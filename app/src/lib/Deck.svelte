@@ -1,6 +1,7 @@
 <script>
   import Waveform from './Waveform.svelte';
   import Fader from './Fader.svelte';
+  import FxUnit from './FxUnit.svelte';
   import Performance from './Performance.svelte';
   import { untrack } from 'svelte';
   import { engine, tracks, control } from './engine.svelte.js';
@@ -126,6 +127,7 @@
       <span class="el num"><span class="sr">Elapsed </span>{fmt(d.position)}</span>
       <span class="rm num"><span class="sr">Remaining </span>{fmt(d.position - d.duration)}</span>
     </div>
+    <FxUnit {deck} />
 
     <Performance {deck} />
 

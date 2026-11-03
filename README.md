@@ -27,6 +27,14 @@ A free, open-source DJ app that is fast, modern and uncluttered. No paywalled
 - **Mixer:** trim, 3-band isolator EQ with full kills, channel faders,
   constant-power crossfader, master gain, headphone cue with cue/master blend
   (on interfaces with 4+ outputs, headphones go to channels 3-4).
+- **Effects:** a filter knob per channel (left low-pass, right high-pass,
+  centre off) and a beat FX unit per deck: echo, reverb, flanger and phaser,
+  timed in beats (1/8 to 8) from the deck's tempo, with level and on. Echo
+  and reverb tails ring out after you switch them off.
+- **Recording:** the Rec button in the mixer records the master output to a
+  24-bit WAV in `Music/oss-dj recordings`. The file is written off the
+  audio thread and its header is refreshed every few seconds, so a crash
+  still leaves a playable file.
 - **Formats:** MP3, AAC/M4A, FLAC, WAV, AIFF, OGG/Vorbis, ALAC via Symphonia.
 - **Waveforms:** frequency-colored (bass blue, mids amber, highs white),
   drawn on the GPU with WebGL2: scrolling view per deck plus a full-track
@@ -45,7 +53,8 @@ A free, open-source DJ app that is fast, modern and uncluttered. No paywalled
   play/cue/headphone LEDs. Pads in hot cue (SHIFT + pad clears), beat loop
   and beat jump modes; loop in, out, reloop/exit, 4-beat loop (SHIFT + IN),
   CUE/LOOP CALL halves and doubles the loop (with SHIFT: beat jump), all
-  with LEDs. FX and CFX come later.
+  with LEDs. CFX knobs drive the channel filters. The beat FX section comes
+  later.
 
 The engine renders two playing decks at about 1% of one CPU core, and a
 test guarantees the audio thread never allocates memory.

@@ -15,6 +15,8 @@ export const engine = $state({
   masterLevels: [0, 0],
   /** Crossfader, cue mix and master gain as the engine has them (null on engines that don't report them). */
   mixer: null,
+  /** The set recording, as the engine reports it (null on engines that can't record). */
+  recording: null,
   /**
    * The audio output: { state: 'connected', device, sampleRate },
    * { state: 'lost', device, fallback } while waiting for a device that went
@@ -62,6 +64,7 @@ function frame(now) {
       .then((s) => {
         for (let i = 0; i < 2; i++) engine.decks[i] = s.decks[i];
         engine.mixer = s.mixer ?? null;
+        engine.recording = s.recording ?? null;
         engine.audio = s.audio ?? null;
         for (let i = 0; i < 2; i++) engine.deckLevels[i] = Math.max(s.deckPeaks[i], engine.deckLevels[i] * 0.86);
         for (let i = 0; i < 2; i++) engine.masterLevels[i] = Math.max(s.masterPeak[i], engine.masterLevels[i] * 0.86);
