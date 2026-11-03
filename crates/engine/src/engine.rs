@@ -7,6 +7,7 @@ use crate::dsp::{EQ_KILL_DB, EQ_MAX_DB};
 use crate::fx::{ChannelFx, FX_DEFAULT_BEATS};
 use crate::mixer::Mixer;
 use crate::record::{new_recorder, RecordTap, Recorder};
+use crate::sampler::{Sampler, SAMPLER_SLOTS};
 use crate::{Command, RecordError, RecordingStatus, SharedState, Track, NUM_DECKS};
 
 /// Largest block rendered in one pass. Bigger callbacks are split into
@@ -28,11 +29,13 @@ pub struct Engine {
     decks: [Deck; NUM_DECKS],
     fx: [ChannelFx; NUM_DECKS],
     mixer: Mixer,
+    sampler: Sampler,
     record: RecordTap,
     commands: Consumer<Command>,
     garbage: Producer<Arc<Track>>,
     shared: Arc<SharedState>,
     scratch: [Vec<f32>; NUM_DECKS],
+    sampler_buf: Vec<f32>,
 }
 
 /// The control half of the engine: send commands, read state.
@@ -61,17 +64,20 @@ pub fn new_engine(sample_rate: u32) -> (Engine, EngineHandle) {
         d.fx_level.store(0.5);
         d.fx_beats.store(FX_DEFAULT_BEATS);
     }
+    shared.sampler.level.store(crate::sampler::DEFAULT_LEVEL);
     let sr = sample_rate as f32;
     let (record, recorder) = new_recorder(sample_rate);
     let engine = Engine {
         decks: std::array::from_fn(|_| Deck::new(sr)),
         fx: std::array::from_fn(|_| ChannelFx::new(sr)),
         mixer: Mixer::new(sr),
+        sampler: Sampler::new(sr),
         record,
         commands: cmd_rx,
         garbage: gc_tx,
         shared: shared.clone(),
         scratch: std::array::from_fn(|_| vec![0.0; MAX_BLOCK_FRAMES * 2]),
+        sampler_buf: vec![0.0; MAX_BLOCK_FRAMES * 2],
     };
     let handle = EngineHandle {
         commands: cmd_tx,
@@ -106,8 +112,10 @@ impl Engine {
             let bpm = deck.beat_info().map(|b| b.bpm * deck.rate.max(0.25));
             peaks[d] = self.fx[d].process(buf, bpm);
         }
+        let sampler = &mut self.sampler_buf[..n];
+        self.sampler.render(sampler);
         let [a, b] = &self.scratch;
-        self.mixer.mix(&[&a[..n], &b[..n]], master, cue);
+        self.mixer.mix(&[&a[..n], &b[..n]], sampler, master, cue);
         self.record.push(master);
         for (d, p) in peaks.iter().enumerate() {
             let s = &self.shared.decks[d].peak;
@@ -267,6 +275,25 @@ impl Engine {
                 self.mixer.set_master_db(db);
                 self.shared.master_db.store(db);
             }
+            LoadSample { slot, sample } => {
+                if slot < SAMPLER_SLOTS {
+                    let old = self.sampler.load(slot, Some(sample));
+                    self.recycle(old);
+                } else {
+                    self.recycle(Some(sample));
+                }
+            }
+            ClearSample { slot } => {
+                let old = self.sampler.load(slot, None);
+                self.recycle(old);
+            }
+            SamplePlay { slot } => self.sampler.play(slot),
+            SampleStop { slot } => self.sampler.stop(slot),
+            SetSamplerLevel { value } => {
+                let value = value.clamp(0.0, 1.0);
+                self.sampler.set_level(value);
+                self.shared.sampler.level.store(value);
+            }
         }
     }
 
@@ -335,6 +362,13 @@ impl Engine {
             s.loop_out.store(secs(deck.loop_out));
             s.looping.store(deck.looping, Relaxed);
             s.loop_beats.store(deck.loop_beats);
+        }
+        for (i, s) in self.shared.sampler.slots.iter().enumerate() {
+            let (loaded, playing, progress, duration) = self.sampler.slot_state(i);
+            s.loaded.store(loaded, Relaxed);
+            s.playing.store(playing, Relaxed);
+            s.progress.store(progress);
+            s.duration.store(duration);
         }
     }
 

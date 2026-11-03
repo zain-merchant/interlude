@@ -23,6 +23,8 @@ enum UiEvent {
     Browse { delta: i32 },
     /// Load the selected library track into `deck`.
     Load { deck: usize },
+    /// Load the selected library track into sampler slot `slot`.
+    LoadSample { slot: usize },
 }
 
 impl Host for AppHost {
@@ -30,6 +32,7 @@ impl Host for AppHost {
         State {
             decks: std::array::from_fn::<_, NUM_DECKS, _>(|i| self.shared.deck(i)),
             mixer: self.shared.mixer(),
+            sampler: self.shared.sampler(),
         }
     }
 
@@ -47,6 +50,9 @@ impl Host for AppHost {
                 let _ = self
                     .app
                     .emit("controller", UiEvent::Load { deck: deck.index() });
+            }
+            Action::LoadSample(slot) => {
+                let _ = self.app.emit("controller", UiEvent::LoadSample { slot });
             }
         }
     }

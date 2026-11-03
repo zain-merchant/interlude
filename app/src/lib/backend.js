@@ -57,6 +57,8 @@ async function createTauriBackend() {
     stopRecording: () => invoke('stop_recording'),
     /** Stops waiting for a disconnected audio device and uses the system default. */
     useDefaultOutput: () => invoke('use_default_output'),
+    /** Puts a file in a sampler slot. @returns {Promise<number>} its length in seconds */
+    loadSample: (slot, path) => invoke('load_sample', { slot, path }),
     /** @returns {Promise<TrackInfo>} */
     /** With `autoGain`, the deck plays the track at the common loudness, under the trim. */
     loadTrack: (deck, path, autoGain = true) => invoke('load_track', { deck, path, autoGain }),
@@ -122,7 +124,7 @@ async function createTauriBackend() {
     onLibraryAnalysis: (fn) => listen('library-analysis', (e) => fn(e.payload)),
     /**
      * Library actions from a hardware controller (browse knob, load buttons).
-     * @param {(e: { type: 'browse', delta: number } | { type: 'load', deck: number }) => void} fn
+     * @param {(e: { type: 'browse', delta: number } | { type: 'load', deck: number } | { type: 'loadSample', slot: number }) => void} fn
      * @returns {Promise<() => void>} unlisten
      */
     onController: (fn) => listen('controller', (e) => fn(e.payload)),

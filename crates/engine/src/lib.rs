@@ -27,6 +27,7 @@ mod null_output;
 #[cfg(feature = "output")]
 pub mod output;
 mod record;
+mod sampler;
 mod shared;
 mod stretch;
 mod track;
@@ -44,7 +45,10 @@ pub use key::Key;
 pub use loudness::Loudness;
 pub use null_output::{start_null, NullOutput};
 pub use record::{RecordError, RecordingStatus};
-pub use shared::{DeckSnapshot, FxSnapshot, MixerSnapshot, SharedState};
+pub use sampler::{MAX_SAMPLE_SECS, SAMPLER_SLOTS};
+pub use shared::{
+    DeckSnapshot, FxSnapshot, MixerSnapshot, SampleSnapshot, SamplerSnapshot, SharedState,
+};
 pub use track::{LoadError, Track, TrackSummary};
 pub use waveform::Waveform;
 
