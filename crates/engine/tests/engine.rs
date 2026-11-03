@@ -349,3 +349,99 @@ fn sync_without_beatgrids_does_nothing() {
     render(&mut e, 0.1);
     assert_eq!(h.shared().deck(1).rate, 1.0);
 }
+
+fn position(h: &EngineHandle, deck: DeckId) -> f64 {
+    h.shared().deck(deck.index()).position
+}
+
+#[test]
+fn scratching_follows_the_jog_wheel() {
+    let (mut e, mut h) = setup();
+    load(&mut h, DeckId::A, sine(440.0, 10.0, 0.5));
+    h.send(Command::Seek {
+        deck: DeckId::A,
+        seconds: 5.0,
+    })
+    .unwrap();
+    h.send(Command::ScratchStart { deck: DeckId::A }).unwrap();
+    render(&mut e, 0.05);
+
+    // Hand still: no movement, silence (once the EQ tail dies).
+    assert!((position(&h, DeckId::A) - 5.0).abs() < 1e-6);
+
+    // Drag the record back by 0.3 s in small steps, like jog ticks.
+    for _ in 0..60 {
+        h.send(Command::Jog {
+            deck: DeckId::A,
+            seconds: -0.005,
+        })
+        .unwrap();
+        render(&mut e, 0.005);
+    }
+    let out = render(&mut e, 0.15);
+    let pos = position(&h, DeckId::A);
+    assert!((pos - 4.7).abs() < 0.005, "position {pos}");
+    assert!(rms(&out[out.len() / 2..]) < 1e-3, "a still hand is silent");
+
+    // Letting go of a paused deck leaves it where the hand left it.
+    h.send(Command::ScratchEnd { deck: DeckId::A }).unwrap();
+    render(&mut e, 0.1);
+    assert!((position(&h, DeckId::A) - pos).abs() < 1e-6);
+}
+
+#[test]
+fn scratching_a_playing_deck_holds_it_then_resumes() {
+    let (mut e, mut h) = setup();
+    load(&mut h, DeckId::A, sine(440.0, 10.0, 0.5));
+    h.send(Command::Play { deck: DeckId::A }).unwrap();
+    render(&mut e, 1.0);
+    h.send(Command::ScratchStart { deck: DeckId::A }).unwrap();
+    render(&mut e, 0.1);
+    let held = position(&h, DeckId::A);
+    render(&mut e, 0.5);
+    assert!(
+        (position(&h, DeckId::A) - held).abs() < 1e-3,
+        "hand stops the record"
+    );
+    h.send(Command::ScratchEnd { deck: DeckId::A }).unwrap();
+    render(&mut e, 0.5);
+    let moved = position(&h, DeckId::A) - held;
+    assert!(
+        (moved - 0.5).abs() < 0.02,
+        "playback resumes, moved {moved}"
+    );
+}
+
+#[test]
+fn jog_scrubs_when_paused_and_nudges_when_playing() {
+    let (mut e, mut h) = setup();
+    load(&mut h, DeckId::A, sine(440.0, 10.0, 0.5));
+    h.send(Command::Jog {
+        deck: DeckId::A,
+        seconds: 1.5,
+    })
+    .unwrap();
+    render(&mut e, 0.01);
+    assert!((position(&h, DeckId::A) - 1.5).abs() < 1e-6);
+
+    h.send(Command::Play { deck: DeckId::A }).unwrap();
+    render(&mut e, 0.5);
+    let before = position(&h, DeckId::A);
+    // Spin the outer ring through 1 s of audio over 0.5 s.
+    for _ in 0..100 {
+        h.send(Command::Jog {
+            deck: DeckId::A,
+            seconds: 0.01,
+        })
+        .unwrap();
+        render(&mut e, 0.005);
+    }
+    render(&mut e, 1.0);
+    let ahead = position(&h, DeckId::A) - before - 1.5;
+    // A nudge moves the beat a fraction of the wheel's travel, then fades.
+    assert!(ahead > 0.1 && ahead < 0.2, "nudged {ahead}");
+    assert!(
+        (h.shared().deck(0).speed - 1.0).abs() < 1e-3,
+        "nudge has faded"
+    );
+}

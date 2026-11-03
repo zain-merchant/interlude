@@ -3,12 +3,20 @@ use std::sync::Arc;
 use rtrb::{Consumer, Producer, RingBuffer};
 
 use crate::deck::Deck;
+use crate::dsp::{EQ_KILL_DB, EQ_MAX_DB};
 use crate::mixer::Mixer;
 use crate::{Command, SharedState, Track, NUM_DECKS};
 
 /// Largest block rendered in one pass. Bigger callbacks are split into
 /// chunks of this size, so scratch buffers can be allocated up front.
 pub const MAX_BLOCK_FRAMES: usize = 1024;
+
+/// Trim range in dB.
+pub const GAIN_MIN_DB: f32 = -24.0;
+pub const GAIN_MAX_DB: f32 = 12.0;
+/// Master gain range in dB.
+pub const MASTER_MIN_DB: f32 = -60.0;
+pub const MASTER_MAX_DB: f32 = 6.0;
 
 const COMMAND_QUEUE: usize = 1024;
 const GARBAGE_QUEUE: usize = 64;
@@ -41,6 +49,7 @@ pub fn new_engine(sample_rate: u32) -> (Engine, EngineHandle) {
         .store(sample_rate, std::sync::atomic::Ordering::Relaxed);
     for d in &shared.decks {
         d.rate.store(1.0);
+        d.fader.store(1.0);
     }
     let sr = sample_rate as f32;
     let engine = Engine {
@@ -129,14 +138,46 @@ impl Engine {
             Seek { deck, seconds } => self.decks[deck.index()].seek_secs(seconds),
             SetRate { deck, rate } => self.decks[deck.index()].rate = rate.clamp(0.0, 4.0),
             SetBend { deck, bend } => self.decks[deck.index()].bend = bend.clamp(-1.0, 1.0),
+            ScratchStart { deck } => self.decks[deck.index()].scratch_start(),
+            ScratchEnd { deck } => self.decks[deck.index()].scratch_end(),
+            Jog { deck, seconds } => self.decks[deck.index()].jog(seconds),
             Sync { deck } => self.sync(deck.index()),
-            SetGain { deck, db } => self.decks[deck.index()].set_gain_db(db),
-            SetEq { deck, band, db } => self.decks[deck.index()].set_eq_db(band, db),
-            SetFader { deck, value } => self.mixer.set_fader(deck.index(), value),
-            SetPfl { deck, on } => self.mixer.pfl[deck.index()] = on,
-            SetCrossfader { value } => self.mixer.set_crossfader(value),
-            SetCueMix { value } => self.mixer.set_cue_mix(value),
-            SetMasterGain { db } => self.mixer.set_master_db(db),
+            SetGain { deck, db } => {
+                let db = db.clamp(GAIN_MIN_DB, GAIN_MAX_DB);
+                self.decks[deck.index()].set_gain_db(db);
+                self.shared.decks[deck.index()].gain_db.store(db);
+            }
+            SetEq { deck, band, db } => {
+                let db = db.clamp(EQ_KILL_DB, EQ_MAX_DB);
+                self.decks[deck.index()].set_eq_db(band, db);
+                self.shared.decks[deck.index()].eq_db[band as usize].store(db);
+            }
+            SetFader { deck, value } => {
+                let value = value.clamp(0.0, 1.0);
+                self.mixer.set_fader(deck.index(), value);
+                self.shared.decks[deck.index()].fader.store(value);
+            }
+            SetPfl { deck, on } => {
+                self.mixer.pfl[deck.index()] = on;
+                self.shared.decks[deck.index()]
+                    .pfl
+                    .store(on, std::sync::atomic::Ordering::Relaxed);
+            }
+            SetCrossfader { value } => {
+                let value = value.clamp(-1.0, 1.0);
+                self.mixer.set_crossfader(value);
+                self.shared.crossfader.store(value);
+            }
+            SetCueMix { value } => {
+                let value = value.clamp(0.0, 1.0);
+                self.mixer.set_cue_mix(value);
+                self.shared.cue_mix.store(value);
+            }
+            SetMasterGain { db } => {
+                let db = db.clamp(MASTER_MIN_DB, MASTER_MAX_DB);
+                self.mixer.set_master_db(db);
+                self.shared.master_db.store(db);
+            }
         }
     }
 
@@ -190,7 +231,7 @@ impl Engine {
             s.position.store(deck.pos / sr);
             s.cue.store(deck.cue / sr);
             s.rate.store(deck.rate);
-            s.speed.store(deck.rate + deck.bend);
+            s.speed.store(deck.speed());
             s.bpm.store(
                 deck.track
                     .as_ref()
