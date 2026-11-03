@@ -135,6 +135,12 @@ impl Deck {
         self.pos = (secs * self.source_rate()).clamp(0.0, self.frames());
     }
 
+    pub fn set_cue_secs(&mut self, secs: f64) {
+        if self.track.is_some() {
+            self.cue = (secs * self.source_rate()).clamp(0.0, self.frames());
+        }
+    }
+
     pub fn scratch_start(&mut self) {
         if self.track.is_some() {
             self.scratching = true;

@@ -136,6 +136,7 @@ impl Engine {
             CuePress { deck } => self.decks[deck.index()].cue_press(),
             CueRelease { deck } => self.decks[deck.index()].cue_release(),
             Seek { deck, seconds } => self.decks[deck.index()].seek_secs(seconds),
+            SetCue { deck, seconds } => self.decks[deck.index()].set_cue_secs(seconds),
             SetRate { deck, rate } => self.decks[deck.index()].rate = rate.clamp(0.0, 4.0),
             SetBend { deck, bend } => self.decks[deck.index()].bend = bend.clamp(-1.0, 1.0),
             ScratchStart { deck } => self.decks[deck.index()].scratch_start(),

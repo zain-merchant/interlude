@@ -1,4 +1,5 @@
 <script>
+  import { keyLabel } from './commands.js';
   import { onMount } from 'svelte';
   import { WaveformGL, themeColors } from './waveform-gl.js';
   import { tracks, engine, displayPos, onFrame, scrubStart, scrubTo, scrubEnd } from './engine.svelte.js';
@@ -121,7 +122,7 @@
   {#if failed}
     <div class="msg">Waveforms need WebGL2</div>
   {:else if !tracks[deck] && mode === 'scroll'}
-    <div class="msg">Drag a track here or press {deck === 0 ? '⇧←' : '⇧→'}</div>
+    <div class="msg">Drag a track here or press {keyLabel(`deck.${deck}.load`)}</div>
   {/if}
 </div>
 
@@ -153,7 +154,7 @@
     inset: 0;
     display: grid;
     place-items: center;
-    color: var(--fg-4);
+    color: var(--fg-3);
     font-size: 12px;
     pointer-events: none;
   }
