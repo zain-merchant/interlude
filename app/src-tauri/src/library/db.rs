@@ -9,7 +9,7 @@
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
-use dj_engine::{Beatgrid, Key, SavedCues, HOT_CUES};
+use dj_engine::{Beatgrid, Key, Loudness, SavedCues, HOT_CUES};
 use rusqlite::{params, Connection, OptionalExtension};
 
 use super::tags::Tags;
@@ -77,6 +77,10 @@ const MIGRATIONS: &[&str] = &[
      CREATE INDEX history_played_at ON history (played_at);",
     // 3: beatgrids fixed by hand, which analysis leaves alone.
     "ALTER TABLE tracks ADD COLUMN grid_locked INTEGER NOT NULL DEFAULT 0;",
+    // 4: loudness, for auto gain. `lufs` is NULL for silence; `peak` is
+    // NULL until measured.
+    "ALTER TABLE tracks ADD COLUMN lufs REAL;
+     ALTER TABLE tracks ADD COLUMN peak REAL;",
 ];
 
 /// Plays further apart than this start a new history session, so a night
@@ -90,7 +94,7 @@ const LOOP: i64 = 2;
 /// The columns `row_from` reads, from `tracks`.
 const ROW_COLUMNS: &str = "tracks.path, tracks.title, tracks.artist, tracks.album, tracks.genre,
      tracks.missing, tracks.analysis_version, tracks.analysis_failed, tracks.duration,
-     tracks.bpm, tracks.key_tonic, tracks.key_minor";
+     tracks.bpm, tracks.key_tonic, tracks.key_minor, tracks.lufs, tracks.peak";
 
 fn row_from(r: &rusqlite::Row<'_>) -> rusqlite::Result<Row> {
     Ok(Row {
@@ -508,7 +512,8 @@ impl Db {
         Ok(self
             .conn
             .query_row(
-                "SELECT analysis_version, analysis_failed, duration, bpm, key_tonic, key_minor
+                "SELECT analysis_version, analysis_failed, duration, bpm, key_tonic, key_minor,
+                     lufs, peak
                  FROM tracks WHERE path = ?1",
                 params![path_str(path)],
                 |r| analysis_from(r, 0),
@@ -542,7 +547,7 @@ impl Db {
         let id = self.track_id(path)?;
         self.conn.execute(
             "UPDATE tracks SET analysis_version = ?2, analysis_failed = ?3, duration = ?4,
-                 key_tonic = ?6, key_minor = ?7,
+                 key_tonic = ?6, key_minor = ?7, lufs = ?9, peak = ?10,
                  bpm = CASE WHEN grid_locked THEN bpm ELSE ?5 END,
                  first_beat = CASE WHEN grid_locked THEN first_beat
                      WHEN ?5 IS NULL THEN NULL ELSE coalesce(?8, first_beat) END
@@ -555,7 +560,9 @@ impl Db {
                 a.bpm,
                 a.key.map(|k| k.tonic),
                 a.key.map(|k| k.minor),
-                first_beat
+                first_beat,
+                a.loudness.and_then(|l| l.lufs),
+                a.loudness.map(|l| l.peak),
             ],
         )?;
         Ok(())
@@ -686,7 +693,7 @@ impl Db {
     }
 }
 
-/// Reads the six analysis columns starting at `at`. `None` when the track
+/// Reads the eight analysis columns starting at `at`. `None` when the track
 /// hasn't been analyzed by the current analyzer.
 fn analysis_from(r: &rusqlite::Row<'_>, at: usize) -> rusqlite::Result<Option<Analysis>> {
     let version: Option<i64> = r.get(at)?;
@@ -696,10 +703,13 @@ fn analysis_from(r: &rusqlite::Row<'_>, at: usize) -> rusqlite::Result<Option<An
     let failed: bool = r.get(at + 1)?;
     let tonic: Option<u8> = r.get(at + 4)?;
     let minor: Option<bool> = r.get(at + 5)?;
+    let lufs: Option<f32> = r.get(at + 6)?;
+    let peak: Option<f32> = r.get(at + 7)?;
     Ok(Some(Analysis {
         duration: r.get(at + 2)?,
         bpm: r.get(at + 3)?,
         key: tonic.zip(minor).map(|(t, m)| Key::new(t, m)),
+        loudness: peak.map(|peak| Loudness { lufs, peak }),
         failed,
     }))
 }
@@ -823,6 +833,10 @@ mod tests {
             duration: Some(300.0),
             bpm: Some(124.0),
             key: Some(Key::new(9, true)),
+            loudness: Some(Loudness {
+                lufs: Some(-8.5),
+                peak: 0.98,
+            }),
             failed: false,
         };
         db.save_analysis(p, &a, Some(0.12)).unwrap();
@@ -847,6 +861,7 @@ mod tests {
             duration: Some(300.0),
             bpm: Some(87.0),
             key: None,
+            loudness: None,
             failed: false,
         };
         db.save_analysis(p, &a, Some(0.1)).unwrap();
@@ -864,6 +879,34 @@ mod tests {
         db.save_grid(p, None, Some(detected)).unwrap();
         assert_eq!(db.locked_grid(p).unwrap(), None);
         assert_eq!(db.analysis(p).unwrap().unwrap().bpm, Some(87.0));
+    }
+
+    #[test]
+    fn loudness_round_trips_silence_included() {
+        let db = Db::open_in_memory().unwrap();
+        let p = Path::new("/m/a.mp3");
+        let silent = Analysis {
+            duration: Some(10.0),
+            bpm: None,
+            key: None,
+            loudness: Some(Loudness {
+                lufs: None,
+                peak: 0.0,
+            }),
+            failed: false,
+        };
+        db.save_analysis(p, &silent, None).unwrap();
+        let back = db.analysis(p).unwrap().unwrap();
+        assert_eq!(back, silent);
+        assert!(back.complete());
+        // A track analyzed before loudness was measured keeps its BPM and
+        // key, and is analyzed again for its loudness.
+        db.conn
+            .execute("UPDATE tracks SET lufs = NULL, peak = NULL", [])
+            .unwrap();
+        let old = db.analysis(p).unwrap().unwrap();
+        assert_eq!(old.duration, Some(10.0));
+        assert!(!old.complete());
     }
 
     #[test]

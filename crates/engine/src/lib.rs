@@ -21,6 +21,7 @@ pub mod dsp;
 mod engine;
 pub mod fx;
 pub mod key;
+pub mod loudness;
 mod mixer;
 mod null_output;
 #[cfg(feature = "output")]
@@ -40,6 +41,7 @@ pub use engine::{
 };
 pub use fx::FxKind;
 pub use key::Key;
+pub use loudness::Loudness;
 pub use null_output::{start_null, NullOutput};
 pub use record::{RecordError, RecordingStatus};
 pub use shared::{DeckSnapshot, FxSnapshot, MixerSnapshot, SharedState};

@@ -12,6 +12,7 @@ use std::sync::{mpsc, Arc};
 
 use crate::analysis::{detect_beatgrid, Beatgrid, BeatgridBuilder};
 use crate::key::{detect_key, Key, KeyBuilder};
+use crate::loudness::{measure_loudness, Loudness, LoudnessBuilder};
 use crate::waveform::WaveformBuilder;
 use crate::Waveform;
 
@@ -45,17 +46,18 @@ pub struct Track {
     pub beatgrid: Option<Beatgrid>,
     /// Detected musical key, if the track has clear tonal content.
     pub key: Option<Key>,
+    pub loudness: Loudness,
 }
 
 /// Interleaved samples decoded before a stretch goes to the analysis
 /// threads: about 0.75 s of stereo audio at 44.1 kHz.
 const FEED_SAMPLES: usize = 1 << 16;
 
-type Analysis = (Waveform, Option<Beatgrid>, Option<Key>);
+type Analysis = (Waveform, Option<Beatgrid>, Option<Key>, Loudness);
 
 /// Runs `produce`, which calls `feed` with consecutive stretches of
-/// interleaved stereo audio, while three threads analyze that audio for the
-/// waveform, beatgrid and key.
+/// interleaved stereo audio, while four threads analyze that audio for the
+/// waveform, beatgrid, key and loudness.
 fn analyze_while<R>(
     sample_rate: u32,
     produce: impl FnOnce(&mut dyn FnMut(&[f32])) -> R,
@@ -67,6 +69,7 @@ fn analyze_while<R>(
         let (wf_tx, wf_rx) = mpsc::sync_channel::<Arc<[f32]>>(IN_FLIGHT);
         let (bg_tx, bg_rx) = mpsc::sync_channel::<Arc<[f32]>>(IN_FLIGHT);
         let (key_tx, key_rx) = mpsc::sync_channel::<Arc<[f32]>>(IN_FLIGHT);
+        let (lu_tx, lu_rx) = mpsc::sync_channel::<Arc<[f32]>>(IN_FLIGHT);
         let waveform = s.spawn(move || {
             let mut b = WaveformBuilder::new(sample_rate);
             wf_rx.iter().for_each(|c| b.push(&c));
@@ -82,20 +85,26 @@ fn analyze_while<R>(
             key_rx.iter().for_each(|c| b.push(&c));
             b.finish()
         });
+        let loudness = s.spawn(move || {
+            let mut b = LoudnessBuilder::new(sample_rate);
+            lu_rx.iter().for_each(|c| b.push(&c));
+            b.finish()
+        });
         let result = produce(&mut |chunk: &[f32]| {
             if chunk.is_empty() {
                 return;
             }
             let chunk: Arc<[f32]> = chunk.into();
-            for tx in [&wf_tx, &bg_tx, &key_tx] {
+            for tx in [&wf_tx, &bg_tx, &key_tx, &lu_tx] {
                 let _ = tx.send(chunk.clone());
             }
         });
-        drop((wf_tx, bg_tx, key_tx));
+        drop((wf_tx, bg_tx, key_tx, lu_tx));
         let analysis = (
             waveform.join().unwrap_or_default(),
             grid.join().ok().flatten(),
             key.join().ok().flatten(),
+            loudness.join().unwrap_or_default(),
         );
         (result, analysis)
     })
@@ -103,16 +112,22 @@ fn analyze_while<R>(
 
 impl Track {
     /// Builds a track from interleaved stereo samples and analyzes its
-    /// waveform, tempo and key.
+    /// waveform, tempo, key and loudness.
     pub fn from_stereo(samples: Vec<f32>, sample_rate: u32) -> Self {
-        // The three analyses only read the samples, so run them side by
-        // side: loading takes as long as the slowest, not all three.
-        let (waveform, beatgrid, key) = std::thread::scope(|s| {
+        // The analyses only read the samples, so run them side by side:
+        // loading takes as long as the slowest, not all of them.
+        let (waveform, beatgrid, key, loudness) = std::thread::scope(|s| {
             let key = s.spawn(|| detect_key(&samples, sample_rate));
             let waveform = s.spawn(|| Waveform::analyze(&samples, sample_rate));
+            let loudness = s.spawn(|| measure_loudness(&samples, sample_rate));
             let grid = detect_beatgrid(&samples, sample_rate);
             let waveform = waveform.join().unwrap_or_default();
-            (waveform, grid, key.join().ok().flatten())
+            (
+                waveform,
+                grid,
+                key.join().ok().flatten(),
+                loudness.join().unwrap_or_default(),
+            )
         });
         Self {
             path: None,
@@ -121,6 +136,7 @@ impl Track {
             waveform,
             beatgrid,
             key,
+            loudness,
         }
     }
 
@@ -143,13 +159,14 @@ impl Track {
         let mut track = match analysis {
             // The rate changed mid-file (or wasn't known up front): analyze
             // again at the rate the audio really has.
-            Some((waveform, beatgrid, key)) if sample_rate == stream_rate => Track {
+            Some((waveform, beatgrid, key, loudness)) if sample_rate == stream_rate => Track {
                 path: None,
                 sample_rate,
                 samples: stereo,
                 waveform,
                 beatgrid,
                 key,
+                loudness,
             },
             _ => Track::from_stereo(stereo, sample_rate),
         };
@@ -158,8 +175,8 @@ impl Track {
     }
 }
 
-/// What the library shows about a track it hasn't loaded: its length, tempo
-/// and key.
+/// What the library knows about a track it hasn't loaded: its length,
+/// tempo, key and loudness.
 #[derive(Debug, Clone, Copy, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 #[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
@@ -169,6 +186,7 @@ pub struct TrackSummary {
     /// Detected tempo, if the track has a clear pulse.
     pub bpm: Option<f64>,
     pub key: Option<Key>,
+    pub loudness: Loudness,
 }
 
 impl TrackSummary {
@@ -177,11 +195,12 @@ impl TrackSummary {
             duration: track.duration_secs(),
             bpm: track.beatgrid.map(|g| g.bpm),
             key: track.key,
+            loudness: track.loudness,
         }
     }
 
     /// Decodes and analyzes a file for the library, without keeping the
-    /// audio or building a waveform. Runs tempo and key detection one after
+    /// audio or building a waveform. Runs tempo, key and loudness one after
     /// the other on the calling thread, so background analysis stays on one
     /// core.
     pub fn analyze(path: impl AsRef<Path>) -> Result<Self, LoadError> {
@@ -190,6 +209,7 @@ impl TrackSummary {
             duration: stereo.len() as f64 / 2.0 / sample_rate as f64,
             bpm: detect_beatgrid(&stereo, sample_rate).map(|g| g.bpm),
             key: detect_key(&stereo, sample_rate),
+            loudness: measure_loudness(&stereo, sample_rate),
         })
     }
 }
