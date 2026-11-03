@@ -14,7 +14,8 @@ mod library;
 use std::sync::{Arc, Mutex};
 
 use dj_engine::{
-    Beatgrid, Command, DeckId, DeckSnapshot, EngineHandle, EqBand, MixerSnapshot, Track, Waveform,
+    Beatgrid, Command, DeckId, DeckSnapshot, EngineHandle, EqBand, FxKind, MixerSnapshot,
+    RecordingStatus, Track, Waveform,
 };
 use serde::{Deserialize, Serialize};
 use tauri::ipc::Response;
@@ -88,6 +89,7 @@ struct EngineState {
     mixer: MixerSnapshot,
     deck_peaks: [f32; dj_engine::NUM_DECKS],
     master_peak: [f32; 2],
+    recording: RecordingStatus,
     audio: AudioStatus,
 }
 
@@ -187,6 +189,26 @@ enum Control {
         deck: usize,
         band: usize,
         db: f32,
+    },
+    SetFilter {
+        deck: usize,
+        value: f32,
+    },
+    SetFxKind {
+        deck: usize,
+        kind: FxKind,
+    },
+    SetFxOn {
+        deck: usize,
+        on: bool,
+    },
+    SetFxLevel {
+        deck: usize,
+        value: f32,
+    },
+    SetFxBeats {
+        deck: usize,
+        beats: f32,
     },
     SetFader {
         deck: usize,
@@ -318,6 +340,26 @@ impl Control {
                     db,
                 }
             }
+            C::SetFilter { deck, value } => Command::SetFilter {
+                deck: deck_id(deck)?,
+                value,
+            },
+            C::SetFxKind { deck, kind } => Command::SetFxKind {
+                deck: deck_id(deck)?,
+                kind,
+            },
+            C::SetFxOn { deck, on } => Command::SetFxOn {
+                deck: deck_id(deck)?,
+                on,
+            },
+            C::SetFxLevel { deck, value } => Command::SetFxLevel {
+                deck: deck_id(deck)?,
+                value,
+            },
+            C::SetFxBeats { deck, beats } => Command::SetFxBeats {
+                deck: deck_id(deck)?,
+                beats,
+            },
             C::SetFader { deck, value } => Command::SetFader {
                 deck: deck_id(deck)?,
                 value,
@@ -365,16 +407,57 @@ fn control(state: State<'_, AppState>, cmd: Control) -> Result<(), String> {
 
 #[tauri::command]
 fn state(state: State<'_, AppState>) -> EngineState {
-    let engine = state.engine.lock().expect("engine lock");
+    let mut engine = state.engine.lock().expect("engine lock");
     let (deck_peaks, master_peak) = engine.take_peaks();
+    let recording = engine.recording();
     let shared = engine.shared();
     EngineState {
         decks: std::array::from_fn(|i| shared.deck(i)),
         mixer: shared.mixer(),
         deck_peaks,
         master_peak,
+        recording,
         audio: state.output.status(),
     }
+}
+
+/// Where a new set recording goes: `Music/oss-dj recordings/Set <date> <time>.wav`.
+fn recording_path() -> Result<std::path::PathBuf, String> {
+    let dir = dirs::audio_dir()
+        .or_else(|| dirs::home_dir().map(|h| h.join("Music")))
+        .ok_or("no music folder to record into")?
+        .join("oss-dj recordings");
+    let stem = format!("Set {}", chrono::Local::now().format("%Y-%m-%d %H.%M"));
+    let mut path = dir.join(format!("{stem}.wav"));
+    let mut n = 2;
+    while path.exists() {
+        path = dir.join(format!("{stem} ({n}).wav"));
+        n += 1;
+    }
+    Ok(path)
+}
+
+/// Starts recording the master output. Returns the file's path.
+#[tauri::command]
+fn start_recording(state: State<'_, AppState>) -> Result<String, String> {
+    let path = recording_path()?;
+    state
+        .engine
+        .lock()
+        .map_err(|_| "engine lock poisoned")?
+        .start_recording(&path)
+        .map_err(|e| e.to_string())?;
+    Ok(path.display().to_string())
+}
+
+#[tauri::command]
+fn stop_recording(state: State<'_, AppState>) -> Result<RecordingStatus, String> {
+    state
+        .engine
+        .lock()
+        .map_err(|_| "engine lock poisoned")?
+        .stop_recording()
+        .map_err(|e| e.to_string())
 }
 
 #[tauri::command]
@@ -486,6 +569,8 @@ pub fn run() {
             use_default_output,
             load_track,
             waveform,
+            start_recording,
+            stop_recording,
             controller::controller_name,
             library::library_folders,
             library::add_folder,

@@ -4,8 +4,10 @@ use rtrb::{Consumer, Producer, RingBuffer};
 
 use crate::deck::Deck;
 use crate::dsp::{EQ_KILL_DB, EQ_MAX_DB};
+use crate::fx::{ChannelFx, FX_DEFAULT_BEATS};
 use crate::mixer::Mixer;
-use crate::{Command, SharedState, Track, NUM_DECKS};
+use crate::record::{new_recorder, RecordTap, Recorder};
+use crate::{Command, RecordError, RecordingStatus, SharedState, Track, NUM_DECKS};
 
 /// Largest block rendered in one pass. Bigger callbacks are split into
 /// chunks of this size, so scratch buffers can be allocated up front.
@@ -24,7 +26,9 @@ const GARBAGE_QUEUE: usize = 64;
 /// The audio-thread half of the engine. See the crate docs.
 pub struct Engine {
     decks: [Deck; NUM_DECKS],
+    fx: [ChannelFx; NUM_DECKS],
     mixer: Mixer,
+    record: RecordTap,
     commands: Consumer<Command>,
     garbage: Producer<Arc<Track>>,
     shared: Arc<SharedState>,
@@ -36,6 +40,7 @@ pub struct EngineHandle {
     commands: Producer<Command>,
     garbage: Consumer<Arc<Track>>,
     shared: Arc<SharedState>,
+    recorder: Recorder,
 }
 
 /// Creates a connected engine (for the audio thread) and handle (for
@@ -50,11 +55,16 @@ pub fn new_engine(sample_rate: u32) -> (Engine, EngineHandle) {
     for d in &shared.decks {
         d.rate.store(1.0);
         d.fader.store(1.0);
+        d.fx_level.store(0.5);
+        d.fx_beats.store(FX_DEFAULT_BEATS);
     }
     let sr = sample_rate as f32;
+    let (record, recorder) = new_recorder(sample_rate);
     let engine = Engine {
         decks: std::array::from_fn(|_| Deck::new(sr)),
+        fx: std::array::from_fn(|_| ChannelFx::new(sr)),
         mixer: Mixer::new(sr),
+        record,
         commands: cmd_rx,
         garbage: gc_tx,
         shared: shared.clone(),
@@ -64,6 +74,7 @@ pub fn new_engine(sample_rate: u32) -> (Engine, EngineHandle) {
         commands: cmd_tx,
         garbage: gc_rx,
         shared,
+        recorder,
     };
     (engine, handle)
 }
@@ -85,10 +96,16 @@ impl Engine {
         let n = master.len();
         let mut peaks = [0f32; NUM_DECKS];
         for (d, deck) in self.decks.iter_mut().enumerate() {
-            peaks[d] = deck.render(&mut self.scratch[d][..n]);
+            let buf = &mut self.scratch[d][..n];
+            deck.render(buf);
+            // Time effects to the tempo the deck plays at, not the hand on
+            // the platter, so a scratch doesn't warp the echo.
+            let bpm = deck.beat_info().map(|b| b.bpm * deck.rate.max(0.25));
+            peaks[d] = self.fx[d].process(buf, bpm);
         }
         let [a, b] = &self.scratch;
         self.mixer.mix(&[&a[..n], &b[..n]], master, cue);
+        self.record.push(master);
         for (d, p) in peaks.iter().enumerate() {
             let s = &self.shared.decks[d].peak;
             s.store(s.load().max(*p));
@@ -173,6 +190,33 @@ impl Engine {
                 let db = db.clamp(EQ_KILL_DB, EQ_MAX_DB);
                 self.decks[deck.index()].set_eq_db(band, db);
                 self.shared.decks[deck.index()].eq_db[band as usize].store(db);
+            }
+            SetFilter { deck, value } => {
+                let value = value.clamp(-1.0, 1.0);
+                self.fx[deck.index()].set_filter(value);
+                self.shared.decks[deck.index()].filter.store(value);
+            }
+            SetFxKind { deck, kind } => {
+                self.fx[deck.index()].set_kind(kind);
+                self.shared.decks[deck.index()]
+                    .fx_kind
+                    .store(kind as u8, std::sync::atomic::Ordering::Relaxed);
+            }
+            SetFxOn { deck, on } => {
+                self.fx[deck.index()].set_on(on);
+                self.shared.decks[deck.index()]
+                    .fx_on
+                    .store(on, std::sync::atomic::Ordering::Relaxed);
+            }
+            SetFxLevel { deck, value } => {
+                let value = value.clamp(0.0, 1.0);
+                self.fx[deck.index()].set_level(value);
+                self.shared.decks[deck.index()].fx_level.store(value);
+            }
+            SetFxBeats { deck, beats } => {
+                let fx = &mut self.fx[deck.index()];
+                fx.set_beats(beats);
+                self.shared.decks[deck.index()].fx_beats.store(fx.beats());
             }
             SetFader { deck, value } => {
                 let value = value.clamp(0.0, 1.0);
@@ -312,6 +356,24 @@ impl EngineHandle {
 
     pub fn shared(&self) -> &Arc<SharedState> {
         &self.shared
+    }
+
+    /// Starts recording the master output to a 24-bit WAV file at `path`,
+    /// creating its folder if needed. Fails if a recording is running or
+    /// the file can't be created.
+    pub fn start_recording(&mut self, path: &std::path::Path) -> Result<(), RecordError> {
+        self.recorder.start(path)
+    }
+
+    /// Stops recording and finishes the file.
+    pub fn stop_recording(&mut self) -> Result<RecordingStatus, RecordError> {
+        self.recorder.stop()
+    }
+
+    /// The running (or last) recording. If writing failed, the recording
+    /// has stopped and `error` says why.
+    pub fn recording(&mut self) -> RecordingStatus {
+        self.recorder.status()
     }
 
     /// Reads and resets the peak meters, for a UI polling at frame rate.

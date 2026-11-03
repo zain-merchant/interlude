@@ -6,6 +6,11 @@
   import Fader from './Fader.svelte';
   import { untrack } from 'svelte';
   import { engine, control as send } from './engine.svelte.js';
+  import { backend } from './backend.js';
+  import { announce } from './announce.svelte.js';
+
+  /** @type {{ onmessage?: (text: string) => void }} */
+  let { onmessage = () => {} } = $props();
 
   const KILL = -40;
   const channels = $state([0, 1].map(() => ({ gain: 0, eq: [0, 0, 0], fader: 1, pfl: false })));
@@ -55,6 +60,52 @@
     control({ type: 'setCrossfader', value: crossfader });
   }
 
+  // Set recording: the master output, to a WAV file in the Music folder.
+  const rec = $derived(engine.recording);
+  let recBusy = false;
+  const clock = (s) => {
+    s = Math.floor(s);
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const sec = String(s % 60).padStart(2, '0');
+    return h ? `${h}:${String(m).padStart(2, '0')}:${sec}` : `${m}:${sec}`;
+  };
+  const fileName = (p) => p?.split(/[\\/]/).pop() ?? '';
+  async function toggleRecording() {
+    if (recBusy || !rec) return;
+    recBusy = true;
+    try {
+      if (rec.active) {
+        const done = await backend.stopRecording();
+        const msg = `Recording saved: ${fileName(done.path)} (${clock(done.seconds)})`;
+        onmessage(msg);
+        announce(msg);
+      } else {
+        await backend.startRecording();
+        announce('Recording started');
+      }
+    } catch (e) {
+      onmessage(`Recording failed: ${e}`);
+    } finally {
+      recBusy = false;
+    }
+  }
+  // A recording that stops by itself (disk full, say) is reported once.
+  let lastError = null;
+  $effect(() => {
+    const err = rec?.error ?? null;
+    if (err && err !== lastError) onmessage(`Recording stopped: ${err}`);
+    lastError = err;
+  });
+  const recTip = () => {
+    if (!rec) return '';
+    if (rec.active) {
+      const lost = rec.droppedSeconds > 0 ? `, ${rec.droppedSeconds.toFixed(1)} s lost to a slow disk` : '';
+      return tipText(`Recording to ${fileName(rec.path)}${lost}`, '', 'click to stop');
+    }
+    return tipText('Record the master output', '', 'saved to Music/oss-dj recordings');
+  };
+
   // Sync initial values to the engine once.
   control({ type: 'setCueMix', value: 0.5 });
 </script>
@@ -98,6 +149,13 @@
       <Meter level={engine.masterLevels[0]} />
       <Meter level={engine.masterLevels[1]} />
     </div>
+    {#if rec}
+      <button class="rec num" class:on={rec.active} aria-pressed={rec.active}
+        aria-label={rec.active ? `Stop recording, ${clock(rec.seconds)} recorded` : 'Record set'}
+        onclick={toggleRecording} use:tip={recTip}>
+        <span class="dot" aria-hidden="true"></span>{rec.active ? clock(rec.seconds) : 'Rec'}
+      </button>
+    {/if}
   </div>
   {@render strip(1)}
   {@render knobs(1)}
@@ -127,7 +185,7 @@
   }
   .cen {
     display: grid;
-    grid-template-rows: auto auto minmax(0, 1fr);
+    grid-template-rows: auto auto minmax(0, 1fr) auto;
     justify-items: center;
     gap: 6px;
     min-height: 0;
@@ -177,6 +235,39 @@
   .hp.on {
     color: var(--deck-b);
     box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--deck-b) 60%, transparent);
+  }
+  .rec {
+    height: 24px;
+    min-width: 52px;
+    padding: 0 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border: 0;
+    border-radius: 6px;
+    background: none;
+    color: var(--fg-3);
+    font: 400 11px var(--font);
+    box-shadow: inset 0 0 0 1px var(--line-2);
+    transition: color 0.12s, box-shadow 0.12s;
+  }
+  .rec:hover {
+    color: var(--fg-2);
+    box-shadow: inset 0 0 0 1px var(--fg-4);
+  }
+  .rec .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--fg-4);
+  }
+  .rec.on {
+    color: var(--fg);
+    box-shadow: inset 0 0 0 1px var(--fg-4);
+  }
+  .rec.on .dot {
+    background: var(--kill);
   }
   .xf {
     grid-column: 1 / -1;

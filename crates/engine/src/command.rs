@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::Track;
+use crate::{FxKind, Track};
 
 /// Which deck a command targets.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -182,6 +182,32 @@ pub enum Command {
         deck: DeckId,
         band: EqBand,
         db: f32,
+    },
+    /// Channel filter knob: -1.0 full low-pass, 0.0 off, 1.0 full high-pass.
+    SetFilter {
+        deck: DeckId,
+        value: f32,
+    },
+    /// Which beat effect the deck's FX unit runs.
+    SetFxKind {
+        deck: DeckId,
+        kind: FxKind,
+    },
+    /// Beat FX on or off. Echo and reverb tails ring out after off.
+    SetFxOn {
+        deck: DeckId,
+        on: bool,
+    },
+    /// Beat FX level/depth, 0.0..=1.0.
+    SetFxLevel {
+        deck: DeckId,
+        value: f32,
+    },
+    /// Beat FX timing in beats (echo time, reverb size, sweep length).
+    /// See [`crate::fx::FX_BEATS`] for the usual steps.
+    SetFxBeats {
+        deck: DeckId,
+        beats: f32,
     },
     /// Channel fader, 0.0..=1.0.
     SetFader {

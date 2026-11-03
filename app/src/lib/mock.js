@@ -77,7 +77,10 @@ export function createMockBackend() {
   const decks = [0, 1].map(() => ({
     loaded: false, playing: false, position: 0, duration: 0, cue: 0, rate: 1, bend: 0, bpm: 0, key: null, keylock: false, firstBeat: 0,
     generation: 0, previewing: false, scratching: false, waveform: null, fader: 1, peak: 0, ...freshLoops(),
+    filter: 0, fx: { kind: 'echo', on: false, level: 0.5, beats: 1 },
   }));
+  /** @type {{ active: boolean, started: number, seconds: number, path: string | null }} */
+  const rec = { active: false, started: 0, seconds: 0, path: null };
   let folders = FOLDERS.map((f) => `/Music/${f}`);
   let xf = 0;
   let last = performance.now();
@@ -212,6 +215,11 @@ export function createMockBackend() {
         break;
       }
       case 'setCrossfader': xf = cmd.value; break;
+      case 'setFilter': d.filter = cmd.value; break;
+      case 'setFxKind': d.fx.kind = cmd.kind; break;
+      case 'setFxOn': d.fx.on = cmd.on; break;
+      case 'setFxLevel': d.fx.level = cmd.value; break;
+      case 'setFxBeats': d.fx.beats = cmd.beats; break;
       default: break;
     }
   };
@@ -228,11 +236,27 @@ export function createMockBackend() {
           loaded: d.loaded, playing: d.playing, position: d.position, duration: d.duration,
           cue: d.cue, rate: d.rate, speed: d.rate + d.bend, bpm: d.bpm, key: d.key, keylock: d.keylock, generation: d.generation, peak: 0,
           hotCues: [...d.hotCues], loopIn: d.loopIn, loopOut: d.loopOut, looping: d.looping, loopBeats: d.loopBeats,
+          filter: d.filter, fx: { ...d.fx },
         })),
         deckPeaks,
         masterPeak: [Math.min(1, m), Math.min(1, m * 0.97)],
         audio,
+        recording: {
+          active: rec.active, path: rec.path, droppedSeconds: 0, error: null,
+          seconds: rec.active ? (performance.now() - rec.started) / 1000 : rec.seconds,
+        },
       };
+    },
+    startRecording: async () => {
+      if (rec.active) throw new Error('already recording');
+      Object.assign(rec, { active: true, started: performance.now(), path: '~/Music/oss-dj recordings/Set (preview).wav' });
+      return rec.path;
+    },
+    stopRecording: async () => {
+      if (!rec.active) throw new Error('not recording');
+      rec.seconds = (performance.now() - rec.started) / 1000;
+      rec.active = false;
+      return { active: false, seconds: rec.seconds, path: rec.path, droppedSeconds: 0, error: null };
     },
     outputName: async () => 'Browser preview · simulated audio',
     loadTrack: async (deck, path) => {

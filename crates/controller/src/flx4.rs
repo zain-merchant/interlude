@@ -11,9 +11,9 @@
 //! range for each pad mode. The controller switches pad modes itself;
 //! hot cue, beat loop and beat jump modes are mapped.
 //!
-//! Not mapped yet: the other pad modes, beat FX, CFX knobs (the engine has
-//! no filter yet). The headphone level and master level knobs work in
-//! the controller's own sound card and send no MIDI.
+//! The CFX knobs drive each channel's filter. Not mapped yet: the other pad
+//! modes and the beat FX section. The headphone level and master level
+//! knobs work in the controller's own sound card and send no MIDI.
 
 use dj_engine::dsp::{EQ_KILL_DB, EQ_MAX_DB};
 use dj_engine::{Command, DeckId, EqBand, HOT_CUES, NUM_DECKS};
@@ -75,6 +75,8 @@ const JOG_SHIFT_TOP: u8 = 0x29;
 
 // Global channel.
 const CROSSFADER: u8 = 0x1F;
+/// CFX knobs for decks 1 and 2 (14-bit, on the global channel).
+const CFX: [u8; NUM_DECKS] = [0x17, 0x18];
 const BROWSE: u8 = 0x40;
 const LOAD_A: u8 = 0x46;
 const LOAD_B: u8 = 0x47;
@@ -299,7 +301,14 @@ impl Flx4 {
                 Some(v) if num - 0x20 == CROSSFADER => vec![engine(Command::SetCrossfader {
                     value: (v * 2.0 - 1.0) as f32,
                 })],
-                _ => vec![],
+                Some(v) => match CFX.iter().position(|&c| c == num - 0x20) {
+                    Some(d) => vec![engine(Command::SetFilter {
+                        deck: deck_id(d),
+                        value: cfx_filter(v),
+                    })],
+                    None => vec![],
+                },
+                None => vec![],
             },
             _ => vec![],
         }
@@ -412,6 +421,17 @@ fn engine(cmd: Command) -> Action {
 
 fn deck_id(d: usize) -> DeckId {
     DeckId::from_index(d).expect("deck index")
+}
+
+/// CFX knob: -1.0 (low-pass) ..= 1.0 (high-pass), snapping to off near the
+/// centre detent so a knob left at 12 o'clock is really off.
+fn cfx_filter(v: f64) -> f32 {
+    let x = (v * 2.0 - 1.0) as f32;
+    if x.abs() < 0.01 {
+        0.0
+    } else {
+        x.clamp(-1.0, 1.0)
+    }
 }
 
 /// Trim knob: -12 dB ..= +12 dB, 0 dB at the centre detent.
@@ -742,5 +762,21 @@ mod tests {
         assert!(!m.matches("DDJ-400"));
         assert!(m.handle(&[0xF8], &st()).is_empty());
         assert!(m.handle(&[0x9F, 0x01, 0x7F], &st()).is_empty());
+    }
+
+    #[test]
+    fn cfx_knobs_drive_the_filters() {
+        let mut m = Flx4::new();
+        let s = st();
+        let c = fourteen(&mut m, GLOBAL_CH, CFX[1], 0, &s);
+        assert!(matches!(
+            c[..],
+            [Command::SetFilter { deck: DeckId::B, value }] if value == -1.0
+        ));
+        let c = fourteen(&mut m, GLOBAL_CH, CFX[0], 8192, &s);
+        assert!(matches!(
+            c[..],
+            [Command::SetFilter { deck: DeckId::A, value }] if value == 0.0
+        ));
     }
 }

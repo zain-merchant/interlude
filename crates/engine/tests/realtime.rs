@@ -5,7 +5,7 @@ use std::alloc::{GlobalAlloc, Layout, System};
 use std::cell::Cell;
 use std::sync::Arc;
 
-use dj_engine::{new_engine, Beatgrid, Command, DeckId, EqBand, Track};
+use dj_engine::{new_engine, Beatgrid, Command, DeckId, EqBand, FxKind, Track};
 
 struct CountingAlloc;
 
@@ -125,10 +125,43 @@ fn process_does_not_allocate() {
         },
         Command::Eject { deck: DeckId::B },
         Command::TogglePlay { deck: DeckId::A },
+        Command::SetFilter {
+            deck: DeckId::A,
+            value: -0.6,
+        },
+        Command::SetFxOn {
+            deck: DeckId::A,
+            on: true,
+        },
+        Command::SetFxLevel {
+            deck: DeckId::A,
+            value: 0.8,
+        },
+        Command::SetFxBeats {
+            deck: DeckId::A,
+            beats: 0.75,
+        },
+        Command::SetFxKind {
+            deck: DeckId::A,
+            kind: FxKind::Reverb,
+        },
+        Command::SetFxKind {
+            deck: DeckId::B,
+            kind: FxKind::Phaser,
+        },
+        Command::SetFxOn {
+            deck: DeckId::B,
+            on: true,
+        },
     ];
     for cmd in commands {
         h.send(cmd).unwrap();
     }
+    // Recording copies into a ring buffer on the audio thread; the file
+    // is written on the recorder's own thread.
+    let dir = std::env::temp_dir().join(format!("oss-dj-rt-{}", std::process::id()));
+    let wav = dir.join("rt.wav");
+    h.start_recording(&wav).unwrap();
 
     TRACKING.with(|t| t.set(true));
     for _ in 0..200 {
@@ -136,6 +169,8 @@ fn process_does_not_allocate() {
         engine.meter_master(&master);
     }
     TRACKING.with(|t| t.set(false));
+    h.stop_recording().unwrap();
+    let _ = std::fs::remove_dir_all(&dir);
 
     let n = COUNT.with(|c| c.get());
     assert_eq!(n, 0, "Engine::process allocated or freed {n} times");
