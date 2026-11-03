@@ -40,6 +40,14 @@ impl Drop for AudioOutput {
 /// Master goes to channels 1-2. On a device with 4 or more channels (most
 /// DJ controllers and interfaces), the headphone cue goes to channels 3-4.
 pub fn start_default() -> Result<(AudioOutput, EngineHandle), OutputError> {
+    start_preferring(&[])
+}
+
+/// Like [`start_default`], but uses the first output device whose name
+/// contains one of `preferred` (case-insensitive), such as a DJ
+/// controller's built-in sound card, when one is plugged in.
+pub fn start_preferring(preferred: &[&str]) -> Result<(AudioOutput, EngineHandle), OutputError> {
+    let preferred: Vec<String> = preferred.iter().map(|p| p.to_lowercase()).collect();
     let (ready_tx, ready_rx) = mpsc::channel();
     let (stop_tx, stop_rx) = mpsc::channel::<()>();
 
@@ -48,11 +56,22 @@ pub fn start_default() -> Result<(AudioOutput, EngineHandle), OutputError> {
         .spawn(move || {
             let result = (|| {
                 let host = cpal::default_host();
-                let device = host.default_output_device().ok_or(OutputError::NoDevice)?;
-                let name = device
-                    .description()
-                    .map(|d| format!("{d:?}"))
-                    .unwrap_or_else(|_| "default".into());
+                let label = |d: &cpal::Device| {
+                    d.description()
+                        .map(|d| d.to_string())
+                        .unwrap_or_else(|_| "default".into())
+                };
+                let wanted = host.output_devices().ok().and_then(|mut all| {
+                    all.find(|d| {
+                        let name = label(d).to_lowercase();
+                        preferred.iter().any(|p| name.contains(p))
+                    })
+                });
+                let device = match wanted {
+                    Some(d) => d,
+                    None => host.default_output_device().ok_or(OutputError::NoDevice)?,
+                };
+                let name = label(&device);
                 let default = device
                     .default_output_config()
                     .map_err(|e| OutputError::Device(e.to_string()))?;

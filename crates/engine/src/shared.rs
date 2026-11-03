@@ -40,6 +40,10 @@ pub(crate) struct DeckShared {
     /// Bumped on every load so the UI knows to fetch the new waveform.
     pub generation: AtomicU64,
     pub peak: AtomicF32,
+    pub gain_db: AtomicF32,
+    pub eq_db: [AtomicF32; 3],
+    pub fader: AtomicF32,
+    pub pfl: AtomicBool,
 }
 
 /// State the audio thread publishes for the UI, written once per block.
@@ -49,6 +53,22 @@ pub struct SharedState {
     pub(crate) decks: [DeckShared; NUM_DECKS],
     pub(crate) master_peak: [AtomicF32; 2],
     pub(crate) sample_rate: AtomicU32,
+    pub(crate) crossfader: AtomicF32,
+    pub(crate) cue_mix: AtomicF32,
+    pub(crate) master_db: AtomicF32,
+}
+
+/// Mixer settings shared by both decks, so a UI can follow changes made on
+/// a hardware controller.
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+pub struct MixerSnapshot {
+    /// -1.0 (deck A) ..= 1.0 (deck B).
+    pub crossfader: f32,
+    /// Headphones: 0.0 cue only ..= 1.0 master only.
+    pub cue_mix: f32,
+    pub master_db: f32,
 }
 
 /// A point-in-time copy of one deck's state.
@@ -72,6 +92,14 @@ pub struct DeckSnapshot {
     pub generation: u64,
     /// Peak level since the last block, 0.0..=1.0+.
     pub peak: f32,
+    /// Trim in dB.
+    pub gain_db: f32,
+    /// EQ low, mid, high in dB.
+    pub eq_db: [f32; 3],
+    /// Channel fader, 0.0..=1.0.
+    pub fader: f32,
+    /// Headphone cue on.
+    pub pfl: bool,
 }
 
 impl SharedState {
@@ -88,6 +116,18 @@ impl SharedState {
             bpm: d.bpm.load(),
             generation: d.generation.load(Relaxed),
             peak: d.peak.load(),
+            gain_db: d.gain_db.load(),
+            eq_db: std::array::from_fn(|b| d.eq_db[b].load()),
+            fader: d.fader.load(),
+            pfl: d.pfl.load(Relaxed),
+        }
+    }
+
+    pub fn mixer(&self) -> MixerSnapshot {
+        MixerSnapshot {
+            crossfader: self.crossfader.load(),
+            cue_mix: self.cue_mix.load(),
+            master_db: self.master_db.load(),
         }
     }
 
