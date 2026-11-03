@@ -6,12 +6,17 @@
 //! and faders are 14-bit: the MSB arrives on CC `n`, then the LSB on
 //! CC `n + 0x20`.
 //!
-//! Not mapped yet: performance pads, loops, beat FX, CFX knobs (the engine
-//! has no filter yet). The headphone level and master level knobs work in
+//! The performance pads send on their own channels: 8 and 9 (plain and
+//! with SHIFT) for deck 1, 10 and 11 for deck 2, with a different note
+//! range for each pad mode. The controller switches pad modes itself;
+//! hot cue, beat loop and beat jump modes are mapped.
+//!
+//! Not mapped yet: the other pad modes, beat FX, CFX knobs (the engine has
+//! no filter yet). The headphone level and master level knobs work in
 //! the controller's own sound card and send no MIDI.
 
 use dj_engine::dsp::{EQ_KILL_DB, EQ_MAX_DB};
-use dj_engine::{Command, DeckId, EqBand, NUM_DECKS};
+use dj_engine::{Command, DeckId, EqBand, HOT_CUES, NUM_DECKS};
 
 use crate::{Action, Mapping, State};
 
@@ -29,6 +34,29 @@ const JOG_TOUCH_SHIFT: u8 = 0x67;
 const SYNC: u8 = 0x58;
 const SYNC_SHIFT: u8 = 0x5C;
 const HEADPHONE_CUE: u8 = 0x54;
+const LOOP_IN: u8 = 0x10;
+const LOOP_OUT: u8 = 0x11;
+/// SHIFT + LOOP IN: the "4BEAT" printed under the button.
+const LOOP_4_BEAT: u8 = 0x4C;
+const RELOOP_EXIT: u8 = 0x4D;
+/// CUE/LOOP CALL ◀ and ▶: halve and double the loop.
+const LOOP_HALVE: u8 = 0x51;
+const LOOP_DOUBLE: u8 = 0x53;
+/// SHIFT + CUE/LOOP CALL ◀ and ▶: beat jump by the loop size.
+const JUMP_BACK: u8 = 0x3E;
+const JUMP_FORWARD: u8 = 0x3D;
+
+/// MIDI channel (0-based) of deck 1's pads; SHIFT adds 1, deck 2 adds 2.
+const PAD_CH: u8 = 7;
+// First note of each pad mode; pads 1 to 8 follow.
+const PAD_HOT_CUE: u8 = 0x00;
+const PAD_BEAT_JUMP: u8 = 0x20;
+const PAD_BEAT_LOOP: u8 = 0x60;
+/// Loop length of each pad in beat loop mode, in beats.
+const PAD_LOOP_BEATS: [f64; 8] = [0.25, 0.5, 1.0, 2.0, 4.0, 8.0, 16.0, 32.0];
+/// Jump of each pad in beat jump mode, in beats: back on the left pad of
+/// each pair, forward on the right.
+const PAD_JUMP_BEATS: [f64; 8] = [-1.0, 1.0, -2.0, 2.0, -4.0, 4.0, -8.0, 8.0];
 
 // Deck CCs (MSB; LSB is +0x20).
 const TEMPO: u8 = 0x00;
@@ -76,19 +104,15 @@ struct DeckState {
     sent_rate: Option<f64>,
 }
 
-/// LED state last sent, to send only changes.
-#[derive(Debug, Default, Clone, Copy, PartialEq)]
-struct DeckLeds {
-    play: bool,
-    cue: bool,
-    headphone_cue: bool,
-}
+/// One LED: status byte (note on + channel), note, lit.
+type Led = (u8, u8, bool);
 
 pub struct Flx4 {
     decks: [DeckState; NUM_DECKS],
     /// MSBs waiting for their LSB, by (channel, CC).
     msb: [[u8; 0x20]; 16],
-    leds: Option<[DeckLeds; NUM_DECKS]>,
+    /// LED state last sent, to send only changes.
+    leds: Option<Vec<Led>>,
 }
 
 impl Default for Flx4 {
@@ -161,8 +185,43 @@ impl Flx4 {
                 deck,
                 on: !state.decks[d].pfl,
             },
+            (LOOP_IN, true) => Command::LoopIn { deck },
+            (LOOP_OUT, true) => Command::LoopOut { deck },
+            (LOOP_4_BEAT, true) => Command::BeatLoop { deck, beats: 4.0 },
+            (RELOOP_EXIT, true) => Command::ReloopExit { deck },
+            (LOOP_HALVE, true) => Command::LoopScale { deck, factor: 0.5 },
+            (LOOP_DOUBLE, true) => Command::LoopScale { deck, factor: 2.0 },
+            (JUMP_BACK, true) => Command::BeatJump {
+                deck,
+                beats: -state.decks[d].loop_beats,
+            },
+            (JUMP_FORWARD, true) => Command::BeatJump {
+                deck,
+                beats: state.decks[d].loop_beats,
+            },
             (JOG_TOUCH | JOG_TOUCH_SHIFT, true) => Command::ScratchStart { deck },
             (JOG_TOUCH | JOG_TOUCH_SHIFT, false) => Command::ScratchEnd { deck },
+            _ => return vec![],
+        };
+        vec![engine(cmd)]
+    }
+
+    /// A performance pad, in whichever mode the controller is in.
+    fn pad(d: usize, shift: bool, note: u8, pressed: bool) -> Vec<Action> {
+        let deck = deck_id(d);
+        let (mode, i) = (note & !0x07, (note & 0x07) as usize);
+        let cmd = match (mode, shift, pressed) {
+            (PAD_HOT_CUE, false, true) => Command::HotCuePress { deck, index: i },
+            (PAD_HOT_CUE, false, false) => Command::HotCueRelease { deck, index: i },
+            (PAD_HOT_CUE, true, true) => Command::HotCueClear { deck, index: i },
+            (PAD_BEAT_LOOP, _, true) => Command::BeatLoop {
+                deck,
+                beats: PAD_LOOP_BEATS[i],
+            },
+            (PAD_BEAT_JUMP, _, true) => Command::BeatJump {
+                deck,
+                beats: PAD_JUMP_BEATS[i],
+            },
             _ => return vec![],
         };
         vec![engine(cmd)]
@@ -282,42 +341,69 @@ impl Mapping for Flx4 {
         match ch as usize {
             d if d < NUM_DECKS && kind == NOTE_ON => self.deck_note(d, num, value > 0, state),
             d if d < NUM_DECKS && kind == CC => self.deck_cc(d, num, value, state),
+            c if kind == NOTE_ON && (PAD_CH..PAD_CH + 2 * NUM_DECKS as u8).contains(&(c as u8)) => {
+                let p = c as u8 - PAD_CH;
+                Self::pad((p / 2) as usize, p % 2 == 1, num, value > 0)
+            }
             _ if ch == GLOBAL_CH => self.global(kind, num, value),
             _ => vec![],
         }
     }
 
     fn leds(&mut self, state: &State) -> Vec<Vec<u8>> {
-        let now: [DeckLeds; NUM_DECKS] = std::array::from_fn(|d| {
-            let deck = &state.decks[d];
-            DeckLeds {
-                play: deck.playing,
-                cue: deck.loaded && !deck.playing && (deck.position - deck.cue).abs() < 0.01,
-                headphone_cue: deck.pfl,
-            }
-        });
-        let before = self.leds.replace(now);
-        let mut out = vec![];
-        for d in 0..NUM_DECKS {
-            let was = before.map(|b| b[d]);
-            let led = |note: u8, on: bool| vec![NOTE_ON | d as u8, note, if on { 0x7F } else { 0 }];
-            let n = now[d];
-            if was.map(|w| w.play) != Some(n.play) {
-                out.push(led(PLAY, n.play));
-            }
-            if was.map(|w| w.cue) != Some(n.cue) {
-                out.push(led(CUE, n.cue));
-            }
-            if was.map(|w| w.headphone_cue) != Some(n.headphone_cue) {
-                out.push(led(HEADPHONE_CUE, n.headphone_cue));
-            }
-        }
-        out
+        let now = all_leds(state);
+        let before = self.leds.replace(now.clone());
+        now.iter()
+            .enumerate()
+            .filter(|(i, led)| before.as_ref().map(|b| b[*i]) != Some(**led))
+            .map(|(_, &(status, note, on))| vec![status, note, if on { 0x7F } else { 0 }])
+            .collect()
     }
 
     fn reset_leds(&mut self) {
         self.leds = None;
     }
+}
+
+/// Every LED this mapping drives, in a fixed order.
+fn all_leds(state: &State) -> Vec<Led> {
+    let mut out = vec![];
+    for (d, deck) in state.decks.iter().enumerate() {
+        let ch = NOTE_ON | d as u8;
+        out.push((ch, PLAY, deck.playing));
+        out.push((
+            ch,
+            CUE,
+            deck.loaded && !deck.playing && (deck.position - deck.cue).abs() < 0.01,
+        ));
+        out.push((ch, HEADPHONE_CUE, deck.pfl));
+        for note in [LOOP_IN, LOOP_OUT, RELOOP_EXIT] {
+            out.push((ch, note, deck.looping));
+        }
+        let loop_beats = match (deck.looping, deck.loop_in, deck.loop_out) {
+            (true, Some(i), Some(o)) if deck.bpm > 0.0 => (o - i) * deck.bpm / 60.0,
+            _ => 0.0,
+        };
+        let gridded = deck.loaded && deck.bpm > 0.0;
+        // Pads light the same with or without SHIFT held.
+        let pads = PAD_CH + 2 * d as u8;
+        for status in [NOTE_ON | pads, NOTE_ON | (pads + 1)] {
+            for i in 0..HOT_CUES.min(8) {
+                out.push((status, PAD_HOT_CUE + i as u8, deck.hot_cues[i].is_some()));
+            }
+            for (i, beats) in PAD_LOOP_BEATS.iter().enumerate() {
+                out.push((
+                    status,
+                    PAD_BEAT_LOOP + i as u8,
+                    (loop_beats - beats).abs() < 1e-3,
+                ));
+            }
+            for i in 0..8 {
+                out.push((status, PAD_BEAT_JUMP + i, gridded));
+            }
+        }
+    }
+    out
 }
 
 fn engine(cmd: Command) -> Action {
@@ -521,13 +607,131 @@ mod tests {
         let mut m = Flx4::new();
         let mut s = st();
         // First call sends everything.
-        assert_eq!(m.leds(&s).len(), 6);
+        let all = m.leds(&s).len();
+        assert!(all > 6);
         assert!(m.leds(&s).is_empty());
         s.decks[1].playing = true;
         // Play on, cue off (no longer paused at the cue point).
         assert_eq!(m.leds(&s), vec![vec![0x91, PLAY, 0x7F], vec![0x91, CUE, 0]]);
         m.reset_leds();
-        assert_eq!(m.leds(&s).len(), 6);
+        assert_eq!(m.leds(&s).len(), all);
+    }
+
+    #[test]
+    fn hot_cue_pads() {
+        let mut m = Flx4::new();
+        let s = st();
+        assert!(matches!(
+            one(&mut m, [0x97, 0x02, 0x7F], &s),
+            Command::HotCuePress {
+                deck: DeckId::A,
+                index: 2
+            }
+        ));
+        assert!(matches!(
+            one(&mut m, [0x87, 0x02, 0x00], &s),
+            Command::HotCueRelease {
+                deck: DeckId::A,
+                index: 2
+            }
+        ));
+        // SHIFT + pad clears, on deck 2's shifted channel.
+        assert!(matches!(
+            one(&mut m, [0x9A, 0x07, 0x7F], &s),
+            Command::HotCueClear {
+                deck: DeckId::B,
+                index: 7
+            }
+        ));
+        assert!(cmds(m.handle(&[0x9A, 0x07, 0x00], &s)).is_empty());
+    }
+
+    #[test]
+    fn beat_loop_and_beat_jump_pads() {
+        let mut m = Flx4::new();
+        let s = st();
+        assert!(matches!(
+            one(&mut m, [0x99, 0x60, 0x7F], &s),
+            Command::BeatLoop { deck: DeckId::B, beats } if beats == 0.25
+        ));
+        assert!(matches!(
+            one(&mut m, [0x97, 0x67, 0x7F], &s),
+            Command::BeatLoop { deck: DeckId::A, beats } if beats == 32.0
+        ));
+        assert!(matches!(
+            one(&mut m, [0x97, 0x24, 0x7F], &s),
+            Command::BeatJump { beats, .. } if beats == -4.0
+        ));
+        assert!(matches!(
+            one(&mut m, [0x97, 0x27, 0x7F], &s),
+            Command::BeatJump { beats, .. } if beats == 8.0
+        ));
+    }
+
+    #[test]
+    fn loop_section() {
+        let mut m = Flx4::new();
+        let mut s = st();
+        s.decks[1].loop_beats = 8.0;
+        assert!(matches!(
+            one(&mut m, [0x90, LOOP_IN, 0x7F], &s),
+            Command::LoopIn { .. }
+        ));
+        assert!(matches!(
+            one(&mut m, [0x90, LOOP_OUT, 0x7F], &s),
+            Command::LoopOut { .. }
+        ));
+        assert!(matches!(
+            one(&mut m, [0x91, RELOOP_EXIT, 0x7F], &s),
+            Command::ReloopExit { deck: DeckId::B }
+        ));
+        assert!(matches!(
+            one(&mut m, [0x90, LOOP_4_BEAT, 0x7F], &s),
+            Command::BeatLoop { beats, .. } if beats == 4.0
+        ));
+        assert!(matches!(
+            one(&mut m, [0x90, LOOP_HALVE, 0x7F], &s),
+            Command::LoopScale { factor, .. } if factor == 0.5
+        ));
+        assert!(matches!(
+            one(&mut m, [0x90, LOOP_DOUBLE, 0x7F], &s),
+            Command::LoopScale { factor, .. } if factor == 2.0
+        ));
+        assert!(matches!(
+            one(&mut m, [0x91, JUMP_BACK, 0x7F], &s),
+            Command::BeatJump { deck: DeckId::B, beats } if beats == -8.0
+        ));
+        assert!(matches!(
+            one(&mut m, [0x91, JUMP_FORWARD, 0x7F], &s),
+            Command::BeatJump { deck: DeckId::B, beats } if beats == 8.0
+        ));
+    }
+
+    #[test]
+    fn pad_and_loop_leds() {
+        let mut m = Flx4::new();
+        let mut s = st();
+        m.leds(&s);
+        s.decks[0].hot_cues[1] = Some(12.0);
+        // Hot cue 2 lights with and without SHIFT.
+        assert_eq!(
+            m.leds(&s),
+            vec![vec![0x97, 0x01, 0x7F], vec![0x98, 0x01, 0x7F]]
+        );
+        s.decks[1].bpm = 120.0;
+        s.decks[1].looping = true;
+        s.decks[1].loop_in = Some(10.0);
+        s.decks[1].loop_out = Some(12.0);
+        let on: Vec<_> = m.leds(&s).into_iter().filter(|l| l[2] == 0x7F).collect();
+        for led in [
+            vec![0x91, LOOP_IN, 0x7F],
+            vec![0x91, RELOOP_EXIT, 0x7F],
+            vec![0x99, 0x64, 0x7F], // the 4-beat loop pad
+            vec![0x9A, 0x64, 0x7F],
+            vec![0x99, 0x20, 0x7F], // beat jump works now there's a grid
+        ] {
+            assert!(on.contains(&led), "{led:02X?} not in {on:02X?}");
+        }
     }
 
     #[test]

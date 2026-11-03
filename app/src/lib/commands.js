@@ -29,6 +29,20 @@ export const keys = {
   'deck.1.pfl': { code: 'KeyH', label: 'H' },
   'deck.0.where': { code: 'KeyT', label: 'T' },
   'deck.1.where': { code: 'KeyY', label: 'Y' },
+  // Hot cues 1 to 4: number row, 1-4 for deck A and 7-0 for deck B. Hold
+  // on a paused deck to preview; ⇧ clears.
+  ...hotCueKeys(0, ['Digit1', 'Digit2', 'Digit3', 'Digit4']),
+  ...hotCueKeys(1, ['Digit7', 'Digit8', 'Digit9', 'Digit0']),
+  'deck.0.loop': { code: 'KeyR', label: 'R' },
+  'deck.1.loop': { code: 'KeyU', label: 'U' },
+  'deck.0.loopHalve': { code: 'KeyD', label: 'D' },
+  'deck.0.loopDouble': { code: 'KeyF', label: 'F' },
+  'deck.1.loopHalve': { code: 'KeyJ', label: 'J' },
+  'deck.1.loopDouble': { code: 'KeyK', label: 'K' },
+  'deck.0.jumpBack': { code: 'KeyC', label: 'C' },
+  'deck.0.jumpForward': { code: 'KeyV', label: 'V' },
+  'deck.1.jumpBack': { code: 'KeyN', label: 'N' },
+  'deck.1.jumpForward': { code: 'KeyM', label: 'M' },
   'deck.0.load': { code: 'ArrowLeft', shift: true, label: '⇧←' },
   'deck.1.load': { code: 'ArrowRight', shift: true, label: '⇧→' },
   'mixer.xfLeft': { code: 'BracketLeft', label: '[' },
@@ -58,6 +72,11 @@ const NAMES = {
   pfl: 'Headphone cue',
   where: 'Read out position',
   load: 'Load selected track',
+  loop: 'Loop on / off',
+  loopHalve: 'Halve loop',
+  loopDouble: 'Double loop',
+  jumpBack: 'Beat jump back',
+  jumpForward: 'Beat jump forward',
   'mixer.xfLeft': 'Crossfader left',
   'mixer.xfRight': 'Crossfader right',
   'mixer.xfHardLeft': 'Crossfader all the way left',
@@ -79,6 +98,8 @@ const NAMES = {
 export function commandName(id) {
   const action = id.startsWith('deck.') ? id.split('.').slice(2).join('.') : id;
   if (NAMES[action]) return NAMES[action];
+  const hot = action.match(/^hotCue(Clear)?\.(\d+)$/);
+  if (hot) return hot[1] ? `Clear hot cue ${+hot[2] + 1}` : `Hot cue ${+hot[2] + 1} (hold to preview)`;
   // Commands added without a name still get a readable one.
   const words = action.split('.').pop().replace(/([a-z])([A-Z0-9])/g, '$1 $2').toLowerCase();
   return words.charAt(0).toUpperCase() + words.slice(1);
@@ -90,6 +111,16 @@ export function commandName(id) {
  */
 export function binding(id) {
   return id in keymap.overrides ? keymap.overrides[id] : (keys[id] ?? null);
+}
+
+function hotCueKeys(deck, codes) {
+  const out = {};
+  codes.forEach((code, i) => {
+    const label = code.slice(-1);
+    out[`deck.${deck}.hotCue.${i}`] = { code, label, hold: true };
+    out[`deck.${deck}.hotCueClear.${i}`] = { code, shift: true, label: `⇧${label}` };
+  });
+  return out;
 }
 
 /** The key label for a command, for tooltips ("" if it has none). */
