@@ -24,6 +24,10 @@ A free, open-source DJ app that is fast, modern and uncluttered. No paywalled
   snap to the beatgrid, halve and double, and wrap without clicks. Beat jump
   moves by the loop size and carries an active loop with it. Cues are kept
   until the track is unloaded; saving them with the library comes later.
+- **Quantize** (on by default; the Quantize button in the mixer, or B):
+  hot cues, the cue point, loop in and out snap to the nearest beat, and a
+  hot cue or reloop pressed mid-play lands at the same point in the beat, so
+  the mix stays in time. Off, everything happens exactly at the play head.
 - **Mixer:** trim, 3-band isolator EQ with full kills, channel faders,
   constant-power crossfader, master gain, headphone cue with cue/master blend
   (on interfaces with 4+ outputs, headphones go to channels 3-4).
@@ -40,7 +44,10 @@ A free, open-source DJ app that is fast, modern and uncluttered. No paywalled
   drawn on the GPU with WebGL2: scrolling view per deck plus a full-track
   overview you can click to jump.
 - **Library:** add music folders, instant search across artist, title and
-  folder, load with double-click, Enter, or Shift+←/→.
+  folder, load with double-click, Enter, or Shift+←/→. Columns for title,
+  artist, BPM, key, length and folder; click a heading to sort (again to
+  reverse). BPM, key and length are found in the background, one track at
+  a time, and kept until you quit.
 - **Safety:** loading onto a playing deck is blocked.
 - **Controller: Pioneer DDJ-FLX4.** Plug it in (before or after starting the
   app) and it connects by itself; audio goes through its sound card, with
@@ -80,6 +87,7 @@ shape on AZERTY, QWERTZ and Dvorak.
 
 | Key | Action |
 | --- | --- |
+| B | Quantize on / off |
 | [ / ] | Crossfader left / right (Shift snaps to the end) |
 | − / = | Zoom waveforms out / in (or ⌘ + scroll on a waveform) |
 | Ctrl/⌘ F | Search the library |

@@ -19,7 +19,7 @@ use dj_engine::{
 };
 use serde::{Deserialize, Serialize};
 use tauri::ipc::Response;
-use tauri::State;
+use tauri::{Manager, State};
 
 /// Keeps whichever output is running alive for the app's lifetime.
 enum Output {
@@ -165,6 +165,9 @@ enum Control {
         deck: usize,
         on: bool,
     },
+    SetQuantize {
+        on: bool,
+    },
     ScratchStart {
         deck: usize,
     },
@@ -305,6 +308,7 @@ impl Control {
                 deck: deck_id(deck)?,
                 on,
             },
+            C::SetQuantize { on } => Command::SetQuantize { on },
             C::ScratchStart { deck } => Command::ScratchStart {
                 deck: deck_id(deck)?,
             },
@@ -495,7 +499,9 @@ fn use_default_output(state: State<'_, AppState>) {
 /// it into the deck.
 #[tauri::command]
 async fn load_track(
+    app: tauri::AppHandle,
     state: State<'_, AppState>,
+    library: State<'_, library::Library>,
     deck: usize,
     path: String,
 ) -> Result<TrackInfo, String> {
@@ -505,6 +511,7 @@ async fn load_track(
         .map_err(|e| e.to_string())?
         .map_err(|e| e.to_string())?;
     let track = Arc::new(track);
+    library.loaded(&app, &track);
     let info = TrackInfo {
         title: track.title(),
         path: track
@@ -591,6 +598,8 @@ pub fn run() {
             move |app| {
                 controller::start(app.handle(), engine, shared);
                 log_audio_stats(app.handle().clone());
+                app.state::<library::Library>()
+                    .start_analyzer(app.handle().clone());
                 Ok(())
             }
         })

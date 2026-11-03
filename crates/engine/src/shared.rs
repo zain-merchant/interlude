@@ -70,6 +70,7 @@ pub struct SharedState {
     pub(crate) crossfader: AtomicF32,
     pub(crate) cue_mix: AtomicF32,
     pub(crate) master_db: AtomicF32,
+    pub(crate) quantize: AtomicBool,
 }
 
 /// Mixer settings shared by both decks, so a UI can follow changes made on
@@ -83,6 +84,8 @@ pub struct MixerSnapshot {
     /// Headphones: 0.0 cue only ..= 1.0 master only.
     pub cue_mix: f32,
     pub master_db: f32,
+    /// Quantize on, for both decks.
+    pub quantize: bool,
 }
 
 /// A deck's beat FX unit.
@@ -185,6 +188,7 @@ impl SharedState {
             crossfader: self.crossfader.load(),
             cue_mix: self.cue_mix.load(),
             master_db: self.master_db.load(),
+            quantize: self.quantize.load(Relaxed),
         }
     }
 

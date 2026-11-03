@@ -52,6 +52,9 @@ pub fn new_engine(sample_rate: u32) -> (Engine, EngineHandle) {
     shared
         .sample_rate
         .store(sample_rate, std::sync::atomic::Ordering::Relaxed);
+    shared
+        .quantize
+        .store(true, std::sync::atomic::Ordering::Relaxed);
     for d in &shared.decks {
         d.rate.store(1.0);
         d.fader.store(1.0);
@@ -170,6 +173,14 @@ impl Engine {
                 self.decks[deck.index()].keylock = on;
                 self.shared.decks[deck.index()]
                     .keylock
+                    .store(on, std::sync::atomic::Ordering::Relaxed);
+            }
+            SetQuantize { on } => {
+                for d in &mut self.decks {
+                    d.quantize = on;
+                }
+                self.shared
+                    .quantize
                     .store(on, std::sync::atomic::Ordering::Relaxed);
             }
             ScratchStart { deck } => self.decks[deck.index()].scratch_start(),
