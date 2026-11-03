@@ -285,6 +285,8 @@ impl Library {
     /// the library shows it without decoding the file again, and returns
     /// its saved cue points to put back on the deck.
     pub fn loaded(&self, app: &AppHandle, deck: usize, track: &dj_engine::Track) -> SavedCues {
+        // The deck still holds the track being replaced: keep its last change.
+        self.save_cues(deck);
         let Some(path) = &track.path else {
             self.unwatch(deck);
             return SavedCues::default();
