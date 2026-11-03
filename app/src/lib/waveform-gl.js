@@ -196,6 +196,22 @@ export class WaveformGL {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
     this.count = bytes.length >= 4 ? count : 0;
+    this.binsVersion = (this.binsVersion ?? 0) + 1;
+  }
+
+  /** True if `view` draws exactly what the last draw did. Remembers it. */
+  unchanged(view) {
+    const key = [
+      this.canvas.width, this.canvas.height, window.devicePixelRatio || 1, this.binsVersion,
+      view.start, view.perPx, view.playhead, view.cue, !!view.centerLine,
+      view.beatLen ?? 0, view.firstBeat ?? 0, view.loopIn ?? -1, view.loopOut ?? -1, !!view.looping,
+      ...(view.hotCues ?? []),
+    ];
+    const last = this.lastKey;
+    const same = !!last && view.colors === this.lastColors && last.length === key.length && key.every((v, i) => v === last[i]);
+    this.lastKey = key;
+    this.lastColors = view.colors;
+    return same;
   }
 
   /** Matches the drawing buffer to the canvas's CSS size and pixel ratio. */
@@ -221,6 +237,9 @@ export class WaveformGL {
   draw(view) {
     const gl = this.gl;
     this.resize();
+    // A paused deck, or an overview whose play head hasn't moved, looks
+    // the same as last frame: keep the picture and skip the GPU work.
+    if (this.unchanged(view)) return;
     gl.viewport(0, 0, this.canvas.width, this.canvas.height);
     gl.useProgram(this.prog);
     gl.activeTexture(gl.TEXTURE0);

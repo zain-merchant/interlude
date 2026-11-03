@@ -50,28 +50,120 @@ export function onFrame(fn) {
   return () => frameListeners.delete(fn);
 }
 
+/**
+ * Copies `src` into the reactive `target` field by field, writing only what
+ * changed. Replacing a whole deck object every frame would wake every piece
+ * of UI that reads any of its fields; this wakes only the ones whose value
+ * moved (mostly the play position). Returns the value to store when `target`
+ * can't be patched in place (a different shape, or not an object).
+ */
+function patch(target, src) {
+  if (target === null || src === null || typeof target !== 'object' || typeof src !== 'object' || Array.isArray(target) !== Array.isArray(src)) {
+    return src;
+  }
+  if (Array.isArray(src) && target.length !== src.length) return src;
+  for (const k in src) {
+    const v = src[k];
+    const old = target[k];
+    if (old === v) continue;
+    const next = patch(old, v);
+    if (next !== old) {
+      target[k] = next;
+      changed = true;
+    }
+  }
+  if (!Array.isArray(src)) {
+    for (const k in target) {
+      if (!(k in src)) {
+        delete target[k];
+        changed = true;
+      }
+    }
+  }
+  return target;
+}
+
+/** Sets `obj[key]` to `value`, patching in place where it can. */
+function update(obj, key, value) {
+  const old = obj[key];
+  if (old === value) return;
+  const next = patch(old, value);
+  if (next !== old) {
+    obj[key] = next;
+    changed = true;
+  }
+}
+
+/** Set by `patch` and `update` when they write anything. */
+let changed = false;
+
+/**
+ * While nothing plays, nothing is being dragged and nothing has changed
+ * for IDLE_AFTER polls, the frame loop stops and the engine is polled on a
+ * timer every IDLE_POLL_MS instead. A running animation-frame loop keeps
+ * the browser rendering every frame even when nothing on screen moves,
+ * which on macOS costs about a third of a core across the app, WebKit and
+ * GPU processes. Any change (a controller fader, a key press), anything
+ * playing, or any input goes straight back to the frame loop.
+ */
+const IDLE_POLL_MS = 50;
+/** Unchanged polls in a row before going idle. */
+const IDLE_AFTER = 30;
+let quietPolls = 0;
+/** Meter levels below this (-60 dBFS) show as empty, so settle them at 0. */
+const SILENT = 1e-3;
+const decay = (peak, level) => {
+  const l = Math.max(peak, level * 0.86);
+  return l < SILENT ? 0 : l;
+};
+
 let polling = false;
 let lastFrame = performance.now();
+/** True while the frame loop is stopped and the idle timer polls. */
+let idle = false;
+let idleTimer = null;
+
+function poll() {
+  if (polling) return;
+  polling = true;
+  backend
+    .state()
+    .then((s) => {
+      changed = false;
+      for (let i = 0; i < 2; i++) update(engine.decks, i, s.decks[i]);
+      update(engine, 'mixer', s.mixer ?? null);
+      update(engine, 'recording', s.recording ?? null);
+      update(engine, 'audio', s.audio ?? null);
+      for (let i = 0; i < 2; i++) update(engine.deckLevels, i, decay(s.deckPeaks[i], engine.deckLevels[i]));
+      for (let i = 0; i < 2; i++) update(engine.masterLevels, i, decay(s.masterPeak[i], engine.masterLevels[i]));
+      const playing = s.decks.some((d) => d.playing) || s.recording?.active;
+      quietPolls = changed || playing ? 0 : quietPolls + 1;
+      if (idle && quietPolls === 0) wake();
+    })
+    .catch(() => {})
+    .finally(() => (polling = false));
+}
+
+function idleTick() {
+  idleTimer = setTimeout(idleTick, IDLE_POLL_MS);
+  poll();
+}
+
+/** Restarts the frame loop if it's idle, and keeps it running a while. */
+export function wake() {
+  quietPolls = 0;
+  if (!idle) return;
+  idle = false;
+  clearTimeout(idleTimer);
+  idleTimer = null;
+  lastFrame = performance.now();
+  requestAnimationFrame(frame);
+}
 
 function frame(now) {
   const dt = Math.min(0.1, (now - lastFrame) / 1000);
   lastFrame = now;
-
-  if (!polling) {
-    polling = true;
-    backend
-      .state()
-      .then((s) => {
-        for (let i = 0; i < 2; i++) engine.decks[i] = s.decks[i];
-        engine.mixer = s.mixer ?? null;
-        engine.recording = s.recording ?? null;
-        engine.audio = s.audio ?? null;
-        for (let i = 0; i < 2; i++) engine.deckLevels[i] = Math.max(s.deckPeaks[i], engine.deckLevels[i] * 0.86);
-        for (let i = 0; i < 2; i++) engine.masterLevels[i] = Math.max(s.masterPeak[i], engine.masterLevels[i] * 0.86);
-      })
-      .catch(() => {})
-      .finally(() => (polling = false));
-  }
+  poll();
 
   for (let i = 0; i < 2; i++) {
     const d = engine.decks[i];
@@ -94,11 +186,24 @@ function frame(now) {
   }
 
   for (const fn of frameListeners) fn(now);
-  requestAnimationFrame(frame);
+
+  const still = quietPolls >= IDLE_AFTER && !scrubs[0] && !scrubs[1] && !engine.decks.some((d) => d.playing);
+  if (still) {
+    idle = true;
+    idleTimer = setTimeout(idleTick, IDLE_POLL_MS);
+  } else {
+    requestAnimationFrame(frame);
+  }
 }
 
 export function startEngineLoop() {
   requestAnimationFrame(frame);
+  // Input can change what's drawn (zoom, resize, settings) without
+  // changing engine state, so any of it restarts the frame loop.
+  for (const type of ['pointerdown', 'keydown', 'wheel', 'resize', 'focus']) {
+    window.addEventListener(type, wake, { capture: true, passive: true });
+  }
+  document.addEventListener('visibilitychange', wake);
 }
 
 /** Loads a library track into a deck. */
@@ -107,6 +212,7 @@ export async function loadTrack(deck, item) {
   const bins = await backend.waveform(deck);
   tracks[deck] = { ...info, title: item.title || info.title, artist: item.artist ?? '', bins };
   displayPos[deck] = 0;
+  wake();
 }
 
 /** Empties a deck. */
@@ -114,6 +220,7 @@ export async function ejectTrack(deck) {
   await backend.control({ type: 'eject', deck });
   tracks[deck] = null;
   displayPos[deck] = 0;
+  wake();
 }
 
 /** What a deck holds now, so it can be put back: the track, where it was and its cue point. */
@@ -133,7 +240,11 @@ export async function restoreDeck(deck, snap) {
   displayPos[deck] = snap.position;
 }
 
-export const control = (cmd) => backend.control(cmd).catch((e) => console.error(e));
+export const control = (cmd) => {
+  // Show the result of a command at full rate.
+  wake();
+  return backend.control(cmd).catch((e) => console.error(e));
+};
 
 /**
  * Starts a hand scrub. With `scratch`, the deck plays what passes under the

@@ -260,6 +260,40 @@ fn decodes_wav_files() {
 }
 
 #[test]
+fn analysis_while_decoding_matches_analysis_after() {
+    // A file is analyzed in pieces as it decodes; the result must be the
+    // same as analyzing the whole track at once.
+    let dir = std::env::temp_dir().join(format!("dj-engine-stream-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let path = dir.join("drums.wav");
+    let spec = hound::WavSpec {
+        channels: 2,
+        sample_rate: SR,
+        bits_per_sample: 32,
+        sample_format: hound::SampleFormat::Float,
+    };
+    let mut w = hound::WavWriter::create(&path, spec).unwrap();
+    // Drums over an A minor chord, so there's a tempo and a key to find.
+    for (i, v) in drums(124.0, 30.0, 0.1).into_iter().enumerate() {
+        let t = (i / 2) as f32 / SR as f32;
+        let chord: f32 = [220.0, 261.63, 329.63]
+            .iter()
+            .map(|f| (2.0 * std::f32::consts::PI * f * t).sin() * 0.1)
+            .sum();
+        w.write_sample(v + chord).unwrap();
+    }
+    w.finalize().unwrap();
+
+    let streamed = Track::load(&path).unwrap();
+    let whole = Track::from_stereo(streamed.samples.clone(), streamed.sample_rate);
+    assert!(streamed.beatgrid.is_some() && streamed.key.is_some());
+    assert_eq!(streamed.waveform.bins, whole.waveform.bins);
+    assert_eq!(streamed.beatgrid, whole.beatgrid);
+    assert_eq!(streamed.key, whole.key);
+    std::fs::remove_dir_all(dir).ok();
+}
+
+#[test]
 fn missing_file_is_an_error_not_a_panic() {
     assert!(Track::load("/definitely/not/here.mp3").is_err());
 }

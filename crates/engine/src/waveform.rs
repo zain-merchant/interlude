@@ -20,6 +20,90 @@ pub struct Bin {
     pub high: u8,
 }
 
+/// Builds a [`Waveform`] from audio fed in pieces of any size, so a track
+/// can be analyzed while it is still being decoded. The result is the same
+/// as [`Waveform::analyze`] on the whole track.
+pub(crate) struct WaveformBuilder {
+    sr: f64,
+    low_lp: [Biquad; 2],
+    high_hp: [Biquad; 2],
+    /// The bin being filled: peak, low, mid, high, and frames so far.
+    acc: [f32; 4],
+    filled: usize,
+    bins: Vec<Bin>,
+}
+
+impl WaveformBuilder {
+    pub fn new(sample_rate: u32) -> Self {
+        let sr = sample_rate as f64;
+        Self {
+            sr,
+            low_lp: [
+                Biquad::lowpass(250.0, 0.707, sr),
+                Biquad::lowpass(250.0, 0.707, sr),
+            ],
+            high_hp: [
+                Biquad::highpass(2_500.0, 0.707, sr),
+                Biquad::highpass(2_500.0, 0.707, sr),
+            ],
+            acc: [0.0; 4],
+            filled: 0,
+            bins: Vec::new(),
+        }
+    }
+
+    /// Adds interleaved stereo samples (an even number).
+    pub fn push(&mut self, stereo: &[f32]) {
+        self.bins
+            .reserve((self.filled + stereo.len() / 2) / FRAMES_PER_BIN);
+        let [mut peak, mut lo, mut mi, mut hi] = self.acc;
+        let mut frames = stereo.as_chunks::<2>().0;
+        while !frames.is_empty() {
+            // The rest of the current bin, or as much of it as there is.
+            let (part, rest) = frames.split_at((FRAMES_PER_BIN - self.filled).min(frames.len()));
+            frames = rest;
+            for f in part {
+                let x = 0.5 * (f[0] + f[1]);
+                let l = self.low_lp[0].process(x);
+                let l = self.low_lp[1].process(l);
+                let h = self.high_hp[0].process(x);
+                let h = self.high_hp[1].process(h);
+                let m = x - l - h;
+                peak = peak.max(f[0].abs()).max(f[1].abs());
+                lo = lo.max(l.abs());
+                mi = mi.max(m.abs());
+                hi = hi.max(h.abs());
+            }
+            self.filled += part.len();
+            if self.filled == FRAMES_PER_BIN {
+                self.bins.push(bin([peak, lo, mi, hi]));
+                (peak, lo, mi, hi) = (0.0, 0.0, 0.0, 0.0);
+                self.filled = 0;
+            }
+        }
+        self.acc = [peak, lo, mi, hi];
+    }
+
+    pub fn finish(mut self) -> Waveform {
+        if self.filled > 0 {
+            self.bins.push(bin(self.acc));
+        }
+        Waveform {
+            bins_per_sec: self.sr / FRAMES_PER_BIN as f64,
+            bins: self.bins,
+        }
+    }
+}
+
+fn bin([peak, lo, mi, hi]: [f32; 4]) -> Bin {
+    Bin {
+        peak: to_u8(peak),
+        low: to_u8(lo),
+        mid: to_u8(mi),
+        high: to_u8(hi),
+    }
+}
+
 #[derive(Debug, Clone, Default)]
 pub struct Waveform {
     /// Bins per second of audio.
@@ -34,43 +118,9 @@ fn to_u8(x: f32) -> u8 {
 
 impl Waveform {
     pub fn analyze(stereo: &[f32], sample_rate: u32) -> Self {
-        let sr = sample_rate as f64;
-        let mut low_lp = [
-            Biquad::lowpass(250.0, 0.707, sr),
-            Biquad::lowpass(250.0, 0.707, sr),
-        ];
-        let mut high_hp = [
-            Biquad::highpass(2_500.0, 0.707, sr),
-            Biquad::highpass(2_500.0, 0.707, sr),
-        ];
-
-        let frames = stereo.len() / 2;
-        let mut bins = Vec::with_capacity(frames.div_ceil(FRAMES_PER_BIN));
-        for chunk in stereo.chunks(FRAMES_PER_BIN * 2) {
-            let (mut peak, mut lo, mut mi, mut hi) = (0f32, 0f32, 0f32, 0f32);
-            for f in chunk.as_chunks::<2>().0 {
-                let x = 0.5 * (f[0] + f[1]);
-                let l = low_lp[0].process(x);
-                let l = low_lp[1].process(l);
-                let h = high_hp[0].process(x);
-                let h = high_hp[1].process(h);
-                let m = x - l - h;
-                peak = peak.max(f[0].abs()).max(f[1].abs());
-                lo = lo.max(l.abs());
-                mi = mi.max(m.abs());
-                hi = hi.max(h.abs());
-            }
-            bins.push(Bin {
-                peak: to_u8(peak),
-                low: to_u8(lo),
-                mid: to_u8(mi),
-                high: to_u8(hi),
-            });
-        }
-        Self {
-            bins_per_sec: sr / FRAMES_PER_BIN as f64,
-            bins,
-        }
+        let mut b = WaveformBuilder::new(sample_rate);
+        b.push(stereo);
+        b.finish()
     }
 
     /// Downsamples to `n` bins (max per group) for the full-track overview.

@@ -10,7 +10,7 @@
 //! happening, and [`AudioOutput::use_default`] gives up waiting and moves to
 //! the system's default output instead.
 
-use std::sync::atomic::{AtomicU64, AtomicU8, Ordering};
+use std::sync::atomic::{AtomicU32, AtomicU64, AtomicU8, Ordering};
 use std::sync::{mpsc, Arc, Mutex};
 use std::thread::JoinHandle;
 use std::time::{Duration, Instant};
@@ -60,6 +60,7 @@ pub struct AudioOutput {
     msgs: Option<mpsc::Sender<Msg>>,
     thread: Option<JoinHandle<()>>,
     status: Arc<Mutex<OutputStatus>>,
+    stats: Arc<Stats>,
     /// The device the output first opened.
     pub device_name: String,
     /// The engine's sample rate. A reconnected device runs at the same rate.
@@ -70,6 +71,11 @@ pub struct AudioOutput {
 impl AudioOutput {
     pub fn status(&self) -> OutputStatus {
         self.status.lock().expect("status lock").clone()
+    }
+
+    /// How the stream is running: buffer size, latency and timing.
+    pub fn stats(&self) -> OutputStats {
+        self.stats.snapshot()
     }
 
     /// Stops waiting for a lost device and plays through the system default
@@ -97,6 +103,70 @@ impl Drop for AudioOutput {
 /// DJ controllers and interfaces), the headphone cue goes to channels 3-4.
 pub fn start_default() -> Result<(AudioOutput, EngineHandle), OutputError> {
     start_preferring(&[])
+}
+
+/// Frames per callback asked of the device. Commands (a play press, a
+/// fader move) take effect at the start of the next callback, and a
+/// callback's audio is heard one buffer later, so this sets how quickly the
+/// app answers: 128 frames is 2.7 ms at 48 kHz. The device's own default is
+/// often 512 (10.7 ms). Set `OSS_DJ_BUFFER_FRAMES` to override, or to 0 to
+/// use the device default.
+pub const TARGET_BUFFER_FRAMES: u32 = 128;
+
+/// Timing of the running stream, measured on the audio thread.
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+pub struct OutputStats {
+    /// Frames in the last callback.
+    pub buffer_frames: u32,
+    /// From a callback starting to its first sample reaching the speakers,
+    /// as the driver predicts it, in ms. 0 if the driver doesn't say.
+    pub output_latency_ms: f32,
+    /// Longest time spent rendering one callback, in µs.
+    pub max_render_us: u32,
+    /// Callbacks that came more than one and a half buffers after the one
+    /// before: a sign the system starved the audio thread and it may have
+    /// dropped out.
+    pub late_callbacks: u64,
+}
+
+#[derive(Debug, Default)]
+struct Stats {
+    buffer_frames: AtomicU32,
+    latency_us: AtomicU32,
+    max_render_us: AtomicU32,
+    late: AtomicU64,
+}
+
+impl Stats {
+    fn snapshot(&self) -> OutputStats {
+        OutputStats {
+            buffer_frames: self.buffer_frames.load(Ordering::Relaxed),
+            output_latency_ms: self.latency_us.load(Ordering::Relaxed) as f32 / 1000.0,
+            max_render_us: self.max_render_us.load(Ordering::Relaxed),
+            late_callbacks: self.late.load(Ordering::Relaxed),
+        }
+    }
+}
+
+fn target_buffer_frames() -> u32 {
+    std::env::var("OSS_DJ_BUFFER_FRAMES")
+        .ok()
+        .and_then(|v| v.trim().parse().ok())
+        .unwrap_or(TARGET_BUFFER_FRAMES)
+}
+
+/// The buffer size to ask for: the target, kept inside what the device
+/// supports. `None` means leave it to the device.
+fn buffer_size(supported: &cpal::SupportedBufferSize, target: u32) -> cpal::BufferSize {
+    match (supported, target) {
+        (_, 0) => cpal::BufferSize::Default,
+        (cpal::SupportedBufferSize::Range { min, max }, t) if min <= max => {
+            cpal::BufferSize::Fixed(t.clamp(*min, *max))
+        }
+        _ => cpal::BufferSize::Fixed(target),
+    }
 }
 
 /// What the error callback saw, read by the watching thread.
@@ -143,16 +213,45 @@ fn open(
     device: &cpal::Device,
     sample_rate: u32,
     engine: &Arc<Mutex<Engine>>,
+    stats: &Arc<Stats>,
 ) -> Result<Live, OutputError> {
     let default = device
         .default_output_config()
         .map_err(|e| OutputError::Device(e.to_string()))?;
     let channels = default.channels();
+    let wanted = buffer_size(default.buffer_size(), target_buffer_frames());
+    // Some drivers refuse a fixed size they claimed to support; the device
+    // default always works.
+    match open_with(device, channels, sample_rate, wanted, engine, stats) {
+        Err(e) if wanted != cpal::BufferSize::Default => {
+            eprintln!("audio: {wanted:?} refused ({e}); using the device default");
+            open_with(
+                device,
+                channels,
+                sample_rate,
+                cpal::BufferSize::Default,
+                engine,
+                stats,
+            )
+        }
+        r => r,
+    }
+}
+
+fn open_with(
+    device: &cpal::Device,
+    channels: u16,
+    sample_rate: u32,
+    buffer_size: cpal::BufferSize,
+    engine: &Arc<Mutex<Engine>>,
+    stats: &Arc<Stats>,
+) -> Result<Live, OutputError> {
     let config = cpal::StreamConfig {
         channels,
         sample_rate,
-        buffer_size: cpal::BufferSize::Default,
+        buffer_size,
     };
+    stats.max_render_us.store(0, Ordering::Relaxed);
 
     let callbacks = Arc::new(AtomicU64::new(0));
     let event = Arc::new(AtomicU8::new(OK));
@@ -161,12 +260,29 @@ fn open(
     let ch = channels as usize;
     let engine = engine.clone();
     let (count, ev) = (callbacks.clone(), event.clone());
+    let stats = stats.clone();
+    let mut last_callback: Option<cpal::StreamInstant> = None;
 
     let stream = device
         .build_output_stream(
             config,
-            move |data: &mut [f32], _: &cpal::OutputCallbackInfo| {
+            move |data: &mut [f32], info: &cpal::OutputCallbackInfo| {
+                let started = Instant::now();
                 count.fetch_add(1, Ordering::Relaxed);
+                let frames = (data.len() / ch.max(1)) as u32;
+                let ts = info.timestamp();
+                if let Some(prev) = last_callback {
+                    let gap = ts.callback.duration_since(prev).as_secs_f64();
+                    if gap * sample_rate as f64 > frames as f64 * 1.5 {
+                        stats.late.fetch_add(1, Ordering::Relaxed);
+                    }
+                }
+                last_callback = Some(ts.callback);
+                stats.buffer_frames.store(frames, Ordering::Relaxed);
+                let latency = ts.playback.duration_since(ts.callback).as_micros();
+                stats
+                    .latency_us
+                    .store(latency.min(u32::MAX as u128) as u32, Ordering::Relaxed);
                 // Only one stream exists at a time and the watching thread
                 // only takes the lock while no stream is running, so this
                 // never waits; it is a single atomic swap.
@@ -191,6 +307,8 @@ fn open(
                         }
                     }
                 }
+                let us = started.elapsed().as_micros().min(u32::MAX as u128) as u32;
+                stats.max_render_us.fetch_max(us, Ordering::Relaxed);
             },
             move |err| match err.kind() {
                 cpal::ErrorKind::DeviceNotAvailable => ev.store(GONE, Ordering::Relaxed),
@@ -225,6 +343,8 @@ pub fn start_preferring(preferred: &[&str]) -> Result<(AudioOutput, EngineHandle
         sample_rate: 0,
     }));
     let status2 = status.clone();
+    let stats = Arc::new(Stats::default());
+    let stats2 = stats.clone();
 
     let thread = std::thread::Builder::new()
         .name("audio-output".into())
@@ -246,7 +366,7 @@ pub fn start_preferring(preferred: &[&str]) -> Result<(AudioOutput, EngineHandle
                     .sample_rate();
                 let (engine, handle) = new_engine(sample_rate);
                 let engine = Arc::new(Mutex::new(engine));
-                let live = open(&device, sample_rate, &engine)?;
+                let live = open(&device, sample_rate, &engine, &stats2)?;
                 Ok((engine, handle, live, sample_rate))
             })();
             let (engine, handle, live, sample_rate) = match first {
@@ -262,7 +382,7 @@ pub fn start_preferring(preferred: &[&str]) -> Result<(AudioOutput, EngineHandle
                 sample_rate,
             });
             let _ = ready_tx.send(Ok((handle, live.name.clone(), sample_rate, live.channels)));
-            watch(&host, live, sample_rate, &engine, &msg_rx, set);
+            watch(&host, live, sample_rate, &engine, &stats2, &msg_rx, set);
         })
         .map_err(|e| OutputError::Device(e.to_string()))?;
 
@@ -274,6 +394,7 @@ pub fn start_preferring(preferred: &[&str]) -> Result<(AudioOutput, EngineHandle
             msgs: Some(msg_tx),
             thread: Some(thread),
             status,
+            stats,
             device_name,
             sample_rate,
             channels,
@@ -290,6 +411,7 @@ fn watch(
     mut live: Live,
     sample_rate: u32,
     engine: &Arc<Mutex<Engine>>,
+    stats: &Arc<Stats>,
     msgs: &mpsc::Receiver<Msg>,
     set: impl Fn(OutputStatus),
 ) {
@@ -320,7 +442,7 @@ fn watch(
         if !lost {
             // Same device, new settings (its sample rate changed, say).
             let found = id.as_ref().and_then(|id| host.device_by_id(id));
-            if let Some(Ok(l)) = found.map(|d| open(&d, sample_rate, engine)) {
+            if let Some(Ok(l)) = found.map(|d| open(&d, sample_rate, engine, stats)) {
                 live = l;
                 continue;
             }
@@ -355,7 +477,7 @@ fn watch(
                 })
             };
             if let Some(d) = device {
-                match open(&d, sample_rate, engine) {
+                match open(&d, sample_rate, engine, stats) {
                     Ok(l) => break l,
                     Err(e) => eprintln!("can't reopen {}: {e}", label(&d)),
                 }
