@@ -53,64 +53,116 @@ impl Beatgrid {
 /// Analyzes interleaved stereo audio. Returns `None` for audio with no
 /// clear pulse (silence, ambient pads, very short clips).
 pub fn detect_beatgrid(stereo: &[f32], sample_rate: u32) -> Option<Beatgrid> {
-    let env = onset_envelope(stereo, sample_rate);
-    let fps = sample_rate as f64 / HOP as f64;
-    if env.len() < (fps * 6.0) as usize {
-        return None;
-    }
-    let coarse = coarse_tempo(&env, fps)?;
-    let (bpm, phase) = refine(&env, fps, coarse)?;
-    let beat = 60.0 / bpm;
-    let first_beat = phase.rem_euclid(beat);
-    Some(Beatgrid { bpm, first_beat })
+    let mut b = BeatgridBuilder::new(sample_rate);
+    b.push(stereo);
+    b.finish()
 }
 
-/// Positive energy change per hop, summed over three bands and normalized.
-fn onset_envelope(stereo: &[f32], sample_rate: u32) -> Vec<f32> {
-    let sr = sample_rate as f64;
-    let mut low = [
-        Biquad::lowpass(150.0, 0.707, sr),
-        Biquad::lowpass(150.0, 0.707, sr),
-    ];
-    let mut mid = [
-        Biquad::highpass(300.0, 0.707, sr),
-        Biquad::lowpass(3_000.0, 0.707, sr),
-    ];
-    let mut high = [
-        Biquad::highpass(5_000.0, 0.707, sr),
-        Biquad::highpass(5_000.0, 0.707, sr),
-    ];
+/// Finds the beatgrid of audio fed in pieces of any size, so a track can
+/// be analyzed while it is still being decoded. The result is the same as
+/// [`detect_beatgrid`] on the whole track.
+pub(crate) struct BeatgridBuilder {
+    sample_rate: u32,
+    low: [Biquad; 2],
+    mid: [Biquad; 2],
+    high: [Biquad; 2],
+    /// Band energies of the hop being filled, and frames so far.
+    e: [f32; 3],
+    filled: usize,
+    prev: [f32; 3],
+    env: Vec<f32>,
+}
 
-    let frames = stereo.len() / 2;
-    let mut env = Vec::with_capacity(frames / HOP + 1);
-    let mut prev = [0f32; 3];
-    let (frames_slice, _) = stereo.as_chunks::<2>();
-    for hop in frames_slice.chunks(HOP) {
-        let mut e = [0f32; 3];
-        for [l, r] in hop {
-            let x = 0.5 * (l + r);
-            let lo = low[0].process(x);
-            let lo = low[1].process(lo);
-            let mi = mid[0].process(x);
-            let mi = mid[1].process(mi);
-            let hi = high[0].process(x);
-            let hi = high[1].process(hi);
-            e[0] += lo * lo;
-            e[1] += mi * mi;
-            e[2] += hi * hi;
+impl BeatgridBuilder {
+    pub fn new(sample_rate: u32) -> Self {
+        let sr = sample_rate as f64;
+        Self {
+            sample_rate,
+            low: [
+                Biquad::lowpass(150.0, 0.707, sr),
+                Biquad::lowpass(150.0, 0.707, sr),
+            ],
+            mid: [
+                Biquad::highpass(300.0, 0.707, sr),
+                Biquad::lowpass(3_000.0, 0.707, sr),
+            ],
+            high: [
+                Biquad::highpass(5_000.0, 0.707, sr),
+                Biquad::highpass(5_000.0, 0.707, sr),
+            ],
+            e: [0.0; 3],
+            filled: 0,
+            prev: [0.0; 3],
+            env: Vec::new(),
         }
+    }
+
+    /// Adds interleaved stereo samples (an even number).
+    pub fn push(&mut self, stereo: &[f32]) {
+        self.env.reserve((self.filled + stereo.len() / 2) / HOP);
+        let mut e = self.e;
+        let mut frames = stereo.as_chunks::<2>().0;
+        while !frames.is_empty() {
+            // The rest of the current hop, or as much of it as there is.
+            let (part, rest) = frames.split_at((HOP - self.filled).min(frames.len()));
+            frames = rest;
+            for [l, r] in part {
+                let x = 0.5 * (l + r);
+                let lo = self.low[0].process(x);
+                let lo = self.low[1].process(lo);
+                let mi = self.mid[0].process(x);
+                let mi = self.mid[1].process(mi);
+                let hi = self.high[0].process(x);
+                let hi = self.high[1].process(hi);
+                e[0] += lo * lo;
+                e[1] += mi * mi;
+                e[2] += hi * hi;
+            }
+            self.filled += part.len();
+            if self.filled == HOP {
+                self.end_hop(e);
+                e = [0.0; 3];
+            }
+        }
+        self.e = e;
+    }
+
+    /// Positive energy change over the hop just filled, summed over the
+    /// three bands.
+    fn end_hop(&mut self, e: [f32; 3]) {
+        let n = self.filled as f32;
         // Log energy, so a quiet hi-hat counts as much as a loud kick rise.
-        let cur = e.map(|v| (1.0 + 1_000.0 * v / hop.len() as f32).ln());
+        let cur = e.map(|v| (1.0 + 1_000.0 * v / n).ln());
         // Kicks carry the pulse in most dance music, so weight them most.
         let weights = [1.0, 0.6, 0.5];
         let flux: f32 = (0..3)
-            .map(|b| (cur[b] - prev[b]).max(0.0) * weights[b])
+            .map(|b| (cur[b] - self.prev[b]).max(0.0) * weights[b])
             .sum();
-        env.push(flux);
-        prev = cur;
+        self.env.push(flux);
+        self.prev = cur;
+        self.filled = 0;
     }
 
-    // Remove the slowly moving average so loud sections don't dominate.
+    pub fn finish(mut self) -> Option<Beatgrid> {
+        if self.filled > 0 {
+            self.end_hop(self.e);
+        }
+        let env = normalize_envelope(self.env);
+        let fps = self.sample_rate as f64 / HOP as f64;
+        if env.len() < (fps * 6.0) as usize {
+            return None;
+        }
+        let coarse = coarse_tempo(&env, fps)?;
+        let (bpm, phase) = refine(&env, fps, coarse)?;
+        let beat = 60.0 / bpm;
+        let first_beat = phase.rem_euclid(beat);
+        Some(Beatgrid { bpm, first_beat })
+    }
+}
+
+/// Removes the slowly moving average from the onset envelope, so loud
+/// sections don't dominate, and scales it to 0..=1.
+fn normalize_envelope(env: Vec<f32>) -> Vec<f32> {
     let w = 16;
     let mut out = vec![0f32; env.len()];
     let mut sum: f32 = env.iter().take(w).sum();

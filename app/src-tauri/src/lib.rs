@@ -472,6 +472,16 @@ fn output_name(state: State<'_, AppState>) -> String {
     }
 }
 
+/// The audio stream's timing (buffer size, output latency, slowest render,
+/// late callbacks), or null when running silently.
+#[tauri::command]
+fn audio_stats(state: State<'_, AppState>) -> Option<dj_engine::output::OutputStats> {
+    match &state.output {
+        Output::Device(out) => Some(out.stats()),
+        Output::Null(_) => None,
+    }
+}
+
 /// Stops waiting for a disconnected audio device and plays through the
 /// system default output instead.
 #[tauri::command]
@@ -531,6 +541,33 @@ fn waveform(state: State<'_, AppState>, deck: usize) -> Result<Response, String>
     Ok(Response::new(Waveform::to_bytes(&track.waveform.bins)))
 }
 
+/// Prints the audio stream's timing once it has settled, and every few
+/// seconds with `OSS_DJ_AUDIO_LOG=1`.
+fn log_audio_stats(app: tauri::AppHandle) {
+    use tauri::Manager;
+    let every = std::env::var_os("OSS_DJ_AUDIO_LOG").is_some();
+    let _ = std::thread::Builder::new()
+        .name("audio-stats".into())
+        .spawn(move || loop {
+            std::thread::sleep(std::time::Duration::from_secs(3));
+            let Output::Device(out) = &app.state::<AppState>().output else {
+                return;
+            };
+            let s = out.stats();
+            eprintln!(
+                "audio: {} frames per buffer ({:.1} ms), output latency {:.1} ms, slowest render {} µs, late callbacks {}",
+                s.buffer_frames,
+                s.buffer_frames as f64 / out.sample_rate as f64 * 1000.0,
+                s.output_latency_ms,
+                s.max_render_us,
+                s.late_callbacks
+            );
+            if !every {
+                return;
+            }
+        });
+}
+
 pub fn run() {
     // Play through the controller's own sound card when it's plugged in, so
     // its headphone output works.
@@ -553,6 +590,7 @@ pub fn run() {
             let engine = engine.clone();
             move |app| {
                 controller::start(app.handle(), engine, shared);
+                log_audio_stats(app.handle().clone());
                 Ok(())
             }
         })
@@ -566,6 +604,7 @@ pub fn run() {
             control,
             state,
             output_name,
+            audio_stats,
             use_default_output,
             load_track,
             waveform,
