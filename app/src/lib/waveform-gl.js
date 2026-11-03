@@ -2,10 +2,11 @@
 // RGBA8 texture (peak, low, mid, high); each frame only a few uniforms
 // change, so drawing costs almost nothing on the CPU.
 //
-// The look: three nested, mirrored envelopes, one per frequency band (low
-// blue outside, mid amber, high near-white in the core), each one smooth,
-// flowing shape with a soft gradient (brightest at the centre line), not
-// a comb of separate bars. What has already played collapses to one grey
+// The look: a ribbon of thin, anti-aliased threads. The outermost follows
+// the bass outline and the innermost the highs, with the threads between
+// blending from blue through amber to white, so width still reads as
+// loudness and colour as frequency. The threads weave with a slow twist
+// that scrolls with the music. What has already played collapses to one grey
 // shape. Beats are faint full-height lines, every 4th a little stronger,
 // and the play head is a single 1 px line. Hot cues are thin cue-coloured
 // lines; an active loop is a faint white band between two white lines. No
@@ -53,6 +54,7 @@ uniform float hotCues[${HOT_CUES}]; // bin indexes (-1 = none)
 uniform float loopIn;     // bin index (-1 = none)
 uniform float loopOut;    // bin index (-1 = none)
 uniform float looping;    // 1 = the loop is playing
+uniform float twist;      // radians of ribbon twist per bin
 
 vec4 fetchLevel(int l, int i) {
   if (i < 0 || float(i) >= levelLen[l]) return vec4(0.0);
@@ -72,10 +74,29 @@ vec4 sampleColumn(float px) {
   return mix(fetchLevel(l, int(f)), fetchLevel(l, int(f) + 1), bl - 0.5 - f);
 }
 
-// Brightness across a band: fullest at the centre line, falling off
-// towards its edge, so each band reads as a soft, rounded shape.
-float shade(float y, float h) {
-  return mix(1.1, 0.68, smoothstep(0.0, 1.0, y / max(h, 1.0)));
+// The three band outlines (low, mid, high) at one column, in px from the
+// centre line, smoothed with a small Gaussian across neighbouring columns.
+vec3 bandsAt(float px, float half_) {
+  float o = 2.0 * dpr;
+  vec4 v = sampleColumn(px) * 0.4
+    + (sampleColumn(px - o) + sampleColumn(px + o)) * 0.24
+    + (sampleColumn(px - 2.0 * o) + sampleColumn(px + 2.0 * o)) * 0.06;
+  v = clamp(v, 0.0, 1.0);
+  return vec3(v.g, v.b * 0.78, v.a * 0.55) * half_;
+}
+
+// Thread t (0 = outermost, 1 = innermost) runs from the bass outline in
+// to the highs outline, so the outer edge still reads as loudness and
+// the colour across the threads as frequency. A slow twist along the
+// track (it scrolls with the music) makes the threads weave like a ribbon.
+float threadY(vec3 b, float t, float bin) {
+  float h = t < 0.5 ? mix(b.x, b.y, t * 2.0) : mix(b.y, b.z, t * 2.0 - 1.0);
+  float phase = bin * twist + t * 4.7;
+  return h * (1.0 + 0.16 * sin(phase));
+}
+
+vec3 threadColour(float t) {
+  return t < 0.5 ? mix(cLow, cMid, t * 2.0) : mix(cMid, cHigh, t * 2.0 - 1.0);
 }
 
 void main() {
@@ -85,30 +106,31 @@ void main() {
   float bin = start + px * perPx;
   float aa = 0.8 * dpr;
 
-  // A small Gaussian across neighbouring columns smooths the outline.
-  float o = dpr;
-  vec4 v = sampleColumn(px) * 0.4
-    + (sampleColumn(px - o) + sampleColumn(px + o)) * 0.24
-    + (sampleColumn(px - 2.0 * o) + sampleColumn(px + 2.0 * o)) * 0.06;
-  v = clamp(v, 0.0, 1.0);
-  float hLow = v.g * half_;
-  float hMid = v.b * 0.78 * half_;
-  float hHigh = v.a * 0.55 * half_;
-  float inLow = 1.0 - smoothstep(hLow - aa, hLow + aa, y);
-  float inMid = 1.0 - smoothstep(hMid - aa, hMid + aa, y);
-  float inHigh = 1.0 - smoothstep(hHigh - aa, hHigh + aa, y);
-  // Silence draws nothing, not a hairline along the centre.
-  inLow *= step(0.004, v.g);
-  inMid *= step(0.004, v.b);
-  inHigh *= step(0.004, v.a);
-
+  vec3 b = bandsAt(px, half_);
+  vec3 bNext = bandsAt(px + dpr, half_);
+  float binNext = bin + dpr * perPx;
+  bool past = bin < playhead;
   vec3 c = cBg;
-  if (bin < playhead) {
-    c = mix(c, cPast, max(inLow, inMid));
-  } else {
-    c = mix(c, cLow * shade(y, hLow), inLow);
-    c = mix(c, cMid * shade(y, hMid), inMid);
-    c = mix(c, min(cHigh * shade(y, hHigh) * 1.05, vec3(1.0)), inHigh);
+
+  // Silence draws nothing, not a hairline along the centre.
+  if (b.x > 0.5 * dpr) {
+    // A faint body inside the outer thread gives the ribbon some volume.
+    float outer = threadY(b, 0.0, bin);
+    float body = 1.0 - smoothstep(outer - aa, outer + aa, y);
+    c = mix(c, past ? cPast : cLow, body * (past ? 0.35 : 0.09));
+
+    // Threads: about one every 4 px of height, each a 1 px anti-aliased line.
+    float n = clamp(floor(half_ / (4.0 * dpr)), 6.0, 18.0);
+    for (float k = 0.0; k < 18.0; k += 1.0) {
+      if (k >= n) break;
+      float t = k / (n - 1.0);
+      float ty = threadY(b, t, bin);
+      float slope = (threadY(bNext, t, binNext) - ty) / dpr;
+      float d = abs(y - ty) / sqrt(1.0 + slope * slope);
+      float line = 1.0 - smoothstep(0.3 * dpr, 1.0 * dpr, d);
+      vec3 tc = past ? mix(cPast, cFg, 0.14) : threadColour(t);
+      c = mix(c, tc, line * (past ? 0.8 : 0.92));
+    }
   }
 
   // Beat lines: faint and full height, every 4th a little stronger.
@@ -215,7 +237,7 @@ export class WaveformGL {
     gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
 
     this.u = {};
-    for (const name of ['bins', 'count', 'levels', 'levelOff', 'levelLen', 'start', 'perPx', 'width', 'height', 'dpr', 'playhead', 'cue', 'cBg', 'cFg', 'cLow', 'cMid', 'cHigh', 'cPast', 'cCue', 'centerLine', 'beatLen', 'firstBeat', 'loopIn', 'loopOut', 'looping']) {
+    for (const name of ['bins', 'count', 'levels', 'levelOff', 'levelLen', 'start', 'perPx', 'width', 'height', 'dpr', 'playhead', 'cue', 'cBg', 'cFg', 'cLow', 'cMid', 'cHigh', 'cPast', 'cCue', 'centerLine', 'twist', 'beatLen', 'firstBeat', 'loopIn', 'loopOut', 'looping']) {
       this.u[name] = gl.getUniformLocation(prog, name);
     }
     this.u.hotCues = gl.getUniformLocation(prog, 'hotCues');
@@ -310,6 +332,11 @@ export class WaveformGL {
     gl.uniform1f(this.u.cue, view.cue);
     gl.uniform1f(this.u.centerLine, view.centerLine ? 1 : 0);
     gl.uniform1f(this.u.beatLen, view.beatLen ?? 0);
+    // The scrolling view twists once every two bars (or 4 s without a
+    // beatgrid); the overview, which shows the whole track, every ~180 px.
+    const dpr = window.devicePixelRatio || 1;
+    const twistBins = !view.centerLine ? view.perPx * 180 * dpr : view.beatLen ? view.beatLen * 8 : 172 * 4;
+    gl.uniform1f(this.u.twist, (2 * Math.PI) / twistBins);
     gl.uniform1f(this.u.firstBeat, view.firstBeat ?? 0);
     this.cues.fill(-1);
     view.hotCues?.forEach((c, i) => i < HOT_CUES && (this.cues[i] = c));
