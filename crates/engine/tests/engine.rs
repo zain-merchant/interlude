@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 
-use dj_engine::{new_engine, Command, DeckId, Engine, EngineHandle, Track};
+use dj_engine::{new_engine, Command, DeckId, Engine, EngineHandle, FxKind, Track};
 
 const SR: u32 = 48_000;
 
@@ -444,4 +444,120 @@ fn jog_scrubs_when_paused_and_nudges_when_playing() {
         (h.shared().deck(0).speed - 1.0).abs() < 1e-3,
         "nudge has faded"
     );
+}
+
+#[test]
+fn filter_knob_low_passes_the_channel() {
+    let (mut e, mut h) = setup();
+    load(&mut h, DeckId::A, sine(6_000.0, 3.0, 0.5));
+    h.send(Command::Play { deck: DeckId::A }).unwrap();
+    let dry = rms(&render(&mut e, 0.5)[9_600..]);
+    h.send(Command::SetFilter {
+        deck: DeckId::A,
+        value: -0.9,
+    })
+    .unwrap();
+    let wet = rms(&render(&mut e, 0.5)[24_000..]);
+    assert!(wet < dry * 0.05, "filter left {wet} of {dry}");
+    assert!((h.shared().deck(0).filter + 0.9).abs() < 1e-6);
+}
+
+#[test]
+fn echo_is_timed_to_the_beatgrid_and_reported() {
+    let (mut e, mut h) = setup();
+    // A short click at the start of a silent track with a 120 BPM grid.
+    let mut samples = vec![0.0; SR as usize * 4 * 2];
+    for v in &mut samples[..960] {
+        *v = 0.5;
+    }
+    let mut t = Track::from_stereo(samples, SR);
+    t.beatgrid = Some(dj_engine::Beatgrid {
+        bpm: 120.0,
+        first_beat: 0.0,
+    });
+    h.send(Command::Load {
+        deck: DeckId::A,
+        track: Arc::new(t),
+    })
+    .unwrap();
+    for cmd in [
+        Command::SetFxKind {
+            deck: DeckId::A,
+            kind: FxKind::Echo,
+        },
+        Command::SetFxBeats {
+            deck: DeckId::A,
+            beats: 0.5,
+        },
+        Command::SetFxLevel {
+            deck: DeckId::A,
+            value: 1.0,
+        },
+        Command::SetFxOn {
+            deck: DeckId::A,
+            on: true,
+        },
+    ] {
+        h.send(cmd).unwrap();
+    }
+    render(&mut e, 0.05);
+    h.send(Command::Play { deck: DeckId::A }).unwrap();
+    let out = render(&mut e, 1.0);
+    // Half a beat at 120 BPM is 0.25 s.
+    let at = |secs: f32| {
+        let i = (secs * SR as f32) as usize * 2;
+        rms(&out[i..i + 960])
+    };
+    assert!(at(0.25) > 0.1, "no echo after half a beat");
+    assert!(at(0.15) < 0.01, "echo arrived early");
+    let fx = h.shared().deck(0).fx;
+    assert!(fx.on && fx.kind == FxKind::Echo && fx.beats == 0.5 && fx.level == 1.0);
+}
+
+#[test]
+fn records_the_master_output_to_wav() {
+    let (mut e, mut h) = setup();
+    load(&mut h, DeckId::A, sine(440.0, 3.0, 0.5));
+    h.send(Command::Play { deck: DeckId::A }).unwrap();
+    let dir = std::env::temp_dir().join(format!("oss-dj-rec-{}", std::process::id()));
+    let path = dir.join("nested").join("set.wav");
+    h.start_recording(&path).unwrap();
+    assert!(
+        h.start_recording(&path).is_err(),
+        "second start should fail"
+    );
+    let master = render(&mut e, 1.0);
+    // Give the writer a moment, as a real audio callback would.
+    std::thread::sleep(std::time::Duration::from_millis(50));
+    assert!(h.recording().active);
+    let done = h.stop_recording().unwrap();
+    assert!(!done.active);
+    assert!(
+        (done.seconds - 1.0).abs() < 1e-3,
+        "recorded {} s",
+        done.seconds
+    );
+    assert_eq!(done.dropped_seconds, 0.0);
+
+    let mut wav = hound::WavReader::open(&path).unwrap();
+    let spec = wav.spec();
+    assert_eq!(
+        (spec.channels, spec.sample_rate, spec.bits_per_sample),
+        (2, SR, 24)
+    );
+    let samples: Vec<f32> = wav
+        .samples::<i32>()
+        .map(|s| s.unwrap() as f32 / 8_388_607.0)
+        .collect();
+    assert_eq!(samples.len(), master.len());
+    let err = samples
+        .iter()
+        .zip(&master)
+        .fold(0f32, |m, (a, b)| m.max((a - b).abs()));
+    assert!(err < 1e-5, "file differs from master by {err}");
+
+    // Nothing is recorded once stopped.
+    render(&mut e, 0.2);
+    assert!(h.stop_recording().is_err());
+    let _ = std::fs::remove_dir_all(&dir);
 }
