@@ -8,12 +8,12 @@ use symphonia::core::formats::{FormatOptions, TrackType};
 use symphonia::core::io::MediaSourceStream;
 use symphonia::core::meta::MetadataOptions;
 
-use std::sync::{mpsc, Arc};
+use std::sync::{mpsc, Arc, OnceLock};
 
 use crate::analysis::{detect_beatgrid, Beatgrid, BeatgridBuilder};
 use crate::key::{detect_key, Key, KeyBuilder};
 use crate::waveform::WaveformBuilder;
-use crate::Waveform;
+use crate::{Stems, Waveform};
 
 #[derive(Debug, thiserror::Error)]
 pub enum LoadError {
@@ -45,6 +45,9 @@ pub struct Track {
     pub beatgrid: Option<Beatgrid>,
     /// Detected musical key, if the track has clear tonal content.
     pub key: Option<Key>,
+    /// The track split into stems, set once a separator starts on it and
+    /// filled in while it plays. See [`Stems`].
+    pub stems: OnceLock<Arc<Stems>>,
 }
 
 /// Interleaved samples decoded before a stretch goes to the analysis
@@ -121,6 +124,7 @@ impl Track {
             waveform,
             beatgrid,
             key,
+            stems: OnceLock::new(),
         }
     }
 
@@ -150,6 +154,7 @@ impl Track {
                 waveform,
                 beatgrid,
                 key,
+                stems: OnceLock::new(),
             },
             _ => Track::from_stereo(stereo, sample_rate),
         };

@@ -12,9 +12,11 @@
 //! keylocked deck stays on its beatgrid and in sync.
 //!
 //! Real-time safe: the window is allocated up front, and grains read the
-//! track's samples directly, so there are no buffers to fill.
+//! track's samples (with any muted stems taken out) directly, so there are
+//! no buffers to fill.
 
 use crate::dsp::hermite;
+use crate::stems::Source;
 
 /// Grain length in seconds.
 const GRAIN_SECS: f64 = 0.040;
@@ -103,9 +105,9 @@ impl Stretcher {
     /// The next output frame. `pos` is the deck's play head (source frames),
     /// `step` how far it moves per output frame, and `ratio` the source to
     /// output sample rate ratio (the step at normal speed).
-    pub fn next(&mut self, samples: &[f32], pos: f64, step: f64, ratio: f64) -> (f32, f32) {
+    pub fn next(&mut self, src: &Source, pos: f64, step: f64, ratio: f64) -> (f32, f32) {
         if self.until_next == 0 {
-            self.start_grain(samples, pos, step, ratio);
+            self.start_grain(src, pos, step, ratio);
             self.until_next = self.hop;
         }
         self.until_next -= 1;
@@ -116,7 +118,7 @@ impl Stretcher {
                 continue;
             }
             let w = self.window[g.phase];
-            let (gl, gr) = read(samples, g.src);
+            let (gl, gr) = read(src, g.src);
             l += gl * w;
             r += gr * w;
             g.src += ratio;
@@ -125,7 +127,7 @@ impl Stretcher {
         (l, r)
     }
 
-    fn start_grain(&mut self, samples: &[f32], pos: f64, step: f64, ratio: f64) {
+    fn start_grain(&mut self, src: &Source, pos: f64, step: f64, ratio: f64) {
         let n = self.window.len();
         let (old, new) = if self.grains[0].phase >= n {
             (1, 0)
@@ -139,7 +141,7 @@ impl Stretcher {
         let reference = self.grains[old].src;
         let search = (SEARCH_SECS * self.out_rate * ratio).round() as i64;
         let len = (MATCH_SECS * self.out_rate * ratio).round().max(8.0) as i64;
-        let offset = best_offset(samples, reference, target, search, len);
+        let offset = best_offset(src, reference, target, search, len);
         self.grains[new] = Grain {
             // Keep the reference's sub-frame position, so a perfect match
             // (playing at normal speed) continues the old grain exactly.
@@ -150,18 +152,14 @@ impl Stretcher {
 }
 
 /// Mono sample at integer frame `i`, silent outside the track.
-fn mono(samples: &[f32], i: i64) -> f32 {
-    if i < 0 || (i as usize) * 2 + 1 >= samples.len() {
-        0.0
-    } else {
-        let i = i as usize * 2;
-        samples[i] + samples[i + 1]
-    }
+fn mono(src: &Source, i: i64) -> f32 {
+    let (l, r) = src.frame(i);
+    l + r
 }
 
 /// The offset from `target` (within ±`search`) where the source best
 /// matches the source at `reference`, by normalized cross-correlation.
-fn best_offset(samples: &[f32], reference: f64, target: f64, search: i64, len: i64) -> i64 {
+fn best_offset(src: &Source, reference: f64, target: f64, search: i64, len: i64) -> i64 {
     let r0 = reference.floor() as i64;
     let t0 = target.round() as i64;
     let score = |k: i64| {
@@ -169,8 +167,8 @@ fn best_offset(samples: &[f32], reference: f64, target: f64, search: i64, len: i
         let c0 = t0 + k;
         let mut j = 0;
         while j < len {
-            let x = mono(samples, r0 + j);
-            let y = mono(samples, c0 + j);
+            let x = mono(src, r0 + j);
+            let y = mono(src, c0 + j);
             xy += x * y;
             yy += y * y;
             j += 2;
@@ -198,19 +196,17 @@ fn best_offset(samples: &[f32], reference: f64, target: f64, search: i64, len: i
 }
 
 /// Stereo sample at fractional frame `pos`, silent outside the track.
-pub(crate) fn read(samples: &[f32], pos: f64) -> (f32, f32) {
-    let frames = (samples.len() / 2) as i64;
+pub(crate) fn read(src: &Source, pos: f64) -> (f32, f32) {
     let i = pos.floor() as i64;
     let t = (pos - i as f64) as f32;
-    let s = |i: i64, ch: usize| -> f32 {
-        if i < 0 || i >= frames {
-            0.0
-        } else {
-            samples[i as usize * 2 + ch]
-        }
-    };
+    let (a, b, c, d) = (
+        src.frame(i - 1),
+        src.frame(i),
+        src.frame(i + 1),
+        src.frame(i + 2),
+    );
     (
-        hermite(t, s(i - 1, 0), s(i, 0), s(i + 1, 0), s(i + 2, 0)),
-        hermite(t, s(i - 1, 1), s(i, 1), s(i + 1, 1), s(i + 2, 1)),
+        hermite(t, a.0, b.0, c.0, d.0),
+        hermite(t, a.1, b.1, c.1, d.1),
     )
 }
