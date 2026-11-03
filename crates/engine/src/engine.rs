@@ -1,0 +1,214 @@
+use std::sync::Arc;
+
+use rtrb::{Consumer, Producer, RingBuffer};
+
+use crate::deck::Deck;
+use crate::mixer::Mixer;
+use crate::{Command, SharedState, Track, NUM_DECKS};
+
+/// Largest block rendered in one pass. Bigger callbacks are split into
+/// chunks of this size, so scratch buffers can be allocated up front.
+pub const MAX_BLOCK_FRAMES: usize = 1024;
+
+const COMMAND_QUEUE: usize = 1024;
+const GARBAGE_QUEUE: usize = 64;
+
+/// The audio-thread half of the engine. See the crate docs.
+pub struct Engine {
+    decks: [Deck; NUM_DECKS],
+    mixer: Mixer,
+    commands: Consumer<Command>,
+    garbage: Producer<Arc<Track>>,
+    shared: Arc<SharedState>,
+    scratch: [Vec<f32>; NUM_DECKS],
+}
+
+/// The control half of the engine: send commands, read state.
+pub struct EngineHandle {
+    commands: Producer<Command>,
+    garbage: Consumer<Arc<Track>>,
+    shared: Arc<SharedState>,
+}
+
+/// Creates a connected engine (for the audio thread) and handle (for
+/// everything else) running at `sample_rate`.
+pub fn new_engine(sample_rate: u32) -> (Engine, EngineHandle) {
+    let (cmd_tx, cmd_rx) = RingBuffer::new(COMMAND_QUEUE);
+    let (gc_tx, gc_rx) = RingBuffer::new(GARBAGE_QUEUE);
+    let shared = Arc::new(SharedState::default());
+    shared
+        .sample_rate
+        .store(sample_rate, std::sync::atomic::Ordering::Relaxed);
+    for d in &shared.decks {
+        d.rate.store(1.0);
+    }
+    let sr = sample_rate as f32;
+    let engine = Engine {
+        decks: std::array::from_fn(|_| Deck::new(sr)),
+        mixer: Mixer::new(sr),
+        commands: cmd_rx,
+        garbage: gc_tx,
+        shared: shared.clone(),
+        scratch: std::array::from_fn(|_| vec![0.0; MAX_BLOCK_FRAMES * 2]),
+    };
+    let handle = EngineHandle {
+        commands: cmd_tx,
+        garbage: gc_rx,
+        shared,
+    };
+    (engine, handle)
+}
+
+impl Engine {
+    /// Renders audio. `master` and `cue` are interleaved stereo buffers of
+    /// equal length. Real-time safe: no locks, no allocation, no I/O.
+    pub fn process(&mut self, master: &mut [f32], cue: &mut [f32]) {
+        debug_assert_eq!(master.len(), cue.len());
+        self.drain_commands();
+        let chunk = MAX_BLOCK_FRAMES * 2;
+        for (m, c) in master.chunks_mut(chunk).zip(cue.chunks_mut(chunk)) {
+            self.render_block(m, c);
+        }
+        self.publish();
+    }
+
+    fn render_block(&mut self, master: &mut [f32], cue: &mut [f32]) {
+        let n = master.len();
+        let mut peaks = [0f32; NUM_DECKS];
+        for (d, deck) in self.decks.iter_mut().enumerate() {
+            peaks[d] = deck.render(&mut self.scratch[d][..n]);
+        }
+        let [a, b] = &self.scratch;
+        self.mixer.mix(&[&a[..n], &b[..n]], master, cue);
+        for (d, p) in peaks.iter().enumerate() {
+            let s = &self.shared.decks[d].peak;
+            s.store(s.load().max(*p));
+        }
+    }
+
+    fn drain_commands(&mut self) {
+        while let Ok(cmd) = self.commands.pop() {
+            self.apply(cmd);
+        }
+    }
+
+    fn apply(&mut self, cmd: Command) {
+        use Command::*;
+        match cmd {
+            Load { deck, track } => {
+                let duration = track.duration_secs();
+                let old = self.decks[deck.index()].load(Some(track));
+                self.recycle(old);
+                let s = &self.shared.decks[deck.index()];
+                s.duration.store(duration);
+                s.loaded.store(true, std::sync::atomic::Ordering::Relaxed);
+                s.generation
+                    .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+            }
+            Eject { deck } => {
+                let old = self.decks[deck.index()].load(None);
+                self.recycle(old);
+                let s = &self.shared.decks[deck.index()];
+                s.duration.store(0.0);
+                s.loaded.store(false, std::sync::atomic::Ordering::Relaxed);
+                s.generation
+                    .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+            }
+            Play { deck } => self.decks[deck.index()].play(),
+            Pause { deck } => self.decks[deck.index()].pause(),
+            TogglePlay { deck } => {
+                let d = &mut self.decks[deck.index()];
+                if d.playing && !d.previewing {
+                    d.pause()
+                } else {
+                    d.play()
+                }
+            }
+            CuePress { deck } => self.decks[deck.index()].cue_press(),
+            CueRelease { deck } => self.decks[deck.index()].cue_release(),
+            Seek { deck, seconds } => self.decks[deck.index()].seek_secs(seconds),
+            SetRate { deck, rate } => self.decks[deck.index()].rate = rate.clamp(0.0, 4.0),
+            SetBend { deck, bend } => self.decks[deck.index()].bend = bend.clamp(-1.0, 1.0),
+            SetGain { deck, db } => self.decks[deck.index()].set_gain_db(db),
+            SetEq { deck, band, db } => self.decks[deck.index()].set_eq_db(band, db),
+            SetFader { deck, value } => self.mixer.set_fader(deck.index(), value),
+            SetPfl { deck, on } => self.mixer.pfl[deck.index()] = on,
+            SetCrossfader { value } => self.mixer.set_crossfader(value),
+            SetCueMix { value } => self.mixer.set_cue_mix(value),
+            SetMasterGain { db } => self.mixer.set_master_db(db),
+        }
+    }
+
+    /// Hands a dropped track back to the control side to be freed there.
+    fn recycle(&mut self, track: Option<Arc<Track>>) {
+        if let Some(t) = track {
+            // If the queue is somehow full the Arc drops here instead: a rare
+            // free on the audio thread is better than leaking a whole track.
+            let _ = self.garbage.push(t);
+        }
+    }
+
+    fn publish(&self) {
+        use std::sync::atomic::Ordering::Relaxed;
+        for (deck, s) in self.decks.iter().zip(&self.shared.decks) {
+            let sr = deck.source_rate();
+            s.position.store(deck.pos / sr);
+            s.cue.store(deck.cue / sr);
+            s.rate.store(deck.rate + deck.bend);
+            s.playing.store(deck.playing, Relaxed);
+        }
+    }
+
+    /// Updates the master peak meters. Called by the output with the final
+    /// buffer it hands to the sound card.
+    pub fn meter_master(&self, master: &[f32]) {
+        let mut p = [0f32; 2];
+        for f in master.chunks_exact(2) {
+            p[0] = p[0].max(f[0].abs());
+            p[1] = p[1].max(f[1].abs());
+        }
+        for (s, v) in self.shared.master_peak.iter().zip(p) {
+            s.store(s.load().max(v));
+        }
+    }
+
+    pub fn shared(&self) -> &Arc<SharedState> {
+        &self.shared
+    }
+}
+
+impl EngineHandle {
+    /// Queues a command for the audio thread. Fails only if the queue is
+    /// full (1024 pending commands), which means the audio thread has stalled.
+    pub fn send(&mut self, cmd: Command) -> Result<(), Command> {
+        self.collect_garbage();
+        self.commands
+            .push(cmd)
+            .map_err(|rtrb::PushError::Full(c)| c)
+    }
+
+    /// Frees tracks the audio thread has finished with. Called by `send`, and
+    /// worth calling periodically (e.g. from the UI's state poll).
+    pub fn collect_garbage(&mut self) {
+        while self.garbage.pop().is_ok() {}
+    }
+
+    pub fn shared(&self) -> &Arc<SharedState> {
+        &self.shared
+    }
+
+    /// Reads and resets the peak meters, for a UI polling at frame rate.
+    pub fn take_peaks(&self) -> ([f32; NUM_DECKS], [f32; 2]) {
+        let decks = std::array::from_fn(|i| {
+            let p = self.shared.decks[i].peak.load();
+            self.shared.decks[i].peak.store(0.0);
+            p
+        });
+        let master = std::array::from_fn(|i| {
+            let p = self.shared.master_peak[i].load();
+            self.shared.master_peak[i].store(0.0);
+            p
+        });
+        (decks, master)
+    }
+}
