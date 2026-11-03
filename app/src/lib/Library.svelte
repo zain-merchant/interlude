@@ -213,6 +213,11 @@
     await refresh();
   }
 
+  /** Reloads everything, keeping the selection (after an import). */
+  export function reload() {
+    return refresh({ keep: true });
+  }
+
   /** Shows a folder, or every track when `f` is null. */
   function pick(f) {
     show(f === null ? { kind: 'all' } : { kind: 'folder', path: f });

@@ -697,6 +697,9 @@ pub fn run() {
             library::set_playlist_tracks,
             library::history_sessions,
             library::session_tracks,
+            library::import_sources,
+            library::import_preview,
+            library::import_run,
         ])
         .run(tauri::generate_context!())
         .expect("error while running oss-dj");

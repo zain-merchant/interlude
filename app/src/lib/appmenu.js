@@ -17,7 +17,7 @@ const accelerator = (b) => (b?.mod ? ['CmdOrCtrl', b.shift && 'Shift', b.code].f
 /**
  * Builds the menu and makes it the app menu.
  * @param {(id: string) => void} run runs a command from commands.js
- * @param {{ addFolder: () => void, keyboard: () => void, undoInField: (redo: boolean) => boolean }} actions
+ * @param {{ addFolder: () => void, importLibrary: () => void, keyboard: () => void, undoInField: (redo: boolean) => boolean }} actions
  */
 export async function installAppMenu(run, actions) {
   if (!hasAppMenu) return;
@@ -76,6 +76,7 @@ export async function installAppMenu(run, actions) {
       ]),
       sub('File', [
         item('Add Music Folder…', actions.addFolder),
+        item('Import from Rekordbox…', actions.importLibrary),
         sep(),
         cmd('deck.0.load', 'Load Selected Track to Deck A'),
         cmd('deck.1.load', 'Load Selected Track to Deck B'),

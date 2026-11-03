@@ -15,6 +15,7 @@
 //! hot cues, cue point and loop, and writes them for the loaded track.
 
 mod db;
+mod import;
 mod tags;
 
 use std::collections::VecDeque;
@@ -698,6 +699,60 @@ pub fn history_sessions(lib: State<'_, Library>) -> Result<Vec<db::Session>, Str
 pub fn session_tracks(lib: State<'_, Library>, start: i64) -> Result<Vec<LibraryTrack>, String> {
     let rows = lib.db.lock().unwrap().session_tracks(start);
     listed(&lib, rows)
+}
+
+/// Rekordbox XML exports found in the usual places, newest first.
+#[tauri::command]
+pub async fn import_sources() -> Vec<import::Found> {
+    tauri::async_runtime::spawn_blocking(import::find_sources)
+        .await
+        .unwrap_or_default()
+}
+
+/// Reads a library to import and says what it would bring over. Changes
+/// nothing.
+#[tauri::command]
+pub async fn import_preview(
+    lib: State<'_, Library>,
+    source: import::Source,
+) -> Result<import::Preview, String> {
+    let existing = lib.db.lock().unwrap().folders().map_err(db_err)?;
+    tauri::async_runtime::spawn_blocking(move || {
+        let c = source.read()?;
+        Ok(import::preview(&c, &existing))
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
+#[derive(Serialize, Clone)]
+struct ImportProgress {
+    done: usize,
+    total: usize,
+}
+
+/// Imports a library, adding `folders` to the library first. Reports
+/// progress as `import-progress` events.
+#[tauri::command]
+pub async fn import_run(
+    app: AppHandle,
+    lib: State<'_, Library>,
+    source: import::Source,
+    options: import::Options,
+    folders: Vec<String>,
+) -> Result<import::Summary, String> {
+    let db = lib.db.clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        let c = source.read()?;
+        let folders: Vec<PathBuf> = folders.into_iter().map(PathBuf::from).collect();
+        let db = db.lock().unwrap();
+        import::apply(&db, &c, options, &folders, |done, total| {
+            let _ = app.emit("import-progress", ImportProgress { done, total });
+        })
+        .map_err(db_err)
+    })
+    .await
+    .map_err(|e| e.to_string())?
 }
 
 #[cfg(test)]

@@ -76,6 +76,7 @@ export function createMockBackend() {
       format: i % 5 ? 'MP3' : 'FLAC', missing: i === 47, analysis: null,
     });
   }
+  const importListeners = new Set();
   // Playlists and History, in memory for the preview.
   let playlistIds = 2;
   let playlists = [
@@ -390,6 +391,30 @@ export function createMockBackend() {
     historySessions: async () => sessions.map((x) => ({ start: x.start, count: x.paths.length })),
     sessionTracks: async (start) => byPaths(sessions.find((x) => x.start === start)?.paths ?? []),
     onLibraryPlayed: async () => () => {},
+    importSources: async () => [{ source: { kind: /** @type {'rekordbox'} */ ('rekordbox'), path: '~/Documents/rekordbox.xml' }, modified: Date.now() - 3 * 3600e3 }],
+    importPreview: async () => {
+      await new Promise((r) => setTimeout(r, 600));
+      return {
+        tracks: 2431, missing: 12, withCues: 1890, hotCues: 9204, loops: 311, grids: 2398,
+        playlists: [{ name: 'Friday', count: 42 }, { name: 'Gigs › Club', count: 88 }],
+        folders: ['/Users/you/Music/DJ', '/Volumes/USB/Tracks'],
+      };
+    },
+    importRun: async (source, options) => {
+      const total = 2465;
+      for (let done = 0; done < total; done += 150) {
+        for (const fn of importListeners) fn({ done, total });
+        await new Promise((r) => setTimeout(r, 60));
+      }
+      for (const fn of importListeners) fn({ done: total, total });
+      if (options.playlists && !playlists.some((p) => p.name === 'Friday')) playlists.push({ id: ++playlistIds, name: 'Friday', paths: tracks.slice(3, 9).map((t) => t.path) });
+      return { tracks: 2431, cues: options.cues ? 1874 : 0, grids: options.grids ? 2390 : 0, playlists: options.playlists ? 2 : 0, kept: 16 };
+    },
+    onImportProgress: async (fn) => {
+      importListeners.add(fn);
+      return () => importListeners.delete(fn);
+    },
+    pickRekordboxXml: async () => '~/Desktop/rekordbox.xml',
     pickFolder: async () => null,
   };
 }

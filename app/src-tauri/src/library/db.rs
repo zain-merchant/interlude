@@ -161,6 +161,8 @@ impl Db {
         }
         let conn = Connection::open(file)?;
         conn.pragma_update(None, "journal_mode", "WAL")?;
+        // Safe with WAL: a crash can lose the last commit, never corrupt the file.
+        conn.pragma_update(None, "synchronous", "NORMAL")?;
         let db = Self::setup(conn)?;
         db.back_up(file);
         db.migrate()?;
@@ -596,6 +598,39 @@ impl Db {
             ],
         )?;
         Ok(())
+    }
+
+    /// Sets a track's tags where it has none yet (a file not scanned yet,
+    /// or one without tags). Tags read from the file itself are kept.
+    pub fn fill_tags(
+        &self,
+        path: &Path,
+        title: &str,
+        artist: &str,
+        album: &str,
+        genre: &str,
+    ) -> rusqlite::Result<()> {
+        let id = self.track_id(path)?;
+        self.conn.execute(
+            "UPDATE tracks SET
+                 title = CASE WHEN title = '' THEN ?2 ELSE title END,
+                 artist = CASE WHEN title = '' AND artist = '' THEN ?3 ELSE artist END,
+                 album = CASE WHEN album = '' THEN ?4 ELSE album END,
+                 genre = CASE WHEN genre = '' THEN ?5 ELSE genre END
+             WHERE id = ?1",
+            params![id, title, artist, album, genre],
+        )?;
+        Ok(())
+    }
+
+    /// True when a track has any saved cue point or loop.
+    pub fn has_cues(&self, path: &Path) -> rusqlite::Result<bool> {
+        self.conn.query_row(
+            "SELECT EXISTS (SELECT 1 FROM cues JOIN tracks ON tracks.id = cues.track_id
+                            WHERE tracks.path = ?1)",
+            params![path_str(path)],
+            |r| r.get(0),
+        )
     }
 
     /// A track's saved cue points; all empty for a track never cued.

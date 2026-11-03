@@ -33,6 +33,11 @@ export const inTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in
  *             analysis: TrackAnalysis | null }} LibraryTrack
  * @typedef {{ id: number, name: string, count: number }} Playlist
  * @typedef {{ start: number, count: number }} HistorySession
+ * @typedef {{ kind: 'rekordbox', path: string }} ImportSource
+ * @typedef {{ tracks: number, missing: number, withCues: number, hotCues: number, loops: number,
+ *             grids: number, playlists: { name: string, count: number }[], folders: string[] }} ImportPreview
+ * @typedef {{ cues: boolean, grids: boolean, playlists: boolean }} ImportOptions
+ * @typedef {{ tracks: number, cues: number, grids: number, playlists: number, kept: number }} ImportSummary
  */
 
 async function createTauriBackend() {
@@ -89,6 +94,20 @@ async function createTauriBackend() {
      * @returns {Promise<() => void>} unlisten
      */
     onLibraryPlayed: (fn) => listen('library-played', (e) => fn(e.payload)),
+    /** Rekordbox XML exports found in the usual places, newest first.
+     * @returns {Promise<{ source: ImportSource, modified: number }[]>} */
+    importSources: () => invoke('import_sources'),
+    /** What importing `source` would bring over. Changes nothing. @returns {Promise<ImportPreview>} */
+    importPreview: (source) => invoke('import_preview', { source }),
+    /** @returns {Promise<ImportSummary>} */
+    importRun: (source, options, folders) => invoke('import_run', { source, options, folders }),
+    /** @param {(e: { done: number, total: number }) => void} fn @returns {Promise<() => void>} */
+    onImportProgress: (fn) => listen('import-progress', (e) => fn(e.payload)),
+    /** @returns {Promise<string | null>} */
+    pickRekordboxXml: async () => {
+      const picked = await open({ multiple: false, title: 'Choose your Rekordbox XML export', filters: [{ name: 'Rekordbox XML', extensions: ['xml'] }] });
+      return typeof picked === 'string' ? picked : null;
+    },
     /**
      * A track's length, BPM and key, as the background analyzer finds them.
      * @param {(e: TrackAnalysis & { path: string }) => void} fn
