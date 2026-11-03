@@ -66,6 +66,12 @@ A free, open-source DJ app that is fast, modern and uncluttered. No paywalled
   later; double-click the BPM to type an exact one. A grid fixed by hand is
   saved and kept when the track is analyzed again, until you pick Reset to
   detected grid. Every change can be undone.
+- **Import from Rekordbox:** File › Import from Rekordbox… (or Settings ›
+  Library) reads a rekordbox.xml export (File › Export Collection in xml
+  format, Rekordbox 5, 6 or 7) and brings over hot cues, memory cues,
+  loops, beatgrids and playlists, and fills in empty tags. Cues or grids
+  you've already set in oss-dj are never replaced, and imported grids are
+  kept when a track is analyzed again. Music files aren't touched.
 - **Safety:** loading onto a playing deck is blocked.
 - **Controller: Pioneer DDJ-FLX4.** Plug it in (before or after starting the
   app) and it connects by itself; audio goes through its sound card, with
