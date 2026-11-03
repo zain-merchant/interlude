@@ -29,9 +29,12 @@ pub mod waveform;
 
 pub use analysis::Beatgrid;
 pub use command::{Command, DeckId, EqBand};
-pub use engine::{new_engine, Engine, EngineHandle, MAX_BLOCK_FRAMES};
+pub use engine::{
+    new_engine, Engine, EngineHandle, GAIN_MAX_DB, GAIN_MIN_DB, MASTER_MAX_DB, MASTER_MIN_DB,
+    MAX_BLOCK_FRAMES,
+};
 pub use null_output::{start_null, NullOutput};
-pub use shared::{DeckSnapshot, SharedState};
+pub use shared::{DeckSnapshot, MixerSnapshot, SharedState};
 pub use track::{LoadError, Track};
 pub use waveform::Waveform;
 

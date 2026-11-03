@@ -3,6 +3,17 @@ use std::sync::Arc;
 use crate::dsp::{db_to_gain, hermite, Eq3, Smoothed};
 use crate::{Beatgrid, EqBand, Track};
 
+/// How much of a jog movement a playing deck's nudge moves the play head.
+const NUDGE_SCALE: f64 = 0.15;
+/// Decay time of a jog nudge, in seconds.
+const JOG_BEND_TAU: f64 = 0.08;
+/// Time for the scratch follower to close the gap to the hand.
+const SCRATCH_TAU: f64 = 0.012;
+/// Velocity smoothing for scratching.
+const SCRATCH_SMOOTH: f64 = 0.004;
+/// Fastest a scratch can play, as a multiple of normal speed.
+const SCRATCH_MAX_SPEED: f64 = 10.0;
+
 /// Where a deck is on its beatgrid.
 pub(crate) struct BeatInfo {
     pub bpm: f64,
@@ -22,6 +33,13 @@ pub(crate) struct Deck {
     pub previewing: bool,
     pub rate: f64,
     pub bend: f64,
+    /// Temporary tempo push from the jog wheel's outer ring, decaying to 0.
+    pub jog_bend: f64,
+    /// Hand on the platter: the play head chases `scratch_target`.
+    pub scratching: bool,
+    scratch_target: f64,
+    /// Scratch velocity in source frames per output frame.
+    scratch_vel: f64,
     gain: Smoothed,
     eq: Eq3,
     out_rate: f64,
@@ -37,6 +55,10 @@ impl Deck {
             previewing: false,
             rate: 1.0,
             bend: 0.0,
+            jog_bend: 0.0,
+            scratching: false,
+            scratch_target: 0.0,
+            scratch_vel: 0.0,
             gain: Smoothed::new(1.0, 10.0, out_rate),
             eq: Eq3::new(out_rate),
             out_rate: out_rate as f64,
@@ -50,6 +72,9 @@ impl Deck {
         self.cue = 0.0;
         self.playing = false;
         self.previewing = false;
+        self.scratching = false;
+        self.scratch_vel = 0.0;
+        self.jog_bend = 0.0;
         self.eq.reset();
         std::mem::replace(&mut self.track, track)
     }
@@ -110,6 +135,43 @@ impl Deck {
         self.pos = (secs * self.source_rate()).clamp(0.0, self.frames());
     }
 
+    pub fn scratch_start(&mut self) {
+        if self.track.is_some() {
+            self.scratching = true;
+            self.scratch_target = self.pos;
+            self.scratch_vel = 0.0;
+        }
+    }
+
+    pub fn scratch_end(&mut self) {
+        self.scratching = false;
+    }
+
+    /// See `Command::Jog`.
+    pub fn jog(&mut self, secs: f64) {
+        let frames = secs * self.source_rate();
+        if self.scratching {
+            self.scratch_target = (self.scratch_target + frames).clamp(0.0, self.frames());
+        } else if self.playing {
+            // An impulse that decays over JOG_BEND_TAU; integrated, it moves
+            // the play head by NUDGE_SCALE times the wheel's movement.
+            self.jog_bend += secs * NUDGE_SCALE / JOG_BEND_TAU;
+            self.jog_bend = self.jog_bend.clamp(-0.5, 0.5);
+        } else {
+            self.pos = (self.pos + frames).clamp(0.0, self.frames());
+        }
+    }
+
+    /// Playback speed (1.0 = normal) when moving: the scratch velocity while
+    /// scratching, otherwise the rate plus any nudge.
+    pub fn speed(&self) -> f64 {
+        if self.scratching {
+            self.scratch_vel * self.out_rate / self.source_rate()
+        } else {
+            self.rate + self.bend + self.jog_bend
+        }
+    }
+
     fn grid(&self) -> Option<Beatgrid> {
         self.track.as_ref().and_then(|t| t.beatgrid)
     }
@@ -148,7 +210,16 @@ impl Deck {
         };
         let samples = &track.samples[..];
         let frames = track.frames() as i64;
-        let step = (self.rate + self.bend).max(0.0) * track.sample_rate as f64 / self.out_rate;
+        let ratio = track.sample_rate as f64 / self.out_rate;
+        let step = (self.rate + self.bend + self.jog_bend).max(0.0) * ratio;
+        let end = frames as f64;
+        // Per-frame coefficients for the scratch follower: a spring pulling
+        // the velocity towards closing the gap to the hand within
+        // SCRATCH_TAU, smoothed over SCRATCH_SMOOTH so jog ticks blur into
+        // continuous motion.
+        let pull = 1.0 / (SCRATCH_TAU * self.out_rate);
+        let smooth = 1.0 / (SCRATCH_SMOOTH * self.out_rate);
+        let max_vel = SCRATCH_MAX_SPEED * ratio;
 
         let sample = |i: i64, ch: usize| -> f32 {
             if i < 0 || i >= frames {
@@ -160,7 +231,7 @@ impl Deck {
 
         for frame in out.as_chunks_mut::<2>().0 {
             let (mut l, mut r) = (0.0, 0.0);
-            if self.playing {
+            if self.playing || self.scratching {
                 let i = self.pos.floor() as i64;
                 let t = (self.pos - i as f64) as f32;
                 l = hermite(
@@ -177,11 +248,18 @@ impl Deck {
                     sample(i + 1, 1),
                     sample(i + 2, 1),
                 );
-                self.pos += step;
-                if self.pos >= frames as f64 {
-                    self.pos = frames as f64;
-                    self.playing = false;
-                    self.previewing = false;
+                if self.scratching {
+                    let want = (self.scratch_target - self.pos) * pull;
+                    self.scratch_vel += (want - self.scratch_vel) * smooth;
+                    self.scratch_vel = self.scratch_vel.clamp(-max_vel, max_vel);
+                    self.pos = (self.pos + self.scratch_vel).clamp(0.0, end);
+                } else {
+                    self.pos += step;
+                    if self.pos >= end {
+                        self.pos = end;
+                        self.playing = false;
+                        self.previewing = false;
+                    }
                 }
             }
             // Keep the EQ running on silence so its tail rings out naturally.
@@ -190,6 +268,13 @@ impl Deck {
             frame[0] = l * g;
             frame[1] = r * g;
             peak = peak.max(frame[0].abs()).max(frame[1].abs());
+        }
+        if self.jog_bend != 0.0 {
+            let n = (out.len() / 2) as f64;
+            self.jog_bend *= (-n / (JOG_BEND_TAU * self.out_rate)).exp();
+            if self.jog_bend.abs() < 1e-4 {
+                self.jog_bend = 0.0;
+            }
         }
         peak
     }

@@ -1,0 +1,15 @@
+[package]
+name = "dj-controller"
+description = "MIDI DJ controller support: device discovery and mappings"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[features]
+default = ["midi"]
+# Talk to real MIDI devices. Off to test the mappings alone.
+midi = ["dep:midir"]
+
+[dependencies]
+dj-engine = { path = "../engine", default-features = false }
+midir = { version = "0.11", optional = true }
