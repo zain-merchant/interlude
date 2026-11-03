@@ -3,8 +3,8 @@
   import { WaveformGL, themeColors } from './waveform-gl.js';
   import { tracks, engine, displayPos, onFrame, scrubStart, scrubTo, scrubEnd } from './engine.svelte.js';
 
-  /** @type {{ deck: number, mode?: 'scroll' | 'overview', seconds?: number }} */
-  let { deck, mode = 'scroll', seconds = 12 } = $props();
+  /** @type {{ deck: number, mode?: 'scroll' | 'overview', seconds?: number, onzoom?: (factor: number) => void }} */
+  let { deck, mode = 'scroll', seconds = 12, onzoom } = $props();
 
   let canvas;
   let failed = $state(false);
@@ -18,7 +18,7 @@
       failed = true;
       return;
     }
-    const colors = themeColors(deck === 0 ? '--deck-a' : '--deck-b');
+    const colors = themeColors();
     let uploaded = null;
 
     const off = onFrame(() => {
@@ -83,6 +83,27 @@
     drag = null;
     dragging = false;
   }
+
+  // ⌘/Ctrl + scroll zooms; plain scroll moves through a paused track.
+  let wheelTimer;
+  function wheel(e) {
+    if (mode !== 'scroll') return;
+    if (e.metaKey || e.ctrlKey) {
+      e.preventDefault();
+      onzoom?.(e.deltaY > 0 ? 1.15 : 1 / 1.15);
+      return;
+    }
+    if (!tracks[deck] || engine.decks[deck].playing || drag) return;
+    e.preventDefault();
+    if (!wheelTimer) scrubStart(deck);
+    clearTimeout(wheelTimer);
+    const d = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+    scrubTo(deck, displayPos[deck] + (d / canvas.clientWidth) * seconds);
+    wheelTimer = setTimeout(() => {
+      wheelTimer = null;
+      scrubEnd(deck);
+    }, 200);
+  }
 </script>
 
 <div class="wave {mode}" class:empty={!tracks[deck]}>
@@ -94,19 +115,20 @@
     onpointerup={up}
     onpointercancel={up}
     onlostpointercapture={up}
-    aria-label={mode === 'overview' ? 'Track overview, click or drag to jump' : 'Scrolling waveform, drag to scrub'}
+    onwheel={wheel}
+    aria-hidden="true"
   ></canvas>
   {#if failed}
     <div class="msg">Waveforms need WebGL2</div>
   {:else if !tracks[deck] && mode === 'scroll'}
-    <div class="msg">Deck {deck === 0 ? 'A' : 'B'} · drop a track from the library</div>
+    <div class="msg">Drag a track here or press {deck === 0 ? '⇧←' : '⇧→'}</div>
   {/if}
 </div>
 
 <style>
   .wave {
     position: relative;
-    background: var(--panel);
+    background: var(--bg);
     overflow: hidden;
   }
   canvas {
@@ -131,7 +153,7 @@
     inset: 0;
     display: grid;
     place-items: center;
-    color: var(--faint);
+    color: var(--fg-4);
     font-size: 12px;
     pointer-events: none;
   }
