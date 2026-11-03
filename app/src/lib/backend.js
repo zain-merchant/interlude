@@ -27,7 +27,8 @@ export const inTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in
  *             beatgrid: { bpm: number, firstBeat: number } | null }} TrackInfo
  * @typedef {{ duration: number | null, bpm: number | null,
  *             key: { tonic: number, minor: boolean } | null, failed: boolean }} TrackAnalysis
- * @typedef {{ path: string, title: string, artist: string, folder: string, format: string,
+ * @typedef {{ path: string, title: string, artist: string, album: string, genre: string,
+ *             folder: string, format: string, missing: boolean,
  *             analysis: TrackAnalysis | null }} LibraryTrack
  */
 

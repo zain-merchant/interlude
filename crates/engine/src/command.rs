@@ -32,6 +32,39 @@ pub enum EqBand {
     High = 2,
 }
 
+/// A track's cue points as the library saves them, in seconds from the
+/// start of the track.
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
+pub struct SavedCues {
+    pub cue: f64,
+    pub hot_cues: [Option<f64>; crate::HOT_CUES],
+    /// Loop in and loop out.
+    pub saved_loop: Option<(f64, f64)>,
+}
+
+impl SavedCues {
+    /// The commands that put these cues on a freshly loaded deck. Send
+    /// them straight after its `Load`.
+    pub fn commands(&self, deck: DeckId) -> impl Iterator<Item = Command> + '_ {
+        let restore = Command::RestoreCue {
+            deck,
+            seconds: self.cue,
+            saved_loop: self.saved_loop,
+        };
+        std::iter::once(restore).chain(
+            self.hot_cues
+                .iter()
+                .enumerate()
+                .filter(|(_, at)| at.is_some())
+                .map(move |(index, &seconds)| Command::SetHotCue {
+                    deck,
+                    index,
+                    seconds,
+                }),
+        )
+    }
+}
+
 /// A message from the control side to the audio thread.
 ///
 /// Every variant is cheap to move and dropping one never frees memory on the
@@ -121,6 +154,21 @@ pub enum Command {
     SetCue {
         deck: DeckId,
         seconds: f64,
+    },
+    /// Put back a track's saved cue point and loop right after loading
+    /// it: the play head moves to the cue, and the loop is stored but not
+    /// playing. See [`SavedCues::commands`].
+    RestoreCue {
+        deck: DeckId,
+        seconds: f64,
+        saved_loop: Option<(f64, f64)>,
+    },
+    /// Set (or with `None`, clear) hot cue `index` at a position in
+    /// seconds, without jumping to it.
+    SetHotCue {
+        deck: DeckId,
+        index: usize,
+        seconds: Option<f64>,
     },
     /// Quantize, for both decks: cue points and loops snap to the beat,
     /// and hot cues and reloop jumps while playing keep the beat's timing.

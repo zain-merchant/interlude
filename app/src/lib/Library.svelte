@@ -28,12 +28,12 @@
   let scrollTop = $state(0);
   let viewHeight = $state(400);
 
-  /** Every word must appear in the artist, title or folder. */
+  /** Every word must appear in the artist, title, album, genre or folder. */
   const results = $derived.by(() => {
     const words = query.toLowerCase().split(/\s+/).filter(Boolean);
     if (!words.length) return all;
     return all.filter((t) => {
-      const hay = `${t.artist} ${t.title} ${t.folder}`.toLowerCase();
+      const hay = `${t.artist} ${t.title} ${t.album ?? ''} ${t.genre ?? ''} ${t.folder}`.toLowerCase();
       return words.every((w) => hay.includes(w));
     });
   });
@@ -193,7 +193,7 @@
   /** Loads the selected track into `deck`, then moves to the next row, ready for the next pick. */
   export function loadSelected(deck) {
     const t = sorted[selected];
-    if (!t) return;
+    if (!t || t.missing) return;
     onload(deck, t);
     if (!engine.decks[deck].playing) browse(1);
   }
@@ -213,6 +213,7 @@
 
   /** Loads into the first deck that isn't playing, preferring A. */
   function autoLoad(t) {
+    if (!t || t.missing) return;
     const deck = !engine.decks[0].playing ? 0 : !engine.decks[1].playing ? 1 : null;
     if (deck !== null) onload(deck, t);
   }
@@ -339,13 +340,13 @@
           {@const decks = onDeck(t)}
           {@const a = t.analysis}
           <!-- svelte-ignore a11y_interactive_supports_focus (the listbox holds focus; rows are its options) -->
-          <div class="row" class:sel={index === selected} style:top="{index * ROW}px" role="option" id="track-{index}"
+          <div class="row" class:sel={index === selected} class:missing={t.missing} style:top="{index * ROW}px" role="option" id="track-{index}"
             aria-selected={index === selected}
-            draggable="true" ondragstart={(e) => { selectIndex(index); startDrag(e, t); }} ondragend={endDrag}
+            draggable={!t.missing} ondragstart={(e) => { selectIndex(index); startDrag(e, t); }} ondragend={endDrag}
             onclick={() => { selectIndex(index); scroller.focus({ preventScroll: true }); }} ondblclick={() => autoLoad(t)} onkeydown={() => {}}
             oncontextmenu={(e) => rowMenu(e, t, index)}>
             <span class="ld">{#each decks as d}<b class:b={d === 1} aria-hidden="true">{'AB'[d]}</b>{/each}</span>
-            <span class="t">{t.title}</span>
+            <span class="t">{#if t.missing}<span class="k" use:tip={() => `File not found: ${t.path}`}>{t.title}</span><span class="sr">, file not found</span>{:else}{t.title}{/if}</span>
             <span>{t.artist}</span>
             <span class="n num" class:none={a && !a.bpm}>{a ? bpmText(a) || NONE : ''}</span>
             <span class:none={a && !a.key}>{#if a?.key}<span class="k" use:tip={() => `${keyLongName(a.key)} (${camelot(a.key)})`}>{keyName(a.key)}</span>{:else if a}{NONE}{/if}</span>
@@ -510,6 +511,11 @@
   }
   .row .n {
     text-align: right;
+  }
+  /* A file that's gone from disk: listed, with its cues kept, but can't load. */
+  .row.missing,
+  .row.missing .t {
+    color: var(--fg-3);
   }
   .row .none {
     color: var(--fg-4);
