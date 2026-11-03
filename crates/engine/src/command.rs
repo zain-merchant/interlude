@@ -116,6 +116,12 @@ pub enum Command {
         deck: DeckId,
         seconds: f64,
     },
+    /// Move the cue point, in seconds from the start of the track. Used to
+    /// put a deck back the way it was (undoing a load).
+    SetCue {
+        deck: DeckId,
+        seconds: f64,
+    },
     /// Playback rate as a ratio: 1.0 is normal speed, 1.08 is +8%.
     SetRate {
         deck: DeckId,

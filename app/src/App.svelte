@@ -6,40 +6,105 @@
   import Waveform from './lib/Waveform.svelte';
   import Tooltip from './lib/Tooltip.svelte';
   import ContextMenu from './lib/ContextMenu.svelte';
-  import { engine, tracks, startEngineLoop, loadTrack, control } from './lib/engine.svelte.js';
+  import Settings from './lib/Settings.svelte';
+  import { engine, tracks, startEngineLoop, loadTrack, control, deckSnapshot, restoreDeck } from './lib/engine.svelte.js';
   import { backend } from './lib/backend.js';
   import { dropTarget } from './lib/dnd.svelte.js';
   import { commandFor, keyLabel } from './lib/commands.js';
+  import { keymap } from './lib/keymap.svelte.js';
   import { keyboardMenu, htmlMenu } from './lib/menu.svelte.js';
   import { tip, tipText } from './lib/tooltip.svelte.js';
   import { live, announce } from './lib/announce.svelte.js';
+  import { toast, showToast, hideToast, pushEdit, undo, redo } from './lib/undo.svelte.js';
+  import { stepUiZoom, setUiZoom } from './lib/uizoom.svelte.js';
+  import { installAppMenu } from './lib/appmenu.js';
   import { runPerformance } from './lib/performance.js';
 
   let library;
   let mixer;
   let zoom = $state(12);
-  let toast = $state('');
-  let toastTimer;
+  const say = (msg) => showToast(msg);
 
-  function say(msg) {
-    toast = msg;
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => (toast = ''), 2600);
-  }
+  const playingMsg = (deck) => `Deck ${'AB'[deck]} is playing. Pause it first.`;
 
+  /** Loads a track, keeping what the deck held so ⌘Z can put it back. */
   async function load(deck, track) {
     // Never swap the track under a playing deck in the middle of a set.
     if (engine.decks[deck].playing) {
-      say(`Deck ${'AB'[deck]} is playing. Pause it first.`);
+      say(playingMsg(deck));
       return;
     }
+    const before = deckSnapshot(deck);
     try {
       await loadTrack(deck, track);
       announce(`Loaded ${track.title} on deck ${'AB'[deck]}`);
     } catch (e) {
       say(`Couldn't load ${track.title}: ${e}`);
+      return;
     }
+    let after = null;
+    // Undo and redo both refuse a playing deck, like loading does.
+    const swap = (snap) => async () => {
+      if (engine.decks[deck].playing) {
+        say(playingMsg(deck));
+        return false;
+      }
+      const now = deckSnapshot(deck);
+      await restoreDeck(deck, snap);
+      return now;
+    };
+    pushEdit({
+      label: `Loaded ${track.title} on deck ${'AB'[deck]}`,
+      undo: async () => {
+        const now = await swap(before)();
+        if (now === false) return false;
+        after = now;
+      },
+      redo: async () => (await swap(after)()) === false ? false : undefined,
+    });
   }
+
+  // Settings open over the library, leaving the decks in reach.
+  let settings = $state(null); // null, 'keyboard' or 'display'
+  const openSettings = (page = 'keyboard') => {
+    hideToast();
+    settings = page;
+  };
+
+  /** Speaks where a deck is: time, bar and whether it's playing. */
+  function readPosition(deck) {
+    const n = 'AB'[deck];
+    const t = tracks[deck];
+    if (!t) return announce(`Deck ${n} is empty`);
+    const d = engine.decks[deck];
+    const spoken = (s) => {
+      const m = Math.floor(s / 60);
+      const sec = Math.floor(s - m * 60);
+      return `${m} minute${m === 1 ? '' : 's'} ${sec} second${sec === 1 ? '' : 's'}`;
+    };
+    const parts = [`Deck ${n}`, `${spoken(d.position)} of ${spoken(d.duration)}`];
+    const g = t.beatgrid;
+    if (g?.bpm) {
+      const bar = (s) => Math.floor(Math.max(0, ((s - g.firstBeat) * g.bpm) / 60) / 4) + 1;
+      parts.push(`bar ${bar(d.position)} of ${bar(d.duration)}`);
+    }
+    parts.push(d.playing ? 'playing' : 'paused');
+    announce(parts.join(', '));
+  }
+
+  // The audio device: a banner while it's gone, a toast when it's back.
+  let lostDevice = null;
+  $effect(() => {
+    const a = engine.audio;
+    if (a?.state === 'lost' && lostDevice === null) {
+      lostDevice = a.device;
+      announce(`${a.device} disconnected. Decks are held where they stopped.`);
+    } else if (a?.state === 'connected' && lostDevice !== null) {
+      say(a.device === lostDevice ? `${a.device} is back` : `Playing through ${a.device}`);
+      announce(`Audio is back on ${a.device}`);
+      lostDevice = null;
+    }
+  });
 
   const setZoom = (z) => (zoom = Math.max(3, Math.min(48, z)));
 
@@ -117,10 +182,34 @@
       case 'focus.prev':
         if (down) cycleFocus(id === 'focus.next' ? 1 : -1);
         break;
+      case 'deck.0.where':
+      case 'deck.1.where':
+        if (down) readPosition(deck);
+        break;
+      case 'edit.undo':
+        if (down) undo();
+        break;
+      case 'edit.redo':
+        if (down) redo();
+        break;
+      case 'app.settings':
+        if (down) openSettings();
+        break;
+      case 'view.uiZoomIn':
+      case 'view.uiZoomOut':
+        if (down) stepUiZoom(id === 'view.uiZoomIn' ? 1 : -1);
+        break;
+      case 'view.uiZoomReset':
+        if (down) setUiZoom(1);
+        break;
       default:
         runPerformance(id, down);
     }
   }
+
+  // ⌘ shortcuts that work even while typing. Undo and redo aren't among
+  // them: in a text field they undo the typing.
+  const ANYWHERE = new Set(['library.search', 'app.settings', 'view.uiZoomIn', 'view.uiZoomOut', 'view.uiZoomReset']);
 
   const REPEATS = new Set(['mixer.xfLeft', 'mixer.xfRight', 'view.zoomOut', 'view.zoomIn']);
   const held = new Map(); // key code -> command id, for hold commands
@@ -130,9 +219,10 @@
     const t = e.target;
     const typing = t instanceof HTMLTextAreaElement || (t instanceof HTMLInputElement && t.type !== 'range') || t?.isContentEditable;
     const cmd = commandFor(e);
-    // ⌘F works everywhere; everything else gives way to typing and to a
-    // focused control that already used the key (a slider's arrows).
-    if (cmd?.id === 'library.search') {
+    // A few ⌘ shortcuts work everywhere; everything else gives way to
+    // typing and to a focused control that already used the key (a
+    // slider's arrows).
+    if (cmd && ANYWHERE.has(cmd.id)) {
       e.preventDefault();
       run(cmd.id, true);
       return;
@@ -170,12 +260,13 @@
   // between sessions.
   const LIB_KEY = 'oss-dj.libraryHeight';
   const LIB_DEFAULT = 440;
+  const APP_MIN_H = 720; // matches .app's min-height
   let libHeight = $state(LIB_DEFAULT);
   let winHeight = $state(900);
   try {
     libHeight = Number(localStorage.getItem(LIB_KEY)) || LIB_DEFAULT;
   } catch {}
-  const libMax = $derived(Math.max(160, Math.min(560, winHeight - 150 - 9 - 260)));
+  const libMax = $derived(Math.max(160, Math.min(560, Math.max(winHeight, APP_MIN_H) - 150 - 9 - 300)));
   const lib = $derived(Math.max(160, Math.min(libMax, libHeight)));
   function setLib(h) {
     libHeight = Math.max(160, Math.min(libMax, h));
@@ -200,6 +291,25 @@
     e.stopPropagation();
   };
 
+  /** Undo / redo in a focused text field, for the menu's ⌘Z. True if it was one. */
+  function undoInField(again) {
+    const t = document.activeElement;
+    if (!(t instanceof HTMLInputElement || t instanceof HTMLTextAreaElement)) return false;
+    document.execCommand(again ? 'redo' : 'undo');
+    return true;
+  }
+
+  // The macOS menu bar shows each command's current shortcut, so it's
+  // rebuilt whenever the user changes one.
+  $effect(() => {
+    JSON.stringify(keymap.overrides);
+    installAppMenu((id) => run(id, true), {
+      addFolder: () => library.addFolder(),
+      keyboard: () => openSettings('keyboard'),
+      undoInField,
+    }).catch((e) => console.error('menu', e));
+  });
+
   onMount(() => {
     startEngineLoop();
     // The controller's browse knob and load buttons drive the library.
@@ -211,10 +321,10 @@
   });
 </script>
 
-<svelte:window onkeydown={keydown} onkeyup={keyup} onblur={blur} oncontextmenu={contextmenu} bind:innerHeight={winHeight} />
+<svelte:window onkeydown={keydown} onkeyup={keyup} onblur={blur} oncontextmenu={contextmenu} />
 
-<div class="app" style:--lib="{lib}px">
-  <div class="waves" data-region="waves">
+<div class="app" style:--lib="{lib}px" bind:clientHeight={winHeight}>
+  <div class="waves" data-region="waves" role="group" aria-label="Waveforms">
     {#each [0, 1] as deck}
       <div class="lane" style:--drop-color={deck === 0 ? 'var(--deck-a)' : 'var(--deck-b)'} class:b={deck === 1}
         use:dropTarget={{ ondrop: (t) => load(deck, t), blocked: () => engine.decks[deck].playing }}>
@@ -224,7 +334,7 @@
     {/each}
     <div class="zoom">
       <button onclick={() => setZoom(zoom * 1.4)} aria-label="Zoom out" use:tip={() => tipText('Zoom out', keyLabel('view.zoomOut'))}>−</button>
-      <span class="num" aria-label="Waveform window">{zoom.toFixed(0)} s</span>
+      <span class="num"><span class="sr">Waveforms show </span>{zoom.toFixed(0)} s</span>
       <button onclick={() => setZoom(zoom / 1.4)} aria-label="Zoom in" use:tip={() => tipText('Zoom in', keyLabel('view.zoomIn'))}>+</button>
     </div>
   </div>
@@ -242,9 +352,33 @@
     ondblclick={() => setLib(LIB_DEFAULT)} onkeydown={splitKey}
     use:tip={() => 'Drag to resize the library, double-click to reset'}><i></i></div>
 
-  <Library bind:this={library} onload={load} />
+  <div class="below">
+    <div class="libwrap" inert={settings !== null}>
+      <Library bind:this={library} onload={load} onsettings={() => openSettings()} />
+    </div>
+    {#if settings}<Settings bind:page={settings} onclose={() => (settings = null)} />{/if}
+  </div>
 
-  {#if toast}<div class="toast" role="status">{toast}</div>{/if}
+  {#if engine.audio?.state === 'lost'}
+    <div class="banner" role="alert">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.8 15 14H1z" /><path d="M8 6.2v3.6M8 11.6v.4" /></svg>
+      <span><b>{engine.audio.device} disconnected.</b> Decks are held where they stopped and carry on when it's back.</span>
+      {#if engine.audio.fallback && engine.audio.fallback !== engine.audio.device}
+        <button class="btn sm" onclick={() => backend.useDefaultOutput?.()}>Play through {engine.audio.fallback}</button>
+      {/if}
+    </div>
+  {/if}
+
+  <div class="toastbox" role="status">
+    {#if toast.text}
+      <div class="toast">
+        <span>{toast.text}</span>
+        {#if toast.undo}
+          <button class="undo" onclick={() => { hideToast(); undo(); }}>Undo <kbd>{keyLabel('edit.undo')}</kbd></button>
+        {/if}
+      </div>
+    {/if}
+  </div>
   <div class="sr" aria-live="polite">{live.text}</div>
 </div>
 
@@ -253,9 +387,56 @@
 
 <style>
   .app {
+    position: relative;
     height: 100%;
+    /* Below this the app scrolls rather than clipping, so the interface
+       can be zoomed to 200% on a laptop screen. */
+    min-width: 960px;
+    min-height: 720px;
     display: grid;
-    grid-template-rows: 150px minmax(260px, 1fr) 9px var(--lib);
+    grid-template-rows: 150px minmax(300px, 1fr) 9px var(--lib);
+  }
+  .below {
+    position: relative;
+    display: grid;
+    min-height: 0;
+  }
+  .libwrap {
+    display: grid;
+    min-height: 0;
+  }
+  .banner {
+    position: absolute;
+    left: 50%;
+    top: 10px;
+    transform: translateX(-50%);
+    z-index: 40;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    max-width: calc(100% - 32px);
+    padding: 8px 8px 8px 14px;
+    border-radius: 8px;
+    background: var(--popover);
+    box-shadow: inset 0 0 0 1px var(--fg-3), 0 12px 32px rgb(0 0 0 / 0.45);
+    color: var(--fg-2);
+  }
+  .banner b {
+    color: var(--fg);
+    font-weight: 500;
+  }
+  .banner svg {
+    flex: none;
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: var(--fg);
+    stroke-width: 1.5;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+  }
+  .banner .btn {
+    flex: none;
   }
   .waves {
     position: relative;
@@ -382,11 +563,39 @@
     bottom: 24px;
     transform: translateX(-50%);
     z-index: 50;
-    padding: 9px 14px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 6px 6px 6px 14px;
+    min-height: 36px;
+    box-sizing: border-box;
     border-radius: 8px;
     background: var(--popover);
     box-shadow: inset 0 0 0 1px var(--line-2);
     color: var(--fg);
+  }
+  .toast:not(:has(.undo)) {
+    padding-right: 14px;
+  }
+  .undo {
+    height: 26px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: 6px;
+    background: none;
+    box-shadow: inset 0 0 0 1px var(--line-2);
+    color: var(--fg);
+    font: 500 13px var(--font);
+  }
+  .undo:hover {
+    box-shadow: inset 0 0 0 1px var(--fg-3);
+  }
+  .undo kbd {
+    font: 400 11px var(--font);
+    color: var(--fg-3);
   }
   .sr {
     position: absolute;

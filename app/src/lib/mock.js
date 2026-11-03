@@ -78,13 +78,24 @@ export function createMockBackend() {
     loaded: false, playing: false, position: 0, duration: 0, cue: 0, rate: 1, bend: 0, bpm: 0, key: null, keylock: false, firstBeat: 0,
     generation: 0, previewing: false, scratching: false, waveform: null, fader: 1, peak: 0, ...freshLoops(),
   }));
+  let folders = FOLDERS.map((f) => `/Music/${f}`);
   let xf = 0;
   let last = performance.now();
+  // Simulated audio device, so the disconnect banner can be tried in a
+  // browser: run __mockAudio.lose() and __mockAudio.restore() in the console.
+  /** @type {any} */
+  let audio = { state: 'connected', device: 'Browser preview', sampleRate: 48000 };
+  globalThis.__mockAudio = {
+    lose: () => (audio = { state: 'lost', device: 'DDJ-FLX4', fallback: 'MacBook Pro Speakers' }),
+    restore: () => (audio = { state: 'connected', device: 'DDJ-FLX4', sampleRate: 48000 }),
+  };
 
   function tick() {
     const now = performance.now();
     const dt = (now - last) / 1000;
     last = now;
+    // A lost device holds every deck where it is, like the real engine.
+    if (audio.state === 'lost') return;
     for (const d of decks) {
       if (!d.playing || d.scratching) continue;
       const before = d.position;
@@ -179,6 +190,11 @@ export function createMockBackend() {
         d.position = Math.max(0, Math.min(d.duration, d.position + delta));
         break;
       }
+      case 'setCue': if (d.loaded) d.cue = Math.max(0, Math.min(d.duration, cmd.seconds)); break;
+      case 'eject':
+        Object.assign(d, { loaded: false, playing: false, previewing: false, scratching: false, position: 0, cue: 0, duration: 0, bpm: 0, key: null, waveform: null, ...freshLoops() });
+        d.generation++;
+        break;
       case 'setRate': d.rate = cmd.rate; break;
       case 'setBend': d.bend = cmd.bend; break;
       case 'setKeylock': d.keylock = cmd.on; break;
@@ -215,6 +231,7 @@ export function createMockBackend() {
         })),
         deckPeaks,
         masterPeak: [Math.min(1, m), Math.min(1, m * 0.97)],
+        audio,
       };
     },
     outputName: async () => 'Browser preview · simulated audio',
@@ -236,10 +253,20 @@ export function createMockBackend() {
       };
     },
     waveform: async (deck) => decks[deck].waveform,
-    libraryFolders: async () => FOLDERS.map((f) => `/Music/${f}`),
-    addFolder: async () => FOLDERS.map((f) => `/Music/${f}`),
-    removeFolder: async () => FOLDERS.map((f) => `/Music/${f}`),
-    libraryTracks: async (folder) => (folder ? tracks.filter((t) => t.path.startsWith(folder + '/')) : tracks),
+    libraryFolders: async () => [...folders],
+    addFolder: async (path) => {
+      if (path && !folders.includes(path)) folders.push(path);
+      return [...folders];
+    },
+    useDefaultOutput: async () => {
+      if (audio.state === 'lost') audio = { state: 'connected', device: audio.fallback, sampleRate: 48000 };
+    },
+    removeFolder: async (path) => {
+      folders = folders.filter((f) => f !== path);
+      return [...folders];
+    },
+    libraryTracks: async (folder) =>
+      tracks.filter((t) => (folder ? [folder] : folders).some((f) => t.path.startsWith(f + '/'))),
     pickFolder: async () => null,
   };
 }

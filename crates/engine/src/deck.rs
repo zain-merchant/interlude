@@ -480,6 +480,12 @@ impl Deck {
         self.hand.reset(self.pos, vel);
     }
 
+    pub fn set_cue_secs(&mut self, secs: f64) {
+        if self.track.is_some() {
+            self.cue = (secs * self.source_rate()).clamp(0.0, self.frames());
+        }
+    }
+
     pub fn scratch_start(&mut self) {
         if self.track.is_some() {
             self.start_following();
