@@ -54,6 +54,13 @@ A free, open-source DJ app that is fast, modern and uncluttered. No paywalled
   `backups/`); your music files are never changed. Rescans only re-read
   new or changed files, and a file that has gone stays listed, greyed out,
   with its cues kept.
+- **Playlists and History:** make playlists in the sidebar (+ New playlist,
+  or right-click a track and Add to new playlist), add tracks by dragging
+  them onto a playlist or from the right-click menu, drag rows to reorder,
+  and Backspace to remove. Double-click a playlist to rename it. Every
+  change can be undone. History lists what you played, one entry per
+  session (a gap of 4 hours starts a new one); a track counts once it has
+  been on air for 30 seconds with its fader up and the crossfader open.
 - **Safety:** loading onto a playing deck is blocked.
 - **Controller: Pioneer DDJ-FLX4.** Plug it in (before or after starting the
   app) and it connects by itself; audio goes through its sound card, with
