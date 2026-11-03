@@ -2,11 +2,12 @@
 // RGBA8 texture (peak, low, mid, high); each frame only a few uniforms
 // change, so drawing costs almost nothing on the CPU.
 //
-// The look: a ribbon of thin, anti-aliased threads. The outermost follows
-// the bass outline and the innermost the highs, with the threads between
-// blending from blue through amber to white, so width still reads as
-// loudness and colour as frequency. The threads weave with a slow twist
-// that scrolls with the music. What has already played collapses to one grey
+// The look: the familiar nested bands (bass blue outside, mids amber,
+// highs white in the core) as solid, smooth shapes, with a ribbon of thin
+// anti-aliased threads laid over them as a fine texture. The outermost
+// thread is the crisp bass edge and the innermost follows the highs, the
+// ones between blending blue to amber to white. A faint twist that
+// scrolls with the music makes the inner threads weave. What has already played collapses to one grey
 // shape. Beats are faint full-height lines, every 4th a little stronger,
 // and the play head is a single 1 px line. Hot cues are thin cue-coloured
 // lines; an active loop is a faint white band between two white lines. No
@@ -92,7 +93,13 @@ vec3 bandsAt(float px, float half_) {
 float threadY(vec3 b, float t, float bin) {
   float h = t < 0.5 ? mix(b.x, b.y, t * 2.0) : mix(b.y, b.z, t * 2.0 - 1.0);
   float phase = bin * twist + t * 4.7;
-  return h * (1.0 + 0.16 * sin(phase));
+  return h * (1.0 + 0.07 * sin(phase) * t * (1.0 - t) * 4.0);
+}
+
+// Brightness across a band: fullest at the centre line, falling off
+// towards its edge, so each band reads as a soft, rounded shape.
+float shade(float y, float h) {
+  return mix(1.15, 0.7, smoothstep(0.0, 1.0, y / max(h, 1.0)));
 }
 
 vec3 threadColour(float t) {
@@ -114,10 +121,18 @@ void main() {
 
   // Silence draws nothing, not a hairline along the centre.
   if (b.x > 0.5 * dpr) {
-    // A faint body inside the outer thread gives the ribbon some volume.
-    float outer = threadY(b, 0.0, bin);
-    float body = 1.0 - smoothstep(outer - aa, outer + aa, y);
-    c = mix(c, past ? cPast : cLow, body * (past ? 0.35 : 0.09));
+    // Solid nested bands underneath, the familiar DJ shape: bass outside,
+    // mids, highs in the core, each darker towards its edge.
+    float inLow = 1.0 - smoothstep(b.x - aa, b.x + aa, y);
+    float inMid = 1.0 - smoothstep(b.y - aa, b.y + aa, y);
+    float inHigh = 1.0 - smoothstep(b.z - aa, b.z + aa, y);
+    if (past) {
+      c = mix(c, cPast, max(inLow, inMid));
+    } else {
+      c = mix(c, cLow * shade(y, b.x) * 0.55, inLow);
+      c = mix(c, cMid * shade(y, b.y) * 0.7, inMid);
+      c = mix(c, min(cHigh * shade(y, b.z) * 0.92, vec3(1.0)), inHigh);
+    }
 
     // Threads: about one every 4 px of height, each a 1 px anti-aliased line.
     float n = clamp(floor(half_ / (4.0 * dpr)), 6.0, 18.0);
@@ -128,8 +143,10 @@ void main() {
       float slope = (threadY(bNext, t, binNext) - ty) / dpr;
       float d = abs(y - ty) / sqrt(1.0 + slope * slope);
       float line = 1.0 - smoothstep(0.3 * dpr, 1.0 * dpr, d);
-      vec3 tc = past ? mix(cPast, cFg, 0.14) : threadColour(t);
-      c = mix(c, tc, line * (past ? 0.8 : 0.92));
+      vec3 tc = past ? mix(cPast, cFg, 0.12) : threadColour(t);
+      // The outermost thread is the band's crisp edge; the rest are a
+      // finer texture over the fill.
+      c = mix(c, tc, line * (past ? 0.6 : k < 0.5 ? 1.0 : 0.7));
     }
   }
 
