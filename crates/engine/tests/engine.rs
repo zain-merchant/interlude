@@ -263,3 +263,89 @@ fn decodes_wav_files() {
 fn missing_file_is_an_error_not_a_panic() {
     assert!(Track::load("/definitely/not/here.mp3").is_err());
 }
+
+/// Kick drum on every beat starting at `offset` seconds, plus off-beat hats.
+fn drums(bpm: f64, secs: f64, offset: f64) -> Vec<f32> {
+    let n = (SR as f64 * secs) as usize;
+    let beat = 60.0 / bpm;
+    (0..n)
+        .flat_map(|i| {
+            let t = i as f64 / SR as f64;
+            let mut v = 0.0;
+            if t >= offset {
+                let bt = (t - offset) % beat;
+                let f = 50.0 + 100.0 * (-bt * 30.0).exp();
+                v += 0.7 * (2.0 * std::f64::consts::PI * f * bt).sin() * (-bt * 8.0).exp();
+                let ht = (t - offset + beat / 2.0) % beat;
+                v += 0.1 * (2.0 * std::f64::consts::PI * 9_000.0 * t).sin() * (-ht * 60.0).exp();
+            }
+            [v as f32, v as f32]
+        })
+        .collect()
+}
+
+#[test]
+fn loaded_tracks_get_a_beatgrid() {
+    let (mut e, mut h) = setup();
+    load(&mut h, DeckId::A, drums(126.0, 30.0, 0.2));
+    render(&mut e, 0.01);
+    let bpm = h.shared().deck(0).bpm;
+    assert!((bpm - 126.0).abs() < 0.02, "got {bpm}");
+}
+
+#[test]
+fn sync_matches_tempo_and_beat_phase() {
+    let (mut e, mut h) = setup();
+    let (a_bpm, a_off) = (128.0, 0.10);
+    let (b_bpm, b_off) = (122.0, 0.31);
+    load(&mut h, DeckId::A, drums(a_bpm, 40.0, a_off));
+    load(&mut h, DeckId::B, drums(b_bpm, 40.0, b_off));
+    h.send(Command::Play { deck: DeckId::A }).unwrap();
+    render(&mut e, 3.0);
+    h.send(Command::Seek {
+        deck: DeckId::B,
+        seconds: 5.4,
+    })
+    .unwrap();
+    h.send(Command::Play { deck: DeckId::B }).unwrap();
+    h.send(Command::Sync { deck: DeckId::B }).unwrap();
+    render(&mut e, 4.0);
+
+    let (a, b) = (h.shared().deck(0), h.shared().deck(1));
+    assert!(
+        (b.speed * b.bpm - a.speed * a.bpm).abs() < 0.01,
+        "tempo {} vs {}",
+        b.speed * b.bpm,
+        a.speed * a.bpm
+    );
+
+    // Both decks should be the same fraction of the way through a beat.
+    let phase = |pos: f64, bpm: f64, off: f64| ((pos - off) * bpm / 60.0).rem_euclid(1.0);
+    let pa = phase(a.position, a_bpm, a_off);
+    let pb = phase(b.position, b_bpm, b_off);
+    let mut d = (pa - pb).abs();
+    d = d.min(1.0 - d);
+    // Within 2% of a beat (about 10 ms).
+    assert!(d < 0.02, "phase A {pa:.3} vs B {pb:.3}");
+}
+
+#[test]
+fn sync_picks_double_time_when_closer() {
+    let (mut e, mut h) = setup();
+    load(&mut h, DeckId::A, drums(87.0, 30.0, 0.0)); // drum & bass, detected as half time
+    load(&mut h, DeckId::B, drums(172.0 / 2.0, 30.0, 0.0));
+    h.send(Command::Sync { deck: DeckId::B }).unwrap();
+    render(&mut e, 0.1);
+    let b = h.shared().deck(1);
+    assert!((b.rate - 87.0 / 86.0).abs() < 0.001, "rate {}", b.rate);
+}
+
+#[test]
+fn sync_without_beatgrids_does_nothing() {
+    let (mut e, mut h) = setup();
+    load(&mut h, DeckId::A, sine(440.0, 10.0, 0.5));
+    load(&mut h, DeckId::B, sine(440.0, 10.0, 0.5));
+    h.send(Command::Sync { deck: DeckId::B }).unwrap();
+    render(&mut e, 0.1);
+    assert_eq!(h.shared().deck(1).rate, 1.0);
+}

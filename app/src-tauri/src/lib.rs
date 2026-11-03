@@ -8,7 +8,7 @@ mod library;
 
 use std::sync::{Arc, Mutex};
 
-use dj_engine::{Command, DeckId, DeckSnapshot, EngineHandle, EqBand, Track, Waveform};
+use dj_engine::{Beatgrid, Command, DeckId, DeckSnapshot, EngineHandle, EqBand, Track, Waveform};
 use serde::{Deserialize, Serialize};
 use tauri::ipc::Response;
 use tauri::State;
@@ -36,6 +36,7 @@ struct TrackInfo {
     sample_rate: u32,
     bins_per_sec: f64,
     bin_count: usize,
+    beatgrid: Option<Beatgrid>,
 }
 
 #[derive(Serialize)]
@@ -58,6 +59,7 @@ enum Control {
     Seek { deck: usize, seconds: f64 },
     SetRate { deck: usize, rate: f64 },
     SetBend { deck: usize, bend: f64 },
+    Sync { deck: usize },
     SetGain { deck: usize, db: f32 },
     SetEq { deck: usize, band: usize, db: f32 },
     SetFader { deck: usize, value: f32 },
@@ -101,6 +103,9 @@ impl Control {
             C::SetBend { deck, bend } => Command::SetBend {
                 deck: deck_id(deck)?,
                 bend,
+            },
+            C::Sync { deck } => Command::Sync {
+                deck: deck_id(deck)?,
             },
             C::SetGain { deck, db } => Command::SetGain {
                 deck: deck_id(deck)?,
@@ -190,6 +195,7 @@ async fn load_track(
         sample_rate: track.sample_rate,
         bins_per_sec: track.waveform.bins_per_sec,
         bin_count: track.waveform.bins.len(),
+        beatgrid: track.beatgrid,
     };
     send(
         &state,

@@ -14,6 +14,7 @@
 //! engine sends the `Arc` back to the handle so the memory is freed off the
 //! audio thread.
 
+pub mod analysis;
 mod command;
 mod deck;
 pub mod dsp;
@@ -26,6 +27,7 @@ mod shared;
 mod track;
 pub mod waveform;
 
+pub use analysis::Beatgrid;
 pub use command::{Command, DeckId, EqBand};
 pub use engine::{new_engine, Engine, EngineHandle, MAX_BLOCK_FRAMES};
 pub use null_output::{start_null, NullOutput};
