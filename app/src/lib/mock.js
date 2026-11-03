@@ -124,7 +124,7 @@ export function createMockBackend() {
 
   const decks = [0, 1].map(() => ({
     loaded: false, playing: false, position: 0, duration: 0, cue: 0, rate: 1, bend: 0, bpm: 0, key: null, keylock: false, firstBeat: 0,
-    generation: 0, previewing: false, scratching: false, waveform: null, fader: 1, peak: 0, ...freshLoops(),
+    generation: 0, previewing: false, scratching: false, waveform: null, fader: 1, peak: 0, path: null, ...freshLoops(),
     filter: 0, fx: { kind: 'echo', on: false, level: 0.5, beats: 1 },
   }));
   /** @type {{ active: boolean, started: number, seconds: number, path: string | null }} */
@@ -335,6 +335,13 @@ export function createMockBackend() {
         binsPerSec: BINS_PER_SEC, binCount: d.waveform.length / 4,
         beatgrid: { bpm, firstBeat: 0 },
       };
+    },
+    setBeatgrid: async (deck, grid) => {
+      const d = decks[deck];
+      if (!d.loaded) throw new Error('deck is empty');
+      const g = grid ?? { bpm: 118 + (hash(d.path) % 12), firstBeat: 0 };
+      Object.assign(d, { bpm: g.bpm, firstBeat: g.firstBeat });
+      return { beatgrid: g, gridLocked: !!grid };
     },
     waveform: async (deck) => decks[deck].waveform,
     libraryFolders: async () => [...folders],

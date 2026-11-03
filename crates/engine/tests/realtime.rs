@@ -67,6 +67,13 @@ fn process_does_not_allocate() {
             seconds: 1.0,
             saved_loop: Some((1.0, 3.0)),
         },
+        Command::SetBeatgrid {
+            deck: DeckId::A,
+            grid: Some(dj_engine::Beatgrid {
+                bpm: 62.0,
+                first_beat: 0.1,
+            }),
+        },
         Command::SetHotCue {
             deck: DeckId::B,
             index: 5,

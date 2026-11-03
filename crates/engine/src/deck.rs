@@ -66,6 +66,8 @@ pub(crate) struct Deck {
     preview_hot: Option<usize>,
     /// Hot cue positions in source frames.
     pub hot_cues: [Option<f64>; HOT_CUES],
+    /// A beatgrid fixed by hand, used instead of the track's detected one.
+    grid_override: Option<Beatgrid>,
     /// Loop points in source frames. A loop can be stored but not active,
     /// so reloop can jump back into it.
     pub loop_in: Option<f64>,
@@ -116,6 +118,7 @@ impl Deck {
             preview_return: 0.0,
             preview_hot: None,
             hot_cues: [None; HOT_CUES],
+            grid_override: None,
             loop_in: None,
             loop_out: None,
             looping: false,
@@ -148,6 +151,7 @@ impl Deck {
         self.previewing = false;
         self.preview_hot = None;
         self.hot_cues = [None; HOT_CUES];
+        self.grid_override = None;
         self.loop_in = None;
         self.loop_out = None;
         self.looping = false;
@@ -623,8 +627,30 @@ impl Deck {
         }
     }
 
-    fn grid(&self) -> Option<Beatgrid> {
-        self.track.as_ref().and_then(|t| t.beatgrid)
+    /// The beatgrid in use: one fixed by hand, else the detected one.
+    pub fn grid(&self) -> Option<Beatgrid> {
+        self.grid_override
+            .or_else(|| self.track.as_ref().and_then(|t| t.beatgrid))
+    }
+
+    /// Uses `grid` instead of the detected beatgrid until the next load
+    /// (`None` goes back to the detected one). A grid without a sensible
+    /// tempo is ignored.
+    pub fn set_grid(&mut self, grid: Option<Beatgrid>) {
+        if self.track.is_none() {
+            return;
+        }
+        match grid {
+            None => self.grid_override = None,
+            Some(g)
+                if g.bpm.is_finite()
+                    && (20.0..=400.0).contains(&g.bpm)
+                    && g.first_beat.is_finite() =>
+            {
+                self.grid_override = Some(g)
+            }
+            Some(_) => {}
+        }
     }
 
     /// The beatgrid, while quantize is on.

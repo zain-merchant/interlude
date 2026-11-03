@@ -1330,3 +1330,83 @@ fn unquantized_beat_loops_start_at_the_play_head() {
     assert!((d.loop_in.unwrap() - 4.1).abs() < 1e-3);
     assert!((d.loop_out.unwrap() - 6.1).abs() < 1e-3);
 }
+
+#[test]
+fn a_beatgrid_fixed_by_hand_replaces_the_detected_one_until_the_next_load() {
+    let (mut e, mut h) = setup();
+    let gridded = || {
+        let mut t = Track::from_stereo(sine(440.0, 20.0, 0.5), SR);
+        t.beatgrid = Some(dj_engine::Beatgrid {
+            bpm: 120.0,
+            first_beat: 0.0,
+        });
+        Arc::new(t)
+    };
+    let a = DeckId::A;
+    h.send(Command::Load {
+        deck: a,
+        track: gridded(),
+    })
+    .unwrap();
+    render(&mut e, 0.05);
+    assert_eq!(h.shared().deck(0).bpm, 120.0);
+
+    // Halved, with the downbeat moved: beat jumps follow the new grid.
+    h.send(Command::SetBeatgrid {
+        deck: a,
+        grid: Some(dj_engine::Beatgrid {
+            bpm: 60.0,
+            first_beat: 0.25,
+        }),
+    })
+    .unwrap();
+    h.send(Command::BeatJump {
+        deck: a,
+        beats: 4.0,
+    })
+    .unwrap();
+    render(&mut e, 0.05);
+    let d = h.shared().deck(0);
+    assert_eq!(d.bpm, 60.0);
+    assert!(
+        (d.position - 4.0).abs() < 1e-3,
+        "4 beats at 60 BPM, got {}",
+        d.position
+    );
+
+    // Nonsense is ignored; None goes back to the detected grid.
+    h.send(Command::SetBeatgrid {
+        deck: a,
+        grid: Some(dj_engine::Beatgrid {
+            bpm: f64::NAN,
+            first_beat: 0.0,
+        }),
+    })
+    .unwrap();
+    render(&mut e, 0.05);
+    assert_eq!(h.shared().deck(0).bpm, 60.0);
+    h.send(Command::SetBeatgrid {
+        deck: a,
+        grid: None,
+    })
+    .unwrap();
+    render(&mut e, 0.05);
+    assert_eq!(h.shared().deck(0).bpm, 120.0);
+
+    // A new load starts from its own detected grid.
+    h.send(Command::SetBeatgrid {
+        deck: a,
+        grid: Some(dj_engine::Beatgrid {
+            bpm: 90.0,
+            first_beat: 0.0,
+        }),
+    })
+    .unwrap();
+    h.send(Command::Load {
+        deck: a,
+        track: gridded(),
+    })
+    .unwrap();
+    render(&mut e, 0.05);
+    assert_eq!(h.shared().deck(0).bpm, 120.0);
+}
