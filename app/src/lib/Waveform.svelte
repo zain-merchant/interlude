@@ -1,7 +1,7 @@
 <script>
   import { onMount } from 'svelte';
   import { WaveformGL, themeColors } from './waveform-gl.js';
-  import { tracks, engine, displayPos, onFrame, control } from './engine.svelte.js';
+  import { tracks, engine, displayPos, onFrame, scrubStart, scrubTo, scrubEnd } from './engine.svelte.js';
 
   /** @type {{ deck: number, mode?: 'scroll' | 'overview', seconds?: number }} */
   let { deck, mode = 'scroll', seconds = 12 } = $props();
@@ -48,19 +48,53 @@
     return off;
   });
 
-  function seek(e) {
-    if (mode !== 'overview' || !tracks[deck]) return;
+  // Drag to scrub. The overview maps the pointer straight onto the track;
+  // the scrolling view moves with the pointer like a record under a hand,
+  // and only starts once the pointer has moved, so a stray click does nothing.
+  let drag = null;
+  let dragging = $state(false);
+
+  function down(e) {
+    if (!tracks[deck] || e.button !== 0) return;
+    canvas.setPointerCapture(e.pointerId);
+    drag = { x: e.clientX, from: displayPos[deck], live: mode === 'overview' };
+    if (drag.live) begin(e);
+  }
+  function begin(e) {
+    drag.live = true;
+    dragging = true;
+    scrubStart(deck);
+    move(e);
+  }
+  function move(e) {
+    if (!drag) return;
     const r = canvas.getBoundingClientRect();
-    const x = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
-    control({ type: 'seek', deck, seconds: x * tracks[deck].duration });
+    if (mode === 'overview') {
+      const x = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
+      scrubTo(deck, x * tracks[deck].duration);
+    } else if (drag.live) {
+      scrubTo(deck, drag.from - ((e.clientX - drag.x) / r.width) * seconds);
+    } else if (Math.abs(e.clientX - drag.x) > 3) {
+      begin(e);
+    }
+  }
+  function up() {
+    if (drag?.live) scrubEnd(deck);
+    drag = null;
+    dragging = false;
   }
 </script>
 
 <div class="wave {mode}" class:empty={!tracks[deck]}>
   <canvas
     bind:this={canvas}
-    onpointerdown={seek}
-    aria-label={mode === 'overview' ? 'Track overview, click to jump' : 'Scrolling waveform'}
+    class:dragging
+    onpointerdown={down}
+    onpointermove={move}
+    onpointerup={up}
+    onpointercancel={up}
+    onlostpointercapture={up}
+    aria-label={mode === 'overview' ? 'Track overview, click or drag to jump' : 'Scrolling waveform, drag to scrub'}
   ></canvas>
   {#if failed}
     <div class="msg">Waveforms need WebGL2</div>
@@ -80,8 +114,17 @@
     width: 100%;
     height: 100%;
   }
-  .overview canvas {
+  canvas {
+    touch-action: none;
+  }
+  .wave:not(.empty) canvas {
+    cursor: grab;
+  }
+  .wave:not(.empty).overview canvas {
     cursor: pointer;
+  }
+  .wave:not(.empty) canvas.dragging {
+    cursor: grabbing;
   }
   .msg {
     position: absolute;

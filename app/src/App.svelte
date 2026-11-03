@@ -202,6 +202,5 @@
     color: #ffd7dc;
     padding: 10px 16px;
     border-radius: 10px;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
   }
 </style>

@@ -24,6 +24,13 @@ export const tracks = $state([null, null]);
  */
 export const displayPos = [0, 0];
 
+/**
+ * Decks being scrubbed by hand. While the pointer is down the drawn
+ * position follows the pointer, not the engine; after release it waits
+ * for the engine to catch up so a stale poll can't snap it back.
+ */
+const scrubs = [null, null];
+
 const frameListeners = new Set();
 
 /** Calls `fn(now)` every animation frame. Returns an unsubscribe function. */
@@ -54,6 +61,15 @@ function frame(now) {
 
   for (let i = 0; i < 2; i++) {
     const d = engine.decks[i];
+    const s = scrubs[i];
+    if (s) {
+      if (s.dragging) continue;
+      if (Math.abs(d.position - displayPos[i]) > 0.25 && now < s.until) {
+        if (d.playing) displayPos[i] += dt * d.speed;
+        continue;
+      }
+      scrubs[i] = null;
+    }
     if (d.playing) {
       displayPos[i] += dt * d.speed;
       const err = d.position - displayPos[i];
@@ -80,3 +96,27 @@ export async function loadTrack(deck, item) {
 }
 
 export const control = (cmd) => backend.control(cmd).catch((e) => console.error(e));
+
+/** Starts a hand scrub. A playing deck pauses until the scrub ends, like holding a record. */
+export function scrubStart(deck) {
+  const resume = engine.decks[deck].playing || !!scrubs[deck]?.resume;
+  if (engine.decks[deck].playing) control({ type: 'pause', deck });
+  scrubs[deck] = { dragging: true, resume, until: 0 };
+}
+
+/** Moves a scrubbing deck to `seconds`. */
+export function scrubTo(deck, seconds) {
+  const t = tracks[deck];
+  if (!t || !scrubs[deck]) return;
+  seconds = Math.max(0, Math.min(t.duration, seconds));
+  displayPos[deck] = seconds;
+  control({ type: 'seek', deck, seconds });
+}
+
+export function scrubEnd(deck) {
+  const s = scrubs[deck];
+  if (!s?.dragging) return;
+  s.dragging = false;
+  s.until = performance.now() + 400;
+  if (s.resume) control({ type: 'play', deck });
+}
