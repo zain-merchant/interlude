@@ -13,6 +13,7 @@
   import { keyboardMenu, htmlMenu } from './lib/menu.svelte.js';
   import { tip, tipText } from './lib/tooltip.svelte.js';
   import { live, announce } from './lib/announce.svelte.js';
+  import { runPerformance } from './lib/performance.js';
 
   let library;
   let mixer;
@@ -116,6 +117,8 @@
       case 'focus.prev':
         if (down) cycleFocus(id === 'focus.next' ? 1 : -1);
         break;
+      default:
+        runPerformance(id, down);
     }
   }
 

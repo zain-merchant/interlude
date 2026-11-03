@@ -6,9 +6,13 @@
 // blue outside, mid amber, high near-white in the core), with
 // anti-aliased edges. What has already played collapses to one grey
 // shape. Beats are faint full-height lines, every 4th a little stronger,
-// and the play head is a single 1 px line. No glow anywhere.
+// and the play head is a single 1 px line. Hot cues are thin cue-coloured
+// lines; an active loop is a faint white band between two white lines. No
+// glow anywhere.
 
 const TEX_WIDTH = 4096;
+/** Hot cue slots drawn, matching the engine's HOT_CUES. */
+export const HOT_CUES = 8;
 
 const VERT = `#version 300 es
 in vec2 a;
@@ -39,6 +43,10 @@ uniform vec3 cCue;
 uniform float centerLine; // 1 = scrolling view with a fixed centre play head
 uniform float beatLen;    // bins per beat (0 = no beatgrid)
 uniform float firstBeat;  // bin index of beat 0
+uniform float hotCues[${HOT_CUES}]; // bin indexes (-1 = none)
+uniform float loopIn;     // bin index (-1 = none)
+uniform float loopOut;    // bin index (-1 = none)
+uniform float looping;    // 1 = the loop is playing
 
 vec4 fetchBin(int i) {
   if (i < 0 || i >= count) return vec4(0.0);
@@ -100,6 +108,24 @@ void main() {
     }
   }
 
+  // Loop: a faint band while it plays, edges always (a stored loop can be
+  // jumped back into).
+  if (loopIn >= 0.0) {
+    float on = looping > 0.5 ? 1.0 : 0.0;
+    if (loopOut > loopIn && bin >= loopIn && bin < loopOut) c = mix(c, cFg, 0.1 * on);
+    float dEdge = abs(bin - loopIn) / perPx;
+    if (loopOut > loopIn) dEdge = min(dEdge, abs(bin - loopOut) / perPx);
+    float edge = 1.0 - smoothstep(0.4 * dpr, 1.0 * dpr, dEdge);
+    c = mix(c, cFg, edge * mix(0.25, 0.7, on));
+  }
+
+  // Hot cues: thin lines; the scrolling view labels them in HTML.
+  for (int i = 0; i < ${HOT_CUES}; i++) {
+    if (hotCues[i] < 0.0) continue;
+    float dx = abs(bin - hotCues[i]) / perPx;
+    c = mix(c, cCue, (1.0 - smoothstep(0.4 * dpr, 1.0 * dpr, dx)) * 0.7);
+  }
+
   // Cue marker: a thin line with a small triangle at the top.
   if (cue >= 0.0) {
     float dx = abs(bin - cue) / perPx;
@@ -147,11 +173,13 @@ export class WaveformGL {
     gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
 
     this.u = {};
-    for (const name of ['bins', 'count', 'start', 'perPx', 'width', 'height', 'dpr', 'playhead', 'cue', 'cBg', 'cFg', 'cLow', 'cMid', 'cHigh', 'cPast', 'cCue', 'centerLine', 'beatLen', 'firstBeat']) {
+    for (const name of ['bins', 'count', 'start', 'perPx', 'width', 'height', 'dpr', 'playhead', 'cue', 'cBg', 'cFg', 'cLow', 'cMid', 'cHigh', 'cPast', 'cCue', 'centerLine', 'beatLen', 'firstBeat', 'loopIn', 'loopOut', 'looping']) {
       this.u[name] = gl.getUniformLocation(prog, name);
     }
+    this.u.hotCues = gl.getUniformLocation(prog, 'hotCues');
     this.tex = gl.createTexture();
     this.count = 0;
+    this.cues = new Float32Array(HOT_CUES);
     this.setBins(new Uint8Array(4));
   }
 
@@ -184,8 +212,10 @@ export class WaveformGL {
   /**
    * @param {{ start: number, perPx: number, playhead: number, cue: number,
    *           centerLine: boolean, colors: Record<string, number[]>,
-   *           beatLen?: number, firstBeat?: number }} view
-   *   `start`, `playhead`, `cue`, `beatLen` and `firstBeat` are in bins;
+   *           beatLen?: number, firstBeat?: number, hotCues?: number[],
+   *           loopIn?: number, loopOut?: number, looping?: boolean }} view
+   *   `start`, `playhead`, `cue`, `beatLen`, `firstBeat`, `hotCues` and the
+   *   loop points are in bins, -1 for none;
    *   `perPx` is bins per device pixel. Colours are linear 0..1 RGB.
    */
   draw(view) {
@@ -207,6 +237,12 @@ export class WaveformGL {
     gl.uniform1f(this.u.centerLine, view.centerLine ? 1 : 0);
     gl.uniform1f(this.u.beatLen, view.beatLen ?? 0);
     gl.uniform1f(this.u.firstBeat, view.firstBeat ?? 0);
+    this.cues.fill(-1);
+    view.hotCues?.forEach((c, i) => i < HOT_CUES && (this.cues[i] = c));
+    gl.uniform1fv(this.u.hotCues, this.cues);
+    gl.uniform1f(this.u.loopIn, view.loopIn ?? -1);
+    gl.uniform1f(this.u.loopOut, view.loopOut ?? -1);
+    gl.uniform1f(this.u.looping, view.looping ? 1 : 0);
     for (const [k, v] of Object.entries(view.colors)) gl.uniform3fv(this.u[k], v);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   }
