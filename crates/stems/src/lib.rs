@@ -105,10 +105,14 @@ pub type PlayHeads = Box<dyn Fn(usize) -> f64 + Send + Sync>;
 struct Job {
     id: u64,
     track: Arc<Track>,
-    stems: Arc<Stems>,
+    /// Attached once there's something to fill it with (stems take about
+    /// 190 MB for 6 minutes, so not before).
+    stems: Option<Arc<Stems>>,
     key: Option<CacheKey>,
     /// `None` until the cache has been looked at.
     progress: Option<Progress>,
+    /// Not in the cache, and no model to split with.
+    waiting: bool,
     failed: Option<String>,
 }
 
@@ -178,6 +182,7 @@ impl Splitter {
                 st.model_ready = false;
                 for job in st.jobs.iter_mut().flatten() {
                     job.failed = None;
+                    job.waiting = false;
                 }
             }
             if !st.settings.enabled {
@@ -198,10 +203,7 @@ impl Splitter {
             st.jobs[deck] = None;
             return;
         }
-        let stems = track
-            .stems
-            .get_or_init(|| Arc::new(Stems::new(track.frames())))
-            .clone();
+        let stems = track.stems.get().cloned();
         st.next_id += 1;
         let id = st.next_id;
         st.jobs[deck] = Some(Job {
@@ -210,6 +212,7 @@ impl Splitter {
             stems,
             key,
             progress: None,
+            waiting: false,
             failed: None,
         });
         drop(st);
@@ -228,19 +231,19 @@ impl Splitter {
         let Some(job) = st.jobs.get(deck).and_then(|j| j.as_ref()) else {
             return Status::Off;
         };
-        if job.stems.is_complete() {
+        if job.stems.as_ref().is_some_and(|s| s.is_complete()) {
             return Status::Ready;
         }
         if let Some(e) = job.failed.as_ref().or(st.model_error.as_ref()) {
             return Status::Failed(e.clone());
         }
-        if job.progress.is_some() && st.settings.model.is_none() {
+        if job.waiting || (job.progress.is_some() && st.settings.model.is_none()) {
             return Status::NeedsModel;
         }
         if job.progress.is_some() && !st.model_ready {
             return Status::Starting;
         }
-        Status::Splitting(job.stems.ready_fraction())
+        Status::Splitting(job.stems.as_ref().map_or(0.0, |s| s.ready_fraction()))
     }
 }
 
@@ -260,9 +263,10 @@ enum Task {
     Cache {
         deck: usize,
         id: u64,
-        stems: Arc<Stems>,
+        track: Arc<Track>,
         key: Option<CacheKey>,
         dir: Option<PathBuf>,
+        can_split: bool,
     },
     /// Split region `k` of a job.
     Region {
@@ -318,13 +322,14 @@ impl Worker {
     fn pick(&self, st: &State) -> Option<Task> {
         // Cache lookups first: they're quick and may save a whole split.
         for (deck, job) in st.jobs.iter().enumerate() {
-            if let Some(job) = job.as_ref().filter(|j| j.progress.is_none()) {
+            if let Some(job) = job.as_ref().filter(|j| j.progress.is_none() && !j.waiting) {
                 return Some(Task::Cache {
                     deck,
                     id: job.id,
-                    stems: job.stems.clone(),
+                    track: job.track.clone(),
                     key: job.key.clone(),
                     dir: st.settings.cache_dir.clone(),
+                    can_split: st.settings.model.is_some(),
                 });
             }
         }
@@ -381,14 +386,32 @@ impl Worker {
             Task::Cache {
                 deck,
                 id,
-                stems,
+                track,
                 key,
                 dir,
+                can_split,
             } => {
-                let hit = matches!((&dir, &key), (Some(d), Some(k)) if cache::load(d, k, &stems));
+                let cached = match (&dir, &key) {
+                    (Some(d), Some(k)) => cache::contains(d, k),
+                    _ => false,
+                };
+                if !cached && !can_split {
+                    let mut st = lock(&shared);
+                    if let Some(job) = st.jobs[deck].as_mut().filter(|j| j.id == id) {
+                        job.waiting = true;
+                    }
+                    return;
+                }
+                let stems = track
+                    .stems
+                    .get_or_init(|| Arc::new(Stems::new(track.frames())))
+                    .clone();
+                let hit = cached
+                    && matches!((&dir, &key), (Some(d), Some(k)) if cache::load(d, k, &stems));
                 let mut st = lock(&shared);
                 let segment = self.model.as_ref().map_or(DEFAULT_SEGMENT, |m| m.segment());
                 if let Some(job) = st.jobs[deck].as_mut().filter(|j| j.id == id) {
+                    job.stems = Some(stems);
                     let plan = Plan::new(segment, job.track.frames(), job.track.sample_rate);
                     let mut p = Progress::new(plan);
                     if hit {
@@ -454,9 +477,11 @@ impl Worker {
                         let Some(p) = job.progress.as_mut() else {
                             return;
                         };
-                        p.finish(k, &sep, &job.stems);
+                        let Some(stems) = job.stems.clone() else {
+                            return;
+                        };
+                        p.finish(k, &sep, &stems);
                         if p.is_done() {
-                            let stems = job.stems.clone();
                             let key = job.key.clone();
                             drop(st);
                             if let (Some(dir), Some(key)) = (cache_dir, key) {

@@ -67,6 +67,11 @@ impl Fnv {
     }
 }
 
+/// Whether the cache has an entry for `key`.
+pub fn contains(dir: &Path, key: &CacheKey) -> bool {
+    key.file(dir).is_file()
+}
+
 /// Fills `stems` from the cache and marks it all ready. Returns false if
 /// there's no usable entry. A hit counts as a use, for eviction.
 pub fn load(dir: &Path, key: &CacheKey, stems: &Stems) -> bool {
