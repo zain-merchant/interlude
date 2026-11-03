@@ -25,6 +25,20 @@ const SCRATCH_MAX_SPEED: f64 = 10.0;
 /// How quickly a playing record gets back up to speed after the hand lets go.
 const SPINUP_TAU: f64 = 0.015;
 
+/// Hot cue slots per deck, one per performance pad.
+pub const HOT_CUES: usize = 8;
+/// Shortest and longest loop and beat jump size, in beats.
+pub const MIN_LOOP_BEATS: f64 = 1.0 / 32.0;
+pub const MAX_LOOP_BEATS: f64 = 64.0;
+/// Loop size a freshly loaded deck starts with, in beats.
+pub const DEFAULT_LOOP_BEATS: f64 = 4.0;
+/// Shortest manual loop, in seconds, for tracks without a beatgrid.
+const MIN_LOOP_SECS: f64 = 0.01;
+/// A jump while playing (a loop wrapping, a hot cue, a beat jump)
+/// crossfades from the old position over this many output frames, so it
+/// doesn't click.
+const JUMP_FADE_FRAMES: u32 = 128;
+
 /// Where a deck is on its beatgrid.
 pub(crate) struct BeatInfo {
     pub bpm: f64,
@@ -40,8 +54,26 @@ pub(crate) struct Deck {
     pub playing: bool,
     /// Cue point in source frames.
     pub cue: f64,
-    /// True while the cue button is held to preview from the cue point.
+    /// True while the cue button or a hot cue is held to preview.
     pub previewing: bool,
+    /// Where a held preview returns to on release.
+    preview_return: f64,
+    /// The hot cue holding the preview, or `None` for the main cue.
+    preview_hot: Option<usize>,
+    /// Hot cue positions in source frames.
+    pub hot_cues: [Option<f64>; HOT_CUES],
+    /// Loop points in source frames. A loop can be stored but not active,
+    /// so reloop can jump back into it.
+    pub loop_in: Option<f64>,
+    pub loop_out: Option<f64>,
+    /// True while playback wraps from `loop_out` back to `loop_in`.
+    pub looping: bool,
+    /// Size of the next beat loop and of beat jumps, in beats.
+    pub loop_beats: f64,
+    /// During a jump crossfade: the old position, still sounding, and how
+    /// many frames of the fade are left.
+    fade_from: f64,
+    fade_left: u32,
     pub rate: f64,
     pub bend: f64,
     /// Temporary tempo push from the jog wheel's outer ring, decaying to 0.
@@ -70,6 +102,15 @@ impl Deck {
             playing: false,
             cue: 0.0,
             previewing: false,
+            preview_return: 0.0,
+            preview_hot: None,
+            hot_cues: [None; HOT_CUES],
+            loop_in: None,
+            loop_out: None,
+            looping: false,
+            loop_beats: DEFAULT_LOOP_BEATS,
+            fade_from: 0.0,
+            fade_left: 0,
             rate: 1.0,
             bend: 0.0,
             jog_bend: 0.0,
@@ -91,6 +132,13 @@ impl Deck {
         self.cue = 0.0;
         self.playing = false;
         self.previewing = false;
+        self.preview_hot = None;
+        self.hot_cues = [None; HOT_CUES];
+        self.loop_in = None;
+        self.loop_out = None;
+        self.looping = false;
+        self.loop_beats = DEFAULT_LOOP_BEATS;
+        self.fade_left = 0;
         self.scratching = false;
         self.following = false;
         self.spinning_up = false;
@@ -119,12 +167,14 @@ impl Deck {
             // Pressing play during a cue preview keeps the deck playing
             // after the cue button is released.
             self.previewing = false;
+            self.preview_hot = None;
         }
     }
 
     pub fn pause(&mut self) {
         self.playing = false;
         self.previewing = false;
+        self.preview_hot = None;
     }
 
     /// CDJ-style cue:
@@ -132,12 +182,15 @@ impl Deck {
     /// * paused away from the cue point: set the cue point here, then preview;
     /// * paused on the cue point: preview while the button is held.
     pub fn cue_press(&mut self) {
-        if self.track.is_none() {
+        // A hot cue preview owns the deck until its pad is released.
+        if self.track.is_none() || self.preview_hot.is_some() {
             return;
         }
         if self.playing && !self.previewing {
-            self.jump_to(self.cue);
+            self.pos = self.cue;
             self.playing = false;
+            self.fade_left = 0;
+            self.rebase_hand();
             return;
         }
         if (self.pos - self.cue).abs() > 1.0 {
@@ -145,29 +198,257 @@ impl Deck {
         }
         self.playing = true;
         self.previewing = true;
+        self.preview_return = self.cue;
     }
 
     pub fn cue_release(&mut self) {
-        if self.previewing {
-            self.previewing = false;
-            self.playing = false;
-            self.jump_to(self.cue);
+        if self.previewing && self.preview_hot.is_none() {
+            self.end_preview();
         }
     }
 
-    pub fn seek_secs(&mut self, secs: f64) {
-        self.jump_to(secs * self.source_rate());
+    fn end_preview(&mut self) {
+        self.previewing = false;
+        self.preview_hot = None;
+        self.playing = false;
+        self.fade_left = 0;
+        self.pos = self.preview_return;
+        self.rebase_hand();
     }
 
-    /// Moves the play head instantly (seek, cue, sync). A hand on the record
-    /// stays on it, at the new spot.
-    fn jump_to(&mut self, frames: f64) {
-        self.pos = frames.clamp(0.0, self.frames());
+    /// Moves the play head instantly (seek, cue, hot cue, loop, sync).
+    /// While playing, the old position fades out under the new one so the
+    /// jump doesn't click. A hand on the record stays on it, at the new spot.
+    fn jump(&mut self, to: f64) {
+        if self.playing && !self.following {
+            self.fade_from = self.pos;
+            self.fade_left = JUMP_FADE_FRAMES;
+        }
+        self.pos = to.clamp(0.0, self.frames());
+        self.rebase_hand();
+    }
+
+    /// After the play head moved instantly: the hand (if any) holds the
+    /// record at its new spot, and a spin-up in progress finishes at once.
+    fn rebase_hand(&mut self) {
         if self.following {
             self.hand.reset(self.pos, 0.0);
             self.vel = 0.0;
         }
         self.spinning_up = false;
+    }
+
+    /// Leaves the active loop if `at` is outside it.
+    fn leave_loop_if_outside(&mut self, at: f64) {
+        if let (true, Some(i), Some(o)) = (self.looping, self.loop_in, self.loop_out) {
+            if at < i || at >= o {
+                self.looping = false;
+            }
+        }
+    }
+
+    pub fn seek_secs(&mut self, secs: f64) {
+        let to = (secs * self.source_rate()).clamp(0.0, self.frames());
+        self.leave_loop_if_outside(to);
+        self.jump(to);
+    }
+
+    /// Hot cue pad pressed. An empty hot cue is set at the play head. A
+    /// set one is jumped to: a playing deck keeps playing from there, a
+    /// paused deck plays from it while the pad is held, like the cue
+    /// button.
+    pub fn hot_cue_press(&mut self, n: usize) {
+        if self.track.is_none() || n >= HOT_CUES {
+            return;
+        }
+        let Some(at) = self.hot_cues[n] else {
+            self.hot_cues[n] = Some(self.pos);
+            return;
+        };
+        self.leave_loop_if_outside(at);
+        self.jump(at);
+        if !self.playing || self.previewing {
+            self.playing = true;
+            self.previewing = true;
+            self.preview_hot = Some(n);
+            self.preview_return = at;
+        }
+    }
+
+    pub fn hot_cue_release(&mut self, n: usize) {
+        if self.previewing && self.preview_hot == Some(n) {
+            self.end_preview();
+        }
+    }
+
+    pub fn hot_cue_clear(&mut self, n: usize) {
+        if let Some(c) = self.hot_cues.get_mut(n) {
+            *c = None;
+        }
+    }
+
+    /// Source frames in `beats` beats, if the track has a beatgrid.
+    fn beat_frames(&self, beats: f64) -> Option<f64> {
+        self.grid()
+            .map(|g| beats * g.beat_length() * self.source_rate())
+    }
+
+    /// Length of the stored loop in source frames.
+    fn loop_len(&self) -> Option<f64> {
+        Some(self.loop_out? - self.loop_in?)
+    }
+
+    /// Shortest loop allowed, in source frames.
+    fn min_loop(&self) -> f64 {
+        self.beat_frames(MIN_LOOP_BEATS)
+            .unwrap_or(MIN_LOOP_SECS * self.source_rate())
+            .max(MIN_LOOP_SECS * self.source_rate())
+    }
+
+    /// Takes the loop size from a loop's length when it's a power-of-two
+    /// number of beats, so the size shown matches the loop playing.
+    fn adopt_loop_size(&mut self, len: f64) {
+        if let Some(beat) = self.beat_frames(1.0) {
+            let beats = len / beat;
+            let p = beats.log2().round().exp2();
+            if (beats / p - 1.0).abs() < 0.01 {
+                self.loop_beats = p.clamp(MIN_LOOP_BEATS, MAX_LOOP_BEATS);
+            }
+        }
+    }
+
+    /// Starts a loop of `beats` beats at the nearest beat (or the nearest
+    /// fraction of a beat, for loops under one beat). An active loop keeps
+    /// its start and changes length. Needs a beatgrid.
+    pub fn beat_loop(&mut self, beats: f64) {
+        let Some(g) = self.grid() else { return };
+        if self.track.is_none() {
+            return;
+        }
+        let beats = beats.clamp(MIN_LOOP_BEATS, MAX_LOOP_BEATS);
+        let sr = self.source_rate();
+        let len = beats * g.beat_length() * sr;
+        self.loop_beats = beats;
+        if self.looping {
+            self.resize_loop(len);
+            return;
+        }
+        let unit = beats.min(1.0);
+        let start_beat = (g.beat_at(self.pos / sr) / unit).round() * unit;
+        let start = (g.time_of_beat(start_beat) * sr).max(0.0);
+        if start + len > self.frames() {
+            return;
+        }
+        self.loop_in = Some(start);
+        self.loop_out = Some(start + len);
+        self.looping = true;
+    }
+
+    /// Pad in beat loop mode: a loop of that size, or out of it if it's
+    /// the one playing.
+    pub fn beat_loop_toggle(&mut self, beats: f64) {
+        let current = self
+            .loop_len()
+            .zip(self.beat_frames(1.0))
+            .map(|(len, beat)| len / beat);
+        if self.looping && current.is_some_and(|b| (b - beats).abs() < 1e-3) {
+            self.looping = false;
+        } else {
+            self.beat_loop(beats);
+        }
+    }
+
+    /// The loop button: out of the active loop, or into a new beat loop of
+    /// the deck's loop size.
+    pub fn loop_toggle(&mut self) {
+        if self.looping {
+            self.looping = false;
+        } else {
+            self.beat_loop(self.loop_beats);
+        }
+    }
+
+    /// Changes the active loop's length, keeping its start, and brings the
+    /// play head back inside if the loop got shorter.
+    fn resize_loop(&mut self, len: f64) {
+        let Some(start) = self.loop_in else { return };
+        if len < self.min_loop() - 1e-6 || start + len > self.frames() {
+            return;
+        }
+        self.loop_out = Some(start + len);
+        if self.looping && self.pos >= start + len {
+            self.jump(start + (self.pos - start) % len);
+        }
+    }
+
+    /// Halves (0.5) or doubles (2.0) the loop size, and the active loop
+    /// with it.
+    pub fn loop_scale(&mut self, factor: f64) {
+        if factor.is_nan() || factor <= 0.0 {
+            return;
+        }
+        if let (true, Some(len)) = (self.looping, self.loop_len()) {
+            let before = self.loop_out;
+            self.resize_loop(len * factor);
+            if self.loop_out != before {
+                self.loop_beats = (self.loop_beats * factor).clamp(MIN_LOOP_BEATS, MAX_LOOP_BEATS);
+                self.adopt_loop_size(len * factor);
+            }
+        } else {
+            self.loop_beats = (self.loop_beats * factor).clamp(MIN_LOOP_BEATS, MAX_LOOP_BEATS);
+        }
+    }
+
+    /// Sets the loop in point at the play head. The loop starts when the
+    /// out point is set.
+    pub fn loop_in_press(&mut self) {
+        if self.track.is_some() {
+            self.loop_in = Some(self.pos);
+            self.loop_out = None;
+            self.looping = false;
+        }
+    }
+
+    /// Sets the loop out point at the play head and starts looping.
+    pub fn loop_out_press(&mut self) {
+        let Some(start) = self.loop_in else { return };
+        if self.pos - start < self.min_loop() {
+            return;
+        }
+        let len = self.pos - start;
+        self.loop_out = Some(self.pos);
+        self.looping = true;
+        self.adopt_loop_size(len);
+        self.jump(start);
+    }
+
+    /// Out of the active loop, or back into the last one.
+    pub fn reloop_exit(&mut self) {
+        if self.looping {
+            self.looping = false;
+        } else if let (Some(start), Some(_)) = (self.loop_in, self.loop_out) {
+            self.looping = true;
+            self.jump(start);
+        }
+    }
+
+    /// Moves the play head by `beats` (negative is back). An active loop
+    /// moves along with it. Needs a beatgrid.
+    pub fn beat_jump(&mut self, beats: f64) {
+        let Some(d) = self.beat_frames(beats) else {
+            return;
+        };
+        if self.track.is_none() {
+            return;
+        }
+        if let (true, Some(i), Some(o)) = (self.looping, self.loop_in, self.loop_out) {
+            let d = d.clamp(-i, self.frames() - o);
+            self.loop_in = Some(i + d);
+            self.loop_out = Some(o + d);
+            self.jump(self.pos + d);
+        } else {
+            self.jump(self.pos + d);
+        }
     }
 
     /// The play head starts following the hand from where it is, moving at
@@ -185,6 +466,7 @@ impl Deck {
         };
         self.following = true;
         self.spinning_up = false;
+        self.fade_left = 0;
         self.vel = vel;
         self.hand.reset(self.pos, vel);
     }
@@ -193,6 +475,7 @@ impl Deck {
         if self.track.is_some() {
             self.start_following();
             self.scratching = true;
+            self.fade_left = 0;
         }
     }
 
@@ -267,7 +550,7 @@ impl Deck {
     pub fn shift_beats(&mut self, beats: f64) {
         if let Some(g) = self.grid() {
             let frames = beats * g.beat_length() * self.source_rate();
-            self.jump_to(self.pos + frames);
+            self.jump(self.pos + frames);
         }
     }
 
@@ -301,26 +584,39 @@ impl Deck {
                 samples[i as usize * 2 + ch]
             }
         };
+        let read = |pos: f64| -> (f32, f32) {
+            let i = pos.floor() as i64;
+            let t = (pos - i as f64) as f32;
+            let ch = |c| {
+                hermite(
+                    t,
+                    sample(i - 1, c),
+                    sample(i, c),
+                    sample(i + 1, c),
+                    sample(i + 2, c),
+                )
+            };
+            (ch(0), ch(1))
+        };
+        // The active loop, as (in, length).
+        let wrap = match (self.looping, self.loop_in, self.loop_out) {
+            (true, Some(i), Some(o)) if o > i => Some((i, o - i)),
+            _ => None,
+        };
 
         for frame in out.as_chunks_mut::<2>().0 {
             let (mut l, mut r) = (0.0, 0.0);
             if self.playing || self.following {
-                let i = self.pos.floor() as i64;
-                let t = (self.pos - i as f64) as f32;
-                l = hermite(
-                    t,
-                    sample(i - 1, 0),
-                    sample(i, 0),
-                    sample(i + 1, 0),
-                    sample(i + 2, 0),
-                );
-                r = hermite(
-                    t,
-                    sample(i - 1, 1),
-                    sample(i, 1),
-                    sample(i + 1, 1),
-                    sample(i + 2, 1),
-                );
+                (l, r) = read(self.pos);
+                if self.fade_left > 0 {
+                    // Linear crossfade from the old position to the new.
+                    let w = self.fade_left as f32 / JUMP_FADE_FRAMES as f32;
+                    let (ol, or) = read(self.fade_from);
+                    l += (ol - l) * w;
+                    r += (or - r) * w;
+                    self.fade_from += step;
+                    self.fade_left -= 1;
+                }
                 if self.following {
                     let to = self.hand.tick();
                     self.vel = (to - self.pos).clamp(-max_vel, max_vel);
@@ -332,12 +628,23 @@ impl Deck {
                             self.spinning_up = false;
                         }
                     }
+                    let before = self.pos;
                     self.pos += if self.spinning_up { self.vel } else { step };
+                    if let Some((start, len)) = wrap {
+                        let out = start + len;
+                        if before < out && self.pos >= out {
+                            self.fade_from = self.pos;
+                            self.fade_left = JUMP_FADE_FRAMES;
+                            self.pos -= len;
+                        }
+                    }
                     if self.pos >= end {
                         self.pos = end;
                         self.playing = false;
                         self.previewing = false;
                         self.spinning_up = false;
+                        self.preview_hot = None;
+                        self.fade_left = 0;
                     }
                 }
             }

@@ -74,6 +74,36 @@ enum Control {
     CueRelease {
         deck: usize,
     },
+    HotCuePress {
+        deck: usize,
+        index: usize,
+    },
+    HotCueRelease {
+        deck: usize,
+        index: usize,
+    },
+    HotCueClear {
+        deck: usize,
+        index: usize,
+    },
+    LoopToggle {
+        deck: usize,
+    },
+    BeatLoop {
+        deck: usize,
+        beats: f64,
+    },
+    LoopScale {
+        deck: usize,
+        factor: f64,
+    },
+    ReloopExit {
+        deck: usize,
+    },
+    BeatJump {
+        deck: usize,
+        beats: f64,
+    },
     Seek {
         deck: usize,
         seconds: f64,
@@ -152,6 +182,36 @@ impl Control {
             },
             C::CueRelease { deck } => Command::CueRelease {
                 deck: deck_id(deck)?,
+            },
+            C::HotCuePress { deck, index } => Command::HotCuePress {
+                deck: deck_id(deck)?,
+                index,
+            },
+            C::HotCueRelease { deck, index } => Command::HotCueRelease {
+                deck: deck_id(deck)?,
+                index,
+            },
+            C::HotCueClear { deck, index } => Command::HotCueClear {
+                deck: deck_id(deck)?,
+                index,
+            },
+            C::LoopToggle { deck } => Command::LoopToggle {
+                deck: deck_id(deck)?,
+            },
+            C::BeatLoop { deck, beats } => Command::BeatLoop {
+                deck: deck_id(deck)?,
+                beats,
+            },
+            C::LoopScale { deck, factor } => Command::LoopScale {
+                deck: deck_id(deck)?,
+                factor,
+            },
+            C::ReloopExit { deck } => Command::ReloopExit {
+                deck: deck_id(deck)?,
+            },
+            C::BeatJump { deck, beats } => Command::BeatJump {
+                deck: deck_id(deck)?,
+                beats,
             },
             C::Seek { deck, seconds } => Command::Seek {
                 deck: deck_id(deck)?,

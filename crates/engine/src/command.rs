@@ -61,6 +61,56 @@ pub enum Command {
     CueRelease {
         deck: DeckId,
     },
+    /// Performance pad `index` (0-based, below [`crate::HOT_CUES`]) in hot
+    /// cue mode. An empty hot cue is set at the play head; a set one is
+    /// jumped to. A paused deck plays from it while held, like the cue button.
+    HotCuePress {
+        deck: DeckId,
+        index: usize,
+    },
+    HotCueRelease {
+        deck: DeckId,
+        index: usize,
+    },
+    HotCueClear {
+        deck: DeckId,
+        index: usize,
+    },
+    /// Loop button: leaves the active loop, or starts a beat loop of the
+    /// deck's loop size at the nearest beat. Needs a beatgrid.
+    LoopToggle {
+        deck: DeckId,
+    },
+    /// A loop of `beats` beats, or out of the loop if it's that long
+    /// already. Sets the deck's loop size. Needs a beatgrid.
+    BeatLoop {
+        deck: DeckId,
+        beats: f64,
+    },
+    /// Multiplies the loop size by `factor` (0.5 halves, 2.0 doubles),
+    /// along with the active loop.
+    LoopScale {
+        deck: DeckId,
+        factor: f64,
+    },
+    /// Sets the loop in point at the play head.
+    LoopIn {
+        deck: DeckId,
+    },
+    /// Sets the loop out point at the play head and starts looping.
+    LoopOut {
+        deck: DeckId,
+    },
+    /// Leaves the active loop, or jumps back into the last one.
+    ReloopExit {
+        deck: DeckId,
+    },
+    /// Moves the play head by `beats` beats, negative for back. An active
+    /// loop moves with it. Needs a beatgrid.
+    BeatJump {
+        deck: DeckId,
+        beats: f64,
+    },
     /// Jump to a position, in seconds from the start of the track.
     Seek {
         deck: DeckId,
