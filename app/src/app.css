@@ -162,6 +162,17 @@
 .btn[aria-disabled='true'] {
   opacity: 0.35;
 }
+/* Secondary controls: no outline until hovered, so only the controls
+   that matter most (cue, play, set pads, things that are on) draw a line. */
+.btn.ghost {
+  box-shadow: none;
+  color: var(--fg-3);
+}
+.btn.ghost:hover:not(:disabled, [aria-disabled='true']) {
+  background: var(--raise);
+  color: var(--fg);
+  box-shadow: none;
+}
 .btn.sm {
   height: 32px;
   min-width: 0;

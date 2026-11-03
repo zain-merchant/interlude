@@ -329,7 +329,7 @@
       <div class="lane" style:--drop-color={deck === 0 ? 'var(--deck-a)' : 'var(--deck-b)'} class:b={deck === 1}
         use:dropTarget={{ ondrop: (t) => load(deck, t), blocked: () => engine.decks[deck].playing }}>
         <Waveform {deck} seconds={zoom} onzoom={(f) => setZoom(zoom * f)} />
-        <div class="who"><b>{'AB'[deck]}</b>{tracks[deck]?.title ?? ''}</div>
+        <div class="who"><b>{'AB'[deck]}</b>{#if tracks[deck]}{tracks[deck].title}{:else}<span class="hint">Drag a track here or press {keyLabel(`deck.${deck}.load`)}</span>{/if}</div>
       </div>
     {/each}
     <div class="zoom">
@@ -478,6 +478,9 @@
     font-size: 11px;
     color: var(--fg-3);
     pointer-events: none;
+  }
+  .who .hint {
+    color: var(--fg-4);
   }
   .who b {
     width: 16px;
