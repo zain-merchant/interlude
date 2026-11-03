@@ -445,3 +445,329 @@ fn jog_scrubs_when_paused_and_nudges_when_playing() {
         "nudge has faded"
     );
 }
+
+fn send(h: &mut EngineHandle, cmd: Command) {
+    h.send(cmd).unwrap();
+}
+
+/// A loaded, analyzed 120 BPM track on deck A: one beat is 0.5 s.
+fn beat_track() -> (Engine, EngineHandle) {
+    let (mut e, mut h) = setup();
+    load(&mut h, DeckId::A, drums(120.0, 30.0, 0.0));
+    render(&mut e, 0.01);
+    let bpm = h.shared().deck(0).bpm;
+    assert!((bpm - 120.0).abs() < 0.05, "got {bpm}");
+    (e, h)
+}
+
+#[test]
+fn hot_cues_set_jump_and_preview() {
+    let (mut e, mut h) = setup();
+    load(&mut h, DeckId::A, sine(440.0, 10.0, 0.5));
+    let a = DeckId::A;
+    send(
+        &mut h,
+        Command::Seek {
+            deck: a,
+            seconds: 2.0,
+        },
+    );
+    send(&mut h, Command::HotCuePress { deck: a, index: 0 });
+    send(&mut h, Command::HotCueRelease { deck: a, index: 0 });
+    render(&mut e, 0.01);
+    let d = h.shared().deck(0);
+    assert_eq!(d.hot_cues[0].map(|c| (c * 1000.0).round()), Some(2000.0));
+    assert!(!d.playing, "setting a hot cue doesn't start playback");
+
+    // Paused: play from the hot cue while held, back on release.
+    send(
+        &mut h,
+        Command::Seek {
+            deck: a,
+            seconds: 5.0,
+        },
+    );
+    send(&mut h, Command::HotCuePress { deck: a, index: 0 });
+    render(&mut e, 0.5);
+    let d = h.shared().deck(0);
+    assert!(d.playing);
+    assert!((d.position - 2.5).abs() < 0.02, "{}", d.position);
+    send(&mut h, Command::HotCueRelease { deck: a, index: 0 });
+    render(&mut e, 0.01);
+    let d = h.shared().deck(0);
+    assert!(!d.playing);
+    assert!((d.position - 2.0).abs() < 1e-3);
+
+    // Playing: jump and keep playing after release.
+    send(
+        &mut h,
+        Command::Seek {
+            deck: a,
+            seconds: 6.0,
+        },
+    );
+    send(&mut h, Command::Play { deck: a });
+    send(&mut h, Command::HotCuePress { deck: a, index: 0 });
+    send(&mut h, Command::HotCueRelease { deck: a, index: 0 });
+    render(&mut e, 0.5);
+    let d = h.shared().deck(0);
+    assert!(d.playing);
+    assert!((d.position - 2.5).abs() < 0.02, "{}", d.position);
+
+    send(&mut h, Command::HotCueClear { deck: a, index: 0 });
+    render(&mut e, 0.01);
+    assert_eq!(h.shared().deck(0).hot_cues, [None; dj_engine::HOT_CUES]);
+}
+
+#[test]
+fn beat_loop_wraps_on_the_grid() {
+    let (mut e, mut h) = beat_track();
+    let a = DeckId::A;
+    send(
+        &mut h,
+        Command::Seek {
+            deck: a,
+            seconds: 4.1,
+        },
+    );
+    send(&mut h, Command::Play { deck: a });
+    send(&mut h, Command::LoopToggle { deck: a });
+    render(&mut e, 0.01);
+    let d = h.shared().deck(0);
+    assert!(d.looping);
+    assert_eq!(d.loop_beats, 4.0);
+    let (i, o) = (d.loop_in.unwrap(), d.loop_out.unwrap());
+    assert!(
+        (i - 4.0).abs() < 0.03,
+        "starts on the nearest beat, got {i}"
+    );
+    assert!((o - i - 2.0).abs() < 1e-3, "four beats at 120 BPM");
+
+    // Long after the loop's end, still inside it.
+    render(&mut e, 5.0);
+    let p = h.shared().deck(0).position;
+    assert!(p >= i && p < o, "{p} outside {i}..{o}");
+
+    // Halving keeps the start and pulls the play head inside.
+    send(
+        &mut h,
+        Command::LoopScale {
+            deck: a,
+            factor: 0.5,
+        },
+    );
+    render(&mut e, 0.3);
+    let d = h.shared().deck(0);
+    assert_eq!(d.loop_beats, 2.0);
+    assert!((d.loop_out.unwrap() - i - 1.0).abs() < 1e-3);
+    assert!(d.position >= i && d.position < i + 1.0);
+
+    // Out of the loop: playback carries on past it.
+    send(&mut h, Command::LoopToggle { deck: a });
+    render(&mut e, 1.5);
+    let d = h.shared().deck(0);
+    assert!(!d.looping);
+    assert!(d.position > i + 1.0);
+    assert!(d.loop_in.is_some(), "the loop is kept for reloop");
+
+    // Reloop jumps back in.
+    send(&mut h, Command::ReloopExit { deck: a });
+    render(&mut e, 0.1);
+    let d = h.shared().deck(0);
+    assert!(d.looping);
+    assert!(d.position >= i && d.position < i + 1.0);
+}
+
+#[test]
+fn beat_loop_pads_toggle_their_size() {
+    let (mut e, mut h) = beat_track();
+    let a = DeckId::A;
+    send(
+        &mut h,
+        Command::Seek {
+            deck: a,
+            seconds: 3.0,
+        },
+    );
+    send(
+        &mut h,
+        Command::BeatLoop {
+            deck: a,
+            beats: 1.0,
+        },
+    );
+    render(&mut e, 0.01);
+    let d = h.shared().deck(0);
+    assert!(d.looping);
+    assert_eq!(d.loop_beats, 1.0);
+    send(
+        &mut h,
+        Command::BeatLoop {
+            deck: a,
+            beats: 8.0,
+        },
+    );
+    render(&mut e, 0.01);
+    let d = h.shared().deck(0);
+    assert!(d.looping);
+    assert!((d.loop_out.unwrap() - d.loop_in.unwrap() - 4.0).abs() < 1e-3);
+    send(
+        &mut h,
+        Command::BeatLoop {
+            deck: a,
+            beats: 8.0,
+        },
+    );
+    render(&mut e, 0.01);
+    assert!(!h.shared().deck(0).looping);
+}
+
+#[test]
+fn manual_loop_in_and_out() {
+    let (mut e, mut h) = setup();
+    load(&mut h, DeckId::A, sine(440.0, 10.0, 0.5));
+    let a = DeckId::A;
+    send(
+        &mut h,
+        Command::Seek {
+            deck: a,
+            seconds: 1.0,
+        },
+    );
+    send(&mut h, Command::Play { deck: a });
+    send(&mut h, Command::LoopIn { deck: a });
+    render(&mut e, 0.75);
+    send(&mut h, Command::LoopOut { deck: a });
+    render(&mut e, 2.0);
+    let d = h.shared().deck(0);
+    assert!(d.looping);
+    let (i, o) = (d.loop_in.unwrap(), d.loop_out.unwrap());
+    assert!(
+        (i - 1.0).abs() < 1e-3 && (o - 1.75).abs() < 0.02,
+        "{i}..{o}"
+    );
+    assert!(d.position >= i && d.position < o);
+}
+
+#[test]
+fn loop_wrap_does_not_click() {
+    let (mut e, mut h) = setup();
+    // 440 Hz doesn't fit a 0.3 s loop a whole number of times, so a hard
+    // wrap would jump between unrelated points of the wave.
+    load(&mut h, DeckId::A, sine(441.3, 10.0, 0.5));
+    let a = DeckId::A;
+    send(
+        &mut h,
+        Command::Seek {
+            deck: a,
+            seconds: 1.0,
+        },
+    );
+    send(&mut h, Command::Play { deck: a });
+    send(&mut h, Command::LoopIn { deck: a });
+    render(&mut e, 0.3);
+    send(&mut h, Command::LoopOut { deck: a });
+    let out = render(&mut e, 1.5);
+    let step = out
+        .chunks(2)
+        .collect::<Vec<_>>()
+        .windows(2)
+        .map(|w| (w[1][0] - w[0][0]).abs())
+        .fold(0f32, f32::max);
+    // A clean 441 Hz sine at 0.5 moves at most ~0.029 per sample.
+    assert!(step < 0.05, "largest sample step {step}");
+}
+
+#[test]
+fn beat_jump_moves_by_beats_and_carries_the_loop() {
+    let (mut e, mut h) = beat_track();
+    let a = DeckId::A;
+    send(
+        &mut h,
+        Command::Seek {
+            deck: a,
+            seconds: 10.0,
+        },
+    );
+    send(
+        &mut h,
+        Command::BeatJump {
+            deck: a,
+            beats: 4.0,
+        },
+    );
+    render(&mut e, 0.01);
+    assert!((position(&h, a) - 12.0).abs() < 1e-3);
+    send(
+        &mut h,
+        Command::BeatJump {
+            deck: a,
+            beats: -8.0,
+        },
+    );
+    render(&mut e, 0.01);
+    assert!((position(&h, a) - 8.0).abs() < 1e-3);
+
+    send(&mut h, Command::LoopToggle { deck: a });
+    send(
+        &mut h,
+        Command::BeatJump {
+            deck: a,
+            beats: 4.0,
+        },
+    );
+    render(&mut e, 0.01);
+    let d = h.shared().deck(0);
+    assert!(d.looping, "jumping moves the loop instead of leaving it");
+    assert!((d.loop_in.unwrap() - 10.0).abs() < 0.03, "{:?}", d.loop_in);
+    assert!(d.position >= d.loop_in.unwrap() && d.position < d.loop_out.unwrap());
+}
+
+#[test]
+fn loops_and_jumps_need_a_beatgrid() {
+    let (mut e, mut h) = setup();
+    load(&mut h, DeckId::A, sine(440.0, 10.0, 0.5));
+    let a = DeckId::A;
+    send(
+        &mut h,
+        Command::Seek {
+            deck: a,
+            seconds: 2.0,
+        },
+    );
+    send(&mut h, Command::LoopToggle { deck: a });
+    send(
+        &mut h,
+        Command::BeatJump {
+            deck: a,
+            beats: 4.0,
+        },
+    );
+    render(&mut e, 0.01);
+    let d = h.shared().deck(0);
+    assert!(!d.looping);
+    assert!((d.position - 2.0).abs() < 1e-3);
+}
+
+#[test]
+fn loading_a_track_clears_cues_and_loops() {
+    let (mut e, mut h) = beat_track();
+    let a = DeckId::A;
+    send(&mut h, Command::HotCuePress { deck: a, index: 3 });
+    send(&mut h, Command::LoopToggle { deck: a });
+    send(
+        &mut h,
+        Command::LoopScale {
+            deck: a,
+            factor: 2.0,
+        },
+    );
+    render(&mut e, 0.01);
+    assert!(h.shared().deck(0).hot_cues[3].is_some());
+    load(&mut h, a, sine(440.0, 3.0, 0.5));
+    render(&mut e, 0.01);
+    let d = h.shared().deck(0);
+    assert!(d.hot_cues.iter().all(Option::is_none));
+    assert!(!d.looping && d.loop_in.is_none());
+    assert_eq!(d.loop_beats, dj_engine::DEFAULT_LOOP_BEATS);
+}

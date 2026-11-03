@@ -1,6 +1,7 @@
 <script>
   import Waveform from './Waveform.svelte';
   import Fader from './Fader.svelte';
+  import Performance from './Performance.svelte';
   import { untrack } from 'svelte';
   import { engine, tracks, control } from './engine.svelte.js';
   import { dropTarget } from './dnd.svelte.js';
@@ -116,6 +117,8 @@
       <span class="rm num" aria-label="Remaining">{fmt(d.position - d.duration)}</span>
     </div>
 
+    <Performance {deck} />
+
     <div class="transport">
       <button class="btn big cue" class:lit={atCue} aria-disabled={!t}
         onpointerdown={(e) => e.button === 0 && t && control({ type: 'cuePress', deck })}
@@ -175,9 +178,9 @@
   }
   .body {
     display: grid;
-    grid-template-rows: auto minmax(56px, 1fr) auto auto;
+    grid-template-rows: auto minmax(48px, 1fr) auto auto auto;
     align-content: space-between;
-    gap: 14px;
+    gap: 12px;
     min-width: 0;
     min-height: 0;
   }
