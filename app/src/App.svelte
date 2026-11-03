@@ -5,8 +5,9 @@
   import Library from './lib/Library.svelte';
   import Waveform from './lib/Waveform.svelte';
   import Meter from './lib/Meter.svelte';
+  import { Button } from './lib/components/ui/button/index.js';
   import { engine, startEngineLoop, loadTrack, control } from './lib/engine.svelte.js';
-  import { inTauri } from './lib/backend.js';
+  import { dropTarget } from './lib/dnd.svelte.js';
 
   let library;
   let mixer;
@@ -75,13 +76,10 @@
       <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="2.5" /></svg>
       oss-dj
     </div>
-    <div class="status" class:sim={!inTauri} class:off={engine.outputName === 'No audio device'}>
-      <span class="dot"></span>{engine.outputName || 'Starting audio…'}
-    </div>
     <div class="zoom">
-      <button onclick={() => (zoom = Math.min(48, zoom * 1.4))} aria-label="Zoom out">−</button>
+      <Button variant="ghost" size="icon-xs" onclick={() => (zoom = Math.min(48, zoom * 1.4))} aria-label="Zoom out">−</Button>
       <span class="mono">{zoom.toFixed(0)}s</span>
-      <button onclick={() => (zoom = Math.max(3, zoom / 1.4))} aria-label="Zoom in">+</button>
+      <Button variant="ghost" size="icon-xs" onclick={() => (zoom = Math.max(3, zoom / 1.4))} aria-label="Zoom in">+</Button>
     </div>
     <div class="master" title="Master level">
       <Meter level={engine.masterLevels[0]} segments={12} />
@@ -90,14 +88,18 @@
   </header>
 
   <div class="waves">
-    <div class="lane a"><Waveform deck={0} seconds={zoom} /></div>
-    <div class="lane b"><Waveform deck={1} seconds={zoom} /></div>
+    {#each [0, 1] as deck}
+      <div class="lane" class:a={deck === 0} class:b={deck === 1}
+        use:dropTarget={{ ondrop: (t) => load(deck, t), blocked: () => engine.decks[deck].playing }}>
+        <Waveform {deck} seconds={zoom} />
+      </div>
+    {/each}
   </div>
 
   <div class="decks">
-    <Deck deck={0} />
+    <Deck deck={0} onload={load} />
     <Mixer bind:this={mixer} />
-    <Deck deck={1} />
+    <Deck deck={1} onload={load} />
   </div>
 
   <Library bind:this={library} onload={load} />
@@ -135,40 +137,13 @@
     stroke: var(--deck-a);
     stroke-width: 2;
   }
-  .status {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: var(--muted);
-    font-size: 12px;
-  }
-  .dot {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: var(--ok);
-    box-shadow: 0 0 8px var(--ok);
-  }
-  .status.off .dot {
-    background: var(--danger);
-    box-shadow: 0 0 8px var(--danger);
-  }
-  .status.sim .dot {
-    background: #ffd23d;
-    box-shadow: 0 0 8px #ffd23d;
-  }
   .zoom {
     margin-left: auto;
     display: flex;
     align-items: center;
     gap: 6px;
-    color: var(--muted);
+    color: var(--muted-foreground);
     font-size: 12px;
-  }
-  .zoom button {
-    width: 26px;
-    height: 26px;
-    padding: 0;
   }
   .master {
     display: flex;
@@ -198,6 +173,12 @@
     bottom: 0;
     width: 3px;
     z-index: 1;
+  }
+  .lane.a {
+    --drop-color: var(--deck-a);
+  }
+  .lane.b {
+    --drop-color: var(--deck-b);
   }
   .lane.a::before {
     background: var(--deck-a);

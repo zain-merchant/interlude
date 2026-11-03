@@ -1,76 +1,99 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn-svelte/tailwind.css";
+@import "@fontsource-variable/inter";
+
+@custom-variant dark (&:is(.dark *));
+
+/* The app is dark only. shadcn-svelte tokens (background, card, muted, ...)
+   are set to the app's palette, and the app's own names (--panel, --line,
+   --faint, deck accents) are derived from them so both stay in step. */
 :root {
-  --bg: #0b0c0f;
-  --panel: #121419;
-  --panel-2: #181b21;
-  --line: #23262e;
-  --line-2: #2e323c;
-  --text: #e9ebf1;
-  --muted: #8a8f9d;
-  --faint: #5a5f6c;
+  --background: oklch(0.155 0.006 265);
+  --foreground: oklch(0.95 0.004 265);
+  --card: oklch(0.19 0.007 265);
+  --card-foreground: var(--foreground);
+  --popover: oklch(0.21 0.008 265);
+  --popover-foreground: var(--foreground);
+  --primary: oklch(0.95 0.004 265);
+  --primary-foreground: oklch(0.2 0.007 265);
+  --secondary: oklch(0.235 0.008 265);
+  --secondary-foreground: var(--foreground);
+  --muted: oklch(0.235 0.008 265);
+  --muted-foreground: oklch(0.66 0.012 265);
+  --accent: oklch(0.26 0.01 265);
+  --accent-foreground: var(--foreground);
+  --destructive: oklch(0.68 0.2 20);
+  --border: oklch(1 0 0 / 8%);
+  --input: oklch(1 0 0 / 12%);
+  --ring: oklch(0.72 0.13 230);
+  --radius: 0.625rem;
+
+  --panel: var(--card);
+  --panel-2: var(--secondary);
+  --line: var(--border);
+  --line-2: var(--input);
+  --text: var(--foreground);
+  --faint: oklch(0.5 0.012 265);
   --deck-a: #3ec6ff;
   --deck-b: #ff8a3d;
-  --wave-low: #2f6bff;
-  --wave-mid: #ffae2b;
-  --wave-high: #f5f5f7;
   --danger: #ff4d5e;
   --ok: #3ddc84;
-  --radius: 10px;
-  --font: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --mono: ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, Consolas, monospace;
   color-scheme: dark;
 }
 
-* {
-  box-sizing: border-box;
+@theme inline {
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, Consolas, monospace;
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --color-deck-a: var(--deck-a);
+  --color-deck-b: var(--deck-b);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
 }
 
-html,
-body,
-#app {
-  height: 100%;
-  margin: 0;
-}
-
-body {
-  background: var(--bg);
-  color: var(--text);
-  font: 13px/1.4 var(--font);
-  -webkit-font-smoothing: antialiased;
-  user-select: none;
-  overflow: hidden;
-}
-
-button {
-  font: inherit;
-  color: inherit;
-  background: var(--panel-2);
-  border: 1px solid var(--line-2);
-  border-radius: 8px;
-  padding: 6px 10px;
-  cursor: pointer;
-  transition: background 0.12s, border-color 0.12s, color 0.12s;
-}
-
-button:hover {
-  background: #20242c;
-  border-color: #3a3f4b;
-}
-
-button:focus-visible,
-input:focus-visible {
-  outline: 2px solid var(--deck-a);
-  outline-offset: 1px;
-}
-
-input[type='search'],
-input[type='text'] {
-  font: inherit;
-  color: var(--text);
-  background: var(--panel-2);
-  border: 1px solid var(--line-2);
-  border-radius: 8px;
-  padding: 7px 10px;
-  user-select: text;
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html,
+  body,
+  #app {
+    height: 100%;
+    margin: 0;
+  }
+  html {
+    @apply font-sans;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-size: 13px;
+    line-height: 1.4;
+    -webkit-font-smoothing: antialiased;
+    user-select: none;
+    overflow: hidden;
+  }
 }
 
 .mono {
@@ -78,41 +101,13 @@ input[type='text'] {
   font-variant-numeric: tabular-nums;
 }
 
-/* Range inputs used as faders. */
-input[type='range'] {
-  -webkit-appearance: none;
-  appearance: none;
-  background: transparent;
-  margin: 0;
-  cursor: pointer;
+/* Drop targets for library tracks (see lib/dnd.svelte.js). */
+[data-drop] {
+  outline: 2px solid var(--drop-color, var(--ring));
+  outline-offset: -2px;
+  background-image: linear-gradient(color-mix(in oklch, var(--drop-color, var(--ring)) 10%, transparent), transparent);
 }
-
-input[type='range']::-webkit-slider-runnable-track {
-  height: 4px;
-  background: var(--line-2);
-  border-radius: 2px;
-}
-
-input[type='range']::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 30px;
-  height: 16px;
-  margin-top: -6px;
-  border-radius: 4px;
-  background: linear-gradient(#e9ebf1, #b9bdc8);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.6), inset 0 -2px 0 rgba(0, 0, 0, 0.25);
-}
-
-input[type='range']::-moz-range-track {
-  height: 4px;
-  background: var(--line-2);
-  border-radius: 2px;
-}
-
-input[type='range']::-moz-range-thumb {
-  width: 30px;
-  height: 16px;
-  border: 0;
-  border-radius: 4px;
-  background: linear-gradient(#e9ebf1, #b9bdc8);
+[data-drop='blocked'] {
+  --drop-color: var(--danger);
+  cursor: not-allowed;
 }
