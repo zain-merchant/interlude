@@ -1,11 +1,15 @@
 <script>
+  import { showTip, hideTip, tip, tipText } from './tooltip.svelte.js';
+  import { openMenu } from './menu.svelte.js';
+  import { detent, keyValue } from './control.js';
+
   /**
-   * A rotary knob. Drag up/down (hold Shift for fine control), scroll, or use
-   * arrow keys. Double-click resets. Bipolar knobs draw their arc from the
-   * centre, like EQs.
-   * @type {{ value: number, min?: number, max?: number, reset?: number, label: string,
-   *          bipolar?: boolean, size?: number, accent?: string, format?: (v: number) => string,
-   *          onchange?: (v: number) => void }}
+   * A rotary knob: a dark disc with a hairline ring and a white indicator
+   * over a 270° sweep. Drag up/down (⇧ for fine), scroll, or use the
+   * arrow keys; double-click or right-click resets. With `kill`, clicking
+   * the label kills the band and clicking again brings it back.
+   * @type {{ value: number, min?: number, max?: number, reset?: number, label: string, name?: string,
+   *          kill?: number, size?: number, format?: (v: number) => string, onchange?: (v: number) => void }}
    */
   let {
     value = $bindable(),
@@ -13,18 +17,17 @@
     max = 1,
     reset = 0,
     label,
-    bipolar = false,
-    size = 40,
-    accent = 'var(--text)',
+    name = label,
+    kill,
+    size = 28,
     format = (v) => v.toFixed(1),
     onchange = () => {},
   } = $props();
 
-  const START = -135;
-  const SWEEP = 270;
   const norm = $derived((value - min) / (max - min));
-  const angle = $derived(START + norm * SWEEP);
-  const zero = $derived(bipolar ? START + ((reset - min) / (max - min)) * SWEEP : START);
+  const killed = $derived(kill !== undefined && value <= kill);
+  let beforeKill = 0;
+  let dial;
 
   function set(v) {
     const next = Math.min(max, Math.max(min, v));
@@ -34,57 +37,72 @@
     }
   }
 
+  let raw = 0;
   let dragging = $state(false);
+  const readout = () => tipText(name, format(value));
+
   function down(e) {
+    if (e.button !== 0) return;
     e.currentTarget.setPointerCapture(e.pointerId);
     dragging = true;
+    raw = value;
+    showTip(dial, readout());
   }
   function move(e) {
     if (!dragging) return;
-    const scale = e.shiftKey ? 0.1 : 1;
-    set(value - (e.movementY / 180) * (max - min) * scale);
+    const perPx = ((max - min) / 180) * (e.shiftKey ? 0.1 : 1);
+    raw = Math.min(max, Math.max(min, raw - e.movementY * perPx));
+    set(detent(raw, reset, perPx, e.shiftKey));
+    showTip(dial, readout());
   }
   function up() {
+    if (!dragging) return;
     dragging = false;
+    hideTip(dial);
   }
   function wheel(e) {
     e.preventDefault();
-    set(value - Math.sign(e.deltaY) * (max - min) * 0.02);
+    set(value - Math.sign(e.deltaY) * (max - min) * (e.shiftKey ? 0.005 : 0.02));
+    showTip(dial, readout());
   }
   function key(e) {
-    const step = (max - min) * (e.shiftKey ? 0.01 : 0.05);
-    if (e.key === 'ArrowUp' || e.key === 'ArrowRight') set(value + step);
-    else if (e.key === 'ArrowDown' || e.key === 'ArrowLeft') set(value - step);
-    else return;
+    const v = keyValue(e, value, min, max);
+    if (v === null) return;
     e.preventDefault();
+    set(v);
+    showTip(dial, readout());
   }
-
-  function arc(a0, a1, r) {
-    const p = (a) => {
-      const rad = ((a - 90) * Math.PI) / 180;
-      return [50 + r * Math.cos(rad), 50 + r * Math.sin(rad)];
-    };
-    const [lo, hi] = a0 < a1 ? [a0, a1] : [a1, a0];
-    if (hi - lo < 0.5) return '';
-    const [x0, y0] = p(lo);
-    const [x1, y1] = p(hi);
-    return `M ${x0} ${y0} A ${r} ${r} 0 ${hi - lo > 180 ? 1 : 0} 1 ${x1} ${y1}`;
+  function toggleKill() {
+    if (killed) set(beforeKill > kill ? beforeKill : reset);
+    // (beforeKill is 0 until the first kill, which is the EQ default.)
+    else {
+      beforeKill = value;
+      set(kill);
+    }
   }
+  const menu = (e) =>
+    openMenu(e, [
+      { label: 'Reset to default', action: () => set(reset), key: '' },
+      ...(kill !== undefined ? [{ label: killed ? 'Bring back' : 'Kill', action: toggleKill }] : []),
+    ]);
 </script>
 
-<div class="knob" style:width="{size + 16}px">
+<div class="knob">
   <div
+    bind:this={dial}
     class="dial"
     class:dragging
+    class:killed
     role="slider"
     tabindex="0"
-    aria-label={label}
+    aria-label={name}
     aria-valuemin={min}
     aria-valuemax={max}
     aria-valuenow={value}
     aria-valuetext={format(value)}
     style:width="{size}px"
     style:height="{size}px"
+    style:--v={norm}
     onpointerdown={down}
     onpointermove={move}
     onpointerup={up}
@@ -92,60 +110,69 @@
     ondblclick={() => set(reset)}
     onwheel={wheel}
     onkeydown={key}
-    title="{label}: {format(value)} (double-click to reset)"
-  >
-    <svg viewBox="0 0 100 100">
-      <path d={arc(START, START + SWEEP, 44)} class="track" />
-      <path d={arc(zero, angle, 44)} class="fill" style:stroke={accent} />
-      <circle cx="50" cy="50" r="33" class="cap" />
-      <line x1="50" y1="50" x2="50" y2="22" class="pointer" transform="rotate({angle} 50 50)" />
-    </svg>
-  </div>
-  <div class="label">{label}</div>
+    oncontextmenu={menu}
+    use:tip={() => tipText(name, format(value), 'double-click to reset')}
+  ></div>
+  {#if kill !== undefined}
+    <button class="label" class:killed onclick={toggleKill} aria-pressed={killed}
+      use:tip={() => (killed ? `Bring back ${name}` : `Kill ${name}`)}>{label}{killed ? ' · kill' : ''}</button>
+  {:else}
+    <span class="label">{label}</span>
+  {/if}
 </div>
 
 <style>
   .knob {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2px;
+    display: grid;
+    justify-items: center;
+    gap: 3px;
   }
   .dial {
+    position: relative;
+    border-radius: 50%;
+    background: var(--bg);
+    box-shadow: inset 0 0 0 1.5px var(--line-2);
     cursor: ns-resize;
     touch-action: none;
-    border-radius: 50%;
+    transition: box-shadow 0.12s;
   }
-  svg {
-    width: 100%;
-    height: 100%;
-    overflow: visible;
+  .dial:hover,
+  .dial.dragging {
+    box-shadow: inset 0 0 0 1.5px var(--fg-4);
   }
-  .track {
-    fill: none;
-    stroke: var(--line-2);
-    stroke-width: 7;
-    stroke-linecap: round;
+  .dial::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 14%;
+    width: 2px;
+    height: 32%;
+    margin-left: -1px;
+    border-radius: 1px;
+    background: var(--fg);
+    transform-origin: 50% 112%;
+    transform: rotate(calc(-135deg + var(--v) * 270deg));
   }
-  .fill {
-    fill: none;
-    stroke-width: 7;
-    stroke-linecap: round;
-  }
-  .cap {
-    fill: #1d2027;
-    stroke: #343844;
-    stroke-width: 2;
-  }
-  .pointer {
-    stroke: var(--text);
-    stroke-width: 5;
-    stroke-linecap: round;
+  .dial.killed::after {
+    background: var(--fg-4);
   }
   .label {
-    font-size: 10px;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--muted-foreground);
+    font-size: 10.5px;
+    color: var(--fg-3);
+    white-space: nowrap;
+  }
+  button.label {
+    border: 0;
+    padding: 0 2px;
+    background: none;
+    font: inherit;
+    font-size: 10.5px;
+    border-radius: 3px;
+  }
+  button.label:hover {
+    color: var(--fg-2);
+  }
+  .label.killed {
+    color: var(--kill);
   }
 </style>
