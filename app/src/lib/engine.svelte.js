@@ -50,6 +50,37 @@ export function onFrame(fn) {
   return () => frameListeners.delete(fn);
 }
 
+/**
+ * Copies `src` into the reactive `target` field by field, writing only what
+ * changed. Replacing a whole deck object every frame would wake every piece
+ * of UI that reads any of its fields; this wakes only the ones whose value
+ * moved (mostly the play position). Returns the value to store when `target`
+ * can't be patched in place (a different shape, or not an object).
+ */
+function patch(target, src) {
+  if (target === null || src === null || typeof target !== 'object' || typeof src !== 'object' || Array.isArray(target) !== Array.isArray(src)) {
+    return src;
+  }
+  if (Array.isArray(src) && target.length !== src.length) return src;
+  for (const k in src) {
+    const v = src[k];
+    const old = target[k];
+    if (old === v) continue;
+    const next = patch(old, v);
+    if (next !== old) target[k] = next;
+  }
+  if (!Array.isArray(src)) for (const k in target) if (!(k in src)) delete target[k];
+  return target;
+}
+
+/** Sets `obj[key]` to `value`, patching in place where it can. */
+function update(obj, key, value) {
+  const old = obj[key];
+  if (old === value) return;
+  const next = patch(old, value);
+  if (next !== old) obj[key] = next;
+}
+
 let polling = false;
 let lastFrame = performance.now();
 
@@ -62,12 +93,12 @@ function frame(now) {
     backend
       .state()
       .then((s) => {
-        for (let i = 0; i < 2; i++) engine.decks[i] = s.decks[i];
-        engine.mixer = s.mixer ?? null;
-        engine.recording = s.recording ?? null;
-        engine.audio = s.audio ?? null;
-        for (let i = 0; i < 2; i++) engine.deckLevels[i] = Math.max(s.deckPeaks[i], engine.deckLevels[i] * 0.86);
-        for (let i = 0; i < 2; i++) engine.masterLevels[i] = Math.max(s.masterPeak[i], engine.masterLevels[i] * 0.86);
+        for (let i = 0; i < 2; i++) update(engine.decks, i, s.decks[i]);
+        update(engine, 'mixer', s.mixer ?? null);
+        update(engine, 'recording', s.recording ?? null);
+        update(engine, 'audio', s.audio ?? null);
+        for (let i = 0; i < 2; i++) update(engine.deckLevels, i, Math.max(s.deckPeaks[i], engine.deckLevels[i] * 0.86));
+        for (let i = 0; i < 2; i++) update(engine.masterLevels, i, Math.max(s.masterPeak[i], engine.masterLevels[i] * 0.86));
       })
       .catch(() => {})
       .finally(() => (polling = false));
