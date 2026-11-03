@@ -33,6 +33,19 @@ fn main() {
     let elapsed = t0.elapsed().as_secs_f64();
     let per_block_us = elapsed / blocks as f64 * 1e6;
     let budget_us = block as f64 / sr as f64 * 1e6;
+    let six_min: Vec<f32> = (0..44_100 * 360 * 2)
+        .map(|i| {
+            let t = (i / 2) as f64 / 44_100.0;
+            let bt = t % (60.0 / 124.0);
+            ((2.0 * std::f64::consts::PI * 60.0 * bt).sin() * (-bt * 8.0).exp()) as f32
+        })
+        .collect();
+    let t1 = Instant::now();
+    let grid = dj_engine::analysis::detect_beatgrid(&six_min, 44_100);
+    println!(
+        "beatgrid for a 6-minute track: {grid:?} in {} ms",
+        t1.elapsed().as_millis()
+    );
     println!(
         "2 decks, {block}-frame blocks: {per_block_us:.1} µs per block of a {budget_us:.0} µs budget ({:.0}x real time)",
         budget_us / per_block_us

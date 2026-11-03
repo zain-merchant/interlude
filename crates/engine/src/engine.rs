@@ -129,6 +129,7 @@ impl Engine {
             Seek { deck, seconds } => self.decks[deck.index()].seek_secs(seconds),
             SetRate { deck, rate } => self.decks[deck.index()].rate = rate.clamp(0.0, 4.0),
             SetBend { deck, bend } => self.decks[deck.index()].bend = bend.clamp(-1.0, 1.0),
+            Sync { deck } => self.sync(deck.index()),
             SetGain { deck, db } => self.decks[deck.index()].set_gain_db(db),
             SetEq { deck, band, db } => self.decks[deck.index()].set_eq_db(band, db),
             SetFader { deck, value } => self.mixer.set_fader(deck.index(), value),
@@ -137,6 +138,40 @@ impl Engine {
             SetCueMix { value } => self.mixer.set_cue_mix(value),
             SetMasterGain { db } => self.mixer.set_master_db(db),
         }
+    }
+
+    /// Matches deck `i` to the other deck: tempo first, then beat phase.
+    /// Picks the half/double tempo match closest to the current speed, so a
+    /// 87 BPM grid syncs to 174 BPM drum & bass without racing.
+    fn sync(&mut self, i: usize) {
+        let other = 1 - i;
+        let (Some(me), Some(them)) = (self.decks[i].beat_info(), self.decks[other].beat_info())
+        else {
+            return;
+        };
+        let target_bpm = them.bpm * self.decks[other].rate;
+        let candidates = [target_bpm, target_bpm * 2.0, target_bpm / 2.0];
+        let rate = candidates
+            .iter()
+            .map(|t| t / me.bpm)
+            .min_by(|a, b| (a - 1.0).abs().total_cmp(&(b - 1.0).abs()))
+            .unwrap_or(1.0);
+        self.decks[i].rate = rate.clamp(0.0, 4.0);
+
+        // Phase: compare positions in units of the faster of the two beats.
+        let my_beat = me.beat;
+        let their_beat = them.beat;
+        let ratio = (me.bpm * rate) / target_bpm; // ~0.5, 1 or 2
+        let (mine, theirs, my_beats_per_unit) = if ratio > 1.5 {
+            (my_beat, their_beat * 2.0, 1.0)
+        } else if ratio < 0.75 {
+            (my_beat * 2.0, their_beat, 0.5)
+        } else {
+            (my_beat, their_beat, 1.0)
+        };
+        let mut delta = theirs.fract() - mine.fract();
+        delta -= delta.round(); // shortest way: within half a beat
+        self.decks[i].shift_beats(delta * my_beats_per_unit);
     }
 
     /// Hands a dropped track back to the control side to be freed there.
@@ -154,7 +189,14 @@ impl Engine {
             let sr = deck.source_rate();
             s.position.store(deck.pos / sr);
             s.cue.store(deck.cue / sr);
-            s.rate.store(deck.rate + deck.bend);
+            s.rate.store(deck.rate);
+            s.speed.store(deck.rate + deck.bend);
+            s.bpm.store(
+                deck.track
+                    .as_ref()
+                    .and_then(|t| t.beatgrid)
+                    .map_or(0.0, |g| g.bpm),
+            );
             s.playing.store(deck.playing, Relaxed);
         }
     }

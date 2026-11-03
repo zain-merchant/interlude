@@ -5,14 +5,19 @@ A free, open-source DJ app that is fast, modern and uncluttered. No paywalled
 
 ![oss-dj running on Linux with two test tracks loaded](docs/screenshot.png)
 
-> **Status: early development (Phase 0/1).** You can load two tracks, play,
-> cue, change pitch, EQ and crossfade between them. Beat analysis, sync,
-> hot cues, loops and controller support come next. See the roadmap below.
+> **Status: early development (Phase 2 under way).** You can load two
+> tracks, see their BPM, sync them, cue, change pitch, EQ and crossfade.
+> Hot cues, loops and controller support come next. See the roadmap below.
 
 ## What works today
 
 - **Audio engine (Rust):** two decks with varispeed playback, CDJ-style cue
   (set, hold to preview, play from preview), nudge, ±8/16/50% pitch.
+- **Tempo:** BPM and beatgrid detected on load (about 0.2 s for a 6-minute
+  track), shown on each deck and as beat lines on the waveform (a stronger
+  line every 4 beats). SYNC matches tempo and beat phase to the other deck,
+  picking half or double time when that's closer (e.g. 87 vs 174 BPM).
+  Detection range is 80-160 BPM; constant tempo only for now.
 - **Mixer:** trim, 3-band isolator EQ with full kills, channel faders,
   constant-power crossfader, master gain, headphone cue with cue/master blend
   (on interfaces with 4+ outputs, headphones go to channels 3-4).

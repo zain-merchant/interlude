@@ -1,6 +1,7 @@
 <script>
   import Waveform from './Waveform.svelte';
   import Fader from './Fader.svelte';
+  import { untrack } from 'svelte';
   import { engine, tracks, control } from './engine.svelte.js';
 
   /** @type {{ deck: number }} */
@@ -18,10 +19,31 @@
   const t = $derived(tracks[deck]);
   const ratePct = $derived((d.rate - 1) * 100);
 
+  const bpm = $derived(d.bpm > 0 ? d.bpm * d.speed : 0);
+
+  let lastTouch = 0;
+
   function setPitch(v) {
+    lastTouch = performance.now();
     pitch = v;
     control({ type: 'setRate', deck, rate: 1 - pitch * range });
   }
+
+  // Keep the pitch fader in step when the engine changes the rate itself
+  // (SYNC), widening the range if the new rate doesn't fit.
+  // Ignores the engine for a moment after the fader moves, since the
+  // engine's reported rate lags the fader by a frame or two.
+  $effect(() => {
+    const rate = d.rate;
+    untrack(() => {
+      if (performance.now() - lastTouch < 500) return;
+      if (Math.abs(1 - pitch * range - rate) < 1e-6) return;
+      let r = range;
+      while (Math.abs(1 - rate) > r + 1e-9 && r < RANGES[RANGES.length - 1]) r = RANGES[RANGES.indexOf(r) + 1];
+      range = r;
+      pitch = Math.max(-1, Math.min(1, (1 - rate) / r));
+    });
+  });
 
   function cycleRange() {
     range = RANGES[(RANGES.indexOf(range) + 1) % RANGES.length];
@@ -53,8 +75,8 @@
           <div class="artist">Load a track from the library below</div>
         {/if}
       </div>
-      <div class="bpm" title="BPM detection arrives with track analysis">
-        <span class="mono">—</span><small>BPM</small>
+      <div class="bpm" title={d.bpm > 0 ? `Track tempo ${d.bpm.toFixed(2)} BPM` : t ? 'No clear beat found' : ''}>
+        <span class="mono">{bpm > 0 ? bpm.toFixed(1) : '—'}</span><small>BPM</small>
       </div>
     </header>
 
@@ -81,6 +103,8 @@
           <svg viewBox="0 0 24 24"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z" /></svg>
         {/if}
       </button>
+      <button class="sync" onclick={() => control({ type: 'sync', deck })} disabled={!t || !d.bpm || !engine.decks[1 - deck].bpm}
+        title="Match tempo and beats to deck {deck === 0 ? 'B' : 'A'}">SYNC</button>
       <div class="nudge">
         <button onpointerdown={bend(-0.04)} onpointerup={bend(0)} onpointerleave={bend(0)} title="Nudge slower (hold)" aria-label="Nudge slower">‹‹</button>
         <button onpointerdown={bend(0.04)} onpointerup={bend(0)} onpointerleave={bend(0)} title="Nudge faster (hold)" aria-label="Nudge faster">››</button>
@@ -232,6 +256,14 @@
   button:disabled {
     opacity: 0.4;
     cursor: default;
+  }
+  .sync {
+    height: 34px;
+    padding: 0 12px;
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    color: var(--accent);
   }
   .nudge {
     margin-left: auto;
