@@ -126,8 +126,18 @@ export function createMockBackend() {
   const decks = [0, 1].map(() => ({
     loaded: false, playing: false, position: 0, duration: 0, cue: 0, rate: 1, bend: 0, bpm: 0, key: null, keylock: false, firstBeat: 0,
     generation: 0, previewing: false, scratching: false, waveform: null, fader: 1, peak: 0, path: null, ...freshLoops(),
-    filter: 0, fx: { kind: 'echo', on: false, level: 0.5, beats: 1 },
+    filter: 0, fx: { kind: 'echo', on: false, level: 0.5, beats: 1 }, stems: 0b1111, splitFrom: 0,
   }));
+  // Stems: a pretend model download, and splitting that takes 20 s a track.
+  const stemsCfg = { enabled: true, cacheGb: 5, accelerate: true, cacheBytes: 1.2e9 };
+  /** @type {any} */
+  let stemsModel = { state: 'missing' };
+  const deckStems = (d) => {
+    if (!d.loaded || !stemsCfg.enabled) return { state: 'off', ready: 0, error: null };
+    if (stemsModel.state !== 'ready') return { state: 'needsModel', ready: 0, error: null };
+    const ready = Math.min(1, (performance.now() - Math.max(d.splitFrom, stemsModel.at)) / 20000);
+    return { state: ready >= 1 ? 'ready' : 'splitting', ready, error: null };
+  };
   /** @type {{ active: boolean, started: number, seconds: number, path: string | null }} */
   const rec = { active: false, started: 0, seconds: 0, path: null };
   // Sampler slots: a length, and when the slot was last pressed.
@@ -254,12 +264,13 @@ export function createMockBackend() {
       case 'setCue': if (d.loaded) d.cue = Math.max(0, Math.min(d.duration, cmd.seconds)); break;
       case 'eject':
         keepCues(d);
-        Object.assign(d, { loaded: false, playing: false, previewing: false, scratching: false, position: 0, cue: 0, duration: 0, bpm: 0, key: null, waveform: null, ...freshLoops() });
+        Object.assign(d, { loaded: false, playing: false, previewing: false, scratching: false, position: 0, cue: 0, duration: 0, bpm: 0, key: null, waveform: null, stems: 0b1111, ...freshLoops() });
         d.generation++;
         break;
       case 'setRate': d.rate = cmd.rate; break;
       case 'setBend': d.bend = cmd.bend; break;
       case 'setKeylock': d.keylock = cmd.on; break;
+      case 'setStems': d.stems = cmd.mask & 0b1111; break;
       case 'setFader': d.fader = cmd.value; break;
       case 'sync': {
         const o = decks[1 - cmd.deck];
@@ -302,8 +313,9 @@ export function createMockBackend() {
           loaded: d.loaded, playing: d.playing, position: d.position, duration: d.duration,
           cue: d.cue, rate: d.rate, speed: d.rate + d.bend, bpm: d.bpm, key: d.key, keylock: d.keylock, generation: d.generation, peak: 0,
           hotCues: [...d.hotCues], loopIn: d.loopIn, loopOut: d.loopOut, looping: d.looping, loopBeats: d.loopBeats,
-          filter: d.filter, fx: { ...d.fx },
+          filter: d.filter, fx: { ...d.fx }, stems: d.stems,
         })),
+        stems: decks.map(deckStems),
         deckPeaks,
         mixer: { crossfader: xf, cueMix, masterDb, quantize },
         sampler: { level: samplerLevel, slots: samples.map(sampleState) },
@@ -348,6 +360,7 @@ export function createMockBackend() {
       Object.assign(d, {
         loaded: true, playing: false, position: saved?.cue ?? 0, cue: 0, duration, bpm, firstBeat: 0, key: { tonic: seed % 12, minor: seed % 3 !== 0 },
         waveform: fakeWaveform(seed, duration, bpm), generation: d.generation + 1, ...freshLoops(), path,
+        stems: 0b1111, splitFrom: performance.now(),
       }, saved ? { ...saved, hotCues: [...saved.hotCues] } : {});
       return {
         title: t.title, path, duration, sampleRate: 44100,
@@ -363,6 +376,42 @@ export function createMockBackend() {
       return { beatgrid: g, gridLocked: !!grid };
     },
     waveform: async (deck) => decks[deck].waveform,
+    // Muted stems take their share out of the bands they live in.
+    stemsWaveform: async (deck, mask) => {
+      const w = decks[deck].waveform;
+      const on = (i) => (mask >> i) & 1;
+      const low = 0.1 + 0.55 * on(2) + 0.35 * on(3);
+      const mid = 0.1 + 0.45 * on(0) + 0.45 * on(1);
+      const high = 0.1 + 0.3 * on(0) + 0.2 * on(1) + 0.4 * on(3);
+      const out = new Uint8Array(w.length);
+      for (let i = 0; i < w.length; i += 4) {
+        out[i + 1] = w[i + 1] * Math.min(1, low);
+        out[i + 2] = w[i + 2] * Math.min(1, mid);
+        out[i + 3] = w[i + 3] * Math.min(1, high);
+        out[i] = Math.max(out[i + 1], out[i + 2], out[i + 3]);
+      }
+      return out;
+    },
+    stemsInfo: async () => ({ ...stemsCfg, model: stemsModel, modelBytes: 84 * 1024 * 1024 }),
+    setStems: async (change) => {
+      for (const k of ['enabled', 'cacheGb', 'accelerate']) if (change[k] != null) stemsCfg[k] = change[k];
+      return { ...stemsCfg, model: stemsModel, modelBytes: 84 * 1024 * 1024 };
+    },
+    clearStemsCache: async () => {
+      stemsCfg.cacheBytes = 0;
+      return { ...stemsCfg, model: stemsModel, modelBytes: 84 * 1024 * 1024 };
+    },
+    downloadStemsModel: async () => {
+      if (stemsModel.state === 'downloading' || stemsModel.state === 'ready') return;
+      const total = 84 * 1024 * 1024;
+      const started = performance.now();
+      stemsModel = { state: 'downloading', done: 0, total };
+      const timer = setInterval(() => {
+        const done = Math.min(total, ((performance.now() - started) / 4000) * total);
+        stemsModel = done >= total ? { state: 'ready', at: performance.now() } : { state: 'downloading', done, total };
+        if (done >= total) clearInterval(timer);
+      }, 100);
+    },
     libraryFolders: async () => [...folders],
     addFolder: async (path) => {
       if (path && !folders.includes(path)) folders.push(path);

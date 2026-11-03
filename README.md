@@ -42,6 +42,20 @@ A free, open-source DJ app that is fast, modern and uncluttered. No paywalled
   decks. Drag a track onto a slot to load it (up to 60 seconds), click to
   play from the top, ⇧-click to stop, right-click to clear. Slots are kept
   between sessions.
+- **Stems:** each deck's Stems tab has four buttons, Vocals, Melody, Bass
+  and Drums. Click mutes a stem, ⇧-click plays it alone (again: all back
+  on). Stems fade in and out over a few milliseconds, so there are no
+  clicks, and the waveforms show only what you hear. With every stem on,
+  you hear the original file exactly: melody is the original minus the
+  other three. Tracks are split on your computer by HTDemucs (Meta, MIT
+  licence), a one-time 84 MB download from Settings › Stems, through ONNX
+  Runtime: on a Mac on the GPU and Neural Engine. Splitting starts at the
+  play head when a track loads and runs ahead of it, so the part you're
+  about to play is ready first; anything not split yet plays as normal.
+  Finished stems are kept in a cache (5 GB by default, oldest out first), so
+  a track you've played before has them at once. Settings › Stems turns
+  splitting off, sets the cache size and clears it. Stems have no keys
+  until you give them some in Settings › Keyboard.
 - **Recording:** the Rec button in the mixer records the master output to a
   24-bit WAV in `Music/oss-dj recordings`. The file is written off the
   audio thread and its header is refreshed every few seconds, so a crash
@@ -96,7 +110,9 @@ A free, open-source DJ app that is fast, modern and uncluttered. No paywalled
   CUE/LOOP CALL halves and doubles the loop (with SHIFT: beat jump), all
   with LEDs. Sampler pad mode plays sampler slots 1 to 8 from either deck's
   pads (lit when loaded); SHIFT + pad stops a slot, or loads the selected
-  library track into an empty one. CFX knobs drive the channel filters. The beat FX section comes
+  library track into an empty one. PAD FX1 mode is stems: pads 1 to 4
+  mute and unmute vocals, melody, bass and drums (lit while playing), pads
+  5 to 8 play one alone (lit while soloed). CFX knobs drive the channel filters. The beat FX section comes
   later.
 
 The engine renders two playing decks at about 1% of one CPU core, and a
@@ -146,6 +162,8 @@ line above the library to resize it.
 ```
 crates/engine   Real-time audio engine (no UI). Decks, mixer, DSP, decoding,
                 waveform analysis, sound card output.
+crates/stems    Splits tracks into stems in the background (ONNX Runtime +
+                HTDemucs), and the stems cache.
 crates/cli      `dj` command-line tool for testing the engine headless.
 app/            Desktop app: Tauri 2 shell (app/src-tauri) + Svelte 5 UI (app/src).
 ```
@@ -162,6 +180,8 @@ You need Rust (stable) and Node 20+.
 **Linux** also needs: `libasound2-dev libwebkit2gtk-4.1-dev libgtk-3-dev librsvg2-dev`
 (Debian/Ubuntu names). **macOS** and **Windows** need nothing extra beyond
 the [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/).
+The first build downloads ONNX Runtime (for stems) through the `ort` crate;
+to use a copy you already have, set `ORT_LIB_LOCATION` to its folder.
 
 ```sh
 # Desktop app (dev mode with hot reload)
@@ -196,7 +216,7 @@ cargo run --release -p dj-cli -- midi                      # print what a contro
    Gate: a full 2-hour set on your own controller.
 3. **Phase 3 · Public beta, then 1.0:** Rekordbox and Serato import, crates,
    history; top 10 controllers tested; installers for macOS, Windows, Linux.
-4. **Beyond 1.0:** stems, 4 decks, samplers, HID jog displays, DVS, CDJ USB
+4. **Beyond 1.0:** 4 decks, HID jog displays, DVS, CDJ USB
    export.
 
 ## License

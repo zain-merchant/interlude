@@ -203,15 +203,6 @@ pub(crate) struct Source<'a> {
 }
 
 impl<'a> Source<'a> {
-    #[cfg(test)]
-    pub fn plain(samples: &'a [f32]) -> Self {
-        Self {
-            samples,
-            stems: None,
-            mix: StemMix::FULL,
-        }
-    }
-
     pub fn frames(&self) -> i64 {
         (self.samples.len() / 2) as i64
     }
