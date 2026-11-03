@@ -245,6 +245,7 @@
         {#each visible as t, i (t.path)}
           {@const index = first + i}
           {@const decks = onDeck(t)}
+          <!-- svelte-ignore a11y_interactive_supports_focus (the listbox holds focus; rows are its options) -->
           <div class="row" class:sel={index === selected} style:top="{index * ROW}px" role="option" id="track-{index}"
             aria-selected={index === selected}
             draggable="true" ondragstart={(e) => { selected = index; startDrag(e, t); }} ondragend={endDrag}

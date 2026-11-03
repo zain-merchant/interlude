@@ -87,6 +87,10 @@ void main() {
   float inLow = 1.0 - smoothstep(hLow - aa, hLow + aa, y);
   float inMid = 1.0 - smoothstep(hMid - aa, hMid + aa, y);
   float inHigh = 1.0 - smoothstep(hHigh - aa, hHigh + aa, y);
+  // Silence draws nothing, not a hairline along the centre.
+  inLow *= step(0.004, v.g);
+  inMid *= step(0.004, v.b);
+  inHigh *= step(0.004, v.a);
 
   vec3 c = cBg;
   if (bin < playhead) {
