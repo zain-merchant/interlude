@@ -71,8 +71,19 @@ export function createMockBackend() {
     const folder = FOLDERS[i % FOLDERS.length];
     const artist = ARTISTS[Math.floor(r() * ARTISTS.length)];
     const title = TITLES[i % TITLES.length] + (i >= TITLES.length ? ' (Extended Mix)' : '');
-    tracks.push({ path: `/Music/${folder}/${artist} - ${title}.mp3`, title, artist, folder, format: i % 5 ? 'MP3' : 'FLAC', analysis: null });
+    tracks.push({
+      path: `/Music/${folder}/${artist} - ${title}.mp3`, title, artist, album: '', genre: folder, folder,
+      format: i % 5 ? 'MP3' : 'FLAC', missing: i === 47, analysis: null,
+    });
   }
+  // Saved cue points by path, like the real library: kept when a track
+  // leaves a deck and put back when it's loaded again.
+  const savedCues = new Map();
+  const keepCues = (d) => {
+    if (d.loaded && d.path) {
+      savedCues.set(d.path, { cue: d.cue, hotCues: [...d.hotCues], loopIn: d.loopIn, loopOut: d.loopOut });
+    }
+  };
   // What "analysis" finds for a track: the same numbers loading it gives.
   const summary = (path) => {
     const seed = hash(path);
@@ -221,6 +232,7 @@ export function createMockBackend() {
       }
       case 'setCue': if (d.loaded) d.cue = Math.max(0, Math.min(d.duration, cmd.seconds)); break;
       case 'eject':
+        keepCues(d);
         Object.assign(d, { loaded: false, playing: false, previewing: false, scratching: false, position: 0, cue: 0, duration: 0, bpm: 0, key: null, waveform: null, ...freshLoops() });
         d.generation++;
         break;
@@ -300,10 +312,12 @@ export function createMockBackend() {
       const duration = 300 + Math.floor(r() * 180);
       const bpm = 118 + (seed % 12);
       const d = decks[deck];
+      keepCues(d);
+      const saved = savedCues.get(path);
       Object.assign(d, {
-        loaded: true, playing: false, position: 0, cue: 0, duration, bpm, firstBeat: 0, key: { tonic: seed % 12, minor: seed % 3 !== 0 },
-        waveform: fakeWaveform(seed, duration, bpm), generation: d.generation + 1, ...freshLoops(),
-      });
+        loaded: true, playing: false, position: saved?.cue ?? 0, cue: 0, duration, bpm, firstBeat: 0, key: { tonic: seed % 12, minor: seed % 3 !== 0 },
+        waveform: fakeWaveform(seed, duration, bpm), generation: d.generation + 1, ...freshLoops(), path,
+      }, saved ? { ...saved, hotCues: [...saved.hotCues] } : {});
       return {
         title: t.title, path, duration, sampleRate: 44100,
         binsPerSec: BINS_PER_SEC, binCount: d.waveform.length / 4,

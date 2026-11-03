@@ -517,6 +517,49 @@ impl Deck {
         }
     }
 
+    /// A position in seconds as source frames, if it's within the track.
+    fn frame_in_track(&self, secs: f64) -> Option<f64> {
+        let f = secs * self.source_rate();
+        (self.track.is_some() && f.is_finite() && (0.0..self.frames()).contains(&f)).then_some(f)
+    }
+
+    /// Puts back a saved cue point and loop on a freshly loaded, stopped
+    /// deck. The loop is stored, ready for reloop, but not playing.
+    pub fn restore_cue(&mut self, secs: f64, saved_loop: Option<(f64, f64)>) {
+        if self.track.is_none() || self.playing {
+            return;
+        }
+        self.cue = self.frame_in_track(secs).unwrap_or(0.0);
+        self.jump(self.cue);
+        let end = self.frames();
+        let sr = self.source_rate();
+        let saved_loop = saved_loop
+            .and_then(|(i, o)| Some((self.frame_in_track(i)?, (o * sr).min(end))))
+            .filter(|(i, o)| o > i);
+        self.loop_in = saved_loop.map(|l| l.0);
+        self.loop_out = saved_loop.map(|l| l.1);
+        self.looping = false;
+        if let Some((i, o)) = saved_loop {
+            self.adopt_loop_size(o - i);
+        }
+    }
+
+    /// Sets or clears a hot cue at a position in seconds, without moving.
+    /// A position outside the track is ignored.
+    pub fn set_hot_cue_secs(&mut self, n: usize, secs: Option<f64>) {
+        if n >= HOT_CUES || self.track.is_none() {
+            return;
+        }
+        match secs {
+            None => self.hot_cues[n] = None,
+            Some(s) => {
+                if let Some(f) = self.frame_in_track(s) {
+                    self.hot_cues[n] = Some(f);
+                }
+            }
+        }
+    }
+
     pub fn scratch_start(&mut self) {
         if self.track.is_some() {
             self.start_following();

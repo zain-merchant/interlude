@@ -167,6 +167,16 @@ impl Engine {
             BeatJump { deck, beats } => self.decks[deck.index()].beat_jump(beats),
             Seek { deck, seconds } => self.decks[deck.index()].seek_secs(seconds),
             SetCue { deck, seconds } => self.decks[deck.index()].set_cue_secs(seconds),
+            RestoreCue {
+                deck,
+                seconds,
+                saved_loop,
+            } => self.decks[deck.index()].restore_cue(seconds, saved_loop),
+            SetHotCue {
+                deck,
+                index,
+                seconds,
+            } => self.decks[deck.index()].set_hot_cue_secs(index, seconds),
             SetRate { deck, rate } => self.decks[deck.index()].rate = rate.clamp(0.0, 4.0),
             SetBend { deck, bend } => self.decks[deck.index()].bend = bend.clamp(-1.0, 1.0),
             SetKeylock { deck, on } => {
