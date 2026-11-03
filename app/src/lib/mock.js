@@ -76,6 +76,18 @@ export function createMockBackend() {
       format: i % 5 ? 'MP3' : 'FLAC', missing: i === 47, analysis: null,
     });
   }
+  // Playlists and History, in memory for the preview.
+  let playlistIds = 2;
+  let playlists = [
+    { id: 1, name: 'Friday warmup', paths: tracks.slice(0, 6).map((t) => t.path) },
+    { id: 2, name: 'Peak time', paths: tracks.slice(10, 14).map((t) => t.path) },
+  ];
+  const DAY = 24 * 3600 * 1000;
+  const sessions = [
+    { start: Date.now() - 2 * DAY, paths: tracks.slice(20, 27).map((t) => t.path) },
+    { start: Date.now() - 9 * DAY, paths: tracks.slice(30, 35).map((t) => t.path) },
+  ];
+  const byPaths = (paths) => paths.map((p) => tracks.find((t) => t.path === p)).filter(Boolean).map((t) => ({ ...t }));
   // Saved cue points by path, like the real library: kept when a track
   // leaves a deck and put back when it's loaded again.
   const savedCues = new Map();
@@ -346,6 +358,31 @@ export function createMockBackend() {
       analysisListeners.add(fn);
       return () => analysisListeners.delete(fn);
     },
+    playlists: async () => playlists.map((p) => ({ id: p.id, name: p.name, count: p.paths.length })),
+    createPlaylist: async (name, paths = []) => {
+      const id = ++playlistIds;
+      playlists.push({ id, name, paths: [...new Set(paths)] });
+      return id;
+    },
+    renamePlaylist: async (id, name) => {
+      const p = playlists.find((x) => x.id === id);
+      if (p) p.name = name;
+    },
+    deletePlaylist: async (id) => {
+      playlists = playlists.filter((x) => x.id !== id);
+    },
+    playlistTracks: async (id) => byPaths(playlists.find((x) => x.id === id)?.paths ?? []),
+    addToPlaylist: async (id, paths) => {
+      const p = playlists.find((x) => x.id === id);
+      if (p) p.paths = [...new Set([...p.paths, ...paths])];
+    },
+    setPlaylistTracks: async (id, paths) => {
+      const p = playlists.find((x) => x.id === id);
+      if (p) p.paths = [...new Set(paths)];
+    },
+    historySessions: async () => sessions.map((x) => ({ start: x.start, count: x.paths.length })),
+    sessionTracks: async (start) => byPaths(sessions.find((x) => x.start === start)?.paths ?? []),
+    onLibraryPlayed: async () => () => {},
     pickFolder: async () => null,
   };
 }

@@ -35,12 +35,15 @@ const AUDIO_EXTENSIONS: &[&str] = &[
 const MAX_DEPTH: usize = 12;
 /// How often the cue saver looks at the decks.
 const CUE_SAVE_INTERVAL: Duration = Duration::from_millis(250);
+/// A track counts as played, and goes into History, after this long on air.
+const PLAYED_AFTER_SECS: f64 = 30.0;
 
 pub struct Library {
     db: Arc<Mutex<Db>>,
     analyzer: Arc<Analyzer>,
     watches: Mutex<[Option<CueWatch>; NUM_DECKS]>,
     shared: OnceLock<Arc<SharedState>>,
+    app: OnceLock<AppHandle>,
 }
 
 #[derive(Serialize, Clone)]
@@ -178,6 +181,10 @@ struct CueWatch {
     restored: SavedCues,
     /// What's saved now, once the deck has shown `restored`.
     saved: Option<SavedCues>,
+    /// Seconds the track has played on air since it was loaded.
+    on_air: f64,
+    /// Already in History for this load.
+    played: bool,
 }
 
 fn cues_of(d: &DeckSnapshot) -> SavedCues {
@@ -203,9 +210,44 @@ fn same_cues(a: &SavedCues, b: &SavedCues) -> bool {
 }
 
 impl CueWatch {
+    fn new(path: PathBuf, duration: f64, restored: SavedCues) -> Self {
+        Self {
+            path,
+            duration,
+            restored,
+            saved: None,
+            on_air: 0.0,
+            played: false,
+        }
+    }
+
+    /// The deck shows this watch's track, not the one before it.
+    fn shows_track(&self, d: &DeckSnapshot) -> bool {
+        d.loaded && (d.duration - self.duration).abs() <= 1e-3
+    }
+
+    /// Counts `dt` seconds of the deck playing where the audience hears it
+    /// (fader up, crossfader not shut on it). True once, when the track has
+    /// been heard long enough to count as played.
+    fn listen(&mut self, d: &DeckSnapshot, deck: usize, crossfader: f32, dt: f64) -> bool {
+        if self.played || !self.shows_track(d) {
+            return false;
+        }
+        let cut = if deck == 0 {
+            crossfader >= 0.99
+        } else {
+            crossfader <= -0.99
+        };
+        if d.playing && d.fader > 0.01 && !cut {
+            self.on_air += dt;
+        }
+        self.played = self.on_air >= PLAYED_AFTER_SECS;
+        self.played
+    }
+
     /// Given the deck's state now, the cues to save, if they changed.
     fn check(&mut self, d: &DeckSnapshot) -> Option<SavedCues> {
-        if !d.loaded || (d.duration - self.duration).abs() > 1e-3 {
+        if !self.shows_track(d) {
             return None;
         }
         let now = cues_of(d);
@@ -241,6 +283,7 @@ impl Library {
             db,
             watches: Mutex::default(),
             shared: OnceLock::new(),
+            app: OnceLock::new(),
         }
     }
 
@@ -248,15 +291,17 @@ impl Library {
     /// the decks.
     pub fn start(&self, app: AppHandle, shared: Arc<SharedState>) {
         let analyzer = self.analyzer.clone();
+        let _ = self.app.set(app.clone());
         let _ = std::thread::Builder::new()
             .name("library-analysis".into())
             .spawn(move || analyzer.run(app));
         let _ = self.shared.set(shared);
     }
 
-    /// Saves any cue changes on the decks. Called by the saver thread, and
-    /// before a deck is emptied so its last change isn't lost.
-    pub fn save_cues(&self, deck: usize) {
+    /// Saves any cue changes on a deck, and counts `dt` seconds towards
+    /// its track being played. Called by the deck watcher thread, and before
+    /// a deck is emptied so its last change isn't lost.
+    fn watch_deck(&self, deck: usize, dt: f64) {
         let Some(shared) = self.shared.get() else {
             return;
         };
@@ -264,19 +309,34 @@ impl Library {
         let Some(w) = watches.get_mut(deck).and_then(|w| w.as_mut()) else {
             return;
         };
-        if let Some(cues) = w.check(&shared.deck(deck)) {
+        let d = shared.deck(deck);
+        if let Some(cues) = w.check(&d) {
             if let Err(e) = self.db.lock().unwrap().save_cues(&w.path, &cues) {
                 eprintln!("could not save cues for {}: {e}", w.path.display());
             }
         }
+        if w.listen(&d, deck, shared.mixer().crossfader, dt) {
+            let now = chrono::Utc::now().timestamp_millis();
+            if let Err(e) = self.db.lock().unwrap().record_play(&w.path, now) {
+                eprintln!("could not add {} to History: {e}", w.path.display());
+            }
+            if let Some(app) = self.app.get() {
+                let _ = app.emit("library-played", w.path.display().to_string());
+            }
+        }
     }
 
-    /// Runs the cue saver until the app quits.
-    pub fn run_cue_saver(&self) {
+    /// Watches the decks until the app quits: saves cue changes and adds
+    /// tracks to History once they've played.
+    pub fn run_deck_watcher(&self) {
+        let mut last = std::time::Instant::now();
         loop {
             std::thread::sleep(CUE_SAVE_INTERVAL);
+            let now = std::time::Instant::now();
+            let dt = (now - last).as_secs_f64();
+            last = now;
             for deck in 0..NUM_DECKS {
-                self.save_cues(deck);
+                self.watch_deck(deck, dt);
             }
         }
     }
@@ -286,7 +346,7 @@ impl Library {
     /// its saved cue points to put back on the deck.
     pub fn loaded(&self, app: &AppHandle, deck: usize, track: &dj_engine::Track) -> SavedCues {
         // The deck still holds the track being replaced: keep its last change.
-        self.save_cues(deck);
+        self.watch_deck(deck, 0.0);
         let Some(path) = &track.path else {
             self.unwatch(deck);
             return SavedCues::default();
@@ -302,19 +362,14 @@ impl Library {
             SavedCues::default()
         });
         if let Some(w) = self.watches.lock().unwrap().get_mut(deck) {
-            *w = Some(CueWatch {
-                path: path.clone(),
-                duration: track.duration_secs(),
-                restored: cues,
-                saved: None,
-            });
+            *w = Some(CueWatch::new(path.clone(), track.duration_secs(), cues));
         }
         cues
     }
 
     /// Stops saving a deck's cues, saving its last change first.
     pub fn unwatch(&self, deck: usize) {
-        self.save_cues(deck);
+        self.watch_deck(deck, 0.0);
         if let Some(w) = self.watches.lock().unwrap().get_mut(deck) {
             *w = None;
         }
@@ -514,6 +569,107 @@ pub async fn library_tracks(
     .map_err(|e| e.to_string())?
 }
 
+/// Lists saved tracks without rescanning, and queues the unanalyzed ones.
+fn listed(
+    lib: &Library,
+    rows: rusqlite::Result<Vec<db::Row>>,
+) -> Result<Vec<LibraryTrack>, String> {
+    let out: Vec<LibraryTrack> = rows
+        .map_err(|e| e.to_string())?
+        .into_iter()
+        .map(list_entry)
+        .collect();
+    lib.analyzer.enqueue(
+        out.iter()
+            .filter(|t| t.analysis.is_none() && !t.missing)
+            .map(|t| PathBuf::from(&t.path)),
+    );
+    Ok(out)
+}
+
+fn db_err(e: rusqlite::Error) -> String {
+    e.to_string()
+}
+
+#[tauri::command]
+pub fn playlists(lib: State<'_, Library>) -> Result<Vec<db::Playlist>, String> {
+    lib.db.lock().unwrap().playlists().map_err(db_err)
+}
+
+/// Makes a playlist, optionally filled with `paths`. Returns its id.
+#[tauri::command]
+pub fn create_playlist(
+    lib: State<'_, Library>,
+    name: String,
+    paths: Option<Vec<String>>,
+) -> Result<i64, String> {
+    let db = lib.db.lock().unwrap();
+    let id = db.create_playlist(name.trim()).map_err(db_err)?;
+    let paths: Vec<PathBuf> = paths
+        .unwrap_or_default()
+        .into_iter()
+        .map(PathBuf::from)
+        .collect();
+    db.set_playlist_tracks(id, &paths).map_err(db_err)?;
+    Ok(id)
+}
+
+#[tauri::command]
+pub fn rename_playlist(lib: State<'_, Library>, id: i64, name: String) -> Result<(), String> {
+    lib.db
+        .lock()
+        .unwrap()
+        .rename_playlist(id, name.trim())
+        .map_err(db_err)
+}
+
+#[tauri::command]
+pub fn delete_playlist(lib: State<'_, Library>, id: i64) -> Result<(), String> {
+    lib.db.lock().unwrap().delete_playlist(id).map_err(db_err)
+}
+
+#[tauri::command]
+pub fn playlist_tracks(lib: State<'_, Library>, id: i64) -> Result<Vec<LibraryTrack>, String> {
+    let rows = lib.db.lock().unwrap().playlist_tracks(id);
+    listed(&lib, rows)
+}
+
+#[tauri::command]
+pub fn add_to_playlist(lib: State<'_, Library>, id: i64, paths: Vec<String>) -> Result<(), String> {
+    let paths: Vec<PathBuf> = paths.into_iter().map(PathBuf::from).collect();
+    lib.db
+        .lock()
+        .unwrap()
+        .add_to_playlist(id, &paths)
+        .map_err(db_err)
+}
+
+/// Replaces a playlist's tracks, in order: how the UI reorders and removes.
+#[tauri::command]
+pub fn set_playlist_tracks(
+    lib: State<'_, Library>,
+    id: i64,
+    paths: Vec<String>,
+) -> Result<(), String> {
+    let paths: Vec<PathBuf> = paths.into_iter().map(PathBuf::from).collect();
+    lib.db
+        .lock()
+        .unwrap()
+        .set_playlist_tracks(id, &paths)
+        .map_err(db_err)
+}
+
+#[tauri::command]
+pub fn history_sessions(lib: State<'_, Library>) -> Result<Vec<db::Session>, String> {
+    lib.db.lock().unwrap().sessions().map_err(db_err)
+}
+
+#[tauri::command]
+pub fn session_tracks(lib: State<'_, Library>, start: i64) -> Result<Vec<LibraryTrack>, String> {
+    let rows = lib.db.lock().unwrap().session_tracks(start);
+    listed(&lib, rows)
+}
+
 #[cfg(test)]
 pub(crate) mod tests {
     use super::*;
@@ -538,12 +694,7 @@ pub(crate) mod tests {
             ..SavedCues::default()
         };
         restored.hot_cues[0] = Some(10.0);
-        let mut w = CueWatch {
-            path: "/m/a.mp3".into(),
-            duration: 200.0,
-            restored,
-            saved: None,
-        };
+        let mut w = CueWatch::new("/m/a.mp3".into(), 200.0, restored);
         // The deck still shows the previous track: nothing saved.
         assert_eq!(w.check(&deck(&SavedCues::default(), 150.0)), None);
         assert_eq!(w.check(&deck(&SavedCues::default(), 200.0)), None);
@@ -602,6 +753,26 @@ pub(crate) mod tests {
         let two = rows.iter().find(|r| r.tags.title == "Two").unwrap();
         assert!(two.missing);
         let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn a_track_counts_as_played_after_30_seconds_on_air() {
+        let mut w = CueWatch::new("/m/a.mp3".into(), 200.0, SavedCues::default());
+        let mut d = deck(&SavedCues::default(), 200.0);
+        d.playing = true;
+        d.fader = 1.0;
+        // Crossfader shut on deck A, or fader down: not heard.
+        assert!(!w.listen(&d, 0, 1.0, 40.0));
+        d.fader = 0.0;
+        assert!(!w.listen(&d, 0, 0.0, 40.0));
+        d.fader = 0.8;
+        assert!(!w.listen(&d, 0, 0.0, 20.0));
+        assert!(w.listen(&d, 0, 0.0, 10.0));
+        // Only once per load.
+        assert!(!w.listen(&d, 0, 0.0, 60.0));
+        // Deck B is shut by the crossfader at the far left.
+        let mut b = CueWatch::new("/m/b.mp3".into(), 200.0, SavedCues::default());
+        assert!(!b.listen(&d, 1, -1.0, 60.0));
     }
 
     #[test]
