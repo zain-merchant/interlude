@@ -1,7 +1,14 @@
 use std::sync::Arc;
 
 use crate::dsp::{db_to_gain, hermite, Eq3, Smoothed};
-use crate::{EqBand, Track};
+use crate::{Beatgrid, EqBand, Track};
+
+/// Where a deck is on its beatgrid.
+pub(crate) struct BeatInfo {
+    pub bpm: f64,
+    /// Fractional beat number at the play head.
+    pub beat: f64,
+}
 
 /// One deck's playback state. Lives on the audio thread.
 pub(crate) struct Deck {
@@ -101,6 +108,26 @@ impl Deck {
 
     pub fn seek_secs(&mut self, secs: f64) {
         self.pos = (secs * self.source_rate()).clamp(0.0, self.frames());
+    }
+
+    fn grid(&self) -> Option<Beatgrid> {
+        self.track.as_ref().and_then(|t| t.beatgrid)
+    }
+
+    pub fn beat_info(&self) -> Option<BeatInfo> {
+        let g = self.grid()?;
+        Some(BeatInfo {
+            bpm: g.bpm,
+            beat: g.beat_at(self.pos / self.source_rate()),
+        })
+    }
+
+    /// Moves the play head by a (fractional) number of beats.
+    pub fn shift_beats(&mut self, beats: f64) {
+        if let Some(g) = self.grid() {
+            let frames = beats * g.beat_length() * self.source_rate();
+            self.pos = (self.pos + frames).clamp(0.0, self.frames());
+        }
     }
 
     pub fn set_gain_db(&mut self, db: f32) {

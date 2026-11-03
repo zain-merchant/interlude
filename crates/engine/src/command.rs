@@ -77,6 +77,11 @@ pub enum Command {
         deck: DeckId,
         bend: f64,
     },
+    /// Match this deck's tempo and beat phase to the other deck. Does
+    /// nothing unless both decks have a beatgrid.
+    Sync {
+        deck: DeckId,
+    },
     /// Trim gain in dB.
     SetGain {
         deck: DeckId,

@@ -27,6 +27,8 @@ uniform vec3 cHigh;
 uniform vec3 cBg;
 uniform vec3 cAccent;
 uniform float centerLine; // 1 = draw a fixed centre playhead (scrolling view)
+uniform float beatLen;    // bins per beat (0 = no beatgrid)
+uniform float firstBeat;  // bin index of beat 0
 
 vec4 fetchBin(int i) {
   return texelFetch(bins, ivec2(i % ${TEX_WIDTH}, i / ${TEX_WIDTH}), 0);
@@ -54,6 +56,19 @@ void main() {
   // Dim what has already played.
   float bin = start + px * perPx;
   if (bin < playhead && a > 0.0) c = mix(c, cBg, 0.55);
+
+  // Beatgrid: a faint line per beat, a stronger one every 4 beats (bars are
+  // counted from the first detected beat until downbeat detection lands).
+  // Hidden when zoomed out so far that beats would blur together.
+  if (beatLen > 0.0 && beatLen / perPx > 6.0) {
+    float b = (bin - firstBeat) / beatLen;
+    float k = floor(b + 0.5);
+    float distPx = abs(b - k) * beatLen / perPx;
+    if (distPx < 0.75 && k >= 0.0) {
+      bool bar = mod(k, 4.0) < 0.5;
+      c = mix(c, bar ? vec3(1.0, 0.32, 0.36) : vec3(1.0), bar ? 0.85 : 0.35);
+    }
+  }
 
   // Cue marker.
   if (cue >= 0.0 && abs(bin - cue) < perPx * 1.5) { c = mix(c, vec3(1.0, 0.25, 0.3), 0.9); a = 1.0; }
@@ -99,7 +114,7 @@ export class WaveformGL {
     gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
 
     this.u = {};
-    for (const name of ['bins', 'count', 'start', 'perPx', 'width', 'playhead', 'cue', 'cLow', 'cMid', 'cHigh', 'cBg', 'cAccent', 'centerLine']) {
+    for (const name of ['bins', 'count', 'start', 'perPx', 'width', 'playhead', 'cue', 'cLow', 'cMid', 'cHigh', 'cBg', 'cAccent', 'centerLine', 'beatLen', 'firstBeat']) {
       this.u[name] = gl.getUniformLocation(prog, name);
     }
     this.tex = gl.createTexture();
@@ -135,8 +150,10 @@ export class WaveformGL {
 
   /**
    * @param {{ start: number, perPx: number, playhead: number, cue: number,
-   *           centerLine: boolean, colors: Record<string, string> }} view
-   *   `start`, `playhead` and `cue` are in bins; `perPx` is bins per device pixel.
+   *           centerLine: boolean, colors: Record<string, string>,
+   *           beatLen?: number, firstBeat?: number }} view
+   *   `start`, `playhead`, `cue`, `beatLen` and `firstBeat` are in bins;
+   *   `perPx` is bins per device pixel.
    */
   draw(view) {
     const gl = this.gl;
@@ -153,6 +170,8 @@ export class WaveformGL {
     gl.uniform1f(this.u.playhead, view.playhead);
     gl.uniform1f(this.u.cue, view.cue);
     gl.uniform1f(this.u.centerLine, view.centerLine ? 1 : 0);
+    gl.uniform1f(this.u.beatLen, view.beatLen ?? 0);
+    gl.uniform1f(this.u.firstBeat, view.firstBeat ?? 0);
     for (const k of ['cLow', 'cMid', 'cHigh', 'cBg', 'cAccent']) gl.uniform3fv(this.u[k], hexToRgb(view.colors[k]));
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   }
