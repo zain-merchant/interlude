@@ -19,6 +19,7 @@ mod deck;
 pub mod dsp;
 mod engine;
 mod mixer;
+mod null_output;
 #[cfg(feature = "output")]
 pub mod output;
 mod shared;
@@ -27,6 +28,7 @@ pub mod waveform;
 
 pub use command::{Command, DeckId, EqBand};
 pub use engine::{new_engine, Engine, EngineHandle, MAX_BLOCK_FRAMES};
+pub use null_output::{start_null, NullOutput};
 pub use shared::{DeckSnapshot, SharedState};
 pub use track::{LoadError, Track};
 pub use waveform::Waveform;
