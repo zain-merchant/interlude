@@ -43,18 +43,34 @@ test guarantees the audio thread never allocates memory.
 
 ## Keyboard
 
+The keyboard splits down the middle: the left hand plays deck A, the right
+hand deck B, mirrored. Keys follow their position, so the layout keeps its
+shape on AZERTY, QWERTZ and Dvorak.
+
+| Deck A | Deck B | Action |
+| --- | --- | --- |
+| Q | P | Cue (hold to preview) |
+| W | O | Play / pause |
+| E | I | Sync tempo and beats to the other deck |
+| Z / X | , / . | Nudge slower / faster (hold) |
+| G | H | Headphone cue |
+| Shift ← | Shift → | Load the selected track |
+
 | Key | Action |
 | --- | --- |
-| Q / W | Deck A cue (hold) / play-pause |
-| O / P | Deck B cue (hold) / play-pause |
-| [ / ] | Crossfader left / right |
-| − / = | Zoom waveforms out / in |
+| [ / ] | Crossfader left / right (Shift snaps to the end) |
+| − / = | Zoom waveforms out / in (or ⌘ + scroll on a waveform) |
 | Ctrl/⌘ F | Search the library |
-| ↑ / ↓, Enter | Pick a track, load it |
-| Shift ← / → | Load selected track to deck A / B |
+| ↑ / ↓, Page Up / Down, Home / End, Enter | Pick a track, load it |
+| F6 / Shift F6 | Move focus between the library, decks, mixer and waveforms |
+| Esc | Clear the search, or hand the keys back to the decks |
+| Shift F10 | Open the right-click menu for the focused control |
 
-Knobs: drag up/down (Shift for fine), scroll, or arrow keys. Double-click any
-knob or fader to reset it.
+Knobs and faders: drag (Shift for fine), scroll, or arrow keys (Home / End for
+the ends). They snap gently at their default; Shift ignores that. Double-click
+or right-click to reset. Click an EQ's label to kill that band. Hover any
+control for its value and shortcut. Drag the waveforms to scrub, and drag the
+line above the library to resize it.
 
 ## Architecture
 
