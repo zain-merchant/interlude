@@ -3,7 +3,8 @@
 // change, so drawing costs almost nothing on the CPU.
 //
 // The look: the familiar nested bands (bass blue outside, mids amber,
-// highs white in the core) as solid, smooth shapes, with a ribbon of thin
+// highs white in the core) as one solid, smooth shape filled with a
+// continuous gradient between them, with a ribbon of thin
 // anti-aliased threads laid over them as a fine texture. The outermost
 // thread is the crisp bass edge and the innermost follows the highs, the
 // ones between blending blue to amber to white. A faint twist that
@@ -125,13 +126,17 @@ void main() {
     // mids, highs in the core, each darker towards its edge.
     float inLow = 1.0 - smoothstep(b.x - aa, b.x + aa, y);
     float inMid = 1.0 - smoothstep(b.y - aa, b.y + aa, y);
-    float inHigh = 1.0 - smoothstep(b.z - aa, b.z + aa, y);
     if (past) {
       c = mix(c, cPast, max(inLow, inMid));
     } else {
-      c = mix(c, cLow * shade(y, b.x) * 0.55, inLow);
-      c = mix(c, cMid * shade(y, b.y) * 0.7, inMid);
-      c = mix(c, min(cHigh * shade(y, b.z) * 0.92, vec3(1.0)), inHigh);
+      // One continuous gradient from the white core through amber to the
+      // blue edge, its stops at the band outlines, so the colour still
+      // says where the highs, mids and bass are without hard seams.
+      vec3 midway = mix(cHigh, cMid, 0.5);
+      vec3 g = y < b.z ? mix(cHigh, midway, y / max(b.z, 1.0))
+        : y < b.y ? mix(midway, cMid, (y - b.z) / max(b.y - b.z, 1.0))
+        : mix(cMid, cLow, (y - b.y) / max(b.x - b.y, 1.0));
+      c = mix(c, g * mix(1.0, 0.6, smoothstep(0.0, 1.0, y / max(b.x, 1.0))), inLow);
     }
 
     // Threads: about one every 4 px of height, each a 1 px anti-aliased line.
