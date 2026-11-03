@@ -135,6 +135,16 @@ impl Engine {
             }
             CuePress { deck } => self.decks[deck.index()].cue_press(),
             CueRelease { deck } => self.decks[deck.index()].cue_release(),
+            HotCuePress { deck, index } => self.decks[deck.index()].hot_cue_press(index),
+            HotCueRelease { deck, index } => self.decks[deck.index()].hot_cue_release(index),
+            HotCueClear { deck, index } => self.decks[deck.index()].hot_cue_clear(index),
+            LoopToggle { deck } => self.decks[deck.index()].loop_toggle(),
+            BeatLoop { deck, beats } => self.decks[deck.index()].beat_loop_toggle(beats),
+            LoopScale { deck, factor } => self.decks[deck.index()].loop_scale(factor),
+            LoopIn { deck } => self.decks[deck.index()].loop_in_press(),
+            LoopOut { deck } => self.decks[deck.index()].loop_out_press(),
+            ReloopExit { deck } => self.decks[deck.index()].reloop_exit(),
+            BeatJump { deck, beats } => self.decks[deck.index()].beat_jump(beats),
             Seek { deck, seconds } => self.decks[deck.index()].seek_secs(seconds),
             SetRate { deck, rate } => self.decks[deck.index()].rate = rate.clamp(0.0, 4.0),
             SetBend { deck, bend } => self.decks[deck.index()].bend = bend.clamp(-1.0, 1.0),
@@ -239,6 +249,14 @@ impl Engine {
                     .map_or(0.0, |g| g.bpm),
             );
             s.playing.store(deck.playing, Relaxed);
+            let secs = |f: Option<f64>| f.map_or(-1.0, |f| f / sr);
+            for (slot, cue) in s.hot_cues.iter().zip(deck.hot_cues) {
+                slot.store(secs(cue));
+            }
+            s.loop_in.store(secs(deck.loop_in));
+            s.loop_out.store(secs(deck.loop_out));
+            s.looping.store(deck.looping, Relaxed);
+            s.loop_beats.store(deck.loop_beats);
         }
     }
 
