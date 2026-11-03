@@ -88,8 +88,9 @@
   </div>
   <div class="jump" role="group" aria-label="Deck {'AB'[deck]} beat jump">
     {#each [{ dir: -1, id: 'jumpBack', label: 'Jump back' }, { dir: 1, id: 'jumpForward', label: 'Jump forward' }] as j}
-      <button class="btn sm ghost step" aria-label="{j.label} {size} {beatsWord}" aria-disabled={!grid} {...press(() => beatJump(deck, j.dir))}
-        use:tip={() => (grid ? tipText(`${j.label} ${size} ${beatsWord}`, keyLabel(`deck.${deck}.${j.id}`)) : noGrid)}>
+      <button class="btn sm ghost step" aria-label="{j.label} {size} {beatsWord}" aria-disabled={!grid}
+        onpointerdown={(e) => e.button === 0 && beatJump(deck, j.dir, e.shiftKey)} onclick={(e) => e.detail === 0 && beatJump(deck, j.dir, e.shiftKey)}
+        use:tip={() => (grid ? tipText(`${j.label} ${size} ${beatsWord}`, keyLabel(`deck.${deck}.${j.id}`), `⇧ for 4 bars (${keyLabel(`deck.${deck}.${j.id}Long`)})`) : noGrid)}>
         <svg viewBox="0 0 16 16" aria-hidden="true" class:flip={j.dir > 0}>
           <path d="M8 3.5 3.5 8 8 12.5M12.5 3.5 8 8l4.5 4.5" />
         </svg>
