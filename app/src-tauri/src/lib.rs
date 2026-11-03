@@ -612,8 +612,8 @@ pub fn run() {
                     .start(app.handle().clone(), shared);
                 let handle = app.handle().clone();
                 let _ = std::thread::Builder::new()
-                    .name("cue-saver".into())
-                    .spawn(move || handle.state::<library::Library>().run_cue_saver());
+                    .name("deck-watcher".into())
+                    .spawn(move || handle.state::<library::Library>().run_deck_watcher());
                 Ok(())
             }
         })
@@ -638,6 +638,15 @@ pub fn run() {
             library::add_folder,
             library::remove_folder,
             library::library_tracks,
+            library::playlists,
+            library::create_playlist,
+            library::rename_playlist,
+            library::delete_playlist,
+            library::playlist_tracks,
+            library::add_to_playlist,
+            library::set_playlist_tracks,
+            library::history_sessions,
+            library::session_tracks,
         ])
         .run(tauri::generate_context!())
         .expect("error while running oss-dj");
