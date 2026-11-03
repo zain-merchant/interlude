@@ -3,12 +3,19 @@
 //! The UI never touches audio. It sends small commands (`control`), polls
 //! state at screen refresh rate (`state`), and fetches waveform bytes once
 //! per loaded track (`waveform`).
+//!
+//! A supported MIDI controller is picked up automatically when plugged in.
+//! Its mixer and transport controls go straight to the engine; its library
+//! browse knob and load buttons arrive in the UI as `controller` events.
 
+mod controller;
 mod library;
 
 use std::sync::{Arc, Mutex};
 
-use dj_engine::{Beatgrid, Command, DeckId, DeckSnapshot, EngineHandle, EqBand, Track, Waveform};
+use dj_engine::{
+    Beatgrid, Command, DeckId, DeckSnapshot, EngineHandle, EqBand, MixerSnapshot, Track, Waveform,
+};
 use serde::{Deserialize, Serialize};
 use tauri::ipc::Response;
 use tauri::State;
@@ -21,7 +28,7 @@ enum Output {
 }
 
 struct AppState {
-    engine: Mutex<EngineHandle>,
+    engine: Arc<Mutex<EngineHandle>>,
     tracks: Mutex<[Option<Arc<Track>>; dj_engine::NUM_DECKS]>,
     output_name: String,
     _output: Output,
@@ -43,6 +50,7 @@ struct TrackInfo {
 #[serde(rename_all = "camelCase")]
 struct EngineState {
     decks: [DeckSnapshot; dj_engine::NUM_DECKS],
+    mixer: MixerSnapshot,
     deck_peaks: [f32; dj_engine::NUM_DECKS],
     master_peak: [f32; 2],
 }
@@ -160,6 +168,7 @@ fn state(state: State<'_, AppState>) -> EngineState {
     let shared = engine.shared();
     EngineState {
         decks: std::array::from_fn(|i| shared.deck(i)),
+        mixer: shared.mixer(),
         deck_peaks,
         master_peak,
     }
@@ -221,7 +230,10 @@ fn waveform(state: State<'_, AppState>, deck: usize) -> Result<Response, String>
 }
 
 pub fn run() {
-    let (output, handle, device_label) = match dj_engine::output::start_default() {
+    // Play through the controller's own sound card when it's plugged in, so
+    // its headphone output works.
+    let preferred = ["DDJ-FLX4"];
+    let (output, handle, device_label) = match dj_engine::output::start_preferring(&preferred) {
         Ok((out, handle)) => {
             let name = format!("{} · {} Hz", out.device_name, out.sample_rate);
             (Output::Device(out), handle, name)
@@ -233,10 +245,20 @@ pub fn run() {
         }
     };
 
+    let shared = handle.shared().clone();
+    let engine = Arc::new(Mutex::new(handle));
+
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
+        .setup({
+            let engine = engine.clone();
+            move |app| {
+                controller::start(app.handle(), engine, shared);
+                Ok(())
+            }
+        })
         .manage(AppState {
-            engine: Mutex::new(handle),
+            engine,
             tracks: Mutex::new(Default::default()),
             output_name: device_label,
             _output: output,
@@ -248,6 +270,7 @@ pub fn run() {
             output_name,
             load_track,
             waveform,
+            controller::controller_name,
             library::library_folders,
             library::add_folder,
             library::remove_folder,
