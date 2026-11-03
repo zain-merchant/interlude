@@ -33,8 +33,9 @@ A free, open-source DJ app that is fast, modern and uncluttered. No paywalled
   app) and it connects by itself; audio goes through its sound card, with
   headphones on its headphone jack. Mapped: play, cue, sync (SHIFT + SYNC
   changes pitch range), pitch fader (picks up the current rate after SYNC
-  rather than jumping), jog wheels (top: scratch, outer ring: nudge while
-  playing, scrub while paused; SHIFT + jog: fast search), trim, EQ, channel
+  rather than jumping), jog wheels (top: audible vinyl-style scratching,
+  forwards and backwards; outer ring: nudge while playing, audible scrub
+  while paused; SHIFT + jog: fast search), trim, EQ, channel
   faders, crossfader, headphone cue, browse knob and load buttons, with
   play/cue/headphone LEDs. Pads, loops, FX and CFX come later.
 
@@ -69,7 +70,9 @@ shape on AZERTY, QWERTZ and Dvorak.
 Knobs and faders: drag (Shift for fine), scroll, or arrow keys (Home / End for
 the ends). They snap gently at their default; Shift ignores that. Double-click
 or right-click to reset. Click an EQ's label to kill that band. Hover any
-control for its value and shortcut. Drag the waveforms to scrub, and drag the
+control for its value and shortcut. Drag the scrolling waveforms to scratch (you hear it, like a record under
+your hand; a playing deck picks back up when you let go), click or drag the
+overview to jump, and drag the
 line above the library to resize it.
 
 ## Architecture
