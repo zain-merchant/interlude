@@ -228,7 +228,7 @@
 
   <div class="decks">
     <Deck deck={0} onload={load} onreveal={(p) => library.reveal(p)} />
-    <Mixer bind:this={mixer} />
+    <Mixer bind:this={mixer} onmessage={say} />
     <Deck deck={1} onload={load} onreveal={(p) => library.reveal(p)} />
   </div>
 

@@ -1,6 +1,7 @@
 <script>
   import Waveform from './Waveform.svelte';
   import Fader from './Fader.svelte';
+  import FxUnit from './FxUnit.svelte';
   import { untrack } from 'svelte';
   import { engine, tracks, control } from './engine.svelte.js';
   import { dropTarget } from './dnd.svelte.js';
@@ -115,6 +116,7 @@
       <span class="el num" aria-label="Elapsed">{fmt(d.position)}</span>
       <span class="rm num" aria-label="Remaining">{fmt(d.position - d.duration)}</span>
     </div>
+    <FxUnit {deck} />
 
     <div class="transport">
       <button class="btn big cue" class:lit={atCue} aria-disabled={!t}
@@ -175,7 +177,7 @@
   }
   .body {
     display: grid;
-    grid-template-rows: auto minmax(56px, 1fr) auto auto;
+    grid-template-rows: auto minmax(48px, 1fr) auto auto auto;
     align-content: space-between;
     gap: 14px;
     min-width: 0;

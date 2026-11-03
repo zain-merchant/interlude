@@ -1,6 +1,6 @@
-use std::sync::atomic::{AtomicBool, AtomicU32, AtomicU64, Ordering::Relaxed};
+use std::sync::atomic::{AtomicBool, AtomicU32, AtomicU64, AtomicU8, Ordering::Relaxed};
 
-use crate::NUM_DECKS;
+use crate::{FxKind, NUM_DECKS};
 
 /// An `f64` stored in an `AtomicU64`.
 #[derive(Debug, Default)]
@@ -44,6 +44,11 @@ pub(crate) struct DeckShared {
     pub eq_db: [AtomicF32; 3],
     pub fader: AtomicF32,
     pub pfl: AtomicBool,
+    pub filter: AtomicF32,
+    pub fx_kind: AtomicU8,
+    pub fx_on: AtomicBool,
+    pub fx_level: AtomicF32,
+    pub fx_beats: AtomicF32,
 }
 
 /// State the audio thread publishes for the UI, written once per block.
@@ -69,6 +74,18 @@ pub struct MixerSnapshot {
     /// Headphones: 0.0 cue only ..= 1.0 master only.
     pub cue_mix: f32,
     pub master_db: f32,
+}
+
+/// A deck's beat FX unit.
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+pub struct FxSnapshot {
+    pub kind: FxKind,
+    pub on: bool,
+    /// Level/depth, 0.0..=1.0.
+    pub level: f32,
+    pub beats: f32,
 }
 
 /// A point-in-time copy of one deck's state.
@@ -100,6 +117,9 @@ pub struct DeckSnapshot {
     pub fader: f32,
     /// Headphone cue on.
     pub pfl: bool,
+    /// Filter knob: -1.0 low-pass ..= 0.0 off ..= 1.0 high-pass.
+    pub filter: f32,
+    pub fx: FxSnapshot,
 }
 
 impl SharedState {
@@ -120,6 +140,13 @@ impl SharedState {
             eq_db: std::array::from_fn(|b| d.eq_db[b].load()),
             fader: d.fader.load(),
             pfl: d.pfl.load(Relaxed),
+            filter: d.filter.load(),
+            fx: FxSnapshot {
+                kind: FxKind::from_index(d.fx_kind.load(Relaxed)),
+                on: d.fx_on.load(Relaxed),
+                level: d.fx_level.load(),
+                beats: d.fx_beats.load(),
+            },
         }
     }
 

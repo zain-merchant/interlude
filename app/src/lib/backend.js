@@ -10,8 +10,10 @@ export const inTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in
 /**
  * @typedef {{ loaded: boolean, playing: boolean, position: number, duration: number,
  *             cue: number, rate: number, speed: number, bpm: number,
- *             generation: number, peak: number }} DeckState
- * @typedef {{ decks: DeckState[], deckPeaks: number[], masterPeak: number[] }} EngineState
+ *             generation: number, peak: number, filter?: number,
+ *             fx?: { kind: 'echo' | 'reverb' | 'flanger' | 'phaser', on: boolean, level: number, beats: number } }} DeckState
+ * @typedef {{ active: boolean, seconds: number, path: string | null, droppedSeconds: number, error: string | null }} RecordingStatus
+ * @typedef {{ decks: DeckState[], deckPeaks: number[], masterPeak: number[], recording?: RecordingStatus }} EngineState
  * @typedef {{ title: string, path: string, duration: number, sampleRate: number,
  *             binsPerSec: number, binCount: number,
  *             beatgrid: { bpm: number, firstBeat: number } | null }} TrackInfo
@@ -29,6 +31,10 @@ async function createTauriBackend() {
     state: () => invoke('state'),
     /** @returns {Promise<string>} */
     outputName: () => invoke('output_name'),
+    /** Starts recording the master output. @returns {Promise<string>} the file's path */
+    startRecording: () => invoke('start_recording'),
+    /** @returns {Promise<RecordingStatus>} */
+    stopRecording: () => invoke('stop_recording'),
     /** @returns {Promise<TrackInfo>} */
     loadTrack: (deck, path) => invoke('load_track', { deck, path }),
     /** @returns {Promise<Uint8Array>} */
