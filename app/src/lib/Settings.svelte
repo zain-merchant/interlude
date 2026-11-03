@@ -196,9 +196,9 @@
       {:else if page === 'library'}
         <section class="display">
           <h3>Import from another app</h3>
-          <p>Bring over your Rekordbox collection: cue points, loops, beatgrids and playlists. Your music files aren't changed, and anything you've set here stays as it is.</p>
+          <p>Bring over your Rekordbox or Serato library: cue points, loops, beatgrids and playlists. Your music files aren't changed, and anything you've set here stays as it is.</p>
           <div class="size">
-            <button class="btn sm" onclick={onimport}>Import from Rekordbox…</button>
+            <button class="btn sm" onclick={onimport}>Import a library…</button>
           </div>
         </section>
       {:else}

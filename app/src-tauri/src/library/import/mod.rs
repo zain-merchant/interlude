@@ -4,6 +4,7 @@
 //! running an import again only fills in what's still missing.
 
 pub mod rekordbox;
+pub mod serato;
 
 use std::collections::{BTreeSet, HashSet};
 use std::path::{Path, PathBuf};
@@ -51,6 +52,8 @@ pub struct Collection {
 pub enum Source {
     /// A Rekordbox collection exported as XML.
     Rekordbox { path: PathBuf },
+    /// A Serato library: its `_Serato_` folder.
+    Serato { path: PathBuf },
 }
 
 impl Source {
@@ -61,11 +64,12 @@ impl Source {
                     .map_err(|e| format!("couldn't read {}: {e}", path.display()))?;
                 rekordbox::parse(&xml)
             }
+            Source::Serato { path } => serato::read(path),
         }
     }
 }
 
-/// A Rekordbox XML export found on this computer.
+/// A library found on this computer.
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Found {
@@ -74,7 +78,8 @@ pub struct Found {
     pub modified: i64,
 }
 
-/// Looks for Rekordbox XML exports where people usually save them.
+/// Looks for Serato libraries, and for Rekordbox XML exports where people
+/// usually save them.
 pub fn find_sources() -> Vec<Found> {
     let Some(home) = dirs::home_dir() else {
         return Vec::new();
@@ -101,12 +106,7 @@ pub fn find_sources() -> Vec<Found> {
             if !is_xml || !looks_like_rekordbox(&path) {
                 continue;
             }
-            let modified = entry
-                .metadata()
-                .and_then(|m| m.modified())
-                .ok()
-                .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
-                .map_or(0, |d| d.as_millis() as i64);
+            let modified = modified_ms(&path);
             found.push(Found {
                 source: Source::Rekordbox { path },
                 modified,
@@ -114,7 +114,22 @@ pub fn find_sources() -> Vec<Found> {
         }
     }
     found.sort_by_key(|f| std::cmp::Reverse(f.modified));
+    for path in serato::find() {
+        let modified = modified_ms(&path.join("database V2"));
+        found.push(Found {
+            source: Source::Serato { path },
+            modified,
+        });
+    }
     found
+}
+
+fn modified_ms(path: &Path) -> i64 {
+    std::fs::metadata(path)
+        .and_then(|m| m.modified())
+        .ok()
+        .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
+        .map_or(0, |d| d.as_millis() as i64)
 }
 
 /// True when a file starts like a Rekordbox export.
