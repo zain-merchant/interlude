@@ -22,8 +22,6 @@ struct Saved {
     enabled: bool,
     /// Stems cache size in GB. 0 turns the cache off.
     cache_gb: u32,
-    /// Use the GPU and Neural Engine.
-    accelerate: bool,
 }
 
 impl Default for Saved {
@@ -31,7 +29,6 @@ impl Default for Saved {
         Self {
             enabled: true,
             cache_gb: 5,
-            accelerate: true,
         }
     }
 }
@@ -75,7 +72,6 @@ pub struct DeckStems {
 pub struct StemsInfo {
     enabled: bool,
     cache_gb: u32,
-    accelerate: bool,
     /// Bytes the cache takes now.
     cache_bytes: u64,
     model: ModelState,
@@ -84,7 +80,7 @@ pub struct StemsInfo {
 }
 
 /// Size of the model download, shown before it starts.
-const MODEL_BYTES: u64 = 84 * 1024 * 1024;
+const MODEL_BYTES: u64 = 165_612_636;
 
 impl Stems {
     pub fn new(shared: Arc<SharedState>) -> Self {
@@ -130,10 +126,8 @@ impl Stems {
         self.splitter.configure(Settings {
             enabled: saved.enabled,
             model: self.model_path().filter(|_| ready),
-            accelerate: saved.accelerate,
             cache_dir: self.cache_dir(),
             cache_limit: saved.cache_gb as u64 * GB,
-            compiled_dir: self.dir.as_ref().map(|d| d.join("models").join("compiled")),
         });
     }
 
@@ -183,7 +177,6 @@ impl Stems {
         StemsInfo {
             enabled: saved.enabled,
             cache_gb: saved.cache_gb,
-            accelerate: saved.accelerate,
             cache_bytes: self.cache_dir().map_or(0, |d| dj_stems::cache::size(&d)),
             model: self.model.lock().expect("model state").clone(),
             model_bytes: MODEL_BYTES,
@@ -202,7 +195,6 @@ pub fn set_stems(
     stems: State<'_, Stems>,
     enabled: Option<bool>,
     cache_gb: Option<u32>,
-    accelerate: Option<bool>,
 ) -> StemsInfo {
     {
         let mut s = stems.saved.lock().expect("stems settings");
@@ -211,9 +203,6 @@ pub fn set_stems(
         }
         if let Some(v) = cache_gb {
             s.cache_gb = v.min(100);
-        }
-        if let Some(v) = accelerate {
-            s.accelerate = v;
         }
     }
     stems.save();

@@ -265,8 +265,6 @@
             <h3>Splitting</h3>
             <label class="check"><input type="checkbox" checked={stems.enabled} onchange={(e) => setStems({ enabled: e.currentTarget.checked })} />
               Split tracks into stems when they load</label>
-            <label class="check"><input type="checkbox" checked={stems.accelerate} onchange={(e) => setStems({ accelerate: e.currentTarget.checked })} />
-              Use the graphics chip and Neural Engine (much faster on a Mac)</label>
           </section>
           <section class="display">
             <h3>Stems cache</h3>

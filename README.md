@@ -48,8 +48,9 @@ A free, open-source DJ app that is fast, modern and uncluttered. No paywalled
   clicks, and the waveforms show only what you hear. With every stem on,
   you hear the original file exactly: melody is the original minus the
   other three. Tracks are split on your computer by HTDemucs (Meta, MIT
-  licence), a one-time 84 MB download from Settings › Stems, through ONNX
-  Runtime: on a Mac on the GPU and Neural Engine. Splitting starts at the
+  licence; Rouard et al., ICASSP 2023), a one-time 166 MB download from
+  Settings › Stems, run on the CPU through ONNX Runtime. On an M5 MacBook
+  Air a 4½-minute track splits in about 50 seconds. Splitting starts at the
   play head when a track loads and runs ahead of it, so the part you're
   about to play is ready first; anything not split yet plays as normal.
   Finished stems are kept in a cache (5 GB by default, oldest out first), so

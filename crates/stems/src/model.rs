@@ -5,8 +5,8 @@
 //! `[1, 4, 2, N]`) in the order drums, bass, other, vocals. The STFT is
 //! inside the graph, so all we do is feed it audio.
 //!
-//! On a Mac it runs through Core ML, which puts the work on the GPU and the
-//! Neural Engine; elsewhere it runs on the CPU.
+//! It runs on the CPU everywhere. Core ML was measured on an M5 and was
+//! either broken or about 100x slower for this model, so it isn't used.
 
 use std::path::Path;
 
@@ -24,6 +24,9 @@ const OUT_BASS: usize = 1;
 const OUT_VOCALS: usize = 3;
 const OUT_STEMS: usize = 4;
 
+/// Threads the model runs on.
+const THREADS: usize = 2;
+
 /// A loaded separation model.
 pub struct Model {
     session: Session,
@@ -39,19 +42,21 @@ pub struct Separated {
 }
 
 impl Model {
-    /// Loads a model file. `accelerate` uses Core ML on a Mac, which keeps
-    /// its compiled model in `cache_dir` so later loads are quick.
-    pub fn load(path: &Path, accelerate: bool, cache_dir: Option<&Path>) -> Result<Self, Error> {
+    /// Loads a model file.
+    pub fn load(path: &Path) -> Result<Self, Error> {
         let env = ort::init().with_name("oss-dj stems").build()?;
-        let mut builder = Session::builder(&env)?;
-        // Leave a core free for the audio thread and the UI.
-        let threads =
-            std::thread::available_parallelism().map_or(2, |n| n.get().saturating_sub(1).max(1));
-        builder = builder.with_intra_threads(threads)?;
-        if accelerate {
-            builder = accelerated(builder, cache_dir)?;
-        }
-        let session = builder.commit_from_file(path)?;
+        // The model barely gains past two threads (on an M5: 1.46 s per
+        // segment on one, 1.21 s on two, 1.07 s on four), so two keeps it
+        // fast while leaving the rest for the audio thread and the UI.
+        // Without the arena and memory pattern, memory stays flat from one
+        // segment to the next (about 0.5 GB less at peak) for under 3% speed.
+        let session = Session::builder(&env)?
+            .with_intra_threads(THREADS)?
+            .with_memory_pattern(false)?
+            .with_execution_providers([ort::ep::CPU::default()
+                .with_arena_allocator(false)
+                .build()])?
+            .commit_from_file(path)?;
         let segment = Self::check_shapes(&session)?;
         Ok(Self { session, segment })
     }
@@ -111,28 +116,4 @@ impl Model {
             drums: take(OUT_DRUMS),
         })
     }
-}
-
-#[cfg(target_os = "macos")]
-fn accelerated(
-    builder: ort::session::builder::SessionBuilder,
-    cache_dir: Option<&Path>,
-) -> Result<ort::session::builder::SessionBuilder, Error> {
-    use ort::ep::coreml::{ComputeUnits, ModelFormat};
-    let mut ep = ort::ep::CoreML::default()
-        .with_model_format(ModelFormat::MLProgram)
-        .with_compute_units(ComputeUnits::All);
-    if let Some(dir) = cache_dir {
-        let _ = std::fs::create_dir_all(dir);
-        ep = ep.with_model_cache_dir(dir.display());
-    }
-    Ok(builder.with_execution_providers([ep.build()])?)
-}
-
-#[cfg(not(target_os = "macos"))]
-fn accelerated(
-    builder: ort::session::builder::SessionBuilder,
-    _cache_dir: Option<&Path>,
-) -> Result<ort::session::builder::SessionBuilder, Error> {
-    Ok(builder)
 }

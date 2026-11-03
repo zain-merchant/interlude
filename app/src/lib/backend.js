@@ -65,7 +65,7 @@ async function createTauriBackend() {
     stemsWaveform: async (deck, mask) => new Uint8Array(await invoke('stems_waveform', { deck, mask })),
     /** The Stems settings page. */
     stemsInfo: () => invoke('stems_info'),
-    /** @param {{ enabled?: boolean, cacheGb?: number, accelerate?: boolean }} change */
+    /** @param {{ enabled?: boolean, cacheGb?: number }} change */
     setStems: (change) => invoke('set_stems', change),
     clearStemsCache: () => invoke('clear_stems_cache'),
     downloadStemsModel: () => invoke('download_stems_model'),
