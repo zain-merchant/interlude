@@ -11,8 +11,9 @@
 // scrolls with the music makes the inner threads weave. What has already played collapses to one grey
 // shape. Beats are faint full-height lines, every 4th a little stronger,
 // and the play head is a single 1 px line. Hot cues are thin cue-coloured
-// lines; an active loop is a faint white band between two white lines. No
-// glow anywhere.
+// lines; an active loop is a faint white band between two white lines.
+// While slip holds, a fainter second play head shows where the track
+// would be, and where playback picks up again. No glow anywhere.
 
 const TEX_WIDTH = 4096;
 /** Levels in the bin pyramid: level k holds one value per 2^k bins. */
@@ -57,6 +58,7 @@ uniform float loopIn;     // bin index (-1 = none)
 uniform float loopOut;    // bin index (-1 = none)
 uniform float looping;    // 1 = the loop is playing
 uniform float twist;      // radians of ribbon twist per bin
+uniform float slip;       // bin index of the slip play head (-1 = none)
 
 vec4 fetchLevel(int l, int i) {
   if (i < 0 || float(i) >= levelLen[l]) return vec4(0.0);
@@ -193,6 +195,12 @@ void main() {
     c = mix(c, cCue, max(line * 0.8, tri));
   }
 
+  // Slip play head: the same line, fainter.
+  if (slip >= 0.0) {
+    float dx = abs(bin - slip) / perPx;
+    c = mix(c, cFg, (1.0 - smoothstep(0.5 * dpr, 1.0 * dpr, dx)) * 0.7);
+  }
+
   // Play head: one crisp 1 px line.
   float dPlay = centerLine > 0.5 ? abs(px - width * 0.5) : abs(bin - playhead) / perPx;
   c = mix(c, cFg, 1.0 - smoothstep(0.5 * dpr, 1.0 * dpr, dPlay));
@@ -259,7 +267,7 @@ export class WaveformGL {
     gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
 
     this.u = {};
-    for (const name of ['bins', 'count', 'levels', 'levelOff', 'levelLen', 'start', 'perPx', 'width', 'height', 'dpr', 'playhead', 'cue', 'cBg', 'cFg', 'cLow', 'cMid', 'cHigh', 'cPast', 'cCue', 'centerLine', 'twist', 'beatLen', 'firstBeat', 'loopIn', 'loopOut', 'looping']) {
+    for (const name of ['bins', 'count', 'levels', 'levelOff', 'levelLen', 'start', 'perPx', 'width', 'height', 'dpr', 'playhead', 'cue', 'cBg', 'cFg', 'cLow', 'cMid', 'cHigh', 'cPast', 'cCue', 'centerLine', 'twist', 'beatLen', 'firstBeat', 'loopIn', 'loopOut', 'looping', 'slip']) {
       this.u[name] = gl.getUniformLocation(prog, name);
     }
     this.u.hotCues = gl.getUniformLocation(prog, 'hotCues');
@@ -319,7 +327,7 @@ export class WaveformGL {
     const key = [
       this.canvas.width, this.canvas.height, window.devicePixelRatio || 1, this.binsVersion,
       view.start, view.perPx, view.playhead, view.cue, !!view.centerLine,
-      view.beatLen ?? 0, view.firstBeat ?? 0, view.loopIn ?? -1, view.loopOut ?? -1, !!view.looping,
+      view.beatLen ?? 0, view.firstBeat ?? 0, view.loopIn ?? -1, view.loopOut ?? -1, !!view.looping, view.slip ?? -1,
       ...(view.hotCues ?? []),
     ];
     const last = this.lastKey;
@@ -344,9 +352,9 @@ export class WaveformGL {
    * @param {{ start: number, perPx: number, playhead: number, cue: number,
    *           centerLine: boolean, colors: Record<string, number[]>,
    *           beatLen?: number, firstBeat?: number, hotCues?: number[],
-   *           loopIn?: number, loopOut?: number, looping?: boolean }} view
-   *   `start`, `playhead`, `cue`, `beatLen`, `firstBeat`, `hotCues` and the
-   *   loop points are in bins, -1 for none;
+   *           loopIn?: number, loopOut?: number, looping?: boolean, slip?: number }} view
+   *   `start`, `playhead`, `cue`, `beatLen`, `firstBeat`, `hotCues`, the
+   *   loop points and `slip` are in bins, -1 for none;
    *   `perPx` is bins per device pixel. Colours are linear 0..1 RGB.
    */
   draw(view) {
@@ -385,6 +393,7 @@ export class WaveformGL {
     gl.uniform1f(this.u.loopIn, view.loopIn ?? -1);
     gl.uniform1f(this.u.loopOut, view.loopOut ?? -1);
     gl.uniform1f(this.u.looping, view.looping ? 1 : 0);
+    gl.uniform1f(this.u.slip, view.slip ?? -1);
     for (const [k, v] of Object.entries(view.colors)) gl.uniform3fv(this.u[k], v);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   }

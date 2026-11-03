@@ -10,7 +10,9 @@
 //! with SHIFT) for deck 1, 10 and 11 for deck 2, with a different note
 //! range for each pad mode. The controller switches pad modes itself;
 //! hot cue, beat loop, beat jump and sampler modes are mapped. Both decks'
-//! sampler pads play the same eight slots.
+//! sampler pads play the same eight slots. SHIFT + a beat jump pad jumps
+//! 16 times as far (4 to 32 bars), and SHIFT + PLAY turns slip mode on and
+//! off; the FLX4 has no slip button of its own.
 //!
 //! The CFX knobs drive each channel's filter. Not mapped yet: the other pad
 //! modes and the beat FX section. The headphone level and master level
@@ -28,6 +30,8 @@ const GLOBAL_CH: u8 = 6;
 
 // Deck notes (channel = deck).
 const PLAY: u8 = 0x0B;
+/// SHIFT + PLAY/PAUSE: slip mode on / off.
+const PLAY_SHIFT: u8 = 0x47;
 const CUE: u8 = 0x0C;
 const SHIFT: u8 = 0x3F;
 const JOG_TOUCH: u8 = 0x36;
@@ -59,6 +63,9 @@ const PAD_LOOP_BEATS: [f64; 8] = [0.25, 0.5, 1.0, 2.0, 4.0, 8.0, 16.0, 32.0];
 /// Jump of each pad in beat jump mode, in beats: back on the left pad of
 /// each pair, forward on the right.
 const PAD_JUMP_BEATS: [f64; 8] = [-1.0, 1.0, -2.0, 2.0, -4.0, 4.0, -8.0, 8.0];
+/// SHIFT + a beat jump pad jumps this many times as far: 4, 8, 16 and 32
+/// bars, for skipping whole phrases.
+const PAD_JUMP_SHIFT: f64 = 16.0;
 
 // Deck CCs (MSB; LSB is +0x20).
 const TEMPO: u8 = 0x00;
@@ -178,6 +185,10 @@ impl Flx4 {
                 return vec![];
             }
             (PLAY, true) => Command::TogglePlay { deck },
+            (PLAY_SHIFT, true) => Command::SetSlip {
+                deck,
+                on: !state.decks[d].slip,
+            },
             (CUE, true) => Command::CuePress { deck },
             (CUE, false) => Command::CueRelease { deck },
             (SYNC, true) => Command::Sync { deck },
@@ -234,7 +245,7 @@ impl Flx4 {
             },
             (PAD_BEAT_JUMP, _, true) => Command::BeatJump {
                 deck,
-                beats: PAD_JUMP_BEATS[i],
+                beats: PAD_JUMP_BEATS[i] * if shift { PAD_JUMP_SHIFT } else { 1.0 },
             },
             _ => return vec![],
         };
@@ -700,6 +711,34 @@ mod tests {
         assert!(matches!(
             one(&mut m, [0x97, 0x27, 0x7F], &s),
             Command::BeatJump { beats, .. } if beats == 8.0
+        ));
+        // SHIFT: whole phrases, 4 to 32 bars.
+        assert!(matches!(
+            one(&mut m, [0x98, 0x20, 0x7F], &s),
+            Command::BeatJump { deck: DeckId::A, beats } if beats == -16.0
+        ));
+        assert!(matches!(
+            one(&mut m, [0x9A, 0x27, 0x7F], &s),
+            Command::BeatJump { deck: DeckId::B, beats } if beats == 128.0
+        ));
+    }
+
+    #[test]
+    fn shift_play_toggles_slip() {
+        let mut m = Flx4::new();
+        let mut s = st();
+        assert!(matches!(
+            one(&mut m, [0x91, PLAY_SHIFT, 0x7F], &s),
+            Command::SetSlip {
+                deck: DeckId::B,
+                on: true
+            }
+        ));
+        assert!(cmds(m.handle(&[0x91, PLAY_SHIFT, 0], &s)).is_empty());
+        s.decks[1].slip = true;
+        assert!(matches!(
+            one(&mut m, [0x91, PLAY_SHIFT, 0x7F], &s),
+            Command::SetSlip { on: false, .. }
         ));
     }
 

@@ -1,4 +1,4 @@
-// Hot cues, loops and beat jump: the actions shared by the deck's pads,
+// Hot cues, loops, beat jump and slip: the actions shared by the deck's pads,
 // the keyboard (commands.js) and nothing else. The engine does the work;
 // these only check a command makes sense and send it.
 
@@ -43,10 +43,23 @@ export function loopScale(deck, factor) {
   control({ type: 'loopScale', deck, factor });
 }
 
-/** Jumps back (-1) or forward (1) by the loop size. */
-export function beatJump(deck, dir) {
+/** A long beat jump, in beats: four bars, to skip a phrase. */
+export const LONG_JUMP = 16;
+
+/** Jumps back (-1) or forward (1) by the loop size, or with `long` by four bars. */
+export function beatJump(deck, dir, long = false) {
   if (!hasGrid(deck)) return;
-  control({ type: 'beatJump', deck, beats: dir * (engine.decks[deck].loopBeats || 4) });
+  control({ type: 'beatJump', deck, beats: dir * (long ? LONG_JUMP : engine.decks[deck].loopBeats || 4) });
+}
+
+/** Slip mode on or off. */
+export function toggleSlip(deck) {
+  if (!tracks[deck]) return;
+  const on = !engine.decks[deck].slip;
+  control({ type: 'setSlip', deck, on });
+  // Shown at once; the engine's next report agrees.
+  engine.decks[deck].slip = on;
+  announce(`Deck ${deckName(deck)} slip ${on ? 'on' : 'off'}`);
 }
 
 /** Quantize, for both decks. On unless turned off; engines that don't report it count as on. */
@@ -90,6 +103,13 @@ export function runPerformance(id, down) {
     case 'jumpBack':
     case 'jumpForward':
       if (down) beatJump(deck, m[2] === 'jumpBack' ? -1 : 1);
+      return true;
+    case 'jumpBackLong':
+    case 'jumpForwardLong':
+      if (down) beatJump(deck, m[2] === 'jumpBackLong' ? -1 : 1, true);
+      return true;
+    case 'slip':
+      if (down) toggleSlip(deck);
       return true;
   }
   return false;

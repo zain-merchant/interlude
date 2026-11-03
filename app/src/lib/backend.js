@@ -13,7 +13,7 @@ export const inTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in
  *             key: { tonic: number, minor: boolean } | null, keylock: boolean,
  *             generation: number, peak: number, hotCues: (number | null)[],
  *             loopIn: number | null, loopOut: number | null, looping: boolean,
- *             loopBeats: number, filter?: number,
+ *             loopBeats: number, slip?: boolean, slipPosition?: number | null, filter?: number,
  *             fx?: { kind: 'echo' | 'reverb' | 'flanger' | 'phaser', on: boolean, level: number, beats: number } }} DeckState
  * @typedef {{ active: boolean, seconds: number, path: string | null, droppedSeconds: number, error: string | null }} RecordingStatus
  * @typedef {{ state: 'connected', device: string, sampleRate: number }
