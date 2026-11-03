@@ -1,10 +1,17 @@
 <script>
+  import { showTip, hideTip, tip, tipText } from './tooltip.svelte.js';
+  import { openMenu } from './menu.svelte.js';
+  import { detent, keyValue } from './control.js';
+
   /**
    * A fader drawn with plain elements, so it looks and behaves the same in
-   * every webview (WebKit doesn't support vertical range inputs everywhere).
-   * Drag the cap or click the track; arrow keys step; double-click resets.
+   * every webview (WebKit doesn't support vertical range inputs
+   * everywhere): a 2 px track and a flat white cap. Drag the cap or click
+   * the track (⇧ for fine), scroll, or use the arrow keys; double-click or
+   * right-click resets. `tick` marks the default with a short line.
    * @type {{ value: number, min?: number, max?: number, reset?: number, label: string,
-   *          vertical?: boolean, invert?: boolean, onchange?: (v: number) => void }}
+   *          vertical?: boolean, invert?: boolean, tick?: boolean, big?: boolean,
+   *          format?: (v: number) => string, onchange?: (v: number) => void }}
    */
   let {
     value = $bindable(),
@@ -14,15 +21,25 @@
     label,
     vertical = false,
     invert = false,
+    tick = false,
+    big = false,
+    format = (v) => `${Math.round(((v - min) / (max - min)) * 100)}%`,
     onchange = () => {},
   } = $props();
 
   let track;
   let dragging = $state(false);
-  let grabOffset = 0;
+  let grab = 0;
+  let last = 0;
+  let raw = 0;
 
-  // 0..1 along the track, measured from the start (left or bottom).
-  const t = $derived(((value - min) / (max - min)) * (invert ? -1 : 1) + (invert ? 1 : 0));
+  // 0..1 along the track, from the start (left or bottom).
+  const along = (v) => {
+    const f = (v - min) / (max - min);
+    return invert ? 1 - f : f;
+  };
+  const t = $derived(along(value));
+  const tickAt = $derived(along(reset));
 
   function set(v) {
     const next = Math.min(max, Math.max(min, v));
@@ -31,44 +48,58 @@
       onchange(next);
     }
   }
+  const readout = () => tipText(label, format(value));
 
-  function fromPointer(e) {
+  function pos(e) {
     const r = track.getBoundingClientRect();
-    let f = vertical ? (r.bottom - e.clientY) / r.height : (e.clientX - r.left) / r.width;
-    f = Math.min(1, Math.max(0, f - grabOffset));
-    if (invert) f = 1 - f;
-    return min + f * (max - min);
+    return vertical ? (r.bottom - e.clientY) / r.height : (e.clientX - r.left) / r.width;
   }
+  const length = () => (vertical ? track.clientHeight : track.clientWidth) || 1;
 
   function down(e) {
     if (e.button !== 0) return;
     e.currentTarget.setPointerCapture(e.pointerId);
     dragging = true;
     // Grabbing the cap keeps it under the pointer instead of jumping.
-    const onCap = e.target.classList?.contains('cap');
-    if (onCap) {
-      const r = track.getBoundingClientRect();
-      const f = vertical ? (r.bottom - e.clientY) / r.height : (e.clientX - r.left) / r.width;
-      grabOffset = f - t;
-    } else {
-      grabOffset = 0;
-      set(fromPointer(e));
+    const f = pos(e);
+    grab = e.target.classList?.contains('cap') ? f - t : 0;
+    last = f;
+    raw = value;
+    if (!grab) {
+      const g = Math.min(1, Math.max(0, f));
+      raw = min + (invert ? 1 - g : g) * (max - min);
+      set(raw);
     }
+    showTip(track, readout());
   }
   function move(e) {
-    if (dragging) set(fromPointer(e));
+    if (!dragging) return;
+    const f = pos(e);
+    const scale = e.shiftKey ? 0.1 : 1;
+    raw = Math.min(max, Math.max(min, raw + (f - last) * scale * (invert ? -1 : 1) * (max - min)));
+    last = f;
+    const perPx = (max - min) / length();
+    set(detent(raw, reset, perPx, e.shiftKey));
+    showTip(track, readout());
   }
   function up() {
+    if (!dragging) return;
     dragging = false;
-    grabOffset = 0;
+    hideTip(track);
   }
   function key(e) {
-    const step = (max - min) * (e.shiftKey ? 0.01 : 0.05) * (invert ? -1 : 1);
-    if (e.key === 'ArrowUp' || e.key === 'ArrowRight') set(value + step);
-    else if (e.key === 'ArrowDown' || e.key === 'ArrowLeft') set(value - step);
-    else if (e.key === 'Home') set(reset);
-    else return;
+    let v = keyValue(e, value, min, max);
+    if (v === null) return;
+    if (invert && e.key.startsWith('Arrow')) v = value - (v - value);
     e.preventDefault();
+    set(v);
+    showTip(track, readout());
+  }
+  function wheel(e) {
+    e.preventDefault();
+    const d = (vertical ? -e.deltaY : e.deltaX || -e.deltaY) > 0 ? 1 : -1;
+    set(value + d * (invert ? -1 : 1) * (max - min) * (e.shiftKey ? 0.005 : 0.02));
+    showTip(track, readout());
   }
 </script>
 
@@ -76,6 +107,7 @@
   class="fader"
   class:vertical
   class:dragging
+  class:big
   bind:this={track}
   role="slider"
   tabindex="0"
@@ -84,92 +116,110 @@
   aria-valuemin={min}
   aria-valuemax={max}
   aria-valuenow={value}
-  title="{label} (double-click to reset)"
+  aria-valuetext={format(value)}
   onpointerdown={down}
   onpointermove={move}
   onpointerup={up}
   onpointercancel={up}
   ondblclick={() => set(reset)}
   onkeydown={key}
+  onwheel={wheel}
+  oncontextmenu={(e) => openMenu(e, [{ label: 'Reset to default', action: () => set(reset) }])}
+  use:tip={() => tipText(label, format(value), 'double-click to reset')}
 >
-  <div class="groove"></div>
+  <div class="line"></div>
+  {#if tick}<div class="tick" style={vertical ? `bottom: ${tickAt * 100}%` : `left: ${tickAt * 100}%`}></div>{/if}
   <div class="cap" style={vertical ? `bottom: ${t * 100}%` : `left: ${t * 100}%`}></div>
 </div>
 
 <style>
+  /* The element is the hit area; the cap's centre travels along it, so
+     it's inset by half a cap at each end. */
   .fader {
     position: relative;
     touch-action: none;
     cursor: pointer;
-    border-radius: 4px;
-    width: 100%;
-    height: 22px;
-    margin: 0 15px;
+    width: calc(100% - 14px);
+    height: 30px;
+    margin: 0 7px;
   }
   .fader.vertical {
     width: 30px;
-    height: 100%;
-    margin: 15px 0;
+    height: calc(100% - 12px);
+    margin: 6px 0;
   }
-  .groove {
+  .fader.vertical.big {
+    width: 36px;
+    height: calc(100% - 14px);
+    margin: 7px 0;
+  }
+  .line {
     position: absolute;
-    left: 0;
-    right: 0;
+    left: -7px;
+    right: -7px;
     top: 50%;
-    height: 4px;
-    margin-top: -2px;
-    border-radius: 2px;
-    background: #0c0d10;
-    box-shadow: inset 0 0 0 1px var(--line-2);
+    height: 2px;
+    margin-top: -1px;
+    border-radius: 1px;
+    background: var(--line-2);
   }
-  .vertical .groove {
+  .vertical .line {
     left: 50%;
     right: auto;
-    top: 0;
-    bottom: 0;
-    width: 4px;
+    top: -6px;
+    bottom: -6px;
+    width: 2px;
     height: auto;
-    margin: 0 0 0 -2px;
+    margin: 0 0 0 -1px;
+  }
+  .tick {
+    position: absolute;
+    top: 50%;
+    width: 1px;
+    height: 11px;
+    margin: -5.5px 0 0 -0.5px;
+    background: var(--fg-3);
+  }
+  .vertical .tick {
+    top: auto;
+    left: 50%;
+    width: 16px;
+    height: 1px;
+    margin: 0 0 -0.5px -8px;
   }
   .cap {
     position: absolute;
     top: 50%;
-    width: 30px;
-    height: 18px;
+    width: 14px;
+    height: 30px;
     transform: translate(-50%, -50%);
-    border-radius: 4px;
-    background: linear-gradient(#eef0f5, #b7bbc6);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.6), inset 0 -2px 0 rgba(0, 0, 0, 0.2);
-  }
-  .cap::after {
-    content: '';
-    position: absolute;
-    left: 50%;
-    top: 3px;
-    bottom: 3px;
-    width: 2px;
-    margin-left: -1px;
-    background: #1b1d22;
-    pointer-events: none;
+    border-radius: 3px;
+    background: var(--fg);
+    transition: background-color 0.12s;
   }
   .vertical .cap {
     top: auto;
     left: 50%;
     width: 30px;
-    height: 18px;
+    height: 12px;
     transform: translate(-50%, 50%);
   }
-  .vertical .cap::after {
-    left: 3px;
-    right: 3px;
-    top: 50%;
-    bottom: auto;
-    width: auto;
-    height: 2px;
-    margin: -1px 0 0;
+  .vertical.big .cap {
+    width: 36px;
+    height: 14px;
   }
-  .dragging .cap,
-  .fader:focus-visible .cap {
-    background: linear-gradient(#ffffff, #cfd3dd);
+  .vertical.big .cap::after {
+    content: '';
+    position: absolute;
+    left: 6px;
+    right: 6px;
+    top: 6px;
+    height: 2px;
+    background: var(--bg);
+    opacity: 0.5;
+  }
+  .fader:hover .cap,
+  .dragging .cap {
+    background: #ffffff;
   }
 </style>
