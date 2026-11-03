@@ -1,0 +1,68 @@
+//! Hooks a hardware DJ controller up to the engine and the UI.
+
+use std::sync::{Arc, Mutex};
+
+use dj_controller::midi::{ControllerService, Host};
+use dj_controller::{Action, State};
+use dj_engine::{EngineHandle, SharedState, NUM_DECKS};
+use serde::Serialize;
+use tauri::{AppHandle, Emitter, Manager};
+
+struct AppHost {
+    engine: Arc<Mutex<EngineHandle>>,
+    shared: Arc<SharedState>,
+    app: AppHandle,
+}
+
+/// Library actions from the controller, sent to the UI as `controller`
+/// events.
+#[derive(Serialize, Clone)]
+#[serde(tag = "type", rename_all = "camelCase")]
+enum UiEvent {
+    /// Move the library selection by `delta` rows.
+    Browse { delta: i32 },
+    /// Load the selected library track into `deck`.
+    Load { deck: usize },
+}
+
+impl Host for AppHost {
+    fn state(&self) -> State {
+        State {
+            decks: std::array::from_fn::<_, NUM_DECKS, _>(|i| self.shared.deck(i)),
+            mixer: self.shared.mixer(),
+        }
+    }
+
+    fn act(&self, action: Action) {
+        match action {
+            Action::Engine(cmd) => {
+                if let Ok(mut e) = self.engine.lock() {
+                    let _ = e.send(cmd);
+                }
+            }
+            Action::Browse(delta) => {
+                let _ = self.app.emit("controller", UiEvent::Browse { delta });
+            }
+            Action::LoadSelected(deck) => {
+                let _ = self
+                    .app
+                    .emit("controller", UiEvent::Load { deck: deck.index() });
+            }
+        }
+    }
+}
+
+pub fn start(app: &AppHandle, engine: Arc<Mutex<EngineHandle>>, shared: Arc<SharedState>) {
+    let host = Arc::new(AppHost {
+        engine,
+        shared,
+        app: app.clone(),
+    });
+    app.manage(ControllerService::start(host));
+}
+
+/// The connected controller's name, or null.
+#[tauri::command]
+pub fn controller_name(service: tauri::State<'_, ControllerService>) -> Option<String> {
+    service.connected()
+}

@@ -77,6 +77,21 @@ pub enum Command {
         deck: DeckId,
         bend: f64,
     },
+    /// Hand on the platter: playback follows `Jog` movements (and stops
+    /// when the hand is still) until `ScratchEnd`.
+    ScratchStart {
+        deck: DeckId,
+    },
+    ScratchEnd {
+        deck: DeckId,
+    },
+    /// A jog wheel moved by `seconds` of audio at normal speed. While
+    /// scratching, the play head follows it. While playing, it nudges the
+    /// tempo briefly, like pushing a record. While paused, it scrubs.
+    Jog {
+        deck: DeckId,
+        seconds: f64,
+    },
     /// Match this deck's tempo and beat phase to the other deck. Does
     /// nothing unless both decks have a beatgrid.
     Sync {

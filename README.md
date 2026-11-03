@@ -7,7 +7,8 @@ A free, open-source DJ app that is fast, modern and uncluttered. No paywalled
 
 > **Status: early development (Phase 2 under way).** You can load two
 > tracks, see their BPM, sync them, cue, change pitch, EQ and crossfade.
-> Hot cues, loops and controller support come next. See the roadmap below.
+> The Pioneer DDJ-FLX4 works as a controller (first pass). Hot cues and loops
+> come next. See the roadmap below.
 
 ## What works today
 
@@ -28,6 +29,14 @@ A free, open-source DJ app that is fast, modern and uncluttered. No paywalled
 - **Library:** add music folders, instant search across artist, title and
   folder, load with double-click, Enter, or Shift+←/→.
 - **Safety:** loading onto a playing deck is blocked.
+- **Controller: Pioneer DDJ-FLX4.** Plug it in (before or after starting the
+  app) and it connects by itself; audio goes through its sound card, with
+  headphones on its headphone jack. Mapped: play, cue, sync (SHIFT + SYNC
+  changes pitch range), pitch fader (picks up the current rate after SYNC
+  rather than jumping), jog wheels (top: scratch, outer ring: nudge while
+  playing, scrub while paused; SHIFT + jog: fast search), trim, EQ, channel
+  faders, crossfader, headphone cue, browse knob and load buttons, with
+  play/cue/headphone LEDs. Pads, loops, FX and CFX come later.
 
 The engine renders two playing decks at about 1% of one CPU core, and a
 test guarantees the audio thread never allocates memory.
@@ -89,6 +98,7 @@ cargo run --release -p dj-engine --example bench
 cargo run --release -p dj-cli -- info track.mp3
 cargo run --release -p dj-cli -- play a.mp3 b.mp3          # auto-crossfade A into B
 cargo run --release -p dj-cli -- render a.mp3 b.mp3 mix.wav
+cargo run --release -p dj-cli -- midi                      # print what a controller sends
 ```
 
 ## Roadmap
