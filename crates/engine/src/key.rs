@@ -169,7 +169,7 @@ fn chromagram(stereo: &[f32], sample_rate: u32) -> Option<[f64; 12]> {
     let mut frames = 0;
     let mut loudest = 0f64;
     let mut sums = Vec::new();
-    for chunk in mono.chunks_exact(FRAME) {
+    for chunk in mono.as_chunks::<FRAME>().0 {
         for i in 0..FRAME {
             re[i] = chunk[i] * window[i];
             im[i] = 0.0;
