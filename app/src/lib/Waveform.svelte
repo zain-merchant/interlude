@@ -48,9 +48,10 @@
     return off;
   });
 
-  // Drag to scrub. The overview maps the pointer straight onto the track;
-  // the scrolling view moves with the pointer like a record under a hand,
-  // and only starts once the pointer has moved, so a stray click does nothing.
+  // Drag to scrub. The overview maps the pointer straight onto the track and
+  // seeks silently; the scrolling view scratches, audibly, like a record
+  // under a hand, and only starts once the pointer has moved, so a stray
+  // click does nothing.
   let drag = null;
   let dragging = $state(false);
 
@@ -63,7 +64,7 @@
   function begin(e) {
     drag.live = true;
     dragging = true;
-    scrubStart(deck);
+    scrubStart(deck, { scratch: mode === 'scroll' });
     move(e);
   }
   function move(e) {
@@ -73,7 +74,7 @@
       const x = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
       scrubTo(deck, x * tracks[deck].duration);
     } else if (drag.live) {
-      scrubTo(deck, drag.from - ((e.clientX - drag.x) / r.width) * seconds);
+      scrubTo(deck, drag.from - ((e.clientX - drag.x) / r.width) * seconds, e.timeStamp);
     } else if (Math.abs(e.clientX - drag.x) > 3) {
       begin(e);
     }
@@ -84,7 +85,7 @@
     dragging = false;
   }
 
-  // ⌘/Ctrl + scroll zooms; plain scroll moves through a paused track.
+  // ⌘/Ctrl + scroll zooms; plain scroll scratches through a paused track.
   let wheelTimer;
   function wheel(e) {
     if (mode !== 'scroll') return;
@@ -95,10 +96,10 @@
     }
     if (!tracks[deck] || engine.decks[deck].playing || drag) return;
     e.preventDefault();
-    if (!wheelTimer) scrubStart(deck);
+    if (!wheelTimer) scrubStart(deck, { scratch: true });
     clearTimeout(wheelTimer);
     const d = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
-    scrubTo(deck, displayPos[deck] + (d / canvas.clientWidth) * seconds);
+    scrubTo(deck, displayPos[deck] + (d / canvas.clientWidth) * seconds, e.timeStamp);
     wheelTimer = setTimeout(() => {
       wheelTimer = null;
       scrubEnd(deck);

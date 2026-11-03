@@ -59,22 +59,75 @@ struct EngineState {
 #[derive(Deserialize, Debug)]
 #[serde(tag = "type", rename_all = "camelCase")]
 enum Control {
-    Play { deck: usize },
-    Pause { deck: usize },
-    TogglePlay { deck: usize },
-    CuePress { deck: usize },
-    CueRelease { deck: usize },
-    Seek { deck: usize, seconds: f64 },
-    SetRate { deck: usize, rate: f64 },
-    SetBend { deck: usize, bend: f64 },
-    Sync { deck: usize },
-    SetGain { deck: usize, db: f32 },
-    SetEq { deck: usize, band: usize, db: f32 },
-    SetFader { deck: usize, value: f32 },
-    SetPfl { deck: usize, on: bool },
-    SetCrossfader { value: f32 },
-    SetCueMix { value: f32 },
-    SetMasterGain { db: f32 },
+    Play {
+        deck: usize,
+    },
+    Pause {
+        deck: usize,
+    },
+    TogglePlay {
+        deck: usize,
+    },
+    CuePress {
+        deck: usize,
+    },
+    CueRelease {
+        deck: usize,
+    },
+    Seek {
+        deck: usize,
+        seconds: f64,
+    },
+    SetRate {
+        deck: usize,
+        rate: f64,
+    },
+    SetBend {
+        deck: usize,
+        bend: f64,
+    },
+    ScratchStart {
+        deck: usize,
+    },
+    ScratchTo {
+        deck: usize,
+        seconds: f64,
+        /// Seconds since the previous scratchTo by the UI's clock.
+        #[serde(default, rename = "sinceLast")]
+        since_last: Option<f64>,
+    },
+    ScratchEnd {
+        deck: usize,
+    },
+    Sync {
+        deck: usize,
+    },
+    SetGain {
+        deck: usize,
+        db: f32,
+    },
+    SetEq {
+        deck: usize,
+        band: usize,
+        db: f32,
+    },
+    SetFader {
+        deck: usize,
+        value: f32,
+    },
+    SetPfl {
+        deck: usize,
+        on: bool,
+    },
+    SetCrossfader {
+        value: f32,
+    },
+    SetCueMix {
+        value: f32,
+    },
+    SetMasterGain {
+        db: f32,
+    },
 }
 
 fn deck_id(i: usize) -> Result<DeckId, String> {
@@ -111,6 +164,21 @@ impl Control {
             C::SetBend { deck, bend } => Command::SetBend {
                 deck: deck_id(deck)?,
                 bend,
+            },
+            C::ScratchStart { deck } => Command::ScratchStart {
+                deck: deck_id(deck)?,
+            },
+            C::ScratchTo {
+                deck,
+                seconds,
+                since_last,
+            } => Command::ScratchTo {
+                deck: deck_id(deck)?,
+                seconds,
+                since_last,
+            },
+            C::ScratchEnd { deck } => Command::ScratchEnd {
+                deck: deck_id(deck)?,
             },
             C::Sync { deck } => Command::Sync {
                 deck: deck_id(deck)?,

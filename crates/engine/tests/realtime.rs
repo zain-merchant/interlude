@@ -100,6 +100,11 @@ fn process_does_not_allocate() {
             deck: DeckId::B,
             seconds: -0.02,
         },
+        Command::ScratchTo {
+            deck: DeckId::B,
+            seconds: 0.3,
+            since_last: Some(0.01),
+        },
         Command::ScratchEnd { deck: DeckId::B },
         Command::SetMasterGain { db: -3.0 },
         Command::CuePress { deck: DeckId::B },

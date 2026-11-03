@@ -421,8 +421,11 @@ fn jog_scrubs_when_paused_and_nudges_when_playing() {
         seconds: 1.5,
     })
     .unwrap();
-    render(&mut e, 0.01);
+    // Turning a paused record is audible, and it stops where it was turned to.
+    let out = render(&mut e, 0.5);
+    assert!(rms(&out) > 0.05, "paused jog is audible");
     assert!((position(&h, DeckId::A) - 1.5).abs() < 1e-6);
+    assert!(rms(&render(&mut e, 0.1)) < 1e-3, "and silent once it stops");
 
     h.send(Command::Play { deck: DeckId::A }).unwrap();
     render(&mut e, 0.5);
@@ -444,4 +447,91 @@ fn jog_scrubs_when_paused_and_nudges_when_playing() {
         (h.shared().deck(0).speed - 1.0).abs() < 1e-3,
         "nudge has faded"
     );
+}
+
+/// Sends `ScratchTo` like a mouse drag: an update every `every` seconds,
+/// moving `speed` seconds of audio per second. Returns the rendered audio.
+fn drag(
+    e: &mut Engine,
+    h: &mut EngineHandle,
+    from: f64,
+    speed: f64,
+    every: f32,
+    secs: f32,
+) -> Vec<f32> {
+    let mut out = vec![];
+    let steps = (secs / every).round() as usize;
+    for k in 1..=steps {
+        h.send(Command::ScratchTo {
+            deck: DeckId::A,
+            seconds: from + speed * (k as f32 * every) as f64,
+            since_last: Some(every as f64),
+        })
+        .unwrap();
+        out.extend(render(e, every));
+    }
+    out
+}
+
+#[test]
+fn dragging_a_waveform_scratches_audibly_both_ways() {
+    let (mut e, mut h) = setup();
+    load(&mut h, DeckId::A, sine(440.0, 10.0, 0.5));
+    h.send(Command::Seek {
+        deck: DeckId::A,
+        seconds: 5.0,
+    })
+    .unwrap();
+    // Not scratching: ScratchTo does nothing.
+    h.send(Command::ScratchTo {
+        deck: DeckId::A,
+        seconds: 2.0,
+        since_last: None,
+    })
+    .unwrap();
+    render(&mut e, 0.05);
+    assert!((position(&h, DeckId::A) - 5.0).abs() < 1e-6);
+
+    h.send(Command::ScratchStart { deck: DeckId::A }).unwrap();
+    // Forward at normal speed with 60 Hz pointer events: plays at ~1x.
+    let fwd = drag(&mut e, &mut h, 5.0, 1.0, 1.0 / 60.0, 0.5);
+    assert!(rms(&fwd[fwd.len() / 2..]) > 0.2, "forward drag is audible");
+    let speed = h.shared().deck(0).speed;
+    assert!((speed - 1.0).abs() < 0.15, "forward speed {speed}");
+
+    // Then backwards at half speed: reverse playback.
+    let at = position(&h, DeckId::A);
+    let back = drag(&mut e, &mut h, 5.5, -0.5, 1.0 / 60.0, 0.5);
+    assert!(
+        rms(&back[back.len() / 2..]) > 0.1,
+        "backward drag is audible"
+    );
+    let speed = h.shared().deck(0).speed;
+    assert!((speed + 0.5).abs() < 0.1, "backward speed {speed}");
+    assert!(position(&h, DeckId::A) < at);
+
+    // Letting go of a paused deck: it glides to the hand and stops there.
+    h.send(Command::ScratchEnd { deck: DeckId::A }).unwrap();
+    render(&mut e, 0.2);
+    assert!((position(&h, DeckId::A) - 5.25).abs() < 1e-6);
+    assert!(!h.shared().deck(0).playing);
+    assert!(rms(&render(&mut e, 0.1)) < 1e-3);
+}
+
+#[test]
+fn releasing_a_scratched_playing_deck_resumes_play() {
+    let (mut e, mut h) = setup();
+    load(&mut h, DeckId::A, sine(440.0, 10.0, 0.5));
+    h.send(Command::Play { deck: DeckId::A }).unwrap();
+    render(&mut e, 1.0);
+    h.send(Command::ScratchStart { deck: DeckId::A }).unwrap();
+    // Pull the record back half a second.
+    drag(&mut e, &mut h, 1.0, -1.0, 1.0 / 120.0, 0.5);
+    render(&mut e, 0.1);
+    assert!(h.shared().deck(0).playing, "still playing under the hand");
+    assert!(h.shared().deck(0).speed.abs() < 1e-3, "held still");
+    h.send(Command::ScratchEnd { deck: DeckId::A }).unwrap();
+    render(&mut e, 0.2);
+    let speed = h.shared().deck(0).speed;
+    assert!((speed - 1.0).abs() < 1e-3, "back up to speed: {speed}");
 }
