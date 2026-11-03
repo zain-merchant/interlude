@@ -24,7 +24,8 @@ export const inTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in
  *             audio?: AudioStatus, recording?: RecordingStatus }} EngineState
  * @typedef {{ title: string, path: string, duration: number, sampleRate: number,
  *             binsPerSec: number, binCount: number,
- *             beatgrid: { bpm: number, firstBeat: number } | null }} TrackInfo
+ *             beatgrid: Beatgrid | null, gridLocked?: boolean }} TrackInfo
+ * @typedef {{ bpm: number, firstBeat: number }} Beatgrid
  * @typedef {{ duration: number | null, bpm: number | null,
  *             key: { tonic: number, minor: boolean } | null, failed: boolean }} TrackAnalysis
  * @typedef {{ path: string, title: string, artist: string, album: string, genre: string,
@@ -53,6 +54,12 @@ async function createTauriBackend() {
     useDefaultOutput: () => invoke('use_default_output'),
     /** @returns {Promise<TrackInfo>} */
     loadTrack: (deck, path) => invoke('load_track', { deck, path }),
+    /**
+     * Fixes the beatgrid of a deck's track by hand (saved, and kept from
+     * analysis), or with null goes back to the detected one.
+     * @returns {Promise<{ beatgrid: Beatgrid | null, gridLocked: boolean }>}
+     */
+    setBeatgrid: (deck, grid) => invoke('set_beatgrid', { deck, grid }),
     /** @returns {Promise<Uint8Array>} */
     waveform: async (deck) => new Uint8Array(await invoke('waveform', { deck })),
     /** @returns {Promise<string[]>} */

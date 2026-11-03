@@ -22,7 +22,7 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, Condvar, Mutex, OnceLock};
 use std::time::{Duration, UNIX_EPOCH};
 
-use dj_engine::{DeckSnapshot, SavedCues, SharedState, TrackSummary, NUM_DECKS};
+use dj_engine::{Beatgrid, DeckSnapshot, SavedCues, SharedState, TrackSummary, NUM_DECKS};
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter, State};
 
@@ -132,14 +132,13 @@ impl Analyzer {
 
     /// Saves a result and tells the UI.
     fn record(&self, app: &AppHandle, path: &Path, analysis: Analysis, first_beat: Option<f64>) {
-        if let Err(e) = self
-            .db
-            .lock()
-            .unwrap()
-            .save_analysis(path, &analysis, first_beat)
-        {
+        let db = self.db.lock().unwrap();
+        if let Err(e) = db.save_analysis(path, &analysis, first_beat) {
             eprintln!("could not save analysis of {}: {e}", path.display());
         }
+        // Report what's saved: a BPM fixed by hand wins over the detected one.
+        let analysis = db.analysis(path).ok().flatten().unwrap_or(analysis);
+        drop(db);
         let _ = app.emit(
             "library-analysis",
             AnalysisEvent {
@@ -341,15 +340,45 @@ impl Library {
         }
     }
 
+    /// Saves a beatgrid fixed by hand (locked against analysis), or with
+    /// `None` goes back to `detected`, and updates the library's BPM.
+    pub fn save_grid(
+        &self,
+        app: &AppHandle,
+        path: &Path,
+        grid: Option<Beatgrid>,
+        detected: Option<Beatgrid>,
+    ) -> Result<(), String> {
+        let db = self.db.lock().unwrap();
+        db.save_grid(path, grid, detected)
+            .map_err(|e| e.to_string())?;
+        if let Ok(Some(analysis)) = db.analysis(path) {
+            let _ = app.emit(
+                "library-analysis",
+                AnalysisEvent {
+                    path: path.display().to_string(),
+                    analysis,
+                },
+            );
+        }
+        Ok(())
+    }
+
     /// Saves the analysis of a track that was just loaded onto a deck, so
     /// the library shows it without decoding the file again, and returns
-    /// its saved cue points to put back on the deck.
-    pub fn loaded(&self, app: &AppHandle, deck: usize, track: &dj_engine::Track) -> SavedCues {
+    /// what to put back on the deck: its saved cue points and its beatgrid
+    /// if one was fixed by hand.
+    pub fn loaded(
+        &self,
+        app: &AppHandle,
+        deck: usize,
+        track: &dj_engine::Track,
+    ) -> (SavedCues, Option<Beatgrid>) {
         // The deck still holds the track being replaced: keep its last change.
         self.watch_deck(deck, 0.0);
         let Some(path) = &track.path else {
             self.unwatch(deck);
-            return SavedCues::default();
+            return (SavedCues::default(), None);
         };
         self.analyzer.record(
             app,
@@ -361,10 +390,11 @@ impl Library {
             eprintln!("could not read cues for {}: {e}", path.display());
             SavedCues::default()
         });
+        let grid = self.db.lock().unwrap().locked_grid(path).unwrap_or(None);
         if let Some(w) = self.watches.lock().unwrap().get_mut(deck) {
             *w = Some(CueWatch::new(path.clone(), track.duration_secs(), cues));
         }
-        cues
+        (cues, grid)
     }
 
     /// Stops saving a deck's cues, saving its last change first.

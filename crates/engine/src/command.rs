@@ -163,6 +163,12 @@ pub enum Command {
         seconds: f64,
         saved_loop: Option<(f64, f64)>,
     },
+    /// Replace the loaded track's beatgrid (a grid fixed by hand), or with
+    /// `None`, go back to the one detected on load.
+    SetBeatgrid {
+        deck: DeckId,
+        grid: Option<crate::Beatgrid>,
+    },
     /// Set (or with `None`, clear) hot cue `index` at a position in
     /// seconds, without jumping to it.
     SetHotCue {

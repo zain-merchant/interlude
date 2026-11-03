@@ -9,7 +9,7 @@
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
-use dj_engine::{Key, SavedCues, HOT_CUES};
+use dj_engine::{Beatgrid, Key, SavedCues, HOT_CUES};
 use rusqlite::{params, Connection, OptionalExtension};
 
 use super::tags::Tags;
@@ -75,6 +75,8 @@ const MIGRATIONS: &[&str] = &[
          played_at INTEGER NOT NULL
      );
      CREATE INDEX history_played_at ON history (played_at);",
+    // 3: beatgrids fixed by hand, which analysis leaves alone.
+    "ALTER TABLE tracks ADD COLUMN grid_locked INTEGER NOT NULL DEFAULT 0;",
 ];
 
 /// Plays further apart than this start a new history session, so a night
@@ -538,8 +540,10 @@ impl Db {
         let id = self.track_id(path)?;
         self.conn.execute(
             "UPDATE tracks SET analysis_version = ?2, analysis_failed = ?3, duration = ?4,
-                 bpm = ?5, key_tonic = ?6, key_minor = ?7,
-                 first_beat = CASE WHEN ?5 IS NULL THEN NULL ELSE coalesce(?8, first_beat) END
+                 key_tonic = ?6, key_minor = ?7,
+                 bpm = CASE WHEN grid_locked THEN bpm ELSE ?5 END,
+                 first_beat = CASE WHEN grid_locked THEN first_beat
+                     WHEN ?5 IS NULL THEN NULL ELSE coalesce(?8, first_beat) END
              WHERE id = ?1",
             params![
                 id,
@@ -550,6 +554,45 @@ impl Db {
                 a.key.map(|k| k.tonic),
                 a.key.map(|k| k.minor),
                 first_beat
+            ],
+        )?;
+        Ok(())
+    }
+
+    /// The beatgrid fixed by hand for a track, if there is one.
+    pub fn locked_grid(&self, path: &Path) -> rusqlite::Result<Option<Beatgrid>> {
+        self.conn
+            .query_row(
+                "SELECT bpm, first_beat FROM tracks
+                 WHERE path = ?1 AND grid_locked AND bpm IS NOT NULL",
+                params![path_str(path)],
+                |r| {
+                    Ok(Beatgrid {
+                        bpm: r.get(0)?,
+                        first_beat: r.get::<_, Option<f64>>(1)?.unwrap_or(0.0),
+                    })
+                },
+            )
+            .optional()
+    }
+
+    /// Saves a beatgrid fixed by hand and locks it, so analysis leaves it
+    /// alone. `None` unlocks and puts back `detected`.
+    pub fn save_grid(
+        &self,
+        path: &Path,
+        grid: Option<Beatgrid>,
+        detected: Option<Beatgrid>,
+    ) -> rusqlite::Result<()> {
+        let id = self.track_id(path)?;
+        let g = grid.or(detected);
+        self.conn.execute(
+            "UPDATE tracks SET grid_locked = ?2, bpm = ?3, first_beat = ?4 WHERE id = ?1",
+            params![
+                id,
+                grid.is_some(),
+                g.map(|g| g.bpm),
+                g.map(|g| g.first_beat)
             ],
         )?;
         Ok(())
@@ -755,6 +798,37 @@ mod tests {
             .query_row("SELECT first_beat FROM tracks", [], |r| r.get(0))
             .unwrap();
         assert_eq!(first, Some(0.12));
+    }
+
+    #[test]
+    fn a_grid_fixed_by_hand_survives_analysis_until_reset() {
+        let db = Db::open_in_memory().unwrap();
+        let p = Path::new("/m/a.mp3");
+        let detected = Beatgrid {
+            bpm: 87.0,
+            first_beat: 0.1,
+        };
+        let a = Analysis {
+            duration: Some(300.0),
+            bpm: Some(87.0),
+            key: None,
+            failed: false,
+        };
+        db.save_analysis(p, &a, Some(0.1)).unwrap();
+        assert_eq!(db.locked_grid(p).unwrap(), None);
+        let fixed = Beatgrid {
+            bpm: 174.0,
+            first_beat: 1.2,
+        };
+        db.save_grid(p, Some(fixed), Some(detected)).unwrap();
+        // Analysis runs again (a reload, or a new analyzer version).
+        db.save_analysis(p, &a, Some(0.1)).unwrap();
+        assert_eq!(db.locked_grid(p).unwrap(), Some(fixed));
+        assert_eq!(db.analysis(p).unwrap().unwrap().bpm, Some(174.0));
+        // Reset: back to the detected grid, unlocked.
+        db.save_grid(p, None, Some(detected)).unwrap();
+        assert_eq!(db.locked_grid(p).unwrap(), None);
+        assert_eq!(db.analysis(p).unwrap().unwrap().bpm, Some(87.0));
     }
 
     #[test]

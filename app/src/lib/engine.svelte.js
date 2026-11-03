@@ -206,6 +206,42 @@ export function startEngineLoop() {
   document.addEventListener('visibilitychange', wake);
 }
 
+// Fixing a beatgrid by hand. Beat 0 starts a bar, so it's kept within one
+// bar of the start; each change is saved, locked against analysis, and
+// can be undone.
+const barLen = (bpm) => (4 * 60) / bpm;
+const wrap = (t, len) => ((t % len) + len) % len;
+
+/**
+ * The grid after `op`: 'halve' or 'double' the tempo, put the 'downbeat'
+ * at the play head, 'nudge' the grid by `value` seconds, or set the tempo
+ * to `value` 'bpm' keeping the bar at the play head where it is.
+ * @param {import('./backend.js').Beatgrid | null} g
+ * @param {number} pos play head, in seconds
+ */
+export function nextGrid(g, op, pos, value = 0) {
+  switch (op) {
+    case 'halve': return g && { bpm: g.bpm / 2, firstBeat: wrap(g.firstBeat, barLen(g.bpm / 2)) };
+    case 'double': return g && { bpm: g.bpm * 2, firstBeat: wrap(g.firstBeat, barLen(g.bpm * 2)) };
+    case 'downbeat': return g && { bpm: g.bpm, firstBeat: wrap(pos, barLen(g.bpm)) };
+    case 'nudge': return g && { bpm: g.bpm, firstBeat: wrap(g.firstBeat + value, barLen(g.bpm)) };
+    case 'bpm': {
+      if (!(value >= 20 && value <= 400)) return null;
+      const bar = g && barLen(g.bpm);
+      const anchor = g ? g.firstBeat + Math.floor((pos - g.firstBeat) / bar) * bar : pos;
+      return { bpm: value, firstBeat: wrap(anchor, barLen(value)) };
+    }
+  }
+  return null;
+}
+
+/** Sets a deck's beatgrid (null: back to the detected one) and shows it. */
+export async function setGrid(deck, grid) {
+  const info = await backend.setBeatgrid(deck, grid);
+  if (tracks[deck]) tracks[deck] = { ...tracks[deck], beatgrid: info.beatgrid, gridLocked: info.gridLocked };
+  wake();
+}
+
 /** Loads a library track into a deck. */
 export async function loadTrack(deck, item) {
   const info = await backend.loadTrack(deck, item.path);

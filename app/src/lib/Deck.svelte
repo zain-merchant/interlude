@@ -4,7 +4,8 @@
   import FxUnit from './FxUnit.svelte';
   import Performance from './Performance.svelte';
   import { untrack } from 'svelte';
-  import { engine, tracks, control } from './engine.svelte.js';
+  import { engine, tracks, control, nextGrid, setGrid } from './engine.svelte.js';
+  import { pushEdit } from './undo.svelte.js';
   import { dropTarget } from './dnd.svelte.js';
   import { tip, tipText } from './tooltip.svelte.js';
   import { openMenu } from './menu.svelte.js';
@@ -16,6 +17,51 @@
   let { deck, onload, onreveal } = $props();
 
   const name = $derived(deck === 0 ? 'A' : 'B');
+
+  // Fixing the beatgrid: right-click the BPM, or double-click it to type one.
+  let editingBpm = $state(false);
+  /** Applies a grid change, with Undo back to the grid before it. */
+  async function gridEdit(op, label, value) {
+    const t = tracks[deck];
+    if (!t) return;
+    const before = t.gridLocked ? t.beatgrid : null;
+    const after = op === 'reset' ? null : nextGrid(t.beatgrid, op, d.position, value);
+    if (op !== 'reset' && !after) return;
+    await setGrid(deck, after);
+    announce(`${label} on deck ${name}`);
+    pushEdit({ label: `${label} on deck ${name}`, undo: () => setGrid(deck, before), redo: () => setGrid(deck, after) });
+  }
+  const gridMenu = (e) => {
+    const t = tracks[deck];
+    if (!t) return;
+    const has = !!t.beatgrid;
+    openMenu(e, [
+      { label: 'Halve BPM', enabled: has, action: () => gridEdit('halve', 'Halved the BPM') },
+      { label: 'Double BPM', enabled: has, action: () => gridEdit('double', 'Doubled the BPM') },
+      { label: 'Set BPM…', action: () => (editingBpm = true) },
+      '-',
+      { label: 'Set downbeat at play head', enabled: has, action: () => gridEdit('downbeat', 'Moved the downbeat') },
+      { label: 'Move grid earlier', enabled: has, action: () => gridEdit('nudge', 'Moved the grid earlier', -0.01) },
+      { label: 'Move grid later', enabled: has, action: () => gridEdit('nudge', 'Moved the grid later', 0.01) },
+      '-',
+      { label: 'Reset to detected grid', enabled: !!t.gridLocked, action: () => gridEdit('reset', 'Reset the beatgrid') },
+    ]);
+  };
+  const focusBpm = (node) => {
+    node.focus();
+    node.select();
+  };
+  function bpmKey(e) {
+    e.stopPropagation();
+    if (e.key === 'Enter') finishBpm(e.currentTarget.value);
+    else if (e.key === 'Escape') editingBpm = false;
+  }
+  function finishBpm(text) {
+    if (!editingBpm) return;
+    editingBpm = false;
+    const v = parseFloat(String(text).replace(',', '.'));
+    if (v > 0 && Math.abs(v - d.bpm) > 1e-6) gridEdit('bpm', `Set the BPM to ${+v.toFixed(2)}`, v);
+  }
   const other = $derived(deck === 0 ? 'B' : 'A');
   const RANGES = [0.08, 0.16, 0.5];
 
@@ -146,8 +192,14 @@
           <div class="artist">Drag a track here or press {keyLabel(`deck.${deck}.load`)}</div>
         {/if}
       </div>
-      <div class="bpm" use:tip={() => (d.bpm > 0 ? `Track tempo ${d.bpm.toFixed(2)} BPM` : t ? 'No clear beat found' : '')}>
-        <div class="big num">{bpm > 0 ? bpm.toFixed(2) : '—'}</div>
+      <div class="bpm" oncontextmenu={gridMenu} ondblclick={() => t && (editingBpm = true)} role="group" aria-label="Tempo"
+        use:tip={() => (editingBpm ? '' : d.bpm > 0 ? `Track tempo ${d.bpm.toFixed(2)} BPM${t?.gridLocked ? ', beatgrid fixed by hand' : ''}. Right-click to fix the beatgrid` : t ? 'No clear beat found. Double-click to set the BPM' : '')}>
+        {#if editingBpm}
+          <input class="big num edit" value={d.bpm > 0 ? +d.bpm.toFixed(2) : ''} inputmode="decimal" aria-label="Track BPM" spellcheck="false"
+            use:focusBpm onkeydown={bpmKey} onblur={(e) => finishBpm(e.currentTarget.value)} />
+        {:else}
+          <div class="big num">{bpm > 0 ? bpm.toFixed(2) : '—'}</div>
+        {/if}
         <div class="unit">{#if pk}<span class="key" class:shifted={pk.shift} use:tip={keyTip}>{keyName(pk)}</span>{" · "}{/if}BPM</div>
       </div>
     </header>
@@ -292,6 +344,18 @@
     font-size: 30px;
     line-height: 1;
     letter-spacing: -0.02em;
+  }
+  .bpm .edit {
+    width: 4.2em;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--fg);
+    font-family: inherit;
+    text-align: right;
+    border-radius: 4px;
+    box-shadow: 0 0 0 1px var(--fg-3);
+    user-select: text;
   }
   .bpm .unit {
     margin-top: 6px;
