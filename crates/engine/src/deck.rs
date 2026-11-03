@@ -86,6 +86,10 @@ pub(crate) struct Deck {
     pub scratching: bool,
     /// Keylock: tempo changes keep the track's pitch.
     pub keylock: bool,
+    /// Quantize: cue points and loops snap to the beatgrid, and jumps
+    /// while playing land on the same spot in the beat, so they stay in
+    /// time. Does nothing for tracks without a beatgrid.
+    pub quantize: bool,
     stretch: Stretcher,
     /// The play head follows the hand. Stays on after a paused deck is
     /// released (or nudged by the outer ring) until it has caught up.
@@ -123,6 +127,7 @@ impl Deck {
             jog_bend: 0.0,
             scratching: false,
             keylock: false,
+            quantize: true,
             stretch: Stretcher::new(out_rate),
             following: false,
             hand: Hand::new(out_rate as f64),
@@ -203,7 +208,9 @@ impl Deck {
             return;
         }
         if (self.pos - self.cue).abs() > 1.0 {
-            self.cue = self.pos;
+            self.cue = self.snap(self.pos);
+            self.pos = self.cue;
+            self.rebase_hand();
         }
         self.playing = true;
         self.previewing = true;
@@ -271,8 +278,13 @@ impl Deck {
             return;
         }
         let Some(at) = self.hot_cues[n] else {
-            self.hot_cues[n] = Some(self.pos);
+            self.hot_cues[n] = Some(self.snap(self.pos));
             return;
+        };
+        let at = if self.playing && !self.previewing {
+            self.in_phase(at)
+        } else {
+            at
         };
         self.leave_loop_if_outside(at);
         self.jump(at);
@@ -342,9 +354,15 @@ impl Deck {
             self.resize_loop(len);
             return;
         }
-        let unit = beats.min(1.0);
-        let start_beat = (g.beat_at(self.pos / sr) / unit).round() * unit;
-        let start = (g.time_of_beat(start_beat) * sr).max(0.0);
+        // Quantized, the loop starts on the nearest beat (or fraction of a
+        // beat, for loops under one beat); otherwise right at the play head.
+        let start = if self.quantize {
+            let unit = beats.min(1.0);
+            let start_beat = (g.beat_at(self.pos / sr) / unit).round() * unit;
+            (g.time_of_beat(start_beat) * sr).max(0.0)
+        } else {
+            self.pos
+        };
         if start + len > self.frames() {
             return;
         }
@@ -412,7 +430,7 @@ impl Deck {
     /// out point is set.
     pub fn loop_in_press(&mut self) {
         if self.track.is_some() {
-            self.loop_in = Some(self.pos);
+            self.loop_in = Some(self.snap(self.pos));
             self.loop_out = None;
             self.looping = false;
         }
@@ -421,14 +439,22 @@ impl Deck {
     /// Sets the loop out point at the play head and starts looping.
     pub fn loop_out_press(&mut self) {
         let Some(start) = self.loop_in else { return };
-        if self.pos - start < self.min_loop() {
+        let mut end = self.snap(self.pos);
+        if end <= start {
+            // Snapped back onto the in point: take the next beat instead.
+            end = self.beat_frames(1.0).map_or(self.pos, |b| end + b);
+        }
+        if end - start < self.min_loop() || end > self.frames() {
             return;
         }
-        let len = self.pos - start;
-        self.loop_out = Some(self.pos);
+        self.loop_out = Some(end);
         self.looping = true;
-        self.adopt_loop_size(len);
-        self.jump(start);
+        self.adopt_loop_size(end - start);
+        // Past the out point, wrap as the loop would have; short of it,
+        // play on to it.
+        if self.pos >= end {
+            self.jump(start + (self.pos - end));
+        }
     }
 
     /// Out of the active loop, or back into the last one.
@@ -437,7 +463,12 @@ impl Deck {
             self.looping = false;
         } else if let (Some(start), Some(_)) = (self.loop_in, self.loop_out) {
             self.looping = true;
-            self.jump(start);
+            let to = if self.playing {
+                self.in_phase(start)
+            } else {
+                start
+            };
+            self.jump(to.max(start));
         }
     }
 
@@ -551,6 +582,34 @@ impl Deck {
 
     fn grid(&self) -> Option<Beatgrid> {
         self.track.as_ref().and_then(|t| t.beatgrid)
+    }
+
+    /// The beatgrid, while quantize is on.
+    fn quantize_grid(&self) -> Option<Beatgrid> {
+        self.grid().filter(|_| self.quantize)
+    }
+
+    /// `at` (source frames) moved to the nearest beat when quantizing.
+    fn snap(&self, at: f64) -> f64 {
+        let Some(g) = self.quantize_grid() else {
+            return at;
+        };
+        let sr = self.source_rate();
+        (g.time_of_beat(g.beat_at(at / sr).round()) * sr).clamp(0.0, self.frames())
+    }
+
+    /// Where to land when jumping to `target` mid-play: when quantizing,
+    /// moved by under half a beat so it sits at the same point in the beat
+    /// as the play head, and the music stays in time. Like other DJ
+    /// software, the jump itself is immediate, not held for the next beat.
+    fn in_phase(&self, target: f64) -> f64 {
+        let Some(g) = self.quantize_grid() else {
+            return target;
+        };
+        let sr = self.source_rate();
+        let diff = g.beat_at(self.pos / sr) - g.beat_at(target / sr);
+        let off = diff - diff.round();
+        (target + off * g.beat_length() * sr).clamp(0.0, self.frames())
     }
 
     pub fn beat_info(&self) -> Option<BeatInfo> {

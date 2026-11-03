@@ -43,7 +43,7 @@ pub use key::Key;
 pub use null_output::{start_null, NullOutput};
 pub use record::{RecordError, RecordingStatus};
 pub use shared::{DeckSnapshot, FxSnapshot, MixerSnapshot, SharedState};
-pub use track::{LoadError, Track};
+pub use track::{LoadError, Track, TrackSummary};
 pub use waveform::Waveform;
 
 /// Number of decks. Phase 1 is a two-deck app; four decks come after the MVP.
