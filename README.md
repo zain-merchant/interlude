@@ -61,6 +61,11 @@ A free, open-source DJ app that is fast, modern and uncluttered. No paywalled
   change can be undone. History lists what you played, one entry per
   session (a gap of 4 hours starts a new one); a track counts once it has
   been on air for 30 seconds with its fader up and the crossfader open.
+- **Fixing a beatgrid:** right-click a deck's BPM to halve or double it,
+  put the downbeat at the play head, or move the grid 10 ms earlier or
+  later; double-click the BPM to type an exact one. A grid fixed by hand is
+  saved and kept when the track is analyzed again, until you pick Reset to
+  detected grid. Every change can be undone.
 - **Safety:** loading onto a playing deck is blocked.
 - **Controller: Pioneer DDJ-FLX4.** Plug it in (before or after starting the
   app) and it connects by itself; audio goes through its sound card, with

@@ -172,6 +172,7 @@ impl Engine {
                 seconds,
                 saved_loop,
             } => self.decks[deck.index()].restore_cue(seconds, saved_loop),
+            SetBeatgrid { deck, grid } => self.decks[deck.index()].set_grid(grid),
             SetHotCue {
                 deck,
                 index,
@@ -319,12 +320,7 @@ impl Engine {
             s.cue.store(deck.cue / sr);
             s.rate.store(deck.rate);
             s.speed.store(deck.speed());
-            s.bpm.store(
-                deck.track
-                    .as_ref()
-                    .and_then(|t| t.beatgrid)
-                    .map_or(0.0, |g| g.bpm),
-            );
+            s.bpm.store(deck.grid().map_or(0.0, |g| g.bpm));
             s.key.store(
                 crate::Key::code(deck.track.as_ref().and_then(|t| t.key)),
                 Relaxed,

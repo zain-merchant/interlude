@@ -158,12 +158,12 @@ void main() {
   // Beat lines: faint and full height, every 4th a little stronger.
   if (beatLen > 0.0 && beatLen / perPx > 6.0 * dpr) {
     float b = (bin - firstBeat) / beatLen;
+    // Beat 0 starts a bar and can sit up to a bar in (a downbeat set by
+    // hand), so beats before it are drawn too; mod() keeps their bars.
     float k = floor(b + 0.5);
-    if (k >= 0.0) {
-      float distPx = abs(b - k) * beatLen / perPx;
-      float line = 1.0 - smoothstep(0.3 * dpr, 0.9 * dpr, distPx);
-      c = mix(c, cFg, line * (mod(k, 4.0) < 0.5 ? 0.18 : 0.08));
-    }
+    float distPx = abs(b - k) * beatLen / perPx;
+    float line = 1.0 - smoothstep(0.3 * dpr, 0.9 * dpr, distPx);
+    c = mix(c, cFg, line * (mod(k, 4.0) < 0.5 ? 0.18 : 0.08));
   }
 
   // Loop: a faint band while it plays, edges always (a stored loop can be

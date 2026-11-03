@@ -80,6 +80,16 @@ struct TrackInfo {
     bins_per_sec: f64,
     bin_count: usize,
     beatgrid: Option<Beatgrid>,
+    /// The beatgrid was fixed by hand, so analysis leaves it alone.
+    grid_locked: bool,
+}
+
+/// A deck's beatgrid after it was changed by hand.
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct GridInfo {
+    beatgrid: Option<Beatgrid>,
+    grid_locked: bool,
 }
 
 #[derive(Serialize)]
@@ -518,7 +528,7 @@ async fn load_track(
         .map_err(|e| e.to_string())?
         .map_err(|e| e.to_string())?;
     let track = Arc::new(track);
-    let cues = library.loaded(&app, deck, &track);
+    let (cues, locked) = library.loaded(&app, deck, &track);
     let info = TrackInfo {
         title: track.title(),
         path: track
@@ -530,7 +540,8 @@ async fn load_track(
         sample_rate: track.sample_rate,
         bins_per_sec: track.waveform.bins_per_sec,
         bin_count: track.waveform.bins.len(),
-        beatgrid: track.beatgrid,
+        beatgrid: locked.or(track.beatgrid),
+        grid_locked: locked.is_some(),
     };
     send(
         &state,
@@ -542,8 +553,46 @@ async fn load_track(
     for cmd in cues.commands(id) {
         send(&state, cmd)?;
     }
+    if locked.is_some() {
+        send(
+            &state,
+            Command::SetBeatgrid {
+                deck: id,
+                grid: locked,
+            },
+        )?;
+    }
     state.tracks.lock().map_err(|_| "lock poisoned")?[deck] = Some(track);
     Ok(info)
+}
+
+/// Fixes the beatgrid of the track on a deck by hand, and saves it locked
+/// so analysis leaves it alone. `None` goes back to the detected grid.
+#[tauri::command]
+fn set_beatgrid(
+    app: tauri::AppHandle,
+    state: State<'_, AppState>,
+    library: State<'_, library::Library>,
+    deck: usize,
+    grid: Option<Beatgrid>,
+) -> Result<GridInfo, String> {
+    let id = deck_id(deck)?;
+    let track = state.tracks.lock().map_err(|_| "lock poisoned")?[deck]
+        .clone()
+        .ok_or("deck is empty")?;
+    if let Some(g) = grid {
+        if !(g.bpm.is_finite() && (20.0..=400.0).contains(&g.bpm) && g.first_beat.is_finite()) {
+            return Err(format!("{} BPM is out of range", g.bpm));
+        }
+    }
+    send(&state, Command::SetBeatgrid { deck: id, grid })?;
+    if let Some(path) = &track.path {
+        library.save_grid(&app, path, grid, track.beatgrid)?;
+    }
+    Ok(GridInfo {
+        beatgrid: grid.or(track.beatgrid),
+        grid_locked: grid.is_some(),
+    })
 }
 
 /// Raw waveform bytes for a deck: 4 bytes per bin (peak, low, mid, high).
@@ -630,6 +679,7 @@ pub fn run() {
             audio_stats,
             use_default_output,
             load_track,
+            set_beatgrid,
             waveform,
             start_recording,
             stop_recording,

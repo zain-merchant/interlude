@@ -27,11 +27,13 @@ const PHASE_BINS: usize = 96;
 
 /// A constant-tempo beatgrid.
 #[derive(Debug, Clone, Copy, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
 pub struct Beatgrid {
     pub bpm: f64,
-    /// Time of the first beat, in seconds. Always within one beat of 0.
+    /// Time of beat 0, in seconds, which starts a bar. Detected grids put
+    /// it within one beat of 0; a downbeat set by hand puts it within one
+    /// bar (4 beats).
     pub first_beat: f64,
 }
 
