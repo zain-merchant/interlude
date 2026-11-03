@@ -4,7 +4,6 @@ description = "Real-time audio engine: decks, mixer, decoding and waveform analy
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-rust-version.workspace = true
 
 [features]
 default = ["output"]

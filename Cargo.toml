@@ -1,12 +1,11 @@
 [workspace]
 resolver = "2"
-members = ["crates/engine", "crates/cli"]
+members = ["crates/engine", "crates/cli", "app/src-tauri"]
 
 [workspace.package]
 version = "0.1.0"
 edition = "2021"
 license = "GPL-3.0-or-later"
-rust-version = "1.80"
 
 [profile.dev]
 # Audio code is unusable unoptimized; keep debug builds fast enough to play.

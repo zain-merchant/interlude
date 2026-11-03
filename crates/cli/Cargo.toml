@@ -4,7 +4,6 @@ description = "Headless tools for the DJ engine: play, offline mix render, track
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-rust-version.workspace = true
 
 [[bin]]
 name = "dj"
