@@ -48,11 +48,14 @@ impl Track {
     /// Builds a track from interleaved stereo samples and analyzes its
     /// waveform, tempo and key.
     pub fn from_stereo(samples: Vec<f32>, sample_rate: u32) -> Self {
-        let waveform = Waveform::analyze(&samples, sample_rate);
-        let (beatgrid, key) = std::thread::scope(|s| {
+        // The three analyses only read the samples, so run them side by
+        // side: loading takes as long as the slowest, not all three.
+        let (waveform, beatgrid, key) = std::thread::scope(|s| {
             let key = s.spawn(|| detect_key(&samples, sample_rate));
+            let waveform = s.spawn(|| Waveform::analyze(&samples, sample_rate));
             let grid = detect_beatgrid(&samples, sample_rate);
-            (grid, key.join().ok().flatten())
+            let waveform = waveform.join().unwrap_or_default();
+            (waveform, grid, key.join().ok().flatten())
         });
         Self {
             path: None,
@@ -100,7 +103,14 @@ impl Track {
             .make_audio_decoder(params, &AudioDecoderOptions::default())
             .map_err(|e| LoadError::Decode(e.to_string()))?;
 
-        let mut stereo: Vec<f32> = Vec::new();
+        // Size the buffer once from the container's frame count when it has
+        // one. Growing by doubling instead copies the track several times
+        // and leaves up to half of it as unused capacity.
+        let expected = track
+            .num_frames
+            .and_then(|n| usize::try_from(n).ok())
+            .unwrap_or(0);
+        let mut stereo: Vec<f32> = Vec::with_capacity(expected.saturating_mul(2));
         let mut packet_buf: Vec<f32> = Vec::new();
         loop {
             let packet = match format.next_packet() {
@@ -141,6 +151,11 @@ impl Track {
 
         if sample_rate == 0 || stereo.is_empty() {
             return Err(LoadError::NoAudio);
+        }
+        // Give back spare capacity (from a missing or low frame count): it
+        // would otherwise stay allocated for as long as the track is loaded.
+        if stereo.capacity() > stereo.len() + stereo.len() / 50 {
+            stereo.shrink_to_fit();
         }
         let mut track = Track::from_stereo(stereo, sample_rate);
         track.path = Some(path.to_owned());
