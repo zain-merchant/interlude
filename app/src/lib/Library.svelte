@@ -2,7 +2,7 @@
   import { onMount, tick } from 'svelte';
   import { backend } from './backend.js';
   import { engine, tracks } from './engine.svelte.js';
-  import { startDrag, endDrag } from './dnd.svelte.js';
+  import { startDrag, endDrag, drag, dropTarget } from './dnd.svelte.js';
   import { tip, tipText } from './tooltip.svelte.js';
   import { openMenu } from './menu.svelte.js';
   import { keyLabel, MOD } from './commands.js';
@@ -15,7 +15,20 @@
   const ROW = 30;
 
   let folders = $state([]);
-  let folder = $state(null); // null = all
+  /**
+   * What the track list shows: every track, a folder, a playlist or a History session.
+   * @typedef {{ kind: 'all' | 'folder' | 'playlist' | 'session', path?: string, id?: number, start?: number }} View
+   */
+  let view = $state(/** @type {View} */ ({ kind: 'all' }));
+  const folder = $derived(view.kind === 'folder' ? view.path : null);
+  /** Playlists and History keep their own order; the scan is sorted by artist. */
+  const ordered = $derived(view.kind === 'playlist' || view.kind === 'session');
+  /** @type {import('./backend.js').Playlist[]} */
+  let playlists = $state([]);
+  /** @type {import('./backend.js').HistorySession[]} */
+  let sessions = $state([]);
+  /** The playlist whose name is being typed. */
+  let renaming = $state(null);
   let all = $state([]);
   let total = $state(null); // track count across every folder
   let query = $state('');
@@ -104,14 +117,28 @@
   /** Shown when analysis found nothing (or the file wouldn't decode). */
   const NONE = '–';
 
-  // Analysis results stream in from the background analyzer.
+  // Analysis results stream in from the background analyzer. A History
+  // session can list a track twice, so each path maps to every row of it.
   let byPath = new Map();
   $effect(() => {
     let off = null;
     let gone = false;
     backend.onLibraryAnalysis?.((e) => {
-      const t = byPath.get(e.path);
-      if (t) t.analysis = { duration: e.duration, bpm: e.bpm, key: e.key, failed: e.failed };
+      for (const t of byPath.get(e.path) ?? []) t.analysis = { duration: e.duration, bpm: e.bpm, key: e.key, failed: e.failed };
+    }).then((fn) => (gone ? fn() : (off = fn)));
+    return () => {
+      gone = true;
+      off?.();
+    };
+  });
+  // A track just went into History.
+  $effect(() => {
+    let off = null;
+    let gone = false;
+    backend.onLibraryPlayed?.(async () => {
+      sessions = await backend.historySessions();
+      if (view.kind === 'session' && view.start === sessions[0]?.start) refresh({ keep: true });
+      else if (view.kind === 'session' && sessions.length && !sessions.some((x) => x.start === view.start)) refresh({ keep: true });
     }).then((fn) => (gone ? fn() : (off = fn)));
     return () => {
       gone = true;
@@ -123,15 +150,30 @@
   const visible = $derived(sorted.slice(first, first + Math.ceil(viewHeight / ROW) + 10));
   const onDeck = (t) => [0, 1].filter((d) => tracks[d]?.path === t.path);
 
-  async function refresh() {
-    loading = true;
+  /** Loads the current view. `keep` holds on to the selection (after an edit). */
+  async function refresh({ keep = false } = {}) {
+    loading = !keep;
     error = '';
     try {
-      folders = await backend.libraryFolders();
-      all = await backend.libraryTracks(folder);
-      byPath = new Map(all.map((t) => [t.path, t]));
-      if (folder === null) total = all.length;
-      selectIndex(0);
+      [folders, playlists, sessions] = await Promise.all([backend.libraryFolders(), backend.playlists(), backend.historySessions()]);
+      if (view.kind === 'playlist' && !playlists.some((p) => p.id === view.id)) view = { kind: 'all' };
+      if (view.kind === 'session' && !sessions.some((x) => x.start === view.start)) view = { kind: 'all' };
+      const list =
+        view.kind === 'playlist' ? await backend.playlistTracks(view.id)
+        : view.kind === 'session' ? await backend.sessionTracks(view.start)
+        : await backend.libraryTracks(folder);
+      // Rows need a unique key: History can list a track twice.
+      const seen = new Map();
+      for (const t of list) {
+        const n = seen.get(t.path) ?? 0;
+        seen.set(t.path, n + 1);
+        t.key = n ? `${t.path}#${n}` : t.path;
+      }
+      all = list;
+      byPath = new Map();
+      for (const t of all) byPath.set(t.path, [...(byPath.get(t.path) ?? []), t]);
+      if (view.kind === 'all') total = all.length;
+      if (!keep) selectIndex(0);
     } catch (e) {
       error = String(e);
     } finally {
@@ -144,7 +186,7 @@
     if (!path) return;
     try {
       folders = await backend.addFolder(path);
-      folder = null;
+      view = { kind: 'all' };
       await refresh();
     } catch (e) {
       error = String(e);
@@ -154,7 +196,7 @@
   /** Removes a music folder from the library (never from disk), with Undo. */
   async function removeFolder(f, { undoable = true } = {}) {
     folders = await backend.removeFolder(f);
-    if (folder === f) folder = null;
+    if (folder === f) view = { kind: 'all' };
     total = null;
     await refresh();
     if (undoable)
@@ -171,10 +213,129 @@
     await refresh();
   }
 
+  /** Shows a folder, or every track when `f` is null. */
   function pick(f) {
-    folder = f;
+    show(f === null ? { kind: 'all' } : { kind: 'folder', path: f });
+  }
+
+  /** @param {View} v */
+  function show(v) {
+    view = v;
+    sort = { by: null, dir: 1 };
     refresh();
   }
+
+  // Playlists. Every change can be undone, and none touches the files.
+  const playlistName = (id) => playlists.find((p) => p.id === id)?.name ?? 'playlist';
+
+  /** Makes a playlist (holding `paths`) and starts naming it. */
+  async function newPlaylist(paths = []) {
+    let name = 'New playlist';
+    for (let n = 2; playlists.some((p) => p.name === name); n++) name = `New playlist ${n}`;
+    const id = await backend.createPlaylist(name, paths);
+    playlists = await backend.playlists();
+    renaming = id;
+    pushEdit({
+      label: `Made ${name}`,
+      undo: async () => { await backend.deletePlaylist(id); await refresh({ keep: true }); },
+      redo: async () => { await backend.createPlaylist(name, paths); await refresh({ keep: true }); },
+    });
+  }
+
+  async function finishRename(id, value) {
+    renaming = null;
+    const name = value.trim();
+    const old = playlistName(id);
+    if (!name || name === old) return;
+    await backend.renamePlaylist(id, name);
+    playlists = await backend.playlists();
+    pushEdit({
+      label: `Renamed ${old} to ${name}`,
+      undo: async () => { await backend.renamePlaylist(id, old); playlists = await backend.playlists(); },
+      redo: async () => { await backend.renamePlaylist(id, name); playlists = await backend.playlists(); },
+    });
+  }
+
+  async function deletePlaylist(id) {
+    const name = playlistName(id);
+    const paths = (await backend.playlistTracks(id)).map((t) => t.path);
+    await backend.deletePlaylist(id);
+    if (view.kind === 'playlist' && view.id === id) view = { kind: 'all' };
+    await refresh({ keep: view.kind !== 'all' });
+    let current = id;
+    pushEdit({
+      label: `Deleted ${name}`,
+      undo: async () => { current = await backend.createPlaylist(name, paths); await refresh({ keep: true }); },
+      redo: async () => { await backend.deletePlaylist(current); await refresh({ keep: true }); },
+    });
+  }
+
+  /** Adds tracks to the end of a playlist (ones already there stay put). */
+  async function addTo(id, paths) {
+    const before = (await backend.playlistTracks(id)).map((t) => t.path);
+    await backend.addToPlaylist(id, paths);
+    const added = paths.filter((p) => !before.includes(p)).length;
+    await refresh({ keep: true });
+    const name = playlistName(id);
+    pushEdit({
+      label: added ? `Added ${added === 1 ? 'a track' : `${added} tracks`} to ${name}` : `Already in ${name}`,
+      undo: async () => { await backend.setPlaylistTracks(id, before); await refresh({ keep: true }); },
+      redo: async () => { await backend.addToPlaylist(id, paths); await refresh({ keep: true }); },
+    });
+  }
+
+  /** Sets the open playlist's order (reorder or remove), with Undo. */
+  async function reorder(paths, label) {
+    if (view.kind !== 'playlist') return;
+    const id = view.id;
+    const before = all.map((t) => t.path);
+    await backend.setPlaylistTracks(id, paths);
+    await refresh({ keep: true });
+    pushEdit({
+      label,
+      undo: async () => { await backend.setPlaylistTracks(id, before); await refresh({ keep: true }); },
+      redo: async () => { await backend.setPlaylistTracks(id, paths); await refresh({ keep: true }); },
+    });
+  }
+
+  function removeFromPlaylist(t) {
+    reorder(all.filter((x) => x.path !== t.path).map((x) => x.path), `Removed ${t.title} from ${playlistName(view.id)}`);
+  }
+
+  // Drag to reorder: only in a playlist shown in its own order, unfiltered.
+  const canReorder = $derived(view.kind === 'playlist' && !sort.by && !query);
+  /** Where a dragged row would land: before row `index`. */
+  let dropAt = $state(null);
+  function rowDragOver(e, index) {
+    if (!canReorder || !drag.track || !all.some((t) => t.path === drag.track.path)) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    const r = e.currentTarget.getBoundingClientRect();
+    dropAt = e.clientY > r.top + r.height / 2 ? index + 1 : index;
+  }
+  function rowDrop(e) {
+    if (dropAt === null || !drag.track) return;
+    e.preventDefault();
+    const moving = drag.track.path;
+    const paths = all.map((t) => t.path);
+    const from = paths.indexOf(moving);
+    let to = dropAt;
+    dropAt = null;
+    if (from < 0 || to === from || to === from + 1) return;
+    paths.splice(from, 1);
+    if (to > from) to--;
+    paths.splice(to, 0, moving);
+    reorder(paths, `Moved ${drag.track.title}`);
+  }
+
+  /** History session label: "Fri 31 Oct", with the time if a day has two. */
+  function sessionLabel(x) {
+    const d = new Date(x.start);
+    const day = d.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' });
+    const twice = sessions.some((o) => o !== x && new Date(o.start).toDateString() === d.toDateString());
+    return twice ? `${day}, ${d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}` : day;
+  }
+  const HISTORY_SHOWN = 10;
 
   function select(i) {
     if (!sorted.length) return;
@@ -201,8 +362,8 @@
   /** Selects a track in the library, clearing the search and folder if they hide it. */
   export async function reveal(path) {
     query = '';
-    if (!all.some((t) => t.path === path) && folder !== null) {
-      folder = null;
+    if (!all.some((t) => t.path === path) && view.kind !== 'all') {
+      view = { kind: 'all' };
       await refresh();
     }
     await tick();
@@ -229,6 +390,11 @@
       case 'Home': select(0); break;
       case 'End': select(sorted.length - 1); break;
       case 'Enter': autoLoad(sorted[selected]); browse(1); break;
+      case 'Backspace':
+      case 'Delete':
+        if (view.kind !== 'playlist') return;
+        removeFromPlaylist(sorted[selected]);
+        break;
       default:
         return;
     }
@@ -263,13 +429,37 @@
   const rowMenu = (e, t, index) => {
     selectIndex(index);
     const blocked = (d) => engine.decks[d].playing;
-    openMenu(e, [0, 1].map((d) => ({
-      label: blocked(d) ? `Deck ${'AB'[d]} is playing` : `Load to deck ${'AB'[d]}`,
+    const load = [0, 1].map((d) => ({
+      label: t.missing ? 'File not found' : blocked(d) ? `Deck ${'AB'[d]} is playing` : `Load to deck ${'AB'[d]}`,
       key: keyLabel(`deck.${d}.load`),
-      enabled: !blocked(d),
+      enabled: !blocked(d) && !t.missing,
       action: () => onload(d, t),
-    })));
+    }));
+    const add = playlists
+      .filter((p) => !(view.kind === 'playlist' && view.id === p.id))
+      .map((p) => ({ label: `Add to ${p.name}`, action: () => addTo(p.id, [t.path]) }));
+    const remove = view.kind === 'playlist' ? [{ label: 'Remove from playlist', key: '⌫', action: () => removeFromPlaylist(t) }] : [];
+    /** @type {import('./menu.svelte.js').MenuEntry[]} */
+    const items = [...load, '-', ...add, { label: 'Add to new playlist', action: () => newPlaylist([t.path]) }];
+    if (remove.length) items.push('-', ...remove);
+    openMenu(e, items);
   };
+  const playlistMenu = (e, p) =>
+    openMenu(e, [
+      { label: 'Rename', action: () => (renaming = p.id) },
+      '-',
+      { label: 'Delete playlist', action: () => deletePlaylist(p.id) },
+    ]);
+  /** Focuses and selects the name field when renaming starts. */
+  const focusName = (node) => {
+    node.focus();
+    node.select();
+  };
+  function nameKey(e, id) {
+    e.stopPropagation();
+    if (e.key === 'Enter') finishRename(id, e.currentTarget.value);
+    else if (e.key === 'Escape') renaming = null;
+  }
   const folderMenu = (e, f) =>
     openMenu(e, [
       { label: 'Rescan', action: () => (folder === f ? refresh() : pick(f)) },
@@ -281,9 +471,9 @@
 </script>
 
 <section class="library" aria-label="Library">
-  <nav data-region="sidebar" aria-label="Music folders">
+  <nav data-region="sidebar" aria-label="Library, playlists and history">
     <div class="h">Library</div>
-    <button class="item" class:on={folder === null} aria-current={folder === null} onclick={() => pick(null)}>
+    <button class="item" class:on={view.kind === 'all'} aria-current={view.kind === 'all'} onclick={() => pick(null)}>
       <span>All tracks</span>{#if total !== null}<small class="num">{total.toLocaleString()}</small>{/if}
     </button>
     {#each folders as f}
@@ -293,6 +483,33 @@
       </button>
     {/each}
     <button class="add" onclick={addFolder}>+ Add music folder</button>
+
+    <div class="h sec">Playlists</div>
+    {#each playlists as p (p.id)}
+      {#if renaming === p.id}
+        <input class="item name" value={p.name} aria-label="Playlist name" spellcheck="false" use:focusName
+          onkeydown={(e) => nameKey(e, p.id)} onblur={(e) => finishRename(p.id, e.currentTarget.value)} />
+      {:else}
+        {@const on = view.kind === 'playlist' && view.id === p.id}
+        <button class="item" class:on aria-current={on} onclick={() => show({ kind: 'playlist', id: p.id })}
+          ondblclick={() => (renaming = p.id)} oncontextmenu={(e) => playlistMenu(e, p)}
+          use:dropTarget={{ ondrop: (t) => addTo(p.id, [t.path]) }}>
+          <span>{p.name}</span><small class="num">{p.count.toLocaleString()}</small>
+        </button>
+      {/if}
+    {/each}
+    <button class="add" onclick={() => newPlaylist()}>+ New playlist</button>
+
+    {#if sessions.length}
+      <div class="h sec">History</div>
+      {#each sessions.slice(0, HISTORY_SHOWN) as x (x.start)}
+        {@const on = view.kind === 'session' && view.start === x.start}
+        <button class="item" class:on aria-current={on} onclick={() => show({ kind: 'session', start: x.start })}
+          use:tip={() => `Played ${new Date(x.start).toLocaleString()}`}>
+          <span>{sessionLabel(x)}</span><small class="num">{x.count.toLocaleString()}</small>
+        </button>
+      {/each}
+    {/if}
     <span class="grow"></span>
     {#if onsettings}
       <button class="add" onclick={onsettings} use:tip={() => tipText('Settings', keyLabel('app.settings'))}>Settings</button>
@@ -335,14 +552,17 @@
         <div class="empty">Nothing matches “{query}”.</div>
       {/if}
       <div style:height="{sorted.length * ROW}px" style:position="relative">
-        {#each visible as t, i (t.path)}
+        {#each visible as t, i (t.key ?? t.path)}
           {@const index = first + i}
           {@const decks = onDeck(t)}
           {@const a = t.analysis}
           <!-- svelte-ignore a11y_interactive_supports_focus (the listbox holds focus; rows are its options) -->
-          <div class="row" class:sel={index === selected} class:missing={t.missing} style:top="{index * ROW}px" role="option" id="track-{index}"
+          <div class="row" class:sel={index === selected} class:missing={t.missing}
+            class:drop-before={dropAt === index} class:drop-after={dropAt === index + 1 && index === sorted.length - 1} style:top="{index * ROW}px" role="option" id="track-{index}"
             aria-selected={index === selected}
-            draggable={!t.missing} ondragstart={(e) => { selectIndex(index); startDrag(e, t); }} ondragend={endDrag}
+            draggable={!t.missing || canReorder} ondragstart={(e) => { selectIndex(index); startDrag(e, t); if (canReorder) e.dataTransfer.effectAllowed = 'copyMove'; }}
+            ondragend={() => { dropAt = null; endDrag(); }} ondragover={(e) => rowDragOver(e, index)} ondrop={rowDrop}
+            ondragleave={(e) => { if (!e.currentTarget.contains(/** @type {Node} */ (e.relatedTarget))) dropAt = null; }}
             onclick={() => { selectIndex(index); scroller.focus({ preventScroll: true }); }} ondblclick={() => autoLoad(t)} onkeydown={() => {}}
             oncontextmenu={(e) => rowMenu(e, t, index)}>
             <span class="ld">{#each decks as d}<b class:b={d === 1} aria-hidden="true">{'AB'[d]}</b>{/each}</span>
@@ -410,6 +630,24 @@
   .item small {
     color: var(--fg-3);
     font-size: 11px;
+  }
+  .h.sec {
+    margin-top: 18px;
+  }
+  .item.name {
+    border: 0;
+    font: inherit;
+    color: var(--fg);
+    background: var(--raise);
+    box-shadow: inset 0 0 0 1px var(--fg-3);
+    user-select: text;
+  }
+  /* Where a dragged row will land in a playlist. */
+  .row.drop-before {
+    box-shadow: inset 0 2px 0 var(--fg-2);
+  }
+  .row.drop-after {
+    box-shadow: inset 0 -2px 0 var(--fg-2);
   }
   .add {
     margin-top: 8px;

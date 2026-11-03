@@ -57,11 +57,68 @@ const MIGRATIONS: &[&str] = &[
          end REAL,
          PRIMARY KEY (track_id, kind, slot)
      );",
+    // 2: playlists and play history.
+    "CREATE TABLE playlists (
+         id INTEGER PRIMARY KEY,
+         name TEXT NOT NULL,
+         position INTEGER NOT NULL
+     );
+     CREATE TABLE playlist_tracks (
+         playlist_id INTEGER NOT NULL REFERENCES playlists(id) ON DELETE CASCADE,
+         track_id INTEGER NOT NULL REFERENCES tracks(id) ON DELETE CASCADE,
+         position INTEGER NOT NULL,
+         PRIMARY KEY (playlist_id, track_id)
+     );
+     CREATE TABLE history (
+         id INTEGER PRIMARY KEY,
+         track_id INTEGER NOT NULL REFERENCES tracks(id) ON DELETE CASCADE,
+         played_at INTEGER NOT NULL
+     );
+     CREATE INDEX history_played_at ON history (played_at);",
 ];
+
+/// Plays further apart than this start a new history session, so a night
+/// that runs past midnight stays one session.
+const SESSION_GAP_MS: i64 = 4 * 60 * 60 * 1000;
 
 const MAIN_CUE: i64 = 0;
 const HOT_CUE: i64 = 1;
 const LOOP: i64 = 2;
+
+/// The columns `row_from` reads, from `tracks`.
+const ROW_COLUMNS: &str = "tracks.path, tracks.title, tracks.artist, tracks.album, tracks.genre,
+     tracks.missing, tracks.analysis_version, tracks.analysis_failed, tracks.duration,
+     tracks.bpm, tracks.key_tonic, tracks.key_minor";
+
+fn row_from(r: &rusqlite::Row<'_>) -> rusqlite::Result<Row> {
+    Ok(Row {
+        path: PathBuf::from(r.get::<_, String>(0)?),
+        tags: Tags {
+            title: r.get(1)?,
+            artist: r.get(2)?,
+            album: r.get(3)?,
+            genre: r.get(4)?,
+        },
+        missing: r.get(5)?,
+        analysis: analysis_from(r, 6)?,
+    })
+}
+
+/// A playlist as the sidebar lists it.
+#[derive(Debug, Clone, PartialEq, serde::Serialize)]
+pub struct Playlist {
+    pub id: i64,
+    pub name: String,
+    pub count: usize,
+}
+
+/// One stretch of playing, as History lists it.
+#[derive(Debug, Clone, PartialEq, serde::Serialize)]
+pub struct Session {
+    /// When its first track was played (ms since 1970). Also its id.
+    pub start: i64,
+    pub count: usize,
+}
 
 /// A file found on disk by a folder scan.
 #[derive(Debug, Clone, PartialEq)]
@@ -277,24 +334,10 @@ impl Db {
 
     /// Every saved track under one of `roots`, missing ones included.
     pub fn tracks(&self, roots: &[PathBuf]) -> rusqlite::Result<Vec<Row>> {
-        let mut st = self.conn.prepare(
-            "SELECT path, title, artist, album, genre, missing, analysis_version,
-                    analysis_failed, duration, bpm, key_tonic, key_minor
-             FROM tracks",
-        )?;
-        let rows = st.query_map([], |r| {
-            Ok(Row {
-                path: PathBuf::from(r.get::<_, String>(0)?),
-                tags: Tags {
-                    title: r.get(1)?,
-                    artist: r.get(2)?,
-                    album: r.get(3)?,
-                    genre: r.get(4)?,
-                },
-                missing: r.get(5)?,
-                analysis: analysis_from(r, 6)?,
-            })
-        })?;
+        let mut st = self
+            .conn
+            .prepare(&format!("SELECT {ROW_COLUMNS} FROM tracks"))?;
+        let rows = st.query_map([], row_from)?;
         let mut out = Vec::new();
         for row in rows {
             let row = row?;
@@ -303,6 +346,158 @@ impl Db {
             }
         }
         Ok(out)
+    }
+
+    pub fn playlists(&self) -> rusqlite::Result<Vec<Playlist>> {
+        let mut st = self.conn.prepare(
+            "SELECT id, name, (SELECT count(*) FROM playlist_tracks WHERE playlist_id = id)
+             FROM playlists ORDER BY position, id",
+        )?;
+        let rows = st.query_map([], |r| {
+            Ok(Playlist {
+                id: r.get(0)?,
+                name: r.get(1)?,
+                count: r.get::<_, i64>(2)? as usize,
+            })
+        })?;
+        rows.collect()
+    }
+
+    /// Adds an empty playlist at the end of the list. Returns its id.
+    pub fn create_playlist(&self, name: &str) -> rusqlite::Result<i64> {
+        self.conn.execute(
+            "INSERT INTO playlists (name, position)
+             VALUES (?1, (SELECT coalesce(max(position), -1) + 1 FROM playlists))",
+            params![name],
+        )?;
+        Ok(self.conn.last_insert_rowid())
+    }
+
+    pub fn rename_playlist(&self, id: i64, name: &str) -> rusqlite::Result<()> {
+        self.conn.execute(
+            "UPDATE playlists SET name = ?2 WHERE id = ?1",
+            params![id, name],
+        )?;
+        Ok(())
+    }
+
+    /// Deletes a playlist. The tracks stay in the library.
+    pub fn delete_playlist(&self, id: i64) -> rusqlite::Result<()> {
+        self.conn
+            .execute("DELETE FROM playlists WHERE id = ?1", params![id])?;
+        Ok(())
+    }
+
+    /// A playlist's tracks, in order.
+    pub fn playlist_tracks(&self, id: i64) -> rusqlite::Result<Vec<Row>> {
+        let mut st = self.conn.prepare(&format!(
+            "SELECT {ROW_COLUMNS} FROM playlist_tracks
+             JOIN tracks ON tracks.id = playlist_tracks.track_id
+             WHERE playlist_id = ?1 ORDER BY playlist_tracks.position"
+        ))?;
+        let rows = st.query_map(params![id], row_from)?;
+        rows.collect()
+    }
+
+    /// Adds tracks to the end of a playlist. Ones already in it stay where
+    /// they are.
+    pub fn add_to_playlist(&self, id: i64, paths: &[PathBuf]) -> rusqlite::Result<()> {
+        let mut order = self.playlist_order(id)?;
+        for p in paths {
+            if !order.contains(p) {
+                order.push(p.clone());
+            }
+        }
+        self.set_playlist_tracks(id, &order)
+    }
+
+    fn playlist_order(&self, id: i64) -> rusqlite::Result<Vec<PathBuf>> {
+        Ok(self
+            .playlist_tracks(id)?
+            .into_iter()
+            .map(|r| r.path)
+            .collect())
+    }
+
+    /// Replaces a playlist's tracks with `paths`, in that order. Used to
+    /// reorder and remove. A path listed twice is kept once, where it first
+    /// appears.
+    pub fn set_playlist_tracks(&self, id: i64, paths: &[PathBuf]) -> rusqlite::Result<()> {
+        let tx = self.conn.unchecked_transaction()?;
+        tx.execute(
+            "DELETE FROM playlist_tracks WHERE playlist_id = ?1",
+            params![id],
+        )?;
+        let mut position = 0i64;
+        for p in paths {
+            let track = self.track_id(p)?;
+            position += tx.execute(
+                "INSERT OR IGNORE INTO playlist_tracks (playlist_id, track_id, position)
+                 VALUES (?1, ?2, ?3)",
+                params![id, track, position],
+            )? as i64;
+        }
+        tx.commit()
+    }
+
+    /// Notes that a track was played on air.
+    pub fn record_play(&self, path: &Path, at: i64) -> rusqlite::Result<()> {
+        let track = self.track_id(path)?;
+        self.conn.execute(
+            "INSERT INTO history (track_id, played_at) VALUES (?1, ?2)",
+            params![track, at],
+        )?;
+        Ok(())
+    }
+
+    /// Plays grouped into sessions, newest first.
+    pub fn sessions(&self) -> rusqlite::Result<Vec<Session>> {
+        let mut st = self
+            .conn
+            .prepare("SELECT played_at FROM history ORDER BY played_at")?;
+        let times: Vec<i64> = st
+            .query_map([], |r| r.get(0))?
+            .collect::<rusqlite::Result<_>>()?;
+        let mut out: Vec<Session> = Vec::new();
+        let mut last = None;
+        for t in times {
+            match (out.last_mut(), last) {
+                (Some(s), Some(l)) if t - l <= SESSION_GAP_MS => s.count += 1,
+                _ => out.push(Session { start: t, count: 1 }),
+            }
+            last = Some(t);
+        }
+        out.reverse();
+        Ok(out)
+    }
+
+    /// The tracks played in the session that started at `start`, in the
+    /// order they were played. A track played twice is listed twice.
+    pub fn session_tracks(&self, start: i64) -> rusqlite::Result<Vec<Row>> {
+        let end = self.session_end(start)?;
+        let mut st = self.conn.prepare(&format!(
+            "SELECT {ROW_COLUMNS} FROM history JOIN tracks ON tracks.id = history.track_id
+             WHERE played_at BETWEEN ?1 AND ?2 ORDER BY played_at, history.id"
+        ))?;
+        let rows = st.query_map(params![start, end], row_from)?;
+        rows.collect()
+    }
+
+    /// The time of the last play in the session starting at `start`.
+    fn session_end(&self, start: i64) -> rusqlite::Result<i64> {
+        let mut st = self
+            .conn
+            .prepare("SELECT played_at FROM history WHERE played_at >= ?1 ORDER BY played_at")?;
+        let times = st.query_map(params![start], |r| r.get::<_, i64>(0))?;
+        let mut end = start;
+        for t in times {
+            let t = t?;
+            if t - end > SESSION_GAP_MS {
+                break;
+            }
+            end = t;
+        }
+        Ok(end)
     }
 
     pub fn analysis(&self, path: &Path) -> rusqlite::Result<Option<Analysis>> {
@@ -571,6 +766,91 @@ mod tests {
             .execute("UPDATE tracks SET analysis_version = 0", [])
             .unwrap();
         assert_eq!(db.analysis(p).unwrap(), None);
+    }
+
+    #[test]
+    fn playlists_keep_their_order_and_skip_duplicates() {
+        let db = Db::open_in_memory().unwrap();
+        let p: Vec<PathBuf> = ["/m/a.mp3", "/m/b.mp3", "/m/c.mp3"]
+            .iter()
+            .map(PathBuf::from)
+            .collect();
+        let warm = db.create_playlist("Warmup").unwrap();
+        let peak = db.create_playlist("Peak").unwrap();
+        db.add_to_playlist(warm, &[p[1].clone(), p[0].clone()])
+            .unwrap();
+        db.add_to_playlist(warm, &[p[0].clone(), p[2].clone()])
+            .unwrap();
+        let order = |id| -> Vec<PathBuf> {
+            db.playlist_tracks(id)
+                .unwrap()
+                .into_iter()
+                .map(|r| r.path)
+                .collect()
+        };
+        assert_eq!(order(warm), [p[1].clone(), p[0].clone(), p[2].clone()]);
+
+        // Reorder and remove in one go.
+        db.set_playlist_tracks(warm, &[p[2].clone(), p[1].clone(), p[2].clone()])
+            .unwrap();
+        assert_eq!(order(warm), [p[2].clone(), p[1].clone()]);
+
+        db.rename_playlist(peak, "Peak time").unwrap();
+        let lists = db.playlists().unwrap();
+        assert_eq!(
+            lists,
+            [
+                Playlist {
+                    id: warm,
+                    name: "Warmup".into(),
+                    count: 2
+                },
+                Playlist {
+                    id: peak,
+                    name: "Peak time".into(),
+                    count: 0
+                }
+            ]
+        );
+        db.delete_playlist(warm).unwrap();
+        assert_eq!(db.playlists().unwrap().len(), 1);
+        // The tracks themselves stay.
+        assert!(db.track_id(&p[0]).is_ok());
+    }
+
+    #[test]
+    fn history_splits_into_sessions_at_long_gaps() {
+        let db = Db::open_in_memory().unwrap();
+        let hour = 60 * 60 * 1000;
+        let (a, b) = (Path::new("/m/a.mp3"), Path::new("/m/b.mp3"));
+        // Friday night, past midnight: one session.
+        db.record_play(a, 22 * hour).unwrap();
+        db.record_play(b, 25 * hour).unwrap();
+        db.record_play(a, 26 * hour).unwrap();
+        // Saturday evening: a new one.
+        db.record_play(b, 44 * hour).unwrap();
+        let sessions = db.sessions().unwrap();
+        assert_eq!(
+            sessions,
+            [
+                Session {
+                    start: 44 * hour,
+                    count: 1
+                },
+                Session {
+                    start: 22 * hour,
+                    count: 3
+                }
+            ]
+        );
+        let titles: Vec<PathBuf> = db
+            .session_tracks(22 * hour)
+            .unwrap()
+            .into_iter()
+            .map(|r| r.path)
+            .collect();
+        assert_eq!(titles, [a, b, a]);
+        assert_eq!(db.session_tracks(44 * hour).unwrap().len(), 1);
     }
 
     #[test]

@@ -30,6 +30,8 @@ export const inTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in
  * @typedef {{ path: string, title: string, artist: string, album: string, genre: string,
  *             folder: string, format: string, missing: boolean,
  *             analysis: TrackAnalysis | null }} LibraryTrack
+ * @typedef {{ id: number, name: string, count: number }} Playlist
+ * @typedef {{ start: number, count: number }} HistorySession
  */
 
 async function createTauriBackend() {
@@ -59,6 +61,27 @@ async function createTauriBackend() {
     removeFolder: (path) => invoke('remove_folder', { path }),
     /** @returns {Promise<LibraryTrack[]>} */
     libraryTracks: (folder) => invoke('library_tracks', { folder: folder ?? null }),
+    /** @returns {Promise<Playlist[]>} */
+    playlists: () => invoke('playlists'),
+    /** @returns {Promise<number>} the new playlist's id */
+    createPlaylist: (name, paths = []) => invoke('create_playlist', { name, paths }),
+    renamePlaylist: (id, name) => invoke('rename_playlist', { id, name }),
+    deletePlaylist: (id) => invoke('delete_playlist', { id }),
+    /** @returns {Promise<LibraryTrack[]>} in playlist order */
+    playlistTracks: (id) => invoke('playlist_tracks', { id }),
+    addToPlaylist: (id, paths) => invoke('add_to_playlist', { id, paths }),
+    /** Replaces a playlist's tracks, in order. */
+    setPlaylistTracks: (id, paths) => invoke('set_playlist_tracks', { id, paths }),
+    /** @returns {Promise<HistorySession[]>} newest first */
+    historySessions: () => invoke('history_sessions'),
+    /** @returns {Promise<LibraryTrack[]>} in the order they were played */
+    sessionTracks: (start) => invoke('session_tracks', { start }),
+    /**
+     * A track has been on air long enough to go into History.
+     * @param {(path: string) => void} fn
+     * @returns {Promise<() => void>} unlisten
+     */
+    onLibraryPlayed: (fn) => listen('library-played', (e) => fn(e.payload)),
     /**
      * A track's length, BPM and key, as the background analyzer finds them.
      * @param {(e: TrackAnalysis & { path: string }) => void} fn
