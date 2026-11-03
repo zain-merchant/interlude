@@ -12,7 +12,6 @@ export const engine = $state({
   /** Meter levels with peak-hold decay, 0..1. */
   deckLevels: [0, 0],
   masterLevels: [0, 0],
-  outputName: '',
 });
 
 /** Loaded track info and waveform bytes per deck. */
@@ -69,7 +68,6 @@ function frame(now) {
 }
 
 export function startEngineLoop() {
-  backend.outputName().then((n) => (engine.outputName = n));
   requestAnimationFrame(frame);
 }
 

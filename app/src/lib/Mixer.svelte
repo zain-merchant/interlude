@@ -98,12 +98,20 @@
     padding: 0;
     display: grid;
     place-items: center;
+    cursor: pointer;
+    background: var(--panel-2);
+    border: 1px solid var(--line-2);
+    border-radius: var(--radius-md);
+    transition: background-color 0.12s, border-color 0.12s;
+  }
+  .pfl:hover {
+    border-color: color-mix(in oklch, var(--text) 25%, transparent);
   }
   .pfl svg {
     width: 16px;
     height: 16px;
     fill: none;
-    stroke: var(--muted);
+    stroke: var(--muted-foreground);
     stroke-width: 2;
     stroke-linejoin: round;
   }

@@ -3,9 +3,11 @@
   import Fader from './Fader.svelte';
   import { untrack } from 'svelte';
   import { engine, tracks, control } from './engine.svelte.js';
+  import { dropTarget } from './dnd.svelte.js';
+  import { Button } from './components/ui/button/index.js';
 
-  /** @type {{ deck: number }} */
-  let { deck } = $props();
+  /** @type {{ deck: number, onload: (deck: number, track: any) => void }} */
+  let { deck, onload } = $props();
 
   const name = $derived(deck === 0 ? 'A' : 'B');
   const accent = $derived(deck === 0 ? 'var(--deck-a)' : 'var(--deck-b)');
@@ -62,7 +64,8 @@
   const bend = (v) => () => control({ type: 'setBend', deck, bend: v });
 </script>
 
-<section class="deck" class:mirror={deck === 1} style:--accent={accent}>
+<section class="deck" class:mirror={deck === 1} style:--deck-accent={accent} style:--drop-color={accent}
+  use:dropTarget={{ ondrop: (track) => onload(deck, track), blocked: () => d.playing }}>
   <div class="main">
     <header>
       <span class="badge">{name}</span>
@@ -72,7 +75,7 @@
           <div class="artist">{t.artist || ' '}</div>
         {:else}
           <div class="name dim">Empty deck</div>
-          <div class="artist">Load a track from the library below</div>
+          <div class="artist">Drag a track here from the library</div>
         {/if}
       </div>
       <div class="bpm" title={d.bpm > 0 ? `Track tempo ${d.bpm.toFixed(2)} BPM` : t ? 'No clear beat found' : ''}>
@@ -103,11 +106,11 @@
           <svg viewBox="0 0 24 24"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z" /></svg>
         {/if}
       </button>
-      <button class="sync" onclick={() => control({ type: 'sync', deck })} disabled={!t || !d.bpm || !engine.decks[1 - deck].bpm}
-        title="Match tempo and beats to deck {deck === 0 ? 'B' : 'A'}">SYNC</button>
+      <Button variant="outline" class="sync" onclick={() => control({ type: 'sync', deck })} disabled={!t || !d.bpm || !engine.decks[1 - deck].bpm}
+        title="Match tempo and beats to deck {deck === 0 ? 'B' : 'A'}">SYNC</Button>
       <div class="nudge">
-        <button onpointerdown={bend(-0.04)} onpointerup={bend(0)} onpointerleave={bend(0)} title="Nudge slower (hold)" aria-label="Nudge slower">‹‹</button>
-        <button onpointerdown={bend(0.04)} onpointerup={bend(0)} onpointerleave={bend(0)} title="Nudge faster (hold)" aria-label="Nudge faster">››</button>
+        <Button variant="ghost" size="icon" class="touch-none text-muted-foreground" onpointerdown={bend(-0.04)} onpointerup={bend(0)} onpointerleave={bend(0)} title="Nudge slower (hold)" aria-label="Nudge slower">‹‹</Button>
+        <Button variant="ghost" size="icon" class="touch-none text-muted-foreground" onpointerdown={bend(0.04)} onpointerup={bend(0)} onpointerleave={bend(0)} title="Nudge faster (hold)" aria-label="Nudge faster">››</Button>
       </div>
     </div>
   </div>
@@ -117,7 +120,7 @@
     <div class="pitch-fader">
       <Fader vertical value={pitch} min={-1} max={1} reset={0} label="Deck {name} pitch" onchange={setPitch} />
     </div>
-    <button class="range" onclick={cycleRange} title="Pitch range">±{Math.round(range * 100)}</button>
+    <Button variant="ghost" size="xs" class="text-muted-foreground" onclick={cycleRange} title="Pitch range">±{Math.round(range * 100)}</Button>
   </div>
 </section>
 
@@ -158,7 +161,7 @@
     border-radius: 8px;
     font-weight: 700;
     color: #0b0c0f;
-    background: var(--accent);
+    background: var(--deck-accent);
   }
   .title {
     flex: 1;
@@ -172,10 +175,10 @@
     text-overflow: ellipsis;
   }
   .name.dim {
-    color: var(--muted);
+    color: var(--muted-foreground);
   }
   .artist {
-    color: var(--muted);
+    color: var(--muted-foreground);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -191,7 +194,7 @@
     font-weight: 600;
   }
   .bpm small {
-    color: var(--muted);
+    color: var(--muted-foreground);
     font-size: 10px;
     letter-spacing: 0.08em;
   }
@@ -202,7 +205,7 @@
     font-weight: 500;
   }
   .remain {
-    color: var(--muted);
+    color: var(--muted-foreground);
   }
   .overview {
     flex: 1;
@@ -223,6 +226,10 @@
   }
   .cue,
   .play {
+    cursor: pointer;
+    background: var(--panel-2);
+    border-style: solid;
+    transition: background-color 0.12s, border-color 0.12s, box-shadow 0.12s;
     width: 64px;
     height: 64px;
     border-radius: 50%;
@@ -240,6 +247,7 @@
   .cue.lit {
     background: #3a2a0c;
     border-color: #ffb02e;
+    box-shadow: 0 0 18px -4px #ffb02e;
   }
   .play svg {
     width: 26px;
@@ -252,28 +260,22 @@
   .play.lit {
     background: #0f2e1d;
     border-color: var(--ok);
+    box-shadow: 0 0 18px -4px var(--ok);
   }
   button:disabled {
     opacity: 0.4;
     cursor: default;
   }
-  .sync {
-    height: 34px;
-    padding: 0 12px;
+  .transport :global(.sync) {
     font-weight: 700;
     font-size: 12px;
     letter-spacing: 0.06em;
-    color: var(--accent);
+    color: var(--deck-accent);
   }
   .nudge {
     margin-left: auto;
     display: flex;
     gap: 6px;
-  }
-  .nudge button {
-    width: 40px;
-    color: var(--muted);
-    touch-action: none;
   }
   .pitch {
     display: flex;
@@ -283,7 +285,7 @@
   }
   .rate {
     font-size: 12px;
-    color: var(--muted);
+    color: var(--muted-foreground);
   }
   .rate.off {
     color: var(--text);
@@ -292,10 +294,5 @@
     flex: 1;
     display: flex;
     min-height: 100px;
-  }
-  .range {
-    font-size: 11px;
-    padding: 3px 6px;
-    color: var(--muted);
   }
 </style>
