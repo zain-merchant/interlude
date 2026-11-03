@@ -154,7 +154,7 @@ fn entries(dir: &Path) -> Vec<(PathBuf, u64, SystemTime)> {
 /// The 16-bit sample of channel `c` at `frame`, as stored in `stems`.
 fn sample(stems: &Stems, frame: usize, c: usize) -> i16 {
     let (l, r) = stems.get(frame, c / 2);
-    let x = if c % 2 == 0 { l } else { r };
+    let x = if c.is_multiple_of(2) { l } else { r };
     (x * 16384.0).round().clamp(-32768.0, 32767.0) as i16
 }
 
@@ -204,8 +204,8 @@ pub(crate) fn decode(bytes: &[u8], stems: &Stems) -> Result<(), &'static str> {
         for c in 0..CHANNELS {
             one.clear();
             decode_block(&mut r, len, &mut one)?;
-            for (i, &x) in one.iter().enumerate() {
-                block[i][c] = x;
+            for (frame, &x) in block.iter_mut().zip(&one) {
+                frame[c] = x;
             }
         }
         for (i, s) in block.iter().take(len).enumerate() {

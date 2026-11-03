@@ -3,6 +3,7 @@
   import Fader from './Fader.svelte';
   import FxUnit from './FxUnit.svelte';
   import Performance from './Performance.svelte';
+  import Stems from './Stems.svelte';
   import { untrack } from 'svelte';
   import { engine, tracks, control, nextGrid, setGrid } from './engine.svelte.js';
   import { pushEdit } from './undo.svelte.js';
@@ -13,8 +14,8 @@
   import { announce } from './announce.svelte.js';
   import { keyName, keyLongName, camelot, playingKey } from './key.js';
 
-  /** @type {{ deck: number, onload: (deck: number, track: any) => void, onreveal: (path: string) => void }} */
-  let { deck, onload, onreveal } = $props();
+  /** @type {{ deck: number, onload: (deck: number, track: any) => void, onreveal: (path: string) => void, onsettings?: (page: string) => void }} */
+  let { deck, onload, onreveal, onsettings } = $props();
 
   const name = $derived(deck === 0 ? 'A' : 'B');
 
@@ -74,9 +75,10 @@
     { id: 'cues', label: 'Cues' },
     { id: 'loop', label: 'Loop' },
     { id: 'fx', label: 'FX' },
+    { id: 'stems', label: 'Stems' },
   ];
   const storageKey = () => `oss-dj.deckMode.${deck}`;
-  /** @type {'cues' | 'loop' | 'fx'} */
+  /** @type {'cues' | 'loop' | 'fx' | 'stems'} */
   let mode = $state('cues');
   try {
     const saved = localStorage.getItem(storageKey());
@@ -210,7 +212,7 @@
       <span class="el num"><span class="sr">Elapsed </span>{fmt(d.position)}</span>
       <div class="modes" role="tablist" aria-label="Deck {name} controls" tabindex="-1" onkeydown={modeKey}>
         {#each MODES as m}
-          {@const busy = (m.id === 'loop' && d.looping) || (m.id === 'fx' && (d.fx?.on || Math.abs(d.filter ?? 0) >= 0.02))}
+          {@const busy = (m.id === 'loop' && d.looping) || (m.id === 'fx' && (d.fx?.on || Math.abs(d.filter ?? 0) >= 0.02)) || (m.id === 'stems' && (d.stems ?? 15) !== 15)}
           <button role="tab" class:on={mode === m.id} aria-selected={mode === m.id} tabindex={mode === m.id ? 0 : -1}
             onclick={() => setMode(m.id)} use:tip={() => (busy ? `${m.label} (active)` : m.label)}>
             {m.label}{#if busy}<i aria-label="active"></i>{/if}
@@ -223,6 +225,8 @@
     <div class="strip" role="tabpanel" aria-label={MODES.find((m) => m.id === mode)?.label}>
       {#if mode === 'fx'}
         <FxUnit {deck} />
+      {:else if mode === 'stems'}
+        <Stems {deck} onsettings={() => onsettings?.('stems')} />
       {:else}
         <Performance {deck} show={mode === 'loop' ? 'loop' : 'cues'} />
       {/if}

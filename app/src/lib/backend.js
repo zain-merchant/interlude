@@ -61,6 +61,14 @@ async function createTauriBackend() {
     loadSample: (slot, path) => invoke('load_sample', { slot, path }),
     /** @returns {Promise<TrackInfo>} */
     loadTrack: (deck, path) => invoke('load_track', { deck, path }),
+    /** Waveform bytes of what a deck plays with the stems in `mask` on. @returns {Promise<Uint8Array>} */
+    stemsWaveform: async (deck, mask) => new Uint8Array(await invoke('stems_waveform', { deck, mask })),
+    /** The Stems settings page. */
+    stemsInfo: () => invoke('stems_info'),
+    /** @param {{ enabled?: boolean, cacheGb?: number, accelerate?: boolean }} change */
+    setStems: (change) => invoke('set_stems', change),
+    clearStemsCache: () => invoke('clear_stems_cache'),
+    downloadStemsModel: () => invoke('download_stems_model'),
     /**
      * Fixes the beatgrid of a deck's track by hand (saved, and kept from
      * analysis), or with null goes back to the detected one.
