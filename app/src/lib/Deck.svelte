@@ -355,7 +355,6 @@
     text-align: right;
     border-radius: 4px;
     box-shadow: 0 0 0 1px var(--fg-3);
-    user-select: text;
   }
   .bpm .unit {
     margin-top: 6px;

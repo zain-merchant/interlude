@@ -101,9 +101,21 @@
     line-height: 1.35;
     font-feature-settings: 'tnum' 1;
     -webkit-font-smoothing: antialiased;
+    /* A desktop app: nothing selects on drag or long press except text
+       fields. WebKit (the macOS webview) only reads the prefixed form. */
+    -webkit-user-select: none;
     user-select: none;
+    -webkit-touch-callout: none;
+    cursor: default;
     /* Scrolls only when the interface is zoomed past what the window fits. */
     overflow: auto;
+  }
+  input:not([type='checkbox']):not([type='radio']):not([type='range']),
+  textarea,
+  [contenteditable='true'] {
+    -webkit-user-select: text;
+    user-select: text;
+    cursor: text;
   }
 }
 
