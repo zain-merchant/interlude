@@ -9,7 +9,7 @@
 //! soonest goes first. Finished stems are saved to a cache on disk.
 //!
 //! The separation model is HTDemucs (Meta, MIT licence), run through ONNX
-//! Runtime: on a Mac on the GPU and Neural Engine via Core ML.
+//! Runtime on the CPU.
 
 pub mod cache;
 pub mod download;
@@ -48,10 +48,10 @@ impl From<ort::Error<ort::session::builder::SessionBuilder>> for Error {
 /// 32-bit). Parity-checked against Meta's PyTorch model by its exporter.
 pub const MODEL_ID: &str = "htdemucs-v4";
 pub const MODEL_FILE: &str = "htdemucs_fp16weights.onnx";
-pub const MODEL_URL: &str =
-    "https://huggingface.co/StemSplitio/htdemucs-onnx/resolve/main/htdemucs_fp16weights.onnx";
-/// Filled in from the published file; a mismatch refuses the download.
-pub const MODEL_SHA256: &str = "";
+/// Pinned to a commit, so the file can't change under the hash.
+pub const MODEL_URL: &str = "https://huggingface.co/StemSplitio/htdemucs-onnx/resolve/d54ed9eb60e258ea82131c6ee14578628816456a/htdemucs_fp16weights.onnx";
+/// SHA-256 of the file at [`MODEL_URL`]; a mismatch refuses the download.
+pub const MODEL_SHA256: &str = "d05c269d0178d2a72ad484b10b11dd370193fc923201c3b27a99f848745db70a";
 
 /// How the splitter should run. Changing it takes effect on the next region.
 #[derive(Debug, Clone, PartialEq)]
@@ -60,14 +60,10 @@ pub struct Settings {
     pub enabled: bool,
     /// The model file, if it's been downloaded.
     pub model: Option<PathBuf>,
-    /// Use the GPU and Neural Engine where there is one.
-    pub accelerate: bool,
     /// Where finished stems are kept, and how many bytes they may take
     /// (0 turns the cache off).
     pub cache_dir: Option<PathBuf>,
     pub cache_limit: u64,
-    /// Where Core ML keeps its compiled model.
-    pub compiled_dir: Option<PathBuf>,
 }
 
 impl Default for Settings {
@@ -75,10 +71,8 @@ impl Default for Settings {
         Self {
             enabled: true,
             model: None,
-            accelerate: true,
             cache_dir: None,
             cache_limit: 5 * 1024 * 1024 * 1024,
-            compiled_dir: None,
         }
     }
 }
@@ -90,7 +84,7 @@ pub enum Status {
     Off,
     /// The model hasn't been downloaded yet.
     NeedsModel,
-    /// Getting the model ready (the first time on a Mac, Core ML compiles
+    /// Getting the model ready.
     /// it, which takes a while).
     Starting,
     /// Splitting; this share of the track is ready.
@@ -173,8 +167,7 @@ impl Splitter {
     pub fn configure(&self, settings: Settings) {
         let mut st = self.lock();
         if st.settings != settings {
-            let model_changed = st.settings.model != settings.model
-                || st.settings.accelerate != settings.accelerate;
+            let model_changed = st.settings.model != settings.model;
             st.settings = settings;
             if model_changed {
                 st.generation += 1;
@@ -277,7 +270,7 @@ enum Task {
         track: Arc<Track>,
     },
     /// Load the model.
-    LoadModel(PathBuf, bool, Option<PathBuf>, u64),
+    LoadModel(PathBuf, u64),
 }
 
 struct Worker {
@@ -312,6 +305,9 @@ impl Worker {
                     if let Some(t) = self.pick(&st) {
                         break t;
                     }
+                    // Nothing to split: give back the 4 to 5 GB the model
+                    // holds while it runs. Loading it again takes a second.
+                    self.model = None;
                     st = shared.wake.wait(st).unwrap_or_else(|e| e.into_inner());
                 }
             };
@@ -343,12 +339,7 @@ impl Worker {
         }
         if self.model.is_none() || self.model_generation != st.generation {
             let path = st.settings.model.clone()?;
-            return Some(Task::LoadModel(
-                path,
-                st.settings.accelerate,
-                st.settings.compiled_dir.clone(),
-                st.generation,
-            ));
+            return Some(Task::LoadModel(path, st.generation));
         }
         // The deck whose ready audio runs out soonest goes first.
         let mut best: Option<(f64, Task)> = None;
@@ -420,8 +411,8 @@ impl Worker {
                     job.progress = Some(p);
                 }
             }
-            Task::LoadModel(path, accelerate, compiled, generation) => {
-                let loaded = Model::load(&path, accelerate, compiled.as_deref());
+            Task::LoadModel(path, generation) => {
+                let loaded = Model::load(&path);
                 let mut st = lock(&shared);
                 if st.generation != generation {
                     return;
