@@ -2,13 +2,22 @@
 //!
 //! The stream is built and owned by a dedicated thread, because cpal streams
 //! are not `Send` on every platform. Dropping [`AudioOutput`] stops it.
+//!
+//! The same thread watches the stream. If the device disappears (a USB
+//! cable is pulled), the engine stops rendering, so every deck holds its
+//! place, and the thread waits for that device to come back and carries on
+//! from where it left off. [`AudioOutput::status`] says which of the two is
+//! happening, and [`AudioOutput::use_default`] gives up waiting and moves to
+//! the system's default output instead.
 
-use std::sync::mpsc;
+use std::sync::atomic::{AtomicU64, AtomicU8, Ordering};
+use std::sync::{mpsc, Arc, Mutex};
 use std::thread::JoinHandle;
+use std::time::{Duration, Instant};
 
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 
-use crate::{new_engine, EngineHandle, MAX_BLOCK_FRAMES};
+use crate::{new_engine, Engine, EngineHandle, MAX_BLOCK_FRAMES};
 
 #[derive(Debug, thiserror::Error)]
 pub enum OutputError {
@@ -18,17 +27,64 @@ pub enum OutputError {
     Device(String),
 }
 
+/// Whether the output is playing, or waiting for its device to come back.
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
+#[cfg_attr(
+    feature = "serde",
+    serde(
+        tag = "state",
+        rename_all = "camelCase",
+        rename_all_fields = "camelCase"
+    )
+)]
+pub enum OutputStatus {
+    Connected {
+        device: String,
+        sample_rate: u32,
+    },
+    /// The device went away. Decks are held until it returns, or until
+    /// [`AudioOutput::use_default`] switches to `fallback`.
+    Lost {
+        device: String,
+        /// The system default output, if there is one to switch to.
+        fallback: Option<String>,
+    },
+}
+
+enum Msg {
+    UseDefault,
+}
+
 pub struct AudioOutput {
-    stop: Option<mpsc::Sender<()>>,
+    msgs: Option<mpsc::Sender<Msg>>,
     thread: Option<JoinHandle<()>>,
+    status: Arc<Mutex<OutputStatus>>,
+    /// The device the output first opened.
     pub device_name: String,
+    /// The engine's sample rate. A reconnected device runs at the same rate.
     pub sample_rate: u32,
     pub channels: u16,
 }
 
+impl AudioOutput {
+    pub fn status(&self) -> OutputStatus {
+        self.status.lock().expect("status lock").clone()
+    }
+
+    /// Stops waiting for a lost device and plays through the system default
+    /// output instead. Does nothing while connected.
+    pub fn use_default(&self) {
+        if let Some(tx) = &self.msgs {
+            let _ = tx.send(Msg::UseDefault);
+        }
+    }
+}
+
 impl Drop for AudioOutput {
     fn drop(&mut self) {
-        self.stop.take();
+        // Closing the channel tells the thread to stop.
+        self.msgs.take();
         if let Some(t) = self.thread.take() {
             let _ = t.join();
         }
@@ -43,96 +99,170 @@ pub fn start_default() -> Result<(AudioOutput, EngineHandle), OutputError> {
     start_preferring(&[])
 }
 
+/// What the error callback saw, read by the watching thread.
+const OK: u8 = 0;
+const GONE: u8 = 1;
+const REBUILD: u8 = 2;
+
+/// How often the watching thread checks on the stream.
+const TICK: Duration = Duration::from_millis(250);
+/// A stream whose callback hasn't run for this long is treated as lost, for
+/// backends that go quiet instead of reporting an error.
+const STALL: Duration = Duration::from_secs(2);
+
+/// A running stream and what the watching thread needs to keep an eye on it.
+struct Live {
+    _stream: cpal::Stream,
+    id: Option<cpal::DeviceId>,
+    name: String,
+    channels: u16,
+    callbacks: Arc<AtomicU64>,
+    event: Arc<AtomicU8>,
+}
+
+fn label(d: &cpal::Device) -> String {
+    d.description()
+        .map(|d| d.to_string())
+        .unwrap_or_else(|_| "default".into())
+}
+
+/// The system default output as a concrete device. A stream built from the
+/// default device itself may silently follow the system to a new default
+/// (from a DJ interface to laptop speakers, mid-set); a concrete device
+/// reports that it went away instead, so the app can say so.
+fn default_device(host: &cpal::Host) -> Option<cpal::Device> {
+    let d = host.default_output_device()?;
+    d.id()
+        .ok()
+        .and_then(|id| host.device_by_id(&id))
+        .or(Some(d))
+}
+
+/// Opens `device` at `sample_rate` and renders `engine` into it.
+fn open(
+    device: &cpal::Device,
+    sample_rate: u32,
+    engine: &Arc<Mutex<Engine>>,
+) -> Result<Live, OutputError> {
+    let default = device
+        .default_output_config()
+        .map_err(|e| OutputError::Device(e.to_string()))?;
+    let channels = default.channels();
+    let config = cpal::StreamConfig {
+        channels,
+        sample_rate,
+        buffer_size: cpal::BufferSize::Default,
+    };
+
+    let callbacks = Arc::new(AtomicU64::new(0));
+    let event = Arc::new(AtomicU8::new(OK));
+    let mut master = vec![0f32; MAX_BLOCK_FRAMES * 2];
+    let mut cue = vec![0f32; MAX_BLOCK_FRAMES * 2];
+    let ch = channels as usize;
+    let engine = engine.clone();
+    let (count, ev) = (callbacks.clone(), event.clone());
+
+    let stream = device
+        .build_output_stream(
+            config,
+            move |data: &mut [f32], _: &cpal::OutputCallbackInfo| {
+                count.fetch_add(1, Ordering::Relaxed);
+                // Only one stream exists at a time and the watching thread
+                // only takes the lock while no stream is running, so this
+                // never waits; it is a single atomic swap.
+                let Ok(mut engine) = engine.try_lock() else {
+                    data.fill(0.0);
+                    return;
+                };
+                for out in data.chunks_mut(MAX_BLOCK_FRAMES * ch) {
+                    let frames = out.len() / ch;
+                    let (m, c) = (&mut master[..frames * 2], &mut cue[..frames * 2]);
+                    engine.process(m, c);
+                    engine.meter_master(m);
+                    for (i, f) in out.chunks_exact_mut(ch).enumerate() {
+                        f.fill(0.0);
+                        f[0] = m[i * 2];
+                        if ch > 1 {
+                            f[1] = m[i * 2 + 1];
+                        }
+                        if ch >= 4 {
+                            f[2] = c[i * 2];
+                            f[3] = c[i * 2 + 1];
+                        }
+                    }
+                }
+            },
+            move |err| match err.kind() {
+                cpal::ErrorKind::DeviceNotAvailable => ev.store(GONE, Ordering::Relaxed),
+                cpal::ErrorKind::StreamInvalidated => ev.store(REBUILD, Ordering::Relaxed),
+                _ => eprintln!("audio stream error: {err}"),
+            },
+            None,
+        )
+        .map_err(|e| OutputError::Device(e.to_string()))?;
+    stream
+        .play()
+        .map_err(|e| OutputError::Device(e.to_string()))?;
+    Ok(Live {
+        _stream: stream,
+        id: device.id().ok(),
+        name: label(device),
+        channels,
+        callbacks,
+        event,
+    })
+}
+
 /// Like [`start_default`], but uses the first output device whose name
 /// contains one of `preferred` (case-insensitive), such as a DJ
 /// controller's built-in sound card, when one is plugged in.
 pub fn start_preferring(preferred: &[&str]) -> Result<(AudioOutput, EngineHandle), OutputError> {
     let preferred: Vec<String> = preferred.iter().map(|p| p.to_lowercase()).collect();
     let (ready_tx, ready_rx) = mpsc::channel();
-    let (stop_tx, stop_rx) = mpsc::channel::<()>();
+    let (msg_tx, msg_rx) = mpsc::channel::<Msg>();
+    let status = Arc::new(Mutex::new(OutputStatus::Connected {
+        device: String::new(),
+        sample_rate: 0,
+    }));
+    let status2 = status.clone();
 
     let thread = std::thread::Builder::new()
         .name("audio-output".into())
         .spawn(move || {
-            let result = (|| {
-                let host = cpal::default_host();
-                let label = |d: &cpal::Device| {
-                    d.description()
-                        .map(|d| d.to_string())
-                        .unwrap_or_else(|_| "default".into())
-                };
+            let host = cpal::default_host();
+            let first = (|| {
                 let wanted = host.output_devices().ok().and_then(|mut all| {
                     all.find(|d| {
                         let name = label(d).to_lowercase();
                         preferred.iter().any(|p| name.contains(p))
                     })
                 });
-                let device = match wanted {
-                    Some(d) => d,
-                    None => host.default_output_device().ok_or(OutputError::NoDevice)?,
-                };
-                let name = label(&device);
-                let default = device
+                let device = wanted
+                    .or_else(|| default_device(&host))
+                    .ok_or(OutputError::NoDevice)?;
+                let sample_rate = device
                     .default_output_config()
-                    .map_err(|e| OutputError::Device(e.to_string()))?;
-                let channels = default.channels();
-                let sample_rate = default.sample_rate();
-                let config = cpal::StreamConfig {
-                    channels,
-                    sample_rate,
-                    // Ask for a small buffer for low latency; fall back to
-                    // the device default if refused.
-                    buffer_size: cpal::BufferSize::Default,
-                };
-
-                let (mut engine, handle) = new_engine(sample_rate);
-                let mut master = vec![0f32; MAX_BLOCK_FRAMES * 2];
-                let mut cue = vec![0f32; MAX_BLOCK_FRAMES * 2];
-                let ch = channels as usize;
-
-                let stream = device
-                    .build_output_stream(
-                        config,
-                        move |data: &mut [f32], _: &cpal::OutputCallbackInfo| {
-                            for out in data.chunks_mut(MAX_BLOCK_FRAMES * ch) {
-                                let frames = out.len() / ch;
-                                let (m, c) = (&mut master[..frames * 2], &mut cue[..frames * 2]);
-                                engine.process(m, c);
-                                engine.meter_master(m);
-                                for (i, f) in out.chunks_exact_mut(ch).enumerate() {
-                                    f.fill(0.0);
-                                    f[0] = m[i * 2];
-                                    if ch > 1 {
-                                        f[1] = m[i * 2 + 1];
-                                    }
-                                    if ch >= 4 {
-                                        f[2] = c[i * 2];
-                                        f[3] = c[i * 2 + 1];
-                                    }
-                                }
-                            }
-                        },
-                        |err| eprintln!("audio stream error: {err}"),
-                        None,
-                    )
-                    .map_err(|e| OutputError::Device(e.to_string()))?;
-                stream
-                    .play()
-                    .map_err(|e| OutputError::Device(e.to_string()))?;
-                Ok((stream, handle, name, sample_rate, channels))
+                    .map_err(|e| OutputError::Device(e.to_string()))?
+                    .sample_rate();
+                let (engine, handle) = new_engine(sample_rate);
+                let engine = Arc::new(Mutex::new(engine));
+                let live = open(&device, sample_rate, &engine)?;
+                Ok((engine, handle, live, sample_rate))
             })();
-
-            match result {
-                Ok((stream, handle, name, sr, ch)) => {
-                    let _ = ready_tx.send(Ok((handle, name, sr, ch)));
-                    // Park until the AudioOutput is dropped.
-                    let _ = stop_rx.recv();
-                    drop(stream);
-                }
+            let (engine, handle, live, sample_rate) = match first {
+                Ok(v) => v,
                 Err(e) => {
                     let _ = ready_tx.send(Err(e));
+                    return;
                 }
-            }
+            };
+            let set = |s: OutputStatus| *status2.lock().expect("status lock") = s;
+            set(OutputStatus::Connected {
+                device: live.name.clone(),
+                sample_rate,
+            });
+            let _ = ready_tx.send(Ok((handle, live.name.clone(), sample_rate, live.channels)));
+            watch(&host, live, sample_rate, &engine, &msg_rx, set);
         })
         .map_err(|e| OutputError::Device(e.to_string()))?;
 
@@ -141,12 +271,107 @@ pub fn start_preferring(preferred: &[&str]) -> Result<(AudioOutput, EngineHandle
         .map_err(|_| OutputError::Device("audio thread exited".into()))??;
     Ok((
         AudioOutput {
-            stop: Some(stop_tx),
+            msgs: Some(msg_tx),
             thread: Some(thread),
+            status,
             device_name,
             sample_rate,
             channels,
         },
         handle,
     ))
+}
+
+/// Keeps the output running until the [`AudioOutput`] is dropped:
+/// watches the live stream, and when its device goes away, holds the decks
+/// and waits for it (or for [`Msg::UseDefault`]).
+fn watch(
+    host: &cpal::Host,
+    mut live: Live,
+    sample_rate: u32,
+    engine: &Arc<Mutex<Engine>>,
+    msgs: &mpsc::Receiver<Msg>,
+    set: impl Fn(OutputStatus),
+) {
+    loop {
+        // Connected: watch for an error or a stall.
+        let mut seen = live.callbacks.load(Ordering::Relaxed);
+        let mut last = Instant::now();
+        let lost = loop {
+            match msgs.recv_timeout(TICK) {
+                Err(mpsc::RecvTimeoutError::Disconnected) => return,
+                Ok(Msg::UseDefault) | Err(mpsc::RecvTimeoutError::Timeout) => {}
+            }
+            let n = live.callbacks.load(Ordering::Relaxed);
+            if n != seen {
+                seen = n;
+                last = Instant::now();
+            }
+            match live.event.swap(OK, Ordering::Relaxed) {
+                GONE => break true,
+                REBUILD => break false,
+                _ if last.elapsed() > STALL => break true,
+                _ => {}
+            }
+        };
+        let (id, name) = (live.id.clone(), live.name.clone());
+        drop(live);
+
+        if !lost {
+            // Same device, new settings (its sample rate changed, say).
+            let found = id.as_ref().and_then(|id| host.device_by_id(id));
+            if let Some(Ok(l)) = found.map(|d| open(&d, sample_rate, engine)) {
+                live = l;
+                continue;
+            }
+        }
+
+        // Lost: wait for the device to come back.
+        eprintln!("audio device {name} went away; waiting for it to return");
+        let fallback = || default_device(host).map(|d| label(&d));
+        let mut offered = fallback();
+        set(OutputStatus::Lost {
+            device: name.clone(),
+            fallback: offered.clone(),
+        });
+        let mut use_default = false;
+        live = loop {
+            // No stream is running, so take the engine here: apply queued
+            // commands (fader moves, loads) without advancing any deck, so
+            // the queue never fills and every deck stays where it was.
+            if let Ok(mut e) = engine.lock() {
+                e.process(&mut [], &mut []);
+            }
+            match msgs.recv_timeout(Duration::from_millis(500)) {
+                Err(mpsc::RecvTimeoutError::Disconnected) => return,
+                Ok(Msg::UseDefault) => use_default = true,
+                Err(mpsc::RecvTimeoutError::Timeout) => {}
+            }
+            let device = if use_default {
+                default_device(host)
+            } else {
+                host.output_devices().ok().and_then(|mut all| {
+                    all.find(|d| d.id().ok() == id || (id.is_none() && label(d) == name))
+                })
+            };
+            if let Some(d) = device {
+                match open(&d, sample_rate, engine) {
+                    Ok(l) => break l,
+                    Err(e) => eprintln!("can't reopen {}: {e}", label(&d)),
+                }
+            }
+            let now = fallback();
+            if now != offered {
+                offered = now;
+                set(OutputStatus::Lost {
+                    device: name.clone(),
+                    fallback: offered.clone(),
+                });
+            }
+        };
+        set(OutputStatus::Connected {
+            device: live.name.clone(),
+            sample_rate,
+        });
+    }
 }

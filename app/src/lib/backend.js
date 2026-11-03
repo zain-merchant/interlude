@@ -10,10 +10,18 @@ export const inTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in
 /**
  * @typedef {{ loaded: boolean, playing: boolean, position: number, duration: number,
  *             cue: number, rate: number, speed: number, bpm: number,
- *             generation: number, peak: number, filter?: number,
+ *             key: { tonic: number, minor: boolean } | null, keylock: boolean,
+ *             generation: number, peak: number, hotCues: (number | null)[],
+ *             loopIn: number | null, loopOut: number | null, looping: boolean,
+ *             loopBeats: number, filter?: number,
  *             fx?: { kind: 'echo' | 'reverb' | 'flanger' | 'phaser', on: boolean, level: number, beats: number } }} DeckState
  * @typedef {{ active: boolean, seconds: number, path: string | null, droppedSeconds: number, error: string | null }} RecordingStatus
- * @typedef {{ decks: DeckState[], deckPeaks: number[], masterPeak: number[], recording?: RecordingStatus }} EngineState
+ * @typedef {{ state: 'connected', device: string, sampleRate: number }
+ *         | { state: 'lost', device: string, fallback: string | null }
+ *         | { state: 'none' }} AudioStatus
+ * @typedef {{ decks: DeckState[], deckPeaks: number[], masterPeak: number[],
+ *             mixer?: { crossfader: number, cueMix: number, masterDb: number },
+ *             audio?: AudioStatus, recording?: RecordingStatus }} EngineState
  * @typedef {{ title: string, path: string, duration: number, sampleRate: number,
  *             binsPerSec: number, binCount: number,
  *             beatgrid: { bpm: number, firstBeat: number } | null }} TrackInfo
@@ -35,6 +43,8 @@ async function createTauriBackend() {
     startRecording: () => invoke('start_recording'),
     /** @returns {Promise<RecordingStatus>} */
     stopRecording: () => invoke('stop_recording'),
+    /** Stops waiting for a disconnected audio device and uses the system default. */
+    useDefaultOutput: () => invoke('use_default_output'),
     /** @returns {Promise<TrackInfo>} */
     loadTrack: (deck, path) => invoke('load_track', { deck, path }),
     /** @returns {Promise<Uint8Array>} */

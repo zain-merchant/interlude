@@ -1,6 +1,7 @@
 // A simulated engine for running the UI in a plain browser. It mirrors the
 // real engine's behaviour closely enough for design work: positions advance,
-// cue works CDJ-style, meters move, and tracks have believable waveforms.
+// cue works CDJ-style, hot cues, loops and beat jumps behave like the
+// engine's, meters move, and tracks have believable waveforms.
 
 const BINS_PER_SEC = 172.27;
 
@@ -55,6 +56,14 @@ function fakeWaveform(seed, duration, bpm) {
   return out;
 }
 
+const HOT_CUES = 8;
+const freshLoops = () => ({
+  hotCues: Array(HOT_CUES).fill(null), previewHot: null, previewReturn: 0,
+  loopIn: null, loopOut: null, looping: false, loopBeats: 4,
+});
+const beatLen = (d) => 60 / d.bpm;
+const clampBeats = (b) => Math.max(1 / 32, Math.min(64, b));
+
 export function createMockBackend() {
   const tracks = [];
   for (let i = 0; i < 48; i++) {
@@ -66,22 +75,35 @@ export function createMockBackend() {
   }
 
   const decks = [0, 1].map(() => ({
-    loaded: false, playing: false, position: 0, duration: 0, cue: 0, rate: 1, bend: 0, bpm: 0, firstBeat: 0,
-    generation: 0, previewing: false, waveform: null, fader: 1, peak: 0,
+    loaded: false, playing: false, position: 0, duration: 0, cue: 0, rate: 1, bend: 0, bpm: 0, key: null, keylock: false, firstBeat: 0,
+    generation: 0, previewing: false, scratching: false, waveform: null, fader: 1, peak: 0, ...freshLoops(),
     filter: 0, fx: { kind: 'echo', on: false, level: 0.5, beats: 1 },
   }));
   /** @type {{ active: boolean, started: number, seconds: number, path: string | null }} */
   const rec = { active: false, started: 0, seconds: 0, path: null };
+  let folders = FOLDERS.map((f) => `/Music/${f}`);
   let xf = 0;
   let last = performance.now();
+  // Simulated audio device, so the disconnect banner can be tried in a
+  // browser: run __mockAudio.lose() and __mockAudio.restore() in the console.
+  /** @type {any} */
+  let audio = { state: 'connected', device: 'Browser preview', sampleRate: 48000 };
+  globalThis.__mockAudio = {
+    lose: () => (audio = { state: 'lost', device: 'DDJ-FLX4', fallback: 'MacBook Pro Speakers' }),
+    restore: () => (audio = { state: 'connected', device: 'DDJ-FLX4', sampleRate: 48000 }),
+  };
 
   function tick() {
     const now = performance.now();
     const dt = (now - last) / 1000;
     last = now;
+    // A lost device holds every deck where it is, like the real engine.
+    if (audio.state === 'lost') return;
     for (const d of decks) {
-      if (!d.playing) continue;
+      if (!d.playing || d.scratching) continue;
+      const before = d.position;
       d.position += dt * (d.rate + d.bend);
+      if (d.looping && before < d.loopOut && d.position >= d.loopOut) d.position -= d.loopOut - d.loopIn;
       if (d.position >= d.duration) {
         d.position = d.duration;
         d.playing = false;
@@ -99,24 +121,86 @@ export function createMockBackend() {
     tick();
     const d = decks[cmd.deck];
     switch (cmd.type) {
-      case 'play': if (d.loaded) { d.playing = true; d.previewing = false; } break;
-      case 'pause': d.playing = false; d.previewing = false; break;
+      case 'play': if (d.loaded) { d.playing = true; d.previewing = false; d.previewHot = null; } break;
+      case 'pause': d.playing = false; d.previewing = false; d.previewHot = null; break;
       case 'togglePlay':
         if (d.playing && !d.previewing) d.playing = false;
-        else if (d.loaded) { d.playing = true; d.previewing = false; }
+        else if (d.loaded) { d.playing = true; d.previewing = false; d.previewHot = null; }
         break;
       case 'cuePress':
-        if (!d.loaded) break;
+        if (!d.loaded || d.previewHot != null) break;
         if (d.playing && !d.previewing) { d.position = d.cue; d.playing = false; break; }
         if (Math.abs(d.position - d.cue) > 0.001) d.cue = d.position;
         d.playing = true; d.previewing = true;
         break;
       case 'cueRelease':
-        if (d.previewing) { d.previewing = false; d.playing = false; d.position = d.cue; }
+        if (d.previewing && d.previewHot == null) { d.previewing = false; d.playing = false; d.position = d.cue; }
         break;
-      case 'seek': d.position = Math.max(0, Math.min(d.duration, cmd.seconds)); break;
+      // No audio here: a scratch holds the deck and moves it with the hand.
+      case 'scratchStart': d.scratching = true; break;
+      case 'scratchTo': if (d.scratching) d.position = Math.max(0, Math.min(d.duration, cmd.seconds)); break;
+      case 'scratchEnd': d.scratching = false; break;
+      case 'seek':
+        d.position = Math.max(0, Math.min(d.duration, cmd.seconds));
+        if (d.looping && (d.position < d.loopIn || d.position >= d.loopOut)) d.looping = false;
+        break;
+      case 'hotCuePress': {
+        if (!d.loaded) break;
+        const at = d.hotCues[cmd.index];
+        if (at == null) { d.hotCues[cmd.index] = d.position; break; }
+        if (d.looping && (at < d.loopIn || at >= d.loopOut)) d.looping = false;
+        d.position = at;
+        if (!d.playing || d.previewing) Object.assign(d, { playing: true, previewing: true, previewHot: cmd.index, previewReturn: at });
+        break;
+      }
+      case 'hotCueRelease':
+        if (d.previewing && d.previewHot === cmd.index) Object.assign(d, { playing: false, previewing: false, previewHot: null, position: d.previewReturn });
+        break;
+      case 'hotCueClear': d.hotCues[cmd.index] = null; break;
+      case 'loopToggle': {
+        if (d.looping) { d.looping = false; break; }
+        if (!d.loaded || !d.bpm) break;
+        const unit = Math.min(1, d.loopBeats);
+        const beat = (d.position - d.firstBeat) / beatLen(d);
+        d.loopIn = Math.max(0, d.firstBeat + Math.round(beat / unit) * unit * beatLen(d));
+        d.loopOut = d.loopIn + d.loopBeats * beatLen(d);
+        d.looping = true;
+        break;
+      }
+      case 'loopScale': {
+        const beats = clampBeats(d.loopBeats * cmd.factor);
+        if (d.looping) {
+          const len = (d.loopOut - d.loopIn) * cmd.factor;
+          if (len < beatLen(d) / 32 - 1e-9 || d.loopIn + len > d.duration) break;
+          d.loopOut = d.loopIn + len;
+          if (d.position >= d.loopOut) d.position = d.loopIn + ((d.position - d.loopIn) % len);
+        }
+        d.loopBeats = beats;
+        break;
+      }
+      case 'reloopExit':
+        if (d.looping) d.looping = false;
+        else if (d.loopIn != null && d.loopOut != null) { d.looping = true; d.position = d.loopIn; }
+        break;
+      case 'beatJump': {
+        if (!d.loaded || !d.bpm) break;
+        let delta = cmd.beats * beatLen(d);
+        if (d.looping) {
+          delta = Math.max(-d.loopIn, Math.min(d.duration - d.loopOut, delta));
+          d.loopIn += delta;
+          d.loopOut += delta;
+        }
+        d.position = Math.max(0, Math.min(d.duration, d.position + delta));
+        break;
+      }
+      case 'setCue': if (d.loaded) d.cue = Math.max(0, Math.min(d.duration, cmd.seconds)); break;
+      case 'eject':
+        Object.assign(d, { loaded: false, playing: false, previewing: false, scratching: false, position: 0, cue: 0, duration: 0, bpm: 0, key: null, waveform: null, ...freshLoops() });
+        d.generation++;
+        break;
       case 'setRate': d.rate = cmd.rate; break;
       case 'setBend': d.bend = cmd.bend; break;
+      case 'setKeylock': d.keylock = cmd.on; break;
       case 'setFader': d.fader = cmd.value; break;
       case 'sync': {
         const o = decks[1 - cmd.deck];
@@ -150,11 +234,13 @@ export function createMockBackend() {
       return {
         decks: decks.map((d) => ({
           loaded: d.loaded, playing: d.playing, position: d.position, duration: d.duration,
-          cue: d.cue, rate: d.rate, speed: d.rate + d.bend, bpm: d.bpm, generation: d.generation, peak: 0,
+          cue: d.cue, rate: d.rate, speed: d.rate + d.bend, bpm: d.bpm, key: d.key, keylock: d.keylock, generation: d.generation, peak: 0,
+          hotCues: [...d.hotCues], loopIn: d.loopIn, loopOut: d.loopOut, looping: d.looping, loopBeats: d.loopBeats,
           filter: d.filter, fx: { ...d.fx },
         })),
         deckPeaks,
         masterPeak: [Math.min(1, m), Math.min(1, m * 0.97)],
+        audio,
         recording: {
           active: rec.active, path: rec.path, droppedSeconds: 0, error: null,
           seconds: rec.active ? (performance.now() - rec.started) / 1000 : rec.seconds,
@@ -181,8 +267,8 @@ export function createMockBackend() {
       const bpm = 118 + (seed % 12);
       const d = decks[deck];
       Object.assign(d, {
-        loaded: true, playing: false, position: 0, cue: 0, duration, bpm, firstBeat: 0,
-        waveform: fakeWaveform(seed, duration, bpm), generation: d.generation + 1,
+        loaded: true, playing: false, position: 0, cue: 0, duration, bpm, firstBeat: 0, key: { tonic: seed % 12, minor: seed % 3 !== 0 },
+        waveform: fakeWaveform(seed, duration, bpm), generation: d.generation + 1, ...freshLoops(),
       });
       return {
         title: t.title, path, duration, sampleRate: 44100,
@@ -191,10 +277,20 @@ export function createMockBackend() {
       };
     },
     waveform: async (deck) => decks[deck].waveform,
-    libraryFolders: async () => FOLDERS.map((f) => `/Music/${f}`),
-    addFolder: async () => FOLDERS.map((f) => `/Music/${f}`),
-    removeFolder: async () => FOLDERS.map((f) => `/Music/${f}`),
-    libraryTracks: async (folder) => (folder ? tracks.filter((t) => t.path.startsWith(folder + '/')) : tracks),
+    libraryFolders: async () => [...folders],
+    addFolder: async (path) => {
+      if (path && !folders.includes(path)) folders.push(path);
+      return [...folders];
+    },
+    useDefaultOutput: async () => {
+      if (audio.state === 'lost') audio = { state: 'connected', device: audio.fallback, sampleRate: 48000 };
+    },
+    removeFolder: async (path) => {
+      folders = folders.filter((f) => f !== path);
+      return [...folders];
+    },
+    libraryTracks: async (folder) =>
+      tracks.filter((t) => (folder ? [folder] : folders).some((f) => t.path.startsWith(f + '/'))),
     pickFolder: async () => null,
   };
 }

@@ -20,22 +20,26 @@ mod deck;
 pub mod dsp;
 mod engine;
 pub mod fx;
+pub mod key;
 mod mixer;
 mod null_output;
 #[cfg(feature = "output")]
 pub mod output;
 mod record;
 mod shared;
+mod stretch;
 mod track;
 pub mod waveform;
 
 pub use analysis::Beatgrid;
 pub use command::{Command, DeckId, EqBand};
+pub use deck::{DEFAULT_LOOP_BEATS, HOT_CUES, MAX_LOOP_BEATS, MIN_LOOP_BEATS};
 pub use engine::{
     new_engine, Engine, EngineHandle, GAIN_MAX_DB, GAIN_MIN_DB, MASTER_MAX_DB, MASTER_MIN_DB,
     MAX_BLOCK_FRAMES,
 };
 pub use fx::FxKind;
+pub use key::Key;
 pub use null_output::{start_null, NullOutput};
 pub use record::{RecordError, RecordingStatus};
 pub use shared::{DeckSnapshot, FxSnapshot, MixerSnapshot, SharedState};

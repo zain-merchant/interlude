@@ -1,6 +1,6 @@
 use std::sync::atomic::{AtomicBool, AtomicU32, AtomicU64, AtomicU8, Ordering::Relaxed};
 
-use crate::{FxKind, NUM_DECKS};
+use crate::{FxKind, Key, HOT_CUES, NUM_DECKS};
 
 /// An `f64` stored in an `AtomicU64`.
 #[derive(Debug, Default)]
@@ -36,6 +36,9 @@ pub(crate) struct DeckShared {
     pub speed: AtomicF64,
     pub bpm: AtomicF64,
     pub playing: AtomicBool,
+    pub keylock: AtomicBool,
+    /// [`Key::code`] of the loaded track's key.
+    pub key: AtomicU32,
     pub loaded: AtomicBool,
     /// Bumped on every load so the UI knows to fetch the new waveform.
     pub generation: AtomicU64,
@@ -49,6 +52,12 @@ pub(crate) struct DeckShared {
     pub fx_on: AtomicBool,
     pub fx_level: AtomicF32,
     pub fx_beats: AtomicF32,
+    /// Seconds, or negative for none.
+    pub hot_cues: [AtomicF64; HOT_CUES],
+    pub loop_in: AtomicF64,
+    pub loop_out: AtomicF64,
+    pub looping: AtomicBool,
+    pub loop_beats: AtomicF64,
 }
 
 /// State the audio thread publishes for the UI, written once per block.
@@ -106,6 +115,12 @@ pub struct DeckSnapshot {
     /// The track's detected tempo at normal speed, 0.0 if unknown.
     /// Multiply by `speed` for the tempo being played.
     pub bpm: f64,
+    /// The track's detected key at normal speed. With keylock off and the
+    /// tempo changed, the key heard is shifted by `12 * log2(speed)`
+    /// semitones.
+    pub key: Option<Key>,
+    /// Keylock on: tempo changes keep the pitch.
+    pub keylock: bool,
     pub generation: u64,
     /// Peak level since the last block, 0.0..=1.0+.
     pub peak: f32,
@@ -120,6 +135,14 @@ pub struct DeckSnapshot {
     /// Filter knob: -1.0 low-pass ..= 0.0 off ..= 1.0 high-pass.
     pub filter: f32,
     pub fx: FxSnapshot,
+    /// Hot cue positions in seconds, by pad.
+    pub hot_cues: [Option<f64>; HOT_CUES],
+    /// The stored loop in seconds. It plays only while `looping`.
+    pub loop_in: Option<f64>,
+    pub loop_out: Option<f64>,
+    pub looping: bool,
+    /// Size of the next beat loop and of beat jumps, in beats.
+    pub loop_beats: f64,
 }
 
 impl SharedState {
@@ -134,6 +157,8 @@ impl SharedState {
             rate: d.rate.load(),
             speed: d.speed.load(),
             bpm: d.bpm.load(),
+            key: Key::from_code(d.key.load(Relaxed)),
+            keylock: d.keylock.load(Relaxed),
             generation: d.generation.load(Relaxed),
             peak: d.peak.load(),
             gain_db: d.gain_db.load(),
@@ -147,6 +172,11 @@ impl SharedState {
                 level: d.fx_level.load(),
                 beats: d.fx_beats.load(),
             },
+            hot_cues: std::array::from_fn(|i| some(d.hot_cues[i].load())),
+            loop_in: some(d.loop_in.load()),
+            loop_out: some(d.loop_out.load()),
+            looping: d.looping.load(Relaxed),
+            loop_beats: d.loop_beats.load(),
         }
     }
 
@@ -165,4 +195,9 @@ impl SharedState {
     pub fn sample_rate(&self) -> u32 {
         self.sample_rate.load(Relaxed)
     }
+}
+
+/// A stored position: negative means none.
+fn some(secs: f64) -> Option<f64> {
+    (secs >= 0.0).then_some(secs)
 }
