@@ -657,7 +657,6 @@
     color: var(--fg);
     background: var(--raise);
     box-shadow: inset 0 0 0 1px var(--fg-3);
-    user-select: text;
   }
   /* Where a dragged row will land in a playlist. */
   .row.drop-before {
@@ -716,7 +715,6 @@
     background: none;
     color: var(--fg);
     font: inherit;
-    user-select: text;
   }
   .search input::placeholder {
     color: var(--fg-3);
