@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use crate::dsp::{db_to_gain, hermite, Eq3, Smoothed};
+use crate::stretch::Stretcher;
 use crate::{Beatgrid, EqBand, Track};
 
 /// How much of a jog movement a playing deck's nudge moves the play head.
@@ -38,6 +39,9 @@ const MIN_LOOP_SECS: f64 = 0.01;
 /// crossfades from the old position over this many output frames, so it
 /// doesn't click.
 const JUMP_FADE_FRAMES: u32 = 128;
+
+/// Crossfade length, in output frames, when keylock turns off mid-play.
+const KEYLOCK_FADE: usize = 256;
 
 /// Where a deck is on its beatgrid.
 pub(crate) struct BeatInfo {
@@ -80,6 +84,9 @@ pub(crate) struct Deck {
     pub jog_bend: f64,
     /// Hand on the platter (jog wheel top or a waveform drag).
     pub scratching: bool,
+    /// Keylock: tempo changes keep the track's pitch.
+    pub keylock: bool,
+    stretch: Stretcher,
     /// The play head follows the hand. Stays on after a paused deck is
     /// released (or nudged by the outer ring) until it has caught up.
     following: bool,
@@ -115,6 +122,8 @@ impl Deck {
             bend: 0.0,
             jog_bend: 0.0,
             scratching: false,
+            keylock: false,
+            stretch: Stretcher::new(out_rate),
             following: false,
             hand: Hand::new(out_rate as f64),
             vel: 0.0,
@@ -572,7 +581,24 @@ impl Deck {
         };
         let samples = &track.samples[..];
         let frames = track.frames() as i64;
+        let ratio = track.sample_rate as f64 / self.out_rate;
+        let tempo = (self.rate + self.bend + self.jog_bend).max(0.0);
         let step = self.normal_step();
+        // Scratching is meant to bend the pitch, and far from normal speed
+        // grains sound worse than a pitch change, so keylock sits those out,
+        // as does a record spinning back up after the hand lets go.
+        let hand_off = !self.following && !self.spinning_up;
+        let stretch = self.keylock && self.playing && hand_off && (0.5..=2.0).contains(&tempo);
+        // Turning keylock off mid-play: the grains and the play head are a
+        // few milliseconds apart, so crossfade from one to the other.
+        let mut fade_out = 0;
+        if stretch {
+            self.stretch.begin(self.pos);
+        } else if self.stretch.active() && self.playing && hand_off {
+            fade_out = (out.len() / 2).min(KEYLOCK_FADE);
+        } else {
+            self.stretch.stop();
+        }
         let end = frames as f64;
         let max_vel = SCRATCH_MAX_SPEED * track.sample_rate as f64 / self.out_rate;
         let spin = 1.0 - (-1.0 / (SPINUP_TAU * self.out_rate)).exp();
@@ -604,10 +630,15 @@ impl Deck {
             _ => None,
         };
 
-        for frame in out.as_chunks_mut::<2>().0 {
+        for (n, frame) in out.as_chunks_mut::<2>().0.iter_mut().enumerate() {
             let (mut l, mut r) = (0.0, 0.0);
+            let grains = (n < fade_out).then(|| self.stretch.next(samples, self.pos, step, ratio));
             if self.playing || self.following {
-                (l, r) = read(self.pos);
+                (l, r) = if stretch {
+                    self.stretch.next(samples, self.pos, step, ratio)
+                } else {
+                    read(self.pos)
+                };
                 if self.fade_left > 0 {
                     // Linear crossfade from the old position to the new.
                     let w = self.fade_left as f32 / JUMP_FADE_FRAMES as f32;
@@ -648,12 +679,22 @@ impl Deck {
                     }
                 }
             }
+            if let Some((gl, gr)) = grains {
+                let w = n as f32 / fade_out as f32;
+                l = l * w + gl * (1.0 - w);
+                r = r * w + gr * (1.0 - w);
+            }
             // Keep the EQ running on silence so its tail rings out naturally.
             let (l, r) = self.eq.process(l, r);
             let g = self.gain.tick();
             frame[0] = l * g;
             frame[1] = r * g;
             peak = peak.max(frame[0].abs()).max(frame[1].abs());
+        }
+        if stretch {
+            self.stretch.end(self.pos);
+        } else {
+            self.stretch.stop();
         }
         let n = out.len() / 2;
         self.hand.elapsed(n);

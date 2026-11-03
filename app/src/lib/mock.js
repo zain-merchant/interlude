@@ -75,7 +75,7 @@ export function createMockBackend() {
   }
 
   const decks = [0, 1].map(() => ({
-    loaded: false, playing: false, position: 0, duration: 0, cue: 0, rate: 1, bend: 0, bpm: 0, firstBeat: 0,
+    loaded: false, playing: false, position: 0, duration: 0, cue: 0, rate: 1, bend: 0, bpm: 0, key: null, keylock: false, firstBeat: 0,
     generation: 0, previewing: false, scratching: false, waveform: null, fader: 1, peak: 0, ...freshLoops(),
   }));
   let xf = 0;
@@ -181,6 +181,7 @@ export function createMockBackend() {
       }
       case 'setRate': d.rate = cmd.rate; break;
       case 'setBend': d.bend = cmd.bend; break;
+      case 'setKeylock': d.keylock = cmd.on; break;
       case 'setFader': d.fader = cmd.value; break;
       case 'sync': {
         const o = decks[1 - cmd.deck];
@@ -209,7 +210,7 @@ export function createMockBackend() {
       return {
         decks: decks.map((d) => ({
           loaded: d.loaded, playing: d.playing, position: d.position, duration: d.duration,
-          cue: d.cue, rate: d.rate, speed: d.rate + d.bend, bpm: d.bpm, generation: d.generation, peak: 0,
+          cue: d.cue, rate: d.rate, speed: d.rate + d.bend, bpm: d.bpm, key: d.key, keylock: d.keylock, generation: d.generation, peak: 0,
           hotCues: [...d.hotCues], loopIn: d.loopIn, loopOut: d.loopOut, looping: d.looping, loopBeats: d.loopBeats,
         })),
         deckPeaks,
@@ -225,7 +226,7 @@ export function createMockBackend() {
       const bpm = 118 + (seed % 12);
       const d = decks[deck];
       Object.assign(d, {
-        loaded: true, playing: false, position: 0, cue: 0, duration, bpm, firstBeat: 0,
+        loaded: true, playing: false, position: 0, cue: 0, duration, bpm, firstBeat: 0, key: { tonic: seed % 12, minor: seed % 3 !== 0 },
         waveform: fakeWaveform(seed, duration, bpm), generation: d.generation + 1, ...freshLoops(),
       });
       return {

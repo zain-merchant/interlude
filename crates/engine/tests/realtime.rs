@@ -68,6 +68,10 @@ fn process_does_not_allocate() {
             deck: DeckId::A,
             rate: 1.06,
         },
+        Command::SetKeylock {
+            deck: DeckId::A,
+            on: true,
+        },
         Command::SetBend {
             deck: DeckId::B,
             bend: 0.04,
