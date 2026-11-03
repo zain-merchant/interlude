@@ -33,7 +33,7 @@ export const inTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in
  *             analysis: TrackAnalysis | null }} LibraryTrack
  * @typedef {{ id: number, name: string, count: number }} Playlist
  * @typedef {{ start: number, count: number }} HistorySession
- * @typedef {{ kind: 'rekordbox', path: string }} ImportSource
+ * @typedef {{ kind: 'rekordbox' | 'serato', path: string }} ImportSource
  * @typedef {{ tracks: number, missing: number, withCues: number, hotCues: number, loops: number,
  *             grids: number, playlists: { name: string, count: number }[], folders: string[] }} ImportPreview
  * @typedef {{ cues: boolean, grids: boolean, playlists: boolean }} ImportOptions
@@ -106,6 +106,11 @@ async function createTauriBackend() {
     /** @returns {Promise<string | null>} */
     pickRekordboxXml: async () => {
       const picked = await open({ multiple: false, title: 'Choose your Rekordbox XML export', filters: [{ name: 'Rekordbox XML', extensions: ['xml'] }] });
+      return typeof picked === 'string' ? picked : null;
+    },
+    /** A _Serato_ folder, chosen by hand. @returns {Promise<string | null>} */
+    pickSeratoFolder: async () => {
+      const picked = await open({ directory: true, multiple: false, title: 'Choose the _Serato_ folder' });
       return typeof picked === 'string' ? picked : null;
     },
     /**

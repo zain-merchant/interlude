@@ -391,9 +391,17 @@ export function createMockBackend() {
     historySessions: async () => sessions.map((x) => ({ start: x.start, count: x.paths.length })),
     sessionTracks: async (start) => byPaths(sessions.find((x) => x.start === start)?.paths ?? []),
     onLibraryPlayed: async () => () => {},
-    importSources: async () => [{ source: { kind: /** @type {'rekordbox'} */ ('rekordbox'), path: '~/Documents/rekordbox.xml' }, modified: Date.now() - 3 * 3600e3 }],
-    importPreview: async () => {
+    importSources: async () => [
+      { source: { kind: /** @type {'rekordbox'} */ ('rekordbox'), path: '~/Documents/rekordbox.xml' }, modified: Date.now() - 3 * 3600e3 },
+      { source: { kind: /** @type {'serato'} */ ('serato'), path: '/Users/you/Music/_Serato_' }, modified: Date.now() - 26 * 3600e3 },
+    ],
+    importPreview: async (source) => {
       await new Promise((r) => setTimeout(r, 600));
+      if (source.kind === 'serato') return {
+        tracks: 1288, missing: 4, withCues: 1102, hotCues: 6120, loops: 140, grids: 1250,
+        playlists: [{ name: 'Warm up', count: 64 }, { name: 'Gigs › Saturday', count: 31 }, { name: 'Edits', count: 22 }],
+        folders: ['/Users/you/Music/Serato'],
+      };
       return {
         tracks: 2431, missing: 12, withCues: 1890, hotCues: 9204, loops: 311, grids: 2398,
         playlists: [{ name: 'Friday', count: 42 }, { name: 'Gigs › Club', count: 88 }],
@@ -415,6 +423,7 @@ export function createMockBackend() {
       return () => importListeners.delete(fn);
     },
     pickRekordboxXml: async () => '~/Desktop/rekordbox.xml',
+    pickSeratoFolder: async () => '/Volumes/USB/_Serato_',
     pickFolder: async () => null,
   };
 }
