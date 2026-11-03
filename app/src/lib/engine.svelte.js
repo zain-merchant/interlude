@@ -67,9 +67,19 @@ function patch(target, src) {
     const old = target[k];
     if (old === v) continue;
     const next = patch(old, v);
-    if (next !== old) target[k] = next;
+    if (next !== old) {
+      target[k] = next;
+      changed = true;
+    }
   }
-  if (!Array.isArray(src)) for (const k in target) if (!(k in src)) delete target[k];
+  if (!Array.isArray(src)) {
+    for (const k in target) {
+      if (!(k in src)) {
+        delete target[k];
+        changed = true;
+      }
+    }
+  }
   return target;
 }
 
@@ -78,8 +88,32 @@ function update(obj, key, value) {
   const old = obj[key];
   if (old === value) return;
   const next = patch(old, value);
-  if (next !== old) obj[key] = next;
+  if (next !== old) {
+    obj[key] = next;
+    changed = true;
+  }
 }
+
+/** Set by `patch` and `update` when they write anything. */
+let changed = false;
+
+/**
+ * While nothing plays and nothing changes, the engine is polled every
+ * IDLE_POLL_MS instead of every frame, so an idle window costs next to
+ * nothing. Any change (a controller fader, a key press) or anything
+ * playing goes straight back to every frame.
+ */
+const IDLE_POLL_MS = 50;
+/** Unchanged polls in a row before slowing down. */
+const IDLE_AFTER = 30;
+let quietPolls = 0;
+let lastPoll = 0;
+/** Meter levels below this (-60 dBFS) show as empty, so settle them at 0. */
+const SILENT = 1e-3;
+const decay = (peak, level) => {
+  const l = Math.max(peak, level * 0.86);
+  return l < SILENT ? 0 : l;
+};
 
 let polling = false;
 let lastFrame = performance.now();
@@ -88,17 +122,21 @@ function frame(now) {
   const dt = Math.min(0.1, (now - lastFrame) / 1000);
   lastFrame = now;
 
-  if (!polling) {
+  if (!polling && (quietPolls < IDLE_AFTER || now - lastPoll >= IDLE_POLL_MS)) {
     polling = true;
+    lastPoll = now;
     backend
       .state()
       .then((s) => {
+        changed = false;
         for (let i = 0; i < 2; i++) update(engine.decks, i, s.decks[i]);
         update(engine, 'mixer', s.mixer ?? null);
         update(engine, 'recording', s.recording ?? null);
         update(engine, 'audio', s.audio ?? null);
-        for (let i = 0; i < 2; i++) update(engine.deckLevels, i, Math.max(s.deckPeaks[i], engine.deckLevels[i] * 0.86));
-        for (let i = 0; i < 2; i++) update(engine.masterLevels, i, Math.max(s.masterPeak[i], engine.masterLevels[i] * 0.86));
+        for (let i = 0; i < 2; i++) update(engine.deckLevels, i, decay(s.deckPeaks[i], engine.deckLevels[i]));
+        for (let i = 0; i < 2; i++) update(engine.masterLevels, i, decay(s.masterPeak[i], engine.masterLevels[i]));
+        const playing = s.decks.some((d) => d.playing) || s.recording?.active;
+        quietPolls = changed || playing ? 0 : quietPolls + 1;
       })
       .catch(() => {})
       .finally(() => (polling = false));
@@ -164,7 +202,11 @@ export async function restoreDeck(deck, snap) {
   displayPos[deck] = snap.position;
 }
 
-export const control = (cmd) => backend.control(cmd).catch((e) => console.error(e));
+export const control = (cmd) => {
+  // Show the result of a command at full rate.
+  quietPolls = 0;
+  return backend.control(cmd).catch((e) => console.error(e));
+};
 
 /**
  * Starts a hand scrub. With `scratch`, the deck plays what passes under the
