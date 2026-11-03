@@ -11,7 +11,11 @@ export const inTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in
  * @typedef {{ loaded: boolean, playing: boolean, position: number, duration: number,
  *             cue: number, rate: number, speed: number, bpm: number,
  *             generation: number, peak: number }} DeckState
- * @typedef {{ decks: DeckState[], deckPeaks: number[], masterPeak: number[] }} EngineState
+ * @typedef {{ state: 'connected', device: string, sampleRate: number }
+ *         | { state: 'lost', device: string, fallback: string | null }
+ *         | { state: 'none' }} AudioStatus
+ * @typedef {{ decks: DeckState[], deckPeaks: number[], masterPeak: number[],
+ *             mixer?: { crossfader: number, cueMix: number, masterDb: number }, audio?: AudioStatus }} EngineState
  * @typedef {{ title: string, path: string, duration: number, sampleRate: number,
  *             binsPerSec: number, binCount: number,
  *             beatgrid: { bpm: number, firstBeat: number } | null }} TrackInfo
@@ -29,6 +33,8 @@ async function createTauriBackend() {
     state: () => invoke('state'),
     /** @returns {Promise<string>} */
     outputName: () => invoke('output_name'),
+    /** Stops waiting for a disconnected audio device and uses the system default. */
+    useDefaultOutput: () => invoke('use_default_output'),
     /** @returns {Promise<TrackInfo>} */
     loadTrack: (deck, path) => invoke('load_track', { deck, path }),
     /** @returns {Promise<Uint8Array>} */

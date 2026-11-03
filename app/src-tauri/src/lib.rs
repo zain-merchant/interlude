@@ -21,17 +21,52 @@ use tauri::ipc::Response;
 use tauri::State;
 
 /// Keeps whichever output is running alive for the app's lifetime.
-#[allow(dead_code)]
 enum Output {
     Device(dj_engine::output::AudioOutput),
+    #[allow(dead_code)]
     Null(dj_engine::NullOutput),
+}
+
+/// The audio output as the UI shows it: playing, waiting for a device that
+/// went away, or running silently because there was never one.
+#[derive(Serialize)]
+#[serde(tag = "state", rename_all = "camelCase")]
+enum AudioStatus {
+    Connected {
+        device: String,
+        #[serde(rename = "sampleRate")]
+        sample_rate: u32,
+    },
+    Lost {
+        device: String,
+        fallback: Option<String>,
+    },
+    None,
+}
+
+impl Output {
+    fn status(&self) -> AudioStatus {
+        use dj_engine::output::OutputStatus as S;
+        match self {
+            Output::Device(out) => match out.status() {
+                S::Connected {
+                    device,
+                    sample_rate,
+                } => AudioStatus::Connected {
+                    device,
+                    sample_rate,
+                },
+                S::Lost { device, fallback } => AudioStatus::Lost { device, fallback },
+            },
+            Output::Null(_) => AudioStatus::None,
+        }
+    }
 }
 
 struct AppState {
     engine: Arc<Mutex<EngineHandle>>,
     tracks: Mutex<[Option<Arc<Track>>; dj_engine::NUM_DECKS]>,
-    output_name: String,
-    _output: Output,
+    output: Output,
 }
 
 #[derive(Serialize)]
@@ -53,6 +88,7 @@ struct EngineState {
     mixer: MixerSnapshot,
     deck_peaks: [f32; dj_engine::NUM_DECKS],
     master_peak: [f32; 2],
+    audio: AudioStatus,
 }
 
 /// Commands the UI can send. Mirrors `dj_engine::Command` minus track loading.
@@ -65,6 +101,8 @@ enum Control {
     CuePress { deck: usize },
     CueRelease { deck: usize },
     Seek { deck: usize, seconds: f64 },
+    SetCue { deck: usize, seconds: f64 },
+    Eject { deck: usize },
     SetRate { deck: usize, rate: f64 },
     SetBend { deck: usize, bend: f64 },
     Sync { deck: usize },
@@ -103,6 +141,13 @@ impl Control {
             C::Seek { deck, seconds } => Command::Seek {
                 deck: deck_id(deck)?,
                 seconds,
+            },
+            C::SetCue { deck, seconds } => Command::SetCue {
+                deck: deck_id(deck)?,
+                seconds,
+            },
+            C::Eject { deck } => Command::Eject {
+                deck: deck_id(deck)?,
             },
             C::SetRate { deck, rate } => Command::SetRate {
                 deck: deck_id(deck)?,
@@ -158,7 +203,23 @@ fn send(state: &AppState, cmd: Command) -> Result<(), String> {
 
 #[tauri::command]
 fn control(state: State<'_, AppState>, cmd: Control) -> Result<(), String> {
-    send(&state, cmd.into_command()?)
+    let eject = match cmd {
+        Control::Eject { deck } => Some(deck),
+        _ => None,
+    };
+    send(&state, cmd.into_command()?)?;
+    if let Some(deck) = eject {
+        // The engine hands the track back to be freed; drop our copy too.
+        if let Some(t) = state
+            .tracks
+            .lock()
+            .map_err(|_| "lock poisoned")?
+            .get_mut(deck)
+        {
+            *t = None;
+        }
+    }
+    Ok(())
 }
 
 #[tauri::command]
@@ -171,12 +232,29 @@ fn state(state: State<'_, AppState>) -> EngineState {
         mixer: shared.mixer(),
         deck_peaks,
         master_peak,
+        audio: state.output.status(),
     }
 }
 
 #[tauri::command]
 fn output_name(state: State<'_, AppState>) -> String {
-    state.output_name.clone()
+    match state.output.status() {
+        AudioStatus::Connected {
+            device,
+            sample_rate,
+        } => format!("{device} · {sample_rate} Hz"),
+        AudioStatus::Lost { device, .. } => format!("{device} (disconnected)"),
+        AudioStatus::None => "No audio device".into(),
+    }
+}
+
+/// Stops waiting for a disconnected audio device and plays through the
+/// system default output instead.
+#[tauri::command]
+fn use_default_output(state: State<'_, AppState>) {
+    if let Output::Device(out) = &state.output {
+        out.use_default();
+    }
 }
 
 /// Decodes a file on a worker thread (keeping the UI responsive), then loads
@@ -233,15 +311,12 @@ pub fn run() {
     // Play through the controller's own sound card when it's plugged in, so
     // its headphone output works.
     let preferred = ["DDJ-FLX4"];
-    let (output, handle, device_label) = match dj_engine::output::start_preferring(&preferred) {
-        Ok((out, handle)) => {
-            let name = format!("{} · {} Hz", out.device_name, out.sample_rate);
-            (Output::Device(out), handle, name)
-        }
+    let (output, handle) = match dj_engine::output::start_preferring(&preferred) {
+        Ok((out, handle)) => (Output::Device(out), handle),
         Err(e) => {
             eprintln!("no audio output ({e}); running silently");
             let (out, handle) = dj_engine::start_null(48_000);
-            (Output::Null(out), handle, "No audio device".to_string())
+            (Output::Null(out), handle)
         }
     };
 
@@ -260,14 +335,14 @@ pub fn run() {
         .manage(AppState {
             engine,
             tracks: Mutex::new(Default::default()),
-            output_name: device_label,
-            _output: output,
+            output,
         })
         .manage(library::Library::load())
         .invoke_handler(tauri::generate_handler![
             control,
             state,
             output_name,
+            use_default_output,
             load_track,
             waveform,
             controller::controller_name,
