@@ -20,6 +20,37 @@
   const RANGES = [0.08, 0.16, 0.5];
 
   let range = $state(0.08);
+
+  // The performance strip shows one set of controls at a time (hot cues,
+  // loop and beat jump, or effects) so the deck stays calm. Keys and the
+  // controller reach all of them whichever is showing.
+  const MODES = [
+    { id: 'cues', label: 'Cues' },
+    { id: 'loop', label: 'Loop' },
+    { id: 'fx', label: 'FX' },
+  ];
+  const storageKey = () => `oss-dj.deckMode.${deck}`;
+  /** @type {'cues' | 'loop' | 'fx'} */
+  let mode = $state('cues');
+  try {
+    const saved = localStorage.getItem(storageKey());
+    if (MODES.some((m) => m.id === saved)) mode = /** @type {any} */ (saved);
+  } catch {}
+  function setMode(m) {
+    mode = m;
+    try {
+      localStorage.setItem(storageKey(), m);
+    } catch {}
+  }
+  function modeKey(e) {
+    const i = MODES.findIndex((m) => m.id === mode);
+    const dir = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+    if (!dir) return;
+    e.preventDefault();
+    e.stopPropagation();
+    setMode(MODES[(i + dir + MODES.length) % MODES.length].id);
+    /** @type {HTMLElement} */ (e.currentTarget.querySelector('[aria-selected="true"]'))?.focus();
+  }
   // Pitch fader position, -1..1. Up is slower, like a turntable.
   let pitch = $state(0);
 
@@ -125,11 +156,25 @@
 
     <div class="times">
       <span class="el num"><span class="sr">Elapsed </span>{fmt(d.position)}</span>
+      <div class="modes" role="tablist" aria-label="Deck {name} controls" tabindex="-1" onkeydown={modeKey}>
+        {#each MODES as m}
+          {@const busy = (m.id === 'loop' && d.looping) || (m.id === 'fx' && (d.fx?.on || Math.abs(d.filter ?? 0) >= 0.02))}
+          <button role="tab" class:on={mode === m.id} aria-selected={mode === m.id} tabindex={mode === m.id ? 0 : -1}
+            onclick={() => setMode(m.id)} use:tip={() => (busy ? `${m.label} (active)` : m.label)}>
+            {m.label}{#if busy}<i aria-label="active"></i>{/if}
+          </button>
+        {/each}
+      </div>
       <span class="rm num"><span class="sr">Remaining </span>{fmt(d.position - d.duration)}</span>
     </div>
-    <FxUnit {deck} />
 
-    <Performance {deck} />
+    <div class="strip" role="tabpanel" aria-label={MODES.find((m) => m.id === mode)?.label}>
+      {#if mode === 'fx'}
+        <FxUnit {deck} />
+      {:else}
+        <Performance {deck} show={mode === 'loop' ? 'loop' : 'cues'} />
+      {/if}
+    </div>
 
     <div class="transport">
       <button class="btn big cue" class:lit={atCue} aria-disabled={!t}
@@ -153,7 +198,7 @@
         use:tip={() => (canSync ? tipText(`Match tempo and beats to deck ${other}`, keyLabel(`deck.${deck}.sync`)) : `Sync needs a beat on both decks`)}>Sync</button>
       <div class="nudge">
         {#each [{ v: -0.04, label: 'Nudge slower', glyph: '‹', id: 'slower' }, { v: 0.04, label: 'Nudge faster', glyph: '›', id: 'faster' }] as n}
-          <button class="btn sm" aria-label={n.label} aria-disabled={!t}
+          <button class="btn sm ghost" aria-label={n.label} aria-disabled={!t}
             onpointerdown={(e) => e.button === 0 && bend(n.v)()} onpointerup={bend(0)} onpointerleave={bend(0)}
             onkeydown={(e) => (e.key === ' ' || e.key === 'Enter') && !e.repeat && (e.preventDefault(), bend(n.v)())}
             onkeyup={(e) => (e.key === ' ' || e.key === 'Enter') && bend(0)()}
@@ -277,6 +322,46 @@
     line-height: 1;
     color: var(--fg-3);
   }
+  .modes {
+    display: flex;
+    gap: 2px;
+    align-self: center;
+  }
+  .modes button {
+    position: relative;
+    height: 24px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: 6px;
+    background: none;
+    color: var(--fg-3);
+    font: 400 12px var(--font);
+    transition: color 0.12s, background-color 0.12s;
+  }
+  .modes button:hover {
+    color: var(--fg-2);
+  }
+  .modes button.on {
+    background: var(--raise);
+    color: var(--fg);
+  }
+  .modes i {
+    position: absolute;
+    top: 4px;
+    right: 3px;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--deck);
+  }
+  .strip {
+    min-height: 32px;
+    display: flex;
+    align-items: center;
+  }
+  .strip > :global(*) {
+    flex: 1;
+  }
   .transport {
     display: flex;
     align-items: center;
@@ -373,7 +458,6 @@
     border: 0;
     border-radius: 6px;
     background: none;
-    box-shadow: inset 0 0 0 1px var(--line);
     color: var(--fg-3);
     font: 400 11px var(--font);
   }
@@ -386,8 +470,8 @@
     white-space: nowrap;
   }
   .range:hover {
-    color: var(--fg-2);
-    box-shadow: inset 0 0 0 1px var(--line-2);
+    color: var(--fg);
+    background: var(--raise);
   }
   .lock {
     padding: 0 6px;

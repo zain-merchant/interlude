@@ -81,16 +81,16 @@
   <Knob label="Filter" name="Deck {name} filter" bind:value={filter} min={-1} max={1} reset={0} size={24} format={filterText}
     onchange={(v) => control({ type: 'setFilter', deck, value: v })} />
   <span class="sep" aria-hidden="true"></span>
-  <button class="btn sm kind" aria-haspopup="menu" aria-label="Deck {name} effect, {k.label}" {...press(pick)}
+  <button class="btn sm ghost kind" aria-haspopup="menu" aria-label="Deck {name} effect, {k.label}" {...press(pick)}
     use:tip={() => 'Choose effect'}>{k.label}<svg viewBox="0 0 10 10" aria-hidden="true"><path d="M2.5 4l2.5 2.5L7.5 4" /></svg></button>
   <div class="beats" use:tip={() => `${k.beats}: ${beatText(beats)} ${beats > 1 ? 'beats' : 'beat'}`}>
-    <button class="btn sm" aria-label="Shorter" aria-disabled={beats <= BEATS[0]} {...press(() => step(-1))}>‹</button>
+    <button class="btn sm ghost" aria-label="Shorter" aria-disabled={beats <= BEATS[0]} {...press(() => step(-1))}>‹</button>
     <span class="num" aria-live="polite" aria-label="{beatText(beats)} {beats > 1 ? 'beats' : 'beat'}">{beatText(beats)}</span>
-    <button class="btn sm" aria-label="Longer" aria-disabled={beats >= BEATS[BEATS.length - 1]} {...press(() => step(1))}>›</button>
+    <button class="btn sm ghost" aria-label="Longer" aria-disabled={beats >= BEATS[BEATS.length - 1]} {...press(() => step(1))}>›</button>
   </div>
   <Knob label="Level" name="Deck {name} {k.label.toLowerCase()} level" bind:value={level} min={0} max={1} reset={0.5} size={24}
     format={(v) => `${Math.round(v * 100)}%`} onchange={(v) => control({ type: 'setFxLevel', deck, value: v })} />
-  <button class="btn sm on" class:lit={on} aria-pressed={on} {...press(toggle)}
+  <button class="btn sm ghost on" class:lit={on} aria-pressed={on} {...press(toggle)}
     use:tip={() => `${k.label} ${on ? 'on' : 'off'}`}>On</button>
 </div>
 
