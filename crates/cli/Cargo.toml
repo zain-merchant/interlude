@@ -11,4 +11,5 @@ path = "src/main.rs"
 
 [dependencies]
 dj-engine = { path = "../engine" }
+dj-controller = { path = "../controller" }
 hound = "3.5"

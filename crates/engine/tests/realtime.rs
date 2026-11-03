@@ -91,6 +91,16 @@ fn process_does_not_allocate() {
             on: true,
         },
         Command::SetCueMix { value: 0.5 },
+        Command::Jog {
+            deck: DeckId::A,
+            seconds: 0.01,
+        },
+        Command::ScratchStart { deck: DeckId::B },
+        Command::Jog {
+            deck: DeckId::B,
+            seconds: -0.02,
+        },
+        Command::ScratchEnd { deck: DeckId::B },
         Command::SetMasterGain { db: -3.0 },
         Command::CuePress { deck: DeckId::B },
         Command::CueRelease { deck: DeckId::B },

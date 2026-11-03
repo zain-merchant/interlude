@@ -4,6 +4,7 @@
 //!   dj info <file>                         decode a file and show its waveform
 //!   dj render <a> <b> <out.wav> [secs]     mix A into B offline and write a WAV
 //!   dj play <a> [b]                        play A, then crossfade into B
+//!   dj midi [secs]                         print what MIDI controllers send
 
 use std::sync::Arc;
 use std::time::{Duration, Instant};
@@ -19,9 +20,10 @@ fn main() {
             render(&args[1], &args[2], &args[3], secs)
         }
         Some("play") if args.len() >= 2 => play(&args[1], args.get(2).map(String::as_str)),
+        Some("midi") => midi(args.get(1).and_then(|s| s.parse().ok())),
         _ => {
             eprintln!(
-                "usage:\n  dj info <file>\n  dj render <a> <b> <out.wav> [secs]\n  dj play <a> [b]"
+                "usage:\n  dj info <file>\n  dj render <a> <b> <out.wav> [secs]\n  dj play <a> [b]\n  dj midi [secs]"
             );
             std::process::exit(2);
         }
@@ -222,4 +224,40 @@ fn play(a: &str, b: Option<&str>) -> Result<()> {
             return Ok(());
         }
     }
+}
+
+/// Prints every MIDI message from every connected device, with what the
+/// matching controller mapping would do with it. For checking a mapping
+/// against real hardware.
+fn midi(secs: Option<f64>) -> Result<()> {
+    use std::sync::Mutex;
+
+    let ports = dj_controller::midi::input_port_names();
+    if ports.is_empty() {
+        return Err("no MIDI inputs found; is the controller plugged in?".into());
+    }
+    for p in &ports {
+        eprintln!("listening to {p}");
+    }
+    let t0 = Instant::now();
+    let mappings = Mutex::new(dj_controller::mappings());
+    let state = dj_controller::State::default();
+    let _conns = dj_controller::midi::monitor_all(move |port, msg| {
+        let hex: Vec<String> = msg.iter().map(|b| format!("{b:02X}")).collect();
+        let mut meaning = String::new();
+        if let Ok(mut ms) = mappings.lock() {
+            if let Some(m) = ms.iter_mut().find(|m| m.matches(port)) {
+                meaning = format!("{:?}", m.handle(msg, &state));
+            }
+        }
+        println!(
+            "{:9.3}  {port}  {}  {meaning}",
+            t0.elapsed().as_secs_f64(),
+            hex.join(" ")
+        );
+    });
+    std::thread::sleep(Duration::from_secs_f64(
+        secs.unwrap_or(f64::MAX / 4.0).min(1e9),
+    ));
+    Ok(())
 }
