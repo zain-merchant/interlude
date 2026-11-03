@@ -5,6 +5,7 @@ import { backend } from './backend.js';
 
 const emptyDeck = () => ({
   loaded: false, playing: false, position: 0, duration: 0, cue: 0, rate: 1, speed: 1, bpm: 0, generation: 0, peak: 0,
+  hotCues: Array(8).fill(null), loopIn: null, loopOut: null, looping: false, loopBeats: 4,
 });
 
 export const engine = $state({
