@@ -76,7 +76,7 @@ export async function installAppMenu(run, actions) {
       ]),
       sub('File', [
         item('Add Music Folder…', actions.addFolder),
-        item('Import from Rekordbox…', actions.importLibrary),
+        item('Import from Rekordbox or Serato…', actions.importLibrary),
         sep(),
         cmd('deck.0.load', 'Load Selected Track to Deck A'),
         cmd('deck.1.load', 'Load Selected Track to Deck B'),

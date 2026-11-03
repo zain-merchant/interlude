@@ -35,11 +35,25 @@
   const plural = (x, one, many = `${one}s`) => `${n(x)} ${x === 1 ? one : many}`;
   const fileName = (p) => p.split(/[\\/]/).pop();
   const where = (p) => p.split(/[\\/]/).slice(0, -1).join('/').replace(/^\/Users\/[^/]+/, '~');
-  const ago = (ms) => {
+  const ago = (ms, verb) => {
     const h = (Date.now() - ms) / 3600e3;
-    if (h < 1) return 'exported just now';
-    if (h < 24) return `exported ${Math.round(h)} h ago`;
-    return `exported ${new Date(ms).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}`;
+    if (h < 1) return `${verb} just now`;
+    if (h < 24) return `${verb} ${Math.round(h)} h ago`;
+    if (h < 48) return `${verb} yesterday`;
+    return `${verb} ${new Date(ms).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}`;
+  };
+
+  const APPS = /** @type {const} */ ([
+    { kind: 'rekordbox', name: 'Rekordbox', note: '5, 6 and 7', verb: 'exported', other: 'Use a different file…' },
+    { kind: 'serato', name: 'Serato DJ', note: 'Pro and Lite', verb: 'updated', other: 'Choose a different _Serato_ folder…' },
+  ]);
+  const appName = $derived(source?.kind === 'serato' ? 'Serato' : 'Rekordbox');
+  const foundFor = (kind) => found.filter((f) => f.source.kind === kind).slice(0, kind === 'rekordbox' ? 1 : 3);
+  /** What a found library is called: the file, or for Serato where it lives. */
+  const title = (src) => {
+    if (src.kind === 'rekordbox') return fileName(src.path);
+    const drive = src.path.match(/^\/Volumes\/([^/]+)\//);
+    return drive ? `On ${drive[1]}` : 'In your Music folder';
   };
 
   async function read(s) {
@@ -51,16 +65,17 @@
       folders = preview.folders.map((path) => ({ path, on: true }));
       options = { cues: preview.withCues > 0, grids: preview.grids > 0, playlists: preview.playlists.length > 0 };
       step = 'choose';
-      announce(`Found ${plural(preview.tracks, 'track')} in Rekordbox`);
+      announce(`Found ${plural(preview.tracks, 'track')} in ${appName}`);
     } catch (e) {
       error = String(e);
       step = 'find';
     }
   }
 
-  async function choose() {
-    const path = await backend.pickRekordboxXml();
-    if (path) read({ kind: 'rekordbox', path });
+  /** @param {'rekordbox' | 'serato'} kind */
+  async function choose(kind) {
+    const path = kind === 'serato' ? await backend.pickSeratoFolder() : await backend.pickRekordboxXml();
+    if (path) read({ kind, path });
   }
 
   async function run() {
@@ -120,37 +135,46 @@
       <h2 id="import-title">Bring your library over</h2>
       <p class="lead">Your cue points, loops, beatgrids and playlists come with your tracks. Your music files aren't changed.</p>
 
-      <div class="source" aria-busy={step === 'reading' || searching}>
-        <div class="src-head">
-          <span class="src-name">Rekordbox</span>
-          <span class="src-note">5, 6 and 7</span>
+      {#each APPS as app}
+        {@const mine = foundFor(app.kind)}
+        <div class="source" aria-busy={(step === 'reading' && source?.kind === app.kind) || searching}>
+          <div class="src-head">
+            <span class="src-name">{app.name}</span>
+            <span class="src-note">{app.note}</span>
+          </div>
+          {#if step === 'reading' && source?.kind === app.kind}
+            <div class="reading"><span class="spinner" aria-hidden="true"></span>Reading your {app.name} library…</div>
+          {:else if searching}
+            <div class="reading"><span class="spinner" aria-hidden="true"></span>Looking for your library…</div>
+          {:else if mine.length}
+            {#each mine as f}
+              <button class="found" onclick={() => read(f.source)} disabled={step === 'reading'}>
+                <span class="file">
+                  <b>{title(f.source)}</b>
+                  <small>{where(f.source.path)}{f.source.kind === 'serato' ? `/${fileName(f.source.path)}` : ''} · {ago(f.modified, app.verb)}</small>
+                </span>
+                <span class="go">Continue</span>
+              </button>
+            {/each}
+            <button class="link" onclick={() => choose(app.kind)} disabled={step === 'reading'}>{app.other}</button>
+          {:else}
+            <ol class="how">
+              {#if app.kind === 'rekordbox'}
+                <li>In Rekordbox, choose <b>File › Export Collection in xml format</b>.</li>
+                <li>Save it anywhere, then choose it here.</li>
+              {:else}
+                <li>Open Serato DJ on this computer once, so it saves your library.</li>
+                <li>For a library on a drive, choose the drive's <b>_Serato_</b> folder.</li>
+              {/if}
+            </ol>
+            <button class="btn sm" onclick={() => choose(app.kind)} disabled={step === 'reading'}>{app.kind === 'serato' ? 'Choose folder…' : 'Choose file…'}</button>
+          {/if}
         </div>
-        {#if step === 'reading'}
-          <div class="reading"><span class="spinner" aria-hidden="true"></span>Reading {fileName(source.path)}…</div>
-        {:else if searching}
-          <div class="reading"><span class="spinner" aria-hidden="true"></span>Looking for your collection…</div>
-        {:else if found.length}
-          {@const f = found[0]}
-          <button class="found" onclick={() => read(f.source)}>
-            <span class="file">
-              <b>{fileName(f.source.path)}</b>
-              <small>{where(f.source.path)} · {ago(f.modified)}</small>
-            </span>
-            <span class="go">Continue</span>
-          </button>
-          <button class="link" onclick={choose}>Use a different file…</button>
-        {:else}
-          <ol class="how">
-            <li>In Rekordbox, choose <b>File › Export Collection in xml format</b>.</li>
-            <li>Save it anywhere, then choose it here.</li>
-          </ol>
-          <button class="btn primary" onclick={choose}>Choose file…</button>
-        {/if}
-      </div>
+      {/each}
       {#if error}<p class="error" role="alert">{error}</p>{/if}
 
     {:else if step === 'choose' && preview}
-      <h2 id="import-title">{plural(preview.tracks, 'track')} in Rekordbox</h2>
+      <h2 id="import-title">{plural(preview.tracks, 'track')} in {appName}</h2>
       <p class="lead">Choose what to bring over. Anything you've already set in oss-dj stays as it is.</p>
 
       <div class="options">
@@ -166,7 +190,7 @@
         </label>
         <label class="opt" class:off={!preview.playlists.length}>
           <input type="checkbox" bind:checked={options.playlists} disabled={!preview.playlists.length} />
-          <span class="what">Playlists</span>
+          <span class="what">{source?.kind === 'serato' ? 'Crates, as playlists' : 'Playlists'}</span>
           <span class="count num">{n(preview.playlists.length)}</span>
         </label>
       </div>
@@ -183,7 +207,9 @@
         </div>
       {/if}
       {#if preview.missing}
-        <p class="note">{plural(preview.missing, 'track')} {preview.missing === 1 ? "isn't" : "aren't"} on this computer right now. Their cues come along and are ready when the files are back.</p>
+        <p class="note">{plural(preview.missing, 'track')} {preview.missing === 1 ? "isn't" : "aren't"} on this computer right now. {source?.kind === 'serato'
+          ? 'Serato keeps cues inside the music files, so those come over without them.'
+          : 'Their cues come along and are ready when the files are back.'}</p>
       {/if}
       {#if error}<p class="error" role="alert">{error}</p>{/if}
 
@@ -202,7 +228,7 @@
 
     {:else if step === 'done' && summary}
       <div class="tick" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg></div>
-      <h2 id="import-title">Your Rekordbox library is in</h2>
+      <h2 id="import-title">Your {appName} library is in</h2>
       <dl class="summary">
         <div><dt class="num">{n(summary.tracks)}</dt><dd>tracks</dd></div>
         {#if options.cues}<div><dt class="num">{n(summary.cues)}</dt><dd>with cue points</dd></div>{/if}
@@ -319,6 +345,15 @@
     padding: 18px;
     border-radius: 10px;
     box-shadow: inset 0 0 0 1px var(--line-2);
+  }
+  .source + .source {
+    margin-top: 12px;
+  }
+  .found + .found {
+    margin-top: 8px;
+  }
+  .found:disabled, .link:disabled {
+    opacity: 0.5;
   }
   .src-head {
     display: flex;
