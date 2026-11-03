@@ -131,7 +131,7 @@ impl Deck {
             }
         };
 
-        for frame in out.chunks_exact_mut(2) {
+        for frame in out.as_chunks_mut::<2>().0 {
             let (mut l, mut r) = (0.0, 0.0);
             if self.playing {
                 let i = self.pos.floor() as i64;

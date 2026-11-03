@@ -48,7 +48,7 @@ impl Waveform {
         let mut bins = Vec::with_capacity(frames.div_ceil(FRAMES_PER_BIN));
         for chunk in stereo.chunks(FRAMES_PER_BIN * 2) {
             let (mut peak, mut lo, mut mi, mut hi) = (0f32, 0f32, 0f32, 0f32);
-            for f in chunk.chunks_exact(2) {
+            for f in chunk.as_chunks::<2>().0 {
                 let x = 0.5 * (f[0] + f[1]);
                 let l = low_lp[0].process(x);
                 let l = low_lp[1].process(l);
