@@ -176,6 +176,10 @@ enum Control {
         deck: usize,
         on: bool,
     },
+    SetSlip {
+        deck: usize,
+        on: bool,
+    },
     SetQuantize {
         on: bool,
     },
@@ -328,6 +332,10 @@ impl Control {
                 bend,
             },
             C::SetKeylock { deck, on } => Command::SetKeylock {
+                deck: deck_id(deck)?,
+                on,
+            },
+            C::SetSlip { deck, on } => Command::SetSlip {
                 deck: deck_id(deck)?,
                 on,
             },

@@ -199,6 +199,13 @@ pub enum Command {
         deck: DeckId,
         on: bool,
     },
+    /// Slip mode: while a scratch, loop, held hot cue or pause interrupts
+    /// a playing deck, the track keeps time underneath, and playback picks
+    /// up from there when it ends. Off mid-slip stays where playback is.
+    SetSlip {
+        deck: DeckId,
+        on: bool,
+    },
     /// Hand on the platter: playback follows `Jog` and `ScratchTo`
     /// movements, audibly and in either direction, and stops when the hand
     /// is still, until `ScratchEnd`. A playing deck slows to a halt under
@@ -315,4 +322,54 @@ pub enum Command {
     SetSamplerLevel {
         value: f32,
     },
+}
+
+impl Command {
+    /// The deck a command acts on, if it's for one deck.
+    pub fn deck(&self) -> Option<DeckId> {
+        use Command::*;
+        match *self {
+            Load { deck, .. }
+            | Eject { deck, .. }
+            | Play { deck, .. }
+            | Pause { deck, .. }
+            | TogglePlay { deck, .. }
+            | CuePress { deck, .. }
+            | CueRelease { deck, .. }
+            | HotCuePress { deck, .. }
+            | HotCueRelease { deck, .. }
+            | HotCueClear { deck, .. }
+            | LoopToggle { deck, .. }
+            | BeatLoop { deck, .. }
+            | LoopScale { deck, .. }
+            | LoopIn { deck, .. }
+            | LoopOut { deck, .. }
+            | ReloopExit { deck, .. }
+            | BeatJump { deck, .. }
+            | Seek { deck, .. }
+            | SetCue { deck, .. }
+            | RestoreCue { deck, .. }
+            | SetBeatgrid { deck, .. }
+            | SetHotCue { deck, .. }
+            | SetRate { deck, .. }
+            | SetBend { deck, .. }
+            | SetKeylock { deck, .. }
+            | SetSlip { deck, .. }
+            | ScratchStart { deck, .. }
+            | ScratchEnd { deck, .. }
+            | ScratchTo { deck, .. }
+            | Jog { deck, .. }
+            | Sync { deck, .. }
+            | SetGain { deck, .. }
+            | SetEq { deck, .. }
+            | SetFilter { deck, .. }
+            | SetFxKind { deck, .. }
+            | SetFxOn { deck, .. }
+            | SetFxLevel { deck, .. }
+            | SetFxBeats { deck, .. }
+            | SetFader { deck, .. }
+            | SetPfl { deck, .. } => Some(deck),
+            _ => None,
+        }
+    }
 }

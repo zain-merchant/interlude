@@ -58,6 +58,9 @@ pub(crate) struct DeckShared {
     pub loop_out: AtomicF64,
     pub looping: AtomicBool,
     pub loop_beats: AtomicF64,
+    pub slip: AtomicBool,
+    /// Seconds, or negative for none.
+    pub slip_position: AtomicF64,
 }
 
 #[derive(Debug, Default)]
@@ -184,6 +187,12 @@ pub struct DeckSnapshot {
     pub looping: bool,
     /// Size of the next beat loop and of beat jumps, in beats.
     pub loop_beats: f64,
+    /// Slip mode on.
+    pub slip: bool,
+    /// Where the track would be without the scratch, loop, held hot cue
+    /// or pause interrupting it, in seconds: playback picks up from here
+    /// when that ends. `None` unless slip is holding.
+    pub slip_position: Option<f64>,
 }
 
 impl SharedState {
@@ -218,6 +227,8 @@ impl SharedState {
             loop_out: some(d.loop_out.load()),
             looping: d.looping.load(Relaxed),
             loop_beats: d.loop_beats.load(),
+            slip: d.slip.load(Relaxed),
+            slip_position: some(d.slip_position.load()),
         }
     }
 
