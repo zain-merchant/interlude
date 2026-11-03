@@ -7,6 +7,7 @@
   import Meter from './lib/Meter.svelte';
   import { Button } from './lib/components/ui/button/index.js';
   import { engine, startEngineLoop, loadTrack, control } from './lib/engine.svelte.js';
+  import { backend } from './lib/backend.js';
   import { dropTarget } from './lib/dnd.svelte.js';
 
   let library;
@@ -63,9 +64,20 @@
     if (held.delete(k)) control({ type: 'cueRelease', deck: k === 'q' ? 0 : 1 });
   }
   let xf = 0;
-  const nextXf = (d) => (xf = Math.max(-1, Math.min(1, Math.round((xf + d) * 10) / 10)));
+  const nextXf = (d) => {
+    const from = engine.mixer?.crossfader ?? xf;
+    return (xf = Math.max(-1, Math.min(1, Math.round((from + d) * 10) / 10)));
+  };
 
-  onMount(startEngineLoop);
+  onMount(() => {
+    startEngineLoop();
+    // The controller's browse knob and load buttons drive the library.
+    const off = backend.onController?.((e) => {
+      if (e.type === 'browse') library.browse(e.delta);
+      else if (e.type === 'load') library.loadSelected(e.deck);
+    });
+    return () => off?.then((f) => f());
+  });
 </script>
 
 <svelte:window onkeydown={keydown} onkeyup={keyup} />

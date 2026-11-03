@@ -73,14 +73,25 @@
     if (deck !== null) onload(deck, t);
   }
 
+  /** Moves the selection by `delta` rows, scrolling it into view. */
+  export function browse(delta) {
+    if (!results.length) return;
+    selected = Math.max(0, Math.min(results.length - 1, selected + delta));
+    const y = selected * ROW;
+    if (y < scroller.scrollTop) scroller.scrollTop = y;
+    else if (y + ROW > scroller.scrollTop + scroller.clientHeight) scroller.scrollTop = y + ROW - scroller.clientHeight;
+  }
+
+  /** Loads the selected track into `deck`. */
+  export function loadSelected(deck) {
+    if (results[selected]) onload(deck, results[selected]);
+  }
+
   function keydown(e) {
     if (!results.length) return;
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
       e.preventDefault();
-      selected = Math.max(0, Math.min(results.length - 1, selected + (e.key === 'ArrowDown' ? 1 : -1)));
-      const y = selected * ROW;
-      if (y < scroller.scrollTop) scroller.scrollTop = y;
-      else if (y + ROW > scroller.scrollTop + scroller.clientHeight) scroller.scrollTop = y + ROW - scroller.clientHeight;
+      browse(e.key === 'ArrowDown' ? 1 : -1);
     } else if (e.key === 'Enter') {
       autoLoad(results[selected]);
     } else if (e.shiftKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
