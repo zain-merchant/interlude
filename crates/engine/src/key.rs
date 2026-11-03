@@ -102,7 +102,60 @@ const HIGH_HZ: f64 = 1_760.0;
 /// Detects the key of interleaved stereo audio. Returns `None` for audio
 /// without enough tonal content (silence, pure drums, very short clips).
 pub fn detect_key(stereo: &[f32], sample_rate: u32) -> Option<Key> {
-    let chroma = chromagram(stereo, sample_rate)?;
+    let mut b = KeyBuilder::new(sample_rate);
+    b.push(stereo);
+    b.finish()
+}
+
+/// Detects the key of audio fed in pieces of any size, so a track can be
+/// analyzed while it is still being decoded. The result is the same as
+/// [`detect_key`] on the whole track.
+pub(crate) struct KeyBuilder {
+    factor: usize,
+    lp: [Biquad; 2],
+    /// Frames to skip before keeping the next one.
+    skip: usize,
+    chroma: Chroma,
+}
+
+impl KeyBuilder {
+    pub fn new(sample_rate: u32) -> Self {
+        let sr = sample_rate as f64;
+        let factor = (sr / TARGET_RATE).floor().max(1.0) as usize;
+        let rate = sr / factor as f64;
+        Self {
+            factor,
+            // Anti-alias before keeping every `factor`-th sample.
+            lp: [
+                Biquad::lowpass(rate * 0.4, 0.707, sr),
+                Biquad::lowpass(rate * 0.4, 0.707, sr),
+            ],
+            skip: 0,
+            chroma: Chroma::new(rate),
+        }
+    }
+
+    /// Adds interleaved stereo samples (an even number).
+    pub fn push(&mut self, stereo: &[f32]) {
+        for [l, r] in stereo.as_chunks::<2>().0 {
+            let x = self.lp[0].process(0.5 * (l + r));
+            let x = self.lp[1].process(x);
+            if self.skip == 0 {
+                self.chroma.push(x);
+                self.skip = self.factor;
+            }
+            self.skip -= 1;
+        }
+    }
+
+    pub fn finish(self) -> Option<Key> {
+        key_of(&self.chroma.finish()?)
+    }
+}
+
+/// The best fitting of the 24 keys for a track's average chroma.
+fn key_of(chroma: &[f64; 12]) -> Option<Key> {
+    let chroma = *chroma;
     let mut best = (f64::MIN, Key::new(0, false));
     for tonic in 0..12 {
         for (minor, profile) in [(false, &MAJOR_PROFILE), (true, &MINOR_PROFILE)] {
@@ -117,83 +170,92 @@ pub fn detect_key(stereo: &[f32], sample_rate: u32) -> Option<Key> {
     (best.0 > 0.3).then_some(best.1)
 }
 
-/// Average normalized chroma over the track, or `None` if nothing tonal.
-fn chromagram(stereo: &[f32], sample_rate: u32) -> Option<[f64; 12]> {
-    let sr = sample_rate as f64;
-    let factor = (sr / TARGET_RATE).floor().max(1.0) as usize;
-    let rate = sr / factor as f64;
+/// Average normalized chroma over a track, built from mono audio fed one
+/// sample at a time: each full frame is analyzed as soon as it's in.
+struct Chroma {
+    /// Where each FFT bin goes: its pitch class and a weight.
+    bins: Vec<(usize, usize, f64)>,
+    window: Vec<f32>,
+    fft: Fft,
+    re: Vec<f32>,
+    im: Vec<f32>,
+    /// The frame being filled.
+    frame: Vec<f32>,
+    loudest: f64,
+    /// Each frame's total and chroma.
+    sums: Vec<(f64, [f64; 12])>,
+}
 
-    // Anti-alias, then keep every `factor`-th sample.
-    let mut lp = [
-        Biquad::lowpass(rate * 0.4, 0.707, sr),
-        Biquad::lowpass(rate * 0.4, 0.707, sr),
-    ];
-    let mono: Vec<f32> = stereo
-        .as_chunks::<2>()
-        .0
-        .iter()
-        .map(|[l, r]| {
-            let x = lp[0].process(0.5 * (l + r));
-            lp[1].process(x)
-        })
-        .step_by(factor)
-        .collect();
-    if mono.len() < FRAME {
-        return None;
+impl Chroma {
+    fn new(rate: f64) -> Self {
+        // A bin's weight falls off between two semitones, so a bin halfway
+        // between notes counts for neither.
+        let bins = (1..FRAME / 2)
+            .filter_map(|k| {
+                let f = k as f64 * rate / FRAME as f64;
+                if !(LOW_HZ..=HIGH_HZ).contains(&f) {
+                    return None;
+                }
+                let midi = 69.0 + 12.0 * (f / 440.0).log2();
+                let note = midi.round();
+                let w = 1.0 - 2.0 * (midi - note).abs();
+                Some((k, (note as i64).rem_euclid(12) as usize, w))
+            })
+            .collect();
+        let window = (0..FRAME)
+            .map(|i| (0.5 - 0.5 * (2.0 * PI * i as f64 / FRAME as f64).cos()) as f32)
+            .collect();
+        Self {
+            bins,
+            window,
+            fft: Fft::new(FRAME),
+            re: vec![0f32; FRAME],
+            im: vec![0f32; FRAME],
+            frame: Vec::with_capacity(FRAME),
+            loudest: 0.0,
+            sums: Vec::new(),
+        }
     }
 
-    // Where each FFT bin goes: its pitch class and a weight that falls off
-    // between two semitones, so a bin halfway between notes counts for
-    // neither.
-    let bins: Vec<(usize, usize, f64)> = (1..FRAME / 2)
-        .filter_map(|k| {
-            let f = k as f64 * rate / FRAME as f64;
-            if !(LOW_HZ..=HIGH_HZ).contains(&f) {
-                return None;
-            }
-            let midi = 69.0 + 12.0 * (f / 440.0).log2();
-            let note = midi.round();
-            let w = 1.0 - 2.0 * (midi - note).abs();
-            Some((k, (note as i64).rem_euclid(12) as usize, w))
-        })
-        .collect();
-
-    let window: Vec<f32> = (0..FRAME)
-        .map(|i| (0.5 - 0.5 * (2.0 * PI * i as f64 / FRAME as f64).cos()) as f32)
-        .collect();
-    let fft = Fft::new(FRAME);
-    let mut re = vec![0f32; FRAME];
-    let mut im = vec![0f32; FRAME];
-
-    let mut total = [0f64; 12];
-    let mut frames = 0;
-    let mut loudest = 0f64;
-    let mut sums = Vec::new();
-    for chunk in mono.as_chunks::<FRAME>().0 {
-        for i in 0..FRAME {
-            re[i] = chunk[i] * window[i];
-            im[i] = 0.0;
+    fn push(&mut self, x: f32) {
+        self.frame.push(x);
+        if self.frame.len() < FRAME {
+            return;
         }
-        fft.run(&mut re, &mut im);
+        for i in 0..FRAME {
+            self.re[i] = self.frame[i] * self.window[i];
+            self.im[i] = 0.0;
+        }
+        self.frame.clear();
+        self.fft.run(&mut self.re, &mut self.im);
         let mut c = [0f64; 12];
-        for &(k, pc, w) in &bins {
-            let mag = ((re[k] * re[k] + im[k] * im[k]) as f64).sqrt();
+        for &(k, pc, w) in &self.bins {
+            let (re, im) = (self.re[k], self.im[k]);
+            let mag = ((re * re + im * im) as f64).sqrt();
             c[pc] += mag * w;
         }
         let sum: f64 = c.iter().sum();
-        loudest = loudest.max(sum);
-        sums.push((sum, c));
+        self.loudest = self.loudest.max(sum);
+        self.sums.push((sum, c));
     }
-    // Skip near-silent frames (fade-ins, gaps), then weight the rest equally.
-    for (sum, c) in sums {
-        if sum > loudest * 0.05 && sum > 1e-3 {
-            for pc in 0..12 {
-                total[pc] += c[pc] / sum;
+
+    /// The average chroma, or `None` if nothing tonal (or not one full
+    /// frame).
+    fn finish(self) -> Option<[f64; 12]> {
+        let mut total = [0f64; 12];
+        let mut frames = 0;
+        // Skip near-silent frames (fade-ins, gaps), then weight the rest
+        // equally.
+        for (sum, c) in self.sums {
+            if sum > self.loudest * 0.05 && sum > 1e-3 {
+                for pc in 0..12 {
+                    total[pc] += c[pc] / sum;
+                }
+                frames += 1;
             }
-            frames += 1;
         }
+        (frames > 0).then_some(total)
     }
-    (frames > 0).then_some(total)
 }
 
 fn pearson(a: &[f64; 12], b: &[f64; 12]) -> f64 {
