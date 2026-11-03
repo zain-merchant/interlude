@@ -116,6 +116,10 @@ enum Control {
         deck: usize,
         bend: f64,
     },
+    SetKeylock {
+        deck: usize,
+        on: bool,
+    },
     ScratchStart {
         deck: usize,
     },
@@ -224,6 +228,10 @@ impl Control {
             C::SetBend { deck, bend } => Command::SetBend {
                 deck: deck_id(deck)?,
                 bend,
+            },
+            C::SetKeylock { deck, on } => Command::SetKeylock {
+                deck: deck_id(deck)?,
+                on,
             },
             C::ScratchStart { deck } => Command::ScratchStart {
                 deck: deck_id(deck)?,

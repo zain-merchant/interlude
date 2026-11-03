@@ -148,6 +148,12 @@ impl Engine {
             Seek { deck, seconds } => self.decks[deck.index()].seek_secs(seconds),
             SetRate { deck, rate } => self.decks[deck.index()].rate = rate.clamp(0.0, 4.0),
             SetBend { deck, bend } => self.decks[deck.index()].bend = bend.clamp(-1.0, 1.0),
+            SetKeylock { deck, on } => {
+                self.decks[deck.index()].keylock = on;
+                self.shared.decks[deck.index()]
+                    .keylock
+                    .store(on, std::sync::atomic::Ordering::Relaxed);
+            }
             ScratchStart { deck } => self.decks[deck.index()].scratch_start(),
             ScratchEnd { deck } => self.decks[deck.index()].scratch_end(),
             ScratchTo {
@@ -252,6 +258,10 @@ impl Engine {
                     .as_ref()
                     .and_then(|t| t.beatgrid)
                     .map_or(0.0, |g| g.bpm),
+            );
+            s.key.store(
+                crate::Key::code(deck.track.as_ref().and_then(|t| t.key)),
+                Relaxed,
             );
             s.playing.store(deck.playing, Relaxed);
             let secs = |f: Option<f64>| f.map_or(-1.0, |f| f / sr);
