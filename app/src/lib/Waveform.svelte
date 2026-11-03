@@ -1,5 +1,4 @@
 <script>
-  import { keyLabel } from './commands.js';
   import { onMount } from 'svelte';
   import { WaveformGL, themeColors, HOT_CUES } from './waveform-gl.js';
   import { tracks, engine, displayPos, onFrame, scrubStart, scrubTo, scrubEnd } from './engine.svelte.js';
@@ -33,7 +32,8 @@
       }
       const bps = t?.binsPerSec ?? 172;
       const count = bins ? bins.length / 4 : 0;
-      const playhead = displayPos[deck] * bps;
+      // No track, no play head: an empty lane stays empty.
+      const playhead = t ? displayPos[deck] * bps : -1000;
       const d = engine.decks[deck];
       const cue = t ? d.cue * bps : -1;
       const w = canvas.width || 1;
@@ -47,7 +47,7 @@
         const perPx = (seconds * bps) / w;
         const start = playhead - (w / 2) * perPx;
         gl.draw({
-          start, perPx, playhead, cue, centerLine: true, colors, ...marks,
+          start, perPx, playhead, cue, centerLine: !!t, colors, ...marks,
           beatLen: grid ? (60 / grid.bpm) * bps : 0,
           firstBeat: grid ? grid.firstBeat * bps : 0,
         });
@@ -145,8 +145,6 @@
   {/if}
   {#if failed}
     <div class="msg">Waveforms need WebGL2</div>
-  {:else if !tracks[deck] && mode === 'scroll'}
-    <div class="msg">Drag a track here or press {keyLabel(`deck.${deck}.load`)}</div>
   {/if}
 </div>
 

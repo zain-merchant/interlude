@@ -8,8 +8,8 @@
   import { keyLabel } from './commands.js';
   import { PADS, hasGrid, beatsLabel, hotCue, clearHotCue, loopToggle, loopScale, beatJump } from './performance.js';
 
-  /** @type {{ deck: number }} */
-  let { deck } = $props();
+  /** @type {{ deck: number, show?: 'all' | 'cues' | 'loop' }} */
+  let { deck, show = 'all' } = $props();
 
   const d = $derived(engine.decks[deck]);
   const t = $derived(tracks[deck]);
@@ -62,6 +62,7 @@
 </script>
 
 <div class="perf">
+  {#if show !== 'loop'}
   <div class="pads" role="group" aria-label="Deck {'AB'[deck]} hot cues">
     {#each Array.from({ length: PADS }, (_, i) => i) as i}
       {@const set = d.hotCues?.[i] != null}
@@ -72,20 +73,22 @@
         oncontextmenu={(e) => padMenu(e, i)} use:tip={() => padTip(i)}>{i + 1}</button>
     {/each}
   </div>
-  <span class="sp"></span>
+  {/if}
+  {#if show === 'all'}<span class="sp"></span>{/if}
+  {#if show !== 'cues'}
   <div class="loop" role="group" aria-label="Deck {'AB'[deck]} loop">
-    <button class="btn sm step" aria-label="Halve loop" aria-disabled={!t} {...press(() => loopScale(deck, 0.5))}
+    <button class="btn sm ghost step" aria-label="Halve loop" aria-disabled={!t} {...press(() => loopScale(deck, 0.5))}
       use:tip={() => tipText('Halve loop', keyLabel(`deck.${deck}.loopHalve`))}>½</button>
-    <button class="btn sm toggle" class:on={d.looping} aria-pressed={d.looping} aria-disabled={!grid}
+    <button class="btn sm ghost toggle" class:on={d.looping} aria-pressed={d.looping} aria-disabled={!grid}
       {...press(() => loopToggle(deck))}
       use:tip={() => (grid ? tipText(d.looping ? 'Exit loop' : `Loop ${size} ${beatsWord}`, keyLabel(`deck.${deck}.loop`)) : noGrid)}
     >Loop <span class="num size">{size}</span></button>
-    <button class="btn sm step" aria-label="Double loop" aria-disabled={!t} {...press(() => loopScale(deck, 2))}
+    <button class="btn sm ghost step" aria-label="Double loop" aria-disabled={!t} {...press(() => loopScale(deck, 2))}
       use:tip={() => tipText('Double loop', keyLabel(`deck.${deck}.loopDouble`))}>2×</button>
   </div>
   <div class="jump" role="group" aria-label="Deck {'AB'[deck]} beat jump">
     {#each [{ dir: -1, id: 'jumpBack', label: 'Jump back' }, { dir: 1, id: 'jumpForward', label: 'Jump forward' }] as j}
-      <button class="btn sm step" aria-label="{j.label} {size} {beatsWord}" aria-disabled={!grid} {...press(() => beatJump(deck, j.dir))}
+      <button class="btn sm ghost step" aria-label="{j.label} {size} {beatsWord}" aria-disabled={!grid} {...press(() => beatJump(deck, j.dir))}
         use:tip={() => (grid ? tipText(`${j.label} ${size} ${beatsWord}`, keyLabel(`deck.${deck}.${j.id}`)) : noGrid)}>
         <svg viewBox="0 0 16 16" aria-hidden="true" class:flip={j.dir > 0}>
           <path d="M8 3.5 3.5 8 8 12.5M12.5 3.5 8 8l4.5 4.5" />
@@ -93,6 +96,7 @@
       </button>
     {/each}
   </div>
+  {/if}
 </div>
 
 <style>
@@ -121,6 +125,7 @@
     flex: 0 1 40px;
     padding: 0;
     color: var(--fg-4);
+    box-shadow: inset 0 0 0 1px var(--line);
   }
   .pad.set {
     color: var(--cue);
