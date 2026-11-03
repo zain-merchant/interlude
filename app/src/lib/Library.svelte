@@ -2,6 +2,9 @@
   import { onMount } from 'svelte';
   import { backend } from './backend.js';
   import { engine } from './engine.svelte.js';
+  import { startDrag, endDrag } from './dnd.svelte.js';
+  import { Button } from './components/ui/button/index.js';
+  import { Input } from './components/ui/input/index.js';
 
   /** @type {{ onload: (deck: number, track: import('./backend.js').LibraryTrack) => void }} */
   let { onload } = $props();
@@ -15,7 +18,7 @@
   let selected = $state(0);
   let loading = $state(false);
   let error = $state('');
-  let search;
+  let search = $state(null);
   let scroller;
   let scrollTop = $state(0);
   let viewHeight = $state(400);
@@ -107,18 +110,18 @@
           onclick={async () => { folders = await backend.removeFolder(f); if (folder === f) folder = null; refresh(); }}>×</button>
       </div>
     {/each}
-    <button class="add" onclick={addFolder}>+ Add music folder</button>
+    <Button variant="outline" size="sm" class="add" onclick={addFolder}>+ Add music folder</Button>
   </nav>
 
   <div class="tracks">
     <div class="bar">
-      <input bind:this={search} type="search" placeholder="Search artist, title, folder" bind:value={query}
+      <Input bind:ref={search} type="search" placeholder="Search artist, title, folder" bind:value={query} class="h-8 max-w-md select-text"
         oninput={() => { selected = 0; scroller.scrollTop = 0; }} onkeydown={keydown} spellcheck="false" />
       <span class="count">{loading ? 'Scanning…' : `${results.length.toLocaleString()} tracks`}</span>
     </div>
 
     <div class="head row">
-      <span>Title</span><span>Artist</span><span>Folder</span><span>Format</span><span></span>
+      <span>Title</span><span>Artist</span><span>Folder</span><span>Format</span>
     </div>
 
     <div class="scroll" bind:this={scroller} bind:clientHeight={viewHeight} onscroll={() => (scrollTop = scroller.scrollTop)}
@@ -128,7 +131,7 @@
       {:else if !loading && !all.length}
         <div class="empty">
           <p>No tracks yet.</p>
-          <button onclick={addFolder}>Add a music folder</button>
+          <Button variant="secondary" size="sm" onclick={addFolder}>Add a music folder</Button>
         </div>
       {:else if !loading && !results.length}
         <div class="empty">Nothing matches “{query}”.</div>
@@ -137,15 +140,13 @@
         {#each visible as t, i (t.path)}
           {@const index = first + i}
           <div class="row" class:sel={index === selected} style:top="{index * ROW}px" role="row" tabindex="-1"
+            draggable="true" ondragstart={(e) => { selected = index; startDrag(e, t); }} ondragend={endDrag}
+            title="Drag onto a deck, or double-click to load"
             onclick={() => (selected = index)} ondblclick={() => autoLoad(t)} onkeydown={() => {}}>
             <span class="t">{t.title}</span>
             <span class="muted">{t.artist}</span>
             <span class="muted">{t.folder}</span>
             <span class="fmt">{t.format}</span>
-            <span class="load">
-              <button class="la" onclick={(e) => { e.stopPropagation(); onload(0, t); }} title="Load to deck A">A</button>
-              <button class="lb" onclick={(e) => { e.stopPropagation(); onload(1, t); }} title="Load to deck B">B</button>
-            </span>
           </div>
         {/each}
       </div>
@@ -176,7 +177,7 @@
     font-size: 11px;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: var(--muted);
+    color: var(--muted-foreground);
   }
   .item {
     flex: none;
@@ -184,10 +185,17 @@
     border: 0;
     background: none;
     padding: 6px 8px;
+    border-radius: var(--radius-md);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    color: var(--muted);
+    color: var(--muted-foreground);
+    cursor: pointer;
+    transition: background-color 0.12s, color 0.12s;
+  }
+  .item:hover {
+    background: color-mix(in oklch, var(--panel-2) 60%, transparent);
+    color: var(--text);
   }
   .item.active {
     background: var(--panel-2);
@@ -206,16 +214,19 @@
     background: none;
     color: var(--faint);
     padding: 2px 6px;
+    cursor: pointer;
     visibility: hidden;
+  }
+  .remove:hover {
+    color: var(--text);
   }
   .folder:hover .remove {
     visibility: visible;
   }
-  .add {
+  nav :global(.add) {
     margin-top: 8px;
-    background: none;
     border-style: dashed;
-    color: var(--muted);
+    color: var(--muted-foreground);
   }
   .tracks {
     display: flex;
@@ -229,17 +240,13 @@
     gap: 12px;
     padding: 10px 12px;
   }
-  .bar input {
-    flex: 1;
-    max-width: 420px;
-  }
   .count {
-    color: var(--muted);
+    color: var(--muted-foreground);
     font-size: 12px;
   }
   .row {
     display: grid;
-    grid-template-columns: 2fr 1.4fr 1fr 64px 64px;
+    grid-template-columns: 2fr 1.4fr 1fr 64px;
     gap: 12px;
     align-items: center;
     height: 30px;
@@ -267,40 +274,23 @@
     position: absolute;
     left: 0;
     right: 0;
-    cursor: default;
+    cursor: grab;
+  }
+  .scroll .row:active {
+    cursor: grabbing;
   }
   .scroll .row:hover {
-    background: #171a20;
+    background: color-mix(in oklch, var(--panel-2) 55%, transparent);
   }
   .scroll .row.sel {
-    background: #1c2230;
+    background: color-mix(in oklch, var(--ring) 14%, var(--panel));
   }
   .muted {
-    color: var(--muted);
+    color: var(--muted-foreground);
   }
   .fmt {
     color: var(--faint);
     font-size: 11px;
-  }
-  .load {
-    display: flex;
-    gap: 4px;
-    visibility: hidden;
-  }
-  .row:hover .load,
-  .row.sel .load {
-    visibility: visible;
-  }
-  .load button {
-    padding: 1px 7px;
-    font-size: 11px;
-    font-weight: 700;
-  }
-  .la {
-    color: var(--deck-a);
-  }
-  .lb {
-    color: var(--deck-b);
   }
   .empty {
     position: absolute;
@@ -310,7 +300,7 @@
     align-items: center;
     justify-content: center;
     gap: 8px;
-    color: var(--muted);
+    color: var(--muted-foreground);
   }
   .empty p {
     margin: 0;
