@@ -44,11 +44,9 @@ impl Mixer {
     /// (interleaved stereo, same length as each deck buffer).
     pub fn mix(&mut self, decks: &[&[f32]; NUM_DECKS], master: &mut [f32], cue: &mut [f32]) {
         let any_pfl = self.pfl.iter().any(|&p| p);
-        for (i, (m, c)) in master
-            .chunks_exact_mut(2)
-            .zip(cue.chunks_exact_mut(2))
-            .enumerate()
-        {
+        let (master, _) = master.as_chunks_mut::<2>();
+        let (cue, _) = cue.as_chunks_mut::<2>();
+        for (i, (m, c)) in master.iter_mut().zip(cue.iter_mut()).enumerate() {
             let (xa, xb) = crossfader_gains(self.crossfader.tick());
             let xf = [xa, xb];
             let (mut ml, mut mr, mut cl, mut cr) = (0.0, 0.0, 0.0, 0.0);

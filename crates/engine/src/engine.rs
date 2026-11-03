@@ -163,7 +163,7 @@ impl Engine {
     /// buffer it hands to the sound card.
     pub fn meter_master(&self, master: &[f32]) {
         let mut p = [0f32; 2];
-        for f in master.chunks_exact(2) {
+        for f in master.as_chunks::<2>().0 {
             p[0] = p[0].max(f[0].abs());
             p[1] = p[1].max(f[1].abs());
         }
