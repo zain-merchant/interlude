@@ -11,12 +11,18 @@
 //! range for each pad mode. The controller switches pad modes itself;
 //! hot cue, beat loop and beat jump modes are mapped.
 //!
-//! The CFX knobs drive each channel's filter. Not mapped yet: the other pad
-//! modes and the beat FX section. The headphone level and master level
-//! knobs work in the controller's own sound card and send no MIDI.
+//! The CFX knobs drive each channel's filter. The beat FX section drives the
+//! beat FX unit of the deck the channel select lever points at, as rekordbox
+//! does: SELECT changes the effect (SHIFT goes back), BEAT ◀ ▶ the beat
+//! length, LEVEL/DEPTH the level, and ON/OFF switches it (SHIFT + ON/OFF
+//! turns both decks' effects off). Moving the lever moves the effect to the
+//! new channel; MASTER (1&2) runs it on both decks together. Not mapped yet:
+//! the other pad modes. The headphone level and master level knobs work in
+//! the controller's own sound card and send no MIDI.
 
 use dj_engine::dsp::{EQ_KILL_DB, EQ_MAX_DB};
-use dj_engine::{Command, DeckId, EqBand, HOT_CUES, NUM_DECKS};
+use dj_engine::fx::FX_BEATS;
+use dj_engine::{Command, DeckId, EqBand, FxKind, HOT_CUES, NUM_DECKS};
 
 use crate::{Action, Mapping, State};
 
@@ -81,6 +87,23 @@ const BROWSE: u8 = 0x40;
 const LOAD_A: u8 = 0x46;
 const LOAD_B: u8 = 0x47;
 
+/// MIDI channel (0-based) of the beat FX section. Some messages arrive on
+/// the next channel while the lever is at CH2; both are accepted.
+const FX_CH: u8 = 4;
+const FX_SELECT: u8 = 0x63;
+const FX_SELECT_SHIFT: u8 = 0x64;
+/// BEAT ◀ and ▶: shorter and longer beat length.
+const FX_BEAT_LEFT: u8 = 0x4A;
+const FX_BEAT_RIGHT: u8 = 0x4B;
+const FX_ON: u8 = 0x47;
+const FX_ON_SHIFT: u8 = 0x43;
+/// Channel select lever positions: on while the lever is there.
+const FX_LEVER_CH1: u8 = 0x10;
+const FX_LEVER_CH2: u8 = 0x11;
+const FX_LEVER_MASTER: u8 = 0x14;
+/// LEVEL/DEPTH knob (14-bit CC on the FX channel).
+const FX_LEVEL: u8 = 0x02;
+
 /// Jog ticks per platter revolution.
 const JOG_TICKS_PER_REV: f64 = 720.0;
 /// Seconds of audio per revolution, as on a 33⅓ RPM record.
@@ -106,6 +129,39 @@ struct DeckState {
     sent_rate: Option<f64>,
 }
 
+/// The beat FX section: where the channel select lever points.
+#[derive(Debug, Clone, Copy)]
+struct FxSection {
+    /// Lever positions reported on: CH1, CH2, MASTER.
+    lever: [bool; 3],
+    /// Decks the section drives.
+    target: [bool; NUM_DECKS],
+    /// Whether the lever has reported yet. Its first report only tells us
+    /// where it already is, so it doesn't move any effect.
+    known: bool,
+}
+
+impl Default for FxSection {
+    fn default() -> Self {
+        Self {
+            lever: [false; 3],
+            target: [true, false],
+            known: false,
+        }
+    }
+}
+
+impl FxSection {
+    fn decks(&self) -> impl Iterator<Item = usize> + '_ {
+        (0..NUM_DECKS).filter(|&d| self.target[d])
+    }
+
+    /// The deck whose settings the section shows and steps from.
+    fn primary(&self) -> usize {
+        self.decks().next().unwrap_or(0)
+    }
+}
+
 /// One LED: status byte (note on + channel), note, lit.
 type Led = (u8, u8, bool);
 
@@ -115,6 +171,7 @@ pub struct Flx4 {
     msb: [[u8; 0x20]; 16],
     /// LED state last sent, to send only changes.
     leds: Option<Vec<Led>>,
+    fx: FxSection,
 }
 
 impl Default for Flx4 {
@@ -129,6 +186,7 @@ impl Flx4 {
             decks: [DeckState::default(); NUM_DECKS],
             msb: [[0; 0x20]; 16],
             leds: None,
+            fx: FxSection::default(),
         }
     }
 
@@ -314,6 +372,110 @@ impl Flx4 {
         }
     }
 
+    /// The beat FX section.
+    fn fx(&mut self, kind: u8, num: u8, value: u8, state: &State) -> Vec<Action> {
+        let pressed = value > 0;
+        let p = state.decks[self.fx.primary()].fx;
+        let target = self.fx.target;
+        let each = |f: &dyn Fn(DeckId) -> Command| -> Vec<Action> {
+            (0..NUM_DECKS)
+                .filter(|&d| target[d])
+                .map(|d| engine(f(deck_id(d))))
+                .collect()
+        };
+        match (kind, num) {
+            (NOTE_ON, FX_SELECT | FX_SELECT_SHIFT) if pressed => {
+                let n = FxKind::ALL.len();
+                let step = if num == FX_SELECT { 1 } else { n - 1 };
+                let kind = FxKind::ALL[(p.kind as usize + step) % n];
+                each(&|deck| Command::SetFxKind { deck, kind })
+            }
+            (NOTE_ON, FX_BEAT_LEFT | FX_BEAT_RIGHT) if pressed => {
+                let i = nearest_beat(p.beats);
+                let i = if num == FX_BEAT_LEFT {
+                    i.saturating_sub(1)
+                } else {
+                    (i + 1).min(FX_BEATS.len() - 1)
+                };
+                let beats = FX_BEATS[i];
+                each(&|deck| Command::SetFxBeats { deck, beats })
+            }
+            (NOTE_ON, FX_ON) if pressed => {
+                let on = !p.on;
+                each(&|deck| Command::SetFxOn { deck, on })
+            }
+            (NOTE_ON, FX_ON_SHIFT) if pressed => (0..NUM_DECKS)
+                .map(|d| {
+                    engine(Command::SetFxOn {
+                        deck: deck_id(d),
+                        on: false,
+                    })
+                })
+                .collect(),
+            (NOTE_ON, FX_LEVER_CH1 | FX_LEVER_CH2 | FX_LEVER_MASTER) => {
+                let i = match num {
+                    FX_LEVER_CH1 => 0,
+                    FX_LEVER_CH2 => 1,
+                    _ => 2,
+                };
+                self.fx.lever[i] = pressed;
+                self.move_fx(state)
+            }
+            (CC, _) => match self.fourteen_bit(FX_CH, num, value) {
+                Some(v) if num - 0x20 == FX_LEVEL => {
+                    let value = v as f32;
+                    each(&|deck| Command::SetFxLevel { deck, value })
+                }
+                _ => vec![],
+            },
+            _ => vec![],
+        }
+    }
+
+    /// Points the FX section where the lever now is, taking the effect
+    /// along: decks it leaves stop (echo and reverb tails ring out), decks
+    /// it reaches pick up its settings.
+    fn move_fx(&mut self, state: &State) -> Vec<Action> {
+        let [ch1, ch2, master] = self.fx.lever;
+        let target = if master { [true, true] } else { [ch1, ch2] };
+        // Between positions the lever can briefly report none.
+        if target == [false, false] || target == self.fx.target {
+            self.fx.known = true;
+            return vec![];
+        }
+        let from = state.decks[self.fx.primary()].fx;
+        let before = std::mem::replace(&mut self.fx.target, target);
+        if !std::mem::replace(&mut self.fx.known, true) {
+            return vec![];
+        }
+        let mut out = vec![];
+        for d in 0..NUM_DECKS {
+            let deck = deck_id(d);
+            match (before[d], target[d]) {
+                (true, false) if state.decks[d].fx.on => {
+                    out.push(engine(Command::SetFxOn { deck, on: false }))
+                }
+                (false, true) => {
+                    out.push(engine(Command::SetFxKind {
+                        deck,
+                        kind: from.kind,
+                    }));
+                    out.push(engine(Command::SetFxBeats {
+                        deck,
+                        beats: from.beats,
+                    }));
+                    out.push(engine(Command::SetFxLevel {
+                        deck,
+                        value: from.level,
+                    }));
+                    out.push(engine(Command::SetFxOn { deck, on: from.on }));
+                }
+                _ => {}
+            }
+        }
+        out
+    }
+
     /// Stores an MSB, or combines an LSB with its MSB into 0.0..=1.0.
     fn fourteen_bit(&mut self, ch: u8, cc: u8, value: u8) -> Option<f64> {
         match cc {
@@ -355,12 +517,18 @@ impl Mapping for Flx4 {
                 Self::pad((p / 2) as usize, p % 2 == 1, num, value > 0)
             }
             _ if ch == GLOBAL_CH => self.global(kind, num, value),
+            _ if ch == FX_CH || ch == FX_CH + 1 => self.fx(kind, num, value, state),
             _ => vec![],
         }
     }
 
     fn leds(&mut self, state: &State) -> Vec<Vec<u8>> {
-        let now = all_leds(state);
+        let mut now = all_leds(state);
+        // The FX ON/OFF button shows the effect it switches.
+        let on = state.decks[self.fx.primary()].fx.on;
+        for note in [FX_ON, FX_ON_SHIFT] {
+            now.push((NOTE_ON | FX_CH, note, on));
+        }
         let before = self.leds.replace(now.clone());
         now.iter()
             .enumerate()
@@ -421,6 +589,17 @@ fn engine(cmd: Command) -> Action {
 
 fn deck_id(d: usize) -> DeckId {
     DeckId::from_index(d).expect("deck index")
+}
+
+/// Index of the step in [`FX_BEATS`] closest to `beats`.
+fn nearest_beat(beats: f32) -> usize {
+    (0..FX_BEATS.len())
+        .min_by(|&a, &b| {
+            (FX_BEATS[a] - beats)
+                .abs()
+                .total_cmp(&(FX_BEATS[b] - beats).abs())
+        })
+        .unwrap_or(0)
 }
 
 /// CFX knob: -1.0 (low-pass) ..= 1.0 (high-pass), snapping to off near the
@@ -778,5 +957,153 @@ mod tests {
             c[..],
             [Command::SetFilter { deck: DeckId::A, value }] if value == 0.0
         ));
+    }
+
+    fn with_fx(mut s: State, d: usize, kind: FxKind, on: bool, beats: f32) -> State {
+        s.decks[d].fx = dj_engine::FxSnapshot {
+            kind,
+            on,
+            level: 0.5,
+            beats,
+        };
+        s
+    }
+
+    #[test]
+    fn beat_fx_buttons_drive_the_selected_deck() {
+        let mut m = Flx4::new();
+        let s = with_fx(st(), 0, FxKind::Phaser, false, 1.0);
+        // Deck 1 until the lever says otherwise.
+        assert!(matches!(
+            one(&mut m, [0x94, FX_SELECT, 0x7F], &s),
+            Command::SetFxKind {
+                deck: DeckId::A,
+                kind: FxKind::Echo
+            }
+        ));
+        assert!(cmds(m.handle(&[0x94, FX_SELECT, 0], &s)).is_empty());
+        assert!(matches!(
+            one(&mut m, [0x94, FX_SELECT_SHIFT, 0x7F], &s),
+            Command::SetFxKind {
+                kind: FxKind::Flanger,
+                ..
+            }
+        ));
+        assert!(matches!(
+            one(&mut m, [0x94, FX_BEAT_LEFT, 0x7F], &s),
+            Command::SetFxBeats { beats, .. } if beats == 0.75
+        ));
+        assert!(matches!(
+            one(&mut m, [0x94, FX_BEAT_RIGHT, 0x7F], &s),
+            Command::SetFxBeats { beats, .. } if beats == 2.0
+        ));
+        assert!(matches!(
+            one(&mut m, [0x94, FX_ON, 0x7F], &s),
+            Command::SetFxOn {
+                deck: DeckId::A,
+                on: true
+            }
+        ));
+        let c = fourteen(&mut m, FX_CH, FX_LEVEL, 16383, &s);
+        assert!(matches!(c[..], [Command::SetFxLevel { deck: DeckId::A, value }] if value == 1.0));
+    }
+
+    #[test]
+    fn beat_length_stops_at_the_ends() {
+        let mut m = Flx4::new();
+        let s = with_fx(st(), 0, FxKind::Echo, false, 8.0);
+        assert!(matches!(
+            one(&mut m, [0x94, FX_BEAT_RIGHT, 0x7F], &s),
+            Command::SetFxBeats { beats, .. } if beats == 8.0
+        ));
+    }
+
+    #[test]
+    fn lever_moves_the_effect() {
+        let mut m = Flx4::new();
+        let s = with_fx(st(), 0, FxKind::Reverb, true, 2.0);
+        // First report: just where the lever already is.
+        assert!(cmds(m.handle(&[0x94, FX_LEVER_CH1, 0x7F], &s)).is_empty());
+        // To CH2: deck 1 stops, deck 2 picks up the reverb, still on.
+        assert!(cmds(m.handle(&[0x94, FX_LEVER_CH1, 0], &s)).is_empty());
+        let c = cmds(m.handle(&[0x95, FX_LEVER_CH2, 0x7F], &s));
+        assert!(matches!(
+            c[0],
+            Command::SetFxOn {
+                deck: DeckId::A,
+                on: false
+            }
+        ));
+        assert!(c.iter().any(|c| matches!(
+            c,
+            Command::SetFxKind {
+                deck: DeckId::B,
+                kind: FxKind::Reverb
+            }
+        )));
+        assert!(c.iter().any(|c| matches!(
+            c,
+            Command::SetFxBeats { deck: DeckId::B, beats } if *beats == 2.0
+        )));
+        assert!(c.iter().any(|c| matches!(
+            c,
+            Command::SetFxOn {
+                deck: DeckId::B,
+                on: true
+            }
+        )));
+        // Now the buttons drive deck 2 (on either FX channel).
+        let s = with_fx(st(), 1, FxKind::Reverb, true, 2.0);
+        assert!(matches!(
+            one(&mut m, [0x95, FX_ON, 0x7F], &s),
+            Command::SetFxOn {
+                deck: DeckId::B,
+                on: false
+            }
+        ));
+    }
+
+    #[test]
+    fn master_runs_the_effect_on_both_decks() {
+        let mut m = Flx4::new();
+        let s = with_fx(st(), 0, FxKind::Echo, false, 1.0);
+        m.handle(&[0x94, FX_LEVER_CH1, 0x7F], &s);
+        m.handle(&[0x94, FX_LEVER_CH1, 0], &s);
+        let c = cmds(m.handle(&[0x94, FX_LEVER_MASTER, 0x7F], &s));
+        assert!(c
+            .iter()
+            .all(|c| !matches!(c, Command::SetFxOn { on: true, .. })));
+        let c = cmds(m.handle(&[0x94, FX_ON, 0x7F], &s));
+        assert!(matches!(
+            c[..],
+            [
+                Command::SetFxOn {
+                    deck: DeckId::A,
+                    on: true
+                },
+                Command::SetFxOn {
+                    deck: DeckId::B,
+                    on: true
+                },
+            ]
+        ));
+        // SHIFT + ON/OFF: everything off.
+        let c = cmds(m.handle(&[0x94, FX_ON_SHIFT, 0x7F], &s));
+        assert!(c
+            .iter()
+            .all(|c| matches!(c, Command::SetFxOn { on: false, .. })));
+        assert_eq!(c.len(), 2);
+    }
+
+    #[test]
+    fn fx_on_led_follows_the_selected_deck() {
+        let mut m = Flx4::new();
+        let s = st();
+        m.leds(&s);
+        let s = with_fx(s, 0, FxKind::Echo, true, 1.0);
+        assert_eq!(
+            m.leds(&s),
+            vec![vec![0x94, FX_ON, 0x7F], vec![0x94, FX_ON_SHIFT, 0x7F]]
+        );
     }
 }
