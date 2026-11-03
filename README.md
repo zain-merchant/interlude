@@ -26,7 +26,7 @@ A free, open-source DJ app that is fast, modern and uncluttered. No paywalled
   bars). Hot cues, the
   cue point and the loop are saved with the library as you set them, and
   come back when the track is loaded again.
-- **Slip** (the Slip toggle under Key lock, S / L, or SHIFT + PLAY on the
+- **Slip** (the Slip toggle under Key lock, A / ;, or SHIFT + PLAY on the
   FLX4): while a scratch, loop, held hot cue or pause interrupts a playing
   deck, the track keeps time underneath, shown as a fainter second play
   head on the waveform. When it ends, playback picks up where the track
@@ -129,7 +129,7 @@ shape on AZERTY, QWERTZ and Dvorak.
 | D / F | J / K | Halve / double the loop |
 | C / V | N / M | Beat jump back / forward by the loop size |
 | ⇧C / ⇧V | ⇧N / ⇧M | Jump back / forward 4 bars |
-| S | L | Slip on / off |
+| A | ; | Slip on / off |
 | Shift ← | Shift → | Load the selected track |
 
 | Key | Action |
