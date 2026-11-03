@@ -146,6 +146,7 @@ impl Engine {
             ReloopExit { deck } => self.decks[deck.index()].reloop_exit(),
             BeatJump { deck, beats } => self.decks[deck.index()].beat_jump(beats),
             Seek { deck, seconds } => self.decks[deck.index()].seek_secs(seconds),
+            SetCue { deck, seconds } => self.decks[deck.index()].set_cue_secs(seconds),
             SetRate { deck, rate } => self.decks[deck.index()].rate = rate.clamp(0.0, 4.0),
             SetBend { deck, bend } => self.decks[deck.index()].bend = bend.clamp(-1.0, 1.0),
             SetKeylock { deck, on } => {

@@ -15,6 +15,12 @@ export const engine = $state({
   masterLevels: [0, 0],
   /** Crossfader, cue mix and master gain as the engine has them (null on engines that don't report them). */
   mixer: null,
+  /**
+   * The audio output: { state: 'connected', device, sampleRate },
+   * { state: 'lost', device, fallback } while waiting for a device that went
+   * away, or { state: 'none' } when running silently. Null until known.
+   */
+  audio: null,
 });
 
 /** Loaded track info and waveform bytes per deck. */
@@ -56,6 +62,7 @@ function frame(now) {
       .then((s) => {
         for (let i = 0; i < 2; i++) engine.decks[i] = s.decks[i];
         engine.mixer = s.mixer ?? null;
+        engine.audio = s.audio ?? null;
         for (let i = 0; i < 2; i++) engine.deckLevels[i] = Math.max(s.deckPeaks[i], engine.deckLevels[i] * 0.86);
         for (let i = 0; i < 2; i++) engine.masterLevels[i] = Math.max(s.masterPeak[i], engine.masterLevels[i] * 0.86);
       })
@@ -97,6 +104,30 @@ export async function loadTrack(deck, item) {
   const bins = await backend.waveform(deck);
   tracks[deck] = { ...info, title: item.title || info.title, artist: item.artist ?? '', bins };
   displayPos[deck] = 0;
+}
+
+/** Empties a deck. */
+export async function ejectTrack(deck) {
+  await backend.control({ type: 'eject', deck });
+  tracks[deck] = null;
+  displayPos[deck] = 0;
+}
+
+/** What a deck holds now, so it can be put back: the track, where it was and its cue point. */
+export function deckSnapshot(deck) {
+  const t = tracks[deck];
+  if (!t) return null;
+  const d = engine.decks[deck];
+  return { item: { path: t.path, title: t.title, artist: t.artist }, position: d.position, cue: d.cue };
+}
+
+/** Puts a deck back the way `deckSnapshot` found it (null empties it). */
+export async function restoreDeck(deck, snap) {
+  if (!snap) return ejectTrack(deck);
+  await loadTrack(deck, snap.item);
+  await backend.control({ type: 'setCue', deck, seconds: snap.cue });
+  await backend.control({ type: 'seek', deck, seconds: snap.position });
+  displayPos[deck] = snap.position;
 }
 
 export const control = (cmd) => backend.control(cmd).catch((e) => console.error(e));

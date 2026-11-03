@@ -6,9 +6,10 @@
   import { tip, tipText } from './tooltip.svelte.js';
   import { openMenu } from './menu.svelte.js';
   import { keyLabel, MOD } from './commands.js';
+  import { pushEdit } from './undo.svelte.js';
 
-  /** @type {{ onload: (deck: number, track: import('./backend.js').LibraryTrack) => void }} */
-  let { onload } = $props();
+  /** @type {{ onload: (deck: number, track: import('./backend.js').LibraryTrack) => void, onsettings?: () => void }} */
+  let { onload, onsettings } = $props();
 
   const ROW = 30;
 
@@ -54,7 +55,7 @@
     }
   }
 
-  async function addFolder() {
+  export async function addFolder() {
     const path = await backend.pickFolder();
     if (!path) return;
     try {
@@ -66,11 +67,24 @@
     }
   }
 
-  async function removeFolder(f) {
+  /** Removes a music folder from the library (never from disk), with Undo. */
+  async function removeFolder(f, { undoable = true } = {}) {
     folders = await backend.removeFolder(f);
     if (folder === f) folder = null;
     total = null;
-    refresh();
+    await refresh();
+    if (undoable)
+      pushEdit({
+        label: `Removed ${short(f)} from the library`,
+        undo: () => restoreFolder(f),
+        redo: () => removeFolder(f, { undoable: false }),
+      });
+  }
+
+  async function restoreFolder(f) {
+    folders = await backend.addFolder(f);
+    total = null;
+    await refresh();
   }
 
   function pick(f) {
@@ -193,6 +207,10 @@
       </button>
     {/each}
     <button class="add" onclick={addFolder}>+ Add music folder</button>
+    <span class="grow"></span>
+    {#if onsettings}
+      <button class="add" onclick={onsettings} use:tip={() => tipText('Settings', keyLabel('app.settings'))}>Settings</button>
+    {/if}
   </nav>
 
   <div class="main">
@@ -232,10 +250,11 @@
             draggable="true" ondragstart={(e) => { selected = index; startDrag(e, t); }} ondragend={endDrag}
             onclick={() => { selected = index; scroller.focus({ preventScroll: true }); }} ondblclick={() => autoLoad(t)} onkeydown={() => {}}
             oncontextmenu={(e) => rowMenu(e, t, index)}>
-            <span class="ld">{#each decks as d}<b class:b={d === 1}>{'AB'[d]}</b>{/each}</span>
+            <span class="ld">{#each decks as d}<b class:b={d === 1} aria-hidden="true">{'AB'[d]}</b>{/each}</span>
             <span class="t">{t.title}</span>
             <span>{t.artist}</span>
             <span>{t.folder}</span>
+            {#if decks.length}<span class="sr">, on deck {decks.map((d) => 'AB'[d]).join(' and ')}</span>{/if}
           </div>
         {/each}
       </div>
@@ -291,7 +310,7 @@
     color: var(--fg);
   }
   .item small {
-    color: var(--fg-4);
+    color: var(--fg-3);
     font-size: 11px;
   }
   .add {
@@ -357,7 +376,19 @@
   }
   kbd {
     font: 400 11px var(--font);
-    color: var(--fg-4);
+    color: var(--fg-3);
+  }
+  .grow {
+    flex: 1;
+  }
+  .sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
   .count {
     font-size: 11px;

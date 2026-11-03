@@ -123,8 +123,8 @@
     <div class="overview"><Waveform {deck} mode="overview" /></div>
 
     <div class="times">
-      <span class="el num" aria-label="Elapsed">{fmt(d.position)}</span>
-      <span class="rm num" aria-label="Remaining">{fmt(d.position - d.duration)}</span>
+      <span class="el num"><span class="sr">Elapsed </span>{fmt(d.position)}</span>
+      <span class="rm num"><span class="sr">Remaining </span>{fmt(d.position - d.duration)}</span>
     </div>
 
     <Performance {deck} />
@@ -167,7 +167,7 @@
       <Fader vertical big tick value={pitch} min={-1} max={1} reset={0} label="Deck {name} pitch" onchange={setPitch}
         format={(v) => pct(-v * range * 100)} />
     </div>
-    <button class="range num" onclick={cycleRange} use:tip={() => `Pitch range ±${Math.round(range * 100)}%, click to change`}>±{Math.round(range * 100)}</button>
+    <button class="range num" onclick={cycleRange} aria-label="Deck {name} pitch range, plus or minus {Math.round(range * 100)} percent" use:tip={() => `Pitch range ±${Math.round(range * 100)}%, click to change`}>±{Math.round(range * 100)}</button>
     <button class="range lock" class:on={d.keylock} aria-pressed={d.keylock} {...press(toggleKeylock)}
       use:tip={() => (d.keylock ? 'Key lock on: tempo changes keep the pitch' : 'Key lock off: tempo changes raise or lower the pitch')}>Key lock</button>
   </div>
@@ -280,6 +280,25 @@
     align-items: center;
     gap: 10px;
   }
+  /* A narrow deck (small window, or the interface zoomed in) puts Sync and
+     nudge on a second line instead of running into the pitch fader. */
+  .body {
+    container-type: inline-size;
+  }
+  @container (max-width: 345px) {
+    .transport {
+      flex-wrap: wrap;
+      row-gap: 8px;
+    }
+    .transport .btn.big {
+      flex: 1;
+      min-width: 0;
+    }
+    .sp {
+      flex-basis: 100%;
+      height: 0;
+    }
+  }
   .sp {
     flex: 1;
   }
@@ -355,6 +374,14 @@
     box-shadow: inset 0 0 0 1px var(--line);
     color: var(--fg-3);
     font: 400 11px var(--font);
+  }
+  .sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
   .range:hover {
     color: var(--fg-2);

@@ -449,6 +449,60 @@ fn jog_scrubs_when_paused_and_nudges_when_playing() {
     );
 }
 
+#[test]
+fn set_cue_moves_the_cue_point_without_playing() {
+    let (mut e, mut h) = setup();
+    load(&mut h, DeckId::A, sine(440.0, 10.0, 0.5));
+    let a = DeckId::A;
+    h.send(Command::SetCue {
+        deck: a,
+        seconds: 3.5,
+    })
+    .unwrap();
+    h.send(Command::Seek {
+        deck: a,
+        seconds: 6.0,
+    })
+    .unwrap();
+    let out = render(&mut e, 0.2);
+    let d = h.shared().deck(0);
+    assert!(!d.playing);
+    assert!((d.cue - 3.5).abs() < 1e-3);
+    assert!((d.position - 6.0).abs() < 1e-3);
+    assert!(rms(&out) < 1e-6, "setting a cue must not make a sound");
+
+    // Past the end clamps to the track's length.
+    h.send(Command::SetCue {
+        deck: a,
+        seconds: 99.0,
+    })
+    .unwrap();
+    render(&mut e, 0.05);
+    assert!((h.shared().deck(0).cue - 10.0).abs() < 1e-3);
+}
+
+#[test]
+fn processing_an_empty_block_applies_commands_but_holds_position() {
+    // While the audio device is gone, the output thread calls `process` with
+    // empty buffers so queued commands still land and decks stay put.
+    let (mut e, mut h) = setup();
+    load(&mut h, DeckId::A, sine(440.0, 10.0, 0.5));
+    h.send(Command::Play { deck: DeckId::A }).unwrap();
+    render(&mut e, 0.5);
+    let before = h.shared().deck(0).position;
+    h.send(Command::SetFader {
+        deck: DeckId::A,
+        value: 0.25,
+    })
+    .unwrap();
+    for _ in 0..10 {
+        e.process(&mut [], &mut []);
+    }
+    let d = h.shared().deck(0);
+    assert_eq!(d.position, before);
+    assert!((d.fader - 0.25).abs() < 1e-6);
+}
+
 /// Frequency of a (roughly) pure tone, from its upward zero crossings.
 fn pitch_of(stereo: &[f32]) -> f32 {
     let left: Vec<f32> = stereo.iter().step_by(2).copied().collect();

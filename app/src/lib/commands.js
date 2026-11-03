@@ -4,8 +4,13 @@
 //
 // The keyboard splits down the middle: the left hand plays deck A, the
 // right hand deck B, mirrored. The left key of a pair always means "less".
+//
+// Users can rebind any of these on the Keyboard settings page; their
+// bindings live in keymap.svelte.js and win over the defaults here.
 
-const mac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform);
+import { keymap } from './keymap.svelte.js';
+
+export const mac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform);
 export const MOD = mac ? '⌘' : 'Ctrl+';
 
 /** @type {Record<string, { code: string, shift?: boolean, mod?: boolean, label: string, hold?: boolean }>} */
@@ -22,6 +27,8 @@ export const keys = {
   'deck.1.faster': { code: 'Period', label: '.', hold: true },
   'deck.0.pfl': { code: 'KeyG', label: 'G' },
   'deck.1.pfl': { code: 'KeyH', label: 'H' },
+  'deck.0.where': { code: 'KeyT', label: 'T' },
+  'deck.1.where': { code: 'KeyY', label: 'Y' },
   // Hot cues 1 to 4: number row, 1-4 for deck A and 7-0 for deck B. Hold
   // on a paused deck to preview; ⇧ clears.
   ...hotCueKeys(0, ['Digit1', 'Digit2', 'Digit3', 'Digit4']),
@@ -47,7 +54,64 @@ export const keys = {
   'library.search': { code: 'KeyF', mod: true, label: `${MOD}F` },
   'focus.next': { code: 'F6', label: 'F6' },
   'focus.prev': { code: 'F6', shift: true, label: '⇧F6' },
+  'edit.undo': { code: 'KeyZ', mod: true, label: `${MOD}Z` },
+  'edit.redo': { code: 'KeyZ', mod: true, shift: true, label: mac ? '⇧⌘Z' : 'Ctrl+⇧Z' },
+  'app.settings': { code: 'Comma', mod: true, label: `${MOD},` },
+  'view.uiZoomIn': { code: 'Equal', mod: true, label: `${MOD}=` },
+  'view.uiZoomOut': { code: 'Minus', mod: true, label: `${MOD}−` },
+  'view.uiZoomReset': { code: 'Digit0', mod: true, label: `${MOD}0` },
 };
+
+/** What each command does, as the Keyboard settings page and menus name it. */
+const NAMES = {
+  cue: 'Cue (hold to preview)',
+  play: 'Play / pause',
+  sync: 'Sync',
+  slower: 'Nudge slower (hold)',
+  faster: 'Nudge faster (hold)',
+  pfl: 'Headphone cue',
+  where: 'Read out position',
+  load: 'Load selected track',
+  loop: 'Loop on / off',
+  loopHalve: 'Halve loop',
+  loopDouble: 'Double loop',
+  jumpBack: 'Beat jump back',
+  jumpForward: 'Beat jump forward',
+  'mixer.xfLeft': 'Crossfader left',
+  'mixer.xfRight': 'Crossfader right',
+  'mixer.xfHardLeft': 'Crossfader all the way left',
+  'mixer.xfHardRight': 'Crossfader all the way right',
+  'view.zoomOut': 'Zoom waveforms out',
+  'view.zoomIn': 'Zoom waveforms in',
+  'view.uiZoomIn': 'Make everything bigger',
+  'view.uiZoomOut': 'Make everything smaller',
+  'view.uiZoomReset': 'Actual size',
+  'library.search': 'Search the library',
+  'focus.next': 'Next area',
+  'focus.prev': 'Previous area',
+  'edit.undo': 'Undo',
+  'edit.redo': 'Redo',
+  'app.settings': 'Settings',
+};
+
+/** A command's name, without its deck ("Play / pause"). */
+export function commandName(id) {
+  const action = id.startsWith('deck.') ? id.split('.').slice(2).join('.') : id;
+  if (NAMES[action]) return NAMES[action];
+  const hot = action.match(/^hotCue(Clear)?\.(\d+)$/);
+  if (hot) return hot[1] ? `Clear hot cue ${+hot[2] + 1}` : `Hot cue ${+hot[2] + 1} (hold to preview)`;
+  // Commands added without a name still get a readable one.
+  const words = action.split('.').pop().replace(/([a-z])([A-Z0-9])/g, '$1 $2').toLowerCase();
+  return words.charAt(0).toUpperCase() + words.slice(1);
+}
+
+/**
+ * A command's key as the user has it: their own binding, the default, or
+ * null if they removed it.
+ */
+export function binding(id) {
+  return id in keymap.overrides ? keymap.overrides[id] : (keys[id] ?? null);
+}
 
 function hotCueKeys(deck, codes) {
   const out = {};
@@ -60,13 +124,18 @@ function hotCueKeys(deck, codes) {
 }
 
 /** The key label for a command, for tooltips ("" if it has none). */
-export const keyLabel = (id) => keys[id]?.label ?? '';
+export const keyLabel = (id) => binding(id)?.label ?? '';
+
+/** True when two bindings are the same key press. */
+export const sameKey = (a, b) => !!a && !!b && a.code === b.code && !!a.shift === !!b.shift && !!a.mod === !!b.mod;
 
 /** The command a key event triggers, or null. */
 export function commandFor(e) {
-  const mod = e.metaKey || e.ctrlKey;
-  for (const [id, k] of Object.entries(keys)) {
-    if (k.code === e.code && !!k.shift === e.shiftKey && !!k.mod === mod && !e.altKey) return { id, ...k };
+  if (e.altKey) return null;
+  const press = { code: e.code, shift: e.shiftKey, mod: e.metaKey || e.ctrlKey };
+  for (const id of Object.keys(keys)) {
+    const k = binding(id);
+    if (sameKey(k, press)) return { id, ...k, hold: keys[id].hold };
   }
   return null;
 }

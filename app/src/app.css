@@ -16,7 +16,7 @@
   --line-2: #2e2e32;
   --fg: #ececea;
   --fg-2: #a3a39e;
-  --fg-3: #6b6b67;
+  --fg-3: #82827e; /* lightened from #6b6b67 to reach 4.5:1 for text */
   --fg-4: #45454a;
   --deck-a: #3db4ff;
   --deck-b: #ff8a3d;
@@ -102,7 +102,20 @@
     font-feature-settings: 'tnum' 1;
     -webkit-font-smoothing: antialiased;
     user-select: none;
-    overflow: hidden;
+    /* Scrolls only when the interface is zoomed past what the window fits. */
+    overflow: auto;
+  }
+}
+
+/* macOS Increase Contrast (and the same setting elsewhere): brighter
+   secondary text and visible outlines on every control. */
+@media (prefers-contrast: more) {
+  :root {
+    --fg-2: #c8c8c3;
+    --fg-3: #a3a39e;
+    --fg-4: #82827e;
+    --line: #3a3a3f;
+    --line-2: #6b6b70;
   }
 }
 
