@@ -5,6 +5,7 @@
 //!   dj render <a> <b> <out.wav> [secs]     mix A into B offline and write a WAV
 //!   dj play <a> [b]                        play A, then crossfade into B
 //!   dj midi [secs]                         print what MIDI controllers send
+//!   dj latency [secs]                      play two decks hard and report audio timing
 
 use std::sync::Arc;
 use std::time::{Duration, Instant};
@@ -21,9 +22,10 @@ fn main() {
         }
         Some("play") if args.len() >= 2 => play(&args[1], args.get(2).map(String::as_str)),
         Some("midi") => midi(args.get(1).and_then(|s| s.parse().ok())),
+        Some("latency") => latency(args.get(1).and_then(|s| s.parse().ok()).unwrap_or(10)),
         _ => {
             eprintln!(
-                "usage:\n  dj info <file>\n  dj render <a> <b> <out.wav> [secs]\n  dj play <a> [b]\n  dj midi [secs]"
+                "usage:\n  dj info <file>\n  dj render <a> <b> <out.wav> [secs]\n  dj play <a> [b]\n  dj midi [secs]\n  dj latency [secs]"
             );
             std::process::exit(2);
         }
@@ -232,6 +234,52 @@ fn play(a: &str, b: Option<&str>) -> Result<()> {
             return Ok(());
         }
     }
+}
+
+/// Plays two decks at the heaviest settings (keylock, pitch, an effect) on
+/// the real output, quietly, and prints the stream's timing every second:
+/// buffer size, the driver's output latency, the slowest render and any
+/// late callbacks. Set `OSS_DJ_BUFFER_FRAMES` to try other buffer sizes.
+fn latency(secs: u64) -> Result<()> {
+    let (output, mut h) = dj_engine::output::start_preferring(&["DDJ-FLX4"])?;
+    let sr = output.sample_rate;
+    eprintln!("output: {} at {sr} Hz", output.device_name);
+    let tone: Vec<f32> = (0..sr as usize * 60)
+        .flat_map(|i| {
+            let v = (i as f32 * 220.0 * std::f32::consts::TAU / sr as f32).sin() * 0.5;
+            [v, v]
+        })
+        .collect();
+    let track = Arc::new(Track::from_stereo(tone, sr));
+    send(&mut h, Command::SetMasterGain { db: -40.0 });
+    for deck in DeckId::ALL {
+        send(
+            &mut h,
+            Command::Load {
+                deck,
+                track: track.clone(),
+            },
+        );
+        send(&mut h, Command::SetRate { deck, rate: 1.04 });
+        send(&mut h, Command::SetKeylock { deck, on: true });
+        send(&mut h, Command::SetFxOn { deck, on: true });
+        send(&mut h, Command::Play { deck });
+    }
+    for _ in 0..secs {
+        std::thread::sleep(Duration::from_secs(1));
+        let s = output.stats();
+        let budget = s.buffer_frames as f64 / sr as f64 * 1e6;
+        println!(
+            "buffer {} frames ({:.1} ms), output latency {:.1} ms, slowest render {} µs ({:.0}% of budget), late callbacks {}",
+            s.buffer_frames,
+            budget / 1000.0,
+            s.output_latency_ms,
+            s.max_render_us,
+            s.max_render_us as f64 / budget * 100.0,
+            s.late_callbacks
+        );
+    }
+    Ok(())
 }
 
 /// Prints every MIDI message from every connected device, with what the
