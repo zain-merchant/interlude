@@ -71,8 +71,33 @@ export function createMockBackend() {
     const folder = FOLDERS[i % FOLDERS.length];
     const artist = ARTISTS[Math.floor(r() * ARTISTS.length)];
     const title = TITLES[i % TITLES.length] + (i >= TITLES.length ? ' (Extended Mix)' : '');
-    tracks.push({ path: `/Music/${folder}/${artist} - ${title}.mp3`, title, artist, folder, format: i % 5 ? 'MP3' : 'FLAC' });
+    tracks.push({ path: `/Music/${folder}/${artist} - ${title}.mp3`, title, artist, folder, format: i % 5 ? 'MP3' : 'FLAC', analysis: null });
   }
+  // What "analysis" finds for a track: the same numbers loading it gives.
+  const summary = (path) => {
+    const seed = hash(path);
+    return { duration: 300 + Math.floor(rng(seed)() * 180), bpm: 118 + (seed % 12), key: { tonic: seed % 12, minor: seed % 3 !== 0 }, failed: false };
+  };
+  // Background analysis: one track every 60 ms, reported to listeners.
+  const analysisListeners = new Set();
+  let analysisQueue = [];
+  setInterval(() => {
+    const t = analysisQueue.shift();
+    if (!t || t.analysis) return;
+    t.analysis = summary(t.path);
+    for (const fn of analysisListeners) fn({ path: t.path, ...t.analysis });
+  }, 60);
+  let quantize = true;
+  let cueMix = 0.5;
+  let masterDb = 0;
+  /** Seconds to the nearest beat, when quantizing. */
+  const snap = (d, t) => (quantize && d.bpm ? d.firstBeat + Math.round((t - d.firstBeat) / beatLen(d)) * beatLen(d) : t);
+  /** A jump target moved to the play head's place in the beat, when quantizing. */
+  const inPhase = (d, to) => {
+    if (!quantize || !d.bpm) return to;
+    const diff = (d.position - to) / beatLen(d);
+    return to + (diff - Math.round(diff)) * beatLen(d);
+  };
 
   const decks = [0, 1].map(() => ({
     loaded: false, playing: false, position: 0, duration: 0, cue: 0, rate: 1, bend: 0, bpm: 0, key: null, keylock: false, firstBeat: 0,
@@ -130,7 +155,7 @@ export function createMockBackend() {
       case 'cuePress':
         if (!d.loaded || d.previewHot != null) break;
         if (d.playing && !d.previewing) { d.position = d.cue; d.playing = false; break; }
-        if (Math.abs(d.position - d.cue) > 0.001) d.cue = d.position;
+        if (Math.abs(d.position - d.cue) > 0.001) d.position = d.cue = snap(d, d.position);
         d.playing = true; d.previewing = true;
         break;
       case 'cueRelease':
@@ -146,8 +171,9 @@ export function createMockBackend() {
         break;
       case 'hotCuePress': {
         if (!d.loaded) break;
-        const at = d.hotCues[cmd.index];
-        if (at == null) { d.hotCues[cmd.index] = d.position; break; }
+        let at = d.hotCues[cmd.index];
+        if (at == null) { d.hotCues[cmd.index] = snap(d, d.position); break; }
+        if (d.playing && !d.previewing) at = inPhase(d, at);
         if (d.looping && (at < d.loopIn || at >= d.loopOut)) d.looping = false;
         d.position = at;
         if (!d.playing || d.previewing) Object.assign(d, { playing: true, previewing: true, previewHot: cmd.index, previewReturn: at });
@@ -162,7 +188,7 @@ export function createMockBackend() {
         if (!d.loaded || !d.bpm) break;
         const unit = Math.min(1, d.loopBeats);
         const beat = (d.position - d.firstBeat) / beatLen(d);
-        d.loopIn = Math.max(0, d.firstBeat + Math.round(beat / unit) * unit * beatLen(d));
+        d.loopIn = quantize ? Math.max(0, d.firstBeat + Math.round(beat / unit) * unit * beatLen(d)) : d.position;
         d.loopOut = d.loopIn + d.loopBeats * beatLen(d);
         d.looping = true;
         break;
@@ -180,7 +206,7 @@ export function createMockBackend() {
       }
       case 'reloopExit':
         if (d.looping) d.looping = false;
-        else if (d.loopIn != null && d.loopOut != null) { d.looping = true; d.position = d.loopIn; }
+        else if (d.loopIn != null && d.loopOut != null) { d.looping = true; d.position = Math.max(d.loopIn, d.playing ? inPhase(d, d.loopIn) : d.loopIn); }
         break;
       case 'beatJump': {
         if (!d.loaded || !d.bpm) break;
@@ -215,6 +241,9 @@ export function createMockBackend() {
         break;
       }
       case 'setCrossfader': xf = cmd.value; break;
+      case 'setCueMix': cueMix = cmd.value; break;
+      case 'setMasterGain': masterDb = cmd.db; break;
+      case 'setQuantize': quantize = cmd.on; break;
       case 'setFilter': d.filter = cmd.value; break;
       case 'setFxKind': d.fx.kind = cmd.kind; break;
       case 'setFxOn': d.fx.on = cmd.on; break;
@@ -239,6 +268,7 @@ export function createMockBackend() {
           filter: d.filter, fx: { ...d.fx },
         })),
         deckPeaks,
+        mixer: { crossfader: xf, cueMix, masterDb, quantize },
         masterPeak: [Math.min(1, m), Math.min(1, m * 0.97)],
         audio,
         recording: {
@@ -261,6 +291,10 @@ export function createMockBackend() {
     outputName: async () => 'Browser preview · simulated audio',
     loadTrack: async (deck, path) => {
       const t = tracks.find((x) => x.path === path) ?? { title: path, path };
+      if ('analysis' in t && !t.analysis) {
+        t.analysis = summary(path);
+        for (const fn of analysisListeners) fn({ path, ...t.analysis });
+      }
       const seed = hash(path);
       const r = rng(seed);
       const duration = 300 + Math.floor(r() * 180);
@@ -289,8 +323,15 @@ export function createMockBackend() {
       folders = folders.filter((f) => f !== path);
       return [...folders];
     },
-    libraryTracks: async (folder) =>
-      tracks.filter((t) => (folder ? [folder] : folders).some((f) => t.path.startsWith(f + '/'))),
+    libraryTracks: async (folder) => {
+      const list = tracks.filter((t) => (folder ? [folder] : folders).some((f) => t.path.startsWith(f + '/')));
+      analysisQueue = list.filter((t) => !t.analysis);
+      return list.map((t) => ({ ...t }));
+    },
+    onLibraryAnalysis: async (fn) => {
+      analysisListeners.add(fn);
+      return () => analysisListeners.delete(fn);
+    },
     pickFolder: async () => null,
   };
 }
