@@ -389,11 +389,18 @@ fn send(state: &AppState, cmd: Command) -> Result<(), String> {
 }
 
 #[tauri::command]
-fn control(state: State<'_, AppState>, cmd: Control) -> Result<(), String> {
+fn control(
+    state: State<'_, AppState>,
+    library: State<'_, library::Library>,
+    cmd: Control,
+) -> Result<(), String> {
     let eject = match cmd {
         Control::Eject { deck } => Some(deck),
         _ => None,
     };
+    if let Some(deck) = eject {
+        library.unwatch(deck);
+    }
     send(&state, cmd.into_command()?)?;
     if let Some(deck) = eject {
         // The engine hands the track back to be freed; drop our copy too.
@@ -496,7 +503,7 @@ fn use_default_output(state: State<'_, AppState>) {
 }
 
 /// Decodes a file on a worker thread (keeping the UI responsive), then loads
-/// it into the deck.
+/// it into the deck with its saved cue points.
 #[tauri::command]
 async fn load_track(
     app: tauri::AppHandle,
@@ -511,7 +518,7 @@ async fn load_track(
         .map_err(|e| e.to_string())?
         .map_err(|e| e.to_string())?;
     let track = Arc::new(track);
-    library.loaded(&app, &track);
+    let cues = library.loaded(&app, deck, &track);
     let info = TrackInfo {
         title: track.title(),
         path: track
@@ -532,6 +539,9 @@ async fn load_track(
             track: track.clone(),
         },
     )?;
+    for cmd in cues.commands(id) {
+        send(&state, cmd)?;
+    }
     state.tracks.lock().map_err(|_| "lock poisoned")?[deck] = Some(track);
     Ok(info)
 }
@@ -596,10 +606,14 @@ pub fn run() {
         .setup({
             let engine = engine.clone();
             move |app| {
-                controller::start(app.handle(), engine, shared);
+                controller::start(app.handle(), engine, shared.clone());
                 log_audio_stats(app.handle().clone());
                 app.state::<library::Library>()
-                    .start_analyzer(app.handle().clone());
+                    .start(app.handle().clone(), shared);
+                let handle = app.handle().clone();
+                let _ = std::thread::Builder::new()
+                    .name("cue-saver".into())
+                    .spawn(move || handle.state::<library::Library>().run_cue_saver());
                 Ok(())
             }
         })

@@ -22,8 +22,9 @@ A free, open-source DJ app that is fast, modern and uncluttered. No paywalled
 - **Hot cues, loops, beat jump:** 8 hot cues per deck (4 on screen, all 8
   on the FLX4 pads): set, jump, hold on a paused deck to preview. Beat loops
   snap to the beatgrid, halve and double, and wrap without clicks. Beat jump
-  moves by the loop size and carries an active loop with it. Cues are kept
-  until the track is unloaded; saving them with the library comes later.
+  moves by the loop size and carries an active loop with it. Hot cues, the
+  cue point and the loop are saved with the library as you set them, and
+  come back when the track is loaded again.
 - **Quantize** (on by default; the Quantize button in the mixer, or B):
   hot cues, the cue point, loop in and out snap to the nearest beat, and a
   hot cue or reloop pressed mid-play lands at the same point in the beat, so
@@ -46,8 +47,13 @@ A free, open-source DJ app that is fast, modern and uncluttered. No paywalled
 - **Library:** add music folders, instant search across artist, title and
   folder, load with double-click, Enter, or Shift+←/→. Columns for title,
   artist, BPM, key, length and folder; click a heading to sort (again to
-  reverse). BPM, key and length are found in the background, one track at
-  a time, and kept until you quit.
+  reverse). Title, artist, album and genre come from the file's tags (or
+  an "Artist - Title" file name). BPM, key and length are found in the
+  background, one track at a time, and saved. The library lives in one
+  SQLite file (`library.db` in the app's data folder, backed up daily to
+  `backups/`); your music files are never changed. Rescans only re-read
+  new or changed files, and a file that has gone stays listed, greyed out,
+  with its cues kept.
 - **Safety:** loading onto a playing deck is blocked.
 - **Controller: Pioneer DDJ-FLX4.** Plug it in (before or after starting the
   app) and it connects by itself; audio goes through its sound card, with

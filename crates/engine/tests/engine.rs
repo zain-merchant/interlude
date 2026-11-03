@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 
-use dj_engine::{new_engine, Command, DeckId, Engine, EngineHandle, FxKind, Track};
+use dj_engine::{new_engine, Command, DeckId, Engine, EngineHandle, FxKind, SavedCues, Track};
 
 const SR: u32 = 48_000;
 
@@ -629,6 +629,37 @@ fn set_cue_moves_the_cue_point_without_playing() {
     .unwrap();
     render(&mut e, 0.05);
     assert!((h.shared().deck(0).cue - 10.0).abs() < 1e-3);
+}
+
+#[test]
+fn restored_cues_put_the_deck_back_at_its_cue_without_playing() {
+    let (mut e, mut h) = setup();
+    load(&mut h, DeckId::A, sine(440.0, 10.0, 0.5));
+    let mut hot_cues = [None; dj_engine::HOT_CUES];
+    hot_cues[0] = Some(1.0);
+    hot_cues[2] = Some(7.25);
+    hot_cues[3] = Some(42.0); // past the end: dropped
+    let cues = SavedCues {
+        cue: 2.5,
+        hot_cues,
+        saved_loop: Some((4.0, 6.0)),
+    };
+    for cmd in cues.commands(DeckId::A) {
+        h.send(cmd).unwrap();
+    }
+    let out = render(&mut e, 0.2);
+    let d = h.shared().deck(0);
+    assert!(!d.playing);
+    assert!(rms(&out) < 1e-6, "restoring cues must not make a sound");
+    assert!((d.cue - 2.5).abs() < 1e-3);
+    assert!((d.position - 2.5).abs() < 1e-3);
+    assert!((d.hot_cues[0].unwrap() - 1.0).abs() < 1e-3);
+    assert_eq!(d.hot_cues[1], None);
+    assert!((d.hot_cues[2].unwrap() - 7.25).abs() < 1e-3);
+    assert_eq!(d.hot_cues[3], None);
+    assert!((d.loop_in.unwrap() - 4.0).abs() < 1e-3);
+    assert!((d.loop_out.unwrap() - 6.0).abs() < 1e-3);
+    assert!(!d.looping, "a restored loop waits for reloop");
 }
 
 #[test]
