@@ -3,14 +3,17 @@
 // change, so drawing costs almost nothing on the CPU.
 //
 // The look: three nested, mirrored envelopes, one per frequency band (low
-// blue outside, mid amber, high near-white in the core), with
-// anti-aliased edges. What has already played collapses to one grey
+// blue outside, mid amber, high near-white in the core), each one smooth,
+// flowing shape with a soft gradient (brightest at the centre line), not
+// a comb of separate bars. What has already played collapses to one grey
 // shape. Beats are faint full-height lines, every 4th a little stronger,
 // and the play head is a single 1 px line. Hot cues are thin cue-coloured
 // lines; an active loop is a faint white band between two white lines. No
 // glow anywhere.
 
 const TEX_WIDTH = 4096;
+/** Levels in the bin pyramid: level k holds one value per 2^k bins. */
+const MAX_LEVELS = 16;
 /** Hot cue slots drawn, matching the engine's HOT_CUES. */
 export const HOT_CUES = 8;
 
@@ -24,8 +27,11 @@ precision highp float;
 precision highp int;
 in vec2 uv;
 out vec4 color;
-uniform sampler2D bins;
-uniform int count;        // number of bins
+uniform sampler2D bins;   // the bin pyramid, every level end to end
+uniform int count;        // number of bins (level 0)
+uniform int levels;       // levels in the pyramid
+uniform float levelOff[${MAX_LEVELS}]; // texel offset of each level
+uniform float levelLen[${MAX_LEVELS}]; // values in each level
 uniform float start;      // bin index at the left edge
 uniform float perPx;      // bins per pixel
 uniform float width;      // canvas width in px
@@ -48,27 +54,28 @@ uniform float loopIn;     // bin index (-1 = none)
 uniform float loopOut;    // bin index (-1 = none)
 uniform float looping;    // 1 = the loop is playing
 
-vec4 fetchBin(int i) {
-  if (i < 0 || i >= count) return vec4(0.0);
-  return texelFetch(bins, ivec2(i % ${TEX_WIDTH}, i / ${TEX_WIDTH}), 0);
+vec4 fetchLevel(int l, int i) {
+  if (i < 0 || float(i) >= levelLen[l]) return vec4(0.0);
+  int t = int(levelOff[l]) + i;
+  return texelFetch(bins, ivec2(t % ${TEX_WIDTH}, t / ${TEX_WIDTH}), 0);
 }
 
-// The bins under one pixel column: interpolated when zoomed in, so the
-// outline stays smooth, and a peak-preserving max when zoomed out.
+// The bins under one pixel column, read from the pyramid level that has
+// about one value per pixel and interpolated, so the outline flows at any
+// zoom instead of breaking into separate bars.
 vec4 sampleColumn(float px) {
   float b = start + px * perPx;
-  if (perPx <= 1.0) {
-    float f = floor(b - 0.5);
-    return mix(fetchBin(int(f)), fetchBin(int(f) + 1), b - 0.5 - f);
-  }
-  float b0 = start + floor(px) * perPx;
-  vec4 v = vec4(0.0);
-  float steps = min(16.0, perPx);
-  for (float s = 0.0; s < 16.0; s += 1.0) {
-    if (s >= steps) break;
-    v = max(v, fetchBin(int(b0 + perPx * (s / steps))));
-  }
-  return v;
+  float lv = clamp(floor(log2(max(perPx, 1.0))), 0.0, float(levels - 1));
+  float bl = b / exp2(lv);
+  float f = floor(bl - 0.5);
+  int l = int(lv);
+  return mix(fetchLevel(l, int(f)), fetchLevel(l, int(f) + 1), bl - 0.5 - f);
+}
+
+// Brightness across a band: fullest at the centre line, falling off
+// towards its edge, so each band reads as a soft, rounded shape.
+float shade(float y, float h) {
+  return mix(1.1, 0.68, smoothstep(0.0, 1.0, y / max(h, 1.0)));
 }
 
 void main() {
@@ -78,8 +85,11 @@ void main() {
   float bin = start + px * perPx;
   float aa = 0.8 * dpr;
 
-  // Average neighbouring columns a little so the outline isn't jagged.
-  vec4 v = sampleColumn(px) * 0.5 + (sampleColumn(px - 1.0) + sampleColumn(px + 1.0)) * 0.25;
+  // A small Gaussian across neighbouring columns smooths the outline.
+  float o = dpr;
+  vec4 v = sampleColumn(px) * 0.4
+    + (sampleColumn(px - o) + sampleColumn(px + o)) * 0.24
+    + (sampleColumn(px - 2.0 * o) + sampleColumn(px + 2.0 * o)) * 0.06;
   v = clamp(v, 0.0, 1.0);
   float hLow = v.g * half_;
   float hMid = v.b * 0.78 * half_;
@@ -96,9 +106,9 @@ void main() {
   if (bin < playhead) {
     c = mix(c, cPast, max(inLow, inMid));
   } else {
-    c = mix(c, cLow, inLow);
-    c = mix(c, cMid, inMid);
-    c = mix(c, cHigh, inHigh);
+    c = mix(c, cLow * shade(y, hLow), inLow);
+    c = mix(c, cMid * shade(y, hMid), inMid);
+    c = mix(c, min(cHigh * shade(y, hHigh) * 1.05, vec3(1.0)), inHigh);
   }
 
   // Beat lines: faint and full height, every 4th a little stronger.
@@ -146,6 +156,34 @@ void main() {
   color = vec4(c, 1.0);
 }`;
 
+/**
+ * Gaussian blur along time of interleaved RGBA values, `radius` values each
+ * side (sigma = radius / 2).
+ * @param {Float32Array} src @param {number} radius
+ */
+function blur(src, radius) {
+  const n = src.length / 4;
+  const w = [];
+  let sum = 0;
+  for (let k = -radius; k <= radius; k++) {
+    const g = Math.exp(-(k * k) / (2 * (radius / 2) ** 2));
+    w.push(g);
+    sum += g;
+  }
+  const out = new Float32Array(src.length);
+  for (let i = 0; i < n; i++) {
+    for (let c = 0; c < 4; c++) {
+      let v = 0;
+      for (let k = -radius; k <= radius; k++) {
+        const j = Math.min(n - 1, Math.max(0, i + k));
+        v += src[j * 4 + c] * w[k + radius];
+      }
+      out[i * 4 + c] = v / sum;
+    }
+  }
+  return out;
+}
+
 function compile(gl, type, src) {
   const s = gl.createShader(type);
   gl.shaderSource(s, src);
@@ -177,7 +215,7 @@ export class WaveformGL {
     gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
 
     this.u = {};
-    for (const name of ['bins', 'count', 'start', 'perPx', 'width', 'height', 'dpr', 'playhead', 'cue', 'cBg', 'cFg', 'cLow', 'cMid', 'cHigh', 'cPast', 'cCue', 'centerLine', 'beatLen', 'firstBeat', 'loopIn', 'loopOut', 'looping']) {
+    for (const name of ['bins', 'count', 'levels', 'levelOff', 'levelLen', 'start', 'perPx', 'width', 'height', 'dpr', 'playhead', 'cue', 'cBg', 'cFg', 'cLow', 'cMid', 'cHigh', 'cPast', 'cCue', 'centerLine', 'beatLen', 'firstBeat', 'loopIn', 'loopOut', 'looping']) {
       this.u[name] = gl.getUniformLocation(prog, name);
     }
     this.u.hotCues = gl.getUniformLocation(prog, 'hotCues');
@@ -187,19 +225,48 @@ export class WaveformGL {
     this.setBins(new Uint8Array(4));
   }
 
-  /** Uploads waveform bins (4 bytes each). */
+  /**
+   * Uploads waveform bins (4 bytes each) as a pyramid: level 0 is the bins
+   * lightly smoothed over time, and each level above holds the peak of
+   * each pair below it, smoothed again. Built once per track, so drawing
+   * any zoom reads only a couple of texels per pixel.
+   */
   setBins(bytes) {
     const gl = this.gl;
-    const count = Math.max(1, Math.floor(bytes.length / 4));
-    const rows = Math.ceil(count / TEX_WIDTH);
-    const padded = new Uint8Array(TEX_WIDTH * rows * 4);
-    padded.set(bytes.subarray(0, count * 4));
+    const count = Math.floor(bytes.length / 4);
+    const levels = [blur(Float32Array.from(bytes.subarray(0, count * 4)), 2)];
+    while (levels.length < MAX_LEVELS && levels[levels.length - 1].length / 4 > 1) {
+      const prev = levels[levels.length - 1];
+      const n = Math.ceil(prev.length / 8);
+      const next = new Float32Array(n * 4);
+      for (let i = 0; i < n; i++) {
+        for (let c = 0; c < 4; c++) {
+          const a = prev[i * 8 + c];
+          const b = i * 8 + 4 + c < prev.length ? prev[i * 8 + 4 + c] : a;
+          next[i * 4 + c] = Math.max(a, b);
+        }
+      }
+      levels.push(blur(next, 2));
+    }
+    const total = levels.reduce((n, l) => n + l.length / 4, 0);
+    const rows = Math.max(1, Math.ceil(total / TEX_WIDTH));
+    const packed = new Uint8Array(TEX_WIDTH * rows * 4);
+    this.levelOff = new Float32Array(MAX_LEVELS);
+    this.levelLen = new Float32Array(MAX_LEVELS);
+    let at = 0;
+    levels.forEach((l, k) => {
+      this.levelOff[k] = at;
+      this.levelLen[k] = l.length / 4;
+      for (let i = 0; i < l.length; i++) packed[at * 4 + i] = Math.min(255, Math.round(l[i]));
+      at += l.length / 4;
+    });
+    this.levels = count ? levels.length : 1;
     gl.bindTexture(gl.TEXTURE_2D, this.tex);
     gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, TEX_WIDTH, rows, 0, gl.RGBA, gl.UNSIGNED_BYTE, padded);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, TEX_WIDTH, rows, 0, gl.RGBA, gl.UNSIGNED_BYTE, packed);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-    this.count = bytes.length >= 4 ? count : 0;
+    this.count = count;
   }
 
   /** Matches the drawing buffer to the canvas's CSS size and pixel ratio. */
@@ -231,6 +298,9 @@ export class WaveformGL {
     gl.bindTexture(gl.TEXTURE_2D, this.tex);
     gl.uniform1i(this.u.bins, 0);
     gl.uniform1i(this.u.count, this.count);
+    gl.uniform1i(this.u.levels, this.levels);
+    gl.uniform1fv(this.u.levelOff, this.levelOff);
+    gl.uniform1fv(this.u.levelLen, this.levelLen);
     gl.uniform1f(this.u.start, view.start);
     gl.uniform1f(this.u.perPx, view.perPx);
     gl.uniform1f(this.u.width, this.canvas.width);
