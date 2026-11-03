@@ -62,6 +62,16 @@ fn process_does_not_allocate() {
             deck: DeckId::B,
             track: b.clone(),
         },
+        Command::RestoreCue {
+            deck: DeckId::B,
+            seconds: 1.0,
+            saved_loop: Some((1.0, 3.0)),
+        },
+        Command::SetHotCue {
+            deck: DeckId::B,
+            index: 5,
+            seconds: Some(2.0),
+        },
         Command::Play { deck: DeckId::A },
         Command::Play { deck: DeckId::B },
         Command::SetRate {
