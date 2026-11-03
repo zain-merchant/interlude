@@ -20,12 +20,15 @@ export const inTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in
  *         | { state: 'lost', device: string, fallback: string | null }
  *         | { state: 'none' }} AudioStatus
  * @typedef {{ decks: DeckState[], deckPeaks: number[], masterPeak: number[],
- *             mixer?: { crossfader: number, cueMix: number, masterDb: number },
+ *             mixer?: { crossfader: number, cueMix: number, masterDb: number, quantize?: boolean },
  *             audio?: AudioStatus, recording?: RecordingStatus }} EngineState
  * @typedef {{ title: string, path: string, duration: number, sampleRate: number,
  *             binsPerSec: number, binCount: number,
  *             beatgrid: { bpm: number, firstBeat: number } | null }} TrackInfo
- * @typedef {{ path: string, title: string, artist: string, folder: string, format: string }} LibraryTrack
+ * @typedef {{ duration: number | null, bpm: number | null,
+ *             key: { tonic: number, minor: boolean } | null, failed: boolean }} TrackAnalysis
+ * @typedef {{ path: string, title: string, artist: string, folder: string, format: string,
+ *             analysis: TrackAnalysis | null }} LibraryTrack
  */
 
 async function createTauriBackend() {
@@ -55,6 +58,12 @@ async function createTauriBackend() {
     removeFolder: (path) => invoke('remove_folder', { path }),
     /** @returns {Promise<LibraryTrack[]>} */
     libraryTracks: (folder) => invoke('library_tracks', { folder: folder ?? null }),
+    /**
+     * A track's length, BPM and key, as the background analyzer finds them.
+     * @param {(e: TrackAnalysis & { path: string }) => void} fn
+     * @returns {Promise<() => void>} unlisten
+     */
+    onLibraryAnalysis: (fn) => listen('library-analysis', (e) => fn(e.payload)),
     /**
      * Library actions from a hardware controller (browse knob, load buttons).
      * @param {(e: { type: 'browse', delta: number } | { type: 'load', deck: number }) => void} fn

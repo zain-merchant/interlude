@@ -67,86 +67,128 @@ impl Track {
     /// Decodes an audio file (MP3, AAC/M4A, FLAC, WAV, AIFF, OGG, ALAC).
     pub fn load(path: impl AsRef<Path>) -> Result<Self, LoadError> {
         let path = path.as_ref();
-        let file = File::open(path).map_err(|source| LoadError::Io {
-            path: path.to_owned(),
-            source,
-        })?;
-        let mss = MediaSourceStream::new(Box::new(file), Default::default());
-
-        let mut hint = Hint::new();
-        if let Some(ext) = path.extension().and_then(|e| e.to_str()) {
-            hint.with_extension(ext);
-        }
-
-        let mut format = symphonia::default::get_probe()
-            .probe(
-                &hint,
-                mss,
-                FormatOptions::default(),
-                MetadataOptions::default(),
-            )
-            .map_err(|e| LoadError::Decode(e.to_string()))?;
-        let track = format
-            .default_track(TrackType::Audio)
-            .ok_or(LoadError::NoAudio)?;
-        let track_id = track.id;
-        let params = track
-            .codec_params
-            .as_ref()
-            .and_then(|p| p.audio())
-            .ok_or(LoadError::NoAudio)?;
-        let mut sample_rate = params.sample_rate.unwrap_or(0);
-        let mut decoder = symphonia::default::get_codecs()
-            .make_audio_decoder(params, &AudioDecoderOptions::default())
-            .map_err(|e| LoadError::Decode(e.to_string()))?;
-
-        let mut stereo: Vec<f32> = Vec::new();
-        let mut packet_buf: Vec<f32> = Vec::new();
-        loop {
-            let packet = match format.next_packet() {
-                Ok(Some(p)) => p,
-                Ok(None) => break,
-                Err(SymphoniaError::IoError(e))
-                    if e.kind() == std::io::ErrorKind::UnexpectedEof =>
-                {
-                    break
-                }
-                Err(e) => return Err(LoadError::Decode(e.to_string())),
-            };
-            if packet.track_id != track_id {
-                continue;
-            }
-            match decoder.decode(&packet) {
-                Ok(buf) => {
-                    let channels = buf.spec().channels().count().max(1);
-                    sample_rate = buf.spec().rate();
-                    packet_buf.resize(buf.samples_interleaved(), 0.0);
-                    buf.copy_to_slice_interleaved(&mut packet_buf);
-                    stereo.reserve(buf.frames() * 2);
-                    for frame in packet_buf.chunks_exact(channels) {
-                        let (l, r) = if channels == 1 {
-                            (frame[0], frame[0])
-                        } else {
-                            (frame[0], frame[1])
-                        };
-                        stereo.push(l);
-                        stereo.push(r);
-                    }
-                }
-                // A corrupt packet is skipped, like every player does.
-                Err(SymphoniaError::DecodeError(_)) => continue,
-                Err(e) => return Err(LoadError::Decode(e.to_string())),
-            }
-        }
-
-        if sample_rate == 0 || stereo.is_empty() {
-            return Err(LoadError::NoAudio);
-        }
+        let (stereo, sample_rate) = decode(path)?;
         let mut track = Track::from_stereo(stereo, sample_rate);
         track.path = Some(path.to_owned());
         Ok(track)
     }
+}
 
+/// What the library shows about a track it hasn't loaded: its length, tempo
+/// and key.
+#[derive(Debug, Clone, Copy, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+pub struct TrackSummary {
+    /// Seconds.
+    pub duration: f64,
+    /// Detected tempo, if the track has a clear pulse.
+    pub bpm: Option<f64>,
+    pub key: Option<Key>,
+}
+
+impl TrackSummary {
+    pub fn of(track: &Track) -> Self {
+        Self {
+            duration: track.duration_secs(),
+            bpm: track.beatgrid.map(|g| g.bpm),
+            key: track.key,
+        }
+    }
+
+    /// Decodes and analyzes a file for the library, without keeping the
+    /// audio or building a waveform. Runs tempo and key detection one after
+    /// the other on the calling thread, so background analysis stays on one
+    /// core.
+    pub fn analyze(path: impl AsRef<Path>) -> Result<Self, LoadError> {
+        let (stereo, sample_rate) = decode(path.as_ref())?;
+        Ok(Self {
+            duration: stereo.len() as f64 / 2.0 / sample_rate as f64,
+            bpm: detect_beatgrid(&stereo, sample_rate).map(|g| g.bpm),
+            key: detect_key(&stereo, sample_rate),
+        })
+    }
+}
+
+/// Decodes a file to interleaved stereo `f32` and its sample rate.
+fn decode(path: &Path) -> Result<(Vec<f32>, u32), LoadError> {
+    let file = File::open(path).map_err(|source| LoadError::Io {
+        path: path.to_owned(),
+        source,
+    })?;
+    let mss = MediaSourceStream::new(Box::new(file), Default::default());
+
+    let mut hint = Hint::new();
+    if let Some(ext) = path.extension().and_then(|e| e.to_str()) {
+        hint.with_extension(ext);
+    }
+
+    let mut format = symphonia::default::get_probe()
+        .probe(
+            &hint,
+            mss,
+            FormatOptions::default(),
+            MetadataOptions::default(),
+        )
+        .map_err(|e| LoadError::Decode(e.to_string()))?;
+    let track = format
+        .default_track(TrackType::Audio)
+        .ok_or(LoadError::NoAudio)?;
+    let track_id = track.id;
+    let params = track
+        .codec_params
+        .as_ref()
+        .and_then(|p| p.audio())
+        .ok_or(LoadError::NoAudio)?;
+    let mut sample_rate = params.sample_rate.unwrap_or(0);
+    let mut decoder = symphonia::default::get_codecs()
+        .make_audio_decoder(params, &AudioDecoderOptions::default())
+        .map_err(|e| LoadError::Decode(e.to_string()))?;
+
+    let mut stereo: Vec<f32> = Vec::new();
+    let mut packet_buf: Vec<f32> = Vec::new();
+    loop {
+        let packet = match format.next_packet() {
+            Ok(Some(p)) => p,
+            Ok(None) => break,
+            Err(SymphoniaError::IoError(e)) if e.kind() == std::io::ErrorKind::UnexpectedEof => {
+                break
+            }
+            Err(e) => return Err(LoadError::Decode(e.to_string())),
+        };
+        if packet.track_id != track_id {
+            continue;
+        }
+        match decoder.decode(&packet) {
+            Ok(buf) => {
+                let channels = buf.spec().channels().count().max(1);
+                sample_rate = buf.spec().rate();
+                packet_buf.resize(buf.samples_interleaved(), 0.0);
+                buf.copy_to_slice_interleaved(&mut packet_buf);
+                stereo.reserve(buf.frames() * 2);
+                for frame in packet_buf.chunks_exact(channels) {
+                    let (l, r) = if channels == 1 {
+                        (frame[0], frame[0])
+                    } else {
+                        (frame[0], frame[1])
+                    };
+                    stereo.push(l);
+                    stereo.push(r);
+                }
+            }
+            // A corrupt packet is skipped, like every player does.
+            Err(SymphoniaError::DecodeError(_)) => continue,
+            Err(e) => return Err(LoadError::Decode(e.to_string())),
+        }
+    }
+
+    if sample_rate == 0 || stereo.is_empty() {
+        return Err(LoadError::NoAudio);
+    }
+    Ok((stereo, sample_rate))
+}
+
+impl Track {
     pub fn frames(&self) -> usize {
         self.samples.len() / 2
     }
