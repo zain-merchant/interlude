@@ -76,7 +76,7 @@ export function createMockBackend() {
 
   const decks = [0, 1].map(() => ({
     loaded: false, playing: false, position: 0, duration: 0, cue: 0, rate: 1, bend: 0, bpm: 0, firstBeat: 0,
-    generation: 0, previewing: false, waveform: null, fader: 1, peak: 0, ...freshLoops(),
+    generation: 0, previewing: false, scratching: false, waveform: null, fader: 1, peak: 0, ...freshLoops(),
   }));
   let xf = 0;
   let last = performance.now();
@@ -86,7 +86,7 @@ export function createMockBackend() {
     const dt = (now - last) / 1000;
     last = now;
     for (const d of decks) {
-      if (!d.playing) continue;
+      if (!d.playing || d.scratching) continue;
       const before = d.position;
       d.position += dt * (d.rate + d.bend);
       if (d.looping && before < d.loopOut && d.position >= d.loopOut) d.position -= d.loopOut - d.loopIn;
@@ -122,6 +122,10 @@ export function createMockBackend() {
       case 'cueRelease':
         if (d.previewing && d.previewHot == null) { d.previewing = false; d.playing = false; d.position = d.cue; }
         break;
+      // No audio here: a scratch holds the deck and moves it with the hand.
+      case 'scratchStart': d.scratching = true; break;
+      case 'scratchTo': if (d.scratching) d.position = Math.max(0, Math.min(d.duration, cmd.seconds)); break;
+      case 'scratchEnd': d.scratching = false; break;
       case 'seek':
         d.position = Math.max(0, Math.min(d.duration, cmd.seconds));
         if (d.looping && (d.position < d.loopIn || d.position >= d.loopOut)) d.looping = false;

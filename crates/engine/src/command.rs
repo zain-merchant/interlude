@@ -127,17 +127,30 @@ pub enum Command {
         deck: DeckId,
         bend: f64,
     },
-    /// Hand on the platter: playback follows `Jog` movements (and stops
-    /// when the hand is still) until `ScratchEnd`.
+    /// Hand on the platter: playback follows `Jog` and `ScratchTo`
+    /// movements, audibly and in either direction, and stops when the hand
+    /// is still, until `ScratchEnd`. A playing deck slows to a halt under
+    /// the hand and spins back up when released.
     ScratchStart {
         deck: DeckId,
     },
     ScratchEnd {
         deck: DeckId,
     },
+    /// While scratching, move the hand to `seconds` from the start of the
+    /// track, e.g. from dragging a waveform. Ignored otherwise.
+    /// `since_last` is the time since the previous `ScratchTo` by the
+    /// sender's clock (e.g. pointer event timestamps), which keeps the
+    /// motion smooth however unevenly the messages arrive. `None` if unknown.
+    ScratchTo {
+        deck: DeckId,
+        seconds: f64,
+        since_last: Option<f64>,
+    },
     /// A jog wheel moved by `seconds` of audio at normal speed. While
     /// scratching, the play head follows it. While playing, it nudges the
-    /// tempo briefly, like pushing a record. While paused, it scrubs.
+    /// tempo briefly, like pushing a record. While paused, it turns the
+    /// record audibly, like scratching.
     Jog {
         deck: DeckId,
         seconds: f64,

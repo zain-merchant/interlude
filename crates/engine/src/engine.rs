@@ -150,6 +150,11 @@ impl Engine {
             SetBend { deck, bend } => self.decks[deck.index()].bend = bend.clamp(-1.0, 1.0),
             ScratchStart { deck } => self.decks[deck.index()].scratch_start(),
             ScratchEnd { deck } => self.decks[deck.index()].scratch_end(),
+            ScratchTo {
+                deck,
+                seconds,
+                since_last,
+            } => self.decks[deck.index()].scratch_to(seconds, since_last),
             Jog { deck, seconds } => self.decks[deck.index()].jog(seconds),
             Sync { deck } => self.sync(deck.index()),
             SetGain { deck, db } => {
