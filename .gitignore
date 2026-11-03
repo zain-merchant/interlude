@@ -4,3 +4,4 @@ dist/
 .DS_Store
 *.wav
 !crates/**/tests/fixtures/*.wav
+app/src-tauri/gen/
