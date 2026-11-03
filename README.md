@@ -7,8 +7,8 @@ A free, open-source DJ app that is fast, modern and uncluttered. No paywalled
 
 > **Status: early development (Phase 2 under way).** You can load two
 > tracks, see their BPM, sync them, cue, change pitch, EQ and crossfade.
-> The Pioneer DDJ-FLX4 works as a controller (first pass). Hot cues and loops
-> come next. See the roadmap below.
+> The Pioneer DDJ-FLX4 works as a controller, including hot cues, loops and
+> beat jump. See the roadmap below.
 
 ## What works today
 
@@ -19,6 +19,11 @@ A free, open-source DJ app that is fast, modern and uncluttered. No paywalled
   line every 4 beats). SYNC matches tempo and beat phase to the other deck,
   picking half or double time when that's closer (e.g. 87 vs 174 BPM).
   Detection range is 80-160 BPM; constant tempo only for now.
+- **Hot cues, loops, beat jump:** 8 hot cues per deck (4 on screen, all 8
+  on the FLX4 pads): set, jump, hold on a paused deck to preview. Beat loops
+  snap to the beatgrid, halve and double, and wrap without clicks. Beat jump
+  moves by the loop size and carries an active loop with it. Cues are kept
+  until the track is unloaded; saving them with the library comes later.
 - **Mixer:** trim, 3-band isolator EQ with full kills, channel faders,
   constant-power crossfader, master gain, headphone cue with cue/master blend
   (on interfaces with 4+ outputs, headphones go to channels 3-4).
@@ -36,7 +41,10 @@ A free, open-source DJ app that is fast, modern and uncluttered. No paywalled
   rather than jumping), jog wheels (top: scratch, outer ring: nudge while
   playing, scrub while paused; SHIFT + jog: fast search), trim, EQ, channel
   faders, crossfader, headphone cue, browse knob and load buttons, with
-  play/cue/headphone LEDs. Pads, loops, FX and CFX come later.
+  play/cue/headphone LEDs. Pads in hot cue (SHIFT + pad clears), beat loop
+  and beat jump modes; loop in, out, reloop/exit, 4-beat loop (SHIFT + IN),
+  CUE/LOOP CALL halves and doubles the loop (with SHIFT: beat jump), all
+  with LEDs. FX and CFX come later.
 
 The engine renders two playing decks at about 1% of one CPU core, and a
 test guarantees the audio thread never allocates memory.
@@ -54,6 +62,10 @@ shape on AZERTY, QWERTZ and Dvorak.
 | E | I | Sync tempo and beats to the other deck |
 | Z / X | , / . | Nudge slower / faster (hold) |
 | G | H | Headphone cue |
+| 1 2 3 4 | 7 8 9 0 | Hot cues 1 to 4 (hold to preview a paused deck, Shift clears) |
+| R | U | Loop on / off (snaps to the beat) |
+| D / F | J / K | Halve / double the loop |
+| C / V | N / M | Beat jump back / forward by the loop size |
 | Shift ← | Shift → | Load the selected track |
 
 | Key | Action |
@@ -122,7 +134,7 @@ cargo run --release -p dj-cli -- midi                      # print what a contro
 1. **Phase 0/1 · Playable** (now): two decks, mixer, waveforms, basic library.
    Gate: you can mix two tracks by ear for an hour.
 2. **Phase 2 · DJ-ready:** BPM, beatgrid and key analysis; sync, keylock,
-   quantize; hot cues, loops, beat jump; effects; recording; MIDI learn and
+   quantize; saved cues; effects; recording; MIDI learn and
    Mixxx controller mapping support; SQLite library.
    Gate: a full 2-hour set on your own controller.
 3. **Phase 3 · Public beta, then 1.0:** Rekordbox and Serato import, crates,
