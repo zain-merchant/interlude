@@ -5,7 +5,7 @@ use std::alloc::{GlobalAlloc, Layout, System};
 use std::cell::Cell;
 use std::sync::Arc;
 
-use dj_engine::{new_engine, Command, DeckId, EqBand, Track};
+use dj_engine::{new_engine, Beatgrid, Command, DeckId, EqBand, Track};
 
 struct CountingAlloc;
 
@@ -38,8 +38,17 @@ fn process_does_not_allocate() {
     let tone: Vec<f32> = (0..48_000 * 2)
         .map(|i| ((i / 2) as f32 * 0.05).sin() * 0.5)
         .collect();
-    let a = Arc::new(Track::from_stereo(tone.clone(), 44_100));
-    let b = Arc::new(Track::from_stereo(tone, 48_000));
+    // Give both tracks grids so the sync path runs too.
+    let with_grid = |samples: Vec<f32>, sr: u32, bpm: f64| {
+        let mut t = Track::from_stereo(samples, sr);
+        t.beatgrid = Some(Beatgrid {
+            bpm,
+            first_beat: 0.1,
+        });
+        Arc::new(t)
+    };
+    let a = with_grid(tone.clone(), 44_100, 124.0);
+    let b = with_grid(tone, 48_000, 128.0);
     let mut master = vec![0.0; 2048];
     let mut cue = vec![0.0; 2048];
 
@@ -89,6 +98,8 @@ fn process_does_not_allocate() {
             deck: DeckId::A,
             seconds: 0.5,
         },
+        Command::Sync { deck: DeckId::B },
+        Command::Sync { deck: DeckId::A },
         Command::Load {
             deck: DeckId::A,
             track: b.clone(),

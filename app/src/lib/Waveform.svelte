@@ -33,9 +33,14 @@
       const playhead = displayPos[deck] * bps;
       const cue = t ? engine.decks[deck].cue * bps : -1;
       const w = canvas.width || 1;
+      const grid = t?.beatgrid;
       if (mode === 'scroll') {
         const perPx = (seconds * bps) / w;
-        gl.draw({ start: playhead - (w / 2) * perPx, perPx, playhead, cue, centerLine: true, colors });
+        gl.draw({
+          start: playhead - (w / 2) * perPx, perPx, playhead, cue, centerLine: true, colors,
+          beatLen: grid ? (60 / grid.bpm) * bps : 0,
+          firstBeat: grid ? grid.firstBeat * bps : 0,
+        });
       } else {
         gl.draw({ start: 0, perPx: Math.max(count, 1) / w, playhead, cue, centerLine: false, colors });
       }

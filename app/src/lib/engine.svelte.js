@@ -4,7 +4,7 @@
 import { backend } from './backend.js';
 
 const emptyDeck = () => ({
-  loaded: false, playing: false, position: 0, duration: 0, cue: 0, rate: 1, generation: 0, peak: 0,
+  loaded: false, playing: false, position: 0, duration: 0, cue: 0, rate: 1, speed: 1, bpm: 0, generation: 0, peak: 0,
 });
 
 export const engine = $state({
@@ -56,7 +56,7 @@ function frame(now) {
   for (let i = 0; i < 2; i++) {
     const d = engine.decks[i];
     if (d.playing) {
-      displayPos[i] += dt * d.rate;
+      displayPos[i] += dt * d.speed;
       const err = d.position - displayPos[i];
       displayPos[i] = Math.abs(err) > 0.08 ? d.position : displayPos[i] + err * 0.15;
     } else {

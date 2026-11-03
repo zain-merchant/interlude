@@ -66,7 +66,7 @@ export function createMockBackend() {
   }
 
   const decks = [0, 1].map(() => ({
-    loaded: false, playing: false, position: 0, duration: 0, cue: 0, rate: 1, bend: 0,
+    loaded: false, playing: false, position: 0, duration: 0, cue: 0, rate: 1, bend: 0, bpm: 0, firstBeat: 0,
     generation: 0, previewing: false, waveform: null, fader: 1, peak: 0,
   }));
   let xf = 0;
@@ -115,6 +115,18 @@ export function createMockBackend() {
       case 'setRate': d.rate = cmd.rate; break;
       case 'setBend': d.bend = cmd.bend; break;
       case 'setFader': d.fader = cmd.value; break;
+      case 'sync': {
+        const o = decks[1 - cmd.deck];
+        if (!d.bpm || !o.bpm) break;
+        const target = o.bpm * o.rate;
+        const options = [target, target * 2, target / 2].map((x) => x / d.bpm);
+        d.rate = options.reduce((a, b) => (Math.abs(b - 1) < Math.abs(a - 1) ? b : a));
+        const beat = (x) => ((x.position - x.firstBeat) * x.bpm) / 60;
+        let delta = (beat(o) % 1) - (beat(d) % 1);
+        delta -= Math.round(delta);
+        d.position += (delta * 60) / d.bpm;
+        break;
+      }
       case 'setCrossfader': xf = cmd.value; break;
       default: break;
     }
@@ -130,7 +142,7 @@ export function createMockBackend() {
       return {
         decks: decks.map((d) => ({
           loaded: d.loaded, playing: d.playing, position: d.position, duration: d.duration,
-          cue: d.cue, rate: d.rate + d.bend, generation: d.generation, peak: 0,
+          cue: d.cue, rate: d.rate, speed: d.rate + d.bend, bpm: d.bpm, generation: d.generation, peak: 0,
         })),
         deckPeaks,
         masterPeak: [Math.min(1, m), Math.min(1, m * 0.97)],
@@ -142,15 +154,16 @@ export function createMockBackend() {
       const seed = hash(path);
       const r = rng(seed);
       const duration = 300 + Math.floor(r() * 180);
-      const bpm = 120 + Math.floor(r() * 8);
+      const bpm = 118 + (seed % 12);
       const d = decks[deck];
       Object.assign(d, {
-        loaded: true, playing: false, position: 0, cue: 0, duration,
+        loaded: true, playing: false, position: 0, cue: 0, duration, bpm, firstBeat: 0,
         waveform: fakeWaveform(seed, duration, bpm), generation: d.generation + 1,
       });
       return {
         title: t.title, path, duration, sampleRate: 44100,
         binsPerSec: BINS_PER_SEC, binCount: d.waveform.length / 4,
+        beatgrid: { bpm, firstBeat: 0 },
       };
     },
     waveform: async (deck) => decks[deck].waveform,

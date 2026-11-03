@@ -8,6 +8,7 @@ use symphonia::core::formats::{FormatOptions, TrackType};
 use symphonia::core::io::MediaSourceStream;
 use symphonia::core::meta::MetadataOptions;
 
+use crate::analysis::{detect_beatgrid, Beatgrid};
 use crate::Waveform;
 
 #[derive(Debug, thiserror::Error)]
@@ -36,17 +37,22 @@ pub struct Track {
     /// Interleaved stereo: `[l0, r0, l1, r1, ...]`.
     pub samples: Vec<f32>,
     pub waveform: Waveform,
+    /// Detected tempo and beat positions, if the track has a clear pulse.
+    pub beatgrid: Option<Beatgrid>,
 }
 
 impl Track {
-    /// Builds a track from interleaved stereo samples and analyzes its waveform.
+    /// Builds a track from interleaved stereo samples and analyzes its
+    /// waveform and tempo.
     pub fn from_stereo(samples: Vec<f32>, sample_rate: u32) -> Self {
         let waveform = Waveform::analyze(&samples, sample_rate);
+        let beatgrid = detect_beatgrid(&samples, sample_rate);
         Self {
             path: None,
             sample_rate,
             samples,
             waveform,
+            beatgrid,
         }
     }
 

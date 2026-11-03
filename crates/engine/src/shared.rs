@@ -33,6 +33,8 @@ pub(crate) struct DeckShared {
     pub duration: AtomicF64,
     pub cue: AtomicF64,
     pub rate: AtomicF64,
+    pub speed: AtomicF64,
+    pub bpm: AtomicF64,
     pub playing: AtomicBool,
     pub loaded: AtomicBool,
     /// Bumped on every load so the UI knows to fetch the new waveform.
@@ -52,6 +54,7 @@ pub struct SharedState {
 /// A point-in-time copy of one deck's state.
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
 pub struct DeckSnapshot {
     pub loaded: bool,
     pub playing: bool,
@@ -59,7 +62,13 @@ pub struct DeckSnapshot {
     pub position: f64,
     pub duration: f64,
     pub cue: f64,
+    /// Pitch fader rate: 1.0 is normal speed.
     pub rate: f64,
+    /// Actual playback speed right now: `rate` plus any nudge.
+    pub speed: f64,
+    /// The track's detected tempo at normal speed, 0.0 if unknown.
+    /// Multiply by `speed` for the tempo being played.
+    pub bpm: f64,
     pub generation: u64,
     /// Peak level since the last block, 0.0..=1.0+.
     pub peak: f32,
@@ -75,6 +84,8 @@ impl SharedState {
             duration: d.duration.load(),
             cue: d.cue.load(),
             rate: d.rate.load(),
+            speed: d.speed.load(),
+            bpm: d.bpm.load(),
             generation: d.generation.load(Relaxed),
             peak: d.peak.load(),
         }
