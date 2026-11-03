@@ -1412,6 +1412,42 @@ fn a_beatgrid_fixed_by_hand_replaces_the_detected_one_until_the_next_load() {
 }
 
 #[test]
+fn sampler_plays_into_the_master_past_the_crossfader() {
+    let (mut e, mut h) = setup();
+    h.send(Command::LoadSample {
+        slot: 3,
+        sample: Arc::new(Track::from_stereo(sine(880.0, 0.3, 0.5), SR)),
+    })
+    .unwrap();
+    // Decks off air: the sampler doesn't care.
+    h.send(Command::SetCrossfader { value: 1.0 }).unwrap();
+    h.send(Command::SetFader {
+        deck: DeckId::A,
+        value: 0.0,
+    })
+    .unwrap();
+    assert_eq!(rms(&render(&mut e, 0.1)), 0.0, "silent until pressed");
+    h.send(Command::SamplePlay { slot: 3 }).unwrap();
+    let out = render(&mut e, 0.5);
+    assert!(rms(&out[..SR as usize / 5]) > 0.2, "the sample plays");
+    assert_eq!(rms(&out[SR as usize..]), 0.0, "once");
+    let slot = e.shared().sampler().slots[3];
+    assert!(slot.loaded && !slot.playing);
+    assert!((slot.duration - 0.3).abs() < 1e-3);
+
+    // Level 0 mutes it.
+    h.send(Command::SetSamplerLevel { value: 0.0 }).unwrap();
+    render(&mut e, 0.3);
+    h.send(Command::SamplePlay { slot: 3 }).unwrap();
+    assert!(e.shared().sampler().level == 0.0);
+    assert!(rms(&render(&mut e, 0.2)) < 1e-4);
+
+    h.send(Command::ClearSample { slot: 3 }).unwrap();
+    render(&mut e, 0.01);
+    assert!(!e.shared().sampler().slots[3].loaded);
+}
+
+#[test]
 fn auto_gain_matches_loudness_and_trim_works_on_top() {
     use dj_engine::loudness::TARGET_LUFS;
     // A loud track and one 12 dB quieter, with room to be turned up.
