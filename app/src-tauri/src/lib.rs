@@ -67,6 +67,7 @@ enum Control {
     Seek { deck: usize, seconds: f64 },
     SetRate { deck: usize, rate: f64 },
     SetBend { deck: usize, bend: f64 },
+    SetKeylock { deck: usize, on: bool },
     Sync { deck: usize },
     SetGain { deck: usize, db: f32 },
     SetEq { deck: usize, band: usize, db: f32 },
@@ -111,6 +112,10 @@ impl Control {
             C::SetBend { deck, bend } => Command::SetBend {
                 deck: deck_id(deck)?,
                 bend,
+            },
+            C::SetKeylock { deck, on } => Command::SetKeylock {
+                deck: deck_id(deck)?,
+                on,
             },
             C::Sync { deck } => Command::Sync {
                 deck: deck_id(deck)?,

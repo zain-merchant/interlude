@@ -77,6 +77,12 @@ pub enum Command {
         deck: DeckId,
         bend: f64,
     },
+    /// Keylock: tempo changes (pitch fader, nudge, sync) keep the track's
+    /// pitch instead of making it higher or lower.
+    SetKeylock {
+        deck: DeckId,
+        on: bool,
+    },
     /// Hand on the platter: playback follows `Jog` movements (and stops
     /// when the hand is still) until `ScratchEnd`.
     ScratchStart {
