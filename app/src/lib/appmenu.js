@@ -102,6 +102,8 @@ export async function installAppMenu(run, actions) {
         cmd('view.zoomIn', 'Zoom Waveforms In'),
         cmd('view.zoomOut', 'Zoom Waveforms Out'),
         sep(),
+        cmd('view.sampler', 'Show / Hide Sampler'),
+        sep(),
         cmd('focus.next', 'Next Area'),
         cmd('focus.prev', 'Previous Area'),
         sep(),

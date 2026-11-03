@@ -10,7 +10,7 @@ pub mod flx4;
 #[cfg(feature = "midi")]
 pub mod midi;
 
-use dj_engine::{Command, DeckId, DeckSnapshot, MixerSnapshot, NUM_DECKS};
+use dj_engine::{Command, DeckId, DeckSnapshot, MixerSnapshot, SamplerSnapshot, NUM_DECKS};
 
 /// What a controller asks the app to do.
 #[derive(Debug)]
@@ -21,6 +21,8 @@ pub enum Action {
     Browse(i32),
     /// Load the selected library track into a deck.
     LoadSelected(DeckId),
+    /// Load the selected library track into this sampler slot.
+    LoadSample(usize),
 }
 
 /// The engine state a mapping needs to decide what a control does and what
@@ -29,6 +31,7 @@ pub enum Action {
 pub struct State {
     pub decks: [DeckSnapshot; NUM_DECKS],
     pub mixer: MixerSnapshot,
+    pub sampler: SamplerSnapshot,
 }
 
 /// One controller model's mapping.

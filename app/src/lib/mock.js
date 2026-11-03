@@ -130,6 +130,14 @@ export function createMockBackend() {
   }));
   /** @type {{ active: boolean, started: number, seconds: number, path: string | null }} */
   const rec = { active: false, started: 0, seconds: 0, path: null };
+  // Sampler slots: a length, and when the slot was last pressed.
+  const samples = Array.from({ length: 8 }, () => ({ duration: 0, started: null }));
+  let samplerLevel = 0.8;
+  const sampleState = (s) => {
+    const t = s.started == null ? 0 : (performance.now() - s.started) / 1000;
+    const playing = s.started != null && t < s.duration;
+    return { loaded: s.duration > 0, playing, progress: playing ? t / s.duration : 0, duration: s.duration };
+  };
   let folders = FOLDERS.map((f) => `/Music/${f}`);
   let xf = 0;
   let last = performance.now();
@@ -274,6 +282,10 @@ export function createMockBackend() {
       case 'setFxOn': d.fx.on = cmd.on; break;
       case 'setFxLevel': d.fx.level = cmd.value; break;
       case 'setFxBeats': d.fx.beats = cmd.beats; break;
+      case 'samplePlay': if (samples[cmd.slot].duration) samples[cmd.slot].started = performance.now(); break;
+      case 'sampleStop': samples[cmd.slot].started = null; break;
+      case 'clearSample': samples[cmd.slot] = { duration: 0, started: null }; break;
+      case 'setSamplerLevel': samplerLevel = cmd.value; break;
       default: break;
     }
   };
@@ -294,6 +306,7 @@ export function createMockBackend() {
         })),
         deckPeaks,
         mixer: { crossfader: xf, cueMix, masterDb, quantize },
+        sampler: { level: samplerLevel, slots: samples.map(sampleState) },
         masterPeak: [Math.min(1, m), Math.min(1, m * 0.97)],
         audio,
         recording: {
@@ -314,6 +327,11 @@ export function createMockBackend() {
       return { active: false, seconds: rec.seconds, path: rec.path, droppedSeconds: 0, error: null };
     },
     outputName: async () => 'Browser preview · simulated audio',
+    loadSample: async (slot, path) => {
+      const duration = 0.6 + (hash(path) % 40) / 10;
+      samples[slot] = { duration, started: null };
+      return duration;
+    },
     loadTrack: async (deck, path) => {
       const t = tracks.find((x) => x.path === path) ?? { title: path, path };
       if ('analysis' in t && !t.analysis) {
