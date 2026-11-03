@@ -122,6 +122,12 @@ pub enum Command {
         deck: DeckId,
         seconds: f64,
     },
+    /// Quantize, for both decks: cue points and loops snap to the beat,
+    /// and hot cues and reloop jumps while playing keep the beat's timing.
+    /// On by default.
+    SetQuantize {
+        on: bool,
+    },
     /// Playback rate as a ratio: 1.0 is normal speed, 1.08 is +8%.
     SetRate {
         deck: DeckId,

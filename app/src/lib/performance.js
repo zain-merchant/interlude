@@ -49,11 +49,26 @@ export function beatJump(deck, dir) {
   control({ type: 'beatJump', deck, beats: dir * (engine.decks[deck].loopBeats || 4) });
 }
 
+/** Quantize, for both decks. On unless turned off; engines that don't report it count as on. */
+export const quantizeOn = () => engine.mixer?.quantize ?? true;
+
+export function toggleQuantize() {
+  const on = !quantizeOn();
+  control({ type: 'setQuantize', on });
+  // Shown at once; the engine's next report agrees.
+  if (engine.mixer) engine.mixer.quantize = on;
+  announce(on ? 'Quantize on' : 'Quantize off');
+}
+
 /**
  * Runs a keyboard command from commands.js if it's one of ours. `down` is
  * false on key release. Returns false for commands it doesn't know.
  */
 export function runPerformance(id, down) {
+  if (id === 'mixer.quantize') {
+    if (down) toggleQuantize();
+    return true;
+  }
   const m = /^deck\.(\d)\.(\w+?)(?:\.(\d))?$/.exec(id);
   if (!m) return false;
   const deck = Number(m[1]);
