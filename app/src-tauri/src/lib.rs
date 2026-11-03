@@ -95,24 +95,116 @@ struct EngineState {
 #[derive(Deserialize, Debug)]
 #[serde(tag = "type", rename_all = "camelCase")]
 enum Control {
-    Play { deck: usize },
-    Pause { deck: usize },
-    TogglePlay { deck: usize },
-    CuePress { deck: usize },
-    CueRelease { deck: usize },
-    Seek { deck: usize, seconds: f64 },
-    SetCue { deck: usize, seconds: f64 },
-    Eject { deck: usize },
-    SetRate { deck: usize, rate: f64 },
-    SetBend { deck: usize, bend: f64 },
-    Sync { deck: usize },
-    SetGain { deck: usize, db: f32 },
-    SetEq { deck: usize, band: usize, db: f32 },
-    SetFader { deck: usize, value: f32 },
-    SetPfl { deck: usize, on: bool },
-    SetCrossfader { value: f32 },
-    SetCueMix { value: f32 },
-    SetMasterGain { db: f32 },
+    Play {
+        deck: usize,
+    },
+    Pause {
+        deck: usize,
+    },
+    TogglePlay {
+        deck: usize,
+    },
+    CuePress {
+        deck: usize,
+    },
+    CueRelease {
+        deck: usize,
+    },
+    HotCuePress {
+        deck: usize,
+        index: usize,
+    },
+    HotCueRelease {
+        deck: usize,
+        index: usize,
+    },
+    HotCueClear {
+        deck: usize,
+        index: usize,
+    },
+    LoopToggle {
+        deck: usize,
+    },
+    BeatLoop {
+        deck: usize,
+        beats: f64,
+    },
+    LoopScale {
+        deck: usize,
+        factor: f64,
+    },
+    ReloopExit {
+        deck: usize,
+    },
+    BeatJump {
+        deck: usize,
+        beats: f64,
+    },
+    Seek {
+        deck: usize,
+        seconds: f64,
+    },
+    SetCue {
+        deck: usize,
+        seconds: f64,
+    },
+    Eject {
+        deck: usize,
+    },
+    SetRate {
+        deck: usize,
+        rate: f64,
+    },
+    SetBend {
+        deck: usize,
+        bend: f64,
+    },
+    SetKeylock {
+        deck: usize,
+        on: bool,
+    },
+    ScratchStart {
+        deck: usize,
+    },
+    ScratchTo {
+        deck: usize,
+        seconds: f64,
+        /// Seconds since the previous scratchTo by the UI's clock.
+        #[serde(default, rename = "sinceLast")]
+        since_last: Option<f64>,
+    },
+    ScratchEnd {
+        deck: usize,
+    },
+    Sync {
+        deck: usize,
+    },
+    SetGain {
+        deck: usize,
+        db: f32,
+    },
+    SetEq {
+        deck: usize,
+        band: usize,
+        db: f32,
+    },
+    SetFader {
+        deck: usize,
+        value: f32,
+    },
+    SetPfl {
+        deck: usize,
+        on: bool,
+    },
+    SetCrossfader {
+        value: f32,
+    },
+    SetCueMix {
+        value: f32,
+    },
+    SetMasterGain {
+        db: f32,
+    },
 }
 
 fn deck_id(i: usize) -> Result<DeckId, String> {
@@ -138,6 +230,36 @@ impl Control {
             C::CueRelease { deck } => Command::CueRelease {
                 deck: deck_id(deck)?,
             },
+            C::HotCuePress { deck, index } => Command::HotCuePress {
+                deck: deck_id(deck)?,
+                index,
+            },
+            C::HotCueRelease { deck, index } => Command::HotCueRelease {
+                deck: deck_id(deck)?,
+                index,
+            },
+            C::HotCueClear { deck, index } => Command::HotCueClear {
+                deck: deck_id(deck)?,
+                index,
+            },
+            C::LoopToggle { deck } => Command::LoopToggle {
+                deck: deck_id(deck)?,
+            },
+            C::BeatLoop { deck, beats } => Command::BeatLoop {
+                deck: deck_id(deck)?,
+                beats,
+            },
+            C::LoopScale { deck, factor } => Command::LoopScale {
+                deck: deck_id(deck)?,
+                factor,
+            },
+            C::ReloopExit { deck } => Command::ReloopExit {
+                deck: deck_id(deck)?,
+            },
+            C::BeatJump { deck, beats } => Command::BeatJump {
+                deck: deck_id(deck)?,
+                beats,
+            },
             C::Seek { deck, seconds } => Command::Seek {
                 deck: deck_id(deck)?,
                 seconds,
@@ -156,6 +278,25 @@ impl Control {
             C::SetBend { deck, bend } => Command::SetBend {
                 deck: deck_id(deck)?,
                 bend,
+            },
+            C::SetKeylock { deck, on } => Command::SetKeylock {
+                deck: deck_id(deck)?,
+                on,
+            },
+            C::ScratchStart { deck } => Command::ScratchStart {
+                deck: deck_id(deck)?,
+            },
+            C::ScratchTo {
+                deck,
+                seconds,
+                since_last,
+            } => Command::ScratchTo {
+                deck: deck_id(deck)?,
+                seconds,
+                since_last,
+            },
+            C::ScratchEnd { deck } => Command::ScratchEnd {
+                deck: deck_id(deck)?,
             },
             C::Sync { deck } => Command::Sync {
                 deck: deck_id(deck)?,

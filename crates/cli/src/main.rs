@@ -59,6 +59,14 @@ fn info(path: &str) -> Result<()> {
         .map(|b| BARS[(b.peak as usize * 7) / 255])
         .collect();
     println!("{line}");
+    match t.beatgrid {
+        Some(g) => println!("tempo: {:.2} BPM", g.bpm),
+        None => println!("tempo: no clear beat"),
+    }
+    match t.key {
+        Some(k) => println!("key: {} ({})", k.name(), k.camelot()),
+        None => println!("key: unknown"),
+    }
     Ok(())
 }
 

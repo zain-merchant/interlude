@@ -18,6 +18,7 @@
   import { toast, showToast, hideToast, pushEdit, undo, redo } from './lib/undo.svelte.js';
   import { stepUiZoom, setUiZoom } from './lib/uizoom.svelte.js';
   import { installAppMenu } from './lib/appmenu.js';
+  import { runPerformance } from './lib/performance.js';
 
   let library;
   let mixer;
@@ -201,6 +202,8 @@
       case 'view.uiZoomReset':
         if (down) setUiZoom(1);
         break;
+      default:
+        runPerformance(id, down);
     }
   }
 

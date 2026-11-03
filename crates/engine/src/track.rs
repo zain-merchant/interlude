@@ -9,6 +9,7 @@ use symphonia::core::io::MediaSourceStream;
 use symphonia::core::meta::MetadataOptions;
 
 use crate::analysis::{detect_beatgrid, Beatgrid};
+use crate::key::{detect_key, Key};
 use crate::Waveform;
 
 #[derive(Debug, thiserror::Error)]
@@ -39,20 +40,27 @@ pub struct Track {
     pub waveform: Waveform,
     /// Detected tempo and beat positions, if the track has a clear pulse.
     pub beatgrid: Option<Beatgrid>,
+    /// Detected musical key, if the track has clear tonal content.
+    pub key: Option<Key>,
 }
 
 impl Track {
     /// Builds a track from interleaved stereo samples and analyzes its
-    /// waveform and tempo.
+    /// waveform, tempo and key.
     pub fn from_stereo(samples: Vec<f32>, sample_rate: u32) -> Self {
         let waveform = Waveform::analyze(&samples, sample_rate);
-        let beatgrid = detect_beatgrid(&samples, sample_rate);
+        let (beatgrid, key) = std::thread::scope(|s| {
+            let key = s.spawn(|| detect_key(&samples, sample_rate));
+            let grid = detect_beatgrid(&samples, sample_rate);
+            (grid, key.join().ok().flatten())
+        });
         Self {
             path: None,
             sample_rate,
             samples,
             waveform,
             beatgrid,
+            key,
         }
     }
 
