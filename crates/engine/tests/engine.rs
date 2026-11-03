@@ -1170,3 +1170,98 @@ fn loading_a_track_clears_cues_and_loops() {
     assert!(!d.looping && d.loop_in.is_none());
     assert_eq!(d.loop_beats, dj_engine::DEFAULT_LOOP_BEATS);
 }
+
+fn seek(h: &mut EngineHandle, seconds: f64) {
+    send(
+        h,
+        Command::Seek {
+            deck: DeckId::A,
+            seconds,
+        },
+    );
+}
+
+#[test]
+fn quantized_hot_cues_snap_and_keep_the_beat() {
+    let (mut e, mut h) = beat_track();
+    let a = DeckId::A;
+    assert!(h.shared().mixer().quantize, "quantize starts on");
+
+    // Set at 2.1 s: snaps to the beat at 2.0 s.
+    seek(&mut h, 2.1);
+    send(&mut h, Command::HotCuePress { deck: a, index: 0 });
+    send(&mut h, Command::HotCueRelease { deck: a, index: 0 });
+    render(&mut e, 0.01);
+    let cue = h.shared().deck(0).hot_cues[0].unwrap();
+    assert!((cue - 2.0).abs() < 0.03, "snapped to the beat, got {cue}");
+
+    // Playing 0.2 s (0.4 beats) past a beat: the jump lands 0.2 s past the
+    // cue, so the music stays in time.
+    seek(&mut h, 6.2 + (cue - 2.0));
+    send(&mut h, Command::Play { deck: a });
+    send(&mut h, Command::HotCuePress { deck: a, index: 0 });
+    send(&mut h, Command::HotCueRelease { deck: a, index: 0 });
+    render(&mut e, 0.01);
+    let p = h.shared().deck(0).position;
+    assert!((p - (cue + 0.21)).abs() < 0.01, "kept the beat phase: {p}");
+}
+
+#[test]
+fn hot_cues_are_exact_with_quantize_off() {
+    let (mut e, mut h) = beat_track();
+    let a = DeckId::A;
+    send(&mut h, Command::SetQuantize { on: false });
+    seek(&mut h, 2.1);
+    send(&mut h, Command::HotCuePress { deck: a, index: 0 });
+    send(&mut h, Command::HotCueRelease { deck: a, index: 0 });
+    render(&mut e, 0.01);
+    let d = h.shared().deck(0);
+    assert!(!h.shared().mixer().quantize);
+    assert!((d.hot_cues[0].unwrap() - 2.1).abs() < 1e-3);
+
+    seek(&mut h, 6.2);
+    send(&mut h, Command::Play { deck: a });
+    send(&mut h, Command::HotCuePress { deck: a, index: 0 });
+    send(&mut h, Command::HotCueRelease { deck: a, index: 0 });
+    render(&mut e, 0.01);
+    let p = h.shared().deck(0).position;
+    assert!((p - 2.11).abs() < 0.01, "jumped right to the cue: {p}");
+}
+
+#[test]
+fn quantized_manual_loops_land_on_beats() {
+    let (mut e, mut h) = beat_track();
+    let a = DeckId::A;
+    seek(&mut h, 4.1);
+    send(&mut h, Command::Play { deck: a });
+    send(&mut h, Command::LoopIn { deck: a });
+    render(&mut e, 0.95);
+    send(&mut h, Command::LoopOut { deck: a });
+    render(&mut e, 0.01);
+    let d = h.shared().deck(0);
+    let (i, o) = (d.loop_in.unwrap(), d.loop_out.unwrap());
+    assert!(d.looping);
+    assert!((i - 4.0).abs() < 0.03, "in on the beat, got {i}");
+    assert!((o - i - 1.0).abs() < 1e-3, "two beats long, got {i}..{o}");
+    assert_eq!(d.loop_beats, 2.0);
+    // Pressed 0.05 s past the out point: wrapped as the loop would have.
+    assert!(
+        (d.position - (i + 0.06)).abs() < 0.02,
+        "wrapped in time: {}",
+        d.position
+    );
+}
+
+#[test]
+fn unquantized_beat_loops_start_at_the_play_head() {
+    let (mut e, mut h) = beat_track();
+    let a = DeckId::A;
+    send(&mut h, Command::SetQuantize { on: false });
+    seek(&mut h, 4.1);
+    send(&mut h, Command::LoopToggle { deck: a });
+    render(&mut e, 0.01);
+    let d = h.shared().deck(0);
+    assert!(d.looping);
+    assert!((d.loop_in.unwrap() - 4.1).abs() < 1e-3);
+    assert!((d.loop_out.unwrap() - 6.1).abs() < 1e-3);
+}

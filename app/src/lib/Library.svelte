@@ -7,6 +7,7 @@
   import { openMenu } from './menu.svelte.js';
   import { keyLabel, MOD } from './commands.js';
   import { pushEdit } from './undo.svelte.js';
+  import { keyName, keyLongName, camelot } from './key.js';
 
   /** @type {{ onload: (deck: number, track: import('./backend.js').LibraryTrack) => void, onsettings?: () => void }} */
   let { onload, onsettings } = $props();
@@ -18,7 +19,8 @@
   let all = $state([]);
   let total = $state(null); // track count across every folder
   let query = $state('');
-  let selected = $state(0);
+  /** The selected track, by path, so it stays selected when rows reorder. */
+  let selPath = $state(null);
   let loading = $state(false);
   let error = $state('');
   let search = $state(null);
@@ -36,8 +38,89 @@
     });
   });
 
+  // Sorting: by a column, either way. Null keeps the scan's artist, title
+  // order. Tracks still being analyzed sort after the rest, whichever way.
+  /** @type {{ by: 'title' | 'artist' | 'bpm' | 'key' | 'time' | 'folder' | null, dir: 1 | -1 }} */
+  let sort = $state({ by: null, dir: 1 });
+  const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
+  // Camelot order puts harmonically close keys next to each other.
+  const keyRank = (k) => {
+    if (!k) return null;
+    const c = camelot(k);
+    return parseInt(c) * 2 + (c.endsWith('B') ? 1 : 0);
+  };
+  const SORT_VALUE = {
+    title: (t) => t.title,
+    artist: (t) => t.artist || null,
+    folder: (t) => t.folder,
+    bpm: (t) => t.analysis?.bpm ?? null,
+    key: (t) => keyRank(t.analysis?.key),
+    time: (t) => t.analysis?.duration ?? null,
+  };
+  const sorted = $derived.by(() => {
+    if (!sort.by) return results;
+    const value = SORT_VALUE[sort.by];
+    const dir = sort.dir;
+    return results
+      .map((t) => ({ t, v: value(t) }))
+      .sort((a, b) => {
+        if (a.v == null || b.v == null) return a.v == null ? (b.v == null ? 0 : 1) : -1;
+        return (typeof a.v === 'string' ? collator.compare(a.v, b.v) : a.v - b.v) * dir;
+      })
+      .map((x) => x.t);
+  });
+  /** @param {typeof sort.by} by */
+  function sortBy(by) {
+    sort = { by, dir: sort.by === by && sort.dir > 0 ? -1 : 1 };
+  }
+  /** @type {{ by: typeof sort.by, label: string, num?: boolean }[]} */
+  const COLUMNS = [
+    { by: 'title', label: 'Title' },
+    { by: 'artist', label: 'Artist' },
+    { by: 'bpm', label: 'BPM', num: true },
+    { by: 'key', label: 'Key' },
+    { by: 'time', label: 'Time', num: true },
+    { by: 'folder', label: 'Folder' },
+  ];
+
+  const selected = $derived.by(() => {
+    const i = sorted.findIndex((t) => t.path === selPath);
+    return i < 0 ? 0 : i;
+  });
+  const selectIndex = (i) => (selPath = sorted[i]?.path ?? null);
+
+  /** Tracks still waiting for their length, BPM and key. */
+  const pending = $derived(all.reduce((n, t) => n + (t.analysis ? 0 : 1), 0));
+  const bpmText = (a) => {
+    if (!a?.bpm) return '';
+    const r = Math.round(a.bpm);
+    return Math.abs(a.bpm - r) < 0.05 ? String(r) : a.bpm.toFixed(1);
+  };
+  const timeText = (a) => {
+    if (a?.duration == null) return '';
+    const s = Math.round(a.duration);
+    return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+  };
+  /** Shown when analysis found nothing (or the file wouldn't decode). */
+  const NONE = '–';
+
+  // Analysis results stream in from the background analyzer.
+  let byPath = new Map();
+  $effect(() => {
+    let off = null;
+    let gone = false;
+    backend.onLibraryAnalysis?.((e) => {
+      const t = byPath.get(e.path);
+      if (t) t.analysis = { duration: e.duration, bpm: e.bpm, key: e.key, failed: e.failed };
+    }).then((fn) => (gone ? fn() : (off = fn)));
+    return () => {
+      gone = true;
+      off?.();
+    };
+  });
+
   const first = $derived(Math.max(0, Math.floor(scrollTop / ROW) - 5));
-  const visible = $derived(results.slice(first, first + Math.ceil(viewHeight / ROW) + 10));
+  const visible = $derived(sorted.slice(first, first + Math.ceil(viewHeight / ROW) + 10));
   const onDeck = (t) => [0, 1].filter((d) => tracks[d]?.path === t.path);
 
   async function refresh() {
@@ -46,8 +129,9 @@
     try {
       folders = await backend.libraryFolders();
       all = await backend.libraryTracks(folder);
+      byPath = new Map(all.map((t) => [t.path, t]));
       if (folder === null) total = all.length;
-      selected = 0;
+      selectIndex(0);
     } catch (e) {
       error = String(e);
     } finally {
@@ -93,9 +177,10 @@
   }
 
   function select(i) {
-    if (!results.length) return;
-    selected = Math.max(0, Math.min(results.length - 1, i));
-    const y = selected * ROW;
+    if (!sorted.length) return;
+    const index = Math.max(0, Math.min(sorted.length - 1, i));
+    selectIndex(index);
+    const y = index * ROW;
     if (y < scroller.scrollTop) scroller.scrollTop = y;
     else if (y + ROW > scroller.scrollTop + scroller.clientHeight) scroller.scrollTop = y + ROW - scroller.clientHeight;
   }
@@ -107,7 +192,7 @@
 
   /** Loads the selected track into `deck`, then moves to the next row, ready for the next pick. */
   export function loadSelected(deck) {
-    const t = results[selected];
+    const t = sorted[selected];
     if (!t) return;
     onload(deck, t);
     if (!engine.decks[deck].playing) browse(1);
@@ -121,7 +206,7 @@
       await refresh();
     }
     await tick();
-    const i = results.findIndex((t) => t.path === path);
+    const i = sorted.findIndex((t) => t.path === path);
     if (i >= 0) select(i);
     scroller.focus();
   }
@@ -134,15 +219,15 @@
 
   const page = () => Math.max(1, Math.floor(scroller.clientHeight / ROW) - 1);
   function listKey(e) {
-    if (!results.length || e.metaKey || e.ctrlKey || e.altKey) return;
+    if (!sorted.length || e.metaKey || e.ctrlKey || e.altKey) return;
     switch (e.key) {
       case 'ArrowDown': browse(1); break;
       case 'ArrowUp': browse(-1); break;
       case 'PageDown': browse(page()); break;
       case 'PageUp': browse(-page()); break;
       case 'Home': select(0); break;
-      case 'End': select(results.length - 1); break;
-      case 'Enter': autoLoad(results[selected]); browse(1); break;
+      case 'End': select(sorted.length - 1); break;
+      case 'Enter': autoLoad(sorted[selected]); browse(1); break;
       default:
         return;
     }
@@ -155,7 +240,7 @@
       e.preventDefault();
       browse(e.key === 'ArrowDown' ? 1 : -1);
     } else if (e.key === 'Enter') {
-      if (results[selected]) autoLoad(results[selected]);
+      if (sorted[selected]) autoLoad(sorted[selected]);
       search.blur();
     } else if (e.key === 'Escape') {
       e.stopPropagation();
@@ -175,7 +260,7 @@
   const short = (p) => p.split(/[\\/]/).filter(Boolean).pop() ?? p;
 
   const rowMenu = (e, t, index) => {
-    selected = index;
+    selectIndex(index);
     const blocked = (d) => engine.decks[d].playing;
     openMenu(e, [0, 1].map((d) => ({
       label: blocked(d) ? `Deck ${'AB'[d]} is playing` : `Load to deck ${'AB'[d]}`,
@@ -218,19 +303,26 @@
       <label class="search">
         <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="4.5" /><path d="M10.5 10.5 14 14" /></svg>
         <input bind:this={search} type="search" placeholder="Search artist, title, folder" bind:value={query} spellcheck="false"
-          aria-label="Search the library" oninput={() => { selected = 0; scroller.scrollTop = 0; }} onkeydown={searchKey} />
+          aria-label="Search the library" oninput={() => { selectIndex(0); scroller.scrollTop = 0; }} onkeydown={searchKey} />
         {#if !query}<kbd>{MOD}F</kbd>{/if}
       </label>
-      <span class="count num">{loading ? 'Scanning…' : `${results.length.toLocaleString()} tracks`}</span>
+      <span class="count num">{loading ? 'Scanning…' : `${results.length.toLocaleString()} tracks`}{#if !loading && pending}<span
+          class="pending" use:tip={() => 'Finding each track’s length, BPM and key in the background'}> · analyzing, {pending.toLocaleString()} to go</span>{/if}</span>
     </div>
 
-    <div class="row head" aria-hidden="true">
-      <span></span><span>Title</span><span>Artist</span><span>Folder</span>
+    <div class="row head" role="group" aria-label="Sort tracks">
+      <span></span>
+      {#each COLUMNS as c}
+        {@const on = sort.by === c.by}
+        <button class="sort" class:on class:num={c.num} aria-pressed={on}
+          aria-label="Sort by {c.label.toLowerCase()}{on ? (sort.dir > 0 ? ', ascending' : ', descending') : ''}"
+          onclick={() => sortBy(c.by)}>{c.label}{#if on}<svg viewBox="0 0 10 10" aria-hidden="true" class:down={sort.dir < 0}><path d="M2.5 6.5 5 4l2.5 2.5" /></svg>{/if}</button>
+      {/each}
     </div>
 
     <div class="scroll" bind:this={scroller} bind:clientHeight={viewHeight} onscroll={() => (scrollTop = scroller.scrollTop)}
       tabindex="0" onkeydown={listKey} role="listbox" aria-label="Tracks" data-region="tracks"
-      aria-activedescendant={results[selected] ? `track-${selected}` : undefined}>
+      aria-activedescendant={sorted[selected] ? `track-${selected}` : undefined}>
       {#if error}
         <div class="empty">{error}</div>
       {:else if !loading && !all.length}
@@ -241,18 +333,22 @@
       {:else if !loading && !results.length}
         <div class="empty">Nothing matches “{query}”.</div>
       {/if}
-      <div style:height="{results.length * ROW}px" style:position="relative">
+      <div style:height="{sorted.length * ROW}px" style:position="relative">
         {#each visible as t, i (t.path)}
           {@const index = first + i}
           {@const decks = onDeck(t)}
+          {@const a = t.analysis}
           <div class="row" class:sel={index === selected} style:top="{index * ROW}px" role="option" id="track-{index}"
             aria-selected={index === selected}
-            draggable="true" ondragstart={(e) => { selected = index; startDrag(e, t); }} ondragend={endDrag}
-            onclick={() => { selected = index; scroller.focus({ preventScroll: true }); }} ondblclick={() => autoLoad(t)} onkeydown={() => {}}
+            draggable="true" ondragstart={(e) => { selectIndex(index); startDrag(e, t); }} ondragend={endDrag}
+            onclick={() => { selectIndex(index); scroller.focus({ preventScroll: true }); }} ondblclick={() => autoLoad(t)} onkeydown={() => {}}
             oncontextmenu={(e) => rowMenu(e, t, index)}>
             <span class="ld">{#each decks as d}<b class:b={d === 1} aria-hidden="true">{'AB'[d]}</b>{/each}</span>
             <span class="t">{t.title}</span>
             <span>{t.artist}</span>
+            <span class="n num" class:none={a && !a.bpm}>{a ? bpmText(a) || NONE : ''}</span>
+            <span class:none={a && !a.key}>{#if a?.key}<span class="k" use:tip={() => `${keyLongName(a.key)} (${camelot(a.key)})`}>{keyName(a.key)}</span>{:else if a}{NONE}{/if}</span>
+            <span class="n num" class:none={a?.failed}>{a ? timeText(a) || NONE : ''}</span>
             <span>{t.folder}</span>
             {#if decks.length}<span class="sr">, on deck {decks.map((d) => 'AB'[d]).join(' and ')}</span>{/if}
           </div>
@@ -396,7 +492,7 @@
   }
   .row {
     display: grid;
-    grid-template-columns: 34px minmax(0, 2.4fr) minmax(0, 1.6fr) minmax(0, 1.2fr);
+    grid-template-columns: 34px minmax(0, 2.4fr) minmax(0, 1.6fr) 64px 56px 64px minmax(0, 1.2fr);
     align-items: center;
     height: 30px;
     padding: 0 10px;
@@ -410,6 +506,51 @@
   }
   .row .t {
     color: var(--fg);
+  }
+  .row .n {
+    text-align: right;
+  }
+  .row .none {
+    color: var(--fg-4);
+  }
+  .row .k {
+    padding: 0;
+  }
+  .pending {
+    color: var(--fg-4);
+  }
+  .sort {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+    height: 100%;
+    padding: 0 10px;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    white-space: nowrap;
+    transition: color 0.12s;
+  }
+  .sort.num {
+    justify-content: flex-end;
+  }
+  .sort:hover,
+  .sort.on {
+    color: var(--fg-2);
+  }
+  .sort svg {
+    flex: none;
+    width: 10px;
+    height: 10px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.4;
+  }
+  .sort svg.down {
+    transform: rotate(180deg);
   }
   .head {
     margin: 0 10px;
