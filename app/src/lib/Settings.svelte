@@ -10,9 +10,9 @@
    * Settings sit over the library, never over the decks, and don't block
    * them: performance keys keep working while this is open, except while a
    * shortcut is being recorded.
-   * @type {{ page?: 'keyboard' | 'display', onclose: () => void }}
+   * @type {{ page?: 'keyboard' | 'display' | 'library', onclose: () => void, onimport?: () => void }}
    */
-  let { page = $bindable('keyboard'), onclose } = $props();
+  let { page = $bindable('keyboard'), onclose, onimport } = $props();
 
   const GROUPS = [
     { name: 'Deck A', test: (id) => id.startsWith('deck.0.') },
@@ -145,11 +145,13 @@
       onclick={() => (page = 'keyboard')}>Keyboard</button>
     <button class="item" class:on={page === 'display'} aria-current={page === 'display' ? 'page' : undefined}
       onclick={() => (page = 'display')}>Display</button>
+    <button class="item" class:on={page === 'library'} aria-current={page === 'library' ? 'page' : undefined}
+      onclick={() => (page = 'library')}>Library</button>
   </nav>
 
   <div class="main">
     <div class="bar">
-      <h2>{page === 'keyboard' ? 'Keyboard' : 'Display'}</h2>
+      <h2>{page === 'keyboard' ? 'Keyboard' : page === 'library' ? 'Library' : 'Display'}</h2>
       {#if page === 'keyboard'}
         <p>Click a shortcut, then press the new key. Backspace removes it, Esc cancels.</p>
         <button class="btn sm" onclick={resetAll} disabled={!Object.keys(keymap.overrides).length}>Reset all</button>
@@ -191,6 +193,14 @@
             </section>
           {/each}
         </div>
+      {:else if page === 'library'}
+        <section class="display">
+          <h3>Import from another app</h3>
+          <p>Bring over your Rekordbox collection: cue points, loops, beatgrids and playlists. Your music files aren't changed, and anything you've set here stays as it is.</p>
+          <div class="size">
+            <button class="btn sm" onclick={onimport}>Import from Rekordbox…</button>
+          </div>
+        </section>
       {:else}
         <section class="display">
           <h3>Interface size</h3>

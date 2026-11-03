@@ -7,6 +7,7 @@
   import Tooltip from './lib/Tooltip.svelte';
   import ContextMenu from './lib/ContextMenu.svelte';
   import Settings from './lib/Settings.svelte';
+  import Import from './lib/Import.svelte';
   import { engine, tracks, startEngineLoop, loadTrack, control, deckSnapshot, restoreDeck } from './lib/engine.svelte.js';
   import { backend } from './lib/backend.js';
   import { dropTarget } from './lib/dnd.svelte.js';
@@ -65,7 +66,13 @@
   }
 
   // Settings open over the library, leaving the decks in reach.
-  let settings = $state(null); // null, 'keyboard' or 'display'
+  let settings = $state(null); // null, 'keyboard', 'display' or 'library'
+  // Importing another app's library opens in its own window over the app.
+  let importing = $state(false);
+  const openImport = () => {
+    hideToast();
+    importing = true;
+  };
   const openSettings = (page = 'keyboard') => {
     hideToast();
     settings = page;
@@ -305,6 +312,7 @@
     JSON.stringify(keymap.overrides);
     installAppMenu((id) => run(id, true), {
       addFolder: () => library.addFolder(),
+      importLibrary: openImport,
       keyboard: () => openSettings('keyboard'),
       undoInField,
     }).catch((e) => console.error('menu', e));
@@ -356,7 +364,7 @@
     <div class="libwrap" inert={settings !== null}>
       <Library bind:this={library} onload={load} onsettings={() => openSettings()} />
     </div>
-    {#if settings}<Settings bind:page={settings} onclose={() => (settings = null)} />{/if}
+    {#if settings}<Settings bind:page={settings} onclose={() => (settings = null)} onimport={() => { settings = null; openImport(); }} />{/if}
   </div>
 
   {#if engine.audio?.state === 'lost'}
@@ -384,6 +392,8 @@
 
 <Tooltip />
 <ContextMenu />
+
+{#if importing}<Import onclose={() => (importing = false)} ondone={() => library.reload()} />{/if}
 
 <style>
   .app {
