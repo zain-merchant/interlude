@@ -2,7 +2,8 @@
   import Knob from './Knob.svelte';
   import Meter from './Meter.svelte';
   import Fader from './Fader.svelte';
-  import { engine, control } from './engine.svelte.js';
+  import { untrack } from 'svelte';
+  import { engine, control as send } from './engine.svelte.js';
 
   const KILL = -40;
   const channels = $state([0, 1].map(() => ({ gain: 0, eq: [0, 0, 0], fader: 1, pfl: false })));
@@ -12,6 +13,34 @@
 
   const db = (v) => (v <= KILL ? 'kill' : `${v > 0 ? '+' : ''}${v.toFixed(1)} dB`);
   const accents = ['var(--deck-a)', 'var(--deck-b)'];
+
+  // Controls follow the engine, so a hardware controller moves them too.
+  // Right after a change here the engine's report lags a frame or two,
+  // so following pauses briefly to keep the control from jumping back.
+  let lastTouch = 0;
+  function control(cmd) {
+    lastTouch = performance.now();
+    send(cmd);
+  }
+  $effect(() => {
+    const decks = engine.decks;
+    const mixer = engine.mixer;
+    untrack(() => {
+      if (performance.now() - lastTouch < 500) return;
+      decks.forEach((d, i) => {
+        const ch = channels[i];
+        if (d.gainDb !== undefined) ch.gain = d.gainDb;
+        if (d.eqDb) ch.eq = [...d.eqDb];
+        if (d.fader !== undefined) ch.fader = d.fader;
+        if (d.pfl !== undefined) ch.pfl = d.pfl;
+      });
+      if (mixer) {
+        crossfader = mixer.crossfader;
+        cueMix = mixer.cueMix;
+        master = mixer.masterDb;
+      }
+    });
+  });
 
   export function setCrossfader(v) {
     crossfader = Math.max(-1, Math.min(1, v));

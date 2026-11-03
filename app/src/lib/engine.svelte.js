@@ -12,6 +12,8 @@ export const engine = $state({
   /** Meter levels with peak-hold decay, 0..1. */
   deckLevels: [0, 0],
   masterLevels: [0, 0],
+  /** Crossfader, cue mix and master gain as the engine has them (null on engines that don't report them). */
+  mixer: null,
 });
 
 /** Loaded track info and waveform bytes per deck. */
@@ -52,6 +54,7 @@ function frame(now) {
       .state()
       .then((s) => {
         for (let i = 0; i < 2; i++) engine.decks[i] = s.decks[i];
+        engine.mixer = s.mixer ?? null;
         for (let i = 0; i < 2; i++) engine.deckLevels[i] = Math.max(s.deckPeaks[i], engine.deckLevels[i] * 0.86);
         for (let i = 0; i < 2; i++) engine.masterLevels[i] = Math.max(s.masterPeak[i], engine.masterLevels[i] * 0.86);
       })

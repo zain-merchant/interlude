@@ -21,6 +21,7 @@ export const inTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in
 async function createTauriBackend() {
   const { invoke } = await import('@tauri-apps/api/core');
   const { open } = await import('@tauri-apps/plugin-dialog');
+  const { listen } = await import('@tauri-apps/api/event');
   return {
     /** @param {Record<string, any>} cmd */
     control: (cmd) => invoke('control', { cmd }),
@@ -38,6 +39,12 @@ async function createTauriBackend() {
     removeFolder: (path) => invoke('remove_folder', { path }),
     /** @returns {Promise<LibraryTrack[]>} */
     libraryTracks: (folder) => invoke('library_tracks', { folder: folder ?? null }),
+    /**
+     * Library actions from a hardware controller (browse knob, load buttons).
+     * @param {(e: { type: 'browse', delta: number } | { type: 'load', deck: number }) => void} fn
+     * @returns {Promise<() => void>} unlisten
+     */
+    onController: (fn) => listen('controller', (e) => fn(e.payload)),
     /** @returns {Promise<string | null>} */
     pickFolder: async () => {
       const picked = await open({ directory: true, multiple: false, title: 'Add a music folder' });
