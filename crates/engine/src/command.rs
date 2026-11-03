@@ -199,6 +199,12 @@ pub enum Command {
         deck: DeckId,
         on: bool,
     },
+    /// Which stems are audible: bit `n` is [`crate::Stem`] `n`. Every bit
+    /// set plays the track as it is. A freshly loaded deck has all stems on.
+    SetStems {
+        deck: DeckId,
+        mask: u8,
+    },
     /// Hand on the platter: playback follows `Jog` and `ScratchTo`
     /// movements, audibly and in either direction, and stops when the hand
     /// is still, until `ScratchEnd`. A playing deck slows to a halt under

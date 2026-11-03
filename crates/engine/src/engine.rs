@@ -194,6 +194,7 @@ impl Engine {
                     .keylock
                     .store(on, std::sync::atomic::Ordering::Relaxed);
             }
+            SetStems { deck, mask } => self.decks[deck.index()].set_stems(mask),
             SetQuantize { on } => {
                 for d in &mut self.decks {
                     d.quantize = on;
@@ -361,6 +362,7 @@ impl Engine {
             s.loop_out.store(secs(deck.loop_out));
             s.looping.store(deck.looping, Relaxed);
             s.loop_beats.store(deck.loop_beats);
+            s.stems.store(deck.stems, Relaxed);
         }
         for (i, s) in self.shared.sampler.slots.iter().enumerate() {
             let (loaded, playing, progress, duration) = self.sampler.slot_state(i);

@@ -10,6 +10,7 @@
 
 mod controller;
 mod library;
+mod stems;
 
 use std::sync::{Arc, Mutex};
 
@@ -102,6 +103,7 @@ struct EngineState {
     master_peak: [f32; 2],
     recording: RecordingStatus,
     audio: AudioStatus,
+    stems: [stems::DeckStems; dj_engine::NUM_DECKS],
 }
 
 /// Commands the UI can send. Mirrors `dj_engine::Command` minus track loading.
@@ -253,6 +255,11 @@ enum Control {
     SetSamplerLevel {
         value: f32,
     },
+    /// Which stems a deck plays: bit n is vocals, melody, bass, drums.
+    SetStems {
+        deck: usize,
+        mask: u8,
+    },
 }
 
 fn deck_id(i: usize) -> Result<DeckId, String> {
@@ -402,6 +409,10 @@ impl Control {
             C::SampleStop { slot } => Command::SampleStop { slot },
             C::ClearSample { slot } => Command::ClearSample { slot },
             C::SetSamplerLevel { value } => Command::SetSamplerLevel { value },
+            C::SetStems { deck, mask } => Command::SetStems {
+                deck: deck_id(deck)?,
+                mask,
+            },
         })
     }
 }
@@ -419,6 +430,7 @@ fn send(state: &AppState, cmd: Command) -> Result<(), String> {
 fn control(
     state: State<'_, AppState>,
     library: State<'_, library::Library>,
+    stems: State<'_, stems::Stems>,
     cmd: Control,
 ) -> Result<(), String> {
     let eject = match cmd {
@@ -427,6 +439,7 @@ fn control(
     };
     if let Some(deck) = eject {
         library.unwatch(deck);
+        stems.ejected(deck);
     }
     send(&state, cmd.into_command()?)?;
     if let Some(deck) = eject {
@@ -444,7 +457,7 @@ fn control(
 }
 
 #[tauri::command]
-fn state(state: State<'_, AppState>) -> EngineState {
+fn state(state: State<'_, AppState>, stems: State<'_, stems::Stems>) -> EngineState {
     let mut engine = state.engine.lock().expect("engine lock");
     let (deck_peaks, master_peak) = engine.take_peaks();
     let recording = engine.recording();
@@ -457,6 +470,7 @@ fn state(state: State<'_, AppState>) -> EngineState {
         master_peak,
         recording,
         audio: state.output.status(),
+        stems: stems.decks(),
     }
 }
 
@@ -537,6 +551,7 @@ async fn load_track(
     app: tauri::AppHandle,
     state: State<'_, AppState>,
     library: State<'_, library::Library>,
+    stems: State<'_, stems::Stems>,
     deck: usize,
     path: String,
 ) -> Result<TrackInfo, String> {
@@ -580,6 +595,7 @@ async fn load_track(
             },
         )?;
     }
+    stems.loaded(deck, &track);
     state.tracks.lock().map_err(|_| "lock poisoned")?[deck] = Some(track);
     Ok(info)
 }
@@ -696,6 +712,7 @@ pub fn run() {
     };
 
     let shared = handle.shared().clone();
+    let stems = stems::Stems::new(shared.clone());
     let engine = Arc::new(Mutex::new(handle));
 
     tauri::Builder::default()
@@ -720,6 +737,7 @@ pub fn run() {
             output,
         })
         .manage(library::Library::load())
+        .manage(stems)
         .invoke_handler(tauri::generate_handler![
             control,
             state,
@@ -749,6 +767,11 @@ pub fn run() {
             library::import_sources,
             library::import_preview,
             library::import_run,
+            stems::stems_info,
+            stems::set_stems,
+            stems::clear_stems_cache,
+            stems::download_stems_model,
+            stems::stems_waveform,
         ])
         .run(tauri::generate_context!())
         .expect("error while running oss-dj");

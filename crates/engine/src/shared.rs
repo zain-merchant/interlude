@@ -58,6 +58,7 @@ pub(crate) struct DeckShared {
     pub loop_out: AtomicF64,
     pub looping: AtomicBool,
     pub loop_beats: AtomicF64,
+    pub stems: AtomicU8,
 }
 
 #[derive(Debug, Default)]
@@ -184,6 +185,8 @@ pub struct DeckSnapshot {
     pub looping: bool,
     /// Size of the next beat loop and of beat jumps, in beats.
     pub loop_beats: f64,
+    /// Which stems are audible: bit `n` is [`crate::Stem`] `n`.
+    pub stems: u8,
 }
 
 impl SharedState {
@@ -218,6 +221,7 @@ impl SharedState {
             loop_out: some(d.loop_out.load()),
             looping: d.looping.load(Relaxed),
             loop_beats: d.loop_beats.load(),
+            stems: d.stems.load(Relaxed),
         }
     }
 

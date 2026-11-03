@@ -1,7 +1,8 @@
 use std::sync::Arc;
 
-use crate::dsp::{db_to_gain, hermite, Eq3, Smoothed};
-use crate::stretch::Stretcher;
+use crate::dsp::{db_to_gain, Eq3, Smoothed};
+use crate::stems::{Source, StemMix, ALL_STEMS, STEMS};
+use crate::stretch::{self, Stretcher};
 use crate::{Beatgrid, EqBand, Track};
 
 /// How much of a jog movement a playing deck's nudge moves the play head.
@@ -42,6 +43,9 @@ const JUMP_FADE_FRAMES: u32 = 128;
 
 /// Crossfade length, in output frames, when keylock turns off mid-play.
 const KEYLOCK_FADE: usize = 256;
+
+/// How quickly a stem fades out or back in, in ms (about 20 ms to settle).
+const STEM_FADE_MS: f32 = 6.0;
 
 /// Where a deck is on its beatgrid.
 pub(crate) struct BeatInfo {
@@ -103,6 +107,9 @@ pub(crate) struct Deck {
     /// A released playing deck is getting back up to speed.
     spinning_up: bool,
     gain: Smoothed,
+    /// Which stems are audible, one bit per [`crate::Stem`].
+    pub stems: u8,
+    stem_gain: [Smoothed; STEMS],
     eq: Eq3,
     out_rate: f64,
 }
@@ -137,6 +144,8 @@ impl Deck {
             vel: 0.0,
             spinning_up: false,
             gain: Smoothed::new(1.0, 10.0, out_rate),
+            stems: ALL_STEMS,
+            stem_gain: std::array::from_fn(|_| Smoothed::new(1.0, STEM_FADE_MS, out_rate)),
             eq: Eq3::new(out_rate),
             out_rate: out_rate as f64,
         }
@@ -162,6 +171,10 @@ impl Deck {
         self.spinning_up = false;
         self.vel = 0.0;
         self.jog_bend = 0.0;
+        self.set_stems(ALL_STEMS);
+        for g in &mut self.stem_gain {
+            g.snap();
+        }
         self.eq.reset();
         std::mem::replace(&mut self.track, track)
     }
@@ -697,6 +710,15 @@ impl Deck {
         }
     }
 
+    /// Sets which stems are audible, one bit per [`crate::Stem`]. They fade
+    /// in and out over a few milliseconds, so there are no clicks.
+    pub fn set_stems(&mut self, mask: u8) {
+        self.stems = mask & ALL_STEMS;
+        for (i, g) in self.stem_gain.iter_mut().enumerate() {
+            g.set(if self.stems & (1 << i) != 0 { 1.0 } else { 0.0 });
+        }
+    }
+
     pub fn set_gain_db(&mut self, db: f32) {
         self.gain.set(db_to_gain(db.clamp(-24.0, 12.0)));
     }
@@ -713,7 +735,11 @@ impl Deck {
             out.fill(0.0);
             return 0.0;
         };
-        let samples = &track.samples[..];
+        let base = Source {
+            samples: &track.samples[..],
+            stems: track.stems.get().map(|s| &**s),
+            mix: StemMix::FULL,
+        };
         let frames = track.frames() as i64;
         let ratio = track.sample_rate as f64 / self.out_rate;
         let tempo = (self.rate + self.bend + self.jog_bend).max(0.0);
@@ -737,27 +763,6 @@ impl Deck {
         let max_vel = SCRATCH_MAX_SPEED * track.sample_rate as f64 / self.out_rate;
         let spin = 1.0 - (-1.0 / (SPINUP_TAU * self.out_rate)).exp();
 
-        let sample = |i: i64, ch: usize| -> f32 {
-            if i < 0 || i >= frames {
-                0.0
-            } else {
-                samples[i as usize * 2 + ch]
-            }
-        };
-        let read = |pos: f64| -> (f32, f32) {
-            let i = pos.floor() as i64;
-            let t = (pos - i as f64) as f32;
-            let ch = |c| {
-                hermite(
-                    t,
-                    sample(i - 1, c),
-                    sample(i, c),
-                    sample(i + 1, c),
-                    sample(i + 2, c),
-                )
-            };
-            (ch(0), ch(1))
-        };
         // The active loop, as (in, length).
         let wrap = match (self.looping, self.loop_in, self.loop_out) {
             (true, Some(i), Some(o)) if o > i => Some((i, o - i)),
@@ -766,10 +771,15 @@ impl Deck {
 
         for (n, frame) in out.as_chunks_mut::<2>().0.iter_mut().enumerate() {
             let (mut l, mut r) = (0.0, 0.0);
-            let grains = (n < fade_out).then(|| self.stretch.next(samples, self.pos, step, ratio));
+            let src = Source {
+                mix: StemMix::from_gains(std::array::from_fn(|i| self.stem_gain[i].tick())),
+                ..base
+            };
+            let read = |pos: f64| stretch::read(&src, pos);
+            let grains = (n < fade_out).then(|| self.stretch.next(&src, self.pos, step, ratio));
             if self.playing || self.following {
                 (l, r) = if stretch {
-                    self.stretch.next(samples, self.pos, step, ratio)
+                    self.stretch.next(&src, self.pos, step, ratio)
                 } else {
                     read(self.pos)
                 };
