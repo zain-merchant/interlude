@@ -6,7 +6,7 @@
 // gradient. Its hue follows the spectrum, from the deck colour where the
 // music is bass-heavy to a pale tint where it's bright. What has already
 // played is desaturated, beats are short ticks at the edges, and the play
-// head has a soft glow.
+// head is a single crisp line.
 
 const TEX_WIDTH = 4096;
 
@@ -118,10 +118,8 @@ void main() {
     c = mix(c, cueC, max(line * 0.75, tri));
   }
 
-  // Play head: a crisp line with a soft glow in the deck colour.
+  // Play head: a crisp line, no glow.
   float dPlay = centerLine > 0.5 ? abs(px - width * 0.5) : abs(bin - playhead) / perPx;
-  float glow = exp(-pow(dPlay / (6.0 * dpr), 2.0)) * (centerLine > 0.5 ? 0.35 : 0.2);
-  c += cAccent * glow;
   float core = 1.0 - smoothstep(0.5 * dpr, 1.3 * dpr, dPlay);
   c = mix(c, mix(cAccent, vec3(1.0), 0.6), core);
 

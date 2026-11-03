@@ -229,7 +229,7 @@
     cursor: pointer;
     background: var(--panel-2);
     border-style: solid;
-    transition: background-color 0.12s, border-color 0.12s, box-shadow 0.12s;
+    transition: background-color 0.12s, border-color 0.12s;
     width: 64px;
     height: 64px;
     border-radius: 50%;
@@ -247,7 +247,6 @@
   .cue.lit {
     background: #3a2a0c;
     border-color: #ffb02e;
-    box-shadow: 0 0 18px -4px #ffb02e;
   }
   .play svg {
     width: 26px;
@@ -260,7 +259,6 @@
   .play.lit {
     background: #0f2e1d;
     border-color: var(--ok);
-    box-shadow: 0 0 18px -4px var(--ok);
   }
   button:disabled {
     opacity: 0.4;
