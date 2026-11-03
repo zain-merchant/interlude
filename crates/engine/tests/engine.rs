@@ -445,3 +445,142 @@ fn jog_scrubs_when_paused_and_nudges_when_playing() {
         "nudge has faded"
     );
 }
+
+/// Frequency of a (roughly) pure tone, from its upward zero crossings.
+fn pitch_of(stereo: &[f32]) -> f32 {
+    let left: Vec<f32> = stereo.iter().step_by(2).copied().collect();
+    let ups: Vec<usize> = (1..left.len())
+        .filter(|&i| left[i - 1] < 0.0 && left[i] >= 0.0)
+        .collect();
+    let (first, last) = (ups[0], ups[ups.len() - 1]);
+    (ups.len() - 1) as f32 * SR as f32 / (last - first) as f32
+}
+
+#[test]
+fn keylock_changes_tempo_but_not_pitch() {
+    for keylock in [false, true] {
+        let (mut e, mut h) = setup();
+        load(&mut h, DeckId::A, sine(440.0, 6.0, 0.5));
+        h.send(Command::SetKeylock {
+            deck: DeckId::A,
+            on: keylock,
+        })
+        .unwrap();
+        h.send(Command::SetRate {
+            deck: DeckId::A,
+            rate: 1.08,
+        })
+        .unwrap();
+        h.send(Command::Play { deck: DeckId::A }).unwrap();
+        let out = render(&mut e, 2.0);
+        // The play head moves at the new tempo either way.
+        let pos = position(&h, DeckId::A);
+        assert!(
+            (pos - 2.16).abs() < 0.002,
+            "keylock {keylock}: position {pos}"
+        );
+        assert!(h.shared().deck(0).keylock == keylock);
+        let f = pitch_of(&out[SR as usize..]);
+        let expect = if keylock { 440.0 } else { 440.0 * 1.08 };
+        assert!(
+            (f - expect).abs() < expect * 0.003,
+            "keylock {keylock}: pitch {f} Hz, expected {expect}"
+        );
+    }
+}
+
+#[test]
+fn keylock_keeps_pitch_when_slowed_and_resampled() {
+    // A 44.1 kHz track on a 48 kHz engine, slowed down 6%.
+    let (mut e, mut h) = setup();
+    let n = 44_100 * 6;
+    let tone: Vec<f32> = (0..n)
+        .flat_map(|i| {
+            let v = 0.5 * (std::f32::consts::TAU * 330.0 * i as f32 / 44_100.0).sin();
+            [v, v]
+        })
+        .collect();
+    h.send(Command::Load {
+        deck: DeckId::A,
+        track: Arc::new(Track::from_stereo(tone, 44_100)),
+    })
+    .unwrap();
+    h.send(Command::SetKeylock {
+        deck: DeckId::A,
+        on: true,
+    })
+    .unwrap();
+    h.send(Command::SetRate {
+        deck: DeckId::A,
+        rate: 0.94,
+    })
+    .unwrap();
+    h.send(Command::Play { deck: DeckId::A }).unwrap();
+    let out = render(&mut e, 2.0);
+    let f = pitch_of(&out[SR as usize..]);
+    assert!((f - 330.0).abs() < 1.0, "pitch {f} Hz");
+    assert!((position(&h, DeckId::A) - 1.88).abs() < 0.002);
+}
+
+#[test]
+fn keylock_is_smooth() {
+    // A steady tone should come out steady: no dips where grains overlap,
+    // and no clicks when keylock turns on or off mid-play.
+    let (mut e, mut h) = setup();
+    load(&mut h, DeckId::A, sine(220.0, 8.0, 0.5));
+    h.send(Command::SetRate {
+        deck: DeckId::A,
+        rate: 1.05,
+    })
+    .unwrap();
+    h.send(Command::Play { deck: DeckId::A }).unwrap();
+    let mut out = render(&mut e, 0.5);
+    for on in [true, false, true] {
+        h.send(Command::SetKeylock {
+            deck: DeckId::A,
+            on,
+        })
+        .unwrap();
+        out.extend(render(&mut e, 1.0));
+    }
+    let start = SR as usize / 10; // skip the EQ and gain settling in
+    let left: Vec<f32> = out.iter().step_by(2).skip(start).copied().collect();
+    // The mixer scales the level, so measure the steady amplitude first.
+    let amp = left.iter().fold(0f32, |m, v| m.max(v.abs()));
+    // Largest step between samples of a sine this loud at 231 Hz.
+    let max_step = amp * std::f32::consts::TAU * 231.0 / SR as f32;
+    for i in 1..left.len() {
+        let step = (left[i] - left[i - 1]).abs();
+        assert!(step < max_step * 1.2, "click at frame {i}: step {step}");
+    }
+    let windows: Vec<f32> = left.chunks(SR as usize / 50).map(rms).collect();
+    let mean = windows.iter().sum::<f32>() / windows.len() as f32;
+    for (k, r) in windows.iter().enumerate() {
+        assert!(
+            (r - mean).abs() < mean * 0.04,
+            "level wobbles in window {k}: rms {r}"
+        );
+    }
+}
+
+#[test]
+fn loaded_tracks_get_a_key() {
+    // An A minor chord, held.
+    let n = SR as usize * 20;
+    let notes = [110.0, 220.0, 261.63, 329.63];
+    let chord: Vec<f32> = (0..n)
+        .flat_map(|i| {
+            let t = i as f32 / SR as f32;
+            let v: f32 = notes
+                .iter()
+                .map(|f| 0.1 * (std::f32::consts::TAU * f * t).sin())
+                .sum();
+            [v, v]
+        })
+        .collect();
+    let (mut e, mut h) = setup();
+    load(&mut h, DeckId::A, chord);
+    render(&mut e, 0.05);
+    let key = h.shared().deck(0).key.expect("no key");
+    assert_eq!(key.name(), "Am");
+}

@@ -8,6 +8,7 @@
   import { openMenu } from './menu.svelte.js';
   import { keyLabel } from './commands.js';
   import { announce } from './announce.svelte.js';
+  import { keyName, keyLongName, camelot, playingKey } from './key.js';
 
   /** @type {{ deck: number, onload: (deck: number, track: any) => void, onreveal: (path: string) => void }} */
   let { deck, onload, onreveal } = $props();
@@ -25,6 +26,7 @@
   const ratePct = $derived((d.rate - 1) * 100);
   const bpm = $derived(d.bpm > 0 ? d.bpm * d.speed : 0);
   const atCue = $derived(!!t && !d.playing && Math.abs(d.position - d.cue) < 0.01);
+  const pk = $derived(t ? playingKey(d.key, d.speed, d.keylock) : null);
   const canSync = $derived(!!t && d.bpm > 0 && engine.decks[1 - deck].bpm > 0);
 
   let lastTouch = 0;
@@ -78,6 +80,14 @@
     control({ type: 'sync', deck });
     announce(`Deck ${name} synced to deck ${other}`);
   };
+  const toggleKeylock = () => control({ type: 'setKeylock', deck, on: !d.keylock });
+  const keyTip = () => {
+    if (!pk) return '';
+    const track = `${keyLongName(d.key)} (${camelot(d.key)})`;
+    if (!pk.shift) return `Key ${track}`;
+    const st = Math.abs(pk.shift) === 1 ? 'semitone' : 'semitones';
+    return `Key ${keyLongName(pk)} (${camelot(pk)}): the track is in ${track}, shifted ${pk.shift > 0 ? 'up' : 'down'} ${Math.abs(pk.shift)} ${st} by the tempo. Key lock keeps the original key.`;
+  };
   const bend = (v) => () => t && control({ type: 'setBend', deck, bend: v });
 
   const regionLabel = $derived(
@@ -105,7 +115,7 @@
       </div>
       <div class="bpm" use:tip={() => (d.bpm > 0 ? `Track tempo ${d.bpm.toFixed(2)} BPM` : t ? 'No clear beat found' : '')}>
         <div class="big num">{bpm > 0 ? bpm.toFixed(2) : '—'}</div>
-        <div class="unit">BPM</div>
+        <div class="unit">{#if pk}<span class="key" class:shifted={pk.shift} use:tip={keyTip}>{keyName(pk)}</span>{" · "}{/if}BPM</div>
       </div>
     </header>
 
@@ -155,6 +165,8 @@
         format={(v) => pct(-v * range * 100)} />
     </div>
     <button class="range num" onclick={cycleRange} use:tip={() => `Pitch range ±${Math.round(range * 100)}%, click to change`}>±{Math.round(range * 100)}</button>
+    <button class="range lock" class:on={d.keylock} aria-pressed={d.keylock} {...press(toggleKeylock)}
+      use:tip={() => (d.keylock ? 'Key lock on: tempo changes keep the pitch' : 'Key lock off: tempo changes raise or lower the pitch')}>Key lock</button>
   </div>
 </section>
 
@@ -312,7 +324,7 @@
   }
   .pitch {
     display: grid;
-    grid-template-rows: auto minmax(0, 1fr) auto;
+    grid-template-rows: auto minmax(0, 1fr) auto auto;
     justify-items: center;
     gap: 10px;
     padding-top: 2px;
@@ -344,5 +356,20 @@
   .range:hover {
     color: var(--fg-2);
     box-shadow: inset 0 0 0 1px var(--line-2);
+  }
+  .lock {
+    padding: 0 6px;
+    white-space: nowrap;
+  }
+  .lock.on,
+  .lock.on:hover {
+    color: var(--deck);
+    box-shadow: inset 0 0 0 1px var(--deck);
+  }
+  .key {
+    color: var(--fg-2);
+  }
+  .key.shifted {
+    color: var(--fg);
   }
 </style>

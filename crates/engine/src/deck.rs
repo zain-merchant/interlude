@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use crate::dsp::{db_to_gain, hermite, Eq3, Smoothed};
+use crate::stretch::Stretcher;
 use crate::{Beatgrid, EqBand, Track};
 
 /// How much of a jog movement a playing deck's nudge moves the play head.
@@ -13,6 +14,9 @@ const SCRATCH_TAU: f64 = 0.012;
 const SCRATCH_SMOOTH: f64 = 0.004;
 /// Fastest a scratch can play, as a multiple of normal speed.
 const SCRATCH_MAX_SPEED: f64 = 10.0;
+
+/// Crossfade length, in output frames, when keylock turns off mid-play.
+const KEYLOCK_FADE: usize = 256;
 
 /// Where a deck is on its beatgrid.
 pub(crate) struct BeatInfo {
@@ -37,6 +41,9 @@ pub(crate) struct Deck {
     pub jog_bend: f64,
     /// Hand on the platter: the play head chases `scratch_target`.
     pub scratching: bool,
+    /// Keylock: tempo changes keep the track's pitch.
+    pub keylock: bool,
+    stretch: Stretcher,
     scratch_target: f64,
     /// Scratch velocity in source frames per output frame.
     scratch_vel: f64,
@@ -57,6 +64,8 @@ impl Deck {
             bend: 0.0,
             jog_bend: 0.0,
             scratching: false,
+            keylock: false,
+            stretch: Stretcher::new(out_rate),
             scratch_target: 0.0,
             scratch_vel: 0.0,
             gain: Smoothed::new(1.0, 10.0, out_rate),
@@ -211,7 +220,22 @@ impl Deck {
         let samples = &track.samples[..];
         let frames = track.frames() as i64;
         let ratio = track.sample_rate as f64 / self.out_rate;
-        let step = (self.rate + self.bend + self.jog_bend).max(0.0) * ratio;
+        let tempo = (self.rate + self.bend + self.jog_bend).max(0.0);
+        let step = tempo * ratio;
+        // Scratching is meant to bend the pitch, and far from normal speed
+        // grains sound worse than a pitch change, so keylock sits those out.
+        let stretch =
+            self.keylock && self.playing && !self.scratching && (0.5..=2.0).contains(&tempo);
+        // Turning keylock off mid-play: the grains and the play head are a
+        // few milliseconds apart, so crossfade from one to the other.
+        let mut fade_out = 0;
+        if stretch {
+            self.stretch.begin(self.pos);
+        } else if self.stretch.active() && self.playing && !self.scratching {
+            fade_out = (out.len() / 2).min(KEYLOCK_FADE);
+        } else {
+            self.stretch.stop();
+        }
         let end = frames as f64;
         // Per-frame coefficients for the scratch follower: a spring pulling
         // the velocity towards closing the gap to the hand within
@@ -229,9 +253,18 @@ impl Deck {
             }
         };
 
-        for frame in out.as_chunks_mut::<2>().0 {
+        for (n, frame) in out.as_chunks_mut::<2>().0.iter_mut().enumerate() {
             let (mut l, mut r) = (0.0, 0.0);
-            if self.playing || self.scratching {
+            let grains = (n < fade_out).then(|| self.stretch.next(samples, self.pos, step, ratio));
+            if stretch && self.playing {
+                (l, r) = self.stretch.next(samples, self.pos, step, ratio);
+                self.pos += step;
+                if self.pos >= end {
+                    self.pos = end;
+                    self.playing = false;
+                    self.previewing = false;
+                }
+            } else if self.playing || self.scratching {
                 let i = self.pos.floor() as i64;
                 let t = (self.pos - i as f64) as f32;
                 l = hermite(
@@ -262,12 +295,22 @@ impl Deck {
                     }
                 }
             }
+            if let Some((gl, gr)) = grains {
+                let w = n as f32 / fade_out as f32;
+                l = l * w + gl * (1.0 - w);
+                r = r * w + gr * (1.0 - w);
+            }
             // Keep the EQ running on silence so its tail rings out naturally.
             let (l, r) = self.eq.process(l, r);
             let g = self.gain.tick();
             frame[0] = l * g;
             frame[1] = r * g;
             peak = peak.max(frame[0].abs()).max(frame[1].abs());
+        }
+        if stretch {
+            self.stretch.end(self.pos);
+        } else {
+            self.stretch.stop();
         }
         if self.jog_bend != 0.0 {
             let n = (out.len() / 2) as f64;

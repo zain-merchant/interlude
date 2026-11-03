@@ -10,6 +10,7 @@ export const inTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in
 /**
  * @typedef {{ loaded: boolean, playing: boolean, position: number, duration: number,
  *             cue: number, rate: number, speed: number, bpm: number,
+ *             key: { tonic: number, minor: boolean } | null, keylock: boolean,
  *             generation: number, peak: number }} DeckState
  * @typedef {{ decks: DeckState[], deckPeaks: number[], masterPeak: number[] }} EngineState
  * @typedef {{ title: string, path: string, duration: number, sampleRate: number,
