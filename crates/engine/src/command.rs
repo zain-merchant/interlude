@@ -291,4 +291,28 @@ pub enum Command {
     SetMasterGain {
         db: f32,
     },
+    /// Put a sample in sampler slot `slot` (below [`crate::SAMPLER_SLOTS`]),
+    /// replacing what it held. Like `Load`, the engine sends the old one
+    /// back to be freed.
+    LoadSample {
+        slot: usize,
+        sample: Arc<Track>,
+    },
+    /// Empty a sampler slot.
+    ClearSample {
+        slot: usize,
+    },
+    /// Play a sampler slot from the top, or from the top again if it's
+    /// already playing. Samples play once, straight to the master.
+    SamplePlay {
+        slot: usize,
+    },
+    /// Stop a sampler slot.
+    SampleStop {
+        slot: usize,
+    },
+    /// Sampler level, 0.0..=1.0, for every slot.
+    SetSamplerLevel {
+        value: f32,
+    },
 }

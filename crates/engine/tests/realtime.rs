@@ -170,6 +170,25 @@ fn process_does_not_allocate() {
             deck: DeckId::B,
             on: true,
         },
+        Command::LoadSample {
+            slot: 0,
+            sample: a.clone(),
+        },
+        Command::LoadSample {
+            slot: 7,
+            sample: b.clone(),
+        },
+        Command::SamplePlay { slot: 0 },
+        Command::SamplePlay { slot: 7 },
+        Command::SamplePlay { slot: 0 },
+        Command::SampleStop { slot: 7 },
+        Command::SetSamplerLevel { value: 0.5 },
+        Command::LoadSample {
+            slot: 0,
+            sample: b.clone(),
+        },
+        Command::SamplePlay { slot: 0 },
+        Command::ClearSample { slot: 7 },
     ];
     for cmd in commands {
         h.send(cmd).unwrap();

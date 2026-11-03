@@ -15,6 +15,8 @@ export const engine = $state({
   masterLevels: [0, 0],
   /** Crossfader, cue mix and master gain as the engine has them (null on engines that don't report them). */
   mixer: null,
+  /** The sampler's level and slots, as the engine reports them (null on engines without one). */
+  sampler: null,
   /** The set recording, as the engine reports it (null on engines that can't record). */
   recording: null,
   /**
@@ -133,10 +135,11 @@ function poll() {
       for (let i = 0; i < 2; i++) update(engine.decks, i, s.decks[i]);
       update(engine, 'mixer', s.mixer ?? null);
       update(engine, 'recording', s.recording ?? null);
+      update(engine, 'sampler', s.sampler ?? null);
       update(engine, 'audio', s.audio ?? null);
       for (let i = 0; i < 2; i++) update(engine.deckLevels, i, decay(s.deckPeaks[i], engine.deckLevels[i]));
       for (let i = 0; i < 2; i++) update(engine.masterLevels, i, decay(s.masterPeak[i], engine.masterLevels[i]));
-      const playing = s.decks.some((d) => d.playing) || s.recording?.active;
+      const playing = s.decks.some((d) => d.playing) || s.recording?.active || s.sampler?.slots.some((x) => x.playing);
       quietPolls = changed || playing ? 0 : quietPolls + 1;
       if (idle && quietPolls === 0) wake();
     })

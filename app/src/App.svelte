@@ -8,6 +8,8 @@
   import ContextMenu from './lib/ContextMenu.svelte';
   import Settings from './lib/Settings.svelte';
   import Import from './lib/Import.svelte';
+  import Sampler from './lib/Sampler.svelte';
+  import { sampler, setSamplerOpen, restoreSampler, loadSample } from './lib/sampler.svelte.js';
   import { engine, tracks, startEngineLoop, loadTrack, control, deckSnapshot, restoreDeck } from './lib/engine.svelte.js';
   import { backend } from './lib/backend.js';
   import { dropTarget } from './lib/dnd.svelte.js';
@@ -176,6 +178,9 @@
       case 'mixer.xfHardRight':
         if (down) mixer.setCrossfader((xf = id === 'mixer.xfHardLeft' ? -1 : 1));
         break;
+      case 'view.sampler':
+        if (down) setSamplerOpen(!sampler.open);
+        break;
       case 'view.zoomOut':
         if (down) setZoom(zoom * 1.4);
         break;
@@ -273,7 +278,8 @@
   try {
     libHeight = Number(localStorage.getItem(LIB_KEY)) || LIB_DEFAULT;
   } catch {}
-  const libMax = $derived(Math.max(160, Math.min(560, Math.max(winHeight, APP_MIN_H) - 150 - 9 - 300)));
+  const SAMPLER_H = 46;
+  const libMax = $derived(Math.max(160, Math.min(560, Math.max(winHeight, APP_MIN_H) - 150 - 9 - 300 - (sampler.open ? SAMPLER_H : 0))));
   const lib = $derived(Math.max(160, Math.min(libMax, libHeight)));
   function setLib(h) {
     libHeight = Math.max(160, Math.min(libMax, h));
@@ -324,14 +330,22 @@
     const off = backend.onController?.((e) => {
       if (e.type === 'browse') library.browse(e.delta);
       else if (e.type === 'load') library.loadSelected(e.deck);
+      else if (e.type === 'loadSample') {
+        // SHIFT + an empty sampler pad: the selected track goes in that slot.
+        const t = library.selectedTrack();
+        if (!t) return;
+        setSamplerOpen(true);
+        loadSample(e.slot, t).catch((err) => say(`Couldn't use ${t.title} as a sample: ${err}`));
+      }
     });
+    restoreSampler();
     return () => off?.then((f) => f());
   });
 </script>
 
 <svelte:window onkeydown={keydown} onkeyup={keyup} onblur={blur} oncontextmenu={contextmenu} />
 
-<div class="app" style:--lib="{lib}px" bind:clientHeight={winHeight}>
+<div class="app" class:sampling={sampler.open} style:--lib="{lib}px" style:--sampler="{SAMPLER_H}px" bind:clientHeight={winHeight}>
   <div class="waves" data-region="waves" role="group" aria-label="Waveforms">
     {#each [0, 1] as deck}
       <div class="lane" style:--drop-color={deck === 0 ? 'var(--deck-a)' : 'var(--deck-b)'} class:b={deck === 1}
@@ -352,6 +366,8 @@
     <Mixer bind:this={mixer} onmessage={say} />
     <Deck deck={1} onload={load} onreveal={(p) => library.reveal(p)} />
   </div>
+
+  {#if sampler.open}<Sampler onmessage={say} selected={() => library.selectedTrack()} />{/if}
 
   <!-- svelte-ignore a11y_no_noninteractive_tabindex, a11y_no_noninteractive_element_interactions (a focusable separator is the ARIA window-splitter pattern) -->
   <div class="split" class:drag={split} role="separator" aria-orientation="horizontal" aria-label="Resize library"
@@ -405,6 +421,9 @@
     min-height: 720px;
     display: grid;
     grid-template-rows: 150px minmax(300px, 1fr) 9px var(--lib);
+  }
+  .app.sampling {
+    grid-template-rows: 150px minmax(300px, 1fr) var(--sampler) 9px var(--lib);
   }
   .below {
     position: relative;

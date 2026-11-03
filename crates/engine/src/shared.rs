@@ -1,6 +1,6 @@
 use std::sync::atomic::{AtomicBool, AtomicU32, AtomicU64, AtomicU8, Ordering::Relaxed};
 
-use crate::{FxKind, Key, HOT_CUES, NUM_DECKS};
+use crate::{FxKind, Key, HOT_CUES, NUM_DECKS, SAMPLER_SLOTS};
 
 /// An `f64` stored in an `AtomicU64`.
 #[derive(Debug, Default)]
@@ -60,6 +60,20 @@ pub(crate) struct DeckShared {
     pub loop_beats: AtomicF64,
 }
 
+#[derive(Debug, Default)]
+pub(crate) struct SlotShared {
+    pub loaded: AtomicBool,
+    pub playing: AtomicBool,
+    pub progress: AtomicF64,
+    pub duration: AtomicF64,
+}
+
+#[derive(Debug, Default)]
+pub(crate) struct SamplerShared {
+    pub level: AtomicF32,
+    pub slots: [SlotShared; SAMPLER_SLOTS],
+}
+
 /// State the audio thread publishes for the UI, written once per block.
 /// Reads are lock-free and never disturb playback.
 #[derive(Debug, Default)]
@@ -71,6 +85,7 @@ pub struct SharedState {
     pub(crate) cue_mix: AtomicF32,
     pub(crate) master_db: AtomicF32,
     pub(crate) quantize: AtomicBool,
+    pub(crate) sampler: SamplerShared,
 }
 
 /// Mixer settings shared by both decks, so a UI can follow changes made on
@@ -86,6 +101,29 @@ pub struct MixerSnapshot {
     pub master_db: f32,
     /// Quantize on, for both decks.
     pub quantize: bool,
+}
+
+/// One sampler slot.
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+pub struct SampleSnapshot {
+    pub loaded: bool,
+    pub playing: bool,
+    /// How far through the sample playback is, 0.0..=1.0.
+    pub progress: f64,
+    /// Length in seconds.
+    pub duration: f64,
+}
+
+/// The sampler: its level and slots.
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+pub struct SamplerSnapshot {
+    /// 0.0..=1.0.
+    pub level: f32,
+    pub slots: [SampleSnapshot; SAMPLER_SLOTS],
 }
 
 /// A deck's beat FX unit.
@@ -189,6 +227,22 @@ impl SharedState {
             cue_mix: self.cue_mix.load(),
             master_db: self.master_db.load(),
             quantize: self.quantize.load(Relaxed),
+        }
+    }
+
+    pub fn sampler(&self) -> SamplerSnapshot {
+        let s = &self.sampler;
+        SamplerSnapshot {
+            level: s.level.load(),
+            slots: std::array::from_fn(|i| {
+                let slot = &s.slots[i];
+                SampleSnapshot {
+                    loaded: slot.loaded.load(Relaxed),
+                    playing: slot.playing.load(Relaxed),
+                    progress: slot.progress.load(),
+                    duration: slot.duration.load(),
+                }
+            }),
         }
     }
 
