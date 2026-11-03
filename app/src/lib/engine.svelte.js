@@ -2,6 +2,7 @@
 // and drives every waveform, so all visuals move in lockstep.
 
 import { backend } from './backend.js';
+import { autoGain } from './autogain.svelte.js';
 
 const emptyDeck = () => ({
   loaded: false, playing: false, position: 0, duration: 0, cue: 0, rate: 1, speed: 1, bpm: 0, key: null, keylock: false, generation: 0, peak: 0,
@@ -244,7 +245,7 @@ export async function setGrid(deck, grid) {
 
 /** Loads a library track into a deck. */
 export async function loadTrack(deck, item) {
-  const info = await backend.loadTrack(deck, item.path);
+  const info = await backend.loadTrack(deck, item.path, autoGain.on);
   const bins = await backend.waveform(deck);
   tracks[deck] = { ...info, title: item.title || info.title, artist: item.artist ?? '', bins };
   displayPos[deck] = 0;

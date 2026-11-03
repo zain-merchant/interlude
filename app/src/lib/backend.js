@@ -58,7 +58,8 @@ async function createTauriBackend() {
     /** Stops waiting for a disconnected audio device and uses the system default. */
     useDefaultOutput: () => invoke('use_default_output'),
     /** @returns {Promise<TrackInfo>} */
-    loadTrack: (deck, path) => invoke('load_track', { deck, path }),
+    /** With `autoGain`, the deck plays the track at the common loudness, under the trim. */
+    loadTrack: (deck, path, autoGain = true) => invoke('load_track', { deck, path, autoGain }),
     /**
      * Fixes the beatgrid of a deck's track by hand (saved, and kept from
      * analysis), or with null goes back to the detected one.

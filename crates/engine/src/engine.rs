@@ -203,6 +203,7 @@ impl Engine {
             } => self.decks[deck.index()].scratch_to(seconds, since_last),
             Jog { deck, seconds } => self.decks[deck.index()].jog(seconds),
             Sync { deck } => self.sync(deck.index()),
+            SetAutoGain { deck, db } => self.decks[deck.index()].set_auto_gain_db(db),
             SetGain { deck, db } => {
                 let db = db.clamp(GAIN_MIN_DB, GAIN_MAX_DB);
                 self.decks[deck.index()].set_gain_db(db);
