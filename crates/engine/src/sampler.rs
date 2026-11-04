@@ -188,6 +188,7 @@ mod tests {
             waveform: Default::default(),
             beatgrid: None,
             key: None,
+            loudness: Default::default(),
         })
     }
 

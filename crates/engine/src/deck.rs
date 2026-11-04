@@ -111,6 +111,10 @@ pub(crate) struct Deck {
     /// A released playing deck is getting back up to speed.
     spinning_up: bool,
     gain: Smoothed,
+    /// Trim, as the knob has it, and auto gain under it, in dB. The deck
+    /// plays at their sum.
+    trim_db: f32,
+    auto_gain_db: f32,
     eq: Eq3,
     out_rate: f64,
 }
@@ -148,6 +152,8 @@ impl Deck {
             vel: 0.0,
             spinning_up: false,
             gain: Smoothed::new(1.0, 10.0, out_rate),
+            trim_db: 0.0,
+            auto_gain_db: 0.0,
             eq: Eq3::new(out_rate),
             out_rate: out_rate as f64,
         }
@@ -176,6 +182,7 @@ impl Deck {
         self.slip_pos = None;
         self.slip_hot = None;
         self.eq.reset();
+        self.set_auto_gain_db(0.0);
         std::mem::replace(&mut self.track, track)
     }
 
@@ -767,7 +774,19 @@ impl Deck {
     }
 
     pub fn set_gain_db(&mut self, db: f32) {
-        self.gain.set(db_to_gain(db.clamp(-24.0, 12.0)));
+        self.trim_db = db.clamp(-24.0, 12.0);
+        self.update_gain();
+    }
+
+    /// The loaded track's auto gain, which trim works on top of. Loading
+    /// a track puts it back to 0 dB.
+    pub fn set_auto_gain_db(&mut self, db: f32) {
+        self.auto_gain_db = db.clamp(-24.0, 12.0);
+        self.update_gain();
+    }
+
+    fn update_gain(&mut self) {
+        self.gain.set(db_to_gain(self.trim_db + self.auto_gain_db));
     }
 
     pub fn set_eq_db(&mut self, band: EqBand, db: f32) {

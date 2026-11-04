@@ -60,7 +60,8 @@ async function createTauriBackend() {
     /** Puts a file in a sampler slot. @returns {Promise<number>} its length in seconds */
     loadSample: (slot, path) => invoke('load_sample', { slot, path }),
     /** @returns {Promise<TrackInfo>} */
-    loadTrack: (deck, path) => invoke('load_track', { deck, path }),
+    /** With `autoGain`, the deck plays the track at the common loudness, under the trim. */
+    loadTrack: (deck, path, autoGain = true) => invoke('load_track', { deck, path, autoGain }),
     /**
      * Fixes the beatgrid of a deck's track by hand (saved, and kept from
      * analysis), or with null goes back to the detected one.

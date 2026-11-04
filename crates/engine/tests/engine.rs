@@ -1447,6 +1447,41 @@ fn sampler_plays_into_the_master_past_the_crossfader() {
     assert!(!e.shared().sampler().slots[3].loaded);
 }
 
+#[test]
+fn auto_gain_matches_loudness_and_trim_works_on_top() {
+    use dj_engine::loudness::TARGET_LUFS;
+    // A loud track and one 12 dB quieter, with room to be turned up.
+    let (mut e, mut h) = setup();
+    let mut level = |amp: f32, trim: f32| {
+        let t = Arc::new(Track::from_stereo(sine(1_000.0, 3.0, amp), SR));
+        let db = t.loudness.gain_db(TARGET_LUFS);
+        h.send(Command::Load {
+            deck: DeckId::A,
+            track: t,
+        })
+        .unwrap();
+        h.send(Command::SetAutoGain {
+            deck: DeckId::A,
+            db,
+        })
+        .unwrap();
+        h.send(Command::SetGain {
+            deck: DeckId::A,
+            db: trim,
+        })
+        .unwrap();
+        h.send(Command::Play { deck: DeckId::A }).unwrap();
+        let out = render(&mut e, 1.0);
+        rms(&out[out.len() / 2..])
+    };
+    let loud = level(0.5, 0.0);
+    let quiet = level(0.125, 0.0);
+    assert!((loud / quiet - 1.0).abs() < 0.02, "{loud} vs {quiet}");
+    // Trim adds to it: +6 dB is twice the level.
+    let trimmed = level(0.125, 6.0);
+    assert!((trimmed / quiet - 2.0).abs() < 0.05, "{trimmed} vs {quiet}");
+}
+
 fn slip_on(h: &mut EngineHandle, deck: DeckId) {
     send(h, Command::SetSlip { deck, on: true });
 }
