@@ -4,7 +4,7 @@ use std::sync::{Arc, Mutex};
 
 use dj_controller::midi::{ControllerService, Host};
 use dj_controller::{Action, State};
-use dj_engine::{EngineHandle, SharedState, NUM_DECKS};
+use dj_engine::{Command, EngineHandle, SharedState, NUM_DECKS};
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager};
 
@@ -25,6 +25,8 @@ enum UiEvent {
     Load { deck: usize },
     /// Load the selected library track into sampler slot `slot`.
     LoadSample { slot: usize },
+    /// A stem pad was pressed on a deck whose stems can't be used yet.
+    StemsUnavailable { deck: usize },
 }
 
 impl Host for AppHost {
@@ -38,6 +40,19 @@ impl Host for AppHost {
 
     fn act(&self, action: Action) {
         match action {
+            // Without stems the deck plays the original whatever the mask
+            // says, so a stem pad would light up and change nothing.
+            Action::Engine(Command::SetStems { deck, .. })
+                if !self
+                    .app
+                    .try_state::<crate::stems::Stems>()
+                    .is_some_and(|s| s.usable(deck.index())) =>
+            {
+                let _ = self.app.emit(
+                    "controller",
+                    UiEvent::StemsUnavailable { deck: deck.index() },
+                );
+            }
             Action::Engine(cmd) => {
                 if let Ok(mut e) = self.engine.lock() {
                     let _ = e.send(cmd);
