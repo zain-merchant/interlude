@@ -131,6 +131,25 @@ impl Engine {
 
     fn apply(&mut self, cmd: Command) {
         use Command::*;
+        // Slip watches every deck command: what interrupts playback starts
+        // the shadow play head, and the end of the last interruption goes
+        // back to it. Going somewhere on purpose never starts one.
+        let slip = cmd.deck().map(|d| {
+            let deck = &self.decks[d.index()];
+            let deliberate = matches!(
+                cmd,
+                Load { .. } | Eject { .. } | CuePress { .. } | Seek { .. } | RestoreCue { .. }
+            );
+            (d.index(), deck.pos, deck.live() && !deliberate)
+        });
+        self.apply_inner(cmd);
+        if let Some((i, pos, live)) = slip {
+            self.decks[i].update_slip(pos, live);
+        }
+    }
+
+    fn apply_inner(&mut self, cmd: Command) {
+        use Command::*;
         match cmd {
             Load { deck, track } => {
                 let duration = track.duration_secs();
@@ -195,6 +214,7 @@ impl Engine {
                     .store(on, std::sync::atomic::Ordering::Relaxed);
             }
             SetStems { deck, mask } => self.decks[deck.index()].set_stems(mask),
+            SetSlip { deck, on } => self.decks[deck.index()].set_slip(on),
             SetQuantize { on } => {
                 for d in &mut self.decks {
                     d.quantize = on;
@@ -212,6 +232,7 @@ impl Engine {
             } => self.decks[deck.index()].scratch_to(seconds, since_last),
             Jog { deck, seconds } => self.decks[deck.index()].jog(seconds),
             Sync { deck } => self.sync(deck.index()),
+            SetAutoGain { deck, db } => self.decks[deck.index()].set_auto_gain_db(db),
             SetGain { deck, db } => {
                 let db = db.clamp(GAIN_MIN_DB, GAIN_MAX_DB);
                 self.decks[deck.index()].set_gain_db(db);
@@ -363,6 +384,8 @@ impl Engine {
             s.looping.store(deck.looping, Relaxed);
             s.loop_beats.store(deck.loop_beats);
             s.stems.store(deck.stems, Relaxed);
+            s.slip.store(deck.slip, Relaxed);
+            s.slip_position.store(secs(deck.slip_pos));
         }
         for (i, s) in self.shared.sampler.slots.iter().enumerate() {
             let (loaded, playing, progress, duration) = self.sampler.slot_state(i);

@@ -13,7 +13,7 @@ export const inTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in
  *             key: { tonic: number, minor: boolean } | null, keylock: boolean,
  *             generation: number, peak: number, hotCues: (number | null)[],
  *             loopIn: number | null, loopOut: number | null, looping: boolean,
- *             loopBeats: number, filter?: number,
+ *             loopBeats: number, slip?: boolean, slipPosition?: number | null, filter?: number,
  *             fx?: { kind: 'echo' | 'reverb' | 'flanger' | 'phaser', on: boolean, level: number, beats: number } }} DeckState
  * @typedef {{ active: boolean, seconds: number, path: string | null, droppedSeconds: number, error: string | null }} RecordingStatus
  * @typedef {{ state: 'connected', device: string, sampleRate: number }
@@ -60,7 +60,8 @@ async function createTauriBackend() {
     /** Puts a file in a sampler slot. @returns {Promise<number>} its length in seconds */
     loadSample: (slot, path) => invoke('load_sample', { slot, path }),
     /** @returns {Promise<TrackInfo>} */
-    loadTrack: (deck, path) => invoke('load_track', { deck, path }),
+    /** With `autoGain`, the deck plays the track at the common loudness, under the trim. */
+    loadTrack: (deck, path, autoGain = true) => invoke('load_track', { deck, path, autoGain }),
     /** Waveform bytes of what a deck plays with the stems in `mask` on. @returns {Promise<Uint8Array>} */
     stemsWaveform: async (deck, mask) => new Uint8Array(await invoke('stems_waveform', { deck, mask })),
     /** The Stems settings page. */

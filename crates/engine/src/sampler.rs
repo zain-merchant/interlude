@@ -189,6 +189,7 @@ mod tests {
             beatgrid: None,
             key: None,
             stems: Default::default(),
+            loudness: Default::default(),
         })
     }
 

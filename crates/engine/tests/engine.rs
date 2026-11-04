@@ -1514,3 +1514,181 @@ fn stems_mute_and_solo() {
     assert!((back / full - 1.0).abs() < 0.01);
     assert_eq!(h.shared().deck(0).stems, 0b1111);
 }
+
+#[test]
+fn auto_gain_matches_loudness_and_trim_works_on_top() {
+    use dj_engine::loudness::TARGET_LUFS;
+    // A loud track and one 12 dB quieter, with room to be turned up.
+    let (mut e, mut h) = setup();
+    let mut level = |amp: f32, trim: f32| {
+        let t = Arc::new(Track::from_stereo(sine(1_000.0, 3.0, amp), SR));
+        let db = t.loudness.gain_db(TARGET_LUFS);
+        h.send(Command::Load {
+            deck: DeckId::A,
+            track: t,
+        })
+        .unwrap();
+        h.send(Command::SetAutoGain {
+            deck: DeckId::A,
+            db,
+        })
+        .unwrap();
+        h.send(Command::SetGain {
+            deck: DeckId::A,
+            db: trim,
+        })
+        .unwrap();
+        h.send(Command::Play { deck: DeckId::A }).unwrap();
+        let out = render(&mut e, 1.0);
+        rms(&out[out.len() / 2..])
+    };
+    let loud = level(0.5, 0.0);
+    let quiet = level(0.125, 0.0);
+    assert!((loud / quiet - 1.0).abs() < 0.02, "{loud} vs {quiet}");
+    // Trim adds to it: +6 dB is twice the level.
+    let trimmed = level(0.125, 6.0);
+    assert!((trimmed / quiet - 2.0).abs() < 0.05, "{trimmed} vs {quiet}");
+}
+
+fn slip_on(h: &mut EngineHandle, deck: DeckId) {
+    send(h, Command::SetSlip { deck, on: true });
+}
+
+fn near(h: &EngineHandle, deck: DeckId, secs: f64, what: &str) {
+    let at = position(h, deck);
+    assert!((at - secs).abs() < 0.02, "{what}: at {at}, expected {secs}");
+}
+
+#[test]
+fn slip_scratch_picks_up_where_the_track_would_be() {
+    let (mut e, mut h) = setup();
+    load(&mut h, DeckId::A, sine(440.0, 20.0, 0.5));
+    let a = DeckId::A;
+    slip_on(&mut h, a);
+    send(&mut h, Command::Play { deck: a });
+    render(&mut e, 1.0);
+    send(&mut h, Command::ScratchStart { deck: a });
+    render(&mut e, 0.5);
+    let d = h.shared().deck(0);
+    assert!(d.slip);
+    assert!(d.position < 1.1, "the hand holds the record");
+    let shadow = d.slip_position.expect("slip is holding");
+    assert!((shadow - 1.5).abs() < 0.02, "shadow keeps time: {shadow}");
+    send(&mut h, Command::ScratchEnd { deck: a });
+    render(&mut e, 0.5);
+    near(&h, a, 2.0, "back in time after letting go");
+    assert_eq!(h.shared().deck(0).slip_position, None);
+}
+
+#[test]
+fn slip_loop_exits_in_time() {
+    let (mut e, mut h) = beat_track();
+    let a = DeckId::A;
+    send(
+        &mut h,
+        Command::Seek {
+            deck: a,
+            seconds: 10.0,
+        },
+    );
+    slip_on(&mut h, a);
+    send(&mut h, Command::Play { deck: a });
+    send(&mut h, Command::LoopToggle { deck: a });
+    render(&mut e, 5.0);
+    let d = h.shared().deck(0);
+    assert!(d.looping && d.position < 12.0, "looping a 2 s loop");
+    send(&mut h, Command::LoopToggle { deck: a });
+    render(&mut e, 0.01);
+    near(&h, a, 15.01, "out of the loop where the track would be");
+    assert!(!h.shared().deck(0).looping);
+}
+
+#[test]
+fn slip_hot_cue_rolls_while_held() {
+    let (mut e, mut h) = setup();
+    load(&mut h, DeckId::A, sine(440.0, 20.0, 0.5));
+    let a = DeckId::A;
+    // Land exactly on the hot cue rather than in phase with the beat.
+    send(&mut h, Command::SetQuantize { on: false });
+    send(
+        &mut h,
+        Command::Seek {
+            deck: a,
+            seconds: 2.0,
+        },
+    );
+    send(&mut h, Command::HotCuePress { deck: a, index: 0 });
+    send(&mut h, Command::HotCueRelease { deck: a, index: 0 });
+    send(
+        &mut h,
+        Command::Seek {
+            deck: a,
+            seconds: 8.0,
+        },
+    );
+    slip_on(&mut h, a);
+    send(&mut h, Command::Play { deck: a });
+    render(&mut e, 0.5);
+    send(&mut h, Command::HotCuePress { deck: a, index: 0 });
+    render(&mut e, 0.5);
+    near(&h, a, 2.5, "plays from the hot cue while held");
+    send(&mut h, Command::HotCueRelease { deck: a, index: 0 });
+    render(&mut e, 0.01);
+    near(&h, a, 9.01, "back in time on release");
+    assert!(h.shared().deck(0).playing);
+}
+
+#[test]
+fn slip_pause_resumes_in_time_and_cue_cancels_it() {
+    let (mut e, mut h) = setup();
+    load(&mut h, DeckId::A, sine(440.0, 20.0, 0.5));
+    let a = DeckId::A;
+    slip_on(&mut h, a);
+    send(&mut h, Command::Play { deck: a });
+    render(&mut e, 1.0);
+    send(&mut h, Command::TogglePlay { deck: a });
+    render(&mut e, 1.0);
+    near(&h, a, 1.0, "paused");
+    send(&mut h, Command::TogglePlay { deck: a });
+    render(&mut e, 0.01);
+    near(&h, a, 2.01, "resumes where the track would be");
+
+    // The cue button stops at the cue point, with no slip to come back to.
+    send(&mut h, Command::CuePress { deck: a });
+    send(&mut h, Command::CueRelease { deck: a });
+    render(&mut e, 0.5);
+    let d = h.shared().deck(0);
+    assert!(!d.playing && d.slip_position.is_none());
+    near(&h, a, 0.0, "at the cue point");
+}
+
+#[test]
+fn turning_slip_off_mid_slip_stays_put() {
+    let (mut e, mut h) = setup();
+    load(&mut h, DeckId::A, sine(440.0, 20.0, 0.5));
+    let a = DeckId::A;
+    slip_on(&mut h, a);
+    send(&mut h, Command::Play { deck: a });
+    render(&mut e, 1.0);
+    send(&mut h, Command::TogglePlay { deck: a });
+    render(&mut e, 1.0);
+    send(&mut h, Command::SetSlip { deck: a, on: false });
+    send(&mut h, Command::TogglePlay { deck: a });
+    render(&mut e, 0.01);
+    near(&h, a, 1.01, "plays on from where it paused");
+}
+
+#[test]
+fn without_slip_a_pause_is_just_a_pause() {
+    let (mut e, mut h) = setup();
+    load(&mut h, DeckId::A, sine(440.0, 20.0, 0.5));
+    let a = DeckId::A;
+    send(&mut h, Command::Play { deck: a });
+    render(&mut e, 1.0);
+    send(&mut h, Command::TogglePlay { deck: a });
+    render(&mut e, 1.0);
+    assert_eq!(h.shared().deck(0).slip_position, None);
+    send(&mut h, Command::TogglePlay { deck: a });
+    render(&mut e, 0.01);
+    near(&h, a, 1.01, "plays on from where it paused");
+}

@@ -59,6 +59,9 @@ pub(crate) struct DeckShared {
     pub looping: AtomicBool,
     pub loop_beats: AtomicF64,
     pub stems: AtomicU8,
+    pub slip: AtomicBool,
+    /// Seconds, or negative for none.
+    pub slip_position: AtomicF64,
 }
 
 #[derive(Debug, Default)]
@@ -187,6 +190,12 @@ pub struct DeckSnapshot {
     pub loop_beats: f64,
     /// Which stems are audible: bit `n` is [`crate::Stem`] `n`.
     pub stems: u8,
+    /// Slip mode on.
+    pub slip: bool,
+    /// Where the track would be without the scratch, loop, held hot cue
+    /// or pause interrupting it, in seconds: playback picks up from here
+    /// when that ends. `None` unless slip is holding.
+    pub slip_position: Option<f64>,
 }
 
 impl SharedState {
@@ -222,6 +231,8 @@ impl SharedState {
             looping: d.looping.load(Relaxed),
             loop_beats: d.loop_beats.load(),
             stems: d.stems.load(Relaxed),
+            slip: d.slip.load(Relaxed),
+            slip_position: some(d.slip_position.load()),
         }
     }
 

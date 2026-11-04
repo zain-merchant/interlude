@@ -7,8 +7,8 @@ A free, open-source DJ app that is fast, modern and uncluttered. No paywalled
 
 > **Status: early development (Phase 2 under way).** You can load two
 > tracks, see their BPM, sync them, cue, change pitch, EQ and crossfade.
-> The Pioneer DDJ-FLX4 works as a controller, including hot cues, loops and
-> beat jump. See the roadmap below.
+> The Pioneer DDJ-FLX4 works as a controller, including hot cues, loops,
+> beat jump and beat FX. See the roadmap below.
 
 ## What works today
 
@@ -22,9 +22,17 @@ A free, open-source DJ app that is fast, modern and uncluttered. No paywalled
 - **Hot cues, loops, beat jump:** 8 hot cues per deck (4 on screen, all 8
   on the FLX4 pads): set, jump, hold on a paused deck to preview. Beat loops
   snap to the beatgrid, halve and double, and wrap without clicks. Beat jump
-  moves by the loop size and carries an active loop with it. Hot cues, the
+  moves by the loop size and carries an active loop with it (Shift: 4
+  bars). Hot cues, the
   cue point and the loop are saved with the library as you set them, and
   come back when the track is loaded again.
+- **Slip** (the Slip toggle under Key lock, A / ;, or SHIFT + PLAY on the
+  FLX4): while a scratch, loop, held hot cue or pause interrupts a playing
+  deck, the track keeps time underneath, shown as a fainter second play
+  head on the waveform. When it ends, playback picks up where the track
+  would have been, so a loop or scratch never knocks the mix out of time.
+  With slip on, a hot cue pressed mid-play rolls while held. Cue, a seek
+  or turning slip off ends a slip where it is.
 - **Quantize** (on by default; the Quantize button in the mixer, or B):
   hot cues, the cue point, loop in and out snap to the nearest beat, and a
   hot cue or reloop pressed mid-play lands at the same point in the beat, so
@@ -32,6 +40,11 @@ A free, open-source DJ app that is fast, modern and uncluttered. No paywalled
 - **Mixer:** trim, 3-band isolator EQ with full kills, channel faders,
   constant-power crossfader, master gain, headphone cue with cue/master blend
   (on interfaces with 4+ outputs, headphones go to channels 3-4).
+- **Auto gain** (on by default; Settings > Library): each track's loudness
+  is measured when it's analyzed (EBU R128, in LUFS) and the deck plays it
+  at a common -12 LUFS, so trim starts from matched levels and works on top.
+  Loud masters are turned down in full; quiet tracks are turned up only as
+  far as their peaks allow, so auto gain never makes a track clip.
 - **Effects:** a filter knob per channel (left low-pass, right high-pass,
   centre off) and a beat FX unit per deck: echo, reverb, flanger and phaser,
   timed in beats (1/8 to 8) from the deck's tempo, with level and on. Echo
@@ -107,14 +120,20 @@ A free, open-source DJ app that is fast, modern and uncluttered. No paywalled
   while paused; SHIFT + jog: fast search), trim, EQ, channel
   faders, crossfader, headphone cue, browse knob and load buttons, with
   play/cue/headphone LEDs. Pads in hot cue (SHIFT + pad clears), beat loop
-  and beat jump modes; loop in, out, reloop/exit, 4-beat loop (SHIFT + IN),
+  and beat jump modes (SHIFT + a beat jump pad jumps 16 times as far: 4 to
+  32 bars), SHIFT + PLAY for slip; loop in, out, reloop/exit, 4-beat loop (SHIFT + IN),
   CUE/LOOP CALL halves and doubles the loop (with SHIFT: beat jump), all
   with LEDs. Sampler pad mode plays sampler slots 1 to 8 from either deck's
   pads (lit when loaded); SHIFT + pad stops a slot, or loads the selected
   library track into an empty one. PAD FX1 mode is stems: pads 1 to 4
   mute and unmute vocals, melody, bass and drums (lit while playing), pads
-  5 to 8 play one alone (lit while soloed). CFX knobs drive the channel filters. The beat FX section comes
-  later.
+  5 to 8 play one alone (lit while soloed). CFX knobs drive the channel
+  filters. The beat FX section works as in rekordbox: the channel select
+  lever picks the deck (MASTER runs the effect on both), BEAT FX SELECT
+  changes the effect (SHIFT goes back), BEAT ◀ ▶ the beat length,
+  LEVEL/DEPTH the level, and ON/OFF switches it, lit while on (SHIFT +
+  ON/OFF turns every effect off). Moving the lever takes the effect with it
+  to the new deck.
 
 The engine renders two playing decks at about 1% of one CPU core, and a
 test guarantees the audio thread never allocates memory.
@@ -136,6 +155,8 @@ shape on AZERTY, QWERTZ and Dvorak.
 | R | U | Loop on / off (snaps to the beat) |
 | D / F | J / K | Halve / double the loop |
 | C / V | N / M | Beat jump back / forward by the loop size |
+| ⇧C / ⇧V | ⇧N / ⇧M | Jump back / forward 4 bars |
+| A | ; | Slip on / off |
 | Shift ← | Shift → | Load the selected track |
 
 | Key | Action |
