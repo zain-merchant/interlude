@@ -12,6 +12,7 @@
   import { keyLabel } from './commands.js';
   import { announce } from './announce.svelte.js';
   import { keyName, keyLongName, camelot, playingKey } from './key.js';
+  import { toggleSlip } from './performance.js';
 
   /** @type {{ deck: number, onload: (deck: number, track: any) => void, onreveal: (path: string) => void }} */
   let { deck, onload, onreveal } = $props();
@@ -160,6 +161,11 @@
     announce(`Deck ${name} synced to deck ${other}`);
   };
   const toggleKeylock = () => control({ type: 'setKeylock', deck, on: !d.keylock });
+  const slipTip = () =>
+    tipText(
+      d.slip ? 'Slip on: after a scratch, loop, held hot cue or pause, the track picks up where it would have been' : 'Slip off',
+      keyLabel(`deck.${deck}.slip`),
+    );
   const keyTip = () => {
     if (!pk) return '';
     const track = `${keyLongName(d.key)} (${camelot(d.key)})`;
@@ -269,6 +275,8 @@
     <button class="range num" onclick={cycleRange} aria-label="Deck {name} pitch range, plus or minus {Math.round(range * 100)} percent" use:tip={() => `Pitch range ±${Math.round(range * 100)}%, click to change`}>±{Math.round(range * 100)}</button>
     <button class="range lock" class:on={d.keylock} aria-pressed={d.keylock} {...press(toggleKeylock)}
       use:tip={() => (d.keylock ? 'Key lock on: tempo changes keep the pitch' : 'Key lock off: tempo changes raise or lower the pitch')}>Key lock</button>
+    <button class="range lock" class:on={d.slip} aria-pressed={!!d.slip} aria-disabled={!t} {...press(() => toggleSlip(deck))}
+      use:tip={slipTip}>Slip</button>
   </div>
 </section>
 
@@ -355,7 +363,6 @@
     text-align: right;
     border-radius: 4px;
     box-shadow: 0 0 0 1px var(--fg-3);
-    user-select: text;
   }
   .bpm .unit {
     margin-top: 6px;
@@ -497,7 +504,7 @@
   }
   .pitch {
     display: grid;
-    grid-template-rows: auto minmax(0, 1fr) auto auto;
+    grid-template-rows: auto minmax(0, 1fr) auto auto auto;
     justify-items: center;
     gap: 10px;
     padding-top: 2px;

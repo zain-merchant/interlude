@@ -7,6 +7,7 @@ import { autoGain } from './autogain.svelte.js';
 const emptyDeck = () => ({
   loaded: false, playing: false, position: 0, duration: 0, cue: 0, rate: 1, speed: 1, bpm: 0, key: null, keylock: false, generation: 0, peak: 0,
   hotCues: Array(8).fill(null), loopIn: null, loopOut: null, looping: false, loopBeats: 4,
+  slip: false, slipPosition: null,
 });
 
 export const engine = $state({
@@ -37,6 +38,12 @@ export const tracks = $state([null, null]);
  * own clock and gently steer it towards the engine's.
  */
 export const displayPos = [0, 0];
+
+/**
+ * The slip play head, smoothed the same way (null while slip isn't
+ * holding). It keeps time at the deck's rate whatever the deck is doing.
+ */
+export const displaySlip = [null, null];
 
 /**
  * Decks being scrubbed by hand. While the pointer is down the drawn
@@ -172,6 +179,12 @@ function frame(now) {
   for (let i = 0; i < 2; i++) {
     const d = engine.decks[i];
     const s = scrubs[i];
+    if (d.slipPosition == null || displaySlip[i] == null) displaySlip[i] = d.slipPosition ?? null;
+    else {
+      const ahead = displaySlip[i] + dt * d.rate;
+      const err = d.slipPosition - ahead;
+      displaySlip[i] = Math.abs(err) > 0.08 ? d.slipPosition : ahead + err * 0.15;
+    }
     if (s) {
       if (s.dragging) continue;
       if (Math.abs(d.position - displayPos[i]) > 0.25 && now < s.until) {
