@@ -154,6 +154,15 @@ impl Stems {
         self.splitter.stop(deck);
     }
 
+    /// True when `deck`'s stems can be muted: split, or being split. Until
+    /// then the deck plays the original whatever the stem mask says.
+    pub fn usable(&self, deck: usize) -> bool {
+        matches!(
+            self.splitter.status(deck),
+            Status::Starting | Status::Splitting(_) | Status::Ready
+        )
+    }
+
     pub fn decks(&self) -> [DeckStems; NUM_DECKS] {
         std::array::from_fn(|deck| {
             let (state, ready, error) = match self.splitter.status(deck) {

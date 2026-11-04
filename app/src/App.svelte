@@ -22,7 +22,7 @@
   import { stepUiZoom, setUiZoom } from './lib/uizoom.svelte.js';
   import { installAppMenu } from './lib/appmenu.js';
   import { runPerformance } from './lib/performance.js';
-  import { toggleStem, soloStem, syncStemWaveforms } from './lib/stems.svelte.js';
+  import { toggleStem, soloStem, syncStemWaveforms, stemsUnavailable } from './lib/stems.svelte.js';
 
   let library;
   let mixer;
@@ -340,6 +340,7 @@
     const off = backend.onController?.((e) => {
       if (e.type === 'browse') library.browse(e.delta);
       else if (e.type === 'load') library.loadSelected(e.deck);
+      else if (e.type === 'stemsUnavailable') say(stemsUnavailable(e.deck));
       else if (e.type === 'loadSample') {
         // SHIFT + an empty sampler pad: the selected track goes in that slot.
         const t = library.selectedTrack();
