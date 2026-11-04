@@ -7,8 +7,8 @@ A free, open-source DJ app that is fast, modern and uncluttered. No paywalled
 
 > **Status: early development (Phase 2 under way).** You can load two
 > tracks, see their BPM, sync them, cue, change pitch, EQ and crossfade.
-> The Pioneer DDJ-FLX4 works as a controller, including hot cues, loops and
-> beat jump. See the roadmap below.
+> The Pioneer DDJ-FLX4 works as a controller, including hot cues, loops,
+> beat jump and beat FX. See the roadmap below.
 
 ## What works today
 
@@ -105,8 +105,12 @@ A free, open-source DJ app that is fast, modern and uncluttered. No paywalled
   CUE/LOOP CALL halves and doubles the loop (with SHIFT: beat jump), all
   with LEDs. Sampler pad mode plays sampler slots 1 to 8 from either deck's
   pads (lit when loaded); SHIFT + pad stops a slot, or loads the selected
-  library track into an empty one. CFX knobs drive the channel filters. The beat FX section comes
-  later.
+  library track into an empty one. CFX knobs drive the channel filters. The
+  beat FX section works as in rekordbox: the channel select lever picks the
+  deck (MASTER runs the effect on both), BEAT FX SELECT changes the effect
+  (SHIFT goes back), BEAT ◀ ▶ the beat length, LEVEL/DEPTH the level, and
+  ON/OFF switches it, lit while on (SHIFT + ON/OFF turns every effect off).
+  Moving the lever takes the effect with it to the new deck.
 
 The engine renders two playing decks at about 1% of one CPU core, and a
 test guarantees the audio thread never allocates memory.
