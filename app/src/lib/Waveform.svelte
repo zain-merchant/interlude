@@ -1,7 +1,7 @@
 <script>
   import { onMount } from 'svelte';
   import { WaveformGL, themeColors, HOT_CUES } from './waveform-gl.js';
-  import { tracks, engine, displayPos, onFrame, scrubStart, scrubTo, scrubEnd } from './engine.svelte.js';
+  import { tracks, engine, displayPos, displaySlip, onFrame, scrubStart, scrubTo, scrubEnd } from './engine.svelte.js';
 
   /** @type {{ deck: number, mode?: 'scroll' | 'overview', seconds?: number, onzoom?: (factor: number) => void }} */
   let { deck, mode = 'scroll', seconds = 12, onzoom } = $props();
@@ -42,6 +42,7 @@
       const marks = {
         hotCues: Array.from({ length: HOT_CUES }, (_, i) => bin(d.hotCues?.[i])),
         loopIn: bin(d.loopIn), loopOut: bin(d.loopOut), looping: !!t && d.looping,
+        slip: bin(displaySlip[deck]),
       };
       if (mode === 'scroll') {
         const perPx = (seconds * bps) / w;
