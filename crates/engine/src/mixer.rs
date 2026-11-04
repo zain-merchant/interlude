@@ -41,8 +41,15 @@ impl Mixer {
     }
 
     /// Mixes per-deck buffers (pre-fader) into `master` and `cue`
-    /// (interleaved stereo, same length as each deck buffer).
-    pub fn mix(&mut self, decks: &[&[f32]; NUM_DECKS], master: &mut [f32], cue: &mut [f32]) {
+    /// (interleaved stereo, same length as each deck buffer). `sampler`
+    /// joins the master after the crossfader, before master gain.
+    pub fn mix(
+        &mut self,
+        decks: &[&[f32]; NUM_DECKS],
+        sampler: &[f32],
+        master: &mut [f32],
+        cue: &mut [f32],
+    ) {
         let any_pfl = self.pfl.iter().any(|&p| p);
         let (master, _) = master.as_chunks_mut::<2>();
         let (cue, _) = cue.as_chunks_mut::<2>();
@@ -60,6 +67,8 @@ impl Mixer {
                     cr += r;
                 }
             }
+            ml += sampler[i * 2];
+            mr += sampler[i * 2 + 1];
             let mg = self.master.tick();
             // Hard clip as a last line of defence; a proper limiter comes later.
             m[0] = (ml * mg).clamp(-1.0, 1.0);

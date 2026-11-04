@@ -9,7 +9,10 @@
 //! The performance pads send on their own channels: 8 and 9 (plain and
 //! with SHIFT) for deck 1, 10 and 11 for deck 2, with a different note
 //! range for each pad mode. The controller switches pad modes itself;
-//! hot cue, beat loop and beat jump modes are mapped.
+//! hot cue, beat loop, beat jump and sampler modes are mapped. Both decks'
+//! sampler pads play the same eight slots. SHIFT + a beat jump pad jumps
+//! 16 times as far (4 to 32 bars), and SHIFT + PLAY turns slip mode on and
+//! off; the FLX4 has no slip button of its own.
 //!
 //! The CFX knobs drive each channel's filter. The beat FX section drives the
 //! beat FX unit of the deck the channel select lever points at, as rekordbox
@@ -33,6 +36,8 @@ const GLOBAL_CH: u8 = 6;
 
 // Deck notes (channel = deck).
 const PLAY: u8 = 0x0B;
+/// SHIFT + PLAY/PAUSE: slip mode on / off.
+const PLAY_SHIFT: u8 = 0x47;
 const CUE: u8 = 0x0C;
 const SHIFT: u8 = 0x3F;
 const JOG_TOUCH: u8 = 0x36;
@@ -57,12 +62,16 @@ const PAD_CH: u8 = 7;
 // First note of each pad mode; pads 1 to 8 follow.
 const PAD_HOT_CUE: u8 = 0x00;
 const PAD_BEAT_JUMP: u8 = 0x20;
+const PAD_SAMPLER: u8 = 0x30;
 const PAD_BEAT_LOOP: u8 = 0x60;
 /// Loop length of each pad in beat loop mode, in beats.
 const PAD_LOOP_BEATS: [f64; 8] = [0.25, 0.5, 1.0, 2.0, 4.0, 8.0, 16.0, 32.0];
 /// Jump of each pad in beat jump mode, in beats: back on the left pad of
 /// each pair, forward on the right.
 const PAD_JUMP_BEATS: [f64; 8] = [-1.0, 1.0, -2.0, 2.0, -4.0, 4.0, -8.0, 8.0];
+/// SHIFT + a beat jump pad jumps this many times as far: 4, 8, 16 and 32
+/// bars, for skipping whole phrases.
+const PAD_JUMP_SHIFT: f64 = 16.0;
 
 // Deck CCs (MSB; LSB is +0x20).
 const TEMPO: u8 = 0x00;
@@ -234,6 +243,10 @@ impl Flx4 {
                 return vec![];
             }
             (PLAY, true) => Command::TogglePlay { deck },
+            (PLAY_SHIFT, true) => Command::SetSlip {
+                deck,
+                on: !state.decks[d].slip,
+            },
             (CUE, true) => Command::CuePress { deck },
             (CUE, false) => Command::CueRelease { deck },
             (SYNC, true) => Command::Sync { deck },
@@ -267,10 +280,20 @@ impl Flx4 {
     }
 
     /// A performance pad, in whichever mode the controller is in.
-    fn pad(d: usize, shift: bool, note: u8, pressed: bool) -> Vec<Action> {
+    fn pad(d: usize, shift: bool, note: u8, pressed: bool, state: &State) -> Vec<Action> {
         let deck = deck_id(d);
         let (mode, i) = (note & !0x07, (note & 0x07) as usize);
         let cmd = match (mode, shift, pressed) {
+            (PAD_SAMPLER, false, true) => Command::SamplePlay { slot: i },
+            // SHIFT stops a playing slot, and loads the selected track
+            // into an empty one.
+            (PAD_SAMPLER, true, true) => {
+                let slot = state.sampler.slots[i];
+                if !slot.loaded {
+                    return vec![Action::LoadSample(i)];
+                }
+                Command::SampleStop { slot: i }
+            }
             (PAD_HOT_CUE, false, true) => Command::HotCuePress { deck, index: i },
             (PAD_HOT_CUE, false, false) => Command::HotCueRelease { deck, index: i },
             (PAD_HOT_CUE, true, true) => Command::HotCueClear { deck, index: i },
@@ -280,7 +303,7 @@ impl Flx4 {
             },
             (PAD_BEAT_JUMP, _, true) => Command::BeatJump {
                 deck,
-                beats: PAD_JUMP_BEATS[i],
+                beats: PAD_JUMP_BEATS[i] * if shift { PAD_JUMP_SHIFT } else { 1.0 },
             },
             _ => return vec![],
         };
@@ -514,7 +537,7 @@ impl Mapping for Flx4 {
             d if d < NUM_DECKS && kind == CC => self.deck_cc(d, num, value, state),
             c if kind == NOTE_ON && (PAD_CH..PAD_CH + 2 * NUM_DECKS as u8).contains(&(c as u8)) => {
                 let p = c as u8 - PAD_CH;
-                Self::pad((p / 2) as usize, p % 2 == 1, num, value > 0)
+                Self::pad((p / 2) as usize, p % 2 == 1, num, value > 0, state)
             }
             _ if ch == GLOBAL_CH => self.global(kind, num, value),
             _ if ch == FX_CH || ch == FX_CH + 1 => self.fx(kind, num, value, state),
@@ -577,6 +600,9 @@ fn all_leds(state: &State) -> Vec<Led> {
             }
             for i in 0..8 {
                 out.push((status, PAD_BEAT_JUMP + i, gridded));
+            }
+            for (i, slot) in state.sampler.slots.iter().enumerate().take(8) {
+                out.push((status, PAD_SAMPLER + i as u8, slot.loaded));
             }
         }
     }
@@ -865,6 +891,74 @@ mod tests {
             one(&mut m, [0x97, 0x27, 0x7F], &s),
             Command::BeatJump { beats, .. } if beats == 8.0
         ));
+        // SHIFT: whole phrases, 4 to 32 bars.
+        assert!(matches!(
+            one(&mut m, [0x98, 0x20, 0x7F], &s),
+            Command::BeatJump { deck: DeckId::A, beats } if beats == -16.0
+        ));
+        assert!(matches!(
+            one(&mut m, [0x9A, 0x27, 0x7F], &s),
+            Command::BeatJump { deck: DeckId::B, beats } if beats == 128.0
+        ));
+    }
+
+    #[test]
+    fn shift_play_toggles_slip() {
+        let mut m = Flx4::new();
+        let mut s = st();
+        assert!(matches!(
+            one(&mut m, [0x91, PLAY_SHIFT, 0x7F], &s),
+            Command::SetSlip {
+                deck: DeckId::B,
+                on: true
+            }
+        ));
+        assert!(cmds(m.handle(&[0x91, PLAY_SHIFT, 0], &s)).is_empty());
+        s.decks[1].slip = true;
+        assert!(matches!(
+            one(&mut m, [0x91, PLAY_SHIFT, 0x7F], &s),
+            Command::SetSlip { on: false, .. }
+        ));
+    }
+
+    #[test]
+    fn sampler_pads() {
+        let mut m = Flx4::new();
+        let mut s = st();
+        // Deck 1 and deck 2 pads play the same slots.
+        assert!(matches!(
+            one(&mut m, [0x97, 0x32, 0x7F], &s),
+            Command::SamplePlay { slot: 2 }
+        ));
+        assert!(matches!(
+            one(&mut m, [0x99, 0x32, 0x7F], &s),
+            Command::SamplePlay { slot: 2 }
+        ));
+        assert!(cmds(m.handle(&[0x97, 0x32, 0x00], &s)).is_empty());
+        // SHIFT + an empty pad loads the selected track there...
+        assert!(matches!(
+            m.handle(&[0x98, 0x35, 0x7F], &s)[..],
+            [Action::LoadSample(5)]
+        ));
+        // ...and stops a loaded one.
+        s.sampler.slots[5].loaded = true;
+        assert!(matches!(
+            one(&mut m, [0x9A, 0x35, 0x7F], &s),
+            Command::SampleStop { slot: 5 }
+        ));
+        // Loaded pads light on both decks, with and without SHIFT.
+        m.reset_leds();
+        m.leds(&s);
+        s.sampler.slots[0].loaded = true;
+        assert_eq!(
+            m.leds(&s),
+            vec![
+                vec![0x97, 0x30, 0x7F],
+                vec![0x98, 0x30, 0x7F],
+                vec![0x99, 0x30, 0x7F],
+                vec![0x9A, 0x30, 0x7F],
+            ]
+        );
     }
 
     #[test]
