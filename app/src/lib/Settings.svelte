@@ -4,6 +4,7 @@
   import { keymap, saveKeymap, bindingFrom, reserved } from './keymap.svelte.js';
   import { uiZoom, setUiZoom, stepUiZoom, uiZoomSteps } from './uizoom.svelte.js';
   import { announce } from './announce.svelte.js';
+  import { autoGain, setAutoGain } from './autogain.svelte.js';
   import { keyLabel } from './commands.js';
   import { backend } from './backend.js';
 
@@ -280,6 +281,14 @@
         {/if}
       {:else if page === 'library'}
         <section class="display">
+          <h3>Loudness</h3>
+          <label class="opt">
+            <input type="checkbox" checked={autoGain.on} onchange={(e) => setAutoGain(e.currentTarget.checked)} />
+            <span>Auto gain</span>
+          </label>
+          <p>Tracks load at the same loudness, so you can leave trim near the middle. Trim still works on top. Applies to the next track you load.</p>
+        </section>
+        <section class="display">
           <h3>Import from another app</h3>
           <p>Bring over your Rekordbox or Serato library: cue points, loops, beatgrids and playlists. Your music files aren't changed, and anything you've set here stays as it is.</p>
           <div class="size">
@@ -456,6 +465,41 @@
   .display p {
     margin: 0 0 12px;
     color: var(--fg-3);
+  }
+  .opt {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 30px;
+    color: var(--fg);
+  }
+  input[type='checkbox'] {
+    appearance: none;
+    flex: none;
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    border-radius: 4px;
+    box-shadow: inset 0 0 0 1px var(--fg-4);
+    display: grid;
+    place-items: center;
+  }
+  input[type='checkbox']:checked {
+    background: var(--fg);
+    box-shadow: none;
+  }
+  input[type='checkbox']:checked::after {
+    content: '';
+    width: 8px;
+    height: 4px;
+    margin-top: -2px;
+    border-left: 1.6px solid var(--bg);
+    border-bottom: 1.6px solid var(--bg);
+    transform: rotate(-45deg);
+  }
+  input[type='checkbox']:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
   }
   .size {
     display: flex;

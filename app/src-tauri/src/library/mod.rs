@@ -23,7 +23,9 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, Condvar, Mutex, OnceLock};
 use std::time::{Duration, UNIX_EPOCH};
 
-use dj_engine::{Beatgrid, DeckSnapshot, SavedCues, SharedState, TrackSummary, NUM_DECKS};
+use dj_engine::{
+    Beatgrid, DeckSnapshot, Loudness, SavedCues, SharedState, TrackSummary, NUM_DECKS,
+};
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter, State};
 
@@ -71,6 +73,9 @@ pub struct Analysis {
     duration: Option<f64>,
     bpm: Option<f64>,
     key: Option<dj_engine::Key>,
+    /// `None` for tracks analyzed before loudness was measured, until the
+    /// analyzer gets back to them.
+    loudness: Option<Loudness>,
     failed: bool,
 }
 
@@ -80,6 +85,7 @@ impl From<TrackSummary> for Analysis {
             duration: Some(s.duration),
             bpm: s.bpm,
             key: s.key,
+            loudness: Some(s.loudness),
             failed: false,
         }
     }
@@ -90,8 +96,15 @@ impl Analysis {
         duration: None,
         bpm: None,
         key: None,
+        loudness: None,
         failed: true,
     };
+
+    /// Nothing left to analyze: everything is measured, or the file
+    /// couldn't be decoded.
+    fn complete(&self) -> bool {
+        self.failed || self.loudness.is_some()
+    }
 }
 
 #[derive(Serialize, Clone)]
@@ -160,7 +173,7 @@ impl Analyzer {
                     queue = self.wake.wait(queue).unwrap();
                 }
             };
-            if self.get(&path).is_some() {
+            if self.get(&path).is_some_and(|a| a.complete()) {
                 continue;
             }
             let analysis = TrackSummary::analyze(&path)
@@ -591,7 +604,7 @@ pub async fn library_tracks(
         out.sort_by(|a, b| (&a.artist, &a.title).cmp(&(&b.artist, &b.title)));
         analyzer.enqueue(
             out.iter()
-                .filter(|t| t.analysis.is_none() && !t.missing)
+                .filter(|t| !t.analysis.is_some_and(|a| a.complete()) && !t.missing)
                 .map(|t| PathBuf::from(&t.path)),
         );
         Ok(out)
@@ -612,7 +625,7 @@ fn listed(
         .collect();
     lib.analyzer.enqueue(
         out.iter()
-            .filter(|t| t.analysis.is_none() && !t.missing)
+            .filter(|t| !t.analysis.is_some_and(|a| a.complete()) && !t.missing)
             .map(|t| PathBuf::from(&t.path)),
     );
     Ok(out)

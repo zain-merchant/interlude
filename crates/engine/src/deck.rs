@@ -92,6 +92,14 @@ pub(crate) struct Deck {
     pub scratching: bool,
     /// Keylock: tempo changes keep the track's pitch.
     pub keylock: bool,
+    /// Slip mode: scratches, loops, held hot cues and pauses leave a
+    /// shadow play head running in time underneath, and playback picks up
+    /// from it when they end, as if the track had played on.
+    pub slip: bool,
+    /// The shadow play head in source frames, while slip is holding.
+    pub slip_pos: Option<f64>,
+    /// The hot cue pad holding a slip, while it's pressed.
+    slip_hot: Option<usize>,
     /// Quantize: cue points and loops snap to the beatgrid, and jumps
     /// while playing land on the same spot in the beat, so they stay in
     /// time. Does nothing for tracks without a beatgrid.
@@ -110,6 +118,10 @@ pub(crate) struct Deck {
     /// Which stems are audible, one bit per [`crate::Stem`].
     pub stems: u8,
     stem_gain: [Smoothed; STEMS],
+    /// Trim, as the knob has it, and auto gain under it, in dB. The deck
+    /// plays at their sum.
+    trim_db: f32,
+    auto_gain_db: f32,
     eq: Eq3,
     out_rate: f64,
 }
@@ -137,6 +149,9 @@ impl Deck {
             jog_bend: 0.0,
             scratching: false,
             keylock: false,
+            slip: false,
+            slip_pos: None,
+            slip_hot: None,
             quantize: true,
             stretch: Stretcher::new(out_rate),
             following: false,
@@ -146,6 +161,8 @@ impl Deck {
             gain: Smoothed::new(1.0, 10.0, out_rate),
             stems: ALL_STEMS,
             stem_gain: std::array::from_fn(|_| Smoothed::new(1.0, STEM_FADE_MS, out_rate)),
+            trim_db: 0.0,
+            auto_gain_db: 0.0,
             eq: Eq3::new(out_rate),
             out_rate: out_rate as f64,
         }
@@ -175,7 +192,10 @@ impl Deck {
         for g in &mut self.stem_gain {
             g.snap();
         }
+        self.slip_pos = None;
+        self.slip_hot = None;
         self.eq.reset();
+        self.set_auto_gain_db(0.0);
         std::mem::replace(&mut self.track, track)
     }
 
@@ -217,6 +237,8 @@ impl Deck {
         if self.track.is_none() || self.preview_hot.is_some() {
             return;
         }
+        // The cue button goes somewhere on purpose, which ends a slip.
+        self.slip_pos = None;
         if self.playing && !self.previewing {
             self.pos = self.cue;
             self.playing = false;
@@ -281,6 +303,8 @@ impl Deck {
     }
 
     pub fn seek_secs(&mut self, secs: f64) {
+        // Going somewhere on purpose ends a slip where it is.
+        self.slip_pos = None;
         let to = (secs * self.source_rate()).clamp(0.0, self.frames());
         self.leave_loop_if_outside(to);
         self.jump(to);
@@ -298,11 +322,16 @@ impl Deck {
             self.hot_cues[n] = Some(self.snap(self.pos));
             return;
         };
-        let at = if self.playing && !self.previewing {
-            self.in_phase(at)
-        } else {
-            at
-        };
+        let live = self.playing && !self.previewing;
+        let at = if live { self.in_phase(at) } else { at };
+        // In slip mode a hot cue pressed mid-play holds like a roll: the
+        // track picks up where it would have been when the pad lets go.
+        if live && self.slip {
+            self.slip_hot = Some(n);
+        } else if !live {
+            // Previewing a cue from a paused deck ends a slip pause.
+            self.slip_pos = None;
+        }
         self.leave_loop_if_outside(at);
         self.jump(at);
         if !self.playing || self.previewing {
@@ -314,6 +343,9 @@ impl Deck {
     }
 
     pub fn hot_cue_release(&mut self, n: usize) {
+        if self.slip_hot == Some(n) {
+            self.slip_hot = None;
+        }
         if self.previewing && self.preview_hot == Some(n) {
             self.end_preview();
         }
@@ -506,6 +538,47 @@ impl Deck {
         } else {
             self.jump(self.pos + d);
         }
+    }
+
+    /// Slip on or off. Turning it off mid-slip stays where playback is.
+    pub fn set_slip(&mut self, on: bool) {
+        self.slip = on;
+        if !on {
+            self.slip_pos = None;
+            self.slip_hot = None;
+        }
+    }
+
+    /// Something is holding playback away from the shadow play head: a
+    /// hand on the record, a loop, a held hot cue, or a pause.
+    fn slip_held(&self) -> bool {
+        self.scratching || self.looping || self.slip_hot.is_some() || !self.playing
+    }
+
+    /// Called after every command with the play head and transport as they
+    /// were before it. In slip mode, the shadow play head starts where an
+    /// interruption began, and playback jumps back to it when the last one
+    /// ends.
+    pub fn update_slip(&mut self, pos_before: f64, live_before: bool) {
+        if !self.slip || self.track.is_none() {
+            return;
+        }
+        let held = self.slip_held();
+        match self.slip_pos {
+            None if held && live_before => self.slip_pos = Some(pos_before),
+            Some(to) if !held => {
+                self.slip_pos = None;
+                self.following = false;
+                self.spinning_up = false;
+                self.jump(to);
+            }
+            _ => {}
+        }
+    }
+
+    /// Playing, and not just previewing a cue: what slip keeps time for.
+    pub fn live(&self) -> bool {
+        self.playing && !self.previewing
     }
 
     /// The play head starts following the hand from where it is, moving at
@@ -707,6 +780,9 @@ impl Deck {
         if let Some(g) = self.grid() {
             let frames = beats * g.beat_length() * self.source_rate();
             self.jump(self.pos + frames);
+            if let Some(s) = &mut self.slip_pos {
+                *s += frames;
+            }
         }
     }
 
@@ -720,7 +796,19 @@ impl Deck {
     }
 
     pub fn set_gain_db(&mut self, db: f32) {
-        self.gain.set(db_to_gain(db.clamp(-24.0, 12.0)));
+        self.trim_db = db.clamp(-24.0, 12.0);
+        self.update_gain();
+    }
+
+    /// The loaded track's auto gain, which trim works on top of. Loading
+    /// a track puts it back to 0 dB.
+    pub fn set_auto_gain_db(&mut self, db: f32) {
+        self.auto_gain_db = db.clamp(-24.0, 12.0);
+        self.update_gain();
+    }
+
+    fn update_gain(&mut self) {
+        self.gain.set(db_to_gain(self.trim_db + self.auto_gain_db));
     }
 
     pub fn set_eq_db(&mut self, band: EqBand, db: f32) {
@@ -841,6 +929,10 @@ impl Deck {
             self.stretch.stop();
         }
         let n = out.len() / 2;
+        // The shadow play head keeps time at the deck's tempo.
+        if let Some(s) = &mut self.slip_pos {
+            *s = (*s + step * n as f64).min(end);
+        }
         self.hand.elapsed(n);
         // A released paused record stops once it has reached the hand.
         if self.following && !self.scratching && self.hand.settled(self.pos) {
