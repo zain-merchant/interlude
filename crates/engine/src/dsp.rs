@@ -64,6 +64,11 @@ impl Smoothed {
         self.target
     }
 
+    /// Jumps straight to the target.
+    pub fn snap(&mut self) {
+        self.current = self.target;
+    }
+
     #[inline]
     pub fn tick(&mut self) -> f32 {
         self.current += (self.target - self.current) * self.coeff;

@@ -199,6 +199,12 @@ pub enum Command {
         deck: DeckId,
         on: bool,
     },
+    /// Which stems are audible: bit `n` is [`crate::Stem`] `n`. Every bit
+    /// set plays the track as it is. A freshly loaded deck has all stems on.
+    SetStems {
+        deck: DeckId,
+        mask: u8,
+    },
     /// Slip mode: while a scratch, loop, held hot cue or pause interrupts
     /// a playing deck, the track keeps time underneath, and playback picks
     /// up from there when it ends. Off mid-slip stays where playback is.

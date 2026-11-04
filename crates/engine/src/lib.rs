@@ -29,6 +29,7 @@ pub mod output;
 mod record;
 mod sampler;
 mod shared;
+pub mod stems;
 mod stretch;
 mod track;
 pub mod waveform;
@@ -49,6 +50,7 @@ pub use sampler::{MAX_SAMPLE_SECS, SAMPLER_SLOTS};
 pub use shared::{
     DeckSnapshot, FxSnapshot, MixerSnapshot, SampleSnapshot, SamplerSnapshot, SharedState,
 };
+pub use stems::{Stem, Stems, ALL_STEMS, STEMS};
 pub use track::{LoadError, Track, TrackSummary};
 pub use waveform::Waveform;
 

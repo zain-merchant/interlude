@@ -1448,6 +1448,74 @@ fn sampler_plays_into_the_master_past_the_crossfader() {
 }
 
 #[test]
+fn stems_mute_and_solo() {
+    use dj_engine::stems::{STORED_BASS, STORED_DRUMS, STORED_VOCALS};
+    use dj_engine::Stems;
+
+    let (mut e, mut h) = setup();
+    // A mix of two tones: "vocals" at 880 Hz and "bass" at 110 Hz.
+    let vocals = sine(880.0, 2.0, 0.3);
+    let bass = sine(110.0, 2.0, 0.3);
+    let mix: Vec<f32> = vocals.iter().zip(&bass).map(|(a, b)| a + b).collect();
+    let track = Track::from_stereo(mix, SR);
+    let stems = Stems::new(track.frames());
+    for f in 0..track.frames() {
+        stems.write(f, STORED_VOCALS, vocals[f * 2], vocals[f * 2 + 1]);
+        stems.write(f, STORED_BASS, bass[f * 2], bass[f * 2 + 1]);
+        stems.write(f, STORED_DRUMS, 0.0, 0.0);
+    }
+    for b in 0..stems.blocks() {
+        stems.mark_ready(b);
+    }
+    track.stems.set(Arc::new(stems)).unwrap();
+    h.send(Command::Load {
+        deck: DeckId::A,
+        track: Arc::new(track),
+    })
+    .unwrap();
+    h.send(Command::SetCrossfader { value: -1.0 }).unwrap();
+    h.send(Command::Play { deck: DeckId::A }).unwrap();
+    let full = rms(&render(&mut e, 0.3)[4800..]);
+
+    // Vocals off: only the bass is left, about 1/√2 of the level.
+    h.send(Command::SetStems {
+        deck: DeckId::A,
+        mask: 0b1110,
+    })
+    .unwrap();
+    let out = render(&mut e, 0.3);
+    let no_vocals = rms(&out[4800..]);
+    assert!(
+        (no_vocals / full - 0.707).abs() < 0.05,
+        "{no_vocals} vs {full}"
+    );
+    // The change fades in rather than clicking: no sample jumps far.
+    let jump = out
+        .windows(2)
+        .map(|w| (w[1] - w[0]).abs())
+        .fold(0.0, f32::max);
+    assert!(jump < 0.1, "jump {jump}");
+
+    // Only drums (silent here): nothing.
+    h.send(Command::SetStems {
+        deck: DeckId::A,
+        mask: 0b1000,
+    })
+    .unwrap();
+    assert!(rms(&render(&mut e, 0.3)[4800..]) < 1e-3);
+
+    // All back on: the original again.
+    h.send(Command::SetStems {
+        deck: DeckId::A,
+        mask: 0b1111,
+    })
+    .unwrap();
+    let back = rms(&render(&mut e, 0.3)[4800..]);
+    assert!((back / full - 1.0).abs() < 0.01);
+    assert_eq!(h.shared().deck(0).stems, 0b1111);
+}
+
+#[test]
 fn auto_gain_matches_loudness_and_trim_works_on_top() {
     use dj_engine::loudness::TARGET_LUFS;
     // A loud track and one 12 dB quieter, with room to be turned up.

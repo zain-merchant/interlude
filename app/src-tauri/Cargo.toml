@@ -15,6 +15,7 @@ tauri-build = { version = "2", features = [] }
 [dependencies]
 dj-engine = { path = "../../crates/engine", features = ["serde"] }
 dj-controller = { path = "../../crates/controller" }
+dj-stems = { path = "../../crates/stems" }
 tauri = { version = "2", features = [] }
 tauri-plugin-dialog = "2"
 serde = { version = "1", features = ["derive"] }
