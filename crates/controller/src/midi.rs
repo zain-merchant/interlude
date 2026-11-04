@@ -119,7 +119,7 @@ fn run(
                 }
             }
         }
-        std::thread::sleep(LED_EVERY);
+        wait(LED_EVERY);
     }
     // Leave the controller dark rather than showing stale state.
     if let Some(mut c) = conn {
@@ -130,6 +130,32 @@ fn run(
             }
         }
     }
+}
+
+/// Sleeps for `d`. On macOS this runs the thread's run loop instead, which
+/// is how CoreMIDI tells the process that devices were plugged in or
+/// removed. Without it the device list stays as it was at launch, so a
+/// controller plugged in after the app started is never found.
+#[cfg(target_os = "macos")]
+fn wait(d: Duration) {
+    use std::ffi::c_void;
+    #[link(name = "CoreFoundation", kind = "framework")]
+    extern "C" {
+        static kCFRunLoopDefaultMode: *const c_void;
+        fn CFRunLoopRunInMode(mode: *const c_void, seconds: f64, return_after_source: u8) -> i32;
+    }
+    // SAFETY: plain CoreFoundation calls on the current thread's run loop.
+    // With no sources it returns at once, so fall back to sleeping.
+    let t = Instant::now();
+    unsafe { CFRunLoopRunInMode(kCFRunLoopDefaultMode, d.as_secs_f64(), 0) };
+    if let Some(rest) = d.checked_sub(t.elapsed()) {
+        std::thread::sleep(rest);
+    }
+}
+
+#[cfg(not(target_os = "macos"))]
+fn wait(d: Duration) {
+    std::thread::sleep(d);
 }
 
 /// Names of all MIDI inputs currently present.
