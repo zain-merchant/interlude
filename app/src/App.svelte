@@ -22,6 +22,7 @@
   import { stepUiZoom, setUiZoom } from './lib/uizoom.svelte.js';
   import { installAppMenu } from './lib/appmenu.js';
   import { runPerformance } from './lib/performance.js';
+  import { toggleStem, soloStem, syncStemWaveforms } from './lib/stems.svelte.js';
 
   let library;
   let mixer;
@@ -68,7 +69,10 @@
   }
 
   // Settings open over the library, leaving the decks in reach.
-  let settings = $state(null); // null, 'keyboard', 'display' or 'library'
+  let settings = $state(null); // null, 'keyboard', 'display', 'library' or 'stems'
+
+  // Muted stems drop out of the waveforms.
+  $effect(() => syncStemWaveforms());
   // Importing another app's library opens in its own window over the app.
   let importing = $state(false);
   const openImport = () => {
@@ -214,8 +218,14 @@
       case 'view.uiZoomReset':
         if (down) setUiZoom(1);
         break;
-      default:
+      default: {
+        const stem = /^deck\.(\d)\.stem(Solo)?\.(\d)$/.exec(id);
+        if (stem) {
+          if (down) (stem[2] ? soloStem : toggleStem)(Number(stem[1]), Number(stem[3]));
+          break;
+        }
         runPerformance(id, down);
+      }
     }
   }
 
@@ -362,9 +372,9 @@
   </div>
 
   <div class="decks">
-    <Deck deck={0} onload={load} onreveal={(p) => library.reveal(p)} />
+    <Deck deck={0} onload={load} onreveal={(p) => library.reveal(p)} onsettings={openSettings} />
     <Mixer bind:this={mixer} onmessage={say} />
-    <Deck deck={1} onload={load} onreveal={(p) => library.reveal(p)} />
+    <Deck deck={1} onload={load} onreveal={(p) => library.reveal(p)} onsettings={openSettings} />
   </div>
 
   {#if sampler.open}<Sampler onmessage={say} selected={() => library.selectedTrack()} />{/if}

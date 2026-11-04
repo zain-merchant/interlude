@@ -6,7 +6,7 @@ import { autoGain } from './autogain.svelte.js';
 
 const emptyDeck = () => ({
   loaded: false, playing: false, position: 0, duration: 0, cue: 0, rate: 1, speed: 1, bpm: 0, key: null, keylock: false, generation: 0, peak: 0,
-  hotCues: Array(8).fill(null), loopIn: null, loopOut: null, looping: false, loopBeats: 4,
+  hotCues: Array(8).fill(null), loopIn: null, loopOut: null, looping: false, loopBeats: 4, stems: 0b1111,
   slip: false, slipPosition: null,
 });
 
@@ -19,6 +19,12 @@ export const engine = $state({
   mixer: null,
   /** The sampler's level and slots, as the engine reports them (null on engines without one). */
   sampler: null,
+  /**
+   * Each deck's stems: { state, ready, error }, where state is off,
+   * needsModel, starting, splitting, ready or failed and ready is the share
+   * of the track split so far. Null on engines without stems.
+   */
+  stems: null,
   /** The set recording, as the engine reports it (null on engines that can't record). */
   recording: null,
   /**
@@ -144,6 +150,7 @@ function poll() {
       update(engine, 'mixer', s.mixer ?? null);
       update(engine, 'recording', s.recording ?? null);
       update(engine, 'sampler', s.sampler ?? null);
+      update(engine, 'stems', s.stems ?? null);
       update(engine, 'audio', s.audio ?? null);
       for (let i = 0; i < 2; i++) update(engine.deckLevels, i, decay(s.deckPeaks[i], engine.deckLevels[i]));
       for (let i = 0; i < 2; i++) update(engine.masterLevels, i, decay(s.masterPeak[i], engine.masterLevels[i]));

@@ -1,0 +1,13 @@
+[package]
+name = "dj-stems"
+description = "Splits tracks into vocals, melody, bass and drums for oss-dj"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+dj-engine = { path = "../engine" }
+ort = { version = "=2.0.0-rc.15", default-features = false, features = ["std", "download-binaries", "copy-dylibs", "tls-rustls", "api-24"] }
+thiserror = "2"
+ureq = "3"
+sha2 = "0.10"

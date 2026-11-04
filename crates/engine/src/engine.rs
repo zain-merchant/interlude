@@ -213,6 +213,7 @@ impl Engine {
                     .keylock
                     .store(on, std::sync::atomic::Ordering::Relaxed);
             }
+            SetStems { deck, mask } => self.decks[deck.index()].set_stems(mask),
             SetSlip { deck, on } => self.decks[deck.index()].set_slip(on),
             SetQuantize { on } => {
                 for d in &mut self.decks {
@@ -382,6 +383,7 @@ impl Engine {
             s.loop_out.store(secs(deck.loop_out));
             s.looping.store(deck.looping, Relaxed);
             s.loop_beats.store(deck.loop_beats);
+            s.stems.store(deck.stems, Relaxed);
             s.slip.store(deck.slip, Relaxed);
             s.slip_position.store(secs(deck.slip_pos));
         }

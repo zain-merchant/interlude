@@ -6,12 +6,13 @@
   import { announce } from './announce.svelte.js';
   import { autoGain, setAutoGain } from './autogain.svelte.js';
   import { keyLabel } from './commands.js';
+  import { backend } from './backend.js';
 
   /**
    * Settings sit over the library, never over the decks, and don't block
    * them: performance keys keep working while this is open, except while a
    * shortcut is being recorded.
-   * @type {{ page?: 'keyboard' | 'display' | 'library', onclose: () => void, onimport?: () => void }}
+   * @type {{ page?: 'keyboard' | 'display' | 'library' | 'stems', onclose: () => void, onimport?: () => void }}
    */
   let { page = $bindable('keyboard'), onclose, onimport } = $props();
 
@@ -136,6 +137,53 @@
   });
 
   const pct = (s) => `${Math.round(s * 100)}%`;
+
+  // Stems: the model download, and how splitting and the cache behave.
+  const CACHE_SIZES = [0, 1, 2, 5, 10, 20, 50];
+  /** @type {any} */
+  let stems = $state(null);
+  let stemsError = $state('');
+  async function refreshStems() {
+    if (!backend.stemsInfo) return;
+    try {
+      stems = await backend.stemsInfo();
+    } catch (e) {
+      stemsError = String(e);
+    }
+  }
+  $effect(() => {
+    if (page !== 'stems') return;
+    refreshStems();
+    // Follow a download while the page is open.
+    const timer = setInterval(() => stems?.model?.state === 'downloading' && refreshStems(), 250);
+    return () => clearInterval(timer);
+  });
+  async function setStems(change) {
+    try {
+      stems = await backend.setStems(change);
+    } catch (e) {
+      stemsError = String(e);
+    }
+  }
+  async function download() {
+    stemsError = '';
+    try {
+      await backend.downloadStemsModel();
+    } catch (e) {
+      stemsError = String(e);
+    }
+    refreshStems();
+  }
+  async function clearCache() {
+    try {
+      stems = await backend.clearStemsCache();
+      announce('Stems cache cleared');
+    } catch (e) {
+      stemsError = String(e);
+    }
+  }
+  const mb = (b) => `${Math.round(b / (1024 * 1024))} MB`;
+  const gb = (b) => (b >= 1024 ** 3 ? `${(b / 1024 ** 3).toFixed(1)} GB` : mb(b));
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
@@ -148,11 +196,13 @@
       onclick={() => (page = 'display')}>Display</button>
     <button class="item" class:on={page === 'library'} aria-current={page === 'library' ? 'page' : undefined}
       onclick={() => (page = 'library')}>Library</button>
+    <button class="item" class:on={page === 'stems'} aria-current={page === 'stems' ? 'page' : undefined}
+      onclick={() => (page = 'stems')}>Stems</button>
   </nav>
 
   <div class="main">
     <div class="bar">
-      <h2>{page === 'keyboard' ? 'Keyboard' : page === 'library' ? 'Library' : 'Display'}</h2>
+      <h2>{{ keyboard: 'Keyboard', library: 'Library', stems: 'Stems' }[page] ?? 'Display'}</h2>
       {#if page === 'keyboard'}
         <p>Click a shortcut, then press the new key. Backspace removes it, Esc cancels.</p>
         <button class="btn sm" onclick={resetAll} disabled={!Object.keys(keymap.overrides).length}>Reset all</button>
@@ -194,6 +244,41 @@
             </section>
           {/each}
         </div>
+      {:else if page === 'stems'}
+        <section class="display">
+          <h3>Separation model</h3>
+          {#if !stems}
+            <p>{stemsError || 'Loading…'}</p>
+          {:else if stems.model.state === 'ready'}
+            <p>Ready. Each track you load is split into vocals, melody, bass and drums on this computer, starting at the play head, so the part you're about to play is ready first.</p>
+          {:else if stems.model.state === 'downloading'}
+            <p>Downloading, {mb(stems.model.done)} of {mb(stems.model.total)}…</p>
+            <div class="bar-track" role="progressbar" aria-label="Model download" aria-valuemin="0" aria-valuemax="100"
+              aria-valuenow={Math.round((stems.model.done / stems.model.total) * 100)}><i style:width="{(stems.model.done / stems.model.total) * 100}%"></i></div>
+          {:else}
+            <p>Stems need a one-time {mb(stems.modelBytes)} download: HTDemucs, an open model (MIT licence) that runs on this computer. Nothing is uploaded.</p>
+            {#if stems.model.state === 'failed'}<p class="err" role="alert">{stems.model.error}</p>{/if}
+            <div class="size"><button class="btn sm" onclick={download}>{stems.model.state === 'failed' ? 'Try again' : `Download (${mb(stems.modelBytes)})`}</button></div>
+          {/if}
+        </section>
+        {#if stems}
+          <section class="display">
+            <h3>Splitting</h3>
+            <label class="check"><input type="checkbox" checked={stems.enabled} onchange={(e) => setStems({ enabled: e.currentTarget.checked })} />
+              Split tracks into stems when they load</label>
+          </section>
+          <section class="display">
+            <h3>Stems cache</h3>
+            <p>Finished stems are kept so a track you've played before has them at once. The oldest go first when it's full. Using {gb(stems.cacheBytes)}.</p>
+            <div class="size">
+              <select class="btn sm" aria-label="Stems cache size" value={stems.cacheGb} onchange={(e) => setStems({ cacheGb: Number(e.currentTarget.value) })}>
+                {#each CACHE_SIZES as n}<option value={n}>{n ? `${n} GB` : 'Off'}</option>{/each}
+              </select>
+              <button class="btn sm" onclick={clearCache} disabled={!stems.cacheBytes}>Clear cache</button>
+            </div>
+          </section>
+          {#if stemsError}<p class="err" role="alert">{stemsError}</p>{/if}
+        {/if}
       {:else if page === 'library'}
         <section class="display">
           <h3>Loudness</h3>
@@ -424,5 +509,34 @@
   .size span {
     width: 48px;
     text-align: center;
+  }
+  .check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 8px;
+    color: var(--fg-2);
+  }
+  .check input {
+    accent-color: var(--fg);
+  }
+  .err {
+    color: var(--kill);
+  }
+  .bar-track {
+    height: 2px;
+    background: var(--line);
+    border-radius: 1px;
+    margin-bottom: 12px;
+  }
+  .bar-track i {
+    display: block;
+    height: 100%;
+    background: var(--fg-2);
+    border-radius: 1px;
+  }
+  select.btn {
+    appearance: none;
+    padding-right: 12px;
   }
 </style>

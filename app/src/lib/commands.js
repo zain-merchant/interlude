@@ -33,6 +33,9 @@ export const keys = {
   // on a paused deck to preview; ⇧ clears.
   ...hotCueKeys(0, ['Digit1', 'Digit2', 'Digit3', 'Digit4']),
   ...hotCueKeys(1, ['Digit7', 'Digit8', 'Digit9', 'Digit0']),
+  // Stems have no keys until you give them some in Settings.
+  ...stemKeys(0),
+  ...stemKeys(1),
   'deck.0.loop': { code: 'KeyR', label: 'R' },
   'deck.1.loop': { code: 'KeyU', label: 'U' },
   'deck.0.loopHalve': { code: 'KeyD', label: 'D' },
@@ -111,6 +114,8 @@ const NAMES = {
 export function commandName(id) {
   const action = id.startsWith('deck.') ? id.split('.').slice(2).join('.') : id;
   if (NAMES[action]) return NAMES[action];
+  const stem = action.match(/^stem(Solo)?\.(\d)$/);
+  if (stem) return `${STEM_NAMES[+stem[2]]} ${stem[1] ? 'alone' : 'on / off'}`;
   const hot = action.match(/^hotCue(Clear)?\.(\d+)$/);
   if (hot) return hot[1] ? `Clear hot cue ${+hot[2] + 1}` : `Hot cue ${+hot[2] + 1} (hold to preview)`;
   // Commands added without a name still get a readable one.
@@ -124,6 +129,16 @@ export function commandName(id) {
  */
 export function binding(id) {
   return id in keymap.overrides ? keymap.overrides[id] : (keys[id] ?? null);
+}
+
+const STEM_NAMES = ['Vocals', 'Melody', 'Bass', 'Drums'];
+
+function stemKeys(deck) {
+  const out = {};
+  for (let i = 0; i < 4; i++) {
+    out[`deck.${deck}.stem.${i}`] = null;
+  }
+  return out;
 }
 
 function hotCueKeys(deck, codes) {
@@ -148,7 +163,7 @@ export function commandFor(e) {
   const press = { code: e.code, shift: e.shiftKey, mod: e.metaKey || e.ctrlKey };
   for (const id of Object.keys(keys)) {
     const k = binding(id);
-    if (sameKey(k, press)) return { id, ...k, hold: keys[id].hold };
+    if (sameKey(k, press)) return { id, ...k, hold: keys[id]?.hold };
   }
   return null;
 }

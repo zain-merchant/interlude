@@ -9,8 +9,10 @@
 //! The performance pads send on their own channels: 8 and 9 (plain and
 //! with SHIFT) for deck 1, 10 and 11 for deck 2, with a different note
 //! range for each pad mode. The controller switches pad modes itself;
-//! hot cue, beat loop, beat jump and sampler modes are mapped. Both decks'
-//! sampler pads play the same eight slots. SHIFT + a beat jump pad jumps
+//! hot cue, beat loop, beat jump, sampler and stems (PAD FX1) modes are
+//! mapped. Both decks' sampler pads play the same eight slots. In PAD FX1
+//! mode the top pads mute and unmute vocals, melody, bass and drums, and
+//! the bottom pads play one of them alone. SHIFT + a beat jump pad jumps
 //! 16 times as far (4 to 32 bars), and SHIFT + PLAY turns slip mode on and
 //! off; the FLX4 has no slip button of its own.
 //!
@@ -25,7 +27,7 @@
 
 use dj_engine::dsp::{EQ_KILL_DB, EQ_MAX_DB};
 use dj_engine::fx::FX_BEATS;
-use dj_engine::{Command, DeckId, EqBand, FxKind, HOT_CUES, NUM_DECKS};
+use dj_engine::{Command, DeckId, EqBand, FxKind, ALL_STEMS, HOT_CUES, NUM_DECKS, STEMS};
 
 use crate::{Action, Mapping, State};
 
@@ -61,6 +63,7 @@ const JUMP_FORWARD: u8 = 0x3D;
 const PAD_CH: u8 = 7;
 // First note of each pad mode; pads 1 to 8 follow.
 const PAD_HOT_CUE: u8 = 0x00;
+const PAD_STEMS: u8 = 0x10;
 const PAD_BEAT_JUMP: u8 = 0x20;
 const PAD_SAMPLER: u8 = 0x30;
 const PAD_BEAT_LOOP: u8 = 0x60;
@@ -293,6 +296,19 @@ impl Flx4 {
                     return vec![Action::LoadSample(i)];
                 }
                 Command::SampleStop { slot: i }
+            }
+            // Stems: pads 1-4 mute or unmute a stem, 5-8 play one alone
+            // (again: all back on). Same with SHIFT held.
+            (PAD_STEMS, _, true) => {
+                let mask = state.decks[d].stems;
+                let mask = if i < STEMS {
+                    mask ^ (1 << i)
+                } else if mask == 1 << (i - STEMS) {
+                    ALL_STEMS
+                } else {
+                    1 << (i - STEMS)
+                };
+                Command::SetStems { deck, mask }
             }
             (PAD_HOT_CUE, false, true) => Command::HotCuePress { deck, index: i },
             (PAD_HOT_CUE, false, false) => Command::HotCueRelease { deck, index: i },
@@ -601,6 +617,15 @@ fn all_leds(state: &State) -> Vec<Led> {
             for i in 0..8 {
                 out.push((status, PAD_BEAT_JUMP + i, gridded));
             }
+            for i in 0..STEMS {
+                let on = deck.stems & (1 << i) != 0;
+                out.push((status, PAD_STEMS + i as u8, deck.loaded && on));
+                out.push((
+                    status,
+                    PAD_STEMS + (STEMS + i) as u8,
+                    deck.loaded && deck.stems == 1 << i,
+                ));
+            }
             for (i, slot) in state.sampler.slots.iter().enumerate().take(8) {
                 out.push((status, PAD_SAMPLER + i as u8, slot.loaded));
             }
@@ -869,6 +894,46 @@ mod tests {
             }
         ));
         assert!(cmds(m.handle(&[0x9A, 0x07, 0x00], &s)).is_empty());
+    }
+
+    #[test]
+    fn stems_pads() {
+        let mut m = Flx4::new();
+        let mut s = st();
+        s.decks[0].loaded = true;
+        s.decks[0].stems = 0b1111;
+        s.decks[1].stems = 0b1111;
+        // Pad 1 mutes vocals; pad 4 (deck B, with SHIFT) mutes drums.
+        assert!(matches!(
+            one(&mut m, [0x97, 0x10, 0x7F], &s),
+            Command::SetStems {
+                deck: DeckId::A,
+                mask: 0b1110
+            }
+        ));
+        assert!(matches!(
+            one(&mut m, [0x9A, 0x13, 0x7F], &s),
+            Command::SetStems {
+                deck: DeckId::B,
+                mask: 0b0111
+            }
+        ));
+        // Pad 7 plays bass alone; pressed again, everything comes back.
+        assert!(matches!(
+            one(&mut m, [0x97, 0x16, 0x7F], &s),
+            Command::SetStems { mask: 0b0100, .. }
+        ));
+        s.decks[0].stems = 0b0100;
+        assert!(matches!(
+            one(&mut m, [0x97, 0x16, 0x7F], &s),
+            Command::SetStems { mask: 0b1111, .. }
+        ));
+        assert!(cmds(m.handle(&[0x97, 0x16, 0x00], &s)).is_empty());
+        // LEDs: bass lit on top, its solo pad lit below.
+        let leds = m.leds(&s);
+        let lit = |note: u8| leds.contains(&vec![0x97, note, 0x7F]);
+        assert!(lit(0x12) && lit(0x16));
+        assert!(!lit(0x10) && !lit(0x14));
     }
 
     #[test]
