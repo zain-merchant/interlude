@@ -40,6 +40,11 @@ A free, open-source DJ app that is fast, modern and uncluttered. No paywalled
 - **Mixer:** trim, 3-band isolator EQ with full kills, channel faders,
   constant-power crossfader, master gain, headphone cue with cue/master blend
   (on interfaces with 4+ outputs, headphones go to channels 3-4).
+- **Auto gain** (on by default; Settings > Library): each track's loudness
+  is measured when it's analyzed (EBU R128, in LUFS) and the deck plays it
+  at a common -12 LUFS, so trim starts from matched levels and works on top.
+  Loud masters are turned down in full; quiet tracks are turned up only as
+  far as their peaks allow, so auto gain never makes a track clip.
 - **Effects:** a filter knob per channel (left low-pass, right high-pass,
   centre off) and a beat FX unit per deck: echo, reverb, flanger and phaser,
   timed in beats (1/8 to 8) from the deck's tempo, with level and on. Echo

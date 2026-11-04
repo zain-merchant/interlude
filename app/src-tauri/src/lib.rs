@@ -539,7 +539,8 @@ fn use_default_output(state: State<'_, AppState>) {
 }
 
 /// Decodes a file on a worker thread (keeping the UI responsive), then loads
-/// it into the deck with its saved cue points.
+/// it into the deck with its saved cue points. With `auto_gain` (the
+/// default), the deck plays it at the common loudness, under the trim.
 #[tauri::command]
 async fn load_track(
     app: tauri::AppHandle,
@@ -547,6 +548,7 @@ async fn load_track(
     library: State<'_, library::Library>,
     deck: usize,
     path: String,
+    auto_gain: Option<bool>,
 ) -> Result<TrackInfo, String> {
     let id = deck_id(deck)?;
     let track = tauri::async_runtime::spawn_blocking(move || Track::load(&path))
@@ -576,6 +578,15 @@ async fn load_track(
             track: track.clone(),
         },
     )?;
+    if auto_gain.unwrap_or(true) {
+        send(
+            &state,
+            Command::SetAutoGain {
+                deck: id,
+                db: track.loudness.gain_db(dj_engine::loudness::TARGET_LUFS),
+            },
+        )?;
+    }
     for cmd in cues.commands(id) {
         send(&state, cmd)?;
     }

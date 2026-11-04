@@ -244,6 +244,13 @@ pub enum Command {
         deck: DeckId,
         db: f32,
     },
+    /// Auto gain in dB, under the trim: what brings the loaded track to
+    /// a common loudness (see [`crate::Loudness::gain_db`]). Send it
+    /// straight after `Load`, which puts it back to 0 dB.
+    SetAutoGain {
+        deck: DeckId,
+        db: f32,
+    },
     /// EQ band gain in dB. Values at or below [`crate::dsp::EQ_KILL_DB`] kill the band.
     SetEq {
         deck: DeckId,
