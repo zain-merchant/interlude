@@ -6,6 +6,7 @@
   import { tip, tipText } from './tooltip.svelte.js';
   import { openMenu } from './menu.svelte.js';
   import { keyLabel, MOD } from './commands.js';
+  import { sampler, setSamplerOpen } from './sampler.svelte.js';
   import { pushEdit } from './undo.svelte.js';
   import { keyName, keyLongName, camelot } from './key.js';
 
@@ -364,6 +365,12 @@
     if (!engine.decks[deck].playing) browse(1);
   }
 
+  /** The selected track, or null. */
+  export function selectedTrack() {
+    const t = sorted[selected];
+    return t && !t.missing ? t : null;
+  }
+
   /** Selects a track in the library, clearing the search and folder if they hide it. */
   export async function reveal(path) {
     query = '';
@@ -531,6 +538,11 @@
       </label>
       <span class="count num">{loading ? 'Scanning…' : `${results.length.toLocaleString()} tracks`}{#if !loading && pending}<span
           class="pending" use:tip={() => 'Finding each track’s length, BPM and key in the background'}> · analyzing, {pending.toLocaleString()} to go</span>{/if}</span>
+      <button class="btn sm ghost samp" class:on={sampler.open} aria-pressed={sampler.open}
+        onclick={() => setSamplerOpen(!sampler.open)}
+        use:tip={() => tipText(sampler.open ? 'Hide sampler' : 'Show sampler', keyLabel('view.sampler'), 'eight one-shot slots; drag tracks onto them')}>
+        <svg viewBox="0 0 12 12" aria-hidden="true"><rect x="1.5" y="1.5" width="3.5" height="3.5" rx="1" /><rect x="7" y="1.5" width="3.5" height="3.5" rx="1" /><rect x="1.5" y="7" width="3.5" height="3.5" rx="1" /><rect x="7" y="7" width="3.5" height="3.5" rx="1" /></svg>Sampler
+      </button>
     </div>
 
     <div class="row head" role="group" aria-label="Sort tracks">
@@ -645,7 +657,6 @@
     color: var(--fg);
     background: var(--raise);
     box-shadow: inset 0 0 0 1px var(--fg-3);
-    user-select: text;
   }
   /* Where a dragged row will land in a playlist. */
   .row.drop-before {
@@ -704,7 +715,6 @@
     background: none;
     color: var(--fg);
     font: inherit;
-    user-select: text;
   }
   .search input::placeholder {
     color: var(--fg-3);
@@ -734,6 +744,25 @@
   .count {
     font-size: 11px;
     color: var(--fg-3);
+  }
+  .samp {
+    margin-left: auto;
+    height: 28px;
+    display: inline-flex;
+    gap: 7px;
+    padding: 0 10px;
+    font-size: 12px;
+  }
+  .samp.on {
+    color: var(--fg);
+    box-shadow: inset 0 0 0 1px var(--line-2);
+  }
+  .samp svg {
+    width: 11px;
+    height: 11px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.3;
   }
   .row {
     display: grid;

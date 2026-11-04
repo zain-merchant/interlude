@@ -60,6 +60,7 @@ const HOT_CUES = 8;
 const freshLoops = () => ({
   hotCues: Array(HOT_CUES).fill(null), previewHot: null, previewReturn: 0,
   loopIn: null, loopOut: null, looping: false, loopBeats: 4,
+  slipAt: null, slipHot: null,
 });
 const beatLen = (d) => 60 / d.bpm;
 const clampBeats = (b) => Math.max(1 / 32, Math.min(64, b));
@@ -125,11 +126,20 @@ export function createMockBackend() {
 
   const decks = [0, 1].map(() => ({
     loaded: false, playing: false, position: 0, duration: 0, cue: 0, rate: 1, bend: 0, bpm: 0, key: null, keylock: false, firstBeat: 0,
+    slip: false,
     generation: 0, previewing: false, scratching: false, waveform: null, fader: 1, peak: 0, path: null, ...freshLoops(),
     filter: 0, fx: { kind: 'echo', on: false, level: 0.5, beats: 1 },
   }));
   /** @type {{ active: boolean, started: number, seconds: number, path: string | null }} */
   const rec = { active: false, started: 0, seconds: 0, path: null };
+  // Sampler slots: a length, and when the slot was last pressed.
+  const samples = Array.from({ length: 8 }, () => ({ duration: 0, started: null }));
+  let samplerLevel = 0.8;
+  const sampleState = (s) => {
+    const t = s.started == null ? 0 : (performance.now() - s.started) / 1000;
+    const playing = s.started != null && t < s.duration;
+    return { loaded: s.duration > 0, playing, progress: playing ? t / s.duration : 0, duration: s.duration };
+  };
   let folders = FOLDERS.map((f) => `/Music/${f}`);
   let xf = 0;
   let last = performance.now();
@@ -149,6 +159,7 @@ export function createMockBackend() {
     // A lost device holds every deck where it is, like the real engine.
     if (audio.state === 'lost') return;
     for (const d of decks) {
+      if (d.slipAt != null) d.slipAt = Math.min(d.duration, d.slipAt + dt * (d.rate + d.bend));
       if (!d.playing || d.scratching) continue;
       const before = d.position;
       d.position += dt * (d.rate + d.bend);
@@ -166,9 +177,21 @@ export function createMockBackend() {
     return ((d.waveform[i] ?? 0) / 255) ** 2;
   }
 
+  // Slip, as the engine does it: whatever interrupts a playing deck starts
+  // a shadow play head, and the end of the last interruption goes back to it.
+  const DELIBERATE = new Set(['load', 'eject', 'cuePress', 'seek', 'restoreCue']);
+  const slipHeld = (d) => d.scratching || d.looping || d.slipHot != null || !d.playing;
   const control = async (cmd) => {
     tick();
     const d = decks[cmd.deck];
+    const before = d && { at: d.position, live: d.playing && !d.previewing && !DELIBERATE.has(cmd.type) };
+    if (d && ['cuePress', 'seek'].includes(cmd.type)) d.slipAt = null;
+    await apply(cmd, d);
+    if (!d?.slip || !d.loaded) return;
+    if (d.slipAt == null && slipHeld(d) && before.live) d.slipAt = before.at;
+    else if (d.slipAt != null && !slipHeld(d)) Object.assign(d, { position: d.slipAt, slipAt: null, playing: true });
+  };
+  const apply = async (cmd, d) => {
     switch (cmd.type) {
       case 'play': if (d.loaded) { d.playing = true; d.previewing = false; d.previewHot = null; } break;
       case 'pause': d.playing = false; d.previewing = false; d.previewHot = null; break;
@@ -197,13 +220,17 @@ export function createMockBackend() {
         if (!d.loaded) break;
         let at = d.hotCues[cmd.index];
         if (at == null) { d.hotCues[cmd.index] = snap(d, d.position); break; }
-        if (d.playing && !d.previewing) at = inPhase(d, at);
+        if (d.playing && !d.previewing) {
+          at = inPhase(d, at);
+          if (d.slip) d.slipHot = cmd.index;
+        } else d.slipAt = null;
         if (d.looping && (at < d.loopIn || at >= d.loopOut)) d.looping = false;
         d.position = at;
         if (!d.playing || d.previewing) Object.assign(d, { playing: true, previewing: true, previewHot: cmd.index, previewReturn: at });
         break;
       }
       case 'hotCueRelease':
+        if (d.slipHot === cmd.index) d.slipHot = null;
         if (d.previewing && d.previewHot === cmd.index) Object.assign(d, { playing: false, previewing: false, previewHot: null, position: d.previewReturn });
         break;
       case 'hotCueClear': d.hotCues[cmd.index] = null; break;
@@ -252,6 +279,7 @@ export function createMockBackend() {
       case 'setRate': d.rate = cmd.rate; break;
       case 'setBend': d.bend = cmd.bend; break;
       case 'setKeylock': d.keylock = cmd.on; break;
+      case 'setSlip': Object.assign(d, { slip: cmd.on }, cmd.on ? {} : { slipAt: null, slipHot: null }); break;
       case 'setFader': d.fader = cmd.value; break;
       case 'sync': {
         const o = decks[1 - cmd.deck];
@@ -274,6 +302,10 @@ export function createMockBackend() {
       case 'setFxOn': d.fx.on = cmd.on; break;
       case 'setFxLevel': d.fx.level = cmd.value; break;
       case 'setFxBeats': d.fx.beats = cmd.beats; break;
+      case 'samplePlay': if (samples[cmd.slot].duration) samples[cmd.slot].started = performance.now(); break;
+      case 'sampleStop': samples[cmd.slot].started = null; break;
+      case 'clearSample': samples[cmd.slot] = { duration: 0, started: null }; break;
+      case 'setSamplerLevel': samplerLevel = cmd.value; break;
       default: break;
     }
   };
@@ -289,11 +321,13 @@ export function createMockBackend() {
         decks: decks.map((d) => ({
           loaded: d.loaded, playing: d.playing, position: d.position, duration: d.duration,
           cue: d.cue, rate: d.rate, speed: d.rate + d.bend, bpm: d.bpm, key: d.key, keylock: d.keylock, generation: d.generation, peak: 0,
+          slip: d.slip, slipPosition: d.slipAt,
           hotCues: [...d.hotCues], loopIn: d.loopIn, loopOut: d.loopOut, looping: d.looping, loopBeats: d.loopBeats,
           filter: d.filter, fx: { ...d.fx },
         })),
         deckPeaks,
         mixer: { crossfader: xf, cueMix, masterDb, quantize },
+        sampler: { level: samplerLevel, slots: samples.map(sampleState) },
         masterPeak: [Math.min(1, m), Math.min(1, m * 0.97)],
         audio,
         recording: {
@@ -314,6 +348,11 @@ export function createMockBackend() {
       return { active: false, seconds: rec.seconds, path: rec.path, droppedSeconds: 0, error: null };
     },
     outputName: async () => 'Browser preview · simulated audio',
+    loadSample: async (slot, path) => {
+      const duration = 0.6 + (hash(path) % 40) / 10;
+      samples[slot] = { duration, started: null };
+      return duration;
+    },
     loadTrack: async (deck, path) => {
       const t = tracks.find((x) => x.path === path) ?? { title: path, path };
       if ('analysis' in t && !t.analysis) {

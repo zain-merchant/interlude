@@ -15,7 +15,7 @@ use std::sync::{Arc, Mutex};
 
 use dj_engine::{
     Beatgrid, Command, DeckId, DeckSnapshot, EngineHandle, EqBand, FxKind, MixerSnapshot,
-    RecordingStatus, Track, Waveform,
+    RecordingStatus, SamplerSnapshot, Track, Waveform, MAX_SAMPLE_SECS, SAMPLER_SLOTS,
 };
 use serde::{Deserialize, Serialize};
 use tauri::ipc::Response;
@@ -97,6 +97,7 @@ struct GridInfo {
 struct EngineState {
     decks: [DeckSnapshot; dj_engine::NUM_DECKS],
     mixer: MixerSnapshot,
+    sampler: SamplerSnapshot,
     deck_peaks: [f32; dj_engine::NUM_DECKS],
     master_peak: [f32; 2],
     recording: RecordingStatus,
@@ -175,6 +176,10 @@ enum Control {
         deck: usize,
         on: bool,
     },
+    SetSlip {
+        deck: usize,
+        on: bool,
+    },
     SetQuantize {
         on: bool,
     },
@@ -239,6 +244,18 @@ enum Control {
     },
     SetMasterGain {
         db: f32,
+    },
+    SamplePlay {
+        slot: usize,
+    },
+    SampleStop {
+        slot: usize,
+    },
+    ClearSample {
+        slot: usize,
+    },
+    SetSamplerLevel {
+        value: f32,
     },
 }
 
@@ -318,6 +335,10 @@ impl Control {
                 deck: deck_id(deck)?,
                 on,
             },
+            C::SetSlip { deck, on } => Command::SetSlip {
+                deck: deck_id(deck)?,
+                on,
+            },
             C::SetQuantize { on } => Command::SetQuantize { on },
             C::ScratchStart { deck } => Command::ScratchStart {
                 deck: deck_id(deck)?,
@@ -385,6 +406,10 @@ impl Control {
             C::SetCrossfader { value } => Command::SetCrossfader { value },
             C::SetCueMix { value } => Command::SetCueMix { value },
             C::SetMasterGain { db } => Command::SetMasterGain { db },
+            C::SamplePlay { slot } => Command::SamplePlay { slot },
+            C::SampleStop { slot } => Command::SampleStop { slot },
+            C::ClearSample { slot } => Command::ClearSample { slot },
+            C::SetSamplerLevel { value } => Command::SetSamplerLevel { value },
         })
     }
 }
@@ -435,6 +460,7 @@ fn state(state: State<'_, AppState>) -> EngineState {
     EngineState {
         decks: std::array::from_fn(|i| shared.deck(i)),
         mixer: shared.mixer(),
+        sampler: shared.sampler(),
         deck_peaks,
         master_peak,
         recording,
@@ -566,6 +592,36 @@ async fn load_track(
     Ok(info)
 }
 
+/// Decodes a file on a worker thread and puts it in a sampler slot.
+/// Returns the sample's length in seconds.
+#[tauri::command]
+async fn load_sample(state: State<'_, AppState>, slot: usize, path: String) -> Result<f64, String> {
+    if slot >= SAMPLER_SLOTS {
+        return Err(format!("no sampler slot {slot}"));
+    }
+    let track = tauri::async_runtime::spawn_blocking(move || Track::load(&path))
+        .await
+        .map_err(|e| e.to_string())?
+        .map_err(|e| e.to_string())?;
+    let duration = track.duration_secs();
+    if duration > MAX_SAMPLE_SECS {
+        return Err(format!(
+            "it's {}:{:02} long, and samples can be up to {} seconds",
+            (duration / 60.0) as u32,
+            (duration % 60.0) as u32,
+            MAX_SAMPLE_SECS
+        ));
+    }
+    send(
+        &state,
+        Command::LoadSample {
+            slot,
+            sample: Arc::new(track),
+        },
+    )?;
+    Ok(duration)
+}
+
 /// Fixes the beatgrid of the track on a deck by hand, and saves it locked
 /// so analysis leaves it alone. `None` goes back to the detected grid.
 #[tauri::command]
@@ -679,6 +735,7 @@ pub fn run() {
             audio_stats,
             use_default_output,
             load_track,
+            load_sample,
             set_beatgrid,
             waveform,
             start_recording,
