@@ -34,5 +34,5 @@ export function setDeckSetting(name, on) {
 
 /** Tells the engine the saved choices. Call once at startup. */
 export function syncDeckSettings() {
-  for (const name of Object.keys(SETTINGS)) setDeckSetting(name, deckSettings[name]);
+  for (const name of /** @type {(keyof typeof SETTINGS)[]} */ (Object.keys(SETTINGS))) setDeckSetting(name, deckSettings[name]);
 }
