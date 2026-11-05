@@ -7,6 +7,7 @@
   import { openMenu } from './menu.svelte.js';
   import { keyLabel } from './commands.js';
   import { PADS, hasGrid, beatsLabel, hotCue, clearHotCue, loopToggle, loopScale, beatJump } from './performance.js';
+  import { hotCuePlays } from './hotcueplay.svelte.js';
 
   /** @type {{ deck: number, show?: 'all' | 'cues' | 'loop' }} */
   let { deck, show = 'all' } = $props();
@@ -48,7 +49,7 @@
     if (!t) return 'Load a track first';
     return at == null
       ? tipText(`Set hot cue ${i + 1}`, keyLabel(`deck.${deck}.hotCue.${i}`))
-      : tipText(`Hot cue ${i + 1} at ${fmt(at)}`, keyLabel(`deck.${deck}.hotCue.${i}`), 'hold to preview, ⇧-click to clear');
+      : tipText(`Hot cue ${i + 1} at ${fmt(at)}`, keyLabel(`deck.${deck}.hotCue.${i}`), hotCuePlays.on ? '⇧-click to clear' : 'hold to preview, ⇧-click to clear');
   };
   const padMenu = (e, i) =>
     openMenu(e, [

@@ -943,7 +943,25 @@ fn hot_cues_set_jump_and_preview() {
     assert_eq!(d.hot_cues[0].map(|c| (c * 1000.0).round()), Some(2000.0));
     assert!(!d.playing, "setting a hot cue doesn't start playback");
 
-    // Paused: play from the hot cue while held, back on release.
+    // Paused: start playing from the hot cue.
+    send(
+        &mut h,
+        Command::Seek {
+            deck: a,
+            seconds: 5.0,
+        },
+    );
+    send(&mut h, Command::HotCuePress { deck: a, index: 0 });
+    send(&mut h, Command::HotCueRelease { deck: a, index: 0 });
+    render(&mut e, 0.5);
+    let d = h.shared().deck(0);
+    assert!(d.playing, "keeps playing after release");
+    assert!((d.position - 2.5).abs() < 0.02, "{}", d.position);
+    send(&mut h, Command::Pause { deck: a });
+
+    // With that off, a paused deck plays from the hot cue while held, back
+    // on release.
+    send(&mut h, Command::SetHotCuePlays { on: false });
     send(
         &mut h,
         Command::Seek {
