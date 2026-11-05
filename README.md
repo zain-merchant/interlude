@@ -151,7 +151,7 @@ shape on AZERTY, QWERTZ and Dvorak.
 | E | I | Sync tempo and beats to the other deck |
 | Z / X | , / . | Nudge slower / faster (hold) |
 | G | H | Headphone cue |
-| 1 2 3 4 | 7 8 9 0 | Hot cues 1 to 4 (hold to preview a paused deck, Shift clears) |
+| 1 2 3 4 | 7 8 9 0 | Hot cues 1 to 4 (start a paused deck; Settings can make them hold to preview instead, Shift clears) |
 | R | U | Loop on / off (snaps to the beat) |
 | D / F | J / K | Halve / double the loop |
 | C / V | N / M | Beat jump back / forward by the loop size |

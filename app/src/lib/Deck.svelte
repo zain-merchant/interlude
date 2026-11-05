@@ -106,9 +106,11 @@
   const d = $derived(engine.decks[deck]);
   const t = $derived(tracks[deck]);
   const ratePct = $derived((d.rate - 1) * 100);
-  const bpm = $derived(d.bpm > 0 ? d.bpm * d.speed : 0);
+  // The tempo the deck is set to, not its momentary speed, so scratching
+  // or nudging doesn't make the BPM and key jump around.
+  const bpm = $derived(d.bpm > 0 ? d.bpm * d.rate : 0);
   const atCue = $derived(!!t && !d.playing && Math.abs(d.position - d.cue) < 0.01);
-  const pk = $derived(t ? playingKey(d.key, d.speed, d.keylock) : null);
+  const pk = $derived(t ? playingKey(d.key, d.rate, d.keylock) : null);
   const canSync = $derived(!!t && d.bpm > 0 && engine.decks[1 - deck].bpm > 0);
 
   let lastTouch = 0;
@@ -218,7 +220,7 @@
       <span class="el num"><span class="sr">Elapsed </span>{fmt(d.position)}</span>
       <div class="modes" role="tablist" aria-label="Deck {name} controls" tabindex="-1" onkeydown={modeKey}>
         {#each MODES as m}
-          {@const busy = (m.id === 'loop' && d.looping) || (m.id === 'fx' && (d.fx?.on || Math.abs(d.filter ?? 0) >= 0.02)) || (m.id === 'stems' && (d.stems ?? 15) !== 15)}
+          {@const busy = (m.id === 'loop' && d.looping) || (m.id === 'fx' && d.fx?.on) || (m.id === 'stems' && (d.stems ?? 15) !== 15)}
           <button role="tab" class:on={mode === m.id} aria-selected={mode === m.id} tabindex={mode === m.id ? 0 : -1}
             onclick={() => setMode(m.id)} use:tip={() => (busy ? `${m.label} (active)` : m.label)}>
             {m.label}{#if busy}<i aria-label="active"></i>{/if}

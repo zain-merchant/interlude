@@ -6,8 +6,8 @@
   import { openMenu } from './menu.svelte.js';
 
   /**
-   * One deck's effects: the channel filter, then a beat FX unit (effect,
-   * beat length, level, on).
+   * One deck's beat FX unit: effect, beat length, level, on. The channel
+   * filter lives in the mixer, under the EQ, as on the controller.
    * @type {{ deck: number }}
    */
   let { deck } = $props();
@@ -22,7 +22,6 @@
   const BEATS = [0.125, 0.25, 0.5, 0.75, 1, 2, 4, 8];
   const beatText = (b) => ({ 0.125: '1/8', 0.25: '1/4', 0.5: '1/2', 0.75: '3/4' })[b] ?? String(b);
 
-  let filter = $state(0);
   let kind = $state('echo');
   let on = $state(false);
   let level = $state(0.5);
@@ -36,17 +35,16 @@
     lastTouch = performance.now();
     send(cmd);
   }
+  // The engine's state is patched in place: read the fields here so the
+  // effect tracks them.
   $effect(() => {
-    const d = engine.decks[deck];
+    const fx = engine.decks[deck].fx;
+    const next = fx && { kind: fx.kind, on: fx.on, level: fx.level, beats: fx.beats };
     untrack(() => {
       if (performance.now() - lastTouch < 500) return;
-      if (d.filter !== undefined) filter = d.filter;
-      if (d.fx) ({ kind, on, level, beats } = d.fx);
+      if (next) ({ kind, on, level, beats } = next);
     });
   });
-
-  const filterText = (v) =>
-    Math.abs(v) < 0.02 ? 'off' : `${v < 0 ? 'low-pass' : 'high-pass'} ${Math.round(Math.abs(v) * 100)}%`;
 
   function pick(e) {
     openMenu(
@@ -78,9 +76,6 @@
 </script>
 
 <div class="fx" role="group" aria-label="Deck {name} effects">
-  <Knob label="Filter" name="Deck {name} filter" bind:value={filter} min={-1} max={1} reset={0} size={24} format={filterText}
-    onchange={(v) => control({ type: 'setFilter', deck, value: v })} />
-  <span class="sep" aria-hidden="true"></span>
   <button class="btn sm ghost kind" aria-haspopup="menu" aria-label="Deck {name} effect, {k.label}" {...press(pick)}
     use:tip={() => 'Choose effect'}>{k.label}<svg viewBox="0 0 10 10" aria-hidden="true"><path d="M2.5 4l2.5 2.5L7.5 4" /></svg></button>
   <div class="beats" use:tip={() => `${k.beats}: ${beatText(beats)} ${beats > 1 ? 'beats' : 'beat'}`}>
@@ -108,11 +103,6 @@
   }
   .fx :global(.knob .label) {
     order: -1;
-  }
-  .sep {
-    width: 1px;
-    height: 18px;
-    background: var(--line);
   }
   .btn.sm {
     height: 28px;

@@ -96,7 +96,8 @@ pub enum Command {
     },
     /// Performance pad `index` (0-based, below [`crate::HOT_CUES`]) in hot
     /// cue mode. An empty hot cue is set at the play head; a set one is
-    /// jumped to. A paused deck plays from it while held, like the cue button.
+    /// jumped to. A paused deck starts playing from it; see
+    /// [`Command::SetHotCuePlays`].
     HotCuePress {
         deck: DeckId,
         index: usize,
@@ -180,6 +181,18 @@ pub enum Command {
     /// and hot cues and reloop jumps while playing keep the beat's timing.
     /// On by default.
     SetQuantize {
+        on: bool,
+    },
+    /// For both decks: a hot cue pressed on a paused deck starts it playing
+    /// (on, the default), or plays only while the pad is held, like the cue
+    /// button (off).
+    SetHotCuePlays {
+        on: bool,
+    },
+    /// A deck started from pause (play, cue or a hot cue) while the other
+    /// deck plays takes its tempo and beat, as if SYNC were pressed. On by
+    /// default.
+    SetAutoSync {
         on: bool,
     },
     /// Playback rate as a ratio: 1.0 is normal speed, 1.08 is +8%.

@@ -104,6 +104,9 @@ pub(crate) struct Deck {
     /// while playing land on the same spot in the beat, so they stay in
     /// time. Does nothing for tracks without a beatgrid.
     pub quantize: bool,
+    /// A hot cue pressed on a paused deck starts it playing from there.
+    /// Off, it plays only while the pad is held, like the cue button.
+    pub hot_cue_plays: bool,
     stretch: Stretcher,
     /// The play head follows the hand. Stays on after a paused deck is
     /// released (or nudged by the outer ring) until it has caught up.
@@ -153,6 +156,7 @@ impl Deck {
             slip_pos: None,
             slip_hot: None,
             quantize: true,
+            hot_cue_plays: true,
             stretch: Stretcher::new(out_rate),
             following: false,
             hand: Hand::new(out_rate as f64),
@@ -311,9 +315,9 @@ impl Deck {
     }
 
     /// Hot cue pad pressed. An empty hot cue is set at the play head. A
-    /// set one is jumped to: a playing deck keeps playing from there, a
-    /// paused deck plays from it while the pad is held, like the cue
-    /// button.
+    /// set one is jumped to: a playing deck keeps playing from there. A
+    /// paused deck starts playing from it, or with `hot_cue_plays` off
+    /// plays from it while the pad is held, like the cue button.
     pub fn hot_cue_press(&mut self, n: usize) {
         if self.track.is_none() || n >= HOT_CUES {
             return;
@@ -329,12 +333,14 @@ impl Deck {
         if live && self.slip {
             self.slip_hot = Some(n);
         } else if !live {
-            // Previewing a cue from a paused deck ends a slip pause.
+            // Starting from a cue on a paused deck ends a slip pause.
             self.slip_pos = None;
         }
         self.leave_loop_if_outside(at);
         self.jump(at);
-        if !self.playing || self.previewing {
+        if !live && self.hot_cue_plays {
+            self.play();
+        } else if !live {
             self.playing = true;
             self.previewing = true;
             self.preview_hot = Some(n);

@@ -36,6 +36,8 @@ pub struct Engine {
     shared: Arc<SharedState>,
     scratch: [Vec<f32>; NUM_DECKS],
     sampler_buf: Vec<f32>,
+    /// A deck started from pause while the other plays syncs to it.
+    auto_sync: bool,
 }
 
 /// The control half of the engine: send commands, read state.
@@ -78,6 +80,7 @@ pub fn new_engine(sample_rate: u32) -> (Engine, EngineHandle) {
         shared: shared.clone(),
         scratch: std::array::from_fn(|_| vec![0.0; MAX_BLOCK_FRAMES * 2]),
         sampler_buf: vec![0.0; MAX_BLOCK_FRAMES * 2],
+        auto_sync: true,
     };
     let handle = EngineHandle {
         commands: cmd_tx,
@@ -142,7 +145,20 @@ impl Engine {
             );
             (d.index(), deck.pos, deck.live() && !deliberate)
         });
+        // Play, cue and hot cues can start a paused deck; with auto sync it
+        // comes in at the other deck's tempo and on its beat.
+        let start = match cmd {
+            Play { deck } | TogglePlay { deck } | CuePress { deck } | HotCuePress { deck, .. } => {
+                Some(deck.index()).filter(|&i| !self.decks[i].playing)
+            }
+            _ => None,
+        };
         self.apply_inner(cmd);
+        if let Some(i) = start {
+            if self.auto_sync && self.decks[i].playing && self.decks[1 - i].live() {
+                self.sync(i);
+            }
+        }
         if let Some((i, pos, live)) = slip {
             self.decks[i].update_slip(pos, live);
         }
@@ -222,6 +238,12 @@ impl Engine {
                 self.shared
                     .quantize
                     .store(on, std::sync::atomic::Ordering::Relaxed);
+            }
+            SetAutoSync { on } => self.auto_sync = on,
+            SetHotCuePlays { on } => {
+                for d in &mut self.decks {
+                    d.hot_cue_plays = on;
+                }
             }
             ScratchStart { deck } => self.decks[deck.index()].scratch_start(),
             ScratchEnd { deck } => self.decks[deck.index()].scratch_end(),

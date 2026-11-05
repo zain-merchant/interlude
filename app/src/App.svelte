@@ -12,6 +12,7 @@
   import { sampler, setSamplerOpen, restoreSampler, loadSample } from './lib/sampler.svelte.js';
   import { engine, tracks, startEngineLoop, loadTrack, control, deckSnapshot, restoreDeck } from './lib/engine.svelte.js';
   import { backend } from './lib/backend.js';
+  import { syncDeckSettings } from './lib/decksettings.svelte.js';
   import { dropTarget } from './lib/dnd.svelte.js';
   import { commandFor, keyLabel } from './lib/commands.js';
   import { keymap } from './lib/keymap.svelte.js';
@@ -69,7 +70,7 @@
   }
 
   // Settings open over the library, leaving the decks in reach.
-  let settings = $state(null); // null, 'keyboard', 'display', 'library' or 'stems'
+  let settings = $state(null); // null, 'keyboard', 'decks', 'display', 'library' or 'stems'
 
   // Muted stems drop out of the waveforms.
   $effect(() => syncStemWaveforms());
@@ -336,6 +337,7 @@
 
   onMount(() => {
     startEngineLoop();
+    syncDeckSettings();
     // The controller's browse knob and load buttons drive the library.
     const off = backend.onController?.((e) => {
       if (e.type === 'browse') library.browse(e.delta);

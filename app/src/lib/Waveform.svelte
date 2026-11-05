@@ -107,6 +107,8 @@
 
   // ⌘/Ctrl + scroll zooms; plain scroll scratches through a paused track.
   let wheelTimer;
+  /** Pixels of scroll that start a scratch; less is a resting finger. */
+  const WHEEL_MIN = 4;
   function wheel(e) {
     if (mode !== 'scroll') return;
     if (e.metaKey || e.ctrlKey) {
@@ -116,9 +118,14 @@
     }
     if (!tracks[deck] || engine.decks[deck].playing || drag) return;
     e.preventDefault();
+    const d = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+    // A trackpad or mouse with a finger resting on it sends wheel events
+    // that barely move, and macOS sends empty ones as gestures start and
+    // end. Each would grab the record for an instant, which clicks and
+    // flickers the tempo, so only a real scroll scratches.
+    if (!wheelTimer && Math.abs(d) < WHEEL_MIN) return;
     if (!wheelTimer) scrubStart(deck, { scratch: true });
     clearTimeout(wheelTimer);
-    const d = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
     scrubTo(deck, displayPos[deck] + (d / canvas.clientWidth) * seconds, e.timeStamp);
     wheelTimer = setTimeout(() => {
       wheelTimer = null;

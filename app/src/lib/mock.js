@@ -113,6 +113,7 @@ export function createMockBackend() {
     for (const fn of analysisListeners) fn({ path: t.path, ...t.analysis });
   }, 60);
   let quantize = true;
+  let hotCuePlays = true;
   let cueMix = 0.5;
   let masterDb = 0;
   /** Seconds to the nearest beat, when quantizing. */
@@ -236,7 +237,9 @@ export function createMockBackend() {
         } else d.slipAt = null;
         if (d.looping && (at < d.loopIn || at >= d.loopOut)) d.looping = false;
         d.position = at;
-        if (!d.playing || d.previewing) Object.assign(d, { playing: true, previewing: true, previewHot: cmd.index, previewReturn: at });
+        if (d.playing && !d.previewing) break;
+        if (hotCuePlays) Object.assign(d, { playing: true, previewing: false, previewHot: null });
+        else Object.assign(d, { playing: true, previewing: true, previewHot: cmd.index, previewReturn: at });
         break;
       }
       case 'hotCueRelease':
@@ -308,6 +311,8 @@ export function createMockBackend() {
       case 'setCueMix': cueMix = cmd.value; break;
       case 'setMasterGain': masterDb = cmd.db; break;
       case 'setQuantize': quantize = cmd.on; break;
+      case 'setHotCuePlays': hotCuePlays = cmd.on; break;
+      case 'setAutoSync': break;
       case 'setFilter': d.filter = cmd.value; break;
       case 'setFxKind': d.fx.kind = cmd.kind; break;
       case 'setFxOn': d.fx.on = cmd.on; break;
