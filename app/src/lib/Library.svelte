@@ -862,8 +862,13 @@
   .scroll .row:hover {
     background: color-mix(in srgb, var(--raise) 60%, transparent);
   }
+  /* The browse cursor has to read at a glance from the decks, so it gets a
+     clearly lighter fill, a hairline, and full-strength text. */
   .scroll .row.sel {
-    background: var(--raise);
+    background: color-mix(in srgb, var(--fg) 12%, var(--bg));
+    outline: 1px solid var(--fg-3);
+    outline-offset: -1px;
+    color: var(--fg);
   }
   .ld {
     display: flex;
