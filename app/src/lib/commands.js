@@ -117,7 +117,7 @@ export function commandName(id) {
   const stem = action.match(/^stem(Solo)?\.(\d)$/);
   if (stem) return `${STEM_NAMES[+stem[2]]} ${stem[1] ? 'alone' : 'on / off'}`;
   const hot = action.match(/^hotCue(Clear)?\.(\d+)$/);
-  if (hot) return hot[1] ? `Clear hot cue ${+hot[2] + 1}` : `Hot cue ${+hot[2] + 1} (hold to preview)`;
+  if (hot) return hot[1] ? `Clear hot cue ${+hot[2] + 1}` : `Hot cue ${+hot[2] + 1}`;
   // Commands added without a name still get a readable one.
   const words = action.split('.').pop().replace(/([a-z])([A-Z0-9])/g, '$1 $2').toLowerCase();
   return words.charAt(0).toUpperCase() + words.slice(1);

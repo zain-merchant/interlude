@@ -14,13 +14,17 @@
   let { onmessage = () => {} } = $props();
 
   const KILL = -40;
-  const channels = $state([0, 1].map(() => ({ gain: 0, eq: [0, 0, 0], fader: 1, pfl: false })));
+  /** Channel knob size: five of them fit the shortest deck row. */
+  const KNOB = 24;
+  const channels = $state([0, 1].map(() => ({ gain: 0, eq: [0, 0, 0], filter: 0, fader: 1, pfl: false })));
   let master = $state(0);
   let cueMix = $state(0.5);
   let crossfader = $state(0);
 
   const db = (v) => (v <= KILL ? 'killed' : `${v > 0 ? '+' : v < 0 ? '−' : ''}${Math.abs(v).toFixed(1)} dB`);
   const BANDS = [{ label: 'High', band: 2 }, { label: 'Mid', band: 1 }, { label: 'Low', band: 0 }];
+  const filterText = (v) =>
+    Math.abs(v) < 0.02 ? 'off' : `${v < 0 ? 'low-pass' : 'high-pass'} ${Math.round(Math.abs(v) * 100)}%`;
 
   export function togglePfl(deck) {
     const ch = channels[deck];
@@ -36,23 +40,29 @@
     lastTouch = performance.now();
     send(cmd);
   }
+  // The engine's state is patched in place, so read each value here, where
+  // the effect tracks it, and only decide what to do with it untracked.
   $effect(() => {
-    const decks = engine.decks;
-    const mixer = engine.mixer;
+    const decks = engine.decks.map((d) => ({
+      gain: d.gainDb,
+      eq: d.eqDb && [...d.eqDb],
+      filter: d.filter,
+      fader: d.fader,
+      pfl: d.pfl,
+    }));
+    const m = engine.mixer;
+    const mixer = m && { crossfader: m.crossfader, cueMix: m.cueMix, master: m.masterDb };
     untrack(() => {
       if (performance.now() - lastTouch < 500) return;
       decks.forEach((d, i) => {
         const ch = channels[i];
-        if (d.gainDb !== undefined) ch.gain = d.gainDb;
-        if (d.eqDb) ch.eq = [...d.eqDb];
+        if (d.gain !== undefined) ch.gain = d.gain;
+        if (d.eq) ch.eq = d.eq;
+        if (d.filter !== undefined) ch.filter = d.filter;
         if (d.fader !== undefined) ch.fader = d.fader;
         if (d.pfl !== undefined) ch.pfl = d.pfl;
       });
-      if (mixer) {
-        crossfader = mixer.crossfader;
-        cueMix = mixer.cueMix;
-        master = mixer.masterDb;
-      }
+      if (mixer) ({ crossfader, cueMix, master } = mixer);
     });
   });
 
@@ -115,25 +125,30 @@
   {@const ch = channels[deck]}
   {@const n = deck === 0 ? 'A' : 'B'}
   <div class="ch">
-    <Knob label="Trim" name="Deck {n} trim" bind:value={ch.gain} min={-12} max={12} reset={0} format={db}
+    <Knob label="Trim" name="Deck {n} trim" size={KNOB} bind:value={ch.gain} min={-12} max={12} reset={0} format={db}
       onchange={(v) => control({ type: 'setGain', deck, db: v })} />
     {#each BANDS as { label, band }}
-      <Knob {label} name="Deck {n} {label.toLowerCase()} EQ" bind:value={ch.eq[band]} min={KILL} max={6} reset={0} kill={KILL} format={db}
+      <Knob {label} name="Deck {n} {label.toLowerCase()} EQ" size={KNOB} bind:value={ch.eq[band]} min={KILL} max={6} reset={0} kill={KILL} format={db}
         onchange={(v) => control({ type: 'setEq', deck, band, db: v })} />
     {/each}
-    <button class="hp" class:on={ch.pfl} aria-pressed={ch.pfl} aria-label="Deck {n} headphone cue"
-      onclick={() => togglePfl(deck)} use:tip={() => tipText(`Headphone cue ${ch.pfl ? 'on' : 'off'}`, keyLabel(`deck.${deck}.pfl`))}>
-      <svg viewBox="0 0 16 16"><path d="M2.5 10V8a5.5 5.5 0 0 1 11 0v2" /><rect x="2" y="9.5" width="3" height="4.5" rx="1" /><rect x="11" y="9.5" width="3" height="4.5" rx="1" /></svg>
-    </button>
+    <Knob label="Filter" name="Deck {n} filter" size={KNOB} bind:value={ch.filter} min={-1} max={1} reset={0} format={filterText}
+      onchange={(v) => control({ type: 'setFilter', deck, value: v })} />
   </div>
 {/snippet}
 
 {#snippet strip(deck)}
   {@const ch = channels[deck]}
+  {@const n = deck === 0 ? 'A' : 'B'}
   <div class="fwrap" class:mirror={deck === 1}>
-    <Meter level={engine.deckLevels[deck]} />
-    <Fader vertical bind:value={ch.fader} reset={1} label="Deck {deck === 0 ? 'A' : 'B'} volume"
-      onchange={(v) => control({ type: 'setFader', deck, value: v })} />
+    <div class="frow">
+      <Meter level={engine.deckLevels[deck]} />
+      <Fader vertical bind:value={ch.fader} reset={1} label="Deck {n} volume"
+        onchange={(v) => control({ type: 'setFader', deck, value: v })} />
+    </div>
+    <button class="hp" class:on={ch.pfl} aria-pressed={ch.pfl} aria-label="Deck {n} headphone cue"
+      onclick={() => togglePfl(deck)} use:tip={() => tipText(`Headphone cue ${ch.pfl ? 'on' : 'off'}`, keyLabel(`deck.${deck}.pfl`))}>
+      <svg viewBox="0 0 16 16"><path d="M2.5 10V8a5.5 5.5 0 0 1 11 0v2" /><rect x="2" y="9.5" width="3" height="4.5" rx="1" /><rect x="11" y="9.5" width="3" height="4.5" rx="1" /></svg>
+    </button>
   </div>
 {/snippet}
 
@@ -187,7 +202,7 @@
     display: grid;
     justify-items: center;
     align-content: start;
-    gap: 6px;
+    gap: 4px;
   }
   .cen {
     display: grid;
@@ -199,14 +214,27 @@
     border-right: 1px solid var(--line);
   }
   .fwrap {
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) auto;
+    gap: 4px;
+    min-height: 0;
+    padding: 4px 0 2px;
+  }
+  .frow {
     display: flex;
     gap: 8px;
     align-items: stretch;
     min-height: 0;
-    padding: 4px 0 2px;
   }
-  .fwrap.mirror {
+  .fwrap.mirror .frow {
     flex-direction: row-reverse;
+  }
+  /* The headphone cue sits under the fader, as on the controller. */
+  .fwrap .hp {
+    justify-self: end;
+  }
+  .fwrap.mirror .hp {
+    justify-self: start;
   }
   .mpair {
     display: flex;
@@ -217,7 +245,6 @@
   .hp {
     width: 32px;
     height: 24px;
-    margin-top: 2px;
     display: grid;
     place-items: center;
     border: 0;
