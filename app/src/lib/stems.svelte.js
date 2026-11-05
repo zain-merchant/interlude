@@ -21,6 +21,19 @@ export function stemsOf(deck) {
 /** True when the deck's stems can be used (or are on their way). */
 export const usable = (deck) => !!tracks[deck] && ['starting', 'splitting', 'ready'].includes(stemsOf(deck).state);
 
+/** Why a stem pad on the controller did nothing, for a toast. */
+export function stemsUnavailable(deck) {
+  if (!tracks[deck]) return `Deck ${deckName(deck)}: load a track first`;
+  switch (stemsOf(deck).state) {
+    case 'needsModel':
+      return 'Stems need a one-time model download. Get it in Settings › Stems';
+    case 'failed':
+      return `Deck ${deckName(deck)}: stems couldn't be made`;
+    default:
+      return 'Stems are off. Turn them on in Settings › Stems';
+  }
+}
+
 /** The one stem playing alone, or -1. */
 export function soloed(mask) {
   return [0, 1, 2, 3].find((i) => mask === 1 << i) ?? -1;
