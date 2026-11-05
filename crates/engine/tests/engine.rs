@@ -364,6 +364,53 @@ fn sync_matches_tempo_and_beat_phase() {
 }
 
 #[test]
+fn a_deck_started_while_the_other_plays_syncs_to_it() {
+    let (mut e, mut h) = setup();
+    let (a_bpm, a_off) = (128.0, 0.10);
+    let (b_bpm, b_off) = (122.0, 0.31);
+    load(&mut h, DeckId::A, drums(a_bpm, 40.0, a_off));
+    load(&mut h, DeckId::B, drums(b_bpm, 40.0, b_off));
+    h.send(Command::Play { deck: DeckId::A }).unwrap();
+    render(&mut e, 3.0);
+    h.send(Command::Seek {
+        deck: DeckId::B,
+        seconds: 5.4,
+    })
+    .unwrap();
+    // A hot cue on the paused deck starts it, in time with A.
+    h.send(Command::HotCuePress {
+        deck: DeckId::B,
+        index: 0,
+    })
+    .unwrap();
+    h.send(Command::HotCuePress {
+        deck: DeckId::B,
+        index: 0,
+    })
+    .unwrap();
+    render(&mut e, 2.0);
+    let (a, b) = (h.shared().deck(0), h.shared().deck(1));
+    assert!(b.playing);
+    assert!((b.rate * b.bpm - a.rate * a.bpm).abs() < 0.01);
+    let phase = |pos: f64, bpm: f64, off: f64| ((pos - off) * bpm / 60.0).rem_euclid(1.0);
+    let mut d = (phase(a.position, a_bpm, a_off) - phase(b.position, b_bpm, b_off)).abs();
+    d = d.min(1.0 - d);
+    assert!(d < 0.02, "phase off by {d:.3} of a beat");
+
+    // Turned off, it starts at its own tempo.
+    h.send(Command::SetAutoSync { on: false }).unwrap();
+    h.send(Command::Pause { deck: DeckId::B }).unwrap();
+    h.send(Command::SetRate {
+        deck: DeckId::B,
+        rate: 1.0,
+    })
+    .unwrap();
+    h.send(Command::Play { deck: DeckId::B }).unwrap();
+    render(&mut e, 0.1);
+    assert_eq!(h.shared().deck(1).rate, 1.0);
+}
+
+#[test]
 fn sync_picks_double_time_when_closer() {
     let (mut e, mut h) = setup();
     load(&mut h, DeckId::A, drums(87.0, 30.0, 0.0)); // drum & bass, detected as half time

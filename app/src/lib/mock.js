@@ -312,6 +312,7 @@ export function createMockBackend() {
       case 'setMasterGain': masterDb = cmd.db; break;
       case 'setQuantize': quantize = cmd.on; break;
       case 'setHotCuePlays': hotCuePlays = cmd.on; break;
+      case 'setAutoSync': break;
       case 'setFilter': d.filter = cmd.value; break;
       case 'setFxKind': d.fx.kind = cmd.kind; break;
       case 'setFxOn': d.fx.on = cmd.on; break;

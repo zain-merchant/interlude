@@ -5,7 +5,7 @@
   import { uiZoom, setUiZoom, stepUiZoom, uiZoomSteps } from './uizoom.svelte.js';
   import { announce } from './announce.svelte.js';
   import { autoGain, setAutoGain } from './autogain.svelte.js';
-  import { hotCuePlays, setHotCuePlays } from './hotcueplay.svelte.js';
+  import { deckSettings, setDeckSetting } from './decksettings.svelte.js';
   import { keyLabel } from './commands.js';
   import { backend } from './backend.js';
 
@@ -286,10 +286,18 @@
         <section class="display">
           <h3>Hot cues</h3>
           <label class="opt">
-            <input type="checkbox" checked={hotCuePlays.on} onchange={(e) => setHotCuePlays(e.currentTarget.checked)} />
+            <input type="checkbox" checked={deckSettings.hotCuePlays} onchange={(e) => setDeckSetting('hotCuePlays', e.currentTarget.checked)} />
             <span>Start a paused deck</span>
           </label>
           <p>A hot cue on a paused deck plays the track from there. Turn this off to play only while the pad is held and go back when it's let go, like the cue button.</p>
+        </section>
+        <section class="display">
+          <h3>Sync</h3>
+          <label class="opt">
+            <input type="checkbox" checked={deckSettings.autoSync} onchange={(e) => setDeckSetting('autoSync', e.currentTarget.checked)} />
+            <span>Sync when a deck starts</span>
+          </label>
+          <p>Starting a deck with play, cue or a hot cue while the other deck is playing brings it in at that deck's tempo and on its beat, as if you'd pressed Sync.</p>
         </section>
       {:else if page === 'library'}
         <section class="display">

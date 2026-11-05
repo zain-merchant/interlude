@@ -188,6 +188,9 @@ enum Control {
     SetHotCuePlays {
         on: bool,
     },
+    SetAutoSync {
+        on: bool,
+    },
     ScratchStart {
         deck: usize,
     },
@@ -351,6 +354,7 @@ impl Control {
             },
             C::SetQuantize { on } => Command::SetQuantize { on },
             C::SetHotCuePlays { on } => Command::SetHotCuePlays { on },
+            C::SetAutoSync { on } => Command::SetAutoSync { on },
             C::ScratchStart { deck } => Command::ScratchStart {
                 deck: deck_id(deck)?,
             },

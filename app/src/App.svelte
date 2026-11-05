@@ -12,7 +12,7 @@
   import { sampler, setSamplerOpen, restoreSampler, loadSample } from './lib/sampler.svelte.js';
   import { engine, tracks, startEngineLoop, loadTrack, control, deckSnapshot, restoreDeck } from './lib/engine.svelte.js';
   import { backend } from './lib/backend.js';
-  import { syncHotCuePlays } from './lib/hotcueplay.svelte.js';
+  import { syncDeckSettings } from './lib/decksettings.svelte.js';
   import { dropTarget } from './lib/dnd.svelte.js';
   import { commandFor, keyLabel } from './lib/commands.js';
   import { keymap } from './lib/keymap.svelte.js';
@@ -337,7 +337,7 @@
 
   onMount(() => {
     startEngineLoop();
-    syncHotCuePlays();
+    syncDeckSettings();
     // The controller's browse knob and load buttons drive the library.
     const off = backend.onController?.((e) => {
       if (e.type === 'browse') library.browse(e.delta);
