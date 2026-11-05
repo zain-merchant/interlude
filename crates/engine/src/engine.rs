@@ -223,6 +223,11 @@ impl Engine {
                     .quantize
                     .store(on, std::sync::atomic::Ordering::Relaxed);
             }
+            SetHotCuePlays { on } => {
+                for d in &mut self.decks {
+                    d.hot_cue_plays = on;
+                }
+            }
             ScratchStart { deck } => self.decks[deck.index()].scratch_start(),
             ScratchEnd { deck } => self.decks[deck.index()].scratch_end(),
             ScratchTo {
