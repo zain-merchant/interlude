@@ -35,11 +35,14 @@
     lastTouch = performance.now();
     send(cmd);
   }
+  // The engine's state is patched in place: read the fields here so the
+  // effect tracks them.
   $effect(() => {
-    const d = engine.decks[deck];
+    const fx = engine.decks[deck].fx;
+    const next = fx && { kind: fx.kind, on: fx.on, level: fx.level, beats: fx.beats };
     untrack(() => {
       if (performance.now() - lastTouch < 500) return;
-      if (d.fx) ({ kind, on, level, beats } = d.fx);
+      if (next) ({ kind, on, level, beats } = next);
     });
   });
 

@@ -40,24 +40,29 @@
     lastTouch = performance.now();
     send(cmd);
   }
+  // The engine's state is patched in place, so read each value here, where
+  // the effect tracks it, and only decide what to do with it untracked.
   $effect(() => {
-    const decks = engine.decks;
-    const mixer = engine.mixer;
+    const decks = engine.decks.map((d) => ({
+      gain: d.gainDb,
+      eq: d.eqDb && [...d.eqDb],
+      filter: d.filter,
+      fader: d.fader,
+      pfl: d.pfl,
+    }));
+    const m = engine.mixer;
+    const mixer = m && { crossfader: m.crossfader, cueMix: m.cueMix, master: m.masterDb };
     untrack(() => {
       if (performance.now() - lastTouch < 500) return;
       decks.forEach((d, i) => {
         const ch = channels[i];
-        if (d.gainDb !== undefined) ch.gain = d.gainDb;
-        if (d.eqDb) ch.eq = [...d.eqDb];
+        if (d.gain !== undefined) ch.gain = d.gain;
+        if (d.eq) ch.eq = d.eq;
         if (d.filter !== undefined) ch.filter = d.filter;
         if (d.fader !== undefined) ch.fader = d.fader;
         if (d.pfl !== undefined) ch.pfl = d.pfl;
       });
-      if (mixer) {
-        crossfader = mixer.crossfader;
-        cueMix = mixer.cueMix;
-        master = mixer.masterDb;
-      }
+      if (mixer) ({ crossfader, cueMix, master } = mixer);
     });
   });
 

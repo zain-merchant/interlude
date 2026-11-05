@@ -189,6 +189,12 @@ pub enum Command {
     SetHotCuePlays {
         on: bool,
     },
+    /// A deck started from pause (play, cue or a hot cue) while the other
+    /// deck plays takes its tempo and beat, as if SYNC were pressed. On by
+    /// default.
+    SetAutoSync {
+        on: bool,
+    },
     /// Playback rate as a ratio: 1.0 is normal speed, 1.08 is +8%.
     SetRate {
         deck: DeckId,

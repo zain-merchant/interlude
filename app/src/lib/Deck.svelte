@@ -106,9 +106,11 @@
   const d = $derived(engine.decks[deck]);
   const t = $derived(tracks[deck]);
   const ratePct = $derived((d.rate - 1) * 100);
-  const bpm = $derived(d.bpm > 0 ? d.bpm * d.speed : 0);
+  // The tempo the deck is set to, not its momentary speed, so scratching
+  // or nudging doesn't make the BPM and key jump around.
+  const bpm = $derived(d.bpm > 0 ? d.bpm * d.rate : 0);
   const atCue = $derived(!!t && !d.playing && Math.abs(d.position - d.cue) < 0.01);
-  const pk = $derived(t ? playingKey(d.key, d.speed, d.keylock) : null);
+  const pk = $derived(t ? playingKey(d.key, d.rate, d.keylock) : null);
   const canSync = $derived(!!t && d.bpm > 0 && engine.decks[1 - deck].bpm > 0);
 
   let lastTouch = 0;
