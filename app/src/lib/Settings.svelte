@@ -6,6 +6,8 @@
   import { announce } from './announce.svelte.js';
   import { autoGain, setAutoGain } from './autogain.svelte.js';
   import { deckSettings, setDeckSetting } from './decksettings.svelte.js';
+  import { engine } from './engine.svelte.js';
+  import { setSlip } from './performance.js';
   import { keyLabel } from './commands.js';
   import { backend } from './backend.js';
 
@@ -341,6 +343,16 @@
             <span>Snap to the beat</span>
           </label>
           <p>Hot cues and loops you set land on the nearest beat, and jumping to a hot cue or back into a loop while a track plays stays in time. Turn this off to set and jump exactly where you press. B turns it on and off too.</p>
+        </section>
+        <section class="display">
+          <h3>Slip</h3>
+          {#each [0, 1] as i}
+            <label class="opt">
+              <input type="checkbox" checked={!!engine.decks[i].slip} onchange={(e) => setSlip(i, e.currentTarget.checked)} />
+              <span>Slip on deck {'AB'[i]}</span>
+            </label>
+          {/each}
+          <p>After a scratch, loop, held hot cue or pause, the track picks up where it would have been playing all along, so you stay in time. {#if keyLabel('deck.0.slip') && keyLabel('deck.1.slip')}Press {keyLabel('deck.0.slip')} or {keyLabel('deck.1.slip')} to turn it on or off mid-set.{' '}{/if}The deck shows "Slip" while it's on.</p>
         </section>
       {:else if page === 'audio'}
         <section class="display">
