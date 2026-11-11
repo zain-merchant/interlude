@@ -477,7 +477,9 @@ fn control(
 
 #[tauri::command]
 fn state(state: State<'_, AppState>, stems: State<'_, stems::Stems>) -> EngineState {
-    let mut engine = state.engine.lock().expect("engine lock");
+    // A panic elsewhere while holding the lock mustn't take the UI down
+    // with it: the handle itself is still fine to read.
+    let mut engine = state.engine.lock().unwrap_or_else(|e| e.into_inner());
     let (deck_peaks, master_peak) = engine.take_peaks();
     let recording = engine.recording();
     let shared = engine.shared();
@@ -808,6 +810,35 @@ pub fn run() {
             stems::download_stems_model,
             stems::stems_waveform,
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running oss-dj");
+        .build(tauri::generate_context!())
+        .expect("error while running oss-dj")
+        .run(|app, event| {
+            if let tauri::RunEvent::Exit = event {
+                shut_down(app);
+            }
+        });
+}
+
+/// Finishes what's in flight before the app quits. The process exits
+/// straight after this without running destructors, so anything left to
+/// them would be lost: the end of a set recording, the last cue change,
+/// and a controller left lit (or a deck held under a jog wheel touch).
+fn shut_down(app: &tauri::AppHandle) {
+    if let Some(state) = app.try_state::<AppState>() {
+        let mut engine = state.engine.lock().unwrap_or_else(|e| e.into_inner());
+        if engine.recording().active {
+            match engine.stop_recording() {
+                Ok(r) => eprintln!("recording saved: {:?}", r.path),
+                Err(e) => eprintln!("could not finish the recording: {e}"),
+            }
+        }
+    }
+    if let Some(library) = app.try_state::<library::Library>() {
+        for deck in 0..dj_engine::NUM_DECKS {
+            library.unwatch(deck);
+        }
+    }
+    if let Some(controller) = app.try_state::<dj_controller::midi::ControllerService>() {
+        controller.shutdown();
+    }
 }
