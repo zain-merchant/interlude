@@ -159,6 +159,10 @@ export function createMockBackend() {
   /** @type {any} */
   let audio = { state: 'connected', device: 'Browser preview', sampleRate: 48000 };
   /** @type {string | null} */
+  /** @type {Record<string, any[]>} */
+  const learned = {};
+  let learnAt = 0;
+  let learnNext = 0;
   let outputChoice = null;
   globalThis.__mockAudio = {
     lose: () => (audio = { state: 'lost', device: 'DDJ-FLX4', fallback: 'MacBook Pro Speakers' }),
@@ -449,6 +453,33 @@ export function createMockBackend() {
       if (audio.state === 'lost') audio = { state: 'connected', device: audio.fallback, sampleRate: 48000 };
     },
     audioOutputs: async () => ({ devices: ['DDJ-FLX4', 'MacBook Pro Speakers'], choice: outputChoice }),
+    controllers: async () => ({
+      connected: [{ port: 'DDJ-FLX4', mapping: 'Pioneer DDJ-FLX4', learned: false },
+        ...(learned['Mock Pad MIDI 1']?.length ? [{ port: 'Mock Pad MIDI 1', mapping: 'Mock Pad MIDI 1', learned: true }] : [])],
+      ports: ['DDJ-FLX4', 'Mock Pad MIDI 1'],
+      learned: Object.keys(learned).filter((p) => learned[p].length),
+    }),
+    // A pretend control is "moved" a moment after learning starts.
+    midiLearnStart: async () => {
+      learnAt = Date.now() + 700;
+      learnNext = (learnNext + 1) % 128;
+    },
+    midiLearnPoll: async () => {
+      if (!learnAt || Date.now() < learnAt) return null;
+      learnAt = 0;
+      const button = learnNext % 2 === 0;
+      return /** @type {[string, import('./backend.js').Binding]} */ (['Mock Pad MIDI 1', {
+        group: '', key: '', kind: button ? 'button' : 'knob', status: button ? 0x90 : 0xb0, number: learnNext,
+        description: `${button ? 'note' : 'CC'} 0x${learnNext.toString(16).padStart(2, '0').toUpperCase()}, channel 1`,
+      }]);
+    },
+    midiLearnStop: async () => {
+      learnAt = 0;
+    },
+    learnedMapping: async (port) => (learned[port] ?? []).map((b) => ({ ...b })),
+    saveLearnedMapping: async (port, bindings) => {
+      learned[port] = bindings.map((b) => ({ ...b }));
+    },
     setAudioOutput: async (device) => {
       outputChoice = device;
       audio = { state: 'connected', device: device ?? 'DDJ-FLX4', sampleRate: 48000 };

@@ -57,6 +57,25 @@ impl Input {
     pub fn is_script(&self) -> bool {
         self.options & SCRIPT != 0
     }
+
+    /// The binding's main option, as its XML tag ("normal" for none).
+    pub fn option_name(&self) -> &'static str {
+        let o = self.options;
+        [
+            (SCRIPT, "script-binding"),
+            (MSB, "fourteen-bit-msb"),
+            (LSB, "fourteen-bit-lsb"),
+            (SELECT_KNOB, "selectknob"),
+            (DIFF, "diff"),
+            (SPREAD64, "spread64"),
+            (ROT64, "rot64"),
+            (BUTTON, "button"),
+            (INVERT, "invert"),
+        ]
+        .into_iter()
+        .find(|(bit, _)| o & bit != 0)
+        .map_or("normal", |(_, name)| name)
+    }
 }
 
 /// One `<output>`: a control shown on an LED.
@@ -98,6 +117,8 @@ pub struct Preset {
     pub script_dirs: Vec<PathBuf>,
     /// Port names matching these (normalised) belong to the controller.
     match_names: Vec<String>,
+    /// Made with MIDI learn for one port: matches that port name only.
+    exact: bool,
 }
 
 /// How much of a mapping works here.
@@ -278,6 +299,8 @@ impl Preset {
             })
             .collect();
 
+        let author = child(root, "info").and_then(|i| text(i, "author"));
+        let exact = author == Some(crate::learn::AUTHOR);
         let mut match_names = vec![normalise(&name)];
         // Mapping names usually lead with the brand, which port names often
         // leave out: "Pioneer DDJ-400" vs a port called "DDJ-400".
@@ -302,6 +325,7 @@ impl Preset {
             settings,
             script_dirs: vec![],
             match_names,
+            exact,
         })
     }
 
@@ -315,8 +339,16 @@ impl Preset {
     /// longest of the mapping's names found in it. When several mappings
     /// match, the most specific wins, so "Mixtrack Platinum FX" beats
     /// "Mixtrack".
+    /// Made with MIDI learn for one port, and only for that port.
+    pub fn is_exact(&self) -> bool {
+        self.exact
+    }
+
     pub fn match_len(&self, port_name: &str) -> Option<usize> {
         let port = normalise(port_name);
+        if self.exact {
+            return (self.match_names.first() == Some(&port)).then_some(port.len());
+        }
         self.match_names
             .iter()
             .filter(|n| port.contains(n.as_str()))
@@ -326,6 +358,13 @@ impl Preset {
 
     pub fn inputs(&self) -> impl Iterator<Item = &Input> {
         self.inputs.values().flatten()
+    }
+
+    /// Every binding with the status byte and number it listens to.
+    pub fn inputs_with_midi(&self) -> impl Iterator<Item = (u8, u8, &Input)> {
+        self.inputs
+            .iter()
+            .flat_map(|(&(s, n), v)| v.iter().map(move |i| (s, n, i)))
     }
 
     pub fn coverage(&self) -> Coverage {

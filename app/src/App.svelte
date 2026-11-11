@@ -71,7 +71,7 @@
   }
 
   // Settings open over the library, leaving the decks in reach.
-  let settings = $state(null); // null, 'keyboard', 'decks', 'audio', 'display', 'library' or 'stems'
+  let settings = $state(null); // null, 'keyboard', 'decks', 'audio', 'display', 'library', 'stems' or 'controllers'
 
   // Muted stems drop out of the waveforms.
   $effect(() => syncStemWaveforms());
