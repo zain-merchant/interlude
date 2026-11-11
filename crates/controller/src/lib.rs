@@ -15,6 +15,7 @@ pub mod flx4;
 #[cfg(feature = "midi")]
 pub mod midi;
 pub mod mixxx;
+pub mod script;
 
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -73,6 +74,14 @@ pub trait Mapping: Send {
     fn leds(&mut self, state: &State) -> Vec<Vec<u8>>;
     /// Forgets which LEDs were sent, e.g. after a reconnect.
     fn reset_leds(&mut self);
+    /// Called about every 30 ms: what the mapping does on its own, such as
+    /// a script's timers and connection callbacks.
+    fn poll(&mut self, _state: &State) -> Vec<Action> {
+        vec![]
+    }
+    /// The controller is being let go: the mapping's last chance to send
+    /// MIDI (through [`Self::leds`]) before it's dropped.
+    fn shutdown(&mut self, _state: &State) {}
 }
 
 /// Remembers which controls are held down: a hand on a jog wheel, CUE or
@@ -217,10 +226,15 @@ impl Catalog {
                     continue;
                 }
                 match mixxx::Preset::load(&path) {
-                    Ok(p) => c.entries.push(Entry {
+                    Ok(mut p) => c.entries.push(Entry {
                         name: p.name.clone(),
                         source: Source::Mixxx(path),
-                        kind: Kind::Mixxx(Arc::new(p)),
+                        kind: Kind::Mixxx(Arc::new({
+                            // Shared script libraries live with Mixxx's
+                            // mappings, so look in every folder for them.
+                            p.script_dirs = dirs.to_vec();
+                            p
+                        })),
                     }),
                     Err(e) => eprintln!("skipping controller mapping {e}"),
                 }

@@ -166,9 +166,22 @@ fn run(
             }
         }
 
-        if conns.iter().any(|c| c.output.is_some()) {
+        if !conns.is_empty() {
             let state = host.state();
             for c in &mut conns {
+                // The mapping's own work: script timers and callbacks.
+                let actions = match c.mapping.lock() {
+                    Ok(mut m) => m.poll(&state),
+                    Err(_) => vec![],
+                };
+                if !actions.is_empty() {
+                    if let Ok(mut h) = c.held.lock() {
+                        actions.iter().for_each(|a| h.observe(a));
+                    }
+                    for a in actions {
+                        host.act(a);
+                    }
+                }
                 if let Some(out) = &mut c.output {
                     let msgs = match c.mapping.lock() {
                         Ok(mut m) => m.leds(&state),
@@ -183,9 +196,16 @@ fn run(
         wait(LED_EVERY);
     }
     // Leave the controllers dark rather than showing stale state.
+    let state = host.state();
     for mut c in conns {
         c.release_held(host.as_ref());
         if let (Some(out), Ok(mut m)) = (&mut c.output, c.mapping.lock()) {
+            // A script's shutdown sends its own goodbye; then darken the
+            // LEDs the mapping drives directly.
+            m.shutdown(&state);
+            for msg in m.leds(&state) {
+                let _ = out.send(&msg);
+            }
             m.reset_leds();
             for msg in m.leds(&State::default()) {
                 let _ = out.send(&msg);
@@ -208,7 +228,7 @@ fn describe(entry: &crate::Entry) -> String {
                 c.controls
             );
             if c.scripted > 0 {
-                s += &format!(", {} script bindings not supported yet", c.scripted);
+                s += &format!(" plus {} script bindings", c.scripted);
             }
             s
         }
