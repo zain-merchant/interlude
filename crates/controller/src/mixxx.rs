@@ -1,4 +1,4 @@
-//! Mixxx MIDI mappings (`*.midi.xml`).
+//! Mixxx controller mappings: MIDI (`*.midi.xml`) and HID (`*.hid.xml`).
 //!
 //! A Mixxx mapping binds MIDI messages to Mixxx controls such as
 //! `[Channel1] play`, with options for how the value is read (14-bit
@@ -11,6 +11,10 @@
 //! Bindings to script functions (`<script-binding/>`) call into the
 //! mapping's JavaScript, run by [`crate::script`]. [`Preset::coverage`]
 //! says how much of a mapping's direct bindings work.
+//!
+//! A HID mapping has no bindings: every report the device sends goes to
+//! the script's `incomingData`, and the script sends reports back.
+//! [`crate::hid`] connects those to the device.
 //!
 //! Mixxx mappings are GPL-2.0-or-later, which oss-dj's GPL-3.0-or-later
 //! licence is compatible with.
@@ -99,7 +103,43 @@ pub struct ScriptFile {
     pub prefix: String,
 }
 
-/// A parsed Mixxx MIDI mapping file.
+/// A USB HID device a Mixxx HID mapping is for. Fields left out of the
+/// mapping match any device.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct HidProduct {
+    pub vendor_id: u16,
+    pub product_id: u16,
+    pub usage_page: Option<u16>,
+    pub usage: Option<u16>,
+    pub interface_number: Option<i32>,
+}
+
+/// What the system says about a HID device, to match against
+/// [`HidProduct`]s.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub struct HidDevice {
+    pub vendor_id: u16,
+    pub product_id: u16,
+    pub usage_page: u16,
+    pub usage: u16,
+    /// -1 where the system doesn't say (macOS and Windows, often).
+    pub interface_number: i32,
+}
+
+impl HidProduct {
+    pub fn matches(&self, d: &HidDevice) -> bool {
+        self.vendor_id == d.vendor_id
+            && self.product_id == d.product_id
+            && self.usage_page.is_none_or(|u| u == d.usage_page)
+            && self.usage.is_none_or(|u| u == d.usage)
+            // Mixxx matches on the interface only where the system reports it.
+            && self
+                .interface_number
+                .is_none_or(|i| d.interface_number < 0 || i == d.interface_number)
+    }
+}
+
+/// A parsed Mixxx mapping file (MIDI or HID).
 #[derive(Debug, Clone)]
 pub struct Preset {
     /// The mapping's name, e.g. "Pioneer DDJ-400".
@@ -119,6 +159,12 @@ pub struct Preset {
     match_names: Vec<String>,
     /// Made with MIDI learn for one port: matches that port name only.
     exact: bool,
+    /// For a HID mapping, the devices it's for. A HID mapping does
+    /// everything in script and never matches a MIDI port.
+    pub hid: Vec<HidProduct>,
+    /// From a `.hid.xml` file. Some name no devices (Mixxx has the user
+    /// pick one), so they're never connected automatically.
+    hid_file: bool,
 }
 
 /// How much of a mapping works here.
@@ -195,10 +241,17 @@ impl Preset {
             p.name = path
                 .file_name()
                 .and_then(|n| n.to_str())
-                .and_then(|n| n.strip_suffix(".midi.xml"))
+                .and_then(|n| {
+                    n.strip_suffix(".midi.xml")
+                        .or_else(|| n.strip_suffix(".hid.xml"))
+                })
                 .unwrap_or("Mixxx mapping")
                 .to_owned();
         }
+        p.hid_file = path
+            .to_string_lossy()
+            .to_ascii_lowercase()
+            .ends_with(".hid.xml");
         p.path = Some(path.to_owned());
         Ok(p)
     }
@@ -299,6 +352,31 @@ impl Preset {
             })
             .collect();
 
+        let num16 = |n: roxmltree::Node, a: &str| {
+            n.attribute(a)
+                .and_then(|v| u16::try_from(parse_int(v)?).ok())
+        };
+        let hid = child(root, "info")
+            .and_then(|i| child(i, "devices"))
+            .into_iter()
+            .flat_map(|d| d.children().filter(|c| c.has_tag_name("product")))
+            .filter(|p| {
+                p.attribute("protocol")
+                    .is_some_and(|v| v.eq_ignore_ascii_case("hid"))
+            })
+            .filter_map(|p| {
+                Some(HidProduct {
+                    vendor_id: num16(p, "vendor_id")?,
+                    product_id: num16(p, "product_id")?,
+                    usage_page: num16(p, "usage_page"),
+                    usage: num16(p, "usage"),
+                    interface_number: p
+                        .attribute("interface_number")
+                        .and_then(parse_int)
+                        .and_then(|i| i32::try_from(i).ok()),
+                })
+            })
+            .collect();
         let author = child(root, "info").and_then(|i| text(i, "author"));
         let exact = author == Some(crate::learn::AUTHOR);
         let mut match_names = vec![normalise(&name)];
@@ -326,6 +404,8 @@ impl Preset {
             script_dirs: vec![],
             match_names,
             exact,
+            hid,
+            hid_file: false,
         })
     }
 
@@ -339,12 +419,25 @@ impl Preset {
     /// longest of the mapping's names found in it. When several mappings
     /// match, the most specific wins, so "Mixtrack Platinum FX" beats
     /// "Mixtrack".
+    /// A HID mapping, for the devices in [`Self::hid`].
+    pub fn is_hid(&self) -> bool {
+        self.hid_file || !self.hid.is_empty()
+    }
+
+    /// Whether this HID mapping is for `device`.
+    pub fn matches_hid(&self, device: &HidDevice) -> bool {
+        self.hid.iter().any(|p| p.matches(device))
+    }
+
     /// Made with MIDI learn for one port, and only for that port.
     pub fn is_exact(&self) -> bool {
         self.exact
     }
 
     pub fn match_len(&self, port_name: &str) -> Option<usize> {
+        if self.is_hid() {
+            return None;
+        }
         let port = normalise(port_name);
         if self.exact {
             return (self.match_names.first() == Some(&port)).then_some(port.len());
@@ -456,6 +549,21 @@ impl MixxxMidi {
     }
 
     /// Whether the mapping's scripts are running.
+    /// Connects the scripts to a HID device: see [`Script::set_hid`].
+    pub fn set_hid(&mut self, reader: crate::script::ReportReader) {
+        if let Some(s) = &mut self.script {
+            s.set_hid(reader);
+        }
+    }
+
+    /// HID reports the scripts sent since the last call.
+    pub fn take_hid(&mut self) -> Vec<crate::script::HidOut> {
+        self.script
+            .as_mut()
+            .map(Script::take_hid)
+            .unwrap_or_default()
+    }
+
     pub fn has_script(&self) -> bool {
         self.script.is_some()
     }
@@ -659,9 +767,10 @@ impl Mapping for MixxxMidi {
             return vec![];
         };
         let mut out = self.started(state);
-        // System exclusive goes to the scripts' incomingData; clock and
-        // other system messages are dropped, as in Mixxx.
-        if status == 0xF0 {
+        // System exclusive goes to the scripts' incomingData, and so does
+        // everything from a HID controller; clock and other system
+        // messages are dropped, as in Mixxx.
+        if status == 0xF0 || self.preset.is_hid() {
             if let Some(s) = &mut self.script {
                 out.extend(s.sysex(msg, state));
             }
@@ -1151,5 +1260,78 @@ mod tests {
         println!(
             "\n{with_scripts} mappings with scripts: {loaded} loaded, {clean} ran without errors; {actions} actions"
         );
+    }
+
+    /// Runs every Mixxx HID mapping's scripts with made-up reports: they
+    /// should load, take input without errors, and send reports back.
+    /// `cargo test -p dj-controller mixxx_hid -- --ignored --nocapture`.
+    #[test]
+    #[ignore]
+    fn mixxx_hid_scripts() {
+        let Some(dir) = std::env::var_os("MIXXX_CONTROLLERS") else {
+            return;
+        };
+        let dir = std::path::PathBuf::from(dir);
+        let mut files: Vec<_> = std::fs::read_dir(&dir)
+            .unwrap()
+            .filter_map(|e| e.ok().map(|e| e.path()))
+            .filter(|p| p.to_string_lossy().ends_with(".hid.xml"))
+            .collect();
+        files.sort();
+        let (mut total, mut loaded, mut clean, mut sending) = (0, 0, 0, 0);
+        for f in &files {
+            let mut p = Preset::load(f).unwrap();
+            assert!(p.is_hid(), "{}", p.name);
+            assert!(
+                !p.matches(&p.name.clone()),
+                "a HID mapping never takes a MIDI port"
+            );
+            if !p.scripts.iter().any(|s| s.filename.ends_with(".js")) {
+                continue;
+            }
+            total += 1;
+            p.script_dirs = vec![dir.clone()];
+            let p = Arc::new(p);
+            let mut m = MixxxMidi::new(p.clone());
+            if !m.has_script() {
+                println!("NOT LOADED  {}", p.name);
+                continue;
+            }
+            loaded += 1;
+            m.set_hid(Arc::new(|_, _| vec![0; 64]));
+            let mut s = st();
+            let mut reports = 0;
+            m.poll(&s);
+            reports += m.take_hid().len();
+            for id in 0..4u8 {
+                for fill in [0x00u8, 0xFF, 0x55] {
+                    let mut r = vec![fill; 64];
+                    r[0] = id;
+                    m.handle(&r, &s);
+                    reports += m.take_hid().len();
+                }
+            }
+            s.decks[0].playing = true;
+            for _ in 0..3 {
+                m.poll(&s);
+                reports += m.take_hid().len();
+            }
+            m.shutdown(&s);
+            reports += m.take_hid().len();
+            if reports > 0 {
+                sending += 1;
+            }
+            let errors = m.script_errors();
+            if errors.is_empty() {
+                clean += 1;
+                println!("OK          {} ({reports} reports out)", p.name);
+            } else {
+                println!("ERRORS      {} ({} distinct)", p.name, errors.len());
+                for e in errors.iter().take(3) {
+                    println!("              {e}");
+                }
+            }
+        }
+        println!("\n{total} HID mappings with scripts: {loaded} loaded, {clean} ran without errors, {sending} sent reports");
     }
 }

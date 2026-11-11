@@ -6,12 +6,15 @@ edition.workspace = true
 license.workspace = true
 
 [features]
-default = ["midi"]
+default = ["midi", "hid"]
 # Talk to real MIDI devices. Off to test the mappings alone.
 midi = ["dep:midir"]
+# Also USB HID controllers, through Mixxx HID mappings.
+hid = ["midi", "dep:hidapi"]
 
 [dependencies]
 dj-engine = { path = "../engine", default-features = false }
+hidapi = { version = "2.6", optional = true }
 midir = { version = "0.11", optional = true }
 roxmltree = "0.20"
 rquickjs = { version = "0.14", features = ["parallel"] }

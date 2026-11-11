@@ -53,6 +53,34 @@ pub enum Setting {
     Text(String),
 }
 
+/// A HID report a script sent, for the device.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum HidOut {
+    /// An output report. Unless `resend`, it's skipped when it's the same
+    /// as the last one sent with this id.
+    Output {
+        id: u8,
+        data: Vec<u8>,
+        resend: bool,
+    },
+    Feature {
+        id: u8,
+        data: Vec<u8>,
+    },
+}
+
+/// Which kind of report a script asks the device for.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ReportKind {
+    Input,
+    Feature,
+}
+
+/// Reads a report from the device right away, for a script's
+/// `controller.getInputReport` and `getFeatureReport`. Returns the report
+/// without its id, or nothing if the device didn't answer.
+pub type ReportReader = Arc<dyn Fn(ReportKind, u8) -> Vec<u8> + Send + Sync>;
+
 /// One deck's jog wheel scratch, from `engine.scratchEnable`.
 #[derive(Debug, Clone, Copy)]
 struct Scratch {
@@ -68,6 +96,9 @@ struct Shared {
     overlay: HashMap<Control, (f64, Instant)>,
     actions: Vec<Action>,
     midi_out: Vec<Vec<u8>>,
+    /// Set for a HID controller: `controller.send` sends reports then.
+    hid: Option<ReportReader>,
+    hid_out: Vec<HidOut>,
     scratch: [Option<Scratch>; dj_engine::NUM_DECKS],
     /// Soft takeover per control: the parameter last set from script.
     takeover: HashMap<Control, Option<f64>>,
@@ -166,6 +197,8 @@ impl Script {
             overlay: HashMap::new(),
             actions: vec![],
             midi_out: vec![],
+            hid: None,
+            hid_out: vec![],
             scratch: [None; dj_engine::NUM_DECKS],
             takeover: HashMap::new(),
             errors: HashSet::new(),
@@ -199,11 +232,24 @@ impl Script {
             for (file, src) in files {
                 // Mapping scripts are written for sloppy mode: many assign
                 // to undeclared globals, as `MyController = {}`.
-                let mut opts = rquickjs::context::EvalOptions::default();
-                opts.strict = false;
-                opts.filename = Some(file.clone());
-                ctx.eval_with_options::<(), _>(src.as_str(), opts)
-                    .map_err(|e| format!("{file}: {}", describe_error(&ctx, e)))?;
+                let mut src = std::borrow::Cow::Borrowed(src.as_str());
+                loop {
+                    let mut opts = rquickjs::context::EvalOptions::default();
+                    opts.strict = false;
+                    opts.filename = Some(file.clone());
+                    let Err(e) = ctx.eval_with_options::<(), _>(&*src, opts) else {
+                        break;
+                    };
+                    let e = describe_error(&ctx, e);
+                    // Mixxx's engine lets a file declare `class Deck` over
+                    // the `var Deck` from common-controller-scripts.js;
+                    // QuickJS, like the standard, refuses before running
+                    // anything. Redeclare it as the var it shadows instead.
+                    match redeclared(&e).and_then(|name| as_var(&src, name)) {
+                        Some(fixed) => src = std::borrow::Cow::Owned(fixed),
+                        None => return Err(format!("{file}: {e}")),
+                    }
+                }
             }
             Ok(())
         });
@@ -302,7 +348,8 @@ impl Script {
         self.take()
     }
 
-    /// Hands a system exclusive message to the mapping's `incomingData`.
+    /// Hands a system exclusive message, or a HID controller's input
+    /// report, to the mapping's `incomingData`.
     pub fn sysex(&mut self, data: &[u8], state: &State) -> Vec<Action> {
         self.update_state(state);
         let prefixes = self.prefixes.clone();
@@ -329,6 +376,17 @@ impl Script {
         e
     }
 
+    /// Makes this a HID controller's script: `controller.send` and the
+    /// report functions talk to the device, and reads go to `reader`.
+    pub fn set_hid(&mut self, reader: ReportReader) {
+        lock(&self.shared).hid = Some(reader);
+    }
+
+    /// HID reports the scripts sent since the last call.
+    pub fn take_hid(&mut self) -> Vec<HidOut> {
+        std::mem::take(&mut lock(&self.shared).hid_out)
+    }
+
     /// MIDI the scripts sent since the last call.
     pub fn take_midi(&mut self) -> Vec<Vec<u8>> {
         std::mem::take(&mut lock(&self.shared).midi_out)
@@ -352,6 +410,43 @@ fn describe_error(ctx: &rquickjs::Ctx<'_>, e: rquickjs::Error) -> String {
     exc.as_string()
         .and_then(|s| s.to_string().ok())
         .unwrap_or_else(|| format!("{exc:?}"))
+}
+
+/// The name in a "redeclaration of 'Deck'" error.
+fn redeclared(error: &str) -> Option<&str> {
+    let rest = error.split_once("redeclaration of '")?.1;
+    Some(&rest[..rest.find('\'')?])
+}
+
+/// `src` with top-level `class name`, `let name` and `const name`
+/// declarations made `var`, or `None` if it has none.
+fn as_var(src: &str, name: &str) -> Option<String> {
+    let mut changed = false;
+    let lines: Vec<String> = src
+        .lines()
+        .map(|line| {
+            for kw in ["class", "let", "const"] {
+                let Some(rest) = line
+                    .strip_prefix(kw)
+                    .and_then(|r| r.strip_prefix(' '))
+                    .and_then(|r| r.strip_prefix(name))
+                else {
+                    continue;
+                };
+                if rest.starts_with(|c: char| c.is_alphanumeric() || c == '_' || c == '$') {
+                    continue;
+                }
+                changed = true;
+                return if kw == "class" {
+                    format!("var {name} = class {name}{rest}")
+                } else {
+                    format!("var {name}{rest}")
+                };
+            }
+            line.to_owned()
+        })
+        .collect();
+    changed.then(|| lines.join("\n"))
 }
 
 /// Mixxx numbers decks from 1; anything else is out of range.
@@ -432,6 +527,33 @@ fn native<'js>(
         if !msg.is_empty() {
             lock(&s).midi_out.push(msg);
         }
+    });
+    let s = shared.clone();
+    func!("isHid", move || -> bool { lock(&s).hid.is_some() });
+    let s = shared.clone();
+    func!("hidOutput", move |id: f64,
+                             bytes: Vec<f64>,
+                             resend: bool| {
+        let data = bytes.iter().map(|&b| (b as i64 & 0xFF) as u8).collect();
+        let id = (id as i64 & 0xFF) as u8;
+        lock(&s).hid_out.push(HidOut::Output { id, data, resend });
+    });
+    let s = shared.clone();
+    func!("hidFeature", move |id: f64, bytes: Vec<f64>| {
+        let data = bytes.iter().map(|&b| (b as i64 & 0xFF) as u8).collect();
+        let id = (id as i64 & 0xFF) as u8;
+        lock(&s).hid_out.push(HidOut::Feature { id, data });
+    });
+    let s = shared.clone();
+    func!("getReport", move |feature: bool, id: f64| -> Vec<u8> {
+        // Not under the lock: the device read can take a moment.
+        let reader = lock(&s).hid.clone();
+        let kind = if feature {
+            ReportKind::Feature
+        } else {
+            ReportKind::Input
+        };
+        reader.map_or(vec![], |r| r(kind, (id as i64 & 0xFF) as u8))
     });
     let s = shared.clone();
     func!("log", move |m: String| {
@@ -631,6 +753,7 @@ const PRELUDE: &str = r#"
   };
 
   const bytes = (data, length) => {
+    if (data instanceof ArrayBuffer) data = new Uint8Array(data);
     let a = Array.from(data || []);
     if (typeof length === "number" && length >= 0) a = a.slice(0, length);
     return a.map((x) => Number(x) & 0xff);
@@ -638,11 +761,17 @@ const PRELUDE: &str = r#"
   g.midi = g.controller = {
     sendShortMsg(s, d1, d2) { native.send([Number(s) & 0xff, Number(d1) & 0xff, Number(d2) & 0xff]); },
     sendSysexMsg(data, length) { native.send(bytes(data, length)); },
-    send(data, length) { native.send(bytes(data, length)); },
-    sendOutputReport() {},
-    sendFeatureReport() {},
-    getInputReport() { return []; },
-    getFeatureReport() { return []; },
+    // On a HID controller: send(data, length, reportId).
+    send(data, length, reportId) {
+      if (native.isHid()) native.hidOutput(Number(reportId) || 0, bytes(data, length), true);
+      else native.send(bytes(data, length));
+    },
+    sendOutputReport(reportId, data, resendUnchanged) {
+      native.hidOutput(Number(reportId) || 0, bytes(data), !!resendUnchanged);
+    },
+    sendFeatureReport(reportId, data) { native.hidFeature(Number(reportId) || 0, bytes(data)); },
+    getInputReport(reportId) { return new Uint8Array(native.getReport(false, Number(reportId) || 0)).buffer; },
+    getFeatureReport(reportId) { return new Uint8Array(native.getReport(true, Number(reportId) || 0)).buffer; },
   };
 
   g.ColorMapper = class ColorMapper {
@@ -685,7 +814,7 @@ const PRELUDE: &str = r#"
       for (const p of prefixes) {
         const o = g[p];
         if (o && typeof o.incomingData === "function") {
-          try { o.incomingData(data, length); } catch (e) { report(e); }
+          try { o.incomingData(new Uint8Array(data), length); } catch (e) { report(e); }
         }
       }
     },
@@ -774,6 +903,78 @@ mod tests {
                 _ => None,
             })
             .collect()
+    }
+
+    #[test]
+    fn a_class_may_replace_a_common_var() {
+        let s = Script::load(
+            "test",
+            &[
+                ("common.js".into(), "var Deck = function () {};".into()),
+                (
+                    "map.js".into(),
+                    "class Deck {\n  constructor() { this.n = 1; }\n}\nconst T = { d: new Deck() };".into(),
+                ),
+            ],
+            vec!["T".into()],
+            &[],
+        );
+        assert!(s.is_ok(), "{:?}", s.err());
+        assert_eq!(
+            redeclared("SyntaxError: redeclaration of 'Deck' at x"),
+            Some("Deck")
+        );
+        assert_eq!(as_var("class Decks {}", "Deck"), None);
+    }
+
+    #[test]
+    fn hid_scripts_read_and_send_reports() {
+        let mut s = load(
+            r#"var T = {
+                 init: function () {
+                   var cal = new Uint8Array(controller.getFeatureReport(0xD0));
+                   controller.sendFeatureReport(0x01, [cal.length, cal[0]]);
+                 },
+                 incomingData: function (data, length) {
+                   if (!(data instanceof Uint8Array)) throw new Error("not bytes");
+                   if (data[0] === 0x01 && data[1] & 0x01) engine.setValue("[Channel1]", "play", 1);
+                   var out = new Uint8Array([data[1], length]);
+                   controller.sendOutputReport(0x80, out.buffer);
+                   controller.send([9, 9, 9], 2, 0x81);
+                 },
+               };"#,
+        );
+        s.set_hid(Arc::new(|kind, id| match (kind, id) {
+            (ReportKind::Feature, 0xD0) => vec![7, 8, 9],
+            _ => vec![],
+        }));
+        s.start("dev", &st());
+        assert_eq!(
+            s.take_hid(),
+            vec![HidOut::Feature {
+                id: 1,
+                data: vec![3, 7]
+            }]
+        );
+        let c = cmds(s.sysex(&[0x01, 0x01, 0x00], &st()));
+        assert!(matches!(c[..], [Command::Play { deck: DeckId::A }]));
+        assert_eq!(
+            s.take_hid(),
+            vec![
+                HidOut::Output {
+                    id: 0x80,
+                    data: vec![1, 3],
+                    resend: false
+                },
+                HidOut::Output {
+                    id: 0x81,
+                    data: vec![9, 9],
+                    resend: true
+                },
+            ]
+        );
+        assert!(s.take_midi().is_empty());
+        assert!(s.errors().is_empty(), "{:?}", s.errors());
     }
 
     #[test]
