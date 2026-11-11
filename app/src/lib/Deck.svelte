@@ -67,7 +67,19 @@
   const other = $derived(deck === 0 ? 'B' : 'A');
   const RANGES = [0.08, 0.16, 0.5];
 
+  // The pitch fader's range, remembered per deck. Clicking the tempo
+  // readout above the fader steps through them.
+  const rangeKey = () => `oss-dj.pitchRange.${deck}`;
   let range = $state(0.08);
+  try {
+    const saved = Number(localStorage.getItem(rangeKey()));
+    if (RANGES.includes(saved)) range = saved;
+  } catch {}
+  function saveRange() {
+    try {
+      localStorage.setItem(rangeKey(), String(range));
+    } catch {}
+  }
 
   // The performance strip shows one set of controls at a time (hot cues,
   // loop and beat jump, or effects) so the deck stays calm. Keys and the
@@ -132,14 +144,26 @@
       if (Math.abs(1 - pitch * range - rate) < 1e-6) return;
       let r = range;
       while (Math.abs(1 - rate) > r + 1e-9 && r < RANGES[RANGES.length - 1]) r = RANGES[RANGES.indexOf(r) + 1];
-      range = r;
+      if (r !== range) {
+        range = r;
+        saveRange();
+      }
       pitch = Math.max(-1, Math.min(1, (1 - rate) / r));
     });
   });
 
+  // Steps to the next range, keeping the tempo where it is if it fits
+  // (the fader moves instead), so changing range mid-mix never jumps.
   function cycleRange() {
-    range = RANGES[(RANGES.indexOf(range) + 1) % RANGES.length];
-    setPitch(pitch);
+    const rate = 1 - pitch * range;
+    let next = RANGES[(RANGES.indexOf(range) + 1) % RANGES.length];
+    while (Math.abs(1 - rate) > next + 1e-9 && next < RANGES[RANGES.length - 1]) next = RANGES[RANGES.indexOf(next) + 1];
+    range = next;
+    saveRange();
+    lastTouch = performance.now();
+    pitch = Math.max(-1, Math.min(1, (1 - rate) / range));
+    control({ type: 'setRate', deck, rate: 1 - pitch * range });
+    announce(`Deck ${name} pitch range plus or minus ${Math.round(range * 100)} percent`);
   }
 
   function fmt(s) {
@@ -166,10 +190,8 @@
   };
   const toggleKeylock = () => control({ type: 'setKeylock', deck, on: !d.keylock });
   const slipTip = () =>
-    tipText(
-      d.slip ? 'Slip on: after a scratch, loop, held hot cue or pause, the track picks up where it would have been' : 'Slip off',
-      keyLabel(`deck.${deck}.slip`),
-    );
+    tipText('Slip on: after a scratch, loop, held hot cue or pause, the track picks up where it would have been. Click to turn off', keyLabel(`deck.${deck}.slip`));
+  const rangeTip = () => `Tempo ${pct(ratePct)}, fader range ±${Math.round(range * 100)}%. Click to change the range`;
   const keyTip = () => {
     if (!pk) return '';
     const track = `${keyLongName(d.key)} (${camelot(d.key)})`;
@@ -273,16 +295,24 @@
   </div>
 
   <div class="pitch">
-    <span class="val num" class:off={Math.abs(ratePct) > 0.005}>{pct(ratePct)}</span>
+    <button class="val num" class:off={Math.abs(ratePct) > 0.005} onclick={cycleRange}
+      aria-label="Deck {name} tempo {pct(ratePct)}, pitch range plus or minus {Math.round(range * 100)} percent. Click to change the range"
+      use:tip={rangeTip}>{pct(ratePct)}{#if range !== RANGES[0]}<span class="rng">±{Math.round(range * 100)}</span>{/if}</button>
     <div class="pitch-fader">
       <Fader vertical big tick value={pitch} min={-1} max={1} reset={0} label="Deck {name} pitch" onchange={setPitch}
         format={(v) => pct(-v * range * 100)} />
     </div>
-    <button class="range num" onclick={cycleRange} aria-label="Deck {name} pitch range, plus or minus {Math.round(range * 100)} percent" use:tip={() => `Pitch range ±${Math.round(range * 100)}%, click to change`}>±{Math.round(range * 100)}</button>
     <button class="range lock" class:on={d.keylock} aria-pressed={d.keylock} {...press(toggleKeylock)}
       use:tip={() => (d.keylock ? 'Key lock on: tempo changes keep the pitch' : 'Key lock off: tempo changes raise or lower the pitch')}>Key lock</button>
-    <button class="range lock" class:on={d.slip} aria-pressed={!!d.slip} aria-disabled={!t} {...press(() => toggleSlip(deck))}
-      use:tip={slipTip}>Slip</button>
+    {#if d.slip}
+      <!-- Slip is set in Settings > Decks or with its key; the deck only
+           shows it while it's on, so it's never on by surprise. -->
+      <button class="range lock on" aria-pressed="true" aria-label="Deck {name} slip on, click to turn off" {...press(() => toggleSlip(deck))}
+        use:tip={slipTip}>Slip</button>
+    {:else}
+      <!-- Keeps the fader the same length whether slip is on or off. -->
+      <span class="slot" aria-hidden="true"></span>
+    {/if}
   </div>
 </section>
 
@@ -510,18 +540,34 @@
   }
   .pitch {
     display: grid;
-    grid-template-rows: auto minmax(0, 1fr) auto auto auto;
+    grid-template-rows: auto minmax(0, 1fr) auto auto;
     justify-items: center;
     gap: 10px;
     padding-top: 2px;
     min-height: 0;
   }
   .val {
+    display: grid;
+    justify-items: center;
+    padding: 3px 4px;
+    border: 0;
+    border-radius: 6px;
+    background: none;
+    font-family: inherit;
     font-size: 12px;
     color: var(--fg-3);
   }
+  .val:hover {
+    color: var(--fg);
+    background: var(--raise);
+  }
   .val.off {
     color: var(--fg-2);
+  }
+  /* The fader range, shown only when it isn't the usual ±8. */
+  .rng {
+    font-size: 10px;
+    color: var(--fg-3);
   }
   .pitch-fader {
     display: flex;
@@ -549,6 +595,9 @@
   .range:hover {
     color: var(--fg);
     background: var(--raise);
+  }
+  .slot {
+    height: 24px;
   }
   .lock {
     padding: 0 6px;
