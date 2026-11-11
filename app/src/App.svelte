@@ -351,12 +351,14 @@
       else if (e.type === 'load') library.loadSelected(e.deck);
       else if (e.type === 'stemsUnavailable') say(stemsUnavailable(e.deck));
       else if (e.type === 'padMode') {
+        const was = padMode[e.deck].mode;
         setPadMode(e.deck, e.mode);
-        // SAMPLER shows the sampler; leaving sampler mode on both decks
-        // hides it again, if it was SAMPLER that showed it.
-        if (e.mode === 'sampler' && !sampler.open) {
-          setSamplerOpen(true);
-          samplerFromPads = true;
+        // SAMPLER shows the sampler, and pressed again hides it. Leaving
+        // sampler mode on both decks hides it too, if SAMPLER showed it.
+        if (e.mode === 'sampler') {
+          const open = was !== 'sampler' || !sampler.open;
+          if (open !== sampler.open) setSamplerOpen(open);
+          samplerFromPads = open;
         } else if (samplerFromPads && !padMode.some((p) => p.mode === 'sampler')) {
           if (sampler.open) setSamplerOpen(false);
           samplerFromPads = false;
