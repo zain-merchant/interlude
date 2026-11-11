@@ -7,9 +7,12 @@
    * A rotary knob: a dark disc with a hairline ring and a white indicator
    * over a 270° sweep. Drag up/down (⇧ for fine), scroll, or use the
    * arrow keys; double-click or right-click resets. With `kill`, clicking
-   * the label kills the band and clicking again brings it back.
+   * the label kills the band and clicking again brings it back. A `taper`
+   * maps values to positions on the sweep (0..1) when they aren't linear,
+   * so the knob sits where a hardware knob with the same curve would.
    * @type {{ value: number, min?: number, max?: number, reset?: number, label: string, name?: string,
-   *          kill?: number, size?: number, format?: (v: number) => string, onchange?: (v: number) => void }}
+   *          kill?: number, size?: number, format?: (v: number) => string, onchange?: (v: number) => void,
+   *          taper?: { toPos: (v: number) => number, fromPos: (p: number) => number } }}
    */
   let {
     value = $bindable(),
@@ -22,9 +25,18 @@
     size = 28,
     format = (v) => v.toFixed(1),
     onchange = () => {},
+    taper = {
+      toPos: (v) => (v - min) / (max - min),
+      fromPos: (p) => min + p * (max - min),
+    },
   } = $props();
 
-  const norm = $derived((value - min) / (max - min));
+  // Gestures work in sweep positions, so a tapered knob turns like the hardware.
+  const clampPos = (p) => Math.min(1, Math.max(0, p));
+  const pos = $derived(clampPos(taper.toPos(value)));
+  const resetPos = $derived(taper.toPos(reset));
+  // The default comes back exact, not as a round trip through the taper.
+  const setPos = (p) => set(p === resetPos ? reset : taper.fromPos(clampPos(p)));
   const killed = $derived(kill !== undefined && value <= kill);
   let beforeKill = 0;
   let dial;
@@ -45,14 +57,14 @@
     if (e.button !== 0) return;
     e.currentTarget.setPointerCapture(e.pointerId);
     dragging = true;
-    raw = value;
+    raw = pos;
     showTip(dial, readout());
   }
   function move(e) {
     if (!dragging) return;
-    const perPx = ((max - min) / 180) * (e.shiftKey ? 0.1 : 1);
-    raw = Math.min(max, Math.max(min, raw - e.movementY * perPx));
-    set(detent(raw, reset, perPx, e.shiftKey));
+    const perPx = (1 / 180) * (e.shiftKey ? 0.1 : 1);
+    raw = clampPos(raw - e.movementY * perPx);
+    setPos(detent(raw, resetPos, perPx, e.shiftKey));
     showTip(dial, readout());
   }
   function up() {
@@ -62,14 +74,14 @@
   }
   function wheel(e) {
     e.preventDefault();
-    set(value - Math.sign(e.deltaY) * (max - min) * (e.shiftKey ? 0.005 : 0.02));
+    setPos(pos - Math.sign(e.deltaY) * (e.shiftKey ? 0.005 : 0.02));
     showTip(dial, readout());
   }
   function key(e) {
-    const v = keyValue(e, value, min, max);
-    if (v === null) return;
+    const p = keyValue(e, pos, 0, 1);
+    if (p === null) return;
     e.preventDefault();
-    set(v);
+    setPos(p);
     showTip(dial, readout());
   }
   function toggleKill() {
@@ -102,7 +114,7 @@
     aria-valuetext={format(value)}
     style:width="{size}px"
     style:height="{size}px"
-    style:--v={norm}
+    style:--v={pos}
     onpointerdown={down}
     onpointermove={move}
     onpointerup={up}
