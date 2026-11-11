@@ -299,7 +299,7 @@ fn mappings(dirs: &[String]) -> Result<()> {
             Some(p) => {
                 let c = p.coverage();
                 println!(
-                    "{:48} {:4}/{:<4} controls  {:4}/{:<4} LEDs  {:5} script bindings (not run yet)",
+                    "{:48} {:4}/{:<4} controls  {:4}/{:<4} LEDs  {:5} script bindings",
                     e.name, c.supported, c.controls, c.outputs_supported, c.outputs, c.scripted
                 );
             }

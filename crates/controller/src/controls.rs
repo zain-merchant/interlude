@@ -381,6 +381,11 @@ impl Behavior {
         }
     }
 
+    /// Whether this is a relative control, whose value is a step.
+    pub fn is_encoder(&self) -> bool {
+        matches!(self, Behavior::Encoder)
+    }
+
     /// Whether this is a continuous control soft takeover applies to.
     pub fn is_pot(&self) -> bool {
         matches!(self, Behavior::Pot { .. } | Behavior::Taper(_))
@@ -618,6 +623,24 @@ impl Control {
                 Some(Control::LoadIntoStopped)
             }
             _ => None,
+        }
+    }
+
+    /// The control's value at rest, as Mixxx's `reset` sets it.
+    pub fn default_value(&self) -> f64 {
+        use DeckKey as K;
+        match *self {
+            Control::Deck(_, K::Volume | K::Pregain) => 1.0,
+            Control::Deck(_, K::RateRange) => DEFAULT_RATE_RANGE,
+            Control::Deck(_, K::BeatJumpSize) => DEFAULT_BEATJUMP,
+            Control::Deck(_, K::BeatLoopSize) => dj_engine::DEFAULT_LOOP_BEATS,
+            Control::Eq(..) | Control::MasterGain => 1.0,
+            Control::Filter(_) => 0.5,
+            Control::HeadMix => -1.0,
+            Control::Sampler(_, SamplerKey::Volume) => 1.0,
+            Control::NumDecks => NUM_DECKS as f64,
+            Control::NumSamplers => SAMPLER_SLOTS as f64,
+            _ => 0.0,
         }
     }
 
