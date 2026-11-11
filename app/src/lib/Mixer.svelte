@@ -14,6 +14,14 @@
   let { onmessage = () => {} } = $props();
 
   const KILL = -40;
+  const EQ_MAX = 6;
+  // EQ knobs turn like the controller's (crates/controller/src/flx4.rs,
+  // eq_db): 0 dB at 12 o'clock, linear in dB up to +6 on the right, and
+  // linear in gain down to the kill on the left.
+  const eqTaper = {
+    toPos: (v) => (v >= 0 ? 0.5 + v / EQ_MAX / 2 : v <= KILL ? 0 : 10 ** (v / 20) / 2),
+    fromPos: (p) => (p >= 0.5 ? (p - 0.5) * 2 * EQ_MAX : Math.max(KILL, 20 * Math.log10(Math.max(p * 2, 1e-6)))),
+  };
   /** Channel knob size: five of them fit the shortest deck row. */
   const KNOB = 24;
   const channels = $state([0, 1].map(() => ({ gain: 0, eq: [0, 0, 0], filter: 0, fader: 1, pfl: false })));
@@ -128,7 +136,7 @@
     <Knob label="Trim" name="Deck {n} trim" size={KNOB} bind:value={ch.gain} min={-12} max={12} reset={0} format={db}
       onchange={(v) => control({ type: 'setGain', deck, db: v })} />
     {#each BANDS as { label, band }}
-      <Knob {label} name="Deck {n} {label.toLowerCase()} EQ" size={KNOB} bind:value={ch.eq[band]} min={KILL} max={6} reset={0} kill={KILL} format={db}
+      <Knob {label} name="Deck {n} {label.toLowerCase()} EQ" size={KNOB} bind:value={ch.eq[band]} min={KILL} max={EQ_MAX} reset={0} kill={KILL} taper={eqTaper} format={db}
         onchange={(v) => control({ type: 'setEq', deck, band, db: v })} />
     {/each}
     <Knob label="Filter" name="Deck {n} filter" size={KNOB} bind:value={ch.filter} min={-1} max={1} reset={0} format={filterText}

@@ -664,15 +664,26 @@ fn cfx_filter(v: f64) -> f32 {
     }
 }
 
+/// Half-width of the centre detent, as a fraction of the knob's travel. A
+/// knob resting in its detent doesn't read exactly 8192, so anything this
+/// close to the centre counts as the centre.
+const DETENT: f64 = 0.005;
+
 /// Trim knob: -12 dB ..= +12 dB, 0 dB at the centre detent.
 fn trim_db(v: f64) -> f32 {
+    if (v - 0.5).abs() < DETENT {
+        return 0.0;
+    }
     ((v - 0.5) * 24.0) as f32
 }
 
-/// EQ knob: kill at the far left, 0 dB at centre, +6 dB at the far right.
-/// The left half is linear in gain so the cut sweeps smoothly to silence.
+/// EQ knob: kill at the far left, 0 dB at the centre detent, +6 dB at the
+/// far right. The left half is linear in gain so the cut sweeps smoothly to
+/// silence. The app's on-screen EQ knobs use the same curve (Mixer.svelte).
 fn eq_db(v: f64) -> f32 {
-    if v >= 0.5 {
+    if (v - 0.5).abs() < DETENT {
+        0.0
+    } else if v >= 0.5 {
         ((v - 0.5) * 2.0) as f32 * EQ_MAX_DB
     } else {
         let gain = (v * 2.0) as f32;
@@ -774,6 +785,15 @@ mod tests {
         assert!(matches!(c[..], [Command::SetGain { db, .. }] if db == -12.0));
         let c = fourteen(&mut m, GLOBAL_CH, CROSSFADER, 0, &s);
         assert!(matches!(c[..], [Command::SetCrossfader { value }] if value == -1.0));
+    }
+
+    #[test]
+    fn knobs_resting_near_the_detent_are_flat() {
+        for raw in [8150u16, 8191, 8192, 8230] {
+            let v = raw as f64 / 16383.0;
+            assert_eq!(eq_db(v), 0.0, "{raw}");
+            assert_eq!(trim_db(v), 0.0, "{raw}");
+        }
     }
 
     #[test]
