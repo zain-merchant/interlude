@@ -5,6 +5,7 @@
 //!   dj render <a> <b> <out.wav> [secs]     mix A into B offline and write a WAV
 //!   dj play <a> [b]                        play A, then crossfade into B
 //!   dj midi [secs]                         print what MIDI controllers send
+//!   dj mappings [dir...]                   list controller mappings and how much of each works
 //!   dj latency [secs]                      play two decks hard and report audio timing
 
 use std::sync::Arc;
@@ -22,10 +23,11 @@ fn main() {
         }
         Some("play") if args.len() >= 2 => play(&args[1], args.get(2).map(String::as_str)),
         Some("midi") => midi(args.get(1).and_then(|s| s.parse().ok())),
+        Some("mappings") => mappings(&args[1..]),
         Some("latency") => latency(args.get(1).and_then(|s| s.parse().ok()).unwrap_or(10)),
         _ => {
             eprintln!(
-                "usage:\n  dj info <file>\n  dj render <a> <b> <out.wav> [secs]\n  dj play <a> [b]\n  dj midi [secs]\n  dj latency [secs]"
+                "usage:\n  dj info <file>\n  dj render <a> <b> <out.wav> [secs]\n  dj play <a> [b]\n  dj midi [secs]\n  dj mappings [dir...]\n  dj latency [secs]"
             );
             std::process::exit(2);
         }
@@ -282,6 +284,36 @@ fn latency(secs: u64) -> Result<()> {
     Ok(())
 }
 
+/// Lists the controller mappings found in `dirs` (or the default folders)
+/// and how much of each Mixxx mapping works here.
+fn mappings(dirs: &[String]) -> Result<()> {
+    let dirs: Vec<std::path::PathBuf> = if dirs.is_empty() {
+        dj_controller::Catalog::default_dirs()
+    } else {
+        dirs.iter().map(Into::into).collect()
+    };
+    let catalog = dj_controller::Catalog::load(&dirs);
+    for e in catalog.entries() {
+        match e.preset() {
+            None => println!("{:48} built in", e.name),
+            Some(p) => {
+                let c = p.coverage();
+                println!(
+                    "{:48} {:4}/{:<4} controls  {:4}/{:<4} LEDs  {:5} script bindings (not run yet)",
+                    e.name, c.supported, c.controls, c.outputs_supported, c.outputs, c.scripted
+                );
+            }
+        }
+    }
+    if catalog.entries().len() == 1 {
+        eprintln!("no Mixxx mappings found in:");
+        for d in &dirs {
+            eprintln!("  {}", d.display());
+        }
+    }
+    Ok(())
+}
+
 /// Prints every MIDI message from every connected device, with what the
 /// matching controller mapping would do with it. For checking a mapping
 /// against real hardware.
@@ -296,13 +328,21 @@ fn midi(secs: Option<f64>) -> Result<()> {
         eprintln!("listening to {p}");
     }
     let t0 = Instant::now();
-    let mappings = Mutex::new(dj_controller::mappings());
+    let catalog = dj_controller::Catalog::load(&dj_controller::Catalog::default_dirs());
+    let mut mappings = std::collections::HashMap::new();
+    for p in &ports {
+        if let Some(e) = catalog.find(p) {
+            eprintln!("{p}: mapping {:?}", e.name);
+            mappings.insert(p.clone(), e.create());
+        }
+    }
+    let mappings = Mutex::new(mappings);
     let state = dj_controller::State::default();
     let _conns = dj_controller::midi::monitor_all(move |port, msg| {
         let hex: Vec<String> = msg.iter().map(|b| format!("{b:02X}")).collect();
         let mut meaning = String::new();
         if let Ok(mut ms) = mappings.lock() {
-            if let Some(m) = ms.iter_mut().find(|m| m.matches(port)) {
+            if let Some(m) = ms.get_mut(port) {
                 meaning = format!("{:?}", m.handle(msg, &state));
             }
         }

@@ -1,6 +1,6 @@
 [package]
 name = "dj-controller"
-description = "MIDI DJ controller support: device discovery and mappings"
+description = "MIDI DJ controller support: device discovery, built-in and Mixxx mappings"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -13,3 +13,4 @@ midi = ["dep:midir"]
 [dependencies]
 dj-engine = { path = "../engine", default-features = false }
 midir = { version = "0.11", optional = true }
+roxmltree = "0.20"

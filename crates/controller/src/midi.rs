@@ -1,10 +1,12 @@
 //! Connects mappings to real MIDI devices through midir.
 //!
-//! A background thread looks for a known controller every couple of
-//! seconds, connects to it, notices when it's unplugged, and keeps its LEDs
-//! in step with the engine. Incoming MIDI is handled on midir's own thread
-//! as soon as it arrives.
+//! A background thread looks for known controllers every couple of
+//! seconds, connects to each one, notices when one is unplugged, and keeps
+//! their LEDs in step with the engine. Several controllers can be
+//! connected at once. Incoming MIDI is handled on midir's own thread as
+//! soon as it arrives.
 
+use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::thread::JoinHandle;
@@ -12,7 +14,7 @@ use std::time::{Duration, Instant};
 
 use midir::{MidiInput, MidiInputConnection, MidiOutput, MidiOutputConnection};
 
-use crate::{mappings, Action, HeldControls, Mapping, State};
+use crate::{Action, Catalog, HeldControls, Mapping, Source, State};
 
 const CLIENT: &str = "oss-dj";
 const SCAN_EVERY: Duration = Duration::from_secs(2);
@@ -30,22 +32,40 @@ pub trait Host: Send + Sync + 'static {
 /// dropped.
 pub struct ControllerService {
     stop: Arc<AtomicBool>,
-    connected: Arc<Mutex<Option<String>>>,
+    connected: Arc<Mutex<Vec<String>>>,
     thread: Mutex<Option<JoinHandle<()>>>,
 }
 
 impl ControllerService {
-    /// Starts watching for controllers. Set `OSS_DJ_MIDI_LOG=1` to print
-    /// every incoming message to stderr.
+    /// Starts watching for controllers, with the built-in mappings and
+    /// Mixxx mappings from [`Catalog::default_dirs`]. Set
+    /// `OSS_DJ_MIDI_LOG=1` to print every incoming message to stderr.
     pub fn start(host: Arc<dyn Host>) -> Self {
+        Self::start_with(host, vec![])
+    }
+
+    /// As [`Self::start`], also loading Mixxx mappings from `dirs`, which
+    /// come before the default folders.
+    pub fn start_with(host: Arc<dyn Host>, dirs: Vec<PathBuf>) -> Self {
         let stop = Arc::new(AtomicBool::new(false));
-        let connected = Arc::new(Mutex::new(None));
+        let connected = Arc::new(Mutex::new(vec![]));
         let log = std::env::var_os("OSS_DJ_MIDI_LOG").is_some();
         let thread = {
             let (stop, connected) = (stop.clone(), connected.clone());
             std::thread::Builder::new()
                 .name("controller".into())
-                .spawn(move || run(host, stop, connected, log))
+                .spawn(move || {
+                    // Parsing mapping files takes a moment; do it here, off
+                    // the app's startup path, and only once.
+                    let mut all = dirs;
+                    all.extend(Catalog::default_dirs());
+                    let catalog = Catalog::load(&all);
+                    let mixxx = catalog.entries().len() - Catalog::built_in().entries().len();
+                    if mixxx > 0 {
+                        eprintln!("controller mappings: {mixxx} from Mixxx");
+                    }
+                    run(&catalog, host, stop, connected, log)
+                })
                 .ok()
         };
         Self {
@@ -65,9 +85,9 @@ impl ControllerService {
         }
     }
 
-    /// The connected controller's port name, if any.
-    pub fn connected(&self) -> Option<String> {
-        self.connected.lock().ok().and_then(|c| c.clone())
+    /// The connected controllers' port names.
+    pub fn connected(&self) -> Vec<String> {
+        self.connected.lock().map(|c| c.clone()).unwrap_or_default()
     }
 }
 
@@ -102,52 +122,68 @@ impl Connection {
 }
 
 fn run(
+    catalog: &Catalog,
     host: Arc<dyn Host>,
     stop: Arc<AtomicBool>,
-    connected: Arc<Mutex<Option<String>>>,
+    connected: Arc<Mutex<Vec<String>>>,
     log: bool,
 ) {
-    let mut conn: Option<Connection> = None;
+    let mut conns: Vec<Connection> = vec![];
+    // Ports a mapping matched but that couldn't be opened, so a port
+    // that's busy elsewhere isn't retried (and reported) every scan.
+    let mut failed: Vec<String> = vec![];
     let mut last_scan: Option<Instant> = None;
     while !stop.load(Ordering::Relaxed) {
         if last_scan.is_none_or(|t| t.elapsed() >= SCAN_EVERY) {
             last_scan = Some(Instant::now());
             let ports = input_port_names();
-            if let Some(c) = &conn {
-                if !ports.contains(&c.port_name) {
+            conns.retain(|c| {
+                let present = ports.contains(&c.port_name);
+                if !present {
                     eprintln!("controller disconnected: {}", c.port_name);
                     c.release_held(host.as_ref());
-                    conn = None;
                 }
-            }
-            if conn.is_none() {
-                conn = ports
-                    .iter()
-                    .find_map(|name| connect(name, host.clone(), log));
-                if let Some(c) = &conn {
-                    eprintln!("controller connected: {}", c.port_name);
+                present
+            });
+            failed.retain(|p| ports.contains(p));
+            for name in &ports {
+                if conns.iter().any(|c| &c.port_name == name) || failed.contains(name) {
+                    continue;
+                }
+                let Some(entry) = catalog.find(name) else {
+                    continue;
+                };
+                match connect(name, entry.create(), host.clone(), log) {
+                    Some(c) => {
+                        eprintln!("controller connected: {name} ({})", describe(entry));
+                        conns.push(c);
+                    }
+                    None => failed.push(name.clone()),
                 }
             }
             if let Ok(mut s) = connected.lock() {
-                *s = conn.as_ref().map(|c| c.port_name.clone());
+                *s = conns.iter().map(|c| c.port_name.clone()).collect();
             }
         }
 
-        if let Some(c) = &mut conn {
-            if let Some(out) = &mut c.output {
-                let msgs = match c.mapping.lock() {
-                    Ok(mut m) => m.leds(&host.state()),
-                    Err(_) => vec![],
-                };
-                for msg in msgs {
-                    let _ = out.send(&msg);
+        if conns.iter().any(|c| c.output.is_some()) {
+            let state = host.state();
+            for c in &mut conns {
+                if let Some(out) = &mut c.output {
+                    let msgs = match c.mapping.lock() {
+                        Ok(mut m) => m.leds(&state),
+                        Err(_) => vec![],
+                    };
+                    for msg in msgs {
+                        let _ = out.send(&msg);
+                    }
                 }
             }
         }
         wait(LED_EVERY);
     }
-    // Leave the controller dark rather than showing stale state.
-    if let Some(mut c) = conn {
+    // Leave the controllers dark rather than showing stale state.
+    for mut c in conns {
         c.release_held(host.as_ref());
         if let (Some(out), Ok(mut m)) = (&mut c.output, c.mapping.lock()) {
             m.reset_leds();
@@ -155,6 +191,28 @@ fn run(
                 let _ = out.send(&msg);
             }
         }
+    }
+}
+
+/// Which mapping drives a controller, and for a Mixxx one how much of it
+/// works, for the log.
+fn describe(entry: &crate::Entry) -> String {
+    match (&entry.source, entry.preset()) {
+        (Source::Mixxx(path), Some(p)) => {
+            let c = p.coverage();
+            let mut s = format!(
+                "Mixxx mapping {:?} from {}: {} of {} controls work",
+                entry.name,
+                path.display(),
+                c.supported,
+                c.controls
+            );
+            if c.scripted > 0 {
+                s += &format!(", {} script bindings not supported yet", c.scripted);
+            }
+            s
+        }
+        _ => format!("built-in mapping {:?}", entry.name),
     }
 }
 
@@ -196,8 +254,12 @@ pub fn input_port_names() -> Vec<String> {
         .collect()
 }
 
-fn connect(port_name: &str, host: Arc<dyn Host>, log: bool) -> Option<Connection> {
-    let mapping = mappings().into_iter().find(|m| m.matches(port_name))?;
+fn connect(
+    port_name: &str,
+    mapping: Box<dyn Mapping>,
+    host: Arc<dyn Host>,
+    log: bool,
+) -> Option<Connection> {
     let mapping = Arc::new(Mutex::new(mapping));
     let held = Arc::new(Mutex::new(HeldControls::default()));
 
