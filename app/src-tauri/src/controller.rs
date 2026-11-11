@@ -100,11 +100,23 @@ pub fn start(app: &AppHandle, engine: Arc<Mutex<EngineHandle>>, shared: Arc<Shar
         shared,
         app: app.clone(),
     });
-    app.manage(ControllerService::start(host));
+    // Mixxx mapping files dropped in here are picked up at launch, ahead
+    // of any from a Mixxx install.
+    let dirs = app
+        .path()
+        .app_data_dir()
+        .map(|d| d.join("controllers"))
+        .into_iter()
+        .inspect(|d| {
+            let _ = std::fs::create_dir_all(d);
+        })
+        .collect();
+    app.manage(ControllerService::start_with(host, dirs));
 }
 
-/// The connected controller's name, or null.
+/// The connected controllers' names, or null if there are none.
 #[tauri::command]
 pub fn controller_name(service: tauri::State<'_, ControllerService>) -> Option<String> {
-    service.connected()
+    let names = service.connected();
+    (!names.is_empty()).then(|| names.join(", "))
 }
