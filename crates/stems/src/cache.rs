@@ -123,6 +123,7 @@ pub fn clear(dir: &Path) -> io::Result<()> {
 /// Removes the least recently used entries until the cache fits in `limit`
 /// bytes, keeping `keep` (the entry just written).
 pub fn trim(dir: &Path, limit: u64, keep: Option<&Path>) -> io::Result<()> {
+    remove_stale_parts(dir);
     let mut all = entries(dir);
     let mut total: u64 = all.iter().map(|e| e.1).sum();
     all.sort_by_key(|e| e.2);
@@ -137,6 +138,25 @@ pub fn trim(dir: &Path, limit: u64, keep: Option<&Path>) -> io::Result<()> {
         total -= len;
     }
     Ok(())
+}
+
+/// Deletes half-written entries left by a crash or quit mid-save. They're
+/// invisible to the size limit, so they would otherwise pile up. Only old
+/// ones go, so a save running right now keeps its file.
+fn remove_stale_parts(dir: &Path) {
+    let Ok(rd) = fs::read_dir(dir) else { return };
+    let stale = |m: &fs::Metadata| {
+        m.modified()
+            .ok()
+            .and_then(|t| t.elapsed().ok())
+            .is_some_and(|age| age > std::time::Duration::from_secs(600))
+    };
+    for e in rd.flatten() {
+        let path = e.path();
+        if path.extension().is_some_and(|x| x == "part") && e.metadata().is_ok_and(|m| stale(&m)) {
+            let _ = fs::remove_file(path);
+        }
+    }
 }
 
 fn entries(dir: &Path) -> Vec<(PathBuf, u64, SystemTime)> {
