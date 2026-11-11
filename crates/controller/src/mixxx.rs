@@ -1249,7 +1249,7 @@ mod tests {
                 clean += 1;
             } else {
                 println!("ERRORS      {} ({} distinct)", p.name, errors.len());
-                for e in errors.iter().take(20) {
+                for e in errors.iter().take(3) {
                     println!("              {e}");
                 }
             }
@@ -1327,7 +1327,7 @@ mod tests {
                 println!("OK          {} ({reports} reports out)", p.name);
             } else {
                 println!("ERRORS      {} ({} distinct)", p.name, errors.len());
-                for e in errors.iter().take(20) {
+                for e in errors.iter().take(3) {
                     println!("              {e}");
                 }
             }
