@@ -136,26 +136,28 @@ A free, open-source DJ app that is fast, modern and uncluttered. No paywalled
   LEVEL/DEPTH the level, and ON/OFF switches it, lit while on (SHIFT +
   ON/OFF turns every effect off). Moving the lever takes the effect with it
   to the new deck.
-- **Other controllers (early): Mixxx mappings.** oss-dj reads Mixxx's
-  controller mapping files (`*.midi.xml`) and connects a controller whose
-  name matches one, alongside any others plugged in. It finds them in a
-  Mixxx install, Mixxx's user folder, the app's own `controllers` folder
-  (in its data folder) or folders listed in `OSS_DJ_MAPPINGS`. Direct
-  bindings and LEDs work for about 68% of the controls across Mixxx's 144
-  MIDI mappings (decks 3 and 4, and Mixxx-only features, are left out).
-  The mappings' JavaScript runs too, in an embedded engine with Mixxx's
-  script API (controls, connections, timers, jog scratching, MIDI out);
-  all 132 scripted mappings load, and each script call has a time and
-  memory limit so a broken mapping can't hang the app. Mixxx's own FLX4
-  mapping drives the decks the same way the built-in one does. Not yet
-  tested on hardware beyond the FLX4. `dj mappings` lists what was found
-  and how much of each works.
+- **Other controllers (early): Mixxx mappings, built in.** oss-dj ships
+  every controller mapping from Mixxx 2.5.6 (in
+  `crates/controller/mappings`, GPL-2.0-or-later), so a controller Mixxx
+  supports connects when it's plugged in, alongside any others, with no
+  Mixxx install needed. Mapping files in the app's own `controllers`
+  folder (in its data folder), folders listed in `OSS_DJ_MAPPINGS` and
+  Mixxx's user folder come first, so a mapping you've changed wins.
+  Direct bindings and LEDs work for about 68% of the controls across the
+  142 MIDI mappings (decks 3 and 4, and Mixxx-only features, are left
+  out). The mappings' JavaScript runs too, in an embedded engine with
+  Mixxx's script API (controls, connections, timers, jog scratching, MIDI
+  out); all 130 scripted mappings load, and each script call has a time
+  and memory limit so a broken mapping can't hang the app. Mixxx's own
+  FLX4 mapping drives the decks the same way the built-in one does. Not
+  yet tested on hardware beyond the FLX4. `dj mappings` lists what was
+  found and how much of each works.
 - **USB HID controllers: Mixxx HID mappings.** Controllers that speak
   HID rather than MIDI (Native Instruments' Traktor Kontrol S2, S3, S4,
   F1, Z1 and MX2, Pioneer CDJs in HID mode, EKS Otus) connect through
   Mixxx's `*.hid.xml` mappings, whose scripts do all the work: reports
   from the device go to the script and the reports it sends light the
-  controller up. All 17 scripted HID mappings load; none has been tried on
+  controller up. All 16 scripted HID mappings load; none has been tried on
   real hardware yet. Mappings that don't name their USB ids (the older
   Hercules consoles) aren't connected automatically, and game controllers
   are left alone. On Linux, opening a HID device needs a udev rule giving
