@@ -57,6 +57,10 @@ async function createTauriBackend() {
     stopRecording: () => invoke('stop_recording'),
     /** Stops waiting for a disconnected audio device and uses the system default. */
     useDefaultOutput: () => invoke('use_default_output'),
+    /** Output devices plugged in, and the saved choice (null for automatic). @returns {Promise<{ devices: string[], choice: string | null }>} */
+    audioOutputs: () => invoke('audio_outputs'),
+    /** Plays the master through `device` (null for automatic) and remembers it. @returns {Promise<string>} the device now playing */
+    setAudioOutput: (device) => invoke('set_audio_output', { device }),
     /** Puts a file in a sampler slot. @returns {Promise<number>} its length in seconds */
     loadSample: (slot, path) => invoke('load_sample', { slot, path }),
     /** @returns {Promise<TrackInfo>} */

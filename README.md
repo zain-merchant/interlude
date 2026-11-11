@@ -113,7 +113,9 @@ A free, open-source DJ app that is fast, modern and uncluttered. No paywalled
 - **Safety:** loading onto a playing deck is blocked.
 - **Controller: Pioneer DDJ-FLX4.** Plug it in (before or after starting the
   app) and it connects by itself; audio goes through its sound card, with
-  headphones on its headphone jack. Mapped: play, cue, sync (SHIFT + SYNC
+  headphones on its headphone jack. To keep the controller for control but
+  hear the master from the laptop's speakers (or any other sound card), pick
+  that device in Settings > Audio; the choice is remembered. Mapped: play, cue, sync (SHIFT + SYNC
   changes pitch range), pitch fader (picks up the current rate after SYNC
   rather than jumping), jog wheels (top: audible vinyl-style scratching,
   forwards and backwards; outer ring: nudge while playing, audible scrub
