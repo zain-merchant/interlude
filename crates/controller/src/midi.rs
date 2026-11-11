@@ -14,6 +14,7 @@ use std::time::{Duration, Instant};
 
 use midir::{MidiInput, MidiInputConnection, MidiOutput, MidiOutputConnection};
 
+use crate::learn::{Detector, Learned};
 use crate::{Action, Catalog, HeldControls, Mapping, Source, State};
 
 const CLIENT: &str = "oss-dj";
@@ -28,12 +29,26 @@ pub trait Host: Send + Sync + 'static {
     fn act(&self, action: Action);
 }
 
+/// A connected controller and the mapping driving it.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Connected {
+    pub port: String,
+    pub mapping: String,
+    /// The mapping file, for Mixxx mappings.
+    pub file: Option<PathBuf>,
+}
+
 /// Keeps a supported controller connected while it's plugged in. Stops when
 /// dropped.
 pub struct ControllerService {
     stop: Arc<AtomicBool>,
-    connected: Arc<Mutex<Vec<String>>>,
+    /// Set to load the mappings again and reconnect.
+    reload: Arc<AtomicBool>,
+    connected: Arc<Mutex<Vec<Connected>>>,
     thread: Mutex<Option<JoinHandle<()>>>,
+    /// MIDI learn: inputs opened on every port, and what they've seen.
+    learning: Mutex<Option<Vec<MidiInputConnection<()>>>>,
+    detector: Arc<Mutex<Detector>>,
 }
 
 impl ControllerService {
@@ -48,30 +63,64 @@ impl ControllerService {
     /// come before the default folders.
     pub fn start_with(host: Arc<dyn Host>, dirs: Vec<PathBuf>) -> Self {
         let stop = Arc::new(AtomicBool::new(false));
+        let reload = Arc::new(AtomicBool::new(false));
         let connected = Arc::new(Mutex::new(vec![]));
         let log = std::env::var_os("OSS_DJ_MIDI_LOG").is_some();
         let thread = {
-            let (stop, connected) = (stop.clone(), connected.clone());
+            let (stop, reload, connected) = (stop.clone(), reload.clone(), connected.clone());
             std::thread::Builder::new()
                 .name("controller".into())
                 .spawn(move || {
-                    // Parsing mapping files takes a moment; do it here, off
-                    // the app's startup path, and only once.
                     let mut all = dirs;
                     all.extend(Catalog::default_dirs());
-                    let catalog = Catalog::load(&all);
-                    let mixxx = catalog.entries().len() - Catalog::built_in().entries().len();
-                    if mixxx > 0 {
-                        eprintln!("controller mappings: {mixxx} from Mixxx");
-                    }
-                    run(&catalog, host, stop, connected, log)
+                    run(&all, host, stop, reload, connected, log)
                 })
                 .ok()
         };
         Self {
             stop,
+            reload,
             connected,
             thread: Mutex::new(thread),
+            learning: Mutex::new(None),
+            detector: Arc::new(Mutex::new(Detector::new())),
+        }
+    }
+
+    /// Loads the mapping files again and reconnects every controller, e.g.
+    /// after a mapping was saved.
+    pub fn reload(&self) {
+        self.reload.store(true, Ordering::Relaxed);
+    }
+
+    /// Starts MIDI learn: listens to every MIDI input, mapped or not, for
+    /// the next control moved. Starting again forgets what was half seen.
+    pub fn learn_start(&self) {
+        if let Ok(mut d) = self.detector.lock() {
+            d.clear();
+        }
+        let Ok(mut learning) = self.learning.lock() else {
+            return;
+        };
+        if learning.is_none() {
+            let detector = self.detector.clone();
+            *learning = Some(monitor_all(move |port, msg| {
+                if let Ok(mut d) = detector.lock() {
+                    d.feed(port, msg, Instant::now());
+                }
+            }));
+        }
+    }
+
+    /// The control moved since [`Self::learn_start`], once it's known.
+    pub fn learn_poll(&self) -> Option<Learned> {
+        self.detector.lock().ok()?.poll(Instant::now())
+    }
+
+    /// Stops listening for MIDI learn.
+    pub fn learn_stop(&self) {
+        if let Ok(mut l) = self.learning.lock() {
+            *l = None;
         }
     }
 
@@ -85,8 +134,8 @@ impl ControllerService {
         }
     }
 
-    /// The connected controllers' port names.
-    pub fn connected(&self) -> Vec<String> {
+    /// The connected controllers and their mappings.
+    pub fn connected(&self) -> Vec<Connected> {
         self.connected.lock().map(|c| c.clone()).unwrap_or_default()
     }
 }
@@ -104,6 +153,7 @@ struct Connection {
     held: Arc<Mutex<HeldControls>>,
     _input: MidiInputConnection<()>,
     output: Option<MidiOutputConnection>,
+    info: Connected,
 }
 
 impl Connection {
@@ -121,19 +171,59 @@ impl Connection {
     }
 }
 
+/// Lets a connection go: releases what it held, runs the mapping's
+/// shutdown and darkens its LEDs.
+fn close(mut c: Connection, host: &dyn Host, state: &State) {
+    c.release_held(host);
+    if let (Some(out), Ok(mut m)) = (&mut c.output, c.mapping.lock()) {
+        // A script's shutdown sends its own goodbye; then darken the LEDs
+        // the mapping drives directly.
+        m.shutdown(state);
+        for msg in m.leds(state) {
+            let _ = out.send(&msg);
+        }
+        m.reset_leds();
+        for msg in m.leds(&State::default()) {
+            let _ = out.send(&msg);
+        }
+    }
+}
+
+/// Parses the mapping files. This takes a moment, so it runs on the
+/// controller thread, off the app's startup path.
+fn load_catalog(dirs: &[PathBuf]) -> Catalog {
+    let catalog = Catalog::load(dirs);
+    let mixxx = catalog.entries().len() - Catalog::built_in().entries().len();
+    if mixxx > 0 {
+        eprintln!("controller mappings: {mixxx} Mixxx mapping files");
+    }
+    catalog
+}
+
 fn run(
-    catalog: &Catalog,
+    dirs: &[PathBuf],
     host: Arc<dyn Host>,
     stop: Arc<AtomicBool>,
-    connected: Arc<Mutex<Vec<String>>>,
+    reload: Arc<AtomicBool>,
+    connected: Arc<Mutex<Vec<Connected>>>,
     log: bool,
 ) {
+    let mut catalog = load_catalog(dirs);
     let mut conns: Vec<Connection> = vec![];
     // Ports a mapping matched but that couldn't be opened, so a port
     // that's busy elsewhere isn't retried (and reported) every scan.
     let mut failed: Vec<String> = vec![];
     let mut last_scan: Option<Instant> = None;
     while !stop.load(Ordering::Relaxed) {
+        if reload.swap(false, Ordering::Relaxed) {
+            catalog = load_catalog(dirs);
+            let state = host.state();
+            for c in conns.drain(..) {
+                close(c, host.as_ref(), &state);
+            }
+            failed.clear();
+            last_scan = None;
+        }
         if last_scan.is_none_or(|t| t.elapsed() >= SCAN_EVERY) {
             last_scan = Some(Instant::now());
             let ports = input_port_names();
@@ -154,15 +244,23 @@ fn run(
                     continue;
                 };
                 match connect(name, entry.create(), host.clone(), log) {
-                    Some(c) => {
+                    Some(mut c) => {
                         eprintln!("controller connected: {name} ({})", describe(entry));
+                        c.info = Connected {
+                            port: name.clone(),
+                            mapping: entry.name.clone(),
+                            file: match &entry.source {
+                                Source::Mixxx(p) => Some(p.clone()),
+                                Source::BuiltIn => None,
+                            },
+                        };
                         conns.push(c);
                     }
                     None => failed.push(name.clone()),
                 }
             }
             if let Ok(mut s) = connected.lock() {
-                *s = conns.iter().map(|c| c.port_name.clone()).collect();
+                *s = conns.iter().map(|c| c.info.clone()).collect();
             }
         }
 
@@ -197,20 +295,8 @@ fn run(
     }
     // Leave the controllers dark rather than showing stale state.
     let state = host.state();
-    for mut c in conns {
-        c.release_held(host.as_ref());
-        if let (Some(out), Ok(mut m)) = (&mut c.output, c.mapping.lock()) {
-            // A script's shutdown sends its own goodbye; then darken the
-            // LEDs the mapping drives directly.
-            m.shutdown(&state);
-            for msg in m.leds(&state) {
-                let _ = out.send(&msg);
-            }
-            m.reset_leds();
-            for msg in m.leds(&State::default()) {
-                let _ = out.send(&msg);
-            }
-        }
+    for c in conns {
+        close(c, host.as_ref(), &state);
     }
 }
 
@@ -340,6 +426,11 @@ fn connect(
         held,
         _input: input_conn,
         output,
+        info: Connected {
+            port: port_name.to_owned(),
+            mapping: String::new(),
+            file: None,
+        },
     })
 }
 
