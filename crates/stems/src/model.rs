@@ -10,6 +10,7 @@
 
 use std::path::Path;
 
+use ort::session::builder::AutoDevicePolicy;
 use ort::session::Session;
 use ort::value::Tensor;
 
@@ -50,7 +51,11 @@ impl Model {
         // fast while leaving the rest for the audio thread and the UI.
         // Without the arena and memory pattern, memory stays flat from one
         // segment to the next (about 0.5 GB less at peak) for under 3% speed.
+        // ort turns on automatic device selection by default, which on macOS
+        // adds Core ML even with only the CPU provider listed, and Core ML
+        // can't compile this model. PreferCPU keeps it off.
         let session = Session::builder(&env)?
+            .with_auto_device(AutoDevicePolicy::PreferCPU)?
             .with_intra_threads(THREADS)?
             .with_memory_pattern(false)?
             .with_execution_providers([ort::ep::CPU::default()
