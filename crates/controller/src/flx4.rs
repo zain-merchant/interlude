@@ -14,7 +14,9 @@
 //! mode the top pads mute and unmute vocals, melody, bass and drums, and
 //! the bottom pads play one of them alone. SHIFT + a beat jump pad jumps
 //! 16 times as far (4 to 32 bars), and SHIFT + PLAY turns slip mode on and
-//! off; the FLX4 has no slip button of its own.
+//! off; the FLX4 has no slip button of its own. The pad mode buttons light
+//! for the mode each deck is in (the controller doesn't light them itself)
+//! and tell the app, which shows the matching controls.
 //!
 //! The CFX knobs drive each channel's filter. The beat FX section drives the
 //! beat FX unit of the deck the channel select lever points at, as rekordbox
@@ -29,7 +31,7 @@ use dj_engine::dsp::{EQ_KILL_DB, EQ_MAX_DB};
 use dj_engine::fx::FX_BEATS;
 use dj_engine::{Command, DeckId, EqBand, FxKind, ALL_STEMS, HOT_CUES, NUM_DECKS, STEMS};
 
-use crate::{Action, Mapping, State};
+use crate::{Action, Mapping, PadMode, State};
 
 const NOTE_ON: u8 = 0x90;
 const CC: u8 = 0xB0;
@@ -67,6 +69,15 @@ const PAD_STEMS: u8 = 0x10;
 const PAD_BEAT_JUMP: u8 = 0x20;
 const PAD_SAMPLER: u8 = 0x30;
 const PAD_BEAT_LOOP: u8 = 0x60;
+/// Pad mode buttons (deck notes), as (button, SHIFT + button): HOT CUE /
+/// KEYBOARD, PAD FX1 / PAD FX2, BEAT JUMP / BEAT LOOP, SAMPLER / KEY SHIFT.
+/// Each pair shares one LED.
+const PAD_MODE_BUTTONS: [((u8, PadMode), (u8, PadMode)); 4] = [
+    ((0x1B, PadMode::HotCue), (0x69, PadMode::Keyboard)),
+    ((0x1E, PadMode::PadFx1), (0x6B, PadMode::PadFx2)),
+    ((0x20, PadMode::BeatJump), (0x6D, PadMode::BeatLoop)),
+    ((0x22, PadMode::Sampler), (0x6F, PadMode::KeyShift)),
+];
 /// Loop length of each pad in beat loop mode, in beats.
 const PAD_LOOP_BEATS: [f64; 8] = [0.25, 0.5, 1.0, 2.0, 4.0, 8.0, 16.0, 32.0];
 /// Jump of each pad in beat jump mode, in beats: back on the left pad of
@@ -130,7 +141,7 @@ const PITCH_RANGES: [f64; 3] = [0.08, 0.16, 0.5];
 /// over after the rate changed elsewhere (SYNC, the app's own fader).
 const PICKUP_TOLERANCE: f64 = 0.002;
 
-#[derive(Debug, Default, Clone, Copy)]
+#[derive(Debug, Clone, Copy)]
 struct DeckState {
     shift: bool,
     range_index: usize,
@@ -139,6 +150,21 @@ struct DeckState {
     /// Rate this mapping last sent; if the engine's differs, the fader
     /// has to pick it up again before it takes control.
     sent_rate: Option<f64>,
+    /// The pad mode the controller is in. It starts in hot cue mode, and
+    /// pad presses correct this if it was left in another.
+    pad_mode: PadMode,
+}
+
+impl Default for DeckState {
+    fn default() -> Self {
+        Self {
+            shift: false,
+            range_index: 0,
+            fader_rate: None,
+            sent_rate: None,
+            pad_mode: PadMode::HotCue,
+        }
+    }
 }
 
 /// The beat FX section: where the channel select lever points.
@@ -240,6 +266,17 @@ impl Flx4 {
 
     fn deck_note(&mut self, d: usize, note: u8, pressed: bool, state: &State) -> Vec<Action> {
         let deck = deck_id(d);
+        if let Some(mode) = PAD_MODE_BUTTONS
+            .iter()
+            .flat_map(|&(a, b)| [a, b])
+            .find_map(|(n, m)| (n == note).then_some(m))
+        {
+            if !pressed {
+                return vec![];
+            }
+            self.decks[d].pad_mode = mode;
+            return vec![Action::PadMode { deck, mode }];
+        }
         let cmd = match (note, pressed) {
             (SHIFT, p) => {
                 self.decks[d].shift = p;
@@ -553,7 +590,14 @@ impl Mapping for Flx4 {
             d if d < NUM_DECKS && kind == CC => self.deck_cc(d, num, value, state),
             c if kind == NOTE_ON && (PAD_CH..PAD_CH + 2 * NUM_DECKS as u8).contains(&(c as u8)) => {
                 let p = c as u8 - PAD_CH;
-                Self::pad((p / 2) as usize, p % 2 == 1, num, value > 0, state)
+                let d = (p / 2) as usize;
+                // The note range says which mode the pads are in, which
+                // keeps the mode buttons' LEDs right if the controller was
+                // already in another mode when it connected.
+                if let Some(mode) = pad_mode_of(num) {
+                    self.decks[d].pad_mode = mode;
+                }
+                Self::pad(d, p % 2 == 1, num, value > 0, state)
             }
             _ if ch == GLOBAL_CH => self.global(kind, num, value),
             _ if ch == FX_CH || ch == FX_CH + 1 => self.fx(kind, num, value, state),
@@ -563,6 +607,17 @@ impl Mapping for Flx4 {
 
     fn leds(&mut self, state: &State) -> Vec<Vec<u8>> {
         let mut now = all_leds(state);
+        // Each pad mode button lights while its mode (or its SHIFT mode)
+        // is on.
+        for (d, s) in self.decks.iter().enumerate() {
+            for &((note, mode), (shift_note, shift_mode)) in &PAD_MODE_BUTTONS {
+                now.push(match s.pad_mode {
+                    m if m == mode => (NOTE_ON | d as u8, note, true),
+                    m if m == shift_mode => (NOTE_ON | d as u8, shift_note, true),
+                    _ => (NOTE_ON | d as u8, note, false),
+                });
+            }
+        }
         // The FX ON/OFF button shows the effect it switches.
         let on = state.decks[self.fx.primary()].fx.on;
         for note in [FX_ON, FX_ON_SHIFT] {
@@ -632,6 +687,18 @@ fn all_leds(state: &State) -> Vec<Led> {
         }
     }
     out
+}
+
+/// The mode a pad note belongs to, for the modes this mapping knows.
+fn pad_mode_of(note: u8) -> Option<PadMode> {
+    match note & !0x07 {
+        PAD_HOT_CUE => Some(PadMode::HotCue),
+        PAD_STEMS => Some(PadMode::PadFx1),
+        PAD_BEAT_JUMP => Some(PadMode::BeatJump),
+        PAD_SAMPLER => Some(PadMode::Sampler),
+        PAD_BEAT_LOOP => Some(PadMode::BeatLoop),
+        _ => None,
+    }
 }
 
 fn engine(cmd: Command) -> Action {
@@ -1272,6 +1339,55 @@ mod tests {
             .iter()
             .all(|c| matches!(c, Command::SetFxOn { on: false, .. })));
         assert_eq!(c.len(), 2);
+    }
+
+    #[test]
+    fn pad_mode_buttons_light_and_tell_the_app() {
+        let mut m = Flx4::new();
+        let s = st();
+        // Hot cue mode to start with.
+        let lit = |leds: &[Vec<u8>], ch: u8, note: u8| leds.contains(&vec![0x90 | ch, note, 0x7F]);
+        assert!(lit(&m.leds(&s), 0, 0x1B));
+        // PAD FX on deck 2.
+        let a = m.handle(&[0x91, 0x1E, 0x7F], &s);
+        assert!(matches!(
+            a[..],
+            [Action::PadMode {
+                deck: DeckId::B,
+                mode: PadMode::PadFx1
+            }]
+        ));
+        assert!(m.handle(&[0x91, 0x1E, 0], &s).is_empty());
+        assert_eq!(
+            m.leds(&s),
+            vec![vec![0x91, 0x1B, 0], vec![0x91, 0x1E, 0x7F]]
+        );
+        // SHIFT + BEAT JUMP is beat loop, lit on the BEAT JUMP button.
+        let a = m.handle(&[0x90, 0x6D, 0x7F], &s);
+        assert!(matches!(
+            a[..],
+            [Action::PadMode {
+                deck: DeckId::A,
+                mode: PadMode::BeatLoop
+            }]
+        ));
+        assert_eq!(
+            m.leds(&s),
+            vec![vec![0x90, 0x1B, 0], vec![0x90, 0x6D, 0x7F]]
+        );
+    }
+
+    #[test]
+    fn pads_correct_the_pad_mode() {
+        let mut m = Flx4::new();
+        let s = st();
+        m.leds(&s);
+        // A sampler pad on deck 1: the controller was in sampler mode.
+        m.handle(&[0x97, 0x32, 0x7F], &s);
+        assert_eq!(
+            m.leds(&s),
+            vec![vec![0x90, 0x1B, 0], vec![0x90, 0x22, 0x7F]]
+        );
     }
 
     #[test]

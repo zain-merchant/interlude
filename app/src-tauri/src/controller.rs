@@ -3,7 +3,7 @@
 use std::sync::{Arc, Mutex};
 
 use dj_controller::midi::{ControllerService, Host};
-use dj_controller::{Action, State};
+use dj_controller::{Action, PadMode, State};
 use dj_engine::{Command, EngineHandle, SharedState, NUM_DECKS};
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager};
@@ -25,6 +25,8 @@ enum UiEvent {
     Load { deck: usize },
     /// Load the selected library track into sampler slot `slot`.
     LoadSample { slot: usize },
+    /// A pad mode button was pressed on `deck`.
+    PadMode { deck: usize, mode: &'static str },
     /// A stem pad was pressed on a deck whose stems can't be used yet.
     StemsUnavailable { deck: usize },
 }
@@ -68,6 +70,25 @@ impl Host for AppHost {
             }
             Action::LoadSample(slot) => {
                 let _ = self.app.emit("controller", UiEvent::LoadSample { slot });
+            }
+            Action::PadMode { deck, mode } => {
+                let mode = match mode {
+                    PadMode::HotCue => "hotCue",
+                    PadMode::BeatLoop => "beatLoop",
+                    PadMode::BeatJump => "beatJump",
+                    PadMode::Sampler => "sampler",
+                    PadMode::PadFx1 => "padFx1",
+                    PadMode::PadFx2 => "padFx2",
+                    PadMode::Keyboard => "keyboard",
+                    PadMode::KeyShift => "keyShift",
+                };
+                let _ = self.app.emit(
+                    "controller",
+                    UiEvent::PadMode {
+                        deck: deck.index(),
+                        mode,
+                    },
+                );
             }
         }
     }
