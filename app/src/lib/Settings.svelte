@@ -13,7 +13,7 @@
    * Settings sit over the library, never over the decks, and don't block
    * them: performance keys keep working while this is open, except while a
    * shortcut is being recorded.
-   * @type {{ page?: 'keyboard' | 'decks' | 'display' | 'library' | 'stems', onclose: () => void, onimport?: () => void }}
+   * @type {{ page?: 'keyboard' | 'decks' | 'audio' | 'display' | 'library' | 'stems', onclose: () => void, onimport?: () => void }}
    */
   let { page = $bindable('keyboard'), onclose, onimport } = $props();
 
@@ -183,6 +183,39 @@
       stemsError = String(e);
     }
   }
+  // Audio: which sound card the master plays through.
+  /** @type {{ devices: string[], choice: string | null } | null} */
+  let outputs = $state(null);
+  let outputError = $state('');
+  let switching = $state(false);
+  async function refreshOutputs() {
+    if (!backend.audioOutputs) return;
+    try {
+      outputs = await backend.audioOutputs();
+    } catch (e) {
+      outputError = String(e);
+    }
+  }
+  $effect(() => {
+    if (page !== 'audio') return;
+    refreshOutputs();
+    // Pick up a device plugged in while the page is open.
+    const timer = setInterval(refreshOutputs, 2000);
+    return () => clearInterval(timer);
+  });
+  async function pickOutput(value) {
+    const device = value === '' ? null : value;
+    outputError = '';
+    switching = true;
+    try {
+      const playing = await backend.setAudioOutput(device);
+      announce(`Playing through ${playing}`);
+    } catch (e) {
+      outputError = String(e);
+    }
+    switching = false;
+    refreshOutputs();
+  }
   const mb = (b) => `${Math.round(b / (1024 * 1024))} MB`;
   const gb = (b) => (b >= 1024 ** 3 ? `${(b / 1024 ** 3).toFixed(1)} GB` : mb(b));
 </script>
@@ -195,6 +228,8 @@
       onclick={() => (page = 'keyboard')}>Keyboard</button>
     <button class="item" class:on={page === 'decks'} aria-current={page === 'decks' ? 'page' : undefined}
       onclick={() => (page = 'decks')}>Decks</button>
+    <button class="item" class:on={page === 'audio'} aria-current={page === 'audio' ? 'page' : undefined}
+      onclick={() => (page = 'audio')}>Audio</button>
     <button class="item" class:on={page === 'display'} aria-current={page === 'display' ? 'page' : undefined}
       onclick={() => (page = 'display')}>Display</button>
     <button class="item" class:on={page === 'library'} aria-current={page === 'library' ? 'page' : undefined}
@@ -205,7 +240,7 @@
 
   <div class="main">
     <div class="bar">
-      <h2>{{ keyboard: 'Keyboard', decks: 'Decks', library: 'Library', stems: 'Stems' }[page] ?? 'Display'}</h2>
+      <h2>{{ keyboard: 'Keyboard', decks: 'Decks', audio: 'Audio', library: 'Library', stems: 'Stems' }[page] ?? 'Display'}</h2>
       {#if page === 'keyboard'}
         <p>Click a shortcut, then press the new key. Backspace removes it, Esc cancels.</p>
         <button class="btn sm" onclick={resetAll} disabled={!Object.keys(keymap.overrides).length}>Reset all</button>
@@ -298,6 +333,33 @@
             <span>Sync when a deck starts</span>
           </label>
           <p>Starting a deck with play, cue or a hot cue while the other deck is playing brings it in at that deck's tempo and on its beat, as if you'd pressed Sync.</p>
+        </section>
+      {:else if page === 'audio'}
+        <section class="display">
+          <h3>Output</h3>
+          <p>Where the master plays. Automatic uses your controller's sound card when it's plugged in, so its headphone output works, and this computer's speakers otherwise. Pick a device to play through it even with the controller connected; the controller still works for everything else.</p>
+          {#if outputs}
+            <div class="size">
+              <select class="btn sm" aria-label="Audio output" value={outputs.choice ?? ''} disabled={switching}
+                onchange={(e) => pickOutput(e.currentTarget.value)}>
+                <option value="">Automatic</option>
+                {#each outputs.devices as d}<option value={d}>{d}</option>{/each}
+                {#if outputs.choice && !outputs.devices.includes(outputs.choice)}
+                  <option value={outputs.choice}>{outputs.choice} (not connected)</option>
+                {/if}
+              </select>
+            </div>
+            {#if outputs.choice && !outputs.devices.includes(outputs.choice)}
+              <p>{outputs.choice} isn't connected, so the app is playing through the automatic choice for now.</p>
+            {/if}
+          {:else}
+            <p>{outputError || 'Loading…'}</p>
+          {/if}
+          {#if outputs && outputError}<p class="err" role="alert">{outputError}</p>{/if}
+        </section>
+        <section class="display">
+          <h3>Headphones</h3>
+          <p>Headphone cue comes out of channels 3 and 4 of the output, which DJ controllers have and laptop speakers don't. Playing through the speakers, the controller's headphone socket is silent.</p>
         </section>
       {:else if page === 'library'}
         <section class="display">

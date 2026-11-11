@@ -158,6 +158,8 @@ export function createMockBackend() {
   // browser: run __mockAudio.lose() and __mockAudio.restore() in the console.
   /** @type {any} */
   let audio = { state: 'connected', device: 'Browser preview', sampleRate: 48000 };
+  /** @type {string | null} */
+  let outputChoice = null;
   globalThis.__mockAudio = {
     lose: () => (audio = { state: 'lost', device: 'DDJ-FLX4', fallback: 'MacBook Pro Speakers' }),
     restore: () => (audio = { state: 'connected', device: 'DDJ-FLX4', sampleRate: 48000 }),
@@ -445,6 +447,12 @@ export function createMockBackend() {
     },
     useDefaultOutput: async () => {
       if (audio.state === 'lost') audio = { state: 'connected', device: audio.fallback, sampleRate: 48000 };
+    },
+    audioOutputs: async () => ({ devices: ['DDJ-FLX4', 'MacBook Pro Speakers'], choice: outputChoice }),
+    setAudioOutput: async (device) => {
+      outputChoice = device;
+      audio = { state: 'connected', device: device ?? 'DDJ-FLX4', sampleRate: 48000 };
+      return audio.device;
     },
     removeFolder: async (path) => {
       folders = folders.filter((f) => f !== path);

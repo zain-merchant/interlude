@@ -9,6 +9,10 @@
 //! from where it left off. [`AudioOutput::status`] says which of the two is
 //! happening, and [`AudioOutput::use_default`] gives up waiting and moves to
 //! the system's default output instead.
+//!
+//! [`AudioOutput::switch`] moves the running engine to another device (the
+//! laptop's speakers while a controller is plugged in, say) without
+//! stopping the decks; [`output_devices`] lists what there is to pick from.
 
 use std::sync::atomic::{AtomicU32, AtomicU64, AtomicU8, Ordering};
 use std::sync::{mpsc, Arc, Mutex};
@@ -52,8 +56,66 @@ pub enum OutputStatus {
     },
 }
 
+/// Which device the output should play through.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum OutputTarget {
+    /// The first device whose name contains one of the preferred names
+    /// given at start (a DJ controller's sound card), else the system
+    /// default.
+    Auto,
+    /// The system default output.
+    Default,
+    /// The device with exactly this name, as [`output_devices`] lists it.
+    Named(String),
+}
+
+type Reply = mpsc::Sender<Result<String, String>>;
+
 enum Msg {
-    UseDefault,
+    /// Play through `target`. The reply, if any, gets the device's name, or
+    /// why it couldn't be opened (the output then stays where it was).
+    Use(OutputTarget, Option<Reply>),
+}
+
+/// The names of the output devices on the system, as
+/// [`OutputTarget::Named`] takes them.
+pub fn output_devices() -> Vec<String> {
+    let host = cpal::default_host();
+    let mut names: Vec<String> = host
+        .output_devices()
+        .map(|all| all.map(|d| label(&d)).collect())
+        .unwrap_or_default();
+    let mut seen = std::collections::HashSet::new();
+    names.retain(|n| seen.insert(n.clone()));
+    names
+}
+
+/// Which of `names` `target` means: `Some(i)` for a device, `None` for the
+/// system default (or nothing matching).
+fn pick(names: &[String], target: &OutputTarget, preferred: &[String]) -> Option<usize> {
+    match target {
+        OutputTarget::Default => None,
+        OutputTarget::Named(n) => names.iter().position(|d| d == n),
+        OutputTarget::Auto => names.iter().position(|d| {
+            let d = d.to_lowercase();
+            preferred.iter().any(|p| d.contains(p))
+        }),
+    }
+}
+
+/// The device `target` means right now. A named device that isn't plugged
+/// in is `None`; `Auto` falls back to the system default.
+fn resolve(host: &cpal::Host, target: &OutputTarget, preferred: &[String]) -> Option<cpal::Device> {
+    let devices: Vec<cpal::Device> = host
+        .output_devices()
+        .map(|all| all.collect())
+        .unwrap_or_default();
+    let names: Vec<String> = devices.iter().map(label).collect();
+    match (pick(&names, target, preferred), target) {
+        (Some(i), _) => devices.into_iter().nth(i),
+        (None, OutputTarget::Named(_)) => None,
+        (None, _) => default_device(host),
+    }
 }
 
 pub struct AudioOutput {
@@ -79,11 +141,25 @@ impl AudioOutput {
     }
 
     /// Stops waiting for a lost device and plays through the system default
-    /// output instead. Does nothing while connected.
+    /// output instead.
     pub fn use_default(&self) {
         if let Some(tx) = &self.msgs {
-            let _ = tx.send(Msg::UseDefault);
+            let _ = tx.send(Msg::Use(OutputTarget::Default, None));
         }
+    }
+
+    /// Moves the output to `target` and waits for it to start. The decks
+    /// carry on where they were. On failure the output stays on the device
+    /// it was using (or keeps waiting for it), and the error says why.
+    /// Returns the name of the device now playing.
+    pub fn switch(&self, target: OutputTarget) -> Result<String, String> {
+        let tx = self.msgs.as_ref().ok_or("audio output stopped")?;
+        let (reply, answer) = mpsc::channel();
+        tx.send(Msg::Use(target, Some(reply)))
+            .map_err(|_| "audio output stopped")?;
+        answer
+            .recv_timeout(Duration::from_secs(10))
+            .map_err(|_| "the audio device didn't answer".to_string())?
     }
 }
 
@@ -335,6 +411,16 @@ fn open_with(
 /// contains one of `preferred` (case-insensitive), such as a DJ
 /// controller's built-in sound card, when one is plugged in.
 pub fn start_preferring(preferred: &[&str]) -> Result<(AudioOutput, EngineHandle), OutputError> {
+    start_with(OutputTarget::Auto, preferred)
+}
+
+/// Starts an engine on `target`. A named device that isn't plugged in falls
+/// back to [`OutputTarget::Auto`]. `preferred` is what `Auto` looks for,
+/// now and on later [`AudioOutput::switch`]es.
+pub fn start_with(
+    target: OutputTarget,
+    preferred: &[&str],
+) -> Result<(AudioOutput, EngineHandle), OutputError> {
     let preferred: Vec<String> = preferred.iter().map(|p| p.to_lowercase()).collect();
     let (ready_tx, ready_rx) = mpsc::channel();
     let (msg_tx, msg_rx) = mpsc::channel::<Msg>();
@@ -351,14 +437,8 @@ pub fn start_preferring(preferred: &[&str]) -> Result<(AudioOutput, EngineHandle
         .spawn(move || {
             let host = cpal::default_host();
             let first = (|| {
-                let wanted = host.output_devices().ok().and_then(|mut all| {
-                    all.find(|d| {
-                        let name = label(d).to_lowercase();
-                        preferred.iter().any(|p| name.contains(p))
-                    })
-                });
-                let device = wanted
-                    .or_else(|| default_device(&host))
+                let device = resolve(&host, &target, &preferred)
+                    .or_else(|| resolve(&host, &OutputTarget::Auto, &preferred))
                     .ok_or(OutputError::NoDevice)?;
                 let sample_rate = device
                     .default_output_config()
@@ -382,7 +462,14 @@ pub fn start_preferring(preferred: &[&str]) -> Result<(AudioOutput, EngineHandle
                 sample_rate,
             });
             let _ = ready_tx.send(Ok((handle, live.name.clone(), sample_rate, live.channels)));
-            watch(&host, live, sample_rate, &engine, &stats2, &msg_rx, set);
+            let ctx = Ctx {
+                host: &host,
+                preferred: &preferred,
+                sample_rate,
+                engine: &engine,
+                stats: &stats2,
+            };
+            watch(&ctx, live, &msg_rx, set);
         })
         .map_err(|e| OutputError::Device(e.to_string()))?;
 
@@ -403,26 +490,66 @@ pub fn start_preferring(preferred: &[&str]) -> Result<(AudioOutput, EngineHandle
     ))
 }
 
+/// What the watching thread works with.
+struct Ctx<'a> {
+    host: &'a cpal::Host,
+    preferred: &'a [String],
+    sample_rate: u32,
+    engine: &'a Arc<Mutex<Engine>>,
+    stats: &'a Arc<Stats>,
+}
+
+impl Ctx<'_> {
+    fn open(&self, d: &cpal::Device) -> Result<Live, OutputError> {
+        open(d, self.sample_rate, self.engine, self.stats)
+    }
+
+    fn find(&self, id: &Option<cpal::DeviceId>, name: &str) -> Option<cpal::Device> {
+        self.host.output_devices().ok().and_then(|mut all| {
+            all.find(|d| d.id().ok() == *id || (id.is_none() && label(d) == name))
+        })
+    }
+}
+
+fn answer(reply: Option<Reply>, r: Result<String, String>) {
+    if let Some(tx) = reply {
+        let _ = tx.send(r);
+    }
+}
+
+/// Why the connected stream stopped being watched.
+enum Stop {
+    Lost,
+    Rebuild,
+    Switch(cpal::Device, Option<Reply>),
+}
+
 /// Keeps the output running until the [`AudioOutput`] is dropped:
 /// watches the live stream, and when its device goes away, holds the decks
-/// and waits for it (or for [`Msg::UseDefault`]).
-fn watch(
-    host: &cpal::Host,
-    mut live: Live,
-    sample_rate: u32,
-    engine: &Arc<Mutex<Engine>>,
-    stats: &Arc<Stats>,
-    msgs: &mpsc::Receiver<Msg>,
-    set: impl Fn(OutputStatus),
-) {
+/// and waits for it (or for another device to be picked). Moves to another
+/// device when asked.
+fn watch(ctx: &Ctx, mut live: Live, msgs: &mpsc::Receiver<Msg>, set: impl Fn(OutputStatus)) {
+    let connected = |live: &Live| {
+        set(OutputStatus::Connected {
+            device: live.name.clone(),
+            sample_rate: ctx.sample_rate,
+        })
+    };
     loop {
-        // Connected: watch for an error or a stall.
+        // Connected: watch for an error, a stall or a switch.
         let mut seen = live.callbacks.load(Ordering::Relaxed);
         let mut last = Instant::now();
-        let lost = loop {
+        let stop = loop {
             match msgs.recv_timeout(TICK) {
                 Err(mpsc::RecvTimeoutError::Disconnected) => return,
-                Ok(Msg::UseDefault) | Err(mpsc::RecvTimeoutError::Timeout) => {}
+                Ok(Msg::Use(target, reply)) => match resolve(ctx.host, &target, ctx.preferred) {
+                    Some(d) if d.id().ok().is_some() && d.id().ok() == live.id => {
+                        answer(reply, Ok(live.name.clone()))
+                    }
+                    Some(d) => break Stop::Switch(d, reply),
+                    None => answer(reply, Err("that device isn't connected".into())),
+                },
+                Err(mpsc::RecvTimeoutError::Timeout) => {}
             }
             let n = live.callbacks.load(Ordering::Relaxed);
             if n != seen {
@@ -430,57 +557,86 @@ fn watch(
                 last = Instant::now();
             }
             match live.event.swap(OK, Ordering::Relaxed) {
-                GONE => break true,
-                REBUILD => break false,
-                _ if last.elapsed() > STALL => break true,
+                GONE => break Stop::Lost,
+                REBUILD => break Stop::Rebuild,
+                _ if last.elapsed() > STALL => break Stop::Lost,
                 _ => {}
             }
         };
         let (id, name) = (live.id.clone(), live.name.clone());
+        // Only one stream at a time: the old one goes before the new opens.
         drop(live);
 
-        if !lost {
-            // Same device, new settings (its sample rate changed, say).
-            let found = id.as_ref().and_then(|id| host.device_by_id(id));
-            if let Some(Ok(l)) = found.map(|d| open(&d, sample_rate, engine, stats)) {
-                live = l;
-                continue;
+        match stop {
+            Stop::Switch(d, reply) => match ctx.open(&d) {
+                Ok(l) => {
+                    eprintln!("audio: now playing through {}", l.name);
+                    answer(reply, Ok(l.name.clone()));
+                    live = l;
+                    connected(&live);
+                    continue;
+                }
+                Err(e) => {
+                    let msg = format!("can't play through {}: {e}", label(&d));
+                    eprintln!("audio: {msg}");
+                    answer(reply, Err(msg));
+                    // Back to where it was.
+                    if let Some(Ok(l)) = ctx.find(&id, &name).map(|d| ctx.open(&d)) {
+                        live = l;
+                        continue;
+                    }
+                }
+            },
+            Stop::Rebuild => {
+                // Same device, new settings (its sample rate changed, say).
+                let found = id.as_ref().and_then(|id| ctx.host.device_by_id(id));
+                if let Some(Ok(l)) = found.map(|d| ctx.open(&d)) {
+                    live = l;
+                    continue;
+                }
             }
+            Stop::Lost => {}
         }
 
         // Lost: wait for the device to come back.
         eprintln!("audio device {name} went away; waiting for it to return");
-        let fallback = || default_device(host).map(|d| label(&d));
+        let fallback = || default_device(ctx.host).map(|d| label(&d));
         let mut offered = fallback();
         set(OutputStatus::Lost {
             device: name.clone(),
             fallback: offered.clone(),
         });
-        let mut use_default = false;
+        let mut instead: Option<OutputTarget> = None;
         live = loop {
             // No stream is running, so take the engine here: apply queued
             // commands (fader moves, loads) without advancing any deck, so
             // the queue never fills and every deck stays where it was.
-            if let Ok(mut e) = engine.lock() {
+            if let Ok(mut e) = ctx.engine.lock() {
                 e.process(&mut [], &mut []);
             }
+            let mut reply = None;
             match msgs.recv_timeout(Duration::from_millis(500)) {
                 Err(mpsc::RecvTimeoutError::Disconnected) => return,
-                Ok(Msg::UseDefault) => use_default = true,
+                Ok(Msg::Use(target, r)) => {
+                    instead = Some(target);
+                    reply = r;
+                }
                 Err(mpsc::RecvTimeoutError::Timeout) => {}
             }
-            let device = if use_default {
-                default_device(host)
-            } else {
-                host.output_devices().ok().and_then(|mut all| {
-                    all.find(|d| d.id().ok() == id || (id.is_none() && label(d) == name))
-                })
+            let device = match &instead {
+                Some(t) => resolve(ctx.host, t, ctx.preferred),
+                None => ctx.find(&id, &name),
             };
-            if let Some(d) = device {
-                match open(&d, sample_rate, engine, stats) {
-                    Ok(l) => break l,
-                    Err(e) => eprintln!("can't reopen {}: {e}", label(&d)),
+            match device.map(|d| (label(&d), ctx.open(&d))) {
+                Some((_, Ok(l))) => {
+                    answer(reply, Ok(l.name.clone()));
+                    break l;
                 }
+                Some((n, Err(e))) => {
+                    eprintln!("can't reopen {n}: {e}");
+                    answer(reply, Err(format!("can't play through {n}: {e}")));
+                }
+                None => answer(reply, Err("that device isn't connected".into())),
             }
             let now = fallback();
             if now != offered {
@@ -491,9 +647,38 @@ fn watch(
                 });
             }
         };
-        set(OutputStatus::Connected {
-            device: live.name.clone(),
-            sample_rate,
-        });
+        connected(&live);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn names(n: &[&str]) -> Vec<String> {
+        n.iter().map(|s| s.to_string()).collect()
+    }
+
+    #[test]
+    fn picks_the_device_asked_for() {
+        let all = names(&["MacBook Pro Speakers", "DDJ-FLX4", "AirPods"]);
+        let pref = names(&["ddj-flx4"]);
+        assert_eq!(pick(&all, &OutputTarget::Auto, &pref), Some(1));
+        assert_eq!(
+            pick(
+                &all,
+                &OutputTarget::Named("MacBook Pro Speakers".into()),
+                &pref
+            ),
+            Some(0)
+        );
+        assert_eq!(pick(&all, &OutputTarget::Default, &pref), None);
+        // A named device that isn't plugged in matches nothing.
+        assert_eq!(
+            pick(&all, &OutputTarget::Named("Studio Monitors".into()), &pref),
+            None
+        );
+        // Without the controller, Auto means the system default.
+        assert_eq!(pick(&all[..1], &OutputTarget::Auto, &pref), None);
     }
 }
