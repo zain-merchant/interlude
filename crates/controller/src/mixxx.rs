@@ -1061,15 +1061,37 @@ mod tests {
         assert_eq!(parse_int("zz"), None);
     }
 
-    /// Loads every mapping in `$MIXXX_CONTROLLERS` (Mixxx's
-    /// `res/controllers`) and prints how much of each works. Run with
+    /// Mixxx mappings to test against: the bundled ones, or
+    /// `$MIXXX_CONTROLLERS` (another copy of Mixxx's `res/controllers`).
+    fn corpus_dir() -> std::path::PathBuf {
+        std::env::var_os("MIXXX_CONTROLLERS")
+            .map(Into::into)
+            .or_else(crate::Catalog::source_mappings_dir)
+            .expect("bundled mappings")
+    }
+
+    /// Every bundled mapping parses, and every one with scripts loads them.
+    #[test]
+    fn bundled_mappings_load() {
+        let dir = crate::Catalog::source_mappings_dir().expect("bundled mappings");
+        let files = crate::mapping_files(&dir);
+        assert!(files.len() > 150, "{} mapping files", files.len());
+        for f in files {
+            let mut p = Preset::load(&f).unwrap_or_else(|e| panic!("{e}"));
+            if !p.scripts.iter().any(|s| s.filename.ends_with(".js")) {
+                continue;
+            }
+            p.script_dirs = vec![dir.clone()];
+            assert!(load_script(&p).is_some(), "{}: scripts didn't load", p.name);
+        }
+    }
+
+    /// Loads every mapping in the corpus (see [`corpus_dir`]) and prints how much of each works. Run with
     /// `cargo test -p dj-controller mixxx_corpus -- --ignored --nocapture`.
     #[test]
     #[ignore]
     fn mixxx_corpus() {
-        let Some(dir) = std::env::var_os("MIXXX_CONTROLLERS") else {
-            return;
-        };
+        let dir = corpus_dir();
         let mut files: Vec<_> = std::fs::read_dir(dir)
             .unwrap()
             .filter_map(|e| e.ok().map(|e| e.path()))
@@ -1131,15 +1153,10 @@ mod tests {
     }
 
     /// Mixxx's own DDJ-FLX4 mapping, scripts and all, should drive the
-    /// deck as our hand-written one does for the same MIDI. Needs
-    /// `$MIXXX_CONTROLLERS`; run with `-- --ignored --nocapture`.
+    /// deck as our hand-written one does for the same MIDI.
     #[test]
-    #[ignore]
     fn mixxx_flx4_agrees_with_ours() {
-        let Some(dir) = std::env::var_os("MIXXX_CONTROLLERS") else {
-            return;
-        };
-        let dir = std::path::PathBuf::from(dir);
+        let dir = corpus_dir();
         let mut p = Preset::load(&dir.join("Pioneer-DDJ-FLX4.midi.xml")).unwrap();
         p.script_dirs = vec![dir];
         let mut theirs = MixxxMidi::new(Arc::new(p));
@@ -1195,17 +1212,14 @@ mod tests {
         assert!(theirs.script_errors().is_empty());
     }
 
-    /// Runs every mapping in `$MIXXX_CONTROLLERS` with its scripts: init,
+    /// Runs every mapping in the corpus with its scripts: init,
     /// every bound message pressed and released, timers, shutdown. Prints
     /// the mappings whose scripts don't load or raise errors. Run with
     /// `cargo test -p dj-controller mixxx_scripts -- --ignored --nocapture`.
     #[test]
     #[ignore]
     fn mixxx_scripts() {
-        let Some(dir) = std::env::var_os("MIXXX_CONTROLLERS") else {
-            return;
-        };
-        let dir = std::path::PathBuf::from(dir);
+        let dir = corpus_dir();
         let mut files: Vec<_> = std::fs::read_dir(&dir)
             .unwrap()
             .filter_map(|e| e.ok().map(|e| e.path()))
@@ -1268,10 +1282,7 @@ mod tests {
     #[test]
     #[ignore]
     fn mixxx_hid_scripts() {
-        let Some(dir) = std::env::var_os("MIXXX_CONTROLLERS") else {
-            return;
-        };
-        let dir = std::path::PathBuf::from(dir);
+        let dir = corpus_dir();
         let mut files: Vec<_> = std::fs::read_dir(&dir)
             .unwrap()
             .filter_map(|e| e.ok().map(|e| e.path()))

@@ -103,7 +103,7 @@ pub fn start(app: &AppHandle, engine: Arc<Mutex<EngineHandle>>, shared: Arc<Shar
         app: app.clone(),
     });
     // Mixxx mapping files dropped in here, and mappings made with MIDI
-    // learn, are picked up ahead of any from a Mixxx install.
+    // learn, come first; then the Mixxx mappings the app ships with.
     let dir = app
         .path()
         .app_data_dir()
@@ -113,10 +113,16 @@ pub fn start(app: &AppHandle, engine: Arc<Mutex<EngineHandle>>, shared: Arc<Shar
         let _ = std::fs::create_dir_all(d);
     }
     app.manage(MappingDir(dir.clone()));
-    app.manage(ControllerService::start_with(
-        host,
-        dir.into_iter().collect(),
-    ));
+    let bundled = app
+        .path()
+        .resource_dir()
+        .ok()
+        .map(|d| d.join("controllers"))
+        .filter(|d| d.is_dir())
+        .or_else(dj_controller::Catalog::source_mappings_dir);
+    let mut dirs: Vec<PathBuf> = dir.into_iter().collect();
+    dirs.extend(dj_controller::Catalog::default_dirs_with(bundled));
+    app.manage(ControllerService::start_with(host, dirs));
 }
 
 /// Where the app keeps its own controller mappings.
