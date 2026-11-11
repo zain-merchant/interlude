@@ -224,6 +224,10 @@ fn decode(path: &Path) -> Result<(Vec<f32>, u32), LoadError> {
     Decoding::open(path)?.run(&mut |_| {})
 }
 
+/// The longest audio, in seconds, whose buffer is sized up front from the
+/// container's frame count. Longer files still load; their buffer grows.
+const MAX_PREALLOC_SECS: usize = 4 * 3600;
+
 /// An opened audio file, ready to decode.
 struct Decoding {
     format: Box<dyn symphonia::core::formats::FormatReader>,
@@ -273,7 +277,8 @@ impl Decoding {
             .num_frames
             .and_then(|n| usize::try_from(n).ok())
             .map(|n| n + n / 100 + stream_rate as usize)
-            .unwrap_or(0);
+            .unwrap_or(0)
+            .min(MAX_PREALLOC_SECS * stream_rate.max(48_000) as usize);
         Ok(Self {
             format,
             decoder,
@@ -290,7 +295,11 @@ impl Decoding {
         // Size the buffer once from the container's frame count when it has
         // one. Growing by doubling instead copies the track several times
         // and can leave half of it as unused capacity.
-        let mut stereo: Vec<f32> = Vec::with_capacity(self.expected.saturating_mul(2));
+        // The count comes from the file and can't be trusted: a corrupt
+        // header claiming days of audio must not abort the app with an
+        // allocation failure, so ask politely and carry on without it.
+        let mut stereo: Vec<f32> = Vec::new();
+        let _ = stereo.try_reserve_exact(self.expected.saturating_mul(2));
         let mut packet_buf: Vec<f32> = Vec::new();
         let mut sent = 0;
         loop {
