@@ -241,6 +241,25 @@ cargo run --release -p dj-cli -- midi                      # print what a contro
 cargo run --release -p dj-cli -- mappings                  # list controller mappings found
 ```
 
+## Running the checks
+
+There is no hosted CI, so run these before merging a change. The Tauri crate
+embeds the built UI, so build the UI first.
+
+```sh
+# UI: type and Svelte checks, then build
+cd app
+npm ci
+npm run check
+npm run build
+cd ..
+
+# Rust: formatting, lints and tests
+cargo fmt --all --check
+cargo clippy --workspace --all-targets --all-features -- -D warnings
+cargo test --workspace
+```
+
 ## Roadmap
 
 1. **Phase 0/1 · Playable** (now): two decks, mixer, waveforms, basic library.

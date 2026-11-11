@@ -14,7 +14,7 @@ use std::time::{Duration, Instant};
 
 use midir::{MidiInput, MidiInputConnection, MidiOutput, MidiOutputConnection};
 
-use crate::{Action, Catalog, Mapping, Source, State};
+use crate::{Action, Catalog, HeldControls, Mapping, Source, State};
 
 const CLIENT: &str = "oss-dj";
 const SCAN_EVERY: Duration = Duration::from_secs(2);
@@ -33,7 +33,7 @@ pub trait Host: Send + Sync + 'static {
 pub struct ControllerService {
     stop: Arc<AtomicBool>,
     connected: Arc<Mutex<Vec<String>>>,
-    thread: Option<JoinHandle<()>>,
+    thread: Mutex<Option<JoinHandle<()>>>,
 }
 
 impl ControllerService {
@@ -71,7 +71,17 @@ impl ControllerService {
         Self {
             stop,
             connected,
-            thread,
+            thread: Mutex::new(thread),
+        }
+    }
+
+    /// Lets go of any held controls, darkens the controller's LEDs and
+    /// stops watching. Called when the app quits; dropping does the same.
+    pub fn shutdown(&self) {
+        self.stop.store(true, Ordering::Relaxed);
+        let thread = self.thread.lock().ok().and_then(|mut t| t.take());
+        if let Some(t) = thread {
+            let _ = t.join();
         }
     }
 
@@ -83,18 +93,32 @@ impl ControllerService {
 
 impl Drop for ControllerService {
     fn drop(&mut self) {
-        self.stop.store(true, Ordering::Relaxed);
-        if let Some(t) = self.thread.take() {
-            let _ = t.join();
-        }
+        self.shutdown();
     }
 }
 
 struct Connection {
     port_name: String,
     mapping: Arc<Mutex<Box<dyn Mapping>>>,
+    /// What the controller is holding down, to let go of if it goes away.
+    held: Arc<Mutex<HeldControls>>,
     _input: MidiInputConnection<()>,
     output: Option<MidiOutputConnection>,
+}
+
+impl Connection {
+    /// Lets go of every control still held: a jog wheel touched, CUE or a
+    /// hot cue pad down. Without this, pulling the cable mid-scratch would
+    /// leave the deck stopped under a hand that isn't there.
+    fn release_held(&self, host: &dyn Host) {
+        let actions = match self.held.lock() {
+            Ok(mut h) => h.release(),
+            Err(p) => p.into_inner().release(),
+        };
+        for a in actions {
+            host.act(a);
+        }
+    }
 }
 
 fn run(
@@ -117,6 +141,7 @@ fn run(
                 let present = ports.contains(&c.port_name);
                 if !present {
                     eprintln!("controller disconnected: {}", c.port_name);
+                    c.release_held(host.as_ref());
                 }
                 present
             });
@@ -159,6 +184,7 @@ fn run(
     }
     // Leave the controllers dark rather than showing stale state.
     for mut c in conns {
+        c.release_held(host.as_ref());
         if let (Some(out), Ok(mut m)) = (&mut c.output, c.mapping.lock()) {
             m.reset_leds();
             for msg in m.leds(&State::default()) {
@@ -235,6 +261,7 @@ fn connect(
     log: bool,
 ) -> Option<Connection> {
     let mapping = Arc::new(Mutex::new(mapping));
+    let held = Arc::new(Mutex::new(HeldControls::default()));
 
     let input = MidiInput::new(CLIENT).ok()?;
     let port = input
@@ -242,6 +269,7 @@ fn connect(
         .into_iter()
         .find(|p| input.port_name(p).as_deref() == Ok(port_name))?;
     let m = mapping.clone();
+    let h = held.clone();
     let input_conn = input
         .connect(
             &port,
@@ -254,6 +282,9 @@ fn connect(
                     Ok(mut m) => m.handle(msg, &host.state()),
                     Err(_) => return,
                 };
+                if let Ok(mut h) = h.lock() {
+                    actions.iter().for_each(|a| h.observe(a));
+                }
                 for a in actions {
                     host.act(a);
                 }
@@ -286,6 +317,7 @@ fn connect(
     Some(Connection {
         port_name: port_name.to_owned(),
         mapping,
+        held,
         _input: input_conn,
         output,
     })

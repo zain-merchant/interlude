@@ -176,9 +176,23 @@ impl Analyzer {
             if self.get(&path).is_some_and(|a| a.complete()) {
                 continue;
             }
-            let analysis = TrackSummary::analyze(&path)
-                .map(Analysis::from)
-                .unwrap_or(Analysis::FAILED);
+            // A malformed file can make a decoder panic. Caught here, it
+            // marks that one file as failed; uncaught, it would end this
+            // thread and with it all analysis until the app restarts (and
+            // then again at the same file).
+            let result = std::panic::catch_unwind(|| TrackSummary::analyze(&path));
+            let analysis = match result {
+                Ok(Ok(summary)) => Analysis::from(summary),
+                // Gone mid-analysis (a drive unplugged, a file moved): try
+                // again once it's back, rather than marking it undecodable
+                // for good.
+                _ if !path.is_file() => continue,
+                Ok(Err(_)) => Analysis::FAILED,
+                Err(_) => {
+                    eprintln!("analysis crashed on {}", path.display());
+                    Analysis::FAILED
+                }
+            };
             self.record(&app, &path, analysis, None);
         }
     }

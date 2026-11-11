@@ -19,7 +19,9 @@ pub mod mixxx;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-use dj_engine::{Command, DeckId, DeckSnapshot, MixerSnapshot, SamplerSnapshot, NUM_DECKS};
+use dj_engine::{
+    Command, DeckId, DeckSnapshot, MixerSnapshot, SamplerSnapshot, HOT_CUES, NUM_DECKS,
+};
 
 /// What a controller asks the app to do.
 #[derive(Debug)]
@@ -71,6 +73,64 @@ pub trait Mapping: Send {
     fn leds(&mut self, state: &State) -> Vec<Vec<u8>>;
     /// Forgets which LEDs were sent, e.g. after a reconnect.
     fn reset_leds(&mut self);
+}
+
+/// Remembers which controls are held down: a hand on a jog wheel, CUE or
+/// a hot cue pad. Each of those changes what a deck does until it's let go,
+/// so if the controller goes away mid-press (a cable pulled), the deck would
+/// stay that way: stopped under a hand that isn't there, or previewing from
+/// a cue. [`HeldControls::release`] lets go of them all.
+///
+/// It watches the commands any mapping sends, so it works for every
+/// controller without the mapping having to track anything.
+#[derive(Debug, Default, Clone)]
+pub struct HeldControls {
+    scratching: [bool; NUM_DECKS],
+    cue: [bool; NUM_DECKS],
+    hot_cues: [[bool; HOT_CUES]; NUM_DECKS],
+}
+
+impl HeldControls {
+    /// Notes what `action` presses or lets go.
+    pub fn observe(&mut self, action: &Action) {
+        let Action::Engine(cmd) = action else {
+            return;
+        };
+        match *cmd {
+            Command::ScratchStart { deck } => self.scratching[deck.index()] = true,
+            Command::ScratchEnd { deck } => self.scratching[deck.index()] = false,
+            Command::CuePress { deck } => self.cue[deck.index()] = true,
+            Command::CueRelease { deck } => self.cue[deck.index()] = false,
+            Command::HotCuePress { deck, index } if index < HOT_CUES => {
+                self.hot_cues[deck.index()][index] = true
+            }
+            Command::HotCueRelease { deck, index } if index < HOT_CUES => {
+                self.hot_cues[deck.index()][index] = false
+            }
+            _ => {}
+        }
+    }
+
+    /// Commands that let go of everything still held, and forgets it.
+    pub fn release(&mut self) -> Vec<Action> {
+        let mut out = vec![];
+        for deck in DeckId::ALL {
+            let d = deck.index();
+            for index in 0..HOT_CUES {
+                if self.hot_cues[d][index] {
+                    out.push(Action::Engine(Command::HotCueRelease { deck, index }));
+                }
+            }
+            if self.cue[d] {
+                out.push(Action::Engine(Command::CueRelease { deck }));
+            }
+            if self.scratching[d] {
+                out.push(Action::Engine(Command::ScratchEnd { deck }));
+            }
+        }
+        *self = Self::default();
+        out
+    }
 }
 
 /// The mappings built into this build.
@@ -287,5 +347,52 @@ mod tests {
         );
         assert_eq!(c.find("Mixtrack MIDI 1").unwrap().name, "Numark Mixtrack");
         assert!(c.find("IAC Driver Bus 1").is_none());
+    }
+
+    fn engine(cmd: Command) -> Action {
+        Action::Engine(cmd)
+    }
+
+    fn names(actions: &[Action]) -> Vec<String> {
+        actions.iter().map(|a| format!("{a:?}")).collect()
+    }
+
+    #[test]
+    fn releases_what_is_still_held() {
+        let mut held = HeldControls::default();
+        let (a, b) = (DeckId::A, DeckId::B);
+        for cmd in [
+            Command::ScratchStart { deck: a },
+            Command::CuePress { deck: b },
+            Command::HotCuePress { deck: a, index: 2 },
+            Command::HotCuePress { deck: a, index: 5 },
+            Command::HotCueRelease { deck: a, index: 5 },
+            Command::ScratchStart { deck: b },
+            Command::ScratchEnd { deck: b },
+            Command::TogglePlay { deck: a },
+        ] {
+            held.observe(&engine(cmd));
+        }
+        assert_eq!(
+            names(&held.release()),
+            names(&[
+                engine(Command::HotCueRelease { deck: a, index: 2 }),
+                engine(Command::ScratchEnd { deck: a }),
+                engine(Command::CueRelease { deck: b }),
+            ])
+        );
+        // Released once: nothing is held any more.
+        assert!(held.release().is_empty());
+    }
+
+    #[test]
+    fn ignores_out_of_range_hot_cues() {
+        let mut held = HeldControls::default();
+        held.observe(&engine(Command::HotCuePress {
+            deck: DeckId::A,
+            index: HOT_CUES + 3,
+        }));
+        held.observe(&Action::Browse(1));
+        assert!(held.release().is_empty());
     }
 }
