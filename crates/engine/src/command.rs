@@ -25,7 +25,7 @@ impl DeckId {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum EqBand {
     Low = 0,
     Mid = 1,
