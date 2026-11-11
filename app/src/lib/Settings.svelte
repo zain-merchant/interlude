@@ -563,7 +563,7 @@
               <div class="row"><span class="name">{c.port}</span><span class="dim">{c.learned ? 'Your mapping' : c.mapping}</span></div>
             {/each}
           {/if}
-          <p class="gap">Mixxx mappings work as they are: put a <code>.midi.xml</code> file and its scripts in the app's <code>controllers</code> folder, or install Mixxx and its mappings are picked up.</p>
+          <p class="gap">Mixxx mappings work as they are, MIDI and HID (such as Traktor Kontrol controllers): put a <code>.midi.xml</code> or <code>.hid.xml</code> file and its scripts in the app's <code>controllers</code> folder, or install Mixxx and its mappings are picked up.</p>
         </section>
         <section class="display">
           <h3>MIDI learn</h3>

@@ -150,6 +150,16 @@ A free, open-source DJ app that is fast, modern and uncluttered. No paywalled
   mapping drives the decks the same way the built-in one does. Not yet
   tested on hardware beyond the FLX4. `dj mappings` lists what was found
   and how much of each works.
+- **USB HID controllers: Mixxx HID mappings.** Controllers that speak
+  HID rather than MIDI (Native Instruments' Traktor Kontrol S2, S3, S4,
+  F1, Z1 and MX2, Pioneer CDJs in HID mode, EKS Otus) connect through
+  Mixxx's `*.hid.xml` mappings, whose scripts do all the work: reports
+  from the device go to the script and the reports it sends light the
+  controller up. All 17 scripted HID mappings load; none has been tried on
+  real hardware yet. Mappings that don't name their USB ids (the older
+  Hercules consoles) aren't connected automatically, and game controllers
+  are left alone. On Linux, opening a HID device needs a udev rule giving
+  you access to it; Mixxx's packages install one.
 - **Any other MIDI controller: MIDI learn.** In Settings → Controllers,
   pick the controller, pick an action (play, cue, faders, EQ, hot cues,
   loops, effects, browsing, samples) and press Learn, then move the
@@ -223,7 +233,7 @@ tracks are decoded up front on a worker thread and freed off the audio thread.
 
 You need Rust (stable) and Node 20+.
 
-**Linux** also needs: `libasound2-dev libwebkit2gtk-4.1-dev libgtk-3-dev librsvg2-dev`
+**Linux** also needs: `libasound2-dev libudev-dev libwebkit2gtk-4.1-dev libgtk-3-dev librsvg2-dev`
 (Debian/Ubuntu names). **macOS** and **Windows** need nothing extra beyond
 the [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/).
 The first build downloads ONNX Runtime (for stems) through the `ort` crate;
