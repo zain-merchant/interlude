@@ -8,7 +8,6 @@
   import { engine, control as send } from './engine.svelte.js';
   import { backend } from './backend.js';
   import { announce } from './announce.svelte.js';
-  import { quantizeOn, toggleQuantize } from './performance.js';
 
   /** @type {{ onmessage?: (text: string) => void }} */
   let { onmessage = () => {} } = $props();
@@ -181,11 +180,6 @@
         <span class="dot" aria-hidden="true"></span>{rec.active ? clock(rec.seconds) : 'Rec'}
       </button>
     {/if}
-    <button class="rec quant" class:on={quantizeOn()} aria-pressed={quantizeOn()} aria-label="Quantize"
-      onpointerdown={(e) => e.button === 0 && toggleQuantize()} onclick={(e) => e.detail === 0 && toggleQuantize()}
-      use:tip={() => tipText(`Quantize ${quantizeOn() ? 'on' : 'off'}`, keyLabel('mixer.quantize'), 'hot cues and loops snap to the beat')}>
-      <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 2v8M6 2v8M10 2v8" /></svg>Quantize
-    </button>
   </div>
   {@render strip(1)}
   {@render knobs(1)}
@@ -310,13 +304,6 @@
   }
   .rec.on .dot {
     background: var(--kill);
-  }
-  .quant svg {
-    width: 10px;
-    height: 10px;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 1.4;
   }
   .xf {
     grid-column: 1 / -1;

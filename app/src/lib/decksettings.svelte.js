@@ -4,6 +4,8 @@
 //   off, it plays only while the pad is held, like the cue button.
 // * autoSync: a deck started (play, cue or a hot cue) while the other deck
 //   plays takes its tempo and beat, as if SYNC were pressed.
+// * quantize: hot cues and loops snap to the beat, and jumps while playing
+//   keep the beat's timing.
 // * slip: slip mode for each deck. It lives here rather than on the deck so
 //   the deck stays calm; the A and ; keys still flip it mid-set, and the
 //   choice is remembered either way.
@@ -13,6 +15,7 @@ import { backend } from './backend.js';
 const SETTINGS = {
   hotCuePlays: { key: 'oss-dj.hotCuePlays', command: 'setHotCuePlays' },
   autoSync: { key: 'oss-dj.autoSync', command: 'setAutoSync' },
+  quantize: { key: 'oss-dj.quantize', command: 'setQuantize' },
 };
 
 const saved = (key) => {
