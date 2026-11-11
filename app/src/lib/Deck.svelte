@@ -5,6 +5,7 @@
   import Performance from './Performance.svelte';
   import Stems from './Stems.svelte';
   import { untrack } from 'svelte';
+  import { padMode, padModeTab } from './padmode.svelte.js';
   import { engine, tracks, control, nextGrid, setGrid } from './engine.svelte.js';
   import { pushEdit } from './undo.svelte.js';
   import { dropTarget } from './dnd.svelte.js';
@@ -91,6 +92,13 @@
       localStorage.setItem(storageKey(), m);
     } catch {}
   }
+  // A pad mode button on the controller shows the controls its pads now
+  // play, as rekordbox does.
+  $effect(() => {
+    const tab = padModeTab(padMode[deck].mode);
+    padMode[deck].presses;
+    if (tab) untrack(() => setMode(tab));
+  });
   function modeKey(e) {
     const i = MODES.findIndex((m) => m.id === mode);
     const dir = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
