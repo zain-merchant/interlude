@@ -296,6 +296,19 @@ fn mappings(dirs: &[String]) -> Result<()> {
     for e in catalog.entries() {
         match e.preset() {
             None => println!("{:48} built in", e.name),
+            Some(p) if p.is_hid() => {
+                let ids: Vec<String> = p
+                    .hid
+                    .iter()
+                    .map(|d| format!("{:04x}:{:04x}", d.vendor_id, d.product_id))
+                    .collect();
+                let ids = if ids.is_empty() {
+                    "no device ids, not connected automatically".to_owned()
+                } else {
+                    ids.join(", ")
+                };
+                println!("{:48} HID, all in script ({ids})", e.name);
+            }
             Some(p) => {
                 let c = p.coverage();
                 println!(

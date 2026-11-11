@@ -1,4 +1,5 @@
-//! Connects mappings to real MIDI devices through midir.
+//! Connects mappings to real MIDI devices through midir, and USB HID
+//! controllers through [`crate::hid`].
 //!
 //! A background thread looks for known controllers every couple of
 //! seconds, connects to each one, notices when one is unplugged, and keeps
@@ -210,6 +211,8 @@ fn run(
 ) {
     let mut catalog = load_catalog(dirs);
     let mut conns: Vec<Connection> = vec![];
+    #[cfg(feature = "hid")]
+    let mut hid = crate::hid::HidControllers::default();
     // Ports a mapping matched but that couldn't be opened, so a port
     // that's busy elsewhere isn't retried (and reported) every scan.
     let mut failed: Vec<String> = vec![];
@@ -221,6 +224,8 @@ fn run(
             for c in conns.drain(..) {
                 close(c, host.as_ref(), &state);
             }
+            #[cfg(feature = "hid")]
+            hid.close_all();
             failed.clear();
             last_scan = None;
         }
@@ -259,8 +264,15 @@ fn run(
                     None => failed.push(name.clone()),
                 }
             }
+            #[allow(unused_mut)]
+            let mut now: Vec<Connected> = conns.iter().map(|c| c.info.clone()).collect();
+            #[cfg(feature = "hid")]
+            {
+                hid.scan(&catalog, &host, log);
+                now.extend(hid.connected().cloned());
+            }
             if let Ok(mut s) = connected.lock() {
-                *s = conns.iter().map(|c| c.info.clone()).collect();
+                *s = now;
             }
         }
 
@@ -298,6 +310,8 @@ fn run(
     for c in conns {
         close(c, host.as_ref(), &state);
     }
+    #[cfg(feature = "hid")]
+    hid.close_all();
 }
 
 /// Which mapping drives a controller, and for a Mixxx one how much of it
