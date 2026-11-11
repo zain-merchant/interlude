@@ -38,6 +38,8 @@ export const inTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in
  *             grids: number, playlists: { name: string, count: number }[], folders: string[] }} ImportPreview
  * @typedef {{ cues: boolean, grids: boolean, playlists: boolean }} ImportOptions
  * @typedef {{ tracks: number, cues: number, grids: number, playlists: number, kept: number }} ImportSummary
+ * @typedef {{ group: string, key: string, kind: 'button' | 'knob' | 'knob14' | 'encoder' | 'encoder64' | 'pitchbend',
+ *             status: number, number: number, description: string }} Binding
  */
 
 async function createTauriBackend() {
@@ -140,6 +142,21 @@ async function createTauriBackend() {
      * @returns {Promise<() => void>} unlisten
      */
     onController: (fn) => listen('controller', (e) => fn(e.payload)),
+    /**
+     * Connected controllers and their mappings, every MIDI input, and the
+     * inputs with a learned mapping.
+     * @returns {Promise<{ connected: { port: string, mapping: string, learned: boolean }[], ports: string[], learned: string[] }>}
+     */
+    controllers: () => invoke('controllers'),
+    /** MIDI learn: listen to every input for the next control moved. */
+    midiLearnStart: () => invoke('midi_learn_start'),
+    /** @returns {Promise<[string, Binding] | null>} the port and the control, once one is moved */
+    midiLearnPoll: () => invoke('midi_learn_poll'),
+    midiLearnStop: () => invoke('midi_learn_stop'),
+    /** @returns {Promise<Binding[]>} */
+    learnedMapping: (port) => invoke('learned_mapping', { port }),
+    /** Saves (or with no bindings, deletes) the learned mapping for a port, and reconnects. */
+    saveLearnedMapping: (port, bindings) => invoke('save_learned_mapping', { port, bindings }),
     /** @returns {Promise<string | null>} */
     pickFolder: async () => {
       const picked = await open({ directory: true, multiple: false, title: 'Add a music folder' });

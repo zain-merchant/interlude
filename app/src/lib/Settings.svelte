@@ -15,7 +15,7 @@
    * Settings sit over the library, never over the decks, and don't block
    * them: performance keys keep working while this is open, except while a
    * shortcut is being recorded.
-   * @type {{ page?: 'keyboard' | 'decks' | 'audio' | 'display' | 'library' | 'stems', onclose: () => void, onimport?: () => void }}
+   * @type {{ page?: 'keyboard' | 'decks' | 'audio' | 'display' | 'library' | 'stems' | 'controllers', onclose: () => void, onimport?: () => void }}
    */
   let { page = $bindable('keyboard'), onclose, onimport } = $props();
 
@@ -218,6 +218,174 @@
     switching = false;
     refreshOutputs();
   }
+  // Controllers: what's connected, and MIDI learn for anything unmapped.
+  const deckActions = (n) => {
+    const ch = `[Channel${n}]`;
+    return [
+      [ch, 'play', 'Play'],
+      [ch, 'cue_default', 'Cue'],
+      [ch, 'beatsync', 'Sync'],
+      [ch, 'pfl', 'Headphone cue'],
+      [ch, 'keylock', 'Key lock'],
+      [ch, 'slip_enabled', 'Slip'],
+      [ch, 'volume', 'Volume fader'],
+      [ch, 'pregain', 'Trim'],
+      [`[EqualizerRack1_${ch}_Effect1]`, 'parameter3', 'EQ high'],
+      [`[EqualizerRack1_${ch}_Effect1]`, 'parameter2', 'EQ mid'],
+      [`[EqualizerRack1_${ch}_Effect1]`, 'parameter1', 'EQ low'],
+      [`[QuickEffectRack1_${ch}]`, 'super1', 'Filter'],
+      [ch, 'rate', 'Tempo fader'],
+      [ch, 'jog', 'Jog wheel'],
+      ...[1, 2, 3, 4, 5, 6, 7, 8].map((i) => [ch, `hotcue_${i}_activate`, `Hot cue ${i}`]),
+      [ch, 'loop_in', 'Loop in'],
+      [ch, 'loop_out', 'Loop out'],
+      [ch, 'reloop_toggle', 'Loop on/off'],
+      [ch, 'beatloop_4_activate', '4-beat loop'],
+      [ch, 'loop_halve', 'Halve loop'],
+      [ch, 'loop_double', 'Double loop'],
+      [ch, 'beatjump_backward', 'Beat jump back'],
+      [ch, 'beatjump_forward', 'Beat jump forward'],
+      [ch, 'LoadSelectedTrack', 'Load selected track'],
+      [`[EffectRack1_EffectUnit${n}]`, 'enabled', 'Effect on/off'],
+      [`[EffectRack1_EffectUnit${n}]`, 'mix', 'Effect amount'],
+    ];
+  };
+  const ACTIONS = [
+    { name: 'Deck A', list: deckActions(1) },
+    { name: 'Deck B', list: deckActions(2) },
+    { name: 'Mixer', list: [
+      ['[Master]', 'crossfader', 'Crossfader'],
+      ['[Master]', 'gain', 'Master level'],
+      ['[Master]', 'headMix', 'Headphone mix'],
+      ['[Library]', 'MoveVertical', 'Browse (knob)'],
+      ['[Library]', 'MoveUp', 'Browse up'],
+      ['[Library]', 'MoveDown', 'Browse down'],
+    ] },
+    { name: 'Sampler', list: [1, 2, 3, 4, 5, 6, 7, 8].map((i) => [`[Sampler${i}]`, 'cue_gotoandplay', `Play sample ${i}`]) },
+  ].map((g) => ({ name: g.name, list: g.list.map(([group, key, label]) => ({ id: `${group} ${key}`, group, key, label: `${g.name}: ${label}` })) }));
+  const ALL_ACTIONS = ACTIONS.flatMap((g) => g.list);
+  const actionLabel = (b) => ALL_ACTIONS.find((a) => a.group === b.group && a.key === b.key)?.label ?? `${b.group} ${b.key}`;
+
+  /** @type {{ connected: { port: string, mapping: string, learned: boolean }[], ports: string[], learned: string[] } | null} */
+  let ctl = $state(null);
+  let ctlError = $state('');
+  let learnPort = $state('');
+  /** @type {import('./backend.js').Binding[]} */
+  let bindings = $state([]);
+  let saved = $state('[]');
+  let action = $state(ALL_ACTIONS[0].id);
+  let learning = $state(false);
+  const dirty = $derived(JSON.stringify(bindings) !== saved);
+
+  async function refreshControllers() {
+    if (!backend.controllers) return;
+    try {
+      ctl = await backend.controllers();
+      if (!learnPort || !ctl.ports.includes(learnPort)) {
+        const unmapped = ctl.ports.find((p) => !ctl.connected.some((c) => c.port === p));
+        const port = unmapped ?? ctl.ports[0] ?? '';
+        if (port !== learnPort && !dirty) pickPort(port);
+      }
+    } catch (e) {
+      ctlError = String(e);
+    }
+  }
+  $effect(() => {
+    if (page !== 'controllers') return;
+    refreshControllers();
+    // Pick up a controller plugged in while the page is open.
+    const timer = setInterval(refreshControllers, 2000);
+    return () => {
+      clearInterval(timer);
+      stopLearn();
+    };
+  });
+  async function pickPort(port) {
+    stopLearn();
+    learnPort = port;
+    bindings = [];
+    saved = '[]';
+    if (!port) return;
+    try {
+      bindings = await backend.learnedMapping(port);
+      saved = JSON.stringify(bindings);
+    } catch (e) {
+      ctlError = String(e);
+    }
+  }
+  /** @type {ReturnType<typeof setInterval> | undefined} */
+  let learnTimer;
+  async function startLearn() {
+    ctlError = '';
+    try {
+      await backend.midiLearnStart();
+    } catch (e) {
+      ctlError = String(e);
+      return;
+    }
+    learning = true;
+    announce(`Move a control on ${learnPort} for ${ALL_ACTIONS.find((a) => a.id === action)?.label}`);
+    clearInterval(learnTimer);
+    learnTimer = setInterval(pollLearn, 100);
+  }
+  async function pollLearn() {
+    /** @type {[string, import('./backend.js').Binding] | null} */
+    let got;
+    try {
+      got = await backend.midiLearnPoll();
+    } catch (e) {
+      ctlError = String(e);
+      stopLearn();
+      return;
+    }
+    if (!got || !learning) return;
+    const [port, b] = got;
+    // A control on another controller: keep listening for this one.
+    if (port !== learnPort) {
+      await backend.midiLearnStart();
+      return;
+    }
+    const a = ALL_ACTIONS.find((x) => x.id === action);
+    if (!a) return;
+    const entry = { ...b, group: a.group, key: a.key };
+    bindings = [
+      ...bindings.filter((x) => !(x.group === a.group && x.key === a.key) && !(x.status === b.status && x.number === b.number)),
+      entry,
+    ];
+    announce(`${a.label} is ${b.description}`);
+    // Straight on to the next action, so a whole controller goes quickly.
+    const next = ALL_ACTIONS[ALL_ACTIONS.indexOf(a) + 1];
+    if (next) {
+      action = next.id;
+      await backend.midiLearnStart();
+    } else {
+      stopLearn();
+    }
+  }
+  function stopLearn() {
+    if (!learning && !learnTimer) return;
+    learning = false;
+    clearInterval(learnTimer);
+    learnTimer = undefined;
+    backend.midiLearnStop?.();
+  }
+  function removeBinding(b) {
+    bindings = bindings.filter((x) => x !== b);
+  }
+  async function saveBindings(list) {
+    stopLearn();
+    ctlError = '';
+    try {
+      await backend.saveLearnedMapping(learnPort, list);
+      bindings = list;
+      saved = JSON.stringify(list);
+      announce(list.length ? `Mapping for ${learnPort} saved` : `Mapping for ${learnPort} deleted`);
+    } catch (e) {
+      ctlError = String(e);
+    }
+    refreshControllers();
+  }
+
   const mb = (b) => `${Math.round(b / (1024 * 1024))} MB`;
   const gb = (b) => (b >= 1024 ** 3 ? `${(b / 1024 ** 3).toFixed(1)} GB` : mb(b));
 </script>
@@ -238,11 +406,13 @@
       onclick={() => (page = 'library')}>Library</button>
     <button class="item" class:on={page === 'stems'} aria-current={page === 'stems' ? 'page' : undefined}
       onclick={() => (page = 'stems')}>Stems</button>
+    <button class="item" class:on={page === 'controllers'} aria-current={page === 'controllers' ? 'page' : undefined}
+      onclick={() => (page = 'controllers')}>Controllers</button>
   </nav>
 
   <div class="main">
     <div class="bar">
-      <h2>{{ keyboard: 'Keyboard', decks: 'Decks', audio: 'Audio', library: 'Library', stems: 'Stems' }[page] ?? 'Display'}</h2>
+      <h2>{{ keyboard: 'Keyboard', decks: 'Decks', audio: 'Audio', library: 'Library', stems: 'Stems', controllers: 'Controllers' }[page] ?? 'Display'}</h2>
       {#if page === 'keyboard'}
         <p>Click a shortcut, then press the new key. Backspace removes it, Esc cancels.</p>
         <button class="btn sm" onclick={resetAll} disabled={!Object.keys(keymap.overrides).length}>Reset all</button>
@@ -380,6 +550,67 @@
         <section class="display">
           <h3>Headphones</h3>
           <p>Headphone cue comes out of channels 3 and 4 of the output, which DJ controllers have and laptop speakers don't. Playing through the speakers, the controller's headphone socket is silent.</p>
+        </section>
+      {:else if page === 'controllers'}
+        <section class="display">
+          <h3>Connected</h3>
+          {#if !ctl}
+            <p>{ctlError || 'Loading…'}</p>
+          {:else if !ctl.connected.length}
+            <p>No mapped controller is connected. Plug one in, or teach the app one below.</p>
+          {:else}
+            {#each ctl.connected as c}
+              <div class="row"><span class="name">{c.port}</span><span class="dim">{c.learned ? 'Your mapping' : c.mapping}</span></div>
+            {/each}
+          {/if}
+          <p class="gap">Mixxx mappings work as they are: put a <code>.midi.xml</code> file and its scripts in the app's <code>controllers</code> folder, or install Mixxx and its mappings are picked up.</p>
+        </section>
+        <section class="display">
+          <h3>MIDI learn</h3>
+          <p>Map a controller yourself: pick an action, press Learn, then move the button, knob or fader for it. Each learned control moves on to the next action. A mapping you make here is used for that controller ahead of any other.</p>
+          {#if ctl && !ctl.ports.length}
+            <p>No MIDI controller is plugged in.</p>
+          {:else if ctl}
+            <div class="size">
+              <select class="btn sm" aria-label="Controller" value={learnPort} disabled={learning}
+                onchange={(e) => pickPort(e.currentTarget.value)}>
+                {#each ctl.ports as p}<option value={p}>{p}{ctl.learned.includes(p) ? ' (your mapping)' : ''}</option>{/each}
+              </select>
+            </div>
+            <div class="size gap">
+              <select class="btn sm" aria-label="Action" bind:value={action}>
+                {#each ACTIONS as g}
+                  <optgroup label={g.name}>
+                    {#each g.list as a}<option value={a.id}>{a.label.slice(g.name.length + 2)}{bindings.some((b) => b.group === a.group && b.key === a.key) ? ' ✓' : ''}</option>{/each}
+                  </optgroup>
+                {/each}
+              </select>
+              {#if learning}
+                <button class="btn sm rec" onclick={stopLearn}>Move a control… (stop)</button>
+              {:else}
+                <button class="btn sm" onclick={startLearn} disabled={!learnPort}>Learn</button>
+              {/if}
+            </div>
+            {#if bindings.length}
+              <div class="gap">
+                {#each bindings as b}
+                  <div class="row">
+                    <span class="name">{actionLabel(b)}</span>
+                    <span class="dim">{b.description}</span>
+                    <button class="reset" onclick={() => removeBinding(b)} aria-label="Remove {actionLabel(b)}">Remove</button>
+                  </div>
+                {/each}
+              </div>
+            {/if}
+            <div class="size gap">
+              <button class="btn sm" onclick={() => saveBindings(bindings)} disabled={!dirty || !bindings.length}>Save</button>
+              <button class="btn sm" onclick={() => pickPort(learnPort)} disabled={!dirty}>Undo changes</button>
+              {#if ctl.learned.includes(learnPort)}
+                <button class="btn sm" onclick={() => saveBindings([])}>Delete mapping</button>
+              {/if}
+            </div>
+          {/if}
+          {#if ctl && ctlError}<p class="err" role="alert">{ctlError}</p>{/if}
         </section>
       {:else if page === 'library'}
         <section class="display">
@@ -624,6 +855,20 @@
   }
   .err {
     color: var(--kill);
+  }
+  .dim {
+    color: var(--fg-3);
+    font-size: 12px;
+    white-space: nowrap;
+  }
+  .gap {
+    margin-top: 12px;
+  }
+  .btn.rec {
+    box-shadow: inset 0 0 0 1.5px var(--fg);
+  }
+  code {
+    font-size: 11px;
   }
   .bar-track {
     height: 2px;

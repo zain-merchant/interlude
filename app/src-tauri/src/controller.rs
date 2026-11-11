@@ -1,11 +1,13 @@
 //! Hooks a hardware DJ controller up to the engine and the UI.
 
+use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 
+use dj_controller::learn::{Binding, Kind, Learned};
 use dj_controller::midi::{ControllerService, Host};
 use dj_controller::{Action, PadMode, State};
 use dj_engine::{Command, EngineHandle, SharedState, NUM_DECKS};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter, Manager};
 
 struct AppHost {
@@ -100,23 +102,232 @@ pub fn start(app: &AppHandle, engine: Arc<Mutex<EngineHandle>>, shared: Arc<Shar
         shared,
         app: app.clone(),
     });
-    // Mixxx mapping files dropped in here are picked up at launch, ahead
-    // of any from a Mixxx install.
-    let dirs = app
+    // Mixxx mapping files dropped in here, and mappings made with MIDI
+    // learn, are picked up ahead of any from a Mixxx install.
+    let dir = app
         .path()
         .app_data_dir()
-        .map(|d| d.join("controllers"))
-        .into_iter()
-        .inspect(|d| {
-            let _ = std::fs::create_dir_all(d);
-        })
-        .collect();
-    app.manage(ControllerService::start_with(host, dirs));
+        .ok()
+        .map(|d| d.join("controllers"));
+    if let Some(d) = &dir {
+        let _ = std::fs::create_dir_all(d);
+    }
+    app.manage(MappingDir(dir.clone()));
+    app.manage(ControllerService::start_with(
+        host,
+        dir.into_iter().collect(),
+    ));
 }
+
+/// Where the app keeps its own controller mappings.
+pub struct MappingDir(Option<PathBuf>);
 
 /// The connected controllers' names, or null if there are none.
 #[tauri::command]
 pub fn controller_name(service: tauri::State<'_, ControllerService>) -> Option<String> {
-    let names = service.connected();
+    let names: Vec<String> = service.connected().into_iter().map(|c| c.port).collect();
     (!names.is_empty()).then(|| names.join(", "))
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ConnectedInfo {
+    port: String,
+    mapping: String,
+    /// Made with MIDI learn here.
+    learned: bool,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ControllersInfo {
+    connected: Vec<ConnectedInfo>,
+    /// Every MIDI input, mapped or not.
+    ports: Vec<String>,
+    /// Ports with a learned mapping saved.
+    learned: Vec<String>,
+}
+
+/// The file a learned mapping for `port` is saved in.
+fn learned_file(dir: &Path, port: &str) -> PathBuf {
+    let safe: String = port
+        .chars()
+        .map(|c| {
+            if c.is_alphanumeric() || " -_".contains(c) {
+                c
+            } else {
+                '_'
+            }
+        })
+        .collect();
+    dir.join(format!("{} (learned).midi.xml", safe.trim()))
+}
+
+fn is_learned(path: &Path) -> bool {
+    path.file_name()
+        .and_then(|n| n.to_str())
+        .is_some_and(|n| n.ends_with(" (learned).midi.xml"))
+}
+
+/// Controllers for the Controllers settings page.
+#[tauri::command]
+pub fn controllers(
+    service: tauri::State<'_, ControllerService>,
+    dir: tauri::State<'_, MappingDir>,
+) -> ControllersInfo {
+    let ports = dj_controller::midi::input_port_names();
+    let learned = match &dir.0 {
+        Some(d) => ports
+            .iter()
+            .filter(|p| learned_file(d, p).is_file())
+            .cloned()
+            .collect(),
+        None => vec![],
+    };
+    ControllersInfo {
+        connected: service
+            .connected()
+            .into_iter()
+            .map(|c| ConnectedInfo {
+                learned: c.file.as_deref().is_some_and(is_learned),
+                port: c.port,
+                mapping: c.mapping,
+            })
+            .collect(),
+        ports,
+        learned,
+    }
+}
+
+/// One learned binding, as the UI sees it.
+#[derive(Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct BindingInfo {
+    group: String,
+    key: String,
+    /// "button", "knob", "knob14", "encoder", "encoder64" or "pitchbend".
+    kind: String,
+    status: u8,
+    number: u8,
+    /// e.g. "note 0x0B, channel 1".
+    #[serde(default)]
+    description: String,
+}
+
+fn kind_name(k: Kind) -> &'static str {
+    match k {
+        Kind::Button => "button",
+        Kind::Knob => "knob",
+        Kind::Knob14 => "knob14",
+        Kind::Encoder { offset64: false } => "encoder",
+        Kind::Encoder { offset64: true } => "encoder64",
+        Kind::PitchBend => "pitchbend",
+    }
+}
+
+fn kind_from(name: &str) -> Option<Kind> {
+    Some(match name {
+        "button" => Kind::Button,
+        "knob" => Kind::Knob,
+        "knob14" => Kind::Knob14,
+        "encoder" => Kind::Encoder { offset64: false },
+        "encoder64" => Kind::Encoder { offset64: true },
+        "pitchbend" => Kind::PitchBend,
+        _ => return None,
+    })
+}
+
+fn describe(kind: Kind, status: u8, number: u8) -> String {
+    Learned {
+        port: String::new(),
+        kind,
+        status,
+        number,
+    }
+    .describe()
+}
+
+/// Starts listening for MIDI learn on every input.
+#[tauri::command]
+pub fn midi_learn_start(service: tauri::State<'_, ControllerService>) {
+    service.learn_start();
+}
+
+/// The control moved since learning started, once it's known.
+#[tauri::command]
+pub fn midi_learn_poll(
+    service: tauri::State<'_, ControllerService>,
+) -> Option<(String, BindingInfo)> {
+    let l = service.learn_poll()?;
+    Some((
+        l.port.clone(),
+        BindingInfo {
+            group: String::new(),
+            key: String::new(),
+            kind: kind_name(l.kind).into(),
+            status: l.status,
+            number: l.number,
+            description: l.describe(),
+        },
+    ))
+}
+
+#[tauri::command]
+pub fn midi_learn_stop(service: tauri::State<'_, ControllerService>) {
+    service.learn_stop();
+}
+
+/// The learned mapping saved for `port`, if any.
+#[tauri::command]
+pub fn learned_mapping(dir: tauri::State<'_, MappingDir>, port: String) -> Vec<BindingInfo> {
+    let Some(d) = &dir.0 else { return vec![] };
+    let Ok(preset) = dj_controller::mixxx::Preset::load(&learned_file(d, &port)) else {
+        return vec![];
+    };
+    dj_controller::learn::read_bindings(&preset)
+        .into_iter()
+        .map(|b| BindingInfo {
+            description: describe(b.kind, b.status, b.number),
+            kind: kind_name(b.kind).into(),
+            group: b.group,
+            key: b.key,
+            status: b.status,
+            number: b.number,
+        })
+        .collect()
+}
+
+/// Saves a learned mapping for `port` and reconnects so it takes effect.
+/// No bindings deletes it.
+#[tauri::command]
+pub fn save_learned_mapping(
+    service: tauri::State<'_, ControllerService>,
+    dir: tauri::State<'_, MappingDir>,
+    port: String,
+    bindings: Vec<BindingInfo>,
+) -> Result<(), String> {
+    let d = dir.0.as_ref().ok_or("no app data folder")?;
+    let file = learned_file(d, &port);
+    if bindings.is_empty() {
+        if file.exists() {
+            std::fs::remove_file(&file).map_err(|e| e.to_string())?;
+        }
+    } else {
+        let bindings: Vec<Binding> = bindings
+            .into_iter()
+            .filter_map(|b| {
+                Some(Binding {
+                    kind: kind_from(&b.kind)?,
+                    group: b.group,
+                    key: b.key,
+                    status: b.status,
+                    number: b.number,
+                })
+            })
+            .collect();
+        let xml = dj_controller::learn::write_mapping(&port, &bindings);
+        std::fs::write(&file, xml).map_err(|e| format!("{}: {e}", file.display()))?;
+    }
+    service.reload();
+    Ok(())
 }
