@@ -10,8 +10,10 @@
    * the label kills the band and clicking again brings it back. A `taper`
    * maps values to positions on the sweep (0..1) when they aren't linear,
    * so the knob sits where a hardware knob with the same curve would.
+   * With `arc` (a CSS color), a colored arc on the ring runs from the
+   * default to the current position, so a cut or boost reads at a glance.
    * @type {{ value: number, min?: number, max?: number, reset?: number, label: string, name?: string,
-   *          kill?: number, size?: number, format?: (v: number) => string, onchange?: (v: number) => void,
+   *          kill?: number, size?: number, arc?: string, format?: (v: number) => string, onchange?: (v: number) => void,
    *          taper?: { toPos: (v: number) => number, fromPos: (p: number) => number } }}
    */
   let {
@@ -23,6 +25,7 @@
     name = label,
     kill,
     size = 28,
+    arc,
     format = (v) => v.toFixed(1),
     onchange = () => {},
     taper = {
@@ -38,6 +41,10 @@
   // The default comes back exact, not as a round trip through the taper.
   const setPos = (p) => set(p === resetPos ? reset : taper.fromPos(clampPos(p)));
   const killed = $derived(kill !== undefined && value <= kill);
+  // The arc as a conic slice: angles from 12 o'clock, clockwise.
+  const angle = (p) => -135 + p * 270;
+  const arcFrom = $derived(angle(Math.min(pos, clampPos(resetPos))));
+  const arcSpan = $derived(Math.abs(pos - clampPos(resetPos)) * 270);
   let beforeKill = 0;
   let dial;
 
@@ -115,6 +122,10 @@
     style:width="{size}px"
     style:height="{size}px"
     style:--v={pos}
+    style:--arc={arc}
+    style:--arc-from="{arcFrom}deg"
+    style:--arc-span="{arcSpan}deg"
+    class:arc={arc && arcSpan > 0.5}
     onpointerdown={down}
     onpointermove={move}
     onpointerup={up}
@@ -151,6 +162,19 @@
   .dial:hover,
   .dial.dragging {
     box-shadow: inset 0 0 0 1.5px var(--fg-4);
+  }
+  /* Value arc: a conic slice of the deck color, masked to the ring. */
+  .dial.arc::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: conic-gradient(from var(--arc-from), var(--arc) 0 var(--arc-span), transparent 0);
+    mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 1.5px));
+    pointer-events: none;
+  }
+  .dial.killed::before {
+    --arc: var(--kill);
   }
   .dial::after {
     content: '';

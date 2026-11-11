@@ -4,7 +4,7 @@
 
 import { engine, tracks, control } from './engine.svelte.js';
 import { announce } from './announce.svelte.js';
-import { deckSettings, setDeckSetting } from './decksettings.svelte.js';
+import { deckSettings, setDeckSetting, saveSlip } from './decksettings.svelte.js';
 
 /** Hot cues the deck shows as pads. The engine and the FLX4 have eight. */
 export const PADS = 4;
@@ -53,15 +53,17 @@ export function beatJump(deck, dir, long = false) {
   control({ type: 'beatJump', deck, beats: dir * (long ? LONG_JUMP : engine.decks[deck].loopBeats || 4) });
 }
 
-/** Slip mode on or off. */
-export function toggleSlip(deck) {
-  if (!tracks[deck]) return;
-  const on = !engine.decks[deck].slip;
+/** Turns slip mode on or off for a deck, and remembers it. */
+export function setSlip(deck, on) {
   control({ type: 'setSlip', deck, on });
   // Shown at once; the engine's next report agrees.
   engine.decks[deck].slip = on;
+  saveSlip(deck, on);
   announce(`Deck ${deckName(deck)} slip ${on ? 'on' : 'off'}`);
 }
+
+/** Slip mode on or off. */
+export const toggleSlip = (deck) => setSlip(deck, !engine.decks[deck].slip);
 
 /** Quantize, for both decks, from Settings > Decks (B toggles it too). */
 export function toggleQuantize() {

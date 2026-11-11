@@ -6,6 +6,9 @@
 //   plays takes its tempo and beat, as if SYNC were pressed.
 // * quantize: hot cues and loops snap to the beat, and jumps while playing
 //   keep the beat's timing.
+// * slip: slip mode for each deck. It lives here rather than on the deck so
+//   the deck stays calm; the A and ; keys still flip it mid-set, and the
+//   choice is remembered either way.
 
 import { backend } from './backend.js';
 
@@ -35,7 +38,29 @@ export function setDeckSetting(name, on) {
   return backend.control({ type: command, on }).catch((e) => console.error(e));
 }
 
+const slipKey = (deck) => `oss-dj.slip.${deck}`;
+
+/** The saved slip choice for a deck: off unless turned on. */
+export function savedSlip(deck) {
+  try {
+    return localStorage.getItem(slipKey(deck)) === 'on';
+  } catch {
+    return false;
+  }
+}
+
+/** Remembers a deck's slip choice for next time. */
+export function saveSlip(deck, on) {
+  try {
+    localStorage.setItem(slipKey(deck), on ? 'on' : 'off');
+  } catch {}
+}
+
 /** Tells the engine the saved choices. Call once at startup. */
 export function syncDeckSettings() {
   for (const name of /** @type {(keyof typeof SETTINGS)[]} */ (Object.keys(SETTINGS))) setDeckSetting(name, deckSettings[name]);
+  for (const deck of [0, 1]) {
+    const on = savedSlip(deck);
+    backend.control({ type: 'setSlip', deck, on }).catch((e) => console.error(e));
+  }
 }

@@ -23,6 +23,23 @@ pub enum Action {
     LoadSelected(DeckId),
     /// Load the selected library track into this sampler slot.
     LoadSample(usize),
+    /// A pad mode button was pressed: the deck's pads now work in `mode`.
+    PadMode { deck: DeckId, mode: PadMode },
+}
+
+/// What a deck's performance pads do, chosen with the controller's pad mode
+/// buttons.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PadMode {
+    HotCue,
+    BeatLoop,
+    BeatJump,
+    Sampler,
+    /// The FLX4's PAD FX1, which plays stems here.
+    PadFx1,
+    PadFx2,
+    Keyboard,
+    KeyShift,
 }
 
 /// The engine state a mapping needs to decide what a control does and what

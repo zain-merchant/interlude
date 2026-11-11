@@ -23,6 +23,7 @@
   import { stepUiZoom, setUiZoom } from './lib/uizoom.svelte.js';
   import { installAppMenu } from './lib/appmenu.js';
   import { runPerformance } from './lib/performance.js';
+  import { padMode, setPadMode } from './lib/padmode.svelte.js';
   import { toggleStem, soloStem, syncStemWaveforms, stemsUnavailable } from './lib/stems.svelte.js';
 
   let library;
@@ -184,7 +185,10 @@
         if (down) mixer.setCrossfader((xf = id === 'mixer.xfHardLeft' ? -1 : 1));
         break;
       case 'view.sampler':
-        if (down) setSamplerOpen(!sampler.open);
+        if (down) {
+          setSamplerOpen(!sampler.open);
+          samplerFromPads = false;
+        }
         break;
       case 'view.zoomOut':
         if (down) setZoom(zoom * 1.4);
@@ -335,6 +339,9 @@
     }).catch((e) => console.error('menu', e));
   });
 
+  /** True while the sampler is showing because of the controller's SAMPLER button. */
+  let samplerFromPads = false;
+
   onMount(() => {
     startEngineLoop();
     syncDeckSettings();
@@ -343,6 +350,20 @@
       if (e.type === 'browse') library.browse(e.delta);
       else if (e.type === 'load') library.loadSelected(e.deck);
       else if (e.type === 'stemsUnavailable') say(stemsUnavailable(e.deck));
+      else if (e.type === 'padMode') {
+        const was = padMode[e.deck].mode;
+        setPadMode(e.deck, e.mode);
+        // SAMPLER shows the sampler, and pressed again hides it. Leaving
+        // sampler mode on both decks hides it too, if SAMPLER showed it.
+        if (e.mode === 'sampler') {
+          const open = was !== 'sampler' || !sampler.open;
+          if (open !== sampler.open) setSamplerOpen(open);
+          samplerFromPads = open;
+        } else if (samplerFromPads && !padMode.some((p) => p.mode === 'sampler')) {
+          if (sampler.open) setSamplerOpen(false);
+          samplerFromPads = false;
+        }
+      }
       else if (e.type === 'loadSample') {
         // SHIFT + an empty sampler pad: the selected track goes in that slot.
         const t = library.selectedTrack();
