@@ -12,6 +12,8 @@
 
 pub mod controls;
 pub mod flx4;
+#[cfg(feature = "hid")]
+pub mod hid;
 pub mod learn;
 #[cfg(feature = "midi")]
 pub mod midi;
@@ -184,6 +186,15 @@ impl Entry {
         }
     }
 
+    /// A fresh instance of a Mixxx mapping, which a HID connection drives
+    /// directly.
+    pub fn create_mixxx(&self) -> Option<mixxx::MixxxMidi> {
+        match &self.kind {
+            Kind::Mixxx(p) => Some(mixxx::MixxxMidi::new(p.clone())),
+            Kind::Flx4 => None,
+        }
+    }
+
     /// The Mixxx mapping file's contents, for Mixxx mappings.
     pub fn preset(&self) -> Option<&mixxx::Preset> {
         match &self.kind {
@@ -211,7 +222,8 @@ impl Catalog {
         }
     }
 
-    /// The built-in mappings plus every `*.midi.xml` in `dirs`. A file
+    /// The built-in mappings plus every `*.midi.xml` and `*.hid.xml` in
+    /// `dirs`. A file
     /// name seen in an earlier folder hides the same name in later ones,
     /// so a user's copy of a Mixxx mapping wins over Mixxx's own. Files
     /// that fail to parse are reported to stderr and skipped.
@@ -279,6 +291,20 @@ impl Catalog {
         best.map(|(e, _)| e)
     }
 
+    /// The Mixxx HID mapping for this USB device, if any: the first that
+    /// names it. Joysticks and gamepads (Mixxx has mappings for a Wii
+    /// remote and a PS3 pad) are left to the games they're for.
+    pub fn find_hid(&self, device: &mixxx::HidDevice) -> Option<&Entry> {
+        const GENERIC_DESKTOP: u16 = 0x01;
+        if device.usage_page == GENERIC_DESKTOP && matches!(device.usage, 0x04 | 0x05) {
+            return None;
+        }
+        self.entries.iter().find(|e| {
+            matches!(&e.kind, Kind::Mixxx(p)
+                if p.matches_hid(device) && p.scripts.iter().any(|s| s.filename.ends_with(".js")))
+        })
+    }
+
     /// Folders searched for Mixxx mappings, besides any the app adds:
     /// `$OSS_DJ_MAPPINGS` (a path list), then Mixxx's user folder, then
     /// Mixxx's installed mappings, so a Mixxx install's mappings work
@@ -313,7 +339,7 @@ impl Catalog {
     }
 }
 
-/// `*.midi.xml` files in `dir`, sorted by name. A missing folder has none.
+/// Mixxx mapping files in `dir`, sorted by name. A missing folder has none.
 fn mapping_files(dir: &Path) -> Vec<PathBuf> {
     let Ok(rd) = std::fs::read_dir(dir) else {
         return vec![];
@@ -321,9 +347,10 @@ fn mapping_files(dir: &Path) -> Vec<PathBuf> {
     let mut files: Vec<PathBuf> = rd
         .filter_map(|e| e.ok().map(|e| e.path()))
         .filter(|p| {
-            p.file_name()
-                .and_then(|n| n.to_str())
-                .is_some_and(|n| n.to_ascii_lowercase().ends_with(".midi.xml"))
+            p.file_name().and_then(|n| n.to_str()).is_some_and(|n| {
+                let n = n.to_ascii_lowercase();
+                n.ends_with(".midi.xml") || n.ends_with(".hid.xml")
+            })
         })
         .collect();
     files.sort();
@@ -338,6 +365,57 @@ mod tests {
         format!(
             r#"<MixxxMIDIPreset><info><name>{name}</name></info><controller id="x"><controls/></controller></MixxxMIDIPreset>"#
         )
+    }
+
+    #[test]
+    fn hid_mappings_match_their_device_only() {
+        let dir = std::env::temp_dir().join(format!("ossdj-hid-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let xml = |name: &str, product: &str, script: &str| {
+            format!(
+                r#"<MixxxControllerPreset><info><name>{name}</name><devices>{product}</devices></info>
+                <controller id="x"><scriptfiles><file filename="{script}" functionprefix="X"/></scriptfiles></controller>
+                </MixxxControllerPreset>"#
+            )
+        };
+        let s3 = r#"<product protocol="hid" vendor_id="0x17cc" product_id="0x1900" usage_page="0xff01" usage="0x1" interface_number="0x3"/>"#;
+        let pad = r#"<product protocol="hid" vendor_id="0x54c" product_id="0x268" usage_page="0x1" usage="0x4"/>"#;
+        std::fs::write(dir.join("S3.hid.xml"), xml("Kontrol S3", s3, "s3.js")).unwrap();
+        std::fs::write(dir.join("Pad.hid.xml"), xml("Pad", pad, "pad.js")).unwrap();
+        std::fs::write(dir.join("Plain.hid.xml"), xml("Plain", "", "plain.js")).unwrap();
+        let c = Catalog::load(std::slice::from_ref(&dir));
+        let s3_dev = mixxx::HidDevice {
+            vendor_id: 0x17cc,
+            product_id: 0x1900,
+            usage_page: 0xff01,
+            usage: 1,
+            interface_number: 3,
+        };
+        assert_eq!(c.find_hid(&s3_dev).unwrap().name, "Kontrol S3");
+        // macOS and Windows often don't say which interface.
+        let unknown_if = mixxx::HidDevice {
+            interface_number: -1,
+            ..s3_dev
+        };
+        assert!(c.find_hid(&unknown_if).is_some());
+        assert!(c
+            .find_hid(&mixxx::HidDevice {
+                interface_number: 0,
+                ..s3_dev
+            })
+            .is_none());
+        let pad_dev = mixxx::HidDevice {
+            vendor_id: 0x54c,
+            product_id: 0x268,
+            usage_page: 1,
+            usage: 4,
+            interface_number: -1,
+        };
+        assert!(c.find_hid(&pad_dev).is_none(), "gamepads are left alone");
+        // HID mappings never take a MIDI port, even one named like them.
+        assert!(c.find("Kontrol S3 MIDI").is_none());
+        assert!(c.find("Plain MIDI 1").is_none());
+        std::fs::remove_dir_all(&dir).unwrap();
     }
 
     #[test]
