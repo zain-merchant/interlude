@@ -20,8 +20,9 @@ use rtrb::{Consumer, Producer, RingBuffer};
 const RING_SECS: usize = 4;
 /// How often the writer wakes to drain the ring.
 const WRITER_PERIOD: Duration = Duration::from_millis(20);
-/// How often the WAV header is rewritten, so a crash leaves a playable file.
-const FLUSH_PERIOD: Duration = Duration::from_secs(5);
+/// How often the WAV header is rewritten and the file flushed, so a crash
+/// or power cut leaves a playable file missing at most about this much.
+const FLUSH_PERIOD: Duration = Duration::from_secs(1);
 /// Bit depth of recordings.
 const BITS: u16 = 24;
 
@@ -140,17 +141,18 @@ impl Recorder {
         if self.job.is_some() {
             return Err(RecordError::AlreadyRecording);
         }
-        if let Some(dir) = path.parent() {
-            std::fs::create_dir_all(dir)?;
-        }
-        let spec = hound::WavSpec {
-            channels: 2,
-            sample_rate: self.sample_rate,
-            bits_per_sample: BITS,
-            sample_format: hound::SampleFormat::Int,
+        // The ring only goes missing if the writer thread panicked; the
+        // engine plays on, but recording can't start again this session.
+        let mut rx = self.rx.take().ok_or_else(|| {
+            RecordError::Io("the recorder stopped working; restart the app to record".into())
+        })?;
+        let writer = match self.create(path) {
+            Ok(w) => w,
+            Err(e) => {
+                self.rx = Some(rx);
+                return Err(e);
+            }
         };
-        let writer = hound::WavWriter::create(path, spec)?;
-        let mut rx = self.rx.take().expect("ring is home while idle");
         // Throw away anything left over from the end of the last recording.
         if let Ok(c) = rx.read_chunk(rx.slots()) {
             c.commit_all();
@@ -179,6 +181,19 @@ impl Recorder {
         self.job = Some(Job { thread, stop });
         self.shared.active.store(true, Ordering::Release);
         Ok(())
+    }
+
+    fn create(&self, path: &Path) -> Result<hound::WavWriter<BufWriter<File>>, RecordError> {
+        if let Some(dir) = path.parent() {
+            std::fs::create_dir_all(dir)?;
+        }
+        let spec = hound::WavSpec {
+            channels: 2,
+            sample_rate: self.sample_rate,
+            bits_per_sample: BITS,
+            sample_format: hound::SampleFormat::Int,
+        };
+        Ok(hound::WavWriter::create(path, spec)?)
     }
 
     /// Stops the recording, finishes the file and returns its final status.
