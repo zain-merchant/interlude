@@ -136,6 +136,16 @@ A free, open-source DJ app that is fast, modern and uncluttered. No paywalled
   LEVEL/DEPTH the level, and ON/OFF switches it, lit while on (SHIFT +
   ON/OFF turns every effect off). Moving the lever takes the effect with it
   to the new deck.
+- **Other controllers (early): Mixxx mappings.** oss-dj reads Mixxx's
+  controller mapping files (`*.midi.xml`) and connects a controller whose
+  name matches one, alongside any others plugged in. It finds them in a
+  Mixxx install, Mixxx's user folder, the app's own `controllers` folder
+  (in its data folder) or folders listed in `OSS_DJ_MAPPINGS`. The direct
+  bindings work, LEDs included: about 68% of them across Mixxx's 144 MIDI
+  mappings (decks 3 and 4, and Mixxx-only features, are left out). Most
+  mappings also rely on JavaScript, which isn't run yet, so for now many
+  controllers only partly work. `dj mappings` lists what was found and how
+  much of each works.
 
 The engine renders two playing decks at about 1% of one CPU core, and a
 test guarantees the audio thread never allocates memory.
@@ -228,6 +238,7 @@ cargo run --release -p dj-cli -- info track.mp3
 cargo run --release -p dj-cli -- play a.mp3 b.mp3          # auto-crossfade A into B
 cargo run --release -p dj-cli -- render a.mp3 b.mp3 mix.wav
 cargo run --release -p dj-cli -- midi                      # print what a controller sends
+cargo run --release -p dj-cli -- mappings                  # list controller mappings found
 ```
 
 ## Roadmap
