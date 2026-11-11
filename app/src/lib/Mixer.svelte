@@ -137,6 +137,7 @@
       onchange={(v) => control({ type: 'setGain', deck, db: v })} />
     {#each BANDS as { label, band }}
       <Knob {label} name="Deck {n} {label.toLowerCase()} EQ" size={KNOB} bind:value={ch.eq[band]} min={KILL} max={EQ_MAX} reset={0} kill={KILL} taper={eqTaper} format={db}
+        arc={deck === 0 ? 'var(--deck-a)' : 'var(--deck-b)'}
         onchange={(v) => control({ type: 'setEq', deck, band, db: v })} />
     {/each}
     <Knob label="Filter" name="Deck {n} filter" size={KNOB} bind:value={ch.filter} min={-1} max={1} reset={0} format={filterText}
