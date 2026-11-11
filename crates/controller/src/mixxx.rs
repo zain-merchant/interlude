@@ -8,10 +8,9 @@
 //! (`MidiController::processInputMapping` and `MidiOutputHandler`) so a
 //! mapping behaves here as it does in Mixxx.
 //!
-//! Bindings to script functions (`<script-binding/>`) are skipped for
-//! now; mappings that do everything in script only partly work until
-//! scripts are supported. [`Preset::coverage`] says how much of a mapping
-//! works.
+//! Bindings to script functions (`<script-binding/>`) call into the
+//! mapping's JavaScript, run by [`crate::script`]. [`Preset::coverage`]
+//! says how much of a mapping's direct bindings work.
 //!
 //! Mixxx mappings are GPL-2.0-or-later, which oss-dj's GPL-3.0-or-later
 //! licence is compatible with.
@@ -20,6 +19,7 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 use crate::controls::{Control, Controls};
+use crate::script::{Script, Setting};
 use crate::{Action, Mapping, State};
 
 // MIDI options, as Mixxx's `MidiOption` flags.
@@ -91,6 +91,11 @@ pub struct Preset {
     inputs: HashMap<(u8, u8), Vec<Input>>,
     pub outputs: Vec<Output>,
     pub scripts: Vec<ScriptFile>,
+    /// The mapping's `<settings>`, at their defaults.
+    pub settings: Vec<(String, Setting)>,
+    /// Other folders to look for script files in (shared libraries such as
+    /// Mixxx's `common-controller-scripts.js`).
+    pub script_dirs: Vec<PathBuf>,
     /// Port names matching these (normalised) belong to the controller.
     match_names: Vec<String>,
 }
@@ -200,6 +205,12 @@ impl Preset {
             })
             .collect();
 
+        let settings = root
+            .descendants()
+            .filter(|n| n.has_tag_name("option"))
+            .filter_map(|o| Some((o.attribute("variable")?.to_owned(), setting(o))))
+            .collect();
+
         let mut inputs: HashMap<(u8, u8), Vec<Input>> = HashMap::new();
         for c in child(controller, "controls")
             .into_iter()
@@ -288,6 +299,8 @@ impl Preset {
             inputs,
             outputs,
             scripts,
+            settings,
+            script_dirs: vec![],
             match_names,
         })
     }
@@ -343,9 +356,37 @@ impl Preset {
     }
 }
 
+/// A `<settings>` option's default value.
+fn setting(o: roxmltree::Node) -> Setting {
+    let default = o.attribute("default").unwrap_or("");
+    match o.attribute("type").unwrap_or("") {
+        "boolean" => Setting::Bool(default == "true"),
+        "integer" | "real" => Setting::Number(default.parse().unwrap_or(0.0)),
+        "enum" => {
+            let values: Vec<_> = o.children().filter(|c| c.has_tag_name("value")).collect();
+            let chosen = values
+                .iter()
+                .find(|v| v.attribute("default") == Some("true"))
+                .or(values.first());
+            Setting::Text(
+                chosen
+                    .and_then(|v| v.text())
+                    .unwrap_or("")
+                    .trim()
+                    .to_owned(),
+            )
+        }
+        _ => Setting::Text(default.to_owned()),
+    }
+}
+
 /// A Mixxx MIDI mapping running against our engine.
 pub struct MixxxMidi {
     preset: std::sync::Arc<Preset>,
+    /// The mapping's scripts, if it has any and they loaded.
+    script: Option<Script>,
+    /// Engine state last seen, for the scripts' shutdown.
+    last_state: State,
     controls: Controls,
     /// The first half of 14-bit pairs, waiting for the other: the control,
     /// whether it was the MSB, and its value.
@@ -359,7 +400,10 @@ pub struct MixxxMidi {
 impl MixxxMidi {
     pub fn new(preset: std::sync::Arc<Preset>) -> Self {
         let n = preset.outputs.len();
+        let script = load_script(&preset);
         Self {
+            script,
+            last_state: State::default(),
             preset,
             controls: Controls::new(),
             halves: vec![],
@@ -370,6 +414,26 @@ impl MixxxMidi {
 
     pub fn preset(&self) -> &Preset {
         &self.preset
+    }
+
+    /// Whether the mapping's scripts are running.
+    pub fn has_script(&self) -> bool {
+        self.script.is_some()
+    }
+
+    /// Errors the mapping's scripts have raised.
+    pub fn script_errors(&self) -> Vec<String> {
+        self.script.as_ref().map(Script::errors).unwrap_or_default()
+    }
+
+    /// Runs the scripts' `init` the first time it's needed.
+    fn started(&mut self, state: &State) -> Vec<Action> {
+        self.last_state = *state;
+        let id = self.preset.id.clone();
+        match &mut self.script {
+            Some(s) => s.start(&id, state),
+            None => vec![],
+        }
     }
 
     /// Soft takeover: whether a knob now at `param` should be ignored
@@ -394,6 +458,12 @@ impl MixxxMidi {
         value: u8,
         state: &State,
     ) -> Vec<Action> {
+        if input.is_script() {
+            return match &mut self.script {
+                Some(s) => s.binding(&input.key, &input.group, status, number, value, state),
+                None => vec![],
+            };
+        }
         let Some(c) = input.control else {
             return vec![];
         };
@@ -448,6 +518,35 @@ impl MixxxMidi {
             }
         }
         self.controls.set_from_midi(c, v, note_off, state)
+    }
+}
+
+/// Loads a mapping's scripts, if it lists any. A mapping whose scripts
+/// can't be found or don't load still works through its direct bindings.
+fn load_script(preset: &Preset) -> Option<Script> {
+    if preset.scripts.is_empty() {
+        return None;
+    }
+    let names: Vec<String> = preset.scripts.iter().map(|s| s.filename.clone()).collect();
+    let dir = preset.path.as_deref().and_then(Path::parent);
+    let loaded = crate::script::read_files(dir, &names, &preset.script_dirs).and_then(|files| {
+        let prefixes = preset
+            .scripts
+            .iter()
+            .map(|s| s.prefix.clone())
+            .filter(|p| !p.is_empty())
+            .collect();
+        Script::load(&preset.name, &files, prefixes, &preset.settings)
+    });
+    match loaded {
+        Ok(s) => Some(s),
+        Err(e) => {
+            eprintln!(
+                "controller mapping {:?}: scripts not loaded: {e}",
+                preset.name
+            );
+            None
+        }
     }
 }
 
@@ -520,24 +619,49 @@ impl Mapping for MixxxMidi {
         let Some(&status) = msg.first() else {
             return vec![];
         };
-        // System messages: sysex, clock and so on go to scripts only.
+        let mut out = self.started(state);
+        // System exclusive goes to the scripts' incomingData; clock and
+        // other system messages are dropped, as in Mixxx.
+        if status == 0xF0 {
+            if let Some(s) = &mut self.script {
+                out.extend(s.sysex(msg, state));
+            }
+            return out;
+        }
         if !(0x80..0xF0).contains(&status) {
-            return vec![];
+            return out;
         }
         let number = msg.get(1).copied().unwrap_or(0);
         let value = msg.get(2).copied().unwrap_or(0);
         let preset = self.preset.clone();
         let Some(inputs) = preset.inputs.get(&(status, number)) else {
-            return vec![];
+            return out;
         };
-        inputs
-            .iter()
-            .flat_map(|i| self.input(i, status, number, value, state))
-            .collect()
+        for i in inputs {
+            out.extend(self.input(i, status, number, value, state));
+        }
+        out
+    }
+
+    fn poll(&mut self, state: &State) -> Vec<Action> {
+        let mut out = self.started(state);
+        if let Some(s) = &mut self.script {
+            out.extend(s.tick(state));
+        }
+        out
+    }
+
+    fn shutdown(&mut self, state: &State) {
+        if let Some(s) = &mut self.script {
+            s.stop(state);
+        }
     }
 
     fn leds(&mut self, state: &State) -> Vec<Vec<u8>> {
-        let mut out = vec![];
+        let mut out = match &mut self.script {
+            Some(s) => s.take_midi(),
+            None => vec![],
+        };
         for (o, sent) in self.preset.outputs.iter().zip(&mut self.sent) {
             let Some(c) = o.control else { continue };
             let v = self.controls.get(c, state);
@@ -856,5 +980,137 @@ mod tests {
             println!("  {n:4}  {m}");
         }
         assert_eq!(failed, 0);
+    }
+
+    /// Mixxx's own DDJ-FLX4 mapping, scripts and all, should drive the
+    /// deck as our hand-written one does for the same MIDI. Needs
+    /// `$MIXXX_CONTROLLERS`; run with `-- --ignored --nocapture`.
+    #[test]
+    #[ignore]
+    fn mixxx_flx4_agrees_with_ours() {
+        let Some(dir) = std::env::var_os("MIXXX_CONTROLLERS") else {
+            return;
+        };
+        let dir = std::path::PathBuf::from(dir);
+        let mut p = Preset::load(&dir.join("Pioneer-DDJ-FLX4.midi.xml")).unwrap();
+        p.script_dirs = vec![dir];
+        let mut theirs = MixxxMidi::new(Arc::new(p));
+        assert!(theirs.has_script());
+        let mut ours = crate::flx4::Flx4::new();
+        let s = st();
+        theirs.poll(&s);
+        // The command's name; Play and Pause from a stopped deck are what
+        // TogglePlay does.
+        let kind = |a: &Action| {
+            let s = format!("{a:?}");
+            let s = s.strip_prefix("Engine(").unwrap_or(&s);
+            let name: String = s.chars().take_while(|c| c.is_alphanumeric()).collect();
+            match name.as_str() {
+                "Play" | "Pause" => "TogglePlay".to_owned(),
+                _ => name,
+            }
+        };
+        let msgs: &[&[u8]] = &[
+            &[0x90, 0x0B, 0x7F], // play
+            &[0x90, 0x0C, 0x7F], // cue press
+            &[0x90, 0x0C, 0x00], // cue release
+            &[0x90, 0x58, 0x7F], // sync
+            &[0x90, 0x54, 0x7F], // headphone cue
+            &[0x97, 0x00, 0x7F], // hot cue pad 1
+            &[0x97, 0x00, 0x00],
+            &[0x90, 0x10, 0x7F], // loop in
+            &[0x90, 0x11, 0x7F], // loop out
+            &[0xB0, 0x13, 0x40],
+            &[0xB0, 0x33, 0x00], // channel fader
+            &[0xB0, 0x07, 0x40],
+            &[0xB0, 0x27, 0x00], // EQ high
+            &[0xB6, 0x1F, 0x7F],
+            &[0xB6, 0x3F, 0x7F], // crossfader
+            &[0x96, 0x46, 0x7F], // load A
+        ];
+        let mut agree = 0;
+        for m in msgs {
+            let a: Vec<String> = ours.handle(m, &s).iter().map(kind).collect();
+            let mut b: Vec<String> = theirs.handle(m, &s).iter().map(kind).collect();
+            b.extend(theirs.poll(&s).iter().map(kind));
+            let same = a.iter().all(|x| b.contains(x));
+            agree += usize::from(same);
+            println!(
+                "{:02X?}  ours {a:?}  mixxx {b:?}{}",
+                m,
+                if same { "" } else { "  <- differs" }
+            );
+        }
+        println!("errors: {:?}", theirs.script_errors());
+        println!("{agree}/{} agree", msgs.len());
+        assert_eq!(agree, msgs.len());
+        assert!(theirs.script_errors().is_empty());
+    }
+
+    /// Runs every mapping in `$MIXXX_CONTROLLERS` with its scripts: init,
+    /// every bound message pressed and released, timers, shutdown. Prints
+    /// the mappings whose scripts don't load or raise errors. Run with
+    /// `cargo test -p dj-controller mixxx_scripts -- --ignored --nocapture`.
+    #[test]
+    #[ignore]
+    fn mixxx_scripts() {
+        let Some(dir) = std::env::var_os("MIXXX_CONTROLLERS") else {
+            return;
+        };
+        let dir = std::path::PathBuf::from(dir);
+        let mut files: Vec<_> = std::fs::read_dir(&dir)
+            .unwrap()
+            .filter_map(|e| e.ok().map(|e| e.path()))
+            .filter(|p| p.to_string_lossy().ends_with(".midi.xml"))
+            .collect();
+        files.sort();
+        let (mut with_scripts, mut loaded, mut clean) = (0, 0, 0);
+        let mut actions = 0usize;
+        for f in &files {
+            let mut p = Preset::load(f).unwrap();
+            if p.scripts.is_empty() {
+                continue;
+            }
+            with_scripts += 1;
+            p.script_dirs = vec![dir.clone()];
+            let p = Arc::new(p);
+            let t = std::time::Instant::now();
+            let mut m = MixxxMidi::new(p.clone());
+            if !m.has_script() {
+                println!("NOT LOADED  {}", p.name);
+                continue;
+            }
+            loaded += 1;
+            let mut s = st();
+            actions += m.poll(&s).len();
+            let keys: Vec<(u8, u8)> = p.inputs.keys().copied().collect();
+            for (status, number) in keys {
+                actions += m.handle(&[status, number, 0x7F], &s).len();
+                actions += m.handle(&[status, number, 0x00], &s).len();
+            }
+            s.decks[0].playing = true;
+            s.decks[1].hot_cues[0] = Some(1.0);
+            for _ in 0..3 {
+                actions += m.poll(&s).len();
+                m.leds(&s);
+            }
+            m.shutdown(&s);
+            m.leds(&s);
+            let errors = m.script_errors();
+            if errors.is_empty() {
+                clean += 1;
+            } else {
+                println!("ERRORS      {} ({} distinct)", p.name, errors.len());
+                for e in errors.iter().take(3) {
+                    println!("              {e}");
+                }
+            }
+            if t.elapsed() > std::time::Duration::from_secs(2) {
+                println!("SLOW        {} took {:?}", p.name, t.elapsed());
+            }
+        }
+        println!(
+            "\n{with_scripts} mappings with scripts: {loaded} loaded, {clean} ran without errors; {actions} actions"
+        );
     }
 }

@@ -140,12 +140,16 @@ A free, open-source DJ app that is fast, modern and uncluttered. No paywalled
   controller mapping files (`*.midi.xml`) and connects a controller whose
   name matches one, alongside any others plugged in. It finds them in a
   Mixxx install, Mixxx's user folder, the app's own `controllers` folder
-  (in its data folder) or folders listed in `OSS_DJ_MAPPINGS`. The direct
-  bindings work, LEDs included: about 68% of them across Mixxx's 144 MIDI
-  mappings (decks 3 and 4, and Mixxx-only features, are left out). Most
-  mappings also rely on JavaScript, which isn't run yet, so for now many
-  controllers only partly work. `dj mappings` lists what was found and how
-  much of each works.
+  (in its data folder) or folders listed in `OSS_DJ_MAPPINGS`. Direct
+  bindings and LEDs work for about 68% of the controls across Mixxx's 144
+  MIDI mappings (decks 3 and 4, and Mixxx-only features, are left out).
+  The mappings' JavaScript runs too, in an embedded engine with Mixxx's
+  script API (controls, connections, timers, jog scratching, MIDI out);
+  all 132 scripted mappings load, and each script call has a time and
+  memory limit so a broken mapping can't hang the app. Mixxx's own FLX4
+  mapping drives the decks the same way the built-in one does. Not yet
+  tested on hardware beyond the FLX4. `dj mappings` lists what was found
+  and how much of each works.
 
 The engine renders two playing decks at about 1% of one CPU core, and a
 test guarantees the audio thread never allocates memory.
