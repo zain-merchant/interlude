@@ -8,6 +8,7 @@
 //! Its mixer and transport controls go straight to the engine; its library
 //! browse knob and load buttons arrive in the UI as `controller` events.
 
+mod audio;
 mod controller;
 mod library;
 mod stems;
@@ -23,7 +24,7 @@ use tauri::ipc::Response;
 use tauri::{Manager, State};
 
 /// Keeps whichever output is running alive for the app's lifetime.
-enum Output {
+pub(crate) enum Output {
     Device(dj_engine::output::AudioOutput),
     #[allow(dead_code)]
     Null(dj_engine::NullOutput),
@@ -65,10 +66,12 @@ impl Output {
     }
 }
 
-struct AppState {
+pub(crate) struct AppState {
     engine: Arc<Mutex<EngineHandle>>,
     tracks: Mutex<[Option<Arc<Track>>; dj_engine::NUM_DECKS]>,
     output: Output,
+    /// The output device picked in Settings > Audio.
+    audio: Mutex<audio::Saved>,
 }
 
 #[derive(Serialize)]
@@ -726,17 +729,19 @@ fn log_audio_stats(app: tauri::AppHandle) {
 }
 
 pub fn run() {
-    // Play through the controller's own sound card when it's plugged in, so
-    // its headphone output works.
-    let preferred = ["DDJ-FLX4"];
-    let (output, handle) = match dj_engine::output::start_preferring(&preferred) {
-        Ok((out, handle)) => (Output::Device(out), handle),
-        Err(e) => {
-            eprintln!("no audio output ({e}); running silently");
-            let (out, handle) = dj_engine::start_null(48_000);
-            (Output::Null(out), handle)
-        }
-    };
+    // Play through the device picked in Settings > Audio, or by default the
+    // controller's own sound card when it's plugged in, so its headphone
+    // output works.
+    let saved_audio = audio::load();
+    let (output, handle) =
+        match dj_engine::output::start_with(audio::target(&saved_audio), audio::PREFERRED) {
+            Ok((out, handle)) => (Output::Device(out), handle),
+            Err(e) => {
+                eprintln!("no audio output ({e}); running silently");
+                let (out, handle) = dj_engine::start_null(48_000);
+                (Output::Null(out), handle)
+            }
+        };
 
     let shared = handle.shared().clone();
     let stems = stems::Stems::new(shared.clone());
@@ -762,6 +767,7 @@ pub fn run() {
             engine,
             tracks: Mutex::new(Default::default()),
             output,
+            audio: Mutex::new(saved_audio),
         })
         .manage(library::Library::load())
         .manage(stems)
@@ -771,6 +777,8 @@ pub fn run() {
             output_name,
             audio_stats,
             use_default_output,
+            audio::audio_outputs,
+            audio::set_audio_output,
             load_track,
             load_sample,
             set_beatgrid,
