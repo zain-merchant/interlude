@@ -334,6 +334,14 @@
           </label>
           <p>Starting a deck with play, cue or a hot cue while the other deck is playing brings it in at that deck's tempo and on its beat, as if you'd pressed Sync.</p>
         </section>
+        <section class="display">
+          <h3>Quantize</h3>
+          <label class="opt">
+            <input type="checkbox" checked={deckSettings.quantize} onchange={(e) => setDeckSetting('quantize', e.currentTarget.checked)} />
+            <span>Snap to the beat</span>
+          </label>
+          <p>Hot cues and loops you set land on the nearest beat, and jumping to a hot cue or back into a loop while a track plays stays in time. Turn this off to set and jump exactly where you press. B turns it on and off too.</p>
+        </section>
       {:else if page === 'audio'}
         <section class="display">
           <h3>Output</h3>

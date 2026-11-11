@@ -4,6 +4,7 @@
 
 import { engine, tracks, control } from './engine.svelte.js';
 import { announce } from './announce.svelte.js';
+import { deckSettings, setDeckSetting } from './decksettings.svelte.js';
 
 /** Hot cues the deck shows as pads. The engine and the FLX4 have eight. */
 export const PADS = 4;
@@ -62,12 +63,10 @@ export function toggleSlip(deck) {
   announce(`Deck ${deckName(deck)} slip ${on ? 'on' : 'off'}`);
 }
 
-/** Quantize, for both decks. On unless turned off; engines that don't report it count as on. */
-export const quantizeOn = () => engine.mixer?.quantize ?? true;
-
+/** Quantize, for both decks, from Settings > Decks (B toggles it too). */
 export function toggleQuantize() {
-  const on = !quantizeOn();
-  control({ type: 'setQuantize', on });
+  const on = !deckSettings.quantize;
+  setDeckSetting('quantize', on);
   // Shown at once; the engine's next report agrees.
   if (engine.mixer) engine.mixer.quantize = on;
   announce(on ? 'Quantize on' : 'Quantize off');
