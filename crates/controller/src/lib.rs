@@ -12,6 +12,7 @@
 
 pub mod controls;
 pub mod flx4;
+pub mod learn;
 #[cfg(feature = "midi")]
 pub mod midi;
 pub mod mixxx;
@@ -247,10 +248,17 @@ impl Catalog {
         &self.entries
     }
 
-    /// The mapping for a MIDI port with this name: a built-in one if any
-    /// matches, otherwise the Mixxx mapping whose name matches the port
+    /// The mapping for a MIDI port with this name: one learned for exactly
+    /// this port, then a built-in one, otherwise the Mixxx mapping whose name matches the port
     /// most closely (the first such file on a tie).
     pub fn find(&self, port_name: &str) -> Option<&Entry> {
+        // A mapping learned for this exact port is what the user asked for,
+        // so it comes ahead of even the built-in one.
+        if let Some(e) = self.entries.iter().find(|e| {
+            matches!(&e.kind, Kind::Mixxx(p) if p.is_exact() && p.match_len(port_name).is_some())
+        }) {
+            return Some(e);
+        }
         if let Some(e) = self
             .entries
             .iter()

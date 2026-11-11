@@ -150,6 +150,14 @@ A free, open-source DJ app that is fast, modern and uncluttered. No paywalled
   mapping drives the decks the same way the built-in one does. Not yet
   tested on hardware beyond the FLX4. `dj mappings` lists what was found
   and how much of each works.
+- **Any other MIDI controller: MIDI learn.** In Settings → Controllers,
+  pick the controller, pick an action (play, cue, faders, EQ, hot cues,
+  loops, effects, browsing, samples) and press Learn, then move the
+  control. It tells buttons, knobs, 14-bit faders, jog encoders and pitch
+  bend apart on its own and moves straight on to the next action. The
+  result is saved as a Mixxx mapping in the app's `controllers` folder and
+  used for that controller ahead of any other, the built-in FLX4 one
+  included.
 
 The engine renders two playing decks at about 1% of one CPU core, and a
 test guarantees the audio thread never allocates memory.
