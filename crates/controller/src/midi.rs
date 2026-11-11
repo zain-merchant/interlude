@@ -57,11 +57,11 @@ impl ControllerService {
     /// Mixxx mappings from [`Catalog::default_dirs`]. Set
     /// `OSS_DJ_MIDI_LOG=1` to print every incoming message to stderr.
     pub fn start(host: Arc<dyn Host>) -> Self {
-        Self::start_with(host, vec![])
+        Self::start_with(host, Catalog::default_dirs())
     }
 
-    /// As [`Self::start`], also loading Mixxx mappings from `dirs`, which
-    /// come before the default folders.
+    /// As [`Self::start`], with Mixxx mappings from `dirs`, in order: a
+    /// file name in an earlier folder hides the same name in later ones.
     pub fn start_with(host: Arc<dyn Host>, dirs: Vec<PathBuf>) -> Self {
         let stop = Arc::new(AtomicBool::new(false));
         let reload = Arc::new(AtomicBool::new(false));
@@ -71,11 +71,7 @@ impl ControllerService {
             let (stop, reload, connected) = (stop.clone(), reload.clone(), connected.clone());
             std::thread::Builder::new()
                 .name("controller".into())
-                .spawn(move || {
-                    let mut all = dirs;
-                    all.extend(Catalog::default_dirs());
-                    run(&all, host, stop, reload, connected, log)
-                })
+                .spawn(move || run(&dirs, host, stop, reload, connected, log))
                 .ok()
         };
         Self {

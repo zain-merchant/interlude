@@ -305,36 +305,54 @@ impl Catalog {
         })
     }
 
-    /// Folders searched for Mixxx mappings, besides any the app adds:
-    /// `$OSS_DJ_MAPPINGS` (a path list), then Mixxx's user folder, then
-    /// Mixxx's installed mappings, so a Mixxx install's mappings work
-    /// without copying anything.
+    /// The Mixxx mappings that come with oss-dj, in this source tree. A
+    /// built app ships its own copy and passes it to
+    /// [`Self::default_dirs_with`] instead.
+    pub fn source_mappings_dir() -> Option<PathBuf> {
+        let d = Path::new(env!("CARGO_MANIFEST_DIR")).join("mappings");
+        d.is_dir().then_some(d)
+    }
+
+    /// Folders searched for Mixxx mappings, besides any the app adds, with
+    /// the mappings in this source tree as the bundled ones.
     pub fn default_dirs() -> Vec<PathBuf> {
+        Self::default_dirs_with(Self::source_mappings_dir())
+    }
+
+    /// Folders searched for Mixxx mappings, in order: `$OSS_DJ_MAPPINGS`
+    /// (a path list), Mixxx's user folder (mappings someone made or
+    /// changed in Mixxx), the `bundled` mappings that come with oss-dj,
+    /// then an installed Mixxx's own. Mixxx itself isn't needed: the
+    /// bundled mappings cover every controller Mixxx supports.
+    pub fn default_dirs_with(bundled: Option<PathBuf>) -> Vec<PathBuf> {
         let mut dirs: Vec<PathBuf> = std::env::var_os("OSS_DJ_MAPPINGS")
             .map(|v| std::env::split_paths(&v).collect())
             .unwrap_or_default();
         let home = std::env::var_os("HOME").map(PathBuf::from);
+        let mut system: Vec<PathBuf> = vec![];
         if cfg!(target_os = "macos") {
             if let Some(h) = &home {
                 dirs.push(h.join("Library/Containers/org.mixxx.mixxx/Data/Library/Application Support/Mixxx/controllers"));
                 dirs.push(h.join("Library/Application Support/Mixxx/controllers"));
             }
-            dirs.push("/Applications/Mixxx.app/Contents/Resources/controllers".into());
+            system.push("/Applications/Mixxx.app/Contents/Resources/controllers".into());
         } else if cfg!(windows) {
             if let Some(l) = std::env::var_os("LOCALAPPDATA") {
                 dirs.push(PathBuf::from(l).join("Mixxx/controllers"));
             }
             if let Some(p) = std::env::var_os("ProgramFiles") {
-                dirs.push(PathBuf::from(p).join("Mixxx/controllers"));
+                system.push(PathBuf::from(p).join("Mixxx/controllers"));
             }
         } else {
             if let Some(h) = &home {
                 dirs.push(h.join(".mixxx/controllers"));
                 dirs.push(h.join(".local/share/mixxx/controllers"));
             }
-            dirs.push("/usr/share/mixxx/controllers".into());
-            dirs.push("/usr/local/share/mixxx/controllers".into());
+            system.push("/usr/share/mixxx/controllers".into());
+            system.push("/usr/local/share/mixxx/controllers".into());
         }
+        dirs.extend(bundled);
+        dirs.extend(system);
         dirs
     }
 }
