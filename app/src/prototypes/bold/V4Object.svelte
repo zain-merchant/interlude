@@ -42,7 +42,7 @@
       <div class="list">
         <div class="lh"><span>library</span><span class="dim">412</span></div>
         {#each library.slice(0, 7) as r, i}
-          <div class="li" class:sel={i === 2}><span>{r[0].toLowerCase()}</span><span>{r[2]}</span><span>{r[3]}</span></div>
+          <div class="li" class:sel={i === 2}><span>{String(r[0]).toLowerCase()}</span><span>{r[2]}</span><span>{r[3]}</span></div>
         {/each}
       </div>
     </div>

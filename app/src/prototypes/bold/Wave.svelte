@@ -22,7 +22,7 @@
     const off = onTick(() => {
       if (!w || !h || !canvas.offsetParent) return;
       ctx.clearRect(0, 0, w, h);
-      styles[kind](ctx, w, h, decks[deck].data, clock.t[deck], { seconds: 12, ...opts });
+      /** @type {Function} */ (styles[kind])(ctx, w, h, decks[deck].data, clock.t[deck], { seconds: 12, ...opts });
     });
     return () => (off(), ro.disconnect());
   });
