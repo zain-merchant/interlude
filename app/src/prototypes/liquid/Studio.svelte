@@ -16,8 +16,8 @@
 
   // modes: which mode each deck's panel opens on.
   /** @type {{ palette: { a: string, b: string, bands: Record<string, string>[] }, modes?: string[] }} */
-  /** look: how the mode panel draws its controls ('text', 'round' or 'scale'). */
-  let { palette, modes = ['Cues', 'Cues'], look = 'text' } = $props();
+  /** tint: how much deck colour the backdrop carries (0 = none). */
+  let { palette, modes = ['Cues', 'Cues'], tint = 0 } = $props();
   // svelte-ignore state_referenced_locally (only the starting mode comes from the prop)
   let mode = $state([...modes]);
   const C = $derived([palette.a, palette.b]);
@@ -31,7 +31,7 @@
 </script>
 
 <div class="studio" style:--a={C[0]} style:--b={C[1]}>
-  <Backdrop a={C[0]} b={C[1]} />
+  <Backdrop a={C[0]} b={C[1]} {tint} />
   <section class="panel waves">
     {#each [0, 1] as k}
       <div class="lane" style:--c={C[k]}>
@@ -56,7 +56,7 @@
             <span class="el"><Time deck={k} /></span>
             <span class="rm"><Time deck={k} remaining /></span>
           </div>
-          <ModePanel deck={k} color={C[k]} bind:mode={mode[k]} {look} />
+          <ModePanel deck={k} color={C[k]} bind:mode={mode[k]} />
           <div class="tp">
             <button class="cue">Cue</button>
             <button class="play" aria-label="Pause"><svg viewBox="0 0 16 16"><rect x="3" y="2" width="3.5" height="12" rx="1" /><rect x="9.5" y="2" width="3.5" height="12" rx="1" /></svg></button>

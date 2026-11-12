@@ -13,9 +13,8 @@
 </script>
 
 <prototype-switcher>
-  <section data-variant="Text Row" data-note="No boxes: a toolbar row of words, numbers and small marks under underline tabs. Cues are a colour and a time"><Studio palette={palettes.mint} look="text" modes={['Cues', 'Stems']} /></section>
-  <section data-variant="Round Pads" data-note="Round pads and machined dials like the mixer; stems are level dials you can mute"><Studio palette={palettes.mint} look="round" modes={['Cues', 'Stems']} /></section>
-  <section data-variant="Value Scales" data-note="Choices laid out on a scale with the current one lit (loop lengths, FX beats); stems are on/off switches"><Studio palette={palettes.mint} look="scale" modes={['Cues', 'Stems']} /></section>
+  <section data-variant="No gradient" data-note="Text Row menus; frosted panels over plain graphite with a neutral light from the top, no deck colour behind"><Studio palette={palettes.mint} tint={0} modes={['Cues', 'Stems']} /></section>
+  <section data-variant="Faint gradient" data-note="Same, with a trace of the deck colours behind the glass (about a quarter of before)"><Studio palette={palettes.mint} tint={0.25} modes={['Cues', 'Stems']} /></section>
 </prototype-switcher>
 
 <style>
