@@ -1,17 +1,23 @@
 <script>
-  import '@fontsource-variable/geist-mono';
   import './liquid.css';
   import '../bold/switcher.js';
-  import L4Classic from './L4Classic.svelte';
+  import Studio from './Studio.svelte';
+
+  // Three deck colour pairs on the same layout. Each pair's waveform bands
+  // are tones of its own colour (deep low, the colour for mids, a pale high).
+  const palettes = {
+    mint: { a: '#5fd4b4', b: '#b49cff', bands: [{ low: '#1f7f6c', mid: '#5fd4b4', high: '#d9f5ec' }, { low: '#5a47b8', mid: '#b49cff', high: '#ece6ff' }] },
+    lime: { a: '#c8e64c', b: '#ef6f9b', bands: [{ low: '#5f7a12', mid: '#c8e64c', high: '#f2f8d6' }, { low: '#8f2f53', mid: '#ef6f9b', high: '#fbe1ea' }] },
+    ice: { a: '#8ec5ff', b: '#f2a65a', bands: [{ low: '#36598a', mid: '#8ec5ff', high: '#e6f1ff' }, { low: '#8a5520', mid: '#f2a65a', high: '#fbe9d6' }] },
+  };
 </script>
 
 <prototype-switcher>
-  <section data-variant="Classic Glass" data-note="The traditional layout (waveforms on top, deck A, mixer, deck B, library) in Liquid Glass"><L4Classic /></section>
-  <section data-variant="Platter Decks" data-note="The ring is the whole track (lit = played) with hot cues marked; the inner ring counts 16 beats to the next phrase; drag the disc to nudge"><L4Classic look="platter" /></section>
-  <section data-variant="One Console" data-note="Waveforms, decks and mixer in one glass slab split by hairlines, instead of separate cards"><L4Classic unified /></section>
-  <section data-variant="Readout Screens" data-note="Deck numbers in black mono screens, Hardware Object style, set into the glass; waveforms on a black screen"><L4Classic look="oled" /></section>
+  <section data-variant="Mint and Lilac" data-note="The real app's layout in Classic Glass styling, flat graphite panels; deck A mint, deck B lilac"><Studio palette={palettes.mint} /></section>
+  <section data-variant="Lime and Rose" data-note="Same layout; deck A lime (Teenage Engineering-ish), deck B rose"><Studio palette={palettes.lime} /></section>
+  <section data-variant="Ice and Amber" data-note="Same layout; a quieter take on blue and orange, pale ice and soft amber"><Studio palette={palettes.ice} /></section>
 </prototype-switcher>
 
 <style>
-  :global(body) { background: #07070a; }
+  :global(body) { background: #0b0b0d; }
 </style>
