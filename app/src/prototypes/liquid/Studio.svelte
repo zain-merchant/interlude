@@ -15,8 +15,8 @@
   import { decks, library } from '../bold/track.js';
 
   // modes: which mode each deck's panel opens on.
-  /** @type {{ palette: { a: string, b: string, bands: Record<string, string>[] }, modes?: string[] }} */
-  /** tint: how much deck colour the backdrop carries (0 = none). */
+  // tint: how much deck colour the backdrop carries (0 = none).
+  /** @type {{ palette: { a: string, b: string, bands: Record<string, string>[] }, modes?: string[], tint?: number }} */
   let { palette, modes = ['Cues', 'Cues'], tint = 0 } = $props();
   // svelte-ignore state_referenced_locally (only the starting mode comes from the prop)
   let mode = $state([...modes]);

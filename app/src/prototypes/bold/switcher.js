@@ -1,3 +1,4 @@
+// @ts-nocheck: vendored prototype switcher, not type-annotated.
 /*
   Prototype switcher. Copy this file into the app beside the prototype route, load it once and write the variants only.
 

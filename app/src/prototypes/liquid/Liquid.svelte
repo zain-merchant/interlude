@@ -17,9 +17,9 @@
 </script>
 
 <prototype-switcher>
+  <section data-variant="Chosen: cool and warm white" data-note="Picked direction (Nov 2026). Barely-there colour: an ice white and a cream white. Hardware-like, the decks differ by temperature"><Studio palette={palettes.whites} tint={0.25} modes={['Cues', 'Stems']} /></section>
   <section data-variant="One colour" data-note="Both decks share mint; you tell them apart by side only. Calmest, most product-like"><Studio palette={palettes.one} tint={0.25} modes={['Cues', 'Stems']} /></section>
   <section data-variant="Mint and violet" data-note="Current pair: two soft colours at the same brightness, clearly different but neither shouts"><Studio palette={palettes.mint} tint={0.25} modes={['Cues', 'Stems']} /></section>
-  <section data-variant="Cool and warm white" data-note="Barely-there colour: an ice white and a cream white. Hardware-like, the decks differ by temperature"><Studio palette={palettes.whites} tint={0.25} modes={['Cues', 'Stems']} /></section>
   <section data-variant="Periwinkle and saffron" data-note="A colour-blind-safe pair (blue-violet against yellow), most legible at a glance in a dark booth"><Studio palette={palettes.peri} tint={0.25} modes={['Cues', 'Stems']} /></section>
   <section data-variant="Aqua and coral" data-note="The punchiest pair, cool against warm, without going back to blue and orange"><Studio palette={palettes.aqua} tint={0.25} modes={['Cues', 'Stems']} /></section>
 </prototype-switcher>
