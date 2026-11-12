@@ -29,10 +29,17 @@ export function ribbon(ctx, w, h, d, t, o) {
   const mid = side === 1 ? h : side === -1 ? 0 : h / 2;
   const amp = side ? h * 0.96 : h / 2;
   const step = 2;
+  // Sample on a grid fixed to the track, not to the screen, then slide the
+  // shape by the sub-column remainder. Otherwise each column's window moves
+  // a little every frame, peaks are caught or missed, and the shape pulses.
+  const dt = spp * step;
+  const tLeft = t - (w / 2) * spp;
+  const k0 = Math.floor(tLeft / dt);
+  const shift = (k0 * dt - tLeft) / spp; // 0 .. -step px
   const cols = [];
-  for (let x = 0; x <= w; x += step) {
-    const tt = t + (x - w / 2) * spp;
-    cols.push(sample(d, tt - spp * step / 2, tt + spp * step / 2) ?? [0, 0, 0]);
+  for (let i = 0; i <= w / step + 2; i++) {
+    const tt = (k0 + i) * dt;
+    cols.push(sample(d, tt - dt / 2, tt + dt / 2) ?? [0, 0, 0]);
   }
   // Smooth with a small kernel so the shapes read as liquid, not jagged.
   const sm = cols.map((_, i) => [0, 1, 2].map((k) => {
@@ -45,9 +52,9 @@ export function ribbon(ctx, w, h, d, t, o) {
     ctx.beginPath();
     ctx.moveTo(0, mid);
     const up = side === -1 ? -1 : 1;
-    sm.forEach((v, i) => ctx.lineTo(i * step, mid - up * v[k] * scale * amp));
+    sm.forEach((v, i) => ctx.lineTo(shift + i * step, mid - up * v[k] * scale * amp));
     if (side) ctx.lineTo(w, mid);
-    else for (let i = sm.length - 1; i >= 0; i--) ctx.lineTo(i * step, mid + sm[i][k] * scale * amp);
+    else for (let i = sm.length - 1; i >= 0; i--) ctx.lineTo(shift + i * step, mid + sm[i][k] * scale * amp);
     ctx.closePath();
     const g = ctx.createLinearGradient(0, 0, 0, h);
     if (side) {
@@ -77,7 +84,7 @@ export function ribbon(ctx, w, h, d, t, o) {
     ctx.beginPath();
     sm.forEach((v, i) => {
       const y = mid - sign * Math.max(v[0] * 0.95, v[1] * 0.62) * amp;
-      i ? ctx.lineTo(i * step, y) : ctx.moveTo(0, y);
+      i ? ctx.lineTo(shift + i * step, y) : ctx.moveTo(shift, y);
     });
     ctx.strokeStyle = rgba(o.edge ?? o.high, 0.55);
     ctx.lineWidth = 1;

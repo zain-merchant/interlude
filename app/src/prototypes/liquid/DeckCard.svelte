@@ -1,11 +1,9 @@
 <script>
   // A classic deck in Liquid Glass: big title and clock, whole-track
   // overview with a tick ruler, phrase, transport and pitch.
-  import Progress from './Progress.svelte';
   import Wave from '../bold/Wave.svelte';
   import Fader from '../bold/Fader.svelte';
   import Time from '../bold/Time.svelte';
-  import Phrase from '../bold/Phrase.svelte';
   import Platter from '../bold/Platter.svelte';
   import { decks } from '../bold/track.js';
   // look: 'card' (title and clock on top), 'platter' (a turning platter
@@ -19,7 +17,7 @@
 <section class="deck {look}" class:lq-glass={!bare} style:--c={color} class:r={k === 1}>
   {#if look === 'platter'}
     <div class="pl">
-      <Platter deck={k} {color} size={186} />
+      <Platter deck={k} {color} size={262} cues={k ? [22.4, 98, 120.5] : [30, 75.2, 105]} phrase />
       <div class="pt">
         <div class="eyebrow"><i></i>Deck {'AB'[k]}</div>
         <h2>{d.title}</h2>
@@ -58,9 +56,7 @@
     <div><b>{pitch}%</b><span>Pitch</span></div>
   </div>
   {/if}
-  <div class="ov lq-well"><Wave deck={k} kind="overview" opts={{ ...bands, past: 'rgba(6,6,10,0.55)' }} /></div>
-  <Progress deck={k} {color} n={121} height={10} />
-  <Phrase deck={k} look="pill" />
+  {#if look !== 'platter'}<div class="ov lq-well"><Wave deck={k} kind="overview" opts={{ ...bands, past: 'rgba(6,6,10,0.55)' }} /></div>{/if}
   <div class="tp">
     <button class="lq-pill lq-cue">Cue</button>
     <button class="lq-pill lq-play" aria-label="Pause"><svg viewBox="0 0 16 16"><rect x="3" y="2" width="3.5" height="12" rx="1" /><rect x="9.5" y="2" width="3.5" height="12" rx="1" /></svg></button>
@@ -99,7 +95,7 @@
   .pt { display: grid; gap: 2px; }
   .r .pt { text-align: right; }
   .pt .facts { margin-top: 12px; }
-  .pl :global(.platter .el) { font-size: 24px; }
+  .pl :global(.platter .el) { font-size: 28px; }
   .pl :global(.platter .bpm), .pl :global(.platter .rm) { font-size: 11px; }
   .screen { display: grid; grid-template-columns: 1.5fr 1fr 1fr; grid-template-rows: auto auto; gap: 1px; border-radius: 10px; overflow: hidden; background: rgb(255 255 255 / 0.08); box-shadow: 0 0 0 1px #000, 0 0 0 4px rgb(0 0 0 / 0.25); }
   .cell { display: grid; gap: 2px; padding: 8px 12px; background: #000; }
