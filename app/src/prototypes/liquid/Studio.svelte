@@ -5,6 +5,7 @@
   // deck colours and their waveform bands.
   import Ruler from './Ruler.svelte';
   import ModePanel from './ModePanel.svelte';
+  import Backdrop from './Backdrop.svelte';
   import { CUES } from './perf.js';
   import Wave from '../bold/Wave.svelte';
   import Dial from '../bold/Dial.svelte';
@@ -15,7 +16,8 @@
 
   // modes: which mode each deck's panel opens on.
   /** @type {{ palette: { a: string, b: string, bands: Record<string, string>[] }, modes?: string[] }} */
-  let { palette, modes = ['Cues', 'Cues'] } = $props();
+  /** look: how the mode panel draws its controls ('text', 'round' or 'scale'). */
+  let { palette, modes = ['Cues', 'Cues'], look = 'text' } = $props();
   // svelte-ignore state_referenced_locally (only the starting mode comes from the prop)
   let mode = $state([...modes]);
   const C = $derived([palette.a, palette.b]);
@@ -29,6 +31,7 @@
 </script>
 
 <div class="studio" style:--a={C[0]} style:--b={C[1]}>
+  <Backdrop a={C[0]} b={C[1]} />
   <section class="panel waves">
     {#each [0, 1] as k}
       <div class="lane" style:--c={C[k]}>
@@ -53,7 +56,7 @@
             <span class="el"><Time deck={k} /></span>
             <span class="rm"><Time deck={k} remaining /></span>
           </div>
-          <ModePanel deck={k} color={C[k]} bind:mode={mode[k]} />
+          <ModePanel deck={k} color={C[k]} bind:mode={mode[k]} {look} />
           <div class="tp">
             <button class="cue">Cue</button>
             <button class="play" aria-label="Pause"><svg viewBox="0 0 16 16"><rect x="3" y="2" width="3.5" height="12" rx="1" /><rect x="9.5" y="2" width="3.5" height="12" rx="1" /></svg></button>
@@ -129,9 +132,10 @@
     box-sizing: border-box;
     display: grid;
     grid-template-rows: 140px 352px minmax(0, 1fr);
-    gap: 10px;
-    padding: 10px;
-    background: #0b0b0d;
+    gap: 12px;
+    padding: 12px;
+    position: relative;
+    background: #09090b;
     color: #eceae4;
     font-family: 'Geist Variable', sans-serif;
     font-feature-settings: 'tnum';
@@ -143,7 +147,16 @@
 
   /* One surface for every panel: a step lighter than the page, a hairline
      edge, a 1px top highlight. No gradients, no glow. */
-  .panel { border-radius: 12px; background: #141416; box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.06), inset 0 1px 0 rgb(255 255 255 / 0.05); }
+  .studio > :not(:global(.bd)) { position: relative; }
+  /* Liquid Glass: frosted panels over the backdrop, a bright top edge, a
+     faint inner ring. One surface for everything; no glow on the content. */
+  .panel, .tracks {
+    border-radius: 16px;
+    background: linear-gradient(180deg, rgb(255 255 255 / 0.065), rgb(255 255 255 / 0.03));
+    backdrop-filter: blur(30px) saturate(1.25);
+    -webkit-backdrop-filter: blur(30px) saturate(1.25);
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08), inset 0 1px 0 rgb(255 255 255 / 0.14), 0 20px 50px rgb(0 0 0 / 0.3);
+  }
 
   .waves { position: relative; display: grid; grid-template-rows: 1fr 1fr; overflow: hidden; }
   .lane { position: relative; min-height: 0; }
@@ -167,8 +180,8 @@
   .bpm { display: grid; justify-items: end; }
   .bpm strong { font-size: 30px; font-weight: 300; letter-spacing: -0.03em; line-height: 1; }
   .bpm span { margin-top: 4px; font-size: 11.5px; color: rgb(236 234 228 / 0.55); }
-  .ov { position: relative; border-radius: 6px; overflow: hidden; background: #0e0e10; }
-  .mid { padding: 0 4px; display: flex; justify-content: space-between; align-items: baseline; }
+  .ov { position: relative; border-radius: 8px; overflow: hidden; background: rgb(0 0 0 / 0.28); box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.4); }
+  .mid { display: flex; justify-content: space-between; align-items: baseline; }
   .el { font-size: 26px; font-weight: 300; letter-spacing: -0.03em; }
   .rm { justify-self: end; font-size: 18px; font-weight: 300; color: rgb(236 234 228 / 0.55); }
   .mark { position: absolute; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: var(--q); opacity: 0.9; }
@@ -176,7 +189,7 @@
 
   /* Transport sits on the same four columns as the mode panel. The panel's
      4px tray inset is matched so cell edges line up. */
-  .tp { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; padding: 0 4px; }
+  .tp { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
   .tp > * { height: 44px; border-radius: 8px; }
   .cue { color: #e8b04a; box-shadow: inset 0 0 0 1px rgb(232 176 74 / 0.55); }
   .play { display: grid; place-items: center; background: #eceae4; color: #111; }
@@ -216,12 +229,12 @@
   .side .h:first-child { padding-top: 6px; }
   .side button { display: flex; justify-content: space-between; height: 30px; align-items: center; padding: 0 10px; border-radius: 8px; text-align: left; color: rgb(236 234 228 / 0.75); }
   .side button span { font-size: 12px; color: rgb(236 234 228 / 0.4); }
-  .side button.on { background: #1c1c1f; color: #eceae4; }
+  .side button.on { background: rgb(255 255 255 / 0.08); color: #eceae4; }
   .side button.add { color: rgb(236 234 228 / 0.45); }
-  .tracks { border-radius: 12px; background: #141416; box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.06); padding: 10px; display: grid; align-content: start; overflow: hidden; }
+  .tracks { padding: 10px; display: grid; align-content: start; overflow: hidden; }
   .bar { display: flex; align-items: center; gap: 14px; padding-bottom: 8px; }
   .bar > span:empty { flex: 1; }
-  .search { width: 360px; height: 32px; display: flex; align-items: center; gap: 8px; padding: 0 10px; border-radius: 8px; background: #0e0e10; box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08); color: rgb(236 234 228 / 0.45); }
+  .search { width: 360px; height: 32px; display: flex; align-items: center; gap: 8px; padding: 0 10px; border-radius: 8px; background: rgb(0 0 0 / 0.22); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08); color: rgb(236 234 228 / 0.45); }
   .search svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.5; }
   .search kbd { margin-left: auto; font: inherit; font-size: 11.5px; color: rgb(236 234 228 / 0.35); }
   .count { font-size: 12px; color: rgb(236 234 228 / 0.5); }

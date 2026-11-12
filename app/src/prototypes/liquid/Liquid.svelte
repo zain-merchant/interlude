@@ -13,8 +13,9 @@
 </script>
 
 <prototype-switcher>
-  <section data-variant="Cues and Stems" data-note="Left deck on Cues, right deck on Stems. Tabs, mode cells and transport share one four-column grid"><Studio palette={palettes.mint} modes={['Cues', 'Stems']} /></section>
-  <section data-variant="Loop and FX" data-note="Left deck on Loop, right deck on FX. Every cell: small label on top, value underneath"><Studio palette={palettes.mint} modes={['Loop', 'FX']} /></section>
+  <section data-variant="Text Row" data-note="No boxes: a toolbar row of words, numbers and small marks under underline tabs. Cues are a colour and a time"><Studio palette={palettes.mint} look="text" modes={['Cues', 'Stems']} /></section>
+  <section data-variant="Round Pads" data-note="Round pads and machined dials like the mixer; stems are level dials you can mute"><Studio palette={palettes.mint} look="round" modes={['Cues', 'Stems']} /></section>
+  <section data-variant="Value Scales" data-note="Choices laid out on a scale with the current one lit (loop lengths, FX beats); stems are on/off switches"><Studio palette={palettes.mint} look="scale" modes={['Cues', 'Stems']} /></section>
 </prototype-switcher>
 
 <style>
