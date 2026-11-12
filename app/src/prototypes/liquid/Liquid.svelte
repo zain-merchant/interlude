@@ -3,18 +3,25 @@
   import '../bold/switcher.js';
   import Studio from './Studio.svelte';
 
-  // Three deck colour pairs on the same layout. Each pair's waveform bands
-  // are tones of its own colour (deep low, the colour for mids, a pale high).
+  // Colour-scheme study on the faint-gradient look. Each palette sets the
+  // two deck colours; waveform bands are tones of each deck's colour (deep
+  // low, the colour itself for mids, a pale high).
+  const mint = { low: '#1f7f6c', mid: '#5fd4b4', high: '#d9f5ec' };
   const palettes = {
-    mint: { a: '#5fd4b4', b: '#b49cff', bands: [{ low: '#1f7f6c', mid: '#5fd4b4', high: '#d9f5ec' }, { low: '#5a47b8', mid: '#b49cff', high: '#ece6ff' }] },
-    lime: { a: '#c8e64c', b: '#ef6f9b', bands: [{ low: '#5f7a12', mid: '#c8e64c', high: '#f2f8d6' }, { low: '#8f2f53', mid: '#ef6f9b', high: '#fbe1ea' }] },
-    ice: { a: '#8ec5ff', b: '#f2a65a', bands: [{ low: '#36598a', mid: '#8ec5ff', high: '#e6f1ff' }, { low: '#8a5520', mid: '#f2a65a', high: '#fbe9d6' }] },
+    one: { a: '#5fd4b4', b: '#5fd4b4', bands: [mint, mint] },
+    mint: { a: '#5fd4b4', b: '#b49cff', bands: [mint, { low: '#5a47b8', mid: '#b49cff', high: '#ece6ff' }] },
+    whites: { a: '#c9dcf2', b: '#f0dcc0', bands: [{ low: '#4d6580', mid: '#c9dcf2', high: '#f4f8fc' }, { low: '#806548', mid: '#f0dcc0', high: '#fcf7ef' }] },
+    peri: { a: '#8f9cff', b: '#f2c14e', bands: [{ low: '#3e4aa8', mid: '#8f9cff', high: '#e4e7ff' }, { low: '#8a6a14', mid: '#f2c14e', high: '#fcf0cf' }] },
+    aqua: { a: '#4fd6e8', b: '#ff7a8a', bands: [{ low: '#16707c', mid: '#4fd6e8', high: '#d8f6fa' }, { low: '#8f2f3b', mid: '#ff7a8a', high: '#ffe0e4' }] },
   };
 </script>
 
 <prototype-switcher>
-  <section data-variant="No gradient" data-note="Text Row menus; frosted panels over plain graphite with a neutral light from the top, no deck colour behind"><Studio palette={palettes.mint} tint={0} modes={['Cues', 'Stems']} /></section>
-  <section data-variant="Faint gradient" data-note="Same, with a trace of the deck colours behind the glass (about a quarter of before)"><Studio palette={palettes.mint} tint={0.25} modes={['Cues', 'Stems']} /></section>
+  <section data-variant="One colour" data-note="Both decks share mint; you tell them apart by side only. Calmest, most product-like"><Studio palette={palettes.one} tint={0.25} modes={['Cues', 'Stems']} /></section>
+  <section data-variant="Mint and violet" data-note="Current pair: two soft colours at the same brightness, clearly different but neither shouts"><Studio palette={palettes.mint} tint={0.25} modes={['Cues', 'Stems']} /></section>
+  <section data-variant="Cool and warm white" data-note="Barely-there colour: an ice white and a cream white. Hardware-like, the decks differ by temperature"><Studio palette={palettes.whites} tint={0.25} modes={['Cues', 'Stems']} /></section>
+  <section data-variant="Periwinkle and saffron" data-note="A colour-blind-safe pair (blue-violet against yellow), most legible at a glance in a dark booth"><Studio palette={palettes.peri} tint={0.25} modes={['Cues', 'Stems']} /></section>
+  <section data-variant="Aqua and coral" data-note="The punchiest pair, cool against warm, without going back to blue and orange"><Studio palette={palettes.aqua} tint={0.25} modes={['Cues', 'Stems']} /></section>
 </prototype-switcher>
 
 <style>
