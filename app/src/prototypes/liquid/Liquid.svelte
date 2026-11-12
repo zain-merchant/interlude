@@ -13,9 +13,9 @@
 </script>
 
 <prototype-switcher>
-  <section data-variant="Underline Tabs" data-note="Modes as plain words with the current one underlined; cues as full-width named pads with a colour edge; cue points marked on the overview"><Studio palette={palettes.mint} cueBar="tabs" /></section>
-  <section data-variant="Cue Cards" data-note="Taller cue cards with name and time, colour along the top; modes as a quiet row of words"><Studio palette={palettes.mint} cueBar="cards" /></section>
-  <section data-variant="Mode Strip" data-note="One row: a mode menu on the left (Cues, Loop, FX, Stems, keys 1–4) and that mode's controls beside it"><Studio palette={palettes.mint} cueBar="strip" /></section>
+  <section data-variant="Track Map" data-note="The track as its sections (Intro, Build, Drop) with cue flags; click a section to jump; counts down the bars to the next one"><Studio palette={palettes.mint} cueBar="map" /></section>
+  <section data-variant="Stem Lanes" data-note="The overview splits into Vocals, Melody, Bass and Drums lanes, each with mute and level, like Traktor stem decks and djay Neural Mix"><Studio palette={palettes.mint} cueBar="stems" /></section>
+  <section data-variant="Snapshot Pads" data-note="Eight pads like a controller: hot cues show a picture of the music after each cue; the bottom row is loop rolls, beat jumps or samples"><Studio palette={palettes.mint} cueBar="pads" /></section>
 </prototype-switcher>
 
 <style>
