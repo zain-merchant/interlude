@@ -15,7 +15,7 @@
 </div>
 
 <style>
-  .lib { font-family: 'Geist Mono Variable', 'Geist Mono', ui-monospace, monospace; font-size: 12.5px; }
+  .lib { font-size: 13px; font-feature-settings: 'tnum'; }
   .hd, .tr { display: grid; grid-template-columns: 1.4fr 1.1fr 48px 48px 56px 1fr; gap: 12px; align-items: center; padding: 0 12px; }
   .compact .hd, .compact .tr { grid-template-columns: 1fr 36px 36px; }
   .hd { height: 28px; color: rgb(242 241 236 / 0.45); font-family: 'Geist Variable', sans-serif; font-size: 11.5px; }

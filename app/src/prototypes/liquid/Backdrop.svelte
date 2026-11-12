@@ -11,11 +11,11 @@
 </div>
 
 <style>
-  .bd { position: absolute; inset: 0; overflow: hidden; background: #07070a; pointer-events: none; }
+  .bd { position: absolute; inset: 0; overflow: hidden; background: radial-gradient(90% 80% at 50% 0%, #17181c, #0a0a0c 70%); pointer-events: none; }
   i { position: absolute; border-radius: 50%; filter: blur(80px); will-change: transform; }
-  .o1 { width: 70vw; height: 70vw; left: -22vw; top: 10vh; background: radial-gradient(circle, color-mix(in srgb, var(--a) 55%, transparent), transparent 65%); animation: d1 64s ease-in-out infinite alternate; }
-  .o2 { width: 64vw; height: 64vw; right: -20vw; top: 22vh; background: radial-gradient(circle, color-mix(in srgb, var(--b) 48%, transparent), transparent 65%); animation: d2 72s ease-in-out infinite alternate; }
-  .o3 { width: 50vw; height: 50vw; left: 28vw; top: -26vw; background: radial-gradient(circle, color-mix(in srgb, var(--c) 32%, transparent), transparent 65%); animation: d3 80s ease-in-out infinite alternate; }
+  .o1 { width: 70vw; height: 70vw; left: -22vw; top: 10vh; background: radial-gradient(circle, color-mix(in srgb, var(--a) 16%, transparent), transparent 65%); animation: d1 64s ease-in-out infinite alternate; }
+  .o2 { width: 64vw; height: 64vw; right: -20vw; top: 22vh; background: radial-gradient(circle, color-mix(in srgb, var(--b) 12%, transparent), transparent 65%); animation: d2 72s ease-in-out infinite alternate; }
+  .o3 { width: 50vw; height: 50vw; left: 28vw; top: -26vw; background: radial-gradient(circle, color-mix(in srgb, var(--c) 8%, transparent), transparent 65%); animation: d3 80s ease-in-out infinite alternate; }
   @keyframes d1 { to { transform: translate(8vw, -6vh) scale(1.08); } }
   @keyframes d2 { to { transform: translate(-7vw, 5vh) scale(0.94); } }
   @keyframes d3 { to { transform: translate(6vw, 8vh) scale(1.1); } }

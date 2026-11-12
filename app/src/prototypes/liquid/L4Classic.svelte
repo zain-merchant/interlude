@@ -15,19 +15,19 @@
 
   const C = ['#4aa8ff', '#ff8a4a'];
   const W = [
-    { low: '#2456ff', mid: '#4aa8ff', high: '#d6f0ff' },
-    { low: '#ff4d2e', mid: '#ff8a4a', high: '#ffe2c4' },
+    { low: '#3563d8', mid: '#5aa9f0', high: '#dbe9f5' },
+    { low: '#d9542e', mid: '#f08f55', high: '#f5e3d0' },
   ];
 </script>
 
 <div class="lq-root l4" class:unified>
-  <Backdrop dim={0.8} />
+  <Backdrop />
   <div class="shell">
     <div class="console" class:lq-glass={unified}>
       <section class="waves" class:lq-glass={!unified} class:oled={look === 'oled'}>
         {#each [0, 1] as k}
           <div class="ln" style:--c={C[k]}>
-            <Wave deck={k} kind="ribbon" opts={{ ...W[k], glow: 0.6, seconds: 16, grid: 'rgba(255,255,255,0.03)', gridStrong: 'rgba(255,255,255,0.07)', headGlow: C[k], past: 'rgba(6,6,10,0.45)' }} />
+            <Wave deck={k} kind="ribbon" opts={{ ...W[k], glow: 0.3, seconds: 16, grid: 'rgba(255,255,255,0.03)', gridStrong: 'rgba(255,255,255,0.07)', headGlow: C[k], past: 'rgba(6,6,10,0.45)' }} />
             <span class="tag">{'AB'[k]}</span><span class="nm">{decks[k].title}</span>
           </div>
         {/each}
