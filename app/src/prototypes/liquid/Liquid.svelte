@@ -13,9 +13,9 @@
 </script>
 
 <prototype-switcher>
-  <section data-variant="Mint and Lilac" data-note="The real app's layout in Classic Glass styling, flat graphite panels; deck A mint, deck B lilac"><Studio palette={palettes.mint} /></section>
-  <section data-variant="Lime and Rose" data-note="Same layout; deck A lime (Teenage Engineering-ish), deck B rose"><Studio palette={palettes.lime} /></section>
-  <section data-variant="Ice and Amber" data-note="Same layout; a quieter take on blue and orange, pale ice and soft amber"><Studio palette={palettes.ice} /></section>
+  <section data-variant="Underline Tabs" data-note="Modes as plain words with the current one underlined; cues as full-width named pads with a colour edge; cue points marked on the overview"><Studio palette={palettes.mint} cueBar="tabs" /></section>
+  <section data-variant="Cue Cards" data-note="Taller cue cards with name and time, colour along the top; modes as a quiet row of words"><Studio palette={palettes.mint} cueBar="cards" /></section>
+  <section data-variant="Mode Strip" data-note="One row: a mode menu on the left (Cues, Loop, FX, Stems, keys 1–4) and that mode's controls beside it"><Studio palette={palettes.mint} cueBar="strip" /></section>
 </prototype-switcher>
 
 <style>

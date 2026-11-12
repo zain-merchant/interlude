@@ -11,18 +11,28 @@
   import Time from '../bold/Time.svelte';
   import { decks, library } from '../bold/track.js';
 
-  /** @type {{ palette: { a: string, b: string, bands: Record<string, string>[] } }} */
-  let { palette } = $props();
+  // cueBar: how the Cues / Loop / FX / Stems bar is drawn.
+  //  'tabs'  underline tabs over full-width named cue pads
+  //  'cards' tall cue cards with name and time; modes as a quiet text row
+  //  'strip' one row: a mode menu on the left, the mode's controls beside it
+  /** @type {{ palette: { a: string, b: string, bands: Record<string, string>[] }, cueBar?: 'tabs'|'cards'|'strip' }} */
+  let { palette, cueBar = 'tabs' } = $props();
+  const CUES = [
+    [{ n: 'Intro', t: 30.2, c: '#e8b04a' }, { n: 'Build', t: 75.1, c: '#7cb6ff' }, { n: 'Drop', t: 105.0, c: '#ef7a64' }, null],
+    [{ n: 'Intro', t: 22.4, c: '#e8b04a' }, { n: 'Break', t: 70.0, c: '#7cb6ff' }, null, { n: 'Drop', t: 120.5, c: '#ef7a64' }],
+  ];
+  const mmss = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+  // The strip shows its menu open on the right deck, so you can see it.
+  let menu = $state([false, cueBar === 'strip']);
   const C = $derived([palette.a, palette.b]);
 
-  let tab = $state(['Cues', 'Stems']);
+  let tab = $state(['Cues', 'Cues']);
   let eq = $state([[0.5, 0.58, 0.5, 0.34, 0.5], [0.5, 0.5, 0.64, 0.5, 0.42]]);
   let vol = $state([0.84, 0.7]);
   let xf = $state(0.44);
   let stems = $state([[true, true, true, true], [false, true, true, true]]);
   let pfl = $state([false, true]);
   let keylock = $state([true, false]);
-  const cues = [[1, 2, 3], [1, 2, 4]];
   const pitch = ['+0.00', '−0.78'];
   const tabs = ['Cues', 'Loop', 'FX', 'Stems'];
 </script>
@@ -32,7 +42,7 @@
     {#each [0, 1] as k}
       <div class="lane" style:--c={C[k]}>
         <Wave deck={k} kind="ribbon" opts={{ ...palette.bands[k], glow: 0.2, seconds: 12, grid: 'rgba(255,255,255,0.03)', gridStrong: 'rgba(255,255,255,0.07)', past: 'rgba(12,12,14,0.5)', edge: palette.bands[k].high }} />
-        <span class="who"><b>{'AB'[k]}</b>{decks[k].title}</span>
+        <span class="who"><i></i>{decks[k].title}</span>
       </div>
     {/each}
     <div class="zoom"><button aria-label="Zoom out">−</button><span>12 s</span><button aria-label="Zoom in">+</button></div>
@@ -44,20 +54,42 @@
       <section class="panel deck" class:r={k === 1} style:--c={C[k]} style:order={k ? 2 : 0}>
         <div class="main">
           <header>
-            <div class="t"><span class="id">{'AB'[k]}</span><div><h2>{d.title}</h2><p>{d.artist}</p></div></div>
+            <div class="t"><div><h2>{d.title}</h2><p>{d.artist}</p></div></div>
             <div class="bpm"><strong>{d.bpm}.00</strong><span>{d.key} · {d.camelot} · BPM</span></div>
           </header>
-          <div class="ov"><Wave deck={k} kind="overview" opts={{ ...palette.bands[k], past: 'rgba(12,12,14,0.55)' }} /></div>
-          <div class="mid">
+          <div class="ov"><Wave deck={k} kind="overview" opts={{ ...palette.bands[k], past: 'rgba(12,12,14,0.55)' }} />{#each CUES[k] as q}{#if q}<i class="mark" style:left="{(q.t / d.data.length) * 100}%" style:--q={q.c}></i>{/if}{/each}</div>
+          <div class="mid" class:bare={cueBar === 'strip'}>
             <span class="el"><Time deck={k} /></span>
-            <div class="tabs" role="tablist">
-              {#each tabs as t}<button role="tab" aria-selected={tab[k] === t} class:on={tab[k] === t} onclick={() => (tab[k] = t)}>{t}</button>{/each}
-            </div>
+            {#if cueBar === 'tabs'}
+              <div class="utabs" role="tablist">
+                {#each tabs as t}<button role="tab" aria-selected={tab[k] === t} class:on={tab[k] === t} onclick={() => (tab[k] = t)}>{t}</button>{/each}
+              </div>
+            {:else if cueBar === 'cards'}
+              <div class="ttabs" role="tablist">
+                {#each tabs as t}<button role="tab" aria-selected={tab[k] === t} class:on={tab[k] === t} onclick={() => (tab[k] = t)}>{t}</button>{/each}
+              </div>
+            {:else}<span></span>{/if}
             <span class="rm"><Time deck={k} remaining /></span>
           </div>
-          <div class="tabbody">
+          <div class="tabbody {cueBar}">
+            {#if cueBar === 'strip'}
+              <div class="mode">
+                <button class="mbtn" aria-haspopup="menu" aria-expanded={menu[k]} onclick={() => (menu[k] = !menu[k])}>{tab[k]}<svg viewBox="0 0 10 10"><path d="M2.5 4 5 6.5 7.5 4" /></svg></button>
+                {#if menu[k]}
+                  <div class="mlist" role="menu">{#each tabs as t, i}<button role="menuitem" class:on={tab[k] === t} onclick={() => { tab[k] = t; menu[k] = false; }}>{t}<kbd>{i + 1}</kbd></button>{/each}</div>
+                {/if}
+              </div>
+            {/if}
             {#if tab[k] === 'Cues'}
-              <div class="pads">{#each [1, 2, 3, 4] as p}<button class:set={cues[k].includes(p)}>{p}</button>{/each}</div>
+              <div class="pads">
+                {#each CUES[k] as q, i}
+                  {#if q}
+                    <button class="pad" style:--q={q.c}><span class="no">{i + 1}</span><span class="nm">{q.n}</span>{#if cueBar === 'cards'}<span class="tm">{mmss(q.t)}</span>{/if}</button>
+                  {:else}
+                    <button class="pad empty"><span class="no">{i + 1}</span><span class="nm">Set cue</span></button>
+                  {/if}
+                {/each}
+              </div>
             {:else if tab[k] === 'Loop'}
               <div class="loop"><button>½</button><button class="on">Loop 4</button><button>2×</button><span></span><button aria-label="Move loop back">«</button><button aria-label="Move loop forward">»</button></div>
             {:else if tab[k] === 'FX'}
@@ -88,7 +120,7 @@
           <div class="ch" class:r={k === 1} style:order={k ? 2 : 0}>
             <div class="dials">{#each ['Trim', 'High', 'Mid', 'Low', 'Filter'] as l, i}<Dial bind:value={eq[k][i]} bipolar label={l} size={20} color={C[k]} glow={0.25} />{/each}</div>
             <div class="fz"><Fader bind:value={vol[k]} look="machined" /><Meter deck={k} look="bar" /></div>
-            <button class="pfl" class:on={pfl[k]} aria-label="Cue deck {'AB'[k]} in headphones" onclick={() => (pfl[k] = !pfl[k])}><svg viewBox="0 0 16 16"><path d="M3 10V8a5 5 0 0 1 10 0v2" /><rect x="2" y="9.5" width="3" height="4.5" rx="1" /><rect x="11" y="9.5" width="3" height="4.5" rx="1" /></svg></button>
+            <button class="pfl" class:on={pfl[k]} aria-label="Cue {decks[k].title} in headphones" onclick={() => (pfl[k] = !pfl[k])}><svg viewBox="0 0 16 16"><path d="M3 10V8a5 5 0 0 1 10 0v2" /><rect x="2" y="9.5" width="3" height="4.5" rx="1" /><rect x="11" y="9.5" width="3" height="4.5" rx="1" /></svg></button>
           </div>
         {/each}
         <div class="master" style:order="1">
@@ -99,9 +131,9 @@
         </div>
       </div>
       <div class="xf">
-        <span style:color={C[0]}>A</span>
+        <i class="end" style:background={C[0]}></i>
         <div class="xr"><Ruler value={xf} from={0.5} n={41} major={10} color="#e9e7e0" height={8} /><Fader bind:value={xf} vertical={false} look="machined" /></div>
-        <span style:color={C[1]}>B</span>
+        <i class="end" style:background={C[1]}></i>
       </div>
     </section>
   </div>
@@ -127,7 +159,7 @@
       <div class="thead"><span></span><span>Title</span><span>Artist</span><span>BPM</span><span>Key</span><span>Time</span><span>Folder</span></div>
       {#each library.slice(0, 9) as r, i}
         <div class="tr" class:sel={i === 2}>
-          <span class="dk">{#if i === 0}<b style:color={C[0]}>A</b>{:else if i === 8}<b style:color={C[1]}>B</b>{/if}</span>
+          <span class="dk">{#if i === 0}<i style:background={C[0]}></i>{:else if i === 8}<i style:background={C[1]}></i>{/if}</span>
           <span>{r[0]}</span><span class="dim">{r[1]}</span><span>{r[2]}</span><span>{r[3]}</span><span class="dim">{r[4]}</span><span class="dim">{r[5]}</span>
         </div>
       {/each}
@@ -141,7 +173,7 @@
     min-width: 1200px;
     box-sizing: border-box;
     display: grid;
-    grid-template-rows: 140px 340px minmax(0, 1fr);
+    grid-template-rows: 140px 352px minmax(0, 1fr);
     gap: 10px;
     padding: 10px;
     background: #0b0b0d;
@@ -162,19 +194,18 @@
   .lane { position: relative; min-height: 0; }
   .lane + .lane { border-top: 1px solid rgb(255 255 255 / 0.06); }
   .who { position: absolute; left: 12px; top: 8px; display: flex; gap: 8px; font-size: 12px; color: rgb(236 234 228 / 0.75); }
-  .who b, .id { color: var(--c); font-weight: 600; }
+  .who i { width: 3px; height: 12px; margin-top: 2px; border-radius: 2px; background: var(--c); }
   .zoom { position: absolute; right: 10px; top: 8px; display: flex; align-items: center; gap: 4px; height: 26px; padding: 0 4px; border-radius: 8px; background: rgb(11 11 13 / 0.8); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.06); font-size: 12px; color: rgb(236 234 228 / 0.7); }
   .zoom button { width: 22px; height: 22px; border-radius: 6px; }
   .zoom button:hover { background: rgb(255 255 255 / 0.06); }
 
   .row { display: grid; grid-template-columns: 1fr 300px 1fr; gap: 10px; min-height: 0; }
-  .deck { overflow: hidden; display: grid; grid-template-columns: 1fr 64px; gap: 16px; padding: 16px 16px 14px 18px; min-height: 0; }
-  .deck.r { grid-template-columns: 64px 1fr; padding: 16px 18px 14px 16px; }
+  .deck { overflow: visible; display: grid; grid-template-columns: minmax(0, 1fr) 64px; gap: 16px; padding: 16px 16px 14px 18px; min-height: 0; }
+  .deck.r { grid-template-columns: 64px minmax(0, 1fr); padding: 16px 18px 14px 16px; }
   .deck.r .pitch { order: -1; }
-  .main { display: grid; grid-template-rows: auto 52px auto 36px auto; gap: 10px; min-width: 0; }
+  .main { grid-template-columns: minmax(0, 1fr); display: grid; grid-template-rows: auto 52px auto auto auto; gap: 10px; min-width: 0; }
   header { display: flex; justify-content: space-between; align-items: start; }
   .t { display: flex; gap: 10px; }
-  .id { font-size: 14px; line-height: 26px; }
   h2 { margin: 0; font-size: 22px; font-weight: 400; letter-spacing: -0.02em; line-height: 26px; }
   .t p { margin: 2px 0 0; font-size: 13px; color: rgb(236 234 228 / 0.55); }
   .bpm { display: grid; justify-items: end; }
@@ -184,23 +215,59 @@
   .mid { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; }
   .el { font-size: 26px; font-weight: 300; letter-spacing: -0.03em; }
   .rm { justify-self: end; font-size: 18px; font-weight: 300; color: rgb(236 234 228 / 0.55); }
-  .tabs { display: flex; gap: 2px; padding: 2px; border-radius: 8px; background: rgb(0 0 0 / 0.3); }
-  .tabs button { height: 26px; padding: 0 12px; border-radius: 6px; font-size: 12.5px; color: rgb(236 234 228 / 0.6); }
-  .tabs button:hover { color: #eceae4; }
-  .tabs button.on { background: #26262a; color: #eceae4; box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06); }
-  .tabbody > div { height: 36px; display: flex; align-items: center; gap: 6px; }
-  .tabbody button { height: 34px; border-radius: 8px; box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08); }
+  .mark { position: absolute; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: var(--q); opacity: 0.9; }
+  .mark::before { content: ''; position: absolute; top: 0; left: -3px; border: 4px solid transparent; border-top-color: var(--q); }
+
+  /* tabs: plain words, the current one underlined in the deck colour. */
+  .utabs { display: flex; gap: 18px; }
+  .utabs button { position: relative; height: 28px; font-size: 13px; color: rgb(236 234 228 / 0.5); }
+  .utabs button:hover { color: rgb(236 234 228 / 0.85); }
+  .utabs button.on { color: #eceae4; }
+  .utabs button.on::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 2px; border-radius: 1px; background: var(--c); }
+  /* cards: the modes are a quiet row of words, no box. */
+  .ttabs { display: flex; gap: 2px; }
+  .ttabs button { height: 24px; padding: 0 8px; border-radius: 6px; font-size: 12px; color: rgb(236 234 228 / 0.45); }
+  .ttabs button.on { color: #eceae4; background: rgb(255 255 255 / 0.07); }
+
+  .tabbody { display: flex; gap: 8px; align-items: stretch; }
+  .tabbody > div:not(.mode) { flex: 1; min-height: 38px; display: flex; align-items: center; gap: 6px; }
+  .tabbody button { height: 38px; border-radius: 8px; box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08); }
   .tabbody button:hover { background: rgb(255 255 255 / 0.04); }
-  .pads button { width: 52px; position: relative; color: rgb(236 234 228 / 0.4); }
-  .pads button.set { color: #eceae4; }
-  .pads button.set::after { content: ''; position: absolute; left: 10px; right: 10px; bottom: 5px; height: 2px; border-radius: 1px; background: #e8b04a; }
+
+  .pads { gap: 6px !important; }
+  .pad { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; padding: 0 10px; position: relative; overflow: hidden; text-align: left; background: rgb(255 255 255 / 0.02); }
+  .pad::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--q); }
+  .pad .no { font-size: 11px; color: rgb(236 234 228 / 0.45); }
+  .pad .nm { font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pad .tm { margin-left: auto; font-size: 11.5px; color: rgb(236 234 228 / 0.5); }
+  .pad.empty { background: none; box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1); outline: 1px dashed rgb(255 255 255 / 0.14); outline-offset: -4px; color: rgb(236 234 228 / 0.35); }
+  .pad.empty::before { display: none; }
+
+  /* cards: taller pads, name on top and time below, colour along the top. */
+  .cards .pad { height: 54px; flex-direction: column; align-items: start; justify-content: center; gap: 2px; padding: 0 10px; }
+  .cards .pad::before { top: 0; left: 0; right: 0; bottom: auto; width: auto; height: 3px; }
+  .cards .pad .no { position: absolute; right: 9px; top: 9px; }
+  .cards .pad .nm { font-size: 13px; }
+  .cards .pad .tm { margin-left: 0; }
+  .cards .pad.empty { justify-content: center; }
+
+  /* strip: one row, a mode menu on the left. */
+  .mode { position: relative; flex: none; }
+  .mbtn { width: 88px; display: flex; align-items: center; justify-content: space-between; padding: 0 10px; background: #1d1d20 !important; font-size: 12.5px; }
+  .mbtn svg { width: 10px; height: 10px; fill: none; stroke: currentColor; stroke-width: 1.4; opacity: 0.6; }
+  .mlist { position: absolute; z-index: 5; left: 0; bottom: calc(100% + 6px); width: 150px; padding: 4px; border-radius: 10px; background: #1d1d20; box-shadow: 0 0 0 1px rgb(255 255 255 / 0.08), 0 12px 30px rgb(0 0 0 / 0.5); display: grid; gap: 2px; transform-origin: bottom left; animation: pop 160ms cubic-bezier(0.23, 1, 0.32, 1); }
+  .mlist button { height: 30px !important; box-shadow: none !important; display: flex; justify-content: space-between; align-items: center; padding: 0 10px; border-radius: 6px; font-size: 12.5px; color: rgb(236 234 228 / 0.75); }
+  .mlist button.on { background: rgb(255 255 255 / 0.07); color: #eceae4; }
+  .mlist kbd { font: inherit; font-size: 11px; color: rgb(236 234 228 / 0.35); }
+  @keyframes pop { from { opacity: 0; transform: scale(0.96); } }
+  .mid.bare { grid-template-columns: 1fr auto; }
+  .mid.bare > span:empty { display: none; }
   .loop button, .fx button { padding: 0 12px; color: rgb(236 234 228 / 0.75); }
   .loop span, .fx > span:empty { flex: 1; }
   .loop .on, .fx .on { color: var(--c); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c) 50%, transparent); }
   .fx .sel i { font-style: normal; margin-left: 6px; color: rgb(236 234 228 / 0.4); }
   .fx .num { width: 18px; text-align: center; }
   .fx .lbl { font-size: 11.5px; color: rgb(236 234 228 / 0.5); margin-right: 6px; }
-  .stems { width: 100%; }
   .stems button { flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; }
   .stems button i { width: 6px; height: 6px; border-radius: 50%; background: var(--c); }
   .stems button.off { color: rgb(236 234 228 / 0.35); }
@@ -258,5 +325,6 @@
   .tr { height: 30px; border-radius: 7px; }
   .tr:hover { background: rgb(255 255 255 / 0.03); }
   .tr.sel { background: rgb(255 255 255 / 0.07); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1); }
-  .dk b { font-size: 11.5px; }
+  .dk i { display: block; width: 3px; height: 14px; border-radius: 2px; }
+  .end { width: 3px; height: 14px; border-radius: 2px; }
 </style>
