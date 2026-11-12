@@ -13,9 +13,8 @@
 </script>
 
 <prototype-switcher>
-  <section data-variant="Track Map" data-note="The track as its sections (Intro, Build, Drop) with cue flags; click a section to jump; counts down the bars to the next one"><Studio palette={palettes.mint} cueBar="map" /></section>
-  <section data-variant="Stem Lanes" data-note="The overview splits into Vocals, Melody, Bass and Drums lanes, each with mute and level, like Traktor stem decks and djay Neural Mix"><Studio palette={palettes.mint} cueBar="stems" /></section>
-  <section data-variant="Snapshot Pads" data-note="Eight pads like a controller: hot cues show a picture of the music after each cue; the bottom row is loop rolls, beat jumps or samples"><Studio palette={palettes.mint} cueBar="pads" /></section>
+  <section data-variant="Cues and Stems" data-note="Left deck on Cues, right deck on Stems. Tabs, mode cells and transport share one four-column grid"><Studio palette={palettes.mint} modes={['Cues', 'Stems']} /></section>
+  <section data-variant="Loop and FX" data-note="Left deck on Loop, right deck on FX. Every cell: small label on top, value underneath"><Studio palette={palettes.mint} modes={['Loop', 'FX']} /></section>
 </prototype-switcher>
 
 <style>

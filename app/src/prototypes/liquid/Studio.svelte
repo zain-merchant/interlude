@@ -4,9 +4,7 @@
   // edge, machined tick dials, calm liquid waveforms. `palette` sets the two
   // deck colours and their waveform bands.
   import Ruler from './Ruler.svelte';
-  import SectionMap from './SectionMap.svelte';
-  import StemLanes from './StemLanes.svelte';
-  import SnapPads from './SnapPads.svelte';
+  import ModePanel from './ModePanel.svelte';
   import { CUES } from './perf.js';
   import Wave from '../bold/Wave.svelte';
   import Dial from '../bold/Dial.svelte';
@@ -15,13 +13,11 @@
   import Time from '../bold/Time.svelte';
   import { decks, library } from '../bold/track.js';
 
-  // cueBar: what fills the deck's performance area (was the Cues / Loop /
-  // FX / Stems bar).
-  //  'map'   the track as its sections, cue flags, countdown to the next one
-  //  'stems' the overview split into four stem lanes with mute and level
-  //  'pads'  eight pads: hot cues with a snapshot of the music, plus a page
-  /** @type {{ palette: { a: string, b: string, bands: Record<string, string>[] }, cueBar?: 'map'|'stems'|'pads' }} */
-  let { palette, cueBar = 'map' } = $props();
+  // modes: which mode each deck's panel opens on.
+  /** @type {{ palette: { a: string, b: string, bands: Record<string, string>[] }, modes?: string[] }} */
+  let { palette, modes = ['Cues', 'Cues'] } = $props();
+  // svelte-ignore state_referenced_locally (only the starting mode comes from the prop)
+  let mode = $state([...modes]);
   const C = $derived([palette.a, palette.b]);
 
   let eq = $state([[0.5, 0.58, 0.5, 0.34, 0.5], [0.5, 0.5, 0.64, 0.5, 0.42]]);
@@ -52,24 +48,17 @@
             <div class="t"><div><h2>{d.title}</h2><p>{d.artist}</p></div></div>
             <div class="bpm"><strong>{d.bpm}.00</strong><span>{d.key} · {d.camelot} · BPM</span></div>
           </header>
-          {#if cueBar !== 'stems'}
-            <div class="ov" class:thin={cueBar !== 'stems'}><Wave deck={k} kind="overview" opts={{ ...palette.bands[k], past: 'rgba(12,12,14,0.55)' }} />{#each CUES[k] as q}{#if q}<i class="mark" style:left="{(q.t / d.data.length) * 100}%" style:--q={q.c}></i>{/if}{/each}</div>
-          {/if}
+          <div class="ov"><Wave deck={k} kind="overview" opts={{ ...palette.bands[k], past: 'rgba(12,12,14,0.55)' }} />{#each CUES[k] as q}{#if q}<i class="mark" style:left="{(q.t / d.data.length) * 100}%" style:--q={q.c}></i>{/if}{/each}</div>
           <div class="mid">
             <span class="el"><Time deck={k} /></span>
             <span class="rm"><Time deck={k} remaining /></span>
           </div>
-          <div class="perf">
-            {#if cueBar === 'map'}<SectionMap deck={k} color={C[k]} />
-            {:else if cueBar === 'stems'}<StemLanes deck={k} color={C[k]} bands={palette.bands[k]} />
-            {:else}<SnapPads deck={k} color={C[k]} />{/if}
-          </div>
+          <ModePanel deck={k} color={C[k]} bind:mode={mode[k]} />
           <div class="tp">
             <button class="cue">Cue</button>
             <button class="play" aria-label="Pause"><svg viewBox="0 0 16 16"><rect x="3" y="2" width="3.5" height="12" rx="1" /><rect x="9.5" y="2" width="3.5" height="12" rx="1" /></svg></button>
-            <span></span>
             <button class="sync" class:on={k === 1}>Sync</button>
-            <button class="jump" aria-label="Jump back">‹</button><button class="jump" aria-label="Jump forward">›</button>
+            <div class="jumps"><button aria-label="Jump back 4 beats">‹</button><span>4</span><button aria-label="Jump forward 4 beats">›</button></div>
           </div>
         </div>
         <div class="pitch">
@@ -179,23 +168,25 @@
   .bpm strong { font-size: 30px; font-weight: 300; letter-spacing: -0.03em; line-height: 1; }
   .bpm span { margin-top: 4px; font-size: 11.5px; color: rgb(236 234 228 / 0.55); }
   .ov { position: relative; border-radius: 6px; overflow: hidden; background: #0e0e10; }
-  .mid { display: flex; justify-content: space-between; align-items: baseline; }
+  .mid { padding: 0 4px; display: flex; justify-content: space-between; align-items: baseline; }
   .el { font-size: 26px; font-weight: 300; letter-spacing: -0.03em; }
   .rm { justify-self: end; font-size: 18px; font-weight: 300; color: rgb(236 234 228 / 0.55); }
   .mark { position: absolute; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: var(--q); opacity: 0.9; }
   .mark::before { content: ''; position: absolute; top: 0; left: -3px; border: 4px solid transparent; border-top-color: var(--q); }
 
-  .perf { min-height: 0; }
-  .ov.thin { height: 40px; }
-  .tp { display: flex; align-items: center; gap: 8px; }
-  .tp span { flex: 1; }
-  .tp > button { height: 46px; border-radius: 10px; box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1); }
-  .cue { width: 80px; color: #e8b04a; box-shadow: inset 0 0 0 1px rgb(232 176 74 / 0.55) !important; }
-  .play { width: 80px; display: grid; place-items: center; background: #eceae4 !important; color: #111; }
+  /* Transport sits on the same four columns as the mode panel. The panel's
+     4px tray inset is matched so cell edges line up. */
+  .tp { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; padding: 0 4px; }
+  .tp > * { height: 44px; border-radius: 8px; }
+  .cue { color: #e8b04a; box-shadow: inset 0 0 0 1px rgb(232 176 74 / 0.55); }
+  .play { display: grid; place-items: center; background: #eceae4; color: #111; }
   .play svg { width: 14px; height: 14px; fill: currentColor; }
-  .sync { height: 34px !important; padding: 0 14px; color: rgb(236 234 228 / 0.75); }
-  .sync.on { color: var(--c); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c) 50%, transparent) !important; }
-  .jump { width: 30px; height: 34px !important; box-shadow: none !important; color: rgb(236 234 228 / 0.55); }
+  .sync { color: rgb(236 234 228 / 0.75); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1); }
+  .sync.on { color: var(--c); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c) 55%, transparent); }
+  .jumps { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1); }
+  .jumps button { height: 100%; color: rgb(236 234 228 / 0.7); border-radius: 8px; }
+  .jumps button:hover { background: rgb(255 255 255 / 0.04); }
+  .jumps span { font-size: 11.5px; color: rgb(236 234 228 / 0.45); }
   .pitch { display: grid; grid-template-rows: auto 1fr auto; justify-items: center; gap: 8px; }
   .pv { font-size: 12px; color: rgb(236 234 228 / 0.7); }
   .pf { height: 100%; min-height: 0; }
