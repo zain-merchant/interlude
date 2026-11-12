@@ -5,14 +5,14 @@
   import Dial from '../bold/Dial.svelte';
   import Fader from '../bold/Fader.svelte';
   import Meter from '../bold/Meter.svelte';
-  /** @type {{ colors: string[] }} */
-  let { colors } = $props();
+  /** @type {{ colors: string[], bare?: boolean }} */
+  let { colors, bare = false } = $props();
   let eq = $state([[0.5, 0.6, 0.5, 0.32, 0.5], [0.5, 0.5, 0.64, 0.5, 0.42]]);
   let vol = $state([0.86, 0.74]);
   let xf = $state(0.44);
 </script>
 
-<section class="lq-glass mixer">
+<section class="mixer" class:lq-glass={!bare} class:bare>
   <div class="chs">
     {#each [0, 1] as k}
       <div class="ch">
@@ -36,6 +36,7 @@
 
 <style>
   .mixer { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: 10px; padding: 16px; min-height: 0; }
+  .bare { border-radius: 0; box-shadow: inset 1px 0 0 rgb(255 255 255 / 0.07), inset -1px 0 0 rgb(255 255 255 / 0.07); }
   .chs { display: flex; justify-content: space-between; }
   .ch { display: grid; grid-template-columns: 1fr 1fr; gap: 0 4px; }
   .ch :global(.dialwrap:last-child) { grid-column: 1 / -1; justify-self: center; }

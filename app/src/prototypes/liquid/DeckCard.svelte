@@ -6,13 +6,44 @@
   import Fader from '../bold/Fader.svelte';
   import Time from '../bold/Time.svelte';
   import Phrase from '../bold/Phrase.svelte';
+  import Platter from '../bold/Platter.svelte';
   import { decks } from '../bold/track.js';
-  /** @type {{ k: number, color: string, bands: Record<string, string>, pitch?: string }} */
-  let { k, color, bands, pitch = '+0.00' } = $props();
+  // look: 'card' (title and clock on top), 'platter' (a turning platter
+  // with tick ring beside the title), 'oled' (readouts in black mono
+  // screens, Hardware Object style). bare drops the glass for a shared pane.
+  /** @type {{ k: number, color: string, bands: Record<string, string>, pitch?: string, look?: 'card'|'platter'|'oled', bare?: boolean }} */
+  let { k, color, bands, pitch = '+0.00', look = 'card', bare = false } = $props();
   const d = decks[k];
 </script>
 
-<section class="lq-glass deck" style:--c={color} class:r={k === 1}>
+<section class="deck {look}" class:lq-glass={!bare} style:--c={color} class:r={k === 1}>
+  {#if look === 'platter'}
+    <div class="pl">
+      <Platter deck={k} {color} size={186} />
+      <div class="pt">
+        <div class="eyebrow"><i></i>Deck {'AB'[k]}</div>
+        <h2>{d.title}</h2>
+        <p>{d.artist}</p>
+        <div class="facts">
+          <div><b>{d.key}</b><span>{d.camelot}</span></div>
+          <div><b>{pitch}%</b><span>Pitch</span></div>
+        </div>
+      </div>
+    </div>
+  {:else if look === 'oled'}
+    <div class="t">
+      <div class="eyebrow"><i></i>Deck {'AB'[k]}</div>
+      <h2>{d.title}</h2>
+      <p>{d.artist}</p>
+    </div>
+    <div class="screen lq-mono">
+      <div class="cell big"><span>elapsed</span><b><Time deck={k} /></b></div>
+      <div class="cell"><span>remain</span><b><Time deck={k} remaining /></b></div>
+      <div class="cell"><span>bpm</span><b class="hi">{d.bpm}.00</b></div>
+      <div class="cell"><span>key</span><b>{d.key.toLowerCase()} {d.camelot.toLowerCase()}</b></div>
+      <div class="cell"><span>pitch</span><b>{pitch}</b></div>
+    </div>
+  {:else}
   <header>
     <div class="t">
       <div class="eyebrow"><i></i>Deck {'AB'[k]}</div>
@@ -26,6 +57,7 @@
     <div><b>{d.key}</b><span>{d.camelot}</span></div>
     <div><b>{pitch}%</b><span>Pitch</span></div>
   </div>
+  {/if}
   <div class="ov lq-well"><Wave deck={k} kind="overview" opts={{ ...bands, past: 'rgba(6,6,10,0.55)' }} /></div>
   <Progress deck={k} {color} n={121} height={10} />
   <Phrase deck={k} look="pill" />
@@ -44,6 +76,8 @@
   header { display: flex; justify-content: space-between; align-items: end; gap: 12px; }
   .r header { flex-direction: row-reverse; }
   .r .t { text-align: right; }
+  .r .screen { direction: rtl; }
+  .r .screen > * { direction: ltr; }
   .r .eyebrow { justify-content: flex-end; }
   .r .clk { justify-items: start; }
   .eyebrow { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--c); }
@@ -59,6 +93,21 @@
   .facts b { font-size: 18px; font-weight: 400; }
   .facts span { font-size: 11.5px; color: rgb(242 241 236 / 0.5); }
   .ov { height: 56px; }
+  .oled .ov { background: #000; border-radius: 8px; }
+  .pl { display: flex; align-items: center; gap: 22px; }
+  .r .pl { flex-direction: row-reverse; }
+  .pt { display: grid; gap: 2px; }
+  .r .pt { text-align: right; }
+  .pt .facts { margin-top: 12px; }
+  .pl :global(.platter .el) { font-size: 24px; }
+  .pl :global(.platter .bpm), .pl :global(.platter .rm) { font-size: 11px; }
+  .screen { display: grid; grid-template-columns: 1.5fr 1fr 1fr; grid-template-rows: auto auto; gap: 1px; border-radius: 10px; overflow: hidden; background: rgb(255 255 255 / 0.08); box-shadow: 0 0 0 1px #000, 0 0 0 4px rgb(0 0 0 / 0.25); }
+  .cell { display: grid; gap: 2px; padding: 8px 12px; background: #000; }
+  .cell.big { grid-row: span 2; align-content: center; }
+  .cell span { font-size: 10.5px; color: rgb(255 255 255 / 0.45); }
+  .cell b { font-weight: 400; font-size: 15px; color: #f4f2ec; }
+  .cell.big b { font-size: 34px; letter-spacing: -0.03em; color: var(--c); text-shadow: 0 0 18px color-mix(in srgb, var(--c) 45%, transparent); }
+  .cell b.hi { color: var(--c); }
   .tp { display: flex; align-items: center; gap: 8px; }
   .sp { flex: 1; }
   .sync { color: var(--c); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c) 45%, transparent); }
