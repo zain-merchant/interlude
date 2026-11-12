@@ -1,11 +1,13 @@
 <script>
   // The Liquid Glass backdrop, kept calm: two soft pools of the deck colours
   // and a cool neutral glow, drifting over about a minute. Not tied to audio.
-  /** @type {{ a: string, b: string }} */
-  let { a, b } = $props();
+  // tint: how much of the deck colours shows (0 = none, just a neutral
+  // light from the top).
+  /** @type {{ a: string, b: string, tint?: number }} */
+  let { a, b, tint = 1 } = $props();
 </script>
 
-<div class="bd" style:--a={a} style:--b={b} aria-hidden="true"><i class="o1"></i><i class="o2"></i><i class="o3"></i></div>
+<div class="bd" style:--a={a} style:--b={b} aria-hidden="true">{#if tint > 0}<i class="o1" style:opacity={tint}></i><i class="o2" style:opacity={tint}></i>{/if}<i class="o3"></i></div>
 
 <style>
   .bd { position: absolute; inset: 0; overflow: hidden; pointer-events: none; background: radial-gradient(100% 80% at 50% 0%, #16171b, #09090b 70%); }
