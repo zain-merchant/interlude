@@ -113,6 +113,8 @@ export function onTick(fn) {
 }
 
 export const fmt = (s) => {
+  // Round to tenths first so 179.97 reads 3:00.0, not 2:60.0.
+  s = Math.round(s * 10) / 10;
   const m = Math.floor(s / 60);
   const r = s - m * 60;
   return `${m}:${r.toFixed(1).padStart(4, '0')}`;
