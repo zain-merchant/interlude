@@ -23,7 +23,11 @@ function grid(ctx, w, h, t, spp, beat, color, strong) {
 /** Pro-Q style: smooth mirrored bands with translucent fills and a soft glow. */
 export function ribbon(ctx, w, h, d, t, o) {
   const spp = o.seconds / w;
-  const mid = h / 2;
+  // side: 'up' grows from the bottom edge, 'down' hangs from the top edge,
+  // otherwise the shape is mirrored around the centre.
+  const side = o.side === 'up' ? 1 : o.side === 'down' ? -1 : 0;
+  const mid = side === 1 ? h : side === -1 ? 0 : h / 2;
+  const amp = side ? h * 0.96 : h / 2;
   const step = 2;
   const cols = [];
   for (let x = 0; x <= w; x += step) {
@@ -40,13 +44,20 @@ export function ribbon(ctx, w, h, d, t, o) {
   const layer = (k, scale, color, alpha, blur) => {
     ctx.beginPath();
     ctx.moveTo(0, mid);
-    sm.forEach((v, i) => ctx.lineTo(i * step, mid - v[k] * scale * mid));
-    for (let i = sm.length - 1; i >= 0; i--) ctx.lineTo(i * step, mid + sm[i][k] * scale * mid);
+    const up = side === -1 ? -1 : 1;
+    sm.forEach((v, i) => ctx.lineTo(i * step, mid - up * v[k] * scale * amp));
+    if (side) ctx.lineTo(w, mid);
+    else for (let i = sm.length - 1; i >= 0; i--) ctx.lineTo(i * step, mid + sm[i][k] * scale * amp);
     ctx.closePath();
     const g = ctx.createLinearGradient(0, 0, 0, h);
-    g.addColorStop(0, rgba(color, alpha * 0.35));
-    g.addColorStop(0.5, rgba(color, alpha));
-    g.addColorStop(1, rgba(color, alpha * 0.35));
+    if (side) {
+      g.addColorStop(side === 1 ? 1 : 0, rgba(color, alpha));
+      g.addColorStop(side === 1 ? 0 : 1, rgba(color, alpha * 0.3));
+    } else {
+      g.addColorStop(0, rgba(color, alpha * 0.35));
+      g.addColorStop(0.5, rgba(color, alpha));
+      g.addColorStop(1, rgba(color, alpha * 0.35));
+    }
     ctx.fillStyle = g;
     if (blur) ctx.filter = `blur(${blur}px)`;
     ctx.fill();
@@ -62,10 +73,10 @@ export function ribbon(ctx, w, h, d, t, o) {
   layer(2, 0.34, o.high, 0.55);
   ctx.globalCompositeOperation = 'source-over';
   // A crisp edge on the outer band so the shape reads sharp under the glow.
-  for (const sign of [1, -1]) {
+  for (const sign of side ? [side] : [1, -1]) {
     ctx.beginPath();
     sm.forEach((v, i) => {
-      const y = mid - sign * Math.max(v[0] * 0.95, v[1] * 0.62) * mid;
+      const y = mid - sign * Math.max(v[0] * 0.95, v[1] * 0.62) * amp;
       i ? ctx.lineTo(i * step, y) : ctx.moveTo(0, y);
     });
     ctx.strokeStyle = rgba(o.edge ?? o.high, 0.55);
