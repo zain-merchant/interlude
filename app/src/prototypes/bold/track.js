@@ -93,7 +93,7 @@ export function sample(d, t0, t1) {
 
 // One shared clock so every view scrolls together. Starts mid-track so the
 // waveforms show played and unplayed parts.
-export const clock = { t: [96.4, 121.8], playing: [true, true], last: 0 };
+export const clock = { t: [101.2, 121.8], playing: [true, true], last: 0 };
 let running = false;
 const listeners = new Set();
 export function onTick(fn) {
