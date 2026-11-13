@@ -121,8 +121,8 @@
   }
   .lbl {
     margin-top: -2px;
-    font-size: 10.5px;
-    color: rgb(236 236 234 / 0.62);
+    font-size: var(--t-xs, 10.5px);
+    color: var(--fg-3, rgb(236 236 234 / 0.62));
     letter-spacing: 0.01em;
   }
 </style>
