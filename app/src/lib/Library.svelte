@@ -13,7 +13,7 @@
   /** @type {{ onload: (deck: number, track: import('./backend.js').LibraryTrack) => void, onsettings?: () => void }} */
   let { onload, onsettings } = $props();
 
-  const ROW = 30;
+  const ROW = 28;
 
   let folders = $state([]);
   /**
@@ -538,7 +538,7 @@
       </label>
       <span class="count num">{loading ? 'Scanning…' : `${results.length.toLocaleString()} tracks`}{#if !loading && pending}<span
           class="pending" use:tip={() => 'Finding each track’s length, BPM and key in the background'}> · analyzing, {pending.toLocaleString()} to go</span>{/if}</span>
-      <button class="btn sm ghost samp" class:on={sampler.open} aria-pressed={sampler.open}
+      <button class="btn sm samp" class:on={sampler.open} aria-pressed={sampler.open}
         onclick={() => setSamplerOpen(!sampler.open)}
         use:tip={() => tipText(sampler.open ? 'Hide sampler' : 'Show sampler', keyLabel('view.sampler'), 'eight one-shot slots; drag tracks onto them')}>
         <svg viewBox="0 0 12 12" aria-hidden="true"><rect x="1.5" y="1.5" width="3.5" height="3.5" rx="1" /><rect x="7" y="1.5" width="3.5" height="3.5" rx="1" /><rect x="1.5" y="7" width="3.5" height="3.5" rx="1" /><rect x="7" y="7" width="3.5" height="3.5" rx="1" /></svg>Sampler
@@ -582,7 +582,7 @@
             ondragleave={(e) => { if (!e.currentTarget.contains(/** @type {Node} */ (e.relatedTarget))) dropAt = null; }}
             onclick={() => { selectIndex(index); scroller.focus({ preventScroll: true }); }} ondblclick={() => autoLoad(t)} onkeydown={() => {}}
             oncontextmenu={(e) => rowMenu(e, t, index)}>
-            <span class="ld">{#each decks as d}<b class:b={d === 1} aria-hidden="true">{'AB'[d]}</b>{/each}</span>
+            <span class="ld">{#each decks as d}<b class:b={d === 1} aria-hidden="true"></b>{/each}</span>
             <span class="t">{#if t.missing}<span class="k" use:tip={() => `File not found: ${t.path}`}>{t.title}</span><span class="sr">, file not found</span>{:else}{t.title}{/if}</span>
             <span>{t.artist}</span>
             <span class="n num" class:none={a && !a.bpm}>{a ? bpmText(a) || NONE : ''}</span>
@@ -598,22 +598,24 @@
 </section>
 
 <style>
+  /* The sidebar sits straight on the page; the track list is a glass panel.
+     Box edges line up with box edges (search, selected row), and text with
+     text: the search text starts where the titles do. */
   .library {
     display: grid;
-    grid-template-columns: 210px minmax(0, 1fr);
+    grid-template-columns: 200px minmax(0, 1fr);
+    gap: var(--gap);
     min-height: 0;
   }
   nav {
     display: flex;
     flex-direction: column;
-    gap: 2px;
-    padding: 16px 12px;
-    border-right: 1px solid var(--line);
+    padding: 8px 0;
     overflow-y: auto;
   }
   .h {
-    padding: 0 10px 8px;
-    font-size: 11px;
+    padding: 0 8px 4px;
+    font-size: var(--t-xs);
     color: var(--fg-3);
   }
   .item,
@@ -621,41 +623,44 @@
     flex: none;
     display: flex;
     justify-content: space-between;
-    align-items: baseline;
+    align-items: center;
     gap: 8px;
-    padding: 7px 10px;
+    height: 28px;
+    padding: 0 8px;
     border: 0;
-    border-radius: 6px;
+    border-radius: var(--r);
     background: none;
     color: var(--fg-2);
     font: inherit;
     text-align: left;
-    transition: background-color 0.12s, color 0.12s;
+    transition: background-color 140ms ease, color 140ms ease;
   }
   .item span {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  .item:hover {
+  .item:hover,
+  .add:hover {
+    background: var(--hover);
     color: var(--fg);
   }
   .item.on {
-    background: var(--raise);
+    background: var(--sel);
     color: var(--fg);
   }
   .item small {
     color: var(--fg-3);
-    font-size: 11px;
+    font-size: var(--t-xs);
   }
   .h.sec {
-    margin-top: 18px;
+    margin-top: 16px;
   }
   .item.name {
     border: 0;
     font: inherit;
     color: var(--fg);
-    background: var(--raise);
+    background: var(--well);
     box-shadow: inset 0 0 0 1px var(--fg-3);
   }
   /* Where a dragged row will land in a playlist. */
@@ -666,39 +671,44 @@
     box-shadow: inset 0 -2px 0 var(--fg-2);
   }
   .add {
-    margin-top: 8px;
     color: var(--fg-3);
-  }
-  .add:hover {
-    color: var(--fg-2);
   }
   .main {
     display: flex;
     flex-direction: column;
     min-width: 0;
     min-height: 0;
+    padding: 8px;
+    border-radius: var(--r-panel);
+    background: var(--glass-fill);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+    box-shadow: var(--glass-edge);
   }
   .bar {
     display: flex;
     align-items: center;
-    gap: 14px;
-    padding: 14px 20px 10px;
+    gap: 12px;
+    padding-bottom: 8px;
   }
+  /* A recessed well, like the waveforms. */
   .search {
-    width: 380px;
+    width: 360px;
     max-width: 60%;
-    height: 32px;
+    height: var(--h-md);
+    box-sizing: border-box;
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 0 12px;
-    border-radius: 8px;
-    box-shadow: inset 0 0 0 1px var(--line-2);
+    gap: 8px;
+    padding: 0 10px;
+    border-radius: var(--r);
+    background: var(--well);
+    box-shadow: var(--well-shadow);
     color: var(--fg-3);
-    transition: box-shadow 0.12s;
+    transition: box-shadow 140ms ease;
   }
   .search:focus-within {
-    box-shadow: inset 0 0 0 1px var(--fg-3);
+    box-shadow: var(--well-shadow), inset 0 0 0 1px var(--fg-3);
   }
   .search svg {
     flex: none;
@@ -706,7 +716,7 @@
     height: 14px;
     fill: none;
     stroke: currentColor;
-    stroke-width: 1.6;
+    stroke-width: 1.5;
   }
   .search input {
     flex: 1;
@@ -726,7 +736,7 @@
     outline: none;
   }
   kbd {
-    font: 400 11px var(--font);
+    font: 400 var(--t-xs) var(--font);
     color: var(--fg-3);
   }
   .grow {
@@ -742,20 +752,18 @@
     white-space: nowrap;
   }
   .count {
-    font-size: 11px;
+    font-size: var(--t-xs);
     color: var(--fg-3);
   }
   .samp {
     margin-left: auto;
-    height: 28px;
     display: inline-flex;
-    gap: 7px;
-    padding: 0 10px;
-    font-size: 12px;
+    gap: 8px;
+    padding: 0 12px;
   }
   .samp.on {
     color: var(--fg);
-    box-shadow: inset 0 0 0 1px var(--line-2);
+    background: var(--sel);
   }
   .samp svg {
     width: 11px;
@@ -766,14 +774,13 @@
   }
   .row {
     display: grid;
-    grid-template-columns: 34px minmax(0, 2.4fr) minmax(0, 1.6fr) 64px 56px 64px minmax(0, 1.2fr);
+    grid-template-columns: 26px minmax(0, 2.4fr) minmax(0, 1.6fr) 64px 56px 64px minmax(0, 1.2fr);
     align-items: center;
-    height: 30px;
-    padding: 0 10px;
+    height: 28px;
     color: var(--fg-2);
   }
   .row span {
-    padding: 0 10px;
+    padding: 0 6px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -804,21 +811,21 @@
     gap: 4px;
     min-width: 0;
     height: 100%;
-    padding: 0 10px;
+    padding: 0 6px;
     border: 0;
     background: none;
     color: inherit;
     font: inherit;
     text-align: left;
     white-space: nowrap;
-    transition: color 0.12s;
+    transition: color 140ms ease;
   }
   .sort.num {
     justify-content: flex-end;
   }
   .sort:hover,
   .sort.on {
-    color: var(--fg-2);
+    color: var(--fg);
   }
   .sort svg {
     flex: none;
@@ -832,10 +839,9 @@
     transform: rotate(180deg);
   }
   .head {
-    margin: 0 10px;
-    padding: 0;
     height: 28px;
-    font-size: 11px;
+    margin-bottom: 4px;
+    font-size: var(--t-xs);
     color: var(--fg-3);
     border-bottom: 1px solid var(--line);
   }
@@ -843,49 +849,44 @@
     flex: 1;
     overflow-y: auto;
     position: relative;
-    padding: 4px 0;
+    border-radius: var(--r);
   }
   .scroll:focus-visible {
-    outline-offset: -2px;
+    outline: 1px solid var(--fg-3);
+    outline-offset: -1px;
   }
   .scroll .row {
     position: absolute;
-    left: 10px;
-    right: 10px;
-    padding: 0;
-    border-radius: 6px;
+    left: 0;
+    right: 0;
+    border-radius: var(--r);
     cursor: grab;
   }
   .scroll .row:active {
     cursor: grabbing;
   }
   .scroll .row:hover {
-    background: color-mix(in srgb, var(--raise) 60%, transparent);
+    background: var(--hover);
   }
-  /* The browse cursor has to read at a glance from the decks, so it gets a
-     clearly lighter fill, a hairline, and full-strength text. */
+  /* The browse cursor has to read at a glance from the decks: a lighter
+     fill, a hairline, full-strength text. */
   .scroll .row.sel {
-    background: color-mix(in srgb, var(--fg) 12%, var(--bg));
-    outline: 1px solid var(--fg-3);
-    outline-offset: -1px;
+    background: var(--sel);
+    box-shadow: inset 0 0 0 1px var(--line-2);
     color: var(--fg);
   }
+  /* Which deck a track is on: a bar in the deck's colour. */
   .ld {
     display: flex;
-    gap: 2px;
+    gap: 3px;
     justify-content: center;
     padding: 0 !important;
   }
   .ld b {
-    width: 16px;
-    height: 16px;
-    display: inline-grid;
-    place-items: center;
-    border-radius: 4px;
+    width: 3px;
+    height: 14px;
+    border-radius: 2px;
     background: var(--deck-a);
-    color: var(--ink);
-    font-size: 10px;
-    font-weight: 600;
   }
   .ld b.b {
     background: var(--deck-b);
@@ -897,7 +898,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 10px;
+    gap: 8px;
     color: var(--fg-3);
   }
   .empty p {

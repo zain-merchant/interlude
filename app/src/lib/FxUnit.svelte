@@ -76,43 +76,60 @@
 </script>
 
 <div class="fx" role="group" aria-label="Deck {name} effects">
-  <button class="btn sm ghost kind" aria-haspopup="menu" aria-label="Deck {name} effect, {k.label}" {...press(pick)}
+  <button class="tb kind" aria-haspopup="menu" aria-label="Deck {name} effect, {k.label}" {...press(pick)}
     use:tip={() => 'Choose effect'}>{k.label}<svg viewBox="0 0 10 10" aria-hidden="true"><path d="M2.5 4l2.5 2.5L7.5 4" /></svg></button>
+  <span class="sep"></span>
   <div class="beats" use:tip={() => `${k.beats}: ${beatText(beats)} ${beats > 1 ? 'beats' : 'beat'}`}>
-    <button class="btn sm ghost" aria-label="Shorter" aria-disabled={beats <= BEATS[0]} {...press(() => step(-1))}>‹</button>
-    <span class="num" aria-live="polite" aria-label="{beatText(beats)} {beats > 1 ? 'beats' : 'beat'}">{beatText(beats)}</span>
-    <button class="btn sm ghost" aria-label="Longer" aria-disabled={beats >= BEATS[BEATS.length - 1]} {...press(() => step(1))}>›</button>
+    <button class="tb ar" aria-label="Shorter" aria-disabled={beats <= BEATS[0]} {...press(() => step(-1))}>‹</button>
+    <span class="val" aria-live="polite" aria-label="{beatText(beats)} {beats > 1 ? 'beats' : 'beat'}"><b class="num">{beatText(beats)}</b> {beats > 1 ? 'beats' : 'beat'}</span>
+    <button class="tb ar" aria-label="Longer" aria-disabled={beats >= BEATS[BEATS.length - 1]} {...press(() => step(1))}>›</button>
   </div>
-  <Knob label="Level" name="Deck {name} {k.label.toLowerCase()} level" bind:value={level} min={0} max={1} reset={0.5} size={24}
-    format={(v) => `${Math.round(v * 100)}%`} onchange={(v) => control({ type: 'setFxLevel', deck, value: v })} />
-  <button class="btn sm ghost on" class:lit={on} aria-pressed={on} {...press(toggle)}
-    use:tip={() => `${k.label} ${on ? 'on' : 'off'}`}>On</button>
+  <span class="sep"></span>
+  <Knob label="" name="Deck {name} {k.label.toLowerCase()} level" bind:value={level} min={0} max={1} reset={0.5} size={20} fromMin
+    arc={'var(--deck)'} format={(v) => `${Math.round(v * 100)}%`} onchange={(v) => control({ type: 'setFxLevel', deck, value: v })} />
+  <span class="sep"></span>
+  <button class="tb tog" class:live={on} aria-pressed={on} {...press(toggle)}
+    use:tip={() => `${k.label} ${on ? 'on' : 'off'}`}><i></i>{on ? 'On' : 'Off'}</button>
 </div>
 
 <style>
   .fx {
     display: flex;
     align-items: center;
-    gap: 10px;
+    justify-content: space-between;
     min-width: 0;
   }
-  .fx :global(.knob) {
-    grid-auto-flow: column;
+  button {
+    border: 0;
+    background: none;
+    font: inherit;
+    transition: background-color 140ms ease, transform 140ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+  button:hover:not([aria-disabled='true']) {
+    background: var(--hover);
+  }
+  button:active:not([aria-disabled='true']) {
+    transform: scale(0.97);
+  }
+  button[aria-disabled='true'] {
+    opacity: 0.4;
+  }
+  .tb {
+    display: flex;
     align-items: center;
-    gap: 7px;
+    justify-content: center;
+    gap: 8px;
+    min-width: var(--h-md);
+    height: var(--h-md);
+    padding: 0 8px;
+    border-radius: var(--r);
+    color: var(--fg-2);
   }
-  .fx :global(.knob .label) {
-    order: -1;
-  }
-  .btn.sm {
-    height: 28px;
+  .tb.ar {
+    font-size: var(--t-md);
   }
   .kind {
-    display: inline-flex;
-    gap: 4px;
-    padding: 0 8px 0 10px;
-    min-width: 82px;
-    justify-content: space-between;
+    color: var(--fg);
   }
   .kind svg {
     width: 10px;
@@ -120,28 +137,39 @@
     fill: none;
     stroke: currentColor;
     stroke-width: 1.4;
+    opacity: 0.6;
+  }
+  .sep {
+    width: 1px;
+    height: 16px;
+    background: var(--line);
   }
   .beats {
     display: flex;
     align-items: center;
-    gap: 2px;
   }
-  .beats .btn {
-    width: 26px;
-    padding: 0;
-    font-size: 14px;
-  }
-  .beats span {
-    min-width: 30px;
+  .val {
+    min-width: 52px;
     text-align: center;
-    font-size: 12px;
-    color: var(--fg-2);
+    font-size: var(--t-xs);
+    color: var(--fg-3);
   }
-  .on {
-    margin-left: auto;
+  .val b {
+    font-weight: 400;
+    font-size: var(--t-sm);
+    color: var(--fg);
   }
-  .on.lit {
+  .tog i {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    box-shadow: inset 0 0 0 1px currentColor;
+  }
+  .tog.live {
     color: var(--deck);
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--deck) 60%, transparent);
+  }
+  .tog.live i {
+    background: var(--deck);
+    box-shadow: none;
   }
 </style>
