@@ -171,9 +171,12 @@
     <Knob label="Cue mix" name="Headphone cue mix" size={22} fromMin bind:value={cueMix} min={0} max={1} reset={0.5}
       format={(v) => `${Math.round((1 - v) * 100)}% cue, ${Math.round(v * 100)}% master`}
       onchange={(v) => control({ type: 'setCueMix', value: v })} />
-    <div class="mpair" use:tip={() => 'Master level'}>
+    <div class="mpair" use:tip={() => engine.limiting >= 0.5
+      ? `Master level. The limiter is turning the mix down ${engine.limiting.toFixed(1)} dB to stop it distorting; lower the master or channel levels.`
+      : 'Master level'}>
       <Meter level={engine.masterLevels[0]} />
       <Meter level={engine.masterLevels[1]} />
+      {#if engine.limiting >= 0.5}<span class="lim" aria-hidden="true">LIM</span>{/if}
     </div>
     {#if rec}
       <button class="rec num" class:on={rec.active} aria-pressed={rec.active}
@@ -248,9 +251,19 @@
     justify-self: center;
   }
   .mpair {
+    position: relative;
     display: flex;
     gap: 4px;
     height: 72px;
+  }
+  /* Lights while the master limiter is holding the mix down. */
+  .lim {
+    position: absolute;
+    left: calc(100% + 6px);
+    bottom: 0;
+    font: 500 var(--t-xs) var(--font);
+    letter-spacing: 0.04em;
+    color: var(--warn);
   }
   .hp {
     width: 32px;

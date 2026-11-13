@@ -19,7 +19,7 @@ export const inTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in
  * @typedef {{ state: 'connected', device: string, sampleRate: number }
  *         | { state: 'lost', device: string, fallback: string | null }
  *         | { state: 'none' }} AudioStatus
- * @typedef {{ decks: DeckState[], deckPeaks: number[], masterPeak: number[],
+ * @typedef {{ decks: DeckState[], deckPeaks: number[], masterPeak: number[], limiting?: number,
  *             mixer?: { crossfader: number, cueMix: number, masterDb: number, quantize?: boolean },
  *             audio?: AudioStatus, recording?: RecordingStatus }} EngineState
  * @typedef {{ title: string, path: string, duration: number, sampleRate: number,

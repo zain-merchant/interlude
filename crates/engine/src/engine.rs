@@ -120,6 +120,11 @@ impl Engine {
         let [a, b] = &self.scratch;
         self.mixer.mix(&[&a[..n], &b[..n]], sampler, master, cue);
         self.record.push(master);
+        let lim = self.mixer.take_limiting_db();
+        if lim > 0.0 {
+            let s = &self.shared.limiting_db;
+            s.store(s.load().max(lim));
+        }
         for (d, p) in peaks.iter().enumerate() {
             let s = &self.shared.decks[d].peak;
             s.store(s.load().max(*p));
@@ -472,6 +477,14 @@ impl EngineHandle {
     /// has stopped and `error` says why.
     pub fn recording(&mut self) -> RecordingStatus {
         self.recorder.status()
+    }
+
+    /// Reads and resets how far the master limiter turned the mix down
+    /// since the last call, in dB (0 when it didn't).
+    pub fn take_limiting_db(&self) -> f32 {
+        let db = self.shared.limiting_db.load();
+        self.shared.limiting_db.store(0.0);
+        db
     }
 
     /// Reads and resets the peak meters, for a UI polling at frame rate.

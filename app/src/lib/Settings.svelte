@@ -15,9 +15,9 @@
    * Settings sit over the library, never over the decks, and don't block
    * them: performance keys keep working while this is open, except while a
    * shortcut is being recorded.
-   * @type {{ page?: 'keyboard' | 'decks' | 'audio' | 'display' | 'library' | 'stems' | 'controllers', onclose: () => void, onimport?: () => void }}
+   * @type {{ page?: 'keyboard' | 'decks' | 'audio' | 'display' | 'library' | 'stems' | 'controllers', onclose: () => void, onimport?: () => void, onreport?: () => void, onupdates?: () => void }}
    */
-  let { page = $bindable('keyboard'), onclose, onimport } = $props();
+  let { page = $bindable('keyboard'), onclose, onimport, onreport, onupdates } = $props();
 
   const GROUPS = [
     { name: 'Deck A', test: (id) => id.startsWith('deck.0.') },
@@ -408,6 +408,10 @@
       onclick={() => (page = 'stems')}>Stems</button>
     <button class="item" class:on={page === 'controllers'} aria-current={page === 'controllers' ? 'page' : undefined}
       onclick={() => (page = 'controllers')}>Controllers</button>
+    <div class="foot">
+      {#if onupdates}<button class="item" onclick={onupdates}>Check for updates</button>{/if}
+      {#if onreport}<button class="item" onclick={onreport}>Report a problem…</button>{/if}
+    </div>
   </nav>
 
   <div class="main">
@@ -657,6 +661,12 @@
     display: flex;
     flex-direction: column;
     padding: 8px 0;
+  }
+  .foot {
+    display: flex;
+    flex-direction: column;
+    margin-top: auto;
+    padding-top: 12px;
   }
   .h {
     padding: 0 8px 4px;
