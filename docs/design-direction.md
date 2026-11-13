@@ -37,6 +37,32 @@ cool and warm white", is the picked direction. Source:
 - **Waveforms:** calm ribbons sampled on a grid anchored to the track, so
   they don't pulse.
 
+## Design system
+
+The refinement pass, after Reese's feedback, puts everything on one set of
+tokens. They are defined at the top of the `.studio` styles in `Studio.svelte`.
+
+- **Type**: five sizes, 11, 13, 16, 24 and 32px.
+- **Text**: three levels plus an "off" level.
+  - `--fg` is full.
+  - `--fg-2` is 64%.
+  - `--fg-3` is 50%. This is the quietest level that still passes 4.5:1.
+  - `--fg-off` is 30%, for empty or disabled items only.
+- **Space**: a 4px grid.
+  - Panels pad 16px.
+  - Gaps between panels are 12px.
+  - Control heights are 44px (transport), 32px and 24px.
+  - Radii are 16px for panels and 8px for controls.
+- **Depth**, from back to front:
+  1. The page.
+  2. Glass panels.
+  3. Recessed wells: darker, with an inner shadow. Used for waveforms and search.
+  4. Outlined controls (`.ctl`).
+  5. One solid primary control, Play.
+- **Alignment**: the mode tabs, the mode row and the transport share the
+  deck's four columns. The crossfader row shares the transport row's height.
+  Box edges line up with box edges, and text lines up with text.
+
 ## What we ruled out, and why
 
 - Strong gradients, glows and saturated deck colours. They looked
