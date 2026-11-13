@@ -1,7 +1,7 @@
 <script>
-  // A deck's hot cue pads, loop and beat jump controls, in one row above
-  // the transport. Hot cues are cue points, so a set pad takes the cue
-  // colour; an active loop is white, like the waveform's loop region.
+  // A deck's hot cues, or its loop and beat jump, as one quiet row above the
+  // transport. A hot cue is its slot's colour and a time, like its line on
+  // the waveform; an active loop takes the deck's colour.
   import { engine, tracks } from './engine.svelte.js';
   import { tip, tipText } from './tooltip.svelte.js';
   import { openMenu } from './menu.svelte.js';
@@ -21,6 +21,7 @@
 
   let held = $state(-1);
 
+  const mmss = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
   function fmt(s) {
     const m = Math.floor(s / 60);
     return `${m}:${(s - m * 60).toFixed(1).padStart(4, '0')}`;
@@ -64,113 +65,135 @@
 
 <div class="perf">
   {#if show !== 'loop'}
-  <div class="pads" role="group" aria-label="Deck {'AB'[deck]} hot cues">
+  <div class="row" role="group" aria-label="Deck {'AB'[deck]} hot cues">
     {#each Array.from({ length: PADS }, (_, i) => i) as i}
       {@const set = d.hotCues?.[i] != null}
-      <button class="btn sm pad num" class:set class:pressed={held === i} aria-disabled={!t}
+      <button class="tc" class:set class:pressed={held === i} aria-disabled={!t} style:--hc="var(--hc-{i + 1})"
         aria-label={set ? `Hot cue ${i + 1}, at ${fmt(d.hotCues[i])}` : `Set hot cue ${i + 1}`}
         onpointerdown={(e) => padDown(e, i)} onpointerup={() => padUp(i)} onpointerleave={() => padUp(i)}
         onkeydown={(e) => padKey(e, i, true)} onkeyup={(e) => padKey(e, i, false)}
-        oncontextmenu={(e) => padMenu(e, i)} use:tip={() => padTip(i)}>{i + 1}</button>
+        oncontextmenu={(e) => padMenu(e, i)} use:tip={() => padTip(i)}><i></i><b class="num">{i + 1}</b><span class="num">{set ? mmss(d.hotCues[i]) : 'Set'}</span></button>
     {/each}
   </div>
   {/if}
-  {#if show === 'all'}<span class="sp"></span>{/if}
   {#if show !== 'cues'}
-  <div class="loop" role="group" aria-label="Deck {'AB'[deck]} loop">
-    <button class="btn sm ghost step" aria-label="Halve loop" aria-disabled={!t} {...press(() => loopScale(deck, 0.5))}
+  <div class="grp" role="group" aria-label="Deck {'AB'[deck]} loop">
+    <button class="tb" aria-label="Halve loop" aria-disabled={!t} {...press(() => loopScale(deck, 0.5))}
       use:tip={() => tipText('Halve loop', keyLabel(`deck.${deck}.loopHalve`))}>½</button>
-    <button class="btn sm ghost toggle" class:on={d.looping} aria-pressed={d.looping} aria-disabled={!grid}
+    <button class="tb ar" aria-label="Jump back {size} {beatsWord}" aria-disabled={!grid}
+      onpointerdown={(e) => e.button === 0 && beatJump(deck, -1, e.shiftKey)} onclick={(e) => e.detail === 0 && beatJump(deck, -1, e.shiftKey)}
+      use:tip={() => (grid ? tipText(`Jump back ${size} ${beatsWord}`, keyLabel(`deck.${deck}.jumpBack`)) : noGrid)}>‹</button>
+    <button class="big" class:live={d.looping} aria-pressed={d.looping} aria-disabled={!grid}
       {...press(() => loopToggle(deck))}
       use:tip={() => (grid ? tipText(d.looping ? 'Exit loop' : `Loop ${size} ${beatsWord}`, keyLabel(`deck.${deck}.loop`)) : noGrid)}
-    >Loop <span class="num size">{size}</span></button>
-    <button class="btn sm ghost step" aria-label="Double loop" aria-disabled={!t} {...press(() => loopScale(deck, 2))}
+    ><b class="num">{size}</b><span>{beatsWord}</span></button>
+    <button class="tb ar" aria-label="Jump forward {size} {beatsWord}" aria-disabled={!grid}
+      onpointerdown={(e) => e.button === 0 && beatJump(deck, 1, e.shiftKey)} onclick={(e) => e.detail === 0 && beatJump(deck, 1, e.shiftKey)}
+      use:tip={() => (grid ? tipText(`Jump forward ${size} ${beatsWord}`, keyLabel(`deck.${deck}.jumpForward`)) : noGrid)}>›</button>
+    <button class="tb" aria-label="Double loop" aria-disabled={!t} {...press(() => loopScale(deck, 2))}
       use:tip={() => tipText('Double loop', keyLabel(`deck.${deck}.loopDouble`))}>2×</button>
-  </div>
-  <div class="jump" role="group" aria-label="Deck {'AB'[deck]} beat jump">
-    {#each [{ dir: -1, id: 'jumpBack', label: 'Jump back' }, { dir: 1, id: 'jumpForward', label: 'Jump forward' }] as j}
-      <button class="btn sm ghost step" aria-label="{j.label} {size} {beatsWord}" aria-disabled={!grid}
-        onpointerdown={(e) => e.button === 0 && beatJump(deck, j.dir, e.shiftKey)} onclick={(e) => e.detail === 0 && beatJump(deck, j.dir, e.shiftKey)}
-        use:tip={() => (grid ? tipText(`${j.label} ${size} ${beatsWord}`, keyLabel(`deck.${deck}.${j.id}`), `⇧ for 4 bars (${keyLabel(`deck.${deck}.${j.id}Long`)})`) : noGrid)}>
-        <svg viewBox="0 0 16 16" aria-hidden="true" class:flip={j.dir > 0}>
-          <path d="M8 3.5 3.5 8 8 12.5M12.5 3.5 8 8l4.5 4.5" />
-        </svg>
-      </button>
-    {/each}
   </div>
   {/if}
 </div>
 
 <style>
-  .perf {
+  /* One quiet row on the deck's four columns: words, numbers and small
+     marks, no boxes. A hot cue is a colour and a time. */
+  .row {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+    align-items: center;
+  }
+  button {
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    transition: background-color 140ms ease, transform 140ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+  button:active:not([aria-disabled='true']) {
+    transform: scale(0.97);
+  }
+  button:hover:not([aria-disabled='true']),
+  .pressed {
+    background: var(--hover);
+  }
+  button[aria-disabled='true'] {
+    opacity: 0.4;
+  }
+  .tc {
+    justify-self: center;
     display: flex;
     align-items: center;
-    gap: 10px;
-    min-width: 0;
+    gap: 8px;
+    height: var(--h-md);
+    padding: 0 8px;
+    border-radius: var(--r);
   }
-  .pads,
-  .loop,
-  .jump {
-    display: flex;
-    gap: 6px;
-    min-width: 0;
+  .tc i {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    box-shadow: inset 0 0 0 1px var(--fg-4);
   }
-  .pads {
-    flex: 0 1 auto;
+  .tc.set i {
+    background: var(--hc);
+    box-shadow: none;
   }
-  .sp {
-    flex: 1;
-  }
-  .pad {
-    width: 40px;
-    min-width: 28px;
-    flex: 0 1 40px;
-    padding: 0;
-    color: var(--fg-4);
-    box-shadow: inset 0 0 0 1px var(--line);
-  }
-  .pad.set {
-    color: var(--cue);
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--cue) 55%, transparent);
-  }
-  .pad.set:hover:not([aria-disabled='true']) {
-    color: var(--cue);
-    box-shadow: inset 0 0 0 1.5px var(--cue);
-  }
-  .step {
-    width: 32px;
-    padding: 0;
-  }
-  .toggle {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    min-width: 68px;
-    padding: 0 10px;
-    white-space: nowrap;
-  }
-  .size {
+  /* An empty slot still sets a cue when pressed, so its text stays
+     readable (fg-3 reaches 4.5:1); only the hollow dot says it's empty. */
+  .tc b {
+    font-weight: 500;
     color: var(--fg-3);
   }
-  .toggle.on,
-  .toggle.on:hover {
-    color: var(--fg);
-    background: var(--raise);
-    box-shadow: inset 0 0 0 1.5px var(--fg);
+  .tc span {
+    color: var(--fg-3);
   }
-  .toggle.on .size {
+  .tc.set b {
     color: var(--fg);
   }
-  svg {
-    width: 14px;
-    height: 14px;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 1.5;
-    stroke-linecap: round;
-    stroke-linejoin: round;
+  .tc.set span {
+    color: var(--fg-2);
   }
-  svg.flip {
-    transform: scaleX(-1);
+  .grp {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .tb {
+    min-width: var(--h-md);
+    height: var(--h-md);
+    padding: 0 8px;
+    border-radius: var(--r);
+    color: var(--fg-2);
+  }
+  .tb.ar {
+    font-size: var(--t-md);
+  }
+  .big {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    height: 40px;
+    padding: 0 12px;
+    border-radius: var(--r);
+    color: var(--fg);
+  }
+  .big b {
+    font-size: var(--t-lg);
+    font-weight: 300;
+    letter-spacing: -0.02em;
+  }
+  .big span {
+    font-size: var(--t-xs);
+    color: var(--fg-3);
+  }
+  .big.live {
+    color: var(--deck);
+  }
+  .big.live span {
+    color: inherit;
+    opacity: 0.7;
   }
 </style>

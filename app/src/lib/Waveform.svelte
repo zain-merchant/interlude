@@ -1,6 +1,6 @@
 <script>
   import { onMount } from 'svelte';
-  import { WaveformGL, themeColors, HOT_CUES } from './waveform-gl.js';
+  import { Waveform2D, themeColors, HOT_CUES } from './waveform-2d.js';
   import { tracks, engine, displayPos, displaySlip, onFrame, scrubStart, scrubTo, scrubEnd } from './engine.svelte.js';
 
   /** @type {{ deck: number, mode?: 'scroll' | 'overview', seconds?: number, onzoom?: (factor: number) => void }} */
@@ -14,13 +14,13 @@
   onMount(() => {
     let gl;
     try {
-      gl = new WaveformGL(canvas);
+      gl = new Waveform2D(canvas);
     } catch (e) {
       console.error(e);
       failed = true;
       return;
     }
-    const colors = themeColors();
+    const colors = themeColors(deck);
     let uploaded = null;
 
     const off = onFrame(() => {
@@ -48,7 +48,7 @@
         const perPx = (seconds * bps) / w;
         const start = playhead - (w / 2) * perPx;
         gl.draw({
-          start, perPx, playhead, cue, centerLine: !!t, colors, ...marks,
+          mode, start, perPx, playhead, cue, colors, ...marks,
           beatLen: grid ? (60 / grid.bpm) * bps : 0,
           firstBeat: grid ? grid.firstBeat * bps : 0,
         });
@@ -62,7 +62,7 @@
           if (show) el.style.transform = `translateX(${x.toFixed(1)}px)`;
         });
       } else {
-        gl.draw({ start: 0, perPx: Math.max(count, 1) / w, playhead, cue, centerLine: false, colors, ...marks });
+        gl.draw({ mode, start: 0, perPx: Math.max(count, 1) / w, playhead, cue, colors, ...marks });
       }
     });
     return off;
@@ -148,18 +148,17 @@
   ></canvas>
   {#if mode === 'scroll'}
     {#each Array.from({ length: HOT_CUES }, (_, i) => i) as i}
-      <span class="chip num" bind:this={chips[i]} style="display: none" aria-hidden="true">{i + 1}</span>
+      <span class="chip num" bind:this={chips[i]} style="display: none" style:--hc="var(--hc-{i + 1})" aria-hidden="true">{i + 1}</span>
     {/each}
   {/if}
   {#if failed}
-    <div class="msg">Waveforms need WebGL2</div>
+    <div class="msg">Waveforms can't be drawn here</div>
   {/if}
 </div>
 
 <style>
   .wave {
     position: relative;
-    background: var(--bg);
     overflow: hidden;
   }
   canvas {
@@ -182,16 +181,16 @@
   .chip {
     position: absolute;
     left: 0;
-    bottom: 6px;
+    bottom: 4px;
     width: 14px;
     height: 14px;
-    margin-left: 1px;
+    margin-left: 2px;
     display: grid;
     place-items: center;
-    border-radius: 3px;
-    background: var(--cue);
+    border-radius: 4px;
+    background: var(--hc);
     color: var(--ink);
-    font-size: 10px;
+    font-size: var(--t-xs);
     font-weight: 600;
     pointer-events: none;
     will-change: transform;
@@ -202,7 +201,7 @@
     display: grid;
     place-items: center;
     color: var(--fg-3);
-    font-size: 12px;
+    font-size: var(--t-xs);
     pointer-events: none;
   }
 </style>

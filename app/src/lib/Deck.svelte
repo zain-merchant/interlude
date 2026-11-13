@@ -14,7 +14,7 @@
   import { keyLabel } from './commands.js';
   import { announce } from './announce.svelte.js';
   import { keyName, keyLongName, camelot, playingKey } from './key.js';
-  import { toggleSlip } from './performance.js';
+  import { toggleSlip, beatJump, hasGrid, beatsLabel } from './performance.js';
 
   /** @type {{ deck: number, onload: (deck: number, track: any) => void, onreveal: (path: string) => void, onsettings?: (page: string) => void }} */
   let { deck, onload, onreveal, onsettings } = $props();
@@ -124,6 +124,8 @@
   let pitch = $state(0);
 
   const d = $derived(engine.decks[deck]);
+  const grid = $derived(hasGrid(deck));
+  const jumpSize = $derived(beatsLabel(d.loopBeats || 4));
   const t = $derived(tracks[deck]);
   const ratePct = $derived((d.rate - 1) * 100);
   // The tempo the deck is set to, not its momentary speed, so scratching
@@ -222,7 +224,6 @@
   <div class="body">
     <!-- svelte-ignore a11y_no_static_element_interactions -->
     <header oncontextmenu={headerMenu}>
-      <span class="letter" aria-hidden="true">{name}</span>
       <div class="title">
         {#if t}
           <div class="name" use:tip={() => t.path}>{t.title}</div>
@@ -240,7 +241,7 @@
         {:else}
           <div class="big num">{bpm > 0 ? bpm.toFixed(2) : '—'}</div>
         {/if}
-        <div class="unit">{#if pk}<span class="key" class:shifted={pk.shift} use:tip={keyTip}>{keyName(pk)}</span>{" · "}{/if}BPM</div>
+        <div class="unit">{#if pk}<span class="key" class:shifted={pk.shift} use:tip={keyTip}>{keyName(pk)} · {camelot(pk)}</span>{" · "}{/if}BPM</div>
       </div>
     </header>
 
@@ -248,6 +249,10 @@
 
     <div class="times">
       <span class="el num"><span class="sr">Elapsed </span>{fmt(d.position)}</span>
+      <span class="rm num"><span class="sr">Remaining </span>{fmt(d.position - d.duration)}</span>
+    </div>
+
+    <div class="mp">
       <div class="modes" role="tablist" aria-label="Deck {name} controls" tabindex="-1" onkeydown={modeKey}>
         {#each MODES as m}
           {@const busy = (m.id === 'loop' && d.looping) || (m.id === 'fx' && d.fx?.on) || (m.id === 'stems' && (d.stems ?? 15) !== 15)}
@@ -257,8 +262,6 @@
           </button>
         {/each}
       </div>
-      <span class="rm num"><span class="sr">Remaining </span>{fmt(d.position - d.duration)}</span>
-    </div>
 
     <div class="strip" role="tabpanel" aria-label={MODES.find((m) => m.id === mode)?.label}>
       {#if mode === 'fx'}
@@ -269,9 +272,10 @@
         <Performance {deck} show={mode === 'loop' ? 'loop' : 'cues'} />
       {/if}
     </div>
+    </div>
 
     <div class="transport">
-      <button class="btn big cue" class:lit={atCue} aria-disabled={!t}
+      <button class="btn cue" class:lit={atCue} aria-disabled={!t}
         onpointerdown={(e) => e.button === 0 && t && control({ type: 'cuePress', deck })}
         onpointerup={() => t && control({ type: 'cueRelease', deck })}
         onpointerleave={(e) => e.buttons && t && control({ type: 'cueRelease', deck })}
@@ -279,7 +283,7 @@
         onkeyup={(e) => (e.key === ' ' || e.key === 'Enter') && t && control({ type: 'cueRelease', deck })}
         use:tip={() => (t ? tipText('Cue', keyLabel(`deck.${deck}.cue`), 'hold to preview') : `Load a track onto deck ${name} first`)}
       >Cue</button>
-      <button class="btn big play" class:on={d.playing} aria-disabled={!t} aria-pressed={d.playing} aria-label={d.playing ? 'Pause' : 'Play'}
+      <button class="btn play" class:on={d.playing} aria-disabled={!t} aria-pressed={d.playing} aria-label={d.playing ? 'Pause' : 'Play'}
         {...press(play)} use:tip={() => (t ? tipText(d.playing ? 'Pause' : 'Play', keyLabel(`deck.${deck}.play`)) : `Load a track onto deck ${name} first`)}>
         {#if d.playing}
           <svg viewBox="0 0 16 16"><rect x="3" y="2" width="3.5" height="12" rx="1" /><rect x="9.5" y="2" width="3.5" height="12" rx="1" /></svg>
@@ -287,17 +291,15 @@
           <svg viewBox="0 0 16 16"><path d="M4 2.2v11.6a.6.6 0 0 0 .9.5l9.2-5.8a.6.6 0 0 0 0-1L4.9 1.7a.6.6 0 0 0-.9.5z" /></svg>
         {/if}
       </button>
-      <span class="sp"></span>
-      <button class="btn sm" aria-disabled={!canSync} {...press(sync)}
+      <button class="btn sync" aria-disabled={!canSync} {...press(sync)}
         use:tip={() => (canSync ? tipText(`Match tempo and beats to deck ${other}`, keyLabel(`deck.${deck}.sync`)) : `Sync needs a beat on both decks`)}>Sync</button>
-      <div class="nudge">
-        {#each [{ v: -0.04, label: 'Nudge slower', glyph: '‹', id: 'slower' }, { v: 0.04, label: 'Nudge faster', glyph: '›', id: 'faster' }] as n}
-          <button class="btn sm ghost" aria-label={n.label} aria-disabled={!t}
-            onpointerdown={(e) => e.button === 0 && bend(n.v)()} onpointerup={bend(0)} onpointerleave={bend(0)}
-            onkeydown={(e) => (e.key === ' ' || e.key === 'Enter') && !e.repeat && (e.preventDefault(), bend(n.v)())}
-            onkeyup={(e) => (e.key === ' ' || e.key === 'Enter') && bend(0)()}
-            use:tip={() => tipText(n.label, keyLabel(`deck.${deck}.${n.id}`), 'hold')}>{n.glyph}</button>
+      <div class="btn jumps" role="group" aria-label="Beat jump">
+        {#each [{ dir: -1, id: 'jumpBack', label: 'Jump back', glyph: '‹' }, { dir: 1, id: 'jumpForward', label: 'Jump forward', glyph: '›' }] as j, i}
+          <button aria-label="{j.label} {jumpSize} {d.loopBeats === 1 ? 'beat' : 'beats'}" aria-disabled={!grid} style:order={i * 2}
+            onpointerdown={(e) => e.button === 0 && beatJump(deck, j.dir, e.shiftKey)} onclick={(e) => e.detail === 0 && beatJump(deck, j.dir, e.shiftKey)}
+            use:tip={() => (grid ? tipText(`${j.label} ${jumpSize} ${d.loopBeats === 1 ? 'beat' : 'beats'}`, keyLabel(`deck.${deck}.${j.id}`), `⇧ for 4 bars (${keyLabel(`deck.${deck}.${j.id}Long`)})`) : 'Needs a beatgrid')}>{j.glyph}</button>
         {/each}
+        <span class="num" style:order="1">{jumpSize}</span>
       </div>
     </div>
   </div>
@@ -310,17 +312,23 @@
       <Fader vertical big tick value={pitch} min={-1} max={1} reset={0} label="Deck {name} pitch" onchange={setPitch}
         format={(v) => pct(-v * range * 100)} />
     </div>
-    <button class="range lock" class:on={d.keylock} aria-pressed={d.keylock} {...press(toggleKeylock)}
-      use:tip={() => (d.keylock ? 'Key lock on: tempo changes keep the pitch' : 'Key lock off: tempo changes raise or lower the pitch')}>Key lock</button>
     {#if d.slip}
       <!-- Slip is set in Settings > Decks or with its key; the deck only
            shows it while it's on, so it's never on by surprise. -->
       <button class="range lock on" aria-pressed="true" aria-label="Deck {name} slip on, click to turn off" {...press(() => toggleSlip(deck))}
         use:tip={slipTip}>Slip</button>
-    {:else}
-      <!-- Keeps the fader the same length whether slip is on or off. -->
-      <span class="slot" aria-hidden="true"></span>
     {/if}
+    <div class="nudge">
+      {#each [{ v: -0.04, label: 'Nudge slower', glyph: '‹', id: 'slower' }, { v: 0.04, label: 'Nudge faster', glyph: '›', id: 'faster' }] as n}
+        <button aria-label={n.label} aria-disabled={!t}
+          onpointerdown={(e) => e.button === 0 && bend(n.v)()} onpointerup={bend(0)} onpointerleave={bend(0)}
+          onkeydown={(e) => (e.key === ' ' || e.key === 'Enter') && !e.repeat && (e.preventDefault(), bend(n.v)())}
+          onkeyup={(e) => (e.key === ' ' || e.key === 'Enter') && bend(0)()}
+          use:tip={() => tipText(n.label, keyLabel(`deck.${deck}.${n.id}`), 'hold')}>{n.glyph}</button>
+      {/each}
+    </div>
+    <button class="range lock kl" class:on={d.keylock} aria-pressed={d.keylock} {...press(toggleKeylock)}
+      use:tip={() => (d.keylock ? 'Key lock on: tempo changes keep the pitch' : 'Key lock off: tempo changes raise or lower the pitch')}>Key lock</button>
   </div>
 </section>
 
@@ -328,8 +336,8 @@
   .deck {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 56px;
-    gap: 0 22px;
-    padding: 18px 20px 16px;
+    gap: var(--pad);
+    padding: var(--pad);
     min-width: 0;
     min-height: 0;
   }
@@ -341,8 +349,7 @@
   }
   .body {
     display: grid;
-    grid-template-rows: auto minmax(48px, 1fr) auto auto auto;
-    align-content: space-between;
+    grid-template-rows: auto minmax(32px, 48px) auto 1fr auto;
     gap: 12px;
     min-width: 0;
     min-height: 0;
@@ -350,30 +357,19 @@
   header {
     display: flex;
     align-items: flex-start;
-    gap: 14px;
+    justify-content: space-between;
+    gap: 12px;
     min-width: 0;
-  }
-  .letter {
-    flex: none;
-    width: 22px;
-    height: 22px;
-    margin-top: 2px;
-    display: grid;
-    place-items: center;
-    border-radius: 6px;
-    background: var(--deck);
-    color: var(--ink);
-    font-size: 12px;
-    font-weight: 600;
   }
   .title {
     flex: 1;
     min-width: 0;
   }
   .name {
-    font-size: 18px;
-    font-weight: 500;
-    letter-spacing: -0.015em;
+    font-size: var(--t-lg);
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    line-height: 28px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -382,20 +378,21 @@
     color: var(--fg-3);
   }
   .artist {
-    margin-top: 2px;
-    color: var(--fg-3);
+    color: var(--fg-2);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
   .bpm {
     flex: none;
-    text-align: right;
+    display: grid;
+    justify-items: end;
   }
   .bpm .big {
-    font-size: 30px;
-    line-height: 1;
-    letter-spacing: -0.02em;
+    font-size: var(--t-xl);
+    font-weight: 300;
+    line-height: 28px;
+    letter-spacing: -0.03em;
   }
   .bpm .edit {
     width: 4.2em;
@@ -409,15 +406,18 @@
     box-shadow: 0 0 0 1px var(--fg-3);
   }
   .bpm .unit {
-    margin-top: 6px;
-    font-size: 11px;
+    font-size: var(--t-xs);
+    line-height: 17px;
     color: var(--fg-3);
   }
+  /* A recessed well: darker than the glass, with an inner shadow. */
   .overview {
     position: relative;
-    border-radius: 4px;
+    border-radius: var(--r);
     overflow: hidden;
     min-height: 0;
+    background: var(--well);
+    box-shadow: var(--well-shadow);
   }
   .overview :global(.wave) {
     height: 100%;
@@ -428,86 +428,80 @@
     align-items: baseline;
   }
   .el {
-    font-size: 26px;
-    line-height: 1;
-    letter-spacing: -0.02em;
+    font-size: var(--t-lg);
+    font-weight: 300;
+    line-height: 28px;
+    letter-spacing: -0.03em;
   }
   .rm {
-    font-size: 18px;
-    line-height: 1;
-    color: var(--fg-3);
+    font-size: var(--t-md);
+    font-weight: 300;
+    color: var(--fg-2);
+  }
+
+  /* Tabs, the mode row and the transport share the deck's four columns, so
+     the tab bar spans the deck and every edge lines up. */
+  .mp {
+    display: grid;
+    grid-template-rows: auto 1fr;
+    gap: 8px;
+    min-height: 0;
   }
   .modes {
-    display: flex;
-    gap: 2px;
-    align-self: center;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+    border-bottom: 1px solid var(--line);
   }
   .modes button {
     position: relative;
-    height: 24px;
-    padding: 0 10px;
+    height: var(--h-md);
     border: 0;
-    border-radius: 6px;
     background: none;
     color: var(--fg-3);
-    font: 400 12px var(--font);
-    transition: color 0.12s, background-color 0.12s;
+    font: 400 var(--t-sm) var(--font);
+    transition: color 140ms ease;
   }
   .modes button:hover {
-    color: var(--fg-2);
-  }
-  .modes button.on {
-    background: var(--raise);
     color: var(--fg);
   }
-  .modes i {
+  .modes button.on {
+    color: var(--fg);
+  }
+  .modes button.on::after {
+    content: '';
     position: absolute;
-    top: 4px;
-    right: 3px;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+    height: 2px;
+    border-radius: 1px;
+    background: var(--deck);
+  }
+  /* Something in that mode is on (a loop, an effect, a muted stem). */
+  .modes i {
+    display: inline-block;
     width: 4px;
     height: 4px;
+    margin-left: 6px;
+    vertical-align: 2px;
     border-radius: 50%;
     background: var(--deck);
   }
   .strip {
-    min-height: 32px;
-    display: flex;
+    min-height: var(--h-lg);
+    display: grid;
     align-items: center;
-  }
-  .strip > :global(*) {
-    flex: 1;
   }
   .transport {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
   }
-  /* A narrow deck (small window, or the interface zoomed in) puts Sync and
-     nudge on a second line instead of running into the pitch fader. */
-  .body {
-    container-type: inline-size;
-  }
-  @container (max-width: 345px) {
-    .transport {
-      flex-wrap: wrap;
-      row-gap: 8px;
-    }
-    .transport .btn.big {
-      flex: 1;
-      min-width: 0;
-    }
-    .sp {
-      flex-basis: 100%;
-      height: 0;
-    }
-  }
-  .sp {
-    flex: 1;
-  }
-  .btn.big {
-    height: 52px;
-    min-width: 84px;
-    font-size: 14px;
+  .transport > :global(*) {
+    height: var(--h-lg);
+    min-width: 0;
+    padding: 0;
   }
   .cue {
     color: var(--cue);
@@ -518,79 +512,136 @@
     color: var(--cue);
     box-shadow: inset 0 0 0 1.5px var(--cue);
   }
-  .play {
-    color: var(--go);
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--go) 55%, transparent);
-  }
+  /* The one solid control. */
+  .play,
   .play:hover:not([aria-disabled='true']) {
-    color: var(--go);
-    box-shadow: inset 0 0 0 1.5px var(--go);
-  }
-  .play.on,
-  .play.on:hover {
-    background: var(--go);
-    color: #04140b;
+    background: var(--fg);
+    color: var(--ink);
     box-shadow: none;
   }
+  .play[aria-disabled='true'] {
+    opacity: 0.35;
+  }
   .play svg {
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
     fill: currentColor;
   }
-  .nudge {
-    display: flex;
-    gap: 6px;
+  .sync {
+    color: var(--fg-2);
   }
-  .nudge .btn {
-    width: 36px;
-    padding: 0;
-    font-size: 15px;
+  .jumps {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
   }
+  .jumps:hover:not([aria-disabled='true']) {
+    background: none;
+  }
+  .jumps button {
+    height: 100%;
+    border: 0;
+    border-radius: var(--r);
+    background: none;
+    color: var(--fg-2);
+    font: 400 var(--t-md) var(--font);
+  }
+  .jumps button:hover:not([aria-disabled='true']) {
+    background: var(--hover);
+    color: var(--fg);
+  }
+  .jumps button[aria-disabled='true'] {
+    opacity: 0.4;
+  }
+  .jumps span {
+    font-size: var(--t-xs);
+    color: var(--fg-3);
+  }
+
   .pitch {
     display: grid;
-    grid-template-rows: auto minmax(0, 1fr) auto auto;
+    /* Key lock is always last, so it lines up with the transport row. */
+    grid-template-rows: 28px minmax(0, 1fr);
+    grid-auto-rows: auto;
     justify-items: center;
-    gap: 10px;
-    padding-top: 2px;
+    align-items: center;
+    gap: 8px;
     min-height: 0;
   }
   .val {
     display: grid;
     justify-items: center;
-    padding: 3px 4px;
+    padding: 2px 4px;
     border: 0;
     border-radius: 6px;
     background: none;
     font-family: inherit;
-    font-size: 12px;
-    color: var(--fg-3);
+    font-size: var(--t-xs);
+    color: var(--fg-2);
   }
   .val:hover {
     color: var(--fg);
-    background: var(--raise);
+    background: var(--hover);
   }
   .val.off {
-    color: var(--fg-2);
+    color: var(--fg);
   }
   /* The fader range, shown only when it isn't the usual ±8. */
   .rng {
-    font-size: 10px;
+    font-size: var(--t-xs);
     color: var(--fg-3);
   }
   .pitch-fader {
     display: flex;
     justify-content: center;
+    height: 100%;
     min-height: 0;
     width: 100%;
   }
-  .range {
-    height: 24px;
-    padding: 0 8px;
+  .nudge {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+  }
+  .nudge button {
+    height: var(--h-sm);
     border: 0;
     border-radius: 6px;
     background: none;
     color: var(--fg-3);
-    font: 400 11px var(--font);
+    font: 400 var(--t-md) var(--font);
+  }
+  .nudge button:hover:not([aria-disabled='true']) {
+    background: var(--hover);
+    color: var(--fg);
+  }
+  .range {
+    height: var(--h-sm);
+    padding: 0 8px;
+    border: 0;
+    border-radius: var(--r);
+    background: none;
+    color: var(--fg-3);
+    font: 400 var(--t-xs) var(--font);
+  }
+  .range:hover {
+    color: var(--fg);
+    background: var(--hover);
+  }
+  .lock {
+    width: 100%;
+    padding: 0 4px;
+    white-space: nowrap;
+  }
+  .kl {
+    height: var(--h-lg);
+    white-space: normal;
+    line-height: 1.2;
+  }
+  .lock.on,
+  .lock.on:hover {
+    color: var(--fg);
+    box-shadow: inset 0 0 0 1px var(--line-2);
   }
   .sr {
     position: absolute;
@@ -600,24 +651,8 @@
     clip-path: inset(50%);
     white-space: nowrap;
   }
-  .range:hover {
-    color: var(--fg);
-    background: var(--raise);
-  }
-  .slot {
-    height: 24px;
-  }
-  .lock {
-    padding: 0 6px;
-    white-space: nowrap;
-  }
-  .lock.on,
-  .lock.on:hover {
-    color: var(--deck);
-    box-shadow: inset 0 0 0 1px var(--deck);
-  }
   .key {
-    color: var(--fg-2);
+    color: var(--fg-3);
   }
   .key.shifted {
     color: var(--fg);

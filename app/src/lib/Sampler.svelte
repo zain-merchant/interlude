@@ -75,7 +75,7 @@
       </button>
     {/each}
   </div>
-  <Knob label="Level" name="Sampler level" size={22} value={sampler.level} min={0} max={1} reset={0.8}
+  <Knob label="Level" name="Sampler level" size={22} fromMin value={sampler.level} min={0} max={1} reset={0.8}
     format={(v) => `${Math.round(v * 100)}%`} onchange={setSamplerLevel} />
   <button class="close" aria-label="Hide sampler" onclick={() => setSamplerOpen(false)}
     use:tip={() => tipText('Hide sampler', keyLabel('view.sampler'), 'slots keep playing from a controller')}>
@@ -87,14 +87,29 @@
   .sampler {
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: 12px;
     min-width: 0;
-    padding: 0 12px 0 16px;
-    border-top: 1px solid var(--line);
+    margin-top: var(--gap);
+    padding: 0 8px 0 var(--pad);
+    border-radius: var(--r-panel);
+    background: var(--glass-fill);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+    box-shadow: var(--glass-edge);
+  }
+  /* The level dial with its label beside it, so it fits the strip. */
+  .sampler :global(.knob) {
+    grid-auto-flow: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .sampler :global(.knob .label) {
+    order: -1;
+    margin: 0;
   }
   .title {
     flex: none;
-    font-size: 11px;
+    font-size: var(--t-xs);
     color: var(--fg-3);
   }
   .slots {
@@ -102,37 +117,38 @@
     min-width: 0;
     display: grid;
     grid-template-columns: repeat(8, minmax(0, 1fr));
-    gap: 6px;
+    gap: 8px;
   }
   .slot {
     position: relative;
-    height: 30px;
+    height: var(--h-sm);
     min-width: 0;
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 0 10px;
+    padding: 0 8px;
     overflow: hidden;
     border: 0;
     border-radius: 6px;
-    background: none;
-    box-shadow: inset 0 0 0 1px var(--line);
+    background: var(--well);
+    box-shadow: var(--well-shadow);
     color: var(--fg-4);
-    font: 400 12px var(--font);
+    font: 400 var(--t-xs) var(--font);
     text-align: left;
     touch-action: none;
     transition: color 0.12s, box-shadow 0.12s;
   }
   .slot.set {
     color: var(--fg-2);
+    background: none;
     box-shadow: inset 0 0 0 1px var(--line-2);
   }
   .slot.set:hover {
     color: var(--fg);
-    box-shadow: inset 0 0 0 1px var(--fg-4);
+    background: var(--hover);
   }
   .slot.set:active {
-    background: var(--raise);
+    background: var(--sel);
   }
   .slot.playing,
   .slot.playing:hover {
@@ -141,7 +157,7 @@
   }
   .n {
     flex: none;
-    font-size: 11px;
+    font-size: var(--t-xs);
     color: var(--fg-3);
   }
   .playing .n {

@@ -75,9 +75,9 @@ A free, open-source DJ app that is fast, modern and uncluttered. No paywalled
   audio thread and its header is refreshed every few seconds, so a crash
   still leaves a playable file.
 - **Formats:** MP3, AAC/M4A, FLAC, WAV, AIFF, OGG/Vorbis, ALAC via Symphonia.
-- **Waveforms:** frequency-colored (bass blue, mids amber, highs white),
-  drawn on the GPU with WebGL2: scrolling view per deck plus a full-track
-  overview you can click to jump.
+- **Waveforms:** smooth low, mid and high bands in tones of each deck's
+  colour, with beat lines, hot cues and loops: a scrolling view per deck
+  plus a full-track overview you can click to jump.
 - **Library:** add music folders, instant search across artist, title and
   folder, load with double-click, Enter, or Shift+←/→. Columns for title,
   artist, BPM, key, length and folder; click a heading to sort (again to
