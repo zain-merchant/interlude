@@ -75,8 +75,20 @@ tokens. They are defined at the top of the `.studio` styles in `Studio.svelte`.
 - Big platters, the Ridgeline terrain and other experimental layouts. Fun,
   but not practical to mix on. Round 2 is saved at `/prototypes/bold`.
 
+## In the app
+
+The real app now uses this design. The tokens live in `app/src/app.css`.
+Waveforms are drawn by `app/src/lib/waveform-2d.js`, the prototype's ribbon
+renderer, reading the analyser's bins. A few things differ from the
+prototype because the app does more:
+
+- Nudge is a pair of small ‹ › buttons under the pitch fader. The
+  transport's fourth button is beat jump, as in the prototype.
+- Hot cues use eight slot colours (`--hc-1` to `--hc-8`), on the cue row,
+  the overview and the waveform.
+- The sampler strip and the settings page are glass panels too.
+
 ## Next
 
-1. Move this design into the real app components.
-2. Then delete `app/src/prototypes` and the prototype routes in
-   `app/src/main.js`.
+Delete `app/src/prototypes` and the prototype routes in `app/src/main.js`
+once the app has been checked against them.

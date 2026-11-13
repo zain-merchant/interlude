@@ -28,30 +28,53 @@ function hash(str) {
   return h >>> 0;
 }
 
-/** Builds a dance-music-shaped waveform: intro, build, breakdown, drop, outro. */
+/**
+ * Builds a dance-music-shaped waveform: intro, first groove, build,
+ * drop, breakdown, build, second drop, outro. A kick on every beat in the
+ * grooves, off-beat hats, a snare on 2 and 4, and pads that follow the bars.
+ * Sections land on 8-bar boundaries, as phrases do.
+ */
 function fakeWaveform(seed, duration, bpm) {
   const r = rng(seed);
   const n = Math.floor(duration * BINS_PER_SEC);
   const out = new Uint8Array(n * 4);
   const beat = 60 / bpm;
-  const bar = beat * 4;
-  const breakdownAt = duration * (0.45 + r() * 0.1);
-  const breakdownLen = bar * 16;
+  const phrase = beat * 32;
+  const at = (f) => Math.round((duration * f) / phrase) * phrase;
+  const S = (from, to, o) => ({ from, to, energy: 1, kick: true, bass: true, hats: true, pad: 0.5, air: 0.3, ...o });
+  const j = () => (r() - 0.5) * 0.06;
+  const sections = [
+    S(0, at(0.07 + j()), { energy: 0.55, bass: false, pad: 0.2, hats: false }),
+    S(at(0.07), at(0.16 + j()), { energy: 0.8, pad: 0.35 }),
+    S(at(0.16), at(0.22), { energy: 0.9, ramp: true, kick: false, bass: false, pad: 0.9, air: 0.8 }),
+    S(at(0.22), at(0.44 + j()), { energy: 1, pad: 0.6, air: 0.5 }),
+    S(at(0.44), at(0.53), { energy: 0.6, kick: false, bass: false, hats: false, pad: 1, air: 0.4 }),
+    S(at(0.53), at(0.6), { energy: 0.95, ramp: true, kick: false, pad: 0.8, air: 0.9 }),
+    S(at(0.6), at(0.88 + j()), { energy: 1, pad: 0.7, air: 0.6 }),
+    S(at(0.88), Infinity, { energy: 0.6, pad: 0.15, hats: false, bass: false }),
+  ];
+  // A slow random walk for the pads, and a level per bar for the chords.
+  let walk = 0.5;
+  const chord = [];
+  for (let b = 0; b < duration / (beat * 4) + 2; b++) chord.push(0.55 + r() * 0.45);
+  const q = (x) => Math.round(Math.sqrt(Math.max(0, Math.min(1, x))) * 255);
   for (let i = 0; i < n; i++) {
     const t = i / BINS_PER_SEC;
-    const phase = (t % beat) / beat;
-    const kick = Math.exp(-phase * 9);
-    const intro = Math.min(1, t / (bar * 16));
-    const outro = Math.min(1, (duration - t) / (bar * 16));
-    const inBreak = t > breakdownAt && t < breakdownAt + breakdownLen;
-    const energy = Math.min(intro, outro);
-    const low = inBreak ? 0.05 : (0.35 + 0.6 * kick) * (0.4 + 0.6 * energy);
-    const hat = Math.exp(-(((t + beat / 2) % beat) / beat) * 14);
-    const mid = ((inBreak ? 0.5 : 0.22) + 0.08 * Math.sin(t * 0.7) + 0.06 * r()) ** 1.6;
-    const high = ((inBreak ? 0.08 : 0.05 + 0.25 * hat) * (0.5 + 0.5 * energy) + 0.03 * r()) ** 1.5;
-    const peak = Math.min(1, Math.max(low, mid, high) * 1.05);
-    const q = (x) => Math.round(Math.sqrt(Math.max(0, Math.min(1, x))) * 255);
-    out.set([q(peak), q(low), q(mid * (0.3 + 0.7 * energy)), q(high)], i * 4);
+    const sec = sections.find((s) => t >= s.from && t < s.to) ?? sections[sections.length - 1];
+    const p = Math.min(1, (t - sec.from) / Math.max(1, Math.min(sec.to, duration) - sec.from));
+    const energy = sec.ramp ? sec.energy * (0.35 + 0.65 * p * p) : sec.energy;
+    const bt = t / beat;
+    const inBeat = bt - Math.floor(bt);
+    const kick = sec.kick ? Math.exp(-inBeat * 9) : 0;
+    const bass = sec.bass ? 0.35 + 0.25 * Math.sin(inBeat * Math.PI) : 0;
+    const hat = sec.hats ? Math.exp(-((bt + 0.5) % 1) * 22) * 0.9 + Math.exp(-((bt * 4) % 1) * 30) * 0.25 : 0.05;
+    walk = Math.min(1, Math.max(0.2, walk + (r() - 0.5) * 0.06));
+    const pad = sec.pad * chord[Math.floor(bt / 4) % chord.length] * (0.75 + 0.25 * walk);
+    const snare = sec.kick && Math.floor(bt) % 2 === 1 ? Math.exp(-inBeat * 12) * 0.6 : 0;
+    const low = Math.min(1, (kick * 0.95 + bass * 0.5) * energy + r() * 0.03);
+    const mid = Math.min(1, (pad * 0.7 + snare * 0.5) * energy + r() * 0.05);
+    const high = Math.min(1, (hat * 0.6 + sec.air * 0.25 + snare * 0.3) * energy * (0.8 + r() * 0.4));
+    out.set([q(Math.max(low, mid, high)), q(low), q(mid), q(high)], i * 4);
   }
   return out;
 }

@@ -1,4 +1,5 @@
 <script>
+  import Ruler from './Ruler.svelte';
   import Knob from './Knob.svelte';
   import Meter from './Meter.svelte';
   import { tip, tipText } from './tooltip.svelte.js';
@@ -22,7 +23,8 @@
     fromPos: (p) => (p >= 0.5 ? (p - 0.5) * 2 * EQ_MAX : Math.max(KILL, 20 * Math.log10(Math.max(p * 2, 1e-6)))),
   };
   /** Channel knob size: five of them fit the shortest deck row. */
-  const KNOB = 24;
+  const KNOB = 20;
+  const color = (deck) => (deck === 0 ? 'var(--deck-a)' : 'var(--deck-b)');
   const channels = $state([0, 1].map(() => ({ gain: 0, eq: [0, 0, 0], filter: 0, fader: 1, pfl: false })));
   let master = $state(0);
   let cueMix = $state(0.5);
@@ -132,14 +134,14 @@
   {@const ch = channels[deck]}
   {@const n = deck === 0 ? 'A' : 'B'}
   <div class="ch">
-    <Knob label="Trim" name="Deck {n} trim" size={KNOB} bind:value={ch.gain} min={-12} max={12} reset={0} format={db}
+    <Knob label="Trim" name="Deck {n} trim" size={KNOB} bind:value={ch.gain} min={-12} max={12} reset={0} format={db} arc={color(deck)}
       onchange={(v) => control({ type: 'setGain', deck, db: v })} />
     {#each BANDS as { label, band }}
       <Knob {label} name="Deck {n} {label.toLowerCase()} EQ" size={KNOB} bind:value={ch.eq[band]} min={KILL} max={EQ_MAX} reset={0} kill={KILL} taper={eqTaper} format={db}
-        arc={deck === 0 ? 'var(--deck-a)' : 'var(--deck-b)'}
+        arc={color(deck)}
         onchange={(v) => control({ type: 'setEq', deck, band, db: v })} />
     {/each}
-    <Knob label="Filter" name="Deck {n} filter" size={KNOB} bind:value={ch.filter} min={-1} max={1} reset={0} format={filterText}
+    <Knob label="Filter" name="Deck {n} filter" size={KNOB} bind:value={ch.filter} min={-1} max={1} reset={0} format={filterText} arc={color(deck)}
       onchange={(v) => control({ type: 'setFilter', deck, value: v })} />
   </div>
 {/snippet}
@@ -164,9 +166,9 @@
   {@render knobs(0)}
   {@render strip(0)}
   <div class="cen">
-    <Knob label="Master" name="Master volume" bind:value={master} min={-24} max={6} reset={0} format={db}
+    <Knob label="Master" name="Master volume" size={26} fromMin bind:value={master} min={-24} max={6} reset={0} format={db}
       onchange={(v) => control({ type: 'setMasterGain', db: v })} />
-    <Knob label="Cue mix" name="Headphone cue mix" bind:value={cueMix} min={0} max={1} reset={0.5}
+    <Knob label="Cue mix" name="Headphone cue mix" size={22} fromMin bind:value={cueMix} min={0} max={1} reset={0.5}
       format={(v) => `${Math.round((1 - v) * 100)}% cue, ${Math.round(v * 100)}% master`}
       onchange={(v) => control({ type: 'setCueMix', value: v })} />
     <div class="mpair" use:tip={() => 'Master level'}>
@@ -185,112 +187,116 @@
   {@render knobs(1)}
 
   <div class="xf">
-    <span class="a">A</span>
+    <i class="end" style:background="var(--deck-a)"></i>
+    <div class="xr">
+    <Ruler value={(crossfader + 1) / 2} from={0.5} n={41} major={10} color="var(--fg)" height={8} />
     <Fader tick value={crossfader} min={-1} max={1} reset={0} label="Crossfader" onchange={setCrossfader}
       format={(v) => (Math.abs(v) < 0.005 ? 'centre' : `${Math.round(Math.abs(v) * 100)}% to ${v < 0 ? 'A' : 'B'}`)} />
-    <span class="b">B</span>
+    </div>
+    <i class="end" style:background="var(--deck-b)"></i>
   </div>
 </section>
 
 <style>
+  /* Each channel: its dials in one column, then its fader with the meter on
+     the inner side and the headphone cue under it. Master in the middle.
+     The crossfader row shares the decks' transport row height. */
   .mixer {
     display: grid;
     grid-template-columns: auto auto 1fr auto auto;
     grid-template-rows: minmax(0, 1fr) auto;
-    gap: 0 10px;
-    padding: 14px 16px 12px;
+    gap: 0 4px;
+    padding: var(--pad) 12px;
     min-height: 0;
+    overflow: hidden;
   }
   .ch {
     display: grid;
     justify-items: center;
-    align-content: start;
-    gap: 4px;
+    align-content: space-between;
+    min-height: 0;
+  }
+  /* The tick ring's margin overlaps a little, so five dials still fit
+     when the decks are short (sampler open, small window). */
+  .ch :global(.knob) {
+    margin: -3px 0;
   }
   .cen {
     display: grid;
-    grid-template-rows: auto auto minmax(0, 1fr) auto auto;
     justify-items: center;
-    gap: 6px;
+    align-content: start;
+    gap: 8px;
     min-height: 0;
-    border-left: 1px solid var(--line);
-    border-right: 1px solid var(--line);
   }
   .fwrap {
     display: grid;
     grid-template-rows: minmax(0, 1fr) auto;
-    gap: 4px;
+    gap: 8px;
     min-height: 0;
-    padding: 4px 0 2px;
   }
   .frow {
     display: flex;
-    gap: 8px;
+    flex-direction: row-reverse;
+    gap: 4px;
     align-items: stretch;
     min-height: 0;
   }
   .fwrap.mirror .frow {
-    flex-direction: row-reverse;
+    flex-direction: row;
   }
-  /* The headphone cue sits under the fader, as on the controller. */
   .fwrap .hp {
-    justify-self: end;
-  }
-  .fwrap.mirror .hp {
-    justify-self: start;
+    justify-self: center;
   }
   .mpair {
     display: flex;
-    gap: 3px;
-    min-height: 0;
-    margin: 4px 0 2px;
+    gap: 4px;
+    height: 72px;
   }
   .hp {
     width: 32px;
-    height: 24px;
+    height: var(--h-sm);
     display: grid;
     place-items: center;
     border: 0;
-    border-radius: 6px;
+    border-radius: var(--r);
     background: none;
-    color: var(--fg-3);
+    color: var(--fg-2);
     box-shadow: inset 0 0 0 1px var(--line-2);
-    transition: color 0.12s, box-shadow 0.12s;
+    transition: background-color 140ms ease, color 140ms ease, box-shadow 140ms ease;
   }
   .hp:hover {
-    color: var(--fg-2);
-    box-shadow: inset 0 0 0 1px var(--fg-4);
+    background: var(--hover);
+    color: var(--fg);
   }
   .hp svg {
     width: 14px;
     height: 14px;
     fill: none;
     stroke: currentColor;
-    stroke-width: 1.6;
+    stroke-width: 1.4;
   }
   .hp.on {
-    color: var(--deck-b);
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--deck-b) 60%, transparent);
+    color: var(--cue);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--cue) 55%, transparent);
   }
   .rec {
-    height: 24px;
-    min-width: 52px;
+    height: var(--h-sm);
     padding: 0 8px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
+    gap: 8px;
     border: 0;
-    border-radius: 6px;
+    border-radius: var(--r);
     background: none;
-    color: var(--fg-3);
-    font: 400 11px var(--font);
+    color: var(--fg-2);
+    font: 400 var(--t-xs) var(--font);
     box-shadow: inset 0 0 0 1px var(--line-2);
-    transition: color 0.12s, box-shadow 0.12s;
+    transition: background-color 140ms ease, color 140ms ease;
   }
   .rec:hover {
-    color: var(--fg-2);
-    box-shadow: inset 0 0 0 1px var(--fg-4);
+    background: var(--hover);
+    color: var(--fg);
   }
   .rec .dot {
     width: 6px;
@@ -300,7 +306,6 @@
   }
   .rec.on {
     color: var(--fg);
-    box-shadow: inset 0 0 0 1px var(--fg-4);
   }
   .rec.on .dot {
     background: var(--kill);
@@ -309,18 +314,18 @@
     grid-column: 1 / -1;
     display: flex;
     align-items: center;
-    gap: 14px;
-    margin-top: 10px;
-    padding-top: 8px;
+    gap: 8px;
+    height: var(--h-lg);
+    margin-top: 12px;
     border-top: 1px solid var(--line);
   }
-  .xf span {
-    font-size: 11px;
+  .xr {
+    flex: 1;
+    display: grid;
   }
-  .a {
-    color: var(--deck-a);
-  }
-  .b {
-    color: var(--deck-b);
+  .end {
+    width: 3px;
+    height: 14px;
+    border-radius: 2px;
   }
 </style>
