@@ -29,7 +29,7 @@ use dj_engine::{
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter, State};
 
-use db::{Db, FileStat};
+use db::{Db, FileStat, Health};
 
 const AUDIO_EXTENSIONS: &[&str] = &[
     "mp3", "m4a", "aac", "mp4", "flac", "wav", "aif", "aiff", "ogg", "oga", "caf",
@@ -47,6 +47,7 @@ pub struct Library {
     watches: Mutex<[Option<CueWatch>; NUM_DECKS]>,
     shared: OnceLock<Arc<SharedState>>,
     app: OnceLock<AppHandle>,
+    health: Health,
 }
 
 #[derive(Serialize, Clone)]
@@ -295,19 +296,21 @@ impl CueWatch {
 impl Library {
     pub fn load() -> Self {
         let dir = dirs::data_dir().map(|d| d.join("oss-dj"));
-        let db = dir
-            .as_ref()
-            .map(|d| Db::open(&d.join("library.db")))
-            .and_then(|r| {
-                r.map_err(|e| eprintln!("could not open the library: {e}"))
-                    .ok()
-            })
-            .unwrap_or_else(|| Db::open_in_memory().expect("in-memory library"));
+        let (db, health) = match &dir {
+            Some(d) => Db::open_or_recover(&d.join("library.db")),
+            None => (
+                Db::open_in_memory().expect("in-memory library"),
+                Health::Unsaved {
+                    reason: "there's no folder to keep it in".into(),
+                },
+            ),
+        };
         import_old_folders(&db);
         let db = Arc::new(Mutex::new(db));
         Self {
             analyzer: Arc::new(Analyzer::new(db.clone())),
             db,
+            health,
             watches: Mutex::default(),
             shared: OnceLock::new(),
             app: OnceLock::new(),
@@ -562,6 +565,13 @@ fn list_entry(row: db::Row) -> LibraryTrack {
         missing: row.missing,
         analysis: row.analysis,
     }
+}
+
+/// How the library file fared when the app opened it, so the UI can say
+/// if it was restored from a backup or isn't being saved.
+#[tauri::command]
+pub fn library_health(lib: State<'_, Library>) -> Health {
+    lib.health.clone()
 }
 
 #[tauri::command]

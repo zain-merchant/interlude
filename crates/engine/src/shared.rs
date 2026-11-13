@@ -84,6 +84,8 @@ pub(crate) struct SamplerShared {
 pub struct SharedState {
     pub(crate) decks: [DeckShared; NUM_DECKS],
     pub(crate) master_peak: [AtomicF32; 2],
+    /// Deepest master limiter gain reduction since the UI last looked, in dB.
+    pub(crate) limiting_db: AtomicF32,
     pub(crate) sample_rate: AtomicU32,
     pub(crate) crossfader: AtomicF32,
     pub(crate) cue_mix: AtomicF32,

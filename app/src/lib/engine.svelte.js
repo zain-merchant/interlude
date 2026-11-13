@@ -15,6 +15,8 @@ export const engine = $state({
   /** Meter levels with peak-hold decay, 0..1. */
   deckLevels: [0, 0],
   masterLevels: [0, 0],
+  /** How far the master limiter is turning the mix down, in dB, held briefly so it can be seen. */
+  limiting: 0,
   /** Crossfader, cue mix and master gain as the engine has them (null on engines that don't report them). */
   mixer: null,
   /** The sampler's level and slots, as the engine reports them (null on engines without one). */
@@ -154,6 +156,8 @@ function poll() {
       update(engine, 'audio', s.audio ?? null);
       for (let i = 0; i < 2; i++) update(engine.deckLevels, i, decay(s.deckPeaks[i], engine.deckLevels[i]));
       for (let i = 0; i < 2; i++) update(engine.masterLevels, i, decay(s.masterPeak[i], engine.masterLevels[i]));
+      const lim = Math.max(s.limiting ?? 0, engine.limiting * 0.95);
+      update(engine, 'limiting', lim < 0.1 ? 0 : lim);
       const playing = s.decks.some((d) => d.playing) || s.recording?.active || s.sampler?.slots.some((x) => x.playing);
       quietPolls = changed || playing ? 0 : quietPolls + 1;
       if (idle && quietPolls === 0) wake();

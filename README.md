@@ -39,7 +39,9 @@ A free, open-source DJ app that is fast, modern and uncluttered. No paywalled
   the mix stays in time. Off, everything happens exactly at the play head.
 - **Mixer:** trim, 3-band isolator EQ with full kills, channel faders,
   constant-power crossfader, master gain, headphone cue with cue/master blend
-  (on interfaces with 4+ outputs, headphones go to channels 3-4).
+  (on interfaces with 4+ outputs, headphones go to channels 3-4). A master
+  limiter keeps the output (and recordings) under -0.3 dBFS without the
+  distortion of clipping; LIM lights by the master meter while it's working.
 - **Auto gain** (on by default; Settings > Library): each track's loudness
   is measured when it's analyzed (EBU R128, in LUFS) and the deck plays it
   at a common -12 LUFS, so trim starts from matched levels and works on top.
@@ -87,7 +89,8 @@ A free, open-source DJ app that is fast, modern and uncluttered. No paywalled
   SQLite file (`library.db` in the app's data folder, backed up daily to
   `backups/`); your music files are never changed. Rescans only re-read
   new or changed files, and a file that has gone stays listed, greyed out,
-  with its cues kept.
+  with its cues kept. If the library file is ever damaged, it's set aside
+  and the newest good backup restored, and the app says so.
 - **Playlists and History:** make playlists in the sidebar (+ New playlist,
   or right-click a track and Add to new playlist), add tracks by dragging
   them onto a playlist or from the right-click menu, drag rows to reorder,
@@ -173,6 +176,20 @@ A free, open-source DJ app that is fast, modern and uncluttered. No paywalled
 
 The engine renders two playing decks at about 1% of one CPU core, and a
 test guarantees the audio thread never allocates memory.
+
+## Logs, problem reports and updates
+
+- **Logs:** everything the app reports goes to `logs/oss-dj.log` in its
+  data folder (on a Mac, `~/Library/Application Support/oss-dj/logs`), with
+  the last three sessions kept.
+- **Report a problem** (Help menu, or the bottom of Settings): say what
+  happened and the app saves a report to the Desktop with the version,
+  system, audio device, controllers and the logs of this and the last
+  session. Testers send that file in.
+- **Updates:** the app checks for a newer version a few seconds after
+  launch (and from oss-dj › Check for Updates…) and offers to install it.
+  It never installs or restarts while a deck is playing or a set is
+  recording.
 
 ## Keyboard
 
@@ -283,6 +300,30 @@ cargo fmt --all --check
 cargo clippy --workspace --all-targets --all-features -- -D warnings
 cargo test --workspace
 ```
+
+## Releasing a beta
+
+Updates come from the public
+[oss-dj-releases](https://github.com/zain-merchant/oss-dj-releases) repo,
+since this one is private. Each release is signed with the updater key;
+the app only installs updates signed with it.
+
+1. Once: the key is in `~/.tauri/oss-dj-updater.key` on the release Mac
+   (made with `npx tauri signer generate -w ~/.tauri/oss-dj-updater.key`;
+   its public half is `plugins.updater.pubkey` in `tauri.conf.json`).
+   Keep a copy somewhere safe: without it, installed copies can't be updated.
+2. Bump `version` in `Cargo.toml` (workspace) and `app/src-tauri/tauri.conf.json`.
+3. Build:
+   ```sh
+   cd app
+   export TAURI_SIGNING_PRIVATE_KEY="$(cat ~/.tauri/oss-dj-updater.key)"
+   export TAURI_SIGNING_PRIVATE_KEY_PASSWORD=""
+   npm run tauri build
+   node scripts/latest-json.mjs "What changed"
+   ```
+4. Make a release tagged `v<version>` in oss-dj-releases and upload the
+   `.dmg` (for new testers) and, from `target/release/bundle/macos`, the
+   `.app.tar.gz`, its `.sig` and `latest.json`.
 
 ## Roadmap
 
