@@ -650,60 +650,67 @@
     inset: 0;
     z-index: 20;
     display: grid;
-    grid-template-columns: 210px minmax(0, 1fr);
-    background: var(--bg);
+    grid-template-columns: 200px minmax(0, 1fr);
+    gap: var(--gap);
   }
   nav {
     display: flex;
     flex-direction: column;
-    gap: 2px;
-    padding: 16px 12px;
-    border-right: 1px solid var(--line);
+    padding: 8px 0;
   }
   .h {
-    padding: 0 10px 8px;
-    font-size: 11px;
+    padding: 0 8px 4px;
+    font-size: var(--t-xs);
     color: var(--fg-3);
   }
   .item {
-    padding: 7px 10px;
+    height: 28px;
+    padding: 0 8px;
     border: 0;
-    border-radius: 6px;
+    border-radius: var(--r);
     background: none;
     color: var(--fg-2);
     font: inherit;
     text-align: left;
+    transition: background-color 140ms ease, color 140ms ease;
   }
   .item:hover {
+    background: var(--hover);
     color: var(--fg);
   }
   .item.on {
-    background: var(--raise);
+    background: var(--sel);
     color: var(--fg);
   }
+  /* The page is a glass panel, like the track list it covers. */
   .main {
     display: flex;
     flex-direction: column;
     min-width: 0;
     min-height: 0;
+    border-radius: var(--r-panel);
+    background: var(--glass-fill);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+    box-shadow: var(--glass-edge);
   }
   .bar {
     display: flex;
     align-items: center;
-    gap: 14px;
-    padding: 14px 20px 10px;
+    gap: 12px;
+    padding: 8px 8px 8px var(--pad);
     border-bottom: 1px solid var(--line);
   }
   h2 {
     margin: 0;
-    font-size: 13px;
+    font-size: var(--t-sm);
     font-weight: 500;
   }
   .bar p {
     flex: 1;
     margin: 0;
     color: var(--fg-3);
-    font-size: 12px;
+    font-size: var(--t-xs);
   }
   .sp {
     flex: 1;
@@ -714,7 +721,7 @@
   .scroll {
     flex: 1;
     overflow-y: auto;
-    padding: 6px 20px 20px;
+    padding: 4px var(--pad) var(--pad);
   }
   .cols {
     columns: 300px 3;

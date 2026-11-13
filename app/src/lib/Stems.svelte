@@ -1,7 +1,7 @@
 <script>
   // A deck's stems: vocals, melody, bass and drums. Click mutes a stem,
-  // Shift-click plays it alone. A stem that plays looks like any button; a
-  // muted one fades back; a soloed one takes the deck's colour. While the
+  // Shift-click plays it alone. A stem that plays has a filled dot; a muted
+  // one a hollow dot and dim text; a soloed one takes the deck's colour. While the
   // track is still being split, a hairline under the buttons fills up.
   import { tracks } from './engine.svelte.js';
   import { tip, tipText } from './tooltip.svelte.js';
@@ -63,10 +63,10 @@
   <div class="row">
     {#each STEMS as name, i}
       {@const on = !!((s.mask >> i) & 1)}
-      <button class="btn sm stem" class:muted={!on} class:solo={solo === i} aria-disabled={!can && !(t && why)}
+      <button class="stem" class:muted={!on} class:solo={solo === i} aria-disabled={!can && !(t && why)}
         aria-pressed={on} aria-label={label(i)}
         onpointerdown={(e) => down(e, i)} onclick={(e) => e.detail === 0 && down({ button: 0, shiftKey: e.shiftKey }, i)}
-        onkeydown={(e) => key(e, i)} use:tip={() => stemTip(i)}>{name}</button>
+        onkeydown={(e) => key(e, i)} use:tip={() => stemTip(i)}><i></i>{name}</button>
     {/each}
   </div>
   {#if t && (s.state === 'splitting' || s.state === 'starting')}
@@ -81,32 +81,63 @@
     min-width: 0;
   }
   .row {
-    display: flex;
-    gap: 6px;
-    min-width: 0;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+    align-items: center;
   }
   .stem {
-    flex: 1 1 0;
-    min-width: 0;
+    justify-self: center;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    max-width: 100%;
+    height: var(--h-md);
     padding: 0 8px;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    border: 0;
+    border-radius: var(--r);
+    background: none;
+    color: var(--fg);
+    font: inherit;
     white-space: nowrap;
+    overflow: hidden;
+    transition: background-color 140ms ease, transform 140ms cubic-bezier(0.23, 1, 0.32, 1);
   }
+  .stem:hover:not([aria-disabled='true']) {
+    background: var(--hover);
+  }
+  .stem:active:not([aria-disabled='true']) {
+    transform: scale(0.97);
+  }
+  .stem[aria-disabled='true'] {
+    opacity: 0.4;
+  }
+  .stem i {
+    flex: none;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--deck);
+  }
+  /* Muted, but still a control: dim to fg-3, which stays readable. */
   .stem.muted {
-    color: var(--fg-4);
-    box-shadow: inset 0 0 0 1px var(--line);
+    color: var(--fg-3);
   }
-  .stem.solo,
-  .stem.solo:hover:not([aria-disabled='true']) {
+  .stem.muted i {
+    background: none;
+    box-shadow: inset 0 0 0 1px var(--fg-4);
+  }
+  .stem.solo {
     color: var(--deck);
-    box-shadow: inset 0 0 0 1.5px var(--deck);
+  }
+  .stem.solo i {
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--deck) 25%, transparent);
   }
   .progress {
     position: absolute;
     left: 0;
     right: 0;
-    bottom: -5px;
+    bottom: -6px;
     height: 1px;
     background: var(--line);
   }

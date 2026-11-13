@@ -9,10 +9,10 @@
 
 <style>
   .meter {
-    width: 4px;
+    width: 5px;
     height: 100%;
     border-radius: 2px;
-    background: var(--line);
+    background: #070708;
     position: relative;
     overflow: hidden;
   }

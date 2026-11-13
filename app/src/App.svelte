@@ -5,6 +5,7 @@
   import Library from './lib/Library.svelte';
   import Waveform from './lib/Waveform.svelte';
   import Tooltip from './lib/Tooltip.svelte';
+  import Backdrop from './lib/Backdrop.svelte';
   import ContextMenu from './lib/ContextMenu.svelte';
   import Settings from './lib/Settings.svelte';
   import Import from './lib/Import.svelte';
@@ -286,15 +287,15 @@
   // The divider between the decks and the library. Its height is kept
   // between sessions.
   const LIB_KEY = 'oss-dj.libraryHeight';
-  const LIB_DEFAULT = 440;
+  const LIB_DEFAULT = 360;
   const APP_MIN_H = 720; // matches .app's min-height
   let libHeight = $state(LIB_DEFAULT);
   let winHeight = $state(900);
   try {
     libHeight = Number(localStorage.getItem(LIB_KEY)) || LIB_DEFAULT;
   } catch {}
-  const SAMPLER_H = 46;
-  const libMax = $derived(Math.max(160, Math.min(560, Math.max(winHeight, APP_MIN_H) - 150 - 9 - 300 - (sampler.open ? SAMPLER_H : 0))));
+  const SAMPLER_H = 52; // a 40px strip and the 12px gap above it
+  const libMax = $derived(Math.max(160, Math.min(560, Math.max(winHeight, APP_MIN_H) - 24 - 136 - 12 - 12 - 300 - (sampler.open ? SAMPLER_H : 0))));
   const lib = $derived(Math.max(160, Math.min(libMax, libHeight)));
   function setLib(h) {
     libHeight = Math.max(160, Math.min(libMax, h));
@@ -379,13 +380,14 @@
 
 <svelte:window onkeydown={keydown} onkeyup={keyup} onblur={blur} oncontextmenu={contextmenu} />
 
-<div class="app" class:sampling={sampler.open} style:--lib="{lib}px" style:--sampler="{SAMPLER_H}px" bind:clientHeight={winHeight}>
-  <div class="waves" data-region="waves" role="group" aria-label="Waveforms">
+<div class="app" class:sampling={sampler.open} style:--lib="{lib}px" style:--sampler="{SAMPLER_H}px"  bind:clientHeight={winHeight}>
+  <Backdrop a="var(--deck-a)" b="var(--deck-b)" tint={0.25} />
+  <div class="waves glass" data-region="waves" role="group" aria-label="Waveforms">
     {#each [0, 1] as deck}
       <div class="lane" style:--drop-color={deck === 0 ? 'var(--deck-a)' : 'var(--deck-b)'} class:b={deck === 1}
         use:dropTarget={{ ondrop: (t) => load(deck, t), blocked: () => engine.decks[deck].playing }}>
         <Waveform {deck} seconds={zoom} onzoom={(f) => setZoom(zoom * f)} />
-        <div class="who"><b>{'AB'[deck]}</b>{#if tracks[deck]}{tracks[deck].title}{:else}<span class="hint">Drag a track here or press {keyLabel(`deck.${deck}.load`)}</span>{/if}</div>
+        <div class="who"><i></i>{#if tracks[deck]}{tracks[deck].title}{:else}<span class="hint">Drag a track here or press {keyLabel(`deck.${deck}.load`)}</span>{/if}</div>
       </div>
     {/each}
     <div class="zoom">
@@ -449,15 +451,21 @@
   .app {
     position: relative;
     height: 100%;
+    box-sizing: border-box;
     /* Below this the app scrolls rather than clipping, so the interface
        can be zoomed to 200% on a laptop screen. */
     min-width: 960px;
     min-height: 720px;
     display: grid;
-    grid-template-rows: 150px minmax(300px, 1fr) 9px var(--lib);
+    grid-template-rows: 136px minmax(300px, 1fr) var(--gap) var(--lib);
+    padding: var(--gap);
+    background: var(--bg);
   }
   .app.sampling {
-    grid-template-rows: 150px minmax(300px, 1fr) var(--sampler) 9px var(--lib);
+    grid-template-rows: 136px minmax(300px, 1fr) var(--sampler) var(--gap) var(--lib);
+  }
+  .app > :global(:not(.bd)) {
+    position: relative;
   }
   .below {
     position: relative;
@@ -467,6 +475,10 @@
   .libwrap {
     display: grid;
     min-height: 0;
+  }
+  /* Settings open over the library; its glass would show the list through. */
+  .libwrap[inert] {
+    visibility: hidden;
   }
   .banner {
     position: absolute;
@@ -506,6 +518,8 @@
     display: grid;
     grid-template-rows: 1fr 1fr;
     min-height: 0;
+    margin-bottom: var(--gap);
+    overflow: hidden;
   }
   .lane {
     position: relative;
@@ -517,94 +531,83 @@
   .lane :global(.wave) {
     height: 100%;
   }
-  .lane::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 2px;
-    z-index: 2;
-    background: var(--deck-a);
-  }
-  .lane.b::before {
-    background: var(--deck-b);
-  }
   .who {
     position: absolute;
-    left: 20px;
-    top: 9px;
+    left: var(--pad);
+    top: 8px;
     z-index: 2;
     display: flex;
     align-items: center;
     gap: 8px;
-    font-size: 11px;
-    color: var(--fg-3);
+    font-size: var(--t-xs);
+    color: var(--fg-2);
     pointer-events: none;
   }
   .who .hint {
-    color: var(--fg-4);
+    color: var(--fg-3);
   }
-  .who b {
-    width: 16px;
-    height: 16px;
-    display: grid;
-    place-items: center;
-    border-radius: 4px;
+  .who i {
+    width: 3px;
+    height: 12px;
+    border-radius: 2px;
     background: var(--deck-a);
-    color: var(--ink);
-    font-size: 10px;
-    font-weight: 600;
   }
-  .b .who b {
+  .b .who i {
     background: var(--deck-b);
   }
   .zoom {
     position: absolute;
-    right: 12px;
+    right: 8px;
     top: 8px;
     z-index: 4;
     display: flex;
     align-items: center;
-    gap: 2px;
-    padding: 2px;
-    border-radius: 7px;
-    background: color-mix(in srgb, var(--bg) 85%, transparent);
+    gap: 4px;
+    height: var(--h-sm);
+    padding: 0 4px;
+    border-radius: 6px;
+    background: rgb(11 11 13 / 0.8);
+    box-shadow: inset 0 0 0 1px var(--line);
     color: var(--fg-2);
-    font-size: 12px;
+    font-size: var(--t-xs);
   }
   .zoom button {
-    width: 26px;
-    height: 26px;
+    width: 20px;
+    height: 20px;
     display: grid;
     place-items: center;
     border: 0;
-    border-radius: 6px;
+    border-radius: 4px;
     background: none;
     color: var(--fg-2);
-    font: 400 15px var(--font);
+    font: 400 var(--t-sm) var(--font);
   }
   .zoom button:hover {
-    background: var(--raise);
+    background: var(--hover);
     color: var(--fg);
   }
   .zoom span {
-    width: 36px;
+    min-width: 28px;
     text-align: center;
   }
+  /* Deck, mixer, deck: three glass panels 12px apart. */
   .decks {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 300px minmax(0, 1fr);
+    gap: var(--gap);
     min-height: 0;
-    border-top: 1px solid var(--line);
   }
-  .decks > :global(* + *) {
-    border-left: 1px solid var(--line);
+  .decks > :global(*) {
+    border-radius: var(--r-panel);
+    background: var(--glass-fill);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+    box-shadow: var(--glass-edge);
   }
+  /* The gap between the decks and the library is also its resize handle. */
   .split {
     display: grid;
     place-items: center;
-    border-top: 1px solid var(--line);
     cursor: row-resize;
     touch-action: none;
   }
@@ -612,8 +615,8 @@
     width: 36px;
     height: 3px;
     border-radius: 2px;
-    background: var(--line-2);
-    transition: background-color 0.12s;
+    background: transparent;
+    transition: background-color 140ms ease;
   }
   .split:hover i,
   .split.drag i,

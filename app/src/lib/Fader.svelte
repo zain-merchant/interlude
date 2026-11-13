@@ -128,98 +128,116 @@
   use:tip={() => tipText(label, format(value), 'double-click to reset')}
 >
   <div class="line"></div>
+  {#each [0, 0.25, 0.5, 0.75, 1] as m}<i class="mark" style={vertical ? `bottom: ${m * 100}%` : `left: ${m * 100}%`}></i>{/each}
   {#if tick}<div class="tick" style={vertical ? `bottom: ${tickAt * 100}%` : `left: ${tickAt * 100}%`}></div>{/if}
   <div class="cap" style={vertical ? `bottom: ${t * 100}%` : `left: ${t * 100}%`}></div>
 </div>
 
 <style>
   /* The element is the hit area; the cap's centre travels along it, so
-     it's inset by half a cap at each end. */
+     it's inset by half a cap at each end. A machined fader: a recessed
+     slot, engraved marks every quarter, a graphite cap with a white line. */
   .fader {
     position: relative;
     touch-action: none;
     cursor: pointer;
-    width: calc(100% - 14px);
-    height: 30px;
-    margin: 0 7px;
+    width: calc(100% - 12px);
+    height: 28px;
+    margin: 0 6px;
   }
   .fader.vertical {
-    width: 30px;
+    width: 28px;
     height: calc(100% - 12px);
     margin: 6px 0;
   }
-  .fader.vertical.big {
-    width: 36px;
-    height: calc(100% - 14px);
-    margin: 7px 0;
-  }
   .line {
     position: absolute;
-    left: -7px;
-    right: -7px;
+    left: -6px;
+    right: -6px;
     top: 50%;
-    height: 2px;
-    margin-top: -1px;
-    border-radius: 1px;
-    background: var(--line-2);
+    height: 4px;
+    margin-top: -2px;
+    border-radius: 3px;
+    background: #070708;
+    box-shadow: inset 0 1px 2px #000, 0 1px 0 rgb(255 255 255 / 0.05);
   }
   .vertical .line {
     left: 50%;
     right: auto;
     top: -6px;
     bottom: -6px;
-    width: 2px;
+    width: 4px;
     height: auto;
-    margin: 0 0 0 -1px;
+    margin: 0 0 0 -2px;
+  }
+  .mark {
+    position: absolute;
+    top: 50%;
+    width: 1px;
+    height: 12px;
+    margin: -6px 0 0 -0.5px;
+    background: rgb(255 255 255 / 0.14);
+  }
+  .vertical .mark {
+    top: auto;
+    left: 50%;
+    width: 5px;
+    height: 1px;
+    margin: 0 0 -0.5px 8px;
   }
   .tick {
     position: absolute;
     top: 50%;
     width: 1px;
-    height: 11px;
-    margin: -5.5px 0 0 -0.5px;
-    background: var(--fg-3);
+    height: 14px;
+    margin: -7px 0 0 -0.5px;
+    background: rgb(255 255 255 / 0.3);
   }
   .vertical .tick {
     top: auto;
     left: 50%;
-    width: 16px;
+    width: 14px;
     height: 1px;
-    margin: 0 0 -0.5px -8px;
+    margin: 0 0 -0.5px -7px;
   }
   .cap {
     position: absolute;
     top: 50%;
-    width: 14px;
-    height: 30px;
+    width: 12px;
+    height: 26px;
     transform: translate(-50%, -50%);
-    border-radius: 3px;
-    background: var(--fg);
-    transition: background-color 0.12s;
+    border-radius: 2px;
+    background: linear-gradient(180deg, #404147, #2a2b30);
+    box-shadow: 0 0 0 1px #08080a, 0 3px 5px rgb(0 0 0 / 0.6), inset 0 1px 0 rgb(255 255 255 / 0.1);
+  }
+  .cap::after {
+    content: '';
+    position: absolute;
+    top: 4px;
+    bottom: 4px;
+    left: 50%;
+    width: 2px;
+    margin-left: -1px;
+    background: #f4f3ee;
   }
   .vertical .cap {
     top: auto;
     left: 50%;
-    width: 30px;
+    width: 26px;
     height: 12px;
     transform: translate(-50%, 50%);
   }
-  .vertical.big .cap {
-    width: 36px;
-    height: 14px;
-  }
-  .vertical.big .cap::after {
-    content: '';
-    position: absolute;
-    left: 6px;
-    right: 6px;
-    top: 6px;
+  .vertical .cap::after {
+    top: 50%;
+    bottom: auto;
+    left: 4px;
+    right: 4px;
+    width: auto;
     height: 2px;
-    background: var(--bg);
-    opacity: 0.5;
+    margin: -1px 0 0;
   }
   .fader:hover .cap,
   .dragging .cap {
-    background: #ffffff;
+    background: linear-gradient(180deg, #4a4b52, #313238);
   }
 </style>
