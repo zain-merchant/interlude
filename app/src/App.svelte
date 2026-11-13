@@ -10,6 +10,7 @@
   import Settings from './lib/Settings.svelte';
   import Import from './lib/Import.svelte';
   import Sampler from './lib/Sampler.svelte';
+  import Report from './lib/Report.svelte';
   import { sampler, setSamplerOpen, restoreSampler, loadSample } from './lib/sampler.svelte.js';
   import { engine, tracks, startEngineLoop, loadTrack, control, deckSnapshot, restoreDeck } from './lib/engine.svelte.js';
   import { backend } from './lib/backend.js';
@@ -26,6 +27,7 @@
   import { runPerformance } from './lib/performance.js';
   import { padMode, setPadMode } from './lib/padmode.svelte.js';
   import { toggleStem, soloStem, syncStemWaveforms, stemsUnavailable } from './lib/stems.svelte.js';
+  import { libraryHealth, reveal, captureUiErrors, update, checkForUpdate, installUpdate } from './lib/support.svelte.js';
 
   let library;
   let mixer;
@@ -82,6 +84,54 @@
     hideToast();
     importing = true;
   };
+  // Report a problem: a small window over the app.
+  let reporting = $state(false);
+  const openReport = () => {
+    hideToast();
+    reporting = true;
+  };
+  /** What the report says about the setup, beyond the version and system. */
+  async function reportContext() {
+    const a = engine.audio;
+    const out = a?.state === 'connected' ? `${a.device}, ${a.sampleRate} Hz` : a?.state === 'lost' ? `${a.device} (disconnected)` : 'none';
+    const c = await backend.controllers?.().catch(() => null);
+    const pads = c?.connected?.map((x) => `${x.port} (${x.mapping})`).join(', ') || 'none';
+    return `Audio output: ${out}\nControllers: ${pads}`;
+  }
+
+  // The library file's state on launch, when it needs saying.
+  /** @type {import('./lib/support.svelte.js').LibraryHealth | null} */
+  let health = $state(null);
+  const healthText = $derived.by(() => {
+    if (!health || health.state === 'ok') return null;
+    if (health.state === 'restored') {
+      const date = health.backup.match(/\d{4}-\d{2}-\d{2}/)?.[0];
+      return { title: 'Your library was damaged, so it was restored from a backup.', body: `Anything changed after ${date ? new Date(`${date}T12:00`).toLocaleDateString(undefined, { month: 'long', day: 'numeric' }) : 'that backup'} is missing. The damaged file is kept.`, file: health.damaged };
+    }
+    if (health.state === 'fresh') {
+      return { title: 'Your library was damaged and had no backup, so a new one was started.', body: 'Add your music folders again. The damaged file is kept.', file: health.damaged };
+    }
+    return { title: "Your library couldn't be opened, so changes won't be saved.", body: `The cause: ${health.reason}. Quit and open oss-dj again.`, file: null };
+  });
+
+  // Updates: checked a few seconds after launch, and from the menu.
+  let updateDismissed = $state(false);
+  const busyOnAir = () => engine.decks.some((d) => d.playing) || engine.recording?.active;
+  async function checkUpdatesNow() {
+    const found = await checkForUpdate();
+    updateDismissed = false;
+    if (found === false) say("You're on the latest version");
+    else if (found === null) say("Couldn't check for updates. Try again later.");
+  }
+  function install() {
+    // Never restart the app under a playing deck or a recording.
+    if (busyOnAir()) {
+      say('Stop the decks and the recording first, then install the update.');
+      return;
+    }
+    installUpdate();
+  }
+
   const openSettings = (page = 'keyboard') => {
     hideToast();
     settings = page;
@@ -336,6 +386,8 @@
       addFolder: () => library.addFolder(),
       importLibrary: openImport,
       keyboard: () => openSettings('keyboard'),
+      report: openReport,
+      checkUpdates: checkUpdatesNow,
       undoInField,
     }).catch((e) => console.error('menu', e));
   });
@@ -344,6 +396,9 @@
   let samplerFromPads = false;
 
   onMount(() => {
+    captureUiErrors();
+    libraryHealth().then((h) => (health = h)).catch(() => {});
+    const updateTimer = setTimeout(() => checkForUpdate(), 8000);
     startEngineLoop();
     syncDeckSettings();
     // The controller's browse knob and load buttons drive the library.
@@ -374,7 +429,10 @@
       }
     });
     restoreSampler();
-    return () => off?.then((f) => f());
+    return () => {
+      clearTimeout(updateTimer);
+      off?.then((f) => f());
+    };
   });
 </script>
 
@@ -416,7 +474,8 @@
     <div class="libwrap" inert={settings !== null}>
       <Library bind:this={library} onload={load} onsettings={() => openSettings()} />
     </div>
-    {#if settings}<Settings bind:page={settings} onclose={() => (settings = null)} onimport={() => { settings = null; openImport(); }} />{/if}
+    {#if settings}<Settings bind:page={settings} onclose={() => (settings = null)} onimport={() => { settings = null; openImport(); }}
+      onreport={openReport} onupdates={checkUpdatesNow} />{/if}
   </div>
 
   {#if engine.audio?.state === 'lost'}
@@ -425,6 +484,23 @@
       <span><b>{engine.audio.device} disconnected.</b> Decks are held where they stopped and carry on when it's back.</span>
       {#if engine.audio.fallback && engine.audio.fallback !== engine.audio.device}
         <button class="btn sm" onclick={() => backend.useDefaultOutput?.()}>Play through {engine.audio.fallback}</button>
+      {/if}
+    </div>
+  {:else if healthText}
+    <div class="banner" role="alert">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.8 15 14H1z" /><path d="M8 6.2v3.6M8 11.6v.4" /></svg>
+      <span><b>{healthText.title}</b> {healthText.body}</span>
+      {#if healthText.file}<button class="btn sm ghost" onclick={() => reveal(healthText.file)}>Show file</button>{/if}
+      <button class="btn sm" onclick={() => (health = null)}>OK</button>
+    </div>
+  {:else if update.available && !updateDismissed}
+    <div class="banner" role="status">
+      {#if update.state === 'downloading'}
+        <span><b>Updating to {update.available.version}…</b> {Math.round(update.progress * 100)}%. The app restarts when it's done.</span>
+      {:else}
+        <span><b>oss-dj {update.available.version} is ready.</b> {update.state === 'failed' ? "The last try didn't work." : 'Install it between sets; the app restarts.'}</span>
+        <button class="btn sm ghost" onclick={() => (updateDismissed = true)}>Later</button>
+        <button class="btn sm" onclick={install}>{update.state === 'failed' ? 'Try again' : 'Install and restart'}</button>
       {/if}
     </div>
   {/if}
@@ -446,6 +522,7 @@
 <ContextMenu />
 
 {#if importing}<Import onclose={() => (importing = false)} ondone={() => library.reload()} />{/if}
+{#if reporting}<Report onclose={() => (reporting = false)} context={reportContext} />{/if}
 
 <style>
   .app {

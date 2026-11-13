@@ -148,6 +148,172 @@ pub struct Db {
     conn: Connection,
 }
 
+/// How the library file fared when the app opened it.
+#[derive(Debug, Clone, PartialEq, serde::Serialize)]
+#[serde(tag = "state", rename_all = "camelCase")]
+pub enum Health {
+    Ok,
+    /// The file was damaged. It was set aside and the newest good backup,
+    /// from `backup` (its file name), put in its place.
+    #[serde(rename_all = "camelCase")]
+    Restored {
+        backup: String,
+        damaged: PathBuf,
+    },
+    /// The file was damaged and there was no good backup. It was set aside
+    /// and a new, empty library started.
+    #[serde(rename_all = "camelCase")]
+    Fresh {
+        damaged: PathBuf,
+    },
+    /// The file couldn't be opened at all (in use by another copy of the
+    /// app, or not readable), so this session's library isn't saved.
+    Unsaved {
+        reason: String,
+    },
+}
+
+/// True for errors that mean the file itself is broken, rather than
+/// busy or out of reach.
+fn is_damage(e: &rusqlite::Error) -> bool {
+    use rusqlite::ErrorCode::{DatabaseCorrupt, NotADatabase};
+    matches!(e, rusqlite::Error::SqliteFailure(f, _) if matches!(f.code, DatabaseCorrupt | NotADatabase))
+}
+
+fn is_busy(e: &rusqlite::Error) -> bool {
+    use rusqlite::ErrorCode::{DatabaseBusy, DatabaseLocked};
+    matches!(e, rusqlite::Error::SqliteFailure(f, _) if matches!(f.code, DatabaseBusy | DatabaseLocked))
+}
+
+/// Opens `file`: Ok(None) when it's damaged.
+fn open_checked(file: &Path) -> rusqlite::Result<Option<Db>> {
+    match Db::open(file) {
+        Ok(db) => Ok(Some(db)),
+        Err(e) if is_damage(&e) => Ok(None),
+        Err(e) => Err(e),
+    }
+}
+
+/// Fails with `DatabaseCorrupt` unless SQLite's quick check passes.
+fn check_sound(conn: &Connection) -> rusqlite::Result<()> {
+    let result: String = conn.query_row("PRAGMA quick_check", [], |r| r.get(0))?;
+    if result == "ok" {
+        Ok(())
+    } else {
+        Err(rusqlite::Error::SqliteFailure(
+            rusqlite::ffi::Error::new(rusqlite::ffi::SQLITE_CORRUPT),
+            Some(result),
+        ))
+    }
+}
+
+/// Moves a damaged library (and its WAL files) out of the way, keeping it
+/// next to the original in case it can be rescued. Returns where it went.
+fn set_aside(file: &Path) -> std::io::Result<PathBuf> {
+    let stamp = chrono::Local::now().format("%Y-%m-%d %H.%M.%S");
+    let aside = file.with_file_name(format!("library (damaged {stamp}).db"));
+    std::fs::rename(file, &aside)?;
+    for ext in ["-wal", "-shm"] {
+        let mut from = file.as_os_str().to_owned();
+        from.push(ext);
+        let mut to = aside.as_os_str().to_owned();
+        to.push(ext);
+        let _ = std::fs::rename(&from, &to);
+    }
+    Ok(aside)
+}
+
+/// The library's backups, newest first.
+fn backups(file: &Path) -> Vec<PathBuf> {
+    let Some(dir) = file.parent().map(|d| d.join("backups")) else {
+        return Vec::new();
+    };
+    let mut found: Vec<(std::time::SystemTime, PathBuf)> = std::fs::read_dir(dir)
+        .into_iter()
+        .flatten()
+        .flatten()
+        .map(|e| e.path())
+        .filter(|p| {
+            p.file_name()
+                .and_then(|n| n.to_str())
+                .is_some_and(|n| n.starts_with("library-") && n.ends_with(".db"))
+        })
+        .filter_map(|p| {
+            let meta = p.metadata().ok()?;
+            (meta.len() > 0).then_some(())?;
+            Some((meta.modified().ok()?, p))
+        })
+        .collect();
+    found.sort_by_key(|f| std::cmp::Reverse(f.0));
+    found.into_iter().map(|(_, p)| p).collect()
+}
+
+impl Db {
+    /// Opens the library at `file`, never losing it silently:
+    /// - a damaged file is set aside and the newest good backup restored
+    ///   (or, with none, a new library started);
+    /// - a file that can't be opened at all is left alone, and the app runs
+    ///   on a library that lasts until quit.
+    ///
+    /// The `Health` says which happened, so the user can be told.
+    pub fn open_or_recover(file: &Path) -> (Self, Health) {
+        let unsaved = |e: rusqlite::Error| {
+            eprintln!("could not open the library: {e}");
+            let reason = if is_busy(&e) {
+                "another copy of oss-dj is using it".to_string()
+            } else {
+                e.to_string()
+            };
+            let db = Self::open_in_memory().expect("in-memory library");
+            (db, Health::Unsaved { reason })
+        };
+        match open_checked(file) {
+            Ok(Some(db)) => return (db, Health::Ok),
+            Ok(None) => {}
+            Err(e) => return unsaved(e),
+        }
+        eprintln!("the library at {} is damaged", file.display());
+        let damaged = match set_aside(file) {
+            Ok(p) => p,
+            Err(e) => {
+                eprintln!("could not move the damaged library aside: {e}");
+                let db = Self::open_in_memory().expect("in-memory library");
+                let reason =
+                    format!("the library file is damaged and couldn't be moved aside ({e})");
+                return (db, Health::Unsaved { reason });
+            }
+        };
+        for backup in backups(file) {
+            if std::fs::copy(&backup, file).is_err() {
+                continue;
+            }
+            match open_checked(file) {
+                Ok(Some(db)) => {
+                    let name = backup
+                        .file_name()
+                        .map(|n| n.to_string_lossy().into_owned())
+                        .unwrap_or_default();
+                    eprintln!("restored the library from {}", backup.display());
+                    return (
+                        db,
+                        Health::Restored {
+                            backup: name,
+                            damaged,
+                        },
+                    );
+                }
+                _ => {
+                    let _ = std::fs::remove_file(file);
+                }
+            }
+        }
+        match Self::open(file) {
+            Ok(db) => (db, Health::Fresh { damaged }),
+            Err(e) => unsaved(e),
+        }
+    }
+}
+
 fn now_ms() -> i64 {
     chrono::Utc::now().timestamp_millis()
 }
@@ -158,7 +324,8 @@ fn path_str(p: &Path) -> String {
 
 impl Db {
     /// Opens (or creates) the library at `file`, backing it up first when
-    /// a backup is due.
+    /// a backup is due. Fails with `DatabaseCorrupt` or `NotADatabase` if
+    /// the file is damaged.
     pub fn open(file: &Path) -> rusqlite::Result<Self> {
         if let Some(dir) = file.parent() {
             let _ = std::fs::create_dir_all(dir);
@@ -167,6 +334,8 @@ impl Db {
         conn.pragma_update(None, "journal_mode", "WAL")?;
         // Safe with WAL: a crash can lose the last commit, never corrupt the file.
         conn.pragma_update(None, "synchronous", "NORMAL")?;
+        // Before the backup, so a damaged file never replaces a good one.
+        check_sound(&conn)?;
         let db = Self::setup(conn)?;
         db.back_up(file);
         db.migrate()?;
@@ -1031,6 +1200,67 @@ mod tests {
         drop(Db::open(&file).unwrap()); // today's exists already: just prune
         let left = std::fs::read_dir(&backups).unwrap().count();
         assert_eq!(left, BACKUPS_KEPT);
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    fn test_dir(name: &str) -> PathBuf {
+        let dir = std::env::temp_dir().join(format!("oss-dj-{name}-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        dir
+    }
+
+    #[test]
+    fn a_sound_library_opens_as_is() {
+        let dir = test_dir("health-ok");
+        let file = dir.join("library.db");
+        let (db, health) = Db::open_or_recover(&file);
+        assert_eq!(health, Health::Ok);
+        db.add_folder(Path::new("/music")).unwrap();
+        drop(db);
+        let (db, health) = Db::open_or_recover(&file);
+        assert_eq!(health, Health::Ok);
+        assert_eq!(db.folders().unwrap(), [PathBuf::from("/music")]);
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn a_damaged_library_is_set_aside_and_restored_from_a_backup() {
+        let dir = test_dir("health-restore");
+        let file = dir.join("library.db");
+        let db = Db::open(&file).unwrap();
+        db.add_folder(Path::new("/music")).unwrap();
+        drop(db);
+        drop(Db::open(&file).unwrap()); // makes today's backup
+        std::fs::write(&file, b"this is not a database, just noise ".repeat(200)).unwrap();
+
+        let (db, health) = Db::open_or_recover(&file);
+        let Health::Restored { backup, damaged } = health else {
+            panic!("expected a restore, got {health:?}");
+        };
+        assert!(backup.starts_with("library-"));
+        assert!(damaged.exists(), "the damaged file is kept");
+        assert_eq!(db.folders().unwrap(), [PathBuf::from("/music")]);
+        // Restored for good: the next launch is normal.
+        drop(db);
+        assert_eq!(Db::open_or_recover(&file).1, Health::Ok);
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn a_damaged_library_with_no_backup_starts_fresh_and_keeps_the_old_file() {
+        let dir = test_dir("health-fresh");
+        let file = dir.join("library.db");
+        std::fs::write(&file, b"garbage".repeat(1000)).unwrap();
+        let (db, health) = Db::open_or_recover(&file);
+        let Health::Fresh { damaged } = health else {
+            panic!("expected a fresh start, got {health:?}");
+        };
+        assert!(damaged.exists());
+        db.add_folder(Path::new("/music")).unwrap();
+        drop(db);
+        // The new library is saved.
+        assert_eq!(Db::open(&file).unwrap().folders().unwrap().len(), 1);
         let _ = std::fs::remove_dir_all(&dir);
     }
 }

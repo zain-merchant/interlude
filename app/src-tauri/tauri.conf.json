@@ -37,6 +37,15 @@
     ],
     "resources": {
       "../../crates/controller/mappings/": "controllers/"
+    },
+    "createUpdaterArtifacts": true
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "REPLACE_WITH_UPDATER_PUBLIC_KEY",
+      "endpoints": [
+        "https://github.com/zain-merchant/oss-dj-releases/releases/latest/download/latest.json"
+      ]
     }
   }
 }
