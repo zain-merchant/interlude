@@ -374,7 +374,8 @@ export function createMockBackend() {
         deckPeaks,
         mixer: { crossfader: xf, cueMix, masterDb, quantize },
         sampler: { level: samplerLevel, slots: samples.map(sampleState) },
-        masterPeak: [Math.min(1, m), Math.min(1, m * 0.97)],
+        masterPeak: [Math.min(0.966, m), Math.min(0.966, m * 0.97)],
+        limiting: m > 0.966 ? 20 * Math.log10(m / 0.966) : 0,
         audio,
         recording: {
           active: rec.active, path: rec.path, droppedSeconds: 0, error: null,

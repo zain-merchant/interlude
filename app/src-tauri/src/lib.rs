@@ -11,6 +11,7 @@
 mod audio;
 mod controller;
 mod library;
+mod log;
 mod stems;
 
 use std::sync::{Arc, Mutex};
@@ -104,6 +105,8 @@ struct EngineState {
     sampler: SamplerSnapshot,
     deck_peaks: [f32; dj_engine::NUM_DECKS],
     master_peak: [f32; 2],
+    /// How far the master limiter turned the mix down since the last poll, in dB.
+    limiting: f32,
     recording: RecordingStatus,
     audio: AudioStatus,
     stems: [stems::DeckStems; dj_engine::NUM_DECKS],
@@ -481,6 +484,7 @@ fn state(state: State<'_, AppState>, stems: State<'_, stems::Stems>) -> EngineSt
     // with it: the handle itself is still fine to read.
     let mut engine = state.engine.lock().unwrap_or_else(|e| e.into_inner());
     let (deck_peaks, master_peak) = engine.take_peaks();
+    let limiting = engine.take_limiting_db();
     let recording = engine.recording();
     let shared = engine.shared();
     EngineState {
@@ -489,6 +493,7 @@ fn state(state: State<'_, AppState>, stems: State<'_, stems::Stems>) -> EngineSt
         sampler: shared.sampler(),
         deck_peaks,
         master_peak,
+        limiting,
         recording,
         audio: state.output.status(),
         stems: stems.decks(),
@@ -731,6 +736,7 @@ fn log_audio_stats(app: tauri::AppHandle) {
 }
 
 pub fn run() {
+    log::start();
     // Play through the device picked in Settings > Audio, or by default the
     // controller's own sound card when it's plugged in, so its headphone
     // output works.
@@ -751,6 +757,9 @@ pub fn run() {
 
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_process::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .setup({
             let engine = engine.clone();
             move |app| {
@@ -794,6 +803,9 @@ pub fn run() {
             controller::midi_learn_stop,
             controller::learned_mapping,
             controller::save_learned_mapping,
+            log::log_ui,
+            log::save_report,
+            library::library_health,
             library::library_folders,
             library::add_folder,
             library::remove_folder,
