@@ -7,10 +7,10 @@
   import { openMenu } from './menu.svelte.js';
   import { keyLabel, MOD } from './commands.js';
   import { sampler, setSamplerOpen } from './sampler.svelte.js';
-  import { pushEdit } from './undo.svelte.js';
+  import { pushEdit, showToast } from './undo.svelte.js';
   import { keyName, keyLongName, camelot } from './key.js';
 
-  /** @type {{ onload: (deck: number, track: import('./backend.js').LibraryTrack) => void, onsettings?: () => void }} */
+  /** @type {{ onload: (deck: number, track: import('./backend.js').LibraryTrack, opts?: { force?: boolean }) => void, onsettings?: () => void }} */
   let { onload, onsettings } = $props();
 
   const ROW = 28;
@@ -384,11 +384,13 @@
     scroller.focus();
   }
 
-  /** Loads into the first deck that isn't playing, preferring A. */
+  /** Loads into the first deck that isn't playing, preferring A. With both
+   *  playing it says how to pick one, rather than guess which to stop. */
   function autoLoad(t) {
     if (!t || t.missing) return;
     const deck = !engine.decks[0].playing ? 0 : !engine.decks[1].playing ? 1 : null;
     if (deck !== null) onload(deck, t);
+    else showToast(`Both decks are playing. Press ${keyLabel('deck.0.load')} or ${keyLabel('deck.1.load')} twice to replace one.`);
   }
 
   const page = () => Math.max(1, Math.floor(scroller.clientHeight / ROW) - 1);
@@ -447,12 +449,13 @@
 
   const rowMenu = (e, t, index) => {
     selectIndex(index);
-    const blocked = (d) => engine.decks[d].playing;
+    // Choosing "Replace" in the menu is the confirmation, so it loads at once.
+    const playing = (d) => engine.decks[d].playing;
     const load = [0, 1].map((d) => ({
-      label: t.missing ? 'File not found' : blocked(d) ? `Deck ${'AB'[d]} is playing` : `Load to deck ${'AB'[d]}`,
-      key: keyLabel(`deck.${d}.load`),
-      enabled: !blocked(d) && !t.missing,
-      action: () => onload(d, t),
+      label: t.missing ? 'File not found' : playing(d) ? `Replace the playing track on deck ${'AB'[d]}` : `Load to deck ${'AB'[d]}`,
+      key: playing(d) ? undefined : keyLabel(`deck.${d}.load`),
+      enabled: !t.missing,
+      action: () => onload(d, t, { force: true }),
     }));
     const add = playlists
       .filter((p) => !(view.kind === 'playlist' && view.id === p.id))
