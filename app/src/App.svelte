@@ -41,13 +41,32 @@
 
   const playingMsg = (deck) => `Deck ${'AB'[deck]} is playing. Pause it first.`;
 
-  /** Loads a track, keeping what the deck held so ⌘Z can put it back. */
-  async function load(deck, track) {
-    // Never swap the track under a playing deck in the middle of a set.
-    if (engine.decks[deck].playing) {
-      say(playingMsg(deck));
-      return;
+  // Loading onto a playing deck stops what the room hears, so it takes a
+  // second press: the first only warns. Any load onto the same deck within
+  // REPLACE_MS (button, key, controller or drag) goes ahead, with whatever
+  // track it names, so browsing to a different track in between is fine.
+  const REPLACE_MS = 3000;
+  /** @type {{ deck: number, until: number } | null} */
+  let replacing = null;
+  /** True if `deck` can take a track now; otherwise warns and arms the second press. */
+  function confirmReplace(deck) {
+    if (!engine.decks[deck].playing) return true;
+    const now = performance.now();
+    if (replacing?.deck === deck && now < replacing.until) {
+      replacing = null;
+      return true;
     }
+    replacing = { deck, until: now + REPLACE_MS };
+    showToast(`Deck ${'AB'[deck]} is playing. Load again within 3 seconds to replace it.`, { ms: REPLACE_MS });
+    announce(`Deck ${'AB'[deck]} is playing. Load again within 3 seconds to replace it.`);
+    return false;
+  }
+
+  /** Loads a track, keeping what the deck held so ⌘Z can put it back.
+   *  `force` skips the second press, for a choice that already said so. */
+  async function load(deck, track, { force = false } = {}) {
+    if (!force && !confirmReplace(deck)) return;
+    replacing = null;
     const before = deckSnapshot(deck);
     try {
       await loadTrack(deck, track);
@@ -57,7 +76,8 @@
       return;
     }
     let after = null;
-    // Undo and redo both refuse a playing deck, like loading does.
+    // Undo and redo both refuse a playing deck: they'd stop it with no
+    // warning, so pause it first.
     const swap = (snap) => async () => {
       if (engine.decks[deck].playing) {
         say(playingMsg(deck));

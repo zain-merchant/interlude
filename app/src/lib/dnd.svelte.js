@@ -30,8 +30,9 @@ export function endDrag() {
  * While any track is being dragged the element gets `data-drop="ok"` or
  * `"blocked"` (when `blocked()` is true: the deck is playing), so every
  * target shows itself; the one under the pointer gets `"over"` or
- * `"blocked-over"`. Dropping calls `ondrop(track)` either way, so the
- * caller can explain why a blocked drop did nothing.
+ * `"blocked-over"`. Dropping calls `ondrop(track)` either way: for a
+ * playing deck the caller warns first and replaces the track on a second
+ * drop.
  * @param {HTMLElement} node
  * @param {{ ondrop: (track: any) => void, blocked?: () => boolean }} opts
  */
@@ -51,7 +52,7 @@ export function dropTarget(node, opts) {
   const over = (e) => {
     if (!drag.track) return;
     e.preventDefault();
-    e.dataTransfer.dropEffect = opts.blocked?.() ? 'none' : 'copy';
+    e.dataTransfer.dropEffect = 'copy';
     paint();
   };
   const enter = (e) => {
