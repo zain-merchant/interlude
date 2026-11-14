@@ -107,3 +107,15 @@ fn splits_two_decks_and_caches() {
     drop(s);
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+/// The model is dropped whenever splitting goes idle and loaded again for
+/// the next track. ONNX Runtime allows one environment per process, so the
+/// second load used to fail with "only one environment is allowed".
+#[test]
+fn model_loads_again_after_being_dropped() {
+    for _ in 0..3 {
+        let m = dj_stems::Model::load(&model()).expect("model loads");
+        assert!(m.segment() > 0);
+        drop(m);
+    }
+}

@@ -9,7 +9,10 @@
 //! either broken or about 100x slower for this model, so it isn't used.
 
 use std::path::Path;
+use std::sync::Mutex;
+use std::time::Instant;
 
+use ort::environment::Environment;
 use ort::session::builder::AutoDevicePolicy;
 use ort::session::Session;
 use ort::value::Tensor;
@@ -28,6 +31,22 @@ const OUT_STEMS: usize = 4;
 /// Threads the model runs on.
 const THREADS: usize = 2;
 
+/// ONNX Runtime allows one environment per process, ever: once the first
+/// is made, building another fails even after it's dropped. The model is
+/// unloaded whenever splitting goes idle and loaded again for the next
+/// track, so the environment is made once and kept here.
+static ENV: Mutex<Option<Environment>> = Mutex::new(None);
+
+fn environment() -> Result<Environment, Error> {
+    let mut env = ENV.lock().unwrap_or_else(|e| e.into_inner());
+    if let Some(e) = env.as_ref() {
+        return Ok(e.clone());
+    }
+    let e = ort::init().with_name("oss-dj stems").build()?;
+    *env = Some(e.clone());
+    Ok(e)
+}
+
 /// A loaded separation model.
 pub struct Model {
     session: Session,
@@ -45,7 +64,8 @@ pub struct Separated {
 impl Model {
     /// Loads a model file.
     pub fn load(path: &Path) -> Result<Self, Error> {
-        let env = ort::init().with_name("oss-dj stems").build()?;
+        let started = Instant::now();
+        let env = environment()?;
         // The model barely gains past two threads (on an M5: 1.46 s per
         // segment on one, 1.21 s on two, 1.07 s on four), so two keeps it
         // fast while leaving the rest for the audio thread and the UI.
@@ -63,6 +83,10 @@ impl Model {
                 .build()])?
             .commit_from_file(path)?;
         let segment = Self::check_shapes(&session)?;
+        eprintln!(
+            "stems: model loaded in {:.1} s",
+            started.elapsed().as_secs_f64()
+        );
         Ok(Self { session, segment })
     }
 
