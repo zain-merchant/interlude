@@ -8,6 +8,16 @@
 //! On macOS and Linux stderr is routed through a pipe that a small thread
 //! copies to both the terminal and the file. Elsewhere only panics and
 //! the UI's errors reach the file.
+//!
+//! So that a log always says how a session ended, it also records:
+//! * a native crash (a bad memory access, an abort) or a quit signal, with
+//!   the signal and, on macOS, a backtrace, written straight to the file;
+//! * "closed normally" when the app quits on its own;
+//! * every few minutes, that it's still running and how much memory it has
+//!   used at most.
+//!
+//! A log that ends with none of these was killed outright (Force Quit, or
+//! macOS ending it for memory), which nothing inside the app can catch.
 
 use std::fs::File;
 use std::io::{BufRead, Write};
@@ -69,7 +79,160 @@ pub fn start() {
     }));
 
     #[cfg(unix)]
-    capture_stderr();
+    {
+        capture_stderr();
+        crash::install();
+    }
+    heartbeat();
+}
+
+/// Notes in the log that the app quit on its own. Call as it exits.
+pub fn closed() {
+    write_line(&format!("closed normally after {}", uptime()));
+}
+
+static STARTED: OnceLock<std::time::Instant> = OnceLock::new();
+
+fn uptime() -> String {
+    let secs = STARTED.get().map_or(0, |t| t.elapsed().as_secs());
+    match secs {
+        s if s < 60 => format!("{s} s"),
+        s if s < 3600 => format!("{} min", s / 60),
+        s => format!("{} h {} min", s / 3600, (s % 3600) / 60),
+    }
+}
+
+/// Peak memory use so far, in MB.
+fn peak_memory_mb() -> Option<u64> {
+    #[cfg(unix)]
+    {
+        // SAFETY: getrusage fills the struct it's given.
+        let mut usage: libc::rusage = unsafe { std::mem::zeroed() };
+        if unsafe { libc::getrusage(libc::RUSAGE_SELF, &mut usage) } != 0 {
+            return None;
+        }
+        let max = usage.ru_maxrss as u64;
+        // Bytes on macOS, kilobytes on Linux.
+        let bytes = if cfg!(target_os = "macos") { max } else { max * 1024 };
+        Some(bytes / (1024 * 1024))
+    }
+    #[cfg(not(unix))]
+    None
+}
+
+/// Every five minutes, a line saying the app is alive and its peak memory,
+/// so a log that stops shows roughly when, and whether memory was climbing.
+fn heartbeat() {
+    let _ = STARTED.set(std::time::Instant::now());
+    let _ = std::thread::Builder::new()
+        .name("log heartbeat".into())
+        .spawn(|| loop {
+            std::thread::sleep(std::time::Duration::from_secs(300));
+            let mem = peak_memory_mb().map_or(String::new(), |m| format!(", peak memory {m} MB"));
+            write_line(&format!("still running: up {}{mem}", uptime()));
+        });
+}
+
+/// Writes native crashes and quit signals to the log file. A signal
+/// handler can't take locks or allocate, so it writes to the file's
+/// descriptor directly with preformatted text.
+#[cfg(unix)]
+mod crash {
+    use std::os::fd::AsRawFd;
+    use std::sync::atomic::{AtomicI32, Ordering};
+
+    static FD: AtomicI32 = AtomicI32::new(-1);
+
+    const SIGNALS: [(libc::c_int, &str); 8] = [
+        (libc::SIGSEGV, "SIGSEGV (bad memory access)"),
+        (libc::SIGBUS, "SIGBUS (bad memory access)"),
+        (libc::SIGILL, "SIGILL (illegal instruction)"),
+        (libc::SIGFPE, "SIGFPE (arithmetic error)"),
+        (libc::SIGABRT, "SIGABRT (abort)"),
+        (libc::SIGTERM, "SIGTERM (asked to quit)"),
+        (libc::SIGHUP, "SIGHUP (its terminal closed)"),
+        (libc::SIGINT, "SIGINT (Ctrl-C)"),
+    ];
+
+    /// The handlers that were there before ours, put back once ours has
+    /// written its line, so Rust's stack overflow message and the default
+    /// behaviour (a crash report, the process ending) still happen.
+    static mut PREVIOUS: [Option<libc::sigaction>; 8] = [None; 8];
+
+    pub fn install() {
+        let Some(log) = super::LOG.get() else { return };
+        let fd = log.lock().unwrap_or_else(|e| e.into_inner()).file.as_raw_fd();
+        // A duplicate, so it stays open however the file is handled.
+        // SAFETY: plain libc calls on descriptors this module owns.
+        let fd = unsafe { libc::dup(fd) };
+        if fd < 0 {
+            return;
+        }
+        FD.store(fd, Ordering::SeqCst);
+        for (i, (sig, _)) in SIGNALS.iter().enumerate() {
+            // SAFETY: installs a handler that only makes async-signal-safe
+            // calls; the old action is saved before anything can fire.
+            unsafe {
+                let mut new: libc::sigaction = std::mem::zeroed();
+                new.sa_sigaction = handler as *const () as usize;
+                new.sa_flags = libc::SA_SIGINFO | libc::SA_ONSTACK;
+                libc::sigemptyset(&mut new.sa_mask);
+                let mut old: libc::sigaction = std::mem::zeroed();
+                if libc::sigaction(*sig, &new, &mut old) == 0 {
+                    PREVIOUS[i] = Some(old);
+                }
+            }
+        }
+    }
+
+    fn put(fd: libc::c_int, text: &[u8]) {
+        // SAFETY: write(2) is async-signal-safe.
+        unsafe {
+            libc::write(fd, text.as_ptr().cast(), text.len());
+        }
+    }
+
+    extern "C" fn handler(sig: libc::c_int, _info: *mut libc::siginfo_t, _ctx: *mut libc::c_void) {
+        let fd = FD.load(Ordering::SeqCst);
+        let Some(i) = SIGNALS.iter().position(|(s, _)| *s == sig) else {
+            return;
+        };
+        if fd >= 0 {
+            let fatal = i < 5;
+            put(fd, if fatal { b"CRASHED: signal " } else { b"stopped by signal " });
+            put(fd, SIGNALS[i].1.as_bytes());
+            put(fd, b"\n");
+            #[cfg(target_os = "macos")]
+            if fatal {
+                put(fd, b"backtrace:\n");
+                let mut frames = [std::ptr::null_mut(); 64];
+                // SAFETY: backtrace and backtrace_symbols_fd don't allocate
+                // on macOS and write straight to the descriptor.
+                unsafe {
+                    let n = libc::backtrace(frames.as_mut_ptr(), frames.len() as libc::c_int);
+                    libc::backtrace_symbols_fd(frames.as_ptr(), n, fd);
+                }
+            }
+            // SAFETY: fsync is async-signal-safe.
+            unsafe {
+                libc::fsync(fd);
+            }
+        }
+        // SAFETY: puts back the earlier action (or the default) and raises
+        // the signal again; it's blocked until this handler returns, then
+        // goes to that action. A real fault also happens again on return.
+        unsafe {
+            let previous = PREVIOUS[i];
+            match previous {
+                Some(old) => libc::sigaction(sig, &old, std::ptr::null_mut()),
+                None => {
+                    libc::signal(sig, libc::SIG_DFL);
+                    0
+                }
+            };
+            libc::raise(sig);
+        }
+    }
 }
 
 /// Shifts `oss-dj.log` to `oss-dj.1.log` and so on, dropping the oldest.
