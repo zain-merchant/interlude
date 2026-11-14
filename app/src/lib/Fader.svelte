@@ -8,10 +8,14 @@
    * every webview (WebKit doesn't support vertical range inputs
    * everywhere): a 2 px track and a flat white cap. Drag the cap or click
    * the track (⇧ for fine), scroll, or use the arrow keys; double-click or
-   * right-click resets. `tick` marks the default with a short line.
+   * right-click resets. `tick` marks the default: a line across the slot
+   * when horizontal, a longer mark beside it when vertical. `ghost` marks
+   * another value, such as where a hardware fader waits to pick up, and
+   * `note` explains it in the tooltip.
    * @type {{ value: number, min?: number, max?: number, reset?: number, label: string,
    *          vertical?: boolean, invert?: boolean, tick?: boolean, big?: boolean,
-   *          format?: (v: number) => string, onchange?: (v: number) => void }}
+   *          format?: (v: number) => string, onchange?: (v: number) => void,
+   *          ghost?: number | null, note?: string }}
    */
   let {
     value = $bindable(),
@@ -25,6 +29,8 @@
     big = false,
     format = (v) => `${Math.round(((v - min) / (max - min)) * 100)}%`,
     onchange = () => {},
+    ghost = null,
+    note = '',
   } = $props();
 
   let track;
@@ -125,11 +131,12 @@
   onkeydown={key}
   onwheel={wheel}
   oncontextmenu={(e) => openMenu(e, [{ label: 'Reset to default', action: () => set(reset) }])}
-  use:tip={() => tipText(label, format(value), 'double-click to reset')}
+  use:tip={() => note || tipText(label, format(value), 'double-click to reset')}
 >
   <div class="line"></div>
-  {#each [0, 0.25, 0.5, 0.75, 1] as m}<i class="mark" style={vertical ? `bottom: ${m * 100}%` : `left: ${m * 100}%`}></i>{/each}
+  {#each [0, 0.25, 0.5, 0.75, 1].filter((m) => !(tick && vertical && Math.abs(m - tickAt) < 1e-6)) as m}<i class="mark" style={vertical ? `bottom: ${m * 100}%` : `left: ${m * 100}%`}></i>{/each}
   {#if tick}<div class="tick" style={vertical ? `bottom: ${tickAt * 100}%` : `left: ${tickAt * 100}%`}></div>{/if}
+  {#if ghost !== null}<div class="ghost" style={vertical ? `bottom: ${along(ghost) * 100}%` : `left: ${along(ghost) * 100}%`}></div>{/if}
   <div class="cap" style={vertical ? `bottom: ${t * 100}%` : `left: ${t * 100}%`}></div>
 </div>
 
@@ -193,12 +200,15 @@
     margin: -7px 0 0 -0.5px;
     background: rgb(255 255 255 / 0.3);
   }
+  /* Upright, the default sits beside the slot like the other marks, just
+     longer and brighter, so nothing crosses the slot. */
   .vertical .tick {
     top: auto;
     left: 50%;
-    width: 14px;
+    width: 9px;
     height: 1px;
-    margin: 0 0 -0.5px -7px;
+    margin: 0 0 -0.5px 8px;
+    background: rgb(255 255 255 / 0.4);
   }
   .cap {
     position: absolute;
@@ -235,6 +245,25 @@
     width: auto;
     height: 2px;
     margin: -1px 0 0;
+  }
+  /* An outline of the cap where the other fader sits. */
+  .ghost {
+    position: absolute;
+    top: 50%;
+    width: 12px;
+    height: 26px;
+    transform: translate(-50%, -50%);
+    box-sizing: border-box;
+    border-radius: 2px;
+    box-shadow: inset 0 0 0 1px var(--fg-2);
+    pointer-events: none;
+  }
+  .vertical .ghost {
+    top: auto;
+    left: 50%;
+    width: 26px;
+    height: 12px;
+    transform: translate(-50%, 50%);
   }
   .fader:hover .cap,
   .dragging .cap {

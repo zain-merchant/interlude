@@ -431,6 +431,13 @@
     }
   }
 
+  function clearSearch() {
+    query = '';
+    selectIndex(0);
+    if (scroller) scroller.scrollTop = 0;
+    search?.focus();
+  }
+
   export function focusSearch() {
     search?.focus();
     search?.select();
@@ -532,9 +539,13 @@
     <div class="bar">
       <label class="search">
         <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="4.5" /><path d="M10.5 10.5 14 14" /></svg>
-        <input bind:this={search} type="search" placeholder="Search artist, title, folder" bind:value={query} spellcheck="false"
+        <input bind:this={search} type="search" placeholder="Search artist, title, folder…" bind:value={query} spellcheck="false"
           aria-label="Search the library" oninput={() => { selectIndex(0); scroller.scrollTop = 0; }} onkeydown={searchKey} />
-        {#if !query}<kbd>{MOD}F</kbd>{/if}
+        {#if query}
+          <button class="clear" aria-label="Clear search" onclick={clearSearch} use:tip={() => tipText('Clear search', 'Esc')}>
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 5l6 6M11 5l-6 6" /></svg>
+          </button>
+        {:else}<kbd>{MOD}F</kbd>{/if}
       </label>
       <span class="count num">{loading ? 'Scanning…' : `${results.length.toLocaleString()} tracks`}{#if !loading && pending}<span
           class="pending" use:tip={() => 'Finding each track’s length, BPM and key in the background'}> · analyzing, {pending.toLocaleString()} to go</span>{/if}</span>
@@ -598,19 +609,24 @@
 </section>
 
 <style>
-  /* The sidebar sits straight on the page; the track list is a glass panel.
+  /* One glass panel: the sidebar and the track list, with a line between.
      Box edges line up with box edges (search, selected row), and text with
      text: the search text starts where the titles do. */
   .library {
     display: grid;
     grid-template-columns: 200px minmax(0, 1fr);
-    gap: var(--gap);
     min-height: 0;
+    border-radius: var(--r-panel);
+    background: var(--glass-fill);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+    box-shadow: var(--glass-edge);
   }
   nav {
     display: flex;
     flex-direction: column;
-    padding: 8px 0;
+    padding: 8px;
+    border-right: 1px solid var(--line);
     overflow-y: auto;
   }
   .h {
@@ -679,11 +695,6 @@
     min-width: 0;
     min-height: 0;
     padding: 8px;
-    border-radius: var(--r-panel);
-    background: var(--glass-fill);
-    -webkit-backdrop-filter: var(--glass-blur);
-    backdrop-filter: var(--glass-blur);
-    box-shadow: var(--glass-edge);
   }
   .bar {
     display: flex;
@@ -738,6 +749,33 @@
   kbd {
     font: 400 var(--t-xs) var(--font);
     color: var(--fg-3);
+  }
+  .clear {
+    flex: none;
+    width: 20px;
+    height: 20px;
+    margin-right: -4px;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 0;
+    border-radius: 4px;
+    background: none;
+    color: var(--fg-3);
+    transition: background-color 140ms ease, color 140ms ease;
+  }
+  .clear:hover,
+  .clear:focus-visible {
+    background: var(--hover);
+    color: var(--fg);
+  }
+  .clear:focus-visible {
+    outline: 1px solid var(--fg-3);
+  }
+  .clear svg {
+    width: 12px;
+    height: 12px;
+    stroke-linecap: round;
   }
   .grow {
     flex: 1;

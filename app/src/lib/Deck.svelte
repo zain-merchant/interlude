@@ -6,6 +6,7 @@
   import Stems from './Stems.svelte';
   import { untrack } from 'svelte';
   import { padMode, padModeTab } from './padmode.svelte.js';
+  import { tempoPickup } from './pickup.svelte.js';
   import { engine, tracks, control, nextGrid, setGrid } from './engine.svelte.js';
   import { pushEdit } from './undo.svelte.js';
   import { dropTarget } from './dnd.svelte.js';
@@ -136,6 +137,11 @@
   const canSync = $derived(!!t && d.bpm > 0 && engine.decks[1 - deck].bpm > 0);
 
   let lastTouch = 0;
+
+  // The controller's tempo fader, while it waits to pick up the tempo:
+  // where it sits on this fader's scale.
+  const pickupRate = $derived(t ? tempoPickup[deck] : null);
+  const ghost = $derived(pickupRate === null ? null : Math.max(-1, Math.min(1, (1 - pickupRate) / range)));
 
   function setPitch(v) {
     lastTouch = performance.now();
@@ -310,7 +316,8 @@
       use:tip={rangeTip}>{pct(ratePct)}{#if range !== RANGES[0]}<span class="rng">±{Math.round(range * 100)}</span>{/if}</button>
     <div class="pitch-fader">
       <Fader vertical big tick value={pitch} min={-1} max={1} reset={0} label="Deck {name} pitch" onchange={setPitch}
-        format={(v) => pct(-v * range * 100)} />
+        format={(v) => pct(-v * range * 100)} {ghost}
+        note={pickupRate === null ? '' : `The controller's tempo fader is at ${pct((pickupRate - 1) * 100)}. Move it to the marker and it takes over`} />
     </div>
     {#if d.slip}
       <!-- Slip is set in Settings > Decks or with its key; the deck only
