@@ -40,6 +40,11 @@ pub enum Action {
     LoadSample(usize),
     /// A pad mode button was pressed: the deck's pads now work in `mode`.
     PadMode { deck: DeckId, mode: PadMode },
+    /// The deck's hardware tempo fader no longer sets its tempo, because
+    /// the tempo changed elsewhere (SYNC, the app's fader): it sits at the
+    /// rate `fader` and takes over once it's moved to the deck's tempo.
+    /// `None` once it's back in control.
+    TempoPickup { deck: DeckId, fader: Option<f64> },
 }
 
 /// What a deck's performance pads do, chosen with the controller's pad mode
@@ -100,11 +105,16 @@ pub struct HeldControls {
     scratching: [bool; NUM_DECKS],
     cue: [bool; NUM_DECKS],
     hot_cues: [[bool; HOT_CUES]; NUM_DECKS],
+    /// The app shows where a tempo fader sits, waiting to pick up.
+    pickup: [bool; NUM_DECKS],
 }
 
 impl HeldControls {
     /// Notes what `action` presses or lets go.
     pub fn observe(&mut self, action: &Action) {
+        if let Action::TempoPickup { deck, fader } = action {
+            self.pickup[deck.index()] = fader.is_some();
+        }
         let Action::Engine(cmd) = action else {
             return;
         };
@@ -138,6 +148,10 @@ impl HeldControls {
             }
             if self.scratching[d] {
                 out.push(Action::Engine(Command::ScratchEnd { deck }));
+            }
+            // A fader that's gone can't pick anything up.
+            if self.pickup[d] {
+                out.push(Action::TempoPickup { deck, fader: None });
             }
         }
         *self = Self::default();
