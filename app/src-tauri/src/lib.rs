@@ -584,10 +584,23 @@ async fn load_track(
     auto_gain: Option<bool>,
 ) -> Result<TrackInfo, String> {
     let id = deck_id(deck)?;
+    let name = std::path::Path::new(&path)
+        .file_name()
+        .map_or_else(|| path.clone(), |n| n.to_string_lossy().into_owned());
+    let deck_name = if deck == 0 { "A" } else { "B" };
+    eprintln!("deck {deck_name}: loading {name}");
+    let started = std::time::Instant::now();
     let track = tauri::async_runtime::spawn_blocking(move || Track::load(&path))
         .await
-        .map_err(|e| e.to_string())?
-        .map_err(|e| e.to_string())?;
+        .map_err(|e| e.to_string())
+        .and_then(|r| r.map_err(|e| e.to_string()))
+        .inspect_err(|e| eprintln!("deck {deck_name}: couldn't load {name}: {e}"))?;
+    eprintln!(
+        "deck {deck_name}: loaded {name} ({:.0} s of audio at {} Hz) in {:.1} s",
+        track.duration_secs(),
+        track.sample_rate,
+        started.elapsed().as_secs_f64()
+    );
     let track = Arc::new(track);
     let (cues, locked) = library.loaded(&app, deck, &track);
     let info = TrackInfo {
@@ -833,6 +846,7 @@ pub fn run() {
         .run(|app, event| {
             if let tauri::RunEvent::Exit = event {
                 shut_down(app);
+                log::closed();
             }
         });
 }
