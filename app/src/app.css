@@ -256,10 +256,10 @@
   outline-color: color-mix(in srgb, var(--fg-4) 60%, transparent);
   opacity: 0.6;
 }
+/* A playing deck: dropping warns, and a second drop replaces its track. */
 [data-drop='blocked-over'] {
   outline: 2px solid var(--kill);
   outline-offset: -2px;
-  cursor: not-allowed;
 }
 
 @media (prefers-reduced-motion: reduce) {

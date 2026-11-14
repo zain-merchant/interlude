@@ -22,13 +22,13 @@ const future = [];
 export const toast = $state({ text: '', undo: false, id: 0 });
 let timer;
 
-/** Shows a short message. With `undo`, it offers Undo for 6 seconds. */
-export function showToast(text, { undo = false } = {}) {
+/** Shows a short message. With `undo`, it offers Undo for 6 seconds. `ms` sets how long it stays. */
+export function showToast(text, { undo = false, ms = undefined } = {}) {
   toast.text = text;
   toast.undo = undo;
   toast.id++;
   clearTimeout(timer);
-  timer = setTimeout(hideToast, undo ? 6000 : 2600);
+  timer = setTimeout(hideToast, ms ?? (undo ? 6000 : 2600));
 }
 
 export function hideToast() {
