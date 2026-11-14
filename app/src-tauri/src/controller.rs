@@ -31,6 +31,9 @@ enum UiEvent {
     PadMode { deck: usize, mode: &'static str },
     /// A stem pad was pressed on a deck whose stems can't be used yet.
     StemsUnavailable { deck: usize },
+    /// The deck's hardware tempo fader waits at `rate` to pick up the
+    /// tempo, or (`null`) controls it again.
+    TempoPickup { deck: usize, rate: Option<f64> },
 }
 
 impl Host for AppHost {
@@ -72,6 +75,15 @@ impl Host for AppHost {
             }
             Action::LoadSample(slot) => {
                 let _ = self.app.emit("controller", UiEvent::LoadSample { slot });
+            }
+            Action::TempoPickup { deck, fader } => {
+                let _ = self.app.emit(
+                    "controller",
+                    UiEvent::TempoPickup {
+                        deck: deck.index(),
+                        rate: fader,
+                    },
+                );
             }
             Action::PadMode { deck, mode } => {
                 let mode = match mode {

@@ -13,10 +13,10 @@
   import Report from './lib/Report.svelte';
   import { sampler, setSamplerOpen, restoreSampler, loadSample } from './lib/sampler.svelte.js';
   import { engine, tracks, startEngineLoop, loadTrack, control, deckSnapshot, restoreDeck } from './lib/engine.svelte.js';
-  import { backend } from './lib/backend.js';
+  import { backend, inTauri } from './lib/backend.js';
   import { syncDeckSettings } from './lib/decksettings.svelte.js';
   import { dropTarget } from './lib/dnd.svelte.js';
-  import { commandFor, keyLabel } from './lib/commands.js';
+  import { commandFor, keyLabel, mac } from './lib/commands.js';
   import { keymap } from './lib/keymap.svelte.js';
   import { keyboardMenu, htmlMenu } from './lib/menu.svelte.js';
   import { tip, tipText } from './lib/tooltip.svelte.js';
@@ -26,11 +26,16 @@
   import { installAppMenu } from './lib/appmenu.js';
   import { runPerformance } from './lib/performance.js';
   import { padMode, setPadMode } from './lib/padmode.svelte.js';
+  import { tempoPickup } from './lib/pickup.svelte.js';
   import { toggleStem, soloStem, syncStemWaveforms, stemsUnavailable } from './lib/stems.svelte.js';
   import { libraryHealth, reveal, captureUiErrors, update, checkForUpdate, installUpdate } from './lib/support.svelte.js';
 
   let library;
   let mixer;
+  // On the Mac the window has no title bar: the close, minimize and zoom
+  // buttons sit in the waveform panel's top-left corner (tauri.conf.json
+  // places them), and the edges around the panels drag the window.
+  const macWindow = inTauri && mac;
   let zoom = $state(12);
   const say = (msg) => showToast(msg);
 
@@ -406,6 +411,7 @@
       if (e.type === 'browse') library.browse(e.delta);
       else if (e.type === 'load') library.loadSelected(e.deck);
       else if (e.type === 'stemsUnavailable') say(stemsUnavailable(e.deck));
+      else if (e.type === 'tempoPickup') tempoPickup[e.deck] = e.rate ?? null;
       else if (e.type === 'padMode') {
         const was = padMode[e.deck].mode;
         setPadMode(e.deck, e.mode);
@@ -438,8 +444,14 @@
 
 <svelte:window onkeydown={keydown} onkeyup={keyup} onblur={blur} oncontextmenu={contextmenu} />
 
-<div class="app" class:sampling={sampler.open} style:--lib="{lib}px" style:--sampler="{SAMPLER_H}px"  bind:clientHeight={winHeight}>
+<div class="app" class:sampling={sampler.open} class:mac-window={macWindow} style:--lib="{lib}px" style:--sampler="{SAMPLER_H}px"  bind:clientHeight={winHeight}>
   <Backdrop a="var(--deck-a)" b="var(--deck-b)" tint={0.25} />
+  {#if macWindow}
+    <!-- Grab the top edge, or the corner around the window buttons, to move
+         the window; double-click to zoom it. -->
+    <div class="drag top" data-tauri-drag-region aria-hidden="true"></div>
+    <div class="drag lights" data-tauri-drag-region aria-hidden="true"></div>
+  {/if}
   <div class="waves glass" data-region="waves" role="group" aria-label="Waveforms">
     {#each [0, 1] as deck}
       <div class="lane" style:--drop-color={deck === 0 ? 'var(--deck-a)' : 'var(--deck-b)'} class:b={deck === 1}
@@ -543,6 +555,27 @@
   }
   .app > :global(:not(.bd)) {
     position: relative;
+  }
+  .app > .drag {
+    position: absolute;
+    z-index: 5;
+  }
+  .drag.top {
+    left: 0;
+    right: 0;
+    top: 0;
+    height: var(--gap);
+  }
+  /* The window buttons' corner of the waveform panel. */
+  .drag.lights {
+    left: var(--gap);
+    top: var(--gap);
+    width: 76px;
+    height: 32px;
+    border-top-left-radius: var(--r-panel);
+  }
+  .mac-window .lane:first-child .who {
+    left: 84px;
   }
   .below {
     position: relative;

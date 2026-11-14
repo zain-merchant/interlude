@@ -31,6 +31,8 @@ use dj_engine::dsp::{EQ_KILL_DB, EQ_MAX_DB};
 use dj_engine::fx::FX_BEATS;
 use dj_engine::{Command, DeckId, EqBand, FxKind, ALL_STEMS, HOT_CUES, NUM_DECKS, STEMS};
 
+use std::time::{Duration, Instant};
+
 use crate::{Action, Mapping, PadMode, State};
 
 const NOTE_ON: u8 = 0x90;
@@ -140,6 +142,10 @@ const PITCH_RANGES: [f64; 3] = [0.08, 0.16, 0.5];
 /// How close the pitch fader must come to the deck's real rate to take it
 /// over after the rate changed elsewhere (SYNC, the app's own fader).
 const PICKUP_TOLERANCE: f64 = 0.002;
+/// How long the engine may take to report a rate the fader sent.
+const TAKEOVER_LAG: Duration = Duration::from_millis(250);
+/// How many sent rates count as the fader's own (see `DeckState::sent_rates`).
+const SENT_HISTORY: usize = 32;
 
 #[derive(Debug, Clone, Copy)]
 struct DeckState {
@@ -147,12 +153,34 @@ struct DeckState {
     range_index: usize,
     /// Rate the hardware fader last asked for.
     fader_rate: Option<f64>,
-    /// Rate this mapping last sent; if the engine's differs, the fader
-    /// has to pick it up again before it takes control.
-    sent_rate: Option<f64>,
+    /// Rates this mapping sent lately, newest first. The engine reports
+    /// a rate a moment after it's sent, so while the fader moves quickly the
+    /// deck shows one of these rather than the newest. A rate that isn't
+    /// among them was set elsewhere (SYNC, the app's own fader), and the
+    /// fader has to pick it up again before it takes control.
+    sent_rates: [Option<f64>; SENT_HISTORY],
+    /// When the fader last took the tempo over, and the deck's rate then.
+    /// The engine reports the new rate a moment later; until it does, the
+    /// old one doesn't mean the tempo was changed elsewhere.
+    took_over: Option<(f64, Instant)>,
+    /// Where the fader sits, as last told to the app while it doesn't
+    /// control the tempo (see `Action::TempoPickup`).
+    shown_pickup: Option<f64>,
     /// The pad mode the controller is in. It starts in hot cue mode, and
     /// pad presses correct this if it was left in another.
     pad_mode: PadMode,
+}
+
+impl DeckState {
+    /// Whether the deck's tempo is one this fader set, or the one it just
+    /// took over from and the engine hasn't caught up yet.
+    fn owns(&self, rate: f64) -> bool {
+        let same = |r: f64| (r - rate).abs() < 1e-9;
+        self.sent_rates.iter().flatten().any(|&r| same(r))
+            || self
+                .took_over
+                .is_some_and(|(r, at)| same(r) && at.elapsed() < TAKEOVER_LAG)
+    }
 }
 
 impl Default for DeckState {
@@ -161,7 +189,9 @@ impl Default for DeckState {
             shift: false,
             range_index: 0,
             fader_rate: None,
-            sent_rate: None,
+            sent_rates: [None; SENT_HISTORY],
+            took_over: None,
+            shown_pickup: None,
             pad_mode: PadMode::HotCue,
         }
     }
@@ -239,7 +269,7 @@ impl Flx4 {
         let rate = 1.0 - range + value * 2.0 * range;
         let deck = &state.decks[d];
         let s = &mut self.decks[d];
-        let in_control = s.sent_rate.is_some_and(|r| (r - deck.rate).abs() < 1e-6);
+        let in_control = s.owns(deck.rate);
         let crossed = s
             .fader_rate
             .is_some_and(|prev| (prev - deck.rate) * (rate - deck.rate) <= 0.0);
@@ -247,7 +277,11 @@ impl Flx4 {
         s.fader_rate = Some(rate);
         // A stopped deck can jump; a playing one would lurch audibly.
         if in_control || crossed || close || !deck.playing {
-            s.sent_rate = Some(rate);
+            if !in_control {
+                s.took_over = Some((deck.rate, Instant::now()));
+            }
+            s.sent_rates.rotate_right(1);
+            s.sent_rates[0] = Some(rate);
             out.push(engine(Command::SetRate {
                 deck: deck_id(d),
                 rate,
@@ -260,7 +294,8 @@ impl Flx4 {
         s.range_index = (s.range_index + 1) % PITCH_RANGES.len();
         // The fader's position now means a different rate: make it pick up
         // the current one again rather than jump.
-        s.sent_rate = None;
+        s.sent_rates = [None; SENT_HISTORY];
+        s.took_over = None;
         s.fader_rate = None;
     }
 
@@ -634,6 +669,24 @@ impl Mapping for Flx4 {
     fn reset_leds(&mut self) {
         self.leds = None;
     }
+
+    /// Tells the app where a tempo fader sits while it doesn't control the
+    /// tempo, so the screen can show where to move it to take over.
+    fn poll(&mut self, state: &State) -> Vec<Action> {
+        let mut out = vec![];
+        for (d, s) in self.decks.iter_mut().enumerate() {
+            let deck = &state.decks[d];
+            let waiting = s.fader_rate.filter(|_| deck.loaded && !s.owns(deck.rate));
+            if waiting != s.shown_pickup {
+                s.shown_pickup = waiting;
+                out.push(Action::TempoPickup {
+                    deck: deck_id(d),
+                    fader: waiting,
+                });
+            }
+        }
+        out
+    }
 }
 
 /// Every LED this mapping drives, in a fixed order.
@@ -897,6 +950,72 @@ mod tests {
         // ...until it crosses it, then it takes over.
         let c = fourteen(&mut m, 0, TEMPO, 14000, &s);
         assert!(matches!(c[..], [Command::SetRate { rate, .. }] if rate > 1.04));
+    }
+
+    #[test]
+    fn pitch_fader_keeps_control_when_moved_faster_than_the_engine_reports() {
+        let mut m = Flx4::new();
+        let mut s = st();
+        s.decks[0].playing = true;
+        // The fader takes control at the centre and the engine catches up.
+        let c = fourteen(&mut m, 0, TEMPO, 8192, &s);
+        let [Command::SetRate { rate, .. }] = c[..] else {
+            panic!("{c:?}")
+        };
+        s.decks[0].rate = rate;
+        // A quick push sends several moves before the engine reports any of
+        // them: every one must still reach the engine.
+        for v in [9000, 10000, 11000, 12000] {
+            let c = fourteen(&mut m, 0, TEMPO, v, &s);
+            assert!(
+                matches!(c[..], [Command::SetRate { .. }]),
+                "move to {v} was dropped"
+            );
+        }
+        // The engine reports one of the earlier moves: still in control.
+        s.decks[0].rate = 1.0 - 0.08 + (10000.0 / 16383.0) * 0.16;
+        assert_eq!(fourteen(&mut m, 0, TEMPO, 12500, &s).len(), 1);
+    }
+
+    #[test]
+    fn app_shows_where_the_tempo_fader_waits_after_sync() {
+        let mut m = Flx4::new();
+        let mut s = st();
+        s.decks[0].loaded = true;
+        s.decks[0].playing = true;
+        let pickup = |m: &mut Flx4, s: &State| {
+            m.poll(s)
+                .into_iter()
+                .filter_map(|a| match a {
+                    Action::TempoPickup { deck, fader } => Some((deck, fader)),
+                    _ => None,
+                })
+                .collect::<Vec<_>>()
+        };
+        let c = fourteen(&mut m, 0, TEMPO, 8192, &s);
+        let [Command::SetRate { rate, .. }] = c[..] else {
+            panic!("{c:?}")
+        };
+        s.decks[0].rate = rate;
+        assert!(pickup(&mut m, &s).is_empty(), "in control");
+        // SYNC moves the tempo: the app hears where the fader waits, once.
+        s.decks[0].rate = 1.04;
+        let p = pickup(&mut m, &s);
+        assert!(
+            matches!(p[..], [(DeckId::A, Some(r))] if (r - rate).abs() < 1e-9),
+            "{p:?}"
+        );
+        assert!(pickup(&mut m, &s).is_empty());
+        // Moved across the new tempo, it takes over at once, before the
+        // engine reports it, and the marker goes.
+        assert_eq!(fourteen(&mut m, 0, TEMPO, 14000, &s).len(), 1);
+        assert!(matches!(pickup(&mut m, &s)[..], [(DeckId::A, None)]));
+        let c = fourteen(&mut m, 0, TEMPO, 14100, &s);
+        let [Command::SetRate { rate, .. }] = c[..] else {
+            panic!("{c:?}")
+        };
+        s.decks[0].rate = rate;
+        assert!(pickup(&mut m, &s).is_empty(), "still in control");
     }
 
     #[test]
