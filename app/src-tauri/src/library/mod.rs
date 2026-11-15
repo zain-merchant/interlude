@@ -295,7 +295,7 @@ impl CueWatch {
 
 impl Library {
     pub fn load() -> Self {
-        let dir = dirs::data_dir().map(|d| d.join("oss-dj"));
+        let dir = crate::paths::data_dir();
         let (db, health) = match &dir {
             Some(d) => Db::open_or_recover(&d.join("library.db")),
             None => (

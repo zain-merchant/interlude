@@ -127,7 +127,7 @@
       const lost = rec.droppedSeconds > 0 ? `, ${rec.droppedSeconds.toFixed(1)} s lost to a slow disk` : '';
       return tipText(`Recording to ${fileName(rec.path)}${lost}`, '', 'click to stop');
     }
-    return tipText('Record the master output', '', 'saved to Music/oss-dj recordings');
+    return tipText('Record the master output', '', 'saved to Music/Interlude recordings');
   };
 
   // Sync initial values to the engine once.
