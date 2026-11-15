@@ -4,12 +4,12 @@ import App from './App.svelte';
 
 const target = document.getElementById('app');
 
-// Temporary: /prototypes/bold keeps the round-2 concepts and
-// /prototypes/liquid the round-3 ones. Delete these branches with
-// src/prototypes once a direction is picked.
-if (location.pathname.startsWith('/prototypes/liquid')) {
+// The design prototypes (/prototypes/liquid is the reference for the
+// chosen direction, /prototypes/bold the earlier concepts) are only served
+// by `npm run dev`; release builds leave them out.
+if (import.meta.env.DEV && location.pathname.startsWith('/prototypes/liquid')) {
   import('./prototypes/liquid/Liquid.svelte').then((m) => mount(m.default, { target }));
-} else if (location.pathname.startsWith('/prototypes/bold')) {
+} else if (import.meta.env.DEV && location.pathname.startsWith('/prototypes/bold')) {
   import('./prototypes/bold/Bold.svelte').then((m) => mount(m.default, { target }));
 } else {
   mount(App, { target });

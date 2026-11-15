@@ -10,6 +10,15 @@
   let failed = $state(false);
   /** Hot cue number chips over the scrolling view, moved every frame. */
   const chips = [];
+  /** Keeps `chips[i]` pointing at hot cue chip `i` while it's on screen. */
+  function chip(node, i) {
+    chips[i] = node;
+    return {
+      destroy() {
+        if (chips[i] === node) chips[i] = undefined;
+      },
+    };
+  }
 
   onMount(() => {
     let gl;
@@ -148,7 +157,7 @@
   ></canvas>
   {#if mode === 'scroll'}
     {#each Array.from({ length: HOT_CUES }, (_, i) => i) as i}
-      <span class="chip num" bind:this={chips[i]} style="display: none" style:--hc="var(--hc-{i + 1})" aria-hidden="true">{i + 1}</span>
+      <span class="chip num" use:chip={i} style="display: none" style:--hc="var(--hc-{i + 1})" aria-hidden="true">{i + 1}</span>
     {/each}
   {/if}
   {#if failed}

@@ -83,9 +83,11 @@ function patch(target, src) {
   for (const k in src) {
     const v = src[k];
     const old = target[k];
-    if (old === v) continue;
+    // Object.is rather than ===: these compare reactive proxies with plain
+    // values, which Svelte warns about for ===.
+    if (Object.is(old, v)) continue;
     const next = patch(old, v);
-    if (next !== old) {
+    if (!Object.is(next, old)) {
       target[k] = next;
       changed = true;
     }
@@ -104,9 +106,9 @@ function patch(target, src) {
 /** Sets `obj[key]` to `value`, patching in place where it can. */
 function update(obj, key, value) {
   const old = obj[key];
-  if (old === value) return;
+  if (Object.is(old, value)) return;
   const next = patch(old, value);
-  if (next !== old) {
+  if (!Object.is(next, old)) {
     obj[key] = next;
     changed = true;
   }
