@@ -175,7 +175,7 @@
 
     {:else if step === 'choose' && preview}
       <h2 id="import-title">{plural(preview.tracks, 'track')} in {appName}</h2>
-      <p class="lead">Choose what to bring over. Anything you've already set in oss-dj stays as it is.</p>
+      <p class="lead">Choose what to bring over. Anything you've already set in Interlude stays as it is.</p>
 
       <div class="options">
         <label class="opt" class:off={!preview.withCues}>
@@ -236,7 +236,7 @@
         {#if options.playlists}<div><dt class="num">{n(summary.playlists)}</dt><dd>new playlists</dd></div>{/if}
       </dl>
       {#if summary.kept}
-        <p class="note">{plural(summary.kept, 'track')} kept the cues or beatgrid you'd already set in oss-dj.</p>
+        <p class="note">{plural(summary.kept, 'track')} kept the cues or beatgrid you'd already set in Interlude.</p>
       {/if}
       <div class="actions">
         <button class="btn primary" onclick={onclose}>Done</button>

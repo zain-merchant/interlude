@@ -84,7 +84,7 @@ const MODEL_BYTES: u64 = 165_612_636;
 
 impl Stems {
     pub fn new(shared: Arc<SharedState>) -> Self {
-        let dir = dirs::data_dir().map(|d| d.join("oss-dj"));
+        let dir = crate::paths::data_dir();
         let saved: Saved = dir
             .as_ref()
             .and_then(|d| std::fs::read(d.join("stems.json")).ok())

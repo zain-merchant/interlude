@@ -1,6 +1,6 @@
 [package]
 name = "dj-stems"
-description = "Splits tracks into vocals, melody, bass and drums for oss-dj"
+description = "Splits tracks into vocals, melody, bass and drums for Interlude"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
