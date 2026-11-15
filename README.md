@@ -4,7 +4,7 @@ A free, open-source DJ app that is fast, modern and uncluttered. No paywalled
 "pro" features, no lock-in.
 
 **Download:** [Interlude.dmg](https://github.com/zain-merchant/interlude/releases/latest/download/Interlude.dmg)
-for Macs with Apple silicon. It updates itself after that.
+for Macs with Apple silicon, or from [interludedj.com](https://interludedj.com). It updates itself after that.
 
 ![Interlude running on Linux with two test tracks loaded](docs/screenshot.png)
 
@@ -355,9 +355,8 @@ CI. To publish or update it, push that folder to the `gh-pages` branch:
 ```sh
 git subtree push --prefix site origin gh-pages
 ```
-and, once, set Settings › Pages › Source to "Deploy from a branch",
-`gh-pages`, `/ (root)`. Pages on a private repo needs a paid GitHub plan,
-so it goes live when the repo is public.
+It's served at [interludedj.com](https://interludedj.com) (`site/CNAME`;
+DNS at Namecheap points the domain at GitHub Pages).
 
 **Moving over from oss-dj.** The app was called oss-dj. On first launch,
 Interlude moves the old data folder (library, settings, stems, logs), the
