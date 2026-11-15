@@ -33,9 +33,10 @@
   let library;
   let mixer;
   // On the Mac the window has no title bar: the close, minimize and zoom
-  // buttons sit in the waveform panel's top-left corner (tauri.conf.json
-  // places them), and the edges around the panels drag the window.
+  // buttons sit on a plain strip of their own above the panels
+  // (tauri.conf.json centres them in it), and the strip drags the window.
   const macWindow = inTauri && mac;
+  const TOP_STRIP = 32; // the strip's height, in place of the usual 12px top padding
   let zoom = $state(12);
   const say = (msg) => showToast(msg);
 
@@ -370,7 +371,7 @@
     libHeight = Number(localStorage.getItem(LIB_KEY)) || LIB_DEFAULT;
   } catch {}
   const SAMPLER_H = 52; // a 40px strip and the 12px gap above it
-  const libMax = $derived(Math.max(160, Math.min(560, Math.max(winHeight, APP_MIN_H) - 24 - 136 - 12 - 12 - 300 - (sampler.open ? SAMPLER_H : 0))));
+  const libMax = $derived(Math.max(160, Math.min(560, Math.max(winHeight, APP_MIN_H) - (macWindow ? TOP_STRIP : 12) - 12 - 136 - 12 - 12 - 300 - (sampler.open ? SAMPLER_H : 0))));
   const lib = $derived(Math.max(160, Math.min(libMax, libHeight)));
   function setLib(h) {
     libHeight = Math.max(160, Math.min(libMax, h));
@@ -464,13 +465,12 @@
 
 <svelte:window onkeydown={keydown} onkeyup={keyup} onblur={blur} oncontextmenu={contextmenu} />
 
-<div class="app" class:sampling={sampler.open} class:mac-window={macWindow} style:--lib="{lib}px" style:--sampler="{SAMPLER_H}px"  bind:clientHeight={winHeight}>
+<div class="app" class:sampling={sampler.open} class:mac-window={macWindow} style:--top="{macWindow ? TOP_STRIP : 12}px" style:--lib="{lib}px" style:--sampler="{SAMPLER_H}px"  bind:clientHeight={winHeight}>
   <Backdrop a="var(--deck-a)" b="var(--deck-b)" tint={0.25} />
   {#if macWindow}
-    <!-- Grab the top edge, or the corner around the window buttons, to move
-         the window; double-click to zoom it. -->
-    <div class="drag top" data-tauri-drag-region aria-hidden="true"></div>
-    <div class="drag lights" data-tauri-drag-region aria-hidden="true"></div>
+    <!-- The window buttons' strip: drag it to move the window, double-click
+         to zoom it. -->
+    <div class="drag" data-tauri-drag-region aria-hidden="true"></div>
   {/if}
   <div class="waves glass" data-region="waves" role="group" aria-label="Waveforms">
     {#each [0, 1] as deck}
@@ -567,7 +567,7 @@
     min-height: 720px;
     display: grid;
     grid-template-rows: 136px minmax(300px, 1fr) var(--gap) var(--lib);
-    padding: var(--gap);
+    padding: var(--top) var(--gap) var(--gap);
     background: var(--bg);
   }
   .app.sampling {
@@ -580,22 +580,11 @@
     position: absolute;
     z-index: 5;
   }
-  .drag.top {
+  .drag {
     left: 0;
     right: 0;
     top: 0;
-    height: var(--gap);
-  }
-  /* The window buttons' corner of the waveform panel. */
-  .drag.lights {
-    left: var(--gap);
-    top: var(--gap);
-    width: 76px;
-    height: 32px;
-    border-top-left-radius: var(--r-panel);
-  }
-  .mac-window .lane:first-child .who {
-    left: 84px;
+    height: var(--top);
   }
   .below {
     position: relative;
