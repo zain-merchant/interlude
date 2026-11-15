@@ -385,7 +385,7 @@ export function createMockBackend() {
     },
     startRecording: async () => {
       if (rec.active) throw new Error('already recording');
-      Object.assign(rec, { active: true, started: performance.now(), path: '~/Music/oss-dj recordings/Set (preview).wav' });
+      Object.assign(rec, { active: true, started: performance.now(), path: '~/Music/Interlude recordings/Set (preview).wav' });
       return rec.path;
     },
     stopRecording: async () => {

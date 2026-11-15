@@ -28,7 +28,7 @@ export async function reveal(path) {
  * Desktop. @returns {Promise<string>} its path
  */
 export const saveReport = (description, context) =>
-  invoke ? invoke('save_report', { description, context }) : Promise.resolve('~/Desktop/oss-dj report.txt');
+  invoke ? invoke('save_report', { description, context }) : Promise.resolve('~/Desktop/Interlude report.txt');
 
 // The UI's own errors go into the app's log, so a report has them too.
 // Capped, so an error in a render loop can't flood it.

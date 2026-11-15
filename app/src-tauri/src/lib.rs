@@ -12,6 +12,7 @@ mod audio;
 mod controller;
 mod library;
 mod log;
+mod paths;
 mod stems;
 
 use std::sync::{Arc, Mutex};
@@ -500,12 +501,9 @@ fn state(state: State<'_, AppState>, stems: State<'_, stems::Stems>) -> EngineSt
     }
 }
 
-/// Where a new set recording goes: `Music/oss-dj recordings/Set <date> <time>.wav`.
+/// Where a new set recording goes: `Music/Interlude recordings/Set <date> <time>.wav`.
 fn recording_path() -> Result<std::path::PathBuf, String> {
-    let dir = dirs::audio_dir()
-        .or_else(|| dirs::home_dir().map(|h| h.join("Music")))
-        .ok_or("no music folder to record into")?
-        .join("oss-dj recordings");
+    let dir = paths::recordings_dir().ok_or("no music folder to record into")?;
     let stem = format!("Set {}", chrono::Local::now().format("%Y-%m-%d %H.%M"));
     let mut path = dir.join(format!("{stem}.wav"));
     let mut n = 2;
@@ -722,10 +720,10 @@ fn waveform(state: State<'_, AppState>, deck: usize) -> Result<Response, String>
 }
 
 /// Prints the audio stream's timing once it has settled, and every few
-/// seconds with `OSS_DJ_AUDIO_LOG=1`.
+/// seconds with `INTERLUDE_AUDIO_LOG=1`.
 fn log_audio_stats(app: tauri::AppHandle) {
     use tauri::Manager;
-    let every = std::env::var_os("OSS_DJ_AUDIO_LOG").is_some();
+    let every = std::env::var_os("INTERLUDE_AUDIO_LOG").is_some();
     let _ = std::thread::Builder::new()
         .name("audio-stats".into())
         .spawn(move || loop {
@@ -764,7 +762,11 @@ pub fn run() {
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .setup(|app| {
+            let moved = paths::migrate(&app.config().identifier);
             log::start();
+            for note in moved {
+                eprintln!("{note}");
+            }
             // Play through the device picked in Settings > Audio, or by
             // default the controller's own sound card when it's plugged in,
             // so its headphone output works.
@@ -853,7 +855,7 @@ pub fn run() {
             stems::stems_waveform,
         ])
         .build(tauri::generate_context!())
-        .expect("error while running oss-dj")
+        .expect("error while running Interlude")
         .run(|app, event| {
             if let tauri::RunEvent::Exit = event {
                 shut_down(app);

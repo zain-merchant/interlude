@@ -137,7 +137,7 @@
     if (health.state === 'fresh') {
       return { title: 'Your library was damaged and had no backup, so a new one was started.', body: 'Add your music folders again. The damaged file is kept.', file: health.damaged };
     }
-    return { title: "Your library couldn't be opened, so changes won't be saved.", body: `The cause: ${health.reason}. Quit and open oss-dj again.`, file: null };
+    return { title: "Your library couldn't be opened, so changes won't be saved.", body: `The cause: ${health.reason}. Quit and open Interlude again.`, file: null };
   });
 
   // Updates: checked a few seconds after launch, and from the menu.
@@ -530,7 +530,7 @@
       {#if update.state === 'downloading'}
         <span><b>Updating to {update.available.version}…</b> {Math.round(update.progress * 100)}%. The app restarts when it's done.</span>
       {:else}
-        <span><b>oss-dj {update.available.version} is ready.</b> {update.state === 'failed' ? "The last try didn't work." : 'Install it between sets; the app restarts.'}</span>
+        <span><b>Interlude {update.available.version} is ready.</b> {update.state === 'failed' ? "The last try didn't work." : 'Install it between sets; the app restarts.'}</span>
         <button class="btn sm ghost" onclick={() => (updateDismissed = true)}>Later</button>
         <button class="btn sm" onclick={install}>{update.state === 'failed' ? 'Try again' : 'Install and restart'}</button>
       {/if}

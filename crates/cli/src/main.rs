@@ -241,7 +241,7 @@ fn play(a: &str, b: Option<&str>) -> Result<()> {
 /// Plays two decks at the heaviest settings (keylock, pitch, an effect) on
 /// the real output, quietly, and prints the stream's timing every second:
 /// buffer size, the driver's output latency, the slowest render and any
-/// late callbacks. Set `OSS_DJ_BUFFER_FRAMES` to try other buffer sizes.
+/// late callbacks. Set `INTERLUDE_BUFFER_FRAMES` to try other buffer sizes.
 fn latency(secs: u64) -> Result<()> {
     let (output, mut h) = dj_engine::output::start_preferring(&["DDJ-FLX4"])?;
     let sr = output.sample_rate;

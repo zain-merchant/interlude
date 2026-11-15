@@ -1,12 +1,12 @@
 [package]
-name = "oss-dj"
+name = "interlude"
 description = "Open-source DJ app"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 
 [lib]
-name = "oss_dj_lib"
+name = "interlude_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]

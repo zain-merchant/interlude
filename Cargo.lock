@@ -1992,6 +1992,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "interlude"
+version = "0.1.0"
+dependencies = [
+ "base64 0.23.1",
+ "chrono",
+ "dirs 6.0.0",
+ "dj-controller",
+ "dj-engine",
+ "dj-stems",
+ "libc",
+ "lofty",
+ "quick-xml 0.37.5",
+ "rusqlite",
+ "serde",
+ "serde_json",
+ "tauri",
+ "tauri-build",
+ "tauri-plugin-dialog",
+ "tauri-plugin-opener",
+ "tauri-plugin-process",
+ "tauri-plugin-single-instance",
+ "tauri-plugin-updater",
+]
+
+[[package]]
 name = "ipnet"
 version = "2.12.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2976,31 +3001,6 @@ dependencies = [
  "serde",
  "serde_json",
  "thiserror 2.0.21",
-]
-
-[[package]]
-name = "oss-dj"
-version = "0.1.0"
-dependencies = [
- "base64 0.23.1",
- "chrono",
- "dirs 6.0.0",
- "dj-controller",
- "dj-engine",
- "dj-stems",
- "libc",
- "lofty",
- "quick-xml 0.37.5",
- "rusqlite",
- "serde",
- "serde_json",
- "tauri",
- "tauri-build",
- "tauri-plugin-dialog",
- "tauri-plugin-opener",
- "tauri-plugin-process",
- "tauri-plugin-single-instance",
- "tauri-plugin-updater",
 ]
 
 [[package]]

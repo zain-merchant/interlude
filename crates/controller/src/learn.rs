@@ -283,7 +283,7 @@ pub fn write_mapping(port: &str, bindings: &[Binding]) -> String {
     }
     let name = esc(port);
     format!(
-        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<!-- Made with MIDI learn in oss-dj. This is a Mixxx mapping file. -->\n<MixxxMIDIPreset schemaVersion=\"1\" mixxxVersion=\"2.4\">\n  <info>\n    <name>{name}</name>\n    <author>{AUTHOR}</author>\n    <description>Learned in oss-dj</description>\n  </info>\n  <controller id=\"{name}\">\n    <controls>\n{controls}    </controls>\n    <outputs>\n{outputs}    </outputs>\n  </controller>\n</MixxxMIDIPreset>\n"
+        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<!-- Made with MIDI learn in Interlude. This is a Mixxx mapping file. -->\n<MixxxMIDIPreset schemaVersion=\"1\" mixxxVersion=\"2.4\">\n  <info>\n    <name>{name}</name>\n    <author>{AUTHOR}</author>\n    <description>Learned in Interlude</description>\n  </info>\n  <controller id=\"{name}\">\n    <controls>\n{controls}    </controls>\n    <outputs>\n{outputs}    </outputs>\n  </controller>\n</MixxxMIDIPreset>\n"
     )
 }
 

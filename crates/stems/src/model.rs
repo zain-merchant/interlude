@@ -42,7 +42,7 @@ fn environment() -> Result<Environment, Error> {
     if let Some(e) = env.as_ref() {
         return Ok(e.clone());
     }
-    let e = ort::init().with_name("oss-dj stems").build()?;
+    let e = ort::init().with_name("Interlude stems").build()?;
     *env = Some(e.clone());
     Ok(e)
 }

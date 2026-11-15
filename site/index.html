@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Interlude: a free DJ app for the Mac</title>
+  <meta name="description" content="Interlude is a free, open-source DJ app for the Mac. Two decks, sync, stems, effects, a fast library, and support for 140+ controllers.">
+  <meta property="og:title" content="Interlude">
+  <meta property="og:description" content="A free, open-source DJ app for the Mac.">
+  <meta property="og:image" content="img/og.jpg">
+  <meta name="theme-color" content="#09090b">
+  <link rel="icon" href="img/icon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="nav">
+    <div class="wrap nav-row">
+      <a class="brand" href="#top" aria-label="Interlude home">
+        <img src="img/icon.svg" alt="" width="24" height="24">
+        <span>Interlude</span>
+      </a>
+      <nav class="links" aria-label="Sections">
+        <a href="#install">Install</a>
+        <a href="#features">Features</a>
+        <a href="#faq">FAQ</a>
+        <a href="https://github.com/zain-merchant/interlude/releases">Changelog</a>
+      </nav>
+      <div class="nav-actions">
+        <a class="btn ghost small" href="https://github.com/zain-merchant/interlude">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+          GitHub
+        </a>
+        <a class="btn small" href="https://github.com/zain-merchant/interlude/releases/latest/download/Interlude.dmg">Download</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="hero wrap">
+      <img class="hero-icon" src="img/icon.svg" alt="" width="88" height="88">
+      <h1>Interlude</h1>
+      <p class="tagline">A free, open-source DJ app for the Mac. Fast, uncluttered, and nothing locked behind a paywall.</p>
+      <div class="cta">
+        <a class="btn big" href="https://github.com/zain-merchant/interlude/releases/latest/download/Interlude.dmg">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v8m0 0L4.5 6.5M8 10l3.5-3.5M3 13h10"/></svg>
+          Download for Mac
+        </a>
+        <a class="btn ghost big" href="https://github.com/zain-merchant/interlude">View the source</a>
+      </div>
+      <p class="meta">
+        <a id="version" href="https://github.com/zain-merchant/interlude/releases/latest">Latest release</a>
+        <span aria-hidden="true">·</span> Free and open source
+        <span aria-hidden="true">·</span> macOS 11+ on Apple silicon
+        <span aria-hidden="true">·</span> GPL-3.0-or-later
+      </p>
+    </section>
+
+    <section class="shot wrap" aria-label="Screenshot">
+      <img src="img/screenshot-1x.jpg" srcset="img/screenshot-1x.jpg 1440w, img/screenshot.jpg 2880w" sizes="(max-width: 1200px) 100vw, 1200px"
+        width="1440" height="900" alt="Interlude with two tracks loaded: waveforms across the top, two decks either side of the mixer, and the library below.">
+    </section>
+
+    <section id="install" class="wrap section">
+      <p class="eyebrow">Install</p>
+      <h2>Up and running in a minute</h2>
+      <ol class="steps">
+        <li>
+          <span class="num">01</span>
+          <h3>Download</h3>
+          <p>Get <a href="https://github.com/zain-merchant/interlude/releases/latest/download/Interlude.dmg">Interlude.dmg</a>, open it, and drag Interlude into Applications.</p>
+        </li>
+        <li>
+          <span class="num">02</span>
+          <h3>Open it the first time</h3>
+          <p>The beta isn't signed by Apple yet, so macOS asks first. Open Interlude once, then go to System Settings › Privacy &amp; Security and click <b>Open Anyway</b>. Or, in Terminal:</p>
+          <pre><code>xattr -dr com.apple.quarantine /Applications/Interlude.app</code></pre>
+        </li>
+        <li>
+          <span class="num">03</span>
+          <h3>Add your music</h3>
+          <p>Click <b>+ Add music folder</b>, or bring your library over from Rekordbox or Serato with File › Import. Plug in your controller and it connects by itself.</p>
+        </li>
+      </ol>
+      <p class="aside">After that, Interlude keeps itself up to date: when a new version is out it asks, and installs it between sets.</p>
+    </section>
+
+    <section id="features" class="wrap section">
+      <p class="eyebrow">Features</p>
+      <h2>What it does</h2>
+      <div class="groups">
+        <div class="group">
+          <h3><span class="dot a"></span>Decks</h3>
+          <ul>
+            <li>BPM, beatgrid and key found on load</li>
+            <li>Sync that matches tempo and phase</li>
+            <li>8 hot cues, beat loops and beat jump</li>
+            <li>Slip mode, quantize and key lock</li>
+            <li>Scrolling waveforms in three bands</li>
+          </ul>
+        </div>
+        <div class="group">
+          <h3><span class="dot b"></span>Mixer and effects</h3>
+          <ul>
+            <li>3-band EQ with full kills, trim and filter</li>
+            <li>Echo, reverb, flanger and phaser, timed to the beat</li>
+            <li>Auto gain, so every track starts level</li>
+            <li>A master limiter that never clips</li>
+            <li>Headphone cue with a cue/master blend</li>
+          </ul>
+        </div>
+        <div class="group">
+          <h3><span class="dot a"></span>Stems</h3>
+          <ul>
+            <li>Vocals, melody, bass and drums on every deck</li>
+            <li>Split on your Mac, nothing uploaded</li>
+            <li>Mute any stem live, on screen or from the pads</li>
+          </ul>
+        </div>
+        <div class="group">
+          <h3><span class="dot b"></span>Library</h3>
+          <ul>
+            <li>Instant search across your whole collection</li>
+            <li>Playlists and a history of every set</li>
+            <li>Import from Rekordbox and Serato, cues included</li>
+            <li>MP3, AAC, FLAC, WAV, AIFF, OGG and ALAC</li>
+          </ul>
+        </div>
+        <div class="group">
+          <h3><span class="dot a"></span>Controllers</h3>
+          <ul>
+            <li>Pioneer DDJ-FLX4 mapped in full</li>
+            <li>140+ more through bundled Mixxx mappings</li>
+            <li>MIDI learn for anything else</li>
+          </ul>
+        </div>
+        <div class="group">
+          <h3><span class="dot b"></span>Recording and more</h3>
+          <ul>
+            <li>Record your set to WAV in one click</li>
+            <li>A sampler with eight one-shot slots</li>
+            <li>Every shortcut can be remapped</li>
+            <li>Report a problem from the Help menu</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="faq" class="wrap section">
+      <p class="eyebrow">FAQ</p>
+      <h2>Questions</h2>
+      <div class="faq">
+        <details>
+          <summary>Is it really free?</summary>
+          <p>Yes. There's no pro tier, no account and no subscription. Interlude is open source under the GPL, so anyone can read, change and share the code.</p>
+        </details>
+        <details>
+          <summary>Why does macOS say it can't check the app?</summary>
+          <p>During the beta, Interlude isn't signed with an Apple developer certificate yet. It's safe to open with the steps under Install; you only need to do it once.</p>
+        </details>
+        <details>
+          <summary>Does it work on Windows, Linux or Intel Macs?</summary>
+          <p>Not yet. The beta is for Macs with Apple silicon (M1 and later). Other platforms are on the roadmap.</p>
+        </details>
+        <details>
+          <summary>Will my controller work?</summary>
+          <p>The Pioneer DDJ-FLX4 is fully mapped. Interlude also reads Mixxx mapping files and ships with more than 140 of them, so most popular controllers connect on their own. If yours doesn't, Settings › Controllers lets you map it with MIDI learn.</p>
+        </details>
+        <details>
+          <summary>Does it change my music files?</summary>
+          <p>No. Cues, beatgrids and playlists are kept in Interlude's own library. Your files are only read.</p>
+        </details>
+        <details>
+          <summary>How do I report a bug?</summary>
+          <p>Choose Help › Report a Problem. Interlude saves a report with what you describe, the app's logs and your system (no music) to your Desktop, ready to send. You can also <a href="https://github.com/zain-merchant/interlude/issues">open an issue</a>.</p>
+        </details>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <div class="wrap foot-grid">
+      <div>
+        <a class="brand" href="#top"><img src="img/icon.svg" alt="" width="20" height="20"><span>Interlude</span></a>
+        <p class="small-print">Made by Zain Merchant.</p>
+      </div>
+      <div>
+        <h4>App</h4>
+        <a href="https://github.com/zain-merchant/interlude/releases/latest/download/Interlude.dmg">Download</a>
+        <a href="https://github.com/zain-merchant/interlude/releases">Changelog</a>
+        <a href="#faq">FAQ</a>
+      </div>
+      <div>
+        <h4>Project</h4>
+        <a href="https://github.com/zain-merchant/interlude">Source</a>
+        <a href="https://github.com/zain-merchant/interlude/issues">Issues</a>
+        <a href="https://github.com/zain-merchant/interlude/blob/main/LICENSE">License</a>
+      </div>
+    </div>
+    <p class="wrap small-print legal">Interlude is free software under the GNU GPL v3 or later. Controller mappings come from the <a href="https://mixxx.org">Mixxx</a> project (GPL-2.0-or-later). Interlude isn't affiliated with Pioneer DJ, Rekordbox, Serato or Mixxx; their names belong to their owners.</p>
+  </footer>
+
+  <script>
+    // Shows the latest version next to the download button. Leaves the
+    // plain "Latest release" link if GitHub can't be reached.
+    fetch('https://api.github.com/repos/zain-merchant/interlude/releases/latest')
+      .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
+      .then((r) => {
+        if (!r.tag_name) return;
+        const v = document.getElementById('version');
+        v.textContent = r.tag_name;
+        v.href = r.html_url;
+      })
+      .catch(() => {});
+  </script>
+</body>
+</html>

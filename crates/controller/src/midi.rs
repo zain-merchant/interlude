@@ -18,7 +18,7 @@ use midir::{MidiInput, MidiInputConnection, MidiOutput, MidiOutputConnection};
 use crate::learn::{Detector, Learned};
 use crate::{Action, Catalog, HeldControls, Mapping, Source, State};
 
-const CLIENT: &str = "oss-dj";
+const CLIENT: &str = "Interlude";
 const SCAN_EVERY: Duration = Duration::from_secs(2);
 const LED_EVERY: Duration = Duration::from_millis(30);
 
@@ -55,7 +55,7 @@ pub struct ControllerService {
 impl ControllerService {
     /// Starts watching for controllers, with the built-in mappings and
     /// Mixxx mappings from [`Catalog::default_dirs`]. Set
-    /// `OSS_DJ_MIDI_LOG=1` to print every incoming message to stderr.
+    /// `INTERLUDE_MIDI_LOG=1` to print every incoming message to stderr.
     pub fn start(host: Arc<dyn Host>) -> Self {
         Self::start_with(host, Catalog::default_dirs())
     }
@@ -66,7 +66,7 @@ impl ControllerService {
         let stop = Arc::new(AtomicBool::new(false));
         let reload = Arc::new(AtomicBool::new(false));
         let connected = Arc::new(Mutex::new(vec![]));
-        let log = std::env::var_os("OSS_DJ_MIDI_LOG").is_some();
+        let log = std::env::var_os("INTERLUDE_MIDI_LOG").is_some();
         let thread = {
             let (stop, reload, connected) = (stop.clone(), reload.clone(), connected.clone());
             std::thread::Builder::new()
@@ -389,7 +389,7 @@ fn connect(
     let input_conn = input
         .connect(
             &port,
-            "oss-dj-in",
+            "Interlude in",
             move |_, msg, _| {
                 if log {
                     eprintln!("midi in: {msg:02X?}");
@@ -427,7 +427,7 @@ fn connect(
                     .find(|(_, n)| mapping.lock().is_ok_and(|m| m.matches(n)))
             })
             .map(|(p, _)| p.clone())?;
-        out.connect(&port, "oss-dj-out").ok()
+        out.connect(&port, "Interlude out").ok()
     });
 
     Some(Connection {
@@ -462,7 +462,12 @@ pub fn monitor_all(
             let f = f.clone();
             let label = name.clone();
             input
-                .connect(&port, "oss-dj-monitor", move |_, msg, _| f(&label, msg), ())
+                .connect(
+                    &port,
+                    "Interlude monitor",
+                    move |_, msg, _| f(&label, msg),
+                    (),
+                )
                 .ok()
         })
         .collect()
