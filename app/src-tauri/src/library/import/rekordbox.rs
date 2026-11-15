@@ -250,7 +250,7 @@ mod tests {
   <PRODUCT Name="rekordbox" Version="7.0.0" Company="AlphaTheta"/>
   <COLLECTION Entries="3">
     <TRACK TrackID="11" Name="Around the World" Artist="Daft Punk" Album="Homework" Genre="House"
-        AverageBpm="121.00" Location="file://localhost/Users/zain/Music/DJ/Daft%20Punk%20-%20Around%20the%20World.mp3">
+        AverageBpm="121.00" Location="file://localhost/Users/dj/Music/DJ/Daft%20Punk%20-%20Around%20the%20World.mp3">
       <TEMPO Inizio="0.512" Bpm="121.00" Metro="4/4" Battito="2"/>
       <TEMPO Inizio="100.0" Bpm="122.00" Metro="4/4" Battito="1"/>
       <POSITION_MARK Name="" Type="0" Start="33.250" Num="-1"/>
@@ -285,7 +285,7 @@ mod tests {
         let t = &c.tracks[0];
         assert_eq!(
             t.path,
-            PathBuf::from("/Users/zain/Music/DJ/Daft Punk - Around the World.mp3")
+            PathBuf::from("/Users/dj/Music/DJ/Daft Punk - Around the World.mp3")
         );
         assert_eq!(
             (t.title.as_str(), t.artist.as_str()),
