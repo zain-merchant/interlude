@@ -66,6 +66,9 @@ fi
 export TAURI_SIGNING_PRIVATE_KEY
 TAURI_SIGNING_PRIVATE_KEY=$(cat "$KEY")
 export TAURI_SIGNING_PRIVATE_KEY_PASSWORD=${TAURI_SIGNING_PRIVATE_KEY_PASSWORD:-}
+# Start from an empty bundle folder, so files from an earlier build can't
+# end up in the release.
+rm -rf target/release/bundle
 (cd app && npm ci && npm run tauri build)
 unset TAURI_SIGNING_PRIVATE_KEY
 
