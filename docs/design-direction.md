@@ -1,10 +1,7 @@
 # UI design direction
 
-This is where the UI redesign stands as of November 2026. The live reference
-is the prototype at `/prototypes/liquid` (run `cd app && npm run dev`, then
-open http://localhost:1420/prototypes/liquid). The first variant, "Chosen:
-cool and warm white", is the picked direction. Source:
-`app/src/prototypes/liquid/`.
+The look Interlude settled on in November 2026, and what was tried and
+ruled out along the way.
 
 ## What we picked
 
@@ -73,22 +70,16 @@ tokens. They are defined at the top of the `.studio` styles in `Studio.svelte`.
   know which part of a track is which.
 - Stem progress bars. Their meaning was unclear.
 - Big platters, the Ridgeline terrain and other experimental layouts. Fun,
-  but not practical to mix on. Round 2 is saved at `/prototypes/bold`.
+  but not practical to mix on.
 
 ## In the app
 
 The real app now uses this design. The tokens live in `app/src/app.css`.
-Waveforms are drawn by `app/src/lib/waveform-2d.js`, the prototype's ribbon
-renderer, reading the analyser's bins. A few things differ from the
-prototype because the app does more:
+Waveforms are drawn by `app/src/lib/waveform-2d.js`, a ribbon renderer
+reading the analyser's bins. A few details:
 
 - Nudge is a pair of small ‹ › buttons under the pitch fader. The
-  transport's fourth button is beat jump, as in the prototype.
+  transport's fourth button is beat jump.
 - Hot cues use eight slot colours (`--hc-1` to `--hc-8`), on the cue row,
   the overview and the waveform.
 - The sampler strip and the settings page are glass panels too.
-
-## Next
-
-Delete `app/src/prototypes` and the prototype routes in `app/src/main.js`
-once the app has been checked against them.
