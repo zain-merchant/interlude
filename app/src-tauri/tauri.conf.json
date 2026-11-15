@@ -24,7 +24,8 @@
         "trafficLightPosition": {
           "x": 14,
           "y": 18
-        }
+        },
+        "create": false
       }
     ],
     "security": {

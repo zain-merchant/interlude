@@ -532,10 +532,6 @@
         </button>
       {/each}
     {/if}
-    <span class="grow"></span>
-    {#if onsettings}
-      <button class="add" onclick={onsettings} use:tip={() => tipText('Settings', keyLabel('app.settings'))}>Settings</button>
-    {/if}
   </nav>
 
   <div class="main">
@@ -557,6 +553,13 @@
         use:tip={() => tipText(sampler.open ? 'Hide sampler' : 'Show sampler', keyLabel('view.sampler'), 'eight one-shot slots; drag tracks onto them')}>
         <svg viewBox="0 0 12 12" aria-hidden="true"><rect x="1.5" y="1.5" width="3.5" height="3.5" rx="1" /><rect x="7" y="1.5" width="3.5" height="3.5" rx="1" /><rect x="1.5" y="7" width="3.5" height="3.5" rx="1" /><rect x="7" y="7" width="3.5" height="3.5" rx="1" /></svg>Sampler
       </button>
+      {#if onsettings}
+        <!-- Always here, however long the sidebar gets. -->
+        <button class="btn sm gear" onclick={onsettings} aria-label="Settings"
+          use:tip={() => tipText('Settings', keyLabel('app.settings'))}>
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 4.5h6M11.5 4.5h2M2.5 11.5h2M7.5 11.5h6" /><circle cx="10" cy="4.5" r="1.5" /><circle cx="6" cy="11.5" r="1.5" /></svg>
+        </button>
+      {/if}
     </div>
 
     <div class="row head" role="group" aria-label="Sort tracks">
@@ -780,9 +783,6 @@
     height: 12px;
     stroke-linecap: round;
   }
-  .grow {
-    flex: 1;
-  }
   .sr {
     position: absolute;
     width: 1px;
@@ -801,6 +801,20 @@
     display: inline-flex;
     gap: 8px;
     padding: 0 12px;
+  }
+  .gear {
+    aspect-ratio: 1;
+    padding: 0;
+    display: inline-grid;
+    place-items: center;
+  }
+  .gear svg {
+    width: 14px;
+    height: 14px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.3;
+    stroke-linecap: round;
   }
   .samp.on {
     color: var(--fg);
