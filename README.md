@@ -339,10 +339,14 @@ set `APPLE_SIGNING_IDENTITY`, `APPLE_ID`, `APPLE_PASSWORD` (an app-specific
 password) and `APPLE_TEAM_ID` before running the script, and the app is
 signed and notarized.
 
-**The website** is `site/`, plain HTML and CSS. `.github/workflows/pages.yml`
-publishes it to GitHub Pages when it changes on `main` (turn on Settings ›
-Pages › Source: GitHub Actions once). Pages on a private repo needs a paid
-GitHub plan, so it goes live when the repo is public.
+**The website** is `site/`, plain HTML and CSS, with no build step and no
+CI. To publish or update it, push that folder to the `gh-pages` branch:
+```sh
+git subtree push --prefix site origin gh-pages
+```
+and, once, set Settings › Pages › Source to "Deploy from a branch",
+`gh-pages`, `/ (root)`. Pages on a private repo needs a paid GitHub plan,
+so it goes live when the repo is public.
 
 **Moving over from oss-dj.** The app was called oss-dj. On first launch,
 Interlude moves the old data folder (library, settings, stems, logs), the

@@ -78,7 +78,8 @@ cp "$DMG" "$STAGE/Interlude.dmg"
 
 echo "==> Committing the version"
 git add Cargo.toml Cargo.lock app/src-tauri/tauri.conf.json
-git commit -m "Release $VERSION"
+# Nothing to commit when the version was already set (a first release).
+git diff --cached --quiet || git commit -m "Release $VERSION"
 git tag "v$VERSION"
 git push origin HEAD "v$VERSION"
 
