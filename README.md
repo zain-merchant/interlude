@@ -332,12 +332,23 @@ signed with it.
    `latest.json`. GitHub adds the source code to each release, which the
    GPL asks for.
 
-**Apple signing (optional).** Without it, testers see "Apple could not
-verify Interlude" the first time and have to click Open Anyway in System
-Settings › Privacy & Security. With an Apple Developer account ($99/year),
-set `APPLE_SIGNING_IDENTITY`, `APPLE_ID`, `APPLE_PASSWORD` (an app-specific
-password) and `APPLE_TEAM_ID` before running the script, and the app is
-signed and notarized.
+**Apple signing.** A signed and notarized app opens without the "Apple
+could not verify" warning. Set up once on the release Mac:
+
+1. Make a certificate signing request: Keychain Access › Certificate
+   Assistant › Request a Certificate From a Certificate Authority, with your
+   email, "Saved to disk".
+2. At [developer.apple.com › Certificates](https://developer.apple.com/account/resources/certificates/add),
+   add a **Developer ID Application** certificate (G2 Sub-CA) from that
+   request, download it and double-click it to add it to the login keychain.
+   `security find-identity -v -p codesigning` should now list it.
+3. Make an app-specific password at [account.apple.com](https://account.apple.com)
+   › Sign-In and Security › App-Specific Passwords, and save it with
+   `security add-generic-password -s interlude-notarize -a <Apple ID email> -w`
+   (it asks for the password).
+
+After that `release.sh` finds the certificate and the password itself, and
+Tauri signs the app and sends it to Apple to notarize (a few minutes).
 
 **The website** is `site/`, plain HTML and CSS, with no build step and no
 CI. To publish or update it, push that folder to the `gh-pages` branch:

@@ -16,11 +16,15 @@
 # Needs: gh (signed in), node, the Rust toolchain, and the updater key at
 # ~/.tauri/oss-dj-updater.key (or set INTERLUDE_UPDATER_KEY to its path).
 #
-# Apple signing is optional. With a Developer ID, set these before running
-# and Tauri signs and notarizes the app, so testers can open it without the
-# "unidentified developer" step:
-#   APPLE_SIGNING_IDENTITY="Developer ID Application: Your Name (TEAMID)"
-#   APPLE_ID=you@example.com APPLE_PASSWORD=<app-specific password> APPLE_TEAM_ID=TEAMID
+# Apple signing and notarization happen by themselves once this Mac has
+# (see "Apple signing" in the README):
+#   - a "Developer ID Application" certificate in the login keychain, and
+#   - the notarization login saved in the keychain, once:
+#       security add-generic-password -s interlude-notarize -a <Apple ID email> -w
+#     (it asks for the app-specific password)
+# The usual Tauri variables (APPLE_SIGNING_IDENTITY, APPLE_ID, APPLE_PASSWORD,
+# APPLE_TEAM_ID) override these. Without a certificate the app is built
+# unsigned and testers need the Open Anyway step.
 
 set -euo pipefail
 
@@ -58,10 +62,25 @@ grep -q "^version = \"$VERSION\"" Cargo.toml || fail "couldn't set the version i
 cargo metadata --format-version 1 >/dev/null # refreshes Cargo.lock
 
 echo "==> Building"
-if [[ -n ${APPLE_SIGNING_IDENTITY:-} ]]; then
-  echo "    signing as $APPLE_SIGNING_IDENTITY"
+if [[ -z ${APPLE_SIGNING_IDENTITY:-} ]]; then
+  APPLE_SIGNING_IDENTITY=$(security find-identity -v -p codesigning |
+    sed -n 's/.*"\(Developer ID Application: .*\)"/\1/p' | head -1)
+fi
+if [[ -n $APPLE_SIGNING_IDENTITY ]]; then
+  export APPLE_SIGNING_IDENTITY
+  # The team ID is the part in brackets at the end of the identity.
+  export APPLE_TEAM_ID=${APPLE_TEAM_ID:-$(sed -E 's/.*\(([A-Z0-9]+)\)$/\1/' <<<"$APPLE_SIGNING_IDENTITY")}
+  if [[ -z ${APPLE_PASSWORD:-} ]] && security find-generic-password -s interlude-notarize >/dev/null 2>&1; then
+    export APPLE_ID=${APPLE_ID:-$(security find-generic-password -s interlude-notarize |
+      sed -n 's/.*"acct"<blob>="\(.*\)"/\1/p')}
+    export APPLE_PASSWORD
+    APPLE_PASSWORD=$(security find-generic-password -s interlude-notarize -w)
+  fi
+  [[ -n ${APPLE_ID:-} && -n ${APPLE_PASSWORD:-} ]] ||
+    fail "found $APPLE_SIGNING_IDENTITY but no notarization login; see \"Apple signing\" in the README"
+  echo "    signing as $APPLE_SIGNING_IDENTITY and notarizing as $APPLE_ID"
 else
-  echo "    not signed with a Developer ID: testers will need the Open Anyway step"
+  echo "    no Developer ID certificate: testers will need the Open Anyway step"
 fi
 export TAURI_SIGNING_PRIVATE_KEY
 TAURI_SIGNING_PRIVATE_KEY=$(cat "$KEY")
@@ -70,7 +89,7 @@ export TAURI_SIGNING_PRIVATE_KEY_PASSWORD=${TAURI_SIGNING_PRIVATE_KEY_PASSWORD:-
 # end up in the release.
 rm -rf target/release/bundle
 (cd app && npm ci && npm run tauri build)
-unset TAURI_SIGNING_PRIVATE_KEY
+unset TAURI_SIGNING_PRIVATE_KEY APPLE_PASSWORD
 
 BUNDLE=target/release/bundle
 node app/scripts/latest-json.mjs "$NOTES"
