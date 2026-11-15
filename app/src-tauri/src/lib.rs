@@ -749,52 +749,63 @@ fn log_audio_stats(app: tauri::AppHandle) {
 }
 
 pub fn run() {
-    log::start();
-    // Play through the device picked in Settings > Audio, or by default the
-    // controller's own sound card when it's plugged in, so its headphone
-    // output works.
-    let saved_audio = audio::load();
-    let (output, handle) =
-        match dj_engine::output::start_with(audio::target(&saved_audio), audio::PREFERRED) {
-            Ok((out, handle)) => (Output::Device(out), handle),
-            Err(e) => {
-                eprintln!("no audio output ({e}); running silently");
-                let (out, handle) = dj_engine::start_null(48_000);
-                (Output::Null(out), handle)
-            }
-        };
-
-    let shared = handle.shared().clone();
-    let stems = stems::Stems::new(shared.clone());
-    let engine = Arc::new(Mutex::new(handle));
-
     tauri::Builder::default()
+        // First, so a second launch hands over to the running app and quits
+        // before it touches the log, the sound card or the library.
+        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+            if let Some(window) = app.get_webview_window("main") {
+                let _ = window.unminimize();
+                let _ = window.show();
+                let _ = window.set_focus();
+            }
+        }))
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
-        .setup({
-            let engine = engine.clone();
-            move |app| {
-                controller::start(app.handle(), engine, shared.clone());
-                log_audio_stats(app.handle().clone());
-                app.state::<library::Library>()
-                    .start(app.handle().clone(), shared);
-                let handle = app.handle().clone();
-                let _ = std::thread::Builder::new()
-                    .name("deck-watcher".into())
-                    .spawn(move || handle.state::<library::Library>().run_deck_watcher());
-                Ok(())
+        .setup(|app| {
+            log::start();
+            // Play through the device picked in Settings > Audio, or by
+            // default the controller's own sound card when it's plugged in,
+            // so its headphone output works.
+            let saved_audio = audio::load();
+            let (output, handle) = match dj_engine::output::start_with(
+                audio::target(&saved_audio),
+                audio::PREFERRED,
+            ) {
+                Ok((out, handle)) => (Output::Device(out), handle),
+                Err(e) => {
+                    eprintln!("no audio output ({e}); running silently");
+                    let (out, handle) = dj_engine::start_null(48_000);
+                    (Output::Null(out), handle)
+                }
+            };
+            let shared = handle.shared().clone();
+            let engine = Arc::new(Mutex::new(handle));
+            app.manage(AppState {
+                engine: engine.clone(),
+                tracks: Mutex::new(Default::default()),
+                output,
+                audio: Mutex::new(saved_audio),
+            });
+            app.manage(library::Library::load());
+            app.manage(stems::Stems::new(shared.clone()));
+
+            controller::start(app.handle(), engine, shared.clone());
+            log_audio_stats(app.handle().clone());
+            app.state::<library::Library>()
+                .start(app.handle().clone(), shared);
+            let handle = app.handle().clone();
+            let _ = std::thread::Builder::new()
+                .name("deck-watcher".into())
+                .spawn(move || handle.state::<library::Library>().run_deck_watcher());
+
+            // The window opens last, once everything it asks for is in place.
+            for config in app.config().app.windows.clone() {
+                tauri::WebviewWindowBuilder::from_config(app.handle(), &config)?.build()?;
             }
+            Ok(())
         })
-        .manage(AppState {
-            engine,
-            tracks: Mutex::new(Default::default()),
-            output,
-            audio: Mutex::new(saved_audio),
-        })
-        .manage(library::Library::load())
-        .manage(stems)
         .invoke_handler(tauri::generate_handler![
             control,
             state,
