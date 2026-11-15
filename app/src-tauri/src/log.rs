@@ -113,7 +113,11 @@ fn peak_memory_mb() -> Option<u64> {
         }
         let max = usage.ru_maxrss as u64;
         // Bytes on macOS, kilobytes on Linux.
-        let bytes = if cfg!(target_os = "macos") { max } else { max * 1024 };
+        let bytes = if cfg!(target_os = "macos") {
+            max
+        } else {
+            max * 1024
+        };
         Some(bytes / (1024 * 1024))
     }
     #[cfg(not(unix))]
@@ -161,7 +165,11 @@ mod crash {
 
     pub fn install() {
         let Some(log) = super::LOG.get() else { return };
-        let fd = log.lock().unwrap_or_else(|e| e.into_inner()).file.as_raw_fd();
+        let fd = log
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .file
+            .as_raw_fd();
         // A duplicate, so it stays open however the file is handled.
         // SAFETY: plain libc calls on descriptors this module owns.
         let fd = unsafe { libc::dup(fd) };
@@ -199,7 +207,14 @@ mod crash {
         };
         if fd >= 0 {
             let fatal = i < 5;
-            put(fd, if fatal { b"CRASHED: signal " } else { b"stopped by signal " });
+            put(
+                fd,
+                if fatal {
+                    b"CRASHED: signal "
+                } else {
+                    b"stopped by signal "
+                },
+            );
             put(fd, SIGNALS[i].1.as_bytes());
             put(fd, b"\n");
             #[cfg(target_os = "macos")]

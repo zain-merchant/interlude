@@ -24,6 +24,10 @@
   };
   /** Channel knob size: five of them fit the shortest deck row. */
   const KNOB = 20;
+  /** Height of the channel dial columns; on a short mixer the dials shrink so their labels never overlap. */
+  let chHeight = $state(0);
+  // Each dial takes its size plus 24px (tick ring and label), with 4px between dials.
+  const knob = $derived(chHeight ? Math.max(14, Math.min(KNOB, Math.floor((chHeight - 16) / 5 - 24))) : KNOB);
   const color = (deck) => (deck === 0 ? 'var(--deck-a)' : 'var(--deck-b)');
   const channels = $state([0, 1].map(() => ({ gain: 0, eq: [0, 0, 0], filter: 0, fader: 1, pfl: false })));
   let master = $state(0);
@@ -133,15 +137,15 @@
 {#snippet knobs(deck)}
   {@const ch = channels[deck]}
   {@const n = deck === 0 ? 'A' : 'B'}
-  <div class="ch">
-    <Knob label="Trim" name="Deck {n} trim" size={KNOB} bind:value={ch.gain} min={-12} max={12} reset={0} format={db} arc={color(deck)}
+  <div class="ch" bind:clientHeight={chHeight}>
+    <Knob label="Trim" name="Deck {n} trim" size={knob} bind:value={ch.gain} min={-12} max={12} reset={0} format={db} arc={color(deck)}
       onchange={(v) => control({ type: 'setGain', deck, db: v })} />
     {#each BANDS as { label, band }}
-      <Knob {label} name="Deck {n} {label.toLowerCase()} EQ" size={KNOB} bind:value={ch.eq[band]} min={KILL} max={EQ_MAX} reset={0} kill={KILL} taper={eqTaper} format={db}
+      <Knob {label} name="Deck {n} {label.toLowerCase()} EQ" size={knob} bind:value={ch.eq[band]} min={KILL} max={EQ_MAX} reset={0} kill={KILL} taper={eqTaper} format={db}
         arc={color(deck)}
         onchange={(v) => control({ type: 'setEq', deck, band, db: v })} />
     {/each}
-    <Knob label="Filter" name="Deck {n} filter" size={KNOB} bind:value={ch.filter} min={-1} max={1} reset={0} format={filterText} arc={color(deck)}
+    <Knob label="Filter" name="Deck {n} filter" size={knob} bind:value={ch.filter} min={-1} max={1} reset={0} format={filterText} arc={color(deck)}
       onchange={(v) => control({ type: 'setFilter', deck, value: v })} />
   </div>
 {/snippet}
@@ -223,6 +227,9 @@
      when the decks are short (sampler open, small window). */
   .ch :global(.knob) {
     margin: -3px 0;
+  }
+  .ch :global(.label) {
+    line-height: 12px;
   }
   .cen {
     display: grid;

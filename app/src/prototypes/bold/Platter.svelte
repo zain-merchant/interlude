@@ -1,7 +1,7 @@
 <script>
   // A platter: the whole track as a ring of spokes, a slowly turning disc
   // with engraved grooves inside it, and the deck's numbers in the middle.
-  import { onMount } from 'svelte';
+  import { onMount, untrack } from 'svelte';
   import Wave from './Wave.svelte';
   import Time from './Time.svelte';
   import { decks, clock, onTick } from './track.js';
@@ -27,7 +27,7 @@
   const down = (e) => { drag = angleAt(e); disc.setPointerCapture(e.pointerId); };
   const move = (e) => { if (drag === null) return; const a = angleAt(e); nudge += a - drag; drag = a; };
   const up = () => (drag = null);
-  const d = decks[deck];
+  const d = untrack(() => decks[deck]);
   const len = d.data.length;
   const pt = (f, r) => [Math.cos(f * Math.PI * 2 - Math.PI / 2) * r, Math.sin(f * Math.PI * 2 - Math.PI / 2) * r];
 </script>

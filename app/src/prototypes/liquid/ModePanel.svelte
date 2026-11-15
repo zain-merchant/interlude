@@ -1,4 +1,5 @@
 <script>
+  import { untrack } from 'svelte';
   // The deck's mode panel: tabs for Cues, Loop, FX and Stems over one row of
   // controls, drawn as a toolbar row: words, numbers and small marks, no
   // boxes. Cues are a colour and a time.
@@ -6,14 +7,16 @@
   import { CUES, mmss } from './perf.js';
   /** @type {{ deck: number, color: string, mode?: string }} */
   let { deck, color, mode = $bindable('Cues') } = $props();
+  // Each panel starts from its deck's demo state; it doesn't follow `deck` after that.
+  const first = untrack(() => deck);
   const MODES = ['Cues', 'Loop', 'FX', 'Stems'];
   const STEMS = ['Vocals', 'Melody', 'Bass', 'Drums'];
-  let loop = $state(deck ? 8 : 4);
-  let looping = $state(deck === 0);
+  let loop = $state(first ? 8 : 4);
+  let looping = $state(first === 0);
   let fxBeats = $state(1);
-  let fxOn = $state(deck === 1);
+  let fxOn = $state(first === 1);
   let fxLevel = $state(0.6);
-  let on = $state(deck ? [false, true, true, true] : [true, true, true, true]);
+  let on = $state(first ? [false, true, true, true] : [true, true, true, true]);
   const frac = (b) => (b < 1 ? `1/${1 / b}` : `${b}`);
   const halve = () => (loop = Math.max(1 / 8, loop / 2));
   const double = () => (loop = Math.min(32, loop * 2));
