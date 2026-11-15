@@ -1,6 +1,6 @@
 //! Importing another DJ app's library: tracks with their tags, cue points,
 //! loops and beatgrids, and playlists. Your own work always wins: a track
-//! that already has cues or a grid fixed by hand in oss-dj keeps them, and
+//! that already has cues or a grid fixed by hand in Interlude keeps them, and
 //! running an import again only fills in what's still missing.
 
 pub mod rekordbox;
@@ -274,7 +274,7 @@ pub struct Summary {
     pub cues: usize,
     pub grids: usize,
     pub playlists: usize,
-    /// Tracks that kept the cues or grid already set in oss-dj.
+    /// Tracks that kept the cues or grid already set in Interlude.
     pub kept: usize,
 }
 

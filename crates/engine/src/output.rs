@@ -185,7 +185,7 @@ pub fn start_default() -> Result<(AudioOutput, EngineHandle), OutputError> {
 /// fader move) take effect at the start of the next callback, and a
 /// callback's audio is heard one buffer later, so this sets how quickly the
 /// app answers: 128 frames is 2.7 ms at 48 kHz. The device's own default is
-/// often 512 (10.7 ms). Set `OSS_DJ_BUFFER_FRAMES` to override, or to 0 to
+/// often 512 (10.7 ms). Set `INTERLUDE_BUFFER_FRAMES` to override, or to 0 to
 /// use the device default.
 pub const TARGET_BUFFER_FRAMES: u32 = 128;
 
@@ -227,7 +227,7 @@ impl Stats {
 }
 
 fn target_buffer_frames() -> u32 {
-    std::env::var("OSS_DJ_BUFFER_FRAMES")
+    std::env::var("INTERLUDE_BUFFER_FRAMES")
         .ok()
         .and_then(|v| v.trim().parse().ok())
         .unwrap_or(TARGET_BUFFER_FRAMES)

@@ -319,7 +319,7 @@ impl Catalog {
         })
     }
 
-    /// The Mixxx mappings that come with oss-dj, in this source tree. A
+    /// The Mixxx mappings that come with Interlude, in this source tree. A
     /// built app ships its own copy and passes it to
     /// [`Self::default_dirs_with`] instead.
     pub fn source_mappings_dir() -> Option<PathBuf> {
@@ -333,13 +333,13 @@ impl Catalog {
         Self::default_dirs_with(Self::source_mappings_dir())
     }
 
-    /// Folders searched for Mixxx mappings, in order: `$OSS_DJ_MAPPINGS`
+    /// Folders searched for Mixxx mappings, in order: `$INTERLUDE_MAPPINGS`
     /// (a path list), Mixxx's user folder (mappings someone made or
-    /// changed in Mixxx), the `bundled` mappings that come with oss-dj,
+    /// changed in Mixxx), the `bundled` mappings that come with Interlude,
     /// then an installed Mixxx's own. Mixxx itself isn't needed: the
     /// bundled mappings cover every controller Mixxx supports.
     pub fn default_dirs_with(bundled: Option<PathBuf>) -> Vec<PathBuf> {
-        let mut dirs: Vec<PathBuf> = std::env::var_os("OSS_DJ_MAPPINGS")
+        let mut dirs: Vec<PathBuf> = std::env::var_os("INTERLUDE_MAPPINGS")
             .map(|v| std::env::split_paths(&v).collect())
             .unwrap_or_default();
         let home = std::env::var_os("HOME").map(PathBuf::from);

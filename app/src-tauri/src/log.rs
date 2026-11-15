@@ -2,8 +2,8 @@
 //!
 //! Everything the app prints to stderr (its own messages, a panic, the
 //! audio and controller threads, ONNX Runtime) also goes to
-//! `logs/oss-dj.log` in the app's data folder, each line with the time.
-//! The previous few sessions' logs are kept as `oss-dj.1.log` and so on.
+//! `logs/interlude.log` in the app's data folder, each line with the time.
+//! The previous few sessions' logs are kept as `interlude.1.log` and so on.
 //!
 //! On macOS and Linux stderr is routed through a pipe that a small thread
 //! copies to both the terminal and the file. Elsewhere only panics and
@@ -46,13 +46,13 @@ pub fn path() -> Option<&'static Path> {
 /// Opens the log file and starts copying stderr into it. Call once, first
 /// thing. Failure leaves stderr as it was.
 pub fn start() {
-    let Some(dir) = dirs::data_dir().map(|d| d.join("oss-dj").join("logs")) else {
+    let Some(dir) = crate::paths::data_dir().map(|d| d.join("logs")) else {
         return;
     };
     if std::fs::create_dir_all(&dir).is_err() {
         return;
     }
-    let path = dir.join("oss-dj.log");
+    let path = dir.join("interlude.log");
     rotate(&dir);
     let Ok(file) = File::create(&path) else {
         return;
@@ -60,7 +60,7 @@ pub fn start() {
     let _ = PATH.set(path);
     let _ = LOG.set(Mutex::new(Log { file, written: 0 }));
     write_line(&format!(
-        "oss-dj {} on {} {} started",
+        "Interlude {} on {} {} started",
         env!("CARGO_PKG_VERSION"),
         std::env::consts::OS,
         std::env::consts::ARCH
@@ -250,11 +250,11 @@ mod crash {
     }
 }
 
-/// Shifts `oss-dj.log` to `oss-dj.1.log` and so on, dropping the oldest.
+/// Shifts `interlude.log` to `interlude.1.log` and so on, dropping the oldest.
 fn rotate(dir: &Path) {
     let name = |i: usize| match i {
-        0 => dir.join("oss-dj.log"),
-        i => dir.join(format!("oss-dj.{i}.log")),
+        0 => dir.join("interlude.log"),
+        i => dir.join(format!("interlude.{i}.log")),
     };
     let _ = std::fs::remove_file(name(KEEP));
     for i in (0..KEEP).rev() {
@@ -348,9 +348,9 @@ pub fn save_report(description: String, context: String) -> Result<String, Strin
         .or_else(dirs::home_dir)
         .ok_or("no Desktop folder to save the report in")?;
     let stamp = chrono::Local::now().format("%Y-%m-%d %H.%M");
-    let path = dir.join(format!("oss-dj report {stamp}.txt"));
+    let path = dir.join(format!("Interlude report {stamp}.txt"));
     let mut text = format!(
-        "oss-dj problem report\n\nWhat happened:\n{}\n\nVersion: {}\nSystem: {} ({})\n{}\n",
+        "Interlude problem report\n\nWhat happened:\n{}\n\nVersion: {}\nSystem: {} ({})\n{}\n",
         description.trim(),
         env!("CARGO_PKG_VERSION"),
         os_version(),
@@ -380,7 +380,7 @@ fn session_log(n: usize) -> Option<PathBuf> {
     let current = path()?;
     let p = match n {
         0 => current.to_path_buf(),
-        n => current.with_file_name(format!("oss-dj.{n}.log")),
+        n => current.with_file_name(format!("interlude.{n}.log")),
     };
     p.exists().then_some(p)
 }

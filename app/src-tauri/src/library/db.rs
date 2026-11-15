@@ -260,7 +260,7 @@ impl Db {
         let unsaved = |e: rusqlite::Error| {
             eprintln!("could not open the library: {e}");
             let reason = if is_busy(&e) {
-                "another copy of oss-dj is using it".to_string()
+                "another copy of Interlude is using it".to_string()
             } else {
                 e.to_string()
             };

@@ -26,7 +26,7 @@ pub struct Saved {
 }
 
 fn path() -> Option<PathBuf> {
-    dirs::data_dir().map(|d| d.join("oss-dj").join("audio.json"))
+    crate::paths::data_dir().map(|d| d.join("audio.json"))
 }
 
 pub fn load() -> Saved {

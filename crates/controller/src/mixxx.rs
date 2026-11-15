@@ -16,7 +16,7 @@
 //! the script's `incomingData`, and the script sends reports back.
 //! [`crate::hid`] connects those to the device.
 //!
-//! Mixxx mappings are GPL-2.0-or-later, which oss-dj's GPL-3.0-or-later
+//! Mixxx mappings are GPL-2.0-or-later, which Interlude's GPL-3.0-or-later
 //! licence is compatible with.
 
 use std::collections::HashMap;

@@ -1,19 +1,19 @@
 // Writes latest.json, the file the in-app updater reads, for a release
-// built with `npm run tauri build`.
+// built with `npm run tauri build`. scripts/release.sh runs it.
 //
 //   node scripts/latest-json.mjs "What changed in this version"
 //
 // It finds the signed update bundle (`*.app.tar.gz` and its `.sig`) for
 // this Mac's architecture, and writes `latest.json` next to it. Upload
-// both files and latest.json to a GitHub release tagged v<version> in
-// zain-merchant/oss-dj-releases (see "Releasing a beta" in the README).
+// both files and latest.json to the GitHub release tagged v<version> in
+// zain-merchant/interlude (see "Releasing" in the README).
 
 import { readFileSync, readdirSync, writeFileSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { arch } from 'node:process';
 
-const RELEASES = 'https://github.com/zain-merchant/oss-dj-releases/releases/download';
+const RELEASES = 'https://github.com/zain-merchant/interlude/releases/download';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const conf = JSON.parse(readFileSync(join(here, '../src-tauri/tauri.conf.json'), 'utf8'));

@@ -1,4 +1,4 @@
-//! Stems for oss-dj: splits each loaded track into vocals, melody, bass and
+//! Stems for Interlude: splits each loaded track into vocals, melody, bass and
 //! drums in the background.
 //!
 //! A [`Splitter`] runs one worker thread. When a track loads onto a deck,
@@ -43,7 +43,7 @@ impl From<ort::Error<ort::session::builder::SessionBuilder>> for Error {
     }
 }
 
-/// The model file oss-dj downloads on first use: HTDemucs v4, exported to
+/// The model file Interlude downloads on first use: HTDemucs v4, exported to
 /// ONNX with its weights stored as 16-bit floats (it still computes in
 /// 32-bit). Parity-checked against Meta's PyTorch model by its exporter.
 pub const MODEL_ID: &str = "htdemucs-v4";

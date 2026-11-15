@@ -1,9 +1,12 @@
-# oss-dj
+# Interlude
 
 A free, open-source DJ app that is fast, modern and uncluttered. No paywalled
 "pro" features, no lock-in.
 
-![oss-dj running on Linux with two test tracks loaded](docs/screenshot.png)
+**Download:** [Interlude.dmg](https://github.com/zain-merchant/interlude/releases/latest/download/Interlude.dmg)
+for Macs with Apple silicon. It updates itself after that.
+
+![Interlude running on Linux with two test tracks loaded](docs/screenshot.png)
 
 > **Status: early development (Phase 2 under way).** You can load two
 > tracks, see their BPM, sync them, cue, change pitch, EQ and crossfade.
@@ -73,7 +76,7 @@ A free, open-source DJ app that is fast, modern and uncluttered. No paywalled
   splitting off, sets the cache size and clears it. Stems have no keys
   until you give them some in Settings › Keyboard.
 - **Recording:** the Rec button in the mixer records the master output to a
-  24-bit WAV in `Music/oss-dj recordings`. The file is written off the
+  24-bit WAV in `Music/Interlude recordings`. The file is written off the
   audio thread and its header is refreshed every few seconds, so a crash
   still leaves a playable file.
 - **Formats:** MP3, AAC/M4A, FLAC, WAV, AIFF, OGG/Vorbis, ALAC via Symphonia.
@@ -111,7 +114,7 @@ A free, open-source DJ app that is fast, modern and uncluttered. No paywalled
   drive) and brings over crates as playlists, plus the hot cues, saved
   loops and beatgrids Serato keeps in MP3, AIFF, WAV, FLAC and M4A files.
   Both fill in empty tags. Cues or grids
-  you've already set in oss-dj are never replaced, and imported grids are
+  you've already set in Interlude are never replaced, and imported grids are
   kept when a track is analyzed again. Music files aren't touched.
 - **Safety:** loading onto a playing deck is blocked.
 - **Controller: Pioneer DDJ-FLX4.** Plug it in (before or after starting the
@@ -139,12 +142,12 @@ A free, open-source DJ app that is fast, modern and uncluttered. No paywalled
   LEVEL/DEPTH the level, and ON/OFF switches it, lit while on (SHIFT +
   ON/OFF turns every effect off). Moving the lever takes the effect with it
   to the new deck.
-- **Other controllers (early): Mixxx mappings, built in.** oss-dj ships
+- **Other controllers (early): Mixxx mappings, built in.** Interlude ships
   every controller mapping from Mixxx 2.5.6 (in
   `crates/controller/mappings`, GPL-2.0-or-later), so a controller Mixxx
   supports connects when it's plugged in, alongside any others, with no
   Mixxx install needed. Mapping files in the app's own `controllers`
-  folder (in its data folder), folders listed in `OSS_DJ_MAPPINGS` and
+  folder (in its data folder), folders listed in `INTERLUDE_MAPPINGS` and
   Mixxx's user folder come first, so a mapping you've changed wins.
   Direct bindings and LEDs work for about 68% of the controls across the
   142 MIDI mappings (decks 3 and 4, and Mixxx-only features, are left
@@ -179,15 +182,15 @@ test guarantees the audio thread never allocates memory.
 
 ## Logs, problem reports and updates
 
-- **Logs:** everything the app reports goes to `logs/oss-dj.log` in its
-  data folder (on a Mac, `~/Library/Application Support/oss-dj/logs`), with
+- **Logs:** everything the app reports goes to `logs/interlude.log` in its
+  data folder (on a Mac, `~/Library/Application Support/Interlude/logs`), with
   the last three sessions kept.
 - **Report a problem** (Help menu, or the bottom of Settings): say what
   happened and the app saves a report to the Desktop with the version,
   system, audio device, controllers and the logs of this and the last
   session. Testers send that file in.
 - **Updates:** the app checks for a newer version a few seconds after
-  launch (and from oss-dj › Check for Updates…) and offers to install it.
+  launch (and from Interlude › Check for Updates…) and offers to install it.
   It never installs or restarts while a deck is playing or a set is
   recording.
 
@@ -301,29 +304,50 @@ cargo clippy --workspace --all-targets --all-features -- -D warnings
 cargo test --workspace
 ```
 
-## Releasing a beta
+## Releasing
 
-Updates come from the public
-[oss-dj-releases](https://github.com/zain-merchant/oss-dj-releases) repo,
-since this one is private. Each release is signed with the updater key;
-the app only installs updates signed with it.
+Interlude is downloaded from, and updates itself from, this repo's
+[GitHub Releases](https://github.com/zain-merchant/interlude/releases).
+The website's download button links to
+`releases/latest/download/Interlude.dmg`, and installed copies read
+`releases/latest/download/latest.json`, so both always point at the newest
+(non-prerelease) release. While the repo is private, only people with
+access can download.
+
+Each update is signed with the updater key; the app only installs updates
+signed with it.
 
 1. Once: the key is in `~/.tauri/oss-dj-updater.key` on the release Mac
    (made with `npx tauri signer generate -w ~/.tauri/oss-dj-updater.key`;
    its public half is `plugins.updater.pubkey` in `tauri.conf.json`).
-   Keep a copy somewhere safe: without it, installed copies can't be updated.
-2. Bump `version` in `Cargo.toml` (workspace) and `app/src-tauri/tauri.conf.json`.
-3. Build:
+   Keep a copy somewhere safe, like a password manager: without it,
+   installed copies can never be updated again.
+2. From a clean, up-to-date `main`, on the Mac:
    ```sh
-   cd app
-   export TAURI_SIGNING_PRIVATE_KEY="$(cat ~/.tauri/oss-dj-updater.key)"
-   export TAURI_SIGNING_PRIVATE_KEY_PASSWORD=""
-   npm run tauri build
-   node scripts/latest-json.mjs "What changed"
+   app/scripts/release.sh 0.2.0 "What changed, in a line or two"
    ```
-4. Make a release tagged `v<version>` in oss-dj-releases and upload the
-   `.dmg` (for new testers) and, from `target/release/bundle/macos`, the
-   `.app.tar.gz`, its `.sig` and `latest.json`.
+   It sets the version, builds and signs the app, writes `latest.json`,
+   commits and tags `v0.2.0`, and publishes the release with the disk image
+   (also as `Interlude.dmg`), the update bundle, its signature and
+   `latest.json`. GitHub adds the source code to each release, which the
+   GPL asks for.
+
+**Apple signing (optional).** Without it, testers see "Apple could not
+verify Interlude" the first time and have to click Open Anyway in System
+Settings › Privacy & Security. With an Apple Developer account ($99/year),
+set `APPLE_SIGNING_IDENTITY`, `APPLE_ID`, `APPLE_PASSWORD` (an app-specific
+password) and `APPLE_TEAM_ID` before running the script, and the app is
+signed and notarized.
+
+**The website** is `site/`, plain HTML and CSS. `.github/workflows/pages.yml`
+publishes it to GitHub Pages when it changes on `main` (turn on Settings ›
+Pages › Source: GitHub Actions once). Pages on a private repo needs a paid
+GitHub plan, so it goes live when the repo is public.
+
+**Moving over from oss-dj.** The app was called oss-dj. On first launch,
+Interlude moves the old data folder (library, settings, stems, logs), the
+learned controller mappings, `Music/oss-dj recordings`, and on a Mac the UI
+settings, to their new places (see `app/src-tauri/src/paths.rs`).
 
 ## Roadmap
 

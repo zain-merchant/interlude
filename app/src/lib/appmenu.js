@@ -61,19 +61,19 @@ export async function installAppMenu(run, actions) {
 
   const menu = await Menu.new({
     items: await Promise.all([
-      sub('oss-dj', [
-        PredefinedMenuItem.new({ item: { About: null }, text: 'About oss-dj' }),
+      sub('Interlude', [
+        PredefinedMenuItem.new({ item: { About: null }, text: 'About Interlude' }),
         item('Check for Updates…', actions.checkUpdates),
         sep(),
         cmd('app.settings', 'Settings…'),
         sep(),
         pre('Services'),
         sep(),
-        pre('Hide', 'Hide oss-dj'),
+        pre('Hide', 'Hide Interlude'),
         pre('HideOthers'),
         pre('ShowAll'),
         sep(),
-        pre('Quit', 'Quit oss-dj'),
+        pre('Quit', 'Quit Interlude'),
       ]),
       sub('File', [
         item('Add Music Folder…', actions.addFolder),
