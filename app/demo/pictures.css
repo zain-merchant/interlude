@@ -1,7 +1,8 @@
 /* The pictures, in the app's own tokens (app/src/app.css) and component
    styles (Knob, Stems, Library, Mixer). Scoped under .p, so nothing reaches
-   the page. One grid: 18px top and bottom, 24px sides; some pictures run
-   past it to the card's edge (data-bleed), where the card cuts them. */
+   the page. One grid: 24px from the top and sides, content about 120px
+   tall; some pictures run past it to the card's edge (data-bleed), where
+   the card cuts them. */
 .p .ss-stage {
   --t-xs: 11px;
   --t-sm: 13px;
@@ -30,10 +31,25 @@
   font-feature-settings: 'tnum' 1;
   -webkit-font-smoothing: antialiased;
 }
-.p .p-body { position: absolute; inset: 16px 24px; display: grid; align-content: center; }
+/* Every picture starts 24px down, the card's side inset, and its content
+   is sized to about 120px, so across a row they start and end together,
+   clear of the card's fade. */
+.p .p-body { position: absolute; inset: 24px 24px 16px; display: grid; align-content: start; }
 .p .p-body[data-bleed="x"] { left: 0; right: 0; }
 .p .p-body[data-bleed="right"] { right: 0; }
-.p .p-body[data-bleed="bottom"] { bottom: 0; align-content: start; }
+/* Running off the bottom (Controllers, Add your music): the picture fades
+   out itself, on a long eased curve so a bright drawing dissolves rather
+   than stops, all but gone where the other pictures end (about 30px above
+   the card's heading). It
+   starts at the card's top, padded, so a lead coming down from above isn't cut. */
+.p .p-body[data-bleed="bottom"] {
+  top: 0; bottom: 0; padding-top: 24px;
+  /* An ease-in-out ramp --fl long, gone 18px above the card's foot. */
+  --fl: 60px;
+  --bleed-fade: linear-gradient(to bottom, #000 calc(100% - 18px - var(--fl)), rgb(0 0 0 / 0.9) calc(100% - 18px - var(--fl) * 0.8), rgb(0 0 0 / 0.65) calc(100% - 18px - var(--fl) * 0.6), rgb(0 0 0 / 0.35) calc(100% - 18px - var(--fl) * 0.4), rgb(0 0 0 / 0.1) calc(100% - 18px - var(--fl) * 0.2), transparent calc(100% - 18px));
+  -webkit-mask-image: var(--bleed-fade);
+  mask-image: var(--bleed-fade);
+}
 
 /* The app's button: outlined, 8px radius, 13px. */
 .p .p-btn {
@@ -47,7 +63,7 @@
 /* Decks: two rows, each the deck's chip, its tempo and a run of its beats.
    Columns: chip 22, tempo 92, beats from 138 (the gaps are 12). Sync sits
    centred beneath. */
-.p-decks { position: relative; display: grid; gap: 14px; }
+.p-decks { position: relative; display: grid; gap: 10px; }
 .p-deckrow { display: grid; grid-template-columns: 22px 92px 1fr; align-items: center; gap: 12px; height: 34px; }
 .p-chip {
   display: grid; place-items: center; width: 22px; height: 22px; border-radius: 6px;
@@ -64,7 +80,7 @@
 .p-ticks__run i[data-bar] { width: 3px; height: 30px; margin-top: -15px; margin-left: 0.5px; background: var(--deck-a); box-shadow: 0 0 10px rgb(201 220 242 / 0.35); }
 .p-ticks[data-deck="b"] .p-ticks__run i[data-bar] { background: var(--deck-b); box-shadow: 0 0 10px rgb(240 220 192 / 0.35); }
 /* As the beats lock, a faint line runs down through each pair of downbeats. */
-.p-locks { position: absolute; left: 138px; right: 0; top: 0; height: 82px; pointer-events: none; }
+.p-locks { position: absolute; left: 138px; right: 0; top: 0; height: 78px; pointer-events: none; }
 .p-locks i {
   position: absolute; top: 0; bottom: 0; width: 2px; margin-left: 1px; border-radius: 1px;
   transition-delay: calc(var(--n, 0) * 50ms);
@@ -77,7 +93,7 @@
 .p-btn[data-on] { box-shadow: inset 0 0 0 1px rgb(240 220 192 / 0.45), 0 0 18px rgb(240 220 192 / 0.14); }
 
 /* Mixer: the app's knob (Knob.svelte), larger. */
-.p-eq { display: flex; justify-content: center; gap: 18px; }
+.p-eq { display: flex; justify-content: center; gap: 22px; }
 .p-knob { display: grid; justify-items: center; }
 .p-knob__wrap { position: relative; display: grid; place-items: center; }
 .p-knob svg { position: absolute; inset: 0; overflow: visible; }
@@ -93,11 +109,11 @@
 .p-knob__dial::after { content: ''; position: absolute; inset: 20%; border-radius: 50%; background: radial-gradient(circle at 40% 30%, #3a3b41, #26272b 70%); box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.08), 0 0 0 1px rgb(0 0 0 / 0.4); }
 .p-knob__dial i { position: absolute; z-index: 1; left: 50%; top: 9%; width: 2px; height: 30%; margin-left: -1px; border-radius: 1px; background: #f4f3ee; }
 .p-knob[data-killed] .p-knob__dial i { background: var(--fg-4); }
-.p-knob__label { position: relative; min-width: 64px; margin-top: 2px; text-align: center; font-size: var(--t-xs); color: var(--fg-3); white-space: nowrap; transition: color 140ms; }
+.p-knob__label { position: relative; min-width: 64px; margin-top: 4px; text-align: center; font-size: var(--t-xs); color: var(--fg-3); white-space: nowrap; transition: color 140ms; }
 .p-knob[data-killed] .p-knob__label { color: var(--kill); }
 
 /* Stems: the app's stem buttons, each lane running off to the right. */
-.p-stems { display: grid; gap: 6px; }
+.p-stems { display: grid; gap: 8px; }
 .p-stem { display: grid; grid-template-columns: 88px 1fr; align-items: center; gap: 10px; }
 .p-stem__btn { display: flex; align-items: center; gap: 8px; height: var(--h-sm); padding: 0 8px 0 0; color: var(--fg); transition: color 140ms; }
 .p-stem__btn i { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--deck-b); transition: background-color 140ms, box-shadow 140ms; }
@@ -112,8 +128,6 @@
 /* Muted: the lane's bars flatten, left to right, and go quiet; unmuted, they grow back the same way. */
 .p-stem[data-muted] .p-stem__wave b { transform: scaleY(0.1); opacity: 0.25; background: var(--fg); }
 
-/* Library: the app's search well and rows, the list running off the bottom. */
-.p-lib { display: grid; gap: 8px; }
 .p-field { display: flex; align-items: center; gap: 8px; height: var(--h-md); padding: 0 10px; border-radius: var(--r); background: var(--well); box-shadow: var(--well-shadow); transition: box-shadow 160ms; }
 .p-field[data-focus] { box-shadow: var(--well-shadow), 0 0 0 1px rgb(236 234 228 / 0.18); }
 .p-field svg { width: 14px; height: 14px; flex: none; fill: none; stroke: var(--fg-3); stroke-width: 1.5; stroke-linecap: round; }
@@ -129,10 +143,12 @@
 .p-row span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .p-row[data-sel] { background: var(--sel); box-shadow: inset 0 0 0 1px var(--line); }
 
-/* Controllers: the top of an aluminium controller, cut by the card's foot. */
+/* Controllers: the top of an aluminium controller, cut by the card's foot.
+   The bright plate dissolves over a longer ramp, from its top edge down. */
+.p.p--ctl .p-body[data-bleed] { --fl: 80px; }
 .p-ctl { position: relative; height: 160px; }
 .p-ctl__plate {
-  position: absolute; left: 6px; right: 6px; top: 62px; height: 150px; border-radius: 16px;
+  position: absolute; left: 6px; right: 6px; top: 52px; height: 150px; border-radius: 16px;
   display: grid; grid-template-columns: 1fr 74px 1fr; grid-template-rows: 92px auto; gap: 10px 12px; padding: 14px 16px; box-sizing: border-box;
   background:
     repeating-linear-gradient(0deg, rgb(255 255 255 / 0.05) 0 1px, rgb(0 0 0 / 0.035) 1px 2px, transparent 2px 3px),
@@ -160,11 +176,11 @@
 .p-ctl[data-wake] .p-ctl__pads i { background: radial-gradient(90% 70% at 45% 25%, rgb(255 255 255 / 0.25), transparent 60%), #8fb3d9; box-shadow: 0 0 10px rgb(201 220 242 / 0.5), 0 0 0 1px rgb(0 0 0 / 0.4); }
 .p-ctl[data-wake] .p-ctl__pads[data-deck="b"] i { background: radial-gradient(90% 70% at 45% 25%, rgb(255 255 255 / 0.25), transparent 60%), #d8bf9c; box-shadow: 0 0 10px rgb(240 220 192 / 0.5), 0 0 0 1px rgb(0 0 0 / 0.4); }
 /* The lead: a USB-C plug coming down to the back edge. */
-.p-ctl__lead { position: absolute; left: 50%; top: -40px; width: 10px; height: 96px; margin-left: -5px; transform: translateY(-46px); transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1); }
+.p-ctl__lead { position: absolute; left: 50%; top: -50px; width: 10px; height: 96px; margin-left: -5px; transform: translateY(-46px); transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1); }
 .p-ctl__lead::before { content: ''; position: absolute; left: 2px; right: 2px; top: 0; bottom: 18px; border-radius: 3px; background: linear-gradient(90deg, #111, #3a3a3e 45%, #111); }
 .p-ctl__lead i { position: absolute; left: 0; right: 0; bottom: 0; height: 20px; border-radius: 3px; background: linear-gradient(90deg, #8f9299, #e6e8ec 45%, #8f9299); box-shadow: 0 2px 4px rgb(0 0 0 / 0.4); }
 .p-ctl__lead[data-in] { transform: translateY(6px); }
-.p-ctl .p-toast { position: absolute; left: 50%; top: 4px; margin: 0; translate: -50% 0; white-space: nowrap; }
+.p-ctl .p-toast { position: absolute; left: 50%; top: 0; margin: 0; translate: -50% 0; white-space: nowrap; }
 .p-toast {
   display: inline-flex; align-items: center; gap: 8px; padding: 7px 12px; border-radius: 10px;
   background: #1b1c20; box-shadow: inset 0 0 0 1px var(--line-2), 0 10px 30px rgb(0 0 0 / 0.45); font-size: var(--t-sm);
@@ -197,19 +213,19 @@
 .p-dmg__bar i:nth-child(2) { background: #febc2e; }
 .p-dmg__bar i:nth-child(3) { background: #28c840; }
 .p-dmg__bar span { position: absolute; left: 0; right: 0; text-align: center; font-size: 12px; font-weight: 600; color: rgb(255 255 255 / 0.78); pointer-events: none; }
-.p-dmg__body { display: flex; align-items: center; justify-content: space-evenly; height: 118px; }
-.p-dmg__item { position: relative; display: grid; justify-items: center; gap: 6px; font-size: 12px; color: rgb(255 255 255 / 0.85); }
+.p-dmg__body { display: flex; align-items: center; justify-content: space-evenly; height: 94px; }
+/* Both icons sit in the same 64px row, so their names share a line and the arrow runs between their middles. */
+.p-dmg__item { position: relative; display: grid; grid-template-rows: 64px auto; align-items: center; justify-items: center; gap: 6px; font-size: 12px; color: rgb(255 255 255 / 0.85); }
 .p-dmg__item img { position: relative; z-index: 2; transition: transform 0.7s cubic-bezier(0.77, 0, 0.175, 1), opacity 0.2s; }
 .p-dmg__item img[data-go] { transform: translateX(170px) scale(0.6); filter: drop-shadow(0 10px 14px rgb(0 0 0 / 0.5)); }
 .p-dmg__item img[data-gone] { transition: opacity 0.3s 0.15s; }
 .p-dmg__item[data-done] .p-folder { animation: p-bump 0.5s cubic-bezier(0.23, 1, 0.32, 1); }
 @keyframes p-bump { 40% { transform: scale(1.1); } }
-.p-dmg__arrow { width: 44px; height: 12px; fill: none; stroke: rgb(255 255 255 / 0.25); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.p-dmg__arrow { width: 44px; height: 12px; margin-bottom: 21px; fill: none; stroke: rgb(255 255 255 / 0.25); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 .p-folder { filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.3)); }
 
 /* Open it: Spotlight as macOS draws it now, a frosted bar, the rest of the
    name filled in, the Top Hit beneath. */
-.p-open .p-body { align-content: start; padding-top: 6px; }
 .p-spot {
   border-radius: 20px; overflow: hidden;
   background: rgb(44 44 48 / 0.82);
@@ -222,7 +238,7 @@
 .p-spot__rest { color: rgb(255 255 255 / 0.38); }
 .p-spot__icon { flex: none; }
 .p-spot__list { padding: 0 8px 8px; border-top: 1px solid rgb(255 255 255 / 0.08); }
-.p-spot__head { padding: 8px 8px 4px; font-size: 11px; font-weight: 600; color: rgb(255 255 255 / 0.45); }
+.p-spot__head { padding: 10px 8px 6px; font-size: 11px; font-weight: 600; color: rgb(255 255 255 / 0.45); }
 .p-spot__hit { display: grid; grid-template-columns: 22px auto 1fr; align-items: center; gap: 10px; padding: 6px 8px; border-radius: 12px; background: #0a64d8; font-size: 13px; color: #fff; transition: transform 120ms ease-out; }
 .p-spot__hit[data-go] { transform: scale(0.98); filter: brightness(1.15); }
 .p-spot__hit span { justify-self: end; font-size: 12px; color: rgb(255 255 255 / 0.75); }
@@ -264,6 +280,23 @@
 .p-pads { display: grid; grid-template-columns: repeat(4, 16px); gap: 4px; }
 .p-pads i { height: 16px; border-radius: 4px; background: rgb(255 255 255 / 0.07); box-shadow: inset 0 0 0 1px var(--line); transition: background-color 0.35s, box-shadow 0.35s; }
 .p-pads i[data-on] { background: var(--deck-b); box-shadow: 0 0 12px rgb(240 220 192 / 0.45); transition-duration: 0.05s; }
+/* A pad played: pressed in and lit almost at once, then it lets go and its
+   light dies away, so hits in quick succession overlap like notes ringing. */
+.p-pads i[data-hit] { animation: p-padhit 900ms both; }
+.p-pads i[data-hit="soft"] { animation-name: p-padhit-soft; animation-duration: 600ms; }
+@keyframes p-padhit {
+  0% { background-color: rgb(255 255 255 / 0.07); box-shadow: inset 0 0 0 1px var(--line); transform: scale(1); animation-timing-function: cubic-bezier(0.2, 0, 0.4, 1); }
+  6% { background-color: var(--deck-b); box-shadow: 0 0 14px rgb(240 220 192 / 0.5), inset 0 0 0 1px rgb(255 255 255 / 0.2); transform: scale(0.92); animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1); }
+  22% { background-color: rgb(240 220 192 / 0.85); box-shadow: 0 0 12px rgb(240 220 192 / 0.38), inset 0 0 0 1px rgb(255 255 255 / 0.12); transform: scale(1); animation-timing-function: cubic-bezier(0.25, 0.6, 0.4, 1); }
+  100% { background-color: rgb(255 255 255 / 0.07); box-shadow: 0 0 0 rgb(240 220 192 / 0), inset 0 0 0 1px var(--line); transform: scale(1); }
+}
+/* An unaccented hit (the hat): the same shape, softer and shorter. */
+@keyframes p-padhit-soft {
+  0% { background-color: rgb(255 255 255 / 0.07); box-shadow: inset 0 0 0 1px var(--line); transform: scale(1); animation-timing-function: cubic-bezier(0.2, 0, 0.4, 1); }
+  8% { background-color: rgb(240 220 192 / 0.62); box-shadow: 0 0 8px rgb(240 220 192 / 0.28), inset 0 0 0 1px rgb(255 255 255 / 0.14); transform: scale(0.95); animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1); }
+  26% { background-color: rgb(240 220 192 / 0.45); box-shadow: 0 0 6px rgb(240 220 192 / 0.18), inset 0 0 0 1px rgb(255 255 255 / 0.08); transform: scale(1); animation-timing-function: cubic-bezier(0.25, 0.6, 0.4, 1); }
+  100% { background-color: rgb(255 255 255 / 0.07); box-shadow: 0 0 0 rgb(240 220 192 / 0), inset 0 0 0 1px var(--line); transform: scale(1); }
+}
 .p-remap { display: flex; align-items: center; gap: 6px; }
 /* The new key's cap is sized for the longest it can say, so the swap never resizes it. */
 .p-remap .p-key:last-child { width: 52px; }
@@ -344,28 +377,38 @@
 .p-add[data-ready] .p-add__zone { box-shadow: inset 0 0 0 1px rgb(61 220 132 / 0.45); transition: box-shadow 0.5s; }
 .p-add[data-ready] .p-add__say { color: #6fe3a3; }
 
-/* Library: a small library view. Rows arrive with their format and where
-   they came from; a search folds away the ones that don't match. */
-.p-lib { display: grid; gap: 6px; width: 312px; align-self: start; }
-.p-lib__field { display: flex; align-items: center; gap: 8px; height: 28px; padding: 0 10px; border-radius: 8px; background: var(--well); box-shadow: var(--well-shadow); font-size: 13px; }
+/* Library: a small library view. Rows arrive into fixed places with their
+   format and source; a search lights the matching letters in place and
+   quiets the rest; the pick loads to Deck A. Nothing reflows. */
+.p-lib { display: grid; gap: 10px; width: 312px; }
+.p-lib__field { display: flex; align-items: center; gap: 8px; height: 28px; padding: 0 10px; border-radius: 8px; background: var(--well); box-shadow: var(--well-shadow); font-size: 13px; transition: box-shadow 200ms; }
+.p-lib__field[data-focus] { box-shadow: var(--well-shadow), 0 0 0 1px rgb(236 234 228 / 0.16); }
 .p-lib__field svg { width: 13px; height: 13px; flex: none; fill: none; stroke: var(--fg-3); stroke-width: 1.5; stroke-linecap: round; }
 .p-lib__field span { display: flex; align-items: center; flex: 1; }
 .p-lib__field em { font-style: normal; color: var(--fg-3); }
 .p-lib__field b { font-weight: 400; font-size: var(--t-xs); color: var(--fg-3); font-variant-numeric: tabular-nums; }
-.p-lib__list { display: grid; }
+.p-lib__list { display: grid; grid-template-rows: repeat(4, 21px); }
 .p-lib__row {
-  display: grid; grid-template-columns: 1fr 40px 72px; align-items: center; gap: 8px;
-  height: 0; opacity: 0; overflow: hidden; padding: 0 10px; font-size: 13px; color: var(--fg);
-  transform: translateY(-4px);
-  transition: height 0.32s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.25s, transform 0.32s cubic-bezier(0.23, 1, 0.32, 1);
+  position: relative; display: grid; grid-template-columns: 1fr 40px 76px; align-items: center; gap: 8px;
+  padding: 0 10px; border-radius: 6px; font-size: 13px; color: var(--fg);
+  opacity: 0; transform: translateY(4px);
+  transition: opacity 360ms cubic-bezier(0.23, 1, 0.32, 1), transform 360ms cubic-bezier(0.23, 1, 0.32, 1), background-color 220ms;
 }
-.p-lib__row[data-in] { height: 22px; opacity: 1; transform: none; }
-.p-lib__row[data-in][data-out] { height: 0; opacity: 0; }
-.p-lib__row .t { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.p-lib__row[data-in] { opacity: 1; transform: none; }
+.p-lib__row[data-in][data-dim] { opacity: 0.3; transition-duration: 260ms; }
+.p-lib__row[data-sel] { background: var(--sel); }
+.p-lib__row .t { display: flex; align-items: center; gap: 8px; min-width: 0; white-space: nowrap; }
+.p-lib__row .t > span { overflow: hidden; text-overflow: ellipsis; }
+.p-lib__row mark { color: var(--fg); background: rgb(201 220 242 / 0.2); border-radius: 3px; box-shadow: 0 0 0 1px rgb(201 220 242 / 0.2); }
 .p-lib__fmt { justify-self: start; padding: 1px 5px; border-radius: 4px; font-size: 10px; letter-spacing: 0.02em; color: var(--fg-2); background: rgb(255 255 255 / 0.06); }
 .p-lib__src { justify-self: end; display: flex; align-items: center; gap: 5px; font-size: var(--t-xs); color: var(--fg-3); }
 .p-lib__src::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--deck-a); }
 .p-lib__src[data-src="Serato"]::before { background: var(--deck-b); }
+/* Loaded: a deck-coloured bar at the row's edge and Deck A's chip. */
+.p-lib__row::before { content: ''; position: absolute; left: 3px; top: 5px; bottom: 5px; width: 2px; border-radius: 1px; background: var(--deck-a); opacity: 0; transform: scaleY(0.3); transition: opacity 0.25s, transform 0.35s cubic-bezier(0.23, 1, 0.32, 1); }
+.p-lib__row[data-loaded]::before { opacity: 1; transform: none; }
+.p-lib__deck { flex: none; display: inline-grid; place-items: center; width: 15px; height: 15px; border-radius: 4px; font-size: 9.5px; font-weight: 600; color: #0b0b0d; background: var(--deck-a); opacity: 0; transform: scale(0.6); transition: opacity 0.2s, transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.p-lib__row[data-loaded] .p-lib__deck { opacity: 1; transform: none; }
 
 /* Recording and more, three layouts being tried (html[data-reclayout]). */
 .p-x { margin: 0; display: grid; gap: 8px; justify-items: start; align-content: start; }
@@ -409,30 +452,11 @@
 :root[data-reclayout="carousel"] .p-extras .p-pads--lg { grid-template-columns: repeat(4, 28px); }
 :root[data-reclayout="carousel"] .p-extras .p-pads--lg i { height: 28px; }
 
-/* The search stays at the top; rows that don't match close upward. */
-.p-search .p-body { align-content: start; }
-.p-lib__row { position: relative; border-radius: 6px; transition: height 0.32s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.25s, transform 0.32s cubic-bezier(0.23, 1, 0.32, 1), background-color 0.2s; }
-.p-lib__row[data-sel] { background: var(--sel); }
-.p-lib__row::before { content: ''; position: absolute; left: 3px; top: 6px; bottom: 6px; width: 2px; border-radius: 1px; background: var(--deck-a); opacity: 0; transform: scaleY(0.3); transition: opacity 0.25s, transform 0.35s cubic-bezier(0.23, 1, 0.32, 1); }
-.p-lib__row[data-loaded]::before { opacity: 1; transform: none; }
-.p-lib__row .t { display: flex; align-items: center; gap: 8px; }
-.p-lib__deck { display: inline-grid; place-items: center; width: 15px; height: 15px; border-radius: 4px; font-size: 9.5px; font-weight: 600; color: #0b0b0d; background: var(--deck-a); opacity: 0; transform: scale(0.6); transition: opacity 0.2s, transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); }
-.p-lib__row[data-loaded] .p-lib__deck { opacity: 1; transform: none; }
-
-.p-lib__tabs { display: flex; gap: 4px; margin: -2px 0 -2px; font-size: var(--t-xs); }
-.p-lib__tabs span { padding: 3px 8px; border-radius: 6px; color: var(--fg-3); transition: background-color 0.2s, color 0.2s; }
-.p-lib__tabs span[data-on] { color: var(--fg); background: var(--raise); }
 /* Recording stacked: pads a touch smaller and closer, clear of the fade. */
-.p-extras { row-gap: 14px; }
+.p-extras { row-gap: 12px; }
 .p-extras .p-pads--lg { grid-template-columns: repeat(8, 22px); }
 .p-extras .p-pads--lg i { height: 22px; }
-/* Stems: its four lanes sit at the top of the picture, clear of the fade. */
-.p.p-stems .p-body { align-content: start; }
 
-.p-knob__kill { position: absolute; left: 50%; top: calc(100% + 3px); translate: -50% 0; padding: 1px 5px; border-radius: 4px; font-size: 9px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: #0b0b0d; background: var(--kill); opacity: 0; transform: translateY(-3px); transition: opacity 0.2s, transform 0.3s cubic-bezier(0.23, 1, 0.32, 1); }
-.p-knob[data-killed] .p-knob__kill { opacity: 1; transform: none; }
-/* Library: more air between the search, the tabs and the results. */
-.p-lib { gap: 12px; }
-/* Every picture sits the same distance from the top of its card. */
-.p .p-body { align-content: start; padding-top: 6px; }
-.p .p-body[data-bleed="bottom"] { padding-top: 0; }
+.p-knob__kill { position: absolute; left: 50%; top: calc(100% + 3px); padding: 1px 5px; border-radius: 4px; font-size: 9px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: #0b0b0d; background: var(--kill); opacity: 0; transform: translate(-50%, -3px); transition: opacity 0.2s, transform 0.3s cubic-bezier(0.23, 1, 0.32, 1); }
+/* Centred under the band's name: one transform (the build drops a separate translate beside it). */
+.p-knob[data-killed] .p-knob__kill { opacity: 1; transform: translate(-50%, 0); }
