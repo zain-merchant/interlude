@@ -501,7 +501,8 @@
   {#if sampler.open}<Sampler onmessage={say} selected={() => library.selectedTrack()} />{/if}
 
   <!-- svelte-ignore a11y_no_noninteractive_tabindex, a11y_no_noninteractive_element_interactions (a focusable separator is the ARIA window-splitter pattern) -->
-  <div class="split" class:drag={split} role="separator" aria-orientation="horizontal" aria-label="Resize library"
+  <!-- #19 (UI audit flag): library-resize: while dragging, the handle is marked "dragging", not "drag", which is also the title strip's class (.app > .drag is absolutely placed, so the handle left the grid and the library fell into its 12px row until the drag ended). -->
+  <div class="split" class:drag={split && !flag('library-resize')} class:dragging={split && flag('library-resize')} role="separator" aria-orientation="horizontal" aria-label="Resize library"
     aria-valuenow={Math.round(lib)} aria-valuemin={160} aria-valuemax={Math.round(libMax)} tabindex="0"
     onpointerdown={splitDown} onpointermove={splitMove} onpointerup={() => (split = null)} onpointercancel={() => (split = null)}
     ondblclick={() => setLib(LIB_DEFAULT)} onkeydown={splitKey}

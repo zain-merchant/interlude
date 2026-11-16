@@ -1,0 +1,14 @@
+/* #20: the track list runs to the library card's bottom edge and clips
+   there, with the card's corner, not at an inner rounded box 8px above it.
+   The column's bottom padding goes; the list's own corners go square
+   except the one that meets the card's corner (bottom right), which takes
+   the card's radius less the list's inset on each side (8px across, 0px
+   down): an elliptical corner concentric with the card's. Written after
+   #2's radius on the list, so it wins where both are on. */
+:root[data-flag-library-clip] section.library .main {
+  padding-bottom: 0;
+}
+:root[data-flag-library-clip] section.library .main .scroll {
+  border-radius: 0;
+  border-bottom-right-radius: calc(var(--r-panel) - 8px) var(--r-panel);
+}
