@@ -24,7 +24,8 @@
       const d = document.documentElement;
       const pick = (k, d0, ok) => { try { const v = localStorage.getItem(k); return ok.includes(v) ? v : d0; } catch { return d0; } };
       d.dataset.hero = pick('interlude.try.hero', 'centred', ['centred', 'eyebrow', 'split', 'wordmark', 'headline']);
-      d.dataset.nav = pick('interlude.try.nav', 'bar', ['bar', 'pill', 'clear', 'centred']);
+      // (A new key, so a pick saved before Bar to capsule became the default is ignored.)
+      d.dataset.nav = pick('interlude.try.navstyle', 'morph', ['morph', 'bar', 'pill', 'clear', 'centred']);
       const scrolled = () => d.toggleAttribute('data-scrolled', scrollY > 8);
       addEventListener('scroll', scrolled, { passive: true });
       scrolled();
@@ -49,10 +50,67 @@
           <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
           GitHub
         </a>
-        <a class="btn small" href="https://github.com/zain-merchant/interlude/releases/latest/download/Interlude.dmg">Download</a>
+        <a class="btn small" href="https://github.com/zain-merchant/interlude/releases/latest/download/Interlude.dmg">
+          <svg class="nav-dl" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2.5v7.5m0 0L4.75 6.75M8 10l3.25-3.25M3.5 13h9"/></svg>Download
+        </a>
       </div>
     </div>
   </header>
+  <script>
+    // The nav, bar to capsule (data-nav="morph"): a quiet bar over the top of
+    // the page; once the hero's buttons have gone under it, the bar draws in
+    // to a floating capsule and the nav's own GitHub and Download come in at
+    // its end. All of it is CSS transitions on clip-path, opacity and
+    // transform (style.css, "Bar to capsule"): nothing is laid out again on
+    // the way. This works out where the capsule puts each item, and says
+    // when. Back again as the hero's buttons return. (Runs once the page
+    // is parsed: the hero comes after this script.)
+    addEventListener('DOMContentLoaded', () => {
+      const d = document.documentElement;
+      const nav = document.querySelector('.nav');
+      const row = nav.querySelector('.nav-row');
+      const cta = document.querySelector('.hero .cta');
+      if (!cta) return;
+      const brand = row.querySelector('.brand');
+      const links = row.querySelector('.links');
+      const acts = row.querySelector('.nav-actions');
+      // Where the capsule puts each item, from their sizes in the bar (which
+      // never change), as offsets from where they sit in the bar.
+      function measure() {
+        if (d.dataset.nav !== 'morph') return;
+        const W = nav.clientWidth;
+        const x0 = row.getBoundingClientRect().left;
+        const narrow = getComputedStyle(links).display === 'none';
+        const gap = 22, padL = narrow ? 14 : 18, padR = 7, inset = 12;
+        const bw = brand.offsetWidth, lw = narrow ? 0 : links.offsetWidth, aw = acts.offsetWidth;
+        // Wide: the capsule hugs its contents, centred. Narrow: nearly edge to edge.
+        const capW = narrow ? W - inset * 2 : padL + bw + gap + lw + gap + aw + padR;
+        const left = (W - capW) / 2;
+        const bx = left + padL;
+        const lx = bx + bw + gap;
+        const ax = narrow ? left + capW - padR - aw : lx + lw + gap;
+        const px = (v) => `${Math.round(v * 2) / 2}px`;
+        nav.style.setProperty('--cap-w', px(capW));
+        nav.style.setProperty('--nb-x', px(bx - (x0 + brand.offsetLeft)));
+        nav.style.setProperty('--nl-x', px(lx - (x0 + links.offsetLeft)));
+        nav.style.setProperty('--na-x', px(ax - (x0 + acts.offsetLeft)));
+      }
+      measure();
+      // One attribute; CSS does the rest. Called only on a real change.
+      function set(on) {
+        if (on !== d.hasAttribute('data-capsule')) d.toggleAttribute('data-capsule', on);
+      }
+      // A little give either way, so it never flickers at the edge: in once
+      // the buttons are wholly under the bar, out once half of them is back.
+      new IntersectionObserver(([e]) => {
+        if (e.intersectionRatio >= 0.5 || e.boundingClientRect.top > innerHeight / 2) set(false);
+        else if (!e.isIntersecting) set(true);
+      }, { rootMargin: '-60px 0px 0px 0px', threshold: [0, 0.5] }).observe(cta);
+      addEventListener('resize', measure);
+      new MutationObserver(measure).observe(d, { attributeFilter: ['data-nav'] });
+      document.fonts?.ready.then(measure);
+    });
+  </script>
 
   <main id="top">
     <!-- A record's grooves round the hero's screen, with light moving over them (hero-fx.js). -->
@@ -327,9 +385,9 @@
       // The record behind the hero, and the name in the footer (an old or
       // unknown pick falls back to the default).
       const pick = (k, d, ok) => { const v = remembered(k, d); return ok.includes(v) ? v : d; };
-      const recStyle = pick('interlude.try.vinylstyle', 'fine', ['fine', 'satin', 'blend']);
+      const recStyle = 'blend';
       const recTouch = pick('interlude.try.vinyltouch', 'needle', ['needle', 'off']);
-      const footHover = pick('interlude.try.foothover', 'gentle', ['barely', 'gentle', 'noticeable']);
+      const footHover = pick('interlude.try.foothover', 'soft', ['faint', 'soft', 'clear']);
       // The hero's controller is the Club drawing.
       let heroCtl = 'club';
       fx?.setVariant(recTouch);
@@ -341,17 +399,17 @@
           <div class="try__group" data-key="${key}"><span>${title}</span>
             <div>${options.map(([v, l]) => `<button type="button" data-v="${v}" aria-pressed="${v === now}">${l}</button>`).join('')}</div>
           </div>`;
-        panel.innerHTML = `<b>Try</b>${group('Record', 'recstyle', [['fine', 'Fine'], ['satin', 'Satin'], ['blend', 'Blend']], recStyle)}<p class="try__hint" data-hint="recstyle"></p>${group('Record touch', 'rings', [['needle', 'Needle'], ['off', 'Off']], recTouch)}<p class="try__hint" data-hint="rings"></p>${group('Footer hover', 'foothover', [['barely', 'Barely'], ['gentle', 'Gentle'], ['noticeable', 'Noticeable']], footHover)}<p class="try__hint" data-hint="foothover"></p>${group('Controller link', 'input', [['line', 'Pulse line'], ['label', 'Moving label'], ['rings', 'Highlights']], input)}${group('Recording layout', 'reclayout', [['stacked', 'Stacked'], ['side', 'Side by side'], ['carousel', 'Carousel']], remembered('interlude.try.reclayout', 'stacked'))}`;
+        panel.innerHTML = `<b>Try</b>${group('Record touch', 'rings', [['needle', 'Needle'], ['off', 'Off']], recTouch)}<p class="try__hint" data-hint="rings"></p>${group('Footer hover', 'foothover', [['faint', 'Faint'], ['soft', 'Soft'], ['clear', 'Clear']], footHover)}<p class="try__hint" data-hint="foothover"></p>${group('Controller link', 'input', [['line', 'Pulse line'], ['label', 'Moving label'], ['rings', 'Highlights']], input)}${group('Recording layout', 'reclayout', [['stacked', 'Stacked'], ['side', 'Side by side'], ['carousel', 'Carousel']], remembered('interlude.try.reclayout', 'stacked'))}`;
         // The hero's and the nav's layouts (set in <head>), first in the panel.
         panel.querySelector('b').insertAdjacentHTML('afterend',
           group('Hero layout', 'hero', [['centred', 'Centred'], ['eyebrow', 'Eyebrow'], ['split', 'Split'], ['wordmark', 'Wordmark'], ['headline', 'Headline']], document.documentElement.dataset.hero)
-          + group('Nav', 'nav', [['bar', 'Bar'], ['pill', 'Capsule'], ['clear', 'Clear'], ['centred', 'Centred']], document.documentElement.dataset.nav));
+          + group('Nav', 'nav', [['morph', 'Bar to capsule'], ['bar', 'Bar'], ['pill', 'Capsule'], ['clear', 'Clear'], ['centred', 'Centred']], document.documentElement.dataset.nav));
         panel.addEventListener('click', (e) => {
           const b = e.target.closest('button');
           if (!b) return;
           const key = b.closest('.try__group').dataset.key;
           for (const o of b.parentElement.children) o.setAttribute('aria-pressed', String(o === b));
-          if (key === 'hero' || key === 'nav') { document.documentElement.dataset[key] = b.dataset.v; remember(`interlude.try.${key}`, b.dataset.v); }
+          if (key === 'hero' || key === 'nav') { document.documentElement.dataset[key] = b.dataset.v; remember(key === 'nav' ? 'interlude.try.navstyle' : 'interlude.try.hero', b.dataset.v); }
           if (key === 'recstyle') { fx?.setStyle(b.dataset.v); remember('interlude.try.vinylstyle', b.dataset.v); hint(key, b.dataset.v); }
           if (key === 'rings') { fx?.setVariant(b.dataset.v); remember('interlude.try.vinyltouch', b.dataset.v); hint(key, b.dataset.v); }
           if (key === 'foothover') {
@@ -381,22 +439,19 @@
         function hint(key, v) {
           panel.querySelector(`[data-hint="${key}"]`).textContent = {
             recstyle: {
-              fine: 'Hairline grooves, close together and very faint; a soft sheen in them turns with the record.',
-              satin: 'No single grooves: each song a smooth, soft band, the gaps between them quiet.',
-              blend: 'Satin\'s soft bands, with faint hairline grooves over them.',
+              blend: 'Soft bands for the songs, with faint hairline grooves over them.',
             },
             rings: {
-              needle: 'Click anywhere in the hero to drop the needle: that groove lights warm and plays slowly inward.',
+              needle: 'Hover the record: the grooves under the pointer catch the light along their arc. Click to drop the needle: that groove lights warm and plays slowly inward.',
               off: 'The record just turns.',
             },
             foothover: {
-              barely: 'The footer name turns very slowly; hover and it eases a touch faster, the sheen a shade brighter. Easy to miss.',
-              gentle: 'The footer name turns slowly, its grooves drifting under a still sheen; hover and it spins up a little and catches more light.',
-              noticeable: 'The same, turned up: more drift in the grooves, a quicker spin-up on hover and a brighter sheen.',
+              faint: 'Hover the footer name: its light eases a few degrees toward the pointer and lifts a shade. Easy to miss.',
+              soft: 'Hover the footer name: its light eases a little way toward the pointer and lifts a touch.',
+              clear: 'Hover the footer name: the same, a little further and brighter. Still no glow, no ring.',
             },
           }[key][v];
         }
-        hint('recstyle', recStyle);
         hint('rings', recTouch);
         hint('foothover', footHover);
       }
@@ -409,53 +464,152 @@
       if (!reduced.matches && !live.getAttribute('src')) live.src = live.dataset.src;
     })();
 
-    // The name in the footer: a record, turning slowly while it's on screen
-    // (the drift in its grooves goes round; the light stays put). Hovering
-    // eases it up to a slightly faster turn, like a platter spinning up, and
-    // the sheen catches a little more light; leaving eases both back. How
-    // much shows (barely, gentle, noticeable) is the Try panel's pick, gentle
-    // unless tried otherwise. style.css draws it from --spin and --glow.
-    // Reduced motion keeps it still.
+    // The name in the footer: a record lying flat below it, its texture
+    // drawn once per size, the way the hero's record is (hero-fx.js): the
+    // grooves are a few harmonics of a soft line, each faded out as it nears
+    // the pixel size, so they stay fine without a moiré; songs are soft
+    // bands, a little louder in the middle; between them the grooves ease
+    // out to a smooth, quieter surface and back in. Two images: the colour
+    // (--vinyl) and the sheen's mask (--vinyl-mask).
+    //
+    // Still until hovered. Then its light eases a little way round toward
+    // the pointer and lifts a touch; leaving eases it back. How far and how
+    // much (faint, soft, clear) is the Try panel's pick, soft unless tried
+    // otherwise. The word never takes the pointer (the links above it stay
+    // clickable), so hovering is worked out from where the pointer is.
+    // Nothing runs at rest; reduced motion leaves it still.
     (() => {
       const w = document.querySelector('.foot-word');
       if (!w) return;
-      const levels = { barely: [1.5, 4], gentle: [2.5, 7], noticeable: [4, 11] }; // degrees a second: resting, hovered
+      const levels = { faint: [6, 0.05], soft: [11, 0.09], clear: [18, 0.15] }; // most the light turns (deg), most it lifts
       let saved = null;
       try { saved = localStorage.getItem('interlude.try.foothover'); } catch {}
-      w.dataset.hover = levels[saved] ? saved : 'gentle';
-      if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-      const canHover = matchMedia('(hover: hover)').matches;
+      w.dataset.hover = levels[saved] ? saved : 'soft';
+
+      const SQUASH = 0.3; // as the hero's record
+      const PITCH = 7; // groove spacing across the record, px
+      const GAP = 18; // the quiet run between songs, px across
+      const rand = (i, s) => { const k = Math.sin(i * 12.9898 + s * 78.233) * 43758.5453; return k - Math.floor(k); };
+      const ease = (a, b, x) => { const t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+      const coef = [1, 2, 3, 4].map((k) => Math.exp(-2 * Math.PI * Math.PI * 0.012 * k * k));
+      let drawn = '';
+      let urls = [];
+      function paint() {
+        const box = w.getBoundingClientRect();
+        const dpr = Math.min(2, devicePixelRatio || 1);
+        const W = Math.round(box.width * dpr);
+        const H = Math.round(box.height * dpr);
+        if (!W || !H || `${W}x${H}` === drawn) return;
+        drawn = `${W}x${H}`;
+        const scale = Math.max(0.6, parseFloat(getComputedStyle(w).fontSize) / 330);
+        // The record's centre: mid-word, well below it (as 50% 165% in the CSS).
+        const cx = box.width / 2;
+        const cy = box.height * 1.65;
+        const rMin = (cy - box.height) / SQUASH - 60;
+        const rMax = Math.hypot(cx, cy / SQUASH) + 60;
+        const songs = [];
+        for (let a = rMin, i = 0; a < rMax; i++) {
+          const b = a + (140 + rand(i, 9) * 200) * scale;
+          songs.push([a, b]);
+          a = b + GAP;
+        }
+        const colour = new ImageData(W, H);
+        const mask = new ImageData(W, H);
+        const cd = colour.data;
+        const md = mask.data;
+        for (let j = 0; j < H; j++) {
+          const qy = ((j + 0.5) / dpr - cy) / SQUASH;
+          for (let i = 0; i < W; i++) {
+            const qx = (i + 0.5) / dpr - cx;
+            const r = Math.hypot(qx, qy);
+            // How much of the record one device pixel covers here.
+            const fr = (Math.abs(qx) + Math.abs(qy) / SQUASH) / r / dpr;
+            const soft = Math.max(10, fr * 2);
+            let inSong = 0;
+            let u = 0;
+            let idx = 0;
+            for (let t = 0; t < songs.length; t++) {
+              const [a, b] = songs[t];
+              if (r < a - soft) break;
+              if (r > b + soft) continue;
+              const v = ease(a - soft, a + soft, r) * (1 - ease(b - soft, b + soft, r));
+              if (v > inSong) { inSong = v; u = Math.max(0, Math.min(1, (r - a) / (b - a))); idx = t; }
+            }
+            const g = r / PITCH;
+            const fg = fr / PITCH;
+            let lines = 0;
+            for (let k = 1; k <= 4; k++) {
+              const att = Math.exp(-7 * k * k * fg * fg) * (1 - ease(0.3, 0.48, k * fg));
+              if (att < 1e-3) break;
+              lines += 2 * coef[k - 1] * att * Math.cos(2 * Math.PI * k * g);
+            }
+            lines /= 2.9;
+            const loud = 0.82 + 0.18 * Math.sin(Math.PI * u) + 0.07 * Math.sin(r / 41 + idx * 1.7) * Math.sin(r / 113 + idx);
+            const satin = 0.62 + (loud - 0.62) * inSong;
+            const fine = 0.7 + (0.3 + lines) * inSong;
+            const L = satin * fine;
+            const p = (j * W + i) * 4;
+            cd[p] = cd[p + 1] = cd[p + 2] = md[p] = md[p + 1] = md[p + 2] = 255;
+            cd[p + 3] = Math.min(255, L * 0.065 * 255);
+            md[p + 3] = Math.min(255, (L / 1.8) * 255);
+          }
+        }
+        const blobs = [colour, mask].map((img) => new Promise((done) => {
+          const c = document.createElement('canvas');
+          c.width = W;
+          c.height = H;
+          c.getContext('2d').putImageData(img, 0, 0);
+          c.toBlob(done);
+        }));
+        Promise.all(blobs).then(([c, m]) => {
+          const old = urls;
+          urls = [URL.createObjectURL(c), URL.createObjectURL(m)];
+          w.style.setProperty('--vinyl', `url(${urls[0]})`);
+          w.style.setProperty('--vinyl-mask', `url(${urls[1]})`);
+          setTimeout(() => old.forEach((u) => URL.revokeObjectURL(u)), 1000);
+        });
+      }
+      // Drawn when the page is idle, and again (once it settles) if the
+      // word changes size.
+      let wait = 0;
+      const later = (ms) => { clearTimeout(wait); wait = setTimeout(() => (window.requestIdleCallback || setTimeout)(paint), ms); };
+      new ResizeObserver(() => later(drawn ? 250 : 0)).observe(w);
+
+      if (!matchMedia('(hover: hover)').matches || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
       let over = false;
-      let seen = false;
-      let spin = 0;
-      let speed = levels[w.dataset.hover][0];
-      let glow = 0;
+      let toward = 0; // -1 (far left of the centre) to 1 (far right)
+      let a = 0;
+      let lift = 0;
       let raf = 0;
       let last = 0;
       function frame(now) {
         const dt = Math.min(0.05, (now - last) / 1000);
         last = now;
-        const [rest, hovered] = levels[w.dataset.hover] || levels.gentle;
-        // Spins up over a second or two, winds down a little slower.
-        speed += ((over ? hovered : rest) - speed) * (1 - Math.exp(-dt * (over ? 1.2 : 0.8)));
-        glow += ((over ? 1 : 0) - glow) * (1 - Math.exp(-dt * (over ? 1.6 : 1.1)));
-        spin = (spin + speed * dt) % 360;
-        w.style.setProperty('--spin', `${spin.toFixed(3)}deg`);
-        w.style.setProperty('--glow', glow.toFixed(4));
-        raf = seen ? requestAnimationFrame(frame) : 0;
+        const [turn, most] = levels[w.dataset.hover] || levels.soft;
+        const wantA = over ? toward * turn : 0;
+        const wantLift = over ? most : 0;
+        const k = 1 - Math.exp(-dt * (over ? 2.4 : 1.6));
+        a += (wantA - a) * k;
+        lift += (wantLift - lift) * k;
+        w.style.setProperty('--a', `${a.toFixed(3)}deg`);
+        w.style.setProperty('--lift', lift.toFixed(4));
+        raf = Math.abs(wantA - a) > 0.01 || Math.abs(wantLift - lift) > 0.0005 ? requestAnimationFrame(frame) : 0;
       }
-      // Only turns while the footer is on screen.
-      new IntersectionObserver(([e]) => {
-        seen = e.isIntersecting;
-        if (seen && !raf) {
-          last = performance.now();
-          raf = requestAnimationFrame(frame);
-        }
-      }).observe(w);
-      if (canHover) {
-        w.addEventListener('pointerenter', () => (over = true));
-        w.addEventListener('pointerleave', () => (over = false));
-      }
+      const run = () => {
+        if (raf) return;
+        last = performance.now();
+        raf = requestAnimationFrame(frame);
+      };
+      // Over the word: inside its box, below the top of its letters, and not
+      // on a link or button.
+      addEventListener('pointermove', (e) => {
+        const r = w.getBoundingClientRect();
+        const top = r.top + parseFloat(getComputedStyle(w).fontSize) * 0.12;
+        const now = e.clientX >= r.left && e.clientX <= r.right && e.clientY >= top && e.clientY <= r.bottom && !e.target.closest('a, button');
+        if (now) toward = Math.max(-1, Math.min(1, ((e.clientX - r.left) / r.width) * 2 - 1));
+        if (now || over) { over = now; run(); }
+      }, { passive: true });
+      document.addEventListener('pointerleave', () => { over = false; run(); });
     })();
 
     // The FAQ: answers ease open and closed instead of jumping. The
