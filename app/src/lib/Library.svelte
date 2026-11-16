@@ -105,6 +105,14 @@
   });
   const selectIndex = (i) => (selPath = sorted[i]?.path ?? null);
 
+  // #7 (UI audit flag): edge-empty-views: an empty playlist or folder says so, not "No tracks yet. Add a music folder".
+  const emptyView = $derived(
+    !flag('edge-empty-views') ? null
+    : view.kind === 'playlist' ? 'This playlist is empty. Drag tracks onto its name to add them.'
+    : view.kind === 'folder' ? `No music files found in ${(view.path ?? '').split(/[\\/]/).filter(Boolean).pop()}.`
+    : null,
+  );
+
   /** Tracks still waiting for their length, BPM and key. */
   const pending = $derived(all.reduce((n, t) => n + (t.analysis ? 0 : 1), 0));
   const bpmText = (a) => {
@@ -583,6 +591,8 @@
       aria-activedescendant={sorted[selected] ? `track-${selected}` : undefined}>
       {#if error}
         <div class="empty">{error}</div>
+      {:else if !loading && !all.length && emptyView}
+        <div class="empty"><p>{emptyView}</p></div>
       {:else if !loading && !all.length}
         <div class="empty">
           <p>No tracks yet.</p>
