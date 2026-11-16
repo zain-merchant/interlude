@@ -17,13 +17,15 @@
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="demo/cards.css">
   <script>
-    // The hero's and the nav's layouts (picked in the Try panel; the current
-    // design otherwise), set before the first paint so nothing jumps. The
-    // nav's look can change once the page scrolls.
+    // The hero's layout (Split) and the nav's (bar to capsule, unless another
+    // is picked in the Try panel), set before the first paint so nothing
+    // jumps. The nav's look can change once the page scrolls.
     (() => {
       const d = document.documentElement;
       const pick = (k, d0, ok) => { try { const v = localStorage.getItem(k); return ok.includes(v) ? v : d0; } catch { return d0; } };
-      d.dataset.hero = pick('interlude.try.hero', 'centred', ['centred', 'eyebrow', 'split', 'wordmark', 'headline']);
+      d.dataset.hero = 'split';
+      // Where the hero's supporting line goes: under the headline, or over the buttons.
+      d.dataset.lede = pick('interlude.try.lede', 'under', ['under', 'side']);
       // (A new key, so a pick saved before Bar to capsule became the default is ignored.)
       d.dataset.nav = pick('interlude.try.navstyle', 'morph', ['morph', 'bar', 'pill', 'clear', 'centred']);
       const scrolled = () => d.toggleAttribute('data-scrolled', scrollY > 8);
@@ -61,10 +63,10 @@
   </header>
   <script>
     // The nav, bar to capsule (data-nav="morph"). At the top of the page a
-    // quiet bar: the icon left, the sections right. Once the hero's buttons
-    // have gone under it, the bar draws in to a floating capsule; the name
-    // comes in beside the icon, and the nav's own GitHub and Download slide
-    // in at its end. Back again as the hero's buttons return.
+    // quiet bar: the brand left, large, the sections right. Once the hero's
+    // buttons have gone under it, the bar draws in to a floating capsule,
+    // the brand settles to its compact size, and the nav's own GitHub and
+    // Download slide in at its end. Back again as the buttons return.
     //
     // The state comes from the scroll position, read once a frame, with a
     // little give either way so it never flickers at the edge. The motion is
@@ -84,11 +86,15 @@
       const glass = nav.querySelector('.nav-glass');
       const edge = nav.querySelector('.nav-edge');
       const brand = row.querySelector('.brand');
+      const icon = brand.querySelector('img');
       const word = brand.querySelector('span');
       const links = row.querySelector('.links');
       const acts = row.querySelector('.nav-actions');
       const reduced = matchMedia('(prefers-reduced-motion: reduce)');
       const NAV = 60;
+      // The name is 19px in the bar and 15px in the capsule; the icon is
+      // 32px in the bar and 36px in the capsule.
+      const WORD = 15 / 19, ICON = 32 / 36;
       // Where the capsule puts each item, from their sizes in the bar (which
       // never change), as offsets from where they sit in the bar.
       let geo = null;
@@ -97,14 +103,19 @@
         const W = nav.clientWidth;
         const x0 = row.getBoundingClientRect().left;
         const narrow = getComputedStyle(links).display === 'none';
-        const gap = 22, padL = narrow ? 14 : 16, padR = 7, inset = 12;
-        const bw = brand.offsetWidth, lw = narrow ? 0 : links.offsetWidth, aw = acts.offsetWidth;
+        // The ends: 6px from the capsule's edge to the icon and to the
+        // Download pill, the same as above and below them (48 = 6 + 36 + 6).
+        const end = 6, gap = 20, gapA = 14, inset = 12;
+        // The brand in the capsule: the 36px icon, then the name drawn at
+        // WORD of its laid-out (bar) size.
+        const bw = icon.offsetWidth + 10 + word.offsetWidth * WORD;
+        const lw = narrow ? 0 : links.offsetWidth, aw = acts.offsetWidth;
         // Wide: the capsule hugs its contents, centred. Narrow: nearly edge to edge.
-        const capW = Math.round(narrow ? W - inset * 2 : padL + bw + gap + lw + gap + aw + padR);
+        const capW = Math.round(narrow ? W - inset * 2 : end + bw + gap + lw + gapA + aw + end);
         const left = Math.round((W - capW) / 2);
-        const bx = left + padL;
+        const bx = left + end;
         const lx = bx + bw + gap;
-        const ax = narrow ? left + capW - padR - aw : lx + lw + gap;
+        const ax = narrow ? left + capW - end - aw : lx + lw + gapA;
         geo = { side: left, right: W - left - capW, b: bx - (x0 + brand.offsetLeft), l: lx - (x0 + links.offsetLeft), a: ax - (x0 + acts.offsetLeft) };
         edge.style.left = `${left}px`;
         edge.style.width = `${capW}px`;
@@ -122,18 +133,22 @@
         if (Math.abs(s.x - s.to) < 0.0005 && Math.abs(s.v) < 0.005) { s.x = s.to; s.v = 0; }
       };
       const clamp = (v) => Math.min(1, Math.max(0, v));
-      const r = (v) => Math.round(v * 100) / 100;
+      const r = (v) => Math.round(v * 1000) / 1000;
       function draw() {
         if (!geo) return;
         const p = shape.x;
         const q = act.x;
-        glass.style.clipPath = `inset(${r(10 * p)}px ${r(geo.right * p)}px ${r(p)}px ${r(geo.side * p)}px round ${r(25 * p)}px)`;
+        // The glass (61px: the bar and its hairline) closes to 10..58.
+        glass.style.clipPath = `inset(${r(10 * p)}px ${r(geo.right * p)}px ${r(3 * p)}px ${r(geo.side * p)}px round ${r(24 * p)}px)`;
         glass.style.opacity = p > 0.001 ? '1' : '';
         edge.style.opacity = r(clamp((p - 0.6) / 0.4));
-        brand.style.transform = `translate(${r(geo.b * p)}px, ${r(5 * p)}px)`;
-        word.style.opacity = r(clamp((p - 0.35) / 0.55));
-        links.style.transform = `translate(${r(geo.l * p)}px, ${r(5 * p)}px)`;
-        acts.style.transform = `translate(${r(geo.a + 16 * (1 - q))}px, 5px)`;
+        // The bar's middle is 30px down, the capsule's 34px. The icon's box
+        // is 36px; in the bar it's drawn at 32, so the name sits 4px left.
+        brand.style.transform = `translate(${r(geo.b * p)}px, ${r(4 * p)}px)`;
+        icon.style.transform = `scale(${r(ICON + (1 - ICON) * p)})`;
+        word.style.transform = `translateX(${r(-4 * (1 - p))}px) scale(${r(1 - (1 - WORD) * p)})`;
+        links.style.transform = `translate(${r(geo.l * p)}px, ${r(4 * p)}px)`;
+        acts.style.transform = `translate(${r(geo.a + 16 * (1 - q))}px, 4px)`;
         acts.style.opacity = r(clamp(q * 1.25));
         const shown = q > 0.02 || act.to === 1 ? 'visible' : '';
         if (acts.style.visibility !== shown) acts.style.visibility = shown;
@@ -153,7 +168,6 @@
       function tick(now) {
         const dt = Math.min(0.032, (now - last) / 1000 || 0.016);
         last = now;
-        read();
         step(shape, dt);
         // The actions follow once the shape is mostly formed; they go at once.
         act.to = shape.to === 1 && shape.x > 0.6 ? 1 : 0;
@@ -169,11 +183,13 @@
         last = performance.now();
         requestAnimationFrame(tick);
       }
-      addEventListener('scroll', wake, { passive: true });
+      // Read where the buttons are in the scroll event (once a frame, before
+      // this frame's writes, so the read never forces a layout), then move.
+      addEventListener('scroll', () => { read(); wake(); }, { passive: true });
       addEventListener('resize', measure);
       // Another nav (the Try panel): hand the items back to the stylesheet.
       new MutationObserver(() => {
-        for (const e of [glass, edge, brand, word, links, acts]) e.removeAttribute('style');
+        for (const e of [glass, edge, brand, icon, word, links, acts]) e.removeAttribute('style');
         geo = null;
         measure();
         wake();
@@ -190,14 +206,12 @@
     <!-- A record's grooves round the hero's screen, with light moving over them (hero-fx.js). -->
     <canvas class="ripples" aria-hidden="true"></canvas>
     <section class="hero wrap">
-      <img class="hero-icon" src="img/icon.svg" alt="" width="88" height="88">
-      <!-- Shown by some hero layouts only (data-hero). -->
-      <a class="eyebrow" href="https://github.com/zain-merchant/interlude/releases/latest" target="_blank" rel="noopener">
-        <span class="eyebrow-v" data-version>Latest</span>See what's new
-        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 4l4 4-4 4"/></svg>
-      </a>
-      <h1>Interlude</h1>
+      <div class="lockup">
+        <img class="hero-icon" src="img/icon.svg" alt="" width="88" height="88">
+        <h1>Interlude</h1>
+      </div>
       <p class="tagline">A free, open-source DJ app for the Mac.</p>
+      <p class="lede">Pro features with a fast, lightweight footprint.</p>
       <div class="cta">
         <a class="btn big" href="https://github.com/zain-merchant/interlude/releases/latest/download/Interlude.dmg">
           <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v8m0 0L4.5 6.5M8 10l3.5-3.5M3 13h10"/></svg>
@@ -207,9 +221,9 @@
       </div>
       <p class="meta">
         <a id="version" href="https://github.com/zain-merchant/interlude/releases/latest" target="_blank" rel="noopener">Latest release</a>
-        <span aria-hidden="true">·</span> Free and open source
-        <span aria-hidden="true">·</span> macOS 11+ on Apple silicon
-        <span aria-hidden="true">·</span> GPL-3.0-or-later
+        <span aria-hidden="true">·</span> <span class="mi">Free and open source</span>
+        <span aria-hidden="true">·</span> <span class="mi">macOS 11+ on Apple silicon</span>
+        <span aria-hidden="true">·</span> <span class="mi">GPL-3.0-or-later</span>
       </p>
     </section>
 
@@ -474,16 +488,17 @@
             <div>${options.map(([v, l]) => `<button type="button" data-v="${v}" aria-pressed="${v === now}">${l}</button>`).join('')}</div>
           </div>`;
         panel.innerHTML = `<b>Try</b>${group('Record touch', 'rings', [['needle', 'Needle'], ['off', 'Off']], recTouch)}<p class="try__hint" data-hint="rings"></p>${group('Controller link', 'input', [['line', 'Pulse line'], ['label', 'Moving label'], ['rings', 'Highlights']], input)}${group('Recording layout', 'reclayout', [['stacked', 'Stacked'], ['side', 'Side by side'], ['carousel', 'Carousel']], remembered('interlude.try.reclayout', 'stacked'))}`;
-        // The hero's and the nav's layouts (set in <head>), first in the panel.
+        // The hero's supporting line and the nav's layout (set in <head>), first in the panel.
         panel.querySelector('b').insertAdjacentHTML('afterend',
-          group('Hero layout', 'hero', [['centred', 'Centred'], ['eyebrow', 'Eyebrow'], ['split', 'Split'], ['wordmark', 'Wordmark'], ['headline', 'Headline']], document.documentElement.dataset.hero)
+          group('Hero line', 'lede', [['under', 'Under headline'], ['side', 'Over buttons']], document.documentElement.dataset.lede)
           + group('Nav', 'nav', [['morph', 'Bar to capsule'], ['bar', 'Bar'], ['pill', 'Capsule'], ['clear', 'Clear'], ['centred', 'Centred']], document.documentElement.dataset.nav));
         panel.addEventListener('click', (e) => {
           const b = e.target.closest('button');
           if (!b) return;
           const key = b.closest('.try__group').dataset.key;
           for (const o of b.parentElement.children) o.setAttribute('aria-pressed', String(o === b));
-          if (key === 'hero' || key === 'nav') { document.documentElement.dataset[key] = b.dataset.v; remember(key === 'nav' ? 'interlude.try.navstyle' : 'interlude.try.hero', b.dataset.v); }
+          if (key === 'nav') { document.documentElement.dataset.nav = b.dataset.v; remember('interlude.try.navstyle', b.dataset.v); }
+          if (key === 'lede') { document.documentElement.dataset.lede = b.dataset.v; remember('interlude.try.lede', b.dataset.v); dispatchEvent(new Event('resize')); }
           if (key === 'recstyle') { fx?.setStyle(b.dataset.v); remember('interlude.try.vinylstyle', b.dataset.v); hint(key, b.dataset.v); }
           if (key === 'rings') { fx?.setVariant(b.dataset.v); remember('interlude.try.vinyltouch', b.dataset.v); hint(key, b.dataset.v); }
           if (key === 'foothover') {
@@ -540,7 +555,7 @@
 
     // The name in the footer: its grooves show round the pointer. The word
     // itself ignores the pointer (so the links above it work), so the hover
-    // is worked out from where the pointer is over the word's letters.
+    // is worked out from where the pointer is over its letters.
     (() => {
       const w = document.querySelector('.foot-word');
       if (!w || !matchMedia('(hover: hover)').matches) return;
@@ -598,9 +613,7 @@
         if (!r.tag_name) return;
         const v = document.getElementById('version');
         v.textContent = r.tag_name;
-        v.href = r.html_url;
-        for (const e of document.querySelectorAll('[data-version]')) e.textContent = r.tag_name;
-      })
+        v.href = r.html_url;      })
       .catch(() => {});
   </script>
 </body>
