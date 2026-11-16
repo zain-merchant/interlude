@@ -1,12 +1,5 @@
-/* #1: squircle corners. squircles.js marks the rounded rects (data-sq);
-   circles and capsules are left unmarked. The radius stays the same: only
-   the curve changes, from circular (superellipse(1), smoothing 0) to the
-   squircle (superellipse(2), smoothing 100). Borders, box-shadows and focus
-   rings follow the curve, so nothing is cropped. Engines without
-   corner-shape (WebKit as of macOS 26.4) skip this and keep the round
-   corners. */
-@supports (corner-shape: squircle) {
-  :root[data-flag-squircles] [data-sq] {
-    corner-shape: superellipse(calc(1 + var(--flag-squircles-smoothing, 60) / 100));
-  }
-}
+/* #1: squircle corners. squircles.js generates the rules, each scoped under
+   :root[data-flag-squircles], into its own stylesheet: corner-shape with a
+   radius matched to the plain corner's apex where the engine has it
+   (Chrome 139+), and a clip-path plus a redrawn ring everywhere else
+   (WebKit: Safari and the app's WKWebView). Nothing else is needed here. */

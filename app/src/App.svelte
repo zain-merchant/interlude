@@ -423,7 +423,7 @@
   /** True while the sampler is showing because of the controller's SAMPLER button. */
   let samplerFromPads = false;
 
-  // #1 (UI audit flag): squircle corners: marks the rounded rects for CSS corner-shape (a no-op where unsupported).
+  // #1 (UI audit flag): squircle corners: native corner-shape, or a clip with the ring redrawn in WebKit.
   $effect(() => (flag('squircles') ? startSquircles() : undefined));
 
   onMount(() => {
