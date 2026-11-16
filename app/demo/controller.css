@@ -467,3 +467,5 @@
 }
 .hw[data-v="club"] .hw-mixer .hw-knob i::after { width: 2.5px; background: #ffffff; box-shadow: 0 0 3px rgb(255 255 255 / 0.5); }
 .hw[data-v="club"] .hw-mixer .hw-knob { font-size: 8px; font-weight: 600; }
+/* Club: tilted further, the board needs more depth to read right. */
+.hw[data-v="club"] { height: 384px; }
