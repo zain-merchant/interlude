@@ -13,8 +13,9 @@
   <link rel="icon" href="img/icon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="demo/cards.css">
 </head>
 <body>
   <header class="nav">
@@ -59,25 +60,47 @@
       </p>
     </section>
 
-    <section class="shot wrap" aria-label="Screenshot">
-      <img src="img/screenshot-1x.jpg" srcset="img/screenshot-1x.jpg 1440w, img/screenshot.jpg 2880w" sizes="(max-width: 1200px) 100vw, 1200px"
-        width="1440" height="900" alt="Interlude with two tracks loaded: waveforms across the top, two decks either side of the mixer, and the library below.">
+    <section class="shot wrap" aria-label="Interlude in action">
+      <canvas class="beats" aria-hidden="true"></canvas>
+      <div class="fx-beams" aria-hidden="true"><i></i><i></i></div>
+      <div class="fx-floor" aria-hidden="true"></div>
+      <div class="stage-frame" data-mode="mouse">
+        <div class="glow" aria-hidden="true"></div>
+        <div class="screen">
+          <img class="poster" src="img/screenshot-1x.jpg" srcset="img/screenshot-1x.jpg 1440w, img/screenshot.jpg 2880w" sizes="(max-width: 1200px) 100vw, 1200px"
+            width="1440" height="900" alt="Interlude with two tracks loaded: waveforms across the top, two decks either side of the mixer, and the library below.">
+          <!-- The real app on its simulated engine, played by a script (app/demo). Loaded after the page. -->
+          <iframe class="live" title="Interlude mixing one track into the next" tabindex="-1" aria-hidden="true" data-src="demo/hero.html"></iframe>
+        </div>
+      </div>
+      <div class="shot-bar">
+        <div class="switch" role="radiogroup" aria-label="Play it with">
+          <button type="button" role="radio" aria-checked="true" data-mode="mouse">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5 12.5 7.4 8.6 8.6 7.4 12.5Z"/></svg>Mouse
+          </button>
+          <button type="button" role="radio" aria-checked="false" data-mode="controller">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="1.5" y="4" width="13" height="8" rx="2"/><circle cx="5" cy="8" r="1.8"/><circle cx="11" cy="8" r="1.8"/></svg>Controller
+          </button>
+          <i class="thumb" aria-hidden="true"></i>
+        </div>
+        <span class="shot-tag">Works with any MIDI controller <span aria-hidden="true">·</span> 140+ mapped</span>
+      </div>
     </section>
 
     <section id="install" class="wrap section">
       <h2>Install</h2>
       <ol class="steps">
-        <li>
+        <li data-picture="download">
           <span class="num">01</span>
           <h3>Download</h3>
           <p>Get <a href="https://github.com/zain-merchant/interlude/releases/latest/download/Interlude.dmg">Interlude.dmg</a>, open it, and drag Interlude into Applications.</p>
         </li>
-        <li>
+        <li data-picture="open">
           <span class="num">02</span>
           <h3>Open it</h3>
           <p>Open Interlude from Applications or Spotlight.</p>
         </li>
-        <li>
+        <li data-picture="music">
           <span class="num">03</span>
           <h3>Add your music</h3>
           <p>Click <b>+ Add music folder</b>, or bring your library over from Rekordbox or Serato with File › Import. Plug in your controller and it connects by itself.</p>
@@ -89,7 +112,7 @@
     <section id="features" class="wrap section">
       <h2>Features</h2>
       <div class="groups">
-        <div class="group">
+        <div class="group" data-picture="decks">
           <h3><span class="dot a"></span>Decks</h3>
           <ul>
             <li>BPM, beatgrid and key found on load</li>
@@ -99,7 +122,7 @@
             <li>Scrolling waveforms in three bands</li>
           </ul>
         </div>
-        <div class="group">
+        <div class="group" data-picture="mixer">
           <h3><span class="dot b"></span>Mixer and effects</h3>
           <ul>
             <li>3-band EQ with full kills, trim and filter</li>
@@ -109,7 +132,7 @@
             <li>Headphone cue with a cue/master blend</li>
           </ul>
         </div>
-        <div class="group">
+        <div class="group" data-picture="stems">
           <h3><span class="dot a"></span>Stems</h3>
           <ul>
             <li>Vocals, melody, bass and drums on every deck</li>
@@ -117,7 +140,7 @@
             <li>Mute any stem live, on screen or from the pads</li>
           </ul>
         </div>
-        <div class="group">
+        <div class="group" data-picture="library">
           <h3><span class="dot b"></span>Library</h3>
           <ul>
             <li>Instant search across your whole collection</li>
@@ -126,7 +149,7 @@
             <li>MP3, AAC, FLAC, WAV, AIFF, OGG and ALAC</li>
           </ul>
         </div>
-        <div class="group">
+        <div class="group" data-picture="controllers">
           <h3><span class="dot a"></span>Controllers</h3>
           <ul>
             <li>Pioneer DDJ-FLX4 mapped in full</li>
@@ -134,7 +157,7 @@
             <li>MIDI learn for anything else</li>
           </ul>
         </div>
-        <div class="group">
+        <div class="group" data-picture="recording">
           <h3><span class="dot b"></span>Recording and more</h3>
           <ul>
             <li>Record your set to WAV in one click</li>
@@ -195,7 +218,106 @@
     <p class="wrap small-print legal">Interlude is free software under the GNU GPL v3 or later. Controller mappings come from the <a href="https://mixxx.org">Mixxx</a> project (GPL-2.0-or-later). Interlude isn't affiliated with Pioneer DJ, Rekordbox, Serato or Mixxx; their names belong to their owners.</p>
   </footer>
 
+  <!-- The feature cards' pictures (built from app/demo, see the README). -->
+  <script type="module" src="demo/cards.js"></script>
   <script>
+    // The hero. The screenshot shows first; once the page has loaded, the
+    // live app takes its place (unless the visitor prefers less motion).
+    // The app runs at 1440 × 900 and is scaled to the frame, so it looks the
+    // same at any width. It tells us how loud it's playing, and the glow
+    // under it follows; the switch picks mouse or controller.
+    (async () => {
+      const fx = await import('./hero-fx.js').catch(() => null);
+      const frame = document.querySelector('.stage-frame');
+      const screen = frame.querySelector('.screen');
+      const live = frame.querySelector('.live');
+      const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+      const fit = () => frame.parentElement.style.setProperty('--s', String(screen.clientWidth / 1440));
+      new ResizeObserver(fit).observe(screen);
+      fit();
+
+      // Leans back a little until it's scrolled up into view, then sits flat.
+      const tilt = () => {
+        const r = frame.getBoundingClientRect();
+        const t = Math.min(1, Math.max(0, (innerHeight - r.top) / (innerHeight * 0.75)));
+        frame.style.setProperty('--tilt', reduced.matches ? '0' : String(1 - t));
+      };
+      addEventListener('scroll', tilt, { passive: true });
+      addEventListener('resize', tilt);
+      tilt();
+
+      let mode = 'mouse';
+      addEventListener('message', (e) => {
+        if (e.source !== live.contentWindow) return;
+        if (e.data?.interlude === 'hero-ready') {
+          frame.dataset.live = '';
+          live.contentWindow.postMessage({ interlude: 'mode', mode }, '*');
+          live.contentWindow.postMessage({ interlude: 'input', style: input }, '*');
+        }
+        if (e.data?.interlude === 'level') {
+          frame.style.setProperty('--level', e.data.level.toFixed(3));
+          fx?.hear(e.data.level);
+        }
+      });
+
+      const buttons = [...document.querySelectorAll('.switch button')];
+      for (const b of buttons) {
+        b.addEventListener('click', () => {
+          mode = b.dataset.mode;
+          frame.dataset.mode = mode;
+          for (const o of buttons) o.setAttribute('aria-checked', String(o === b));
+          live.contentWindow?.postMessage({ interlude: 'mode', mode }, '*');
+        });
+      }
+      document.querySelector('.switch').addEventListener('keydown', (e) => {
+        if (!['ArrowLeft', 'ArrowRight'].includes(e.key)) return;
+        const i = buttons.findIndex((b) => b.getAttribute('aria-checked') === 'true');
+        const next = buttons[(i + (e.key === 'ArrowRight' ? 1 : buttons.length - 1)) % buttons.length];
+        next.click();
+        next.focus();
+      });
+
+      // Trying out (on localhost, or with ?try): a small panel to click
+      // through the background effects and the ways a controller press
+      // shows. The picks are remembered in this browser.
+      const trying = location.hostname === 'localhost' || location.hostname === '127.0.0.1' || location.search.includes('try');
+      const remembered = (k, d) => { try { return localStorage.getItem(k) ?? d; } catch { return d; } };
+      const remember = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
+      let input = remembered('interlude.try.input', 'shadow');
+      fx?.setEffect(trying ? remembered('interlude.try.fx', 'rings') : 'rings');
+      if (trying) {
+        const panel = document.createElement('div');
+        panel.className = 'try';
+        const group = (title, key, options, now, pick) => `
+          <div class="try__group" data-key="${key}"><span>${title}</span>
+            <div>${options.map(([v, l]) => `<button type="button" data-v="${v}" aria-pressed="${v === now}">${l}</button>`).join('')}</div>
+          </div>`;
+        panel.innerHTML = `<b>Try</b>${group('Background', 'fx', [['none', 'Off'], ['rings', 'Rings'], ['floor', 'Floor'], ['dots', 'Dots'], ['skyline', 'Skyline'], ['beams', 'Beams']], remembered('interlude.try.fx', 'rings'))}${group('Controller press', 'input', [['shadow', 'Shadow'], ['pad', 'Pad'], ['halo', 'Halo'], ['cable', 'Cable'], ['label', 'Label']], input)}`;
+        panel.addEventListener('click', (e) => {
+          const b = e.target.closest('button');
+          if (!b) return;
+          const key = b.closest('.try__group').dataset.key;
+          for (const o of b.parentElement.children) o.setAttribute('aria-pressed', String(o === b));
+          if (key === 'fx') { fx?.setEffect(b.dataset.v); remember('interlude.try.fx', b.dataset.v); }
+          if (key === 'input') {
+            input = b.dataset.v;
+            remember('interlude.try.input', input);
+            live.contentWindow?.postMessage({ interlude: 'input', style: input }, '*');
+            // A press style only shows with the controller.
+            if (mode !== 'controller') document.querySelector('.switch [data-mode=controller]').click();
+          }
+        });
+        document.body.append(panel);
+      }
+
+      const start = () => {
+        if (reduced.matches) return;
+        live.src = live.dataset.src;
+      };
+      if (document.readyState === 'complete') start();
+      else addEventListener('load', start, { once: true });
+    })();
+
     // Shows the latest version next to the download button. Leaves the
     // plain "Latest release" link if GitHub can't be reached.
     fetch('https://api.github.com/repos/zain-merchant/interlude/releases/latest')
