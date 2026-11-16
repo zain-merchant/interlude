@@ -413,6 +413,8 @@ html[data-hero="eyebrow"] .tagline { margin-top: 14px; font-size: clamp(16px, 2v
 html[data-hero="eyebrow"] .cta { margin-top: 30px; gap: 10px; }
 html[data-hero="eyebrow"] .cta .btn.big { height: 44px; padding: 0 18px; font-size: 15px; border-radius: 11px; }
 html[data-hero="eyebrow"] .meta { margin-top: 18px; font-size: 13px; }
+/* The pill shows the version, so the facts line doesn't repeat it. */
+html[data-hero="eyebrow"] .meta #version, html[data-hero="eyebrow"] .meta #version + span { display: none; }
 
 /* Split: the name and tagline set left; the buttons beside them, sitting on
    the tagline's line; the facts in a ruled strip under both. */
@@ -427,7 +429,7 @@ html[data-hero="split"] .tagline { grid-area: tag; align-self: end; margin: 18px
 html[data-hero="split"] .cta { grid-area: cta; align-self: end; margin: 0; flex-wrap: nowrap; }
 html[data-hero="split"] .meta {
   grid-area: meta; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 0;
-  margin-top: 44px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 13px;
+  margin-top: 36px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 13px;
 }
 html[data-hero="split"] .meta span { margin: 0 10px; }
 
@@ -441,7 +443,7 @@ html[data-hero="wordmark"] .hero {
 }
 html[data-hero="wordmark"] .hero-icon { display: none; }
 html[data-hero="wordmark"] .hero h1 {
-  grid-area: title; font-size: 27.4cqi; letter-spacing: -0.06em; line-height: 0.8; margin: 0 0 0 -0.045em; white-space: nowrap;
+  grid-area: title; font-size: 25.9cqi; letter-spacing: -0.06em; line-height: 0.8; margin: 0 0 0 -0.04em; white-space: nowrap;
   background: linear-gradient(to bottom, #fff 20%, rgb(236 234 228 / 0.4) 95%); -webkit-background-clip: text; background-clip: text; color: transparent;
   padding: 0.04em 0 0.1em;
 }
