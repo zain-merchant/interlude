@@ -16,6 +16,20 @@
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="demo/cards.css">
+  <script>
+    // The hero's and the nav's layouts (picked in the Try panel; the current
+    // design otherwise), set before the first paint so nothing jumps. The
+    // nav's look can change once the page scrolls.
+    (() => {
+      const d = document.documentElement;
+      const pick = (k, d0, ok) => { try { const v = localStorage.getItem(k); return ok.includes(v) ? v : d0; } catch { return d0; } };
+      d.dataset.hero = pick('interlude.try.hero', 'centred', ['centred', 'eyebrow', 'split', 'wordmark', 'headline']);
+      d.dataset.nav = pick('interlude.try.nav', 'bar', ['bar', 'pill', 'clear', 'centred']);
+      const scrolled = () => d.toggleAttribute('data-scrolled', scrollY > 8);
+      addEventListener('scroll', scrolled, { passive: true });
+      scrolled();
+    })();
+  </script>
 </head>
 <body>
   <header class="nav">
@@ -45,6 +59,11 @@
     <canvas class="ripples" aria-hidden="true"></canvas>
     <section class="hero wrap">
       <img class="hero-icon" src="img/icon.svg" alt="" width="88" height="88">
+      <!-- Shown by some hero layouts only (data-hero). -->
+      <a class="eyebrow" href="https://github.com/zain-merchant/interlude/releases/latest" target="_blank" rel="noopener">
+        <span class="eyebrow-v" data-version>Latest</span>See what's new
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 4l4 4-4 4"/></svg>
+      </a>
       <h1>Interlude</h1>
       <p class="tagline">A free, open-source DJ app for the Mac.</p>
       <div class="cta">
@@ -310,7 +329,7 @@
       const pick = (k, d, ok) => { const v = remembered(k, d); return ok.includes(v) ? v : d; };
       const recStyle = pick('interlude.try.vinylstyle', 'fine', ['fine', 'satin', 'blend']);
       const recTouch = pick('interlude.try.vinyltouch', 'needle', ['needle', 'off']);
-      const footHover = pick('interlude.try.foothover', 'spin', ['spin', 'tonearm', 'ripple', 'platter', 'depth']);
+      const footHover = pick('interlude.try.foothover', 'gentle', ['barely', 'gentle', 'noticeable']);
       // The hero's controller is the Club drawing.
       let heroCtl = 'club';
       fx?.setVariant(recTouch);
@@ -322,12 +341,17 @@
           <div class="try__group" data-key="${key}"><span>${title}</span>
             <div>${options.map(([v, l]) => `<button type="button" data-v="${v}" aria-pressed="${v === now}">${l}</button>`).join('')}</div>
           </div>`;
-        panel.innerHTML = `<b>Try</b>${group('Record', 'recstyle', [['fine', 'Fine'], ['satin', 'Satin'], ['blend', 'Blend']], recStyle)}<p class="try__hint" data-hint="recstyle"></p>${group('Record touch', 'rings', [['needle', 'Needle'], ['off', 'Off']], recTouch)}<p class="try__hint" data-hint="rings"></p>${group('Footer hover', 'foothover', [['spin', 'Spin'], ['tonearm', 'Tonearm'], ['ripple', 'Ripple'], ['platter', 'Platter'], ['depth', 'Depth']], footHover)}<p class="try__hint" data-hint="foothover"></p>${group('Controller link', 'input', [['line', 'Pulse line'], ['label', 'Moving label'], ['rings', 'Highlights']], input)}${group('Recording layout', 'reclayout', [['stacked', 'Stacked'], ['side', 'Side by side'], ['carousel', 'Carousel']], remembered('interlude.try.reclayout', 'stacked'))}`;
+        panel.innerHTML = `<b>Try</b>${group('Record', 'recstyle', [['fine', 'Fine'], ['satin', 'Satin'], ['blend', 'Blend']], recStyle)}<p class="try__hint" data-hint="recstyle"></p>${group('Record touch', 'rings', [['needle', 'Needle'], ['off', 'Off']], recTouch)}<p class="try__hint" data-hint="rings"></p>${group('Footer hover', 'foothover', [['barely', 'Barely'], ['gentle', 'Gentle'], ['noticeable', 'Noticeable']], footHover)}<p class="try__hint" data-hint="foothover"></p>${group('Controller link', 'input', [['line', 'Pulse line'], ['label', 'Moving label'], ['rings', 'Highlights']], input)}${group('Recording layout', 'reclayout', [['stacked', 'Stacked'], ['side', 'Side by side'], ['carousel', 'Carousel']], remembered('interlude.try.reclayout', 'stacked'))}`;
+        // The hero's and the nav's layouts (set in <head>), first in the panel.
+        panel.querySelector('b').insertAdjacentHTML('afterend',
+          group('Hero layout', 'hero', [['centred', 'Centred'], ['eyebrow', 'Eyebrow'], ['split', 'Split'], ['wordmark', 'Wordmark'], ['headline', 'Headline']], document.documentElement.dataset.hero)
+          + group('Nav', 'nav', [['bar', 'Bar'], ['pill', 'Capsule'], ['clear', 'Clear'], ['centred', 'Centred']], document.documentElement.dataset.nav));
         panel.addEventListener('click', (e) => {
           const b = e.target.closest('button');
           if (!b) return;
           const key = b.closest('.try__group').dataset.key;
           for (const o of b.parentElement.children) o.setAttribute('aria-pressed', String(o === b));
+          if (key === 'hero' || key === 'nav') { document.documentElement.dataset[key] = b.dataset.v; remember(`interlude.try.${key}`, b.dataset.v); }
           if (key === 'recstyle') { fx?.setStyle(b.dataset.v); remember('interlude.try.vinylstyle', b.dataset.v); hint(key, b.dataset.v); }
           if (key === 'rings') { fx?.setVariant(b.dataset.v); remember('interlude.try.vinyltouch', b.dataset.v); hint(key, b.dataset.v); }
           if (key === 'foothover') {
@@ -366,11 +390,9 @@
               off: 'The record just turns.',
             },
             foothover: {
-              spin: 'Hover the footer name: the record spins up under the pointer, the music in its grooves turning; leave and it winds down.',
-              tonearm: 'Hover the footer name: a fine line of light swings once across it, like the tonearm\'s reflection.',
-              ripple: 'Hover the footer name: one soft wave of light runs out through the grooves from where you came in.',
-              platter: 'Hover the footer name: light spreads up through the grooves from the centre, as if the platter lit.',
-              depth: 'Hover the footer name: the grooves and their sheen drift apart with the pointer, so the surface looks deep and glossy.',
+              barely: 'The footer name turns very slowly; hover and it eases a touch faster, the sheen a shade brighter. Easy to miss.',
+              gentle: 'The footer name turns slowly, its grooves drifting under a still sheen; hover and it spins up a little and catches more light.',
+              noticeable: 'The same, turned up: more drift in the grooves, a quicker spin-up on hover and a brighter sheen.',
             },
           }[key][v];
         }
@@ -387,104 +409,53 @@
       if (!reduced.matches && !live.getAttribute('src')) live.src = live.dataset.src;
     })();
 
-    // The name in the footer: at rest, quiet grooves and a soft sheen (all
-    // CSS). On hover, one of five effects (the Try panel picks; Spin unless
-    // tried otherwise). Each eases in and out from a single loop that stops
-    // when nothing is moving; style.css draws them from the properties set
-    // here. Reduced motion keeps the word still.
+    // The name in the footer: a record, turning slowly while it's on screen
+    // (the drift in its grooves goes round; the light stays put). Hovering
+    // eases it up to a slightly faster turn, like a platter spinning up, and
+    // the sheen catches a little more light; leaving eases both back. How
+    // much shows (barely, gentle, noticeable) is the Try panel's pick, gentle
+    // unless tried otherwise. style.css draws it from --spin and --glow.
+    // Reduced motion keeps it still.
     (() => {
       const w = document.querySelector('.foot-word');
       if (!w) return;
-      const modes = ['spin', 'tonearm', 'ripple', 'platter', 'depth'];
+      const levels = { barely: [1.5, 4], gentle: [2.5, 7], noticeable: [4, 11] }; // degrees a second: resting, hovered
       let saved = null;
       try { saved = localStorage.getItem('interlude.try.foothover'); } catch {}
-      w.dataset.hover = modes.includes(saved) ? saved : 'spin';
-      if (!matchMedia('(hover: hover)').matches || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-      const s = { on: 0, spin: 0, speed: 0, lit: 0, gx: 0, gy: 0, sx: 0, sy: 0 };
+      w.dataset.hover = levels[saved] ? saved : 'gentle';
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      const canHover = matchMedia('(hover: hover)').matches;
       let over = false;
-      let nx = 0;
-      let ny = 0;
-      let born = 0;
-      let from = { x: 0, y: 0 };
+      let seen = false;
+      let spin = 0;
+      let speed = levels[w.dataset.hover][0];
+      let glow = 0;
       let raf = 0;
       let last = 0;
-      const set = (k, v) => w.style.setProperty(k, v);
-      const towards = (k, target, rate, dt) => {
-        s[k] += (target - s[k]) * (1 - Math.exp(-dt * rate));
-        if (Math.abs(target - s[k]) < 0.001) s[k] = target;
-        return s[k] !== target;
-      };
-      const inOut = (t) => (t < 0.5 ? 4 * t ** 3 : 1 - (-2 * t + 2) ** 3 / 2);
       function frame(now) {
         const dt = Math.min(0.05, (now - last) / 1000);
         last = now;
-        const mode = w.dataset.hover;
-        let busy = towards('on', over ? 1 : 0, over ? 3 : 2.5, dt);
-        if (mode === 'spin') {
-          // Spins up over a second or so, winds down a little slower.
-          busy = towards('speed', over ? 24 : 0, over ? 1.4 : 1, dt) || busy || s.speed > 0;
-          s.spin = (s.spin + s.speed * dt) % 360;
-          set('--spin', `${s.spin.toFixed(2)}deg`);
-          set('--fx', (s.speed / 24).toFixed(3));
-        } else if (mode === 'tonearm') {
-          const t = Math.min(1, (now - born) / 2600);
-          set('--sweep', `${(-68 + 136 * inOut(t)).toFixed(2)}deg`);
-          set('--fx', (Math.sin(Math.PI * t) ** 0.8).toFixed(3));
-          busy = t < 1;
-        } else if (mode === 'ripple') {
-          const t = Math.min(1, (now - born) / 3200);
-          set('--wx', `${from.x.toFixed(0)}px`);
-          set('--wy', `${from.y.toFixed(0)}px`);
-          set('--wave', `${(1150 * (1 - (1 - t) ** 1.7)).toFixed(1)}px`);
-          set('--fx', ((1 - t) ** 1.2 * Math.min(1, t * 10)).toFixed(3));
-          busy = t < 1;
-        } else if (mode === 'platter') {
-          busy = towards('lit', over ? 1 : 0, over ? 1.6 : 2.2, dt) || busy;
-          set('--lit', s.lit.toFixed(4));
-          set('--fx', Math.min(1, s.lit * 2.5).toFixed(3));
-        } else if (mode === 'depth') {
-          const k = over ? 1 : 0;
-          busy = towards('gx', -8 * nx * k, 2, dt) | towards('gy', -4 * ny * k, 2, dt) | towards('sx', 46 * nx * k, 2, dt)
-            | towards('sy', 18 * ny * k, 2, dt) || busy;
-          set('--gx', `${s.gx.toFixed(2)}px`);
-          set('--gy', `${s.gy.toFixed(2)}px`);
-          set('--sx', `${s.sx.toFixed(2)}px`);
-          set('--sy', `${s.sy.toFixed(2)}px`);
-          set('--fx', s.on.toFixed(3));
-        }
-        raf = busy ? requestAnimationFrame(frame) : 0;
+        const [rest, hovered] = levels[w.dataset.hover] || levels.gentle;
+        // Spins up over a second or two, winds down a little slower.
+        speed += ((over ? hovered : rest) - speed) * (1 - Math.exp(-dt * (over ? 1.2 : 0.8)));
+        glow += ((over ? 1 : 0) - glow) * (1 - Math.exp(-dt * (over ? 1.6 : 1.1)));
+        spin = (spin + speed * dt) % 360;
+        w.style.setProperty('--spin', `${spin.toFixed(3)}deg`);
+        w.style.setProperty('--glow', glow.toFixed(4));
+        raf = seen ? requestAnimationFrame(frame) : 0;
       }
-      const run = () => {
-        if (raf) return;
-        last = performance.now();
-        raf = requestAnimationFrame(frame);
-      };
-      const where = (e) => {
-        const r = w.getBoundingClientRect();
-        nx = Math.max(-1, Math.min(1, ((e.clientX - r.left) / r.width) * 2 - 1));
-        ny = Math.max(-1, Math.min(1, ((e.clientY - r.top) / r.height) * 2 - 1));
-        return { x: e.clientX - r.left, y: e.clientY - r.top };
-      };
-      w.addEventListener('pointerenter', (e) => {
-        over = true;
-        from = where(e);
-        // Tonearm and Ripple play once per visit, not again while one runs.
-        if (performance.now() - born > 1200) born = performance.now();
-        run();
-      });
-      w.addEventListener('pointermove', (e) => {
-        where(e);
-        if (w.dataset.hover === 'depth') run();
-      });
-      w.addEventListener('pointerleave', () => {
-        over = false;
-        run();
-      });
-      // A new pick from the Try panel starts from rest.
-      new MutationObserver(() => {
-        for (const k of ['--fx', '--gx', '--gy', '--sx', '--sy']) w.style.removeProperty(k);
-        Object.assign(s, { speed: 0, lit: 0, gx: 0, gy: 0, sx: 0, sy: 0 });
-      }).observe(w, { attributes: true, attributeFilter: ['data-hover'] });
+      // Only turns while the footer is on screen.
+      new IntersectionObserver(([e]) => {
+        seen = e.isIntersecting;
+        if (seen && !raf) {
+          last = performance.now();
+          raf = requestAnimationFrame(frame);
+        }
+      }).observe(w);
+      if (canHover) {
+        w.addEventListener('pointerenter', () => (over = true));
+        w.addEventListener('pointerleave', () => (over = false));
+      }
     })();
 
     // The FAQ: answers ease open and closed instead of jumping. The
@@ -529,6 +500,7 @@
         const v = document.getElementById('version');
         v.textContent = r.tag_name;
         v.href = r.html_url;
+        for (const e of document.querySelectorAll('[data-version]')) e.textContent = r.tag_name;
       })
       .catch(() => {});
   </script>
