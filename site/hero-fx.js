@@ -37,7 +37,25 @@ const gl = canvas.getContext('webgl', { premultipliedAlpha: true, antialias: fal
 
 // How flat the record lies: a low angle, so it reads as a disc on a surface
 // going away from you, not a well.
-const SQUASH = 0.3;
+const SQUASH = 0.2;
+// And in true perspective: the far side (up behind the headline) recedes
+// towards a horizon this far above the record's centre, in CSS pixels times
+// the centre's height, so it narrows and its grooves crowd together, and
+// the near side (below the screen) opens out.
+const HORIZON = 1400;
+// The record's own pixels are this many CSS pixels at the centre, beside
+// the screen: the grooves are drawn at the size they'd have on a record
+// this close.
+const SCALE = 3.2;
+
+/** A point on the page (CSS pixels from the canvas's top left) on the disc. */
+function toRecord(x, y, g) {
+  const d0 = g.cy + HORIZON;
+  const f = d0 / Math.max(1, y + HORIZON);
+  const qx = ((x - g.cx) * f) / SCALE;
+  const qy = ((1 - f) * d0) / SQUASH / SCALE;
+  return { r: Math.hypot(qx, qy), a: Math.atan2(qy, qx) };
+}
 // One turn every four minutes: behind the headline the grooves drift by a
 // few dozen pixels a second, beside the screen much less.
 const TURN = (Math.PI * 2) / 240;
@@ -52,7 +70,7 @@ const STYLES = {
   // those across from it).
   fine: { lines: 0.75, satin: 0, level: 0.052, sheen: 0.13 },
   satin: { lines: 0, satin: 1, level: 0.06, sheen: 0.13 },
-  blend: { lines: 0.68, satin: 0.6, level: 0.07, sheen: 0.24 },
+  blend: { lines: 0.85, satin: 0.6, level: 0.082, sheen: 0.3 },
 };
 let style = 'blend';
 let touch = 'needle';
@@ -117,14 +135,19 @@ uniform vec2 uTracks[${MAX_TRACKS}];
 uniform float uTrackCount;
 
 const float PI = 3.14159265;
-const float PITCH = 7.0;   // groove spacing, record pixels
+const float PITCH = 7.0;   // groove spacing, record pixels (about 22 CSS px up close)
 const float SQUASH = ${SQUASH.toFixed(3)};
+const float HORIZON = ${HORIZON.toFixed(1)};
+const float SCALE = ${SCALE.toFixed(3)};
 
 float hash(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
 
 void main() {
   vec2 px = vec2(gl_FragCoord.x, uSize.y - gl_FragCoord.y) / uDpr;
-  vec2 q = vec2(px.x - uCentre.x, (px.y - uCentre.y) / SQUASH);
+  // Onto the disc, in perspective (see toRecord).
+  float d0 = uCentre.y + HORIZON;
+  float f = d0 / max(1.0, px.y + HORIZON);
+  vec2 q = vec2((px.x - uCentre.x) * f, (1.0 - f) * d0 / SQUASH) / SCALE;
   float r = length(q);
   // How many record pixels one device pixel covers here (larger where the
   // disc is flattest).
@@ -151,17 +174,22 @@ void main() {
   float g = r / PITCH;
   float fg = fr / PITCH; // grooves per device pixel
   float lines = 0.0;
-  for (int k = 1; k <= 4; k++) {
+  // Hairlines stay about a device pixel fine wherever the grooves open out
+  // (on the near side), and are soft bands where they crowd (the far side).
+  float sig = clamp(1.1 * fg, 0.035, 0.11);
+  float norm = 0.0;
+  for (int k = 1; k <= 10; k++) {
     float fk = float(k);
-    float coef = exp(-2.0 * PI * PI * 0.012 * fk * fk);   // line shape
+    float coef = exp(-2.0 * PI * PI * sig * sig * fk * fk);   // line shape
+    norm += 2.0 * coef;
     float att = exp(-7.0 * fk * fk * fg * fg) * (1.0 - smoothstep(0.3, 0.48, fk * fg));
     lines += 2.0 * coef * att * cos(2.0 * PI * fk * g);
   }
-  lines /= 2.9; // so the brightest line sits about +1 over the average
+  lines /= norm; // the brightest line sits +1 over the average, which stays 1
 
   // Each song: a soft band, a little louder in its middle, its loudness
   // drifting gently across it, as the music does.
-  float loud = 0.82 + 0.18 * sin(PI * u) + 0.07 * sin(r / 41.0 + idx * 1.7) * sin(r / 113.0 + idx);
+  float loud = 0.82 + 0.18 * sin(PI * u) + 0.07 * sin(r / 18.0 + idx * 1.7) * sin(r / 50.0 + idx);
   float satin = mix(0.62, loud, inSong);
   float fine = mix(0.7, 1.0 + lines, inSong);
   float L = mix(1.0, satin, uStyle.y) * mix(1.0, fine, uStyle.x);
@@ -171,9 +199,9 @@ void main() {
   // The pressing is never perfectly even: a soft warp in it, a few hundred
   // pixels across, curling with the radius, turning with the record.
   float b = a - uSpin;
-  float k1 = floor(mid / 330.0) + 3.0;
-  float k2 = floor(mid / 210.0) + 5.0;
-  float warp = 0.1 * sin(k1 * b + r / 180.0 + idx * 2.3) + 0.065 * sin(k2 * b - r / 120.0 + idx * 4.1);
+  float k1 = floor(mid / 140.0) + 3.0;
+  float k2 = floor(mid / 90.0) + 5.0;
+  float warp = 0.1 * sin(k1 * b + r / 80.0 + idx * 2.3) + 0.065 * sin(k2 * b - r / 55.0 + idx * 4.1);
   L *= 1.0 + sheen + warp * mix(0.6, 1.0, inSong);
 
   // The pointer: the grooves at its radius catch the light along their own
@@ -182,7 +210,7 @@ void main() {
   if (uHover.z > 0.0) {
     float dr = (r - uHover.x) / 85.0;
     float da = atan(sin(a - uHover.y), cos(a - uHover.y));
-    float s = da * max(uHover.x, 300.0) / 640.0;
+    float s = da * max(uHover.x, 100.0) / 300.0;
     float streak = exp(-dr * dr) * exp(-s * s);
     float shine = mix(1.0, clamp(0.25 + 0.75 * (1.0 + lines) * 0.5, 0.0, 1.3), uStyle.x);
     L += 1.5 * uHover.z * streak * shine * mix(0.5, 1.0, inSong);
@@ -203,7 +231,7 @@ void main() {
   }
   // A dropped needle: one soft ring of light running out through the grooves.
   if (uRipple.y > 0.0) {
-    float d = (r - uRipple.x) / 60.0;
+    float d = (r - uRipple.x) / 30.0;
     float w = 0.07 * exp(-d * d) * uRipple.y * edge * mix(1.0, fine, uStyle.x);
     col += warm * w;
     alpha += w;
@@ -258,13 +286,14 @@ function layout(now) {
   const s = screen.getBoundingClientRect();
   const cx = s.left - c.left + s.width / 2;
   const cy = s.top - c.top + s.height * 0.5;
-  const R = Math.max(cy / SQUASH, c.width / 2) * 1.08;
-  const r0 = s.width * 0.42;
-  // The record fades out to nothing halfway between the mouse/controller
-  // switch under the screen and the next section's heading ("Install").
+  const r0 = (s.width * 0.42) / SCALE;
+  const corner = (x, y) => toRecord(x, y, { cx, cy }).r;
+  const R = Math.max(corner(0, 0), corner(c.width, 0), corner(0, c.height), corner(c.width, c.height)) * 1.05;
+  // The record runs on past the mouse/controller switch under the screen
+  // and fades out to nothing at the next section's heading ("Install").
   const bar = document.querySelector('.shot-bar')?.getBoundingClientRect();
   const next = document.querySelector('#install :is(h1, h2, h3)')?.getBoundingClientRect();
-  const end = bar && next && next.top > bar.bottom ? (bar.bottom + next.top) / 2 - c.top : s.bottom - c.top + 120;
+  const end = bar && next && next.top > bar.bottom ? next.top - c.top : s.bottom - c.top + 180;
   // The app's screen, where the pointer isn't on the record.
   const box = { l: s.left - c.left, r: s.right - c.left, t: s.top - c.top, b: s.bottom - c.top };
   const key = [c.width, c.height, Math.round(cx), Math.round(cy), Math.round(end)].join();
@@ -301,7 +330,7 @@ addEventListener('blur', () => Object.assign(hover, { x: -1e4, y: -1e4 }));
 addEventListener('pointerdown', (e) => {
   if (touch !== 'needle' || !geo || e.target.closest('a, button, input, summary, iframe, .try, .shot')) return;
   const p = local(e);
-  const r = Math.hypot(p.x - geo.cx, (p.y - geo.cy) / SQUASH);
+  const { r } = toRecord(p.x, p.y, geo);
   if (r < geo.r0 || r > geo.R) return;
   const now = performance.now();
   Object.assign(needle, { on: true, r, born: now });
@@ -341,7 +370,7 @@ function frame(now, still) {
   // The needle plays inward, slowly; the ring runs out and fades.
   let needleOn = 0;
   if (needle.on && touch === 'needle') {
-    needle.r = Math.max(g.r0 + 30, needle.r - dt * 2.5);
+    needle.r = Math.max(g.r0 + 30, needle.r - dt * 1.2);
     needleOn = Math.min(1, (now - needle.born) / 500);
   }
   let rippleOn = 0;
@@ -351,15 +380,14 @@ function frame(now, still) {
     if (t >= 1) ripple.on = false;
     else {
       rippleOn = Math.min(1, t * 8) * (1 - t) ** 2;
-      rippleR = ripple.r + t * 700;
+      rippleR = ripple.r + t * 300;
     }
   }
 
   // Hover: only on the record, not over the app's screen (its own events
   // don't reach us there anyway) or with the touch switched off.
   const overScreen = hover.x > g.box.l && hover.x < g.box.r && hover.y > g.box.t && hover.y < g.box.b;
-  const hr = Math.hypot(hover.x - g.cx, (hover.y - g.cy) / SQUASH);
-  const ha = Math.atan2((hover.y - g.cy) / SQUASH, hover.x - g.cx);
+  const { r: hr, a: ha } = toRecord(hover.x, hover.y, g);
   const reach = touch !== 'off' && !overScreen && hr > g.r0 && hr < g.R ? 1 : 0;
   if (reach) {
     if (hover.on < 0.02) Object.assign(hover, { r: hr, a: ha });

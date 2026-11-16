@@ -34,6 +34,9 @@
 </head>
 <body>
   <header class="nav">
+    <!-- The bar to capsule nav's glass and its edge (style.css). -->
+    <span class="nav-glass" aria-hidden="true"></span>
+    <span class="nav-edge" aria-hidden="true"></span>
     <div class="wrap nav-row">
       <a class="brand" href="#top" aria-label="Interlude home">
         <img src="img/icon.svg" alt="" width="24" height="24">
@@ -57,58 +60,129 @@
     </div>
   </header>
   <script>
-    // The nav, bar to capsule (data-nav="morph"): a quiet bar over the top of
-    // the page; once the hero's buttons have gone under it, the bar draws in
-    // to a floating capsule and the nav's own GitHub and Download come in at
-    // its end. All of it is CSS transitions on clip-path, opacity and
-    // transform (style.css, "Bar to capsule"): nothing is laid out again on
-    // the way. This works out where the capsule puts each item, and says
-    // when. Back again as the hero's buttons return. (Runs once the page
-    // is parsed: the hero comes after this script.)
+    // The nav, bar to capsule (data-nav="morph"). At the top of the page a
+    // quiet bar: the icon left, the sections right. Once the hero's buttons
+    // have gone under it, the bar draws in to a floating capsule; the name
+    // comes in beside the icon, and the nav's own GitHub and Download slide
+    // in at its end. Back again as the hero's buttons return.
+    //
+    // The state comes from the scroll position, read once a frame, with a
+    // little give either way so it never flickers at the edge. The motion is
+    // a spring on one value, 0 (bar) to 1 (capsule): retargeting it keeps
+    // its speed, so a reversal halfway is seamless and a fast scroll never
+    // queues anything up. Each frame writes only clip-path (the glass),
+    // opacity and transform, straight onto the elements; nothing is laid
+    // out again. The actions have a spring of their own that starts once the
+    // shape has mostly formed. (Runs once the page is parsed: the hero
+    // comes after this script.)
     addEventListener('DOMContentLoaded', () => {
       const d = document.documentElement;
       const nav = document.querySelector('.nav');
       const row = nav.querySelector('.nav-row');
       const cta = document.querySelector('.hero .cta');
       if (!cta) return;
+      const glass = nav.querySelector('.nav-glass');
+      const edge = nav.querySelector('.nav-edge');
       const brand = row.querySelector('.brand');
+      const word = brand.querySelector('span');
       const links = row.querySelector('.links');
       const acts = row.querySelector('.nav-actions');
+      const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+      const NAV = 60;
       // Where the capsule puts each item, from their sizes in the bar (which
       // never change), as offsets from where they sit in the bar.
+      let geo = null;
       function measure() {
         if (d.dataset.nav !== 'morph') return;
         const W = nav.clientWidth;
         const x0 = row.getBoundingClientRect().left;
         const narrow = getComputedStyle(links).display === 'none';
-        const gap = 22, padL = narrow ? 14 : 18, padR = 7, inset = 12;
+        const gap = 22, padL = narrow ? 14 : 16, padR = 7, inset = 12;
         const bw = brand.offsetWidth, lw = narrow ? 0 : links.offsetWidth, aw = acts.offsetWidth;
         // Wide: the capsule hugs its contents, centred. Narrow: nearly edge to edge.
-        const capW = narrow ? W - inset * 2 : padL + bw + gap + lw + gap + aw + padR;
-        const left = (W - capW) / 2;
+        const capW = Math.round(narrow ? W - inset * 2 : padL + bw + gap + lw + gap + aw + padR);
+        const left = Math.round((W - capW) / 2);
         const bx = left + padL;
         const lx = bx + bw + gap;
         const ax = narrow ? left + capW - padR - aw : lx + lw + gap;
-        const px = (v) => `${Math.round(v * 2) / 2}px`;
-        nav.style.setProperty('--cap-w', px(capW));
-        nav.style.setProperty('--nb-x', px(bx - (x0 + brand.offsetLeft)));
-        nav.style.setProperty('--nl-x', px(lx - (x0 + links.offsetLeft)));
-        nav.style.setProperty('--na-x', px(ax - (x0 + acts.offsetLeft)));
+        geo = { side: left, right: W - left - capW, b: bx - (x0 + brand.offsetLeft), l: lx - (x0 + links.offsetLeft), a: ax - (x0 + acts.offsetLeft) };
+        edge.style.left = `${left}px`;
+        edge.style.width = `${capW}px`;
+        draw();
       }
-      measure();
-      // One attribute; CSS does the rest. Called only on a real change.
-      function set(on) {
-        if (on !== d.hasAttribute('data-capsule')) d.toggleAttribute('data-capsule', on);
+      // Springs: the shape eases in over about 0.6s, critically damped (no
+      // overshoot); the actions are a touch livelier and may overshoot by a
+      // hair as they land.
+      const shape = { x: 0, v: 0, to: 0, k: 110, c: 2 * Math.sqrt(110) };
+      const act = { x: 0, v: 0, to: 0, k: 190, c: 2 * 0.78 * Math.sqrt(190) };
+      const step = (s, dt) => {
+        const a = -s.k * (s.x - s.to) - s.c * s.v;
+        s.v += a * dt;
+        s.x += s.v * dt;
+        if (Math.abs(s.x - s.to) < 0.0005 && Math.abs(s.v) < 0.005) { s.x = s.to; s.v = 0; }
+      };
+      const clamp = (v) => Math.min(1, Math.max(0, v));
+      const r = (v) => Math.round(v * 100) / 100;
+      function draw() {
+        if (!geo) return;
+        const p = shape.x;
+        const q = act.x;
+        glass.style.clipPath = `inset(${r(10 * p)}px ${r(geo.right * p)}px ${r(p)}px ${r(geo.side * p)}px round ${r(25 * p)}px)`;
+        glass.style.opacity = p > 0.001 ? '1' : '';
+        edge.style.opacity = r(clamp((p - 0.6) / 0.4));
+        brand.style.transform = `translate(${r(geo.b * p)}px, ${r(5 * p)}px)`;
+        word.style.opacity = r(clamp((p - 0.35) / 0.55));
+        links.style.transform = `translate(${r(geo.l * p)}px, ${r(5 * p)}px)`;
+        acts.style.transform = `translate(${r(geo.a + 16 * (1 - q))}px, 5px)`;
+        acts.style.opacity = r(clamp(q * 1.25));
+        const shown = q > 0.02 || act.to === 1 ? 'visible' : '';
+        if (acts.style.visibility !== shown) acts.style.visibility = shown;
       }
-      // A little give either way, so it never flickers at the edge: in once
-      // the buttons are wholly under the bar, out once half of them is back.
-      new IntersectionObserver(([e]) => {
-        if (e.intersectionRatio >= 0.5 || e.boundingClientRect.top > innerHeight / 2) set(false);
-        else if (!e.isIntersecting) set(true);
-      }, { rootMargin: '-60px 0px 0px 0px', threshold: [0, 0.5] }).observe(cta);
+      // In once the buttons are wholly under the bar, out once half of them
+      // is back in view.
+      function read() {
+        const b = cta.getBoundingClientRect();
+        const to = b.bottom < NAV ? 1 : b.bottom > NAV + b.height / 2 ? 0 : shape.to;
+        if (to === shape.to) return;
+        shape.to = to;
+        d.toggleAttribute('data-capsule', to === 1);
+        if (reduced.matches) { shape.x = to; shape.v = 0; act.x = act.to = to; act.v = 0; }
+      }
+      // One loop, running only while something moves.
+      let running = false, last = 0;
+      function tick(now) {
+        const dt = Math.min(0.032, (now - last) / 1000 || 0.016);
+        last = now;
+        read();
+        step(shape, dt);
+        // The actions follow once the shape is mostly formed; they go at once.
+        act.to = shape.to === 1 && shape.x > 0.6 ? 1 : 0;
+        step(act, dt);
+        draw();
+        const moving = shape.x !== shape.to || shape.v || act.x !== act.to || act.v || (shape.to === 1 && act.to === 0);
+        if (moving) requestAnimationFrame(tick);
+        else running = false;
+      }
+      function wake() {
+        if (running || d.dataset.nav !== 'morph') return;
+        running = true;
+        last = performance.now();
+        requestAnimationFrame(tick);
+      }
+      addEventListener('scroll', wake, { passive: true });
       addEventListener('resize', measure);
-      new MutationObserver(measure).observe(d, { attributeFilter: ['data-nav'] });
+      // Another nav (the Try panel): hand the items back to the stylesheet.
+      new MutationObserver(() => {
+        for (const e of [glass, edge, brand, word, links, acts]) e.removeAttribute('style');
+        geo = null;
+        measure();
+        wake();
+      }).observe(d, { attributeFilter: ['data-nav'] });
+      measure();
       document.fonts?.ready.then(measure);
+      // Opened part way down the page: start as a capsule.
+      read();
+      if (shape.to) { shape.x = act.x = act.to = 1; draw(); }
     });
   </script>
 
@@ -399,7 +473,7 @@
           <div class="try__group" data-key="${key}"><span>${title}</span>
             <div>${options.map(([v, l]) => `<button type="button" data-v="${v}" aria-pressed="${v === now}">${l}</button>`).join('')}</div>
           </div>`;
-        panel.innerHTML = `<b>Try</b>${group('Record touch', 'rings', [['needle', 'Needle'], ['off', 'Off']], recTouch)}<p class="try__hint" data-hint="rings"></p>${group('Footer hover', 'foothover', [['faint', 'Faint'], ['soft', 'Soft'], ['clear', 'Clear']], footHover)}<p class="try__hint" data-hint="foothover"></p>${group('Controller link', 'input', [['line', 'Pulse line'], ['label', 'Moving label'], ['rings', 'Highlights']], input)}${group('Recording layout', 'reclayout', [['stacked', 'Stacked'], ['side', 'Side by side'], ['carousel', 'Carousel']], remembered('interlude.try.reclayout', 'stacked'))}`;
+        panel.innerHTML = `<b>Try</b>${group('Record touch', 'rings', [['needle', 'Needle'], ['off', 'Off']], recTouch)}<p class="try__hint" data-hint="rings"></p>${group('Controller link', 'input', [['line', 'Pulse line'], ['label', 'Moving label'], ['rings', 'Highlights']], input)}${group('Recording layout', 'reclayout', [['stacked', 'Stacked'], ['side', 'Side by side'], ['carousel', 'Carousel']], remembered('interlude.try.reclayout', 'stacked'))}`;
         // The hero's and the nav's layouts (set in <head>), first in the panel.
         panel.querySelector('b').insertAdjacentHTML('afterend',
           group('Hero layout', 'hero', [['centred', 'Centred'], ['eyebrow', 'Eyebrow'], ['split', 'Split'], ['wordmark', 'Wordmark'], ['headline', 'Headline']], document.documentElement.dataset.hero)
@@ -437,7 +511,8 @@
         document.body.append(panel);
         // What each touch does, and how to try it.
         function hint(key, v) {
-          panel.querySelector(`[data-hint="${key}"]`).textContent = {
+          const el = panel.querySelector(`[data-hint="${key}"]`);
+          if (el) el.textContent = {
             recstyle: {
               blend: 'Soft bands for the songs, with faint hairline grooves over them.',
             },
@@ -453,7 +528,6 @@
           }[key][v];
         }
         hint('rings', recTouch);
-        hint('foothover', footHover);
       }
 
 
@@ -464,152 +538,23 @@
       if (!reduced.matches && !live.getAttribute('src')) live.src = live.dataset.src;
     })();
 
-    // The name in the footer: a record lying flat below it, its texture
-    // drawn once per size, the way the hero's record is (hero-fx.js): the
-    // grooves are a few harmonics of a soft line, each faded out as it nears
-    // the pixel size, so they stay fine without a moiré; songs are soft
-    // bands, a little louder in the middle; between them the grooves ease
-    // out to a smooth, quieter surface and back in. Two images: the colour
-    // (--vinyl) and the sheen's mask (--vinyl-mask).
-    //
-    // Still until hovered. Then its light eases a little way round toward
-    // the pointer and lifts a touch; leaving eases it back. How far and how
-    // much (faint, soft, clear) is the Try panel's pick, soft unless tried
-    // otherwise. The word never takes the pointer (the links above it stay
-    // clickable), so hovering is worked out from where the pointer is.
-    // Nothing runs at rest; reduced motion leaves it still.
+    // The name in the footer: its grooves show round the pointer. The word
+    // itself ignores the pointer (so the links above it work), so the hover
+    // is worked out from where the pointer is over the word's letters.
     (() => {
       const w = document.querySelector('.foot-word');
-      if (!w) return;
-      const levels = { faint: [6, 0.05], soft: [11, 0.09], clear: [18, 0.15] }; // most the light turns (deg), most it lifts
-      let saved = null;
-      try { saved = localStorage.getItem('interlude.try.foothover'); } catch {}
-      w.dataset.hover = levels[saved] ? saved : 'soft';
-
-      const SQUASH = 0.3; // as the hero's record
-      const PITCH = 7; // groove spacing across the record, px
-      const GAP = 18; // the quiet run between songs, px across
-      const rand = (i, s) => { const k = Math.sin(i * 12.9898 + s * 78.233) * 43758.5453; return k - Math.floor(k); };
-      const ease = (a, b, x) => { const t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
-      const coef = [1, 2, 3, 4].map((k) => Math.exp(-2 * Math.PI * Math.PI * 0.012 * k * k));
-      let drawn = '';
-      let urls = [];
-      function paint() {
-        const box = w.getBoundingClientRect();
-        const dpr = Math.min(2, devicePixelRatio || 1);
-        const W = Math.round(box.width * dpr);
-        const H = Math.round(box.height * dpr);
-        if (!W || !H || `${W}x${H}` === drawn) return;
-        drawn = `${W}x${H}`;
-        const scale = Math.max(0.6, parseFloat(getComputedStyle(w).fontSize) / 330);
-        // The record's centre: mid-word, well below it (as 50% 165% in the CSS).
-        const cx = box.width / 2;
-        const cy = box.height * 1.65;
-        const rMin = (cy - box.height) / SQUASH - 60;
-        const rMax = Math.hypot(cx, cy / SQUASH) + 60;
-        const songs = [];
-        for (let a = rMin, i = 0; a < rMax; i++) {
-          const b = a + (140 + rand(i, 9) * 200) * scale;
-          songs.push([a, b]);
-          a = b + GAP;
-        }
-        const colour = new ImageData(W, H);
-        const mask = new ImageData(W, H);
-        const cd = colour.data;
-        const md = mask.data;
-        for (let j = 0; j < H; j++) {
-          const qy = ((j + 0.5) / dpr - cy) / SQUASH;
-          for (let i = 0; i < W; i++) {
-            const qx = (i + 0.5) / dpr - cx;
-            const r = Math.hypot(qx, qy);
-            // How much of the record one device pixel covers here.
-            const fr = (Math.abs(qx) + Math.abs(qy) / SQUASH) / r / dpr;
-            const soft = Math.max(10, fr * 2);
-            let inSong = 0;
-            let u = 0;
-            let idx = 0;
-            for (let t = 0; t < songs.length; t++) {
-              const [a, b] = songs[t];
-              if (r < a - soft) break;
-              if (r > b + soft) continue;
-              const v = ease(a - soft, a + soft, r) * (1 - ease(b - soft, b + soft, r));
-              if (v > inSong) { inSong = v; u = Math.max(0, Math.min(1, (r - a) / (b - a))); idx = t; }
-            }
-            const g = r / PITCH;
-            const fg = fr / PITCH;
-            let lines = 0;
-            for (let k = 1; k <= 4; k++) {
-              const att = Math.exp(-7 * k * k * fg * fg) * (1 - ease(0.3, 0.48, k * fg));
-              if (att < 1e-3) break;
-              lines += 2 * coef[k - 1] * att * Math.cos(2 * Math.PI * k * g);
-            }
-            lines /= 2.9;
-            const loud = 0.82 + 0.18 * Math.sin(Math.PI * u) + 0.07 * Math.sin(r / 41 + idx * 1.7) * Math.sin(r / 113 + idx);
-            const satin = 0.62 + (loud - 0.62) * inSong;
-            const fine = 0.7 + (0.3 + lines) * inSong;
-            const L = satin * fine;
-            const p = (j * W + i) * 4;
-            cd[p] = cd[p + 1] = cd[p + 2] = md[p] = md[p + 1] = md[p + 2] = 255;
-            cd[p + 3] = Math.min(255, L * 0.065 * 255);
-            md[p + 3] = Math.min(255, (L / 1.8) * 255);
-          }
-        }
-        const blobs = [colour, mask].map((img) => new Promise((done) => {
-          const c = document.createElement('canvas');
-          c.width = W;
-          c.height = H;
-          c.getContext('2d').putImageData(img, 0, 0);
-          c.toBlob(done);
-        }));
-        Promise.all(blobs).then(([c, m]) => {
-          const old = urls;
-          urls = [URL.createObjectURL(c), URL.createObjectURL(m)];
-          w.style.setProperty('--vinyl', `url(${urls[0]})`);
-          w.style.setProperty('--vinyl-mask', `url(${urls[1]})`);
-          setTimeout(() => old.forEach((u) => URL.revokeObjectURL(u)), 1000);
-        });
-      }
-      // Drawn when the page is idle, and again (once it settles) if the
-      // word changes size.
-      let wait = 0;
-      const later = (ms) => { clearTimeout(wait); wait = setTimeout(() => (window.requestIdleCallback || setTimeout)(paint), ms); };
-      new ResizeObserver(() => later(drawn ? 250 : 0)).observe(w);
-
-      if (!matchMedia('(hover: hover)').matches || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-      let over = false;
-      let toward = 0; // -1 (far left of the centre) to 1 (far right)
-      let a = 0;
-      let lift = 0;
-      let raf = 0;
-      let last = 0;
-      function frame(now) {
-        const dt = Math.min(0.05, (now - last) / 1000);
-        last = now;
-        const [turn, most] = levels[w.dataset.hover] || levels.soft;
-        const wantA = over ? toward * turn : 0;
-        const wantLift = over ? most : 0;
-        const k = 1 - Math.exp(-dt * (over ? 2.4 : 1.6));
-        a += (wantA - a) * k;
-        lift += (wantLift - lift) * k;
-        w.style.setProperty('--a', `${a.toFixed(3)}deg`);
-        w.style.setProperty('--lift', lift.toFixed(4));
-        raf = Math.abs(wantA - a) > 0.01 || Math.abs(wantLift - lift) > 0.0005 ? requestAnimationFrame(frame) : 0;
-      }
-      const run = () => {
-        if (raf) return;
-        last = performance.now();
-        raf = requestAnimationFrame(frame);
-      };
-      // Over the word: inside its box, below the top of its letters, and not
-      // on a link or button.
+      if (!w || !matchMedia('(hover: hover)').matches) return;
+      let on = false;
       addEventListener('pointermove', (e) => {
         const r = w.getBoundingClientRect();
-        const top = r.top + parseFloat(getComputedStyle(w).fontSize) * 0.12;
-        const now = e.clientX >= r.left && e.clientX <= r.right && e.clientY >= top && e.clientY <= r.bottom && !e.target.closest('a, button');
-        if (now) toward = Math.max(-1, Math.min(1, ((e.clientX - r.left) / r.width) * 2 - 1));
-        if (now || over) { over = now; run(); }
+        const inside = e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top + r.height * 0.1 && e.clientY <= r.bottom
+          && !e.target.closest('a, button');
+        if (inside) {
+          w.style.setProperty('--x', `${e.clientX - r.left}px`);
+          w.style.setProperty('--y', `${e.clientY - r.top}px`);
+        }
+        if (inside !== on) { on = inside; w.style.setProperty('--on', on ? '1' : '0'); }
       }, { passive: true });
-      document.addEventListener('pointerleave', () => { over = false; run(); });
     })();
 
     // The FAQ: answers ease open and closed instead of jumping. The
