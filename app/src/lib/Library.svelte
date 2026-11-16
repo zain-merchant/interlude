@@ -113,6 +113,9 @@
     : null,
   );
 
+  // #8 (UI audit flag): stress-plural says "1 track", not "1 tracks".
+  const tracksWord = $derived(flag('stress-plural') && results.length === 1 ? 'track' : 'tracks');
+
   /** Tracks still waiting for their length, BPM and key. */
   const pending = $derived(all.reduce((n, t) => n + (t.analysis ? 0 : 1), 0));
   const bpmText = (a) => {
@@ -560,7 +563,7 @@
           </button>
         {:else}<kbd>{MOD}F</kbd>{/if}
       </label>
-      <span class="count num">{loading ? 'Scanning…' : `${results.length.toLocaleString()} tracks`}{#if !loading && pending}<span
+      <span class="count num">{loading ? 'Scanning…' : `${results.length.toLocaleString()} ${tracksWord}`}{#if !loading && pending}<span
           class="pending" use:tip={() => 'Finding each track’s length, BPM and key in the background'}> · analyzing, {pending.toLocaleString()} to go</span>{/if}</span>
       <button class="btn sm samp" class:on={sampler.open} aria-pressed={sampler.open}
         onclick={() => setSamplerOpen(!sampler.open)}
