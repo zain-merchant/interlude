@@ -23,7 +23,7 @@ export default {
 
 /** Show me: shrinks deck A's loop from 4 beats to 1/4 and ghosts the arrows beside it. */
 export const show = {
-  note: "Deck A's Loop tab is open and its size went from 4 beats to 1/4 (the beat-jump size in the transport follows it). Dashed blue is where the loop's and the beat jump's ‹ › were at 4; green held still, red moved. Turn the flag off and on. Hot cue times (Cues tab) and the effect name (FX tab) get the same fixed slots.",
+  note: "Deck A's loop went from 4 beats to 1/4: ghosts show the loop and beat-jump arrows held still. Toggle: off, they move 2 to 4px. Hot cues and FX get the same slots.",
   async setup(app, ctx) {
     if (!app.loaded(0)) await app.loadTrack(0);
     await app.tab(0, 'Loop');
@@ -38,10 +38,12 @@ export const show = {
     ctx.parts = () => [...app.$$(`${D} .perf .tb.ar`), app.$(`${D} .perf .big`), ...app.$$(`${D} .transport .jumps button`)];
     ctx.names = ['loop ‹', 'loop ›', 'loop size', 'jump ‹', 'jump ›'];
     ctx.rest = app.snap(ctx.parts());
+    // Where they stand with the flag off, too: the ghost compares like with like.
+    ctx.restOff = app.without('no-shift-strip', () => app.snap(ctx.parts()));
     for (let i = 0; i < 4; i++) await app.click(`${D} button[aria-label='Halve loop']`);
   },
   target: (app) => [app.$("[data-region='deck0'] .perf"), app.$("[data-region='deck0'] .transport .jumps")],
   aid(d, app, ctx) {
-    ctx.parts().forEach((el, i) => el && d.ghost(ctx.rest[i], el.getBoundingClientRect(), { label: ctx.names[i], below: i % 2 === 1 }));
+    ctx.parts().forEach((el, i) => el && d.ghost((app.isOn('no-shift-strip') ? ctx.rest : ctx.restOff)[i], el.getBoundingClientRect(), { label: ctx.names[i], below: i % 2 === 1 }));
   },
 };

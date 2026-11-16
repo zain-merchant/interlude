@@ -18,7 +18,7 @@ export default {
 
 /** Show me: selects the last library row and measures what's under it. */
 export const show = {
-  note: "The library's last row is selected (End). The bar measures from its bottom to the list's rounded foot: on, a gap (6px, under More) so its corners and hairline show; off, 0 and the row is cut by the list's corner.",
+  note: "The last row is selected; the bar measures the room under it. On, 6px; off, it touches the list's rounded foot (see the loupe).",
   async setup(app) {
     await app.selectRow('last');
   },

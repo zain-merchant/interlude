@@ -18,11 +18,13 @@ export default {
 
 /** Show me: disconnects the simulated audio device, which raises the banner, and ghosts the decks. */
 export const show = {
-  note: 'The simulated audio device is unplugged (__mockAudio.lose()), so the "disconnected" banner is up. Dashed blue is where deck A, the mixer and the library stood before; green held still, red moved. Turn the flag off and on: off, the banner becomes a row of the layout and the decks lose 48px. Done or another Show me plugs it back in.',
+  note: "The simulated audio device is unplugged and its banner is up: ghosts show the decks and library held still. Toggle: off, the decks lose 49px.",
   async setup(app, ctx) {
     ctx.parts = () => [app.deck(0), app.$('.mixer'), app.$('section.library')];
     ctx.names = ['deck A', 'mixer', 'library'];
     ctx.rest = app.snap(ctx.parts());
+    // Where they stand with the flag off, too: the ghost compares like with like.
+    ctx.restOff = app.without('edge-banner', () => app.snap(ctx.parts()));
     app.mock.lose();
     await app.until(() => app.$('.banner'), 3000, 'the banner');
   },
@@ -31,6 +33,6 @@ export const show = {
   },
   target: '.banner',
   aid(d, app, ctx) {
-    ctx.parts().forEach((el, i) => el && d.ghost(ctx.rest[i], el.getBoundingClientRect(), { label: ctx.names[i] }));
+    ctx.parts().forEach((el, i) => el && d.ghost((app.isOn('edge-banner') ? ctx.rest : ctx.restOff)[i], el.getBoundingClientRect(), { label: ctx.names[i] }));
   },
 };

@@ -15,7 +15,7 @@ export default {
 
 /** Show me: the worst-case library, still analysing, with the progress hairline under its note. */
 export const show = {
-  note: 'Turned on Worst-case data (the page reloaded for it): 1,284 tracks are being analysed. Under "analyzing, N to go" beside the track count, a hairline fills left to right as they finish (it takes about a minute and a half). Off, there is only the number counting down.',
+  note: "Worst-case data on, 1,284 tracks analysing: watch the hairline under \"analyzing, N to go\" fill. Off, there's only the number.",
   needs: { 'stress-data': { set: 'worst' } },
   async setup(app) {
     await app.until(() => app.$('section.library .bar .count .pending'), 4000, 'the analysis note');

@@ -18,7 +18,7 @@ export default {
 
 /** Show me: two decks at different tempos, with the match marks on their pitch faders. */
 export const show = {
-  note: "Deck A (118 BPM) and deck B (129 BPM) are loaded. Beside each pitch fader, a small mark in the other deck's colour sits where this deck would play at the other's tempo; the bar measures the cap's distance from it. Drag a cap onto its mark and the tempos match. Off, there are no marks.",
+  note: "Two decks at different tempos: the mark by each pitch fader is the other deck's tempo, the bar the gap to the cap. Off, no marks.",
   async setup(app) {
     await app.loadTrack(0, 1);
     await app.loadTrack(1, 0);

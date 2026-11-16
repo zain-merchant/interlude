@@ -46,7 +46,7 @@ export default {
 
 /** Show me: each nested corner's radius drawn as a circle with its centre, outer and inner together. */
 export const show = {
-  note: 'Each nested corner is drawn as its radius circle with a dot at its centre: the waveforms panel and its zoom pill, the pill and its + button, the library panel and its track list. Concentric means the dots meet (green); red gives the distance between them. Turn the flag off and on; "Grow decks" under More rounds the deck panels too.',
+  note: "Radius circles and centres on the zoom pill, its + button and the track list: concentric where the dots meet (green). Turn the flag off and on to compare.",
   target: (app) => [app.$('.waves .zoom'), app.$("section.library [data-region='tracks']")],
   aid(d, app) {
     const { C } = d;

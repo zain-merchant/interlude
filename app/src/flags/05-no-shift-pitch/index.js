@@ -19,7 +19,7 @@ export default {
 
 /** Show me: widens deck A's pitch range and turns Slip on, with ghosts of the pitch column. */
 export const show = {
-  note: "Deck A's pitch range is now ±16 and Slip is on. Dashed blue is where the tempo readout, the pitch fader, the nudge buttons and Key lock were before; green held still, red moved. Turn the flag off and on: off, the readout lifts 7px and Slip takes 32px off the fader.",
+  note: "Pitch range ±16 and Slip on: ghosts show the readout, fader and nudge held still (Slip shares Key lock's row). Toggle: off, the readout lifts and the fader loses 32px.",
   async setup(app, ctx) {
     if (!app.loaded(0)) await app.loadTrack(0);
     const D = "[data-region='deck0'] .pitch";
@@ -30,6 +30,8 @@ export const show = {
     if (app.$(`${D} .lock:not(.kl)`)) await app.key('KeyA', { target: document.body });
     await app.wait(80);
     ctx.rest = app.snap(ctx.parts());
+    // Where they stand with the flag off, too: the ghost compares like with like.
+    ctx.restOff = app.without('no-shift-pitch', () => app.snap(ctx.parts()));
     await app.click(`${D} .val`);
     await app.key('KeyA', { target: document.body });
     await app.until(() => app.$(`${D} .lock:not(.kl)`), 1500, 'Slip to turn on');
@@ -41,7 +43,7 @@ export const show = {
     ctx.parts().forEach((el, i) => {
       if (!el) return;
       const live = el.getBoundingClientRect();
-      d.ghost(ctx.rest[i], live, { label: ctx.names[i], labelAt: { x: (col?.left ?? live.left) - 200, y: live.top + live.height / 2 } });
+      d.ghost((app.isOn('no-shift-pitch') ? ctx.rest : ctx.restOff)[i], live, { label: ctx.names[i], labelAt: { x: (col?.left ?? live.left) - 200, y: live.top + live.height / 2 } });
     });
   },
 };

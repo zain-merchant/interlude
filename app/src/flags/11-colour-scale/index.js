@@ -23,7 +23,7 @@ export default {
 
 /** Show me: labels the text of the controls this touches with the colour level each is drawn at. */
 export const show = {
-  note: "Each text is labelled with its colour token (fg brightest, fg-4 dimmest), with a key at the top left. Look at deck A's nudge ‹ › against the beat jump and loop ‹ › (fg-3 vs fg-2 off; all fg-2 on), and the deck tabs with \"Tabs like nav\" under More. The library's \"analyzing, N to go\" (only while analysis runs, e.g. with Worst-case data) goes from fg-4 to fg-3.",
+  note: "Text labelled with its colour level: compare deck A's nudge ‹ › with the loop and jump ‹ ›. Off, nudge is fg-3; on, fg-2 like the others.",
   async setup(app, ctx) {
     if (!app.loaded(0)) await app.loadTrack(0);
     await app.tab(0, 'Loop');

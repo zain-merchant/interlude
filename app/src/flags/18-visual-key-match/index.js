@@ -22,7 +22,7 @@ export default {
 
 /** Show me: two decks whose keys mix, and the library keys that mix with them. */
 export const show = {
-  note: 'Loaded a track on deck A and, on deck B, one whose key mixes with it. Both decks\' keys are underlined, and so is every library key that mixes with them (Camelot: same number, or one step with the same letter); each is labelled with its Camelot code. Off, nothing marks them. Underline colour under More.',
+  note: "Two decks whose keys mix: both keys and the library keys that mix are underlined and labelled. Off, nothing marks them.",
   async setup(app) {
     if (!app.loaded(0)) await app.loadTrack(0);
     // With the flag on, library keys that mix are marked; load one on B.

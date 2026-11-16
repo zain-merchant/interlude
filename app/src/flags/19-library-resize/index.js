@@ -21,7 +21,7 @@ export default {
 
 /** Show me: points at the handle and, while you drag it, draws the pointer against the library's top edge. */
 export const show = {
-  note: "Drag the handle above the library (outlined) up and down. The pink line follows the pointer and the dashed box is the library, with its height: on, its top edge stays under the pointer the whole way. Turn the flag off and drag again: the library drops to a 12px sliver while you hold the handle and jumps to its size when you let go.",
+  note: 'Drag the outlined handle above the library: the pink line is the pointer, the box the library. On, its top follows; off, it drops to 12px until you let go.',
   target: '.app > .split',
   setup(app, ctx) {
     const move = (e) => (ctx.pointer = ctx.held ? e.clientY : null);

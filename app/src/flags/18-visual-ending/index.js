@@ -19,7 +19,7 @@ export default {
 
 /** Show me: deck A playing its last half minute. */
 export const show = {
-  note: "Deck A is playing its last ~25 seconds. Its remaining time (right, under the overview) turns the warning colour from 30s (Warn from, under More) and pulses in the last ten. Off, it looks the same at 5 minutes and at 5 seconds. Again to play the end once more.",
+  note: "Deck A is playing its last ~25s: its remaining time turns the warning colour, and pulses in the last ten. Off, it looks the same.",
   async setup(app) {
     if (!app.loaded(0)) await app.loadTrack(0);
     const ov = app.$("[data-region='deck0'] .overview");

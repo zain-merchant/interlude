@@ -29,7 +29,7 @@ export default {
 
 /** Show me: loads the longest title in view so the toast is wide, and ghosts where it would sit with the flag off. */
 export const show = {
-  note: 'Loaded the longest title in view onto deck A, so the "Loaded … on deck A" toast is up. Dashed blue is where it sits with the flag off: at most half the window wide (long titles wrap) and over the library\'s titles. On, it sizes to its text and, with "Bottom right" under More, sits over the Time and Folder columns instead.',
+  note: "The longest title loaded, so the toast is up: dashed blue is where it sits with the flag off (half width, over the titles).",
   async setup(app, ctx) {
     await show.replay(app, ctx);
   },

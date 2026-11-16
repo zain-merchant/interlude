@@ -31,7 +31,7 @@ export default {
 
 /** Show me: loupes on a panel corner and a button corner. */
 export const show = {
-  note: "Loupes (6×) on deck A's corner and the Sync button's: the radius stays the same, the curve eases in from the edges instead of starting abruptly, and the border follows it. Tune Smoothing under More. Needs Chrome 139+; in Safari and the app's WKWebView (no corner-shape) the corners stay round.",
+  note: "Loupes on deck A's and Sync's corners: same radius, the curve eases in and the border follows it. Chrome 139+ only; Safari and the app's WKWebView keep round corners.",
   target: (app) => [app.deck(0), app.$("[data-region='deck0'] .btn.sync")],
   aid(d, app) {
     if (!CSS.supports('corner-shape', 'superellipse(2)')) {

@@ -22,7 +22,7 @@ export default {
 
 /** Show me: selects a row that straddles the bottom edge, with the card's and the list's edges drawn. */
 export const show = {
-  note: "A selected row now sits across the bottom of the track list, half scrolled out. The yellow outline is the library card; the blue dashed one is where the list clips. Off, rows are cut 8px above the card by the list's own rounded box (see the loupe); on, they run to the card's edge and are cut there, by the card's corner.",
+  note: "A selected row straddles the list's bottom. On, it's cut by the card's own edge and corner; off, by a rounded box 8px inside it (see the loupe).",
   async setup(app) {
     const list = app.$("[data-region='tracks']");
     // Select a row, then scroll so it straddles the list's bottom edge.

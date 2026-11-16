@@ -47,7 +47,7 @@ export default {
 
 /** Show me: the 4px grid over deck A, the mixer and the library, with guides on the lines that should meet. */
 export const show = {
-  note: "4px grid (brighter every 16) over deck A, the mixer and the library, with guides on what should line up: the mode row's bottom line (nudge, headphone and Rec end on it), the deck header's height, sidebar items against track rows, the lane name against the zoom control. Green is on the line, red is off by the px shown. Turn the flag off and on to watch them move.",
+  note: "4px grid with guides: nudge, headphone and Rec should end on the mode row's line, sidebar items on track rows. Green is on, red is off by the px shown. Toggle to watch.",
   target: (app) => [app.$("[data-region='deck0'] header"), app.$("[data-region='deck0'] .pitch .nudge"), ...app.$$('.mixer .hp'), app.$('.mixer button.rec'), app.$("[data-region='sidebar']")],
   aid(d, app) {
     const { C } = d;

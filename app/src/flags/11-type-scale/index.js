@@ -26,7 +26,7 @@ export default {
 
 /** Show me: opens the Import dialog and labels every text with its size and weight. */
 export const show = {
-  note: 'The Import dialog is open, where most of the stray sizes were. Every text is labelled size/weight: green is on the scale (11, 13, 16, 24, 32 px; 300, 400, 500), red is off it (the 12s, 22s and 600). Turn the flag off and on to watch the reds go. Tooltips, Settings\' key caps and the waveform\'s cue chips change too.',
+  note: "The Import dialog, every text labelled size/weight: red is off the scale (12, 22, 600). Toggle to watch the reds go.",
   async setup(app) {
     await app.openImport();
   },

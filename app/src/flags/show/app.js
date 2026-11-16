@@ -188,11 +188,31 @@ export async function openReport() {
   return until(() => $(".card[aria-labelledby='report-title']"), 2000, 'the Report dialog');
 }
 
+/** The user's own interface zoom while a show has changed it. */
+let userZoom = /** @type {number | null} */ (null);
 /** Sets the interface zoom (⌘= / ⌘−) and returns the one it replaced. */
 export function zoom(scale) {
   const was = uiZoom.scale;
+  userZoom ??= was;
   setUiZoom(scale);
+  // The app remembers its zoom; a reload mid-show should come back at the
+  // user's own, not the show's.
+  try {
+    localStorage.setItem('oss-dj.uiZoom', String(userZoom));
+  } catch {}
+  if (scale === userZoom) userZoom = null;
   return was;
+}
+
+/** Runs fn with flag `id` off (DOM updated), then turns it back on; returns fn's result. */
+export function without(id, fn) {
+  const was = flags.on[id];
+  if (was) setFlag(id, false);
+  try {
+    return fn();
+  } finally {
+    if (was) setFlag(id, true);
+  }
 }
 
 /**
@@ -305,7 +325,7 @@ export const FLAG_IDS = FLAGS.map((f) => f.id);
 /** Everything above, as the `app` a show's setup(app) and aid(d, app) get. */
 export const kit = {
   $, $$, until, wait, click, dblclick, hover, unhover, key, type, deck, rows, loaded, search, clearSearch, selectRow, loadTrack,
-  playButton, play, pause, tab, zoom, forceStates, hideTips, tooltip, openSettings, openImport, openReport, reset, setFlag, setSetting, isOn, rectsWithout, textRect, snap,
+  playButton, play, pause, tab, zoom, forceStates, hideTips, tooltip, openSettings, openImport, openReport, reset, setFlag, setSetting, isOn, without, rectsWithout, textRect, snap,
   get mock() {
     return globalThis.__mockAudio;
   },

@@ -22,7 +22,7 @@ export default {
 
 /** Show me: paddings drawn as measured bands with their sizes: the mixer, the search, the library cells, the toast. */
 export const show = {
-  note: "Paddings are drawn as yellow bands with their size: the mixer's sides (12 off, 16 on, like every panel), the search well (10 → 8), the library's cells (6 → 8) and the toast (loaded a track to bring it up; 14 / 6 → 12 / 4). Turn the flag off and on and read the numbers. Menus, tooltips, Settings rows and the two dialogs move onto 4/8/12/16 too.",
+  note: "Paddings drawn with their sizes: mixer sides, search, library cells, toast. Toggle and read the numbers (12 to 16, 10 to 8, 6 to 8, 14/6 to 12/4).",
   async setup(app) {
     await app.loadTrack(0, 2);
   },

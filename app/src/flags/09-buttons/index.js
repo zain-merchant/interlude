@@ -35,7 +35,7 @@ export default {
 
 /** Show me: every button the style applies to, labelled, with a loupe on two of them. */
 export const show = {
-  note: 'Outlined: the normal buttons this restyles (Sync, beat jump, Sampler, the gear, the headphone cues, Rec; also Settings and dialog buttons, select menus and the toast\'s Undo). Loupes (4×) on Sync and a headphone button. Click through Style under More and watch them; Outline also takes weight and strength.',
+  note: "The restyled buttons are outlined, with loupes on Sync and a headphone button. Click through Style under More, and turn the flag off to compare.",
   async setup(app) {
     if (!app.loaded(0)) await app.loadTrack(0);
   },

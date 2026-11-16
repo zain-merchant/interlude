@@ -45,7 +45,7 @@ export default {
 
 /** Show me: loupes on a panel's edge and on the selected library row. */
 export const show = {
-  note: "Loupes (5×) on deck A's top edge and on the selected library row's edge, where the change is: the panel ring, its top light and the selected row's outline. Click through Edges and Selected under More and watch the loupes; turn the flag off to compare with today's.",
+  note: "Loupes on deck A's edge and the selected library row. Click through Edges and Selected under More, and turn the flag off to compare with today's.",
   async setup(app) {
     await app.selectRow(2);
   },

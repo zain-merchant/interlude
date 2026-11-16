@@ -14,7 +14,7 @@ export default {
 
 /** Show me: starts a loop on deck A, which lights the Loop tab's dot, and ghosts the tab's word. */
 export const show = {
-  note: "A loop is running on deck A, so its Loop tab shows a dot. Dashed blue is where the word \"Loop\" sat before the dot came on; green held still, red moved. Turn the flag off and on: off, the word slides 5px left. Replay turns the loop off and on.",
+  note: "A loop lit the Loop tab's dot: the ghost shows the word held still. Toggle: off, it slides 5px left. Replay turns the loop off and on.",
   async setup(app, ctx) {
     if (!app.loaded(0)) await app.loadTrack(0);
     await app.tab(0, 'Cues');
@@ -23,6 +23,7 @@ export const show = {
     if (loopTab().querySelector('i')) await app.key('KeyR', { target: document.body });
     await app.wait(80);
     ctx.rest = ctx.word();
+    ctx.restOff = app.without('no-shift-tabs', () => ctx.word());
     await app.key('KeyR', { target: document.body });
     await app.until(() => loopTab().querySelector('i'), 1500, 'the loop dot');
     ctx.tab = loopTab;
@@ -34,6 +35,6 @@ export const show = {
   },
   target: (app) => app.$$("[data-region='deck0'] .modes button").find((b) => b.textContent.trim().startsWith('Loop')),
   aid(d, app, ctx) {
-    d.ghost(ctx.rest, ctx.word(), { label: 'Loop', below: true });
+    d.ghost(app.isOn('no-shift-tabs') ? ctx.rest : ctx.restOff, ctx.word(), { label: 'Loop', below: true });
   },
 };

@@ -31,7 +31,7 @@ export default {
 
 /** Show me: kills deck A's Low and ghosts where the mixer's columns stood. */
 export const show = {
-  note: "Deck A's Low EQ is now killed. Dashed blue is where the fader, the master column and deck B's side stood before the kill; green held still, red moved (by the px shown). Turn the flag off and on: off, the label grows to \"Low · kill\" and everything to its right shifts.",
+  note: "Deck A's Low is killed: ghosts show the mixer's columns held still. Toggle: off, \"Low · kill\" widens the column and the mixer shifts 9px.",
   target: (app) => app.$$('.mixer .ch')[0]?.querySelectorAll('.knob')[3],
   async setup(app, ctx) {
     ctx.parts = () => [app.$('.mixer .fwrap'), app.$('.mixer .cen'), app.$('.mixer .fwrap.mirror'), app.$$('.mixer .ch')[1]];
@@ -40,6 +40,8 @@ export const show = {
     if (low().classList.contains('killed')) await app.click(low());
     // At rest (nothing killed) the mixer is the same with the flag on or off.
     ctx.rest = app.snap(ctx.parts());
+    // Where they stand with the flag off, too: the ghost compares like with like.
+    ctx.restOff = app.without('no-shift', () => app.snap(ctx.parts()));
     await app.click(low());
     await app.until(() => low().classList.contains('killed'), 1000, 'the kill');
   },
@@ -50,6 +52,6 @@ export const show = {
     await app.click(low());
   },
   aid(d, app, ctx) {
-    ctx.parts().forEach((el, i) => el && d.ghost(ctx.rest[i], el.getBoundingClientRect(), { label: ctx.names[i], below: i % 2 === 1 }));
+    ctx.parts().forEach((el, i) => el && d.ghost((app.isOn('no-shift') ? ctx.rest : ctx.restOff)[i], el.getBoundingClientRect(), { label: ctx.names[i], below: i % 2 === 1 }));
   },
 };

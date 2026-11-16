@@ -26,7 +26,7 @@ export default {
 
 /** Show me: zooms the interface in until deck A's mode row is under 320px, with hot cues set. */
 export const show = {
-  note: "Only applies when a deck's mode row is under 320px (windows under about 1,180px wide), so this zoomed the interface in (⌘=) until it is, and set two hot cues on deck A. The bar measures the row. On: set cues show colour + time, empty ones their number, nothing overlaps; off: \"1 Set2 Set\" runs together. Try the Stems and FX tabs too. Done puts the zoom back.",
+  note: "Zoomed in until deck A's mode row is under 320px (measured), with two hot cues set. Off, \"1 Set2 Set\" runs together; on, they fit. Done restores the zoom.",
   async setup(app, ctx) {
     if (!app.loaded(0)) await app.loadTrack(0);
     await app.tab(0, 'Cues');

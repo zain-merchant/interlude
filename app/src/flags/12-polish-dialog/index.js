@@ -19,7 +19,7 @@ export default {
 
 /** Show me: opens the Report dialog; Replay closes and opens it again. */
 export const show = {
-  note: 'The Report a problem dialog just opened: watch its entrance. Press Replay to see it again, then turn the flag off and Replay to compare: on, it covers most of the way at once and settles (strong ease-out from 97%); off, it creeps in. Duration under More.',
+  note: "The Report dialog just opened: watch it arrive. Press Replay with the flag off and on to compare the entrance.",
   async setup(app) {
     await app.openReport();
   },

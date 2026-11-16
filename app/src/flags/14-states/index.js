@@ -35,7 +35,7 @@ export default {
 
 /** Show me: puts a few controls through hover, pressed and focus on a loop, labelled. */
 export const show = {
-  note: 'Each labelled control steps through its state every 1.2s, as if pointed at, pressed or tabbed to: a deck tab and a sort header hovered (a step toward selected, not the same), Sync and a sidebar item pressed (shrink and darken / selected fill), the track list and search focused (the one 2px ring). An empty deck\'s nudge shows disabled (40%): deck B\'s, while B is empty. Turn the flag off and on to compare.',
+  note: "Labelled controls step in and out of hover, pressed and focus every 1.2s; deck B's nudge shows disabled while B is empty. Toggle to compare.",
   async setup(app, ctx) {
     if (!app.loaded(0)) await app.loadTrack(0);
     await app.tab(0, 'Cues');

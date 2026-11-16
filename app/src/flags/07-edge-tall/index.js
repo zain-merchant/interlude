@@ -19,7 +19,7 @@ export default {
 
 /** Show me: zooms the interface out to 80% so the window is tall enough, and marks the decks' cap. */
 export const show = {
-  note: 'Only shows in a window over about 1,000px tall, so this zoomed the interface out to 80% (⌘−), which gives the layout more height. The line marks the deck row\'s cap (Deck max height under More): on, the decks stop there and the waveforms take the rest; off, the decks stretch. Done puts the zoom back.',
+  note: "Zoomed out to 80% for a tall layout; the line is the decks' cap. On, the decks stop there and the waveforms grow; off, the decks stretch. Done restores the zoom.",
   async setup(app, ctx) {
     ctx.was = app.zoom(0.8);
     await app.wait(300);

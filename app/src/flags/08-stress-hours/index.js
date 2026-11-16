@@ -17,7 +17,7 @@ export default {
 
 /** Show me: the two-hour live set from the worst-case data, on deck A and in the library. */
 export const show = {
-  note: 'Turned on Worst-case data (the page reloaded for it) and loaded the 2h14m "Live at Printworks" set on deck A, 80% in. Compare its Time in the library and the deck\'s elapsed and remaining: off, they read 134:33, 107:38.4 and −26:54.6; on, 2:14:33, 1:47:38.4 and −26:54.6.',
+  note: "Worst-case data on, the 2-hour set loaded: read its Time and deck A's times. Off: 134:33 and 107:38.4; on: 2:14:33 and 1:47:38.4.",
   needs: { 'stress-data': { set: 'worst' } },
   async setup(app) {
     await app.loadTrack(0, 'Printworks');

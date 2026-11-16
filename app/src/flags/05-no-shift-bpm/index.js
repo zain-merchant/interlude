@@ -16,13 +16,15 @@ export default {
 
 /** Show me: opens deck A's BPM field and ghosts where the deck's rows stood. */
 export const show = {
-  note: "Deck A's BPM is open for typing (double-click it to open, Esc to close). Dashed blue is where the title, the overview, the times, the tabs and the transport stood before; green held still, red moved. Turn the flag off and on: off, the field is 42px wider and 11px taller and the deck drops.",
+  note: "Deck A's BPM field is open; ghosts show the rows below held still. To compare, turn the flag off and press Replay: off, the field is 42px wider and the deck drops 11px.",
   async setup(app, ctx) {
     if (!app.loaded(0)) await app.loadTrack(0);
     const D = "[data-region='deck0']";
     ctx.parts = () => [app.$(`${D} .title`), app.$(`${D} .bpm`), app.$(`${D} .overview`), app.$(`${D} .times`), app.$(`${D} .modes`), app.$(`${D} .transport`)];
     ctx.names = ['title', 'BPM', 'overview', 'times', 'tabs', 'transport'];
     ctx.rest = app.snap(ctx.parts());
+    // Where they stand with the flag off, too: the ghost compares like with like.
+    ctx.restOff = app.without('no-shift-bpm', () => app.snap(ctx.parts()));
     await app.dblclick(`${D} .bpm .big`);
     await app.until(() => app.$(`${D} .bpm input, ${D} .bpm .edit`), 1500, 'the BPM field');
   },
@@ -34,6 +36,6 @@ export const show = {
     await app.dblclick(`${D} .bpm .big`);
   },
   aid(d, app, ctx) {
-    ctx.parts().forEach((el, i) => el && d.ghost(ctx.rest[i], el.getBoundingClientRect(), { label: ctx.names[i], below: i === 1 }));
+    ctx.parts().forEach((el, i) => el && d.ghost((app.isOn('no-shift-bpm') ? ctx.rest : ctx.restOff)[i], el.getBoundingClientRect(), { label: ctx.names[i], below: i === 1 }));
   },
 };

@@ -16,7 +16,7 @@ export default {
 
 /** Show me: a very long title on deck A's lane, with the play head marked. */
 export const show = {
-  note: 'Turned on Worst-case data (the page reloaded for it) and loaded "Strings of Life (… 1987 Detroit Mix) [2023 Remaster]" on deck A. The line is the play head, the lane\'s centre. On, the name ends in an ellipsis 16px before it; off, it runs across the play head and the waveform.',
+  note: "Worst-case data on, a very long title on deck A; the line is the play head. On, the name stops 16px before it; off, it runs across.",
   needs: { 'stress-data': { set: 'worst' } },
   async setup(app) {
     await app.loadTrack(0, 'Strings of Life');

@@ -14,13 +14,14 @@ export default {
 
 /** Show me: sorts the library by BPM and ghosts where the heading's word stood. */
 export const show = {
-  note: 'The library is now sorted by BPM. Dashed blue is where the word "BPM" stood before; green held still, red moved. Turn the flag off and on: off, the arrow pushes the word 14px left. Click Time to try the other right-aligned column.',
+  note: "Sorted by BPM: the ghost shows the word \"BPM\" held still. Toggle: off, the sort arrow pushes it 14px left.",
   async setup(app, ctx) {
     const title = app.$("button.sort[aria-label^='Sort by title']");
     // Sort by title first (the app's default), so BPM starts unsorted.
     for (let i = 0; i < 3 && !title.classList.contains('on'); i++) await app.click(title);
     ctx.word = () => app.textRect(app.$("button.sort[aria-label^='Sort by bpm']"));
     ctx.rest = ctx.word();
+    ctx.restOff = app.without('no-shift-sort', () => ctx.word());
     await app.click("button.sort[aria-label^='Sort by bpm']");
   },
   async replay(app) {
@@ -30,6 +31,6 @@ export const show = {
   },
   target: "button.sort[aria-label^='Sort by bpm']",
   aid(d, app, ctx) {
-    d.ghost(ctx.rest, ctx.word(), { label: 'BPM heading', below: true });
+    d.ghost(app.isOn('no-shift-sort') ? ctx.rest : ctx.restOff, ctx.word(), { label: 'BPM heading', below: true });
   },
 };

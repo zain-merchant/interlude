@@ -21,7 +21,7 @@ export default {
 
 /** Show me: points at deck A's EQ labels one after another, as a hand scanning the mixer would. */
 export const show = {
-  note: "This pointed at deck A's High, then Mid, then Low label, 400ms apart, as you would scanning the mixer. On, the first tip waits and fades in and the next ones appear at once; off, each one waits 600ms and pops in. Replay runs it again; try it by hand along the mixer.",
+  note: "Pointed along deck A's EQ labels: the first tip waits, the next ones show at once. Replay with the flag off: each waits 600ms.",
   async setup(app, ctx) {
     await show.replay(app);
   },

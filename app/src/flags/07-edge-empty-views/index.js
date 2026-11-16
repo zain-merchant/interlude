@@ -15,7 +15,7 @@ export default {
 
 /** Show me: makes (or reuses) an empty playlist and opens it. */
 export const show = {
-  note: 'Opened an empty playlist ("New playlist", made for this; it lives only until a reload). Read the message in the track list: on, it says the playlist is empty and how to fill it; off, it says "No tracks yet" and offers to add a music folder, which is the wrong fix.',
+  note: "An empty playlist is open: read its message. Off, it says \"No tracks yet\" and offers to add a music folder.",
   async setup(app) {
     // A playlist this made before (still empty: no count beside it), or a new one.
     const find = () => app.$$("[data-region='sidebar'] .item").find((b) => /^New playlist/.test(b.querySelector('span')?.textContent.trim() ?? '') && !Number(b.querySelector('small')?.textContent));

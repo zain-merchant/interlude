@@ -27,7 +27,7 @@ export default {
 
 /** Show me: guides on each channel's fader axis and meter edges, against the headphone button. */
 export const show = {
-  note: "Guides down each channel strip: the fader's axis (the slot's centre, dashed) and the outer edges of fader and meter. Off, the headphone button is centred on the pair, on neither line (4.5px off the axis). On, \"Fader\" centres it on the axis; \"Fader and meter\" (under More) spans both edges.",
+  note: "Guides on each fader's axis and the strip's edges. Off, the headphone button sits 4.5px off the axis; on, it's centred on it (or spans the strip).",
   target: '.mixer .hp',
   aid(d, app) {
     for (const wrap of app.$$('.mixer .fwrap')) {

@@ -22,7 +22,7 @@ export default {
 
 /** Show me: the deck's key line, the library count and a tooltip, with the gaps between their parts measured. */
 export const show = {
-  note: "Three places that used \" · \": deck A's key line (key, Camelot code, BPM), the library count (\"analyzing, N to go\" while it lasts) and the crossfader's tooltip (shown now). The bars measure the space between parts. Off, the parts are joined by middle dots; on, by space and a step down in tone. Tune the gap under More.",
+  note: "Deck A's key line, the library count and a tooltip, with the gaps measured. Off, the parts are joined by \" · \"; on, by space and a step in tone.",
   async setup(app) {
     if (!app.loaded(0)) await app.loadTrack(0);
     app.hover("[aria-label='Crossfader']");

@@ -32,7 +32,7 @@ export default {
 
 /** Show me: the worst-case library (the page reloads to swap the data in). */
 export const show = {
-  note: 'The page reloaded with the worst-case library: long, unicode, RTL and emoji titles, missing artists, BPM 0 / 45 / 999, no keys, failed analysis, a 2-hour set, 1,284 tracks still analysing. Read down the list and load a few onto the decks; the other Stability flags fix what breaks. Pick another set (Empty, One, 10,000) under More, then Again. Turn it off and reload to get the demo back.',
+  note: "Reloaded with the worst-case library: long, RTL and emoji titles, odd BPMs, a 2-hour set. Browse and load a few; other sets under More, then Again.",
   reload: true,
   target: (app) => [app.$("[data-region='tracks']"), app.$('section.library .bar .count')],
   aid(d, app) {
