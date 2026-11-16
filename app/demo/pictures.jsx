@@ -584,8 +584,11 @@ function measure(e) {
   const seen = card.bottom > 0 && card.top < vh;
   const below = card.bottom - pic.bottom;
   const shownBelow = Math.min(vh, card.bottom) - pic.bottom;
-  const ready = seen && pic.top >= -pic.height * 0.25 && shownBelow >= below * 0.3;
-  return { seen, ready };
+  // A picture already scrolled up past the top has been passed: it never
+  // holds the queue (only a card still coming up from below does).
+  const passed = pic.top < -pic.height * 0.25;
+  const ready = seen && !passed && shownBelow >= below * 0.3;
+  return { seen, ready, passed };
 }
 
 function step(grid) {
@@ -594,11 +597,18 @@ function step(grid) {
     const { seen } = measure(e);
     if (!seen && e.state !== 'idle') e.reset();
   }
+  // A picture that started and was then scrolled up out of view pauses
+  // (the stage only runs on screen), so it would never finish: count it as
+  // played and let the queue move on.
+  if (grid.playing && measure(grid.playing).passed) {
+    grid.playing.state = 'done';
+    grid.playing = null;
+  }
   if (grid.playing) return;
   for (const e of ordered) {
     if (e.state === 'done') continue;
-    const { seen, ready } = measure(e);
-    if (!seen) continue;
+    const { seen, ready, passed } = measure(e);
+    if (!seen || passed) continue;
     if (!ready) return;
     grid.playing = e;
     e.play();

@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Interlude: a free DJ app for the Mac</title>
-  <meta name="description" content="Interlude is a free, open-source DJ app for the Mac. Two decks, sync, stems, effects, a fast library, and support for 140+ controllers.">
+  <title>Interlude: a free DJ app for Mac</title>
+  <meta name="description" content="Interlude is a free, open-source DJ app for Mac. Two decks, sync, stems, effects, a fast library, and support for 140+ controllers.">
   <meta property="og:title" content="Interlude">
-  <meta property="og:description" content="A free, open-source DJ app for the Mac.">
+  <meta property="og:description" content="A free, open-source DJ app for Mac.">
   <meta property="og:image" content="https://interludedj.com/img/og.jpg">
   <meta property="og:url" content="https://interludedj.com/">
   <meta name="theme-color" content="#09090b">
@@ -17,15 +17,13 @@
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="demo/cards.css">
   <script>
-    // The hero's layout (Split) and the nav's (bar to capsule, unless another
-    // is picked in the Try panel), set before the first paint so nothing
-    // jumps. The nav's look can change once the page scrolls.
+    // The hero's layout (Split) and the nav's (bar to capsule), set before
+    // the first paint so nothing jumps. The nav's look changes as the page
+    // scrolls.
     (() => {
       const d = document.documentElement;
-      const pick = (k, d0, ok) => { try { const v = localStorage.getItem(k); return ok.includes(v) ? v : d0; } catch { return d0; } };
       d.dataset.hero = 'split';
-      // (A new key, so a pick saved before Bar to capsule became the default is ignored.)
-      d.dataset.nav = pick('interlude.try.navstyle', 'morph', ['morph', 'bar', 'pill', 'clear', 'centred']);
+      d.dataset.nav = 'morph';
       const scrolled = () => d.toggleAttribute('data-scrolled', scrollY > 8);
       addEventListener('scroll', scrolled, { passive: true });
       scrolled();
@@ -215,7 +213,7 @@
         <h1>Interlude</h1>
       </div>
       <p class="tagline">A free, <span class="nw">open-source</span> DJ app for Mac.</p>
-      <p class="lede">Pro features with a fast, lightweight footprint: two decks, sync, stems, effects, a fast library, and support for 140+ controllers.</p>
+      <p class="lede">Pro features with a fast, lightweight footprint.</p>
       <div class="cta">
         <a class="btn big" href="https://github.com/zain-merchant/interlude/releases/latest/download/Interlude.dmg">
           <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v8m0 0L4.5 6.5M8 10l3.5-3.5M3 13h10"/></svg>
@@ -368,7 +366,7 @@
     <div class="wrap foot-grid">
       <div>
         <a class="brand" href="#top"><img src="img/icon.svg" alt="" width="20" height="20"><span>Interlude</span></a>
-        <p class="small-print">A free DJ app for the Mac.</p>
+        <p class="small-print">A free DJ app for Mac.</p>
         <p class="small-print legal">Interlude is free software under the GNU GPL v3 or later. Controller mappings come from the <a href="https://mixxx.org" target="_blank" rel="noopener">Mixxx</a> project (GPL-2.0-or-later). Interlude isn't affiliated with Pioneer DJ, Rekordbox, Serato or Mixxx; their names belong to their owners.</p>
       </div>
       <div>
@@ -438,7 +436,7 @@
           frame.dataset.live = '';
           live.contentWindow.postMessage({ interlude: 'mode', mode }, '*');
           live.contentWindow.postMessage({ interlude: 'input', style: input }, '*');
-          live.contentWindow.postMessage({ interlude: 'controller', v: heroCtl }, '*');
+          live.contentWindow.postMessage({ interlude: 'controller', v: 'club' }, '*');
         }
         if (e.data?.interlude === 'camera') camera(e.data);
         if (e.data?.interlude === 'level') {
@@ -467,87 +465,13 @@
         next.focus();
       });
 
-      // Trying out (on localhost, or with ?try): a small panel to click
-      // through the ways a controller press shows. The pick is remembered
-      // in this browser.
-      const trying = location.hostname === 'localhost' || location.hostname === '127.0.0.1' || location.search.includes('try');
-      const remembered = (k, d) => { try { return localStorage.getItem(k) ?? d; } catch { return d; } };
-      const remember = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
-      let input = remembered('interlude.try.link', 'line');
-      // The record behind the hero, and the name in the footer (an old or
-      // unknown pick falls back to the default).
-      const pick = (k, d, ok) => { const v = remembered(k, d); return ok.includes(v) ? v : d; };
-      const recStyle = 'blend';
-      const recTouch = pick('interlude.try.vinyltouch', 'needle', ['needle', 'off']);
-      const footHover = pick('interlude.try.foothover', 'soft', ['faint', 'soft', 'clear']);
-      // The hero's controller is the Club drawing.
-      let heroCtl = 'club';
-      fx?.setVariant(recTouch);
-      fx?.setStyle(recStyle);
-      if (trying) {
-        const panel = document.createElement('div');
-        panel.className = 'try';
-        const group = (title, key, options, now, pick) => `
-          <div class="try__group" data-key="${key}"><span>${title}</span>
-            <div>${options.map(([v, l]) => `<button type="button" data-v="${v}" aria-pressed="${v === now}">${l}</button>`).join('')}</div>
-          </div>`;
-        panel.innerHTML = `<b>Try</b>${group('Record touch', 'rings', [['needle', 'Needle'], ['off', 'Off']], recTouch)}<p class="try__hint" data-hint="rings"></p>${group('Controller link', 'input', [['line', 'Pulse line'], ['label', 'Moving label'], ['rings', 'Highlights']], input)}${group('Recording layout', 'reclayout', [['stacked', 'Stacked'], ['side', 'Side by side'], ['carousel', 'Carousel']], remembered('interlude.try.reclayout', 'stacked'))}`;
-        // The nav's layout (set in <head>), first in the panel.
-        panel.querySelector('b').insertAdjacentHTML('afterend',
-          group('Nav', 'nav', [['morph', 'Bar to capsule'], ['bar', 'Bar'], ['pill', 'Capsule'], ['clear', 'Clear'], ['centred', 'Centred']], document.documentElement.dataset.nav));
-        panel.addEventListener('click', (e) => {
-          const b = e.target.closest('button');
-          if (!b) return;
-          const key = b.closest('.try__group').dataset.key;
-          for (const o of b.parentElement.children) o.setAttribute('aria-pressed', String(o === b));
-          if (key === 'nav') { document.documentElement.dataset.nav = b.dataset.v; remember('interlude.try.navstyle', b.dataset.v); }          if (key === 'recstyle') { fx?.setStyle(b.dataset.v); remember('interlude.try.vinylstyle', b.dataset.v); hint(key, b.dataset.v); }
-          if (key === 'rings') { fx?.setVariant(b.dataset.v); remember('interlude.try.vinyltouch', b.dataset.v); hint(key, b.dataset.v); }
-          if (key === 'foothover') {
-            remember('interlude.try.foothover', b.dataset.v);
-            hint(key, b.dataset.v);
-            const word = document.querySelector('.foot-word');
-            if (word) word.dataset.hover = b.dataset.v;
-          }
-          if (key === 'reclayout') { document.documentElement.dataset.reclayout = b.dataset.v; remember('interlude.try.reclayout', b.dataset.v); }
-          if (key === 'heroctl') {
-            heroCtl = b.dataset.v;
-            remember('interlude.try.heroctl', heroCtl);
-            live.contentWindow?.postMessage({ interlude: 'controller', v: heroCtl }, '*');
-            // A drawing of the controller only shows with the controller.
-            if (mode !== 'controller') document.querySelector('.switch [data-mode=controller]').click();
-          }
-          if (key === 'input') {
-            input = b.dataset.v;
-            remember('interlude.try.link', input);
-            live.contentWindow?.postMessage({ interlude: 'input', style: input }, '*');
-            // A press style only shows with the controller.
-            if (mode !== 'controller') document.querySelector('.switch [data-mode=controller]').click();
-          }
-        });
-        document.body.append(panel);
-        // What each touch does, and how to try it.
-        function hint(key, v) {
-          const el = panel.querySelector(`[data-hint="${key}"]`);
-          if (el) el.textContent = {
-            recstyle: {
-              blend: 'Soft bands for the songs, with faint hairline grooves over them.',
-            },
-            rings: {
-              needle: 'Hover the record: the grooves under the pointer catch the light along their arc. Click to drop the needle: that groove lights warm and plays slowly inward.',
-              off: 'The record just turns.',
-            },
-            foothover: {
-              faint: 'Hover the footer name: its light eases a few degrees toward the pointer and lifts a shade. Easy to miss.',
-              soft: 'Hover the footer name: its light eases a little way toward the pointer and lifts a touch.',
-              clear: 'Hover the footer name: the same, a little further and brighter. Still no glow, no ring.',
-            },
-          }[key][v];
-        }
-        hint('rings', recTouch);
-      }
-
-
-      document.documentElement.dataset.reclayout = remembered('interlude.try.reclayout', 'stacked');
+      // The choices made while trying things out, now fixed: the pulse line
+      // for the controller link, the needle on the record, the stacked
+      // Recording picture.
+      const input = 'line';
+      fx?.setVariant('needle');
+      fx?.setStyle('blend');
+      document.documentElement.dataset.reclayout = 'stacked';
 
       // The live app starts loading straight away, so it's on screen (and
       // the switch has something to act on) as soon as possible.

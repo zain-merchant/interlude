@@ -1,5 +1,6 @@
-// Behind the hero: a record lying flat round the app's screen, turning very
-// slowly. Its grooves run up the page behind the hero's words.
+// Behind the hero: a record lying back in perspective, its centre behind
+// the top of the app's screen, turning slowly. Its far side and rim arc up
+// the page behind the hero's words; reflections slide round as it turns.
 //
 // Drawn with one small WebGL shader, at the screen's full pixel density, so
 // it stays crisp: every pixel works out where it lies on the disc and how
@@ -35,33 +36,27 @@ const screen = document.querySelector('.shot .screen');
 const canvas = document.querySelector('.ripples');
 const gl = canvas.getContext('webgl', { premultipliedAlpha: true, antialias: false, alpha: true });
 
-// How flat the record lies: a low angle, so it reads as a disc on a surface
-// going away from you, not a well.
-const SQUASH = 0.2;
-// And in true perspective: the far side (up behind the headline) recedes
-// towards a horizon this far above the record's centre, in CSS pixels times
-// the centre's height, so it narrows and its grooves crowd together, and
-// the near side (below the screen) opens out.
+// The disc: about 1.8 times the content's width across, its centre just
+// behind the top of the app's screen, lying back in perspective so its far
+// rim arcs up behind the headline and its edge shows at the sides. The
+// horizon sits this far (CSS px) above the top of the canvas: the far side
+// narrows and its grooves crowd, the near side (under the screen) opens out.
 const HORIZON = 1400;
-// The record's own pixels are this many CSS pixels at the centre, beside
-// the screen: the grooves are drawn at the size they'd have on a record
-// this close.
-const SCALE = 2.4;
+// Where the far rim sits, CSS px from the canvas's top.
+const RIM_TOP = 24;
 
 /** A point on the page (CSS pixels from the canvas's top left) on the disc. */
 function toRecord(x, y, g) {
-  const d0 = g.cy + HORIZON;
-  const f = d0 / Math.max(1, y + HORIZON);
-  const qx = ((x - g.cx) * f) / SCALE;
-  const qy = ((1 - f) * d0) / SQUASH / SCALE;
+  const f = g.d0 / Math.max(1, y + HORIZON);
+  const qx = (x - g.cx) * f;
+  const qy = ((1 - f) * g.d0) / g.tilt;
   return { r: Math.hypot(qx, qy), a: Math.atan2(qy, qx) };
 }
-// One turn every four minutes: behind the headline the grooves drift by a
-// few dozen pixels a second, beside the screen much less.
-const TURN = (Math.PI * 2) / 240;
+// One turn every 50 seconds: slow, but its reflections can be seen moving.
+const TURN = (Math.PI * 2) / 50;
 // Where the light comes from: up and to the right of the centre.
 const FACING = -1.3;
-const GAP = 22; // the quiet run between two songs, in the record's own pixels
+const GAP = 8; // the quiet run between two songs, in the record's own pixels
 
 const STYLES = {
   // lines: how much the single grooves show; satin: how much the songs show
@@ -122,6 +117,9 @@ precision highp float;
 uniform vec2 uSize;      // canvas, device pixels
 uniform float uDpr;
 uniform vec2 uCentre;    // record centre, CSS pixels from the canvas's top left
+uniform vec2 uGeo;       // distance from the centre to the horizon, and the tilt
+uniform vec4 uHoles[4];  // the hero's buttons, where nothing may show through
+uniform float uHoleCount;
 uniform vec2 uSpan;      // inner and outer radius, record pixels
 uniform float uSpin;
 uniform float uFacing;
@@ -141,26 +139,27 @@ const float PI = 3.14159265;
 // headline) is foreshortened hard; the wider spacing out there keeps its
 // grooves about 5 CSS px apart, distinct hairlines rather than one band.
 // The grooves stay true circles: spacing only changes with the radius.
-const float PITCH = 5.0;
-const float PITCH_OUT = 38.0;
-const float SQUASH = ${SQUASH.toFixed(3)};
+const float PITCH = 6.0;
+const float PITCH_OUT = 8.0;
 const float HORIZON = ${HORIZON.toFixed(1)};
-const float SCALE = ${SCALE.toFixed(3)};
 
 float hash(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
 
 void main() {
   vec2 px = vec2(gl_FragCoord.x, uSize.y - gl_FragCoord.y) / uDpr;
   // Onto the disc, in perspective (see toRecord).
-  float d0 = uCentre.y + HORIZON;
-  float f = d0 / max(1.0, px.y + HORIZON);
-  vec2 q = vec2((px.x - uCentre.x) * f, (1.0 - f) * d0 / SQUASH) / SCALE;
+  float f = uGeo.x / max(1.0, px.y + HORIZON);
+  vec2 q = vec2((px.x - uCentre.x) * f, (1.0 - f) * uGeo.x / uGeo.y);
   float r = length(q);
   // How many record pixels one device pixel covers here (larger where the
   // disc is flattest).
   float fr = max(fwidth(r), 1e-3);
-  float edge = smoothstep(uSpan.x, uSpan.x + 120.0, r) * (1.0 - smoothstep(uSpan.y - 160.0, uSpan.y, r));
-  if (edge <= 0.0) { gl_FragColor = vec4(0.0); return; }
+  float R = uSpan.y;
+  if (r > R + 2.0 * fr) { gl_FragColor = vec4(0.0); return; }
+  // The disc, with a crisp edge, and the label hidden behind the screen.
+  float edge = smoothstep(uSpan.x, uSpan.x + 40.0, r) * (1.0 - smoothstep(R - fr, R + fr, r));
+  // Out at the rim: a smooth lead-in with no grooves, then the raised lip.
+  float lead = smoothstep(R - 34.0, R - 26.0, r);
   float a = atan(q.y, q.x);
 
   // Which song this radius is in, and where in it.
@@ -171,7 +170,7 @@ void main() {
   for (int i = 0; i < ${MAX_TRACKS}; i++) {
     if (float(i) >= uTrackCount) break;
     vec2 t = uTracks[i];
-    float soft = max(12.0, fr * 2.0);
+    float soft = max(3.0, fr * 1.5);
     float w = smoothstep(t.x - soft, t.x + soft, r) * (1.0 - smoothstep(t.y - soft, t.y + soft, r));
     if (w > inSong) { inSong = w; u = clamp((r - t.x) / (t.y - t.x), 0.0, 1.0); idx = float(i); mid = 0.5 * (t.x + t.y); }
   }
@@ -201,6 +200,7 @@ void main() {
   float satin = mix(0.62, loud, inSong);
   float fine = mix(0.7, 1.0 + lines, inSong);
   float L = mix(1.0, satin, uStyle.y) * mix(1.0, fine, uStyle.x);
+  L = mix(L, 0.5, lead);
 
   // Light. The fixed sheen: two broad wedges either side of the centre.
   float sheen = uSheen * cos(2.0 * (a - uFacing));
@@ -222,23 +222,27 @@ void main() {
   float seg = 2.0 * PI / 3.0;
   float ph = fract(sin(idx * 91.7) * 4375.5) * seg;
   float la = mod(b - ph, seg) - 0.5 * seg;          // angle to the nearest one
-  float arc = la * r / 700.0;
+  float arc = la * r / 220.0;
   float uc = 0.3 + 0.4 * fract(sin(idx * 17.3) * 9631.1);
-  float du = (u - uc) / 0.28;
+  float du = (u - uc) / 0.3;
   float glint = exp(-arc * arc - du * du) * inSong;
   float onLines = mix(1.0, clamp(0.4 + 0.6 * (1.0 + lines) * 0.5, 0.0, 1.3), uStyle.x);
-  L += uGlint * glint * (0.25 + 0.75 * lamp) * onLines;
+  L += uGlint * glint * (0.25 + 0.75 * lamp) * onLines * (1.0 - lead);
+  // The lip at the very edge catches the light: a fine bright line that
+  // shows the disc's outline, brightest where the lamp falls.
+  float dl = (r - (R - 2.5)) / max(1.3, fr * 1.2);
+  L += 1.1 * exp(-dl * dl) * (0.45 + 0.55 * lamp) * mix(0.35, 1.0, clamp((f - 1.0) * 4.0, 0.0, 1.0));
 
   // The pointer: the grooves at its radius catch the light along their own
   // run, a narrow streak following the arc either side of it rather than a
   // round glow, shining on the grooves themselves.
   if (uHover.z > 0.0) {
-    float dr = (r - uHover.x) / 85.0;
+    float dr = (r - uHover.x) / 34.0;
     float da = atan(sin(a - uHover.y), cos(a - uHover.y));
-    float s = da * max(uHover.x, 100.0) / 300.0;
+    float s = da * max(uHover.x, 100.0) / 240.0;
     float streak = exp(-dr * dr) * exp(-s * s);
     float shine = mix(1.0, clamp(0.25 + 0.75 * (1.0 + lines) * 0.5, 0.0, 1.3), uStyle.x);
-    L += 2.8 * uHover.z * streak * shine * mix(0.5, 1.0, inSong);
+    L += 11.0 * uHover.z * streak * (0.45 + 0.55 * shine) * mix(0.6, 1.0, inSong);
   }
 
   float alpha = uStyle.z * L * edge * (1.0 + 0.08 * uSwell);
@@ -247,19 +251,29 @@ void main() {
   // The needle's groove: lit warm, a narrow band riding on the grooves.
   vec3 warm = vec3(0.95, 0.86, 0.74);
   if (uNeedle.y > 0.0) {
-    float d = (r - uNeedle.x) / max(5.0, fr * 1.2);
+    float d = (r - uNeedle.x) / max(3.0, fr * 1.2);
     float band = exp(-d * d * 0.5) * uNeedle.y * edge;
     float on = mix(1.0, clamp(0.35 + 0.65 * (1.0 + lines) * 0.5, 0.0, 1.2), uStyle.x);
-    float w = 0.16 * band * on;
+    float w = 0.3 * band * on;
     col += warm * w;
     alpha += w;
   }
   // A dropped needle: one soft ring of light running out through the grooves.
   if (uRipple.y > 0.0) {
-    float d = (r - uRipple.x) / 30.0;
-    float w = 0.07 * exp(-d * d) * uRipple.y * edge * mix(1.0, fine, uStyle.x);
+    float d = (r - uRipple.x) / 20.0;
+    float w = 0.1 * exp(-d * d) * uRipple.y * edge * mix(1.0, fine, uStyle.x);
     col += warm * w;
     alpha += w;
+  }
+
+  // Nothing shows through the hero's buttons (one is see-through).
+  for (int i = 0; i < 4; i++) {
+    if (float(i) >= uHoleCount) break;
+    vec4 h = uHoles[i];
+    float inside = smoothstep(h.x - 3.0, h.x + 1.0, px.x) * (1.0 - smoothstep(h.z - 1.0, h.z + 3.0, px.x))
+      * smoothstep(h.y - 3.0, h.y + 1.0, px.y) * (1.0 - smoothstep(h.w - 1.0, h.w + 3.0, px.y));
+    col *= 1.0 - inside;
+    alpha *= 1.0 - inside;
   }
 
   // Dither, so the soft gradients never step into bands.
@@ -295,7 +309,7 @@ function init() {
   const loc = gl.getAttribLocation(prog, 'p');
   gl.enableVertexAttribArray(loc);
   gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
-  for (const n of ['uSize', 'uDpr', 'uCentre', 'uSpan', 'uSpin', 'uFacing', 'uStyle', 'uSheen', 'uGlint', 'uHover', 'uSwell', 'uNeedle', 'uRipple', 'uTracks', 'uTrackCount']) U[n] = gl.getUniformLocation(prog, n);
+  for (const n of ['uSize', 'uDpr', 'uCentre', 'uGeo', 'uHoles', 'uHoleCount', 'uSpan', 'uSpin', 'uFacing', 'uStyle', 'uSheen', 'uGlint', 'uHover', 'uSwell', 'uNeedle', 'uRipple', 'uTracks', 'uTrackCount']) U[n] = gl.getUniformLocation(prog, n);
   return true;
 }
 
@@ -310,12 +324,20 @@ function layout(now) {
   const c = canvas.getBoundingClientRect();
   const s = screen.getBoundingClientRect();
   const cx = s.left - c.left + s.width / 2;
-  // The centre sits low, just under the screen's foot, so the far side of
-  // the disc reaches up behind the whole hero.
-  const cy = s.top - c.top + s.height * 0.95;
-  const r0 = (s.width * 0.25) / SCALE;
-  const corner = (x, y) => toRecord(x, y, { cx, cy }).r;
-  const R = Math.max(corner(0, 0), corner(c.width, 0), corner(0, c.height), corner(c.width, c.height)) * 1.05;
+  // The centre sits just behind the top of the screen; the disc is about
+  // 1.8 times the content's width across.
+  const cy = s.top - c.top + s.height * 0.14;
+  const R = Math.min(c.width * 0.7, s.width * 0.9);
+  const r0 = R * 0.12;
+  // Tilt it back just enough that its far rim lands near the top of the
+  // canvas (behind the headline).
+  const d0 = cy + HORIZON;
+  const tilt = Math.max(0.2, ((d0 / (RIM_TOP + HORIZON) - 1) * d0) / R);
+  // The hero's buttons, so nothing shows through them.
+  const holes = [...document.querySelectorAll('.hero .btn')].slice(0, 4).map((b) => {
+    const r = b.getBoundingClientRect();
+    return [r.left - c.left, r.top - c.top, r.right - c.left, r.bottom - c.top];
+  });
   // The record runs on past the mouse/controller switch under the screen
   // and fades out to nothing at the next section's heading ("Install").
   const bar = document.querySelector('.shot-bar')?.getBoundingClientRect();
@@ -324,10 +346,12 @@ function layout(now) {
   // The app's screen, where the pointer isn't on the record.
   const box = { l: s.left - c.left, r: s.right - c.left, t: s.top - c.top, b: s.bottom - c.top };
   const key = [c.width, c.height, Math.round(cx), Math.round(cy), Math.round(end)].join();
+  gl.uniform4fv(U.uHoles, new Float32Array([...holes.flat(), ...new Array(16 - holes.length * 4).fill(0)]));
+  gl.uniform1f(U.uHoleCount, holes.length);
   if (geo?.key === key) return Object.assign(geo, { box });
   const tracks = [];
-  for (let a = r0, i = 0; a < R && tracks.length < MAX_TRACKS; i++) {
-    const b = Math.min(R, a + 200 + rand(i, 9) * 260);
+  for (let a = r0, i = 0; a < R - 40 && tracks.length < MAX_TRACKS; i++) {
+    const b = Math.min(R - 34, a + 60 + rand(i, 9) * 80);
     tracks.push(a, b);
     a = b + GAP;
   }
@@ -338,7 +362,7 @@ function layout(now) {
   canvas.style.setProperty('--fx-top', `${Math.round(s.top - c.top)}px`);
   canvas.style.setProperty('--fx-mid', `${Math.round(s.top - c.top + s.height * 0.3)}px`);
   canvas.style.setProperty('--fx-end', `${Math.round(end)}px`);
-  geo = { key, cx, cy, R, r0, box };
+  geo = { key, cx, cy, R, r0, box, d0, tilt };
   return geo;
 }
 
@@ -396,7 +420,7 @@ function frame(now, still) {
   // The needle plays inward, slowly; the ring runs out and fades.
   let needleOn = 0;
   if (needle.on && touch === 'needle') {
-    needle.r = Math.max(g.r0 + 30, needle.r - dt * 1.2);
+    needle.r = Math.max(g.r0 + 30, needle.r - dt * 0.6);
     needleOn = Math.min(1, (now - needle.born) / 500);
   }
   let rippleOn = 0;
@@ -406,7 +430,7 @@ function frame(now, still) {
     if (t >= 1) ripple.on = false;
     else {
       rippleOn = Math.min(1, t * 8) * (1 - t) ** 2;
-      rippleR = ripple.r + t * 300;
+      rippleR = ripple.r + t * 160;
     }
   }
 
@@ -428,6 +452,7 @@ function frame(now, still) {
   gl.uniform2f(U.uSize, w, h);
   gl.uniform1f(U.uDpr, w / canvas.clientWidth);
   gl.uniform2f(U.uCentre, g.cx, g.cy);
+  gl.uniform2f(U.uGeo, g.d0, g.tilt);
   gl.uniform2f(U.uSpan, g.r0, g.R);
   gl.uniform1f(U.uSpin, spin % (Math.PI * 2));
   gl.uniform1f(U.uFacing, FACING);
