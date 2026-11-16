@@ -1,0 +1,15 @@
+/* #13: the lane label is one truncating line that ends 16px before the
+   play head (the lane's centre). Block layout so the ellipsis applies to
+   the title text; the deck-colour bar stays inline before it. */
+:root[data-flag-declutter-lane-label] .waves .lane .who {
+  display: block;
+  max-width: calc(50% - var(--pad) - 16px);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+:root[data-flag-declutter-lane-label] .waves .lane .who i {
+  display: inline-block;
+  margin-right: 8px;
+  vertical-align: -2px;
+}
