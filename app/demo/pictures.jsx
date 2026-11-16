@@ -10,14 +10,15 @@
 //                B's beats glide into line under A's as 118.00 rolls to 129.00
 //   Mixer        High, Mid and Low; Low turns down to its kill
 //   Stems        the four stems; Vocals mutes and its lane goes quiet
-//   Library      "glass" typed into search; the list closes to its matches
+//   Library      tracks arrive from Rekordbox and Serato; "glass" lights the
+//                matches in place and quiets the rest; the pick loads to A
 //   Controllers  140+, and a controller connecting
 //   Recording    Rec, the clock running, the take growing
 //   Download     the disk image: Interlude glides onto Applications
 //   Open it      Spotlight: "Interl", the rest filled in, the Top Hit
 //   Add music    the library filling: tracks arrive, then their tempo and key
 //
-// Each is a 360 × 196 Stage. Some sit centred inside the card's insets (the
+// Each is a 360 × 176 Stage. Some sit centred inside the card's insets (the
 // knobs, the figure, the windows); some run off its edges where the thing
 // they show does (the beat rails, the stem lanes, the take, long lists),
 // and the card cuts them.
@@ -47,7 +48,7 @@ const ICON = new URL('../../site/img/icon.svg', import.meta.url).href;
 /** The frame every picture shares. */
 function Pic({ id, initial, poster, script, gate, onDone, bleed, children }) {
   return (
-    <Stage width={PW} height={PH} theme="dark" unframed play="once" tokens={TOKENS} className={`p p-${id}`}
+    <Stage width={PW} height={PH} theme="dark" unframed play="once" tokens={TOKENS} className={`p p--${id}`}
       initial={initial} poster={poster}
       script={async (a) => {
         // Wait for this picture's turn (Replay's sequence), then play.
@@ -178,9 +179,9 @@ export function Eq(play) {
       }}>
       {(s) => (
         <div className="p-eq">
-          <Knob label="High" pos={s.hi} />
-          <Knob label="Mid" pos={s.mid} />
-          <Knob label="Low" pos={s.low} killed={s.low <= 0.001} />
+          <Knob label="High" pos={s.hi} size={66} />
+          <Knob label="Mid" pos={s.mid} size={66} />
+          <Knob label="Low" pos={s.low} killed={s.low <= 0.001} size={66} />
         </div>
       )}
     </Pic>
@@ -224,61 +225,68 @@ export function Stems(play) {
   );
 }
 
-/* ---------------- Library: search, the list running off the bottom ---------------- */
+/* ---------------- Library: tracks come in, a search finds two ---------------- */
 
-const ROWS = [
-  { title: 'Afterglow', artist: 'Deepfield', bpm: 129, key: 'Bm' },
-  { title: 'Glass Rooms', artist: 'Kite Theory', bpm: 128, key: 'B♭m' },
-  { title: 'Night Shift', artist: 'Mara Lune', bpm: 118, key: 'C' },
-  { title: 'Halcyon', artist: 'Juno Hale', bpm: 126, key: 'G♯m' },
-  { title: 'Glasshouse', artist: 'Sable & Ash', bpm: 124, key: 'Am' },
-  { title: 'Signal Fire', artist: 'Low Orbit', bpm: 125, key: 'Gm' },
-];
-// Library: one small library view that shows all three things at once:
-// tracks from Rekordbox and Serato, each tagged with its format, and a
-// search that narrows them, letter by letter, to the two that match.
+// One small library view, in three calm beats, one thing moving at a time:
+//   1. The tracks arrive, one by one into their own places, each with its
+//      format and where it came from (Rekordbox or Serato).
+//   2. "glass" is typed. Nothing moves: as each letter lands, the letters
+//      that match light up in place and the tracks that don't fall quiet
+//      (g: all four; gl: three; gla: the two Glass ones).
+//   3. The first match is picked and loads to Deck A.
+// Rows keep their places throughout, so the eye never has to follow a reflow.
 const LIB = [
-  { t: 'Night Shift', fmt: 'MP3', src: 'Serato' },
-  { t: 'Glass Rooms', fmt: 'FLAC', src: 'Rekordbox' },
-  { t: 'Glasshouse', fmt: 'WAV', src: 'Serato' },
+  { t: 'Night Shift', fmt: 'FLAC', src: 'Rekordbox' },
+  { t: 'Glass Rooms', fmt: 'MP3', src: 'Serato' },
+  { t: 'Afterglow', fmt: 'WAV', src: 'Rekordbox' },
+  { t: 'Glasshouse', fmt: 'AIFF', src: 'Serato' },
 ];
+const LIB_QUERY = 'glass';
+const LIB_PICK = 1;
+
+/** The title, with the part that matches the search lit. */
+function Marked({ text, q }) {
+  const at = q ? text.toLowerCase().indexOf(q) : -1;
+  if (at < 0) return text;
+  return <>{text.slice(0, at)}<mark>{text.slice(at, at + q.length)}</mark>{text.slice(at + q.length)}</>;
+}
+
 export function Search(play) {
   return (
-    <Pic id="search" {...play} initial={{ rows: LIB.length, q: '', src: 'All', sel: -1, loaded: false }} poster={{ rows: LIB.length, q: 'glass', src: 'All', sel: 1, loaded: true }}
+    <Pic id="search" {...play} initial={{ rows: 0, q: '', sel: false, loaded: false }} poster={{ rows: LIB.length, q: LIB_QUERY, sel: true, loaded: true }}
       script={async (a) => {
-        // First, where the music came from: just what came from Serato,
-        // then everything again.
-        await a.wait(500);
-        await a.set({ src: 'Serato' });
-        await a.wait(1500);
-        await a.set({ src: 'All' });
-        await a.wait(900);
-        for (let i = 1; i <= 5; i++) {
-          await a.set({ q: 'glass'.slice(0, i) });
-          await a.wait(220);
+        // 1. In they come.
+        for (let rows = 1; rows <= LIB.length; rows++) {
+          await a.set({ rows });
+          await a.wait(260);
         }
-        // Then the first match is picked and loaded to Deck A.
+        // 2. A pause, then the search, a letter at a time.
         await a.wait(800);
-        await a.set({ sel: 1 });
-        await a.wait(800);
+        for (let i = 1; i <= LIB_QUERY.length; i++) {
+          await a.set({ q: LIB_QUERY.slice(0, i) });
+          await a.wait(i < 3 ? 320 : 180);
+        }
+        // 3. The first match is picked, then loaded to Deck A.
+        await a.wait(700);
+        await a.set({ sel: true });
+        await a.wait(450);
         await a.set({ loaded: true });
       }}>
       {(s) => {
-        const hit = (r) => r.t.toLowerCase().includes(s.q) && (s.src === 'All' || r.src === s.src);
-        const shown = LIB.slice(0, s.rows).filter(hit).length;
+        const hit = (r) => r.t.toLowerCase().includes(s.q);
+        const found = LIB.filter(hit).length;
         return (
           <div className="p-lib">
-            <div className="p-lib__field">
+            <div className="p-lib__field" data-focus={s.q ? '' : undefined}>
               <svg viewBox="0 0 16 16" aria-hidden><circle cx="7" cy="7" r="4.5" /><path d="m10.5 10.5 3 3" /></svg>
               <span>{s.q || <em>Search</em>}{s.q && <i className="p-caret" />}</span>
-              <b>{shown} {shown === 1 ? 'track' : 'tracks'}</b>
+              {(s.rows > 0 || s.q) && <b>{s.q ? `${found} of ${LIB.length}` : `${s.rows} ${s.rows === 1 ? 'track' : 'tracks'}`}</b>}
             </div>
-            <div className="p-lib__tabs">{['All', 'Rekordbox', 'Serato'].map((t) => <span key={t} data-on={s.src === t || undefined}>{t === 'All' ? 'All tracks' : t}</span>)}</div>
             <div className="p-lib__list">
               {LIB.map((r, i) => (
-                <div key={r.t} className="p-lib__row" data-in={i < s.rows || undefined} data-out={(i < s.rows && !hit(r)) || undefined}
-                  data-sel={(s.sel === i) || undefined} data-loaded={(s.sel === i && s.loaded) || undefined}>
-                  <span className="t">{r.t}<b className="p-lib__deck">A</b></span>
+                <div key={r.t} className="p-lib__row" data-in={i < s.rows || undefined} data-dim={(s.q && !hit(r)) || undefined}
+                  data-sel={(s.sel && i === LIB_PICK) || undefined} data-loaded={(s.loaded && i === LIB_PICK) || undefined}>
+                  <span className="t"><span><Marked text={r.t} q={s.q} /></span><b className="p-lib__deck">A</b></span>
                   <span className="p-lib__fmt">{r.fmt}</span>
                   <span className="p-lib__src" data-src={r.src}>{r.src}</span>
                 </div>
@@ -336,10 +344,17 @@ export function Controllers(play) {
 //   carousel  Record, Sampler and Shortcuts: one large in the middle doing
 //             its thing, then it eases aside as the next grows into place
 const PADS = 8;
+// The Sampler plays a finger-drum groove on a steady grid of eighths at
+// 120 bpm: kick, hat, snare, hat, twice over, with the end pad in place
+// of the last hat. Kick sits on the first pad, the hat in the middle, the snare
+// beyond it. Capitals are accents (the downbeats), played a little brighter.
+const EIGHTH = 250; // ms
+const GROOVE = ['K', 'h', 'S', 'h', 'K', 'h', 'S', 'X'];
+const GROOVE_PAD = { K: 0, h: 3, S: 5, X: 7 };
 const WAVE = Array.from({ length: 44 }, (_, i) => 0.25 + 0.75 * Math.abs(Math.sin(i * 0.9) * Math.cos(i * 0.31)));
 export function Extras(play) {
   return (
-    <Pic id="extras" {...play} initial={{ rec: false, sec: 0, bars: 0, pad: -1, key: 'W', focus: 0 }} poster={{ rec: true, sec: 9, bars: WAVE.length, pad: 5, key: 'Space', focus: 0 }}
+    <Pic id="extras" {...play} initial={{ rec: false, sec: 0, bars: 0, hits: Array(PADS).fill(0), accent: Array(PADS).fill(false), key: 'W', focus: 0 }} poster={{ rec: true, sec: 9, bars: WAVE.length, hits: Array(PADS).fill(0), accent: Array(PADS).fill(false), key: 'Space', focus: 0 }}
       script={async (a) => {
         await a.set({ rec: true });
         let sec = 0;
@@ -349,12 +364,21 @@ export function Extras(play) {
         await a.wait(document.documentElement.dataset.reclayout === 'carousel' ? 1500 : 600);
         await a.set({ focus: 1 });
         await a.wait(document.documentElement.dataset.reclayout === 'carousel' ? 450 : 0);
-        for (const pad of [0, 5, 2, 5, 7]) {
-          await a.set({ pad });
-          await a.wait(190);
+        // Each hit lands on the grid, timed from the first (not chained, so
+        // nothing drifts), and rings out on its own while the next lands.
+        const hits = Array(PADS).fill(0);
+        const accent = Array(PADS).fill(false);
+        const t0 = performance.now();
+        for (let k = 0; k < GROOVE.length; k++) {
+          await a.wait(Math.max(0, t0 + k * EIGHTH - performance.now()));
+          const g = GROOVE[k];
+          const pad = GROOVE_PAD[g];
+          hits[pad]++;
+          accent[pad] = g === g.toUpperCase() && g !== 'h';
+          a.put({ hits: [...hits], accent: [...accent] });
         }
-        await a.wait(500);
-        await a.set({ focus: 2, pad: -1 });
+        await a.wait(EIGHTH + 400);
+        await a.set({ focus: 2 });
         await a.wait(600);
         await a.set({ key: 'Space' });
         await a.wait(1100);
@@ -375,7 +399,8 @@ export function Extras(play) {
           </figure>
           <figure className="p-x p-x--pads" data-focus={s.focus === 1 || undefined}>
             <figcaption>Sampler</figcaption>
-            <div className="p-pads p-pads--lg">{Array.from({ length: PADS }, (_, i) => <i key={i} data-on={s.pad === i || undefined} />)}</div>
+            <div className="p-pads p-pads--lg">{/* Keyed by its hit count, so each hit starts the pad's light afresh. */}
+              {Array.from({ length: PADS }, (_, i) => <i key={`${i}.${s.hits[i]}`} data-hit={s.hits[i] > 0 ? (s.accent[i] ? 'accent' : 'soft') : undefined} />)}</div>
           </figure>
           <figure className="p-x p-x--keys" data-focus={s.focus === 2 || undefined}>
             <figcaption>Shortcuts</figcaption>
