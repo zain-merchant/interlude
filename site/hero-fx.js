@@ -127,6 +127,7 @@ uniform float uSpin;
 uniform float uFacing;
 uniform vec3 uStyle;     // lines, satin, level
 uniform float uSheen;
+uniform float uGlint;
 uniform vec3 uHover;     // pointer radius, angle, strength
 uniform float uSwell;
 uniform vec2 uNeedle;    // radius, strength
@@ -208,8 +209,25 @@ void main() {
   float b = a - uSpin;
   float k1 = floor(mid / 140.0) + 3.0;
   float k2 = floor(mid / 90.0) + 5.0;
-  float warp = 0.1 * sin(k1 * b + r / 80.0 + idx * 2.3) + 0.065 * sin(k2 * b - r / 55.0 + idx * 4.1);
+  float warp = 0.13 * sin(k1 * b + r / 80.0 + idx * 2.3) + 0.085 * sin(k2 * b - r / 55.0 + idx * 4.1);
   L *= 1.0 + sheen + warp * mix(0.6, 1.0, inSong);
+
+  // Reflections, so it reads as spinning: in each song, a few short runs
+  // of groove catch the light more than the rest (a slight ridge in the
+  // pressing). They're fixed on the disc and turn with it, brightening as
+  // they come round into the lamp's light and fading as they leave, the
+  // way highlights slide round a record under a lamp.
+  float lamp = 0.5 + 0.5 * cos(2.0 * (a - uFacing));
+  lamp *= lamp;
+  float seg = 2.0 * PI / 3.0;
+  float ph = fract(sin(idx * 91.7) * 4375.5) * seg;
+  float la = mod(b - ph, seg) - 0.5 * seg;          // angle to the nearest one
+  float arc = la * r / 700.0;
+  float uc = 0.3 + 0.4 * fract(sin(idx * 17.3) * 9631.1);
+  float du = (u - uc) / 0.28;
+  float glint = exp(-arc * arc - du * du) * inSong;
+  float onLines = mix(1.0, clamp(0.4 + 0.6 * (1.0 + lines) * 0.5, 0.0, 1.3), uStyle.x);
+  L += uGlint * glint * (0.25 + 0.75 * lamp) * onLines;
 
   // The pointer: the grooves at its radius catch the light along their own
   // run, a narrow streak following the arc either side of it rather than a
@@ -277,7 +295,7 @@ function init() {
   const loc = gl.getAttribLocation(prog, 'p');
   gl.enableVertexAttribArray(loc);
   gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
-  for (const n of ['uSize', 'uDpr', 'uCentre', 'uSpan', 'uSpin', 'uFacing', 'uStyle', 'uSheen', 'uHover', 'uSwell', 'uNeedle', 'uRipple', 'uTracks', 'uTrackCount']) U[n] = gl.getUniformLocation(prog, n);
+  for (const n of ['uSize', 'uDpr', 'uCentre', 'uSpan', 'uSpin', 'uFacing', 'uStyle', 'uSheen', 'uGlint', 'uHover', 'uSwell', 'uNeedle', 'uRipple', 'uTracks', 'uTrackCount']) U[n] = gl.getUniformLocation(prog, n);
   return true;
 }
 
@@ -415,6 +433,7 @@ function frame(now, still) {
   gl.uniform1f(U.uFacing, FACING);
   gl.uniform3f(U.uStyle, st.lines, st.satin, st.level);
   gl.uniform1f(U.uSheen, st.sheen);
+  gl.uniform1f(U.uGlint, st.glint ?? 1.6);
   gl.uniform3f(U.uHover, hover.r, hover.a, still ? 0 : hover.on);
   gl.uniform1f(U.uSwell, swell);
   gl.uniform2f(U.uNeedle, needle.r, needleOn);

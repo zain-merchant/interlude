@@ -465,3 +465,16 @@
 .p-knob[data-killed] .p-knob__kill { opacity: 1; transform: translate(-50%, 0); }
 /* Add your music: a shorter fade, so its third track still reads. */
 .p.p--add .p-body[data-bleed="bottom"] { --fl: 34px; }
+
+/* Controllers: a smaller controller with a shorter fade, so more of it
+   shows; the connected tag centred between the card's top and the plug. */
+.p.p--ctl .p-body[data-bleed] { --fl: 46px; }
+.p-ctl__plate { left: 34px; right: 34px; top: 54px; height: 124px; grid-template-columns: 1fr 60px 1fr; grid-template-rows: 70px auto; gap: 8px 10px; padding: 12px 14px; border-radius: 14px; }
+.p-ctl__jog { width: 70px; height: 70px; }
+.p-ctl__jog::after { inset: 7px; }
+.p-ctl__mix { gap: 8px 0; padding: 8px 0; }
+.p-ctl__mix i { width: 12px; height: 12px; }
+.p-ctl__mix b { width: 38px; margin-top: 4px; }
+.p-ctl__pads { gap: 4px; padding: 4px; }
+.p-ctl__pads i { height: 16px; }
+.p-ctl .p-toast { top: -12px; }
