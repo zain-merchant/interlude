@@ -26,8 +26,10 @@ const screen = document.querySelector('.shot .screen');
 const canvas = document.querySelector('.ripples');
 const ctx = canvas.getContext('2d');
 const RES = Math.min(1.25, devicePixelRatio || 1);
-const SQUASH = 0.5;
-const TURN = (Math.PI * 2) / 120; // one turn every two minutes
+// How flat the record lies: a low angle, so it reads as a disc on a
+// surface going away from you, not a well.
+const SQUASH = 0.3;
+const TURN = (Math.PI * 2) / 50; // one slow turn every 50 seconds
 const COOL = '201 220 242';
 const WARM = '240 220 192';
 
@@ -248,7 +250,7 @@ function draw(now) {
   ctx.fillStyle = shade(ctx, facing - Math.PI / 2, 1, 4, 0.32, 0.68);
   ctx.fillRect(-g.R, -g.R, g.R * 2, g.R * 2);
   // The turn: three broad lobes going round with the record, gently.
-  ctx.fillStyle = shade(ctx, spin, 1.5, 2, 0.82, 0.18);
+  ctx.fillStyle = shade(ctx, spin, 1.5, 2, 0.55, 0.45);
   ctx.fillRect(-g.R, -g.R, g.R * 2, g.R * 2);
   // Under the pointer, the grooves catch a little more light: a soft pool
   // that fades in as the pointer arrives and out when it leaves.
@@ -256,12 +258,12 @@ function draw(now) {
   if (glow > 0.01) {
     const mx = mouse.x - g.cx;
     const my = (mouse.y - g.cy) / SQUASH;
-    const pool = ctx.createRadialGradient(mx, my, 0, mx, my, 380);
-    pool.addColorStop(0, `rgb(${COOL} / ${0.32 * glow})`);
-    pool.addColorStop(0.5, `rgb(${COOL} / ${0.12 * glow})`);
+    const pool = ctx.createRadialGradient(mx, my, 0, mx, my, 460);
+    pool.addColorStop(0, `rgb(${COOL} / ${0.5 * glow})`);
+    pool.addColorStop(0.45, `rgb(${COOL} / ${0.2 * glow})`);
     pool.addColorStop(1, `rgb(${COOL} / 0)`);
     ctx.fillStyle = pool;
-    ctx.fillRect(mx - 380, my - 380, 760, 760);
+    ctx.fillRect(mx - 460, my - 460, 920, 920);
   }
   // A dropped needle: a ring of light running out through the grooves.
   for (const rp of ripples) {

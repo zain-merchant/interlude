@@ -34,26 +34,15 @@ img { max-width: 100%; height: auto; display: block; }
 .wrap { width: min(1120px, 100% - 32px); margin-inline: auto; }
 
 /* Nav */
-/* The nav. Over the hero it stays out of the way: the record shows
-   through, and the buttons the hero already has are hidden. Once the
-   hero's buttons scroll away ([data-past]), GitHub and Download fade in. The section links, which the
-   hero doesn't have, are always there. */
 .nav {
   position: sticky;
   top: 0;
   z-index: 10;
-  border-bottom: 1px solid transparent;
-  transition: background-color 0.3s, border-color 0.3s, backdrop-filter 0.3s;
-}
-.nav[data-scrolled] {
   background: rgb(9 9 11 / 0.78);
   backdrop-filter: blur(16px) saturate(1.2);
   -webkit-backdrop-filter: blur(16px) saturate(1.2);
-  border-bottom-color: var(--line);
+  border-bottom: 1px solid var(--line);
 }
-.nav-actions > * { transition: opacity 0.3s cubic-bezier(0.23, 1, 0.32, 1), transform 0.3s cubic-bezier(0.23, 1, 0.32, 1), visibility 0.3s; }
-.nav:not([data-past]) .nav-actions > * { opacity: 0; transform: translateY(-4px); visibility: hidden; }
-.nav-actions > :nth-child(2) { transition-delay: 40ms; }
 .nav-row { display: flex; align-items: center; gap: 24px; height: 60px; }
 .brand { display: inline-flex; align-items: center; gap: 10px; font-weight: 600; text-decoration: none; letter-spacing: -0.01em; }
 .links { display: flex; gap: 22px; margin-right: auto; font-size: 14px; }
@@ -167,7 +156,7 @@ main { position: relative; isolation: isolate; }
   position: absolute; left: 0; top: 0; z-index: -1; width: 100%; height: min(2000px, 230vh); pointer-events: none;
   /* Clearest above the screen, behind the words; quieter beside the app. */
   --fx-top: 600px; --fx-mid: 900px;
-  --fx-mask: linear-gradient(to bottom, rgb(0 0 0 / 0.15) 0, rgb(0 0 0 / 0.8) calc(var(--fx-top) * 0.55), rgb(0 0 0 / 0.8) var(--fx-top), rgb(0 0 0 / 0.42) var(--fx-mid), rgb(0 0 0 / 0.42) 72%, transparent);
+  --fx-mask: linear-gradient(to bottom, transparent 0, rgb(0 0 0 / 0.35) calc(var(--fx-top) * 0.35), rgb(0 0 0 / 0.62) var(--fx-top), rgb(0 0 0 / 0.42) var(--fx-mid), rgb(0 0 0 / 0.42) 72%, transparent);
   -webkit-mask-image: var(--fx-mask);
   mask-image: var(--fx-mask);
 }
@@ -273,11 +262,33 @@ pre {
 /* Feature lists: each a single line, evenly spaced, no rules between. */
 .group ul { display: grid; gap: 0; }
 .group li { padding: 0; border: 0; line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-/* A spec sheet: the term, then what it means, quieter; a hairline between. */
-.group li { display: grid; grid-template-columns: 92px 1fr; gap: 12px; align-items: baseline; padding: 9px 0; border-top: 1px solid var(--line); }
-.group li:first-child { border-top: 0; padding-top: 0; }
+/* Feature rows, five versions being tried (.groups[data-rows]). */
+.group li { display: grid; grid-template-columns: 84px 1fr; gap: 10px; align-items: baseline; }
 .group li b { font-weight: 450; color: var(--fg); }
 .group li span { color: var(--fg-3); overflow: hidden; text-overflow: ellipsis; }
+/* Inset rule: a hairline under the detail only, closer rows. */
+.groups[data-rows="inset"] li { padding: 7px 0; }
+.groups[data-rows="inset"] li span { padding-bottom: 7px; margin-bottom: -7px; border-bottom: 1px solid var(--line); }
+.groups[data-rows="inset"] li:last-child span { border-bottom: 0; }
+/* Zebra: every other row on a faint band, no lines. */
+.groups[data-rows="zebra"] ul { margin-inline: -10px; }
+.groups[data-rows="zebra"] li { padding: 7px 10px; border-radius: 8px; }
+.groups[data-rows="zebra"] li:nth-child(odd) { background: rgb(255 255 255 / 0.03); }
+/* Plain: no names, the original sentences, a little air between. */
+.groups[data-rows="plain"] ul { gap: 9px; }
+.groups[data-rows="plain"] li { display: block; color: var(--fg-2); }
+.groups[data-rows="plain"] li > * { display: none; }
+.groups[data-rows="plain"] li::before { content: attr(data-full); }
+/* Stacked: the name small above, the detail under it, two columns. */
+.groups[data-rows="stacked"] ul { grid-template-columns: 1fr 1fr; gap: 14px 16px; align-items: start; }
+.groups[data-rows="stacked"] li { grid-template-columns: 1fr; gap: 2px; align-items: start; }
+.groups[data-rows="stacked"] li b { font-size: 13px; font-weight: 400; color: var(--fg-3); }
+.groups[data-rows="stacked"] li span { color: var(--fg); white-space: normal; }
+/* Aligned: names right-aligned and quiet against a gutter, details bright. */
+.groups[data-rows="aligned"] ul { gap: 8px; }
+.groups[data-rows="aligned"] li { grid-template-columns: 80px 1fr; gap: 14px; }
+.groups[data-rows="aligned"] li b { justify-self: end; font-size: 13px; font-weight: 400; color: var(--fg-3); }
+.groups[data-rows="aligned"] li span { color: var(--fg); }
 
 /* FAQ */
 .faq { max-width: 760px; }
@@ -305,7 +316,7 @@ details p { margin: 0; padding-bottom: 20px; color: var(--fg-2); max-width: 62ch
 .foot-grid > div > a:not(.brand) { display: block; width: fit-content; padding: 3px 0; color: var(--fg-2); text-decoration: none; font-size: 14px; }
 .foot-grid > div > a:not(.brand):hover { color: var(--fg); }
 .small-print { color: var(--fg-3); font-size: 13px; }
-.legal { margin-top: 40px; }
+.legal { margin-top: 16px; max-width: 34em; }
 
 @media (max-width: 860px) {
   .steps, .groups { grid-template-columns: 1fr; }
@@ -338,21 +349,27 @@ details p { margin: 0; padding-bottom: 20px; color: var(--fg-2); max-width: 62ch
 .try button[aria-pressed="true"] { color: #111; background: var(--fg); box-shadow: none; }
 
 /* The name, very large, across the foot of the page and running off its
-   bottom edge. On hover, a record's grooves show in the letters round the
-   pointer: arcs round a spindle below the word, like the record above. */
+   bottom edge, cut in vinyl: fine, even grooves round a centre, and the two
+   wedges of light a record always shows. On hover the light brightens and
+   swings round to face the pointer. */
 .foot { overflow: hidden; }
 .foot-word {
-  position: relative; display: block; margin: 56px 0 -0.22em; text-align: center; user-select: none;
-  font-size: clamp(96px, 21vw, 340px); font-weight: 600; letter-spacing: -0.055em; line-height: 0.9;
-  color: rgb(255 255 255 / 0.045);
-  --x: 50%; --y: 50%; --on: 0;
+  position: relative; display: block; margin: 64px 0 -0.42em; text-align: center; user-select: none;
+  font-size: clamp(110px, 23vw, 380px); font-weight: 600; letter-spacing: -0.055em; line-height: 0.9;
+  color: transparent;
+  background:
+    repeating-radial-gradient(circle at 50% 70%, rgb(255 255 255 / 0.085) 0 0.6px, rgb(255 255 255 / 0.025) 1.2px 2.6px),
+    rgb(255 255 255 / 0.02);
+  -webkit-background-clip: text; background-clip: text;
+  --a: -60deg; --on: 0;
 }
 .foot-word::after {
-  content: attr(data-text); position: absolute; inset: 0;
-  background: repeating-radial-gradient(ellipse 100% 50% at 50% 135%, rgb(255 255 255 / 0.6) 0 1px, transparent 1.5px 5px);
-  -webkit-background-clip: text; background-clip: text; color: transparent;
-  -webkit-mask-image: radial-gradient(circle at var(--x) var(--y), #000, transparent 320px);
-  mask-image: radial-gradient(circle at var(--x) var(--y), #000, transparent 320px);
-  opacity: var(--on); transition: opacity 0.5s ease-out;
+  content: attr(data-text); position: absolute; inset: 0; color: transparent;
+  background: conic-gradient(from var(--a) at 50% 70%,
+    transparent 0deg, rgb(255 255 255 / 0.3) 14deg, transparent 34deg,
+    transparent 180deg, rgb(255 255 255 / 0.3) 194deg, transparent 214deg);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-mask-image: repeating-radial-gradient(circle at 50% 70%, #000 0 0.8px, rgb(0 0 0 / 0.35) 1.4px 2.6px);
+  mask-image: repeating-radial-gradient(circle at 50% 70%, #000 0 0.8px, rgb(0 0 0 / 0.35) 1.4px 2.6px);
+  opacity: calc(0.45 + var(--on) * 0.55); transition: opacity 0.5s ease-out;
 }
-@media (hover: none) { .foot-word::after { display: none; } }

@@ -232,48 +232,52 @@ const ROWS = [
   { title: 'Glasshouse', artist: 'Sable & Ash', bpm: 124, key: 'Am' },
   { title: 'Signal Fire', artist: 'Low Orbit', bpm: 125, key: 'Gm' },
 ];
-// Library: three of its parts laid out loose on the surface, like things
-// knolled on a desk, each a different size, each doing its one thing in
-// turn: search narrowing, an import checking off, the formats it plays.
-const FORMATS = ['MP3', 'FLAC', 'WAV', 'AIFF', 'AAC', 'ALAC'];
+// Library: one small library view that shows all three things at once.
+// Tracks arrive from Rekordbox and Serato, each tagged with its format, and
+// then a search narrows them to the two that match.
+const LIB = [
+  { t: 'Glass Rooms', fmt: 'FLAC', src: 'Rekordbox' },
+  { t: 'Night Shift', fmt: 'MP3', src: 'Serato' },
+  { t: 'Glasshouse', fmt: 'WAV', src: 'Rekordbox' },
+  { t: 'Paper Planes', fmt: 'AIFF', src: 'Serato' },
+  { t: 'Halcyon', fmt: 'AAC', src: 'Rekordbox' },
+];
 export function Search(play) {
   return (
-    <Pic id="search" {...play} initial={{ q: '', n: 2184, imp: 0, fmt: -1 }} poster={{ q: 'glass', n: 2, imp: 2, fmt: FORMATS.length }}
+    <Pic id="search" {...play} initial={{ rows: 0, q: '' }} poster={{ rows: LIB.length, q: 'glass' }}
       script={async (a) => {
-        const counts = [2184, 642, 117, 23, 4, 2];
-        for (let i = 1; i <= 5; i++) {
-          await a.set({ q: 'glass'.slice(0, i), n: counts[i] });
-          await a.wait(130);
+        for (let rows = 1; rows <= LIB.length; rows++) {
+          await a.set({ rows });
+          await a.wait(170);
         }
-        await a.wait(420);
-        await a.set({ imp: 1 });
-        await a.wait(420);
-        await a.set({ imp: 2 });
-        await a.wait(480);
-        for (let f = 0; f <= FORMATS.length; f++) {
-          await a.set({ fmt: f });
+        await a.wait(650);
+        for (let i = 1; i <= 5; i++) {
+          await a.set({ q: 'glass'.slice(0, i) });
           await a.wait(120);
         }
       }}>
-      {(s) => (
-        <div className="p-loose">
-          <figure className="p-obj" style={{ left: 16, top: 22 }}>
-            <div className="p-field-lg"><svg viewBox="0 0 16 16" aria-hidden><circle cx="7" cy="7" r="4.5" /><path d="m10.5 10.5 3 3" /></svg><span>{s.q}<i className="p-caret" /></span><em>{s.n.toLocaleString('en')}</em></div>
-            <figcaption>Search</figcaption>
-          </figure>
-          <figure className="p-obj" style={{ left: 16, top: 98 }}>
-            <div className="p-sources">
-              <span data-done={s.imp >= 1 || undefined}><i className="p-check" />Rekordbox</span>
-              <span data-done={s.imp >= 2 || undefined}><i className="p-check" />Serato</span>
+      {(s) => {
+        const hit = (r) => r.t.toLowerCase().includes(s.q);
+        const shown = LIB.slice(0, s.rows).filter(hit).length;
+        return (
+          <div className="p-lib">
+            <div className="p-lib__field">
+              <svg viewBox="0 0 16 16" aria-hidden><circle cx="7" cy="7" r="4.5" /><path d="m10.5 10.5 3 3" /></svg>
+              <span>{s.q || <em>Search</em>}{s.q && <i className="p-caret" />}</span>
+              <b>{shown} {shown === 1 ? 'track' : 'tracks'}</b>
             </div>
-            <figcaption>Import</figcaption>
-          </figure>
-          <figure className="p-obj" style={{ left: 214, top: 18 }}>
-            <div className="p-files">{FORMATS.map((f, i) => <span key={f} data-on={i < s.fmt || undefined}><b>{f}</b></span>)}</div>
-            <figcaption>Every format</figcaption>
-          </figure>
-        </div>
-      )}
+            <div className="p-lib__list">
+              {LIB.map((r, i) => (
+                <div key={r.t} className="p-lib__row" data-in={i < s.rows || undefined} data-out={(i < s.rows && !hit(r)) || undefined}>
+                  <span className="t">{r.t}</span>
+                  <span className="p-lib__fmt">{r.fmt}</span>
+                  <span className="p-lib__src" data-src={r.src}>{r.src}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      }}
     </Pic>
   );
 }
@@ -339,21 +343,21 @@ export function Extras(play) {
       }}>
       {(s) => (
         <div className="p-loose">
-          <figure className="p-obj" style={{ left: 18, top: 12 }}>
-            <div className="p-rec-lg" data-on={s.rec || undefined}><i /><span>{s.rec ? `0:${String(s.sec).padStart(2, '0')}` : 'Rec'}</span></div>
+          <figure className="p-obj" style={{ left: 20, top: 8 }}>
             <figcaption>Record</figcaption>
+            <div className="p-rec-lg" data-on={s.rec || undefined}><i /><span>{s.rec ? `0:${String(s.sec).padStart(2, '0')}` : 'Rec'}</span></div>
           </figure>
-          <figure className="p-obj" style={{ left: 196, top: 30 }}>
-            <div className="p-pads p-pads--lg">{Array.from({ length: PADS }, (_, i) => <i key={i} data-on={s.pad === i || undefined} />)}</div>
+          <figure className="p-obj" style={{ left: 200, top: 8 }}>
             <figcaption>Sampler</figcaption>
+            <div className="p-pads p-pads--lg">{Array.from({ length: PADS }, (_, i) => <i key={i} data-on={s.pad === i || undefined} />)}</div>
           </figure>
-          <figure className="p-obj" style={{ left: 56, top: 100 }}>
+          <figure className="p-obj" style={{ left: 20, top: 90 }}>
+            <figcaption>Shortcuts</figcaption>
             <div className="p-remap">
               <kbd className="p-key">Play</kbd>
               <svg viewBox="0 0 16 8" aria-hidden><path d="M1 4h13m-3-3 3 3-3 3" /></svg>
               <kbd className="p-key"><span key={s.key}>{s.key}</span></kbd>
             </div>
-            <figcaption>Shortcuts</figcaption>
           </figure>
         </div>
       )}
