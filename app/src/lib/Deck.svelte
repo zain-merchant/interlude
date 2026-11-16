@@ -15,7 +15,7 @@
   import { openMenu } from './menu.svelte.js';
   import { keyLabel } from './commands.js';
   import { announce } from './announce.svelte.js';
-  import { keyName, keyLongName, camelot, playingKey } from './key.js';
+  import { keyName, keyLongName, camelot, playingKey, keysMix } from './key.js';
   import { toggleSlip, beatJump, hasGrid, beatsLabel } from './performance.js';
 
   /** @type {{ deck: number, onload: (deck: number, track: any) => void, onreveal: (path: string) => void, onsettings?: (page: string) => void }} */
@@ -136,6 +136,12 @@
   const atCue = $derived(!!t && !d.playing && Math.abs(d.position - d.cue) < 0.01);
   const pk = $derived(t ? playingKey(d.key, d.rate, d.keylock) : null);
   const canSync = $derived(!!t && d.bpm > 0 && engine.decks[1 - deck].bpm > 0);
+  // #18 (UI audit flag): this deck's key mixes with the other deck's (as each sounds now); class:mix on .key.
+  const keyMix = $derived.by(() => {
+    if (!flag('visual-key-match') || !pk || !tracks[1 - deck]) return false;
+    const o = engine.decks[1 - deck];
+    return keysMix(pk, playingKey(o.key, o.rate, o.keylock));
+  });
 
   let lastTouch = 0;
 
@@ -250,9 +256,9 @@
         {/if}
         <!-- #10 (UI audit flag): key, Camelot code and unit set apart by space and tone, not middle dots. -->
         {#if flag('no-dots')}
-          <div class="unit">{#if pk}<span class="key" class:shifted={pk.shift} use:tip={keyTip}>{keyName(pk)} <span class="cam">{camelot(pk)}</span></span>{' '}{/if}<span class="u">BPM</span></div>
+          <div class="unit">{#if pk}<span class="key" class:shifted={pk.shift} class:mix={keyMix} use:tip={keyTip}>{keyName(pk)} <span class="cam">{camelot(pk)}</span></span>{' '}{/if}<span class="u">BPM</span></div>
         {:else}
-        <div class="unit">{#if pk}<span class="key" class:shifted={pk.shift} use:tip={keyTip}>{keyName(pk)} · {camelot(pk)}</span>{" · "}{/if}BPM</div>
+        <div class="unit">{#if pk}<span class="key" class:shifted={pk.shift} class:mix={keyMix} use:tip={keyTip}>{keyName(pk)} · {camelot(pk)}</span>{" · "}{/if}BPM</div>
         {/if}
       </div>
     </header>
