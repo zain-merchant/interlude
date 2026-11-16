@@ -11,12 +11,12 @@
   import { pushEdit } from './undo.svelte.js';
   import { dropTarget } from './dnd.svelte.js';
   import { tip, tipText } from './tooltip.svelte.js';
+  import { flag, setting } from '../flags/registry.svelte.js';
   import { openMenu } from './menu.svelte.js';
   import { keyLabel } from './commands.js';
   import { announce } from './announce.svelte.js';
-  import { keyName, keyLongName, camelot, playingKey } from './key.js';
+  import { keyName, keyLongName, camelot, playingKey, keysMix } from './key.js';
   import { toggleSlip, beatJump, hasGrid, beatsLabel } from './performance.js';
-  import { flag } from '../flags/registry.svelte.js';
 
   /** @type {{ deck: number, onload: (deck: number, track: any) => void, onreveal: (path: string) => void, onsettings?: (page: string) => void }} */
   let { deck, onload, onreveal, onsettings } = $props();
@@ -136,6 +136,20 @@
   const atCue = $derived(!!t && !d.playing && Math.abs(d.position - d.cue) < 0.01);
   const pk = $derived(t ? playingKey(d.key, d.rate, d.keylock) : null);
   const canSync = $derived(!!t && d.bpm > 0 && engine.decks[1 - deck].bpm > 0);
+  // #18 (UI audit flag): the track is playing out its last seconds (class:ending, and class:last for the final ten, on the remaining time).
+  const ending = $derived(flag('visual-ending') && !!t && d.playing && d.duration > 0 && d.duration - d.position < (Number(setting('visual-ending', 'secs')) || 30));
+  // #18 (UI audit flag): where the pitch fader would match the other deck's tempo (Fader's match mark).
+  const tempoMatch = $derived.by(() => {
+    const o = engine.decks[1 - deck];
+    if (!flag('visual-tempo-match') || !t || !tracks[1 - deck] || !(d.bpm > 0) || !(o.bpm > 0)) return null;
+    return (1 - (o.bpm * o.rate) / d.bpm) / range;
+  });
+  // #18 (UI audit flag): this deck's key mixes with the other deck's (as each sounds now); class:mix on .key.
+  const keyMix = $derived.by(() => {
+    if (!flag('visual-key-match') || !pk || !tracks[1 - deck]) return false;
+    const o = engine.decks[1 - deck];
+    return keysMix(pk, playingKey(o.key, o.rate, o.keylock));
+  });
 
   // #6 (UI audit flag): whether the on-screen Cue button is held, so the play button can show a cue preview.
   let cueHeld = $state(false);
@@ -251,7 +265,12 @@
         {:else}
           <div class="big num">{bpm > 0 ? bpm.toFixed(2) : '—'}</div>
         {/if}
-        <div class="unit">{#if pk}<span class="key" class:shifted={pk.shift} use:tip={keyTip}>{keyName(pk)} · {camelot(pk)}</span>{" · "}{/if}BPM</div>
+        <!-- #10 (UI audit flag): key, Camelot code and unit set apart by space and tone, not middle dots. -->
+        {#if flag('no-dots')}
+          <div class="unit">{#if pk}<span class="key" class:shifted={pk.shift} class:mix={keyMix} use:tip={keyTip}>{keyName(pk)} <span class="cam">{camelot(pk)}</span></span>{' '}{/if}<span class="u">BPM</span></div>
+        {:else}
+        <div class="unit">{#if pk}<span class="key" class:shifted={pk.shift} class:mix={keyMix} use:tip={keyTip}>{keyName(pk)} · {camelot(pk)}</span>{" · "}{/if}BPM</div>
+        {/if}
       </div>
     </header>
 
@@ -259,7 +278,7 @@
 
     <div class="times">
       <span class="el num"><span class="sr">Elapsed </span>{fmt(d.position)}</span>
-      <span class="rm num"><span class="sr">Remaining </span>{fmt(d.position - d.duration)}</span>
+      <span class="rm num" class:ending class:last={ending && d.duration - d.position < 10}><span class="sr">Remaining </span>{fmt(d.position - d.duration)}</span>
     </div>
 
     <div class="mp">
@@ -329,7 +348,7 @@
       use:tip={rangeTip}>{pct(ratePct)}{#if range !== RANGES[0]}<span class="rng">±{Math.round(range * 100)}</span>{/if}</button>
     <div class="pitch-fader">
       <Fader vertical big tick value={pitch} min={-1} max={1} reset={0} label="Deck {name} pitch" onchange={setPitch}
-        format={(v) => pct(-v * range * 100)} {ghost}
+        format={(v) => pct(-v * range * 100)} {ghost} match={tempoMatch}
         note={pickupRate === null ? '' : `The controller's tempo fader is at ${pct((pickupRate - 1) * 100)}. Move it to the marker and it takes over`} />
     </div>
     {#if d.slip}

@@ -1,0 +1,18 @@
+/* #12: the dialog's existing entrance, on a strong ease-out. */
+:root[data-flag-polish-dialog] .backdrop:has(> .card[role='dialog']) {
+  animation: flag-polish-dialog-fade 160ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+:root[data-flag-polish-dialog] .backdrop > .card[role='dialog'] {
+  animation: flag-polish-dialog-rise var(--flag-polish-dialog-ms, 220ms) cubic-bezier(0.23, 1, 0.32, 1);
+}
+@keyframes flag-polish-dialog-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes flag-polish-dialog-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.97);
+  }
+}

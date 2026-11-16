@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { backend } from './backend.js';
   import { announce } from './announce.svelte.js';
+  import { flag } from '../flags/registry.svelte.js';
 
   /**
    * Bringing another app's library over, one calm step at a time: find it,
@@ -151,7 +152,12 @@
               <button class="found" onclick={() => read(f.source)} disabled={step === 'reading'}>
                 <span class="file">
                   <b>{title(f.source)}</b>
+                  <!-- #10 (UI audit flag): where and when set apart by space, not a middle dot. -->
+                  {#if flag('no-dots')}
+                    <small>{where(f.source.path)}{f.source.kind === 'serato' ? `/${fileName(f.source.path)}` : ''} <span class="when">{ago(f.modified, app.verb)}</span></small>
+                  {:else}
                   <small>{where(f.source.path)}{f.source.kind === 'serato' ? `/${fileName(f.source.path)}` : ''} · {ago(f.modified, app.verb)}</small>
+                  {/if}
                 </span>
                 <span class="go">Continue</span>
               </button>

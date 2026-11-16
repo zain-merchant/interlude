@@ -1,0 +1,13 @@
+/* #12: the toast rises and fades in. A transition from @starting-style
+   rather than keyframes, so it can be retargeted; `translate` stacks with
+   the toast's own centring transform. Webviews without @starting-style
+   show it at once, as before. */
+:root[data-flag-polish-toast] .toastbox .toast {
+  transition:
+    opacity var(--flag-polish-toast-ms, 220ms) cubic-bezier(0.23, 1, 0.32, 1),
+    translate var(--flag-polish-toast-ms, 220ms) cubic-bezier(0.23, 1, 0.32, 1);
+  @starting-style {
+    opacity: 0;
+    translate: 0 8px;
+  }
+}

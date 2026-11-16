@@ -24,3 +24,17 @@ export function playingKey(k, speed, keylock) {
   const shift = keylock || speed <= 0 ? 0 : Math.round(12 * Math.log2(speed));
   return { tonic: (((k.tonic + shift) % 12) + 12) % 12, minor: k.minor, shift };
 }
+
+// #18 (UI audit flag): harmonic mixing on the Camelot wheel.
+/**
+ * Whether two keys mix: the same Camelot number (same key, or its
+ * relative major or minor), or a step either way round the wheel with the
+ * same letter.
+ */
+export function keysMix(a, b) {
+  if (!a || !b) return false;
+  const [na, la] = [parseInt(camelot(a)), camelot(a).slice(-1)];
+  const [nb, lb] = [parseInt(camelot(b)), camelot(b).slice(-1)];
+  if (na === nb) return true;
+  return la === lb && (Math.abs(na - nb) === 1 || Math.abs(na - nb) === 11);
+}

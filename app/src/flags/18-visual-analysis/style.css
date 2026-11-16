@@ -1,0 +1,8 @@
+/* #18: a hairline under the analysis note: the track (--line-2) and the
+   part done (--fg-3), sized by --flag-visual-analysis-done. */
+:root[data-flag-visual-analysis] section.library .bar .count .pending {
+  padding-bottom: 4px;
+  background:
+    linear-gradient(var(--fg-3), var(--fg-3)) left bottom / var(--flag-visual-analysis-done, 0%) 1px no-repeat,
+    linear-gradient(var(--line-2), var(--line-2)) left bottom / 100% 1px no-repeat;
+}

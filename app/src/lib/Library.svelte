@@ -9,7 +9,7 @@
   import { keyLabel, MOD } from './commands.js';
   import { sampler, setSamplerOpen } from './sampler.svelte.js';
   import { pushEdit, showToast } from './undo.svelte.js';
-  import { keyName, keyLongName, camelot } from './key.js';
+  import { keyName, keyLongName, camelot, keysMix, playingKey } from './key.js';
 
   /** @type {{ onload: (deck: number, track: import('./backend.js').LibraryTrack, opts?: { force?: boolean }) => void, onsettings?: () => void }} */
   let { onload, onsettings } = $props();
@@ -106,6 +106,8 @@
 
   /** Tracks still waiting for their length, BPM and key. */
   const pending = $derived(all.reduce((n, t) => n + (t.analysis ? 0 : 1), 0));
+  // #18 (UI audit flag): how much of the library is analysed, for the bar under the analysis note.
+  const analysisDone = $derived(flag('visual-analysis') && all.length ? `${((1 - pending / all.length) * 100).toFixed(1)}%` : undefined);
   const bpmText = (a) => {
     if (!a?.bpm) return '';
     const r = Math.round(a.bpm);
@@ -151,6 +153,13 @@
   const first = $derived(Math.max(0, Math.floor(scrollTop / ROW) - 5));
   const visible = $derived(sorted.slice(first, first + Math.ceil(viewHeight / ROW) + 10));
   const onDeck = (t) => [0, 1].filter((d) => tracks[d]?.path === t.path);
+  // #18 (UI audit flag): the keys to mix into: the playing decks', or the loaded ones' if none plays (class:mix on .k).
+  const mixKeys = $derived.by(() => {
+    if (!flag('visual-key-match')) return [];
+    const loaded = [0, 1].filter((d) => tracks[d] && engine.decks[d].key);
+    const from = loaded.some((d) => engine.decks[d].playing) ? loaded.filter((d) => engine.decks[d].playing) : loaded;
+    return from.map((d) => playingKey(engine.decks[d].key, engine.decks[d].rate, engine.decks[d].keylock));
+  });
 
   /** Loads the current view. `keep` holds on to the selection (after an edit). */
   async function refresh({ keep = false } = {}) {
@@ -549,8 +558,14 @@
           </button>
         {:else}<kbd>{MOD}F</kbd>{/if}
       </label>
+      <!-- #10 (UI audit flag): the analysis note set apart by space, not a middle dot. -->
+      {#if flag('no-dots')}
+        <span class="count num">{loading ? 'Scanning…' : `${results.length.toLocaleString()} tracks`}{#if !loading && pending}{' '}<span
+            class="pending" style:--flag-visual-analysis-done={analysisDone} use:tip={() => 'Finding each track’s length, BPM and key in the background'}>analyzing, {pending.toLocaleString()} to go</span>{/if}</span>
+      {:else}
       <span class="count num">{loading ? 'Scanning…' : `${results.length.toLocaleString()} tracks`}{#if !loading && pending}<span
-          class="pending" use:tip={() => 'Finding each track’s length, BPM and key in the background'}> · analyzing, {pending.toLocaleString()} to go</span>{/if}</span>
+          class="pending" style:--flag-visual-analysis-done={analysisDone} use:tip={() => 'Finding each track’s length, BPM and key in the background'}> · analyzing, {pending.toLocaleString()} to go</span>{/if}</span>
+      {/if}
       <button class="btn sm samp" class:on={sampler.open} aria-pressed={sampler.open}
         onclick={() => setSamplerOpen(!sampler.open)}
         use:tip={() => tipText(sampler.open ? 'Hide sampler' : 'Show sampler', keyLabel('view.sampler'), 'eight one-shot slots; drag tracks onto them')}>
@@ -606,7 +621,7 @@
             <span class="t">{#if t.missing}<span class="k" use:tip={() => `File not found: ${t.path}`}>{t.title}</span><span class="sr">, file not found</span>{:else}{t.title}{/if}</span>
             <span>{t.artist}</span>
             <span class="n num" class:none={a && !a.bpm}>{a ? bpmText(a) || NONE : ''}</span>
-            <span class:none={a && !a.key}>{#if a?.key}<span class="k" use:tip={() => `${keyLongName(a.key)} (${camelot(a.key)})`}>{keyName(a.key)}</span>{:else if a}{NONE}{/if}</span>
+            <span class:none={a && !a.key}>{#if a?.key}<span class="k" class:mix={mixKeys.some((k) => keysMix(k, a.key))} use:tip={() => `${keyLongName(a.key)} (${camelot(a.key)})`}>{keyName(a.key)}</span>{:else if a}{NONE}{/if}</span>
             <span class="n num" class:none={a?.failed}>{a ? timeText(a) || NONE : ''}</span>
             <span>{t.folder}</span>
             {#if decks.length}<span class="sr">, on deck {decks.map((d) => 'AB'[d]).join(' and ')}</span>{/if}

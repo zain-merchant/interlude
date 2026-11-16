@@ -1,5 +1,6 @@
 <script>
-  import { tooltip } from './tooltip.svelte.js';
+  import { tooltip, tipWarm } from './tooltip.svelte.js';
+  import { flag } from '../flags/registry.svelte.js';
   let el = $state();
   let width = $state(0);
   // Keep the tip inside the window.
@@ -7,8 +8,10 @@
 </script>
 
 {#if tooltip.visible && tooltip.text}
-  <div class="tip" class:below={tooltip.below} role="tooltip" bind:this={el} bind:clientWidth={width}
-    style:left="{left}px" style:top="{tooltip.y}px">{tooltip.text}</div>
+  <!-- #12 (UI audit flag): data-warm marks a tip that follows straight on from another (no entrance). -->
+  <div class="tip" class:below={tooltip.below} role="tooltip" bind:this={el} bind:clientWidth={width} data-warm={flag('polish-tooltip') && tipWarm.on ? '' : undefined}
+    style:left="{left}px" style:top="{tooltip.y}px"><!-- #10 (UI audit flag): the tip's parts as spans spaced apart, not joined with middle dots.
+    -->{#if flag('no-dots')}{#each tooltip.text.split(' · ') as part, i}{i ? ' ' : ''}<span class="part">{part}</span>{/each}{:else}{tooltip.text}{/if}</div>
 {/if}
 
 <style>

@@ -1,0 +1,24 @@
+/* #18: a key that mixes is drawn at full strength and underlined. (A dot
+   beside it read as one of the middle dots #10 removes.) */
+:root[data-flag-visual-key-match] {
+  --flag-visual-key-match-mark: var(--fg-2);
+}
+:root[data-flag-visual-key-match][data-flag-visual-key-match-colour='go'] {
+  --flag-visual-key-match-mark: var(--go);
+}
+/* Doubled .mix and the colour attribute: this must beat #10's tone steps
+   on the key and its Camelot code when both flags are on. */
+:root[data-flag-visual-key-match][data-flag-visual-key-match-colour] [data-region^='deck'] .bpm .unit .key.mix.mix,
+:root[data-flag-visual-key-match] [data-region='tracks'] .row .k.mix {
+  color: var(--fg);
+  text-decoration: underline;
+  text-decoration-color: var(--flag-visual-key-match-mark);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
+}
+:root[data-flag-visual-key-match][data-flag-visual-key-match-colour] [data-region^='deck'] .bpm .unit .key.mix.mix .cam {
+  color: var(--fg);
+}
+:root[data-flag-visual-key-match][data-flag-visual-key-match-colour='deck'] [data-region^='deck'] .bpm .unit .key.mix.mix {
+  text-decoration-color: var(--deck);
+}

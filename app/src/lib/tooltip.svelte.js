@@ -3,10 +3,15 @@
 // ("Low EQ · −6.0 dB · double-click to reset"). Knobs and faders also use
 // it as a live readout while they're dragged.
 
+import { flag } from '../flags/registry.svelte.js';
+
 export const tooltip = $state({ text: '', x: 0, y: 0, below: false, visible: false });
+// #12 (UI audit flag): whether the tip showing came straight from another, so it skips its entrance.
+export const tipWarm = $state({ on: false });
 
 let timer;
 let owner = null;
+let leftAt = -Infinity; // #12 (UI audit flag): when the pointer last left a showing tip's control.
 
 function place(node, text) {
   const r = node.getBoundingClientRect();
@@ -22,6 +27,7 @@ function place(node, text) {
 /** Shows `text` for `node` now (live readouts). */
 export function showTip(node, text) {
   clearTimeout(timer);
+  tipWarm.on = true; // #12 (UI audit flag): live readouts (drags, keys) appear without an entrance.
   place(node, text);
 }
 
@@ -43,12 +49,21 @@ export function tip(node, text) {
   let get = text;
   const enter = () => {
     clearTimeout(timer);
+    // #12 (UI audit flag): moving straight from one tip to the next skips the delay and the entrance.
+    if (flag('polish-tooltip') && performance.now() - leftAt < 300) {
+      tipWarm.on = true;
+      return place(node, get());
+    }
+    tipWarm.on = false;
     timer = setTimeout(() => place(node, get()), 600);
   };
-  const focus = () => node.matches(':focus-visible') && place(node, get());
+  // #12 (UI audit flag): keyboard focus shows its tip without an entrance.
+  const focus = () => node.matches(':focus-visible') && ((tipWarm.on = true), place(node, get()));
   const leave = () => hideTip(node);
+  // #12 (UI audit flag): note when a showing tip is left, for the next control's tip.
+  const out = () => (owner === node && tooltip.visible && (leftAt = performance.now()), hideTip(node));
   node.addEventListener('pointerenter', enter);
-  node.addEventListener('pointerleave', leave);
+  node.addEventListener('pointerleave', out);
   node.addEventListener('pointerdown', leave);
   node.addEventListener('focus', focus);
   node.addEventListener('blur', leave);
@@ -60,7 +75,7 @@ export function tip(node, text) {
     destroy() {
       hideTip(node);
       node.removeEventListener('pointerenter', enter);
-      node.removeEventListener('pointerleave', leave);
+      node.removeEventListener('pointerleave', out);
       node.removeEventListener('pointerdown', leave);
       node.removeEventListener('focus', focus);
       node.removeEventListener('blur', leave);
