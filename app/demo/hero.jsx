@@ -33,14 +33,13 @@ const W = 1440;
 const APP_H = 900;
 const H = 900;
 
-// The set: Afterglow opens it; then each loop puts on the next of these,
-// round and round. All sit well inside the library's first screen (never
-// the last row, which the list's edge cuts), and all a few BPM under the
-// 129 the set runs at (123, 126, 125), so Sync has a clear job: the tempo
-// jumps, the pitch fader moves, the beats snap into line.
+// The set: Lucid (118) opens it; then each loop puts on the next of these,
+// round and round, all from the top three rows so the controller never
+// covers them. Afterglow (129) comes first, so the first Sync has a clear
+// job: its tempo drops to 118, the pitch fader moves, the beats line up.
 const OPENER = 'Lucid';
 // From the top of the list, so the controller never covers the row it picks.
-const SET = ['Night Shift', 'Afterglow', 'Paper Planes'];
+const SET = ['Afterglow', 'Night Shift', 'Paper Planes'];
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -596,6 +595,14 @@ const fxOf = (d) => deckEl(d).querySelector('.fx .tog');
 const lowEq = (d) => $(`[role="slider"][aria-label="Deck ${'AB'[d]} low EQ"]`);
 const key = (el, k) => el.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true }));
 
+/** Switches the app's tab without the hand, as the controller's mapping does. */
+async function showTab(a, d, label) {
+  const t = tabOf(d, label);
+  if (!t || t.getAttribute('aria-selected') === 'true') return;
+  t.click();
+  await a.wait(320);
+}
+
 /** Shows a deck's Loop, FX or Stems controls, if they aren't showing already. */
 async function openTab(a, d, label) {
   const t = tabOf(d, label);
@@ -659,6 +666,29 @@ const mouseFeatures = {
 
 // On the controller, the low EQ is its knob and the loop is its fourth pad.
 const controllerFeatures = {
+  // The app shows one of Cues, Loop, FX and Stems at a time; on the
+  // controller every key is always there, so the app's tab is switched to
+  // the one the key drives (as the controller's mapping does), and then the
+  // key is pressed, with its line to the app's control.
+  async muteVocals(a, d, mute) {
+    if (!stemsUsable(d)) return;
+    await showTab(a, d, 'Stems');
+    const vocals = stemOf(d, 0);
+    if (!vocals || (vocals.getAttribute('aria-pressed') === 'false') === mute) return;
+    await hwPress(a, `c-stem-${d}-0`, () => stemOf(d, 0)?.click(), 'Vocals', () => stemOf(d, 0));
+  },
+  async loop(a, d, on) {
+    await showTab(a, d, 'Loop');
+    const l = loopOf(d);
+    if (!l || (l.getAttribute('aria-pressed') === 'true') === on) return;
+    await hwPress(a, `c-loop-${d}`, () => loopOf(d)?.click(), 'Loop', () => loopOf(d));
+  },
+  async echo(a, d, on) {
+    await showTab(a, d, 'FX');
+    const f = fxOf(d);
+    if (!f || (f.getAttribute('aria-pressed') === 'true') === on) return;
+    await hwPress(a, `c-fx-${d}`, () => fxOf(d)?.click(), 'Echo', () => fxOf(d));
+  },
   async killLow(a, d) {
     const hw = document.querySelector(`[data-hw="low-${d}"]`);
     if (!hw) return;

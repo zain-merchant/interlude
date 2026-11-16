@@ -374,7 +374,7 @@ details p { margin: 0; padding-bottom: 20px; color: var(--fg-2); max-width: 62ch
    block and the buttons share one foot. */
 html[data-hero="split"] .hero {
   display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: auto auto auto;
-  grid-template-areas: "tag ." "lede cta" "meta cta";
+  grid-template-areas: "tag cta" "lede lede" "meta meta";
   column-gap: 48px; text-align: left; padding: 64px 0 80px;
 }
 html[data-hero="split"] .lockup {
@@ -387,9 +387,9 @@ html[data-hero="split"] .tagline {
 html[data-hero="split"] .lede {
   grid-area: lede; margin: 24px 0 0; max-width: 31em; color: var(--fg-2); font-size: 20px; line-height: 1.45; text-wrap: pretty;
 }
-/* The buttons stand on the facts' line (the foot of the text block) and
-   end on the screen's right edge. */
-html[data-hero="split"] .cta { grid-area: cta; align-self: end; flex-wrap: nowrap; gap: 8px; margin: 0 0 -6px; }
+/* The buttons stand level with the headline's last line, on the screen's
+   right edge; the supporting line and the facts run under the headline. */
+html[data-hero="split"] .cta { grid-area: cta; align-self: end; flex-wrap: nowrap; gap: 8px; margin: 0 0 0.6em; }
 html[data-hero="split"] .cta .btn.big { flex: 1 1 auto; justify-content: center; padding: 0 18px; font-size: 15px; }
 /* Over the record: GitHub is a surface, not a tint, so no grooves show through. */
 html[data-hero="split"] .cta .btn.ghost {
@@ -555,3 +555,8 @@ html[data-nav="morph"] .nav-dl path { fill: none; stroke: currentColor; stroke-w
 /* Nothing may scroll the page sideways (parked nav buttons, decorative
    layers); clip, unlike hidden, keeps the sticky nav working. */
 html, body { overflow-x: clip; }
+
+/* On phones the four facts sit two by two, so none is left alone on a line. */
+@media (max-width: 560px) {
+  html[data-hero="split"] .meta { display: grid; grid-template-columns: auto 1fr; gap: 4px 20px; }
+}
