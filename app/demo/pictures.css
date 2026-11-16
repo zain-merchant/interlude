@@ -366,3 +366,55 @@
 .p-lib__src { justify-self: end; display: flex; align-items: center; gap: 5px; font-size: var(--t-xs); color: var(--fg-3); }
 .p-lib__src::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--deck-a); }
 .p-lib__src[data-src="Serato"]::before { background: var(--deck-b); }
+
+/* Recording and more, three layouts being tried (html[data-reclayout]). */
+.p-x { margin: 0; display: grid; gap: 8px; justify-items: start; align-content: start; }
+.p-x > figcaption { font-size: var(--t-xs); color: var(--fg-3); }
+.p-recbox { display: flex; align-items: center; gap: 12px; }
+.p-recwave { display: flex; align-items: center; gap: 2px; height: 34px; }
+.p-recwave i { width: 2px; height: calc(var(--h) * 100%); border-radius: 1px; background: rgb(255 255 255 / 0.08); transition: background-color 0.25s; }
+.p-recwave i[data-on] { background: var(--deck-a); }
+.p-extras { display: grid; justify-self: center; align-self: center; }
+
+/* Stacked (default): Record and its waveform over the Sampler's pads. */
+.p-extras { grid-template-columns: auto; row-gap: 18px; }
+.p-x--keys { display: none; }
+.p-extras .p-pads--lg { grid-template-columns: repeat(8, 24px); gap: 6px; }
+.p-extras .p-pads--lg i { height: 24px; border-radius: 6px; }
+
+/* Side by side: Record (button over its waveform) left, Sampler right. */
+:root[data-reclayout="side"] .p-extras { grid-template-columns: auto auto; column-gap: 32px; align-items: start; }
+:root[data-reclayout="side"] .p-recbox { flex-direction: column; align-items: start; gap: 10px; }
+:root[data-reclayout="side"] .p-recwave { width: 130px; overflow: hidden; height: 26px; }
+:root[data-reclayout="side"] .p-extras .p-pads--lg { grid-template-columns: repeat(4, 26px); }
+:root[data-reclayout="side"] .p-extras .p-pads--lg i { height: 26px; }
+
+/* Carousel: all three on one track; the one in focus sits large in the
+   middle, the others smaller and quieter either side, and the track eases
+   along as focus moves. */
+:root[data-reclayout="carousel"] .p-extras { position: relative; width: 312px; height: 120px; display: block; overflow: visible; }
+:root[data-reclayout="carousel"] .p-x {
+  --slot: calc(var(--i) - var(--focus));
+  position: absolute; left: 50%; top: 50%; justify-items: center;
+  transform: translate(calc(-50% + var(--slot) * 150px), -50%) scale(0.62);
+  opacity: 0.35; transition: transform 0.7s cubic-bezier(0.65, 0, 0.35, 1), opacity 0.7s cubic-bezier(0.65, 0, 0.35, 1);
+}
+:root[data-reclayout="carousel"] .p-x[data-focus] { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+:root[data-reclayout="carousel"] .p-x--rec { --i: 0; } :root[data-reclayout="carousel"] .p-x--pads { --i: 1; } :root[data-reclayout="carousel"] .p-x--keys { --i: 2; display: grid; }
+/* The ends wrap round, so the one before the first sits on its left. */
+:root[data-reclayout="carousel"] .p-extras[style*="--focus: 0"] .p-x--keys { --slot: -1; }
+:root[data-reclayout="carousel"] .p-extras[style*="--focus: 2"] .p-x--rec { --slot: 1; }
+:root[data-reclayout="carousel"] .p-recbox { flex-direction: column; gap: 10px; }
+:root[data-reclayout="carousel"] .p-recwave { width: 150px; overflow: hidden; }
+:root[data-reclayout="carousel"] .p-extras .p-pads--lg { grid-template-columns: repeat(4, 28px); }
+:root[data-reclayout="carousel"] .p-extras .p-pads--lg i { height: 28px; }
+
+/* The search stays at the top; rows that don't match close upward. */
+.p-search .p-body { align-content: start; }
+.p-lib__row { position: relative; border-radius: 6px; transition: height 0.32s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.25s, transform 0.32s cubic-bezier(0.23, 1, 0.32, 1), background-color 0.2s; }
+.p-lib__row[data-sel] { background: var(--sel); }
+.p-lib__row::before { content: ''; position: absolute; left: 3px; top: 6px; bottom: 6px; width: 2px; border-radius: 1px; background: var(--deck-a); opacity: 0; transform: scaleY(0.3); transition: opacity 0.25s, transform 0.35s cubic-bezier(0.23, 1, 0.32, 1); }
+.p-lib__row[data-loaded]::before { opacity: 1; transform: none; }
+.p-lib__row .t { display: flex; align-items: center; gap: 8px; }
+.p-lib__deck { display: inline-grid; place-items: center; width: 15px; height: 15px; border-radius: 4px; font-size: 9.5px; font-weight: 600; color: #0b0b0d; background: var(--deck-a); opacity: 0; transform: scale(0.6); transition: opacity 0.2s, transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.p-lib__row[data-loaded] .p-lib__deck { opacity: 1; transform: none; }

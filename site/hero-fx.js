@@ -14,10 +14,14 @@
 //           fine   hairline grooves close together, very faint
 //           lines  fewer, wider-spaced hairlines, a little more graphic
 //           satin  no single grooves: smooth bands for the tracks
-//   touch   lamp   the sheen swings round to face the pointer
-//           hand   the record slows near the pointer; drag across the hero
-//                  to scratch it, let go and it spins back up
-//           needle click to drop the needle: a ripple runs out
+//   touch   lamp   the two bands of light swing round to face the pointer
+//           hand   hover and the record slows almost to a stop; drag across
+//                  the hero to scratch it back and forth, let go and it
+//                  spins back up
+//           needle click to drop the needle in a groove: that groove lights
+//                  warm and creeps slowly inward as the record plays
+//
+// So the turning shows, faint dust and scuffs ride round with the record.
 //
 // A kick lifts the sheen a little; reduced motion leaves it still.
 const reduced = matchMedia('(prefers-reduced-motion: reduce)');
@@ -43,8 +47,19 @@ const mouse = { x: -1e4, y: -1e4, in: false };
 const drag = { on: false, lastX: 0, lastT: 0 };
 const ripples = [];
 let spin = 0;
+// Dust and scuffs on the record, in its own turning frame: short arcs at
+// fixed places on the disc, so its turning shows.
+const DUST = Array.from({ length: 140 }, (_, i) => {
+  const k = Math.sin(i * 12.9898) * 43758.5453;
+  const f = k - Math.floor(k);
+  const g = Math.sin(i * 78.233) * 12345.678;
+  const h = g - Math.floor(g);
+  return { r: 0.3 + 0.7 * Math.sqrt(f), a: h * Math.PI * 2, len: 0.004 + 0.03 * ((f * 7) % 1), alpha: 0.04 + 0.12 * ((h * 13) % 1) };
+});
+const needle = { on: false, r: 0, born: 0 };
 let facingNow = -Math.PI * 0.6;
 let glow = 0;
+let lampOn = 0;
 let speed = TURN;
 let running = false;
 
@@ -83,7 +98,11 @@ addEventListener('pointerup', () => {
   document.documentElement.style.userSelect = '';
 });
 addEventListener('pointerdown', (e) => {
-  if (touch === 'needle' && !e.target.closest('a, button, input, summary, .try')) ripples.push({ born: performance.now(), ...local(e) });
+  if (touch === 'needle' && !e.target.closest('a, button, input, summary, .try') && geo) {
+    const p = local(e);
+    ripples.push({ born: performance.now(), ...p });
+    Object.assign(needle, { on: true, r: Math.hypot(p.x - geo.cx, (p.y - geo.cy) / SQUASH), born: performance.now() });
+  }
 }, { passive: true });
 
 /** Called with each level report from the app. */
@@ -133,8 +152,8 @@ function layout(w, h) {
     for (const g of [...gaps, R]) {
       const grad = gctx.createRadialGradient(0, 0, prev, 0, 0, g);
       grad.addColorStop(0, 'rgb(255 255 255 / 0)');
-      grad.addColorStop(0.1, `rgb(255 255 255 / ${0.26 * rise(prev + 40)})`);
-      grad.addColorStop(0.9, `rgb(255 255 255 / ${0.26 * rise(g)})`);
+      grad.addColorStop(0.1, `rgb(255 255 255 / ${0.16 * rise(prev + 40)})`);
+      grad.addColorStop(0.9, `rgb(255 255 255 / ${0.16 * rise(g)})`);
       grad.addColorStop(1, 'rgb(255 255 255 / 0)');
       gctx.fillStyle = grad;
       gctx.beginPath();
@@ -143,10 +162,10 @@ function layout(w, h) {
       gctx.fill();
       prev = g;
     }
-    gctx.lineWidth = 0.8 / RES;
-    for (let r = r0; r < R; r += 6) {
+    gctx.lineWidth = 1 / RES;
+    for (let r = r0; r < R; r += 7) {
       if (gaps.some((g) => Math.abs(r - g) < 14)) continue;
-      gctx.strokeStyle = `rgb(255 255 255 / ${0.85 * rise(r)})`;
+      gctx.strokeStyle = `rgb(255 255 255 / ${1 * rise(r)})`;
       gctx.beginPath();
       gctx.arc(0, 0, r, 0, Math.PI * 2);
       gctx.stroke();
@@ -221,7 +240,7 @@ function draw(now) {
   let target = TURN;
   if (touch === 'hand' && mouse.in && !drag.on) {
     const d = Math.hypot(mouse.x - g.cx, (mouse.y - g.cy) / SQUASH);
-    if (d > g.r0 && d < g.R) target = TURN * 0.1;
+    if (d > g.r0 && d < g.R) target = TURN * 0.03;
   }
   if (!drag.on) speed += (target - speed) * Math.min(1, dt * 1.5);
   spin += speed * dt;
@@ -231,7 +250,7 @@ function draw(now) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   // The grooves at full strength; light and shade are then laid over them
   // in place (source-atop keeps it all on the grooves).
-  ctx.globalAlpha = (style === 'blend' ? 0.3 : style === 'satin' ? 0.17 : style === 'lines' ? 0.24 : 0.2) * (1 + swell * 0.18);
+  ctx.globalAlpha = (style === 'blend' ? 0.36 : style === 'satin' ? 0.17 : style === 'lines' ? 0.24 : 0.2) * (1 + swell * 0.18);
   // A record never sits quite true: the grooves drift a pixel or so round
   // the spindle, slowly, so they seem to breathe.
   const wob = now / 1000 * ((Math.PI * 2) / 11);
@@ -244,17 +263,18 @@ function draw(now) {
   const rest = -Math.PI * 0.6 + Math.sin(now / 1000 * ((Math.PI * 2) / 17)) * 0.14;
   const aim = touch === 'lamp' && mouse.in ? Math.atan2((mouse.y - g.cy) / SQUASH, mouse.x - g.cx) : rest;
   let delta = ((aim - facingNow + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
-  facingNow += delta * Math.min(1, dt * 2.2);
+  facingNow += delta * Math.min(1, dt * (touch === 'lamp' && mouse.in ? 4 : 1.5));
   const facing = facingNow;
   // The fixed sheen: two soft wedges; the rest sinks to a fifth.
-  ctx.fillStyle = shade(ctx, facing - Math.PI / 2, 1, 4, 0.32, 0.68);
+  lampOn += ((touch === 'lamp' && mouse.in ? 1 : 0) - lampOn) * Math.min(1, dt * 3);
+  ctx.fillStyle = shade(ctx, facing - Math.PI / 2, 1, 4 + lampOn * 4, 0.32 - lampOn * 0.16, 0.68 + lampOn * 0.3);
   ctx.fillRect(-g.R, -g.R, g.R * 2, g.R * 2);
   // The turn: three broad lobes going round with the record, gently.
   ctx.fillStyle = shade(ctx, spin, 1.5, 2, 0.55, 0.45);
   ctx.fillRect(-g.R, -g.R, g.R * 2, g.R * 2);
   // Under the pointer, the grooves catch a little more light: a soft pool
   // that fades in as the pointer arrives and out when it leaves.
-  glow += ((mouse.in ? 1 : 0) - glow) * Math.min(1, dt * 3);
+  glow += ((mouse.in && touch === 'lamp' ? 0.6 : 0) - glow) * Math.min(1, dt * 3);
   if (glow > 0.01) {
     const mx = mouse.x - g.cx;
     const my = (mouse.y - g.cy) / SQUASH;
@@ -265,18 +285,39 @@ function draw(now) {
     ctx.fillStyle = pool;
     ctx.fillRect(mx - 460, my - 460, 920, 920);
   }
+  // The needle's groove: lit warm, creeping inward as the record plays.
+  if (touch === 'needle' && needle.on) {
+    needle.r = Math.max(g.r0 + 20, needle.r - dt * 3);
+    const fadeIn = Math.min(1, (now - needle.born) / 400);
+    const band = ctx.createRadialGradient(0, 0, Math.max(0, needle.r - 14), 0, 0, needle.r + 14);
+    band.addColorStop(0, `rgb(${WARM} / 0)`);
+    band.addColorStop(0.5, `rgb(${WARM} / ${1 * fadeIn})`);
+    band.addColorStop(1, `rgb(${WARM} / 0)`);
+    ctx.fillStyle = band;
+    ctx.fillRect(-needle.r - 16, -needle.r - 16, (needle.r + 16) * 2, (needle.r + 16) * 2);
+  }
   // A dropped needle: a ring of light running out through the grooves.
   for (const rp of ripples) {
     const t = (now - rp.born) / 3200;
     const r = Math.hypot(rp.x - g.cx, (rp.y - g.cy) / SQUASH) + t * 600;
     const band = ctx.createRadialGradient(0, 0, Math.max(0, r - 70), 0, 0, r + 70);
     band.addColorStop(0, `rgb(${WARM} / 0)`);
-    band.addColorStop(0.5, `rgb(${WARM} / ${(1 - t) ** 2 * 0.45})`);
+    band.addColorStop(0.5, `rgb(${WARM} / ${(1 - t) ** 2 * 0.6})`);
     band.addColorStop(1, `rgb(${WARM} / 0)`);
     ctx.fillStyle = band;
     ctx.fillRect(-r - 70, -r - 70, (r + 70) * 2, (r + 70) * 2);
   }
+  // Dust and scuffs, turning with the record.
   ctx.globalCompositeOperation = 'source-over';
+  ctx.lineCap = 'round';
+  ctx.lineWidth = 1.2;
+  for (const d of DUST) {
+    const r = g.r0 + (g.R - g.r0) * d.r;
+    ctx.strokeStyle = `rgb(255 255 255 / ${d.alpha})`;
+    ctx.beginPath();
+    ctx.arc(0, 0, r, d.a + spin, d.a + spin + d.len);
+    ctx.stroke();
+  }
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   for (let i = ripples.length - 1; i >= 0; i--) if (now - ripples[i].born > 3200) ripples.splice(i, 1);
 
