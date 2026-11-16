@@ -1,109 +1,76 @@
-// Behind the hero: a record, lying on the floor round the screen, turning
-// very slowly. Its grooves run up the page behind the hero's words. As with
-// a real record, the light doesn't turn with it: a fixed, soft sheen (two
-// wedges of light) sits over the grooves, and the turn shows as a slow,
-// smooth shimmer that does turn with it.
+// Behind the hero: a record lying flat round the app's screen, turning very
+// slowly. Its grooves run up the page behind the hero's words.
 //
-// Drawn crisply: the grooves are drawn once, at full resolution, to a
-// stored layer (they're round, so turning doesn't change them); each frame
-// only paints light, masked to them. No noise, no grit.
+// Drawn with one small WebGL shader, at the screen's full pixel density, so
+// it stays crisp: every pixel works out where it lies on the disc and how
+// much light the grooves there give back.
+//
+// What keeps it even and quiet:
+// - The grooves are a fixed pattern on the disc, filtered to the pixel: where
+//   the record lies flattest (behind the headline) they pack closer on
+//   screen, and as they near the pixel size they fade smoothly to their
+//   average instead of aliasing. Their average never changes, so no part of
+//   the disc is brighter just because the grooves bunch up there.
+// - Light only nudges it: a broad, fixed sheen (two soft wedges either side
+//   of the centre, as on a real record) and a soft warp in the pressing that
+//   turns with the disc, each a few percent up or down, added, never
+//   multiplied into hot spots or holes.
+// - A touch of dither, so the soft gradients on the near-black page never
+//   step into bands.
 //
 // Being tried with the Try panel (localhost or ?try):
-//   style   blend  satin's soft bands for presence, fine hairlines over them
-//                  for texture (the default)
-//           fine   hairline grooves close together, very faint
-//           lines  fewer, wider-spaced hairlines, a little more graphic
-//           satin  no single grooves: smooth bands for the tracks
-//   touch   lamp   the two bands of light swing round to face the pointer
-//           hand   hover and the record slows almost to a stop; drag across
-//                  the hero to scratch it back and forth, let go and it
-//                  spins back up
-//           needle click to drop the needle in a groove: that groove lights
+//   style   fine   hairline grooves close together, very faint
+//           satin  no single grooves: each song a smooth, soft band
+//           blend  satin's bands, with fine grooves over them
+//   touch   needle click to drop the needle in a groove: that groove lights
 //                  warm and creeps slowly inward as the record plays
+//           off    nothing
 //
-// So the turning shows, faint dust and scuffs ride round with the record.
-//
-// A kick lifts the sheen a little; reduced motion leaves it still.
+// A kick in the music lifts it a hair; with reduced motion it's one still
+// frame.
 const reduced = matchMedia('(prefers-reduced-motion: reduce)');
-const hero = document.querySelector('.hero');
 const screen = document.querySelector('.shot .screen');
 const canvas = document.querySelector('.ripples');
-const ctx = canvas.getContext('2d');
-const RES = Math.min(1.25, devicePixelRatio || 1);
-// How flat the record lies: a low angle, so it reads as a disc on a
-// surface going away from you, not a well.
-const SQUASH = 0.3;
-const TURN = (Math.PI * 2) / 50; // one slow turn every 50 seconds
-const COOL = '201 220 242';
-const WARM = '240 220 192';
+const gl = canvas.getContext('webgl', { premultipliedAlpha: true, antialias: false, alpha: true });
 
-let style = 'blend';
-let touch = 'lamp';
+// How flat the record lies: a low angle, so it reads as a disc on a surface
+// going away from you, not a well.
+const SQUASH = 0.3;
+// One turn every four minutes: behind the headline the grooves drift by a
+// few dozen pixels a second, beside the screen much less.
+const TURN = (Math.PI * 2) / 240;
+// Where the light comes from: up and to the right of the centre.
+const FACING = -1.3;
+const GAP = 22; // the quiet run between two songs, in the record's own pixels
+
+const STYLES = {
+  // lines: how much the single grooves show; satin: how much the songs show
+  // as bands; level: overall strength.
+  fine: { lines: 0.75, satin: 0, level: 0.052 },
+  satin: { lines: 0, satin: 1, level: 0.06 },
+  blend: { lines: 0.45, satin: 0.65, level: 0.056 },
+};
+let style = 'fine';
+let touch = 'needle';
 let avg = 0;
 let swell = 0;
 let want = 0;
 let lastKick = 0;
-const mouse = { x: -1e4, y: -1e4, in: false };
-const drag = { on: false, lastX: 0, lastT: 0 };
-const ripples = [];
 let spin = 0;
-// Dust and scuffs on the record, in its own turning frame: short arcs at
-// fixed places on the disc, so its turning shows.
-const DUST = Array.from({ length: 140 }, (_, i) => {
-  const k = Math.sin(i * 12.9898) * 43758.5453;
-  const f = k - Math.floor(k);
-  const g = Math.sin(i * 78.233) * 12345.678;
-  const h = g - Math.floor(g);
-  return { r: 0.3 + 0.7 * Math.sqrt(f), a: h * Math.PI * 2, len: 0.004 + 0.03 * ((f * 7) % 1), alpha: 0.04 + 0.12 * ((h * 13) % 1) };
-});
 const needle = { on: false, r: 0, born: 0 };
-let facingNow = -Math.PI * 0.6;
-let glow = 0;
-let lampOn = 0;
-let speed = TURN;
+const ripple = { on: false, r: 0, born: 0 };
 let running = false;
+let visible = true;
 
-export function setVariant(v) {
-  touch = v;
-  wake();
-}
 export function setStyle(v) {
-  style = v;
-  geo = null;
+  style = STYLES[v] ? v : 'fine';
   wake();
 }
-
-const local = (e) => {
-  const c = canvas.getBoundingClientRect();
-  return { x: e.clientX - c.left, y: e.clientY - c.top };
-};
-addEventListener('pointermove', (e) => {
-  Object.assign(mouse, local(e), { in: true });
-  if (drag.on && touch === 'hand') {
-    const now = performance.now();
-    const dt = Math.max(8, now - drag.lastT) / 1000;
-    speed = ((e.clientX - drag.lastX) / dt) * 0.0025;
-    drag.lastX = e.clientX;
-    drag.lastT = now;
-  }
-}, { passive: true });
-document.addEventListener('pointerleave', () => (mouse.in = false));
-hero.addEventListener('pointerdown', (e) => {
-  if (touch !== 'hand' || e.target.closest('a, button, input, summary')) return;
-  Object.assign(drag, { on: true, lastX: e.clientX, lastT: performance.now() });
-  document.documentElement.style.userSelect = 'none';
-});
-addEventListener('pointerup', () => {
-  drag.on = false;
-  document.documentElement.style.userSelect = '';
-});
-addEventListener('pointerdown', (e) => {
-  if (touch === 'needle' && !e.target.closest('a, button, input, summary, .try') && geo) {
-    const p = local(e);
-    ripples.push({ born: performance.now(), ...p });
-    Object.assign(needle, { on: true, r: Math.hypot(p.x - geo.cx, (p.y - geo.cy) / SQUASH), born: performance.now() });
-  }
-}, { passive: true });
+export function setVariant(v) {
+  touch = v === 'off' ? 'off' : 'needle';
+  if (touch === 'off') needle.on = ripple.on = false;
+  wake();
+}
 
 /** Called with each level report from the app. */
 export function hear(l) {
@@ -115,218 +82,274 @@ export function hear(l) {
   }
 }
 
-function wake() {
-  if (running || reduced.matches) return;
-  running = true;
-  requestAnimationFrame(draw);
-}
+// Fixed pseudo-random numbers, so the record looks the same every visit.
+const rand = (i, s = 1) => {
+  const k = Math.sin(i * 12.9898 + s * 78.233) * 43758.5453;
+  return k - Math.floor(k);
+};
 
-const grooves = document.createElement('canvas');
-const gctx = grooves.getContext('2d');
+const MAX_TRACKS = 24;
+const VERT = `
+attribute vec2 p;
+void main() { gl_Position = vec4(p, 0.0, 1.0); }`;
+const FRAG = `
+precision highp float;
+uniform vec2 uSize;      // canvas, device pixels
+uniform float uDpr;
+uniform vec2 uCentre;    // record centre, CSS pixels from the canvas's top left
+uniform vec2 uSpan;      // inner and outer radius, record pixels
+uniform float uSpin;
+uniform float uFacing;
+uniform vec3 uStyle;     // lines, satin, level
+uniform float uSwell;
+uniform vec2 uNeedle;    // radius, strength
+uniform vec2 uRipple;    // radius, strength
+uniform vec2 uTracks[${MAX_TRACKS}];
+uniform float uTrackCount;
+
+const float PI = 3.14159265;
+const float PITCH = 7.0;   // groove spacing, record pixels
+const float SQUASH = ${SQUASH.toFixed(3)};
+
+float hash(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
+
+void main() {
+  vec2 px = vec2(gl_FragCoord.x, uSize.y - gl_FragCoord.y) / uDpr;
+  vec2 q = vec2(px.x - uCentre.x, (px.y - uCentre.y) / SQUASH);
+  float r = length(q);
+  // How many record pixels one device pixel covers here (larger where the
+  // disc is flattest).
+  float fr = max(fwidth(r), 1e-3);
+  float edge = smoothstep(uSpan.x, uSpan.x + 120.0, r) * (1.0 - smoothstep(uSpan.y - 160.0, uSpan.y, r));
+  if (edge <= 0.0) { gl_FragColor = vec4(0.0); return; }
+  float a = atan(q.y, q.x);
+
+  // Which song this radius is in, and where in it.
+  float inSong = 0.0;
+  float u = 0.0;
+  float idx = 0.0;
+  float mid = r;
+  for (int i = 0; i < ${MAX_TRACKS}; i++) {
+    if (float(i) >= uTrackCount) break;
+    vec2 t = uTracks[i];
+    float soft = max(12.0, fr * 2.0);
+    float w = smoothstep(t.x - soft, t.x + soft, r) * (1.0 - smoothstep(t.y - soft, t.y + soft, r));
+    if (w > inSong) { inSong = w; u = clamp((r - t.x) / (t.y - t.x), 0.0, 1.0); idx = float(i); mid = 0.5 * (t.x + t.y); }
+  }
+
+  // The grooves: a train of soft lines, built from a few harmonics, each
+  // faded out as it nears the pixel size. Its average is always 1.
+  float g = r / PITCH;
+  float fg = fr / PITCH; // grooves per device pixel
+  float lines = 0.0;
+  for (int k = 1; k <= 4; k++) {
+    float fk = float(k);
+    float coef = exp(-2.0 * PI * PI * 0.012 * fk * fk);   // line shape
+    float att = exp(-7.0 * fk * fk * fg * fg) * (1.0 - smoothstep(0.3, 0.48, fk * fg));
+    lines += 2.0 * coef * att * cos(2.0 * PI * fk * g);
+  }
+  lines /= 2.9; // so the brightest line sits about +1 over the average
+
+  // Each song: a soft band, a little louder in its middle, its loudness
+  // drifting gently across it, as the music does.
+  float loud = 0.82 + 0.18 * sin(PI * u) + 0.07 * sin(r / 41.0 + idx * 1.7) * sin(r / 113.0 + idx);
+  float satin = mix(0.62, loud, inSong);
+  float fine = mix(0.7, 1.0 + lines, inSong);
+  float L = mix(1.0, satin, uStyle.y) * mix(1.0, fine, uStyle.x);
+
+  // Light. The fixed sheen: two broad wedges either side of the centre.
+  float sheen = 0.13 * cos(2.0 * (a - uFacing));
+  // The pressing is never perfectly even: a soft warp in it, a few hundred
+  // pixels across, curling with the radius, turning with the record.
+  float b = a - uSpin;
+  float k1 = floor(mid / 330.0) + 3.0;
+  float k2 = floor(mid / 210.0) + 5.0;
+  float warp = 0.1 * sin(k1 * b + r / 180.0 + idx * 2.3) + 0.065 * sin(k2 * b - r / 120.0 + idx * 4.1);
+  L *= 1.0 + sheen + warp * mix(0.6, 1.0, inSong);
+
+  float alpha = uStyle.z * L * edge * (1.0 + 0.08 * uSwell);
+  vec3 col = vec3(0.86, 0.89, 0.95) * alpha;
+
+  // The needle's groove: lit warm, a narrow band riding on the grooves.
+  vec3 warm = vec3(0.95, 0.86, 0.74);
+  if (uNeedle.y > 0.0) {
+    float d = (r - uNeedle.x) / max(5.0, fr * 1.2);
+    float band = exp(-d * d * 0.5) * uNeedle.y * edge;
+    float on = mix(1.0, clamp(0.35 + 0.65 * (1.0 + lines) * 0.5, 0.0, 1.2), uStyle.x);
+    float w = 0.16 * band * on;
+    col += warm * w;
+    alpha += w;
+  }
+  // A dropped needle: one soft ring of light running out through the grooves.
+  if (uRipple.y > 0.0) {
+    float d = (r - uRipple.x) / 60.0;
+    float w = 0.07 * exp(-d * d) * uRipple.y * edge * mix(1.0, fine, uStyle.x);
+    col += warm * w;
+    alpha += w;
+  }
+
+  // Dither, so the soft gradients never step into bands.
+  float n = (hash(gl_FragCoord.xy) - 0.5) / 255.0;
+  gl_FragColor = vec4(max(col + n, 0.0), clamp(alpha + n, 0.0, 1.0));
+}`;
+
+let prog = null;
+let U = {};
 let geo = null;
 
-function layout(w, h) {
+function init() {
+  if (!gl) return false;
+  gl.getExtension('OES_standard_derivatives');
+  const shader = (type, src) => {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src);
+    gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
+    return s;
+  };
+  // WebGL 1 needs the derivatives extension switched on in the shader.
+  const frag = '#extension GL_OES_standard_derivatives : enable\n' + FRAG;
+  prog = gl.createProgram();
+  gl.attachShader(prog, shader(gl.VERTEX_SHADER, VERT));
+  gl.attachShader(prog, shader(gl.FRAGMENT_SHADER, frag));
+  gl.linkProgram(prog);
+  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
+  gl.useProgram(prog);
+  const buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+  const loc = gl.getAttribLocation(prog, 'p');
+  gl.enableVertexAttribArray(loc);
+  gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+  for (const n of ['uSize', 'uDpr', 'uCentre', 'uSpan', 'uSpin', 'uFacing', 'uStyle', 'uSwell', 'uNeedle', 'uRipple', 'uTracks', 'uTrackCount']) U[n] = gl.getUniformLocation(prog, n);
+  return true;
+}
+
+/** Where the record sits, and its songs: uneven lengths, a quiet run after each. */
+function layout() {
   const c = canvas.getBoundingClientRect();
   const s = screen.getBoundingClientRect();
   const cx = s.left - c.left + s.width / 2;
   const cy = s.top - c.top + s.height * 0.5;
-  const R = Math.max(cy / SQUASH, w / 2) * 1.06;
+  const R = Math.max(cy / SQUASH, c.width / 2) * 1.08;
   const r0 = s.width * 0.42;
-  const key = [w, h, Math.round(cx), Math.round(cy), style].join();
+  const key = [c.width, c.height, Math.round(cx), Math.round(cy)].join();
   if (geo?.key === key) return geo;
-  grooves.width = canvas.width;
-  grooves.height = canvas.height;
-  gctx.setTransform(RES, 0, 0, RES * SQUASH, cx * RES, cy * RES);
-  gctx.clearRect(-R * 2, -R * 4, R * 4, R * 8);
-  // Tracks: the quieter gaps between songs, at steady but uneven spacing.
-  const gaps = [];
-  for (let r = r0 + 240, i = 0; r < R; r += 260 + ((i++ * 97) % 140)) gaps.push(r);
-  const fade = (r) => Math.min(1, (r - r0) / 90) * (1 - ((r - r0) / (R - r0)) * 0.5);
-  if (style === 'blend') {
-    // Presence from broad, soft bands; texture from quiet hairlines over
-    // them. No falloff with radius: the outer grooves, up behind the
-    // headline, are as clear as the inner ones (the page's mask sets how
-    // strong each part of the hero is).
-    const rise = (r) => Math.min(1, (r - r0) / 90);
-    let prev = r0;
-    for (const g of [...gaps, R]) {
-      const grad = gctx.createRadialGradient(0, 0, prev, 0, 0, g);
-      grad.addColorStop(0, 'rgb(255 255 255 / 0)');
-      grad.addColorStop(0.1, `rgb(255 255 255 / ${0.16 * rise(prev + 40)})`);
-      grad.addColorStop(0.9, `rgb(255 255 255 / ${0.16 * rise(g)})`);
-      grad.addColorStop(1, 'rgb(255 255 255 / 0)');
-      gctx.fillStyle = grad;
-      gctx.beginPath();
-      gctx.arc(0, 0, g, 0, Math.PI * 2);
-      gctx.arc(0, 0, prev, 0, Math.PI * 2, true);
-      gctx.fill();
-      prev = g;
-    }
-    gctx.lineWidth = 1 / RES;
-    for (let r = r0; r < R; r += 7) {
-      if (gaps.some((g) => Math.abs(r - g) < 14)) continue;
-      gctx.strokeStyle = `rgb(255 255 255 / ${1 * rise(r)})`;
-      gctx.beginPath();
-      gctx.arc(0, 0, r, 0, Math.PI * 2);
-      gctx.stroke();
-    }
-  } else if (style === 'satin') {
-    // Smooth bands, no single grooves: each track a soft sheet of light.
-    let prev = r0;
-    for (const g of [...gaps, R]) {
-      const grad = gctx.createRadialGradient(0, 0, prev, 0, 0, g);
-      grad.addColorStop(0, 'rgb(255 255 255 / 0)');
-      grad.addColorStop(0.08, `rgb(255 255 255 / ${0.55 * fade(prev + 40)})`);
-      grad.addColorStop(0.92, `rgb(255 255 255 / ${0.55 * fade(g)})`);
-      grad.addColorStop(1, 'rgb(255 255 255 / 0)');
-      gctx.fillStyle = grad;
-      gctx.beginPath();
-      gctx.arc(0, 0, g, 0, Math.PI * 2);
-      gctx.arc(0, 0, prev, 0, Math.PI * 2, true);
-      gctx.fill();
-      prev = g;
-    }
-  } else {
-    const spacing = style === 'lines' ? 14 : 5;
-    gctx.lineWidth = (style === 'lines' ? 1 : 0.8) / RES;
-    for (let r = r0; r < R; r += spacing) {
-      const gap = gaps.some((g) => Math.abs(r - g) < (style === 'lines' ? 8 : 12));
-      gctx.strokeStyle = `rgb(255 255 255 / ${(gap ? 0.15 : 1) * fade(r)})`;
-      gctx.beginPath();
-      gctx.arc(0, 0, r, 0, Math.PI * 2);
-      gctx.stroke();
-    }
+  const tracks = [];
+  for (let a = r0, i = 0; a < R && tracks.length < MAX_TRACKS; i++) {
+    const b = Math.min(R, a + 200 + rand(i, 9) * 260);
+    tracks.push(a, b);
+    a = b + GAP;
   }
-  // The page's mask keeps the record clearest above the screen, behind the
-  // words, and quieter beside the app, which is the star.
+  gl.uniform2fv(U.uTracks, new Float32Array([...tracks, ...new Array(MAX_TRACKS * 2 - tracks.length).fill(0)]));
+  gl.uniform1f(U.uTrackCount, tracks.length / 2);
+  // The page's mask: the record shows evenly behind the words, a step
+  // quieter beside the app, which is the star.
   canvas.style.setProperty('--fx-top', `${Math.round(s.top - c.top)}px`);
-  canvas.style.setProperty('--fx-mid', `${Math.round(s.top - c.top + s.height * 0.35)}px`);
+  canvas.style.setProperty('--fx-mid', `${Math.round(s.top - c.top + s.height * 0.3)}px`);
   geo = { key, cx, cy, R, r0 };
   return geo;
 }
 
-/**
- * Conic stops for light round the centre: `n` wedges, `sharp` how narrow,
- * as the darkness laid over grooves drawn at full strength. Where a wedge
- * falls the grooves keep their light; elsewhere they sink to `rest` of it.
- */
-function shade(l, at, n, sharp, rest, lift) {
-  const grad = l.createConicGradient(at, 0, 0);
-  const steps = 48;
-  for (let i = 0; i <= steps; i++) {
-    const t = i / steps;
-    const v = Math.max(0, Math.cos(t * Math.PI * 2 * n)) ** sharp;
-    const keep = Math.min(1, rest + v * lift);
-    grad.addColorStop(t, `rgb(9 9 11 / ${1 - keep})`);
+const local = (e) => {
+  const c = canvas.getBoundingClientRect();
+  return { x: e.clientX - c.left, y: e.clientY - c.top };
+};
+addEventListener('pointerdown', (e) => {
+  if (touch !== 'needle' || !geo || e.target.closest('a, button, input, summary, iframe, .try, .shot')) return;
+  const p = local(e);
+  const r = Math.hypot(p.x - geo.cx, (p.y - geo.cy) / SQUASH);
+  if (r < geo.r0 || r > geo.R) return;
+  const now = performance.now();
+  Object.assign(needle, { on: true, r, born: now });
+  Object.assign(ripple, { on: true, r, born: now });
+  wake();
+}, { passive: true });
+
+function wake() {
+  if (!prog || running) return;
+  if (reduced.matches) {
+    frame(performance.now(), true);
+    return;
   }
-  return grad;
+  if (!visible) return;
+  running = true;
+  last = performance.now();
+  requestAnimationFrame(draw);
 }
 
 let last = performance.now();
-function draw(now) {
-  const dt = Math.min(0.1, (now - last) / 1000);
+function frame(now, still) {
+  const dt = still ? 0 : Math.min(0.1, (now - last) / 1000);
   last = now;
-  const w = canvas.clientWidth;
-  const h = canvas.clientHeight;
-  if (canvas.width !== Math.round(w * RES) || canvas.height !== Math.round(h * RES)) {
-    canvas.width = Math.round(w * RES);
-    canvas.height = Math.round(h * RES);
+  const dpr = Math.min(2, devicePixelRatio || 1);
+  const w = Math.round(canvas.clientWidth * dpr);
+  const h = Math.round(canvas.clientHeight * dpr);
+  if (canvas.width !== w || canvas.height !== h) {
+    canvas.width = w;
+    canvas.height = h;
     geo = null;
   }
-  const g = layout(w, h);
+  const g = layout();
   swell += (want - swell) * Math.min(1, dt * (want > swell ? 2.5 : 1));
   want *= Math.exp(-dt * 1.4);
+  spin += TURN * dt;
 
-  let target = TURN;
-  if (touch === 'hand' && mouse.in && !drag.on) {
-    const d = Math.hypot(mouse.x - g.cx, (mouse.y - g.cy) / SQUASH);
-    if (d > g.r0 && d < g.R) target = TURN * 0.03;
+  // The needle plays inward, slowly; the ring runs out and fades.
+  let needleOn = 0;
+  if (needle.on && touch === 'needle') {
+    needle.r = Math.max(g.r0 + 30, needle.r - dt * 2.5);
+    needleOn = Math.min(1, (now - needle.born) / 500);
   }
-  if (!drag.on) speed += (target - speed) * Math.min(1, dt * 1.5);
-  spin += speed * dt;
+  let rippleOn = 0;
+  let rippleR = 0;
+  if (ripple.on) {
+    const t = (now - ripple.born) / 3600;
+    if (t >= 1) ripple.on = false;
+    else {
+      rippleOn = Math.min(1, t * 8) * (1 - t) ** 2;
+      rippleR = ripple.r + t * 700;
+    }
+  }
 
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.globalCompositeOperation = 'source-over';
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  // The grooves at full strength; light and shade are then laid over them
-  // in place (source-atop keeps it all on the grooves).
-  ctx.globalAlpha = (style === 'blend' ? 0.36 : style === 'satin' ? 0.17 : style === 'lines' ? 0.24 : 0.2) * (1 + swell * 0.18);
-  // A record never sits quite true: the grooves drift a pixel or so round
-  // the spindle, slowly, so they seem to breathe.
-  const wob = now / 1000 * ((Math.PI * 2) / 11);
-  ctx.drawImage(grooves, Math.cos(wob) * 1.4 * RES, Math.sin(wob) * 1.4 * SQUASH * RES);
-  ctx.globalAlpha = 1;
-  ctx.globalCompositeOperation = 'source-atop';
-  ctx.setTransform(RES, 0, 0, RES * SQUASH, g.cx * RES, g.cy * RES);
-  // The sheen swings slowly on its own, and eases round to face the
-  // pointer (the short way round), never snapping.
-  const rest = -Math.PI * 0.6 + Math.sin(now / 1000 * ((Math.PI * 2) / 17)) * 0.14;
-  const aim = touch === 'lamp' && mouse.in ? Math.atan2((mouse.y - g.cy) / SQUASH, mouse.x - g.cx) : rest;
-  let delta = ((aim - facingNow + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
-  facingNow += delta * Math.min(1, dt * (touch === 'lamp' && mouse.in ? 4 : 1.5));
-  const facing = facingNow;
-  // The fixed sheen: two soft wedges; the rest sinks to a fifth.
-  lampOn += ((touch === 'lamp' && mouse.in ? 1 : 0) - lampOn) * Math.min(1, dt * 3);
-  ctx.fillStyle = shade(ctx, facing - Math.PI / 2, 1, 4 + lampOn * 4, 0.32 - lampOn * 0.16, 0.68 + lampOn * 0.3);
-  ctx.fillRect(-g.R, -g.R, g.R * 2, g.R * 2);
-  // The turn: three broad lobes going round with the record, gently.
-  ctx.fillStyle = shade(ctx, spin, 1.5, 2, 0.55, 0.45);
-  ctx.fillRect(-g.R, -g.R, g.R * 2, g.R * 2);
-  // Under the pointer, the grooves catch a little more light: a soft pool
-  // that fades in as the pointer arrives and out when it leaves.
-  glow += ((mouse.in && touch === 'lamp' ? 0.6 : 0) - glow) * Math.min(1, dt * 3);
-  if (glow > 0.01) {
-    const mx = mouse.x - g.cx;
-    const my = (mouse.y - g.cy) / SQUASH;
-    const pool = ctx.createRadialGradient(mx, my, 0, mx, my, 460);
-    pool.addColorStop(0, `rgb(${COOL} / ${0.5 * glow})`);
-    pool.addColorStop(0.45, `rgb(${COOL} / ${0.2 * glow})`);
-    pool.addColorStop(1, `rgb(${COOL} / 0)`);
-    ctx.fillStyle = pool;
-    ctx.fillRect(mx - 460, my - 460, 920, 920);
-  }
-  // The needle's groove: lit warm, creeping inward as the record plays.
-  if (touch === 'needle' && needle.on) {
-    needle.r = Math.max(g.r0 + 20, needle.r - dt * 3);
-    const fadeIn = Math.min(1, (now - needle.born) / 400);
-    const band = ctx.createRadialGradient(0, 0, Math.max(0, needle.r - 14), 0, 0, needle.r + 14);
-    band.addColorStop(0, `rgb(${WARM} / 0)`);
-    band.addColorStop(0.5, `rgb(${WARM} / ${1 * fadeIn})`);
-    band.addColorStop(1, `rgb(${WARM} / 0)`);
-    ctx.fillStyle = band;
-    ctx.fillRect(-needle.r - 16, -needle.r - 16, (needle.r + 16) * 2, (needle.r + 16) * 2);
-  }
-  // A dropped needle: a ring of light running out through the grooves.
-  for (const rp of ripples) {
-    const t = (now - rp.born) / 3200;
-    const r = Math.hypot(rp.x - g.cx, (rp.y - g.cy) / SQUASH) + t * 600;
-    const band = ctx.createRadialGradient(0, 0, Math.max(0, r - 70), 0, 0, r + 70);
-    band.addColorStop(0, `rgb(${WARM} / 0)`);
-    band.addColorStop(0.5, `rgb(${WARM} / ${(1 - t) ** 2 * 0.6})`);
-    band.addColorStop(1, `rgb(${WARM} / 0)`);
-    ctx.fillStyle = band;
-    ctx.fillRect(-r - 70, -r - 70, (r + 70) * 2, (r + 70) * 2);
-  }
-  // Dust and scuffs, turning with the record.
-  ctx.globalCompositeOperation = 'source-over';
-  ctx.lineCap = 'round';
-  ctx.lineWidth = 1.2;
-  for (const d of DUST) {
-    const r = g.r0 + (g.R - g.r0) * d.r;
-    ctx.strokeStyle = `rgb(255 255 255 / ${d.alpha})`;
-    ctx.beginPath();
-    ctx.arc(0, 0, r, d.a + spin, d.a + spin + d.len);
-    ctx.stroke();
-  }
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
-  for (let i = ripples.length - 1; i >= 0; i--) if (now - ripples[i].born > 3200) ripples.splice(i, 1);
-
-  if (!reduced.matches) requestAnimationFrame(draw);
-  else {
-    running = false;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-  }
+  const st = STYLES[style];
+  gl.viewport(0, 0, w, h);
+  gl.uniform2f(U.uSize, w, h);
+  gl.uniform1f(U.uDpr, w / canvas.clientWidth);
+  gl.uniform2f(U.uCentre, g.cx, g.cy);
+  gl.uniform2f(U.uSpan, g.r0, g.R);
+  gl.uniform1f(U.uSpin, spin % (Math.PI * 2));
+  gl.uniform1f(U.uFacing, FACING);
+  gl.uniform3f(U.uStyle, st.lines, st.satin, st.level);
+  gl.uniform1f(U.uSwell, swell);
+  gl.uniform2f(U.uNeedle, needle.r, needleOn);
+  gl.uniform2f(U.uRipple, rippleR, rippleOn);
+  gl.clearColor(0, 0, 0, 0);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
 }
 
-reduced.addEventListener('change', wake);
-wake();
+function draw(now) {
+  if (reduced.matches || !visible) {
+    running = false;
+    if (reduced.matches) frame(now, true);
+    return;
+  }
+  frame(now, false);
+  requestAnimationFrame(draw);
+}
+
+try {
+  if (init()) {
+    // Nothing to draw while the hero is scrolled out of view.
+    new IntersectionObserver(([e]) => {
+      visible = e.isIntersecting;
+      wake();
+    }).observe(canvas);
+    reduced.addEventListener('change', wake);
+    addEventListener('resize', () => reduced.matches && wake());
+    wake();
+  }
+} catch (err) {
+  console.warn('hero-fx:', err);
+}
