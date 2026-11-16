@@ -9,7 +9,9 @@
     "build": "vite build",
     "preview": "vite preview",
     "check": "svelte-check",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "dev:site": "vite --config demo/vite.config.js",
+    "build:site": "vite build --config demo/vite.config.js"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.9.0",
@@ -25,7 +27,11 @@
     "@sveltejs/vite-plugin-svelte": "^7.0.0",
     "@tailwindcss/vite": "^4.3.4",
     "@tauri-apps/cli": "^2.9.0",
+    "@vitejs/plugin-react": "^6.3.0",
     "cn": "^0.5.2",
+    "lucide-react": "^0.468.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "shadcn-svelte": "^1.7.2",
     "svelte": "^5.40.0",
     "svelte-check": "^4.3.0",
