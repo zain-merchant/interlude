@@ -1,154 +1,289 @@
-// What happens behind the hero while the set plays. Five ideas, from subtle
-// to bold, being tried with the widget at the bottom right (on localhost or
-// with ?try in the address); one will stay and the rest go.
+// Behind the hero: a record, lying on the floor round the screen, turning
+// very slowly. Its grooves run up the page behind the hero's words. As with
+// a real record, the light doesn't turn with it: a fixed, soft sheen (two
+// wedges of light) sits over the grooves, and the turn shows as a slow,
+// smooth shimmer that does turn with it.
 //
-//   rings     rings leave the screen on each kick, like a speaker cone
-//   floor     the screen reflected in a glossy floor, its light pulsing
-//   dots      a dot grid that ripples out from the screen on each kick
-//   skyline   soft spectrum bars rising behind the top of the screen
-//   beams     two club beams, cool and warm, sweeping through faint haze
+// Drawn crisply: the grooves are drawn once, at full resolution, to a
+// stored layer (they're round, so turning doesn't change them); each frame
+// only paints light, masked to them. No noise, no grit.
 //
-// The app in the hero reports its output level about 30 times a second;
-// a kick is that level jumping well above its recent average.
+// Being tried with the Try panel (localhost or ?try):
+//   style   blend  satin's soft bands for presence, fine hairlines over them
+//                  for texture (the default)
+//           fine   hairline grooves close together, very faint
+//           lines  fewer, wider-spaced hairlines, a little more graphic
+//           satin  no single grooves: smooth bands for the tracks
+//   touch   lamp   the sheen swings round to face the pointer
+//           hand   the record slows near the pointer; drag across the hero
+//                  to scratch it, let go and it spins back up
+//           needle click to drop the needle: a ripple runs out
+//
+// A kick lifts the sheen a little; reduced motion leaves it still.
 const reduced = matchMedia('(prefers-reduced-motion: reduce)');
-const shot = document.querySelector('.shot');
-const screen = shot.querySelector('.screen');
-const canvas = shot.querySelector('.beats');
+const hero = document.querySelector('.hero');
+const screen = document.querySelector('.shot .screen');
+const canvas = document.querySelector('.ripples');
 const ctx = canvas.getContext('2d');
+const RES = Math.min(1.25, devicePixelRatio || 1);
+const SQUASH = 0.5;
+const TURN = (Math.PI * 2) / 120; // one turn every two minutes
 const COOL = '201 220 242';
 const WARM = '240 220 192';
 
-let effect = 'rings';
-let level = 0;
+let style = 'blend';
+let touch = 'lamp';
 let avg = 0;
-let lastBeat = 0;
-let beats = 0;
-const rings = [];
+let swell = 0;
+let want = 0;
+let lastKick = 0;
+const mouse = { x: -1e4, y: -1e4, in: false };
+const drag = { on: false, lastX: 0, lastT: 0 };
+const ripples = [];
+let spin = 0;
+let facingNow = -Math.PI * 0.6;
+let glow = 0;
+let speed = TURN;
 let running = false;
 
-export function setEffect(name) {
-  effect = name;
-  shot.dataset.fx = name;
-  rings.length = 0;
-  kick();
+export function setVariant(v) {
+  touch = v;
+  wake();
 }
+export function setStyle(v) {
+  style = v;
+  geo = null;
+  wake();
+}
+
+const local = (e) => {
+  const c = canvas.getBoundingClientRect();
+  return { x: e.clientX - c.left, y: e.clientY - c.top };
+};
+addEventListener('pointermove', (e) => {
+  Object.assign(mouse, local(e), { in: true });
+  if (drag.on && touch === 'hand') {
+    const now = performance.now();
+    const dt = Math.max(8, now - drag.lastT) / 1000;
+    speed = ((e.clientX - drag.lastX) / dt) * 0.0025;
+    drag.lastX = e.clientX;
+    drag.lastT = now;
+  }
+}, { passive: true });
+document.addEventListener('pointerleave', () => (mouse.in = false));
+hero.addEventListener('pointerdown', (e) => {
+  if (touch !== 'hand' || e.target.closest('a, button, input, summary')) return;
+  Object.assign(drag, { on: true, lastX: e.clientX, lastT: performance.now() });
+  document.documentElement.style.userSelect = 'none';
+});
+addEventListener('pointerup', () => {
+  drag.on = false;
+  document.documentElement.style.userSelect = '';
+});
+addEventListener('pointerdown', (e) => {
+  if (touch === 'needle' && !e.target.closest('a, button, input, summary, .try')) ripples.push({ born: performance.now(), ...local(e) });
+}, { passive: true });
 
 /** Called with each level report from the app. */
 export function hear(l) {
-  level = l;
-  avg += (l - avg) * 0.08;
+  avg += (l - avg) * 0.05;
   const now = performance.now();
-  if (l > 0.12 && l > avg * 1.25 && now - lastBeat > 300) {
-    lastBeat = now;
-    beats++;
-    rings.push({ born: now, tone: beats % 2 ? WARM : COOL, strength: Math.min(1, l * 1.5) });
-    shot.style.setProperty('--kick', '1');
-    requestAnimationFrame(() => requestAnimationFrame(() => shot.style.setProperty('--kick', '0')));
+  if (l > 0.12 && l > avg * 1.3 && now - lastKick > 900) {
+    lastKick = now;
+    want = 1;
   }
-  shot.style.setProperty('--fx-level', l.toFixed(3));
-  kick();
 }
 
-function kick() {
-  if (running || reduced.matches || effect === 'none' || effect === 'floor' || effect === 'beams') return;
+function wake() {
+  if (running || reduced.matches) return;
   running = true;
   requestAnimationFrame(draw);
 }
 
-// The skyline's bars, each easing toward a height of its own.
-const BARS = 48;
-const bars = Array.from({ length: BARS }, () => 0);
-const seeds = Array.from({ length: BARS }, (_, i) => 0.5 + 0.5 * Math.sin(i * 1.7) * Math.cos(i * 0.37));
+const grooves = document.createElement('canvas');
+const gctx = grooves.getContext('2d');
+let geo = null;
 
-function draw(now) {
-  const dpr = Math.min(2, devicePixelRatio || 1);
-  const w = canvas.clientWidth;
-  const h = canvas.clientHeight;
-  if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) {
-    canvas.width = Math.round(w * dpr);
-    canvas.height = Math.round(h * dpr);
-  }
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  ctx.clearRect(0, 0, w, h);
-  // Where the screen sits in the canvas.
+function layout(w, h) {
   const c = canvas.getBoundingClientRect();
   const s = screen.getBoundingClientRect();
-  const f = { x: s.left - c.left, y: s.top - c.top, w: s.width, h: s.height };
-  const cx = f.x + f.w / 2;
-  const cy = f.y + f.h / 2;
-
-  for (let i = rings.length - 1; i >= 0; i--) if (now - rings[i].born > 2200) rings.splice(i, 1);
-
-  if (effect === 'rings') {
-    for (const r of rings) {
-      const t = (now - r.born) / 1600;
-      if (t >= 1) continue;
-      const grow = 6 + (1 - (1 - t) ** 3) * 120;
-      const rw = f.w + grow * 2;
-      const rh = f.h + grow * 2;
-      ctx.beginPath();
-      ctx.roundRect(cx - rw / 2, cy - rh / 2, rw, rh, 16 + grow * 0.6);
-      ctx.strokeStyle = `rgb(${r.tone} / ${(1 - t) ** 1.6 * 0.5 * r.strength})`;
-      ctx.lineWidth = 2 + (1 - t) * 4;
-      ctx.shadowColor = `rgb(${r.tone} / ${(1 - t) * 0.6})`;
-      ctx.shadowBlur = 18;
-      ctx.stroke();
-      ctx.shadowBlur = 0;
+  const cx = s.left - c.left + s.width / 2;
+  const cy = s.top - c.top + s.height * 0.5;
+  const R = Math.max(cy / SQUASH, w / 2) * 1.06;
+  const r0 = s.width * 0.42;
+  const key = [w, h, Math.round(cx), Math.round(cy), style].join();
+  if (geo?.key === key) return geo;
+  grooves.width = canvas.width;
+  grooves.height = canvas.height;
+  gctx.setTransform(RES, 0, 0, RES * SQUASH, cx * RES, cy * RES);
+  gctx.clearRect(-R * 2, -R * 4, R * 4, R * 8);
+  // Tracks: the quieter gaps between songs, at steady but uneven spacing.
+  const gaps = [];
+  for (let r = r0 + 240, i = 0; r < R; r += 260 + ((i++ * 97) % 140)) gaps.push(r);
+  const fade = (r) => Math.min(1, (r - r0) / 90) * (1 - ((r - r0) / (R - r0)) * 0.5);
+  if (style === 'blend') {
+    // Presence from broad, soft bands; texture from quiet hairlines over
+    // them. No falloff with radius: the outer grooves, up behind the
+    // headline, are as clear as the inner ones (the page's mask sets how
+    // strong each part of the hero is).
+    const rise = (r) => Math.min(1, (r - r0) / 90);
+    let prev = r0;
+    for (const g of [...gaps, R]) {
+      const grad = gctx.createRadialGradient(0, 0, prev, 0, 0, g);
+      grad.addColorStop(0, 'rgb(255 255 255 / 0)');
+      grad.addColorStop(0.1, `rgb(255 255 255 / ${0.26 * rise(prev + 40)})`);
+      grad.addColorStop(0.9, `rgb(255 255 255 / ${0.26 * rise(g)})`);
+      grad.addColorStop(1, 'rgb(255 255 255 / 0)');
+      gctx.fillStyle = grad;
+      gctx.beginPath();
+      gctx.arc(0, 0, g, 0, Math.PI * 2);
+      gctx.arc(0, 0, prev, 0, Math.PI * 2, true);
+      gctx.fill();
+      prev = g;
+    }
+    gctx.lineWidth = 0.8 / RES;
+    for (let r = r0; r < R; r += 6) {
+      if (gaps.some((g) => Math.abs(r - g) < 14)) continue;
+      gctx.strokeStyle = `rgb(255 255 255 / ${0.85 * rise(r)})`;
+      gctx.beginPath();
+      gctx.arc(0, 0, r, 0, Math.PI * 2);
+      gctx.stroke();
+    }
+  } else if (style === 'satin') {
+    // Smooth bands, no single grooves: each track a soft sheet of light.
+    let prev = r0;
+    for (const g of [...gaps, R]) {
+      const grad = gctx.createRadialGradient(0, 0, prev, 0, 0, g);
+      grad.addColorStop(0, 'rgb(255 255 255 / 0)');
+      grad.addColorStop(0.08, `rgb(255 255 255 / ${0.55 * fade(prev + 40)})`);
+      grad.addColorStop(0.92, `rgb(255 255 255 / ${0.55 * fade(g)})`);
+      grad.addColorStop(1, 'rgb(255 255 255 / 0)');
+      gctx.fillStyle = grad;
+      gctx.beginPath();
+      gctx.arc(0, 0, g, 0, Math.PI * 2);
+      gctx.arc(0, 0, prev, 0, Math.PI * 2, true);
+      gctx.fill();
+      prev = g;
+    }
+  } else {
+    const spacing = style === 'lines' ? 14 : 5;
+    gctx.lineWidth = (style === 'lines' ? 1 : 0.8) / RES;
+    for (let r = r0; r < R; r += spacing) {
+      const gap = gaps.some((g) => Math.abs(r - g) < (style === 'lines' ? 8 : 12));
+      gctx.strokeStyle = `rgb(255 255 255 / ${(gap ? 0.15 : 1) * fade(r)})`;
+      gctx.beginPath();
+      gctx.arc(0, 0, r, 0, Math.PI * 2);
+      gctx.stroke();
     }
   }
-
-  if (effect === 'dots') {
-    const gap = 22;
-    for (let x = gap / 2; x < w; x += gap) {
-      for (let y = gap / 2; y < h; y += gap) {
-        // Distance outside the screen's box (0 on its edge).
-        const dx = Math.max(f.x - x, 0, x - (f.x + f.w));
-        const dy = Math.max(f.y - y, 0, y - (f.y + f.h));
-        const d = Math.hypot(dx, dy);
-        if (d === 0) continue;
-        let push = 0;
-        let lit = 0;
-        for (const r of rings) {
-          const front = ((now - r.born) / 1800) * 520;
-          const k = Math.exp(-(((d - front) / 40) ** 2)) * r.strength * Math.max(0, 1 - front / 520);
-          push += k * 7;
-          lit += k;
-        }
-        const ux = dx === 0 ? 0 : Math.sign(x - cx);
-        const uy = dy === 0 ? 0 : Math.sign(y - cy);
-        const fade = Math.max(0, 1 - d / 420);
-        ctx.fillStyle = `rgb(${(x + y) % 2 ? COOL : WARM} / ${(0.07 + lit * 0.55) * fade})`;
-        ctx.beginPath();
-        ctx.arc(x + ux * push, y + uy * push, 1.1 + lit * 1.4, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
-  }
-
-  if (effect === 'skyline') {
-    const base = f.y + 40;
-    const span = f.w * 1.1;
-    const left = cx - span / 2;
-    const bw = span / BARS;
-    const recent = rings.length ? Math.max(0, 1 - (now - rings[rings.length - 1].born) / 500) : 0;
-    for (let i = 0; i < BARS; i++) {
-      const wobble = 0.5 + 0.5 * Math.sin(now / 420 + i * 0.9) * Math.sin(now / 1300 + i * 0.31);
-      const want = (0.15 + level * 0.9 * seeds[i] + recent * 0.35 * seeds[(i * 7) % BARS]) * (0.5 + wobble * 0.5);
-      bars[i] += (want - bars[i]) * 0.18;
-      const bh = bars[i] * 150;
-      const g = ctx.createLinearGradient(0, base - bh, 0, base);
-      const tone = i < BARS / 2 ? COOL : WARM;
-      g.addColorStop(0, `rgb(${tone} / 0)`);
-      g.addColorStop(1, `rgb(${tone} / 0.32)`);
-      ctx.fillStyle = g;
-      ctx.beginPath();
-      ctx.roundRect(left + i * bw + 2, base - bh, bw - 4, bh, 3);
-      ctx.fill();
-    }
-  }
-
-  if (effect !== 'none' && effect !== 'floor' && effect !== 'beams') requestAnimationFrame(draw);
-  else running = false;
+  // The page's mask keeps the record clearest above the screen, behind the
+  // words, and quieter beside the app, which is the star.
+  canvas.style.setProperty('--fx-top', `${Math.round(s.top - c.top)}px`);
+  canvas.style.setProperty('--fx-mid', `${Math.round(s.top - c.top + s.height * 0.35)}px`);
+  geo = { key, cx, cy, R, r0 };
+  return geo;
 }
 
-reduced.addEventListener('change', () => setEffect(effect));
+/**
+ * Conic stops for light round the centre: `n` wedges, `sharp` how narrow,
+ * as the darkness laid over grooves drawn at full strength. Where a wedge
+ * falls the grooves keep their light; elsewhere they sink to `rest` of it.
+ */
+function shade(l, at, n, sharp, rest, lift) {
+  const grad = l.createConicGradient(at, 0, 0);
+  const steps = 48;
+  for (let i = 0; i <= steps; i++) {
+    const t = i / steps;
+    const v = Math.max(0, Math.cos(t * Math.PI * 2 * n)) ** sharp;
+    const keep = Math.min(1, rest + v * lift);
+    grad.addColorStop(t, `rgb(9 9 11 / ${1 - keep})`);
+  }
+  return grad;
+}
+
+let last = performance.now();
+function draw(now) {
+  const dt = Math.min(0.1, (now - last) / 1000);
+  last = now;
+  const w = canvas.clientWidth;
+  const h = canvas.clientHeight;
+  if (canvas.width !== Math.round(w * RES) || canvas.height !== Math.round(h * RES)) {
+    canvas.width = Math.round(w * RES);
+    canvas.height = Math.round(h * RES);
+    geo = null;
+  }
+  const g = layout(w, h);
+  swell += (want - swell) * Math.min(1, dt * (want > swell ? 2.5 : 1));
+  want *= Math.exp(-dt * 1.4);
+
+  let target = TURN;
+  if (touch === 'hand' && mouse.in && !drag.on) {
+    const d = Math.hypot(mouse.x - g.cx, (mouse.y - g.cy) / SQUASH);
+    if (d > g.r0 && d < g.R) target = TURN * 0.1;
+  }
+  if (!drag.on) speed += (target - speed) * Math.min(1, dt * 1.5);
+  spin += speed * dt;
+
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  // The grooves at full strength; light and shade are then laid over them
+  // in place (source-atop keeps it all on the grooves).
+  ctx.globalAlpha = (style === 'blend' ? 0.3 : style === 'satin' ? 0.17 : style === 'lines' ? 0.24 : 0.2) * (1 + swell * 0.18);
+  // A record never sits quite true: the grooves drift a pixel or so round
+  // the spindle, slowly, so they seem to breathe.
+  const wob = now / 1000 * ((Math.PI * 2) / 11);
+  ctx.drawImage(grooves, Math.cos(wob) * 1.4 * RES, Math.sin(wob) * 1.4 * SQUASH * RES);
+  ctx.globalAlpha = 1;
+  ctx.globalCompositeOperation = 'source-atop';
+  ctx.setTransform(RES, 0, 0, RES * SQUASH, g.cx * RES, g.cy * RES);
+  // The sheen swings slowly on its own, and eases round to face the
+  // pointer (the short way round), never snapping.
+  const rest = -Math.PI * 0.6 + Math.sin(now / 1000 * ((Math.PI * 2) / 17)) * 0.14;
+  const aim = touch === 'lamp' && mouse.in ? Math.atan2((mouse.y - g.cy) / SQUASH, mouse.x - g.cx) : rest;
+  let delta = ((aim - facingNow + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
+  facingNow += delta * Math.min(1, dt * 2.2);
+  const facing = facingNow;
+  // The fixed sheen: two soft wedges; the rest sinks to a fifth.
+  ctx.fillStyle = shade(ctx, facing - Math.PI / 2, 1, 4, 0.32, 0.68);
+  ctx.fillRect(-g.R, -g.R, g.R * 2, g.R * 2);
+  // The turn: three broad lobes going round with the record, gently.
+  ctx.fillStyle = shade(ctx, spin, 1.5, 2, 0.82, 0.18);
+  ctx.fillRect(-g.R, -g.R, g.R * 2, g.R * 2);
+  // Under the pointer, the grooves catch a little more light: a soft pool
+  // that fades in as the pointer arrives and out when it leaves.
+  glow += ((mouse.in ? 1 : 0) - glow) * Math.min(1, dt * 3);
+  if (glow > 0.01) {
+    const mx = mouse.x - g.cx;
+    const my = (mouse.y - g.cy) / SQUASH;
+    const pool = ctx.createRadialGradient(mx, my, 0, mx, my, 380);
+    pool.addColorStop(0, `rgb(${COOL} / ${0.32 * glow})`);
+    pool.addColorStop(0.5, `rgb(${COOL} / ${0.12 * glow})`);
+    pool.addColorStop(1, `rgb(${COOL} / 0)`);
+    ctx.fillStyle = pool;
+    ctx.fillRect(mx - 380, my - 380, 760, 760);
+  }
+  // A dropped needle: a ring of light running out through the grooves.
+  for (const rp of ripples) {
+    const t = (now - rp.born) / 3200;
+    const r = Math.hypot(rp.x - g.cx, (rp.y - g.cy) / SQUASH) + t * 600;
+    const band = ctx.createRadialGradient(0, 0, Math.max(0, r - 70), 0, 0, r + 70);
+    band.addColorStop(0, `rgb(${WARM} / 0)`);
+    band.addColorStop(0.5, `rgb(${WARM} / ${(1 - t) ** 2 * 0.45})`);
+    band.addColorStop(1, `rgb(${WARM} / 0)`);
+    ctx.fillStyle = band;
+    ctx.fillRect(-r - 70, -r - 70, (r + 70) * 2, (r + 70) * 2);
+  }
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  for (let i = ripples.length - 1; i >= 0; i--) if (now - ripples[i].born > 3200) ripples.splice(i, 1);
+
+  if (!reduced.matches) requestAnimationFrame(draw);
+  else {
+    running = false;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+}
+
+reduced.addEventListener('change', wake);
+wake();

@@ -34,15 +34,26 @@ img { max-width: 100%; height: auto; display: block; }
 .wrap { width: min(1120px, 100% - 32px); margin-inline: auto; }
 
 /* Nav */
+/* The nav. Over the hero it stays out of the way: the record shows
+   through, and the buttons the hero already has are hidden. Once the
+   hero's buttons scroll away ([data-past]), GitHub and Download fade in. The section links, which the
+   hero doesn't have, are always there. */
 .nav {
   position: sticky;
   top: 0;
   z-index: 10;
+  border-bottom: 1px solid transparent;
+  transition: background-color 0.3s, border-color 0.3s, backdrop-filter 0.3s;
+}
+.nav[data-scrolled] {
   background: rgb(9 9 11 / 0.78);
   backdrop-filter: blur(16px) saturate(1.2);
   -webkit-backdrop-filter: blur(16px) saturate(1.2);
-  border-bottom: 1px solid var(--line);
+  border-bottom-color: var(--line);
 }
+.nav-actions > * { transition: opacity 0.3s cubic-bezier(0.23, 1, 0.32, 1), transform 0.3s cubic-bezier(0.23, 1, 0.32, 1), visibility 0.3s; }
+.nav:not([data-past]) .nav-actions > * { opacity: 0; transform: translateY(-4px); visibility: hidden; }
+.nav-actions > :nth-child(2) { transition-delay: 40ms; }
 .nav-row { display: flex; align-items: center; gap: 24px; height: 60px; }
 .brand { display: inline-flex; align-items: center; gap: 10px; font-weight: 600; text-decoration: none; letter-spacing: -0.01em; }
 .links { display: flex; gap: 22px; margin-right: auto; font-size: 14px; }
@@ -85,27 +96,21 @@ h1 { margin: 0; font-size: clamp(48px, 9vw, 88px); font-weight: 600; letter-spac
 .meta a { color: var(--fg-2); }
 .meta span { margin: 0 6px; }
 
-/* Screenshot, then the live app. The frame leans back a few degrees until
-   it's scrolled into view (--tilt runs 1 to 0), and the glow under it
-   follows the music (--level, 0 to 1, sent by the app). */
-.shot { perspective: 1800px; }
+/* Screenshot, then the live app. It sits flat; the glow under it follows
+   the music (--level, 0 to 1, sent by the app). */
 .stage-frame {
-  --tilt: 0;
   --level: 0;
   position: relative;
-
-  transform: rotateX(calc(var(--tilt) * 14deg)) scale(calc(1 - var(--tilt) * 0.04));
-  transform-origin: 50% 0;
-  will-change: transform;
 }
 .screen {
   position: relative;
   aspect-ratio: 1440 / 900;
-  border-radius: 14px;
+  /* The app's own corner at this scale: its panels' 16px plus its 12px margin. */
+  border-radius: calc(28px * var(--s));
   background: #09090b;
-  box-shadow: 0 0 0 1px var(--line-2), 0 40px 120px rgb(0 0 0 / 0.6);
+  box-shadow: 0 40px 120px rgb(0 0 0 / 0.6);
 }
-.screen .poster { width: 100%; border-radius: 14px; transition: opacity 0.6s ease-out; }
+.screen .poster { width: 100%; border-radius: inherit; transition: opacity 0.6s ease-out; }
 .screen .live {
   position: absolute;
   top: 0;
@@ -118,11 +123,20 @@ h1 { margin: 0; font-size: clamp(48px, 9vw, 88px); font-weight: 600; letter-spac
   transform-origin: 0 0;
   pointer-events: none;
   opacity: 0;
-  transition: opacity 0.6s ease-out;
+  transition: opacity 0.6s ease-out, transform 0.9s cubic-bezier(0.77, 0, 0.175, 1);
 }
 .stage-frame[data-live] .live { opacity: 1; }
+/* The camera crops to the frame as it pushes in. */
+.stage-frame[data-live] .screen { overflow: hidden; }
 /* Live, the app draws its own edge and shadow (it moves within the frame). */
-.stage-frame[data-live] .screen { box-shadow: none; background: none; }
+.stage-frame[data-live] .screen { background: none; box-shadow: none; }
+/* The screenshot's edge, until the live app (which draws its own) takes over:
+   inside the box, so nothing can clip it. */
+.screen::after {
+  content: ''; position: absolute; inset: 0; z-index: 1; border-radius: inherit; pointer-events: none;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08), inset 0 1px 0 rgb(255 255 255 / 0.14);
+}
+.stage-frame[data-live] .screen::after { display: none; }
 .stage-frame[data-live] .poster { opacity: 0; }
 /* A soft light under the frame in the decks' cool and warm whites, swelling
    with the output level. */
@@ -139,54 +153,28 @@ h1 { margin: 0; font-size: clamp(48px, 9vw, 88px); font-weight: 600; letter-spac
   transform: scale(calc(0.97 + var(--level) * 0.05));
   transition: opacity 120ms linear, transform 120ms linear;
 }
-/* The switch sits pinned on the frame's top edge, so it never moves:
-   switching changes what plays inside the frame, not the page. */
-.shot-bar {
-  position: absolute; z-index: 5; top: 22px; left: 50%; translate: -50% -50%;
-  display: flex; align-items: center; gap: 10px; padding: 4px; border-radius: 14px;
-  background: rgb(14 14 17 / 0.85); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
-  box-shadow: inset 0 0 0 1px var(--line-2), 0 10px 30px rgb(0 0 0 / 0.5);
-}
-.shot-tag {
-  margin-right: 6px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  height: 26px;
-  padding: 0 10px;
-  border-radius: 999px;
-  color: var(--fg-2);
-  font-size: 13px;
-  background: rgb(62 198 255 / 0.08);
-  box-shadow: inset 0 0 0 1px rgb(62 198 255 / 0.22);
-  transition: opacity 0.3s, transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-}
-.shot-tag span { color: var(--fg-3); }
+/* Under the frame, centred: the switch and, beside it, what it means. Three
+   layers only: a quiet track, a filled thumb, plain text. The controller
+   version plays inside the same frame, so this never moves. */
+.shot-bar { display: flex; align-items: center; gap: 16px; width: max-content; margin: 28px auto 0; }
+.shot-tag { color: var(--fg-3); font-size: 13px; }
 
-/* Behind the hero: the effect being tried (hero-fx.js), on a canvas a
-   little larger than the frame, over a fine grain. Absent under reduced
-   motion. */
-.shot { --s: 0.78; position: relative; padding-top: 22px; }
-.beats {
-  position: absolute;
-  inset: -12% -8%;
-  z-index: -2;
-  width: 116%;
-  height: 124%;
-  pointer-events: none;
-  -webkit-mask-image: radial-gradient(closest-side, #000 55%, transparent);
-  mask-image: radial-gradient(closest-side, #000 55%, transparent);
-}
-.hero::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -3;
-  pointer-events: none;
-  opacity: 0.5;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.05 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-}
+/* Behind the hero: rings rippling out from the screen (hero-fx.js), on a
+   canvas the page's full width, from the top of the page to below the
+   hero, fading out at its foot. Nothing clips it. */
 main { position: relative; isolation: isolate; }
+.ripples {
+  position: absolute; left: 0; top: 0; z-index: -1; width: 100%; height: min(2000px, 230vh); pointer-events: none;
+  /* Clearest above the screen, behind the words; quieter beside the app. */
+  --fx-top: 600px; --fx-mid: 900px;
+  --fx-mask: linear-gradient(to bottom, rgb(0 0 0 / 0.15) 0, rgb(0 0 0 / 0.8) calc(var(--fx-top) * 0.55), rgb(0 0 0 / 0.8) var(--fx-top), rgb(0 0 0 / 0.42) var(--fx-mid), rgb(0 0 0 / 0.42) 72%, transparent);
+  -webkit-mask-image: var(--fx-mask);
+  mask-image: var(--fx-mask);
+}
+@media (prefers-reduced-motion: reduce) { .ripples { display: none; } }
+/* Decorative layers run the page's full width, never a content column's,
+   so no edge of theirs can show. */
+.shot { --s: 0.78; position: relative; }
 
 /* Mouse or controller: two options and a thumb that slides between them. */
 .switch {
@@ -196,7 +184,6 @@ main { position: relative; isolation: isolate; }
   padding: 3px;
   border-radius: 10px;
   background: rgb(255 255 255 / 0.05);
-  box-shadow: inset 0 0 0 1px var(--line);
 }
 .switch button {
   position: relative;
@@ -226,9 +213,8 @@ main { position: relative; isolation: isolate; }
   left: 3px;
   width: calc(50% - 3px);
   border-radius: 7px;
-  background: rgb(255 255 255 / 0.09);
-  box-shadow: inset 0 0 0 1px var(--line-2);
-  transition: transform 0.35s cubic-bezier(0.45, 0, 0.1, 1);
+  background: rgb(255 255 255 / 0.1);
+  transition: transform 0.3s cubic-bezier(0.77, 0, 0.175, 1);
 }
 .stage-frame[data-mode="controller"] ~ .shot-bar .thumb,
 .shot:has(.stage-frame[data-mode="controller"]) .thumb { transform: translateX(100%); }
@@ -283,8 +269,15 @@ pre {
 .dot.a { background: var(--deck-a); }
 .dot.b { background: var(--deck-b); }
 .group ul { margin: 0; padding: 0; list-style: none; }
-.group li { padding: 7px 0; color: var(--fg-2); border-top: 1px solid var(--line); font-size: 15px; }
-.group li:first-child { border-top: 0; }
+.group li { color: var(--fg-2); font-size: 15px; }
+/* Feature lists: each a single line, evenly spaced, no rules between. */
+.group ul { display: grid; gap: 0; }
+.group li { padding: 0; border: 0; line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* A spec sheet: the term, then what it means, quieter; a hairline between. */
+.group li { display: grid; grid-template-columns: 92px 1fr; gap: 12px; align-items: baseline; padding: 9px 0; border-top: 1px solid var(--line); }
+.group li:first-child { border-top: 0; padding-top: 0; }
+.group li b { font-weight: 450; color: var(--fg); }
+.group li span { color: var(--fg-3); overflow: hidden; text-overflow: ellipsis; }
 
 /* FAQ */
 .faq { max-width: 760px; }
@@ -301,15 +294,15 @@ summary {
   list-style: none;
 }
 summary::-webkit-details-marker { display: none; }
-summary::after { content: '+'; color: var(--fg-3); font-weight: 400; transition: transform 0.2s ease-out; }
-details[open] summary::after { transform: rotate(45deg); }
-details p { margin: 0 0 20px; color: var(--fg-2); max-width: 62ch; }
+summary::after { content: '+'; color: var(--fg-3); font-weight: 400; transition: transform 0.28s cubic-bezier(0.23, 1, 0.32, 1); }
+details[open]:not([data-closing]) summary::after { transform: rotate(45deg); }
+details p { margin: 0; padding-bottom: 20px; color: var(--fg-2); max-width: 62ch; }
 
 /* Footer */
 .foot { margin-top: 128px; padding: 48px 0 40px; border-top: 1px solid var(--line); }
 .foot-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 32px; }
 .foot h4 { margin: 0 0 12px; color: var(--fg-3); font-size: 13px; font-weight: 500; }
-.foot-grid > div > a:not(.brand) { display: block; padding: 3px 0; color: var(--fg-2); text-decoration: none; font-size: 14px; }
+.foot-grid > div > a:not(.brand) { display: block; width: fit-content; padding: 3px 0; color: var(--fg-2); text-decoration: none; font-size: 14px; }
 .foot-grid > div > a:not(.brand):hover { color: var(--fg); }
 .small-print { color: var(--fg-3); font-size: 13px; }
 .legal { margin-top: 40px; }
@@ -327,37 +320,6 @@ details p { margin: 0 0 20px; color: var(--fg-2); max-width: 62ch; }
   .nav-actions .ghost { display: none; }
 }
 
-/* Floor: the screen reflected in a glossy floor, its light pulsing. */
-.shot[data-fx="floor"] .screen {
-  -webkit-box-reflect: below 10px linear-gradient(to bottom, transparent 55%, rgb(0 0 0 / 0.22));
-}
-.fx-floor {
-  position: absolute; left: 4%; right: 4%; top: calc(22px + var(--s, 0.78) * 900px * 0.98); height: 40%; z-index: -1; pointer-events: none;
-  background: radial-gradient(50% 60% at 30% 0%, rgb(201 220 242 / 0.2), transparent 70%), radial-gradient(50% 60% at 70% 0%, rgb(240 220 192 / 0.18), transparent 70%);
-  filter: blur(30px);
-  opacity: 0;
-  transition: opacity 0.4s;
-}
-.shot[data-fx="floor"] .fx-floor { opacity: calc(0.35 + var(--fx-level, 0) * 0.9); transition: opacity 120ms linear; }
-
-/* Beams: two soft club lights, cool and warm, sweeping from behind the screen. */
-.fx-beams { position: absolute; inset: -20% -10% 0; z-index: -1; pointer-events: none; opacity: 0; transition: opacity 0.6s; overflow: hidden;
-  -webkit-mask-image: linear-gradient(to bottom, #000 30%, transparent 85%); mask-image: linear-gradient(to bottom, #000 30%, transparent 85%); }
-.shot[data-fx="beams"] .fx-beams { opacity: calc(0.55 + var(--fx-level, 0) * 0.6); }
-.fx-beams i {
-  position: absolute; bottom: 20%; left: 50%; width: 46%; height: 140%; transform-origin: 50% 100%;
-  background: conic-gradient(from 180deg at 50% 100%, transparent 170deg, rgb(201 220 242 / 0.16) 177deg, rgb(201 220 242 / 0.26) 180deg, rgb(201 220 242 / 0.16) 183deg, transparent 190deg);
-  filter: blur(6px);
-  animation: fx-sweep 9s ease-in-out infinite alternate;
-  translate: -50% 0;
-}
-.fx-beams i:nth-child(2) {
-  background: conic-gradient(from 180deg at 50% 100%, transparent 170deg, rgb(240 220 192 / 0.15) 177deg, rgb(240 220 192 / 0.24) 180deg, rgb(240 220 192 / 0.15) 183deg, transparent 190deg);
-  animation-duration: 11s; animation-delay: -4s; animation-direction: alternate-reverse;
-}
-@keyframes fx-sweep { from { rotate: -34deg; } to { rotate: 34deg; } }
-@media (prefers-reduced-motion: reduce) { .fx-beams, .fx-floor { display: none; } }
-
 /* Trying out: the panel at the bottom right (localhost, or ?try). */
 .try {
   position: fixed; right: 16px; bottom: 16px; z-index: 50; display: grid; gap: 10px; width: 300px; padding: 12px 12px 14px; border-radius: 14px;
@@ -374,3 +336,23 @@ details p { margin: 0 0 20px; color: var(--fg-2); max-width: 62ch; }
 }
 .try button:hover { color: var(--fg); background: rgb(255 255 255 / 0.08); }
 .try button[aria-pressed="true"] { color: #111; background: var(--fg); box-shadow: none; }
+
+/* The name, very large, across the foot of the page and running off its
+   bottom edge. On hover, a record's grooves show in the letters round the
+   pointer: arcs round a spindle below the word, like the record above. */
+.foot { overflow: hidden; }
+.foot-word {
+  position: relative; display: block; margin: 56px 0 -0.22em; text-align: center; user-select: none;
+  font-size: clamp(96px, 21vw, 340px); font-weight: 600; letter-spacing: -0.055em; line-height: 0.9;
+  color: rgb(255 255 255 / 0.045);
+  --x: 50%; --y: 50%; --on: 0;
+}
+.foot-word::after {
+  content: attr(data-text); position: absolute; inset: 0;
+  background: repeating-radial-gradient(ellipse 100% 50% at 50% 135%, rgb(255 255 255 / 0.6) 0 1px, transparent 1.5px 5px);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  -webkit-mask-image: radial-gradient(circle at var(--x) var(--y), #000, transparent 320px);
+  mask-image: radial-gradient(circle at var(--x) var(--y), #000, transparent 320px);
+  opacity: var(--on); transition: opacity 0.5s ease-out;
+}
+@media (hover: none) { .foot-word::after { display: none; } }

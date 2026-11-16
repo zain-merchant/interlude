@@ -10,8 +10,8 @@ html, body { margin: 0; width: 1440px; height: 900px; overflow: hidden; backgrou
    visitor watches. */
 .app-host {
   position: absolute; top: 0; left: 0; width: 1440px;
-  overflow: hidden; border-radius: 14px; background: #09090b;
-  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.12), 0 40px 120px rgb(0 0 0 / 0.6);
+  overflow: hidden; border-radius: 28px; background: #09090b;
+  box-shadow: 0 40px 120px rgb(0 0 0 / 0.6);
   pointer-events: none; user-select: none;
 }
 
@@ -80,47 +80,54 @@ html, body { margin: 0; width: 1440px; height: 900px; overflow: hidden; backgrou
    laptop does behind the controller in front of it; the desk comes up over
    its foot. */
 .app-host { transform-origin: 50% 0; transition: transform 1s cubic-bezier(0.23, 1, 0.32, 1); }
-#hero[data-hand="controller"] .app-host { transform: perspective(2400px) rotateX(5deg) scale(0.8); }
+#hero[data-hand="controller"] .app-host { transform: perspective(2400px) rotateX(4deg) scale(0.88); }
 .desk { transition: top 1s cubic-bezier(0.23, 1, 0.32, 1); }
-#hero[data-hand="controller"] .desk { top: 616px; }
+#hero[data-hand="controller"] .desk { top: 624px; }
 
-/* The five ways a press shows (#hero[data-input]). The touch cursor's dot
-   is the fingertip in the first two, and hidden in the other three. */
-#hero[data-input="pad"] .hero-stage .ss-stage .ss-cursor[data-style="touch"] .ss-cursor__dot {
-  width: 34px; height: 42px; margin: -21px 0 0 -17px; border-radius: 50%;
-  background: radial-gradient(60% 55% at 45% 40%, rgb(255 255 255 / 0.55), rgb(255 255 255 / 0.22) 70%, rgb(255 255 255 / 0.1));
-  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.5), 0 10px 20px rgb(0 0 0 / 0.45);
-  filter: none;
+/* The link between a control on the controller and the one it drives in
+   the app (#hero[data-input]): soft rings round both, a fine line between,
+   a dot of light travelling it; or a small label gliding across. Quiet
+   white, the app's own hairline weight; everything eases in and out. */
+svg.links { position: absolute; inset: 0; z-index: 255; pointer-events: none; overflow: visible; }
+/* Interlude's orange: warm enough to read over the app's blues and the
+   metal alike, with a dark keyline for the brightest parts. */
+.link-ring {
+  fill: none; stroke: #ff9b45; stroke-width: 1.75;
+  opacity: 0; transition: opacity 0.35s ease-out;
+  filter: drop-shadow(0 0 1px rgb(0 0 0 / 0.85));
 }
-#hero[data-input="pad"] .hero-stage .ss-stage .ss-cursor[data-style="touch"][data-pressed="true"] .ss-cursor__dot { transform: scale(0.88, 0.82); }
-#hero:is([data-input="halo"], [data-input="cable"], [data-input="label"]) .hero-stage .ss-cursor[data-style="touch"] .ss-cursor__dot { display: none; }
+.link-ring.on { opacity: 1; }
+.link-line {
+  fill: none; stroke: #ff9b45; stroke-width: 1.75; stroke-linecap: round;
+  filter: drop-shadow(0 0 1px rgb(0 0 0 / 0.9));
+  opacity: 0; transition: opacity 0.35s ease-out;
+}
+.link-line.on { opacity: 1; }
+/* The pulse: a bright stretch of the line, glowing. */
+.link-spark { fill: none; stroke: #ffe2c2; stroke-width: 3; stroke-linecap: round; filter: drop-shadow(0 0 3px #ff9b45) drop-shadow(0 0 8px rgb(255 155 69 / 0.8)); }
+/* The demo moves focus about; no focus rings in it. */
+#hero :focus, #hero :focus-visible { outline: none !important; }
+.link-label {
+  position: absolute; left: 0; top: 0; z-index: 260; pointer-events: none; white-space: nowrap;
+  padding: 7px 12px; border-radius: 999px;
+  font: 500 17px/1 'Geist Variable', system-ui, sans-serif; color: #eceae4;
+  background: rgb(24 24 28 / 0.92); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.14), 0 8px 24px rgb(0 0 0 / 0.5);
+}
 
-/* Halo: the key's light thrown in a ring across the faceplate. */
-.fx-halo {
-  position: absolute; z-index: 260; width: 22px; height: 22px; margin: -11px 0 0 -11px; border-radius: 50%; pointer-events: none;
-  box-shadow: 0 0 0 2px rgb(140 210 255 / 0.9), 0 0 18px 4px rgb(62 198 255 / 0.55);
-  animation: fx-halo 0.8s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+/* The screen's edge, drawn the way the app draws its own panels (its
+   --glass-edge: a 1px hairline at 8% white, a 14% light along the top) and
+   inside the app's own box, so nothing can clip it. The corner is 28px:
+   the panels' 16px plus the app's 12px margin, so the edge runs concentric
+   with the panels inside it. */
+.app-host::after {
+  content: ''; position: absolute; inset: 0; z-index: 150; border-radius: inherit; pointer-events: none;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08), inset 0 1px 0 rgb(255 255 255 / 0.14);
 }
-@keyframes fx-halo { from { transform: scale(0.6); opacity: 1; } to { transform: scale(3.4); opacity: 0; } }
 
-/* Label: what the key sent, captioned at the press. */
-.fx-label {
-  position: absolute; z-index: 260; translate: -50% -100%; pointer-events: none; white-space: nowrap;
-  padding: 6px 10px; border-radius: 8px;
-  font: 500 15px/1 'Geist Variable', system-ui, sans-serif; color: #eceae4;
-  background: rgb(22 22 26 / 0.92); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.12), 0 8px 20px rgb(0 0 0 / 0.45);
-  animation: fx-label 1.5s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+/* A running loop: in the app only its number takes the deck's colour, too
+   quiet to catch in a demo, so here the button lights in that colour too. */
+#hero .perf button.big[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--deck) 16%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--deck) 55%, transparent);
+  transition: background-color 0.25s, box-shadow 0.25s;
 }
-@keyframes fx-label { 0% { opacity: 0; transform: translateY(6px); } 12% { opacity: 1; transform: none; } 75% { opacity: 1; } 100% { opacity: 0; transform: translateY(-4px); } }
-
-/* Cable: a pulse running up the lead, toward the computer. */
-.hw-cable { overflow: hidden; }
-.hw-cable::after {
-  content: ''; position: absolute; left: 0; right: 0; bottom: -30px; height: 30px; border-radius: 4px;
-  background: linear-gradient(to top, transparent, rgb(140 210 255 / 0.95), transparent);
-  box-shadow: 0 0 12px rgb(62 198 255 / 0.8);
-  opacity: 0;
-}
-.hw-cable.pulse::after { animation: fx-cable 0.55s cubic-bezier(0.45, 0, 0.1, 1); }
-@keyframes fx-cable { from { bottom: -30px; opacity: 1; } to { bottom: 100%; opacity: 1; } }

@@ -28,10 +28,10 @@
         <a href="#install">Install</a>
         <a href="#features">Features</a>
         <a href="#faq">FAQ</a>
-        <a href="https://github.com/zain-merchant/interlude/releases">Changelog</a>
+        <a href="https://github.com/zain-merchant/interlude/releases" target="_blank" rel="noopener">Changelog</a>
       </nav>
       <div class="nav-actions">
-        <a class="btn ghost small" href="https://github.com/zain-merchant/interlude">
+        <a class="btn ghost small" href="https://github.com/zain-merchant/interlude" target="_blank" rel="noopener">
           <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
           GitHub
         </a>
@@ -41,6 +41,8 @@
   </header>
 
   <main id="top">
+    <!-- A record's grooves round the hero's screen, with light moving over them (hero-fx.js). -->
+    <canvas class="ripples" aria-hidden="true"></canvas>
     <section class="hero wrap">
       <img class="hero-icon" src="img/icon.svg" alt="" width="88" height="88">
       <h1>Interlude</h1>
@@ -50,10 +52,10 @@
           <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v8m0 0L4.5 6.5M8 10l3.5-3.5M3 13h10"/></svg>
           Download for Mac
         </a>
-        <a class="btn ghost big" href="https://github.com/zain-merchant/interlude">View on GitHub</a>
+        <a class="btn ghost big" href="https://github.com/zain-merchant/interlude" target="_blank" rel="noopener">View on GitHub</a>
       </div>
       <p class="meta">
-        <a id="version" href="https://github.com/zain-merchant/interlude/releases/latest">Latest release</a>
+        <a id="version" href="https://github.com/zain-merchant/interlude/releases/latest" target="_blank" rel="noopener">Latest release</a>
         <span aria-hidden="true">·</span> Free and open source
         <span aria-hidden="true">·</span> macOS 11+ on Apple silicon
         <span aria-hidden="true">·</span> GPL-3.0-or-later
@@ -61,9 +63,6 @@
     </section>
 
     <section class="shot wrap" aria-label="Interlude in action">
-      <canvas class="beats" aria-hidden="true"></canvas>
-      <div class="fx-beams" aria-hidden="true"><i></i><i></i></div>
-      <div class="fx-floor" aria-hidden="true"></div>
       <div class="stage-frame" data-mode="mouse">
         <div class="glow" aria-hidden="true"></div>
         <div class="screen">
@@ -83,7 +82,7 @@
           </button>
           <i class="thumb" aria-hidden="true"></i>
         </div>
-        <span class="shot-tag">Works with any MIDI controller <span aria-hidden="true">·</span> 140+ mapped</span>
+        <span class="shot-tag">Works with 140+ MIDI controllers</span>
       </div>
     </section>
 
@@ -115,55 +114,55 @@
         <div class="group" data-picture="decks">
           <h3><span class="dot a"></span>Decks</h3>
           <ul>
-            <li>BPM, beatgrid and key found on load</li>
-            <li>Sync that matches tempo and phase</li>
-            <li>8 hot cues, beat loops and beat jump</li>
-            <li>Slip mode, quantize and key lock</li>
-            <li>Scrolling waveforms in three bands</li>
+            <li><b>Analysis</b><span>BPM, key and beatgrid</span></li>
+            <li><b>Sync</b><span>Tempo and phase</span></li>
+            <li><b>Cues</b><span>8 hot cues, loops, beat jump</span></li>
+            <li><b>Feel</b><span>Slip, quantize, key lock</span></li>
+            <li><b>Waveforms</b><span>Three-band, scrolling</span></li>
           </ul>
         </div>
         <div class="group" data-picture="mixer">
           <h3><span class="dot b"></span>Mixer and effects</h3>
           <ul>
-            <li>3-band EQ with full kills, trim and filter</li>
-            <li>Echo, reverb, flanger and phaser, timed to the beat</li>
-            <li>Auto gain, so every track starts level</li>
-            <li>A master limiter that never clips</li>
-            <li>Headphone cue with a cue/master blend</li>
+            <li><b>EQ</b><span>3 bands with full kills</span></li>
+            <li><b>Effects</b><span>Echo, reverb, flanger, phaser</span></li>
+            <li><b>Gain</b><span>Set for every track</span></li>
+            <li><b>Limiter</b><span>Never clips</span></li>
+            <li><b>Cue</b><span>Headphones, with a blend</span></li>
           </ul>
         </div>
         <div class="group" data-picture="stems">
           <h3><span class="dot a"></span>Stems</h3>
           <ul>
-            <li>Vocals, melody, bass and drums on every deck</li>
-            <li>Split on your Mac, nothing uploaded</li>
-            <li>Mute any stem live, on screen or from the pads</li>
+            <li><b>Parts</b><span>Vocals, melody, bass, drums</span></li>
+            <li><b>Split</b><span>On your Mac, offline</span></li>
+            <li><b>Mute</b><span>Live, or from the pads</span></li>
           </ul>
         </div>
         <div class="group" data-picture="library">
           <h3><span class="dot b"></span>Library</h3>
           <ul>
-            <li>Instant search across your whole collection</li>
-            <li>Playlists and a history of every set</li>
-            <li>Import from Rekordbox and Serato, cues included</li>
-            <li>MP3, AAC, FLAC, WAV, AIFF, OGG and ALAC</li>
+            <li><b>Search</b><span>Instant</span></li>
+            <li><b>Playlists</b><span>And your set history</span></li>
+            <li><b>Import</b><span>Rekordbox and Serato</span></li>
+            <li><b>Formats</b><span>Every common one</span></li>
           </ul>
         </div>
         <div class="group" data-picture="controllers">
           <h3><span class="dot a"></span>Controllers</h3>
           <ul>
-            <li>Pioneer DDJ-FLX4 mapped in full</li>
-            <li>140+ more through bundled Mixxx mappings</li>
-            <li>MIDI learn for anything else</li>
+            <li><b>DDJ-FLX4</b><span>Mapped in full</span></li>
+            <li><b>140+ more</b><span>Via Mixxx mappings</span></li>
+            <li><b>The rest</b><span>MIDI learn</span></li>
           </ul>
         </div>
         <div class="group" data-picture="recording">
           <h3><span class="dot b"></span>Recording and more</h3>
           <ul>
-            <li>Record your set to WAV in one click</li>
-            <li>A sampler with eight one-shot slots</li>
-            <li>Every shortcut can be remapped</li>
-            <li>Report a problem from the Help menu</li>
+            <li><b>Record</b><span>Your set, to WAV</span></li>
+            <li><b>Sampler</b><span>8 slots</span></li>
+            <li><b>Shortcuts</b><span>Remap any of them</span></li>
+            <li><b>Help</b><span>Report a problem</span></li>
           </ul>
         </div>
       </div>
@@ -190,7 +189,7 @@
         </details>
         <details>
           <summary>How do I report a bug?</summary>
-          <p>Choose Help › Report a Problem. Interlude saves a report with what you describe, the app's logs and your system (no music) to your Desktop, ready to send. You can also <a href="https://github.com/zain-merchant/interlude/issues">open an issue</a>.</p>
+          <p>Choose Help › Report a Problem. Interlude saves a report with what you describe, the app's logs and your system (no music) to your Desktop, ready to send. You can also <a href="https://github.com/zain-merchant/interlude/issues" target="_blank" rel="noopener">open an issue</a>.</p>
         </details>
       </div>
     </section>
@@ -205,17 +204,18 @@
       <div>
         <h4>App</h4>
         <a href="https://github.com/zain-merchant/interlude/releases/latest/download/Interlude.dmg">Download</a>
-        <a href="https://github.com/zain-merchant/interlude/releases">Changelog</a>
+        <a href="https://github.com/zain-merchant/interlude/releases" target="_blank" rel="noopener">Changelog</a>
         <a href="#faq">FAQ</a>
       </div>
       <div>
         <h4>Project</h4>
-        <a href="https://github.com/zain-merchant/interlude">GitHub</a>
-        <a href="https://github.com/zain-merchant/interlude/issues">Issues</a>
-        <a href="https://github.com/zain-merchant/interlude/blob/main/LICENSE">License</a>
+        <a href="https://github.com/zain-merchant/interlude" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://github.com/zain-merchant/interlude/issues" target="_blank" rel="noopener">Issues</a>
+        <a href="https://github.com/zain-merchant/interlude/blob/main/LICENSE" target="_blank" rel="noopener">License</a>
       </div>
     </div>
-    <p class="wrap small-print legal">Interlude is free software under the GNU GPL v3 or later. Controller mappings come from the <a href="https://mixxx.org">Mixxx</a> project (GPL-2.0-or-later). Interlude isn't affiliated with Pioneer DJ, Rekordbox, Serato or Mixxx; their names belong to their owners.</p>
+    <p class="wrap small-print legal">Interlude is free software under the GNU GPL v3 or later. Controller mappings come from the <a href="https://mixxx.org" target="_blank" rel="noopener">Mixxx</a> project (GPL-2.0-or-later). Interlude isn't affiliated with Pioneer DJ, Rekordbox, Serato or Mixxx; their names belong to their owners.</p>
+    <span class="foot-word" data-text="Interlude" aria-hidden="true">Interlude</span>
   </footer>
 
   <!-- The feature cards' pictures (built from app/demo, see the README). -->
@@ -236,15 +236,22 @@
       new ResizeObserver(fit).observe(screen);
       fit();
 
-      // Leans back a little until it's scrolled up into view, then sits flat.
-      const tilt = () => {
-        const r = frame.getBoundingClientRect();
-        const t = Math.min(1, Math.max(0, (innerHeight - r.top) / (innerHeight * 0.75)));
-        frame.style.setProperty('--tilt', reduced.matches ? '0' : String(1 - t));
-      };
-      addEventListener('scroll', tilt, { passive: true });
-      addEventListener('resize', tilt);
-      tilt();
+      // The camera: the app asks to ease in on a point (in its own 1440 × 900
+      // pixels) at a zoom; the frame crops, so the view pushes in and back.
+      function camera({ x, y, zoom }) {
+        if (!zoom || zoom <= 1.01 || reduced.matches) {
+          live.style.transform = '';
+          return;
+        }
+        const s = screen.clientWidth / 1440;
+        const W = screen.clientWidth;
+        const H = screen.clientHeight;
+        const S = s * zoom;
+        // Bring the point most of the way to the middle, never past an edge.
+        const tx = Math.min(0, Math.max(W - 1440 * S, (x * s + (W / 2 - x * s) * 0.7) - x * S));
+        const ty = Math.min(0, Math.max(H - 900 * S, (y * s + (H / 2 - y * s) * 0.7) - y * S));
+        live.style.transform = `translate(${tx}px, ${ty}px) scale(${S})`;
+      }
 
       let mode = 'mouse';
       addEventListener('message', (e) => {
@@ -254,6 +261,7 @@
           live.contentWindow.postMessage({ interlude: 'mode', mode }, '*');
           live.contentWindow.postMessage({ interlude: 'input', style: input }, '*');
         }
+        if (e.data?.interlude === 'camera') camera(e.data);
         if (e.data?.interlude === 'level') {
           frame.style.setProperty('--level', e.data.level.toFixed(3));
           fx?.hear(e.data.level);
@@ -265,6 +273,7 @@
         b.addEventListener('click', () => {
           mode = b.dataset.mode;
           frame.dataset.mode = mode;
+          if (mode === 'mouse') camera({ zoom: 1 });
           for (const o of buttons) o.setAttribute('aria-checked', String(o === b));
           live.contentWindow?.postMessage({ interlude: 'mode', mode }, '*');
         });
@@ -278,13 +287,14 @@
       });
 
       // Trying out (on localhost, or with ?try): a small panel to click
-      // through the background effects and the ways a controller press
-      // shows. The picks are remembered in this browser.
+      // through the ways a controller press shows. The pick is remembered
+      // in this browser.
       const trying = location.hostname === 'localhost' || location.hostname === '127.0.0.1' || location.search.includes('try');
       const remembered = (k, d) => { try { return localStorage.getItem(k) ?? d; } catch { return d; } };
       const remember = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
-      let input = remembered('interlude.try.input', 'shadow');
-      fx?.setEffect(trying ? remembered('interlude.try.fx', 'rings') : 'rings');
+      let input = remembered('interlude.try.link', 'line');
+      fx?.setVariant(remembered('interlude.try.vinyl', 'lamp'));
+      fx?.setStyle(remembered('interlude.try.recstyle', 'blend'));
       if (trying) {
         const panel = document.createElement('div');
         panel.className = 'try';
@@ -292,16 +302,17 @@
           <div class="try__group" data-key="${key}"><span>${title}</span>
             <div>${options.map(([v, l]) => `<button type="button" data-v="${v}" aria-pressed="${v === now}">${l}</button>`).join('')}</div>
           </div>`;
-        panel.innerHTML = `<b>Try</b>${group('Background', 'fx', [['none', 'Off'], ['rings', 'Rings'], ['floor', 'Floor'], ['dots', 'Dots'], ['skyline', 'Skyline'], ['beams', 'Beams']], remembered('interlude.try.fx', 'rings'))}${group('Controller press', 'input', [['shadow', 'Shadow'], ['pad', 'Pad'], ['halo', 'Halo'], ['cable', 'Cable'], ['label', 'Label']], input)}`;
+        panel.innerHTML = `<b>Try</b>${group('Record style', 'recstyle', [['blend', 'Blend'], ['fine', 'Fine'], ['satin', 'Satin']], remembered('interlude.try.recstyle', 'blend'))}${group('Record touch', 'rings', [['lamp', 'Lamp'], ['hand', 'Hand'], ['needle', 'Needle']], remembered('interlude.try.vinyl', 'lamp'))}${group('Controller link', 'input', [['line', 'Pulse line'], ['label', 'Moving label'], ['rings', 'Highlights']], input)}`;
         panel.addEventListener('click', (e) => {
           const b = e.target.closest('button');
           if (!b) return;
           const key = b.closest('.try__group').dataset.key;
           for (const o of b.parentElement.children) o.setAttribute('aria-pressed', String(o === b));
-          if (key === 'fx') { fx?.setEffect(b.dataset.v); remember('interlude.try.fx', b.dataset.v); }
+          if (key === 'recstyle') { fx?.setStyle(b.dataset.v); remember('interlude.try.recstyle', b.dataset.v); }
+          if (key === 'rings') { fx?.setVariant(b.dataset.v); remember('interlude.try.vinyl', b.dataset.v); }
           if (key === 'input') {
             input = b.dataset.v;
-            remember('interlude.try.input', input);
+            remember('interlude.try.link', input);
             live.contentWindow?.postMessage({ interlude: 'input', style: input }, '*');
             // A press style only shows with the controller.
             if (mode !== 'controller') document.querySelector('.switch [data-mode=controller]').click();
@@ -316,6 +327,64 @@
       };
       if (document.readyState === 'complete') start();
       else addEventListener('load', start, { once: true });
+    })();
+
+    // The nav: its backdrop once the page moves, and the name and buttons
+    // once the hero's own buttons have scrolled away.
+    (() => {
+      const nav = document.querySelector('.nav');
+      const cta = document.querySelector('.hero .cta');
+      const scrolled = () => nav.toggleAttribute('data-scrolled', scrollY > 8);
+      addEventListener('scroll', scrolled, { passive: true });
+      scrolled();
+      if (!cta) return nav.setAttribute('data-past', '');
+      new IntersectionObserver(([e]) => nav.toggleAttribute('data-past', !e.isIntersecting && e.boundingClientRect.top < 0), { rootMargin: '-60px 0px 0px 0px' }).observe(cta);
+    })();
+
+    // The name in the footer: its grooves show round the pointer.
+    (() => {
+      const w = document.querySelector('.foot-word');
+      if (!w || !matchMedia('(hover: hover)').matches) return;
+      w.addEventListener('pointermove', (e) => {
+        const r = w.getBoundingClientRect();
+        w.style.setProperty('--x', `${e.clientX - r.left}px`);
+        w.style.setProperty('--y', `${e.clientY - r.top}px`);
+      });
+      w.addEventListener('pointerenter', () => w.style.setProperty('--on', '1'));
+      w.addEventListener('pointerleave', () => w.style.setProperty('--on', '0'));
+    })();
+
+    // The FAQ: answers ease open and closed instead of jumping. The
+    // details element still works on its own without this.
+    (() => {
+      const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+      const EASE = 'cubic-bezier(0.23, 1, 0.32, 1)';
+      for (const d of document.querySelectorAll('.faq details')) {
+        const summary = d.querySelector('summary');
+        const body = d.querySelector('summary ~ *');
+        let anim = null;
+        summary.addEventListener('click', (e) => {
+          if (reduced.matches || !body) return;
+          e.preventDefault();
+          const from = d.offsetHeight;
+          const closing = d.open;
+          if (!closing) d.open = true;
+          // The + turns with the click, not when the closing finishes.
+          d.toggleAttribute('data-closing', closing);
+          const to = closing ? summary.offsetHeight : d.scrollHeight;
+          anim?.cancel();
+          d.style.overflow = 'hidden';
+          anim = d.animate({ height: [`${from}px`, `${to}px`] }, { duration: closing ? 200 : 280, easing: EASE });
+          body.animate({ opacity: closing ? [1, 0] : [0, 1], transform: closing ? ['none', 'translateY(-4px)'] : ['translateY(-4px)', 'none'] },
+            { duration: closing ? 140 : 280, easing: EASE, fill: 'both' });
+          anim.onfinish = () => {
+            if (closing) d.open = false;
+            d.removeAttribute('data-closing');
+            d.style.overflow = '';
+            anim = null;
+          };
+        });
+      }
     })();
 
     // Shows the latest version next to the download button. Leaves the

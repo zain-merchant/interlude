@@ -30,7 +30,7 @@
   font-feature-settings: 'tnum' 1;
   -webkit-font-smoothing: antialiased;
 }
-.p .p-body { position: absolute; inset: 18px 24px; display: grid; align-content: center; }
+.p .p-body { position: absolute; inset: 16px 24px; display: grid; align-content: center; }
 .p .p-body[data-bleed="x"] { left: 0; right: 0; }
 .p .p-body[data-bleed="right"] { right: 0; }
 .p .p-body[data-bleed="bottom"] { bottom: 0; align-content: start; }
@@ -56,7 +56,7 @@
 .p-deckrow[data-deck="b"] .p-chip { background: var(--deck-b); }
 .p-bpm { font-size: 26px; font-weight: 300; letter-spacing: -0.02em; line-height: 1; white-space: nowrap; }
 .p-ticks { position: relative; height: 34px; overflow: hidden; }
-.p-ticks__run { position: absolute; inset: 0; transform-origin: 0 50%; transition: transform 1.2s cubic-bezier(0.77, 0, 0.175, 1); }
+.p-ticks__run { position: absolute; inset: 0; transform-origin: 0 50%; transition: transform 0.75s cubic-bezier(0.77, 0, 0.175, 1); }
 .p-ticks__run i {
   position: absolute; top: 50%; width: 2px; height: 12px; margin: -6px 0 0 1px; border-radius: 1px;
   background: var(--fg-3);
@@ -67,9 +67,10 @@
 .p-locks { position: absolute; left: 138px; right: 0; top: 0; height: 82px; pointer-events: none; }
 .p-locks i {
   position: absolute; top: 0; bottom: 0; width: 2px; margin-left: 1px; border-radius: 1px;
+  transition-delay: calc(var(--n, 0) * 50ms);
   background: linear-gradient(to bottom, rgb(201 220 242 / 0.5), rgb(240 220 192 / 0.5));
   opacity: 0; transform: scaleY(0.3); transform-origin: 50% 50%;
-  transition: opacity 0.5s ease-out, transform 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+  transition: opacity 0.3s ease-out, transform 0.35s cubic-bezier(0.23, 1, 0.32, 1);
 }
 .p-decks[data-lock] .p-locks i { opacity: 1; transform: none; }
 .p-sync__key { display: flex; justify-content: center; margin-top: 2px; padding-right: 24px; }
@@ -102,17 +103,14 @@
 .p-stem__btn i { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--deck-b); transition: background-color 140ms, box-shadow 140ms; }
 .p-stem[data-muted] .p-stem__btn { color: var(--fg-3); }
 .p-stem[data-muted] .p-stem__btn i { background: none; box-shadow: inset 0 0 0 1px var(--fg-4); }
-.p-stem__wave { height: 22px; overflow: hidden; }
-.p-stem__run { display: flex; align-items: center; gap: 2px; width: max-content; height: 100%; animation: p-scroll 7s linear infinite; }
-@keyframes p-scroll { to { transform: translateX(-50%); } }
+.p-stem__wave { display: flex; align-items: center; gap: 2px; height: 22px; overflow: hidden; }
 .p-stem__wave b {
   flex: none; width: 4px; height: calc(var(--h) * 100%); border-radius: 1px; background: var(--deck-b); opacity: 0.75;
-  transition: transform 380ms cubic-bezier(0.23, 1, 0.32, 1), opacity 380ms, background-color 380ms;
+  transition: transform 520ms cubic-bezier(0.45, 0, 0.55, 1), opacity 520ms, background-color 520ms;
   transition-delay: calc(var(--i) * 9ms);
 }
-/* Muted: the lane's bars flatten, left to right, and go quiet. */
+/* Muted: the lane's bars flatten, left to right, and go quiet; unmuted, they grow back the same way. */
 .p-stem[data-muted] .p-stem__wave b { transform: scaleY(0.1); opacity: 0.25; background: var(--fg); }
-@media (prefers-reduced-motion: reduce) { .p-stem__run { animation: none; } }
 
 /* Library: the app's search well and rows, the list running off the bottom. */
 .p-lib { display: grid; gap: 8px; }
@@ -124,6 +122,7 @@
 .p-caret { width: 1.5px; height: 15px; margin-left: 1px; background: var(--fg); animation: p-blink 1s steps(1) infinite; }
 @keyframes p-blink { 50% { opacity: 0; } }
 .p-field kbd { font: 400 var(--t-xs) var(--ss-font); color: var(--fg-3); }
+.p-field__n { flex: none; font-size: var(--t-xs); color: var(--fg-3); white-space: nowrap; }
 .p-rows { display: grid; }
 .p-row { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1.1fr) 32px 34px; align-items: center; height: 28px; padding: 0 10px; border-radius: 6px; color: var(--fg-2); transition: background-color 200ms, color 200ms; }
 .p-row span:first-child { color: var(--fg); }
@@ -131,7 +130,7 @@
 .p-row[data-sel] { background: var(--sel); box-shadow: inset 0 0 0 1px var(--line); }
 
 /* Controllers: the top of an aluminium controller, cut by the card's foot. */
-.p-ctl { position: relative; height: 178px; }
+.p-ctl { position: relative; height: 160px; }
 .p-ctl__plate {
   position: absolute; left: 6px; right: 6px; top: 62px; height: 150px; border-radius: 16px;
   display: grid; grid-template-columns: 1fr 74px 1fr; grid-template-rows: 92px auto; gap: 10px 12px; padding: 14px 16px; box-sizing: border-box;
@@ -161,7 +160,7 @@
 .p-ctl[data-wake] .p-ctl__pads i { background: radial-gradient(90% 70% at 45% 25%, rgb(255 255 255 / 0.25), transparent 60%), #8fb3d9; box-shadow: 0 0 10px rgb(201 220 242 / 0.5), 0 0 0 1px rgb(0 0 0 / 0.4); }
 .p-ctl[data-wake] .p-ctl__pads[data-deck="b"] i { background: radial-gradient(90% 70% at 45% 25%, rgb(255 255 255 / 0.25), transparent 60%), #d8bf9c; box-shadow: 0 0 10px rgb(240 220 192 / 0.5), 0 0 0 1px rgb(0 0 0 / 0.4); }
 /* The lead: a USB-C plug coming down to the back edge. */
-.p-ctl__lead { position: absolute; left: 50%; top: -40px; width: 10px; height: 96px; margin-left: -5px; transform: translateY(-46px); transition: transform 0.55s cubic-bezier(0.77, 0, 0.175, 1); }
+.p-ctl__lead { position: absolute; left: 50%; top: -40px; width: 10px; height: 96px; margin-left: -5px; transform: translateY(-46px); transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1); }
 .p-ctl__lead::before { content: ''; position: absolute; left: 2px; right: 2px; top: 0; bottom: 18px; border-radius: 3px; background: linear-gradient(90deg, #111, #3a3a3e 45%, #111); }
 .p-ctl__lead i { position: absolute; left: 0; right: 0; bottom: 0; height: 20px; border-radius: 3px; background: linear-gradient(90deg, #8f9299, #e6e8ec 45%, #8f9299); box-shadow: 0 2px 4px rgb(0 0 0 / 0.4); }
 .p-ctl__lead[data-in] { transform: translateY(6px); }
@@ -179,7 +178,8 @@
 /* Recording: the Rec button, the take running off the right edge. */
 .p-rec { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 12px 14px; }
 .p-rec__btn {
-  display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: var(--h-sm); min-width: 62px; padding: 0 10px;
+  /* A fixed width that fits "Rec" and "0:00" alike, digits tabular, so it never resizes. */
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: var(--h-sm); width: 68px; padding: 0 10px; box-sizing: border-box; font-variant-numeric: tabular-nums;
   border-radius: var(--r); color: var(--fg-2); box-shadow: inset 0 0 0 1px var(--line-2); transition: color 140ms;
 }
 .p-rec__btn i { width: 6px; height: 6px; border-radius: 50%; background: var(--fg-4); transition: background-color 140ms; }
@@ -199,7 +199,7 @@
 .p-dmg__bar span { position: absolute; left: 0; right: 0; text-align: center; font-size: 12px; font-weight: 600; color: rgb(255 255 255 / 0.78); pointer-events: none; }
 .p-dmg__body { display: flex; align-items: center; justify-content: space-evenly; height: 118px; }
 .p-dmg__item { position: relative; display: grid; justify-items: center; gap: 6px; font-size: 12px; color: rgb(255 255 255 / 0.85); }
-.p-dmg__item img { position: relative; z-index: 2; transition: transform 0.85s cubic-bezier(0.77, 0, 0.175, 1), opacity 0.2s; }
+.p-dmg__item img { position: relative; z-index: 2; transition: transform 0.7s cubic-bezier(0.77, 0, 0.175, 1), opacity 0.2s; }
 .p-dmg__item img[data-go] { transform: translateX(170px) scale(0.6); filter: drop-shadow(0 10px 14px rgb(0 0 0 / 0.5)); }
 .p-dmg__item img[data-gone] { transition: opacity 0.3s 0.15s; }
 .p-dmg__item[data-done] .p-folder { animation: p-bump 0.5s cubic-bezier(0.23, 1, 0.32, 1); }
@@ -223,27 +223,123 @@
 .p-spot__icon { flex: none; }
 .p-spot__list { padding: 0 8px 8px; border-top: 1px solid rgb(255 255 255 / 0.08); }
 .p-spot__head { padding: 8px 8px 4px; font-size: 11px; font-weight: 600; color: rgb(255 255 255 / 0.45); }
-.p-spot__hit { display: grid; grid-template-columns: 22px auto 1fr; align-items: center; gap: 10px; padding: 6px 8px; border-radius: 8px; background: #0a64d8; font-size: 13px; color: #fff; transition: transform 120ms ease-out; }
+.p-spot__hit { display: grid; grid-template-columns: 22px auto 1fr; align-items: center; gap: 10px; padding: 6px 8px; border-radius: 12px; background: #0a64d8; font-size: 13px; color: #fff; transition: transform 120ms ease-out; }
 .p-spot__hit[data-go] { transform: scale(0.98); filter: brightness(1.15); }
 .p-spot__hit span { justify-self: end; font-size: 12px; color: rgb(255 255 255 / 0.75); }
 
-/* Add your music: the library filling, tempo and key found as it goes. */
+/* Add your music: the folder dropped in, the tracks found, each worked out. */
 .p-add { display: grid; }
-.p-add__head { display: grid; grid-template-columns: 1fr 40px 40px; align-items: center; height: 24px; padding: 0 10px; font-size: var(--t-xs); color: var(--fg-3); border-bottom: 1px solid var(--line); margin-bottom: 4px; position: relative; }
-.p-add__head em { position: absolute; right: 10px; top: -20px; font-style: normal; color: var(--fg-3); }
+.p-add__zone {
+  position: relative;
+  display: flex; align-items: center; gap: 12px; height: 52px; padding: 0 12px; margin-bottom: 8px; border-radius: 12px;
+  box-shadow: inset 0 0 0 1.5px rgb(236 234 228 / 0.18); background: rgb(255 255 255 / 0.02);
+  transition: box-shadow 0.3s, background-color 0.3s;
+}
+.p-add__zone::before { content: '+ Add music folder'; position: absolute; left: 0; right: 0; text-align: center; color: var(--fg-3); transition: opacity 0.2s; }
+.p-add[data-drop] .p-add__zone { box-shadow: inset 0 0 0 1px var(--line-2); background: var(--raise); }
+.p-add[data-drop] .p-add__zone::before { opacity: 0; }
+.p-add__folder { flex: none; opacity: 0; transform: translateY(-40px) scale(1.3); transition: transform 0.65s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s; }
+.p-add[data-drop] .p-add__folder { opacity: 1; transform: none; }
+.p-add__status { flex: 1; display: grid; gap: 2px; opacity: 0; transition: opacity 0.3s 0.25s; }
+.p-add[data-drop] .p-add__status { opacity: 1; }
+.p-add__status b { font-weight: 400; color: var(--fg); }
+.p-add__say { font-size: var(--t-xs); color: var(--fg-3); animation: p-say 0.35s ease-out; }
+@keyframes p-say { from { opacity: 0; } }
 .p-add__row {
-  display: grid; grid-template-columns: 1fr 40px 40px; align-items: center; height: 30px; padding: 0 10px;
+  display: grid; grid-template-columns: 1fr 40px 40px; align-items: center; height: 28px; padding: 0 10px;
   opacity: 0; transform: translateY(6px);
-  transition: opacity 260ms cubic-bezier(0.23, 1, 0.32, 1), transform 260ms cubic-bezier(0.23, 1, 0.32, 1);
+  transition: opacity 420ms cubic-bezier(0.22, 1, 0.36, 1), transform 420ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 .p-add__row[data-in] { opacity: 1; transform: none; }
 .p-add__row .t { display: flex; gap: 10px; align-items: baseline; color: var(--fg-3); white-space: nowrap; overflow: hidden; }
 .p-add__row .t b { font-weight: 400; color: var(--fg); }
-.p-add__row .v { color: var(--fg-4); transition: color 300ms; }
-.p-add__row .v[data-known] { color: var(--fg-2); animation: p-found 400ms cubic-bezier(0.23, 1, 0.32, 1); }
-@keyframes p-found { from { opacity: 0; transform: translateY(-4px); } }
-.p-add .p-body { padding-top: 22px; }
+.p-add__row .v { position: relative; height: 14px; color: var(--fg-4, rgb(255 255 255 / 0.25)); }
+.p-add__row .v[data-known] { color: var(--fg-2); animation: p-found 0.45s ease-out; }
+@keyframes p-found { from { opacity: 0; } }
+
+/* Recording and more: three extras knolled on one line, each captioned. */
+.p-knoll { display: grid; grid-template-columns: repeat(3, 1fr); align-items: end; gap: 12px; }
+.p-knoll__item { display: grid; justify-items: center; align-content: end; gap: 12px; }
+.p-knoll__item > span { font-size: var(--t-xs); color: var(--fg-3); }
+.p-pads { display: grid; grid-template-columns: repeat(4, 16px); gap: 4px; }
+.p-pads i { height: 16px; border-radius: 4px; background: rgb(255 255 255 / 0.07); box-shadow: inset 0 0 0 1px var(--line); transition: background-color 0.35s, box-shadow 0.35s; }
+.p-pads i[data-on] { background: var(--deck-b); box-shadow: 0 0 12px rgb(240 220 192 / 0.45); transition-duration: 0.05s; }
+.p-remap { display: flex; align-items: center; gap: 6px; }
+/* The new key's cap is sized for the longest it can say, so the swap never resizes it. */
+.p-remap .p-key:last-child { width: 52px; }
+.p-remap svg { width: 14px; height: 8px; fill: none; stroke: var(--fg-3); stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
+.p-key {
+  display: inline-grid; place-items: center; min-width: 26px; height: 26px; padding: 0 6px; border-radius: 6px; overflow: hidden; box-sizing: border-box;
+  font: 500 var(--t-xs) var(--ss-font); color: var(--fg);
+  background: linear-gradient(180deg, #2a2a2f, #1f1f23); box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.08), 0 0 0 1px rgb(0 0 0 / 0.5), 0 2px 0 #0d0d0f;
+}
+.p-key span { animation: p-keyin 0.35s cubic-bezier(0.23, 1, 0.32, 1); }
+@keyframes p-keyin { from { transform: translateY(-120%); opacity: 0; } }
 
 /* The slot a picture sits in on the page. */
 .p-slot { width: 100%; max-width: 360px; margin-inline: auto; }
-.p-slot__hold { aspect-ratio: 360 / 196; }
+.p-slot__hold { aspect-ratio: 360 / 176; }
+
+/* Knolled 2 × 2: four small things laid out square, each captioned. */
+.p-knoll2 { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 8px; height: 124px; align-self: start; }
+.p-cell {
+  display: grid; grid-template-rows: 1fr auto; justify-items: center; align-items: center; gap: 6px;
+  padding: 8px 8px 6px; border-radius: 10px; background: rgb(255 255 255 / 0.025); box-shadow: inset 0 0 0 1px var(--line);
+}
+.p-cell > b { font-weight: 400; font-size: var(--t-xs); color: var(--fg-3); }
+.p-cell__note { font-size: var(--t-xs); color: var(--fg-3); margin-top: -4px; }
+.p-cell:has(.p-cell__note) { grid-template-rows: 1fr auto auto; }
+.p-mini-field { display: flex; align-items: center; gap: 6px; width: 120px; height: 24px; padding: 0 8px; border-radius: 7px; background: var(--well); box-shadow: var(--well-shadow); font-size: 12px; }
+.p-mini-field svg { width: 12px; height: 12px; flex: none; fill: none; stroke: var(--fg-3); stroke-width: 1.5; stroke-linecap: round; }
+.p-mini-field span { display: flex; align-items: center; }
+.p-mini-list { display: grid; gap: 3px; width: 128px; font-size: 12px; }
+.p-mini-list span { display: flex; align-items: center; gap: 6px; color: var(--fg-2); transition: color 0.3s; }
+.p-mini-list em { margin-left: auto; font-style: normal; color: var(--fg-3); }
+.p-mini-list span[data-done] { color: var(--fg); }
+.p-check { position: relative; flex: none; width: 12px; height: 12px; border-radius: 50%; box-shadow: inset 0 0 0 1px var(--fg-4); transition: background-color 0.3s, box-shadow 0.3s; }
+.p-check::after { content: ''; position: absolute; left: 3.5px; top: 2px; width: 3px; height: 6px; border: solid #0b0b0d; border-width: 0 1.5px 1.5px 0; transform: rotate(45deg) scale(0.6); opacity: 0; transition: opacity 0.2s, transform 0.3s cubic-bezier(0.22, 1, 0.36, 1); }
+[data-done] > .p-check, [data-saved] > .p-check { background: #3ddc84; box-shadow: none; }
+[data-done] > .p-check::after, [data-saved] > .p-check::after { opacity: 1; transform: rotate(45deg) scale(1); }
+.p-formats { display: flex; flex-wrap: wrap; justify-content: center; gap: 3px; width: 140px; }
+.p-formats span { padding: 1px 5px; border-radius: 4px; font-size: 10px; color: var(--fg-3); background: rgb(255 255 255 / 0.04); transition: color 0.3s, background-color 0.3s; }
+.p-formats span[data-on] { color: #0b0b0d; background: var(--deck-a); }
+.p-report { display: flex; align-items: center; gap: 6px; height: 24px; padding: 0 10px; border-radius: 8px; font-size: 12px; color: var(--fg-2); box-shadow: inset 0 0 0 1px var(--line-2); white-space: nowrap; }
+.p-report[data-saved] { color: var(--fg); }
+.p-knoll2 .p-pads { grid-template-columns: repeat(4, 14px); gap: 3px; }
+.p-knoll2 .p-pads i { height: 14px; }
+
+/* Knolled, loose: a few things laid on the surface at their own sizes, no
+   cards round them, each with a small caption under its left edge. */
+.p-loose { position: relative; width: 360px; height: 150px; align-self: start; }
+.p-obj { position: absolute; margin: 0; display: grid; justify-items: start; gap: 8px; }
+.p-obj > figcaption { font-size: var(--t-xs); color: var(--fg-3); }
+.p-field-lg { display: flex; align-items: center; gap: 8px; width: 172px; height: 34px; padding: 0 12px; box-sizing: border-box; border-radius: 9px; background: var(--well); box-shadow: var(--well-shadow); font-size: 14px; }
+.p-field-lg svg { width: 14px; height: 14px; flex: none; fill: none; stroke: var(--fg-3); stroke-width: 1.5; stroke-linecap: round; }
+.p-field-lg span { display: flex; align-items: center; flex: 1; }
+.p-field-lg em { font-style: normal; font-size: var(--t-xs); color: var(--fg-3); font-variant-numeric: tabular-nums; }
+.p-sources { display: flex; gap: 6px; }
+.p-sources span { display: flex; align-items: center; gap: 6px; height: 24px; padding: 0 10px 0 7px; border-radius: 999px; font-size: 12px; color: var(--fg-2); box-shadow: inset 0 0 0 1px var(--line-2); transition: color 0.3s; }
+.p-sources span[data-done] { color: var(--fg); }
+/* Files: small documents with a turned corner, lit as each format is shown. */
+.p-files { display: grid; grid-template-columns: repeat(3, 32px); gap: 8px 6px; }
+.p-files span { position: relative; display: grid; place-items: end center; height: 38px; padding-bottom: 5px; box-sizing: border-box; border-radius: 4px 9px 4px 4px; background: rgb(255 255 255 / 0.05); box-shadow: inset 0 0 0 1px var(--line); transition: background-color 0.35s, box-shadow 0.35s; }
+.p-files span::before { content: ''; position: absolute; right: 0; top: 0; width: 9px; height: 9px; border-radius: 0 9px 0 3px; background: rgb(255 255 255 / 0.08); }
+.p-files b { font-weight: 500; font-size: 8.5px; letter-spacing: 0.02em; color: var(--fg-3); transition: color 0.35s; }
+.p-files span[data-on] { background: rgb(201 220 242 / 0.14); box-shadow: inset 0 0 0 1px rgb(201 220 242 / 0.35); }
+.p-files span[data-on] b { color: var(--fg); }
+.p-rec-lg { display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 18px 0 14px; border-radius: 12px; font: 400 18px var(--ss-font); font-variant-numeric: tabular-nums; color: var(--fg-2); background: linear-gradient(180deg, #232327, #1b1b1f); box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06), 0 0 0 1px var(--line-2); }
+.p-rec-lg span { min-width: 3.2ch; }
+.p-rec-lg i { width: 12px; height: 12px; border-radius: 50%; background: var(--fg-4, rgb(255 255 255 / 0.25)); transition: background-color 0.3s, box-shadow 0.3s; }
+.p-rec-lg[data-on] { color: var(--fg); }
+.p-rec-lg[data-on] i { background: #ff5a4f; box-shadow: 0 0 12px rgb(255 90 79 / 0.6); }
+.p-pads--lg { grid-template-columns: repeat(4, 26px); gap: 6px; }
+.p-pads--lg i { height: 26px; border-radius: 6px; }
+
+/* Add your music, finished: the zone settles green, a check lands on the
+   folder and the line says it's ready, all at once, so the end reads. */
+.p-add__icon { position: relative; flex: none; display: grid; }
+.p-add__badge { position: absolute; right: -5px; bottom: -4px; width: 16px; height: 16px; border-radius: 50%; background: #3ddc84; box-shadow: 0 0 0 2px var(--raise); opacity: 0; transform: scale(0.4); transition: opacity 0.2s, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.p-add__badge::after { content: ''; position: absolute; left: 5.5px; top: 3px; width: 3.5px; height: 7px; border: solid #0b0b0d; border-width: 0 1.75px 1.75px 0; transform: rotate(45deg); }
+.p-add[data-ready] .p-add__badge { opacity: 1; transform: none; }
+.p-add[data-ready] .p-add__zone { box-shadow: inset 0 0 0 1px rgb(61 220 132 / 0.45); transition: box-shadow 0.5s; }
+.p-add[data-ready] .p-add__say { color: #6fe3a3; }

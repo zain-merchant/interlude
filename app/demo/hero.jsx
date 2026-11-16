@@ -38,7 +38,8 @@ const H = 900;
 // 129 the set runs at (123, 126, 125), so Sync has a clear job: the tempo
 // jumps, the pitch fader moves, the beats snap into line.
 const OPENER = 'Afterglow';
-const SET = ['Slow Burn', 'Halcyon', 'Signal Fire'];
+// From the top of the list, so the controller never covers the row it picks.
+const SET = ['Night Shift', 'Paper Planes', 'Lucid'];
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -152,10 +153,13 @@ async function crossfade(a, to) {
 // them with a message; the script picks the hands at each beat, so a switch
 // takes effect mid-set without anything resetting.
 let arrived = false;
+// Every link on screen, so a switch of hands can clear them all.
+const links = new Set();
 let mode = new URLSearchParams(location.search).get('mode') === 'controller' ? 'controller' : 'mouse';
 const modeListeners = new Set();
 function setMode(next) {
   if (next !== 'mouse' && next !== 'controller') return;
+  if (next !== mode) links.forEach((end) => end());
   if (next !== mode) arrived = next === 'controller';
   mode = next;
   modeListeners.forEach((fn) => fn(mode));
@@ -168,25 +172,40 @@ window.addEventListener('message', (e) => {
  * Presses a key on the controller: a fingertip's shadow lands on it, the
  * key goes down its travel, and the app answers as it comes back up.
  */
-async function hwPress(a, target, act, label) {
+/**
+ * Presses a key on the controller: the fingertip lands, the key goes down
+ * its travel, the link to the app shows, and the app answers.
+ */
+async function hwPress(a, target, act, label, appEl) {
   const el = document.querySelector(`[data-target="${target}"]`);
+  const done = link(el, appEl, label);
+  await a.wait(LEAD);
   el?.setAttribute('data-hw-pressed', '');
-  feedback(el, label);
   await a.click(target);
   el?.removeAttribute('data-hw-pressed');
+  // The change travels the line; the app answers as the pulse lands.
+  done.pulse();
+  await a.wait(TRAVEL);
   act();
+  await a.wait(500);
+  done();
 }
 
+/** Runs `fn` when a pulse sent now would land in the app. */
+const onLanding = (fn) => setTimeout(fn, TRAVEL);
+
 /*
- * How a press on the controller shows, picked by the site's widget (being
- * tried; one will stay):
- *   shadow  a fingertip's soft shadow on the key (the touch cursor)
- *   pad     a frosted pad of light pressing in, a finger without the finger
- *   halo    no finger: the key's light throws a ring across the faceplate
- *   cable   no finger: a pulse runs up the lead toward the computer
- *   label   no finger: a small caption at the press, what the key just sent
+ * How the controller and the app are tied together on screen, picked by
+ * the site's Try panel (being tried; one will stay). The gestures (the
+ * tempo fader ridden, the crossfader swept, knobs turned) are the same in
+ * every one.
+ *   line    a soft ring round the control on the hardware and the one in the
+ *           app, a fine line between them, and a dot of light travelling
+ *           along it, hardware to app, as each change goes through
+ *   label   a small label appears at the hardware and glides to the app
+ *   rings   just the two rings, together
  */
-let inputStyle = new URLSearchParams(location.search).get('input') ?? 'shadow';
+let inputStyle = new URLSearchParams(location.search).get('input') ?? 'line';
 function setInput(style) {
   inputStyle = style;
   document.getElementById('hero').dataset.input = style;
@@ -196,30 +215,236 @@ window.addEventListener('message', (e) => {
 });
 queueMicrotask(() => setInput(inputStyle));
 
-function spawn(cls, x, y, text) {
-  const hero = document.getElementById('hero');
-  const el = document.createElement('div');
-  el.className = cls;
-  el.style.left = `${x}px`;
-  el.style.top = `${y}px`;
-  if (text) el.textContent = text;
-  hero.append(el);
-  el.addEventListener('animationend', () => el.remove(), { once: true });
-}
-function feedback(el, label) {
-  if (!el) return;
-  const h = document.getElementById('hero').getBoundingClientRect();
-  const r = el.getBoundingClientRect();
-  const x = r.left + r.width / 2 - h.left;
-  const y = r.top + r.height / 2 - h.top;
-  if (inputStyle === 'halo') spawn('fx-halo', x, y);
-  if (inputStyle === 'label' && label) spawn('fx-label', x, r.top - h.top - 12, label);
-  if (inputStyle === 'cable') {
-    const cable = document.querySelector('.hw-cable');
-    cable?.classList.remove('pulse');
-    void cable?.offsetWidth;
-    cable?.classList.add('pulse');
+// How long a pulse takes to travel the line, and for the line to draw in.
+const TRAVEL = 560;
+const LINK_IN = 380;
+// The pulse sets off while the line is still drawing, a little past halfway.
+const LEAD = 200;
+const heroBox = () => document.getElementById('hero').getBoundingClientRect();
+const NS = 'http://www.w3.org/2000/svg';
+function layer() {
+  let svg = document.querySelector('svg.links');
+  if (!svg) {
+    svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('class', 'links');
+    svg.setAttribute('width', String(W));
+    svg.setAttribute('height', String(H));
+    document.getElementById('hero').append(svg);
   }
+  return svg;
+}
+/** An element's own corner radii as drawn on screen (x and y apart, since
+ * the controller is tilted and a round knob shows as an ellipse). */
+function radiiOf(el, r) {
+  const v = getComputedStyle(el).borderTopLeftRadius;
+  const sx = r.width / (el.offsetWidth || r.width || 1);
+  const sy = r.height / (el.offsetHeight || r.height || 1);
+  let rx, ry;
+  if (v.endsWith('%')) {
+    rx = r.width * (parseFloat(v) / 100);
+    ry = r.height * (parseFloat(v) / 100);
+  } else {
+    const px = parseFloat(v) || 0;
+    rx = px * sx;
+    ry = px * sy;
+  }
+  return [Math.min(rx, r.width / 2), Math.min(ry, r.height / 2)];
+}
+const PAD = 5;
+/** The box a mark goes round: a library title is a wide column, so its mark
+ * hugs just the words. */
+function rectOf(el) {
+  if (el.matches('.t') && el.firstChild) {
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    const r = range.getBoundingClientRect();
+    if (r.width) return r;
+  }
+  return el.getBoundingClientRect();
+}
+/** Where a straight line from inside `r` towards (ux, uy) leaves it, `pad` out. */
+function exitDistance(r, ux, uy, pad) {
+  const tx = Math.abs(ux) > 1e-6 ? (r.width / 2 + pad) / Math.abs(ux) : Infinity;
+  const ty = Math.abs(uy) > 1e-6 ? (r.height / 2 + pad) / Math.abs(uy) : Infinity;
+  return Math.min(tx, ty);
+}
+
+/**
+ * Ties a control on the hardware to the one it drives in the app: a mark
+ * round each, shaped to its own corners, a gently curved line between them
+ * in Interlude's blue, and one dot of light that travels it as the change
+ * goes through. While it's up it follows both ends, so it moves when a
+ * fader or knob moves. Returns a function that ends it; .pulse() sends the
+ * dot.
+ */
+function link(hw, appEl, label) {
+  // The app's end is looked up afresh each frame, so a re-rendered row or a
+  // moved selection never leaves the mark on a stale node.
+  const target = () => (typeof appEl === 'function' ? appEl() : appEl);
+  const end = () => {};
+  end.pulse = () => {};
+  if (!hw || !target()) return end;
+  const svg = layer();
+  const mk = (tag, cls) => {
+    const n = document.createElementNS(NS, tag);
+    n.setAttribute('class', cls);
+    svg.append(n);
+    return n;
+  };
+  const marks = inputStyle !== 'label' ? [mk('rect', 'link-ring'), mk('rect', 'link-ring')] : [];
+  const path = inputStyle === 'line' ? mk('path', 'link-line') : null;
+  let tag = null;
+  if (inputStyle === 'label' && label) {
+    tag = document.createElement('div');
+    tag.className = 'link-label';
+    tag.textContent = label;
+    document.getElementById('hero').append(tag);
+  }
+  let geom = null;
+  // The way it was first drawn: out of the hardware straight up (or down),
+  // into the app from below (or above), one soft S between. It starts and
+  // ends on the marks' own edges, so it meets them with no gap.
+  const curve = (t) => {
+    const { p0, c0, c1, p1 } = geom;
+    const u = 1 - t;
+    return {
+      x: u * u * u * p0.x + 3 * u * u * t * c0.x + 3 * u * t * t * c1.x + t * t * t * p1.x,
+      y: u * u * u * p0.y + 3 * u * u * t * c0.y + 3 * u * t * t * c1.y + t * t * t * p1.y,
+    };
+  };
+  let spark = null;
+  const sizes = [];
+  let anchor = null;
+  const place = () => {
+    const h = heroBox();
+    const app = target();
+    const ra = hw.getBoundingClientRect();
+    const rb = app?.isConnected ? rectOf(app) : null;
+    if (!rb || !rb.width || !rb.height) {
+      svg.style.visibility = 'hidden';
+      return;
+    }
+    svg.style.visibility = '';
+    // Each mark's size is taken once, when it appears (or when the app's end
+    // becomes a different element); after that it only follows the
+    // control's centre. So a key going down doesn't make its ring shrink or
+    // pulse, while a fader cap's ring travels with the cap.
+    const box = (r, el, slot) => {
+      const py = PAD * (r.height / (el.offsetHeight || r.height));
+      if (!sizes[slot] || sizes[slot].el !== el) {
+        const [rx, ry] = radiiOf(el, r);
+        sizes[slot] = { el, w: r.width, h: r.height, py, rx, ry };
+      }
+      const z = sizes[slot];
+      // A key going down shrinks a few percent: ignored. A real change of
+      // size (a new title) is eased into, never jumped to.
+      const dw = r.width / z.w - 1;
+      const dh = r.height / z.h - 1;
+      if (Math.abs(dw) > 0.1 || Math.abs(dh) > 0.1) {
+        z.w += (r.width - z.w) * 0.18;
+        z.h += (r.height - z.h) * 0.18;
+      }
+      // It stays put unless the control really travels (a fader cap, a
+      // crossfader): a key's few pixels of travel don't move its mark.
+      const x = r.left - h.left + r.width / 2;
+      const y = r.top - h.top + r.height / 2;
+      if (!z.home) z.home = { x, y };
+      if (!z.moving && Math.hypot(x - z.home.x, y - z.home.y) > 4) z.moving = true;
+      const cx = z.moving ? x : z.home.x;
+      const cy = z.moving ? y : z.home.y;
+      return { ...z, cx, cy, top: cy - z.h / 2 - z.py, bottom: cy + z.h / 2 + z.py };
+    };
+    const A = box(ra, hw, 0);
+    const B = box(rb, app, 1);
+    [[marks[0], A], [marks[1], B]].forEach(([m, z]) => {
+      if (!m) return;
+      m.setAttribute('x', String(z.cx - z.w / 2 - PAD));
+      m.setAttribute('y', String(z.top));
+      m.setAttribute('width', String(z.w + PAD * 2));
+      m.setAttribute('height', String(z.h + z.py * 2));
+      m.setAttribute('rx', String(z.rx + PAD));
+      m.setAttribute('ry', String(z.ry + z.py));
+    });
+    const up = B.cy < A.cy;
+    const p0 = { x: A.cx, y: up ? A.top : A.bottom };
+    const p1 = { x: B.cx, y: up ? B.bottom : B.top };
+    const lift = Math.max(40, Math.abs(p0.y - p1.y) * 0.5) * (up ? -1 : 1);
+    // The bends are set where the line was first drawn and follow the ends
+    // only part of the way: when the ends move the line flexes, rather than
+    // the whole thing sliding along as one.
+    if (!anchor) anchor = { p0: { ...p0 }, p1: { ...p1 }, lift };
+    const FOLLOW = 0.35;
+    const c0 = { x: anchor.p0.x + (p0.x - anchor.p0.x) * FOLLOW, y: anchor.p0.y + anchor.lift + (p0.y - anchor.p0.y) * FOLLOW };
+    const c1 = { x: anchor.p1.x + (p1.x - anchor.p1.x) * FOLLOW, y: anchor.p1.y - anchor.lift + (p1.y - anchor.p1.y) * FOLLOW };
+    geom = { p0, p1, c0, c1 };
+    const d = `M${p0.x} ${p0.y} C ${geom.c0.x} ${geom.c0.y}, ${geom.c1.x} ${geom.c1.y}, ${p1.x} ${p1.y}`;
+    path?.setAttribute('d', d);
+    spark?.setAttribute('d', d);
+  };
+  place();
+  if (path) {
+    const total = path.getTotalLength();
+    path.style.strokeDasharray = `${total} ${total}`;
+    path.animate([{ strokeDashoffset: total }, { strokeDashoffset: 0 }], { duration: LINK_IN, easing: 'cubic-bezier(0.45, 0, 0.55, 1)', fill: 'forwards' })
+      .finished.then(() => (path.style.strokeDasharray = 'none'));
+  }
+  if (tag) {
+    tag.animate(Array.from({ length: 13 }, (_, i) => {
+      const p = curve(i / 12);
+      return { transform: `translate(${p.x}px, ${p.y - 28}px) translate(-50%, -50%)` };
+    }), { duration: TRAVEL + 300, delay: LEAD, easing: 'cubic-bezier(0.45, 0, 0.55, 1)', fill: 'both' });
+    tag.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 250, fill: 'both' });
+  }
+  requestAnimationFrame(() => [...marks, path].forEach((p) => p?.classList.add('on')));
+  // Follow both ends while the link is up.
+  let alive = true;
+  const follow = () => {
+    if (!alive) return;
+    place();
+    requestAnimationFrame(follow);
+  };
+  requestAnimationFrame(follow);
+
+  // The pulse: a short brighter stretch of the line itself, running along
+  // it once, hardware to app, and fading as it arrives.
+  let sent = false;
+  const pulse = () => {
+    if (!path || sent) return;
+    sent = true;
+    spark = mk('path', 'link-spark');
+    place();
+    const SEG = 64;
+    const t0 = performance.now();
+    const step = (now) => {
+      const t = Math.min(1, (now - t0) / TRAVEL);
+      const e = -(Math.cos(Math.PI * t) - 1) / 2;
+      const total = spark.getTotalLength();
+      spark.style.strokeDasharray = `${SEG} ${total + SEG}`;
+      spark.style.strokeDashoffset = String(SEG - e * (total + SEG));
+      spark.style.opacity = String(t < 0.8 ? 1 : (1 - t) / 0.2);
+      if (t < 1) requestAnimationFrame(step);
+      else {
+        spark.remove();
+        spark = null;
+      }
+    };
+    requestAnimationFrame(step);
+  };
+  let ended = false;
+  const done = () => {
+    if (ended) return;
+    ended = true;
+    links.delete(done);
+    alive = false;
+    spark?.remove();
+    spark = null;
+    for (const p of [...marks, path]) p?.classList.remove('on');
+    if (tag) tag.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 300, fill: 'forwards' }).finished.then(() => tag.remove());
+    setTimeout(() => [...marks, path].forEach((p) => p?.remove()), 420);
+  };
+  done.pulse = pulse;
+  links.add(done);
+  return done;
 }
 
 const mouse = {
@@ -231,29 +456,76 @@ const mouse = {
 };
 
 const controller = {
-  sync: (a, d) => hwPress(a, `c-sync-${d}`, () => $('.btn.sync', deckEl(d)).click(), `Sync → Deck ${'AB'[d]}`),
-  play: (a, d) => hwPress(a, `c-play-${d}`, () => $('.btn.play', deckEl(d)).click(), `${engine.decks[d].playing ? 'Pause' : 'Play'} → Deck ${'AB'[d]}`),
+  // Beatmatching by hand: ride the waiting deck's tempo fader until its
+  // tempo meets the playing deck's, the app's tempo moving with it; then
+  // Sync to lock the beats.
+  async sync(a, d) {
+    const cap = $(`[data-hw="pitch-${d}"]`);
+    const slot = cap?.parentElement;
+    const appFader = () => { const f = deckEl(d).querySelector('[role="slider"]'); return f?.querySelector('.cap') ?? f; };
+    const other = engine.decks[1 - d];
+    const rate0 = engine.decks[d].rate || 1;
+    const target = (other.bpm * other.rate) / (engine.decks[d].bpm || other.bpm);
+    if (!cap || !slot || !Number.isFinite(target)) return;
+    cap.setAttribute('data-target', `c-pitch-${d}`);
+    const s = slot.getBoundingClientRect();
+    const h = heroBox();
+    const from = a.center(`c-pitch-${d}`);
+    const at = Math.max(-1, Math.min(1, (target - 1) / 0.08));
+    const to = { x: from.x, y: s.top - h.top + s.height * (0.5 + at * 0.45) };
+    await a.move(from);
+    const tie = link(cap, appFader, 'Tempo');
+    await a.wait(LEAD);
+    let next = 0;
+    await a.drag(to, (_p, _f, t) => {
+      const rate = rate0 + (target - rate0) * t;
+      onLanding(() => control({ type: 'setRate', deck: d, rate }));
+      if (t >= next) { tie.pulse(); next = 2; }
+    }, { duration: 1700, path: straight });
+    await a.wait(TRAVEL);
+    control({ type: 'setRate', deck: d, rate: target });
+    await a.wait(400);
+    tie();
+    await a.wait(200);
+    await hwPress(a, `c-sync-${d}`, () => $('.btn.sync', deckEl(d)).click(), 'Sync', () => $('.btn.sync', deckEl(d)));
+  },
+  play: (a, d) => hwPress(a, `c-play-${d}`, () => $('.btn.play', deckEl(d)).click(), engine.decks[d].playing ? 'Pause' : 'Play', () => $('.btn.play', deckEl(d))),
   async crossfade(a, to) {
+    const capEl = $('[data-target="c-xf-cap"]');
     const r = a.rect('c-xf');
     const xf = engine.mixer?.crossfader ?? 0;
     const y = r.y + r.height / 2;
     await a.move({ x: r.x + ((xf + 1) / 2) * r.width, y });
-    feedback($('[data-target="c-xf-cap"]'), `Crossfader → Deck ${to < 0 ? 'A' : 'B'}`);
-    await a.drag({ x: r.x + ((to + 1) / 2) * r.width, y }, (at) => {
-      control({ type: 'setCrossfader', value: Math.max(-1, Math.min(1, ((at.x - r.x) / r.width) * 2 - 1)) });
+    const tie = link(capEl, $('.cap', crossfader()), 'Crossfader');
+    await a.wait(LEAD);
+    let next = 0;
+    await a.drag({ x: r.x + ((to + 1) / 2) * r.width, y }, (at, _f, t) => {
+      const value = Math.max(-1, Math.min(1, ((at.x - r.x) / r.width) * 2 - 1));
+      onLanding(() => control({ type: 'setCrossfader', value }));
+      if (t >= next) { tie.pulse(); next = 2; }
     }, { duration: 2200, path: straight });
+    await a.wait(TRAVEL);
     control({ type: 'setCrossfader', value: to });
+    await a.wait(400);
+    tie();
   },
   async load(a, d, row) {
-    // Turn the browse knob to the record, then press Load on the free deck.
+    // Turn the browse knob through the list to the record, then push it to load.
     const knob = $('[data-target="c-browse"]');
-    await hwPress(a, 'c-browse', () => {
-      knob?.toggleAttribute('data-turned');
-      row.scrollIntoView({ block: 'nearest' });
-      row.dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 1 }));
-    }, `Browse → ${row.textContent.trim().split(/\s{2,}|\n/)[0]}`);
-    await a.wait(500);
-    await hwPress(a, `c-load-${d}`, () => doubleClick(row), `Load → Deck ${'AB'[d]}`);
+    await a.move('c-browse');
+    const tie = link(knob, () => row.querySelector('.t') ?? row, 'Browse');
+    await a.wait(LEAD);
+    tie.pulse();
+    for (let i = 0; i < 3; i++) {
+      knob.style.rotate = `${(parseFloat(knob.style.rotate) || 0) + 30}deg`;
+      await a.wait(260);
+    }
+    await a.wait(TRAVEL - 260);
+    row.scrollIntoView({ block: 'nearest' });
+    row.dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 1 }));
+    await a.wait(450);
+    tie();
+    await hwPress(a, 'c-browse', () => doubleClick(row), 'Load', () => $('.title, [class*="title"]', deckEl(d)) ?? deckEl(d));
   },
 };
 
@@ -399,14 +671,22 @@ const controllerFeatures = {
     const app = lowEq(d);
     const r = a.rect(`c-low-${d}`);
     const from = { x: r.x + r.width / 2, y: r.y + r.height / 2 };
-    feedback(hw, `Low EQ → kill, Deck ${'AB'[d]}`);
+    const tie = link(hw, app, 'Low EQ');
+    await a.wait(LEAD);
     let steps = 0;
-    await a.drag({ x: from.x, y: from.y + 40 }, (at) => {
-      const t = Math.min(1, (at.y - from.y) / 40);
-      hw.style.rotate = `${-t * 150}deg`;
-      while (steps < Math.floor(t * 12)) { key(app, 'ArrowDown'); steps++; }
-    }, { duration: 1000, path: straight });
+    let next = 0;
+    await a.drag({ x: from.x, y: from.y + 40 }, (at, _f, t) => {
+      const k = Math.min(1, (at.y - from.y) / 40);
+      hw.style.rotate = `${-k * 150}deg`;
+      while (steps < Math.floor(k * 12)) { onLanding(() => key(app, 'ArrowDown')); steps++; }
+      if (t >= next) { tie.pulse(); next = 2; }
+    }, { duration: 1300, path: straight });
+    await a.wait(TRAVEL);
     key(app, 'Home');
+    await a.wait(400);
+    tie();
+    await a.wait(500);
+    app.dispatchEvent(new FocusEvent('blur'));
   },
   async resetLow(a, d) {
     const hw = document.querySelector(`[data-hw="low-${d}"]`);
@@ -415,22 +695,21 @@ const controllerFeatures = {
     await a.move(`c-low-${d}`);
     const r = a.rect(`c-low-${d}`);
     const from = { x: r.x + r.width / 2, y: r.y + r.height / 2 + 40 };
-    feedback(hw, `Low EQ → reset, Deck ${'AB'[d]}`);
+    const tie = link(hw, lowEq(d), 'Low EQ');
+    await a.wait(LEAD);
+    tie.pulse();
     await a.drag({ x: from.x, y: from.y - 40 }, (at) => {
       hw.style.rotate = `${-Math.max(0, Math.min(1, (at.y - (from.y - 40)) / 40)) * 150}deg`;
     }, { duration: 700, path: straight });
     hw.style.rotate = '';
+    await a.wait(TRAVEL - 400);
     lowEq(d).dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
+    await a.wait(400);
+    tie();
+    await a.wait(500);
+    lowEq(d).dispatchEvent(new FocusEvent('blur'));
   },
-  async loop(a, d, on) {
-    const pad = document.querySelector(`[data-hw="pad-${d}-3"]`);
-    if (!pad) return;
-    await hwPress(a, `c-pad-${d}-3`, () => {
-      const l = loopOf(d);
-      if (l && (l.getAttribute('aria-pressed') === 'true') !== on) l.click();
-      pad.toggleAttribute('data-lit', on);
-    }, on ? `Loop 4 beats → Deck ${'AB'[d]}` : `Loop off → Deck ${'AB'[d]}`);
-  },
+
 };
 
 const features = () => (mode === 'controller' ? controllerFeatures : mouseFeatures);
@@ -448,26 +727,45 @@ let round = 0;
  *   loop and echo out: the new record holds a four-beat loop while it's
  *     brought in, and the old one goes out on an echo.
  */
-async function transition(a) {
-  await ready;
-  // A controller that has just risen into view settles before it's played.
-  if (arrived || (mode === 'controller' && a.layout && !$('.hw[data-shown]'))) {
+/**
+ * A switch between mouse and controller can come mid-mix, so each step
+ * picks its hands as it runs, and a controller that has just risen into
+ * view settles before it's played.
+ */
+async function settle(a) {
+  if (arrived || (mode === 'controller' && !$('.hw[data-shown]'))) {
     arrived = false;
     await a.wait(1100);
   }
+}
+async function act(a, set, name, ...args) {
+  await settle(a);
+  const fn = set()[name];
+  if (fn) return fn(a, ...args);
+  // The controller has no key for this one: if the mouse turned it on before
+  // the switch, it's turned off here directly, so nothing is left on.
+  const [d, on] = args;
+  if (on !== false) return;
+  const el = { muteVocals: () => stemOf(d, 0), loop: () => loopOf(d), echo: () => fxOf(d) }[name]?.();
+  if (el?.getAttribute('aria-pressed') === (name === 'muteVocals' ? 'false' : 'true')) el.click();
+}
+
+async function transition(a) {
+  await ready;
+  // A controller that has just risen into view settles before it's played.
+  await settle(a);
   const playing = [0, 1].filter((d) => engine.decks[d].playing);
   const xf = engine.mixer?.crossfader ?? 0;
   // The deck the crowd hears, and the other one.
   const from = playing.length === 2 ? (xf <= 0 ? 0 : 1) : playing[0] ?? 0;
   const to = 1 - from;
-  const f = features();
   const stemsAndBass = round++ % 2 === 0;
 
   // An empty deck gets a record first.
   if (!engine.decks[to].loaded) {
     a.mark('load');
     const row = rowByTitle(SET[nextInSet++ % SET.length]);
-    if (row) await hands().load(a, to, row);
+    if (row) await act(a, hands, 'load', to, row);
     await a.wait(1600);
   }
 
@@ -475,69 +773,69 @@ async function transition(a) {
     // Sync the waiting deck to the one playing: the tempo jumps, the pitch
     // fader moves, the beats fall into line.
     a.mark('sync');
-    await hands().sync(a, to);
+    await act(a, hands, 'sync', to);
     await a.wait(1300);
 
     // Mute its vocals so they don't clash while both play.
-    if (stemsAndBass && f.muteVocals) {
+    if (stemsAndBass && features().muteVocals) {
       a.mark('stems');
-      await f.muteVocals(a, to, true);
+      await act(a, features, 'muteVocals', to, true);
       await a.wait(700);
     }
 
     // Start it, on the beat.
     a.mark('play');
-    await hands().play(a, to);
+    await act(a, hands, 'play', to);
     await a.wait(1000);
   }
 
   if (stemsAndBass) {
     // Take the bass out of the old record, so the two basslines never fight.
     a.mark('eq');
-    await f.killLow?.(a, from);
+    await act(a, features, 'killLow', from);
     await a.wait(500);
-  } else if (f.loop) {
+  } else if (features().loop) {
     // Hold the new record on a four-beat loop while it comes in.
     a.mark('loop');
-    await f.loop(a, to, true);
+    await act(a, features, 'loop', to, true);
     await a.wait(900);
   }
 
   // Bring it in.
   a.mark('crossfade');
-  await hands().crossfade(a, to === 0 ? -1 : 1);
+  await act(a, hands, 'crossfade', to === 0 ? -1 : 1);
   await a.wait(500);
 
-  if (stemsAndBass && f.muteVocals) {
+  if (stemsAndBass && features().muteVocals) {
     // And now its vocals.
     a.mark('stems');
-    await f.muteVocals(a, to, false);
+    await act(a, features, 'muteVocals', to, false);
     await a.wait(700);
   } else if (!stemsAndBass) {
     // Let the loop go, and send the old record out on an echo.
-    await f.loop?.(a, to, false);
+    await act(a, features, 'loop', to, false);
     await a.wait(400);
-    if (f.echo) {
+    if (features().echo) {
       a.mark('fx');
-      await f.echo(a, from, true);
+      await act(a, features, 'echo', from, true);
       await a.wait(900);
     }
   }
 
   // Stop the record that went out.
   a.mark('stop');
-  await hands().play(a, from);
+  await act(a, hands, 'play', from);
   await a.wait(600);
 
   // Put its channel back as it was: EQ to the middle, echo off.
-  if (stemsAndBass) await f.resetLow?.(a, from);
-  else await f.echo?.(a, from, false);
+  if (stemsAndBass) await act(a, features, 'resetLow', from);
+  else await act(a, features, 'echo', from, false);
   await a.wait(400);
 
   // And put the next one on.
   a.mark('load');
   const row = rowByTitle(SET[nextInSet++ % SET.length]);
-  if (row) await hands().load(a, from, row);
+  if (row) await act(a, hands, 'load', from, row);
   await a.wait(2200);
 }
 
