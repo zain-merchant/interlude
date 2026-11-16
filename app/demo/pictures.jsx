@@ -80,8 +80,10 @@ async function tween(a, key, from, to, ms, ease = (t) => 1 - (1 - t) ** 3) {
 // downbeats tall. B starts well slower (118) and more than half a beat late; Sync lights, B's
 // beats slide under A's, its tempo rolls up, and as they lock a faint line
 // runs down through each pair of downbeats.
-const TICK = 16; // px between beats
-const BEATS = 16;
+// px between beats: chosen so the card's edge cuts mid-bar, between
+// downbeats, not on one.
+const TICK = 14;
+const BEATS = 24;
 const B_FROM = 118; // deck B's tempo before Sync
 function Ticks({ deck, offset = 0, stretch = 1 }) {
   return (
@@ -117,7 +119,7 @@ export function Sync(play) {
             <Ticks deck="b" offset={s.on ? 0 : TICK * 0.6} stretch={s.on ? 1 : 129 / B_FROM} />
           </div>
           <div className="p-locks" aria-hidden>
-            {[0, 4, 8, 12].map((i, n) => <i key={i} style={{ left: i * TICK, '--n': n }} />)}
+            {[0, 4, 8, 12, 16, 20].map((i, n) => <i key={i} style={{ left: i * TICK, '--n': n }} />)}
           </div>
           <div className="p-sync__key">
             <div className="p-btn" data-on={s.on || undefined} data-press={s.press || undefined}>Sync</div>
