@@ -247,7 +247,7 @@
 .p-add { display: grid; }
 .p-add__zone {
   position: relative;
-  display: flex; align-items: center; gap: 12px; height: 52px; padding: 0 12px; margin-bottom: 8px; border-radius: 12px;
+  display: flex; align-items: center; gap: 12px; height: 44px; padding: 0 12px; margin-bottom: 6px; border-radius: 12px;
   box-shadow: inset 0 0 0 1.5px rgb(236 234 228 / 0.18); background: rgb(255 255 255 / 0.02);
   transition: box-shadow 0.3s, background-color 0.3s;
 }
@@ -262,7 +262,7 @@
 .p-add__say { font-size: var(--t-xs); color: var(--fg-3); animation: p-say 0.35s ease-out; }
 @keyframes p-say { from { opacity: 0; } }
 .p-add__row {
-  display: grid; grid-template-columns: 1fr 40px 40px; align-items: center; height: 28px; padding: 0 10px;
+  display: grid; grid-template-columns: 1fr 40px 40px; align-items: center; height: 24px; padding: 0 10px;
   opacity: 0; transform: translateY(6px);
   transition: opacity 420ms cubic-bezier(0.22, 1, 0.36, 1), transform 420ms cubic-bezier(0.22, 1, 0.36, 1);
 }
@@ -460,3 +460,5 @@
 .p-knob__kill { position: absolute; left: 50%; top: calc(100% + 3px); padding: 1px 5px; border-radius: 4px; font-size: 9px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: #0b0b0d; background: var(--kill); opacity: 0; transform: translate(-50%, -3px); transition: opacity 0.2s, transform 0.3s cubic-bezier(0.23, 1, 0.32, 1); }
 /* Centred under the band's name: one transform (the build drops a separate translate beside it). */
 .p-knob[data-killed] .p-knob__kill { opacity: 1; transform: translate(-50%, 0); }
+/* Add your music: a shorter fade, so its third track still reads. */
+.p.p--add .p-body[data-bleed="bottom"] { --fl: 34px; }
