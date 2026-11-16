@@ -1,4 +1,5 @@
 <script>
+  import { flag, setting } from '../flags/registry.svelte.js';
   import { onMount, tick } from 'svelte';
   import { backend } from './backend.js';
   import { engine, tracks } from './engine.svelte.js';
@@ -348,8 +349,10 @@
     const index = Math.max(0, Math.min(sorted.length - 1, i));
     selectIndex(index);
     const y = index * ROW;
+    // #16 (UI audit flag): scroll the row clear of the list's foot by the gap under the last row.
+    const pad = flag('library-end') ? parseFloat(setting('library-end', 'gap')) || 0 : 0;
     if (y < scroller.scrollTop) scroller.scrollTop = y;
-    else if (y + ROW > scroller.scrollTop + scroller.clientHeight) scroller.scrollTop = y + ROW - scroller.clientHeight;
+    else if (y + ROW + pad > scroller.scrollTop + scroller.clientHeight) scroller.scrollTop = y + ROW + pad - scroller.clientHeight;
   }
 
   /** Moves the selection by `delta` rows, scrolling it into view. */
