@@ -154,23 +154,25 @@ function Knob({ label, pos, killed, size = 44 }) {
         </svg>
         <div className="p-knob__dial" style={{ width: size, height: size }}><i /></div>
       </div>
-      <span className="p-knob__label">{label}{killed ? ' · kill' : ''}</span>
+      {/* The band's name stays put; a kill turns it and the ring red and a
+          small tag drops in under it, taking no room. */}
+      <span className="p-knob__label">{label}<b className="p-knob__kill">Kill</b></span>
     </div>
   );
 }
 
 export function Eq(play) {
-  // All three turn, the way a DJ shapes a track: High up a touch, Mid down,
-  // then Low all the way to its kill.
+  // All three turn, the way a DJ shapes a track: High down, Mid up, then
+  // Low all the way down to its kill (counter-clockwise, clockwise, counter).
   return (
-    <Pic id="eq" {...play} initial={{ hi: 0.5, mid: 0.5, low: 0.5 }} poster={{ hi: 0.9, mid: 0.18, low: 0 }}
+    <Pic id="eq" {...play} initial={{ hi: 0.5, mid: 0.5, low: 0.5 }} poster={{ hi: 0.18, mid: 0.85, low: 0 }}
       script={async (a) => {
         // One cascade, well staggered so each knob is seen to turn; Low
         // travels furthest, so it turns longest.
         const GAP = 380;
         await Promise.all([
-          tween(a, 'hi', 0.5, 0.9, 1050, inOut),
-          a.wait(GAP).then(() => tween(a, 'mid', 0.5, 0.18, 1050, inOut)),
+          tween(a, 'hi', 0.5, 0.18, 1050, inOut),
+          a.wait(GAP).then(() => tween(a, 'mid', 0.5, 0.85, 1050, inOut)),
           a.wait(GAP * 2).then(() => tween(a, 'low', 0.5, 0, 1250, inOut)),
         ]);
       }}>
@@ -238,7 +240,6 @@ const ROWS = [
 const LIB = [
   { t: 'Night Shift', fmt: 'MP3', src: 'Serato' },
   { t: 'Glass Rooms', fmt: 'FLAC', src: 'Rekordbox' },
-  { t: 'Paper Planes', fmt: 'AIFF', src: 'Serato' },
   { t: 'Glasshouse', fmt: 'WAV', src: 'Serato' },
 ];
 export function Search(play) {
@@ -247,19 +248,19 @@ export function Search(play) {
       script={async (a) => {
         // First, where the music came from: just what came from Serato,
         // then everything again.
-        await a.wait(300);
+        await a.wait(500);
         await a.set({ src: 'Serato' });
-        await a.wait(1100);
+        await a.wait(1500);
         await a.set({ src: 'All' });
-        await a.wait(600);
+        await a.wait(900);
         for (let i = 1; i <= 5; i++) {
           await a.set({ q: 'glass'.slice(0, i) });
-          await a.wait(170);
+          await a.wait(220);
         }
         // Then the first match is picked and loaded to Deck A.
-        await a.wait(500);
+        await a.wait(800);
         await a.set({ sel: 1 });
-        await a.wait(600);
+        await a.wait(800);
         await a.set({ loaded: true });
       }}>
       {(s) => {
