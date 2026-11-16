@@ -1,0 +1,13 @@
+/* #18: the remaining time warns while the track plays out. */
+:root[data-flag-visual-ending] [data-region^='deck'] .times .rm.ending {
+  color: var(--warn);
+  transition: color 200ms ease;
+}
+:root[data-flag-visual-ending][data-flag-visual-ending-pulse='on'] [data-region^='deck'] .times .rm.ending.last {
+  animation: flag-visual-ending-pulse 1s ease-in-out infinite alternate;
+}
+@keyframes flag-visual-ending-pulse {
+  to {
+    opacity: 0.45;
+  }
+}

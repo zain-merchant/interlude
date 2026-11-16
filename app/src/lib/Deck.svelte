@@ -11,7 +11,7 @@
   import { pushEdit } from './undo.svelte.js';
   import { dropTarget } from './dnd.svelte.js';
   import { tip, tipText } from './tooltip.svelte.js';
-  import { flag } from '../flags/registry.svelte.js';
+  import { flag, setting } from '../flags/registry.svelte.js';
   import { openMenu } from './menu.svelte.js';
   import { keyLabel } from './commands.js';
   import { announce } from './announce.svelte.js';
@@ -136,6 +136,8 @@
   const atCue = $derived(!!t && !d.playing && Math.abs(d.position - d.cue) < 0.01);
   const pk = $derived(t ? playingKey(d.key, d.rate, d.keylock) : null);
   const canSync = $derived(!!t && d.bpm > 0 && engine.decks[1 - deck].bpm > 0);
+  // #18 (UI audit flag): the track is playing out its last seconds (class:ending, and class:last for the final ten, on the remaining time).
+  const ending = $derived(flag('visual-ending') && !!t && d.playing && d.duration > 0 && d.duration - d.position < (Number(setting('visual-ending', 'secs')) || 30));
   // #18 (UI audit flag): where the pitch fader would match the other deck's tempo (Fader's match mark).
   const tempoMatch = $derived.by(() => {
     const o = engine.decks[1 - deck];
@@ -273,7 +275,7 @@
 
     <div class="times">
       <span class="el num"><span class="sr">Elapsed </span>{fmt(d.position)}</span>
-      <span class="rm num"><span class="sr">Remaining </span>{fmt(d.position - d.duration)}</span>
+      <span class="rm num" class:ending class:last={ending && d.duration - d.position < 10}><span class="sr">Remaining </span>{fmt(d.position - d.duration)}</span>
     </div>
 
     <div class="mp">
