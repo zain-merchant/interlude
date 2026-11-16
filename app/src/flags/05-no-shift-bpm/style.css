@@ -1,0 +1,8 @@
+/* #5: the BPM field is the size of the number it replaces: "000.00" in
+   tabular figures (2.88em at this size) and the number's 28px line. */
+:root[data-flag-no-shift-bpm] [data-region^='deck'] .bpm .edit {
+  box-sizing: border-box;
+  width: 2.88em;
+  height: 28px;
+  line-height: 28px;
+}
