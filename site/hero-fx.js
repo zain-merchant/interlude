@@ -46,7 +46,7 @@ const HORIZON = 1400;
 // The record's own pixels are this many CSS pixels at the centre, beside
 // the screen: the grooves are drawn at the size they'd have on a record
 // this close.
-const SCALE = 3.2;
+const SCALE = 2.4;
 
 /** A point on the page (CSS pixels from the canvas's top left) on the disc. */
 function toRecord(x, y, g) {
@@ -70,7 +70,7 @@ const STYLES = {
   // those across from it).
   fine: { lines: 0.75, satin: 0, level: 0.052, sheen: 0.13 },
   satin: { lines: 0, satin: 1, level: 0.06, sheen: 0.13 },
-  blend: { lines: 0.85, satin: 0.6, level: 0.082, sheen: 0.3 },
+  blend: { lines: 1, satin: 0.6, level: 0.056, sheen: 0.22 },
 };
 let style = 'blend';
 let touch = 'needle';
@@ -135,7 +135,13 @@ uniform vec2 uTracks[${MAX_TRACKS}];
 uniform float uTrackCount;
 
 const float PI = 3.14159265;
-const float PITCH = 7.0;   // groove spacing, record pixels (about 22 CSS px up close)
+// Groove spacing, record pixels: PITCH near the centre, opening out by
+// PITCH_OUT more at the rim. The far side of the disc (behind the
+// headline) is foreshortened hard; the wider spacing out there keeps its
+// grooves about 5 CSS px apart, distinct hairlines rather than one band.
+// The grooves stay true circles: spacing only changes with the radius.
+const float PITCH = 5.0;
+const float PITCH_OUT = 38.0;
 const float SQUASH = ${SQUASH.toFixed(3)};
 const float HORIZON = ${HORIZON.toFixed(1)};
 const float SCALE = ${SCALE.toFixed(3)};
@@ -171,14 +177,15 @@ void main() {
 
   // The grooves: a train of soft lines, built from a few harmonics, each
   // faded out as it nears the pixel size. Its average is always 1.
-  float g = r / PITCH;
-  float fg = fr / PITCH; // grooves per device pixel
+  float pb = PITCH_OUT / uSpan.y;
+  float g = log(1.0 + pb * r / PITCH) / pb;     // grooves counted out from the centre
+  float fg = fr / (PITCH + pb * r);              // grooves per device pixel
   float lines = 0.0;
   // Hairlines stay about a device pixel fine wherever the grooves open out
   // (on the near side), and are soft bands where they crowd (the far side).
-  float sig = clamp(1.1 * fg, 0.035, 0.11);
+  float sig = clamp(0.8 * fg, 0.025, 0.1);
   float norm = 0.0;
-  for (int k = 1; k <= 10; k++) {
+  for (int k = 1; k <= 16; k++) {
     float fk = float(k);
     float coef = exp(-2.0 * PI * PI * sig * sig * fk * fk);   // line shape
     norm += 2.0 * coef;
@@ -213,7 +220,7 @@ void main() {
     float s = da * max(uHover.x, 100.0) / 300.0;
     float streak = exp(-dr * dr) * exp(-s * s);
     float shine = mix(1.0, clamp(0.25 + 0.75 * (1.0 + lines) * 0.5, 0.0, 1.3), uStyle.x);
-    L += 1.5 * uHover.z * streak * shine * mix(0.5, 1.0, inSong);
+    L += 2.8 * uHover.z * streak * shine * mix(0.5, 1.0, inSong);
   }
 
   float alpha = uStyle.z * L * edge * (1.0 + 0.08 * uSwell);
@@ -285,8 +292,10 @@ function layout(now) {
   const c = canvas.getBoundingClientRect();
   const s = screen.getBoundingClientRect();
   const cx = s.left - c.left + s.width / 2;
-  const cy = s.top - c.top + s.height * 0.5;
-  const r0 = (s.width * 0.42) / SCALE;
+  // The centre sits low, just under the screen's foot, so the far side of
+  // the disc reaches up behind the whole hero.
+  const cy = s.top - c.top + s.height * 0.95;
+  const r0 = (s.width * 0.25) / SCALE;
   const corner = (x, y) => toRecord(x, y, { cx, cy }).r;
   const R = Math.max(corner(0, 0), corner(c.width, 0), corner(0, c.height), corner(c.width, c.height)) * 1.05;
   // The record runs on past the mouse/controller switch under the screen
@@ -325,8 +334,7 @@ addEventListener('pointermove', (e) => {
   Object.assign(hover, p);
   wake();
 }, { passive: true });
-document.addEventListener('pointerleave', () => Object.assign(hover, { x: -1e4, y: -1e4 }));
-addEventListener('blur', () => Object.assign(hover, { x: -1e4, y: -1e4 }));
+document.documentElement.addEventListener('pointerleave', () => Object.assign(hover, { x: -1e4, y: -1e4 }));
 addEventListener('pointerdown', (e) => {
   if (touch !== 'needle' || !geo || e.target.closest('a, button, input, summary, iframe, .try, .shot')) return;
   const p = local(e);
