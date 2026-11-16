@@ -491,19 +491,7 @@
           <div class="try__group" data-key="${key}"><span>${title}</span>
             <div>${options.map(([v, l]) => `<button type="button" data-v="${v}" aria-pressed="${v === now}">${l}</button>`).join('')}</div>
           </div>`;
-        panel.innerHTML = `<b>Try</b>${group('Record touch', 'rings', [['needle', 'Needle'], ['off', 'Off']], recTouch)}<p class="try__hint" data-hint="rings"></p>${group('Controller link', 'input', [['line', 'Pulse line'], ['label', 'Moving label'], ['rings', 'Highlights']], input)}${group('Recording layout', 'reclayout', [['stacked', 'Stacked'], ['side', 'Side by side'], ['carousel', 'Carousel']], remembered('interlude.try.reclayout', 'stacked'))}<div class="try__group"><span>Controllers picture size <output data-ctl-out></output></span><input type="range" data-ctl-scale min="0.9" max="1.5" step="0.01"></div>`;
-        // The Controllers card's drawing: scaled live from its top, where the lead comes in.
-        {
-          const range = panel.querySelector('[data-ctl-scale]');
-          const out = panel.querySelector('[data-ctl-out]');
-          const apply = (v) => {
-            document.documentElement.style.setProperty('--ctl-scale', v);
-            out.textContent = `${Math.round(v * 100)}%`;
-          };
-          range.value = remembered('interlude.try.ctlscale', '1.1');
-          apply(range.value);
-          range.addEventListener('input', () => { apply(range.value); remember('interlude.try.ctlscale', range.value); });
-        }
+        panel.innerHTML = `<b>Try</b>${group('Record touch', 'rings', [['needle', 'Needle'], ['off', 'Off']], recTouch)}<p class="try__hint" data-hint="rings"></p>${group('Controller link', 'input', [['line', 'Pulse line'], ['label', 'Moving label'], ['rings', 'Highlights']], input)}${group('Recording layout', 'reclayout', [['stacked', 'Stacked'], ['side', 'Side by side'], ['carousel', 'Carousel']], remembered('interlude.try.reclayout', 'stacked'))}`;
         // The nav's layout (set in <head>), first in the panel.
         panel.querySelector('b').insertAdjacentHTML('afterend',
           group('Nav', 'nav', [['morph', 'Bar to capsule'], ['bar', 'Bar'], ['pill', 'Capsule'], ['clear', 'Clear'], ['centred', 'Centred']], document.documentElement.dataset.nav));
