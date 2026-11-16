@@ -1,0 +1,57 @@
+/* #5: fixed slots for changing values in the deck's mode row. Sizes are in
+   em/ch of the text they hold, so they follow the type scale. */
+
+/* The mode row measures its own width, so slots are only reserved where
+   they fit (decks narrower than 320px, at the smallest windows, keep the
+   old sizing rather than overflow). Safari 16+ / WebKit has these. */
+:root[data-flag-no-shift-strip] [data-region^='deck'] .mp {
+  container-type: inline-size;
+}
+
+@container (min-width: 320px) {
+  /* Hot cues: the time slot fits "0:00" whether it reads Set or a time. */
+  :root[data-flag-no-shift-strip] [data-region^='deck'] .perf .tc span {
+    min-width: calc(3ch + 0.3em);
+    text-align: left;
+  }
+
+  /* FX: the effect name and On/Off sit in the row's two outer columns, so
+     their length doesn't push the middle; the beat length, level and
+     separators stay centred. */
+  :root[data-flag-no-shift-strip] [data-region^='deck'] .fx {
+    display: grid;
+    grid-template-columns: minmax(max-content, 1fr) auto auto auto auto auto minmax(max-content, 1fr);
+    align-items: center;
+    column-gap: 8px;
+  }
+  :root[data-flag-no-shift-strip] [data-region^='deck'] .fx .kind {
+    justify-self: start;
+  }
+  :root[data-flag-no-shift-strip] [data-region^='deck'] .fx .tog {
+    justify-self: end;
+    min-width: 3.8em;
+  }
+}
+
+/* Loop: the size is right-aligned in a slot that fits "1/16" (and 1/32),
+   and the word fits "beats", so the button keeps one width. The row then
+   needs 233px, which fits the window's minimum (234px at 1024×760); below
+   that (960 wide) a 1/16 loop overflowed the row before this flag too. */
+:root[data-flag-no-shift-strip] [data-region^='deck'] .perf .big b {
+  min-width: 1.95em;
+  text-align: right;
+}
+:root[data-flag-no-shift-strip] [data-region^='deck'] .perf .big span {
+  min-width: 2.6em;
+  text-align: left;
+}
+
+/* Beat jump in the transport: three equal parts, so the size in the middle
+   can change without moving the arrows' hit areas. */
+:root[data-flag-no-shift-strip] [data-region^='deck'] .transport .jumps {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+:root[data-flag-no-shift-strip] [data-region^='deck'] .transport .jumps span {
+  text-align: center;
+  white-space: nowrap;
+}
