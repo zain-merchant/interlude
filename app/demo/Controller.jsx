@@ -1,8 +1,10 @@
 // A two-deck DJ controller, drawn top-down, for the hero's controller
-// version. It isn't any one model, and it carries only what the hero plays,
-// each part large: per deck a tempo fader, a jog wheel, Sync and Play; in
-// the middle a browse knob (turn to choose, push to load), a Low knob per
-// channel, and the crossfader.
+// version. It isn't any one model, and it carries what the hero plays: per
+// deck a tempo fader, a jog wheel, Sync, Cue and Play, pads (hot cues and
+// stems), a four-beat Loop key and an Echo key with its level; in the
+// middle a browse knob (turn to choose, push to load), three EQ knobs and a
+// fader per channel, meters and the crossfader. Five drawings of it are
+// being tried (VERSIONS, below).
 //
 // Nothing on it is set by hand. Each frame it reads the app's engine, so
 // its jogs turn with the decks, its play and cue keys light with them, its
