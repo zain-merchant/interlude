@@ -86,8 +86,11 @@ h1 { margin: 0; font-size: clamp(48px, 9vw, 88px); font-weight: 600; letter-spac
 .meta span { margin: 0 6px; }
 
 /* Screenshot */
-.shot img {
+.shot video {
+  display: block;
   width: 100%;
+  height: auto;
+  background: #0b0c0f;
   border-radius: 14px;
   box-shadow: 0 0 0 1px var(--line-2), 0 40px 120px rgb(0 0 0 / 0.6), 0 0 160px -40px rgb(62 198 255 / 0.25);
 }
