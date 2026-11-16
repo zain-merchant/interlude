@@ -136,6 +136,12 @@
   const atCue = $derived(!!t && !d.playing && Math.abs(d.position - d.cue) < 0.01);
   const pk = $derived(t ? playingKey(d.key, d.rate, d.keylock) : null);
   const canSync = $derived(!!t && d.bpm > 0 && engine.decks[1 - deck].bpm > 0);
+  // #18 (UI audit flag): where the pitch fader would match the other deck's tempo (Fader's match mark).
+  const tempoMatch = $derived.by(() => {
+    const o = engine.decks[1 - deck];
+    if (!flag('visual-tempo-match') || !t || !tracks[1 - deck] || !(d.bpm > 0) || !(o.bpm > 0)) return null;
+    return (1 - (o.bpm * o.rate) / d.bpm) / range;
+  });
   // #18 (UI audit flag): this deck's key mixes with the other deck's (as each sounds now); class:mix on .key.
   const keyMix = $derived.by(() => {
     if (!flag('visual-key-match') || !pk || !tracks[1 - deck]) return false;
@@ -328,7 +334,7 @@
       use:tip={rangeTip}>{pct(ratePct)}{#if range !== RANGES[0]}<span class="rng">±{Math.round(range * 100)}</span>{/if}</button>
     <div class="pitch-fader">
       <Fader vertical big tick value={pitch} min={-1} max={1} reset={0} label="Deck {name} pitch" onchange={setPitch}
-        format={(v) => pct(-v * range * 100)} {ghost}
+        format={(v) => pct(-v * range * 100)} {ghost} match={tempoMatch}
         note={pickupRate === null ? '' : `The controller's tempo fader is at ${pct((pickupRate - 1) * 100)}. Move it to the marker and it takes over`} />
     </div>
     {#if d.slip}
