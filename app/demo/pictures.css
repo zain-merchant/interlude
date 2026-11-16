@@ -478,3 +478,7 @@
 .p-ctl__pads { gap: 4px; padding: 4px; }
 .p-ctl__pads i { height: 16px; }
 .p-ctl .p-toast { top: -12px; }
+/* Controllers: scaled by --ctl-scale (tried with a slider in the Try
+   panel), anchored at the top, where the lead comes in, so it grows down
+   into the fade and the tag stays put. */
+.p-ctl { transform: scale(var(--ctl-scale, 1.1)); transform-origin: 50% 0; }

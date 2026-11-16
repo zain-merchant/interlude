@@ -106,7 +106,9 @@
         const end = 6, gap = 20, gapA = 14, inset = 12;
         // The brand in the capsule: the 36px icon, then the name drawn at
         // WORD of its laid-out (bar) size.
-        const bw = icon.offsetWidth + 10 + word.offsetWidth * WORD;
+        // (Its exact width, undoing whatever scale it's drawn at now.)
+        const ww = word.getBoundingClientRect().width / (1 - (1 - WORD) * shape.x);
+        const bw = icon.offsetWidth + 10 + ww * WORD;
         // (Their boxes' exact widths: they only ever move, never scale.)
         const lw = narrow ? 0 : links.getBoundingClientRect().width, aw = acts.getBoundingClientRect().width;
         // Wide: the capsule hugs its contents, centred. Narrow: nearly edge to edge.
@@ -116,6 +118,9 @@
         const lx = bx + bw + gap;
         const ax = narrow ? left + capW - end - aw : lx + lw + gapA;
         geo = { side: left, right: W - left - capW, b: bx - (x0 + brand.offsetLeft), l: lx - (x0 + links.offsetLeft), a: ax - (x0 + acts.offsetLeft) };
+        // The actions ride with what's beside them on the way: just after the
+        // links (wide), or just inside the capsule's closing right end (narrow).
+        geo.k = narrow ? geo.right : -geo.l;
         edge.style.left = `${left}px`;
         edge.style.width = `${capW}px`;
         draw();
@@ -147,7 +152,7 @@
         icon.style.transform = `scale(${r(ICON + (1 - ICON) * p)})`;
         word.style.transform = `translateX(${r(-4 * (1 - p))}px) scale(${r(1 - (1 - WORD) * p)})`;
         links.style.transform = `translate(${r(geo.l * p)}px, ${r(4 * p)}px)`;
-        acts.style.transform = `translate(${r(geo.a + 16 * (1 - q))}px, 4px)`;
+        acts.style.transform = `translate(${r(geo.a + geo.k * (1 - p) + 16 * (1 - q))}px, 4px)`;
         acts.style.opacity = r(clamp(q * 1.25));
         const shown = q > 0.02 || act.to === 1 ? 'visible' : '';
         if (acts.style.visibility !== shown) acts.style.visibility = shown;
@@ -486,7 +491,19 @@
           <div class="try__group" data-key="${key}"><span>${title}</span>
             <div>${options.map(([v, l]) => `<button type="button" data-v="${v}" aria-pressed="${v === now}">${l}</button>`).join('')}</div>
           </div>`;
-        panel.innerHTML = `<b>Try</b>${group('Record touch', 'rings', [['needle', 'Needle'], ['off', 'Off']], recTouch)}<p class="try__hint" data-hint="rings"></p>${group('Controller link', 'input', [['line', 'Pulse line'], ['label', 'Moving label'], ['rings', 'Highlights']], input)}${group('Recording layout', 'reclayout', [['stacked', 'Stacked'], ['side', 'Side by side'], ['carousel', 'Carousel']], remembered('interlude.try.reclayout', 'stacked'))}`;
+        panel.innerHTML = `<b>Try</b>${group('Record touch', 'rings', [['needle', 'Needle'], ['off', 'Off']], recTouch)}<p class="try__hint" data-hint="rings"></p>${group('Controller link', 'input', [['line', 'Pulse line'], ['label', 'Moving label'], ['rings', 'Highlights']], input)}${group('Recording layout', 'reclayout', [['stacked', 'Stacked'], ['side', 'Side by side'], ['carousel', 'Carousel']], remembered('interlude.try.reclayout', 'stacked'))}<div class="try__group"><span>Controllers picture size <output data-ctl-out></output></span><input type="range" data-ctl-scale min="0.9" max="1.5" step="0.01"></div>`;
+        // The Controllers card's drawing: scaled live from its top, where the lead comes in.
+        {
+          const range = panel.querySelector('[data-ctl-scale]');
+          const out = panel.querySelector('[data-ctl-out]');
+          const apply = (v) => {
+            document.documentElement.style.setProperty('--ctl-scale', v);
+            out.textContent = `${Math.round(v * 100)}%`;
+          };
+          range.value = remembered('interlude.try.ctlscale', '1.1');
+          apply(range.value);
+          range.addEventListener('input', () => { apply(range.value); remember('interlude.try.ctlscale', range.value); });
+        }
         // The nav's layout (set in <head>), first in the panel.
         panel.querySelector('b').insertAdjacentHTML('afterend',
           group('Nav', 'nav', [['morph', 'Bar to capsule'], ['bar', 'Bar'], ['pill', 'Capsule'], ['clear', 'Clear'], ['centred', 'Centred']], document.documentElement.dataset.nav));
