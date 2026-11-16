@@ -1,83 +1,82 @@
-/* #2: concentric inset corners. Inner radius = outer radius − inset, written
-   as that sum so it follows the tokens. The insets are the paddings the
-   components use today (named in each comment). */
+/* #2: concentric by construction. Two numbers set everything: the panel
+   radius R (--flag-concentric-radius) and the panel padding P
+   (--flag-concentric-padding). Every panel takes R and insets its content by
+   P, and anything inset in a rounded thing gets that thing's radius less
+   its inset, never below 4px:
+     panels (decks, mixer, waveforms, library, Settings, sampler, dialogs)  R
+     controls in a panel, P in (--r: every .btn, field, row, tab)         R − P
+     the zoom pill, P in from the waveforms' corner                       R − P
+     its − + buttons, 2px in                                              R − P − 2
+     the search field's clear button, 6px in                              R − P − 6
+     context menu items, 4px in                                           --r − 4
+   and, the other way, overlays sized from what's inside them: the toast is
+   its Undo's radius + 6, the banner its buttons' + 8. Defaults R 24, P 16
+   keep today's 16px padding and 8px controls; only the panels round more. */
+:root[data-flag-concentric] {
+  --concentric-min: 4px;
+  --r-panel: var(--flag-concentric-radius, 24px);
+  --pad: var(--flag-concentric-padding, 16px);
+  --r: max(var(--concentric-min), calc(var(--r-panel) - var(--pad)));
+  --radius: var(--r);
+}
 
-/* Waveforms panel → zoom pill, 8px in from the top right. */
+/* Every panel insets by P. (Decks already pad by --pad; Settings pads its
+   sides by --pad already.) */
+:root[data-flag-concentric] .mixer {
+  padding: var(--pad);
+}
+:root[data-flag-concentric] section.library nav,
+:root[data-flag-concentric] section.library .main {
+  padding: var(--pad);
+}
+:root[data-flag-concentric] section.library {
+  /* #20 (library-clip) reads this for the list's corner. */
+  --library-inset: var(--pad);
+}
+:root[data-flag-concentric] .settings .main .bar {
+  padding: var(--pad);
+}
+/* The waveforms panel: the zoom pill sits P in from its corner. */
 :root[data-flag-concentric] .waves .zoom {
-  --concentric-outer: calc(var(--r-panel) - 8px);
-  border-radius: var(--concentric-outer);
+  top: var(--pad);
+  right: var(--pad);
+  border-radius: var(--r);
 }
-/* Zoom pill → its − and + buttons: 2px in top and bottom (24px pill, 20px
-   buttons), 4px at the ends; the tighter side sets the radius. */
 :root[data-flag-concentric] .waves .zoom button {
-  border-radius: calc(var(--concentric-outer) - 2px);
+  border-radius: max(var(--concentric-min), calc(var(--r) - 2px));
 }
 
-/* Library panel → nav items (nav pads 8px), the bar's controls and the
-   track list (the main column pads 8px). */
-:root[data-flag-concentric] .library nav .item,
-:root[data-flag-concentric] .library nav .add,
-:root[data-flag-concentric] .library .main .search,
-:root[data-flag-concentric] .library .main .bar .btn,
-:root[data-flag-concentric] .library .main .scroll {
-  border-radius: calc(var(--r-panel) - 8px);
-}
-/* Track list → its rows, flush with its edges. */
-:root[data-flag-concentric] .library .main .scroll .row {
-  border-radius: calc(var(--r-panel) - 8px - 0px);
-}
-/* Search field → its clear button: 6px in (10px padding, −4px margin;
-   20px button in a 32px field). */
-:root[data-flag-concentric] .library .main .search .clear {
-  border-radius: calc(var(--r-panel) - 8px - 6px);
-}
-
-/* Sampler strip → its close button, 8px in from the right. */
-:root[data-flag-concentric] .sampler .close {
-  border-radius: calc(var(--r-panel) - 8px);
-}
-
-/* Settings panel → the buttons in its bar (8px padding). */
-:root[data-flag-concentric] .settings .main .bar .btn {
-  border-radius: calc(var(--r-panel) - 8px);
-}
-
-/* Beat-jump control → its ‹ › buttons, flush with its ends. */
+/* Things flush with a rounded parent take its radius. */
+:root[data-flag-concentric] .library .main .scroll .row,
 :root[data-flag-concentric] .transport .jumps button {
-  border-radius: calc(var(--r) - 0px);
+  border-radius: var(--r);
 }
-
-/* Context menu → its items (4px padding). */
-:root[data-flag-concentric] .menu {
-  --concentric-outer: var(--r);
+:root[data-flag-concentric] .library .main .search .clear {
+  border-radius: max(var(--concentric-min), calc(var(--r) - 6px));
+}
+:root[data-flag-concentric] .sampler .close {
+  border-radius: max(var(--concentric-min), calc(min(var(--r-panel), 20px) - 8px));
 }
 :root[data-flag-concentric] .menu button {
-  border-radius: calc(var(--concentric-outer) - 4px);
+  border-radius: max(var(--concentric-min), calc(var(--r) - 4px));
 }
 
-/* Toast → Undo, 6px in. Undo keeps its 6px radius, so the toast grows to
-   6 + 6. */
+/* Dialogs are panels too; their padding (24 to 32) is already past R. */
+:root[data-flag-concentric] .card[role='dialog'] {
+  border-radius: var(--r-panel);
+}
+
+/* Overlays sized from their contents: the toast around its Undo (6px in),
+   the banner around its buttons (8px in). */
 :root[data-flag-concentric] .toastbox .toast {
-  --concentric-outer: calc(6px + 6px);
-  border-radius: var(--concentric-outer);
+  border-radius: calc(var(--r) + 6px);
 }
 :root[data-flag-concentric] .toastbox .toast .undo {
-  border-radius: calc(var(--concentric-outer) - 6px);
+  border-radius: var(--r);
 }
-
-/* Banner → its buttons, 8px in. The buttons keep the control radius, so
-   the banner grows to it + 8. */
 :root[data-flag-concentric] .banner {
-  --concentric-outer: calc(var(--r) + 8px);
-  border-radius: var(--concentric-outer);
+  border-radius: calc(var(--r) + 8px);
 }
 :root[data-flag-concentric] .banner .btn {
-  border-radius: calc(var(--concentric-outer) - 8px);
-}
-
-/* Optional: the deck and mixer panels grow to control radius + padding,
-   so the transport buttons in their corners are concentric too. */
-:root[data-flag-concentric][data-flag-concentric-panels='grow'] .decks > * {
-  --r-panel: calc(var(--r) + var(--pad));
-  border-radius: var(--r-panel);
+  border-radius: var(--r);
 }

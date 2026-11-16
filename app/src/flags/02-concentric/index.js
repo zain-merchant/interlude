@@ -1,56 +1,44 @@
-// #2: concentric corners wherever a rounded thing sits inset in another.
+// #2: concentric corners by construction.
 //
-// A rounded control close to its container's rounded corner looks right
-// only when the two curves share a centre: inner radius = outer radius −
-// inset. Each nesting below is written as that sum, so it keeps working if
-// the radius tokens or the spacing change. Where the inner radius would get
-// too small (the toast's Undo, the banner's buttons) the outer one grows to
-// inner + inset instead.
+// A rounded control near its container's rounded corner looks right only
+// when the two curves share a centre: inner radius = outer radius − inset.
+// Rather than fix each nesting, this sets the app from two numbers: every
+// panel (decks, mixer, waveforms, library, Settings, sampler, the dialogs)
+// has the same radius R and insets its content by the same padding P, and
+// every radius inside is derived from them (style.css):
+//   panels                                   R
+//   controls, fields, rows, tabs (--r)        R − P, never below 4px
+//   zoom pill (P in) and its buttons (2 in)   R − P, R − P − 2
+//   search clear button (6 in)                R − P − 6
+//   menu items (4 in)                         --r − 4
+//   toast, banner (around Undo / buttons)     --r + 6, --r + 8
+// Both are settings, to tune live. The defaults (R 24, P 16) keep today's
+// 16px padding and 8px controls, so the panels round more and the mixer
+// (12px sides) and the library (8px) pad 16 like the decks.
 //
-// Inventory (corner nestings, inset on both sides < outer radius):
-//   waveforms panel → its zoom pill (8px in)                was 6, now 8
-//   zoom pill → its − and + buttons (2px in)                was 4, now 6
-//   library panel → nav items, bar controls, track list (8) already 8, now calc
-//   track list → its rows (0px in)                          already, now calc
-//   search field → its clear button (6px in)                was 4, now 2
-//   sampler strip → its close button (8px in)               was 6, now 8
-//   settings panel → its bar buttons (8px in)               already 8, now calc
-//   beat-jump control → its ‹ › buttons (0px in)            already, now calc
-//   context menu → its items (4px in)                       was 5, now 4
-//   toast → Undo (6px in)                                   toast 8 → 12
-//   banner → its buttons (8px in)                           banner 8 → 16
-// Not nestings: the deck and mixer controls sit 16px in from 16px corners
-// (inset = radius, so the concentric radius would be 0); the "Padded
-// panels" setting tries growing those panels to control radius + padding.
-// Dialog cards (Import, Report) pad 24–32px from 14px corners, so their
-// contents are clear of the curve too.
+// Before: panels were 16px with controls 16px in (inset = radius, so a
+// concentric control would be square), the library padded 8, the mixer 12,
+// and the few real nestings were fixed one by one.
 export default {
   id: 'concentric',
   n: 2,
   title: 'Concentric inset corners',
   group: 'Shape',
   notes:
-    'Inner radius = outer radius − inset wherever a rounded control sits near a rounded corner: zoom pill, clear button, sampler close, menu items, the toast and banner. "Grow" also rounds the deck and mixer panels to control radius + padding (24px), so their corner buttons are concentric too.',
+    'One panel radius and one panel padding for every panel; every inner radius is the panel radius less its inset (at least 4px). Tune both below: controls follow.',
   settings: {
-    panels: {
-      type: 'choice',
-      options: [
-        ['keep', 'Keep 16px'],
-        ['grow', 'Grow decks'],
-      ],
-      default: 'keep',
-      label: 'Padded panels',
-    },
+    radius: { type: 'range', min: 12, max: 32, step: 1, default: 24, unit: 'px', label: 'Panel radius' },
+    padding: { type: 'range', min: 8, max: 24, step: 2, default: 16, unit: 'px', label: 'Panel padding' },
   },
 };
 
 /** Show me: each nested corner's radius drawn as a circle with its centre, outer and inner together. */
 export const show = {
-  note: "Radius circles and centres on the zoom pill, its + button and the track list: concentric where the dots meet (green). Turn the flag off and on to compare.",
-  target: (app) => [app.$('.waves .zoom'), app.$("section.library [data-region='tracks']")],
+  note: "Radius circles and centres where a rounded thing sits in a rounded panel: concentric where the dots meet (green). Drag Panel radius and Panel padding under More.",
+  target: (app) => [app.$('.waves .zoom'), app.$("[data-region='deck0'] .transport .btn.cue"), app.$("section.library [data-region='tracks']")],
   aid(d, app) {
     const { C } = d;
-    /** One corner's radius circle and centre; returns the centre. */
+    /** One corner's radius circle and centre. */
     const corner = (el, which, c) => {
       const r = el.getBoundingClientRect();
       const cs = getComputedStyle(el);
@@ -68,20 +56,19 @@ export const show = {
       const i = corner(inner, which, C.aid);
       const gap = Math.hypot(o.cx - i.cx, o.cy - i.cy);
       const c = gap < 0.75 ? C.ok : C.bad;
-      d.text(at.x, at.y, `${name}: outer r${Math.round(o.rad)}, inner r${Math.round(i.rad)}, ${gap < 0.75 ? 'centres meet' : `centres ${Math.round(gap * 10) / 10}px apart`}`, { c, anchor: at.anchor ?? 'end' });
+      d.text(at.x, at.y, `${name}: r${Math.round(o.rad)} > r${Math.round(i.rad)}, ${gap < 0.75 ? 'centres meet' : `centres ${Math.round(gap * 10) / 10}px apart`}`, { c, anchor: at.anchor ?? 'end' });
     };
-    const waves = app.$('.waves');
     const zoom = app.$('.waves .zoom');
-    const plus = app.$(".waves .zoom button[aria-label='Zoom in']");
     const zr = zoom?.getBoundingClientRect();
     if (zr) {
-      pair(waves, zoom, 'tr', 'waveforms > zoom pill', { x: zr.left - 8, y: zr.top + 4 });
-      pair(zoom, plus, 'tr', 'zoom pill > + button', { x: zr.left - 8, y: zr.bottom + 10 });
-      d.loupe('zoom', { x: zr.right - 30, y: zr.top - 12 }, { zoom: 5, size: { w: 220, h: 150 }, at: { x: zr.right - 236, y: zr.bottom + 28 }, caption: 'zoom pill corner, 5×' });
+      pair(app.$('.waves'), zoom, 'tr', 'waveforms > zoom', { x: zr.left - 8, y: zr.top + 4 });
+      pair(zoom, app.$(".waves .zoom button[aria-label='Zoom in']"), 'tr', 'zoom > + button', { x: zr.left - 8, y: zr.bottom + 10 });
     }
-    const lib = app.$('section.library');
+    const cue = app.$("[data-region='deck0'] .transport .btn.cue");
+    const cr = cue?.getBoundingClientRect();
+    if (cr) pair(app.deck(0), cue, 'bl', 'deck A > Cue', { x: cr.left, y: cr.bottom + 22, anchor: 'start' });
     const list = app.$("section.library [data-region='tracks']");
     const lr = list?.getBoundingClientRect();
-    if (lr) pair(lib, list, 'br', 'library > track list', { x: lr.right - 8, y: lr.bottom - 24 });
+    if (lr) pair(app.$('section.library'), list, 'br', 'library > track list', { x: lr.right - 8, y: lr.bottom - 24 });
   },
 };

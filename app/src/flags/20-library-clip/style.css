@@ -10,5 +10,6 @@
 }
 :root[data-flag-library-clip] section.library .main .scroll {
   border-radius: 0;
-  border-bottom-right-radius: calc(var(--r-panel) - 8px) var(--r-panel);
+  /* The column's inset is 8px, or the panel padding under #2. */
+  border-bottom-right-radius: max(4px, calc(var(--r-panel) - var(--library-inset, 8px))) var(--r-panel);
 }
