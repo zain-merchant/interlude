@@ -168,7 +168,7 @@ export function Controller({ shown }) {
     return () => clearTimeout(t);
   }, [shown]);
   // Which drawing: ?controller= on load, then the site's Try panel.
-  const [version, setVersion] = useState(() => pick(new URLSearchParams(location.search).get('controller')) ?? VERSIONS[0]);
+  const [version, setVersion] = useState(() => pick(new URLSearchParams(location.search).get('controller')) ?? 'club');
   useEffect(() => {
     const on = (e) => {
       if (e.data?.interlude === 'controller' && pick(e.data.v)) setVersion(e.data.v);
