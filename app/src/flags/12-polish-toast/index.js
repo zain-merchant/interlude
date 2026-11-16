@@ -14,3 +14,18 @@ export default {
     ms: { type: 'range', min: 100, max: 400, step: 20, default: 220, unit: 'ms', label: 'Entrance' },
   },
 };
+
+/** Show me: loads a track, which brings up the "Loaded … Undo" toast; Replay loads another. */
+export const show = {
+  note: 'A track was just loaded, which brings up the "Loaded … on deck A" toast at the bottom. Watch it arrive; press Replay to load another and see it again, with the flag off and on: on, it rises 8px and fades in; off, it blinks on. Entrance time under More.',
+  async setup(app) {
+    await app.loadTrack(0, 3);
+    await app.until(() => app.$('.toastbox .toast'), 2000, 'the toast');
+  },
+  async replay(app) {
+    app.$('.toastbox .toast') && (await app.key('Escape', { target: document.body }));
+    await app.wait(200);
+    await app.loadTrack(0, Math.floor(Math.random() * 8) + 2);
+  },
+  target: '.toastbox .toast',
+};

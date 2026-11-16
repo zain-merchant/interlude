@@ -14,13 +14,16 @@
 // Settings: { key: { type: 'range', min, max, step, default, unit? } }
 // becomes the CSS variable --flag-<id>-<key>; { type: 'choice', options:
 // [[value, label], ...], default } becomes :root[data-flag-<id>-<key>=value].
-const modules = import.meta.glob('./*/index.js', { eager: true });
+// Only each flag's default export: a flag's `show` (its Show me steps) is
+// for the dev-only FlagBar, which reads it itself (show/show.svelte.js), so
+// it stays out of production builds.
+const modules = import.meta.glob('./*/index.js', { eager: true, import: 'default' });
 import.meta.glob('./*/style.css', { eager: true });
 
 /** @typedef {{ id: string, n: number, title: string, group?: string, issue?: string, notes?: string, settings?: Record<string, any> }} Flag */
 /** @type {Flag[]} */
 export const FLAGS = Object.values(modules)
-  .map((m) => /** @type {any} */ (m).default)
+  .map((m) => /** @type {any} */ (m))
   .filter(Boolean)
   .sort((a, b) => a.n - b.n || a.id.localeCompare(b.id));
 

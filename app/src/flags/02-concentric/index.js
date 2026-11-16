@@ -43,3 +43,45 @@ export default {
     },
   },
 };
+
+/** Show me: each nested corner's radius drawn as a circle with its centre, outer and inner together. */
+export const show = {
+  note: 'Each nested corner is drawn as its radius circle with a dot at its centre: the waveforms panel and its zoom pill, the pill and its + button, the library panel and its track list. Concentric means the dots meet (green); red gives the distance between them. Turn the flag off and on; "Grow decks" under More rounds the deck panels too.',
+  target: (app) => [app.$('.waves .zoom'), app.$("section.library [data-region='tracks']")],
+  aid(d, app) {
+    const { C } = d;
+    /** One corner's radius circle and centre; returns the centre. */
+    const corner = (el, which, c) => {
+      const r = el.getBoundingClientRect();
+      const cs = getComputedStyle(el);
+      const prop = { tl: 'borderTopLeftRadius', tr: 'borderTopRightRadius', br: 'borderBottomRightRadius', bl: 'borderBottomLeftRadius' }[which];
+      const rad = Math.min(parseFloat(cs[prop]) || 0, r.width / 2, r.height / 2);
+      const cx = which.includes('l') ? r.left + rad : r.right - rad;
+      const cy = which.includes('t') ? r.top + rad : r.bottom - rad;
+      d.circle(cx, cy, rad, { c, dash: '2 2' });
+      d.dot(cx, cy, { c, r: 2 });
+      return { cx, cy, rad };
+    };
+    const pair = (outer, inner, which, name, at) => {
+      if (!outer || !inner) return;
+      const o = corner(outer, which, C.ghost);
+      const i = corner(inner, which, C.aid);
+      const gap = Math.hypot(o.cx - i.cx, o.cy - i.cy);
+      const c = gap < 0.75 ? C.ok : C.bad;
+      d.text(at.x, at.y, `${name}: outer r${Math.round(o.rad)}, inner r${Math.round(i.rad)}, ${gap < 0.75 ? 'centres meet' : `centres ${Math.round(gap * 10) / 10}px apart`}`, { c, anchor: at.anchor ?? 'end' });
+    };
+    const waves = app.$('.waves');
+    const zoom = app.$('.waves .zoom');
+    const plus = app.$(".waves .zoom button[aria-label='Zoom in']");
+    const zr = zoom?.getBoundingClientRect();
+    if (zr) {
+      pair(waves, zoom, 'tr', 'waveforms > zoom pill', { x: zr.left - 8, y: zr.top + 4 });
+      pair(zoom, plus, 'tr', 'zoom pill > + button', { x: zr.left - 8, y: zr.bottom + 10 });
+      d.loupe('zoom', { x: zr.right - 30, y: zr.top - 12 }, { zoom: 5, size: { w: 220, h: 150 }, at: { x: zr.right - 236, y: zr.bottom + 28 }, caption: 'zoom pill corner, 5×' });
+    }
+    const lib = app.$('section.library');
+    const list = app.$("section.library [data-region='tracks']");
+    const lr = list?.getBoundingClientRect();
+    if (lr) pair(lib, list, 'br', 'library > track list', { x: lr.right - 8, y: lr.bottom - 24 });
+  },
+};

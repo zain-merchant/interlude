@@ -23,3 +23,37 @@ export default {
   group: 'Stability',
   notes: 'Below a 320px mode row (windows under about 1,180px wide): hot cues show colour + time or just the number, stems stack dot over name, FX drops separators and the chevron. Wider decks are unchanged.',
 };
+
+/** Show me: zooms the interface in until deck A's mode row is under 320px, with hot cues set. */
+export const show = {
+  note: "Only applies when a deck's mode row is under 320px (windows under about 1,180px wide), so this zoomed the interface in (⌘=) until it is, and set two hot cues on deck A. The bar measures the row. On: set cues show colour + time, empty ones their number, nothing overlaps; off: \"1 Set2 Set\" runs together. Try the Stems and FX tabs too. Done puts the zoom back.",
+  async setup(app, ctx) {
+    if (!app.loaded(0)) await app.loadTrack(0);
+    await app.tab(0, 'Cues');
+    const D = "[data-region='deck0']";
+    for (const n of [1, 2]) {
+      const b = app.$(`${D} button[aria-label='Set hot cue ${n}']`);
+      if (b) {
+        await app.click(b);
+        await app.click(`${D} button[aria-label='Jump forward ${app.$(`${D} .transport .jumps .num`)?.textContent.trim() ?? 4} beats']`).catch(() => {});
+      }
+    }
+    ctx.was = app.zoom(1);
+    for (const z of [1.1, 1.25, 1.5, 1.75]) {
+      if (app.$(`${D} .mp`).offsetWidth < 320) break;
+      app.zoom(z);
+      await app.wait(150);
+    }
+  },
+  cleanup(app, ctx) {
+    if (ctx.was != null) app.zoom(ctx.was);
+  },
+  target: "[data-region='deck0'] .mp",
+  aid(d, app) {
+    const mp = app.$("[data-region='deck0'] .mp");
+    const r = mp?.getBoundingClientRect();
+    if (!r) return;
+    const w = mp.offsetWidth;
+    d.measure(r.left, r.top - 8, r.right, r.top - 8, { above: true, c: w < 320 ? d.C.ok : d.C.bad, label: `mode row ${w}px (applies under 320)` });
+  },
+};

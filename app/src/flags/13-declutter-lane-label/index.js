@@ -13,3 +13,25 @@ export default {
   group: 'Stability',
   notes: 'The track name over each waveform lane ends with an ellipsis before the centre line instead of running across it.',
 };
+
+/** Show me: a very long title on deck A's lane, with the play head marked. */
+export const show = {
+  note: 'Turned on Worst-case data (the page reloaded for it) and loaded "Strings of Life (… 1987 Detroit Mix) [2023 Remaster]" on deck A. The line is the play head, the lane\'s centre. On, the name ends in an ellipsis 16px before it; off, it runs across the play head and the waveform.',
+  needs: { 'stress-data': { set: 'worst' } },
+  async setup(app) {
+    await app.loadTrack(0, 'Strings of Life');
+    await app.clearSearch();
+  },
+  target: '.waves .lane .who',
+  aid(d, app) {
+    const lane = app.$('.waves .lane')?.getBoundingClientRect();
+    const who = app.$('.waves .lane .who');
+    if (!lane || !who) return;
+    const x = lane.left + lane.width / 2;
+    d.vguide(x, { y1: lane.top, y2: lane.bottom, c: d.C.aid, label: 'play head', ly: lane.bottom - 10 });
+    const r = app.textRect(who) ?? who.getBoundingClientRect();
+    const end = Math.min(r.right, who.getBoundingClientRect().right);
+    const gap = x - end;
+    d.measure(end, r.bottom + 4, x, r.bottom + 4, { c: gap > 0 ? d.C.ok : d.C.bad, label: gap > 0 ? `${Math.round(gap)}px clear` : `${Math.round(-gap)}px over` });
+  },
+};

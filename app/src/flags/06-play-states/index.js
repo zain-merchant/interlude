@@ -36,3 +36,23 @@ export default {
     },
   },
 };
+
+/** Show me: deck A playing, deck B paused, each play button labelled with its state. */
+export const show = {
+  note: 'Deck A is playing and deck B is paused, so the two play buttons show both states side by side (pick the playing style under More). Hold Cue on a paused deck for the amber cueing state; an empty deck shows the outline (see it before loading, or eject). Turn the flag off: both look the same white block.',
+  async setup(app) {
+    if (!app.loaded(0)) await app.loadTrack(0);
+    if (!app.loaded(1)) await app.loadTrack(1);
+    await app.play(0);
+  },
+  target: (app) => [app.playButton(0), app.playButton(1)],
+  aid(d, app) {
+    for (const n of [0, 1]) {
+      const b = app.playButton(n);
+      if (!b) continue;
+      const r = b.getBoundingClientRect();
+      const state = b.getAttribute('aria-disabled') === 'true' ? 'empty deck' : b.hasAttribute('data-cueing') ? 'cueing' : b.classList.contains('on') ? 'playing' : 'paused';
+      d.text(r.x + r.width / 2, r.y - 10, `${'AB'[n]}: ${state}`, { anchor: 'middle' });
+    }
+  },
+};

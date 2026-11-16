@@ -11,3 +11,24 @@ export default {
   group: 'Stability',
   notes: 'The library count reads "1 track" for a single result.',
 };
+
+/** Show me: searches for something with exactly one result and points at the count. */
+export const show = {
+  note: 'The library is searched down to one track. Read the count beside the search: on, "1 track"; off, "1 tracks". Clear the search to go back.',
+  async setup(app, ctx) {
+    const count = () => app.$('section.library .bar .count')?.textContent ?? '';
+    // Find a search with exactly one result among the tracks' own titles.
+    const titles = app.rows().map((r) => r.querySelector('.t')?.textContent.trim()).filter(Boolean);
+    const tries = [...new Set(titles.map((t) => t + ' Extended'))].concat(titles);
+    for (const q of tries) {
+      await app.search(q);
+      if (/^\s*1\s+track/.test(count())) return;
+    }
+    throw new Error('No search with exactly one result');
+  },
+  target: 'section.library .bar .count',
+  aid(d, app) {
+    const r = app.$('section.library .bar .count')?.getBoundingClientRect();
+    if (r) d.text(r.x, r.bottom + 10, 'the count');
+  },
+};

@@ -16,3 +16,23 @@ export default {
     pulse: { type: 'choice', options: [['on', 'Pulse'], ['off', 'Steady']], default: 'on', label: 'Last ten seconds' },
   },
 };
+
+/** Show me: deck A playing its last half minute. */
+export const show = {
+  note: "Deck A is playing its last ~25 seconds. Its remaining time (right, under the overview) turns the warning colour from 30s (Warn from, under More) and pulses in the last ten. Off, it looks the same at 5 minutes and at 5 seconds. Again to play the end once more.",
+  async setup(app) {
+    if (!app.loaded(0)) await app.loadTrack(0);
+    const ov = app.$("[data-region='deck0'] .overview");
+    const r = ov.getBoundingClientRect();
+    // The mock's tracks run 5 to 8 minutes; 93% in is about 25 seconds from the end.
+    await app.click(ov, { clientX: r.x + r.width * 0.93, clientY: r.y + r.height / 2 });
+    await app.play(0);
+  },
+  target: "[data-region='deck0'] .times .rm",
+  aid(d, app) {
+    const rm = app.$("[data-region='deck0'] .times .rm");
+    if (!rm) return;
+    const r = rm.getBoundingClientRect();
+    d.text(r.right, r.bottom + 10, rm.classList.contains('last') ? 'last ten seconds' : rm.classList.contains('ending') ? 'ending' : 'remaining', { anchor: 'end' });
+  },
+};

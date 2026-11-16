@@ -23,3 +23,32 @@ export default {
     titles: { type: 'choice', options: [['400', 'Regular'], ['500', 'Medium']], default: '400', label: 'Dialog title weight' },
   },
 };
+
+/** Show me: opens the Import dialog and labels every text with its size and weight. */
+export const show = {
+  note: 'The Import dialog is open, where most of the stray sizes were. Every text is labelled size/weight: green is on the scale (11, 13, 16, 24, 32 px; 300, 400, 500), red is off it (the 12s, 22s and 600). Turn the flag off and on to watch the reds go. Tooltips, Settings\' key caps and the waveform\'s cue chips change too.',
+  async setup(app) {
+    await app.openImport();
+  },
+  target: ".card[aria-labelledby='import-title']",
+  aid(d, app) {
+    const card = app.$(".card[aria-labelledby='import-title']");
+    if (!card) return;
+    const SIZES = [11, 13, 16, 24, 32];
+    const WEIGHTS = [300, 400, 500];
+    let n = 0;
+    for (const el of [card, ...card.querySelectorAll('*')]) {
+      if (n > 80) break;
+      const own = [...el.childNodes].some((c) => c.nodeType === 3 && c.textContent.trim());
+      if (!own) continue;
+      const r = app.textRect(el);
+      if (!r || !r.width) continue;
+      const cs = getComputedStyle(el);
+      const size = Math.round(parseFloat(cs.fontSize) * 10) / 10;
+      const weight = Number(cs.fontWeight);
+      const ok = SIZES.includes(size) && WEIGHTS.includes(weight);
+      d.text(r.right + 4, r.top + r.height / 2, `${size}/${weight}`, { c: ok ? d.C.ok : d.C.bad });
+      n++;
+    }
+  },
+};

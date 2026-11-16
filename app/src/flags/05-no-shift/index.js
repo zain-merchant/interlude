@@ -28,3 +28,28 @@ export default {
     },
   },
 };
+
+/** Show me: kills deck A's Low and ghosts where the mixer's columns stood. */
+export const show = {
+  note: "Deck A's Low EQ is now killed. Dashed blue is where the fader, the master column and deck B's side stood before the kill; green held still, red moved (by the px shown). Turn the flag off and on: off, the label grows to \"Low · kill\" and everything to its right shifts.",
+  target: (app) => app.$$('.mixer .ch')[0]?.querySelectorAll('.knob')[3],
+  async setup(app, ctx) {
+    ctx.parts = () => [app.$('.mixer .fwrap'), app.$('.mixer .cen'), app.$('.mixer .fwrap.mirror'), app.$$('.mixer .ch')[1]];
+    ctx.names = ['fader A', 'master', 'fader B', 'channel B'];
+    const low = () => app.$$('.mixer .ch')[0].querySelectorAll('.knob')[3].querySelector('button.label');
+    if (low().classList.contains('killed')) await app.click(low());
+    // At rest (nothing killed) the mixer is the same with the flag on or off.
+    ctx.rest = app.snap(ctx.parts());
+    await app.click(low());
+    await app.until(() => low().classList.contains('killed'), 1000, 'the kill');
+  },
+  async replay(app) {
+    const low = () => app.$$('.mixer .ch')[0].querySelectorAll('.knob')[3].querySelector('button.label');
+    await app.click(low());
+    await app.wait(500);
+    await app.click(low());
+  },
+  aid(d, app, ctx) {
+    ctx.parts().forEach((el, i) => el && d.ghost(ctx.rest[i], el.getBoundingClientRect(), { label: ctx.names[i], below: i % 2 === 1 }));
+  },
+};

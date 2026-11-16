@@ -20,3 +20,42 @@ export default {
     tabs: { type: 'choice', options: [['fg-3', 'Tabs as now'], ['fg-2', 'Tabs like nav']], default: 'fg-3', label: 'Inactive deck tabs' },
   },
 };
+
+/** Show me: labels the text of the controls this touches with the colour level each is drawn at. */
+export const show = {
+  note: "Each text is labelled with its colour token (fg brightest, fg-4 dimmest), with a key at the top left. Look at deck A's nudge ‹ › against the beat jump and loop ‹ › (fg-3 vs fg-2 off; all fg-2 on), and the deck tabs with \"Tabs like nav\" under More. The library's \"analyzing, N to go\" (only while analysis runs, e.g. with Worst-case data) goes from fg-4 to fg-3.",
+  async setup(app, ctx) {
+    if (!app.loaded(0)) await app.loadTrack(0);
+    await app.tab(0, 'Loop');
+    // The tokens' computed colours, from a probe in the app's own scope.
+    const probe = document.createElement('span');
+    app.$('.app').append(probe);
+    ctx.levels = ['fg', 'fg-2', 'fg-3', 'fg-4'].map((t) => {
+      probe.style.color = `var(--${t})`;
+      return [t, getComputedStyle(probe).color];
+    });
+    probe.remove();
+  },
+  target: (app) => [app.$("[data-region='deck0'] .pitch .nudge"), app.$("[data-region='deck0'] .modes"), app.$('section.library .bar .count')],
+  aid(d, app, ctx) {
+    const level = (el) => {
+      const c = getComputedStyle(el).color;
+      return ctx.levels.find(([, v]) => v === c)?.[0] ?? c.replace(/\s/g, '');
+    };
+    const D = "[data-region='deck0']";
+    const els = [
+      ...app.$$(`${D} .pitch .nudge button`),
+      ...app.$$(`${D} .perf .tb.ar`),
+      ...app.$$(`${D} .transport .jumps button`),
+      ...app.$$(`${D} .modes button`),
+      app.$('section.library .bar .count'),
+      app.$('section.library .bar .count .pending'),
+    ].filter(Boolean);
+    els.forEach((el, i) => {
+      const r = el.getBoundingClientRect();
+      if (!r.width) return;
+      d.text(r.x + r.width / 2, i % 2 ? r.bottom + 9 : r.y - 9, level(el), { anchor: 'middle' });
+    });
+    d.legend(['text levels', ...ctx.levels.map(([t, c]) => `${t.padEnd(5)} ${c}`)], { x: 16, y: 14 });
+  },
+};

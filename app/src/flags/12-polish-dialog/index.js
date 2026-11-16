@@ -16,3 +16,17 @@ export default {
     ms: { type: 'range', min: 120, max: 320, step: 20, default: 220, unit: 'ms', label: 'Duration' },
   },
 };
+
+/** Show me: opens the Report dialog; Replay closes and opens it again. */
+export const show = {
+  note: 'The Report a problem dialog just opened: watch its entrance. Press Replay to see it again, then turn the flag off and Replay to compare: on, it covers most of the way at once and settles (strong ease-out from 97%); off, it creeps in. Duration under More.',
+  async setup(app) {
+    await app.openReport();
+  },
+  async replay(app) {
+    await app.key('Escape', { target: document.body });
+    await app.wait(250);
+    await app.openReport();
+  },
+  target: ".card[aria-labelledby='report-title']",
+};

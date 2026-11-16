@@ -13,3 +13,27 @@ export default {
   group: 'Stability',
   notes: 'The BPM field opened by double-click has the same box as the number it replaces, so the deck below no longer drops 11px.',
 };
+
+/** Show me: opens deck A's BPM field and ghosts where the deck's rows stood. */
+export const show = {
+  note: "Deck A's BPM is open for typing (double-click it to open, Esc to close). Dashed blue is where the title, the overview, the times, the tabs and the transport stood before; green held still, red moved. Turn the flag off and on: off, the field is 42px wider and 11px taller and the deck drops.",
+  async setup(app, ctx) {
+    if (!app.loaded(0)) await app.loadTrack(0);
+    const D = "[data-region='deck0']";
+    ctx.parts = () => [app.$(`${D} .title`), app.$(`${D} .bpm`), app.$(`${D} .overview`), app.$(`${D} .times`), app.$(`${D} .modes`), app.$(`${D} .transport`)];
+    ctx.names = ['title', 'BPM', 'overview', 'times', 'tabs', 'transport'];
+    ctx.rest = app.snap(ctx.parts());
+    await app.dblclick(`${D} .bpm .big`);
+    await app.until(() => app.$(`${D} .bpm input, ${D} .bpm .edit`), 1500, 'the BPM field');
+  },
+  target: "[data-region='deck0'] .bpm",
+  async replay(app, ctx) {
+    const D = "[data-region='deck0']";
+    await app.key('Escape', { target: app.$(`${D} .bpm input`) ?? document.body });
+    await app.wait(500);
+    await app.dblclick(`${D} .bpm .big`);
+  },
+  aid(d, app, ctx) {
+    ctx.parts().forEach((el, i) => el && d.ghost(ctx.rest[i], el.getBoundingClientRect(), { label: ctx.names[i], below: i === 1 }));
+  },
+};

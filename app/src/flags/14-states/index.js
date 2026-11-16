@@ -32,3 +32,40 @@ export default {
   notes:
     'One rule per state across every control: hover fills, pressed shrinks and darkens, selected fills, focus is the 2px ring (now also on the track list and search), disabled is always 40%.',
 };
+
+/** Show me: puts a few controls through hover, pressed and focus on a loop, labelled. */
+export const show = {
+  note: 'Each labelled control steps through its state every 1.2s, as if pointed at, pressed or tabbed to: a deck tab and a sort header hovered (a step toward selected, not the same), Sync and a sidebar item pressed (shrink and darken / selected fill), the track list and search focused (the one 2px ring). An empty deck\'s nudge shows disabled (40%): deck B\'s, while B is empty. Turn the flag off and on to compare.',
+  async setup(app, ctx) {
+    if (!app.loaded(0)) await app.loadTrack(0);
+    await app.tab(0, 'Cues');
+    ctx.unforce = app.forceStates();
+    const D = "[data-region='deck0']";
+    ctx.items = () => [
+      ['hover', app.$$(`${D} .modes button`).find((b) => b.textContent.trim().startsWith('Loop'))],
+      ['hover', app.$("button.sort[aria-label^='Sort by artist']")],
+      ['active', app.$(`${D} .btn.sync`)],
+      ['active', app.$$("[data-region='sidebar'] .item")[1]],
+      ['focus', app.$("[data-region='tracks']")],
+      ['focus', app.$("input[aria-label='Search the library']")],
+    ];
+    ctx.t0 = performance.now();
+  },
+  cleanup(app, ctx) {
+    ctx.unforce?.();
+  },
+  target: (app) => [app.$$("[data-region='deck0'] .modes button")[1], app.$("[data-region='deck0'] .btn.sync"), app.$("[data-region='tracks']"), app.$("[data-region='deck1'] .pitch .nudge")],
+  aid(d, app, ctx) {
+    const on = Math.floor((performance.now() - ctx.t0) / 1200) % 2 === 1;
+    const word = { hover: 'hover', active: 'pressed', focus: 'focus' };
+    for (const [state, el] of ctx.items()) {
+      if (!el) continue;
+      el.toggleAttribute(`data-show-${state}`, on);
+      const r = el.getBoundingClientRect();
+      const x = Math.min(r.right - 4, r.x + 120);
+      d.text(state === 'focus' && r.height > 100 ? r.x + 8 : x, state === 'focus' && r.height > 100 ? r.y + 12 : r.y - 9, `${word[state]}: ${on ? 'on' : 'rest'}`, { c: on ? d.C.hl : d.C.aid, anchor: state === 'focus' && r.height > 100 ? 'start' : 'end' });
+    }
+    const nudge = app.$("[data-region='deck1'] .pitch .nudge")?.getBoundingClientRect();
+    if (nudge) d.text(nudge.x + nudge.width / 2, nudge.bottom + 10, 'disabled', { anchor: 'middle' });
+  },
+};
