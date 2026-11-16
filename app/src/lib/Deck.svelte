@@ -11,6 +11,7 @@
   import { pushEdit } from './undo.svelte.js';
   import { dropTarget } from './dnd.svelte.js';
   import { tip, tipText } from './tooltip.svelte.js';
+  import { flag } from '../flags/registry.svelte.js';
   import { openMenu } from './menu.svelte.js';
   import { keyLabel } from './commands.js';
   import { announce } from './announce.svelte.js';
@@ -247,7 +248,12 @@
         {:else}
           <div class="big num">{bpm > 0 ? bpm.toFixed(2) : '—'}</div>
         {/if}
+        <!-- #10 (UI audit flag): key, Camelot code and unit set apart by space and tone, not middle dots. -->
+        {#if flag('no-dots')}
+          <div class="unit">{#if pk}<span class="key" class:shifted={pk.shift} use:tip={keyTip}>{keyName(pk)} <span class="cam">{camelot(pk)}</span></span>{' '}{/if}<span class="u">BPM</span></div>
+        {:else}
         <div class="unit">{#if pk}<span class="key" class:shifted={pk.shift} use:tip={keyTip}>{keyName(pk)} · {camelot(pk)}</span>{" · "}{/if}BPM</div>
+        {/if}
       </div>
     </header>
 

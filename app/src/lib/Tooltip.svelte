@@ -1,5 +1,6 @@
 <script>
   import { tooltip } from './tooltip.svelte.js';
+  import { flag } from '../flags/registry.svelte.js';
   let el = $state();
   let width = $state(0);
   // Keep the tip inside the window.
@@ -8,7 +9,8 @@
 
 {#if tooltip.visible && tooltip.text}
   <div class="tip" class:below={tooltip.below} role="tooltip" bind:this={el} bind:clientWidth={width}
-    style:left="{left}px" style:top="{tooltip.y}px">{tooltip.text}</div>
+    style:left="{left}px" style:top="{tooltip.y}px"><!-- #10 (UI audit flag): the tip's parts as spans spaced apart, not joined with middle dots.
+    -->{#if flag('no-dots')}{#each tooltip.text.split(' · ') as part, i}{i ? ' ' : ''}<span class="part">{part}</span>{/each}{:else}{tooltip.text}{/if}</div>
 {/if}
 
 <style>

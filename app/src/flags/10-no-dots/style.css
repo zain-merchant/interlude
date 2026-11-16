@@ -1,0 +1,36 @@
+/* #10: parts set apart by space (and a step in tone), not middle dots.
+   The hooks keep one real space between parts for screen readers and
+   copy; the margin makes up the rest of the gap. */
+
+/* Tooltips: "Low EQ  −6.0 dB  double-click to reset". */
+:root[data-flag-no-dots] [role='tooltip'] .part + .part {
+  margin-left: calc(var(--flag-no-dots-gap, 8px) - 0.25em);
+}
+:root[data-flag-no-dots][data-flag-no-dots-tone='step'] [role='tooltip'] .part + .part {
+  color: var(--fg-2);
+}
+
+/* The deck's line under the BPM: key, then its Camelot code a step
+   quieter, then the unit. */
+:root[data-flag-no-dots] [data-region^='deck'] .bpm .unit .cam {
+  margin-left: 1px;
+}
+:root[data-flag-no-dots] [data-region^='deck'] .bpm .unit .key {
+  margin-right: calc(var(--flag-no-dots-gap, 8px) - 0.25em);
+}
+:root[data-flag-no-dots][data-flag-no-dots-tone='step'] [data-region^='deck'] .bpm .unit .key:not(.shifted) {
+  color: var(--fg-2);
+}
+:root[data-flag-no-dots][data-flag-no-dots-tone='step'] [data-region^='deck'] .bpm .unit .key:not(.shifted) .cam {
+  color: var(--fg-3);
+}
+
+/* Library: "48 tracks   analyzing, 12 to go". */
+:root[data-flag-no-dots] section.library .bar .count .pending {
+  margin-left: calc(var(--flag-no-dots-gap, 8px) - 0.25em);
+}
+
+/* Import: "Music/rekordbox   updated 2 days ago". */
+:root[data-flag-no-dots] .found .file small .when {
+  margin-left: calc(var(--flag-no-dots-gap, 8px) - 0.25em);
+}

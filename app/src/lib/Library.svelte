@@ -549,8 +549,14 @@
           </button>
         {:else}<kbd>{MOD}F</kbd>{/if}
       </label>
+      <!-- #10 (UI audit flag): the analysis note set apart by space, not a middle dot. -->
+      {#if flag('no-dots')}
+        <span class="count num">{loading ? 'Scanning…' : `${results.length.toLocaleString()} tracks`}{#if !loading && pending}{' '}<span
+            class="pending" use:tip={() => 'Finding each track’s length, BPM and key in the background'}>analyzing, {pending.toLocaleString()} to go</span>{/if}</span>
+      {:else}
       <span class="count num">{loading ? 'Scanning…' : `${results.length.toLocaleString()} tracks`}{#if !loading && pending}<span
           class="pending" use:tip={() => 'Finding each track’s length, BPM and key in the background'}> · analyzing, {pending.toLocaleString()} to go</span>{/if}</span>
+      {/if}
       <button class="btn sm samp" class:on={sampler.open} aria-pressed={sampler.open}
         onclick={() => setSamplerOpen(!sampler.open)}
         use:tip={() => tipText(sampler.open ? 'Hide sampler' : 'Show sampler', keyLabel('view.sampler'), 'eight one-shot slots; drag tracks onto them')}>
