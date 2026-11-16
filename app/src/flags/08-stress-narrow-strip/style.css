@@ -1,0 +1,59 @@
+/* #8: the mode row measures its own width (Safari 16+ / WebKit). */
+:root[data-flag-stress-narrow-strip] [data-region^='deck'] .mp {
+  container-type: inline-size;
+}
+
+@container (max-width: 319px) {
+  /* Hot cues: colour + time when set, number when empty. A time too long
+     for the column (past an hour) ends in an ellipsis instead of running
+     into the next cue. */
+  :root[data-flag-stress-narrow-strip] [data-region^='deck'] .perf .tc {
+    gap: 6px;
+    padding: 0 4px;
+    max-width: 100%;
+    min-width: 0;
+  }
+  :root[data-flag-stress-narrow-strip] [data-region^='deck'] .perf .tc span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  :root[data-flag-stress-narrow-strip] [data-region^='deck'] .perf .tc.set b,
+  :root[data-flag-stress-narrow-strip] [data-region^='deck'] .perf .tc:not(.set) span {
+    display: none;
+  }
+
+  /* Loop: smaller side buttons, so a 1/16 loop fits a 202px row. */
+  :root[data-flag-stress-narrow-strip] [data-region^='deck'] .perf .tb {
+    min-width: 24px;
+    padding: 0 4px;
+  }
+  :root[data-flag-stress-narrow-strip] [data-region^='deck'] .perf .big {
+    gap: 4px;
+    padding: 0 6px;
+  }
+
+  /* Stems: the on/off dot above the name, so the whole name fits. */
+  :root[data-flag-stress-narrow-strip] [data-region^='deck'] .stems .stem {
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    padding: 0 2px;
+    line-height: 1;
+  }
+
+  /* FX: no separators or chevron, tighter buttons; still one row. */
+  :root[data-flag-stress-narrow-strip] [data-region^='deck'] .fx .sep,
+  :root[data-flag-stress-narrow-strip] [data-region^='deck'] .fx .kind svg {
+    display: none;
+  }
+  :root[data-flag-stress-narrow-strip] [data-region^='deck'] .fx .tb {
+    min-width: 24px;
+    padding: 0 4px;
+  }
+  :root[data-flag-stress-narrow-strip] [data-region^='deck'] .fx .val {
+    min-width: 0;
+    white-space: nowrap;
+  }
+}
