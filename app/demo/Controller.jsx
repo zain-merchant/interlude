@@ -15,6 +15,19 @@ import { engine } from '$lib/engine.svelte.js';
 // 33⅓ rpm: how far a platter turns in a second, in degrees.
 const DEG_PER_SEC = (100 / 3 / 60) * 360;
 
+/** One of the app's sliders, for the controller to mirror. */
+function appSlider(d, which) {
+  if (which === 'low') return document.querySelector(`[role="slider"][aria-label="Deck ${'AB'[d]} low EQ"]`);
+  return document.querySelector(`[role="slider"][aria-label="Deck ${'AB'[d]} pitch"]`);
+}
+/** How far along its travel a slider is, 0 to 1, from its own ARIA values. */
+function along(el) {
+  const min = +el.getAttribute('aria-valuemin');
+  const max = +el.getAttribute('aria-valuemax');
+  const v = +el.getAttribute('aria-valuenow');
+  return max > min ? Math.max(0, Math.min(1, (v - min) / (max - min))) : 0.5;
+}
+
 function Deck({ side }) {
   const d = side === 'left' ? 0 : 1;
   return (
@@ -88,11 +101,22 @@ export function Controller({ shown }) {
         el(`cue-${d}`)?.toggleAttribute('data-lit', deck.loaded && !deck.playing);
         el(`sync-${d}`)?.toggleAttribute('data-lit', deck.loaded && engine.decks[1 - d].loaded &&
           Math.abs(deck.bpm * deck.rate - engine.decks[1 - d].bpm * engine.decks[1 - d].rate) < 0.01);
-        // ±8% is the cap's travel either side of the middle; faster is toward you.
-        el(`pitch-${d}`)?.style.setProperty('--at', String(Math.max(-1, Math.min(1, ((deck.rate ?? 1) - 1) / 0.08))));
+        // The tempo fader sits exactly where the app's does: same range, same
+        // way up. While a hand holds it ([data-held]) the hand moves it, and
+        // the app catches up.
+        const cap = el(`pitch-${d}`);
+        const app = appSlider(d, 'pitch');
+        if (cap && app && !cap.hasAttribute('data-held')) cap.style.setProperty('--at', String(1 - 2 * along(app)));
+        // The Low knob turns to where the app's Low EQ is.
+        const low = el(`low-${d}`);
+        const eq = appSlider(d, 'low');
+        if (low && eq && !low.hasAttribute('data-held')) low.style.rotate = `${-150 + 300 * along(eq)}deg`;
       }
-      const xf = engine.mixer?.crossfader ?? 0;
-      root.current?.style.setProperty('--xf', String((xf + 1) / 2));
+      const xfCap = root.current?.querySelector('[data-target="c-xf-cap"]');
+      if (!xfCap?.hasAttribute('data-held')) {
+        const xf = engine.mixer?.crossfader ?? 0;
+        root.current?.style.setProperty('--xf', String((xf + 1) / 2));
+      }
       raf = requestAnimationFrame(frame);
     };
     frame();

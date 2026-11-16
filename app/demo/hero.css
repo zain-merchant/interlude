@@ -91,12 +91,12 @@ html, body { margin: 0; width: 1440px; height: 900px; overflow: hidden; backgrou
 svg.links { position: absolute; inset: 0; z-index: 255; pointer-events: none; overflow: visible; }
 /* Interlude's orange: warm enough to read over the app's blues and the
    metal alike, with a dark keyline for the brightest parts. */
-.link-ring {
-  fill: none; stroke: #ff9b45; stroke-width: 1.75;
+.link-mark {
+  position: absolute; z-index: 5; pointer-events: none; box-sizing: border-box;
+  border: 1.75px solid #ff9b45; box-shadow: 0 0 0 1px rgb(0 0 0 / 0.35), inset 0 0 0 1px rgb(0 0 0 / 0.35);
   opacity: 0; transition: opacity 0.35s ease-out;
-  filter: drop-shadow(0 0 1px rgb(0 0 0 / 0.85));
 }
-.link-ring.on { opacity: 1; }
+.link-mark.on { opacity: 1; }
 .link-line {
   fill: none; stroke: #ff9b45; stroke-width: 1.75; stroke-linecap: round;
   filter: drop-shadow(0 0 1px rgb(0 0 0 / 0.9));

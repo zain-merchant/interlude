@@ -233,57 +233,67 @@ function layer() {
   }
   return svg;
 }
-/** An element's own corner radii as drawn on screen (x and y apart, since
- * the controller is tilted and a round knob shows as an ellipse). */
-function radiiOf(el, r) {
-  const v = getComputedStyle(el).borderTopLeftRadius;
-  const sx = r.width / (el.offsetWidth || r.width || 1);
-  const sy = r.height / (el.offsetHeight || r.height || 1);
-  let rx, ry;
-  if (v.endsWith('%')) {
-    rx = r.width * (parseFloat(v) / 100);
-    ry = r.height * (parseFloat(v) / 100);
-  } else {
-    const px = parseFloat(v) || 0;
-    rx = px * sx;
-    ry = px * sy;
-  }
-  return [Math.min(rx, r.width / 2), Math.min(ry, r.height / 2)];
-}
 const PAD = 5;
-/** The box a mark goes round: a library title is a wide column, so its mark
- * hugs just the words. */
-function rectOf(el) {
+
+/**
+ * A mark round a control, made as an element in the control's own layout,
+ * so it's drawn in the same perspective as the control (round knobs on the
+ * tilted controller get a ring that's truly concentric) and keeps the
+ * control's own corners, PAD out. A control that travels (a fader cap)
+ * carries its mark with it; anything else gets one that sits where the
+ * control rests, so a key going down its travel doesn't move it. A
+ * library title gets one round just its words.
+ */
+function markOn(el) {
+  const m = document.createElement('i');
+  m.className = 'link-mark';
+  const cs = getComputedStyle(el);
+  const rad = cs.borderTopLeftRadius;
+  const travels = el.matches('[data-hw^="pitch"], [data-target="c-xf-cap"], .cap');
+  if (travels) {
+    m.style.inset = `${-PAD}px`;
+    m.style.borderRadius = rad.endsWith('%') ? rad : `${(parseFloat(rad) || 0) + PAD}px`;
+    el.append(m);
+    return m;
+  }
+  let host = el.offsetParent;
+  let box = { left: el.offsetLeft, top: el.offsetTop, width: el.offsetWidth, height: el.offsetHeight };
   if (el.matches('.t') && el.firstChild) {
+    // Just the words: their width, in the row's own (unscaled) pixels.
+    const row = el.closest('[role="option"], [role="row"], li, tr, .row') ?? el.parentElement;
     const range = document.createRange();
     range.selectNodeContents(el);
-    const r = range.getBoundingClientRect();
-    if (r.width) return r;
+    const rr = range.getBoundingClientRect();
+    const hr = row.getBoundingClientRect();
+    const k = row.offsetWidth / (hr.width || 1);
+    host = row;
+    box = { left: (rr.left - hr.left) * k, top: (rr.top - hr.top) * k, width: rr.width * k, height: rr.height * k };
+    if (getComputedStyle(row).position === 'static') row.style.position = 'relative';
   }
-  return el.getBoundingClientRect();
-}
-/** Where a straight line from inside `r` towards (ux, uy) leaves it, `pad` out. */
-function exitDistance(r, ux, uy, pad) {
-  const tx = Math.abs(ux) > 1e-6 ? (r.width / 2 + pad) / Math.abs(ux) : Infinity;
-  const ty = Math.abs(uy) > 1e-6 ? (r.height / 2 + pad) / Math.abs(uy) : Infinity;
-  return Math.min(tx, ty);
+  if (!host) return null;
+  Object.assign(m.style, {
+    left: `${box.left - PAD}px`, top: `${box.top - PAD}px`,
+    width: `${box.width + PAD * 2}px`, height: `${box.height + PAD * 2}px`,
+    borderRadius: rad.endsWith('%') ? rad : `${(parseFloat(rad) || 0) + PAD}px`,
+  });
+  host.append(m);
+  return m;
 }
 
 /**
  * Ties a control on the hardware to the one it drives in the app: a mark
- * round each, shaped to its own corners, a gently curved line between them
- * in Interlude's blue, and one dot of light that travels it as the change
- * goes through. While it's up it follows both ends, so it moves when a
- * fader or knob moves. Returns a function that ends it; .pulse() sends the
- * dot.
+ * round each, a soft S of a line between them (out of the hardware
+ * straight up, into the app from below), and one bright stretch of light
+ * that runs along it as the change goes through. Only one is ever up: a
+ * new one ends the last. Returns a function that ends it; .pulse() sends
+ * the light.
  */
 function link(hw, appEl, label) {
-  // The app's end is looked up afresh each frame, so a re-rendered row or a
-  // moved selection never leaves the mark on a stale node.
-  const target = () => (typeof appEl === 'function' ? appEl() : appEl);
+  links.forEach((end) => end(true));
+  const app = typeof appEl === 'function' ? appEl() : appEl;
   const end = () => {};
   end.pulse = () => {};
-  if (!hw || !target()) return end;
+  if (!hw || !app) return end;
   const svg = layer();
   const mk = (tag, cls) => {
     const n = document.createElementNS(NS, tag);
@@ -291,7 +301,7 @@ function link(hw, appEl, label) {
     svg.append(n);
     return n;
   };
-  const marks = inputStyle !== 'label' ? [mk('rect', 'link-ring'), mk('rect', 'link-ring')] : [];
+  const marks = inputStyle !== 'label' ? [markOn(hw), markOn(app)].filter(Boolean) : [];
   const path = inputStyle === 'line' ? mk('path', 'link-line') : null;
   let tag = null;
   if (inputStyle === 'label' && label) {
@@ -301,9 +311,6 @@ function link(hw, appEl, label) {
     document.getElementById('hero').append(tag);
   }
   let geom = null;
-  // The way it was first drawn: out of the hardware straight up (or down),
-  // into the app from below (or above), one soft S between. It starts and
-  // ends on the marks' own edges, so it meets them with no gap.
   const curve = (t) => {
     const { p0, c0, c1, p1 } = geom;
     const u = 1 - t;
@@ -313,70 +320,16 @@ function link(hw, appEl, label) {
     };
   };
   let spark = null;
-  const sizes = [];
-  let anchor = null;
   const place = () => {
     const h = heroBox();
-    const app = target();
-    const ra = hw.getBoundingClientRect();
-    const rb = app?.isConnected ? rectOf(app) : null;
-    if (!rb || !rb.width || !rb.height) {
-      svg.style.visibility = 'hidden';
-      return;
-    }
-    svg.style.visibility = '';
-    // Each mark's size is taken once, when it appears (or when the app's end
-    // becomes a different element); after that it only follows the
-    // control's centre. So a key going down doesn't make its ring shrink or
-    // pulse, while a fader cap's ring travels with the cap.
-    const box = (r, el, slot) => {
-      const py = PAD * (r.height / (el.offsetHeight || r.height));
-      if (!sizes[slot] || sizes[slot].el !== el) {
-        const [rx, ry] = radiiOf(el, r);
-        sizes[slot] = { el, w: r.width, h: r.height, py, rx, ry };
-      }
-      const z = sizes[slot];
-      // A key going down shrinks a few percent: ignored. A real change of
-      // size (a new title) is eased into, never jumped to.
-      const dw = r.width / z.w - 1;
-      const dh = r.height / z.h - 1;
-      if (Math.abs(dw) > 0.1 || Math.abs(dh) > 0.1) {
-        z.w += (r.width - z.w) * 0.18;
-        z.h += (r.height - z.h) * 0.18;
-      }
-      // It stays put unless the control really travels (a fader cap, a
-      // crossfader): a key's few pixels of travel don't move its mark.
-      const x = r.left - h.left + r.width / 2;
-      const y = r.top - h.top + r.height / 2;
-      if (!z.home) z.home = { x, y };
-      if (!z.moving && Math.hypot(x - z.home.x, y - z.home.y) > 4) z.moving = true;
-      const cx = z.moving ? x : z.home.x;
-      const cy = z.moving ? y : z.home.y;
-      return { ...z, cx, cy, top: cy - z.h / 2 - z.py, bottom: cy + z.h / 2 + z.py };
-    };
-    const A = box(ra, hw, 0);
-    const B = box(rb, app, 1);
-    [[marks[0], A], [marks[1], B]].forEach(([m, z]) => {
-      if (!m) return;
-      m.setAttribute('x', String(z.cx - z.w / 2 - PAD));
-      m.setAttribute('y', String(z.top));
-      m.setAttribute('width', String(z.w + PAD * 2));
-      m.setAttribute('height', String(z.h + z.py * 2));
-      m.setAttribute('rx', String(z.rx + PAD));
-      m.setAttribute('ry', String(z.ry + z.py));
-    });
-    const up = B.cy < A.cy;
-    const p0 = { x: A.cx, y: up ? A.top : A.bottom };
-    const p1 = { x: B.cx, y: up ? B.bottom : B.top };
+    const ra = (marks[0] ?? hw).getBoundingClientRect();
+    const rb = (marks[1] ?? app).getBoundingClientRect();
+    if (!rb.width || !app.isConnected) return;
+    const up = rb.top + rb.height / 2 < ra.top + ra.height / 2;
+    const p0 = { x: ra.left - h.left + ra.width / 2, y: (up ? ra.top : ra.bottom) - h.top };
+    const p1 = { x: rb.left - h.left + rb.width / 2, y: (up ? rb.bottom : rb.top) - h.top };
     const lift = Math.max(40, Math.abs(p0.y - p1.y) * 0.5) * (up ? -1 : 1);
-    // The bends are set where the line was first drawn and follow the ends
-    // only part of the way: when the ends move the line flexes, rather than
-    // the whole thing sliding along as one.
-    if (!anchor) anchor = { p0: { ...p0 }, p1: { ...p1 }, lift };
-    const FOLLOW = 0.35;
-    const c0 = { x: anchor.p0.x + (p0.x - anchor.p0.x) * FOLLOW, y: anchor.p0.y + anchor.lift + (p0.y - anchor.p0.y) * FOLLOW };
-    const c1 = { x: anchor.p1.x + (p1.x - anchor.p1.x) * FOLLOW, y: anchor.p1.y - anchor.lift + (p1.y - anchor.p1.y) * FOLLOW };
-    geom = { p0, p1, c0, c1 };
+    geom = { p0, p1, c0: { x: p0.x, y: p0.y + lift }, c1: { x: p1.x, y: p1.y - lift } };
     const d = `M${p0.x} ${p0.y} C ${geom.c0.x} ${geom.c0.y}, ${geom.c1.x} ${geom.c1.y}, ${p1.x} ${p1.y}`;
     path?.setAttribute('d', d);
     spark?.setAttribute('d', d);
@@ -386,9 +339,9 @@ function link(hw, appEl, label) {
     const total = path.getTotalLength();
     path.style.strokeDasharray = `${total} ${total}`;
     path.animate([{ strokeDashoffset: total }, { strokeDashoffset: 0 }], { duration: LINK_IN, easing: 'cubic-bezier(0.45, 0, 0.55, 1)', fill: 'forwards' })
-      .finished.then(() => (path.style.strokeDasharray = 'none'));
+      .finished.then(() => (path.style.strokeDasharray = 'none'), () => {});
   }
-  if (tag) {
+  if (tag && geom) {
     tag.animate(Array.from({ length: 13 }, (_, i) => {
       const p = curve(i / 12);
       return { transform: `translate(${p.x}px, ${p.y - 28}px) translate(-50%, -50%)` };
@@ -396,7 +349,6 @@ function link(hw, appEl, label) {
     tag.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 250, fill: 'both' });
   }
   requestAnimationFrame(() => [...marks, path].forEach((p) => p?.classList.add('on')));
-  // Follow both ends while the link is up.
   let alive = true;
   const follow = () => {
     if (!alive) return;
@@ -405,8 +357,6 @@ function link(hw, appEl, label) {
   };
   requestAnimationFrame(follow);
 
-  // The pulse: a short brighter stretch of the line itself, running along
-  // it once, hardware to app, and fading as it arrives.
   let sent = false;
   const pulse = () => {
     if (!path || sent) return;
@@ -416,6 +366,7 @@ function link(hw, appEl, label) {
     const SEG = 64;
     const t0 = performance.now();
     const step = (now) => {
+      if (!spark) return;
       const t = Math.min(1, (now - t0) / TRAVEL);
       const e = -(Math.cos(Math.PI * t) - 1) / 2;
       const total = spark.getTotalLength();
@@ -431,13 +382,17 @@ function link(hw, appEl, label) {
     requestAnimationFrame(step);
   };
   let ended = false;
-  const done = () => {
+  const done = (now = false) => {
     if (ended) return;
     ended = true;
     links.delete(done);
     alive = false;
     spark?.remove();
     spark = null;
+    if (now === true) {
+      [...marks, path, tag].forEach((p) => p?.remove());
+      return;
+    }
     for (const p of [...marks, path]) p?.classList.remove('on');
     if (tag) tag.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 300, fill: 'forwards' }).finished.then(() => tag.remove());
     setTimeout(() => [...marks, path].forEach((p) => p?.remove()), 420);
@@ -462,29 +417,39 @@ const controller = {
   async sync(a, d) {
     const cap = $(`[data-hw="pitch-${d}"]`);
     const slot = cap?.parentElement;
-    const appFader = () => { const f = deckEl(d).querySelector('[role="slider"]'); return f?.querySelector('.cap') ?? f; };
+    const appFader = () => deckEl(d).querySelector('[role="slider"][aria-label$="pitch"] .cap');
     const other = engine.decks[1 - d];
     const rate0 = engine.decks[d].rate || 1;
     const target = (other.bpm * other.rate) / (engine.decks[d].bpm || other.bpm);
     if (!cap || !slot || !Number.isFinite(target)) return;
+    // The fader's range is the app's (it widens if the tempo needs more),
+    // so the hardware cap ends where the app's will.
+    const RANGES = [0.08, 0.16, 0.5];
+    let range = 0.08;
+    try { range = RANGES.includes(+localStorage.getItem(`oss-dj.pitchRange.${d}`)) ? +localStorage.getItem(`oss-dj.pitchRange.${d}`) : 0.08; } catch {}
+    while (Math.abs(target - 1) > range && range < 0.5) range = RANGES[RANGES.indexOf(range) + 1];
+    const atOf = (rate) => Math.max(-1, Math.min(1, (rate - 1) / range));
     cap.setAttribute('data-target', `c-pitch-${d}`);
     const s = slot.getBoundingClientRect();
     const h = heroBox();
+    const yOf = (at) => s.top - h.top + s.height * (0.5 + at * 0.45);
     const from = a.center(`c-pitch-${d}`);
-    const at = Math.max(-1, Math.min(1, (target - 1) / 0.08));
-    const to = { x: from.x, y: s.top - h.top + s.height * (0.5 + at * 0.45) };
     await a.move(from);
     const tie = link(cap, appFader, 'Tempo');
     await a.wait(LEAD);
-    let next = 0;
-    await a.drag(to, (_p, _f, t) => {
+    cap.setAttribute('data-held', '');
+    const at0 = parseFloat(cap.style.getPropertyValue('--at')) || atOf(rate0);
+    const at1 = atOf(target);
+    tie.pulse();
+    await a.drag({ x: from.x, y: yOf(at1) - yOf(at0) + from.y }, (_p, _f, t) => {
+      cap.style.setProperty('--at', String(at0 + (at1 - at0) * t));
       const rate = rate0 + (target - rate0) * t;
       onLanding(() => control({ type: 'setRate', deck: d, rate }));
-      if (t >= next) { tie.pulse(); next = 2; }
-    }, { duration: 1700, path: straight });
+    }, { duration: 1500, path: straight });
     await a.wait(TRAVEL);
     control({ type: 'setRate', deck: d, rate: target });
     await a.wait(400);
+    cap.removeAttribute('data-held');
     tie();
     await a.wait(200);
     await hwPress(a, `c-sync-${d}`, () => $('.btn.sync', deckEl(d)).click(), 'Sync', () => $('.btn.sync', deckEl(d)));
@@ -492,21 +457,24 @@ const controller = {
   play: (a, d) => hwPress(a, `c-play-${d}`, () => $('.btn.play', deckEl(d)).click(), engine.decks[d].playing ? 'Pause' : 'Play', () => $('.btn.play', deckEl(d))),
   async crossfade(a, to) {
     const capEl = $('[data-target="c-xf-cap"]');
+    const hw = $('.hw');
     const r = a.rect('c-xf');
     const xf = engine.mixer?.crossfader ?? 0;
     const y = r.y + r.height / 2;
     await a.move({ x: r.x + ((xf + 1) / 2) * r.width, y });
-    const tie = link(capEl, $('.cap', crossfader()), 'Crossfader');
+    const tie = link(capEl, () => $('.cap', crossfader()), 'Crossfader');
     await a.wait(LEAD);
-    let next = 0;
-    await a.drag({ x: r.x + ((to + 1) / 2) * r.width, y }, (at, _f, t) => {
+    capEl.setAttribute('data-held', '');
+    tie.pulse();
+    await a.drag({ x: r.x + ((to + 1) / 2) * r.width, y }, (at) => {
       const value = Math.max(-1, Math.min(1, ((at.x - r.x) / r.width) * 2 - 1));
+      hw?.style.setProperty('--xf', String((value + 1) / 2));
       onLanding(() => control({ type: 'setCrossfader', value }));
-      if (t >= next) { tie.pulse(); next = 2; }
     }, { duration: 2200, path: straight });
     await a.wait(TRAVEL);
     control({ type: 'setCrossfader', value: to });
     await a.wait(400);
+    capEl.removeAttribute('data-held');
     tie();
   },
   async load(a, d, row) {
@@ -673,6 +641,7 @@ const controllerFeatures = {
     const from = { x: r.x + r.width / 2, y: r.y + r.height / 2 };
     const tie = link(hw, app, 'Low EQ');
     await a.wait(LEAD);
+    hw.setAttribute('data-held', '');
     let steps = 0;
     let next = 0;
     await a.drag({ x: from.x, y: from.y + 40 }, (at, _f, t) => {
@@ -684,6 +653,7 @@ const controllerFeatures = {
     await a.wait(TRAVEL);
     key(app, 'Home');
     await a.wait(400);
+    hw.removeAttribute('data-held');
     tie();
     await a.wait(500);
     app.dispatchEvent(new FocusEvent('blur'));
@@ -697,14 +667,15 @@ const controllerFeatures = {
     const from = { x: r.x + r.width / 2, y: r.y + r.height / 2 + 40 };
     const tie = link(hw, lowEq(d), 'Low EQ');
     await a.wait(LEAD);
+    hw.setAttribute('data-held', '');
     tie.pulse();
     await a.drag({ x: from.x, y: from.y - 40 }, (at) => {
       hw.style.rotate = `${-Math.max(0, Math.min(1, (at.y - (from.y - 40)) / 40)) * 150}deg`;
     }, { duration: 700, path: straight });
-    hw.style.rotate = '';
     await a.wait(TRAVEL - 400);
     lowEq(d).dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
     await a.wait(400);
+    hw.removeAttribute('data-held');
     tie();
     await a.wait(500);
     lowEq(d).dispatchEvent(new FocusEvent('blur'));
