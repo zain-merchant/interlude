@@ -551,3 +551,7 @@ html[data-nav="morph"] .nav-dl path { fill: none; stroke: currentColor; stroke-w
 /* Install steps: the number sits just above its heading, close to it, on
    the same left edge as the heading and the text. */
 .steps li[data-picture] > .num:not(.pic) { margin-bottom: 6px; }
+
+/* Nothing may scroll the page sideways (parked nav buttons, decorative
+   layers); clip, unlike hidden, keeps the sticky nav working. */
+html, body { overflow-x: clip; }
