@@ -119,14 +119,14 @@ async function setUp() {
   await until(() => engine.decks[1].loaded);
   await control({ type: 'setCrossfader', value: -1 });
   hideToast();
-  // The library analyzes in the background; let it finish so its header is calm.
-  await until(() => !/analyzing/i.test(document.body.textContent), 10000).catch(() => {});
+  // (The library analyzes in the background; the demo hides that note, so
+  // there's no need to wait for it.)
   // The app restores its saved mixer as it starts, so set the crossfader
   // last: all the way over to deck A, the deck that's playing.
   await control({ type: 'setCrossfader', value: -1 });
   await until(() => (engine.mixer?.crossfader ?? -1) <= -0.99, 2000).catch(() => {});
   // Let the waveforms, meters and BPM readouts settle before anyone sees them.
-  await sleep(500);
+  await sleep(250);
 }
 
 /** A fader runs in a slot: the hand follows it in a straight line, not an arc. */
