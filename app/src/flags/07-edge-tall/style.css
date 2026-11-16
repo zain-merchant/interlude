@@ -1,0 +1,9 @@
+/* #7: the deck row grows up to a maximum; the waveform row takes what's
+   left (it keeps its 136px minimum). Grid sizing fills the capped row
+   first, so nothing changes until the decks reach their cap. */
+:root[data-flag-edge-tall] .app {
+  grid-template-rows: minmax(136px, 1fr) minmax(300px, var(--flag-edge-tall-decks, 460px)) var(--gap) var(--lib);
+}
+:root[data-flag-edge-tall] .app.sampling {
+  grid-template-rows: minmax(136px, 1fr) minmax(300px, var(--flag-edge-tall-decks, 460px)) var(--sampler) var(--gap) var(--lib);
+}
