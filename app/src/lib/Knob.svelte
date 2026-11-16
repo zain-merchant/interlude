@@ -2,6 +2,7 @@
   import { showTip, hideTip, tip, tipText } from './tooltip.svelte.js';
   import { openMenu } from './menu.svelte.js';
   import { detent, keyValue } from './control.js';
+  import { flag } from '../flags/registry.svelte.js';
 
   /**
    * A rotary knob: a machined graphite cap with a white indicator inside an
@@ -43,6 +44,8 @@
   // The default comes back exact, not as a round trip through the taper.
   const setPos = (p) => set(p === resetPos ? reset : taper.fromPos(clampPos(p)));
   const killed = $derived(kill !== undefined && value <= kill);
+  // #5 (UI audit flag): no-shift drops the " · kill" suffix, which widened the mixer; the label's colour and mark show the kill instead.
+  const killText = $derived(killed && !flag('no-shift') ? ' · kill' : '');
   // Angles from 12 o'clock, clockwise.
   const angle = (p) => -135 + p * 270;
   let beforeKill = 0;
@@ -159,7 +162,7 @@
   </div>
   {#if kill !== undefined}
     <button class="label" class:killed onclick={toggleKill} aria-pressed={killed}
-      use:tip={() => (killed ? `Bring back ${name}` : `Kill ${name}`)}>{label}{killed ? ' · kill' : ''}</button>
+      use:tip={() => (killed ? `Bring back ${name}` : `Kill ${name}`)}>{label}{killText}</button>
   {:else if label}
     <span class="label">{label}</span>
   {/if}
