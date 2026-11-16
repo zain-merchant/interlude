@@ -329,7 +329,8 @@ export function start() {
   const mo = new MutationObserver((records) => {
     for (const rec of records) {
       if (rec.type === 'attributes') {
-        if (tracked.has(rec.target)) restyled.add(rec.target);
+        const el = /** @type {Element} */ (rec.target);
+        if (tracked.has(el)) restyled.add(el);
         continue;
       }
       rec.removedNodes.forEach(forget);
