@@ -1,9 +1,8 @@
 // A two-deck DJ controller, drawn top-down, for the hero's controller
-// version. It isn't any one model, but it's laid out the way the common
-// two-channel ones are: long tempo faders at the outer edges, a jog wheel,
-// transport and eight performance pads on each deck, and a mixer between
-// them with a browse knob, load keys, trim and three-band EQ, LED meters,
-// channel faders and a crossfader.
+// version. It isn't any one model, and it carries only what the hero plays,
+// each part large: per deck a tempo fader, a jog wheel, Sync and Play; in
+// the middle a browse knob (turn to choose, push to load), a Low knob per
+// channel, and the crossfader.
 //
 // Nothing on it is set by hand. Each frame it reads the app's engine, so
 // its jogs turn with the decks, its play and cue keys light with them, its
@@ -15,7 +14,6 @@ import { engine } from '$lib/engine.svelte.js';
 
 // 33⅓ rpm: how far a platter turns in a second, in degrees.
 const DEG_PER_SEC = (100 / 3 / 60) * 360;
-const SEGMENTS = 9;
 
 function Deck({ side }) {
   const d = side === 'left' ? 0 : 1;
@@ -32,14 +30,8 @@ function Deck({ side }) {
         <div className="hw-jog__hub" />
       </div>
       <div className="hw-bottom">
-        <div className="hw-transport">
-          <div className="hw-round hw-cue" data-target={`c-cue-${d}`} data-hw={`cue-${d}`}><span>Cue</span></div>
-          <div className="hw-round hw-play" data-target={`c-play-${d}`} data-hw={`play-${d}`}>
-            <svg viewBox="0 0 18 12" aria-hidden><path d="M1.5 1.6v8.8l6.6-4.4z" /><rect x="10.6" y="1.6" width="2" height="8.8" rx=".6" /><rect x="14.4" y="1.6" width="2" height="8.8" rx=".6" /></svg>
-          </div>
-        </div>
-        <div className="hw-pads">
-          {Array.from({ length: 8 }, (_, i) => <i key={i} className="hw-pad" data-hw={`pad-${d}-${i}`} data-target={`c-pad-${d}-${i}`} />)}
+        <div className="hw-round hw-play" data-target={`c-play-${d}`} data-hw={`play-${d}`}>
+          <svg viewBox="0 0 18 12" aria-hidden><path d="M1.5 1.6v8.8l6.6-4.4z" /><rect x="10.6" y="1.6" width="2" height="8.8" rx=".6" /><rect x="14.4" y="1.6" width="2" height="8.8" rx=".6" /></svg>
         </div>
       </div>
     </div>
@@ -71,24 +63,7 @@ function Knob({ label, hw }) {
 function Channel({ d }) {
   return (
     <div className="hw-channel">
-      <Knob label="Trim" />
-      <Knob label="Hi" />
-      <Knob label="Mid" />
       <Knob label="Low" hw={`low-${d}`} />
-      <Knob label="Filter" />
-      <div className="hw-key hw-cuebtn"><span>Cue</span></div>
-      <div className="hw-fader">
-        <div className="hw-fader__slot" />
-        <div className="hw-fader__cap" />
-      </div>
-    </div>
-  );
-}
-
-function Meter({ d }) {
-  return (
-    <div className="hw-meter" data-hw={`meter-${d}`}>
-      {Array.from({ length: SEGMENTS }, (_, i) => <i key={i} data-level={i === 0 ? 'peak' : i < 3 ? 'hot' : undefined} />)}
     </div>
   );
 }
@@ -115,12 +90,6 @@ export function Controller({ shown }) {
           Math.abs(deck.bpm * deck.rate - engine.decks[1 - d].bpm * engine.decks[1 - d].rate) < 0.01);
         // ±8% is the cap's travel either side of the middle; faster is toward you.
         el(`pitch-${d}`)?.style.setProperty('--at', String(Math.max(-1, Math.min(1, ((deck.rate ?? 1) - 1) / 0.08))));
-        const meter = el(`meter-${d}`);
-        if (meter) {
-          // Segments light from the bottom; the top one is the peak.
-          const lit = Math.round(Math.min(1, Math.sqrt(engine.deckLevels[d] ?? 0)) * SEGMENTS);
-          [...meter.children].forEach((seg, i) => seg.toggleAttribute('data-lit', SEGMENTS - i <= lit));
-        }
       }
       const xf = engine.mixer?.crossfader ?? 0;
       root.current?.style.setProperty('--xf', String((xf + 1) / 2));
@@ -137,17 +106,11 @@ export function Controller({ shown }) {
         <Deck side="left" />
         <div className="hw-mixer">
           <div className="hw-browse-row">
-            <div className="hw-key hw-load" data-target="c-load-0"><span>Load</span></div>
             <div className="hw-browse" data-target="c-browse"><i /></div>
-            <div className="hw-key hw-load" data-target="c-load-1"><span>Load</span></div>
+            <span className="hw-print">Push to load</span>
           </div>
           <div className="hw-channels">
             <Channel d={0} />
-            <div className="hw-master">
-              <Knob label="Master" />
-              <Knob label="Cue mix" />
-              <div className="hw-meters"><Meter d={0} /><Meter d={1} /></div>
-            </div>
             <Channel d={1} />
           </div>
           <div className="hw-xf" data-target="c-xf">

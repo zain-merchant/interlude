@@ -29,24 +29,40 @@ import { Stage } from './stageshow/stage';
 import { Count, Collapse } from './stageshow/motion';
 import './pictures.css';
 
+// Timing, one system for every picture. A press reads in PRESS (Emil
+// Kowalski's 100–160ms for feedback). These are little stories, not UI
+// responses, so movement takes longer than his under-300ms rule for
+// interface motion: MOVE on a soft ease-in-out. Related motions overlap,
+// CASCADE apart. Across cards, Replay paces when each picture starts.
+const START = 120;
+const PRESS = 140;
+const MOVE = 950;
+const CASCADE = 140;
+
 export const PW = 360;
-export const PH = 196;
+export const PH = 176;
 const TOKENS = { '--ss-font': "'Geist', 'Geist Variable', 'Helvetica Neue', Arial, sans-serif" };
 const ICON = new URL('../../site/img/icon.svg', import.meta.url).href;
 
 /** The frame every picture shares. */
-function Pic({ id, initial, poster, script, delay = 0, bleed, children }) {
+function Pic({ id, initial, poster, script, gate, onDone, bleed, children }) {
   return (
     <Stage width={PW} height={PH} theme="dark" unframed play="once" tokens={TOKENS} className={`p p-${id}`}
       initial={initial} poster={poster}
       script={async (a) => {
-        await a.wait(250 + delay);
+        // Wait for this picture's turn (Replay's sequence), then play.
+        await gate;
+        await a.wait(START);
         await script(a);
+        onDone?.();
       }}>
       {(s) => <div className="p-body" data-bleed={bleed}>{children(s)}</div>}
     </Stage>
   );
 }
+
+// A soft ease-in-out (sine): unhurried at both ends.
+const inOut = (t) => -(Math.cos(Math.PI * t) - 1) / 2;
 
 /** Eases a number in state from `from` to `to` over `ms`, a frame at a time. */
 async function tween(a, key, from, to, ms, ease = (t) => 1 - (1 - t) ** 3) {
@@ -76,14 +92,15 @@ function Ticks({ deck, offset = 0, stretch = 1 }) {
   );
 }
 
-export function Sync({ delay }) {
+export function Sync(play) {
   return (
-    <Pic id="sync" delay={delay} bleed="right" initial={{ on: false, press: false, lock: false }} poster={{ on: true, press: false, lock: true }}
+    <Pic id="sync" {...play} bleed="right" initial={{ on: false, press: false, lock: false }} poster={{ on: true, press: false, lock: true }}
       script={async (a) => {
         await a.set({ press: true });
-        await a.wait(110);
+        await a.wait(PRESS);
         await a.set({ press: false, on: true });
-        await a.wait(1050);
+        // The lock lights as the beats arrive (the slide is 0.75 s).
+        await a.wait(650);
         await a.set({ lock: true });
       }}>
       {(s) => (
@@ -95,11 +112,11 @@ export function Sync({ delay }) {
           </div>
           <div className="p-deckrow" data-deck="b">
             <span className="p-chip">B</span>
-            <b className="p-bpm"><Count value={s.on ? 129 : B_FROM} format={(n) => n.toFixed(2)} duration={900} /></b>
+            <b className="p-bpm"><Count value={s.on ? 129 : B_FROM} format={(n) => n.toFixed(2)} duration={700} /></b>
             <Ticks deck="b" offset={s.on ? 0 : TICK * 0.6} stretch={s.on ? 1 : 129 / B_FROM} />
           </div>
           <div className="p-locks" aria-hidden>
-            {[0, 4, 8].map((i) => <i key={i} style={{ left: i * TICK }} />)}
+            {[0, 4, 8, 12].map((i, n) => <i key={i} style={{ left: i * TICK, '--n': n }} />)}
           </div>
           <div className="p-sync__key">
             <div className="p-btn" data-on={s.on || undefined} data-press={s.press || undefined}>Sync</div>
@@ -142,16 +159,25 @@ function Knob({ label, pos, killed, size = 44 }) {
   );
 }
 
-export function Eq({ delay }) {
+export function Eq(play) {
+  // All three turn, the way a DJ shapes a track: High up a touch, Mid down,
+  // then Low all the way to its kill.
   return (
-    <Pic id="eq" delay={delay} initial={{ low: 0.5 }} poster={{ low: 0 }}
+    <Pic id="eq" {...play} initial={{ hi: 0.5, mid: 0.5, low: 0.5 }} poster={{ hi: 0.9, mid: 0.18, low: 0 }}
       script={async (a) => {
-        await tween(a, 'low', 0.5, 0, 950, (t) => (t < 0.5 ? 4 * t ** 3 : 1 - (-2 * t + 2) ** 3 / 2));
+        // One cascade, well staggered so each knob is seen to turn; Low
+        // travels furthest, so it turns longest.
+        const GAP = 380;
+        await Promise.all([
+          tween(a, 'hi', 0.5, 0.9, 1050, inOut),
+          a.wait(GAP).then(() => tween(a, 'mid', 0.5, 0.18, 1050, inOut)),
+          a.wait(GAP * 2).then(() => tween(a, 'low', 0.5, 0, 1250, inOut)),
+        ]);
       }}>
       {(s) => (
         <div className="p-eq">
-          <Knob label="High" pos={0.5} />
-          <Knob label="Mid" pos={0.58} />
+          <Knob label="High" pos={s.hi} />
+          <Knob label="Mid" pos={s.mid} />
           <Knob label="Low" pos={s.low} killed={s.low <= 0.001} />
         </div>
       )}
@@ -159,7 +185,7 @@ export function Eq({ delay }) {
   );
 }
 
-/* ---------------- Stems: the lanes run off the right edge ---------------- */
+/* ---------------- Stems: parts in and out, each lane running off the right ---------------- */
 
 const STEMS = ['Vocals', 'Melody', 'Bass', 'Drums'];
 const STEM_SHAPES = [
@@ -168,29 +194,28 @@ const STEM_SHAPES = [
   (i) => (i % 2 === 0 ? 0.72 : 0.38),
   (i) => (i % 4 === 0 ? 0.95 : i % 2 === 0 ? 0.42 : 0.2),
 ];
-export function Stems({ delay }) {
+// Which stems are muted, step by step: vocals out, then drums, the vocals
+// back, the melody out. Each lane flattens or grows back, left to right.
+const STEM_STEPS = [[0], [0, 3], [3], [3, 1]];
+export function Stems(play) {
   return (
-    <Pic id="stems" delay={delay} bleed="right" initial={{ muted: false }} poster={{ muted: true }}
+    <Pic id="stems" {...play} bleed="right" initial={{ muted: [] }} poster={{ muted: STEM_STEPS.at(-1) }}
       script={async (a) => {
-        await a.wait(500);
-        await a.set({ muted: true });
+        for (const muted of STEM_STEPS) {
+          await a.set({ muted });
+          await a.wait(700);
+        }
       }}>
       {(s) => (
         <div className="p-stems">
-          {STEMS.map((name, k) => {
-            const muted = k === 0 && s.muted;
-            return (
-              <div key={name} className="p-stem" data-muted={muted || undefined}>
-                <span className="p-stem__btn"><i />{name}</span>
-                {/* Playing: the lane scrolls by, two copies of its bars end to end. */}
-                <div className="p-stem__wave">
-                  <div className="p-stem__run">
-                    {Array.from({ length: 80 }, (_, i) => <b key={i} style={{ '--h': STEM_SHAPES[k](i % 40), '--i': i % 40 }} />)}
-                  </div>
-                </div>
+          {STEMS.map((name, k) => (
+            <div key={name} className="p-stem" data-muted={s.muted.includes(k) || undefined}>
+              <span className="p-stem__btn"><i />{name}</span>
+              <div className="p-stem__wave">
+                {Array.from({ length: 40 }, (_, i) => <b key={i} style={{ '--h': STEM_SHAPES[k](i), '--i': i }} />)}
               </div>
-            );
-          })}
+            </div>
+          ))}
         </div>
       )}
     </Pic>
@@ -207,33 +232,46 @@ const ROWS = [
   { title: 'Glasshouse', artist: 'Sable & Ash', bpm: 124, key: 'Am' },
   { title: 'Signal Fire', artist: 'Low Orbit', bpm: 125, key: 'Gm' },
 ];
-export function Search({ delay }) {
+// Library: three of its parts laid out loose on the surface, like things
+// knolled on a desk, each a different size, each doing its one thing in
+// turn: search narrowing, an import checking off, the formats it plays.
+const FORMATS = ['MP3', 'FLAC', 'WAV', 'AIFF', 'AAC', 'ALAC'];
+export function Search(play) {
   return (
-    <Pic id="search" delay={delay} bleed="bottom" initial={{ q: '', done: false }} poster={{ q: 'glass', done: true }}
+    <Pic id="search" {...play} initial={{ q: '', n: 2184, imp: 0, fmt: -1 }} poster={{ q: 'glass', n: 2, imp: 2, fmt: FORMATS.length }}
       script={async (a) => {
-        await a.type('q', 'glass', { interval: 85 });
-        await a.wait(120);
-        await a.set({ done: true });
+        const counts = [2184, 642, 117, 23, 4, 2];
+        for (let i = 1; i <= 5; i++) {
+          await a.set({ q: 'glass'.slice(0, i), n: counts[i] });
+          await a.wait(130);
+        }
+        await a.wait(420);
+        await a.set({ imp: 1 });
+        await a.wait(420);
+        await a.set({ imp: 2 });
+        await a.wait(480);
+        for (let f = 0; f <= FORMATS.length; f++) {
+          await a.set({ fmt: f });
+          await a.wait(120);
+        }
       }}>
       {(s) => (
-        <div className="p-lib">
-          <div className="p-field" data-focus={s.q ? '' : undefined}>
-            <svg viewBox="0 0 16 16" aria-hidden><circle cx="7" cy="7" r="4.5" /><path d="m10.5 10.5 3 3" /></svg>
-            {s.q ? <span className="p-field__q">{s.q}<i className="p-caret" /></span> : <span className="p-field__ph">Search artist, title, folder…</span>}
-            <kbd>⌘F</kbd>
-          </div>
-          <div className="p-rows">
-            {ROWS.map((r) => {
-              const hit = r.title.toLowerCase().includes('glass');
-              return (
-                <Collapse key={r.title} open={!s.done || hit}>
-                  <div className="p-row" data-sel={(s.done && r.title === 'Glass Rooms') || undefined}>
-                    <span>{r.title}</span><span>{r.artist}</span><span>{r.bpm}</span><span>{r.key}</span>
-                  </div>
-                </Collapse>
-              );
-            })}
-          </div>
+        <div className="p-loose">
+          <figure className="p-obj" style={{ left: 16, top: 22 }}>
+            <div className="p-field-lg"><svg viewBox="0 0 16 16" aria-hidden><circle cx="7" cy="7" r="4.5" /><path d="m10.5 10.5 3 3" /></svg><span>{s.q}<i className="p-caret" /></span><em>{s.n.toLocaleString('en')}</em></div>
+            <figcaption>Search</figcaption>
+          </figure>
+          <figure className="p-obj" style={{ left: 16, top: 98 }}>
+            <div className="p-sources">
+              <span data-done={s.imp >= 1 || undefined}><i className="p-check" />Rekordbox</span>
+              <span data-done={s.imp >= 2 || undefined}><i className="p-check" />Serato</span>
+            </div>
+            <figcaption>Import</figcaption>
+          </figure>
+          <figure className="p-obj" style={{ left: 214, top: 18 }}>
+            <div className="p-files">{FORMATS.map((f, i) => <span key={f} data-on={i < s.fmt || undefined}><b>{f}</b></span>)}</div>
+            <figcaption>Every format</figcaption>
+          </figure>
         </div>
       )}
     </Pic>
@@ -245,14 +283,15 @@ export function Search({ delay }) {
 // The top of a controller, run off the bottom of the card: a lead comes
 // down into its back, the pads wake in a sweep, the jog rings light, and
 // the app says it's connected and mapped.
-export function Controllers({ delay }) {
+export function Controllers(play) {
   return (
-    <Pic id="ctl" delay={delay} bleed="bottom" initial={{ plug: false, wake: false, toast: false }} poster={{ plug: true, wake: true, toast: true }}
+    <Pic id="ctl" {...play} bleed="bottom" initial={{ plug: false, wake: false, toast: false }} poster={{ plug: true, wake: true, toast: true }}
       script={async (a) => {
         await a.set({ plug: true });
-        await a.wait(520);
-        await a.set({ wake: true });
+        // It wakes as the plug seats; the toast follows close behind.
         await a.wait(380);
+        await a.set({ wake: true });
+        await a.wait(140);
         await a.set({ toast: true });
       }}>
       {(s) => (
@@ -268,35 +307,54 @@ export function Controllers({ delay }) {
             <div className="p-ctl__pads">{Array.from({ length: 4 }, (_, i) => <i key={i} style={{ '--i': i }} />)}</div>
             <div className="p-ctl__pads" data-deck="b">{Array.from({ length: 4 }, (_, i) => <i key={i} style={{ '--i': 4 + i }} />)}</div>
           </div>
-          <div className="p-toast" data-on={s.toast || undefined}><i />DDJ-FLX4 connected <span>· mapped</span></div>
+          <div className="p-toast" data-on={s.toast || undefined}><i />DDJ-FLX4 connected</div>
         </div>
       )}
     </Pic>
   );
 }
 
-/* ---------------- Recording: the take runs off the right edge ---------------- */
+/* ---------------- Recording and more: three extras, knolled ---------------- */
 
-const TAKE = Array.from({ length: 52 }, (_, i) => 0.22 + 0.62 * Math.abs(Math.sin(i * 0.7) * Math.cos(i * 0.23)) + (i % 4 === 0 ? 0.16 : 0));
-export function Record({ delay }) {
+// Three of the extras laid out loose, each a different size, each doing its
+// one thing in turn: the set recording, the sampler firing, a shortcut
+// remapped.
+const PADS = 8;
+export function Extras(play) {
   return (
-    <Pic id="rec" delay={delay} bleed="right" initial={{ on: false, sec: 0 }} poster={{ on: true, sec: 8 }}
+    <Pic id="extras" {...play} initial={{ rec: false, sec: 0, pad: -1, key: 'W' }} poster={{ rec: true, sec: 6, pad: 5, key: 'Space' }}
       script={async (a) => {
-        await a.set({ on: true });
-        for (let sec = 1; sec <= 8; sec++) {
-          await a.wait(380);
-          await a.set({ sec });
+        await a.set({ rec: true });
+        let sec = 0;
+        const clock = setInterval(() => a.put({ sec: Math.min(9, ++sec) }), 450);
+        await a.wait(800);
+        for (const pad of [0, 5, 2, 5]) {
+          await a.set({ pad });
+          await a.wait(220);
         }
+        await a.wait(420);
+        await a.set({ key: 'Space' });
+        await a.wait(1200);
+        clearInterval(clock);
       }}>
       {(s) => (
-        <div className="p-rec">
-          <div className="p-rec__btn" data-on={s.on || undefined}>
-            <i />{s.on ? `0:${String(s.sec).padStart(2, '0')}` : 'Rec'}
-          </div>
-          <div className="p-rec__take">
-            {TAKE.map((h, i) => <b key={i} style={{ '--h': h }} data-in={i < s.sec * 5.5 || undefined} />)}
-          </div>
-          <div className="p-rec__file">Interlude recordings › Friday set.wav</div>
+        <div className="p-loose">
+          <figure className="p-obj" style={{ left: 18, top: 12 }}>
+            <div className="p-rec-lg" data-on={s.rec || undefined}><i /><span>{s.rec ? `0:${String(s.sec).padStart(2, '0')}` : 'Rec'}</span></div>
+            <figcaption>Record</figcaption>
+          </figure>
+          <figure className="p-obj" style={{ left: 196, top: 30 }}>
+            <div className="p-pads p-pads--lg">{Array.from({ length: PADS }, (_, i) => <i key={i} data-on={s.pad === i || undefined} />)}</div>
+            <figcaption>Sampler</figcaption>
+          </figure>
+          <figure className="p-obj" style={{ left: 56, top: 100 }}>
+            <div className="p-remap">
+              <kbd className="p-key">Play</kbd>
+              <svg viewBox="0 0 16 8" aria-hidden><path d="M1 4h13m-3-3 3 3-3 3" /></svg>
+              <kbd className="p-key"><span key={s.key}>{s.key}</span></kbd>
+            </div>
+            <figcaption>Shortcuts</figcaption>
+          </figure>
         </div>
       )}
     </Pic>
@@ -305,51 +363,16 @@ export function Record({ delay }) {
 
 /* ---------------- Install ---------------- */
 
-/**
- * macOS's Applications folder: the light system blue, a tab at the back, a
- * lighter front with a bright lip, and the Applications mark (an A made of
- * a pencil, a paintbrush and a ruler) engraved into it.
- */
-function AppsFolder({ size = 62 }) {
-  return (
-    <svg viewBox="0 0 100 80" width={size} height={size * 0.8} aria-hidden className="p-folder">
-      <defs>
-        <linearGradient id="pf-back" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#3f9af0" /><stop offset="1" stopColor="#2b7fdc" /></linearGradient>
-        <linearGradient id="pf-front" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#77c2fd" /><stop offset="1" stopColor="#4ea5f3" /></linearGradient>
-        <linearGradient id="pf-mark" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#2f7fd4" /><stop offset="1" stopColor="#3b8fe2" /></linearGradient>
-      </defs>
-      {/* The back, with its tab on the left. */}
-      <path d="M6 12a5 5 0 0 1 5-5h22.5a5 5 0 0 1 3.7 1.6l3.4 3.8a5 5 0 0 0 3.7 1.6H89a5 5 0 0 1 5 5V68H6Z" fill="url(#pf-back)" />
-      {/* The front, a touch lower, its top edge catching the light. */}
-      <rect x="6" y="21" width="88" height="53" rx="5" fill="url(#pf-front)" />
-      <path d="M11 21h78a5 5 0 0 1 5 5v.6a5 5 0 0 0-5-4.6H11a5 5 0 0 0-5 4.6V26a5 5 0 0 1 5-5Z" fill="#b9e0ff" />
-      {/* The mark, engraved: a darker blue with a light edge below it. */}
-      <g transform="translate(50 48)">
-        <g fill="#a9d7ff" transform="translate(0 0.8)">
-          <path d="M-3.2-16.5-15 13h5.2L1.6-15.2Z" /><path d="M3.2-16.5 15 13H9.8L-1.6-15.2Z" /><rect x="-11" y="2.5" width="22" height="4" rx="1" />
-        </g>
-        <g fill="url(#pf-mark)">
-          {/* pencil: the left leg, pointed at the foot */}
-          <path d="M-3.2-16.5-14.4 11.6l-.6 2.4 2-1.4L1.6-15.2Z" />
-          {/* paintbrush: the right leg, its bristles at the foot */}
-          <path d="M3.2-16.5 13.2 9.4c.8 2.1 1.3 3.6.9 4.1-.6.4-2.1-.5-3.6-2.3L-1.6-15.2Z" />
-          {/* ruler: the crossbar, with its marks */}
-          <rect x="-11" y="2.5" width="22" height="4" rx="1" />
-        </g>
-        <g stroke="#77c2fd" strokeWidth="0.8">
-          <path d="M-7 2.5v1.6M-3 2.5v1.6M1 2.5v1.6M5 2.5v1.6" />
-        </g>
-      </g>
-    </svg>
-  );
-}
+// macOS's own Applications and Music folder icons, from the system's icon files.
+const APPS = new URL('./apps-folder.png', import.meta.url).href;
+const MUSIC = new URL('./music-folder.png', import.meta.url).href;
 
-export function Download({ delay }) {
+export function Download(play) {
   return (
-    <Pic id="dmg" delay={delay} initial={{ go: false, done: false }} poster={{ go: false, done: true }}
+    <Pic id="dmg" {...play} initial={{ go: false, done: false }} poster={{ go: false, done: true }}
       script={async (a) => {
         await a.set({ go: true });
-        await a.wait(900);
+        await a.wait(720);
         await a.set({ go: false, done: true });
       }}>
       {(s) => (
@@ -362,7 +385,7 @@ export function Download({ delay }) {
             </div>
             <svg className="p-dmg__arrow" viewBox="0 0 60 12" aria-hidden><path d="M2 6h52m-6-5 6 5-6 5" /></svg>
             <div className="p-dmg__item" data-done={s.done || undefined}>
-              <AppsFolder />
+              <img src={APPS} alt="" width="64" height="64" className="p-folder" />
               <span>Applications</span>
             </div>
           </div>
@@ -372,18 +395,18 @@ export function Download({ delay }) {
   );
 }
 
-export function Open({ delay }) {
+export function Open(play) {
   const WORD = 'Interlude';
   return (
-    <Pic id="open" delay={delay} initial={{ n: 0, hit: false, go: false }} poster={{ n: 6, hit: true, go: false }}
+    <Pic id="open" {...play} initial={{ n: 0, hit: false, go: false }} poster={{ n: 6, hit: true, go: false }}
       script={async (a) => {
         for (let n = 1; n <= 6; n++) {
           await a.set({ n, hit: n >= 3 });
-          await a.wait(80);
+          await a.wait(60);
         }
-        await a.wait(300);
+        await a.wait(220);
         await a.set({ go: true });
-        await a.wait(160);
+        await a.wait(PRESS);
         await a.set({ go: false });
       }}>
       {(s) => (
@@ -412,7 +435,7 @@ export function Open({ delay }) {
   );
 }
 
-/* ---------------- Add music: the library filling, running off the bottom ---------------- */
+/* ---------------- Add music: a folder dropped in, the tracks found and worked out ---------------- */
 
 const ADDED = [
   { title: 'Afterglow', artist: 'Deepfield', bpm: 129, key: 'Bm' },
@@ -420,96 +443,183 @@ const ADDED = [
   { title: 'Paper Planes', artist: 'Nova Reyes', bpm: 118, key: 'C' },
   { title: 'Concrete Garden', artist: 'Mara Lune', bpm: 119, key: 'C♯m' },
   { title: 'Slow Burn', artist: 'Nova Reyes', bpm: 123, key: 'Fm' },
-  { title: 'Signal Fire', artist: 'Low Orbit', bpm: 125, key: 'Gm' },
 ];
-export function AddMusic({ delay }) {
+const TOTAL = 48;
+export function AddMusic(play) {
   return (
-    <Pic id="add" delay={delay} bleed="bottom" initial={{ rows: 0, known: 0 }} poster={{ rows: ADDED.length, known: ADDED.length }}
+    <Pic id="add" {...play} bleed="bottom" initial={{ drop: false, rows: 0, known: 0 }} poster={{ drop: true, rows: ADDED.length, known: ADDED.length }}
       script={async (a) => {
+        await a.set({ drop: true });
+        // Tracks start arriving as the folder lands, and are worked out while
+        // they're still arriving.
+        await a.wait(560);
         for (let rows = 1; rows <= ADDED.length; rows++) {
           await a.set({ rows });
-          await a.wait(70);
+          await a.wait(90);
         }
-        await a.wait(250);
+        // Then, calmly, what each one is: its tempo and key, one by one.
+        await a.wait(380);
         for (let known = 1; known <= ADDED.length; known++) {
           await a.set({ known });
-          await a.wait(170);
+          await a.wait(340);
         }
       }}>
-      {(s) => (
-        <div className="p-add">
-          <div className="p-add__head">
-            <span>Title</span><span>BPM</span><span>Key</span>
-            <em>{s.known < s.rows ? `analyzing, ${s.rows - s.known} to go` : `${48} tracks`}</em>
-          </div>
-          {ADDED.map((t, i) => (
-            <div key={t.title} className="p-add__row" data-in={i < s.rows || undefined}>
-              <span className="t"><b>{t.title}</b>{t.artist}</span>
-              <span className="v" data-known={i < s.known || undefined}>{i < s.known ? t.bpm : '—'}</span>
-              <span className="v" data-known={i < s.known || undefined}>{i < s.known ? t.key : '—'}</span>
+      {(s) => {
+        const ready = s.known >= ADDED.length;
+        return (
+          <div className="p-add" data-drop={s.drop || undefined} data-ready={ready || undefined}>
+            <div className="p-add__zone">
+              <span className="p-add__icon">
+                <img src={MUSIC} alt="" width="34" height="34" className="p-add__folder" />
+                <i className="p-add__badge" />
+              </span>
+              <div className="p-add__status">
+                <b>House</b>
+                <span className="p-add__say" key={ready ? 'r' : 'a'}>{ready ? `${TOTAL} tracks ready to play` : s.known ? `Reading ${Math.round((s.known / ADDED.length) * TOTAL)} of ${TOTAL}` : `Reading ${TOTAL} tracks`}</span>
+              </div>
             </div>
-          ))}
-        </div>
-      )}
+            {ADDED.map((t, i) => (
+              <div key={t.title} className="p-add__row" data-in={i < s.rows || undefined}>
+                <span className="t"><b>{t.title}</b>{t.artist}</span>
+                <span className="v" data-known={i < s.known || undefined}>{i < s.known ? t.bpm : '–'}</span>
+                <span className="v" data-known={i < s.known || undefined}>{i < s.known ? t.key : '–'}</span>
+              </div>
+            ))}
+          </div>
+        );
+      }}
     </Pic>
   );
 }
 
-export const FEATURES = { decks: Sync, mixer: Eq, stems: Stems, library: Search, controllers: Controllers, recording: Record };
+export const FEATURES = { decks: Sync, mixer: Eq, stems: Stems, library: Search, controllers: Controllers, recording: Extras };
 export const INSTALL = { download: Download, open: Open, music: AddMusic };
 
 /* ---------------- Playing them ---------------- */
 
-// Pictures that come into view together start 60ms apart, in reading order
-// (Emil: 30 to 80ms; decorative, never blocking).
-let batch = [];
-let flushing = 0;
-function enqueue(fn) {
-  batch.push(fn);
-  if (!flushing) flushing = setTimeout(() => {
-    batch.forEach((f, i) => f(i * 60));
-    batch = [];
-    flushing = 0;
-  }, 16);
+// The pictures in a grid play one at a time, in reading order: left to
+// right, then the next row. A card's turn comes when its picture and at
+// least 30% of the text below it are on screen. A card still on screen
+// that isn't ready yet holds the queue; cards that are off screen are
+// passed over, so a row scrolled past doesn't hold up the next. A card
+// that leaves the screen entirely resets, to play again when it's back.
+// Hover or click a card to play it again at once.
+const grids = new Map();
+let lastScroll = 0;
+addEventListener('scroll', () => (lastScroll = performance.now()), { passive: true });
+
+function gridOf(card) {
+  const host = card.parentElement;
+  if (!grids.has(host)) {
+    const grid = { host, entries: [], playing: null };
+    grids.set(host, grid);
+    const tick = () => step(grid);
+    addEventListener('scroll', tick, { passive: true });
+    addEventListener('resize', tick);
+  }
+  return grids.get(host);
 }
 
-/**
- * One picture in its card. It plays when the card comes into view, and
- * again each time it's scrolled back to (it resets once it's fully out of
- * view), and when the card is hovered or clicked, once it has finished.
- */
+function measure(e) {
+  const card = e.card.getBoundingClientRect();
+  const pic = e.box.getBoundingClientRect();
+  const vh = innerHeight;
+  const seen = card.bottom > 0 && card.top < vh;
+  const below = card.bottom - pic.bottom;
+  const shownBelow = Math.min(vh, card.bottom) - pic.bottom;
+  const ready = seen && pic.top >= -pic.height * 0.25 && shownBelow >= below * 0.3;
+  return { seen, ready };
+}
+
+function step(grid) {
+  const ordered = [...grid.entries].sort((x, y) => (x.card.compareDocumentPosition(y.card) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1));
+  for (const e of ordered) {
+    const { seen } = measure(e);
+    if (!seen && e.state !== 'idle') e.reset();
+  }
+  if (grid.playing) return;
+  for (const e of ordered) {
+    if (e.state === 'done') continue;
+    const { seen, ready } = measure(e);
+    if (!seen) continue;
+    if (!ready) return;
+    grid.playing = e;
+    e.play();
+    return;
+  }
+}
+
 export function Replay({ Graphic, card }) {
   const box = useRef(null);
-  const [run, setRun] = useState(null);
+  const [run, setRun] = useState({ key: 0, gate: null, release: null });
   useEffect(() => {
+    const grid = gridOf(card);
     let n = 0;
-    let started = 0;
-    const play = (delay = 0) => {
-      started = performance.now();
-      setRun({ key: ++n, delay });
+    let open;
+    const fresh = () => {
+      const gate = new Promise((r) => (open = r));
+      setRun({ key: ++n, gate });
     };
-    const io = new IntersectionObserver((entries) => {
-      for (const e of entries) {
-        if (e.isIntersecting && e.intersectionRatio >= 0.3) enqueue(play);
-        else if (!e.isIntersecting) setRun(null);
-      }
-    }, { threshold: [0, 0.3] });
-    io.observe(box.current);
+    const entry = {
+      card,
+      box: box.current,
+      state: 'idle',
+      play() {
+        entry.state = 'playing';
+        open();
+      },
+      done() {
+        if (entry.state !== 'playing') return;
+        entry.state = 'done';
+        if (grid.playing === entry) grid.playing = null;
+        step(grid);
+      },
+      reset() {
+        if (grid.playing === entry) grid.playing = null;
+        entry.state = 'idle';
+        replaying = false;
+        fresh();
+      },
+    };
+    grid.entries.push(entry);
+    fresh();
+    requestAnimationFrame(() => step(grid));
+    // Play it again, outside the queue, when the mouse really moves over
+    // the card (not when scrolling slides the card under a still pointer)
+    // or when it's clicked; only once it has had its turn.
+    // Never restarts one already running, whichever way it started.
+    let replaying = false;
+    let hovered = false;
     const again = () => {
-      if (performance.now() - started > 1800) play();
+      if (entry.state !== 'done' || replaying) return;
+      replaying = true;
+      setRun({ key: ++n, gate: Promise.resolve() });
     };
-    const host = card ?? box.current;
-    host.addEventListener('pointerenter', again);
-    host.addEventListener('click', again);
+    const move = (e) => {
+      if (hovered || performance.now() - lastScroll < 350) return;
+      if (!e.movementX && !e.movementY) return;
+      hovered = true;
+      again();
+    };
+    const leave = () => (hovered = false);
+    card.addEventListener('pointermove', move);
+    card.addEventListener('pointerleave', leave);
+    card.addEventListener('click', again);
+    entry.finished = () => {
+      replaying = false;
+      entry.done();
+    };
+    box.current.__entry = entry;
     return () => {
-      io.disconnect();
-      host.removeEventListener('pointerenter', again);
-      host.removeEventListener('click', again);
+      grid.entries.splice(grid.entries.indexOf(entry), 1);
+      card.removeEventListener('pointermove', move);
+      card.removeEventListener('pointerleave', leave);
+      card.removeEventListener('click', again);
     };
   }, [card]);
   return (
     <div ref={box} className="p-slot">
-      {run ? <Graphic key={run.key} delay={run.delay} /> : <div className="p-slot__hold" />}
+      {run.gate ? <Graphic key={run.key} gate={run.gate} onDone={() => box.current?.__entry?.finished()} /> : <div className="p-slot__hold" />}
     </div>
   );
 }
