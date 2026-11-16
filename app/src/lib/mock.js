@@ -3,6 +3,9 @@
 // cue works CDJ-style, hot cues, loops and beat jumps behave like the
 // engine's, meters move, and tracks have believable waveforms.
 
+import { flag, setting } from '../flags/registry.svelte.js';
+import { stressLibrary, STRESS_DEVICE, STRESS_REC_OFFSET } from '../flags/08-stress-data/data.js';
+
 const BINS_PER_SEC = 172.27;
 
 const ARTISTS = ['Nova Reyes', 'Kite Theory', 'Mara Lune', 'Deepfield', 'Oskar Velt', 'Juno Hale', 'Sable & Ash', 'Low Orbit'];
@@ -89,8 +92,10 @@ const beatLen = (d) => 60 / d.bpm;
 const clampBeats = (b) => Math.max(1 / 32, Math.min(64, b));
 
 export function createMockBackend() {
-  const tracks = [];
-  for (let i = 0; i < 48; i++) {
+  // #8 (UI audit flag): stress-data serves a worst-case library instead of the demo one; null keeps the demo.
+  const stress = flag('stress-data') ? stressLibrary(setting('stress-data', 'set')) : null;
+  const tracks = stress ? stress.tracks : [];
+  for (let i = 0; !stress && i < 48; i++) {
     const r = rng(hash(`track-${i}`));
     const folder = FOLDERS[i % FOLDERS.length];
     const artist = ARTISTS[Math.floor(r() * ARTISTS.length)];
@@ -102,13 +107,13 @@ export function createMockBackend() {
   }
   const importListeners = new Set();
   // Playlists and History, in memory for the preview.
-  let playlistIds = 2;
-  let playlists = [
+  let playlistIds = stress ? 100 : 2; // #8 (UI audit flag): clear of the stress playlists' ids
+  let playlists = stress?.playlists ?? [
     { id: 1, name: 'Friday warmup', paths: tracks.slice(0, 6).map((t) => t.path) },
     { id: 2, name: 'Peak time', paths: tracks.slice(10, 14).map((t) => t.path) },
   ];
   const DAY = 24 * 3600 * 1000;
-  const sessions = [
+  const sessions = stress?.sessions ?? [
     { start: Date.now() - 2 * DAY, paths: tracks.slice(20, 27).map((t) => t.path) },
     { start: Date.now() - 9 * DAY, paths: tracks.slice(30, 35).map((t) => t.path) },
   ];
@@ -123,6 +128,9 @@ export function createMockBackend() {
   };
   // What "analysis" finds for a track: the same numbers loading it gives.
   const summary = (path) => {
+    // #8 (UI audit flag): a stress track's own analysis (which can be missing or wrong).
+    const st = stress && tracks.find((t) => t.path === path)?.stress;
+    if (st) return { duration: st.duration ?? null, bpm: st.bpm ?? null, key: st.key ?? null, failed: !!st.failed };
     const seed = hash(path);
     return { duration: 300 + Math.floor(rng(seed)() * 180), bpm: 118 + (seed % 12), key: { tonic: seed % 12, minor: seed % 3 !== 0 }, failed: false };
   };
@@ -174,7 +182,7 @@ export function createMockBackend() {
     const playing = s.started != null && t < s.duration;
     return { loaded: s.duration > 0, playing, progress: playing ? t / s.duration : 0, duration: s.duration };
   };
-  let folders = FOLDERS.map((f) => `/Music/${f}`);
+  let folders = stress?.folders ?? FOLDERS.map((f) => `/Music/${f}`);
   let xf = 0;
   let last = performance.now();
   // Simulated audio device, so the disconnect banner can be tried in a
@@ -188,7 +196,7 @@ export function createMockBackend() {
   let learnNext = 0;
   let outputChoice = null;
   globalThis.__mockAudio = {
-    lose: () => (audio = { state: 'lost', device: 'DDJ-FLX4', fallback: 'MacBook Pro Speakers' }),
+    lose: () => (audio = { state: 'lost', device: stress ? STRESS_DEVICE : 'DDJ-FLX4', fallback: 'MacBook Pro Speakers' }), // #8 (UI audit flag)
     restore: () => (audio = { state: 'connected', device: 'DDJ-FLX4', sampleRate: 48000 }),
   };
 
@@ -385,7 +393,8 @@ export function createMockBackend() {
     },
     startRecording: async () => {
       if (rec.active) throw new Error('already recording');
-      Object.assign(rec, { active: true, started: performance.now(), path: '~/Music/Interlude recordings/Set (preview).wav' });
+      // #8 (UI audit flag): under stress-data the clock starts near an hour, to see it roll over.
+      Object.assign(rec, { active: true, started: performance.now() - (stress ? STRESS_REC_OFFSET * 1000 : 0), path: '~/Music/Interlude recordings/Set (preview).wav' });
       return rec.path;
     },
     stopRecording: async () => {
@@ -408,20 +417,23 @@ export function createMockBackend() {
       }
       const seed = hash(path);
       const r = rng(seed);
-      const duration = 300 + Math.floor(r() * 180);
-      const bpm = 118 + (seed % 12);
+      // #8 (UI audit flag): a stress track loads with its own analysis: no beat, no key, two hours, or no decode at all.
+      const st = stress ? summary(path) : null;
+      if (st && st.failed && !st.duration) throw new Error(`The file couldn't be decoded`);
+      const duration = st ? st.duration : 300 + Math.floor(r() * 180);
+      const bpm = st ? st.bpm ?? 0 : 118 + (seed % 12);
       const d = decks[deck];
       keepCues(d);
       const saved = savedCues.get(path);
       Object.assign(d, {
-        loaded: true, playing: false, position: saved?.cue ?? 0, cue: 0, duration, bpm, firstBeat: 0, key: { tonic: seed % 12, minor: seed % 3 !== 0 },
-        waveform: fakeWaveform(seed, duration, bpm), generation: d.generation + 1, ...freshLoops(), path,
+        loaded: true, playing: false, position: saved?.cue ?? 0, cue: 0, duration, bpm, firstBeat: 0, key: st ? st.key : { tonic: seed % 12, minor: seed % 3 !== 0 },
+        waveform: fakeWaveform(seed, duration, bpm || 120), generation: d.generation + 1, ...freshLoops(), path,
         stems: 0b1111, splitFrom: performance.now(),
       }, saved ? { ...saved, hotCues: [...saved.hotCues] } : {});
       return {
         title: t.title, path, duration, sampleRate: 44100,
         binsPerSec: BINS_PER_SEC, binCount: d.waveform.length / 4,
-        beatgrid: { bpm, firstBeat: 0 },
+        beatgrid: bpm ? { bpm, firstBeat: 0 } : null,
       };
     },
     setBeatgrid: async (deck, grid) => {
