@@ -1,0 +1,92 @@
+/* #14: one state system. Resting looks belong to #9; these rules only add
+   or align states. */
+
+/* Hover: a 5% fill and full-strength text everywhere. */
+:root[data-flag-states] .toast .undo:hover,
+:root[data-flag-states] .settings .key:hover,
+:root[data-flag-states] .sampler .close:hover {
+  background: var(--hover);
+  color: var(--fg);
+}
+/* Context menu: hover and arrow-key focus are the current item, so they
+   get the selected fill. */
+:root[data-flag-states] .menu button:is(:hover, :focus-visible):not(:disabled) {
+  background: var(--sel);
+}
+/* Deck tabs and sort headers: hover is a step towards selected, not the
+   same thing. A hovered tab shows a faint underline. */
+:root[data-flag-states] .modes button:not(.on):hover {
+  color: var(--fg-2);
+}
+:root[data-flag-states] .modes button:not(.on):hover::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--line-2);
+}
+:root[data-flag-states] .head .sort:not(.on):hover {
+  color: var(--fg-2);
+}
+
+/* Pressed, buttons: shrink to 97% (as .btn already does) and darken the
+   face a little, so it reads even where the button has no fill. */
+:root[data-flag-states]
+  :is(
+    .btn,
+    .mixer .hp,
+    .mixer button.rec,
+    .toast .undo,
+    .settings .key,
+    .deck .val,
+    .deck .range,
+    .deck .nudge button,
+    .deck .jumps button,
+    .zoom button,
+    .search .clear,
+    .sampler .close,
+    .perf button,
+    .fx button,
+    .stems .stem
+  ):active:not(:disabled, [aria-disabled='true'], .jumps) {
+  transform: scale(0.97);
+  filter: brightness(0.85);
+}
+/* Pressed, list items and tabs: the selected fill, no shrink. */
+:root[data-flag-states] :is([data-region='sidebar'] :is(.item, .add), nav[aria-label='Settings pages'] .item, .modes button):active {
+  background: var(--sel);
+}
+/* A held hot cue (.pressed) is pressed, not hovered. */
+:root[data-flag-states] .perf .tc.pressed {
+  background: var(--sel);
+}
+
+/* Selected: a latched toggle gets the selected fill, like Sampler. */
+:root[data-flag-states] .deck .lock.on {
+  background: var(--sel);
+}
+
+/* Focus: the one 2px ring, 2px out; inset where the edge would clip it. */
+:root[data-flag-states] [data-region='tracks']:focus-visible {
+  outline: 2px solid var(--fg-2);
+  outline-offset: -2px;
+}
+/* The search field: the same ring in place of its own 1px focus ring. */
+:root[data-flag-states] .search:focus-within {
+  box-shadow: var(--well-shadow);
+  outline: 2px solid var(--fg-2);
+  outline-offset: 2px;
+}
+:root[data-flag-states] .search .clear:focus-visible {
+  outline: 2px solid var(--fg-2);
+  outline-offset: 1px;
+}
+
+/* Disabled: 40% everywhere (hover is already off for disabled controls). */
+:root[data-flag-states] :is(.btn:disabled, .btn[aria-disabled='true']),
+:root[data-flag-states] .deck .nudge button[aria-disabled='true'] {
+  opacity: 0.4;
+}
