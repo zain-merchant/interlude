@@ -234,7 +234,7 @@
       <div class="title">
         {#if t}
           <div class="name" use:tip={() => t.path} use:arrive={{ key: t.path }}>{t.title}</div>
-          <div class="artist" use:arrive={{ key: t.path, delay: 40 }}>{t.artist || 'Unknown artist'}</div>
+          <div class="artist" use:arrive={{ key: t.path, delay: 20 }}>{t.artist || 'Unknown artist'}</div>
         {:else}
           <div class="name dim">Empty deck</div>
           <div class="artist">Drag a track here or press {keyLabel(`deck.${deck}.load`)}</div>
@@ -247,15 +247,15 @@
             use:focusBpm onkeydown={bpmKey} onblur={(e) => finishBpm(e.currentTarget.value)} />
         {:else}
           <!-- The tempo arrives with the track, and again when analysis finds it. -->
-          <div class="big num" use:arrive={{ key: `${t?.path}:${d.bpm > 0}`, delay: 70 }}>{bpm > 0 ? bpm.toFixed(2) : '—'}</div>
+          <div class="big num" use:arrive={{ key: `${t?.path}:${d.bpm > 0}`, delay: 40 }}>{bpm > 0 ? bpm.toFixed(2) : '—'}</div>
         {/if}
-        <div class="unit" use:arrive={{ key: `${t?.path}:${!!pk}`, delay: 100 }}>{#if pk}<span class="key" class:shifted={pk.shift} use:tip={keyTip}>{keyName(pk)} · {camelot(pk)}</span>{" · "}{/if}BPM</div>
+        <div class="unit" use:arrive={{ key: `${t?.path}:${!!pk}`, delay: 60 }}>{#if pk}<span class="key" class:shifted={pk.shift} use:tip={keyTip}>{keyName(pk)} · {camelot(pk)}</span>{" · "}{/if}BPM</div>
       </div>
     </header>
 
-    <div class="overview" use:arrive={{ key: t?.path, delay: 60, y: 0, blur: 6, duration: 420 }}><Waveform {deck} mode="overview" /></div>
+    <div class="overview" use:arrive={{ key: t?.path, delay: 0, y: 0, blur: 0, duration: 280 }}><Waveform {deck} mode="overview" /></div>
 
-    <div class="times" use:arrive={{ key: t?.path, delay: 90, y: 4, blur: 3 }}>
+    <div class="times" use:arrive={{ key: t?.path, delay: 40, y: 3, blur: 0 }}>
       <span class="el num"><span class="sr">Elapsed </span>{fmt(d.position)}</span>
       <span class="rm num"><span class="sr">Remaining </span>{fmt(d.position - d.duration)}</span>
     </div>
