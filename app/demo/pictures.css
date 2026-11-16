@@ -93,7 +93,7 @@
 .p-knob__dial::after { content: ''; position: absolute; inset: 20%; border-radius: 50%; background: radial-gradient(circle at 40% 30%, #3a3b41, #26272b 70%); box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.08), 0 0 0 1px rgb(0 0 0 / 0.4); }
 .p-knob__dial i { position: absolute; z-index: 1; left: 50%; top: 9%; width: 2px; height: 30%; margin-left: -1px; border-radius: 1px; background: #f4f3ee; }
 .p-knob[data-killed] .p-knob__dial i { background: var(--fg-4); }
-.p-knob__label { min-width: 64px; margin-top: 2px; text-align: center; font-size: var(--t-xs); color: var(--fg-3); white-space: nowrap; transition: color 140ms; }
+.p-knob__label { position: relative; min-width: 64px; margin-top: 2px; text-align: center; font-size: var(--t-xs); color: var(--fg-3); white-space: nowrap; transition: color 140ms; }
 .p-knob[data-killed] .p-knob__label { color: var(--kill); }
 
 /* Stems: the app's stem buttons, each lane running off to the right. */
@@ -374,7 +374,7 @@
 .p-recwave { display: flex; align-items: center; gap: 2px; height: 34px; }
 .p-recwave i { width: 2px; height: calc(var(--h) * 100%); border-radius: 1px; background: rgb(255 255 255 / 0.08); transition: background-color 0.25s; }
 .p-recwave i[data-on] { background: var(--deck-a); }
-.p-extras { display: grid; justify-self: center; align-self: center; }
+.p-extras { display: grid; justify-self: center; align-self: start; }
 
 /* Stacked (default): Record and its waveform over the Sampler's pads. */
 .p-extras { grid-template-columns: auto; row-gap: 18px; }
@@ -428,3 +428,11 @@
 .p-extras .p-pads--lg i { height: 22px; }
 /* Stems: its four lanes sit at the top of the picture, clear of the fade. */
 .p.p-stems .p-body { align-content: start; }
+
+.p-knob__kill { position: absolute; left: 50%; top: calc(100% + 3px); translate: -50% 0; padding: 1px 5px; border-radius: 4px; font-size: 9px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: #0b0b0d; background: var(--kill); opacity: 0; transform: translateY(-3px); transition: opacity 0.2s, transform 0.3s cubic-bezier(0.23, 1, 0.32, 1); }
+.p-knob[data-killed] .p-knob__kill { opacity: 1; transform: none; }
+/* Library: more air between the search, the tabs and the results. */
+.p-lib { gap: 12px; }
+/* Every picture sits the same distance from the top of its card. */
+.p .p-body { align-content: start; padding-top: 6px; }
+.p .p-body[data-bleed="bottom"] { padding-top: 0; }
