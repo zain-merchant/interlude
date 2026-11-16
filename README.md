@@ -4,8 +4,7 @@ A free, open-source DJ app for the Mac.
 
 **[Download Interlude](https://github.com/zain-merchant/interlude/releases/latest/download/Interlude.dmg)**
 for Macs with Apple silicon (macOS 11 or later), or visit
-[interludedj.com](https://interludedj.com). It keeps itself up to date after
-that.
+[interludedj.com](https://interludedj.com).
 
 ![Interlude with two tracks loaded: waveforms on top, two decks around the mixer, the library below](docs/screenshot.jpg)
 

@@ -94,7 +94,6 @@ h1 { margin: 0; font-size: clamp(48px, 9vw, 88px); font-weight: 600; letter-spac
 
 /* Sections */
 .section { padding: 112px 0 0; }
-.eyebrow { margin: 0 0 8px; color: var(--arc); font: 500 13px/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; }
 h2 { margin: 0 0 40px; font-size: clamp(30px, 4.4vw, 42px); font-weight: 600; letter-spacing: -0.03em; line-height: 1.1; }
 h3 { margin: 0 0 8px; font-size: 18px; font-weight: 500; letter-spacing: -0.01em; }
 b { font-weight: 500; color: var(--fg); }
