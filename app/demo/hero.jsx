@@ -19,6 +19,7 @@ import { Stage } from './stageshow/stage';
 import { Controller } from './Controller.jsx';
 import App from '../src/App.svelte';
 import { engine, control } from '$lib/engine.svelte.js';
+import { usable as stemsUsable } from '$lib/stems.svelte.js';
 import { showTip, hideTip, tipText } from '$lib/tooltip.svelte.js';
 import { hideToast } from '$lib/undo.svelte.js';
 import { backend } from '$lib/backend.js';
@@ -627,6 +628,9 @@ async function killKnob(a, knob, onTurn) {
 
 const mouseFeatures = {
   async muteVocals(a, d, mute) {
+    // Only once the deck's stems can be used: pressing one before the
+    // separation model is in would (rightly) send the app to Settings.
+    if (!stemsUsable(d)) return;
     await openTab(a, d, 'Stems');
     const vocals = stemOf(d, 0);
     if (!vocals || (vocals.getAttribute('aria-pressed') === 'false') === mute) return;
@@ -741,6 +745,7 @@ async function act(a, set, name, ...args) {
   const [d, on] = args;
   if (on !== false) return;
   const el = { muteVocals: () => stemOf(d, 0), loop: () => loopOf(d), echo: () => fxOf(d) }[name]?.();
+  if (name === 'muteVocals' && !stemsUsable(d)) return;
   if (el?.getAttribute('aria-pressed') === (name === 'muteVocals' ? 'false' : 'true')) el.click();
 }
 
