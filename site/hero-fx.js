@@ -19,11 +19,13 @@
 //   step into bands.
 //
 // Being tried with the Try panel (localhost or ?try):
-//   style   fine   hairline grooves close together, very faint
+//   style   blend  satin's soft bands, with fine grooves over them (the
+//                  default, and the one the page uses)
+//           fine   hairline grooves close together, very faint
 //           satin  no single grooves: each song a smooth, soft band
-//           blend  satin's bands, with fine grooves over them
-//   touch   needle click to drop the needle in a groove: that groove lights
-//                  warm and creeps slowly inward as the record plays
+//   touch   needle hover and the grooves under the pointer catch the light
+//                  along their arc; click to drop the needle in a groove:
+//                  that groove lights warm and creeps slowly inward
 //           off    nothing
 //
 // A kick in the music lifts it a hair; with reduced motion it's one still
@@ -46,11 +48,13 @@ const GAP = 22; // the quiet run between two songs, in the record's own pixels
 const STYLES = {
   // lines: how much the single grooves show; satin: how much the songs show
   // as bands; level: overall strength.
-  fine: { lines: 0.75, satin: 0, level: 0.052 },
-  satin: { lines: 0, satin: 1, level: 0.06 },
-  blend: { lines: 0.45, satin: 0.65, level: 0.056 },
+  // sheen: how far the fixed light lifts the grooves facing it (and dims
+  // those across from it).
+  fine: { lines: 0.75, satin: 0, level: 0.052, sheen: 0.13 },
+  satin: { lines: 0, satin: 1, level: 0.06, sheen: 0.13 },
+  blend: { lines: 0.68, satin: 0.6, level: 0.07, sheen: 0.24 },
 };
-let style = 'fine';
+let style = 'blend';
 let touch = 'needle';
 let avg = 0;
 let swell = 0;
@@ -59,11 +63,14 @@ let lastKick = 0;
 let spin = 0;
 const needle = { on: false, r: 0, born: 0 };
 const ripple = { on: false, r: 0, born: 0 };
+// The pointer, in record terms (radius and angle), eased so the light on
+// the grooves glides after it rather than jumping.
+const hover = { r: 0, a: 0, on: 0, x: -1e4, y: -1e4 };
 let running = false;
 let visible = true;
 
 export function setStyle(v) {
-  style = STYLES[v] ? v : 'fine';
+  style = STYLES[v] ? v : 'blend';
   wake();
 }
 export function setVariant(v) {
@@ -101,6 +108,8 @@ uniform vec2 uSpan;      // inner and outer radius, record pixels
 uniform float uSpin;
 uniform float uFacing;
 uniform vec3 uStyle;     // lines, satin, level
+uniform float uSheen;
+uniform vec3 uHover;     // pointer radius, angle, strength
 uniform float uSwell;
 uniform vec2 uNeedle;    // radius, strength
 uniform vec2 uRipple;    // radius, strength
@@ -158,7 +167,7 @@ void main() {
   float L = mix(1.0, satin, uStyle.y) * mix(1.0, fine, uStyle.x);
 
   // Light. The fixed sheen: two broad wedges either side of the centre.
-  float sheen = 0.13 * cos(2.0 * (a - uFacing));
+  float sheen = uSheen * cos(2.0 * (a - uFacing));
   // The pressing is never perfectly even: a soft warp in it, a few hundred
   // pixels across, curling with the radius, turning with the record.
   float b = a - uSpin;
@@ -166,6 +175,18 @@ void main() {
   float k2 = floor(mid / 210.0) + 5.0;
   float warp = 0.1 * sin(k1 * b + r / 180.0 + idx * 2.3) + 0.065 * sin(k2 * b - r / 120.0 + idx * 4.1);
   L *= 1.0 + sheen + warp * mix(0.6, 1.0, inSong);
+
+  // The pointer: the grooves at its radius catch the light along their own
+  // run, a narrow streak following the arc either side of it rather than a
+  // round glow, shining on the grooves themselves.
+  if (uHover.z > 0.0) {
+    float dr = (r - uHover.x) / 85.0;
+    float da = atan(sin(a - uHover.y), cos(a - uHover.y));
+    float s = da * max(uHover.x, 300.0) / 640.0;
+    float streak = exp(-dr * dr) * exp(-s * s);
+    float shine = mix(1.0, clamp(0.25 + 0.75 * (1.0 + lines) * 0.5, 0.0, 1.3), uStyle.x);
+    L += 1.5 * uHover.z * streak * shine * mix(0.5, 1.0, inSong);
+  }
 
   float alpha = uStyle.z * L * edge * (1.0 + 0.08 * uSwell);
   vec3 col = vec3(0.86, 0.89, 0.95) * alpha;
@@ -221,20 +242,33 @@ function init() {
   const loc = gl.getAttribLocation(prog, 'p');
   gl.enableVertexAttribArray(loc);
   gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
-  for (const n of ['uSize', 'uDpr', 'uCentre', 'uSpan', 'uSpin', 'uFacing', 'uStyle', 'uSwell', 'uNeedle', 'uRipple', 'uTracks', 'uTrackCount']) U[n] = gl.getUniformLocation(prog, n);
+  for (const n of ['uSize', 'uDpr', 'uCentre', 'uSpan', 'uSpin', 'uFacing', 'uStyle', 'uSheen', 'uHover', 'uSwell', 'uNeedle', 'uRipple', 'uTracks', 'uTrackCount']) U[n] = gl.getUniformLocation(prog, n);
   return true;
 }
 
 /** Where the record sits, and its songs: uneven lengths, a quiet run after each. */
-function layout() {
+// The page is measured at most twice a second (and on resize), not every
+// frame: reading positions forces the browser to lay the page out.
+let measured = 0;
+addEventListener('resize', () => (measured = 0));
+function layout(now) {
+  if (geo && now - measured < 500) return geo;
+  measured = now;
   const c = canvas.getBoundingClientRect();
   const s = screen.getBoundingClientRect();
   const cx = s.left - c.left + s.width / 2;
   const cy = s.top - c.top + s.height * 0.5;
   const R = Math.max(cy / SQUASH, c.width / 2) * 1.08;
   const r0 = s.width * 0.42;
-  const key = [c.width, c.height, Math.round(cx), Math.round(cy)].join();
-  if (geo?.key === key) return geo;
+  // The record fades out to nothing halfway between the mouse/controller
+  // switch under the screen and the next section's heading ("Install").
+  const bar = document.querySelector('.shot-bar')?.getBoundingClientRect();
+  const next = document.querySelector('#install :is(h1, h2, h3)')?.getBoundingClientRect();
+  const end = bar && next && next.top > bar.bottom ? (bar.bottom + next.top) / 2 - c.top : s.bottom - c.top + 120;
+  // The app's screen, where the pointer isn't on the record.
+  const box = { l: s.left - c.left, r: s.right - c.left, t: s.top - c.top, b: s.bottom - c.top };
+  const key = [c.width, c.height, Math.round(cx), Math.round(cy), Math.round(end)].join();
+  if (geo?.key === key) return Object.assign(geo, { box });
   const tracks = [];
   for (let a = r0, i = 0; a < R && tracks.length < MAX_TRACKS; i++) {
     const b = Math.min(R, a + 200 + rand(i, 9) * 260);
@@ -247,7 +281,8 @@ function layout() {
   // quieter beside the app, which is the star.
   canvas.style.setProperty('--fx-top', `${Math.round(s.top - c.top)}px`);
   canvas.style.setProperty('--fx-mid', `${Math.round(s.top - c.top + s.height * 0.3)}px`);
-  geo = { key, cx, cy, R, r0 };
+  canvas.style.setProperty('--fx-end', `${Math.round(end)}px`);
+  geo = { key, cx, cy, R, r0, box };
   return geo;
 }
 
@@ -255,6 +290,14 @@ const local = (e) => {
   const c = canvas.getBoundingClientRect();
   return { x: e.clientX - c.left, y: e.clientY - c.top };
 };
+addEventListener('pointermove', (e) => {
+  if (e.pointerType === 'touch') return;
+  const p = local(e);
+  Object.assign(hover, p);
+  wake();
+}, { passive: true });
+document.addEventListener('pointerleave', () => Object.assign(hover, { x: -1e4, y: -1e4 }));
+addEventListener('blur', () => Object.assign(hover, { x: -1e4, y: -1e4 }));
 addEventListener('pointerdown', (e) => {
   if (touch !== 'needle' || !geo || e.target.closest('a, button, input, summary, iframe, .try, .shot')) return;
   const p = local(e);
@@ -290,7 +333,7 @@ function frame(now, still) {
     canvas.height = h;
     geo = null;
   }
-  const g = layout();
+  const g = layout(now);
   swell += (want - swell) * Math.min(1, dt * (want > swell ? 2.5 : 1));
   want *= Math.exp(-dt * 1.4);
   spin += TURN * dt;
@@ -312,6 +355,20 @@ function frame(now, still) {
     }
   }
 
+  // Hover: only on the record, not over the app's screen (its own events
+  // don't reach us there anyway) or with the touch switched off.
+  const overScreen = hover.x > g.box.l && hover.x < g.box.r && hover.y > g.box.t && hover.y < g.box.b;
+  const hr = Math.hypot(hover.x - g.cx, (hover.y - g.cy) / SQUASH);
+  const ha = Math.atan2((hover.y - g.cy) / SQUASH, hover.x - g.cx);
+  const reach = touch !== 'off' && !overScreen && hr > g.r0 && hr < g.R ? 1 : 0;
+  if (reach) {
+    if (hover.on < 0.02) Object.assign(hover, { r: hr, a: ha });
+    const k = Math.min(1, dt * 7);
+    hover.r += (hr - hover.r) * k;
+    hover.a += Math.atan2(Math.sin(ha - hover.a), Math.cos(ha - hover.a)) * k;
+  }
+  hover.on += (reach - hover.on) * Math.min(1, dt * (reach ? 3 : 1.6));
+
   const st = STYLES[style];
   gl.viewport(0, 0, w, h);
   gl.uniform2f(U.uSize, w, h);
@@ -321,6 +378,8 @@ function frame(now, still) {
   gl.uniform1f(U.uSpin, spin % (Math.PI * 2));
   gl.uniform1f(U.uFacing, FACING);
   gl.uniform3f(U.uStyle, st.lines, st.satin, st.level);
+  gl.uniform1f(U.uSheen, st.sheen);
+  gl.uniform3f(U.uHover, hover.r, hover.a, still ? 0 : hover.on);
   gl.uniform1f(U.uSwell, swell);
   gl.uniform2f(U.uNeedle, needle.r, needleOn);
   gl.uniform2f(U.uRipple, rippleR, rippleOn);
