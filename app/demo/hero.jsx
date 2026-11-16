@@ -37,9 +37,9 @@ const H = 900;
 // the last row, which the list's edge cuts), and all a few BPM under the
 // 129 the set runs at (123, 126, 125), so Sync has a clear job: the tempo
 // jumps, the pitch fader moves, the beats snap into line.
-const OPENER = 'Afterglow';
+const OPENER = 'Lucid';
 // From the top of the list, so the controller never covers the row it picks.
-const SET = ['Night Shift', 'Paper Planes', 'Lucid'];
+const SET = ['Night Shift', 'Afterglow', 'Paper Planes'];
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -179,17 +179,33 @@ window.addEventListener('message', (e) => {
 async function hwPress(a, target, act, label, appEl) {
   const el = document.querySelector(`[data-target="${target}"]`);
   const done = link(el, appEl, label);
-  await a.wait(LEAD);
+  // The key goes down and the change sets off while the line is still
+  // drawing; the app answers as the pulse lands.
+  await a.wait(120);
   el?.setAttribute('data-hw-pressed', '');
-  await a.click(target);
-  el?.removeAttribute('data-hw-pressed');
-  // The change travels the line; the app answers as the pulse lands.
   done.pulse();
-  await a.wait(TRAVEL);
+  const tap = a.click(target);
+  await a.wait(160);
+  el?.removeAttribute('data-hw-pressed');
+  await tap;
+  await a.wait(Math.max(0, TRAVEL - 160 - 260));
   act();
   await a.wait(500);
   done();
 }
+
+/** A hardware drag: straight along its slot, easing out to a stop (the
+ * finger's own motion runs at full speed to the end and stops dead). */
+const glide = (e, from, to) => {
+  const k = 1 - (1 - e) * (1 - e);
+  return { x: from.x + (to.x - from.x) * k, y: from.y + (to.y - from.y) * k };
+};
+/** How far along a drag the hand is, from where it actually is. */
+const along = (at, from, to) => {
+  const dx = to.x - from.x, dy = to.y - from.y;
+  const len = dx * dx + dy * dy;
+  return len ? Math.max(0, Math.min(1, ((at.x - from.x) * dx + (at.y - from.y) * dy) / len)) : 1;
+};
 
 /** Runs `fn` when a pulse sent now would land in the app. */
 const onLanding = (fn) => setTimeout(fn, TRAVEL);
@@ -448,10 +464,12 @@ const controller = {
       tie.pulse();
       cap.setAttribute('data-held', '');
       await a.wait(TRAVEL);
-      await a.drag({ x: from.x, y: yOf(at1) - yOf(at0) + from.y }, (_p, _f, t) => {
-        cap.style.setProperty('--at', String(at0 + (at1 - at0) * t));
-        control({ type: 'setRate', deck: d, rate: rate0 + (target - rate0) * t });
-      }, { duration: 1300, path: straight });
+      const end = { x: from.x, y: yOf(at1) - yOf(at0) + from.y };
+      await a.drag(end, (at) => {
+        const k = along(at, from, end);
+        cap.style.setProperty('--at', String(at0 + (at1 - at0) * k));
+        control({ type: 'setRate', deck: d, rate: rate0 + (target - rate0) * k });
+      }, { duration: 1000, path: glide });
       control({ type: 'setRate', deck: d, rate: target });
       await a.wait(350);
       cap.removeAttribute('data-held');
@@ -477,7 +495,7 @@ const controller = {
       const value = Math.max(-1, Math.min(1, ((at.x - r.x) / r.width) * 2 - 1));
       hw?.style.setProperty('--xf', String((value + 1) / 2));
       control({ type: 'setCrossfader', value });
-    }, { duration: 2000, path: straight });
+    }, { duration: 1400, path: glide });
     control({ type: 'setCrossfader', value: to });
     await a.wait(350);
     capEl.removeAttribute('data-held');
@@ -655,7 +673,7 @@ const controllerFeatures = {
       const k = Math.min(1, (at.y - from.y) / 40);
       hw.style.rotate = `${-k * 150}deg`;
       while (steps < Math.floor(k * 12)) { key(app, 'ArrowDown'); steps++; }
-    }, { duration: 1100, path: straight });
+    }, { duration: 900, path: glide });
     key(app, 'Home');
     await a.wait(400);
     hw.removeAttribute('data-held');
@@ -677,7 +695,7 @@ const controllerFeatures = {
     await a.wait(TRAVEL);
     await a.drag({ x: from.x, y: from.y - 40 }, (at) => {
       hw.style.rotate = `${-Math.max(0, Math.min(1, (at.y - (from.y - 40)) / 40)) * 150}deg`;
-    }, { duration: 700, path: straight });
+    }, { duration: 650, path: glide });
     lowEq(d).dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
     await a.wait(400);
     hw.removeAttribute('data-held');

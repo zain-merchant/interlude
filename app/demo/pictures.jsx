@@ -236,29 +236,34 @@ const ROWS = [
 // tracks from Rekordbox and Serato, each tagged with its format, and a
 // search that narrows them, letter by letter, to the two that match.
 const LIB = [
-  { t: 'Glass Rooms', fmt: 'FLAC', src: 'Rekordbox' },
   { t: 'Night Shift', fmt: 'MP3', src: 'Serato' },
-  { t: 'Glasshouse', fmt: 'WAV', src: 'Serato' },
+  { t: 'Glass Rooms', fmt: 'FLAC', src: 'Rekordbox' },
   { t: 'Paper Planes', fmt: 'AIFF', src: 'Serato' },
-  { t: 'Halcyon', fmt: 'AAC', src: 'Rekordbox' },
+  { t: 'Glasshouse', fmt: 'WAV', src: 'Serato' },
 ];
 export function Search(play) {
   return (
-    <Pic id="search" {...play} initial={{ rows: LIB.length, q: '', sel: -1, loaded: false }} poster={{ rows: LIB.length, q: 'glass', sel: 0, loaded: true }}
+    <Pic id="search" {...play} initial={{ rows: LIB.length, q: '', src: 'All', sel: -1, loaded: false }} poster={{ rows: LIB.length, q: 'glass', src: 'All', sel: 1, loaded: true }}
       script={async (a) => {
+        // First, where the music came from: just what came from Serato,
+        // then everything again.
         await a.wait(300);
+        await a.set({ src: 'Serato' });
+        await a.wait(1100);
+        await a.set({ src: 'All' });
+        await a.wait(600);
         for (let i = 1; i <= 5; i++) {
           await a.set({ q: 'glass'.slice(0, i) });
           await a.wait(170);
         }
         // Then the first match is picked and loaded to Deck A.
         await a.wait(500);
-        await a.set({ sel: 0 });
+        await a.set({ sel: 1 });
         await a.wait(600);
         await a.set({ loaded: true });
       }}>
       {(s) => {
-        const hit = (r) => r.t.toLowerCase().includes(s.q);
+        const hit = (r) => r.t.toLowerCase().includes(s.q) && (s.src === 'All' || r.src === s.src);
         const shown = LIB.slice(0, s.rows).filter(hit).length;
         return (
           <div className="p-lib">
@@ -267,6 +272,7 @@ export function Search(play) {
               <span>{s.q || <em>Search</em>}{s.q && <i className="p-caret" />}</span>
               <b>{shown} {shown === 1 ? 'track' : 'tracks'}</b>
             </div>
+            <div className="p-lib__tabs">{['All', 'Rekordbox', 'Serato'].map((t) => <span key={t} data-on={s.src === t || undefined}>{t === 'All' ? 'All tracks' : t}</span>)}</div>
             <div className="p-lib__list">
               {LIB.map((r, i) => (
                 <div key={r.t} className="p-lib__row" data-in={i < s.rows || undefined} data-out={(i < s.rows && !hit(r)) || undefined}
@@ -339,9 +345,9 @@ export function Extras(play) {
         let bars = 0;
         const clock = setInterval(() => a.put({ sec: Math.min(59, ++sec) }), 1000);
         const grow = setInterval(() => a.put({ bars: Math.min(WAVE.length, ++bars) }), 70);
-        await a.wait(1500);
+        await a.wait(document.documentElement.dataset.reclayout === 'carousel' ? 1500 : 600);
         await a.set({ focus: 1 });
-        await a.wait(450);
+        await a.wait(document.documentElement.dataset.reclayout === 'carousel' ? 450 : 0);
         for (const pad of [0, 5, 2, 5, 7]) {
           await a.set({ pad });
           await a.wait(190);
@@ -614,6 +620,12 @@ export function Replay({ Graphic, card }) {
     let replaying = false;
     let hovered = false;
     const again = () => {
+      // Not had its turn yet: a real hover plays it now, out of the queue.
+      if (entry.state === 'idle') {
+        if (!grid.playing) grid.playing = entry;
+        entry.play();
+        return;
+      }
       if (entry.state !== 'done' || replaying) return;
       replaying = true;
       setRun({ key: ++n, gate: Promise.resolve() });

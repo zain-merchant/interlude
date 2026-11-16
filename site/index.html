@@ -284,6 +284,8 @@
           frame.dataset.mode = mode;
           if (mode === 'mouse') camera({ zoom: 1 });
           for (const o of buttons) o.setAttribute('aria-checked', String(o === b));
+          // Asked for before the live app has started loading: start it now.
+          if (!live.getAttribute('src') && !reduced.matches) live.src = live.dataset.src;
           live.contentWindow?.postMessage({ interlude: 'mode', mode }, '*');
         });
       }
