@@ -454,8 +454,11 @@
 
 /* Recording stacked: pads a touch smaller and closer, clear of the fade. */
 .p-extras { row-gap: 12px; }
-.p-extras .p-pads--lg { grid-template-columns: repeat(8, 22px); }
-.p-extras .p-pads--lg i { height: 22px; }
+/* Stacked: the pads span the picture's full width, so they read as pads. */
+:root:not([data-reclayout="side"]):not([data-reclayout="carousel"]) .p-extras { width: 100%; justify-self: stretch; }
+:root:not([data-reclayout="side"]):not([data-reclayout="carousel"]) .p-x--pads { justify-items: stretch; }
+:root:not([data-reclayout="side"]):not([data-reclayout="carousel"]) .p-extras .p-pads--lg { grid-template-columns: repeat(8, 1fr); gap: 7px; width: 100%; }
+:root:not([data-reclayout="side"]):not([data-reclayout="carousel"]) .p-extras .p-pads--lg i { height: auto; aspect-ratio: 1; border-radius: 7px; }
 
 .p-knob__kill { position: absolute; left: 50%; top: calc(100% + 3px); padding: 1px 5px; border-radius: 4px; font-size: 9px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: #0b0b0d; background: var(--kill); opacity: 0; transform: translate(-50%, -3px); transition: opacity 0.2s, transform 0.3s cubic-bezier(0.23, 1, 0.32, 1); }
 /* Centred under the band's name: one transform (the build drops a separate translate beside it). */
