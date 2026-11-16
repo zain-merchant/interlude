@@ -345,21 +345,13 @@ details p { margin: 0; padding-bottom: 20px; color: var(--fg-2); max-width: 62ch
 }
 .foot-word::after {
   content: attr(data-text); position: absolute; inset: 0;
-  background: repeating-radial-gradient(ellipse 100% 50% at 50% 135%, rgb(255 255 255 / 0.6) 0 1px, transparent 1.5px 4.2px);
+  /* The first version's grooves, with the gap between them halved. */
+  background: repeating-radial-gradient(ellipse 100% 50% at 50% 135%, rgb(255 255 255 / 0.6) 0 1px, transparent 1.5px 3.25px);
   -webkit-background-clip: text; background-clip: text; color: transparent;
-  /* A faint trace of the grooves everywhere at rest; round the pointer on
-     hover, a patch a little wider than it is tall, along the grooves. */
-  -webkit-mask-image: radial-gradient(ellipse 380px 260px at var(--x) var(--y), #000, transparent 70%);
-  mask-image: radial-gradient(ellipse 380px 260px at var(--x) var(--y), #000, transparent 70%);
-  opacity: var(--on);
+  -webkit-mask-image: radial-gradient(circle at var(--x) var(--y), #000, transparent 320px);
+  mask-image: radial-gradient(circle at var(--x) var(--y), #000, transparent 320px);
+  opacity: var(--on); transition: opacity 0.5s ease-out;
 }
-.foot-word::before {
-  content: attr(data-text); position: absolute; inset: 0; pointer-events: none;
-  background: repeating-radial-gradient(ellipse 100% 50% at 50% 135%, rgb(255 255 255 / 0.6) 0 1px, transparent 1.5px 4.2px);
-  -webkit-background-clip: text; background-clip: text; color: transparent;
-  opacity: 0.12;
-}
-.foot-word::after { transition: opacity 0.5s ease-out; }
 @media (hover: none) { .foot-word::after { display: none; } }
 
 .try__hint { margin: -4px 0 6px; max-width: 26em; font-size: 12px; line-height: 1.45; color: var(--fg-3); }
@@ -487,7 +479,7 @@ html[data-nav="centred"] .nav-actions .btn:not(.ghost) { padding: 0 14px; border
   html[data-nav="pill"] .nav-row { padding-left: 14px; }
 }
 /* Bar to capsule (the default). At the top, a quiet full-width bar: the
-   brand left and large (a 32px icon, the name at 19px), the sections
+   brand left and large (a 32px icon, the name at 21px), the sections
    right, no buttons (the hero's are just below). Scrolled, it darkens.
    Once the hero's buttons are gone it draws in to a floating capsule, 48px
    tall, and the brand settles to its compact size (the name at 15px): the
@@ -521,11 +513,11 @@ html[data-nav="morph"] .nav-edge {
 html[data-nav="morph"] .nav-row { position: relative; height: 60px; gap: 22px; }
 html[data-nav="morph"] .links { margin: 0 0 0 auto; gap: 26px; }
 /* The icon is laid out at its capsule size (36px) and drawn at 32px in the
-   bar; the name is laid out at its bar size (19px) and drawn smaller in the
+   bar; the name is laid out at its bar size (21px) and drawn smaller in the
    capsule. Only transforms change between them. */
 html[data-nav="morph"] .nav .brand { gap: 10px; }
 html[data-nav="morph"] .nav .brand img { width: 36px; height: 36px; border-radius: 50%; transform-origin: 0 50%; transform: scale(0.889); }
-html[data-nav="morph"] .nav .brand span { font-size: 19px; letter-spacing: -0.02em; transform-origin: 0 50%; transform: translateX(-4px); }
+html[data-nav="morph"] .nav .brand span { font-size: 21px; font-weight: 600; letter-spacing: -0.025em; line-height: 1; transform-origin: 0 50%; transform: translateX(-4px); }
 html[data-nav="morph"] .nav .brand, html[data-nav="morph"] .nav .brand img, html[data-nav="morph"] .nav .brand span,
 html[data-nav="morph"] .nav .links, html[data-nav="morph"] .nav-actions { will-change: transform; }
 /* The actions wait, unseen and unfocusable, at the bar's right end. */
