@@ -17,8 +17,9 @@ const DEG_PER_SEC = (100 / 3 / 60) * 360;
 
 /** One of the app's sliders, for the controller to mirror. */
 function appSlider(d, which) {
-  if (which === 'low') return document.querySelector(`[role="slider"][aria-label="Deck ${'AB'[d]} low EQ"]`);
-  return document.querySelector(`[role="slider"][aria-label="Deck ${'AB'[d]} pitch"]`);
+  if (which === 'pitch') return document.querySelector(`[role="slider"][aria-label="Deck ${'AB'[d]} pitch"]`);
+  if (which === 'volume') return document.querySelector(`[role="slider"][aria-label="Deck ${'AB'[d]} volume"]`);
+  return document.querySelector(`[role="slider"][aria-label="Deck ${'AB'[d]} ${which} EQ"]`);
 }
 /** How far along its travel a slider is, 0 to 1, from its own ARIA values. */
 function along(el) {
@@ -27,14 +28,51 @@ function along(el) {
   const v = +el.getAttribute('aria-valuenow');
   return max > min ? Math.max(0, Math.min(1, (v - min) / (max - min))) : 0.5;
 }
+/**
+ * Where an EQ knob points, in degrees from 12 o'clock: its flat setting
+ * straight up, full cut at -150, full boost at +150. The app's EQs cut far
+ * more than they boost (-40 to +6 dB), so each side is scaled on its own.
+ */
+function eqAngle(el) {
+  const min = +el.getAttribute('aria-valuemin');
+  const max = +el.getAttribute('aria-valuemax');
+  const v = +el.getAttribute('aria-valuenow');
+  if (!(min < 0 && max > 0)) return -150 + 300 * along(el);
+  return v >= 0 ? (150 * Math.min(v, max)) / max : (-150 * Math.max(v, min)) / min;
+}
+
+/**
+ * The five drawings being tried (the site's Try panel picks one with a
+ * message; `?controller=` picks one on load). Every one carries the same
+ * controls under the same names, laid out and finished differently in
+ * controller.css, so the script and the mirror below work on all of them.
+ *   plate    the feature card's controller, scaled up: brushed aluminium,
+ *            machined jog rims, a black mixer let into the metal
+ *   compact  a smaller two-deck: short tempo faders by the jogs, two rows
+ *            of pads (hot cues over stems) under them
+ *   matte    a black body with aluminium accents: bright jog rims, an
+ *            aluminium mixer face, the pads in a long row
+ *   club     wide: long tempo faders, big jogs, a full mixer with three
+ *            EQ knobs, channel faders and meters
+ *   minimal  a thin slab: flat platters inside a lit ring, flat keys,
+ *            the least print
+ */
+export const VERSIONS = ['plate', 'compact', 'matte', 'club', 'minimal'];
+const STEMS = ['Vocals', 'Melody', 'Bass', 'Drums'];
+const pick = (v) => (VERSIONS.includes(v) ? v : null);
+
+const PLAY = <svg viewBox="0 0 18 12" aria-hidden><path d="M1.5 1.6v8.8l6.6-4.4z" /><rect x="10.6" y="1.6" width="2" height="8.8" rx=".6" /><rect x="14.4" y="1.6" width="2" height="8.8" rx=".6" /></svg>;
+
+/** A key with travel. Named for the script (data-target) and the mirror (data-hw). */
+function Key({ name, d, className = '', children }) {
+  return <div className={`hw-key ${className}`} data-target={`c-${name}-${d}`} data-hw={`${name}-${d}`}>{children}</div>;
+}
 
 function Deck({ side }) {
   const d = side === 'left' ? 0 : 1;
   return (
     <div className={`hw-deck hw-deck--${side}`}>
-      <div className="hw-top">
-        <div className="hw-key hw-sync" data-target={`c-sync-${d}`} data-hw={`sync-${d}`}><span>Sync</span></div>
-      </div>
+      <Pitch d={d} />
       <div className="hw-jog" data-target={`c-jog-${d}`}>
         <div className="hw-jog__ring" />
         <div className="hw-jog__platter" data-hw={`jog-${d}`}>
@@ -42,16 +80,32 @@ function Deck({ side }) {
         </div>
         <div className="hw-jog__hub" />
       </div>
-      <div className="hw-bottom">
-        <div className="hw-round hw-play" data-target={`c-play-${d}`} data-hw={`play-${d}`}>
-          <svg viewBox="0 0 18 12" aria-hidden><path d="M1.5 1.6v8.8l6.6-4.4z" /><rect x="10.6" y="1.6" width="2" height="8.8" rx=".6" /><rect x="14.4" y="1.6" width="2" height="8.8" rx=".6" /></svg>
+      <Key name="sync" d={d} className="hw-sync"><span>Sync</span></Key>
+      <div className="hw-transport">
+        <div className="hw-round hw-cue" data-target={`c-cue-${d}`} data-hw={`cue-${d}`}><span>Cue</span></div>
+        <div className="hw-round hw-play" data-target={`c-play-${d}`} data-hw={`play-${d}`}>{PLAY}</div>
+      </div>
+      {/* Performance pads: a row of hot cues over a row of stems (a lit
+          stem pad is playing; press to mute it). */}
+      <div className="hw-perf">
+        <div className="hw-pads hw-pads--cues">
+          {[0, 1, 2, 3].map((i) => <i key={i} className="hw-pad" data-hw={`hotcue-${d}-${i}`}><span>{i + 1}</span></i>)}
         </div>
+        <div className="hw-pads hw-pads--stems">
+          {STEMS.map((s, i) => <i key={s} className="hw-pad" data-target={`c-stem-${d}-${i}`} data-hw={`stem-${d}-${i}`}><span>{s}</span></i>)}
+        </div>
+      </div>
+      {/* A four-beat auto loop, and the deck's effect (Echo) with its level. */}
+      <div className="hw-loopfx">
+        <Key name="loop" d={d} className="hw-loop"><span>Loop</span><b>4</b></Key>
+        <Key name="fx" d={d} className="hw-fx"><span>Echo</span></Key>
+        <Knob label="FX" hw={`fxlevel-${d}`} className="hw-fxknob" />
       </div>
     </div>
   );
 }
 
-/** A long tempo fader at the controller's outer edge. Its cap follows the deck's rate. */
+/** A tempo fader. Its cap follows the deck's rate (the slot's middle 90% is its travel). */
 function Pitch({ d }) {
   return (
     <div className={`hw-pitch hw-pitch--${d ? 'right' : 'left'}`}>
@@ -64,31 +118,62 @@ function Pitch({ d }) {
   );
 }
 
-function Knob({ label, hw }) {
+function Knob({ label, hw, className = '' }) {
   return (
-    <div className="hw-knob">
+    <div className={`hw-knob ${className}`}>
       <i data-hw={hw} />
       <span>{label}</span>
     </div>
   );
 }
 
+/** A channel strip: three EQ knobs (Low is the one the demo turns) and a fader. */
 function Channel({ d }) {
   return (
-    <div className="hw-channel">
-      <Knob label="Low" hw={`low-${d}`} />
+    <div className={`hw-channel hw-channel--${d ? 'b' : 'a'}`}>
+      <Knob label="High" hw={`high-${d}`} className="hw-eq hw-eq--high" />
+      <Knob label="Mid" hw={`mid-${d}`} className="hw-eq hw-eq--mid" />
+      <Knob label="Low" hw={`low-${d}`} className="hw-eq hw-eq--low" />
+      <div className="hw-chfader"><div className="hw-chfader__slot" /><div className="hw-chfader__cap" data-hw={`vol-${d}`} /></div>
     </div>
   );
+}
+
+function Meter({ d }) {
+  return <div className="hw-meter" data-hw={`meter-${d}`}>{Array.from({ length: 12 }, (_, i) => <i key={i} data-level={i > 10 ? 'peak' : i > 8 ? 'hot' : undefined} />).reverse()}</div>;
 }
 
 export function Controller({ shown }) {
   const root = useRef(null);
   // Mounted below the frame, then raised, so it always arrives by moving.
   const [up, setUp] = useState(false);
+  // If it's asked for before the app is on screen (the page swaps a still
+  // picture for the live app once it's loaded), it waits until the app has
+  // faded in, so the rise is always seen.
   useEffect(() => {
-    const t = setTimeout(() => setUp(shown), 40);
+    let t;
+    const go = (wait) => (t = setTimeout(() => setUp(shown), wait));
+    if (!shown || document.documentElement.hasAttribute('data-ready')) go(40);
+    else {
+      const watch = new MutationObserver(() => {
+        if (!document.documentElement.hasAttribute('data-ready')) return;
+        watch.disconnect();
+        go(700);
+      });
+      watch.observe(document.documentElement, { attributes: true });
+      return () => watch.disconnect();
+    }
     return () => clearTimeout(t);
   }, [shown]);
+  // Which drawing: ?controller= on load, then the site's Try panel.
+  const [version, setVersion] = useState(() => pick(new URLSearchParams(location.search).get('controller')) ?? VERSIONS[0]);
+  useEffect(() => {
+    const on = (e) => {
+      if (e.data?.interlude === 'controller' && pick(e.data.v)) setVersion(e.data.v);
+    };
+    window.addEventListener('message', on);
+    return () => window.removeEventListener('message', on);
+  }, []);
   useEffect(() => {
     let raf;
     const el = (k) => root.current?.querySelector(`[data-hw="${k}"]`);
@@ -97,6 +182,8 @@ export function Controller({ shown }) {
         const deck = engine.decks[d];
         const jog = el(`jog-${d}`);
         if (jog) jog.style.transform = `rotate(${(deck.position * DEG_PER_SEC) % 360}deg)`;
+        // The jog's ring glows brighter while its deck plays.
+        jog?.parentElement.toggleAttribute('data-playing', deck.playing);
         el(`play-${d}`)?.toggleAttribute('data-lit', deck.playing);
         el(`cue-${d}`)?.toggleAttribute('data-lit', deck.loaded && !deck.playing);
         el(`sync-${d}`)?.toggleAttribute('data-lit', deck.loaded && engine.decks[1 - d].loaded &&
@@ -107,10 +194,31 @@ export function Controller({ shown }) {
         const cap = el(`pitch-${d}`);
         const app = appSlider(d, 'pitch');
         if (cap && app && !cap.hasAttribute('data-held')) cap.style.setProperty('--at', String(1 - 2 * along(app)));
-        // The Low knob turns to where the app's Low EQ is.
-        const low = el(`low-${d}`);
-        const eq = appSlider(d, 'low');
-        if (low && eq && !low.hasAttribute('data-held')) low.style.rotate = `${-150 + 300 * along(eq)}deg`;
+        // The EQ knobs turn to where the app's are (flat is straight up).
+        for (const band of ['high', 'mid', 'low']) {
+          const knob = el(`${band}-${d}`);
+          const eq = appSlider(d, band);
+          if (knob && eq && !knob.hasAttribute('data-held')) knob.style.rotate = `${eqAngle(eq)}deg`;
+        }
+        // The channel fader sits where the app's volume is (up is loud).
+        const vol = el(`vol-${d}`);
+        const fader = appSlider(d, 'volume');
+        if (vol && fader && !vol.hasAttribute('data-held')) vol.style.setProperty('--at', String(1 - along(fader)));
+        // Pads and keys light from the deck's state: hot cues that are set,
+        // stems that are playing, a running loop, the effect when it's on.
+        deck.hotCues?.forEach((c, i) => el(`hotcue-${d}-${i}`)?.toggleAttribute('data-lit', c != null));
+        const stems = deck.stems ?? 0b1111;
+        for (let i = 0; i < 4; i++) el(`stem-${d}-${i}`)?.toggleAttribute('data-lit', deck.loaded && !!(stems & (1 << i)));
+        el(`loop-${d}`)?.toggleAttribute('data-lit', !!deck.looping);
+        el(`fx-${d}`)?.toggleAttribute('data-lit', !!deck.fx?.on);
+        const fxLevel = el(`fxlevel-${d}`);
+        if (fxLevel && !fxLevel.hasAttribute('data-held')) fxLevel.style.rotate = `${-150 + 300 * (deck.fx?.level ?? 0.5)}deg`;
+        // The channel meter, from the deck's level.
+        const meter = el(`meter-${d}`);
+        if (meter) {
+          const lit = Math.round((engine.deckLevels[d] ?? 0) * meter.children.length);
+          [...meter.children].forEach((seg, i) => seg.toggleAttribute('data-lit', meter.children.length - i <= lit));
+        }
       }
       const xfCap = root.current?.querySelector('[data-target="c-xf-cap"]');
       if (!xfCap?.hasAttribute('data-held')) {
@@ -125,8 +233,7 @@ export function Controller({ shown }) {
 
   return (
     <div className="desk" data-shown={up || undefined}>
-      <div ref={root} className="hw" data-target="controller">
-        <Pitch d={0} />
+      <div ref={root} className="hw" data-target="controller" data-v={version}>
         <Deck side="left" />
         <div className="hw-mixer">
           <div className="hw-browse-row">
@@ -135,6 +242,7 @@ export function Controller({ shown }) {
           </div>
           <div className="hw-channels">
             <Channel d={0} />
+            <div className="hw-meters"><Meter d={0} /><Meter d={1} /></div>
             <Channel d={1} />
           </div>
           <div className="hw-xf" data-target="c-xf">
@@ -143,8 +251,7 @@ export function Controller({ shown }) {
           </div>
         </div>
         <Deck side="right" />
-        <Pitch d={1} />
-        <i className="hw-cable" aria-hidden />
+        <i className="hw-badge" aria-hidden />
       </div>
     </div>
   );
