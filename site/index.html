@@ -116,7 +116,7 @@
           <ul>
             <li><b>Analysis</b><span>BPM, key and beatgrid</span></li>
             <li><b>Sync</b><span>Tempo and phase</span></li>
-            <li><b>Cues</b><span>8 hot cues, loops, beat jump</span></li>
+            <li><b>Cues</b><span>Hot cues, loops, beat jump</span></li>
             <li><b>Feel</b><span>Slip, quantize, key lock</span></li>
             <li><b>Waveforms</b><span>Three-band, scrolling</span></li>
           </ul>
@@ -269,6 +269,7 @@
           frame.dataset.live = '';
           live.contentWindow.postMessage({ interlude: 'mode', mode }, '*');
           live.contentWindow.postMessage({ interlude: 'input', style: input }, '*');
+          live.contentWindow.postMessage({ interlude: 'controller', v: heroCtl }, '*');
         }
         if (e.data?.interlude === 'camera') camera(e.data);
         if (e.data?.interlude === 'level') {
@@ -304,8 +305,16 @@
       const remembered = (k, d) => { try { return localStorage.getItem(k) ?? d; } catch { return d; } };
       const remember = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
       let input = remembered('interlude.try.link', 'line');
-      fx?.setVariant(remembered('interlude.try.vinyl', 'lamp'));
-      fx?.setStyle(remembered('interlude.try.recstyle', 'blend'));
+      // The record behind the hero, and the name in the footer (an old or
+      // unknown pick falls back to the default).
+      const pick = (k, d, ok) => { const v = remembered(k, d); return ok.includes(v) ? v : d; };
+      const recStyle = pick('interlude.try.vinylstyle', 'fine', ['fine', 'satin', 'blend']);
+      const recTouch = pick('interlude.try.vinyltouch', 'needle', ['needle', 'off']);
+      const footHover = pick('interlude.try.foothover', 'spin', ['spin', 'tonearm', 'ripple', 'platter', 'depth']);
+      // The hero's controller is the Club drawing.
+      let heroCtl = 'club';
+      fx?.setVariant(recTouch);
+      fx?.setStyle(recStyle);
       if (trying) {
         const panel = document.createElement('div');
         panel.className = 'try';
@@ -313,15 +322,28 @@
           <div class="try__group" data-key="${key}"><span>${title}</span>
             <div>${options.map(([v, l]) => `<button type="button" data-v="${v}" aria-pressed="${v === now}">${l}</button>`).join('')}</div>
           </div>`;
-        panel.innerHTML = `<b>Try</b>${group('Record style', 'recstyle', [['blend', 'Blend'], ['fine', 'Fine'], ['satin', 'Satin']], remembered('interlude.try.recstyle', 'blend'))}${group('Record touch', 'rings', [['lamp', 'Lamp'], ['hand', 'Hand'], ['needle', 'Needle']], remembered('interlude.try.vinyl', 'lamp'))}<p class="try__hint" data-hint></p>${group('Controller link', 'input', [['line', 'Pulse line'], ['label', 'Moving label'], ['rings', 'Highlights']], input)}${group('Recording layout', 'reclayout', [['stacked', 'Stacked'], ['side', 'Side by side'], ['carousel', 'Carousel']], remembered('interlude.try.reclayout', 'stacked'))}`;
+        panel.innerHTML = `<b>Try</b>${group('Record', 'recstyle', [['fine', 'Fine'], ['satin', 'Satin'], ['blend', 'Blend']], recStyle)}<p class="try__hint" data-hint="recstyle"></p>${group('Record touch', 'rings', [['needle', 'Needle'], ['off', 'Off']], recTouch)}<p class="try__hint" data-hint="rings"></p>${group('Footer hover', 'foothover', [['spin', 'Spin'], ['tonearm', 'Tonearm'], ['ripple', 'Ripple'], ['platter', 'Platter'], ['depth', 'Depth']], footHover)}<p class="try__hint" data-hint="foothover"></p>${group('Controller link', 'input', [['line', 'Pulse line'], ['label', 'Moving label'], ['rings', 'Highlights']], input)}${group('Recording layout', 'reclayout', [['stacked', 'Stacked'], ['side', 'Side by side'], ['carousel', 'Carousel']], remembered('interlude.try.reclayout', 'stacked'))}`;
         panel.addEventListener('click', (e) => {
           const b = e.target.closest('button');
           if (!b) return;
           const key = b.closest('.try__group').dataset.key;
           for (const o of b.parentElement.children) o.setAttribute('aria-pressed', String(o === b));
-          if (key === 'recstyle') { fx?.setStyle(b.dataset.v); remember('interlude.try.recstyle', b.dataset.v); }
-          if (key === 'rings') { fx?.setVariant(b.dataset.v); remember('interlude.try.vinyl', b.dataset.v); hint(b.dataset.v); }
+          if (key === 'recstyle') { fx?.setStyle(b.dataset.v); remember('interlude.try.vinylstyle', b.dataset.v); hint(key, b.dataset.v); }
+          if (key === 'rings') { fx?.setVariant(b.dataset.v); remember('interlude.try.vinyltouch', b.dataset.v); hint(key, b.dataset.v); }
+          if (key === 'foothover') {
+            remember('interlude.try.foothover', b.dataset.v);
+            hint(key, b.dataset.v);
+            const word = document.querySelector('.foot-word');
+            if (word) word.dataset.hover = b.dataset.v;
+          }
           if (key === 'reclayout') { document.documentElement.dataset.reclayout = b.dataset.v; remember('interlude.try.reclayout', b.dataset.v); }
+          if (key === 'heroctl') {
+            heroCtl = b.dataset.v;
+            remember('interlude.try.heroctl', heroCtl);
+            live.contentWindow?.postMessage({ interlude: 'controller', v: heroCtl }, '*');
+            // A drawing of the controller only shows with the controller.
+            if (mode !== 'controller') document.querySelector('.switch [data-mode=controller]').click();
+          }
           if (key === 'input') {
             input = b.dataset.v;
             remember('interlude.try.link', input);
@@ -332,64 +354,137 @@
         });
         document.body.append(panel);
         // What each touch does, and how to try it.
-        function hint(v) {
-          panel.querySelector('[data-hint]').textContent = {
-            lamp: 'Move the pointer over the hero: the light on the record swings round to face it.',
-            hand: 'Hover to slow the record almost to a stop; drag across the hero to scratch it.',
-            needle: 'Click anywhere in the hero to drop the needle: that groove lights and plays inward.',
-          }[v];
+        function hint(key, v) {
+          panel.querySelector(`[data-hint="${key}"]`).textContent = {
+            recstyle: {
+              fine: 'Hairline grooves, close together and very faint; a soft sheen in them turns with the record.',
+              satin: 'No single grooves: each song a smooth, soft band, the gaps between them quiet.',
+              blend: 'Satin\'s soft bands, with faint hairline grooves over them.',
+            },
+            rings: {
+              needle: 'Click anywhere in the hero to drop the needle: that groove lights warm and plays slowly inward.',
+              off: 'The record just turns.',
+            },
+            foothover: {
+              spin: 'Hover the footer name: the record spins up under the pointer, the music in its grooves turning; leave and it winds down.',
+              tonearm: 'Hover the footer name: a fine line of light swings once across it, like the tonearm\'s reflection.',
+              ripple: 'Hover the footer name: one soft wave of light runs out through the grooves from where you came in.',
+              platter: 'Hover the footer name: light spreads up through the grooves from the centre, as if the platter lit.',
+              depth: 'Hover the footer name: the grooves and their sheen drift apart with the pointer, so the surface looks deep and glossy.',
+            },
+          }[key][v];
         }
-        hint(remembered('interlude.try.vinyl', 'lamp'));
+        hint('recstyle', recStyle);
+        hint('rings', recTouch);
+        hint('foothover', footHover);
       }
 
 
       document.documentElement.dataset.reclayout = remembered('interlude.try.reclayout', 'stacked');
 
-      const start = () => {
-        if (reduced.matches) return;
-        live.src = live.dataset.src;
-      };
-      if (document.readyState === 'complete') start();
-      else addEventListener('load', start, { once: true });
+      // The live app starts loading straight away, so it's on screen (and
+      // the switch has something to act on) as soon as possible.
+      if (!reduced.matches && !live.getAttribute('src')) live.src = live.dataset.src;
     })();
 
-    // The name in the footer: its light swings round to face the pointer,
-    // easing there, as a lamp's reflection does on a record.
+    // The name in the footer: at rest, quiet grooves and a soft sheen (all
+    // CSS). On hover, one of five effects (the Try panel picks; Spin unless
+    // tried otherwise). Each eases in and out from a single loop that stops
+    // when nothing is moving; style.css draws them from the properties set
+    // here. Reduced motion keeps the word still.
     (() => {
       const w = document.querySelector('.foot-word');
-      if (!w || !matchMedia('(hover: hover)').matches) return;
-      let want = -60;
-      let now = -60;
+      if (!w) return;
+      const modes = ['spin', 'tonearm', 'ripple', 'platter', 'depth'];
+      let saved = null;
+      try { saved = localStorage.getItem('interlude.try.foothover'); } catch {}
+      w.dataset.hover = modes.includes(saved) ? saved : 'spin';
+      if (!matchMedia('(hover: hover)').matches || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      const s = { on: 0, spin: 0, speed: 0, lit: 0, gx: 0, gy: 0, sx: 0, sy: 0 };
+      let over = false;
+      let nx = 0;
+      let ny = 0;
+      let born = 0;
+      let from = { x: 0, y: 0 };
       let raf = 0;
-      const ease = () => {
-        now += ((((want - now) % 360) + 540) % 360 - 180) * 0.12;
-        w.style.setProperty('--a', `${now.toFixed(1)}deg`);
-        raf = Math.abs(((want - now) % 360 + 540) % 360 - 180) > 0.2 ? requestAnimationFrame(ease) : 0;
+      let last = 0;
+      const set = (k, v) => w.style.setProperty(k, v);
+      const towards = (k, target, rate, dt) => {
+        s[k] += (target - s[k]) * (1 - Math.exp(-dt * rate));
+        if (Math.abs(target - s[k]) < 0.001) s[k] = target;
+        return s[k] !== target;
       };
-      // And the groove under the pointer lights, following it smoothly.
-      let ring = 0;
-      let ringWant = 0;
-      const follow = () => {
-        ring += (ringWant - ring) * 0.2;
-        w.style.setProperty('--r', `${ring.toFixed(1)}px`);
-        if (Math.abs(ringWant - ring) > 0.3) requestAnimationFrame(follow);
-        else following = false;
+      const inOut = (t) => (t < 0.5 ? 4 * t ** 3 : 1 - (-2 * t + 2) ** 3 / 2);
+      function frame(now) {
+        const dt = Math.min(0.05, (now - last) / 1000);
+        last = now;
+        const mode = w.dataset.hover;
+        let busy = towards('on', over ? 1 : 0, over ? 3 : 2.5, dt);
+        if (mode === 'spin') {
+          // Spins up over a second or so, winds down a little slower.
+          busy = towards('speed', over ? 24 : 0, over ? 1.4 : 1, dt) || busy || s.speed > 0;
+          s.spin = (s.spin + s.speed * dt) % 360;
+          set('--spin', `${s.spin.toFixed(2)}deg`);
+          set('--fx', (s.speed / 24).toFixed(3));
+        } else if (mode === 'tonearm') {
+          const t = Math.min(1, (now - born) / 2600);
+          set('--sweep', `${(-68 + 136 * inOut(t)).toFixed(2)}deg`);
+          set('--fx', (Math.sin(Math.PI * t) ** 0.8).toFixed(3));
+          busy = t < 1;
+        } else if (mode === 'ripple') {
+          const t = Math.min(1, (now - born) / 3200);
+          set('--wx', `${from.x.toFixed(0)}px`);
+          set('--wy', `${from.y.toFixed(0)}px`);
+          set('--wave', `${(1150 * (1 - (1 - t) ** 1.7)).toFixed(1)}px`);
+          set('--fx', ((1 - t) ** 1.2 * Math.min(1, t * 10)).toFixed(3));
+          busy = t < 1;
+        } else if (mode === 'platter') {
+          busy = towards('lit', over ? 1 : 0, over ? 1.6 : 2.2, dt) || busy;
+          set('--lit', s.lit.toFixed(4));
+          set('--fx', Math.min(1, s.lit * 2.5).toFixed(3));
+        } else if (mode === 'depth') {
+          const k = over ? 1 : 0;
+          busy = towards('gx', -8 * nx * k, 2, dt) | towards('gy', -4 * ny * k, 2, dt) | towards('sx', 46 * nx * k, 2, dt)
+            | towards('sy', 18 * ny * k, 2, dt) || busy;
+          set('--gx', `${s.gx.toFixed(2)}px`);
+          set('--gy', `${s.gy.toFixed(2)}px`);
+          set('--sx', `${s.sx.toFixed(2)}px`);
+          set('--sy', `${s.sy.toFixed(2)}px`);
+          set('--fx', s.on.toFixed(3));
+        }
+        raf = busy ? requestAnimationFrame(frame) : 0;
+      }
+      const run = () => {
+        if (raf) return;
+        last = performance.now();
+        raf = requestAnimationFrame(frame);
       };
-      let following = false;
-      w.addEventListener('pointermove', (e) => {
+      const where = (e) => {
         const r = w.getBoundingClientRect();
-        const dx = e.clientX - (r.left + r.width / 2);
-        const dy = e.clientY - (r.top + r.height * 0.7);
-        want = (Math.atan2(dy, dx) * 180) / Math.PI + 90 - 24;
-        // Snap to a groove (the pattern repeats every 3.4px), so it's one
-        // groove that lights, not a band between two.
-        ringWant = Math.round(Math.hypot(dx, dy) / 3.4) * 3.4 + 0.35;
-        if (!ring) ring = ringWant;
-        if (!raf) raf = requestAnimationFrame(ease);
-        if (!following) { following = true; requestAnimationFrame(follow); }
+        nx = Math.max(-1, Math.min(1, ((e.clientX - r.left) / r.width) * 2 - 1));
+        ny = Math.max(-1, Math.min(1, ((e.clientY - r.top) / r.height) * 2 - 1));
+        return { x: e.clientX - r.left, y: e.clientY - r.top };
+      };
+      w.addEventListener('pointerenter', (e) => {
+        over = true;
+        from = where(e);
+        // Tonearm and Ripple play once per visit, not again while one runs.
+        if (performance.now() - born > 1200) born = performance.now();
+        run();
       });
-      w.addEventListener('pointerenter', () => w.style.setProperty('--on', '1'));
-      w.addEventListener('pointerleave', () => w.style.setProperty('--on', '0'));
+      w.addEventListener('pointermove', (e) => {
+        where(e);
+        if (w.dataset.hover === 'depth') run();
+      });
+      w.addEventListener('pointerleave', () => {
+        over = false;
+        run();
+      });
+      // A new pick from the Try panel starts from rest.
+      new MutationObserver(() => {
+        for (const k of ['--fx', '--gx', '--gy', '--sx', '--sy']) w.style.removeProperty(k);
+        Object.assign(s, { speed: 0, lit: 0, gx: 0, gy: 0, sx: 0, sy: 0 });
+      }).observe(w, { attributes: true, attributeFilter: ['data-hover'] });
     })();
 
     // The FAQ: answers ease open and closed instead of jumping. The

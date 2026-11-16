@@ -136,3 +136,9 @@ svg.links { position: absolute; inset: 0; z-index: 255; pointer-events: none; ov
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--deck) 55%, transparent);
   transition: background-color 0.25s, box-shadow 0.25s;
 }
+
+/* The library's background-analysis note ("analyzing, 12 to go") would
+   otherwise flicker in the demo's first seconds. */
+.app-host .pending { display: none !important; }
+/* The deeper Club board sits a little higher, so it still ends above the toggle. */
+#hero[data-hand="controller"] .desk:has(.hw[data-v="club"]) { top: 578px; }
