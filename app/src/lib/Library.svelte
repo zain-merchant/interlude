@@ -10,6 +10,7 @@
   import { sampler, setSamplerOpen } from './sampler.svelte.js';
   import { pushEdit, showToast } from './undo.svelte.js';
   import { keyName, keyLongName, camelot } from './key.js';
+  import { hms } from '../flags/08-stress-hours/time.js';
 
   /** @type {{ onload: (deck: number, track: import('./backend.js').LibraryTrack, opts?: { force?: boolean }) => void, onsettings?: () => void }} */
   let { onload, onsettings } = $props();
@@ -114,6 +115,8 @@
   const timeText = (a) => {
     if (a?.duration == null) return '';
     const s = Math.round(a.duration);
+    // #8 (UI audit flag): stress-hours shows h:mm:ss past an hour.
+    if (flag('stress-hours') && s >= 3600) return hms(s);
     return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
   };
   /** Shown when analysis found nothing (or the file wouldn't decode). */

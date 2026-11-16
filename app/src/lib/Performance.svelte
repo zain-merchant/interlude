@@ -8,6 +8,8 @@
   import { keyLabel } from './commands.js';
   import { PADS, hasGrid, beatsLabel, hotCue, clearHotCue, loopToggle, loopScale, beatJump } from './performance.js';
   import { deckSettings } from './decksettings.svelte.js';
+  import { flag } from '../flags/registry.svelte.js';
+  import { hms } from '../flags/08-stress-hours/time.js';
 
   /** @type {{ deck: number, show?: 'all' | 'cues' | 'loop' }} */
   let { deck, show = 'all' } = $props();
@@ -21,8 +23,10 @@
 
   let held = $state(-1);
 
-  const mmss = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+  // #8 (UI audit flag): stress-hours shows hot cues past an hour as h:mm:ss.
+  const mmss = (s) => (flag('stress-hours') && s >= 3600 ? hms(s) : `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`);
   function fmt(s) {
+    if (flag('stress-hours') && s >= 3600) return hms(s, 1); // #8 (UI audit flag)
     const m = Math.floor(s / 60);
     return `${m}:${(s - m * 60).toFixed(1).padStart(4, '0')}`;
   }
