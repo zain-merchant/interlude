@@ -1,0 +1,16 @@
+/* #13: one line where it fits; the window's width less a margin at most. */
+:root[data-flag-declutter-toast] .toastbox .toast {
+  width: max-content;
+  max-width: calc(100vw - 48px);
+}
+/* Bottom right, over the ends of the library rows. */
+:root[data-flag-declutter-toast][data-flag-declutter-toast-place='corner'] .toastbox .toast {
+  left: auto;
+  right: 24px;
+  transform: none;
+  max-width: min(640px, calc(100vw - 48px));
+}
+/* Dev builds only: the audit's own toggle bar sits in that corner; clear it. */
+:root[data-flag-declutter-toast][data-flag-declutter-toast-place='corner']:has(body > .flagbar) .toastbox .toast {
+  bottom: 64px;
+}

@@ -10,6 +10,7 @@
   import { sampler, setSamplerOpen } from './sampler.svelte.js';
   import { pushEdit, showToast } from './undo.svelte.js';
   import { keyName, keyLongName, camelot, keysMix, playingKey } from './key.js';
+  import { hms } from '../flags/08-stress-hours/time.js';
 
   /** @type {{ onload: (deck: number, track: import('./backend.js').LibraryTrack, opts?: { force?: boolean }) => void, onsettings?: () => void }} */
   let { onload, onsettings } = $props();
@@ -104,6 +105,17 @@
   });
   const selectIndex = (i) => (selPath = sorted[i]?.path ?? null);
 
+  // #7 (UI audit flag): edge-empty-views: an empty playlist or folder says so, not "No tracks yet. Add a music folder".
+  const emptyView = $derived(
+    !flag('edge-empty-views') ? null
+    : view.kind === 'playlist' ? 'This playlist is empty. Drag tracks onto its name to add them.'
+    : view.kind === 'folder' ? `No music files found in ${(view.path ?? '').split(/[\\/]/).filter(Boolean).pop()}.`
+    : null,
+  );
+
+  // #8 (UI audit flag): stress-plural says "1 track", not "1 tracks".
+  const tracksWord = $derived(flag('stress-plural') && results.length === 1 ? 'track' : 'tracks');
+
   /** Tracks still waiting for their length, BPM and key. */
   const pending = $derived(all.reduce((n, t) => n + (t.analysis ? 0 : 1), 0));
   // #18 (UI audit flag): how much of the library is analysed, for the bar under the analysis note.
@@ -116,6 +128,8 @@
   const timeText = (a) => {
     if (a?.duration == null) return '';
     const s = Math.round(a.duration);
+    // #8 (UI audit flag): stress-hours shows h:mm:ss past an hour.
+    if (flag('stress-hours') && s >= 3600) return hms(s);
     return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
   };
   /** Shown when analysis found nothing (or the file wouldn't decode). */
@@ -560,10 +574,10 @@
       </label>
       <!-- #10 (UI audit flag): the analysis note set apart by space, not a middle dot. -->
       {#if flag('no-dots')}
-        <span class="count num">{loading ? 'Scanning…' : `${results.length.toLocaleString()} tracks`}{#if !loading && pending}{' '}<span
+        <span class="count num">{loading ? 'Scanning…' : `${results.length.toLocaleString()} ${tracksWord}`}{#if !loading && pending}{' '}<span
             class="pending" style:--flag-visual-analysis-done={analysisDone} use:tip={() => 'Finding each track’s length, BPM and key in the background'}>analyzing, {pending.toLocaleString()} to go</span>{/if}</span>
       {:else}
-      <span class="count num">{loading ? 'Scanning…' : `${results.length.toLocaleString()} tracks`}{#if !loading && pending}<span
+      <span class="count num">{loading ? 'Scanning…' : `${results.length.toLocaleString()} ${tracksWord}`}{#if !loading && pending}<span
           class="pending" style:--flag-visual-analysis-done={analysisDone} use:tip={() => 'Finding each track’s length, BPM and key in the background'}> · analyzing, {pending.toLocaleString()} to go</span>{/if}</span>
       {/if}
       <button class="btn sm samp" class:on={sampler.open} aria-pressed={sampler.open}
@@ -595,6 +609,8 @@
       aria-activedescendant={sorted[selected] ? `track-${selected}` : undefined}>
       {#if error}
         <div class="empty">{error}</div>
+      {:else if !loading && !all.length && emptyView}
+        <div class="empty"><p>{emptyView}</p></div>
       {:else if !loading && !all.length}
         <div class="empty">
           <p>No tracks yet.</p>

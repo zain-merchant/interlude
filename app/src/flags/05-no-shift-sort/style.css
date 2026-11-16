@@ -1,0 +1,6 @@
+/* #5: right-aligned headings keep their right edge; the arrow comes in on
+   the left. */
+:root[data-flag-no-shift-sort] .library .head .sort.num {
+  flex-direction: row-reverse;
+  justify-content: flex-start;
+}

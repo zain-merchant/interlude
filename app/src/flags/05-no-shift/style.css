@@ -1,0 +1,28 @@
+/* #5: the kill shows on the label without changing its length. The label
+   is already red while killed (Knob.svelte); the mark is drawn over it or
+   beside it, out of the layout. */
+:root[data-flag-no-shift][data-flag-no-shift-mark='strike'] .knob button.label.killed {
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+}
+:root[data-flag-no-shift][data-flag-no-shift-mark='dot'] .knob button.label {
+  position: relative;
+}
+:root[data-flag-no-shift][data-flag-no-shift-mark='dot'] .knob button.label.killed::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 100%;
+  width: 4px;
+  height: 4px;
+  margin-top: -2px;
+  border-radius: 50%;
+  background: var(--kill);
+}
+
+/* The record button holds the width of the longest clock it shows in a
+   set ("0:00:00", tabular figures) from the start, so "Rec" turning into
+   a running clock doesn't resize it. */
+:root[data-flag-no-shift] .mixer button.rec {
+  min-width: calc(5ch + 0.6em + 30px);
+}

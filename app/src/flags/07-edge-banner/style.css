@@ -1,0 +1,12 @@
+/* #7: out of the app's grid, as each of these was written to be. Beats
+   App.svelte's `.app > :not(.bd) { position: relative }` on specificity. */
+:root[data-flag-edge-banner] .app > .banner,
+:root[data-flag-edge-banner] .app > .toastbox,
+:root[data-flag-edge-banner] .app > .sr {
+  position: absolute;
+}
+/* Placed at left: 50%, an absolute box only gets half the window before it
+   wraps; size it to its text, up to the max-width it already has. */
+:root[data-flag-edge-banner] .app > .banner {
+  width: max-content;
+}

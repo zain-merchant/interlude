@@ -17,6 +17,7 @@
   import { announce } from './announce.svelte.js';
   import { keyName, keyLongName, camelot, playingKey, keysMix } from './key.js';
   import { toggleSlip, beatJump, hasGrid, beatsLabel } from './performance.js';
+  import { hms } from '../flags/08-stress-hours/time.js';
 
   /** @type {{ deck: number, onload: (deck: number, track: any) => void, onreveal: (path: string) => void, onsettings?: (page: string) => void }} */
   let { deck, onload, onreveal, onsettings } = $props();
@@ -202,6 +203,8 @@
 
   function fmt(s) {
     if (!isFinite(s)) return '0:00.0';
+    // #8 (UI audit flag): stress-hours shows h:mm:ss.s past an hour.
+    if (flag('stress-hours') && Math.abs(s) >= 3600) return hms(s, 1);
     const sign = s < 0 ? '−' : '';
     s = Math.abs(s);
     const m = Math.floor(s / 60);
