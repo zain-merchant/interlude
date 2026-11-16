@@ -290,6 +290,8 @@ function markOn(el) {
  */
 function link(hw, appEl, label) {
   links.forEach((end) => end(true));
+  // And anything still fading from the last one goes now.
+  document.querySelectorAll('svg.links > *, .link-mark').forEach((n) => n.remove());
   const app = typeof appEl === 'function' ? appEl() : appEl;
   const end = () => {};
   end.pulse = () => {};
@@ -433,25 +435,29 @@ const controller = {
     const s = slot.getBoundingClientRect();
     const h = heroBox();
     const yOf = (at) => s.top - h.top + s.height * (0.5 + at * 0.45);
-    const from = a.center(`c-pitch-${d}`);
-    await a.move(from);
-    const tie = link(cap, appFader, 'Tempo');
-    await a.wait(LEAD);
-    cap.setAttribute('data-held', '');
     const at0 = parseFloat(cap.style.getPropertyValue('--at')) || atOf(rate0);
     const at1 = atOf(target);
-    tie.pulse();
-    await a.drag({ x: from.x, y: yOf(at1) - yOf(at0) + from.y }, (_p, _f, t) => {
-      cap.style.setProperty('--at', String(at0 + (at1 - at0) * t));
-      const rate = rate0 + (target - rate0) * t;
-      onLanding(() => control({ type: 'setRate', deck: d, rate }));
-    }, { duration: 1500, path: straight });
-    await a.wait(TRAVEL);
-    control({ type: 'setRate', deck: d, rate: target });
-    await a.wait(400);
-    cap.removeAttribute('data-held');
-    tie();
-    await a.wait(200);
+    // Already at the right tempo: nothing to ride, so go straight to Sync.
+    if (Math.abs(at1 - at0) > 0.03) {
+      const from = a.center(`c-pitch-${d}`);
+      await a.move(from);
+      const tie = link(cap, appFader, 'Tempo');
+      // The pulse goes first, while the finger rests on the cap; once it
+      // lands, the hardware and the app move together.
+      await a.wait(LEAD);
+      tie.pulse();
+      cap.setAttribute('data-held', '');
+      await a.wait(TRAVEL);
+      await a.drag({ x: from.x, y: yOf(at1) - yOf(at0) + from.y }, (_p, _f, t) => {
+        cap.style.setProperty('--at', String(at0 + (at1 - at0) * t));
+        control({ type: 'setRate', deck: d, rate: rate0 + (target - rate0) * t });
+      }, { duration: 1300, path: straight });
+      control({ type: 'setRate', deck: d, rate: target });
+      await a.wait(350);
+      cap.removeAttribute('data-held');
+      tie();
+      await a.wait(200);
+    }
     await hwPress(a, `c-sync-${d}`, () => $('.btn.sync', deckEl(d)).click(), 'Sync', () => $('.btn.sync', deckEl(d)));
   },
   play: (a, d) => hwPress(a, `c-play-${d}`, () => $('.btn.play', deckEl(d)).click(), engine.decks[d].playing ? 'Pause' : 'Play', () => $('.btn.play', deckEl(d))),
@@ -464,16 +470,16 @@ const controller = {
     await a.move({ x: r.x + ((xf + 1) / 2) * r.width, y });
     const tie = link(capEl, () => $('.cap', crossfader()), 'Crossfader');
     await a.wait(LEAD);
-    capEl.setAttribute('data-held', '');
     tie.pulse();
+    capEl.setAttribute('data-held', '');
+    await a.wait(TRAVEL);
     await a.drag({ x: r.x + ((to + 1) / 2) * r.width, y }, (at) => {
       const value = Math.max(-1, Math.min(1, ((at.x - r.x) / r.width) * 2 - 1));
       hw?.style.setProperty('--xf', String((value + 1) / 2));
-      onLanding(() => control({ type: 'setCrossfader', value }));
-    }, { duration: 2200, path: straight });
-    await a.wait(TRAVEL);
+      control({ type: 'setCrossfader', value });
+    }, { duration: 2000, path: straight });
     control({ type: 'setCrossfader', value: to });
-    await a.wait(400);
+    await a.wait(350);
     capEl.removeAttribute('data-held');
     tie();
   },
@@ -641,16 +647,15 @@ const controllerFeatures = {
     const from = { x: r.x + r.width / 2, y: r.y + r.height / 2 };
     const tie = link(hw, app, 'Low EQ');
     await a.wait(LEAD);
+    tie.pulse();
     hw.setAttribute('data-held', '');
+    await a.wait(TRAVEL);
     let steps = 0;
-    let next = 0;
-    await a.drag({ x: from.x, y: from.y + 40 }, (at, _f, t) => {
+    await a.drag({ x: from.x, y: from.y + 40 }, (at) => {
       const k = Math.min(1, (at.y - from.y) / 40);
       hw.style.rotate = `${-k * 150}deg`;
-      while (steps < Math.floor(k * 12)) { onLanding(() => key(app, 'ArrowDown')); steps++; }
-      if (t >= next) { tie.pulse(); next = 2; }
-    }, { duration: 1300, path: straight });
-    await a.wait(TRAVEL);
+      while (steps < Math.floor(k * 12)) { key(app, 'ArrowDown'); steps++; }
+    }, { duration: 1100, path: straight });
     key(app, 'Home');
     await a.wait(400);
     hw.removeAttribute('data-held');
@@ -667,12 +672,12 @@ const controllerFeatures = {
     const from = { x: r.x + r.width / 2, y: r.y + r.height / 2 + 40 };
     const tie = link(hw, lowEq(d), 'Low EQ');
     await a.wait(LEAD);
-    hw.setAttribute('data-held', '');
     tie.pulse();
+    hw.setAttribute('data-held', '');
+    await a.wait(TRAVEL);
     await a.drag({ x: from.x, y: from.y - 40 }, (at) => {
       hw.style.rotate = `${-Math.max(0, Math.min(1, (at.y - (from.y - 40)) / 40)) * 150}deg`;
     }, { duration: 700, path: straight });
-    await a.wait(TRAVEL - 400);
     lowEq(d).dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
     await a.wait(400);
     hw.removeAttribute('data-held');

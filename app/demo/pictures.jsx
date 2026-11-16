@@ -232,29 +232,30 @@ const ROWS = [
   { title: 'Glasshouse', artist: 'Sable & Ash', bpm: 124, key: 'Am' },
   { title: 'Signal Fire', artist: 'Low Orbit', bpm: 125, key: 'Gm' },
 ];
-// Library: one small library view that shows all three things at once.
-// Tracks arrive from Rekordbox and Serato, each tagged with its format, and
-// then a search narrows them to the two that match.
+// Library: one small library view that shows all three things at once:
+// tracks from Rekordbox and Serato, each tagged with its format, and a
+// search that narrows them, letter by letter, to the two that match.
 const LIB = [
   { t: 'Glass Rooms', fmt: 'FLAC', src: 'Rekordbox' },
   { t: 'Night Shift', fmt: 'MP3', src: 'Serato' },
-  { t: 'Glasshouse', fmt: 'WAV', src: 'Rekordbox' },
+  { t: 'Glasshouse', fmt: 'WAV', src: 'Serato' },
   { t: 'Paper Planes', fmt: 'AIFF', src: 'Serato' },
   { t: 'Halcyon', fmt: 'AAC', src: 'Rekordbox' },
 ];
 export function Search(play) {
   return (
-    <Pic id="search" {...play} initial={{ rows: 0, q: '' }} poster={{ rows: LIB.length, q: 'glass' }}
+    <Pic id="search" {...play} initial={{ rows: LIB.length, q: '', sel: -1, loaded: false }} poster={{ rows: LIB.length, q: 'glass', sel: 0, loaded: true }}
       script={async (a) => {
-        for (let rows = 1; rows <= LIB.length; rows++) {
-          await a.set({ rows });
-          await a.wait(170);
-        }
-        await a.wait(650);
+        await a.wait(300);
         for (let i = 1; i <= 5; i++) {
           await a.set({ q: 'glass'.slice(0, i) });
-          await a.wait(120);
+          await a.wait(170);
         }
+        // Then the first match is picked and loaded to Deck A.
+        await a.wait(500);
+        await a.set({ sel: 0 });
+        await a.wait(600);
+        await a.set({ loaded: true });
       }}>
       {(s) => {
         const hit = (r) => r.t.toLowerCase().includes(s.q);
@@ -268,8 +269,9 @@ export function Search(play) {
             </div>
             <div className="p-lib__list">
               {LIB.map((r, i) => (
-                <div key={r.t} className="p-lib__row" data-in={i < s.rows || undefined} data-out={(i < s.rows && !hit(r)) || undefined}>
-                  <span className="t">{r.t}</span>
+                <div key={r.t} className="p-lib__row" data-in={i < s.rows || undefined} data-out={(i < s.rows && !hit(r)) || undefined}
+                  data-sel={(s.sel === i) || undefined} data-loaded={(s.sel === i && s.loaded) || undefined}>
+                  <span className="t">{r.t}<b className="p-lib__deck">A</b></span>
                   <span className="p-lib__fmt">{r.fmt}</span>
                   <span className="p-lib__src" data-src={r.src}>{r.src}</span>
                 </div>
@@ -318,40 +320,57 @@ export function Controllers(play) {
   );
 }
 
-/* ---------------- Recording and more: three extras, knolled ---------------- */
+/* ---------------- Recording and more ---------------- */
 
-// Three of the extras laid out loose, each a different size, each doing its
-// one thing in turn: the set recording, the sampler firing, a shortcut
-// remapped.
+// Being tried (html[data-reclayout]):
+//   stacked   Record (its waveform growing as the set is recorded) over the
+//             Sampler's pads
+//   side      the same two side by side
+//   carousel  Record, Sampler and Shortcuts: one large in the middle doing
+//             its thing, then it eases aside as the next grows into place
 const PADS = 8;
+const WAVE = Array.from({ length: 44 }, (_, i) => 0.25 + 0.75 * Math.abs(Math.sin(i * 0.9) * Math.cos(i * 0.31)));
 export function Extras(play) {
   return (
-    <Pic id="extras" {...play} initial={{ rec: false, sec: 0, pad: -1, key: 'W' }} poster={{ rec: true, sec: 6, pad: 5, key: 'Space' }}
+    <Pic id="extras" {...play} initial={{ rec: false, sec: 0, bars: 0, pad: -1, key: 'W', focus: 0 }} poster={{ rec: true, sec: 9, bars: WAVE.length, pad: 5, key: 'Space', focus: 0 }}
       script={async (a) => {
         await a.set({ rec: true });
         let sec = 0;
-        const clock = setInterval(() => a.put({ sec: Math.min(9, ++sec) }), 450);
-        await a.wait(800);
-        for (const pad of [0, 5, 2, 5]) {
+        let bars = 0;
+        const clock = setInterval(() => a.put({ sec: Math.min(59, ++sec) }), 1000);
+        const grow = setInterval(() => a.put({ bars: Math.min(WAVE.length, ++bars) }), 70);
+        await a.wait(1500);
+        await a.set({ focus: 1 });
+        await a.wait(450);
+        for (const pad of [0, 5, 2, 5, 7]) {
           await a.set({ pad });
-          await a.wait(220);
+          await a.wait(190);
         }
-        await a.wait(420);
+        await a.wait(500);
+        await a.set({ focus: 2, pad: -1 });
+        await a.wait(600);
         await a.set({ key: 'Space' });
-        await a.wait(1200);
+        await a.wait(1100);
+        await a.set({ focus: 0 });
+        await a.wait(900);
         clearInterval(clock);
+        clearInterval(grow);
+        a.put({ bars: WAVE.length });
       }}>
       {(s) => (
-        <div className="p-loose">
-          <figure className="p-obj" style={{ left: 20, top: 8 }}>
+        <div className="p-extras" style={{ '--focus': s.focus }}>
+          <figure className="p-x p-x--rec" data-focus={s.focus === 0 || undefined}>
             <figcaption>Record</figcaption>
-            <div className="p-rec-lg" data-on={s.rec || undefined}><i /><span>{s.rec ? `0:${String(s.sec).padStart(2, '0')}` : 'Rec'}</span></div>
+            <div className="p-recbox">
+              <div className="p-rec-lg" data-on={s.rec || undefined}><i /><span>{s.rec ? `0:${String(s.sec).padStart(2, '0')}` : 'Rec'}</span></div>
+              <div className="p-recwave" aria-hidden>{WAVE.map((h, i) => <i key={i} data-on={i < s.bars || undefined} style={{ '--h': h }} />)}</div>
+            </div>
           </figure>
-          <figure className="p-obj" style={{ left: 200, top: 8 }}>
+          <figure className="p-x p-x--pads" data-focus={s.focus === 1 || undefined}>
             <figcaption>Sampler</figcaption>
             <div className="p-pads p-pads--lg">{Array.from({ length: PADS }, (_, i) => <i key={i} data-on={s.pad === i || undefined} />)}</div>
           </figure>
-          <figure className="p-obj" style={{ left: 20, top: 90 }}>
+          <figure className="p-x p-x--keys" data-focus={s.focus === 2 || undefined}>
             <figcaption>Shortcuts</figcaption>
             <div className="p-remap">
               <kbd className="p-key">Play</kbd>
