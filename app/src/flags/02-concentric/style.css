@@ -1,0 +1,83 @@
+/* #2: concentric inset corners. Inner radius = outer radius − inset, written
+   as that sum so it follows the tokens. The insets are the paddings the
+   components use today (named in each comment). */
+
+/* Waveforms panel → zoom pill, 8px in from the top right. */
+:root[data-flag-concentric] .waves .zoom {
+  --concentric-outer: calc(var(--r-panel) - 8px);
+  border-radius: var(--concentric-outer);
+}
+/* Zoom pill → its − and + buttons: 2px in top and bottom (24px pill, 20px
+   buttons), 4px at the ends; the tighter side sets the radius. */
+:root[data-flag-concentric] .waves .zoom button {
+  border-radius: calc(var(--concentric-outer) - 2px);
+}
+
+/* Library panel → nav items (nav pads 8px), the bar's controls and the
+   track list (the main column pads 8px). */
+:root[data-flag-concentric] .library nav .item,
+:root[data-flag-concentric] .library nav .add,
+:root[data-flag-concentric] .library .main .search,
+:root[data-flag-concentric] .library .main .bar .btn,
+:root[data-flag-concentric] .library .main .scroll {
+  border-radius: calc(var(--r-panel) - 8px);
+}
+/* Track list → its rows, flush with its edges. */
+:root[data-flag-concentric] .library .main .scroll .row {
+  border-radius: calc(var(--r-panel) - 8px - 0px);
+}
+/* Search field → its clear button: 6px in (10px padding, −4px margin;
+   20px button in a 32px field). */
+:root[data-flag-concentric] .library .main .search .clear {
+  border-radius: calc(var(--r-panel) - 8px - 6px);
+}
+
+/* Sampler strip → its close button, 8px in from the right. */
+:root[data-flag-concentric] .sampler .close {
+  border-radius: calc(var(--r-panel) - 8px);
+}
+
+/* Settings panel → the buttons in its bar (8px padding). */
+:root[data-flag-concentric] .settings .main .bar .btn {
+  border-radius: calc(var(--r-panel) - 8px);
+}
+
+/* Beat-jump control → its ‹ › buttons, flush with its ends. */
+:root[data-flag-concentric] .transport .jumps button {
+  border-radius: calc(var(--r) - 0px);
+}
+
+/* Context menu → its items (4px padding). */
+:root[data-flag-concentric] .menu {
+  --concentric-outer: var(--r);
+}
+:root[data-flag-concentric] .menu button {
+  border-radius: calc(var(--concentric-outer) - 4px);
+}
+
+/* Toast → Undo, 6px in. Undo keeps its 6px radius, so the toast grows to
+   6 + 6. */
+:root[data-flag-concentric] .toastbox .toast {
+  --concentric-outer: calc(6px + 6px);
+  border-radius: var(--concentric-outer);
+}
+:root[data-flag-concentric] .toastbox .toast .undo {
+  border-radius: calc(var(--concentric-outer) - 6px);
+}
+
+/* Banner → its buttons, 8px in. The buttons keep the control radius, so
+   the banner grows to it + 8. */
+:root[data-flag-concentric] .banner {
+  --concentric-outer: calc(var(--r) + 8px);
+  border-radius: var(--concentric-outer);
+}
+:root[data-flag-concentric] .banner .btn {
+  border-radius: calc(var(--concentric-outer) - 8px);
+}
+
+/* Optional: the deck and mixer panels grow to control radius + padding,
+   so the transport buttons in their corners are concentric too. */
+:root[data-flag-concentric][data-flag-concentric-panels='grow'] .decks > * {
+  --r-panel: calc(var(--r) + var(--pad));
+  border-radius: var(--r-panel);
+}

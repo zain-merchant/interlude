@@ -25,6 +25,8 @@
   import { stepUiZoom, setUiZoom } from './lib/uizoom.svelte.js';
   import { installAppMenu } from './lib/appmenu.js';
   import { runPerformance } from './lib/performance.js';
+  import { flag } from './flags/registry.svelte.js';
+  import { start as startSquircles } from './flags/01-squircles/squircles.js';
   import { padMode, setPadMode } from './lib/padmode.svelte.js';
   import { tempoPickup } from './lib/pickup.svelte.js';
   import { toggleStem, soloStem, syncStemWaveforms, stemsUnavailable } from './lib/stems.svelte.js';
@@ -420,6 +422,9 @@
 
   /** True while the sampler is showing because of the controller's SAMPLER button. */
   let samplerFromPads = false;
+
+  // #1 (UI audit flag): squircle corners, clipped per element (WebKit has no corner-shape).
+  $effect(() => (flag('squircles') ? startSquircles() : undefined));
 
   onMount(() => {
     captureUiErrors();
