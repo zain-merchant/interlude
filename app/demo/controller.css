@@ -450,8 +450,8 @@
 .hw[data-v="minimal"] .hw-xf__cap::after { display: none; }
 
 /* Club: tilted further, so it leans forward on the desk. */
-.desk[data-shown] .hw[data-v="club"] { transform: rotateX(40deg); }
-.desk:has(.hw[data-v="club"]) { perspective: 1250px; }
+.desk[data-shown] .hw[data-v="club"] { transform: rotateX(33deg); }
+.desk:has(.hw[data-v="club"]) { perspective: 1500px; transform: scale(0.64); }
 /* Club: legible keys and buttons. */
 .hw[data-v="club"] .hw-key { color: rgb(240 238 232 / 0.88); font-size: 9px; font-weight: 600; }
 .hw[data-v="club"] .hw-key[data-lit] { color: #0b0b0d; }
@@ -468,4 +468,4 @@
 .hw[data-v="club"] .hw-mixer .hw-knob i::after { width: 2.5px; background: #ffffff; box-shadow: 0 0 3px rgb(255 255 255 / 0.5); }
 .hw[data-v="club"] .hw-mixer .hw-knob { font-size: 8px; font-weight: 600; }
 /* Club: tilted further, the board needs more depth to read right. */
-.hw[data-v="club"] { height: 384px; }
+.hw[data-v="club"] { height: 430px; padding-top: 42px; padding-bottom: 42px; }
