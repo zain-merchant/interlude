@@ -259,36 +259,17 @@ pre {
 .dot.b { background: var(--deck-b); }
 .group ul { margin: 0; padding: 0; list-style: none; }
 .group li { color: var(--fg-2); font-size: 15px; }
-/* Feature lists: each a single line, evenly spaced, no rules between. */
-.group ul { display: grid; gap: 0; }
-.group li { padding: 0; border: 0; line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-/* Feature rows, five versions being tried (.groups[data-rows]). */
-.group li { display: grid; grid-template-columns: 84px 1fr; gap: 10px; align-items: baseline; }
+/* Feature lists: a name, then what it means, on alternating bands. The
+   bands bleed out to the card's padding so the words line up with the
+   heading; each row is one line, the same height. */
+.group ul { display: grid; margin-inline: -12px; }
+.group li {
+  display: grid; grid-template-columns: 88px 1fr; gap: 12px; align-items: baseline;
+  padding: 8px 12px; border-radius: 9px; line-height: 20px; white-space: nowrap;
+}
+.group li:nth-child(odd) { background: rgb(255 255 255 / 0.035); }
 .group li b { font-weight: 450; color: var(--fg); }
-.group li span { color: var(--fg-3); overflow: hidden; text-overflow: ellipsis; }
-/* Inset rule: a hairline under the detail only, closer rows. */
-.groups[data-rows="inset"] li { padding: 7px 0; }
-.groups[data-rows="inset"] li span { padding-bottom: 7px; margin-bottom: -7px; border-bottom: 1px solid var(--line); }
-.groups[data-rows="inset"] li:last-child span { border-bottom: 0; }
-/* Zebra: every other row on a faint band, no lines. */
-.groups[data-rows="zebra"] ul { margin-inline: -10px; }
-.groups[data-rows="zebra"] li { padding: 7px 10px; border-radius: 8px; }
-.groups[data-rows="zebra"] li:nth-child(odd) { background: rgb(255 255 255 / 0.03); }
-/* Plain: no names, the original sentences, a little air between. */
-.groups[data-rows="plain"] ul { gap: 9px; }
-.groups[data-rows="plain"] li { display: block; color: var(--fg-2); }
-.groups[data-rows="plain"] li > * { display: none; }
-.groups[data-rows="plain"] li::before { content: attr(data-full); }
-/* Stacked: the name small above, the detail under it, two columns. */
-.groups[data-rows="stacked"] ul { grid-template-columns: 1fr 1fr; gap: 14px 16px; align-items: start; }
-.groups[data-rows="stacked"] li { grid-template-columns: 1fr; gap: 2px; align-items: start; }
-.groups[data-rows="stacked"] li b { font-size: 13px; font-weight: 400; color: var(--fg-3); }
-.groups[data-rows="stacked"] li span { color: var(--fg); white-space: normal; }
-/* Aligned: names right-aligned and quiet against a gutter, details bright. */
-.groups[data-rows="aligned"] ul { gap: 8px; }
-.groups[data-rows="aligned"] li { grid-template-columns: 80px 1fr; gap: 14px; }
-.groups[data-rows="aligned"] li b { justify-self: end; font-size: 13px; font-weight: 400; color: var(--fg-3); }
-.groups[data-rows="aligned"] li span { color: var(--fg); }
+.group li span { color: var(--fg-2); overflow: hidden; text-overflow: ellipsis; }
 
 /* FAQ */
 .faq { max-width: 760px; }
@@ -316,7 +297,7 @@ details p { margin: 0; padding-bottom: 20px; color: var(--fg-2); max-width: 62ch
 .foot-grid > div > a:not(.brand) { display: block; width: fit-content; padding: 3px 0; color: var(--fg-2); text-decoration: none; font-size: 14px; }
 .foot-grid > div > a:not(.brand):hover { color: var(--fg); }
 .small-print { color: var(--fg-3); font-size: 13px; }
-.legal { margin-top: 16px; max-width: 34em; }
+.legal { margin-top: 14px; max-width: 36em; font-size: 12px; line-height: 1.6; color: var(--fg-3); opacity: 0.8; }
 
 @media (max-width: 860px) {
   .steps, .groups { grid-template-columns: 1fr; }
@@ -354,14 +335,18 @@ details p { margin: 0; padding-bottom: 20px; color: var(--fg-2); max-width: 62ch
    swings round to face the pointer. */
 .foot { overflow: hidden; }
 .foot-word {
-  position: relative; display: block; margin: 64px 0 -0.42em; text-align: center; user-select: none;
+  position: relative; display: block; margin: 24px 0 -0.3em; text-align: center; user-select: none;
   font-size: clamp(110px, 23vw, 380px); font-weight: 600; letter-spacing: -0.055em; line-height: 0.9;
   color: transparent;
   background:
-    repeating-radial-gradient(circle at 50% 70%, rgb(255 255 255 / 0.085) 0 0.6px, rgb(255 255 255 / 0.025) 1.2px 2.6px),
+    /* The groove under the pointer, lit, as if the needle sat in it. */
+    radial-gradient(circle at 50% 70%, transparent calc(var(--r) - 2.5px), rgb(255 255 255 / calc(0.8 * var(--on))) var(--r), transparent calc(var(--r) + 2.5px)),
+    /* Gaps between the tracks: a darker band every so often. */
+    repeating-radial-gradient(circle at 50% 70%, transparent 0 46px, rgb(9 9 11 / 0.85) 47px 54px),
+    repeating-radial-gradient(circle at 50% 70%, rgb(255 255 255 / 0.1) 0 0.7px, rgb(255 255 255 / 0.03) 1.4px 3.4px),
     rgb(255 255 255 / 0.02);
   -webkit-background-clip: text; background-clip: text;
-  --a: -60deg; --on: 0;
+  --a: -60deg; --on: 0; --r: 0px;
 }
 .foot-word::after {
   content: attr(data-text); position: absolute; inset: 0; color: transparent;
@@ -369,7 +354,9 @@ details p { margin: 0; padding-bottom: 20px; color: var(--fg-2); max-width: 62ch
     transparent 0deg, rgb(255 255 255 / 0.3) 14deg, transparent 34deg,
     transparent 180deg, rgb(255 255 255 / 0.3) 194deg, transparent 214deg);
   -webkit-background-clip: text; background-clip: text;
-  -webkit-mask-image: repeating-radial-gradient(circle at 50% 70%, #000 0 0.8px, rgb(0 0 0 / 0.35) 1.4px 2.6px);
-  mask-image: repeating-radial-gradient(circle at 50% 70%, #000 0 0.8px, rgb(0 0 0 / 0.35) 1.4px 2.6px);
+  -webkit-mask-image: repeating-radial-gradient(circle at 50% 70%, #000 0 0.9px, rgb(0 0 0 / 0.35) 1.6px 3.4px);
+  mask-image: repeating-radial-gradient(circle at 50% 70%, #000 0 0.9px, rgb(0 0 0 / 0.35) 1.6px 3.4px);
   opacity: calc(0.45 + var(--on) * 0.55); transition: opacity 0.5s ease-out;
 }
+
+.try__hint { margin: -4px 0 6px; max-width: 26em; font-size: 12px; line-height: 1.45; color: var(--fg-3); }

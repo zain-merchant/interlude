@@ -49,11 +49,16 @@ html, body { margin: 0; width: 1440px; height: 900px; overflow: hidden; backgrou
 .app-host .btn { transition: transform 90ms ease-out, background-color 160ms ease-out; }
 
 
-/* Demo only: when an EQ is killed its label grows to "Low · kill", which
-   widens the knob's column and nudges the whole mixer sideways. Hold the
-   knob columns at their width and let the longer label spread both ways. */
-.app-host [data-region="mixer"] .knob:has(button.label) { width: 38px; }
-.app-host [data-region="mixer"] .knob button.label { white-space: nowrap; }
+/* Demo only: when an EQ is killed the app adds " · kill" to its label, so
+   the label widens and its words jump. Here the label keeps its own word
+   and the kill shows by colour alone (the knob's ring and label turn red),
+   so nothing moves at all. The UI audit's no-shift item does this in the
+   app itself. */
+.app-host [data-region="mixer"] .knob button.label.killed { font-size: 0; line-height: 0; }
+.app-host [data-region="mixer"] .knob button.label.killed::before { display: block; font-size: var(--t-xs); line-height: var(--label-lh, 12px); }
+.app-host [data-region="mixer"] .knob:has([aria-label$="low EQ"]) button.label.killed::before { content: 'Low'; }
+.app-host [data-region="mixer"] .knob:has([aria-label$="mid EQ"]) button.label.killed::before { content: 'Mid'; }
+.app-host [data-region="mixer"] .knob:has([aria-label$="high EQ"]) button.label.killed::before { content: 'High'; }
 
 /* A fingertip on the hardware, without drawing a hand: the soft shadow a
    finger casts on the surface it presses, darkest where it touches. The
