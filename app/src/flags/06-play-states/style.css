@@ -1,0 +1,69 @@
+/* #6: play button states. Paused keeps the app's solid white; the other
+   states are told apart by fill, edge and glyph, not hue alone. */
+
+/* Paused, hovered: a touch brighter, so it answers the pointer. */
+:root[data-flag-play-states] .transport .btn.play:not(.on, [aria-disabled='true']):hover {
+  background: #fff;
+}
+
+/* Playing: deck tint. A glass fill and ring in the deck's own white, the
+   pause glyph in that colour, like the other "live" marks (FX on, a
+   running loop). */
+:root[data-flag-play-states][data-flag-play-states-playing='tint'] .transport .btn.play.on {
+  background: color-mix(in srgb, var(--deck) 14%, transparent);
+  color: var(--deck);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--deck) 50%, transparent);
+}
+:root[data-flag-play-states][data-flag-play-states-playing='tint'] .transport .btn.play.on:hover {
+  background: color-mix(in srgb, var(--deck) 20%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--deck) 70%, transparent);
+}
+
+/* Playing: outline. Solid when it's waiting, a bright outline while it
+   runs. */
+:root[data-flag-play-states][data-flag-play-states-playing='outline'] .transport .btn.play.on {
+  background: transparent;
+  color: var(--fg);
+  box-shadow: inset 0 0 0 1.5px var(--fg);
+}
+:root[data-flag-play-states][data-flag-play-states-playing='outline'] .transport .btn.play.on:hover {
+  background: var(--hover);
+}
+
+/* Playing: pressed in. The button latches down into a dark well, glyph in
+   the deck's colour. */
+:root[data-flag-play-states][data-flag-play-states-playing='sunk'] .transport .btn.play.on {
+  background: var(--well);
+  color: var(--deck);
+  box-shadow: inset 0 2px 4px rgb(0 0 0 / 0.5), inset 0 0 0 1px var(--line-2);
+}
+:root[data-flag-play-states][data-flag-play-states-playing='sunk'] .transport .btn.play.on:hover {
+  background: rgb(0 0 0 / 0.18);
+}
+
+/* Cueing: Cue held, the track previewing from the cue point. An amber
+   ring and fill and a play glyph (pressing Play now keeps it playing). */
+:root[data-flag-play-states][data-flag-play-states-playing] .transport .btn.play.on[data-cueing] {
+  background: color-mix(in srgb, var(--cue) 12%, transparent);
+  color: var(--cue);
+  box-shadow: inset 0 0 0 1.5px var(--cue);
+}
+:root[data-flag-play-states][data-flag-play-states-playing] .transport .btn.play.on[data-cueing] svg {
+  display: none;
+}
+:root[data-flag-play-states][data-flag-play-states-playing] .transport .btn.play.on[data-cueing]::after {
+  content: '';
+  width: 14px;
+  height: 14px;
+  background: currentColor;
+  clip-path: polygon(26% 12%, 88% 50%, 26% 88%);
+}
+
+/* Disabled: no track. An empty outline and a faint glyph, not a grey
+   block that still looks pressable. */
+:root[data-flag-play-states] .transport .btn.play[aria-disabled='true'] {
+  opacity: 1;
+  background: transparent;
+  color: var(--fg-4);
+  box-shadow: inset 0 0 0 1px var(--line-2);
+}

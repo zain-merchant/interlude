@@ -16,6 +16,7 @@
   import { announce } from './announce.svelte.js';
   import { keyName, keyLongName, camelot, playingKey } from './key.js';
   import { toggleSlip, beatJump, hasGrid, beatsLabel } from './performance.js';
+  import { flag } from '../flags/registry.svelte.js';
 
   /** @type {{ deck: number, onload: (deck: number, track: any) => void, onreveal: (path: string) => void, onsettings?: (page: string) => void }} */
   let { deck, onload, onreveal, onsettings } = $props();
@@ -135,6 +136,9 @@
   const atCue = $derived(!!t && !d.playing && Math.abs(d.position - d.cue) < 0.01);
   const pk = $derived(t ? playingKey(d.key, d.rate, d.keylock) : null);
   const canSync = $derived(!!t && d.bpm > 0 && engine.decks[1 - deck].bpm > 0);
+
+  // #6 (UI audit flag): whether the on-screen Cue button is held, so the play button can show a cue preview.
+  let cueHeld = $state(false);
 
   let lastTouch = 0;
 
@@ -281,15 +285,24 @@
     </div>
 
     <div class="transport">
+      <!-- #6 (UI audit flag): the capture handlers below only track whether Cue is held (cueHeld). -->
       <button class="btn cue" class:lit={atCue} aria-disabled={!t}
         onpointerdown={(e) => e.button === 0 && t && control({ type: 'cuePress', deck })}
         onpointerup={() => t && control({ type: 'cueRelease', deck })}
         onpointerleave={(e) => e.buttons && t && control({ type: 'cueRelease', deck })}
         onkeydown={(e) => (e.key === ' ' || e.key === 'Enter') && !e.repeat && t && (e.preventDefault(), control({ type: 'cuePress', deck }))}
         onkeyup={(e) => (e.key === ' ' || e.key === 'Enter') && t && control({ type: 'cueRelease', deck })}
+        onpointerdowncapture={(e) => (cueHeld = flag('play-states') && e.button === 0)}
+        onpointerupcapture={() => (cueHeld = false)}
+        onpointerleavecapture={() => (cueHeld = false)}
+        onkeydowncapture={(e) => (e.key === ' ' || e.key === 'Enter') && (cueHeld = flag('play-states'))}
+        onkeyupcapture={() => (cueHeld = false)}
+        onblur={() => (cueHeld = false)}
         use:tip={() => (t ? tipText('Cue', keyLabel(`deck.${deck}.cue`), 'hold to preview') : `Load a track onto deck ${name} first`)}
       >Cue</button>
+      <!-- #6 (UI audit flag): mark the play button while Cue is held and the track previews from the cue point. -->
       <button class="btn play" class:on={d.playing} aria-disabled={!t} aria-pressed={d.playing} aria-label={d.playing ? 'Pause' : 'Play'}
+        data-cueing={flag('play-states') && cueHeld && d.playing ? '' : undefined}
         {...press(play)} use:tip={() => (t ? tipText(d.playing ? 'Pause' : 'Play', keyLabel(`deck.${deck}.play`)) : `Load a track onto deck ${name} first`)}>
         {#if d.playing}
           <svg viewBox="0 0 16 16"><rect x="3" y="2" width="3.5" height="12" rx="1" /><rect x="9.5" y="2" width="3.5" height="12" rx="1" /></svg>
