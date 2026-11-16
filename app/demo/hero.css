@@ -141,4 +141,4 @@ svg.links { position: absolute; inset: 0; z-index: 255; pointer-events: none; ov
    otherwise flicker in the demo's first seconds. */
 .app-host .pending { display: none !important; }
 /* The deeper Club board sits a little higher, so it still ends above the toggle. */
-#hero[data-hand="controller"] .desk:has(.hw[data-v="club"]) { top: 578px; }
+#hero[data-hand="controller"] .desk:has(.hw[data-v="club"]) { top: 610px; }
