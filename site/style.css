@@ -154,13 +154,13 @@ h1 { margin: 0; font-size: clamp(48px, 9vw, 88px); font-weight: 600; letter-spac
 main { position: relative; isolation: isolate; }
 .ripples {
   position: absolute; left: 0; top: 0; z-index: -1; width: 100%; height: min(2000px, 230vh); pointer-events: none;
-  /* Clearest above the screen, behind the words; quieter beside the app. */
+  /* Even behind the words (the record does its own shading), one step
+     quieter beside the app, then fading out below it. */
   --fx-top: 600px; --fx-mid: 900px;
-  --fx-mask: linear-gradient(to bottom, transparent 0, rgb(0 0 0 / 0.35) calc(var(--fx-top) * 0.35), rgb(0 0 0 / 0.62) var(--fx-top), rgb(0 0 0 / 0.42) var(--fx-mid), rgb(0 0 0 / 0.42) 72%, transparent);
+  --fx-mask: linear-gradient(to bottom, transparent 0, #000 110px, #000 var(--fx-top), rgb(0 0 0 / 0.7) var(--fx-mid), rgb(0 0 0 / 0.7) 70%, transparent);
   -webkit-mask-image: var(--fx-mask);
   mask-image: var(--fx-mask);
 }
-@media (prefers-reduced-motion: reduce) { .ripples { display: none; } }
 /* Decorative layers run the page's full width, never a content column's,
    so no edge of theirs can show. */
 .shot { --s: 0.78; position: relative; }
@@ -262,10 +262,10 @@ pre {
 /* Feature lists: a name, then what it means, on alternating bands. The
    bands bleed out to the card's padding so the words line up with the
    heading; each row is one line, the same height. */
-.group ul { display: grid; margin-inline: -12px; }
+.group ul { display: grid; grid-template-columns: max-content 1fr; margin-inline: -10px; }
 .group li {
-  display: grid; grid-template-columns: 88px 1fr; gap: 12px; align-items: baseline;
-  padding: 8px 12px; border-radius: 9px; line-height: 20px; white-space: nowrap;
+  grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; column-gap: 14px; align-items: baseline;
+  padding: 8px 10px; border-radius: 9px; font-size: 14px; line-height: 20px; white-space: nowrap;
 }
 .group li:nth-child(odd) { background: rgb(255 255 255 / 0.035); }
 .group li b { font-weight: 450; color: var(--fg); }
@@ -330,33 +330,208 @@ details p { margin: 0; padding-bottom: 20px; color: var(--fg-2); max-width: 62ch
 .try button[aria-pressed="true"] { color: #111; background: var(--fg); box-shadow: none; }
 
 /* The name, very large, across the foot of the page and running off its
-   bottom edge, cut in vinyl: fine, even grooves round a centre, and the two
-   wedges of light a record always shows. On hover the light brightens and
-   swings round to face the pointer. */
+   bottom edge, cut in vinyl: fine, even grooves round a centre just below
+   it, and the two soft wedges of light a record shows (::after). It turns,
+   slowly: the light stays put, as on a real record, and what drifts is the
+   faint irregularity in the grooves (::before). On hover it eases up to a
+   slightly faster turn and the sheen catches a little more light. The
+   script ("The name in the footer", index.html) sets --spin and --glow;
+   data-hover picks how much shows (barely, gentle, noticeable). */
 .foot { overflow: hidden; }
 .foot-word {
   position: relative; display: block; margin: 24px 0 -0.3em; text-align: center; user-select: none;
   font-size: clamp(110px, 23vw, 380px); font-weight: 600; letter-spacing: -0.055em; line-height: 0.9;
   color: transparent;
+  --at: 50% 125%;
+  --grooves: repeating-radial-gradient(circle at var(--at), #000 0 0.55px, rgb(0 0 0 / 0.3) 1.1px 2.6px);
+  --spin: 0deg; --glow: 0;
+  --tex: 0.045; --lift: 0.1;
   background:
-    /* The groove under the pointer, lit, as if the needle sat in it. */
-    radial-gradient(circle at 50% 70%, transparent calc(var(--r) - 2.5px), rgb(255 255 255 / calc(0.8 * var(--on))) var(--r), transparent calc(var(--r) + 2.5px)),
-    /* Gaps between the tracks: a darker band every so often. */
-    repeating-radial-gradient(circle at 50% 70%, transparent 0 46px, rgb(9 9 11 / 0.85) 47px 54px),
-    repeating-radial-gradient(circle at 50% 70%, rgb(255 255 255 / 0.1) 0 0.7px, rgb(255 255 255 / 0.03) 1.4px 3.4px),
-    rgb(255 255 255 / 0.02);
+    repeating-radial-gradient(circle at var(--at), rgb(255 255 255 / 0.085) 0 0.55px, rgb(255 255 255 / 0.03) 1.1px 2.6px),
+    rgb(255 255 255 / 0.015);
   -webkit-background-clip: text; background-clip: text;
-  --a: -60deg; --on: 0; --r: 0px;
 }
+.foot-word::before,
 .foot-word::after {
-  content: attr(data-text); position: absolute; inset: 0; color: transparent;
-  background: conic-gradient(from var(--a) at 50% 70%,
-    transparent 0deg, rgb(255 255 255 / 0.3) 14deg, transparent 34deg,
-    transparent 180deg, rgb(255 255 255 / 0.3) 194deg, transparent 214deg);
+  content: attr(data-text); position: absolute; inset: 0; color: transparent; pointer-events: none;
   -webkit-background-clip: text; background-clip: text;
-  -webkit-mask-image: repeating-radial-gradient(circle at 50% 70%, #000 0 0.9px, rgb(0 0 0 / 0.35) 1.6px 3.4px);
-  mask-image: repeating-radial-gradient(circle at 50% 70%, #000 0 0.9px, rgb(0 0 0 / 0.35) 1.6px 3.4px);
-  opacity: calc(0.45 + var(--on) * 0.55); transition: opacity 0.5s ease-out;
+  -webkit-mask-image: var(--grooves); mask-image: var(--grooves);
 }
+/* The sheen: two soft wedges rising up the word from the centre below, one
+   a little stronger, each in a wider, fainter glow. They never turn. */
+.foot-word::after {
+  --s: calc(0.24 + var(--lift) * var(--glow));
+  --g: calc(0.07 + var(--lift) * 0.4 * var(--glow));
+  background-image: conic-gradient(from -70deg at var(--at),
+    transparent 0deg, rgb(255 255 255 / var(--g)) 14deg, rgb(255 255 255 / var(--s)) 24deg, rgb(255 255 255 / var(--g)) 34deg,
+    transparent 56deg 82deg, rgb(255 255 255 / calc(var(--g) * 0.8)) 100deg, rgb(255 255 255 / calc(var(--s) * 0.75)) 110deg,
+    rgb(255 255 255 / calc(var(--g) * 0.8)) 120deg, transparent 140deg);
+}
+/* The turn: the grooves' faint irregularity (the music cut in them), soft
+   streaks at uneven spacing, going round with the record. */
+.foot-word::before {
+  background-image:
+    repeating-conic-gradient(from var(--spin) at var(--at), rgb(255 255 255 / var(--tex)) 0deg, transparent 2.1deg, rgb(255 255 255 / var(--tex)) 4.7deg),
+    repeating-conic-gradient(from calc(var(--spin) + 1.3deg) at var(--at), rgb(255 255 255 / calc(var(--tex) * 0.8)) 0deg, transparent 3.4deg, rgb(255 255 255 / calc(var(--tex) * 0.8)) 7.3deg),
+    repeating-conic-gradient(from calc(var(--spin) + 4.1deg) at var(--at), transparent 0deg, rgb(9 9 11 / calc(var(--tex) * 2.8)) 5.6deg, transparent 11.9deg);
+}
+.foot-word[data-hover="barely"] { --tex: 0.025; --lift: 0.06; }
+.foot-word[data-hover="noticeable"] { --tex: 0.075; --lift: 0.16; }
 
 .try__hint { margin: -4px 0 6px; max-width: 26em; font-size: 12px; line-height: 1.45; color: var(--fg-3); }
+
+/* ── Hero and nav layouts (begin) ─────────────────────────────────────────
+   Picked in the Try panel: data-hero and data-nav on <html>, set in <head>.
+   No attribute, or "centred" and "bar", is the design above. */
+
+/* The eyebrow: a quiet pill above the name, only in the layouts that ask. */
+.eyebrow { display: none; }
+html[data-hero="eyebrow"] .eyebrow {
+  display: inline-flex; align-items: center; gap: 8px; height: 30px; margin-bottom: 26px; padding: 0 10px 0 4px;
+  border-radius: 999px; background: rgb(255 255 255 / 0.04); box-shadow: inset 0 0 0 1px var(--line-2);
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+  color: var(--fg-2); font-size: 13px; text-decoration: none; transition: color 0.15s, background-color 0.15s;
+}
+html[data-hero="eyebrow"] .eyebrow:hover { color: var(--fg); background: rgb(255 255 255 / 0.07); }
+.eyebrow-v {
+  display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: 999px;
+  background: rgb(255 255 255 / 0.08); color: var(--fg); font: 500 12px var(--mono); letter-spacing: -0.01em;
+}
+.eyebrow svg { width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; opacity: 0.7; transition: transform 0.15s ease-out; }
+.eyebrow:hover svg { transform: translateX(2px); }
+
+/* Eyebrow: a tighter centred block. The pill carries the version; the name
+   is smaller and lit from above; one size down on the buttons. */
+html[data-hero="eyebrow"] .hero { padding: 88px 0 52px; }
+html[data-hero="eyebrow"] .hero-icon { display: none; }
+html[data-hero="eyebrow"] .hero h1 {
+  font-size: clamp(48px, 7.4vw, 76px); letter-spacing: -0.045em;
+  background: linear-gradient(to bottom, #fff 30%, rgb(236 234 228 / 0.55)); -webkit-background-clip: text; background-clip: text; color: transparent;
+  padding-bottom: 0.06em;
+}
+html[data-hero="eyebrow"] .tagline { margin-top: 14px; font-size: clamp(16px, 2vw, 18px); }
+html[data-hero="eyebrow"] .cta { margin-top: 30px; gap: 10px; }
+html[data-hero="eyebrow"] .cta .btn.big { height: 44px; padding: 0 18px; font-size: 15px; border-radius: 11px; }
+html[data-hero="eyebrow"] .meta { margin-top: 18px; font-size: 13px; }
+
+/* Split: the name and tagline set left; the buttons beside them, sitting on
+   the tagline's line; the facts in a ruled strip under both. */
+html[data-hero="split"] .hero {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 48px;
+  grid-template-areas: "icon ." "title ." "tag cta" "meta meta";
+  text-align: left; padding: 88px 0 48px;
+}
+html[data-hero="split"] .hero-icon { grid-area: icon; width: 64px; height: 64px; margin: 0 0 28px; }
+html[data-hero="split"] .hero h1 { grid-area: title; font-size: clamp(56px, 9.4vw, 112px); letter-spacing: -0.05em; line-height: 0.92; margin-left: -0.04em; }
+html[data-hero="split"] .tagline { grid-area: tag; align-self: end; margin: 18px 0 0; max-width: 22em; font-size: clamp(17px, 2vw, 21px); }
+html[data-hero="split"] .cta { grid-area: cta; align-self: end; margin: 0; flex-wrap: nowrap; }
+html[data-hero="split"] .meta {
+  grid-area: meta; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 0;
+  margin-top: 44px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 13px;
+}
+html[data-hero="split"] .meta span { margin: 0 10px; }
+
+/* Wordmark: the name edge to edge across the column, the tagline and the
+   buttons in a row under it. */
+html[data-hero="wordmark"] .hero {
+  container-type: inline-size;
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 40px;
+  grid-template-areas: "title title" "tag cta" "meta cta";
+  text-align: left; padding: 64px 0 48px;
+}
+html[data-hero="wordmark"] .hero-icon { display: none; }
+html[data-hero="wordmark"] .hero h1 {
+  grid-area: title; font-size: 27.4cqi; letter-spacing: -0.06em; line-height: 0.8; margin: 0 0 0 -0.045em; white-space: nowrap;
+  background: linear-gradient(to bottom, #fff 20%, rgb(236 234 228 / 0.4) 95%); -webkit-background-clip: text; background-clip: text; color: transparent;
+  padding: 0.04em 0 0.1em;
+}
+html[data-hero="wordmark"] .tagline { grid-area: tag; margin: 28px 0 0; font-size: clamp(17px, 2vw, 21px); color: var(--fg); }
+html[data-hero="wordmark"] .meta { grid-area: meta; margin-top: 6px; font-size: 13px; }
+html[data-hero="wordmark"] .meta span { margin: 0 5px; }
+html[data-hero="wordmark"] .cta { grid-area: cta; align-self: end; margin: 0; flex-wrap: nowrap; }
+
+/* Headline: the icon and name as a small lockup; the tagline is the
+   headline, on two lines. */
+html[data-hero="headline"] .hero {
+  display: grid; grid-template-columns: 1fr auto auto 1fr; column-gap: 12px; align-items: center;
+  grid-template-areas: ". icon name ." "tag tag tag tag" "cta cta cta cta" "meta meta meta meta";
+  padding: 88px 0 52px;
+}
+html[data-hero="headline"] .hero-icon { grid-area: icon; width: 30px; height: 30px; margin: 0; filter: drop-shadow(0 6px 16px rgb(62 198 255 / 0.25)); }
+html[data-hero="headline"] .hero h1 { grid-area: name; font-size: 19px; font-weight: 500; letter-spacing: -0.01em; color: var(--fg-2); }
+html[data-hero="headline"] .tagline {
+  grid-area: tag; max-width: 12.5em; margin: 26px auto 0; color: var(--fg);
+  font-size: clamp(38px, 6.2vw, 68px); font-weight: 600; letter-spacing: -0.04em; line-height: 1.04;
+}
+html[data-hero="headline"] .cta { grid-area: cta; margin-top: 36px; }
+html[data-hero="headline"] .meta { grid-area: meta; }
+
+@media (max-width: 860px) {
+  html[data-hero="eyebrow"] .hero, html[data-hero="headline"] .hero { padding-top: 60px; }
+  html[data-hero="split"] .hero, html[data-hero="wordmark"] .hero {
+    grid-template-columns: minmax(0, 1fr); grid-template-areas: "icon" "title" "tag" "cta" "meta"; padding-top: 56px;
+  }
+  html[data-hero="split"] .cta, html[data-hero="wordmark"] .cta { justify-content: flex-start; flex-wrap: wrap; margin-top: 28px; }
+  html[data-hero="split"] .meta { margin-top: 32px; }
+  html[data-hero="wordmark"] .tagline { margin-top: 20px; }
+  html[data-hero="wordmark"] .meta { margin-top: 20px; }
+}
+@media (max-width: 480px) {
+  html[data-hero="split"] .hero-icon { width: 52px; height: 52px; margin-bottom: 22px; }
+  html[data-hero="split"] .cta .btn.big, html[data-hero="wordmark"] .cta .btn.big { flex: 1 1 auto; justify-content: center; }
+  html[data-hero="headline"] .tagline { font-size: 36px; }
+}
+
+/* Capsule: a floating, rounded bar over the page, its links centred. */
+html[data-nav="pill"] .nav {
+  padding: 12px 0; background: none; border-bottom: 0;
+  -webkit-backdrop-filter: none; backdrop-filter: none; pointer-events: none;
+}
+html[data-nav="pill"] .nav-row {
+  pointer-events: auto; width: min(940px, 100% - 24px); height: 52px; padding: 0 8px 0 16px; gap: 20px;
+  border-radius: 999px; background: rgb(22 22 26 / 0.6);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4); backdrop-filter: blur(20px) saturate(1.4);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08), inset 0 1px 0 rgb(255 255 255 / 0.06), 0 10px 36px rgb(0 0 0 / 0.32);
+  transition: background-color 0.3s, box-shadow 0.3s;
+}
+html[data-nav="pill"][data-scrolled] .nav-row {
+  background: rgb(22 22 26 / 0.8);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1), inset 0 1px 0 rgb(255 255 255 / 0.06), 0 14px 44px rgb(0 0 0 / 0.5);
+}
+html[data-nav="pill"] .links { margin-inline: auto; }
+html[data-nav="pill"] .nav-actions { gap: 6px; }
+html[data-nav="pill"] .nav-actions .btn { height: 36px; border-radius: 999px; }
+html[data-nav="pill"] .nav-actions .btn.ghost { box-shadow: none; background: transparent; color: var(--fg-2); }
+html[data-nav="pill"] .nav-actions .btn.ghost:hover { color: var(--fg); background: rgb(255 255 255 / 0.06); }
+
+/* Clear: no bar at the top of the page, only the words over the record;
+   the bar fades in once the page scrolls. */
+html[data-nav="clear"] .nav {
+  background: rgb(9 9 11 / 0); border-bottom-color: transparent;
+  -webkit-backdrop-filter: blur(0) saturate(1); backdrop-filter: blur(0) saturate(1);
+  transition: background-color 0.3s, border-color 0.3s, backdrop-filter 0.3s, -webkit-backdrop-filter 0.3s;
+}
+html[data-nav="clear"][data-scrolled] .nav {
+  background: rgb(9 9 11 / 0.78); border-bottom-color: var(--line);
+  -webkit-backdrop-filter: blur(16px) saturate(1.2); backdrop-filter: blur(16px) saturate(1.2);
+}
+html[data-nav="clear"] .nav-row { height: 64px; }
+
+/* Centred: name left, links centred on the page, actions right, all one
+   step lighter: GitHub as a plain link, a small rounded Download. */
+html[data-nav="centred"] .nav { background: rgb(9 9 11 / 0.66); border-bottom-color: rgb(255 255 255 / 0.06); }
+html[data-nav="centred"] .nav-row { display: grid; grid-template-columns: 1fr auto 1fr; height: 56px; }
+html[data-nav="centred"] .brand { font-weight: 500; }
+html[data-nav="centred"] .brand img { width: 22px; height: 22px; }
+html[data-nav="centred"] .links { margin: 0; gap: 30px; font-size: 13.5px; }
+html[data-nav="centred"] .nav-actions { justify-self: end; align-items: center; gap: 4px; }
+html[data-nav="centred"] .nav-actions .btn { height: 30px; font-size: 13.5px; }
+html[data-nav="centred"] .nav-actions .btn.ghost { background: none; box-shadow: none; color: var(--fg-2); padding: 0 10px; }
+html[data-nav="centred"] .nav-actions .btn.ghost:hover { color: var(--fg); }
+html[data-nav="centred"] .nav-actions .btn:not(.ghost) { padding: 0 14px; border-radius: 999px; }
+
+@media (max-width: 860px) {
+  html[data-nav="centred"] .nav-row { display: flex; }
+  html[data-nav="pill"] .nav-row { padding-left: 14px; }
+}
+/* ── Hero and nav layouts (end) ── */
