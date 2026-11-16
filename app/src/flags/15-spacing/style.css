@@ -1,0 +1,127 @@
+/* #15: one spacing scale. --pad (16) and --gap (12) keep their values;
+   these name the steps below them, and the dialog inset above. */
+:root[data-flag-spacing] {
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px; /* = --gap */
+  --space-4: 16px; /* = --pad */
+  --space-dialog: 24px;
+}
+
+/* Every panel insets its content by --pad: the mixer's sides were 12. */
+:root[data-flag-spacing] .mixer {
+  padding: var(--pad);
+}
+
+/* Library cells pad 8 (were 6). The marker column gives the 2px back
+   (26 to 24), so titles still start where the search text does. */
+:root[data-flag-spacing] .library .row {
+  grid-template-columns: 24px minmax(0, 2.4fr) minmax(0, 1.6fr) 64px 56px 64px minmax(0, 1.2fr);
+}
+:root[data-flag-spacing] .library .row span,
+:root[data-flag-spacing] .library .sort {
+  padding: 0 var(--space-2);
+}
+:root[data-flag-spacing] .library .row .k,
+:root[data-flag-spacing] .library .row .ld {
+  padding: 0;
+}
+/* The search well pads 8, and its 14px icon sits in a 16px slot, so its
+   text still starts 32px in (where the titles start). */
+:root[data-flag-spacing] .library .search {
+  padding: 0 var(--space-2);
+}
+:root[data-flag-spacing] .library .search > svg {
+  margin: 0 1px;
+}
+
+/* Overlays. Popovers pad 8 around a 24px control, or 12 before text. */
+:root[data-flag-spacing] .banner {
+  padding: var(--space-2) var(--space-2) var(--space-2) var(--space-3);
+}
+:root[data-flag-spacing] .toast {
+  gap: var(--space-3);
+  min-height: var(--h-md);
+  padding: var(--space-1) var(--space-1) var(--space-1) var(--space-3);
+}
+:root[data-flag-spacing] .toast:not(:has(.undo)) {
+  padding-right: var(--space-3);
+}
+:root[data-flag-spacing] .toast .undo {
+  height: var(--h-sm);
+  padding: 0 var(--space-2);
+}
+/* Menu items are a 28px row, like library and sidebar rows. */
+:root[data-flag-spacing] .menu button {
+  align-items: center;
+  min-height: 28px;
+  padding: 0 var(--space-2);
+}
+:root[data-flag-spacing] .menu .sep {
+  margin: var(--space-1) var(--space-2);
+}
+/* A tooltip is a 24px line. */
+:root[data-flag-spacing] .tip {
+  padding: var(--space-1) var(--space-2);
+  line-height: 16px;
+}
+
+/* Settings: rows on the 32px control height, an 8px gap like every
+   other label-and-control pair. */
+:root[data-flag-spacing] .settings .row,
+:root[data-flag-spacing] .settings .opt {
+  min-height: var(--h-md);
+}
+:root[data-flag-spacing] .settings .opt {
+  gap: var(--space-2);
+}
+
+/* The two dialogs (import, report): one inset, and their inner spacing
+   on the scale. */
+:root[data-flag-spacing] .card[aria-labelledby='import-title'],
+:root[data-flag-spacing] .card[aria-labelledby='report-title'] {
+  padding: var(--space-dialog);
+}
+:root[data-flag-spacing] .card[aria-labelledby='report-title'] textarea {
+  padding: var(--space-2) var(--space-3);
+}
+:root[data-flag-spacing] .card[aria-labelledby='import-title'] .steps {
+  gap: var(--space-2);
+}
+:root[data-flag-spacing] .card[aria-labelledby='import-title'] .source,
+:root[data-flag-spacing] .card[aria-labelledby='import-title'] .summary div {
+  padding: var(--space-4);
+}
+:root[data-flag-spacing] .card[aria-labelledby='import-title'] .src-head,
+:root[data-flag-spacing] .card[aria-labelledby='import-title'] .tick {
+  margin-bottom: var(--space-4);
+}
+:root[data-flag-spacing] .card[aria-labelledby='import-title'] .found {
+  padding: var(--space-3) var(--space-4);
+}
+:root[data-flag-spacing] .card[aria-labelledby='import-title'] .opt {
+  padding: var(--space-4);
+}
+:root[data-flag-spacing] .card[aria-labelledby='import-title'] .file {
+  gap: var(--space-1);
+}
+:root[data-flag-spacing] .card[aria-labelledby='import-title'] .link,
+:root[data-flag-spacing] .card[aria-labelledby='import-title'] .sub {
+  margin-top: var(--space-2);
+}
+:root[data-flag-spacing] .card[aria-labelledby='import-title'] .how {
+  padding-left: var(--space-4);
+}
+:root[data-flag-spacing] .card[aria-labelledby='import-title'] .reading,
+:root[data-flag-spacing] .card[aria-labelledby='import-title'] .actions {
+  gap: var(--space-2);
+}
+:root[data-flag-spacing] .card[aria-labelledby='import-title'] .error {
+  margin-top: var(--space-4);
+}
+:root[data-flag-spacing] .card[aria-labelledby='import-title'] .actions {
+  margin-top: var(--space-dialog);
+}
+:root[data-flag-spacing] .card[aria-labelledby='import-title'] .summary {
+  margin-top: var(--space-dialog);
+}
