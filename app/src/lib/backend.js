@@ -157,8 +157,16 @@ async function createTauriBackend() {
     midiLearnStop: () => invoke('midi_learn_stop'),
     /** @returns {Promise<Binding[]>} */
     learnedMapping: (port) => invoke('learned_mapping', { port }),
-    /** Saves (or with no bindings, deletes) the learned mapping for a port, and reconnects. */
+    /** Saves (or with no bindings, deletes) the learned mapping for a port, and reconnects. @returns {Promise<string>} the file */
     saveLearnedMapping: (port, bindings) => invoke('save_learned_mapping', { port, bindings }),
+    /** @returns {Promise<string[]>} the MIDI controllers there's a mapping for */
+    controllerModels: () => invoke('controller_models'),
+    /** While paused, connected controllers drive nothing (MIDI learn still hears them). */
+    controllersPause: (paused) => invoke('controllers_pause', { paused }),
+    /** @returns {Promise<string>} */
+    appVersion: async () => (await import('@tauri-apps/api/app')).getVersion(),
+    /** Opens a web page in the default browser. */
+    openUrl: async (url) => (await import('@tauri-apps/plugin-opener')).openUrl(url),
     /** @returns {Promise<string | null>} */
     pickFolder: async () => {
       const picked = await open({ directory: true, multiple: false, title: 'Add a music folder' });

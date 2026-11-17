@@ -158,6 +158,14 @@ Everything Interlude does, in detail. For a short overview, see the
   Hercules consoles) aren't connected automatically, and game controllers
   are left alone. On Linux, opening a HID device needs a udev rule giving
   you access to it; Mixxx's packages install one.
+- **Controller not working? Set it up step by step.** Help › Controller
+  Not Working… (or Settings › Controllers) asks which controller and model
+  it is, then walks through about 37 controls on a picture of a two-deck
+  controller: press or move each one as it lights up, or skip it. The
+  controller is paused meanwhile so pressing PLAY doesn't start a deck. The
+  result is saved like a MIDI learn mapping, and Share on GitHub opens a
+  prefilled issue in the browser (nothing is sent until it's submitted) so
+  the mapping can ship with the app.
 - **Any other MIDI controller: MIDI learn.** In Settings → Controllers,
   pick the controller, pick an action (play, cue, faders, EQ, hot cues,
   loops, effects, browsing, samples) and press Learn, then move the
