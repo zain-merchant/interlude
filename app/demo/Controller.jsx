@@ -177,61 +177,114 @@ export function Controller({ shown }) {
     return () => window.removeEventListener('message', on);
   }, []);
   useEffect(() => {
+    // Only while it's up: a controller off screen has nothing to show.
+    if (!up) return;
     let raf;
-    const el = (k) => root.current?.querySelector(`[data-hw="${k}"]`);
+    // Its parts and the app's sliders, found once (and again if the app
+    // redraws one), not on every frame.
+    const parts = new Map();
+    const el = (k) => {
+      let n = parts.get(k);
+      if (!n || !n.isConnected) {
+        n = root.current?.querySelector(`[data-hw="${k}"]`) ?? null;
+        parts.set(k, n);
+      }
+      return n;
+    };
+    const sliders = new Map();
+    const slider = (d, which) => {
+      const k = `${d}.${which}`;
+      let n = sliders.get(k);
+      if (!n || !n.isConnected) {
+        n = appSlider(d, which);
+        sliders.set(k, n);
+      }
+      return n;
+    };
+    // Each write only when it changes: a frame of the same values costs nothing.
+    const last = new Map();
+    const lit = (n, key, on) => {
+      if (!n) return;
+      const k = n.dataset.hw + key;
+      if (last.get(k) === on) return;
+      last.set(k, on);
+      n.toggleAttribute(key, on);
+    };
+    const put = (n, prop, v) => {
+      if (!n) return;
+      const k = (n.dataset.hw ?? n.className) + prop;
+      // A hand holding it sets it itself; forget what was written, so it's
+      // written afresh when the hand lets go.
+      if (n.hasAttribute('data-held')) return void last.delete(k);
+      if (last.get(k) === v) return;
+      last.set(k, v);
+      if (prop === 'rotate') n.style.rotate = v;
+      else if (prop === 'transform') n.style.transform = v;
+      else n.style.setProperty(prop, v);
+    };
+    let xfCap = null;
     const frame = () => {
       for (const d of [0, 1]) {
         const deck = engine.decks[d];
+        const other = engine.decks[1 - d];
         const jog = el(`jog-${d}`);
-        if (jog) jog.style.transform = `rotate(${(deck.position * DEG_PER_SEC) % 360}deg)`;
+        put(jog, 'transform', `rotate(${((deck.position * DEG_PER_SEC) % 360).toFixed(1)}deg)`);
         // The jog's ring glows brighter while its deck plays.
-        jog?.parentElement.toggleAttribute('data-playing', deck.playing);
-        el(`play-${d}`)?.toggleAttribute('data-lit', deck.playing);
-        el(`cue-${d}`)?.toggleAttribute('data-lit', deck.loaded && !deck.playing);
-        el(`sync-${d}`)?.toggleAttribute('data-lit', deck.loaded && engine.decks[1 - d].loaded &&
-          Math.abs(deck.bpm * deck.rate - engine.decks[1 - d].bpm * engine.decks[1 - d].rate) < 0.01);
+        if (jog) lit(jog.parentElement, 'data-playing', deck.playing);
+        lit(el(`play-${d}`), 'data-lit', deck.playing);
+        lit(el(`cue-${d}`), 'data-lit', deck.loaded && !deck.playing);
+        lit(el(`sync-${d}`), 'data-lit', deck.loaded && other.loaded &&
+          Math.abs(deck.bpm * deck.rate - other.bpm * other.rate) < 0.01);
         // The tempo fader sits exactly where the app's does: same range, same
         // way up. While a hand holds it ([data-held]) the hand moves it, and
         // the app catches up.
         const cap = el(`pitch-${d}`);
-        const app = appSlider(d, 'pitch');
-        if (cap && app && !cap.hasAttribute('data-held')) cap.style.setProperty('--at', String(1 - 2 * along(app)));
+        const app = slider(d, 'pitch');
+        if (cap && app) put(cap, '--at', (1 - 2 * along(app)).toFixed(4));
         // The EQ knobs turn to where the app's are (flat is straight up).
         for (const band of ['high', 'mid', 'low']) {
           const knob = el(`${band}-${d}`);
-          const eq = appSlider(d, band);
-          if (knob && eq && !knob.hasAttribute('data-held')) knob.style.rotate = `${eqAngle(eq)}deg`;
+          const eq = slider(d, band);
+          if (knob && eq) put(knob, 'rotate', `${eqAngle(eq).toFixed(1)}deg`);
         }
         // The channel fader sits where the app's volume is (up is loud).
         const vol = el(`vol-${d}`);
-        const fader = appSlider(d, 'volume');
-        if (vol && fader && !vol.hasAttribute('data-held')) vol.style.setProperty('--at', String(1 - along(fader)));
+        const fader = slider(d, 'volume');
+        if (vol && fader) put(vol, '--at', (1 - along(fader)).toFixed(4));
         // Pads and keys light from the deck's state: hot cues that are set,
         // stems that are playing, a running loop, the effect when it's on.
-        deck.hotCues?.forEach((c, i) => el(`hotcue-${d}-${i}`)?.toggleAttribute('data-lit', c != null));
+        deck.hotCues?.forEach((c, i) => lit(el(`hotcue-${d}-${i}`), 'data-lit', c != null));
         const stems = deck.stems ?? 0b1111;
-        for (let i = 0; i < 4; i++) el(`stem-${d}-${i}`)?.toggleAttribute('data-lit', deck.loaded && !!(stems & (1 << i)));
-        el(`loop-${d}`)?.toggleAttribute('data-lit', !!deck.looping);
-        el(`fx-${d}`)?.toggleAttribute('data-lit', !!deck.fx?.on);
+        for (let i = 0; i < 4; i++) lit(el(`stem-${d}-${i}`), 'data-lit', deck.loaded && !!(stems & (1 << i)));
+        lit(el(`loop-${d}`), 'data-lit', !!deck.looping);
+        lit(el(`fx-${d}`), 'data-lit', !!deck.fx?.on);
         const fxLevel = el(`fxlevel-${d}`);
-        if (fxLevel && !fxLevel.hasAttribute('data-held')) fxLevel.style.rotate = `${-150 + 300 * (deck.fx?.level ?? 0.5)}deg`;
+        if (fxLevel) put(fxLevel, 'rotate', `${(-150 + 300 * (deck.fx?.level ?? 0.5)).toFixed(1)}deg`);
         // The channel meter, from the deck's level.
         const meter = el(`meter-${d}`);
         if (meter) {
-          const lit = Math.round((engine.deckLevels[d] ?? 0) * meter.children.length);
-          [...meter.children].forEach((seg, i) => seg.toggleAttribute('data-lit', meter.children.length - i <= lit));
+          const n = meter.children.length;
+          const on = Math.round((engine.deckLevels[d] ?? 0) * n);
+          if (last.get(`meter${d}`) !== on) {
+            last.set(`meter${d}`, on);
+            for (let i = 0; i < n; i++) meter.children[i].toggleAttribute('data-lit', n - i <= on);
+          }
         }
       }
-      const xfCap = root.current?.querySelector('[data-target="c-xf-cap"]');
-      if (!xfCap?.hasAttribute('data-held')) {
-        const xf = engine.mixer?.crossfader ?? 0;
-        root.current?.style.setProperty('--xf', String((xf + 1) / 2));
+      if (!xfCap?.isConnected) xfCap = root.current?.querySelector('[data-target="c-xf-cap"]');
+      if (xfCap?.hasAttribute('data-held')) last.delete('xf');
+      else {
+        const xf = String(((engine.mixer?.crossfader ?? 0) + 1) / 2);
+        if (last.get('xf') !== xf) {
+          last.set('xf', xf);
+          root.current?.style.setProperty('--xf', xf);
+        }
       }
       raf = requestAnimationFrame(frame);
     };
     frame();
     return () => cancelAnimationFrame(raf);
-  }, []);
+  }, [up]);
 
   return (
     <div className="desk" data-shown={up || undefined}>

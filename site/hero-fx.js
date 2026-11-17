@@ -57,7 +57,7 @@ const TURN = (Math.PI * 2) / 40;
 // HORIZON; 2 brings it twice as close, so the far side narrows harder).
 // cue: what shows it turning (a circle spinning looks still on its own),
 // and cueAmt how much.
-const T = { drop: 60, needle: 0.8, life: 1, persp: 1, cue: 'dust', cueAmt: 1 };
+const T = { drop: 60, needle: 0.8, life: 1, persp: 1, cue: 'dust', cueAmt: 1, res: 0.6 };
 const CUES = { glints: 0, dust: 1, warp: 2, spokes: 3 };
 const horizon = () => HORIZON / T.persp;
 // The lamp drifts this far either way (radians), once every this many seconds.
@@ -415,6 +415,8 @@ function layout(now) {
   canvas.style.setProperty('--fx-top', `${Math.round(s.top - c.top)}px`);
   canvas.style.setProperty('--fx-mid', `${Math.round(s.top - c.top + s.height * 0.3)}px`);
   canvas.style.setProperty('--fx-end', `${Math.round(end)}px`);
+  // And the canvas ends where the record does, not 2000px down.
+  canvas.style.height = `${Math.ceil(end + 8)}px`;
   geo = { key, cx, cy, R, r0, box, d0, tilt, hz };
   return geo;
 }
@@ -459,7 +461,10 @@ let last = performance.now();
 function frame(now, still) {
   const dt = still ? 0 : Math.min(0.1, (now - last) / 1000);
   last = now;
-  const dpr = Math.min(2, devicePixelRatio || 1);
+  // Drawn at T.res of the screen's pixels and scaled up by the browser: the
+  // grooves are soft light, so full Retina resolution buys little and costs
+  // four times the pixels.
+  const dpr = Math.min(2, devicePixelRatio || 1) * T.res;
   const w = Math.round(canvas.clientWidth * dpr);
   const h = Math.round(canvas.clientHeight * dpr);
   if (canvas.width !== w || canvas.height !== h) {
@@ -537,7 +542,10 @@ function draw(now) {
     if (reduced.matches) frame(now, true);
     return;
   }
-  frame(now, false);
+  // At rest (no pointer light, no needle) the record only turns slowly, so
+  // 30 frames a second is plenty; the pointer's light gets the full 60.
+  const busy = hover.on > 0.01 || needle.on || ripple.on;
+  if (busy || now - last >= 1000 / 30 - 2) frame(now, false);
   requestAnimationFrame(draw);
 }
 
@@ -548,15 +556,20 @@ tune?.slider({ id: 'rec-needle', label: 'Hero record: needle and hover strength'
 tune?.slider({ id: 'rec-life', label: 'Hero record: spin speed', min: 0, max: 3, step: 0.1, value: T.life, onInput: (v) => { T.life = v; if (prog) wake(); } });
 tune?.slider({ id: 'rec-persp', label: 'Hero record: perspective', min: 0.3, max: 3, step: 0.05, value: T.persp, onInput: (v) => { T.persp = v; if (prog) again(); } });
 tune?.select({ id: 'rec-cue', label: 'Hero record: what shows the spin', value: T.cue, onInput: (v) => { T.cue = v; if (prog) wake(); }, options: [['dust', 'Dust specks'], ['glints', 'Glints'], ['warp', 'Pressing warp'], ['spokes', 'Spokes']] });
+tune?.slider({ id: 'rec-res', label: 'Hero record: render resolution', min: 0.3, max: 1, step: 0.05, value: T.res, onInput: (v) => { T.res = v; if (prog) again(); } });
 tune?.slider({ id: 'rec-cue-amt', label: 'Hero record: spin cue strength', min: 0, max: 3, step: 0.05, value: T.cueAmt, onInput: (v) => { T.cueAmt = v; if (prog) wake(); } });
 
 try {
   if (init()) {
-    // Nothing to draw while the hero is scrolled out of view.
-    new IntersectionObserver(([e]) => {
-      visible = e.isIntersecting;
+    // Nothing to draw once the hero's words and its screen are both
+    // scrolled out of view (the canvas itself runs on far below them).
+    const seen = new Map();
+    const io = new IntersectionObserver((list) => {
+      for (const e of list) seen.set(e.target, e.isIntersecting);
+      visible = [...seen.values()].some(Boolean);
       wake();
-    }).observe(canvas);
+    });
+    for (const el of [document.querySelector('.hero'), screen]) if (el) io.observe(el);
     reduced.addEventListener('change', wake);
     addEventListener('resize', () => reduced.matches && wake());
     wake();

@@ -142,3 +142,15 @@ svg.links { position: absolute; inset: 0; z-index: 255; pointer-events: none; ov
 .app-host .pending { display: none !important; }
 /* The deeper Club board sits a little higher, so it still ends above the toggle. */
 #hero[data-hand="controller"] .desk:has(.hw[data-v="club"]) { top: 610px; }
+
+/* Paused while off screen (pause.js): CSS animations stand still too. */
+html[data-paused] *, html[data-paused] *::before, html[data-paused] *::after { animation-play-state: paused !important; }
+
+/* Cheaper to draw, for the website only (the app itself is unchanged).
+   The app's glass panels blur what's behind them on every frame; behind
+   them here is only the backdrop's soft light, already blurred, so the
+   panels keep their tint and drop the blur. And the backdrop's three
+   drifting lights hold still: they drift over minutes, too slowly to see
+   in a demo, but they kept the whole picture repainting. */
+:root { --glass-blur: none; }
+.bd i { animation: none !important; will-change: auto !important; }

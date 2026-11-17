@@ -4738,6 +4738,10 @@ Apply these values as the new defaults in the ${hookName} call.`;
   }
   var ThumbnailStore = /* @__PURE__ */ pageSingleton("ThumbnailStore", () => new ThumbnailStoreImpl());
   async function captureViewport() {
+    // Interlude: no version thumbnails. Each one clones and rasterizes the
+    // whole page and reads the WebGL canvases back, which held the page at a
+    // few frames a second for ten seconds after every load.
+    return null;
     if (typeof window === "undefined") return null;
     try {
       const canvas = await rasterizeViewport({
