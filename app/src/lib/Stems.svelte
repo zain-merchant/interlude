@@ -71,7 +71,7 @@
   </div>
   {#if t && (s.state === 'splitting' || s.state === 'starting')}
     <div class="progress" role="progressbar" aria-label="Splitting into stems" aria-valuemin="0" aria-valuemax="100"
-      aria-valuenow={Math.round(s.ready * 100)}><i style:width="{s.ready * 100}%"></i></div>
+      aria-valuenow={Math.round(s.ready * 100)}><i style:transform="scaleX({Math.round(s.ready * 200) / 200})"></i></div>
   {/if}
 </div>
 
@@ -141,10 +141,14 @@
     height: 1px;
     background: var(--line);
   }
+  /* Grown by scaling, not by width, so the bar moving (every frame while a
+     track splits) doesn't lay the deck out again each time; and in half
+     percent steps, which its transition smooths over. */
   .progress i {
     display: block;
     height: 100%;
     background: var(--fg-3);
-    transition: width 0.3s;
+    transform-origin: left;
+    transition: transform 0.3s;
   }
 </style>
