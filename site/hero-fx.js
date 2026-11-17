@@ -103,9 +103,9 @@ const TURN = (Math.PI * 2) / 40;
 // pointer does (see HOVERS); still: it fades this many seconds after the
 // pointer stops, so nothing ever looks selected.
 const T = {
-  drop: 8, needle: 0.8, life: 0.1, persp: 0.85, cue: 'dust', cueAmt: 1, res: 0.85,
+  drop: 108, needle: 0.8, life: 0.2, persp: 0.85, cue: 'dust', cueAmt: 1, res: 0.85,
   soft: 1, glintAmt: 1, chroma: 'none', chromaAmt: 0.6, speck: 'hyphen',
-  size: 1, up: 0, mask: 0, warp: 'none', warpAmt: 0.5, tint: 0.4, hover: 'arc', still: 1.2,
+  size: 1, up: 0, mask: 0, warp: 'none', warpAmt: 0.5, tint: 0, hover: 'arc', still: 1.2,
 };
 const CUES = { glints: 0, dust: 1, warp: 2, spokes: 3, soft: 4 };
 const CHROMA = { none: 0, film: 1, prism: 2, lamp: 3, grating: 4, pearl: 5, fringe: 6 };
