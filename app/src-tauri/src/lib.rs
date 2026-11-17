@@ -864,6 +864,8 @@ pub fn run() {
             controller::controller_name,
             controller::controllers,
             controller::midi_learn_start,
+            controller::controller_models,
+            controller::controllers_pause,
             controller::midi_learn_poll,
             controller::midi_learn_stop,
             controller::learned_mapping,

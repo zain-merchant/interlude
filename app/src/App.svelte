@@ -10,6 +10,7 @@
   import Settings from './lib/Settings.svelte';
   import Import from './lib/Import.svelte';
   import Report from './lib/Report.svelte';
+  import ControllerSetup from './lib/ControllerSetup.svelte';
   import { sampler, setSamplerOpen, restoreSampler, loadSample } from './lib/sampler.svelte.js';
   import { engine, tracks, startEngineLoop, loadTrack, control, deckSnapshot, restoreDeck } from './lib/engine.svelte.js';
   import { backend, inTauri } from './lib/backend.js';
@@ -115,6 +116,12 @@
   const openReport = () => {
     hideToast();
     reporting = true;
+  };
+  // Controller not working: set it up step by step, over the app.
+  let settingUp = $state(false);
+  const openControllerSetup = () => {
+    hideToast();
+    settingUp = true;
   };
   /** What the report says about the setup, beyond the version and system. */
   async function reportContext() {
@@ -424,6 +431,7 @@
       importLibrary: openImport,
       keyboard: () => openSettings('keyboard'),
       report: openReport,
+      controllerSetup: openControllerSetup,
       checkUpdates: checkUpdatesNow,
       undoInField,
     }).catch((e) => console.error('menu', e));
@@ -516,7 +524,7 @@
       <Library bind:this={library} onload={load} onsettings={() => openSettings()} onmessage={say} />
     </div>
     {#if settings}<Settings bind:page={settings} onclose={() => (settings = null)} onimport={() => { settings = null; openImport(); }}
-      onreport={openReport} onupdates={checkUpdatesNow} />{/if}
+      onreport={openReport} onupdates={checkUpdatesNow} onsetup={openControllerSetup} />{/if}
   </div>
 
   {#if engine.audio?.state === 'lost'}
@@ -564,6 +572,7 @@
 
 {#if importing}<Import onclose={() => (importing = false)} ondone={() => library.reload()} />{/if}
 {#if reporting}<Report onclose={() => (reporting = false)} context={reportContext} />{/if}
+{#if settingUp}<ControllerSetup onclose={() => (settingUp = false)} />{/if}
 
 <style>
   .app {

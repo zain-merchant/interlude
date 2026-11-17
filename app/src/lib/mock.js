@@ -506,6 +506,13 @@ export function createMockBackend() {
     learnedMapping: async (port) => (learned[port] ?? []).map((b) => ({ ...b })),
     saveLearnedMapping: async (port, bindings) => {
       learned[port] = bindings.map((b) => ({ ...b }));
+      return `~/Library/Application Support/Interlude/controllers/${port} (learned).midi.xml`;
+    },
+    controllerModels: async () => ['Hercules DJControl Inpulse 200', 'Hercules DJControl MIX', 'Numark Mixtrack Platinum FX', 'Pioneer DDJ-200', 'Pioneer DDJ-400', 'Pioneer DDJ-FLX4'],
+    controllersPause: async () => {},
+    appVersion: async () => '0.1.2',
+    openUrl: async (url) => {
+      window.open(url, '_blank', 'noopener');
     },
     setAudioOutput: async (device) => {
       outputChoice = device;
