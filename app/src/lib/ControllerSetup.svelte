@@ -388,7 +388,7 @@
       <p class="lead"><b>{mapped} controls mapped</b> on {port}{mapped < STEPS.length ? `, ${STEPS.length - mapped} skipped` : ''}. It's working now: load a track and press PLAY to try it. You can change single controls in Settings › Controllers.</p>
       <div class="share">
         <p><b>Please share this mapping on GitHub</b> so the next person with a {model || 'controller'} like yours can use it.</p>
-        <p class="hint">Opens a filled-in issue in your browser. Nothing is sent until you submit it. No GitHub account? Copy the details and paste them wherever you talk to us.</p>
+        <p class="hint">No GitHub account? Copy the details and paste them wherever you talk to us.</p>
       </div>
       {#if error}<p class="error" role="alert">{error}</p>{/if}
       <div class="actions">
