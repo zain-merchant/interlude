@@ -78,34 +78,72 @@
     return config;
   }
 
+  // Saved versions (DialKit's presets) and the panel's base values hold
+  // only the controls in the panel too: what they held for a control while
+  // it's hidden is put by here (stash.__p by version, stash.__b), and put
+  // back when it shows again.
+  function putBy(stash, presets, base, paths) {
+    for (const p of presets || []) {
+      for (const path of paths) {
+        if (p.values?.[path] === undefined) continue;
+        ((stash.__p ??= {})[p.id] ??= {})[path] = p.values[path];
+      }
+    }
+    for (const path of paths) if (base?.[path] !== undefined) (stash.__b ??= {})[path] = base[path];
+  }
+  function putBack(DK, id, stash, paths) {
+    try {
+      const st = DK.DialStore;
+      for (const p of st.presets.get(id) || []) {
+        for (const path of paths) {
+          const v = stash.__p?.[p.id]?.[path];
+          if (v !== undefined) { p.values[path] = v; delete stash.__p[p.id][path]; }
+        }
+      }
+      const base = st.baseValues.get(id);
+      for (const path of paths) {
+        if (stash.__b?.[path] === undefined) continue;
+        if (base) base[path] = stash.__b[path];
+        delete stash.__b[path];
+      }
+      st.persistPanel(id);
+    } catch {}
+  }
+
   function make(DK, group, g) {
+    const id = `interlude-${group}`;
     const saved = read(keyOf(group));
     const stash = read(stashOf(group)) || {};
-    // A value saved under the control's plain name (before it moved into a
-    // folder), or put by while it was hidden, is put back where DialKit
-    // will find it.
-    if (saved?.version === 1 && saved.values) {
-      let moved = false;
-      for (const c of g.list) {
-        if (saved.values[c.path] !== undefined) continue;
-        const v = stash[c.path] ?? (c.path !== c.name ? saved.values[c.name] : undefined);
-        if (v !== undefined) { saved.values[c.path] = v; moved = true; }
-      }
-      if (moved) write(keyOf(group), saved);
-    }
     const shownNow = new Set();
     for (const c of g.list) if (visible(c)) shownNow.add(c);
+    if (saved?.version === 1 && saved.values) {
+      // A value saved under the control's plain name (before it moved into
+      // a folder) is moved to where DialKit will now look for it, in the
+      // panel's values, its base values and every saved version.
+      const sets = [saved.values, saved.baseValues, ...(saved.presets || []).map((p) => p.values)].filter(Boolean);
+      for (const c of g.list) {
+        if (c.path === c.name) continue;
+        for (const vs of sets) if (vs[c.path] === undefined && vs[c.name] !== undefined) vs[c.path] = vs[c.name];
+      }
+      // One showing now that was put by while hidden comes back.
+      for (const c of shownNow) if (saved.values[c.path] === undefined && stash[c.path] !== undefined) saved.values[c.path] = stash[c.path];
+      // Hidden from the start: what the versions hold for it is put by.
+      putBy(stash, saved.presets, saved.baseValues, g.list.filter((c) => !shownNow.has(c)).map((c) => c.path));
+      write(keyOf(group), saved);
+    }
     // Hidden from the start: its last value still applies, and is kept.
     for (const c of g.list) {
-      if (shownNow.has(c)) continue;
-      const v = stash[c.path] ?? saved?.values?.[c.path];
+      if (shownNow.has(c)) { delete stash[c.path]; continue; }
+      const v = saved?.values?.[c.path] ?? stash[c.path];
       if (v !== undefined) { stash[c.path] = v; c.apply(v); }
     }
-    write(stashOf(group), stash);
     g.shown = shownNow;
     g.stash = stash;
-    const kit = DK.createDialKit(group, configOf(g), { id: `interlude-${group}`, persist: true });
+    const kit = DK.createDialKit(group, configOf(g), { id, persist: true });
     g.kit = kit;
+    g.DK = DK;
+    putBack(DK, id, stash, [...shownNow].map((c) => c.path));
+    write(stashOf(group), stash);
     const last = {};
     g.last = last;
     kit.subscribe((v) => {
@@ -121,19 +159,23 @@
   function rebuild(group) {
     const g = groups.get(group);
     if (!g?.kit) return;
+    const id = `interlude-${group}`;
     const back = [];
+    const going = [];
     const now = new Set();
     for (const c of g.list) {
       const on = visible(c);
       if (on) now.add(c);
       const was = g.shown.has(c);
-      if (was && !on && g.last[c.path] !== undefined) g.stash[c.path] = g.last[c.path];
+      if (was && !on) { going.push(c.path); if (g.last[c.path] !== undefined) g.stash[c.path] = g.last[c.path]; }
       if (!was && on && g.stash[c.path] !== undefined) { back.push([c.path, g.stash[c.path]]); delete g.stash[c.path]; }
     }
+    try { putBy(g.stash, g.DK.DialStore.presets.get(id), g.DK.DialStore.baseValues.get(id), going); } catch {}
     g.shown = now;
-    write(stashOf(group), g.stash);
     g.kit.updateConfig(configOf(g));
     for (const [path, v] of back) g.kit.setValue(path, v);
+    putBack(g.DK, id, g.stash, back.map(([path]) => path));
+    write(stashOf(group), g.stash);
   }
 
   const pending = new Set();
