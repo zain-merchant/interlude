@@ -14,9 +14,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261117d">
+  <link rel="stylesheet" href="style.css?v=20261117e">
   <link rel="stylesheet" href="demo/cards.css">
-  <script src="tune.js?v=20261117c"></script>
+  <script src="tune.js?v=20261117e"></script>
   <script>
     // The hero's layout (Split) and the nav's (bar to capsule), set before
     // the first paint so nothing jumps. The nav's look changes as the page
@@ -423,7 +423,7 @@
     // same at any width. It tells us how loud it's playing, and the glow
     // under it follows; the switch picks mouse or controller.
     (async () => {
-      const fx = await import('./hero-fx.js?v=20261117c').catch(() => null);
+      const fx = await import('./hero-fx.js?v=20261117e').catch(() => null);
       const frame = document.querySelector('.stage-frame');
       const screen = frame.querySelector('.screen');
       const live = frame.querySelector('.live');
@@ -468,10 +468,43 @@
         }
         if (e.data?.interlude === 'camera') camera(e.data);
         if (e.data?.interlude === 'level') {
-          frame.style.setProperty('--level', e.data.level.toFixed(3));
+          glowTo(e.data.level);
           fx?.hear(e.data.level);
         }
       });
+
+      // The glow under the frame swells with the level. It's set on the glow
+      // alone (a custom property on the frame would restyle everything in
+      // it, the app's frame included, 30 times a second), straight onto its
+      // opacity and scale, which the compositor animates, and at most 12
+      // times a second.
+      const glow = frame.querySelector('.glow');
+      let glowAt = 0;
+      function glowTo(l) {
+        const now = performance.now();
+        if (!glow || now - glowAt < 80) return;
+        glowAt = now;
+        glow.style.opacity = (0.16 + l * 0.34).toFixed(3);
+        glow.style.transform = `scale(${(0.97 + l * 0.05).toFixed(4)})`;
+      }
+
+      // Nobody can see the app while its screen is scrolled out of view or
+      // the tab is hidden, so it's paused then (app/demo/pause.js): nothing
+      // in it draws until it's back.
+      let onScreen = true;
+      const pauseIfHidden = () => live.contentWindow?.postMessage({ interlude: 'pause', paused: !onScreen || document.hidden }, '*');
+      new IntersectionObserver(([e]) => {
+        onScreen = e.isIntersecting;
+        pauseIfHidden();
+      }, { rootMargin: '100px 0px' }).observe(frame);
+      document.addEventListener('visibilitychange', pauseIfHidden);
+      live.addEventListener('load', pauseIfHidden);
+      // Being tried: the app's frame rate while it plays. 30 halves what it
+      // costs to run; the cursor and waveforms move a little less smoothly.
+      let appFps = 60;
+      const sendFps = () => live.contentWindow?.postMessage({ interlude: 'fps', fps: appFps }, '*');
+      live.addEventListener('load', sendFps);
+      window.tune?.slider({ label: 'Hero: app frame rate', min: 20, max: 60, step: 5, value: 60, onInput: (v) => { appFps = v; sendFps(); } });
 
       const buttons = [...document.querySelectorAll('.switch button')];
       for (const b of buttons) {
