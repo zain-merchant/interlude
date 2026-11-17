@@ -2,7 +2,6 @@
   import { onMount } from 'svelte';
   import { backend } from './backend.js';
   import { announce } from './announce.svelte.js';
-  import { reveal } from './support.svelte.js';
 
   /**
    * Controller not working? Set it up step by step: pick the controller,
@@ -393,8 +392,6 @@
       </div>
       {#if error}<p class="error" role="alert">{error}</p>{/if}
       <div class="actions">
-        {#if savedFile}<button class="btn ghost" onclick={() => reveal(savedFile)}>Show file</button>{/if}
-        <span class="grow"></span>
         <button class="btn ghost" onclick={copy}>{copied ? 'Copied' : 'Copy details'}</button>
         <button class="btn" onclick={share}>Share on GitHub…</button>
         <button class="btn primary" onclick={onclose}>Done</button>
