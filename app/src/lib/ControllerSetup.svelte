@@ -233,35 +233,60 @@
   const hex = (n) => `0x${n.toString(16).padStart(2, '0').toUpperCase()}`;
 
   /** A GitHub issue with the mapping filled in, for the browser. Nothing is sent until the user submits it. */
-  async function share() {
+  /** What's shared about this mapping: a title, then the parts of the text. */
+  async function details() {
     const version = await backend.appVersion?.().catch(() => '') ?? '';
     const lines = learned.flatMap((b, i) => (b ? [`${STEPS[i].group} ${STEPS[i].key} ${b.kind} ${hex(b.status)} ${hex(b.number)}`] : []));
     const skipped = STEPS.filter((_, i) => !learned[i]).map(stepName);
-    const head = [
-      `**Controller:** ${model || 'unknown'}`,
-      `**MIDI port:** ${port}`,
-      `**Mapping it had:** ${current && !current.learned ? current.mapping : 'none'}`,
-      `**Interlude:** ${version || 'unknown'} on ${navigator.platform}`,
-      '',
-      '**What wasn’t working:** ',
-      '',
-    ];
-    const tail = [
-      '',
-      skipped.length ? `Skipped: ${skipped.join(', ')}` : 'Nothing skipped.',
-      '',
-      `Made with the guided controller setup. The full mapping file is \`${savedFile.split(/[\\/]/).pop()}\`; drag it in here if you can.`,
-    ];
-    const table = ['<details><summary>Mapping (group, key, kind, status, number)</summary>', '', '```', ...lines, '```', '</details>'];
+    return {
+      title: `Controller mapping: ${model || port}`,
+      head: [
+        `**Controller:** ${model || 'unknown'}`,
+        `**MIDI port:** ${port}`,
+        `**Mapping it had:** ${current && !current.learned ? current.mapping : 'none'}`,
+        `**Interlude:** ${version || 'unknown'} on ${navigator.platform}`,
+        '',
+        '**What wasn’t working:** ',
+        '',
+      ],
+      code: ['```', ...lines, '```'],
+      tail: [
+        '',
+        skipped.length ? `Skipped: ${skipped.join(', ')}` : 'Nothing skipped.',
+        '',
+        `Made with the guided controller setup. The full mapping file is \`${savedFile.split(/[\\/]/).pop()}\`.`,
+      ],
+    };
+  }
+
+  /** A GitHub issue with the mapping filled in, for the browser. Nothing is sent until the user submits it. */
+  async function share() {
+    const d = await details();
+    const table = ['<details><summary>Mapping (group, key, kind, status, number)</summary>', '', ...d.code, '</details>'];
+    const tail = [...d.tail.slice(0, -1), `${d.tail.at(-1)} Drag it in here if you can.`];
     const url = (body) =>
-      `${ISSUES}?${new URLSearchParams({ title: `Controller mapping: ${model || port}`, labels: 'controller-mapping', body: body.join('\n') })}`;
-    let link = url([...head, ...table, ...tail]);
+      `${ISSUES}?${new URLSearchParams({ title: d.title, labels: 'controller-mapping', body: body.join('\n') })}`;
+    let link = url([...d.head, ...table, ...tail]);
     // Browsers and GitHub cut off long links; the file has it all anyway.
-    if (link.length > 7500) link = url([...head, '_Mapping too long for a link: please attach the file._', ...tail]);
+    if (link.length > 7500) link = url([...d.head, '_Mapping too long for a link: please attach the file._', ...tail]);
     try {
       await backend.openUrl(link);
     } catch (e) {
       error = String(e);
+    }
+  }
+
+  /** The same details as plain text, for anyone without a GitHub account to paste wherever they like. */
+  let copied = $state(false);
+  async function copy() {
+    const d = await details();
+    try {
+      await navigator.clipboard.writeText([`**${d.title}**`, '', ...d.head, 'Mapping (group, key, kind, status, number):', ...d.code, ...d.tail].join('\n'));
+      copied = true;
+      announce('Details copied');
+      setTimeout(() => (copied = false), 2000);
+    } catch (e) {
+      error = `Couldn't copy: ${e}`;
     }
   }
 
@@ -364,12 +389,13 @@
       <p class="lead"><b>{mapped} controls mapped</b> on {port}{mapped < STEPS.length ? `, ${STEPS.length - mapped} skipped` : ''}. It's working now: load a track and press PLAY to try it. You can change single controls in Settings › Controllers.</p>
       <div class="share">
         <p><b>Please share this mapping on GitHub</b> so the next person with a {model || 'controller'} like yours can use it.</p>
-        <p class="hint">Opens a filled-in issue in your browser. Nothing is sent until you submit it.</p>
+        <p class="hint">Opens a filled-in issue in your browser. Nothing is sent until you submit it. No GitHub account? Copy the details and paste them wherever you talk to us.</p>
       </div>
       {#if error}<p class="error" role="alert">{error}</p>{/if}
       <div class="actions">
         {#if savedFile}<button class="btn ghost" onclick={() => reveal(savedFile)}>Show file</button>{/if}
         <span class="grow"></span>
+        <button class="btn ghost" onclick={copy}>{copied ? 'Copied' : 'Copy details'}</button>
         <button class="btn" onclick={share}>Share on GitHub…</button>
         <button class="btn primary" onclick={onclose}>Done</button>
       </div>
