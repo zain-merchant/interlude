@@ -19,15 +19,10 @@
 // - A touch of dither, so the soft gradients on the near-black page never
 //   step into bands.
 //
-// Being tried with the Try panel (localhost or ?try):
-//   style   blend  satin's soft bands, with fine grooves over them (the
-//                  default, and the one the page uses)
-//           fine   hairline grooves close together, very faint
-//           satin  no single grooves: each song a smooth, soft band
-//   touch   needle hover and the grooves under the pointer catch the light
-//                  along their arc; click to drop the needle in a groove:
-//                  that groove lights warm and creeps slowly inward
-//           off    nothing
+// The page uses the blend style (satin's soft bands with fine grooves over
+// them) and the needle touch: hover and the grooves under the pointer catch
+// the light along their arc; click to drop the needle in a groove, which
+// lights warm and creeps slowly inward. fine, satin and off still work.
 //
 // A kick in the music lifts it a hair; with reduced motion it's one still
 // frame.
@@ -52,8 +47,19 @@ function toRecord(x, y, g) {
   const qy = ((1 - f) * g.d0) / g.tilt;
   return { r: Math.hypot(qx, qy), a: Math.atan2(qy, qx) };
 }
-// One turn every 50 seconds: slow, but its reflections can be seen moving.
-const TURN = (Math.PI * 2) / 50;
+// One turn every 40 seconds: slow, but its reflections can be seen moving.
+const TURN = (Math.PI * 2) / 40;
+// Set by eye with the Tune panel (see the end of this file): how far the
+// whole record sits lower, how strong the needle's light is, and how much
+// it moves on its own (the turn, and the lamp's light drifting slowly to
+// and fro across it, so it's never quite still).
+const T = { drop: 60, needle: 0.6, life: 1 };
+// The lamp drifts this far either way (radians), once every this many seconds.
+const DRIFT = 0.32;
+const DRIFT_S = 22;
+// A dropped needle's groove stays lit this long (s), then fades over this long.
+const NEEDLE_HOLD = 2.5;
+const NEEDLE_FADE = 2.5;
 // Where the light comes from: up and to the right of the centre.
 const FACING = -1.3;
 const GAP = 8; // the quiet run between two songs, in the record's own pixels
@@ -74,6 +80,7 @@ let swell = 0;
 let want = 0;
 let lastKick = 0;
 let spin = 0;
+let drift = 0;
 const needle = { on: false, r: 0, born: 0 };
 const ripple = { on: false, r: 0, born: 0 };
 // The pointer, in record terms (radius and angle), eased so the light on
@@ -120,6 +127,7 @@ uniform vec2 uCentre;    // record centre, CSS pixels from the canvas's top left
 uniform vec2 uGeo;       // distance from the centre to the horizon, and the tilt
 uniform vec4 uHoles[4];  // the hero's buttons, where nothing may show through
 uniform float uHoleCount;
+uniform float uHoleR;     // the buttons' corner radius
 uniform vec2 uSpan;      // inner and outer radius, record pixels
 uniform float uSpin;
 uniform float uFacing;
@@ -270,8 +278,12 @@ void main() {
   for (int i = 0; i < 4; i++) {
     if (float(i) >= uHoleCount) break;
     vec4 h = uHoles[i];
-    float inside = smoothstep(h.x - 3.0, h.x + 1.0, px.x) * (1.0 - smoothstep(h.z - 1.0, h.z + 3.0, px.x))
-      * smoothstep(h.y - 3.0, h.y + 1.0, px.y) * (1.0 - smoothstep(h.w - 1.0, h.w + 3.0, px.y));
+    // A rounded box the button's own shape, so no dark corners show
+    // outside its rounded ones; the record fades in just past its edge.
+    vec2 hc = 0.5 * (h.xy + h.zw);
+    vec2 hq = abs(px - hc) - (0.5 * (h.zw - h.xy) - uHoleR);
+    float sd = length(max(hq, 0.0)) + min(max(hq.x, hq.y), 0.0) - uHoleR;
+    float inside = 1.0 - smoothstep(-0.5, 2.5, sd);
     col *= 1.0 - inside;
     alpha *= 1.0 - inside;
   }
@@ -309,7 +321,7 @@ function init() {
   const loc = gl.getAttribLocation(prog, 'p');
   gl.enableVertexAttribArray(loc);
   gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
-  for (const n of ['uSize', 'uDpr', 'uCentre', 'uGeo', 'uHoles', 'uHoleCount', 'uSpan', 'uSpin', 'uFacing', 'uStyle', 'uSheen', 'uGlint', 'uHover', 'uSwell', 'uNeedle', 'uRipple', 'uTracks', 'uTrackCount']) U[n] = gl.getUniformLocation(prog, n);
+  for (const n of ['uSize', 'uDpr', 'uCentre', 'uGeo', 'uHoles', 'uHoleCount', 'uHoleR', 'uSpan', 'uSpin', 'uFacing', 'uStyle', 'uSheen', 'uGlint', 'uHover', 'uSwell', 'uNeedle', 'uRipple', 'uTracks', 'uTrackCount']) U[n] = gl.getUniformLocation(prog, n);
   return true;
 }
 
@@ -326,13 +338,13 @@ function layout(now) {
   const cx = s.left - c.left + s.width / 2;
   // The centre sits just behind the top of the screen; the disc is about
   // 1.8 times the content's width across.
-  const cy = s.top - c.top + s.height * 0.14;
+  const cy = s.top - c.top + s.height * 0.14 + T.drop;
   const R = Math.min(c.width * 0.7, s.width * 0.9);
   const r0 = R * 0.12;
   // Tilt it back just enough that its far rim lands near the top of the
   // canvas (behind the headline).
   const d0 = cy + HORIZON;
-  const tilt = Math.max(0.2, ((d0 / (RIM_TOP + HORIZON) - 1) * d0) / R);
+  const tilt = Math.max(0.2, ((d0 / (RIM_TOP + T.drop + HORIZON) - 1) * d0) / R);
   // The hero's buttons, so nothing shows through them.
   const holes = [...document.querySelectorAll('.hero .btn')].slice(0, 4).map((b) => {
     const r = b.getBoundingClientRect();
@@ -345,9 +357,11 @@ function layout(now) {
   const end = bar && next && next.top > bar.bottom ? next.top - c.top : s.bottom - c.top + 180;
   // The app's screen, where the pointer isn't on the record.
   const box = { l: s.left - c.left, r: s.right - c.left, t: s.top - c.top, b: s.bottom - c.top };
-  const key = [c.width, c.height, Math.round(cx), Math.round(cy), Math.round(end)].join();
+  const key = [c.width, c.height, Math.round(cx), Math.round(cy), Math.round(end), T.drop].join();
   gl.uniform4fv(U.uHoles, new Float32Array([...holes.flat(), ...new Array(16 - holes.length * 4).fill(0)]));
   gl.uniform1f(U.uHoleCount, holes.length);
+  const btn = document.querySelector('.hero .btn');
+  gl.uniform1f(U.uHoleR, btn ? parseFloat(getComputedStyle(btn).borderTopLeftRadius) || 0 : 0);
   if (geo?.key === key) return Object.assign(geo, { box });
   const tracks = [];
   for (let a = r0, i = 0; a < R - 40 && tracks.length < MAX_TRACKS; i++) {
@@ -415,13 +429,18 @@ function frame(now, still) {
   const g = layout(now);
   swell += (want - swell) * Math.min(1, dt * (want > swell ? 2.5 : 1));
   want *= Math.exp(-dt * 1.4);
-  spin += TURN * dt;
+  spin += TURN * T.life * dt;
+  drift += dt * T.life;
 
   // The needle plays inward, slowly; the ring runs out and fades.
   let needleOn = 0;
   if (needle.on && touch === 'needle') {
     needle.r = Math.max(g.r0 + 30, needle.r - dt * 0.6);
-    needleOn = Math.min(1, (now - needle.born) / 500);
+    // It lights as it lands, plays on a few seconds, then fades away like
+    // the ring it sent out.
+    const age = (now - needle.born) / 1000;
+    needleOn = Math.min(1, age / 0.5) * (1 - Math.min(1, Math.max(0, (age - NEEDLE_HOLD) / NEEDLE_FADE)) ** 2);
+    if (age > NEEDLE_HOLD + NEEDLE_FADE) needle.on = false;
   }
   let rippleOn = 0;
   let rippleR = 0;
@@ -455,14 +474,14 @@ function frame(now, still) {
   gl.uniform2f(U.uGeo, g.d0, g.tilt);
   gl.uniform2f(U.uSpan, g.r0, g.R);
   gl.uniform1f(U.uSpin, spin % (Math.PI * 2));
-  gl.uniform1f(U.uFacing, FACING);
+  gl.uniform1f(U.uFacing, FACING + DRIFT * Math.min(1, T.life) * Math.sin((drift * 2 * Math.PI) / DRIFT_S));
   gl.uniform3f(U.uStyle, st.lines, st.satin, st.level);
   gl.uniform1f(U.uSheen, st.sheen);
   gl.uniform1f(U.uGlint, st.glint ?? 1.6);
   gl.uniform3f(U.uHover, hover.r, hover.a, still ? 0 : hover.on);
   gl.uniform1f(U.uSwell, swell);
-  gl.uniform2f(U.uNeedle, needle.r, needleOn);
-  gl.uniform2f(U.uRipple, rippleR, rippleOn);
+  gl.uniform2f(U.uNeedle, needle.r, needleOn * T.needle);
+  gl.uniform2f(U.uRipple, rippleR, rippleOn * T.needle);
   gl.clearColor(0, 0, 0, 0);
   gl.clear(gl.COLOR_BUFFER_BIT);
   gl.drawArrays(gl.TRIANGLES, 0, 3);
@@ -477,6 +496,12 @@ function draw(now) {
   frame(now, false);
   requestAnimationFrame(draw);
 }
+
+const tune = window.tune;
+const again = () => { geo = null; measured = 0; wake(); };
+tune?.slider({ id: 'rec-drop', label: 'Hero record: lower by', min: 0, max: 260, step: 4, value: T.drop, unit: 'px', onInput: (v) => { T.drop = v; if (prog) again(); } });
+tune?.slider({ id: 'rec-needle', label: 'Hero record: needle strength', min: 0, max: 1.5, step: 0.05, value: T.needle, onInput: (v) => { T.needle = v; if (prog) wake(); } });
+tune?.slider({ id: 'rec-life', label: 'Hero record: motion at rest', min: 0, max: 3, step: 0.1, value: T.life, onInput: (v) => { T.life = v; if (prog) wake(); } });
 
 try {
   if (init()) {
