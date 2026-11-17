@@ -57,7 +57,7 @@ const TURN = (Math.PI * 2) / 40;
 // HORIZON; 2 brings it twice as close, so the far side narrows harder).
 // cue: what shows it turning (a circle spinning looks still on its own),
 // and cueAmt how much.
-const T = { drop: 60, needle: 0.8, life: 1, persp: 1, cue: 'dust', cueAmt: 1, res: 0.6 };
+const T = { drop: 8, needle: 0.8, life: 0.1, persp: 0.85, cue: 'dust', cueAmt: 1, res: 0.85 };
 const CUES = { glints: 0, dust: 1, warp: 2, spokes: 3 };
 const horizon = () => HORIZON / T.persp;
 // The lamp drifts this far either way (radians), once every this many seconds.
