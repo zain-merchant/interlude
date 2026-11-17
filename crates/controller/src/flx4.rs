@@ -151,7 +151,9 @@ const SENT_HISTORY: usize = 32;
 struct DeckState {
     shift: bool,
     range_index: usize,
-    /// Rate the hardware fader last asked for.
+    /// Where the hardware fader last sat (0.0 top ..= 1.0 bottom), and the
+    /// rate that meant in the range it was in.
+    fader_value: Option<f64>,
     fader_rate: Option<f64>,
     /// Rates this mapping sent lately, newest first. The engine reports
     /// a rate a moment after it's sent, so while the fader moves quickly the
@@ -188,6 +190,7 @@ impl Default for DeckState {
         Self {
             shift: false,
             range_index: 0,
+            fader_value: None,
             fader_rate: None,
             sent_rates: [None; SENT_HISTORY],
             took_over: None,
@@ -262,9 +265,33 @@ impl Flx4 {
         PITCH_RANGES[self.decks[d].range_index]
     }
 
+    /// Widens deck `d`'s range until the deck's `rate` fits, so the fader
+    /// can always reach a tempo set elsewhere (SYNC, the app's fader, which
+    /// widens its own range the same way) and take it over. Only while the
+    /// fader doesn't control the tempo: its position then means nothing yet.
+    fn fit_range(&mut self, d: usize, rate: f64) {
+        let s = &mut self.decks[d];
+        if s.owns(rate) {
+            return;
+        }
+        let before = s.range_index;
+        while (rate - 1.0).abs() > PITCH_RANGES[s.range_index] + 1e-9
+            && s.range_index + 1 < PITCH_RANGES.len()
+        {
+            s.range_index += 1;
+        }
+        if s.range_index != before {
+            let range = PITCH_RANGES[s.range_index];
+            s.fader_rate = s.fader_value.map(|v| 1.0 - range + v * 2.0 * range);
+        }
+    }
+
     /// Handles a pitch fader move to `value` (0.0 top ..= 1.0 bottom).
     /// Top is slower, like a turntable.
     fn tempo(&mut self, d: usize, value: f64, state: &State, out: &mut Vec<Action>) {
+        if state.decks[d].loaded {
+            self.fit_range(d, state.decks[d].rate);
+        }
         let range = self.range(d);
         let rate = 1.0 - range + value * 2.0 * range;
         let deck = &state.decks[d];
@@ -274,6 +301,7 @@ impl Flx4 {
             .fader_rate
             .is_some_and(|prev| (prev - deck.rate) * (rate - deck.rate) <= 0.0);
         let close = (rate - deck.rate).abs() < PICKUP_TOLERANCE;
+        s.fader_value = Some(value);
         s.fader_rate = Some(rate);
         // A stopped deck can jump; a playing one would lurch audibly.
         if in_control || crossed || close || !deck.playing {
@@ -296,6 +324,7 @@ impl Flx4 {
         // the current one again rather than jump.
         s.sent_rates = [None; SENT_HISTORY];
         s.took_over = None;
+        s.fader_value = None;
         s.fader_rate = None;
     }
 
@@ -674,6 +703,11 @@ impl Mapping for Flx4 {
     /// tempo, so the screen can show where to move it to take over.
     fn poll(&mut self, state: &State) -> Vec<Action> {
         let mut out = vec![];
+        for d in 0..NUM_DECKS {
+            if state.decks[d].loaded {
+                self.fit_range(d, state.decks[d].rate);
+            }
+        }
         for (d, s) in self.decks.iter_mut().enumerate() {
             let deck = &state.decks[d];
             let waiting = s.fader_rate.filter(|_| deck.loaded && !s.owns(deck.rate));
@@ -975,6 +1009,48 @@ mod tests {
         // The engine reports one of the earlier moves: still in control.
         s.decks[0].rate = 1.0 - 0.08 + (10000.0 / 16383.0) * 0.16;
         assert_eq!(fourteen(&mut m, 0, TEMPO, 12500, &s).len(), 1);
+    }
+
+    #[test]
+    fn pitch_fader_widens_its_range_to_reach_a_synced_tempo() {
+        // SYNC to a pitched-up deck can ask for more than the fader's ±8%.
+        let mut m = Flx4::new();
+        let mut s = st();
+        s.decks[0].playing = true;
+        assert_eq!(fourteen(&mut m, 0, TEMPO, 8192, &s).len(), 1);
+        s.decks[0].rate = 1.10;
+        // The app's marker already shows the fader on the wider ±16% scale,
+        // still at the centre.
+        let p = m.poll(&s);
+        assert!(
+            p.iter().any(|a| matches!(a, Action::TempoPickup { fader: Some(r), .. } if (r - 1.0).abs() < 1e-3)),
+            "{p:?}"
+        );
+        // Pulled all the way down it passes 1.10 and takes over.
+        let c = fourteen(&mut m, 0, TEMPO, 16383, &s);
+        assert!(
+            matches!(c[..], [Command::SetRate { rate, .. }] if (rate - 1.16).abs() < 1e-9),
+            "{c:?}"
+        );
+    }
+
+    #[test]
+    fn pitch_fader_keeps_its_range_for_tempos_it_set() {
+        let mut m = Flx4::new();
+        let mut s = st();
+        s.decks[0].playing = true;
+        assert_eq!(fourteen(&mut m, 0, TEMPO, 8192, &s).len(), 1);
+        let c = fourteen(&mut m, 0, TEMPO, 16383, &s);
+        let [Command::SetRate { rate, .. }] = c[..] else {
+            panic!("{c:?}")
+        };
+        s.decks[0].rate = rate;
+        m.poll(&s);
+        let c = fourteen(&mut m, 0, TEMPO, 0, &s);
+        assert!(
+            matches!(c[..], [Command::SetRate { rate, .. }] if (rate - 0.92).abs() < 1e-9),
+            "{c:?}"
+        );
     }
 
     #[test]
