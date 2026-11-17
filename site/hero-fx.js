@@ -86,6 +86,9 @@ const ripple = { on: false, r: 0, born: 0 };
 // The pointer, in record terms (radius and angle), eased so the light on
 // the grooves glides after it rather than jumping.
 const hover = { r: 0, a: 0, on: 0, x: -1e4, y: -1e4 };
+// Where the needle was last dropped: the pointer's own light stays off
+// there (so nothing stays lit under a still pointer) until it moves away.
+const quiet = { x: 0, y: 0, on: false };
 let running = false;
 let visible = true;
 
@@ -279,11 +282,11 @@ void main() {
     if (float(i) >= uHoleCount) break;
     vec4 h = uHoles[i];
     // A rounded box the button's own shape, so no dark corners show
-    // outside its rounded ones; the record fades in just past its edge.
+    // outside its rounded ones: it ends exactly at the button's edge.
     vec2 hc = 0.5 * (h.xy + h.zw);
     vec2 hq = abs(px - hc) - (0.5 * (h.zw - h.xy) - uHoleR);
     float sd = length(max(hq, 0.0)) + min(max(hq.x, hq.y), 0.0) - uHoleR;
-    float inside = 1.0 - smoothstep(-0.5, 2.5, sd);
+    float inside = 1.0 - smoothstep(-1.0, 0.0, sd);
     col *= 1.0 - inside;
     alpha *= 1.0 - inside;
   }
@@ -388,6 +391,7 @@ addEventListener('pointermove', (e) => {
   if (e.pointerType === 'touch') return;
   const p = local(e);
   Object.assign(hover, p);
+  if (quiet.on && Math.hypot(p.x - quiet.x, p.y - quiet.y) > 40) quiet.on = false;
   wake();
 }, { passive: true });
 document.documentElement.addEventListener('pointerleave', () => Object.assign(hover, { x: -1e4, y: -1e4 }));
@@ -399,6 +403,7 @@ addEventListener('pointerdown', (e) => {
   const now = performance.now();
   Object.assign(needle, { on: true, r, born: now });
   Object.assign(ripple, { on: true, r, born: now });
+  Object.assign(quiet, { x: p.x, y: p.y, on: true });
   wake();
 }, { passive: true });
 
@@ -457,7 +462,7 @@ function frame(now, still) {
   // don't reach us there anyway) or with the touch switched off.
   const overScreen = hover.x > g.box.l && hover.x < g.box.r && hover.y > g.box.t && hover.y < g.box.b;
   const { r: hr, a: ha } = toRecord(hover.x, hover.y, g);
-  const reach = touch !== 'off' && !overScreen && hr > g.r0 && hr < g.R ? 1 : 0;
+  const reach = touch !== 'off' && !overScreen && !quiet.on && hr > g.r0 && hr < g.R ? 1 : 0;
   if (reach) {
     if (hover.on < 0.02) Object.assign(hover, { r: hr, a: ha });
     const k = Math.min(1, dt * 7);
