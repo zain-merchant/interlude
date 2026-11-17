@@ -169,23 +169,19 @@ export class Waveform2D {
     if (view.playhead >= 0) {
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(x(view.playhead) - 0.75, 0, 1.5, h);
+      if (view.mode === 'scroll' && view.beatLen > 0) this.barNumber(h, view, x);
     }
   }
 
   /**
-   * Beat lines, with brighter bar lines and bar numbers. Beat 0 is the
-   * first downbeat. When beats get too close to tell apart only bars are
-   * drawn, and numbers thin out to every fourth bar, then none.
+   * Beat lines, with brighter bar lines. Beat 0 is the first downbeat.
+   * When beats get too close to tell apart only bars are drawn.
    */
   beats(w, h, view, spp, x) {
     const { ctx } = this;
     const len = view.beatLen;
-    const beatPx = len / spp;
-    const barsOnly = beatPx < 6;
-    const numberEvery = beatPx * 4 >= 32 ? 1 : beatPx * 16 >= 32 ? 4 : 0;
+    const barsOnly = len / spp < 6;
     const TICK = 5;
-    ctx.font = '600 9px "Geist Variable", system-ui, sans-serif';
-    ctx.textBaseline = 'top';
     for (let b = Math.ceil((view.start - view.firstBeat) / len); ; b++) {
       const bx = Math.round(x(view.firstBeat + b * len));
       if (bx > w) break;
@@ -198,11 +194,6 @@ export class Waveform2D {
         ctx.fillStyle = 'rgba(255,255,255,0.75)';
         ctx.fillRect(bx, 0, 1, TICK);
         ctx.fillRect(bx, h - TICK, 1, TICK);
-        const n = b / 4 + 1;
-        if (numberEvery && n >= 1 && (n - 1) % numberEvery === 0) {
-          ctx.fillStyle = 'rgba(255,255,255,0.6)';
-          ctx.fillText(String(n), bx + 3, 2);
-        }
       } else {
         ctx.fillStyle = 'rgba(255,255,255,0.12)';
         ctx.fillRect(bx, 0, 1, h);
@@ -211,6 +202,27 @@ export class Waveform2D {
         ctx.fillRect(bx, h - 3, 1, 3);
       }
     }
+  }
+
+  /** The bar the play head is in, on the play head line, from the first downbeat on. */
+  barNumber(h, view, x) {
+    const bar = Math.floor((view.playhead - view.firstBeat) / view.beatLen / 4) + 1;
+    if (bar < 1) return;
+    const { ctx } = this;
+    const label = String(bar);
+    ctx.font = '600 10px "Geist Variable", system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const pw = Math.max(18, ctx.measureText(label).width + 8);
+    const px = x(view.playhead) - pw / 2;
+    const py = h / 2 - 7;
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.roundRect(px, py, pw, 14, 4);
+    ctx.fill();
+    ctx.fillStyle = '#0c0c0e';
+    ctx.fillText(label, px + pw / 2, h / 2 + 0.5);
+    ctx.textAlign = 'start';
   }
 
   /** Fills one band's shape. `glow` draws only its blurred shadow. */

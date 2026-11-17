@@ -3,7 +3,7 @@
   import { Waveform2D, themeColors, HOT_CUES } from './waveform-2d.js';
   import { tracks, engine, displayPos, displaySlip, onFrame, scrubStart, scrubTo, scrubEnd } from './engine.svelte.js';
   import { openMenu } from './menu.svelte.js';
-  import { gridMenu } from './grid.svelte.js';
+  import { gridMenu, gridMode, startSlide, slide, endSlide } from './grid.svelte.js';
 
   /** @type {{ deck: number, mode?: 'scroll' | 'overview', seconds?: number, onzoom?: (factor: number) => void }} */
   let { deck, mode = 'scroll', seconds = 12, onzoom } = $props();
@@ -91,9 +91,17 @@
   let drag = null;
   let dragging = $state(false);
 
+  // In grid edit mode, dragging slides the beatgrid instead.
+  const editing = $derived(mode === 'scroll' && gridMode[deck]);
+  let sliding = null;
+
   function down(e) {
     if (!tracks[deck] || e.button !== 0) return;
     canvas.setPointerCapture(e.pointerId);
+    if (editing) {
+      if (tracks[deck].beatgrid) sliding = { x: e.clientX, state: startSlide(deck) };
+      return;
+    }
     drag = { x: e.clientX, from: displayPos[deck], live: mode === 'overview' };
     if (drag.live) begin(e);
   }
@@ -104,8 +112,9 @@
     move(e);
   }
   function move(e) {
-    if (!drag) return;
     const r = canvas.getBoundingClientRect();
+    if (sliding) slide(deck, sliding.state, ((e.clientX - sliding.x) / r.width) * span());
+    if (!drag) return;
     if (mode === 'overview') {
       const x = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
       scrubTo(deck, x * tracks[deck].duration);
@@ -116,6 +125,8 @@
     }
   }
   function up() {
+    if (sliding) endSlide(deck, sliding.state);
+    sliding = null;
     if (drag?.live) scrubEnd(deck);
     drag = null;
     dragging = false;
@@ -125,7 +136,7 @@
   function menu(e) {
     if (mode !== 'scroll' || !tracks[deck]) return;
     const r = canvas.getBoundingClientRect();
-    const at = displayPos[deck] + ((e.clientX - r.left) / r.width - 0.5) * seconds;
+    const at = displayPos[deck] + ((e.clientX - r.left) / r.width - 0.5) * span();
     openMenu(e, gridMenu(deck, Math.max(0, Math.min(tracks[deck].duration, at))));
   }
 
@@ -162,6 +173,7 @@
   <canvas
     bind:this={canvas}
     class:dragging
+    class:editing
     onpointerdown={down}
     onpointermove={move}
     onpointerup={up}
@@ -199,6 +211,9 @@
   }
   .wave:not(.empty).overview canvas {
     cursor: pointer;
+  }
+  .wave:not(.empty) canvas.editing {
+    cursor: ew-resize;
   }
   .wave:not(.empty) canvas.dragging {
     cursor: grabbing;
