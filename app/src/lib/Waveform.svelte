@@ -2,6 +2,8 @@
   import { onMount } from 'svelte';
   import { Waveform2D, themeColors, HOT_CUES } from './waveform-2d.js';
   import { tracks, engine, displayPos, displaySlip, onFrame, scrubStart, scrubTo, scrubEnd } from './engine.svelte.js';
+  import { openMenu } from './menu.svelte.js';
+  import { gridMenu } from './grid.svelte.js';
 
   /** @type {{ deck: number, mode?: 'scroll' | 'overview', seconds?: number, onzoom?: (factor: number) => void }} */
   let { deck, mode = 'scroll', seconds = 12, onzoom } = $props();
@@ -114,6 +116,14 @@
     dragging = false;
   }
 
+  // Right-click the scrolling view to fix the beatgrid where you clicked.
+  function menu(e) {
+    if (mode !== 'scroll' || !tracks[deck]) return;
+    const r = canvas.getBoundingClientRect();
+    const at = displayPos[deck] + ((e.clientX - r.left) / r.width - 0.5) * seconds;
+    openMenu(e, gridMenu(deck, Math.max(0, Math.min(tracks[deck].duration, at))));
+  }
+
   // ⌘/Ctrl + scroll zooms; plain scroll scratches through a paused track.
   let wheelTimer;
   /** Pixels of scroll that start a scratch; less is a resting finger. */
@@ -153,6 +163,7 @@
     onpointercancel={up}
     onlostpointercapture={up}
     onwheel={wheel}
+    oncontextmenu={menu}
     aria-hidden="true"
   ></canvas>
   {#if mode === 'scroll'}

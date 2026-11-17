@@ -27,6 +27,7 @@
   import { runPerformance } from './lib/performance.js';
   import { padMode, setPadMode } from './lib/padmode.svelte.js';
   import { tempoPickup } from './lib/pickup.svelte.js';
+  import { gridEdit, NUDGE } from './lib/grid.svelte.js';
   import { toggleStem, soloStem, syncStemWaveforms, stemsUnavailable } from './lib/stems.svelte.js';
   import { libraryHealth, reveal, captureUiErrors, update, checkForUpdate, installUpdate } from './lib/support.svelte.js';
 
@@ -299,6 +300,18 @@
         break;
       case 'view.uiZoomReset':
         if (down) setUiZoom(1);
+        break;
+      case 'deck.0.gridEarlier':
+      case 'deck.1.gridEarlier':
+        if (down) gridEdit(deck, 'nudge', 'Moved the grid earlier', -NUDGE);
+        break;
+      case 'deck.0.gridLater':
+      case 'deck.1.gridLater':
+        if (down) gridEdit(deck, 'nudge', 'Moved the grid later', NUDGE);
+        break;
+      case 'deck.0.gridDownbeat':
+      case 'deck.1.gridDownbeat':
+        if (down) gridEdit(deck, 'downbeat', 'Moved the downbeat');
         break;
       default: {
         const stem = /^deck\.(\d)\.stem(Solo)?\.(\d)$/.exec(id);
