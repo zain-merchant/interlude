@@ -43,11 +43,13 @@ Everything Interlude does, in detail. For a short overview, see the
   timed in beats (1/8 to 8) from the deck's tempo, with level and on. Echo
   and reverb tails ring out after you switch them off.
 - **Sampler:** eight one-shot slots that play straight to the master
-  (past the crossfader), with one level knob. It stays out of the way: the
-  Sampler button above the library (or S) opens a slim strip under the
-  decks. Drag a track onto a slot to load it (up to 60 seconds), click to
-  play from the top, ⇧-click to stop, right-click to clear. Slots are kept
-  between sessions.
+  (past the crossfader), with one level knob. The Sampler button above the
+  library (or S) opens a row of slots at the top of the library. It starts
+  with eight built-in sounds (air horn, siren, kick, clap, snare, rewind,
+  riser, laser). Click a slot to play it from the top, ⇧-click to stop.
+  Click an empty slot to choose a sound file, or drag a short track onto
+  any slot (up to 60 seconds). Right-click a slot to swap, clear or put
+  its built-in sound back. Slots are kept between sessions.
 - **Stems:** each deck's Stems tab has four buttons, Vocals, Melody, Bass
   and Drums. Click mutes a stem, ⇧-click plays it alone (again: all back
   on). Stems fade in and out over a few milliseconds, so there are no

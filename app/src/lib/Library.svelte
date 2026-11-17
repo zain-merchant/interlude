@@ -7,11 +7,12 @@
   import { openMenu } from './menu.svelte.js';
   import { keyLabel, MOD } from './commands.js';
   import { sampler, setSamplerOpen } from './sampler.svelte.js';
+  import Sampler from './Sampler.svelte';
   import { pushEdit, showToast } from './undo.svelte.js';
   import { keyName, keyLongName, camelot } from './key.js';
 
-  /** @type {{ onload: (deck: number, track: import('./backend.js').LibraryTrack, opts?: { force?: boolean }) => void, onsettings?: () => void }} */
-  let { onload, onsettings } = $props();
+  /** @type {{ onload: (deck: number, track: import('./backend.js').LibraryTrack, opts?: { force?: boolean }) => void, onsettings?: () => void, onmessage?: (text: string) => void }} */
+  let { onload, onsettings, onmessage = showToast } = $props();
 
   const ROW = 28;
 
@@ -550,7 +551,7 @@
           class="pending" use:tip={() => 'Finding each track’s length, BPM and key in the background'}> · analyzing, {pending.toLocaleString()} to go</span>{/if}</span>
       <button class="btn sm samp" class:on={sampler.open} aria-pressed={sampler.open}
         onclick={() => setSamplerOpen(!sampler.open)}
-        use:tip={() => tipText(sampler.open ? 'Hide sampler' : 'Show sampler', keyLabel('view.sampler'), 'eight one-shot slots; drag tracks onto them')}>
+        use:tip={() => tipText(sampler.open ? 'Hide sampler' : 'Show sampler', keyLabel('view.sampler'), 'eight one-shot sounds to fire over the mix')}>
         <svg viewBox="0 0 12 12" aria-hidden="true"><rect x="1.5" y="1.5" width="3.5" height="3.5" rx="1" /><rect x="7" y="1.5" width="3.5" height="3.5" rx="1" /><rect x="1.5" y="7" width="3.5" height="3.5" rx="1" /><rect x="7" y="7" width="3.5" height="3.5" rx="1" /></svg>Sampler
       </button>
       {#if onsettings}
@@ -561,6 +562,8 @@
         </button>
       {/if}
     </div>
+
+    {#if sampler.open}<Sampler {onmessage} selected={() => selectedTrack()} />{/if}
 
     <div class="row head" role="group" aria-label="Sort tracks">
       <span></span>

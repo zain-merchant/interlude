@@ -224,7 +224,7 @@
     min-height: 0;
   }
   /* The tick ring's margin overlaps a little, so five dials still fit
-     when the decks are short (sampler open, small window). */
+     when the decks are short (a small window). */
   .ch :global(.knob) {
     margin: -3px 0;
   }
