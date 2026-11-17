@@ -211,7 +211,6 @@ uniform vec2 uGeo;       // distance from the centre to the horizon, and the til
 uniform vec4 uHoles[4];  // the hero's buttons, where nothing may show through
 uniform float uHoleCount;
 uniform float uHoleR;     // the buttons' corner radius
-uniform vec4 uScreen;    // the middle of the app's screen (opaque, so nothing to draw behind it), CSS px
 uniform vec2 uSpan;      // inner radius, and the radius the groove spacing is set by
 uniform vec2 uOuter;     // outer radius: round most of it, and up top
 uniform float uSpin;
@@ -300,7 +299,6 @@ vec2 discQ(vec2 px) {
 const MAIN = `
 void main() {
   vec2 px = vec2(gl_FragCoord.x, uSize.y - gl_FragCoord.y) / uDpr;
-  if (all(greaterThan(px, uScreen.xy)) && all(lessThan(px, uScreen.zw))) { gl_FragColor = vec4(0.0); return; }
   vec2 q = discQ(px);
   float r = length(q);
   // How the disc moves under a device pixel (for things drawn to the
@@ -743,7 +741,7 @@ float wedgeD(float b, float from, float len, float r, float ft) {
 float wrap(float x) { return atan(sin(x), cos(x)); }
 // Light, added; and ink, laid over (both premultiplied).
 void add(inout vec4 o, vec3 c, float k) { o += vec4(c * k, k); }
-void over(inout vec4 o, vec3 c, float k) { o = vec4(c * k, k) + o * (1.0 - k); }
+void over(inout vec4 o, vec3 c, float k) { k = clamp(k, 0.0, 1.0); o = vec4(c * k, k) + o * (1.0 - k); }
 // Lines every P0 of v (fv: v per device px), w device px wide, thinned out
 // by octaves so they're never closer than gap device px.
 float lodLines(float v, float fv, float P0, float gap, float w) {
@@ -821,7 +819,6 @@ vec3 hoverField(vec2 px, float r, float a, float fr, float ft) {
 
 void main() {
   vec2 px = vec2(gl_FragCoord.x, uSize.y - gl_FragCoord.y) / uDpr;
-  if (all(greaterThan(px, uScreen.xy)) && all(lessThan(px, uScreen.zw))) { gl_FragColor = vec4(0.0); return; }
   vec2 q = discQ(px);
   float r = length(q);
   vec2 dqx = dFdx(q);
@@ -1027,7 +1024,26 @@ void main() {
   vec3 FLOOR1 = vec3(0.05, 0.05, 0.06);
   float k1 = floor(mid / 140.0) + 3.0;
   float wob = 0.25 * cue * sin(k1 * b + idx * 2.3) + 0.1 * sin(2.0 * (a - uFacing));
-  float y = (u - 0.5) * 2.3 + wob + 0.7 * (hv.x - hv.y) - 0.15 * sw;
+  // The pointer's bend: the arc, beam and split as they are (soft
+  // already); the spot, stylus and ripples, whose shapes are hard-edged,
+  // as soft swells of the same reach, so the bent reflections stay smooth.
+  float bend = hv.x - hv.y;
+  if (uHoverMode > 1.5 && uHoverMode < 2.5 || uHoverMode > 3.5) {
+    float hon = uHover.z * uTouch;
+    float dd = length(px - uPtr.xy);
+    bend = hon * exp(-dd * dd / (uHoverMode < 2.5 ? 900.0 : 3000.0));
+    if (uHoverMode > 4.5) {
+      bend = 0.0;
+      for (int i = 0; i < 8; i++) {
+        vec4 p = uPts[i];
+        float age = uTime - p.w;
+        if (age < 0.0 || age > 2.2) continue;
+        float x = (length(px - p.xy) - (16.0 + 110.0 * age)) / (14.0 + 8.0 * age);
+        bend += hon * exp(-x * x) * pow(1.0 - age / 2.2, 1.5) * min(1.0, age * 8.0);
+      }
+    }
+  }
+  float y = (u - 0.5) * 2.3 + wob + 0.7 * bend - 0.15 * sw;
   float fy = max(fwidth(y), 1e-4);
   vec3 c = mix(mix(FLOOR0, FLOOR1, clamp(-1.4 * y, 0.0, 1.0)), mix(SKY1, SKY0, clamp(1.2 * y, 0.0, 1.0)), clamp(y / fy + 0.5, 0.0, 1.0));
   c = mix(c, vec3(1.0), 0.85 * clamp(1.6 - abs(y) / fy, 0.0, 1.0));
@@ -1173,7 +1189,9 @@ void main() {
     : k < 3.5 ? vec3(0.13, 0.46, 0.34) : k < 4.5 ? vec3(0.94, 0.66, 0.18) : vec3(0.62, 0.24, 0.42);
   vec3 col2 = k < 0.5 ? vec3(0.94, 0.66, 0.18) : k < 1.5 ? vec3(0.88, 0.36, 0.3) : k < 2.5 ? vec3(0.06, 0.56, 0.6)
     : k < 3.5 ? vec3(0.95, 0.9, 0.8) : k < 4.5 ? vec3(0.12, 0.26, 0.64) : vec3(0.94, 0.66, 0.18);
-  float lit = 1.0 + 0.3 * clamp(hv.x, 0.0, 1.0) + 0.08 * sw;
+  // (Ripples come as rings, x and y by turns: both are gold lines here.)
+  float rip = step(4.5, uHoverMode);
+  float lit = 1.0 + 0.45 * clamp(hv.x, 0.0, 1.0) * (1.0 - rip) + 0.08 * sw;
   over(o, min(col * lit, vec3(1.0)), 0.94 * inS);
   if (s.w > 0.5 && mod(idx, 2.0) < 0.5 && room > 7.0) {
     float N = max(6.0, floor(2.0 * PI * mid / 34.0));
@@ -1194,7 +1212,7 @@ void main() {
   over(o, GOLDHI, stroke((r - (R - 1.5)) / fr, 2.0 * uDpr));
   // The gleam: the lamp's reflection, narrow and clean-edged.
   add(o, vec3(1.0), 0.16 * smoothstep(0.955, 0.965, lamp) * inS);
-  over(o, GOLDHI, clamp(hv.y, 0.0, 1.0) * 0.8 * (1.0 - inS) + hv.z);
+  over(o, GOLDHI, 0.85 * clamp(hv.y + rip * hv.x, 0.0, 1.0) + hv.z);
   over(o, GOLDHI, 0.95 * uNeedle.y * stroke((r - uNeedle.x) / fr, 2.2 * uDpr));
   over(o, GOLDHI, 0.6 * uRipple.y * stroke((r - uRipple.x) / fr, uDpr));
 #elif LOOK == 10
@@ -1241,7 +1259,7 @@ void main() {
 #if LOOK == 1 || LOOK == 8
   const float CALM = 0.75;
 #elif LOOK == 2
-  const float CALM = 1.0;   // flat fields stay flat (they're hatched up there)
+  const float CALM = 0.7;   // (evenly, so flat fields stay flat; they're hatched up there)
 #elif LOOK == 9 || LOOK == 10
   const float CALM = 0.4;
 #elif LOOK == 5
@@ -1293,7 +1311,7 @@ let geo = null;
 
 // One program per style, compiled the first time it's shown.
 const NAMES = ['uSize', 'uDpr', 'uCentre', 'uGeo', 'uHoles', 'uHoleCount', 'uHoleR', 'uSpan', 'uSpin', 'uFacing', 'uStyle', 'uSheen', 'uGlint', 'uHover', 'uSwell', 'uNeedle', 'uRipple', 'uTouch', 'uHz', 'uCue', 'uTracks', 'uTrackCount',
-  'uOuter', 'uScreen', 'uGlintAmt', 'uChroma', 'uSpeck', 'uTint', 'uWarp', 'uLens', 'uHoverMode', 'uPtr', 'uPts', 'uTime'];
+  'uOuter', 'uGlintAmt', 'uChroma', 'uSpeck', 'uTint', 'uWarp', 'uLens', 'uHoverMode', 'uPtr', 'uPts', 'uTime'];
 const progs = new Map();
 let shown = -1;
 function build(n) {
@@ -1573,8 +1591,6 @@ function frame(now, still) {
   gl.uniform1f(U.uHz, g.hz);
   gl.uniform2f(U.uCue, CUES[T.cue] ?? 1, T.cueAmt);
   gl.uniform2f(U.uOuter, g.out, g.top);
-  // (Well inside its rounded corners and the live app's own margin.)
-  gl.uniform4f(U.uScreen, g.box.l + 48, g.box.t + 48, g.box.r - 48, g.box.b - 48);
   gl.uniform2f(U.uGlintAmt, T.soft, T.glintAmt);
   gl.uniform2f(U.uChroma, CHROMA[T.chroma] ?? 0, T.chromaAmt);
   gl.uniform1f(U.uSpeck, SPECKS[T.speck] ?? 0);
