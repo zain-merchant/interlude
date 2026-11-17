@@ -18,7 +18,7 @@ use super::Analysis;
 /// Bumped when BPM or key detection changes enough that saved results
 /// should be redone. Tracks analyzed by an older version are analyzed
 /// again in the background.
-pub const ANALYSIS_VERSION: i64 = 1;
+pub const ANALYSIS_VERSION: i64 = 2;
 
 const BACKUPS_KEPT: usize = 7;
 
