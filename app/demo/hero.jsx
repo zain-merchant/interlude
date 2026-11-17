@@ -13,7 +13,7 @@
 // into it. The decks then trade places, so each loop picks up where the last
 // one finished and nothing rewinds.
 // First, so the pause is in place before anything asks for a frame.
-import './pause.js';
+import { everyFrame } from './pause.js';
 import { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { mount } from 'svelte';
@@ -348,7 +348,9 @@ function link(hw, appEl, label) {
     const up = rb.top + rb.height / 2 < ra.top + ra.height / 2;
     const p0 = { x: ra.left - h.left + ra.width / 2, y: (up ? ra.top : ra.bottom) - h.top };
     const p1 = { x: rb.left - h.left + rb.width / 2, y: (up ? rb.bottom : rb.top) - h.top };
-    const lift = Math.max(40, Math.abs(p0.y - p1.y) * 0.5) * (up ? -1 : 1);
+    // It rises by at least a third of the way across too, so a short, wide
+    // run (the browse knob to a library row) still reads as an S, not a hook.
+    const lift = Math.max(40, Math.abs(p0.y - p1.y) * 0.5, Math.abs(p0.x - p1.x) * 0.3) * (up ? -1 : 1);
     geom = { p0, p1, c0: { x: p0.x, y: p0.y + lift }, c1: { x: p1.x, y: p1.y - lift } };
     // An EQ knob has its channel's other knobs straight above it, so its
     // line leaves sideways, out over the jog's side of the strip, and only
@@ -388,9 +390,9 @@ function link(hw, appEl, label) {
   const follow = () => {
     if (!alive) return;
     place();
-    requestAnimationFrame(follow);
+    everyFrame(follow);
   };
-  requestAnimationFrame(follow);
+  everyFrame(follow);
 
   let sent = false;
   const pulse = () => {
@@ -408,13 +410,13 @@ function link(hw, appEl, label) {
       spark.style.strokeDasharray = `${SEG} ${total + SEG}`;
       spark.style.strokeDashoffset = String(SEG - e * (total + SEG));
       spark.style.opacity = String(t < 0.8 ? 1 : (1 - t) / 0.2);
-      if (t < 1) requestAnimationFrame(step);
+      if (t < 1) everyFrame(step);
       else {
         spark.remove();
         spark = null;
       }
     };
-    requestAnimationFrame(step);
+    everyFrame(step);
   };
   let ended = false;
   const done = (now = false) => {

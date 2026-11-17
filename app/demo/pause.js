@@ -51,6 +51,17 @@ window.cancelAnimationFrame = (id) => {
 
 export const isPaused = () => paused;
 
+// Every frame, cap or no cap (still held while paused): for what has to keep
+// up with something the browser moves itself, like a line pinned to a
+// control that's sliding on a CSS transition. At 30 it would trail behind.
+export const everyFrame = (cb) => {
+  if (paused) {
+    held.set(++next, cb);
+    return next;
+  }
+  return raf(cb);
+};
+
 function setPaused(p) {
   if (p === paused) return;
   paused = p;
