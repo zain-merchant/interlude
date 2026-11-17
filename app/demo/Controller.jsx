@@ -62,6 +62,21 @@ function eqAngle(el) {
 export const VERSIONS = ['plate', 'compact', 'matte', 'club', 'minimal'];
 const STEMS = ['Vocals', 'Melody', 'Bass', 'Drums'];
 const pick = (v) => (VERSIONS.includes(v) ? v : null);
+/**
+ * How it's drawn, apart from how it's laid out (controller-skins.css): the
+ * same parts in the same places, finished in a different illustration
+ * style. `?skin=` picks one on load, the site's Try panel after.
+ *   current    graphite anodised metal, as it was
+ *   flat       a flat vector drawing: solid fills, hard offset shadows
+ *   bauhaus    modernist: off-white, black, red, yellow and blue geometry
+ *   te         small-studio industrial: flat aluminium grey, chunky
+ *              coloured knobs, tiny monospaced print
+ *   blueprint  a technical drawing: white linework on drafting blue
+ *   riso       a two-ink risograph print: blue and fluoro pink on paper
+ *   hifi       a 70s hi-fi: a walnut case, satin silver plates, amber lamps
+ */
+export const SKINS = ['current', 'flat', 'bauhaus', 'te', 'blueprint', 'riso', 'hifi'];
+const pickSkin = (v) => (SKINS.includes(v) ? v : null);
 
 const PLAY = <svg viewBox="0 0 18 12" aria-hidden><path d="M1.5 1.6v8.8l6.6-4.4z" /><rect x="10.6" y="1.6" width="2" height="8.8" rx=".6" /><rect x="14.4" y="1.6" width="2" height="8.8" rx=".6" /></svg>;
 
@@ -169,9 +184,12 @@ export function Controller({ shown }) {
   }, [shown]);
   // Which drawing: ?controller= on load, then the site's Try panel.
   const [version, setVersion] = useState(() => pick(new URLSearchParams(location.search).get('controller')) ?? 'club');
+  const [skin, setSkin] = useState(() => pickSkin(new URLSearchParams(location.search).get('skin')) ?? 'current');
   useEffect(() => {
     const on = (e) => {
-      if (e.data?.interlude === 'controller' && pick(e.data.v)) setVersion(e.data.v);
+      if (e.data?.interlude !== 'controller') return;
+      if (pick(e.data.v)) setVersion(e.data.v);
+      if (pickSkin(e.data.skin)) setSkin(e.data.skin);
     };
     window.addEventListener('message', on);
     return () => window.removeEventListener('message', on);
@@ -288,7 +306,7 @@ export function Controller({ shown }) {
 
   return (
     <div className="desk" data-shown={up || undefined}>
-      <div ref={root} className="hw" data-target="controller" data-v={version}>
+      <div ref={root} className="hw" data-target="controller" data-v={version} data-skin={skin}>
         <Deck side="left" />
         <div className="hw-mixer">
           <div className="hw-browse-row">
