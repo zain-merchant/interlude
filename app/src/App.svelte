@@ -9,7 +9,6 @@
   import ContextMenu from './lib/ContextMenu.svelte';
   import Settings from './lib/Settings.svelte';
   import Import from './lib/Import.svelte';
-  import Sampler from './lib/Sampler.svelte';
   import Report from './lib/Report.svelte';
   import { sampler, setSamplerOpen, restoreSampler, loadSample } from './lib/sampler.svelte.js';
   import { engine, tracks, startEngineLoop, loadTrack, control, deckSnapshot, restoreDeck } from './lib/engine.svelte.js';
@@ -370,8 +369,7 @@
   try {
     libHeight = Number(localStorage.getItem(LIB_KEY)) || LIB_DEFAULT;
   } catch {}
-  const SAMPLER_H = 52; // a 40px strip and the 12px gap above it
-  const libMax = $derived(Math.max(160, Math.min(560, Math.max(winHeight, APP_MIN_H) - (macWindow ? TOP_STRIP : 12) - 12 - 136 - 12 - 12 - 300 - (sampler.open ? SAMPLER_H : 0))));
+  const libMax = $derived(Math.max(160, Math.min(560, Math.max(winHeight, APP_MIN_H) - (macWindow ? TOP_STRIP : 12) - 12 - 136 - 12 - 12 - 300)));
   const lib = $derived(Math.max(160, Math.min(libMax, libHeight)));
   function setLib(h) {
     libHeight = Math.max(160, Math.min(libMax, h));
@@ -465,7 +463,7 @@
 
 <svelte:window onkeydown={keydown} onkeyup={keyup} onblur={blur} oncontextmenu={contextmenu} />
 
-<div class="app" class:sampling={sampler.open} class:mac-window={macWindow} style:--top="{macWindow ? TOP_STRIP : 12}px" style:--lib="{lib}px" style:--sampler="{SAMPLER_H}px"  bind:clientHeight={winHeight}>
+<div class="app" class:mac-window={macWindow} style:--top="{macWindow ? TOP_STRIP : 12}px" style:--lib="{lib}px"  bind:clientHeight={winHeight}>
   <Backdrop a="var(--deck-a)" b="var(--deck-b)" tint={0.25} />
   {#if macWindow}
     <!-- The window buttons' strip: drag it to move the window, double-click
@@ -493,8 +491,6 @@
     <Deck deck={1} onload={load} onreveal={(p) => library.reveal(p)} onsettings={openSettings} />
   </div>
 
-  {#if sampler.open}<Sampler onmessage={say} selected={() => library.selectedTrack()} />{/if}
-
   <!-- svelte-ignore a11y_no_noninteractive_tabindex, a11y_no_noninteractive_element_interactions (a focusable separator is the ARIA window-splitter pattern) -->
   <div class="split" class:drag={split} role="separator" aria-orientation="horizontal" aria-label="Resize library"
     aria-valuenow={Math.round(lib)} aria-valuemin={160} aria-valuemax={Math.round(libMax)} tabindex="0"
@@ -504,7 +500,7 @@
 
   <div class="below">
     <div class="libwrap" inert={settings !== null}>
-      <Library bind:this={library} onload={load} onsettings={() => openSettings()} />
+      <Library bind:this={library} onload={load} onsettings={() => openSettings()} onmessage={say} />
     </div>
     {#if settings}<Settings bind:page={settings} onclose={() => (settings = null)} onimport={() => { settings = null; openImport(); }}
       onreport={openReport} onupdates={checkUpdatesNow} />{/if}
@@ -569,9 +565,6 @@
     grid-template-rows: 136px minmax(300px, 1fr) var(--gap) var(--lib);
     padding: var(--top) var(--gap) var(--gap);
     background: var(--bg);
-  }
-  .app.sampling {
-    grid-template-rows: 136px minmax(300px, 1fr) var(--sampler) var(--gap) var(--lib);
   }
   .app > :global(:not(.bd)) {
     position: relative;

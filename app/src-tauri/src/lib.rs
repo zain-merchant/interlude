@@ -648,6 +648,44 @@ async fn load_track(
     Ok(info)
 }
 
+/// A built-in sampler sound: where its file is and what to call it.
+#[derive(Serialize)]
+struct DefaultSample {
+    path: String,
+    title: String,
+}
+
+/// The one-shots that ship with the app (air horn, kick, ...), in slot
+/// order. They fill the sampler the first time it's used. The files are
+/// named "N Title.wav"; the number orders them and is dropped from the title.
+#[tauri::command]
+fn default_samples(app: tauri::AppHandle) -> Vec<DefaultSample> {
+    let dir = app
+        .path()
+        .resource_dir()
+        .ok()
+        .map(|d| d.join("samples"))
+        .filter(|d| d.is_dir())
+        .unwrap_or_else(|| std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("samples"));
+    let mut files: Vec<_> = std::fs::read_dir(&dir)
+        .map(|r| r.flatten().map(|e| e.path()).collect())
+        .unwrap_or_default();
+    files.retain(|p| p.extension().is_some_and(|e| e == "wav"));
+    files.sort();
+    files
+        .into_iter()
+        .take(SAMPLER_SLOTS)
+        .filter_map(|p| {
+            let stem = p.file_stem()?.to_str()?;
+            let title = stem.split_once(' ').map_or(stem, |(_, t)| t).to_string();
+            Some(DefaultSample {
+                path: p.to_str()?.to_string(),
+                title,
+            })
+        })
+        .collect()
+}
+
 /// Decodes a file on a worker thread and puts it in a sampler slot.
 /// Returns the sample's length in seconds.
 #[tauri::command]
@@ -818,6 +856,7 @@ pub fn run() {
             audio::set_audio_output,
             load_track,
             load_sample,
+            default_samples,
             set_beatgrid,
             waveform,
             start_recording,

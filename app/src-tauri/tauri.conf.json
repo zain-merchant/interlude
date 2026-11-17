@@ -43,7 +43,8 @@
       "icons/icon.ico"
     ],
     "resources": {
-      "../../crates/controller/mappings/": "controllers/"
+      "../../crates/controller/mappings/": "controllers/",
+      "samples/*.wav": "samples/"
     },
     "createUpdaterArtifacts": true
   },
