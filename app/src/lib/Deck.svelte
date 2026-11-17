@@ -4,11 +4,12 @@
   import FxUnit from './FxUnit.svelte';
   import Performance from './Performance.svelte';
   import Stems from './Stems.svelte';
+  import Grid from './Grid.svelte';
   import { untrack } from 'svelte';
   import { padMode, padModeTab } from './padmode.svelte.js';
   import { tempoPickup } from './pickup.svelte.js';
   import { engine, tracks, control } from './engine.svelte.js';
-  import { bpmEdit, gridEdit, gridMenu } from './grid.svelte.js';
+  import { bpmEdit, gridEdit, gridMenu, gridMode } from './grid.svelte.js';
   import { dropTarget } from './dnd.svelte.js';
   import { tip, tipText } from './tooltip.svelte.js';
   import { openMenu } from './menu.svelte.js';
@@ -66,9 +67,10 @@
     { id: 'loop', label: 'Loop' },
     { id: 'fx', label: 'FX' },
     { id: 'stems', label: 'Stems' },
+    { id: 'grid', label: 'Grid' },
   ];
   const storageKey = () => `oss-dj.deckMode.${deck}`;
-  /** @type {'cues' | 'loop' | 'fx' | 'stems'} */
+  /** @type {'cues' | 'loop' | 'fx' | 'stems' | 'grid'} */
   let mode = $state('cues');
   try {
     const saved = localStorage.getItem(storageKey());
@@ -76,10 +78,16 @@
   } catch {}
   function setMode(m) {
     mode = m;
+    // Grid isn't remembered: while it's open, dragging the waveform slides
+    // the grid instead of scratching, which shouldn't greet a new session.
+    if (m === 'grid') return;
     try {
       localStorage.setItem(storageKey(), m);
     } catch {}
   }
+  $effect(() => {
+    gridMode[deck] = mode === 'grid';
+  });
   // A pad mode button on the controller shows the controls its pads now
   // play, as rekordbox does.
   $effect(() => {
@@ -238,7 +246,7 @@
         {#each MODES as m}
           {@const busy = (m.id === 'loop' && d.looping) || (m.id === 'fx' && d.fx?.on) || (m.id === 'stems' && (d.stems ?? 15) !== 15)}
           <button role="tab" class:on={mode === m.id} aria-selected={mode === m.id} tabindex={mode === m.id ? 0 : -1}
-            onclick={() => setMode(m.id)} use:tip={() => (busy ? `${m.label} (active)` : m.label)}>
+            onclick={() => setMode(m.id)} use:tip={() => (busy ? `${m.label} (active)` : m.id === 'grid' ? 'Grid: fix the beatgrid. While open, drag the waveform to slide it' : m.label)}>
             {m.label}{#if busy}<i aria-label="active"></i>{/if}
           </button>
         {/each}
@@ -247,6 +255,8 @@
     <div class="strip" role="tabpanel" aria-label={MODES.find((m) => m.id === mode)?.label}>
       {#if mode === 'fx'}
         <FxUnit {deck} />
+      {:else if mode === 'grid'}
+        <Grid {deck} />
       {:else if mode === 'stems'}
         <Stems {deck} onsettings={() => onsettings?.('stems')} />
       {:else}
@@ -431,7 +441,7 @@
   }
   .modes {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 8px;
     border-bottom: 1px solid var(--line);
   }
