@@ -42,7 +42,7 @@ word.append(base);
 const gl = canvas.getContext('webgl', { premultipliedAlpha: true, antialias: false, alpha: true });
 
 export let ready = false;
-export const T = { mode: 'stylus', pitch: 4, rest: 0, cut: 0.22 };
+export const T = { mode: 'lamp', pitch: 8, rest: 0.4, cut: 0.33 };
 // How many frames have been drawn (for checking it stops when idle).
 export const stats = { frames: 0 };
 

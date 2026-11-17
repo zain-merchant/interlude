@@ -217,13 +217,13 @@
         wake();
       }).observe(d, { attributeFilter: ['data-nav'] });
       window.navMeasure = measure;
-      window.tune?.slider({ id: 'nav-word', label: 'Nav: name size before capsule', min: 18, max: 96, step: 1, value: 30, unit: 'px', css: '--brand-word', onInput: () => requestAnimationFrame(measure) });
+      window.tune?.slider({ id: 'nav-word', label: 'Nav: name size before capsule', min: 18, max: 96, step: 1, value: 36, unit: 'px', css: '--brand-word', onInput: () => requestAnimationFrame(measure) });
       // The capsule's corners: the icon's own (its squircle's corner, about
       // 8px at 36px, plus the 6px between), so everything inside is
       // concentric; or a full pill.
       window.tune?.select({ label: 'Nav: capsule corners', value: '14', options: [['14', 'Match the icon'], ['24', 'Pill']],
         onInput: (v) => { d.style.setProperty('--cap-r', `${v}px`); requestAnimationFrame(measure); } });
-      window.tune?.slider({ id: 'nav-icon', label: 'Nav: icon size before capsule', min: 28, max: 120, step: 1, value: 40, css: '--brand-icon', onInput: () => requestAnimationFrame(measure) });
+      window.tune?.slider({ id: 'nav-icon', label: 'Nav: icon size before capsule', min: 28, max: 120, step: 1, value: 48, css: '--brand-icon', onInput: () => requestAnimationFrame(measure) });
       measure();
       document.fonts?.ready.then(measure);
       // Opened part way down the page: start as a capsule.
@@ -501,10 +501,10 @@
       live.addEventListener('load', pauseIfHidden);
       // Being tried: the app's frame rate while it plays. 30 halves what it
       // costs to run; the cursor and waveforms move a little less smoothly.
-      let appFps = 60;
+      let appFps = 30;
       const sendFps = () => live.contentWindow?.postMessage({ interlude: 'fps', fps: appFps }, '*');
       live.addEventListener('load', sendFps);
-      window.tune?.slider({ label: 'Hero: app frame rate', min: 20, max: 60, step: 5, value: 60, onInput: (v) => { appFps = v; sendFps(); } });
+      window.tune?.slider({ label: 'Hero: app frame rate', min: 20, max: 60, step: 5, value: 30, onInput: (v) => { appFps = v; sendFps(); } });
 
       const buttons = [...document.querySelectorAll('.switch button')];
       for (const b of buttons) {
@@ -563,7 +563,7 @@
         d.toggleAttribute('data-foot-gl', !!gl);
         if (fx) { fx.T.mode = gl || !fx.isGL(m) ? m : 'css'; fx.relayout(); }
       };
-      tune?.select({ id: 'foot-mode', label: 'Footer: style', value: 'stylus', onInput: setMode, options: [
+      tune?.select({ id: 'foot-mode', label: 'Footer: style', value: 'lamp', onInput: setMode, options: [
         ['stylus', 'New · Stylus: grooves part round the needle'],
         ['lamp', 'New · Lamp: a streak of light across the grooves'],
         ['sound', 'New · Sound: rings run out through the grooves'],
@@ -580,14 +580,14 @@
         ['old-depth', 'Earlier · Depth'],
       ] });
 
-      tune?.slider({ id: 'foot-groove', label: 'Footer: groove spacing', min: 1.5, max: 12, step: 0.25, value: 3.25, unit: 'px', onInput: (v) => {
+      tune?.slider({ id: 'foot-groove', label: 'Footer: groove spacing', min: 1.5, max: 12, step: 0.25, value: 8, unit: 'px', onInput: (v) => {
         d.style.setProperty('--groove', `${v}px`);
         if (fx) { fx.T.pitch = v; fx.wake(); }
       } });
-      tune?.slider({ id: 'foot-rest', label: 'Footer: grooves at rest', min: 0, max: 1, step: 0.05, value: 0, onInput: (v) => {
+      tune?.slider({ id: 'foot-rest', label: 'Footer: grooves at rest', min: 0, max: 1, step: 0.05, value: 0.4, onInput: (v) => {
         if (fx) { fx.T.rest = v; fx.relayout(); }
       } });
-      tune?.slider({ id: 'foot-cut', label: 'Footer: word cut off at bottom', min: 0, max: 0.6, step: 0.01, value: 0.22, unit: 'em', onInput: (v) => {
+      tune?.slider({ id: 'foot-cut', label: 'Footer: word cut off at bottom', min: 0, max: 0.6, step: 0.01, value: 0.33, unit: 'em', onInput: (v) => {
         d.style.setProperty('--foot-cut', String(v));
       } });
       const canvas = w.querySelector('.foot-fx');
