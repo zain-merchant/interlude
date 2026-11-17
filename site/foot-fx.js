@@ -14,6 +14,8 @@
 //   wave    the music shows in the grooves round the pointer: they wiggle
 //           as a record's groove does, scrolling as it plays, pulsing on
 //           the beat and warming at the loud parts
+//   lamp-stylus  the lamp's streak, and a needle just ahead of it parting
+//           the grooves (less than Stylus, on a springier follow of its own)
 // The ones shown before (restored to compare):
 //   grooves the first version: long, shallow arcs round a centre below the
 //           word, shown round the pointer; their spacing is set by eye
@@ -29,6 +31,10 @@
 // so nothing jumps; the loop stops once everything has settled, so a still
 // pointer (or none) costs nothing. Reduced motion keeps the light and the
 // reveal, but nothing travels: no rings, wakes, wiggles or turning.
+//
+// How the word looks at rest is its treatment (the new styles only; see
+// TREATS). The text colour, groove colour and the lamp's two fringes can be
+// set, and the text's brightness apart from how much the grooves show.
 const word = document.querySelector('.foot-word');
 const reduced = matchMedia('(prefers-reduced-motion: reduce)');
 const canvas = document.createElement('canvas');
@@ -42,18 +48,49 @@ word.append(base);
 const gl = canvas.getContext('webgl', { premultipliedAlpha: true, antialias: false, alpha: true });
 
 export let ready = false;
-export const T = { mode: 'lamp', pitch: 8, rest: 0.4, cut: 0.33 };
+export const T = {
+  mode: 'lamp', pitch: 8, rest: 0.4, cut: 0.33,
+  treat: 'faint', ink: [1, 1, 1], inkK: 1, groove: [1, 1, 1], bg: [0.035, 0.035, 0.043],
+  blue: [0.239, 0.706, 1], orange: [1, 0.608, 0.271], stroke: 1.5,
+};
+// How the word looks at rest (a number each, in the shader):
+//   faint     the text colour, very faint, light grooves (as it was)
+//   ink       the text colour, solid; the grooves cut darker into it
+//   hollow    filled with the background, a fine line in the text colour
+//             round each letter; grooves faint
+//   outline   no fill, the line round each letter, the grooves inside
+//   grooves   no fill, the grooves alone, brighter
+//   metal     a chrome-like ramp in the text colour, dark at the horizon,
+//             a bright band near the top, a faint brushing
+//   vinyl     black letters with a gloss: two soft wedges of light across
+//             the grooves, and a faint rim
+//   duotone   the lamp's blue running into its orange across the word
+export const TREATS = { faint: 0, ink: 1, hollow: 2, outline: 3, grooves: 4, metal: 5, vinyl: 6, duotone: 7 };
 // How many frames have been drawn (for checking it stops when idle).
 export const stats = { frames: 0 };
 
 // Which number each drawn style has in the shader. Anything else is CSS.
-const GL_MODES = { record: 0, streak: 1, grooves: 2, stylus: 3, lamp: 4, sound: 5, wave: 6 };
+const GL_MODES = { record: 0, streak: 1, grooves: 2, stylus: 3, lamp: 4, sound: 5, wave: 6, 'lamp-stylus': 7 };
 export const isGL = (m) => m in GL_MODES;
 
 // How each style follows the pointer: a spring's stiffness and damping
 // ratio. Under 1 it overshoots a touch and settles, like a needle's
 // cantilever; the lamp is heavy and lags; the first three follow exactly.
-const SPRING = { stylus: [260, 0.55], lamp: [42, 0.9], sound: [90, 1], wave: [70, 0.9] };
+const SPRING = { stylus: [260, 0.55], lamp: [42, 0.9], sound: [90, 1], wave: [70, 0.9], 'lamp-stylus': [42, 0.9] };
+// Lamp-stylus's needle, followed on its own (Stylus's) spring.
+const TIP_SPRING = [260, 0.55];
+
+/** Any CSS colour, as [r, g, b] from 0 to 1 (or null if it isn't one). */
+const probe = document.createElement('canvas').getContext('2d', { willReadFrequently: true });
+export function rgb(css) {
+  if (!probe || typeof css !== 'string') return null;
+  probe.clearRect(0, 0, 1, 1);
+  probe.fillStyle = '#000';
+  probe.fillStyle = css;
+  probe.fillRect(0, 0, 1, 1);
+  const [r, g, b] = probe.getImageData(0, 0, 1, 1).data;
+  return [r / 255, g / 255, b / 255];
+}
 
 const FRAG = `
 precision highp float;
@@ -72,11 +109,21 @@ uniform float uTime;    // seconds, while running
 uniform float uSpeed;   // how fast the pointer is moving, 0 to 1
 uniform vec2 uFar;      // the lamp's streak points away from here
 uniform vec3 uPts[8];   // stylus: where it has been (x, y, when); sound: rings (x, y, when)
+uniform vec2 uTip;      // lamp-stylus: the needle (its own, springier follower)
+uniform float uTreat;   // how the word looks at rest (see TREATS)
+uniform vec3 uInk;      // text colour
+uniform float uInkK;    // text brightness, x the treatment's own
+uniform vec3 uGroove;   // groove colour
+uniform vec3 uBg;       // the footer's background
+uniform vec3 uBlue;     // the lamp's cool fringe
+uniform vec3 uOrange;   // and warm one
+uniform float uBase;    // the word's baseline, CSS px from the canvas top
+uniform vec2 uSpan;     // the word's left and right edges, CSS px
+uniform float uStroke;  // outline width, CSS px
 
 const float PI = 3.14159265;
-const vec3 ORANGE = vec3(1.0, 0.608, 0.271);  // #ff9b45
-const vec3 BLUE = vec3(0.239, 0.706, 1.0);    // #3db4ff
 const vec3 SAND = vec3(0.941, 0.863, 0.753);  // #f0dcc0
+float sq(float x) { return x * x; }
 float hash(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
 
 // Soft lines from a few harmonics, each faded as it nears the pixel size,
@@ -99,9 +146,45 @@ float music(float u) {
   return 0.55 * sin(u) + 0.3 * sin(2.71 * u + 1.3) + 0.15 * sin(6.13 * u + 0.4);
 }
 
+// Stylus: the grooves part round the tip (a gentle lens, never folding
+// over), and each place it has just been rings and settles. A is how far.
+float stylusPush(vec2 px, vec2 tp, float on, float s, float A) {
+  vec2 dp = px - tp;
+  float push = A * on * (dp.y / s) * exp(-dot(dp, dp) / (s * s));
+  for (int i = 0; i < 8; i++) {
+    vec3 p = uPts[i];
+    float age = uTime - p.z;
+    if (age < 0.0 || age > 2.5) continue;
+    vec2 q = px - p.xy;
+    float sw = s * (1.0 + age * 1.6);
+    float ring = exp(-3.0 * age) * cos(13.0 * age) * min(1.0, age * 20.0);
+    push += 0.7 * A * on * ring * (q.y / sw) * exp(-dot(q, q) / (sw * sw));
+  }
+  return push;
+}
+
+// Lamp. On grooved vinyl a lamp's reflection is a streak running across
+// the grooves (along a radius), not a spot. It leans away from a point well
+// below the word, so it fans out a little at the sides.
+void lampLight(vec2 dp, vec2 hp, float on, out float lit, out vec3 tint) {
+  vec2 dir = normalize(hp - uFar);
+  vec2 nrm = vec2(-dir.y, dir.x);
+  float u = dot(dp, nrm);
+  float t = dot(dp, dir);
+  float w = 0.055 * uEm;
+  float along = exp(-t * t / (0.75 * 0.75 * uEm * uEm));
+  float core = exp(-u * u / (w * w));
+  float glow = exp(-u * u / (16.0 * w * w));
+  float cool = exp(-(u + 1.5 * w) * (u + 1.5 * w) / (w * w));
+  float warm = exp(-(u - 1.5 * w) * (u - 1.5 * w) / (w * w));
+  tint = (vec3(1.0) * (core + 0.28 * glow) + uBlue * 0.55 * cool + uOrange * 0.55 * warm)
+    / max(core + 0.28 * glow + 0.55 * cool + 0.55 * warm, 1e-3);
+  lit = on * along * (core + 0.28 * glow + 0.4 * (cool + warm));
+}
+
 void main() {
   vec2 uv = vec2(gl_FragCoord.x, uSize.y - gl_FragCoord.y) / uSize;
-  float text = texture2D(uText, uv).a;
+  float text = texture2D(uText, uv).r;
   if (text < 0.003) { gl_FragColor = vec4(0.0); return; }
   vec2 px = uv * uSize / uDpr;
   vec2 d = px - uCentre;
@@ -122,42 +205,17 @@ void main() {
     float lit = 0.0;       // extra light on the grooves, 0 to 1
     vec3 tint = vec3(1.0);
     float field = on * exp(-dist * dist / (0.9 * 0.9 * uEm * uEm)); // the grooves round the pointer
+    float s = 0.17 * uEm;
+    float A = min(0.8 * s, 2.2 * uPitch + 0.02 * uEm);
 
     if (uMode < 3.5) {
-      // Stylus. The grooves part round the tip (a gentle lens, never
-      // folding over), and each place it has just been rings and settles.
-      float s = 0.17 * uEm;
-      float A = min(0.8 * s, 2.2 * uPitch + 0.02 * uEm);
-      push += A * on * (dp.y / s) * exp(-dot(dp, dp) / (s * s));
-      for (int i = 0; i < 8; i++) {
-        vec3 p = uPts[i];
-        float age = uTime - p.z;
-        if (age < 0.0 || age > 2.5) continue;
-        vec2 q = px - p.xy;
-        float sw = s * (1.0 + age * 1.6);
-        float ring = exp(-3.0 * age) * cos(13.0 * age) * min(1.0, age * 20.0);
-        push += 0.7 * A * on * ring * (q.y / sw) * exp(-dot(q, q) / (sw * sw));
-      }
+      // Stylus; the tip glows warm.
+      push = stylusPush(px, hp, on, s, A);
       float tip = exp(-dist * dist / (0.06 * 0.06 * uEm * uEm)) * on;
       lit = tip * (0.45 + 0.55 * uSpeed);
-      tint = mix(vec3(1.0), ORANGE, clamp(tip * 1.3, 0.0, 1.0));
+      tint = mix(vec3(1.0), uOrange, clamp(tip * 1.3, 0.0, 1.0));
     } else if (uMode < 4.5) {
-      // Lamp. On grooved vinyl a lamp's reflection is a streak running
-      // across the grooves (along a radius), not a spot. It leans away from
-      // a point well below the word, so it fans out a little at the sides.
-      vec2 dir = normalize(hp - uFar);
-      vec2 nrm = vec2(-dir.y, dir.x);
-      float u = dot(dp, nrm);
-      float t = dot(dp, dir);
-      float w = 0.055 * uEm;
-      float along = exp(-t * t / (0.75 * 0.75 * uEm * uEm));
-      float core = exp(-u * u / (w * w));
-      float glow = exp(-u * u / (16.0 * w * w));
-      float cool = exp(-(u + 1.5 * w) * (u + 1.5 * w) / (w * w));
-      float warm = exp(-(u - 1.5 * w) * (u - 1.5 * w) / (w * w));
-      tint = (vec3(1.0) * (core + 0.28 * glow) + BLUE * 0.55 * cool + ORANGE * 0.55 * warm)
-        / max(core + 0.28 * glow + 0.55 * cool + 0.55 * warm, 1e-3);
-      lit = on * along * (core + 0.28 * glow + 0.4 * (cool + warm));
+      lampLight(dp, hp, on, lit, tint);
       field *= 0.5;
     } else if (uMode < 5.5) {
       // Sound. Each ring runs out from where the pointer was when it
@@ -178,7 +236,7 @@ void main() {
       lit = on * min(1.0, sum);
       tint = mix(vec3(1.0), SAND, 0.7);
       field *= 0.6;
-    } else {
+    } else if (uMode < 6.5) {
       // Wave. A groove carries the music as a wiggle along its length;
       // here it shows round the pointer, kept under half a groove's width
       // so lines never cross, and pulses on a 124 BPM beat.
@@ -191,7 +249,15 @@ void main() {
       push += env * beat * 0.45 * uPitch * m;
       float loud = env * beat * smoothstep(0.3, 0.85, abs(m));
       lit = 0.75 * loud;
-      tint = mix(vec3(1.0), ORANGE, clamp(loud * 1.4, 0.0, 1.0));
+      tint = mix(vec3(1.0), uOrange, clamp(loud * 1.4, 0.0, 1.0));
+    } else {
+      // Lamp and stylus: the lamp's streak, trailing as it does, and a
+      // needle just ahead of it on its own springier follow, parting the
+      // grooves a little less than Stylus does and ringing behind it.
+      lampLight(dp, hp, on, lit, tint);
+      push = stylusPush(px, uTip, on, 1.15 * s, 0.6 * A);
+      vec2 tq = px - uTip;
+      field = 0.5 * on * exp(-dot(tq, tq) / (0.9 * 0.9 * uEm * uEm));
     }
 
     // The grooves, from the bent radius (filtered by how fast that changes
@@ -202,11 +268,97 @@ void main() {
     float lines = grooveLines(rr / P, fg, max(0.45 / uPitch, 0.8 * fg));
     float duty = min(1.0, 1.25 / uPitch);
     float groove = clamp((1.0 + lines) * duty, 0.0, 1.0);
-    float show = max(field * 0.55, uRest * 0.6);
-    float light = groove * (show + lit * 0.9);
-    vec3 col = mix(vec3(1.0), tint, clamp(lit * 1.5, 0.0, 1.0));
-    float alpha = clamp(text * (0.045 + light), 0.0, 1.0);
-    gl_FragColor = vec4(col * alpha + n, clamp(alpha + n, 0.0, 1.0));
+
+    // How the word looks at rest (see TREATS): a fill, an outline inside
+    // its edge, how much the grooves at rest show (x), whether they cut
+    // dark into the fill, and any light of its own on the grooves.
+    vec3 fc = uInk;
+    float fa = 0.0;
+    vec3 oc = uInk;
+    float oa = 0.0;
+    float rk = 1.0;
+    float cut = 0.0;
+    float sheen = 0.0;
+    float yy = clamp((uBase - px.y) / (0.74 * uEm), 0.0, 1.0); // 0 on the baseline, 1 at the cap height
+    float xx = clamp((px.x - uSpan.x) / max(uSpan.y - uSpan.x, 1.0), 0.0, 1.0);
+    if (uTreat < 0.5) {
+      // Faint: as it was.
+      fa = 0.045 * uInkK;
+    } else if (uTreat < 1.5) {
+      // Ink: solid colour, the grooves cut darker into it.
+      fa = 0.3 * uInkK;
+      cut = 2.0;
+      rk = 0.3;
+    } else if (uTreat < 2.5) {
+      // Hollow: filled with the background, a fine line round each letter.
+      fc = uBg;
+      fa = 1.0;
+      oa = 0.6 * uInkK;
+      rk = 0.45;
+    } else if (uTreat < 3.5) {
+      // Outline, grooves inside.
+      oa = 0.55 * uInkK;
+      rk = 1.35;
+    } else if (uTreat < 4.5) {
+      // Grooves only, brighter.
+      fa = 0.012 * uInkK;
+      rk = 2.2;
+    } else if (uTreat < 5.5) {
+      // Metal: a chrome-like ramp, dark at the horizon, bright near the top.
+      float sh = 0.3 + 0.7 * smoothstep(0.05, 0.95, yy);
+      sh -= 0.3 * exp(-sq((yy - 0.46) / 0.07));
+      sh += 0.45 * exp(-sq((yy - 0.84) / 0.05));
+      sh *= 0.9 + 0.1 * sin(xx * 23.0 + 2.0 * sin(xx * 7.0));
+      fc = mix(uInk, vec3(1.0), 0.25 * smoothstep(0.75, 0.9, yy));
+      fa = 0.28 * uInkK * sh;
+      oc = mix(uInk, vec3(1.0), 0.6);
+      oa = 0.16 * uInkK;
+      rk = 0.6;
+    } else if (uTreat < 6.5) {
+      // Vinyl: black letters with a gloss, two soft wedges of light across
+      // the grooves (as a record's surface catches a light overhead) and a
+      // faint rim.
+      fc = vec3(0.008, 0.008, 0.012);
+      fa = 1.0;
+      float dev = atan(d.x, -d.y);
+      float w1 = exp(-sq((dev - 0.07) / 0.035));
+      float w2 = exp(-sq((dev + 0.11) / 0.025));
+      sheen = uInkK * (0.5 * w1 + 0.3 * w2) * (0.3 + 0.7 * groove) + 0.06 * uInkK * smoothstep(0.55, 1.0, yy) * groove;
+      oc = uInk;
+      oa = 0.24 * uInkK;
+      rk = 0.55;
+    } else {
+      // Duotone: the lamp's blue to its orange, across the word.
+      fc = mix(uBlue, uOrange, smoothstep(0.08, 0.92, xx));
+      fa = 0.24 * uInkK;
+      rk = 0.75;
+    }
+
+    float show = max(field * 0.55, uRest * 0.6 * rk);
+    float glow = groove * (show + lit * 0.9) + sheen;
+    vec3 gc = mix(uGroove, tint, clamp(lit * 1.5, 0.0, 1.0));
+    fa = clamp(fa, 0.0, 1.0) * text;
+    vec3 pre = fc * fa * (1.0 - clamp(cut * groove * uRest, 0.0, 0.9));
+    float al = fa;
+    // The outline: inside the letters, where the letters end within
+    // uStroke (from the letters' own shape, so overlapping contours in the
+    // font don't show).
+    float oA = 0.0;
+    if (oa > 0.0) {
+      float inner = 1.0;
+      vec2 rad = uStroke * uDpr / uSize;
+      for (int i = 0; i < 12; i++) {
+        float t = float(i) * PI / 6.0;
+        inner = min(inner, texture2D(uText, uv + rad * vec2(cos(t), sin(t))).r);
+      }
+      oA = clamp(oa, 0.0, 1.0) * text * (1.0 - inner);
+    }
+    pre = oc * oA + pre * (1.0 - oA);
+    al = oA + al * (1.0 - oA);
+    float gA = clamp(glow, 0.0, 1.0) * text;
+    pre = gc * gA + pre * (1.0 - gA);
+    al = gA + al * (1.0 - gA);
+    gl_FragColor = vec4(pre + n, clamp(al + n, 0.0, 1.0));
     return;
   }
 
@@ -282,6 +434,8 @@ let clock = 0; // seconds the loop has run (it only counts while running)
 // Where the pointer is (tx, ty), where the effect is (x, y, moving at vx,
 // vy), and how much it shows (on, easing toward want).
 const hover = { tx: 0, ty: 0, x: 0, y: 0, vx: 0, vy: 0, on: 0, want: 0, speed: 0 };
+// Lamp-stylus's needle (it follows the pointer too, on its own spring).
+const tip = { x: 0, y: 0, vx: 0, vy: 0 };
 // Stylus: where the tip has been; sound: rings. Each [x, y, when].
 const pts = Array.from({ length: 8 }, () => [0, 0, -99]);
 let next = 0;
@@ -312,7 +466,8 @@ function init() {
   gl.enableVertexAttribArray(loc);
   gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
   for (const n of ['uText', 'uSize', 'uDpr', 'uCentre', 'uAspect', 'uPitch', 'uSpin', 'uHover', 'uMode', 'uRest',
-    'uEm', 'uTime', 'uSpeed', 'uFar', 'uPts']) U[n] = gl.getUniformLocation(prog, n);
+    'uEm', 'uTime', 'uSpeed', 'uFar', 'uPts', 'uTip', 'uTreat', 'uInk', 'uInkK', 'uGroove', 'uBg', 'uBlue', 'uOrange',
+    'uBase', 'uSpan', 'uStroke']) U[n] = gl.getUniformLocation(prog, n);
   tex = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, tex);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
@@ -338,16 +493,20 @@ function layout() {
   const t = document.createElement('canvas');
   t.width = w;
   t.height = h;
-  const x = t.getContext('2d');
+  const x = t.getContext('2d', { alpha: false });
+  x.fillStyle = '#000';
+  x.fillRect(0, 0, w, h);
   x.scale(dpr, dpr);
   x.font = `${cs.fontWeight} ${size}px ${cs.fontFamily}`;
   if ('letterSpacing' in x) x.letterSpacing = cs.letterSpacing;
   x.textAlign = 'center';
   x.textBaseline = 'alphabetic';
-  x.fillStyle = '#fff';
   // Centre the ink, as the page does (letter-spacing adds a trailing gap).
   const ls = parseFloat(cs.letterSpacing) || 0;
-  x.fillText(word.dataset.text, c.width / 2 - ls / 2, baseline);
+  const tx = c.width / 2 - ls / 2;
+  x.fillStyle = '#fff';
+  x.fillText(word.dataset.text, tx, baseline);
+  const ink = x.measureText(word.dataset.text);
   gl.bindTexture(gl.TEXTURE_2D, tex);
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, t);
   // The record's centre: well below the word, so its grooves arc gently
@@ -359,7 +518,8 @@ function layout() {
     first: { cy: box.top - c.top + box.height * 1.35, aspect: box.width / (box.height * 0.5) },
     // The lamp's streaks lean away from here.
     far: { x: c.width / 2, y: baseline + size * 2.6 },
-    width: c.width, baseline };
+    width: c.width, baseline,
+    span: [tx - ink.actualBoundingBoxLeft, tx + ink.actualBoundingBoxRight] };
   return geo;
 }
 
@@ -368,6 +528,7 @@ function reset() {
   for (const p of pts) p[2] = -99;
   lastPt.t = -99;
   hover.vx = hover.vy = 0;
+  Object.assign(tip, { x: hover.x, y: hover.y, vx: 0, vy: 0 });
   spin = 0;
 }
 
@@ -478,32 +639,36 @@ function frame(now) {
   const sp = SPRING[mode];
   const px = hover.x;
   const py = hover.y;
-  if (!sp || still) {
-    hover.x = hover.tx;
-    hover.y = hover.ty;
-    hover.vx = hover.vy = 0;
-  } else {
-    const [k, z] = sp;
+  const follow = (f, [k, z]) => {
     const c = 2 * z * Math.sqrt(k);
     for (let s = 0, n = Math.ceil(dt / (1 / 240)); s < n; s++) {
       const h = dt / n;
-      hover.vx += (k * (hover.tx - hover.x) - c * hover.vx) * h;
-      hover.vy += (k * (hover.ty - hover.y) - c * hover.vy) * h;
-      hover.x += hover.vx * h;
-      hover.y += hover.vy * h;
+      f.vx += (k * (hover.tx - f.x) - c * f.vx) * h;
+      f.vy += (k * (hover.ty - f.y) - c * f.vy) * h;
+      f.x += f.vx * h;
+      f.y += f.vy * h;
     }
+  };
+  if (!sp || still) {
+    hover.x = tip.x = hover.tx;
+    hover.y = tip.y = hover.ty;
+    hover.vx = hover.vy = tip.vx = tip.vy = 0;
+  } else {
+    follow(hover, sp);
+    follow(tip, TIP_SPRING);
   }
   // How fast it's going, as a share of a brisk sweep, eased.
   const v = dt > 0 ? Math.hypot(hover.x - px, hover.y - py) / dt / (geo.em * 4) : 0;
   hover.speed += (Math.min(1, v) - hover.speed) * Math.min(1, dt * 8);
 
   // Stylus: drop a point where the tip passes, every so often while it moves.
-  if (mode === 'stylus' && !still && hover.want) {
-    const moved = Math.hypot(hover.x - lastPt.x, hover.y - lastPt.y);
+  const needle = mode === 'lamp-stylus' ? tip : hover;
+  if ((mode === 'stylus' || mode === 'lamp-stylus') && !still && hover.want) {
+    const moved = Math.hypot(needle.x - lastPt.x, needle.y - lastPt.y);
     if (moved > geo.em * 0.09 && clock - lastPt.t > 0.035) {
-      pts[next] = [hover.x, hover.y, clock];
+      pts[next] = [needle.x, needle.y, clock];
       next = (next + 1) % pts.length;
-      Object.assign(lastPt, { x: hover.x, y: hover.y, t: clock });
+      Object.assign(lastPt, { x: needle.x, y: needle.y, t: clock });
     }
   }
   // Sound: a ring every beat or so while it's over the word, and sooner
@@ -536,6 +701,17 @@ function frame(now) {
   gl.uniform1f(U.uSpeed, hover.speed);
   gl.uniform2f(U.uFar, geo.far.x, geo.far.y);
   gl.uniform3fv(U.uPts, pts.flat());
+  gl.uniform2f(U.uTip, tip.x, tip.y);
+  gl.uniform1f(U.uTreat, TREATS[T.treat] ?? 0);
+  gl.uniform3fv(U.uInk, T.ink);
+  gl.uniform1f(U.uInkK, T.inkK);
+  gl.uniform3fv(U.uGroove, T.groove);
+  gl.uniform3fv(U.uBg, T.bg);
+  gl.uniform3fv(U.uBlue, T.blue);
+  gl.uniform3fv(U.uOrange, T.orange);
+  gl.uniform1f(U.uBase, geo.baseline);
+  gl.uniform2f(U.uSpan, geo.span[0], geo.span[1]);
+  gl.uniform1f(U.uStroke, T.stroke);
   gl.clearColor(0, 0, 0, 0);
   gl.clear(gl.COLOR_BUFFER_BIT);
   gl.drawArrays(gl.TRIANGLES, 0, 3);
@@ -546,9 +722,10 @@ function frame(now) {
   if (hover.on !== hover.want) return true;
   if (hover.on === 0) return false;
   if (!still && (mode === 'record' || mode === 'wave')) return true;
-  if (sp && !still && (Math.abs(hover.tx - hover.x) > 0.2 || Math.abs(hover.ty - hover.y) > 0.2 || Math.hypot(hover.vx, hover.vy) > 2)) return true;
+  const moving = (f) => Math.abs(hover.tx - f.x) > 0.2 || Math.abs(hover.ty - f.y) > 0.2 || Math.hypot(f.vx, f.vy) > 2;
+  if (sp && !still && (moving(hover) || (mode === 'lamp-stylus' && moving(tip)))) return true;
   if (hover.speed > 0.01) return true;
-  if ((mode === 'stylus' || mode === 'sound') && pts.some((p) => clock - p[2] < 2.6)) return true;
+  if ((mode === 'stylus' || mode === 'lamp-stylus' || mode === 'sound') && pts.some((p) => clock - p[2] < 2.6)) return true;
   if (mode === 'sound' && hover.want && !still) return true;
   return false;
 }
@@ -575,9 +752,9 @@ export function point(p) {
   if (p) {
     // Coming in from nothing, start right there (not flying in from afar).
     if (hover.want === 0 && hover.on < 0.02) {
-      hover.x = p.x;
-      hover.y = p.y;
-      hover.vx = hover.vy = 0;
+      hover.x = tip.x = p.x;
+      hover.y = tip.y = p.y;
+      hover.vx = hover.vy = tip.vx = tip.vy = 0;
       Object.assign(lastPt, { x: p.x, y: p.y, t: -99 });
     }
     if (hover.want === 0) {
@@ -602,6 +779,7 @@ export function demo() {
   const t0 = geo.width * 0.14;
   hover.x = hover.tx = t0;
   hover.y = hover.ty = geo.baseline - geo.em * 0.36;
+  Object.assign(tip, { x: hover.x, y: hover.y, vx: 0, vy: 0 });
   lastPt.t = -99;
   wake();
 }
