@@ -7,6 +7,11 @@
   let { deck, mode = 'scroll', seconds = 12, onzoom } = $props();
 
   let canvas;
+  /** Seconds of the track the scrolling view spans: `seconds` of real
+   * time at the deck's tempo. A sped-up deck shows more of its track, so
+   * two synced decks scroll at the same speed with their beats equally
+   * spaced, whatever their own BPMs. */
+  const span = () => seconds * (engine.decks[deck]?.rate > 0.05 ? engine.decks[deck].rate : 1);
   let failed = $state(false);
   /** Hot cue number chips over the scrolling view, moved every frame. */
   const chips = [];
@@ -54,7 +59,7 @@
         slip: bin(displaySlip[deck]),
       };
       if (mode === 'scroll') {
-        const perPx = (seconds * bps) / w;
+        const perPx = (span() * bps) / w;
         const start = playhead - (w / 2) * perPx;
         gl.draw({
           mode, start, perPx, playhead, cue, colors, ...marks,
@@ -103,7 +108,7 @@
       const x = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
       scrubTo(deck, x * tracks[deck].duration);
     } else if (drag.live) {
-      scrubTo(deck, drag.from - ((e.clientX - drag.x) / r.width) * seconds, e.timeStamp);
+      scrubTo(deck, drag.from - ((e.clientX - drag.x) / r.width) * span(), e.timeStamp);
     } else if (Math.abs(e.clientX - drag.x) > 3) {
       begin(e);
     }
@@ -135,7 +140,7 @@
     if (!wheelTimer && Math.abs(d) < WHEEL_MIN) return;
     if (!wheelTimer) scrubStart(deck, { scratch: true });
     clearTimeout(wheelTimer);
-    scrubTo(deck, displayPos[deck] + (d / canvas.clientWidth) * seconds, e.timeStamp);
+    scrubTo(deck, displayPos[deck] + (d / canvas.clientWidth) * span(), e.timeStamp);
     wheelTimer = setTimeout(() => {
       wheelTimer = null;
       scrubEnd(deck);
