@@ -701,11 +701,21 @@ void main() {
 }`;
 
 // The other styles: the same disc, songs, turn, pointer, needle and music,
-// each drawn as a different kind of picture. Every one draws to the screen's
-// own pixels (fine lines a device pixel or two across, worked out from how
-// the disc is foreshortened there), so none goes soft or shimmers, and none
-// costs more than the current look: no groove harmonics, one pass over the
-// songs, a handful of sums.
+// each drawn as a different kind of picture. None costs more than the
+// current look: no groove harmonics, a pass or two over the songs, a
+// handful of sums.
+//
+// What keeps them crisp however the disc is foreshortened:
+// - Every edge is antialiased to the device pixel (stroke, span, wedge),
+//   and the line styles draw at the screen's full resolution (see STYLE).
+// - Lines that run round the disc are thinned out by octaves where they'd
+//   crowd closer than a few pixels (lodLines): every other one fades as
+//   they near it, so the far side, foreshortened hard behind the headline,
+//   never beats into moire or a grey band.
+// - Things meant to be round (dots, stars, flecks) are measured
+//   on the screen, not on the disc (toPx), so the perspective and the top's
+//   bends never squash them; screens (halftone, hatching) are laid out on
+//   the screen too.
 const LOOKS = `
 const float GAPW = ${GAP}.0;
 // Which song a radius is in: x, y its edges, z its number; w 1 inside one.
@@ -714,7 +724,7 @@ vec4 songAt(float r) {
   for (int i = 0; i < ${MAX_TRACKS}; i++) {
     if (float(i) >= uTrackCount) break;
     vec2 t = uTracks[i];
-    if (r >= t.x && r < t.y) s = vec4(t, float(i), 1.0);
+    if (r >= t.x - 0.5 * GAPW && r < t.y + 0.5 * GAPW) s = vec4(t, float(i), 1.0);
   }
   return s;
 }
@@ -722,45 +732,93 @@ vec4 songAt(float r) {
 float stroke(float d, float w) { return clamp(0.5 * w - abs(d) + 0.5, 0.0, 1.0); }
 // 1 between two radii, its edges a device pixel soft (fr: record px per device px).
 float span(float r, float lo, float hi, float fr) { return clamp((r - lo) / fr + 0.5, 0.0, 1.0) * clamp((hi - r) / fr + 0.5, 0.0, 1.0); }
-// 1 inside the turn from "from" through "len" radians, crisp at its two
-// straight edges (ft: record px per device px along the grooves).
-// wedgeD: how far inside it, device px (negative outside).
+// How far inside the turn from "from" through "len" radians, device px
+// (negative outside; ft: record px per device px along the grooves).
 float wedgeD(float b, float from, float len, float r, float ft) {
   float x = mod(b - from, 2.0 * PI);
   return (x < len ? min(x, len - x) : -min(x - len, 2.0 * PI - x)) * r / ft;
 }
-float wedge(float b, float from, float len, float r, float ft) { return clamp(wedgeD(b, from, len, r, ft) + 0.5, 0.0, 1.0); }
 float wrap(float x) { return atan(sin(x), cos(x)); }
 // Light, added; and ink, laid over (both premultiplied).
 void add(inout vec4 o, vec3 c, float k) { o += vec4(c * k, k); }
 void over(inout vec4 o, vec3 c, float k) { o = vec4(c * k, k) + o * (1.0 - k); }
-// A 4 × 4 ordered dither, 0 to 1.
-float bayer2(vec2 a) { a = floor(a); return fract(dot(a, vec2(0.5, a.y * 0.75))); }
-float bayer4(vec2 a) { return bayer2(0.5 * a) * 0.25 + bayer2(a); }
+// Lines every P0 of v (fv: v per device px), w device px wide, thinned out
+// by octaves so they're never closer than gap device px.
+float lodLines(float v, float fv, float P0, float gap, float w) {
+  float lv = max(log2(gap * fv / P0), 0.0);
+  float t = smoothstep(0.0, 1.0, fract(lv));
+  float P = P0 * exp2(floor(lv));
+  float n = floor(v / P + 0.5);
+  return stroke((v - n * P) / fv, w) * (mod(n, 2.0) > 0.5 ? 1.0 - t : 1.0);
+}
 // A halftone dot screen at an angle, cell CSS px: how much ink at px for tone t.
 float screenDot(vec2 p, float ang, float cell, float t) {
   vec2 rp = mat2(cos(ang), sin(ang), -sin(ang), cos(ang)) * p / cell;
   float d = length(fract(rp) - 0.5) * cell;
-  return clamp((0.7 * cell * sqrt(clamp(t, 0.0, 1.0)) - d) * uDpr + 0.5, 0.0, 1.0);
+  float ink = 0.92 + 0.16 * hash(floor(rp));          // the ink takes a little unevenly
+  return clamp((0.72 * cell * sqrt(clamp(t * ink, 0.0, 1.0)) - d) * uDpr + 0.5, 0.0, 1.0);
+}
+
+// The pointer, the same for every style, which each draws its own way.
+// x: its main light, y: a second one (a beam's glow, a split's other
+// colour, a spot's ring, the stylus's trail), z: a mark at the pointer.
+vec3 hoverField(vec2 px, float r, float a, float fr, float ft) {
+  vec3 h = vec3(0.0);
+  float on = uHover.z * uTouch;
+  if (on <= 0.0) return h;
+  float da = wrap(a - uHover.y);
+  float dist = length(px - uPtr.xy);
+  float run = da * max(uHover.x, 100.0);
+  if (uHoverMode < 0.5) {
+    // Arc: the grooves at its radius, along their run.
+    float dr = (r - uHover.x) / max(12.0, 4.0 * fr * uDpr);
+    float s = run / 240.0;
+    h.x = exp(-dr * dr - s * s);
+  } else if (uHoverMode < 1.5) {
+    // Beam: a streak across the grooves, out along the radius.
+    float along = (r * cos(da) - uHover.x) / 200.0;
+    float s = r * sin(da) / (ft * uDpr) / 6.0;
+    float f = exp(-along * along) * step(0.0, cos(da));
+    h.x = f * exp(-s * s);
+    h.y = f * exp(-s * s / 9.0);
+  } else if (uHoverMode < 2.5) {
+    // Stylus: a tip, and the dots where it has just been.
+    h.z = clamp((3.2 - dist) * uDpr + 0.5, 0.0, 1.0);
+    h.x = exp(-dist * dist / 2500.0);
+    for (int i = 0; i < 8; i++) {
+      vec4 p = uPts[i];
+      float age = uTime - p.w;
+      if (age < 0.0 || age > 1.2) continue;
+      float k = 1.0 - age / 1.2;
+      h.y = max(h.y, clamp((2.2 * k - length(px - p.xy)) * uDpr + 0.5, 0.0, 1.0) * k);
+    }
+  } else if (uHoverMode < 3.5) {
+    // Split: two arcs side by side across the grooves.
+    float dr = (r - uHover.x) / (fr * uDpr);
+    float s = run / 170.0;
+    float e = exp(-s * s);
+    h.x = e * exp(-(dr + 5.0) * (dr + 5.0) / 12.0);
+    h.y = e * exp(-(dr - 5.0) * (dr - 5.0) / 12.0);
+  } else if (uHoverMode < 4.5) {
+    // Spot: a disc with a clean edge, and a ring round it.
+    h.x = clamp((50.0 - dist) / 4.0 + 0.5, 0.0, 1.0);
+    h.y = stroke((dist - 62.0) * uDpr, 1.5 * uDpr);
+  } else {
+    // Ripples: rings running out from where the pointer passed.
+    for (int i = 0; i < 8; i++) {
+      vec4 p = uPts[i];
+      float age = uTime - p.w;
+      if (age < 0.0 || age > 2.2) continue;
+      float x = (length(px - p.xy) - (16.0 + 110.0 * age)) / (2.0 + 2.5 * age);
+      float band = exp(-x * x) * pow(1.0 - age / 2.2, 1.5) * min(1.0, age * 8.0);
+      if (mod(float(i), 2.0) < 0.5) h.x += band; else h.y += band;
+    }
+  }
+  return h * on;
 }
 
 void main() {
   vec2 px = vec2(gl_FragCoord.x, uSize.y - gl_FragCoord.y) / uDpr;
-#if LOOK == 5
-  // Pixel art: the whole picture worked out once per chunky cell.
-  // (Cells a whole number of the canvas's pixels, so they're all one size.)
-  float cd = floor(5.0 * uDpr + 0.5);
-  float CELL = cd / uDpr;
-  vec2 cell = floor(vec2(gl_FragCoord.x, uSize.y - gl_FragCoord.y) / cd);
-  vec2 pc = (cell + 0.5) * CELL;
-  vec2 q = discQ(pc);
-  float r = length(q);
-  // How far the disc runs across one cell, to draw rings a cell thick.
-  float rc = max(max(abs(length(discQ(pc + vec2(0.0, CELL))) - r), abs(length(discQ(pc + vec2(CELL, 0.0))) - r)), 1.0);
-  float fr = 1.0;
-  float ft = 1.0;
-  if (r > max(uOuter.x, uOuter.y)) { gl_FragColor = vec4(0.0); return; }
-#else
   vec2 q = discQ(px);
   float r = length(q);
   vec2 dqx = dFdx(q);
@@ -770,255 +828,423 @@ void main() {
   vec2 tdir = vec2(-q.y, q.x) / max(r, 1e-3);
   float ft = max(length(vec2(dot(dqx, tdir), dot(dqy, tdir))), 1e-3);
   if (r > max(uOuter.x, uOuter.y) + 3.0 * fr) { gl_FragColor = vec4(0.0); return; }
-#endif
+  float det = dqx.x * dqy.y - dqy.x * dqx.y;
+  vec2 hp = px;
   float a = atan(q.y, q.x);
   float b = a - uSpin;                 // the angle on the disc itself, turning with it
   float farSide = smoothstep(0.15, 0.7, -q.y / max(r, 1.0));
   float R = mix(uOuter.x, uOuter.y, farSide);
   vec4 s = songAt(r);
   float idx = s.z;
-  float u = s.w > 0.5 ? (r - s.x) / (s.y - s.x) : 0.0;
+  float u = s.w > 0.5 ? clamp((r - s.x) / (s.y - s.x), 0.0, 1.0) : 0.0;
   float mid = s.w > 0.5 ? 0.5 * (s.x + s.y) : r;
+  // How much of this pixel is in a song (the quiet runs between are not),
+  // and how tall the song is on the screen here, CSS px.
+  float inS = s.w * span(r, s.x, s.y, fr);
+  float room = s.w * (s.y - s.x) / (fr * uDpr);
   float lamp = 0.5 + 0.5 * cos(2.0 * (a - uFacing));
-  float on = uHover.z * uTouch;
-  float da = wrap(a - uHover.y);
-  float dist = length(px - uPtr.xy);
   float cue = uCue.y;
+  float sw = uSwell;
+  vec3 hv = hoverField(hp, r, a, fr, ft);
+  // The CSS px a line one record px across covers here, to fade detail
+  // that has no room.
+  float rp = 1.0 / (fr * uDpr);
   vec4 o = vec4(0.0);
 
 #if LOOK == 1
-  // ORBIT: line art from a star chart. Each song an orbit drawn in a fine
+  // ORBIT: line art from a star chart. Each song an orbit in a fine
   // luminous line, dashed orbits between, a polar grid fixed over it all,
   // stars in the black between, and a satellite riding each orbit with its
   // trail, carried round by the turn. Ticks round the rim turn with it.
   vec3 ICE = vec3(0.62, 0.87, 1.0);
-  vec3 VIO = vec3(0.74, 0.64, 1.0);
-  float glow = (0.7 + 0.3 * lamp) * (1.0 + 0.4 * uSwell);
+  vec3 VIO = vec3(0.76, 0.66, 1.0);
+  float glow = (0.72 + 0.28 * lamp) * (1.0 + 0.4 * sw);
+  float roomy = smoothstep(6.0, 14.0, room);
   if (s.w > 0.5) {
-    add(o, ICE, 0.7 * glow * stroke((r - s.x) / fr, 1.5));
-    float ph = fract(b * mid / 22.0 + idx * 0.37);
-    float dash = clamp((0.3 - abs(ph - 0.5)) * 22.0 / ft + 0.5, 0.0, 1.0);
-    if (mod(idx, 2.0) < 0.5) add(o, ICE, 0.5 * glow * dash * stroke((r - mid) / fr, 1.2));
-    // The satellite and its trail.
+    add(o, ICE, 0.6 * glow * mix(0.55, 1.0, roomy) * stroke((r - s.x) / fr, uDpr));
+    if (mod(idx, 2.0) < 0.5) {
+      float ph = fract(b * mid / 22.0 + idx * 0.37);
+      float dash = clamp((0.3 - abs(ph - 0.5)) * 22.0 / ft + 0.5, 0.0, 1.0);
+      add(o, ICE, 0.42 * glow * roomy * dash * stroke((r - mid) / fr, uDpr));
+    }
+    // The satellite (round on the screen) and its trail.
     float sa = fract(sin(idx * 91.7) * 4375.5) * 2.0 * PI;
     float x = wrap(b - sa);
     vec2 v = vec2((r - mid) / fr, x * r / ft) / uDpr;
     float dv = length(v);
-    float sat = clamp(2.4 - dv, 0.0, 1.0) + 0.55 * stroke((dv - 6.0) * uDpr, 1.0);
-    float trail = stroke((r - mid) / fr, 1.4) * step(x, 0.0) * exp(x * mid / 260.0);
-    add(o, mix(ICE, vec3(1.0), 0.6), cue * (0.95 * sat + 0.5 * trail) * (0.8 + 0.2 * lamp));
+    float sat = clamp((2.2 - dv) * uDpr + 0.5, 0.0, 1.0) + 0.5 * stroke((dv - 5.5) * uDpr, uDpr);
+    float trail = stroke((r - mid) / fr, 1.2 * uDpr) * clamp(-x * r / ft + 0.5, 0.0, 1.0) * exp(x * mid / 240.0);
+    add(o, mix(ICE, vec3(1.0), 0.6), cue * roomy * (0.95 * sat + 0.45 * trail) * (0.8 + 0.2 * lamp));
   }
   {
-    // Stars scattered over it all, turning with it, twinkling as they go.
-    vec2 c = vec2(r / 12.0, mod(b, 2.0 * PI) * r / 12.0);
+    // Stars, turning with it, where there's room to draw them round.
+    vec2 c = vec2(r / 14.0, mod(b, 2.0 * PI) * r / 14.0);
     vec2 id = floor(c);
     float h = hash(id + 3.1);
-    if (h > 0.93) {
-      vec2 at = (fract(c) - 0.5 - 0.4 * (vec2(hash(id + 1.7), hash(id + 5.3)) - 0.5)) * 12.0;
+    float roomS = smoothstep(7.0, 12.0, 14.0 * rp);
+    if (h > 0.93 && roomS > 0.0) {
+      vec2 at = (fract(c) - 0.5 - 0.3 * (vec2(hash(id + 1.7), hash(id + 5.3)) - 0.5)) * 14.0;
       float d = length(vec2(at.x / fr, at.y / ft)) / uDpr;
-      float tw = 0.6 + 0.4 * sin(uSpin * 30.0 + h * 400.0);
-      add(o, vec3(0.9, 0.95, 1.0), clamp(1.6 - d, 0.0, 1.0) * (0.35 + 0.65 * fract(h * 61.0)) * tw);
+      float tw = 0.65 + 0.35 * sin(uSpin * 30.0 + h * 400.0);
+      add(o, vec3(0.9, 0.95, 1.0), roomS * clamp((1.1 - d) * uDpr + 0.5, 0.0, 1.0) * (0.35 + 0.65 * fract(h * 61.0)) * tw);
     }
   }
   // The grid: a spoke every 30 degrees, fixed, as on an instrument.
   float sp = (fract(a / (PI / 6.0) + 0.5) - 0.5) * (PI / 6.0);
-  add(o, ICE, 0.13 * stroke(sp * r / ft, 1.0) * step(r, R - 16.0));
+  add(o, ICE, 0.12 * stroke(sp * r / ft, uDpr) * span(r, 0.0, R - 16.0, fr));
   // The rim, and its ticks every 5 degrees going round with the disc.
-  add(o, mix(ICE, vec3(1.0), 0.4), glow * stroke((r - (R - 1.5)) / fr, 2.0));
+  add(o, mix(ICE, vec3(1.0), 0.4), glow * stroke((r - (R - 1.5)) / fr, 1.4 * uDpr));
   float tk = (fract(b / (PI / 36.0) + 0.5) - 0.5) * (PI / 36.0);
   float tlen = mod(floor(b / (PI / 36.0) + 0.5), 6.0) < 0.5 ? 16.0 : 9.0;
-  add(o, ICE, 0.6 * glow * cue * stroke(tk * r / ft, 1.0) * span(r, R - 4.0 - tlen, R - 4.0, fr));
-  // Hover: the orbit under the pointer lights white along its run, and a
-  // reticle marks the pointer.
-  if (on > 0.0) {
-    float s2 = da * max(uHover.x, 100.0) / 300.0;
-    add(o, vec3(1.0), on * stroke((r - uHover.x) / fr, 2.2) * exp(-s2 * s2));
-    add(o, ICE, 0.35 * on * stroke((r - uHover.x) / fr - 5.0 * uDpr, 1.0) * exp(-s2 * s2 * 0.5));
-    add(o, ICE, 0.35 * on * stroke((r - uHover.x) / fr + 5.0 * uDpr, 1.0) * exp(-s2 * s2 * 0.5));
-    float ring = stroke((dist - 13.0) * uDpr, 1.0);
-    vec2 dp = abs(px - uPtr.xy);
-    float xh = (stroke(dp.x * uDpr, 1.0) * span(dp.y, 17.0, 24.0, 1.0 / uDpr) + stroke(dp.y * uDpr, 1.0) * span(dp.x, 17.0, 24.0, 1.0 / uDpr));
-    add(o, ICE, 0.75 * on * (ring + xh));
-  }
-  // The needle: its orbit drawn bright, all the way round; the drop sends
-  // one fine ring out.
-  add(o, mix(VIO, vec3(1.0), 0.4), 0.95 * uNeedle.y * stroke((r - uNeedle.x) / fr, 2.0));
-  add(o, VIO, 0.7 * uRipple.y * stroke((r - uRipple.x) / fr, 1.2));
+  add(o, ICE, 0.6 * glow * cue * smoothstep(3.0, 6.0, tlen * rp) * stroke(tk * r / ft, uDpr) * span(r, R - 4.0 - tlen, R - 4.0, fr));
+  // The pointer: the fine grooves light up white under it; its second
+  // light, the mark and the needle in violet.
+  float fine = lodLines(r, fr, 6.0, 4.0 * uDpr, uDpr);
+  add(o, vec3(1.0), clamp(hv.x, 0.0, 1.0) * (0.15 + 0.85 * fine));
+  add(o, VIO, clamp(hv.y, 0.0, 1.0) * (0.15 + 0.85 * fine) + hv.z);
+  add(o, mix(VIO, vec3(1.0), 0.4), 0.95 * uNeedle.y * stroke((r - uNeedle.x) / fr, 1.6 * uDpr));
+  add(o, VIO, 0.7 * uRipple.y * stroke((r - uRipple.x) / fr, uDpr));
 #elif LOOK == 2
   // BAUHAUS: flat fields of red, yellow and blue and a warm paper white,
-  // ruled with fine lines, no shading at all. Some songs are filled only
-  // part of the way round (a half, a quarter, three quarters), so the
-  // straight edges of the fields show the turn.
+  // ruled with fine lines, and a few round dots, no shading at all. Most
+  // songs carry a block of colour part of the way round, so the straight
+  // edges of the fields show the turn. A block passing up behind the words
+  // turns to a hatched screen, so the words always read.
   vec3 RED = vec3(0.89, 0.24, 0.16);
   vec3 YEL = vec3(0.98, 0.78, 0.18);
-  vec3 BLU = vec3(0.16, 0.38, 0.80);
+  vec3 BLU = vec3(0.16, 0.38, 0.82);
   vec3 PAP = vec3(0.94, 0.91, 0.85);
-  float sw = 1.0 + 0.15 * uSwell;
+  float d45 = (fract((px.x + px.y) / 7.0 + 0.5) - 0.5) * 7.0 * 0.7071;
+  float hatch = stroke(d45 * uDpr, uDpr);
   vec3 hc = RED;
   if (s.w > 0.5) {
-    float fill = span(r, s.x, s.y, fr);
-    // Rules, thick and thin, at every song's start, and on most songs a
-    // solid block of one colour some way round: short and long, never
-    // lined up, so the edges show the turn wherever the disc is seen.
-    float thick = mod(idx, 3.0) < 0.5 ? 3.5 : 1.2;
-    over(o, PAP, (thick > 2.0 ? 0.5 : 0.32) * stroke((r - s.x) / fr, thick));
+    float thick = mod(idx, 3.0) < 0.5 ? 3.0 : 1.0;
+    over(o, PAP, (thick > 2.0 ? 0.55 : 0.3) * stroke((r - s.x) / fr, thick * uDpr));
     float k = mod(idx, 5.0);
     float h1 = fract(sin(idx * 37.1) * 9431.7);
     float h2 = fract(sin(idx * 61.3) * 2741.9);
-    vec3 bc = k < 0.5 ? RED : k < 1.5 ? PAP : k < 2.5 ? BLU : k < 3.5 ? YEL : RED;
-    float len = (k < 1.5 && k > 0.5) ? 0.25 + 0.3 * h2 : 0.5 + 1.1 * h2;
-    float amt = (k < 1.5 && k > 0.5) ? 0.6 : k > 2.5 && k < 3.5 ? 0.78 : 0.88;
+    vec3 bc = k < 0.5 ? RED : k < 1.5 ? BLU : k < 2.5 ? YEL : k < 3.5 ? PAP : RED;
+    float len = (k > 2.5 && k < 3.5) ? 0.25 + 0.3 * h2 : 0.45 + 1.0 * h2;
+    float from = h1 * 2.0 * PI;
     if (k < 3.5 || h1 > 0.5) {
-      // Up behind the words a block is drawn in outline only, cut off
-      // square at a line across the page, as a poster's grid crops it, so
-      // the words always sit on black.
-      float wD = wedgeD(b, h1 * 2.0 * PI, len, r, ft);
+      float wD = wedgeD(b, from, len, r, ft);
       float inW = clamp(wD + 0.5, 0.0, 1.0);
-      float solid = clamp(px.y - (uCentre.y - 290.0) + 0.5, 0.0, 1.0);
-      float edge = max(stroke(wD, 1.5) * fill, inW * max(stroke((r - s.x) / fr, 1.5), stroke((r - s.y) / fr, 1.5)));
-      over(o, bc, amt * sw * max(fill * inW * solid, edge));
+      float top = 1.0 - smoothstep(-0.55, -0.2, sin(from + 0.5 * len + uSpin));
+      float rim = max(stroke(wD, 1.5 * uDpr) * inS, inW * max(stroke((r - s.x) / fr, 1.5 * uDpr), stroke((r - s.y) / fr, 1.5 * uDpr)));
+      over(o, bc, (k > 2.5 && k < 3.5 ? 0.75 : 0.9) * (1.0 + 0.1 * sw) * max(inS * inW * mix(1.0, 0.4 * hatch, top), rim * top));
+    }
+    // A dot riding round in some songs, round on the screen.
+    if (mod(idx, 3.0) > 1.5 && room > 8.0) {
+      float ang = fract(sin(idx * 17.3) * 9631.1) * 2.0 * PI + uSpin;
+      vec2 D = q - mid * vec2(cos(ang), sin(ang));
+      float dd = length(vec2(dqy.y * D.x - dqy.x * D.y, dqx.x * D.y - dqx.y * D.x) / (det * uDpr));
+      float rad = min(14.0, 0.42 * room);
+      float top = 1.0 - smoothstep(-0.55, -0.2, sin(ang));
+      vec3 dc = k < 1.5 ? YEL : k < 2.5 ? BLU : RED;
+      over(o, dc, 0.95 * cue * mix(clamp((rad - dd) * uDpr + 0.5, 0.0, 1.0), stroke((dd - rad) * uDpr, 1.5 * uDpr), top));
     }
     hc = k < 0.5 || k > 3.5 ? YEL : RED;
-    // The song under the pointer: a flat block of colour round it.
-    if (on > 0.0) {
-      // (It opens out as it comes in, rather than fading, so it stays flat.)
-      float wd = clamp((0.28 * on - abs(da)) * r / ft + 0.5, 0.0, 1.0);
-      over(o, hc, 0.9 * fill * wd * step(s.x, uHover.x) * step(uHover.x, s.y));
-    }
   }
-  over(o, PAP, 0.3 * stroke((r - (R - 1.5)) / fr, 1.5));
-  // The needle: a bold yellow ring; the drop, a fine white one.
-  over(o, YEL, 0.85 * uNeedle.y * stroke((r - uNeedle.x) / fr, 4.0));
-  over(o, PAP, 0.45 * uRipple.y * stroke((r - uRipple.x) / fr, 1.5));
+  // The pointer: a flat shape of colour, cut clean (the song's own band).
+  over(o, hc, 0.92 * clamp((hv.x - 0.45) * 10.0, 0.0, 1.0) * max(inS, step(3.5, uHoverMode)));
+  over(o, BLU, 0.92 * clamp((hv.y - 0.45) * 10.0, 0.0, 1.0));
+  over(o, PAP, hv.z);
+  over(o, PAP, 0.3 * stroke((r - (R - 1.5)) / fr, 1.5 * uDpr));
+  // The needle: a bold yellow ring; the drop, a fine paper one.
+  over(o, YEL, 0.9 * uNeedle.y * stroke((r - uNeedle.x) / fr, 4.0 * uDpr));
+  over(o, PAP, 0.5 * uRipple.y * stroke((r - uRipple.x) / fr, 1.5 * uDpr));
 #elif LOOK == 3
   // RISO: a two-colour risograph print, fluorescent pink and blue, each a
-  // halftone screen at its own angle, a touch out of register. How heavily
-  // each prints follows the songs, the lamp's light and the pressing's warp
-  // turning with the disc, so the dots swell and shrink as it goes round.
-  vec3 PINK = vec3(1.0, 0.3, 0.63);
-  vec3 BLUE2 = vec3(0.22, 0.6, 1.0);
-  float loud = s.w * (0.8 + 0.2 * sin(PI * u) + 0.1 * sin(r / 18.0 + idx * 1.7) * sin(r / 50.0 + idx));
-  float k1 = floor(mid / 140.0) + 3.0;
-  float k2 = floor(mid / 90.0) + 5.0;
-  float w1 = sin(k1 * b + r / 80.0 + idx * 2.3);
-  float w2 = sin(k2 * b - r / 55.0 + idx * 4.1);
-  float sw = 1.0 + 0.3 * uSwell;
-  float tP = loud * (0.04 + 0.22 * lamp + 0.12 * cue * w1) * sw;
-  float tB = loud * (0.05 + 0.18 * (1.0 - lamp) + 0.12 * cue * w2) * sw;
-  // The pointer presses the pink in harder round it; the drop's ring prints blue.
-  tP += 0.5 * on * exp(-dist * dist / (85.0 * 85.0)) * s.w;
+  // halftone screen laid on the page at its own angle, a touch out of
+  // register. The pink follows the lamp's light, a clean ramp; the blue
+  // prints a flat tint per song and heavy blocks that turn with the disc.
+  vec3 PINK = vec3(1.0, 0.3, 0.62);
+  vec3 BLUE2 = vec3(0.16, 0.56, 1.0);
+  float h1 = fract(sin(idx * 37.1) * 9431.7);
+  float h2 = fract(sin(idx * 61.3) * 2741.9);
+  float tint = mod(idx, 3.0) < 0.5 ? 0.1 : mod(idx, 3.0) < 1.5 ? 0.3 : 0.0;
+  float blk = clamp(wedgeD(b, h1 * 2.0 * PI, 0.5 + 0.9 * h2, r, ft) + 0.5, 0.0, 1.0) * step(0.4, h2);
+  float tB = inS * max(tint, 0.62 * blk * cue) * (1.0 + 0.25 * sw);
+  float tP = inS * (0.03 + 0.5 * pow(lamp, 3.0)) * (1.0 + 0.3 * sw);
+  // The pointer presses the inks in harder; the drop's ring prints blue.
+  tP += 0.7 * (hv.x + hv.z) * max(inS, 0.5);
+  tB += 0.7 * hv.y;
   float dr = (r - uRipple.x) / 24.0;
   tB += 0.6 * uRipple.y * exp(-dr * dr);
-  // Paper grain: the ink takes a little unevenly.
-  float grain = 0.8 + 0.4 * hash(floor(px * uDpr));
-  float inkB = screenDot(px + vec2(1.4, -0.9), 1.31, 5.0, tB * grain);
-  float inkP = screenDot(px, 0.26, 5.0, tP * grain);
-  add(o, BLUE2, 0.45 * inkB);
-  add(o, PINK, 0.5 * inkP);
-  // Solid strokes: the rim, and the needle's groove (with its blue a hair off).
-  add(o, PINK, 0.4 * stroke((r - (R - 1.5)) / fr, 1.4));
-  add(o, PINK, 0.8 * uNeedle.y * stroke((r - uNeedle.x) / fr, 2.4));
-  add(o, BLUE2, 0.6 * uNeedle.y * stroke((r - uNeedle.x) / fr - 2.2 * uDpr, 1.6));
+  float inkB = screenDot(px + vec2(1.2, -0.8), 1.31, 6.0, tB);
+  float inkP = screenDot(px, 0.26, 6.0, tP);
+  add(o, BLUE2, 0.55 * inkB);
+  add(o, PINK, 0.6 * inkP);
+  // Solid strokes: each song's edge, the rim, and the needle's groove
+  // (with its blue a hair off).
+  add(o, PINK, 0.35 * smoothstep(4.0, 9.0, room) * stroke((r - s.x) / fr, uDpr));
+  add(o, PINK, 0.45 * stroke((r - (R - 1.5)) / fr, 1.4 * uDpr));
+  add(o, PINK, 0.85 * uNeedle.y * stroke((r - uNeedle.x) / fr, 2.4 * uDpr));
+  add(o, BLUE2, 0.65 * uNeedle.y * stroke((r - uNeedle.x) / fr - 2.2 * uDpr, 1.6 * uDpr));
 #elif LOOK == 4
   // ENGRAVING: a banknote's guilloche. In each song two families of fine
-  // engraved lines weave round in waves, crossing into a rosette lattice;
-  // the lines swell where the lamp falls, as an engraver's do. The rosette
-  // is cut into the disc, so it turns with it. Double rules part the songs.
+  // engraved lines weave round in waves, crossing into a lattice; the
+  // lines swell where the lamp falls, as an engraver's do. The waves are
+  // cut into the disc, so they turn with it. Double rules part the songs.
   vec3 IVORY = vec3(0.95, 0.9, 0.79);
-  vec3 COPPER = vec3(0.95, 0.6, 0.36);
-  float sw = 1.0 + 0.35 * uSwell;
-  float hot = 0.0;
-  if (on > 0.0) {
-    float s2 = da * max(uHover.x, 100.0) / 200.0;
-    float d2 = (r - uHover.x) / 40.0;
-    hot = on * exp(-s2 * s2 - d2 * d2);
-  }
+  vec3 COPPER = vec3(0.98, 0.6, 0.34);
   float nd = (r - uNeedle.x) / 14.0;
-  hot = max(hot, uNeedle.y * exp(-nd * nd));
+  float hot = clamp(hv.x + hv.y + hv.z + uNeedle.y * exp(-nd * nd), 0.0, 1.5);
   if (s.w > 0.5) {
     float hw = 0.5 * (s.y - s.x);
     float N = floor(mid / 9.0);
-    float A = min(10.0, 0.35 * hw) * sin(PI * u);
-    float P = mix(6.0, 13.0, clamp(mid / uSpan.y, 0.0, 1.0)) * max(1.0, 1.5 / uDpr);
+    float A = min(11.0, 0.35 * hw) * sin(PI * u);
     float wv = sin(N * b + idx * 1.3);
-    float g1 = (r + A * wv) / P;
-    float g2 = (r - A * wv) / P;
+    float g1 = r + A * wv;
+    float g2 = r - A * wv;
     float f1 = max(fwidth(g1), 1e-3);
     float f2 = max(fwidth(g2), 1e-3);
-    float wd = (0.55 + 1.0 * lamp * lamp) * sw + 1.4 * hot;
-    float c1 = stroke((fract(g1 + 0.5) - 0.5) / f1, wd);
-    float c2 = stroke((fract(g2 + 0.5) - 0.5) / f2, wd);
-    // Where the lines crowd under a pixel, they settle to their average.
-    float avg = min(0.3, wd * 0.5 * (f1 + f2));
-    float line = mix(max(c1, c2), avg, smoothstep(0.22, 0.45, max(f1, f2)));
-    over(o, mix(IVORY, COPPER, clamp(hot * 1.4, 0.0, 1.0)), 0.46 * line * cue);
-    over(o, IVORY, 0.32 * (stroke((r - s.x - 2.0) / fr, 1.0) + stroke((r - s.y + 2.0) / fr, 1.0)));
+    float wd = ((0.55 + 0.9 * lamp * lamp) * (1.0 + 0.35 * sw) + 1.3 * hot) * uDpr;
+    float line = max(lodLines(g1, f1, 7.0, 5.0 * uDpr, wd), lodLines(g2, f2, 7.0, 5.0 * uDpr, wd));
+    over(o, mix(IVORY, COPPER, clamp(hot * 1.3, 0.0, 1.0)), 0.5 * line * inS * (0.4 + 0.6 * cue) * smoothstep(5.0, 10.0, room));
+    float rules = stroke((r - s.x - 2.5) / fr, uDpr) + stroke((r - s.y + 2.5) / fr, uDpr);
+    over(o, IVORY, 0.34 * min(rules, 1.0) * mix(0.5, 1.0, smoothstep(4.0, 9.0, room)));
   }
-  over(o, IVORY, 0.45 * stroke((r - (R - 1.5)) / fr, 1.5));
-  over(o, IVORY, 0.3 * stroke((r - (R - 6.0)) / fr, 1.0));
+  over(o, IVORY, 0.5 * stroke((r - (R - 1.5)) / fr, 1.4 * uDpr));
+  over(o, IVORY, 0.3 * stroke((r - (R - 6.0)) / fr, uDpr) * smoothstep(1.0, 3.0, 4.5 * rp));
   // The needle's groove: one copper line cut deep; the drop, a fine ring.
-  over(o, COPPER, 0.9 * uNeedle.y * stroke((r - uNeedle.x) / fr, 1.8));
-  over(o, COPPER, 0.5 * uRipple.y * stroke((r - uRipple.x) / fr, 1.2));
+  over(o, COPPER, 0.9 * uNeedle.y * stroke((r - uNeedle.x) / fr, 1.8 * uDpr));
+  over(o, COPPER, 0.5 * uRipple.y * stroke((r - uRipple.x) / fr, uDpr));
 #elif LOOK == 5
-  // PIXEL: an 8-bit sprite of a record in four colours (navy, violet, cyan
-  // and cream) on the page's black, shaded in fixed stipples and checks. A glint sprite
-  // in each song rides round with the turn; rings are drawn a cell thick.
-  vec3 C1 = vec3(0.2, 0.25, 0.56);
-  vec3 C2 = vec3(0.58, 0.38, 0.88);
-  vec3 C3 = vec3(0.33, 0.78, 0.96);
-  vec3 C4 = vec3(1.0, 0.93, 0.72);
-  float lvl = 0.0;
-  if (s.w > 0.5) {
-    // Shading in fixed patterns, as sprites are: every other song a sparse
-    // stipple, and where the lamp falls a checkerboard.
-    float bd = bayer4(cell);
-    float k1 = floor(mid / 140.0) + 3.0;
-    float w1 = sin(k1 * b + r / 80.0 + idx * 2.3);
-    float lit = lamp + 0.12 * w1 * cue + 0.15 * uSwell;
-    if (mod(idx, 2.0) > 0.5 && bd < 0.125) lvl = 1.0;
-    if (lit > 0.72 && bd < 0.5) lvl = 1.0;
-    if (lit > 0.93 && bd < 0.5) lvl = 2.0;
-    // A glint sprite in each song, riding round with the turn.
-    float ph = fract(sin(idx * 91.7) * 4375.5) * 2.0 * PI;
-    float la = wrap(b - ph) * r / 150.0;
-    float du = (u - 0.5) / 0.32;
-    float t = 0.62 * cue * exp(-la * la - du * du) * (0.4 + 0.6 * lamp);
-    lvl = max(lvl, clamp(floor(t * 4.0 + bd), 0.0, 4.0));
-    // Each song's first groove, a cell thick, where there's room for it.
-    if (abs(r - s.x - 0.5 * rc) < 0.5 * rc && s.y - s.x > 3.0 * rc) lvl = max(lvl, 2.0);
-    // Hover: the groove under the pointer drawn in cream along its run,
-    // its neighbours in cyan.
-    if (on > 0.05) {
-      float run = abs(da) * max(uHover.x, 100.0);
-      float reach = 170.0 * on;
-      float dr = abs(r - uHover.x);
-      if (run < reach && dr < 0.5 * rc) lvl = 4.0;
-      else if (run < reach * 0.8 && dr < 2.5 * rc && mod(cell.x + cell.y, 2.0) < 0.5) lvl = max(lvl, 3.0);
+  // CHROME: liquid metal. Each song a polished bead, its face turning from
+  // up to down across it, so it mirrors a plain studio: a pale sky over a
+  // crisp horizon, a dark floor beneath. The horizon runs along every song
+  // as a sharp bright edge; a slow wobble in the pressing, turning with the
+  // disc, sends it wandering; the lamp is a hard white sun in the sky. The
+  // pointer bends the metal, so the reflections flow round it. Where a song
+  // is too thin on the screen for its bands, it settles to its mean grey.
+  vec3 SKY0 = vec3(0.8, 0.86, 0.95);
+  vec3 SKY1 = vec3(0.4, 0.48, 0.62);
+  vec3 FLOOR0 = vec3(0.22, 0.2, 0.19);
+  vec3 FLOOR1 = vec3(0.05, 0.05, 0.06);
+  float k1 = floor(mid / 140.0) + 3.0;
+  float wob = 0.25 * cue * sin(k1 * b + idx * 2.3) + 0.1 * sin(2.0 * (a - uFacing));
+  float y = (u - 0.5) * 2.3 + wob + 0.7 * (hv.x - hv.y) - 0.15 * sw;
+  float fy = max(fwidth(y), 1e-4);
+  vec3 c = mix(mix(FLOOR0, FLOOR1, clamp(-1.4 * y, 0.0, 1.0)), mix(SKY1, SKY0, clamp(1.2 * y, 0.0, 1.0)), clamp(y / fy + 0.5, 0.0, 1.0));
+  c = mix(c, vec3(1.0), 0.85 * clamp(1.6 - abs(y) / fy, 0.0, 1.0));
+  float sunv = min(lamp - 0.955, 0.16 - abs(y - 0.62));
+  c = mix(c, vec3(1.0), clamp(sunv / max(fwidth(sunv), 1e-4) + 0.5, 0.0, 1.0));
+  c = mix(vec3(0.36, 0.38, 0.43), c, smoothstep(4.0, 10.0, room));
+  over(o, c, 0.96 * inS);
+  over(o, vec3(0.92, 0.95, 1.0), (0.5 + 0.5 * lamp) * stroke((r - (R - 1.5)) / fr, 1.5 * uDpr));
+  over(o, vec3(1.0, 0.86, 0.6), hv.z);
+  // The needle: its groove a line of warm light; the drop, a fine ring.
+  over(o, vec3(1.0, 0.86, 0.6), 0.95 * uNeedle.y * stroke((r - uNeedle.x) / fr, 1.8 * uDpr));
+  over(o, vec3(1.0), 0.6 * uRipple.y * stroke((r - uRipple.x) / fr, uDpr));
+#elif LOOK == 6
+  // TINTED: translucent cherry vinyl, the light coming through it. The
+  // body a clear flat red; the quiet runs between songs clearer still; the
+  // grooves fine lines that catch the lamp; its reflection two clean-edged
+  // wedges where the grooves light up pale; flecks in the vinyl carried
+  // round, glinting as they pass through the light.
+  vec3 TINT = vec3(0.92, 0.1, 0.24);
+  vec3 HI = vec3(1.0, 0.8, 0.84);
+  float wedge = smoothstep(0.78, 0.84, lamp);
+  add(o, TINT, mix(0.15, 0.3, inS) * (1.0 + 0.15 * sw));
+  float gro = lodLines(r, fr, 5.0, 3.5 * uDpr, 0.9 * uDpr) * inS;
+  add(o, mix(TINT, HI, wedge), (0.1 + 0.32 * wedge) * gro);
+  add(o, HI, 0.05 * wedge * inS);
+  add(o, HI, 0.5 * wedge * smoothstep(3.0, 8.0, room) * stroke((r - s.x) / fr, uDpr));
+  {
+    vec2 c = vec2(r / 40.0, mod(b, 2.0 * PI) * r / 40.0);
+    vec2 id = floor(c);
+    float h = hash(id + 7.7);
+    float roomF = smoothstep(12.0, 20.0, 40.0 * rp);
+    if (h > 0.8 && roomF > 0.0) {
+      vec2 ctr = (id + 0.5 + 0.5 * (vec2(hash(id + 1.7), hash(id + 5.3)) - 0.5)) * 40.0;
+      float ang = ctr.y / ((id.x + 0.5) * 40.0) + uSpin;
+      vec2 D = q - ctr.x * vec2(cos(ang), sin(ang));
+      float dd = length(vec2(dqy.y * D.x - dqy.x * D.y, dqx.x * D.y - dqx.y * D.x) / (det * uDpr));
+      float rad = 0.9 + 1.0 * fract(h * 37.0);
+      float ls = 0.5 + 0.5 * cos(2.0 * (ang - uFacing));
+      add(o, HI, roomF * cue * clamp((rad - dd) * uDpr + 0.5, 0.0, 1.0) * (0.25 + 0.75 * ls * ls));
     }
   }
-  if (abs(r - (R - 0.5 * rc)) < 0.5 * rc) lvl = 3.0;
-  if (uRipple.y > 0.05 && abs(r - uRipple.x) < 0.5 * rc) lvl = max(lvl, 3.0);
-  if (uNeedle.y > 0.05 && abs(r - uNeedle.x) < 0.5 * rc) lvl = uNeedle.y > 0.35 ? 4.0 : 3.0;
-  vec3 c = lvl < 1.5 ? C1 : lvl < 2.5 ? C2 : lvl < 3.5 ? C3 : C4;
-  float al = lvl < 0.5 ? 0.0 : lvl < 1.5 ? 0.42 : lvl < 2.5 ? 0.6 : lvl < 3.5 ? 0.65 : 0.88;
-  o = vec4(c * al, al);
+  add(o, HI, (0.4 + 0.5 * lamp) * stroke((r - (R - 1.5)) / fr, 1.4 * uDpr));
+  // The pointer: light through the vinyl, the grooves under it lit pale.
+  add(o, HI, clamp(hv.x, 0.0, 1.0) * (0.12 + 0.7 * gro));
+  add(o, TINT, 0.35 * hv.x);
+  add(o, vec3(1.0, 0.7, 0.4), clamp(hv.y, 0.0, 1.0) * (0.15 + 0.6 * gro));
+  add(o, HI, hv.z);
+  add(o, vec3(1.0, 0.92, 0.8), 0.9 * uNeedle.y * stroke((r - uNeedle.x) / fr, 1.6 * uDpr));
+  add(o, HI, 0.6 * uRipple.y * stroke((r - uRipple.x) / fr, uDpr));
+#elif LOOK == 7
+  // CONTOUR: a topographic map. The disc a gentle basin, each song a ridge
+  // whose peaks rise and fall round it and turn with the disc; drawn as
+  // contour lines, an index line every fourth, coloured by height in a
+  // few clean steps (sea teal, sage, sand, snow).
+  vec3 LOW = vec3(0.32, 0.72, 0.72);
+  vec3 MID = vec3(0.68, 0.82, 0.52);
+  vec3 HIGH = vec3(0.97, 0.82, 0.56);
+  vec3 TOP = vec3(1.0, 0.97, 0.92);
+  vec3 ACC = vec3(1.0, 0.42, 0.28);
+  float hill = 0.0;
+  if (s.w > 0.5) {
+    float k = floor(mid / 110.0) + 2.0;
+    float sn = sin(PI * u);
+    // (Flattened where the song is too thin on the screen to show its ridge.)
+    hill = 1.5 * sn * sn * (0.55 + 0.45 * cue * sin(k * b + idx * 2.1)) * (1.0 + 0.1 * sw) * smoothstep(8.0, 20.0, room);
+  }
+  float h = r / 85.0 + hill + 0.3 * sin(3.0 * b + r / 140.0 + 1.0);
+  float fh = max(fwidth(h), 1e-4);
+  float minor = lodLines(h, fh, 0.2, 4.0 * uDpr, 0.8 * uDpr);
+  float index = lodLines(h, fh, 0.8, 9.0 * uDpr, 1.5 * uDpr);
+  float e = hill / 1.5;
+  vec3 col = e < 0.2 ? LOW : e < 0.55 ? MID : e < 0.85 ? HIGH : TOP;
+  float hl = clamp(hv.x + hv.z, 0.0, 1.0);
+  col = mix(col, ACC, hl);
+  float line = max(0.26 * minor, 0.62 * index) * (1.0 + 0.6 * hl);
+  add(o, col, line);
+  add(o, LOW, 0.6 * clamp(hv.y, 0.0, 1.0) * max(minor, index));
+  add(o, ACC, hv.z);
+  add(o, MID, 0.55 * stroke((r - (R - 1.5)) / fr, 1.2 * uDpr));
+  // The needle: a dashed route along its groove; the drop, a fine ring.
+  float dash = clamp((0.28 - abs(fract(b * r / 14.0) - 0.5)) * 14.0 / ft + 0.5, 0.0, 1.0);
+  add(o, ACC, 0.95 * uNeedle.y * dash * stroke((r - uNeedle.x) / fr, 2.0 * uDpr));
+  add(o, ACC, 0.5 * uRipple.y * stroke((r - uRipple.x) / fr, uDpr));
+#elif LOOK == 8
+  // NEON: a few glass tubes bent into rings, every third song, each its
+  // own colour: a white-hot core, the coloured tube, and its glow on the
+  // dark. Each tube has a break or two (the bends between its sections),
+  // which turn with the disc.
+  vec3 NP = vec3(1.0, 0.24, 0.6);
+  vec3 NC = vec3(0.2, 0.88, 1.0);
+  vec3 NA = vec3(1.0, 0.66, 0.2);
+  vec3 NV = vec3(0.64, 0.42, 1.0);
+  float shine = (0.85 + 0.15 * lamp) * (1.0 + 0.35 * sw);
+  float halo = 0.0;
+  for (int i = 0; i < ${MAX_TRACKS}; i++) {
+    if (float(i) >= uTrackCount) break;
+    if (mod(float(i), 3.0) > 0.5) continue;
+    float T = uTracks[i].x - 0.5 * GAPW;
+    float dcss = (r - T) / (fr * uDpr);
+    if (abs(dcss) > 40.0) continue;
+    float k = mod(float(i) / 3.0, 4.0);
+    vec3 c = k < 0.5 ? NP : k < 1.5 ? NC : k < 2.5 ? NA : NV;
+    float g0 = fract(sin(float(i) * 41.3) * 7919.1) * 2.0 * PI;
+    float gl1 = abs(wrap(b - g0)) * T / (ft * uDpr);
+    float gl2 = abs(wrap(b - g0 - 2.3)) * T / (ft * uDpr);
+    float gap = min(gl1, gl2) - 5.0 * cue;
+    float lit = clamp(gap * uDpr + 0.5, 0.0, 1.0);
+    float tube = stroke(dcss * uDpr, 3.6 * uDpr);
+    float core = stroke(dcss * uDpr, 1.2 * uDpr);
+    float glo = 0.28 * exp(-dcss * dcss / 90.0) + 0.22 * exp(-dcss * dcss / 9.0);
+    add(o, c, shine * lit * (0.85 * tube + glo));
+    add(o, vec3(1.0), 0.8 * shine * lit * core);
+    // The electrodes at the break, dim stubs of glass.
+    add(o, c, 0.25 * tube * (1.0 - lit) * clamp((gap + 3.0) * uDpr + 0.5, 0.0, 1.0));
+  }
+  {
+    float dcss = (r - (R - 6.0)) / (fr * uDpr);
+    add(o, NP, 0.6 * shine * (0.8 * stroke(dcss * uDpr, 2.4 * uDpr) + 0.25 * exp(-dcss * dcss / 50.0)));
+  }
+  // The pointer: its light in pink, the second in cyan, a white-hot mark.
+  float hx = clamp(hv.x, 0.0, 1.0);
+  add(o, NP, 0.45 * hx);
+  add(o, vec3(1.0), 0.7 * hx * hx * hx);
+  add(o, NC, 0.5 * clamp(hv.y, 0.0, 1.0));
+  add(o, vec3(1.0), hv.z);
+  // The needle: a new tube lights in its groove; the drop, a violet ring.
+  float nd = (r - uNeedle.x) / (fr * uDpr);
+  add(o, NC, uNeedle.y * (0.85 * stroke(nd * uDpr, 3.2 * uDpr) + 0.3 * exp(-nd * nd / 60.0)));
+  add(o, vec3(1.0), 0.8 * uNeedle.y * stroke(nd * uDpr, uDpr));
+  add(o, NV, 0.6 * uRipple.y * stroke((r - uRipple.x) / fr, 1.5 * uDpr));
+  o = min(o, vec4(1.0));
+#elif LOOK == 9
+  // ENAMEL: cloisonne. Each song a band of glossy enamel in a jewel
+  // colour, parted from the next by a gold wire; every other band set with
+  // round flowers of another enamel ringed in gold, turning with the disc;
+  // the lamp's reflection a clean narrow gleam across it.
+  vec3 GOLD = vec3(0.84, 0.66, 0.3);
+  vec3 GOLDHI = vec3(1.0, 0.92, 0.66);
+  float k = mod(idx, 6.0);
+  vec3 col = k < 0.5 ? vec3(0.12, 0.26, 0.64) : k < 1.5 ? vec3(0.06, 0.56, 0.6) : k < 2.5 ? vec3(0.88, 0.36, 0.3)
+    : k < 3.5 ? vec3(0.13, 0.46, 0.34) : k < 4.5 ? vec3(0.94, 0.66, 0.18) : vec3(0.62, 0.24, 0.42);
+  vec3 col2 = k < 0.5 ? vec3(0.94, 0.66, 0.18) : k < 1.5 ? vec3(0.88, 0.36, 0.3) : k < 2.5 ? vec3(0.06, 0.56, 0.6)
+    : k < 3.5 ? vec3(0.95, 0.9, 0.8) : k < 4.5 ? vec3(0.12, 0.26, 0.64) : vec3(0.94, 0.66, 0.18);
+  float lit = 1.0 + 0.3 * clamp(hv.x, 0.0, 1.0) + 0.08 * sw;
+  over(o, min(col * lit, vec3(1.0)), 0.94 * inS);
+  if (s.w > 0.5 && mod(idx, 2.0) < 0.5 && room > 7.0) {
+    float N = max(6.0, floor(2.0 * PI * mid / 34.0));
+    float n = floor(mod(b, 2.0 * PI) / (2.0 * PI) * N);
+    float ang = (n + 0.5) * 2.0 * PI / N + uSpin;
+    vec2 D = q - mid * vec2(cos(ang), sin(ang));
+    float dd = length(vec2(dqy.y * D.x - dqy.x * D.y, dqx.x * D.y - dqx.y * D.x) / (det * uDpr));
+    float rad = min(5.0, 0.3 * room);
+    float fit = smoothstep(4.0, 7.0, 2.0 * PI * mid / N / (ft * uDpr) - 2.0 * rad) * cue;
+    over(o, col2, fit * inS * clamp((rad - dd) * uDpr + 0.5, 0.0, 1.0));
+    over(o, mix(GOLD, GOLDHI, 0.3), fit * inS * stroke((dd - rad) * uDpr, 1.2 * uDpr));
+  }
+  // The wires: the quiet runs between songs, gold, at least a hair wide.
+  float wire = max(1.0 - inS, stroke((r - (s.x - 0.5 * GAPW)) / fr, 1.4 * uDpr) * s.w);
+  float gl = smoothstep(0.72, 0.76, lamp);
+  vec3 wc = mix(GOLD, GOLDHI, max(gl, clamp(hv.x + hv.y, 0.0, 1.0)));
+  over(o, wc, 0.96 * wire * step(uSpan.x, r));
+  over(o, GOLDHI, stroke((r - (R - 1.5)) / fr, 2.0 * uDpr));
+  // The gleam: the lamp's reflection, narrow and clean-edged.
+  add(o, vec3(1.0), 0.16 * smoothstep(0.955, 0.965, lamp) * inS);
+  over(o, GOLDHI, clamp(hv.y, 0.0, 1.0) * 0.8 * (1.0 - inS) + hv.z);
+  over(o, GOLDHI, 0.95 * uNeedle.y * stroke((r - uNeedle.x) / fr, 2.2 * uDpr));
+  over(o, GOLDHI, 0.6 * uRipple.y * stroke((r - uRipple.x) / fr, uDpr));
+#elif LOOK == 10
+  // PAPERCUT: layers of coloured card cut into rings, each song one, its
+  // inner edge cut in scallops; each layer lies on the one inside it and
+  // casts a small soft shadow onto it. The scallops turn with the disc.
+  vec3 CREAM = vec3(0.95, 0.9, 0.8);
+  vec3 sh = vec3(0.0);
+  for (int i = 0; i < ${MAX_TRACKS}; i++) {
+    if (float(i) >= uTrackCount) break;
+    vec2 t = uTracks[i];
+    float n = max(5.0, floor(t.x / 26.0));
+    float amp = 9.0 * (0.35 + 0.65 * cue);
+    float ph = float(i) * 1.7;
+    float sc = 0.5 + 0.5 * cos(n * b + ph);
+    float inner = t.x - GAPW - amp * sc;
+    // Device px inside this layer's edge (its slope round the disc too).
+    float slope = amp * 0.5 * n * sin(n * b + ph) / max(r, 1.0) * ft;
+    float d = (r - inner) / length(vec2(fr, slope));
+    if (d < -40.0 * uDpr) break;
+    float m = mod(float(i), 5.0);
+    vec3 c = m < 0.5 ? vec3(0.2, 0.25, 0.38) : m < 1.5 ? vec3(0.22, 0.42, 0.44) : m < 2.5 ? vec3(0.62, 0.31, 0.23)
+      : m < 3.5 ? vec3(0.72, 0.56, 0.3) : vec3(0.4, 0.29, 0.46);
+    // Its shadow on what's beneath, just outside its edge.
+    o *= 1.0 - 0.5 * exp(min(d, 0.0) / (5.0 * uDpr)) * step(d, 0.0);
+    float cov = clamp(d + 0.5, 0.0, 1.0);
+    // The cut edge catches the light.
+    vec3 cc = mix(c, CREAM, 0.45 * stroke(d - 1.0 * uDpr, 1.2 * uDpr) * (0.3 + 0.7 * lamp));
+    over(o, cc * (1.0 + 0.08 * sw), 0.97 * cov);
+  }
+  // The pointer: a window cut in cream card, a cream ring, a cream mark.
+  over(o, CREAM, 0.9 * clamp((hv.x - 0.45) * 10.0, 0.0, 1.0));
+  over(o, vec3(0.62, 0.31, 0.23), 0.9 * clamp((hv.y - 0.45) * 10.0, 0.0, 1.0));
+  over(o, CREAM, hv.z);
+  // The needle: a stitched thread along its groove; the drop, a fine one.
+  float stitch = clamp((0.3 - abs(fract(b * r / 10.0) - 0.5)) * 10.0 / ft + 0.5, 0.0, 1.0);
+  over(o, CREAM, 0.95 * uNeedle.y * stitch * stroke((r - uNeedle.x) / fr, 1.6 * uDpr));
+  over(o, CREAM, 0.6 * uRipple.y * stroke((r - uRipple.x) / fr, uDpr));
 #endif
 
   // A step quieter up behind the words, so they read easily over it.
-#if LOOK == 1
-  const float CALM = 0.8;
+#if LOOK == 1 || LOOK == 8
+  const float CALM = 0.75;
 #elif LOOK == 2
-  const float CALM = 1.0;   // flat fields stay flat
+  const float CALM = 1.0;   // flat fields stay flat (they're hatched up there)
+#elif LOOK == 9 || LOOK == 10
+  const float CALM = 0.4;
+#elif LOOK == 5
+  const float CALM = 0.3;   // bright metal
 #else
-  const float CALM = 0.5;
+  const float CALM = 0.55;
 #endif
   o *= mix(CALM, 1.0, smoothstep(uCentre.y - 330.0, uCentre.y - 90.0, px.y));
   // The label hides behind the app's screen; and nothing past the rim.
-#if LOOK == 5
-  o *= step(uSpan.x, r) * step(r, R);
-#else
   o *= smoothstep(uSpan.x, uSpan.x + 40.0, r) * clamp((R - r) / fr + 0.5, 0.0, 1.0);
-#endif
   // Nothing shows through the hero's buttons (one is see-through).
   for (int i = 0; i < 4; i++) {
     if (float(i) >= uHoleCount) break;
@@ -1033,8 +1259,26 @@ void main() {
   float n = (hash(gl_FragCoord.xy) - 0.5) / 255.0;
   gl_FragColor = vec4(max(o.rgb + n, 0.0), clamp(o.a + n, 0.0, 1.0));
 }`;
-// The styles, by name: 0 is the current look.
-const LOOK = { current: 0, orbit: 1, bauhaus: 2, riso: 3, engraving: 4, pixel: 5 };
+// The styles, by name: n is its program (0 the current look, the others
+// LOOK in LOOKS). crisp: drawn at the screen's full resolution whatever
+// the render resolution, since fine lines, dots and cells go soft when
+// the browser scales them up (each still costs less than the current
+// look does at its own resolution).
+const STYLE_LIST = [
+  ['current', 'Current (dark vinyl)', { n: 0 }],
+  ['orbit', 'Orbit (star-chart line art)', { n: 1, crisp: true }],
+  ['bauhaus', 'Bauhaus', { n: 2, crisp: true }],
+  ['riso', 'Risograph', { n: 3, crisp: true }],
+  ['engraving', 'Engraving (guilloche)', { n: 4, crisp: true }],
+  ['chrome', 'Chrome (liquid metal)', { n: 5, crisp: true }],
+  ['tinted', 'Tinted vinyl (translucent cherry)', { n: 6, crisp: true }],
+  ['contour', 'Contour map', { n: 7, crisp: true }],
+  ['neon', 'Neon tubes', { n: 8, crisp: true }],
+  ['enamel', 'Enamel (cloisonne)', { n: 9, crisp: true }],
+  ['papercut', 'Paper cut-out', { n: 10, crisp: true }],
+];
+const LOOK = Object.fromEntries(STYLE_LIST.map(([k, , d]) => [k, d.n]));
+const STYLE = Object.fromEntries(STYLE_LIST.map(([k, , d]) => [k, d]));
 
 let prog = null;
 let U = {};
@@ -1210,7 +1454,7 @@ function frame(now, still) {
   // Drawn at T.res of the screen's pixels and scaled up by the browser: the
   // grooves are soft light, so full Retina resolution buys little and costs
   // four times the pixels.
-  const dpr = Math.min(2, devicePixelRatio || 1) * T.res;
+  const dpr = Math.min(2, devicePixelRatio || 1) * (STYLE[T.look]?.crisp ? 1 : T.res);
   const w = Math.round(canvas.clientWidth * dpr);
   const h = Math.round(canvas.clientHeight * dpr);
   if (canvas.width !== w || canvas.height !== h) {
@@ -1361,36 +1605,57 @@ function topFade() {
   canvas.style.setProperty('--fx-mask', `linear-gradient(to bottom, rgb(0 0 0 / ${(0.75 * v).toFixed(2)}) 0, #000 ${full}px, #000 var(--fx-top), rgb(0 0 0 / 0.75) var(--fx-mid), rgb(0 0 0 / 0.75) calc(var(--fx-end) - 110px), transparent var(--fx-end))`);
 }
 
+// Tune. The style comes first; then the rest in folders, each control only
+// in the panel while it does something to the style picked (or to what's
+// picked above it): the spin cue's, glints' and dust's controls, the lamp
+// colour and the render resolution belong to the current look; everything
+// else works in every style, each drawing it its own way (see LOOKS and
+// hoverField). Labels are what the panel saves values under, so they stay.
 const tune = window.tune;
 const again = () => { geo = null; measured = 0; wake(); };
-tune?.slider({ id: 'rec-drop', label: 'Hero record: lower by', min: -300, max: 400, step: 4, value: T.drop, unit: 'px', onInput: (v) => { T.drop = v; if (prog) again(); } });
-tune?.slider({ id: 'rec-needle', label: 'Hero record: needle and hover strength', min: 0, max: 2, step: 0.05, value: T.needle, onInput: (v) => { T.needle = v; if (prog) wake(); } });
-tune?.slider({ id: 'rec-life', label: 'Hero record: spin speed', min: 0, max: 3, step: 0.1, value: T.life, onInput: (v) => { T.life = v; if (prog) wake(); } });
-tune?.slider({ id: 'rec-persp', label: 'Hero record: perspective', min: 0.3, max: 3, step: 0.05, value: T.persp, onInput: (v) => { T.persp = v; if (prog) again(); } });
-tune?.select({ id: 'rec-cue', label: 'Hero record: what shows the spin', value: T.cue, onInput: (v) => { T.cue = v; if (prog) wake(); }, options: [['dust', 'Dust specks'], ['glints', 'Glints'], ['warp', 'Pressing warp'], ['spokes', 'Spokes'], ['soft', 'Soft glints (as among the dust)']] });
-tune?.slider({ id: 'rec-res', label: 'Hero record: render resolution', min: 0.3, max: 1, step: 0.05, value: T.res, onInput: (v) => { T.res = v; if (prog) again(); } });
-tune?.slider({ id: 'rec-cue-amt', label: 'Hero record: spin cue strength', min: 0, max: 3, step: 0.05, value: T.cueAmt, onInput: (v) => { T.cueAmt = v; if (prog) wake(); } });
-// Newer: the glints, their colour and the dust; the record's reach up the
-// page and the bend at its top; its colour; and what the pointer does.
 const redraw = (k) => (v) => { T[k] = v; if (prog) wake(); };
 const reshape = (k) => (v) => { T[k] = v; if (prog) again(); };
-tune?.slider({ label: 'Hero record: soft glints strength', min: 0, max: 3, step: 0.05, value: T.soft, onInput: redraw('soft') });
-tune?.slider({ label: 'Hero record: glints mode strength', min: 0, max: 3, step: 0.05, value: T.glintAmt, onInput: redraw('glintAmt') });
-tune?.select({ label: 'Hero record: glint colour', value: T.chroma, onInput: redraw('chroma'), options: [['none', 'None'], ['film', 'Thin film (oil slick)'], ['prism', 'Prism split'], ['lamp', 'Lamp (blue / orange)'], ['grating', 'Diffraction rainbow'], ['pearl', 'Pearl'], ['fringe', 'Lens fringe']] });
-tune?.slider({ label: 'Hero record: glint colour amount', min: 0, max: 1, step: 0.05, value: T.chromaAmt, onInput: redraw('chromaAmt') });
-tune?.select({ label: 'Hero record: speck style', value: T.speck, onInput: redraw('speck'), options: [['hyphen', 'Dashes (first)'], ['motes', 'Dust motes'], ['scratches', 'Hairline scratches'], ['scuffs', 'Scuffs'], ['sparkle', 'Sparkle'], ['lint', 'Lint'], ['smudge', 'Smudges']] });
-tune?.slider({ label: 'Hero record: rings all round', min: 0.7, max: 2, step: 0.05, value: T.size, onInput: reshape('size') });
-tune?.slider({ label: 'Hero record: more rings up top', min: 0, max: 1, step: 0.05, value: T.up, onInput: reshape('up') });
-tune?.slider({ label: 'Hero record: show to the top (mask)', min: 0, max: 1, step: 0.05, value: T.mask, onInput: reshape('mask') });
-tune?.select({ label: 'Hero record: top warp', value: T.warp, onInput: reshape('warp'), options: [['none', 'None'], ['mirror', 'Mirror the sweep'], ['barrel', 'Barrel'], ['lens', 'Lens bulge'], ['flip', 'Flipped perspective']] });
-tune?.slider({ label: 'Hero record: top warp strength', min: 0, max: 1, step: 0.05, value: T.warpAmt, onInput: reshape('warpAmt') });
-tune?.slider({ label: 'Hero record: lamp colour', min: 0, max: 1, step: 0.05, value: T.tint, onInput: redraw('tint') });
-tune?.select({ label: 'Hero record: hover style', value: T.hover, onInput: redraw('hover'), options: [['arc', 'Arc (first)'], ['lamp', 'Lamp'], ['stylus', 'Stylus'], ['prism', 'Prism'], ['spot', 'Spotlight'], ['ripples', 'Colour ripples']] });
-tune?.slider({ label: 'Hero record: hover fades after still', min: 0.3, max: 10, step: 0.1, value: T.still, unit: 's', onInput: redraw('still') });
-// The whole record drawn in another style (see LOOKS). ?record=orbit (or
-// any style's name) in the address picks one over the panel, for testing.
+const panel = () => tune?.refresh?.('Hero record');
+// ...and the panel follows it.
+const thenPanel = (f) => (v) => { f(v); panel(); };
+const cur = () => T.look === 'current';
+// ?record=orbit (or any style's name) in the address picks one over the
+// panel, for testing.
 const forced = new URLSearchParams(location.search).get('record');
-tune?.select({ label: 'Hero record: style', value: T.look, onInput: (v) => { T.look = forced in LOOK ? forced : v; if (prog) again(); }, options: [['current', 'Current'], ['orbit', 'Orbit (line art)'], ['bauhaus', 'Bauhaus'], ['riso', 'Risograph'], ['engraving', 'Engraving'], ['pixel', 'Pixel art']] });
+tune?.select({ label: 'Hero record: style', value: T.look, options: STYLE_LIST.map(([k, t]) => [k, t]),
+  onInput: (v) => { T.look = forced in LOOK ? forced : v; if (prog) again(); panel(); } });
+
+const look = { folder: 'Look' };
+tune?.select({ ...look, label: 'Hero record: what shows the spin', value: T.cue, show: cur, onInput: thenPanel((v) => { T.cue = v; if (prog) wake(); }), options: [['dust', 'Dust specks'], ['glints', 'Glints'], ['warp', 'Pressing warp'], ['spokes', 'Spokes'], ['soft', 'Soft glints (as among the dust)']] });
+tune?.slider({ ...look, label: 'Hero record: spin cue strength', min: 0, max: 3, step: 0.05, value: T.cueAmt, onInput: redraw('cueAmt') });
+tune?.select({ ...look, label: 'Hero record: speck style', value: T.speck, show: () => cur() && T.cue === 'dust', onInput: redraw('speck'), options: [['hyphen', 'Dashes (first)'], ['motes', 'Dust motes'], ['scratches', 'Hairline scratches'], ['scuffs', 'Scuffs'], ['sparkle', 'Sparkle'], ['lint', 'Lint'], ['smudge', 'Smudges']] });
+tune?.slider({ ...look, label: 'Hero record: soft glints strength', min: 0, max: 3, step: 0.05, value: T.soft, show: cur, onInput: redraw('soft') });
+tune?.slider({ ...look, label: 'Hero record: glints mode strength', min: 0, max: 3, step: 0.05, value: T.glintAmt, show: () => cur() && T.cue === 'glints', onInput: redraw('glintAmt') });
+tune?.select({ ...look, label: 'Hero record: glint colour', value: T.chroma, show: cur, onInput: thenPanel(redraw('chroma')), options: [['none', 'None'], ['film', 'Thin film (oil slick)'], ['prism', 'Prism split'], ['lamp', 'Lamp (blue / orange)'], ['grating', 'Diffraction rainbow'], ['pearl', 'Pearl'], ['fringe', 'Lens fringe']] });
+tune?.slider({ ...look, label: 'Hero record: glint colour amount', min: 0, max: 1, step: 0.05, value: T.chromaAmt, show: () => cur() && T.chroma !== 'none', onInput: redraw('chromaAmt') });
+tune?.slider({ ...look, label: 'Hero record: lamp colour', min: 0, max: 1, step: 0.05, value: T.tint, show: cur, onInput: redraw('tint') });
+tune?.slider({ ...look, label: 'Hero record: render resolution', min: 0.3, max: 1, step: 0.05, value: T.res, show: () => !STYLE[T.look]?.crisp, onInput: reshape('res') });
+
+tune?.slider({ folder: 'Motion', label: 'Hero record: spin speed', min: 0, max: 3, step: 0.1, value: T.life, onInput: redraw('life') });
+
+const touchF = { folder: 'Hover & needle' };
+tune?.select({ ...touchF, label: 'Hero record: hover style', value: T.hover, onInput: redraw('hover'),
+  // The same six everywhere; outside the current look, named for what
+  // they do in every style.
+  options: () => (cur()
+    ? [['arc', 'Arc (first)'], ['lamp', 'Lamp'], ['stylus', 'Stylus'], ['prism', 'Prism'], ['spot', 'Spotlight'], ['ripples', 'Colour ripples']]
+    : [['arc', 'Arc: along the groove'], ['lamp', 'Beam: across the grooves'], ['stylus', 'Stylus: tip and trail'], ['prism', 'Split: two arcs'], ['spot', 'Spot: disc and ring'], ['ripples', 'Ripples']]) });
+tune?.slider({ ...touchF, label: 'Hero record: needle and hover strength', min: 0, max: 2, step: 0.05, value: T.needle, onInput: redraw('needle') });
+tune?.slider({ ...touchF, label: 'Hero record: hover fades after still', min: 0.3, max: 10, step: 0.1, value: T.still, unit: 's', onInput: redraw('still') });
+
+const lay = { folder: 'Layout' };
+tune?.slider({ ...lay, label: 'Hero record: lower by', min: -300, max: 400, step: 4, value: T.drop, unit: 'px', onInput: reshape('drop') });
+tune?.slider({ ...lay, label: 'Hero record: perspective', min: 0.3, max: 3, step: 0.05, value: T.persp, onInput: reshape('persp') });
+tune?.slider({ ...lay, label: 'Hero record: rings all round', min: 0.7, max: 2, step: 0.05, value: T.size, onInput: reshape('size') });
+tune?.slider({ ...lay, label: 'Hero record: more rings up top', min: 0, max: 1, step: 0.05, value: T.up, onInput: reshape('up') });
+tune?.slider({ ...lay, label: 'Hero record: show to the top (mask)', min: 0, max: 1, step: 0.05, value: T.mask, onInput: reshape('mask') });
+tune?.select({ ...lay, label: 'Hero record: top warp', value: T.warp, onInput: thenPanel(reshape('warp')), options: [['none', 'None'], ['mirror', 'Mirror the sweep'], ['barrel', 'Barrel'], ['lens', 'Lens bulge'], ['flip', 'Flipped perspective']] });
+tune?.slider({ ...lay, label: 'Hero record: top warp strength', min: 0, max: 1, step: 0.05, value: T.warpAmt, show: () => T.warp !== 'none', onInput: reshape('warpAmt') });
 if (forced in LOOK) T.look = forced;
 
 try {
