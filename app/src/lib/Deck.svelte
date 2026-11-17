@@ -7,8 +7,8 @@
   import { untrack } from 'svelte';
   import { padMode, padModeTab } from './padmode.svelte.js';
   import { tempoPickup } from './pickup.svelte.js';
-  import { engine, tracks, control, nextGrid, setGrid } from './engine.svelte.js';
-  import { pushEdit } from './undo.svelte.js';
+  import { engine, tracks, control } from './engine.svelte.js';
+  import { bpmEdit, gridEdit, gridMenu } from './grid.svelte.js';
   import { dropTarget } from './dnd.svelte.js';
   import { tip, tipText } from './tooltip.svelte.js';
   import { openMenu } from './menu.svelte.js';
@@ -22,35 +22,10 @@
 
   const name = $derived(deck === 0 ? 'A' : 'B');
 
-  // Fixing the beatgrid: right-click the BPM, or double-click it to type one.
-  let editingBpm = $state(false);
-  /** Applies a grid change, with Undo back to the grid before it. */
-  async function gridEdit(op, label, value) {
-    const t = tracks[deck];
-    if (!t) return;
-    const before = t.gridLocked ? t.beatgrid : null;
-    const after = op === 'reset' ? null : nextGrid(t.beatgrid, op, d.position, value);
-    if (op !== 'reset' && !after) return;
-    await setGrid(deck, after);
-    announce(`${label} on deck ${name}`);
-    pushEdit({ label: `${label} on deck ${name}`, undo: () => setGrid(deck, before), redo: () => setGrid(deck, after) });
-  }
-  const gridMenu = (e) => {
-    const t = tracks[deck];
-    if (!t) return;
-    const has = !!t.beatgrid;
-    openMenu(e, [
-      { label: 'Halve BPM', enabled: has, action: () => gridEdit('halve', 'Halved the BPM') },
-      { label: 'Double BPM', enabled: has, action: () => gridEdit('double', 'Doubled the BPM') },
-      { label: 'Set BPM…', action: () => (editingBpm = true) },
-      '-',
-      { label: 'Set downbeat at play head', enabled: has, action: () => gridEdit('downbeat', 'Moved the downbeat') },
-      { label: 'Move grid earlier', enabled: has, action: () => gridEdit('nudge', 'Moved the grid earlier', -0.01) },
-      { label: 'Move grid later', enabled: has, action: () => gridEdit('nudge', 'Moved the grid later', 0.01) },
-      '-',
-      { label: 'Reset to detected grid', enabled: !!t.gridLocked, action: () => gridEdit('reset', 'Reset the beatgrid') },
-    ]);
-  };
+  // Fixing the beatgrid: right-click the BPM (or the waveform), or
+  // double-click the BPM to type one.
+  const editingBpm = $derived(bpmEdit.deck === deck);
+  const openGridMenu = (e) => tracks[deck] && openMenu(e, gridMenu(deck));
   const focusBpm = (node) => {
     node.focus();
     node.select();
@@ -58,13 +33,13 @@
   function bpmKey(e) {
     e.stopPropagation();
     if (e.key === 'Enter') finishBpm(e.currentTarget.value);
-    else if (e.key === 'Escape') editingBpm = false;
+    else if (e.key === 'Escape') bpmEdit.deck = -1;
   }
   function finishBpm(text) {
     if (!editingBpm) return;
-    editingBpm = false;
+    bpmEdit.deck = -1;
     const v = parseFloat(String(text).replace(',', '.'));
-    if (v > 0 && Math.abs(v - d.bpm) > 1e-6) gridEdit('bpm', `Set the BPM to ${+v.toFixed(2)}`, v);
+    if (v > 0 && Math.abs(v - d.bpm) > 1e-6) gridEdit(deck, 'bpm', `Set the BPM to ${+v.toFixed(2)}`, v);
   }
   const other = $derived(deck === 0 ? 'B' : 'A');
   const RANGES = [0.08, 0.16, 0.5];
@@ -239,8 +214,8 @@
           <div class="artist">Drag a track here or press {keyLabel(`deck.${deck}.load`)}</div>
         {/if}
       </div>
-      <div class="bpm" oncontextmenu={gridMenu} ondblclick={() => t && (editingBpm = true)} role="group" aria-label="Tempo"
-        use:tip={() => (editingBpm ? '' : d.bpm > 0 ? `Track tempo ${d.bpm.toFixed(2)} BPM${t?.gridLocked ? ', beatgrid fixed by hand' : ''}. Right-click to fix the beatgrid` : t ? 'No clear beat found. Double-click to set the BPM' : '')}>
+      <div class="bpm" oncontextmenu={openGridMenu} ondblclick={() => t && (bpmEdit.deck = deck)} role="group" aria-label="Tempo"
+        use:tip={() => (editingBpm ? '' : d.bpm > 0 ? `Track tempo ${d.bpm.toFixed(2)} BPM${t?.gridLocked ? ', beatgrid fixed by hand' : ''}. Right-click here or on the waveform to fix the beatgrid` : t ? 'No clear beat found. Double-click to set the BPM' : '')}>
         {#if editingBpm}
           <input class="big num edit" value={d.bpm > 0 ? +d.bpm.toFixed(2) : ''} inputmode="decimal" aria-label="Track BPM" spellcheck="false"
             use:focusBpm onkeydown={bpmKey} onblur={(e) => finishBpm(e.currentTarget.value)} />

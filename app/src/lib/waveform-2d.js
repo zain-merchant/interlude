@@ -114,7 +114,6 @@ export class Waveform2D {
     const x = (bin) => (bin - view.start) / spp;
     const c = view.colors;
 
-    if (view.mode === 'scroll' && view.beatLen > 0) this.beats(w, h, view, spp, x);
     if (view.loopIn >= 0 && view.loopOut > view.loopIn) {
       const a = x(view.loopIn), b = x(view.loopOut);
       ctx.fillStyle = `rgba(255,255,255,${view.looping ? 0.08 : 0.04})`;
@@ -123,6 +122,11 @@ export class Waveform2D {
     if (this.count) {
       if (view.mode === 'scroll') this.ribbon(w, h, view, spp, c);
       else this.overview(w, h, c);
+    }
+    // The grid sits over the waveform so it reads against loud parts too,
+    // and under the veil so the played part dims with it.
+    if (view.mode === 'scroll' && view.beatLen > 0) this.beats(w, h, view, spp, x);
+    if (this.count) {
       // The played part: a dark veil so what's ahead is what reads.
       const px = Math.max(0, Math.min(w, x(view.playhead)));
       ctx.fillStyle = view.mode === 'scroll' ? 'rgba(12,12,14,0.5)' : 'rgba(12,12,14,0.55)';
@@ -168,19 +172,44 @@ export class Waveform2D {
     }
   }
 
+  /**
+   * Beat lines, with brighter bar lines and bar numbers. Beat 0 is the
+   * first downbeat. When beats get too close to tell apart only bars are
+   * drawn, and numbers thin out to every fourth bar, then none.
+   */
   beats(w, h, view, spp, x) {
     const { ctx } = this;
     const len = view.beatLen;
-    const first = Math.ceil((view.start - view.firstBeat) / len);
-    // Too dense to read: drop to bars only.
-    const barsOnly = len / spp < 6;
-    for (let b = first; ; b++) {
-      const bx = x(view.firstBeat + b * len);
+    const beatPx = len / spp;
+    const barsOnly = beatPx < 6;
+    const numberEvery = beatPx * 4 >= 32 ? 1 : beatPx * 16 >= 32 ? 4 : 0;
+    const TICK = 5;
+    ctx.font = '600 9px "Geist Variable", system-ui, sans-serif';
+    ctx.textBaseline = 'top';
+    for (let b = Math.ceil((view.start - view.firstBeat) / len); ; b++) {
+      const bx = Math.round(x(view.firstBeat + b * len));
       if (bx > w) break;
       const bar = ((b % 4) + 4) % 4 === 0;
       if (barsOnly && !bar) continue;
-      ctx.fillStyle = bar ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.03)';
-      ctx.fillRect(Math.round(bx), 0, 1, h);
+      if (bar) {
+        ctx.fillStyle = 'rgba(255,255,255,0.28)';
+        ctx.fillRect(bx, 0, 1, h);
+        // Ticks at the edges mark the bar even where the waveform is loud.
+        ctx.fillStyle = 'rgba(255,255,255,0.75)';
+        ctx.fillRect(bx, 0, 1, TICK);
+        ctx.fillRect(bx, h - TICK, 1, TICK);
+        const n = b / 4 + 1;
+        if (numberEvery && n >= 1 && (n - 1) % numberEvery === 0) {
+          ctx.fillStyle = 'rgba(255,255,255,0.6)';
+          ctx.fillText(String(n), bx + 3, 2);
+        }
+      } else {
+        ctx.fillStyle = 'rgba(255,255,255,0.12)';
+        ctx.fillRect(bx, 0, 1, h);
+        ctx.fillStyle = 'rgba(255,255,255,0.4)';
+        ctx.fillRect(bx, 0, 1, 3);
+        ctx.fillRect(bx, h - 3, 1, 3);
+      }
     }
   }
 
