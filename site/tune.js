@@ -20,11 +20,11 @@
   if (show) {
     const css = document.createElement('link');
     css.rel = 'stylesheet';
-    css.href = `${base}vendor/dialkit/styles.css`;
+    css.href = `${base}vendor/dialkit/styles.css?v=2`;
     document.head.append(css);
     lib = new Promise((done, fail) => {
       const s = document.createElement('script');
-      s.src = `${base}vendor/dialkit/browser.global.js`;
+      s.src = `${base}vendor/dialkit/browser.global.js?v=2`;
       s.onload = () => (window.DialKit ? done(window.DialKit) : fail());
       s.onerror = fail;
       document.head.append(s);

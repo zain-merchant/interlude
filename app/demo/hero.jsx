@@ -12,6 +12,8 @@
 // deck, start it, crossfade over, stop the old deck, load the next record
 // into it. The decks then trade places, so each loop picks up where the last
 // one finished and nothing rewinds.
+// First, so the pause is in place before anything asks for a frame.
+import './pause.js';
 import { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { mount } from 'svelte';
@@ -580,16 +582,22 @@ function useCursorSteer() {
     const STEER = 0.05; // how hard the path turns it (rad/s² per px/s)
     const MAX = (10 * Math.PI) / 180;
     let raf;
+    let el = null;
+    let leanWas = '';
     let prev = null;
     let p0 = null;
     const v = { x: 0, y: 0 };
     let angle = 0;
     let omega = 0;
     const frame = (now) => {
-      const el = document.querySelector('.hero-stage .ss-cursor');
-      if (el && prev !== null) {
+      // Found once; and read from the position Stageshow writes on it
+      // (translate(x, y)), not from its computed style, which would make the
+      // browser restyle the page every frame to answer.
+      if (!el?.isConnected) el = document.querySelector('.hero-stage .ss-cursor');
+      const at = el && /translate\(([-\d.e]+)px, ([-\d.e]+)px\)/.exec(el.style.transform);
+      if (at && prev !== null) {
         const dt = Math.min(0.05, (now - prev) / 1000) || 1 / 60;
-        const m = new DOMMatrix(getComputedStyle(el).transform);
+        const m = { m41: +at[1], m42: +at[2] };
         if (p0) {
           // Velocity, smoothed over a couple of frames.
           v.x += ((m.m41 - p0.x) / dt - v.x) * 0.45;
@@ -607,7 +615,8 @@ function useCursorSteer() {
         angle += omega * dt;
         // A soft ceiling: it eases into the limit rather than stopping dead at it.
         const shown = MAX * Math.tanh(angle / MAX);
-        el.style.setProperty('--lean', `${((shown * 180) / Math.PI).toFixed(2)}deg`);
+        const lean = `${((shown * 180) / Math.PI).toFixed(2)}deg`;
+        if (lean !== leanWas) el.style.setProperty('--lean', (leanWas = lean));
       }
       prev = now;
       raf = requestAnimationFrame(frame);
