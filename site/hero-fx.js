@@ -211,6 +211,7 @@ uniform vec2 uGeo;       // distance from the centre to the horizon, and the til
 uniform vec4 uHoles[4];  // the hero's buttons, where nothing may show through
 uniform float uHoleCount;
 uniform float uHoleR;     // the buttons' corner radius
+uniform vec4 uScreen;    // the middle of the app's screen (opaque, so nothing to draw behind it), CSS px
 uniform vec2 uSpan;      // inner radius, and the radius the groove spacing is set by
 uniform vec2 uOuter;     // outer radius: round most of it, and up top
 uniform float uSpin;
@@ -299,6 +300,7 @@ vec2 discQ(vec2 px) {
 const MAIN = `
 void main() {
   vec2 px = vec2(gl_FragCoord.x, uSize.y - gl_FragCoord.y) / uDpr;
+  if (all(greaterThan(px, uScreen.xy)) && all(lessThan(px, uScreen.zw))) { gl_FragColor = vec4(0.0); return; }
   vec2 q = discQ(px);
   float r = length(q);
   // How the disc moves under a device pixel (for things drawn to the
@@ -819,6 +821,7 @@ vec3 hoverField(vec2 px, float r, float a, float fr, float ft) {
 
 void main() {
   vec2 px = vec2(gl_FragCoord.x, uSize.y - gl_FragCoord.y) / uDpr;
+  if (all(greaterThan(px, uScreen.xy)) && all(lessThan(px, uScreen.zw))) { gl_FragColor = vec4(0.0); return; }
   vec2 q = discQ(px);
   float r = length(q);
   vec2 dqx = dFdx(q);
@@ -1119,12 +1122,14 @@ void main() {
   vec3 NV = vec3(0.64, 0.42, 1.0);
   float shine = (0.85 + 0.15 * lamp) * (1.0 + 0.35 * sw);
   float halo = 0.0;
-  for (int i = 0; i < ${MAX_TRACKS}; i++) {
+  for (int j = 0; j < ${MAX_TRACKS / 3}; j++) {
+    int i = 3 * j;
     if (float(i) >= uTrackCount) break;
-    if (mod(float(i), 3.0) > 0.5) continue;
-    float T = uTracks[i].x - 0.5 * GAPW;
+    float T = uTracks[3 * j].x - 0.5 * GAPW;
     float dcss = (r - T) / (fr * uDpr);
-    if (abs(dcss) > 40.0) continue;
+    // (The tubes run outward: past the last one near enough to glow here, stop.)
+    if (dcss < -32.0) break;
+    if (dcss > 32.0) continue;
     float k = mod(float(i) / 3.0, 4.0);
     vec3 c = k < 0.5 ? NP : k < 1.5 ? NC : k < 2.5 ? NA : NV;
     float g0 = fract(sin(float(i) * 41.3) * 7919.1) * 2.0 * PI;
@@ -1201,6 +1206,8 @@ void main() {
   for (int i = 0; i < ${MAX_TRACKS}; i++) {
     if (float(i) >= uTrackCount) break;
     vec2 t = uTracks[i];
+    // (Wholly under the next layer out here: skip it.)
+    if (r > t.y + GAPW) continue;
     float n = max(5.0, floor(t.x / 26.0));
     float amp = 9.0 * (0.35 + 0.65 * cue);
     float ph = float(i) * 1.7;
@@ -1209,7 +1216,7 @@ void main() {
     // Device px inside this layer's edge (its slope round the disc too).
     float slope = amp * 0.5 * n * sin(n * b + ph) / max(r, 1.0) * ft;
     float d = (r - inner) / length(vec2(fr, slope));
-    if (d < -40.0 * uDpr) break;
+    if (d < -24.0 * uDpr) break;
     float m = mod(float(i), 5.0);
     vec3 c = m < 0.5 ? vec3(0.2, 0.25, 0.38) : m < 1.5 ? vec3(0.22, 0.42, 0.44) : m < 2.5 ? vec3(0.62, 0.31, 0.23)
       : m < 3.5 ? vec3(0.72, 0.56, 0.3) : vec3(0.4, 0.29, 0.46);
@@ -1286,7 +1293,7 @@ let geo = null;
 
 // One program per style, compiled the first time it's shown.
 const NAMES = ['uSize', 'uDpr', 'uCentre', 'uGeo', 'uHoles', 'uHoleCount', 'uHoleR', 'uSpan', 'uSpin', 'uFacing', 'uStyle', 'uSheen', 'uGlint', 'uHover', 'uSwell', 'uNeedle', 'uRipple', 'uTouch', 'uHz', 'uCue', 'uTracks', 'uTrackCount',
-  'uOuter', 'uGlintAmt', 'uChroma', 'uSpeck', 'uTint', 'uWarp', 'uLens', 'uHoverMode', 'uPtr', 'uPts', 'uTime'];
+  'uOuter', 'uScreen', 'uGlintAmt', 'uChroma', 'uSpeck', 'uTint', 'uWarp', 'uLens', 'uHoverMode', 'uPtr', 'uPts', 'uTime'];
 const progs = new Map();
 let shown = -1;
 function build(n) {
@@ -1566,6 +1573,8 @@ function frame(now, still) {
   gl.uniform1f(U.uHz, g.hz);
   gl.uniform2f(U.uCue, CUES[T.cue] ?? 1, T.cueAmt);
   gl.uniform2f(U.uOuter, g.out, g.top);
+  // (Well inside its rounded corners and the live app's own margin.)
+  gl.uniform4f(U.uScreen, g.box.l + 48, g.box.t + 48, g.box.r - 48, g.box.b - 48);
   gl.uniform2f(U.uGlintAmt, T.soft, T.glintAmt);
   gl.uniform2f(U.uChroma, CHROMA[T.chroma] ?? 0, T.chromaAmt);
   gl.uniform1f(U.uSpeck, SPECKS[T.speck] ?? 0);
@@ -1641,10 +1650,12 @@ tune?.slider({ folder: 'Motion', label: 'Hero record: spin speed', min: 0, max: 
 const touchF = { folder: 'Hover & needle' };
 tune?.select({ ...touchF, label: 'Hero record: hover style', value: T.hover, onInput: redraw('hover'),
   // The same six everywhere; outside the current look, named for what
-  // they do in every style.
+  // they do in every style (see hoverField): arc along the groove, a beam
+  // across the grooves, a stylus tip and trail, a split pair of arcs, a
+  // spot with a ring, ripples.
   options: () => (cur()
     ? [['arc', 'Arc (first)'], ['lamp', 'Lamp'], ['stylus', 'Stylus'], ['prism', 'Prism'], ['spot', 'Spotlight'], ['ripples', 'Colour ripples']]
-    : [['arc', 'Arc: along the groove'], ['lamp', 'Beam: across the grooves'], ['stylus', 'Stylus: tip and trail'], ['prism', 'Split: two arcs'], ['spot', 'Spot: disc and ring'], ['ripples', 'Ripples']]) });
+    : [['arc', 'Arc'], ['lamp', 'Beam'], ['stylus', 'Stylus'], ['prism', 'Split'], ['spot', 'Spot'], ['ripples', 'Ripples']]) });
 tune?.slider({ ...touchF, label: 'Hero record: needle and hover strength', min: 0, max: 2, step: 0.05, value: T.needle, onInput: redraw('needle') });
 tune?.slider({ ...touchF, label: 'Hero record: hover fades after still', min: 0.3, max: 10, step: 0.1, value: T.still, unit: 's', onInput: redraw('still') });
 
