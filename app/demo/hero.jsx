@@ -348,6 +348,21 @@ function link(hw, appEl, label) {
     const p1 = { x: rb.left - h.left + rb.width / 2, y: (up ? rb.bottom : rb.top) - h.top };
     const lift = Math.max(40, Math.abs(p0.y - p1.y) * 0.5) * (up ? -1 : 1);
     geom = { p0, p1, c0: { x: p0.x, y: p0.y + lift }, c1: { x: p1.x, y: p1.y - lift } };
+    // An EQ knob has its channel's other knobs straight above it, so its
+    // line leaves sideways, out over the jog's side of the strip, and only
+    // then turns up.
+    const side = hw.closest('.hw-channel--a') ? -1 : hw.closest('.hw-channel--b') ? 1 : 0;
+    if (side && up) {
+      p0.x = side < 0 ? ra.left - h.left : ra.right - h.left;
+      p0.y = ra.top - h.top + ra.height / 2;
+      geom.c0 = { x: p0.x + side * 34, y: p0.y };
+      // The app's knob has its Filter knob straight below: in from the side too.
+      if (app.matches('[role="slider"][aria-label$="EQ"]')) {
+        p1.x = side < 0 ? rb.left - h.left : rb.right - h.left;
+        p1.y = rb.top - h.top + rb.height / 2;
+        geom.c1 = { x: p1.x + side * 34, y: p1.y };
+      }
+    }
     const d = `M${p0.x} ${p0.y} C ${geom.c0.x} ${geom.c0.y}, ${geom.c1.x} ${geom.c1.y}, ${p1.x} ${p1.y}`;
     path?.setAttribute('d', d);
     spark?.setAttribute('d', d);
@@ -508,14 +523,31 @@ const controller = {
     const tie = link(knob, () => row.querySelector('.t') ?? row, 'Browse');
     await a.wait(LEAD);
     tie.pulse();
-    for (let i = 0; i < 3; i++) {
-      knob.style.rotate = `${(parseFloat(knob.style.rotate) || 0) + 30}deg`;
-      await a.wait(260);
+    // Once the pulse lands, each detent of the knob moves the list's
+    // selection one row, the way the controller's mapping does, until it's
+    // on the record: the highlight walks there rather than jumping.
+    await a.wait(TRAVEL);
+    const index = (el) => (el ? +el.id.replace('track-', '') : NaN);
+    const to = index(row);
+    let at = index(document.querySelector('[data-region="tracks"] [role="option"][aria-selected="true"]'));
+    if (!Number.isFinite(at)) at = to;
+    const dir = Math.sign(to - at) || 1;
+    // Never more than a handful of detents; a long way round starts nearer.
+    if (Math.abs(to - at) > 6) at = to - dir * 6;
+    const turn = () => (knob.style.rotate = `${(parseFloat(knob.style.rotate) || 0) + 24 * dir}deg`);
+    if (at === to) turn();
+    while (at !== to) {
+      at += dir;
+      turn();
+      const r = document.getElementById(`track-${at}`);
+      r?.dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 1 }));
+      document.activeElement?.blur?.();
+      await a.wait(210);
     }
-    await a.wait(TRAVEL - 260);
     row.scrollIntoView({ block: 'nearest' });
     row.dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 1 }));
-    await a.wait(450);
+    document.activeElement?.blur?.();
+    await a.wait(380);
     tie();
     await hwPress(a, 'c-browse', () => doubleClick(row), 'Load', () => $('.title, [class*="title"]', deckEl(d)) ?? deckEl(d));
   },
