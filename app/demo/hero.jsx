@@ -13,7 +13,7 @@
 // into it. The decks then trade places, so each loop picks up where the last
 // one finished and nothing rewinds.
 // First, so the pause is in place before anything asks for a frame.
-import { everyFrame } from './pause.js';
+import { everyFrame, isPaused } from './pause.js';
 import { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { mount } from 'svelte';
@@ -46,13 +46,22 @@ const SET = ['Afterglow', 'Night Shift', 'Paper Planes'];
 const $ = (sel, root = document) => root.querySelector(sel);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-/** Waits until `fn` returns something truthy, checking each frame. */
+/**
+ * Waits until `fn` returns something truthy, checking every 30 ms. Time
+ * spent paused doesn't count: the app stands still then (pause.js holds its
+ * frames), so a page opened scrolled away from the hero would otherwise
+ * time out here and the hero would never start.
+ */
 async function until(fn, ms = 8000) {
-  const end = performance.now() + ms;
+  let left = ms;
+  let at = performance.now();
   for (;;) {
     const v = fn();
     if (v) return v;
-    if (performance.now() > end) throw new Error('hero: timed out waiting for the app');
+    const now = performance.now();
+    if (!isPaused()) left -= now - at;
+    at = now;
+    if (left <= 0) throw new Error('hero: timed out waiting for the app');
     await sleep(30);
   }
 }

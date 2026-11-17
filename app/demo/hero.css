@@ -154,3 +154,7 @@ html[data-paused] *, html[data-paused] *::before, html[data-paused] *::after { a
    in a demo, but they kept the whole picture repainting. */
 :root { --glass-blur: none; }
 .bd i { animation: none !important; will-change: auto !important; }
+/* And the backdrop on a layer of its own, drawn once: otherwise its 90px
+   blurs share a layer with the decks, and every meter or readout that
+   changes over them has the blur worked out again around it. */
+.bd { will-change: transform; }
