@@ -213,15 +213,35 @@
 .p-dmg__bar i:nth-child(2) { background: #febc2e; }
 .p-dmg__bar i:nth-child(3) { background: #28c840; }
 .p-dmg__bar span { position: absolute; left: 0; right: 0; text-align: center; font-size: 12px; font-weight: 600; color: rgb(255 255 255 / 0.78); pointer-events: none; }
-.p-dmg__body { display: flex; align-items: center; justify-content: space-evenly; height: 94px; }
-/* Both icons sit in the same 64px row, so their names share a line and the arrow runs between their middles. */
-.p-dmg__item { position: relative; display: grid; grid-template-rows: 64px auto; align-items: center; justify-items: center; gap: 6px; font-size: 12px; color: rgb(255 255 255 / 0.85); }
-.p-dmg__item img { position: relative; z-index: 2; transition: transform 0.7s cubic-bezier(0.77, 0, 0.175, 1), opacity 0.2s; }
-.p-dmg__item img[data-go] { transform: translateX(170px) scale(0.6); filter: drop-shadow(0 10px 14px rgb(0 0 0 / 0.5)); }
-.p-dmg__item img[data-gone] { transition: opacity 0.3s 0.15s; }
-.p-dmg__item[data-done] .p-folder { animation: p-bump 0.5s cubic-bezier(0.23, 1, 0.32, 1); }
-@keyframes p-bump { 40% { transform: scale(1.1); } }
-.p-dmg__arrow { width: 44px; height: 12px; margin-bottom: 21px; fill: none; stroke: rgb(255 255 255 / 0.25); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+/* The window's body: the two items at fixed places (so the pointer and the
+   drag image can be steered to them), the old arrow left faint between. */
+.p-dmg__body { position: relative; height: 94px; overflow: hidden; }
+.p-dmg__item { position: absolute; top: 5px; width: 84px; margin-left: -42px; display: grid; grid-template-rows: 64px auto; align-items: center; justify-items: center; gap: 6px; font-size: 12px; color: rgb(255 255 255 / 0.85); }
+.p-dmg__item img { position: relative; }
+.p-dmg__item span { padding: 0 5px; border-radius: 4px; line-height: 16px; transition: background-color 120ms, color 120ms; }
+/* Selected, as Finder draws it: a grey rounded tint behind the icon and the name on an accent pill. */
+.p-dmg__item::before { content: ''; position: absolute; left: 50%; top: -2px; width: 68px; height: 68px; margin-left: -34px; border-radius: 8px; background: rgb(255 255 255 / 0.12); opacity: 0; transition: opacity 120ms; }
+.p-dmg__item[data-sel]::before { opacity: 1; }
+.p-dmg__item[data-sel] span { color: #fff; background: #0a64d8; }
+/* The drop target, highlighted while the copy is over it: the folder darkens in a grey box. */
+.p-dmg__item[data-over]::before { opacity: 1; background: rgb(255 255 255 / 0.16); }
+.p-dmg__item img.p-folder { transition: filter 120ms; }
+.p-dmg__item[data-over] img.p-folder { filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.3)) brightness(0.62); }
+/* The drag image: the same size, about half there; gone almost at once on release. */
+.p-dmg__ghost { z-index: 3; pointer-events: none; opacity: 0; transition: opacity 100ms ease-out; }
+.p-dmg__ghost[data-on] { opacity: 0.55; transition-duration: 80ms; }
+.p-dmg__arrow { position: absolute; left: 50%; top: 31px; width: 44px; height: 12px; margin-left: -22px; fill: none; stroke: rgb(255 255 255 / 0.12); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+/* The pointer, its tip at its box's top left; the copy's green "+" at its lower right. */
+.p-cursor { position: absolute; left: 0; top: 0; z-index: 4; pointer-events: none; will-change: transform; }
+.p-cursor svg { display: block; margin: -1.5px 0 0 -1.5px; overflow: visible; filter: drop-shadow(0 1px 1.5px rgb(0 0 0 / 0.45)); }
+.p-cursor path { fill: #000; stroke: #fff; stroke-width: 1.3; stroke-linejoin: round; }
+.p-cursor__copy {
+  position: absolute; left: 10px; top: 15px; width: 13px; height: 13px; border-radius: 50%;
+  background: #28c840 linear-gradient(#fff, #fff) center / 7px 1.6px no-repeat; box-shadow: 0 0 0 1px rgb(0 0 0 / 0.25), 0 1px 2px rgb(0 0 0 / 0.4);
+  opacity: 0; scale: 0.5; transition: opacity 120ms, scale 160ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+.p-cursor__copy::after { content: ''; position: absolute; left: 50%; top: 50%; width: 1.6px; height: 7px; margin: -3.5px 0 0 -0.8px; background: #fff; }
+.p-cursor__copy[data-on] { opacity: 1; scale: 1; }
 .p-folder { filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.3)); }
 
 /* Open it: Spotlight as macOS draws it now, a frosted bar, the rest of the
@@ -494,9 +514,9 @@
 :root:not([data-reclayout="side"]):not([data-reclayout="carousel"]) .p-rec-lg i { width: 10px; height: 10px; }
 :root:not([data-reclayout="side"]):not([data-reclayout="carousel"]) .p-recwave { flex: 1; justify-content: space-between; height: 28px; }
 
-/* The connected tag comes on in three beats: the pill drops in out of a
-   soft blur, the green light pops on with a ring going out from it (the
-   device answering), and a glint runs once across the pill. Its own
+/* The connected tag comes on in overlapping beats: the pill drops in out
+   of a soft blur, the green light pops on, and partway through that pop a
+   glint starts across the pill from the light's side. Its own
    scale undo (above) stays on transform; the entrance uses the separate
    translate, scale and filter properties so the two never fight. */
 .p-ctl .p-toast {
@@ -505,20 +525,21 @@
 }
 .p-ctl .p-toast[data-on] { opacity: 1; translate: -50% 0; scale: 1; filter: blur(0); }
 .p-toast i { position: relative; scale: 0; }
-.p-toast i::after { content: ''; position: absolute; inset: 0; border-radius: 50%; box-shadow: 0 0 0 1.5px #3ddc84; opacity: 0; }
 .p-toast[data-on] i { animation: p-toast-dot 0.5s 0.28s cubic-bezier(0.34, 1.8, 0.64, 1) both; box-shadow: 0 0 6px rgb(61 220 132 / 0.7); }
-.p-toast[data-on] i::after { animation: p-toast-ring 1.1s 0.4s cubic-bezier(0.23, 1, 0.32, 1) both; }
 .p-toast {
   background: linear-gradient(105deg, transparent 40%, rgb(255 255 255 / 0.12) 50%, transparent 60%) no-repeat, #1b1c20;
   background-size: 300% 100%, auto; background-position: 100% 0, 0 0;
 }
-.p-toast[data-on] { animation: p-toast-glint 1s 0.45s cubic-bezier(0.45, 0, 0.55, 1) both; }
+/* The band (a fifth of the 300% image) is at the pill's left edge at
+   position 90% and has gone past its right edge by 10%, so the sweep runs
+   only while it shows. It sets off just after the light starts to pop and
+   its brightest part crosses the light midway through the pop. */
+.p-toast[data-on] { animation: p-toast-glint 0.85s 0.34s cubic-bezier(0.3, 0, 0.5, 1) both; }
 @keyframes p-toast-dot { from { scale: 0; } to { scale: 1; } }
-@keyframes p-toast-ring { 0% { opacity: 0.9; scale: 1; } 100% { opacity: 0; scale: 3.4; } }
-@keyframes p-toast-glint { from { background-position: 100% 0, 0 0; } to { background-position: 0% 0, 0 0; } }
+@keyframes p-toast-glint { from { background-position: 90% 0, 0 0; } to { background-position: 10% 0, 0 0; } }
 @media (prefers-reduced-motion: reduce) {
   .p-ctl .p-toast { filter: none; scale: 1; translate: -50% 0; }
-  .p-toast[data-on], .p-toast[data-on] i, .p-toast[data-on] i::after { animation: none; }
+  .p-toast[data-on], .p-toast[data-on] i { animation: none; }
   .p-toast i { scale: 1; }
 }
 
@@ -533,7 +554,10 @@
 :root:not([data-decklayout="single"]) .p-ticks { height: 30px; }
 :root:not([data-decklayout="single"]) .p-bpm { font-size: 23px; }
 :root:not([data-decklayout="single"]) .p-locks { height: 66px; }
-:root:not([data-decklayout="single"]) .p-sync__key { justify-content: flex-start; gap: 10px; margin-top: 8px; padding-right: 0; }
+:root:not([data-decklayout="single"]) .p-sync__key { justify-content: flex-start; gap: 10px; margin-top: 16px; padding-right: 24px; }
+/* The cue pads and the Loop key sit together at the right, their right edge
+   on the card's inset (the beats run on past it, off the card). */
+:root:not([data-decklayout="single"]) .p-cuepads { margin-left: auto; }
 :root:not([data-decklayout="single"]) .p-sync__key .p-btn { height: 28px; min-width: 0; padding: 0 12px; font-size: 12px; }
 :root:not([data-decklayout="single"]) .p-cuepads { display: flex; gap: 5px; }
 :root:not([data-decklayout="single"]) .p-loopkey { display: inline-grid; }

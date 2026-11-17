@@ -14,7 +14,7 @@
 //                matches in place and quiets the rest; the pick loads to A
 //   Controllers  140+, and a controller connecting
 //   Recording    Rec, the clock running, the take growing
-//   Download     the disk image: Interlude glides onto Applications
+//   Download     the disk image: the pointer drags Interlude onto Applications
 //   Open it      Spotlight: "Interl", the rest filled in, the Top Hit
 //   Add music    the library filling: tracks arrive, then their tempo and key
 //
@@ -100,11 +100,12 @@ function Ticks({ deck, offset = 0, stretch = 1, children }) {
 const B_LATE = 2.4;
 // Being tried (html[data-decklayout]):
 //   single   just Sync
-//   stacked  Sync, then under it the deck's cues: three hot cues set on A
+//   stacked  Sync, then under it the deck's cues: two hot cues set on A
 //            (each pad lights and a marker drops onto A's beats), then a
-//            four-beat loop that lights its four beats
+//            four-beat loop that lights its four beats. The pads and the
+//            Loop key sit at the right, under the end of the beats
 const stacked = () => document.documentElement.dataset.decklayout !== 'single';
-const HOT_CUES = [1, 3, 5]; // the beats they're set on
+const HOT_CUES = [1, 5]; // the beats they're set on
 const LOOP_AT = 8; // the loop's first beat (a downbeat), well inside the card
 
 export function Sync(play) {
@@ -119,16 +120,16 @@ export function Sync(play) {
         await a.wait(650);
         await a.set({ lock: true });
         if (!stacked()) return;
-        // Then the cues: three pads pressed in turn, each setting a hot cue.
-        await a.wait(550);
+        // Then the cues: two pads pressed in turn, each setting a hot cue.
+        await a.wait(500);
         for (let c = 1; c <= HOT_CUES.length; c++) {
           await a.set({ cuePress: c });
           await a.wait(PRESS);
           await a.set({ cuePress: 0, cues: c });
-          await a.wait(280);
+          await a.wait(320);
         }
         // And a four-beat loop.
-        await a.wait(220);
+        await a.wait(160);
         await a.set({ loopPress: true });
         await a.wait(PRESS);
         await a.set({ loopPress: false, loop: true });
@@ -296,14 +297,16 @@ export function Search(play) {
           await a.set({ rows });
           await a.wait(110);
         }
-        // 2. A pause, then the search, a letter at a time.
-        await a.wait(650);
+        // 2. A short pause, then the search, typed briskly: the first two
+        //    letters (where the matches change most) a beat apart, the rest
+        //    quick. The rows' own fades keep their length.
+        await a.wait(320);
         for (let i = 1; i <= LIB_QUERY.length; i++) {
           await a.set({ q: LIB_QUERY.slice(0, i) });
-          await a.wait(i < 3 ? 320 : 180);
+          await a.wait(i < 3 ? 170 : 95);
         }
         // 3. The first match is picked, then loaded to Deck A.
-        await a.wait(700);
+        await a.wait(420);
         await a.set({ sel: true });
         await a.wait(450);
         await a.set({ loaded: true });
@@ -458,30 +461,90 @@ export function Extras(play) {
 const APPS = new URL('./apps-folder.png', import.meta.url).href;
 const MUSIC = new URL('./music-folder.png', import.meta.url).href;
 
-export function Download(play) {
+// Dragging Interlude into Applications the way Finder does it: the arrow
+// comes onto the icon and presses (icon and name take the selection), then
+// a faint copy of both, the same size, follows the pointer, keeping where
+// it was grabbed, with the green "+" of a copy at the pointer. Over
+// Applications the folder darkens in its highlight; let go, and the copy is
+// gone at once. The original never moves. Body coordinates, in px: the two
+// items are centred at DMG_A and DMG_B, the icons' middles at DMG_Y.
+const DMG_A = 78;
+const DMG_B = 234;
+const DMG_Y = 37;
+const GRAB = { x: DMG_A + 6, y: DMG_Y + 8 }; // where the arrow takes the icon
+const DROP = { x: DMG_B + 4, y: DMG_Y + 6 };
+const REST = { x: 160, y: 66 }; // where the arrow starts, under the old arrow
+const AWAY = { x: 284, y: 52 }; // and where it goes after the drop
+
+/** Moves the arrow from `from` to `to` on a soft ease, bowed upward by `arc` px. */
+async function glide(a, from, to, ms, arc = 0) {
+  const steps = Math.max(1, Math.round(ms / 16));
+  for (let i = 1; i <= steps; i++) {
+    const t = inOut(i / steps);
+    a.put({ cx: from.x + (to.x - from.x) * t, cy: from.y + (to.y - from.y) * t - Math.sin(Math.PI * t) * arc });
+    await a.wait(16);
+  }
+}
+
+/** macOS's arrow pointer: black, a white outline, a soft shadow. Its tip is at (0, 0). */
+function Arrow({ x, y, copy }) {
   return (
-    <Pic id="dmg" {...play} initial={{ go: false, done: false }} poster={{ go: false, done: true }}
+    <div className="p-cursor" style={{ transform: `translate(${x}px, ${y}px)` }} aria-hidden>
+      <svg width="15" height="22" viewBox="-1.5 -1.5 15 22"><path d="M0 0v16.2l3.9-3.7 2.6 6.1 2.6-1.1-2.5-5.9H12Z" /></svg>
+      <b className="p-cursor__copy" data-on={copy || undefined} />
+    </div>
+  );
+}
+
+export function Download(play) {
+  const start = { cx: REST.x, cy: REST.y, sel: false, drag: false, copy: false, done: false };
+  return (
+    <Pic id="dmg" {...play} initial={start} poster={{ ...start, cx: AWAY.x, cy: AWAY.y, sel: true, done: true }}
       script={async (a) => {
-        await a.set({ go: true });
-        await a.wait(720);
-        await a.set({ go: false, done: true });
+        // Onto the icon, settle, press.
+        await glide(a, REST, GRAB, 720, 10);
+        await a.wait(160);
+        await a.set({ sel: true });
+        await a.wait(200);
+        // Drag: the copy lifts off with the pointer; the "+" shows once it's moving.
+        a.put({ drag: true });
+        const going = glide(a, GRAB, DROP, 1000, 16);
+        await a.wait(160);
+        a.put({ copy: true });
+        await going;
+        // Over Applications a moment, then let go.
+        await a.wait(380);
+        await a.set({ drag: false, copy: false, done: true });
+        await a.wait(260);
+        await glide(a, DROP, AWAY, 520, 4);
       }}>
-      {(s) => (
-        <div className="p-dmg">
-          <div className="p-dmg__bar"><i /><i /><i /><span>Interlude</span></div>
-          <div className="p-dmg__body">
-            <div className="p-dmg__item">
-              <img src={ICON} alt="" width="58" height="58" data-go={s.go || undefined} data-gone={s.done || undefined} />
-              <span>Interlude</span>
-            </div>
-            <svg className="p-dmg__arrow" viewBox="0 0 60 12" aria-hidden><path d="M2 6h52m-6-5 6 5-6 5" /></svg>
-            <div className="p-dmg__item" data-done={s.done || undefined}>
-              <img src={APPS} alt="" width="64" height="64" className="p-folder" />
-              <span>Applications</span>
+      {(s) => {
+        const over = s.drag && s.cx > DMG_B - 40;
+        const dx = s.cx - GRAB.x;
+        const dy = s.cy - GRAB.y;
+        return (
+          <div className="p-dmg">
+            <div className="p-dmg__bar"><i /><i /><i /><span>Interlude</span></div>
+            <div className="p-dmg__body">
+              <svg className="p-dmg__arrow" viewBox="0 0 60 12" aria-hidden><path d="M2 6h52m-6-5 6 5-6 5" /></svg>
+              <div className="p-dmg__item" data-sel={s.sel || undefined} style={{ left: DMG_A }}>
+                <img src={ICON} alt="" width="58" height="58" />
+                <span>Interlude</span>
+              </div>
+              <div className="p-dmg__item" data-over={over || undefined} style={{ left: DMG_B }}>
+                <img src={APPS} alt="" width="64" height="64" className="p-folder" />
+                <span>Applications</span>
+              </div>
+              {/* The drag image: a faint copy of icon and name, same size, offset as grabbed. */}
+              <div className="p-dmg__item p-dmg__ghost" data-on={s.drag || undefined} style={{ left: DMG_A, transform: `translate(${dx}px, ${dy}px)` }} aria-hidden>
+                <img src={ICON} alt="" width="58" height="58" />
+                <span>Interlude</span>
+              </div>
+              <Arrow x={s.cx} y={s.cy} copy={s.copy} />
             </div>
           </div>
-        </div>
-      )}
+        );
+      }}
     </Pic>
   );
 }
