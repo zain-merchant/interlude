@@ -1,5 +1,8 @@
-// The name in the footer, drawn as a record (data-foot="record" or
-// "streak"; the plain CSS grooves, "grooves", don't need this file).
+// The name in the footer, with grooves in its letters. Three styles:
+//   grooves the first version: long, shallow arcs round a centre below the
+//           word, shown round the pointer; their spacing is set by eye
+//           (style.css draws the same with a CSS gradient if WebGL fails,
+//           but that shimmers and breaks into dashes)
 //
 // The letters are cut from a record lying back below the word: true
 // grooves (filtered to the pixel, so they never shimmer), a soft band for
@@ -23,7 +26,8 @@ base.className = 'foot-base';
 word.append(base);
 const gl = canvas.getContext('webgl', { premultipliedAlpha: true, antialias: false, alpha: true });
 
-export const T = { mode: 'record', pitch: 4, rest: 0, cut: 0.22 };
+export let ready = false;
+export const T = { mode: 'grooves', pitch: 4, rest: 0, cut: 0.22 };
 
 const FRAG = `
 precision highp float;
@@ -35,7 +39,7 @@ uniform float uAspect;  // how much the record is foreshortened (y squeezed)
 uniform float uPitch;   // groove spacing, CSS px (on the word's middle row)
 uniform float uSpin;
 uniform vec3 uHover;    // pointer x, y, strength
-uniform float uMode;    // 0 record, 1 streak
+uniform float uMode;    // 0 record, 1 streak, 2 grooves (the first version)
 uniform float uRest;    // how much of the grooves show at rest
 
 const float PI = 3.14159265;
@@ -57,7 +61,8 @@ void main() {
   float P = uPitch * uAspect;
   float g = r / P;
   float fg = fr / P;
-  float sig = clamp(0.8 * fg, 0.03, 0.12);
+  // The first version's grooves are hairlines about a pixel wide.
+  float sig = uMode > 1.5 ? max(0.45 / uPitch, 0.8 * fg) : clamp(0.8 * fg, 0.03, 0.12);
   float lines = 0.0, norm = 0.0;
   for (int k = 1; k <= 12; k++) {
     float fk = float(k);
@@ -67,6 +72,19 @@ void main() {
     lines += 2.0 * coef * att * cos(2.0 * PI * fk * g);
   }
   lines /= norm;
+
+  // The first version: plain hairlines, 60% white, shown round the pointer
+  // and fading out 320px from it. Filtered like the rest, they stay whole
+  // arcs at any spacing (their average is the same as the lines' own).
+  if (uMode > 1.5) {
+    float duty = min(1.0, 1.25 / uPitch);
+    float groove = clamp((1.0 + lines) * duty, 0.0, 1.0);
+    float near = clamp(1.0 - length(px - uHover.xy) / 320.0, 0.0, 1.0) * uHover.z;
+    float a0 = text * (0.045 + max(near, uRest) * 0.6 * groove);
+    float n0 = (hash(gl_FragCoord.xy) - 0.5) / 255.0;
+    gl_FragColor = vec4(vec3(1.0) * a0 + n0, clamp(a0 + n0, 0.0, 1.0));
+    return;
+  }
 
   // Songs: bands of uneven width with a quiet run between.
   float W = 36.0 * P;
@@ -181,7 +199,11 @@ function layout() {
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, t);
   // The record's centre: well below the word, so its grooves arc gently
   // across the letters, foreshortened as if lying back.
-  geo = { w, h, dpr, cx: c.width / 2, cy: baseline + size * 0.55, aspect: 2.0 };
+  // The first version's: the CSS ellipse "100% 50% at 50% 135%" of the
+  // word's own box, so its arcs are long and shallow.
+  const box = word.getBoundingClientRect();
+  geo = { w, h, dpr, cx: c.width / 2, cy: baseline + size * 0.55, aspect: 2.0,
+    first: { cy: box.top - c.top + box.height * 1.35, aspect: box.width / (box.height * 0.5) } };
   return geo;
 }
 
@@ -198,12 +220,13 @@ function frame(now) {
   gl.uniform1i(U.uText, 0);
   gl.uniform2f(U.uSize, geo.w, geo.h);
   gl.uniform1f(U.uDpr, geo.dpr);
-  gl.uniform2f(U.uCentre, geo.cx, geo.cy);
-  gl.uniform1f(U.uAspect, geo.aspect);
+  const first = T.mode === 'grooves';
+  gl.uniform2f(U.uCentre, geo.cx, first ? geo.first.cy : geo.cy);
+  gl.uniform1f(U.uAspect, first ? geo.first.aspect : geo.aspect);
   gl.uniform1f(U.uPitch, T.pitch);
   gl.uniform1f(U.uSpin, spin);
   gl.uniform3f(U.uHover, hover.x, hover.y, hover.on);
-  gl.uniform1f(U.uMode, T.mode === 'streak' ? 1 : 0);
+  gl.uniform1f(U.uMode, first ? 2 : T.mode === 'streak' ? 1 : 0);
   gl.uniform1f(U.uRest, T.rest);
   gl.clearColor(0, 0, 0, 0);
   gl.clear(gl.COLOR_BUFFER_BIT);
@@ -212,11 +235,11 @@ function frame(now) {
 }
 
 function loop(now) {
-  if (frame(now) && T.mode !== 'grooves') requestAnimationFrame(loop);
+  if (frame(now)) requestAnimationFrame(loop);
   else running = false;
 }
 export function wake() {
-  if (!prog || T.mode === 'grooves') return;
+  if (!prog) return;
   if (running) return;
   running = true;
   last = performance.now();
@@ -236,6 +259,7 @@ export function point(p) {
 
 try {
   if (init()) {
+    ready = true;
     new ResizeObserver(relayout).observe(word);
     document.fonts?.ready.then(relayout);
   }

@@ -358,9 +358,9 @@ details p { margin: 0; padding-bottom: 20px; color: var(--fg-2); max-width: 62ch
    the line box, where the tall letters reach. */
 .foot-base { display: inline-block; width: 0; height: 0; }
 .foot-fx { display: none; position: absolute; left: 0; top: -0.25em; width: 100%; height: calc(100% + 0.35em); pointer-events: none; }
-html:is([data-foot="record"], [data-foot="streak"]) .foot-word { color: transparent; }
-html:is([data-foot="record"], [data-foot="streak"]) .foot-word::after { display: none; }
-html:is([data-foot="record"], [data-foot="streak"]) .foot-fx { display: block; }
+html[data-foot]:not([data-foot="css"]) .foot-word { color: transparent; }
+html[data-foot]:not([data-foot="css"]) .foot-word::after { display: none; }
+html[data-foot]:not([data-foot="css"]) .foot-fx { display: block; }
 
 .try__hint { margin: -4px 0 6px; max-width: 26em; font-size: 12px; line-height: 1.45; color: var(--fg-3); }
 

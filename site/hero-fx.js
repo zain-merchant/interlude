@@ -396,7 +396,7 @@ addEventListener('pointermove', (e) => {
 }, { passive: true });
 document.documentElement.addEventListener('pointerleave', () => Object.assign(hover, { x: -1e4, y: -1e4 }));
 addEventListener('pointerdown', (e) => {
-  if (touch !== 'needle' || !geo || e.target.closest('a, button, input, summary, iframe, .try, .shot')) return;
+  if (touch !== 'needle' || !geo || e.target.closest('a, button, input, select, summary, iframe, .shot, .dialkit-root')) return;
   const p = local(e);
   const { r } = toRecord(p.x, p.y, geo);
   if (r < geo.r0 || r > geo.R) return;
