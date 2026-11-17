@@ -26,7 +26,7 @@
   import { runPerformance } from './lib/performance.js';
   import { padMode, setPadMode } from './lib/padmode.svelte.js';
   import { tempoPickup } from './lib/pickup.svelte.js';
-  import { gridEdit, NUDGE } from './lib/grid.svelte.js';
+  import { gridEdit, gridMode, bpmEdit, NUDGE } from './lib/grid.svelte.js';
   import { toggleStem, soloStem, syncStemWaveforms, stemsUnavailable } from './lib/stems.svelte.js';
   import { libraryHealth, reveal, captureUiErrors, update, checkForUpdate, installUpdate } from './lib/support.svelte.js';
 
@@ -344,6 +344,7 @@
       return;
     }
     if (e.key === 'Escape' && !typing) {
+      gridMode[0] = gridMode[1] = false;
       /** @type {HTMLElement | null} */ (document.activeElement)?.blur?.();
       return;
     }
@@ -488,7 +489,25 @@
       <div class="lane" style:--drop-color={deck === 0 ? 'var(--deck-a)' : 'var(--deck-b)'} class:b={deck === 1}
         use:dropTarget={{ ondrop: (t) => load(deck, t), blocked: () => engine.decks[deck].playing }}>
         <Waveform {deck} seconds={zoom} onzoom={(f) => setZoom(zoom * f)} />
-        <div class="who"><i></i>{#if tracks[deck]}{tracks[deck].title}{:else}<span class="hint">Drag a track here or press {keyLabel(`deck.${deck}.load`)}</span>{/if}</div>
+        <div class="who"><i></i>{#if tracks[deck]}{tracks[deck].title}{:else}<span class="hint">Drag a track here or press {keyLabel(`deck.${deck}.load`)}</span>{/if}
+          {#if tracks[deck]}
+            {@const has = !!tracks[deck].beatgrid}
+            <div class="gridbar" class:open={gridMode[deck]} role="toolbar" aria-label="Deck {'AB'[deck]} beatgrid">
+              <button class="gridtoggle" aria-pressed={gridMode[deck]} onclick={() => (gridMode[deck] = !gridMode[deck])}
+                use:tip={() => (gridMode[deck] ? 'Done editing the grid (Esc)' : 'Fix the beatgrid: line its bars up with the music')}>{gridMode[deck] ? 'Done' : 'Grid'}</button>
+              {#if gridMode[deck]}
+                <span class="gridhint">Drag the waveform to slide the grid</span>
+                <button disabled={!has} aria-label="Move grid earlier" use:tip={() => tipText('Move grid earlier', keyLabel(`deck.${deck}.gridEarlier`))} onclick={() => gridEdit(deck, 'nudge', 'Moved the grid earlier', -NUDGE)}>‹</button>
+                <button disabled={!has} aria-label="Move grid later" use:tip={() => tipText('Move grid later', keyLabel(`deck.${deck}.gridLater`))} onclick={() => gridEdit(deck, 'nudge', 'Moved the grid later', NUDGE)}>›</button>
+                <button disabled={!has} use:tip={() => 'Make the play head the first beat of a bar'} onclick={() => gridEdit(deck, 'downbeat', 'Moved the downbeat')}>Downbeat</button>
+                <button disabled={!has} aria-label="Halve BPM" use:tip={() => 'Halve BPM'} onclick={() => gridEdit(deck, 'halve', 'Halved the BPM')}>½</button>
+                <button disabled={!has} aria-label="Double BPM" use:tip={() => 'Double BPM'} onclick={() => gridEdit(deck, 'double', 'Doubled the BPM')}>×2</button>
+                <button onclick={() => (bpmEdit.deck = deck)}>Set BPM</button>
+                <button disabled={!tracks[deck].gridLocked} use:tip={() => 'Go back to the detected grid'} onclick={() => gridEdit(deck, 'reset', 'Reset the beatgrid')}>Reset</button>
+              {/if}
+            </div>
+          {/if}
+        </div>
       </div>
     {/each}
     <div class="zoom">
@@ -667,6 +686,55 @@
     font-size: var(--t-xs);
     color: var(--fg-2);
     pointer-events: none;
+  }
+  .gridbar {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    margin-left: 4px;
+    pointer-events: auto;
+  }
+  .gridbar.open {
+    padding: 2px;
+    border-radius: 6px;
+    background: rgb(11 11 13 / 0.85);
+    box-shadow: inset 0 0 0 1px var(--line);
+  }
+  .gridbar button {
+    min-width: 22px;
+    height: 20px;
+    padding: 0 6px;
+    border: 0;
+    border-radius: 4px;
+    background: none;
+    color: var(--fg-3);
+    font: 500 var(--t-xs) var(--font);
+  }
+  .gridbar.open button {
+    color: var(--fg-2);
+  }
+  .gridbar button:hover:not(:disabled) {
+    background: var(--hover);
+    color: var(--fg);
+  }
+  .gridbar button:disabled {
+    opacity: 0.4;
+  }
+  .gridbar .gridtoggle {
+    box-shadow: inset 0 0 0 1px var(--line);
+  }
+  .gridbar.open .gridtoggle {
+    background: var(--fg);
+    color: var(--ink);
+    box-shadow: none;
+  }
+  .gridbar.open .gridtoggle:hover {
+    background: var(--fg);
+    color: var(--ink);
+  }
+  .gridhint {
+    padding: 0 6px;
+    color: var(--fg-3);
   }
   .who .hint {
     color: var(--fg-3);
