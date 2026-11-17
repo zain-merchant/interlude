@@ -16,6 +16,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="demo/cards.css">
+  <script src="tune.js"></script>
   <script>
     // The hero's layout (Split) and the nav's (bar to capsule), set before
     // the first paint so nothing jumps. The nav's look changes as the page
@@ -88,14 +89,20 @@
       const acts = row.querySelector('.nav-actions');
       const reduced = matchMedia('(prefers-reduced-motion: reduce)');
       const NAV = 60;
-      // The name is 22px in the bar and 15px in the capsule; the icon is
-      // 32px in the bar and 36px in the capsule.
-      const WORD = 15 / 22, ICON = 32 / 36;
+      // The name is --brand-word (30px) in the bar and 15px in the capsule;
+      // the icon is --brand-icon (40px) in the bar and 36px in the capsule.
+      let WORD = 15 / 30, ICON = 40 / 36;
+      const sizes = () => {
+        const cs = getComputedStyle(d);
+        WORD = 15 / (parseFloat(cs.getPropertyValue('--brand-word')) || 30);
+        ICON = (parseFloat(cs.getPropertyValue('--brand-icon')) || 40) / 36;
+      };
       // Where the capsule puts each item, from their sizes in the bar (which
       // never change), as offsets from where they sit in the bar.
       let geo = null;
       function measure() {
         if (d.dataset.nav !== 'morph') return;
+        sizes();
         const W = nav.clientWidth;
         const x0 = row.getBoundingClientRect().left;
         const narrow = getComputedStyle(links).display === 'none';
@@ -115,18 +122,16 @@
         const bx = left + end;
         const lx = bx + bw + gap;
         const ax = narrow ? left + capW - end - aw : lx + lw + gapA;
-        geo = { side: left, right: W - left - capW, b: bx - (x0 + brand.offsetLeft), l: lx - (x0 + links.offsetLeft), a: ax - (x0 + acts.offsetLeft) };
+        geo = { W, side: left, right: W - left - capW, b: bx - (x0 + brand.offsetLeft), l: lx - (x0 + links.offsetLeft), a: ax - (x0 + acts.offsetLeft) };
         // The actions ride with what's beside them on the way: just after the
         // links (wide), or just inside the capsule's closing right end (narrow).
         geo.k = narrow ? geo.right : -geo.l;
-        edge.style.left = `${left}px`;
-        edge.style.width = `${capW}px`;
         draw();
       }
-      // Springs: the shape eases in over about 0.6s, critically damped (no
+      // Springs: the shape eases in over about 0.8s, critically damped (no
       // overshoot); the actions are a touch livelier and may overshoot by a
       // hair as they land.
-      const shape = { x: 0, v: 0, to: 0, k: 110, c: 2 * Math.sqrt(110) };
+      const shape = { x: 0, v: 0, to: 0, k: 64, c: 2 * Math.sqrt(64) };
       const act = { x: 0, v: 0, to: 0, k: 190, c: 2 * 0.78 * Math.sqrt(190) };
       const step = (s, dt) => {
         const a = -s.k * (s.x - s.to) - s.c * s.v;
@@ -140,16 +145,27 @@
         if (!geo) return;
         const p = shape.x;
         const q = act.x;
-        // The glass (61px: the bar and its hairline) closes to 10..58.
-        glass.style.clipPath = `inset(${r(10 * p)}px ${r(geo.right * p)}px ${r(3 * p)}px ${r(geo.side * p)}px round ${r(24 * p)}px)`;
+        // One shape, outline and all: the bar lifts off first (its height
+        // and round ends come in ahead, v), then draws in from the sides (p),
+        // so it reads as the bar becoming a pill rather than a box shrinking.
+        // The glass is a lone absolutely placed box, so resizing it lays out
+        // nothing else.
+        const v = 1 - (1 - p) ** 2;
+        const left = geo.side * p, right = geo.right * p;
+        glass.style.left = `${r(left)}px`;
+        glass.style.width = `${r(geo.W - left - right)}px`;
+        glass.style.top = `${r(10 * v)}px`;
+        glass.style.height = `${r(61 - 13 * v)}px`;
+        glass.style.borderRadius = `${r(24 * Math.min(1, v * 1.4))}px`;
+        glass.style.boxShadow = `inset 0 -1px 0 rgb(255 255 255 / ${r(0.08 * (1 - v))}), inset 0 0 0 1px rgb(255 255 255 / ${r(0.09 * v)}), inset 0 1px 0 rgb(255 255 255 / ${r(0.05 * v)}), 0 12px 40px rgb(0 0 0 / ${r(0.42 * v)})`;
         glass.style.opacity = p > 0.001 ? '1' : '';
-        edge.style.opacity = r(clamp((p - 0.6) / 0.4));
         // The bar's middle is 30px down, the capsule's 34px. The icon's box
-        // is 36px; in the bar it's drawn at 32, so the name sits 4px left.
-        brand.style.transform = `translate(${r(geo.b * p)}px, ${r(4 * p)}px)`;
-        icon.style.transform = `scale(${r(ICON + (1 - ICON) * p)})`;
-        word.style.transform = `translateX(${r(-4 * (1 - p))}px) scale(${r(1 - (1 - WORD) * p)})`;
-        links.style.transform = `translate(${r(geo.l * p)}px, ${r(4 * p)}px)`;
+        // is 36px, drawn larger in the bar; the name follows its right edge.
+        const ic = ICON + (1 - ICON) * p;
+        brand.style.transform = `translate(${r(geo.b * p)}px, ${r(4 * v)}px)`;
+        icon.style.transform = `scale(${r(ic)})`;
+        word.style.transform = `translateX(${r(36 * (ic - 1))}px) scale(${r(1 - (1 - WORD) * p)})`;
+        links.style.transform = `translate(${r(geo.l * p)}px, ${r(4 * v)}px)`;
         acts.style.transform = `translate(${r(geo.a + geo.k * (1 - p) + 16 * (1 - q))}px, 4px)`;
         acts.style.opacity = r(clamp(q * 1.25));
         const shown = q > 0.02 || act.to === 1 ? 'visible' : '';
@@ -196,6 +212,9 @@
         measure();
         wake();
       }).observe(d, { attributeFilter: ['data-nav'] });
+      window.navMeasure = measure;
+      window.tune?.slider({ id: 'nav-word', label: 'Nav: name size before capsule', min: 18, max: 48, step: 1, value: 30, unit: 'px', css: '--brand-word', onInput: () => geo && measure() });
+      window.tune?.slider({ id: 'nav-icon', label: 'Nav: icon size before capsule', min: 28, max: 52, step: 1, value: 40, css: '--brand-icon', onInput: () => geo && measure() });
       measure();
       document.fonts?.ready.then(measure);
       // Opened part way down the page: start as a capsule.
@@ -478,21 +497,51 @@
       if (!reduced.matches && !live.getAttribute('src')) live.src = live.dataset.src;
     })();
 
-    // The name in the footer: its grooves show round the pointer. The word
-    // itself ignores the pointer (so the links above it work), so the hover
-    // is worked out from where the pointer is over its letters.
-    (() => {
+    // The name in the footer. Three ways to draw it, picked in the Tune
+    // panel: the first version's grooves round the pointer (CSS), or a
+    // record drawn in the letters (foot-fx.js), revealed round the pointer
+    // or lighting the grooves under it. The word itself ignores the pointer
+    // (so the links above it work), so the hover is worked out from where
+    // the pointer is over its letters.
+    (async () => {
       const w = document.querySelector('.foot-word');
-      if (!w || !matchMedia('(hover: hover)').matches) return;
+      if (!w) return;
+      const d = document.documentElement;
+      const fx = await import('./foot-fx.js').catch(() => null);
+      const tune = window.tune;
+      const setMode = (m) => {
+        d.dataset.foot = fx ? m : 'grooves';
+        if (fx) { fx.T.mode = m; fx.relayout(); }
+      };
+      tune?.select({ id: 'foot-mode', label: 'Footer word', value: 'grooves', onInput: setMode, options: [
+        ['grooves', 'A: first version (CSS grooves)'],
+        ['record', 'B: record, revealed round the pointer'],
+        ['streak', 'C: record, light streak along the groove'],
+      ] });
+      if (!tune?.shown) setMode('grooves');
+      tune?.slider({ id: 'foot-groove', label: 'Footer: groove spacing', min: 1.5, max: 12, step: 0.25, value: 3.25, unit: 'px', onInput: (v) => {
+        d.style.setProperty('--groove', `${v}px`);
+        if (fx) { fx.T.pitch = v; fx.wake(); }
+      } });
+      tune?.slider({ id: 'foot-rest', label: 'Footer: grooves at rest (B)', min: 0, max: 1, step: 0.05, value: 0, onInput: (v) => {
+        if (fx) { fx.T.rest = v; fx.relayout(); }
+      } });
+      tune?.slider({ id: 'foot-cut', label: 'Footer: word cut off at bottom', min: 0, max: 0.6, step: 0.01, value: 0.22, unit: 'em', onInput: (v) => {
+        d.style.setProperty('--foot-cut', String(v));
+      } });
+      if (!matchMedia('(hover: hover)').matches) return;
+      const canvas = w.querySelector('.foot-fx');
       let on = false;
       addEventListener('pointermove', (e) => {
         const r = w.getBoundingClientRect();
         const inside = e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top + r.height * 0.1 && e.clientY <= r.bottom
-          && !e.target.closest('a, button');
+          && !e.target.closest('a, button, .tune');
         if (inside) {
           w.style.setProperty('--x', `${e.clientX - r.left}px`);
           w.style.setProperty('--y', `${e.clientY - r.top}px`);
-        }
+          const c = canvas?.getBoundingClientRect();
+          if (c) fx?.point({ x: e.clientX - c.left, y: e.clientY - c.top });
+        } else if (on) fx?.point(null);
         if (inside !== on) { on = inside; w.style.setProperty('--on', on ? '1' : '0'); }
       }, { passive: true });
     })();

@@ -557,8 +557,8 @@ export const INSTALL = { download: Download, open: Open, music: AddMusic };
 // The pictures in a grid play one at a time, in reading order: left to
 // right, then the next row. A card's turn comes when its picture and at
 // least 30% of the text below it are on screen. A card still on screen
-// that isn't ready yet holds the queue; cards that are off screen are
-// passed over, so a row scrolled past doesn't hold up the next. A card
+// that isn't ready yet holds the queue; cards that are off screen, or
+// scrolled up so most of the picture is gone, are passed over, so a row scrolled past doesn't hold up the next. A card
 // that leaves the screen entirely resets, to play again when it's back.
 // Hover or click a card to play it again at once.
 const grids = new Map();
@@ -584,9 +584,11 @@ function measure(e) {
   const seen = card.bottom > 0 && card.top < vh;
   const below = card.bottom - pic.bottom;
   const shownBelow = Math.min(vh, card.bottom) - pic.bottom;
-  // A picture already scrolled up past the top has been passed: it never
-  // holds the queue (only a card still coming up from below does).
-  const passed = pic.top < -pic.height * 0.25;
+  // A picture scrolled up so that less than 60% of it still shows has been
+  // passed: it never holds the queue (only a card still coming up from
+  // below does), so the next row starts as soon as it is in view enough.
+  const shown = (Math.min(vh, pic.bottom) - Math.max(0, pic.top)) / pic.height;
+  const passed = pic.top < 0 && shown < 0.6;
   const ready = seen && !passed && shownBelow >= below * 0.3;
   return { seen, ready, passed };
 }
