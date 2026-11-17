@@ -523,3 +523,152 @@
    to the right of it, out of the centring. */
 .hw[data-v="club"] .hw-browse-row { position: relative; display: grid; justify-content: center; align-items: center; }
 .hw[data-v="club"] .hw-browse-row .hw-print { position: absolute; left: calc(50% + 29px); top: 50%; translate: 0 -50%; white-space: nowrap; }
+
+/* ---------- club, current finish: light silver, studio accents ----------
+   The default drawing. Pale bead-blasted aluminium under one key light high
+   on the left: a two-stop body, a soft pool of light, fine brushing, crisp
+   bevels and short shadows. Studio-industrial touches on top: pale keys
+   and pads with small lamps, blue / aluminium / orange EQ caps, aluminium
+   fader caps with an orange line, a spun hub, small lowercase mono print.
+   The mixer stays black anodised, so the board sits with the dark app.
+   Scoped to [data-skin="current"] so the other skins, which repaint the
+   club rules above, never see any of it. */
+.hw[data-v="club"][data-skin="current"] {
+  --deck-a: #5b9cff;
+  --deck-b: #ff8a3d;
+  background:
+    repeating-linear-gradient(0deg, rgb(255 255 255 / 0.06) 0 1px, transparent 1px 3px),
+    radial-gradient(110% 90% at 18% -20%, rgb(255 255 255 / 0.34), transparent 62%),
+    linear-gradient(180deg, #cbced2, #b0b3b8);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.9),
+    inset 0 0 0 1px rgb(255 255 255 / 0.22),
+    inset 0 -2px 1px -1px rgb(255 255 255 / 0.95),
+    inset 0 -7px 6px -5px rgb(0 0 0 / 0.14);
+  color: rgb(22 23 26 / 0.7);
+  font-family: 'SF Mono', ui-monospace, Menlo, monospace;
+  text-transform: lowercase;
+  letter-spacing: 0.03em;
+}
+/* The front face: the same metal turned away from the light. */
+.hw[data-v="club"][data-skin="current"]::after {
+  background:
+    linear-gradient(90deg, rgb(0 0 0 / 0.45), rgb(0 0 0 / 0.12) 18px, transparent 44px, transparent calc(100% - 44px), rgb(0 0 0 / 0.12) calc(100% - 18px), rgb(0 0 0 / 0.45)),
+    linear-gradient(0deg, #0b0b0d 0 3px, rgb(0 0 0 / 0.3) 3px, transparent 10px),
+    repeating-linear-gradient(0deg, rgb(255 255 255 / 0.035) 0 1px, transparent 1px 3px),
+    linear-gradient(180deg, #9a9da3, #6c6f75);
+}
+
+/* Keys: pale grey caps, dark print; lit, the deck's colour. */
+.hw[data-v="club"][data-skin="current"] .hw-key {
+  color: rgb(22 23 26 / 0.85);
+  background: linear-gradient(180deg, #eceef0, #cfd2d6);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.9), 0 0 0 1px rgb(0 0 0 / 0.32), 0 1px 0 1px rgb(0 0 0 / 0.08), 0 3px 4px rgb(0 0 0 / 0.2);
+}
+.hw[data-v="club"][data-skin="current"] .hw-key[data-lit] {
+  color: #fff;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--deck), #fff 18%), var(--deck));
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.45), 0 0 0 1px rgb(0 0 0 / 0.35), 0 3px 4px rgb(0 0 0 / 0.2), 0 0 12px color-mix(in srgb, var(--deck) 50%, transparent);
+}
+.hw[data-v="club"][data-skin="current"] .hw-fx[data-lit] { background: linear-gradient(180deg, #ffa66b, var(--cue)); }
+
+/* Cue and Play: dark rubber domes, lit by a ring. */
+.hw[data-v="club"][data-skin="current"] .hw-round {
+  background: radial-gradient(120% 100% at 40% 0%, #47484e, #26272b 62%, #1d1e21);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.14), 0 0 0 1px rgb(0 0 0 / 0.6), 0 1px 1px rgb(0 0 0 / 0.35), 0 4px 7px rgb(0 0 0 / 0.28);
+}
+.hw[data-v="club"][data-skin="current"] .hw-cue[data-lit] { box-shadow: inset 0 0 0 2px rgb(255 138 61 / 0.95), inset 0 1px 0 rgb(255 255 255 / 0.14), 0 0 0 1px rgb(0 0 0 / 0.6), 0 4px 7px rgb(0 0 0 / 0.28), 0 0 14px rgb(255 138 61 / 0.4); }
+.hw[data-v="club"][data-skin="current"] .hw-play[data-lit] { box-shadow: inset 0 0 0 2px rgb(61 220 132 / 0.95), inset 0 1px 0 rgb(255 255 255 / 0.14), 0 0 0 1px rgb(0 0 0 / 0.6), 0 4px 7px rgb(0 0 0 / 0.28), 0 0 14px rgb(61 220 132 / 0.4); }
+
+/* Tempo: a dark slot with a light lip, its scale printed dark. */
+.hw[data-v="club"][data-skin="current"] .hw-pitch__slot { background: #0e0f11; box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.9), 0 1px 0 rgb(255 255 255 / 0.7); }
+.hw[data-v="club"][data-skin="current"] .hw-pitch__slot::before {
+  background: repeating-linear-gradient(180deg, rgb(20 21 24 / 0.38) 0 1px, transparent 1px 10%) left / 6px 100% no-repeat, repeating-linear-gradient(180deg, rgb(20 21 24 / 0.38) 0 1px, transparent 1px 10%) right / 6px 100% no-repeat;
+}
+.hw[data-v="club"][data-skin="current"] .hw-pitch__mid { background: rgb(20 21 24 / 0.6); }
+/* Fader caps: aluminium, an orange index line. */
+.hw[data-v="club"][data-skin="current"] .hw-pitch__cap, .hw[data-v="club"][data-skin="current"] .hw-chfader__cap {
+  background: repeating-linear-gradient(180deg, rgb(0 0 0 / 0.05) 0 1px, transparent 1px 3px), linear-gradient(180deg, #eef0f2, #b3b6bb);
+  box-shadow: inset 0 1px 0 #fff, 0 0 0 1px rgb(0 0 0 / 0.55), 0 3px 5px rgb(0 0 0 / 0.45);
+}
+.hw[data-v="club"][data-skin="current"] .hw-xf__cap { background: linear-gradient(90deg, #b3b6bb, #eef0f2 50%, #b3b6bb); box-shadow: inset 0 1px 0 #fff, 0 0 0 1px rgb(0 0 0 / 0.55), 0 3px 5px rgb(0 0 0 / 0.45); }
+.hw[data-v="club"][data-skin="current"] .hw-pitch__cap::after, .hw[data-v="club"][data-skin="current"] .hw-chfader__cap::after, .hw[data-v="club"][data-skin="current"] .hw-xf__cap::after { background: #ff6a1e; }
+
+/* The jog: a recess round it, a machined rim lit on the line to the key
+   light, a satin platter that looks the same at every angle (it turns), the
+   light laid over it from a layer that doesn't, and a spun aluminium hub. */
+.hw[data-v="club"][data-skin="current"] .hw-jog {
+  box-shadow: 0 0 0 4px rgb(0 0 0 / 0.16), 0 1px 0 5px rgb(255 255 255 / 0.6),
+    0 0 0 8px color-mix(in srgb, var(--deck) calc(var(--glow) * 70%), transparent), 0 0 20px color-mix(in srgb, var(--deck) calc(var(--glow) * 45%), transparent);
+}
+.hw[data-v="club"][data-skin="current"] .hw-jog__ring {
+  background:
+    repeating-conic-gradient(rgb(255 255 255 / 0.04) 0 0.6deg, transparent 0.6deg 1.6deg),
+    conic-gradient(from -45deg, #eef0f2, #a4a7ad 11%, #6e7177 25%, #9a9da3 39%, #c9cbcf 50%, #93969c 61%, #64676d 75%, #a4a7ad 89%, #eef0f2);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.35), 0 0 0 1px rgb(0 0 0 / 0.55), 0 6px 12px rgb(0 0 0 / 0.4);
+}
+.hw[data-v="club"][data-skin="current"] .hw-jog__platter {
+  background:
+    repeating-radial-gradient(circle, rgb(255 255 255 / 0.028) 0 0.7px, transparent 0.7px 3px),
+    radial-gradient(circle, #26272b 0 50%, #19191c 100%);
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.7), inset 0 0 14px rgb(0 0 0 / 0.5);
+}
+.hw[data-v="club"][data-skin="current"] .hw-jog::after {
+  content: ''; position: absolute; inset: 7%; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(70% 55% at 30% 18%, rgb(255 255 255 / 0.07), transparent 70%);
+}
+.hw[data-v="club"][data-skin="current"] .hw-jog__mark { width: 3px; margin-left: -1.5px; box-shadow: 0 0 6px var(--deck); }
+.hw[data-v="club"][data-skin="current"] .hw-jog__hub {
+  background:
+    radial-gradient(circle, #c4c7cb 0 7%, rgb(0 0 0 / 0.18) 7.5% 9%, transparent 9.5%),
+    repeating-radial-gradient(circle, rgb(0 0 0 / 0.035) 0 0.6px, transparent 0.6px 2px),
+    conic-gradient(from -45deg, #e6e8eb, #b7babf 25%, #d4d6d9 50%, #aeb1b6 75%, #e6e8eb);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.5), 0 0 0 1px rgb(0 0 0 / 0.65), 0 3px 7px rgb(0 0 0 / 0.55);
+}
+
+/* Pads: pale satin rubber in a dark well, a small lamp top right that
+   lights in the deck's colour. */
+.hw[data-v="club"][data-skin="current"] .hw-perf { background: #141517; box-shadow: inset 0 1px 3px rgb(0 0 0 / 0.7), 0 1px 0 rgb(255 255 255 / 0.65); }
+.hw[data-v="club"][data-skin="current"] .hw-pad {
+  color: rgb(22 23 26 / 0.72);
+  background: linear-gradient(180deg, #dcdfe2, #bfc2c7);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.75), 0 0 0 1px rgb(0 0 0 / 0.55), 0 2px 2px rgb(0 0 0 / 0.35);
+}
+.hw[data-v="club"][data-skin="current"] .hw-pad::after {
+  content: ''; position: absolute; right: 5px; top: 5px; width: 6px; height: 6px; border-radius: 50%;
+  background: #a3a6ab; box-shadow: inset 0 1px 1px rgb(0 0 0 / 0.3);
+}
+.hw[data-v="club"][data-skin="current"] .hw-pad[data-lit] {
+  color: rgb(22 23 26 / 0.85);
+  background: linear-gradient(180deg, #f7f8f9, #dcdfe2);
+  box-shadow: inset 0 1px 0 #fff, 0 0 0 1px rgb(0 0 0 / 0.5), 0 2px 2px rgb(0 0 0 / 0.35);
+}
+.hw[data-v="club"][data-skin="current"] .hw-pad[data-lit]::after { background: var(--deck); box-shadow: 0 0 0 1px color-mix(in srgb, var(--deck) 60%, #000), 0 0 6px var(--deck); }
+
+/* The mixer: black anodised, let in with a clean bevel. */
+.hw[data-v="club"][data-skin="current"] .hw-mixer {
+  background: linear-gradient(180deg, #1e1f22, #151618);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.07), inset 0 0 0 1px rgb(0 0 0 / 0.6), 0 -1px 0 rgb(0 0 0 / 0.2), 0 1px 0 rgb(255 255 255 / 0.7);
+}
+.hw[data-v="club"][data-skin="current"] .hw-browse {
+  background: radial-gradient(circle, #5a5c63 0 32%, #44464c 56%, transparent 59%), repeating-conic-gradient(#5e6067 0 6deg, #34353a 6deg 12deg);
+  box-shadow: 0 0 0 1px #050506, inset 0 1px 0 rgb(255 255 255 / 0.22), 0 3px 4px rgb(0 0 0 / 0.6);
+}
+/* EQ: high blue, mid aluminium, low orange; domed caps on a dark knurled skirt. */
+.hw[data-v="club"][data-skin="current"] .hw-mixer .hw-knob i { --cap: #d9dbde; --cap-hi: #f6f7f8; }
+.hw[data-v="club"][data-skin="current"] .hw-mixer .hw-eq--high i { --cap: #3f7fe6; --cap-hi: #7fb0ff; }
+.hw[data-v="club"][data-skin="current"] .hw-mixer .hw-eq--low i { --cap: #ef6a22; --cap-hi: #ffa064; }
+.hw[data-v="club"][data-skin="current"] .hw-mixer .hw-knob i {
+  background: radial-gradient(circle at 50% 30%, var(--cap-hi), var(--cap) 46%, color-mix(in srgb, var(--cap), #000 22%) 58%, transparent 60%), repeating-conic-gradient(#3a3b40 0 6deg, #222327 6deg 12deg);
+  box-shadow: 0 0 0 1px #050506, inset 0 1px 0 rgb(255 255 255 / 0.2), 0 3px 4px rgb(0 0 0 / 0.6);
+}
+.hw[data-v="club"][data-skin="current"] .hw-mixer .hw-knob i::after { width: 2px; background: #fff; box-shadow: none; }
+.hw[data-v="club"][data-skin="current"] .hw-mixer .hw-eq--mid i::after { background: #1a1b1e; }
+/* The meters: a black readout window, crisp segments. */
+.hw[data-v="club"][data-skin="current"] .hw-meters { padding: 3px; border-radius: 3px; background: #0a0a0b; box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.9), 0 1px 0 rgb(255 255 255 / 0.06); }
+.hw[data-v="club"][data-skin="current"] .hw-meter i { background: #1a201c; }
+.hw[data-v="club"][data-skin="current"] .hw-meter i[data-level="hot"] { background: #24221a; }
+.hw[data-v="club"][data-skin="current"] .hw-meter i[data-level="peak"] { background: #261a18; }
+.hw[data-v="club"][data-skin="current"] .hw-meter i[data-lit] { background: var(--play); box-shadow: 0 0 3px rgb(61 220 132 / 0.55); }
+.hw[data-v="club"][data-skin="current"] .hw-meter i[data-lit][data-level="hot"] { background: #e8d44d; box-shadow: 0 0 3px rgb(232 212 77 / 0.55); }
+.hw[data-v="club"][data-skin="current"] .hw-meter i[data-lit][data-level="peak"] { background: #ff5a4a; box-shadow: 0 0 3px rgb(255 90 74 / 0.55); }
