@@ -15,9 +15,9 @@
    * Settings sit over the library, never over the decks, and don't block
    * them: performance keys keep working while this is open, except while a
    * shortcut is being recorded.
-   * @type {{ page?: 'keyboard' | 'decks' | 'audio' | 'display' | 'library' | 'stems' | 'controllers', onclose: () => void, onimport?: () => void, onreport?: () => void, onupdates?: () => void }}
+   * @type {{ page?: 'keyboard' | 'decks' | 'audio' | 'display' | 'library' | 'stems' | 'controllers', onclose: () => void, onimport?: () => void, onreport?: () => void, onupdates?: () => void, onsetup?: () => void }}
    */
-  let { page = $bindable('keyboard'), onclose, onimport, onreport, onupdates } = $props();
+  let { page = $bindable('keyboard'), onclose, onimport, onreport, onupdates, onsetup } = $props();
 
   const GROUPS = [
     { name: 'Deck A', test: (id) => id.startsWith('deck.0.') },
@@ -568,6 +568,13 @@
             {/each}
           {/if}
           <p class="gap">Mixxx mappings work as they are, MIDI and HID (such as Traktor Kontrol controllers): put a <code>.midi.xml</code> or <code>.hid.xml</code> file and its scripts in the app's <code>controllers</code> folder, or install Mixxx and its mappings are picked up.</p>
+        </section>
+        <section class="display">
+          <h3>Controller not working?</h3>
+          <p>If it does nothing, or the wrong things, set it up step by step: the app asks for each control and you press or move it. It takes a couple of minutes, and you can share the result so it works for everyone.</p>
+          <div class="size">
+            <button class="btn sm" onclick={onsetup}>Set up step by step…</button>
+          </div>
         </section>
         <section class="display">
           <h3>MIDI learn</h3>
