@@ -26,6 +26,18 @@ export class Waveform2D {
     if (!ctx) throw new Error('Canvas 2D not available');
     this.canvas = canvas;
     this.ctx = ctx;
+    // The canvas's CSS size, kept by an observer rather than read on every
+    // draw: reading clientWidth each frame makes the browser lay the page
+    // out again first, every frame.
+    this.cssW = canvas.clientWidth;
+    this.cssH = canvas.clientHeight;
+    if (typeof ResizeObserver !== 'undefined') {
+      new ResizeObserver(([e]) => {
+        const box = e.contentBoxSize?.[0];
+        this.cssW = box ? box.inlineSize : canvas.clientWidth;
+        this.cssH = box ? box.blockSize : canvas.clientHeight;
+      }).observe(canvas);
+    }
     this.count = 0;
     this.version = 0;
     this.setBins(new Uint8Array(0));
@@ -71,8 +83,8 @@ export class Waveform2D {
   /** Matches the drawing buffer to the canvas's CSS size and pixel ratio. */
   resize() {
     const dpr = window.devicePixelRatio || 1;
-    const w = Math.max(1, Math.round(this.canvas.clientWidth * dpr));
-    const h = Math.max(1, Math.round(this.canvas.clientHeight * dpr));
+    const w = Math.max(1, Math.round(this.cssW * dpr));
+    const h = Math.max(1, Math.round(this.cssH * dpr));
     if (this.canvas.width !== w || this.canvas.height !== h) {
       this.canvas.width = w;
       this.canvas.height = h;
