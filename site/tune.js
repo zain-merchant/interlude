@@ -49,7 +49,7 @@
     const DK = await lib.catch(() => null);
     if (!DK) return;
     const start = () => {
-      root ??= DK.createDialRoot({ position: 'bottom-right', theme: 'dark', defaultOpen: true });
+      root ??= DK.createDialRoot({ position: 'bottom-right', theme: 'dark', defaultOpen: false });
       for (const [group, g] of groups) {
         if (g.made) continue;
         g.made = true;

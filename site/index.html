@@ -14,9 +14,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261116d">
+  <link rel="stylesheet" href="style.css?v=20261117a">
   <link rel="stylesheet" href="demo/cards.css">
-  <script src="tune.js?v=20261116d"></script>
+  <script src="tune.js?v=20261117a"></script>
   <script>
     // The hero's layout (Split) and the nav's (bar to capsule), set before
     // the first paint so nothing jumps. The nav's look changes as the page
@@ -154,7 +154,7 @@
         glass.style.left = `${r(left)}px`;
         glass.style.width = `${r(geo.W - left - right)}px`;
         glass.style.top = `${r(10 * v)}px`;
-        glass.style.height = `${r(geo.H + 1 - (geo.H - 35) * v)}px`;
+        glass.style.height = `${r(geo.H + 1 - (geo.H - 47) * v)}px`;
         glass.style.borderRadius = `${r(24 * Math.min(1, v * 1.4))}px`;
         glass.style.boxShadow = `inset 0 -1px 0 rgb(255 255 255 / ${r(0.08 * (1 - v))}), inset 0 0 0 1px rgb(255 255 255 / ${r(0.09 * v)}), inset 0 1px 0 rgb(255 255 255 / ${r(0.05 * v)}), 0 12px 40px rgb(0 0 0 / ${r(0.42 * v)})`;
         glass.style.opacity = p > 0.001 ? '1' : '';
@@ -168,7 +168,8 @@
         word.style.transform = `translateX(${r(36 * (ic - 1))}px) scale(${r(1 - (1 - WORD) * p)})`;
         links.style.transform = `translate(${r(geo.l * p)}px, ${r(dy * v)}px)`;
         acts.style.transform = `translate(${r(geo.a + geo.k * (1 - p) + 16 * (1 - q))}px, ${r(dy)}px)`;
-        acts.style.opacity = r(clamp(q * 1.25));
+        // They're gone before the capsule opens back out, so they never show outside it.
+        acts.style.opacity = r(clamp(q * 1.25) * clamp((p - 0.55) / 0.35));
         const shown = q > 0.02 || act.to === 1 ? 'visible' : '';
         if (acts.style.visibility !== shown) acts.style.visibility = shown;
       }
@@ -186,7 +187,7 @@
       // One loop, running only while something moves.
       let running = false, last = 0;
       function tick(now) {
-        const dt = Math.min(0.05, (now - last) / 1000 || 0.016);
+        const dt = Math.max(0, Math.min(0.05, (now - last) / 1000 || 0.016));
         last = now;
         step(shape, dt);
         // The actions follow once the shape is mostly formed; they go at once.
@@ -416,7 +417,7 @@
     // same at any width. It tells us how loud it's playing, and the glow
     // under it follows; the switch picks mouse or controller.
     (async () => {
-      const fx = await import('./hero-fx.js?v=20261116d').catch(() => null);
+      const fx = await import('./hero-fx.js?v=20261117a').catch(() => null);
       const frame = document.querySelector('.stage-frame');
       const screen = frame.querySelector('.screen');
       const live = frame.querySelector('.live');
@@ -509,10 +510,10 @@
       const w = document.querySelector('.foot-word');
       if (!w) return;
       const d = document.documentElement;
-      const fx = await import('./foot-fx.js?v=20261116d').catch(() => null);
+      const fx = await import('./foot-fx.js?v=20261117a').catch(() => null);
       const tune = window.tune;
       const setMode = (m) => {
-        d.dataset.foot = fx ? m : 'grooves';
+        d.dataset.foot = fx?.ready ? m : 'css';
         if (fx) { fx.T.mode = m; fx.relayout(); }
       };
       tune?.select({ id: 'foot-mode', label: 'Footer: style', value: 'grooves', onInput: setMode, options: [
@@ -520,7 +521,7 @@
         ['record', 'B · record, reveal'],
         ['streak', 'C · record, streak'],
       ] });
-      if (!tune?.shown) setMode('grooves');
+      
       tune?.slider({ id: 'foot-groove', label: 'Footer: groove spacing', min: 1.5, max: 12, step: 0.25, value: 3.25, unit: 'px', onInput: (v) => {
         d.style.setProperty('--groove', `${v}px`);
         if (fx) { fx.T.pitch = v; fx.wake(); }
@@ -537,7 +538,7 @@
       addEventListener('pointermove', (e) => {
         const r = w.getBoundingClientRect();
         const inside = e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top + r.height * 0.1 && e.clientY <= r.bottom
-          && !e.target.closest('a, button, .tune');
+          && !e.target.closest('a, button, .dialkit-root');
         if (inside) {
           w.style.setProperty('--x', `${e.clientX - r.left}px`);
           w.style.setProperty('--y', `${e.clientY - r.top}px`);
