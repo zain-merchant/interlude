@@ -16,7 +16,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css?v=20261117e">
   <link rel="stylesheet" href="demo/cards.css">
-  <script src="tune.js?v=20261117e"></script>
+  <script src="tune.js?v=20261117f"></script>
   <script>
     // The hero's layout (Split) and the nav's (bar to capsule), set before
     // the first paint so nothing jumps. The nav's look changes as the page
@@ -157,8 +157,10 @@
         glass.style.top = `${r(10 * v)}px`;
         glass.style.height = `${r(geo.H + 1 - (geo.H - 47) * v)}px`;
         glass.style.borderRadius = `${r(CAP_R * Math.min(1, v * 1.4))}px`;
-        glass.style.boxShadow = `inset 0 -1px 0 rgb(255 255 255 / ${r(0.08 * (1 - v))}), inset 0 0 0 1px rgb(255 255 255 / ${r(0.09 * v)}), inset 0 1px 0 rgb(255 255 255 / ${r(0.05 * v)}), 0 12px 40px rgb(0 0 0 / ${r(0.42 * v)})`;
-        glass.style.opacity = p > 0.001 ? '1' : '';
+        glass.style.boxShadow = `inset 0 0 0 1px rgb(255 255 255 / ${r(0.09 * v)}), inset 0 1px 0 rgb(255 255 255 / ${r(0.05 * v)}), 0 12px 40px rgb(0 0 0 / ${r(0.42 * v)})`;
+        // Never a bar with a background: the glass comes in only as it
+        // closes on the capsule, and is gone again before it opens out.
+        glass.style.opacity = p > 0.001 ? String(r(clamp((p - 0.08) / 0.3))) : '';
         // The bar's middle is 30px down, the capsule's 34px. The icon's box
         // is 36px, drawn larger in the bar; the name follows its right edge.
         const ic = ICON + (1 - ICON) * p;
@@ -423,7 +425,7 @@
     // same at any width. It tells us how loud it's playing, and the glow
     // under it follows; the switch picks mouse or controller.
     (async () => {
-      const fx = await import('./hero-fx.js?v=20261117e').catch(() => null);
+      const fx = await import('./hero-fx.js?v=20261117h3').catch(() => null);
       const frame = document.querySelector('.stage-frame');
       const screen = frame.querySelector('.screen');
       const live = frame.querySelector('.live');
@@ -545,7 +547,7 @@
     })();
 
     // The name in the footer, and what it does under the pointer (see
-    // foot-fx.js for each style). Picked in the Tune panel; Stylus unless
+    // foot-fx.js for each style). Picked in the Tune panel; Lamp unless
     // tried otherwise. The word itself ignores the pointer (so the links
     // above it work), so the hover is worked out from where the pointer is
     // over its letters. On phones, holding a finger on the word works the
@@ -554,8 +556,10 @@
       const w = document.querySelector('.foot-word');
       if (!w) return;
       const d = document.documentElement;
-      const fx = await import('./foot-fx.js?v=20261117d').catch(() => null);
-      const tune = window.tune;
+      const fx = await import('./foot-fx.js?v=20261117e').catch(() => null);
+      // Without tune.js (or an older one), each control still applies its default.
+      const own = (o) => o.onInput?.(o.value);
+      const tune = { slider: own, select: own, color: own, ...window.tune };
       const setMode = (m) => {
         const gl = fx?.ready && fx.isGL(m);
         // Without WebGL the drawn styles fall back to the first version in CSS.
@@ -563,11 +567,12 @@
         d.toggleAttribute('data-foot-gl', !!gl);
         if (fx) { fx.T.mode = gl || !fx.isGL(m) ? m : 'css'; fx.relayout(); }
       };
-      tune?.select({ id: 'foot-mode', label: 'Footer: style', value: 'lamp', onInput: setMode, options: [
+      tune.select({ id: 'foot-mode', label: 'Footer: style', value: 'lamp', onInput: setMode, options: [
         ['stylus', 'New · Stylus: grooves part round the needle'],
         ['lamp', 'New · Lamp: a streak of light across the grooves'],
         ['sound', 'New · Sound: rings run out through the grooves'],
         ['wave', 'New · Wave: the music wiggles in the grooves'],
+        ['lamp-stylus', 'New · Lamp + stylus: the streak, and the grooves part round the needle'],
         ['grooves', 'A · first version (crisp)'],
         ['css', 'A · first version, exactly as first shown'],
         ['record', 'B · record, reveal'],
@@ -580,16 +585,48 @@
         ['old-depth', 'Earlier · Depth'],
       ] });
 
-      tune?.slider({ id: 'foot-groove', label: 'Footer: groove spacing', min: 1.5, max: 12, step: 0.25, value: 8, unit: 'px', onInput: (v) => {
+      tune.slider({ id: 'foot-groove', label: 'Footer: groove spacing', min: 1.5, max: 12, step: 0.25, value: 8, unit: 'px', onInput: (v) => {
         d.style.setProperty('--groove', `${v}px`);
         if (fx) { fx.T.pitch = v; fx.wake(); }
       } });
-      tune?.slider({ id: 'foot-rest', label: 'Footer: grooves at rest', min: 0, max: 1, step: 0.05, value: 0.4, onInput: (v) => {
+      tune.slider({ id: 'foot-rest', label: 'Footer: grooves at rest', min: 0, max: 1, step: 0.05, value: 0.4, onInput: (v) => {
         if (fx) { fx.T.rest = v; fx.relayout(); }
       } });
-      tune?.slider({ id: 'foot-cut', label: 'Footer: word cut off at bottom', min: 0, max: 0.6, step: 0.01, value: 0.33, unit: 'em', onInput: (v) => {
+      tune.slider({ id: 'foot-cut', label: 'Footer: word cut off at bottom', min: 0, max: 0.6, step: 0.01, value: 0.33, unit: 'em', onInput: (v) => {
         d.style.setProperty('--foot-cut', String(v));
       } });
+      // How the word looks at rest, in the new styles (see TREATS in foot-fx.js).
+      const redraw = () => fx?.wake();
+      tune.select({ label: 'Footer: treatment', value: 'faint', onInput: (v) => { if (fx) { fx.T.treat = v; redraw(); } }, options: [
+        ['faint', 'Faint: as it was'],
+        ['ink', 'Ink: solid colour, grooves cut in'],
+        ['hollow', 'Hollow: background fill, fine outline'],
+        ['outline', 'Outline, grooves inside'],
+        ['grooves', 'Grooves only, brighter'],
+        ['metal', 'Metal: chrome ramp'],
+        ['vinyl', 'Vinyl: black with a gloss'],
+        ['duotone', 'Duotone: blue into orange'],
+      ] });
+      const colour = (key, after) => (v) => {
+        const c = fx?.rgb(v);
+        if (c) { fx.T[key] = c; after?.(v); redraw(); }
+      };
+      tune.color({ label: 'Footer: text colour', value: '#ffffff', onInput: colour('ink') });
+      tune.slider({ label: 'Footer: text brightness', min: 0, max: 3, step: 0.05, value: 1, unit: '×', onInput: (v) => {
+        if (fx) { fx.T.inkK = v; redraw(); }
+      } });
+      tune.slider({ label: 'Footer: outline width', min: 0.5, max: 6, step: 0.25, value: 1.5, unit: 'px', onInput: (v) => {
+        if (fx) { fx.T.stroke = v; redraw(); }
+      } });
+      tune.color({ label: 'Footer: groove colour', value: '#ffffff', onInput: colour('groove') });
+      tune.color({ label: 'Footer: lamp cool', value: '#3db4ff', onInput: colour('blue') });
+      tune.color({ label: 'Footer: lamp warm', value: '#ff9b45', onInput: colour('orange') });
+      // The footer's own background (the page's unless changed); Hollow fills
+      // the letters with it.
+      tune.color({ label: 'Footer: background', value: '#09090b', onInput: colour('bg', (v) => {
+        if (v === '#09090b') d.style.removeProperty('--foot-bg');
+        else d.style.setProperty('--foot-bg', v);
+      }) });
       const canvas = w.querySelector('.foot-fx');
       let on = false;
       let last = null;

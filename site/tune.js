@@ -4,6 +4,8 @@
 //
 //   tune.slider({ label, min, max, step, value, unit, css, onInput })
 //   tune.select({ label, options: [[value, label], ...], value, onInput })
+//   tune.color({ label, value: '#rrggbb', onInput })   (DialKit's own picker;
+//     it may hand back other CSS colour forms if its format is switched)
 //
 // A label "Group: name" puts the control in that group's panel. onInput
 // gets the default straight away, then whatever the panel holds (DialKit
@@ -84,5 +86,10 @@
     if (show) add(label, { apply: (v) => onInput?.(v), config: { type: 'select', options: options.map(([v, t]) => ({ value: v, label: t })), default: value } });
   }
 
-  window.tune = { slider, select, shown: show };
+  function color({ label, value, onInput }) {
+    onInput?.(value);
+    if (show) add(label, { apply: (v) => onInput?.(v), config: { type: 'color', default: value } });
+  }
+
+  window.tune = { slider, select, color, shown: show };
 })();
