@@ -77,7 +77,7 @@ async function tween(a, key, from, to, ms, ease = (t) => 1 - (1 - t) ** 3) {
 /* ---------------- Decks: Sync ---------------- */
 
 // Two decks as two rows: the deck, its tempo, a run of its beats with the
-// downbeats tall. B starts well slower (118) and more than half a beat late; Sync lights, B's
+// downbeats tall. B starts well slower (118) and over two beats late; Sync lights, B's
 // beats slide under A's, its tempo rolls up, and as they lock a faint line
 // runs down through each pair of downbeats.
 // px between beats: chosen so the card's edge cuts mid-bar, between
@@ -85,19 +85,32 @@ async function tween(a, key, from, to, ms, ease = (t) => 1 - (1 - t) ** 3) {
 const TICK = 14;
 const BEATS = 24;
 const B_FROM = 118; // deck B's tempo before Sync
-function Ticks({ deck, offset = 0, stretch = 1 }) {
+function Ticks({ deck, offset = 0, stretch = 1, children }) {
   return (
     <div className="p-ticks" data-deck={deck}>
       <div className="p-ticks__run" style={{ transform: `translateX(${offset}px) scaleX(${stretch})` }}>
         {Array.from({ length: BEATS }, (_, i) => <i key={i} data-bar={i % 4 === 0 || undefined} style={{ left: i * TICK }} />)}
+        {children}
       </div>
     </div>
   );
 }
+// B starts this many beats behind A: well off, and not a whole number, so
+// no beat lines up until Sync.
+const B_LATE = 2.4;
+// Being tried (html[data-decklayout]):
+//   single   just Sync
+//   stacked  Sync, then under it the deck's cues: three hot cues set on A
+//            (each pad lights and a marker drops onto A's beats), then a
+//            four-beat loop that lights its four beats
+const stacked = () => document.documentElement.dataset.decklayout !== 'single';
+const HOT_CUES = [1, 3, 5]; // the beats they're set on
+const LOOP_AT = 8; // the loop's first beat (a downbeat), well inside the card
 
 export function Sync(play) {
   return (
-    <Pic id="sync" {...play} bleed="right" initial={{ on: false, press: false, lock: false }} poster={{ on: true, press: false, lock: true }}
+    <Pic id="sync" {...play} bleed="right" initial={{ on: false, press: false, lock: false, cues: 0, cuePress: 0, loop: false, loopPress: false }}
+      poster={{ on: true, press: false, lock: true, cues: HOT_CUES.length, cuePress: 0, loop: true, loopPress: false }}
       script={async (a) => {
         await a.set({ press: true });
         await a.wait(PRESS);
@@ -105,24 +118,45 @@ export function Sync(play) {
         // The lock lights as the beats arrive (the slide is 0.75 s).
         await a.wait(650);
         await a.set({ lock: true });
+        if (!stacked()) return;
+        // Then the cues: three pads pressed in turn, each setting a hot cue.
+        await a.wait(550);
+        for (let c = 1; c <= HOT_CUES.length; c++) {
+          await a.set({ cuePress: c });
+          await a.wait(PRESS);
+          await a.set({ cuePress: 0, cues: c });
+          await a.wait(280);
+        }
+        // And a four-beat loop.
+        await a.wait(220);
+        await a.set({ loopPress: true });
+        await a.wait(PRESS);
+        await a.set({ loopPress: false, loop: true });
       }}>
       {(s) => (
         <div className="p-decks" data-lock={s.lock || undefined}>
           <div className="p-deckrow" data-deck="a">
             <span className="p-chip">A</span>
             <b className="p-bpm">129.00</b>
-            <Ticks deck="a" />
+            <Ticks deck="a">
+              {HOT_CUES.map((b, n) => <b key={b} className="p-hcue" data-on={n < s.cues || undefined} style={{ left: b * TICK }}>{n + 1}</b>)}
+              <span className="p-loopband" data-on={s.loop || undefined} style={{ left: LOOP_AT * TICK, width: 4 * TICK }} />
+            </Ticks>
           </div>
           <div className="p-deckrow" data-deck="b">
             <span className="p-chip">B</span>
             <b className="p-bpm"><Count value={s.on ? 129 : B_FROM} format={(n) => n.toFixed(2)} duration={700} /></b>
-            <Ticks deck="b" offset={s.on ? 0 : TICK * 0.6} stretch={s.on ? 1 : 129 / B_FROM} />
+            <Ticks deck="b" offset={s.on ? 0 : TICK * B_LATE} stretch={s.on ? 1 : 129 / B_FROM} />
           </div>
           <div className="p-locks" aria-hidden>
             {[0, 4, 8, 12, 16, 20].map((i, n) => <i key={i} style={{ left: i * TICK, '--n': n }} />)}
           </div>
           <div className="p-sync__key">
             <div className="p-btn" data-on={s.on || undefined} data-press={s.press || undefined}>Sync</div>
+            <div className="p-cuepads" aria-hidden>
+              {[1, 2, 3, 4].map((n) => <i key={n} data-on={n <= s.cues || undefined} data-press={s.cuePress === n || undefined}>{n}</i>)}
+            </div>
+            <div className="p-btn p-loopkey" data-on={s.loop || undefined} data-press={s.loopPress || undefined}>Loop 4</div>
           </div>
         </div>
       )}
@@ -260,10 +294,10 @@ export function Search(play) {
         // 1. In they come.
         for (let rows = 1; rows <= LIB.length; rows++) {
           await a.set({ rows });
-          await a.wait(260);
+          await a.wait(110);
         }
         // 2. A pause, then the search, a letter at a time.
-        await a.wait(800);
+        await a.wait(650);
         for (let i = 1; i <= LIB_QUERY.length; i++) {
           await a.set({ q: LIB_QUERY.slice(0, i) });
           await a.wait(i < 3 ? 320 : 180);

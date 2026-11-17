@@ -394,7 +394,7 @@
   /* Before it arrives a row shows as a faint placeholder, so the picture
      is never an empty box while it waits its turn. */
   opacity: 0.14; transform: translateY(4px);
-  transition: opacity 360ms cubic-bezier(0.23, 1, 0.32, 1), transform 360ms cubic-bezier(0.23, 1, 0.32, 1), background-color 220ms;
+  transition: opacity 240ms cubic-bezier(0.23, 1, 0.32, 1), transform 240ms cubic-bezier(0.23, 1, 0.32, 1), background-color 220ms;
 }
 .p-lib__row[data-in] { opacity: 1; transform: none; }
 .p-lib__row[data-in][data-dim] { opacity: 0.3; transition-duration: 260ms; }
@@ -493,3 +493,72 @@
 :root:not([data-reclayout="side"]):not([data-reclayout="carousel"]) .p-rec-lg { height: 34px; padding: 0 13px 0 11px; gap: 8px; font-size: 15px; border-radius: 10px; }
 :root:not([data-reclayout="side"]):not([data-reclayout="carousel"]) .p-rec-lg i { width: 10px; height: 10px; }
 :root:not([data-reclayout="side"]):not([data-reclayout="carousel"]) .p-recwave { flex: 1; justify-content: space-between; height: 28px; }
+
+/* The connected tag comes on in three beats: the pill drops in out of a
+   soft blur, the green light pops on with a ring going out from it (the
+   device answering), and a glint runs once across the pill. Its own
+   scale undo (above) stays on transform; the entrance uses the separate
+   translate, scale and filter properties so the two never fight. */
+.p-ctl .p-toast {
+  translate: -50% -10px; scale: 0.9; filter: blur(5px);
+  transition: opacity 0.3s cubic-bezier(0.23, 1, 0.32, 1), translate 0.7s cubic-bezier(0.34, 1.4, 0.64, 1), scale 0.7s cubic-bezier(0.34, 1.4, 0.64, 1), filter 0.45s ease-out;
+}
+.p-ctl .p-toast[data-on] { opacity: 1; translate: -50% 0; scale: 1; filter: blur(0); }
+.p-toast i { position: relative; scale: 0; }
+.p-toast i::after { content: ''; position: absolute; inset: 0; border-radius: 50%; box-shadow: 0 0 0 1.5px #3ddc84; opacity: 0; }
+.p-toast[data-on] i { animation: p-toast-dot 0.5s 0.28s cubic-bezier(0.34, 1.8, 0.64, 1) both; box-shadow: 0 0 6px rgb(61 220 132 / 0.7); }
+.p-toast[data-on] i::after { animation: p-toast-ring 1.1s 0.4s cubic-bezier(0.23, 1, 0.32, 1) both; }
+.p-toast {
+  background: linear-gradient(105deg, transparent 40%, rgb(255 255 255 / 0.12) 50%, transparent 60%) no-repeat, #1b1c20;
+  background-size: 300% 100%, auto; background-position: 100% 0, 0 0;
+}
+.p-toast[data-on] { animation: p-toast-glint 1s 0.45s cubic-bezier(0.45, 0, 0.55, 1) both; }
+@keyframes p-toast-dot { from { scale: 0; } to { scale: 1; } }
+@keyframes p-toast-ring { 0% { opacity: 0.9; scale: 1; } 100% { opacity: 0; scale: 3.4; } }
+@keyframes p-toast-glint { from { background-position: 100% 0, 0 0; } to { background-position: 0% 0, 0 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .p-ctl .p-toast { filter: none; scale: 1; translate: -50% 0; }
+  .p-toast[data-on], .p-toast[data-on] i, .p-toast[data-on] i::after { animation: none; }
+  .p-toast i { scale: 1; }
+}
+
+/* Decks, stacked (html[data-decklayout] not "single"): the two rows a
+   step smaller, and under them one bar: Sync, the deck's four cue pads and
+   a Loop key. The hot cues it sets drop onto A's beats as numbered flags;
+   the loop lights its four beats. In "single" only Sync shows, centred. */
+.p-cuepads, .p-loopkey { display: none; }
+.p-hcue, .p-loopband { display: none; }
+:root:not([data-decklayout="single"]) .p-decks { gap: 6px; }
+:root:not([data-decklayout="single"]) .p-deckrow { height: 30px; }
+:root:not([data-decklayout="single"]) .p-ticks { height: 30px; }
+:root:not([data-decklayout="single"]) .p-bpm { font-size: 23px; }
+:root:not([data-decklayout="single"]) .p-locks { height: 66px; }
+:root:not([data-decklayout="single"]) .p-sync__key { justify-content: flex-start; gap: 10px; margin-top: 8px; padding-right: 0; }
+:root:not([data-decklayout="single"]) .p-sync__key .p-btn { height: 28px; min-width: 0; padding: 0 12px; font-size: 12px; }
+:root:not([data-decklayout="single"]) .p-cuepads { display: flex; gap: 5px; }
+:root:not([data-decklayout="single"]) .p-loopkey { display: inline-grid; }
+:root:not([data-decklayout="single"]) .p-hcue, :root:not([data-decklayout="single"]) .p-loopband { display: block; }
+.p-cuepads i {
+  display: grid; place-items: center; width: 28px; height: 28px; border-radius: var(--r);
+  font-size: 11px; font-style: normal; font-weight: 600; color: var(--fg-3);
+  box-shadow: inset 0 0 0 1px var(--line-2);
+  transition: background-color 160ms, color 160ms, box-shadow 200ms, transform 140ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+.p-cuepads i[data-on] { color: #0b0b0d; background: var(--deck-a); box-shadow: 0 0 14px rgb(201 220 242 / 0.3); }
+.p-cuepads i[data-press] { transform: scale(0.92); background: var(--hover); }
+/* A hot cue on the beats: a small numbered flag at the top of the rail, on its beat. */
+.p-hcue {
+  position: absolute; top: 0; height: 100%; margin-left: 1px; padding: 0 0 0 3px;
+  font-size: 8px; font-weight: 700; line-height: 10px; color: var(--deck-a);
+  opacity: 0; transform: translateY(-4px); transition: opacity 0.2s ease-out, transform 0.35s cubic-bezier(0.23, 1, 0.32, 1);
+}
+.p-hcue::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 1.5px; border-radius: 1px; background: var(--deck-a); }
+.p-hcue[data-on] { opacity: 1; transform: none; }
+/* The loop: a soft band over its four beats. */
+.p-loopband {
+  position: absolute; top: 3px; bottom: 3px; border-radius: 4px;
+  background: rgb(201 220 242 / 0.14); box-shadow: inset 0 0 0 1px rgb(201 220 242 / 0.4);
+  opacity: 0; transform: scaleX(0.4); transform-origin: 0 50%;
+  transition: opacity 0.25s ease-out, transform 0.45s cubic-bezier(0.23, 1, 0.32, 1);
+}
+.p-loopband[data-on] { opacity: 1; transform: none; }
