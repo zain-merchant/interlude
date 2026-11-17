@@ -371,7 +371,10 @@
 .hw[data-v="club"] .hw-jog__hub { inset: 30%; }
 .hw[data-v="club"] .hw-mixer { grid-template-rows: 50px 1fr 30px; padding: 10px 12px; }
 .hw[data-v="club"] .hw-channels { grid-template-columns: 1fr auto 1fr; }
-.hw[data-v="club"] .hw-channel { grid-template-columns: 1fr 1fr; grid-template-rows: auto auto 1fr; justify-items: center; align-items: start; gap: 4px; }
+/* Room round each EQ knob for the link ring (5px out) to clear its own
+   label and the knob above. */
+.hw[data-v="club"] .hw-channel { grid-template-columns: 1fr 1fr; grid-template-rows: auto auto 1fr; justify-items: center; align-items: start; gap: 13px 4px; }
+.hw[data-v="club"] .hw-channel .hw-knob { gap: 9px; }
 .hw[data-v="club"] .hw-channel .hw-knob i { width: 24px; height: 24px; }
 .hw[data-v="club"] .hw-channel .hw-eq--low i { width: 30px; height: 30px; }
 .hw[data-v="club"] .hw-channel--a .hw-knob { grid-column: 1; }
