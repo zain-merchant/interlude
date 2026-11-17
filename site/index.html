@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261117c">
+  <link rel="stylesheet" href="style.css?v=20261117d">
   <link rel="stylesheet" href="demo/cards.css">
   <script src="tune.js?v=20261117c"></script>
   <script>
@@ -511,53 +511,100 @@
       if (!reduced.matches && !live.getAttribute('src')) live.src = live.dataset.src;
     })();
 
-    // The name in the footer. Three ways to draw it, picked in the Tune
-    // panel: the first version's grooves round the pointer (CSS), or a
-    // record drawn in the letters (foot-fx.js), revealed round the pointer
-    // or lighting the grooves under it. The word itself ignores the pointer
-    // (so the links above it work), so the hover is worked out from where
-    // the pointer is over its letters.
+    // The name in the footer, and what it does under the pointer (see
+    // foot-fx.js for each style). Picked in the Tune panel; Stylus unless
+    // tried otherwise. The word itself ignores the pointer (so the links
+    // above it work), so the hover is worked out from where the pointer is
+    // over its letters. On phones, holding a finger on the word works the
+    // same, and the first time the word comes into view it plays once.
     (async () => {
       const w = document.querySelector('.foot-word');
       if (!w) return;
       const d = document.documentElement;
-      const fx = await import('./foot-fx.js?v=20261117c').catch(() => null);
+      const fx = await import('./foot-fx.js?v=20261117d').catch(() => null);
       const tune = window.tune;
       const setMode = (m) => {
-        d.dataset.foot = fx?.ready ? m : 'css';
-        if (fx) { fx.T.mode = m; fx.relayout(); }
+        const gl = fx?.ready && fx.isGL(m);
+        // Without WebGL the drawn styles fall back to the first version in CSS.
+        d.dataset.foot = gl || !fx?.isGL(m) ? m : 'css';
+        d.toggleAttribute('data-foot-gl', !!gl);
+        if (fx) { fx.T.mode = gl || !fx.isGL(m) ? m : 'css'; fx.relayout(); }
       };
-      tune?.select({ id: 'foot-mode', label: 'Footer: style', value: 'grooves', onInput: setMode, options: [
-        ['grooves', 'A · first version'],
+      tune?.select({ id: 'foot-mode', label: 'Footer: style', value: 'stylus', onInput: setMode, options: [
+        ['stylus', 'New · Stylus: grooves part round the needle'],
+        ['lamp', 'New · Lamp: a streak of light across the grooves'],
+        ['sound', 'New · Sound: rings run out through the grooves'],
+        ['wave', 'New · Wave: the music wiggles in the grooves'],
+        ['grooves', 'A · first version (crisp)'],
+        ['css', 'A · first version, exactly as first shown'],
         ['record', 'B · record, reveal'],
         ['streak', 'C · record, streak'],
+        ['old-swing', 'Earlier · light swings to the pointer'],
+        ['old-spin', 'Earlier · Spin'],
+        ['old-tonearm', 'Earlier · Tonearm'],
+        ['old-ripple', 'Earlier · Ripple'],
+        ['old-platter', 'Earlier · Platter'],
+        ['old-depth', 'Earlier · Depth'],
       ] });
-      
+
       tune?.slider({ id: 'foot-groove', label: 'Footer: groove spacing', min: 1.5, max: 12, step: 0.25, value: 3.25, unit: 'px', onInput: (v) => {
         d.style.setProperty('--groove', `${v}px`);
         if (fx) { fx.T.pitch = v; fx.wake(); }
       } });
-      tune?.slider({ id: 'foot-rest', label: 'Footer: B grooves at rest', min: 0, max: 1, step: 0.05, value: 0, onInput: (v) => {
+      tune?.slider({ id: 'foot-rest', label: 'Footer: grooves at rest', min: 0, max: 1, step: 0.05, value: 0, onInput: (v) => {
         if (fx) { fx.T.rest = v; fx.relayout(); }
       } });
       tune?.slider({ id: 'foot-cut', label: 'Footer: word cut off at bottom', min: 0, max: 0.6, step: 0.01, value: 0.22, unit: 'em', onInput: (v) => {
         d.style.setProperty('--foot-cut', String(v));
       } });
-      if (!matchMedia('(hover: hover)').matches) return;
       const canvas = w.querySelector('.foot-fx');
       let on = false;
-      addEventListener('pointermove', (e) => {
+      let last = null;
+      // Whether a point on the page is over the word (below the top of its
+      // letters, and not on a link, a button or the Tune panel).
+      const check = (x, y, target) => {
         const r = w.getBoundingClientRect();
-        const inside = e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top + r.height * 0.1 && e.clientY <= r.bottom
-          && !e.target.closest('a, button, .dialkit-root');
+        const inside = x >= r.left && x <= r.right && y >= r.top + r.height * 0.1 && y <= r.bottom
+          && !target?.closest?.('a, button, .dialkit-root');
         if (inside) {
-          w.style.setProperty('--x', `${e.clientX - r.left}px`);
-          w.style.setProperty('--y', `${e.clientY - r.top}px`);
+          w.style.setProperty('--x', `${x - r.left}px`);
+          w.style.setProperty('--y', `${y - r.top}px`);
           const c = canvas?.getBoundingClientRect();
-          if (c) fx?.point({ x: e.clientX - c.left, y: e.clientY - c.top });
+          if (c) fx?.point({ x: x - c.left, y: y - c.top });
         } else if (on) fx?.point(null);
         if (inside !== on) { on = inside; w.style.setProperty('--on', on ? '1' : '0'); }
+      };
+      const leave = () => {
+        last = null;
+        if (on) { on = false; w.style.setProperty('--on', '0'); fx?.point(null); }
+      };
+      addEventListener('pointermove', (e) => {
+        // A finger counts only while it's down (and not scrolling the page).
+        if (e.pointerType === 'touch' && !e.buttons) return;
+        last = { x: e.clientX, y: e.clientY, target: e.target };
+        check(e.clientX, e.clientY, e.target);
       }, { passive: true });
+      addEventListener('pointerdown', (e) => {
+        if (e.pointerType !== 'touch') return;
+        last = { x: e.clientX, y: e.clientY, target: e.target };
+        check(e.clientX, e.clientY, e.target);
+      }, { passive: true });
+      addEventListener('pointerup', (e) => { if (e.pointerType === 'touch') leave(); }, { passive: true });
+      addEventListener('pointercancel', leave, { passive: true });
+      // Leaving the window (the word sits on its bottom edge) lets go too.
+      d.addEventListener('pointerleave', leave);
+      addEventListener('blur', leave);
+      // The page scrolling under a still pointer moves the word under it.
+      addEventListener('scroll', () => { if (last) check(last.x, last.y, document.elementFromPoint(last.x, last.y)); }, { passive: true });
+      // No hover on this screen: play it once when the word comes into view.
+      if (fx?.ready && !matchMedia('(hover: hover)').matches) {
+        const io = new IntersectionObserver(([e]) => {
+          if (!e.isIntersecting) return;
+          io.disconnect();
+          setTimeout(() => fx.demo(), 250);
+        }, { threshold: 0.5 });
+        io.observe(w);
+      }
     })();
 
     // The FAQ: answers ease open and closed instead of jumping. The
