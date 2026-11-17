@@ -28,6 +28,7 @@ import { backend } from '$lib/backend.js';
 import '../src/app.css';
 import './hero.css';
 import './controller.css';
+import './controller-skins.css';
 
 const W = 1440;
 // The app is 1440 × 900, and so is the whole picture: in the controller

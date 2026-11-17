@@ -467,7 +467,7 @@
           if (!useVideo()) frame.dataset.live = '';
           live.contentWindow.postMessage({ interlude: 'mode', mode }, '*');
           live.contentWindow.postMessage({ interlude: 'input', style: input }, '*');
-          live.contentWindow.postMessage({ interlude: 'controller', v: 'club' }, '*');
+          live.contentWindow.postMessage({ interlude: 'controller', v: 'club', skin: heroSkin }, '*');
         }
         if (e.data?.interlude === 'camera') camera(e.data);
         if (e.data?.interlude === 'level') {
@@ -596,6 +596,17 @@
       }, { once: true });
       window.tune?.select({ label: 'Hero: render', value: render, options: [['video', 'A video of the app'], ['live', 'The live app']],
         onInput: (v) => { render = v; start(); } });
+      // Being tried: how the controller is drawn (app/demo/controller-skins.css).
+      // Kept here too, so a pick made before the app has loaded is sent once
+      // it's ready.
+      let heroSkin = 'current';
+      window.tune?.select({ label: 'Hero: controller style', value: heroSkin, options: [
+        ['current', 'Graphite metal (current)'], ['flat', 'Flat'], ['bauhaus', 'Modernist'], ['te', 'Studio industrial'],
+        ['blueprint', 'Blueprint'], ['riso', 'Risograph'], ['hifi', '70s hi-fi'],
+      ], onInput: (v) => {
+        heroSkin = v;
+        live.contentWindow?.postMessage({ interlude: 'controller', v: 'club', skin: v }, '*');
+      } });
 
       const buttons = [...document.querySelectorAll('.switch button')];
       for (const b of buttons) {
