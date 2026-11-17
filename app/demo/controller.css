@@ -498,7 +498,10 @@
 .desk[data-shown]:has(.hw[data-v="club"]) { opacity: 1; }
 .hw[data-v="club"]::after {
   content: ''; position: absolute; left: 0; right: 0; top: calc(100% - 26px); height: var(--body);
-  border-radius: 0 0 26px 26px / 0 0 20px 20px;
+  /* Top corners: the plate's own 26px corners as they're seen from here
+     (26px across, 26 × cos 33° ≈ 22px down), so the face never shows past
+     the plate's rounded corners; bottom corners the same, on the desk. */
+  border-radius: 26px 26px 26px 26px / 22px 22px 20px 20px;
   transform-origin: 50% 0; transform: rotateX(-33deg);
   background:
     /* the ends, turning away round the corners */
@@ -512,3 +515,8 @@
   box-shadow: 0 5px 8px -2px rgb(0 0 0 / 0.75), 0 12px 22px rgb(0 0 0 / 0.5);
   pointer-events: none;
 }
+
+/* Club: the browse knob sits on the mixer's centre line; its print hangs
+   to the right of it, out of the centring. */
+.hw[data-v="club"] .hw-browse-row { position: relative; display: grid; justify-content: center; align-items: center; }
+.hw[data-v="club"] .hw-browse-row .hw-print { position: absolute; left: calc(50% + 29px); top: 50%; translate: 0 -50%; white-space: nowrap; }

@@ -10,13 +10,13 @@
   <meta property="og:image" content="https://interludedj.com/img/og.jpg">
   <meta property="og:url" content="https://interludedj.com/">
   <meta name="theme-color" content="#09090b">
-  <link rel="icon" href="img/icon.svg" type="image/svg+xml">
+  <link rel="icon" href="img/icon.svg?v=2" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261117a">
+  <link rel="stylesheet" href="style.css?v=20261117c">
   <link rel="stylesheet" href="demo/cards.css">
-  <script src="tune.js?v=20261117a"></script>
+  <script src="tune.js?v=20261117c"></script>
   <script>
     // The hero's layout (Split) and the nav's (bar to capsule), set before
     // the first paint so nothing jumps. The nav's look changes as the page
@@ -38,7 +38,7 @@
     <span class="nav-edge" aria-hidden="true"></span>
     <div class="wrap nav-row">
       <a class="brand" href="#top" aria-label="Interlude home">
-        <img src="img/icon.svg" alt="" width="24" height="24">
+        <img src="img/icon.svg?v=2" alt="" width="24" height="24">
         <span>Interlude</span>
       </a>
       <nav class="links" aria-label="Sections">
@@ -90,9 +90,10 @@
       const reduced = matchMedia('(prefers-reduced-motion: reduce)');
       // The name is --brand-word (30px) in the bar and 15px in the capsule;
       // the icon is --brand-icon (40px) in the bar and 36px in the capsule.
-      let WORD = 15 / 30, ICON = 40 / 36;
+      let WORD = 15 / 30, ICON = 40 / 36, CAP_R = 14;
       const sizes = () => {
         const cs = getComputedStyle(d);
+        CAP_R = parseFloat(cs.getPropertyValue('--cap-r')) || 14;
         WORD = 15 / (parseFloat(cs.getPropertyValue('--brand-word')) || 30);
         ICON = (parseFloat(cs.getPropertyValue('--brand-icon')) || 40) / 36;
       };
@@ -155,7 +156,7 @@
         glass.style.width = `${r(geo.W - left - right)}px`;
         glass.style.top = `${r(10 * v)}px`;
         glass.style.height = `${r(geo.H + 1 - (geo.H - 47) * v)}px`;
-        glass.style.borderRadius = `${r(24 * Math.min(1, v * 1.4))}px`;
+        glass.style.borderRadius = `${r(CAP_R * Math.min(1, v * 1.4))}px`;
         glass.style.boxShadow = `inset 0 -1px 0 rgb(255 255 255 / ${r(0.08 * (1 - v))}), inset 0 0 0 1px rgb(255 255 255 / ${r(0.09 * v)}), inset 0 1px 0 rgb(255 255 255 / ${r(0.05 * v)}), 0 12px 40px rgb(0 0 0 / ${r(0.42 * v)})`;
         glass.style.opacity = p > 0.001 ? '1' : '';
         // The bar's middle is 30px down, the capsule's 34px. The icon's box
@@ -217,6 +218,11 @@
       }).observe(d, { attributeFilter: ['data-nav'] });
       window.navMeasure = measure;
       window.tune?.slider({ id: 'nav-word', label: 'Nav: name size before capsule', min: 18, max: 96, step: 1, value: 30, unit: 'px', css: '--brand-word', onInput: () => requestAnimationFrame(measure) });
+      // The capsule's corners: the icon's own (its squircle's corner, about
+      // 8px at 36px, plus the 6px between), so everything inside is
+      // concentric; or a full pill.
+      window.tune?.select({ label: 'Nav: capsule corners', value: '14', options: [['14', 'Match the icon'], ['24', 'Pill']],
+        onInput: (v) => { d.style.setProperty('--cap-r', `${v}px`); requestAnimationFrame(measure); } });
       window.tune?.slider({ id: 'nav-icon', label: 'Nav: icon size before capsule', min: 28, max: 120, step: 1, value: 40, css: '--brand-icon', onInput: () => requestAnimationFrame(measure) });
       measure();
       document.fonts?.ready.then(measure);
@@ -231,7 +237,7 @@
     <canvas class="ripples" aria-hidden="true"></canvas>
     <section class="hero wrap">
       <div class="lockup">
-        <img class="hero-icon" src="img/icon.svg" alt="" width="88" height="88">
+        <img class="hero-icon" src="img/icon.svg?v=2" alt="" width="88" height="88">
         <h1>Interlude</h1>
       </div>
       <p class="tagline">A free, <span class="nw">open-source</span> DJ app for Mac.</p>
@@ -387,7 +393,7 @@
   <footer class="foot">
     <div class="wrap foot-grid">
       <div>
-        <a class="brand" href="#top"><img src="img/icon.svg" alt="" width="20" height="20"><span>Interlude</span></a>
+        <a class="brand" href="#top"><img src="img/icon.svg?v=2" alt="" width="20" height="20"><span>Interlude</span></a>
         <p class="small-print">A free DJ app for Mac.</p>
         <p class="small-print legal">Interlude is free software under the GNU GPL v3 or later. Controller mappings come from the <a href="https://mixxx.org" target="_blank" rel="noopener">Mixxx</a> project (GPL-2.0-or-later). Interlude isn't affiliated with Pioneer DJ, Rekordbox, Serato or Mixxx; their names belong to their owners.</p>
       </div>
@@ -417,7 +423,7 @@
     // same at any width. It tells us how loud it's playing, and the glow
     // under it follows; the switch picks mouse or controller.
     (async () => {
-      const fx = await import('./hero-fx.js?v=20261117a').catch(() => null);
+      const fx = await import('./hero-fx.js?v=20261117c').catch(() => null);
       const frame = document.querySelector('.stage-frame');
       const screen = frame.querySelector('.screen');
       const live = frame.querySelector('.live');
@@ -494,6 +500,11 @@
       fx?.setVariant('needle');
       fx?.setStyle('blend');
       document.documentElement.dataset.reclayout = 'stacked';
+      // Being tried: the Decks picture with Sync alone, or Sync with the
+      // deck's cues and loop under it.
+      window.tune?.select({ label: 'Features: Decks picture', value: 'stacked', options: [['stacked', 'Sync, then cues and a loop'], ['single', 'Sync only']],
+        onInput: (v) => (document.documentElement.dataset.decklayout = v) });
+      if (!window.tune) document.documentElement.dataset.decklayout = 'stacked';
 
       // The live app starts loading straight away, so it's on screen (and
       // the switch has something to act on) as soon as possible.
@@ -510,7 +521,7 @@
       const w = document.querySelector('.foot-word');
       if (!w) return;
       const d = document.documentElement;
-      const fx = await import('./foot-fx.js?v=20261117a').catch(() => null);
+      const fx = await import('./foot-fx.js?v=20261117c').catch(() => null);
       const tune = window.tune;
       const setMode = (m) => {
         d.dataset.foot = fx?.ready ? m : 'css';
