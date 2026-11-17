@@ -395,6 +395,9 @@ export function createMockBackend() {
       return { active: false, seconds: rec.seconds, path: rec.path, droppedSeconds: 0, error: null };
     },
     outputName: async () => 'Browser preview · simulated audio',
+    defaultSamples: async () =>
+      ['Air horn', 'Siren', 'Kick', 'Clap', 'Snare', 'Rewind', 'Riser', 'Laser'].map((title) => ({ path: `/samples/${title}.wav`, title })),
+    pickSample: async () => '/Users/you/Samples/Vocal chop.wav',
     loadSample: async (slot, path) => {
       const duration = 0.6 + (hash(path) % 40) / 10;
       samples[slot] = { duration, started: null };

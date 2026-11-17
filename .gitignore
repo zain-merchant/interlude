@@ -5,3 +5,4 @@ dist/
 *.wav
 !crates/**/tests/fixtures/*.wav
 app/src-tauri/gen/
+!app/src-tauri/samples/*.wav
