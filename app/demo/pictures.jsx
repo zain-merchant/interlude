@@ -28,7 +28,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Stage } from './stageshow/stage';
 import { Count, Collapse } from './stageshow/motion';
-import { spring, SMOOTH, GLIDE, LOCK } from './springs.js';
+import { spring, SMOOTH, SETTLE, GLIDE, SLIDE, LOCK } from './springs.js';
 import './pictures.css';
 
 // Timing, one system for every picture. A press is held for PRESS (Emil
@@ -65,7 +65,10 @@ function Pic({ id, initial, poster, script, gate, onDone, bleed, children }) {
 // The EQ knobs, on Apple's spring (springs.js) as tuned by eye in
 // site/lab/motion.html: a long, heavily damped turn that the magnet grabs
 // over the last fifth and snaps home.
-const KNOB_SPRING = spring({ duration: 0.86, bounce: -0.3, mass: 0.75, velocity: 3.6, magnet: 1.8, range: 0.21 });
+const KNOB_LOW = spring({ duration: 0.86, bounce: -0.3, mass: 0.75, velocity: 3.6, magnet: 1.8, range: 0.21 });
+// High and Mid: the same spring without the magnet, and without the extra
+// damping that only the magnet makes up for (it would creep for seconds).
+const KNOB_SPRING = spring({ duration: 0.86, mass: 0.75, velocity: 3.6 });
 
 // One step a frame, on the screen's own frame clock, timed from the first
 // frame drawn: a 16ms timer drifts against the screen and judders.
@@ -122,9 +125,10 @@ export function Sync(play) {
         await a.set({ press: true });
         await a.wait(PRESS);
         await a.set({ press: false, on: true });
-        // The lock lights as the beats arrive (they slide on LOCK, home at
-        // 352ms; the lines take a moment to draw, so they start just before).
-        await a.wait(LOCK.ms - 50);
+        // The lock lights as the beats arrive (they slide on SLIDE, nearly
+        // home by 700ms; the lines take a moment to draw, so they start just
+        // before).
+        await a.wait(620);
         await a.set({ lock: true });
         if (!stacked()) return;
         // Then the cues: two pads pressed in turn, each setting a hot cue.
@@ -153,7 +157,7 @@ export function Sync(play) {
           </div>
           <div className="p-deckrow" data-deck="b">
             <span className="p-chip">B</span>
-            <b className="p-bpm"><Count value={s.on ? 129 : B_FROM} format={(n) => n.toFixed(2)} duration={LOCK.ms} /></b>
+            <b className="p-bpm"><Count value={s.on ? 129 : B_FROM} format={(n) => n.toFixed(2)} duration={SLIDE.ms} /></b>
             <Ticks deck="b" offset={s.on ? 0 : TICK * B_LATE} stretch={s.on ? 1 : 129 / B_FROM} />
           </div>
           <div className="p-locks" aria-hidden>
@@ -218,13 +222,13 @@ export function Eq(play) {
     <Pic id="eq" {...play} initial={{ hi: 0.5, mid: 0.5, low: 0.5 }} poster={{ hi: 0.18, mid: 0.85, low: 0 }}
       script={async (a) => {
         // One cascade: Mid takes over while High is still turning, then Low
-        // travels furthest; each on the knob spring, snapping into place
-        // (Low onto its kill).
-        const turn = (key, to) => tween(a, key, 0.5, to, KNOB_SPRING.ms, KNOB_SPRING.ease);
+        // travels furthest and snaps onto its kill (the only one with the
+        // magnet).
+        const turn = (key, to, sp = KNOB_SPRING) => tween(a, key, 0.5, to, sp.ms, sp.ease);
         await Promise.all([
           turn('hi', 0.18),
           a.wait(290).then(() => turn('mid', 0.85)),
-          a.wait(700).then(() => turn('low', 0)),
+          a.wait(700).then(() => turn('low', 0, KNOB_LOW)),
         ]);
       }}>
       {(s) => (
@@ -633,9 +637,10 @@ export function AddMusic(play) {
     <Pic id="add" {...play} bleed="bottom" initial={{ drop: false, rows: 0, known: 0 }} poster={{ drop: true, rows: ADDED.length, known: ADDED.length }}
       script={async (a) => {
         await a.set({ drop: true });
-        // Tracks start arriving as the folder lands (it seats on LOCK, at
-        // 352ms), and are worked out while they're still arriving.
-        await a.wait(LOCK.ms + 40);
+        // Tracks start arriving as the folder lands (it drops on SETTLE,
+        // nearly home by 350ms), and are worked out while they're still
+        // arriving.
+        await a.wait(380);
         for (let rows = 1; rows <= ADDED.length; rows++) {
           await a.set({ rows });
           await a.wait(90);
