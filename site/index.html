@@ -15,7 +15,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css?v=20261119c">
-  <link rel="stylesheet" href="demo/cards.css?v=20261119b">
+  <link rel="stylesheet" href="demo/cards.css?v=20261119d">
   <script src="tune.js?v=20261118b"></script>
   <script>
     // The hero's layout (Split) and the nav's (bar to capsule), set before
@@ -290,7 +290,7 @@
       // way Raycast, Linear and most Mac download pages do it), as a sentence
       // there, or above the buttons under the name (the earlier layout).
       d.dataset.cardblock = 'caption';
-      window.tune?.select({ label: 'Hero: download block', folder: 'Layout', value: 'caption', options: [['caption', 'Caption under the buttons'], ['sentence', 'One sentence under the buttons'], ['head', 'Name and facts above']], onInput: (v) => { d.dataset.cardblock = v; ruleMid(); } });
+      window.tune?.select({ label: 'Hero: download block', folder: 'Layout', value: 'caption', options: [['caption', 'Caption under the buttons'], ['sentence', 'One sentence under the buttons'], ['head', 'Name and facts above']], onInput: (v) => { d.dataset.cardblock = v; requestAnimationFrame(() => ruleMid()); } });
       window.tune?.select({ label: 'Hero: version link', folder: 'Layout', value: 'match', options: [['match', 'Beside the name, its size'], ['small', 'Beside the name, smaller'], ['right', 'Small, on the right']], onInput: (v) => (d.dataset.cardvlink = v) });
       // Midway, measured: from the end of the headline's longest line to the
       // words beside it, the rule half way.
@@ -375,7 +375,7 @@
           <img class="poster" src="img/screenshot-1x.jpg" srcset="img/screenshot-1x.jpg 1440w, img/screenshot.jpg 2880w" sizes="(max-width: 1200px) 100vw, 1200px"
             width="1440" height="900" alt="Interlude with two tracks loaded: waveforms across the top, two decks either side of the mixer, and the library below.">
           <!-- The real app on its simulated engine, played by a script (app/demo). Loaded after the page. -->
-          <iframe class="live" title="Interlude mixing one track into the next" tabindex="-1" aria-hidden="true" data-src="demo/hero.html?v=20261118d"></iframe>
+          <iframe class="live" title="Interlude mixing one track into the next" tabindex="-1" aria-hidden="true" data-src="demo/hero.html?v=20261119e"></iframe>
         </div>
       </div>
       <div class="shot-bar">
@@ -393,7 +393,7 @@
     </section>
 
     <section id="install" class="wrap section">
-      <h2>Three steps to your first mix.</h2>
+      <h2>Three steps to your first mix</h2>
       <ol class="steps">
         <li data-picture="download">
           <span class="num">01</span>
@@ -415,7 +415,7 @@
     </section>
 
     <section id="features" class="wrap section">
-      <h2>Everything you need to play a set.</h2>
+      <h2>Everything you need to play a set</h2>
       <div class="groups">
         <div class="group" data-picture="decks">
           <h3><span class="dot a"></span>Decks</h3>
@@ -578,7 +578,7 @@
   </footer>
 
   <!-- The feature cards' pictures (built from app/demo, see the README). -->
-  <script type="module" src="demo/cards.js?v=20261119b"></script>
+  <script type="module" src="demo/cards.js?v=20261119d"></script>
   <script>
     // The hero. The screenshot shows first; once the page has loaded, the
     // live app takes its place (unless the visitor prefers less motion).
