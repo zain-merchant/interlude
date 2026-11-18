@@ -1087,7 +1087,7 @@ html[data-hero][data-herotext="card"][data-cardblock="sentence"] .dl-cap2 { disp
 .oss:is([data-look="tight"], [data-look^="doors"], [data-look^="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .oss-commits li + li { border-image: none; border-top: 1px solid var(--oss-rule2); }
 .oss:is([data-look="tight"], [data-look^="doors"], [data-look^="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .oss-commits a { padding: 9px 0; font-size: 14px; color: var(--oss-ink); transition: color 150ms ease; }
 .oss:is([data-look="tight"], [data-look^="doors"], [data-look^="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .oss-commits a:hover .oss-msg { color: var(--oss-strong); text-decoration: none; }
-.oss:is([data-look="tight"], [data-look^="doors"], [data-look^="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .oss-area { color: inherit; font-weight: 560; }
+.oss:is([data-look="tight"], [data-look^="doors"], [data-look^="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .oss-area { color: inherit; font-weight: 500; }
 .oss:is([data-look="tight"], [data-look^="doors"], [data-look^="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .oss-commits time { font-size: 12.5px; color: var(--oss-dim); }
 .oss:is([data-look="tight"], [data-look^="doors"], [data-look^="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .oss-empty a { color: var(--oss-ink); }
 /* Light surfaces' inks. */
@@ -1380,7 +1380,7 @@ html[data-mark="glow"] .group::before {
 html[data-mark="tick"] .group h3::before { content: ''; flex: none; width: 3px; height: 15px; border-radius: 2px; background: var(--mark); }
 
 /* A change's area ("Mappings:") in the change's own colour, a step heavier. */
-.oss-area { font-weight: 560; }
+.oss-area { font-weight: 500; }
 
 /* Between sections (Tune, Sections: between). Each keeps the same 112px
    from the content above to the heading; only what sits in that space
@@ -1581,18 +1581,26 @@ html[data-note="sleeve"] .founder::before {
 }
 /* The record: centred on the window, a little larger than the sleeve's
    reach, so its edge stands out of the open side. */
+/* At rest the record sits in the sleeve, still, its edge just showing at
+   the open side. On hover it slides out to the side and spins up (the
+   turning is index.html's, eased up and down); off, it slows, stops and
+   slides home. */
 html[data-note="sleeve"] .rec {
   z-index: -3; width: 80%; left: calc(var(--hx) - 40%); top: calc(var(--hy) - 40%);
-  translate: -14% 0; transition: translate 1.3s cubic-bezier(0.22, 1, 0.36, 1) 0.15s;
+  translate: 0 0; transition: translate 0.9s cubic-bezier(0.22, 1, 0.36, 1);
 }
-html[data-note="sleeve"] .founder:is([data-signed], :not([data-sign])) .rec { translate: 0 0; }
-html[data-note="sleeve"] .rec-spin { animation: rec-turn 7s linear infinite; }
+html[data-note="sleeve"] .founder:hover .rec { translate: 46% 0; transition-duration: 0.7s; }
+/* (The page cuts it at the window's edge, never a section's.) */
+body { overflow-x: clip; }
 html[data-note="sleeve"] .founder h3 { color: #17140e; margin: 0 0 14px; }
 html[data-note="sleeve"] .founder-body { margin-bottom: 18px; }
 html[data-note="sleeve"] .founder-body i { background: rgb(28 24 18 / 0.11); }
 html[data-note="sleeve"] .founder-body i:nth-child(n + 5) { width: min(var(--w), 48%); }
 html[data-note="sleeve"] .founder-ask { max-width: 46%; margin: 0 0 4px; line-height: 1.4; }
-html[data-note="sleeve"] .founder-ask a { color: #17140e; text-decoration-color: rgb(28 24 18 / 0.35); }
+html[data-note="sleeve"] .founder-ask a { color: #17140e; text-decoration-color: rgb(28 24 18 / 0.35); text-decoration-thickness: 1px; transition: text-decoration-color 0.15s, text-decoration-thickness 0.15s, color 0.15s; }
+html[data-note="sleeve"] .founder-ask a:hover { color: #000; text-decoration-color: #17140e; text-decoration-thickness: 2px; }
+html[data-note="label"] .founder-ask a { transition: text-decoration-color 0.15s, text-decoration-thickness 0.15s; }
+html[data-note="label"] .founder-ask a:hover { text-decoration-color: var(--fg); text-decoration-thickness: 2px; }
 html[data-note="sleeve"] .founder-sig { stroke: #23315c; width: 112px; margin: 0 0 0 -4px; }
 
 /* Note: white label. A promo pressing with a plain white label, the note
