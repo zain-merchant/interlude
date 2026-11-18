@@ -31,6 +31,11 @@ function markSeen(id) {
   }
 }
 
+/** True the first time it's called for `id` on this computer, then never again. */
+export function once(id) {
+  return markSeen(id);
+}
+
 /** Shows `text` once, ever, under `id`. Returns whether it showed. */
 export function tipOnce(id, text) {
   if (!markSeen(id)) return false;
