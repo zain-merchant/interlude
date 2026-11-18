@@ -632,3 +632,7 @@
   transition: opacity var(--snappy-ms) var(--snappy), transform var(--smooth-ms) var(--smooth);
 }
 .p-loopband[data-on] { opacity: 1; transform: none; }
+
+/* A picture going back to its start while faded out (Pic): it lands there
+   at once, nothing on the way showing through as it fades back up. */
+.p-body[data-snap], .p-body[data-snap] *, .p-body[data-snap] *::before, .p-body[data-snap] *::after { transition: none !important; animation: none !important; }

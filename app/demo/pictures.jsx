@@ -48,7 +48,17 @@ const TOKENS = { '--ss-font': "'Geist', 'Geist Variable', 'Helvetica Neue', Aria
 const ICON = new URL('../../site/img/icon.svg', import.meta.url).href;
 
 /** The frame every picture shares. */
-function Pic({ id, initial, poster, script, gate, onDone, bleed, children }) {
+// Played again (a hover or click on a finished card, Replay's `again`), a
+// picture goes back to how it started where you can see it, rather than
+// jumping there: by its own `rewind` (the knobs turn back, the stems come
+// back up), or else a quick fade down, the start state set while it's out,
+// and a fade back up. Then it holds the start a moment, so you see where it
+// begins, before it plays.
+const HOLD = 650;
+const fadeOut = (el) => el?.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 170, easing: 'cubic-bezier(0.4, 0, 1, 1)', fill: 'forwards' }).finished;
+const fadeIn = (el) => el?.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 260, easing: 'cubic-bezier(0.23, 1, 0.32, 1)', fill: 'forwards' }).finished;
+function Pic({ id, initial, poster, script, rewind, gate, again, onDone, bleed, children }) {
+  const body = useRef(null);
   return (
     <Stage width={PW} height={PH} theme="dark" unframed play="once" tokens={TOKENS} className={`p p--${id}`}
       initial={initial} poster={poster}
@@ -56,10 +66,27 @@ function Pic({ id, initial, poster, script, gate, onDone, bleed, children }) {
         // Wait for this picture's turn (Replay's sequence), then play.
         await gate;
         await a.wait(START);
-        await script(a);
-        onDone?.();
+        for (;;) {
+          await script(a);
+          onDone?.();
+          if (!again) return;
+          await again();
+          if (rewind) await rewind(a);
+          else {
+            // (Set while it's out with its transitions off, so nothing on
+            // the way back shows through as it fades up.)
+            await fadeOut(body.current);
+            body.current?.setAttribute('data-snap', '');
+            await a.set(initial);
+            await frame();
+            await frame();
+            body.current?.removeAttribute('data-snap');
+            await fadeIn(body.current);
+          }
+          await a.wait(HOLD);
+        }
       }}>
-      {(s) => <div className="p-body" data-bleed={bleed}>{children(s)}</div>}
+      {(s) => <div ref={body} className="p-body" data-bleed={bleed}>{children(s)}</div>}
     </Stage>
   );
 }
@@ -122,6 +149,8 @@ const LOOP_AT = 8; // the loop's first beat (a downbeat), well inside the card
 export function Sync(play) {
   return (
     <Pic id="sync" {...play} bleed="right" initial={{ on: false, press: false, lock: false, cues: 0, cuePress: 0, loop: false, loopPress: false }}
+      // Again: the lock, cues and loop go off, and B's beats slide back out.
+      rewind={async (a) => { await a.set({ lock: false, cues: 0, loop: false }); await a.wait(120); await a.set({ on: false }); await a.wait(750); }}
       poster={{ on: true, press: false, lock: true, cues: HOT_CUES.length, cuePress: 0, loop: true, loopPress: false }}
       script={async (a) => {
         await a.set({ press: true });
@@ -222,6 +251,17 @@ export function Eq(play) {
   // Low all the way down to its kill (counter-clockwise, clockwise, counter).
   return (
     <Pic id="eq" {...play} initial={{ hi: 0.5, mid: 0.5, low: 0.5 }} poster={{ hi: 0.18, mid: 0.85, low: 0 }}
+      // Again: all three turn back to the middle together, on SMOOTH.
+      rewind={async (a) => {
+        const from = { hi: 0.18, mid: 0.85, low: 0 };
+        const t0 = await frame();
+        for (let now = t0; ; now = await frame()) {
+          const u = Math.min(1, (now - t0) / 480);
+          const k = SMOOTH.ease(u);
+          a.put({ hi: from.hi + (0.5 - from.hi) * k, mid: from.mid + (0.5 - from.mid) * k, low: from.low + (0.5 - from.low) * k });
+          if (u >= 1) break;
+        }
+      }}
       script={async (a) => {
         // One cascade: Mid takes over while High is still turning, then Low
         // travels furthest and snaps onto its kill (the only one with the
@@ -268,6 +308,8 @@ const stemDelay = (i) => Math.round((i + (i % 2) * (0.4 + 1.2 * jitter(i)) * STE
 export function Stems(play) {
   return (
     <Pic id="stems" {...play} bleed="right" initial={{ muted: [] }} poster={{ muted: STEM_STEPS.at(-1) }}
+      // Again: every stem comes back up, its bars growing back in their wave.
+      rewind={async (a) => { await a.set({ muted: [] }); await a.wait(700); }}
       script={async (a) => {
         for (const muted of STEM_STEPS) {
           await a.set({ muted });
@@ -374,6 +416,8 @@ export function Search(play) {
 export function Controllers(play) {
   return (
     <Pic id="ctl" {...play} bleed="bottom" initial={{ plug: false, wake: false, toast: false }} poster={{ plug: true, wake: true, toast: true }}
+      // Again: the toast and the lights go, then the lead lifts out.
+      rewind={async (a) => { await a.set({ toast: false, wake: false }); await a.wait(160); await a.set({ plug: false }); await a.wait(LOCK.ms); }}
       script={async (a) => {
         await a.set({ plug: true });
         // It wakes as the plug seats (it comes down on LOCK and stops dead
@@ -422,7 +466,11 @@ const GROOVE_PAD = { K: 0, h: 3, S: 5, X: 7 };
 const WAVE = Array.from({ length: 44 }, (_, i) => 0.25 + 0.75 * Math.abs(Math.sin(i * 0.9) * Math.cos(i * 0.31)));
 export function Extras(play) {
   return (
-    <Pic id="extras" {...play} initial={{ rec: false, sec: 0, bars: 0, hits: Array(PADS).fill(0), accent: Array(PADS).fill(false), key: 'W', focus: 0 }} poster={{ rec: true, sec: 9, bars: WAVE.length, hits: Array(PADS).fill(0), accent: Array(PADS).fill(false), key: 'Space', focus: 0 }}
+    <Pic id="extras" {...play}
+      // Again: the sampler stays as it is; the recorder stops, its take
+      // clears and its time goes back to Rec.
+      rewind={async (a) => { await a.set({ rec: false, sec: 0, bars: 0, key: 'W', focus: 0 }); await a.wait(260); }}
+      initial={{ rec: false, sec: 0, bars: 0, hits: Array(PADS).fill(0), accent: Array(PADS).fill(false), key: 'W', focus: 0 }} poster={{ rec: true, sec: 9, bars: WAVE.length, hits: Array(PADS).fill(0), accent: Array(PADS).fill(false), key: 'Space', focus: 0 }}
       script={async (a) => {
         await a.set({ rec: true });
         let sec = 0;
@@ -792,6 +840,8 @@ export function Replay({ Graphic, card }) {
     // Never restarts one already running, whichever way it started.
     let replaying = false;
     let hovered = false;
+    let next = null;
+    box.current.__again = () => new Promise((r) => (next = r));
     const again = () => {
       // Not had its turn yet: a real hover plays it now, out of the queue.
       if (entry.state === 'idle') {
@@ -799,9 +849,13 @@ export function Replay({ Graphic, card }) {
         entry.play();
         return;
       }
-      if (entry.state !== 'done' || replaying) return;
+      if (entry.state !== 'done' || replaying || !next) return;
+      // The picture goes back to its start where you can see it, and plays
+      // again (Pic), rather than being remounted at its start.
       replaying = true;
-      setRun({ key: ++n, gate: Promise.resolve() });
+      const go = next;
+      next = null;
+      go();
     };
     const move = (e) => {
       if (hovered || performance.now() - lastScroll < 350) return;
@@ -827,7 +881,7 @@ export function Replay({ Graphic, card }) {
   }, [card]);
   return (
     <div ref={box} className="p-slot">
-      {run.gate ? <Graphic key={run.key} gate={run.gate} onDone={() => box.current?.__entry?.finished()} /> : <div className="p-slot__hold" />}
+      {run.gate ? <Graphic key={run.key} gate={run.gate} again={() => box.current.__again()} onDone={() => box.current?.__entry?.finished()} /> : <div className="p-slot__hold" />}
     </div>
   );
 }

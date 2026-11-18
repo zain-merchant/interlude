@@ -1034,3 +1034,7 @@ html[data-nav="morph"][data-navacts="after"] .nav[data-acts-in] .nav-actions .bt
 }
 html[data-nav="morph"][data-navacts="after"] .nav[data-acts-in] .nav-actions .btn + .btn { transition-delay: 50ms, 50ms, 50ms, 0ms; }
 html[data-nav="morph"] .nav-actions { will-change: transform, opacity; }
+/* The words beside the headline sit on its foot: the column is only as tall
+   as what's in it, its last line level with the end of the line under the
+   headline, and the rule beside it runs exactly that height. */
+html[data-hero][data-herotext="card"] .hero-side { align-self: end; }

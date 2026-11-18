@@ -14,8 +14,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261118z">
-  <link rel="stylesheet" href="demo/cards.css?v=20261118d">
+  <link rel="stylesheet" href="style.css?v=20261119a">
+  <link rel="stylesheet" href="demo/cards.css?v=20261119b">
   <script src="tune.js?v=20261118b"></script>
   <script>
     // The hero's layout (Split) and the nav's (bar to capsule), set before
@@ -271,23 +271,22 @@
         onInput: (v) => { d.dataset.navacts = v; for (const b of btns) b.removeAttribute('style'); nav.removeAttribute('data-acts-in'); draw(); } });
       window.tune?.slider({ label: 'Nav: gap between icon and name before capsule', min: 0, max: 40, step: 1, value: 10, unit: 'px', css: '--brand-gap', onInput: () => requestAnimationFrame(measure) });
       window.tune?.slider({ id: 'nav-icon', label: 'Nav: icon size before capsule', folder: 'Settled', min: 28, max: 120, step: 1, value: 48, css: '--brand-icon', onInput: () => requestAnimationFrame(measure) });
-      // The hero's text: the card arrangement (data-herotext="card",
-      // style.css), its licence in the line. Two things still being tried
-      // (Hero › Layout): where What's new goes, and what frames it.
-      d.dataset.cardtitle = 'version';
+      // The hero's text beside the headline (data-herotext="card",
+      // style.css): Interlude and its version as a link, under it the
+      // licence and what it runs on, then the buttons, a rule beside it all.
+      // Two things still being tried (Hero › Layout): how the version link
+      // looks, and where the rule goes.
+      d.dataset.cardtitle = 'name';
       d.dataset.cardlic = 'line';
       d.dataset.cardsurface = 'rule';
       d.dataset.cardnew = 'link';
       d.dataset.cardsub = 'facts';
       d.dataset.cardreq = 'under';
       d.dataset.cardrule = 'near';
-      window.tune?.select({ label: 'Hero: what\u2019s new', folder: 'Layout', value: 'link', options: [['beside', 'Interlude 0.1.3, What\u2019s new beside it'], ['under', 'What\u2019s new in 0.1.3 under GitHub'], ['right', 'Interlude, the version on the right'], ['title', 'Interlude 0.1.3 is itself the link'], ['pill', 'Interlude, the version as a small chip'], ['link', 'Interlude, the version as a link beside it'], ['spaced', 'The licence, then What\u2019s new, on one line'], ['sentence', 'Open source under GPLv3+. See what\u2019s new in 0.1.3']],
-        onInput: (v) => { d.dataset.cardnew = v; d.dataset.cardtitle = v === 'beside' || v === 'title' ? 'version' : 'name';
-          d.dataset.cardsub = v === 'spaced' || v === 'sentence' ? v : v === 'link' ? 'facts' : 'line'; } });
-      // The version link's look (with What's new as the link): the name's
-      // size in a quieter grey, small and right-aligned, or small beside it.
+      // The version link: beside the name at its size in a quieter grey,
+      // smaller beside it, or small on the right.
       d.dataset.cardvlink = 'match';
-      window.tune?.select({ label: 'Hero: version link', folder: 'Layout', value: 'match', options: [['match', 'The name\u2019s size, quieter'], ['right', 'Small, on the right'], ['small', 'Small, beside the name']], onInput: (v) => (d.dataset.cardvlink = v) });
+      window.tune?.select({ label: 'Hero: version link', folder: 'Layout', value: 'match', options: [['match', 'Beside the name, its size'], ['small', 'Beside the name, smaller'], ['right', 'Small, on the right']], onInput: (v) => (d.dataset.cardvlink = v) });
       // Midway, measured: from the end of the headline's longest line to the
       // words beside it, the rule half way.
       const ruleMid = () => {
@@ -303,12 +302,8 @@
       ruleMid();
       document.fonts?.ready.then(ruleMid);
       addEventListener('resize', () => requestAnimationFrame(ruleMid));
-      window.tune?.select({ label: 'Hero: requirement', folder: 'Layout', value: 'under', options: [['under', 'Under the buttons'], ['top', 'Up top, the buttons at the foot']], onInput: (v) => (d.dataset.cardreq = v) });
-      window.tune?.select({ label: 'Hero: frame', folder: 'Layout', value: 'rule-near', options: [['rule-near', 'A rule beside the buttons'], ['rule-mid', 'A rule midway'], ['none', 'Nothing'], ['glass', 'A glass card'], ['outline', 'An outline']],
-        onInput: (v) => {
-          d.dataset.cardsurface = v.startsWith('rule') || v === 'none' ? 'rule' : v;
-          d.dataset.cardrule = v === 'rule-mid' ? 'mid' : v === 'none' ? 'none' : 'near';
-        } });
+      window.tune?.select({ label: 'Hero: rule', folder: 'Layout', value: 'near', options: [['near', 'Beside the words'], ['mid', 'Midway to the headline'], ['none', 'None']],
+        onInput: (v) => (d.dataset.cardrule = v) });
       measure();
       document.fonts?.ready.then(measure);
       // Opened part way down the page: start as a capsule.
@@ -574,7 +569,7 @@
   </footer>
 
   <!-- The feature cards' pictures (built from app/demo, see the README). -->
-  <script type="module" src="demo/cards.js?v=20261118d"></script>
+  <script type="module" src="demo/cards.js?v=20261119b"></script>
   <script>
     // The hero. The screenshot shows first; once the page has loaded, the
     // live app takes its place (unless the visitor prefers less motion).
