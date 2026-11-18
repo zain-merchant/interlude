@@ -3,7 +3,7 @@
   "values": {
     "style": "sleeve",
     "side A label": "#fb8b38",
-    "side B label": "#5ed9f8",
+    "side B label": "#3fc9ea",
     "record speed when out (rpm)": 9.7,
     "how far the record comes out (%)": 42,
     "record slides out": {
