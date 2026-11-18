@@ -359,8 +359,12 @@ function link(hw, appEl, label) {
     const p0 = { x: ra.left - h.left + ra.width / 2, y: (up ? ra.top : ra.bottom) - h.top };
     const p1 = { x: rb.left - h.left + rb.width / 2, y: (up ? rb.bottom : rb.top) - h.top };
     // It rises by at least a third of the way across too, so a short, wide
-    // run (the browse knob to a library row) still reads as an S, not a hook.
-    const lift = Math.max(40, Math.abs(p0.y - p1.y) * 0.5, Math.abs(p0.x - p1.x) * 0.3) * (up ? -1 : 1);
+    // run (the browse knob to a library row) still reads as an S, not a
+    // hook; but never by more than the run itself rises, or it climbs past
+    // where it's going and comes back down to it (a zig-zag).
+    const dy = Math.abs(p0.y - p1.y);
+    const dx = Math.abs(p0.x - p1.x);
+    const lift = Math.max(40, dy * 0.5, Math.min(dx * 0.3, dy * 0.9)) * (up ? -1 : 1);
     geom = { p0, p1, c0: { x: p0.x, y: p0.y + lift }, c1: { x: p1.x, y: p1.y - lift } };
     // An EQ knob has its channel's other knobs straight above it, so its
     // line leaves sideways, out over the jog's side of the strip, and only
@@ -369,12 +373,15 @@ function link(hw, appEl, label) {
     if (side && up) {
       p0.x = side < 0 ? ra.left - h.left : ra.right - h.left;
       p0.y = ra.top - h.top + ra.height / 2;
-      geom.c0 = { x: p0.x + side * 34, y: p0.y };
-      // The app's knob has its Filter knob straight below: in from the side too.
+      const reach = Math.max(40, dy * 0.3);
+      geom.c0 = { x: p0.x + side * reach, y: p0.y };
+      // The app's knob has its Filter knob straight below: in from the side
+      // too, the other side (toward the faders), so the line is an S, out
+      // one way and in the other, not a bracket.
       if (app.matches('[role="slider"][aria-label$="EQ"]')) {
-        p1.x = side < 0 ? rb.left - h.left : rb.right - h.left;
+        p1.x = side < 0 ? rb.right - h.left : rb.left - h.left;
         p1.y = rb.top - h.top + rb.height / 2;
-        geom.c1 = { x: p1.x + side * 34, y: p1.y };
+        geom.c1 = { x: p1.x - side * reach, y: p1.y };
       }
     }
     const d = `M${p0.x} ${p0.y} C ${geom.c0.x} ${geom.c0.y}, ${geom.c1.x} ${geom.c1.y}, ${p1.x} ${p1.y}`;
