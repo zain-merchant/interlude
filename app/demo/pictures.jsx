@@ -65,7 +65,6 @@ function Pic({ id, initial, poster, script, gate, onDone, bleed, children }) {
 // A soft ease-in-out (sine): unhurried at both ends.
 const inOut = (t) => -(Math.cos(Math.PI * t) - 1) / 2;
 
-/** Eases a number in state from `from` to `to` over `ms`, a frame at a time. */
 // Apple's spring, as tuned by eye in site/lab/motion.html: SwiftUI's
 // .spring(duration:bounce:) turned into physics (stiffness (2π/duration)²,
 // damping from the bounce), with CASpringAnimation's mass and initial
@@ -98,6 +97,7 @@ const KNOB_SPRING = spring({ duration: 0.86, bounce: -0.3, mass: 0.75, velocity:
 // One step a frame, on the screen's own frame clock, timed from the first
 // frame drawn: a 16ms timer drifts against the screen and judders.
 const frame = () => new Promise((r) => requestAnimationFrame(r));
+/** Eases a number in state from `from` to `to` over `ms`, a frame at a time. */
 async function tween(a, key, from, to, ms, ease = (t) => 1 - (1 - t) ** 3) {
   const t0 = await frame();
   for (let now = t0; ; now = await frame()) {
