@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261119u">
+  <link rel="stylesheet" href="style.css?v=20261119v">
   <link rel="stylesheet" href="demo/cards.css?v=20261119k">
   <script src="tune.js?v=20261118b"></script>
   <script>
@@ -1029,7 +1029,7 @@
     window.tune?.select({ label: 'Open source: look', value: 'poster-light', options: [['tight', 'Current, tightened'], ['doors', 'Two doors, in a light frame'], ['doors-apart', 'Two doors, a dark card and a light one'], ['doors-dark', 'Two doors, both dark like the note'], ['poster-card', 'Poster, in a dark card'], ['poster-light', 'Poster, in the light card'], ['poster-open', 'Poster, no card (the FAQ gets one)'], ['feed', 'The newest change, big'], ['cards', 'Centred, three change cards'], ['gitlog', 'The log as git shows it']],
       onInput: (v) => { document.querySelector('.oss').dataset.look = v; window.tune?.refresh?.('Open source'); } });
     // What else the light card has (style.css, "Light card extras").
-    window.tune?.select({ label: 'Open source: light card extra', value: 'none', options: [['none', 'Nothing more'], ['grooves', 'A record\'s grooves in the corner'], ['vinyl', 'A record turning at the edge'], ['icon', 'The app icon, tipped in the corner'], ['reveal', 'Heading rises in as it comes into view'], ['wide', 'Wider than the page, nearly edge to edge']],
+    window.tune?.select({ label: 'Open source: light card extra', value: 'none', options: [['none', 'Plain'], ['ticket', 'A ticket: the changes a tear-off stub'], ['stack', 'A pile: two deck-coloured cards behind'], ['bite', 'A bite out of the corner, the icon in it'], ['tab', 'A folder tab, labelled'], ['grooves', 'Grooves round the bottom right corner'], ['reveal', 'Heading rises in as it comes into view']],
       onInput: (v) => (document.querySelector('.oss').dataset.extra = v) });
     // (Reveal: marked once the card is mostly in view.)
     (() => {
@@ -1053,8 +1053,8 @@
       onInput: (v) => (document.documentElement.dataset.between = v) });
     // The install and feature cards (style.css, "Cards"): as they were, or
     // quieter and of a piece with the rest of the page, or no card at all.
-    document.documentElement.dataset.cards = 'quiet';
-    window.tune?.select({ label: 'Cards: style', value: 'quiet', options: [['quiet', 'Quiet: hairlines, a soft top light'], ['open', 'Open: the picture in a panel, words on the page'], ['before', 'Before']],
+    document.documentElement.dataset.cards = 'hairlines';
+    window.tune?.select({ label: 'Cards: style', value: 'hairlines', options: [['hairlines', 'As before, lists on hairlines'], ['quiet', 'Quiet: hairlines, a soft top light'], ['open', 'Open: the picture in a panel, words on the page'], ['before', 'Before']],
       onInput: (v) => (document.documentElement.dataset.cards = v) });
     // What sits before each feature's heading.
     document.documentElement.dataset.mark = 'underline';
