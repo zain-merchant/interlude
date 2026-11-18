@@ -29,7 +29,7 @@
   import { tempoPickup } from './lib/pickup.svelte.js';
   import { gridEdit, NUDGE } from './lib/grid.svelte.js';
   import { toggleStem, soloStem, syncStemWaveforms, stemsUnavailable, stemsOf } from './lib/stems.svelte.js';
-  import { stemsReadyTip } from './lib/tips.svelte.js';
+  import { once, stemsReadyTip } from './lib/tips.svelte.js';
   import { libraryHealth, reveal, captureUiErrors, update, checkForUpdate, installUpdate } from './lib/support.svelte.js';
 
   let library;
@@ -526,7 +526,8 @@
 
   <div class="below">
     <div class="libwrap" inert={settings !== null}>
-      <Library bind:this={library} onload={load} onsettings={() => openSettings()} onmessage={say} />
+      <Library bind:this={library} onload={load} onsettings={() => openSettings()} onmessage={say}
+        onimport={openImport} onempty={() => { if (once('importOffer')) openImport(); }} />
     </div>
     {#if settings}<Settings bind:page={settings} onclose={() => (settings = null)} onimport={() => { settings = null; openImport(); }}
       onreport={openReport} onupdates={checkUpdatesNow} onsetup={openControllerSetup} />{/if}
