@@ -649,7 +649,7 @@
 
 /* Sampler pads with a sample loaded: a faint glow of their own colour,
    so the slots in use read at a glance, before, between and after hits. */
-.p-extras .p-pads--lg i[data-loaded] { background: rgb(240 220 192 / 0.16); box-shadow: inset 0 0 0 1px rgb(240 220 192 / 0.28); }
+.p-extras .p-pads--lg i[data-loaded] { background: rgb(240 220 192 / 0.3); box-shadow: inset 0 0 0 1px rgb(240 220 192 / 0.45), 0 0 10px rgb(240 220 192 / 0.12); }
 
 /* The install pictures sit where the features' do (24px in), with corners
    a touch rounder than before so they sit easier with the card's 18px
