@@ -195,20 +195,24 @@ window.addEventListener('message', (e) => {
 async function hwPress(a, target, act, label, appEl) {
   const el = document.querySelector(`[data-target="${target}"]`);
   const done = link(el, appEl, label);
-  // The key goes down and the change sets off while the line is still
-  // drawing; the app answers as the pulse lands.
-  await a.wait(120);
+  // Once the line is mostly drawn (LEAD, as for every link), the key goes
+  // down and the pulse sets off with it; the key is back up well before
+  // the pulse lands, and the app answers the moment it does. Then the link
+  // goes, without lingering.
+  await a.wait(LEAD);
   el?.setAttribute('data-hw-pressed', '');
   done.pulse();
+  const landed = new Promise((r) => setTimeout(r, TRAVEL));
   const tap = a.click(target);
-  await a.wait(160);
+  await a.wait(150);
   el?.removeAttribute('data-hw-pressed');
-  await tap;
-  await a.wait(Math.max(0, TRAVEL - 160 - 260));
+  await Promise.all([tap, landed]);
   act();
-  await a.wait(500);
+  await a.wait(HOLD_AFTER);
   done();
 }
+// How long a link stays once the app has answered, before it fades.
+const HOLD_AFTER = 350;
 
 /**
  * A hardware drag on a spring (springs.js): straight along its slot, leaving
@@ -528,10 +532,12 @@ const controller = {
         control({ type: 'setRate', deck: d, rate: rate0 + (target - rate0) * k });
       }, { duration: GLIDE.ms, path: springDrag(GLIDE) });
       control({ type: 'setRate', deck: d, rate: target });
-      await a.wait(350);
-      cap.removeAttribute('data-held');
-      tie();
       await a.wait(200);
+      cap.removeAttribute('data-held');
+      await a.wait(HOLD_AFTER - 200);
+      tie();
+      // (The tempo's line fades before Sync's draws.)
+      await a.wait(LINK_IN);
     }
     await hwPress(a, `c-sync-${d}`, () => $('.btn.sync', deckEl(d)).click(), 'Sync', () => $('.btn.sync', deckEl(d)));
   },
@@ -554,8 +560,9 @@ const controller = {
       control({ type: 'setCrossfader', value });
     }, { duration: GLIDE.ms, path: springDrag(GLIDE) });
     control({ type: 'setCrossfader', value: to });
-    await a.wait(350);
+    await a.wait(200);
     capEl.removeAttribute('data-held');
+    await a.wait(HOLD_AFTER - 200);
     tie();
   },
   async load(a, d, row) {
@@ -589,8 +596,11 @@ const controller = {
     row.scrollIntoView({ block: 'nearest' });
     row.dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 1 }));
     document.activeElement?.blur?.();
-    await a.wait(380);
+    await a.wait(HOLD_AFTER);
     tie();
+    // The browse line fades out before the push's own line draws, so the
+    // two read as two moves, turn and then push, not one line jumping.
+    await a.wait(LINK_IN);
     await hwPress(a, 'c-browse', () => doubleClick(row), 'Load', () => $('.title, [class*="title"]', deckEl(d)) ?? deckEl(d));
   },
 };
@@ -790,10 +800,11 @@ const controllerFeatures = {
       while (steps < Math.floor(k * 12)) { key(app, 'ArrowDown'); steps++; }
     }, { duration: LOCK.ms, path: springDrag(LOCK) });
     key(app, 'Home');
-    await a.wait(400);
+    await a.wait(200);
     hw.removeAttribute('data-held');
+    await a.wait(HOLD_AFTER - 200);
     tie();
-    await a.wait(500);
+    await a.wait(LINK_IN);
     app.dispatchEvent(new FocusEvent('blur'));
   },
   async resetLow(a, d) {
@@ -812,10 +823,11 @@ const controllerFeatures = {
       hw.style.rotate = `${-Math.max(0, Math.min(1, (at.y - (from.y - 40)) / 40)) * 150}deg`;
     }, { duration: SMOOTH.ms, path: springDrag(SMOOTH) });
     lowEq(d).dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
-    await a.wait(400);
+    await a.wait(200);
     hw.removeAttribute('data-held');
+    await a.wait(HOLD_AFTER - 200);
     tie();
-    await a.wait(500);
+    await a.wait(LINK_IN);
     lowEq(d).dispatchEvent(new FocusEvent('blur'));
   },
 
