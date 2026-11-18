@@ -696,15 +696,16 @@ html[data-nav="morph"] { scroll-padding-top: 80px; }
 /* The bar grows to fit a large name or icon (they're tuned in the Tune
    panel); the capsule is always 48px, 10px down. */
 html[data-nav="morph"] { --nav-h: max(60px, calc(var(--brand-word) * 1.35), calc(var(--brand-icon) * 1px + 20px)); }
+html[data-nav="morph"] { --nav-pad: 10px; }
 html[data-nav="morph"] .nav {
-  height: var(--nav-h); background: none; border-bottom: 0; -webkit-backdrop-filter: none; backdrop-filter: none;
+  height: calc(var(--nav-h) + var(--nav-pad)); padding-top: var(--nav-pad); box-sizing: border-box; background: none; border-bottom: 0; -webkit-backdrop-filter: none; backdrop-filter: none;
 }
 /* The glass: one box, always blurred (the blur never changes). There are
    only two states, the clear bar and the capsule: the glass is unseen in
    the bar however far the page has scrolled, and the script fades it in
    as it cuts it down to the capsule. */
 html[data-nav="morph"] .nav-glass {
-  display: block; position: absolute; z-index: -1; left: 0; top: 0; width: 100%; height: calc(var(--nav-h) + 1px); pointer-events: none;
+  display: block; position: absolute; z-index: -1; left: 0; top: 0; width: 100%; height: calc(var(--nav-h) + var(--nav-pad) + 1px); pointer-events: none;
   background: rgb(16 16 19 / 0.74);
   -webkit-backdrop-filter: blur(20px) saturate(1.4); backdrop-filter: blur(20px) saturate(1.4);
   opacity: 0; will-change: opacity;
@@ -722,9 +723,9 @@ html[data-nav="morph"] .links { margin: 0 0 0 auto; gap: 26px; }
    bar; the name is laid out at its bar size (22px) and drawn smaller in the
    capsule. Only transforms change between them. */
 html[data-nav="morph"] .nav .brand { gap: 10px; }
-html[data-nav="morph"] { --brand-word: 36px; --brand-icon: 48; }
+html[data-nav="morph"] { --brand-word: 32px; --brand-icon: 40; }
 html[data-nav="morph"] .nav .brand img { width: 36px; height: 36px; transform-origin: 0 50%; transform: scale(calc(var(--brand-icon) / 36)); }
-html[data-nav="morph"] .nav .brand span { font-size: var(--brand-word); font-weight: 600; letter-spacing: -0.03em; line-height: 1; transform-origin: 0 50%; transform: translateX(calc((var(--brand-icon) - 36) * 1px + var(--brand-gap, 10px) - 10px)); }
+html[data-nav="morph"] .nav .brand span { font-size: var(--brand-word); font-weight: 600; letter-spacing: -0.03em; line-height: 1; text-box: trim-both cap alphabetic; transform-origin: 0 50%; transform: translateX(calc((var(--brand-icon) - 36) * 1px + var(--brand-gap, 12px) - 10px)); }
 html[data-nav="morph"] .nav .brand, html[data-nav="morph"] .nav .brand img, html[data-nav="morph"] .nav .brand span,
 html[data-nav="morph"] .nav .links, html[data-nav="morph"] .nav-actions { will-change: transform; }
 /* The actions wait, unseen and unfocusable, at the bar's right end. */
@@ -1592,9 +1593,9 @@ html[data-note="label"] .rec { --lab: 52%; }
    out of the sleeve's open side. It slides a little further out as the
    note comes into view. */
 html[data-note="sleeve"] .founder {
-  --hx: 72%; --hy: 60%; --hr: 50px;
+  --hx: 72%; --hy: calc(60% - var(--rec-lift, 12px)); --hr: 50px;
   /* A record sleeve's corners are all but square: card cut to size. */
-  aspect-ratio: auto; width: 292px; height: 292px; box-sizing: border-box; margin-inline: auto; padding: 16px 22px 14px; display: flex; flex-direction: column; border-radius: var(--sleeve-r, 4px); overflow: visible; rotate: -1.5deg; transform-origin: 50% 0;
+  aspect-ratio: auto; width: 292px; height: 292px; box-sizing: border-box; margin-inline: auto; padding: 16px 22px 14px; display: flex; flex-direction: column; border-radius: var(--sleeve-r, 4px); overflow: visible; rotate: var(--sleeve-tilt, -1.5deg); transform-origin: 50% 0;
   background: none; box-shadow: none; color: rgb(28 24 18 / 0.72);
 }
 html[data-note="sleeve"] .founder::after {
@@ -1635,13 +1636,13 @@ html[data-note="sleeve"] .founder-body { margin-bottom: 14px; gap: 7px; }
 html[data-note="sleeve"] .founder-body i.gap { margin-top: 6px; }
 html[data-note="sleeve"] .founder-body i { background: rgb(28 24 18 / 0.11); }
 html[data-note="sleeve"] .founder-body i:nth-child(n + 5) { width: min(var(--w), 48%); }
-html[data-note="sleeve"] .founder-ask { max-width: 56%; margin: 0 0 6px; line-height: 1.4; font-size: 13.5px; }
+html[data-note="sleeve"] .founder-ask { max-width: 56%; margin: auto 0 var(--ask-gap, 6px); line-height: 1.4; font-size: 13.5px; }
 /* Links as everywhere else on the page: the underline faint, full on hover. */
 html[data-note="sleeve"] .founder-ask a { color: #17140e; text-decoration-color: rgb(28 24 18 / 0.35); white-space: nowrap; }
 html[data-note="sleeve"] .founder-ask a:hover { text-decoration-color: #17140e; }
 /* The signature smaller, without the line under it (it read as a rule the
    rest didn't line up with). */
-html[data-note="sleeve"] .founder-sig { stroke: #23315c; width: 86px; margin: auto 0 0 -3px; }
+html[data-note="sleeve"] .founder-sig { stroke: #23315c; width: 86px; margin: 0 0 0 -3px; }
 html[data-note="sleeve"] .founder-sig path:nth-child(3) { display: none; }
 
 /* Note: white label. A promo pressing with a plain white label, the note
@@ -1773,3 +1774,5 @@ html[data-flayout="one"] .group:nth-child(-n + 2) { box-shadow: inset -1px 0 0 v
 html:not([data-lablogo="tile"]) .lg-tile, html[data-lablogo="tile"] .lg-rings { display: none; }
 /* Plain: the rings with no outline (the outline is the first of each pair). */
 html[data-lablogo="plain"] .lg-rings circle:nth-child(-n + 2) { display: none; }
+/* The rings' outline (Note: rings logo outline; under 1.25 it's hidden by the rings themselves). */
+.lg-rings circle:nth-child(-n + 2) { stroke-width: var(--lab-outline, 2.5); }
