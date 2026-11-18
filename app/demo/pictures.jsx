@@ -222,7 +222,7 @@ function Knob({ label, pos, killed, size = 44 }) {
               className={`${major ? 'major' : ''} ${on ? 'on' : ''}`} />;
           })}
         </svg>
-        <div className="p-knob__dial" style={{ width: size, height: size }}><i /></div>
+        <div className="p-knob__dial" style={{ width: size, height: size }}><b className="p-knob__knurl" /><span className="p-knob__cap" /><b className="p-knob__ptr"><i /></b></div>
       </div>
       {/* The band's name stays put; a kill turns it and the ring red and a
           small tag drops in under it, taking no room. */}
