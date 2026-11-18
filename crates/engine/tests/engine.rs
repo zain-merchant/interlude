@@ -849,6 +849,94 @@ fn keylock_is_smooth() {
 }
 
 #[test]
+fn key_shift_changes_pitch_but_not_tempo() {
+    // With keylock on, off at normal speed, and off with the tempo up.
+    for (keylock, rate, semis) in [(true, 1.08, 2), (false, 1.0, -3), (false, 1.08, 1)] {
+        let (mut e, mut h) = setup();
+        load(&mut h, DeckId::A, sine(440.0, 6.0, 0.5));
+        for cmd in [
+            Command::SetKeylock {
+                deck: DeckId::A,
+                on: keylock,
+            },
+            Command::SetRate {
+                deck: DeckId::A,
+                rate,
+            },
+            Command::SetKeyShift {
+                deck: DeckId::A,
+                semitones: semis,
+            },
+            Command::Play { deck: DeckId::A },
+        ] {
+            h.send(cmd).unwrap();
+        }
+        let out = render(&mut e, 2.0);
+        let pos = position(&h, DeckId::A);
+        assert!((pos - 2.0 * rate).abs() < 0.002, "{semis}: position {pos}");
+        assert_eq!(h.shared().deck(0).key_shift, semis);
+        let tempo = if keylock { 1.0 } else { rate };
+        let expect = 440.0 * tempo * 2f32.powf(semis as f32 / 12.0) as f64;
+        let f = pitch_of(&out[SR as usize..]) as f64;
+        assert!(
+            (f - expect).abs() < expect * 0.003,
+            "{semis} semitones: pitch {f} Hz, expected {expect}"
+        );
+    }
+}
+
+#[test]
+fn key_shift_is_clamped_and_reset_on_load() {
+    let (mut e, mut h) = setup();
+    load(&mut h, DeckId::A, sine(440.0, 1.0, 0.5));
+    h.send(Command::SetKeyShift {
+        deck: DeckId::A,
+        semitones: 40,
+    })
+    .unwrap();
+    render(&mut e, 0.01);
+    assert_eq!(h.shared().deck(0).key_shift, dj_engine::KEY_SHIFT_MAX);
+    load(&mut h, DeckId::A, sine(440.0, 1.0, 0.5));
+    render(&mut e, 0.01);
+    assert_eq!(h.shared().deck(0).key_shift, 0);
+}
+
+#[test]
+fn key_sync_matches_the_other_deck() {
+    let (mut e, mut h) = setup();
+    let keyed = |tonic, minor| {
+        let mut t = Track::from_stereo(sine(440.0, 2.0, 0.5), SR);
+        t.key = Some(dj_engine::Key::new(tonic, minor));
+        Arc::new(t)
+    };
+    // Deck A in D major (10B), deck B in A minor (8A) shifted up a
+    // semitone by its tempo (+6%, keylock off): B♭ minor, 3A.
+    h.send(Command::Load {
+        deck: DeckId::A,
+        track: keyed(2, false),
+    })
+    .unwrap();
+    h.send(Command::Load {
+        deck: DeckId::B,
+        track: keyed(9, true),
+    })
+    .unwrap();
+    h.send(Command::SetRate {
+        deck: DeckId::B,
+        rate: 1.06,
+    })
+    .unwrap();
+    h.send(Command::KeySync { deck: DeckId::A }).unwrap();
+    render(&mut e, 0.01);
+    // D♭ major is 3B, B♭ minor's relative major: one down.
+    assert_eq!(h.shared().deck(0).key_shift, -1);
+    // Syncing again from there lands on the same shift.
+    h.send(Command::KeySync { deck: DeckId::A }).unwrap();
+    render(&mut e, 0.01);
+    assert_eq!(h.shared().deck(0).key_shift, -1);
+}
+
+#[test]
 fn loaded_tracks_get_a_key() {
     // Am, Dm, Em, Am, two seconds each, played twice, on a bright tone
     // (the first six harmonics) over the chord's root an octave down.
