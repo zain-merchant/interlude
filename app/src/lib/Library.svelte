@@ -179,7 +179,8 @@
     })(),
   );
   const columns = $derived(COLUMNS.filter((c) => c.by === 'title' || !hidden.includes(c.by)));
-  const gridColumns = $derived(`26px ${columns.map((c) => c.width).join(' ')}`);
+  // The last 28px holds the columns button in the heading row.
+  const gridColumns = $derived(`26px ${columns.map((c) => c.width).join(' ')} 28px`);
   function toggleColumn(by) {
     hidden = hidden.includes(by) ? hidden.filter((h) => h !== by) : [...hidden, by];
     if (hidden.includes(by) && sort.by === by) sort = { by: null, dir: 1 };
@@ -187,6 +188,11 @@
       localStorage.setItem(HIDDEN_KEY, JSON.stringify(hidden));
     } catch {}
   }
+  /** The columns menu, from a right-click on the headings or the columns button (opened under it). */
+  const columnsButton = (e) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    headMenu({ preventDefault() {}, stopPropagation() {}, clientX: r.right - 200, clientY: r.bottom + 4 });
+  };
   const headMenu = (e) =>
     openMenu(e, [
       ...COLUMNS.filter((c) => c.by !== 'title').map((c) => ({ label: c.label, checked: !hidden.includes(c.by), action: () => toggleColumn(c.by) })),
@@ -698,8 +704,7 @@
 
     {#if sampler.open}<Sampler {onmessage} selected={() => selectedTrack()} />{/if}
 
-    <div class="row head" role="group" aria-label="Sort tracks" oncontextmenu={headMenu}
-      use:tip={() => 'Click a heading to sort, again to reverse. Right-click to choose the columns'}>
+    <div class="row head" role="group" aria-label="Sort tracks" oncontextmenu={headMenu}>
       <span></span>
       {#each columns as c}
         {@const on = sort.by === c.by}
@@ -707,6 +712,10 @@
           aria-label="Sort by {c.label.toLowerCase()}{on ? (sort.dir > 0 ? ', ascending' : ', descending') : ''}"
           onclick={() => sortBy(c.by)}>{c.label}{#if on}<svg viewBox="0 0 10 10" aria-hidden="true" class:down={sort.dir < 0}><path d="M2.5 6.5 5 4l2.5 2.5" /></svg>{/if}</button>
       {/each}
+      <button class="cols" aria-label="Choose columns" aria-haspopup="menu" onclick={columnsButton}
+        use:tip={() => 'Choose columns'}>
+        <svg viewBox="0 0 14 14" aria-hidden="true"><rect x="1.5" y="2.5" width="11" height="9" rx="1.5" /><path d="M5.25 2.5v9M8.75 2.5v9" /></svg>
+      </button>
     </div>
 
     <div class="scroll" bind:this={scroller} bind:clientHeight={viewHeight} onscroll={() => (scrollTop = scroller.scrollTop)}
@@ -1155,6 +1164,35 @@
     fill: none;
     stroke: currentColor;
     stroke-width: 1.4;
+  }
+  /* Opens the columns menu; quiet until hovered, like the headings. */
+  .cols {
+    justify-self: end;
+    width: 24px;
+    height: 22px;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 0;
+    border-radius: 5px;
+    background: none;
+    color: inherit;
+    transition: background-color 140ms ease, color 140ms ease;
+  }
+  .cols:hover,
+  .cols:focus-visible {
+    background: var(--hover);
+    color: var(--fg);
+  }
+  .cols:focus-visible {
+    outline: 1px solid var(--fg-3);
+  }
+  .cols svg {
+    width: 13px;
+    height: 13px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.2;
   }
   .sort svg.down {
     transform: rotate(180deg);
