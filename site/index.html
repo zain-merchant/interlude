@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261121t">
+  <link rel="stylesheet" href="style.css?v=20261121x">
   <link rel="stylesheet" href="demo/cards.css?v=20261121j">
   <script src="tune.js?v=20261120v"></script>
   <script>
@@ -487,6 +487,7 @@
     </section>
 
     <section id="features" class="wrap section">
+      <div class="grain grain--band" aria-hidden="true"></div>
       <h2>Everything you need for a full set</h2>
       <div class="groups">
         <div class="group" data-picture="decks">
@@ -778,8 +779,18 @@
             if (Math.abs(fa - fTo) > 0.05 || Math.abs(fv) > 0.05) requestAnimationFrame(fstep);
             else { fa = fTo; flip.style.transform = `rotateY(${fa}deg)`; fOn = false; }
           };
-          rec.addEventListener('click', () => {
-            if (document.documentElement.dataset.note !== 'sleeve') return;
+          // (Anywhere over the record's disc counts, in the sleeve or out of
+          // it, except on the note's link; the pointer shows it can be clicked.)
+          const overRec = (e) => {
+            if (e.target.closest?.('a')) return false;
+            const r = rec.getBoundingClientRect();
+            const R = Math.max(r.width, r.height) / 2;
+            return Math.hypot(e.clientX - (r.left + r.width / 2), e.clientY - (r.top + r.height / 2)) <= R;
+          };
+          note.addEventListener('pointermove', (e) => note.classList.toggle('over-rec', document.documentElement.dataset.note === 'sleeve' && overRec(e)), { passive: true });
+          note.addEventListener('pointerleave', () => note.classList.remove('over-rec'));
+          note.addEventListener('click', (e) => {
+            if (document.documentElement.dataset.note !== 'sleeve' || !overRec(e)) return;
             fTo += 180;
             rec.classList.remove('rec-glint'); void rec.offsetWidth; rec.classList.add('rec-glint');
             if (!fOn) { fOn = true; fLast = 0; requestAnimationFrame(fstep); }
@@ -802,7 +813,14 @@
           // (The record, its hole and the ring worn into the sleeve move together.)
           t?.slider({ label: 'Note: record lifted off the sleeve bottom', min: 0, max: 48, step: 1, value: 12, unit: 'px', css: '--rec-lift' });
           t?.slider({ label: 'Note: record speed when out', min: 5, max: 78, step: 0.1, value: S.rpm, unit: 'rpm', onInput: (v) => (S.rpm = v) });
-          t?.slider({ label: 'Note: how far the record comes out', min: 10, max: 70, step: 1, value: S.out, unit: '%', onInput: (v) => (S.out = v) });
+          // (How far past the sleeve the record reaches when out, for the
+          // layout to keep it clear of the window's edge: it's 80% of the
+          // sleeve wide, its middle 72% across, and slides out its own width
+          // times the share.)
+          const over = () => document.documentElement.style.setProperty('--rec-over', `${Math.round(292 * 0.12 + 292 * 0.8 * S.out / 100)}px`);
+          over();
+          t?.slider({ label: 'Note: how far the record comes out', min: 10, max: 70, step: 1, value: S.out, unit: '%', onInput: (v) => { S.out = v; over(); } });
+          t?.slider({ label: 'Note: push right', min: 0, max: 40, step: 1, value: 8, unit: 'px', css: '--note-nudge' });
           t?.spring({ label: 'Note: record slides out', value: { type: 'spring', ...S.slide }, onInput: (v) => (S.slide = v) });
           t?.spring({ label: 'Note: record spins up', value: { type: 'spring', ...S.spinUp }, onInput: (v) => (S.spinUp = v) });
           t?.spring({ label: 'Note: record slows down', value: { type: 'spring', ...S.spinDown }, onInput: (v) => (S.spinDown = v) });
@@ -1103,7 +1121,7 @@
       const w = document.querySelector('.foot-word');
       if (!w) return;
       const d = document.documentElement;
-      const fx = await import('./foot-fx.js?v=20261121u').catch(() => null);
+      const fx = await import('./foot-fx.js?v=20261121v').catch(() => null);
       addEventListener('foot-fit', () => fx?.relayout());
       // Without tune.js (or an older one), each control still applies its default.
       const own = (o) => o.onInput?.(o.value);
@@ -1162,11 +1180,11 @@
       // comes over the word and leaves it.
       tune.slider({ label: 'Footer: click ring reach', folder: 'Motion', min: 0.3, max: 4, step: 0.05, value: 1.6, onInput: set('clickReach') });
       tune.slider({ label: 'Footer: click ring strength', folder: 'Motion', min: 1, max: 10, step: 0.25, value: 4, unit: '×', onInput: set('clickBend') });
-      tune.slider({ label: 'Footer: click lens strength', folder: 'Click', min: 0, max: 60, step: 1, value: 18, unit: 'px', onInput: set('knock') });
-      tune.slider({ label: 'Footer: click lens size', folder: 'Click', min: 0.03, max: 0.6, step: 0.01, value: 0.14, unit: 'em', onInput: set('knockSize') });
-      tune.slider({ label: 'Footer: click lens springs back in (s)', folder: 'Click', min: 0.15, max: 3, step: 0.05, value: 0.7, onInput: set('knockTime') });
-      tune.slider({ label: 'Footer: click lens in-out swing', folder: 'Click', min: 0, max: 0.9, step: 0.05, value: 0.55, onInput: set('knockBounce') });
-      tune.slider({ label: 'Footer: click wave strength', folder: 'Click', min: 0, max: 1.5, step: 0.05, value: 0.6, onInput: set('knockWave') });
+      tune.slider({ label: 'Footer: click lens strength', folder: 'Click', min: 0, max: 80, step: 1, value: 30, unit: 'px', onInput: set('knock') });
+      tune.slider({ label: 'Footer: click lens size', folder: 'Click', min: 0.03, max: 0.6, step: 0.01, value: 0.2, unit: 'em', onInput: set('knockSize') });
+      tune.slider({ label: 'Footer: click lens springs back in (s)', folder: 'Click', min: 0.15, max: 3, step: 0.05, value: 0.6, onInput: set('knockTime') });
+      tune.slider({ label: 'Footer: click lens in-out swing', folder: 'Click', min: 0, max: 0.9, step: 0.05, value: 0.15, onInput: set('knockBounce') });
+      tune.slider({ label: 'Footer: click wave strength', folder: 'Click', min: 0, max: 1.5, step: 0.05, value: 0.3, onInput: set('knockWave') });
       tune.slider({ label: 'Footer: click wave reach', folder: 'Click', min: 0.1, max: 4, step: 0.05, value: 1, unit: 'em', onInput: set('knockReach') });
       tune.slider({ label: 'Footer: click wave speed', folder: 'Click', min: 0.3, max: 6, step: 0.1, value: 1.6, unit: 'em/s', onInput: set('knockSpeed') });
       tune.slider({ label: 'Footer: fade in/out', folder: 'Motion', min: 0, max: 2, step: 0.05, value: 0.5, unit: 's', onInput: set('fade') });
@@ -1248,6 +1266,13 @@
         const c = canvas?.getBoundingClientRect();
         if (c) fx?.click?.({ x: e.clientX - c.left, y: e.clientY - c.top });
       });
+      // Held and dragged, the lens goes with the pointer; let go, it springs back.
+      addEventListener('pointermove', (e) => {
+        if (!(e.buttons & 1)) return;
+        const c = canvas?.getBoundingClientRect();
+        if (c) fx?.drag?.({ x: e.clientX - c.left, y: e.clientY - c.top });
+      }, { passive: true });
+      for (const t of ['pointerup', 'pointercancel', 'blur']) addEventListener(t, () => fx?.release?.());
       const leave = () => {
         last = null;
         if (on) { on = false; w.style.setProperty('--on', '0'); fx?.point(null); }

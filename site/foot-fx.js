@@ -55,11 +55,11 @@ export const T = {
   clickReach: 1.6,   // how far a click's ring runs, as a share of the ripple reach
   clickBend: 4,      // how much harder a click's ring bends the grooves than a hover's
   clickGreen: false, // a click's ring shows green (a test that clicks land)
-  knock: 18,         // a click's lens: how far it moves the grooves at first, CSS px
-  knockSize: 0.14,   // its size, em
-  knockTime: 0.7,    // how long it takes to spring back, s
-  knockBounce: 0.55, // how much it swings in and out as it does (0: none)
-  knockWave: 0.6,    // its wave: how hard it bends, a share of the lens
+  knock: 30,         // a click's lens: how far it moves the grooves at first, CSS px
+  knockSize: 0.2,    // its size, em
+  knockTime: 0.6,    // how long it takes to spring back, s
+  knockBounce: 0.15, // how much it swings in and out as it does (0: none)
+  knockWave: 0.3,    // its wave: how hard it bends, a share of the lens
   knockReach: 1,     // how far the wave runs before it's gone, em
   knockSpeed: 1.6,   // how fast it runs, em a second
   lineWidth: 1.25,   // groove line width, CSS px
@@ -392,18 +392,21 @@ const emit = { dist: 0, px: 0, py: 0, time: 0, src: 0, armed: false, rest: 0 };
 // The phone's one-off play-through: when it started (ms), or 0.
 let demoAt = 0;
 // A click's warp: where, and when (ms; 0: none).
-const knock = { x: 0, y: 0, at: 0 };
+const knock = { x: 0, y: 0, at: 0, held: false, from: 0, wave: false };
 // How far the warp pushes now: a spring let go from the full push, with
 // T.knockBounce of wobble, settling over T.knockTime (and a 30ms rise, so
 // it doesn't jump in).
 function knockNow(now) {
   if (!knock.at) return 0;
+  // Held (the button still down, maybe dragging): at full push, after a
+  // 30ms rise. Let go: it springs back from where it was.
+  if (knock.held) return T.knock * (1 - Math.exp(-(now - knock.at) / 30));
   const t = (now - knock.at) / 1000, dur = Math.max(0.1, T.knockTime);
   if (t > dur * 2.5 && !knock.wave) { knock.at = 0; return 0; }
   const w = (2 * Math.PI) / dur, z = 1 - Math.min(0.95, Math.max(0, T.knockBounce));
-  const rise = 1 - Math.exp(-t / 0.03);
+  const rise = knock.from ? 1 : 1 - Math.exp(-t / 0.03);
   const env = z < 1 ? Math.exp(-z * w * t) * Math.cos(w * Math.sqrt(1 - z * z) * t) : Math.exp(-w * t) * (1 + w * t);
-  return T.knock * rise * env;
+  return (knock.from || T.knock) * rise * env;
 }
 let mode = T.mode;
 
@@ -651,7 +654,7 @@ function frame(now) {
   // ring still running out, or (while over the word) rings to come: on a
   // timer for breathe and interference; for drop, the rest still to come.
   if (demoAt) return true;
-  if (knock.at || knock.wave) return true;
+  if (knock.at || knock.wave || knock.held) return true;
   if (T.trigger === 'once' && hover.want) return true;
   if (hover.on !== hover.want) return true;
   if (hover.on === 0) return false;
@@ -712,12 +715,30 @@ export function point(p) {
 export function click(p) {
   if (!geo && !layout()) return;
   ring(p.x, p.y, -(T.clickReach ?? 1.6));
-  Object.assign(knock, { x: p.x, y: p.y, at: performance.now() });
+  Object.assign(knock, { x: p.x, y: p.y, at: performance.now(), held: true, from: 0 });
   // The rings show through the effect's own light, so a click brings that
   // light on (and, in the play-once hover, starts it playing) if it's off.
   if (hover.want === 0 && hover.on < 0.02) Object.assign(hover, { x: p.x, y: p.y, vx: 0, vy: 0 });
   Object.assign(hover, { tx: p.x, ty: p.y, want: 1 });
   if (T.trigger === 'once') { onceUntil = performance.now() + T.hold * 1000; near = true; }
+  wake();
+}
+
+/** Dragging with the button down: the lens goes with the pointer. */
+export function drag(p) {
+  if (!knock.held) return;
+  knock.x = p.x; knock.y = p.y;
+  Object.assign(hover, { tx: p.x, ty: p.y });
+  wake();
+}
+
+/** Let go: the lens springs back where it is (and its wave runs out from there). */
+export function release() {
+  if (!knock.held) return;
+  const now = performance.now();
+  knock.from = knockNow(now);
+  knock.held = false;
+  knock.at = now;
   wake();
 }
 
