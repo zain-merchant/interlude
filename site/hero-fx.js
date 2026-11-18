@@ -125,6 +125,7 @@ const T = {
   drop: 108, needle: 0.8, life: 0.2, persp: 0.85, cue: 'dust', cueAmt: 1, res: 0.85,
   speck: 'hyphen',
   twistRate: 12, twistMax: 20, twistEase: 0.6, // scrolling twists it: degrees per 1000px, at most, settling in s
+  dragTilt: 0.35, // how far dragging on the record tips it (0: not at all)
   dust: 0, away: 1, awayB: 1, dustSize: 1, dustSoft: 0.5, dustGlow: 1, dustGlowSize: 1, dustBright: 1, dustLight: 1, dustVariety: 0.6, dustFibres: 0.5, // natural dust, on top of the rest (see uNat)
   size: 1, up: 0, warp: 'none', warpAmt: 0.5, tint: 0, hover: 'arc', still: 1.2,
   look: 'vinyl', shape: 'custom', vinylPreset: 'dark',
@@ -197,6 +198,10 @@ let glintSpin = 0;
 let lampTurn = 0;
 // The tilt toward the pointer this frame (toRecord uses it too).
 let tiltNow = [0, 0, 0, 0];
+// Dragging on the record tips it a little in 3D, the way it's dragged, and
+// it springs back level when let go: drag.x, drag.y ease to drag.tx, ty
+// (each -1 to 1 times T.dragTilt) on a soft spring.
+const drag = { on: false, x0: 0, y0: 0, tx: 0, ty: 0, x: 0, y: 0, vx: 0, vy: 0 };
 // The hovers that move the record's own light (MOVERS): what the pointer
 // asks of each now, and where each is on its spring (critically damped, so
 // it glides there and back with no bounce). light, cone: radians the lamp
@@ -1559,7 +1564,7 @@ function variant() {
   let d = `#define PAL ${CHROMA[T.chroma] ?? 0}\n#define HOVER ${HOVERS[T.hover] ?? 0}\n`;
   if (T.gSharp !== 1) d += '#define SHARP\n';
   if (T.gHue !== 0 || mv?.includes('colour')) d += '#define HUE\n';
-  if (mv?.includes('tilt')) d += '#define TILT\n';
+  if (mv?.includes('tilt') || T.dragTilt > 0) d += '#define TILT\n';
   if (T.cones === 'one' || T.coneReach < 1 || coneShape().scale !== 1 || coneShape().lo !== 0.78) d += '#define CONE\n';
   return d;
 }
@@ -1700,6 +1705,23 @@ addEventListener('pointermove', (e) => {
   wake();
 }, { passive: true });
 document.documentElement.addEventListener('pointerleave', () => Object.assign(hover, { x: -1e4, y: -1e4 }));
+// Dragging on the record (not on a link or a control): it tips the way
+// it's dragged, a little, and springs back when let go.
+addEventListener('pointerdown', (e) => {
+  if (!geo || !T.dragTilt || reduced.matches || e.button !== 0 || e.target.closest('a, button, input, select, summary, iframe, .shot, .dialkit-root, .nav')) return;
+  const p = local(e);
+  if (p.y < 0 || p.y > canvas.clientHeight) return;
+  Object.assign(drag, { on: true, x0: e.clientX, y0: e.clientY, tx: 0, ty: 0 });
+  wake();
+}, { passive: true });
+addEventListener('pointermove', (e) => {
+  if (!drag.on) return;
+  const clamp = (v) => Math.max(-1, Math.min(1, v));
+  drag.tx = clamp((e.clientX - drag.x0) / 320) * T.dragTilt;
+  drag.ty = clamp((e.clientY - drag.y0) / 320) * T.dragTilt;
+  wake();
+}, { passive: true });
+for (const ev of ['pointerup', 'pointercancel', 'blur']) addEventListener(ev, () => { if (!drag.on) return; drag.on = false; drag.tx = drag.ty = 0; wake(); });
 addEventListener('pointerdown', (e) => {
   if (touch !== 'needle' || !geo || e.target.closest('a, button, input, select, summary, iframe, .shot, .dialkit-root')) return;
   const p = local(e);
@@ -1860,7 +1882,19 @@ function frame(now, still) {
   gl.uniform1f(U.uGlintSpread, Math.max(0, T.gSpread * (1 + f.spread)));
   gl.uniformMatrix3fv(U.uHueM, false, hueTurn((T.gHue * Math.PI) / 180 + f.hue));
   // (Only while the tilt is in use: the shader only has it then, see variant.)
-  tiltNow = movers?.includes('tilt') ? [(0.1 * f.tx) / g.half, (0.1 * f.ty) / g.half, 14 * f.tx, 10 * f.ty] : [0, 0, 0, 0];
+  {
+    // The drag's tip, on its spring (about half a second, a hint of bounce).
+    const k = 90, c = 13;
+    for (let i = 0, n = Math.ceil(dt / 0.008); i < n; i++) {
+      const h = dt / n;
+      drag.vx += (k * (drag.tx - drag.x) - c * drag.vx) * h; drag.x += drag.vx * h;
+      drag.vy += (k * (drag.ty - drag.y) - c * drag.vy) * h; drag.y += drag.vy * h;
+    }
+    if (!drag.on && Math.abs(drag.x) < 1e-4 && Math.abs(drag.y) < 1e-4 && Math.abs(drag.vx) < 1e-4 && Math.abs(drag.vy) < 1e-4) drag.x = drag.y = drag.vx = drag.vy = 0;
+  }
+  const htx = (movers?.includes('tilt') ? f.tx : 0) + drag.x;
+  const hty = (movers?.includes('tilt') ? f.ty : 0) + drag.y;
+  tiltNow = htx || hty ? [(0.1 * htx) / g.half, (0.1 * hty) / g.half, 14 * htx, 10 * hty] : [0, 0, 0, 0];
   gl.uniform4fv(U.uTilt, tiltNow);
   const cone = coneShape();
   // (The cone keeps to the lamp's own place: only its own hover, Cone
@@ -1900,7 +1934,7 @@ function draw(now) {
   }
   // At rest (no pointer light, no needle) the record only turns slowly, so
   // 30 frames a second is plenty; the pointer's light gets the full 60.
-  const busy = hover.on > 0.01 || needle.on || ripple.on || fx.moving || twist !== twistTo();
+  const busy = hover.on > 0.01 || needle.on || ripple.on || fx.moving || twist !== twistTo() || drag.on || drag.x !== 0 || drag.y !== 0;
   if (busy || now - last >= 1000 / 30 - 2) frame(now, false);
   requestAnimationFrame(draw);
 }
@@ -2288,6 +2322,7 @@ tw?.select({ ...touchF, label: 'Hero record: hover style', value: T.hover,
     : [['arc', 'Arc'], ['lamp', 'Beam'], ['prism', 'Split'], ['spectrum', 'Wide cast'], ['litarc', 'Arc in lamp light'], ['glass', 'Glass'], ['glassprism', 'Glass prism']]),
   ['light', 'Lamp follows'], ['cone', 'Cone follows'], ['angle', 'Glints slide'], ['colour', 'Colours turn'], ['tilt', 'Record tilts'], ['all', 'All four']] });
 // How far each goes with the pointer (shown with the hovers that use it).
+tw?.slider({ ...touchF, label: 'Hero record: drag tips it', min: 0, max: 1.5, step: 0.05, value: T.dragTilt, onInput: (v) => { const was = T.dragTilt > 0; T.dragTilt = v; if (was !== v > 0) again(); } });
 tw?.slider({ ...touchF, label: 'Hero record: lamp swing', min: 0, max: 1, step: 0.05, value: T.hLight, show: moves('light'), onInput: redraw('hLight') });
 tw?.slider({ ...touchF, label: 'Hero record: cone swing', min: 0, max: 1, step: 0.05, value: T.hCone, show: moves('cone'), onInput: redraw('hCone') });
 tw?.slider({ ...touchF, label: 'Hero record: glint slide', min: 0, max: 1, step: 0.05, value: T.hAngle, show: moves('angle'), onInput: redraw('hAngle') });

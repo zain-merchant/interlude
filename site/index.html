@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261121k">
+  <link rel="stylesheet" href="style.css?v=20261121p">
   <link rel="stylesheet" href="demo/cards.css?v=20261121j">
   <script src="tune.js?v=20261120v"></script>
   <script>
@@ -672,9 +672,8 @@
           // (Words apart by wide spaces, which SVG keeps, not middle dots.)
           const gap = '\u2003\u2003';
           const year = `© ${new Date().getFullYear()}`;
-          tp.textContent = (label === 'white'
-            ? ['WHITE LABEL', 'PROMO', 'FREE', 'OPEN SOURCE', year]
-            : ['INTERLUDE', 'FREE', 'OPEN SOURCE', `SIDE ${side}`, year]).join(gap) + gap;
+          // (Every label says the same: the white label record's too.)
+          tp.textContent = ['INTERLUDE', 'FREE', 'OPEN SOURCE', `SIDE ${side}`, year].join(gap) + gap;
           if (label !== 'white') {
             // The app's two rings, as on its icon.
             el('circle', { cx: -4.6, cy: -11, r: 7, fill: 'none', stroke: '#4aa8ff', 'stroke-width': 2.1 }, lab);
@@ -788,6 +787,10 @@
   </main>
 
   <footer class="foot">
+    <!-- The same film grain as over the hero's record (one set of controls,
+         Tune › Grain): over the footer's background and its big word, under
+         the logo and the links. -->
+    <div class="grain grain--foot" aria-hidden="true"></div>
     <div class="wrap foot-grid">
       <div>
         <a class="brand" href="#top"><img src="img/icon.svg?v=2" alt="" width="20" height="20"><span>Interlude</span></a>
@@ -820,7 +823,7 @@
     // same at any width. It tells us how loud it's playing, and the glow
     // under it follows; the switch picks mouse or controller.
     (async () => {
-      const fx = await import('./hero-fx.js?v=20261120y').catch(() => null);
+      const fx = await import('./hero-fx.js?v=20261121n').catch(() => null);
       const frame = document.querySelector('.stage-frame');
       const screen = frame.querySelector('.screen');
       const live = frame.querySelector('.live');
@@ -1062,7 +1065,7 @@
       const w = document.querySelector('.foot-word');
       if (!w) return;
       const d = document.documentElement;
-      const fx = await import('./foot-fx.js?v=20261119b').catch(() => null);
+      const fx = await import('./foot-fx.js?v=20261121p').catch(() => null);
       addEventListener('foot-fit', () => fx?.relayout());
       // Without tune.js (or an older one), each control still applies its default.
       const own = (o) => o.onInput?.(o.value);
@@ -1119,6 +1122,7 @@
         show: () => rippling() && style === 'interference', onInput: set('rippleSpread') });
       // How long the whole effect takes to come in and go when the pointer
       // comes over the word and leaves it.
+      tune.slider({ label: 'Footer: click ring reach', folder: 'Motion', min: 0.3, max: 4, step: 0.05, value: 1.6, onInput: set('clickReach') });
       tune.slider({ label: 'Footer: fade in/out', folder: 'Motion', min: 0, max: 2, step: 0.05, value: 0.5, unit: 's', onInput: set('fade') });
       // What sets it off: there only while the pointer is over the word, or
       // set off as the pointer comes near and left to play out and fade on
@@ -1185,6 +1189,14 @@
         } else if (on) fx?.point(null);
         if (inside !== on) { on = inside; w.style.setProperty('--on', on ? '1' : '0'); }
       };
+      // A click on the word sends a ring out from where it was clicked.
+      addEventListener('pointerdown', (e) => {
+        if (e.button !== 0 || e.target.closest?.('a, button, .dialkit-root')) return;
+        const r = w.getBoundingClientRect();
+        if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) return;
+        const c = canvas?.getBoundingClientRect();
+        if (c) fx?.click?.({ x: e.clientX - c.left, y: e.clientY - c.top });
+      });
       const leave = () => {
         last = null;
         if (on) { on = false; w.style.setProperty('--on', '0'); fx?.point(null); }
@@ -1303,8 +1315,17 @@
     // laid over the record at a size and an opacity, blended into it, and
     // stepped a few times a second like film, or held still.
     (() => {
-      const el = document.querySelector('.grain');
-      if (!el) return;
+      // (Every grain layer on the page, the hero's and the footer's, set as one.)
+      const els = [...document.querySelectorAll('.grain')];
+      if (!els.length) return;
+      const el = {
+        style: {
+          setProperty: (k, v) => els.forEach((e) => e.style.setProperty(k, v)),
+          set opacity(v) { els.forEach((e) => (e.style.opacity = v)); },
+          set mixBlendMode(v) { els.forEach((e) => (e.style.mixBlendMode = v)); },
+        },
+        dataset: { set move(v) { els.forEach((e) => (e.dataset.move = v)); } },
+      };
       const d = document.documentElement;
       const G = { texture: 'film', size: 1, amount: 0.12, contrast: 1.2, blend: 'normal', move: 'swap', fade: 1 };
       const TEX = { fine: [0.95, 1], film: [0.75, 2], soft: [0.55, 3], coarse: [0.38, 3] };
