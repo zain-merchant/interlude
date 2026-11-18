@@ -127,7 +127,8 @@ const T = {
   twistRate: 12, twistMax: 20, twistEase: 0.6, // scrolling twists it: degrees per 1000px, at most, settling in s
   dragTilt: 0.35, // how far dragging on the record tips it (0: not at all)
   dust: 0, away: 1, awayB: 1, dustSize: 1, dustSoft: 0.5, dustGlow: 1, dustGlowSize: 1, dustBright: 1, dustLight: 1, dustVariety: 0.6, dustFibres: 0.5, // natural dust, on top of the rest (see uNat)
-  size: 1, up: 0, warp: 'none', warpAmt: 0.5, tint: 0, hover: 'arc', still: 1.2,
+  bfStart: -110, bfEnd: 0, bfCurve: 'linear', bfShape: 'line', bfWidth: 0.6, bfCentre: -400, bfMid: 0.75,
+  size: 1, up: 0, reach: 1, warp: 'none', warpAmt: 0.5, tint: 0, hover: 'arc', still: 1.2,
   look: 'vinyl', shape: 'custom', vinylPreset: 'dark',
   vinyl: '#1c1c20', finish: 'solid', body: 0, through: 0, lineTint: 0, flecks: 0,
   pitch: 6, pitchOut: 8, lineW: 1, press: 1, contrast: 1, satin: 1, level: 1, sheen: 1, songLen: 1,
@@ -1638,7 +1639,7 @@ function layout(now) {
   const end = bar && next && next.top > bar.bottom ? next.top - c.top : s.bottom - c.top + 180;
   // The app's screen, where the pointer isn't on the record.
   const box = { l: s.left - c.left, r: s.right - c.left, t: s.top - c.top, b: s.bottom - c.top };
-  const key = [c.width, c.height, Math.round(cx), Math.round(cy), Math.round(end), T.drop, T.persp, T.size, T.up, T.warp, T.warpAmt, T.fadeAt, T.fadeLen, T.songLen].join();
+  const key = [c.width, c.height, Math.round(cx), Math.round(cy), Math.round(end), T.drop, T.persp, T.size, T.up, T.reach, T.warp, T.warpAmt, T.fadeAt, T.fadeLen, T.songLen, T.bfStart, T.bfEnd, T.bfCurve, T.bfShape, T.bfWidth, T.bfCentre, T.bfMid].join();
   gl.uniform4fv(U.uHoles, new Float32Array([...holes.flat(), ...new Array(16 - holes.length * 4).fill(0)]));
   gl.uniform1f(U.uHoleCount, holes.length);
   const btn = document.querySelector('.hero .btn');
@@ -1650,7 +1651,15 @@ function layout(now) {
   // How far out it runs: all round, and (with more rings above) up top as
   // far as the rings now reach at the top of the canvas.
   const out = R * T.size;
-  const top = T.up > 0 ? Math.max(out, toRecord(cx, RIM_TOP + T.drop, g).r) : out;
+  let top = T.up > 0 ? Math.max(out, toRecord(cx, RIM_TOP + T.drop, g).r) : out;
+  // Rings past the rim, up top only (reach): the disc's far edge carried
+  // further out toward the top of the canvas, share `reach` of the way.
+  // Nothing else moves: the same centre, tilt and perspective, so all
+  // below stays exactly as it was.
+  if (T.reach > 0) {
+    const toTop = toRecord(cx, Math.max(2, -0.6 * hz), { ...g, up: 0 }).r;
+    top = Math.max(top, out + (Math.max(out, toTop) - out) * T.reach);
+  }
   const Rmax = Math.max(out, top);
   const tracks = [];
   for (let a = r0, i = 0; a < Rmax - 40 && tracks.length < MAX_TRACKS; i++) {
@@ -1666,8 +1675,8 @@ function layout(now) {
   canvas.style.setProperty('--fx-mid', `${Math.round(s.top - c.top + s.height * 0.3)}px`);
   canvas.style.setProperty('--fx-end', `${Math.round(end)}px`);
   // And the canvas ends where the record does, not 2000px down.
-  canvas.style.height = `${Math.ceil(end + 8)}px`;
-  topFade(s.top - c.top);
+  canvas.style.height = `${Math.ceil(end + Math.max(0, T.bfEnd) + 8)}px`;
+  topFade(Math.round(s.top - c.top), Math.round(s.top - c.top + s.height * 0.3), Math.round(end), c.width);
   geo = { ...g, key, R, r0, box, out, top, Rmax };
   return geo;
 }
@@ -1960,12 +1969,53 @@ function draw(now) {
 // so the very top is always clear and the fade is always a ramp, never an
 // edge. (Its defaults are style.css's own, left to it.) fxTop: the app's
 // screen, which it never reaches past.
-function topFade(fxTop) {
-  if (T.fadeAt === 230 && T.fadeLen >= 230) { canvas.style.removeProperty('--fx-mask'); return; }
+// The canvas's mask, top to bottom: the fade at the very top (fadeAt,
+// fadeLen), full behind the words, a step quieter beside the app (bfMid),
+// then the fade out at the foot. The foot's fade (Hero record: bottom fade)
+// starts bfStart px from the next section's heading and is gone by bfEnd px
+// from it (minus is above), along a curve (bfCurve); as a line straight
+// across, or radial: an ellipse round the app's middle, bfWidth of the
+// page wide, centred bfCentre px below the app's top, so the record goes
+// first at the corners and last straight down.
+const CURVES = {
+  linear: (t) => t,
+  smooth: (t) => t * t * (3 - 2 * t),
+  out: (t) => 1 - (1 - t) ** 2,
+  in: (t) => t * t,
+  long: (t) => 1 - (1 - t) ** 3,
+};
+function topFade(fxTop, fxMid, fxEnd, w) {
   const y1 = Math.max(8, Math.min(T.fadeAt, fxTop));
   const len = Math.max(8, Math.min(T.fadeLen, y1));
   const at = (f) => `${(y1 - len + len * f).toFixed(1)}px`;
-  canvas.style.setProperty('--fx-mask', `linear-gradient(to bottom, transparent 0, transparent ${at(0)}, rgb(0 0 0 / 0.06) ${at(60 / 230)}, rgb(0 0 0 / 0.5) ${at(140 / 230)}, #000 ${at(1)}, #000 var(--fx-top), rgb(0 0 0 / 0.75) var(--fx-mid), rgb(0 0 0 / 0.75) calc(var(--fx-end) - 110px), transparent var(--fx-end))`);
+  const mid = T.bfMid;
+  const topPart = `linear-gradient(to bottom, transparent 0, transparent ${at(0)}, rgb(0 0 0 / 0.06) ${at(60 / 230)}, rgb(0 0 0 / 0.5) ${at(140 / 230)}, #000 ${at(1)}, #000 ${fxTop}px, rgb(0 0 0 / ${mid}) ${fxMid}px, rgb(0 0 0 / ${mid}) 100%)`;
+  const a = fxEnd + Math.min(T.bfStart, T.bfEnd - 1);
+  const b = fxEnd + T.bfEnd;
+  const ease = CURVES[T.bfCurve] || CURVES.linear;
+  const N = T.bfCurve === 'linear' ? 1 : 10;
+  let foot;
+  if (T.bfShape === 'radial') {
+    // Along the ellipse's ray: 0 at its centre, 100% where it ends (b).
+    const cy = fxTop + T.bfCentre;
+    const ry = Math.max(10, b - cy);
+    const k = Math.max(0.05, Math.min(1, (a - cy) / ry));
+    // (Never narrower than keeps the page's edges inside its solid middle
+    // at the centre's height, or the switch from all-showing above would
+    // show as a line there.)
+    const rx = Math.max(w * T.bfWidth, (w / 2) / k * 1.02);
+    const stops = Array.from({ length: N + 1 }, (_, i) => { const t = i / N; return `rgb(0 0 0 / ${(1 - ease(t)).toFixed(3)}) ${((k + (1 - k) * t) * 100).toFixed(2)}%`; });
+    // (Only below its centre: above it, all of the record shows.)
+    foot = `radial-gradient(${rx.toFixed(0)}px ${ry.toFixed(0)}px at 50% ${cy.toFixed(0)}px, #000 0, ${stops.join(', ')}), linear-gradient(to bottom, #000 ${cy.toFixed(0)}px, transparent ${cy.toFixed(0)}px)`;
+  } else {
+    const stops = Array.from({ length: N + 1 }, (_, i) => { const t = i / N; return `rgb(0 0 0 / ${(1 - ease(t)).toFixed(3)}) ${(a + (b - a) * t).toFixed(1)}px`; });
+    foot = `linear-gradient(to bottom, #000 0, ${stops.join(', ')})`;
+  }
+  canvas.style.setProperty('-webkit-mask-image', `${topPart}, ${foot}`);
+  canvas.style.setProperty('mask-image', `${topPart}, ${foot}`);
+  const radial = T.bfShape === 'radial';
+  canvas.style.setProperty('-webkit-mask-composite', radial ? 'source-in, source-over' : 'source-in');
+  canvas.style.setProperty('mask-composite', radial ? 'intersect, add' : 'intersect');
 }
 
 // The glints' colours turned round the colour wheel by t radians (about
@@ -2369,6 +2419,20 @@ tw?.slider({ ...lay, label: 'Hero record: lower by', min: -300, max: 400, step: 
 tw?.slider({ ...lay, label: 'Hero record: perspective', min: 0.3, max: 3, step: 0.05, value: T.persp, onInput: sf('persp') });
 tw?.slider({ ...lay, label: 'Hero record: rings all round', min: 0.7, max: 2, step: 0.05, value: T.size, onInput: sf('size') });
 tw?.slider({ ...lay, label: 'Hero record: more rings up top', min: 0, max: 1, step: 0.05, value: T.up, onInput: sf('up') });
+// The fade at the foot (see topFade).
+{
+  const bf = (k) => (v) => { T[k] = v; geo = null; wake(); };
+  const foot = { folder: 'Bottom fade' };
+  tw?.slider({ ...foot, label: 'Hero record: bottom fade starts (px from the next heading)', min: -800, max: 200, step: 5, value: T.bfStart, onInput: bf('bfStart') });
+  tw?.slider({ ...foot, label: 'Hero record: bottom fade gone by (px from the next heading)', min: -600, max: 400, step: 5, value: T.bfEnd, onInput: bf('bfEnd') });
+  tw?.select({ ...foot, label: 'Hero record: bottom fade curve', value: T.bfCurve, options: [['linear', 'Straight'], ['smooth', 'Eased in and out'], ['out', 'Quick, then gently'], ['long', 'Quick, long tail'], ['in', 'Gently, then quick']], onInput: bf('bfCurve') });
+  tw?.select({ ...foot, label: 'Hero record: bottom fade shape', value: T.bfShape, options: [['line', 'Straight across'], ['radial', 'Radial, round the app']], onInput: bf('bfShape') });
+  tw?.slider({ ...foot, label: 'Hero record: radial fade width (of the page)', min: 0.2, max: 1.5, step: 0.01, value: T.bfWidth, onInput: bf('bfWidth') });
+  tw?.slider({ ...foot, label: 'Hero record: radial fade centre (px below the app top)', min: -2000, max: 900, step: 10, value: T.bfCentre, onInput: bf('bfCentre') });
+  tw?.slider({ ...foot, label: 'Hero record: strength beside the app', min: 0, max: 1, step: 0.01, value: T.bfMid, onInput: bf('bfMid') });
+}
+// (Rings past the rim up top, nothing below changing: see layout.)
+tw?.slider({ ...lay, label: 'Hero record: rings past the rim up top', min: 0, max: 1, step: 0.01, value: T.reach, onInput: (v) => { T.reach = v; geo = null; wake(); } });
 // The fade at the very top: the record is fully shown below "starts at"
 // and fades to nothing over "length" above it, always clear at the very
 // top (see topFade).
