@@ -184,7 +184,9 @@
     }
     g.shown = shownNow;
     g.stash = stash;
-    const kit = DK.createDialKit(group, configOf(g), { id, persist: true });
+    const first = configOf(g);
+    g.sig = JSON.stringify(first);
+    const kit = DK.createDialKit(group, first, { id, persist: true });
     g.kit = kit;
     g.DK = DK;
     putBack(DK, id, stash, [...shownNow].map((c) => c.path));
@@ -226,12 +228,66 @@
     try { putBy(g.stash, g.DK.DialStore.presets.get(id), g.DK.DialStore.baseValues.get(id), going); } catch {}
     g.shown = now;
     g.hold = new Map(back);
-    g.kit.updateConfig(configOf(g));
+    // Nothing to change (the same controls, the same options): leave the
+    // panel alone, so it doesn't jump to the top or open every folder.
+    const cfg = configOf(g);
+    const sig = JSON.stringify(cfg);
+    if (sig === g.sig && !back.length && !going.length) { g.hold = null; return; }
+    g.sig = sig;
+    // Otherwise rebuild it, keeping where it was scrolled to and which
+    // folders were open or closed.
+    const keep = ui.snapshot();
+    g.kit.updateConfig(cfg);
+    ui.restore(keep);
     for (const [path, v] of back) g.kit.setValue(path, v);
     g.hold = null;
     putBack(g.DK, id, g.stash, back.map(([path]) => path));
     write(stashOf(group), g.stash);
   }
+
+  // The panel's own state, kept across rebuilds and visits: how far it's
+  // scrolled, which folders are open or closed (by their titles, outermost
+  // first), and where it was dragged to.
+  const ui = (() => {
+    const FOLDERS_KEY = 'tune-ui:folders';
+    const PLACE_KEY = 'tune-ui:place';
+    const tops = () => [...document.querySelectorAll('.dialkit-root .dialkit-folder-header-top')];
+    const keyOf = (top) => {
+      const names = [];
+      for (let f = top.closest('.dialkit-folder'); f; f = f.parentElement?.closest('.dialkit-folder')) {
+        const t = f.querySelector(':scope > .dialkit-folder-header .dialkit-folder-title, :scope > .dialkit-folder-header .dialkit-folder-header-top');
+        names.unshift((t?.textContent || '').trim().slice(0, 48));
+      }
+      return names.join(' / ');
+    };
+    const scroller = () => document.querySelector('.dialkit-root .dialkit-panel-inner');
+    const folders = () => { const m = {}; for (const t of tops()) m[keyOf(t)] = t.getAttribute('aria-expanded'); return m; };
+    const apply = (m) => { for (const t of tops()) { const want = m[keyOf(t)]; if (want && t.getAttribute('aria-expanded') !== want) t.click(); } };
+    const after = (fn) => requestAnimationFrame(() => requestAnimationFrame(fn));
+    const save = () => { try { localStorage.setItem(FOLDERS_KEY, JSON.stringify({ ...read(FOLDERS_KEY), ...folders() })); } catch {} };
+    // A folder opened or closed by hand is remembered.
+    addEventListener('click', (e) => { if (e.target.closest?.('.dialkit-root .dialkit-folder-header-top')) setTimeout(save, 60); }, true);
+    // Where the panel was dragged to, remembered when it's let go.
+    addEventListener('pointerup', (e) => {
+      if (!e.target.closest?.('.dialkit-root')) return;
+      setTimeout(() => {
+        const shell = document.querySelector('.dialkit-root .dialkit-panel');
+        if (!shell) return;
+        write(PLACE_KEY, shell.style.left ? { left: shell.style.left, top: shell.style.top } : null);
+      }, 60);
+    }, true);
+    return {
+      snapshot: () => ({ top: scroller()?.scrollTop ?? 0, folders: folders() }),
+      restore: (k) => after(() => { apply(k.folders); after(() => { const sc = scroller(); if (sc) sc.scrollTop = k.top; }); }),
+      // On a visit: the folders as they were left, and the panel where it was.
+      start: () => {
+        setTimeout(() => apply(read(FOLDERS_KEY) || {}), 400);
+        const place = read(PLACE_KEY);
+        const shell = document.querySelector('.dialkit-root .dialkit-panel');
+        if (place && shell) { delete shell.dataset.position; Object.assign(shell.style, { left: place.left, top: place.top, right: 'auto', bottom: 'auto' }); }
+      },
+    };
+  })();
 
   const pending = new Set();
   function refresh(group) {
@@ -264,6 +320,7 @@
         g.made = true;
         make(DK, group, g);
       }
+      if (!ui.started) { ui.started = true; ui.start(); }
     };
     if (document.body) start();
     else addEventListener('DOMContentLoaded', start, { once: true });
