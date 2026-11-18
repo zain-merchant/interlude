@@ -614,8 +614,6 @@ html[data-nav="morph"] .nav .links, html[data-nav="morph"] .nav-actions { will-c
 html[data-nav="morph"] .nav-actions {
   position: absolute; right: 0; top: 50%; translate: 0 -50%; align-items: center; gap: 4px; opacity: 0; visibility: hidden;
 }
-/* A thin rule between the sections and the actions. */
-html[data-nav="morph"] .nav-actions::before { content: ''; width: 1px; height: 18px; margin-right: 10px; background: var(--line-2); }
 /* Inside the capsule, 6px in from its edge: corners its radius less 6. */
 html[data-nav="morph"] .nav-actions .btn { height: 36px; border-radius: calc(var(--cap-r, 14px) - 6px); font-size: 13.5px; }
 html[data-nav="morph"] .nav-actions .btn.ghost {
@@ -627,11 +625,6 @@ html[data-nav="morph"] .nav-actions .btn.ghost:hover { color: var(--fg); backgro
 html[data-nav="morph"] .nav-actions .btn:not(.ghost) { gap: 6px; padding: 0 14px 0 11px; }
 html[data-nav="morph"] .nav-dl { display: block; width: 15px; height: 15px; }
 html[data-nav="morph"] .nav-dl path { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
-/* Narrow: no section links; the capsule runs nearly edge to edge, the
-   name left and the actions right. */
-@media (max-width: 860px) {
-  html[data-nav="morph"] .nav-actions::before { display: none; }
-}
 /* ── Hero and nav layouts (end) ── */
 
 /* Install steps: the number sits just above its heading, close to it, on
