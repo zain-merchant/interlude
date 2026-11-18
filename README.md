@@ -26,9 +26,10 @@ the report it saves.
 - **Library:** instant search, playlists, a history of every set, and
   import from Rekordbox and Serato with cues, loops and grids. Your music
   files are never changed.
-- **Controllers:** the Pioneer DDJ-FLX4 is mapped in full. More than 140
-  others connect through the bundled Mixxx mappings, and MIDI learn covers
-  the rest.
+- **Controllers:** the Pioneer DDJ-FLX4 is mapped in full. More than 150
+  others connect through the bundled Mixxx mappings (including untested
+  ones for the DDJ-FLX6, DDJ-FLX10, DDJ-800, XDJ-RX3, XDJ-AZ and OPUS-QUAD),
+  and MIDI learn covers the rest.
 - **And:** set recording to WAV, an 8-slot sampler, fully remappable
   keyboard shortcuts, and MP3, AAC, FLAC, WAV, AIFF, OGG and ALAC support.
 
