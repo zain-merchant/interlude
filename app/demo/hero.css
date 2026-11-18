@@ -1,3 +1,8 @@
+/* The named springs, as CSS linear() curves (springs.css). Imported here,
+   not from JS, so each page's own stylesheet carries them: the site links
+   demo/cards.css alone. */
+@import './springs.css';
+
 /* The hero page: the app at 1440 × 900. In the controller version the app
    eases back and the controller comes up over its foot, inside the same
    900, so the page around it never moves. Clear around the app, so the
@@ -46,7 +51,10 @@ html, body { margin: 0; width: 1440px; height: 900px; overflow: hidden; backgrou
    answer real pointers only, so the script marks what it touches. */
 .app-host [data-demo-hover].btn { background-color: rgb(255 255 255 / 0.08); }
 .app-host [data-demo-pressed].btn { transform: scale(0.97); }
-.app-host .btn { transition: transform 90ms ease-out, background-color 160ms ease-out; }
+/* A press goes down on the `press` spring and lands; the release comes
+   back on `snappy` (springs.css). */
+.app-host .btn { transition: transform var(--snappy-ms) var(--snappy), background-color var(--snappy-ms) var(--snappy); }
+.app-host [data-demo-pressed].btn { transition-duration: var(--press-ms), var(--snappy-ms); transition-timing-function: var(--press), var(--snappy); }
 
 
 /* Demo only: when an EQ is killed the app adds " · kill" to its label, so
@@ -84,9 +92,12 @@ html, body { margin: 0; width: 1440px; height: 900px; overflow: hidden; backgrou
 /* The controller version: the screen eases back and shrinks a little, as a
    laptop does behind the controller in front of it; the desk comes up over
    its foot. */
-.app-host { transform-origin: 50% 0; transition: transform 1s cubic-bezier(0.23, 1, 0.32, 1); }
+/* Both on `glide` (big travel: leaves at once, 98% there by 592ms, no
+   overshoot), together. The desk moves by `top`, a layout property; only
+   its curve is the spring's. */
+.app-host { transform-origin: 50% 0; transition: transform var(--glide-ms) var(--glide); }
 #hero[data-hand="controller"] .app-host { transform: perspective(2400px) rotateX(4deg) scale(0.91); }
-.desk { transition: top 1s cubic-bezier(0.23, 1, 0.32, 1); }
+.desk { transition: top var(--glide-ms) var(--glide); }
 #hero[data-hand="controller"] .desk { top: 624px; }
 
 /* The link between a control on the controller and the one it drives in
@@ -99,13 +110,13 @@ svg.links { position: absolute; inset: 0; z-index: 255; pointer-events: none; ov
 .link-mark {
   position: absolute; z-index: 5; pointer-events: none; box-sizing: border-box;
   border: 1.75px solid #ff9b45; box-shadow: 0 0 0 1px rgb(0 0 0 / 0.35), inset 0 0 0 1px rgb(0 0 0 / 0.35);
-  opacity: 0; transition: opacity 0.35s ease-out;
+  opacity: 0; transition: opacity var(--smooth-ms) var(--smooth);
 }
 .link-mark.on { opacity: 1; }
 .link-line {
   fill: none; stroke: #ff9b45; stroke-width: 1.75; stroke-linecap: round;
   filter: drop-shadow(0 0 1px rgb(0 0 0 / 0.9));
-  opacity: 0; transition: opacity 0.35s ease-out;
+  opacity: 0; transition: opacity var(--smooth-ms) var(--smooth);
 }
 .link-line.on { opacity: 1; }
 /* The pulse: a bright stretch of the line, glowing. */
@@ -134,7 +145,7 @@ svg.links { position: absolute; inset: 0; z-index: 255; pointer-events: none; ov
 #hero .perf button.big[aria-pressed="true"] {
   background: color-mix(in srgb, var(--deck) 16%, transparent);
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--deck) 55%, transparent);
-  transition: background-color 0.25s, box-shadow 0.25s;
+  transition: background-color var(--snappy-ms) var(--snappy), box-shadow var(--snappy-ms) var(--snappy);
 }
 
 /* The library's background-analysis note ("analyzing, 12 to go") would

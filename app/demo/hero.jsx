@@ -19,6 +19,7 @@ import { createRoot } from 'react-dom/client';
 import { mount } from 'svelte';
 import { Stage } from './stageshow/stage';
 import { Controller } from './Controller.jsx';
+import { toLinear, SMOOTH, GLIDE, LOCK, PULSE } from './springs.js';
 import App from '../src/App.svelte';
 import { engine, control } from '$lib/engine.svelte.js';
 import { usable as stemsUsable } from '$lib/stems.svelte.js';
@@ -207,10 +208,19 @@ async function hwPress(a, target, act, label, appEl) {
   done();
 }
 
-/** A hardware drag: straight along its slot, easing out to a stop (the
- * finger's own motion runs at full speed to the end and stops dead). */
-const glide = (e, from, to) => {
-  const k = 1 - (1 - e) * (1 - e);
+/**
+ * A hardware drag on a spring (springs.js): straight along its slot, leaving
+ * at once and coming to rest (or, on LOCK, landing on its stop). Run the drag
+ * for the spring's `ms`. Stageshow hands `path` a finger's progress already
+ * eased (its fingerEase: a quarter of the time gathering speed, then steady),
+ * so that's undone first, back to plain time, and the spring applied to that.
+ */
+const unFinger = (e) => {
+  const a = 0.25, k = 1 / (1 - a / 2);
+  return e < (a / 2) * k ? Math.sqrt((2 * a * e) / k) : e / k + a / 2;
+};
+const springDrag = (sp) => (e, from, to) => {
+  const k = sp.ease(Math.min(1, Math.max(0, unFinger(e))));
   return { x: from.x + (to.x - from.x) * k, y: from.y + (to.y - from.y) * k };
 };
 /** How far along a drag the hand is, from where it actually is. */
@@ -244,9 +254,12 @@ window.addEventListener('message', (e) => {
 });
 queueMicrotask(() => setInput(inputStyle));
 
-// How long a pulse takes to travel the line, and for the line to draw in.
-const TRAVEL = 560;
-const LINK_IN = 380;
+// How long a pulse takes to travel the line (it runs on PULSE and lands in
+// the app at 488ms), and for the line to draw in (SMOOTH).
+const TRAVEL = PULSE.ms;
+const LINK_IN = SMOOTH.ms;
+const SMOOTH_CSS = toLinear(SMOOTH);
+const PULSE_CSS = toLinear(PULSE);
 // The pulse sets off while the line is still drawing, a little past halfway.
 const LEAD = 200;
 const heroBox = () => document.getElementById('hero').getBoundingClientRect();
@@ -393,15 +406,15 @@ function link(hw, appEl, label) {
   if (path) {
     const total = path.getTotalLength();
     path.style.strokeDasharray = `${total} ${total}`;
-    path.animate([{ strokeDashoffset: total }, { strokeDashoffset: 0 }], { duration: LINK_IN, easing: 'cubic-bezier(0.45, 0, 0.55, 1)', fill: 'forwards' })
+    path.animate([{ strokeDashoffset: total }, { strokeDashoffset: 0 }], { duration: LINK_IN, easing: SMOOTH_CSS, fill: 'forwards' })
       .finished.then(() => (path.style.strokeDasharray = 'none'), () => {});
   }
   if (tag && geom) {
     tag.animate(Array.from({ length: 13 }, (_, i) => {
       const p = curve(i / 12);
       return { transform: `translate(${p.x}px, ${p.y - 28}px) translate(-50%, -50%)` };
-    }), { duration: TRAVEL + 300, delay: LEAD, easing: 'cubic-bezier(0.45, 0, 0.55, 1)', fill: 'both' });
-    tag.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 250, fill: 'both' });
+    }), { duration: TRAVEL, delay: LEAD, easing: PULSE_CSS, fill: 'both' });
+    tag.animate([{ opacity: 0 }, { opacity: 1 }], { duration: SMOOTH.ms, easing: SMOOTH_CSS, fill: 'both' });
   }
   requestAnimationFrame(() => [...marks, path].forEach((p) => p?.classList.add('on')));
   let alive = true;
@@ -422,12 +435,14 @@ function link(hw, appEl, label) {
     const t0 = performance.now();
     const step = (now) => {
       if (!spark) return;
+      // On PULSE: it leaves at once and lands in the app on a hard stop,
+      // fading over the last tenth of the way as it goes in.
       const t = Math.min(1, (now - t0) / TRAVEL);
-      const e = -(Math.cos(Math.PI * t) - 1) / 2;
+      const e = PULSE.ease(t);
       const total = spark.getTotalLength();
       spark.style.strokeDasharray = `${SEG} ${total + SEG}`;
       spark.style.strokeDashoffset = String(SEG - e * (total + SEG));
-      spark.style.opacity = String(t < 0.8 ? 1 : (1 - t) / 0.2);
+      spark.style.opacity = String(e < 0.9 ? 1 : (1 - e) / 0.1);
       if (t < 1) everyFrame(step);
       else {
         spark.remove();
@@ -449,8 +464,8 @@ function link(hw, appEl, label) {
       return;
     }
     for (const p of [...marks, path]) p?.classList.remove('on');
-    if (tag) tag.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 300, fill: 'forwards' }).finished.then(() => tag.remove());
-    setTimeout(() => [...marks, path].forEach((p) => p?.remove()), 420);
+    if (tag) tag.animate([{ opacity: 1 }, { opacity: 0 }], { duration: SMOOTH.ms, easing: SMOOTH_CSS, fill: 'forwards' }).finished.then(() => tag.remove());
+    setTimeout(() => [...marks, path].forEach((p) => p?.remove()), SMOOTH.ms);
   };
   done.pulse = pulse;
   links.add(done);
@@ -506,7 +521,7 @@ const controller = {
         const k = along(at, from, end);
         cap.style.setProperty('--at', String(at0 + (at1 - at0) * k));
         control({ type: 'setRate', deck: d, rate: rate0 + (target - rate0) * k });
-      }, { duration: 1000, path: glide });
+      }, { duration: GLIDE.ms, path: springDrag(GLIDE) });
       control({ type: 'setRate', deck: d, rate: target });
       await a.wait(350);
       cap.removeAttribute('data-held');
@@ -532,7 +547,7 @@ const controller = {
       const value = Math.max(-1, Math.min(1, ((at.x - r.x) / r.width) * 2 - 1));
       hw?.style.setProperty('--xf', String((value + 1) / 2));
       control({ type: 'setCrossfader', value });
-    }, { duration: 1400, path: glide });
+    }, { duration: GLIDE.ms, path: springDrag(GLIDE) });
     control({ type: 'setCrossfader', value: to });
     await a.wait(350);
     capEl.removeAttribute('data-held');
@@ -768,7 +783,7 @@ const controllerFeatures = {
       const k = Math.min(1, (at.y - from.y) / 40);
       hw.style.rotate = `${-k * 150}deg`;
       while (steps < Math.floor(k * 12)) { key(app, 'ArrowDown'); steps++; }
-    }, { duration: 900, path: glide });
+    }, { duration: LOCK.ms, path: springDrag(LOCK) });
     key(app, 'Home');
     await a.wait(400);
     hw.removeAttribute('data-held');
@@ -790,7 +805,7 @@ const controllerFeatures = {
     await a.wait(TRAVEL);
     await a.drag({ x: from.x, y: from.y - 40 }, (at) => {
       hw.style.rotate = `${-Math.max(0, Math.min(1, (at.y - (from.y - 40)) / 40)) * 150}deg`;
-    }, { duration: 650, path: glide });
+    }, { duration: SMOOTH.ms, path: springDrag(SMOOTH) });
     lowEq(d).dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
     await a.wait(400);
     hw.removeAttribute('data-held');
