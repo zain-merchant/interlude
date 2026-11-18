@@ -665,5 +665,8 @@
   background: linear-gradient(105deg, transparent 40%, rgb(255 255 255 / 0.12) 50%, transparent 60%) no-repeat;
   background-size: 300% 100%; background-position: 100% 0;
 }
-.p-add[data-ready] .p-add__zone::after { animation: p-toast-glint var(--glide-ms) 0.12s var(--glide) both; }
+/* (It sets off with the check and the words turning green: no wait of its
+   own unless Tune › Add music: sweep starts sets one; negative starts it
+   part way across.) */
+.p-add[data-ready] .p-add__zone::after { animation: p-toast-glint var(--glide-ms) var(--add-sweep, 0ms) var(--glide) both; }
 @media (prefers-reduced-motion: reduce) { .p-add[data-ready] .p-add__zone::after { animation: none; } }

@@ -15,7 +15,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css?v=20261121i">
-  <link rel="stylesheet" href="demo/cards.css?v=20261120z">
+  <link rel="stylesheet" href="demo/cards.css?v=20261121j">
   <script src="tune.js?v=20261120v"></script>
   <script>
     // Live updates while working on the site locally (the dev server
@@ -769,7 +769,7 @@
   </footer>
 
   <!-- The feature cards' pictures (built from app/demo, see the README). -->
-  <script type="module" src="demo/cards.js?v=20261120z"></script>
+  <script type="module" src="demo/cards.js?v=20261121j"></script>
   <script>
     // The hero. The screenshot shows first; once the page has loaded, the
     // live app takes its place (unless the visitor prefers less motion).
@@ -1311,6 +1311,9 @@
     })();
     // Local only: what the page does when the site's files change.
     if (window.__live) window.tune?.select({ label: 'Dev: live updates', value: (() => { try { return localStorage.getItem('interlude-live') || 'ask'; } catch { return 'ask'; } })(), options: [['ask', 'Styles live, ask before reloading'], ['reload', 'Styles live, reload for the rest'], ['off', 'Off']], onInput: (v) => window.__live.set(v) });
+    // When the light sweeps across Add music's row as its tracks are ready:
+    // after (positive) or ahead of (negative) the check and the green words.
+    window.tune?.slider({ label: 'Add music: sweep starts', min: -500, max: 500, step: 10, value: 0, unit: 'ms', css: '--add-sweep' });
     // The note beside the FAQ (style.css, "The note beside the FAQ").
     document.documentElement.dataset.note = 'ruled';
     window.tune?.select({ label: 'Note: style', value: 'ruled', options: [['ruled', 'Ruled page, tilted right, signature right'], ['sleeve', 'A die-cut record sleeve, the record turning inside'], ['label', 'A white label record, the note written on it'], ['plain', 'Plain card'], ['tilt', 'Tilted a little'], ['overhang', 'Signature off the corner'], ['paper', 'On warm paper'], ['lined', 'Ruled like a notebook'], ['letter', 'Paper, tilted, signature off the corner']],
