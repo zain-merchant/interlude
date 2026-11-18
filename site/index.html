@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261118v">
+  <link rel="stylesheet" href="style.css?v=20261118w">
   <link rel="stylesheet" href="demo/cards.css?v=20261118c">
   <script src="tune.js?v=20261118b"></script>
   <script>
@@ -265,8 +265,23 @@
       d.dataset.cardsurface = 'rule';
       d.dataset.cardnew = 'beside';
       d.dataset.cardrule = 'near';
-      window.tune?.select({ label: 'Hero: what\u2019s new', folder: 'Layout', value: 'beside', options: [['beside', 'Interlude 0.1.3, What\u2019s new beside it'], ['under', 'What\u2019s new in 0.1.3 under GitHub'], ['right', 'Interlude, the version on the right']],
-        onInput: (v) => { d.dataset.cardnew = v; d.dataset.cardtitle = v === 'beside' ? 'version' : 'name'; } });
+      window.tune?.select({ label: 'Hero: what\u2019s new', folder: 'Layout', value: 'beside', options: [['beside', 'Interlude 0.1.3, What\u2019s new beside it'], ['under', 'What\u2019s new in 0.1.3 under GitHub'], ['right', 'Interlude, the version on the right'], ['title', 'Interlude 0.1.3 is itself the link'], ['pill', 'Interlude, the version as a small chip']],
+        onInput: (v) => { d.dataset.cardnew = v; d.dataset.cardtitle = v === 'beside' || v === 'title' ? 'version' : 'name'; } });
+      // Midway, measured: from the end of the headline's longest line to the
+      // words beside it, the rule half way.
+      const ruleMid = () => {
+        const side = document.querySelector('.hero-side');
+        const lines = [...document.querySelectorAll('.hero .tagline, .hero .lede')];
+        if (!side || !lines.length) return;
+        let right = -Infinity;
+        for (const el of lines) { const rg = document.createRange(); rg.selectNodeContents(el); for (const r of rg.getClientRects()) right = Math.max(right, r.right); }
+        const sr = side.getBoundingClientRect();
+        const words = sr.left + parseFloat(getComputedStyle(side).paddingLeft || '0');
+        side.style.setProperty('--rule-mid', `${Math.round((right + words) / 2 - sr.left)}px`);
+      };
+      ruleMid();
+      document.fonts?.ready.then(ruleMid);
+      addEventListener('resize', () => requestAnimationFrame(ruleMid));
       window.tune?.select({ label: 'Hero: frame', folder: 'Layout', value: 'rule-near', options: [['rule-near', 'A rule beside the buttons'], ['rule-mid', 'A rule midway'], ['none', 'Nothing'], ['glass', 'A glass card'], ['outline', 'An outline']],
         onInput: (v) => {
           d.dataset.cardsurface = v.startsWith('rule') || v === 'none' ? 'rule' : v;
@@ -296,7 +311,7 @@
       <!-- The card layout's head: the release itself, then what it is and
            what it runs on, in one quiet line (style.css hides it elsewhere). -->
       <div class="dl-head">
-        <b class="dl-name">Interlude<span class="dl-ver"></span></b>
+        <b class="dl-name"><a class="dl-title" href="https://github.com/zain-merchant/interlude/releases/latest" target="_blank" rel="noopener" tabindex="-1">Interlude<span class="dl-ver"></span></a><a class="dl-pill" href="https://github.com/zain-merchant/interlude/releases/latest" target="_blank" rel="noopener" title="What’s new">Latest</a></b>
         <a class="dl-new" href="https://github.com/zain-merchant/interlude/releases/latest" target="_blank" rel="noopener">What’s new<span class="dl-new-ver"></span></a>
         <a class="dl-vlink" href="https://github.com/zain-merchant/interlude/releases/latest" target="_blank" rel="noopener" title="What’s new">Latest release</a>
         <p class="dl-sub">Free and open source<span class="dl-lic" title="GPL-3.0-or-later"> under GPLv3+</span></p>
@@ -1028,6 +1043,10 @@
         for (const a of document.querySelectorAll('.dl-vlink, .dl-new2')) a.href = r.html_url;
         const vl = document.querySelector('.dl-vlink');
         if (vl) vl.textContent = r.tag_name;
+        const pill = document.querySelector('.dl-pill');
+        if (pill) { pill.textContent = r.tag_name.replace(/^v/, ''); pill.href = r.html_url; }
+        const tl = document.querySelector('.dl-title');
+        if (tl) tl.href = r.html_url;
         const dn = document.querySelector('.dl-new');
         if (dn) dn.href = r.html_url;
       })
