@@ -354,11 +354,10 @@ pre {
   -webkit-mask-image: linear-gradient(to right, #000 var(--oss-from), transparent var(--oss-to));
   mask-image: linear-gradient(to right, #000 var(--oss-from), transparent var(--oss-to));
 }
-/* The header's rule runs the full width; the header sits a little tighter
-   than the rows, trimmed to its letters so it's centred by eye. */
+/* The header's rule runs the full width; the header is about a row tall,
+   its text a half size under the rows', on the same left edge. */
 .oss-log h4 {
-  margin: 0 -16px; padding: 10px 18px 9px; color: rgb(11 11 13 / 0.55); font-size: 13px; font-weight: 400; line-height: 1;
-  text-box: trim-both cap alphabetic;
+  margin: 0 -16px; padding: 11px 18px 10px; color: rgb(11 11 13 / 0.55); font-size: 12.5px; font-weight: 400; line-height: 16px;
   border-bottom: 1px solid; border-image: linear-gradient(to right, rgb(11 11 13 / var(--oss-line)) var(--oss-from), transparent var(--oss-to)) 0 0 1 0;
 }
 .oss-commits { margin: 0; padding: 0; list-style: none; }
