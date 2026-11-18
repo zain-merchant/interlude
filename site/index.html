@@ -772,8 +772,8 @@
           window.tune?.slider({ label: 'Note: record flip bounce', min: 0, max: 0.8, step: 0.01, value: S.flip.bounce, onInput: (v) => (S.flip = { ...S.flip, bounce: v }) });
           // The labels' paper.
           const root = document.documentElement.style;
-          document.documentElement.dataset.lablogo = 'rings';
-          window.tune?.select({ label: 'Note: label logo', value: 'rings', options: [['rings', 'Rings, outlined'], ['tile', 'Rings on the icon tile']], onInput: (v) => (document.documentElement.dataset.lablogo = v) });
+          document.documentElement.dataset.lablogo = 'tile';
+          window.tune?.select({ label: 'Note: label logo', value: 'tile', options: [['tile', 'Rings on the icon tile'], ['plain', 'Rings alone, no outline'], ['rings', 'Rings, outlined']], onInput: (v) => (document.documentElement.dataset.lablogo = v) });
           window.tune?.color({ label: 'Note: side A label', value: '#fb8b38', onInput: (v) => root.setProperty('--lab-a', v) });
           window.tune?.color({ label: 'Note: side B label', value: '#3fc9ea', onInput: (v) => root.setProperty('--lab-b', v) });
           window.tune?.color({ label: 'Note: white label', value: '#f3f0e8', onInput: (v) => root.setProperty('--lab-white', v) });
@@ -1081,7 +1081,7 @@
       const w = document.querySelector('.foot-word');
       if (!w) return;
       const d = document.documentElement;
-      const fx = await import('./foot-fx.js?v=20261121p').catch(() => null);
+      const fx = await import('./foot-fx.js?v=20261121r').catch(() => null);
       addEventListener('foot-fit', () => fx?.relayout());
       // Without tune.js (or an older one), each control still applies its default.
       const own = (o) => o.onInput?.(o.value);
@@ -1206,6 +1206,11 @@
         if (inside !== on) { on = inside; w.style.setProperty('--on', on ? '1' : '0'); }
       };
       // A click on the word sends a ring out from where it was clicked.
+      // (Clicking there selects no text, however many times.)
+      addEventListener('mousedown', (e) => {
+        const r = w.getBoundingClientRect();
+        if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom && !e.target.closest?.('a, button, .dialkit-root')) e.preventDefault();
+      });
       addEventListener('pointerdown', (e) => {
         if (e.button !== 0 || e.target.closest?.('a, button, .dialkit-root')) return;
         const r = w.getBoundingClientRect();

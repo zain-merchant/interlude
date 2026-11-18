@@ -652,7 +652,11 @@ export function point(p) {
 export function click(p) {
   if (!geo && !layout()) return;
   ring(p.x, p.y, T.clickReach ?? 1.6);
-  // (The pointer's own light comes on for it too, if it isn't already.)
+  // The rings show through the effect's own light, so a click brings that
+  // light on (and, in the play-once hover, starts it playing) if it's off.
+  if (hover.want === 0 && hover.on < 0.02) Object.assign(hover, { x: p.x, y: p.y, vx: 0, vy: 0 });
+  Object.assign(hover, { tx: p.x, ty: p.y, want: 1 });
+  if (T.trigger === 'once') { onceUntil = performance.now() + T.hold * 1000; near = true; }
   wake();
 }
 
