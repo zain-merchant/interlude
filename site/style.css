@@ -1474,3 +1474,16 @@ html[data-note="lined"] .founder {
 /* The light poster's "Latest updates and changes": darker, so it reads as
    a label rather than a hint. */
 .oss[data-look="poster-light"] .oss-log h4 { color: rgb(11 11 13 / 0.64); }
+
+/* Features: heading (Tune). How much the heading stands above its list.
+   big: the heading larger and heavier. quiet: the list's names and
+   descriptions a step quieter, so the heading leads. both: the two. */
+html:is([data-fhead="big"], [data-fhead="both"]) .group h3 { font-size: 22px !important; font-weight: 600 !important; letter-spacing: -0.02em !important; margin-bottom: 16px; }
+html:is([data-fhead="quiet"], [data-fhead="both"]) .group li b { color: var(--fg-2); font-weight: 450; }
+html:is([data-fhead="quiet"], [data-fhead="both"]) .group li span { color: var(--fg-3); }
+/* Marks on the heading itself (Features: heading mark). Underline: a
+   short line in the card's deck colour under the heading. Count: how
+   many things the card lists, small, beside the heading. */
+html[data-mark="underline"] .group h3 { flex-direction: column; align-items: flex-start; gap: 10px; }
+html[data-mark="underline"] .group h3::after { content: ''; width: 22px; height: 2px; border-radius: 1px; background: var(--mark); box-shadow: 0 0 10px var(--mark); }
+html[data-mark="count"] .group h3::after { content: attr(data-count); margin-left: auto; padding: 2px 8px; border-radius: 999px; font: 500 12px/18px var(--mono); color: var(--mark); background: color-mix(in srgb, var(--mark) 12%, transparent); }
