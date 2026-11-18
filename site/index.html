@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261119h">
+  <link rel="stylesheet" href="style.css?v=20261119j">
   <link rel="stylesheet" href="demo/cards.css?v=20261119d">
   <script src="tune.js?v=20261118b"></script>
   <script>
@@ -381,7 +381,7 @@
           <img class="poster" src="img/screenshot-1x.jpg" srcset="img/screenshot-1x.jpg 1440w, img/screenshot.jpg 2880w" sizes="(max-width: 1200px) 100vw, 1200px"
             width="1440" height="900" alt="Interlude with two tracks loaded: waveforms across the top, two decks either side of the mixer, and the library below.">
           <!-- The real app on its simulated engine, played by a script (app/demo). Loaded after the page. -->
-          <iframe class="live" title="Interlude mixing one track into the next" tabindex="-1" aria-hidden="true" data-src="demo/hero.html?v=20261119e"></iframe>
+          <iframe class="live" title="Interlude mixing one track into the next" tabindex="-1" aria-hidden="true" data-src="demo/hero.html?v=20261119k"></iframe>
         </div>
       </div>
       <div class="shot-bar">
@@ -529,7 +529,7 @@
            open, shown rather than said: its latest changes, live from GitHub. -->
       <div class="oss" data-look="tight" data-fade="outer">
         <div class="oss-text">
-          <h3>Send an idea or build it yourself</h3>
+          <h3><span class="oss-h1">Send an idea</span> <span class="oss-h2">or build it yourself</span></h3>
           <p>Interlude is free and open source, so anyone can fix bugs, add features or support new gear, including you.</p>
           <div class="oss-links">
             <a class="btn" href="https://github.com/zain-merchant/interlude/issues/new" target="_blank" rel="noopener">Send an idea</a>
@@ -1020,8 +1020,8 @@
     // plain "Latest release" link if GitHub can't be reached.
     // The open source card's update list: how its light surface fades into
     // the card (style.css, .oss).
-    // Five takes (style.css, "Open source: five takes"), and the one before them.
-    window.tune?.select({ label: 'Open source: look', value: 'tight', options: [['tight', 'The current one, tightened'], ['timeline', 'Dark, the changes on a timeline'], ['stacked', 'One column, changes in two'], ['split', 'Light words, dark changes to the edge'], ['ledger', 'No card, a big heading over both'], ['white-divided', 'Before (white, divided)']],
+    // The looks (style.css, "Open source looks").
+    window.tune?.select({ label: 'Open source: look', value: 'tight', options: [['tight', 'Current, tightened'], ['doors', 'Two doors: idea, or build it'], ['poster', 'Poster, changes running past'], ['feed', 'The newest change, big'], ['cards', 'Centred, three change cards'], ['gitlog', 'The log as git shows it']],
       onInput: (v) => { document.querySelector('.oss').dataset.look = v; window.tune?.refresh?.('Open source'); } });
     const cream = () => document.querySelector('.oss')?.dataset.look === 'cream';
     window.tune?.select({ show: cream, label: 'Open source: what fades', value: 'outer', options: [['outer', 'The outer card, to the right'], ['inner', 'The updates\' surface, to the right'], ['none', 'Nothing']],
@@ -1072,9 +1072,21 @@
             else t.textContent = msg;
           }
           const w = document.createElement('time'); w.dateTime = c.commit.author.date; w.textContent = ago(c.commit.author.date);
-          a.append(t, w); li.append(a);
+          // (Its short hash, which some looks show.)
+          const h = document.createElement('code'); h.className = 'oss-sha'; h.textContent = c.sha.slice(0, 7);
+          a.append(h, t, w); li.append(a);
           return li;
         }));
+        // The same changes as one running line (the poster look), twice
+        // over so it loops without a seam.
+        const log = document.querySelector('.oss-log');
+        log.querySelector('.oss-ticker')?.remove();
+        const tk = document.createElement('div'); tk.className = 'oss-ticker'; tk.setAttribute('aria-hidden', 'true');
+        const track = document.createElement('div'); track.className = 'oss-track';
+        for (let k = 0; k < 2; k++) for (const li of ol.children) {
+          const a = li.querySelector('a').cloneNode(true); a.tabIndex = -1; track.append(a);
+        }
+        tk.append(track); log.append(tk);
       })
       .catch(() => {});
     // The latest release, kept like the updates above (15 minutes, and the
