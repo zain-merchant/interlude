@@ -941,7 +941,9 @@ version = "0.1.3"
 dependencies = [
  "cpal",
  "hound",
+ "matrixmultiply",
  "rtrb",
+ "rustfft",
  "serde",
  "symphonia",
  "thiserror 2.0.21",
