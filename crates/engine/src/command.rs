@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::{FxKind, Track};
+use crate::{FxKind, PadFx, Track};
 
 /// Which deck a command targets.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -301,6 +301,17 @@ pub enum Command {
     SetFxBeats {
         deck: DeckId,
         beats: f32,
+    },
+    /// A pad FX pad pressed: the effect plays while it's held. Pressing
+    /// another switches to that one.
+    PadFxPress {
+        deck: DeckId,
+        fx: PadFx,
+    },
+    /// A pad FX pad let go. Echo and reverb tails ring out.
+    PadFxRelease {
+        deck: DeckId,
+        fx: PadFx,
     },
     /// Channel fader, 0.0..=1.0.
     SetFader {

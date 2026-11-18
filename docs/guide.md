@@ -44,7 +44,8 @@ Everything Interlude does, in detail. For a short overview, see the
   Loud masters are turned down in full; quiet tracks are turned up only as
   far as their peaks allow, so auto gain never makes a track clip.
 - **Effects:** a filter knob per channel (left low-pass, right high-pass,
-  centre off) and a beat FX unit per deck: echo, reverb, flanger and phaser,
+  centre off), sixteen pad FX on the controller's PAD FX pads (see the
+  DDJ-FLX4 below), and a beat FX unit per deck: echo, reverb, flanger and phaser,
   timed in beats (1/8 to 8) from the deck's tempo, with level and on. Echo
   and reverb tails ring out after you switch them off.
 - **Sampler:** eight one-shot slots that play straight to the master
@@ -134,9 +135,17 @@ Everything Interlude does, in detail. For a short overview, see the
   CUE/LOOP CALL halves and doubles the loop (with SHIFT: beat jump), all
   with LEDs. Sampler pad mode plays sampler slots 1 to 8 from either deck's
   pads (lit when loaded); SHIFT + pad stops a slot, or loads the selected
-  library track into an empty one. PAD FX1 mode is stems: pads 1 to 4
+  library track into an empty one. PAD FX1 and PAD FX2 are pad FX: hold
+  a pad and its effect plays, let go and it stops (lit while held). PAD
+  FX1: echo, reverb, trans, roll 1/4, high-pass sweep, bit crush, brake,
+  spin back. PAD FX2: roll 1, roll 1/2, roll 1/8, roll 1/16, dub echo,
+  trans 1/8, low-pass sweep, flanger. Rolls and trans land on the
+  beatgrid; the track keeps playing underneath, so letting go comes back
+  in where it would have been; echo and reverb tails ring out. KEYBOARD
+  (SHIFT + HOT CUE) is stems, as in Mixxx's FLX4 mapping: pads 1 to 4
   mute and unmute vocals, melody, bass and drums (lit while playing), pads
-  5 to 8 play one alone (lit while soloed). CFX knobs drive the channel
+  5 to 8 play one alone (lit while soloed). The first time a track's stems
+  are ready, a one-time tip says where they are. CFX knobs drive the channel
   filters. The beat FX section works as in rekordbox: the channel select
   lever picks the deck (MASTER runs the effect on both), BEAT FX SELECT
   changes the effect (SHIFT goes back), BEAT ◀ ▶ the beat length,
