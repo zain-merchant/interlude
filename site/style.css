@@ -305,7 +305,7 @@ pre {
 .faq-row { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 64px; align-items: start; }
 .faq { max-width: 760px; }
 .founder {
-  position: sticky; top: 96px; padding: 24px 24px 18px; border-radius: 16px;
+  position: sticky; top: 96px; padding: 24px; border-radius: 18px;
   background: var(--panel); box-shadow: inset 0 0 0 1px var(--line);
   color: var(--fg-2); font-size: 14.5px; line-height: 1.6;
 }
@@ -471,12 +471,14 @@ summary::-webkit-details-marker { display: none; }
    box and turns about its centre into the cross. Both bars are solid and
    the whole mark is faded at once, so where they cross isn't any brighter;
    2px bars in a 12px box land on whole pixels either side of the centre. */
+/* Turned into the cross, its bars lengthen by the square root of two, so
+   the cross spans the same 12px as the plus instead of looking smaller. */
 summary::after {
-  content: ''; flex: none; width: 12px; height: 12px; align-self: center; opacity: 0.5;
+  content: ''; flex: none; width: 18px; height: 18px; margin-right: -3px; align-self: center; opacity: 0.5;
   background: linear-gradient(var(--fg), var(--fg)) center / 12px 2px no-repeat, linear-gradient(var(--fg), var(--fg)) center / 2px 12px no-repeat;
-  transition: transform var(--snappy-ms) var(--snappy);
+  transition: transform var(--snappy-ms) var(--snappy), background-size var(--snappy-ms) var(--snappy);
 }
-details[open]:not([data-closing]) summary::after { transform: rotate(45deg); }
+details[open]:not([data-closing]) summary::after { transform: rotate(45deg); background-size: 17px 2px, 2px 17px; }
 details p { margin: 0; padding-bottom: 20px; color: var(--fg-2); max-width: 62ch; }
 
 /* Footer */
@@ -1085,7 +1087,7 @@ html[data-hero][data-herotext="card"][data-cardblock="sentence"] .dl-cap2 { disp
 .oss:is([data-look="tight"], [data-look^="doors"], [data-look^="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .oss-commits li + li { border-image: none; border-top: 1px solid var(--oss-rule2); }
 .oss:is([data-look="tight"], [data-look^="doors"], [data-look^="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .oss-commits a { padding: 9px 0; font-size: 14px; color: var(--oss-ink); transition: color 150ms ease; }
 .oss:is([data-look="tight"], [data-look^="doors"], [data-look^="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .oss-commits a:hover .oss-msg { color: var(--oss-strong); text-decoration: none; }
-.oss:is([data-look="tight"], [data-look^="doors"], [data-look^="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .oss-area { color: var(--oss-dim); transition: color 150ms ease; }
+.oss:is([data-look="tight"], [data-look^="doors"], [data-look^="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .oss-area { color: inherit; font-weight: 560; }
 .oss:is([data-look="tight"], [data-look^="doors"], [data-look^="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .oss-commits time { font-size: 12.5px; color: var(--oss-dim); }
 .oss:is([data-look="tight"], [data-look^="doors"], [data-look^="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .oss-empty a { color: var(--oss-ink); }
 /* Light surfaces' inks. */
@@ -1180,14 +1182,13 @@ html[data-nav="morph"][data-navacts="island"] .nav[data-acts-in] .nav-actions .b
 .oss[data-look^="poster"] .oss-log h4 { border: 0; padding: 0; }
 .oss[data-look^="poster"] .oss-commits { display: none; }
 .oss[data-look^="poster"] .oss-ticker { display: block; overflow: hidden; -webkit-mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent); mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent); }
-.oss-track { display: flex; width: max-content; animation: oss-run 60s linear infinite; }
-.oss-ticker:hover .oss-track { animation-play-state: paused; }
-@keyframes oss-run { to { transform: translateX(-50%); } }
+.oss-track { display: flex; width: max-content; will-change: transform; }
 .oss-track a { display: flex; align-items: baseline; gap: 8px; padding-right: 40px; color: var(--oss-ink); font-size: 14px; white-space: nowrap; text-decoration: none; }
-.oss-track a:hover .oss-msg { color: var(--oss-strong); }
+.oss-track a .oss-msg { text-decoration: underline; text-decoration-color: transparent; text-decoration-thickness: 1px; text-underline-offset: 3px; transition: text-decoration-color 150ms ease, color 150ms ease; }
+.oss-track a:hover .oss-msg { color: var(--oss-strong); text-decoration-color: currentColor; }
 .oss-track a .oss-sha { display: none; }
 .oss-track time { font-size: 12.5px; color: var(--oss-dim); }
-@media (prefers-reduced-motion: reduce) { .oss-track { animation: none; } .oss-ticker { overflow-x: auto; } }
+@media (prefers-reduced-motion: reduce) { .oss-ticker { overflow-x: auto; } }
 
 /* The newest change, big: the changes lead. The latest one is set as a
    headline with when above it; the rest follow small and fade with age.
@@ -1272,16 +1273,15 @@ html[data-nav="morph"][data-navacts="island"] .nav[data-acts-in] .nav-actions .b
    the FAQ. poster-light: in the light card, the page's one light surface
    at its close. poster-open: no card, and the FAQ's questions go in a
    card instead, so the two sections don't run together. */
-.oss[data-look="poster-card"], .oss[data-look="poster-light"] { padding: 44px 48px 0; border-radius: 22px; row-gap: 36px; }
+.oss[data-look="poster-card"], .oss[data-look="poster-light"] { padding: 48px 48px 0; border-radius: 18px; row-gap: 40px; }
 .oss[data-look="poster-card"] { background: var(--panel); box-shadow: inset 0 0 0 1px var(--line); }
 .oss[data-look="poster-light"] {
   --oss-ink: rgb(11 11 13 / 0.8); --oss-strong: #0b0b0d; --oss-dim: rgb(11 11 13 / 0.46);
   background: #f6f5f1; color: #0b0b0d; box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.7), 0 1px 2px rgb(0 0 0 / 0.2), 0 24px 60px -12px rgb(0 0 0 / 0.45);
 }
 .oss[data-look="poster-light"] p { color: rgb(11 11 13 / 0.62); }
-/* The second line a warm grey of the card's own tone: clearly the
-   quieter half, still dark enough to read at a glance (about 3.5:1). */
-.oss[data-look="poster-light"] .oss-h2 { color: #858279; }
+/* The second line a plain grey, no tint: clearly the quieter half. */
+.oss[data-look="poster-light"] .oss-h2 { color: #949494; }
 .oss[data-look="poster-light"] .btn { background: #0b0b0d; color: var(--fg); }
 .oss[data-look="poster-light"] .btn:hover { background: #222226; }
 .oss[data-look="poster-light"] .btn.ghost { background: transparent; color: #0b0b0d; box-shadow: inset 0 0 0 1px rgb(11 11 13 / 0.16); }
@@ -1402,3 +1402,75 @@ html[data-mark="glow"] .group::before {
 }
 /* Tick: a short rounded bar in the deck colour, the heading's height. */
 html[data-mark="tick"] .group h3::before { content: ''; flex: none; width: 3px; height: 15px; border-radius: 2px; background: var(--mark); }
+
+/* A change's area ("Mappings:") in the change's own colour, a step heavier. */
+.oss-area { font-weight: 560; }
+
+/* Between sections (Tune, Sections: between). Each keeps the same 112px
+   from the content above to the heading; only what sits in that space
+   changes. */
+.section { position: relative; counter-increment: sec; }
+main { counter-reset: sec; }
+/* Rule: a hairline across the column, half way, fading at its ends. */
+html[data-between="rule"] :is(#install, #features, #faq)::before {
+  content: ''; position: absolute; left: 50%; translate: -50% 0; top: calc(var(--section-gap) / 2); height: 1px; width: min(1120px, 100% - 32px);
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.09) 15%, rgb(255 255 255 / 0.09) 85%, transparent);
+}
+/* Grooves: a narrow strip of a record's grooves, half way, in place of a
+   rule. */
+html[data-between="grooves"] :is(#install, #features, #faq)::before {
+  content: ''; position: absolute; left: 50%; top: calc(var(--section-gap) / 2 - 20px); width: min(1120px, 100% - 32px); height: 40px; translate: -50% 0; pointer-events: none;
+  background: repeating-radial-gradient(ellipse 120% 600% at 50% 800%, rgb(255 255 255 / 0.07) 0 1px, transparent 1px 6px);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 25%, #000 75%, transparent), linear-gradient(transparent, #000 40%, #000 60%, transparent); -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(90deg, transparent, #000 25%, #000 75%, transparent), linear-gradient(transparent, #000 40%, #000 60%, transparent); mask-composite: intersect;
+}
+/* Band: the features on a slightly lifted band of their own, full width,
+   so the page reads in three parts. */
+html[data-between="band"] #features { margin-top: var(--section-gap); padding-bottom: var(--section-gap); background: rgb(255 255 255 / 0.018); box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.05), inset 0 -1px 0 rgb(255 255 255 / 0.05); }
+/* Glow: a soft light behind each heading in the decks' colours, alternating. */
+html[data-between="glow"] :is(#install, #features, #faq)::before {
+  content: ''; position: absolute; z-index: -1; left: 50%; top: var(--section-gap); width: 1100px; height: 420px; translate: -50% -45%; pointer-events: none;
+  background: radial-gradient(closest-side, rgb(201 220 242 / 0.07), transparent);
+}
+html[data-between="glow"] #features::before { background: radial-gradient(closest-side, rgb(240 220 192 / 0.07), transparent); }
+/* Eyebrow: each heading numbered above it, small. */
+html[data-between="eyebrow"] :is(#install, #features, #faq) > h2::before {
+  content: counter(sec, decimal-leading-zero); display: block; margin-bottom: 14px;
+  color: var(--fg-3); font: 500 13px/1 var(--mono); letter-spacing: 0.02em;
+}
+
+/* Features band, full width: the band is drawn by a layer that runs out
+   past the column to the window's edges. */
+html[data-between="band"] #features { background: none; box-shadow: none; }
+html[data-between="band"] #features::before {
+  content: ''; position: absolute; z-index: -1; top: 0; bottom: 0; left: 50%; width: 100vw; translate: -50% 0;
+  background: rgb(255 255 255 / 0.02); border-block: 1px solid rgb(255 255 255 / 0.05);
+}
+
+/* The note beside the FAQ (Tune, Note: style). */
+/* Tilt: set down a little crooked, like a note left on the desk. */
+html[data-note="tilt"] .founder, html[data-note="letter"] .founder { rotate: -1.6deg; transform-origin: 50% 0; }
+/* Overhang: the signature larger, running out past the card's corner. */
+html[data-note="overhang"] .founder-sig, html[data-note="letter"] .founder-sig { width: 200px; margin: -4px -56px -46px auto; position: relative; }
+html[data-note="overhang"] .founder, html[data-note="letter"] .founder { overflow: visible; }
+/* Paper: a sheet of warm off-white, dark ink, a soft shadow under it. */
+html[data-note="paper"] .founder, html[data-note="letter"] .founder {
+  background: #efebe2; color: rgb(20 18 14 / 0.7);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 20px 40px -16px rgb(0 0 0 / 0.6);
+}
+html[data-note="paper"] .founder h3, html[data-note="letter"] .founder h3 { color: #17150f; }
+html[data-note="paper"] .founder-body i, html[data-note="letter"] .founder-body i { background: rgb(20 18 14 / 0.1); }
+html[data-note="paper"] .founder-ask a, html[data-note="letter"] .founder-ask a { color: #17150f; text-decoration-color: rgb(20 18 14 / 0.35); }
+html[data-note="paper"] .founder-sig, html[data-note="letter"] .founder-sig { stroke: #1d2a52; }
+/* Lined: the dark card ruled like a notebook page, a faint margin line. */
+html[data-note="lined"] .founder {
+  background:
+    linear-gradient(90deg, transparent 15px, rgb(255 120 100 / 0.16) 15px 16px, transparent 16px),
+    repeating-linear-gradient(transparent 0 25px, rgb(255 255 255 / 0.045) 25px 26px),
+    var(--panel);
+  background-position: 0 0, 0 56px, 0 0;
+}
+
+/* The light poster's "Latest updates and changes": darker, so it reads as
+   a label rather than a hint. */
+.oss[data-look="poster-light"] .oss-log h4 { color: rgb(11 11 13 / 0.64); }
