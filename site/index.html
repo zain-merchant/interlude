@@ -14,8 +14,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261119x">
-  <link rel="stylesheet" href="demo/cards.css?v=20261119k">
+  <link rel="stylesheet" href="style.css?v=20261120b">
+  <link rel="stylesheet" href="demo/cards.css?v=20261120a">
   <script src="tune.js?v=20261118b"></script>
   <script>
     // The hero's layout (Split) and the nav's (bar to capsule), set before
@@ -137,6 +137,8 @@
       // Springs, both critically damped (nothing overshoots): the shape eases
       // in over about 0.55s; the actions come in after it a touch quicker,
       // and go quicker still (stiffness set as they're sent, in tick).
+      // (Nav: buttons start at.)
+      let actsAt = 0.55;
       const shape = { x: 0, v: 0, to: 0, k: 130, c: 2 * Math.sqrt(130) };
       const act = { x: 0, v: 0, to: 0, k: 170, c: 2 * Math.sqrt(170) };
       const btns = [...acts.children];
@@ -215,7 +217,7 @@
           acts.style.opacity = mode === 'with' ? String(r(clamp((p - 0.2) / 0.4) ** 1.5)) : '1';
           // (island: the links come home ahead of the shape, below, so the
           // buttons can surface as soon as the capsule has its glass.)
-          const on = (mode === 'after' && shape.to === 1 && p > 0.55) || (island && shape.to === 1 && p > 0.55);
+          const on = (mode === 'after' && shape.to === 1 && p > 0.55) || (island && shape.to === 1 && p > actsAt);
           if (nav.hasAttribute('data-acts-in') !== on) nav.toggleAttribute('data-acts-in', on);
         }
         const shown = (mode === 'old' ? q > 0.02 || act.to === 1 : p > 0.05) ? 'visible' : '';
@@ -278,6 +280,10 @@
       window.tune?.select({ label: 'Nav: capsule corners', folder: 'Settled', value: '14', options: [['14', 'Match the icon'], ['24', 'Pill']],
         onInput: (v) => { d.style.setProperty('--cap-r', `${v}px`); requestAnimationFrame(measure); } });
       d.dataset.navacts = 'island';
+      // When the buttons start to come in: how far the capsule has formed
+      // (0 to 100%), not a time, so it holds at any scroll speed. Below
+      // about 50% the links are still sliding past where the buttons sit.
+      window.tune?.slider({ label: 'Nav: buttons start at', folder: 'Settled', min: 0, max: 100, step: 5, value: 55, unit: '%', onInput: (v) => { actsAt = v / 100; draw(); } });
       // How far apart the two buttons come in (Download, then GitHub).
       window.tune?.slider({ label: 'Nav: button stagger', folder: 'Settled', min: 0, max: 300, step: 10, value: 90, unit: 'ms', css: '--nav-stagger' });
       window.tune?.select({ label: 'Nav: buttons arrive', value: 'island', options: [['island', 'In place, as the capsule closes round them'], ['with', 'With the capsule, one motion'], ['after', 'Just after it forms, on their own'], ['old', 'Old: after the links, second spring']],
@@ -409,17 +415,17 @@
       <h2>Install, import, and play</h2>
       <ol class="steps">
         <li data-picture="download">
-          <span class="num">01</span>
+          <span class="num">1</span>
           <h3>Download</h3>
           <p>Get <a href="https://github.com/zain-merchant/interlude/releases/latest/download/Interlude.dmg">Interlude.dmg</a>, open it, and drag Interlude into Applications.</p>
         </li>
         <li data-picture="open">
-          <span class="num">02</span>
+          <span class="num">2</span>
           <h3>Open it</h3>
           <p>Open Interlude from Applications or Spotlight. After that, it keeps itself up to date.</p>
         </li>
         <li data-picture="music">
-          <span class="num">03</span>
+          <span class="num">3</span>
           <h3>Add your music</h3>
           <p>Click <b>+ Add music folder</b>, or bring your library over from Rekordbox or Serato with File › Import. Plug in your controller and it connects by itself.</p>
         </li>
@@ -549,6 +555,62 @@
       </div>
     </section>
     <script>
+      // An Interlude record, drawn once and set into the note for its record
+      // styles (Note: style, sleeve and white label; style.css hides it
+      // otherwise). Vinyl with fine grooves and three smooth gaps between
+      // songs, a polished lip, a run-out round the label; the label either
+      // Interlude's own (its two rings, words round its edge) or a white
+      // label, the plain promo pressing DJs get, with the note on it.
+      (() => {
+        const note = document.querySelector('.founder');
+        if (!note) return;
+        const NS = 'http://www.w3.org/2000/svg';
+        const el = (n, a, p) => { const e = document.createElementNS(NS, n); for (const k in a) e.setAttribute(k, a[k]); p?.append(e); return e; };
+        const disc = (label) => {
+          const svg = el('svg', { viewBox: '-100 -100 200 200', class: 'rec-disc', 'aria-hidden': 'true' });
+          const defs = el('defs', {}, svg);
+          const g = el('radialGradient', { id: `vin-${label}` }, defs);
+          for (const [o, c] of [[0, '#1b1b20'], [0.55, '#0e0e11'], [0.96, '#121216'], [0.995, '#2b2b31'], [1, '#0b0b0d']]) el('stop', { offset: o, 'stop-color': c }, g);
+          el('circle', { r: 100, fill: `url(#vin-${label})` }, svg);
+          const L = label === 'white' ? 52 : 34;
+          // Grooves, one every 0.9 units from the run-out to the lip, with
+          // the songs' gaps left smooth and catching a little more light.
+          const gaps = label === 'white' ? [[66, 68.2], [82, 84.2]] : [[52, 54.2], [68, 70.2], [83, 85.2]];
+          const grooves = el('g', { fill: 'none', stroke: 'rgb(255 255 255 / 0.05)', 'stroke-width': 0.28 }, svg);
+          for (let r = L + 4; r < 97; r += 0.9) if (!gaps.some(([a, b]) => r > a && r < b)) el('circle', { r: r.toFixed(2) }, grooves);
+          for (const [a, b] of gaps) el('circle', { r: (a + b) / 2, fill: 'none', stroke: 'rgb(255 255 255 / 0.075)', 'stroke-width': b - a }, svg);
+          el('circle', { r: 99.3, fill: 'none', stroke: 'rgb(255 255 255 / 0.14)', 'stroke-width': 0.5 }, svg);
+          // The label, its words set round its edge.
+          const lab = el('g', { class: 'rec-label' }, svg);
+          el('circle', { r: L, fill: label === 'white' ? '#f3f0e8' : '#efe9dc' }, lab);
+          el('circle', { r: L - 0.6, fill: 'none', stroke: 'rgb(0 0 0 / 0.08)', 'stroke-width': 0.4 }, lab);
+          const id = `ring-${label}`;
+          el('path', { id, d: `M 0 ${-(L - 5)} a ${L - 5} ${L - 5} 0 1 1 -0.01 0`, fill: 'none' }, defs);
+          const t = el('text', { 'font-size': label === 'white' ? 3.6 : 3.4, 'letter-spacing': 0.9, fill: 'rgb(20 18 14 / 0.5)', 'font-family': 'Geist, sans-serif', 'font-weight': 500 }, lab);
+          const tp = el('textPath', { href: `#${id}` }, t);
+          tp.textContent = label === 'white' ? 'WHITE LABEL  ·  PROMO  ·  NOT FOR SALE  ·  INTERLUDE  ·  33⅓ RPM  ·  SIDE A  ·  ' : 'INTERLUDE  ·  SIDE A  ·  33⅓ RPM  ·  STEREO  ·  A FREE DJ APP FOR MAC  ·  ';
+          if (label !== 'white') {
+            // The app's two rings, as on its icon.
+            el('circle', { cx: -4.6, cy: -11, r: 7, fill: 'none', stroke: '#4aa8ff', 'stroke-width': 2.1 }, lab);
+            el('circle', { cx: 4.6, cy: -11, r: 7, fill: 'none', stroke: '#ff9b45', 'stroke-width': 2.1 }, lab);
+            const n = el('text', { y: 12, 'text-anchor': 'middle', 'font-size': 5.4, 'font-weight': 600, 'letter-spacing': -0.2, fill: '#17150f', 'font-family': 'Geist, sans-serif' }, lab);
+            n.textContent = 'Interlude';
+            el('circle', { r: 1.5, fill: '#0b0b0d' }, lab);
+          }
+          return svg;
+        };
+        const rec = document.createElement('div');
+        rec.className = 'rec';
+        rec.setAttribute('aria-hidden', 'true');
+        const spin = document.createElement('div');
+        spin.className = 'rec-spin';
+        spin.append(disc('brand'), disc('white'));
+        // The light on the vinyl stays put while the record turns under it.
+        const sheen = document.createElement('i');
+        sheen.className = 'rec-sheen';
+        rec.append(spin, sheen);
+        note.prepend(rec);
+      })();
       // The note's signature is written in the first time it's mostly in
       // view (shown whole straight away when motion is reduced).
       (() => {
@@ -590,7 +652,7 @@
   </footer>
 
   <!-- The feature cards' pictures (built from app/demo, see the README). -->
-  <script type="module" src="demo/cards.js?v=20261119p"></script>
+  <script type="module" src="demo/cards.js?v=20261120a"></script>
   <script>
     // The hero. The screenshot shows first; once the page has loaded, the
     // live app takes its place (unless the visitor prefers less motion).
@@ -1050,9 +1112,17 @@
     document.documentElement.dataset.fband = 'lift';
     window.tune?.select({ label: 'Features: band', value: 'lift', options: [['lift', 'A lighter band, hairline edges'], ['recess', 'A darker band, pressed in'], ['panel', 'One big rounded panel'], ['tint', 'A band lit in the deck colours'], ['grooves', 'A band cut with grooves'], ['none', 'No band']],
       onInput: (v) => (document.documentElement.dataset.fband = v) });
+    // The install steps' numbers: in a small badge, or plain.
+    document.documentElement.dataset.stepnum = 'badge';
+    window.tune?.select({ label: 'Install: step number', value: 'badge', options: [['badge', 'In a small badge'], ['plain', 'Plain, before the heading']],
+      onInput: (v) => (document.documentElement.dataset.stepnum = v) });
+    // The feature cards apart, or one panel ruled into six.
+    document.documentElement.dataset.flayout = 'apart';
+    window.tune?.select({ label: 'Features: layout', value: 'apart', options: [['apart', 'Six cards, a little more room'], ['one', 'One card, ruled into six']],
+      onInput: (v) => (document.documentElement.dataset.flayout = v) });
     // The note beside the FAQ (style.css, "The note beside the FAQ").
     document.documentElement.dataset.note = 'ruled';
-    window.tune?.select({ label: 'Note: style', value: 'ruled', options: [['ruled', 'Ruled page, tilted right, signature right'], ['sleeve', 'A record sleeve, the record sliding out'], ['label', 'The record\'s label, the vinyl turning'], ['plain', 'Plain card'], ['tilt', 'Tilted a little'], ['overhang', 'Signature off the corner'], ['paper', 'On warm paper'], ['lined', 'Ruled like a notebook'], ['letter', 'Paper, tilted, signature off the corner']],
+    window.tune?.select({ label: 'Note: style', value: 'ruled', options: [['ruled', 'Ruled page, tilted right, signature right'], ['sleeve', 'A die-cut record sleeve, the record turning inside'], ['label', 'A white label record, the note written on it'], ['plain', 'Plain card'], ['tilt', 'Tilted a little'], ['overhang', 'Signature off the corner'], ['paper', 'On warm paper'], ['lined', 'Ruled like a notebook'], ['letter', 'Paper, tilted, signature off the corner']],
       onInput: (v) => (document.documentElement.dataset.note = v) });
     // What sits between sections (style.css, "Between sections").
     document.documentElement.dataset.between = 'none';
