@@ -779,7 +779,12 @@ impl Mapping for MixxxMidi {
         if !(0x80..0xF0).contains(&status) {
             return out;
         }
-        let number = msg.get(1).copied().unwrap_or(0);
+        let mut number = msg.get(1).copied().unwrap_or(0);
+        if status < 0xA0 {
+            if let Some(s) = &self.script {
+                number = s.route(status & 0x0F, number);
+            }
+        }
         let value = msg.get(2).copied().unwrap_or(0);
         let preset = self.preset.clone();
         let Some(inputs) = preset.inputs.get(&(status, number)) else {
@@ -1094,7 +1099,7 @@ mod tests {
     /// raising errors.
     const KNOWN_SCRIPT_ERRORS: &[&str] = &[
         // MIDI
-        "Allen&Heath Xone K2/K1",
+        "Allen&Heath Xone K1/K2/K3",
         "Behringer BCR2000",
         "Behringer DDM4000",
         "Gemini CDMP-7000 L",
@@ -1105,6 +1110,7 @@ mod tests {
         "Icon P1-Nano MIDI 1",
         "Ion Discover DJ Pro",
         "Numark N4",
+        "Numark NS4FX",
         "Numark NS6II",
         "Numark NS7",
         "Pioneer DDJ-SB",
