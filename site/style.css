@@ -1571,3 +1571,70 @@ html[data-fband="grooves"] #features::before {
   background: repeating-radial-gradient(ellipse 140% 120% at 50% 160%, rgb(255 255 255 / 0.035) 0 1px, transparent 1px 9px), rgb(255 255 255 / 0.012);
   border-block: 1px solid rgb(255 255 255 / 0.06);
 }
+
+/* An Interlude record: black vinyl, its grooves catching a little light as
+   it turns, a label in the app's colours with the icon in the middle. Used
+   by the note's record styles below. */
+:root {
+  --record:
+    url(img/icon.svg?v=2) center / 17% no-repeat,
+    radial-gradient(circle, #0b0b0d 0 1.6%, #f3eee4 1.8% 15.5%, #ff9b45 15.7% 16.6%, #f3eee4 16.8% 17.6%, #4aa8ff 17.8% 18.6%, #f3eee4 18.8% 19.6%, transparent 19.8%),
+    conic-gradient(from 20deg, rgb(255 255 255 / 0.11), transparent 10%, transparent 40%, rgb(255 255 255 / 0.08) 50%, transparent 60%, transparent 90%, rgb(255 255 255 / 0.11)),
+    radial-gradient(circle, transparent 0 46%, rgb(255 255 255 / 0.05) 46.4% 47%, transparent 47.4% 68%, rgb(255 255 255 / 0.05) 68.4% 69%, transparent 69.4%),
+    repeating-radial-gradient(circle, #121215 0 1.5px, #18181c 1.5px 3px);
+}
+@keyframes record-spin { to { rotate: 360deg; } }
+
+/* Note: sleeve. The note is the back of a record's sleeve; the record
+   slides up out of its top as the note comes into view, and turns. The
+   sleeve's face is its own layer (::after) so the record (::before) can
+   sit behind it. */
+html[data-note="sleeve"] .founder { background: none; box-shadow: none; overflow: visible; margin-top: 180px; }
+html[data-note="sleeve"] .founder::after {
+  content: ''; position: absolute; z-index: -1; inset: 0; border-radius: 6px;
+  background: #ece6da; box-shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 24px 44px -18px rgb(0 0 0 / 0.7);
+}
+html[data-note="sleeve"] .founder::before {
+  content: ''; position: absolute; z-index: -2; left: 50%; top: 0; width: 86%; aspect-ratio: 1; margin-left: -43%; border-radius: 50%;
+  background: var(--record); box-shadow: 0 10px 30px rgb(0 0 0 / 0.5);
+  translate: 0 -12%; transition: translate 1.1s cubic-bezier(0.22, 1, 0.36, 1);
+  animation: record-spin 6s linear infinite;
+}
+html[data-note="sleeve"] .founder[data-sign]::before { translate: 0 -12%; }
+html[data-note="sleeve"] .founder[data-signed]::before, html[data-note="sleeve"] .founder:not([data-sign])::before { translate: 0 -62%; }
+html[data-note="sleeve"] .founder { color: rgb(20 18 14 / 0.7); border-radius: 6px; }
+html[data-note="sleeve"] .founder h3 { color: #17150f; }
+html[data-note="sleeve"] .founder-body i { background: rgb(20 18 14 / 0.1); }
+html[data-note="sleeve"] .founder-ask a { color: #17150f; text-decoration-color: rgb(20 18 14 / 0.35); }
+html[data-note="sleeve"] .founder-sig { stroke: #1d2a52; width: 124px; margin: 2px -6px 0 auto; }
+
+/* Note: label. The note is the record's own label: a round paper label
+   with the words on it, the vinyl turning round it. */
+html[data-note="label"] .founder {
+  aspect-ratio: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;
+  padding: 44px 40px; border-radius: 50%; margin: 70px 0;
+  background: none; box-shadow: none; color: rgb(20 18 14 / 0.7); overflow: visible;
+}
+/* (The label is its own layer, over the vinyl: the note is a layer of its
+   own, so both sit inside it, the vinyl lowest.) */
+html[data-note="label"] .founder::after {
+  content: ''; position: absolute; z-index: -1; inset: 0; border-radius: 50%;
+  /* (No spindle hole drawn: it would sit in the middle of the words.) */
+  background: #f3eee4;
+  box-shadow: inset 0 0 0 3px #ff9b45, inset 0 0 0 5px #f3eee4, inset 0 0 0 7px #4aa8ff, 0 0 0 1px rgb(0 0 0 / 0.4);
+}
+html[data-note="label"] .founder::before {
+  content: ''; position: absolute; z-index: -2; inset: -64px; border-radius: 50%;
+  background: conic-gradient(from 20deg, rgb(255 255 255 / 0.11), transparent 10%, transparent 40%, rgb(255 255 255 / 0.08) 50%, transparent 60%, transparent 90%, rgb(255 255 255 / 0.11)), repeating-radial-gradient(circle, #121215 0 1.5px, #18181c 1.5px 3px);
+  box-shadow: 0 20px 50px rgb(0 0 0 / 0.6);
+  animation: record-spin 4s linear infinite;
+}
+html[data-note="label"] .founder h3 { color: #17150f; font-size: 16px; margin: 0 0 12px; }
+html[data-note="label"] .founder-body { width: 100%; justify-items: center; gap: 7px; margin-bottom: 12px; }
+html[data-note="label"] .founder-body i { background: rgb(20 18 14 / 0.12); height: 7px; width: calc(var(--w) * 0.86); }
+html[data-note="label"] .founder-body i:nth-child(n + 5) { display: none; }
+html[data-note="label"] .founder-body i.gap { margin-top: 0; }
+html[data-note="label"] .founder-ask { font-size: 12.5px; line-height: 1.4; margin: 0; }
+html[data-note="label"] .founder-ask a { color: #17150f; text-decoration-color: rgb(20 18 14 / 0.35); }
+html[data-note="label"] .founder-sig { stroke: #1d2a52; width: 92px; margin: 2px auto 0; }
+@media (prefers-reduced-motion: reduce) { html[data-note] .founder::before { animation: none !important; } }
