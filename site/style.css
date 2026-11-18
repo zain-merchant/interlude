@@ -823,11 +823,29 @@ html[data-hero][data-herotext="card"][data-cardsurface="outline"] .hero-side {
   background: none; -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.14);
 }
 html[data-hero][data-herotext="card"][data-cardsurface="rule"] .hero-side {
-  background: none; -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: none; border-radius: 0;
-  padding: 4px 0 4px 28px; border-left: 1px solid rgb(255 255 255 / 0.14);
+  position: relative; background: none; -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: none; border-radius: 0;
+  padding: 4px 0 4px 28px;
 }
+/* The rule (Hero: rule): beside the buttons, midway across the gap to the
+   headline (half the hero's 64px column gap), or none. */
+html[data-hero][data-herotext="card"][data-cardsurface="rule"] .hero-side::before { content: ''; position: absolute; top: 4px; bottom: 4px; left: 0; width: 1px; background: rgb(255 255 255 / 0.14); }
+html[data-hero][data-herotext="card"][data-cardsurface="rule"][data-cardrule="mid"] .hero-side { padding-left: 0; }
+html[data-hero][data-herotext="card"][data-cardsurface="rule"][data-cardrule="mid"] .hero-side::before { left: -32px; }
+html[data-hero][data-herotext="card"][data-cardsurface="rule"][data-cardrule="none"] .hero-side { padding-left: 0; }
+html[data-hero][data-herotext="card"][data-cardsurface="rule"][data-cardrule="none"] .hero-side::before { content: none; }
 html[data-hero][data-herotext="card"][data-cardsurface="rule"] :is(.dl-req, .dl-foot) { text-align: left; }
 html[data-hero][data-herotext="card"]:is([data-cardsurface="outline"], [data-cardsurface="rule"]) :is(.dl-head, .dl-req, .dl-foot) { text-shadow: 0 1px 12px rgb(9 9 11 / 0.9); }
+/* Where What's new goes (Hero: what's new): beside the title (as above),
+   under View on GitHub with the requirement on its left, or the version
+   alone on the right of the title. */
+.dl-vlink, .dl-new2 { display: none; }
+html[data-cardnew="under"] .dl-new, html[data-cardnew="right"] .dl-new { display: none; }
+html[data-hero][data-herotext="card"][data-cardnew="right"] .dl-vlink { display: block; grid-area: new; color: var(--fg-3); font-size: 13px; font-variant-numeric: tabular-nums; text-decoration: underline; text-decoration-color: rgb(236 234 228 / 0.25); text-underline-offset: 3px; }
+html[data-hero][data-herotext="card"][data-cardnew="right"] .dl-vlink:hover { color: var(--fg); text-decoration-color: var(--fg); }
+html[data-hero][data-herotext="card"][data-cardnew="under"] .hero-side { grid-template-columns: 1fr auto; grid-template-areas: "head head" "cta cta" "req new2" "foot foot"; }
+html[data-hero][data-herotext="card"][data-cardnew="under"] .dl-req { text-align: left; }
+html[data-hero][data-herotext="card"][data-cardnew="under"] .dl-new2 { display: block; grid-area: new2; margin-top: 12px; color: var(--fg-3); font-size: 12.5px; text-decoration: underline; text-decoration-color: rgb(236 234 228 / 0.25); text-underline-offset: 3px; }
+html[data-hero][data-herotext="card"][data-cardnew="under"] .dl-new2:hover { color: var(--fg); text-decoration-color: var(--fg); }
 /* The version in the title, or beside What's new (Hero: card title). */
 .dl-new-ver { display: none; }
 html[data-cardtitle="name"] .dl-ver { display: none; }
