@@ -46,7 +46,7 @@ export const T = {
   rippleBend: 2,     // how far a ring bends the grooves at most, CSS px
   letter: [1, 1, 1, 11 / 255],
   gap: [0, 0, 0, 0],
-  line: [1, 1, 1, 61 / 255],
+  line: [1, 1, 1, 19 / 255],
   outline: [1, 1, 1, 1],
 };
 // How many frames have been drawn (for checking it stops when idle).
@@ -236,7 +236,17 @@ void main() {
   float fg = max(fwidth(rr), 1e-3) / P;
   float lines = grooveLines(rr / P, fg, max(0.45 / uPitch, 0.8 * fg));
   float duty = min(1.0, 1.25 / uPitch);
-  float groove = clamp((1.0 + lines) * duty, 0.0, 1.0);
+  // The lines' sum of waves never comes down to nothing between them (its
+  // trough, half-way between two lines, sits a little above), so measured
+  // from that trough instead: the space between the lines takes none of
+  // the line colour (it's the gap colour's alone), and a crest takes all
+  // of it, so the line colour's opacity is the lines' own. Where the lines
+  // are too fine to draw apart, an even share.
+  float sigma = max(0.45 / uPitch, 0.8 * fg);
+  float trough = grooveLines(0.5, fg, sigma);
+  float apart = 1.0 - smoothstep(0.3, 0.48, fg);
+  float shaped = clamp((lines - trough) / max(1.0 - trough, 1e-3), 0.0, 1.0);
+  float groove = clamp(mix(duty, shaped, apart), 0.0, 1.0);
 
   // Painted inside the letters, one over the other (premultiplied):
   // the fill, the gaps, the lines with any light, the outline.
