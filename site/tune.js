@@ -23,6 +23,8 @@
 //                      the panel is rebuilt; keep the same values, relabel
 //   tune.refresh('Group')  rebuilds that group's panel (call it when
 //                      whatever `show` or `options` read has changed)
+//   tune.backups() / tune.restore(n)  the panels' settings as they were on
+//                      each of the last 20 loads (see snapshot below)
 //   tune.set(label, value)  moves a control as if by hand (its onInput
 //                      runs, the panel shows it); one hidden for now keeps
 //                      the value for when it shows. label as registered
@@ -33,11 +35,43 @@
   const groups = new Map();
   // The groups' order in the panel: the page's, top to bottom.
   const ORDER = ['Nav', 'Hero', 'Hero record', 'Features', 'Footer'];
+  // And within a group, its folders' order where it matters.
+  const FOLDERS = { Hero: ['Layout', 'Controller', 'Performance'] };
   let queued = false;
   let lib = null;
   let root = null;
 
+  // A copy of every panel's settings and saved versions, taken on each
+  // load before any page code can touch them: the last 20 that differ,
+  // newest first, in localStorage 'tune-backups'. tune.backups() lists
+  // them; tune.restore(n) puts back the nth (0 = newest) and reloads.
+  const BACKUPS = 'tune-backups';
+  const own = (k) => k.startsWith('dialkit:') || k.startsWith('tune-hidden:');
+  function snapshot() {
+    try {
+      const snap = {};
+      for (const k of Object.keys(localStorage)) if (own(k)) snap[k] = localStorage.getItem(k);
+      if (!Object.keys(snap).length) return;
+      const list = JSON.parse(localStorage.getItem(BACKUPS) || '[]');
+      const body = JSON.stringify(snap);
+      if (list[0] && JSON.stringify(list[0].snap) === body) return;
+      list.unshift({ at: new Date().toISOString(), page: location.pathname, snap });
+      localStorage.setItem(BACKUPS, JSON.stringify(list.slice(0, 20)));
+    } catch {}
+  }
+  function backups() {
+    try { return JSON.parse(localStorage.getItem(BACKUPS) || '[]').map((b, i) => `${i}: ${b.at} (${b.page})`); } catch { return []; }
+  }
+  function restore(n = 0) {
+    const b = JSON.parse(localStorage.getItem(BACKUPS) || '[]')[n];
+    if (!b) return 'no such backup';
+    for (const k of Object.keys(localStorage)) if (own(k)) localStorage.removeItem(k);
+    for (const [k, v] of Object.entries(b.snap)) localStorage.setItem(k, v);
+    location.reload();
+  }
+
   if (show) {
+    snapshot();
     const css = document.createElement('link');
     css.rel = 'stylesheet';
     css.href = `${base}vendor/dialkit/styles.css?v=2`;
@@ -55,7 +89,7 @@
     const i = label.indexOf(':');
     const group = i > 0 ? label.slice(0, i).trim() : 'Tune';
     const name = i > 0 ? label.slice(i + 1).trim() : label;
-    if (!groups.has(group)) groups.set(group, { list: [], made: false });
+    if (!groups.has(group)) groups.set(group, { name: group, list: [], made: false });
     const path = def.folder ? `${def.folder}.${name}` : name;
     groups.get(group).list.push({ name, path, ...def });
     if (!queued) {
@@ -77,6 +111,9 @@
   // The panel's config: the controls showing now, in folders where asked.
   function configOf(g) {
     const config = {};
+    // Folders listed in FOLDERS go first, in that order; the rest follow
+    // in the order their controls were added.
+    for (const f of FOLDERS[g.name] || []) if (g.list.some((c) => c.folder === f && visible(c))) config[f] = {};
     for (const c of g.list) {
       if (!visible(c)) continue;
       const cfg = typeof c.config === 'function' ? c.config() : c.config;
@@ -281,5 +318,5 @@
     if (show) add(label, { key: label, apply: (v) => onInput?.(v), config: { type: 'easing', ...value }, folder, show: when });
   }
 
-  window.tune = { slider, select, color, spring, easing, refresh, set, shown: show };
+  window.tune = { slider, select, color, spring, easing, refresh, set, backups, restore, shown: show };
 })();
