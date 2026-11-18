@@ -481,7 +481,10 @@ details p { margin: 0; padding-bottom: 20px; color: var(--fg-2); max-width: 62ch
 
 /* Footer */
 .foot { margin-top: var(--section-gap); padding: 48px 0 40px; border-top: 1px solid var(--line); }
-.foot-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 32px; }
+/* The name and small print on the left; App and Project together on the
+   right, a fixed 64px apart, with at least 96px between them and the text. */
+.foot-grid { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; column-gap: 64px; row-gap: 32px; }
+.foot-grid > div:first-child { max-width: 440px; margin-right: 32px; }
 .foot h4 { margin: 0 0 12px; color: var(--fg-3); font-size: 13px; font-weight: 500; }
 .foot-grid > div > a:not(.brand) { display: block; width: fit-content; padding: 3px 0; color: var(--fg-2); text-decoration: none; font-size: 14px; }
 .foot-grid > div > a:not(.brand):hover { color: var(--fg); }
@@ -525,8 +528,9 @@ details p { margin: 0; padding-bottom: 20px; color: var(--fg-2); max-width: 62ch
    the script works out the hover from where the pointer is. */
 .foot { overflow: hidden; background: var(--foot-bg, transparent); }
 .foot-word {
-  position: relative; display: block; margin: 56px 0 calc(var(--foot-cut, 0.33) * -1em); text-align: center; user-select: none; pointer-events: none;
-  font-size: clamp(96px, 21vw, 340px); font-weight: 600; letter-spacing: -0.055em; line-height: 0.9;
+  position: relative; display: block; width: min(1120px, 100% - 32px); margin: 28px auto calc(var(--foot-cut, 0.33) * -1em); text-align: left; text-indent: var(--foot-indent, 0px); white-space: nowrap; user-select: none; pointer-events: none;
+  /* As wide as the column above (index.html measures it into --foot-fs). */
+  font-size: var(--foot-fs, clamp(96px, 21vw, 340px)); font-weight: 600; letter-spacing: -0.055em; line-height: 0.9;
   color: var(--foot-letter, rgb(255 255 255 / 0.045));
   --x: 50%; --y: 50%; --on: 0;
 }
@@ -1346,3 +1350,55 @@ body:has(.oss[data-look="poster-open"]) .faq details:last-child { border-bottom:
 /* Wider than the page's column, 24px from the window's edges. */
 .oss[data-extra="wide"] { margin-left: calc((100% - 100vw) / 2 + 24px); margin-right: calc((100% - 100vw) / 2 + 24px); border-radius: 28px; }
 @media (max-width: 860px) { .oss[data-extra="vinyl"] { padding-right: 24px !important; } .oss[data-extra="vinyl"]::after { opacity: 0.25; } .oss[data-extra="vinyl"] .oss-log { margin-right: -24px !important; padding-right: 24px !important; } }
+
+/* Cards (Tune, Cards: style). Quiet: of a piece with the page's other
+   surfaces. A soft light from the top instead of a flat fill, a 1px edge
+   with a brighter top, 18px corners like the open source card, and the
+   feature lists on hairlines instead of alternating bands. */
+html[data-cards="quiet"] :is(.steps li, .group) {
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.045), rgb(255 255 255 / 0.015) 55%);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.07), inset 0 1px 0 rgb(255 255 255 / 0.08);
+}
+html[data-cards="quiet"] :is(.steps li, .group) h3 { font-size: 18px; font-weight: 500; letter-spacing: -0.012em; }
+html[data-cards="quiet"] .group ul { margin-inline: 0; }
+html[data-cards="quiet"] .group li { padding: 9px 0; border-radius: 0; }
+html[data-cards="quiet"] .group li:nth-child(odd) { background: none; }
+html[data-cards="quiet"] .group li + li { box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06); }
+html[data-cards="quiet"] .num { font: 500 12px/1 var(--font, inherit); font-variant-numeric: tabular-nums; letter-spacing: 0.02em; color: var(--fg-3); }
+
+/* Open: no card. The picture sits in its own rounded panel, and the
+   heading and words sit under it on the page, like the FAQ's list. */
+html[data-cards="open"] :is(.steps li, .group) { background: none; box-shadow: none; overflow: visible; }
+html[data-cards="open"] :is(.steps li, .group) > :not(.pic) { margin-inline: 4px !important; }
+html[data-cards="open"] :is(.steps li, .group) .pic { border-radius: 16px; overflow: hidden; margin-bottom: 18px;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.07), inset 0 1px 0 rgb(255 255 255 / 0.08); background-color: rgb(255 255 255 / 0.025);
+  -webkit-mask-image: none; mask-image: none; }
+html[data-cards="open"] .group ul { margin-inline: 0; }
+html[data-cards="open"] .group li { padding: 9px 0; border-radius: 0; }
+html[data-cards="open"] .group li:nth-child(odd) { background: none; }
+html[data-cards="open"] .group li + li { box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06); }
+html[data-cards="open"] .groups { row-gap: 48px; column-gap: 28px; }
+html[data-cards="open"] .steps { column-gap: 28px; }
+
+/* Features: heading mark (Tune). The dot is hidden in every mark but its
+   own; the others put the card's deck colour somewhere else. */
+html[data-mark]:not([data-mark="dot"]) .group h3 .dot { display: none; }
+.group { position: relative; }
+/* Edge: a short lit line along the card's top edge, brightest in the
+   middle and gone at the ends, like light catching the rim. */
+html[data-mark="edge"] .group::before {
+  content: ''; position: absolute; z-index: 2; top: 0; left: 18%; right: 18%; height: 1px; pointer-events: none;
+  background: linear-gradient(90deg, transparent, var(--mark) 50%, transparent);
+  box-shadow: 0 0 12px 0 var(--mark);
+  opacity: 0.8;
+}
+.group:nth-child(odd) { --mark: var(--deck-a); }
+.group:nth-child(even) { --mark: var(--deck-b); }
+/* Glow: the deck colour as a soft light from the card's top left. */
+html[data-mark="glow"] .group::before {
+  content: ''; position: absolute; z-index: 0; inset: 0; border-radius: inherit; pointer-events: none;
+  background: radial-gradient(60% 45% at 0% 0%, color-mix(in srgb, var(--mark) 14%, transparent), transparent 70%);
+}
+/* Tick: a short rounded bar in the deck colour, the heading's height. */
+html[data-mark="tick"] .group h3::before { content: ''; flex: none; width: 3px; height: 15px; border-radius: 2px; background: var(--mark); }
