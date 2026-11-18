@@ -792,11 +792,11 @@
         set('rippleStyle')(v);
         if (v !== style) { style = v; tune.refresh('Footer'); }
       }, options: [
-        ['wake', 'Wake: as the pointer moves'],
-        ['drop', 'Drop: where it comes to rest'],
-        ['breathe', 'Breathe: steadily while over'],
-        ['trail', 'Trail: small rings along the path'],
-        ['interference', 'Interference: three sources crossing'],
+        ['wake', 'Wake'],
+        ['drop', 'Drop'],
+        ['breathe', 'Breathe'],
+        ['trail', 'Trail'],
+        ['interference', 'Interference'],
       ] });
       tune.slider({ label: 'Footer: ripple reach', folder: 'Motion', min: 0.5, max: 6, step: 0.1, value: 2.2, unit: 'em',
         show: rippling, onInput: set('rippleReach') });
