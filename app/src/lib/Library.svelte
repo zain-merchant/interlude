@@ -11,8 +11,9 @@
   import { pushEdit, showToast } from './undo.svelte.js';
   import { keyName, keyLongName, camelot } from './key.js';
 
-  /** @type {{ onload: (deck: number, track: import('./backend.js').LibraryTrack, opts?: { force?: boolean }) => void, onsettings?: () => void, onmessage?: (text: string) => void }} */
-  let { onload, onsettings, onmessage = showToast } = $props();
+  /** `onimport` opens the import window; `onempty` is called when the whole library loads with no tracks.
+   * @type {{ onload: (deck: number, track: import('./backend.js').LibraryTrack, opts?: { force?: boolean }) => void, onsettings?: () => void, onmessage?: (text: string) => void, onimport?: () => void, onempty?: () => void }} */
+  let { onload, onsettings, onmessage = showToast, onimport, onempty } = $props();
 
   const ROW = 28;
 
@@ -175,6 +176,7 @@
       byPath = new Map();
       for (const t of all) byPath.set(t.path, [...(byPath.get(t.path) ?? []), t]);
       if (view.kind === 'all') total = all.length;
+      if (view.kind === 'all' && total === 0) onempty?.();
       if (!keep) selectIndex(0);
     } catch (e) {
       error = String(e);
@@ -583,7 +585,11 @@
       {:else if !loading && !all.length}
         <div class="empty">
           <p>No tracks yet.</p>
-          <button class="btn sm" onclick={addFolder}>Add a music folder</button>
+          <div class="empty-actions">
+            <button class="btn sm" onclick={addFolder}>Add a music folder</button>
+            {#if onimport && view.kind === 'all'}<button class="btn sm" onclick={onimport}>Import from Rekordbox or Serato</button>{/if}
+          </div>
+          {#if onimport && view.kind === 'all'}<p class="hint">Importing brings your cue points, loops, beatgrids and playlists too.</p>{/if}
         </div>
       {:else if !loading && !results.length}
         <div class="empty">Nothing matches “{query}”.</div>
@@ -961,5 +967,14 @@
   }
   .empty p {
     margin: 0;
+  }
+  .empty-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+  }
+  .empty .hint {
+    font-size: 12px;
   }
 </style>
