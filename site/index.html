@@ -14,8 +14,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261119j">
-  <link rel="stylesheet" href="demo/cards.css?v=20261119d">
+  <link rel="stylesheet" href="style.css?v=20261119k">
+  <link rel="stylesheet" href="demo/cards.css?v=20261119k">
   <script src="tune.js?v=20261118b"></script>
   <script>
     // The hero's layout (Split) and the nav's (bar to capsule), set before
@@ -178,7 +178,10 @@
         // The bar's gap between icon and name (--brand-gap) closes to the
         // capsule's 10px as it forms.
         word.style.transform = `translateX(${r(36 * (ic - 1) + (GAP - 10) * (1 - p))}px) scale(${r(1 - (1 - WORD) * p)})`;
-        links.style.transform = `translate(${r(geo.l * p)}px, ${r(dy * v)}px)`;
+        // In island the links travel on an eased share of the shape, home
+        // well before it settles, so they're clear of the buttons early.
+        const pl = (d.dataset.navacts || 'island') === 'island' ? 1 - (1 - p) ** 2 : p;
+        links.style.transform = `translate(${r(geo.l * pl)}px, ${r(dy * v)}px)`;
         // The actions (Nav: buttons arrive). In every way but the old one
         // they ride the capsule's right end, fixed inside it, so they never
         // slide past anything or outside it:
@@ -203,14 +206,16 @@
         } else {
           // island: the way the Dynamic Island shows what's in it. The
           //   buttons never move: they wait where they end up, and the
-          //   capsule closes round them; once the links have slid past
-          //   them, they surface in place
+          //   capsule closes round them; as soon as it has its glass and
+          //   the links are clear, they surface in place, Download first
           //   (opacity, blur and a hair of scale, on the compositor).
           const island = mode === 'island';
           acts.style.transform = `translate(${r(geo.a + (island ? 0 : geo.right * (1 - p)))}px, ${r(dy)}px)`;
           // (Opacity on the actions' own layer: the compositor fades it.)
           acts.style.opacity = mode === 'with' ? String(r(clamp((p - 0.2) / 0.4) ** 1.5)) : '1';
-          const on = (mode === 'after' && shape.to === 1 && p > 0.55) || (island && shape.to === 1 && p > 0.9);
+          // (island: the links come home ahead of the shape, below, so the
+          // buttons can surface as soon as the capsule has its glass.)
+          const on = (mode === 'after' && shape.to === 1 && p > 0.55) || (island && shape.to === 1 && p > 0.55);
           if (nav.hasAttribute('data-acts-in') !== on) nav.toggleAttribute('data-acts-in', on);
         }
         const shown = (mode === 'old' ? q > 0.02 || act.to === 1 : p > 0.05) ? 'visible' : '';
@@ -399,7 +404,7 @@
     </section>
 
     <section id="install" class="wrap section">
-      <h2>Three steps to your first mix</h2>
+      <h2>Install, import, and play</h2>
       <ol class="steps">
         <li data-picture="download">
           <span class="num">01</span>
@@ -421,7 +426,7 @@
     </section>
 
     <section id="features" class="wrap section">
-      <h2>Everything you need to play a set</h2>
+      <h2>Everything you need for a full set</h2>
       <div class="groups">
         <div class="group" data-picture="decks">
           <h3><span class="dot a"></span>Decks</h3>
@@ -584,7 +589,7 @@
   </footer>
 
   <!-- The feature cards' pictures (built from app/demo, see the README). -->
-  <script type="module" src="demo/cards.js?v=20261119d"></script>
+  <script type="module" src="demo/cards.js?v=20261119k"></script>
   <script>
     // The hero. The screenshot shows first; once the page has loaded, the
     // live app takes its place (unless the visitor prefers less motion).
