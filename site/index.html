@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261121i">
+  <link rel="stylesheet" href="style.css?v=20261121k">
   <link rel="stylesheet" href="demo/cards.css?v=20261121j">
   <script src="tune.js?v=20261120v"></script>
   <script>
@@ -617,12 +617,13 @@
         if (!note) return;
         const NS = 'http://www.w3.org/2000/svg';
         const el = (n, a, p) => { const e = document.createElementNS(NS, n); for (const k in a) e.setAttribute(k, a[k]); p?.append(e); return e; };
-        const disc = (label) => {
+        const disc = (label, side = 'A') => {
           const svg = el('svg', { viewBox: '-100 -100 200 200', class: 'rec-disc', 'aria-hidden': 'true' });
           const defs = el('defs', {}, svg);
-          const g = el('radialGradient', { id: `vin-${label}` }, defs);
+          const tag = `${label}-${side}`;
+          const g = el('radialGradient', { id: `vin-${tag}` }, defs);
           for (const [o, c] of [[0, '#1b1b20'], [0.55, '#0e0e11'], [0.96, '#121216'], [0.995, '#2b2b31'], [1, '#0b0b0d']]) el('stop', { offset: o, 'stop-color': c }, g);
-          el('circle', { r: 100, fill: `url(#vin-${label})` }, svg);
+          el('circle', { r: 100, fill: `url(#vin-${tag})` }, svg);
           const L = label === 'white' ? 52 : 34;
           // Grooves, one every 0.9 units from the run-out to the lip, with
           // the songs' gaps left smooth and catching a little more light.
@@ -635,7 +636,7 @@
           // the whole disc, not only at the label: a few short stretches of
           // groove catching more light (as a pressing's flaws do), and a
           // scatter of fine dust. Fixed, so it's the same record each visit.
-          let seed = label === 'white' ? 7 : 3;
+          let seed = label === 'white' ? 7 : side === 'B' ? 11 : 3;
           const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
           const marks = el('g', { fill: 'none', 'stroke-linecap': 'round' }, svg);
           for (let i = 0; i < 6; i++) {
@@ -652,14 +653,15 @@
           }
           // The label, its words set round its edge, on paper with a grain.
           const lab = el('g', { class: 'rec-label' }, svg);
-          el('circle', { r: L, fill: label === 'white' ? '#f3f0e8' : '#efe9dc' }, lab);
-          const pf = el('filter', { id: `paper-${label}`, x: '-10%', y: '-10%', width: '120%', height: '120%' }, defs);
+          // (Side B's label is a different paper: the cool blue of deck A.)
+          el('circle', { r: L, fill: label === 'white' ? '#f3f0e8' : side === 'B' ? '#d6e3f0' : '#efe9dc' }, lab);
+          const pf = el('filter', { id: `paper-${tag}`, x: '-10%', y: '-10%', width: '120%', height: '120%' }, defs);
           el('feTurbulence', { type: 'fractalNoise', baseFrequency: '1.4', numOctaves: 3, seed: 4, result: 'n' }, pf);
           el('feColorMatrix', { in: 'n', type: 'matrix', values: '0 0 0 0 0.35  0 0 0 0 0.28  0 0 0 0 0.2  0 0 0 0.9 -0.35', result: 'g' }, pf);
           el('feComposite', { in: 'g', in2: 'SourceGraphic', operator: 'in' }, pf);
-          el('circle', { r: L, fill: '#000', filter: `url(#paper-${label})` }, lab);
+          el('circle', { r: L, fill: '#000', filter: `url(#paper-${tag})` }, lab);
           el('circle', { r: L - 0.6, fill: 'none', stroke: 'rgb(0 0 0 / 0.08)', 'stroke-width': 0.4 }, lab);
-          const id = `ring-${label}`;
+          const id = `ring-${tag}`;
           el('path', { id, d: `M 0 ${-(L - 5)} a ${L - 5} ${L - 5} 0 1 1 -0.01 0`, fill: 'none' }, defs);
           const t = el('text', { 'font-size': label === 'white' ? 3.6 : 3.4, 'letter-spacing': 0.9, fill: 'rgb(20 18 14 / 0.5)', 'font-family': 'Geist, sans-serif', 'font-weight': 500 }, lab);
           const tp = el('textPath', { href: `#${id}` }, t);
@@ -667,13 +669,17 @@
           const gap = '\u2003\u2003';
           tp.textContent = (label === 'white'
             ? ['WHITE LABEL', 'PROMO', 'NOT FOR SALE', 'FREE AND OPEN SOURCE', 'SIDE A']
-            : ['INTERLUDE', 'SIDE A', 'FREE AND OPEN SOURCE', 'MADE FOR MAC', '33⅓ RPM']).join(gap) + gap;
+            : ['INTERLUDE', `SIDE ${side}`, 'FREE AND OPEN SOURCE', 'MADE FOR MAC', '33⅓ RPM']).join(gap) + gap;
           if (label !== 'white') {
             // The app's two rings, as on its icon.
             el('circle', { cx: -4.6, cy: -11, r: 7, fill: 'none', stroke: '#4aa8ff', 'stroke-width': 2.1 }, lab);
             el('circle', { cx: 4.6, cy: -11, r: 7, fill: 'none', stroke: '#ff9b45', 'stroke-width': 2.1 }, lab);
             const n = el('text', { y: 12, 'text-anchor': 'middle', 'font-size': 5.4, 'font-weight': 600, 'letter-spacing': -0.2, fill: '#17150f', 'font-family': 'Geist, sans-serif' }, lab);
             n.textContent = 'Interlude';
+            if (side === 'B') {
+              const sb = el('text', { y: 19, 'text-anchor': 'middle', 'font-size': 3.4, 'font-weight': 600, 'letter-spacing': 0.8, fill: 'rgb(20 18 14 / 0.6)', 'font-family': 'Geist, sans-serif' }, lab);
+              sb.textContent = 'SIDE B';
+            }
             el('circle', { r: 1.5, fill: '#0b0b0d' }, lab);
           }
           return svg;
@@ -683,11 +689,18 @@
         rec.setAttribute('aria-hidden', 'true');
         const spin = document.createElement('div');
         spin.className = 'rec-spin';
-        spin.append(disc('brand'), disc('white'));
+        // Side A, side B on its back (turned over), and the white label.
+        const back = disc('brand', 'B');
+        back.classList.add('rec-back');
+        spin.append(disc('brand'), back, disc('white'));
+        // (Turned over as a whole on a click: the sleeve's record flips.)
+        const flip = document.createElement('div');
+        flip.className = 'rec-flip';
+        flip.append(spin);
         // The light on the vinyl stays put while the record turns under it.
         const sheen = document.createElement('i');
         sheen.className = 'rec-sheen';
-        rec.append(spin, sheen);
+        rec.append(flip, sheen);
         note.prepend(rec);
         // The sleeve's record: on hover it slides out to the side and spins
         // up to its speed; off, it slows to a stop and slides home. Both on
@@ -719,6 +732,26 @@
           const go = (v) => { if (document.documentElement.dataset.note !== 'sleeve') return; inside = v; if (!on) { on = true; last = 0; requestAnimationFrame(step); } };
           note.addEventListener('pointerenter', () => go(true));
           note.addEventListener('pointerleave', () => go(false));
+          // A click on the record turns it over, a quick flip like a coin's,
+          // to its other side (side B, on blue paper), and back again on the
+          // next; a glint crosses it as it lands. On a spring of its own.
+          S.flip = { visualDuration: 0.55, bounce: 0.22 };
+          let fa = 0, fv = 0, fTo = 0, fOn = false, fLast = 0;
+          const fstep = (now) => {
+            const dt = Math.min(0.05, (now - fLast) / 1000 || 0.016); fLast = now;
+            const [k, c] = kc(S.flip);
+            for (let i = 0, n = Math.ceil(dt / 0.008); i < n; i++) { const h = dt / n; fv += (k * (fTo - fa) - c * fv) * h; fa += fv * h; }
+            flip.style.transform = `rotateY(${fa}deg)`;
+            if (Math.abs(fa - fTo) > 0.05 || Math.abs(fv) > 0.05) requestAnimationFrame(fstep);
+            else { fa = fTo; flip.style.transform = `rotateY(${fa}deg)`; fOn = false; }
+          };
+          rec.addEventListener('click', () => {
+            if (document.documentElement.dataset.note !== 'sleeve') return;
+            fTo += 180;
+            rec.classList.remove('rec-glint'); void rec.offsetWidth; rec.classList.add('rec-glint');
+            if (!fOn) { fOn = true; fLast = 0; requestAnimationFrame(fstep); }
+          });
+          window.tune?.spring({ label: 'Note: record flips over', value: { type: 'spring', ...S.flip }, onInput: (v) => (S.flip = v) });
           const t = window.tune;
           t?.slider({ label: 'Note: sleeve corner radius', min: 0, max: 16, step: 0.5, value: 4, unit: 'px', css: '--sleeve-r' });
           t?.slider({ label: 'Note: record speed when out', min: 5, max: 78, step: 0.1, value: S.rpm, unit: 'rpm', onInput: (v) => (S.rpm = v) });
