@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261119m">
+  <link rel="stylesheet" href="style.css?v=20261119n">
   <link rel="stylesheet" href="demo/cards.css?v=20261119k">
   <script src="tune.js?v=20261118b"></script>
   <script>
@@ -532,7 +532,7 @@
       </div>
       <!-- Last on the page before the footer: the project is made in the
            open, shown rather than said: its latest changes, live from GitHub. -->
-      <div class="oss" data-look="tight" data-fade="outer">
+      <div class="oss" data-look="poster-light" data-extra="none" data-fade="outer">
         <div class="oss-text">
           <h3><span class="oss-h1">Send an idea</span> <span class="oss-h2">or build it yourself</span></h3>
           <p>Interlude is free and open source, so anyone can fix bugs, add features, or support new gear, including you.</p>
@@ -1026,8 +1026,17 @@
     // The open source card's update list: how its light surface fades into
     // the card (style.css, .oss).
     // The looks (style.css, "Open source looks").
-    window.tune?.select({ label: 'Open source: look', value: 'tight', options: [['tight', 'Current, tightened'], ['doors', 'Two doors, in a light frame'], ['doors-apart', 'Two doors, a dark card and a light one'], ['doors-dark', 'Two doors, both dark like the note'], ['poster-card', 'Poster, in a dark card'], ['poster-light', 'Poster, in the light card'], ['poster-open', 'Poster, no card (the FAQ gets one)'], ['feed', 'The newest change, big'], ['cards', 'Centred, three change cards'], ['gitlog', 'The log as git shows it']],
+    window.tune?.select({ label: 'Open source: look', value: 'poster-light', options: [['tight', 'Current, tightened'], ['doors', 'Two doors, in a light frame'], ['doors-apart', 'Two doors, a dark card and a light one'], ['doors-dark', 'Two doors, both dark like the note'], ['poster-card', 'Poster, in a dark card'], ['poster-light', 'Poster, in the light card'], ['poster-open', 'Poster, no card (the FAQ gets one)'], ['feed', 'The newest change, big'], ['cards', 'Centred, three change cards'], ['gitlog', 'The log as git shows it']],
       onInput: (v) => { document.querySelector('.oss').dataset.look = v; window.tune?.refresh?.('Open source'); } });
+    // What else the light card has (style.css, "Light card extras").
+    window.tune?.select({ label: 'Open source: light card extra', value: 'none', options: [['none', 'Nothing more'], ['grooves', 'A record\'s grooves in the corner'], ['vinyl', 'A record turning at the edge'], ['icon', 'The app icon, tipped in the corner'], ['reveal', 'Heading rises in as it comes into view'], ['wide', 'Wider than the page, nearly edge to edge']],
+      onInput: (v) => (document.querySelector('.oss').dataset.extra = v) });
+    // (Reveal: marked once the card is mostly in view.)
+    (() => {
+      const card = document.querySelector('.oss');
+      if (!card || !('IntersectionObserver' in window)) { card?.toggleAttribute('data-in', true); return; }
+      new IntersectionObserver((es, io) => { if (es[0].isIntersecting) { card.toggleAttribute('data-in', true); io.disconnect(); } }, { threshold: 0.45 }).observe(card);
+    })();
     const cream = () => document.querySelector('.oss')?.dataset.look === 'cream';
     window.tune?.select({ show: cream, label: 'Open source: what fades', value: 'outer', options: [['outer', 'The outer card, to the right'], ['inner', 'The updates\' surface, to the right'], ['none', 'Nothing']],
       onInput: (v) => { const o = document.querySelector('.oss'); if (v === 'none') o.removeAttribute('data-fade'); else o.dataset.fade = v; } });
