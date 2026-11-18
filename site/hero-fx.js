@@ -2068,9 +2068,10 @@ tw?.slider({ ...vin, label: 'Hero record: pressing warp', min: 0, max: 3, step: 
 const look = { folder: 'Look' };
 const extraCue = () => !cur() || ['dust', 'warp', 'spokes'].includes(T.cue);
 tw?.select({ ...look, label: 'Hero record: what shows the spin', value: T.cue, show: cur,
-  // (The soft glints are now the glints alone: one saved before shows as that.)
-  onInput: vf('cue', thenPanel((v) => redraw('cue')(v === 'soft' ? 'glints' : v))),
-  options: [['glints', 'Glints alone'], ['dust', 'Dust specks'], ['warp', 'Warp shimmer'], ['spokes', 'Spokes']] });
+  // (The soft glints are now the same as the glints alone; kept so a panel
+  // or version saved with them still loads as that, not as the specks.)
+  onInput: vf('cue', thenPanel(redraw('cue'))),
+  options: [['glints', 'Glints alone'], ['dust', 'Dust specks'], ['warp', 'Warp shimmer'], ['spokes', 'Spokes'], ['soft', 'Glints alone (soft)']] });
 // (The spin cue's strength: the specks', the warp's or the spokes' (the
 // glints have their own brightness); in the other styles, how much their
 // own moving parts show.)
