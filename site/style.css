@@ -273,28 +273,21 @@ pre {
 .group li b { font-weight: 450; color: var(--fg); }
 .group li span { color: var(--fg-2); overflow: hidden; text-overflow: ellipsis; }
 
-/* FAQ, and beside it a note from the maker, kept in view while the
-   questions scroll past. */
+/* FAQ, and beside it a small card with where to go next, kept in view
+   while the questions scroll past. */
 .faq-row { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 64px; align-items: start; }
-/* The questions in one card, as the note beside them is. */
-.faq { max-width: 760px; padding: 0 24px; border-radius: 16px; background: var(--panel); box-shadow: inset 0 0 0 1px var(--line); }
-.faq details { border: 0; }
-.faq details:last-child { border-bottom: 0; }
-.faq details + details { border-top: 1px solid var(--line); }
-.founder {
-  position: sticky; top: 96px; padding: 24px 24px 18px; border-radius: 16px;
+.faq { max-width: 760px; }
+.faq-help {
+  position: sticky; top: 96px; padding: 22px 22px 22px; border-radius: 16px;
   background: var(--panel); box-shadow: inset 0 0 0 1px var(--line);
-  color: var(--fg-2); font-size: 14.5px; line-height: 1.6;
+  color: var(--fg-2); font-size: 14.5px; line-height: 1.55;
 }
-.founder p { margin: 0 0 12px; text-wrap: pretty; }
-.founder .founder-hi { color: var(--fg); font-size: 16px; font-weight: 500; }
-.founder .founder-sig {
-  margin: 4px 0 0; color: var(--fg); font-family: 'Mrs Saint Delafield', cursive; font-size: 46px; line-height: 1;
-  transform: rotate(-4deg); transform-origin: 0 50%;
-}
+.faq-help h3 { margin: 0 0 8px; color: var(--fg); font-size: 16px; font-weight: 500; }
+.faq-help p { margin: 0 0 18px; text-wrap: pretty; }
+.faq-help-links { display: flex; flex-wrap: wrap; gap: 8px; }
 @media (max-width: 860px) {
   .faq-row { grid-template-columns: 1fr; gap: 40px; }
-  .founder { position: static; max-width: 520px; }
+  .faq-help { position: static; max-width: 520px; }
 }
 details { border-top: 1px solid var(--line); }
 details:last-child { border-bottom: 1px solid var(--line); }
@@ -311,10 +304,12 @@ summary {
 }
 summary::-webkit-details-marker { display: none; }
 /* The plus, drawn as two bars so it sits exactly in the middle of its own
-   box and turns about its centre into the cross. */
+   box and turns about its centre into the cross. Both bars are solid and
+   the whole mark is faded at once, so where they cross isn't any brighter;
+   2px bars in a 12px box land on whole pixels either side of the centre. */
 summary::after {
-  content: ''; flex: none; width: 12px; height: 12px; align-self: center;
-  background: linear-gradient(var(--fg-3), var(--fg-3)) center / 12px 1.5px no-repeat, linear-gradient(var(--fg-3), var(--fg-3)) center / 1.5px 12px no-repeat;
+  content: ''; flex: none; width: 12px; height: 12px; align-self: center; opacity: 0.5;
+  background: linear-gradient(var(--fg), var(--fg)) center / 12px 2px no-repeat, linear-gradient(var(--fg), var(--fg)) center / 2px 12px no-repeat;
   transition: transform 0.28s cubic-bezier(0.23, 1, 0.32, 1);
 }
 details[open]:not([data-closing]) summary::after { transform: rotate(45deg); }
