@@ -122,7 +122,7 @@
 .p-stem__wave { display: flex; align-items: center; gap: 2px; height: 22px; overflow: hidden; }
 .p-stem__wave b {
   flex: none; width: 4px; height: calc(var(--h) * 100%); border-radius: 1px; background: var(--deck-b); opacity: 0.75;
-  transition: transform 520ms cubic-bezier(0.45, 0, 0.55, 1), opacity 520ms, background-color 520ms;
+  transition: transform 560ms cubic-bezier(0.77, 0, 0.175, 1), opacity 520ms, background-color 520ms;
   transition-delay: calc(var(--i) * 9ms);
 }
 /* Muted: the lane's bars flatten, left to right, and go quiet; unmuted, they grow back the same way. */
@@ -176,7 +176,8 @@
 .p-ctl[data-wake] .p-ctl__pads i { background: radial-gradient(90% 70% at 45% 25%, rgb(255 255 255 / 0.25), transparent 60%), #8fb3d9; box-shadow: 0 0 10px rgb(201 220 242 / 0.5), 0 0 0 1px rgb(0 0 0 / 0.4); }
 .p-ctl[data-wake] .p-ctl__pads[data-deck="b"] i { background: radial-gradient(90% 70% at 45% 25%, rgb(255 255 255 / 0.25), transparent 60%), #d8bf9c; box-shadow: 0 0 10px rgb(240 220 192 / 0.5), 0 0 0 1px rgb(0 0 0 / 0.4); }
 /* The lead: a USB-C plug coming down to the back edge. */
-.p-ctl__lead { position: absolute; left: 50%; top: -50px; width: 10px; height: 96px; margin-left: -5px; transform: translateY(-46px); transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1); }
+/* It sinks into the port as Sync's beats land: a ramp, then home firmly. */
+.p-ctl__lead { position: absolute; left: 50%; top: -50px; width: 10px; height: 96px; margin-left: -5px; transform: translateY(-46px); transition: transform 0.55s cubic-bezier(0.77, 0, 0.175, 1); }
 .p-ctl__lead::before { content: ''; position: absolute; left: 2px; right: 2px; top: 0; bottom: 18px; border-radius: 3px; background: linear-gradient(90deg, #111, #3a3a3e 45%, #111); }
 .p-ctl__lead i { position: absolute; left: 0; right: 0; bottom: 0; height: 20px; border-radius: 3px; background: linear-gradient(90deg, #8f9299, #e6e8ec 45%, #8f9299); box-shadow: 0 2px 4px rgb(0 0 0 / 0.4); }
 .p-ctl__lead[data-in] { transform: translateY(6px); }

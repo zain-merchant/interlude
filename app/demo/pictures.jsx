@@ -65,6 +65,34 @@ function Pic({ id, initial, poster, script, gate, onDone, bleed, children }) {
 // A soft ease-in-out (sine): unhurried at both ends.
 const inOut = (t) => -(Math.cos(Math.PI * t) - 1) / 2;
 
+/** A CSS cubic-bezier(x1, y1, x2, y2) as an easing function of t. */
+function bezier(x1, y1, x2, y2) {
+  const at = (a, b, t) => 3 * a * t * (1 - t) ** 2 + 3 * b * t * t * (1 - t) + t ** 3;
+  return (x) => {
+    // Find the curve's t for this x (Newton's method, then bisection if it stalls).
+    let t = x;
+    for (let i = 0; i < 8; i++) {
+      const dx = at(x1, x2, t) - x;
+      if (Math.abs(dx) < 1e-5) return at(y1, y2, t);
+      const d = 3 * x1 * (1 - t) ** 2 + 6 * (x2 - x1) * t * (1 - t) + 3 * (1 - x2) * t * t;
+      if (Math.abs(d) < 1e-6) break;
+      t -= dx / d;
+    }
+    let lo = 0, hi = 1;
+    t = x;
+    for (let i = 0; i < 24; i++) {
+      if (at(x1, x2, t) < x) lo = t; else hi = t;
+      t = (lo + hi) / 2;
+    }
+    return at(y1, y2, t);
+  };
+}
+// The sink: held back, a hard ramp through the middle, then settled firmly
+// home with nothing past it. Deck B's beats land on A's with it (the
+// Sync picture, .p-ticks__run), and it's used wherever something should
+// feel like it locks into place.
+const sink = bezier(0.77, 0, 0.175, 1);
+
 /** Eases a number in state from `from` to `to` over `ms`, a frame at a time. */
 async function tween(a, key, from, to, ms, ease = (t) => 1 - (1 - t) ** 3) {
   const steps = Math.max(1, Math.round(ms / 16));
@@ -206,14 +234,12 @@ export function Eq(play) {
     <Pic id="eq" {...play} initial={{ hi: 0.5, mid: 0.5, low: 0.5 }} poster={{ hi: 0.18, mid: 0.85, low: 0 }}
       script={async (a) => {
         // One cascade: Mid takes over while High is still turning, then Low
-        // travels furthest. Low eases off gently and gathers speed all the
-        // way down, so it lands on its kill with weight and stops dead there:
-        // a snap into place, nothing past it.
-        const snap = (t) => 0.3 * inOut(t) + 0.7 * t * t;
+        // travels furthest and sinks home onto its kill, as deck B's beats
+        // land on A's in the Sync picture.
         await Promise.all([
           tween(a, 'hi', 0.5, 0.18, 1050, inOut),
           a.wait(290).then(() => tween(a, 'mid', 0.5, 0.85, 1050, inOut)),
-          a.wait(700).then(() => tween(a, 'low', 0.5, 0, 1100, snap)),
+          a.wait(700).then(() => tween(a, 'low', 0.5, 0, 850, sink)),
         ]);
       }}>
       {(s) => (
@@ -350,8 +376,9 @@ export function Controllers(play) {
     <Pic id="ctl" {...play} bleed="bottom" initial={{ plug: false, wake: false, toast: false }} poster={{ plug: true, wake: true, toast: true }}
       script={async (a) => {
         await a.set({ plug: true });
-        // It wakes as the plug seats; the toast follows close behind.
-        await a.wait(380);
+        // It wakes as the plug seats (its slide is 0.55s, home by about
+        // 0.48s); the toast follows close behind.
+        await a.wait(480);
         await a.set({ wake: true });
         await a.wait(140);
         await a.set({ toast: true });
