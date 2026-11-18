@@ -65,35 +65,36 @@ function Pic({ id, initial, poster, script, gate, onDone, bleed, children }) {
 // A soft ease-in-out (sine): unhurried at both ends.
 const inOut = (t) => -(Math.cos(Math.PI * t) - 1) / 2;
 
-/** A CSS cubic-bezier(x1, y1, x2, y2) as an easing function of t. */
-function bezier(x1, y1, x2, y2) {
-  const at = (a, b, t) => 3 * a * t * (1 - t) ** 2 + 3 * b * t * t * (1 - t) + t ** 3;
-  return (x) => {
-    // Find the curve's t for this x (Newton's method, then bisection if it stalls).
-    let t = x;
-    for (let i = 0; i < 8; i++) {
-      const dx = at(x1, x2, t) - x;
-      if (Math.abs(dx) < 1e-5) return at(y1, y2, t);
-      const d = 3 * x1 * (1 - t) ** 2 + 6 * (x2 - x1) * t * (1 - t) + 3 * (1 - x2) * t * t;
-      if (Math.abs(d) < 1e-6) break;
-      t -= dx / d;
-    }
-    let lo = 0, hi = 1;
-    t = x;
-    for (let i = 0; i < 24; i++) {
-      if (at(x1, x2, t) < x) lo = t; else hi = t;
-      t = (lo + hi) / 2;
-    }
-    return at(y1, y2, t);
-  };
-}
-// The sink: held back, a hard ramp through the middle, then settled firmly
-// home with nothing past it. Deck B's beats land on A's with it (the
-// Sync picture, .p-ticks__run), and it's used wherever something should
-// feel like it locks into place.
-const sink = bezier(0.77, 0, 0.175, 1);
-
 /** Eases a number in state from `from` to `to` over `ms`, a frame at a time. */
+// Apple's spring, as tuned by eye in site/lab/motion.html: SwiftUI's
+// .spring(duration:bounce:) turned into physics (stiffness (2π/duration)²,
+// damping from the bounce), with CASpringAnimation's mass and initial
+// velocity, plus a magnet: a pull toward the end that only starts within
+// `range` of it and grows the closer it gets, ending on a hard stop, so
+// it snaps into place. Returns how long it runs and its curve.
+function spring({ duration, bounce = 0, mass = 1, velocity = 0, magnet = 0, range = 0.15 }) {
+  const k = ((2 * Math.PI) / duration) ** 2;
+  const c = bounce >= 0 ? ((1 - bounce) * 4 * Math.PI) / duration : (4 * Math.PI) / (duration * (1 + bounce));
+  let x = 0, v = velocity, t = 0;
+  const dt = 1 / 1000, pts = [0];
+  while (t < 4) {
+    const d = 1 - x;
+    const pull = magnet > 0 && d > 0 && d < range ? magnet * k * (1 - d / range) ** 2 : 0;
+    v += ((-k * (x - 1) - c * v + pull) / mass) * dt;
+    x += v * dt;
+    t += dt;
+    if (magnet > 0 && x >= 0.998) break;
+    pts.push(x);
+    if (Math.abs(1 - x) < 0.001 && Math.abs(v) < 0.02 && t > 0.02) break;
+  }
+  pts.push(1);
+  const T = pts.length - 1;
+  return { ms: T, ease: (u) => { const f = u * T, i = Math.floor(f); return i >= T ? 1 : pts[i] + (pts[i + 1] - pts[i]) * (f - i); } };
+}
+// The EQ knobs: a long, heavily damped turn that the magnet grabs over the
+// last fifth and snaps home.
+const KNOB_SPRING = spring({ duration: 0.86, bounce: -0.3, mass: 0.75, velocity: 3.6, magnet: 1.8, range: 0.21 });
+
 // One step a frame, on the screen's own frame clock, timed from the first
 // frame drawn: a 16ms timer drifts against the screen and judders.
 const frame = () => new Promise((r) => requestAnimationFrame(r));
@@ -243,12 +244,13 @@ export function Eq(play) {
     <Pic id="eq" {...play} initial={{ hi: 0.5, mid: 0.5, low: 0.5 }} poster={{ hi: 0.18, mid: 0.85, low: 0 }}
       script={async (a) => {
         // One cascade: Mid takes over while High is still turning, then Low
-        // travels furthest and sinks home onto its kill, as deck B's beats
-        // land on A's in the Sync picture.
+        // travels furthest; each on the knob spring, snapping into place
+        // (Low onto its kill).
+        const turn = (key, to) => tween(a, key, 0.5, to, KNOB_SPRING.ms, KNOB_SPRING.ease);
         await Promise.all([
-          tween(a, 'hi', 0.5, 0.18, 1050, inOut),
-          a.wait(290).then(() => tween(a, 'mid', 0.5, 0.85, 1050, inOut)),
-          a.wait(700).then(() => tween(a, 'low', 0.5, 0, 850, sink)),
+          turn('hi', 0.18),
+          a.wait(290).then(() => turn('mid', 0.85)),
+          a.wait(700).then(() => turn('low', 0)),
         ]);
       }}>
       {(s) => (
@@ -274,6 +276,15 @@ const STEM_SHAPES = [
 // Which stems are muted, step by step: vocals out, then drums, the vocals
 // back, the melody out. Each lane flattens or grows back, left to right.
 const STEM_STEPS = [[0], [0, 3], [3], [3, 1]];
+// The order a lane's bars move in when it's muted or unmuted, as tuned in
+// site/lab/motion.html: a left-to-right sweep (STEM_STEP apart), every
+// second bar a little behind, each by its own amount (up to STEM_LAG steps),
+// the same every time.
+const STEM_STEP = 15.5;
+const STEM_LAG = 4.4;
+const jitter = (i) => { const v = Math.sin(i * 12.9898 + 78.233) * 43758.5453; return v - Math.floor(v); };
+const stemDelay = (i) => Math.round((i + (i % 2) * (0.4 + 1.2 * jitter(i)) * STEM_LAG) * STEM_STEP);
+
 export function Stems(play) {
   return (
     <Pic id="stems" {...play} bleed="right" initial={{ muted: [] }} poster={{ muted: STEM_STEPS.at(-1) }}
@@ -289,7 +300,7 @@ export function Stems(play) {
             <div key={name} className="p-stem" data-muted={s.muted.includes(k) || undefined}>
               <span className="p-stem__btn"><i />{name}</span>
               <div className="p-stem__wave">
-                {Array.from({ length: 40 }, (_, i) => <b key={i} style={{ '--h': STEM_SHAPES[k](i), '--i': i }} />)}
+                {Array.from({ length: 40 }, (_, i) => <b key={i} style={{ '--h': STEM_SHAPES[k](i), '--delay': `${stemDelay(i)}ms` }} />)}
               </div>
             </div>
           ))}
