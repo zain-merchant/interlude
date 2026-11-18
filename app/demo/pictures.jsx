@@ -205,13 +205,15 @@ export function Eq(play) {
   return (
     <Pic id="eq" {...play} initial={{ hi: 0.5, mid: 0.5, low: 0.5 }} poster={{ hi: 0.18, mid: 0.85, low: 0 }}
       script={async (a) => {
-        // One cascade, well staggered so each knob is seen to turn; Low
-        // travels furthest, so it turns longest.
-        const GAP = 380;
+        // One cascade: Mid takes over while High is still turning, then Low
+        // travels furthest. Low eases off gently and gathers speed all the
+        // way down, so it lands on its kill with weight and stops dead there:
+        // a snap into place, nothing past it.
+        const snap = (t) => 0.3 * inOut(t) + 0.7 * t * t;
         await Promise.all([
           tween(a, 'hi', 0.5, 0.18, 1050, inOut),
-          a.wait(GAP).then(() => tween(a, 'mid', 0.5, 0.85, 1050, inOut)),
-          a.wait(GAP * 2).then(() => tween(a, 'low', 0.5, 0, 1250, inOut)),
+          a.wait(200).then(() => tween(a, 'mid', 0.5, 0.85, 1050, inOut)),
+          a.wait(620).then(() => tween(a, 'low', 0.5, 0, 1100, snap)),
         ]);
       }}>
       {(s) => (
