@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261119c">
+  <link rel="stylesheet" href="style.css?v=20261119f">
   <link rel="stylesheet" href="demo/cards.css?v=20261119d">
   <script src="tune.js?v=20261118b"></script>
   <script>
@@ -325,7 +325,7 @@
         <img class="hero-icon" src="img/icon.svg?v=2" alt="" width="88" height="88">
         <h1>Interlude</h1>
       </div>
-      <p class="tagline">A free, <span class="nw">open-source</span> DJ app for Mac.</p>
+      <p class="tagline">A free, <span class="nw">open-source</span> DJ app for Mac</p>
       <p class="lede">Pro features with a fast, lightweight footprint.</p>
       <!-- The buttons and the facts. Laid out by the layouts in style.css
            ("Hero: text layout"); in the current one it isn't a box of its own. -->
@@ -503,7 +503,7 @@
            the maker. Its body is still to be written: skeleton lines hold
            its place. -->
       <aside class="founder" aria-label="A note from the maker">
-        <h3>Hi, I'm Zain.</h3>
+        <h3>Hi, I'm Zain</h3>
         <div class="founder-body" aria-hidden="true">
           <i style="--w: 100%"></i><i style="--w: 94%"></i><i style="--w: 97%"></i><i style="--w: 62%"></i>
           <i class="gap" style="--w: 100%"></i><i style="--w: 91%"></i><i style="--w: 78%"></i>
@@ -521,9 +521,9 @@
       </div>
       <!-- Last on the page before the footer: the project is made in the
            open, shown rather than said: its latest changes, live from GitHub. -->
-      <div class="oss" data-look="white-divided" data-fade="outer">
+      <div class="oss" data-look="tight" data-fade="outer">
         <div class="oss-text">
-          <h3>Send an idea or build it yourself.</h3>
+          <h3>Send an idea or build it yourself</h3>
           <p>Interlude is free and open source, so anyone can fix bugs, add features or support new gear, including you.</p>
           <div class="oss-links">
             <a class="btn" href="https://github.com/zain-merchant/interlude/issues/new" target="_blank" rel="noopener">Send an idea</a>
@@ -557,7 +557,7 @@
     <div class="wrap foot-grid">
       <div>
         <a class="brand" href="#top"><img src="img/icon.svg?v=2" alt="" width="20" height="20"><span>Interlude</span></a>
-        <p class="small-print">A free DJ app for Mac.</p>
+        <p class="small-print">A free DJ app for Mac</p>
         <p class="small-print legal">Interlude is free software under the GNU GPL v3 or later. Controller mappings come from the <a href="https://mixxx.org" target="_blank" rel="noopener">Mixxx</a> project (GPL-2.0-or-later). Interlude isn't affiliated with Pioneer DJ, Rekordbox, Serato or Mixxx; their names belong to their owners.</p>
       </div>
       <div>
@@ -996,7 +996,8 @@
     // plain "Latest release" link if GitHub can't be reached.
     // The open source card's update list: how its light surface fades into
     // the card (style.css, .oss).
-    window.tune?.select({ label: 'Open source: look', value: 'white-divided', options: [['white-divided', 'White, a line between words and updates'], ['white-flat', 'White, the updates straight on it'], ['white-inset', 'White, the updates on a deeper tone'], ['white-glass', 'White frosted glass'], ['white-dark', 'White, the updates on a dark inset'], ['glass', 'Dark glass, like the download card'], ['bright', 'Bright glass'], ['open', 'No card, the updates in glass'], ['cream', 'Cream card, fading']],
+    // Five takes (style.css, "Open source: five takes"), and the one before them.
+    window.tune?.select({ label: 'Open source: look', value: 'tight', options: [['tight', 'The current one, tightened'], ['timeline', 'Dark, the changes on a timeline'], ['stacked', 'One column, changes in two'], ['split', 'Light words, dark changes to the edge'], ['ledger', 'No card, a big heading over both'], ['white-divided', 'Before (white, divided)']],
       onInput: (v) => { document.querySelector('.oss').dataset.look = v; window.tune?.refresh?.('Open source'); } });
     const cream = () => document.querySelector('.oss')?.dataset.look === 'cream';
     window.tune?.select({ show: cream, label: 'Open source: what fades', value: 'outer', options: [['outer', 'The outer card, to the right'], ['inner', 'The updates\' surface, to the right'], ['none', 'Nothing']],
@@ -1040,7 +1041,12 @@
           a.href = c.html_url; a.target = '_blank'; a.rel = 'noopener';
           const t = document.createElement('span'); t.className = 'oss-msg';
           if (rel) { const b = document.createElement('b'); b.textContent = msg.replace('Release ', 'Version '); t.append(b, ' released'); }
-          else t.textContent = msg;
+          else {
+            // "Mappings: Mixxx 2.6…": the area it touches, quieter than the change.
+            const m = /^([^:]{2,24}): (.+)$/.exec(msg);
+            if (m) { const ar = document.createElement('span'); ar.className = 'oss-area'; ar.textContent = `${m[1]}: `; t.append(ar, m[2]); }
+            else t.textContent = msg;
+          }
           const w = document.createElement('time'); w.dateTime = c.commit.author.date; w.textContent = ago(c.commit.author.date);
           a.append(t, w); li.append(a);
           return li;
