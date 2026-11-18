@@ -180,6 +180,8 @@ function setMode(next) {
 }
 window.addEventListener('message', (e) => {
   if (e.data?.interlude === 'mode') setMode(e.data.mode);
+  // Values the website's sliders set on this page (the screen's tilt, where it scales from).
+  if (e.data?.interlude === 'css') for (const [k, v] of Object.entries(e.data.vars || {})) document.documentElement.style.setProperty(k, v);
 });
 
 /**

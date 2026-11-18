@@ -394,7 +394,7 @@
           <img class="poster" src="img/screenshot-1x.jpg" srcset="img/screenshot-1x.jpg 1440w, img/screenshot.jpg 2880w" sizes="(max-width: 1200px) 100vw, 1200px"
             width="1440" height="900" alt="Interlude with two tracks loaded: waveforms across the top, two decks either side of the mixer, and the library below.">
           <!-- The real app on its simulated engine, played by a script (app/demo). Loaded after the page. -->
-          <iframe class="live" title="Interlude mixing one track into the next" tabindex="-1" aria-hidden="true" data-src="demo/hero.html?v=20261119y"></iframe>
+          <iframe class="live" title="Interlude mixing one track into the next" tabindex="-1" aria-hidden="true" data-src="demo/hero.html?v=20261120d"></iframe>
         </div>
       </div>
       <div class="shot-bar">
@@ -705,6 +705,7 @@
           live.contentWindow.postMessage({ interlude: 'mode', mode }, '*');
           live.contentWindow.postMessage({ interlude: 'input', style: input }, '*');
           live.contentWindow.postMessage({ interlude: 'controller', v: 'club', skin: heroSkin }, '*');
+          live.contentWindow.postMessage({ interlude: 'css', vars: heroVars }, '*');
         }
         if (e.data?.interlude === 'camera') camera(e.data);
         if (e.data?.interlude === 'level') {
@@ -749,6 +750,12 @@
       // Being tried: the app's frame rate while it plays. 30 halves what it
       // costs to run; the cursor and waveforms move a little less smoothly.
       let appFps = 30;
+      // The pushed-back screen in controller mode: how far it tips (negative
+      // tips its top toward you) and where it scales from.
+      const heroVars = { '--tilt': '-3deg', '--anchor': '50% 0%' };
+      const sendVars = () => live.contentWindow?.postMessage({ interlude: 'css', vars: heroVars }, '*');
+      window.tune?.slider({ label: 'Hero: screen tilt in controller mode', min: -10, max: 10, step: 0.5, value: -3, unit: '°', onInput: (v) => { heroVars['--tilt'] = `${v}deg`; sendVars(); } });
+      window.tune?.select({ label: 'Hero: screen scales from', value: 'top', options: [['top', 'Its top'], ['center', 'Its middle'], ['bottom', 'Its bottom']], onInput: (v) => { heroVars['--anchor'] = { top: '50% 0%', center: '50% 50%', bottom: '50% 100%' }[v]; sendVars(); } });
       const sendFps = () => live.contentWindow?.postMessage({ interlude: 'fps', fps: appFps }, '*');
       live.addEventListener('load', sendFps);
       window.tune?.slider({ label: 'Hero: app frame rate', folder: 'Performance', min: 20, max: 60, step: 5, value: 30, onInput: (v) => { appFps = v; sendFps(); } });
