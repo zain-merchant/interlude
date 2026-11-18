@@ -466,15 +466,14 @@ const MUSIC = new URL('./music-folder.png', import.meta.url).href;
 // a faint copy of both, the same size, follows the pointer, keeping where
 // it was grabbed, with the green "+" of a copy at the pointer. Over
 // Applications the folder darkens in its highlight; let go, and the copy is
-// gone at once. The original never moves. Body coordinates, in px: the two
+// gone at once, and the pointer stays where it let go. The original never moves. Body coordinates, in px: the two
 // items are centred at DMG_A and DMG_B, the icons' middles at DMG_Y.
 const DMG_A = 78;
 const DMG_B = 234;
-const DMG_Y = 37;
+const DMG_Y = 44;
 const GRAB = { x: DMG_A + 6, y: DMG_Y + 8 }; // where the arrow takes the icon
 const DROP = { x: DMG_B + 4, y: DMG_Y + 6 };
-const REST = { x: 160, y: 66 }; // where the arrow starts, under the old arrow
-const AWAY = { x: 284, y: 52 }; // and where it goes after the drop
+const REST = { x: DMG_A + 34, y: DMG_Y + 30 }; // where the arrow starts, just off the icon
 
 /** Moves the arrow from `from` to `to` on a soft ease, bowed upward by `arc` px. */
 async function glide(a, from, to, ms, arc = 0) {
@@ -499,10 +498,10 @@ function Arrow({ x, y, copy }) {
 export function Download(play) {
   const start = { cx: REST.x, cy: REST.y, sel: false, drag: false, copy: false, done: false };
   return (
-    <Pic id="dmg" {...play} initial={start} poster={{ ...start, cx: AWAY.x, cy: AWAY.y, sel: true, done: true }}
+    <Pic id="dmg" {...play} initial={start} poster={{ ...start, cx: DROP.x, cy: DROP.y, sel: true, done: true }}
       script={async (a) => {
-        // Onto the icon, settle, press.
-        await glide(a, REST, GRAB, 720, 10);
+        // Onto the icon (it starts just beside it), settle, press.
+        await glide(a, REST, GRAB, 420, 3);
         await a.wait(160);
         await a.set({ sel: true });
         await a.wait(200);
@@ -512,11 +511,10 @@ export function Download(play) {
         await a.wait(160);
         a.put({ copy: true });
         await going;
-        // Over Applications a moment, then let go.
+        // Over Applications a moment, then let go: it ends there, the
+        // pointer resting on the folder.
         await a.wait(380);
         await a.set({ drag: false, copy: false, done: true });
-        await a.wait(260);
-        await glide(a, DROP, AWAY, 520, 4);
       }}>
       {(s) => {
         const over = s.drag && s.cx > DMG_B - 40;
