@@ -64,7 +64,9 @@
      lands; the release comes back up on `snappy`. */
   transition: background-color var(--snappy-ms) var(--snappy), color var(--snappy-ms) var(--snappy), box-shadow var(--snappy-ms) var(--snappy), transform var(--snappy-ms) var(--snappy);
 }
-.p .p-btn[data-press] { transform: scale(0.97); background: var(--hover); transition-duration: var(--press-ms); transition-timing-function: var(--press); }
+/* Pressed: pushed in, not just lighter (smaller, a pixel down, darker, an
+   inner shadow), so a press reads at a glance. */
+.p .p-btn[data-press] { transform: translateY(1px) scale(0.93); background: rgb(0 0 0 / 0.25); box-shadow: inset 0 2px 4px rgb(0 0 0 / 0.45), inset 0 0 0 1px rgb(255 255 255 / 0.06); transition-duration: var(--press-ms); transition-timing-function: var(--press); }
 .p .p-btn[data-on] { color: var(--fg); background: var(--sel); box-shadow: inset 0 0 0 1px var(--line-2), 0 0 18px rgb(240 220 192 / 0.12); }
 
 /* Decks: two rows, each the deck's chip, its tempo and a run of its beats.
@@ -608,7 +610,7 @@
   transition: background-color var(--snappy-ms) var(--snappy), color var(--snappy-ms) var(--snappy), box-shadow var(--snappy-ms) var(--snappy), transform var(--snappy-ms) var(--snappy);
 }
 .p-cuepads i[data-on] { color: #0b0b0d; background: var(--deck-a); box-shadow: 0 0 14px rgb(201 220 242 / 0.3); }
-.p-cuepads i[data-press] { transform: scale(0.97); background: var(--hover); transition-duration: var(--press-ms); transition-timing-function: var(--press); }
+.p-cuepads i[data-press] { transform: translateY(1px) scale(0.93); background: rgb(0 0 0 / 0.25); box-shadow: inset 0 2px 4px rgb(0 0 0 / 0.45); transition-duration: var(--press-ms); transition-timing-function: var(--press); }
 /* A hot cue on the beats: a small numbered flag at the top of the rail, on its beat. */
 .p-hcue {
   position: absolute; top: 0; height: 100%; margin-left: 1px; padding: 0 0 0 3px;
