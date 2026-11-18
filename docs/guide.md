@@ -98,8 +98,8 @@ Everything Interlude does, in detail. For a short overview, see the
   too. A guide, not a rule: it reads the energy, not the arrangement.
 - **Library:** add music folders, instant search across artist, title and
   folder, load with double-click, Enter, or Shift+←/→. Columns for title,
-  artist, BPM, key, length and folder (the columns button at the end of the headings, or a right-click on them, shows
-  album and genre or hide any but title); click a heading to sort (again to
+  artist, BPM, key, length and folder (the columns button at the end of the headings, or a right-click on
+  them, shows album and genre or hides any column but title); click a heading to sort (again to
   reverse). **Filter** narrows the list to a BPM range and any keys on the
   Camelot wheel. **Fits** shows only the tracks that mix with the deck on
   air (the playing deck, or the louder one through its fader and the
