@@ -14,7 +14,7 @@
   <!-- Geist, served from here (no other site to reach before the page can
        draw its text); the Latin file is fetched straight away. -->
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="style.css?v=20261118c1">
+  <link rel="stylesheet" href="style.css?v=20261118c4">
   <script src="tune.js?v=20261118v1b"></script>
   <script>
     // Live updates while working on the site locally (the dev server
@@ -1656,7 +1656,9 @@
           document.fonts?.ready.then(make);
         }
       })
-      .catch(() => {});
+      // (Nothing from GitHub and nothing kept: the card links to the changes
+      // on GitHub in the ticker's place, rather than a label over nothing.)
+      .catch(() => document.querySelector('.oss')?.toggleAttribute('data-nolog', true));
     // The latest release, kept like the updates above (15 minutes, and the
     // last one kept if GitHub turns the request away).
     const RELEASE = 'interlude-release';
