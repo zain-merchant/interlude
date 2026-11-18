@@ -800,7 +800,7 @@ html[data-hero][data-herotext] .meta #version:hover::after { color: var(--fg); }
    same thing. */
 .dl-head { display: none; }
 html[data-hero][data-herotext="card"] .hero-side {
-  display: grid; grid-template-columns: 1fr; grid-template-areas: "head" "cta" "foot"; align-content: start;
+  display: grid; grid-template-columns: 1fr; grid-template-areas: "head" "cta" "req" "foot"; align-content: start;
   padding: 22px 24px 24px;
   background: linear-gradient(180deg, rgb(255 255 255 / 0.065), rgb(255 255 255 / 0.03));
   -webkit-backdrop-filter: blur(30px) saturate(1.25); backdrop-filter: blur(30px) saturate(1.25);
@@ -813,6 +813,21 @@ html[data-hero][data-herotext="card"] .dl-head { grid-area: head; display: grid;
 .dl-new { grid-area: new; color: var(--fg-3); font-size: 13px; text-decoration: underline; text-decoration-color: rgb(236 234 228 / 0.25); text-underline-offset: 3px; transition: color 0.15s, text-decoration-color 0.15s; }
 .dl-new:hover { color: var(--fg); text-decoration-color: var(--fg); }
 .dl-sub { grid-area: sub; margin: 0; color: var(--fg-2); font-size: 14px; text-wrap: balance; }
+/* What it needs, under the buttons, where requirements usually sit. */
+.dl-req { display: none; }
+html[data-hero][data-herotext="card"] .dl-req { display: block; grid-area: req; margin: 12px 0 0; color: var(--fg-3); font-size: 12.5px; text-align: center; }
+html[data-hero][data-herotext="card"][data-cardlic="foot"] .dl-foot { margin-top: 2px; }
+/* The card's surface (Hero: card surface): the app's glass, an outline
+   only, or no card with a hairline beside it. */
+html[data-hero][data-herotext="card"][data-cardsurface="outline"] .hero-side {
+  background: none; -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.14);
+}
+html[data-hero][data-herotext="card"][data-cardsurface="rule"] .hero-side {
+  background: none; -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: none; border-radius: 0;
+  padding: 4px 0 4px 28px; border-left: 1px solid rgb(255 255 255 / 0.14);
+}
+html[data-hero][data-herotext="card"][data-cardsurface="rule"] :is(.dl-req, .dl-foot) { text-align: left; }
+html[data-hero][data-herotext="card"]:is([data-cardsurface="outline"], [data-cardsurface="rule"]) :is(.dl-head, .dl-req, .dl-foot) { text-shadow: 0 1px 12px rgb(9 9 11 / 0.9); }
 /* The version in the title, or beside What's new (Hero: card title). */
 .dl-new-ver { display: none; }
 html[data-cardtitle="name"] .dl-ver { display: none; }

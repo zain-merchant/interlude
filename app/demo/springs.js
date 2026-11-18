@@ -48,13 +48,14 @@ export function toLinear(s, step = 8) {
 //           a carousel step). 0.5s, bounce 0.1 (overshoots 0.1%). 98% in 346ms.
 //   GLIDE   big travel: the hero's screen tilting back, the controller
 //           rising, a long drag. 0.7s, bounce 0. 98% in 592ms, rest 977ms.
-//   LOCK    things that seat (a plug, beats locking to the grid, a folder
-//           dropping into place): the magnet takes it over the last fifth
-//           and it lands on a hard stop at 352ms, no overshoot.
-//   PRESS   the same landing, short: a key or pad going down its travel, a
-//           tag or chip snapping on. Lands at 92ms.
-//   PULSE   the same landing, long: a pulse of light running down a line
-//           and arriving in the app. Lands at 488ms.
+//   LOCK    the one with a magnet, for the controller's plug seating: the
+//           magnet takes it over the last fifth and it lands on a hard
+//           stop at 352ms, no overshoot. (The Low kill knob's own spring,
+//           KNOB_LOW in pictures.jsx, has one too; nothing else does.)
+//   PRESS   short: a key or pad going down its travel, a tag or chip
+//           coming on. 0.15s, bounce 0.
+//   PULSE   a pulse of light running down a line into the app. 0.4s,
+//           bounce 0.
 //
 // The EQ knobs (KNOB_SPRING, pictures.jsx) and the stem bars (pictures.css)
 // keep their own springs, tuned by hand.
@@ -62,6 +63,11 @@ export const SNAPPY = spring({ duration: 0.2, velocity: 12 });
 export const SMOOTH = spring({ duration: 0.35, velocity: 8 });
 export const SETTLE = spring({ duration: 0.5, bounce: 0.1, velocity: 4 });
 export const GLIDE = spring({ duration: 0.7, velocity: 4 });
+// SLIDE   something moving across the picture into its place, from a
+//         standstill: a spring from rest, so it eases in and out, the
+//         shape of the old cubic-bezier(0.77, 0, 0.175, 1) the beats had.
+//         Deck B's beats sliding onto A's.
+export const SLIDE = spring({ duration: 0.75 });
 export const LOCK = spring({ duration: 0.6, velocity: 4, magnet: 1.8, range: 0.2 });
-export const PRESS = spring({ duration: 0.15, velocity: 12, magnet: 1.8, range: 0.2 });
-export const PULSE = spring({ duration: 0.9, velocity: 4, magnet: 1.8, range: 0.2 });
+export const PRESS = spring({ duration: 0.15, velocity: 12 });
+export const PULSE = spring({ duration: 0.4, velocity: 4 });
