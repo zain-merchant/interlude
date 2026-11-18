@@ -1572,7 +1572,7 @@ html[data-note="label"] .rec { --lab: 52%; }
 html[data-note="sleeve"] .founder {
   --hx: 72%; --hy: 60%; --hr: 50px;
   /* A record sleeve's corners are all but square: card cut to size. */
-  aspect-ratio: 1; width: 292px; margin-inline: auto; padding: 24px 24px 20px; border-radius: 2px; overflow: visible; rotate: -1.5deg; transform-origin: 50% 0;
+  aspect-ratio: auto; width: 292px; height: 292px; box-sizing: border-box; margin-inline: auto; padding: 22px 22px 18px; border-radius: var(--sleeve-r, 4px); overflow: visible; rotate: -1.5deg; transform-origin: 50% 0;
   background: none; box-shadow: none; color: rgb(28 24 18 / 0.72);
 }
 html[data-note="sleeve"] .founder::after {
@@ -1581,7 +1581,7 @@ html[data-note="sleeve"] .founder::after {
     linear-gradient(90deg, transparent calc(100% - 3px), rgb(0 0 0 / 0.14) calc(100% - 1px)),
     /* Ring wear: the faint round mark a record leaves pressed into its
        sleeve, a hair lighter, where its rim sits. */
-    radial-gradient(circle at var(--hx) var(--hy), transparent calc(40% * 1.414 - 3px), rgb(255 255 255 / 0.22) calc(40% * 1.414 - 1px), transparent calc(40% * 1.414 + 3px)),
+    radial-gradient(circle at var(--hx) var(--hy), transparent 112px, rgb(255 255 255 / 0.16) 115.5px, rgb(80 64 40 / 0.06) 117px, transparent 120px),
     /* Paper: a fine grain, and long soft fibres running across it. */
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.3 0 0 0 0 0.25 0 0 0 0 0.18 0 0 0 0.16 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E"),
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.012 0.35' numOctaves='2' seed='9' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.35 0 0 0 0 0.3 0 0 0 0 0.22 0 0 0 0.18 -0.04'/%3E%3C/filter%3E%3Crect width='320' height='320' filter='url(%23f)'/%3E%3C/svg%3E"),
@@ -1608,15 +1608,19 @@ html[data-note="sleeve"] .rec {
 /* (The slide out is index.html's, on a spring.) */
 /* (The page cuts it at the window's edge, never a section's.) */
 body { overflow-x: clip; }
-html[data-note="sleeve"] .founder h3 { color: #17140e; margin: 0 0 14px; }
-html[data-note="sleeve"] .founder-body { margin-bottom: 18px; }
+html[data-note="sleeve"] .founder h3 { color: #17140e; margin: 0 0 12px; }
+html[data-note="sleeve"] .founder-body { margin-bottom: 14px; gap: 7px; }
+html[data-note="sleeve"] .founder-body i.gap { margin-top: 6px; }
 html[data-note="sleeve"] .founder-body i { background: rgb(28 24 18 / 0.11); }
 html[data-note="sleeve"] .founder-body i:nth-child(n + 5) { width: min(var(--w), 48%); }
-html[data-note="sleeve"] .founder-ask { max-width: 46%; margin: 0 0 4px; line-height: 1.4; }
+html[data-note="sleeve"] .founder-ask { max-width: 56%; margin: 0 0 6px; line-height: 1.4; font-size: 13.5px; }
 /* Links as everywhere else on the page: the underline faint, full on hover. */
-html[data-note="sleeve"] .founder-ask a { color: #17140e; text-decoration-color: rgb(28 24 18 / 0.35); }
+html[data-note="sleeve"] .founder-ask a { color: #17140e; text-decoration-color: rgb(28 24 18 / 0.35); white-space: nowrap; }
 html[data-note="sleeve"] .founder-ask a:hover { text-decoration-color: #17140e; }
-html[data-note="sleeve"] .founder-sig { stroke: #23315c; width: 112px; margin: 0 0 0 -4px; }
+/* The signature smaller, without the line under it (it read as a rule the
+   rest didn't line up with). */
+html[data-note="sleeve"] .founder-sig { stroke: #23315c; width: 86px; margin: 0 0 0 -3px; }
+html[data-note="sleeve"] .founder-sig path:nth-child(3) { display: none; }
 
 /* Note: white label. A promo pressing with a plain white label, the note
    written on the label. As it comes into view it spins down to a stop;
