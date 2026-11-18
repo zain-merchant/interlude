@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261120e">
+  <link rel="stylesheet" href="style.css?v=20261120q">
   <link rel="stylesheet" href="demo/cards.css?v=20261120e">
   <script src="tune.js?v=20261120n"></script>
   <script>
@@ -339,6 +339,9 @@
   <main id="top">
     <!-- A record's grooves round the hero's screen, with light moving over them (hero-fx.js). -->
     <canvas class="ripples" aria-hidden="true"></canvas>
+    <!-- Film grain over the record behind the hero (and only that: the page's
+         words, buttons and the app sit above it). Tune › Grain. -->
+    <div class="grain" aria-hidden="true"></div>
     <section class="hero wrap">
       <div class="lockup">
         <img class="hero-icon" src="img/icon.svg?v=2" alt="" width="88" height="88">
@@ -660,7 +663,7 @@
     // same at any width. It tells us how loud it's playing, and the glow
     // under it follows; the switch picks mouse or controller.
     (async () => {
-      const fx = await import('./hero-fx.js?v=20261120o').catch(() => null);
+      const fx = await import('./hero-fx.js?v=20261120q').catch(() => null);
       const frame = document.querySelector('.stage-frame');
       const screen = frame.querySelector('.screen');
       const live = frame.querySelector('.live');
@@ -1135,6 +1138,46 @@
     document.documentElement.dataset.flayout = 'apart';
     window.tune?.select({ label: 'Features: layout', value: 'apart', options: [['apart', 'Six cards, a little more room'], ['one', 'One card, ruled into six']],
       onInput: (v) => (document.documentElement.dataset.flayout = v) });
+    // Film grain over the record behind the hero: drawn by an SVG noise
+    // filter into a tile (its texture: how fine, how clumped, how hard),
+    // laid over the record at a size and an opacity, blended into it, and
+    // stepped a few times a second like film, or held still.
+    (() => {
+      const el = document.querySelector('.grain');
+      if (!el) return;
+      const d = document.documentElement;
+      const G = { texture: 'film', size: 1, amount: 0.12, contrast: 1.2, blend: 'normal', move: 'film', fade: 1 };
+      const TEX = { fine: [0.95, 1], film: [0.75, 2], soft: [0.55, 3], coarse: [0.38, 3] };
+      const tile = () => {
+        const [f, oct] = TEX[G.texture] || TEX.film;
+        const k = G.contrast;
+        // The noise as specks, not a grey wash: where it's above its middle,
+        // white specks; below, black ones; each as clear as it's far from
+        // the middle (times the contrast), so the background between them
+        // stays as dark as it was.
+        const a = 2 * k;
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='g' x='0' y='0' width='100%' height='100%'><feTurbulence type='fractalNoise' baseFrequency='${f}' numOctaves='${oct}' stitchTiles='stitch' seed='7' result='n'/><feColorMatrix in='n' type='matrix' values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 ${a} 0 0 0 ${-k}' result='l'/><feColorMatrix in='n' type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ${-a} 0 0 0 ${k}' result='d'/><feMerge><feMergeNode in='d'/><feMergeNode in='l'/></feMerge></filter><rect width='200' height='200' filter='url(%23g)'/></svg>`;
+        el.style.setProperty('--grain-img', `url("data:image/svg+xml,${svg.replace(/</g, '%3C').replace(/>/g, '%3E').replace(/"/g, "'")}")`);
+      };
+      const put = () => {
+        tile();
+        el.style.setProperty('--grain-size', `${200 * G.size}px`);
+        el.style.opacity = String(G.amount);
+        el.style.mixBlendMode = G.blend;
+        el.dataset.move = G.move;
+        el.style.setProperty('--grain-fade', String(G.fade));
+      };
+      const t = window.tune;
+      const set = (k) => (v) => { G[k] = v; put(); };
+      t?.select({ label: 'Grain: texture', value: G.texture, options: [['fine', 'Fine, like sand'], ['film', 'Film'], ['soft', 'Soft and clumped'], ['coarse', 'Coarse']], onInput: set('texture') });
+      t?.slider({ label: 'Grain: size', min: 0.3, max: 4, step: 0.05, value: G.size, onInput: set('size') });
+      t?.slider({ label: 'Grain: amount', min: 0, max: 1, step: 0.01, value: G.amount, onInput: set('amount') });
+      t?.slider({ label: 'Grain: contrast', min: 0.5, max: 4, step: 0.05, value: G.contrast, onInput: set('contrast') });
+      t?.select({ label: 'Grain: blend', value: G.blend, options: [['normal', 'Normal'], ['overlay', 'Overlay'], ['soft-light', 'Soft light'], ['screen', 'Screen (light specks only)'], ['multiply', 'Multiply (dark specks only)']], onInput: set('blend') });
+      t?.select({ label: 'Grain: movement', value: G.move, options: [['film', 'Flickers like film'], ['slow', 'Shifts slowly'], ['still', 'Still']], onInput: set('move') });
+      t?.slider({ label: 'Grain: fades out toward the features', min: 0, max: 1, step: 0.05, value: G.fade, onInput: set('fade') });
+      put();
+    })();
     // The note beside the FAQ (style.css, "The note beside the FAQ").
     document.documentElement.dataset.note = 'ruled';
     window.tune?.select({ label: 'Note: style', value: 'ruled', options: [['ruled', 'Ruled page, tilted right, signature right'], ['sleeve', 'A die-cut record sleeve, the record turning inside'], ['label', 'A white label record, the note written on it'], ['plain', 'Plain card'], ['tilt', 'Tilted a little'], ['overhang', 'Signature off the corner'], ['paper', 'On warm paper'], ['lined', 'Ruled like a notebook'], ['letter', 'Paper, tilted, signature off the corner']],

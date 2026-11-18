@@ -124,7 +124,8 @@ const TURN = (Math.PI * 2) / 40;
 const T = {
   drop: 108, needle: 0.8, life: 0.2, persp: 0.85, cue: 'dust', cueAmt: 1, res: 0.85,
   speck: 'hyphen',
-  dust: 0, away: 1, dustSize: 1, dustSoft: 0.5, dustGlow: 1, dustGlowSize: 1, dustBright: 1, dustLight: 1, dustVariety: 0.6, dustFibres: 0.5, // natural dust, on top of the rest (see uNat)
+  scrollSpin: 1, scrollPick: 6, scrollCoast: 0.8, // how much scrolling turns it, how fast it picks up, how long it coasts
+  dust: 0, away: 1, awayB: 1, dustSize: 1, dustSoft: 0.5, dustGlow: 1, dustGlowSize: 1, dustBright: 1, dustLight: 1, dustVariety: 0.6, dustFibres: 0.5, // natural dust, on top of the rest (see uNat)
   size: 1, up: 0, warp: 'none', warpAmt: 0.5, tint: 0, hover: 'arc', still: 1.2,
   look: 'vinyl', shape: 'custom', vinylPreset: 'dark',
   vinyl: '#1c1c20', finish: 'solid', body: 0, through: 0, lineTint: 0, flecks: 0,
@@ -181,6 +182,14 @@ let swell = 0;
 let want = 0;
 let lastKick = 0;
 let spin = 0;
+// Scrolling turns the record: down turns it on (clockwise, the way it
+// plays), back up turns it back. The scroll's speed sets a speed to aim
+// for (sAim, radians a second), which fades as the page stops; the turn
+// itself (sVel) picks up toward it at sPick and coasts off over sCoast.
+let sVel = 0;
+let sAim = 0;
+let sLastY = scrollY;
+let sLastT = performance.now();
 let drift = 0;
 const needle = { on: false, r: 0, born: 0 };
 // How far the glints have gone round (see T.gRide), and the lamp (when it
@@ -272,6 +281,7 @@ uniform vec2 uConeEdge;  // the cone's edges, on cos^4 of the angle
 uniform float uConeLight; // the lamp's light through the vinyl in the cone
 uniform float uSpeck;    // what the dust is (see SPECKS)
 uniform float uAway;     // colour amount away from the lamp, relative to where it faces (1: the same)
+uniform float uAwayB;    // brightness away from the lamp, the same way
 uniform vec2 uNat;       // natural dust (x, 0 to 1; on top of whatever shows the spin)
 uniform vec4 uNat2;      // dust size, softness, glow, glow size
 uniform vec4 uNat3;      // dust brightness, how much it needs the light, size variety, fibres
@@ -665,9 +675,12 @@ void main() {
     float spk = 0.5 + 0.5 * cos(7.0 * b + sin(r / 120.0) * 0.6);
     after = 1.0 + 0.28 * pow(spk, 6.0) * cueAmt;
   }
-  L *= after;
-  Lg *= after;
-  Gv *= after;
+  // Away from the lamp, the grooves and glints a share as bright as where
+  // it faces (uAwayB; 1 leaves them as the lamp has them).
+  float awayK = mix(uAwayB, 1.0, lamp);
+  L *= after * awayK;
+  Lg *= after * awayK;
+  Gv *= after * awayK;
 
   // Natural dust lying on the disc and turning with it, on top of whatever
   // shows the spin, as it really sits on a record: mostly specks too small
@@ -1022,7 +1035,7 @@ vec3 glints(float r, float a, float b, float idx, float u, float inS, float lamp
   vec3 gv = vec3(glintProf(arc * arc + du * du) * inS);
   vec3 tv;
   glintColour(arc, du, a, r, inS, gv, tv);
-  return max(HUED(uGlint * (0.25 + 0.75 * lamp) * uGlintAmt.x * gv * mix(white, tv * 0.95, uChroma.y * mix(uAway, 1.0, lamp) * step(0.5, uChroma.x))), 0.0);
+  return max(HUED(mix(uAwayB, 1.0, lamp) * uGlint * (0.25 + 0.75 * lamp) * uGlintAmt.x * gv * mix(white, tv * 0.95, uChroma.y * mix(uAway, 1.0, lamp) * step(0.5, uChroma.x))), 0.0);
 }
 
 // The pointer, the same for every style, which each draws its own way.
@@ -1514,7 +1527,7 @@ let geo = null;
 
 // One program per style, compiled the first time it's shown.
 const NAMES = ['uSize', 'uDpr', 'uCentre', 'uGeo', 'uHoles', 'uHoleCount', 'uHoleR', 'uSpan', 'uSpin', 'uFacing', 'uStyle', 'uSheen', 'uGlint', 'uHover', 'uSwell', 'uNeedle', 'uRipple', 'uTouch', 'uHz', 'uCue', 'uTracks', 'uTrackCount',
-  'uOuter', 'uGlintAmt', 'uChroma', 'uSpeck', 'uNat', 'uNat2', 'uNat3', 'uAway', 'uTint', 'uWarp', 'uLens', 'uHoverMode', 'uPtr', 'uVinyl', 'uVinylFin', 'uThru', 'uGroove',
+  'uOuter', 'uGlintAmt', 'uChroma', 'uSpeck', 'uNat', 'uNat2', 'uNat3', 'uAway', 'uAwayB', 'uTint', 'uWarp', 'uLens', 'uHoverMode', 'uPtr', 'uVinyl', 'uVinylFin', 'uThru', 'uGroove',
   'uGlintShape', 'uGlintSpread', 'uHueM', 'uTilt', 'uCone', 'uConeTint', 'uConeEdge', 'uConeLight'];
 const progs = new Map();
 let shown = '';
@@ -1677,6 +1690,19 @@ const local = (e) => {
   const c = canvas.getBoundingClientRect();
   return { x: e.clientX - c.left, y: e.clientY - c.top };
 };
+addEventListener('scroll', () => {
+  const now = performance.now();
+  const dt = Math.max(8, now - sLastT) / 1000;
+  const dy = scrollY - sLastY;
+  sLastY = scrollY;
+  sLastT = now;
+  if (!T.scrollSpin || reduced.matches) return;
+  // Pixels a second of scroll to radians a second of turn (a quick flick of
+  // 3000px/s turns it about one and a half times a second at 1).
+  const aim = (dy / dt) * 0.003 * T.scrollSpin;
+  sAim = Math.abs(aim) > Math.abs(sAim) || Math.sign(aim) !== Math.sign(sAim) ? aim : sAim;
+  wake();
+}, { passive: true });
 addEventListener('pointermove', (e) => {
   if (e.pointerType === 'touch') return;
   const p = local(e);
@@ -1728,9 +1754,13 @@ function frame(now, still) {
   const g = layout(now);
   swell += (want - swell) * Math.min(1, dt * (want > swell ? 2.5 : 1));
   want *= Math.exp(-dt * 1.4);
-  spin += TURN * T.life * dt;
+  // (The scroll's aim fades over the coast time; the turn follows it.)
+  sAim *= Math.exp(-dt / Math.max(0.05, T.scrollCoast));
+  sVel += (sAim - sVel) * Math.min(1, dt * T.scrollPick);
+  if (Math.abs(sVel) < 1e-4 && Math.abs(sAim) < 1e-4) sVel = sAim = 0;
+  spin += (TURN * T.life + sVel) * dt;
   drift += dt * T.life;
-  glintSpin = (glintSpin + TURN * T.life * T.gRide * dt) % (Math.PI * 2);
+  glintSpin = (glintSpin + (TURN * T.life + sVel) * T.gRide * dt) % (Math.PI * 2);
   if (T.lampMove === 'turn') lampTurn = (lampTurn + TURN * T.life * dt) % (Math.PI * 2);
   // Where the lamp points: drifting slowly to and fro, fixed, or turning
   // with the record.
@@ -1849,6 +1879,7 @@ function frame(now, still) {
   gl.uniform4f(U.uNat2, T.dustSize ?? 1, T.dustSoft ?? 0.5, T.dustGlow ?? 1, T.dustGlowSize ?? 1);
   gl.uniform4f(U.uNat3, T.dustBright ?? 1, T.dustLight ?? 1, T.dustVariety ?? 0.6, T.dustFibres ?? 0.5);
   gl.uniform1f(U.uAway, T.away ?? 1);
+  gl.uniform1f(U.uAwayB, T.awayB ?? 1);
   gl.uniform1f(U.uTint, T.tint);
   gl.uniform4f(U.uWarp, WARPS[T.warp] ?? 0, T.warpAmt, g.up, g.half);
   gl.uniform3f(U.uLens, ...g.lens);
@@ -1873,7 +1904,7 @@ function draw(now) {
   }
   // At rest (no pointer light, no needle) the record only turns slowly, so
   // 30 frames a second is plenty; the pointer's light gets the full 60.
-  const busy = hover.on > 0.01 || needle.on || ripple.on || fx.moving;
+  const busy = hover.on > 0.01 || needle.on || ripple.on || fx.moving || sVel !== 0;
   if (busy || now - last >= 1000 / 30 - 2) frame(now, false);
   requestAnimationFrame(draw);
 }
@@ -2206,6 +2237,9 @@ tw?.slider({ ...gl0, label: 'Hero record: colour spread', min: 0, max: 3, step: 
 tw?.slider({ ...gl0, label: 'Hero record: colour amount', min: 0, max: 3, step: 0.05, value: T.chromaAmt, show: coloured, onInput: redraw('chromaAmt') });
 // Colour away from the lamp: the glints' colour on the sides and at the foot,
 // as a share of what it is where the lamp faces (1: the same; up to 3 times).
+// Brightness away from the lamp: the same, for how bright the grooves and
+// glints are there (always shown: it's not only the glints').
+tw?.slider({ folder: 'Lamp', label: 'Hero record: brightness away from the lamp', min: 0, max: 3, step: 0.05, value: T.awayB, onInput: redraw('awayB') });
 tw?.slider({ ...gl0, label: 'Hero record: colour away from the lamp', min: 0, max: 3, step: 0.05, value: T.away, show: coloured, onInput: redraw('away') });
 tw?.slider({ ...gl0, label: 'Hero record: colour hue', min: -180, max: 180, step: 1, value: T.gHue, unit: '°', show: coloured, onInput: redraw('gHue') });
 
@@ -2237,6 +2271,12 @@ tw?.select({ ...lampF, label: 'Hero record: cones', value: T.cones, onInput: red
 tw?.slider({ ...lampF, label: 'Hero record: lamp colour (sides)', min: 0, max: 1, step: 0.05, value: T.tint, onInput: redraw('tint') });
 
 tw?.slider({ folder: 'Motion', label: 'Hero record: spin speed', min: 0, max: 3, step: 0.1, value: T.life, onInput: redraw('life') });
+// Scrolling turns it: down turns it on, up turns it back. How much (0: not
+// at all), how quickly it picks up the scroll (per second), and how long it
+// coasts on after the page stops (seconds).
+tw?.slider({ folder: 'Motion', label: 'Hero record: scroll turns it', min: 0, max: 4, step: 0.05, value: T.scrollSpin, onInput: (v) => { T.scrollSpin = v; } });
+tw?.slider({ folder: 'Motion', label: 'Hero record: scroll pick-up', min: 0.5, max: 20, step: 0.5, value: T.scrollPick, unit: '/s', onInput: (v) => { T.scrollPick = v; } });
+tw?.slider({ folder: 'Motion', label: 'Hero record: scroll coast', min: 0.1, max: 3, step: 0.05, value: T.scrollCoast, unit: 's', onInput: (v) => { T.scrollCoast = v; } });
 
 const touchF = { folder: 'Hover & needle' };
 const moves = (k) => () => MOVERS[T.hover]?.includes(k);
