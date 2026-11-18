@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261119p">
+  <link rel="stylesheet" href="style.css?v=20261119s">
   <link rel="stylesheet" href="demo/cards.css?v=20261119k">
   <script src="tune.js?v=20261118b"></script>
   <script>
@@ -1037,6 +1037,14 @@
       if (!card || !('IntersectionObserver' in window)) { card?.toggleAttribute('data-in', true); return; }
       new IntersectionObserver((es, io) => { if (es[0].isIntersecting) { card.toggleAttribute('data-in', true); io.disconnect(); } }, { threshold: 0.45 }).observe(card);
     })();
+    // The note beside the FAQ (style.css, "The note beside the FAQ").
+    document.documentElement.dataset.note = 'plain';
+    window.tune?.select({ label: 'Note: style', value: 'plain', options: [['plain', 'Plain card'], ['tilt', 'Tilted a little'], ['overhang', 'Signature off the corner'], ['paper', 'On warm paper'], ['lined', 'Ruled like a notebook'], ['letter', 'Paper, tilted, signature off the corner']],
+      onInput: (v) => (document.documentElement.dataset.note = v) });
+    // What sits between sections (style.css, "Between sections").
+    document.documentElement.dataset.between = 'none';
+    window.tune?.select({ label: 'Sections: between', value: 'none', options: [['none', 'Nothing, space only'], ['rule', 'A hairline half way'], ['grooves', 'A strip of record grooves half way'], ['band', 'Features on a lifted band'], ['glow', 'A soft light behind each heading'], ['eyebrow', 'Each heading numbered']],
+      onInput: (v) => (document.documentElement.dataset.between = v) });
     // The install and feature cards (style.css, "Cards"): as they were, or
     // quieter and of a piece with the rest of the page, or no card at all.
     document.documentElement.dataset.cards = 'quiet';
@@ -1140,6 +1148,30 @@
           const a = li.querySelector('a').cloneNode(true); a.tabIndex = -1; track.append(a);
         }
         tk.append(track); log.append(tk);
+        // It runs at a steady 40px a second; with the pointer on it, it
+        // comes to a stop on a quick critically damped spring (about a
+        // quarter second) rather than at once, and picks up again the same
+        // way. (Not at all with reduced motion: it scrolls by hand.)
+        if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          let x = 0, v = 40, acc = 0, want = 40, last = 0, half = 0, on = false;
+          const K = 180, C = 2 * Math.sqrt(K);
+          const step = (now) => {
+            const dt = Math.min(0.05, (now - last) / 1000 || 0.016); last = now;
+            // (The speed is the spring's value: it eases to `want`.)
+            acc += (-K * (v - want) - C * acc) * dt;
+            v += acc * dt;
+            x += v * dt;
+            half = half || track.scrollWidth / 2;
+            if (half && x >= half) x -= half;
+            track.style.transform = `translate3d(${-x}px, 0, 0)`;
+            if (on) requestAnimationFrame(step);
+          };
+          const io = new IntersectionObserver(([e]) => { if (e.isIntersecting && !on) { on = true; last = 0; requestAnimationFrame(step); } else if (!e.isIntersecting) on = false; });
+          io.observe(tk);
+          tk.addEventListener('pointerenter', () => (want = 0));
+          tk.addEventListener('pointerleave', () => (want = 40));
+          addEventListener('resize', () => (half = 0));
+        }
       })
       .catch(() => {});
     // The latest release, kept like the updates above (15 minutes, and the
