@@ -10,6 +10,7 @@
   import Sampler from './Sampler.svelte';
   import { pushEdit, showToast } from './undo.svelte.js';
   import { keyName, keyLongName, camelot } from './key.js';
+  import { onAir, passes, filtering, describe, FIT_TEMPO } from './libraryfilter.js';
 
   /** `onimport` opens the import window; `onempty` is called when the whole library loads with no tracks.
    * @type {{ onload: (deck: number, track: import('./backend.js').LibraryTrack, opts?: { force?: boolean }) => void, onsettings?: () => void, onmessage?: (text: string) => void, onimport?: () => void, onempty?: () => void }} */
@@ -44,19 +45,81 @@
   let scrollTop = $state(0);
   let viewHeight = $state(400);
 
-  /** Every word must appear in the artist, title, album, genre or folder. */
+  // Filters: a BPM range and keys (from the Filter button), and Fits, which
+  // keeps the tracks that mix with the deck on air.
+  /** @type {import('./libraryfilter.js').Filter} */
+  let filter = $state({ bpmMin: null, bpmMax: null, keys: [] });
+  let fits = $state(false);
+  let filterOpen = $state(false);
+  const filtered = $derived(filtering(filter));
+  /** The deck on air, as a string so the list only re-filters when its tempo or key really changes. */
+  const airText = $derived.by(() => {
+    const a = onAir(engine.decks, engine.mixer);
+    return a ? JSON.stringify({ deck: a.deck, bpm: Math.round(a.bpm * 10) / 10, key: a.key && { tonic: a.key.tonic, minor: a.key.minor } }) : '';
+  });
+  const air = $derived(airText ? JSON.parse(airText) : null);
+  const airPath = $derived(air ? tracks[air.deck]?.path : null);
+  const airLabel = $derived(air ? `${'AB'[air.deck]} · ${air.key ? `${camelot(air.key)} ` : ''}${Math.round(air.bpm)}` : '');
+  const fitsTip = () =>
+    !air
+      ? 'Fits: load a track to see what mixes with it'
+      : `${fits ? 'Showing' : 'Show'} tracks that mix with deck ${'AB'[air.deck]}: within ${Math.round(FIT_TEMPO * 100)}% of ${air.bpm.toFixed(1)} BPM${air.key ? `, in ${camelot(air.key)} or a key next to it on the Camelot wheel` : ''}${fits ? '. Click to show everything' : ''}`;
+
+  /** Every word must appear in the artist, title, album, genre or folder, and the track must pass the filters. */
   const results = $derived.by(() => {
     const words = query.toLowerCase().split(/\s+/).filter(Boolean);
-    if (!words.length) return all;
+    const fit = fits ? air : null;
+    if (!words.length && !filtered && !fit) return all;
     return all.filter((t) => {
+      if ((filtered || fit) && !passes(t, filter, fit)) return false;
+      if (fit && t.path === airPath) return false;
+      if (!words.length) return true;
       const hay = `${t.artist} ${t.title} ${t.album ?? ''} ${t.genre ?? ''} ${t.folder}`.toLowerCase();
       return words.every((w) => hay.includes(w));
     });
   });
+  function setFilter(f) {
+    filter = f;
+    selectIndex(0);
+    if (scroller) scroller.scrollTop = 0;
+  }
+  const clearFilter = () => setFilter({ bpmMin: null, bpmMax: null, keys: [] });
+  /** A typed BPM, or null when the box is empty or not a number. */
+  const bpmInput = (v) => {
+    const n = parseFloat(v);
+    return Number.isFinite(n) && n > 0 ? n : null;
+  };
+  const toggleKey = (c) =>
+    setFilter({ ...filter, keys: filter.keys.includes(c) ? filter.keys.filter((k) => k !== c) : [...filter.keys, c] });
+  /** The Camelot wheel as two rows: minor keys (A) over major (B). */
+  const WHEEL = ['A', 'B'].map((l) => Array.from({ length: 12 }, (_, i) => `${i + 1}${l}`));
+  function toggleFits() {
+    fits = !fits;
+    selectIndex(0);
+    if (scroller) scroller.scrollTop = 0;
+  }
+  let filterBox = $state();
+  /** Closes the filter panel on a click outside it or Escape. */
+  $effect(() => {
+    if (!filterOpen) return;
+    const down = (e) => !filterBox?.contains(e.target) && (filterOpen = false);
+    const key = (e) => {
+      if (e.key !== 'Escape') return;
+      e.stopPropagation();
+      filterOpen = false;
+      filterBox?.querySelector('button')?.focus();
+    };
+    window.addEventListener('pointerdown', down, true);
+    window.addEventListener('keydown', key, true);
+    return () => {
+      window.removeEventListener('pointerdown', down, true);
+      window.removeEventListener('keydown', key, true);
+    };
+  });
 
   // Sorting: by a column, either way. Null keeps the scan's artist, title
   // order. Tracks still being analyzed sort after the rest, whichever way.
-  /** @type {{ by: 'title' | 'artist' | 'bpm' | 'key' | 'time' | 'folder' | null, dir: 1 | -1 }} */
+  /** @type {{ by: 'title' | 'artist' | 'album' | 'genre' | 'bpm' | 'key' | 'time' | 'folder' | null, dir: 1 | -1 }} */
   let sort = $state({ by: null, dir: 1 });
   const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
   // Camelot order puts harmonically close keys next to each other.
@@ -68,6 +131,8 @@
   const SORT_VALUE = {
     title: (t) => t.title,
     artist: (t) => t.artist || null,
+    album: (t) => t.album || null,
+    genre: (t) => t.genre || null,
     folder: (t) => t.folder,
     bpm: (t) => t.analysis?.bpm ?? null,
     key: (t) => keyRank(t.analysis?.key),
@@ -89,15 +154,43 @@
   function sortBy(by) {
     sort = { by, dir: sort.by === by && sort.dir > 0 ? -1 : 1 };
   }
-  /** @type {{ by: typeof sort.by, label: string, num?: boolean }[]} */
+  /** Every column, in order. Title always shows; right-click the headings to pick the rest.
+   * @type {{ by: typeof sort.by, label: string, num?: boolean, width: string }[]} */
   const COLUMNS = [
-    { by: 'title', label: 'Title' },
-    { by: 'artist', label: 'Artist' },
-    { by: 'bpm', label: 'BPM', num: true },
-    { by: 'key', label: 'Key' },
-    { by: 'time', label: 'Time', num: true },
-    { by: 'folder', label: 'Folder' },
+    { by: 'title', label: 'Title', width: 'minmax(0, 2.4fr)' },
+    { by: 'artist', label: 'Artist', width: 'minmax(0, 1.6fr)' },
+    { by: 'album', label: 'Album', width: 'minmax(0, 1.4fr)' },
+    { by: 'genre', label: 'Genre', width: 'minmax(0, 1fr)' },
+    { by: 'bpm', label: 'BPM', num: true, width: '64px' },
+    { by: 'key', label: 'Key', width: '56px' },
+    { by: 'time', label: 'Time', num: true, width: '64px' },
+    { by: 'folder', label: 'Folder', width: 'minmax(0, 1.2fr)' },
   ];
+  const HIDDEN_KEY = 'oss-dj.libraryHiddenColumns';
+  const DEFAULT_HIDDEN = ['album', 'genre'];
+  let hidden = $state(
+    (() => {
+      try {
+        const v = JSON.parse(localStorage.getItem(HIDDEN_KEY) ?? 'null');
+        return Array.isArray(v) ? v : DEFAULT_HIDDEN;
+      } catch {
+        return DEFAULT_HIDDEN;
+      }
+    })(),
+  );
+  const columns = $derived(COLUMNS.filter((c) => c.by === 'title' || !hidden.includes(c.by)));
+  const gridColumns = $derived(`26px ${columns.map((c) => c.width).join(' ')}`);
+  function toggleColumn(by) {
+    hidden = hidden.includes(by) ? hidden.filter((h) => h !== by) : [...hidden, by];
+    if (hidden.includes(by) && sort.by === by) sort = { by: null, dir: 1 };
+    try {
+      localStorage.setItem(HIDDEN_KEY, JSON.stringify(hidden));
+    } catch {}
+  }
+  const headMenu = (e) =>
+    openMenu(e, [
+      ...COLUMNS.filter((c) => c.by !== 'title').map((c) => ({ label: c.label, checked: !hidden.includes(c.by), action: () => toggleColumn(c.by) })),
+    ]);
 
   const selected = $derived.by(() => {
     const i = sorted.findIndex((t) => t.path === selPath);
@@ -537,7 +630,7 @@
     {/if}
   </nav>
 
-  <div class="main">
+  <div class="main" style:--cols={gridColumns}>
     <div class="bar">
       <label class="search">
         <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="4.5" /><path d="M10.5 10.5 14 14" /></svg>
@@ -549,6 +642,44 @@
           </button>
         {:else}<kbd>{MOD}F</kbd>{/if}
       </label>
+      <button class="btn sm chip" class:on={fits} aria-pressed={fits} disabled={!air && !fits} onclick={toggleFits} use:tip={fitsTip}>
+        Fits{#if fits && air}<span class="chip-val num">{airLabel}</span>{/if}
+      </button>
+      <div class="filter" bind:this={filterBox}>
+        <button class="btn sm chip" class:on={filtered} aria-expanded={filterOpen} aria-haspopup="dialog"
+          onclick={() => (filterOpen = !filterOpen)} use:tip={() => (filterOpen ? '' : 'Filter by BPM and key')}>
+          <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M1.5 3h9M3 6h6M4.75 9h2.5" /></svg>{filtered ? describe(filter) : 'Filter'}
+        </button>
+        {#if filtered}
+          <button class="clear" aria-label="Clear the filter" onclick={clearFilter} use:tip={() => 'Clear the filter'}>
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 5l6 6M11 5l-6 6" /></svg>
+          </button>
+        {/if}
+        {#if filterOpen}
+          <div class="panel" role="dialog" aria-label="Filter by BPM and key">
+            <div class="ph">BPM</div>
+            <div class="bpm">
+              <input class="num" type="number" min="1" step="1" placeholder="From" aria-label="Lowest BPM" value={filter.bpmMin ?? ''}
+                oninput={(e) => setFilter({ ...filter, bpmMin: bpmInput(e.currentTarget.value) })} />
+              <span>to</span>
+              <input class="num" type="number" min="1" step="1" placeholder="To" aria-label="Highest BPM" value={filter.bpmMax ?? ''}
+                oninput={(e) => setFilter({ ...filter, bpmMax: bpmInput(e.currentTarget.value) })} />
+            </div>
+            <div class="ph">Key</div>
+            <div class="wheel" role="group" aria-label="Keys, on the Camelot wheel">
+              {#each WHEEL as row}
+                {#each row as c}
+                  <button class="kc num" class:on={filter.keys.includes(c)} aria-pressed={filter.keys.includes(c)} onclick={() => toggleKey(c)}>{c}</button>
+                {/each}
+              {/each}
+            </div>
+            <div class="pf">
+              <span>A minor keys, B major</span>
+              <button class="btn sm ghost" disabled={!filtered} onclick={clearFilter}>Clear</button>
+            </div>
+          </div>
+        {/if}
+      </div>
       <span class="count num">{loading ? 'Scanning…' : `${results.length.toLocaleString()} tracks`}{#if !loading && pending}<span
           class="pending" use:tip={() => 'Finding each track’s length, BPM and key in the background'}> · analyzing, {pending.toLocaleString()} to go</span>{/if}</span>
       <button class="btn sm samp" class:on={sampler.open} aria-pressed={sampler.open}
@@ -567,9 +698,10 @@
 
     {#if sampler.open}<Sampler {onmessage} selected={() => selectedTrack()} />{/if}
 
-    <div class="row head" role="group" aria-label="Sort tracks">
+    <div class="row head" role="group" aria-label="Sort tracks" oncontextmenu={headMenu}
+      use:tip={() => 'Click a heading to sort, again to reverse. Right-click to choose the columns'}>
       <span></span>
-      {#each COLUMNS as c}
+      {#each columns as c}
         {@const on = sort.by === c.by}
         <button class="sort" class:on class:num={c.num} aria-pressed={on}
           aria-label="Sort by {c.label.toLowerCase()}{on ? (sort.dir > 0 ? ', ascending' : ', descending') : ''}"
@@ -592,7 +724,15 @@
           {#if onimport && view.kind === 'all'}<p class="hint">Importing brings your cue points, loops, beatgrids and playlists too.</p>{/if}
         </div>
       {:else if !loading && !results.length}
-        <div class="empty">Nothing matches “{query}”.</div>
+        <div class="empty">
+          <p>{query ? `Nothing matches “${query}”` : 'No tracks'}{fits ? ` that mix with deck ${air ? 'AB'[air.deck] : ''}` : ''}{filtered ? ` in ${describe(filter)}` : ''}.</p>
+          {#if fits || filtered}
+            <div class="empty-actions">
+              {#if fits}<button class="btn sm" onclick={toggleFits}>Show everything</button>{/if}
+              {#if filtered}<button class="btn sm" onclick={clearFilter}>Clear the filter</button>{/if}
+            </div>
+          {/if}
+        </div>
       {/if}
       <div style:height="{sorted.length * ROW}px" style:position="relative">
         {#each visible as t, i (t.key ?? t.path)}
@@ -609,12 +749,19 @@
             onclick={() => { selectIndex(index); scroller.focus({ preventScroll: true }); }} ondblclick={() => autoLoad(t)} onkeydown={() => {}}
             oncontextmenu={(e) => rowMenu(e, t, index)}>
             <span class="ld">{#each decks as d}<b class:b={d === 1} aria-hidden="true"></b>{/each}</span>
-            <span class="t">{#if t.missing}<span class="k" use:tip={() => `File not found: ${t.path}`}>{t.title}</span><span class="sr">, file not found</span>{:else}{t.title}{/if}</span>
-            <span>{t.artist}</span>
-            <span class="n num" class:none={a && !a.bpm}>{a ? bpmText(a) || NONE : ''}</span>
-            <span class:none={a && !a.key}>{#if a?.key}<span class="k" use:tip={() => `${keyLongName(a.key)} (${camelot(a.key)})`}>{keyName(a.key)}</span>{:else if a}{NONE}{/if}</span>
-            <span class="n num" class:none={a?.failed}>{a ? timeText(a) || NONE : ''}</span>
-            <span>{t.folder}</span>
+            {#each columns as c (c.by)}
+              {#if c.by === 'title'}
+                <span class="t">{#if t.missing}<span class="k" use:tip={() => `File not found: ${t.path}`}>{t.title}</span><span class="sr">, file not found</span>{:else}{t.title}{/if}</span>
+              {:else if c.by === 'bpm'}
+                <span class="n num" class:none={a && !a.bpm}>{a ? bpmText(a) || NONE : ''}</span>
+              {:else if c.by === 'key'}
+                <span class:none={a && !a.key}>{#if a?.key}<span class="k" use:tip={() => `${keyLongName(a.key)} (${camelot(a.key)})`}>{keyName(a.key)}</span>{:else if a}{NONE}{/if}</span>
+              {:else if c.by === 'time'}
+                <span class="n num" class:none={a?.failed}>{a ? timeText(a) || NONE : ''}</span>
+              {:else}
+                <span>{t[c.by] ?? ''}</span>
+              {/if}
+            {/each}
             {#if decks.length}<span class="sr">, on deck {decks.map((d) => 'AB'[d]).join(' and ')}</span>{/if}
           </div>
         {/each}
@@ -801,6 +948,116 @@
     clip-path: inset(50%);
     white-space: nowrap;
   }
+  .chip {
+    min-width: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 10px;
+    white-space: nowrap;
+  }
+  .chip.on {
+    color: var(--fg);
+    background: var(--sel);
+  }
+  .chip svg {
+    width: 11px;
+    height: 11px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.3;
+    stroke-linecap: round;
+  }
+  .chip-val {
+    color: var(--fg-2);
+  }
+  .filter {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
+  .filter > .clear {
+    margin: 0;
+  }
+  /* The filter panel: under its button, above the track list. */
+  .panel {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    z-index: 20;
+    width: 300px;
+    padding: 10px;
+    border-radius: 8px;
+    background: var(--popover);
+    box-shadow: inset 0 0 0 1px var(--line-2), 0 12px 32px rgb(0 0 0 / 0.45);
+  }
+  .ph {
+    margin: 0 0 6px;
+    font-size: var(--t-xs);
+    color: var(--fg-3);
+  }
+  .bpm {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    color: var(--fg-3);
+    font-size: var(--t-xs);
+  }
+  .bpm input {
+    flex: 1;
+    min-width: 0;
+    height: var(--h-md);
+    box-sizing: border-box;
+    padding: 0 8px;
+    border: 0;
+    border-radius: var(--r);
+    background: var(--well);
+    box-shadow: var(--well-shadow);
+    color: var(--fg);
+    font: inherit;
+    font-size: var(--t-sm);
+  }
+  .bpm input:focus-visible {
+    outline: none;
+    box-shadow: var(--well-shadow), inset 0 0 0 1px var(--fg-3);
+  }
+  .wheel {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 4px;
+  }
+  .kc {
+    height: 24px;
+    padding: 0;
+    border: 0;
+    border-radius: 5px;
+    background: var(--raise);
+    color: var(--fg-2);
+    font: inherit;
+    font-size: var(--t-xs);
+    transition: background-color 140ms ease, color 140ms ease;
+  }
+  .kc:hover {
+    color: var(--fg);
+  }
+  .kc.on {
+    background: var(--sel);
+    color: var(--fg);
+    box-shadow: inset 0 0 0 1px var(--line-2);
+  }
+  .kc:focus-visible {
+    outline: 1px solid var(--fg-3);
+  }
+  .pf {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 10px;
+    font-size: var(--t-xs);
+    color: var(--fg-3);
+  }
   .count {
     font-size: var(--t-xs);
     color: var(--fg-3);
@@ -838,7 +1095,7 @@
   }
   .row {
     display: grid;
-    grid-template-columns: 26px minmax(0, 2.4fr) minmax(0, 1.6fr) 64px 56px 64px minmax(0, 1.2fr);
+    grid-template-columns: var(--cols);
     align-items: center;
     height: 28px;
     color: var(--fg-2);
