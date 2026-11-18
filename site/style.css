@@ -1071,37 +1071,37 @@ html[data-hero][data-herotext="card"][data-cardblock="sentence"] .dl-cap2 { disp
 /* Open source looks (Tune, Open source: look). All keep the words,
    the buttons and the latest changes; they differ in surface and layout. Shared: the updates sit straight on the card, no inner surface,
    and a change's area ("Mappings:") is quieter than the change itself. */
-.oss:is([data-look="tight"], [data-look="doors"], [data-look="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .oss-log { padding: 0; }
-.oss:is([data-look="tight"], [data-look="doors"], [data-look="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .oss-log::before { content: none; }
-.oss:is([data-look="tight"], [data-look="doors"], [data-look="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .oss-log h4 { margin: 0; padding: 0 0 10px; border-image: none; border-bottom: 1px solid var(--oss-rule); font-size: 12.5px; line-height: 16px; color: var(--oss-dim); }
-.oss:is([data-look="tight"], [data-look="doors"], [data-look="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .oss-commits li + li { border-image: none; border-top: 1px solid var(--oss-rule2); }
-.oss:is([data-look="tight"], [data-look="doors"], [data-look="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .oss-commits a { padding: 9px 0; font-size: 14px; color: var(--oss-ink); transition: color 150ms ease; }
-.oss:is([data-look="tight"], [data-look="doors"], [data-look="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .oss-commits a:hover .oss-msg { color: var(--oss-strong); text-decoration: none; }
-.oss:is([data-look="tight"], [data-look="doors"], [data-look="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .oss-area { color: var(--oss-dim); transition: color 150ms ease; }
-.oss:is([data-look="tight"], [data-look="doors"], [data-look="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .oss-commits time { font-size: 12.5px; color: var(--oss-dim); }
-.oss:is([data-look="tight"], [data-look="doors"], [data-look="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .oss-empty a { color: var(--oss-ink); }
+.oss:is([data-look="tight"], [data-look^="doors"], [data-look^="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .oss-log { padding: 0; }
+.oss:is([data-look="tight"], [data-look^="doors"], [data-look^="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .oss-log::before { content: none; }
+.oss:is([data-look="tight"], [data-look^="doors"], [data-look^="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .oss-log h4 { margin: 0; padding: 0 0 10px; border-image: none; border-bottom: 1px solid var(--oss-rule); font-size: 12.5px; line-height: 16px; color: var(--oss-dim); }
+.oss:is([data-look="tight"], [data-look^="doors"], [data-look^="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .oss-commits li + li { border-image: none; border-top: 1px solid var(--oss-rule2); }
+.oss:is([data-look="tight"], [data-look^="doors"], [data-look^="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .oss-commits a { padding: 9px 0; font-size: 14px; color: var(--oss-ink); transition: color 150ms ease; }
+.oss:is([data-look="tight"], [data-look^="doors"], [data-look^="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .oss-commits a:hover .oss-msg { color: var(--oss-strong); text-decoration: none; }
+.oss:is([data-look="tight"], [data-look^="doors"], [data-look^="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .oss-area { color: var(--oss-dim); transition: color 150ms ease; }
+.oss:is([data-look="tight"], [data-look^="doors"], [data-look^="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .oss-commits time { font-size: 12.5px; color: var(--oss-dim); }
+.oss:is([data-look="tight"], [data-look^="doors"], [data-look^="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .oss-empty a { color: var(--oss-ink); }
 /* Light surfaces' inks. */
-.oss:is([data-look="tight"], [data-look="doors"], [data-look="feed"], [data-look="gitlog"]) {
+.oss:is([data-look="tight"], [data-look^="doors"], [data-look="feed"], [data-look="gitlog"]) {
   --oss-ink: rgb(11 11 13 / 0.8); --oss-strong: #0b0b0d; --oss-dim: rgb(11 11 13 / 0.46); --oss-rule: rgb(11 11 13 / 0.1); --oss-rule2: rgb(11 11 13 / 0.07);
   background: #f6f5f1; color: #0b0b0d; -webkit-backdrop-filter: none; backdrop-filter: none;
   box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.7), 0 1px 2px rgb(0 0 0 / 0.2), 0 24px 60px -12px rgb(0 0 0 / 0.45);
 }
 /* Dark ones. */
-.oss:is([data-look="poster"], [data-look="cards"]) {
+.oss:is([data-look^="poster"], [data-look="cards"]) {
   --oss-ink: rgb(236 234 228 / 0.78); --oss-strong: var(--fg); --oss-dim: rgb(236 234 228 / 0.42); --oss-rule: rgb(255 255 255 / 0.09); --oss-rule2: rgb(255 255 255 / 0.06);
   color: var(--fg); -webkit-backdrop-filter: none; backdrop-filter: none;
 }
-.oss:is([data-look="poster"], [data-look="cards"]) p { color: var(--fg-2); }
-.oss:is([data-look="poster"], [data-look="cards"]) .btn { background: var(--fg); color: #0b0b0d; }
-.oss:is([data-look="poster"], [data-look="cards"]) .btn:hover { background: #fff; }
-.oss:is([data-look="poster"], [data-look="cards"]) .btn.ghost { background: transparent; color: var(--fg); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.16); }
-.oss:is([data-look="poster"], [data-look="cards"]) .btn.ghost:hover { background: rgb(255 255 255 / 0.06); }
+.oss:is([data-look^="poster"], [data-look="cards"]) p { color: var(--fg-2); }
+.oss:is([data-look^="poster"], [data-look="cards"]) .btn { background: var(--fg); color: #0b0b0d; }
+.oss:is([data-look^="poster"], [data-look="cards"]) .btn:hover { background: #fff; }
+.oss:is([data-look^="poster"], [data-look="cards"]) .btn.ghost { background: transparent; color: var(--fg); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.16); }
+.oss:is([data-look^="poster"], [data-look="cards"]) .btn.ghost:hover { background: rgb(255 255 255 / 0.06); }
 /* The buttons, one size smaller than the hero's, the second a ring only. */
-.oss:is([data-look="tight"], [data-look="doors"], [data-look="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .btn { height: 38px; padding: 0 15px; border-radius: 10px; font-size: 14.5px; }
-.oss:is([data-look="tight"], [data-look="doors"], [data-look="feed"], [data-look="gitlog"]) .btn.ghost { background: transparent; box-shadow: inset 0 0 0 1px rgb(11 11 13 / 0.16); }
-.oss:is([data-look="tight"], [data-look="doors"], [data-look="feed"], [data-look="gitlog"]) .btn.ghost:hover { background: rgb(11 11 13 / 0.05); }
-.oss:is([data-look="tight"], [data-look="doors"], [data-look="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) h3 { font-size: 28px; letter-spacing: -0.028em; margin: 0 0 10px; }
-.oss:is([data-look="tight"], [data-look="doors"], [data-look="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) p { font-size: 15px; max-width: 25em; margin: 0 0 22px; }
+.oss:is([data-look="tight"], [data-look^="doors"], [data-look^="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .btn { height: 38px; padding: 0 15px; border-radius: 10px; font-size: 14.5px; }
+.oss:is([data-look="tight"], [data-look^="doors"], [data-look="feed"], [data-look="gitlog"]) .btn.ghost { background: transparent; box-shadow: inset 0 0 0 1px rgb(11 11 13 / 0.16); }
+.oss:is([data-look="tight"], [data-look^="doors"], [data-look="feed"], [data-look="gitlog"]) .btn.ghost:hover { background: rgb(11 11 13 / 0.05); }
+.oss:is([data-look="tight"], [data-look^="doors"], [data-look^="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) h3 { font-size: 28px; letter-spacing: -0.028em; margin: 0 0 10px; }
+.oss:is([data-look="tight"], [data-look^="doors"], [data-look^="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) p { font-size: 15px; max-width: 25em; margin: 0 0 22px; }
 
 /* 1. Tight: the current one, edited. The heading's top lines up with the
    updates' header and the buttons' foot with the last change, so both
@@ -1138,40 +1138,40 @@ html[data-nav="morph"][data-navacts="island"] .nav[data-acts-in] .nav-actions .b
 /* Two doors: the heading's two halves are the card's two ways in. A dark
    door for an idea, a light one for building it, with the changes behind
    it: what building it looks like. */
-.oss[data-look="doors"] {
+.oss[data-look^="doors"] {
   grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.5fr); grid-template-rows: auto auto 1fr auto; gap: 0 12px; align-items: start;
   padding: 10px; border-radius: 22px; background: #e7e5df;
 }
-.oss[data-look="doors"] :is(.oss-text, h3, .oss-links) { display: contents; }
-.oss[data-look="doors"]::before, .oss[data-look="doors"]::after { content: ''; grid-row: 1 / -1; border-radius: 14px; z-index: 0; align-self: stretch; }
-.oss[data-look="doors"]::before { grid-column: 1; background: #0e0e10; }
-.oss[data-look="doors"]::after { grid-column: 2; background: #f8f7f3; box-shadow: 0 1px 2px rgb(0 0 0 / 0.06); }
-.oss[data-look="doors"] > *, .oss[data-look="doors"] .oss-text > *, .oss[data-look="doors"] h3 > *, .oss[data-look="doors"] .oss-links > * { position: relative; z-index: 1; }
-.oss[data-look="doors"] :is(.oss-h1, .oss-h2) { display: block; grid-row: 1; padding: 26px 28px 0; font-size: 26px; font-weight: 600; letter-spacing: -0.026em; line-height: 1.1; }
-.oss[data-look="doors"] .oss-h1 { grid-column: 1; color: var(--fg); }
-.oss[data-look="doors"] .oss-h2 { grid-column: 2; }
-.oss[data-look="doors"] .oss-h2::first-letter { text-transform: uppercase; }
-.oss[data-look="doors"] p { grid-column: 1; grid-row: 2; margin: 10px 0 0; padding: 0 28px; max-width: none; color: rgb(236 234 228 / 0.66); }
-.oss[data-look="doors"] .oss-log { grid-column: 2; grid-row: 2 / span 2; padding: 18px 28px 0; }
-.oss[data-look="doors"] .oss-links > .btn { grid-row: 4; justify-self: start; margin: 20px 28px 26px; }
-.oss[data-look="doors"] .oss-links > .btn:not(.ghost) { grid-column: 1; background: var(--fg); color: #0b0b0d; }
-.oss[data-look="doors"] .oss-links > .btn:not(.ghost):hover { background: #fff; }
-.oss[data-look="doors"] .oss-links > .btn.ghost { grid-column: 2; }
+.oss[data-look^="doors"] :is(.oss-text, h3, .oss-links) { display: contents; }
+.oss[data-look^="doors"]::before, .oss[data-look^="doors"]::after { content: ''; grid-row: 1 / -1; border-radius: 14px; z-index: 0; align-self: stretch; }
+.oss[data-look^="doors"]::before { grid-column: 1; background: #0e0e10; }
+.oss[data-look^="doors"]::after { grid-column: 2; background: #f8f7f3; box-shadow: 0 1px 2px rgb(0 0 0 / 0.06); }
+.oss[data-look^="doors"] > *, .oss[data-look^="doors"] .oss-text > *, .oss[data-look^="doors"] h3 > *, .oss[data-look^="doors"] .oss-links > * { position: relative; z-index: 1; }
+.oss[data-look^="doors"] :is(.oss-h1, .oss-h2) { display: block; grid-row: 1; padding: 26px 28px 0; font-size: 26px; font-weight: 600; letter-spacing: -0.026em; line-height: 1.1; }
+.oss[data-look^="doors"] .oss-h1 { grid-column: 1; color: var(--fg); }
+.oss[data-look^="doors"] .oss-h2 { grid-column: 2; }
+.oss[data-look^="doors"] .oss-h2::first-letter { text-transform: uppercase; }
+.oss[data-look^="doors"] p { grid-column: 1; grid-row: 2; margin: 10px 0 0; padding: 0 28px; max-width: none; color: rgb(236 234 228 / 0.66); }
+.oss[data-look^="doors"] .oss-log { grid-column: 2; grid-row: 2 / span 2; padding: 18px 28px 0; }
+.oss[data-look^="doors"] .oss-links > .btn { grid-row: 4; justify-self: start; margin: 20px 28px 26px; }
+.oss[data-look^="doors"] .oss-links > .btn:not(.ghost) { grid-column: 1; background: var(--fg); color: #0b0b0d; }
+.oss[data-look^="doors"] .oss-links > .btn:not(.ghost):hover { background: #fff; }
+.oss[data-look^="doors"] .oss-links > .btn.ghost { grid-column: 2; }
 
 /* Poster: no card. The heading as big as the page allows, on two lines,
    the line about it and the buttons beside its foot, and the changes
    running past underneath in one quiet line (stops while you're on it). */
-.oss[data-look="poster"] { grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); column-gap: 56px; row-gap: 40px; align-items: end; padding: 0; background: none; box-shadow: none; border-radius: 0; }
-.oss[data-look="poster"] .oss-text { display: contents; }
-.oss[data-look="poster"] h3 { grid-column: 1; font-size: clamp(44px, 5.4vw, 76px); letter-spacing: -0.045em; line-height: 0.98; margin: 0; }
-.oss[data-look="poster"] :is(.oss-h1, .oss-h2) { display: block; }
-.oss[data-look="poster"] .oss-h2 { color: rgb(236 234 228 / 0.45); }
-.oss[data-look="poster"] p { grid-column: 2; grid-row: 1; align-self: end; margin: 0 0 64px; }
-.oss[data-look="poster"] .oss-links { grid-column: 2; grid-row: 1; align-self: end; }
-.oss[data-look="poster"] .oss-log { grid-column: 1 / -1; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; column-gap: 24px; padding: 14px 0; border-top: 1px solid rgb(255 255 255 / 0.1); border-bottom: 1px solid rgb(255 255 255 / 0.1); }
-.oss[data-look="poster"] .oss-log h4 { border: 0; padding: 0; }
-.oss[data-look="poster"] .oss-commits { display: none; }
-.oss[data-look="poster"] .oss-ticker { display: block; overflow: hidden; -webkit-mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent); mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent); }
+.oss[data-look^="poster"] { grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); column-gap: 56px; row-gap: 40px; align-items: end; padding: 0; background: none; box-shadow: none; border-radius: 0; }
+.oss[data-look^="poster"] .oss-text { display: contents; }
+.oss[data-look^="poster"] h3 { grid-column: 1; font-size: clamp(44px, 5.4vw, 76px); letter-spacing: -0.045em; line-height: 0.98; margin: 0; }
+.oss[data-look^="poster"] :is(.oss-h1, .oss-h2) { display: block; }
+.oss[data-look^="poster"] .oss-h2 { color: rgb(236 234 228 / 0.45); }
+.oss[data-look^="poster"] p { grid-column: 2; grid-row: 1; align-self: end; margin: 0 0 64px; }
+.oss[data-look^="poster"] .oss-links { grid-column: 2; grid-row: 1; align-self: end; }
+.oss[data-look^="poster"] .oss-log { grid-column: 1 / -1; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; column-gap: 24px; padding: 14px 0; border-top: 1px solid rgb(255 255 255 / 0.1); border-bottom: 1px solid rgb(255 255 255 / 0.1); }
+.oss[data-look^="poster"] .oss-log h4 { border: 0; padding: 0; }
+.oss[data-look^="poster"] .oss-commits { display: none; }
+.oss[data-look^="poster"] .oss-ticker { display: block; overflow: hidden; -webkit-mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent); mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent); }
 .oss-track { display: flex; width: max-content; animation: oss-run 60s linear infinite; }
 .oss-ticker:hover .oss-track { animation-play-state: paused; }
 @keyframes oss-run { to { transform: translateX(-50%); } }
@@ -1233,12 +1233,64 @@ html[data-nav="morph"][data-navacts="island"] .nav[data-acts-in] .nav-actions .b
   .oss[data-look="tight"] { grid-template-columns: 1fr; gap: 28px; }
   .oss[data-look="tight"] .oss-text { padding-right: 0; }
   .oss[data-look="tight"] .oss-log { padding-left: 0; border-left: 0; }
-  .oss:is([data-look="poster"], [data-look="feed"], [data-look="gitlog"]) { grid-template-columns: 1fr; gap: 28px; }
-  .oss[data-look="poster"] :is(p, .oss-links) { grid-column: 1; grid-row: auto; margin: 0; }
-  .oss[data-look="doors"] { grid-template-columns: 1fr; grid-template-rows: none; }
-  .oss[data-look="doors"]::before, .oss[data-look="doors"]::after { content: none; }
-  .oss[data-look="doors"] :is(.oss-h1, .oss-h2, p, .oss-log, .oss-links > .btn) { grid-column: 1; grid-row: auto; }
+  .oss:is([data-look^="poster"], [data-look="feed"], [data-look="gitlog"]) { grid-template-columns: 1fr; gap: 28px; }
+  .oss[data-look^="poster"] :is(p, .oss-links) { grid-column: 1; grid-row: auto; margin: 0; }
+  .oss[data-look^="doors"] { grid-template-columns: 1fr; grid-template-rows: none; }
+  .oss[data-look^="doors"]::before, .oss[data-look^="doors"]::after { content: none; }
+  .oss[data-look^="doors"] :is(.oss-h1, .oss-h2, p, .oss-log, .oss-links > .btn) { grid-column: 1; grid-row: auto; }
   .oss[data-look="cards"] .oss-commits { grid-template-columns: 1fr; }
   .oss[data-look="gitlog"] { padding: 12px; }
   .oss[data-look="gitlog"] .oss-text { padding: 16px 16px 0; }
 }
+
+/* Two doors, three ways (Open source: look). doors: the two inside one
+   light frame. doors-apart: two cards of their own, a dark one and a light
+   one, no frame. doors-dark: two dark cards, the same surface as the note
+   beside the FAQ, so the end of the page is all one material. */
+.oss[data-look^="doors"] :is(.oss-h1, .oss-h2) { font-size: 28px; padding-top: 30px; }
+.oss[data-look^="doors"] .oss-links > .btn { margin-bottom: 28px; }
+.oss[data-look="doors-apart"], .oss[data-look="doors-dark"] { padding: 0; gap: 0 14px; background: none; box-shadow: none; border-radius: 0; }
+.oss[data-look="doors-apart"]::before, .oss[data-look="doors-dark"]::before { border-radius: 18px; background: var(--panel); box-shadow: inset 0 0 0 1px var(--line); }
+.oss[data-look="doors-apart"]::after { border-radius: 18px; box-shadow: 0 1px 2px rgb(0 0 0 / 0.2), 0 24px 60px -12px rgb(0 0 0 / 0.45); }
+.oss[data-look="doors-dark"]::after { border-radius: 18px; background: var(--panel); box-shadow: inset 0 0 0 1px var(--line); }
+.oss[data-look="doors-dark"] {
+  --oss-ink: rgb(236 234 228 / 0.78); --oss-strong: var(--fg); --oss-dim: rgb(236 234 228 / 0.42); --oss-rule: rgb(255 255 255 / 0.09); --oss-rule2: rgb(255 255 255 / 0.06);
+  color: var(--fg);
+}
+.oss[data-look="doors-dark"] .oss-links > .btn.ghost { color: var(--fg); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.16); }
+.oss[data-look="doors-dark"] .oss-links > .btn.ghost:hover { background: rgb(255 255 255 / 0.06); }
+
+/* Poster, three ways. poster-card: in a dark card like the note beside
+   the FAQ. poster-light: in the light card, the page's one light surface
+   at its close. poster-open: no card, and the FAQ's questions go in a
+   card instead, so the two sections don't run together. */
+.oss[data-look="poster-card"], .oss[data-look="poster-light"] { padding: 44px 48px 0; border-radius: 22px; row-gap: 36px; }
+.oss[data-look="poster-card"] { background: var(--panel); box-shadow: inset 0 0 0 1px var(--line); }
+.oss[data-look="poster-light"] {
+  --oss-ink: rgb(11 11 13 / 0.8); --oss-strong: #0b0b0d; --oss-dim: rgb(11 11 13 / 0.46);
+  background: #f6f5f1; color: #0b0b0d; box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.7), 0 1px 2px rgb(0 0 0 / 0.2), 0 24px 60px -12px rgb(0 0 0 / 0.45);
+}
+.oss[data-look="poster-light"] p { color: rgb(11 11 13 / 0.62); }
+.oss[data-look="poster-light"] .oss-h2 { color: rgb(11 11 13 / 0.38); }
+.oss[data-look="poster-light"] .btn { background: #0b0b0d; color: var(--fg); }
+.oss[data-look="poster-light"] .btn:hover { background: #222226; }
+.oss[data-look="poster-light"] .btn.ghost { background: transparent; color: #0b0b0d; box-shadow: inset 0 0 0 1px rgb(11 11 13 / 0.16); }
+.oss[data-look="poster-light"] .btn.ghost:hover { background: rgb(11 11 13 / 0.05); }
+/* In a card, the running line sits along the card's foot, edge to edge. */
+.oss:is([data-look="poster-card"], [data-look="poster-light"]) .oss-log { margin: 0 -48px; padding: 16px 48px; border-bottom: 0; }
+.oss[data-look="poster-light"] .oss-log { border-top-color: rgb(11 11 13 / 0.1); }
+.oss[data-look="poster-open"] { margin-top: 96px; }
+body:has(.oss[data-look="poster-open"]) .faq { padding: 8px 28px 10px; border-radius: 18px; background: var(--panel); box-shadow: inset 0 0 0 1px var(--line); }
+body:has(.oss[data-look="poster-open"]) .faq details:first-child { border-top: 0; }
+body:has(.oss[data-look="poster-open"]) .faq details:last-child { border-bottom: 0; }
+@media (max-width: 860px) {
+  .oss[data-look="doors-apart"], .oss[data-look="doors-dark"] { gap: 14px; }
+  .oss:is([data-look="poster-card"], [data-look="poster-light"]) { padding: 28px 24px 0; }
+  .oss:is([data-look="poster-card"], [data-look="poster-light"]) .oss-log { margin: 0 -24px; padding: 14px 24px; }
+}
+/* In a card the poster's heading is a size smaller, so it stays on two
+   lines; the doors show the four latest changes, so the idea door isn't
+   left mostly empty beside them. */
+.oss:is([data-look="poster-card"], [data-look="poster-light"]) { grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); }
+.oss:is([data-look="poster-card"], [data-look="poster-light"]) h3 { font-size: clamp(40px, 4.4vw, 62px); }
+.oss[data-look^="doors"] .oss-commits li:nth-child(n + 5) { display: none; }
