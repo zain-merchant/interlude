@@ -6,8 +6,9 @@ import { engine, tracks, control } from './engine.svelte.js';
 import { announce } from './announce.svelte.js';
 import { deckSettings, setDeckSetting, saveSlip } from './decksettings.svelte.js';
 
-/** Hot cues the deck shows as pads. The engine and the FLX4 have eight. */
-export const PADS = 4;
+/** Hot cues the deck shows as pads: all eight, like the engine and the
+ * FLX4, in two rows of four laid out like the controller's pads. */
+export const PADS = 8;
 
 const deckName = (deck) => 'AB'[deck];
 /** True when the deck's track has a beatgrid, which loops and jumps need. */
