@@ -363,7 +363,7 @@ details p { margin: 0; padding-bottom: 20px; color: var(--fg-2); max-width: 62ch
 .foot-word {
   position: relative; display: block; margin: 56px 0 calc(var(--foot-cut, 0.33) * -1em); text-align: center; user-select: none; pointer-events: none;
   font-size: clamp(96px, 21vw, 340px); font-weight: 600; letter-spacing: -0.055em; line-height: 0.9;
-  color: rgb(255 255 255 / 0.045);
+  color: var(--foot-letter, rgb(255 255 255 / 0.045));
   --x: 50%; --y: 50%; --on: 0;
 }
 .foot-word::after {
@@ -384,82 +384,6 @@ details p { margin: 0; padding-bottom: 20px; color: var(--fg-2); max-width: 62ch
 html[data-foot-gl] .foot-word { color: transparent; }
 html[data-foot-gl] .foot-word::after { display: none; }
 html[data-foot-gl] .foot-fx { display: block; }
-
-/* The earlier options, kept to compare (data-foot="old-…", picked in the
-   Tune panel), as they were first shown. foot-fx.js eases their custom
-   properties. At rest: quiet grooves round a centre just below the word
-   and a soft wedge of light. Each effect draws on ::before, masked to the
-   grooves (background-image, never the shorthand, so the clip to the
-   letters holds). */
-html[data-foot^="old-"] .foot-word {
-  color: transparent;
-  --gx: 0px; --gy: 0px; --sx: 0px; --sy: 0px;
-  --at: calc(50% + var(--gx)) calc(125% + var(--gy));
-  --light-at: calc(50% + var(--sx)) calc(125% + var(--sy));
-  --grooves: repeating-radial-gradient(circle at var(--at), #000 0 0.55px, rgb(0 0 0 / 0.3) 1.1px 2.6px);
-  --fx: 0; --spin: 0deg; --sweep: 0deg; --wave: 0px; --wx: 50%; --wy: 50%; --lit: 0;
-  background-image:
-    repeating-radial-gradient(circle at var(--at), rgb(255 255 255 / 0.085) 0 0.55px, rgb(255 255 255 / 0.03) 1.1px 2.6px),
-    linear-gradient(rgb(255 255 255 / 0.015), rgb(255 255 255 / 0.015));
-  -webkit-background-clip: text; background-clip: text;
-}
-html[data-foot^="old-"] .foot-word::before,
-html[data-foot^="old-"] .foot-word::after {
-  content: attr(data-text); position: absolute; inset: 0; color: transparent; pointer-events: none;
-  -webkit-mask-image: none; mask-image: none; opacity: 1; transition: none;
-  -webkit-background-clip: text; background-clip: text;
-}
-html[data-foot^="old-"] .foot-word::after {
-  background-image: conic-gradient(from -34deg at var(--light-at),
-    rgb(255 255 255 / 0.1) 0deg, rgb(255 255 255 / 0.3) 8deg, rgb(255 255 255 / 0.1) 18deg, transparent 40deg,
-    transparent 300deg, rgb(255 255 255 / 0.06) 340deg, rgb(255 255 255 / 0.1) 360deg);
-  -webkit-mask-image: var(--grooves); mask-image: var(--grooves);
-}
-html[data-foot^="old-"] .foot-word::before { opacity: var(--fx); -webkit-mask-image: var(--grooves); mask-image: var(--grooves); }
-/* Spin: the record spins up under the pointer; what turns is the faint
-   irregularity in its grooves (the music in them). */
-html[data-foot="old-spin"] .foot-word::before {
-  background-image:
-    repeating-conic-gradient(from var(--spin) at var(--at), rgb(255 255 255 / 0.14) 0deg 0.8deg, transparent 2.6deg 5.3deg),
-    repeating-conic-gradient(from calc(var(--spin) + 1.7deg) at var(--at), rgb(255 255 255 / 0.08) 0deg 1.2deg, transparent 3.5deg 8.9deg);
-}
-/* Tonearm: a fine line of light swings once across the word. */
-html[data-foot="old-tonearm"] .foot-word::before {
-  background-image: conic-gradient(from var(--sweep) at var(--at),
-    rgb(255 255 255 / 0.55) 0deg, rgb(255 255 255 / 0.18) 1.4deg, transparent 4deg 356deg, rgb(255 255 255 / 0.18) 358.6deg);
-}
-/* Ripple: one soft wave of light runs out from where the pointer came in. */
-html[data-foot="old-ripple"] .foot-word::before {
-  background-image: radial-gradient(circle at var(--wx) var(--wy),
-    transparent calc(var(--wave) - 90px), rgb(255 255 255 / 0.35) calc(var(--wave) - 12px), transparent calc(var(--wave) + 30px));
-}
-/* Platter: light spreads out from the centre, as if the platter lit. */
-html[data-foot="old-platter"] .foot-word::before {
-  background-image: radial-gradient(circle at var(--at),
-    rgb(255 255 255 / 0.3) 0, rgb(255 255 255 / 0.2) calc(var(--lit) * 2.2em), transparent calc(var(--lit) * 2.9em));
-}
-/* Depth: the grooves and their reflection drift apart with the pointer. */
-html[data-foot="old-depth"] .foot-word::before {
-  background-image: conic-gradient(from -34deg at var(--light-at),
-    transparent 0deg, rgb(255 255 255 / 0.18) 8deg, transparent 22deg 360deg);
-}
-/* Swing (the first vinyl one): two wedges of light that swing round to
-   face the pointer and brighten, over fine grooves. */
-html[data-foot="old-swing"] .foot-word {
-  --a: -60deg; --on: 0;
-  background-image:
-    repeating-radial-gradient(circle at 50% 70%, rgb(255 255 255 / 0.085) 0 0.6px, rgb(255 255 255 / 0.025) 1.2px 2.6px),
-    linear-gradient(rgb(255 255 255 / 0.02), rgb(255 255 255 / 0.02));
-}
-html[data-foot="old-swing"] .foot-word::before { display: none; }
-html[data-foot="old-swing"] .foot-word::after {
-  background-image: conic-gradient(from var(--a) at 50% 70%,
-    transparent 0deg, rgb(255 255 255 / 0.3) 14deg, transparent 34deg,
-    transparent 180deg, rgb(255 255 255 / 0.3) 194deg, transparent 214deg);
-  -webkit-mask-image: repeating-radial-gradient(circle at 50% 70%, #000 0 0.8px, rgb(0 0 0 / 0.35) 1.4px 2.6px);
-  mask-image: repeating-radial-gradient(circle at 50% 70%, #000 0 0.8px, rgb(0 0 0 / 0.35) 1.4px 2.6px);
-  opacity: calc(0.45 + var(--on) * 0.55); transition: opacity 0.5s ease-out;
-}
 
 .try__hint { margin: -4px 0 6px; max-width: 26em; font-size: 12px; line-height: 1.45; color: var(--fg-3); }
 
