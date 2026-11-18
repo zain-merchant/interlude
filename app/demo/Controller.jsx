@@ -66,7 +66,10 @@ const pick = (v) => (VERSIONS.includes(v) ? v : null);
  * How it's drawn, apart from how it's laid out (controller-skins.css): the
  * same parts in the same places, finished in a different illustration
  * style. `?skin=` picks one on load, the site's Try panel after.
- *   current    graphite anodised metal, as it was
+ *   current    light silver, halfway to studio industrial (controller.css)
+ *   graphite   the graphite anodised metal before it
+ *   polish     the silver with every part still dark (controller-finishes.css)
+ *   most       the silver most of the way to studio industrial (the same)
  *   flat       a flat vector drawing: solid fills, hard offset shadows
  *   bauhaus    modernist: off-white, black, red, yellow and blue geometry
  *   te         small-studio industrial: flat aluminium grey, chunky
@@ -75,7 +78,7 @@ const pick = (v) => (VERSIONS.includes(v) ? v : null);
  *   riso       a two-ink risograph print: blue and fluoro pink on paper
  *   hifi       a 70s hi-fi: a walnut case, satin silver plates, amber lamps
  */
-export const SKINS = ['current', 'flat', 'bauhaus', 'te', 'blueprint', 'riso', 'hifi'];
+export const SKINS = ['current', 'graphite', 'polish', 'most', 'flat', 'bauhaus', 'te', 'blueprint', 'riso', 'hifi'];
 const pickSkin = (v) => (SKINS.includes(v) ? v : null);
 
 const PLAY = <svg viewBox="0 0 18 12" aria-hidden><path d="M1.5 1.6v8.8l6.6-4.4z" /><rect x="10.6" y="1.6" width="2" height="8.8" rx=".6" /><rect x="14.4" y="1.6" width="2" height="8.8" rx=".6" /></svg>;
