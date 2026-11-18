@@ -252,7 +252,7 @@
         {/each}
       </div>
 
-    <div class="strip" role="tabpanel" aria-label={MODES.find((m) => m.id === mode)?.label}>
+    <div class="strip" class:cues={mode === 'cues'} role="tabpanel" aria-label={MODES.find((m) => m.id === mode)?.label}>
       {#if mode === 'fx'}
         <FxUnit {deck} />
       {:else if mode === 'grid'}
@@ -484,6 +484,11 @@
     min-height: var(--h-lg);
     display: grid;
     align-items: center;
+  }
+  /* The hot cues fit themselves to the room the deck has (two rows, or one
+     compact row in a short window), so they measure the strip. */
+  .strip.cues {
+    container-type: size;
   }
   .transport {
     display: grid;

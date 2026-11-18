@@ -1167,6 +1167,14 @@ mod tests {
                 index: 2
             }
         ));
+        // All eight pads are hot cues: pad 8 is hot cue 8.
+        assert!(matches!(
+            one(&mut m, [0x97, 0x07, 0x7F], &s),
+            Command::HotCuePress {
+                deck: DeckId::A,
+                index: 7
+            }
+        ));
         // SHIFT + pad clears, on deck 2's shifted channel.
         assert!(matches!(
             one(&mut m, [0x9A, 0x07, 0x7F], &s),

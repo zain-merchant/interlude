@@ -25,10 +25,11 @@
       { group: ch, key: 'play', kind: 'button', label: 'Play', ask: `Press PLAY on the ${side} deck`, shape: { t: 'btn', x: x(42), y: 262 } },
       { group: ch, key: 'cue_default', kind: 'button', label: 'Cue', ask: `Press CUE on the ${side} deck`, shape: { t: 'btn', x: x(42), y: 230 } },
       { group: ch, key: 'beatsync', kind: 'button', label: 'Sync', ask: `Press SYNC on the ${side} deck`, shape: { t: 'btn', x: x(42), y: 198 } },
-      ...[1, 2, 3, 4].map((i) => ({
+      // Eight pads in two rows of four, 1-4 on top, like the FLX4's.
+      ...[1, 2, 3, 4, 5, 6, 7, 8].map((i) => ({
         group: ch, key: `hotcue_${i}_activate`, kind: 'button', label: `Hot cue ${i}`,
         ask: `Press performance pad ${i} on the ${side} deck${i === 1 ? ', in hot cue mode' : ''}`,
-        shape: { t: 'pad', x: (n === 1 ? 70 : 414) + (i - 1) * 30, y: 220 },
+        shape: { t: 'pad', x: (n === 1 ? 70 : 414) + ((i - 1) % 4) * 30, y: i > 4 ? 250 : 220 },
       })),
       { group: ch, key: 'jog', kind: 'jog', label: 'Jog wheel', ask: `Spin the ${side} jog wheel by its outer edge`, shape: { t: 'jog', x: x(122), y: 112 } },
       { group: ch, key: 'rate', kind: 'fader', label: 'Tempo fader', ask: `Move the ${side} tempo (pitch) fader`, shape: { t: 'vfader', x: x(16), y: 40, h: 130 } },
@@ -357,7 +358,6 @@
               <rect x={sh.x - 11} y={sh.y - 8} width="22" height="16" rx="4" />
             {:else if sh.t === 'pad'}
               <rect x={sh.x} y={sh.y} width="26" height="26" rx="4" />
-              <rect x={sh.x} y={sh.y + 30} width="26" height="26" rx="4" class="ghost" />
             {:else if sh.t === 'knob'}
               <circle cx={sh.x} cy={sh.y} r="10" />
             {:else if sh.t === 'jog'}
