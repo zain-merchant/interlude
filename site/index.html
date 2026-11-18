@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261121q">
+  <link rel="stylesheet" href="style.css?v=20261121t">
   <link rel="stylesheet" href="demo/cards.css?v=20261121j">
   <script src="tune.js?v=20261120v"></script>
   <script>
@@ -142,14 +142,15 @@
       const reduced = matchMedia('(prefers-reduced-motion: reduce)');
       // The name is --brand-word (30px) in the bar and 15px in the capsule;
       // the icon is --brand-icon (40px) in the bar and 36px in the capsule.
-      let WORD = 15 / 30, ICON = 40 / 36, CAP_R = 14, GAP = 10;
+      let WORD = 15 / 30, ICON = 40 / 36, CAP_R = 14, GAP = 10, PAD = 0;
       const sizes = () => {
         const cs = getComputedStyle(d);
         CAP_R = parseFloat(cs.getPropertyValue('--cap-r')) || 14;
         WORD = 15 / (parseFloat(cs.getPropertyValue('--brand-word')) || 30);
         ICON = (parseFloat(cs.getPropertyValue('--brand-icon')) || 40) / 36;
         const g = parseFloat(cs.getPropertyValue('--brand-gap'));
-        GAP = Number.isFinite(g) ? g : 10;
+        GAP = Number.isFinite(g) ? g : 12;
+        PAD = parseFloat(cs.getPropertyValue('--nav-pad')) || 0;
       };
       // Where the capsule puts each item, from their sizes in the bar (which
       // never change), as offsets from where they sit in the bar.
@@ -224,8 +225,9 @@
         // The bar's middle is 30px down, the capsule's 34px. The icon's box
         // is 36px, drawn larger in the bar; the name follows its right edge.
         const ic = ICON + (1 - ICON) * p;
-        // The capsule's middle is 34px down; the bar's is half its height.
-        const dy = 34 - geo.H / 2;
+        // The capsule's middle is 34px down; the bar's is halfway down the
+        // row, below the top padding (--nav-pad).
+        const dy = 34 - (PAD + (geo.H - PAD) / 2);
         brand.style.transform = `translate(${r(geo.b * p)}px, ${r(dy * v)}px)`;
         icon.style.transform = `scale(${r(ic)})`;
         // The bar's gap between icon and name (--brand-gap) closes to the
@@ -324,7 +326,7 @@
         wake();
       }).observe(d, { attributeFilter: ['data-nav'] });
       window.navMeasure = measure;
-      window.tune?.slider({ id: 'nav-word', label: 'Nav: name size before capsule', folder: 'Settled', min: 18, max: 96, step: 1, value: 36, unit: 'px', css: '--brand-word', onInput: () => requestAnimationFrame(measure) });
+      window.tune?.slider({ id: 'nav-word', label: 'Nav: name size before capsule', folder: 'Settled', min: 18, max: 96, step: 1, value: 32, unit: 'px', css: '--brand-word', onInput: () => requestAnimationFrame(measure) });
       // The capsule's corners: the icon's own (its squircle's corner, about
       // 8px at 36px, plus the 6px between), so everything inside is
       // concentric; or a full pill.
@@ -339,8 +341,9 @@
       window.tune?.slider({ label: 'Nav: button stagger', folder: 'Settled', min: 0, max: 300, step: 10, value: 90, unit: 'ms', css: '--nav-stagger' });
       window.tune?.select({ label: 'Nav: buttons arrive', value: 'island', options: [['island', 'In place, as the capsule closes round them'], ['with', 'With the capsule, one motion'], ['after', 'Just after it forms, on their own'], ['old', 'Old: after the links, second spring']],
         onInput: (v) => { d.dataset.navacts = v; for (const b of btns) b.removeAttribute('style'); nav.removeAttribute('data-acts-in'); draw(); } });
-      window.tune?.slider({ label: 'Nav: gap between icon and name before capsule', min: 0, max: 40, step: 1, value: 10, unit: 'px', css: '--brand-gap', onInput: () => requestAnimationFrame(measure) });
-      window.tune?.slider({ id: 'nav-icon', label: 'Nav: icon size before capsule', folder: 'Settled', min: 28, max: 120, step: 1, value: 48, css: '--brand-icon', onInput: () => requestAnimationFrame(measure) });
+      window.tune?.slider({ id: 'nav-pad', label: 'Nav: space above the bar', folder: 'Settled', min: 0, max: 40, step: 1, value: 10, unit: 'px', css: '--nav-pad', onInput: () => requestAnimationFrame(measure) });
+      window.tune?.slider({ label: 'Nav: gap between icon and name before capsule', min: 0, max: 40, step: 1, value: 12, unit: 'px', css: '--brand-gap', onInput: () => requestAnimationFrame(measure) });
+      window.tune?.slider({ id: 'nav-icon', label: 'Nav: icon size before capsule', folder: 'Settled', min: 28, max: 120, step: 1, value: 40, css: '--brand-icon', onInput: () => requestAnimationFrame(measure) });
       // The hero's text beside the headline (data-herotext="card",
       // style.css): Interlude and its version as a link, under it the
       // licence and what it runs on, then the buttons, a rule beside it all.
@@ -671,13 +674,27 @@
           // colour mixed in (so they sit on it rather than float), strong
           // enough to read on any paper.
           const ink = (k) => `fill: color-mix(in oklab, #141210 ${k}%, var(${paperVar}, ${paperDef}))`;
-          const t = el('text', { 'font-size': label === 'white' ? 3.6 : 3.5, 'letter-spacing': 0.9, style: ink(78), 'font-family': 'Geist, sans-serif', 'font-weight': 600 }, lab);
-          const tp = el('textPath', { href: `#${id}` }, t);
-          // (Words apart by wide spaces, which SVG keeps, not middle dots.)
-          const gap = '\u2003\u2003';
+          const fs = label === 'white' ? 3.6 : 3.5, ls = 0.9;
+          const t = el('text', { 'font-size': fs, 'letter-spacing': ls, style: ink(78), 'font-family': 'Geist, sans-serif', 'font-weight': 600 }, lab);
           const year = `© ${new Date().getFullYear()}`;
-          // (Every label says the same: the white label record's too.)
-          tp.textContent = ['INTERLUDE', 'FREE', 'OPEN SOURCE', `SIDE ${side}`, year].join(gap) + gap;
+          // (Every label says the same: the white label record's too.) Each
+          // item on its own, with the same space between every two of them
+          // all the way round, from their measured widths (again once the
+          // font has loaded).
+          const words = ['INTERLUDE', 'FREE', 'OPEN SOURCE', `SIDE ${side}`, year];
+          const tps = words.map((w) => { const tp = el('textPath', { href: `#${id}` }, t); tp.textContent = w; return tp; });
+          const C = 2 * Math.PI * (L - 5);
+          const place = () => {
+            const ctx = document.createElement('canvas').getContext('2d');
+            ctx.font = `600 ${fs * 10}px Geist, sans-serif`;
+            if ('letterSpacing' in ctx) ctx.letterSpacing = `${ls * 10}px`;
+            const wd = words.map((w) => ctx.measureText(w).width / 10 + ('letterSpacing' in ctx ? 0 : ls * w.length));
+            const g = (C - wd.reduce((x, y) => x + y, 0)) / words.length;
+            let at = 0;
+            tps.forEach((tp, i) => { tp.setAttribute('startOffset', at.toFixed(2)); at += wd[i] + g; });
+          };
+          place();
+          document.fonts?.ready.then(place);
           if (label !== 'white') {
             // The app's icon itself, small: its two rings on its own dark
             // tile, so they read on any paper, whatever colour it is.
@@ -779,6 +796,11 @@
           window.tune?.color({ label: 'Note: white label', value: '#f3f0e8', onInput: (v) => root.setProperty('--lab-white', v) });
           const t = window.tune;
           t?.slider({ label: 'Note: sleeve corner radius', min: 0, max: 16, step: 0.5, value: 4, unit: 'px', css: '--sleeve-r' });
+          t?.slider({ label: 'Note: sleeve tilt', min: -8, max: 8, step: 0.25, value: -1.5, unit: 'deg', css: '--sleeve-tilt' });
+          t?.slider({ label: 'Note: question to signature', min: 0, max: 40, step: 1, value: 6, unit: 'px', css: '--ask-gap' });
+          t?.slider({ label: 'Note: rings logo outline', min: 0, max: 4, step: 0.05, value: 2.5, css: '--lab-outline' });
+          // (The record, its hole and the ring worn into the sleeve move together.)
+          t?.slider({ label: 'Note: record lifted off the sleeve bottom', min: 0, max: 48, step: 1, value: 12, unit: 'px', css: '--rec-lift' });
           t?.slider({ label: 'Note: record speed when out', min: 5, max: 78, step: 0.1, value: S.rpm, unit: 'rpm', onInput: (v) => (S.rpm = v) });
           t?.slider({ label: 'Note: how far the record comes out', min: 10, max: 70, step: 1, value: S.out, unit: '%', onInput: (v) => (S.out = v) });
           t?.spring({ label: 'Note: record slides out', value: { type: 'spring', ...S.slide }, onInput: (v) => (S.slide = v) });
@@ -1081,7 +1103,7 @@
       const w = document.querySelector('.foot-word');
       if (!w) return;
       const d = document.documentElement;
-      const fx = await import('./foot-fx.js?v=20261121r').catch(() => null);
+      const fx = await import('./foot-fx.js?v=20261121t').catch(() => null);
       addEventListener('foot-fit', () => fx?.relayout());
       // Without tune.js (or an older one), each control still applies its default.
       const own = (o) => o.onInput?.(o.value);
@@ -1139,6 +1161,11 @@
       // How long the whole effect takes to come in and go when the pointer
       // comes over the word and leaves it.
       tune.slider({ label: 'Footer: click ring reach', folder: 'Motion', min: 0.3, max: 4, step: 0.05, value: 1.6, onInput: set('clickReach') });
+      tune.slider({ label: 'Footer: click ring strength', folder: 'Motion', min: 1, max: 10, step: 0.25, value: 4, unit: '×', onInput: set('clickBend') });
+      tune.slider({ label: 'Footer: click warp amount', folder: 'Motion', min: 0, max: 60, step: 1, value: 14, unit: 'px', onInput: set('knock') });
+      tune.slider({ label: 'Footer: click warp size', folder: 'Motion', min: 0.05, max: 1.2, step: 0.01, value: 0.3, unit: 'em', onInput: set('knockSize') });
+      tune.slider({ label: 'Footer: click warp spring back (s)', folder: 'Motion', min: 0.2, max: 3, step: 0.05, value: 0.9, onInput: set('knockTime') });
+      tune.slider({ label: 'Footer: click warp wobble', folder: 'Motion', min: 0, max: 0.9, step: 0.05, value: 0.45, onInput: set('knockBounce') });
       tune.slider({ label: 'Footer: fade in/out', folder: 'Motion', min: 0, max: 2, step: 0.05, value: 0.5, unit: 's', onInput: set('fade') });
       // What sets it off: there only while the pointer is over the word, or
       // set off as the pointer comes near and left to play out and fade on

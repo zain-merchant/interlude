@@ -53,6 +53,12 @@ export const T = {
   rippleSpread: 0.45, // interference: how far apart its sources are, em
   fade: 0.5,         // how long the whole effect takes to come and go, s
   clickReach: 1.6,   // how far a click's ring runs, as a share of the ripple reach
+  clickBend: 4,      // how much harder a click's ring bends the grooves than a hover's
+  clickGreen: false, // a click's ring shows green (a test that clicks land)
+  knock: 14,         // a click's warp: how far it pushes the grooves at first, CSS px
+  knockSize: 0.3,    // its size, em
+  knockTime: 0.9,    // how long it takes to spring back, s
+  knockBounce: 0.45, // how much it wobbles as it does (0: none)
   lineWidth: 1.25,   // groove line width, CSS px
   arc: 'flat',       // flat: long shallow arcs; record: round arcs of a record's grooves, its middle below the word
   songs: 0,          // grooves per song, with a smooth gap between songs (0: one long song, no gaps)
@@ -145,7 +151,9 @@ uniform float uRipples; // 1 with rings
 uniform vec4 uRing;     // most bend, reach, width, grow-in distance (all CSS px)
 uniform float uEm;      // the word's font size, CSS px: effects scale with it
 uniform vec2 uFar;      // the lamp's streak points away from here
-uniform vec4 uPts[16];  // rings: x, y, how far it has run (-1: none), its share of the reach
+uniform vec4 uPts[16];  // rings: x, y, how far it has run (-1: none), its share of the reach (negative: a click's)
+uniform vec2 uClick;    // a click's ring: how many times the bend, 1 to show it green (a test)
+uniform vec4 uKnock;    // a click's warp: x, y, how far it pushes the grooves now (CSS px), its size (CSS px)
 uniform vec4 uLetter;   // the letters' fill
 uniform vec4 uGap;      // between the grooves
 uniform vec4 uLine;     // the groove lines
@@ -236,6 +244,12 @@ void main() {
     prism(u / w, lit, tint);
     lit *= on * exp(-t * t / (0.75 * 0.75 * uEm * uEm));
   }
+  if (uKnock.z != 0.0) {
+    // A click knocks the grooves: a bulge where it landed that springs
+    // back (and over, with wobble), bending every groove near it.
+    vec2 kp = px - turn(uKnock.xy);
+    push += uKnock.z * exp(-dot(kp, kp) / (uKnock.w * uKnock.w));
+  }
   if (uWarp > 0.0) {
     // A gentle lens: the grooves part round the lamp, never folding over.
     // dp.y e^(-r^2/s^2) peaks at 0.43 s, so this peaks at uWarp.
@@ -251,16 +265,20 @@ void main() {
     for (int i = 0; i < 16; i++) {
       vec4 p = uPts[i];
       float R = p.z;
-      float reach = uRing.y * p.w;
+      // A click's ring (share < 0) bends the grooves much harder and is
+      // wider, so it reads as a knock rather than a breath.
+      float hit = p.w < 0.0 ? 1.0 : 0.0;
+      float reach = uRing.y * abs(p.w);
       if (R < 0.0 || R > reach) continue;
       // Grows in over its first stretch, fades over the last two thirds.
       float fade = smoothstep(0.0, min(uRing.w, 0.3 * reach), R) * (1.0 - smoothstep(0.3 * reach, reach, R));
-      float w = uRing.z * (1.0 + 0.95 * R / uEm);
+      float w = uRing.z * (1.0 + 0.95 * R / uEm) * (1.0 + 0.8 * hit);
       float x = (length(px - p.xy) - R) / w;
-      push += on * uRing.x / 0.4289 * x * exp(-x * x) * fade;
+      push += on * uRing.x * mix(1.0, uClick.x, hit) / 0.4289 * x * exp(-x * x) * fade;
       float l;
       vec3 c;
       prism(x * 1.6, l, c);
+      if (hit > 0.5 && uClick.y > 0.5) { l = max(l, exp(-x * x)); c = vec3(0.2, 1.0, 0.4); }
       l *= fade;
       rl += l;
       rt += c * l;
@@ -360,6 +378,20 @@ const pts = Array.from({ length: 16 }, () => [0, 0, -1, 1]);
 const emit = { dist: 0, px: 0, py: 0, time: 0, src: 0, armed: false, rest: 0 };
 // The phone's one-off play-through: when it started (ms), or 0.
 let demoAt = 0;
+// A click's warp: where, and when (ms; 0: none).
+const knock = { x: 0, y: 0, at: 0 };
+// How far the warp pushes now: a spring let go from the full push, with
+// T.knockBounce of wobble, settling over T.knockTime (and a 30ms rise, so
+// it doesn't jump in).
+function knockNow(now) {
+  if (!knock.at) return 0;
+  const t = (now - knock.at) / 1000, dur = Math.max(0.1, T.knockTime);
+  if (t > dur * 2.5) { knock.at = 0; return 0; }
+  const w = (2 * Math.PI) / dur, z = 1 - Math.min(0.95, Math.max(0, T.knockBounce));
+  const rise = 1 - Math.exp(-t / 0.03);
+  const env = z < 1 ? Math.exp(-z * w * t) * Math.cos(w * Math.sqrt(1 - z * z) * t) : Math.exp(-w * t) * (1 + w * t);
+  return T.knock * rise * env;
+}
 let mode = T.mode;
 
 function init() {
@@ -384,7 +416,7 @@ function init() {
   gl.enableVertexAttribArray(loc);
   gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
   for (const n of ['uText', 'uSize', 'uDpr', 'uCentre', 'uAspect', 'uPivot', 'uRot', 'uPitch', 'uHover', 'uLamp', 'uWarp',
-    'uRipples', 'uRing', 'uEm', 'uFar', 'uLineW', 'uPts', 'uLetter', 'uGap', 'uLine', 'uOutline', 'uStroke', 'uSongs']) U[n] = gl.getUniformLocation(prog, n);
+    'uRipples', 'uRing', 'uClick', 'uKnock', 'uEm', 'uFar', 'uLineW', 'uPts', 'uLetter', 'uGap', 'uLine', 'uOutline', 'uStroke', 'uSongs']) U[n] = gl.getUniformLocation(prog, n);
   tex = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, tex);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
@@ -452,7 +484,8 @@ function reset() {
 
 // A new ring at x, y (unless every slot is still running one).
 function ring(x, y, share = 1) {
-  const p = pts.find((q) => q[2] < 0);
+  // (A click's ring may take the oldest slot, so a click always shows.)
+  const p = pts.find((q) => q[2] < 0) ?? (share < 0 ? pts.reduce((a, q) => (q[2] > a[2] ? q : a)) : null);
   if (p) { p[0] = x; p[1] = y; p[2] = 0; p[3] = share; }
 }
 
@@ -556,7 +589,7 @@ function frame(now) {
   for (const p of pts) {
     if (p[2] < 0) continue;
     p[2] += T.rippleSpeed * geo.em * dt;
-    if (p[2] > reach * p[3]) p[2] = -1;
+    if (p[2] > reach * Math.abs(p[3])) p[2] = -1;
   }
   if (rings && hover.want) spawn(dt, ox, oy);
 
@@ -579,6 +612,9 @@ function frame(now) {
   gl.uniform1f(U.uRipples, hasRipples(mode) || pts.some((q) => q[2] >= 0) ? 1 : 0);
   gl.uniform4f(U.uRing, T.rippleBend, reach, Math.max(0.005, T.rippleWidth) * geo.em, 0.3 * geo.em);
   gl.uniform1f(U.uEm, geo.em);
+  const kz = knockNow(performance.now());
+  gl.uniform4f(U.uKnock, knock.x, knock.y, kz, Math.max(0.02, T.knockSize) * geo.em);
+  gl.uniform2f(U.uClick, T.clickBend ?? 4, T.clickGreen ? 1 : 0);
   gl.uniform2f(U.uFar, geo.far.x, geo.far.y);
   gl.uniform4fv(U.uPts, pts.flat());
   for (const v of [['uLetter', 'letter'], ['uGap', 'gap'], ['uLine', 'line'], ['uOutline', 'outline']]) col(v);
@@ -592,6 +628,7 @@ function frame(now) {
   // ring still running out, or (while over the word) rings to come: on a
   // timer for breathe and interference; for drop, the rest still to come.
   if (demoAt) return true;
+  if (knock.at) return true;
   if (T.trigger === 'once' && hover.want) return true;
   if (hover.on !== hover.want) return true;
   if (hover.on === 0) return false;
@@ -651,7 +688,8 @@ export function point(p) {
  *  is set to (T.clickReach, a share of the ripple reach). */
 export function click(p) {
   if (!geo && !layout()) return;
-  ring(p.x, p.y, T.clickReach ?? 1.6);
+  ring(p.x, p.y, -(T.clickReach ?? 1.6));
+  Object.assign(knock, { x: p.x, y: p.y, at: performance.now() });
   // The rings show through the effect's own light, so a click brings that
   // light on (and, in the play-once hover, starts it playing) if it's off.
   if (hover.want === 0 && hover.on < 0.02) Object.assign(hover, { x: p.x, y: p.y, vx: 0, vy: 0 });
