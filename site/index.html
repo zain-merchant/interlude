@@ -994,6 +994,7 @@
       const heroVars = { '--tilt': '-3deg', '--anchor': '50% 0%' };
       const sendVars = () => live.contentWindow?.postMessage({ interlude: 'css', vars: heroVars }, '*');
       window.tune?.slider({ label: 'Hero: controller comes in from (px, minus is above)', min: -160, max: 160, step: 2, value: -40, unit: 'px', onInput: (v) => { heroVars['--hw-from'] = `${v}px`; sendVars(); } });
+      window.tune?.slider({ label: 'Hero: controller waits for the screen (ms)', min: 0, max: 500, step: 10, value: 120, unit: 'ms', onInput: (v) => { heroVars['--hw-delay'] = `${v}ms`; sendVars(); } });
       window.tune?.slider({ label: 'Hero: controller blur as it comes in', min: 0, max: 30, step: 0.5, value: 10, unit: 'px', onInput: (v) => { heroVars['--hw-blur'] = `${v}px`; sendVars(); } });
       window.tune?.slider({ label: 'Hero: screen tilt in controller mode', min: -10, max: 10, step: 0.5, value: -3, unit: '°', onInput: (v) => { heroVars['--tilt'] = `${v}deg`; sendVars(); } });
       window.tune?.select({ label: 'Hero: screen scales from', value: 'top', options: [['top', 'Its top'], ['center', 'Its middle'], ['bottom', 'Its bottom']], onInput: (v) => { heroVars['--anchor'] = { top: '50% 0%', center: '50% 50%', bottom: '50% 100%' }[v]; sendVars(); } });
