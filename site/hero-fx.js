@@ -124,7 +124,7 @@ const TURN = (Math.PI * 2) / 40;
 const T = {
   drop: 108, needle: 0.8, life: 0.2, persp: 0.85, cue: 'dust', cueAmt: 1, res: 0.85,
   speck: 'hyphen',
-  dust: 0, scratch: 0, // natural dust and scratches, on top of the rest (see uNat)
+  dust: 0, scratch: 0, away: 1, // natural dust and scratches, on top of the rest (see uNat)
   size: 1, up: 0, warp: 'none', warpAmt: 0.5, tint: 0, hover: 'arc', still: 1.2,
   look: 'vinyl', shape: 'custom', vinylPreset: 'dark',
   vinyl: '#1c1c20', finish: 'solid', body: 0, through: 0, lineTint: 0, flecks: 0,
@@ -271,6 +271,7 @@ uniform vec4 uConeTint;  // the cone's colour, and 1 for one cone (0: two, oppos
 uniform vec2 uConeEdge;  // the cone's edges, on cos^4 of the angle
 uniform float uConeLight; // the lamp's light through the vinyl in the cone
 uniform float uSpeck;    // what the dust is (see SPECKS)
+uniform float uAway;     // colour amount away from the lamp, relative to where it faces (1: the same)
 uniform vec2 uNat;       // natural dust, natural scratches (0 to 1; on top of whatever shows the spin)
 uniform float uTint;     // the lamp's blue and orange in the sheen
 uniform vec4 uWarp;      // how the top is bent (see WARPS), how much, more rings up top, half the width
@@ -548,7 +549,10 @@ void main() {
   glintColour(arc, du, a, r, inSong, gv, tv);
   float ce = uChroma.x;
   float Lg = gk * (gv.r + gv.g + gv.b) / 3.0;
-  vec3 Gv = max(HUED(gk * gv * mix(BASE, tv * 0.95, uChroma.y * step(0.5, ce))), 0.0);
+  // (How much of the glint is colour, scaled away from the lamp by uAway:
+  // where the lamp faces it's the colour amount as set; elsewhere, that
+  // times uAway, so the sides and foot can carry more or less colour.)
+  vec3 Gv = max(HUED(gk * gv * mix(BASE, tv * 0.95, uChroma.y * mix(uAway, 1.0, lamp) * step(0.5, ce))), 0.0);
 
   if (uCue.x > 0.5 && uCue.x < 1.5) {
     // Dust: specks lying on the disc, carried round with it, each one
@@ -1043,7 +1047,7 @@ vec3 glints(float r, float a, float b, float idx, float u, float inS, float lamp
   vec3 gv = vec3(glintProf(arc * arc + du * du) * inS);
   vec3 tv;
   glintColour(arc, du, a, r, inS, gv, tv);
-  return max(HUED(uGlint * (0.25 + 0.75 * lamp) * uGlintAmt.x * gv * mix(white, tv * 0.95, uChroma.y * step(0.5, uChroma.x))), 0.0);
+  return max(HUED(uGlint * (0.25 + 0.75 * lamp) * uGlintAmt.x * gv * mix(white, tv * 0.95, uChroma.y * mix(uAway, 1.0, lamp) * step(0.5, uChroma.x))), 0.0);
 }
 
 // The pointer, the same for every style, which each draws its own way.
@@ -1535,7 +1539,7 @@ let geo = null;
 
 // One program per style, compiled the first time it's shown.
 const NAMES = ['uSize', 'uDpr', 'uCentre', 'uGeo', 'uHoles', 'uHoleCount', 'uHoleR', 'uSpan', 'uSpin', 'uFacing', 'uStyle', 'uSheen', 'uGlint', 'uHover', 'uSwell', 'uNeedle', 'uRipple', 'uTouch', 'uHz', 'uCue', 'uTracks', 'uTrackCount',
-  'uOuter', 'uGlintAmt', 'uChroma', 'uSpeck', 'uNat', 'uTint', 'uWarp', 'uLens', 'uHoverMode', 'uPtr', 'uVinyl', 'uVinylFin', 'uThru', 'uGroove',
+  'uOuter', 'uGlintAmt', 'uChroma', 'uSpeck', 'uNat', 'uAway', 'uTint', 'uWarp', 'uLens', 'uHoverMode', 'uPtr', 'uVinyl', 'uVinylFin', 'uThru', 'uGroove',
   'uGlintShape', 'uGlintSpread', 'uHueM', 'uTilt', 'uCone', 'uConeTint', 'uConeEdge', 'uConeLight'];
 const progs = new Map();
 let shown = '';
@@ -1778,14 +1782,14 @@ function frame(now, still) {
     }
   }
 
-  // Hover: only on the record, not over the app's screen (its own events
-  // don't reach us there anyway) or with the touch switched off.
-  const overScreen = hover.x > g.box.l && hover.x < g.box.r && hover.y > g.box.t && hover.y < g.box.b;
+  // Hover: wherever the pointer is over the record, over the app's screen
+  // and the page's words and buttons too (the screen takes no pointer of
+  // its own, so its moves reach us), unless the touch is switched off.
   const { r: hr, a: ha } = toRecord(hover.x, hover.y, g);
   // And only while the pointer moves: a little after it stops, its light
   // fades away, so no groove is left looking selected under a still pointer.
   const lively = T.still >= 10 || now - hover.moved < T.still * 1000;
-  const reach = touch !== 'off' && !overScreen && !quiet.on && lively && hr > g.r0 && hr < g.Rmax ? 1 : 0;
+  const reach = touch !== 'off' && !quiet.on && lively && hr > g.r0 && hr < g.Rmax ? 1 : 0;
   const mode = HOVERS[T.hover] ?? 0;
   const sp = SPRING[T.hover];
   const movers = MOVERS[T.hover];
@@ -1865,6 +1869,7 @@ function frame(now, still) {
   gl.uniform2f(U.uChroma, CHROMA[T.chroma] ?? 0, T.chromaAmt);
   gl.uniform1f(U.uSpeck, SPECKS[T.speck] ?? 0);
   gl.uniform2f(U.uNat, T.dust ?? 0, T.scratch ?? 0);
+  gl.uniform1f(U.uAway, T.away ?? 1);
   gl.uniform1f(U.uTint, T.tint);
   gl.uniform4f(U.uWarp, WARPS[T.warp] ?? 0, T.warpAmt, g.up, g.half);
   gl.uniform3f(U.uLens, ...g.lens);
@@ -2209,6 +2214,9 @@ tw?.slider({ ...gl0, label: 'Hero record: glints turn with the disc', min: 0, ma
 tw?.select({ ...gl0, label: 'Hero record: glint colour', value: T.chroma, onInput: thenPanel(redraw('chroma')), options: [['none', 'None'], ['film', 'Thin film (oil slick)'], ['prism', 'Prism split'], ['lamp', 'Lamp (blue / orange)'], ['grating', 'Diffraction rainbow'], ['pearl', 'Pearl'], ['fringe', 'Lens fringe']] });
 tw?.slider({ ...gl0, label: 'Hero record: colour spread', min: 0, max: 3, step: 0.05, value: T.gSpread, show: coloured, onInput: redraw('gSpread') });
 tw?.slider({ ...gl0, label: 'Hero record: colour amount', min: 0, max: 3, step: 0.05, value: T.chromaAmt, show: coloured, onInput: redraw('chromaAmt') });
+// Colour away from the lamp: the glints' colour on the sides and at the foot,
+// as a share of what it is where the lamp faces (1: the same; up to 3 times).
+tw?.slider({ ...gl0, label: 'Hero record: colour away from the lamp', min: 0, max: 3, step: 0.05, value: T.away, show: coloured, onInput: redraw('away') });
 tw?.slider({ ...gl0, label: 'Hero record: colour hue', min: -180, max: 180, step: 1, value: T.gHue, unit: '°', show: coloured, onInput: redraw('gHue') });
 
 // LAMP: the light over the record. Where it points moves the sheen, the
