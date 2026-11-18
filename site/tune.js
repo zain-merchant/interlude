@@ -197,7 +197,7 @@
       "Hover & needle.needle and hover strength": 0.5,
       "Hover & needle.hover fades after still (s)": 1.2,
       "Layout.shape preset": "custom",
-      "Layout.lower by (px)": 120,
+      "Layout.lower by (px)": 140,
       "Layout.perspective": 0.6,
       "Layout.rings all round": 2,
       "Layout.more rings up top": 0,
