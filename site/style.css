@@ -280,13 +280,27 @@ pre {
    while the questions scroll past. */
 .faq-row { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 64px; align-items: start; }
 .faq { max-width: 760px; }
-.faq-help {
-  position: sticky; top: 96px; padding: 22px 22px 22px; border-radius: 16px;
+.founder {
+  position: sticky; top: 96px; padding: 24px 24px 18px; border-radius: 16px;
   background: var(--panel); box-shadow: inset 0 0 0 1px var(--line);
-  color: var(--fg-2); font-size: 14.5px; line-height: 1.55;
+  color: var(--fg-2); font-size: 14.5px; line-height: 1.6;
 }
-.faq-help h3 { margin: 0 0 8px; color: var(--fg); font-size: 16px; font-weight: 500; }
-.faq-help p { margin: 0 0 18px; text-wrap: pretty; }
+.founder h3 { margin: 0 0 14px; color: var(--fg); font-size: 17px; font-weight: 500; }
+/* Skeleton lines where the note's text will go. */
+.founder-body { display: grid; gap: 9px; margin-bottom: 18px; }
+.founder-body i { display: block; width: var(--w); height: 9px; border-radius: 5px; background: rgb(255 255 255 / 0.07); }
+.founder-body i.gap { margin-top: 8px; }
+.founder-ask { margin: 0 0 6px; }
+.founder-ask a { color: var(--fg); text-decoration: none; }
+.founder-ask a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.founder-sig { display: block; width: 150px; height: auto; margin: 0 0 0 -6px; fill: none; stroke: var(--fg); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+/* Written in once, the first time the note is seen: the name, then the dot,
+   then the line under it. */
+.founder-sig path { stroke-dasharray: 1; stroke-dashoffset: 0; }
+.founder[data-sign] .founder-sig path { stroke-dashoffset: 1; }
+.founder[data-signed] .founder-sig path { stroke-dashoffset: 0; transition: stroke-dashoffset 1.1s cubic-bezier(0.45, 0, 0.25, 1); }
+.founder[data-signed] .founder-sig path:nth-child(2) { transition-duration: 0.12s; transition-delay: 1.1s; }
+.founder[data-signed] .founder-sig path:nth-child(3) { transition-duration: 0.45s; transition-delay: 1.25s; }
 /* The open source card: the page's one light surface, so it closes the
    page. Its right half shows the work rather than saying it: the latest
    changes, a small dark log set into the card. */
@@ -322,7 +336,7 @@ pre {
 .oss-empty a { display: block; padding: 18px 10px; color: var(--fg-2); }
 @media (max-width: 860px) {
   .faq-row { grid-template-columns: 1fr; gap: 40px; }
-  .faq-help { position: static; max-width: 520px; }
+  .founder { position: static; max-width: 520px; }
   .oss { grid-template-columns: 1fr; gap: 28px; margin-top: 56px; padding: 24px; }
   .oss-text { padding: 4px 4px 0; }
 }
