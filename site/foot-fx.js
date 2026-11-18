@@ -415,11 +415,13 @@ function layout() {
   x.scale(dpr, dpr);
   x.font = `${cs.fontWeight} ${size}px ${cs.fontFamily}`;
   if ('letterSpacing' in x) x.letterSpacing = cs.letterSpacing;
-  x.textAlign = 'center';
+  x.textAlign = 'left';
   x.textBaseline = 'alphabetic';
-  // Centre the ink, as the page does (letter-spacing adds a trailing gap).
-  const ls = parseFloat(cs.letterSpacing) || 0;
-  const tx = c.width / 2 - ls / 2;
+  // Exactly where the page sets its own letters: from the start of the
+  // word's text box (canvas centring with letter-spacing lands elsewhere).
+  const tn = [...word.childNodes].find((n) => n.nodeType === 3 && n.textContent.trim());
+  let tx = 0;
+  if (tn) { const rg = document.createRange(); rg.selectNodeContents(tn); tx = rg.getBoundingClientRect().left - c.left; }
   x.fillStyle = '#fff';
   x.fillText(word.dataset.text, tx, baseline);
   gl.bindTexture(gl.TEXTURE_2D, tex);
