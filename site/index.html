@@ -14,7 +14,7 @@
   <!-- Geist, served from here (no other site to reach before the page can
        draw its text); the Latin file is fetched straight away. -->
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="style.css?v=20261118c4">
+  <link rel="stylesheet" href="style.css?v=20261118l1">
   <script src="tune.js?v=20261118v1b"></script>
   <script>
     // Live updates while working on the site locally (.claude/serve.py
@@ -145,7 +145,10 @@
       const sizes = () => {
         const cs = getComputedStyle(d);
         CAP_R = parseFloat(cs.getPropertyValue('--cap-r')) || 14;
-        WORD = 15 / (parseFloat(cs.getPropertyValue('--brand-word')) || 30);
+        // (A wordmark tried at another size, --wm-size, still lands at about
+        // 15px in the capsule, and never under 12.)
+        const wm = parseFloat(cs.getPropertyValue('--wm-size')) || 1;
+        WORD = (15 * Math.max(0.8, Math.min(1, wm))) / ((parseFloat(cs.getPropertyValue('--brand-word')) || 30) * wm);
         ICON = (parseFloat(cs.getPropertyValue('--brand-icon')) || 40) / 36;
         const g = parseFloat(cs.getPropertyValue('--brand-gap'));
         GAP = Number.isFinite(g) ? g : 12;
@@ -1485,6 +1488,50 @@
       t?.slider({ label: 'Grain: drift time', min: 4, max: 60, step: 1, value: 20, unit: 's', onInput: (v) => el.style.setProperty('--grain-drift', `${v}s`) });
       t?.slider({ label: 'Grain: fades out toward the features', min: 0, max: 1, step: 0.05, value: G.fade, onInput: set('fade') });
       put();
+    })();
+    // Logos being tried (lab/logos.html): the mark everywhere the icon
+    // appears (nav, hero, footer, the tab), and the wordmark's lockup.
+    // From ?logo=<id>&lockup=<key>, or Tune (Logo); otherwise nothing loads.
+    (() => {
+      const q = new URLSearchParams(location.search);
+      const want = q.get('logo'), lk = q.get('lockup');
+      if (!want && !lk && !window.tune?.shown) return;
+      import('./logos.js').then(({ LOGOS, LOCKUPS, iconURL, byId }) => {
+        const d = document.documentElement;
+        const imgs = [...document.querySelectorAll('.brand img, .hero-icon, .dmg img')];
+        const fav = document.querySelector('link[rel="icon"]');
+        const orig = new Map(imgs.map((i) => [i, i.getAttribute('src')]));
+        const favOrig = fav?.getAttribute('href');
+        const mark = (id) => {
+          const logo = id !== 'current' && byId(id);
+          const url = logo ? iconURL(logo) : null;
+          imgs.forEach((i) => i.setAttribute('src', url ?? orig.get(i)));
+          if (fav) fav.setAttribute('href', url ?? favOrig);
+        };
+        const word = (k) => {
+          // (Today's wordmark: the stylesheet's own values, untouched.)
+          if (!LOCKUPS[k] || k === 'classic') {
+            for (const v of ['weight', 'track', 'track-s', 'case', 'font', 'size']) d.style.removeProperty(`--wm-${v}`);
+            requestAnimationFrame(() => dispatchEvent(new Event('resize')));
+            return;
+          }
+          const L = LOCKUPS[k];
+          d.style.setProperty('--wm-weight', String(L.weight));
+          d.style.setProperty('--wm-track', `${L.tracking}em`);
+          d.style.setProperty('--wm-track-s', `${L.tracking * 0.4}em`);
+          d.style.setProperty('--wm-case', L.case);
+          d.style.setProperty('--wm-font', L.font);
+          d.style.setProperty('--wm-size', String(L.size));
+          // (The nav measures its name to lay out the capsule.)
+          requestAnimationFrame(() => dispatchEvent(new Event('resize')));
+        };
+        const t = window.tune;
+        t?.select({ label: 'Logo: mark', value: 'current', options: LOGOS.map((l) => [l.id, `${l.family === 'light' ? 'Light: ' : ''}${l.name}`]), onInput: mark });
+        t?.select({ label: 'Logo: wordmark', value: 'classic', options: Object.entries(LOCKUPS).map(([k, v]) => [k, v.name]), onInput: word });
+        // (An address asking for one wins over whatever the panel last held.)
+        if (want) { mark(want); t?.set?.('Logo: mark', want); }
+        if (lk || want) { const k = lk || byId(want)?.lockup || 'classic'; word(k); t?.set?.('Logo: wordmark', k); }
+      });
     })();
     // Local only: what the page does when the site's files change.
     if (window.__live) window.tune?.select({ label: 'Dev: live updates', value: (() => { try { return localStorage.getItem('interlude-live') || 'ask'; } catch { return 'ask'; } })(), options: [['ask', 'Styles live, ask before reloading'], ['reload', 'Styles live, reload for the rest'], ['off', 'Off']], onInput: (v) => window.__live.set(v) });
