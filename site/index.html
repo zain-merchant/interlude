@@ -14,8 +14,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261118e">
-  <link rel="stylesheet" href="demo/cards.css">
+  <link rel="stylesheet" href="style.css?v=20261118f">
+  <link rel="stylesheet" href="demo/cards.css?v=20261118a">
   <script src="tune.js?v=20261118a"></script>
   <script>
     // The hero's layout (Split) and the nav's (bar to capsule), set before
@@ -513,7 +513,7 @@
   </footer>
 
   <!-- The feature cards' pictures (built from app/demo, see the README). -->
-  <script type="module" src="demo/cards.js"></script>
+  <script type="module" src="demo/cards.js?v=20261118a"></script>
   <script>
     // The hero. The screenshot shows first; once the page has loaded, the
     // live app takes its place (unless the visitor prefers less motion).
@@ -528,11 +528,13 @@
       const reduced = matchMedia('(prefers-reduced-motion: reduce)');
       const fit = () => frame.parentElement.style.setProperty('--s', String(screen.clientWidth / 1440));
 
+      // The site's springs (style.css :root), for animations run from here.
+      const spring = (n) => getComputedStyle(document.documentElement).getPropertyValue(`--${n}`).trim();
       // The screen rises into place out of a soft blur as the page opens.
       if (!reduced.matches) {
         frame.animate(
           { opacity: [0, 1], transform: ['translateY(28px) scale(0.985)', 'none'], filter: ['blur(10px)', 'blur(0)'] },
-          { duration: 1100, easing: 'cubic-bezier(0.23, 1, 0.32, 1)', fill: 'backwards' },
+          { duration: parseFloat(spring('glide-ms')), easing: spring('glide'), fill: 'backwards' },
         );
       }
       new ResizeObserver(fit).observe(screen);
@@ -895,7 +897,8 @@
     // details element still works on its own without this.
     (() => {
       const reduced = matchMedia('(prefers-reduced-motion: reduce)');
-      const EASE = 'cubic-bezier(0.23, 1, 0.32, 1)';
+      // Open on the smooth spring, close on the snappy one (style.css :root).
+      const sp = (n) => getComputedStyle(document.documentElement).getPropertyValue(`--${n}`).trim();
       for (const d of document.querySelectorAll('.faq details')) {
         const summary = d.querySelector('summary');
         const body = d.querySelector('summary ~ *');
@@ -911,9 +914,9 @@
           const to = closing ? summary.offsetHeight : d.scrollHeight;
           anim?.cancel();
           d.style.overflow = 'hidden';
-          anim = d.animate({ height: [`${from}px`, `${to}px`] }, { duration: closing ? 200 : 280, easing: EASE });
+          anim = d.animate({ height: [`${from}px`, `${to}px`] }, { duration: parseFloat(sp(closing ? 'snappy-ms' : 'smooth-ms')), easing: sp(closing ? 'snappy' : 'smooth') });
           body.animate({ opacity: closing ? [1, 0] : [0, 1], transform: closing ? ['none', 'translateY(-4px)'] : ['translateY(-4px)', 'none'] },
-            { duration: closing ? 140 : 280, easing: EASE, fill: 'both' });
+            { duration: parseFloat(sp('snappy-ms')), easing: sp('snappy'), fill: 'both' });
           anim.onfinish = () => {
             if (closing) d.open = false;
             d.removeAttribute('data-closing');
