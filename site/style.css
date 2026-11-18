@@ -69,7 +69,10 @@ img { max-width: 100%; height: auto; display: block; }
   border-bottom: 1px solid var(--line);
 }
 .nav-row { display: flex; align-items: center; gap: 24px; height: 60px; }
-.brand { display: inline-flex; align-items: center; gap: 10px; font-weight: 600; text-decoration: none; letter-spacing: -0.01em; }
+/* (The wordmark's style can be swapped while logos are tried: --wm-*, set
+   from lab/logos.html's lockups by index.html.) */
+.brand { display: inline-flex; align-items: center; gap: 10px; font-weight: var(--wm-weight, 600); text-decoration: none; letter-spacing: var(--wm-track-s, -0.01em); }
+.brand span { font-family: var(--wm-font, inherit); text-transform: var(--wm-case, none); }
 .links { display: flex; gap: 22px; margin-right: auto; font-size: 14px; }
 .links a { color: var(--fg-2); text-decoration: none; }
 .links a:hover { color: var(--fg); }
@@ -738,7 +741,7 @@ html[data-nav="morph"] .links { margin: 0 0 0 auto; gap: 26px; }
 html[data-nav="morph"] .nav .brand { gap: 10px; }
 html[data-nav="morph"] { --brand-word: 32px; --brand-icon: 40; }
 html[data-nav="morph"] .nav .brand img { width: 36px; height: 36px; transform-origin: 0 50%; transform: scale(calc(var(--brand-icon) / 36)); }
-html[data-nav="morph"] .nav .brand span { font-size: var(--brand-word); font-weight: 600; letter-spacing: -0.03em; line-height: 1; text-box: trim-both cap alphabetic; transform-origin: 0 50%; transform: translateX(calc((var(--brand-icon) - 36) * 1px + var(--brand-gap, 12px) - 10px)); }
+html[data-nav="morph"] .nav .brand span { font-size: calc(var(--brand-word) * var(--wm-size, 1)); font-weight: var(--wm-weight, 600); letter-spacing: var(--wm-track, -0.03em); line-height: 1; text-box: trim-both cap alphabetic; transform-origin: 0 50%; transform: translateX(calc((var(--brand-icon) - 36) * 1px + var(--brand-gap, 12px) - 10px)); }
 html[data-nav="morph"] .nav .brand, html[data-nav="morph"] .nav .brand img, html[data-nav="morph"] .nav .brand span,
 html[data-nav="morph"] .nav .links, html[data-nav="morph"] .nav-actions { will-change: transform; }
 /* The actions wait, unseen and unfocusable, at the bar's right end. */
