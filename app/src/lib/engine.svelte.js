@@ -228,6 +228,14 @@ function frame(now) {
 
 export function startEngineLoop() {
   requestAnimationFrame(frame);
+  // Beat This! refines a deck's grid in the background after it loads.
+  backend.onDeckBeatgrid?.(({ deck, path, beatgrid }) => {
+    const t = tracks[deck];
+    if (t && t.path === path && !t.gridLocked) {
+      tracks[deck] = { ...t, beatgrid };
+      wake();
+    }
+  });
   // Input can change what's drawn (zoom, resize, settings) without
   // changing engine state, so any of it restarts the frame loop.
   for (const type of ['pointerdown', 'keydown', 'wheel', 'resize', 'focus']) {
