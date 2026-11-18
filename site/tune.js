@@ -6,6 +6,8 @@
 //   tune.select({ label, options: [[value, label], ...], value, onInput })
 //   tune.color({ label, value: '#rrggbb', onInput })   (DialKit's own picker;
 //     it may hand back other CSS colour forms if its format is switched)
+//   tune.spring({ label, value: { visualDuration, bounce }, onInput })
+//   tune.easing({ label, value: { duration, ease: [x1, y1, x2, y2] }, onInput })
 //
 // A label "Group: name" puts the control in that group's panel. onInput
 // gets the default straight away, then whatever the panel holds (DialKit
@@ -266,5 +268,18 @@
     }
   }
 
-  window.tune = { slider, select, color, refresh, set, shown: show };
+  // DialKit's spring editor ({ type: 'spring', visualDuration, bounce } or
+  // { type: 'spring', stiffness, damping, mass }) and its curve editor
+  // ({ type: 'easing', duration, ease: [x1, y1, x2, y2] }): onInput gets
+  // the object as the panel holds it.
+  function spring({ label, value, onInput, folder, show: when }) {
+    onInput?.(value);
+    if (show) add(label, { key: label, apply: (v) => onInput?.(v), config: { type: 'spring', ...value }, folder, show: when });
+  }
+  function easing({ label, value, onInput, folder, show: when }) {
+    onInput?.(value);
+    if (show) add(label, { key: label, apply: (v) => onInput?.(v), config: { type: 'easing', ...value }, folder, show: when });
+  }
+
+  window.tune = { slider, select, color, spring, easing, refresh, set, shown: show };
 })();
