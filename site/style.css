@@ -316,12 +316,16 @@ pre {
 .oss .btn { background: #0b0b0d; color: var(--fg); box-shadow: none; }
 .oss .btn.ghost { background: rgb(11 11 13 / 0.06); color: #0b0b0d; box-shadow: inset 0 0 0 1px rgb(11 11 13 / 0.16); }
 .oss .btn.ghost:hover { background: rgb(11 11 13 / 0.1); }
-/* The latest changes, set as a plain list on the card: what changed, and
-   when. */
-.oss-log { min-width: 0; }
-.oss-log h4 { margin: 0 0 4px; padding: 0 2px; color: rgb(11 11 13 / 0.5); font-size: 13px; font-weight: 500; }
+/* The latest changes, in a light card of their own set into the cream
+   one: a header, then what changed, and when. */
+.oss-log {
+  min-width: 0; padding: 0 18px 4px; border-radius: 14px;
+  background: rgb(255 255 255 / 0.62);
+  box-shadow: 0 0 0 1px rgb(11 11 13 / 0.08), 0 1px 2px rgb(11 11 13 / 0.04), 0 18px 36px -22px rgb(11 11 13 / 0.35);
+}
+.oss-log h4 { margin: 0; padding: 14px 2px 12px; border-bottom: 1px solid rgb(11 11 13 / 0.1); color: rgb(11 11 13 / 0.55); font-size: 13px; font-weight: 500; }
 .oss-commits { margin: 0; padding: 0; list-style: none; }
-.oss-commits li + li { border-top: 1px solid rgb(11 11 13 / 0.12); }
+.oss-commits li + li { border-top: 1px solid rgb(11 11 13 / 0.08); }
 .oss-commits a { display: flex; align-items: baseline; gap: 16px; padding: 11px 2px; color: rgb(11 11 13 / 0.78); text-decoration: none; font-size: 15px; }
 .oss-commits a:hover .oss-msg { color: #0b0b0d; text-decoration: underline; text-decoration-color: rgb(11 11 13 / 0.3); text-underline-offset: 3px; }
 .oss-msg { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
