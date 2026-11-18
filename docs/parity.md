@@ -50,11 +50,11 @@ against the code on 18 November 2026. Tick items off here as they land.
 - [ ] **Track colours, ratings, comments and tag editing.** None of these are
       stored, and tags are read-only. rekordbox's My Tag and Serato's colours
       are how many DJs sort a set.
+- [x] **Filters** by BPM range and key, and **Fits**: only the tracks whose
+      key and tempo mix with what's playing (rekordbox's Related Tracks,
+      djay's Match). Columns can be shown or hidden.
 - [ ] **Crates, playlist folders and smart playlists** (already on the
-      roadmap), plus filters such as a BPM range or "keys that fit the playing
-      track".
-- [ ] **Track suggestions.** Highlight tracks whose key and tempo fit what's
-      playing (rekordbox's Related Tracks, djay's Match).
+      roadmap).
 - [ ] **A prepare list / queue** for the next few tracks.
 - [ ] **Variable-tempo beatgrids.** Grids are constant tempo, so live drums
       and older records drift.
