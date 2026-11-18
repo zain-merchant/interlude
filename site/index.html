@@ -725,7 +725,7 @@
       const w = document.querySelector('.foot-word');
       if (!w) return;
       const d = document.documentElement;
-      const fx = await import('./foot-fx.js?v=20261117g').catch(() => null);
+      const fx = await import('./foot-fx.js?v=20261118b').catch(() => null);
       // Without tune.js (or an older one), each control still applies its default.
       const own = (o) => o.onInput?.(o.value);
       const tune = { slider: own, select: own, color: own, refresh: () => {}, ...window.tune };
@@ -778,7 +778,7 @@
         w.style.setProperty('--foot-letter', v);
       }) });
       tune.color({ label: 'Footer: groove gap colour', folder: 'Colour', value: '#00000000', onInput: colour('gap') });
-      tune.color({ label: 'Footer: groove line colour', folder: 'Colour', value: '#ffffff3d', onInput: colour('line') });
+      tune.color({ label: 'Footer: groove line colour', folder: 'Colour', value: '#ffffff13', onInput: colour('line') });
       tune.color({ label: 'Footer: outline colour', folder: 'Colour', value: '#ffffff', onInput: colour('outline') });
       // The footer's own background (the page's unless changed).
       tune.color({ label: 'Footer: page background', folder: 'Colour', value: '#09090b', onInput: (v) => {
