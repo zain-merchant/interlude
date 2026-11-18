@@ -185,25 +185,34 @@ html[data-paused] *, html[data-paused] *::before, html[data-paused] *::after { a
   mask-image: linear-gradient(to bottom, #000 calc(100% - var(--foot-fade)), transparent 100%); }
 #hero[data-hand="controller"] .app-host { --foot-fade: 64px; }
 
-/* While the controller travels (in or out), a progressive blur along the
-   bottom edge it crosses: light where it starts, heavier at the very edge,
-   so it rises out of a soft blur, not from behind a hard line. Once it has
-   landed the blur eases away (it never just stops), and at rest there's
-   none. Two layers of backdrop blur, each masked to its part of the band.
+/* While the controller travels (in or out), the frame's foot is soft:
+   the last 72px fade out to nothing and carry a light blur that grows
+   toward the edge, so the controller rises out of a haze rather than past
+   a line. The fade is a mask on the whole picture whose depth (--edge)
+   eases from 72px to 0 as the controller lands, slowly, so it never
+   visibly switches off; at rest there is no mask and no blur at all.
    Only after the first switch (data-switched), so the page doesn't open
    with it. */
-#hero::before, #hero::after, #hero ~ .edge-blur {
-  content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 56px; z-index: 300; pointer-events: none; opacity: 0;
+@property --edge { syntax: '<length>'; inherits: true; initial-value: 0px; }
+@keyframes edge-in {
+  0%, 45% { --edge: 72px; -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - var(--edge)), transparent); mask-image: linear-gradient(to bottom, #000 calc(100% - var(--edge)), transparent); }
+  100% { --edge: 0px; -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - var(--edge)), transparent); mask-image: linear-gradient(to bottom, #000 calc(100% - var(--edge)), transparent); }
 }
-/* Three steps of blur, each heavier and lower: 1.5px over the band, 4px
-   over its lower two thirds, 10px over its last third. */
-#hero::before { -webkit-backdrop-filter: blur(1.5px); backdrop-filter: blur(1.5px);
-  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 35%); mask-image: linear-gradient(to bottom, transparent, #000 35%); }
-#hero::after { -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
-  -webkit-mask-image: linear-gradient(to bottom, transparent 30%, #000 65%); mask-image: linear-gradient(to bottom, transparent 30%, #000 65%); }
-#hero ~ .edge-blur { -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
-  -webkit-mask-image: linear-gradient(to bottom, transparent 62%, #000); mask-image: linear-gradient(to bottom, transparent 62%, #000); }
-@keyframes edge-blur-in { 0%, 40% { opacity: 1; } 100% { opacity: 0; } }
-@keyframes edge-blur-out { 0%, 40% { opacity: 1; } 100% { opacity: 0; } }
-#hero[data-switched][data-hand="controller"]::before, #hero[data-switched][data-hand="controller"]::after, #hero[data-switched][data-hand="controller"] ~ .edge-blur { animation: edge-blur-in calc(var(--glide-ms) + 300ms) cubic-bezier(0.4, 0, 0.2, 1); }
-#hero[data-switched]:not([data-hand="controller"])::before, #hero[data-switched]:not([data-hand="controller"])::after, #hero[data-switched]:not([data-hand="controller"]) ~ .edge-blur { animation: edge-blur-out calc(var(--glide-ms) + 300ms) cubic-bezier(0.4, 0, 0.2, 1); }
+@keyframes edge-out {
+  0%, 45% { --edge: 72px; -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - var(--edge)), transparent); mask-image: linear-gradient(to bottom, #000 calc(100% - var(--edge)), transparent); }
+  100% { --edge: 0px; -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - var(--edge)), transparent); mask-image: linear-gradient(to bottom, #000 calc(100% - var(--edge)), transparent); }
+}
+#hero[data-switched][data-hand="controller"] { animation: edge-in calc(var(--glide-ms) + 700ms) cubic-bezier(0.4, 0, 0.2, 1); }
+#hero[data-switched]:not([data-hand="controller"]) { animation: edge-out calc(var(--glide-ms) + 700ms) cubic-bezier(0.4, 0, 0.2, 1); }
+/* The blur: one layer over the bottom 96px, its strength fading in from
+   nothing at its top (so it has no edge of its own), following --edge. */
+#hero ~ .edge-blur {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 96px; z-index: 300; pointer-events: none;
+  -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px);
+  -webkit-mask-image: linear-gradient(transparent, rgb(0 0 0 / 0.35) 45%, #000); mask-image: linear-gradient(transparent, rgb(0 0 0 / 0.35) 45%, #000);
+  opacity: 0;
+}
+@keyframes edge-blur { 0%, 45% { opacity: 1; } 100% { opacity: 0; } }
+#hero[data-switched] ~ .edge-blur { animation: edge-blur-a calc(var(--glide-ms) + 700ms) cubic-bezier(0.4, 0, 0.2, 1); }
+#hero[data-switched][data-hand="controller"] ~ .edge-blur { animation-name: edge-blur; }
+@keyframes edge-blur-a { 0%, 45% { opacity: 1; } 100% { opacity: 0; } }
