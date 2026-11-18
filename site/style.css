@@ -1728,8 +1728,11 @@ html[data-flayout="one"] .group:nth-child(-n + 2) { box-shadow: inset -1px 0 0 v
 }
 /* Film: the grain jumps to a new place eight times a second, as each frame
    of film has its own; slow: it drifts. */
-.grain[data-move="film"] { animation: grain-film 1s steps(8) infinite; }
-.grain[data-move="slow"] { animation: grain-slow 20s linear infinite; }
+/* (Film: eight places in turn, at --grain-fps, a whole fraction of the
+   screen's 60 a second so each lasts the same number of frames; slow: a
+   drift that takes --grain-drift to come round.) */
+.grain[data-move="film"] { animation: grain-film calc(8s / var(--grain-fps, 6)) steps(8) infinite; }
+.grain[data-move="slow"] { animation: grain-slow var(--grain-drift, 20s) linear infinite; }
 @keyframes grain-film {
   0% { background-position: 0 0; } 12.5% { background-position: -37px 21px; } 25% { background-position: 53px -44px; } 37.5% { background-position: -71px -9px; }
   50% { background-position: 19px 63px; } 62.5% { background-position: -48px 37px; } 75% { background-position: 66px 12px; } 87.5% { background-position: -13px -58px; } 100% { background-position: 0 0; }
