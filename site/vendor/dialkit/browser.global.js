@@ -5431,15 +5431,15 @@ Apply these values as the new defaults in the ${hookName} call.`;
         });
       } else if (mode === "simple") {
         if (springOnly && !props.hideDuration)
-          slider("Duration", "visualDuration", SPRING_DEFAULTS.visualDuration, 0.1, 1, 0.05, true);
-        slider("Bounce", "bounce", SPRING_DEFAULTS.bounce, 0, 1, 0.05);
+          slider("Duration", "visualDuration", SPRING_DEFAULTS.visualDuration, 0.05, 0.6, 0.01, true);
+        slider("Bounce", "bounce", SPRING_DEFAULTS.bounce, 0, 0.6, 0.01);
       } else {
-        slider("Stiffness", "stiffness", SPRING_DEFAULTS.stiffness, 1, 1e3, 10);
-        slider("Damping", "damping", SPRING_DEFAULTS.damping, 1, 100, 1);
-        slider("Mass", "mass", SPRING_DEFAULTS.mass, 0.1, 10, 0.1);
+        slider("Stiffness", "stiffness", SPRING_DEFAULTS.stiffness, 10, 600, 5);
+        slider("Damping", "damping", SPRING_DEFAULTS.damping, 1, 60, 0.5);
+        slider("Mass", "mass", SPRING_DEFAULTS.mass, 0.1, 3, 0.05);
       }
       if (!springOnly && !props.hideDuration && mode !== "advanced")
-        slider("Duration", mode === "easing" ? "duration" : "visualDuration", SPRING_DEFAULTS.visualDuration, 0.1, mode === "easing" ? 2 : 1, 0.05, true);
+        slider("Duration", mode === "easing" ? "duration" : "visualDuration", SPRING_DEFAULTS.visualDuration, 0.05, mode === "easing" ? 1 : 0.6, 0.01, true);
       refresh = () => updates.forEach((update) => update());
     }
     render();
