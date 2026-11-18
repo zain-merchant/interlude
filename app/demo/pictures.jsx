@@ -477,6 +477,8 @@ const PADS = 8;
 const EIGHTH = 250; // ms
 const GROOVE = ['K', 'h', 'S', 'h', 'K', 'h', 'S', 'X'];
 const GROOVE_PAD = { K: 0, h: 3, S: 5, X: 7 };
+// The pads with a sample loaded (the ones the groove plays).
+const LOADED = Object.values(GROOVE_PAD);
 const WAVE = Array.from({ length: 44 }, (_, i) => 0.25 + 0.75 * Math.abs(Math.sin(i * 0.9) * Math.cos(i * 0.31)));
 export function Extras(play) {
   return (
@@ -535,7 +537,10 @@ export function Extras(play) {
           <figure className="p-x p-x--pads" data-focus={s.focus === 1 || undefined}>
             <figcaption>Sampler</figcaption>
             <div className="p-pads p-pads--lg">{/* Keyed by its hit count, so each hit starts the pad's light afresh. */}
-              {Array.from({ length: PADS }, (_, i) => <i key={`${i}.${s.hits[i]}`} data-hit={s.hits[i] > 0 ? (s.accent[i] ? 'accent' : 'soft') : undefined} />)}</div>
+              {/* A pad with a sample on it stays faintly lit once it's been
+                  played, as a controller's sampler pads do; a hit lights it
+                  full for a moment. */}
+              {Array.from({ length: PADS }, (_, i) => <i key={`${i}.${s.hits[i]}`} data-loaded={LOADED.includes(i) || undefined} data-hit={s.hits[i] > 0 ? (s.accent[i] ? 'accent' : 'soft') : undefined} />)}</div>
           </figure>
           <figure className="p-x p-x--keys" data-focus={s.focus === 2 || undefined}>
             <figcaption>Shortcuts</figcaption>
