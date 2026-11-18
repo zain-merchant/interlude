@@ -99,6 +99,12 @@ pub enum DeckKey {
     Sync,
     Pfl,
     Keylock,
+    /// Key shift: a semitone up or down, back to the track's key, or the
+    /// other deck's key.
+    KeyUp,
+    KeyDown,
+    KeyReset,
+    KeySync,
     Slip,
     Quantize,
     /// Channel fader.
@@ -446,6 +452,10 @@ fn deck_key(key: &str) -> Option<DeckKey> {
         "beatsync" | "beatsync_tempo" | "sync_enabled" | "beatsync_phase" => Sync,
         "pfl" => Pfl,
         "keylock" => Keylock,
+        "pitch_up" | "pitch_up_small" => KeyUp,
+        "pitch_down" | "pitch_down_small" => KeyDown,
+        "reset_key" => KeyReset,
+        "sync_key" => KeySync,
         "slip_enabled" => Slip,
         "quantize" => Quantize,
         "volume" => Volume,
@@ -880,6 +890,12 @@ impl Controls {
                         seconds: deck_state.position,
                     }),
                     K::Sync if on => engine(Command::Sync { deck }),
+                    K::KeyUp | K::KeyDown if on => engine(Command::SetKeyShift {
+                        deck,
+                        semitones: deck_state.key_shift + if k == K::KeyUp { 1 } else { -1 },
+                    }),
+                    K::KeyReset if on => engine(Command::SetKeyShift { deck, semitones: 0 }),
+                    K::KeySync if on => engine(Command::KeySync { deck }),
                     K::Pfl if on != deck_state.pfl => engine(Command::SetPfl { deck, on }),
                     K::Keylock if on != deck_state.keylock => {
                         engine(Command::SetKeylock { deck, on })

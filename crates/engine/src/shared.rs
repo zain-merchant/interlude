@@ -1,4 +1,4 @@
-use std::sync::atomic::{AtomicBool, AtomicU32, AtomicU64, AtomicU8, Ordering::Relaxed};
+use std::sync::atomic::{AtomicBool, AtomicI8, AtomicU32, AtomicU64, AtomicU8, Ordering::Relaxed};
 
 use crate::{FxKind, Key, PadFx, HOT_CUES, NUM_DECKS, SAMPLER_SLOTS};
 
@@ -37,6 +37,7 @@ pub(crate) struct DeckShared {
     pub bpm: AtomicF64,
     pub playing: AtomicBool,
     pub keylock: AtomicBool,
+    pub key_shift: AtomicI8,
     /// [`Key::code`] of the loaded track's key.
     pub key: AtomicU32,
     pub loaded: AtomicBool,
@@ -164,12 +165,14 @@ pub struct DeckSnapshot {
     /// The track's detected tempo at normal speed, 0.0 if unknown.
     /// Multiply by `speed` for the tempo being played.
     pub bpm: f64,
-    /// The track's detected key at normal speed. With keylock off and the
-    /// tempo changed, the key heard is shifted by `12 * log2(speed)`
-    /// semitones.
+    /// The track's detected key at normal speed. The key heard is shifted
+    /// by `key_shift` semitones, plus `12 * log2(speed)` with keylock off
+    /// and the tempo changed.
     pub key: Option<Key>,
     /// Keylock on: tempo changes keep the pitch.
     pub keylock: bool,
+    /// Key shift in semitones, on top of any change the tempo makes.
+    pub key_shift: i32,
     pub generation: u64,
     /// Peak level since the last block, 0.0..=1.0+.
     pub peak: f32,
@@ -218,6 +221,7 @@ impl SharedState {
             bpm: d.bpm.load(),
             key: Key::from_code(d.key.load(Relaxed)),
             keylock: d.keylock.load(Relaxed),
+            key_shift: d.key_shift.load(Relaxed).into(),
             generation: d.generation.load(Relaxed),
             peak: d.peak.load(),
             gain_db: d.gain_db.load(),

@@ -25,8 +25,15 @@
 //! does: SELECT changes the effect (SHIFT goes back), BEAT ◀ ▶ the beat
 //! length, LEVEL/DEPTH the level, and ON/OFF switches it (SHIFT + ON/OFF
 //! turns both decks' effects off). Moving the lever moves the effect to the
-//! new channel; MASTER (1&2) runs it on both decks together. Not mapped yet:
-//! KEY SHIFT. The headphone level and master level knobs work in
+//! new channel; MASTER (1&2) runs it on both decks together.
+//!
+//! KEY SHIFT (SHIFT + SAMPLER) sets the deck's key: the top pads to the
+//! track's own key, +1, +2 and +3 semitones, the bottom pads to key sync
+//! (the other deck's key), -1, -2 and -3, so each column is a distance from
+//! the original. With SHIFT, pads 7 and 8 step down and up a semitone at a
+//! time, as far as an octave. The pad for the current shift lights.
+//!
+//! The headphone level and master level knobs work in
 //! the controller's own sound card and send no MIDI.
 
 use dj_engine::dsp::{EQ_KILL_DB, EQ_MAX_DB};
@@ -76,6 +83,7 @@ const PAD_SAMPLER: u8 = 0x30;
 const PAD_STEMS: u8 = 0x40;
 const PAD_FX2: u8 = 0x50;
 const PAD_BEAT_LOOP: u8 = 0x60;
+const PAD_KEY_SHIFT: u8 = 0x70;
 /// Pad mode buttons (deck notes), as (button, SHIFT + button): HOT CUE /
 /// KEYBOARD, PAD FX1 / PAD FX2, BEAT JUMP / BEAT LOOP, SAMPLER / KEY SHIFT.
 /// Each pair shares one LED.
@@ -90,6 +98,17 @@ const PAD_LOOP_BEATS: [f64; 8] = [0.25, 0.5, 1.0, 2.0, 4.0, 8.0, 16.0, 32.0];
 /// Jump of each pad in beat jump mode, in beats: back on the left pad of
 /// each pair, forward on the right.
 const PAD_JUMP_BEATS: [f64; 8] = [-1.0, 1.0, -2.0, 2.0, -4.0, 4.0, -8.0, 8.0];
+/// Key shift of each pad in key shift mode, in semitones; `None` is key sync.
+const PAD_KEY_SHIFTS: [Option<i32>; 8] = [
+    Some(0),
+    Some(1),
+    Some(2),
+    Some(3),
+    None,
+    Some(-1),
+    Some(-2),
+    Some(-3),
+];
 /// SHIFT + a beat jump pad jumps this many times as far: 4, 8, 16 and 32
 /// bars, for skipping whole phrases.
 const PAD_JUMP_SHIFT: f64 = 16.0;
@@ -439,6 +458,19 @@ impl Flx4 {
                 deck,
                 beats: PAD_JUMP_BEATS[i] * if shift { PAD_JUMP_SHIFT } else { 1.0 },
             },
+            (PAD_KEY_SHIFT, false, true) => match PAD_KEY_SHIFTS[i] {
+                Some(semitones) => Command::SetKeyShift { deck, semitones },
+                None => Command::KeySync { deck },
+            },
+            // SHIFT: pads 7 and 8 step down and up; the rest work as without.
+            (PAD_KEY_SHIFT, true, true) => match (i, PAD_KEY_SHIFTS[i]) {
+                (6 | 7, _) => Command::SetKeyShift {
+                    deck,
+                    semitones: state.decks[d].key_shift + if i == 7 { 1 } else { -1 },
+                },
+                (_, Some(semitones)) => Command::SetKeyShift { deck, semitones },
+                (_, None) => Command::KeySync { deck },
+            },
             _ => return vec![],
         };
         vec![engine(cmd)]
@@ -785,6 +817,17 @@ fn all_leds(state: &State) -> Vec<Led> {
                     deck.loaded && deck.stems == 1 << i,
                 ));
             }
+            // The pad for the shift now set lights, as does SHIFT's
+            // step pad for the way it went past ±3.
+            for (i, semis) in PAD_KEY_SHIFTS.iter().enumerate() {
+                let on = deck.loaded
+                    && match (status == NOTE_ON | (pads + 1), i) {
+                        (true, 6) => deck.key_shift < -3,
+                        (true, 7) => deck.key_shift > 3,
+                        _ => *semis == Some(deck.key_shift),
+                    };
+                out.push((status, PAD_KEY_SHIFT + i as u8, on));
+            }
             for (i, slot) in state.sampler.slots.iter().enumerate().take(8) {
                 out.push((status, PAD_SAMPLER + i as u8, slot.loaded));
             }
@@ -812,6 +855,7 @@ fn pad_mode_of(note: u8) -> Option<PadMode> {
         PAD_BEAT_JUMP => Some(PadMode::BeatJump),
         PAD_SAMPLER => Some(PadMode::Sampler),
         PAD_BEAT_LOOP => Some(PadMode::BeatLoop),
+        PAD_KEY_SHIFT => Some(PadMode::KeyShift),
         _ => None,
     }
 }
@@ -1327,6 +1371,59 @@ mod tests {
             one(&mut m, [0x9A, 0x27, 0x7F], &s),
             Command::BeatJump { deck: DeckId::B, beats } if beats == 128.0
         ));
+    }
+
+    #[test]
+    fn key_shift_pads() {
+        let mut m = Flx4::new();
+        let mut s = st();
+        let shift = |c| match c {
+            Command::SetKeyShift { semitones, .. } => semitones,
+            c => panic!("{c:?}"),
+        };
+        assert_eq!(shift(one(&mut m, [0x97, 0x70, 0x7F], &s)), 0);
+        assert_eq!(shift(one(&mut m, [0x97, 0x73, 0x7F], &s)), 3);
+        assert_eq!(shift(one(&mut m, [0x99, 0x77, 0x7F], &s)), -3);
+        assert!(matches!(
+            one(&mut m, [0x99, 0x74, 0x7F], &s),
+            Command::KeySync { deck: DeckId::B }
+        ));
+        assert_eq!(m.decks[1].pad_mode, PadMode::KeyShift);
+        // SHIFT steps from wherever it is.
+        s.decks[0].key_shift = 3;
+        assert_eq!(shift(one(&mut m, [0x98, 0x77, 0x7F], &s)), 4);
+        assert_eq!(shift(one(&mut m, [0x98, 0x76, 0x7F], &s)), 2);
+        assert_eq!(shift(one(&mut m, [0x98, 0x71, 0x7F], &s)), 1);
+        // Releases do nothing.
+        assert!(cmds(m.handle(&[0x97, 0x71, 0x00], &s)).is_empty());
+    }
+
+    #[test]
+    fn key_shift_leds() {
+        let mut m = Flx4::new();
+        let mut s = st();
+        let lit = |m: &mut Flx4, s: &State| -> Vec<Vec<u8>> {
+            m.reset_leds();
+            m.leds(s)
+                .into_iter()
+                .filter(|l| l[2] == 0x7F && (0x70..0x78).contains(&l[1]) && l[0] <= 0x98)
+                .collect()
+        };
+        assert_eq!(
+            lit(&mut m, &s),
+            vec![vec![0x97, 0x70, 0x7F], vec![0x98, 0x70, 0x7F]]
+        );
+        s.decks[0].key_shift = 2;
+        assert_eq!(
+            lit(&mut m, &s),
+            vec![vec![0x97, 0x72, 0x7F], vec![0x98, 0x72, 0x7F]]
+        );
+        // With SHIFT, pad 7 steps down rather than meaning -2.
+        s.decks[0].key_shift = -2;
+        assert_eq!(lit(&mut m, &s), vec![vec![0x97, 0x76, 0x7F]]);
+        // Past -3 only SHIFT's step-down pad lights.
+        s.decks[0].key_shift = -5;
+        assert_eq!(lit(&mut m, &s), vec![vec![0x98, 0x76, 0x7F]]);
     }
 
     #[test]

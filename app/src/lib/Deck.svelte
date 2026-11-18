@@ -16,7 +16,7 @@
   import { keyLabel } from './commands.js';
   import { announce } from './announce.svelte.js';
   import { keyName, keyLongName, camelot, playingKey } from './key.js';
-  import { toggleSlip, beatJump, hasGrid, beatsLabel } from './performance.js';
+  import { toggleSlip, beatJump, hasGrid, beatsLabel, setKeyShift, keyStep, keySync, canKeySync, KEY_SHIFT_MAX } from './performance.js';
   import { findPhrases, phraseAt, PHRASE_NAMES } from './phrases.js';
 
   /** @type {{ deck: number, onload: (deck: number, track: any) => void, onreveal: (path: string) => void, onsettings?: (page: string) => void }} */
@@ -117,7 +117,7 @@
   // or nudging doesn't make the BPM and key jump around.
   const bpm = $derived(d.bpm > 0 ? d.bpm * d.rate : 0);
   const atCue = $derived(!!t && !d.playing && Math.abs(d.position - d.cue) < 0.01);
-  const pk = $derived(t ? playingKey(d.key, d.rate, d.keylock) : null);
+  const pk = $derived(t ? playingKey(d.key, d.rate, d.keylock, d.keyShift ?? 0) : null);
   const canSync = $derived(!!t && d.bpm > 0 && engine.decks[1 - deck].bpm > 0);
   // Phrases (intro, build, drop...) from the waveform on the grid; found
   // again when the grid changes.
@@ -196,13 +196,34 @@
   const slipTip = () =>
     tipText('Slip on: after a scratch, loop, held hot cue or pause, the track picks up where it would have been. Click to turn off', keyLabel(`deck.${deck}.slip`));
   const rangeTip = () => `Tempo ${pct(ratePct)}, fader range ±${Math.round(range * 100)}%. Click to change the range`;
+  const st = (n) => `${Math.abs(n)} ${Math.abs(n) === 1 ? 'semitone' : 'semitones'}`;
   const keyTip = () => {
     if (!pk) return '';
     const track = `${keyLongName(d.key)} (${camelot(d.key)})`;
-    if (!pk.shift) return `Key ${track}`;
-    const st = Math.abs(pk.shift) === 1 ? 'semitone' : 'semitones';
-    return `Key ${keyLongName(pk)} (${camelot(pk)}): the track is in ${track}, shifted ${pk.shift > 0 ? 'up' : 'down'} ${Math.abs(pk.shift)} ${st} by the tempo. Key lock keeps the original key.`;
+    const tempo = pk.shift - pk.keyShift;
+    const parts = [
+      pk.keyShift && `key shift ${pk.keyShift > 0 ? 'up' : 'down'} ${st(pk.keyShift)}`,
+      tempo && `the tempo ${tempo > 0 ? 'up' : 'down'} ${st(tempo)}`,
+    ].filter(Boolean);
+    const now = pk.shift ? `Key ${keyLongName(pk)} (${camelot(pk)}): the track is in ${track}, moved by ${parts.join(' and ')}` : `Key ${track}${pk.keyShift ? `, after key shift ${pk.keyShift > 0 ? 'up' : 'down'} ${st(pk.keyShift)} and the tempo back` : ''}`;
+    return `${now}. Click to shift the key`;
   };
+  // The key shift menu, from a click (or keyboard press) on the key.
+  function keyMenu(e) {
+    if (!pk) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const r = e.currentTarget.getBoundingClientRect();
+    const at = e.clientX || e.clientY ? e : { clientX: r.left, clientY: r.bottom, preventDefault() {}, stopPropagation() {} };
+    const ks = d.keyShift ?? 0;
+    openMenu(at, [
+      { label: 'Key up a semitone', action: () => keyStep(deck, 1), key: keyLabel(`deck.${deck}.keyUp`), enabled: ks < KEY_SHIFT_MAX },
+      { label: 'Key down a semitone', action: () => keyStep(deck, -1), key: keyLabel(`deck.${deck}.keyDown`), enabled: ks > -KEY_SHIFT_MAX },
+      { label: "Back to the track's key", action: () => setKeyShift(deck, 0), key: keyLabel(`deck.${deck}.keyReset`), enabled: ks !== 0 },
+      '-',
+      { label: `Match deck ${other}'s key`, action: () => keySync(deck), key: keyLabel(`deck.${deck}.keySync`), enabled: canKeySync(deck) },
+    ]);
+  }
   const bend = (v) => () => t && control({ type: 'setBend', deck, bend: v });
 
   const regionLabel = $derived(
@@ -235,7 +256,8 @@
         {:else}
           <div class="big num">{bpm > 0 ? bpm.toFixed(2) : '—'}</div>
         {/if}
-        <div class="unit">{#if pk}<span class="key" class:shifted={pk.shift} use:tip={keyTip}>{keyName(pk)} · {camelot(pk)}</span>{" · "}{/if}BPM</div>
+        <div class="unit">{#if pk}<button class="key" class:shifted={pk.shift} aria-label="Key {keyName(pk)}, {camelot(pk)}{pk.keyShift ? `, shifted ${pk.keyShift > 0 ? 'up' : 'down'} ${st(pk.keyShift)}` : ''}. Shift the key"
+          aria-haspopup="menu" onclick={keyMenu} oncontextmenu={keyMenu} ondblclick={(e) => e.stopPropagation()} use:tip={keyTip}>{keyName(pk)} · {camelot(pk)}{#if pk.keyShift}<span class="ks num">{pk.keyShift > 0 ? '+' : '−'}{Math.abs(pk.keyShift)}</span>{/if}</button>{" · "}{/if}BPM</div>
       </div>
     </header>
 
@@ -697,8 +719,24 @@
   }
   .key {
     color: var(--fg-3);
+    font: inherit;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    border-radius: 3px;
   }
-  .key.shifted {
+  .key.shifted,
+  .key:hover {
     color: var(--fg);
+  }
+  .key:focus-visible {
+    outline: 2px solid var(--deck);
+    outline-offset: 1px;
+  }
+  /* Key shift, in semitones, after the key it gives. */
+  .ks {
+    margin-left: 0.35em;
+    color: var(--deck);
   }
 </style>
