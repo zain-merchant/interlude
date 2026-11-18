@@ -124,7 +124,7 @@ const TURN = (Math.PI * 2) / 40;
 const T = {
   drop: 108, needle: 0.8, life: 0.2, persp: 0.85, cue: 'dust', cueAmt: 1, res: 0.85,
   speck: 'hyphen',
-  scrollSpin: 1, scrollPick: 6, scrollCoast: 0.8, // how much scrolling turns it, how fast it picks up, how long it coasts
+  twistRate: 12, twistMax: 20, twistEase: 0.6, // scrolling twists it: degrees per 1000px, at most, settling in s
   dust: 0, away: 1, awayB: 1, dustSize: 1, dustSoft: 0.5, dustGlow: 1, dustGlowSize: 1, dustBright: 1, dustLight: 1, dustVariety: 0.6, dustFibres: 0.5, // natural dust, on top of the rest (see uNat)
   size: 1, up: 0, warp: 'none', warpAmt: 0.5, tint: 0, hover: 'arc', still: 1.2,
   look: 'vinyl', shape: 'custom', vinylPreset: 'dark',
@@ -182,14 +182,13 @@ let swell = 0;
 let want = 0;
 let lastKick = 0;
 let spin = 0;
-// Scrolling turns the record: down turns it on (clockwise, the way it
-// plays), back up turns it back. The scroll's speed sets a speed to aim
-// for (sAim, radians a second), which fades as the page stops; the turn
-// itself (sVel) picks up toward it at sPick and coasts off over sCoast.
-let sVel = 0;
-let sAim = 0;
-let sLastY = scrollY;
-let sLastT = performance.now();
+// Scrolling twists the record a little: down twists it on (clockwise, the
+// way it plays), back up twists it back. The twist follows how far down
+// the page is (so a fast scroll or a long one never sets it spinning),
+// capped, and eased: twist eases toward twistAim on a critically damped
+// spring.
+let twist = 0;
+let twistV = 0;
 let drift = 0;
 const needle = { on: false, r: 0, born: 0 };
 // How far the glints have gone round (see T.gRide), and the lamp (when it
@@ -1690,19 +1689,9 @@ const local = (e) => {
   const c = canvas.getBoundingClientRect();
   return { x: e.clientX - c.left, y: e.clientY - c.top };
 };
-addEventListener('scroll', () => {
-  const now = performance.now();
-  const dt = Math.max(8, now - sLastT) / 1000;
-  const dy = scrollY - sLastY;
-  sLastY = scrollY;
-  sLastT = now;
-  if (!T.scrollSpin || reduced.matches) return;
-  // Pixels a second of scroll to radians a second of turn (a quick flick of
-  // 3000px/s turns it about one and a half times a second at 1).
-  const aim = (dy / dt) * 0.003 * T.scrollSpin;
-  sAim = Math.abs(aim) > Math.abs(sAim) || Math.sign(aim) !== Math.sign(sAim) ? aim : sAim;
-  wake();
-}, { passive: true });
+// (Scrolling: wake, so the twist eases to where the page now is.)
+const twistTo = () => (reduced.matches ? 0 : (Math.min(T.twistMax, (scrollY / 1000) * T.twistRate) * Math.PI) / 180);
+addEventListener('scroll', () => { if (T.twistRate) wake(); }, { passive: true });
 addEventListener('pointermove', (e) => {
   if (e.pointerType === 'touch') return;
   const p = local(e);
@@ -1754,13 +1743,20 @@ function frame(now, still) {
   const g = layout(now);
   swell += (want - swell) * Math.min(1, dt * (want > swell ? 2.5 : 1));
   want *= Math.exp(-dt * 1.4);
-  // (The scroll's aim fades over the coast time; the turn follows it.)
-  sAim *= Math.exp(-dt / Math.max(0.05, T.scrollCoast));
-  sVel += (sAim - sVel) * Math.min(1, dt * T.scrollPick);
-  if (Math.abs(sVel) < 1e-4 && Math.abs(sAim) < 1e-4) sVel = sAim = 0;
-  spin += (TURN * T.life + sVel) * dt;
+  // The scroll's twist: so many degrees per 1000px down the page, no more
+  // than its cap, reached on a spring that settles in about scrollEase s.
+  const aim = reduced.matches ? 0 : (Math.min(T.twistMax, (scrollY / 1000) * T.twistRate) * Math.PI) / 180;
+  const k = (2 * Math.PI / Math.max(0.05, T.twistEase)) ** 2;
+  const c = 2 * Math.sqrt(k);
+  for (let i = 0, n = Math.ceil(dt / 0.008); i < n; i++) {
+    const h = dt / n;
+    twistV += (k * (aim - twist) - c * twistV) * h;
+    twist += twistV * h;
+  }
+  if (Math.abs(aim - twist) < 1e-5 && Math.abs(twistV) < 1e-5) { twist = aim; twistV = 0; }
+  spin += TURN * T.life * dt;
   drift += dt * T.life;
-  glintSpin = (glintSpin + (TURN * T.life + sVel) * T.gRide * dt) % (Math.PI * 2);
+  glintSpin = (glintSpin + TURN * T.life * T.gRide * dt) % (Math.PI * 2);
   if (T.lampMove === 'turn') lampTurn = (lampTurn + TURN * T.life * dt) % (Math.PI * 2);
   // Where the lamp points: drifting slowly to and fro, fixed, or turning
   // with the record.
@@ -1840,7 +1836,7 @@ function frame(now, still) {
   gl.uniform2f(U.uCentre, g.cx, g.cy);
   gl.uniform2f(U.uGeo, g.d0, g.tilt);
   gl.uniform2f(U.uSpan, g.r0, g.R);
-  gl.uniform1f(U.uSpin, spin % (Math.PI * 2));
+  gl.uniform1f(U.uSpin, (spin + twist) % (Math.PI * 2));
   // (Nothing passing goes in a still frame: the pointer's moves are left out.)
   const f = still ? ZERO_FX : fx.at;
   gl.uniform1f(U.uFacing, lampAt + f.light);
@@ -1904,7 +1900,7 @@ function draw(now) {
   }
   // At rest (no pointer light, no needle) the record only turns slowly, so
   // 30 frames a second is plenty; the pointer's light gets the full 60.
-  const busy = hover.on > 0.01 || needle.on || ripple.on || fx.moving || sVel !== 0;
+  const busy = hover.on > 0.01 || needle.on || ripple.on || fx.moving || twist !== twistTo();
   if (busy || now - last >= 1000 / 30 - 2) frame(now, false);
   requestAnimationFrame(draw);
 }
@@ -2271,12 +2267,11 @@ tw?.select({ ...lampF, label: 'Hero record: cones', value: T.cones, onInput: red
 tw?.slider({ ...lampF, label: 'Hero record: lamp colour (sides)', min: 0, max: 1, step: 0.05, value: T.tint, onInput: redraw('tint') });
 
 tw?.slider({ folder: 'Motion', label: 'Hero record: spin speed', min: 0, max: 3, step: 0.1, value: T.life, onInput: redraw('life') });
-// Scrolling turns it: down turns it on, up turns it back. How much (0: not
-// at all), how quickly it picks up the scroll (per second), and how long it
-// coasts on after the page stops (seconds).
-tw?.slider({ folder: 'Motion', label: 'Hero record: scroll turns it', min: 0, max: 4, step: 0.05, value: T.scrollSpin, onInput: (v) => { T.scrollSpin = v; } });
-tw?.slider({ folder: 'Motion', label: 'Hero record: scroll pick-up', min: 0.5, max: 20, step: 0.5, value: T.scrollPick, unit: '/s', onInput: (v) => { T.scrollPick = v; } });
-tw?.slider({ folder: 'Motion', label: 'Hero record: scroll coast', min: 0.1, max: 3, step: 0.05, value: T.scrollCoast, unit: 's', onInput: (v) => { T.scrollCoast = v; } });
+// Scrolling twists it a little, down clockwise and back up the other way:
+// how far per 1000px scrolled, its most, and how quickly it settles.
+tw?.slider({ folder: 'Motion', label: 'Hero record: scroll twist per 1000px', min: 0, max: 90, step: 1, value: T.twistRate, unit: '°', onInput: (v) => { T.twistRate = v; wake(); } });
+tw?.slider({ folder: 'Motion', label: 'Hero record: scroll twist at most', min: 0, max: 180, step: 1, value: T.twistMax, unit: '°', onInput: (v) => { T.twistMax = v; wake(); } });
+tw?.slider({ folder: 'Motion', label: 'Hero record: scroll twist settles in', min: 0.1, max: 2, step: 0.05, value: T.twistEase, unit: 's', onInput: (v) => { T.twistEase = v; } });
 
 const touchF = { folder: 'Hover & needle' };
 const moves = (k) => () => MOVERS[T.hover]?.includes(k);
