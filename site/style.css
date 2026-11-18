@@ -1019,7 +1019,11 @@ html[data-hero][data-herotext="card"][data-cardnew="link"][data-cardvlink="right
 html[data-hero][data-herotext="card"] .cta { gap: 8px; }
 html[data-hero][data-herotext="card"] .cta .btn.big { flex: 0 0 auto; box-sizing: border-box; height: 44px; padding: 0 13px; gap: 7px; font-size: 15px; border-radius: 11px; }
 html[data-hero][data-herotext="card"] .cta .btn.big svg { width: 16px; height: 16px; margin-left: -1px; }
-html[data-hero][data-herotext="card"] .cta .btn.ghost { box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.2), inset 0 1px 0 rgb(255 255 255 / 0.06); }
+/* Same 44px box as Download, but a dark button with only a hairline reads
+   shorter beside a light filled one (the light one spreads). So it gets a
+   body of its own, a lit fill the full height, and the ring sits on that. */
+html[data-hero][data-herotext="card"] .cta .btn.ghost { background: rgb(255 255 255 / 0.09); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.12), inset 0 1px 0 rgb(255 255 255 / 0.08); }
+html[data-hero][data-herotext="card"] .cta .btn.ghost:hover { background: rgb(255 255 255 / 0.13); }
 /* The nav's buttons, just after the capsule forms (Nav: buttons arrive,
    after): each fades up from a touch smaller and a little soft, GitHub then
    Download 50ms on; out together, quicker. Opacity, scale and filter only,
