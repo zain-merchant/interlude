@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261121p">
+  <link rel="stylesheet" href="style.css?v=20261121q">
   <link rel="stylesheet" href="demo/cards.css?v=20261121j">
   <script src="tune.js?v=20261120v"></script>
   <script>
@@ -657,7 +657,7 @@
           // (Its colour from a CSS variable, so Tune can change it: Note ›
           // side A, side B, white label paper.)
           const paperVar = label === 'white' ? '--lab-white' : side === 'B' ? '--lab-b' : '--lab-a';
-          const paperDef = label === 'white' ? '#f3f0e8' : side === 'B' ? '#5ed9f8' : '#fb8b38';
+          const paperDef = label === 'white' ? '#f3f0e8' : side === 'B' ? '#3fc9ea' : '#fb8b38';
           el('circle', { r: L, style: `fill: var(${paperVar}, ${paperDef})` }, lab);
           const pf = el('filter', { id: `paper-${tag}`, x: '-10%', y: '-10%', width: '120%', height: '120%' }, defs);
           el('feTurbulence', { type: 'fractalNoise', baseFrequency: '1.4', numOctaves: 3, seed: 4, result: 'n' }, pf);
@@ -681,10 +681,16 @@
           if (label !== 'white') {
             // The app's icon itself, small: its two rings on its own dark
             // tile, so they read on any paper, whatever colour it is.
-            el('rect', { x: -9.5, y: -24, width: 19, height: 19, rx: 4.6, fill: '#121216' }, lab);
-            el('rect', { x: -9.5, y: -24, width: 19, height: 19, rx: 4.6, fill: 'none', stroke: 'rgb(255 255 255 / 0.12)', 'stroke-width': 0.35 }, lab);
-            el('circle', { cx: -2.9, cy: -14.5, r: 4.6, fill: 'none', stroke: '#4aa8ff', 'stroke-width': 1.5 }, lab);
-            el('circle', { cx: 2.9, cy: -14.5, r: 4.6, fill: 'none', stroke: '#ff9b45', 'stroke-width': 1.5 }, lab);
+            // Two ways (Note: label logo): the rings alone, small, each with a
+            // fine outline in the label's ink so a ring the same colour as the
+            // paper still reads; or the rings on the icon's own dark tile.
+            const ringsG = el('g', { class: 'lg-rings' }, lab);
+            for (const [cx, col] of [[-2.5, '#4aa8ff'], [2.5, '#ff9b45']]) el('circle', { cx, cy: -12, r: 3.9, fill: 'none', 'stroke-width': 2.5, style: `stroke: color-mix(in oklab, #141210 88%, var(${paperVar}, ${paperDef}))` }, ringsG);
+            for (const [cx, col] of [[-2.5, '#4aa8ff'], [2.5, '#ff9b45']]) el('circle', { cx, cy: -12, r: 3.9, fill: 'none', stroke: col, 'stroke-width': 1.25 }, ringsG);
+            const tileG = el('g', { class: 'lg-tile' }, lab);
+            el('rect', { x: -7.5, y: -19.5, width: 15, height: 15, rx: 3.6, fill: '#121216' }, tileG);
+            el('circle', { cx: -2.3, cy: -12, r: 3.6, fill: 'none', stroke: '#4aa8ff', 'stroke-width': 1.2 }, tileG);
+            el('circle', { cx: 2.3, cy: -12, r: 3.6, fill: 'none', stroke: '#ff9b45', 'stroke-width': 1.2 }, tileG);
             // Its name under it, larger; under that, which side.
             const n = el('text', { y: 11, 'text-anchor': 'middle', 'font-size': 7.4, 'font-weight': 650, 'letter-spacing': -0.25, style: ink(92), 'font-family': 'Geist, sans-serif' }, lab);
             n.textContent = 'Interlude';
@@ -766,8 +772,10 @@
           window.tune?.slider({ label: 'Note: record flip bounce', min: 0, max: 0.8, step: 0.01, value: S.flip.bounce, onInput: (v) => (S.flip = { ...S.flip, bounce: v }) });
           // The labels' paper.
           const root = document.documentElement.style;
+          document.documentElement.dataset.lablogo = 'rings';
+          window.tune?.select({ label: 'Note: label logo', value: 'rings', options: [['rings', 'Rings, outlined'], ['tile', 'Rings on the icon tile']], onInput: (v) => (document.documentElement.dataset.lablogo = v) });
           window.tune?.color({ label: 'Note: side A label', value: '#fb8b38', onInput: (v) => root.setProperty('--lab-a', v) });
-          window.tune?.color({ label: 'Note: side B label', value: '#5ed9f8', onInput: (v) => root.setProperty('--lab-b', v) });
+          window.tune?.color({ label: 'Note: side B label', value: '#3fc9ea', onInput: (v) => root.setProperty('--lab-b', v) });
           window.tune?.color({ label: 'Note: white label', value: '#f3f0e8', onInput: (v) => root.setProperty('--lab-white', v) });
           const t = window.tune;
           t?.slider({ label: 'Note: sleeve corner radius', min: 0, max: 16, step: 0.5, value: 4, unit: 'px', css: '--sleeve-r' });

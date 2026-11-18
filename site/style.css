@@ -1768,3 +1768,6 @@ html[data-flayout="one"] .group:nth-child(-n + 2) { box-shadow: inset -1px 0 0 v
 .foot { position: relative; isolation: isolate; }
 .grain--foot { inset: 0; height: auto; z-index: 1; -webkit-mask-image: none; mask-image: none; }
 .foot-grid { position: relative; z-index: 2; }
+
+/* The record labels' logo (Tune › Note: label logo). */
+html:not([data-lablogo="tile"]) .lg-tile, html[data-lablogo="tile"] .lg-rings { display: none; }
