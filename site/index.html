@@ -931,8 +931,19 @@
     // plain "Latest release" link if GitHub can't be reached.
     // The open source card's log: the latest changes on main, merges left
     // out (they only repeat the change they bring in), releases tagged.
-    fetch('https://api.github.com/repos/zain-merchant/interlude/commits?per_page=30')
-      .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
+    // GitHub allows an address 60 of these an hour, so the list is kept in
+    // the browser for 15 minutes, and the last one kept is used if GitHub
+    // turns a request away.
+    const CACHED = 'interlude-commits';
+    const kept = (() => { try { return JSON.parse(localStorage.getItem(CACHED)); } catch { return null; } })();
+    (kept && Date.now() - kept.at < 15 * 60000 ? Promise.resolve(kept.list)
+      : fetch('https://api.github.com/repos/zain-merchant/interlude/commits?per_page=30')
+        .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
+        .then((list) => {
+          try { localStorage.setItem(CACHED, JSON.stringify({ at: Date.now(), list: list.map((c) => ({ sha: c.sha, html_url: c.html_url, commit: { message: c.commit.message, author: { date: c.commit.author.date } } })) })); } catch {}
+          return list;
+        })
+        .catch((e) => (kept ? kept.list : Promise.reject(e))))
       .then((list) => {
         const ago = (iso) => {
           const m = Math.max(1, Math.round((Date.now() - new Date(iso)) / 60000));
