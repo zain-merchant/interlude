@@ -1762,3 +1762,9 @@ html[data-flayout="one"] .group:nth-child(-n + 2) { box-shadow: inset -1px 0 0 v
 }
 @keyframes grain-slow { to { background-position: 200px 120px; } }
 @media (prefers-reduced-motion: reduce) { .grain { animation: none !important; } }
+
+/* The footer's grain: the whole footer, over its background and the big
+   word (and its effect), under the logo and the links. */
+.foot { position: relative; isolation: isolate; }
+.grain--foot { inset: 0; height: auto; z-index: 1; -webkit-mask-image: none; mask-image: none; }
+.foot-grid { position: relative; z-index: 2; }

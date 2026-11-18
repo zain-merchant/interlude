@@ -52,6 +52,7 @@ export const T = {
   rippleInterval: 0.95, // breathe and interference: time between rings, s
   rippleSpread: 0.45, // interference: how far apart its sources are, em
   fade: 0.5,         // how long the whole effect takes to come and go, s
+  clickReach: 1.6,   // how far a click's ring runs, as a share of the ripple reach
   lineWidth: 1.25,   // groove line width, CSS px
   arc: 'flat',       // flat: long shallow arcs; record: round arcs of a record's grooves, its middle below the word
   songs: 0,          // grooves per song, with a smooth gap between songs (0: one long song, no gaps)
@@ -574,7 +575,8 @@ function frame(now) {
   gl.uniform3f(U.uHover, hover.x, hover.y, hover.on * hover.on * (3 - 2 * hover.on));
   gl.uniform1f(U.uLamp, hasLamp(mode) ? 1 : 0);
   gl.uniform1f(U.uWarp, mode === 'lamp-warp' ? T.warp : 0);
-  gl.uniform1f(U.uRipples, hasRipples(mode) ? 1 : 0);
+  // (Rings show in the ripple modes, and in any mode while a click's ring runs.)
+  gl.uniform1f(U.uRipples, hasRipples(mode) || pts.some((q) => q[2] >= 0) ? 1 : 0);
   gl.uniform4f(U.uRing, T.rippleBend, reach, Math.max(0.005, T.rippleWidth) * geo.em, 0.3 * geo.em);
   gl.uniform1f(U.uEm, geo.em);
   gl.uniform2f(U.uFar, geo.far.x, geo.far.y);
@@ -594,7 +596,7 @@ function frame(now) {
   if (hover.on !== hover.want) return true;
   if (hover.on === 0) return false;
   if (!still && (Math.abs(hover.tx - hover.x) > 0.2 || Math.abs(hover.ty - hover.y) > 0.2 || Math.hypot(hover.vx, hover.vy) > 2)) return true;
-  if (rings && pts.some((p) => p[2] >= 0)) return true;
+  if (pts.some((p) => p[2] >= 0)) return true;
   if (rings && hover.want && (T.rippleStyle === 'breathe' || T.rippleStyle === 'interference' || emit.armed)) return true;
   return false;
 }
@@ -641,6 +643,16 @@ export function point(p) {
     Object.assign(hover, { tx: p.x, ty: p.y, want: 1 });
     demoAt = 0;
   } else hover.want = 0;
+  wake();
+}
+
+/** A click on the word: a ring runs out from there (canvas-local CSS px),
+ *  in whatever mode, on the ripple settings, and as wide as a click's ring
+ *  is set to (T.clickReach, a share of the ripple reach). */
+export function click(p) {
+  if (!geo && !layout()) return;
+  ring(p.x, p.y, T.clickReach ?? 1.6);
+  // (The pointer's own light comes on for it too, if it isn't already.)
   wake();
 }
 
