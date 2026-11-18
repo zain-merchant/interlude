@@ -14,8 +14,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261120b">
-  <link rel="stylesheet" href="demo/cards.css?v=20261120a">
+  <link rel="stylesheet" href="style.css?v=20261120c">
+  <link rel="stylesheet" href="demo/cards.css?v=20261120c">
   <script src="tune.js?v=20261118b"></script>
   <script>
     // The hero's layout (Split) and the nav's (bar to capsule), set before
@@ -652,7 +652,7 @@
   </footer>
 
   <!-- The feature cards' pictures (built from app/demo, see the README). -->
-  <script type="module" src="demo/cards.js?v=20261120a"></script>
+  <script type="module" src="demo/cards.js?v=20261120c"></script>
   <script>
     // The hero. The screenshot shows first; once the page has loaded, the
     // live app takes its place (unless the visitor prefers less motion).
@@ -1093,7 +1093,7 @@
     window.tune?.select({ label: 'Open source: look', value: 'poster-light', options: [['tight', 'Current, tightened'], ['doors', 'Two doors, in a light frame'], ['doors-apart', 'Two doors, a dark card and a light one'], ['doors-dark', 'Two doors, both dark like the note'], ['poster-card', 'Poster, in a dark card'], ['poster-light', 'Poster, in the light card'], ['poster-open', 'Poster, no card (the FAQ gets one)'], ['feed', 'The newest change, big'], ['cards', 'Centred, three change cards'], ['gitlog', 'The log as git shows it']],
       onInput: (v) => { document.querySelector('.oss').dataset.look = v; window.tune?.refresh?.('Open source'); } });
     // What else the light card has (style.css, "Light card extras").
-    window.tune?.select({ label: 'Open source: light card extra', value: 'none', options: [['none', 'Plain'], ['ticket', 'A ticket: the changes a tear-off stub'], ['stack', 'A pile: two deck-coloured cards behind'], ['bite', 'A bite out of the corner, the icon in it'], ['tab', 'A folder tab, labelled'], ['grooves', 'Grooves round the bottom right corner'], ['reveal', 'Heading rises in as it comes into view']],
+    window.tune?.select({ label: 'Open source: light card extra', value: 'none', options: [['none', 'Plain'], ['grooves', 'Grooves round the corner, kept off the words'], ['ghosts', 'Two paler cards behind it, like a deck'], ['glow', 'On a soft glow in the deck colours'], ['reveal', 'Heading rises in as it comes into view']],
       onInput: (v) => (document.querySelector('.oss').dataset.extra = v) });
     // (Reveal: marked once the card is mostly in view.)
     (() => {
