@@ -56,7 +56,7 @@ export const T = {
   clickBend: 4,      // how much harder a click's ring bends the grooves than a hover's
   clickGreen: false, // a click's ring shows green (a test that clicks land)
   knock: 30,         // a click's lens: how far it moves the grooves at first, CSS px
-  knockSize: 0.3,    // its size, em
+  knockSize: 0.4,    // its size, em
   knockTime: 0.6,    // how long it takes to spring back, s
   knockBounce: 0.15, // how much it swings in and out as it does (0: none)
   knockWave: 0.3,    // its wave: how hard it bends, a share of the lens
@@ -392,7 +392,7 @@ const emit = { dist: 0, px: 0, py: 0, time: 0, src: 0, armed: false, rest: 0 };
 // The phone's one-off play-through: when it started (ms), or 0.
 let demoAt = 0;
 // A click's warp: where, and when (ms; 0: none).
-const knock = { x: 0, y: 0, at: 0, held: false, from: 0, wave: false };
+const knock = { x: 0, y: 0, at: 0, held: false, from: 0, wave: false, letGo: 0 };
 // How far the warp pushes now: a spring let go from the full push, with
 // T.knockBounce of wobble, settling over T.knockTime (and a 30ms rise, so
 // it doesn't jump in).
@@ -400,6 +400,11 @@ function knockNow(now) {
   if (!knock.at) return 0;
   // Held (the button still down, maybe dragging): at full push, after a
   // 30ms rise. Let go: it springs back from where it was.
+  // (A quick click is held until it has pushed all the way, so a tap gets
+  // the whole thing, then let go.)
+  if (knock.held && knock.letGo && now >= knock.letGo) {
+    knock.from = T.knock; knock.held = false; knock.at = knock.letGo; knock.letGo = 0;
+  }
   if (knock.held) return T.knock * (1 - Math.exp(-(now - knock.at) / 30));
   const t = (now - knock.at) / 1000, dur = Math.max(0.1, T.knockTime);
   if (t > dur * 2.5 && !knock.wave) { knock.at = 0; return 0; }
@@ -715,7 +720,7 @@ export function point(p) {
 export function click(p) {
   if (!geo && !layout()) return;
   ring(p.x, p.y, -(T.clickReach ?? 1.6));
-  Object.assign(knock, { x: p.x, y: p.y, at: performance.now(), held: true, from: 0 });
+  Object.assign(knock, { x: p.x, y: p.y, at: performance.now(), held: true, from: 0, letGo: 0 });
   // The rings show through the effect's own light, so a click brings that
   // light on (and, in the play-once hover, starts it playing) if it's off.
   if (hover.want === 0 && hover.on < 0.02) Object.assign(hover, { x: p.x, y: p.y, vx: 0, vy: 0 });
@@ -736,6 +741,8 @@ export function drag(p) {
 export function release() {
   if (!knock.held) return;
   const now = performance.now();
+  // Never before the push is all the way in (about 150ms after the press).
+  if (now - knock.at < 150) { knock.letGo = knock.at + 150; wake(); return; }
   knock.from = knockNow(now);
   knock.held = false;
   knock.at = now;
@@ -755,6 +762,9 @@ export function demo() {
 }
 
 /** For checking: where the effect is now, and where it's headed. */
+/** For checking: how far a click's lens pushes now. */
+export const lens = () => knockNow(performance.now());
+
 export const follower = () => ({ x: hover.x, y: hover.y, tx: hover.tx, ty: hover.ty, on: hover.on });
 
 try {
