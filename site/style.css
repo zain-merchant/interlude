@@ -1057,3 +1057,105 @@ html[data-hero][data-herotext="card"][data-cardblock="sentence"] .dl-cap2 { disp
 .dl-cap > * + *::before { content: ''; display: inline-block; width: 1px; height: 11px; margin: 0 10px; vertical-align: -1px; background: rgb(255 255 255 / 0.16); }
 .dl-cv { color: var(--fg-2); font-variant-numeric: tabular-nums; text-decoration: underline; text-decoration-color: rgb(236 234 228 / 0.25); text-decoration-thickness: 1px; text-underline-offset: 3px; transition: color 0.15s, text-decoration-color 0.15s; }
 .dl-cv:hover { color: var(--fg); text-decoration-color: rgb(236 234 228 / 0.7); }
+
+/* Open source: five takes (Tune, Open source: look). All keep the words,
+   the buttons and the six latest changes; they differ in surface and
+   layout. Shared: the updates sit straight on the card, no inner surface,
+   and a change's area ("Mappings:") is quieter than the change itself. */
+.oss:is([data-look="tight"], [data-look="timeline"], [data-look="stacked"], [data-look="split"], [data-look="ledger"]) .oss-log { padding: 0; }
+.oss:is([data-look="tight"], [data-look="timeline"], [data-look="stacked"], [data-look="split"], [data-look="ledger"]) .oss-log::before { content: none; }
+.oss:is([data-look="tight"], [data-look="timeline"], [data-look="stacked"], [data-look="split"], [data-look="ledger"]) .oss-log h4 { margin: 0; padding: 0 0 10px; border-image: none; border-bottom: 1px solid var(--oss-rule); font-size: 12.5px; line-height: 16px; color: var(--oss-dim); }
+.oss:is([data-look="tight"], [data-look="timeline"], [data-look="stacked"], [data-look="split"], [data-look="ledger"]) .oss-commits li + li { border-image: none; border-top: 1px solid var(--oss-rule2); }
+.oss:is([data-look="tight"], [data-look="timeline"], [data-look="stacked"], [data-look="split"], [data-look="ledger"]) .oss-commits a { padding: 9px 0; font-size: 14px; color: var(--oss-ink); transition: color 150ms ease; }
+.oss:is([data-look="tight"], [data-look="timeline"], [data-look="stacked"], [data-look="split"], [data-look="ledger"]) .oss-commits a:hover .oss-msg { color: var(--oss-strong); text-decoration: none; }
+.oss:is([data-look="tight"], [data-look="timeline"], [data-look="stacked"], [data-look="split"], [data-look="ledger"]) .oss-area { color: var(--oss-dim); transition: color 150ms ease; }
+.oss:is([data-look="tight"], [data-look="timeline"], [data-look="stacked"], [data-look="split"], [data-look="ledger"]) .oss-commits time { font-size: 12.5px; color: var(--oss-dim); }
+.oss:is([data-look="tight"], [data-look="timeline"], [data-look="stacked"], [data-look="split"], [data-look="ledger"]) .oss-empty a { color: var(--oss-ink); }
+/* Light surfaces' inks. */
+.oss:is([data-look="tight"], [data-look="stacked"], [data-look="split"]) {
+  --oss-ink: rgb(11 11 13 / 0.8); --oss-strong: #0b0b0d; --oss-dim: rgb(11 11 13 / 0.46); --oss-rule: rgb(11 11 13 / 0.1); --oss-rule2: rgb(11 11 13 / 0.07);
+  background: #f6f5f1; color: #0b0b0d; -webkit-backdrop-filter: none; backdrop-filter: none;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.7), 0 1px 2px rgb(0 0 0 / 0.2), 0 24px 60px -12px rgb(0 0 0 / 0.45);
+}
+/* Dark ones. */
+.oss:is([data-look="timeline"], [data-look="ledger"]) {
+  --oss-ink: rgb(236 234 228 / 0.78); --oss-strong: var(--fg); --oss-dim: rgb(236 234 228 / 0.42); --oss-rule: rgb(255 255 255 / 0.09); --oss-rule2: rgb(255 255 255 / 0.06);
+  color: var(--fg); -webkit-backdrop-filter: none; backdrop-filter: none;
+}
+.oss:is([data-look="timeline"], [data-look="ledger"]) p { color: var(--fg-2); }
+.oss:is([data-look="timeline"], [data-look="ledger"]) .btn { background: var(--fg); color: #0b0b0d; }
+.oss:is([data-look="timeline"], [data-look="ledger"]) .btn:hover { background: #fff; }
+.oss:is([data-look="timeline"], [data-look="ledger"]) .btn.ghost { background: transparent; color: var(--fg); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.16); }
+.oss:is([data-look="timeline"], [data-look="ledger"]) .btn.ghost:hover { background: rgb(255 255 255 / 0.06); }
+/* The buttons, one size smaller than the hero's, the second a ring only. */
+.oss:is([data-look="tight"], [data-look="timeline"], [data-look="stacked"], [data-look="split"], [data-look="ledger"]) .btn { height: 38px; padding: 0 15px; border-radius: 10px; font-size: 14.5px; }
+.oss:is([data-look="tight"], [data-look="stacked"], [data-look="split"]) .btn.ghost { background: transparent; box-shadow: inset 0 0 0 1px rgb(11 11 13 / 0.16); }
+.oss:is([data-look="tight"], [data-look="stacked"], [data-look="split"]) .btn.ghost:hover { background: rgb(11 11 13 / 0.05); }
+.oss:is([data-look="tight"], [data-look="timeline"], [data-look="stacked"], [data-look="split"], [data-look="ledger"]) h3 { font-size: 28px; letter-spacing: -0.028em; margin: 0 0 10px; }
+.oss:is([data-look="tight"], [data-look="timeline"], [data-look="stacked"], [data-look="split"], [data-look="ledger"]) p { font-size: 15px; max-width: 25em; margin: 0 0 22px; }
+
+/* 1. Tight: the current one, edited. The heading's top lines up with the
+   updates' header and the buttons' foot with the last change, so both
+   columns share a top and a bottom instead of the words floating in the
+   middle; the divider runs only as tall as the list; even padding. */
+.oss[data-look="tight"] { grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 0; align-items: stretch; padding: 30px 32px 28px; border-radius: 20px; }
+.oss[data-look="tight"] .oss-text { display: flex; flex-direction: column; padding-right: 40px; }
+.oss[data-look="tight"] .oss-links { margin-top: auto; }
+.oss[data-look="tight"] .oss-log { padding-left: 32px; border-left: 1px solid rgb(11 11 13 / 0.09); }
+.oss[data-look="tight"] .oss-commits li:last-child a { padding-bottom: 0; }
+
+/* 2. Timeline: dark, of a piece with the page. The changes hang off a
+   thin line, newest at the top with a lit dot; when sits before what. */
+.oss[data-look="timeline"] { grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); gap: 56px; align-items: start; padding: 32px 36px; border-radius: 20px;
+  background: rgb(255 255 255 / 0.035); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08), inset 0 1px 0 rgb(255 255 255 / 0.1); }
+.oss[data-look="timeline"] .oss-log h4 { border-bottom: 0; padding-bottom: 8px; padding-left: 20px; }
+.oss[data-look="timeline"] .oss-commits { position: relative; }
+.oss[data-look="timeline"] .oss-commits::before { content: ''; position: absolute; left: 3px; top: 16px; bottom: 16px; width: 1px; background: rgb(255 255 255 / 0.12); }
+.oss[data-look="timeline"] .oss-commits li + li { border-top: 0; }
+.oss[data-look="timeline"] .oss-commits a { position: relative; padding: 8px 0 8px 20px; gap: 0; }
+.oss[data-look="timeline"] .oss-commits a::before { content: ''; position: absolute; left: 0; top: 50%; width: 7px; height: 7px; margin-top: -3.5px; border-radius: 50%; background: #2a2a2f; box-shadow: 0 0 0 1px rgb(255 255 255 / 0.18); }
+.oss[data-look="timeline"] .oss-commits li[data-latest] a::before { background: #ff9b45; box-shadow: 0 0 0 3px rgb(255 155 69 / 0.18); }
+.oss[data-look="timeline"] .oss-commits time { order: -1; width: 82px; flex: none; }
+
+/* 3. Stacked: one column. The words and buttons across the top, the
+   changes under them in two columns, so each line is short enough to
+   read whole. */
+.oss[data-look="stacked"] { grid-template-columns: 1fr; gap: 26px; padding: 32px 36px 26px; border-radius: 20px; }
+.oss[data-look="stacked"] .oss-text { display: grid; grid-template-columns: 1fr auto; column-gap: 32px; align-items: end; }
+.oss[data-look="stacked"] .oss-text p { margin: 0; }
+.oss[data-look="stacked"] .oss-links { grid-column: 2; grid-row: 1 / span 2; }
+.oss[data-look="stacked"] .oss-commits { columns: 2; column-gap: 40px; }
+.oss[data-look="stacked"] .oss-commits li { break-inside: avoid; border-top: 1px solid var(--oss-rule2); }
+.oss[data-look="stacked"] .oss-commits li + li { border-top: 1px solid var(--oss-rule2); }
+.oss[data-look="stacked"] .oss-log h4 { border-bottom: 0; padding-bottom: 6px; }
+
+/* 4. Split: the words on light, the changes on dark running to the card's
+   own edges, like a screen set into it. */
+.oss[data-look="split"] { grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 0; align-items: stretch; padding: 0; border-radius: 20px; overflow: hidden; }
+.oss[data-look="split"] .oss-text { display: flex; flex-direction: column; padding: 32px 36px 30px; }
+.oss[data-look="split"] .oss-links { margin-top: auto; }
+.oss[data-look="split"] .oss-log { --oss-ink: rgb(236 234 228 / 0.78); --oss-strong: var(--fg); --oss-dim: rgb(236 234 228 / 0.42); --oss-rule: rgb(255 255 255 / 0.09); --oss-rule2: rgb(255 255 255 / 0.06);
+  padding: 30px 32px 26px; background: #121215; box-shadow: inset 1px 0 0 rgb(0 0 0 / 0.4); }
+
+/* 5. Ledger: no card. A big heading across the width, then the words and
+   buttons on the left and the changes on the right, under one rule. */
+.oss[data-look="ledger"] { grid-template-columns: minmax(0, 1fr) minmax(0, 1.7fr); grid-template-areas: "head head"; grid-template-rows: auto auto 1fr; column-gap: 64px; row-gap: 0; align-items: start; padding: 0; background: none; box-shadow: none; border-radius: 0; }
+.oss[data-look="ledger"] .oss-text { display: contents; }
+.oss[data-look="ledger"] h3 { grid-area: head; font-size: clamp(32px, 3.4vw, 44px); margin: 0 0 24px; padding-bottom: 24px; border-bottom: 1px solid rgb(255 255 255 / 0.1); }
+.oss[data-look="ledger"] .oss-text p { grid-column: 1; grid-row: 2; }
+.oss[data-look="ledger"] .oss-links { grid-column: 1; grid-row: 3; align-self: start; }
+.oss[data-look="ledger"] .oss-log { grid-column: 2; grid-row: 2 / span 2; }
+.oss[data-look="ledger"] .oss-log h4 { border-bottom: 0; padding-bottom: 4px; }
+.oss[data-look="ledger"] .oss-commits time { order: -1; width: 82px; flex: none; }
+
+@media (max-width: 860px) {
+  .oss:is([data-look="tight"], [data-look="timeline"], [data-look="split"], [data-look="ledger"]) { grid-template-columns: 1fr; gap: 28px; }
+  .oss[data-look="tight"] .oss-text { padding-right: 0; }
+  .oss[data-look="tight"] .oss-log { padding-left: 0; border-left: 0; }
+  .oss[data-look="split"] { gap: 0; }
+  .oss[data-look="stacked"] .oss-text { display: block; }
+  .oss[data-look="stacked"] .oss-text p { margin-bottom: 20px; }
+  .oss[data-look="stacked"] .oss-commits { columns: 1; }
+  .oss[data-look="ledger"] { grid-template-areas: "head"; grid-template-rows: none; }
+  .oss[data-look="ledger"] :is(.oss-text p, .oss-links, .oss-log) { grid-column: 1; grid-row: auto; }
+}
