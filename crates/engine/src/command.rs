@@ -212,6 +212,20 @@ pub enum Command {
         deck: DeckId,
         on: bool,
     },
+    /// Key shift: play the track this many semitones higher (or lower, if
+    /// negative) without changing its tempo, clamped to ±[`KEY_SHIFT_MAX`].
+    /// It adds to any change the tempo makes with keylock off. Loading a
+    /// track puts it back to 0.
+    SetKeyShift {
+        deck: DeckId,
+        semitones: i32,
+    },
+    /// Key sync: shift the deck's key so it plays in the same key as the
+    /// other deck (or its relative major or minor, the same Camelot code),
+    /// by the smallest shift. Does nothing unless both tracks have a key.
+    KeySync {
+        deck: DeckId,
+    },
     /// Which stems are audible: bit `n` is [`crate::Stem`] `n`. Every bit
     /// set plays the track as it is. A freshly loaded deck has all stems on.
     SetStems {
@@ -391,6 +405,8 @@ impl Command {
             | SetRate { deck, .. }
             | SetBend { deck, .. }
             | SetKeylock { deck, .. }
+            | SetKeyShift { deck, .. }
+            | KeySync { deck, .. }
             | SetSlip { deck, .. }
             | ScratchStart { deck, .. }
             | ScratchEnd { deck, .. }

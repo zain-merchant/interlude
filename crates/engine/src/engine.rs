@@ -243,6 +243,11 @@ impl Engine {
                     .keylock
                     .store(on, std::sync::atomic::Ordering::Relaxed);
             }
+            SetKeyShift { deck, semitones } => {
+                self.decks[deck.index()].key_shift =
+                    semitones.clamp(-crate::KEY_SHIFT_MAX, crate::KEY_SHIFT_MAX);
+            }
+            KeySync { deck } => self.key_sync(deck.index()),
             SetStems { deck, mask } => self.decks[deck.index()].set_stems(mask),
             SetSlip { deck, on } => self.decks[deck.index()].set_slip(on),
             SetQuantize { on } => {
@@ -390,6 +395,26 @@ impl Engine {
         self.decks[i].shift_beats(delta * my_beats_per_unit);
     }
 
+    /// Shifts deck `i`'s key to play in the other deck's key, as heard:
+    /// the smallest shift from the track at its tempo with no key shift.
+    fn key_sync(&mut self, i: usize) {
+        // A deck's key at its tempo, and the key shift on top.
+        let heard = |d: &crate::deck::Deck| {
+            let key = d.track.as_ref()?.key?;
+            let tempo = if d.keylock || d.rate <= 0.0 {
+                0
+            } else {
+                (12.0 * d.rate.log2()).round() as i32
+            };
+            Some(key.transpose(tempo))
+        };
+        let (Some(mine), Some(theirs)) = (heard(&self.decks[i]), heard(&self.decks[1 - i])) else {
+            return;
+        };
+        let theirs = theirs.transpose(self.decks[1 - i].key_shift);
+        self.decks[i].key_shift = mine.shift_to(theirs);
+    }
+
     /// Hands a dropped track back to the control side to be freed there.
     fn recycle(&mut self, track: Option<Arc<Track>>) {
         if let Some(t) = track {
@@ -413,6 +438,7 @@ impl Engine {
                 Relaxed,
             );
             s.playing.store(deck.playing, Relaxed);
+            s.key_shift.store(deck.key_shift as i8, Relaxed);
             let secs = |f: Option<f64>| f.map_or(-1.0, |f| f / sr);
             for (slot, cue) in s.hot_cues.iter().zip(deck.hot_cues) {
                 slot.store(secs(cue));

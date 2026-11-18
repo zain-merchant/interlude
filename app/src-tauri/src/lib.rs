@@ -188,6 +188,13 @@ enum Control {
         deck: usize,
         on: bool,
     },
+    SetKeyShift {
+        deck: usize,
+        semitones: i32,
+    },
+    KeySync {
+        deck: usize,
+    },
     SetSlip {
         deck: usize,
         on: bool,
@@ -357,6 +364,13 @@ impl Control {
             C::SetKeylock { deck, on } => Command::SetKeylock {
                 deck: deck_id(deck)?,
                 on,
+            },
+            C::SetKeyShift { deck, semitones } => Command::SetKeyShift {
+                deck: deck_id(deck)?,
+                semitones,
+            },
+            C::KeySync { deck } => Command::KeySync {
+                deck: deck_id(deck)?,
             },
             C::SetSlip { deck, on } => Command::SetSlip {
                 deck: deck_id(deck)?,

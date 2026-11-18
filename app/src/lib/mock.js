@@ -3,6 +3,8 @@
 // cue works CDJ-style, hot cues, loops and beat jumps behave like the
 // engine's, meters move, and tracks have believable waveforms.
 
+import { playingKey, shiftTo } from './key.js';
+
 const BINS_PER_SEC = 172.27;
 
 const ARTISTS = ['Nova Reyes', 'Kite Theory', 'Mara Lune', 'Deepfield', 'Oskar Velt', 'Juno Hale', 'Sable & Ash', 'Low Orbit'];
@@ -149,7 +151,7 @@ export function createMockBackend() {
   };
 
   const decks = [0, 1].map(() => ({
-    loaded: false, playing: false, position: 0, duration: 0, cue: 0, rate: 1, bend: 0, bpm: 0, key: null, keylock: false, firstBeat: 0,
+    loaded: false, playing: false, position: 0, duration: 0, cue: 0, rate: 1, bend: 0, bpm: 0, key: null, keylock: false, keyShift: 0, firstBeat: 0,
     slip: false,
     generation: 0, previewing: false, scratching: false, waveform: null, fader: 1, peak: 0, path: null, ...freshLoops(),
     filter: 0, fx: { kind: 'echo', on: false, level: 0.5, beats: 1 }, stems: 0b1111, splitFrom: 0,
@@ -321,6 +323,15 @@ export function createMockBackend() {
       case 'setRate': d.rate = cmd.rate; break;
       case 'setBend': d.bend = cmd.bend; break;
       case 'setKeylock': d.keylock = cmd.on; break;
+      case 'setKeyShift': d.keyShift = Math.max(-12, Math.min(12, Math.round(cmd.semitones))); break;
+      case 'keySync': {
+        const o = decks[1 - cmd.deck];
+        if (!d.key || !o.key) break;
+        const mine = playingKey(d.key, d.rate, d.keylock);
+        const theirs = playingKey(o.key, o.rate, o.keylock, o.keyShift);
+        d.keyShift = shiftTo(mine, theirs);
+        break;
+      }
       case 'setStems': d.stems = cmd.mask & 0b1111; break;
       case 'setSlip': Object.assign(d, { slip: cmd.on }, cmd.on ? {} : { slipAt: null, slipHot: null }); break;
       case 'setFader': d.fader = cmd.value; break;
@@ -365,7 +376,7 @@ export function createMockBackend() {
       return {
         decks: decks.map((d) => ({
           loaded: d.loaded, playing: d.playing, position: d.position, duration: d.duration,
-          cue: d.cue, rate: d.rate, speed: d.rate + d.bend, bpm: d.bpm, key: d.key, keylock: d.keylock, generation: d.generation, peak: 0,
+          cue: d.cue, rate: d.rate, speed: d.rate + d.bend, bpm: d.bpm, key: d.key, keylock: d.keylock, keyShift: d.keyShift, generation: d.generation, peak: 0,
           slip: d.slip, slipPosition: d.slipAt,
           hotCues: [...d.hotCues], loopIn: d.loopIn, loopOut: d.loopOut, looping: d.looping, loopBeats: d.loopBeats,
           filter: d.filter, fx: { ...d.fx }, stems: d.stems,
@@ -419,7 +430,7 @@ export function createMockBackend() {
       Object.assign(d, {
         loaded: true, playing: false, position: saved?.cue ?? 0, cue: 0, duration, bpm, firstBeat: 0, key: { tonic: seed % 12, minor: seed % 3 !== 0 },
         waveform: fakeWaveform(seed, duration, bpm), generation: d.generation + 1, ...freshLoops(), path,
-        stems: 0b1111, splitFrom: performance.now(),
+        stems: 0b1111, splitFrom: performance.now(), keyShift: 0,
       }, saved ? { ...saved, hotCues: [...saved.hotCues] } : {});
       return {
         title: t.title, path, duration, sampleRate: 44100,

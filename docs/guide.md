@@ -29,6 +29,17 @@ Everything Interlude does, in detail. For a short overview, see the
   would have been, so a loop or scratch never knocks the mix out of time.
   With slip on, a hot cue pressed mid-play rolls while held. Cue, a seek
   or turning slip off ends a slip where it is.
+- **Key shift and key sync:** each deck shows the key it's playing in, in
+  Camelot, next to the BPM. Click it to move the key a semitone up or down
+  (up to an octave either way), go back to the track's key, or match the
+  other deck's key. Key sync picks the smallest shift that puts the deck on
+  the other deck's Camelot code (its key, or the relative major or minor),
+  so the two mix in key; it allows for the tempo, so it works with key lock
+  on or off. The tempo doesn't change. While a key is shifted, the deck
+  shows how far after the Camelot code ("12A +2"); loading a track puts it
+  back. On the FLX4, KEY SHIFT pad mode (SHIFT + SAMPLER) does the same;
+  the commands have no keys until you give them some in Settings ›
+  Keyboard.
 - **Quantize** (on by default; the Quantize button in the mixer, or B):
   hot cues, the cue point, loop in and out snap to the nearest beat, and a
   hot cue or reloop pressed mid-play lands at the same point in the beat, so
@@ -151,7 +162,11 @@ Everything Interlude does, in detail. For a short overview, see the
   in where it would have been; echo and reverb tails ring out. KEYBOARD
   (SHIFT + HOT CUE) is stems, as in Mixxx's FLX4 mapping: pads 1 to 4
   mute and unmute vocals, melody, bass and drums (lit while playing), pads
-  5 to 8 play one alone (lit while soloed). The first time a track's stems
+  5 to 8 play one alone (lit while soloed). KEY SHIFT (SHIFT + SAMPLER)
+  sets the key: top pads to the track's key, +1, +2 and +3 semitones,
+  bottom pads to key sync, -1, -2 and -3, so each column is a distance from
+  the original; with SHIFT, pads 7 and 8 step down and up a semitone at a
+  time, as far as an octave. The pad for the current shift lights. The first time a track's stems
   are ready, a one-time tip says where they are. CFX knobs drive the channel
   filters. The beat FX section works as in rekordbox: the channel select
   lever picks the deck (MASTER runs the effect on both), BEAT FX SELECT
