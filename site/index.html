@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261121e">
+  <link rel="stylesheet" href="style.css?v=20261121f">
   <link rel="stylesheet" href="demo/cards.css?v=20261120z">
   <script src="tune.js?v=20261120v"></script>
   <script>
@@ -1233,8 +1233,10 @@
     for (const g of document.querySelectorAll('.group')) { const h = g.querySelector('h3'); if (h) h.dataset.count = g.querySelectorAll('li').length; }
     // The features set apart from the sections either side (style.css,
     // "Features, set apart").
-    document.documentElement.dataset.fband = 'lift';
-    window.tune?.select({ label: 'Features: band', value: 'lift', options: [['lift', 'A lighter band, hairline edges'], ['recess', 'A darker band, pressed in'], ['panel', 'One big rounded panel'], ['tint', 'A band lit in the deck colours'], ['grooves', 'A band cut with grooves'], ['none', 'No band']],
+    document.documentElement.dataset.fband = 'recess';
+    window.tune?.color({ label: 'Features: band colour', value: '#070709', onInput: (v) => document.documentElement.style.setProperty('--band-bg', v) });
+    window.tune?.color({ label: 'Features: band edge colour', value: '#ffffff12', onInput: (v) => document.documentElement.style.setProperty('--band-line', v) });
+    window.tune?.select({ label: 'Features: band', value: 'recess', options: [['lift', 'A lighter band, hairline edges'], ['recess', 'A darker band, pressed in'], ['panel', 'One big rounded panel'], ['tint', 'A band lit in the deck colours'], ['grooves', 'A band cut with grooves'], ['none', 'No band']],
       onInput: (v) => (document.documentElement.dataset.fband = v) });
     // The install steps' numbers: in a small badge, or plain.
     document.documentElement.dataset.stepnum = 'badge';
