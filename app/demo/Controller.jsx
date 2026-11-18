@@ -308,6 +308,9 @@ export function Controller({ shown }) {
   }, [up]);
 
   return (
+    // (In a layer of its own the size of the hero, so the soft edge it
+    // rises through is the controller's alone: hero.css .desk-clip.)
+    <div className="desk-clip">
     <div className="desk" data-shown={up || undefined}>
       <div ref={root} className="hw" data-target="controller" data-v={version} data-skin={skin}>
         <Deck side="left" />
@@ -329,6 +332,7 @@ export function Controller({ shown }) {
         <Deck side="right" />
         <i className="hw-badge" aria-hidden />
       </div>
+    </div>
     </div>
   );
 }
