@@ -103,8 +103,10 @@ html, body { margin: 0; width: 1440px; height: 920px; overflow: hidden; backgrou
 :root { --tilt: -3deg; --anchor: 50% 0%; }
 .app-host { transform-origin: var(--anchor); transition: transform var(--glide-ms) var(--glide); }
 #hero[data-hand="controller"] .app-host { transform: perspective(2400px) rotateX(var(--tilt)) scale(0.91); }
-.desk { transition: top var(--glide-ms) var(--glide); }
-#hero[data-hand="controller"] .desk { top: 624px; }
+/* The desk never travels: it waits where it shows (so the controller
+   never crosses the frame's edge on the way, and needs no mask to hide
+   that), and the controller rises a short way into place there. */
+.desk { top: 624px; }
 
 /* The link between a control on the controller and the one it drives in
    the app (#hero[data-input]): soft rings round both, a fine line between,
@@ -159,7 +161,7 @@ svg.links { position: absolute; inset: 0; z-index: 255; pointer-events: none; ov
 .app-host .pending { display: none !important; }
 /* The deeper Club board sits a little higher, so it still ends above the toggle. */
 /* Club: its front edge down at the frame's foot. */
-#hero[data-hand="controller"] .desk:has(.hw[data-v="club"]) { top: 650px; }
+.desk:has(.hw[data-v="club"]) { top: 650px; }
 
 /* Paused while off screen (pause.js): CSS animations stand still too. */
 html[data-paused] *, html[data-paused] *::before, html[data-paused] *::after { animation-play-state: paused !important; }
@@ -179,31 +181,7 @@ html[data-paused] *, html[data-paused] *::before, html[data-paused] *::after { a
 
 /* The app casts no shadow and never fades, in either mode. */
 
-/* While the controller travels (in or out), the frame's foot is soft:
-   the last 72px fade out to nothing and carry a light blur that grows
-   toward the edge, so the controller rises out of a haze rather than past
-   a line. The fade is a mask on the whole picture whose depth (--edge)
-   eases from 72px to 0 as the controller lands, slowly, so it never
-   visibly switches off; at rest there is no mask and no blur at all.
-   Only after the first switch (data-switched), so the page doesn't open
-   with it. */
-@property --edge { syntax: '<length>'; inherits: false; initial-value: 0px; }
-/* While the controller travels (in or out) it fades out over the frame's
-   last 72px, so it rises out of a soft edge rather than past a line, and
-   sinks back into it. Only the controller: the fade is on its own layer
-   (.desk-clip, the hero's size), so the app above it is never touched.
-   The fade's depth (--edge) is what animates, the mask reading it, so it
-   eases frame by frame: in quickly as the controller sets off, held while
-   it crosses the edge, then away to nothing once it's clear. At rest
-   there's no fade at all. */
+/* (No fade at the frame's foot: the controller rises inside the frame
+   and never crosses its edge.) */
 .desk-clip { position: absolute; inset: 0; pointer-events: none; }
-#hero[data-switched] .desk-clip {
-  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - var(--edge)), transparent calc(100% + 0.5px));
-  mask-image: linear-gradient(to bottom, #000 calc(100% - var(--edge)), transparent calc(100% + 0.5px));
-}
-@keyframes edge-in { 0% { --edge: 0px; } 10%, 40% { --edge: 72px; } 100% { --edge: 0px; } }
-@keyframes edge-out { 0% { --edge: 0px; } 10%, 60% { --edge: 72px; } 100% { --edge: 0px; } }
-#hero[data-switched][data-hand="controller"] .desk-clip { animation: edge-in calc(var(--glide-ms) + 700ms) cubic-bezier(0.4, 0, 0.2, 1); }
-#hero[data-switched]:not([data-hand="controller"]) .desk-clip { animation: edge-out calc(var(--glide-ms) + 300ms) cubic-bezier(0.4, 0, 0.2, 1); }
-/* (The backdrop blur that sat here is gone: it blurred the app too.) */
 #hero ~ .edge-blur { display: none; }
