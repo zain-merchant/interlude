@@ -495,7 +495,7 @@ const MUSIC = new URL('./music-folder.png', import.meta.url).href;
 // a faint copy of both, the same size, follows the pointer, keeping where
 // it was grabbed, with the green "+" of a copy at the pointer. Over
 // Applications the folder darkens in its highlight; let go, and the copy is
-// gone at once, and the pointer stays where it let go. The original never moves. Body coordinates, in px: the two
+// gone at once; the pointer rests where it let go, then fades. The original never moves. Body coordinates, in px: the two
 // items are centred at DMG_A and DMG_B, the icons' middles at DMG_Y.
 const DMG_A = 78;
 const DMG_B = 234;
@@ -515,9 +515,9 @@ async function glide(a, from, to, ms, arc = 0) {
 }
 
 /** macOS's arrow pointer: black, a white outline, a soft shadow. Its tip is at (0, 0). */
-function Arrow({ x, y, copy }) {
+function Arrow({ x, y, copy, gone }) {
   return (
-    <div className="p-cursor" style={{ transform: `translate(${x}px, ${y}px)` }} aria-hidden>
+    <div className="p-cursor" data-gone={gone || undefined} style={{ transform: `translate(${x}px, ${y}px)` }} aria-hidden>
       <svg width="15" height="22" viewBox="-1.5 -1.5 15 22"><path d="M0 0v16.2l3.9-3.7 2.6 6.1 2.6-1.1-2.5-5.9H12Z" /></svg>
       <b className="p-cursor__copy" data-on={copy || undefined} />
     </div>
@@ -525,9 +525,9 @@ function Arrow({ x, y, copy }) {
 }
 
 export function Download(play) {
-  const start = { cx: REST.x, cy: REST.y, sel: false, drag: false, copy: false, done: false };
+  const start = { cx: REST.x, cy: REST.y, sel: false, drag: false, copy: false, done: false, gone: false };
   return (
-    <Pic id="dmg" {...play} initial={start} poster={{ ...start, cx: DROP.x, cy: DROP.y, sel: true, done: true }}
+    <Pic id="dmg" {...play} initial={start} poster={{ ...start, cx: DROP.x, cy: DROP.y, sel: true, done: true, gone: true }}
       script={async (a) => {
         // Onto the icon (it starts just beside it), settle, press.
         await glide(a, REST, GRAB, 420, 3);
@@ -541,9 +541,11 @@ export function Download(play) {
         a.put({ copy: true });
         await going;
         // Over Applications a moment, then let go: it ends there, the
-        // pointer resting on the folder.
+        // pointer resting on the folder a beat before it fades away.
         await a.wait(380);
         await a.set({ drag: false, copy: false, done: true });
+        await a.wait(550);
+        await a.set({ gone: true });
       }}>
       {(s) => {
         const over = s.drag && s.cx > DMG_B - 40;
@@ -567,7 +569,7 @@ export function Download(play) {
                 <img src={ICON} alt="" width="58" height="58" />
                 <span>Interlude</span>
               </div>
-              <Arrow x={s.cx} y={s.cy} copy={s.copy} />
+              <Arrow x={s.cx} y={s.cy} copy={s.copy} gone={s.gone} />
             </div>
           </div>
         );
