@@ -38,7 +38,7 @@ import './pictures.css';
 // waits below are taken from those springs' times. Across cards, Replay
 // paces when each picture starts.
 const START = 120;
-const PRESS = 140;
+const PRESS = 200;
 
 export const PW = 360;
 export const PH = 176;
