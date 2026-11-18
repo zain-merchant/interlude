@@ -16,7 +16,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css?v=20261117n">
   <link rel="stylesheet" href="demo/cards.css">
-  <script src="tune.js?v=20261117g"></script>
+  <script src="tune.js?v=20261117h"></script>
   <script>
     // The hero's layout (Split) and the nav's (bar to capsule), set before
     // the first paint so nothing jumps. The nav's look changes as the page
@@ -241,17 +241,17 @@
         wake();
       }).observe(d, { attributeFilter: ['data-nav'] });
       window.navMeasure = measure;
-      window.tune?.slider({ id: 'nav-word', label: 'Nav: name size before capsule', min: 18, max: 96, step: 1, value: 36, unit: 'px', css: '--brand-word', onInput: () => requestAnimationFrame(measure) });
+      window.tune?.slider({ id: 'nav-word', label: 'Nav: name size before capsule', folder: 'Settled', min: 18, max: 96, step: 1, value: 36, unit: 'px', css: '--brand-word', onInput: () => requestAnimationFrame(measure) });
       // The capsule's corners: the icon's own (its squircle's corner, about
       // 8px at 36px, plus the 6px between), so everything inside is
       // concentric; or a full pill.
-      window.tune?.select({ label: 'Nav: capsule corners', value: '14', options: [['14', 'Match the icon'], ['24', 'Pill']],
+      window.tune?.select({ label: 'Nav: capsule corners', folder: 'Settled', value: '14', options: [['14', 'Match the icon'], ['24', 'Pill']],
         onInput: (v) => { d.style.setProperty('--cap-r', `${v}px`); requestAnimationFrame(measure); } });
-      window.tune?.slider({ id: 'nav-icon', label: 'Nav: icon size before capsule', min: 28, max: 120, step: 1, value: 48, css: '--brand-icon', onInput: () => requestAnimationFrame(measure) });
+      window.tune?.slider({ id: 'nav-icon', label: 'Nav: icon size before capsule', folder: 'Settled', min: 28, max: 120, step: 1, value: 48, css: '--brand-icon', onInput: () => requestAnimationFrame(measure) });
       // Being tried: how the hero's text block is laid out round the
       // headline (data-herotext, style.css). The headline stays the first
       // line, so the capsule still turns on it.
-      window.tune?.select({ label: 'Hero: text layout', value: 'float', options: [
+      window.tune?.select({ label: 'Hero: text layout', folder: 'Layout', value: 'float', options: [
         ['float', 'Buttons beside the headline (current)'], ['card', 'Buttons and facts in a card'],
         ['rail', 'Buttons and facts behind a rule'], ['stack', 'Buttons under, facts in a panel'],
         ['segment', 'One joined pill, the facts as a sentence'], ['numeral', 'The version, large and quiet'],
@@ -581,7 +581,7 @@
       let appFps = 30;
       const sendFps = () => live.contentWindow?.postMessage({ interlude: 'fps', fps: appFps }, '*');
       live.addEventListener('load', sendFps);
-      window.tune?.slider({ label: 'Hero: app frame rate', min: 20, max: 60, step: 5, value: 30, onInput: (v) => { appFps = v; sendFps(); } });
+      window.tune?.slider({ label: 'Hero: app frame rate', folder: 'Performance', min: 20, max: 60, step: 5, value: 30, onInput: (v) => { appFps = v; sendFps(); } });
 
       // Or the hero as a video of itself: the same demo, recorded frame by
       // frame by `npm run bake:hero` (app/demo/bake-hero.mjs) into hero/, so
@@ -661,13 +661,13 @@
       document.querySelector('.switch').addEventListener('pointerenter', () => {
         if (!reduced.matches && !live.getAttribute('src')) live.src = live.dataset.src;
       }, { once: true });
-      window.tune?.select({ label: 'Hero: render', value: render, options: [['video', 'A video of the app'], ['live', 'The live app']],
+      window.tune?.select({ label: 'Hero: render', folder: 'Performance', value: render, options: [['video', 'A video of the app'], ['live', 'The live app']],
         onInput: (v) => { render = v; start(); } });
       // Being tried: how the controller is drawn (app/demo/controller-skins.css).
       // Kept here too, so a pick made before the app has loaded is sent once
       // it's ready.
       let heroSkin = 'current';
-      window.tune?.select({ label: 'Hero: controller style', value: heroSkin, options: [
+      window.tune?.select({ label: 'Hero: controller style', folder: 'Controller', value: heroSkin, options: [
         ['current', 'Silver, halfway to studio (current)'], ['graphite', 'Graphite (the finish before)'],
         ['polish', 'Silver, polish only'], ['most', 'Silver, most of the way to studio'], ['flat', 'Flat'], ['bauhaus', 'Modernist'], ['te', 'Studio industrial'],
         ['blueprint', 'Blueprint'], ['riso', 'Risograph'], ['hifi', '70s hi-fi'],
@@ -705,7 +705,7 @@
       document.documentElement.dataset.reclayout = 'stacked';
       // Being tried: the Decks picture with Sync alone, or Sync with the
       // deck's cues and loop under it.
-      window.tune?.select({ label: 'Features: Decks picture', value: 'stacked', options: [['stacked', 'Sync, then cues and a loop'], ['single', 'Sync only']],
+      window.tune?.select({ label: 'Features: Decks picture', folder: 'Settled', value: 'stacked', options: [['stacked', 'Sync, then cues and a loop'], ['single', 'Sync only']],
         onInput: (v) => (document.documentElement.dataset.decklayout = v) });
       if (!window.tune) document.documentElement.dataset.decklayout = 'stacked';
 

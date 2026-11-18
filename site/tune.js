@@ -29,6 +29,8 @@
   const show = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname) || new URLSearchParams(location.search).has('tune');
   const base = document.currentScript?.src ? new URL('.', document.currentScript.src).href : './';
   const groups = new Map();
+  // The groups' order in the panel: the page's, top to bottom.
+  const ORDER = ['Nav', 'Hero', 'Hero record', 'Features', 'Footer'];
   let queued = false;
   let lib = null;
   let root = null;
@@ -208,9 +210,17 @@
     queued = false;
     const DK = await lib.catch(() => null);
     if (!DK) return;
+    // The panels go in the page's order (ORDER), whichever script asks
+    // first: it waits a moment for the groups it knows of (the record's
+    // comes in late, with its module) before making any, then the rest.
+    const begun = performance.now();
     const start = () => {
+      const waiting = ORDER.some((n) => !groups.has(n)) && performance.now() - begun < 2500;
+      if (waiting && !root) { setTimeout(start, 120); return; }
       root ??= DK.createDialRoot({ position: 'bottom-right', theme: 'dark', defaultOpen: false });
-      for (const [group, g] of groups) {
+      const names = [...ORDER.filter((n) => groups.has(n)), ...[...groups.keys()].filter((n) => !ORDER.includes(n))];
+      for (const group of names) {
+        const g = groups.get(group);
         if (g.made) continue;
         g.made = true;
         make(DK, group, g);
