@@ -15,8 +15,30 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css?v=20261120x">
-  <link rel="stylesheet" href="demo/cards.css?v=20261120w">
+  <link rel="stylesheet" href="demo/cards.css?v=20261120z">
   <script src="tune.js?v=20261120v"></script>
+  <script>
+    // Live reload while working on the site locally (.claude/serve.py streams
+    // a message when a file changes): stylesheets swap in place, anything
+    // else reloads the page. Nothing happens anywhere but localhost, or when
+    // the server doesn't offer it.
+    if (/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && 'EventSource' in window) {
+      const es = new EventSource('/__events');
+      es.onmessage = (e) => {
+        if (e.data !== 'css') { location.reload(); return; }
+        for (const l of document.querySelectorAll('link[rel="stylesheet"]')) {
+          const u = new URL(l.href);
+          if (u.origin !== location.origin) continue;
+          u.searchParams.set('lr', Date.now());
+          const n = l.cloneNode();
+          n.href = u.href;
+          n.onload = () => l.remove();
+          l.after(n);
+        }
+      };
+      es.onerror = () => { if (es.readyState === EventSource.CLOSED) es.close(); };
+    }
+  </script>
   <script>
     // The hero's layout (Split) and the nav's (bar to capsule), set before
     // the first paint so nothing jumps. The nav's look changes as the page
@@ -670,7 +692,7 @@
   </footer>
 
   <!-- The feature cards' pictures (built from app/demo, see the README). -->
-  <script type="module" src="demo/cards.js?v=20261120w"></script>
+  <script type="module" src="demo/cards.js?v=20261120z"></script>
   <script>
     // The hero. The screenshot shows first; once the page has loaded, the
     // live app takes its place (unless the visitor prefers less motion).
@@ -678,7 +700,7 @@
     // same at any width. It tells us how loud it's playing, and the glow
     // under it follows; the switch picks mouse or controller.
     (async () => {
-      const fx = await import('./hero-fx.js?v=20261120q').catch(() => null);
+      const fx = await import('./hero-fx.js?v=20261120y').catch(() => null);
       const frame = document.querySelector('.stage-frame');
       const screen = frame.querySelector('.screen');
       const live = frame.querySelector('.live');

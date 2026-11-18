@@ -656,3 +656,14 @@
    (optically, not to the pixel: true concentric would need 0px here). */
 .p-dmg, .p-add__zone { border-radius: 12px; }
 .p-spot { border-radius: 16px; }
+
+/* Add music, done: the same glint as the Controllers card's "connected"
+   tag sweeps once across the folder's row as its tracks are ready, then
+   it's gone. (Over the row's own surface, under nothing that matters.) */
+.p-add__zone::after {
+  content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background: linear-gradient(105deg, transparent 40%, rgb(255 255 255 / 0.12) 50%, transparent 60%) no-repeat;
+  background-size: 300% 100%; background-position: 100% 0;
+}
+.p-add[data-ready] .p-add__zone::after { animation: p-toast-glint var(--glide-ms) 0.12s var(--glide) both; }
+@media (prefers-reduced-motion: reduce) { .p-add[data-ready] .p-add__zone::after { animation: none; } }
