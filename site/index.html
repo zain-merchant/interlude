@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261119t">
+  <link rel="stylesheet" href="style.css?v=20261119u">
   <link rel="stylesheet" href="demo/cards.css?v=20261119k">
   <script src="tune.js?v=20261118b"></script>
   <script>
@@ -1044,8 +1044,8 @@
     // (Count: how many things each card lists.)
     for (const g of document.querySelectorAll('.group')) { const h = g.querySelector('h3'); if (h) h.dataset.count = g.querySelectorAll('li').length; }
     // The note beside the FAQ (style.css, "The note beside the FAQ").
-    document.documentElement.dataset.note = 'plain';
-    window.tune?.select({ label: 'Note: style', value: 'plain', options: [['plain', 'Plain card'], ['tilt', 'Tilted a little'], ['overhang', 'Signature off the corner'], ['paper', 'On warm paper'], ['lined', 'Ruled like a notebook'], ['letter', 'Paper, tilted, signature off the corner']],
+    document.documentElement.dataset.note = 'ruled';
+    window.tune?.select({ label: 'Note: style', value: 'ruled', options: [['ruled', 'Ruled page, tilted right, signature right'], ['plain', 'Plain card'], ['tilt', 'Tilted a little'], ['overhang', 'Signature off the corner'], ['paper', 'On warm paper'], ['lined', 'Ruled like a notebook'], ['letter', 'Paper, tilted, signature off the corner']],
       onInput: (v) => (document.documentElement.dataset.note = v) });
     // What sits between sections (style.css, "Between sections").
     document.documentElement.dataset.between = 'none';
