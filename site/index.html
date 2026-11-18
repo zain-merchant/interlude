@@ -654,7 +654,11 @@
           // The label, its words set round its edge, on paper with a grain.
           const lab = el('g', { class: 'rec-label' }, svg);
           // (Side B's label is a different paper: the cool blue of deck A.)
-          el('circle', { r: L, fill: label === 'white' ? '#f3f0e8' : side === 'B' ? '#d6e3f0' : '#efe9dc' }, lab);
+          // (Its colour from a CSS variable, so Tune can change it: Note ›
+          // side A, side B, white label paper.)
+          const paperVar = label === 'white' ? '--lab-white' : side === 'B' ? '--lab-b' : '--lab-a';
+          const paperDef = label === 'white' ? '#f3f0e8' : side === 'B' ? '#d6e3f0' : '#efe9dc';
+          el('circle', { r: L, style: `fill: var(${paperVar}, ${paperDef})` }, lab);
           const pf = el('filter', { id: `paper-${tag}`, x: '-10%', y: '-10%', width: '120%', height: '120%' }, defs);
           el('feTurbulence', { type: 'fractalNoise', baseFrequency: '1.4', numOctaves: 3, seed: 4, result: 'n' }, pf);
           el('feColorMatrix', { in: 'n', type: 'matrix', values: '0 0 0 0 0.35  0 0 0 0 0.28  0 0 0 0 0.2  0 0 0 0.9 -0.35', result: 'g' }, pf);
@@ -667,9 +671,10 @@
           const tp = el('textPath', { href: `#${id}` }, t);
           // (Words apart by wide spaces, which SVG keeps, not middle dots.)
           const gap = '\u2003\u2003';
+          const year = `© ${new Date().getFullYear()}`;
           tp.textContent = (label === 'white'
-            ? ['WHITE LABEL', 'PROMO', 'NOT FOR SALE', 'FREE AND OPEN SOURCE', 'SIDE A']
-            : ['INTERLUDE', `SIDE ${side}`, 'FREE AND OPEN SOURCE', 'MADE FOR MAC', '33⅓ RPM']).join(gap) + gap;
+            ? ['WHITE LABEL', 'PROMO', 'FREE', 'OPEN SOURCE', year]
+            : ['INTERLUDE', 'FREE', 'OPEN SOURCE', `SIDE ${side}`, year]).join(gap) + gap;
           if (label !== 'white') {
             // The app's two rings, as on its icon.
             el('circle', { cx: -4.6, cy: -11, r: 7, fill: 'none', stroke: '#4aa8ff', 'stroke-width': 2.1 }, lab);
@@ -735,7 +740,7 @@
           // A click on the record turns it over, a quick flip like a coin's,
           // to its other side (side B, on blue paper), and back again on the
           // next; a glint crosses it as it lands. On a spring of its own.
-          S.flip = { visualDuration: 0.55, bounce: 0.22 };
+          S.flip = { visualDuration: 0.95, bounce: 0.2 };
           let fa = 0, fv = 0, fTo = 0, fOn = false, fLast = 0;
           const fstep = (now) => {
             const dt = Math.min(0.05, (now - fLast) / 1000 || 0.016); fLast = now;
@@ -752,6 +757,11 @@
             if (!fOn) { fOn = true; fLast = 0; requestAnimationFrame(fstep); }
           });
           window.tune?.spring({ label: 'Note: record flips over', value: { type: 'spring', ...S.flip }, onInput: (v) => (S.flip = v) });
+          // The labels' paper.
+          const root = document.documentElement.style;
+          window.tune?.color({ label: 'Note: side A label', value: '#efe9dc', onInput: (v) => root.setProperty('--lab-a', v) });
+          window.tune?.color({ label: 'Note: side B label', value: '#d6e3f0', onInput: (v) => root.setProperty('--lab-b', v) });
+          window.tune?.color({ label: 'Note: white label', value: '#f3f0e8', onInput: (v) => root.setProperty('--lab-white', v) });
           const t = window.tune;
           t?.slider({ label: 'Note: sleeve corner radius', min: 0, max: 16, step: 0.5, value: 4, unit: 'px', css: '--sleeve-r' });
           t?.slider({ label: 'Note: record speed when out', min: 5, max: 78, step: 0.1, value: S.rpm, unit: 'rpm', onInput: (v) => (S.rpm = v) });
