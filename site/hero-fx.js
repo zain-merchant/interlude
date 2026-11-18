@@ -44,6 +44,13 @@ const RIM_TOP = 24;
  *  The same sum as the shader's discQ, warps and all. */
 function toRecord(x, y, g) {
   const { cx, cy, hz, d0, tilt } = g;
+  // Tipped toward the pointer (the tilt hover), as the shader's discQ.
+  const [tx, ty, sx, sy] = tiltNow;
+  if (tx || ty || sx || sy) {
+    const w = Math.max(0.3, 1 + tx * (x - cx) + ty * (y - cy));
+    x = cx + (x - cx) / w - sx;
+    y = cy + (y - cy) / w - sy;
+  }
   const mode = WARPS[T.warp] ?? 0;
   const k = T.warpAmt;
   // More rings above: the top half seen from further back.
@@ -89,15 +96,14 @@ const TURN = (Math.PI * 2) / 40;
 // and fro across it, so it's never quite still).
 // persp: how strongly it's drawn in perspective (1 is the horizon at
 // HORIZON; 2 brings it twice as close, so the far side narrows harder).
-// cue: what shows it turning (a circle spinning looks still on its own),
-// and cueAmt how much.
-// soft: the soft glints every cue has (the ones among the dust specks);
-// glintAmt: the extra glints of the "glints" cue. chroma: a colour in the
-// glints (see CHROMA), chromaAmt how much. speck: what the dust is.
+// cue: what else shows it turning (a circle spinning looks still on its
+// own; the glints always go round), and cueAmt how much. speck: what the
+// dust is. The glints' own controls are in the Glints folder (see GLINTS
+// there): glints (brightness), gSize, gSharp, gCount, gRide, chroma (their
+// colour, see CHROMA), gSpread, chromaAmt, gHue.
 // size: the whole record, bigger all round; up: more rings above only (the
 // top half drawn as if seen from further back, the bottom left as it is).
-// mask: how far the page's fade at the very top is lifted (0 leaves
-// style.css's own), so the far rim and the rings near it show up there.
+// fadeAt, fadeLen: the fade at the very top (see topFade).
 // warp/warpAmt: other ways to bend the top (see WARPS). tint: the lamp's
 // blue and orange in the sheen, as on the footer's word. hover: what the
 // pointer does (see HOVERS); still: it fades this many seconds after the
@@ -106,8 +112,9 @@ const TURN = (Math.PI * 2) / 40;
 // or 'custom'. The rest set the vinyl style (see VINYLS, which has dark
 // vinyl's values and the presets'): vinyl, finish: its colour (any CSS
 // colour), 'solid' or 'chromatic'; body: how much that colour shows in it
-// (0: the page's black); through: the lamp's light coming through it;
-// wedge: the clean-edged wedges where the grooves light up pale; lineTint:
+// (0: the page's black); through: the lamp's light coming through it
+// evenly; cone, wedge: its light in the lamp's cone, and the grooves there
+// lit up pale (the cone's shape is in the Lamp folder, see LAMP); lineTint:
 // the grooves in its colour; flecks: flecks inside it. pitch, pitchOut:
 // groove spacing at the centre and how far it opens out by the rim (record
 // px); lineW: line width; press: the pressing's warp; contrast, satin,
@@ -116,17 +123,29 @@ const TURN = (Math.PI * 2) / 40;
 // is (so how many there are).
 const T = {
   drop: 108, needle: 0.8, life: 0.2, persp: 0.85, cue: 'dust', cueAmt: 1, res: 0.85,
-  soft: 1, glintAmt: 1, chroma: 'none', chromaAmt: 0.6, speck: 'hyphen',
-  size: 1, up: 0, mask: 0, warp: 'none', warpAmt: 0.5, tint: 0, hover: 'arc', still: 1.2,
+  speck: 'hyphen',
+  size: 1, up: 0, warp: 'none', warpAmt: 0.5, tint: 0, hover: 'arc', still: 1.2,
   look: 'vinyl', shape: 'custom', vinylPreset: 'dark',
-  vinyl: '#1c1c20', finish: 'solid', body: 0, through: 0, wedge: 0, lineTint: 0, flecks: 0,
+  vinyl: '#1c1c20', finish: 'solid', body: 0, through: 0, lineTint: 0, flecks: 0,
   pitch: 6, pitchOut: 8, lineW: 1, press: 1, contrast: 1, satin: 1, level: 1, sheen: 1, songLen: 1,
+  // The glints (see GLINTS below for what each does).
+  glints: 1, gSize: 1, gSharp: 1, gCount: 3, gRide: 3, chroma: 'none', gSpread: 1, chromaAmt: 0.6, gHue: 0,
+  // The lamp's cone (see LAMP below).
+  cone: 0, wedge: 0, coneW: 36.8, coneSoft: 3.2, coneDir: 0, coneReach: 1, coneTint: '#ffffff', cones: 'two', lampMove: 'drift',
+  // The pointer moving the light (hover styles light, cone, angle, colour,
+  // tilt, all): how far each goes, and how long it takes to follow.
+  hLight: 0.7, hCone: 0.8, hAngle: 0.6, hHue: 0.5, hTilt: 0.5, hFollow: 0.6,
+  // The fade at the very top: fully shown below fadeAt (CSS px from the
+  // canvas's top), fading to nothing over fadeLen above it.
+  fadeAt: 230, fadeLen: 230,
 };
 const CUES = { glints: 0, dust: 1, warp: 2, spokes: 3, soft: 4 };
 const CHROMA = { none: 0, film: 1, prism: 2, lamp: 3, grating: 4, pearl: 5, fringe: 6 };
 const SPECKS = { hyphen: 0, motes: 1, scratches: 2, scuffs: 3, sparkle: 4, lint: 5, smudge: 6 };
 const WARPS = { none: 0, mirror: 1, barrel: 2, lens: 3, flip: 4 };
-const HOVERS = { arc: 0, lamp: 1, prism: 2, spectrum: 3, litarc: 4, glass: 5, glassprism: 6 };
+const HOVERS = { arc: 0, lamp: 1, prism: 2, spectrum: 3, litarc: 4, glass: 5, glassprism: 6, light: 7, cone: 8, angle: 9, colour: 10, tilt: 11, all: 12 };
+// The hovers that move the record's own light rather than drawing a light of their own.
+const MOVERS = { light: ['light'], cone: ['cone'], angle: ['angle'], colour: ['colour'], tilt: ['tilt'], all: ['light', 'angle', 'colour', 'tilt'] };
 // How each hover follows the pointer: a spring's stiffness and damping (as
 // the footer's do). Under 1 it overshoots a touch. (The arc eases instead.)
 const SPRING = { lamp: [42, 0.9], prism: [90, 1], spectrum: [90, 1], litarc: [90, 1], glass: [70, 0.9], glassprism: [70, 0.9] };
@@ -163,6 +182,21 @@ let lastKick = 0;
 let spin = 0;
 let drift = 0;
 const needle = { on: false, r: 0, born: 0 };
+// How far the glints have gone round (see T.gRide), and the lamp (when it
+// turns with the record).
+let glintSpin = 0;
+let lampTurn = 0;
+// The tilt toward the pointer this frame (toRecord uses it too).
+let tiltNow = [0, 0, 0, 0];
+// The hovers that move the record's own light (MOVERS): what the pointer
+// asks of each now, and where each is on its spring (critically damped, so
+// it glides there and back with no bounce). light, cone: radians the lamp
+// and its cone swing; phase: radians the glints slide along their grooves;
+// spread: their colours fanned wider or narrower (a share); hue: radians
+// round the colour wheel; tx, ty: the tilt, -1..1 across and down.
+const FX_KEYS = ['light', 'cone', 'phase', 'spread', 'hue', 'tx', 'ty'];
+const fx = { want: {}, at: {}, v: {}, moving: false };
+for (const k of FX_KEYS) fx.want[k] = fx.at[k] = fx.v[k] = 0;
 const ripple = { on: false, r: 0, born: 0 };
 // The pointer, in record terms (radius and angle), eased so the light on
 // the grooves glides after it rather than jumping.
@@ -225,8 +259,16 @@ uniform float uFacing;
 uniform vec3 uStyle;     // lines, satin, level
 uniform float uSheen;
 uniform float uGlint;
-uniform vec2 uGlintAmt;  // the soft glints, and the glints cue's own
+uniform vec2 uGlintAmt;  // the glints' brightness (y unused)
 uniform vec2 uChroma;    // colour in the glints (see CHROMA), and how much
+uniform vec4 uGlintShape; // the glints' size, sharpness, how many a turn, and how far they've turned
+uniform float uGlintSpread; // how far the glints' colours fan apart
+uniform mat3 uHueM;      // the glints' colours turned round the colour wheel
+uniform vec4 uTilt;      // the record tipped toward the pointer: its tilt (per CSS px), and its shift (CSS px)
+uniform vec4 uCone;      // the lamp's cone: where it points, its width's scale, its edges (on cos^4), how far in it reaches
+uniform vec4 uConeTint;  // the cone's colour, and 1 for one cone (0: two, opposite)
+uniform vec2 uConeEdge;  // the cone's edges, on cos^4 of the angle
+uniform float uConeLight; // the lamp's light through the vinyl in the cone
 uniform float uSpeck;    // what the dust is (see SPECKS)
 uniform float uTint;     // the lamp's blue and orange in the sheen
 uniform vec4 uWarp;      // how the top is bent (see WARPS), how much, more rings up top, half the width
@@ -258,10 +300,18 @@ float hash(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.545
 vec3 hue(float t) { return 0.5 + 0.5 * cos(2.0 * PI * (t + vec3(0.0, 0.33, 0.67))); }
 float maxc(vec3 c) { return max(c.r, max(c.g, c.b)); }
 float near(float v, float k) { return step(abs(v - k), 0.5); }
+float wrap(float x) { return atan(sin(x), cos(x)); }
 
 // A point on the page onto the disc, in perspective, with the top's bends
 // (toRecord in the script does the same sum).
 vec2 discQ(vec2 px) {
+  // Tipped toward the pointer (a hover): the page seen through a tilted
+  // pane, so one side comes nearer and the other falls away (toRecord
+  // does the same).
+#ifdef TILT
+  vec2 dt = px - uCentre;
+  px = uCentre + dt / max(0.3, 1.0 + dot(uTilt.xy, dt)) - uTilt.zw;
+#endif
   float cx = uCentre.x;
   float cy = uCentre.y;
   float k = uWarp.y;
@@ -309,44 +359,71 @@ float glassAt(vec2 px) {
   return uHover.z * exp(-dot(d, d) / (GLASS * GLASS));
 }
 
+// A glint's shape, x2 its squared distance from its middle (in its own
+// units): soft (sharpness under 1, long tails) to crisp (over 1, a flat
+// top with a quicker edge).
+// (Compiled in only when it's not 1, the plain bell curve: see variant.)
+#ifdef SHARP
+float glintProf(float x2) { return exp(-pow(max(x2, 0.0), uGlintShape.y)); }
+vec3 glintProf3(vec3 x2) { return exp(-pow(max(x2, vec3(0.0)), vec3(uGlintShape.y))); }
+#else
+float glintProf(float x2) { return exp(-x2); }
+vec3 glintProf3(vec3 x2) { return exp(-x2); }
+#endif
+// The glints' colours turned round the wheel (only compiled in when they are).
+#ifdef HUE
+#define HUED(v) (uHueM * (v))
+#else
+#define HUED(v) (v)
+#endif
+
 // The glints' colour (see CHROMA). arc, du: where in the glint, along it
 // and across it; gv comes in as its shape and some colours split it per
-// channel; tv is its tint.
+// channel; tv is its tint. sp (uGlintSpread) is how far the colours fan
+// apart across the glint, the same for every palette.
 void glintColour(float arc, float du, float a, float r, float inSong, inout vec3 gv, out vec3 tv) {
   tv = vec3(1.0);
-  float ce = uChroma.x;
-  if (ce > 0.5) {
-    if (near(ce, 1.0) > 0.5) {
-      // Thin film, like oil on water: the hue shifts with the angle the
-      // light meets it at and across the glint.
-      tv = mix(vec3(1.0), hue(0.55 * cos(a - uFacing) + r / 650.0 + 0.12 * du), 0.8);
-    } else if (near(ce, 2.0) > 0.5) {
-      // Prism: the glint split along its length, red leading, blue trailing.
-      vec3 sh = vec3(0.55, 0.0, -0.55);
-      vec3 x = arc + sh;
-      gv = mix(gv, exp(-x * x - du * du) * inSong, uChroma.y);
-    } else if (near(ce, 3.0) > 0.5) {
-      // The footer's lamp: a white core with a cool and a warm side.
-      float side = clamp(arc * 1.2, -1.0, 1.0);
-      tv = mix(mix(BLUE, ORANGE, 0.5 + 0.5 * side), vec3(1.0), exp(-arc * arc * 2.5) * 0.45);
-    } else if (near(ce, 4.0) > 0.5) {
-      // A diffraction grating's rainbow, as on a CD: it runs along the
-      // glint and shifts as the glint turns through the light.
-      tv = hue(0.28 * arc + 0.18 * du + 0.9 * (a - uFacing));
-    } else if (near(ce, 5.0) > 0.5) {
-      // Pearl: soft pink, mint and lilac drifting over each other.
-      tv = mix(vec3(1.0, 0.74, 0.9), vec3(0.7, 1.0, 0.9), 0.5 + 0.5 * sin(3.0 * du + 2.0 * a));
-      tv = mix(tv, vec3(0.8, 0.76, 1.0), 0.5 - 0.5 * cos(arc * 1.4));
-    } else {
-      // Fringe: as through a lens that doesn't quite focus every colour,
-      // red spreads wider and softer, blue stays tight.
-      vec3 sc = vec3(0.6, 1.0, 1.5);
-      vec3 xa = arc * sc;
-      vec3 xu = du * sc;
-      gv = mix(gv, exp(-xa * xa - xu * xu) * inSong * vec3(0.95, 1.0, 1.15), uChroma.y);
-    }
-    tv /= max(maxc(tv), 1e-3);
-  }
+  float sp = uGlintSpread;
+  // (Only the palette picked is compiled in: PAL, see variant and CHROMA.)
+#if PAL == 1
+  // Thin film, like oil on water: the hue shifts with the angle the
+  // light meets it at and across the glint.
+  tv = mix(vec3(1.0), hue(0.55 * cos(a - uFacing) + r / 650.0 + 0.12 * du * sp), 0.8);
+#elif PAL == 2
+  // Prism: the glint split along its length, red leading, blue trailing.
+  vec3 sh = vec3(0.55, 0.0, -0.55) * sp;
+  vec3 x = arc + sh;
+  gv = mix(gv, glintProf3(x * x + du * du) * inSong, uChroma.y);
+#elif PAL == 3
+  // The footer's lamp: a white core with a cool and a warm side.
+  float side = clamp(arc * 1.2 * sp, -1.0, 1.0);
+  tv = mix(mix(BLUE, ORANGE, 0.5 + 0.5 * side), vec3(1.0), exp(-arc * arc * 2.5 * sp * sp) * 0.45);
+#elif PAL == 4
+  // A diffraction grating's rainbow, as on a CD: it runs along the
+  // glint and shifts as the glint turns through the light.
+  tv = hue((0.28 * arc + 0.18 * du) * sp + 0.9 * (a - uFacing));
+#elif PAL == 5
+  // Pearl: soft pink, mint and lilac drifting over each other.
+  tv = mix(vec3(1.0, 0.74, 0.9), vec3(0.7, 1.0, 0.9), 0.5 + 0.5 * sin(3.0 * du * sp + 2.0 * a));
+  tv = mix(tv, vec3(0.8, 0.76, 1.0), 0.5 - 0.5 * cos(arc * 1.4 * sp));
+#elif PAL == 6
+  // Fringe: as through a lens that doesn't quite focus every colour,
+  // red spreads wider and softer, blue stays tight.
+  vec3 sc = 1.0 + (vec3(0.6, 1.0, 1.5) - 1.0) * sp;
+  vec3 xa = arc * sc;
+  vec3 xu = du * sc;
+  gv = mix(gv, glintProf3(xa * xa + xu * xu) * inSong * vec3(0.95, 1.0, 1.15), uChroma.y);
+#endif
+  tv /= max(maxc(tv), 1e-3);
+}
+// The glints' light at a place in one (along it, across it), in their
+// colour: what the pointer's lights are painted with too, so they always
+// match the glints.
+vec3 paint(float x, float y, float a, float r) {
+  vec3 gv = vec3(glintProf(x * x + y * y));
+  vec3 tv;
+  glintColour(x, y, a, r, 1.0, gv, tv);
+  return max(HUED(gv * mix(BASE, tv * 0.95, uChroma.y * step(0.5, uChroma.x))), 0.0);
 }
 `;
 const MAIN = `
@@ -449,28 +526,25 @@ void main() {
   // (Lg, and Gv its colour) so they can take a colour of their own.
   float lamp = 0.5 + 0.5 * cos(2.0 * (a - uFacing));
   lamp *= lamp;
-  float seg = 2.0 * PI / 3.0;
+  // (They go round at their own pace, uGlintShape.w: with the disc, or
+  // faster so the turn reads even when the disc turns slowly.)
+  float seg = 2.0 * PI / uGlintShape.z;
   float ph = fract(sin(idx * 91.7) * 4375.5) * seg;
-  float la = mod(b - ph, seg) - 0.5 * seg;          // angle to the nearest one
-  float arc = la * r / 220.0;
+  float la = mod(a - uGlintShape.w - ph, seg) - 0.5 * seg;   // angle to the nearest one
+  float arc = la * r / (220.0 * uGlintShape.x);
   float uc = 0.3 + 0.4 * fract(sin(idx * 17.3) * 9631.1);
-  float du = (u - uc) / 0.3;
-  float glint = exp(-arc * arc - du * du) * inSong;
+  float du = (u - uc) / (0.3 * uGlintShape.x);
+  float glint = glintProf(arc * arc + du * du) * inSong;
   float onLines = mix(1.0, clamp(0.4 + 0.6 * (1.0 + lines) * 0.5, 0.0, 1.3), uStyle.x);
-  // What shows the turn. A plain circle spinning looks still, so
-  // something fixed on the disc has to be seen going round.
+  // What else shows the turn (dust, the warp, spokes; the glints always do).
   float cueAmt = uCue.y * (1.0 - lead) * edge;
-  float gAmt = uGlintAmt.x;
-  // The glints cue: stronger glints, nothing more. (The soft-glints cue
-  // is those alone, as among the dust.)
-  if (uCue.x < 0.5) gAmt += uGlintAmt.y * cueAmt * 1.2;
-  float gk = uGlint * (0.25 + 0.75 * lamp) * onLines * (1.0 - lead) * gAmt;
+  float gk = uGlint * (0.25 + 0.75 * lamp) * onLines * (1.0 - lead) * uGlintAmt.x;
   vec3 gv = vec3(glint);
   vec3 tv;
   glintColour(arc, du, a, r, inSong, gv, tv);
   float ce = uChroma.x;
   float Lg = gk * (gv.r + gv.g + gv.b) / 3.0;
-  vec3 Gv = gk * gv * mix(BASE, tv * 0.95, uChroma.y * step(0.5, ce));
+  vec3 Gv = max(HUED(gk * gv * mix(BASE, tv * 0.95, uChroma.y * step(0.5, ce))), 0.0);
 
   if (uCue.x > 0.5 && uCue.x < 1.5) {
     // Dust: specks lying on the disc, carried round with it, each one
@@ -592,6 +666,9 @@ void main() {
   // The pointer. Hv is light of its own colour, Hs how much it adds.
   vec3 Hv = vec3(0.0);
   float Hs = 0.0;
+  // (Only the hover picked is compiled in; those that move the light draw
+  // nothing here: HOVER, see variant.)
+#if HOVER <= 6
   if (on > 0.0) {
     float shine = mix(1.0, clamp(0.25 + 0.75 * (1.0 + lines) * 0.5, 0.0, 1.3), uStyle.x);
     float da = atan(sin(a - uHover.y), cos(a - uHover.y));
@@ -607,70 +684,64 @@ void main() {
       float s = run / 240.0;
       float streak = exp(-dr * dr) * exp(-s * s);
       L += 11.0 * uTouch * on * streak * (0.45 + 0.55 * shine) * mix(0.6, 1.0, inSong);
-    } else if (uHoverMode < 1.5) {
-      // Lamp: a lamp carried over the record. On grooved vinyl its
-      // reflection is a streak running across the grooves, out along a
-      // radius, with a cool fringe one side and a warm one the other. (Its
-      // core a soft band rather than a thin ray.)
-      float along = (r * cos(da) - uHover.x) / 240.0;
-      float s = r * sin(da) / (ft * uDpr);
-      float w = 5.5;
-      float core = exp(-s * s / (w * w));
-      float glow = exp(-s * s / (16.0 * w * w));
-      float cool = exp(-(s + 1.6 * w) * (s + 1.6 * w) / (w * w));
-      float warm = exp(-(s - 1.6 * w) * (s - 1.6 * w) / (w * w));
-      float e = 9.0 * k * exp(-along * along) * step(0.0, cos(da)) * (0.4 + 0.6 * shine);
-      Hv = e * (BASE * (0.7 * core + 0.3 * glow) + BLUE * 0.5 * cool + ORANGE * 0.5 * warm);
-      Hs = e * (0.7 * core + 0.3 * glow + 0.5 * (cool + warm));
-    } else if (uHoverMode < 2.5) {
-      // Prism: a short caustic on the grooves at its radius, its colours
-      // split across them, red inside, blue out.
-      float s = run / 170.0;
-      float w = 9.0;
-      vec3 x = (drc + vec3(1.1, 0.0, -1.1) * w) / w;
-      vec3 band = exp(-x * x) * exp(-s * s) * shine;
-      float e = 5.0 * k;
-      Hv = e * band;
-      Hs = e * (band.r + band.g + band.b) / 3.0;
-    } else if (uHoverMode < 3.5) {
-      // Spectrum: a wide cast of light along the pointer's grooves, spread
-      // into a whole spectrum across them, red inside through to blue out.
-      float s = run / 300.0;
-      vec3 x = (drc / 34.0 - vec3(-0.6, 0.0, 0.6)) / 0.62;
-      vec3 band = exp(-x * x) * exp(-s * s) * shine;
-      float e = 4.2 * k;
-      Hv = e * band;
-      Hs = e * (band.r + band.g + band.b) / 3.0;
-    } else if (uHoverMode < 4.5) {
-      // Lit arc: the arc lit as the lamp lights: along the pointer's
-      // grooves, a white core with the lamp's cool side inside it and its
-      // warm side out, and a wide soft glow.
-      float s = run / 240.0;
-      float w = 10.0;
-      float core = exp(-drc * drc / (w * w));
-      float glow = exp(-drc * drc / (16.0 * w * w));
-      float cool = exp(-(drc + 1.7 * w) * (drc + 1.7 * w) / (w * w));
-      float warm = exp(-(drc - 1.7 * w) * (drc - 1.7 * w) / (w * w));
-      float e = 7.0 * k * exp(-s * s) * (0.4 + 0.6 * shine);
-      Hv = e * (BASE * (0.7 * core + 0.3 * glow) + BLUE * 0.55 * cool + ORANGE * 0.55 * warm);
-      Hs = e * (0.7 * core + 0.3 * glow + 0.55 * (cool + warm));
     } else {
-      // Glass (the bend is above): a faint sheen on the glass toward the
-      // lamp, and at its edge, where the grooves crowd, a colour fringe on
-      // them: the lamp's cool inside and warm out, or (glass prism) a
-      // spectrum.
-      float x = (dist - 0.78 * GLASS) / (0.16 * GLASS);
-      vec3 rim = uHoverMode < 5.5
-        ? BLUE * exp(-(x + 0.9) * (x + 0.9)) + ORANGE * exp(-(x - 0.9) * (x - 0.9))
-        : exp(-(x - vec3(-1.0, 0.0, 1.0)) * (x - vec3(-1.0, 0.0, 1.0)) / 0.6);
-      vec2 hl = dp - GLASS * 0.32 * vec2(0.6, -0.8);
-      float gleam = exp(-dot(hl, hl) / (0.09 * GLASS * GLASS));
-      // (The fringe on the grooves alone, so it reads as bent light, not a halo.)
-      float e = 2.6 * k;
-      Hv = e * (rim * shine * shine + BASE * 0.25 * gleam);
-      Hs = e * (maxc(rim) * shine * shine + 0.25 * gleam);
+      // The rest are each a light painted as the glints are (their colour,
+      // split, sharpness; see paint), placed and sized their own way, some
+      // with a soft white glow: worked out here, then painted once.
+      float x = 0.0;          // across the light, in its own units
+      float y = 0.0;          // along it
+      float e = 0.0;          // how strong
+      float pw = 0.85;        // how much of it is painted
+      float glow = 0.0;       // its white glow
+      if (uHoverMode < 1.5) {
+        // Lamp: a lamp carried over the record. On grooved vinyl its
+        // reflection is a streak running across the grooves, out along a
+        // radius, its colours across it, a soft glow round it.
+        float along = (r * cos(da) - uHover.x) / 240.0;
+        float s = r * sin(da) / (ft * uDpr);
+        float w = 5.5;
+        x = s / (1.8 * w);
+        y = along;
+        glow = 0.3 * exp(-s * s / (16.0 * w * w) - along * along);
+        e = 9.0 * k * step(0.0, cos(da)) * (0.4 + 0.6 * shine);
+      } else if (uHoverMode < 2.5) {
+        // Prism: a short caustic on the grooves at its radius, its colours
+        // split across the grooves.
+        x = drc / 14.0;
+        y = run / 170.0;
+        e = 5.0 * k * shine;
+        pw = 1.0;
+      } else if (uHoverMode < 3.5) {
+        // Spectrum: a wide cast of light along the pointer's grooves, its
+        // colours spread wide across them.
+        x = drc / 40.0;
+        y = run / 300.0;
+        e = 4.2 * k * shine;
+        pw = 1.0;
+      } else if (uHoverMode < 4.5) {
+        // Lit arc: the arc lit as the lamp lights: along the pointer's
+        // grooves, a coloured core and a wide soft glow.
+        float w = 10.0;
+        x = drc / (1.7 * w);
+        y = run / 240.0;
+        glow = 0.3 * exp(-drc * drc / (16.0 * w * w) - y * y);
+        e = 7.0 * k * (0.4 + 0.6 * shine);
+      } else {
+        // Glass (the bend is above): at its edge, where the grooves crowd,
+        // a fringe in the glints' colours on them, narrow or (glass prism)
+        // wide; and a faint sheen on the glass toward the lamp. (The fringe
+        // on the grooves alone, so it reads as bent light, not a halo.)
+        x = (dist - 0.78 * GLASS) / (0.16 * GLASS) / (uHoverMode < 5.5 ? 1.0 : 1.6);
+        pw = (uHoverMode < 5.5 ? 0.7 : 1.0) * shine * shine;
+        vec2 hl = dp - GLASS * 0.32 * vec2(0.6, -0.8);
+        glow = 0.25 * exp(-dot(hl, hl) / (0.09 * GLASS * GLASS));
+        e = 2.6 * k;
+      }
+      Hv = e * (pw * paint(x, y, a, r) + glow * BASE);
     }
+    Hs = maxc(Hv);
   }
+#endif
 
   float lift = uStyle.z * edge * (1.0 + 0.08 * uSwell);
   float alpha = lift * L;
@@ -692,7 +763,7 @@ void main() {
   // rather than grey; chromatic, that hue shifts round the disc with the
   // lamp's angle, as on oil-slick vinyl, with swirls that turn with it.
   vec4 vx = vec4(0.0);
-  if (uVinyl.w + uThru.x + uThru.y + uThru.z + uThru.w > 0.0) {
+  if (uVinyl.w + uThru.x + uThru.y + uThru.z + uThru.w + uConeLight > 0.0) {
     vec3 V = uVinyl.rgb;
     float vm = maxc(V);
     vec3 Vn = mix(vec3(1.0), V / max(vm, 1e-3), smoothstep(0.0, 0.03, vm));
@@ -701,18 +772,36 @@ void main() {
       Vn /= maxc(Vn);
     }
     vec3 HI = mix(Vn, vec3(1.0), uVinylFin > 0.5 ? 0.55 : 0.65);
-    float inWedge = smoothstep(0.78, 0.84, lamp);
+    // The lamp's cone (see LAMP in the script): where its light comes
+    // through the vinyl, clean-edged, with a soft halo round it, either side
+    // of the centre (or one side), reaching in from the rim.
+    // (Its width, edges, reach and one-sidedness only compiled in when
+    // they're changed: CONE, see variant.)
+#ifdef CONE
+    float xc = uConeTint.w > 0.5 ? wrap(a - uCone.x) : 0.5 * wrap(2.0 * (a - uCone.x));
+    float cc = cos(clamp(xc * uCone.y, -0.5 * PI, 0.5 * PI));
+    float lampC = cc * cc * cc * cc;
+    float rf = smoothstep(R * (1.0 - uCone.w) - 0.3 * R, R * (1.0 - uCone.w), r);
+#else
+    float lampC = 0.5 + 0.5 * cos(2.0 * (a - uCone.x));
+    lampC *= lampC;
+    float rf = 1.0;
+#endif
+    float inWedge = smoothstep(uConeEdge.x, uConeEdge.y, lampC) * rf;
+    float halo = lampC * lampC * rf;
+    vec3 CT = uConeTint.rgb;
     float wedge = uThru.y * inWedge;
     base = mix(base, mix(Vn, vec3(1.0), 0.15), uThru.z);
-    base = mix(base, HI, min(wedge, 1.0));
+    base = mix(base, HI * CT, min(wedge, 1.0));
     // (In the wedges the grooves' lines light up, not the gaps between.)
     alpha *= 1.0 + 2.5 * wedge * max(lines, 0.0) * inSong;
     float sw = 1.0 + 0.15 * uSwell;
     float body = uVinyl.w * mix(0.5, 1.0, inSong) * edge * sw;
     vx += vec4(V, 1.0) * body;
-    float thr = uThru.x * (0.015 + 0.05 * inWedge + 0.05 * lamp * lamp) * mix(0.7, 1.0, inSong) * edge * sw;
-    vx += vec4(Vn, 1.0) * thr;
-    vx += vec4(HI, 1.0) * 0.05 * wedge * inSong * edge;
+    float thr = mix(0.7, 1.0, inSong) * edge * sw;
+    vx += vec4(Vn, 1.0) * uThru.x * 0.015 * thr;
+    vx += vec4(Vn * CT, 1.0) * uConeLight * (0.05 * inWedge + 0.05 * halo) * thr;
+    vx += vec4(HI * CT, 1.0) * 0.05 * wedge * inSong * edge;
     if (uThru.w > 0.0) {
       // Flecks in the vinyl, carried round, glinting as they pass the light
       // (round on the screen however the disc is foreshortened).
@@ -810,7 +899,6 @@ float wedgeD(float b, float from, float len, float r, float ft) {
   float x = mod(b - from, 2.0 * PI);
   return (x < len ? min(x, len - x) : -min(x - len, 2.0 * PI - x)) * r / ft;
 }
-float wrap(float x) { return atan(sin(x), cos(x)); }
 // Light, added; and ink, laid over (both premultiplied).
 void add(inout vec4 o, vec3 c, float k) { o += vec4(c * k, k); }
 void over(inout vec4 o, vec3 c, float k) { k = clamp(k, 0.0, 1.0); o = vec4(c * k, k) + o * (1.0 - k); }
@@ -850,14 +938,14 @@ float lodHair(float v, float fv, float P0, float gap, float w) {
 // groove catch the lamp, fixed on the disc so they turn with it, in the
 // glint colour (see CHROMA; white: the style's own light). Light to add.
 vec3 glints(float r, float a, float b, float idx, float u, float inS, float lamp, vec3 white) {
-  float seg = 2.0 * PI / 3.0;
+  float seg = 2.0 * PI / uGlintShape.z;
   float ph = fract(sin(idx * 91.7) * 4375.5) * seg;
-  float arc = (mod(b - ph, seg) - 0.5 * seg) * r / 220.0;
-  float du = (u - 0.3 - 0.4 * fract(sin(idx * 17.3) * 9631.1)) / 0.3;
-  vec3 gv = vec3(exp(-arc * arc - du * du) * inS);
+  float arc = (mod(a - uGlintShape.w - ph, seg) - 0.5 * seg) * r / (220.0 * uGlintShape.x);
+  float du = (u - 0.3 - 0.4 * fract(sin(idx * 17.3) * 9631.1)) / (0.3 * uGlintShape.x);
+  vec3 gv = vec3(glintProf(arc * arc + du * du) * inS);
   vec3 tv;
   glintColour(arc, du, a, r, inS, gv, tv);
-  return uGlint * (0.25 + 0.75 * lamp) * uGlintAmt.x * gv * mix(white, tv * 0.95, uChroma.y * step(0.5, uChroma.x));
+  return max(HUED(uGlint * (0.25 + 0.75 * lamp) * uGlintAmt.x * gv * mix(white, tv * 0.95, uChroma.y * step(0.5, uChroma.x))), 0.0);
 }
 
 // The pointer, the same for every style, which each draws its own way.
@@ -1349,10 +1437,11 @@ let geo = null;
 
 // One program per style, compiled the first time it's shown.
 const NAMES = ['uSize', 'uDpr', 'uCentre', 'uGeo', 'uHoles', 'uHoleCount', 'uHoleR', 'uSpan', 'uSpin', 'uFacing', 'uStyle', 'uSheen', 'uGlint', 'uHover', 'uSwell', 'uNeedle', 'uRipple', 'uTouch', 'uHz', 'uCue', 'uTracks', 'uTrackCount',
-  'uOuter', 'uGlintAmt', 'uChroma', 'uSpeck', 'uTint', 'uWarp', 'uLens', 'uHoverMode', 'uPtr', 'uVinyl', 'uVinylFin', 'uThru', 'uGroove'];
+  'uOuter', 'uGlintAmt', 'uChroma', 'uSpeck', 'uTint', 'uWarp', 'uLens', 'uHoverMode', 'uPtr', 'uVinyl', 'uVinylFin', 'uThru', 'uGroove',
+  'uGlintShape', 'uGlintSpread', 'uHueM', 'uTilt', 'uCone', 'uConeTint', 'uConeEdge', 'uConeLight'];
 const progs = new Map();
-let shown = -1;
-function build(n) {
+let shown = '';
+function build(n, defs) {
   const shader = (type, src) => {
     const s = gl.createShader(type);
     gl.shaderSource(s, src);
@@ -1361,7 +1450,7 @@ function build(n) {
     return s;
   };
   // WebGL 1 needs the derivatives extension switched on in the shader.
-  const frag = '#extension GL_OES_standard_derivatives : enable\n' + (n ? `#define LOOK ${n}\n${HEAD}${LOOKS}` : HEAD + MAIN);
+  const frag = '#extension GL_OES_standard_derivatives : enable\n' + defs + (n ? `#define LOOK ${n}\n${HEAD}${LOOKS}` : HEAD + MAIN);
   const p = gl.createProgram();
   gl.attachShader(p, shader(gl.VERTEX_SHADER, VERT));
   gl.attachShader(p, shader(gl.FRAGMENT_SHADER, frag));
@@ -1372,24 +1461,39 @@ function build(n) {
   for (const k of NAMES) u[k] = gl.getUniformLocation(p, k);
   return { p, u };
 }
-/** Switch to style n (see LOOK); a style that won't compile shows the current one. */
+// Each program is compiled with only what the settings use (variant): the
+// glints' palette, and their sharpness, colour turn, the cone's shape, the
+// tilt and the hover only when they're in use, so a setting left as it was
+// costs nothing. The few in use are kept, each compiled the first time.
+function variant() {
+  const mv = MOVERS[T.hover];
+  let d = `#define PAL ${CHROMA[T.chroma] ?? 0}\n#define HOVER ${HOVERS[T.hover] ?? 0}\n`;
+  if (T.gSharp !== 1) d += '#define SHARP\n';
+  if (T.gHue !== 0 || mv?.includes('colour')) d += '#define HUE\n';
+  if (mv?.includes('tilt')) d += '#define TILT\n';
+  if (T.cones === 'one' || T.coneReach < 1 || coneShape().scale !== 1 || coneShape().lo !== 0.78) d += '#define CONE\n';
+  return d;
+}
+/** Switch to style n (see LOOK) with these settings' variant; one that won't compile shows the vinyl style. */
 function use(n) {
-  if (n === shown) return;
-  let e = progs.get(n);
+  const defs = variant();
+  const key = `${n}|${defs}`;
+  if (key === shown) return;
+  let e = progs.get(key);
   if (!e) {
     try {
-      e = build(n);
+      e = build(n, defs);
     } catch (err) {
       if (!n) throw err;
       console.warn('hero-fx:', err);
-      e = progs.get(0) ?? build(0);
+      e = build(0, defs);
     }
-    progs.set(n, e);
+    progs.set(key, e);
   }
   prog = e.p;
   U = e.u;
   gl.useProgram(prog);
-  shown = n;
+  shown = key;
   // Each program keeps its own uniforms: lay everything out afresh.
   geo = null;
   measured = 0;
@@ -1440,7 +1544,7 @@ function layout(now) {
   const end = bar && next && next.top > bar.bottom ? next.top - c.top : s.bottom - c.top + 180;
   // The app's screen, where the pointer isn't on the record.
   const box = { l: s.left - c.left, r: s.right - c.left, t: s.top - c.top, b: s.bottom - c.top };
-  const key = [c.width, c.height, Math.round(cx), Math.round(cy), Math.round(end), T.drop, T.persp, T.size, T.up, T.warp, T.warpAmt, T.mask, T.songLen].join();
+  const key = [c.width, c.height, Math.round(cx), Math.round(cy), Math.round(end), T.drop, T.persp, T.size, T.up, T.warp, T.warpAmt, T.fadeAt, T.fadeLen, T.songLen].join();
   gl.uniform4fv(U.uHoles, new Float32Array([...holes.flat(), ...new Array(16 - holes.length * 4).fill(0)]));
   gl.uniform1f(U.uHoleCount, holes.length);
   const btn = document.querySelector('.hero .btn');
@@ -1469,7 +1573,7 @@ function layout(now) {
   canvas.style.setProperty('--fx-end', `${Math.round(end)}px`);
   // And the canvas ends where the record does, not 2000px down.
   canvas.style.height = `${Math.ceil(end + 8)}px`;
-  topFade();
+  topFade(s.top - c.top);
   geo = { ...g, key, R, r0, box, out, top, Rmax };
   return geo;
 }
@@ -1549,6 +1653,11 @@ function frame(now, still) {
   want *= Math.exp(-dt * 1.4);
   spin += TURN * T.life * dt;
   drift += dt * T.life;
+  glintSpin = (glintSpin + TURN * T.life * T.gRide * dt) % (Math.PI * 2);
+  if (T.lampMove === 'turn') lampTurn = (lampTurn + TURN * T.life * dt) % (Math.PI * 2);
+  // Where the lamp points: drifting slowly to and fro, fixed, or turning
+  // with the record.
+  const lampAt = FACING + (T.lampMove === 'drift' ? DRIFT * Math.min(1, T.life) * Math.sin((drift * 2 * Math.PI) / DRIFT_S) : T.lampMove === 'turn' ? lampTurn : 0);
 
   // The needle plays inward, slowly; the ring runs out and fades.
   let needleOn = 0;
@@ -1581,6 +1690,7 @@ function frame(now, still) {
   const reach = touch !== 'off' && !overScreen && !quiet.on && lively && hr > g.r0 && hr < g.Rmax ? 1 : 0;
   const mode = HOVERS[T.hover] ?? 0;
   const sp = SPRING[T.hover];
+  const movers = MOVERS[T.hover];
   if (reach) {
     if (hover.on < 0.02) {
       // Coming in from nothing, it starts right there.
@@ -1614,6 +1724,7 @@ function frame(now, still) {
     hover.r = at.r;
     hover.a = at.a;
   }
+  stepMovers(movers, reach, ha, lampAt, g, dt);
 
   const st = STYLES[style];
   gl.viewport(0, 0, w, h);
@@ -1623,11 +1734,15 @@ function frame(now, still) {
   gl.uniform2f(U.uGeo, g.d0, g.tilt);
   gl.uniform2f(U.uSpan, g.r0, g.R);
   gl.uniform1f(U.uSpin, spin % (Math.PI * 2));
-  gl.uniform1f(U.uFacing, FACING + DRIFT * Math.min(1, T.life) * Math.sin((drift * 2 * Math.PI) / DRIFT_S));
+  // (Nothing passing goes in a still frame: the pointer's moves are left out.)
+  const f = still ? ZERO_FX : fx.at;
+  gl.uniform1f(U.uFacing, lampAt + f.light);
   gl.uniform3f(U.uStyle, st.lines * T.contrast, st.satin * T.satin, st.level * T.level);
   gl.uniform1f(U.uSheen, st.sheen * T.sheen);
-  gl.uniform1f(U.uGlint, st.glint ?? 1.6);
-  gl.uniform3f(U.uHover, hover.r, hover.a, still ? 0 : hover.on);
+  // (In the vinyl style the grooves' brightness lifts everything drawn;
+  // the glints are taken back out of it, so only their own brightness sets them.)
+  gl.uniform1f(U.uGlint, (st.glint ?? 1.6) / (LOOK[T.look] ? 1 : Math.max(0.01, T.level)));
+  gl.uniform3f(U.uHover, hover.r, hover.a, still || movers ? 0 : hover.on);
   gl.uniform1f(U.uSwell, swell);
   // A still frame (reduced motion) may be the last one drawn for a while, so
   // nothing passing (the needle, its ring, the pointer's light) goes in it.
@@ -1637,7 +1752,18 @@ function frame(now, still) {
   gl.uniform1f(U.uHz, g.hz);
   gl.uniform2f(U.uCue, CUES[T.cue] ?? 1, T.cueAmt);
   gl.uniform2f(U.uOuter, g.out, g.top);
-  gl.uniform2f(U.uGlintAmt, T.soft, T.glintAmt);
+  gl.uniform2f(U.uGlintAmt, T.glints, 0);
+  gl.uniform4f(U.uGlintShape, T.gSize, T.gSharp, Math.max(1, Math.round(T.gCount)), glintSpin + f.phase);
+  gl.uniform1f(U.uGlintSpread, Math.max(0, T.gSpread * (1 + f.spread)));
+  gl.uniformMatrix3fv(U.uHueM, false, hueTurn((T.gHue * Math.PI) / 180 + f.hue));
+  // (Only while the tilt is in use: the shader only has it then, see variant.)
+  tiltNow = movers?.includes('tilt') ? [(0.1 * f.tx) / g.half, (0.1 * f.ty) / g.half, 14 * f.tx, 10 * f.ty] : [0, 0, 0, 0];
+  gl.uniform4fv(U.uTilt, tiltNow);
+  const cone = coneShape();
+  gl.uniform4f(U.uCone, lampAt + f.light + f.cone + (T.coneDir * Math.PI) / 180, cone.scale, 0, T.coneReach);
+  gl.uniform2f(U.uConeEdge, cone.lo, cone.hi);
+  gl.uniform4f(U.uConeTint, ...rgbOf(T.coneTint), T.cones === 'one' ? 1 : 0);
+  gl.uniform1f(U.uConeLight, T.cone);
   gl.uniform2f(U.uChroma, CHROMA[T.chroma] ?? 0, T.chromaAmt);
   gl.uniform1f(U.uSpeck, SPECKS[T.speck] ?? 0);
   gl.uniform1f(U.uTint, T.tint);
@@ -1664,18 +1790,102 @@ function draw(now) {
   }
   // At rest (no pointer light, no needle) the record only turns slowly, so
   // 30 frames a second is plenty; the pointer's light gets the full 60.
-  const busy = hover.on > 0.01 || needle.on || ripple.on;
+  const busy = hover.on > 0.01 || needle.on || ripple.on || fx.moving;
   if (busy || now - last >= 1000 / 30 - 2) frame(now, false);
   requestAnimationFrame(draw);
 }
 
-// The page's mask fades the canvas's top 230px out (style.css); lifted, the
-// record shows nearer the top. The rest of the mask is as style.css has it.
-function topFade() {
-  if (!T.mask) { canvas.style.removeProperty('--fx-mask'); return; }
-  const v = T.mask;
-  const full = Math.round(230 * (1 - 0.8 * v));
-  canvas.style.setProperty('--fx-mask', `linear-gradient(to bottom, rgb(0 0 0 / ${(0.75 * v).toFixed(2)}) 0, #000 ${full}px, #000 var(--fx-top), rgb(0 0 0 / 0.75) var(--fx-mid), rgb(0 0 0 / 0.75) calc(var(--fx-end) - 110px), transparent var(--fx-end))`);
+// The page's mask (style.css) fades the canvas's top 230px out: clear at
+// the very top, 0.06 at 60px, 0.5 at 140px, full at 230px. Moved here, the
+// same curve is laid between fadeAt - fadeLen and fadeAt, clear above it,
+// so the very top is always clear and the fade is always a ramp, never an
+// edge. (Its defaults are style.css's own, left to it.) fxTop: the app's
+// screen, which it never reaches past.
+function topFade(fxTop) {
+  if (T.fadeAt === 230 && T.fadeLen >= 230) { canvas.style.removeProperty('--fx-mask'); return; }
+  const y1 = Math.max(8, Math.min(T.fadeAt, fxTop));
+  const len = Math.max(8, Math.min(T.fadeLen, y1));
+  const at = (f) => `${(y1 - len + len * f).toFixed(1)}px`;
+  canvas.style.setProperty('--fx-mask', `linear-gradient(to bottom, transparent 0, transparent ${at(0)}, rgb(0 0 0 / 0.06) ${at(60 / 230)}, rgb(0 0 0 / 0.5) ${at(140 / 230)}, #000 ${at(1)}, #000 var(--fx-top), rgb(0 0 0 / 0.75) var(--fx-mid), rgb(0 0 0 / 0.75) calc(var(--fx-end) - 110px), transparent var(--fx-end))`);
+}
+
+// The glints' colours turned round the colour wheel by t radians (about
+// the grey axis, so white stays white), as a matrix for the shader.
+function hueTurn(t) {
+  const c = Math.cos(t);
+  const s = Math.sin(t) / Math.sqrt(3);
+  const o = (1 - c) / 3;
+  // (Column by column.)
+  return [c + o, o + s, o - s, o - s, c + o, o + s, o + s, o - s, c + o];
+}
+
+// The lamp's cone. Its edges were set on cos^4 of the angle from the lamp
+// (0.78 to 0.84, a cone 36.8 degrees across with edges 3.2 degrees soft):
+// the angle is scaled so its width can change, and the edges laid where the
+// softness puts them.
+const CONE_OUT = Math.acos(0.78 ** 0.25);
+const CONE_IN = Math.acos(0.84 ** 0.25);
+const CONE_W = CONE_OUT + CONE_IN;          // across, radians
+function coneShape() {
+  if (Math.abs(T.coneW - 36.8) < 1e-6 && Math.abs(T.coneSoft - 3.2) < 1e-6) return { scale: 1, lo: 0.78, hi: 0.84 };
+  const w = Math.max(0.5, T.coneW) * (Math.PI / 180);
+  const scale = CONE_W / w;
+  const soft = Math.max(0.05, T.coneSoft) * (Math.PI / 180);
+  const c4 = (x) => Math.cos(Math.min(Math.PI / 2, Math.max(0, x * scale))) ** 4;
+  const lo = c4(w / 2 + soft / 2);
+  return { scale, lo, hi: Math.max(lo + 1e-4, c4(w / 2 - soft / 2)) };
+}
+
+// The hovers that move the record's own light: what the pointer asks of
+// each (only while it's on the record and moving; otherwise nothing, so
+// all of it drifts back), then each moved toward that on a critically
+// damped spring that settles in about T.hFollow seconds, in small steps.
+// At rest it lies at exactly nothing and costs nothing.
+const ZERO_FX = Object.fromEntries(FX_KEYS.map((k) => [k, 0]));
+const halfWrap = (x) => Math.atan2(Math.sin(2 * x), Math.cos(2 * x)) / 2;
+const fullWrap = (x) => Math.atan2(Math.sin(x), Math.cos(x));
+const clamp1 = (x) => Math.max(-1, Math.min(1, x));
+function stepMovers(movers, reach, ha, lampAt, g, dt) {
+  const w = fx.want;
+  for (const k of FX_KEYS) w[k] = 0;
+  if (movers && reach) {
+    // Across the page from the record's centre, and down from the top to
+    // the app's screen, each -1..1.
+    const nx = clamp1((hover.x - g.cx) / g.half);
+    const ny = clamp1((hover.y - g.box.t / 2) / Math.max(1, g.box.t / 2));
+    if (movers.includes('light')) {
+      // The lamp swings toward the pointer (its light falls either side of
+      // the centre, so the nearer side turns to it).
+      w.light = halfWrap(ha - lampAt) * T.hLight;
+    }
+    if (movers.includes('cone')) {
+      const to = ha - (lampAt + (T.coneDir * Math.PI) / 180);
+      w.cone = (T.cones === 'one' ? fullWrap(to) : halfWrap(to)) * T.hCone;
+    }
+    if (movers.includes('angle')) {
+      w.phase = 0.9 * T.hAngle * nx;
+      w.spread = -0.6 * T.hAngle * ny;
+    }
+    if (movers.includes('colour')) w.hue = Math.PI * T.hHue * nx;
+    if (movers.includes('tilt')) { w.tx = T.hTilt * nx; w.ty = T.hTilt * ny; }
+  }
+  const om = 5 / Math.max(0.05, T.hFollow);
+  let moving = false;
+  for (const k of FX_KEYS) {
+    let p = fx.at[k];
+    let v = fx.v[k];
+    if (p === w[k] && v === 0) { if (p !== 0) moving = true; continue; }
+    for (let s = 0, n = Math.ceil(dt / (1 / 240)); s < n; s++) {
+      const h = dt / n;
+      v += (om * om * (w[k] - p) - 2 * om * v) * h;
+      p += v * h;
+    }
+    if (Math.abs(p - w[k]) < 1e-4 && Math.abs(v) < 1e-3) { p = w[k]; v = 0; }
+    fx.at[k] = p;
+    fx.v[k] = v;
+    if (p !== w[k] || v !== 0 || p !== 0) moving = true;
+  }
+  fx.moving = moving;
 }
 
 // Tune. The style comes first; then the rest in folders, each control only
@@ -1686,6 +1896,9 @@ function topFade() {
 // works in every style, each drawing it its own way (see LOOKS and
 // hoverField). Labels are what the panel saves values under, so they stay.
 const tune = window.tune;
+// The panel's controls, each onInput counted (see counting).
+const counted = (f) => f && ((o) => f({ ...o, onInput: (v) => { counting(); o.onInput?.(v); } }));
+const tw = tune && { ...tune, slider: counted(tune.slider), select: counted(tune.select), color: counted(tune.color) };
 const again = () => { geo = null; measured = 0; wake(); };
 const redraw = (k) => (v) => { T[k] = v; if (prog) wake(); };
 const reshape = (k) => (v) => { T[k] = v; if (prog) again(); };
@@ -1703,14 +1916,32 @@ const glinty = () => GLINTY.has(T.look);
 const sameColour = (a, b) => rgbOf(a).every((x, i) => Math.abs(x - rgbOf(b)[i]) < 1 / 255);
 const same = (a, b) => (typeof a === 'number' && typeof b === 'number' ? Math.abs(a - b) < 1e-6
   : typeof a === 'string' && typeof b === 'string' && /^#|\(/.test(a) && /^#|\(/.test(b) ? sameColour(a, b) : a === b);
+// A preset only applies when it's picked by hand in the panel: the panel
+// restoring its values (on load, or a saved version) sets many controls at
+// once, and then nothing is applied or relabelled, so nothing it holds is
+// ever overwritten. counting() counts the controls set in this go (every
+// control's onInput calls it, see tw below); one alone is a hand.
+let tick = null;
+function counting() {
+  if (!tick) {
+    const t = { n: 0 };
+    tick = t;
+    setTimeout(() => { if (tick === t) tick = null; }, 0);
+  }
+  tick.n++;
+  return tick;
+}
 function presets(key, label, list, labels) {
   const follow = (k, f) => (v) => {
     f(v);
-    const p = list[T[key]]?.[1];
-    if (p && k in p && !same(p[k], v)) { T[key] = 'custom'; tune?.set?.(label, 'custom'); }
+    const t = tick;
+    setTimeout(() => {
+      if (t && t.n !== 1) return;
+      const p = list[T[key]]?.[1];
+      if (p && k in p && !same(p[k], v)) { T[key] = 'custom'; tune?.set?.(label, 'custom'); }
+    }, 0);
   };
-  const pick = (v) => {
-    T[key] = v;
+  const apply = (v) => {
     const p = list[v]?.[1];
     if (!p) return;
     Object.assign(T, p);
@@ -1718,37 +1949,92 @@ function presets(key, label, list, labels) {
     for (const [k, l] of labels) if (k in p) tune?.set?.(l, p[k]);
     panel();
   };
+  const pick = (v) => {
+    T[key] = v;
+    const t = tick;
+    setTimeout(() => { if (t && t.n === 1 && T[key] === v) apply(v); }, 0);
+  };
   const options = [['custom', 'Custom'], ...Object.entries(list).map(([k, [t]]) => [k, t])];
-  return { follow, pick, options };
+  return { follow, pick, options, list };
 }
 
 // The vinyl style's presets. Dark vinyl is the original look exactly; the
 // others are the same renderer with other settings.
-const dark = { vinyl: '#1c1c20', finish: 'solid', body: 0, through: 0, wedge: 0, lineTint: 0, flecks: 0, pitch: 6, pitchOut: 8, lineW: 1, press: 1, contrast: 1, satin: 1, level: 1, sheen: 1, songLen: 1, cue: 'dust' };
+const dark = { vinyl: '#1c1c20', finish: 'solid', body: 0, through: 0, cone: 0, wedge: 0, lineTint: 0, flecks: 0, pitch: 6, pitchOut: 8, lineW: 1, press: 1, contrast: 1, satin: 1, level: 1, sheen: 1, songLen: 1, cue: 'dust' };
+// (cone: the lamp's light through the vinyl in its cone, which was part of
+// "light through it", so the same.)
 const VINYLS = {
   dark: ['Dark vinyl', dark],
-  cherry: ['Tinted cherry', { ...dark, vinyl: '#eb1a3d', body: 0.3, wedge: 1, lineTint: 1, flecks: 1, pitch: 5, pitchOut: 0, press: 0, satin: 0.3, level: 0.9, sheen: 0, cue: 'soft' }],
-  smoked: ['Smoked black (translucent)', { ...dark, vinyl: '#5a5550', body: 0.08, through: 1, wedge: 0.6, lineTint: 0.6, flecks: 0.8, sheen: 0.6, cue: 'soft' }],
-  smokedcherry: ['Smoked cherry', { ...dark, vinyl: '#eb1a3d', body: 0.06, through: 1, wedge: 0.7, lineTint: 1, flecks: 0.8, sheen: 0.6, cue: 'soft' }],
-  clear: ['Clear (frosted)', { ...dark, vinyl: '#cfe3ee', body: 0.04, through: 0.4, wedge: 1, lineTint: 0.4, flecks: 0.6, pitch: 5, pitchOut: 4, satin: 0.6, sheen: 0.5, cue: 'soft' }],
-  oilslick: ['Oil slick (chromatic)', { ...dark, vinyl: '#202028', finish: 'chromatic', body: 0.06, through: 1, wedge: 0.8, lineTint: 1, flecks: 0.8, sheen: 0.6, cue: 'soft' }],
+  cherry: ['Tinted cherry', { ...dark, vinyl: '#eb1a3d', body: 0.3, wedge: 1, lineTint: 1, flecks: 1, pitch: 5, pitchOut: 0, press: 0, satin: 0.3, level: 0.9, sheen: 0, cue: 'glints' }],
+  smoked: ['Smoked black (translucent)', { ...dark, vinyl: '#5a5550', body: 0.08, through: 1, cone: 1, wedge: 0.6, lineTint: 0.6, flecks: 0.8, sheen: 0.6, cue: 'glints' }],
+  smokedcherry: ['Smoked cherry', { ...dark, vinyl: '#eb1a3d', body: 0.06, through: 1, cone: 1, wedge: 0.7, lineTint: 1, flecks: 0.8, sheen: 0.6, cue: 'glints' }],
+  clear: ['Clear (frosted)', { ...dark, vinyl: '#cfe3ee', body: 0.04, through: 0.4, cone: 0.4, wedge: 1, lineTint: 0.4, flecks: 0.6, pitch: 5, pitchOut: 4, satin: 0.6, sheen: 0.5, cue: 'glints' }],
+  oilslick: ['Oil slick (chromatic)', { ...dark, vinyl: '#202028', finish: 'chromatic', body: 0.06, through: 1, cone: 1, wedge: 0.8, lineTint: 1, flecks: 0.8, sheen: 0.6, cue: 'glints' }],
 };
-const VINYL_LABELS = [['vinyl', 'Hero record: vinyl colour'], ['finish', 'Hero record: vinyl finish'], ['body', 'Hero record: vinyl body'], ['through', 'Hero record: light through it'], ['wedge', 'Hero record: lamp wedges'], ['lineTint', 'Hero record: grooves in its colour'], ['flecks', 'Hero record: flecks'], ['pitch', 'Hero record: groove spacing'], ['pitchOut', 'Hero record: spacing opens out by the rim'], ['lineW', 'Hero record: groove line width'], ['press', 'Hero record: pressing warp'], ['contrast', 'Hero record: groove contrast'], ['satin', 'Hero record: song bands'], ['level', 'Hero record: groove brightness'], ['sheen', 'Hero record: sheen'], ['songLen', 'Hero record: song length'], ['cue', 'Hero record: what shows the spin']];
+const VINYL_LABELS = [['vinyl', 'Hero record: vinyl colour'], ['finish', 'Hero record: vinyl finish'], ['body', 'Hero record: vinyl body'], ['through', 'Hero record: light through it'], ['cone', 'Hero record: cone glow'], ['wedge', 'Hero record: cone grooves'], ['lineTint', 'Hero record: grooves in its colour'], ['flecks', 'Hero record: flecks'], ['pitch', 'Hero record: groove spacing'], ['pitchOut', 'Hero record: spacing opens out by the rim'], ['lineW', 'Hero record: groove line width'], ['press', 'Hero record: pressing warp'], ['contrast', 'Hero record: groove contrast'], ['satin', 'Hero record: song bands'], ['level', 'Hero record: groove brightness'], ['sheen', 'Hero record: sheen'], ['songLen', 'Hero record: song length'], ['cue', 'Hero record: what shows the spin']];
 const vinylP = presets('vinylPreset', 'Hero record: vinyl preset', VINYLS, VINYL_LABELS);
+
+// A panel saved before the Glints and Lamp folders: before the controls
+// are made, each new control with no value of its own yet (in the panel's
+// values, its base values and each saved version) takes it from the old
+// ones that did its job there, so the record and every version look as
+// they did. (DialKit would otherwise give it its default.) Nothing else is
+// touched: no value already there changes, and the old controls are kept,
+// hidden, so tune.js keeps their values by rather than DialKit dropping them.
+// - glint brightness: the soft glints' strength, plus (with the glints
+//   showing the spin) the glints mode's strength times the spin cue's, all
+//   times the grooves' brightness (which no longer touches the glints);
+// - glint colour and its amount: as they were;
+// - cone glow: "light through it" (which lit the cone too, and now lights
+//   the vinyl evenly); cone grooves: "lamp wedges"; lamp colour: moved;
+// - top fade starts at: where the old mask was fully shown.
+// ("Soft glints" showing the spin is now the same as the glints alone.)
+(function migrate() {
+  if (!tune?.shown) return;
+  const KEY = 'dialkit:interlude-Hero record';
+  try {
+    const saved = JSON.parse(localStorage.getItem(KEY) || 'null');
+    if (!saved?.values) return;
+    // (What tune.js keeps by for hidden controls: the values, by version, and the base's.)
+    const kept = JSON.parse(localStorage.getItem('tune-hidden:interlude-Hero record') || 'null') || {};
+    let changed = false;
+    // vs: one set of values (the panel's, its base's or a saved version's);
+    // also: what's kept by for it.
+    const fill = (vs, also) => {
+      if (!vs) return;
+      const get = (folder, name) => vs[`${folder}.${name}`] ?? vs[name] ?? also?.[`${folder}.${name}`] ?? also?.[name];
+      // Only a new control's value, only where it has none.
+      const put = (path, v) => { if (vs[path] === undefined && also?.[path] === undefined && v !== undefined) { vs[path] = v; changed = true; } };
+      const cue = get('Look', 'what shows the spin') ?? 'dust';
+      const soft = get('Look', 'soft glints strength');
+      const more = get('Look', 'glints mode strength');
+      if (soft !== undefined || more !== undefined) {
+        const extra = cue === 'glints' ? 1.2 * (more ?? 1) * (get('Look', 'spin cue strength') ?? 1) : 0;
+        const level = ['vinyl', 'current', 'tinted'].includes(vs.style ?? 'vinyl') ? get('Vinyl', 'groove brightness') ?? 1 : 1;
+        put('Glints.glint brightness', Math.round(((soft ?? 1) + extra) * level * 100) / 100);
+      }
+      put('Glints.glint colour', get('Look', 'glint colour'));
+      put('Glints.colour amount', get('Look', 'glint colour amount'));
+      put('Lamp.cone grooves', get('Vinyl', 'lamp wedges'));
+      put('Lamp.cone glow', get('Vinyl', 'light through it'));
+      put('Lamp.lamp colour (sides)', get('Look', 'lamp colour'));
+      const mask = get('Layout', 'show to the top (mask)');
+      if (mask !== undefined) put('Layout.top fade starts at (px)', Math.round((230 * (1 - 0.8 * mask)) / 2) * 2);
+    };
+    fill(saved.values, kept);
+    fill(saved.baseValues, kept.__b);
+    for (const pr of saved.presets || []) fill(pr.values, kept.__p?.[pr.id]);
+    if (changed) localStorage.setItem(KEY, JSON.stringify(saved));
+  } catch {}
+})();
 
 // ?record=orbit (or any style's name) in the address picks one over the
 // panel, for testing. The vinyl style was once two, 'current' (dark vinyl)
 // and 'tinted' (cherry): their names, saved or in the address, still work.
 const OLD = { current: 'dark', tinted: 'cherry' };
 let forced = new URLSearchParams(location.search).get('record');
-if (forced in OLD) { vinylP.pick(OLD[forced]); forced = 'vinyl'; }
-// A panel saved with one of those (which the panel no longer offers):
-// its preset, before the controls are made so they start from it.
-try {
-  const was = JSON.parse(localStorage.getItem('dialkit:interlude-Hero record'))?.values?.style;
-  if (tune?.shown && was in OLD) vinylP.pick(OLD[was]);
-} catch {}
-tune?.select({ label: 'Hero record: style', value: T.look, options: STYLE_LIST.map(([k, t]) => [k, t]),
+if (forced in OLD) { Object.assign(T, VINYLS[OLD[forced]][1], { vinylPreset: OLD[forced] }); forced = 'vinyl'; }
+tw?.select({ label: 'Hero record: style', value: T.look, options: STYLE_LIST.map(([k, t]) => [k, t]),
   onInput: (v) => {
     if (v in OLD) {
       setTimeout(() => tune?.set?.('Hero record: style', 'vinyl'), 0);
@@ -1761,74 +2047,156 @@ tune?.select({ label: 'Hero record: style', value: T.look, options: STYLE_LIST.m
 
 const vin = { folder: 'Vinyl', show: cur };
 const vf = (k, f = redraw(k)) => vinylP.follow(k, f);
-tune?.select({ ...vin, label: 'Hero record: vinyl preset', value: T.vinylPreset, options: vinylP.options, onInput: vinylP.pick });
-tune?.color({ ...vin, label: 'Hero record: vinyl colour', value: T.vinyl, onInput: vf('vinyl') });
-tune?.select({ ...vin, label: 'Hero record: vinyl finish', value: T.finish, onInput: vf('finish'), options: [['solid', 'Solid colour'], ['chromatic', 'Chromatic (oil slick)']] });
-tune?.slider({ ...vin, label: 'Hero record: vinyl body', min: 0, max: 0.6, step: 0.01, value: T.body, onInput: vf('body') });
-tune?.slider({ ...vin, label: 'Hero record: light through it', min: 0, max: 2, step: 0.05, value: T.through, onInput: vf('through') });
-tune?.slider({ ...vin, label: 'Hero record: lamp wedges', min: 0, max: 1.5, step: 0.05, value: T.wedge, onInput: vf('wedge') });
-tune?.slider({ ...vin, label: 'Hero record: grooves in its colour', min: 0, max: 1, step: 0.05, value: T.lineTint, onInput: vf('lineTint') });
-tune?.slider({ ...vin, label: 'Hero record: flecks', min: 0, max: 2, step: 0.05, value: T.flecks, onInput: vf('flecks') });
-tune?.slider({ ...vin, label: 'Hero record: groove spacing', min: 2, max: 16, step: 0.5, value: T.pitch, unit: 'px', onInput: vf('pitch') });
-tune?.slider({ ...vin, label: 'Hero record: spacing opens out by the rim', min: 0, max: 16, step: 0.5, value: T.pitchOut, unit: 'px', onInput: vf('pitchOut') });
-tune?.slider({ ...vin, label: 'Hero record: groove line width', min: 0.5, max: 3, step: 0.05, value: T.lineW, onInput: vf('lineW') });
-tune?.slider({ ...vin, label: 'Hero record: groove contrast', min: 0, max: 2, step: 0.05, value: T.contrast, onInput: vf('contrast') });
-tune?.slider({ ...vin, label: 'Hero record: groove brightness', min: 0.2, max: 3, step: 0.05, value: T.level, onInput: vf('level') });
-tune?.slider({ ...vin, label: 'Hero record: song bands', min: 0, max: 2, step: 0.05, value: T.satin, onInput: vf('satin') });
-tune?.slider({ ...vin, label: 'Hero record: song length', min: 0.4, max: 3, step: 0.05, value: T.songLen, onInput: vf('songLen', reshape('songLen')) });
-tune?.slider({ ...vin, label: 'Hero record: sheen', min: 0, max: 3, step: 0.05, value: T.sheen, onInput: vf('sheen') });
-tune?.slider({ ...vin, label: 'Hero record: pressing warp', min: 0, max: 3, step: 0.05, value: T.press, onInput: vf('press') });
+tw?.select({ ...vin, label: 'Hero record: vinyl preset', value: T.vinylPreset, options: vinylP.options, onInput: vinylP.pick });
+tw?.color({ ...vin, label: 'Hero record: vinyl colour', value: T.vinyl, onInput: vf('vinyl') });
+tw?.select({ ...vin, label: 'Hero record: vinyl finish', value: T.finish, onInput: vf('finish'), options: [['solid', 'Solid colour'], ['chromatic', 'Chromatic (oil slick)']] });
+tw?.slider({ ...vin, label: 'Hero record: vinyl body', min: 0, max: 0.6, step: 0.01, value: T.body, onInput: vf('body') });
+// (Now an even glow through the whole vinyl; its light in the cone is the Lamp's cone glow.)
+tw?.slider({ ...vin, label: 'Hero record: light through it', min: 0, max: 2, step: 0.05, value: T.through, onInput: vf('through') });
+tw?.slider({ ...vin, label: 'Hero record: grooves in its colour', min: 0, max: 1, step: 0.05, value: T.lineTint, onInput: vf('lineTint') });
+tw?.slider({ ...vin, label: 'Hero record: flecks', min: 0, max: 2, step: 0.05, value: T.flecks, onInput: vf('flecks') });
+tw?.slider({ ...vin, label: 'Hero record: groove spacing', min: 2, max: 16, step: 0.5, value: T.pitch, unit: 'px', onInput: vf('pitch') });
+tw?.slider({ ...vin, label: 'Hero record: spacing opens out by the rim', min: 0, max: 16, step: 0.5, value: T.pitchOut, unit: 'px', onInput: vf('pitchOut') });
+tw?.slider({ ...vin, label: 'Hero record: groove line width', min: 0.5, max: 3, step: 0.05, value: T.lineW, onInput: vf('lineW') });
+tw?.slider({ ...vin, label: 'Hero record: groove contrast', min: 0, max: 2, step: 0.05, value: T.contrast, onInput: vf('contrast') });
+tw?.slider({ ...vin, label: 'Hero record: groove brightness', min: 0.2, max: 3, step: 0.05, value: T.level, onInput: vf('level') });
+tw?.slider({ ...vin, label: 'Hero record: song bands', min: 0, max: 2, step: 0.05, value: T.satin, onInput: vf('satin') });
+tw?.slider({ ...vin, label: 'Hero record: song length', min: 0.4, max: 3, step: 0.05, value: T.songLen, onInput: vf('songLen', reshape('songLen')) });
+tw?.slider({ ...vin, label: 'Hero record: sheen', min: 0, max: 3, step: 0.05, value: T.sheen, onInput: vf('sheen') });
+tw?.slider({ ...vin, label: 'Hero record: pressing warp', min: 0, max: 3, step: 0.05, value: T.press, onInput: vf('press') });
 
 const look = { folder: 'Look' };
-tune?.select({ ...look, label: 'Hero record: what shows the spin', value: T.cue, show: cur, onInput: vf('cue', thenPanel(redraw('cue'))), options: [['dust', 'Dust specks'], ['glints', 'Glints'], ['warp', 'Pressing warp'], ['spokes', 'Spokes'], ['soft', 'Soft glints (as among the dust)']] });
-tune?.slider({ ...look, label: 'Hero record: spin cue strength', min: 0, max: 3, step: 0.05, value: T.cueAmt, onInput: redraw('cueAmt') });
-tune?.select({ ...look, label: 'Hero record: speck style', value: T.speck, show: () => cur() && T.cue === 'dust', onInput: redraw('speck'), options: [['hyphen', 'Dashes (first)'], ['motes', 'Dust motes'], ['scratches', 'Hairline scratches'], ['scuffs', 'Scuffs'], ['sparkle', 'Sparkle'], ['lint', 'Lint'], ['smudge', 'Smudges']] });
-tune?.slider({ ...look, label: 'Hero record: soft glints strength', min: 0, max: 3, step: 0.05, value: T.soft, show: glinty, onInput: redraw('soft') });
-tune?.slider({ ...look, label: 'Hero record: glints mode strength', min: 0, max: 3, step: 0.05, value: T.glintAmt, show: () => cur() && T.cue === 'glints', onInput: redraw('glintAmt') });
-tune?.select({ ...look, label: 'Hero record: glint colour', value: T.chroma, show: glinty, onInput: thenPanel(redraw('chroma')), options: [['none', 'None'], ['film', 'Thin film (oil slick)'], ['prism', 'Prism split'], ['lamp', 'Lamp (blue / orange)'], ['grating', 'Diffraction rainbow'], ['pearl', 'Pearl'], ['fringe', 'Lens fringe']] });
-tune?.slider({ ...look, label: 'Hero record: glint colour amount', min: 0, max: 1, step: 0.05, value: T.chromaAmt, show: () => glinty() && T.chroma !== 'none', onInput: redraw('chromaAmt') });
-tune?.slider({ ...look, label: 'Hero record: lamp colour', min: 0, max: 1, step: 0.05, value: T.tint, show: cur, onInput: redraw('tint') });
-tune?.slider({ ...look, label: 'Hero record: render resolution', min: 0.3, max: 1, step: 0.05, value: T.res, show: () => !STYLE[T.look]?.crisp, onInput: reshape('res') });
+const extraCue = () => !cur() || ['dust', 'warp', 'spokes'].includes(T.cue);
+tw?.select({ ...look, label: 'Hero record: what shows the spin', value: T.cue, show: cur,
+  // (The soft glints are now the glints alone: one saved before shows as that.)
+  onInput: vf('cue', thenPanel((v) => redraw('cue')(v === 'soft' ? 'glints' : v))),
+  options: [['glints', 'Glints alone'], ['dust', 'Dust specks'], ['warp', 'Warp shimmer'], ['spokes', 'Spokes']] });
+// (The spin cue's strength: the specks', the warp's or the spokes' (the
+// glints have their own brightness); in the other styles, how much their
+// own moving parts show.)
+tw?.slider({ ...look, label: 'Hero record: spin cue strength', min: 0, max: 3, step: 0.05, value: T.cueAmt, show: extraCue, onInput: redraw('cueAmt') });
+tw?.select({ ...look, label: 'Hero record: speck style', value: T.speck, show: () => cur() && T.cue === 'dust', onInput: redraw('speck'), options: [['hyphen', 'Dashes (first)'], ['motes', 'Dust motes'], ['scratches', 'Hairline scratches'], ['scuffs', 'Scuffs'], ['sparkle', 'Sparkle'], ['lint', 'Lint'], ['smudge', 'Smudges']] });
+tw?.slider({ ...look, label: 'Hero record: render resolution', min: 0.3, max: 1, step: 0.05, value: T.res, show: () => !STYLE[T.look]?.crisp, onInput: reshape('res') });
 
-tune?.slider({ folder: 'Motion', label: 'Hero record: spin speed', min: 0, max: 3, step: 0.1, value: T.life, onInput: redraw('life') });
+// GLINTS: in each song a few short runs of groove catch the lamp, fixed on
+// the disc and going round, brightest as they pass through the lamp's
+// light. Each control here does one thing to them:
+// - brightness: how bright they are, and nothing else;
+// - size: how big each one is, along its groove and across its song;
+// - sharpness: their edge, soft (long tails, a haze) to crisp (a flat top
+//   with a quick edge); their size stays;
+// - per turn: how many there are in each song, round one turn;
+// - turn with the disc: how fast they go round, as a share of the disc's
+//   own turn: 0 stays put under the lamp, 1 turns with the disc, more runs
+//   ahead of it so the turn reads even when the record turns slowly;
+// - colour: their palette (see CHROMA);
+// - colour spread: how far its colours fan apart across a glint (the prism's
+//   split, the rainbow's width);
+// - colour amount: how much of the glint is colour rather than white;
+// - colour hue: the palette turned round the colour wheel.
+// The pointer's lights (lamp, prism, spectrum, arc in lamp light, glass)
+// are painted with the same palette, spread, amount, hue and sharpness.
+const gl0 = { folder: 'Glints', show: glinty };
+const coloured = () => glinty() && T.chroma !== 'none';
+tw?.slider({ ...gl0, label: 'Hero record: glint brightness', min: 0, max: 6, step: 0.01, value: T.glints, onInput: redraw('glints') });
+tw?.slider({ ...gl0, label: 'Hero record: glint size', min: 0.3, max: 3, step: 0.05, value: T.gSize, onInput: redraw('gSize') });
+tw?.slider({ ...gl0, label: 'Hero record: glint sharpness', min: 0.4, max: 4, step: 0.05, value: T.gSharp, onInput: redraw('gSharp') });
+tw?.slider({ ...gl0, label: 'Hero record: glints per turn', min: 1, max: 12, step: 1, value: T.gCount, onInput: redraw('gCount') });
+tw?.slider({ ...gl0, label: 'Hero record: glints turn with the disc', min: 0, max: 8, step: 0.1, value: T.gRide, unit: 'x', onInput: redraw('gRide') });
+tw?.select({ ...gl0, label: 'Hero record: glint colour', value: T.chroma, onInput: thenPanel(redraw('chroma')), options: [['none', 'None'], ['film', 'Thin film (oil slick)'], ['prism', 'Prism split'], ['lamp', 'Lamp (blue / orange)'], ['grating', 'Diffraction rainbow'], ['pearl', 'Pearl'], ['fringe', 'Lens fringe']] });
+tw?.slider({ ...gl0, label: 'Hero record: colour spread', min: 0, max: 3, step: 0.05, value: T.gSpread, show: coloured, onInput: redraw('gSpread') });
+tw?.slider({ ...gl0, label: 'Hero record: colour amount', min: 0, max: 1, step: 0.05, value: T.chromaAmt, show: coloured, onInput: redraw('chromaAmt') });
+tw?.slider({ ...gl0, label: 'Hero record: colour hue', min: -180, max: 180, step: 1, value: T.gHue, unit: '°', show: coloured, onInput: redraw('gHue') });
+
+// LAMP: the light over the record. Where it points moves the sheen, the
+// glints' light and the cone together; the cone is the vinyl style's clean-
+// edged wedge of light coming through the vinyl, either side of the centre:
+// - lamp movement: drifting slowly to and fro, fixed, or turning with the
+//   record (as fast as it does);
+// - cone direction: the cone turned from where the lamp points;
+// - cone width: how wide it is, degrees across (its soft halo with it);
+// - cone edge softness: how soft its edges are, degrees;
+// - cone reach: how far in from the rim it lights (1: right to the label);
+// - cone glow: how bright its light through the vinyl is;
+// - cone grooves: how much the grooves in it light up pale;
+// - cone colour: its tint (white: the vinyl's own colour);
+// - cones: two, opposite, or only the one the lamp points to;
+// - lamp colour: the lamp's blue and orange either side of its light, in
+//   the sheen (hidden under "grooves in its colour" at 1).
+const lampF = { folder: 'Lamp', show: cur };
+tw?.select({ folder: 'Lamp', label: 'Hero record: lamp movement', value: T.lampMove, onInput: redraw('lampMove'), options: [['drift', 'Drifts'], ['fixed', 'Fixed'], ['turn', 'Turns with it']] });
+tw?.slider({ ...lampF, label: 'Hero record: cone direction', min: -90, max: 90, step: 1, value: T.coneDir, unit: '°', onInput: redraw('coneDir') });
+tw?.slider({ ...lampF, label: 'Hero record: cone width', min: 4, max: 120, step: 0.1, value: T.coneW, unit: '°', onInput: redraw('coneW') });
+tw?.slider({ ...lampF, label: 'Hero record: cone edge softness', min: 0.1, max: 40, step: 0.1, value: T.coneSoft, unit: '°', onInput: redraw('coneSoft') });
+tw?.slider({ ...lampF, label: 'Hero record: cone reach', min: 0.05, max: 1, step: 0.01, value: T.coneReach, onInput: redraw('coneReach') });
+tw?.slider({ ...lampF, label: 'Hero record: cone glow', min: 0, max: 2, step: 0.05, value: T.cone, onInput: vf('cone') });
+tw?.slider({ ...lampF, label: 'Hero record: cone grooves', min: 0, max: 1.5, step: 0.05, value: T.wedge, onInput: vf('wedge') });
+tw?.color({ ...lampF, label: 'Hero record: cone colour', value: T.coneTint, onInput: redraw('coneTint') });
+tw?.select({ ...lampF, label: 'Hero record: cones', value: T.cones, onInput: redraw('cones'), options: [['two', 'Two'], ['one', 'One']] });
+tw?.slider({ ...lampF, label: 'Hero record: lamp colour (sides)', min: 0, max: 1, step: 0.05, value: T.tint, onInput: redraw('tint') });
+
+tw?.slider({ folder: 'Motion', label: 'Hero record: spin speed', min: 0, max: 3, step: 0.1, value: T.life, onInput: redraw('life') });
 
 const touchF = { folder: 'Hover & needle' };
-tune?.select({ ...touchF, label: 'Hero record: hover style', value: T.hover,
+const moves = (k) => () => MOVERS[T.hover]?.includes(k);
+tw?.select({ ...touchF, label: 'Hero record: hover style', value: T.hover,
   // (Stylus, spot and ripples are gone: one saved before shows as the arc.)
-  onInput: (v) => { T.hover = v in HOVERS ? v : 'arc'; if (prog) wake(); },
-  // The same seven everywhere; outside the vinyl style, named for what
-  // they do in every style (see hoverField).
-  options: () => (cur()
+  onInput: (v) => { T.hover = v in HOVERS ? v : 'arc'; if (prog) wake(); panel(); },
+  // The same everywhere; outside the vinyl style, the first seven named
+  // for what they do in every style (see hoverField). The last six draw
+  // nothing of their own: the pointer moves the record's own light (the
+  // lamp and its cone, the glints along their grooves, their colours, the
+  // record itself; all four: all but the cone alone).
+  options: () => [...(cur()
     ? [['arc', 'Arc (first)'], ['lamp', 'Lamp'], ['prism', 'Prism'], ['spectrum', 'Wide spectrum'], ['litarc', 'Arc in lamp light'], ['glass', 'Glass'], ['glassprism', 'Glass prism']]
-    : [['arc', 'Arc'], ['lamp', 'Beam'], ['prism', 'Split'], ['spectrum', 'Wide cast'], ['litarc', 'Arc in lamp light'], ['glass', 'Glass'], ['glassprism', 'Glass prism']]) });
-tune?.slider({ ...touchF, label: 'Hero record: needle and hover strength', min: 0, max: 2, step: 0.05, value: T.needle, onInput: redraw('needle') });
-tune?.slider({ ...touchF, label: 'Hero record: hover fades after still', min: 0.3, max: 10, step: 0.1, value: T.still, unit: 's', onInput: redraw('still') });
+    : [['arc', 'Arc'], ['lamp', 'Beam'], ['prism', 'Split'], ['spectrum', 'Wide cast'], ['litarc', 'Arc in lamp light'], ['glass', 'Glass'], ['glassprism', 'Glass prism']]),
+  ['light', 'Lamp follows'], ['cone', 'Cone follows'], ['angle', 'Glints slide'], ['colour', 'Colours turn'], ['tilt', 'Record tilts'], ['all', 'All four']] });
+// How far each goes with the pointer (shown with the hovers that use it).
+tw?.slider({ ...touchF, label: 'Hero record: lamp swing', min: 0, max: 1, step: 0.05, value: T.hLight, show: moves('light'), onInput: redraw('hLight') });
+tw?.slider({ ...touchF, label: 'Hero record: cone swing', min: 0, max: 1, step: 0.05, value: T.hCone, show: moves('cone'), onInput: redraw('hCone') });
+tw?.slider({ ...touchF, label: 'Hero record: glint slide', min: 0, max: 1, step: 0.05, value: T.hAngle, show: moves('angle'), onInput: redraw('hAngle') });
+tw?.slider({ ...touchF, label: 'Hero record: colour turn', min: 0, max: 1, step: 0.05, value: T.hHue, show: moves('colour'), onInput: redraw('hHue') });
+tw?.slider({ ...touchF, label: 'Hero record: tilt', min: -1, max: 1, step: 0.05, value: T.hTilt, show: moves('tilt'), onInput: redraw('hTilt') });
+tw?.slider({ ...touchF, label: 'Hero record: follow time', min: 0.15, max: 2, step: 0.05, value: T.hFollow, unit: 's', show: () => !!MOVERS[T.hover], onInput: redraw('hFollow') });
+tw?.slider({ ...touchF, label: 'Hero record: needle and hover strength', min: 0, max: 2, step: 0.05, value: T.needle, onInput: redraw('needle') });
+tw?.slider({ ...touchF, label: 'Hero record: hover fades after still', min: 0.3, max: 10, step: 0.1, value: T.still, unit: 's', onInput: redraw('still') });
 
 // Shape presets: each sets the layout's controls together to show off one
 // idea (the top warps above all).
-const flat = { drop: 108, persp: 0.85, size: 1, up: 0, mask: 0, warp: 'none', warpAmt: 0.5 };
+const flat = { drop: 108, persp: 0.85, size: 1, up: 0, fadeAt: 230, fadeLen: 230, warp: 'none', warpAmt: 0.5 };
 const SHAPES = {
   flat: ['Flat on the table', flat],
   close: ['Close up', { ...flat, drop: 200, size: 1.45, persp: 1 }],
-  over: ['Rings over the words', { ...flat, up: 0.6, mask: 0.8 }],
-  mirror: ['Mirror the far half', { ...flat, warp: 'mirror', warpAmt: 0.8, mask: 0.5 }],
+  over: ['Rings over the words', { ...flat, up: 0.6, fadeAt: 84 }],
+  mirror: ['Mirror the far half', { ...flat, warp: 'mirror', warpAmt: 0.8, fadeAt: 138 }],
   fisheye: ['Fisheye', { ...flat, warp: 'barrel', warpAmt: 0.8 }],
-  lens: ['Lens behind words', { ...flat, warp: 'lens', warpAmt: 1, mask: 0.4 }],
-  bent: ['Bent upward', { ...flat, warp: 'flip', warpAmt: 0.7, mask: 0.5 }],
-  dramatic: ['Dramatic', { drop: 60, persp: 1.6, size: 1.3, up: 0.5, mask: 0.8, warp: 'barrel', warpAmt: 0.7 }],
+  lens: ['Lens behind words', { ...flat, warp: 'lens', warpAmt: 1, fadeAt: 156 }],
+  bent: ['Bent upward', { ...flat, warp: 'flip', warpAmt: 0.7, fadeAt: 138 }],
+  dramatic: ['Dramatic', { drop: 60, persp: 1.6, size: 1.3, up: 0.5, fadeAt: 84, fadeLen: 230, warp: 'barrel', warpAmt: 0.7 }],
 };
-const SHAPE_LABELS = [['drop', 'Hero record: lower by'], ['persp', 'Hero record: perspective'], ['size', 'Hero record: rings all round'], ['up', 'Hero record: more rings up top'], ['mask', 'Hero record: show to the top (mask)'], ['warp', 'Hero record: top warp'], ['warpAmt', 'Hero record: top warp strength']];
+const SHAPE_LABELS = [['drop', 'Hero record: lower by'], ['persp', 'Hero record: perspective'], ['size', 'Hero record: rings all round'], ['up', 'Hero record: more rings up top'], ['fadeAt', 'Hero record: top fade starts at'], ['fadeLen', 'Hero record: top fade length'], ['warp', 'Hero record: top warp'], ['warpAmt', 'Hero record: top warp strength']];
 const shapeP = presets('shape', 'Hero record: shape preset', SHAPES, SHAPE_LABELS);
 const sf = (k, f = reshape(k)) => shapeP.follow(k, f);
 const lay = { folder: 'Layout' };
-tune?.select({ ...lay, label: 'Hero record: shape preset', value: T.shape, options: shapeP.options, onInput: shapeP.pick });
-tune?.slider({ ...lay, label: 'Hero record: lower by', min: -300, max: 400, step: 4, value: T.drop, unit: 'px', onInput: sf('drop') });
-tune?.slider({ ...lay, label: 'Hero record: perspective', min: 0.3, max: 3, step: 0.05, value: T.persp, onInput: sf('persp') });
-tune?.slider({ ...lay, label: 'Hero record: rings all round', min: 0.7, max: 2, step: 0.05, value: T.size, onInput: sf('size') });
-tune?.slider({ ...lay, label: 'Hero record: more rings up top', min: 0, max: 1, step: 0.05, value: T.up, onInput: sf('up') });
-tune?.slider({ ...lay, label: 'Hero record: show to the top (mask)', min: 0, max: 1, step: 0.05, value: T.mask, onInput: sf('mask') });
-tune?.select({ ...lay, label: 'Hero record: top warp', value: T.warp, onInput: sf('warp', thenPanel(reshape('warp'))), options: [['none', 'None'], ['mirror', 'Mirror the sweep'], ['barrel', 'Barrel'], ['lens', 'Lens bulge'], ['flip', 'Flipped perspective']] });
-tune?.slider({ ...lay, label: 'Hero record: top warp strength', min: 0, max: 1, step: 0.05, value: T.warpAmt, show: () => T.warp !== 'none', onInput: sf('warpAmt') });
+tw?.select({ ...lay, label: 'Hero record: shape preset', value: T.shape, options: shapeP.options, onInput: shapeP.pick });
+tw?.slider({ ...lay, label: 'Hero record: lower by', min: -300, max: 400, step: 4, value: T.drop, unit: 'px', onInput: sf('drop') });
+tw?.slider({ ...lay, label: 'Hero record: perspective', min: 0.3, max: 3, step: 0.05, value: T.persp, onInput: sf('persp') });
+tw?.slider({ ...lay, label: 'Hero record: rings all round', min: 0.7, max: 2, step: 0.05, value: T.size, onInput: sf('size') });
+tw?.slider({ ...lay, label: 'Hero record: more rings up top', min: 0, max: 1, step: 0.05, value: T.up, onInput: sf('up') });
+// The fade at the very top: the record is fully shown below "starts at"
+// and fades to nothing over "length" above it, always clear at the very
+// top (see topFade).
+tw?.slider({ ...lay, label: 'Hero record: top fade starts at', min: 40, max: 600, step: 2, value: T.fadeAt, unit: 'px', onInput: sf('fadeAt') });
+tw?.slider({ ...lay, label: 'Hero record: top fade length', min: 20, max: 600, step: 2, value: T.fadeLen, unit: 'px', onInput: sf('fadeLen') });
+tw?.select({ ...lay, label: 'Hero record: top warp', value: T.warp, onInput: sf('warp', thenPanel(reshape('warp'))), options: [['none', 'None'], ['mirror', 'Mirror the sweep'], ['barrel', 'Barrel'], ['lens', 'Lens bulge'], ['flip', 'Flipped perspective']] });
+tw?.slider({ ...lay, label: 'Hero record: top warp strength', min: 0, max: 1, step: 0.05, value: T.warpAmt, show: () => T.warp !== 'none', onInput: sf('warpAmt') });
+// The controls these replaced (see migrate), never shown and doing nothing:
+// registered so their saved values are kept.
+for (const [folder, label] of [['Look', 'soft glints strength'], ['Look', 'glints mode strength'], ['Look', 'glint colour'], ['Look', 'glint colour amount'], ['Look', 'lamp colour'], ['Vinyl', 'lamp wedges'], ['Layout', 'show to the top (mask)']]) {
+  const old = { folder, label: `Hero record: ${label}`, show: () => false, onInput: () => {} };
+  if (label === 'glint colour') tune?.select({ ...old, value: 'none', options: [['none', 'None']] });
+  else tune?.slider({ ...old, min: 0, max: 3, step: 0.05, value: 0 });
+}
 if (forced in LOOK) T.look = forced;
 
 try {
