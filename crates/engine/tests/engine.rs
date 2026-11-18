@@ -850,15 +850,23 @@ fn keylock_is_smooth() {
 
 #[test]
 fn loaded_tracks_get_a_key() {
-    // An A minor chord, held.
-    let n = SR as usize * 20;
-    let notes = [110.0, 220.0, 261.63, 329.63];
+    // Am, Dm, Em, Am, two seconds each, played twice, on a bright tone
+    // (the first six harmonics) over the chord's root an octave down.
+    let chords: [[f32; 4]; 4] = [
+        [110.0, 220.0, 261.63, 329.63],
+        [146.83, 293.66, 349.23, 440.0],
+        [164.81, 329.63, 392.0, 493.88],
+        [110.0, 220.0, 261.63, 329.63],
+    ];
+    let n = SR as usize * 16;
     let chord: Vec<f32> = (0..n)
         .flat_map(|i| {
             let t = i as f32 / SR as f32;
+            let notes = chords[(i / (SR as usize * 2)) % 4];
             let v: f32 = notes
                 .iter()
-                .map(|f| 0.1 * (std::f32::consts::TAU * f * t).sin())
+                .flat_map(|f| (1..=6).map(move |h| (f, h as f32)))
+                .map(|(f, h)| 0.05 / h * (std::f32::consts::TAU * f * h * t).sin())
                 .sum();
             [v, v]
         })
