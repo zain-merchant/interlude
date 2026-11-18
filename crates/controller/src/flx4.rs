@@ -9,10 +9,12 @@
 //! The performance pads send on their own channels: 8 and 9 (plain and
 //! with SHIFT) for deck 1, 10 and 11 for deck 2, with a different note
 //! range for each pad mode. The controller switches pad modes itself;
-//! hot cue, beat loop, beat jump, sampler and stems (PAD FX1) modes are
-//! mapped. Both decks' sampler pads play the same eight slots. In PAD FX1
-//! mode the top pads mute and unmute vocals, melody, bass and drums, and
-//! the bottom pads play one of them alone. SHIFT + a beat jump pad jumps
+//! hot cue, beat loop, beat jump, sampler, pad FX and stems modes are
+//! mapped. Both decks' sampler pads play the same eight slots. PAD FX1 and
+//! PAD FX2 hold sixteen pad effects that play while a pad is held. Stems
+//! are on KEYBOARD (SHIFT + HOT CUE), where Mixxx puts them too: the top
+//! pads mute and unmute vocals, melody, bass and drums, and the bottom
+//! pads play one of them alone. SHIFT + a beat jump pad jumps
 //! 16 times as far (4 to 32 bars), and SHIFT + PLAY turns slip mode on and
 //! off; the FLX4 has no slip button of its own. The pad mode buttons light
 //! for the mode each deck is in (the controller doesn't light them itself)
@@ -24,12 +26,12 @@
 //! length, LEVEL/DEPTH the level, and ON/OFF switches it (SHIFT + ON/OFF
 //! turns both decks' effects off). Moving the lever moves the effect to the
 //! new channel; MASTER (1&2) runs it on both decks together. Not mapped yet:
-//! the other pad modes. The headphone level and master level knobs work in
+//! KEY SHIFT. The headphone level and master level knobs work in
 //! the controller's own sound card and send no MIDI.
 
 use dj_engine::dsp::{EQ_KILL_DB, EQ_MAX_DB};
 use dj_engine::fx::FX_BEATS;
-use dj_engine::{Command, DeckId, EqBand, FxKind, ALL_STEMS, HOT_CUES, NUM_DECKS, STEMS};
+use dj_engine::{Command, DeckId, EqBand, FxKind, PadFx, ALL_STEMS, HOT_CUES, NUM_DECKS, STEMS};
 
 use std::time::{Duration, Instant};
 
@@ -67,9 +69,12 @@ const JUMP_FORWARD: u8 = 0x3D;
 const PAD_CH: u8 = 7;
 // First note of each pad mode; pads 1 to 8 follow.
 const PAD_HOT_CUE: u8 = 0x00;
-const PAD_STEMS: u8 = 0x10;
+const PAD_FX1: u8 = 0x10;
 const PAD_BEAT_JUMP: u8 = 0x20;
 const PAD_SAMPLER: u8 = 0x30;
+/// KEYBOARD mode's pads, which play stems here.
+const PAD_STEMS: u8 = 0x40;
+const PAD_FX2: u8 = 0x50;
 const PAD_BEAT_LOOP: u8 = 0x60;
 /// Pad mode buttons (deck notes), as (button, SHIFT + button): HOT CUE /
 /// KEYBOARD, PAD FX1 / PAD FX2, BEAT JUMP / BEAT LOOP, SAMPLER / KEY SHIFT.
@@ -410,6 +415,18 @@ impl Flx4 {
                     1 << (i - STEMS)
                 };
                 Command::SetStems { deck, mask }
+            }
+            // Pad FX play while held, with or without SHIFT.
+            (PAD_FX1 | PAD_FX2, _, _) => {
+                let bank = if mode == PAD_FX2 { 8 } else { 0 };
+                let Some(fx) = PadFx::from_index(bank + i) else {
+                    return vec![];
+                };
+                if pressed {
+                    Command::PadFxPress { deck, fx }
+                } else {
+                    Command::PadFxRelease { deck, fx }
+                }
             }
             (PAD_HOT_CUE, false, true) => Command::HotCuePress { deck, index: i },
             (PAD_HOT_CUE, false, false) => Command::HotCueRelease { deck, index: i },
@@ -771,6 +788,15 @@ fn all_leds(state: &State) -> Vec<Led> {
             for (i, slot) in state.sampler.slots.iter().enumerate().take(8) {
                 out.push((status, PAD_SAMPLER + i as u8, slot.loaded));
             }
+            // Pad FX pads light while held.
+            for (i, fx) in PadFx::ALL.iter().enumerate() {
+                let note = if i < 8 {
+                    PAD_FX1 + i as u8
+                } else {
+                    PAD_FX2 + i as u8 - 8
+                };
+                out.push((status, note, deck.pad_fx == Some(*fx)));
+            }
         }
     }
     out
@@ -780,7 +806,9 @@ fn all_leds(state: &State) -> Vec<Led> {
 fn pad_mode_of(note: u8) -> Option<PadMode> {
     match note & !0x07 {
         PAD_HOT_CUE => Some(PadMode::HotCue),
-        PAD_STEMS => Some(PadMode::PadFx1),
+        PAD_FX1 => Some(PadMode::PadFx1),
+        PAD_FX2 => Some(PadMode::PadFx2),
+        PAD_STEMS => Some(PadMode::Keyboard),
         PAD_BEAT_JUMP => Some(PadMode::BeatJump),
         PAD_SAMPLER => Some(PadMode::Sampler),
         PAD_BEAT_LOOP => Some(PadMode::BeatLoop),
@@ -1195,14 +1223,14 @@ mod tests {
         s.decks[1].stems = 0b1111;
         // Pad 1 mutes vocals; pad 4 (deck B, with SHIFT) mutes drums.
         assert!(matches!(
-            one(&mut m, [0x97, 0x10, 0x7F], &s),
+            one(&mut m, [0x97, 0x40, 0x7F], &s),
             Command::SetStems {
                 deck: DeckId::A,
                 mask: 0b1110
             }
         ));
         assert!(matches!(
-            one(&mut m, [0x9A, 0x13, 0x7F], &s),
+            one(&mut m, [0x9A, 0x43, 0x7F], &s),
             Command::SetStems {
                 deck: DeckId::B,
                 mask: 0b0111
@@ -1210,20 +1238,64 @@ mod tests {
         ));
         // Pad 7 plays bass alone; pressed again, everything comes back.
         assert!(matches!(
-            one(&mut m, [0x97, 0x16, 0x7F], &s),
+            one(&mut m, [0x97, 0x46, 0x7F], &s),
             Command::SetStems { mask: 0b0100, .. }
         ));
         s.decks[0].stems = 0b0100;
         assert!(matches!(
-            one(&mut m, [0x97, 0x16, 0x7F], &s),
+            one(&mut m, [0x97, 0x46, 0x7F], &s),
             Command::SetStems { mask: 0b1111, .. }
         ));
-        assert!(cmds(m.handle(&[0x97, 0x16, 0x00], &s)).is_empty());
+        assert!(cmds(m.handle(&[0x97, 0x46, 0x00], &s)).is_empty());
         // LEDs: bass lit on top, its solo pad lit below.
         let leds = m.leds(&s);
         let lit = |note: u8| leds.contains(&vec![0x97, note, 0x7F]);
-        assert!(lit(0x12) && lit(0x16));
-        assert!(!lit(0x10) && !lit(0x14));
+        assert!(lit(0x42) && lit(0x46));
+        assert!(!lit(0x40) && !lit(0x44));
+    }
+
+    #[test]
+    fn pad_fx_pads_play_while_held() {
+        let mut m = Flx4::new();
+        let s = st();
+        // PAD FX1 pad 1: echo, on press and off on release.
+        assert!(matches!(
+            one(&mut m, [0x97, 0x10, 0x7F], &s),
+            Command::PadFxPress {
+                deck: DeckId::A,
+                fx: PadFx::Echo
+            }
+        ));
+        assert!(matches!(
+            one(&mut m, [0x97, 0x10, 0x00], &s),
+            Command::PadFxRelease {
+                deck: DeckId::A,
+                fx: PadFx::Echo
+            }
+        ));
+        // PAD FX2 pad 8 on deck B, with SHIFT held: the flanger.
+        assert!(matches!(
+            one(&mut m, [0x9A, 0x57, 0x7F], &s),
+            Command::PadFxPress {
+                deck: DeckId::B,
+                fx: PadFx::Flanger
+            }
+        ));
+    }
+
+    #[test]
+    fn pad_mode_buttons_put_stems_on_keyboard() {
+        let mut m = Flx4::new();
+        let s = st();
+        // SHIFT + HOT CUE is the KEYBOARD button.
+        let acts = m.handle(&[0x90, 0x69, 0x7F], &s);
+        assert!(acts.iter().any(|a| matches!(
+            a,
+            Action::PadMode {
+                deck: DeckId::A,
+                mode: PadMode::Keyboard
+            }
+        )));
     }
 
     #[test]
