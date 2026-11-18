@@ -1561,7 +1561,21 @@ html[data-fband="grooves"] #features::before {
 html:is([data-note="sleeve"], [data-note="label"]) .rec { display: block; position: absolute; aspect-ratio: 1; pointer-events: none; }
 .rec-spin, .rec-disc, .rec-sheen { position: absolute; inset: 0; width: 100%; height: 100%; }
 .rec-disc { display: none; border-radius: 50%; filter: drop-shadow(0 14px 24px rgb(0 0 0 / 0.55)); }
-html[data-note="sleeve"] .rec-disc:first-child, html[data-note="label"] .rec-disc:last-child { display: block; }
+html[data-note="sleeve"] .rec-disc:first-child, html[data-note="sleeve"] .rec-back, html[data-note="label"] .rec-disc:last-child { display: block; }
+/* Side A faces you; side B is on its back, and shows when it's turned over. */
+.rec { perspective: 900px; }
+.rec-flip { position: absolute; inset: 0; transform-style: preserve-3d; }
+.rec-spin { transform-style: preserve-3d; }
+.rec-disc { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.rec-back { transform: rotateY(180deg); }
+/* The record out of its sleeve is part of the note: on it, the note stays
+   hovered (and the record stays out); a click on it turns it over. */
+html[data-note="sleeve"] .rec { pointer-events: auto; cursor: pointer; }
+/* As it lands, a glint crosses it. */
+.rec::after { content: ''; position: absolute; inset: 0; border-radius: 50%; pointer-events: none; opacity: 0;
+  background: linear-gradient(115deg, transparent 38%, rgb(255 255 255 / 0.28) 50%, transparent 62%) no-repeat; background-size: 300% 100%; background-position: 100% 0; }
+.rec.rec-glint::after { animation: rec-glint 0.7s 0.18s cubic-bezier(0.22, 1, 0.36, 1) both; }
+@keyframes rec-glint { from { opacity: 1; background-position: 100% 0; } to { opacity: 1; background-position: 0% 0; } }
 .rec-sheen {
   border-radius: 50%;
   background: conic-gradient(from -35deg, transparent 0deg, rgb(255 255 255 / 0.10) 22deg, transparent 52deg, transparent 180deg, rgb(255 255 255 / 0.07) 202deg, transparent 232deg);
@@ -1580,7 +1594,7 @@ html[data-note="label"] .rec { --lab: 52%; }
 html[data-note="sleeve"] .founder {
   --hx: 72%; --hy: 60%; --hr: 50px;
   /* A record sleeve's corners are all but square: card cut to size. */
-  aspect-ratio: auto; width: 292px; height: 292px; box-sizing: border-box; margin-inline: auto; padding: 22px 22px 18px; border-radius: var(--sleeve-r, 4px); overflow: visible; rotate: -1.5deg; transform-origin: 50% 0;
+  aspect-ratio: auto; width: 292px; height: 292px; box-sizing: border-box; margin-inline: auto; padding: 16px 22px 14px; display: flex; flex-direction: column; border-radius: var(--sleeve-r, 4px); overflow: visible; rotate: -1.5deg; transform-origin: 50% 0;
   background: none; box-shadow: none; color: rgb(28 24 18 / 0.72);
 }
 html[data-note="sleeve"] .founder::after {
@@ -1627,7 +1641,7 @@ html[data-note="sleeve"] .founder-ask a { color: #17140e; text-decoration-color:
 html[data-note="sleeve"] .founder-ask a:hover { text-decoration-color: #17140e; }
 /* The signature smaller, without the line under it (it read as a rule the
    rest didn't line up with). */
-html[data-note="sleeve"] .founder-sig { stroke: #23315c; width: 86px; margin: 0 0 0 -3px; }
+html[data-note="sleeve"] .founder-sig { stroke: #23315c; width: 86px; margin: auto 0 0 -3px; }
 html[data-note="sleeve"] .founder-sig path:nth-child(3) { display: none; }
 
 /* Note: white label. A promo pressing with a plain white label, the note
