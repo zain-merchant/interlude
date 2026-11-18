@@ -18,15 +18,20 @@ let next = 1e9; // ids of held callbacks, well clear of the browser's own
 // half as often. All of them run together on the frame they get, so
 // everything stays in step.
 let every = 1000 / 60;
-let lastRun = 0;
+// (Which frames: the first of each slot of `every` ms on the wall clock,
+// not every other frame from whenever it began, so the website's record,
+// capped the same way (site/hero-fx.js), draws on the very same frames
+// and the frames between are left with nothing to do.)
+let lastSlot = -1;
 const waiting = new Map();
 let pumping = false;
 function pump(t) {
-  if (t - lastRun < every - 4) {
+  const slot = Math.floor((performance.timeOrigin + t) / every);
+  if (slot === lastSlot) {
     raf(pump);
     return;
   }
-  lastRun = t;
+  lastSlot = slot;
   pumping = false;
   const run = [...waiting.values()];
   waiting.clear();
