@@ -33,7 +33,10 @@ word.append(canvas);
 const base = document.createElement('i');
 base.className = 'foot-base';
 word.append(base);
-const gl = canvas.getContext('webgl', { premultipliedAlpha: true, antialias: false, alpha: true });
+// (The context is made when the footer comes near, in init(): making one
+// costs the page a good 100ms, for something at its very end.)
+let gl = null;
+const canGL = (() => { try { return !!window.WebGLRenderingContext && !!document.createElement('canvas').getContext; } catch { return false; } })();
 
 export let ready = false;
 // Colours are [r, g, b, a], 0 to 1.
@@ -419,21 +422,48 @@ function knockNow(now) {
 }
 let mode = T.mode;
 
+// The shader is compiled only once the footer is getting near (the page
+// has nothing to spend on it before), and where the browser can, off the
+// page's thread (KHR_parallel_shader_compile): asking whether it linked
+// before it's done would make the page wait for it.
 function init() {
-  if (!gl) return false;
+  gl = canvas.getContext('webgl', { premultipliedAlpha: true, antialias: false, alpha: true });
+  if (!gl) { fail(new Error('no WebGL')); return false; }
   gl.getExtension('OES_standard_derivatives');
+  const par = gl.getExtension('KHR_parallel_shader_compile');
   const sh = (type, src) => {
     const s = gl.createShader(type);
     gl.shaderSource(s, src);
     gl.compileShader(s);
-    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
     return s;
   };
-  prog = gl.createProgram();
-  gl.attachShader(prog, sh(gl.VERTEX_SHADER, 'attribute vec2 p; void main() { gl_Position = vec4(p, 0.0, 1.0); }'));
-  gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, '#extension GL_OES_standard_derivatives : enable\n' + FRAG));
-  gl.linkProgram(prog);
-  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
+  const p = gl.createProgram();
+  const vs = sh(gl.VERTEX_SHADER, 'attribute vec2 p; void main() { gl_Position = vec4(p, 0.0, 1.0); }');
+  const fs = sh(gl.FRAGMENT_SHADER, '#extension GL_OES_standard_derivatives : enable\n' + FRAG);
+  gl.attachShader(p, vs);
+  gl.attachShader(p, fs);
+  gl.linkProgram(p);
+  const done = () => {
+    try {
+      if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getShaderInfoLog(fs) || gl.getProgramInfoLog(p));
+      finish(p);
+      wake();
+    } catch (err) { fail(err); }
+  };
+  if (!par) { done(); return true; }
+  const poll = () => (gl.getProgramParameter(p, par.COMPLETION_STATUS_KHR) ? done() : setTimeout(poll, 16));
+  poll();
+  return true;
+}
+// No effect after all: the page's own CSS version of the word.
+function fail(err) {
+  ready = false;
+  document.documentElement.dataset.foot = 'css';
+  document.documentElement.toggleAttribute('data-foot-gl', false);
+  console.warn('foot-fx:', err);
+}
+function finish(p) {
+  prog = p;
   gl.useProgram(prog);
   gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
@@ -454,6 +484,7 @@ function init() {
 // The letters, drawn into a texture the size of the canvas, on the same
 // baseline and in the same type as the page's word.
 function layout() {
+  if (!tex) return null;
   const dpr = Math.min(2, devicePixelRatio || 1);
   const c = canvas.getBoundingClientRect();
   const w = Math.round(c.width * dpr);
@@ -774,8 +805,15 @@ export const lens = () => knockNow(performance.now());
 export const follower = () => ({ x: hover.x, y: hover.y, tx: hover.tx, ty: hover.ty, on: hover.on });
 
 try {
-  if (init()) {
+  if (canGL) {
     ready = true;
+    // Compiled when the footer is within about a screen and a half.
+    const io = new IntersectionObserver((es) => {
+      if (!es.some((e) => e.isIntersecting)) return;
+      io.disconnect();
+      init();
+    }, { rootMargin: '150% 0px' });
+    io.observe(canvas);
     new ResizeObserver(relayout).observe(word);
     document.fonts?.ready.then(relayout);
   }

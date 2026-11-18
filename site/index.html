@@ -11,11 +11,10 @@
   <meta property="og:url" content="https://interludedj.com/">
   <meta name="theme-color" content="#09090b">
   <link rel="icon" href="img/icon.svg?v=2" type="image/svg+xml">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261121z">
-  <link rel="stylesheet" href="demo/cards.css?v=20261121j">
+  <!-- Geist, served from here (no other site to reach before the page can
+       draw its text); the Latin file is fetched straight away. -->
+  <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="style.css?v=20261118p2">
   <script src="tune.js?v=20261118v1"></script>
   <script>
     // Live updates while working on the site locally (.claude/serve.py
@@ -451,7 +450,7 @@
           <img class="poster" src="img/screenshot-1x.jpg" srcset="img/screenshot-1x.jpg 1440w, img/screenshot.jpg 2880w" sizes="(max-width: 1200px) 100vw, 1200px"
             width="1440" height="900" alt="Interlude with two tracks loaded: waveforms across the top, two decks either side of the mixer, and the library below.">
           <!-- The real app on its simulated engine, played by a script (app/demo). Loaded after the page. -->
-          <iframe class="live" title="Interlude mixing one track into the next" tabindex="-1" aria-hidden="true" data-src="demo/hero.html?v=20261121d"></iframe>
+          <iframe class="live" title="Interlude mixing one track into the next" tabindex="-1" aria-hidden="true" data-src="demo/hero.html?v=20261118p1"></iframe>
         </div>
       </div>
       <div class="shot-bar">
@@ -890,8 +889,10 @@
     <span class="foot-word" data-text="Interlude" aria-hidden="true">Interlude</span>
   </footer>
 
-  <!-- The feature cards' pictures (built from app/demo, see the README). -->
-  <script type="module" src="demo/cards.js?v=20261121j"></script>
+  <!-- The feature cards' pictures (built from app/demo, see the README).
+       Their styles are down here, so the first screen never waits for them. -->
+  <link rel="stylesheet" href="demo/cards.css?v=20261118p1">
+  <script type="module" async src="demo/cards.js?v=20261118p1"></script>
   <script>
     // The hero. The screenshot shows first; once the page has loaded, the
     // live app takes its place (unless the visitor prefers less motion).
@@ -899,7 +900,7 @@
     // same at any width. It tells us how loud it's playing, and the glow
     // under it follows; the switch picks mouse or controller.
     (async () => {
-      const fx = await import('./hero-fx.js?v=20261121n').catch(() => null);
+      const fx = await import('./hero-fx.js?v=20261118p2').catch(() => null);
       const frame = document.querySelector('.stage-frame');
       const screen = frame.querySelector('.screen');
       const live = frame.querySelector('.live');
@@ -1144,7 +1145,7 @@
       const w = document.querySelector('.foot-word');
       if (!w) return;
       const d = document.documentElement;
-      const fx = await import('./foot-fx.js?v=20261121z').catch(() => null);
+      const fx = await import('./foot-fx.js?v=20261118p1').catch(() => null);
       addEventListener('foot-fit', () => fx?.relayout());
       // Without tune.js (or an older one), each control still applies its default.
       const own = (o) => o.onInput?.(o.value);
@@ -1265,7 +1266,13 @@
       let last = null;
       // Whether a point on the page is over the word (below the top of its
       // letters, and not on a link, a button or the Tune panel).
+      // (Only while the word is on screen: elsewhere on the page nothing is
+      // measured as the pointer moves or the page scrolls.)
+      let inView = false;
+      if ('IntersectionObserver' in window) new IntersectionObserver(([e]) => { inView = e.isIntersecting; if (!inView && on) { on = false; w.style.setProperty('--on', '0'); fx?.point(null); } }).observe(w);
+      else inView = true;
       const check = (x, y, target) => {
+        if (!inView) return;
         const r = w.getBoundingClientRect();
         const inside = x >= r.left && x <= r.right && y >= r.top + r.height * 0.1 && y <= r.bottom
           && !target?.closest?.('a, button, .dialkit-root');
@@ -1318,7 +1325,7 @@
       d.addEventListener('pointerleave', leave);
       addEventListener('blur', leave);
       // The page scrolling under a still pointer moves the word under it.
-      addEventListener('scroll', () => { if (last) check(last.x, last.y, document.elementFromPoint(last.x, last.y)); }, { passive: true });
+      addEventListener('scroll', () => { if (last && inView) check(last.x, last.y, document.elementFromPoint(last.x, last.y)); }, { passive: true });
       // No hover on this screen: play it once when the word comes into view.
       if (fx?.ready && !matchMedia('(hover: hover)').matches) {
         const io = new IntersectionObserver(([e]) => {
@@ -1418,6 +1425,12 @@
       // (Every grain layer on the page, the hero's and the footer's, set as one.)
       const els = [...document.querySelectorAll('.grain')];
       if (!els.length) return;
+      // A layer out of view stops stepping (its frames are swapped on the
+      // page's own thread, a restyle each step, seen or not).
+      if ('IntersectionObserver' in window) {
+        const io = new IntersectionObserver((es) => { for (const e of es) e.target.toggleAttribute('data-off', !e.isIntersecting); });
+        els.forEach((e) => io.observe(e));
+      }
       const el = {
         style: {
           setProperty: (k, v) => els.forEach((e) => e.style.setProperty(k, v)),
@@ -1542,8 +1555,16 @@
     // turns a request away.
     const CACHED = 'interlude-commits';
     const kept = (() => { try { return JSON.parse(localStorage.getItem(CACHED)); } catch { return null; } })();
-    (kept && Date.now() - kept.at < 15 * 60000 ? Promise.resolve(kept.list)
-      : fetch('https://api.github.com/repos/zain-merchant/interlude/commits?per_page=30')
+    // (Asked for only once the card is getting near: nothing before it needs
+    // it, and it's a good-sized answer.)
+    const nearOss = new Promise((go) => {
+      const el = document.querySelector('.oss');
+      if (!el || !('IntersectionObserver' in window)) return go();
+      const io = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) { io.disconnect(); go(); } }, { rootMargin: '1200px 0px' });
+      io.observe(el);
+    });
+    nearOss.then(() => kept && Date.now() - kept.at < 15 * 60000 ? kept.list
+      : fetch('https://api.github.com/repos/zain-merchant/interlude/commits?per_page=15')
         .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
         .then((list) => {
           try { localStorage.setItem(CACHED, JSON.stringify({ at: Date.now(), list: list.map((c) => ({ sha: c.sha, html_url: c.html_url, commit: { message: c.commit.message, author: { date: c.commit.author.date } } })) })); } catch {}
@@ -1593,25 +1614,46 @@
         // comes to a stop on a quick critically damped spring (about a
         // quarter second) rather than at once, and picks up again the same
         // way. (Not at all with reduced motion: it scrolls by hand.)
+        // The running is a Web Animation, which the compositor plays on its
+        // own: the page does nothing frame to frame. Only the spring to a
+        // stop and back is worked out here, as the animation's speed.
         if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
-          let x = 0, v = 40, acc = 0, want = 40, last = 0, half = 0, on = false;
-          const K = 180, C = 2 * Math.sqrt(K);
-          const step = (now) => {
-            const dt = Math.min(0.05, (now - last) / 1000 || 0.016); last = now;
-            // (The speed is the spring's value: it eases to `want`.)
-            acc += (-K * (v - want) - C * acc) * dt;
-            v += acc * dt;
-            x += v * dt;
-            half = half || track.scrollWidth / 2;
-            if (half && x >= half) x -= half;
-            track.style.transform = `translate3d(${-x}px, 0, 0)`;
-            if (on) requestAnimationFrame(step);
+          const SPEED = 40, K = 180, C = 2 * Math.sqrt(K);
+          let anim = null, half = 0, rate = 1, acc = 0, want = 1, springing = false, seen = false, last = 0;
+          const make = () => {
+            const was = anim ? (anim.currentTime || 0) / (anim.effect.getTiming().duration || 1) : 0;
+            anim?.cancel();
+            half = track.scrollWidth / 2;
+            if (!half) { anim = null; return; }
+            const duration = (half / SPEED) * 1000;
+            anim = track.animate([{ transform: 'translate3d(0, 0, 0)' }, { transform: `translate3d(${-half}px, 0, 0)` }], { duration, iterations: Infinity, easing: 'linear' });
+            anim.currentTime = (was % 1) * duration;
+            anim.updatePlaybackRate(rate);
+            if (!seen || rate === 0) anim.pause();
           };
-          const io = new IntersectionObserver(([e]) => { if (e.isIntersecting && !on) { on = true; last = 0; requestAnimationFrame(step); } else if (!e.isIntersecting) on = false; });
+          const spring = (now) => {
+            const dt = Math.min(0.05, (now - last) / 1000 || 0.016); last = now;
+            acc += (-K * (rate - want) - C * acc) * dt;
+            rate += acc * dt;
+            const done = Math.abs(rate - want) < 0.005 && Math.abs(acc) < 0.01;
+            if (done) { rate = want; acc = 0; }
+            if (anim) {
+              if (rate <= 0) anim.pause();
+              else { anim.updatePlaybackRate(rate); if (seen && anim.playState !== 'running') anim.play(); }
+            }
+            if (!done) requestAnimationFrame(spring); else springing = false;
+          };
+          const to = (r) => { want = r; if (!springing) { springing = true; last = 0; requestAnimationFrame(spring); } };
+          const io = new IntersectionObserver(([e]) => {
+            seen = e.isIntersecting;
+            if (!anim) make();
+            if (anim) { if (seen && rate > 0) anim.play(); else anim.pause(); }
+          });
           io.observe(tk);
-          tk.addEventListener('pointerenter', () => (want = 0));
-          tk.addEventListener('pointerleave', () => (want = 40));
-          addEventListener('resize', () => (half = 0));
+          tk.addEventListener('pointerenter', () => to(0));
+          tk.addEventListener('pointerleave', () => to(1));
+          addEventListener('resize', make);
+          document.fonts?.ready.then(make);
         }
       })
       .catch(() => {});

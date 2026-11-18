@@ -1674,11 +1674,22 @@ function layout(now) {
 
 // A CSS colour (the picker may give hex, oklch() or display-p3) as sRGB
 // 0..1, worked out by the browser once per colour.
-const swatch = document.createElement('canvas').getContext('2d', { willReadFrequently: true });
+let swatchCtx = null;
+const swatchOf = () => (swatchCtx ??= document.createElement('canvas').getContext('2d', { willReadFrequently: true }));
 const rgbCache = new Map();
 function rgbOf(v) {
   let c = rgbCache.get(v);
   if (c) return c;
+  // Hex, the usual case, is read here; anything else the browser works out
+  // (setting up a canvas to read it back costs a good 100ms the first time).
+  const h = /^#([0-9a-f]{3,8})$/i.exec(String(v).trim())?.[1];
+  if (h && (h.length === 3 || h.length === 6 || h.length === 8)) {
+    const x = h.length === 3 ? [...h].map((d) => d + d) : [h.slice(0, 2), h.slice(2, 4), h.slice(4, 6)];
+    c = x.map((d) => parseInt(d, 16) / 255);
+    rgbCache.set(v, c);
+    return c;
+  }
+  const swatch = swatchOf();
   swatch.canvas.width = swatch.canvas.height = 1;
   swatch.fillStyle = '#eb1a3d';
   swatch.fillStyle = String(v);
@@ -1747,6 +1758,7 @@ function wake() {
 }
 
 let last = performance.now();
+let lastSlot = -1;
 function frame(now, still) {
   const dt = still ? 0 : Math.min(0.1, (now - last) / 1000);
   last = now;
@@ -1935,7 +1947,10 @@ function draw(now) {
   // At rest (no pointer light, no needle) the record only turns slowly, so
   // 30 frames a second is plenty; the pointer's light gets the full 60.
   const busy = hover.on > 0.01 || needle.on || ripple.on || fx.moving || twist !== twistTo() || drag.on || drag.x !== 0 || drag.y !== 0;
-  if (busy || now - last >= 1000 / 30 - 2) frame(now, false);
+  // (On the first frame of each 30th of a second on the wall clock, the
+  // same frames the app in the screen draws on, app/demo/pause.js.)
+  const slot = Math.floor((performance.timeOrigin + now) / (1000 / 30));
+  if (busy || slot !== lastSlot) { lastSlot = slot; frame(now, false); }
   requestAnimationFrame(draw);
 }
 
