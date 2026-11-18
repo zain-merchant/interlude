@@ -117,7 +117,7 @@ h1 { margin: 0; font-size: clamp(48px, 9vw, 88px); font-weight: 600; letter-spac
   top: 0;
   left: 0;
   width: 1440px;
-  height: 900px;
+  height: 920px;
   border: 0;
   background: transparent;
   transform: scale(var(--s));
@@ -129,6 +129,12 @@ h1 { margin: 0; font-size: clamp(48px, 9vw, 88px); font-weight: 600; letter-spac
 .stage-frame[data-live] .live { opacity: 1; }
 /* The camera crops to the frame as it pushes in. */
 .stage-frame[data-live] .screen { overflow: hidden; }
+/* In controller mode the frame shows 20px more below it (the app page is
+   920 tall: the app's 900 and clear space), so the controller rises from
+   just above the toggle. The strip opens at once; it closes only after
+   the controller has gone back down, so it never cuts it off. */
+.stage-frame[data-live] .screen { overflow: visible; clip-path: inset(0 0 0 0 round calc(28px * var(--s))); transition: clip-path 0s linear var(--glide-ms); }
+.stage-frame[data-live][data-mode="controller"] .screen { clip-path: inset(0 0 calc(-20px * var(--s)) 0 round calc(28px * var(--s)) calc(28px * var(--s)) 0 0); transition-delay: 0s; }
 /* Live, the app draws its own edge and shadow (it moves within the frame). */
 .stage-frame[data-live] .screen { background: none; box-shadow: none; }
 /* The screenshot's edge, until the live app (which draws its own) takes over:
@@ -1052,51 +1058,50 @@ html[data-hero][data-herotext="card"]:is([data-cardblock="caption"], [data-cardb
 html[data-hero][data-herotext="card"]:is([data-cardblock="caption"], [data-cardblock="sentence"]) .cta { margin-top: 0; }
 html[data-hero][data-herotext="card"][data-cardblock="caption"] .dl-cap,
 html[data-hero][data-herotext="card"][data-cardblock="sentence"] .dl-cap2 {
-  display: flex; grid-area: req; margin: 14px 0 0; color: var(--fg-3); font-size: 13px; line-height: 18px;
+  display: flex; grid-area: req; margin: 14px 0 0; color: rgb(236 234 228 / 0.7); font-size: 13px; line-height: 18px;
   text-shadow: 0 1px 12px rgb(9 9 11 / 0.9);
 }
 html[data-hero][data-herotext="card"][data-cardblock="sentence"] .dl-cap2 { display: block; max-width: 300px; text-wrap: balance; }
 /* The caption's three facts, each after a short hairline rather than a dot. */
 .dl-cap { align-items: center; flex-wrap: wrap; row-gap: 4px; }
-.dl-cap > * + *::before { content: ''; display: inline-block; width: 1px; height: 11px; margin: 0 10px; vertical-align: -1px; background: rgb(255 255 255 / 0.16); }
-.dl-cv { color: var(--fg-2); font-variant-numeric: tabular-nums; text-decoration: underline; text-decoration-color: rgb(236 234 228 / 0.25); text-decoration-thickness: 1px; text-underline-offset: 3px; transition: color 0.15s, text-decoration-color 0.15s; }
+.dl-cap > * + *::before { content: ''; display: inline-block; width: 1px; height: 11px; margin: 0 10px; vertical-align: -1px; background: rgb(255 255 255 / 0.24); }
+.dl-cv { color: inherit; font-variant-numeric: tabular-nums; text-decoration: underline; text-decoration-color: rgb(236 234 228 / 0.4); text-decoration-thickness: 1px; text-underline-offset: 3px; transition: color 0.15s, text-decoration-color 0.15s; }
 .dl-cv:hover { color: var(--fg); text-decoration-color: rgb(236 234 228 / 0.7); }
 
-/* Open source: five takes (Tune, Open source: look). All keep the words,
-   the buttons and the six latest changes; they differ in surface and
-   layout. Shared: the updates sit straight on the card, no inner surface,
+/* Open source looks (Tune, Open source: look). All keep the words,
+   the buttons and the latest changes; they differ in surface and layout. Shared: the updates sit straight on the card, no inner surface,
    and a change's area ("Mappings:") is quieter than the change itself. */
-.oss:is([data-look="tight"], [data-look="timeline"], [data-look="stacked"], [data-look="split"], [data-look="ledger"]) .oss-log { padding: 0; }
-.oss:is([data-look="tight"], [data-look="timeline"], [data-look="stacked"], [data-look="split"], [data-look="ledger"]) .oss-log::before { content: none; }
-.oss:is([data-look="tight"], [data-look="timeline"], [data-look="stacked"], [data-look="split"], [data-look="ledger"]) .oss-log h4 { margin: 0; padding: 0 0 10px; border-image: none; border-bottom: 1px solid var(--oss-rule); font-size: 12.5px; line-height: 16px; color: var(--oss-dim); }
-.oss:is([data-look="tight"], [data-look="timeline"], [data-look="stacked"], [data-look="split"], [data-look="ledger"]) .oss-commits li + li { border-image: none; border-top: 1px solid var(--oss-rule2); }
-.oss:is([data-look="tight"], [data-look="timeline"], [data-look="stacked"], [data-look="split"], [data-look="ledger"]) .oss-commits a { padding: 9px 0; font-size: 14px; color: var(--oss-ink); transition: color 150ms ease; }
-.oss:is([data-look="tight"], [data-look="timeline"], [data-look="stacked"], [data-look="split"], [data-look="ledger"]) .oss-commits a:hover .oss-msg { color: var(--oss-strong); text-decoration: none; }
-.oss:is([data-look="tight"], [data-look="timeline"], [data-look="stacked"], [data-look="split"], [data-look="ledger"]) .oss-area { color: var(--oss-dim); transition: color 150ms ease; }
-.oss:is([data-look="tight"], [data-look="timeline"], [data-look="stacked"], [data-look="split"], [data-look="ledger"]) .oss-commits time { font-size: 12.5px; color: var(--oss-dim); }
-.oss:is([data-look="tight"], [data-look="timeline"], [data-look="stacked"], [data-look="split"], [data-look="ledger"]) .oss-empty a { color: var(--oss-ink); }
+.oss:is([data-look="tight"], [data-look="doors"], [data-look="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .oss-log { padding: 0; }
+.oss:is([data-look="tight"], [data-look="doors"], [data-look="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .oss-log::before { content: none; }
+.oss:is([data-look="tight"], [data-look="doors"], [data-look="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .oss-log h4 { margin: 0; padding: 0 0 10px; border-image: none; border-bottom: 1px solid var(--oss-rule); font-size: 12.5px; line-height: 16px; color: var(--oss-dim); }
+.oss:is([data-look="tight"], [data-look="doors"], [data-look="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .oss-commits li + li { border-image: none; border-top: 1px solid var(--oss-rule2); }
+.oss:is([data-look="tight"], [data-look="doors"], [data-look="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .oss-commits a { padding: 9px 0; font-size: 14px; color: var(--oss-ink); transition: color 150ms ease; }
+.oss:is([data-look="tight"], [data-look="doors"], [data-look="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .oss-commits a:hover .oss-msg { color: var(--oss-strong); text-decoration: none; }
+.oss:is([data-look="tight"], [data-look="doors"], [data-look="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .oss-area { color: var(--oss-dim); transition: color 150ms ease; }
+.oss:is([data-look="tight"], [data-look="doors"], [data-look="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .oss-commits time { font-size: 12.5px; color: var(--oss-dim); }
+.oss:is([data-look="tight"], [data-look="doors"], [data-look="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .oss-empty a { color: var(--oss-ink); }
 /* Light surfaces' inks. */
-.oss:is([data-look="tight"], [data-look="stacked"], [data-look="split"]) {
+.oss:is([data-look="tight"], [data-look="doors"], [data-look="feed"], [data-look="gitlog"]) {
   --oss-ink: rgb(11 11 13 / 0.8); --oss-strong: #0b0b0d; --oss-dim: rgb(11 11 13 / 0.46); --oss-rule: rgb(11 11 13 / 0.1); --oss-rule2: rgb(11 11 13 / 0.07);
   background: #f6f5f1; color: #0b0b0d; -webkit-backdrop-filter: none; backdrop-filter: none;
   box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.7), 0 1px 2px rgb(0 0 0 / 0.2), 0 24px 60px -12px rgb(0 0 0 / 0.45);
 }
 /* Dark ones. */
-.oss:is([data-look="timeline"], [data-look="ledger"]) {
+.oss:is([data-look="poster"], [data-look="cards"]) {
   --oss-ink: rgb(236 234 228 / 0.78); --oss-strong: var(--fg); --oss-dim: rgb(236 234 228 / 0.42); --oss-rule: rgb(255 255 255 / 0.09); --oss-rule2: rgb(255 255 255 / 0.06);
   color: var(--fg); -webkit-backdrop-filter: none; backdrop-filter: none;
 }
-.oss:is([data-look="timeline"], [data-look="ledger"]) p { color: var(--fg-2); }
-.oss:is([data-look="timeline"], [data-look="ledger"]) .btn { background: var(--fg); color: #0b0b0d; }
-.oss:is([data-look="timeline"], [data-look="ledger"]) .btn:hover { background: #fff; }
-.oss:is([data-look="timeline"], [data-look="ledger"]) .btn.ghost { background: transparent; color: var(--fg); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.16); }
-.oss:is([data-look="timeline"], [data-look="ledger"]) .btn.ghost:hover { background: rgb(255 255 255 / 0.06); }
+.oss:is([data-look="poster"], [data-look="cards"]) p { color: var(--fg-2); }
+.oss:is([data-look="poster"], [data-look="cards"]) .btn { background: var(--fg); color: #0b0b0d; }
+.oss:is([data-look="poster"], [data-look="cards"]) .btn:hover { background: #fff; }
+.oss:is([data-look="poster"], [data-look="cards"]) .btn.ghost { background: transparent; color: var(--fg); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.16); }
+.oss:is([data-look="poster"], [data-look="cards"]) .btn.ghost:hover { background: rgb(255 255 255 / 0.06); }
 /* The buttons, one size smaller than the hero's, the second a ring only. */
-.oss:is([data-look="tight"], [data-look="timeline"], [data-look="stacked"], [data-look="split"], [data-look="ledger"]) .btn { height: 38px; padding: 0 15px; border-radius: 10px; font-size: 14.5px; }
-.oss:is([data-look="tight"], [data-look="stacked"], [data-look="split"]) .btn.ghost { background: transparent; box-shadow: inset 0 0 0 1px rgb(11 11 13 / 0.16); }
-.oss:is([data-look="tight"], [data-look="stacked"], [data-look="split"]) .btn.ghost:hover { background: rgb(11 11 13 / 0.05); }
-.oss:is([data-look="tight"], [data-look="timeline"], [data-look="stacked"], [data-look="split"], [data-look="ledger"]) h3 { font-size: 28px; letter-spacing: -0.028em; margin: 0 0 10px; }
-.oss:is([data-look="tight"], [data-look="timeline"], [data-look="stacked"], [data-look="split"], [data-look="ledger"]) p { font-size: 15px; max-width: 25em; margin: 0 0 22px; }
+.oss:is([data-look="tight"], [data-look="doors"], [data-look="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .btn { height: 38px; padding: 0 15px; border-radius: 10px; font-size: 14.5px; }
+.oss:is([data-look="tight"], [data-look="doors"], [data-look="feed"], [data-look="gitlog"]) .btn.ghost { background: transparent; box-shadow: inset 0 0 0 1px rgb(11 11 13 / 0.16); }
+.oss:is([data-look="tight"], [data-look="doors"], [data-look="feed"], [data-look="gitlog"]) .btn.ghost:hover { background: rgb(11 11 13 / 0.05); }
+.oss:is([data-look="tight"], [data-look="doors"], [data-look="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) h3 { font-size: 28px; letter-spacing: -0.028em; margin: 0 0 10px; }
+.oss:is([data-look="tight"], [data-look="doors"], [data-look="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) p { font-size: 15px; max-width: 25em; margin: 0 0 22px; }
 
 /* 1. Tight: the current one, edited. The heading's top lines up with the
    updates' header and the buttons' foot with the last change, so both
@@ -1108,61 +1113,6 @@ html[data-hero][data-herotext="card"][data-cardblock="sentence"] .dl-cap2 { disp
 .oss[data-look="tight"] .oss-log { padding-left: 32px; border-left: 1px solid rgb(11 11 13 / 0.09); }
 .oss[data-look="tight"] .oss-commits li:last-child a { padding-bottom: 0; }
 
-/* 2. Timeline: dark, of a piece with the page. The changes hang off a
-   thin line, newest at the top with a lit dot; when sits before what. */
-.oss[data-look="timeline"] { grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); gap: 56px; align-items: start; padding: 32px 36px; border-radius: 20px;
-  background: rgb(255 255 255 / 0.035); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08), inset 0 1px 0 rgb(255 255 255 / 0.1); }
-.oss[data-look="timeline"] .oss-log h4 { border-bottom: 0; padding-bottom: 8px; padding-left: 20px; }
-.oss[data-look="timeline"] .oss-commits { position: relative; }
-.oss[data-look="timeline"] .oss-commits::before { content: ''; position: absolute; left: 3px; top: 16px; bottom: 16px; width: 1px; background: rgb(255 255 255 / 0.12); }
-.oss[data-look="timeline"] .oss-commits li + li { border-top: 0; }
-.oss[data-look="timeline"] .oss-commits a { position: relative; padding: 8px 0 8px 20px; gap: 0; }
-.oss[data-look="timeline"] .oss-commits a::before { content: ''; position: absolute; left: 0; top: 50%; width: 7px; height: 7px; margin-top: -3.5px; border-radius: 50%; background: #2a2a2f; box-shadow: 0 0 0 1px rgb(255 255 255 / 0.18); }
-.oss[data-look="timeline"] .oss-commits li[data-latest] a::before { background: #ff9b45; box-shadow: 0 0 0 3px rgb(255 155 69 / 0.18); }
-.oss[data-look="timeline"] .oss-commits time { order: -1; width: 82px; flex: none; }
-
-/* 3. Stacked: one column. The words and buttons across the top, the
-   changes under them in two columns, so each line is short enough to
-   read whole. */
-.oss[data-look="stacked"] { grid-template-columns: 1fr; gap: 26px; padding: 32px 36px 26px; border-radius: 20px; }
-.oss[data-look="stacked"] .oss-text { display: grid; grid-template-columns: 1fr auto; column-gap: 32px; align-items: end; }
-.oss[data-look="stacked"] .oss-text p { margin: 0; }
-.oss[data-look="stacked"] .oss-links { grid-column: 2; grid-row: 1 / span 2; }
-.oss[data-look="stacked"] .oss-commits { columns: 2; column-gap: 40px; }
-.oss[data-look="stacked"] .oss-commits li { break-inside: avoid; border-top: 1px solid var(--oss-rule2); }
-.oss[data-look="stacked"] .oss-commits li + li { border-top: 1px solid var(--oss-rule2); }
-.oss[data-look="stacked"] .oss-log h4 { border-bottom: 0; padding-bottom: 6px; }
-
-/* 4. Split: the words on light, the changes on dark running to the card's
-   own edges, like a screen set into it. */
-.oss[data-look="split"] { grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 0; align-items: stretch; padding: 0; border-radius: 20px; overflow: hidden; }
-.oss[data-look="split"] .oss-text { display: flex; flex-direction: column; padding: 32px 36px 30px; }
-.oss[data-look="split"] .oss-links { margin-top: auto; }
-.oss[data-look="split"] .oss-log { --oss-ink: rgb(236 234 228 / 0.78); --oss-strong: var(--fg); --oss-dim: rgb(236 234 228 / 0.42); --oss-rule: rgb(255 255 255 / 0.09); --oss-rule2: rgb(255 255 255 / 0.06);
-  padding: 30px 32px 26px; background: #121215; box-shadow: inset 1px 0 0 rgb(0 0 0 / 0.4); }
-
-/* 5. Ledger: no card. A big heading across the width, then the words and
-   buttons on the left and the changes on the right, under one rule. */
-.oss[data-look="ledger"] { grid-template-columns: minmax(0, 1fr) minmax(0, 1.7fr); grid-template-areas: "head head"; grid-template-rows: auto auto 1fr; column-gap: 64px; row-gap: 0; align-items: start; padding: 0; background: none; box-shadow: none; border-radius: 0; }
-.oss[data-look="ledger"] .oss-text { display: contents; }
-.oss[data-look="ledger"] h3 { grid-area: head; font-size: clamp(32px, 3.4vw, 44px); margin: 0 0 24px; padding-bottom: 24px; border-bottom: 1px solid rgb(255 255 255 / 0.1); }
-.oss[data-look="ledger"] .oss-text p { grid-column: 1; grid-row: 2; }
-.oss[data-look="ledger"] .oss-links { grid-column: 1; grid-row: 3; align-self: start; }
-.oss[data-look="ledger"] .oss-log { grid-column: 2; grid-row: 2 / span 2; }
-.oss[data-look="ledger"] .oss-log h4 { border-bottom: 0; padding-bottom: 4px; }
-.oss[data-look="ledger"] .oss-commits time { order: -1; width: 82px; flex: none; }
-
-@media (max-width: 860px) {
-  .oss:is([data-look="tight"], [data-look="timeline"], [data-look="split"], [data-look="ledger"]) { grid-template-columns: 1fr; gap: 28px; }
-  .oss[data-look="tight"] .oss-text { padding-right: 0; }
-  .oss[data-look="tight"] .oss-log { padding-left: 0; border-left: 0; }
-  .oss[data-look="split"] { gap: 0; }
-  .oss[data-look="stacked"] .oss-text { display: block; }
-  .oss[data-look="stacked"] .oss-text p { margin-bottom: 20px; }
-  .oss[data-look="stacked"] .oss-commits { columns: 1; }
-  .oss[data-look="ledger"] { grid-template-areas: "head"; grid-template-rows: none; }
-  .oss[data-look="ledger"] :is(.oss-text p, .oss-links, .oss-log) { grid-column: 1; grid-row: auto; }
-}
 
 /* Nav: buttons arrive, island. The buttons wait where they end up and the
    capsule closes round them; they surface in place, a touch soft and a
@@ -1178,3 +1128,117 @@ html[data-nav="morph"][data-navacts="island"] .nav[data-acts-in] .nav-actions .b
   transition: opacity 300ms cubic-bezier(0.23, 1, 0.32, 1), scale 300ms cubic-bezier(0.23, 1, 0.32, 1), filter 300ms cubic-bezier(0.23, 1, 0.32, 1), background-color var(--snappy-ms) var(--snappy);
 }
 html[data-nav="morph"][data-navacts="island"] .nav[data-acts-in] .nav-actions .btn + .btn { transition-delay: 40ms, 40ms, 40ms, 0ms; }
+
+/* Open source, from scratch. Each one below rearranges the same pieces:
+   the heading in its two halves (.oss-h1, .oss-h2), the line about it,
+   the two buttons, and the latest changes. */
+.oss-sha, .oss-ticker { display: none; }
+.oss-h1, .oss-h2 { display: inline; }
+
+/* Two doors: the heading's two halves are the card's two ways in. A dark
+   door for an idea, a light one for building it, with the changes behind
+   it: what building it looks like. */
+.oss[data-look="doors"] {
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.5fr); grid-template-rows: auto auto 1fr auto; gap: 0 12px; align-items: start;
+  padding: 10px; border-radius: 22px; background: #e7e5df;
+}
+.oss[data-look="doors"] :is(.oss-text, h3, .oss-links) { display: contents; }
+.oss[data-look="doors"]::before, .oss[data-look="doors"]::after { content: ''; grid-row: 1 / -1; border-radius: 14px; z-index: 0; align-self: stretch; }
+.oss[data-look="doors"]::before { grid-column: 1; background: #0e0e10; }
+.oss[data-look="doors"]::after { grid-column: 2; background: #f8f7f3; box-shadow: 0 1px 2px rgb(0 0 0 / 0.06); }
+.oss[data-look="doors"] > *, .oss[data-look="doors"] .oss-text > *, .oss[data-look="doors"] h3 > *, .oss[data-look="doors"] .oss-links > * { position: relative; z-index: 1; }
+.oss[data-look="doors"] :is(.oss-h1, .oss-h2) { display: block; grid-row: 1; padding: 26px 28px 0; font-size: 26px; font-weight: 600; letter-spacing: -0.026em; line-height: 1.1; }
+.oss[data-look="doors"] .oss-h1 { grid-column: 1; color: var(--fg); }
+.oss[data-look="doors"] .oss-h2 { grid-column: 2; }
+.oss[data-look="doors"] .oss-h2::first-letter { text-transform: uppercase; }
+.oss[data-look="doors"] p { grid-column: 1; grid-row: 2; margin: 10px 0 0; padding: 0 28px; max-width: none; color: rgb(236 234 228 / 0.66); }
+.oss[data-look="doors"] .oss-log { grid-column: 2; grid-row: 2 / span 2; padding: 18px 28px 0; }
+.oss[data-look="doors"] .oss-links > .btn { grid-row: 4; justify-self: start; margin: 20px 28px 26px; }
+.oss[data-look="doors"] .oss-links > .btn:not(.ghost) { grid-column: 1; background: var(--fg); color: #0b0b0d; }
+.oss[data-look="doors"] .oss-links > .btn:not(.ghost):hover { background: #fff; }
+.oss[data-look="doors"] .oss-links > .btn.ghost { grid-column: 2; }
+
+/* Poster: no card. The heading as big as the page allows, on two lines,
+   the line about it and the buttons beside its foot, and the changes
+   running past underneath in one quiet line (stops while you're on it). */
+.oss[data-look="poster"] { grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); column-gap: 56px; row-gap: 40px; align-items: end; padding: 0; background: none; box-shadow: none; border-radius: 0; }
+.oss[data-look="poster"] .oss-text { display: contents; }
+.oss[data-look="poster"] h3 { grid-column: 1; font-size: clamp(44px, 5.4vw, 76px); letter-spacing: -0.045em; line-height: 0.98; margin: 0; }
+.oss[data-look="poster"] :is(.oss-h1, .oss-h2) { display: block; }
+.oss[data-look="poster"] .oss-h2 { color: rgb(236 234 228 / 0.45); }
+.oss[data-look="poster"] p { grid-column: 2; grid-row: 1; align-self: end; margin: 0 0 64px; }
+.oss[data-look="poster"] .oss-links { grid-column: 2; grid-row: 1; align-self: end; }
+.oss[data-look="poster"] .oss-log { grid-column: 1 / -1; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; column-gap: 24px; padding: 14px 0; border-top: 1px solid rgb(255 255 255 / 0.1); border-bottom: 1px solid rgb(255 255 255 / 0.1); }
+.oss[data-look="poster"] .oss-log h4 { border: 0; padding: 0; }
+.oss[data-look="poster"] .oss-commits { display: none; }
+.oss[data-look="poster"] .oss-ticker { display: block; overflow: hidden; -webkit-mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent); mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent); }
+.oss-track { display: flex; width: max-content; animation: oss-run 60s linear infinite; }
+.oss-ticker:hover .oss-track { animation-play-state: paused; }
+@keyframes oss-run { to { transform: translateX(-50%); } }
+.oss-track a { display: flex; align-items: baseline; gap: 8px; padding-right: 40px; color: var(--oss-ink); font-size: 14px; white-space: nowrap; text-decoration: none; }
+.oss-track a:hover .oss-msg { color: var(--oss-strong); }
+.oss-track a .oss-sha { display: none; }
+.oss-track time { font-size: 12.5px; color: var(--oss-dim); }
+@media (prefers-reduced-motion: reduce) { .oss-track { animation: none; } .oss-ticker { overflow-x: auto; } }
+
+/* The newest change, big: the changes lead. The latest one is set as a
+   headline with when above it; the rest follow small and fade with age.
+   The heading, words and buttons sit beside it, on its foot. */
+.oss[data-look="feed"] { grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 56px; align-items: end; padding: 34px 36px 32px; border-radius: 20px; }
+.oss[data-look="feed"] .oss-text { order: 2; }
+.oss[data-look="feed"] .oss-log h4 { border: 0; padding-bottom: 14px; }
+.oss[data-look="feed"] .oss-commits li + li { border-top: 0; }
+.oss[data-look="feed"] .oss-commits li:first-child a { flex-direction: column-reverse; gap: 8px; padding: 0 0 22px; }
+.oss[data-look="feed"] .oss-commits li:first-child .oss-msg { white-space: normal; font-size: 26px; line-height: 1.18; letter-spacing: -0.022em; font-weight: 500; color: var(--oss-strong); text-wrap: balance; }
+.oss[data-look="feed"] .oss-commits li:first-child .oss-area { display: block; font-size: 14px; letter-spacing: 0; font-weight: 400; margin-bottom: 4px; }
+.oss[data-look="feed"] .oss-commits li:not(:first-child) a { padding: 5px 0; font-size: 13.5px; }
+.oss[data-look="feed"] .oss-commits li:nth-child(3) { opacity: 0.8; }
+.oss[data-look="feed"] .oss-commits li:nth-child(4) { opacity: 0.62; }
+.oss[data-look="feed"] .oss-commits li:nth-child(5) { opacity: 0.46; }
+.oss[data-look="feed"] .oss-commits li:nth-child(6) { opacity: 0.32; }
+
+/* Centred, three change cards: the heading and its line centred over the
+   three latest changes, each a small card of its own (what it touched,
+   the change, when). */
+.oss[data-look="cards"] { grid-template-columns: 1fr; justify-items: center; gap: 36px; padding: 0; background: none; box-shadow: none; border-radius: 0; text-align: center; }
+.oss[data-look="cards"] h3 { font-size: clamp(30px, 3.2vw, 40px); letter-spacing: -0.035em; }
+.oss[data-look="cards"] p { margin-left: auto; margin-right: auto; }
+.oss[data-look="cards"] .oss-links { justify-content: center; }
+.oss[data-look="cards"] .oss-log { width: 100%; text-align: left; }
+.oss[data-look="cards"] .oss-log h4 { border: 0; text-align: center; padding-bottom: 14px; }
+.oss[data-look="cards"] .oss-commits { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.oss[data-look="cards"] .oss-commits li + li { border-top: 0; }
+.oss[data-look="cards"] .oss-commits li:nth-child(n + 4) { display: none; }
+.oss[data-look="cards"] .oss-commits a { height: 100%; box-sizing: border-box; flex-direction: column; align-items: stretch; gap: 14px; padding: 18px 18px 16px; border-radius: 14px;
+  background: rgb(255 255 255 / 0.035); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08); transition: background-color 150ms ease, color 150ms ease; }
+.oss[data-look="cards"] .oss-commits a:hover { background: rgb(255 255 255 / 0.06); }
+.oss[data-look="cards"] .oss-msg { white-space: normal; font-size: 15px; line-height: 1.4; color: var(--oss-strong); }
+.oss[data-look="cards"] .oss-area { display: block; margin-bottom: 4px; font-size: 12.5px; }
+.oss[data-look="cards"] .oss-commits time { margin-top: auto; }
+
+/* The log as git shows it: the words on the light card, and the changes
+   on a dark panel set into it, each with its short hash, one line each,
+   in the typeface the code is written in. */
+.oss[data-look="gitlog"] { grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.3fr); gap: 36px; align-items: stretch; padding: 12px 12px 12px 36px; border-radius: 22px; }
+.oss[data-look="gitlog"] .oss-text { display: flex; flex-direction: column; justify-content: center; padding: 24px 0; }
+.oss[data-look="gitlog"] .oss-log { --oss-ink: rgb(236 234 228 / 0.82); --oss-strong: #fff; --oss-dim: rgb(236 234 228 / 0.4); --oss-rule: rgb(255 255 255 / 0.08);
+  padding: 18px 22px 16px; border-radius: 14px; background: #0f0f12; box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.06), 0 10px 30px -14px rgb(0 0 0 / 0.5); font-family: ui-monospace, 'SF Mono', Menlo, monospace; }
+.oss[data-look="gitlog"] .oss-log h4 { font-family: inherit; font-size: 12px; padding-bottom: 10px; margin-bottom: 6px; }
+.oss[data-look="gitlog"] .oss-commits li + li { border-top: 0; }
+.oss[data-look="gitlog"] .oss-commits a { gap: 14px; padding: 5px 0; font-size: 12.5px; }
+.oss[data-look="gitlog"] .oss-sha { display: inline; flex: none; color: #ff9b45; font: inherit; }
+.oss[data-look="gitlog"] .oss-commits time { font-size: 12px; }
+
+@media (max-width: 860px) {
+  .oss[data-look="tight"] { grid-template-columns: 1fr; gap: 28px; }
+  .oss[data-look="tight"] .oss-text { padding-right: 0; }
+  .oss[data-look="tight"] .oss-log { padding-left: 0; border-left: 0; }
+  .oss:is([data-look="poster"], [data-look="feed"], [data-look="gitlog"]) { grid-template-columns: 1fr; gap: 28px; }
+  .oss[data-look="poster"] :is(p, .oss-links) { grid-column: 1; grid-row: auto; margin: 0; }
+  .oss[data-look="doors"] { grid-template-columns: 1fr; grid-template-rows: none; }
+  .oss[data-look="doors"]::before, .oss[data-look="doors"]::after { content: none; }
+  .oss[data-look="doors"] :is(.oss-h1, .oss-h2, p, .oss-log, .oss-links > .btn) { grid-column: 1; grid-row: auto; }
+  .oss[data-look="cards"] .oss-commits { grid-template-columns: 1fr; }
+  .oss[data-look="gitlog"] { padding: 12px; }
+  .oss[data-look="gitlog"] .oss-text { padding: 16px 16px 0; }
+}

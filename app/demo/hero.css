@@ -8,8 +8,11 @@
    900, so the page around it never moves. Clear around the app, so the
    website's page shows through. */
 :root { color-scheme: dark; }
-html, body { margin: 0; width: 1440px; height: 900px; overflow: hidden; background: transparent !important; }
-#hero { position: relative; width: 1440px; height: 900px; overflow: hidden; }
+/* 920 tall: the app's 900, and 20px of clear space under it, so the
+   controller rises from just above the toggle on the page, not from the
+   app's own foot. (The website shows that strip only in controller mode.) */
+html, body { margin: 0; width: 1440px; height: 920px; overflow: hidden; background: transparent !important; }
+#hero { position: relative; width: 1440px; height: 920px; overflow: hidden; }
 
 /* The real app, as `npm run dev` mounts it. No one can reach in: the
    visitor watches. */
@@ -182,19 +185,25 @@ html[data-paused] *, html[data-paused] *::before, html[data-paused] *::after { a
   mask-image: linear-gradient(to bottom, #000 calc(100% - var(--foot-fade)), transparent 100%); }
 #hero[data-hand="controller"] .app-host { --foot-fade: 64px; }
 
-/* While the controller travels (in or out), the frame's foot fades over
-   64px, so it rises out of a soft edge rather than a hard line; once it's
-   there the fade lets go and nothing is masked. The mask exists only while
-   the animation runs (it's set in the keyframes alone), so the settled
-   picture costs nothing extra to draw. */
-@property --rise-fade { syntax: '<length>'; inherits: false; initial-value: 0px; }
-@keyframes rise-fade {
-  0%, 75% { --rise-fade: 64px; -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - var(--rise-fade)), transparent 100%); mask-image: linear-gradient(to bottom, #000 calc(100% - var(--rise-fade)), transparent 100%); }
-  100% { --rise-fade: 0px; -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - var(--rise-fade)), transparent 100%); mask-image: linear-gradient(to bottom, #000 calc(100% - var(--rise-fade)), transparent 100%); }
+/* While the controller travels (in or out), a progressive blur along the
+   bottom edge it crosses: light where it starts, heavier at the very edge,
+   so it rises out of a soft blur, not from behind a hard line. Once it has
+   landed the blur eases away (it never just stops), and at rest there's
+   none. Two layers of backdrop blur, each masked to its part of the band.
+   Only after the first switch (data-switched), so the page doesn't open
+   with it. */
+#hero::before, #hero::after, #hero ~ .edge-blur {
+  content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 56px; z-index: 300; pointer-events: none; opacity: 0;
 }
-#hero[data-hand="controller"] { animation: rise-fade var(--glide-ms) var(--glide); }
-#hero[data-hand]:not([data-hand="controller"]) { animation: rise-fade-out var(--glide-ms) var(--glide); }
-@keyframes rise-fade-out {
-  0%, 75% { --rise-fade: 64px; -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - var(--rise-fade)), transparent 100%); mask-image: linear-gradient(to bottom, #000 calc(100% - var(--rise-fade)), transparent 100%); }
-  100% { --rise-fade: 0px; -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - var(--rise-fade)), transparent 100%); mask-image: linear-gradient(to bottom, #000 calc(100% - var(--rise-fade)), transparent 100%); }
-}
+/* Three steps of blur, each heavier and lower: 1.5px over the band, 4px
+   over its lower two thirds, 10px over its last third. */
+#hero::before { -webkit-backdrop-filter: blur(1.5px); backdrop-filter: blur(1.5px);
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 35%); mask-image: linear-gradient(to bottom, transparent, #000 35%); }
+#hero::after { -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 30%, #000 65%); mask-image: linear-gradient(to bottom, transparent 30%, #000 65%); }
+#hero ~ .edge-blur { -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 62%, #000); mask-image: linear-gradient(to bottom, transparent 62%, #000); }
+@keyframes edge-blur-in { 0%, 40% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes edge-blur-out { 0%, 40% { opacity: 1; } 100% { opacity: 0; } }
+#hero[data-switched][data-hand="controller"]::before, #hero[data-switched][data-hand="controller"]::after, #hero[data-switched][data-hand="controller"] ~ .edge-blur { animation: edge-blur-in calc(var(--glide-ms) + 300ms) cubic-bezier(0.4, 0, 0.2, 1); }
+#hero[data-switched]:not([data-hand="controller"])::before, #hero[data-switched]:not([data-hand="controller"])::after, #hero[data-switched]:not([data-hand="controller"]) ~ .edge-blur { animation: edge-blur-out calc(var(--glide-ms) + 300ms) cubic-bezier(0.4, 0, 0.2, 1); }
