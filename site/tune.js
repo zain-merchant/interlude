@@ -30,6 +30,250 @@
 //                      the value for when it shows. label as registered
 //                      (a slider's without its unit).
 (() => {
+  // v1: every control as it was tuned when v1 shipped (2026-11-18), read
+  // from the panels' saved values. These are the defaults everywhere: on
+  // the live site, which never loads DialKit, and in the panels until
+  // something is changed there (what's changed there still wins, on that
+  // browser). Keyed by group, then by the control's place in its panel
+  // (folder.name, a slider's with its unit).
+  const V1 = {
+    "Add music": {
+      "sweep starts (ms)": 0
+    },
+    "Cards": {
+      "style": "quiet"
+    },
+    "Controllers picture": {
+      "size": 1.15,
+      "up or down (px)": 0,
+      "fade length (px)": 46
+    },
+    "Features": {
+      "heading": "both",
+      "band colour": "#040405",
+      "band edge colour": "#ffffff1a",
+      "band": "recess",
+      "heading to rows (px)": 6,
+      "gap between cards (px)": 24,
+      "layout": "apart",
+      "heading mark": "none",
+      "Settled.Decks picture": "stacked"
+    },
+    "Footer": {
+      "Motion.warp amount (px)": 3,
+      "Motion.ripple spacing (em)": 0.6,
+      "Motion.interference spread (em)": 0.45,
+      "Motion.plays for (s)": 2.5,
+      "mode": "ripples",
+      "Motion.ripple speed (em/s)": 0.25,
+      "Motion.ripple bend (px)": 1.25,
+      "Motion.ripple style": "breathe",
+      "Motion.ripple reach (em)": 1.3,
+      "Motion.ripple width (em)": 0.07,
+      "Motion.ripple interval (s)": 0.55,
+      "Motion.click ring reach": 1,
+      "Motion.click ring strength (×)": 7.5,
+      "Motion.fade in/out (s)": 0.9,
+      "Motion.hover": "follow",
+      "Click.click lens magnify": 0.8,
+      "Click.click lens size (em)": 0.14,
+      "Click.click lens springs back in (s)": 0.75,
+      "Click.click lens holds on a quick click (s)": 0.3,
+      "Click.click lens in-out swing": 0.55,
+      "Click.click wave strength": 0.6,
+      "Click.click wave reach (em)": 1,
+      "Click.click wave speed (em/s)": 1.6,
+      "Shape.groove spacing (px)": 6.25,
+      "Shape.groove arcs": "record",
+      "Shape.grooves per song (0: no gaps)": 0,
+      "Shape.song gap width (grooves)": 0.5,
+      "Shape.groove line width (px)": 1.5,
+      "Shape.groove tilt (°)": 0,
+      "Shape.word cut off at bottom (em)": 0.33,
+      "Shape.outline thickness (px)": 1.5,
+      "Colour.letter colour": "#000000",
+      "Colour.groove gap colour": "#000000",
+      "Colour.groove line colour": "#000000",
+      "Colour.outline colour": "#0d0d0d",
+      "Colour.page background": "#09090b00"
+    },
+    "Grain": {
+      "texture": "film",
+      "size": 0.75,
+      "amount": 0.12,
+      "contrast": 0.9,
+      "blend": "normal",
+      "movement": "swap",
+      "flicker rate": "6",
+      "jump distance": 0.03,
+      "drift time (s)": 30,
+      "fades out toward the features": 1
+    },
+    "Hero": {
+      "Layout.download block": "caption",
+      "Layout.version link": "match",
+      "Layout.rule": "none",
+      "Controller.controller style": "current",
+      "Performance.app frame rate": 30,
+      "Performance.render": "live",
+      "controller comes in from (px, minus is above) (px)": -40,
+      "controller follows the screen by (ms) (ms)": 135,
+      "controller blur as it comes in (px)": 10,
+      "screen tilt in controller mode (°)": -3,
+      "screen scales from": "top"
+    },
+    "Hero record": {
+      "Look.glint colour amount": 0.6,
+      "Look.soft glints strength": 1,
+      "Look.glints mode strength": 1,
+      "Look.glint colour": "none",
+      "Look.lamp colour": 0,
+      "Vinyl.lamp wedges": 0,
+      "Layout.show to the top (mask)": 0,
+      "Hover & needle.tilt": 0.5,
+      "Hover & needle.colour turn": 0.5,
+      "Hover & needle.cone swing": 0.8,
+      "Hover & needle.lamp swing": 0.7,
+      "Hover & needle.glint slide": 0.6,
+      "Hover & needle.follow time (s)": 0.6,
+      "Layout.top warp strength": 0.5,
+      "Look.spin cue strength": 1,
+      "Look.speck style": "hyphen",
+      "style": "vinyl",
+      "Vinyl.vinyl preset": "custom",
+      "Vinyl.vinyl colour": "#000000",
+      "Vinyl.vinyl finish": "solid",
+      "Vinyl.vinyl body": 0,
+      "Vinyl.light through it": 0.4,
+      "Vinyl.grooves in its colour": 0.8,
+      "Vinyl.flecks": 0,
+      "Vinyl.groove spacing (px)": 4.5,
+      "Vinyl.spacing opens out by the rim (px)": 10,
+      "Vinyl.groove line width": 2.1,
+      "Vinyl.groove contrast": 1.7,
+      "Vinyl.groove brightness": 0.8,
+      "Vinyl.song bands": 1.5,
+      "Vinyl.song length": 1,
+      "Vinyl.sheen": 1.9,
+      "Vinyl.pressing warp": 2.1,
+      "Look.what shows the spin": "glints",
+      "Look.natural dust": 0.5,
+      "Look.dust size": 0.6,
+      "Look.dust softness": 0.25,
+      "Look.dust brightness": 0.65,
+      "Look.dust glow": 0.4,
+      "Look.dust glow size": 0.55,
+      "Look.dust only in the light": 0.45,
+      "Look.dust size variety": 0.45,
+      "Look.dust fibres": 0.2,
+      "Look.render resolution": 0.8,
+      "Glints.glint brightness": 3.12,
+      "Glints.glint size": 1.2,
+      "Glints.glint sharpness": 1,
+      "Glints.glints per turn": 4,
+      "Glints.glints turn with the disc (x)": 1,
+      "Glints.glint colour": "lamp",
+      "Glints.colour spread": 1.55,
+      "Glints.colour amount": 1,
+      "Glints.colour away from the lamp": 2.5,
+      "Glints.colour hue (°)": 0,
+      "Lamp.brightness away from the lamp": 1,
+      "Lamp.lamp movement": "turn",
+      "Lamp.cone direction (°)": 10,
+      "Lamp.cone width (°)": 40.7,
+      "Lamp.cone edge softness (°)": 6.3,
+      "Lamp.cone reach": 0.57,
+      "Lamp.cone glow": 0.2,
+      "Lamp.cone grooves": 0.1,
+      "Lamp.cone colour": "#ffffff",
+      "Lamp.cones": "two",
+      "Lamp.lamp colour (sides)": 0,
+      "Motion.spin speed": 0.6,
+      "Motion.scroll twist per 1000px (°)": 36,
+      "Motion.scroll twist at most (°)": 69,
+      "Motion.scroll twist settles in (s)": 1.55,
+      "Hover & needle.hover style": "litarc",
+      "Hover & needle.drag tips it": 0.35,
+      "Hover & needle.needle and hover strength": 0.5,
+      "Hover & needle.hover fades after still (s)": 1.2,
+      "Layout.shape preset": "custom",
+      "Layout.lower by (px)": 120,
+      "Layout.perspective": 0.6,
+      "Layout.rings all round": 2,
+      "Layout.more rings up top": 0,
+      "Layout.top fade starts at (px)": 66,
+      "Layout.top fade length (px)": 590,
+      "Layout.top warp": "none"
+    },
+    "Install": {
+      "step number": "badge"
+    },
+    "Nav": {
+      "Settled.name size before capsule (px)": 32,
+      "Settled.capsule corners": "14",
+      "Settled.buttons start at (%)": 75,
+      "Settled.button stagger (ms)": 180,
+      "Settled.space above the bar (px)": 8,
+      "Settled.icon size before capsule": 40,
+      "buttons arrive": "island",
+      "gap between icon and name before capsule (px)": 13
+    },
+    "Note": {
+      "record flip time (s)": 0.6,
+      "record flip bounce": 0.22,
+      "label logo": "rings",
+      "side A label": "#fb8b38",
+      "side B label": "#3fc9ea",
+      "white label": "#ffbdd0",
+      "sleeve corner radius (px)": 4,
+      "sleeve tilt (deg)": 3,
+      "question to signature (px)": 4,
+      "rings logo outline": 3,
+      "record lifted off the sleeve bottom (px)": 12,
+      "record speed when out (rpm)": 9.7,
+      "how far the record comes out (%)": 42,
+      "push right (px)": 12,
+      "record slides out": {
+        "type": "spring",
+        "visualDuration": 0.5,
+        "bounce": 0.12
+      },
+      "record spins up": {
+        "type": "spring",
+        "visualDuration": 1.1,
+        "bounce": 0
+      },
+      "record slows down": {
+        "type": "spring",
+        "visualDuration": 1.6,
+        "bounce": 0
+      },
+      "style": "sleeve"
+    },
+    "Open source": {
+      "what fades": "none",
+      "card brightness": 1,
+      "card brightness at the right": 1,
+      "card blur (px)": 17,
+      "fade starts at (%)": 64,
+      "fade ends at (%)": 63,
+      "updates surface white": 0.62,
+      "lines": 0.1,
+      "look": "poster-light",
+      "light card extra": "grooves"
+    },
+    "Sections": {
+      "between": "none"
+    }
+  };
+  const v1 = (label, unit, folder, value) => {
+    const i = label.indexOf(':');
+    const group = i > 0 ? label.slice(0, i).trim() : 'Tune';
+    const name = (i > 0 ? label.slice(i + 1).trim() : label) + (unit ? ` (${unit})` : '');
+    const g = V1[group];
+    const v = g && (g[folder ? `${folder}.${name}` : name] ?? g[name]);
+    return v === undefined ? value : v;
+  };
   const show = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname) || new URLSearchParams(location.search).has('tune');
   const base = document.currentScript?.src ? new URL('.', document.currentScript.src).href : './';
   const groups = new Map();
@@ -327,6 +571,7 @@
   }
 
   function slider({ label, min, max, step = 1, value, unit = '', css, onInput, folder, show: when }) {
+    value = v1(label, unit, folder, value);
     const apply = (v) => {
       if (css) document.documentElement.style.setProperty(css, v + unit);
       onInput?.(v);
@@ -336,12 +581,14 @@
   }
 
   function select({ label, options, value, onInput, folder, show: when }) {
+    value = v1(label, '', folder, value);
     onInput?.(value);
     const list = () => (typeof options === 'function' ? options() : options).map(([v, t]) => ({ value: v, label: t }));
     if (show) add(label, { key: label, apply: (v) => onInput?.(v), config: typeof options === 'function' ? () => ({ type: 'select', options: list(), default: value }) : { type: 'select', options: list(), default: value }, folder, show: when });
   }
 
   function color({ label, value, onInput, folder, show: when }) {
+    value = v1(label, '', folder, value);
     onInput?.(value);
     if (show) add(label, { key: label, apply: (v) => onInput?.(v), config: { type: 'color', default: value }, folder, show: when });
   }
@@ -367,10 +614,14 @@
   // ({ type: 'easing', duration, ease: [x1, y1, x2, y2] }): onInput gets
   // the object as the panel holds it.
   function spring({ label, value, onInput, folder, show: when }) {
+    value = v1(label, '', folder, value);
+    if (value && value.type) { const { type, ...rest } = value; value = rest; }
     onInput?.(value);
     if (show) add(label, { key: label, apply: (v) => onInput?.(v), config: { type: 'spring', ...value }, folder, show: when });
   }
   function easing({ label, value, onInput, folder, show: when }) {
+    value = v1(label, '', folder, value);
+    if (value && value.type) { const { type, ...rest } = value; value = rest; }
     onInput?.(value);
     if (show) add(label, { key: label, apply: (v) => onInput?.(v), config: { type: 'easing', ...value }, folder, show: when });
   }
