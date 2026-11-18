@@ -1733,6 +1733,14 @@ html[data-flayout="one"] .group:nth-child(-n + 2) { box-shadow: inset -1px 0 0 v
    drift that takes --grain-drift to come round.) */
 .grain[data-move="film"] { animation: grain-film calc(8s / var(--grain-fps, 6)) steps(8) infinite; }
 .grain[data-move="slow"] { animation: grain-slow var(--grain-drift, 20s) linear infinite; }
+/* Swap: eight different frames of grain, each held for a beat, in turn,
+   at the same rate (the way film's grain changes from frame to frame,
+   without moving). */
+.grain[data-move="swap"] { animation: grain-swap calc(8s / var(--grain-fps, 6)) steps(1, end) infinite; }
+@keyframes grain-swap {
+  0% { background-image: var(--grain-f0); } 12.5% { background-image: var(--grain-f1); } 25% { background-image: var(--grain-f2); } 37.5% { background-image: var(--grain-f3); }
+  50% { background-image: var(--grain-f4); } 62.5% { background-image: var(--grain-f5); } 75% { background-image: var(--grain-f6); } 87.5% { background-image: var(--grain-f7); } 100% { background-image: var(--grain-f0); }
+}
 /* (Each jump moves the grain by up to about 70px, times --grain-jump.) */
 @keyframes grain-film {
   0% { background-position: 0 0; } 12.5% { background-position: calc(-37px * var(--grain-jump, 1)) calc(21px * var(--grain-jump, 1)); } 25% { background-position: calc(53px * var(--grain-jump, 1)) calc(-44px * var(--grain-jump, 1)); } 37.5% { background-position: calc(-71px * var(--grain-jump, 1)) calc(-9px * var(--grain-jump, 1)); }
