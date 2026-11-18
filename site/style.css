@@ -576,147 +576,166 @@ html[data-nav="morph"] .nav-dl path { fill: none; stroke: currentColor; stroke-w
    Picked in the Try panel ("Hero: text layout", data-herotext on <html>);
    without it the hero is the layout above (the buttons beside the
    headline). All of them keep the headline big and left-aligned, first in
-   the hero, so the nav still turns to its capsule on it. Between them:
-     headline  clamp(48px, 4.9vw, 68px): a step smaller than above
-     line      22px and brighter, so the two read as a pair
-     facts     labelled, or chips, each on a solid backing over the record
-   The wrapper round the line, buttons and facts (.hero-side) is no box of
-   its own except where a layout needs one (the card). The grids are for
-   desktop only; under 900px every layout is one column. */
+   the hero (so the nav still turns to its capsule on it), with the line
+   under it close and large enough to read as its pair:
+     headline  clamp(44px, 4.3vw, 62px)
+     line      clamp(23px, 1.9vw, 27px), brighter than before
+   What changes between them is where the buttons and the facts go
+   (.hero-side, no box of its own unless a layout makes it one) and how the
+   facts are set. Every surface over the record is near-solid, like the
+   GitHub button. The grids are for desktop only; under 900px every layout
+   is one column. */
 .hero-side { display: contents; }
-html[data-hero][data-herotext] .tagline { max-width: 9.8em; font-size: clamp(48px, 4.9vw, 68px); letter-spacing: -0.042em; line-height: 1.03; }
+.hero .dmg, .meta .fi { display: none; }
+html[data-hero][data-herotext] .tagline { max-width: 9.8em; font-size: clamp(44px, 4.3vw, 62px); letter-spacing: -0.042em; line-height: 1.04; }
 html[data-hero][data-herotext] .lede {
-  max-width: 26em; margin: 20px 0 0; color: rgb(236 234 228 / 0.84); font-size: 22px; line-height: 1.4;
-  letter-spacing: -0.01em; text-shadow: 0 1px 18px rgb(9 9 11 / 0.9), 0 0 2px rgb(9 9 11 / 0.6);
+  grid-area: lede; max-width: 21em; margin: 18px 0 0; color: rgb(236 234 228 / 0.86);
+  font-size: clamp(23px, 1.9vw, 27px); line-height: 1.3; letter-spacing: -0.016em;
+  text-shadow: 0 1px 18px rgb(9 9 11 / 0.9), 0 0 2px rgb(9 9 11 / 0.6);
 }
-html[data-hero][data-herotext] .cta { justify-content: flex-start; flex-wrap: nowrap; gap: 10px; margin: 0; }
+html[data-hero][data-herotext] .cta { grid-area: cta; justify-content: flex-start; flex-wrap: nowrap; gap: 10px; margin: 0; }
 html[data-hero][data-herotext] .cta .btn { white-space: nowrap; }
 html[data-hero][data-herotext] .cta .btn.big { flex: 0 0 auto; padding: 0 22px; font-size: 15px; }
-html[data-hero][data-herotext] .meta { margin: 0; font-size: 13px; line-height: 1.45; color: var(--fg-2); }
+html[data-hero][data-herotext] .meta { grid-area: meta; margin: 0; font-size: 14px; line-height: 1.45; color: var(--fg-2); }
 html[data-hero][data-herotext] .meta a { text-decoration: none; }
-html[data-hero][data-herotext] .meta a:hover { color: var(--fg); }
-/* A surface over the record, like the GitHub button's. */
-html[data-hero][data-herotext] :is(.spec, .chip) {
-  background: rgb(17 17 21 / 0.88); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1), 0 10px 30px rgb(0 0 0 / 0.35);
+/* In a box of its own (card, rail, download card, the joined pill). */
+html[data-hero]:is([data-herotext="card"], [data-herotext="rail"], [data-herotext="segment"], [data-herotext="dmg"]) .hero-side {
+  grid-area: side; display: flex; flex-direction: column; min-width: 0;
 }
-
-/* The facts, labelled: a label over or beside each one (stack, rail). */
-html[data-hero][data-herotext="stack"] .meta,
-html[data-hero][data-herotext="rail"] .meta { display: grid; grid-template-columns: auto 1fr; gap: 0 20px; }
-html[data-hero][data-herotext="stack"] .meta > :not([aria-hidden]),
-html[data-hero][data-herotext="rail"] .meta > :not([aria-hidden]) {
-  display: grid; grid-template-columns: subgrid; grid-column: 1 / -1; align-items: baseline; color: var(--fg);
-}
-html[data-hero][data-herotext="stack"] .meta > :not([aria-hidden])::before,
-html[data-hero][data-herotext="rail"] .meta > :not([aria-hidden])::before {
-  content: attr(data-k); color: var(--fg-3); font: 500 10.5px/1 var(--mono); letter-spacing: 0.07em; text-transform: uppercase;
-}
-
-/* Stack: the buttons under the line, on the headline's edge; on the right,
-   the facts in a small panel, its foot level with the buttons'. */
-html[data-hero][data-herotext="stack"] .cta { margin-top: 32px; }
+html[data-hero]:is([data-herotext="card"], [data-herotext="rail"], [data-herotext="dmg"]) .cta .btn.big { flex: 1 1 0; justify-content: center; padding: 0 16px; }
+/* A surface over the record. */
+html[data-hero]:is([data-herotext="card"], [data-herotext="dmg"]) .hero-side,
 html[data-hero][data-herotext="stack"] .meta {
-  padding: 6px 18px; border-radius: 14px;
-  background: rgb(17 17 21 / 0.88); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1), 0 10px 30px rgb(0 0 0 / 0.35);
-}
-html[data-hero][data-herotext="stack"] .meta > :not([aria-hidden]) { padding: 9px 0; }
-html[data-hero][data-herotext="stack"] .meta > :not([aria-hidden]) ~ :not([aria-hidden]) { border-top: 1px solid var(--line); }
-
-/* Rail: the buttons and the facts in a column on the right behind a
-   hairline, its foot level with the line under the headline. */
-html[data-hero][data-herotext="rail"] .meta { gap: 6px 20px; }
-html[data-hero][data-herotext="rail"] .meta > :not([aria-hidden]) { text-shadow: 0 1px 12px rgb(9 9 11 / 0.95), 0 0 2px rgb(9 9 11 / 0.8); }
-html[data-hero][data-herotext="rail"] .cta .btn.big { flex: 1 1 0; justify-content: center; padding: 0 16px; }
-
-/* Card: everything but the headline in one card on the right. */
-html[data-hero][data-herotext="card"] .hero-side {
-  display: flex; flex-direction: column; padding: 28px; border-radius: 20px;
-  background: rgb(17 17 21 / 0.88); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
+  border-radius: 20px; background: rgb(17 17 21 / 0.9); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
   box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1), inset 0 1px 0 rgb(255 255 255 / 0.05), 0 20px 50px rgb(0 0 0 / 0.4);
 }
-html[data-hero][data-herotext="card"] .lede { margin: 0; font-size: 20px; text-shadow: none; color: var(--fg); }
-html[data-hero][data-herotext="card"] .cta { align-self: stretch; margin-top: 24px; }
-html[data-hero][data-herotext="card"] .cta .btn.big { flex: 1 1 0; justify-content: center; padding: 0 16px; }
-html[data-hero][data-herotext="card"] .meta {
-  display: grid; grid-template-columns: auto 1fr; gap: 4px 20px; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--line);
-}
-html[data-hero][data-herotext="card"] .meta #version { color: var(--fg); font-family: var(--mono); font-size: 12px; }
 
-/* Ledger: the headline, then a ruled row with the line on the left and
-   the buttons on the right, then the facts as chips. */
-html[data-hero][data-herotext="ledger"] .lede,
-html[data-hero][data-herotext="ledger"] .cta { border-top: 1px solid rgb(255 255 255 / 0.14); padding-top: 24px; margin-top: 32px; }
+/* The facts, set as a little piece of type rather than a table (card,
+   rail, panel): what it is, plainly; what it runs on, with a chip; then,
+   under a hairline, the release (a lit dot, what's new) and the licence
+   as a footnote. */
+html[data-hero]:is([data-herotext="card"], [data-herotext="rail"], [data-herotext="stack"]) .meta {
+  display: grid; grid-template-columns: 1fr auto; grid-template-areas: "free free" "os os" "ver lic"; gap: 0;
+}
+html[data-hero]:is([data-herotext="card"], [data-herotext="rail"], [data-herotext="stack"]) .meta [data-k="Price"] {
+  grid-area: free; color: var(--fg); font-size: 18px; font-weight: 500; letter-spacing: -0.012em;
+}
+html[data-hero]:is([data-herotext="card"], [data-herotext="rail"], [data-herotext="stack"]) .meta [data-k="Price"]::after { content: "."; }
+html[data-hero]:is([data-herotext="card"], [data-herotext="rail"], [data-herotext="stack"]) .meta [data-k="Runs on"] {
+  grid-area: os; display: flex; align-items: center; gap: 8px; margin-top: 4px;
+}
+html[data-hero][data-herotext] .meta .fi { display: block; flex: none; width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.2; stroke-linecap: round; opacity: 0.8; }
+html[data-hero]:is([data-herotext="card"], [data-herotext="rail"], [data-herotext="stack"]) .meta :is(#version, [data-k="License"]) {
+  margin-top: 16px; padding-top: 14px; border-top: 1px solid rgb(255 255 255 / 0.1);
+}
+html[data-hero]:is([data-herotext="card"], [data-herotext="rail"], [data-herotext="stack"]) .meta [data-k="License"] {
+  grid-area: lic; padding-left: 16px; color: var(--fg-3); font-size: 12px; text-align: right; align-self: stretch; line-height: 20px;
+}
+/* The release: a lit dot, the version, what's new. */
+html[data-hero][data-herotext] .meta #version { grid-area: ver; display: inline-flex; align-items: center; gap: 8px; color: var(--fg); font-size: 13px; font-weight: 500; font-variant-numeric: tabular-nums; line-height: 20px; }
+html[data-hero][data-herotext]:not([data-herotext="numeral"]) .meta #version::before {
+  content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--ring); box-shadow: 0 0 8px rgb(62 198 255 / 0.8);
+}
+html[data-hero]:is([data-herotext="card"], [data-herotext="rail"], [data-herotext="stack"]) .meta #version::after {
+  content: "What\2019s new \2192"; color: var(--fg-3); font-weight: 400; transition: color 0.15s;
+}
+html[data-hero][data-herotext] .meta #version:hover::after { color: var(--fg); }
 
-/* Chips (ledger, badge): each fact on its own small surface. */
-html[data-hero][data-herotext="ledger"] .meta,
-html[data-hero][data-herotext="badge"] .meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
-html[data-hero][data-herotext="ledger"] .meta > :not([aria-hidden]),
-html[data-hero][data-herotext="badge"] .meta > :not([aria-hidden]) {
-  display: inline-flex; align-items: center; height: 28px; padding: 0 12px; border-radius: 999px; color: var(--fg); white-space: nowrap;
-  background: rgb(17 17 21 / 0.88); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1);
-}
-html[data-hero][data-herotext="ledger"] .meta #version { font-family: var(--mono); font-size: 12px; }
+/* Card: the buttons and the facts in a card on the right, its foot level
+   with the line under the headline. */
+html[data-hero][data-herotext="card"] .hero-side { padding: 24px; }
+html[data-hero][data-herotext="card"] .meta { margin-top: 22px; }
 
-/* Badge: one column under the headline, the buttons on its edge; under
-   them the release as a pill ("v0.1.3 What's new"), then the rest. */
-html[data-hero][data-herotext="badge"] .cta { margin-top: 32px; }
-html[data-hero][data-herotext="badge"] .meta #version { gap: 8px; padding: 0 6px 0 12px; font-family: var(--mono); font-size: 12px; }
-html[data-hero][data-herotext="badge"] .meta #version::before {
-  content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--ring); box-shadow: 0 0 8px var(--ring);
+/* Rail: the same, open, behind a hairline. */
+html[data-hero][data-herotext="rail"] .meta { margin-top: 24px; }
+html[data-hero][data-herotext="rail"] .meta > * { text-shadow: 0 1px 12px rgb(9 9 11 / 0.95), 0 0 2px rgb(9 9 11 / 0.8); }
+
+/* Panel: the buttons under the line, on the headline's edge; the facts in
+   a panel on the right, its foot level with the buttons'. */
+html[data-hero][data-herotext="stack"] .cta { margin-top: 36px; }
+html[data-hero][data-herotext="stack"] .meta { padding: 20px 22px 16px; }
+
+/* Joined pill: the two buttons as one, the facts as a sentence under it. */
+html[data-hero][data-herotext="segment"] .cta { gap: 0; }
+html[data-hero][data-herotext="segment"] .cta .btn.big { flex: 1 1 auto; justify-content: center; padding: 0 22px; }
+html[data-hero][data-herotext="segment"] .cta .btn:first-child { border-radius: 999px 0 0 999px; padding-left: 24px; }
+html[data-hero][data-herotext="segment"] .cta .btn.ghost { border-radius: 0 999px 999px 0; padding-right: 24px; }
+html[data-hero][data-herotext="segment"] .meta { display: block; margin-top: 16px; padding-left: 4px; font-size: 14px; line-height: 1.6; text-wrap: pretty; text-shadow: 0 1px 12px rgb(9 9 11 / 0.95); }
+html[data-hero][data-herotext="segment"] .meta > * { display: inline; margin: 0; white-space: normal; }
+html[data-hero][data-herotext="segment"] .meta #version { display: inline; margin-right: 2px; }
+html[data-hero][data-herotext="segment"] .meta #version::before { display: inline-block; margin: 0 7px 2px 0; vertical-align: middle; }
+html[data-hero][data-herotext="segment"] .meta #version::after { content: " \2014"; color: var(--fg-2); font-weight: 400; }
+html[data-hero][data-herotext="segment"] .meta [data-k="Price"]::after { content: ","; }
+html[data-hero][data-herotext="segment"] .meta [data-k="Runs on"]::before { content: "for "; }
+html[data-hero][data-herotext="segment"] .meta [data-k="Runs on"]::after { content: "."; }
+html[data-hero][data-herotext="segment"] .meta [data-k="License"] { color: var(--fg-3); }
+html[data-hero][data-herotext="segment"] .meta [data-k="License"]::before { content: "Licensed "; }
+html[data-hero][data-herotext="segment"] .meta [data-k="License"]::after { content: "."; }
+html[data-hero][data-herotext="segment"] .meta .fi { display: none; }
+
+/* Numeral: the buttons under the line; on the right, the version large and
+   quiet, the facts under it. */
+html[data-hero][data-herotext="numeral"] .cta { margin-top: 36px; }
+html[data-hero][data-herotext="numeral"] .meta { display: flex; flex-direction: column; gap: 4px; text-shadow: 0 1px 12px rgb(9 9 11 / 0.95); }
+html[data-hero][data-herotext="numeral"] .meta #version {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 6px; margin-bottom: 14px;
+  color: rgb(236 234 228 / 0.42); font-size: 84px; font-weight: 300; letter-spacing: -0.05em; line-height: 0.9;
 }
-html[data-hero][data-herotext="badge"] .meta #version::after {
-  content: "What\2019s new \2192"; height: 20px; display: inline-flex; align-items: center; padding: 0 9px; border-radius: 999px;
-  background: rgb(255 255 255 / 0.08); color: var(--fg-2); font: 500 12px/1 var(--font);
+html[data-hero][data-herotext="numeral"] .meta #version:hover { color: rgb(236 234 228 / 0.7); }
+html[data-hero][data-herotext="numeral"] .meta #version::after {
+  content: "What\2019s new in this release \2192"; color: var(--fg-2); font-size: 13px; font-weight: 400; letter-spacing: 0; line-height: 1.4;
 }
-html[data-hero][data-herotext="badge"] .meta #version:hover::after { color: var(--fg); background: rgb(255 255 255 / 0.14); }
+html[data-hero][data-herotext="numeral"] .meta [data-k="Price"] { color: var(--fg); font-weight: 500; }
+html[data-hero][data-herotext="numeral"] .meta [data-k="Runs on"] { display: flex; align-items: center; gap: 8px; }
+html[data-hero][data-herotext="numeral"] .meta [data-k="License"] { color: var(--fg-3); font-size: 12px; }
+
+/* Download card: the file itself, its button, and the rest of the facts. */
+html[data-hero][data-herotext="dmg"] .hero-side { padding: 20px; }
+html[data-hero][data-herotext="dmg"] .dmg { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; }
+html[data-hero][data-herotext="dmg"] .dmg img { width: 44px; height: 44px; filter: drop-shadow(0 6px 16px rgb(62 198 255 / 0.2)); }
+html[data-hero][data-herotext="dmg"] .dmg b { display: block; font-size: 16px; font-weight: 500; line-height: 1.3; }
+html[data-hero][data-herotext="dmg"] .dmg small { display: block; color: var(--fg-2); font-size: 13px; line-height: 1.4; }
+html[data-hero][data-herotext="dmg"] .cta .btn.big:first-child { flex-grow: 1.5; }
+html[data-hero][data-herotext="dmg"] .meta {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; margin: 18px -20px -20px; padding: 12px 20px;
+  border-top: 1px solid rgb(255 255 255 / 0.08); font-size: 12px; color: var(--fg-3);
+}
+html[data-hero][data-herotext="dmg"] .meta [data-k="Runs on"] { display: none; }
+html[data-hero][data-herotext="dmg"] .meta #version { font-size: 12px; }
+html[data-hero][data-herotext="dmg"] .meta [data-k="License"] { margin-left: auto; }
+
+/* Inside a box, everything takes its full width. */
+html[data-hero]:is([data-herotext="card"], [data-herotext="rail"], [data-herotext="segment"], [data-herotext="dmg"]) .hero .hero-side > * { align-self: stretch; }
 
 /* Desktop: the grids. */
 @media (min-width: 901px) {
-  html[data-hero][data-herotext] .hero { grid-template-rows: none; row-gap: 0; padding: 64px 0 80px; }
-  html[data-hero][data-herotext="stack"] .hero {
-    grid-template-columns: minmax(0, 1fr) 300px; column-gap: 64px; grid-template-areas: "tag meta" "lede meta" "cta meta";
-  }
-  html[data-hero][data-herotext="stack"] .meta { align-self: end; }
-  html[data-hero][data-herotext="rail"] .hero {
-    grid-template-columns: minmax(0, 1fr) 372px; column-gap: 56px; grid-template-areas: "tag cta" "lede meta";
-  }
-  html[data-hero][data-herotext="rail"] .cta, html[data-hero][data-herotext="rail"] .meta { padding-left: 28px; border-left: 1px solid rgb(255 255 255 / 0.14); }
-  html[data-hero][data-herotext="rail"] .cta { align-self: end; padding-bottom: 20px; }
-  html[data-hero][data-herotext="rail"] .meta { align-self: stretch; padding-top: 0; }
-  html[data-hero][data-herotext="card"] .hero {
-    grid-template-columns: minmax(0, 1fr) 420px; column-gap: 56px; grid-template-areas: "tag side"; align-items: start;
-  }
-  html[data-hero][data-herotext="card"] .hero-side { grid-area: side; }
-  html[data-hero][data-herotext="card"] .tagline { align-self: start; margin-top: 4px; }
-  html[data-hero][data-herotext="ledger"] .hero {
-    grid-template-columns: minmax(0, 1fr) auto; column-gap: 0; grid-template-areas: "tag tag" "lede cta" "meta meta";
-  }
-  html[data-hero][data-herotext="ledger"] .lede { max-width: none; align-self: stretch; padding-right: 48px; }
-  html[data-hero][data-herotext="ledger"] .cta { align-self: stretch; align-items: flex-start; }
-  html[data-hero][data-herotext="badge"] .hero { grid-template-columns: minmax(0, 1fr); grid-template-areas: "tag" "lede" "cta" "meta"; }
+  html[data-hero][data-herotext] .hero { grid-template-rows: none; row-gap: 0; column-gap: 64px; padding: 64px 0 80px; }
+  html[data-hero][data-herotext="card"] .hero { grid-template-columns: minmax(0, 1fr) 380px; grid-template-areas: "tag side" "lede side"; }
+  html[data-hero][data-herotext="rail"] .hero { grid-template-columns: minmax(0, 1fr) 372px; grid-template-areas: "tag side" "lede side"; }
+  html[data-hero][data-herotext="rail"] .hero-side { padding: 4px 0 4px 32px; border-left: 1px solid rgb(255 255 255 / 0.14); }
+  html[data-hero][data-herotext="stack"] .hero { grid-template-columns: minmax(0, 1fr) 320px; grid-template-areas: "tag meta" "lede meta" "cta meta"; }
+  html[data-hero][data-herotext="segment"] .hero { grid-template-columns: minmax(0, 1fr) 360px; grid-template-areas: "tag side" "lede side"; }
+  html[data-hero][data-herotext="numeral"] .hero { grid-template-columns: minmax(0, 1fr) 300px; grid-template-areas: "tag meta" "lede meta" "cta meta"; }
+  html[data-hero][data-herotext="dmg"] .hero { grid-template-columns: minmax(0, 1fr) 372px; grid-template-areas: "tag side" "lede side"; }
+  html[data-hero][data-herotext] :is(.hero-side, .meta) { align-self: end; }
+  html[data-hero][data-herotext] .tagline { align-self: end; }
 }
 /* Narrower: one column for every layout. */
 @media (max-width: 900px) {
-  html[data-hero][data-herotext] .hero { grid-template-areas: "tag" "lede" "cta" "meta"; }
-  html[data-hero][data-herotext] .tagline { font-size: clamp(42px, 8vw, 60px); }
-  html[data-hero][data-herotext] .lede { font-size: 20px; }
-  html[data-hero][data-herotext] .cta { margin-top: 28px; }
-  html[data-hero][data-herotext] .meta { margin-top: 20px; }
-  html[data-hero][data-herotext="stack"] .meta { justify-self: stretch; }
-  html[data-hero][data-herotext="card"] .hero { grid-template-areas: "tag" "side"; }
-  html[data-hero][data-herotext="card"] .hero-side { grid-area: side; margin-top: 28px; padding: 24px; }
-  html[data-hero][data-herotext="card"] .cta { margin-top: 20px; }
-  html[data-hero][data-herotext="ledger"] .lede { border-top: 0; padding-top: 0; margin-top: 20px; }
-  html[data-hero][data-herotext="ledger"] .cta { margin-top: 28px; padding-top: 0; border-top: 0; }
+  html[data-hero][data-herotext] .hero { grid-template-areas: "tag" "lede" "side" "cta" "meta"; }
+  html[data-hero][data-herotext] .tagline { font-size: clamp(40px, 7.6vw, 56px); }
+  html[data-hero][data-herotext] .lede { margin-top: 14px; font-size: 22px; }
+  html[data-hero][data-herotext] .hero-side { margin-top: 28px; }
+  html[data-hero]:is([data-herotext="stack"], [data-herotext="numeral"]) .cta { margin-top: 28px; }
+  html[data-hero]:is([data-herotext="stack"], [data-herotext="numeral"]) .meta { margin-top: 24px; }
+  html[data-hero][data-herotext="numeral"] .meta #version { font-size: 64px; }
 }
 @media (max-width: 480px) {
-  html[data-hero][data-herotext] .tagline { font-size: clamp(36px, 10vw, 42px); }
-  html[data-hero][data-herotext] .lede { font-size: 18px; }
+  html[data-hero][data-herotext] .tagline { font-size: clamp(36px, 10vw, 40px); }
+  html[data-hero][data-herotext] .lede { font-size: 20px; }
   html[data-hero][data-herotext] .cta .btn.big { flex: 1 1 0; justify-content: center; padding: 0 12px; height: 46px; }
-  html[data-hero][data-herotext="card"] .hero-side { padding: 20px; }
+  html[data-hero]:is([data-herotext="card"], [data-herotext="dmg"]) .hero-side { padding: 18px; }
+  html[data-hero][data-herotext="dmg"] .meta { margin: 18px -18px -18px; padding: 12px 18px; }
 }
 /* ── Hero and nav layouts (end) ── */
 

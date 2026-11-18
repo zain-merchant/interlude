@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261117k">
+  <link rel="stylesheet" href="style.css?v=20261117l">
   <link rel="stylesheet" href="demo/cards.css">
   <script src="tune.js?v=20261117g"></script>
   <script>
@@ -252,9 +252,10 @@
       // headline (data-herotext, style.css). The headline stays the first
       // line, so the capsule still turns on it.
       window.tune?.select({ label: 'Hero: text layout', value: 'float', options: [
-        ['float', 'Buttons beside the headline (current)'], ['stack', 'Buttons under, facts in a panel'],
-        ['rail', 'Buttons and facts in a ruled column'], ['card', 'Everything but the headline in a card'],
-        ['ledger', 'A ruled row: line and buttons, then chips'], ['badge', 'One column: buttons, then a release pill'],
+        ['float', 'Buttons beside the headline (current)'], ['card', 'Buttons and facts in a card'],
+        ['rail', 'Buttons and facts behind a rule'], ['stack', 'Buttons under, facts in a panel'],
+        ['segment', 'One joined pill, the facts as a sentence'], ['numeral', 'The version, large and quiet'],
+        ['dmg', 'A download card'],
       ], onInput: (v) => {
         if (v === 'float') delete d.dataset.herotext;
         else d.dataset.herotext = v;
@@ -277,10 +278,14 @@
         <h1>Interlude</h1>
       </div>
       <p class="tagline">A free, <span class="nw">open-source</span> DJ app for Mac.</p>
-      <!-- The rest of the text block. Laid out by the layouts in style.css
-           ("Hero: text layout"); in most it isn't a box of its own. -->
-      <div class="hero-side">
       <p class="lede">Pro features with a fast, lightweight footprint.</p>
+      <!-- The buttons and the facts. Laid out by the layouts in style.css
+           ("Hero: text layout"); in the current one it isn't a box of its own. -->
+      <div class="hero-side">
+      <div class="dmg" aria-hidden="true">
+        <img src="img/icon.svg?v=2" alt="" width="44" height="44">
+        <span><b>Interlude.dmg</b><small>For macOS 11+ on Apple silicon</small></span>
+      </div>
       <div class="cta">
         <a class="btn big" href="https://github.com/zain-merchant/interlude/releases/latest/download/Interlude.dmg">
           <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v8m0 0L4.5 6.5M8 10l3.5-3.5M3 13h10"/></svg>
@@ -291,7 +296,7 @@
       <p class="meta">
         <a id="version" data-k="Version" href="https://github.com/zain-merchant/interlude/releases/latest" target="_blank" rel="noopener">Latest release</a>
         <span aria-hidden="true">·</span> <span class="mi" data-k="Price">Free and open source</span>
-        <span aria-hidden="true">·</span> <span class="mi" data-k="Runs on">macOS 11+ on Apple silicon</span>
+        <span aria-hidden="true">·</span> <span class="mi" data-k="Runs on"><svg class="fi" viewBox="0 0 16 16" aria-hidden="true"><rect x="3.5" y="3.5" width="9" height="9" rx="2"/><path d="M6 1.5v2M10 1.5v2M6 12.5v2M10 12.5v2M1.5 6h2M1.5 10h2M12.5 6h2M12.5 10h2"/></svg>macOS 11+ on Apple silicon</span>
         <span aria-hidden="true">·</span> <span class="mi" data-k="License">GPL-3.0-or-later</span>
       </p>
       </div>
