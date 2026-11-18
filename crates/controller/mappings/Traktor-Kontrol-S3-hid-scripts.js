@@ -298,6 +298,11 @@ TraktorS3.Controller = class {
             TraktorS3.incomingData([inputReportIdx, ...reportData]);
         }
 
+        // The controller state may have overridden our preferred default values, so set them now.
+        for (const ch in this.Channels) {
+            TraktorS3.Channel.prototype.setDefaults(ch);
+        }
+
         // NOTE: Soft takeovers must only be enabled after setting the initial
         //       value, or the above line won't have any effect
         for (let ch = 1; ch <= 4; ch++) {
@@ -905,6 +910,7 @@ TraktorS3.Deck = class {
         // There is no control object to mark / unmark a track as played.
         // this.defineButton(messageShort, "!SetPlayed", 0x01, 0x10, 0x04, 0x20,
         // deckFn.SetPlayedHandler);
+        this.defineButton(messageShort, "!StarTrack", 0x01, 0x10, 0x04, 0x20, deckFn.StarTrackHandler);
         this.defineButton(messageShort, "!LibraryFocus", 0x01, 0x20, 0x04, 0x40, deckFn.LibraryFocusHandler);
         this.defineButton(messageShort, "!MaximizeLibrary", 0x01, 0x40, 0x04, 0x80, deckFn.MaximizeLibraryHandler);
 
@@ -1136,6 +1142,15 @@ TraktorS3.Deck = class {
             this.previewPressed = false;
             engine.setValue("[PreviewDeck1]", "play", 0);
         }
+    }
+
+    StarTrackHandler(field) {
+        this.colorOutput(field.value, "!StarTrack");
+        if (field.value === 0) {
+            return;
+        }
+
+        engine.setValue("[Library]", "sort_focused_column", 1);
     }
 
     LibraryFocusHandler(field) {
@@ -1425,6 +1440,7 @@ TraktorS3.Deck = class {
         this.defineOutput(outputA, "slip_enabled", 0x02, 0x1B);
         this.defineOutput(outputA, "reverse", 0x03, 0x1C);
         this.defineOutput(outputA, "!PreviewTrack", 0x04, 0x1D);
+        this.defineOutput(outputA, "!StarTrack", 0x05, 0x1E);
         this.defineOutput(outputA, "!LibraryFocus", 0x06, 0x1F);
         this.defineOutput(outputA, "!MaximizeLibrary", 0x07, 0x20);
         this.defineOutput(outputA, "quantize", 0x08, 0x21);
@@ -1618,6 +1634,17 @@ TraktorS3.Channel = class {
         this.clipConnection = {};
         this.hotcueCallbacks = [];
 
+        // The visual order of the channels in Mixxx is 3, 1, 2, 4, but we want
+        // the crossfader assignments array to match the visual layout
+        const visualChannelIndex = {3: 0, 1: 1, 2: 2, 4: 3}[this.groupNumber];
+        if (TraktorS3.DefaultCrossfaderAssignments[visualChannelIndex] !== null) {
+            // This goes 0-2 for left, right, and center, but having the values
+            // in this script's config be -1, 0, and 1 makes much more sense
+            engine.setValue(group, "orientation", TraktorS3.DefaultCrossfaderAssignments[visualChannelIndex] + 1);
+        }
+    }
+
+    setDefaults(group) {
         // The script by default doesn't change any of the deck's settings, but it's
         // useful to be able to initialize these settings to your preferences when
         // you turn on the controller
@@ -1635,14 +1662,6 @@ TraktorS3.Channel = class {
         }
         if (TraktorS3.DefaultKeylockEnabled !== null) {
             engine.setValue(group, "keylock", TraktorS3.DefaultKeylockEnabled);
-        }
-        // The visual order of the channels in Mixxx is 4, 2, 1, 3, but we want
-        // the crossfader assignments array to match the visual layout
-        const visualChannelIndex = {3: 0, 1: 1, 2: 2, 4: 3}[this.groupNumber];
-        if (TraktorS3.DefaultCrossfaderAssignments[visualChannelIndex] !== null) {
-            // This goes 0-2 for left, right, and center, but having the values
-            // in this script's config be -1, 0, and 1 makes much more sense
-            engine.setValue(group, "orientation", TraktorS3.DefaultCrossfaderAssignments[visualChannelIndex] + 1);
         }
     }
 
@@ -2291,7 +2310,7 @@ TraktorS3.debugLights = function() {
         "00"
     ];
 
-    const data = [Array(), Array(), Array()];
+    const data = [[], [], []];
 
 
     for (let i = 0; i < data.length; i++) {

@@ -481,6 +481,29 @@ mod tests {
         assert!(c.find("IAC Driver Bus 1").is_none());
     }
 
+    /// Each Pioneer controller's MIDI port finds its own mapping among the
+    /// bundled ones, not a sibling's whose name it contains.
+    #[test]
+    fn pioneer_ports_find_their_own_mappings() {
+        let dir = Catalog::source_mappings_dir().unwrap();
+        let c = Catalog::load(std::slice::from_ref(&dir));
+        for (port, name) in [
+            ("DDJ-FLX4", "Pioneer DDJ-FLX4"),
+            ("DDJ-FLX6", "Pioneer DDJ-FLX6"),
+            ("DDJ-FLX10", "Pioneer DDJ-FLX10"),
+            ("DDJ-800", "Pioneer DDJ-800"),
+            ("DDJ-400", "Pioneer DDJ-400"),
+            ("DDJ-SX2", "Pioneer DDJ-SX2"),
+            ("DDJ-RX", "Pioneer DDJ-RX"),
+            ("XDJ-RX3", "Pioneer XDJ-RX3"),
+            ("XDJ-AZ", "Pioneer XDJ-AZ"),
+            ("OPUS-QUAD", "Pioneer OPUS-QUAD"),
+        ] {
+            let found = c.find(port).map(|e| e.name.as_str());
+            assert_eq!(found, Some(name), "port {port}");
+        }
+    }
+
     fn engine(cmd: Command) -> Action {
         Action::Engine(cmd)
     }
