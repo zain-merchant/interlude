@@ -14,8 +14,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261120c">
-  <link rel="stylesheet" href="demo/cards.css?v=20261120c">
+  <link rel="stylesheet" href="style.css?v=20261120e">
+  <link rel="stylesheet" href="demo/cards.css?v=20261120e">
   <script src="tune.js?v=20261118b"></script>
   <script>
     // The hero's layout (Split) and the nav's (bar to capsule), set before
@@ -652,7 +652,7 @@
   </footer>
 
   <!-- The feature cards' pictures (built from app/demo, see the README). -->
-  <script type="module" src="demo/cards.js?v=20261120c"></script>
+  <script type="module" src="demo/cards.js?v=20261120e"></script>
   <script>
     // The hero. The screenshot shows first; once the page has loaded, the
     // live app takes its place (unless the visitor prefers less motion).
@@ -1123,6 +1123,14 @@
     document.documentElement.dataset.stepnum = 'badge';
     window.tune?.select({ label: 'Install: step number', value: 'badge', options: [['badge', 'In a small badge'], ['plain', 'Plain, before the heading']],
       onInput: (v) => (document.documentElement.dataset.stepnum = v) });
+    // A feature heading's distance to its first row (can tuck under the
+    // first row's own padding when negative).
+    window.tune?.slider({ label: 'Features: heading to rows', min: -9, max: 24, step: 1, value: 0, unit: 'px', css: '--fh-gap' });
+    // The Controllers picture: its size, how high it sits, and how long its
+    // fade at the card's foot runs.
+    window.tune?.slider({ label: 'Controllers picture: size', min: 0.8, max: 1.5, step: 0.01, value: 1.15, css: '--ctl-size' });
+    window.tune?.slider({ label: 'Controllers picture: up or down', min: -40, max: 40, step: 1, value: 0, unit: 'px', css: '--ctl-y' });
+    window.tune?.slider({ label: 'Controllers picture: fade length', min: 0, max: 120, step: 2, value: 46, unit: 'px', css: '--ctl-fl' });
     // The feature cards apart, or one panel ruled into six.
     document.documentElement.dataset.flayout = 'apart';
     window.tune?.select({ label: 'Features: layout', value: 'apart', options: [['apart', 'Six cards, a little more room'], ['one', 'One card, ruled into six']],

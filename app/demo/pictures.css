@@ -532,7 +532,7 @@
 
 /* Controllers: a smaller controller with a shorter fade, so more of it
    shows; the connected tag centred between the card's top and the plug. */
-.p.p--ctl .p-body[data-bleed] { --fl: 46px; }
+.p.p--ctl .p-body[data-bleed] { --fl: var(--ctl-fl, 46px); }
 .p-ctl__plate { left: 34px; right: 34px; top: 54px; height: 124px; grid-template-columns: 1fr 60px 1fr; grid-template-rows: 70px auto; gap: 8px 10px; padding: 12px 14px; border-radius: 14px; }
 .p-ctl__jog { width: 70px; height: 70px; }
 .p-ctl__jog::after { inset: 7px; }
@@ -544,7 +544,7 @@
 .p-ctl .p-toast { top: -7.8px; }
 /* Controllers: the drawing at 115%, anchored at the top, where the lead comes in, so it grows down
    into the fade and the tag stays put. */
-.p-ctl { --ctl-scale: 1.15; transform: scale(var(--ctl-scale)); transform-origin: 50% 0; }
+.p-ctl { --ctl-scale: var(--ctl-size, 1.15); transform: translateY(var(--ctl-y, 0px)) scale(var(--ctl-scale)); transform-origin: 50% 0; }
 /* The connected tag keeps its own size: undo the drawing's scale. */
 .p-ctl .p-toast { transform: scale(calc(1 / var(--ctl-scale))); transform-origin: 50% 0; }
 /* Recording, stacked: a smaller Rec button, its waveform running to the
