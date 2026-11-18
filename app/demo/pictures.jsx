@@ -308,9 +308,9 @@ const STEM_STEPS = [[0], [0, 3], [3], [3, 1]];
 // the same every time.
 const STEM_STEP = 15.5;
 const STEM_LAG = 4.4;
-// Between one lane starting and the next: about 78% of the sweep across
+// Between one lane starting and the next: about 62% of the sweep across
 // the card's visible bars (some 25 of them, 640ms with the last bar's spring).
-const STEM_GAP = 500;
+const STEM_GAP = 400;
 const jitter = (i) => { const v = Math.sin(i * 12.9898 + 78.233) * 43758.5453; return v - Math.floor(v); };
 const stemDelay = (i) => Math.round((i + (i % 2) * (0.4 + 1.2 * jitter(i)) * STEM_LAG) * STEM_STEP);
 
@@ -320,9 +320,9 @@ export function Stems(play) {
       // Again: every stem comes back up, its bars growing back in their wave.
       rewind={async (a) => { await a.set({ muted: [] }); await a.wait(700); }}
       script={async (a) => {
-        // Each lane starts while the one before is about three quarters
-        // through its sweep (of the bars the card shows), so they overlap a
-        // little rather than taking turns; the last one is held.
+        // Each lane starts while the one before is about 60-65% of the way
+        // through its sweep (of the bars the card shows), so they overlap
+        // rather than taking turns; the last one is held.
         for (const [n, muted] of STEM_STEPS.entries()) {
           await a.set({ muted });
           await a.wait(n < STEM_STEPS.length - 1 ? STEM_GAP : 700);
