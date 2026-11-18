@@ -13,6 +13,9 @@ import { keymap } from './keymap.svelte.js';
 export const mac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform);
 export const MOD = mac ? '⌘' : 'Ctrl+';
 
+/** Hot cue slots per deck, as in the engine. */
+const HOT_CUES = 8;
+
 /** @type {Record<string, { code: string, shift?: boolean, mod?: boolean, label: string, hold?: boolean }>} */
 export const keys = {
   'deck.0.cue': { code: 'KeyQ', label: 'Q', hold: true },
@@ -30,7 +33,8 @@ export const keys = {
   'deck.0.where': { code: 'KeyT', label: 'T' },
   'deck.1.where': { code: 'KeyY', label: 'Y' },
   // Hot cues 1 to 4: number row, 1-4 for deck A and 7-0 for deck B. Hold
-  // on a paused deck to preview; ⇧ clears.
+  // on a paused deck to preview; ⇧ clears. Hot cues 5 to 8 have no keys
+  // until you give them some in Settings.
   ...hotCueKeys(0, ['Digit1', 'Digit2', 'Digit3', 'Digit4']),
   ...hotCueKeys(1, ['Digit7', 'Digit8', 'Digit9', 'Digit0']),
   // Stems have no keys until you give them some in Settings.
@@ -153,13 +157,17 @@ function stemKeys(deck) {
 
 function hotCueKeys(deck, codes) {
   const out = {};
-  codes.forEach((code, i) => {
-    const label = code.slice(-1);
-    out[`deck.${deck}.hotCue.${i}`] = { code, label, hold: true };
-    out[`deck.${deck}.hotCueClear.${i}`] = { code, shift: true, label: `⇧${label}` };
-  });
+  for (let i = 0; i < HOT_CUES; i++) {
+    const code = codes[i];
+    const label = code?.slice(-1);
+    out[`deck.${deck}.hotCue.${i}`] = code ? { code, label, hold: true } : null;
+    out[`deck.${deck}.hotCueClear.${i}`] = code ? { code, shift: true, label: `⇧${label}` } : null;
+  }
   return out;
 }
+
+/** True for a command that acts on key down and key up, even unbound by default. */
+const holds = (id) => !!keys[id]?.hold || /\.hotCue\.\d+$/.test(id);
 
 /** The key label for a command, for tooltips ("" if it has none). */
 export const keyLabel = (id) => binding(id)?.label ?? '';
@@ -173,7 +181,7 @@ export function commandFor(e) {
   const press = { code: e.code, shift: e.shiftKey, mod: e.metaKey || e.ctrlKey };
   for (const id of Object.keys(keys)) {
     const k = binding(id);
-    if (sameKey(k, press)) return { id, ...k, hold: keys[id]?.hold };
+    if (sameKey(k, press)) return { id, ...k, hold: holds(id) };
   }
   return null;
 }
