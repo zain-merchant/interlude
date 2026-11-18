@@ -29,6 +29,7 @@ mod mixer;
 mod null_output;
 #[cfg(feature = "output")]
 pub mod output;
+mod padfx;
 mod record;
 mod sampler;
 mod shared;
@@ -48,6 +49,7 @@ pub use fx::FxKind;
 pub use key::Key;
 pub use loudness::Loudness;
 pub use null_output::{start_null, NullOutput};
+pub use padfx::PadFx;
 pub use record::{RecordError, RecordingStatus};
 pub use sampler::{MAX_SAMPLE_SECS, SAMPLER_SLOTS};
 pub use shared::{

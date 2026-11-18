@@ -6,6 +6,7 @@ use crate::deck::Deck;
 use crate::dsp::{EQ_KILL_DB, EQ_MAX_DB};
 use crate::fx::{ChannelFx, FX_DEFAULT_BEATS};
 use crate::mixer::Mixer;
+use crate::padfx::PadFxUnit;
 use crate::record::{new_recorder, RecordTap, Recorder};
 use crate::sampler::{Sampler, SAMPLER_SLOTS};
 use crate::{Command, RecordError, RecordingStatus, SharedState, Track, NUM_DECKS};
@@ -27,6 +28,7 @@ const GARBAGE_QUEUE: usize = 64;
 /// The audio-thread half of the engine. See the crate docs.
 pub struct Engine {
     decks: [Deck; NUM_DECKS],
+    pad_fx: [PadFxUnit; NUM_DECKS],
     fx: [ChannelFx; NUM_DECKS],
     mixer: Mixer,
     sampler: Sampler,
@@ -71,6 +73,7 @@ pub fn new_engine(sample_rate: u32) -> (Engine, EngineHandle) {
     let (record, recorder) = new_recorder(sample_rate);
     let engine = Engine {
         decks: std::array::from_fn(|_| Deck::new(sr)),
+        pad_fx: std::array::from_fn(|_| PadFxUnit::new(sr)),
         fx: std::array::from_fn(|_| ChannelFx::new(sr)),
         mixer: Mixer::new(sr),
         sampler: Sampler::new(sr),
@@ -109,10 +112,14 @@ impl Engine {
         let mut peaks = [0f32; NUM_DECKS];
         for (d, deck) in self.decks.iter_mut().enumerate() {
             let buf = &mut self.scratch[d][..n];
+            // Where the block starts on the beatgrid, for pad FX that land
+            // on the beat.
+            let beat = deck.beat_info().map(|b| b.beat);
             deck.render(buf);
             // Time effects to the tempo the deck plays at, not the hand on
             // the platter, so a scratch doesn't warp the echo.
             let bpm = deck.beat_info().map(|b| b.bpm * deck.rate.max(0.25));
+            self.pad_fx[d].process(buf, bpm, beat);
             peaks[d] = self.fx[d].process(buf, bpm);
         }
         let sampler = &mut self.sampler_buf[..n];
@@ -173,6 +180,7 @@ impl Engine {
         use Command::*;
         match cmd {
             Load { deck, track } => {
+                self.pad_fx[deck.index()].release_all();
                 let duration = track.duration_secs();
                 let old = self.decks[deck.index()].load(Some(track));
                 self.recycle(old);
@@ -183,6 +191,7 @@ impl Engine {
                     .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
             }
             Eject { deck } => {
+                self.pad_fx[deck.index()].release_all();
                 let old = self.decks[deck.index()].load(None);
                 self.recycle(old);
                 let s = &self.shared.decks[deck.index()];
@@ -297,6 +306,8 @@ impl Engine {
                 fx.set_beats(beats);
                 self.shared.decks[deck.index()].fx_beats.store(fx.beats());
             }
+            PadFxPress { deck, fx } => self.pad_fx[deck.index()].press(fx),
+            PadFxRelease { deck, fx } => self.pad_fx[deck.index()].release(fx),
             SetFader { deck, value } => {
                 let value = value.clamp(0.0, 1.0);
                 self.mixer.set_fader(deck.index(), value);
@@ -390,7 +401,7 @@ impl Engine {
 
     fn publish(&self) {
         use std::sync::atomic::Ordering::Relaxed;
-        for (deck, s) in self.decks.iter().zip(&self.shared.decks) {
+        for ((deck, s), pad_fx) in self.decks.iter().zip(&self.shared.decks).zip(&self.pad_fx) {
             let sr = deck.source_rate();
             s.position.store(deck.pos / sr);
             s.cue.store(deck.cue / sr);
@@ -412,6 +423,8 @@ impl Engine {
             s.loop_beats.store(deck.loop_beats);
             s.stems.store(deck.stems, Relaxed);
             s.slip.store(deck.slip, Relaxed);
+            s.pad_fx
+                .store(pad_fx.held().map_or(0, |f| f as u8 + 1), Relaxed);
             s.slip_position.store(secs(deck.slip_pos));
         }
         for (i, s) in self.shared.sampler.slots.iter().enumerate() {

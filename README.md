@@ -19,7 +19,9 @@ the report it saves.
   key lock; scrolling three-band waveforms with a full-track overview.
 - **Mixer and effects:** trim, 3-band EQ with full kills, filter,
   crossfader, headphone cue with a cue/master blend; echo, reverb, flanger
-  and phaser timed to the beat; auto gain so tracks start level; a master
+  and phaser timed to the beat; sixteen hold-to-play pad FX (rolls,
+  trans, brake, spin back, sweeps and more) on the controller's PAD FX
+  pads; auto gain so tracks start level; a master
   limiter so the output never clips.
 - **Stems:** mute or solo vocals, melody, bass and drums on each deck.
   Tracks are split on your Mac, nothing is uploaded.

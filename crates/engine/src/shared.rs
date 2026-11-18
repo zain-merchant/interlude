@@ -1,6 +1,6 @@
 use std::sync::atomic::{AtomicBool, AtomicU32, AtomicU64, AtomicU8, Ordering::Relaxed};
 
-use crate::{FxKind, Key, HOT_CUES, NUM_DECKS, SAMPLER_SLOTS};
+use crate::{FxKind, Key, PadFx, HOT_CUES, NUM_DECKS, SAMPLER_SLOTS};
 
 /// An `f64` stored in an `AtomicU64`.
 #[derive(Debug, Default)]
@@ -62,6 +62,8 @@ pub(crate) struct DeckShared {
     pub slip: AtomicBool,
     /// Seconds, or negative for none.
     pub slip_position: AtomicF64,
+    /// The held pad FX, as its index + 1, or 0 for none.
+    pub pad_fx: AtomicU8,
 }
 
 #[derive(Debug, Default)]
@@ -198,6 +200,8 @@ pub struct DeckSnapshot {
     /// or pause interrupting it, in seconds: playback picks up from here
     /// when that ends. `None` unless slip is holding.
     pub slip_position: Option<f64>,
+    /// The pad FX whose pad is held.
+    pub pad_fx: Option<PadFx>,
 }
 
 impl SharedState {
@@ -235,6 +239,11 @@ impl SharedState {
             stems: d.stems.load(Relaxed),
             slip: d.slip.load(Relaxed),
             slip_position: some(d.slip_position.load()),
+            pad_fx: d
+                .pad_fx
+                .load(Relaxed)
+                .checked_sub(1)
+                .and_then(|i| PadFx::from_index(i as usize)),
         }
     }
 
