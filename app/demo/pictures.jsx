@@ -94,11 +94,15 @@ function bezier(x1, y1, x2, y2) {
 const sink = bezier(0.77, 0, 0.175, 1);
 
 /** Eases a number in state from `from` to `to` over `ms`, a frame at a time. */
+// One step a frame, on the screen's own frame clock, timed from the first
+// frame drawn: a 16ms timer drifts against the screen and judders.
+const frame = () => new Promise((r) => requestAnimationFrame(r));
 async function tween(a, key, from, to, ms, ease = (t) => 1 - (1 - t) ** 3) {
-  const steps = Math.max(1, Math.round(ms / 16));
-  for (let i = 1; i <= steps; i++) {
-    a.put({ [key]: from + (to - from) * ease(i / steps) });
-    await a.wait(16);
+  const t0 = await frame();
+  for (let now = t0; ; now = await frame()) {
+    const u = Math.min(1, (now - t0) / ms);
+    a.put({ [key]: from + (to - from) * ease(u) });
+    if (u >= 1) return;
   }
 }
 
