@@ -17,6 +17,7 @@
   import { announce } from './announce.svelte.js';
   import { keyName, keyLongName, camelot, playingKey } from './key.js';
   import { toggleSlip, beatJump, hasGrid, beatsLabel } from './performance.js';
+  import { findPhrases, phraseAt, PHRASE_NAMES } from './phrases.js';
 
   /** @type {{ deck: number, onload: (deck: number, track: any) => void, onreveal: (path: string) => void, onsettings?: (page: string) => void }} */
   let { deck, onload, onreveal, onsettings } = $props();
@@ -118,6 +119,10 @@
   const atCue = $derived(!!t && !d.playing && Math.abs(d.position - d.cue) < 0.01);
   const pk = $derived(t ? playingKey(d.key, d.rate, d.keylock) : null);
   const canSync = $derived(!!t && d.bpm > 0 && engine.decks[1 - deck].bpm > 0);
+  // Phrases (intro, build, drop...) from the waveform on the grid; found
+  // again when the grid changes.
+  const phrases = $derived(t ? findPhrases(t.bins, t.binsPerSec, t.beatgrid, t.duration) : []);
+  const now = $derived(t?.beatgrid ? phraseAt(phrases, d.position, t.beatgrid) : null);
 
   let lastTouch = 0;
 
@@ -234,10 +239,24 @@
       </div>
     </header>
 
-    <div class="overview"><Waveform {deck} mode="overview" /></div>
+    <div class="overview">
+      <Waveform {deck} mode="overview" />
+      {#if phrases.length}
+        <div class="phrases" aria-hidden="true">
+          {#each phrases as p (p.start)}
+            <span class="phrase {p.kind}" style:left="{(p.start / t.duration) * 100}%" style:width="{((p.end - p.start) / t.duration) * 100}%"></span>
+          {/each}
+        </div>
+      {/if}
+    </div>
 
     <div class="times">
       <span class="el num"><span class="sr">Elapsed </span>{fmt(d.position)}</span>
+      {#if now}
+        <span class="now {now.phrase.kind}" use:tip={() => `${PHRASE_NAMES[now.phrase.kind]}: ${now.phrase.bars} bars, energy ${now.phrase.energy} of 10. Found from the waveform on the beatgrid`}>
+          {PHRASE_NAMES[now.phrase.kind]} · <span class="num">{now.barsLeft}</span> {now.barsLeft === 1 ? 'bar' : 'bars'} left
+        </span>
+      {/if}
       <span class="rm num"><span class="sr">Remaining </span>{fmt(d.position - d.duration)}</span>
     </div>
 
@@ -430,6 +449,34 @@
     font-weight: 300;
     color: var(--fg-2);
   }
+  /* Phrases: a thin strip along the bottom of the overview, and the one
+     playing between the times. */
+  .phrases {
+    position: absolute;
+    inset: auto 0 0 0;
+    height: 3px;
+    pointer-events: none;
+  }
+  .phrase {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    background: var(--phrase);
+    box-shadow: inset -1px 0 0 var(--well);
+  }
+  .now {
+    font-size: var(--t-xs);
+    color: var(--phrase);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .intro, .outro { --phrase: var(--fg-4); }
+  .verse { --phrase: var(--fg-3); }
+  .breakdown { --phrase: var(--hc-2); }
+  .build { --phrase: var(--warn); }
+  .drop { --phrase: var(--hc-3); }
+  .now.intro, .now.outro, .now.verse { color: var(--fg-2); }
 
   /* Tabs, the mode row and the transport share the deck's four columns, so
      the tab bar spans the deck and every edge lines up. */
