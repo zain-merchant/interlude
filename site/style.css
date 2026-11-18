@@ -1669,3 +1669,25 @@ html[data-flayout="one"] .group { border-radius: 0 !important; box-shadow: none 
   content: ''; position: absolute; z-index: -1; inset: 10% 4% -6%; border-radius: 50%; pointer-events: none;
   background: linear-gradient(90deg, rgb(110 170 255 / 0.7), rgb(255 160 90 / 0.65)); filter: blur(56px); opacity: 0.85;
 }
+
+/* Film grain over the record behind the hero, under everything else: the
+   same box as the record's canvas, the noise tile (index.html builds it)
+   repeated at --grain-size, fading out toward the features (--grain-fade:
+   1 fades it over the last third, 0 keeps it to the end). */
+.grain {
+  position: absolute; left: 0; top: 0; z-index: -1; width: 100%; height: min(2000px, 230vh); pointer-events: none;
+  background-image: var(--grain-img); background-size: var(--grain-size, 200px);
+  /* (Coming in under the nav, so the bar's edge never cuts it.) */
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, transparent 60px, #000 220px, #000 calc(100% - 66% * var(--grain-fade, 1)), transparent);
+  mask-image: linear-gradient(to bottom, transparent 0, transparent 60px, #000 220px, #000 calc(100% - 66% * var(--grain-fade, 1)), transparent);
+}
+/* Film: the grain jumps to a new place eight times a second, as each frame
+   of film has its own; slow: it drifts. */
+.grain[data-move="film"] { animation: grain-film 1s steps(8) infinite; }
+.grain[data-move="slow"] { animation: grain-slow 20s linear infinite; }
+@keyframes grain-film {
+  0% { background-position: 0 0; } 12.5% { background-position: -37px 21px; } 25% { background-position: 53px -44px; } 37.5% { background-position: -71px -9px; }
+  50% { background-position: 19px 63px; } 62.5% { background-position: -48px 37px; } 75% { background-position: 66px 12px; } 87.5% { background-position: -13px -58px; } 100% { background-position: 0 0; }
+}
+@keyframes grain-slow { to { background-position: 200px 120px; } }
+@media (prefers-reduced-motion: reduce) { .grain { animation: none !important; } }
