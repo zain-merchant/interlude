@@ -215,8 +215,8 @@
 .p-dmg__bar span { position: absolute; left: 0; right: 0; text-align: center; font-size: 12px; font-weight: 600; color: rgb(255 255 255 / 0.78); pointer-events: none; }
 /* The window's body: the two items at fixed places (so the pointer and the
    drag image can be steered to them), the old arrow left faint between. */
-.p-dmg__body { position: relative; height: 94px; overflow: hidden; }
-.p-dmg__item { position: absolute; top: 5px; width: 84px; margin-left: -42px; display: grid; grid-template-rows: 64px auto; align-items: center; justify-items: center; gap: 6px; font-size: 12px; color: rgb(255 255 255 / 0.85); }
+.p-dmg__body { position: relative; height: 110px; overflow: hidden; }
+.p-dmg__item { position: absolute; top: 12px; width: 84px; margin-left: -42px; display: grid; grid-template-rows: 64px auto; align-items: center; justify-items: center; gap: 6px; font-size: 12px; color: rgb(255 255 255 / 0.85); }
 .p-dmg__item img { position: relative; }
 .p-dmg__item span { padding: 0 5px; border-radius: 4px; line-height: 16px; transition: background-color 120ms, color 120ms; }
 /* Selected, as Finder draws it: a grey rounded tint behind the icon (concentric with its squircle: about 12px of corner plus the 5px between) and the name on an accent pill. */
@@ -230,7 +230,7 @@
 /* The drag image: the same size, about half there; gone almost at once on release. */
 .p-dmg__ghost { z-index: 3; pointer-events: none; opacity: 0; transition: opacity 100ms ease-out; }
 .p-dmg__ghost[data-on] { opacity: 0.55; transition-duration: 80ms; }
-.p-dmg__arrow { position: absolute; left: 50%; top: 31px; width: 44px; height: 12px; margin-left: -22px; fill: none; stroke: rgb(255 255 255 / 0.12); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.p-dmg__arrow { position: absolute; left: 50%; top: 38px; width: 44px; height: 12px; margin-left: -22px; fill: none; stroke: rgb(255 255 255 / 0.12); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 /* The pointer, its tip at its box's top left; the copy's green "+" at its lower right. */
 .p-cursor { position: absolute; left: 0; top: 0; z-index: 4; pointer-events: none; will-change: transform; }
 .p-cursor svg { display: block; margin: -1.5px 0 0 -1.5px; overflow: visible; filter: drop-shadow(0 1px 1.5px rgb(0 0 0 / 0.45)); }
