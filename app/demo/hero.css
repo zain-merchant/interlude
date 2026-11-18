@@ -153,7 +153,7 @@ svg.links { position: absolute; inset: 0; z-index: 255; pointer-events: none; ov
 .app-host .pending { display: none !important; }
 /* The deeper Club board sits a little higher, so it still ends above the toggle. */
 /* Club: its front edge down at the frame's foot. */
-#hero[data-hand="controller"] .desk:has(.hw[data-v="club"]) { top: 632px; }
+#hero[data-hand="controller"] .desk:has(.hw[data-v="club"]) { top: 650px; }
 
 /* Paused while off screen (pause.js): CSS animations stand still too. */
 html[data-paused] *, html[data-paused] *::before, html[data-paused] *::after { animation-play-state: paused !important; }
@@ -170,3 +170,15 @@ html[data-paused] *, html[data-paused] *::before, html[data-paused] *::after { a
    blurs share a layer with the decks, and every meter or readout that
    changes over them has the blur worked out again around it. */
 .bd { will-change: transform; }
+
+/* Controller mode: the app's shadow small and soft, so no dark patch
+   shows round it where it filled the frame; and the frame's foot fades
+   out over 64px, so the controller rises out of a soft edge rather than
+   a cut. The fade eases in with the switch (--foot-fade is animatable). */
+@property --foot-fade { syntax: '<length>'; inherits: false; initial-value: 0px; }
+#hero { --foot-fade: 0px; transition: --foot-fade var(--glide-ms) var(--glide);
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - var(--foot-fade)), transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 calc(100% - var(--foot-fade)), transparent 100%); }
+#hero[data-hand="controller"] { --foot-fade: 64px; }
+.app-host { transition: transform var(--glide-ms) var(--glide), box-shadow var(--glide-ms) var(--glide); }
+#hero[data-hand="controller"] .app-host { box-shadow: 0 18px 40px rgb(0 0 0 / 0.28); }
