@@ -1487,3 +1487,24 @@ html:is([data-fhead="quiet"], [data-fhead="both"]) .group li span { color: var(-
 html[data-mark="underline"] .group h3 { flex-direction: column; align-items: flex-start; gap: 10px; }
 html[data-mark="underline"] .group h3::after { content: ''; width: 22px; height: 2px; border-radius: 1px; background: var(--mark); box-shadow: 0 0 10px var(--mark); }
 html[data-mark="count"] .group h3::after { content: attr(data-count); margin-left: auto; padding: 2px 8px; border-radius: 999px; font: 500 12px/18px var(--mono); color: var(--mark); background: color-mix(in srgb, var(--mark) 12%, transparent); }
+
+/* Note: ruled (the default). Set down a touch crooked to the right, on a
+   college-ruled page: faint blue rules every 24px with the text sitting on
+   them (the note runs on a 24px line, the placeholder lines one to a
+   rule), a soft red double margin line down the left, and the signature
+   on the right, a little smaller. */
+html[data-note="ruled"] .founder {
+  rotate: 1.4deg; transform-origin: 50% 0;
+  padding: 24px 24px 18px 34px; line-height: 24px;
+  background:
+    linear-gradient(90deg, transparent 18px, rgb(240 120 110 / 0.22) 18px 19px, transparent 19px 21px, rgb(240 120 110 / 0.14) 21px 22px, transparent 22px),
+    repeating-linear-gradient(to bottom, transparent 0 23px, rgb(150 180 235 / 0.09) 23px 24px) 0 24px / 100% calc(100% - 48px) no-repeat,
+    var(--panel);
+  box-shadow: inset 0 0 0 1px var(--line), 0 18px 40px -18px rgb(0 0 0 / 0.7);
+}
+html[data-note="ruled"] .founder h3 { margin: 0 0 24px; line-height: 24px; }
+html[data-note="ruled"] .founder-body { grid-auto-rows: 24px; gap: 0; margin-bottom: 24px; }
+html[data-note="ruled"] .founder-body i { align-self: end; margin-bottom: 6px; height: 8px; }
+html[data-note="ruled"] .founder-body i.gap { margin-top: 0; grid-row: span 2; }
+html[data-note="ruled"] .founder-ask { margin: 0; }
+html[data-note="ruled"] .founder-sig { width: 124px; margin: 2px -6px 0 auto; }
