@@ -61,12 +61,19 @@
   text-transform: uppercase;
   color: rgb(28 28 32 / 0.62);
   transform-origin: 50% 0;
-  transform: translateY(260px) rotateX(58deg);
+  /* Away: a little above where it lands (--hw-from, negative is above),
+     unseen. Coming, it settles down into place on `glide` (springs.css)
+     with the screen tilting back, fading in and coming into focus (the
+     desk's blur) over the first part. Going, it lifts back the same way,
+     quicker. */
+  transform: translateY(var(--hw-from, -40px)) rotateX(30deg) scale(0.985);
   opacity: 0;
-  /* It rises on `glide` (springs.css) with the screen tilting back, fading in on `smooth`. */
-  transition: transform var(--glide-ms) var(--glide), opacity var(--smooth-ms) var(--smooth);
+  transition: transform var(--smooth-ms) var(--smooth), opacity 240ms cubic-bezier(0.4, 0, 1, 1);
 }
-.desk[data-shown] .hw { transform: rotateX(30deg); opacity: 1; }
+.desk[data-shown] .hw { transform: rotateX(30deg); opacity: 1; transition: transform var(--glide-ms) var(--glide), opacity 420ms cubic-bezier(0.2, 0, 0, 1); }
+/* (The blur on the desk, round the controller's 3D, so it isn't flattened.) */
+.desk { filter: blur(var(--hw-blur, 10px)); transition: filter 240ms cubic-bezier(0.4, 0, 1, 1); }
+.desk[data-shown] { filter: none; transition: filter 520ms cubic-bezier(0.2, 0, 0, 1); }
 .hw-badge { display: none; }
 
 /* ---------- Shared parts ---------- */
@@ -461,6 +468,7 @@
    only a little, the way a photo of a real controller does; the steeper
    tilt gives back the depth a close eye was faking with keystone. */
 .desk[data-shown] .hw[data-v="club"] { transform: rotateX(40deg); }
+.hw[data-v="club"] { transform: translateY(var(--hw-from, -40px)) rotateX(40deg) scale(0.985); }
 .desk:has(.hw[data-v="club"]) { perspective: 3000px; transform: scale(0.52); }
 /* Club: legible keys and buttons. */
 .hw[data-v="club"] .hw-key { color: rgb(240 238 232 / 0.88); font-size: 9px; font-weight: 600; }
@@ -501,8 +509,8 @@
     inset 0 -2px 1px -1px rgb(255 255 255 / 0.7),
     inset 0 -5px 4px -3px rgb(255 255 255 / 0.18);
 }
-.desk:has(.hw[data-v="club"]) { opacity: 0; transition: top var(--glide-ms) var(--glide), opacity var(--smooth-ms) var(--smooth); }
-.desk[data-shown]:has(.hw[data-v="club"]) { opacity: 1; }
+.desk:has(.hw[data-v="club"]) { opacity: 0; transition: opacity var(--smooth-ms) var(--smooth), filter 240ms cubic-bezier(0.4, 0, 1, 1); }
+.desk[data-shown]:has(.hw[data-v="club"]) { opacity: 1; transition: opacity var(--smooth-ms) var(--smooth), filter 520ms cubic-bezier(0.2, 0, 0, 1); }
 .hw[data-v="club"]::after {
   content: ''; position: absolute; left: 0; right: 0; top: calc(100% - 26px); height: var(--body);
   /* Top corners: the plate's own 26px corners as they're seen from here

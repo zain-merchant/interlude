@@ -471,14 +471,14 @@ summary::-webkit-details-marker { display: none; }
    box and turns about its centre into the cross. Both bars are solid and
    the whole mark is faded at once, so where they cross isn't any brighter;
    2px bars in a 12px box land on whole pixels either side of the centre. */
-/* Turned into the cross, its bars lengthen by the square root of two, so
-   the cross spans the same 12px as the plus instead of looking smaller. */
+/* Open, it's the same mark turned 45 degrees into a cross: the same bars,
+   the same length. */
 summary::after {
   content: ''; flex: none; width: 18px; height: 18px; margin-right: -3px; align-self: center; opacity: 0.5;
   background: linear-gradient(var(--fg), var(--fg)) center / 12px 2px no-repeat, linear-gradient(var(--fg), var(--fg)) center / 2px 12px no-repeat;
-  transition: transform var(--snappy-ms) var(--snappy), background-size var(--snappy-ms) var(--snappy);
+  transition: transform var(--snappy-ms) var(--snappy);
 }
-details[open]:not([data-closing]) summary::after { transform: rotate(45deg); background-size: 17px 2px, 2px 17px; }
+details[open]:not([data-closing]) summary::after { transform: rotate(45deg); }
 details p { margin: 0; padding-bottom: 20px; color: var(--fg-2); max-width: 62ch; }
 
 /* Footer */
@@ -1606,9 +1606,13 @@ html[data-note="sleeve"] .founder::after {
     /* Ring wear: the faint round mark a record leaves pressed into its
        sleeve, a hair lighter, where its rim sits. */
     radial-gradient(circle at var(--hx) var(--hy), transparent 112px, rgb(255 255 255 / 0.16) 115.5px, rgb(80 64 40 / 0.06) 117px, transparent 120px),
-    /* Paper: a fine grain, and long soft fibres running across it. */
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.3 0 0 0 0 0.25 0 0 0 0 0.18 0 0 0 0.16 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E"),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.012 0.35' numOctaves='2' seed='9' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.35 0 0 0 0 0.3 0 0 0 0 0.22 0 0 0 0.18 -0.04'/%3E%3C/filter%3E%3Crect width='320' height='320' filter='url(%23f)'/%3E%3C/svg%3E"),
+    /* Wear: its corners and edges scuffed lighter where it's been
+       handled, the rim a little frayed, and two faint old stains. */
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 292 292' preserveAspectRatio='none'%3E%3Cdefs%3E%3Cfilter id='g' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='2' seed='5'/%3E%3CfeColorMatrix values='0 0 0 0 1  0 0 0 0 0.99  0 0 0 0 0.96  0 0 0 2.4 -1'/%3E%3CfeComposite in2='SourceGraphic' operator='in'/%3E%3C/filter%3E%3CradialGradient id='c'%3E%3Cstop offset='0' stop-color='%23fff' stop-opacity='1'/%3E%3Cstop offset='1' stop-color='%23fff' stop-opacity='0'/%3E%3C/radialGradient%3E%3Cfilter id='s' x='-30%25' y='-30%25' width='160%25' height='160%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.03' numOctaves='2' seed='7'/%3E%3CfeDisplacementMap in='SourceGraphic' scale='16' xChannelSelector='R' yChannelSelector='G'/%3E%3CfeGaussianBlur stdDeviation='1.1'/%3E%3C/filter%3E%3C/defs%3E%3Cg filter='url%28%23s%29'%3E%3Ccircle cx='236' cy='46' r='30' fill='%237a5a30' fill-opacity='0.03' stroke='%236e4f28' stroke-opacity='0.05' stroke-width='2'/%3E%3Cellipse cx='10' cy='156' rx='20' ry='15' fill='%237a5a30' fill-opacity='0.045'/%3E%3C/g%3E%3Cg filter='url%28%23g%29' opacity='0.6'%3E%3Ccircle cx='0' cy='0' r='24' fill='url%28%23c%29'/%3E%3Ccircle cx='292' cy='0' r='18' fill='url%28%23c%29'/%3E%3Ccircle cx='0' cy='292' r='30' fill='url%28%23c%29'/%3E%3Ccircle cx='292' cy='292' r='22' fill='url%28%23c%29'/%3E%3Crect x='0' y='0' width='292' height='292' fill='none' stroke='%23fff' stroke-width='4.5'/%3E%3Crect x='289' y='0' width='3' height='292' fill='%23fff'/%3E%3C/g%3E%3C/svg%3E") 0 0 / 100% 100% no-repeat,
+    /* Paper: a grain (no fibres, so no streaks), and a soft, even
+       mottling under it. */
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.62' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.3 0 0 0 0 0.25 0 0 0 0 0.18 0 0 0 0.19 0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='m'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.028' numOctaves='3' seed='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.4 0 0 0 0 0.32 0 0 0 0 0.2 0 0 0 0.22 -0.06'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23m)'/%3E%3C/svg%3E"),
     /* Its edges a touch darker, handled. */
     radial-gradient(130% 130% at 50% 45%, transparent 60%, rgb(80 64 40 / 0.12)),
     linear-gradient(160deg, #ece6d8, #e2dacb);

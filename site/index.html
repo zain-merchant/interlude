@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261121x">
+  <link rel="stylesheet" href="style.css?v=20261121z">
   <link rel="stylesheet" href="demo/cards.css?v=20261121j">
   <script src="tune.js?v=20261120v"></script>
   <script>
@@ -993,6 +993,8 @@
       // tips its top toward you) and where it scales from.
       const heroVars = { '--tilt': '-3deg', '--anchor': '50% 0%' };
       const sendVars = () => live.contentWindow?.postMessage({ interlude: 'css', vars: heroVars }, '*');
+      window.tune?.slider({ label: 'Hero: controller comes in from (px, minus is above)', min: -160, max: 160, step: 2, value: -40, unit: 'px', onInput: (v) => { heroVars['--hw-from'] = `${v}px`; sendVars(); } });
+      window.tune?.slider({ label: 'Hero: controller blur as it comes in', min: 0, max: 30, step: 0.5, value: 10, unit: 'px', onInput: (v) => { heroVars['--hw-blur'] = `${v}px`; sendVars(); } });
       window.tune?.slider({ label: 'Hero: screen tilt in controller mode', min: -10, max: 10, step: 0.5, value: -3, unit: '°', onInput: (v) => { heroVars['--tilt'] = `${v}deg`; sendVars(); } });
       window.tune?.select({ label: 'Hero: screen scales from', value: 'top', options: [['top', 'Its top'], ['center', 'Its middle'], ['bottom', 'Its bottom']], onInput: (v) => { heroVars['--anchor'] = { top: '50% 0%', center: '50% 50%', bottom: '50% 100%' }[v]; sendVars(); } });
       const sendFps = () => live.contentWindow?.postMessage({ interlude: 'fps', fps: appFps }, '*');
