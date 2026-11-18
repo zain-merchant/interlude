@@ -771,7 +771,9 @@ html[data-nav="morph"] .nav-dl path { fill: none; stroke: currentColor; stroke-w
    is one column. */
 .hero-side { display: contents; }
 .hero .dmg, .meta .fi { display: none; }
-html[data-hero][data-herotext] .tagline { max-width: 9.8em; font-size: clamp(44px, 4.3vw, 62px); letter-spacing: -0.042em; line-height: 1.04; }
+/* (The page's two display headings, this and the open source card's, share
+   one size, tracking and leading.) */
+html[data-hero][data-herotext] .tagline { max-width: 9.8em; font-size: clamp(44px, 4.3vw, 62px); letter-spacing: -0.045em; line-height: 1.02; }
 html[data-hero][data-herotext] .lede {
   grid-area: lede; max-width: 21em; margin: 18px 0 0; color: rgb(236 234 228 / 0.86);
   font-size: clamp(23px, 1.9vw, 27px); line-height: 1.3; letter-spacing: -0.016em;
@@ -1082,7 +1084,7 @@ html[data-hero][data-herotext="card"]:is([data-cardblock="caption"], [data-cardb
 html[data-hero][data-herotext="card"]:is([data-cardblock="caption"], [data-cardblock="sentence"]) .cta { margin-top: 0; }
 html[data-hero][data-herotext="card"][data-cardblock="caption"] .dl-cap,
 html[data-hero][data-herotext="card"][data-cardblock="sentence"] .dl-cap2 {
-  display: flex; grid-area: req; margin: 14px 0 0; color: rgb(236 234 228 / 0.7); font-size: 13px; line-height: 18px;
+  display: flex; grid-area: req; margin: 14px 0 0; color: var(--fg-2); font-size: 13px; line-height: 18px;
   text-shadow: 0 1px 12px rgb(9 9 11 / 0.9);
 }
 html[data-hero][data-herotext="card"][data-cardblock="sentence"] .dl-cap2 { display: block; max-width: 300px; text-wrap: balance; }
@@ -1097,7 +1099,7 @@ html[data-hero][data-herotext="card"][data-cardblock="sentence"] .dl-cap2 { disp
    and a change's area ("Mappings:") is quieter than the change itself. */
 .oss:is([data-look="tight"], [data-look^="doors"], [data-look^="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .oss-log { padding: 0; }
 .oss:is([data-look="tight"], [data-look^="doors"], [data-look^="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .oss-log::before { content: none; }
-.oss:is([data-look="tight"], [data-look^="doors"], [data-look^="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .oss-log h4 { margin: 0; padding: 0 0 10px; border-image: none; border-bottom: 1px solid var(--oss-rule); font-size: 12.5px; line-height: 16px; color: var(--oss-dim); }
+.oss:is([data-look="tight"], [data-look^="doors"], [data-look^="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .oss-log h4 { margin: 0; padding: 0 0 10px; border-image: none; border-bottom: 1px solid var(--oss-rule); font-size: 13px; line-height: 18px; color: var(--oss-dim); }
 .oss:is([data-look="tight"], [data-look^="doors"], [data-look^="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .oss-commits li + li { border-image: none; border-top: 1px solid var(--oss-rule2); }
 .oss:is([data-look="tight"], [data-look^="doors"], [data-look^="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .oss-commits a { padding: 9px 0; font-size: 14px; color: var(--oss-ink); transition: color 150ms ease; }
 .oss:is([data-look="tight"], [data-look^="doors"], [data-look^="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .oss-commits a:hover .oss-msg { color: var(--oss-strong); text-decoration: none; }
@@ -1121,11 +1123,13 @@ html[data-hero][data-herotext="card"][data-cardblock="sentence"] .dl-cap2 { disp
 .oss:is([data-look^="poster"], [data-look="cards"]) .btn.ghost { background: transparent; color: var(--fg); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.16); }
 .oss:is([data-look^="poster"], [data-look="cards"]) .btn.ghost:hover { background: rgb(255 255 255 / 0.06); }
 /* The buttons, one size smaller than the hero's, the second a ring only. */
-.oss:is([data-look="tight"], [data-look^="doors"], [data-look^="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .btn { height: 38px; padding: 0 15px; border-radius: 10px; font-size: 14.5px; }
+/* (The site's standard button: 40px, 15px type, the same as everywhere.) */
+.oss:is([data-look="tight"], [data-look^="doors"], [data-look^="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .btn { height: 40px; padding: 0 16px; border-radius: 10px; font-size: 15px; }
 .oss:is([data-look="tight"], [data-look^="doors"], [data-look="feed"], [data-look="gitlog"]) .btn.ghost { background: transparent; box-shadow: inset 0 0 0 1px rgb(11 11 13 / 0.16); }
 .oss:is([data-look="tight"], [data-look^="doors"], [data-look="feed"], [data-look="gitlog"]) .btn.ghost:hover { background: rgb(11 11 13 / 0.05); }
 .oss:is([data-look="tight"], [data-look^="doors"], [data-look^="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) h3 { font-size: 28px; letter-spacing: -0.028em; margin: 0 0 10px; }
-.oss:is([data-look="tight"], [data-look^="doors"], [data-look^="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) p { font-size: 15px; max-width: 25em; margin: 0 0 22px; }
+/* (Body copy is 16px, as in every card.) */
+.oss:is([data-look="tight"], [data-look^="doors"], [data-look^="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) p { font-size: 16px; max-width: 24em; margin: 0 0 22px; }
 
 /* 1. Tight: the current one, edited. The heading's top lines up with the
    updates' header and the buttons' foot with the last change, so both
@@ -1316,7 +1320,7 @@ body:has(.oss[data-look="poster-open"]) .faq details:last-child { border-bottom:
    lines; the doors show the four latest changes, so the idea door isn't
    left mostly empty beside them. */
 .oss:is([data-look="poster-card"], [data-look="poster-light"]) { grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); }
-.oss:is([data-look="poster-card"], [data-look="poster-light"]) h3 { font-size: clamp(40px, 4.4vw, 62px); }
+.oss:is([data-look="poster-card"], [data-look="poster-light"]) h3 { font-size: clamp(44px, 4.3vw, 62px); line-height: 1.02; }
 .oss[data-look^="doors"] .oss-commits li:nth-child(n + 5) { display: none; }
 
 /* The open source card's own gap above it, the same as between sections. */
