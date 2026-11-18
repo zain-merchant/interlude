@@ -44,7 +44,7 @@
     document.head.append(css);
     lib = new Promise((done, fail) => {
       const s = document.createElement('script');
-      s.src = `${base}vendor/dialkit/browser.global.js?v=2`;
+      s.src = `${base}vendor/dialkit/browser.global.js?v=3`;
       s.onload = () => (window.DialKit ? done(window.DialKit) : fail());
       s.onerror = fail;
       document.head.append(s);
