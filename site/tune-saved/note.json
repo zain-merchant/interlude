@@ -1,0 +1,25 @@
+{
+  "note": "The note's record sleeve as tuned in DialKit (Note panel), copied from the browser on 2026-11-21 and made the code's defaults.",
+  "values": {
+    "style": "sleeve",
+    "side A label": "#fb8b38",
+    "side B label": "#5ed9f8",
+    "record speed when out (rpm)": 9.7,
+    "how far the record comes out (%)": 42,
+    "record slides out": {
+      "visualDuration": 0.5,
+      "bounce": 0.12
+    },
+    "record spins up": {
+      "visualDuration": 1.1,
+      "bounce": 0
+    },
+    "record slows down": {
+      "visualDuration": 1.6,
+      "bounce": 0
+    },
+    "record flip time (s)": 0.6,
+    "record flip bounce": 0.22,
+    "sleeve corner radius (px)": 4
+  }
+}
