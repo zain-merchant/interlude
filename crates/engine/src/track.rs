@@ -190,6 +190,11 @@ pub struct TrackSummary {
     pub duration: f64,
     /// Detected tempo, if the track has a clear pulse.
     pub bpm: Option<f64>,
+    /// The detected beatgrid, whose tempo is `bpm`.
+    pub grid: Option<Beatgrid>,
+    /// `grid` came from Beat This! ([`crate::beatthis`]), not only the DSP
+    /// analysis.
+    pub neural_grid: bool,
     pub key: Option<Key>,
     pub loudness: Loudness,
 }
@@ -199,6 +204,8 @@ impl TrackSummary {
         Self {
             duration: track.duration_secs(),
             bpm: track.beatgrid.map(|g| g.bpm),
+            grid: track.beatgrid,
+            neural_grid: false,
             key: track.key,
             loudness: track.loudness,
         }
@@ -207,13 +214,19 @@ impl TrackSummary {
     /// Decodes and analyzes a file for the library, without keeping the
     /// audio or building a waveform. Runs tempo, key and loudness one after
     /// the other on the calling thread, so background analysis stays on one
-    /// core.
+    /// core, then refines the grid with Beat This! (on the runtime's own
+    /// threads; the app keeps those to two).
     pub fn analyze(path: impl AsRef<Path>) -> Result<Self, LoadError> {
         let (stereo, sample_rate) = decode(path.as_ref())?;
         crate::keynet::set_single_threaded(true);
+        let dsp = detect_beatgrid(&stereo, sample_rate);
+        let refined = dsp.and_then(|g| crate::beatthis::refine(&stereo, sample_rate, Some(g)));
+        let grid = refined.map(|r| r.grid).or(dsp);
         let analysis = Self {
             duration: stereo.len() as f64 / 2.0 / sample_rate as f64,
-            bpm: detect_beatgrid(&stereo, sample_rate).map(|g| g.bpm),
+            bpm: grid.map(|g| g.bpm),
+            grid,
+            neural_grid: refined.is_some(),
             key: detect_key(&stereo, sample_rate),
             loudness: measure_loudness(&stereo, sample_rate),
         };

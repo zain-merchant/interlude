@@ -18,7 +18,7 @@ use super::Analysis;
 /// Bumped when BPM or key detection changes enough that saved results
 /// should be redone. Tracks analyzed by an older version are analyzed
 /// again in the background.
-pub const ANALYSIS_VERSION: i64 = 3;
+pub const ANALYSIS_VERSION: i64 = 4;
 
 const BACKUPS_KEPT: usize = 7;
 
@@ -81,6 +81,9 @@ const MIGRATIONS: &[&str] = &[
     // NULL until measured.
     "ALTER TABLE tracks ADD COLUMN lufs REAL;
      ALTER TABLE tracks ADD COLUMN peak REAL;",
+    // 5: the grid (bpm, first_beat) came from Beat This!, so a quicker DSP
+    // result doesn't replace it.
+    "ALTER TABLE tracks ADD COLUMN grid_neural INTEGER NOT NULL DEFAULT 0;",
 ];
 
 /// Plays further apart than this start a new history session, so a night
@@ -705,21 +708,26 @@ impl Db {
         )
     }
 
-    /// Saves a track's analysis. `first_beat` is known when the track was
-    /// loaded onto a deck; background analysis leaves the saved one alone.
+    /// Saves a track's analysis. `first_beat` is known when the grid was
+    /// found (`None` leaves the saved one alone). `neural` marks a grid
+    /// from Beat This!; a DSP grid never replaces one, and neither replaces
+    /// a grid fixed by hand.
     pub fn save_analysis(
         &self,
         path: &Path,
         a: &Analysis,
         first_beat: Option<f64>,
+        neural: bool,
     ) -> rusqlite::Result<()> {
         let id = self.track_id(path)?;
         self.conn.execute(
             "UPDATE tracks SET analysis_version = ?2, analysis_failed = ?3, duration = ?4,
                  key_tonic = ?6, key_minor = ?7, lufs = ?9, peak = ?10,
-                 bpm = CASE WHEN grid_locked THEN bpm ELSE ?5 END,
-                 first_beat = CASE WHEN grid_locked THEN first_beat
-                     WHEN ?5 IS NULL THEN NULL ELSE coalesce(?8, first_beat) END
+                 bpm = CASE WHEN grid_locked OR (grid_neural AND NOT ?11) THEN bpm ELSE ?5 END,
+                 first_beat = CASE WHEN grid_locked OR (grid_neural AND NOT ?11) THEN first_beat
+                     WHEN ?5 IS NULL THEN NULL ELSE coalesce(?8, first_beat) END,
+                 grid_neural = CASE WHEN grid_locked THEN grid_neural
+                     ELSE grid_neural OR ?11 END
              WHERE id = ?1",
             params![
                 id,
@@ -732,9 +740,40 @@ impl Db {
                 first_beat,
                 a.loudness.and_then(|l| l.lufs),
                 a.loudness.map(|l| l.peak),
+                neural,
             ],
         )?;
         Ok(())
+    }
+
+    /// Saves the grid Beat This! found for a track loaded onto a deck,
+    /// unless its grid was fixed by hand.
+    pub fn save_neural_grid(&self, path: &Path, grid: Beatgrid) -> rusqlite::Result<()> {
+        let id = self.track_id(path)?;
+        self.conn.execute(
+            "UPDATE tracks SET bpm = ?2, first_beat = ?3, grid_neural = 1
+             WHERE id = ?1 AND NOT grid_locked",
+            params![id, grid.bpm, grid.first_beat],
+        )?;
+        Ok(())
+    }
+
+    /// The grid Beat This! found for a track, unless one was fixed by hand.
+    pub fn neural_grid(&self, path: &Path) -> rusqlite::Result<Option<Beatgrid>> {
+        self.conn
+            .query_row(
+                "SELECT bpm, first_beat FROM tracks
+                 WHERE path = ?1 AND grid_neural AND NOT grid_locked
+                     AND bpm IS NOT NULL AND first_beat IS NOT NULL",
+                params![path_str(path)],
+                |r| {
+                    Ok(Beatgrid {
+                        bpm: r.get(0)?,
+                        first_beat: r.get(1)?,
+                    })
+                },
+            )
+            .optional()
     }
 
     /// The beatgrid fixed by hand for a track, if there is one.
@@ -1008,8 +1047,8 @@ mod tests {
             }),
             failed: false,
         };
-        db.save_analysis(p, &a, Some(0.12)).unwrap();
-        db.save_analysis(p, &a, None).unwrap();
+        db.save_analysis(p, &a, Some(0.12), false).unwrap();
+        db.save_analysis(p, &a, None, false).unwrap();
         assert_eq!(db.analysis(p).unwrap(), Some(a));
         let first: Option<f64> = db
             .conn
@@ -1033,7 +1072,7 @@ mod tests {
             loudness: None,
             failed: false,
         };
-        db.save_analysis(p, &a, Some(0.1)).unwrap();
+        db.save_analysis(p, &a, Some(0.1), false).unwrap();
         assert_eq!(db.locked_grid(p).unwrap(), None);
         let fixed = Beatgrid {
             bpm: 174.0,
@@ -1041,13 +1080,55 @@ mod tests {
         };
         db.save_grid(p, Some(fixed), Some(detected)).unwrap();
         // Analysis runs again (a reload, or a new analyzer version).
-        db.save_analysis(p, &a, Some(0.1)).unwrap();
+        db.save_analysis(p, &a, Some(0.1), false).unwrap();
         assert_eq!(db.locked_grid(p).unwrap(), Some(fixed));
         assert_eq!(db.analysis(p).unwrap().unwrap().bpm, Some(174.0));
         // Reset: back to the detected grid, unlocked.
         db.save_grid(p, None, Some(detected)).unwrap();
         assert_eq!(db.locked_grid(p).unwrap(), None);
         assert_eq!(db.analysis(p).unwrap().unwrap().bpm, Some(87.0));
+    }
+
+    #[test]
+    fn a_neural_grid_outlasts_dsp_results_but_not_a_fixed_one() {
+        let db = Db::open_in_memory().unwrap();
+        let p = Path::new("/m/a.mp3");
+        let a = |bpm| Analysis {
+            duration: Some(300.0),
+            bpm: Some(bpm),
+            key: None,
+            loudness: None,
+            failed: false,
+        };
+        // Loaded onto a deck: the DSP grid, then Beat This!'s.
+        db.save_analysis(p, &a(123.9), Some(0.4), false).unwrap();
+        assert_eq!(db.neural_grid(p).unwrap(), None);
+        let neural = Beatgrid {
+            bpm: 124.0,
+            first_beat: 1.3,
+        };
+        db.save_neural_grid(p, neural).unwrap();
+        assert_eq!(db.neural_grid(p).unwrap(), Some(neural));
+        // Loaded again: the quicker DSP result doesn't replace it.
+        db.save_analysis(p, &a(123.9), Some(0.4), false).unwrap();
+        assert_eq!(db.neural_grid(p).unwrap(), Some(neural));
+        assert_eq!(db.analysis(p).unwrap().unwrap().bpm, Some(124.0));
+        // Background analysis with Beat This! does.
+        db.save_analysis(p, &a(124.5), Some(0.2), true).unwrap();
+        assert_eq!(db.neural_grid(p).unwrap().unwrap().bpm, 124.5);
+        // A grid fixed by hand wins over both, and Beat This! leaves it be.
+        let fixed = Beatgrid {
+            bpm: 62.0,
+            first_beat: 0.0,
+        };
+        db.save_grid(p, Some(fixed), Some(neural)).unwrap();
+        db.save_neural_grid(p, neural).unwrap();
+        db.save_analysis(p, &a(124.5), Some(0.2), true).unwrap();
+        assert_eq!(db.neural_grid(p).unwrap(), None);
+        assert_eq!(db.locked_grid(p).unwrap(), Some(fixed));
+        // Reset puts the detected grid back.
+        db.save_grid(p, None, Some(neural)).unwrap();
+        assert_eq!(db.neural_grid(p).unwrap(), Some(neural));
     }
 
     #[test]
@@ -1064,7 +1145,7 @@ mod tests {
             }),
             failed: false,
         };
-        db.save_analysis(p, &silent, None).unwrap();
+        db.save_analysis(p, &silent, None, false).unwrap();
         let back = db.analysis(p).unwrap().unwrap();
         assert_eq!(back, silent);
         assert!(back.complete());
@@ -1082,7 +1163,7 @@ mod tests {
     fn old_analysis_versions_count_as_not_analyzed() {
         let db = Db::open_in_memory().unwrap();
         let p = Path::new("/m/a.mp3");
-        db.save_analysis(p, &Analysis::FAILED, None).unwrap();
+        db.save_analysis(p, &Analysis::FAILED, None, false).unwrap();
         db.conn
             .execute("UPDATE tracks SET analysis_version = 0", [])
             .unwrap();

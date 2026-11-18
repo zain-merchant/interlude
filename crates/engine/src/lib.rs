@@ -15,6 +15,7 @@
 //! audio thread.
 
 pub mod analysis;
+pub mod beatthis;
 mod command;
 mod deck;
 pub mod dsp;
