@@ -57,7 +57,8 @@ export const T = {
   clickGreen: false, // a click's ring shows green (a test that clicks land)
   knock: 0.8,        // a click's lens: how much it magnifies (0.8: 5x, 0.9: 10x; under 1)
   knockSize: 0.4,    // its size, em
-  knockTime: 0.9,    // how long it takes to spring back, s
+  knockTime: 1.5,    // how long it takes to spring back, s
+  knockHold: 0.45,   // a quick click holds it at full this long, s
   knockBounce: 0.15, // how much it swings in and out as it does (0: none)
   knockWave: 0.3,    // its wave: how hard it bends, a share of the lens
   knockReach: 1,     // how far the wave runs before it's gone, em
@@ -408,7 +409,7 @@ function knockNow(now) {
   if (knock.held && knock.letGo && now >= knock.letGo) {
     knock.from = T.knock; knock.held = false; knock.at = knock.letGo; knock.letGo = 0;
   }
-  if (knock.held) return T.knock * (1 - Math.exp(-(now - knock.at) / 30));
+  if (knock.held) return T.knock * (1 - Math.exp(-(now - knock.at) / 60));
   const t = (now - knock.at) / 1000, dur = Math.max(0.1, T.knockTime);
   if (t > dur * 2.5 && !knock.wave) { knock.at = 0; return 0; }
   const w = (2 * Math.PI) / dur, z = 1 - Math.min(0.95, Math.max(0, T.knockBounce));
@@ -744,8 +745,10 @@ export function drag(p) {
 export function release() {
   if (!knock.held) return;
   const now = performance.now();
-  // Never before the push is all the way in (about 150ms after the press).
-  if (now - knock.at < 150) { knock.letGo = knock.at + 150; wake(); return; }
+  // A quick click still holds the lens at full for a moment (T.knockHold)
+  // before it lets go, so the whole thing is seen.
+  const hold = Math.max(150, T.knockHold * 1000);
+  if (now - knock.at < hold) { knock.letGo = knock.at + hold; wake(); return; }
   knock.from = knockNow(now);
   knock.held = false;
   knock.at = now;
