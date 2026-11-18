@@ -227,6 +227,11 @@ function Knob({ label, pos, killed, size = 44 }) {
   );
 }
 
+// Low reads as killed as soon as it reaches its last tick (half a tick's
+// turn from the end): a spring only creeps up on the very end, and the
+// tick shouldn't sit lit white there first.
+const KILL_AT = 0.5 / (TICKS - 1);
+
 export function Eq(play) {
   // All three turn, the way a DJ shapes a track: High down, Mid up, then
   // Low all the way down to its kill (counter-clockwise, clockwise, counter).
@@ -246,7 +251,7 @@ export function Eq(play) {
         <div className="p-eq">
           <Knob label="High" pos={s.hi} size={66} />
           <Knob label="Mid" pos={s.mid} size={66} />
-          <Knob label="Low" pos={s.low} killed={s.low <= 0.001} size={66} />
+          <Knob label="Low" pos={s.low} killed={s.low <= KILL_AT} size={66} />
         </div>
       )}
     </Pic>
