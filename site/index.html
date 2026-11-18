@@ -257,31 +257,21 @@
         onInput: (v) => { d.style.setProperty('--cap-r', `${v}px`); requestAnimationFrame(measure); } });
       window.tune?.slider({ label: 'Nav: gap between icon and name before capsule', min: 0, max: 40, step: 1, value: 10, unit: 'px', css: '--brand-gap', onInput: () => requestAnimationFrame(measure) });
       window.tune?.slider({ id: 'nav-icon', label: 'Nav: icon size before capsule', folder: 'Settled', min: 28, max: 120, step: 1, value: 48, css: '--brand-icon', onInput: () => requestAnimationFrame(measure) });
-      // Being tried: how the hero's text block is laid out round the
-      // headline (data-herotext, style.css). The headline stays the first
-      // line, so the capsule still turns on it.
-      // The card's head: the version in its title, or beside What's new;
-      // and where its licence goes.
+      // The hero's text: the card arrangement (data-herotext="card",
+      // style.css), its licence in the line. Two things still being tried
+      // (Hero › Layout): where What's new goes, and what frames it.
       d.dataset.cardtitle = 'version';
       d.dataset.cardlic = 'line';
       d.dataset.cardsurface = 'rule';
       d.dataset.cardnew = 'beside';
       d.dataset.cardrule = 'near';
-      window.tune?.select({ label: 'Hero: card surface', folder: 'Layout', value: 'rule', options: [['glass', 'Glass card'], ['outline', 'An outline only'], ['rule', 'No card, a rule beside it']], onInput: (v) => (d.dataset.cardsurface = v) });
       window.tune?.select({ label: 'Hero: what\u2019s new', folder: 'Layout', value: 'beside', options: [['beside', 'Interlude 0.1.3, What\u2019s new beside it'], ['under', 'What\u2019s new in 0.1.3 under GitHub'], ['right', 'Interlude, the version on the right']],
         onInput: (v) => { d.dataset.cardnew = v; d.dataset.cardtitle = v === 'beside' ? 'version' : 'name'; } });
-      window.tune?.select({ label: 'Hero: rule', folder: 'Layout', value: 'near', options: [['near', 'Beside the buttons'], ['mid', 'Midway between'], ['none', 'No rule']], onInput: (v) => (d.dataset.cardrule = v) });
-      window.tune?.select({ label: 'Hero: licence', folder: 'Layout', value: 'line', options: [['line', 'In the line (free and open source under GPLv3+)'], ['foot', 'A footnote under the buttons'], ['none', 'Not in the card']], onInput: (v) => (d.dataset.cardlic = v) });
-      window.tune?.select({ label: 'Hero: text layout', folder: 'Layout', value: 'card', options: [
-        ['card', 'Buttons and facts in a card (current)'], ['float', 'Buttons beside the headline (before)'],
-        ['rail', 'Buttons and facts behind a rule'], ['stack', 'Buttons under, facts in a panel'],
-        ['segment', 'One joined pill, the facts as a sentence'], ['numeral', 'The version, large and quiet'],
-        ['dmg', 'A download card'],
-      ], onInput: (v) => {
-        if (v === 'float') delete d.dataset.herotext;
-        else d.dataset.herotext = v;
-        dispatchEvent(new Event('resize'));
-      } });
+      window.tune?.select({ label: 'Hero: frame', folder: 'Layout', value: 'rule-near', options: [['rule-near', 'A rule beside the buttons'], ['rule-mid', 'A rule midway'], ['none', 'Nothing'], ['glass', 'A glass card'], ['outline', 'An outline']],
+        onInput: (v) => {
+          d.dataset.cardsurface = v.startsWith('rule') || v === 'none' ? 'rule' : v;
+          d.dataset.cardrule = v === 'rule-mid' ? 'mid' : v === 'none' ? 'none' : 'near';
+        } });
       measure();
       document.fonts?.ready.then(measure);
       // Opened part way down the page: start as a capsule.
