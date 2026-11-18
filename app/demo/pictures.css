@@ -636,3 +636,12 @@
 /* A picture going back to its start while faded out (Pic): it lands there
    at once, nothing on the way showing through as it fades back up. */
 .p-body[data-snap], .p-body[data-snap] *, .p-body[data-snap] *::before, .p-body[data-snap] *::after { transition: none !important; animation: none !important; }
+
+/* Add music, played again: the folder, its badge and its words fade out
+   small and soft together, quickly, the way the other pictures' parts
+   leave; the rows curl up on their own. */
+.p-add[data-out] :is(.p-add__folder, .p-add__badge, .p-add__status) {
+  opacity: 0; scale: 0.92; filter: blur(3px);
+  transition: opacity 160ms ease-out, scale 160ms ease-out, filter 160ms ease-out;
+}
+.p-add[data-out] .p-add__row { transition-duration: 160ms; }

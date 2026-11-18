@@ -54,10 +54,9 @@ const ICON = new URL('../../site/img/icon.svg', import.meta.url).href;
 // back up), or else a quick fade down, the start state set while it's out,
 // and a fade back up. Then it holds the start a moment, so you see where it
 // begins, before it plays.
-const HOLD = 650;
-// The first pictures and the controller rewind slowly enough to see where
-// they start, so they hold it only a beat.
-const SHORT_HOLD = 220;
+// The same beat for every picture, features and install alike (each
+// rewind ends as its last motion lands, so this is all the hold there is).
+const HOLD = 220;
 /** Steps a whole number from `from` down to `to`, one step every `ms`. */
 async function countDown(a, key, from, to, ms) {
   for (let n = from - 1; n >= to; n--) { await a.wait(ms); a.put({ [key]: n }); }
@@ -155,7 +154,7 @@ const LOOP_AT = 8; // the loop's first beat (a downbeat), well inside the card
 
 export function Sync(play) {
   return (
-    <Pic id="sync" {...play} hold={SHORT_HOLD} bleed="right" initial={{ on: false, press: false, lock: false, cues: 0, cuePress: 0, loop: false, loopPress: false }}
+    <Pic id="sync" {...play} bleed="right" initial={{ on: false, press: false, lock: false, cues: 0, cuePress: 0, loop: false, loopPress: false }}
       // Again: the lock, cues and loop go off, and B's beats slide back out.
       rewind={async (a) => { await a.set({ lock: false, cues: 0, loop: false }); await a.wait(120); await a.set({ on: false }); await a.wait(750); }}
       poster={{ on: true, press: false, lock: true, cues: HOT_CUES.length, cuePress: 0, loop: true, loopPress: false }}
@@ -257,7 +256,7 @@ export function Eq(play) {
   // All three turn, the way a DJ shapes a track: High down, Mid up, then
   // Low all the way down to its kill (counter-clockwise, clockwise, counter).
   return (
-    <Pic id="eq" {...play} hold={SHORT_HOLD} initial={{ hi: 0.5, mid: 0.5, low: 0.5 }} poster={{ hi: 0.18, mid: 0.85, low: 0 }}
+    <Pic id="eq" {...play} initial={{ hi: 0.5, mid: 0.5, low: 0.5 }} poster={{ hi: 0.18, mid: 0.85, low: 0 }}
       // Again: all three turn back to the middle together, on SMOOTH.
       rewind={async (a) => {
         const from = { hi: 0.18, mid: 0.85, low: 0 };
@@ -314,7 +313,7 @@ const stemDelay = (i) => Math.round((i + (i % 2) * (0.4 + 1.2 * jitter(i)) * STE
 
 export function Stems(play) {
   return (
-    <Pic id="stems" {...play} hold={SHORT_HOLD} bleed="right" initial={{ muted: [] }} poster={{ muted: STEM_STEPS.at(-1) }}
+    <Pic id="stems" {...play} bleed="right" initial={{ muted: [] }} poster={{ muted: STEM_STEPS.at(-1) }}
       // Again: every stem comes back up, its bars growing back in their wave.
       rewind={async (a) => { await a.set({ muted: [] }); await a.wait(700); }}
       script={async (a) => {
@@ -368,15 +367,13 @@ function Marked({ text, q }) {
 export function Search(play) {
   return (
     <Pic id="search" {...play} initial={{ rows: 0, q: '', sel: false, loaded: false }} poster={{ rows: LIB.length, q: LIB_QUERY, sel: true, loaded: true }}
-      // Again: the track lets go of the deck, the search is deleted a
-      // letter at a time, and the rows leave, last first.
+      // Again: the search clears and the track lets go, then the rows
+      // leave, last first.
       rewind={async (a) => {
-        await a.set({ loaded: false, sel: false });
+        await a.set({ loaded: false, sel: false, q: '' });
+        await a.wait(140);
+        await countDown(a, 'rows', LIB.length, 0, 40);
         await a.wait(160);
-        for (let i = LIB_QUERY.length - 1; i >= 0; i--) { await a.set({ q: LIB_QUERY.slice(0, i) }); await a.wait(40); }
-        await a.wait(160);
-        await countDown(a, 'rows', LIB.length, 0, 55);
-        await a.wait(200);
       }}
       script={async (a) => {
         // 1. In they come.
@@ -432,7 +429,7 @@ export function Search(play) {
 // the app says it's connected and mapped.
 export function Controllers(play) {
   return (
-    <Pic id="ctl" {...play} hold={SHORT_HOLD} bleed="bottom" initial={{ plug: false, wake: false, toast: false }} poster={{ plug: true, wake: true, toast: true }}
+    <Pic id="ctl" {...play} bleed="bottom" initial={{ plug: false, wake: false, toast: false }} poster={{ plug: true, wake: true, toast: true }}
       // Again: the toast and the lights go, then the lead lifts out.
       rewind={async (a) => { await a.set({ toast: false, wake: false }); await a.wait(160); await a.set({ plug: false }); await a.wait(LOCK.ms); }}
       script={async (a) => {
@@ -488,10 +485,9 @@ export function Extras(play) {
       // clears and its time goes back to Rec.
       rewind={async (a) => {
         await a.set({ rec: false, key: 'W', focus: 0 });
-        await a.wait(120);
-        await countDown(a, 'bars', WAVE.length, 0, 9);
+        for (let n = WAVE.length; n > 0; ) { n = Math.max(0, n - 4); a.put({ bars: n }); await frame(); }
         await a.set({ sec: 0 });
-        await a.wait(160);
+        await a.wait(120);
       }}
       initial={{ rec: false, sec: 0, bars: 0, hits: Array(PADS).fill(0), accent: Array(PADS).fill(false), key: 'W', focus: 0 }} poster={{ rec: true, sec: 9, bars: WAVE.length, hits: Array(PADS).fill(0), accent: Array(PADS).fill(false), key: 'Space', focus: 0 }}
       script={async (a) => {
@@ -605,14 +601,13 @@ export function Download(play) {
   const start = { cx: REST.x, cy: REST.y, sel: false, drag: false, copy: false, done: false, gone: false };
   return (
     <Pic id="dmg" {...play} initial={start} poster={{ ...start, cx: DROP.x, cy: DROP.y, sel: true, done: true, gone: true }}
-      // Again: the pointer shows where it let go, the selection clears, and
-      // it glides back to its place beside the icon.
+      // Again: the pointer (gone by now) comes back where it starts, fading
+      // in as the selection clears; nothing else has moved.
       rewind={async (a) => {
-        await a.set({ gone: false, done: false });
-        await a.wait(200);
-        await a.set({ sel: false });
-        await glide(a, DROP, REST, GLIDE, 10);
-        await a.wait(120);
+        a.put({ cx: REST.x, cy: REST.y });
+        await frame();
+        await a.set({ gone: false, done: false, sel: false });
+        await a.wait(260);
       }}
       script={async (a) => {
         // Onto the icon (it starts just beside it), settle, press.
@@ -672,7 +667,7 @@ export function Open(play) {
       // as it stops matching.
       rewind={async (a) => {
         for (let n = 5; n >= 0; n--) { await a.wait(55); await a.set({ n, hit: n >= 3 }); }
-        await a.wait(220);
+        await a.wait(160);
       }}
       script={async (a) => {
         for (let n = 1; n <= 6; n++) {
@@ -722,14 +717,17 @@ const ADDED = [
 const TOTAL = 48;
 export function AddMusic(play) {
   return (
-    <Pic id="add" {...play} bleed="bottom" initial={{ drop: false, rows: 0, known: 0 }} poster={{ drop: true, rows: ADDED.length, known: ADDED.length }}
-      // Again: the tracks leave, last first, and the folder lifts back out.
+    <Pic id="add" {...play} bleed="bottom" initial={{ drop: false, rows: 0, known: 0, out: false }} poster={{ drop: true, rows: ADDED.length, known: ADDED.length, out: false }}
+      // Again: the tracks curl up, last first, as the folder and its words
+      // fade out small and soft (data-out); only once they're gone does the
+      // empty "+ Add music folder" come back, so the two never overlap.
       rewind={async (a) => {
-        await a.set({ known: 0 });
-        await countDown(a, 'rows', ADDED.length, 0, 60);
-        await a.wait(160);
-        await a.set({ drop: false });
-        await a.wait(450);
+        await a.set({ out: true });
+        await countDown(a, 'rows', ADDED.length, 0, 35);
+        await a.wait(60);
+        await a.set({ drop: false, known: 0 });
+        await a.wait(220);
+        await a.set({ out: false });
       }}
       script={async (a) => {
         await a.set({ drop: true });
@@ -751,7 +749,7 @@ export function AddMusic(play) {
       {(s) => {
         const ready = s.known >= ADDED.length;
         return (
-          <div className="p-add" data-drop={s.drop || undefined} data-ready={ready || undefined}>
+          <div className="p-add" data-drop={s.drop || undefined} data-ready={ready || undefined} data-out={s.out || undefined}>
             <div className="p-add__zone">
               <span className="p-add__icon">
                 <img src={MUSIC} alt="" width="34" height="34" className="p-add__folder" />
