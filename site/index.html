@@ -60,10 +60,10 @@
   </header>
   <script>
     // The nav, bar to capsule (data-nav="morph"). At the top of the page a
-    // quiet bar: the brand left, large, the sections right. Once the hero's
-    // buttons have gone under it, the bar draws in to a floating capsule,
+    // quiet bar: the brand left, large, the sections right. As soon as the
+    // headline reaches it, the bar draws in to a floating capsule,
     // the brand settles to its compact size, and the nav's own GitHub and
-    // Download slide in at its end. Back again as the buttons return.
+    // Download slide in at its end. Back again once the headline is clear.
     //
     // The state comes from the scroll position, read once a frame, with a
     // little give either way so it never flickers at the edge. The motion is
@@ -128,10 +128,10 @@
         geo.k = narrow ? geo.right : -geo.l;
         draw();
       }
-      // Springs: the shape eases in over about 0.8s, critically damped (no
+      // Springs: the shape eases in over about 0.55s, critically damped (no
       // overshoot); the actions are a touch livelier and may overshoot by a
       // hair as they land.
-      const shape = { x: 0, v: 0, to: 0, k: 64, c: 2 * Math.sqrt(64) };
+      const shape = { x: 0, v: 0, to: 0, k: 130, c: 2 * Math.sqrt(130) };
       const act = { x: 0, v: 0, to: 0, k: 190, c: 2 * 0.78 * Math.sqrt(190) };
       const step = (s, dt) => {
         const a = -s.k * (s.x - s.to) - s.c * s.v;
@@ -176,12 +176,17 @@
         const shown = q > 0.02 || act.to === 1 ? 'visible' : '';
         if (acts.style.visibility !== shown) acts.style.visibility = shown;
       }
-      // In once the buttons are wholly under the bar, out once half of them
-      // is back in view.
+      // In as soon as the headline reaches the bar, so the bar's large name
+      // never sits over it; out once it's clear of the bar again, with a
+      // little give between so it never flickers at the edge. (The first of
+      // the hero's lines that's shown: the lockup, or the tagline when the
+      // lockup is hidden.)
+      const heads = [...document.querySelectorAll('.hero .lockup, .hero .tagline')];
+      const headline = () => heads.find((e) => e.offsetHeight > 8) ?? cta;
       function read() {
-        const b = cta.getBoundingClientRect();
+        const h = headline().getBoundingClientRect();
         const NAV = geo?.H ?? 60;
-        const to = b.bottom < NAV ? 1 : b.bottom > NAV + b.height / 2 ? 0 : shape.to;
+        const to = h.top < NAV + 8 ? 1 : h.top > NAV + 40 ? 0 : shape.to;
         if (to === shape.to) return;
         shape.to = to;
         d.toggleAttribute('data-capsule', to === 1);
