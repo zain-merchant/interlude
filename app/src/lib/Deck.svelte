@@ -257,7 +257,7 @@
           <div class="big num">{bpm > 0 ? bpm.toFixed(2) : '—'}</div>
         {/if}
         <div class="unit">{#if pk}<button class="key" class:shifted={pk.shift} aria-label="Key {keyName(pk)}, {camelot(pk)}{pk.keyShift ? `, shifted ${pk.keyShift > 0 ? 'up' : 'down'} ${st(pk.keyShift)}` : ''}. Shift the key"
-          aria-haspopup="menu" onclick={keyMenu} oncontextmenu={keyMenu} ondblclick={(e) => e.stopPropagation()} use:tip={keyTip}>{keyName(pk)} · {camelot(pk)}{#if pk.keyShift}<span class="ks num">{pk.keyShift > 0 ? '+' : '−'}{Math.abs(pk.keyShift)}</span>{/if}</button>{" · "}{/if}BPM</div>
+          aria-haspopup="menu" onclick={keyMenu} oncontextmenu={keyMenu} ondblclick={(e) => e.stopPropagation()} use:tip={keyTip}>{keyName(pk)} · {camelot(pk)}{#if pk.keyShift}<span class="ks num">{pk.keyShift > 0 ? '+' : '−'}{Math.abs(pk.keyShift)}</span>{/if}<svg viewBox="0 0 10 10" aria-hidden="true"><path d="M2.5 4l2.5 2.5L7.5 4" /></svg></button>{" · "}{/if}BPM</div>
       </div>
     </header>
 
@@ -717,18 +717,36 @@
     clip-path: inset(50%);
     white-space: nowrap;
   }
+  /* The key opens the key shift menu: a chevron, as on the FX picker, says
+     so, and hover gives it a fill like other ghost buttons. */
   .key {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    margin: 0 -2px 0 -5px;
+    padding: 0 2px 0 5px;
     color: var(--fg-3);
     font: inherit;
-    padding: 0;
     border: 0;
     background: none;
     cursor: pointer;
-    border-radius: 3px;
+    border-radius: 4px;
+    transition: background-color 120ms ease, color 120ms ease;
+  }
+  .key svg {
+    width: 9px;
+    height: 9px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.4;
+    opacity: 0.7;
   }
   .key.shifted,
   .key:hover {
     color: var(--fg);
+  }
+  .key:hover {
+    background: var(--hover);
   }
   .key:focus-visible {
     outline: 2px solid var(--deck);
