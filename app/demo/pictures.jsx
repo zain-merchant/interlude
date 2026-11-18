@@ -29,6 +29,8 @@ import { useEffect, useRef, useState } from 'react';
 import { Stage } from './stageshow/stage';
 import { Count, Collapse } from './stageshow/motion';
 import { spring, SMOOTH, SETTLE, GLIDE, SLIDE, LOCK } from './springs.js';
+// The sync slide's time (pictures.css, --sync-ms).
+const SYNC_MS = 750;
 import './pictures.css';
 
 // Timing, one system for every picture. A press is held for PRESS (Emil
@@ -125,10 +127,10 @@ export function Sync(play) {
         await a.set({ press: true });
         await a.wait(PRESS);
         await a.set({ press: false, on: true });
-        // The lock lights as the beats arrive (they slide on SLIDE, nearly
-        // home by 700ms; the lines take a moment to draw, so they start just
-        // before).
-        await a.wait(620);
+        // The lock lights as the beats arrive (they slide on the 750ms
+        // curve, 90% home by 494ms; the lines take a moment to draw, so they
+        // start just before).
+        await a.wait(470);
         await a.set({ lock: true });
         if (!stacked()) return;
         // Then the cues: two pads pressed in turn, each setting a hot cue.
@@ -157,7 +159,7 @@ export function Sync(play) {
           </div>
           <div className="p-deckrow" data-deck="b">
             <span className="p-chip">B</span>
-            <b className="p-bpm"><Count value={s.on ? 129 : B_FROM} format={(n) => n.toFixed(2)} duration={SLIDE.ms} /></b>
+            <b className="p-bpm"><Count value={s.on ? 129 : B_FROM} format={(n) => n.toFixed(2)} duration={SYNC_MS} /></b>
             <Ticks deck="b" offset={s.on ? 0 : TICK * B_LATE} stretch={s.on ? 1 : 129 / B_FROM} />
           </div>
           <div className="p-locks" aria-hidden>

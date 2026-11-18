@@ -14,8 +14,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261118w">
-  <link rel="stylesheet" href="demo/cards.css?v=20261118c">
+  <link rel="stylesheet" href="style.css?v=20261118z">
+  <link rel="stylesheet" href="demo/cards.css?v=20261118d">
   <script src="tune.js?v=20261118b"></script>
   <script>
     // The hero's layout (Split) and the nav's (bar to capsule), set before
@@ -179,24 +179,35 @@
         // capsule's 10px as it forms.
         word.style.transform = `translateX(${r(36 * (ic - 1) + (GAP - 10) * (1 - p))}px) scale(${r(1 - (1 - WORD) * p)})`;
         links.style.transform = `translate(${r(geo.l * p)}px, ${r(dy * v)}px)`;
-        // The actions keep their place after the links and appear once the
-        // capsule has nearly closed around them, one after the other (GitHub,
-        // then Download), each fading up as it settles the last few pixels
-        // into place. Nothing bounces. They're gone before the capsule opens
-        // back out, so they never show outside it.
-        acts.style.transform = `translate(${r(geo.a + geo.k * (1 - p))}px, ${r(dy)}px)`;
-        acts.style.opacity = '1';
-        const gate = clamp((p - 0.6) / 0.3);
-        btns.forEach((b, i) => {
-          const t = clamp(q * 1.3 - i * 0.25) * gate;
-          const e = 1 - (1 - t) ** 3;
-          b.style.opacity = r(e);
-          // (translate and scale, not transform: the buttons' own press
-          // transition is on transform, and would trail every frame here.)
-          b.style.translate = t < 1 ? `${r(-6 * (1 - e))}px 0` : '';
-          b.style.scale = t < 1 ? String(r(0.94 + 0.06 * e)) : '';
-        });
-        const shown = q > 0.02 || act.to === 1 ? 'visible' : '';
+        // The actions (Nav: buttons arrive). In every way but the old one
+        // they ride the capsule's right end, fixed inside it, so they never
+        // slide past anything or outside it:
+        //   with: they are part of the capsule, fading in with its glass, in
+        //     one motion; nothing of their own.
+        //   after: once the capsule is mostly formed they come up on their
+        //     own, GitHub then Download, on CSS transitions (run by the
+        //     compositor, so a busy page can't make them stutter).
+        //   old: they follow the links and fade in on a second spring.
+        const mode = d.dataset.navacts || 'with';
+        if (mode === 'old') {
+          acts.style.transform = `translate(${r(geo.a + geo.k * (1 - p))}px, ${r(dy)}px)`;
+          acts.style.opacity = '1';
+          const gate = clamp((p - 0.6) / 0.3);
+          btns.forEach((b, i) => {
+            const t = clamp(q * 1.3 - i * 0.25) * gate;
+            const e = 1 - (1 - t) ** 3;
+            b.style.opacity = r(e);
+            b.style.translate = t < 1 ? `${r(-6 * (1 - e))}px 0` : '';
+            b.style.scale = t < 1 ? String(r(0.94 + 0.06 * e)) : '';
+          });
+        } else {
+          acts.style.transform = `translate(${r(geo.a + geo.right * (1 - p))}px, ${r(dy)}px)`;
+          // (Opacity on the actions' own layer: the compositor fades it.)
+          acts.style.opacity = mode === 'with' ? String(r(clamp((p - 0.2) / 0.4) ** 1.5)) : '1';
+          const on = mode === 'after' && shape.to === 1 && p > 0.55;
+          if (nav.hasAttribute('data-acts-in') !== on) nav.toggleAttribute('data-acts-in', on);
+        }
+        const shown = (mode === 'old' ? q > 0.02 || act.to === 1 : p > 0.05) ? 'visible' : '';
         if (acts.style.visibility !== shown) acts.style.visibility = shown;
       }
       // In as soon as the headline reaches the bar, so the bar's large name
@@ -255,6 +266,9 @@
       // concentric; or a full pill.
       window.tune?.select({ label: 'Nav: capsule corners', folder: 'Settled', value: '14', options: [['14', 'Match the icon'], ['24', 'Pill']],
         onInput: (v) => { d.style.setProperty('--cap-r', `${v}px`); requestAnimationFrame(measure); } });
+      d.dataset.navacts = 'with';
+      window.tune?.select({ label: 'Nav: buttons arrive', value: 'with', options: [['with', 'With the capsule, one motion'], ['after', 'Just after it forms, on their own'], ['old', 'Old: after the links, second spring']],
+        onInput: (v) => { d.dataset.navacts = v; for (const b of btns) b.removeAttribute('style'); nav.removeAttribute('data-acts-in'); draw(); } });
       window.tune?.slider({ label: 'Nav: gap between icon and name before capsule', min: 0, max: 40, step: 1, value: 10, unit: 'px', css: '--brand-gap', onInput: () => requestAnimationFrame(measure) });
       window.tune?.slider({ id: 'nav-icon', label: 'Nav: icon size before capsule', folder: 'Settled', min: 28, max: 120, step: 1, value: 48, css: '--brand-icon', onInput: () => requestAnimationFrame(measure) });
       // The hero's text: the card arrangement (data-herotext="card",
@@ -263,10 +277,17 @@
       d.dataset.cardtitle = 'version';
       d.dataset.cardlic = 'line';
       d.dataset.cardsurface = 'rule';
-      d.dataset.cardnew = 'beside';
+      d.dataset.cardnew = 'link';
+      d.dataset.cardsub = 'facts';
+      d.dataset.cardreq = 'under';
       d.dataset.cardrule = 'near';
-      window.tune?.select({ label: 'Hero: what\u2019s new', folder: 'Layout', value: 'beside', options: [['beside', 'Interlude 0.1.3, What\u2019s new beside it'], ['under', 'What\u2019s new in 0.1.3 under GitHub'], ['right', 'Interlude, the version on the right'], ['title', 'Interlude 0.1.3 is itself the link'], ['pill', 'Interlude, the version as a small chip']],
-        onInput: (v) => { d.dataset.cardnew = v; d.dataset.cardtitle = v === 'beside' || v === 'title' ? 'version' : 'name'; } });
+      window.tune?.select({ label: 'Hero: what\u2019s new', folder: 'Layout', value: 'link', options: [['beside', 'Interlude 0.1.3, What\u2019s new beside it'], ['under', 'What\u2019s new in 0.1.3 under GitHub'], ['right', 'Interlude, the version on the right'], ['title', 'Interlude 0.1.3 is itself the link'], ['pill', 'Interlude, the version as a small chip'], ['link', 'Interlude, the version as a link beside it'], ['spaced', 'The licence, then What\u2019s new, on one line'], ['sentence', 'Open source under GPLv3+. See what\u2019s new in 0.1.3']],
+        onInput: (v) => { d.dataset.cardnew = v; d.dataset.cardtitle = v === 'beside' || v === 'title' ? 'version' : 'name';
+          d.dataset.cardsub = v === 'spaced' || v === 'sentence' ? v : v === 'link' ? 'facts' : 'line'; } });
+      // The version link's look (with What's new as the link): the name's
+      // size in a quieter grey, small and right-aligned, or small beside it.
+      d.dataset.cardvlink = 'match';
+      window.tune?.select({ label: 'Hero: version link', folder: 'Layout', value: 'match', options: [['match', 'The name\u2019s size, quieter'], ['right', 'Small, on the right'], ['small', 'Small, beside the name']], onInput: (v) => (d.dataset.cardvlink = v) });
       // Midway, measured: from the end of the headline's longest line to the
       // words beside it, the rule half way.
       const ruleMid = () => {
@@ -282,6 +303,7 @@
       ruleMid();
       document.fonts?.ready.then(ruleMid);
       addEventListener('resize', () => requestAnimationFrame(ruleMid));
+      window.tune?.select({ label: 'Hero: requirement', folder: 'Layout', value: 'under', options: [['under', 'Under the buttons'], ['top', 'Up top, the buttons at the foot']], onInput: (v) => (d.dataset.cardreq = v) });
       window.tune?.select({ label: 'Hero: frame', folder: 'Layout', value: 'rule-near', options: [['rule-near', 'A rule beside the buttons'], ['rule-mid', 'A rule midway'], ['none', 'Nothing'], ['glass', 'A glass card'], ['outline', 'An outline']],
         onInput: (v) => {
           d.dataset.cardsurface = v.startsWith('rule') || v === 'none' ? 'rule' : v;
@@ -311,10 +333,13 @@
       <!-- The card layout's head: the release itself, then what it is and
            what it runs on, in one quiet line (style.css hides it elsewhere). -->
       <div class="dl-head">
-        <b class="dl-name"><a class="dl-title" href="https://github.com/zain-merchant/interlude/releases/latest" target="_blank" rel="noopener" tabindex="-1">Interlude<span class="dl-ver"></span></a><a class="dl-pill" href="https://github.com/zain-merchant/interlude/releases/latest" target="_blank" rel="noopener" title="What’s new">Latest</a></b>
+        <b class="dl-name"><a class="dl-title" href="https://github.com/zain-merchant/interlude/releases/latest" target="_blank" rel="noopener" tabindex="-1">Interlude<span class="dl-ver"></span></a><a class="dl-vtext" href="https://github.com/zain-merchant/interlude/releases/latest" target="_blank" rel="noopener" title="What’s new">Latest</a><a class="dl-pill" href="https://github.com/zain-merchant/interlude/releases/latest" target="_blank" rel="noopener" title="What’s new">Latest</a></b>
         <a class="dl-new" href="https://github.com/zain-merchant/interlude/releases/latest" target="_blank" rel="noopener">What’s new<span class="dl-new-ver"></span></a>
         <a class="dl-vlink" href="https://github.com/zain-merchant/interlude/releases/latest" target="_blank" rel="noopener" title="What’s new">Latest release</a>
         <p class="dl-sub">Free and open source<span class="dl-lic" title="GPL-3.0-or-later"> under GPLv3+</span></p>
+        <p class="dl-sub2"><span title="GPL-3.0-or-later">GPLv3+</span><a class="dl-rel" href="https://github.com/zain-merchant/interlude/releases/latest" target="_blank" rel="noopener">What’s new<span class="dl-new-ver"></span></a></p>
+        <p class="dl-facts"><span title="GPL-3.0-or-later">GPLv3+</span><span>macOS 11+ on Apple silicon</span></p>
+        <p class="dl-sub3">Open source under <span title="GPL-3.0-or-later">GPLv3+</span>. <a class="dl-rel" href="https://github.com/zain-merchant/interlude/releases/latest" target="_blank" rel="noopener">See what’s new<span class="dl-new-ver"></span></a></p>
       </div>
       <div class="dmg" aria-hidden="true">
         <img src="img/icon.svg?v=2" alt="" width="44" height="44">
@@ -346,7 +371,7 @@
           <img class="poster" src="img/screenshot-1x.jpg" srcset="img/screenshot-1x.jpg 1440w, img/screenshot.jpg 2880w" sizes="(max-width: 1200px) 100vw, 1200px"
             width="1440" height="900" alt="Interlude with two tracks loaded: waveforms across the top, two decks either side of the mixer, and the library below.">
           <!-- The real app on its simulated engine, played by a script (app/demo). Loaded after the page. -->
-          <iframe class="live" title="Interlude mixing one track into the next" tabindex="-1" aria-hidden="true" data-src="demo/hero.html"></iframe>
+          <iframe class="live" title="Interlude mixing one track into the next" tabindex="-1" aria-hidden="true" data-src="demo/hero.html?v=20261118d"></iframe>
         </div>
       </div>
       <div class="shot-bar">
@@ -549,7 +574,7 @@
   </footer>
 
   <!-- The feature cards' pictures (built from app/demo, see the README). -->
-  <script type="module" src="demo/cards.js?v=20261118c"></script>
+  <script type="module" src="demo/cards.js?v=20261118d"></script>
   <script>
     // The hero. The screenshot shows first; once the page has loaded, the
     // live app takes its place (unless the visitor prefers less motion).
@@ -1043,6 +1068,9 @@
         for (const a of document.querySelectorAll('.dl-vlink, .dl-new2')) a.href = r.html_url;
         const vl = document.querySelector('.dl-vlink');
         if (vl) vl.textContent = r.tag_name;
+        for (const a of document.querySelectorAll('.dl-rel')) a.href = r.html_url;
+        const vt = document.querySelector('.dl-vtext');
+        if (vt) { vt.textContent = r.tag_name.replace(/^v/, ''); vt.href = r.html_url; }
         const pill = document.querySelector('.dl-pill');
         if (pill) { pill.textContent = r.tag_name.replace(/^v/, ''); pill.href = r.html_url; }
         const tl = document.querySelector('.dl-title');

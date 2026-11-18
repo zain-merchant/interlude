@@ -82,11 +82,15 @@
 .p-bpm { font-size: 26px; font-weight: 300; letter-spacing: -0.02em; line-height: 1; white-space: nowrap; }
 .p-ticks { position: relative; height: 34px; overflow: hidden; }
 .p-ticks__run { position: absolute; inset: 0; transform-origin: 0 50%; }
-/* Sync: B's beats slide under A's and lock there, on the `lock` spring
-   (leaves at once, the magnet snaps them home at 352ms, no overshoot). */
-.p-ticks[data-deck="b"] .p-ticks__run { transition: transform var(--slide-ms) var(--slide); }
-/* Its tempo rolls on the same spring, over the same time (Count's duration). */
-.p .p-bpm .ss-count__strip { transition-timing-function: var(--slide); }
+/* Sync: B's beats slide under A's and lock there, on the original curve:
+   a held start, a quick middle and a long soft landing, 750ms. Kept over a
+   spring because no spring from rest has that held start; the slide plays
+   on its own, so nothing ever needs to catch it mid-way (and a transition
+   still retargets from wherever it is). */
+.p { --sync: cubic-bezier(0.77, 0, 0.175, 1); --sync-ms: 750ms; }
+.p-ticks[data-deck="b"] .p-ticks__run { transition: transform var(--sync-ms) var(--sync); }
+/* Its tempo rolls on the same curve, over the same time (Count's duration). */
+.p .p-bpm .ss-count__strip { transition-timing-function: var(--sync); }
 .p-ticks__run i {
   position: absolute; top: 50%; width: 2px; height: 12px; margin: -6px 0 0 1px; border-radius: 1px;
   background: var(--fg-3);
