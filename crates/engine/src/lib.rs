@@ -21,6 +21,7 @@ pub mod dsp;
 mod engine;
 pub mod fx;
 pub mod key;
+pub mod keynet;
 mod limiter;
 pub mod loudness;
 mod mixer;
