@@ -1572,6 +1572,7 @@ html[data-note="sleeve"] .rec-disc:first-child, html[data-note="sleeve"] .rec-ba
 /* The record out of its sleeve is part of the note: on it, the note stays
    hovered (and the record stays out); a click on it turns it over. */
 html[data-note="sleeve"] .rec { pointer-events: auto; cursor: pointer; }
+html[data-note="sleeve"] .founder.over-rec { cursor: pointer; }
 /* As it lands, a glint crosses it. */
 .rec::after { content: ''; position: absolute; inset: 0; border-radius: 50%; pointer-events: none; opacity: 0;
   background: linear-gradient(115deg, transparent 38%, rgb(255 255 255 / 0.28) 50%, transparent 62%) no-repeat; background-size: 300% 100%; background-position: 100% 0; }
@@ -1629,6 +1630,18 @@ html[data-note="sleeve"] .rec {
   z-index: -3; width: 80%; left: calc(var(--hx) - 40%); top: calc(var(--hy) - 40%);
 }
 /* (The slide out is index.html's, on a spring.) */
+/* Beside the FAQ, pushed a little right (Note: push right, against how
+   far a tilted corner juts toward the questions), and kept clear of the
+   window's edge: the record, out at its furthest, reaches --rec-over past
+   the sleeve (index.html sets it); when the page's margin can't hold that,
+   the note's column widens and the FAQ narrows by just what's missing. */
+@media (min-width: 861px) {
+  html[data-note="sleeve"] .faq-row {
+    --shift: max(0px, var(--rec-over, 133px) + var(--note-nudge, 8px) + 28px - 14px - max(16px, (100vw - 1120px) / 2));
+    grid-template-columns: minmax(0, 1fr) calc(320px + var(--shift));
+  }
+  html[data-note="sleeve"] .founder { margin: 0 calc(14px + var(--shift)) 0 auto; translate: var(--note-nudge, 8px) 0; }
+}
 /* (The page cuts it at the window's edge, never a section's.) */
 body { overflow-x: clip; }
 html[data-note="sleeve"] .founder h3 { color: #17140e; margin: 0 0 12px; }
@@ -1769,6 +1782,9 @@ html[data-flayout="one"] .group:nth-child(-n + 2) { box-shadow: inset -1px 0 0 v
 .foot { position: relative; isolation: isolate; }
 .grain--foot { inset: 0; height: auto; z-index: 1; -webkit-mask-image: none; mask-image: none; }
 .foot-grid { position: relative; z-index: 2; }
+/* The features' grain: across the band, over its background and under
+   the cards (the same grain as the hero's and the footer's). */
+.grain--band { top: 0; bottom: 0; left: 50%; width: 100vw; height: auto; translate: -50% 0; -webkit-mask-image: none; mask-image: none; }
 
 /* The record labels' logo (Tune › Note: label logo). */
 html:not([data-lablogo="tile"]) .lg-tile, html[data-lablogo="tile"] .lg-rings { display: none; }
