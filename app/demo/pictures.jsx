@@ -28,17 +28,17 @@
 import { useEffect, useRef, useState } from 'react';
 import { Stage } from './stageshow/stage';
 import { Count, Collapse } from './stageshow/motion';
+import { spring, SMOOTH, GLIDE, LOCK } from './springs.js';
 import './pictures.css';
 
-// Timing, one system for every picture. A press reads in PRESS (Emil
-// Kowalski's 100–160ms for feedback). These are little stories, not UI
-// responses, so movement takes longer than his under-300ms rule for
-// interface motion: MOVE on a soft ease-in-out. Related motions overlap,
-// CASCADE apart. Across cards, Replay paces when each picture starts.
+// Timing, one system for every picture. A press is held for PRESS (Emil
+// Kowalski's 100–160ms for feedback; the key lands in 92ms of it). Every
+// motion runs on one of the named springs (springs.js, and springs.css for
+// CSS), so it leaves at once and lands or settles without overshoot; the
+// waits below are taken from those springs' times. Across cards, Replay
+// paces when each picture starts.
 const START = 120;
 const PRESS = 140;
-const MOVE = 950;
-const CASCADE = 140;
 
 export const PW = 360;
 export const PH = 176;
@@ -62,43 +62,16 @@ function Pic({ id, initial, poster, script, gate, onDone, bleed, children }) {
   );
 }
 
-// A soft ease-in-out (sine): unhurried at both ends.
-const inOut = (t) => -(Math.cos(Math.PI * t) - 1) / 2;
-
-// Apple's spring, as tuned by eye in site/lab/motion.html: SwiftUI's
-// .spring(duration:bounce:) turned into physics (stiffness (2π/duration)²,
-// damping from the bounce), with CASpringAnimation's mass and initial
-// velocity, plus a magnet: a pull toward the end that only starts within
-// `range` of it and grows the closer it gets, ending on a hard stop, so
-// it snaps into place. Returns how long it runs and its curve.
-function spring({ duration, bounce = 0, mass = 1, velocity = 0, magnet = 0, range = 0.15 }) {
-  const k = ((2 * Math.PI) / duration) ** 2;
-  const c = bounce >= 0 ? ((1 - bounce) * 4 * Math.PI) / duration : (4 * Math.PI) / (duration * (1 + bounce));
-  let x = 0, v = velocity, t = 0;
-  const dt = 1 / 1000, pts = [0];
-  while (t < 4) {
-    const d = 1 - x;
-    const pull = magnet > 0 && d > 0 && d < range ? magnet * k * (1 - d / range) ** 2 : 0;
-    v += ((-k * (x - 1) - c * v + pull) / mass) * dt;
-    x += v * dt;
-    t += dt;
-    if (magnet > 0 && x >= 0.998) break;
-    pts.push(x);
-    if (Math.abs(1 - x) < 0.001 && Math.abs(v) < 0.02 && t > 0.02) break;
-  }
-  pts.push(1);
-  const T = pts.length - 1;
-  return { ms: T, ease: (u) => { const f = u * T, i = Math.floor(f); return i >= T ? 1 : pts[i] + (pts[i + 1] - pts[i]) * (f - i); } };
-}
-// The EQ knobs: a long, heavily damped turn that the magnet grabs over the
-// last fifth and snaps home.
+// The EQ knobs, on Apple's spring (springs.js) as tuned by eye in
+// site/lab/motion.html: a long, heavily damped turn that the magnet grabs
+// over the last fifth and snaps home.
 const KNOB_SPRING = spring({ duration: 0.86, bounce: -0.3, mass: 0.75, velocity: 3.6, magnet: 1.8, range: 0.21 });
 
 // One step a frame, on the screen's own frame clock, timed from the first
 // frame drawn: a 16ms timer drifts against the screen and judders.
 const frame = () => new Promise((r) => requestAnimationFrame(r));
 /** Eases a number in state from `from` to `to` over `ms`, a frame at a time. */
-async function tween(a, key, from, to, ms, ease = (t) => 1 - (1 - t) ** 3) {
+async function tween(a, key, from, to, ms, ease = SMOOTH.ease) {
   const t0 = await frame();
   for (let now = t0; ; now = await frame()) {
     const u = Math.min(1, (now - t0) / ms);
@@ -149,8 +122,9 @@ export function Sync(play) {
         await a.set({ press: true });
         await a.wait(PRESS);
         await a.set({ press: false, on: true });
-        // The lock lights as the beats arrive (the slide is 0.75 s).
-        await a.wait(650);
+        // The lock lights as the beats arrive (they slide on LOCK, home at
+        // 352ms; the lines take a moment to draw, so they start just before).
+        await a.wait(LOCK.ms - 50);
         await a.set({ lock: true });
         if (!stacked()) return;
         // Then the cues: two pads pressed in turn, each setting a hot cue.
@@ -179,7 +153,7 @@ export function Sync(play) {
           </div>
           <div className="p-deckrow" data-deck="b">
             <span className="p-chip">B</span>
-            <b className="p-bpm"><Count value={s.on ? 129 : B_FROM} format={(n) => n.toFixed(2)} duration={700} /></b>
+            <b className="p-bpm"><Count value={s.on ? 129 : B_FROM} format={(n) => n.toFixed(2)} duration={LOCK.ms} /></b>
             <Ticks deck="b" offset={s.on ? 0 : TICK * B_LATE} stretch={s.on ? 1 : 129 / B_FROM} />
           </div>
           <div className="p-locks" aria-hidden>
@@ -396,9 +370,9 @@ export function Controllers(play) {
     <Pic id="ctl" {...play} bleed="bottom" initial={{ plug: false, wake: false, toast: false }} poster={{ plug: true, wake: true, toast: true }}
       script={async (a) => {
         await a.set({ plug: true });
-        // It wakes as the plug seats (its slide is 0.55s, home by about
-        // 0.48s); the toast follows close behind.
-        await a.wait(480);
+        // It wakes as the plug seats (it comes down on LOCK and stops dead
+        // in the port at 352ms); the toast follows close behind.
+        await a.wait(LOCK.ms);
         await a.set({ wake: true });
         await a.wait(140);
         await a.set({ toast: true });
@@ -524,13 +498,19 @@ const GRAB = { x: DMG_A + 6, y: DMG_Y + 8 }; // where the arrow takes the icon
 const DROP = { x: DMG_B + 4, y: DMG_Y + 6 };
 const REST = { x: DMG_A + 34, y: DMG_Y + 30 }; // where the arrow starts, just off the icon
 
-/** Moves the arrow from `from` to `to` on a soft ease, bowed upward by `arc` px. */
-async function glide(a, from, to, ms, arc = 0) {
-  const steps = Math.max(1, Math.round(ms / 16));
-  for (let i = 1; i <= steps; i++) {
-    const t = inOut(i / steps);
+/**
+ * Moves the arrow from `from` to `to` on a spring, bowed upward by `arc` px,
+ * a frame at a time on the screen's clock. The spring leaves at once (it has
+ * an initial velocity) and comes to rest without overshoot, so the bow,
+ * worked out from how far along it is, never dips below the line.
+ */
+async function glide(a, from, to, sp, arc = 0) {
+  const t0 = await frame();
+  for (let now = t0; ; now = await frame()) {
+    const u = Math.min(1, (now - t0) / sp.ms);
+    const t = sp.ease(u);
     a.put({ cx: from.x + (to.x - from.x) * t, cy: from.y + (to.y - from.y) * t - Math.sin(Math.PI * t) * arc });
-    await a.wait(16);
+    if (u >= 1) return;
   }
 }
 
@@ -550,13 +530,13 @@ export function Download(play) {
     <Pic id="dmg" {...play} initial={start} poster={{ ...start, cx: DROP.x, cy: DROP.y, sel: true, done: true, gone: true }}
       script={async (a) => {
         // Onto the icon (it starts just beside it), settle, press.
-        await glide(a, REST, GRAB, 420, 3);
+        await glide(a, REST, GRAB, SMOOTH, 3);
         await a.wait(160);
         await a.set({ sel: true });
         await a.wait(200);
         // Drag: the copy lifts off with the pointer; the "+" shows once it's moving.
         a.put({ drag: true });
-        const going = glide(a, GRAB, DROP, 1000, 16);
+        const going = glide(a, GRAB, DROP, GLIDE, 16);
         await a.wait(160);
         a.put({ copy: true });
         await going;
@@ -653,9 +633,9 @@ export function AddMusic(play) {
     <Pic id="add" {...play} bleed="bottom" initial={{ drop: false, rows: 0, known: 0 }} poster={{ drop: true, rows: ADDED.length, known: ADDED.length }}
       script={async (a) => {
         await a.set({ drop: true });
-        // Tracks start arriving as the folder lands, and are worked out while
-        // they're still arriving.
-        await a.wait(560);
+        // Tracks start arriving as the folder lands (it seats on LOCK, at
+        // 352ms), and are worked out while they're still arriving.
+        await a.wait(LOCK.ms + 40);
         for (let rows = 1; rows <= ADDED.length; rows++) {
           await a.set({ rows });
           await a.wait(90);
