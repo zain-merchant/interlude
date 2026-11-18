@@ -28,7 +28,8 @@
   import { padMode, setPadMode } from './lib/padmode.svelte.js';
   import { tempoPickup } from './lib/pickup.svelte.js';
   import { gridEdit, NUDGE } from './lib/grid.svelte.js';
-  import { toggleStem, soloStem, syncStemWaveforms, stemsUnavailable } from './lib/stems.svelte.js';
+  import { toggleStem, soloStem, syncStemWaveforms, stemsUnavailable, stemsOf } from './lib/stems.svelte.js';
+  import { stemsReadyTip } from './lib/tips.svelte.js';
   import { libraryHealth, reveal, captureUiErrors, update, checkForUpdate, installUpdate } from './lib/support.svelte.js';
 
   let library;
@@ -105,6 +106,10 @@
 
   // Muted stems drop out of the waveforms.
   $effect(() => syncStemWaveforms());
+  // The first time a track's stems are ready, a one-time tip says where they are.
+  $effect(() => {
+    if ([0, 1].some((d) => stemsOf(d).state === 'ready')) stemsReadyTip();
+  });
   // Importing another app's library opens in its own window over the app.
   let importing = $state(false);
   const openImport = () => {

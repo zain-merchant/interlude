@@ -55,9 +55,10 @@ pub enum PadMode {
     BeatLoop,
     BeatJump,
     Sampler,
-    /// The FLX4's PAD FX1, which plays stems here.
+    /// The FLX4's PAD FX1 and PAD FX2: pad effects.
     PadFx1,
     PadFx2,
+    /// The FLX4's KEYBOARD (SHIFT + HOT CUE), which plays stems here.
     Keyboard,
     KeyShift,
 }
@@ -107,6 +108,8 @@ pub struct HeldControls {
     hot_cues: [[bool; HOT_CUES]; NUM_DECKS],
     /// The app shows where a tempo fader sits, waiting to pick up.
     pickup: [bool; NUM_DECKS],
+    /// A pad FX pad held down.
+    pad_fx: [Option<dj_engine::PadFx>; NUM_DECKS],
 }
 
 impl HeldControls {
@@ -129,6 +132,10 @@ impl HeldControls {
             Command::HotCueRelease { deck, index } if index < HOT_CUES => {
                 self.hot_cues[deck.index()][index] = false
             }
+            Command::PadFxPress { deck, fx } => self.pad_fx[deck.index()] = Some(fx),
+            Command::PadFxRelease { deck, fx } if self.pad_fx[deck.index()] == Some(fx) => {
+                self.pad_fx[deck.index()] = None
+            }
             _ => {}
         }
     }
@@ -148,6 +155,9 @@ impl HeldControls {
             }
             if self.scratching[d] {
                 out.push(Action::Engine(Command::ScratchEnd { deck }));
+            }
+            if let Some(fx) = self.pad_fx[d] {
+                out.push(Action::Engine(Command::PadFxRelease { deck, fx }));
             }
             // A fader that's gone can't pick anything up.
             if self.pickup[d] {
