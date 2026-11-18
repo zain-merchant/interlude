@@ -1086,6 +1086,147 @@ mod tests {
         }
     }
 
+    /// Bundled mappings whose scripts raise errors when every control is
+    /// pressed and released (see [`exercise_midi`] and [`exercise_hid`]).
+    /// Most are bugs in the Mixxx scripts themselves or Mixxx features we
+    /// don't have. Take a mapping off this list once its scripts run clean;
+    /// [`bundled_scripts_run_clean`] fails if a mapping not on it starts
+    /// raising errors.
+    const KNOWN_SCRIPT_ERRORS: &[&str] = &[
+        // MIDI
+        "Allen&Heath Xone K2/K1",
+        "Behringer BCR2000",
+        "Behringer DDM4000",
+        "Gemini CDMP-7000 L",
+        "Gemini CDMP-7000 R",
+        "Hercules DJ Console 4-Mx",
+        "Hercules DJ Control AIR",
+        "Hercules DJControl Inpulse 200",
+        "Icon P1-Nano MIDI 1",
+        "Ion Discover DJ Pro",
+        "Numark N4",
+        "Numark NS6II",
+        "Numark NS7",
+        "Pioneer DDJ-SB",
+        "Pioneer DDJ-SB3",
+        "Reloop Beatpad",
+        "Soundless joyMIDI",
+        "Stanton SCS.1d (unfinished)",
+        "Vestax Spin",
+        "Vestax VCI-100 Hile Mod",
+        "Vestax VCI-400",
+        // HID
+        "EKS Otus HID",
+        "Native Instruments Traktor Kontrol F1",
+        "Native Instruments Traktor Kontrol S2 Mk1",
+        "Traktor Kontrol S4 MK3",
+        "Native Instruments Traktor Kontrol Z1",
+    ];
+
+    /// Runs a MIDI mapping's scripts as a DJ would: init, every bound
+    /// message pressed and released, a playing deck and a set hot cue for
+    /// the LEDs, timers, then shutdown. Returns how many actions it sent.
+    fn exercise_midi(m: &mut MixxxMidi) -> usize {
+        let mut s = st();
+        let mut actions = m.poll(&s).len();
+        let keys: Vec<(u8, u8)> = m.preset().inputs.keys().copied().collect();
+        for (status, number) in keys {
+            actions += m.handle(&[status, number, 0x7F], &s).len();
+            actions += m.handle(&[status, number, 0x00], &s).len();
+        }
+        s.decks[0].playing = true;
+        s.decks[1].hot_cues[0] = Some(1.0);
+        for _ in 0..3 {
+            actions += m.poll(&s).len();
+            m.leds(&s);
+        }
+        m.shutdown(&s);
+        m.leds(&s);
+        actions
+    }
+
+    /// Runs a HID mapping's scripts with made-up reports. Returns how many
+    /// reports it sent back to the device.
+    fn exercise_hid(m: &mut MixxxMidi) -> usize {
+        m.set_hid(Arc::new(|_, _| vec![0; 64]));
+        let mut s = st();
+        m.poll(&s);
+        let mut reports = m.take_hid().len();
+        for id in 0..4u8 {
+            for fill in [0x00u8, 0xFF, 0x55] {
+                let mut r = vec![fill; 64];
+                r[0] = id;
+                m.handle(&r, &s);
+                reports += m.take_hid().len();
+            }
+        }
+        s.decks[0].playing = true;
+        for _ in 0..3 {
+            m.poll(&s);
+            reports += m.take_hid().len();
+        }
+        m.shutdown(&s);
+        reports + m.take_hid().len()
+    }
+
+    /// Every bundled mapping with scripts runs them without errors when
+    /// each control is used, except the ones on [`KNOWN_SCRIPT_ERRORS`]. A
+    /// change to the script host that breaks a mapping fails here, not on
+    /// someone's controller.
+    #[test]
+    fn bundled_scripts_run_clean() {
+        let dir = crate::Catalog::source_mappings_dir().expect("bundled mappings");
+        let mut broken = vec![];
+        let mut ran = 0;
+        for f in crate::mapping_files(&dir) {
+            let mut p = Preset::load(&f).unwrap_or_else(|e| panic!("{e}"));
+            if !p.scripts.iter().any(|s| s.filename.ends_with(".js")) {
+                continue;
+            }
+            p.script_dirs = vec![dir.clone()];
+            let p = Arc::new(p);
+            let mut m = MixxxMidi::new(p.clone());
+            assert!(m.has_script(), "{}: scripts didn't load", p.name);
+            if p.is_hid() {
+                exercise_hid(&mut m);
+            } else {
+                exercise_midi(&mut m);
+            }
+            ran += 1;
+            let errors = m.script_errors();
+            if !errors.is_empty() && !KNOWN_SCRIPT_ERRORS.contains(&p.name.as_str()) {
+                broken.push(format!("{}: {:?}", p.name, errors));
+            }
+        }
+        assert!(ran > 120, "only {ran} mappings with scripts ran");
+        assert!(
+            broken.is_empty(),
+            "scripts raised errors:\n{}",
+            broken.join("\n")
+        );
+    }
+
+    /// No bundled mapping claims a MIDI port that isn't a DJ controller,
+    /// which would take over someone's keyboard or audio interface.
+    #[test]
+    fn bundled_mappings_leave_other_devices_alone() {
+        let dir = crate::Catalog::source_mappings_dir().expect("bundled mappings");
+        let others = [
+            "IAC Driver Bus 1",
+            "Midi Through Port-0",
+            "USB MIDI Keyboard",
+            "Network Session 1",
+            "Scarlett 2i2 USB",
+            "Arturia KeyStep 37",
+        ];
+        for f in crate::mapping_files(&dir) {
+            let p = Preset::load(&f).unwrap_or_else(|e| panic!("{e}"));
+            for o in others {
+                assert!(!p.matches(o), "{} claims {o:?}", p.name);
+            }
+        }
+    }
+
     /// Loads every mapping in the corpus (see [`corpus_dir`]) and prints how much of each works. Run with
     /// `cargo test -p dj-controller mixxx_corpus -- --ignored --nocapture`.
     #[test]
@@ -1118,24 +1259,6 @@ mod tests {
                 Err(e) => {
                     failed += 1;
                     println!("FAILED {e}");
-                }
-            }
-        }
-        // Ports that aren't DJ controllers mustn't pick up a mapping.
-        let others = [
-            "IAC Driver Bus 1",
-            "Midi Through Port-0",
-            "USB MIDI Keyboard",
-            "Network Session 1",
-            "Scarlett 2i2 USB",
-            "Arturia KeyStep 37",
-        ];
-        for f in &files {
-            let Ok(p) = Preset::load(f) else { continue };
-            for o in others {
-                if p.matches(o) {
-                    println!("WRONG MATCH: {} claims {o:?}", p.name);
-                    failed += 1;
                 }
             }
         }
@@ -1243,21 +1366,7 @@ mod tests {
                 continue;
             }
             loaded += 1;
-            let mut s = st();
-            actions += m.poll(&s).len();
-            let keys: Vec<(u8, u8)> = p.inputs.keys().copied().collect();
-            for (status, number) in keys {
-                actions += m.handle(&[status, number, 0x7F], &s).len();
-                actions += m.handle(&[status, number, 0x00], &s).len();
-            }
-            s.decks[0].playing = true;
-            s.decks[1].hot_cues[0] = Some(1.0);
-            for _ in 0..3 {
-                actions += m.poll(&s).len();
-                m.leds(&s);
-            }
-            m.shutdown(&s);
-            m.leds(&s);
+            actions += exercise_midi(&mut m);
             let errors = m.script_errors();
             if errors.is_empty() {
                 clean += 1;
@@ -1309,26 +1418,7 @@ mod tests {
                 continue;
             }
             loaded += 1;
-            m.set_hid(Arc::new(|_, _| vec![0; 64]));
-            let mut s = st();
-            let mut reports = 0;
-            m.poll(&s);
-            reports += m.take_hid().len();
-            for id in 0..4u8 {
-                for fill in [0x00u8, 0xFF, 0x55] {
-                    let mut r = vec![fill; 64];
-                    r[0] = id;
-                    m.handle(&r, &s);
-                    reports += m.take_hid().len();
-                }
-            }
-            s.decks[0].playing = true;
-            for _ in 0..3 {
-                m.poll(&s);
-                reports += m.take_hid().len();
-            }
-            m.shutdown(&s);
-            reports += m.take_hid().len();
+            let reports = exercise_hid(&mut m);
             if reports > 0 {
                 sending += 1;
             }
