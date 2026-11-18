@@ -219,8 +219,8 @@
 .p-dmg__item { position: absolute; top: 5px; width: 84px; margin-left: -42px; display: grid; grid-template-rows: 64px auto; align-items: center; justify-items: center; gap: 6px; font-size: 12px; color: rgb(255 255 255 / 0.85); }
 .p-dmg__item img { position: relative; }
 .p-dmg__item span { padding: 0 5px; border-radius: 4px; line-height: 16px; transition: background-color 120ms, color 120ms; }
-/* Selected, as Finder draws it: a grey rounded tint behind the icon and the name on an accent pill. */
-.p-dmg__item::before { content: ''; position: absolute; left: 50%; top: -2px; width: 68px; height: 68px; margin-left: -34px; border-radius: 8px; background: rgb(255 255 255 / 0.12); opacity: 0; transition: opacity 120ms; }
+/* Selected, as Finder draws it: a grey rounded tint behind the icon (concentric with its squircle: about 12px of corner plus the 5px between) and the name on an accent pill. */
+.p-dmg__item::before { content: ''; position: absolute; left: 50%; top: -2px; width: 68px; height: 68px; margin-left: -34px; border-radius: 17px; background: rgb(255 255 255 / 0.12); opacity: 0; transition: opacity 120ms; }
 .p-dmg__item[data-sel]::before { opacity: 1; }
 .p-dmg__item[data-sel] span { color: #fff; background: #0a64d8; }
 /* The drop target, highlighted while the copy is over it: the folder darkens in a grey box. */
@@ -534,7 +534,7 @@
    position 90% and has gone past its right edge by 10%, so the sweep runs
    only while it shows. It sets off just after the light starts to pop and
    its brightest part crosses the light midway through the pop. */
-.p-toast[data-on] { animation: p-toast-glint 0.85s 0.34s cubic-bezier(0.3, 0, 0.5, 1) both; }
+.p-toast[data-on] { animation: p-toast-glint 0.85s 0.3s cubic-bezier(0.3, 0, 0.5, 1) both; }
 @keyframes p-toast-dot { from { scale: 0; } to { scale: 1; } }
 @keyframes p-toast-glint { from { background-position: 90% 0, 0 0; } to { background-position: 10% 0, 0 0; } }
 @media (prefers-reduced-motion: reduce) {
