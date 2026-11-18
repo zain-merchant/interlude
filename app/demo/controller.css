@@ -62,7 +62,7 @@
   color: rgb(28 28 32 / 0.62);
   transform-origin: 50% 0;
   /* Away: a little above where it lands (--hw-from, negative is above),
-     unseen. Coming, it settles down into place on `glide` (springs.css)
+     unseen. Coming, it settles down into place on `smooth` (springs.css, about half a second)
      with the screen tilting back, fading in and coming into focus (the
      desk's blur) over the first part. Going, it lifts back the same way,
      quicker. */
@@ -70,10 +70,10 @@
   opacity: 0;
   transition: transform var(--smooth-ms) var(--smooth), opacity 240ms cubic-bezier(0.4, 0, 1, 1);
 }
-.desk[data-shown] .hw { transform: rotateX(30deg); opacity: 1; transition: transform var(--glide-ms) var(--glide), opacity 420ms cubic-bezier(0.2, 0, 0, 1); }
+.desk[data-shown] .hw { transform: rotateX(30deg); opacity: 1; transition: transform var(--smooth-ms) var(--smooth), opacity 280ms cubic-bezier(0.2, 0, 0, 1); }
 /* (The blur on the desk, round the controller's 3D, so it isn't flattened.) */
 .desk { filter: blur(var(--hw-blur, 10px)); transition: filter 240ms cubic-bezier(0.4, 0, 1, 1); }
-.desk[data-shown] { filter: none; transition: filter 520ms cubic-bezier(0.2, 0, 0, 1); }
+.desk[data-shown] { filter: none; transition: filter 340ms cubic-bezier(0.2, 0, 0, 1); }
 .hw-badge { display: none; }
 
 /* ---------- Shared parts ---------- */
@@ -510,7 +510,7 @@
     inset 0 -5px 4px -3px rgb(255 255 255 / 0.18);
 }
 .desk:has(.hw[data-v="club"]) { opacity: 0; transition: opacity var(--smooth-ms) var(--smooth), filter 240ms cubic-bezier(0.4, 0, 1, 1); }
-.desk[data-shown]:has(.hw[data-v="club"]) { opacity: 1; transition: opacity var(--smooth-ms) var(--smooth), filter 520ms cubic-bezier(0.2, 0, 0, 1); }
+.desk[data-shown]:has(.hw[data-v="club"]) { opacity: 1; transition: opacity var(--smooth-ms) var(--smooth), filter 340ms cubic-bezier(0.2, 0, 0, 1); }
 .hw[data-v="club"]::after {
   content: ''; position: absolute; left: 0; right: 0; top: calc(100% - 26px); height: var(--body);
   /* Top corners: the plate's own 26px corners as they're seen from here
