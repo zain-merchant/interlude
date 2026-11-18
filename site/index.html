@@ -657,7 +657,7 @@
           // (Its colour from a CSS variable, so Tune can change it: Note ›
           // side A, side B, white label paper.)
           const paperVar = label === 'white' ? '--lab-white' : side === 'B' ? '--lab-b' : '--lab-a';
-          const paperDef = label === 'white' ? '#f3f0e8' : side === 'B' ? '#d6e3f0' : '#efe9dc';
+          const paperDef = label === 'white' ? '#f3f0e8' : side === 'B' ? '#5ed9f8' : '#fb8b38';
           el('circle', { r: L, style: `fill: var(${paperVar}, ${paperDef})` }, lab);
           const pf = el('filter', { id: `paper-${tag}`, x: '-10%', y: '-10%', width: '120%', height: '120%' }, defs);
           el('feTurbulence', { type: 'fractalNoise', baseFrequency: '1.4', numOctaves: 3, seed: 4, result: 'n' }, pf);
@@ -717,7 +717,7 @@
         // Apple-style springs (a duration and a bounce, as in SwiftUI), set
         // on the Note sliders. Its speed, how far out it comes.
         if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
-          const S = { rpm: 33.3, out: 46, slide: { visualDuration: 0.7, bounce: 0.12 }, spinUp: { visualDuration: 1.1, bounce: 0 }, spinDown: { visualDuration: 1.6, bounce: 0 } };
+          const S = { rpm: 9.7, out: 42, slide: { visualDuration: 0.5, bounce: 0.12 }, spinUp: { visualDuration: 1.1, bounce: 0 }, spinDown: { visualDuration: 1.6, bounce: 0 } };
           // A spring's stiffness and damping (mass 1) from its duration and
           // bounce, the way SwiftUI turns one into the other.
           const kc = (sp) => { const d = Math.max(0.05, sp.visualDuration ?? 0.6); const b = Math.min(0.95, Math.max(0, sp.bounce ?? 0)); return [(2 * Math.PI / d) ** 2, (4 * Math.PI * (1 - b)) / d]; };
@@ -766,8 +766,8 @@
           window.tune?.slider({ label: 'Note: record flip bounce', min: 0, max: 0.8, step: 0.01, value: S.flip.bounce, onInput: (v) => (S.flip = { ...S.flip, bounce: v }) });
           // The labels' paper.
           const root = document.documentElement.style;
-          window.tune?.color({ label: 'Note: side A label', value: '#efe9dc', onInput: (v) => root.setProperty('--lab-a', v) });
-          window.tune?.color({ label: 'Note: side B label', value: '#d6e3f0', onInput: (v) => root.setProperty('--lab-b', v) });
+          window.tune?.color({ label: 'Note: side A label', value: '#fb8b38', onInput: (v) => root.setProperty('--lab-a', v) });
+          window.tune?.color({ label: 'Note: side B label', value: '#5ed9f8', onInput: (v) => root.setProperty('--lab-b', v) });
           window.tune?.color({ label: 'Note: white label', value: '#f3f0e8', onInput: (v) => root.setProperty('--lab-white', v) });
           const t = window.tune;
           t?.slider({ label: 'Note: sleeve corner radius', min: 0, max: 16, step: 0.5, value: 4, unit: 'px', css: '--sleeve-r' });
@@ -1387,8 +1387,8 @@
     // after (positive) or ahead of (negative) the check and the green words.
     window.tune?.slider({ label: 'Add music: sweep starts', min: -500, max: 500, step: 10, value: 0, unit: 'ms', css: '--add-sweep' });
     // The note beside the FAQ (style.css, "The note beside the FAQ").
-    document.documentElement.dataset.note = 'ruled';
-    window.tune?.select({ label: 'Note: style', value: 'ruled', options: [['ruled', 'Ruled page, tilted right, signature right'], ['sleeve', 'A die-cut record sleeve, the record turning inside'], ['label', 'A white label record, the note written on it'], ['plain', 'Plain card'], ['tilt', 'Tilted a little'], ['overhang', 'Signature off the corner'], ['paper', 'On warm paper'], ['lined', 'Ruled like a notebook'], ['letter', 'Paper, tilted, signature off the corner']],
+    document.documentElement.dataset.note = 'sleeve';
+    window.tune?.select({ label: 'Note: style', value: 'sleeve', options: [['ruled', 'Ruled page, tilted right, signature right'], ['sleeve', 'A die-cut record sleeve, the record turning inside'], ['label', 'A white label record, the note written on it'], ['plain', 'Plain card'], ['tilt', 'Tilted a little'], ['overhang', 'Signature off the corner'], ['paper', 'On warm paper'], ['lined', 'Ruled like a notebook'], ['letter', 'Paper, tilted, signature off the corner']],
       onInput: (v) => (document.documentElement.dataset.note = v) });
     // What sits between sections (style.css, "Between sections").
     document.documentElement.dataset.between = 'none';
