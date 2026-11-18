@@ -53,6 +53,11 @@ export const T = {
   rippleSpread: 0.45, // interference: how far apart its sources are, em
   fade: 0.5,         // how long the whole effect takes to come and go, s
   lineWidth: 1.25,   // groove line width, CSS px
+  arc: 'flat',       // flat: long shallow arcs; record: round arcs of a record's grooves, its middle below the word
+  songs: 0,          // grooves per song, with a smooth gap between songs (0: one long song, no gaps)
+  songGap: 1.6,      // a song gap's width, in grooves
+  trigger: 'follow', // follow: there while the pointer is; once: starts when it comes near, plays out, then fades on its own
+  hold: 2.5,         // once: how long it plays before it fades, s
   letter: [1, 1, 1, 11 / 255],
   gap: [0, 0, 0, 0],
   line: [1, 1, 1, 19 / 255],
@@ -144,7 +149,8 @@ uniform vec4 uLetter;   // the letters' fill
 uniform vec4 uGap;      // between the grooves
 uniform vec4 uLine;     // the groove lines
 uniform vec4 uOutline;  // round the letters
-uniform float uStroke;  // outline width, CSS px
+uniform float uStroke;
+uniform vec2 uSongs;    // grooves per song (0: none), the gap's width in grooves  // outline width, CSS px
 
 const float PI = 3.14159265;
 // The lamp's fringes: cool on one side, warm on the other.
@@ -294,6 +300,14 @@ void main() {
     groove = clamp(mix(duty, shaped, apart), 0.0, 1.0);
   }
   if (hard > 0.0) groove = mix(groove, boxLines(rr / P, fg, lw / uPitch), hard);
+  // The gaps between songs: every so many grooves, a smooth band with no
+  // lines, the way a record shows where one track ends and the next starts.
+  if (uSongs.x > 0.0) {
+    float k = mod(rr / P, uSongs.x);
+    float g = uSongs.y;
+    float band = smoothstep(0.0, 0.4, k) * (1.0 - smoothstep(g - 0.4, g, k));
+    groove *= 1.0 - band;
+  }
 
   // Painted inside the letters, one over the other (premultiplied):
   // the fill, the gaps, the lines with any light, the outline.
@@ -369,7 +383,7 @@ function init() {
   gl.enableVertexAttribArray(loc);
   gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
   for (const n of ['uText', 'uSize', 'uDpr', 'uCentre', 'uAspect', 'uPivot', 'uRot', 'uPitch', 'uHover', 'uLamp', 'uWarp',
-    'uRipples', 'uRing', 'uEm', 'uFar', 'uLineW', 'uPts', 'uLetter', 'uGap', 'uLine', 'uOutline', 'uStroke']) U[n] = gl.getUniformLocation(prog, n);
+    'uRipples', 'uRing', 'uEm', 'uFar', 'uLineW', 'uPts', 'uLetter', 'uGap', 'uLine', 'uOutline', 'uStroke', 'uSongs']) U[n] = gl.getUniformLocation(prog, n);
   tex = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, tex);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
@@ -413,8 +427,11 @@ function layout() {
   // The grooves: arcs of the CSS ellipse "100% 50% at 50% 135%" of the
   // word's own box, so they're long and shallow, nearly level.
   const box = word.getBoundingClientRect();
+  // Or, as record: true circles round a middle well below the word, so
+  // the arcs bend the way a record's grooves do.
+  const rec = T.arc === 'record';
   geo = { w, h, dpr, em: size, cx: c.width / 2,
-    cy: box.top - c.top + box.height * 1.35, aspect: box.width / (box.height * 0.5),
+    cy: rec ? baseline + c.width * 1.1 : box.top - c.top + box.height * 1.35, aspect: rec ? 1 : box.width / (box.height * 0.5),
     // The tilt turns them round the middle of the letters.
     pivot: { x: c.width / 2, y: baseline - size * 0.36 },
     // The lamp's streaks lean away from here.
@@ -502,6 +519,8 @@ function frame(now) {
   if (!geo) return false;
   if (demoAt) demoPoint(now);
   clock += dt;
+  // Once: it has played its time, so it fades, wherever the pointer is.
+  if (T.trigger === 'once' && hover.want && now >= onceUntil) hover.want = 0;
   const still = reduced.matches;
 
   // Comes and goes evenly over the fade time (eased where it's drawn).
@@ -560,6 +579,7 @@ function frame(now) {
   gl.uniform4fv(U.uPts, pts.flat());
   for (const v of [['uLetter', 'letter'], ['uGap', 'gap'], ['uLine', 'line'], ['uOutline', 'outline']]) col(v);
   gl.uniform1f(U.uStroke, T.stroke);
+  gl.uniform2f(U.uSongs, T.songs, Math.min(T.songGap, Math.max(0, T.songs - 1)));
   gl.clearColor(0, 0, 0, 0);
   gl.clear(gl.COLOR_BUFFER_BIT);
   gl.drawArrays(gl.TRIANGLES, 0, 3);
@@ -568,6 +588,7 @@ function frame(now) {
   // ring still running out, or (while over the word) rings to come: on a
   // timer for breathe and interference; for drop, the rest still to come.
   if (demoAt) return true;
+  if (T.trigger === 'once' && hover.want) return true;
   if (hover.on !== hover.want) return true;
   if (hover.on === 0) return false;
   if (!still && (Math.abs(hover.tx - hover.x) > 0.2 || Math.abs(hover.ty - hover.y) > 0.2 || Math.hypot(hover.vx, hover.vy) > 2)) return true;
@@ -593,7 +614,18 @@ export function relayout() {
 
 /** From the page's pointer handler: where the pointer is over the word
  *  (canvas-local CSS px), or null once it has left. */
+let onceUntil = 0;
+let near = false; // once: the pointer is still near since it last set it off
 export function point(p) {
+  if (T.trigger === 'once') {
+    if (!p) { near = false; wake(); return; }
+    // While it plays, it follows the pointer; leaving doesn't stop it.
+    if (hover.want) { hover.tx = p.x; hover.ty = p.y; wake(); return; }
+    // Set off only by coming near afresh, once it has faded right out.
+    if (near || hover.on > 0.02) return;
+    near = true;
+    onceUntil = performance.now() + T.hold * 1000;
+  }
   if (p) {
     // Coming in from nothing, start right there (not flying in from afar).
     if (hover.want === 0 && hover.on < 0.02) {
