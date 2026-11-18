@@ -1625,14 +1625,15 @@ html[data-note="label"] .founder-ask { position: absolute; top: calc(100% + 18px
 /* Feature cards, fine-tuned. The heading sits closer to its list than to
    the picture above it: 40px or so of the picture's own space above it,
    8px below it to the first row. */
-html:is([data-fhead="big"], [data-fhead="both"]) :is(.group, .steps li) h3 { margin-bottom: 8px !important; }
+html:is([data-fhead="big"], [data-fhead="both"]) :is(.group, .steps li) h3 { margin-bottom: var(--fh-gap, 0px) !important; }
 /* The list's names a touch brighter than the descriptions' grey: about
    15% of the way from the quiet grey toward white. */
 html:is([data-fhead="quiet"], [data-fhead="both"]) .group li b { color: color-mix(in srgb, var(--fg-2) 85%, var(--fg)); }
 /* Pictures that run off their bottom edge (Controllers, Add music) fade
    out sooner, so they end about where the others do instead of running
    down to the heading. */
-.pic:has(.p-body[data-bleed="bottom"]) { -webkit-mask-image: linear-gradient(to bottom, #000 62%, transparent 86%); mask-image: linear-gradient(to bottom, #000 62%, transparent 86%); }
+/* (The pictures that run off their foot fade on their own curve,
+   pictures.css --bleed-fade; the controller's is on the Tune sliders.) */
 
 /* Features: layout (Tune). Apart: the cards with a little more room
    between them (24px). One card: all six in one panel, ruled into cells
