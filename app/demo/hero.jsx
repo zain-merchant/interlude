@@ -953,8 +953,13 @@ function Hero() {
   useCursorSteer();
   // The page lays itself out by the hands: the controller version eases the
   // screen back and brings the controller up over its foot.
+  const firstHand = useRef(true);
   useEffect(() => {
-    document.getElementById('hero').dataset.hand = hand;
+    const el = document.getElementById('hero');
+    el.dataset.hand = hand;
+    // (The edge's blur plays on a switch, not as the page opens.)
+    if (firstHand.current) firstHand.current = false;
+    else el.toggleAttribute('data-switched', true);
   }, [hand]);
   useEffect(() => {
     modeListeners.add(setHand);
