@@ -210,12 +210,15 @@ impl TrackSummary {
     /// core.
     pub fn analyze(path: impl AsRef<Path>) -> Result<Self, LoadError> {
         let (stereo, sample_rate) = decode(path.as_ref())?;
-        Ok(Self {
+        crate::keynet::set_single_threaded(true);
+        let analysis = Self {
             duration: stereo.len() as f64 / 2.0 / sample_rate as f64,
             bpm: detect_beatgrid(&stereo, sample_rate).map(|g| g.bpm),
             key: detect_key(&stereo, sample_rate),
             loudness: measure_loudness(&stereo, sample_rate),
-        })
+        };
+        crate::keynet::set_single_threaded(false);
+        Ok(analysis)
     }
 }
 
