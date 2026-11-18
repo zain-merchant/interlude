@@ -212,8 +212,8 @@ export function Eq(play) {
         const snap = (t) => 0.3 * inOut(t) + 0.7 * t * t;
         await Promise.all([
           tween(a, 'hi', 0.5, 0.18, 1050, inOut),
-          a.wait(200).then(() => tween(a, 'mid', 0.5, 0.85, 1050, inOut)),
-          a.wait(620).then(() => tween(a, 'low', 0.5, 0, 1100, snap)),
+          a.wait(290).then(() => tween(a, 'mid', 0.5, 0.85, 1050, inOut)),
+          a.wait(700).then(() => tween(a, 'low', 0.5, 0, 1100, snap)),
         ]);
       }}>
       {(s) => (
