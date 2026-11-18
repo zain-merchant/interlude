@@ -21,6 +21,10 @@
 //                      the panel is rebuilt; keep the same values, relabel
 //   tune.refresh('Group')  rebuilds that group's panel (call it when
 //                      whatever `show` or `options` read has changed)
+//   tune.set(label, value)  moves a control as if by hand (its onInput
+//                      runs, the panel shows it); one hidden for now keeps
+//                      the value for when it shows. label as registered
+//                      (a slider's without its unit).
 (() => {
   const show = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname) || new URLSearchParams(location.search).has('tune');
   const base = document.currentScript?.src ? new URL('.', document.currentScript.src).href : './';
@@ -146,10 +150,18 @@
     write(stashOf(group), stash);
     const last = {};
     g.last = last;
+    let gen = 0;
     kit.subscribe((v) => {
+      // (A control's onInput may set others, which comes back here with
+      // newer values: then this older round stops.)
+      const mine = ++gen;
       for (const c of g.list) {
+        if (gen !== mine) break;
         const x = at(v, c.path);
         if (x === undefined || x === last[c.path]) continue;
+        // (A control coming back into the panel shows its default for a
+        // moment before its kept value is put back: skip that.)
+        if (g.hold?.has(c.path) && g.hold.get(c.path) !== x) continue;
         last[c.path] = x;
         c.apply(x);
       }
@@ -172,8 +184,10 @@
     }
     try { putBy(g.stash, g.DK.DialStore.presets.get(id), g.DK.DialStore.baseValues.get(id), going); } catch {}
     g.shown = now;
+    g.hold = new Map(back);
     g.kit.updateConfig(configOf(g));
     for (const [path, v] of back) g.kit.setValue(path, v);
+    g.hold = null;
     putBack(g.DK, id, g.stash, back.map(([path]) => path));
     write(stashOf(group), g.stash);
   }
@@ -212,19 +226,35 @@
       onInput?.(v);
     };
     apply(value);
-    if (show) add(unit ? `${label} (${unit})` : label, { apply, config: [value, min, max, step], folder, show: when });
+    if (show) add(unit ? `${label} (${unit})` : label, { key: label, apply, config: [value, min, max, step], folder, show: when });
   }
 
   function select({ label, options, value, onInput, folder, show: when }) {
     onInput?.(value);
     const list = () => (typeof options === 'function' ? options() : options).map(([v, t]) => ({ value: v, label: t }));
-    if (show) add(label, { apply: (v) => onInput?.(v), config: typeof options === 'function' ? () => ({ type: 'select', options: list(), default: value }) : { type: 'select', options: list(), default: value }, folder, show: when });
+    if (show) add(label, { key: label, apply: (v) => onInput?.(v), config: typeof options === 'function' ? () => ({ type: 'select', options: list(), default: value }) : { type: 'select', options: list(), default: value }, folder, show: when });
   }
 
   function color({ label, value, onInput, folder, show: when }) {
     onInput?.(value);
-    if (show) add(label, { apply: (v) => onInput?.(v), config: { type: 'color', default: value }, folder, show: when });
+    if (show) add(label, { key: label, apply: (v) => onInput?.(v), config: { type: 'color', default: value }, folder, show: when });
   }
 
-  window.tune = { slider, select, color, refresh, shown: show };
+  function set(label, value) {
+    if (!show) return;
+    for (const [group, g] of groups) {
+      const c = g.list.find((c) => c.key === label);
+      if (!c) continue;
+      if (!g.kit) c.apply(value);              // its panel isn't made yet
+      else if (g.shown.has(c)) g.kit.setValue(c.path, value);
+      else {
+        g.stash[c.path] = value;
+        write(stashOf(group), g.stash);
+        c.apply(value);
+      }
+      return;
+    }
+  }
+
+  window.tune = { slider, select, color, refresh, set, shown: show };
 })();
