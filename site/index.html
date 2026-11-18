@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261120s">
+  <link rel="stylesheet" href="style.css?v=20261120u">
   <link rel="stylesheet" href="demo/cards.css?v=20261120r">
   <script src="tune.js?v=20261120n"></script>
   <script>
@@ -610,6 +610,24 @@
         sheen.className = 'rec-sheen';
         rec.append(spin, sheen);
         note.prepend(rec);
+        // The sleeve's record turns only while it's out: on hover it spins up
+        // to 33⅓ (a turn every 1.8s) over about a second, and off it slows
+        // to a stop over about a second and a half, as a platter does.
+        if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          const RPM = 360 / 1.8;
+          let ang = 0, vel = 0, want = 0, last = 0, on = false;
+          const step = (now) => {
+            const dt = Math.min(0.05, (now - last) / 1000 || 0.016); last = now;
+            vel += (want - vel) * Math.min(1, dt * (want ? 2.6 : 1.6));
+            if (!want && vel < 2) vel = 0;
+            ang = (ang + vel * dt) % 360;
+            spin.style.rotate = `${ang}deg`;
+            if (vel || want) requestAnimationFrame(step); else on = false;
+          };
+          const go = (w) => { if (document.documentElement.dataset.note !== 'sleeve') return; want = w; if (!on) { on = true; last = 0; requestAnimationFrame(step); } };
+          note.addEventListener('pointerenter', () => go(RPM));
+          note.addEventListener('pointerleave', () => go(0));
+        }
       })();
       // The note's signature is written in the first time it's mostly in
       // view (shown whole straight away when motion is reduced).
