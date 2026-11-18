@@ -102,14 +102,25 @@ const TURN = (Math.PI * 2) / 40;
 // blue and orange in the sheen, as on the footer's word. hover: what the
 // pointer does (see HOVERS); still: it fades this many seconds after the
 // pointer stops, so nothing ever looks selected. look: the style it's
-// drawn in (see LOOK). vinyl, smoke, finish: the tinted style's colour (any
-// CSS colour), how smoked toward black it is, and 'solid' or 'chromatic'.
-// shape: the shape preset last picked (see SHAPES), or 'custom'.
+// drawn in (see LOOK). shape: the shape preset last picked (see SHAPES),
+// or 'custom'. The rest set the vinyl style (see VINYLS, which has dark
+// vinyl's values and the presets'): vinyl, finish: its colour (any CSS
+// colour), 'solid' or 'chromatic'; body: how much that colour shows in it
+// (0: the page's black); through: the lamp's light coming through it;
+// wedge: the clean-edged wedges where the grooves light up pale; lineTint:
+// the grooves in its colour; flecks: flecks inside it. pitch, pitchOut:
+// groove spacing at the centre and how far it opens out by the rim (record
+// px); lineW: line width; press: the pressing's warp; contrast, satin,
+// level, sheen: the grooves' contrast, the songs' bands, their brightness
+// and the fixed sheen, each times its usual; songLen: how long each song
+// is (so how many there are).
 const T = {
   drop: 108, needle: 0.8, life: 0.2, persp: 0.85, cue: 'dust', cueAmt: 1, res: 0.85,
   soft: 1, glintAmt: 1, chroma: 'none', chromaAmt: 0.6, speck: 'hyphen',
   size: 1, up: 0, mask: 0, warp: 'none', warpAmt: 0.5, tint: 0, hover: 'arc', still: 1.2,
-  look: 'current', vinyl: '#eb1a3d', smoke: 0.9, finish: 'solid', shape: 'custom',
+  look: 'vinyl', shape: 'custom', vinylPreset: 'dark',
+  vinyl: '#1c1c20', finish: 'solid', body: 0, through: 0, wedge: 0, lineTint: 0, flecks: 0,
+  pitch: 6, pitchOut: 8, lineW: 1, press: 1, contrast: 1, satin: 1, level: 1, sheen: 1, songLen: 1,
 };
 const CUES = { glints: 0, dust: 1, warp: 2, spokes: 3, soft: 4 };
 const CHROMA = { none: 0, film: 1, prism: 2, lamp: 3, grating: 4, pearl: 5, fringe: 6 };
@@ -195,7 +206,7 @@ const VERT = `
 attribute vec2 p;
 void main() { gl_Position = vec4(p, 0.0, 1.0); }`;
 // The shader comes in parts: HEAD (uniforms, helpers, and discQ, where a
-// point on the page lies on the disc) is shared; MAIN is the current look,
+// point on the page lies on the disc) is shared; MAIN is the vinyl style (dark vinyl and its other presets),
 // LOOKS the other styles (see LOOKS below), one compiled per style with
 // LOOK defined, so each only pays for its own drawing.
 const HEAD = `
@@ -223,8 +234,10 @@ uniform vec3 uLens;      // the lens bulge: centre and radius, CSS px
 uniform vec3 uHover;     // pointer radius, angle, strength
 uniform float uHoverMode;
 uniform vec3 uPtr;       // the hover's own place (on its spring), CSS px, and its speed
-uniform vec4 uVinyl;     // tinted vinyl: its colour, and how smoked (dark) it is
-uniform float uVinylFin; // tinted vinyl: 0 solid, 1 chromatic
+uniform vec4 uVinyl;     // the vinyl's colour, and how much its body shows (0: the page's black)
+uniform float uVinylFin; // the vinyl's colour: 0 solid, 1 chromatic
+uniform vec4 uThru;      // the vinyl: light through it, lamp wedges, grooves in its colour, flecks
+uniform vec4 uGroove;    // groove spacing at the centre, how far it opens out by the rim, line width, pressing warp
 uniform float uSwell;
 uniform vec2 uNeedle;    // radius, strength
 uniform vec2 uRipple;    // radius, strength
@@ -235,13 +248,6 @@ uniform vec2 uTracks[${MAX_TRACKS}];
 uniform float uTrackCount;
 
 const float PI = 3.14159265;
-// Groove spacing, record pixels: PITCH near the centre, opening out by
-// PITCH_OUT more at the rim. The far side of the disc (behind the
-// headline) is foreshortened hard; the wider spacing out there keeps its
-// grooves about 5 CSS px apart, distinct hairlines rather than one band.
-// The grooves stay true circles: spacing only changes with the radius.
-const float PITCH = 6.0;
-const float PITCH_OUT = 8.0;
 const vec3 BASE = vec3(0.86, 0.89, 0.95);
 // The footer's colours.
 const vec3 ORANGE = vec3(1.0, 0.608, 0.271);  // #ff9b45
@@ -393,13 +399,20 @@ void main() {
 
   // The grooves: a train of soft lines, built from a few harmonics, each
   // faded out as it nears the pixel size. Its average is always 1.
-  float pb = PITCH_OUT / uSpan.y;
+  // Their spacing, record pixels: uGroove.x near the centre, opening out by
+  // uGroove.y more at the rim (6 and 8 for dark vinyl). The far side of the
+  // disc (behind the headline) is foreshortened hard; the wider spacing out
+  // there keeps its grooves distinct hairlines rather than one band. They
+  // stay true circles: spacing only changes with the radius.
+  float PITCH = uGroove.x;
+  float pb = max(uGroove.y, 1e-3) / uSpan.y;
   float g = log(1.0 + pb * rr / PITCH) / pb;     // grooves counted out from the centre
   float fg = frr / (PITCH + pb * rr);            // grooves per device pixel
   float lines = 0.0;
   // Hairlines stay about a device pixel fine wherever the grooves open out
   // (on the near side), and are soft bands where they crowd (the far side).
-  float sig = clamp(0.8 * fg, 0.025, 0.1);
+  // (uGroove.z: wider lines, as a share of the spacing.)
+  float sig = clamp(0.8 * fg, 0.025 * uGroove.z, 0.1 * uGroove.z);
   float norm = 0.0;
   for (int k = 1; k <= 16; k++) {
     float fk = float(k);
@@ -425,7 +438,7 @@ void main() {
   float b = a - uSpin;
   float k1 = floor(mid / 140.0) + 3.0;
   float k2 = floor(mid / 90.0) + 5.0;
-  float warp = 0.13 * sin(k1 * b + r / 80.0 + idx * 2.3) + 0.085 * sin(k2 * b - r / 55.0 + idx * 4.1);
+  float warp = (0.13 * sin(k1 * b + r / 80.0 + idx * 2.3) + 0.085 * sin(k2 * b - r / 55.0 + idx * 4.1)) * uGroove.w;
   L *= 1.0 + sheen + warp * mix(0.6, 1.0, inSong);
 
   // Reflections, so it reads as spinning: in each song, a few short runs
@@ -669,8 +682,58 @@ void main() {
     vec3 c = side < 0.0 ? BLUE : ORANGE;
     base = mix(BASE, 0.95 * c, clamp(0.85 * uTint * smoothstep(0.1, 0.9, abs(side)), 0.0, 1.0));
   }
-  vec3 col = base * alpha + lift * (Gv + Hv);
-  alpha += lift * max(max(Lg, maxc(Gv)), 0.0) + lift * max(Hs, maxc(Hv));
+  // The vinyl (see VINYLS in the script). Dark vinyl is the page's own
+  // black, lit only by the lamp glancing off its grooves; the rest can be
+  // coloured and see-through: a body of its colour, the lamp's light
+  // coming through it (a deep glow of its hue, two clean-edged wedges
+  // where the grooves light up pale), grooves in its colour, and flecks
+  // inside it going round. Whatever its colour, the light through it is
+  // the colour's hue at full strength, so even near-black vinyl stays rich
+  // rather than grey; chromatic, that hue shifts round the disc with the
+  // lamp's angle, as on oil-slick vinyl, with swirls that turn with it.
+  vec4 vx = vec4(0.0);
+  if (uVinyl.w + uThru.x + uThru.y + uThru.z + uThru.w > 0.0) {
+    vec3 V = uVinyl.rgb;
+    float vm = maxc(V);
+    vec3 Vn = mix(vec3(1.0), V / max(vm, 1e-3), smoothstep(0.0, 0.03, vm));
+    if (uVinylFin > 0.5) {
+      Vn = hue(0.5 * cos(a - uFacing) + r / 900.0 + 0.12 * sin(2.0 * b + r / 260.0));
+      Vn /= maxc(Vn);
+    }
+    vec3 HI = mix(Vn, vec3(1.0), uVinylFin > 0.5 ? 0.55 : 0.65);
+    float inWedge = smoothstep(0.78, 0.84, lamp);
+    float wedge = uThru.y * inWedge;
+    base = mix(base, mix(Vn, vec3(1.0), 0.15), uThru.z);
+    base = mix(base, HI, min(wedge, 1.0));
+    // (In the wedges the grooves' lines light up, not the gaps between.)
+    alpha *= 1.0 + 2.5 * wedge * max(lines, 0.0) * inSong;
+    float sw = 1.0 + 0.15 * uSwell;
+    float body = uVinyl.w * mix(0.5, 1.0, inSong) * edge * sw;
+    vx += vec4(V, 1.0) * body;
+    float thr = uThru.x * (0.015 + 0.05 * inWedge + 0.05 * lamp * lamp) * mix(0.7, 1.0, inSong) * edge * sw;
+    vx += vec4(Vn, 1.0) * thr;
+    vx += vec4(HI, 1.0) * 0.05 * wedge * inSong * edge;
+    if (uThru.w > 0.0) {
+      // Flecks in the vinyl, carried round, glinting as they pass the light
+      // (round on the screen however the disc is foreshortened).
+      vec2 c = vec2(r / 40.0, mod(b, 2.0 * PI) * r / 40.0);
+      vec2 id = floor(c);
+      float h = hash(id + 7.7);
+      float roomF = smoothstep(12.0, 20.0, 40.0 / (fr * uDpr));
+      if (h > 0.8 && roomF > 0.0) {
+        vec2 ctr = (id + 0.5 + 0.5 * (vec2(hash(id + 1.7), hash(id + 5.3)) - 0.5)) * 40.0;
+        float ang = ctr.y / ((id.x + 0.5) * 40.0) + uSpin;
+        vec2 D = q - ctr.x * vec2(cos(ang), sin(ang));
+        float det = dqx.x * dqy.y - dqy.x * dqx.y;
+        float dd = length(vec2(dqy.y * D.x - dqy.x * D.y, dqx.x * D.y - dqx.y * D.x) / (det * uDpr));
+        float rad = 0.9 + 1.0 * fract(h * 37.0);
+        float ls = 0.5 + 0.5 * cos(2.0 * (ang - uFacing));
+        vx += vec4(HI, 1.0) * uThru.w * roomF * edge * clamp((rad - dd) * uDpr + 0.5, 0.0, 1.0) * (0.25 + 0.75 * ls * ls);
+      }
+    }
+  }
+  vec3 col = base * alpha + lift * (Gv + Hv) + vx.rgb;
+  alpha += lift * max(max(Lg, maxc(Gv)), 0.0) + lift * max(Hs, maxc(Hv)) + vx.a;
 
   // The needle's groove: lit warm, a narrow band riding on the grooves.
   vec3 warm = vec3(0.95, 0.86, 0.74);
@@ -711,7 +774,7 @@ void main() {
 
 // The other styles: the same disc, songs, turn, pointer, needle and music,
 // each drawn as a different kind of picture. None costs more than the
-// current look: no groove harmonics, a pass or two over the songs, a
+// vinyl style: no groove harmonics, a pass or two over the songs, a
 // handful of sums.
 //
 // What keeps them crisp however the disc is foreshortened:
@@ -783,7 +846,7 @@ float lodHair(float v, float fv, float P0, float gap, float w) {
   float n = floor(v / P + 0.5);
   return hair((v - n * P) / fv, w) * (mod(n, 2.0) > 0.5 ? 1.0 - t : 1.0);
 }
-// The glints, as in the current look: in each song three short runs of
+// The glints, as on the vinyl: in each song three short runs of
 // groove catch the lamp, fixed on the disc so they turn with it, in the
 // glint colour (see CHROMA; white: the style's own light). Light to add.
 vec3 glints(float r, float a, float b, float idx, float u, float inS, float lamp, vec3 white) {
@@ -1071,63 +1134,6 @@ void main() {
   // The needle: its groove a line of warm light; the drop, a fine ring.
   over(o, vec3(1.0, 0.86, 0.6), 0.95 * uNeedle.y * stroke((r - uNeedle.x) / fr, 1.8 * uDpr));
   over(o, vec3(1.0), 0.6 * uRipple.y * stroke((r - uRipple.x) / fr, uDpr));
-#elif LOOK == 6
-  // TINTED: translucent coloured vinyl (its colour picked in Tune), the
-  // lamp's light coming through it. The body a clear flat colour, the quiet
-  // runs between songs clearer still; the grooves fine lines that catch the
-  // lamp; its reflection two clean-edged wedges where the grooves light up
-  // pale; flecks in the vinyl carried round, glinting as they pass through
-  // the light; and the glints of the current look.
-  // Smoked (or a dark colour picked) the body darkens toward black, as the
-  // current look's, while the light through it keeps the colour's own hue
-  // at full strength, so dark vinyl stays rich rather than grey: a deep
-  // glow of it where the lamp falls, its grooves faint lines of it all
-  // round. Chromatic: the light through it shifts hue round the disc with
-  // the lamp's angle, as on oil-slick vinyl, with swirls pressed in that
-  // turn with it.
-  vec3 V = uVinyl.rgb;
-  float vm = maxc(V);
-  vec3 Vn = mix(vec3(1.0), V / max(vm, 1e-3), smoothstep(0.0, 0.03, vm));
-  if (uVinylFin > 0.5) {
-    Vn = hue(0.5 * cos(a - uFacing) + r / 900.0 + 0.12 * sin(2.0 * b + r / 260.0));
-    Vn /= maxc(Vn);
-  }
-  float dk = max(uVinyl.w, 1.0 - smoothstep(0.0, 0.6, vm));
-  // (Its highlights paler on clear vinyl, deeper on dark.)
-  vec3 HI = mix(Vn, vec3(1.0), uVinylFin > 0.5 ? 0.55 : mix(0.78, 0.5, dk));
-  vec3 LINE = mix(V, 0.5 * mix(Vn, vec3(1.0), 0.2), dk);
-  float wedge = smoothstep(0.78, 0.84, lamp);
-  add(o, V, mix(0.15, 0.3, inS) * (1.0 - 0.9 * uVinyl.w) * (1.0 + 0.15 * sw));
-  add(o, Vn, dk * (0.015 + 0.05 * wedge + 0.05 * lamp * lamp) * mix(0.7, 1.0, inS) * (1.0 + 0.15 * sw));
-  float gro = lodHair(r, fr, 5.0, 3.5 * uDpr, 0.9 * uDpr) * inS;
-  add(o, mix(LINE, HI, wedge), (0.1 + 0.04 * dk + 0.32 * wedge) * gro);
-  add(o, HI, 0.05 * wedge * inS);
-  add(o, HI, 0.5 * wedge * smoothstep(3.0, 8.0, room) * hair((r - s.x) / fr, uDpr));
-  {
-    vec2 c = vec2(r / 40.0, mod(b, 2.0 * PI) * r / 40.0);
-    vec2 id = floor(c);
-    float h = hash(id + 7.7);
-    float roomF = smoothstep(12.0, 20.0, 40.0 * rp);
-    if (h > 0.8 && roomF > 0.0) {
-      vec2 ctr = (id + 0.5 + 0.5 * (vec2(hash(id + 1.7), hash(id + 5.3)) - 0.5)) * 40.0;
-      float ang = ctr.y / ((id.x + 0.5) * 40.0) + uSpin;
-      vec2 D = q - ctr.x * vec2(cos(ang), sin(ang));
-      float dd = length(vec2(dqy.y * D.x - dqy.x * D.y, dqx.x * D.y - dqx.y * D.x) / (det * uDpr));
-      float rad = 0.9 + 1.0 * fract(h * 37.0);
-      float ls = 0.5 + 0.5 * cos(2.0 * (ang - uFacing));
-      add(o, HI, roomF * cue * clamp((rad - dd) * uDpr + 0.5, 0.0, 1.0) * (0.25 + 0.75 * ls * ls));
-    }
-  }
-  vec3 G = glints(r, a, b, idx, u, inS, lamp, HI);
-  o += vec4(G, maxc(G)) * 0.5 * (0.2 + 0.8 * gro);
-  add(o, HI, (0.4 + 0.5 * lamp) * hair((r - (R - 1.5)) / fr, 1.4 * uDpr));
-  // The pointer: light through the vinyl, the grooves under it lit pale.
-  add(o, HI, clamp(hv.x, 0.0, 1.0) * (0.12 + 0.7 * gro));
-  add(o, Vn, 0.35 * hv.x);
-  add(o, vec3(1.0, 0.7, 0.4), clamp(hv.y, 0.0, 1.0) * (0.15 + 0.6 * gro));
-  add(o, HI, hv.z);
-  add(o, vec3(1.0, 0.92, 0.8), 0.9 * uNeedle.y * stroke((r - uNeedle.x) / fr, 1.6 * uDpr));
-  add(o, HI, 0.6 * uRipple.y * stroke((r - uRipple.x) / fr, uDpr));
 #elif LOOK == 7
   // CONTOUR: a topographic map. The disc a gentle basin, each song a ridge
   // whose peaks rise and fall round it and turn with the disc; drawn as
@@ -1317,19 +1323,18 @@ void main() {
   float n = (hash(gl_FragCoord.xy) - 0.5) / 255.0;
   gl_FragColor = vec4(max(o.rgb + n, 0.0), clamp(o.a + n, 0.0, 1.0));
 }`;
-// The styles, by name: n is its program (0 the current look, the others
+// The styles, by name: n is its program (0 the vinyl, the others
 // LOOK in LOOKS). crisp: drawn at the screen's full resolution whatever
 // the render resolution, since fine lines, dots and cells go soft when
 // the browser scales them up (each still costs less than the current
 // look does at its own resolution).
 const STYLE_LIST = [
-  ['current', 'Current (dark vinyl)', { n: 0 }],
+  ['vinyl', 'Vinyl (see vinyl presets)', { n: 0 }],
   ['orbit', 'Orbit (line art)', { n: 1, crisp: true }],
   ['bauhaus', 'Bauhaus', { n: 2, crisp: true }],
   ['riso', 'Risograph', { n: 3, crisp: true }],
   ['engraving', 'Engraving (guilloche)', { n: 4, crisp: true }],
   ['chrome', 'Chrome (liquid metal)', { n: 5, crisp: true }],
-  ['tinted', 'Tinted vinyl', { n: 6, crisp: true }],
   ['contour', 'Contour map', { n: 7, crisp: true }],
   ['neon', 'Neon tubes', { n: 8, crisp: true }],
   ['enamel', 'Enamel (cloisonne)', { n: 9, crisp: true }],
@@ -1344,7 +1349,7 @@ let geo = null;
 
 // One program per style, compiled the first time it's shown.
 const NAMES = ['uSize', 'uDpr', 'uCentre', 'uGeo', 'uHoles', 'uHoleCount', 'uHoleR', 'uSpan', 'uSpin', 'uFacing', 'uStyle', 'uSheen', 'uGlint', 'uHover', 'uSwell', 'uNeedle', 'uRipple', 'uTouch', 'uHz', 'uCue', 'uTracks', 'uTrackCount',
-  'uOuter', 'uGlintAmt', 'uChroma', 'uSpeck', 'uTint', 'uWarp', 'uLens', 'uHoverMode', 'uPtr', 'uVinyl', 'uVinylFin'];
+  'uOuter', 'uGlintAmt', 'uChroma', 'uSpeck', 'uTint', 'uWarp', 'uLens', 'uHoverMode', 'uPtr', 'uVinyl', 'uVinylFin', 'uThru', 'uGroove'];
 const progs = new Map();
 let shown = -1;
 function build(n) {
@@ -1435,7 +1440,7 @@ function layout(now) {
   const end = bar && next && next.top > bar.bottom ? next.top - c.top : s.bottom - c.top + 180;
   // The app's screen, where the pointer isn't on the record.
   const box = { l: s.left - c.left, r: s.right - c.left, t: s.top - c.top, b: s.bottom - c.top };
-  const key = [c.width, c.height, Math.round(cx), Math.round(cy), Math.round(end), T.drop, T.persp, T.size, T.up, T.warp, T.warpAmt, T.mask].join();
+  const key = [c.width, c.height, Math.round(cx), Math.round(cy), Math.round(end), T.drop, T.persp, T.size, T.up, T.warp, T.warpAmt, T.mask, T.songLen].join();
   gl.uniform4fv(U.uHoles, new Float32Array([...holes.flat(), ...new Array(16 - holes.length * 4).fill(0)]));
   gl.uniform1f(U.uHoleCount, holes.length);
   const btn = document.querySelector('.hero .btn');
@@ -1451,7 +1456,7 @@ function layout(now) {
   const Rmax = Math.max(out, top);
   const tracks = [];
   for (let a = r0, i = 0; a < Rmax - 40 && tracks.length < MAX_TRACKS; i++) {
-    const b = Math.min(Rmax - 34, a + 60 + rand(i, 9) * 80);
+    const b = Math.min(Rmax - 34, a + (60 + rand(i, 9) * 80) * T.songLen);
     tracks.push(a, b);
     a = b + GAP;
   }
@@ -1619,8 +1624,8 @@ function frame(now, still) {
   gl.uniform2f(U.uSpan, g.r0, g.R);
   gl.uniform1f(U.uSpin, spin % (Math.PI * 2));
   gl.uniform1f(U.uFacing, FACING + DRIFT * Math.min(1, T.life) * Math.sin((drift * 2 * Math.PI) / DRIFT_S));
-  gl.uniform3f(U.uStyle, st.lines, st.satin, st.level);
-  gl.uniform1f(U.uSheen, st.sheen);
+  gl.uniform3f(U.uStyle, st.lines * T.contrast, st.satin * T.satin, st.level * T.level);
+  gl.uniform1f(U.uSheen, st.sheen * T.sheen);
   gl.uniform1f(U.uGlint, st.glint ?? 1.6);
   gl.uniform3f(U.uHover, hover.r, hover.a, still ? 0 : hover.on);
   gl.uniform1f(U.uSwell, swell);
@@ -1640,8 +1645,10 @@ function frame(now, still) {
   gl.uniform3f(U.uLens, ...g.lens);
   gl.uniform1f(U.uHoverMode, mode);
   gl.uniform3f(U.uPtr, sp ? hover.sx : hover.x, sp ? hover.sy : hover.y, hover.speed);
-  gl.uniform4f(U.uVinyl, ...rgbOf(T.vinyl), T.smoke);
+  gl.uniform4f(U.uVinyl, ...rgbOf(T.vinyl), T.body);
   gl.uniform1f(U.uVinylFin, T.finish === 'chromatic' ? 1 : 0);
+  gl.uniform4f(U.uThru, T.through, T.wedge, T.lineTint, T.flecks);
+  gl.uniform4f(U.uGroove, T.pitch, T.pitchOut, T.lineW, T.press);
   gl.clearColor(0, 0, 0, 0);
   gl.clear(gl.COLOR_BUFFER_BIT);
   gl.drawArrays(gl.TRIANGLES, 0, 3);
@@ -1673,12 +1680,11 @@ function topFade() {
 
 // Tune. The style comes first; then the rest in folders, each control only
 // in the panel while it does something to the style picked (or to what's
-// picked above it): the spin cue's and dust's controls, the lamp colour
-// and the render resolution belong to the current look; the glints to the
-// current look and the styles that draw them (GLINTY); the vinyl's colour
-// to the tinted one; everything else works in every style, each drawing it
-// its own way (see LOOKS and hoverField). Labels are what the panel saves
-// values under, so they stay.
+// picked above it): the vinyl's own controls, the spin cue's and dust's,
+// the lamp colour and the render resolution belong to the vinyl style; the
+// glints to it and the styles that draw them too (GLINTY); everything else
+// works in every style, each drawing it its own way (see LOOKS and
+// hoverField). Labels are what the panel saves values under, so they stay.
 const tune = window.tune;
 const again = () => { geo = null; measured = 0; wake(); };
 const redraw = (k) => (v) => { T[k] = v; if (prog) wake(); };
@@ -1686,21 +1692,95 @@ const reshape = (k) => (v) => { T[k] = v; if (prog) again(); };
 const panel = () => tune?.refresh?.('Hero record');
 // ...and the panel follows it.
 const thenPanel = (f) => (v) => { f(v); panel(); };
-const cur = () => T.look === 'current';
-const GLINTY = new Set(['current', 'tinted', 'orbit', 'bauhaus']);
+const cur = () => T.look === 'vinyl';
+const GLINTY = new Set(['vinyl', 'orbit', 'bauhaus']);
 const glinty = () => GLINTY.has(T.look);
+
+// Presets: a select that sets several controls together, the panel's
+// sliders following (with an older tune.js, only the record does); moving
+// one of them by hand afterwards shows Custom. Each preset's values sit on
+// its sliders' steps, so the panel's echo of them matches.
+const sameColour = (a, b) => rgbOf(a).every((x, i) => Math.abs(x - rgbOf(b)[i]) < 1 / 255);
+const same = (a, b) => (typeof a === 'number' && typeof b === 'number' ? Math.abs(a - b) < 1e-6
+  : typeof a === 'string' && typeof b === 'string' && /^#|\(/.test(a) && /^#|\(/.test(b) ? sameColour(a, b) : a === b);
+function presets(key, label, list, labels) {
+  const follow = (k, f) => (v) => {
+    f(v);
+    const p = list[T[key]]?.[1];
+    if (p && k in p && !same(p[k], v)) { T[key] = 'custom'; tune?.set?.(label, 'custom'); }
+  };
+  const pick = (v) => {
+    T[key] = v;
+    const p = list[v]?.[1];
+    if (!p) return;
+    Object.assign(T, p);
+    if (prog) again();
+    for (const [k, l] of labels) if (k in p) tune?.set?.(l, p[k]);
+    panel();
+  };
+  const options = [['custom', 'Custom'], ...Object.entries(list).map(([k, [t]]) => [k, t])];
+  return { follow, pick, options };
+}
+
+// The vinyl style's presets. Dark vinyl is the original look exactly; the
+// others are the same renderer with other settings.
+const dark = { vinyl: '#1c1c20', finish: 'solid', body: 0, through: 0, wedge: 0, lineTint: 0, flecks: 0, pitch: 6, pitchOut: 8, lineW: 1, press: 1, contrast: 1, satin: 1, level: 1, sheen: 1, songLen: 1, cue: 'dust' };
+const VINYLS = {
+  dark: ['Dark vinyl', dark],
+  cherry: ['Tinted cherry', { ...dark, vinyl: '#eb1a3d', body: 0.3, wedge: 1, lineTint: 1, flecks: 1, pitch: 5, pitchOut: 0, press: 0, satin: 0.3, level: 0.9, sheen: 0, cue: 'soft' }],
+  smoked: ['Smoked black (translucent)', { ...dark, vinyl: '#5a5550', body: 0.08, through: 1, wedge: 0.6, lineTint: 0.6, flecks: 0.8, sheen: 0.6, cue: 'soft' }],
+  smokedcherry: ['Smoked cherry', { ...dark, vinyl: '#eb1a3d', body: 0.06, through: 1, wedge: 0.7, lineTint: 1, flecks: 0.8, sheen: 0.6, cue: 'soft' }],
+  clear: ['Clear (frosted)', { ...dark, vinyl: '#cfe3ee', body: 0.04, through: 0.4, wedge: 1, lineTint: 0.4, flecks: 0.6, pitch: 5, pitchOut: 4, satin: 0.6, sheen: 0.5, cue: 'soft' }],
+  oilslick: ['Oil slick (chromatic)', { ...dark, vinyl: '#202028', finish: 'chromatic', body: 0.06, through: 1, wedge: 0.8, lineTint: 1, flecks: 0.8, sheen: 0.6, cue: 'soft' }],
+};
+const VINYL_LABELS = [['vinyl', 'Hero record: vinyl colour'], ['finish', 'Hero record: vinyl finish'], ['body', 'Hero record: vinyl body'], ['through', 'Hero record: light through it'], ['wedge', 'Hero record: lamp wedges'], ['lineTint', 'Hero record: grooves in its colour'], ['flecks', 'Hero record: flecks'], ['pitch', 'Hero record: groove spacing'], ['pitchOut', 'Hero record: spacing opens out by the rim'], ['lineW', 'Hero record: groove line width'], ['press', 'Hero record: pressing warp'], ['contrast', 'Hero record: groove contrast'], ['satin', 'Hero record: song bands'], ['level', 'Hero record: groove brightness'], ['sheen', 'Hero record: sheen'], ['songLen', 'Hero record: song length'], ['cue', 'Hero record: what shows the spin']];
+const vinylP = presets('vinylPreset', 'Hero record: vinyl preset', VINYLS, VINYL_LABELS);
+
 // ?record=orbit (or any style's name) in the address picks one over the
-// panel, for testing.
-const forced = new URLSearchParams(location.search).get('record');
+// panel, for testing. The vinyl style was once two, 'current' (dark vinyl)
+// and 'tinted' (cherry): their names, saved or in the address, still work.
+const OLD = { current: 'dark', tinted: 'cherry' };
+let forced = new URLSearchParams(location.search).get('record');
+if (forced in OLD) { vinylP.pick(OLD[forced]); forced = 'vinyl'; }
+// A panel saved with one of those (which the panel no longer offers):
+// its preset, before the controls are made so they start from it.
+try {
+  const was = JSON.parse(localStorage.getItem('dialkit:interlude-Hero record'))?.values?.style;
+  if (tune?.shown && was in OLD) vinylP.pick(OLD[was]);
+} catch {}
 tune?.select({ label: 'Hero record: style', value: T.look, options: STYLE_LIST.map(([k, t]) => [k, t]),
-  onInput: (v) => { T.look = forced in LOOK ? forced : v; if (prog) again(); panel(); } });
+  onInput: (v) => {
+    if (v in OLD) {
+      setTimeout(() => tune?.set?.('Hero record: style', 'vinyl'), 0);
+      v = 'vinyl';
+    }
+    T.look = forced in LOOK ? forced : v in LOOK ? v : 'vinyl';
+    if (prog) again();
+    panel();
+  } });
+
+const vin = { folder: 'Vinyl', show: cur };
+const vf = (k, f = redraw(k)) => vinylP.follow(k, f);
+tune?.select({ ...vin, label: 'Hero record: vinyl preset', value: T.vinylPreset, options: vinylP.options, onInput: vinylP.pick });
+tune?.color({ ...vin, label: 'Hero record: vinyl colour', value: T.vinyl, onInput: vf('vinyl') });
+tune?.select({ ...vin, label: 'Hero record: vinyl finish', value: T.finish, onInput: vf('finish'), options: [['solid', 'Solid colour'], ['chromatic', 'Chromatic (oil slick)']] });
+tune?.slider({ ...vin, label: 'Hero record: vinyl body', min: 0, max: 0.6, step: 0.01, value: T.body, onInput: vf('body') });
+tune?.slider({ ...vin, label: 'Hero record: light through it', min: 0, max: 2, step: 0.05, value: T.through, onInput: vf('through') });
+tune?.slider({ ...vin, label: 'Hero record: lamp wedges', min: 0, max: 1.5, step: 0.05, value: T.wedge, onInput: vf('wedge') });
+tune?.slider({ ...vin, label: 'Hero record: grooves in its colour', min: 0, max: 1, step: 0.05, value: T.lineTint, onInput: vf('lineTint') });
+tune?.slider({ ...vin, label: 'Hero record: flecks', min: 0, max: 2, step: 0.05, value: T.flecks, onInput: vf('flecks') });
+tune?.slider({ ...vin, label: 'Hero record: groove spacing', min: 2, max: 16, step: 0.5, value: T.pitch, unit: 'px', onInput: vf('pitch') });
+tune?.slider({ ...vin, label: 'Hero record: spacing opens out by the rim', min: 0, max: 16, step: 0.5, value: T.pitchOut, unit: 'px', onInput: vf('pitchOut') });
+tune?.slider({ ...vin, label: 'Hero record: groove line width', min: 0.5, max: 3, step: 0.05, value: T.lineW, onInput: vf('lineW') });
+tune?.slider({ ...vin, label: 'Hero record: groove contrast', min: 0, max: 2, step: 0.05, value: T.contrast, onInput: vf('contrast') });
+tune?.slider({ ...vin, label: 'Hero record: groove brightness', min: 0.2, max: 3, step: 0.05, value: T.level, onInput: vf('level') });
+tune?.slider({ ...vin, label: 'Hero record: song bands', min: 0, max: 2, step: 0.05, value: T.satin, onInput: vf('satin') });
+tune?.slider({ ...vin, label: 'Hero record: song length', min: 0.4, max: 3, step: 0.05, value: T.songLen, onInput: vf('songLen', reshape('songLen')) });
+tune?.slider({ ...vin, label: 'Hero record: sheen', min: 0, max: 3, step: 0.05, value: T.sheen, onInput: vf('sheen') });
+tune?.slider({ ...vin, label: 'Hero record: pressing warp', min: 0, max: 3, step: 0.05, value: T.press, onInput: vf('press') });
 
 const look = { folder: 'Look' };
-const tinted = () => T.look === 'tinted';
-tune?.color({ ...look, label: 'Hero record: vinyl colour', value: T.vinyl, show: tinted, onInput: redraw('vinyl') });
-tune?.slider({ ...look, label: 'Hero record: vinyl smoke (dark)', min: 0, max: 1, step: 0.05, value: T.smoke, show: tinted, onInput: redraw('smoke') });
-tune?.select({ ...look, label: 'Hero record: vinyl finish', value: T.finish, show: tinted, onInput: redraw('finish'), options: [['solid', 'Solid colour'], ['chromatic', 'Chromatic (oil slick)']] });
-tune?.select({ ...look, label: 'Hero record: what shows the spin', value: T.cue, show: cur, onInput: thenPanel((v) => { T.cue = v; if (prog) wake(); }), options: [['dust', 'Dust specks'], ['glints', 'Glints'], ['warp', 'Pressing warp'], ['spokes', 'Spokes'], ['soft', 'Soft glints (as among the dust)']] });
+tune?.select({ ...look, label: 'Hero record: what shows the spin', value: T.cue, show: cur, onInput: vf('cue', thenPanel(redraw('cue'))), options: [['dust', 'Dust specks'], ['glints', 'Glints'], ['warp', 'Pressing warp'], ['spokes', 'Spokes'], ['soft', 'Soft glints (as among the dust)']] });
 tune?.slider({ ...look, label: 'Hero record: spin cue strength', min: 0, max: 3, step: 0.05, value: T.cueAmt, onInput: redraw('cueAmt') });
 tune?.select({ ...look, label: 'Hero record: speck style', value: T.speck, show: () => cur() && T.cue === 'dust', onInput: redraw('speck'), options: [['hyphen', 'Dashes (first)'], ['motes', 'Dust motes'], ['scratches', 'Hairline scratches'], ['scuffs', 'Scuffs'], ['sparkle', 'Sparkle'], ['lint', 'Lint'], ['smudge', 'Smudges']] });
 tune?.slider({ ...look, label: 'Hero record: soft glints strength', min: 0, max: 3, step: 0.05, value: T.soft, show: glinty, onInput: redraw('soft') });
@@ -1716,7 +1796,7 @@ const touchF = { folder: 'Hover & needle' };
 tune?.select({ ...touchF, label: 'Hero record: hover style', value: T.hover,
   // (Stylus, spot and ripples are gone: one saved before shows as the arc.)
   onInput: (v) => { T.hover = v in HOVERS ? v : 'arc'; if (prog) wake(); },
-  // The same seven everywhere; outside the current look, named for what
+  // The same seven everywhere; outside the vinyl style, named for what
   // they do in every style (see hoverField).
   options: () => (cur()
     ? [['arc', 'Arc (first)'], ['lamp', 'Lamp'], ['prism', 'Prism'], ['spectrum', 'Wide spectrum'], ['litarc', 'Arc in lamp light'], ['glass', 'Glass'], ['glassprism', 'Glass prism']]
@@ -1725,9 +1805,7 @@ tune?.slider({ ...touchF, label: 'Hero record: needle and hover strength', min: 
 tune?.slider({ ...touchF, label: 'Hero record: hover fades after still', min: 0.3, max: 10, step: 0.1, value: T.still, unit: 's', onInput: redraw('still') });
 
 // Shape presets: each sets the layout's controls together to show off one
-// idea (the top warps above all). Moving one of them by hand afterwards
-// sets the preset back to Custom. The values sit on each slider's steps.
-const SHAPE_KEYS = [['drop', 'Hero record: lower by'], ['persp', 'Hero record: perspective'], ['size', 'Hero record: rings all round'], ['up', 'Hero record: more rings up top'], ['mask', 'Hero record: show to the top (mask)'], ['warp', 'Hero record: top warp'], ['warpAmt', 'Hero record: top warp strength']];
+// idea (the top warps above all).
 const flat = { drop: 108, persp: 0.85, size: 1, up: 0, mask: 0, warp: 'none', warpAmt: 0.5 };
 const SHAPES = {
   flat: ['Flat on the table', flat],
@@ -1739,31 +1817,18 @@ const SHAPES = {
   bent: ['Bent upward', { ...flat, warp: 'flip', warpAmt: 0.7, mask: 0.5 }],
   dramatic: ['Dramatic', { drop: 60, persp: 1.6, size: 1.3, up: 0.5, mask: 0.8, warp: 'barrel', warpAmt: 0.7 }],
 };
-const same = (a, b) => (typeof a === 'number' && typeof b === 'number' ? Math.abs(a - b) < 1e-6 : a === b);
-const shaped = (k, f = reshape(k)) => (v) => {
-  f(v);
-  const p = SHAPES[T.shape]?.[1];
-  if (p && !same(p[k], v)) { T.shape = 'custom'; tune?.set?.('Hero record: shape preset', 'custom'); }
-};
+const SHAPE_LABELS = [['drop', 'Hero record: lower by'], ['persp', 'Hero record: perspective'], ['size', 'Hero record: rings all round'], ['up', 'Hero record: more rings up top'], ['mask', 'Hero record: show to the top (mask)'], ['warp', 'Hero record: top warp'], ['warpAmt', 'Hero record: top warp strength']];
+const shapeP = presets('shape', 'Hero record: shape preset', SHAPES, SHAPE_LABELS);
+const sf = (k, f = reshape(k)) => shapeP.follow(k, f);
 const lay = { folder: 'Layout' };
-tune?.select({ ...lay, label: 'Hero record: shape preset', value: T.shape, options: [['custom', 'Custom'], ...Object.entries(SHAPES).map(([k, [t]]) => [k, t])],
-  onInput: (v) => {
-    T.shape = v;
-    const p = SHAPES[v]?.[1];
-    if (!p) return;
-    Object.assign(T, p);
-    if (prog) again();
-    // The panel's sliders follow (with an older tune.js, only the record does).
-    for (const [k, label] of SHAPE_KEYS) tune?.set?.(label, p[k]);
-    panel();
-  } });
-tune?.slider({ ...lay, label: 'Hero record: lower by', min: -300, max: 400, step: 4, value: T.drop, unit: 'px', onInput: shaped('drop') });
-tune?.slider({ ...lay, label: 'Hero record: perspective', min: 0.3, max: 3, step: 0.05, value: T.persp, onInput: shaped('persp') });
-tune?.slider({ ...lay, label: 'Hero record: rings all round', min: 0.7, max: 2, step: 0.05, value: T.size, onInput: shaped('size') });
-tune?.slider({ ...lay, label: 'Hero record: more rings up top', min: 0, max: 1, step: 0.05, value: T.up, onInput: shaped('up') });
-tune?.slider({ ...lay, label: 'Hero record: show to the top (mask)', min: 0, max: 1, step: 0.05, value: T.mask, onInput: shaped('mask') });
-tune?.select({ ...lay, label: 'Hero record: top warp', value: T.warp, onInput: shaped('warp', thenPanel(reshape('warp'))), options: [['none', 'None'], ['mirror', 'Mirror the sweep'], ['barrel', 'Barrel'], ['lens', 'Lens bulge'], ['flip', 'Flipped perspective']] });
-tune?.slider({ ...lay, label: 'Hero record: top warp strength', min: 0, max: 1, step: 0.05, value: T.warpAmt, show: () => T.warp !== 'none', onInput: shaped('warpAmt') });
+tune?.select({ ...lay, label: 'Hero record: shape preset', value: T.shape, options: shapeP.options, onInput: shapeP.pick });
+tune?.slider({ ...lay, label: 'Hero record: lower by', min: -300, max: 400, step: 4, value: T.drop, unit: 'px', onInput: sf('drop') });
+tune?.slider({ ...lay, label: 'Hero record: perspective', min: 0.3, max: 3, step: 0.05, value: T.persp, onInput: sf('persp') });
+tune?.slider({ ...lay, label: 'Hero record: rings all round', min: 0.7, max: 2, step: 0.05, value: T.size, onInput: sf('size') });
+tune?.slider({ ...lay, label: 'Hero record: more rings up top', min: 0, max: 1, step: 0.05, value: T.up, onInput: sf('up') });
+tune?.slider({ ...lay, label: 'Hero record: show to the top (mask)', min: 0, max: 1, step: 0.05, value: T.mask, onInput: sf('mask') });
+tune?.select({ ...lay, label: 'Hero record: top warp', value: T.warp, onInput: sf('warp', thenPanel(reshape('warp'))), options: [['none', 'None'], ['mirror', 'Mirror the sweep'], ['barrel', 'Barrel'], ['lens', 'Lens bulge'], ['flip', 'Flipped perspective']] });
+tune?.slider({ ...lay, label: 'Hero record: top warp strength', min: 0, max: 1, step: 0.05, value: T.warpAmt, show: () => T.warp !== 'none', onInput: sf('warpAmt') });
 if (forced in LOOK) T.look = forced;
 
 try {
@@ -1784,4 +1849,4 @@ try {
 } catch (err) {
   console.warn('hero-fx:', err);
 }
-export { T, again as relayout };
+export { T, VINYLS, SHAPES, again as relayout };
