@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261118b">
+  <link rel="stylesheet" href="style.css?v=20261118d">
   <link rel="stylesheet" href="demo/cards.css">
   <script src="tune.js?v=20261118a"></script>
   <script>
@@ -24,6 +24,7 @@
     (() => {
       const d = document.documentElement;
       d.dataset.hero = 'split';
+      d.dataset.herotext = 'card';
       d.dataset.nav = 'morph';
       const scrolled = () => d.toggleAttribute('data-scrolled', scrollY > 8);
       addEventListener('scroll', scrolled, { passive: true });
@@ -251,8 +252,8 @@
       // Being tried: how the hero's text block is laid out round the
       // headline (data-herotext, style.css). The headline stays the first
       // line, so the capsule still turns on it.
-      window.tune?.select({ label: 'Hero: text layout', folder: 'Layout', value: 'float', options: [
-        ['float', 'Buttons beside the headline (current)'], ['card', 'Buttons and facts in a card'],
+      window.tune?.select({ label: 'Hero: text layout', folder: 'Layout', value: 'card', options: [
+        ['card', 'Buttons and facts in a card (current)'], ['float', 'Buttons beside the headline (before)'],
         ['rail', 'Buttons and facts behind a rule'], ['stack', 'Buttons under, facts in a panel'],
         ['segment', 'One joined pill, the facts as a sentence'], ['numeral', 'The version, large and quiet'],
         ['dmg', 'A download card'],
@@ -458,13 +459,14 @@
       <div class="oss">
         <div class="oss-text">
           <h3>Made in the open.</h3>
-          <p>Every change lands on GitHub first. Follow along, read the code, or send a fix.</p>
+          <p>Interlude is developed in public under the GPL. The code, the open issues and every release are on GitHub.</p>
           <div class="oss-links">
             <a class="btn" href="https://github.com/zain-merchant/interlude" target="_blank" rel="noopener">View on GitHub</a>
             <a class="btn ghost" href="https://github.com/zain-merchant/interlude/issues/new" target="_blank" rel="noopener">Ask a question</a>
           </div>
         </div>
-        <div class="oss-log" aria-label="Latest changes">
+        <div class="oss-log">
+          <h4>Latest updates</h4>
           <ol class="oss-commits"><li class="oss-empty"><a href="https://github.com/zain-merchant/interlude/commits" target="_blank" rel="noopener">See the latest changes on GitHub →</a></li></ol>
         </div>
       </div>
@@ -931,6 +933,7 @@
         if (!r.tag_name) return;
         const v = document.getElementById('version');
         v.textContent = r.tag_name;
+        v.dataset.v = '';
         v.href = r.html_url;      })
       .catch(() => {});
   </script>
