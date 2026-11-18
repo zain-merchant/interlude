@@ -56,7 +56,7 @@ export const T = {
   clickBend: 4,      // how much harder a click's ring bends the grooves than a hover's
   clickGreen: false, // a click's ring shows green (a test that clicks land)
   knock: 30,         // a click's lens: how far it moves the grooves at first, CSS px
-  knockSize: 0.2,    // its size, em
+  knockSize: 0.3,    // its size, em
   knockTime: 0.6,    // how long it takes to spring back, s
   knockBounce: 0.15, // how much it swings in and out as it does (0: none)
   knockWave: 0.3,    // its wave: how hard it bends, a share of the lens
