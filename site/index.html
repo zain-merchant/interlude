@@ -14,8 +14,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261120q">
-  <link rel="stylesheet" href="demo/cards.css?v=20261120e">
+  <link rel="stylesheet" href="style.css?v=20261120s">
+  <link rel="stylesheet" href="demo/cards.css?v=20261120r">
   <script src="tune.js?v=20261120n"></script>
   <script>
     // The hero's layout (Split) and the nav's (bar to capsule), set before
@@ -418,18 +418,15 @@
       <h2>Install, import, and play</h2>
       <ol class="steps">
         <li data-picture="download">
-          <span class="num">1</span>
-          <h3>Download</h3>
+          <h3><span class="num">1</span>Download</h3>
           <p>Get <a href="https://github.com/zain-merchant/interlude/releases/latest/download/Interlude.dmg">Interlude.dmg</a>, open it, and drag Interlude into Applications.</p>
         </li>
         <li data-picture="open">
-          <span class="num">2</span>
-          <h3>Open it</h3>
+          <h3><span class="num">2</span>Open it</h3>
           <p>Open Interlude from Applications or Spotlight. After that, it keeps itself up to date.</p>
         </li>
         <li data-picture="music">
-          <span class="num">3</span>
-          <h3>Add your music</h3>
+          <h3><span class="num">3</span>Add your music</h3>
           <p>Click <b>+ Add music folder</b>, or bring your library over from Rekordbox or Serato with File › Import. Plug in your controller and it connects by itself.</p>
         </li>
       </ol>
@@ -655,7 +652,7 @@
   </footer>
 
   <!-- The feature cards' pictures (built from app/demo, see the README). -->
-  <script type="module" src="demo/cards.js?v=20261120e"></script>
+  <script type="module" src="demo/cards.js?v=20261120r"></script>
   <script>
     // The hero. The screenshot shows first; once the page has loaded, the
     // live app takes its place (unless the visitor prefers less motion).
@@ -1136,7 +1133,8 @@
     window.tune?.slider({ label: 'Controllers picture: fade length', min: 0, max: 120, step: 2, value: 46, unit: 'px', css: '--ctl-fl' });
     // The feature cards apart, or one panel ruled into six.
     document.documentElement.dataset.flayout = 'apart';
-    window.tune?.select({ label: 'Features: layout', value: 'apart', options: [['apart', 'Six cards, a little more room'], ['one', 'One card, ruled into six']],
+    window.tune?.slider({ label: 'Features: gap between cards', min: 4, max: 48, step: 1, value: 24, unit: 'px', css: '--fgap' });
+    window.tune?.select({ label: 'Features: layout', value: 'apart', options: [['apart', 'Six cards'], ['one', 'One card, ruled into six']],
       onInput: (v) => (document.documentElement.dataset.flayout = v) });
     // Film grain over the record behind the hero: drawn by an SVG noise
     // filter into a tile (its texture: how fine, how clumped, how hard),

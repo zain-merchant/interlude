@@ -433,7 +433,7 @@
 .p-add__badge { position: absolute; right: -5px; bottom: -4px; width: 16px; height: 16px; border-radius: 50%; background: #3ddc84; box-shadow: 0 0 0 2px var(--raise); opacity: 0; transform: scale(0.4); transition: opacity var(--snappy-ms) var(--snappy), transform var(--press-ms) var(--press); }
 .p-add__badge::after { content: ''; position: absolute; left: 5.5px; top: 3px; width: 3.5px; height: 7px; border: solid #0b0b0d; border-width: 0 1.75px 1.75px 0; transform: rotate(45deg); }
 .p-add[data-ready] .p-add__badge { opacity: 1; transform: none; }
-.p-add[data-ready] .p-add__zone { box-shadow: inset 0 0 0 1px rgb(61 220 132 / 0.45); transition: box-shadow var(--smooth-ms) var(--smooth); }
+.p-add[data-ready] .p-add__zone { box-shadow: inset 0 0 0 1px rgb(236 234 228 / 0.32); transition: box-shadow var(--smooth-ms) var(--smooth); }
 .p-add[data-ready] .p-add__say { color: #6fe3a3; }
 
 /* Library: a small library view. Rows arrive into fixed places with their
@@ -650,10 +650,8 @@
    so the slots in use read at a glance, before, between and after hits. */
 .p-extras .p-pads--lg i[data-loaded] { background: rgb(240 220 192 / 0.16); box-shadow: inset 0 0 0 1px rgb(240 220 192 / 0.28); }
 
-/* The install pictures sit 8px inside their card, with 10px corners, so
-   they run concentric with the card's 18px corner (18 = 10 + 8): the Finder
-   window, the Spotlight bar and the Add music folder row. (The window's
-   contents keep their own layout, centred in the wider window.) */
-.p.p--dmg .p-body, .p.p--open .p-body, .p.p--add .p-body { top: 8px; left: 8px; right: 8px; }
-.p-dmg, .p-spot, .p-add__zone { border-radius: 10px; }
-.p-dmg__body { left: 16px; }
+/* The install pictures sit where the features' do (24px in), with corners
+   a touch rounder than before so they sit easier with the card's 18px
+   (optically, not to the pixel: true concentric would need 0px here). */
+.p-dmg, .p-add__zone { border-radius: 12px; }
+.p-spot { border-radius: 16px; }
