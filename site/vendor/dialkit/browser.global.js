@@ -1577,7 +1577,11 @@ var DialKit = (() => {
     }
     const header = target.closest(".dialkit-panel-header");
     if (!header || !inner.contains(header)) return null;
-    if (target.closest(DRAG_EXCLUSION_SELECTOR)) return null;
+    // (Interlude: the open panel's title row is itself a button, the one
+    // that folds the panel, so excluding buttons left nothing to drag it
+    // by. That row drags; a click that doesn't move still folds it.)
+    const ex = target.closest(DRAG_EXCLUSION_SELECTOR);
+    if (ex && !ex.classList.contains("dialkit-folder-header-top")) return null;
     return header;
   }
   function getPanelDragStart(pointerX, pointerY, panel) {
