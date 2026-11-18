@@ -1814,3 +1814,40 @@ html:not([data-lablogo="tile"]) .lg-tile, html[data-lablogo="tile"] .lg-rings { 
 html[data-lablogo="plain"] .lg-rings circle:nth-child(-n + 2) { display: none; }
 /* The rings' outline (Note: rings logo outline; under 1.25 it's hidden by the rings themselves). */
 .lg-rings circle:nth-child(-n + 2) { stroke-width: var(--lab-outline, 2.5); }
+
+/* ── Narrow screens (last, so it wins over the layouts above) ── */
+@media (max-width: 860px) {
+  /* The open source card: one column, its heading, words and buttons in
+     turn, the latest changes under them with their label above. */
+  .oss:is([data-look="poster-card"], [data-look="poster-light"]) { grid-template-columns: 1fr; row-gap: 24px; }
+  .oss:is([data-look="poster-card"], [data-look="poster-light"]) .oss-links { margin-bottom: 4px; }
+  .oss:is([data-look="poster-card"], [data-look="poster-light"]) .oss-log { grid-template-columns: 1fr; row-gap: 8px; }
+}
+@media (max-width: 900px) {
+  /* The download block lines up with the headline: no indent for a rule
+     that isn't drawn. */
+  html[data-hero][data-herotext="card"][data-cardsurface="rule"] .hero-side { padding-left: 0; }
+  html[data-hero][data-herotext="card"][data-cardsurface="rule"] .hero-side::before { content: none; }
+}
+@media (max-width: 480px) {
+  /* The two buttons share the width, the same size; the caption a size
+     smaller so its three facts fit on a line. */
+  html[data-hero][data-herotext="card"] .cta .btn.big { flex: 1 1 0; justify-content: center; padding: 0 10px; }
+  html[data-hero][data-herotext="card"] .dl-cap { font-size: 12px; }
+  .dl-cap > * + *::before { margin: 0 7px; }
+  /* The open source heading's halves each on one line. */
+  .oss:is([data-look="poster-card"], [data-look="poster-light"]) h3 { font-size: clamp(30px, 9.4vw, 44px); }
+}
+@media (max-width: 370px) {
+  /* Too narrow for both buttons on a line: one above the other, full width;
+     the licence on a line of its own. */
+  html[data-hero][data-herotext="card"] .cta { flex-direction: column; }
+  html[data-hero][data-herotext="card"] .cta .btn.big { flex: none; width: 100%; }
+  .dl-cap > :last-child { flex-basis: 100%; }
+  .dl-cap > :last-child::before { display: none; }
+}
+
+/* The open source card when its latest changes can't be had (index.html,
+   data-nolog): the link to them on GitHub where the ticker runs. */
+.oss[data-nolog] .oss-commits { display: block; margin: 0; padding: 0; list-style: none; }
+.oss[data-nolog] .oss-commits .oss-empty a { padding: 0; font-size: 14px; text-decoration: underline; text-decoration-color: rgb(11 11 13 / 0.2); text-underline-offset: 3px; }
