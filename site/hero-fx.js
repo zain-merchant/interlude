@@ -124,6 +124,7 @@ const TURN = (Math.PI * 2) / 40;
 const T = {
   drop: 108, needle: 0.8, life: 0.2, persp: 0.85, cue: 'dust', cueAmt: 1, res: 0.85,
   speck: 'hyphen',
+  dust: 0, scratch: 0, // natural dust and scratches, on top of the rest (see uNat)
   size: 1, up: 0, warp: 'none', warpAmt: 0.5, tint: 0, hover: 'arc', still: 1.2,
   look: 'vinyl', shape: 'custom', vinylPreset: 'dark',
   vinyl: '#1c1c20', finish: 'solid', body: 0, through: 0, lineTint: 0, flecks: 0,
@@ -270,6 +271,7 @@ uniform vec4 uConeTint;  // the cone's colour, and 1 for one cone (0: two, oppos
 uniform vec2 uConeEdge;  // the cone's edges, on cos^4 of the angle
 uniform float uConeLight; // the lamp's light through the vinyl in the cone
 uniform float uSpeck;    // what the dust is (see SPECKS)
+uniform vec2 uNat;       // natural dust, natural scratches (0 to 1; on top of whatever shows the spin)
 uniform float uTint;     // the lamp's blue and orange in the sheen
 uniform vec4 uWarp;      // how the top is bent (see WARPS), how much, more rings up top, half the width
 uniform vec3 uLens;      // the lens bulge: centre and radius, CSS px
@@ -297,6 +299,8 @@ const vec3 BLUE = vec3(0.239, 0.706, 1.0);    // #3db4ff
 const vec3 SAND = vec3(0.941, 0.863, 0.753);  // #f0dcc0
 
 float hash(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
+// A steadier hash for big cell numbers (no sin, so no banding far out).
+float hash2(vec2 p) { vec3 p3 = fract(vec3(p.xyx) * 0.1031); p3 += dot(p3, p3.yzx + 33.33); return fract((p3.x + p3.y) * p3.z); }
 vec3 hue(float t) { return 0.5 + 0.5 * cos(2.0 * PI * (t + vec3(0.0, 0.33, 0.67))); }
 float maxc(vec3 c) { return max(c.r, max(c.g, c.b)); }
 float near(float v, float k) { return step(abs(v - k), 0.5); }
@@ -658,6 +662,100 @@ void main() {
   L *= after;
   Lg *= after;
   Gv *= after;
+
+  // Natural dust and scratches, lying on the disc and turning with it, on
+  // top of whatever shows the spin. Dust as it really sits on a record:
+  // mostly specks too small to make out, a few larger, none quite round,
+  // some in little clumps, the odd fibre; each catching the lamp only as it
+  // turns through the light. Scratches as records get them: a handful of
+  // long fine lines across the grooves at a shallow slant (not round with
+  // them), uneven along their length, tapering out at both ends, and lit
+  // only when they lie across the lamp's light.
+  if (uNat.x > 0.0 || uNat.y > 0.0) {
+    float det = dqx.x * dqy.y - dqy.x * dqx.y;
+    float nat = 0.0;
+    if (uNat.x > 0.0) {
+      float CR = 9.0;
+      float CT = 9.0;
+      float thr = 1.0 - 0.045 * uNat.x;
+      float th0 = mod(b, 2.0 * PI);
+      float row0 = floor(r / CR);
+      for (int j = -1; j <= 1; j++) {
+        float row = row0 + float(j);
+        float rc = (row + 0.5) * CR;
+        if (rc <= 0.0) continue;
+        float col0 = floor(th0 * rc / CT);
+        for (int i = -1; i <= 1; i++) {
+          vec2 id = vec2(row, col0 + float(i));
+          float h = hash2(id + 31.0);
+          if (h < thr) continue;
+          float h1 = hash2(id * 1.3 + 2.9);
+          float h2 = hash2(id * 0.7 + 6.1);
+          float h3 = hash2(id * 1.9 + 8.3);
+          float rs = (row + 0.2 + 0.6 * h1) * CR;
+          float ang = (id.y + 0.2 + 0.6 * h2) * CT / rc + uSpin;
+          vec2 rh = vec2(cos(ang), sin(ang));
+          vec2 D = q - rs * rh;
+          vec2 v = vec2(dqy.y * D.x - dqy.x * D.y, dqx.x * D.y - dqx.y * D.x) / (det * uDpr);
+          float ls = 0.5 + 0.5 * cos(2.0 * (ang - uFacing));
+          ls *= ls;
+          // Size: most tiny, a few larger (a steep power of a random).
+          float size = 0.32 + 2.3 * pow(h3, 3.2);
+          float phi = h1 * PI;
+          vec2 dd = vec2(cos(phi), sin(phi));
+          float asp = 1.0 + 1.6 * h2 * h2;
+          vec2 w = vec2(dot(v, dd) / asp, dot(v, vec2(-dd.y, dd.x)));
+          float spec = exp(-dot(w, w) / (size * size));
+          // A clump: a second speck beside it.
+          if (fract(h * 37.0) > 0.68) {
+            vec2 o = (vec2(h2, h1) - 0.5) * size * 2.6;
+            vec2 w2 = v - o;
+            spec += 0.55 * exp(-dot(w2, w2) / (size * size * 0.45));
+          }
+          // The odd fibre: thin, gently curved, lying any which way.
+          if (fract(h * 53.0) > 0.92) {
+            float ua = dot(v, dd);
+            float wa = dot(v, vec2(-dd.y, dd.x)) - (h3 - 0.5) * 0.12 * ua * ua;
+            float len = 4.0 + 12.0 * h2;
+            spec += 0.7 * exp(-wa * wa / 0.22) * (1.0 - smoothstep(0.6 * len, len, abs(ua)));
+          }
+          float bright = 0.25 + 0.75 * fract(h * 61.0);
+          nat += spec * bright * (0.1 + 0.9 * ls);
+        }
+      }
+    }
+    if (uNat.y > 0.0) {
+      for (int k = 0; k < 8; k++) {
+        float fk = float(k);
+        float hA = hash(vec2(fk, 3.1));
+        float hB = hash(vec2(fk, 7.7));
+        float hC = hash(vec2(fk, 11.3));
+        float hD = hash(vec2(fk, 17.9));
+        // More of them as the amount rises.
+        if (fract(hD * 13.0) > 0.12 + 0.88 * uNat.y) continue;
+        float rS = R * (0.32 + 0.6 * hA);
+        float aS = hB * 2.0 * PI + uSpin;
+        vec2 P = rS * vec2(cos(aS), sin(aS));
+        float dir = aS + 0.5 * PI + (hC - 0.5) * 0.8;
+        vec2 u = vec2(cos(dir), sin(dir));
+        float len = R * (0.1 + 0.32 * hD);
+        vec2 D = q - P;
+        float al = dot(D, u);
+        float t = al / len;
+        if (abs(t) > 1.0) continue;
+        // A slight bow along it.
+        vec2 pp = D - al * u - vec2(-u.y, u.x) * (hA - 0.5) * 0.18 * len * (1.0 - t * t);
+        vec2 vp = vec2(dqy.y * pp.x - dqy.x * pp.y, dqx.x * pp.y - dqx.y * pp.x) / (det * uDpr);
+        float dpx = length(vp);
+        float taper = 1.0 - t * t;
+        float vary = 0.55 + 0.45 * sin(al * 0.09 + hA * 20.0) * sin(al * 0.023 + hB * 9.0);
+        float shine = 0.5 + 0.5 * cos(2.0 * (dir - uFacing));
+        shine = shine * shine * shine;
+        nat += 1.3 * exp(-dpx * dpx / 0.3) * taper * vary * (0.08 + 0.92 * shine);
+      }
+    }
+    L += 7.0 * nat * (0.45 + 0.55 * lamp) * edge * (1.0 - lead);
+  }
   // The lip at the very edge catches the light: a fine bright line that
   // shows the disc's outline, brightest where the lamp falls.
   float dl = (r - (R - 2.5)) / max(1.3, fr * 1.2);
@@ -1437,7 +1535,7 @@ let geo = null;
 
 // One program per style, compiled the first time it's shown.
 const NAMES = ['uSize', 'uDpr', 'uCentre', 'uGeo', 'uHoles', 'uHoleCount', 'uHoleR', 'uSpan', 'uSpin', 'uFacing', 'uStyle', 'uSheen', 'uGlint', 'uHover', 'uSwell', 'uNeedle', 'uRipple', 'uTouch', 'uHz', 'uCue', 'uTracks', 'uTrackCount',
-  'uOuter', 'uGlintAmt', 'uChroma', 'uSpeck', 'uTint', 'uWarp', 'uLens', 'uHoverMode', 'uPtr', 'uVinyl', 'uVinylFin', 'uThru', 'uGroove',
+  'uOuter', 'uGlintAmt', 'uChroma', 'uSpeck', 'uNat', 'uTint', 'uWarp', 'uLens', 'uHoverMode', 'uPtr', 'uVinyl', 'uVinylFin', 'uThru', 'uGroove',
   'uGlintShape', 'uGlintSpread', 'uHueM', 'uTilt', 'uCone', 'uConeTint', 'uConeEdge', 'uConeLight'];
 const progs = new Map();
 let shown = '';
@@ -1766,6 +1864,7 @@ function frame(now, still) {
   gl.uniform1f(U.uConeLight, T.cone);
   gl.uniform2f(U.uChroma, CHROMA[T.chroma] ?? 0, T.chromaAmt);
   gl.uniform1f(U.uSpeck, SPECKS[T.speck] ?? 0);
+  gl.uniform2f(U.uNat, T.dust ?? 0, T.scratch ?? 0);
   gl.uniform1f(U.uTint, T.tint);
   gl.uniform4f(U.uWarp, WARPS[T.warp] ?? 0, T.warpAmt, g.up, g.half);
   gl.uniform3f(U.uLens, ...g.lens);
@@ -2076,6 +2175,9 @@ tw?.select({ ...look, label: 'Hero record: what shows the spin', value: T.cue, s
 // glints have their own brightness); in the other styles, how much their
 // own moving parts show.)
 tw?.slider({ ...look, label: 'Hero record: spin cue strength', min: 0, max: 3, step: 0.05, value: T.cueAmt, show: extraCue, onInput: redraw('cueAmt') });
+// Natural dust and scratches, on top of whatever shows the spin.
+tw?.slider({ ...look, label: 'Hero record: natural dust', min: 0, max: 1, step: 0.05, value: T.dust, show: () => cur(), onInput: redraw('dust') });
+tw?.slider({ ...look, label: 'Hero record: natural scratches', min: 0, max: 1, step: 0.05, value: T.scratch, show: () => cur(), onInput: redraw('scratch') });
 tw?.select({ ...look, label: 'Hero record: speck style', value: T.speck, show: () => cur() && T.cue === 'dust', onInput: redraw('speck'), options: [['hyphen', 'Dashes (first)'], ['motes', 'Dust motes'], ['scratches', 'Hairline scratches'], ['scuffs', 'Scuffs'], ['sparkle', 'Sparkle'], ['lint', 'Lint'], ['smudge', 'Smudges']] });
 tw?.slider({ ...look, label: 'Hero record: render resolution', min: 0.3, max: 1, step: 0.05, value: T.res, show: () => !STYLE[T.look]?.crisp, onInput: reshape('res') });
 
@@ -2106,7 +2208,7 @@ tw?.slider({ ...gl0, label: 'Hero record: glints per turn', min: 1, max: 12, ste
 tw?.slider({ ...gl0, label: 'Hero record: glints turn with the disc', min: 0, max: 8, step: 0.1, value: T.gRide, unit: 'x', onInput: redraw('gRide') });
 tw?.select({ ...gl0, label: 'Hero record: glint colour', value: T.chroma, onInput: thenPanel(redraw('chroma')), options: [['none', 'None'], ['film', 'Thin film (oil slick)'], ['prism', 'Prism split'], ['lamp', 'Lamp (blue / orange)'], ['grating', 'Diffraction rainbow'], ['pearl', 'Pearl'], ['fringe', 'Lens fringe']] });
 tw?.slider({ ...gl0, label: 'Hero record: colour spread', min: 0, max: 3, step: 0.05, value: T.gSpread, show: coloured, onInput: redraw('gSpread') });
-tw?.slider({ ...gl0, label: 'Hero record: colour amount', min: 0, max: 1, step: 0.05, value: T.chromaAmt, show: coloured, onInput: redraw('chromaAmt') });
+tw?.slider({ ...gl0, label: 'Hero record: colour amount', min: 0, max: 3, step: 0.05, value: T.chromaAmt, show: coloured, onInput: redraw('chromaAmt') });
 tw?.slider({ ...gl0, label: 'Hero record: colour hue', min: -180, max: 180, step: 1, value: T.gHue, unit: '°', show: coloured, onInput: redraw('gHue') });
 
 // LAMP: the light over the record. Where it points moves the sheen, the
