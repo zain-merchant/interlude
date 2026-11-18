@@ -47,7 +47,7 @@ async function flx4Connected() {
 let checking = false;
 /**
  * A deck's stems are ready: the first time, say where they are. On the
- * FLX4 that's SHIFT + HOT CUE (the pad FX buttons now hold pad effects);
+ * FLX4 that's SHIFT + HOT CUE;
  * otherwise the deck's Stems tab. The FLX4 tip still shows once if the
  * controller is plugged in after the screen tip was seen.
  */
@@ -58,7 +58,7 @@ export async function stemsReadyTip() {
   try {
     if (await flx4Connected()) {
       // It covers the screen tip too.
-      if (tipOnce('stemsFlx4', 'Stems are ready. On the FLX4, hold SHIFT and press HOT CUE to mute or solo them. PAD FX1 and PAD FX2 now play pad effects.')) {
+      if (tipOnce('stemsFlx4', 'Stems are ready. On the FLX4, hold SHIFT and press HOT CUE to mute or solo them.')) {
         markSeen('stems');
       }
     } else {
