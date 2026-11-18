@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261121h">
+  <link rel="stylesheet" href="style.css?v=20261121i">
   <link rel="stylesheet" href="demo/cards.css?v=20261120z">
   <script src="tune.js?v=20261120v"></script>
   <script>
@@ -1263,7 +1263,7 @@
       const el = document.querySelector('.grain');
       if (!el) return;
       const d = document.documentElement;
-      const G = { texture: 'film', size: 1, amount: 0.12, contrast: 1.2, blend: 'normal', move: 'film', fade: 1 };
+      const G = { texture: 'film', size: 1, amount: 0.12, contrast: 1.2, blend: 'normal', move: 'swap', fade: 1 };
       const TEX = { fine: [0.95, 1], film: [0.75, 2], soft: [0.55, 3], coarse: [0.38, 3] };
       const tile = () => {
         const [f, oct] = TEX[G.texture] || TEX.film;
@@ -1273,8 +1273,14 @@
         // the middle (times the contrast), so the background between them
         // stays as dark as it was.
         const a = 2 * k;
-        const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='g' x='0' y='0' width='100%' height='100%'><feTurbulence type='fractalNoise' baseFrequency='${f}' numOctaves='${oct}' stitchTiles='stitch' seed='7' result='n'/><feColorMatrix in='n' type='matrix' values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 ${a} 0 0 0 ${-k}' result='l'/><feColorMatrix in='n' type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ${-a} 0 0 0 ${k}' result='d'/><feMerge><feMergeNode in='d'/><feMergeNode in='l'/></feMerge></filter><rect width='200' height='200' filter='url(%23g)'/></svg>`;
-        el.style.setProperty('--grain-img', `url("data:image/svg+xml,${svg.replace(/</g, '%3C').replace(/>/g, '%3E').replace(/"/g, "'")}")`);
+        // Eight different frames of grain (the same noise, eight seeds), for
+        // the film flicker to swap between; the first is the still one.
+        for (let i = 0; i < 8; i++) {
+          const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='g' x='0' y='0' width='100%' height='100%'><feTurbulence type='fractalNoise' baseFrequency='${f}' numOctaves='${oct}' stitchTiles='stitch' seed='${7 + i * 13}' result='n'/><feColorMatrix in='n' type='matrix' values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 ${a} 0 0 0 ${-k}' result='l'/><feColorMatrix in='n' type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ${-a} 0 0 0 ${k}' result='d'/><feMerge><feMergeNode in='d'/><feMergeNode in='l'/></feMerge></filter><rect width='200' height='200' filter='url(%23g)'/></svg>`;
+          const url = `url("data:image/svg+xml,${svg.replace(/</g, '%3C').replace(/>/g, '%3E').replace(/"/g, "'")}")`;
+          el.style.setProperty(`--grain-f${i}`, url);
+          if (!i) el.style.setProperty('--grain-img', url);
+        }
       };
       const put = () => {
         tile();
@@ -1291,7 +1297,7 @@
       t?.slider({ label: 'Grain: amount', min: 0, max: 1, step: 0.01, value: G.amount, onInput: set('amount') });
       t?.slider({ label: 'Grain: contrast', min: 0.5, max: 4, step: 0.05, value: G.contrast, onInput: set('contrast') });
       t?.select({ label: 'Grain: blend', value: G.blend, options: [['normal', 'Normal'], ['overlay', 'Overlay'], ['soft-light', 'Soft light'], ['screen', 'Screen (light specks only)'], ['multiply', 'Multiply (dark specks only)']], onInput: set('blend') });
-      t?.select({ label: 'Grain: movement', value: G.move, options: [['film', 'Flickers like film'], ['slow', 'Shifts slowly'], ['still', 'Still']], onInput: set('move') });
+      t?.select({ label: 'Grain: movement', value: G.move, options: [['swap', 'Flickers between frames of grain'], ['film', 'Jumps about'], ['slow', 'Shifts slowly'], ['still', 'Still']], onInput: set('move') });
       // How often the film grain jumps: whole fractions of 60 a second (60
       // over 2, 3, 4, 5, 6, 8, 10, 12, 15, 20), so every jump holds for the
       // same number of the screen's frames. And how long the slow drift
