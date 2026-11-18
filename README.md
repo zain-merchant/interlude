@@ -225,6 +225,9 @@ settings, to their new places (see `app/src-tauri/src/paths.rs`).
 
 ## Roadmap
 
+The full list of what's still missing next to rekordbox, Serato and djay is
+in [docs/parity.md](docs/parity.md).
+
 - More controllers tested and mapped in full, beyond the DDJ-FLX4.
 - Crates and smart playlists.
 - Windows and Linux builds.
