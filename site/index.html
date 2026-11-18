@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261119k">
+  <link rel="stylesheet" href="style.css?v=20261119m">
   <link rel="stylesheet" href="demo/cards.css?v=20261119k">
   <script src="tune.js?v=20261118b"></script>
   <script>
@@ -535,7 +535,7 @@
       <div class="oss" data-look="tight" data-fade="outer">
         <div class="oss-text">
           <h3><span class="oss-h1">Send an idea</span> <span class="oss-h2">or build it yourself</span></h3>
-          <p>Interlude is free and open source, so anyone can fix bugs, add features or support new gear, including you.</p>
+          <p>Interlude is free and open source, so anyone can fix bugs, add features, or support new gear, including you.</p>
           <div class="oss-links">
             <a class="btn" href="https://github.com/zain-merchant/interlude/issues/new" target="_blank" rel="noopener">Send an idea</a>
             <a class="btn ghost" href="https://github.com/zain-merchant/interlude" target="_blank" rel="noopener">View on GitHub</a>
@@ -1026,7 +1026,7 @@
     // The open source card's update list: how its light surface fades into
     // the card (style.css, .oss).
     // The looks (style.css, "Open source looks").
-    window.tune?.select({ label: 'Open source: look', value: 'tight', options: [['tight', 'Current, tightened'], ['doors', 'Two doors: idea, or build it'], ['poster', 'Poster, changes running past'], ['feed', 'The newest change, big'], ['cards', 'Centred, three change cards'], ['gitlog', 'The log as git shows it']],
+    window.tune?.select({ label: 'Open source: look', value: 'tight', options: [['tight', 'Current, tightened'], ['doors', 'Two doors, in a light frame'], ['doors-apart', 'Two doors, a dark card and a light one'], ['doors-dark', 'Two doors, both dark like the note'], ['poster-card', 'Poster, in a dark card'], ['poster-light', 'Poster, in the light card'], ['poster-open', 'Poster, no card (the FAQ gets one)'], ['feed', 'The newest change, big'], ['cards', 'Centred, three change cards'], ['gitlog', 'The log as git shows it']],
       onInput: (v) => { document.querySelector('.oss').dataset.look = v; window.tune?.refresh?.('Open source'); } });
     const cream = () => document.querySelector('.oss')?.dataset.look === 'cream';
     window.tune?.select({ show: cream, label: 'Open source: what fades', value: 'outer', options: [['outer', 'The outer card, to the right'], ['inner', 'The updates\' surface, to the right'], ['none', 'Nothing']],
