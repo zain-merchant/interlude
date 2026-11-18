@@ -55,10 +55,13 @@ export const T = {
   clickReach: 1.6,   // how far a click's ring runs, as a share of the ripple reach
   clickBend: 4,      // how much harder a click's ring bends the grooves than a hover's
   clickGreen: false, // a click's ring shows green (a test that clicks land)
-  knock: 14,         // a click's warp: how far it pushes the grooves at first, CSS px
-  knockSize: 0.3,    // its size, em
-  knockTime: 0.9,    // how long it takes to spring back, s
-  knockBounce: 0.45, // how much it wobbles as it does (0: none)
+  knock: 18,         // a click's lens: how far it moves the grooves at first, CSS px
+  knockSize: 0.14,   // its size, em
+  knockTime: 0.7,    // how long it takes to spring back, s
+  knockBounce: 0.55, // how much it swings in and out as it does (0: none)
+  knockWave: 0.6,    // its wave: how hard it bends, a share of the lens
+  knockReach: 1,     // how far the wave runs before it's gone, em
+  knockSpeed: 1.6,   // how fast it runs, em a second
   lineWidth: 1.25,   // groove line width, CSS px
   arc: 'flat',       // flat: long shallow arcs; record: round arcs of a record's grooves, its middle below the word
   songs: 0,          // grooves per song, with a smooth gap between songs (0: one long song, no gaps)
@@ -153,7 +156,8 @@ uniform float uEm;      // the word's font size, CSS px: effects scale with it
 uniform vec2 uFar;      // the lamp's streak points away from here
 uniform vec4 uPts[16];  // rings: x, y, how far it has run (-1: none), its share of the reach (negative: a click's)
 uniform vec2 uClick;    // a click's ring: how many times the bend, 1 to show it green (a test)
-uniform vec4 uKnock;    // a click's warp: x, y, how far it pushes the grooves now (CSS px), its size (CSS px)
+uniform vec4 uKnock;    // a click's lens: x, y, how far it moves the grooves now (CSS px; < 0 pulls in), its size (CSS px)
+uniform vec4 uKnock2;   // its wave: how far out it has run, its width, how far it moves them now (all CSS px)
 uniform vec4 uLetter;   // the letters' fill
 uniform vec4 uGap;      // between the grooves
 uniform vec4 uLine;     // the groove lines
@@ -244,12 +248,6 @@ void main() {
     prism(u / w, lit, tint);
     lit *= on * exp(-t * t / (0.75 * 0.75 * uEm * uEm));
   }
-  if (uKnock.z != 0.0) {
-    // A click knocks the grooves: a bulge where it landed that springs
-    // back (and over, with wobble), bending every groove near it.
-    vec2 kp = px - turn(uKnock.xy);
-    push += uKnock.z * exp(-dot(kp, kp) / (uKnock.w * uKnock.w));
-  }
   if (uWarp > 0.0) {
     // A gentle lens: the grooves part round the lamp, never folding over.
     // dp.y e^(-r^2/s^2) peaks at 0.43 s, so this peaks at uWarp.
@@ -293,7 +291,22 @@ void main() {
   // The grooves, from the bent radius (filtered by how fast that changes
   // across a pixel, so bending them never makes them shimmer). groove is
   // 1 on a line's crest and 0 between.
-  vec2 d = px - uCentre;
+  // A click is a lens on the grooves: right where it landed they bulge
+  // out (convex) and spring back past flat to pull in (concave), in every
+  // direction, and a wave of the same bend runs out from it.
+  vec2 gp = px;
+  if (uKnock.z != 0.0 || uKnock2.z != 0.0) {
+    vec2 kp = px - turn(uKnock.xy);
+    float kd = length(kp);
+    vec2 kn = kp / max(kd, 1e-3);
+    float s = uKnock.w;
+    // (kd/s e^(-kd^2/s^2) peaks at 0.43: so it moves them uKnock.z at most.)
+    float lens = uKnock.z / 0.4289 * (kd / s) * exp(-kd * kd / (s * s));
+    float x = (kd - uKnock2.x) / uKnock2.y;
+    float wave = uKnock2.z / 0.4289 * x * exp(-x * x);
+    gp -= kn * (lens + wave);
+  }
+  vec2 d = gp - uCentre;
   d.y *= uAspect;
   float r = length(d);
   float rr = r + push * uAspect;
@@ -386,7 +399,7 @@ const knock = { x: 0, y: 0, at: 0 };
 function knockNow(now) {
   if (!knock.at) return 0;
   const t = (now - knock.at) / 1000, dur = Math.max(0.1, T.knockTime);
-  if (t > dur * 2.5) { knock.at = 0; return 0; }
+  if (t > dur * 2.5 && !knock.wave) { knock.at = 0; return 0; }
   const w = (2 * Math.PI) / dur, z = 1 - Math.min(0.95, Math.max(0, T.knockBounce));
   const rise = 1 - Math.exp(-t / 0.03);
   const env = z < 1 ? Math.exp(-z * w * t) * Math.cos(w * Math.sqrt(1 - z * z) * t) : Math.exp(-w * t) * (1 + w * t);
@@ -416,7 +429,7 @@ function init() {
   gl.enableVertexAttribArray(loc);
   gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
   for (const n of ['uText', 'uSize', 'uDpr', 'uCentre', 'uAspect', 'uPivot', 'uRot', 'uPitch', 'uHover', 'uLamp', 'uWarp',
-    'uRipples', 'uRing', 'uClick', 'uKnock', 'uEm', 'uFar', 'uLineW', 'uPts', 'uLetter', 'uGap', 'uLine', 'uOutline', 'uStroke', 'uSongs']) U[n] = gl.getUniformLocation(prog, n);
+    'uRipples', 'uRing', 'uClick', 'uKnock', 'uKnock2', 'uEm', 'uFar', 'uLineW', 'uPts', 'uLetter', 'uGap', 'uLine', 'uOutline', 'uStroke', 'uSongs']) U[n] = gl.getUniformLocation(prog, n);
   tex = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, tex);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
@@ -614,6 +627,16 @@ function frame(now) {
   gl.uniform1f(U.uEm, geo.em);
   const kz = knockNow(performance.now());
   gl.uniform4f(U.uKnock, knock.x, knock.y, kz, Math.max(0.02, T.knockSize) * geo.em);
+  {
+    // The wave: from the lens's edge outward, fading as it goes.
+    const t = knock.at ? (performance.now() - knock.at) / 1000 : 0;
+    const start = Math.max(0.02, T.knockSize) * geo.em;
+    const R = start + T.knockSpeed * geo.em * t, reach = start + Math.max(0.05, T.knockReach) * geo.em;
+    const f = knock.at ? Math.max(0, 1 - (R - start) / (reach - start)) : 0;
+    const amp = T.knock * T.knockWave * f * f * Math.min(1, t / 0.05);
+    gl.uniform4f(U.uKnock2, R, start * 0.6 * (1 + (R - start) / (2 * start)), amp, 0);
+    if (f > 0) knock.wave = true; else knock.wave = false;
+  }
   gl.uniform2f(U.uClick, T.clickBend ?? 4, T.clickGreen ? 1 : 0);
   gl.uniform2f(U.uFar, geo.far.x, geo.far.y);
   gl.uniform4fv(U.uPts, pts.flat());
@@ -628,7 +651,7 @@ function frame(now) {
   // ring still running out, or (while over the word) rings to come: on a
   // timer for breathe and interference; for drop, the rest still to come.
   if (demoAt) return true;
-  if (knock.at) return true;
+  if (knock.at || knock.wave) return true;
   if (T.trigger === 'once' && hover.want) return true;
   if (hover.on !== hover.want) return true;
   if (hover.on === 0) return false;

@@ -1103,7 +1103,7 @@
       const w = document.querySelector('.foot-word');
       if (!w) return;
       const d = document.documentElement;
-      const fx = await import('./foot-fx.js?v=20261121t').catch(() => null);
+      const fx = await import('./foot-fx.js?v=20261121u').catch(() => null);
       addEventListener('foot-fit', () => fx?.relayout());
       // Without tune.js (or an older one), each control still applies its default.
       const own = (o) => o.onInput?.(o.value);
@@ -1162,10 +1162,13 @@
       // comes over the word and leaves it.
       tune.slider({ label: 'Footer: click ring reach', folder: 'Motion', min: 0.3, max: 4, step: 0.05, value: 1.6, onInput: set('clickReach') });
       tune.slider({ label: 'Footer: click ring strength', folder: 'Motion', min: 1, max: 10, step: 0.25, value: 4, unit: '×', onInput: set('clickBend') });
-      tune.slider({ label: 'Footer: click warp amount', folder: 'Motion', min: 0, max: 60, step: 1, value: 14, unit: 'px', onInput: set('knock') });
-      tune.slider({ label: 'Footer: click warp size', folder: 'Motion', min: 0.05, max: 1.2, step: 0.01, value: 0.3, unit: 'em', onInput: set('knockSize') });
-      tune.slider({ label: 'Footer: click warp spring back (s)', folder: 'Motion', min: 0.2, max: 3, step: 0.05, value: 0.9, onInput: set('knockTime') });
-      tune.slider({ label: 'Footer: click warp wobble', folder: 'Motion', min: 0, max: 0.9, step: 0.05, value: 0.45, onInput: set('knockBounce') });
+      tune.slider({ label: 'Footer: click lens strength', folder: 'Click', min: 0, max: 60, step: 1, value: 18, unit: 'px', onInput: set('knock') });
+      tune.slider({ label: 'Footer: click lens size', folder: 'Click', min: 0.03, max: 0.6, step: 0.01, value: 0.14, unit: 'em', onInput: set('knockSize') });
+      tune.slider({ label: 'Footer: click lens springs back in (s)', folder: 'Click', min: 0.15, max: 3, step: 0.05, value: 0.7, onInput: set('knockTime') });
+      tune.slider({ label: 'Footer: click lens in-out swing', folder: 'Click', min: 0, max: 0.9, step: 0.05, value: 0.55, onInput: set('knockBounce') });
+      tune.slider({ label: 'Footer: click wave strength', folder: 'Click', min: 0, max: 1.5, step: 0.05, value: 0.6, onInput: set('knockWave') });
+      tune.slider({ label: 'Footer: click wave reach', folder: 'Click', min: 0.1, max: 4, step: 0.05, value: 1, unit: 'em', onInput: set('knockReach') });
+      tune.slider({ label: 'Footer: click wave speed', folder: 'Click', min: 0.3, max: 6, step: 0.1, value: 1.6, unit: 'em/s', onInput: set('knockSpeed') });
       tune.slider({ label: 'Footer: fade in/out', folder: 'Motion', min: 0, max: 2, step: 0.05, value: 0.5, unit: 's', onInput: set('fade') });
       // What sets it off: there only while the pointer is over the word, or
       // set off as the pointer comes near and left to play out and fade on
