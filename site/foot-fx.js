@@ -55,9 +55,9 @@ export const T = {
   clickReach: 1.6,   // how far a click's ring runs, as a share of the ripple reach
   clickBend: 4,      // how much harder a click's ring bends the grooves than a hover's
   clickGreen: false, // a click's ring shows green (a test that clicks land)
-  knock: 30,         // a click's lens: how far it moves the grooves at first, CSS px
+  knock: 0.8,        // a click's lens: how much it magnifies (0.8: 5x, 0.9: 10x; under 1)
   knockSize: 0.4,    // its size, em
-  knockTime: 0.6,    // how long it takes to spring back, s
+  knockTime: 0.9,    // how long it takes to spring back, s
   knockBounce: 0.15, // how much it swings in and out as it does (0: none)
   knockWave: 0.3,    // its wave: how hard it bends, a share of the lens
   knockReach: 1,     // how far the wave runs before it's gone, em
@@ -156,7 +156,7 @@ uniform float uEm;      // the word's font size, CSS px: effects scale with it
 uniform vec2 uFar;      // the lamp's streak points away from here
 uniform vec4 uPts[16];  // rings: x, y, how far it has run (-1: none), its share of the reach (negative: a click's)
 uniform vec2 uClick;    // a click's ring: how many times the bend, 1 to show it green (a test)
-uniform vec4 uKnock;    // a click's lens: x, y, how far it moves the grooves now (CSS px; < 0 pulls in), its size (CSS px)
+uniform vec4 uKnock;    // a click's lens: x, y, how much it magnifies now (0 to 0.95; < 0 shrinks), its size (CSS px)
 uniform vec4 uKnock2;   // its wave: how far out it has run, its width, how far it moves them now (all CSS px)
 uniform vec4 uLetter;   // the letters' fill
 uniform vec4 uGap;      // between the grooves
@@ -300,8 +300,11 @@ void main() {
     float kd = length(kp);
     vec2 kn = kp / max(kd, 1e-3);
     float s = uKnock.w;
-    // (kd/s e^(-kd^2/s^2) peaks at 0.43: so it moves them uKnock.z at most.)
-    float lens = uKnock.z / 0.4289 * (kd / s) * exp(-kd * kd / (s * s));
+    // A magnifying glass: inside it the grooves are drawn larger (by
+    // 1 / (1 - m), m = uKnock.z), flat across its middle, with a quick
+    // edge where they bunch up again. (m under 1, so they never fold.)
+    float u = kd / s;
+    float lens = clamp(uKnock.z, -0.8, 0.95) * kd * exp(-u * u * u * u);
     float x = (kd - uKnock2.x) / uKnock2.y;
     float wave = uKnock2.z / 0.4289 * x * exp(-x * x);
     gp -= kn * (lens + wave);
@@ -641,7 +644,7 @@ function frame(now) {
     const start = Math.max(0.02, T.knockSize) * geo.em;
     const R = start + T.knockSpeed * geo.em * t, reach = start + Math.max(0.05, T.knockReach) * geo.em;
     const f = knock.at ? Math.max(0, 1 - (R - start) / (reach - start)) : 0;
-    const amp = T.knock * T.knockWave * f * f * Math.min(1, t / 0.05);
+    const amp = T.knock * start * 0.5 * T.knockWave * f * f * Math.min(1, t / 0.05);
     gl.uniform4f(U.uKnock2, R, start * 0.6 * (1 + (R - start) / (2 * start)), amp, 0);
     if (f > 0) knock.wave = true; else knock.wave = false;
   }
