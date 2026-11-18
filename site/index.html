@@ -821,7 +821,7 @@
       const w = document.querySelector('.foot-word');
       if (!w) return;
       const d = document.documentElement;
-      const fx = await import('./foot-fx.js?v=20261118c').catch(() => null);
+      const fx = await import('./foot-fx.js?v=20261119a').catch(() => null);
       // Without tune.js (or an older one), each control still applies its default.
       const own = (o) => o.onInput?.(o.value);
       const tune = { slider: own, select: own, color: own, refresh: () => {}, ...window.tune };
@@ -878,11 +878,29 @@
       // How long the whole effect takes to come in and go when the pointer
       // comes over the word and leaves it.
       tune.slider({ label: 'Footer: fade in/out', folder: 'Motion', min: 0, max: 2, step: 0.05, value: 0.5, unit: 's', onInput: set('fade') });
+      // What sets it off: there only while the pointer is over the word, or
+      // set off as the pointer comes near and left to play out and fade on
+      // its own, wherever the pointer goes.
+      let trigger = 'follow';
+      tune.select({ label: 'Footer: hover', folder: 'Motion', value: 'follow', onInput: (v) => { set('trigger')(v); if (v !== trigger) { trigger = v; tune.refresh('Footer'); } }, options: [
+        ['follow', 'While the pointer is on it'],
+        ['once', 'Starts when near, plays out on its own'],
+      ] });
+      tune.slider({ label: 'Footer: plays for', folder: 'Motion', min: 0.5, max: 8, step: 0.25, value: 2.5, unit: 's',
+        show: () => trigger === 'once', onInput: set('hold') });
 
       tune.slider({ label: 'Footer: groove spacing', folder: 'Shape', min: 1.5, max: 12, step: 0.25, value: 8, unit: 'px', onInput: (v) => {
         d.style.setProperty('--groove', `${v}px`);
         set('pitch')(v);
       } });
+      // The grooves' shape: long shallow arcs, or a record's round ones.
+      tune.select({ label: 'Footer: groove arcs', folder: 'Shape', value: 'flat', onInput: (v) => { if (fx) { fx.T.arc = v; fx.relayout(); } }, options: [
+        ['flat', 'Long and shallow'],
+        ['record', 'Round, like a record'],
+      ] });
+      // Gaps between songs, the smooth bands where one track ends.
+      tune.slider({ label: 'Footer: grooves per song (0: no gaps)', folder: 'Shape', min: 0, max: 24, step: 1, value: 0, onInput: set('songs') });
+      tune.slider({ label: 'Footer: song gap width', folder: 'Shape', min: 0.5, max: 4, step: 0.1, value: 1.6, unit: 'grooves', onInput: set('songGap') });
       tune.slider({ label: 'Footer: groove line width', folder: 'Shape', min: 0.5, max: 6, step: 0.05, value: 1.25, unit: 'px', onInput: set('lineWidth') });
       tune.slider({ label: 'Footer: groove tilt', folder: 'Shape', min: -90, max: 90, step: 1, value: 0, unit: '°', onInput: set('tilt') });
       tune.slider({ label: 'Footer: word cut off at bottom', folder: 'Shape', min: 0, max: 0.6, step: 0.01, value: 0.33, unit: 'em', onInput: (v) => {
