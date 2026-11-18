@@ -1038,3 +1038,22 @@ html[data-nav="morph"] .nav-actions { will-change: transform, opacity; }
    as what's in it, its last line level with the end of the line under the
    headline, and the rule beside it runs exactly that height. */
 html[data-hero][data-herotext="card"] .hero-side { align-self: end; }
+
+/* Hero: download block. Caption and sentence put the release facts under
+   the buttons, small and quiet, as Mac download pages do; the buttons lead
+   straight from the headline. Head is the earlier layout, the name and its
+   facts above them. */
+.dl-cap, .dl-cap2 { display: none; }
+html[data-hero][data-herotext="card"]:is([data-cardblock="caption"], [data-cardblock="sentence"]) .dl-head { display: none; }
+html[data-hero][data-herotext="card"]:is([data-cardblock="caption"], [data-cardblock="sentence"]) .cta { margin-top: 0; }
+html[data-hero][data-herotext="card"][data-cardblock="caption"] .dl-cap,
+html[data-hero][data-herotext="card"][data-cardblock="sentence"] .dl-cap2 {
+  display: flex; grid-area: req; margin: 14px 0 0; color: var(--fg-3); font-size: 13px; line-height: 18px;
+  text-shadow: 0 1px 12px rgb(9 9 11 / 0.9);
+}
+html[data-hero][data-herotext="card"][data-cardblock="sentence"] .dl-cap2 { display: block; max-width: 300px; text-wrap: balance; }
+/* The caption's three facts, each after a short hairline rather than a dot. */
+.dl-cap { align-items: center; flex-wrap: wrap; row-gap: 4px; }
+.dl-cap > * + *::before { content: ''; display: inline-block; width: 1px; height: 11px; margin: 0 10px; vertical-align: -1px; background: rgb(255 255 255 / 0.16); }
+.dl-cv { color: var(--fg-2); font-variant-numeric: tabular-nums; text-decoration: underline; text-decoration-color: rgb(236 234 228 / 0.25); text-decoration-thickness: 1px; text-underline-offset: 3px; transition: color 0.15s, text-decoration-color 0.15s; }
+.dl-cv:hover { color: var(--fg); text-decoration-color: rgb(236 234 228 / 0.7); }

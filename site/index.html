@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261119a">
+  <link rel="stylesheet" href="style.css?v=20261119c">
   <link rel="stylesheet" href="demo/cards.css?v=20261119b">
   <script src="tune.js?v=20261118b"></script>
   <script>
@@ -286,6 +286,11 @@
       // The version link: beside the name at its size in a quieter grey,
       // smaller beside it, or small on the right.
       d.dataset.cardvlink = 'match';
+      // Where the release facts go: under the buttons as a quiet caption (the
+      // way Raycast, Linear and most Mac download pages do it), as a sentence
+      // there, or above the buttons under the name (the earlier layout).
+      d.dataset.cardblock = 'caption';
+      window.tune?.select({ label: 'Hero: download block', folder: 'Layout', value: 'caption', options: [['caption', 'Caption under the buttons'], ['sentence', 'One sentence under the buttons'], ['head', 'Name and facts above']], onInput: (v) => { d.dataset.cardblock = v; ruleMid(); } });
       window.tune?.select({ label: 'Hero: version link', folder: 'Layout', value: 'match', options: [['match', 'Beside the name, its size'], ['small', 'Beside the name, smaller'], ['right', 'Small, on the right']], onInput: (v) => (d.dataset.cardvlink = v) });
       // Midway, measured: from the end of the headline's longest line to the
       // words beside it, the rule half way.
@@ -347,6 +352,10 @@
         </a>
         <a class="btn ghost big" href="https://github.com/zain-merchant/interlude" target="_blank" rel="noopener">View on GitHub</a>
       </div>
+      <!-- Under the buttons, where Mac download pages put it: the version,
+           what it runs on, the licence (Hero: download block). -->
+      <p class="dl-cap"><a class="dl-cv" href="https://github.com/zain-merchant/interlude/releases/latest" target="_blank" rel="noopener" title="What’s new">Latest version</a><span>macOS 11+ on Apple silicon</span><span title="GPL-3.0-or-later">GPLv3+</span></p>
+      <p class="dl-cap2"><a class="dl-cv" href="https://github.com/zain-merchant/interlude/releases/latest" target="_blank" rel="noopener" title="What’s new">Latest version</a> for macOS 11+ on Apple silicon, licensed <span title="GPL-3.0-or-later">GPLv3+</span></p>
       <p class="dl-req">Requires macOS 11+ on Apple silicon</p>
       <a class="dl-new2" href="https://github.com/zain-merchant/interlude/releases/latest" target="_blank" rel="noopener">What’s new<span class="dl-new-ver"></span></a>
       <p class="dl-foot">Licensed under <span title="GPL-3.0-or-later">GPLv3+</span></p>
@@ -1064,6 +1073,7 @@
         const vl = document.querySelector('.dl-vlink');
         if (vl) vl.textContent = r.tag_name;
         for (const a of document.querySelectorAll('.dl-rel')) a.href = r.html_url;
+        for (const a of document.querySelectorAll('.dl-cv')) { a.textContent = `Version ${r.tag_name.replace(/^v/, '')}`; a.href = r.html_url; }
         const vt = document.querySelector('.dl-vtext');
         if (vt) { vt.textContent = r.tag_name.replace(/^v/, ''); vt.href = r.html_url; }
         const pill = document.querySelector('.dl-pill');
