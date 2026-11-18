@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261118a">
+  <link rel="stylesheet" href="style.css?v=20261118b">
   <link rel="stylesheet" href="demo/cards.css">
   <script src="tune.js?v=20261118a"></script>
   <script>
@@ -442,7 +442,7 @@
           <i style="--w: 100%"></i><i style="--w: 94%"></i><i style="--w: 97%"></i><i style="--w: 62%"></i>
           <i class="gap" style="--w: 100%"></i><i style="--w: 91%"></i><i style="--w: 78%"></i>
         </div>
-        <p class="founder-ask">Have a question? <a href="https://github.com/zain-merchant/interlude/issues/new" target="_blank" rel="noopener">Ask on GitHub →</a></p>
+        <p class="founder-ask">Have a question? <a href="https://github.com/zain-merchant/interlude/issues/new" target="_blank" rel="noopener">Ask me on GitHub</a></p>
         <!-- Signed by hand: one line, written in as the note comes into view. -->
         <svg class="founder-sig" viewBox="0 0 176 70" role="img" aria-label="Zain">
           <g transform="translate(8 0) skewX(-10)">
@@ -465,7 +465,6 @@
           </div>
         </div>
         <div class="oss-log" aria-label="Latest changes">
-          <div class="oss-log-head"><span>main</span><span class="oss-live">Latest changes</span></div>
           <ol class="oss-commits"><li class="oss-empty"><a href="https://github.com/zain-merchant/interlude/commits" target="_blank" rel="noopener">See the latest changes on GitHub →</a></li></ol>
         </div>
       </div>
@@ -905,7 +904,7 @@
       .then((list) => {
         const ago = (iso) => {
           const m = Math.max(1, Math.round((Date.now() - new Date(iso)) / 60000));
-          return m < 60 ? `${m}m` : m < 1440 ? `${Math.round(m / 60)}h` : `${Math.round(m / 1440)}d`;
+          return m < 60 ? `${m} min ago` : m < 1440 ? `${Math.round(m / 60)} hr ago` : `${Math.round(m / 1440)} d ago`;
         };
         const rows = list.filter((c) => !/^Merge /.test(c.commit.message)).slice(0, 6);
         if (!rows.length) return;
@@ -917,12 +916,11 @@
           if (i === 0) li.dataset.latest = '';
           const a = document.createElement('a');
           a.href = c.html_url; a.target = '_blank'; a.rel = 'noopener';
-          const h = document.createElement('code'); h.textContent = c.sha.slice(0, 7);
           const t = document.createElement('span'); t.className = 'oss-msg';
-          if (rel) { const b = document.createElement('b'); b.textContent = msg.replace('Release ', 'v'); t.append(b, ' released'); }
+          if (rel) { const b = document.createElement('b'); b.textContent = msg.replace('Release ', 'Version '); t.append(b, ' released'); }
           else t.textContent = msg;
           const w = document.createElement('time'); w.dateTime = c.commit.author.date; w.textContent = ago(c.commit.author.date);
-          a.append(h, t, w); li.append(a);
+          a.append(t, w); li.append(a);
           return li;
         }));
       })
