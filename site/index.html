@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261118j">
+  <link rel="stylesheet" href="style.css?v=20261118l">
   <link rel="stylesheet" href="demo/cards.css?v=20261118a">
   <script src="tune.js?v=20261118b"></script>
   <script>
@@ -298,7 +298,7 @@
         <a id="version" data-k="Version" href="https://github.com/zain-merchant/interlude/releases/latest" target="_blank" rel="noopener">Latest release</a>
         <span aria-hidden="true">·</span> <span class="mi" data-k="Price">Free and open source</span>
         <span aria-hidden="true">·</span> <span class="mi" data-k="Runs on"><svg class="fi" viewBox="0 0 16 16" aria-hidden="true"><rect x="3.5" y="3.5" width="9" height="9" rx="2"/><path d="M6 1.5v2M10 1.5v2M6 12.5v2M10 12.5v2M1.5 6h2M1.5 10h2M12.5 6h2M12.5 10h2"/></svg>macOS 11+ on Apple silicon</span>
-        <span aria-hidden="true">·</span> <span class="mi" data-k="License">GPL-3.0-or-later</span>
+        <span aria-hidden="true">·</span> <span class="mi" data-k="License" title="GPL-3.0-or-later">GPLv3+</span>
       </p>
       </div>
     </section>
@@ -976,8 +976,18 @@
         }));
       })
       .catch(() => {});
-    fetch('https://api.github.com/repos/zain-merchant/interlude/releases/latest')
-      .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
+    // The latest release, kept like the updates above (15 minutes, and the
+    // last one kept if GitHub turns the request away).
+    const RELEASE = 'interlude-release';
+    const rel = (() => { try { return JSON.parse(localStorage.getItem(RELEASE)); } catch { return null; } })();
+    (rel && Date.now() - rel.at < 15 * 60000 ? Promise.resolve(rel.r)
+      : fetch('https://api.github.com/repos/zain-merchant/interlude/releases/latest')
+        .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
+        .then((r) => {
+          try { localStorage.setItem(RELEASE, JSON.stringify({ at: Date.now(), r: { tag_name: r.tag_name, html_url: r.html_url } })); } catch {}
+          return r;
+        })
+        .catch((e) => (rel ? rel.r : Promise.reject(e))))
       .then((r) => {
         if (!r.tag_name) return;
         const v = document.getElementById('version');
