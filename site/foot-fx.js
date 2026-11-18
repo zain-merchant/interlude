@@ -8,8 +8,9 @@
 //                 real vinyl, with a cool and a warm fringe; it trails the
 //                 pointer a little
 //   lamp-warp     the lamp, and the grooves bend gently apart round it
-//   ripples       rings run out from the pointer through the grooves,
-//                 bending them a little and catching the lamp's colours
+//   ripples       rings run out through the grooves, bending them a
+//                 little and catching the lamp's colours; how they're set
+//                 off is the ripple style (see STYLES)
 //   lamp-ripples  both
 //
 // Each thing on screen has one control (see T): the letters, the gaps
@@ -44,6 +45,14 @@ export const T = {
   warp: 3,           // lamp-warp: how far the grooves bend at most, CSS px
   rippleSpeed: 0.85, // how fast rings run out, em a second
   rippleBend: 2,     // how far a ring bends the grooves at most, CSS px
+  rippleStyle: 'breathe', // how rings are set off (see STYLES)
+  rippleReach: 2.2,  // how far a ring runs before it has faded, em
+  rippleWidth: 0.07, // a ring's width where it starts, em (it widens as it runs)
+  rippleSpacing: 0.6, // wake and trail: pointer travel between rings, em
+  rippleInterval: 0.95, // breathe and interference: time between rings, s
+  rippleSpread: 0.45, // interference: how far apart its sources are, em
+  fade: 0.5,         // how long the whole effect takes to come and go, s
+  lineWidth: 1.25,   // groove line width, CSS px
   letter: [1, 1, 1, 11 / 255],
   gap: [0, 0, 0, 0],
   line: [1, 1, 1, 19 / 255],
@@ -57,9 +66,21 @@ const MODES = { lamp: 0, 'lamp-warp': 1, ripples: 2, 'lamp-ripples': 3 };
 export const isGL = (m) => m in MODES;
 const hasLamp = (m) => m !== 'ripples';
 const hasRipples = (m) => m === 'ripples' || m === 'lamp-ripples';
-// How far a ring runs before it has faded, in em.
-const RUN = 2.2;
-const life = () => Math.min(8, RUN / Math.max(0.1, T.rippleSpeed));
+// How the ripples are set off. Every ring starts at nothing, grows in over
+// its first stretch, runs out at the ripple speed and fades away before
+// it has run its reach, so none pops in or is cut off.
+//   wake          from the eased pointer, one ring each time it has moved
+//                 a ring's spacing; none while it's still
+//   drop          one ring where the pointer comes to rest (and one where
+//                 it comes in), like a drop in water
+//   breathe       rings one after another from the eased pointer, at the
+//                 ripple interval, while it's over the word
+//   trail         small rings left along the pointer's own path, a ring's
+//                 spacing apart, each running only a third of the reach
+//   interference  three sources round the eased pointer, slowly turning,
+//                 taking turns at the interval, so their rings cross
+export const STYLES = ['wake', 'drop', 'breathe', 'trail', 'interference'];
+const TRAIL_REACH = 1 / 3;
 
 // How the effect follows the pointer: a spring's stiffness, critically
 // damped (it lags, then settles, and never overshoots). The lamp is heavy.
@@ -110,15 +131,15 @@ uniform float uAspect;  // how much the record is foreshortened (y squeezed)
 uniform vec2 uPivot;    // the word's middle: the grooves turn round it
 uniform vec2 uRot;      // cos, sin of minus the tilt
 uniform float uPitch;   // groove spacing, CSS px
+uniform float uLineW;   // groove line width, CSS px
 uniform vec3 uHover;    // pointer x, y (spring-followed), strength
 uniform float uLamp;    // 1 with the lamp
 uniform float uWarp;    // the warp's most, CSS px (0: none)
 uniform float uRipples; // 1 with rings
-uniform vec3 uRing;     // ring speed (CSS px a second), most bend (CSS px), life (s)
+uniform vec4 uRing;     // most bend, reach, width, grow-in distance (all CSS px)
 uniform float uEm;      // the word's font size, CSS px: effects scale with it
-uniform float uTime;    // seconds, while running
 uniform vec2 uFar;      // the lamp's streak points away from here
-uniform vec3 uPts[8];   // rings: (x, y, when)
+uniform vec4 uPts[16];  // rings: x, y, how far it has run (-1: none), its share of the reach
 uniform vec4 uLetter;   // the letters' fill
 uniform vec4 uGap;      // between the grooves
 uniform vec4 uLine;     // the groove lines
@@ -131,19 +152,38 @@ const vec3 COOL = vec3(0.239, 0.706, 1.0);
 const vec3 WARM = vec3(1.0, 0.608, 0.271);
 float hash(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
 
-// Soft lines from a few harmonics, each faded as it nears the pixel size,
-// so their average never changes and nothing shimmers. g counts grooves;
-// fg is how many grooves one pixel covers; sig is the line's softness.
-float grooveLines(float g, float fg, float sig) {
-  float lines = 0.0, norm = 0.0;
+// The 1.25px lines, as a sum of a few harmonics, each faded as it nears
+// the pixel size, so their average never changes and nothing shimmers. g
+// counts grooves; fg is how many grooves one pixel covers; sig is the
+// line's softness. Gives the lines there, and the same half-way between
+// two (where the lines are lowest).
+void grooveLines(float g, float fg, float sig, out float lines, out float trough) {
+  float norm = 0.0;
+  lines = 0.0;
+  trough = 0.0;
+  float sgn = -1.0;
   for (int k = 1; k <= 12; k++) {
     float fk = float(k);
     float coef = exp(-2.0 * PI * PI * sig * sig * fk * fk);
     norm += 2.0 * coef;
-    float att = exp(-7.0 * fk * fk * fg * fg) * (1.0 - smoothstep(0.3, 0.48, fk * fg));
-    lines += 2.0 * coef * att * cos(2.0 * PI * fk * g);
+    float c = 2.0 * coef * exp(-7.0 * fk * fk * fg * fg) * (1.0 - smoothstep(0.3, 0.48, fk * fg));
+    lines += c * cos(2.0 * PI * fk * g);
+    trough += c * sgn;
+    sgn = -sgn;
   }
-  return lines / norm;
+  lines /= norm;
+  trough /= norm;
+}
+
+// Lines b grooves wide with hard edges, as much of each as the pixel
+// covers (fg grooves across): crisp at any width, and nothing at all
+// between the lines.
+float boxLines(float g, float fg, float b) {
+  float x0 = g + 0.5 * b - 0.5 * fg;
+  float x1 = x0 + fg;
+  float i0 = floor(x0) * b + min(fract(x0), b);
+  float i1 = floor(x1) * b + min(fract(x1), b);
+  return clamp((i1 - i0) / fg, 0.0, 1.0);
 }
 
 // A white core with a cool fringe at x = -1.5 and a warm one at x = +1.5
@@ -201,16 +241,16 @@ void main() {
     // catches the lamp's colours across its width.
     float rl = 0.0;
     vec3 rt = vec3(0.0);
-    for (int i = 0; i < 8; i++) {
-      vec3 p = uPts[i];
-      float age = uTime - p.z;
-      if (age < 0.0 || age > uRing.z) continue;
-      float R = uRing.x * age;
-      float w = 0.07 * uEm * (1.0 + 0.95 * R / uEm);
+    for (int i = 0; i < 16; i++) {
+      vec4 p = uPts[i];
+      float R = p.z;
+      float reach = uRing.y * p.w;
+      if (R < 0.0 || R > reach) continue;
+      // Grows in over its first stretch, fades over the last two thirds.
+      float fade = smoothstep(0.0, min(uRing.w, 0.3 * reach), R) * (1.0 - smoothstep(0.3 * reach, reach, R));
+      float w = uRing.z * (1.0 + 0.95 * R / uEm);
       float x = (length(px - p.xy) - R) / w;
-      float f = age / uRing.z;
-      float fade = (1.0 - f) * (1.0 - f) * smoothstep(0.0, 0.12, age);
-      push += on * uRing.y / 0.4289 * x * exp(-x * x) * fade;
+      push += on * uRing.x / 0.4289 * x * exp(-x * x) * fade;
       float l;
       vec3 c;
       prism(x * 1.6, l, c);
@@ -234,19 +274,26 @@ void main() {
   float rr = r + push * uAspect;
   float P = uPitch * uAspect;
   float fg = max(fwidth(rr), 1e-3) / P;
-  float lines = grooveLines(rr / P, fg, max(0.45 / uPitch, 0.8 * fg));
-  float duty = min(1.0, 1.25 / uPitch);
-  // The lines' sum of waves never comes down to nothing between them (its
-  // trough, half-way between two lines, sits a little above), so measured
-  // from that trough instead: the space between the lines takes none of
-  // the line colour (it's the gap colour's alone), and a crest takes all
-  // of it, so the line colour's opacity is the lines' own. Where the lines
-  // are too fine to draw apart, an even share.
-  float sigma = max(0.45 / uPitch, 0.8 * fg);
-  float trough = grooveLines(0.5, fg, sigma);
-  float apart = 1.0 - smoothstep(0.3, 0.48, fg);
-  float shaped = clamp((lines - trough) / max(1.0 - trough, 1e-3), 0.0, 1.0);
-  float groove = clamp(mix(duty, shaped, apart), 0.0, 1.0);
+  // The 1.25px line as it has always been drawn (soft, from the sum of
+  // waves), measured from its trough (half-way between two lines) to its
+  // crest: the space between the lines takes none of the line colour (it's
+  // the gap colour's alone), and a crest takes all of it, so the line
+  // colour's opacity is the lines' own. Where the lines are too fine to
+  // draw apart, an even share. Any other width is drawn exactly, with hard
+  // edges (it takes over within half a pixel of 1.25). Never wider than
+  // the spacing (then it's solid).
+  float lw = min(uLineW, uPitch);
+  float hard = clamp(abs(lw - 1.25) / 0.5, 0.0, 1.0);
+  float groove = 0.0;
+  if (hard < 1.0) {
+    float lines, trough;
+    grooveLines(rr / P, fg, max(0.45 / uPitch, 0.8 * fg), lines, trough);
+    float duty = min(1.0, 1.25 / uPitch);
+    float apart = 1.0 - smoothstep(0.3, 0.48, fg);
+    float shaped = clamp((lines - trough) / max(1.0 - trough, 1e-3), 0.0, 1.0);
+    groove = clamp(mix(duty, shaped, apart), 0.0, 1.0);
+  }
+  if (hard > 0.0) groove = mix(groove, boxLines(rr / P, fg, lw / uPitch), hard);
 
   // Painted inside the letters, one over the other (premultiplied):
   // the fill, the gaps, the lines with any light, the outline.
@@ -285,11 +332,17 @@ let last = 0;
 let clock = 0; // seconds the loop has run (it only counts while running)
 // Where the pointer is (tx, ty), where the effect is (x, y, moving at vx,
 // vy), and how much it shows (on, easing toward want).
+// on runs evenly from 0 to 1 over the fade time and is eased where it's
+// used, so the effect comes and goes smoothly.
 const hover = { tx: 0, ty: 0, x: 0, y: 0, vx: 0, vy: 0, on: 0, want: 0 };
-// Rings, each [x, y, when].
-const pts = Array.from({ length: 8 }, () => [0, 0, -99]);
-let next = 0;
-let lastPt = { x: 0, y: 0, t: -99 };
+// Rings, each [x, y, how far it has run (CSS px; -1: none), its share of
+// the reach]. A new ring takes a free slot; with none free it waits.
+const pts = Array.from({ length: 16 }, () => [0, 0, -1, 1]);
+// What sets the rings off: how far the pointer has gone since the last
+// (wake, trail), where the trail last was, the time since the last
+// (breathe, interference), which source is next, and for drop whether
+// it's moved since it last came to rest, and how long it's been still.
+const emit = { dist: 0, px: 0, py: 0, time: 0, src: 0, armed: false, rest: 0 };
 // The phone's one-off play-through: when it started (ms), or 0.
 let demoAt = 0;
 let mode = T.mode;
@@ -316,7 +369,7 @@ function init() {
   gl.enableVertexAttribArray(loc);
   gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
   for (const n of ['uText', 'uSize', 'uDpr', 'uCentre', 'uAspect', 'uPivot', 'uRot', 'uPitch', 'uHover', 'uLamp', 'uWarp',
-    'uRipples', 'uRing', 'uEm', 'uTime', 'uFar', 'uPts', 'uLetter', 'uGap', 'uLine', 'uOutline', 'uStroke']) U[n] = gl.getUniformLocation(prog, n);
+    'uRipples', 'uRing', 'uEm', 'uFar', 'uLineW', 'uPts', 'uLetter', 'uGap', 'uLine', 'uOutline', 'uStroke']) U[n] = gl.getUniformLocation(prog, n);
   tex = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, tex);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
@@ -372,9 +425,60 @@ function layout() {
 
 // Everything goes back to rest (a new mode starts clean).
 function reset() {
-  for (const p of pts) p[2] = -99;
-  lastPt.t = -99;
+  for (const p of pts) p[2] = -1;
   hover.vx = hover.vy = 0;
+  Object.assign(emit, { dist: 0, time: 0, armed: false, rest: 0 });
+}
+
+// A new ring at x, y (unless every slot is still running one).
+function ring(x, y, share = 1) {
+  const p = pts.find((q) => q[2] < 0);
+  if (p) { p[0] = x; p[1] = y; p[2] = 0; p[3] = share; }
+}
+
+// Sets rings off as the ripple style has it (see STYLES). Called each
+// frame while the pointer is over the word; ox, oy is where the eased
+// pointer was a frame ago.
+function spawn(dt, ox, oy) {
+  const em = geo.em;
+  const style = STYLES.includes(T.rippleStyle) ? T.rippleStyle : 'breathe';
+  const gap = Math.max(0.05, T.rippleSpacing) * em;
+  if (style === 'wake') {
+    emit.dist += Math.hypot(hover.x - ox, hover.y - oy);
+    if (emit.dist >= gap) { emit.dist %= gap; ring(hover.x, hover.y); }
+  } else if (style === 'trail') {
+    // Along the pointer's own path, each ring where it was.
+    const d = Math.hypot(hover.tx - emit.px, hover.ty - emit.py);
+    if (d >= gap) {
+      const n = Math.min(4, Math.floor(d / gap));
+      for (let i = 1; i <= n; i++) {
+        const f = (i * gap) / d;
+        ring(emit.px + (hover.tx - emit.px) * f, emit.py + (hover.ty - emit.py) * f, TRAIL_REACH);
+      }
+      emit.px += ((hover.tx - emit.px) * n * gap) / d;
+      emit.py += ((hover.ty - emit.py) * n * gap) / d;
+    }
+  } else if (style === 'drop') {
+    // Moving at more than a tenth of an em a second counts as moving; a
+    // fifth of a second slower than that, and it has come to rest.
+    const v = Math.hypot(hover.vx, hover.vy) / em;
+    if (v > 0.1) { emit.armed = true; emit.rest = 0; }
+    else if (emit.armed && (emit.rest += dt) > 0.2) { emit.armed = false; ring(hover.x, hover.y); }
+  } else {
+    emit.time += dt;
+    const every = Math.max(0.1, T.rippleInterval) / (style === 'interference' ? 3 : 1);
+    if (emit.time >= every) {
+      emit.time %= every;
+      if (style === 'breathe') ring(hover.x, hover.y);
+      else {
+        // Three sources a third of a turn apart, turning once a minute.
+        const a = (clock * Math.PI * 2) / 60 + (emit.src * Math.PI * 2) / 3;
+        const r = (T.rippleSpread * em) / Math.sqrt(3);
+        ring(hover.x + r * Math.cos(a), hover.y + r * Math.sin(a));
+        emit.src = (emit.src + 1) % 3;
+      }
+    }
+  }
 }
 
 // The one-off play-through on phones: a slow pass along the word, as if a
@@ -400,13 +504,15 @@ function frame(now) {
   clock += dt;
   const still = reduced.matches;
 
-  // Shows over a quarter second or so; goes over about a second.
-  hover.on += (hover.want - hover.on) * Math.min(1, dt * (hover.want ? 5 : 2.6));
-  if (Math.abs(hover.on - hover.want) < 0.01) hover.on = hover.want;
+  // Comes and goes evenly over the fade time (eased where it's drawn).
+  const step = T.fade > 0 ? dt / T.fade : 1;
+  hover.on = hover.want ? Math.min(1, hover.on + step) : Math.max(0, hover.on - step);
 
   // Follow the pointer on a critically damped spring (in small steps, so
   // it's steady at any frame rate).
   const k = SPRING[mode];
+  const ox = hover.x;
+  const oy = hover.y;
   if (still) {
     hover.x = hover.tx;
     hover.y = hover.ty;
@@ -422,18 +528,15 @@ function frame(now) {
     }
   }
 
-  // Rings: one every second or so while it's over the word (more often
-  // when they're quick, so one is always running), and sooner once it
-  // has moved a fair way.
+  // Rings run out at the ripple speed and are done once past their reach.
   const rings = hasRipples(mode) && !still;
-  if (rings && hover.want) {
-    const moved = Math.hypot(hover.x - lastPt.x, hover.y - lastPt.y);
-    if (clock - lastPt.t > Math.min(0.95, 0.8 * life()) || (moved > geo.em * 0.6 && clock - lastPt.t > 0.3)) {
-      pts[next] = [hover.x, hover.y, clock];
-      next = (next + 1) % pts.length;
-      Object.assign(lastPt, { x: hover.x, y: hover.y, t: clock });
-    }
+  const reach = Math.max(0.1, T.rippleReach) * geo.em;
+  for (const p of pts) {
+    if (p[2] < 0) continue;
+    p[2] += T.rippleSpeed * geo.em * dt;
+    if (p[2] > reach * p[3]) p[2] = -1;
   }
+  if (rings && hover.want) spawn(dt, ox, oy);
 
   const a = (-T.tilt * Math.PI) / 180;
   const col = (v) => gl.uniform4f(U[v[0]], ...T[v[1]]);
@@ -446,15 +549,15 @@ function frame(now) {
   gl.uniform2f(U.uPivot, geo.pivot.x, geo.pivot.y);
   gl.uniform2f(U.uRot, Math.cos(a), Math.sin(a));
   gl.uniform1f(U.uPitch, T.pitch);
-  gl.uniform3f(U.uHover, hover.x, hover.y, hover.on);
+  gl.uniform1f(U.uLineW, T.lineWidth);
+  gl.uniform3f(U.uHover, hover.x, hover.y, hover.on * hover.on * (3 - 2 * hover.on));
   gl.uniform1f(U.uLamp, hasLamp(mode) ? 1 : 0);
   gl.uniform1f(U.uWarp, mode === 'lamp-warp' ? T.warp : 0);
   gl.uniform1f(U.uRipples, hasRipples(mode) ? 1 : 0);
-  gl.uniform3f(U.uRing, T.rippleSpeed * geo.em, T.rippleBend, life());
+  gl.uniform4f(U.uRing, T.rippleBend, reach, Math.max(0.005, T.rippleWidth) * geo.em, 0.3 * geo.em);
   gl.uniform1f(U.uEm, geo.em);
-  gl.uniform1f(U.uTime, clock);
   gl.uniform2f(U.uFar, geo.far.x, geo.far.y);
-  gl.uniform3fv(U.uPts, pts.flat());
+  gl.uniform4fv(U.uPts, pts.flat());
   for (const v of [['uLetter', 'letter'], ['uGap', 'gap'], ['uLine', 'line'], ['uOutline', 'outline']]) col(v);
   gl.uniform1f(U.uStroke, T.stroke);
   gl.clearColor(0, 0, 0, 0);
@@ -462,12 +565,14 @@ function frame(now) {
   gl.drawArrays(gl.TRIANGLES, 0, 3);
 
   // Keep going while anything is still moving: the fade, the spring, a
-  // ring still running out, or (while over the word) the rings to come.
+  // ring still running out, or (while over the word) rings to come: on a
+  // timer for breathe and interference; for drop, the rest still to come.
   if (demoAt) return true;
   if (hover.on !== hover.want) return true;
   if (hover.on === 0) return false;
   if (!still && (Math.abs(hover.tx - hover.x) > 0.2 || Math.abs(hover.ty - hover.y) > 0.2 || Math.hypot(hover.vx, hover.vy) > 2)) return true;
-  if (rings && (hover.want || pts.some((p) => clock - p[2] < life()))) return true;
+  if (rings && pts.some((p) => p[2] >= 0)) return true;
+  if (rings && hover.want && (T.rippleStyle === 'breathe' || T.rippleStyle === 'interference' || emit.armed)) return true;
   return false;
 }
 
@@ -495,7 +600,9 @@ export function point(p) {
       hover.x = p.x;
       hover.y = p.y;
       hover.vx = hover.vy = 0;
-      Object.assign(lastPt, { x: p.x, y: p.y, t: -99 });
+      // Fresh: the first ring comes as the effect fades in (breathe and
+      // interference at once, drop where it first rests).
+      Object.assign(emit, { dist: 0, px: p.x, py: p.y, time: 1e3, armed: true, rest: 0 });
     }
     Object.assign(hover, { tx: p.x, ty: p.y, want: 1 });
     demoAt = 0;
@@ -511,7 +618,7 @@ export function demo() {
   hover.x = hover.tx = geo.width * 0.14;
   hover.y = hover.ty = geo.baseline - geo.em * 0.36;
   hover.vx = hover.vy = 0;
-  lastPt.t = -99;
+  Object.assign(emit, { dist: 0, px: hover.x, py: hover.y, time: 1e3, armed: true, rest: 0 });
   wake();
 }
 
