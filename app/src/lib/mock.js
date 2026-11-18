@@ -557,6 +557,7 @@ export function createMockBackend() {
     historySessions: async () => sessions.map((x) => ({ start: x.start, count: x.paths.length })),
     sessionTracks: async (start) => byPaths(sessions.find((x) => x.start === start)?.paths ?? []),
     onLibraryPlayed: async () => () => {},
+    onDeckBeatgrid: async () => () => {},
     importSources: async () => [
       { source: { kind: /** @type {'rekordbox'} */ ('rekordbox'), path: '~/Documents/rekordbox.xml' }, modified: Date.now() - 3 * 3600e3 },
       { source: { kind: /** @type {'serato'} */ ('serato'), path: '/Users/you/Music/_Serato_' }, modified: Date.now() - 26 * 3600e3 },

@@ -17,6 +17,8 @@ symphonia = { version = "0.6", features = ["all"] }
 cpal = { version = "0.18", optional = true }
 thiserror = "2"
 hound = "3.5"
+# Beat and downbeat tracking (Beat This!, MIT) on the pure-Rust rten runtime.
+beat-this = { version = "1.1", default-features = false }
 matrixmultiply = { version = "0.3", features = ["std"] }
 rustfft = "6"
 serde = { version = "1", features = ["derive"], optional = true }

@@ -139,6 +139,13 @@ async function createTauriBackend() {
      */
     onLibraryAnalysis: (fn) => listen('library-analysis', (e) => fn(e.payload)),
     /**
+     * Beat This! found the grid of a track on a deck, a few seconds after
+     * it loaded. The deck already uses it.
+     * @param {(e: { deck: number, path: string, beatgrid: Beatgrid }) => void} fn
+     * @returns {Promise<() => void>} unlisten
+     */
+    onDeckBeatgrid: (fn) => listen('deck-beatgrid', (e) => fn(e.payload)),
+    /**
      * Library actions from a hardware controller (browse knob, load buttons).
      * @param {(e: { type: 'browse', delta: number } | { type: 'load', deck: number } | { type: 'loadSample', slot: number }) => void} fn
      * @returns {Promise<() => void>} unlisten

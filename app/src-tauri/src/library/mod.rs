@@ -145,10 +145,18 @@ impl Analyzer {
         self.wake.notify_one();
     }
 
-    /// Saves a result and tells the UI.
-    fn record(&self, app: &AppHandle, path: &Path, analysis: Analysis, first_beat: Option<f64>) {
+    /// Saves a result and tells the UI. `first_beat` and `neural` describe
+    /// the grid found, as [`Db::save_analysis`] takes them.
+    fn record(
+        &self,
+        app: &AppHandle,
+        path: &Path,
+        analysis: Analysis,
+        first_beat: Option<f64>,
+        neural: bool,
+    ) {
         let db = self.db.lock().unwrap();
-        if let Err(e) = db.save_analysis(path, &analysis, first_beat) {
+        if let Err(e) = db.save_analysis(path, &analysis, first_beat, neural) {
             eprintln!("could not save analysis of {}: {e}", path.display());
         }
         // Report what's saved: a BPM fixed by hand wins over the detected one.
@@ -182,8 +190,13 @@ impl Analyzer {
             // thread and with it all analysis until the app restarts (and
             // then again at the same file).
             let result = std::panic::catch_unwind(|| TrackSummary::analyze(&path));
+            let (mut first_beat, mut neural) = (None, false);
             let analysis = match result {
-                Ok(Ok(summary)) => Analysis::from(summary),
+                Ok(Ok(summary)) => {
+                    first_beat = summary.grid.map(|g| g.first_beat);
+                    neural = summary.neural_grid;
+                    Analysis::from(summary)
+                }
                 // Gone mid-analysis (a drive unplugged, a file moved): try
                 // again once it's back, rather than marking it undecodable
                 // for good.
@@ -194,7 +207,7 @@ impl Analyzer {
                     Analysis::FAILED
                 }
             };
-            self.record(&app, &path, analysis, None);
+            self.record(&app, &path, analysis, first_beat, neural);
         }
     }
 }
@@ -397,35 +410,60 @@ impl Library {
 
     /// Saves the analysis of a track that was just loaded onto a deck, so
     /// the library shows it without decoding the file again, and returns
-    /// what to put back on the deck: its saved cue points and its beatgrid
-    /// if one was fixed by hand.
+    /// what to put back on the deck: its saved cue points, its beatgrid if
+    /// one was fixed by hand, and the grid Beat This! found if it has run.
     pub fn loaded(
         &self,
         app: &AppHandle,
         deck: usize,
         track: &dj_engine::Track,
-    ) -> (SavedCues, Option<Beatgrid>) {
+    ) -> (SavedCues, Option<Beatgrid>, Option<Beatgrid>) {
         // The deck still holds the track being replaced: keep its last change.
         self.watch_deck(deck, 0.0);
         let Some(path) = &track.path else {
             self.unwatch(deck);
-            return (SavedCues::default(), None);
+            return (SavedCues::default(), None, None);
         };
         self.analyzer.record(
             app,
             path,
             TrackSummary::of(track).into(),
             track.beatgrid.map(|g| g.first_beat),
+            false,
         );
         let cues = self.db.lock().unwrap().cues(path).unwrap_or_else(|e| {
             eprintln!("could not read cues for {}: {e}", path.display());
             SavedCues::default()
         });
         let grid = self.db.lock().unwrap().locked_grid(path).unwrap_or(None);
+        let neural = self.db.lock().unwrap().neural_grid(path).unwrap_or(None);
         if let Some(w) = self.watches.lock().unwrap().get_mut(deck) {
             *w = Some(CueWatch::new(path.clone(), track.duration_secs(), cues));
         }
-        (cues, grid)
+        (cues, grid, neural)
+    }
+
+    /// Saves the grid Beat This! found for a track on a deck and tells the
+    /// UI its tempo. Returns whether the track's grid was fixed by hand, in
+    /// which case nothing changed.
+    pub fn save_neural_grid(&self, app: &AppHandle, path: &Path, grid: Beatgrid) -> bool {
+        let db = self.db.lock().unwrap();
+        if db.locked_grid(path).ok().flatten().is_some() {
+            return true;
+        }
+        if let Err(e) = db.save_neural_grid(path, grid) {
+            eprintln!("could not save the grid of {}: {e}", path.display());
+        }
+        if let Ok(Some(analysis)) = db.analysis(path) {
+            let _ = app.emit(
+                "library-analysis",
+                AnalysisEvent {
+                    path: path.display().to_string(),
+                    analysis,
+                },
+            );
+        }
+        false
     }
 
     /// Stops saving a deck's cues, saving its last change first.
