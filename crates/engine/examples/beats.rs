@@ -3,6 +3,8 @@
 //! `tools/beat-eval` to score the analysis against ground truth. Run with
 //! `cargo run --release -p dj-engine --no-default-features --example beats -- <files…>`.
 //! A single `-` argument reads the paths from stdin, one per line.
+//! `INTERLUDE_BEATS=neural` refines each grid with Beat This!, as the app
+//! does in the background.
 
 use std::io::BufRead;
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -40,6 +42,7 @@ fn main() {
             .map_while(Result::ok)
             .collect();
     }
+    let neural = std::env::var("INTERLUDE_BEATS").is_ok_and(|v| v == "neural");
     let next = AtomicUsize::new(0);
     let out = Mutex::new(());
     let threads = std::thread::available_parallelism().map_or(4, |n| n.get());
@@ -51,7 +54,12 @@ fn main() {
                 let line = match read_wav(path) {
                     Ok((stereo, sr)) => {
                         let t = Instant::now();
-                        let g = detect_beatgrid(&stereo, sr);
+                        let mut g = detect_beatgrid(&stereo, sr);
+                        if neural {
+                            if let Some(r) = dj_engine::beatthis::refine(&stereo, sr, g) {
+                                g = Some(r.grid);
+                            }
+                        }
                         let ms = t.elapsed().as_millis();
                         match g {
                             Some(g) => format!("{path}\t{:.4}\t{:.5}\t{ms}", g.bpm, g.first_beat),

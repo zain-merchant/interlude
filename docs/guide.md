@@ -9,7 +9,12 @@ Everything Interlude does, in detail. For a short overview, see the
   track), shown on each deck and as beat lines on the waveform (a stronger
   line every 4 beats). SYNC matches tempo and beat phase to the other deck,
   picking half or double time when that's closer (e.g. 87 vs 174 BPM).
-  Detection range is 80-160 BPM; constant tempo only for now.
+  Detection range is 80-160 BPM; constant tempo only for now. After a
+  track loads, the Beat This! beat tracker (Foscarin et al., ISMIR 2024,
+  MIT licence, built in) listens to the whole track in the background:
+  where it agrees with the grid on the beats, its downbeats set bar 1, and
+  where it's sure of a steady tempo the grid missed (live drums, mostly),
+  its grid is used. A grid you've fixed by hand is never changed.
 - **Hot cues, loops, beat jump:** 8 hot cues per deck (4 on screen, all 8
   on the FLX4 pads): set, jump, hold on a paused deck to preview. Beat loops
   snap to the beatgrid, halve and double, and wrap without clicks. Beat jump
