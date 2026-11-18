@@ -682,14 +682,34 @@
           // item on its own, with the same space between every two of them
           // all the way round, from their measured widths (again once the
           // font has loaded).
-          const words = ['INTERLUDE', 'FREE', 'OPEN SOURCE', `SIDE ${side}`, year];
-          const tps = words.map((w) => { const tp = el('textPath', { href: `#${id}` }, t); tp.textContent = w; return tp; });
+          // The speed as a real fraction, built from small figures (a ⅓
+          // glyph isn't in the font, and its fallback looked wrong): the 1 up
+          // at the caps' height, a slash, the 3 on the baseline.
+          const k = 0.62, up = 0.7 * fs * (1 - k);
+          const rpm = [{ t: '33' }, { t: '1', k, dy: -up, ls: 0.15 }, { t: '/', k, dy: up / 2, ls: 0.15 }, { t: '3', k, dy: up / 2 }, { t: ' RPM' }];
+          const words = ['INTERLUDE', 'FREE', 'OPEN SOURCE', `SIDE ${side}`, rpm, year].map((w) => (typeof w === 'string' ? [{ t: w }] : w));
+          const tps = words.map((parts) => {
+            const tp = el('textPath', { href: `#${id}` }, t);
+            for (const q of parts) {
+              const a = {};
+              if (q.k) a['font-size'] = fs * q.k;
+              if (q.dy) a.dy = q.dy;
+              if (q.ls != null) a['letter-spacing'] = q.ls;
+              el('tspan', a, tp).textContent = q.t;
+            }
+            return tp;
+          });
           const C = 2 * Math.PI * (L - 5);
           const place = () => {
             const ctx = document.createElement('canvas').getContext('2d');
-            ctx.font = `600 ${fs * 10}px Geist, sans-serif`;
-            if ('letterSpacing' in ctx) ctx.letterSpacing = `${ls * 10}px`;
-            const wd = words.map((w) => ctx.measureText(w).width / 10 + ('letterSpacing' in ctx ? 0 : ls * w.length));
+            const has = 'letterSpacing' in ctx;
+            const width = (q) => {
+              const size = fs * (q.k || 1), sp = q.ls ?? ls;
+              ctx.font = `600 ${size * 10}px Geist, sans-serif`;
+              if (has) ctx.letterSpacing = `${sp * 10}px`;
+              return ctx.measureText(q.t).width / 10 + (has ? 0 : sp * q.t.length);
+            };
+            const wd = words.map((parts) => parts.reduce((x, q) => x + width(q), 0));
             const g = (C - wd.reduce((x, y) => x + y, 0)) / words.length;
             let at = 0;
             tps.forEach((tp, i) => { tp.setAttribute('startOffset', at.toFixed(2)); at += wd[i] + g; });
@@ -1121,7 +1141,7 @@
       const w = document.querySelector('.foot-word');
       if (!w) return;
       const d = document.documentElement;
-      const fx = await import('./foot-fx.js?v=20261121w').catch(() => null);
+      const fx = await import('./foot-fx.js?v=20261121x').catch(() => null);
       addEventListener('foot-fit', () => fx?.relayout());
       // Without tune.js (or an older one), each control still applies its default.
       const own = (o) => o.onInput?.(o.value);
@@ -1181,7 +1201,7 @@
       tune.slider({ label: 'Footer: click ring reach', folder: 'Motion', min: 0.3, max: 4, step: 0.05, value: 1.6, onInput: set('clickReach') });
       tune.slider({ label: 'Footer: click ring strength', folder: 'Motion', min: 1, max: 10, step: 0.25, value: 4, unit: '×', onInput: set('clickBend') });
       tune.slider({ label: 'Footer: click lens strength', folder: 'Click', min: 0, max: 80, step: 1, value: 30, unit: 'px', onInput: set('knock') });
-      tune.slider({ label: 'Footer: click lens size', folder: 'Click', min: 0.03, max: 0.9, step: 0.01, value: 0.3, unit: 'em', onInput: set('knockSize') });
+      tune.slider({ label: 'Footer: click lens size', folder: 'Click', min: 0.03, max: 1.2, step: 0.01, value: 0.4, unit: 'em', onInput: set('knockSize') });
       tune.slider({ label: 'Footer: click lens springs back in (s)', folder: 'Click', min: 0.15, max: 3, step: 0.05, value: 0.6, onInput: set('knockTime') });
       tune.slider({ label: 'Footer: click lens in-out swing', folder: 'Click', min: 0, max: 0.9, step: 0.05, value: 0.15, onInput: set('knockBounce') });
       tune.slider({ label: 'Footer: click wave strength', folder: 'Click', min: 0, max: 1.5, step: 0.05, value: 0.3, onInput: set('knockWave') });
