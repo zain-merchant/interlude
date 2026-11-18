@@ -601,12 +601,13 @@ export function Download(play) {
   const start = { cx: REST.x, cy: REST.y, sel: false, drag: false, copy: false, done: false, gone: false };
   return (
     <Pic id="dmg" {...play} initial={start} poster={{ ...start, cx: DROP.x, cy: DROP.y, sel: true, done: true, gone: true }}
-      // Again: the pointer (gone by now) comes back where it starts, fading
-      // in as the selection clears; nothing else has moved.
+      // Again: the selection clears first, then the pointer (gone by now)
+      // fades in where it starts; nothing else has moved.
       rewind={async (a) => {
+        await a.set({ sel: false, done: false });
         a.put({ cx: REST.x, cy: REST.y });
-        await frame();
-        await a.set({ gone: false, done: false, sel: false });
+        await a.wait(180);
+        await a.set({ gone: false });
         await a.wait(260);
       }}
       script={async (a) => {

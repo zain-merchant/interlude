@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261119n">
+  <link rel="stylesheet" href="style.css?v=20261119p">
   <link rel="stylesheet" href="demo/cards.css?v=20261119k">
   <script src="tune.js?v=20261118b"></script>
   <script>
@@ -414,7 +414,7 @@
         <li data-picture="open">
           <span class="num">02</span>
           <h3>Open it</h3>
-          <p>Open Interlude from Applications or Spotlight.</p>
+          <p>Open Interlude from Applications or Spotlight. After that, it keeps itself up to date.</p>
         </li>
         <li data-picture="music">
           <span class="num">03</span>
@@ -422,7 +422,6 @@
           <p>Click <b>+ Add music folder</b>, or bring your library over from Rekordbox or Serato with File › Import. Plug in your controller and it connects by itself.</p>
         </li>
       </ol>
-      <p class="aside">After that, Interlude keeps itself up to date.</p>
     </section>
 
     <section id="features" class="wrap section">
@@ -514,7 +513,7 @@
            the maker. Its body is still to be written: skeleton lines hold
            its place. -->
       <aside class="founder" aria-label="A note from the maker">
-        <h3>Hi, I'm Zain</h3>
+        <h3>Hi, I'm Zain,</h3>
         <div class="founder-body" aria-hidden="true">
           <i style="--w: 100%"></i><i style="--w: 94%"></i><i style="--w: 97%"></i><i style="--w: 62%"></i>
           <i class="gap" style="--w: 100%"></i><i style="--w: 91%"></i><i style="--w: 78%"></i>
@@ -589,7 +588,7 @@
   </footer>
 
   <!-- The feature cards' pictures (built from app/demo, see the README). -->
-  <script type="module" src="demo/cards.js?v=20261119k"></script>
+  <script type="module" src="demo/cards.js?v=20261119p"></script>
   <script>
     // The hero. The screenshot shows first; once the page has loaded, the
     // live app takes its place (unless the visitor prefers less motion).
@@ -832,7 +831,8 @@
       const w = document.querySelector('.foot-word');
       if (!w) return;
       const d = document.documentElement;
-      const fx = await import('./foot-fx.js?v=20261119a').catch(() => null);
+      const fx = await import('./foot-fx.js?v=20261119b').catch(() => null);
+      addEventListener('foot-fit', () => fx?.relayout());
       // Without tune.js (or an older one), each control still applies its default.
       const own = (o) => o.onInput?.(o.value);
       const tune = { slider: own, select: own, color: own, refresh: () => {}, ...window.tune };
@@ -1036,6 +1036,45 @@
       const card = document.querySelector('.oss');
       if (!card || !('IntersectionObserver' in window)) { card?.toggleAttribute('data-in', true); return; }
       new IntersectionObserver((es, io) => { if (es[0].isIntersecting) { card.toggleAttribute('data-in', true); io.disconnect(); } }, { threshold: 0.45 }).observe(card);
+    })();
+    // The install and feature cards (style.css, "Cards"): as they were, or
+    // quieter and of a piece with the rest of the page, or no card at all.
+    document.documentElement.dataset.cards = 'quiet';
+    window.tune?.select({ label: 'Cards: style', value: 'quiet', options: [['quiet', 'Quiet: hairlines, a soft top light'], ['open', 'Open: the picture in a panel, words on the page'], ['before', 'Before']],
+      onInput: (v) => (document.documentElement.dataset.cards = v) });
+    // What sits before each feature's heading.
+    document.documentElement.dataset.mark = 'edge';
+    window.tune?.select({ label: 'Features: heading mark', value: 'edge', options: [['edge', 'A lit edge along the card top'], ['glow', 'A soft glow in the corner'], ['tick', 'A short bar'], ['none', 'Nothing'], ['dot', 'The dot (before)']],
+      onInput: (v) => (document.documentElement.dataset.mark = v) });
+    // The footer's name, exactly as wide as the column above it at any
+    // window size (measured, since a word's width isn't a CSS length).
+    (() => {
+      const w = document.querySelector('.foot-word');
+      const text = w && [...w.childNodes].find((n) => n.nodeType === 3 && n.textContent.trim());
+      if (!text) return;
+      // Fitted to the letters' ink, not their boxes: the I's left edge sits
+      // on the column's left edge, the e's right edge on its right edge.
+      const ctx = document.createElement('canvas').getContext('2d');
+      const fit = () => {
+        const target = w.clientWidth;
+        const cs = getComputedStyle(w);
+        const fs = parseFloat(cs.fontSize);
+        ctx.font = `${cs.fontWeight} ${fs}px ${cs.fontFamily}`;
+        if ('letterSpacing' in ctx) ctx.letterSpacing = cs.letterSpacing;
+        ctx.textAlign = 'left';
+        const m = ctx.measureText(text.textContent.trim());
+        const width = m.actualBoundingBoxLeft + m.actualBoundingBoxRight;
+        if (width > 0 && target > 0) {
+          const k = target / width;
+          w.style.setProperty('--foot-fs', `${fs * k}px`);
+          w.style.setProperty('--foot-indent', `${m.actualBoundingBoxLeft * k}px`);
+          // (The record drawing redraws its letters at the new size.)
+          dispatchEvent(new Event('foot-fit'));
+        }
+      };
+      fit();
+      document.fonts?.ready.then(fit);
+      new ResizeObserver(() => requestAnimationFrame(fit)).observe(w);
     })();
     const cream = () => document.querySelector('.oss')?.dataset.look === 'cream';
     window.tune?.select({ show: cream, label: 'Open source: what fades', value: 'outer', options: [['outer', 'The outer card, to the right'], ['inner', 'The updates\' surface, to the right'], ['none', 'Nothing']],
