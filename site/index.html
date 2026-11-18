@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261117j">
+  <link rel="stylesheet" href="style.css?v=20261117k">
   <link rel="stylesheet" href="demo/cards.css">
   <script src="tune.js?v=20261117g"></script>
   <script>
@@ -248,6 +248,18 @@
       window.tune?.select({ label: 'Nav: capsule corners', value: '14', options: [['14', 'Match the icon'], ['24', 'Pill']],
         onInput: (v) => { d.style.setProperty('--cap-r', `${v}px`); requestAnimationFrame(measure); } });
       window.tune?.slider({ id: 'nav-icon', label: 'Nav: icon size before capsule', min: 28, max: 120, step: 1, value: 48, css: '--brand-icon', onInput: () => requestAnimationFrame(measure) });
+      // Being tried: how the hero's text block is laid out round the
+      // headline (data-herotext, style.css). The headline stays the first
+      // line, so the capsule still turns on it.
+      window.tune?.select({ label: 'Hero: text layout', value: 'float', options: [
+        ['float', 'Buttons beside the headline (current)'], ['stack', 'Buttons under, facts in a panel'],
+        ['rail', 'Buttons and facts in a ruled column'], ['card', 'Everything but the headline in a card'],
+        ['ledger', 'A ruled row: line and buttons, then chips'], ['badge', 'One column: buttons, then a release pill'],
+      ], onInput: (v) => {
+        if (v === 'float') delete d.dataset.herotext;
+        else d.dataset.herotext = v;
+        dispatchEvent(new Event('resize'));
+      } });
       measure();
       document.fonts?.ready.then(measure);
       // Opened part way down the page: start as a capsule.
@@ -265,6 +277,9 @@
         <h1>Interlude</h1>
       </div>
       <p class="tagline">A free, <span class="nw">open-source</span> DJ app for Mac.</p>
+      <!-- The rest of the text block. Laid out by the layouts in style.css
+           ("Hero: text layout"); in most it isn't a box of its own. -->
+      <div class="hero-side">
       <p class="lede">Pro features with a fast, lightweight footprint.</p>
       <div class="cta">
         <a class="btn big" href="https://github.com/zain-merchant/interlude/releases/latest/download/Interlude.dmg">
@@ -274,11 +289,12 @@
         <a class="btn ghost big" href="https://github.com/zain-merchant/interlude" target="_blank" rel="noopener">View on GitHub</a>
       </div>
       <p class="meta">
-        <a id="version" href="https://github.com/zain-merchant/interlude/releases/latest" target="_blank" rel="noopener">Latest release</a>
-        <span aria-hidden="true">·</span> <span class="mi">Free and open source</span>
-        <span aria-hidden="true">·</span> <span class="mi">macOS 11+ on Apple silicon</span>
-        <span aria-hidden="true">·</span> <span class="mi">GPL-3.0-or-later</span>
+        <a id="version" data-k="Version" href="https://github.com/zain-merchant/interlude/releases/latest" target="_blank" rel="noopener">Latest release</a>
+        <span aria-hidden="true">·</span> <span class="mi" data-k="Price">Free and open source</span>
+        <span aria-hidden="true">·</span> <span class="mi" data-k="Runs on">macOS 11+ on Apple silicon</span>
+        <span aria-hidden="true">·</span> <span class="mi" data-k="License">GPL-3.0-or-later</span>
       </p>
+      </div>
     </section>
 
     <section class="shot wrap" aria-label="Interlude in action">
