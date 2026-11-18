@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261118o">
+  <link rel="stylesheet" href="style.css?v=20261118p">
   <link rel="stylesheet" href="demo/cards.css?v=20261118a">
   <script src="tune.js?v=20261118b"></script>
   <script>
@@ -463,7 +463,7 @@
       </div>
       <!-- Last on the page before the footer: the project is made in the
            open, shown rather than said: its latest changes, live from GitHub. -->
-      <div class="oss" data-fade="outer">
+      <div class="oss" data-look="glass" data-fade="outer">
         <div class="oss-text">
           <h3>Send an idea or build it yourself.</h3>
           <p>Interlude is free and open source, forever, so your gear, your bugs and your wish list can be fixed by anyone who cares, including you.</p>
@@ -938,15 +938,18 @@
     // plain "Latest release" link if GitHub can't be reached.
     // The open source card's update list: how its light surface fades into
     // the card (style.css, .oss).
-    window.tune?.select({ label: 'Open source: what fades', value: 'outer', options: [['outer', 'The outer card, to the right'], ['inner', 'The updates\' surface, to the right'], ['none', 'Nothing']],
+    window.tune?.select({ label: 'Open source: look', value: 'glass', options: [['glass', 'Dark glass, like the download card'], ['bright', 'Bright glass'], ['open', 'No card, the updates in glass'], ['cream', 'Cream card']],
+      onInput: (v) => { document.querySelector('.oss').dataset.look = v; window.tune?.refresh?.('Open source'); } });
+    const cream = () => document.querySelector('.oss')?.dataset.look === 'cream';
+    window.tune?.select({ show: cream, label: 'Open source: what fades', value: 'outer', options: [['outer', 'The outer card, to the right'], ['inner', 'The updates\' surface, to the right'], ['none', 'Nothing']],
       onInput: (v) => { const o = document.querySelector('.oss'); if (v === 'none') o.removeAttribute('data-fade'); else o.dataset.fade = v; } });
-    window.tune?.slider({ label: 'Open source: card brightness', min: 0, max: 1, step: 0.01, value: 0.9, css: '--oss-card' });
-    window.tune?.slider({ label: 'Open source: card brightness at the right', min: 0, max: 1, step: 0.01, value: 0.12, css: '--oss-card-end' });
-    window.tune?.slider({ label: 'Open source: card blur', min: 0, max: 60, step: 1, value: 30, unit: 'px', css: '--oss-blur' });
-    window.tune?.slider({ label: 'Open source: fade starts at', min: 0, max: 100, step: 1, value: 35, unit: '%', css: '--oss-from' });
-    window.tune?.slider({ label: 'Open source: fade ends at', min: 0, max: 100, step: 1, value: 100, unit: '%', css: '--oss-to' });
-    window.tune?.slider({ label: 'Open source: updates surface white', min: 0, max: 1, step: 0.01, value: 0.62, css: '--oss-a' });
-    window.tune?.slider({ label: 'Open source: lines', min: 0, max: 0.3, step: 0.01, value: 0.1, css: '--oss-line' });
+    window.tune?.slider({ show: cream, label: 'Open source: card brightness', min: 0, max: 1, step: 0.01, value: 0.9, css: '--oss-card' });
+    window.tune?.slider({ show: cream, label: 'Open source: card brightness at the right', min: 0, max: 1, step: 0.01, value: 0.12, css: '--oss-card-end' });
+    window.tune?.slider({ show: cream, label: 'Open source: card blur', min: 0, max: 60, step: 1, value: 30, unit: 'px', css: '--oss-blur' });
+    window.tune?.slider({ show: cream, label: 'Open source: fade starts at', min: 0, max: 100, step: 1, value: 35, unit: '%', css: '--oss-from' });
+    window.tune?.slider({ show: cream, label: 'Open source: fade ends at', min: 0, max: 100, step: 1, value: 100, unit: '%', css: '--oss-to' });
+    window.tune?.slider({ show: cream, label: 'Open source: updates surface white', min: 0, max: 1, step: 0.01, value: 0.62, css: '--oss-a' });
+    window.tune?.slider({ show: cream, label: 'Open source: lines', min: 0, max: 0.3, step: 0.01, value: 0.1, css: '--oss-line' });
     // The open source card's log: the latest changes on main, merges left
     // out (they only repeat the change they bring in), releases tagged.
     // GitHub allows an address 60 of these an hour, so the list is kept in
