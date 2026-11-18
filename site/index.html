@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261118q">
+  <link rel="stylesheet" href="style.css?v=20261118r">
   <link rel="stylesheet" href="demo/cards.css?v=20261118a">
   <script src="tune.js?v=20261118b"></script>
   <script>
@@ -478,10 +478,10 @@
       </div>
       <!-- Last on the page before the footer: the project is made in the
            open, shown rather than said: its latest changes, live from GitHub. -->
-      <div class="oss" data-look="glass" data-fade="outer">
+      <div class="oss" data-look="white-divided" data-fade="outer">
         <div class="oss-text">
           <h3>Send an idea or build it yourself.</h3>
-          <p>Interlude is free and open source, forever, so your gear, your bugs and your wish list can be fixed by anyone who cares, including you.</p>
+          <p>Interlude is free and open source, so anyone can fix bugs, add features or support new gear. Including you.</p>
           <div class="oss-links">
             <a class="btn" href="https://github.com/zain-merchant/interlude/issues/new" target="_blank" rel="noopener">Send an idea</a>
             <a class="btn ghost" href="https://github.com/zain-merchant/interlude" target="_blank" rel="noopener">View on GitHub</a>
@@ -953,7 +953,7 @@
     // plain "Latest release" link if GitHub can't be reached.
     // The open source card's update list: how its light surface fades into
     // the card (style.css, .oss).
-    window.tune?.select({ label: 'Open source: look', value: 'glass', options: [['glass', 'Dark glass, like the download card'], ['bright', 'Bright glass'], ['open', 'No card, the updates in glass'], ['cream', 'Cream card']],
+    window.tune?.select({ label: 'Open source: look', value: 'white-divided', options: [['white-divided', 'White, a line between words and updates'], ['white-flat', 'White, the updates straight on it'], ['white-inset', 'White, the updates on a deeper tone'], ['white-glass', 'White frosted glass'], ['white-dark', 'White, the updates on a dark inset'], ['glass', 'Dark glass, like the download card'], ['bright', 'Bright glass'], ['open', 'No card, the updates in glass'], ['cream', 'Cream card, fading']],
       onInput: (v) => { document.querySelector('.oss').dataset.look = v; window.tune?.refresh?.('Open source'); } });
     const cream = () => document.querySelector('.oss')?.dataset.look === 'cream';
     window.tune?.select({ show: cream, label: 'Open source: what fades', value: 'outer', options: [['outer', 'The outer card, to the right'], ['inner', 'The updates\' surface, to the right'], ['none', 'Nothing']],
