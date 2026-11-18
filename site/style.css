@@ -1137,7 +1137,7 @@ html[data-nav="morph"][data-navacts="island"] .nav[data-acts-in] .nav-actions .b
   opacity: 1; scale: 1; filter: blur(0);
   transition: opacity 300ms cubic-bezier(0.23, 1, 0.32, 1), scale 300ms cubic-bezier(0.23, 1, 0.32, 1), filter 300ms cubic-bezier(0.23, 1, 0.32, 1), background-color var(--snappy-ms) var(--snappy);
 }
-html[data-nav="morph"][data-navacts="island"] .nav[data-acts-in] .nav-actions .btn:first-child { transition-delay: 40ms, 40ms, 40ms, 0ms; }
+html[data-nav="morph"][data-navacts="island"] .nav[data-acts-in] .nav-actions .btn:first-child { transition-delay: var(--nav-stagger, 90ms), var(--nav-stagger, 90ms), var(--nav-stagger, 90ms), 0ms; }
 
 /* Open source, from scratch. Each one below rearranges the same pieces:
    the heading in its two halves (.oss-h1, .oss-h2), the line about it,
@@ -1400,9 +1400,6 @@ html[data-between="grooves"] :is(#install, #features, #faq)::before {
   -webkit-mask-image: linear-gradient(90deg, transparent, #000 25%, #000 75%, transparent), linear-gradient(transparent, #000 40%, #000 60%, transparent); -webkit-mask-composite: source-in;
   mask-image: linear-gradient(90deg, transparent, #000 25%, #000 75%, transparent), linear-gradient(transparent, #000 40%, #000 60%, transparent); mask-composite: intersect;
 }
-/* Band: the features on a slightly lifted band of their own, full width,
-   so the page reads in three parts. */
-html[data-between="band"] #features { margin-top: var(--section-gap); padding-bottom: var(--section-gap); background: rgb(255 255 255 / 0.018); box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.05), inset 0 -1px 0 rgb(255 255 255 / 0.05); }
 /* Glow: a soft light behind each heading in the decks' colours, alternating. */
 html[data-between="glow"] :is(#install, #features, #faq)::before {
   content: ''; position: absolute; z-index: -1; left: 50%; top: var(--section-gap); width: 1100px; height: 420px; translate: -50% -45%; pointer-events: none;
@@ -1415,13 +1412,6 @@ html[data-between="eyebrow"] :is(#install, #features, #faq) > h2::before {
   color: var(--fg-3); font: 500 13px/1 var(--mono); letter-spacing: 0.02em;
 }
 
-/* Features band, full width: the band is drawn by a layer that runs out
-   past the column to the window's edges. */
-html[data-between="band"] #features { background: none; box-shadow: none; }
-html[data-between="band"] #features::before {
-  content: ''; position: absolute; z-index: -1; top: 0; bottom: 0; left: 50%; width: 100vw; translate: -50% 0;
-  background: rgb(255 255 255 / 0.02); border-block: 1px solid rgb(255 255 255 / 0.05);
-}
 
 /* The note beside the FAQ (Tune, Note: style). */
 /* Tilt: set down a little crooked, like a note left on the desk. */
@@ -1545,4 +1535,39 @@ html[data-cards="hairlines"] .group li + li { box-shadow: inset 0 1px 0 rgb(255 
 .oss[data-extra="tab"]::before {
   content: 'Open source'; position: absolute; left: 0; top: -30px; height: 31px; padding: 0 22px 0 18px; display: flex; align-items: center;
   border-radius: 12px 12px 0 0; background: #f6f5f1; color: rgb(11 11 13 / 0.6); font-size: 13px; font-weight: 500;
+}
+
+/* Features, set apart (Tune, Features: band). Every way keeps one rhythm:
+   96px from the install cards' foot to the band's edge, 96px inside it
+   from its edge to the heading and from the last card to its foot, and
+   96px from its foot to the FAQ's heading (64px on phones). */
+:root { --band: 96px; }
+@media (max-width: 860px) { :root { --band: 64px; } }
+html:not([data-fband="none"]) #features { margin-top: var(--band); padding-top: var(--band); padding-bottom: var(--band); }
+html:not([data-fband="none"]) #faq { padding-top: var(--band); }
+html:not([data-fband="none"]) #features::before {
+  content: ''; position: absolute; z-index: -1; top: 0; bottom: 0; left: 50%; width: 100vw; translate: -50% 0; pointer-events: none;
+}
+/* Lift: a full-width band a shade lighter than the page, a hairline at
+   each edge. */
+html[data-fband="lift"] #features::before { background: rgb(255 255 255 / 0.022); border-block: 1px solid rgb(255 255 255 / 0.06); }
+/* Recess: the band a shade darker than the page, as if pressed in, with
+   a soft shadow under its top edge. */
+html[data-fband="recess"] #features::before { background: #050506; box-shadow: inset 0 14px 24px -14px rgb(0 0 0 / 0.9), inset 0 -1px 0 rgb(255 255 255 / 0.04); }
+/* Panel: one big rounded panel round the features, inside the page's
+   margins, the cards on it. */
+/* (A panel keeps 56px inside on every side, top, bottom and sides alike.) */
+html[data-fband="panel"] #features { padding-top: 56px; padding-bottom: 56px; }
+html[data-fband="panel"] #features::before { width: min(100vw - 16px, 100% + 112px); border-radius: 32px; background: rgb(255 255 255 / 0.025); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.06), inset 0 1px 0 rgb(255 255 255 / 0.06); }
+/* Tint: the full-width band lit faintly in the decks' colours, cool on the
+   left and warm on the right, its edges fading into the page. */
+html[data-fband="tint"] #features::before {
+  background: linear-gradient(90deg, rgb(201 220 242 / 0.05), rgb(255 255 255 / 0.015) 50%, rgb(240 220 192 / 0.05));
+  -webkit-mask-image: linear-gradient(transparent, #000 18%, #000 82%, transparent); mask-image: linear-gradient(transparent, #000 18%, #000 82%, transparent);
+}
+/* Grooves: the full-width band cut with a record's grooves, very faint,
+   round a centre far below, with hairline edges. */
+html[data-fband="grooves"] #features::before {
+  background: repeating-radial-gradient(ellipse 140% 120% at 50% 160%, rgb(255 255 255 / 0.035) 0 1px, transparent 1px 9px), rgb(255 255 255 / 0.012);
+  border-block: 1px solid rgb(255 255 255 / 0.06);
 }

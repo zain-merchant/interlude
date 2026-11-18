@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261119v">
+  <link rel="stylesheet" href="style.css?v=20261119w">
   <link rel="stylesheet" href="demo/cards.css?v=20261119k">
   <script src="tune.js?v=20261118b"></script>
   <script>
@@ -278,6 +278,8 @@
       window.tune?.select({ label: 'Nav: capsule corners', folder: 'Settled', value: '14', options: [['14', 'Match the icon'], ['24', 'Pill']],
         onInput: (v) => { d.style.setProperty('--cap-r', `${v}px`); requestAnimationFrame(measure); } });
       d.dataset.navacts = 'island';
+      // How far apart the two buttons come in (Download, then GitHub).
+      window.tune?.slider({ label: 'Nav: button stagger', folder: 'Settled', min: 0, max: 300, step: 10, value: 90, unit: 'ms', css: '--nav-stagger' });
       window.tune?.select({ label: 'Nav: buttons arrive', value: 'island', options: [['island', 'In place, as the capsule closes round them'], ['with', 'With the capsule, one motion'], ['after', 'Just after it forms, on their own'], ['old', 'Old: after the links, second spring']],
         onInput: (v) => { d.dataset.navacts = v; for (const b of btns) b.removeAttribute('style'); nav.removeAttribute('data-acts-in'); draw(); } });
       window.tune?.slider({ label: 'Nav: gap between icon and name before capsule', min: 0, max: 40, step: 1, value: 10, unit: 'px', css: '--brand-gap', onInput: () => requestAnimationFrame(measure) });
@@ -1043,13 +1045,18 @@
       onInput: (v) => (document.documentElement.dataset.fhead = v) });
     // (Count: how many things each card lists.)
     for (const g of document.querySelectorAll('.group')) { const h = g.querySelector('h3'); if (h) h.dataset.count = g.querySelectorAll('li').length; }
+    // The features set apart from the sections either side (style.css,
+    // "Features, set apart").
+    document.documentElement.dataset.fband = 'lift';
+    window.tune?.select({ label: 'Features: band', value: 'lift', options: [['lift', 'A lighter band, hairline edges'], ['recess', 'A darker band, pressed in'], ['panel', 'One big rounded panel'], ['tint', 'A band lit in the deck colours'], ['grooves', 'A band cut with grooves'], ['none', 'No band']],
+      onInput: (v) => (document.documentElement.dataset.fband = v) });
     // The note beside the FAQ (style.css, "The note beside the FAQ").
     document.documentElement.dataset.note = 'ruled';
     window.tune?.select({ label: 'Note: style', value: 'ruled', options: [['ruled', 'Ruled page, tilted right, signature right'], ['plain', 'Plain card'], ['tilt', 'Tilted a little'], ['overhang', 'Signature off the corner'], ['paper', 'On warm paper'], ['lined', 'Ruled like a notebook'], ['letter', 'Paper, tilted, signature off the corner']],
       onInput: (v) => (document.documentElement.dataset.note = v) });
     // What sits between sections (style.css, "Between sections").
     document.documentElement.dataset.between = 'none';
-    window.tune?.select({ label: 'Sections: between', value: 'none', options: [['none', 'Nothing, space only'], ['rule', 'A hairline half way'], ['grooves', 'A strip of record grooves half way'], ['band', 'Features on a lifted band'], ['glow', 'A soft light behind each heading'], ['eyebrow', 'Each heading numbered']],
+    window.tune?.select({ label: 'Sections: between', value: 'none', options: [['none', 'Nothing, space only'], ['rule', 'A hairline half way'], ['grooves', 'A strip of record grooves half way'], ['glow', 'A soft light behind each heading'], ['eyebrow', 'Each heading numbered']],
       onInput: (v) => (document.documentElement.dataset.between = v) });
     // The install and feature cards (style.css, "Cards"): as they were, or
     // quieter and of a piece with the rest of the page, or no card at all.
