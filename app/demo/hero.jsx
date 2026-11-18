@@ -211,17 +211,20 @@ async function hwPress(a, target, act, label, appEl) {
 /**
  * A hardware drag on a spring (springs.js): straight along its slot, leaving
  * at once and coming to rest (or, on LOCK, landing on its stop). Run the drag
- * for the spring's `ms`. Stageshow hands `path` a finger's progress already
- * eased (its fingerEase: a quarter of the time gathering speed, then steady),
- * so that's undone first, back to plain time, and the spring applied to that.
+ * for the spring's `ms`. Stageshow hands `path` a progress it has already
+ * eased (a finger's ramp, or a mouse's ease-in-out, by the hand the script
+ * started with), so the spring keeps its own time from the drag's first
+ * frame and only takes the kit's last call, at 1, to end exactly there.
+ * Make a fresh one for each drag.
  */
-const unFinger = (e) => {
-  const a = 0.25, k = 1 / (1 - a / 2);
-  return e < (a / 2) * k ? Math.sqrt((2 * a * e) / k) : e / k + a / 2;
-};
-const springDrag = (sp) => (e, from, to) => {
-  const k = sp.ease(Math.min(1, Math.max(0, unFinger(e))));
-  return { x: from.x + (to.x - from.x) * k, y: from.y + (to.y - from.y) * k };
+const springDrag = (sp) => {
+  let t0 = null;
+  return (e, from, to) => {
+    const now = performance.now();
+    t0 ??= now;
+    const k = e >= 1 ? 1 : sp.ease(Math.min(1, (now - t0) / sp.ms));
+    return { x: from.x + (to.x - from.x) * k, y: from.y + (to.y - from.y) * k };
+  };
 };
 /** How far along a drag the hand is, from where it actually is. */
 const along = (at, from, to) => {
