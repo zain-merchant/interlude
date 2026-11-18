@@ -34,7 +34,7 @@
   const base = document.currentScript?.src ? new URL('.', document.currentScript.src).href : './';
   const groups = new Map();
   // The groups' order in the panel: the page's, top to bottom.
-  const ORDER = ['Nav', 'Hero', 'Hero record', 'Features', 'Footer'];
+  const ORDER = ['Nav', 'Hero', 'Hero record', 'Features', 'Open source', 'Footer'];
   // And within a group, its folders' order where it matters.
   const FOLDERS = { Hero: ['Layout', 'Controller', 'Performance'] };
   let queued = false;
