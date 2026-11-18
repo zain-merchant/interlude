@@ -210,7 +210,7 @@ void main() {
       float x = (length(px - p.xy) - R) / w;
       float f = age / uRing.z;
       float fade = (1.0 - f) * (1.0 - f) * smoothstep(0.0, 0.12, age);
-      push += uRing.y / 0.4289 * x * exp(-x * x) * fade;
+      push += on * uRing.y / 0.4289 * x * exp(-x * x) * fade;
       float l;
       vec3 c;
       prism(x * 1.6, l, c);
@@ -412,12 +412,13 @@ function frame(now) {
     }
   }
 
-  // Rings: one every second or so while it's over the word, and sooner
-  // once it has moved a fair way.
+  // Rings: one every second or so while it's over the word (more often
+  // when they're quick, so one is always running), and sooner once it
+  // has moved a fair way.
   const rings = hasRipples(mode) && !still;
   if (rings && hover.want) {
     const moved = Math.hypot(hover.x - lastPt.x, hover.y - lastPt.y);
-    if (clock - lastPt.t > 0.95 || (moved > geo.em * 0.6 && clock - lastPt.t > 0.3)) {
+    if (clock - lastPt.t > Math.min(0.95, 0.8 * life()) || (moved > geo.em * 0.6 && clock - lastPt.t > 0.3)) {
       pts[next] = [hover.x, hover.y, clock];
       next = (next + 1) % pts.length;
       Object.assign(lastPt, { x: hover.x, y: hover.y, t: clock });

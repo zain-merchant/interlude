@@ -706,7 +706,7 @@
       const w = document.querySelector('.foot-word');
       if (!w) return;
       const d = document.documentElement;
-      const fx = await import('./foot-fx.js?v=20261117f').catch(() => null);
+      const fx = await import('./foot-fx.js?v=20261117g').catch(() => null);
       // Without tune.js (or an older one), each control still applies its default.
       const own = (o) => o.onInput?.(o.value);
       const tune = { slider: own, select: own, color: own, refresh: () => {}, ...window.tune };
@@ -733,7 +733,7 @@
       tune.slider({ label: 'Footer: warp amount', folder: 'Motion', min: 0, max: 10, step: 0.25, value: 3, unit: 'px',
         show: () => mode === 'lamp-warp', onInput: set('warp') });
       const rippling = () => mode === 'ripples' || mode === 'lamp-ripples';
-      tune.slider({ label: 'Footer: ripple speed', folder: 'Motion', min: 0.2, max: 3, step: 0.05, value: 0.85, unit: 'em/s',
+      tune.slider({ label: 'Footer: ripple speed', folder: 'Motion', min: 0.2, max: 2.5, step: 0.05, value: 0.85, unit: 'em/s',
         show: rippling, onInput: set('rippleSpeed') });
       tune.slider({ label: 'Footer: ripple bend', folder: 'Motion', min: 0, max: 8, step: 0.25, value: 2, unit: 'px',
         show: rippling, onInput: set('rippleBend') });
