@@ -14,21 +14,24 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261120x">
+  <link rel="stylesheet" href="style.css?v=20261121a">
   <link rel="stylesheet" href="demo/cards.css?v=20261120z">
   <script src="tune.js?v=20261120v"></script>
   <script>
-    // Live reload while working on the site locally (.claude/serve.py streams
-    // a message when a file changes): stylesheets swap in place, anything
-    // else reloads the page. Nothing happens anywhere but localhost, or when
-    // the server doesn't offer it.
+    // Live updates while working on the site locally (.claude/serve.py
+    // streams the files whose contents changed). Stylesheets swap in place,
+    // here and in the hero's frame, keeping scroll and state; a change only
+    // to the hero's own files reloads just its frame; anything else puts a
+    // small "Reload" note in the corner instead of reloading under you
+    // (or reloads at once, or does nothing: Tune › Dev: live updates,
+    // remembered). Nothing at all happens anywhere but localhost.
     if (/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && 'EventSource' in window) {
-      const es = new EventSource('/__events');
-      es.onmessage = (e) => {
-        if (e.data !== 'css') { location.reload(); return; }
-        for (const l of document.querySelectorAll('link[rel="stylesheet"]')) {
-          const u = new URL(l.href);
-          if (u.origin !== location.origin) continue;
+      const KEY = 'interlude-live';
+      const mode = () => { try { return localStorage.getItem(KEY) || 'ask'; } catch { return 'ask'; } };
+      const swapCss = (doc, path) => {
+        for (const l of doc.querySelectorAll('link[rel="stylesheet"]')) {
+          const u = new URL(l.href, doc.baseURI);
+          if (u.origin !== location.origin || u.pathname !== path) continue;
           u.searchParams.set('lr', Date.now());
           const n = l.cloneNode();
           n.href = u.href;
@@ -36,7 +39,33 @@
           l.after(n);
         }
       };
-      es.onerror = () => { if (es.readyState === EventSource.CLOSED) es.close(); };
+      const frames = () => [...document.querySelectorAll('iframe')].filter((f) => { try { return f.contentDocument; } catch { return false; } });
+      let note = null;
+      const offer = () => {
+        if (note) return;
+        note = document.createElement('button');
+        note.type = 'button';
+        note.textContent = 'Site changed, reload';
+        Object.assign(note.style, { position: 'fixed', left: '16px', bottom: '16px', zIndex: 99999, padding: '8px 12px', borderRadius: '10px', border: '0', font: '500 13px/1 Geist, system-ui, sans-serif', color: '#0b0b0d', background: '#ece9e1', boxShadow: '0 8px 24px rgb(0 0 0 / 0.4)', cursor: 'pointer' });
+        note.onclick = () => location.reload();
+        document.body.append(note);
+      };
+      const es = new EventSource('/__events');
+      es.onmessage = (e) => {
+        let files;
+        try { files = JSON.parse(e.data); } catch { return; }
+        const m = mode();
+        if (m === 'off' || !files.length) return;
+        const css = files.filter((f) => f.endsWith('.css'));
+        const rest = files.filter((f) => !f.endsWith('.css'));
+        for (const f of css) { swapCss(document, f); for (const fr of frames()) swapCss(fr.contentDocument, f); }
+        if (!rest.length) return;
+        // Only the hero's frame's own files: reload just the frame.
+        const heroOnly = rest.every((f) => f.startsWith('/demo/') && !f.startsWith('/demo/cards'));
+        if (heroOnly) { for (const fr of frames()) if (/\/demo\/hero/.test(fr.src)) fr.contentWindow.location.reload(); return; }
+        if (m === 'reload') location.reload(); else offer();
+      };
+      window.__live = { set: (v) => { try { localStorage.setItem(KEY, v); } catch {} } };
     }
   </script>
   <script>
@@ -419,7 +448,7 @@
           <img class="poster" src="img/screenshot-1x.jpg" srcset="img/screenshot-1x.jpg 1440w, img/screenshot.jpg 2880w" sizes="(max-width: 1200px) 100vw, 1200px"
             width="1440" height="900" alt="Interlude with two tracks loaded: waveforms across the top, two decks either side of the mixer, and the library below.">
           <!-- The real app on its simulated engine, played by a script (app/demo). Loaded after the page. -->
-          <iframe class="live" title="Interlude mixing one track into the next" tabindex="-1" aria-hidden="true" data-src="demo/hero.html?v=20261120d"></iframe>
+          <iframe class="live" title="Interlude mixing one track into the next" tabindex="-1" aria-hidden="true" data-src="demo/hero.html?v=20261121c"></iframe>
         </div>
       </div>
       <div class="shot-bar">
@@ -602,15 +631,43 @@
           for (let r = L + 4; r < 97; r += 0.9) if (!gaps.some(([a, b]) => r > a && r < b)) el('circle', { r: r.toFixed(2) }, grooves);
           for (const [a, b] of gaps) el('circle', { r: (a + b) / 2, fill: 'none', stroke: 'rgb(255 255 255 / 0.075)', 'stroke-width': b - a }, svg);
           el('circle', { r: 99.3, fill: 'none', stroke: 'rgb(255 255 255 / 0.14)', 'stroke-width': 0.5 }, svg);
-          // The label, its words set round its edge.
+          // Marks on the vinyl that turn with it, so its turning shows across
+          // the whole disc, not only at the label: a few short stretches of
+          // groove catching more light (as a pressing's flaws do), and a
+          // scatter of fine dust. Fixed, so it's the same record each visit.
+          let seed = label === 'white' ? 7 : 3;
+          const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+          const marks = el('g', { fill: 'none', 'stroke-linecap': 'round' }, svg);
+          for (let i = 0; i < 6; i++) {
+            const r = L + 8 + rnd() * (95 - L - 8);
+            const a0 = rnd() * Math.PI * 2;
+            const a1 = a0 + 0.25 + rnd() * 0.5;
+            const p = (a) => `${(r * Math.cos(a)).toFixed(2)} ${(r * Math.sin(a)).toFixed(2)}`;
+            el('path', { d: `M ${p(a0)} A ${r} ${r} 0 0 1 ${p(a1)}`, stroke: `rgb(255 255 255 / ${(0.07 + rnd() * 0.08).toFixed(3)})`, 'stroke-width': (0.5 + rnd() * 0.9).toFixed(2) }, marks);
+          }
+          for (let i = 0; i < 26; i++) {
+            const r = L + 5 + rnd() * (96 - L - 5);
+            const a = rnd() * Math.PI * 2;
+            el('circle', { cx: (r * Math.cos(a)).toFixed(2), cy: (r * Math.sin(a)).toFixed(2), r: (0.18 + rnd() * rnd() * 0.6).toFixed(2), fill: `rgb(255 255 255 / ${(0.18 + rnd() * 0.3).toFixed(2)})` }, marks);
+          }
+          // The label, its words set round its edge, on paper with a grain.
           const lab = el('g', { class: 'rec-label' }, svg);
           el('circle', { r: L, fill: label === 'white' ? '#f3f0e8' : '#efe9dc' }, lab);
+          const pf = el('filter', { id: `paper-${label}`, x: '-10%', y: '-10%', width: '120%', height: '120%' }, defs);
+          el('feTurbulence', { type: 'fractalNoise', baseFrequency: '1.4', numOctaves: 3, seed: 4, result: 'n' }, pf);
+          el('feColorMatrix', { in: 'n', type: 'matrix', values: '0 0 0 0 0.35  0 0 0 0 0.28  0 0 0 0 0.2  0 0 0 0.9 -0.35', result: 'g' }, pf);
+          el('feComposite', { in: 'g', in2: 'SourceGraphic', operator: 'in' }, pf);
+          el('circle', { r: L, fill: '#000', filter: `url(#paper-${label})` }, lab);
           el('circle', { r: L - 0.6, fill: 'none', stroke: 'rgb(0 0 0 / 0.08)', 'stroke-width': 0.4 }, lab);
           const id = `ring-${label}`;
           el('path', { id, d: `M 0 ${-(L - 5)} a ${L - 5} ${L - 5} 0 1 1 -0.01 0`, fill: 'none' }, defs);
           const t = el('text', { 'font-size': label === 'white' ? 3.6 : 3.4, 'letter-spacing': 0.9, fill: 'rgb(20 18 14 / 0.5)', 'font-family': 'Geist, sans-serif', 'font-weight': 500 }, lab);
           const tp = el('textPath', { href: `#${id}` }, t);
-          tp.textContent = label === 'white' ? 'WHITE LABEL  ·  PROMO  ·  NOT FOR SALE  ·  INTERLUDE  ·  33⅓ RPM  ·  SIDE A  ·  ' : 'INTERLUDE  ·  SIDE A  ·  33⅓ RPM  ·  STEREO  ·  A FREE DJ APP FOR MAC  ·  ';
+          // (Words apart by wide spaces, which SVG keeps, not middle dots.)
+          const gap = '\u2003\u2003';
+          tp.textContent = (label === 'white'
+            ? ['WHITE LABEL', 'PROMO', 'NOT FOR SALE', 'FREE AND OPEN SOURCE', 'SIDE A']
+            : ['INTERLUDE', 'SIDE A', 'FREE AND OPEN SOURCE', 'MADE FOR MAC', '33⅓ RPM']).join(gap) + gap;
           if (label !== 'white') {
             // The app's two rings, as on its icon.
             el('circle', { cx: -4.6, cy: -11, r: 7, fill: 'none', stroke: '#4aa8ff', 'stroke-width': 2.1 }, lab);
@@ -632,23 +689,42 @@
         sheen.className = 'rec-sheen';
         rec.append(spin, sheen);
         note.prepend(rec);
-        // The sleeve's record turns only while it's out: on hover it spins up
-        // to 33⅓ (a turn every 1.8s) over about a second, and off it slows
-        // to a stop over about a second and a half, as a platter does.
+        // The sleeve's record: on hover it slides out to the side and spins
+        // up to its speed; off, it slows to a stop and slides home. Both on
+        // Apple-style springs (a duration and a bounce, as in SwiftUI), set
+        // on the Note sliders. Its speed, how far out it comes.
         if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
-          const RPM = 360 / 1.8;
-          let ang = 0, vel = 0, want = 0, last = 0, on = false;
+          const S = { rpm: 33.3, out: 46, slide: { visualDuration: 0.7, bounce: 0.12 }, spinUp: { visualDuration: 1.1, bounce: 0 }, spinDown: { visualDuration: 1.6, bounce: 0 } };
+          // A spring's stiffness and damping (mass 1) from its duration and
+          // bounce, the way SwiftUI turns one into the other.
+          const kc = (sp) => { const d = Math.max(0.05, sp.visualDuration ?? 0.6); const b = Math.min(0.95, Math.max(0, sp.bounce ?? 0)); return [(2 * Math.PI / d) ** 2, (4 * Math.PI * (1 - b)) / d]; };
+          let ang = 0, vel = 0, velV = 0, x = 0, xV = 0, inside = false, last = 0, on = false;
           const step = (now) => {
             const dt = Math.min(0.05, (now - last) / 1000 || 0.016); last = now;
-            vel += (want - vel) * Math.min(1, dt * (want ? 2.6 : 1.6));
-            if (!want && vel < 2) vel = 0;
-            ang = (ang + vel * dt) % 360;
+            const wantV = inside ? S.rpm * 6 : 0; // degrees a second
+            const wantX = inside ? 1 : 0;
+            const [k1, c1] = kc(inside ? S.spinUp : S.spinDown);
+            const [k2, c2] = kc(S.slide);
+            for (let i = 0, n = Math.ceil(dt / 0.008); i < n; i++) {
+              const h = dt / n;
+              velV += (k1 * (wantV - vel) - c1 * velV) * h; vel += velV * h;
+              xV += (k2 * (wantX - x) - c2 * xV) * h; x += xV * h;
+            }
+            ang = (ang + Math.max(0, vel) * dt) % 360;
             spin.style.rotate = `${ang}deg`;
-            if (vel || want) requestAnimationFrame(step); else on = false;
+            rec.style.translate = `${x * S.out}% 0`;
+            const settled = Math.abs(vel - wantV) < 0.5 && Math.abs(velV) < 0.5 && Math.abs(x - wantX) < 0.001 && Math.abs(xV) < 0.001;
+            if (!settled || inside) requestAnimationFrame(step); else { vel = wantV; x = wantX; rec.style.translate = `${x * S.out}% 0`; on = false; }
           };
-          const go = (w) => { if (document.documentElement.dataset.note !== 'sleeve') return; want = w; if (!on) { on = true; last = 0; requestAnimationFrame(step); } };
-          note.addEventListener('pointerenter', () => go(RPM));
-          note.addEventListener('pointerleave', () => go(0));
+          const go = (v) => { if (document.documentElement.dataset.note !== 'sleeve') return; inside = v; if (!on) { on = true; last = 0; requestAnimationFrame(step); } };
+          note.addEventListener('pointerenter', () => go(true));
+          note.addEventListener('pointerleave', () => go(false));
+          const t = window.tune;
+          t?.slider({ label: 'Note: record speed when out', min: 5, max: 78, step: 0.1, value: S.rpm, unit: 'rpm', onInput: (v) => (S.rpm = v) });
+          t?.slider({ label: 'Note: how far the record comes out', min: 10, max: 70, step: 1, value: S.out, unit: '%', onInput: (v) => (S.out = v) });
+          t?.spring({ label: 'Note: record slides out', value: { type: 'spring', ...S.slide }, onInput: (v) => (S.slide = v) });
+          t?.spring({ label: 'Note: record spins up', value: { type: 'spring', ...S.spinUp }, onInput: (v) => (S.spinUp = v) });
+          t?.spring({ label: 'Note: record slows down', value: { type: 'spring', ...S.spinDown }, onInput: (v) => (S.spinDown = v) });
         }
       })();
       // The note's signature is written in the first time it's mostly in
@@ -1216,6 +1292,8 @@
       t?.slider({ label: 'Grain: fades out toward the features', min: 0, max: 1, step: 0.05, value: G.fade, onInput: set('fade') });
       put();
     })();
+    // Local only: what the page does when the site's files change.
+    if (window.__live) window.tune?.select({ label: 'Dev: live updates', value: (() => { try { return localStorage.getItem('interlude-live') || 'ask'; } catch { return 'ask'; } })(), options: [['ask', 'Styles live, ask before reloading'], ['reload', 'Styles live, reload for the rest'], ['off', 'Off']], onInput: (v) => window.__live.set(v) });
     // The note beside the FAQ (style.css, "The note beside the FAQ").
     document.documentElement.dataset.note = 'ruled';
     window.tune?.select({ label: 'Note: style', value: 'ruled', options: [['ruled', 'Ruled page, tilted right, signature right'], ['sleeve', 'A die-cut record sleeve, the record turning inside'], ['label', 'A white label record, the note written on it'], ['plain', 'Plain card'], ['tilt', 'Tilted a little'], ['overhang', 'Signature off the corner'], ['paper', 'On warm paper'], ['lined', 'Ruled like a notebook'], ['letter', 'Paper, tilted, signature off the corner']],
