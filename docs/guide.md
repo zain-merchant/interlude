@@ -133,14 +133,16 @@ Everything Interlude does, in detail. For a short overview, see the
   ON/OFF turns every effect off). Moving the lever takes the effect with it
   to the new deck.
 - **Other controllers (early): Mixxx mappings, built in.** Interlude ships
-  every controller mapping from Mixxx 2.5.6 (in
+  every controller mapping from Mixxx's 2.6 branch, plus openDJ's
+  untested Mixxx-format mappings for the Pioneer DDJ-FLX6, DDJ-FLX10,
+  DDJ-800, DDJ-SX2, DDJ-RX, XDJ-RX3, XDJ-AZ and OPUS-QUAD (in
   `crates/controller/mappings`, GPL-2.0-or-later), so a controller Mixxx
   supports connects when it's plugged in, alongside any others, with no
   Mixxx install needed. Mapping files in the app's own `controllers`
   folder (in its data folder), folders listed in `INTERLUDE_MAPPINGS` and
   Mixxx's user folder come first, so a mapping you've changed wins.
-  Direct bindings and LEDs work for about 68% of the controls across the
-  142 MIDI mappings (decks 3 and 4, and Mixxx-only features, are left
+  Direct bindings and LEDs work for about 64% of the controls across the
+  153 MIDI mappings (decks 3 and 4, and Mixxx-only features, are left
   out). The mappings' JavaScript runs too, in an embedded engine with
   Mixxx's script API (controls, connections, timers, jog scratching, MIDI
   out); all 130 scripted mappings load, and each script call has a time
