@@ -87,8 +87,15 @@ Everything Interlude does, in detail. For a short overview, see the
   too. A guide, not a rule: it reads the energy, not the arrangement.
 - **Library:** add music folders, instant search across artist, title and
   folder, load with double-click, Enter, or Shift+←/→. Columns for title,
-  artist, BPM, key, length and folder; click a heading to sort (again to
-  reverse). Title, artist, album and genre come from the file's tags (or
+  artist, BPM, key, length and folder (right-click the headings to show
+  album and genre or hide any but title); click a heading to sort (again to
+  reverse). **Filter** narrows the list to a BPM range and any keys on the
+  Camelot wheel. **Fits** shows only the tracks that mix with the deck on
+  air (the playing deck, or the louder one through its fader and the
+  crossfader): within 6% of its tempo, at half or double time too, and in
+  its key, a key next to it on the wheel, or its relative major or minor.
+  It follows the key the deck is sounding in, so a pitched-up track without
+  key lock is matched as heard. Title, artist, album and genre come from the file's tags (or
   an "Artist - Title" file name). BPM, key and length are found in the
   background, one track at a time, and saved. The library lives in one
   SQLite file (`library.db` in the app's data folder, backed up daily to
