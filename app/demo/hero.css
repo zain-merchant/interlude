@@ -101,7 +101,10 @@ html, body { margin: 0; width: 1440px; height: 920px; overflow: hidden; backgrou
    top toward you, as a laptop lid tilted back reads from in front of it),
    both on the website's sliders (Hero: screen tilt, anchor), sent in. */
 :root { --tilt: -3deg; --anchor: 50% 0%; }
-.app-host { transform-origin: var(--anchor); transition: transform var(--glide-ms) var(--glide); }
+/* (On the glide spring made 20% quicker: the same curve over 80% of the
+   time, a stiffer spring with the same damping. It moves first; the
+   controller follows a beat behind, controller.css.) */
+.app-host { transform-origin: var(--anchor); transition: transform calc(var(--glide-ms) * 0.8) var(--glide); }
 #hero[data-hand="controller"] .app-host { transform: perspective(2400px) rotateX(var(--tilt)) scale(0.91); }
 /* The desk never travels: it waits where it shows (so the controller
    never crosses the frame's edge on the way, and needs no mask to hide
