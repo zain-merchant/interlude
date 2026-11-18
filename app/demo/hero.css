@@ -85,7 +85,7 @@ html, body { margin: 0; width: 1440px; height: 900px; overflow: hidden; backgrou
    laptop does behind the controller in front of it; the desk comes up over
    its foot. */
 .app-host { transform-origin: 50% 0; transition: transform 1s cubic-bezier(0.23, 1, 0.32, 1); }
-#hero[data-hand="controller"] .app-host { transform: perspective(2400px) rotateX(4deg) scale(0.88); }
+#hero[data-hand="controller"] .app-host { transform: perspective(2400px) rotateX(4deg) scale(0.91); }
 .desk { transition: top 1s cubic-bezier(0.23, 1, 0.32, 1); }
 #hero[data-hand="controller"] .desk { top: 624px; }
 
@@ -141,7 +141,8 @@ svg.links { position: absolute; inset: 0; z-index: 255; pointer-events: none; ov
    otherwise flicker in the demo's first seconds. */
 .app-host .pending { display: none !important; }
 /* The deeper Club board sits a little higher, so it still ends above the toggle. */
-#hero[data-hand="controller"] .desk:has(.hw[data-v="club"]) { top: 610px; }
+/* Club: its front edge down at the frame's foot. */
+#hero[data-hand="controller"] .desk:has(.hw[data-v="club"]) { top: 632px; }
 
 /* Paused while off screen (pause.js): CSS animations stand still too. */
 html[data-paused] *, html[data-paused] *::before, html[data-paused] *::after { animation-play-state: paused !important; }
