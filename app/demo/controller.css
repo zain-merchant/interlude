@@ -457,7 +457,7 @@
    only a little, the way a photo of a real controller does; the steeper
    tilt gives back the depth a close eye was faking with keystone. */
 .desk[data-shown] .hw[data-v="club"] { transform: rotateX(40deg); }
-.desk:has(.hw[data-v="club"]) { perspective: 3000px; transform: scale(0.51); }
+.desk:has(.hw[data-v="club"]) { perspective: 3000px; transform: scale(0.56); }
 /* Club: legible keys and buttons. */
 .hw[data-v="club"] .hw-key { color: rgb(240 238 232 / 0.88); font-size: 9px; font-weight: 600; }
 .hw[data-v="club"] .hw-key[data-lit] { color: #0b0b0d; }
