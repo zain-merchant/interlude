@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261117m">
+  <link rel="stylesheet" href="style.css?v=20261117n">
   <link rel="stylesheet" href="demo/cards.css">
   <script src="tune.js?v=20261117g"></script>
   <script>
@@ -440,16 +440,20 @@
         <a class="btn small" href="https://github.com/zain-merchant/interlude/issues/new" target="_blank" rel="noopener">Ask on GitHub</a>
       </aside>
       </div>
-      <!-- Last on the page before the footer: the project is open, and how to join in. -->
+      <!-- Last on the page before the footer: the project is made in the
+           open, shown rather than said: its latest changes, live from GitHub. -->
       <div class="oss">
-        <svg class="oss-rings" viewBox="0 0 400 240" aria-hidden="true"><circle cx="150" cy="120" r="96"/><circle cx="250" cy="120" r="96"/></svg>
         <div class="oss-text">
-          <h3>Interlude is open source.</h3>
-          <p>Star it, tell us what's missing, or send a fix. Every line is on GitHub under the GPL.</p>
+          <h3>Made in the open.</h3>
+          <p>Every change lands on GitHub first. Follow along, read the code, or send a fix.</p>
+          <div class="oss-links">
+            <a class="btn" href="https://github.com/zain-merchant/interlude" target="_blank" rel="noopener">Star on GitHub</a>
+            <a class="btn ghost" href="https://github.com/zain-merchant/interlude/commits" target="_blank" rel="noopener">All changes</a>
+          </div>
         </div>
-        <div class="oss-links">
-          <a class="btn" href="https://github.com/zain-merchant/interlude" target="_blank" rel="noopener">Star on GitHub</a>
-          <a class="btn ghost" href="https://github.com/zain-merchant/interlude/issues" target="_blank" rel="noopener">See open issues</a>
+        <div class="oss-log" aria-label="Latest changes">
+          <div class="oss-log-head"><span>main</span><span class="oss-live">Latest changes</span></div>
+          <ol class="oss-commits"><li class="oss-empty"><a href="https://github.com/zain-merchant/interlude/commits" target="_blank" rel="noopener">See the latest changes on GitHub →</a></li></ol>
         </div>
       </div>
     </section>
@@ -866,6 +870,35 @@
 
     // Shows the latest version next to the download button. Leaves the
     // plain "Latest release" link if GitHub can't be reached.
+    // The open source card's log: the latest changes on main, merges left
+    // out (they only repeat the change they bring in), releases tagged.
+    fetch('https://api.github.com/repos/zain-merchant/interlude/commits?per_page=30')
+      .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
+      .then((list) => {
+        const ago = (iso) => {
+          const m = Math.max(1, Math.round((Date.now() - new Date(iso)) / 60000));
+          return m < 60 ? `${m}m` : m < 1440 ? `${Math.round(m / 60)}h` : `${Math.round(m / 1440)}d`;
+        };
+        const rows = list.filter((c) => !/^Merge /.test(c.commit.message)).slice(0, 6);
+        if (!rows.length) return;
+        const ol = document.querySelector('.oss-commits');
+        ol.replaceChildren(...rows.map((c, i) => {
+          const msg = c.commit.message.split('\n')[0];
+          const rel = /^Release \S+$/.test(msg);
+          const li = document.createElement('li');
+          if (i === 0) li.dataset.latest = '';
+          const a = document.createElement('a');
+          a.href = c.html_url; a.target = '_blank'; a.rel = 'noopener';
+          const h = document.createElement('code'); h.textContent = c.sha.slice(0, 7);
+          const t = document.createElement('span'); t.className = 'oss-msg';
+          if (rel) { const b = document.createElement('b'); b.textContent = msg.replace('Release ', 'v'); t.append(b, ' released'); }
+          else t.textContent = msg;
+          const w = document.createElement('time'); w.dateTime = c.commit.author.date; w.textContent = ago(c.commit.author.date);
+          a.append(h, t, w); li.append(a);
+          return li;
+        }));
+      })
+      .catch(() => {});
     fetch('https://api.github.com/repos/zain-merchant/interlude/releases/latest')
       .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
       .then((r) => {
