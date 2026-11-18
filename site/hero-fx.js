@@ -124,7 +124,7 @@ const TURN = (Math.PI * 2) / 40;
 const T = {
   drop: 108, needle: 0.8, life: 0.2, persp: 0.85, cue: 'dust', cueAmt: 1, res: 0.85,
   speck: 'hyphen',
-  dust: 0, scratch: 0, away: 1, dustSize: 1, dustSoft: 0.5, scratchW: 1, scratchLen: 1, // natural dust and scratches, on top of the rest (see uNat)
+  dust: 0, away: 1, dustSize: 1, dustSoft: 0.5, dustGlow: 1, dustGlowSize: 1, dustBright: 1, dustLight: 1, dustVariety: 0.6, dustFibres: 0.5, // natural dust, on top of the rest (see uNat)
   size: 1, up: 0, warp: 'none', warpAmt: 0.5, tint: 0, hover: 'arc', still: 1.2,
   look: 'vinyl', shape: 'custom', vinylPreset: 'dark',
   vinyl: '#1c1c20', finish: 'solid', body: 0, through: 0, lineTint: 0, flecks: 0,
@@ -272,8 +272,9 @@ uniform vec2 uConeEdge;  // the cone's edges, on cos^4 of the angle
 uniform float uConeLight; // the lamp's light through the vinyl in the cone
 uniform float uSpeck;    // what the dust is (see SPECKS)
 uniform float uAway;     // colour amount away from the lamp, relative to where it faces (1: the same)
-uniform vec2 uNat;       // natural dust, natural scratches (0 to 1; on top of whatever shows the spin)
-uniform vec4 uNat2;      // dust size, dust softness, scratch width, scratch length
+uniform vec2 uNat;       // natural dust (x, 0 to 1; on top of whatever shows the spin)
+uniform vec4 uNat2;      // dust size, softness, glow, glow size
+uniform vec4 uNat3;      // dust brightness, how much it needs the light, size variety, fibres
 uniform float uTint;     // the lamp's blue and orange in the sheen
 uniform vec4 uWarp;      // how the top is bent (see WARPS), how much, more rings up top, half the width
 uniform vec3 uLens;      // the lens bulge: centre and radius, CSS px
@@ -668,112 +669,71 @@ void main() {
   Lg *= after;
   Gv *= after;
 
-  // Natural dust and scratches, lying on the disc and turning with it, on
-  // top of whatever shows the spin. Dust as it really sits on a record:
-  // mostly specks too small to make out, a few larger, none quite round,
-  // some in little clumps, the odd fibre; each catching the lamp only as it
-  // turns through the light. Scratches as records get them: a handful of
-  // long fine lines across the grooves at a shallow slant (not round with
-  // them), uneven along their length, tapering out at both ends, and lit
-  // only when they lie across the lamp's light.
-  if (uNat.x > 0.0 || uNat.y > 0.0) {
+  // Natural dust lying on the disc and turning with it, on top of whatever
+  // shows the spin, as it really sits on a record: mostly specks too small
+  // to make out, a few larger, none quite round, some in little clumps, the
+  // odd fibre; each catching the lamp as it turns through the light.
+  // uNat.x: how much; uNat2: size, softness, glow, glow size; uNat3:
+  // brightness, how much it needs the light, size variety, fibres.
+  if (uNat.x > 0.0) {
     float det = dqx.x * dqy.y - dqy.x * dqx.y;
     float nat = 0.0;
-    if (uNat.x > 0.0) {
-      float CR = 9.0;
-      float CT = 9.0;
-      float thr = 1.0 - 0.06 * uNat.x;
-      float th0 = mod(b, 2.0 * PI);
-      float row0 = floor(r / CR);
-      for (int j = -1; j <= 1; j++) {
-        float row = row0 + float(j);
-        float rc = (row + 0.5) * CR;
-        if (rc <= 0.0) continue;
-        float col0 = floor(th0 * rc / CT);
-        for (int i = -1; i <= 1; i++) {
-          vec2 id = vec2(row, col0 + float(i));
-          float h = hash2(id + 31.0);
-          if (h < thr) continue;
-          float h1 = hash2(id * 1.3 + 2.9);
-          float h2 = hash2(id * 0.7 + 6.1);
-          float h3 = hash2(id * 1.9 + 8.3);
-          float rs = (row + 0.2 + 0.6 * h1) * CR;
-          float ang = (id.y + 0.2 + 0.6 * h2) * CT / rc + uSpin;
-          vec2 rh = vec2(cos(ang), sin(ang));
-          vec2 D = q - rs * rh;
-          vec2 v = vec2(dqy.y * D.x - dqy.x * D.y, dqx.x * D.y - dqx.y * D.x) / (det * uDpr);
-          float ls = 0.5 + 0.5 * cos(2.0 * (ang - uFacing));
-          ls *= ls;
-          // Size: most tiny, a few larger (a steep power of a random),
-          // scaled by the dust size.
-          float size = (0.45 + 2.1 * pow(h3, 3.2)) * uNat2.x;
-          float phi = h1 * PI;
-          vec2 dd = vec2(cos(phi), sin(phi));
-          float asp = 1.0 + 1.6 * h2 * h2;
-          vec2 w = vec2(dot(v, dd) / asp, dot(v, vec2(-dd.y, dd.x)));
-          // Its core, and round it a soft bloom (the dust softness): lit
-          // dust on a record glows rather than pins.
-          float d2 = dot(w, w);
-          float spec = mix(exp(-d2 / (size * size)), exp(-d2 / (size * size * 2.6)) * 0.75, uNat2.y)
-                     + uNat2.y * 0.22 * exp(-d2 / (size * size * 14.0));
-          // A clump: a second speck beside it.
-          if (fract(h * 37.0) > 0.68) {
-            vec2 o = (vec2(h2, h1) - 0.5) * size * 2.6;
-            vec2 w2 = v - o;
-            spec += 0.55 * exp(-dot(w2, w2) / (size * size * 0.45));
-          }
-          // The odd fibre: thin, gently curved, lying any which way.
-          if (fract(h * 53.0) > 0.92) {
-            float ua = dot(v, dd);
-            float wa = dot(v, vec2(-dd.y, dd.x)) - (h3 - 0.5) * 0.12 * ua * ua;
-            float len = 4.0 + 12.0 * h2;
-            spec += 0.7 * exp(-wa * wa / 0.22) * (1.0 - smoothstep(0.6 * len, len, abs(ua)));
-          }
-          // Brightness on a steep curve too: most dust faint, the odd
-          // speck catching the light properly.
-          float bright = 0.12 + 0.88 * pow(fract(h * 61.0), 2.5);
-          nat += spec * bright * (0.06 + 0.94 * ls);
+    float CR = 9.0;
+    float CT = 9.0;
+    float thr = 1.0 - 0.06 * uNat.x;
+    float th0 = mod(b, 2.0 * PI);
+    float row0 = floor(r / CR);
+    for (int j = -1; j <= 1; j++) {
+      float row = row0 + float(j);
+      float rc = (row + 0.5) * CR;
+      if (rc <= 0.0) continue;
+      float col0 = floor(th0 * rc / CT);
+      for (int i = -1; i <= 1; i++) {
+        vec2 id = vec2(row, col0 + float(i));
+        float h = hash2(id + 31.0);
+        if (h < thr) continue;
+        float h1 = hash2(id * 1.3 + 2.9);
+        float h2 = hash2(id * 0.7 + 6.1);
+        float h3 = hash2(id * 1.9 + 8.3);
+        float rs = (row + 0.2 + 0.6 * h1) * CR;
+        float ang = (id.y + 0.2 + 0.6 * h2) * CT / rc + uSpin;
+        vec2 rh = vec2(cos(ang), sin(ang));
+        vec2 D = q - rs * rh;
+        vec2 v = vec2(dqy.y * D.x - dqy.x * D.y, dqx.x * D.y - dqx.y * D.x) / (det * uDpr);
+        float ls = 0.5 + 0.5 * cos(2.0 * (ang - uFacing));
+        ls *= ls;
+        // Size: most tiny, a few larger, how unevenly set by the variety;
+        // all scaled by the size.
+        float size = (0.25 + 2.3 * pow(h3, mix(1.2, 5.0, uNat3.z))) * uNat2.x;
+        float phi = h1 * PI;
+        vec2 dd = vec2(cos(phi), sin(phi));
+        float asp = 1.0 + 1.6 * h2 * h2;
+        vec2 w = vec2(dot(v, dd) / asp, dot(v, vec2(-dd.y, dd.x)));
+        float d2 = dot(w, w);
+        float s2 = max(size * size, 0.0025);
+        // Its core (sharper or softer), and its glow round it.
+        float spec = mix(exp(-d2 / s2), exp(-d2 / (s2 * 2.6)) * 0.75, uNat2.y)
+                   + uNat2.z * 0.35 * exp(-d2 / (s2 * uNat2.w * uNat2.w * 9.0));
+        // A clump: a second speck beside it.
+        if (fract(h * 37.0) > 0.68) {
+          vec2 o = (vec2(h2, h1) - 0.5) * size * 2.6;
+          vec2 w2 = v - o;
+          spec += 0.55 * exp(-dot(w2, w2) / (s2 * 0.45));
         }
+        // The odd fibre: thin, gently curved, lying any which way.
+        if (fract(h * 53.0) > 1.0 - 0.16 * uNat3.w) {
+          float ua = dot(v, dd);
+          float wa = dot(v, vec2(-dd.y, dd.x)) - (h3 - 0.5) * 0.12 * ua * ua;
+          float len = (4.0 + 12.0 * h2) * max(0.4, uNat2.x);
+          spec += 0.7 * exp(-wa * wa / (0.22 * max(0.2, uNat2.x))) * (1.0 - smoothstep(0.6 * len, len, abs(ua)));
+        }
+        // Brightness on a steep curve: most dust faint, the odd speck
+        // catching the light properly.
+        float bright = 0.12 + 0.88 * pow(fract(h * 61.0), 2.5);
+        nat += spec * bright * mix(1.0, 0.06 + 0.94 * ls, uNat3.y);
       }
     }
-    if (uNat.y > 0.0) {
-      for (int k = 0; k < 14; k++) {
-        float fk = float(k);
-        float hA = hash(vec2(fk, 3.1));
-        float hB = hash(vec2(fk, 7.7));
-        float hC = hash(vec2(fk, 11.3));
-        float hD = hash(vec2(fk, 17.9));
-        // More of them as the amount rises.
-        if (fract(hD * 13.0) > 0.12 + 0.88 * uNat.y) continue;
-        // Only where the record shows (from where its rings start, out to
-        // its rim): the middle is behind the app's screen.
-        float rS = mix(uSpan.x, R, 0.1 + 0.85 * hA);
-        float aS = hB * 2.0 * PI + uSpin;
-        vec2 P = rS * vec2(cos(aS), sin(aS));
-        float dir = aS + 0.5 * PI + (hC - 0.5) * 0.8;
-        vec2 u = vec2(cos(dir), sin(dir));
-        float len = R * (0.1 + 0.32 * hD) * uNat2.w;
-        vec2 D = q - P;
-        float al = dot(D, u);
-        float t = al / len;
-        if (abs(t) > 1.0) continue;
-        // A slight bow along it.
-        vec2 pp = D - al * u - vec2(-u.y, u.x) * (hA - 0.5) * 0.18 * len * (1.0 - t * t);
-        vec2 vp = vec2(dqy.y * pp.x - dqy.x * pp.y, dqx.x * pp.y - dqx.y * pp.x) / (det * uDpr);
-        float dpx = length(vp);
-        float taper = 1.0 - t * t;
-        float vary = 0.55 + 0.45 * sin(al * 0.09 + hA * 20.0) * sin(al * 0.023 + hB * 9.0);
-        // A scratch lights when it lies the way the lit grooves do: across
-        // the lamp's direction (at a right angle to it), so as the disc
-        // turns each one flashes through the light and goes dark again.
-        float shine = 0.5 + 0.5 * cos(2.0 * (dir - uFacing - 0.5 * PI));
-        shine = shine * shine;
-        float sw = 0.55 * uNat2.z;
-        // (Faintly there out of the light too, as a scratch is.)
-        nat += 2.4 * (exp(-dpx * dpx / (sw * sw)) + 0.25 * exp(-dpx * dpx / (sw * sw * 9.0))) * taper * vary * (0.18 + 0.82 * shine);
-      }
-    }
-    L += 7.0 * nat * (0.45 + 0.55 * lamp) * edge * (1.0 - lead);
+    L += 7.0 * uNat3.x * nat * mix(1.0, 0.45 + 0.55 * lamp, uNat3.y) * edge * (1.0 - lead);
   }
   // The lip at the very edge catches the light: a fine bright line that
   // shows the disc's outline, brightest where the lamp falls.
@@ -1554,7 +1514,7 @@ let geo = null;
 
 // One program per style, compiled the first time it's shown.
 const NAMES = ['uSize', 'uDpr', 'uCentre', 'uGeo', 'uHoles', 'uHoleCount', 'uHoleR', 'uSpan', 'uSpin', 'uFacing', 'uStyle', 'uSheen', 'uGlint', 'uHover', 'uSwell', 'uNeedle', 'uRipple', 'uTouch', 'uHz', 'uCue', 'uTracks', 'uTrackCount',
-  'uOuter', 'uGlintAmt', 'uChroma', 'uSpeck', 'uNat', 'uNat2', 'uAway', 'uTint', 'uWarp', 'uLens', 'uHoverMode', 'uPtr', 'uVinyl', 'uVinylFin', 'uThru', 'uGroove',
+  'uOuter', 'uGlintAmt', 'uChroma', 'uSpeck', 'uNat', 'uNat2', 'uNat3', 'uAway', 'uTint', 'uWarp', 'uLens', 'uHoverMode', 'uPtr', 'uVinyl', 'uVinylFin', 'uThru', 'uGroove',
   'uGlintShape', 'uGlintSpread', 'uHueM', 'uTilt', 'uCone', 'uConeTint', 'uConeEdge', 'uConeLight'];
 const progs = new Map();
 let shown = '';
@@ -1885,8 +1845,9 @@ function frame(now, still) {
   gl.uniform1f(U.uConeLight, T.cone);
   gl.uniform2f(U.uChroma, CHROMA[T.chroma] ?? 0, T.chromaAmt);
   gl.uniform1f(U.uSpeck, SPECKS[T.speck] ?? 0);
-  gl.uniform2f(U.uNat, T.dust ?? 0, T.scratch ?? 0);
-  gl.uniform4f(U.uNat2, T.dustSize ?? 1, T.dustSoft ?? 0.5, T.scratchW ?? 1, T.scratchLen ?? 1);
+  gl.uniform2f(U.uNat, T.dust ?? 0, 0);
+  gl.uniform4f(U.uNat2, T.dustSize ?? 1, T.dustSoft ?? 0.5, T.dustGlow ?? 1, T.dustGlowSize ?? 1);
+  gl.uniform4f(U.uNat3, T.dustBright ?? 1, T.dustLight ?? 1, T.dustVariety ?? 0.6, T.dustFibres ?? 0.5);
   gl.uniform1f(U.uAway, T.away ?? 1);
   gl.uniform1f(U.uTint, T.tint);
   gl.uniform4f(U.uWarp, WARPS[T.warp] ?? 0, T.warpAmt, g.up, g.half);
@@ -2198,13 +2159,20 @@ tw?.select({ ...look, label: 'Hero record: what shows the spin', value: T.cue, s
 // glints have their own brightness); in the other styles, how much their
 // own moving parts show.)
 tw?.slider({ ...look, label: 'Hero record: spin cue strength', min: 0, max: 3, step: 0.05, value: T.cueAmt, show: extraCue, onInput: redraw('cueAmt') });
-// Natural dust and scratches, on top of whatever shows the spin.
-tw?.slider({ ...look, label: 'Hero record: natural dust', min: 0, max: 1, step: 0.05, value: T.dust, show: () => cur(), onInput: redraw('dust') });
-tw?.slider({ ...look, label: 'Hero record: dust size', min: 0.3, max: 4, step: 0.05, value: T.dustSize, show: () => cur(), onInput: redraw('dustSize') });
-tw?.slider({ ...look, label: 'Hero record: dust softness', min: 0, max: 1, step: 0.05, value: T.dustSoft, show: () => cur(), onInput: redraw('dustSoft') });
-tw?.slider({ ...look, label: 'Hero record: natural scratches', min: 0, max: 1, step: 0.05, value: T.scratch, show: () => cur(), onInput: redraw('scratch') });
-tw?.slider({ ...look, label: 'Hero record: scratch width', min: 0.3, max: 4, step: 0.05, value: T.scratchW, show: () => cur(), onInput: redraw('scratchW') });
-tw?.slider({ ...look, label: 'Hero record: scratch length', min: 0.3, max: 3, step: 0.05, value: T.scratchLen, show: () => cur(), onInput: redraw('scratchLen') });
+// Natural dust, on top of whatever shows the spin: how much, and how it
+// looks (size down to a few tenths of a pixel, how soft, its glow, how
+// bright, how much it needs the lamp's light to show, how mixed its sizes
+// are, how many fibres).
+const dustOn = () => cur() && T.dust > 0;
+tw?.slider({ ...look, label: 'Hero record: natural dust', min: 0, max: 1, step: 0.05, value: T.dust, show: () => cur(), onInput: (v) => { const was = T.dust > 0; redraw('dust')(v); if (was !== v > 0) panel(); } });
+tw?.slider({ ...look, label: 'Hero record: dust size', min: 0.05, max: 4, step: 0.05, value: T.dustSize, show: dustOn, onInput: redraw('dustSize') });
+tw?.slider({ ...look, label: 'Hero record: dust softness', min: 0, max: 1, step: 0.05, value: T.dustSoft, show: dustOn, onInput: redraw('dustSoft') });
+tw?.slider({ ...look, label: 'Hero record: dust brightness', min: 0, max: 3, step: 0.05, value: T.dustBright, show: dustOn, onInput: redraw('dustBright') });
+tw?.slider({ ...look, label: 'Hero record: dust glow', min: 0, max: 3, step: 0.05, value: T.dustGlow, show: dustOn, onInput: redraw('dustGlow') });
+tw?.slider({ ...look, label: 'Hero record: dust glow size', min: 0.3, max: 4, step: 0.05, value: T.dustGlowSize, show: dustOn, onInput: redraw('dustGlowSize') });
+tw?.slider({ ...look, label: 'Hero record: dust only in the light', min: 0, max: 1, step: 0.05, value: T.dustLight, show: dustOn, onInput: redraw('dustLight') });
+tw?.slider({ ...look, label: 'Hero record: dust size variety', min: 0, max: 1, step: 0.05, value: T.dustVariety, show: dustOn, onInput: redraw('dustVariety') });
+tw?.slider({ ...look, label: 'Hero record: dust fibres', min: 0, max: 1, step: 0.05, value: T.dustFibres, show: dustOn, onInput: redraw('dustFibres') });
 tw?.select({ ...look, label: 'Hero record: speck style', value: T.speck, show: () => cur() && T.cue === 'dust', onInput: redraw('speck'), options: [['hyphen', 'Dashes (first)'], ['motes', 'Dust motes'], ['scratches', 'Hairline scratches'], ['scuffs', 'Scuffs'], ['sparkle', 'Sparkle'], ['lint', 'Lint'], ['smudge', 'Smudges']] });
 tw?.slider({ ...look, label: 'Hero record: render resolution', min: 0.3, max: 1, step: 0.05, value: T.res, show: () => !STYLE[T.look]?.crisp, onInput: reshape('res') });
 
