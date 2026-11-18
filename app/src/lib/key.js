@@ -15,12 +15,26 @@ export function camelot(k) {
   return `${((major * 7 + 7) % 12) + 1}${k.minor ? 'A' : 'B'}`;
 }
 
+/** Semitones the tempo moves the key by, with keylock off. */
+export const tempoShift = (speed, keylock) => (keylock || speed <= 0 ? 0 : Math.round(12 * Math.log2(speed)));
+
 /**
- * The key a deck is sounding in: the track's key, shifted by the tempo
- * change unless keylock holds the pitch.
+ * The key a deck is sounding in: the track's key, moved by key shift and,
+ * unless keylock holds the pitch, by the tempo change. `shift` is the total;
+ * `keyShift` the part key shift adds.
  */
-export function playingKey(k, speed, keylock) {
+export function playingKey(k, speed, keylock, keyShift = 0) {
   if (!k) return null;
-  const shift = keylock || speed <= 0 ? 0 : Math.round(12 * Math.log2(speed));
-  return { tonic: (((k.tonic + shift) % 12) + 12) % 12, minor: k.minor, shift };
+  const shift = tempoShift(speed, keylock) + keyShift;
+  return { tonic: (((k.tonic + shift) % 12) + 12) % 12, minor: k.minor, shift, keyShift };
+}
+
+/**
+ * The smallest shift (-5..6) that puts key `a` on the same Camelot code as
+ * key `b`, as the engine's key sync does.
+ */
+export function shiftTo(a, b) {
+  const target = a.minor === b.minor ? b.tonic : a.minor ? b.tonic - 3 : b.tonic + 3;
+  const d = (((target - a.tonic) % 12) + 12) % 12;
+  return d > 6 ? d - 12 : d;
 }

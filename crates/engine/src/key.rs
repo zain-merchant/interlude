@@ -80,6 +80,25 @@ impl Key {
         )
     }
 
+    /// The smallest shift, in semitones (-5..=6), that puts this key on the
+    /// same Camelot code as `other`: the same key, or its relative major or
+    /// minor, so the two mix in key.
+    pub fn shift_to(self, other: Key) -> i32 {
+        // The relative major or minor in this key's mode: A minor is
+        // relative to C major, three semitones up.
+        let target = match (self.minor, other.minor) {
+            (true, false) => other.tonic as i32 - 3,
+            (false, true) => other.tonic as i32 + 3,
+            _ => other.tonic as i32,
+        };
+        let d = (target - self.tonic as i32).rem_euclid(12);
+        if d > 6 {
+            d - 12
+        } else {
+            d
+        }
+    }
+
     /// 1..=24 for storing in an atomic; 0 means no key.
     pub(crate) fn code(key: Option<Key>) -> u32 {
         key.map_or(0, |k| 1 + k.tonic as u32 + if k.minor { 12 } else { 0 })
@@ -366,6 +385,33 @@ mod tests {
     use super::*;
 
     const SR: u32 = 44_100;
+
+    #[test]
+    fn shift_to_matches_the_camelot_code() {
+        let am = Key::new(9, true); // 8A
+        let c = Key::new(0, false); // 8B
+        let d = Key::new(2, false); // 10B
+        assert_eq!(c.shift_to(c), 0);
+        assert_eq!(d.shift_to(c), -2);
+        assert_eq!(c.shift_to(d), 2);
+        // Relative minor and major share a code: no shift needed.
+        assert_eq!(am.shift_to(c), 0);
+        assert_eq!(c.shift_to(am), 0);
+        // Bm to C major's code (8A, A minor): two down.
+        assert_eq!(Key::new(11, true).shift_to(c), -2);
+        // Every pair lands on the other key's code, within a tritone.
+        for a in 0..24 {
+            for b in 0..24 {
+                let (x, y) = (Key::new(a % 12, a >= 12), Key::new(b % 12, b >= 12));
+                let s = x.shift_to(y);
+                assert!((-5..=6).contains(&s));
+                assert_eq!(
+                    x.transpose(s).camelot().trim_end_matches(['A', 'B']),
+                    y.camelot().trim_end_matches(['A', 'B'])
+                );
+            }
+        }
+    }
 
     fn freq(midi: i32) -> f64 {
         440.0 * 2f64.powf((midi - 69) as f64 / 12.0)

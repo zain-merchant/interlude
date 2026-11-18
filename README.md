@@ -15,8 +15,8 @@ the report it saves.
 ## Features
 
 - **Decks:** BPM, beatgrid and key found on load; sync that matches tempo
-  and beat phase; 8 hot cues, beat loops and beat jump; slip, quantize and
-  key lock; scrolling three-band waveforms with a full-track overview.
+  and beat phase; 8 hot cues, beat loops and beat jump; slip, quantize,
+  key lock, key shift and key sync; scrolling three-band waveforms with a full-track overview.
 - **Mixer and effects:** trim, 3-band EQ with full kills, filter,
   crossfader, headphone cue with a cue/master blend; echo, reverb, flanger
   and phaser timed to the beat; sixteen hold-to-play pad FX (rolls,

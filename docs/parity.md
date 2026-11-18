@@ -8,6 +8,9 @@ against the code on 18 November 2026. Tick items off here as they land.
 
 - [x] Two decks: sync (tempo and beat phase), pitch ±8/16/50%, key lock, slip,
       quantize, audible scratching, nudge
+- [x] Key shift (±12 semitones, tempo unchanged) and key sync to the other
+      deck's Camelot code, from the key on each deck and the FLX4's KEY SHIFT
+      pads
 - [x] 8 hot cues, beat loops, loop in/out, beat jump
 - [x] BPM and beatgrid analysis (with Beat This!), hand-fixed grids
 - [x] Key detection (KeyNet), shown in Camelot
@@ -20,17 +23,13 @@ against the code on 18 November 2026. Tick items off here as they land.
 - [x] Set recording (WAV)
 - [x] Library: search, sortable columns, playlists, history, missing files kept
 - [x] Import from rekordbox XML and Serato (cues, loops, grids, playlists/crates)
-- [x] FLX4 mapped in full except KEY SHIFT; Mixxx mappings; MIDI learn;
+- [x] FLX4 mapped in full; Mixxx mappings; MIDI learn;
       guided controller setup
 
 ## Still missing, by impact for an FLX4 DJ
 
 ### 1. You'll feel it in a set
 
-- [ ] **Key shift and key sync.** The FLX4's KEY SHIFT pad mode (SHIFT +
-      SAMPLER) is recognised but does nothing, and there's no way to move a
-      track up or down in semitones or match its key to the other deck. All
-      four rivals have this.
 - [ ] **Faster stems.** Splitting runs on the CPU only (about 50 s for a
       4½-minute track). rekordbox, Serato and djay use the GPU / Neural
       Engine and feel near-instant. On a Mac that means ONNX Runtime's CoreML

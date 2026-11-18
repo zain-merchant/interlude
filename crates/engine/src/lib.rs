@@ -40,7 +40,7 @@ pub mod waveform;
 
 pub use analysis::Beatgrid;
 pub use command::{Command, DeckId, EqBand, SavedCues};
-pub use deck::{DEFAULT_LOOP_BEATS, HOT_CUES, MAX_LOOP_BEATS, MIN_LOOP_BEATS};
+pub use deck::{DEFAULT_LOOP_BEATS, HOT_CUES, KEY_SHIFT_MAX, MAX_LOOP_BEATS, MIN_LOOP_BEATS};
 pub use engine::{
     new_engine, Engine, EngineHandle, GAIN_MAX_DB, GAIN_MIN_DB, MASTER_MAX_DB, MASTER_MIN_DB,
     MAX_BLOCK_FRAMES,
