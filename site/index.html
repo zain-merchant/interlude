@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261117o">
+  <link rel="stylesheet" href="style.css?v=20261118a">
   <link rel="stylesheet" href="demo/cards.css">
   <script src="tune.js?v=20261118a"></script>
   <script>
@@ -433,11 +433,24 @@
           <p>Choose Help › Report a Problem. Interlude saves a report with what you describe, the app's logs and your system (no music) to your Desktop, ready to send. You can also <a href="https://github.com/zain-merchant/interlude/issues" target="_blank" rel="noopener">open an issue</a>.</p>
         </details>
       </div>
-      <!-- Beside the questions (below them on a narrow screen): where to ask. -->
-      <aside class="faq-help" aria-label="Ask a question">
-        <h3>Have a question?</h3>
-        <p>Ask it on GitHub. To report a bug, use Help › Report a Problem in the app.</p>
-        <a class="btn small" href="https://github.com/zain-merchant/interlude/issues/new" target="_blank" rel="noopener">Ask on GitHub</a>
+      <!-- Beside the questions (below them on a narrow screen): a note from
+           the maker. Its body is still to be written: skeleton lines hold
+           its place. -->
+      <aside class="founder" aria-label="A note from the maker">
+        <h3>Hi, I'm Zain.</h3>
+        <div class="founder-body" aria-hidden="true">
+          <i style="--w: 100%"></i><i style="--w: 94%"></i><i style="--w: 97%"></i><i style="--w: 62%"></i>
+          <i class="gap" style="--w: 100%"></i><i style="--w: 91%"></i><i style="--w: 78%"></i>
+        </div>
+        <p class="founder-ask">Have a question? <a href="https://github.com/zain-merchant/interlude/issues/new" target="_blank" rel="noopener">Ask on GitHub →</a></p>
+        <!-- Signed by hand: one line, written in as the note comes into view. -->
+        <svg class="founder-sig" viewBox="0 0 176 70" role="img" aria-label="Zain">
+          <g transform="translate(8 0) skewX(-10)">
+            <path pathLength="1" d="M10 22 C 23 17, 43 13, 58 13 C 48 25, 30 40, 14 54 C 28 50, 42 49, 54 51 C 60 52, 65 46, 70 40 C 66 37, 59 38, 57 45 C 55 52, 63 53, 69 45 L 71 40 C 70 46, 70 52, 76 51 C 81 50, 84 45, 87 40 C 86 46, 86 52, 91 50 C 95 48, 97 43, 99 39 C 100 44, 99 49, 98 53 C 101 46, 105 39, 110 40 C 114 41, 112 48, 114 52 C 117 56, 128 50, 143 41"/>
+            <path pathLength="1" d="M88.5 31.5 l 3 -1.4"/>
+            <path pathLength="1" d="M16 63 C 56 60, 108 58, 160 48"/>
+          </g>
+        </svg>
       </aside>
       </div>
       <!-- Last on the page before the footer: the project is made in the
@@ -447,8 +460,8 @@
           <h3>Made in the open.</h3>
           <p>Every change lands on GitHub first. Follow along, read the code, or send a fix.</p>
           <div class="oss-links">
-            <a class="btn" href="https://github.com/zain-merchant/interlude" target="_blank" rel="noopener">Star on GitHub</a>
-            <a class="btn ghost" href="https://github.com/zain-merchant/interlude/commits" target="_blank" rel="noopener">All changes</a>
+            <a class="btn" href="https://github.com/zain-merchant/interlude" target="_blank" rel="noopener">View on GitHub</a>
+            <a class="btn ghost" href="https://github.com/zain-merchant/interlude/issues/new" target="_blank" rel="noopener">Ask a question</a>
           </div>
         </div>
         <div class="oss-log" aria-label="Latest changes">
@@ -457,6 +470,21 @@
         </div>
       </div>
     </section>
+    <script>
+      // The note's signature is written in the first time it's mostly in
+      // view (shown whole straight away when motion is reduced).
+      (() => {
+        const note = document.querySelector('.founder');
+        if (!note || matchMedia('(prefers-reduced-motion: reduce)').matches || !('IntersectionObserver' in window)) return;
+        note.toggleAttribute('data-sign', true);
+        const io = new IntersectionObserver(([e]) => {
+          if (!e.isIntersecting) return;
+          note.toggleAttribute('data-signed', true);
+          io.disconnect();
+        }, { threshold: 0.6 });
+        io.observe(note);
+      })();
+    </script>
   </main>
 
   <footer class="foot">
