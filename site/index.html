@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261119s">
+  <link rel="stylesheet" href="style.css?v=20261119t">
   <link rel="stylesheet" href="demo/cards.css?v=20261119k">
   <script src="tune.js?v=20261118b"></script>
   <script>
@@ -1037,6 +1037,12 @@
       if (!card || !('IntersectionObserver' in window)) { card?.toggleAttribute('data-in', true); return; }
       new IntersectionObserver((es, io) => { if (es[0].isIntersecting) { card.toggleAttribute('data-in', true); io.disconnect(); } }, { threshold: 0.45 }).observe(card);
     })();
+    // How much each feature's heading stands above its list.
+    document.documentElement.dataset.fhead = 'both';
+    window.tune?.select({ label: 'Features: heading', value: 'both', options: [['both', 'Bigger heading, quieter list'], ['big', 'Bigger heading'], ['quiet', 'Quieter list'], ['before', 'As before']],
+      onInput: (v) => (document.documentElement.dataset.fhead = v) });
+    // (Count: how many things each card lists.)
+    for (const g of document.querySelectorAll('.group')) { const h = g.querySelector('h3'); if (h) h.dataset.count = g.querySelectorAll('li').length; }
     // The note beside the FAQ (style.css, "The note beside the FAQ").
     document.documentElement.dataset.note = 'plain';
     window.tune?.select({ label: 'Note: style', value: 'plain', options: [['plain', 'Plain card'], ['tilt', 'Tilted a little'], ['overhang', 'Signature off the corner'], ['paper', 'On warm paper'], ['lined', 'Ruled like a notebook'], ['letter', 'Paper, tilted, signature off the corner']],
@@ -1051,8 +1057,8 @@
     window.tune?.select({ label: 'Cards: style', value: 'quiet', options: [['quiet', 'Quiet: hairlines, a soft top light'], ['open', 'Open: the picture in a panel, words on the page'], ['before', 'Before']],
       onInput: (v) => (document.documentElement.dataset.cards = v) });
     // What sits before each feature's heading.
-    document.documentElement.dataset.mark = 'edge';
-    window.tune?.select({ label: 'Features: heading mark', value: 'edge', options: [['edge', 'A lit edge along the card top'], ['glow', 'A soft glow in the corner'], ['tick', 'A short bar'], ['none', 'Nothing'], ['dot', 'The dot (before)']],
+    document.documentElement.dataset.mark = 'underline';
+    window.tune?.select({ label: 'Features: heading mark', value: 'underline', options: [['underline', 'A short line under the heading'], ['count', 'How many it lists, beside it'], ['tick', 'A short bar before it'], ['edge', 'A lit edge along the card top'], ['glow', 'A soft glow in the corner'], ['none', 'Nothing'], ['dot', 'The dot (before)']],
       onInput: (v) => (document.documentElement.dataset.mark = v) });
     // The footer's name, exactly as wide as the column above it at any
     // window size (measured, since a word's width isn't a CSS length).
