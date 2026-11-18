@@ -667,7 +667,11 @@
           el('circle', { r: L - 0.6, fill: 'none', stroke: 'rgb(0 0 0 / 0.08)', 'stroke-width': 0.4 }, lab);
           const id = `ring-${tag}`;
           el('path', { id, d: `M 0 ${-(L - 5)} a ${L - 5} ${L - 5} 0 1 1 -0.01 0`, fill: 'none' }, defs);
-          const t = el('text', { 'font-size': label === 'white' ? 3.6 : 3.4, 'letter-spacing': 0.9, fill: 'rgb(20 18 14 / 0.5)', 'font-family': 'Geist, sans-serif', 'font-weight': 500 }, lab);
+          // The words on it: a near-black ink with a little of the paper's own
+          // colour mixed in (so they sit on it rather than float), strong
+          // enough to read on any paper.
+          const ink = (k) => `fill: color-mix(in oklab, #141210 ${k}%, var(${paperVar}, ${paperDef}))`;
+          const t = el('text', { 'font-size': label === 'white' ? 3.6 : 3.5, 'letter-spacing': 0.9, style: ink(78), 'font-family': 'Geist, sans-serif', 'font-weight': 600 }, lab);
           const tp = el('textPath', { href: `#${id}` }, t);
           // (Words apart by wide spaces, which SVG keeps, not middle dots.)
           const gap = '\u2003\u2003';
@@ -675,16 +679,18 @@
           // (Every label says the same: the white label record's too.)
           tp.textContent = ['INTERLUDE', 'FREE', 'OPEN SOURCE', `SIDE ${side}`, year].join(gap) + gap;
           if (label !== 'white') {
-            // The app's two rings, as on its icon.
-            el('circle', { cx: -4.6, cy: -11, r: 7, fill: 'none', stroke: '#4aa8ff', 'stroke-width': 2.1 }, lab);
-            el('circle', { cx: 4.6, cy: -11, r: 7, fill: 'none', stroke: '#ff9b45', 'stroke-width': 2.1 }, lab);
-            const n = el('text', { y: 12, 'text-anchor': 'middle', 'font-size': 5.4, 'font-weight': 600, 'letter-spacing': -0.2, fill: '#17150f', 'font-family': 'Geist, sans-serif' }, lab);
+            // The app's icon itself, small: its two rings on its own dark
+            // tile, so they read on any paper, whatever colour it is.
+            el('rect', { x: -9.5, y: -24, width: 19, height: 19, rx: 4.6, fill: '#121216' }, lab);
+            el('rect', { x: -9.5, y: -24, width: 19, height: 19, rx: 4.6, fill: 'none', stroke: 'rgb(255 255 255 / 0.12)', 'stroke-width': 0.35 }, lab);
+            el('circle', { cx: -2.9, cy: -14.5, r: 4.6, fill: 'none', stroke: '#4aa8ff', 'stroke-width': 1.5 }, lab);
+            el('circle', { cx: 2.9, cy: -14.5, r: 4.6, fill: 'none', stroke: '#ff9b45', 'stroke-width': 1.5 }, lab);
+            // Its name under it, larger; under that, which side.
+            const n = el('text', { y: 11, 'text-anchor': 'middle', 'font-size': 7.4, 'font-weight': 650, 'letter-spacing': -0.25, style: ink(92), 'font-family': 'Geist, sans-serif' }, lab);
             n.textContent = 'Interlude';
-            if (side === 'B') {
-              const sb = el('text', { y: 19, 'text-anchor': 'middle', 'font-size': 3.4, 'font-weight': 600, 'letter-spacing': 0.8, fill: 'rgb(20 18 14 / 0.6)', 'font-family': 'Geist, sans-serif' }, lab);
-              sb.textContent = 'SIDE B';
-            }
-            el('circle', { r: 1.5, fill: '#0b0b0d' }, lab);
+            const sb = el('text', { y: 18, 'text-anchor': 'middle', 'font-size': 3.3, 'font-weight': 600, 'letter-spacing': 0.9, style: ink(70), 'font-family': 'Geist, sans-serif' }, lab);
+            sb.textContent = `SIDE ${side}`;
+            el('circle', { r: 1.3, fill: '#0b0b0d' }, lab);
           }
           return svg;
         };
@@ -739,7 +745,7 @@
           // A click on the record turns it over, a quick flip like a coin's,
           // to its other side (side B, on blue paper), and back again on the
           // next; a glint crosses it as it lands. On a spring of its own.
-          S.flip = { visualDuration: 0.95, bounce: 0.2 };
+          S.flip = { visualDuration: 0.6, bounce: 0.22 };
           let fa = 0, fv = 0, fTo = 0, fOn = false, fLast = 0;
           const fstep = (now) => {
             const dt = Math.min(0.05, (now - fLast) / 1000 || 0.016); fLast = now;
@@ -755,7 +761,9 @@
             rec.classList.remove('rec-glint'); void rec.offsetWidth; rec.classList.add('rec-glint');
             if (!fOn) { fOn = true; fLast = 0; requestAnimationFrame(fstep); }
           });
-          window.tune?.spring({ label: 'Note: record flips over', value: { type: 'spring', ...S.flip }, onInput: (v) => (S.flip = v) });
+          // (Time and bounce as their own sliders, so the time can run long.)
+          window.tune?.slider({ label: 'Note: record flip time', min: 0.2, max: 4, step: 0.05, value: S.flip.visualDuration, unit: 's', onInput: (v) => (S.flip = { ...S.flip, visualDuration: v }) });
+          window.tune?.slider({ label: 'Note: record flip bounce', min: 0, max: 0.8, step: 0.01, value: S.flip.bounce, onInput: (v) => (S.flip = { ...S.flip, bounce: v }) });
           // The labels' paper.
           const root = document.documentElement.style;
           window.tune?.color({ label: 'Note: side A label', value: '#efe9dc', onInput: (v) => root.setProperty('--lab-a', v) });
