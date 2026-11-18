@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261119f">
+  <link rel="stylesheet" href="style.css?v=20261119g">
   <link rel="stylesheet" href="demo/cards.css?v=20261119d">
   <script src="tune.js?v=20261118b"></script>
   <script>
@@ -188,7 +188,7 @@
         //     own, GitHub then Download, on CSS transitions (run by the
         //     compositor, so a busy page can't make them stutter).
         //   old: they follow the links and fade in on a second spring.
-        const mode = d.dataset.navacts || 'with';
+        const mode = d.dataset.navacts || 'island';
         if (mode === 'old') {
           acts.style.transform = `translate(${r(geo.a + geo.k * (1 - p))}px, ${r(dy)}px)`;
           acts.style.opacity = '1';
@@ -201,10 +201,16 @@
             b.style.scale = t < 1 ? String(r(0.94 + 0.06 * e)) : '';
           });
         } else {
-          acts.style.transform = `translate(${r(geo.a + geo.right * (1 - p))}px, ${r(dy)}px)`;
+          // island: the way the Dynamic Island shows what's in it. The
+          //   buttons never move: they wait where they end up, and the
+          //   capsule closes round them; once the links have slid past
+          //   them, they surface in place
+          //   (opacity, blur and a hair of scale, on the compositor).
+          const island = mode === 'island';
+          acts.style.transform = `translate(${r(geo.a + (island ? 0 : geo.right * (1 - p)))}px, ${r(dy)}px)`;
           // (Opacity on the actions' own layer: the compositor fades it.)
           acts.style.opacity = mode === 'with' ? String(r(clamp((p - 0.2) / 0.4) ** 1.5)) : '1';
-          const on = mode === 'after' && shape.to === 1 && p > 0.55;
+          const on = (mode === 'after' && shape.to === 1 && p > 0.55) || (island && shape.to === 1 && p > 0.9);
           if (nav.hasAttribute('data-acts-in') !== on) nav.toggleAttribute('data-acts-in', on);
         }
         const shown = (mode === 'old' ? q > 0.02 || act.to === 1 : p > 0.05) ? 'visible' : '';
@@ -266,8 +272,8 @@
       // concentric; or a full pill.
       window.tune?.select({ label: 'Nav: capsule corners', folder: 'Settled', value: '14', options: [['14', 'Match the icon'], ['24', 'Pill']],
         onInput: (v) => { d.style.setProperty('--cap-r', `${v}px`); requestAnimationFrame(measure); } });
-      d.dataset.navacts = 'with';
-      window.tune?.select({ label: 'Nav: buttons arrive', value: 'with', options: [['with', 'With the capsule, one motion'], ['after', 'Just after it forms, on their own'], ['old', 'Old: after the links, second spring']],
+      d.dataset.navacts = 'island';
+      window.tune?.select({ label: 'Nav: buttons arrive', value: 'island', options: [['island', 'In place, as the capsule closes round them'], ['with', 'With the capsule, one motion'], ['after', 'Just after it forms, on their own'], ['old', 'Old: after the links, second spring']],
         onInput: (v) => { d.dataset.navacts = v; for (const b of btns) b.removeAttribute('style'); nav.removeAttribute('data-acts-in'); draw(); } });
       window.tune?.slider({ label: 'Nav: gap between icon and name before capsule', min: 0, max: 40, step: 1, value: 10, unit: 'px', css: '--brand-gap', onInput: () => requestAnimationFrame(measure) });
       window.tune?.slider({ id: 'nav-icon', label: 'Nav: icon size before capsule', folder: 'Settled', min: 28, max: 120, step: 1, value: 48, css: '--brand-icon', onInput: () => requestAnimationFrame(measure) });
