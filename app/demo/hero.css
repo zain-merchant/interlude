@@ -181,3 +181,20 @@ html[data-paused] *, html[data-paused] *::before, html[data-paused] *::after { a
   -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - var(--foot-fade)), transparent 100%);
   mask-image: linear-gradient(to bottom, #000 calc(100% - var(--foot-fade)), transparent 100%); }
 #hero[data-hand="controller"] .app-host { --foot-fade: 64px; }
+
+/* While the controller travels (in or out), the frame's foot fades over
+   64px, so it rises out of a soft edge rather than a hard line; once it's
+   there the fade lets go and nothing is masked. The mask exists only while
+   the animation runs (it's set in the keyframes alone), so the settled
+   picture costs nothing extra to draw. */
+@property --rise-fade { syntax: '<length>'; inherits: false; initial-value: 0px; }
+@keyframes rise-fade {
+  0%, 75% { --rise-fade: 64px; -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - var(--rise-fade)), transparent 100%); mask-image: linear-gradient(to bottom, #000 calc(100% - var(--rise-fade)), transparent 100%); }
+  100% { --rise-fade: 0px; -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - var(--rise-fade)), transparent 100%); mask-image: linear-gradient(to bottom, #000 calc(100% - var(--rise-fade)), transparent 100%); }
+}
+#hero[data-hand="controller"] { animation: rise-fade var(--glide-ms) var(--glide); }
+#hero[data-hand]:not([data-hand="controller"]) { animation: rise-fade-out var(--glide-ms) var(--glide); }
+@keyframes rise-fade-out {
+  0%, 75% { --rise-fade: 64px; -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - var(--rise-fade)), transparent 100%); mask-image: linear-gradient(to bottom, #000 calc(100% - var(--rise-fade)), transparent 100%); }
+  100% { --rise-fade: 0px; -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - var(--rise-fade)), transparent 100%); mask-image: linear-gradient(to bottom, #000 calc(100% - var(--rise-fade)), transparent 100%); }
+}
