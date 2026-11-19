@@ -60,6 +60,9 @@ export const T = {
   clickGreen: false, // a click's ring shows green (a test that clicks land)
   knock: 0.8,        // a click's lens: how much it magnifies (0.8: 5x, 0.9: 10x; under 1)
   knockSize: 0.4,    // its size, em
+  wakeSpacing: 0.12, // dragged: a ripple left every this far, em
+  wakeReach: 0.6,    // how far each of those runs, as a share of the ripple reach
+  dragStretch: 1.2,  // how far the lens is drawn out the way it's dragged (0: not at all)
   knockTime: 1.5,    // how long it takes to spring back, s
   knockHold: 0.45,   // a quick click holds it at full this long, s
   knockBounce: 0.15, // how much it swings in and out as it does (0: none)
@@ -161,6 +164,7 @@ uniform vec2 uFar;      // the lamp's streak points away from here
 uniform vec4 uPts[16];  // rings: x, y, how far it has run (-1: none), its share of the reach (negative: a click's)
 uniform vec2 uClick;    // a click's ring: how many times the bend, 1 to show it green (a test)
 uniform vec4 uKnock;    // a click's lens: x, y, how much it magnifies now (0 to 0.95; < 0 shrinks), its size (CSS px)
+uniform vec3 uKnockDir; // a dragged lens: which way it's going (x, y), how far it's drawn out along that way
 uniform vec4 uKnock2;   // its wave: how far out it has run, its width, how far it moves them now (all CSS px)
 uniform vec4 uLetter;   // the letters' fill
 uniform vec4 uGap;      // between the grooves
@@ -307,7 +311,10 @@ void main() {
     // A magnifying glass: inside it the grooves are drawn larger (by
     // 1 / (1 - m), m = uKnock.z), flat across its middle, with a quick
     // edge where they bunch up again. (m under 1, so they never fold.)
-    float u = kd / s;
+    // (Dragged, it's drawn out along the way it's going: its size measured
+    // with the distance along that way shortened by the stretch.)
+    float along = dot(kp, uKnockDir.xy);
+    float u = length(kp - uKnockDir.xy * along * (1.0 - 1.0 / max(1.0, uKnockDir.z))) / s;
     float lens = clamp(uKnock.z, -0.8, 0.95) * kd * exp(-u * u * u * u);
     float x = (kd - uKnock2.x) / uKnock2.y;
     float wave = uKnock2.z / 0.4289 * x * exp(-x * x);
@@ -399,7 +406,7 @@ const emit = { dist: 0, px: 0, py: 0, time: 0, src: 0, armed: false, rest: 0 };
 // The phone's one-off play-through: when it started (ms), or 0.
 let demoAt = 0;
 // A click's warp: where, and when (ms; 0: none).
-const knock = { x: 0, y: 0, at: 0, held: false, from: 0, wave: false, letGo: 0 };
+const knock = { x: 0, y: 0, at: 0, held: false, from: 0, wave: false, letGo: 0, vx: 0, vy: 0, t: 0, trail: 0 };
 // How far the warp pushes now: a spring let go from the full push, with
 // T.knockBounce of wobble, settling over T.knockTime (and a 30ms rise, so
 // it doesn't jump in).
@@ -471,7 +478,7 @@ function finish(p) {
   gl.enableVertexAttribArray(loc);
   gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
   for (const n of ['uText', 'uSize', 'uDpr', 'uCentre', 'uAspect', 'uPivot', 'uRot', 'uPitch', 'uHover', 'uLamp', 'uWarp',
-    'uRipples', 'uRing', 'uClick', 'uKnock', 'uKnock2', 'uEm', 'uFar', 'uLineW', 'uPts', 'uLetter', 'uGap', 'uLine', 'uOutline', 'uStroke', 'uSongs']) U[n] = gl.getUniformLocation(prog, n);
+    'uRipples', 'uRing', 'uClick', 'uKnock', 'uKnock2', 'uKnockDir', 'uEm', 'uFar', 'uLineW', 'uPts', 'uLetter', 'uGap', 'uLine', 'uOutline', 'uStroke', 'uSongs']) U[n] = gl.getUniformLocation(prog, n);
   tex = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, tex);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
@@ -671,6 +678,15 @@ function frame(now) {
   const kz = knockNow(performance.now());
   gl.uniform4f(U.uKnock, knock.x, knock.y, kz, Math.max(0.02, T.knockSize) * geo.em);
   {
+    // Drawn out the way it's dragged, more the faster (a speed of 3em a
+    // second gives the whole stretch), easing back as it slows.
+    knock.vx *= Math.exp(-dt * 6); knock.vy *= Math.exp(-dt * 6);
+    const sp = Math.hypot(knock.vx, knock.vy);
+    const st = 1 + T.dragStretch * Math.min(1, sp / (3 * geo.em));
+    gl.uniform3f(U.uKnockDir, sp > 1 ? knock.vx / sp : 1, sp > 1 ? knock.vy / sp : 0, st);
+    if (sp > 2) knock.moving = true; else knock.moving = false;
+  }
+  {
     // The wave: from the lens's edge outward, fading as it goes.
     const t = knock.at ? (performance.now() - knock.at) / 1000 : 0;
     const start = Math.max(0.02, T.knockSize) * geo.em;
@@ -694,7 +710,7 @@ function frame(now) {
   // ring still running out, or (while over the word) rings to come: on a
   // timer for breathe and interference; for drop, the rest still to come.
   if (demoAt) return true;
-  if (knock.at || knock.wave || knock.held) return true;
+  if (knock.at || knock.wave || knock.held || knock.moving) return true;
   if (T.trigger === 'once' && hover.want) return true;
   if (hover.on !== hover.want) return true;
   if (hover.on === 0) return false;
@@ -755,7 +771,7 @@ export function point(p) {
 export function click(p) {
   if (!geo && !layout()) return;
   ring(p.x, p.y, -(T.clickReach ?? 1.6));
-  Object.assign(knock, { x: p.x, y: p.y, at: performance.now(), held: true, from: 0, letGo: 0 });
+  Object.assign(knock, { x: p.x, y: p.y, at: performance.now(), held: true, from: 0, letGo: 0, vx: 0, vy: 0, t: 0, trail: 0 });
   // The rings show through the effect's own light, so a click brings that
   // light on (and, in the play-once hover, starts it playing) if it's off.
   if (hover.want === 0 && hover.on < 0.02) Object.assign(hover, { x: p.x, y: p.y, vx: 0, vy: 0 });
@@ -767,7 +783,19 @@ export function click(p) {
 /** Dragging with the button down: the lens goes with the pointer. */
 export function drag(p) {
   if (!knock.held) return;
+  const now = performance.now();
+  const dt = Math.max(0.008, (now - (knock.t || now)) / 1000);
+  const dx = p.x - knock.x, dy = p.y - knock.y;
+  knock.t = now;
+  // Its speed, smoothed over a few moves.
+  knock.vx += (dx / dt - knock.vx) * 0.35;
+  knock.vy += (dy / dt - knock.vy) * 0.35;
   knock.x = p.x; knock.y = p.y;
+  // The wake: a ripple left every so far along the way, each bending the
+  // grooves as a click's does and running out on its own.
+  knock.trail += Math.hypot(dx, dy);
+  const gap = Math.max(0.02, T.wakeSpacing) * (geo?.em || 200);
+  if (T.wakeReach > 0 && knock.trail >= gap) { knock.trail %= gap; ring(p.x, p.y, -T.wakeReach); }
   Object.assign(hover, { tx: p.x, ty: p.y });
   wake();
 }
