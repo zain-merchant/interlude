@@ -588,7 +588,7 @@ const MAIN = `
 // frame, reads that back and lights it.)
 #ifdef RELIT
 uniform sampler2D uSt0;  // the baked layer: L so far, the grooves' lines, in a song, where in it
-uniform sampler2D uSt1;  // and: which song, the pressing warp's two counts (k1 + 32 k2), the angle (in two halves)
+uniform sampler2D uSt1;  // and: which song, the pressing warp's two counts (k1 + 32 k2)
 uniform sampler2D uConeT; // the cone round the disc (CONE_FS)
 uniform sampler2D uGlT;   // the glints (GLINT_FS)
 #endif
@@ -614,12 +614,7 @@ void main() {
   float fr = max(fwidth(r), 1e-3);
   vec2 tdir = vec2(-q.y, q.x) / max(r, 1e-3);
   float ft = max(length(vec2(dot(dqx, tdir), dot(dqy, tdir))), 1e-3);
-#ifdef RELIT
-  vec4 sta = texture2D(uSt1, gl_FragCoord.xy / uSize);
-  float a = sta.z + sta.w;
-#else
   float a = atan(q.y, q.x);
-#endif
   // The outer edge: up top it may run further out than round the rest.
   float farSide = smoothstep(0.15, 0.7, -q.y / max(r, 1.0));
   float R = mix(uOuter.x, uOuter.y, farSide);
@@ -732,9 +727,7 @@ void main() {
 #endif
 #ifdef BAKE
   gl_FragData[0] = vec4(L, lines, inSong, u);
-  // (The angle in two halves, so half floats keep it to a millionth.)
-  float aHi = floor(a * 256.0) / 256.0;
-  gl_FragData[1] = vec4(idx, floor(mid / 140.0) + 3.0 + 32.0 * (floor(mid / 90.0) + 5.0), aHi, a - aHi);
+  gl_FragData[1] = vec4(idx, floor(mid / 140.0) + 3.0 + 32.0 * (floor(mid / 90.0) + 5.0), 0.0, 0.0);
   return;
 #endif
 
@@ -766,8 +759,11 @@ void main() {
   float seg = 2.0 * PI / uGlintShape.z;
 #if defined(RELIT) && (PAL == 0 || PAL == 3)
   // (Read from the glints' table, GLINT_FS: the same shape and colour,
-  // laid out by song, where in it, and the angle round one glint's turn.)
-  vec4 gt = texture2D(uGlT, vec2(mod(a - uGlintShape.w, seg) / seg, (idx * 64.0 + 0.5 + u * 63.0) / 2048.0));
+  // laid out by song, where in it, and where between one glint's turn and
+  // the next: each end on a column, never read across, so the step where
+  // one glint's turn meets the next lands where it does in the full sum.)
+  float ph = fract(sin(idx * 91.7) * 4375.5) * seg;
+  vec4 gt = texture2D(uGlT, vec2((0.5 + 255.0 * mod(a - uGlintShape.w - ph, seg) / seg) / 256.0, (idx * 64.0 + 0.5 + u * 63.0) / 2048.0));
   float glint = gt.x * inSong;
 #else
   float ph = fract(sin(idx * 91.7) * 4375.5) * seg;
@@ -1839,8 +1835,9 @@ void main() {
   gl_FragColor = vec4(smoothstep(uConeEdge.x, uConeEdge.y, lampC), lampC * lampC, 0.0, 0.0);
 }`;
 // The glints, laid out on the disc: 64 rows a song (where in it, 0 to 1,
-// each end on a row) and 256 columns round one glint's turn (2 pi over how
-// many a turn), each the glint's shape there and that times its colour, as
+// each end on a row) and 256 columns from one glint's turn to the next (2 pi
+// over how many a turn, each end on a column), each the glint's shape there
+// and that times its colour, as
 // MAIN works them out (for the palettes whose colour depends only on where
 // in the glint: none, the lamp's).
 const GLINT_FS = `
@@ -1852,8 +1849,7 @@ void main() {
   for (int i = 0; i < ${MAX_TRACKS}; i++) if (float(i) == idx) t = uTracks[i];
   float r = t.x + u * (t.y - t.x);
   float seg = 2.0 * PI / uGlintShape.z;
-  float ph = fract(sin(idx * 91.7) * 4375.5) * seg;
-  float la = mod((gl_FragCoord.x / 256.0) * seg - ph, seg) - 0.5 * seg;
+  float la = (floor(gl_FragCoord.x) / 255.0) * seg - 0.5 * seg;
   float arc = la * r / (220.0 * uGlintShape.x);
   float uc = 0.3 + 0.4 * fract(sin(idx * 17.3) * 9631.1);
   float du = (u - uc) / (0.3 * uGlintShape.x);
@@ -2750,7 +2746,7 @@ function relit(w, h, g, cover, mode) {
   }
   const u = (n) => JSON.stringify(uniNow.get(n)?.[1]);
   const coneT = table('cone', 2048, 1, gl.REPEAT, [u('uCone').replace(/^\[\[?-?[\d.e-]+,/, '['), u('uConeEdge'), u('uConeTint')].join());
-  const glT = table('glints', 256, 2048, gl.REPEAT, [u('uTracks'), u('uTrackCount'), u('uGlintShape').replace(/,[^,\]]*\]+$/, ']'), u('uGlintSpread'), u('uChroma')].join());
+  const glT = table('glints', 256, 2048, gl.CLAMP_TO_EDGE, [u('uTracks'), u('uTrackCount'), u('uGlintShape').replace(/,[^,\]]*\]+$/, ']'), u('uGlintSpread'), u('uChroma')].join());
   gl.activeTexture(gl.TEXTURE0);
   gl.bindTexture(gl.TEXTURE_2D, lit.s0);
   gl.activeTexture(gl.TEXTURE1);
