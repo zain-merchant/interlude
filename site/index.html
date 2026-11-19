@@ -689,7 +689,7 @@
           // at the caps' height, a slash, the 3 on the baseline.
           const k = 0.62, up = 0.7 * fs * (1 - k);
           const rpm = [{ t: '33' }, { t: '1', k, dy: -up, ls: 0.15 }, { t: '/', k, dy: up / 2, ls: 0.15 }, { t: '3', k, dy: up / 2 }, { t: ' RPM' }];
-          const words = ['INTERLUDE', 'FREE', 'OPEN SOURCE', `SIDE ${side}`, rpm, year].map((w) => (typeof w === 'string' ? [{ t: w }] : w));
+          const words = ['INTERLUDE', 'FREE', 'OPEN SOURCE', 'STEREO', rpm, year].map((w) => (typeof w === 'string' ? [{ t: w }] : w));
           const tps = words.map((parts) => {
             const tp = el('textPath', { href: `#${id}` }, t);
             for (const q of parts) {
@@ -1148,7 +1148,7 @@
       const w = document.querySelector('.foot-word');
       if (!w) return;
       const d = document.documentElement;
-      const fx = await import('./foot-fx.js?v=20261118p1').catch(() => null);
+      const fx = await import('./foot-fx.js?v=20261118d1').catch(() => null);
       addEventListener('foot-fit', () => fx?.relayout());
       // Without tune.js (or an older one), each control still applies its default.
       const own = (o) => o.onInput?.(o.value);
@@ -1212,6 +1212,9 @@
       tune.slider({ label: 'Footer: click lens springs back in (s)', folder: 'Click', min: 0.15, max: 4, step: 0.05, value: 1.5, onInput: set('knockTime') });
       tune.slider({ label: 'Footer: click lens holds on a quick click (s)', folder: 'Click', min: 0.15, max: 2, step: 0.05, value: 0.45, onInput: set('knockHold') });
       tune.slider({ label: 'Footer: click lens in-out swing', folder: 'Click', min: 0, max: 0.9, step: 0.05, value: 0.15, onInput: set('knockBounce') });
+      tune.slider({ label: 'Footer: drag wake spacing', folder: 'Click', min: 0.03, max: 0.6, step: 0.01, value: 0.12, unit: 'em', onInput: set('wakeSpacing') });
+      tune.slider({ label: 'Footer: drag wake reach (0: no wake)', folder: 'Click', min: 0, max: 2, step: 0.05, value: 0.6, onInput: set('wakeReach') });
+      tune.slider({ label: 'Footer: drag stretch', folder: 'Click', min: 0, max: 3, step: 0.05, value: 1.2, onInput: set('dragStretch') });
       tune.slider({ label: 'Footer: click wave strength', folder: 'Click', min: 0, max: 1.5, step: 0.05, value: 0.3, onInput: set('knockWave') });
       tune.slider({ label: 'Footer: click wave reach', folder: 'Click', min: 0.1, max: 4, step: 0.05, value: 1, unit: 'em', onInput: set('knockReach') });
       tune.slider({ label: 'Footer: click wave speed', folder: 'Click', min: 0.3, max: 6, step: 0.1, value: 1.6, unit: 'em/s', onInput: set('knockSpeed') });
