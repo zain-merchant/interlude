@@ -947,6 +947,15 @@
       }
 
       let mode = 'mouse';
+      // Being tried: whether the glow and the record follow the music at all
+      // (Tune > Hero > Performance > react to the music; ?react=off).
+      let react = new URLSearchParams(location.search).get('react') !== 'off';
+      // Being tried: the live app in its frame, or the recorded clips played
+      // in the page (startClips, below).
+      let demo = new URLSearchParams(location.search).get('hero') === 'clips' ? 'clips' : 'app';
+      let clips = null;
+      let clipsHost = null;
+      let clipsReady = false;
       addEventListener('message', (e) => {
         if (e.source !== live.contentWindow) return;
         if (e.data?.interlude === 'hero-ready') {
@@ -958,7 +967,7 @@
           live.contentWindow.postMessage({ interlude: 'css', vars: heroVars }, '*');
         }
         if (e.data?.interlude === 'camera') camera(e.data);
-        if (e.data?.interlude === 'level') {
+        if (e.data?.interlude === 'level' && react) {
           fx?.hear(e.data.level);
           glowSoon(e.data.level);
         }
@@ -1004,6 +1013,16 @@
         glowAt = now;
         Object.assign(gs, { o0: +gs.o || 0.16, s0: +gs.s || 0.97, o1: 0.16 + l * 0.34, s1: 0.97 + l * 0.05, t: now });
       }
+      // For the recorded clips, which tell the level a dozen times a second
+      // and nothing between: the glow goes straight to it, with no frames of
+      // easing in between. (At rest when the music isn't followed.)
+      function glowSet(l) {
+        if (!glow) return;
+        const o = (0.16 + l * 0.34).toFixed(3);
+        const s = (0.97 + l * 0.05).toFixed(4);
+        if (o !== gs.o) glow.style.opacity = gs.o = o;
+        if (s !== gs.s) glow.style.transform = `scale(${(gs.s = s)})`;
+      }
 
       // Nobody can see the app while its screen is scrolled out of view or
       // the tab is hidden, so it's paused then (app/demo/pause.js): nothing
@@ -1011,7 +1030,8 @@
       let onScreen = true;
       const pauseIfHidden = () => {
         const hidden = !onScreen || document.hidden;
-        live.contentWindow?.postMessage({ interlude: 'pause', paused: hidden || useVideo() }, '*');
+        live.contentWindow?.postMessage({ interlude: 'pause', paused: hidden || useVideo() || demo === 'clips' }, '*');
+        clips?.setPaused(hidden || demo !== 'clips');
         for (const [m, v] of Object.entries(videos)) {
           if (hidden || !useVideo() || m !== mode) v.pause();
           else v.play().catch(() => {});
@@ -1029,7 +1049,10 @@
       // The pushed-back screen in controller mode: how far it tips (negative
       // tips its top toward you) and where it scales from.
       const heroVars = { '--tilt': '-3deg', '--anchor': '50% 0%' };
-      const sendVars = () => live.contentWindow?.postMessage({ interlude: 'css', vars: heroVars }, '*');
+      const sendVars = () => {
+        live.contentWindow?.postMessage({ interlude: 'css', vars: heroVars }, '*');
+        clips?.setVars(heroVars);
+      };
       window.tune?.slider({ label: 'Hero: controller comes in from (px, minus is above)', min: -160, max: 160, step: 2, value: -40, unit: 'px', onInput: (v) => { heroVars['--hw-from'] = `${v}px`; sendVars(); } });
       window.tune?.slider({ label: 'Hero: controller follows the screen by (ms)', min: 0, max: 500, step: 5, value: 110, unit: 'ms', onInput: (v) => { heroVars['--hw-delay'] = `${v}ms`; sendVars(); } });
       window.tune?.slider({ label: 'Hero: controller blur as it comes in', min: 0, max: 30, step: 0.5, value: 10, unit: 'px', onInput: (v) => { heroVars['--hw-blur'] = `${v}px`; sendVars(); } });
@@ -1063,9 +1086,11 @@
       // so an app loaded behind the video lays itself out as it will show.
       const showOnly = (el) => {
         live.style.visibility = el === live ? '' : 'hidden';
+        if (clipsHost) clipsHost.style.visibility = el === clipsHost ? '' : 'hidden';
         for (const v of Object.values(videos)) v.style.display = v === el ? '' : 'none';
         // (A recording showing paces the record's frames, hero-fx.js beat.)
-        fx?.pacer?.(!!el && el !== live);
+        // (Not the clips: they keep no frame-by-frame beat.)
+        fx?.pacer?.(!!el && el !== live && el !== clipsHost);
       };
       function videoFor(m) {
         if (videos[m]) return videos[m];
@@ -1111,6 +1136,7 @@
           pauseIfHidden();
           return;
         }
+        if (demo === 'clips') return startClips();
         showOnly(live);
         if (!live.getAttribute('src')) live.src = live.dataset.src;
         if (liveReady) frame.dataset.live = '';
@@ -1121,28 +1147,58 @@
       // is loaded (paused, so it costs nothing) as the pointer nears the
       // switch, so it's mostly ready by the click.
       document.querySelector('.switch').addEventListener('pointerenter', () => {
-        if (!reduced.matches && go && !live.getAttribute('src')) live.src = live.dataset.src;
+        if (!reduced.matches && go && demo === 'app' && !live.getAttribute('src')) live.src = live.dataset.src;
       }, { once: true });
       window.tune?.select({ label: 'Hero: render', folder: 'Performance', value: render, options: [['video', 'A video of the app'], ['live', 'The live app']],
         onInput: (v) => { render = v; start(); } });
       // Being tried: what plays in the frame. The live app, or the hero as
-      // recorded clips, one per step of the script in both hands
-      // (lab/segments, made by app/demo/segments/record.mjs). ?hero=clips
-      // picks the clips too.
-      const DEMOS = { app: live.dataset.src, clips: 'lab/segments/hero.html?v=20261119s1' };
-      let demo = new URLSearchParams(location.search).get('hero') === 'clips' ? 'clips' : 'app';
-      const pickDemo = (v) => {
-        if (!DEMOS[v]) return;
-        demo = v;
-        live.dataset.src = DEMOS[v];
-        if (live.getAttribute('src') && live.getAttribute('src') !== DEMOS[v]) {
-          liveReady = false;
-          delete frame.dataset.live;
-          live.src = DEMOS[v];
+      // recorded clips, one per step of the script in both hands, played
+      // here in the page (lab/segments/clips.js, made by
+      // app/demo/segments/record.mjs). ?hero=clips picks the clips too.
+      async function startClips() {
+        if (!clipsHost) {
+          clipsHost = document.createElement('div');
+          clipsHost.className = 'live clips';
+          clipsHost.setAttribute('aria-hidden', 'true');
+          live.after(clipsHost);
+          const { mountClips } = await import('./lab/segments/clips.js?v=20261119c1');
+          clips = await mountClips(clipsHost, {
+            base: 'lab/segments/clips/', hand: mode, paused: true,
+            onReady: () => {
+              clipsReady = true;
+              if (demo === 'clips' && !useVideo()) frame.dataset.live = '';
+            },
+            onLevels: (ls) => {
+              if (!react || demo !== 'clips' || !ls.length) return;
+              for (const l of ls) fx?.hear(l);
+              glowSet(ls[ls.length - 1]);
+            },
+          });
+          clips.setVars(heroVars);
+          if (clips.hand !== mode) clips.setHand(mode);
         }
+        showOnly(clipsHost);
+        if (clipsReady) frame.dataset.live = '';
+        else delete frame.dataset.live;
+        pauseIfHidden();
+      }
+      const pickDemo = (v) => {
+        if (v !== 'app' && v !== 'clips') return;
+        demo = v;
+        if (go) start();
       };
-      pickDemo(demo);
       window.tune?.select({ label: 'Hero: demo', folder: 'Performance', value: demo, options: [['app', 'The live app'], ['clips', 'Recorded clips (prototype)']], onInput: pickDemo });
+      window.tune?.select({ label: 'Hero: react to the music', folder: 'Performance', value: react ? 'on' : 'off', options: [['on', 'The glow and the record follow it'], ['off', 'They stay at rest']], onInput: (v) => {
+        react = v !== 'off';
+        if (!react) glowSet(0);
+      } });
+      // The clips cross to the twin without the arrow as the hand switches;
+      // with the pointer on the switch (or focus in it) the twin is started
+      // underneath, so the click shows at once.
+      const sw = document.querySelector('.switch');
+      for (const [ev, on] of [['pointerenter', true], ['focusin', true], ['pointerdown', true], ['pointerleave', false], ['focusout', false]]) {
+        sw.addEventListener(ev, () => clips?.prepare(on && mode === 'mouse'));
+      }
       // Being tried: how the controller is drawn (app/demo/controller-skins.css).
       // Kept here too, so a pick made before the app has loaded is sent once
       // it's ready.
@@ -1166,6 +1222,7 @@
           // The other recording, or the live app (started now if it hasn't been).
           start();
           live.contentWindow?.postMessage({ interlude: 'mode', mode }, '*');
+          clips?.setHand(mode);
         });
       }
       document.querySelector('.switch').addEventListener('keydown', (e) => {
