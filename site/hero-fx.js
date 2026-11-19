@@ -1579,6 +1579,25 @@ uniform sampler2D uKept;
 uniform vec2 uKeptSize;   // the kept frame, device px: the canvas and a margin all round
 uniform float uKeptM;     // that margin
 float hash(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
+// Read with a Catmull-Rom curve (nine taps of the texture's own linear
+// filter), not straight linear: a fine groove or a speck read between
+// pixels keeps its sharpness instead of softening.
+vec4 sharp(vec2 uv) {
+  vec2 sp = uv * uKeptSize;
+  vec2 tc = floor(sp - 0.5) + 0.5;
+  vec2 f = sp - tc;
+  vec2 w0 = f * (-0.5 + f * (1.0 - 0.5 * f));
+  vec2 w1 = 1.0 + f * f * (-2.5 + 1.5 * f);
+  vec2 w2 = f * (0.5 + f * (2.0 - 1.5 * f));
+  vec2 w3 = f * f * (-0.5 + 0.5 * f);
+  vec2 w12 = w1 + w2;
+  vec2 t0 = (tc - 1.0) / uKeptSize;
+  vec2 t3 = (tc + 2.0) / uKeptSize;
+  vec2 t12 = (tc + w2 / w12) / uKeptSize;
+  return (texture2D(uKept, vec2(t0.x, t0.y)) * w0.x + texture2D(uKept, vec2(t12.x, t0.y)) * w12.x + texture2D(uKept, vec2(t3.x, t0.y)) * w3.x) * w0.y
+       + (texture2D(uKept, vec2(t0.x, t12.y)) * w0.x + texture2D(uKept, vec2(t12.x, t12.y)) * w12.x + texture2D(uKept, vec2(t3.x, t12.y)) * w3.x) * w12.y
+       + (texture2D(uKept, vec2(t0.x, t3.y)) * w0.x + texture2D(uKept, vec2(t12.x, t3.y)) * w12.x + texture2D(uKept, vec2(t3.x, t3.y)) * w3.x) * w3.y;
+}
 void main() {
   vec2 px = vec2(gl_FragCoord.x, uSize.y - gl_FragCoord.y) / uDpr;
   if (px.x > uCover.x && px.x < uCover.z && px.y > uCover.y && px.y < uCover.w) { gl_FragColor = vec4(0.0); return; }
@@ -1589,7 +1608,7 @@ void main() {
   float f0 = 1.0 - q0.y * uGeo.y / uGeo.x;
   vec2 p0 = vec2(uCentre.x + q0.x / max(f0, 1e-4), uGeo.x / max(f0, 1e-4) - uHz);
   vec2 uv = (vec2(p0.x * uDpr, uSize.y - p0.y * uDpr) + uKeptM) / uKeptSize;
-  vec4 o = texture2D(uKept, uv) * uGain;
+  vec4 o = max(sharp(uv), 0.0) * uGain;
   if (f0 <= 0.0 || uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) o = vec4(0.0);
   vec3 col = o.rgb;
   float alpha = o.a;
