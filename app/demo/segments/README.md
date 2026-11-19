@@ -2,7 +2,8 @@
 
 A way to show the hero without running the app in the page: the real demo
 (`demo/hero.html`) is recorded, step by step, in both hands, and a small
-player in `site/lab/segments/` plays the clips. Try it at
+player (`site/lab/segments/clips.js`, in the page itself, no frame) plays
+the clips. Try it at
 `/lab/segments/` (pick the hand, the clips, the codec), or in the site's
 own hero with Tune > Hero > Performance > demo, or `/?hero=clips`.
 
@@ -23,15 +24,21 @@ own hero with Tune > Hero > Performance > demo, or `/?hero=clips`.
    click lands on a frame and a controller key's pulse a little after one,
    so a stopped deck synced by each sits a few milliseconds apart (well under
    a pixel). Anything more stops the recording.
-3. **Record.** Each frame, three things: the app alone, flat (the page tips
-   it back itself in the controller hand), without the cursor, the controller
-   or the link lines; the controller alone in its box; and a timeline of the
-   cursor (transform, lean, `data-*`), the link lines (path, opacity, dash)
-   and the music's level. Each step becomes clips per layer in AV1, HEVC and
-   H.264 (2x, bt709 limited range, 4:2:0), plus `controller-mask.png` (its
-   outline at rest) and `manifest.json` (steps, the controller's box, the
-   cursor's markup, and the cursor's, links' and app box's CSS, read from the
-   page's own stylesheets).
+3. **Record.** Each frame, in layers:
+   - the app alone, flat (the page tips it back itself in the controller
+     hand), without the controller or the link lines. In the mouse hand
+     twice: with the arrow (`appc`, what plays) and without (`app`, its twin,
+     crossed to when the hand switches mid-step; a keyframe every 2 s
+     so it can start partway through quickly);
+   - the controller alone in its box, with the controller hand's fingertip
+     (it goes when the controller does), without the mouse's arrow;
+   - a timeline of the link lines (path, opacity, dash) and the music's
+     level.
+   Each step becomes clips per layer in AV1, HEVC and H.264 (2x, bt709
+   limited range, 4:2:0), plus `controller-mask.png` (its outline at rest,
+   without a fingertip) and `manifest.json` (steps, layers per hand, the
+   controller's box, and the links' and app box's CSS, read from the page's
+   own stylesheets).
 
 Build the demo into a copy of the site first, so the live `site/demo` is
 never rebuilt under anyone:
@@ -45,9 +52,15 @@ never rebuilt under anyone:
   either, so at the end of any step the other hand's next clip follows on
   the same app.
 - A switch of hands moves the page at once (the screen eases back or
-  forward with hero.css's own transform, the controller comes or goes, the
-  cursor fades). The clips swap at the end of the step, if the other hand's
-  clip has loaded, or else at the end of the next.
+  forward with hero.css's own transform, the controller comes or goes, and
+  in the mouse hand the clip crosses to its twin without the arrow, so the
+  arrow fades). The clips swap at the end of the step, if the other hand's
+  clip has loaded, or else at the end of the next. With the pointer or focus
+  on the switch the twin is already running underneath, in step.
+- Nothing runs on most frames: a timer, a dozen times a second, hands the
+  page the music's levels since the last time (for the glow and the
+  record) and keeps the controller's clip in step; frame callbacks run only
+  over a clip's last frames and while a link line shows.
 - Two video elements per layer cross over: the next clip starts a frame
   before the last ends and comes forward once its first frame is up.
 - Codec: AV1 where the browser decodes it in hardware (MediaCapabilities
