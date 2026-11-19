@@ -1646,6 +1646,24 @@ addEventListener('resize', () => (measured = 0));
 // every refresh of the screen (120 a second on some), drawn or not.
 let scrollPos = scrollY;
 let canvasTop = 0;
+// Where the app always covers the record, in either mode. In controller
+// mode it shrinks to 91% toward where it scales from (its top, middle or
+// bottom: the "screen scales from" setting) and tips by its tilt, so this
+// keeps clear of wherever its edges can be (and its rounded corners).
+function coverOf(box) {
+  let ay = 0;
+  let tilt = 3;
+  try {
+    const st = screen.querySelector('iframe.live')?.contentDocument?.documentElement.style;
+    const a = st?.getPropertyValue('--anchor').trim().split(/\s+/)[1];
+    if (a) ay = parseFloat(a) / 100;
+    const t = parseFloat(st?.getPropertyValue('--tilt'));
+    if (Number.isFinite(t)) tilt = Math.abs(t);
+  } catch {}
+  const cw = box.r - box.l, ch = box.b - box.t;
+  const lean = 0.005 * tilt;
+  return [box.l + cw * (0.055 + lean), box.t + ch * (0.09 * ay + 0.03 + lean), box.r - cw * (0.055 + lean), box.b - ch * (0.09 * (1 - ay) + 0.04 + lean)];
+}
 function layout(now) {
   if (geo && now - measured < 500) return geo;
   measured = now;
@@ -1680,7 +1698,7 @@ function layout(now) {
   gl.uniform1f(U.uHoleCount, holes.length);
   const btn = document.querySelector('.hero .btn');
   gl.uniform1f(U.uHoleR, btn ? parseFloat(getComputedStyle(btn).borderTopLeftRadius) || 0 : 0);
-  if (geo?.key === key) return Object.assign(geo, { box });
+  if (geo?.key === key) return Object.assign(geo, { box, cover: coverOf(box) });
   // The bends up top (see toRecord): more rings above, as a share of the
   // half above the centre; the lens's place and size.
   const g = { cx, cy, hz, d0, tilt, up: T.up, half: c.width / 2, lens: [cx, RIM_TOP + T.drop + (cy - RIM_TOP - T.drop) * 0.45, Math.max(200, c.width * 0.3)] };
@@ -1713,12 +1731,7 @@ function layout(now) {
   // And the canvas ends where the record does, not 2000px down.
   canvas.style.height = `${Math.ceil(end + Math.max(0, T.bfEnd) + 8)}px`;
   topFade(Math.round(s.top - c.top), Math.round(s.top - c.top + s.height * 0.3), Math.round(end), c.width);
-  // Where the app always covers the record, in either mode: in controller
-  // mode it shrinks to 91% from its top and tips back 3 degrees, so this
-  // keeps clear of its sides and foot (and its rounded corners).
-  const cw = box.r - box.l, ch = box.b - box.t;
-  const cover = [box.l + cw * 0.08, box.t + ch * 0.04, box.r - cw * 0.08, box.b - ch * 0.14];
-  geo = { ...g, key, R, r0, box, out, top, Rmax, cover };
+  geo = { ...g, key, R, r0, box, out, top, Rmax, cover: coverOf(box) };
   return geo;
 }
 
@@ -1809,6 +1822,7 @@ function wake() {
 
 let last = performance.now();
 let lastSlot = -1;
+let lastDraw = 0;
 function frame(now, still) {
   const dt = still ? 0 : Math.min(0.1, (now - last) / 1000);
   last = now;
@@ -1987,8 +2001,10 @@ function frame(now, still) {
   const ks = h / canvas.clientHeight;
   const ct = canvasTop - scrollPos;
   const mg = innerHeight * 0.25;
-  const y0 = Math.max(0, Math.floor((-ct - mg) * ks));
-  const y1 = Math.min(h, Math.ceil((innerHeight - ct + mg) * ks));
+  // (A still frame, left showing when the record stops, is drawn whole:
+  // nothing redraws it as the page scrolls.)
+  const y0 = still ? 0 : Math.max(0, Math.floor((-ct - mg) * ks));
+  const y1 = still ? h : Math.min(h, Math.ceil((innerHeight - ct + mg) * ks));
   // (Only once the live app has been showing a moment: while it and the
   // screenshot cross-fade, the record shows through a little.)
   const cv = liveSince && now - liveSince > 1500 && geo?.cover;
@@ -2016,8 +2032,14 @@ function draw(now) {
   // (And busy, never more than 60 a second: a 120Hz screen would otherwise
   // draw the record twice as often again, for a light that already looks
   // smooth at 60.)
-  const slot = Math.floor(((performance.timeOrigin + now) * (busy ? 60 : T.fps)) / 1000) + (busy ? 0.5 : 0);
-  if (slot !== lastSlot) { lastSlot = slot; frame(now, false); }
+  // (Busy, it draws unless it drew under 12ms ago: every frame at 60Hz,
+  // every other one at 120Hz.)
+  const slot = Math.floor(((performance.timeOrigin + now) * T.fps) / 1000);
+  if (busy ? now - lastDraw > 12 : slot !== lastSlot) {
+    lastSlot = slot;
+    lastDraw = now;
+    frame(now, false);
+  }
   requestAnimationFrame(draw);
 }
 
