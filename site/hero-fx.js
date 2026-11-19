@@ -1992,12 +1992,12 @@ uniform vec4 uNat2;
 uniform vec4 uNat3;
 uniform vec3 uStyle;
 uniform vec4 uThru;
-varying vec2 vId;
+varying vec2 vIdV;
 const float PI = 3.14159265;
 float hash2(vec2 p) { vec3 p3 = fract(vec3(p.xyx) * 0.1031); p3 += dot(p3, p3.yzx + 33.33); return fract((p3.x + p3.y) * p3.z); }
 void main() {
   vec2 id = p.xy;
-  vId = id;
+  vIdV = id;
   gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
   float h = hash2(id + 31.0);
   // (A hair under the threshold: the pixels test it again exactly.)
@@ -2045,8 +2045,11 @@ void main() {
 }`;
 const DUST_FS = `
 uniform sampler2D uSt0;
-varying vec2 vId;
+varying vec2 vIdV;
 void main() {
+  // (The cell, exactly: a varying can come through a hair off, and the
+  // hashes would make that a different speck.)
+  vec2 vId = floor(vIdV + 0.5);
   vec2 px = vec2(gl_FragCoord.x, uSize.y - gl_FragCoord.y) / uDpr;
   if (px.x > uCover.x && px.x < uCover.z && px.y > uCover.y && px.y < uCover.w) discard;
   vec2 q = discQ(px);
