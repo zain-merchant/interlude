@@ -940,7 +940,8 @@ void main() {
   // lamp's streak runs out along a whole radius, so it's never cut short.)
   float gR = uHoverMode < 0.5 ? 140.0 : (uHoverMode < 2.5 ? 60.0 : 170.0) * fr * uDpr;
   float gA = uHoverMode < 0.5 ? 900.0 : uHoverMode < 2.5 ? 700.0 : uHoverMode < 3.5 ? 1250.0 : 960.0;
-  bool nearH = (uHoverMode > 0.5 && uHoverMode < 1.5)
+  // (Glints softer than the plain bell curve have long tails: then nowhere.)
+  bool nearH = (uHoverMode > 0.5 && uHoverMode < 1.5) || (uHoverMode > 0.5 && uGlintShape.y < 0.999)
     || (abs(r - uHover.x) < gR && length(q - uHover.x * vec2(cos(uHover.y), sin(uHover.y))) < 1.25 * gA * max(1.0, 100.0 / max(uHover.x, 1.0)) + 2.0 * gR + 50.0);
   if (on > 0.0 && nearH) {
 #else
@@ -2691,7 +2692,10 @@ function table(name, w, h, wrapS, key) {
 // (The uniforms the baked layer depends on, by name.)
 const BAKED = ['uSize', 'uDpr', 'uCentre', 'uGeo', 'uSpan', 'uOuter', 'uGroove', 'uTracks', 'uTrackCount', 'uWarp', 'uLens', 'uHz', 'uTilt', 'uCover'];
 function relit(w, h, g, cover, mode) {
-  if (T.atRest !== 'relit' || !keepOK || LOOK[T.look] || T.warp !== 'none' || g.up || tiltNow.some(Boolean) || mode >= 4.5) return false;
+  // (The glass bends the grooves under the pointer, and a tilt the whole
+  // disc, each frame: those take the full path. The hovers that move the
+  // lamp, its cone, the glints or their colour only change the light.)
+  if (T.atRest !== 'relit' || !keepOK || LOOK[T.look] || T.warp !== 'none' || g.up || tiltNow.some(Boolean) || (mode > 4.5 && mode < 6.5)) return false;
   const defs = variant();
   try {
     if (lit.defs !== defs) {
