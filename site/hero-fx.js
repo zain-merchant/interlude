@@ -123,6 +123,7 @@ const TURN = (Math.PI * 2) / 40;
 // is (so how many there are).
 const T = {
   fps: 30, // frames a second at rest
+  atRest: 'turned', // frames at rest turned on from a full one (see REPROJECT), or each worked out in full ('full')
   drop: 108, needle: 0.8, life: 0.2, persp: 0.85, cue: 'dust', cueAmt: 1, res: 0.85,
   speck: 'hyphen',
   twistRate: 12, twistMax: 20, twistEase: 0.6, // scrolling twists it: degrees per 1000px, at most, settling in s
@@ -310,6 +311,8 @@ uniform float uHz;       // the horizon, CSS px above the canvas
 uniform vec2 uCue;       // what shows the turn, and how much
 uniform vec2 uTracks[${MAX_TRACKS}];
 uniform float uTrackCount;
+uniform float uRaw;      // 1: no buttons' holes and no dither (a frame kept to be turned, see REPROJECT)
+uniform vec2 uOrigin;    // the canvas's corner in what's drawn to (device px; 0 but for the kept frame)
 
 const float PI = 3.14159265;
 const vec3 BASE = vec3(0.86, 0.89, 0.95);
@@ -452,7 +455,9 @@ vec3 paint(float x, float y, float a, float r) {
 `;
 const MAIN = `
 void main() {
-  vec2 px = vec2(gl_FragCoord.x, uSize.y - gl_FragCoord.y) / uDpr;
+  // (uOrigin: where the canvas's corner is in what's drawn to, when that's
+  // the kept frame with a margin round it, see REPROJECT.)
+  vec2 px = vec2(gl_FragCoord.x - uOrigin.x, uSize.y - (gl_FragCoord.y - uOrigin.y)) / uDpr;
   // Behind the app's screen nothing would show: nothing is worked out.
   if (px.x > uCover.x && px.x < uCover.z && px.y > uCover.y && px.y < uCover.w) { gl_FragColor = vec4(0.0); return; }
   vec2 q = discQ(px);
@@ -970,6 +975,10 @@ void main() {
     col += warm * w;
     alpha += w;
   }
+
+  // (Kept as it is for the frames at rest to turn, see REPROJECT: the
+  // buttons and the dither are laid on there, fresh each frame.)
+  if (uRaw > 0.5) { gl_FragColor = vec4(col, alpha); return; }
 
   // Nothing shows through the hero's buttons (one is see-through).
   for (int i = 0; i < 4; i++) {
@@ -1542,6 +1551,62 @@ void main() {
   float n = (hash(gl_FragCoord.xy) - 0.5) / 255.0;
   gl_FragColor = vec4(max(o.rgb + n, 0.0), clamp(o.a + n, 0.0, 1.0));
 }`;
+// At rest the whole record turns as one: the disc, and the lamp, its cone
+// and the glints with it (they're all set from its turn), so one frame is
+// the last with the disc turned a little further, the music's swell aside.
+// So at rest the full picture (above) is worked out every few frames into a
+// texture, without the buttons' holes or the dither, and each frame between
+// is that picture turned on to where the disc is now: each pixel finds where
+// on the disc it lies (discQ, plain: nothing bends the disc at rest), turns
+// back by how far the disc has turned since, finds where that lay on the
+// page then, and reads it there; scaled by the swell's change; then the
+// buttons' holes and the dither, as the full picture lays them on. The
+// grooves are circles, so turning them moves them along themselves.
+const REPROJECT = `
+precision highp float;
+uniform vec2 uSize;
+uniform float uDpr;
+uniform vec2 uCentre;
+uniform vec2 uGeo;
+uniform float uHz;
+uniform vec4 uCover;
+uniform vec4 uHoles[4];
+uniform float uHoleCount;
+uniform float uHoleR;
+uniform float uTurn;      // how far the disc has turned since the kept frame
+uniform float uGain;      // the swell's change since
+uniform sampler2D uKept;
+uniform vec2 uKeptSize;   // the kept frame, device px: the canvas and a margin all round
+uniform float uKeptM;     // that margin
+float hash(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
+void main() {
+  vec2 px = vec2(gl_FragCoord.x, uSize.y - gl_FragCoord.y) / uDpr;
+  if (px.x > uCover.x && px.x < uCover.z && px.y > uCover.y && px.y < uCover.w) { gl_FragColor = vec4(0.0); return; }
+  float f = uGeo.x / max(1.0, px.y + uHz);
+  vec2 q = vec2((px.x - uCentre.x) * f, (1.0 - f) * uGeo.x / uGeo.y);
+  float c = cos(uTurn), s = sin(uTurn);
+  vec2 q0 = vec2(c * q.x + s * q.y, c * q.y - s * q.x);
+  float f0 = 1.0 - q0.y * uGeo.y / uGeo.x;
+  vec2 p0 = vec2(uCentre.x + q0.x / max(f0, 1e-4), uGeo.x / max(f0, 1e-4) - uHz);
+  vec2 uv = (vec2(p0.x * uDpr, uSize.y - p0.y * uDpr) + uKeptM) / uKeptSize;
+  vec4 o = texture2D(uKept, uv) * uGain;
+  if (f0 <= 0.0 || uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) o = vec4(0.0);
+  vec3 col = o.rgb;
+  float alpha = o.a;
+  for (int i = 0; i < 4; i++) {
+    if (float(i) >= uHoleCount) break;
+    vec4 h = uHoles[i];
+    vec2 hc = 0.5 * (h.xy + h.zw);
+    vec2 hq = abs(px - hc) - (0.5 * (h.zw - h.xy) - uHoleR);
+    float sd = length(max(hq, 0.0)) + min(max(hq.x, hq.y), 0.0) - uHoleR;
+    float inside = 1.0 - smoothstep(-1.0, 0.0, sd);
+    col *= 1.0 - inside;
+    alpha *= 1.0 - inside;
+  }
+  float n = (hash(gl_FragCoord.xy) - 0.5) / 255.0;
+  gl_FragColor = vec4(max(col + n, 0.0), clamp(alpha + n, 0.0, 1.0));
+}`;
+
 // The styles, by name: n is its program (0 the vinyl, the others
 // LOOK in LOOKS). crisp: drawn at the screen's full resolution whatever
 // the render resolution, since fine lines, dots and cells go soft when
@@ -1576,7 +1641,7 @@ let liveSince = 0;
 // One program per style, compiled the first time it's shown.
 const NAMES = ['uSize', 'uDpr', 'uCentre', 'uGeo', 'uHoles', 'uHoleCount', 'uCover', 'uHoleR', 'uSpan', 'uSpin', 'uFacing', 'uStyle', 'uSheen', 'uGlint', 'uHover', 'uSwell', 'uNeedle', 'uRipple', 'uTouch', 'uHz', 'uCue', 'uTracks', 'uTrackCount',
   'uOuter', 'uGlintAmt', 'uChroma', 'uSpeck', 'uNat', 'uNat2', 'uNat3', 'uAway', 'uAwayB', 'uTint', 'uWarp', 'uLens', 'uHoverMode', 'uPtr', 'uVinyl', 'uVinylFin', 'uThru', 'uGroove',
-  'uGlintShape', 'uGlintSpread', 'uHueM', 'uTilt', 'uCone', 'uConeTint', 'uConeEdge', 'uConeLight'];
+  'uGlintShape', 'uGlintSpread', 'uHueM', 'uTilt', 'uCone', 'uConeTint', 'uConeEdge', 'uConeLight', 'uRaw', 'uOrigin'];
 const progs = new Map();
 let shown = '';
 function build(n, defs) {
@@ -1709,8 +1774,10 @@ function layout(now) {
   const key = [c.width, c.height, Math.round(cx), Math.round(cy), Math.round(end), T.drop, T.persp, T.size, T.up, T.reach, T.warp, T.warpAmt, T.fadeAt, T.fadeLen, T.songLen, T.bfStart, T.bfEnd, T.bfCurve, T.bfShape, T.bfWidth, T.bfCentre, T.bfMid].join();
   gl.uniform4fv(U.uHoles, new Float32Array([...holes.flat(), ...new Array(16 - holes.length * 4).fill(0)]));
   gl.uniform1f(U.uHoleCount, holes.length);
+  holesNow.list = new Float32Array([...holes.flat(), ...new Array(16 - holes.length * 4).fill(0)]);
+  holesNow.count = holes.length;
   const btn = document.querySelector('.hero .btn');
-  gl.uniform1f(U.uHoleR, btn ? parseFloat(getComputedStyle(btn).borderTopLeftRadius) || 0 : 0);
+  gl.uniform1f(U.uHoleR, (holesNow.r = btn ? parseFloat(getComputedStyle(btn).borderTopLeftRadius) || 0 : 0));
   if (geo?.key === key) return Object.assign(geo, { box, cover: coverOf(box) });
   // The bends up top (see toRecord): more rings above, as a share of the
   // half above the centre; the lens's place and size.
@@ -1983,17 +2050,17 @@ function frame(now, still) {
   gl.uniform2f(U.uCentre, g.cx, g.cy);
   gl.uniform2f(U.uGeo, g.d0, g.tilt);
   gl.uniform2f(U.uSpan, g.r0, g.R);
-  gl.uniform1f(U.uSpin, (spin + twist) % (Math.PI * 2));
+  gl.uniform1f(U.uSpin, (turnNow.spin = (spin + twist) % (Math.PI * 2)));
   // (Nothing passing goes in a still frame: the pointer's moves are left out.)
   const f = still ? ZERO_FX : fx.at;
-  gl.uniform1f(U.uFacing, lampAt + f.light);
+  gl.uniform1f(U.uFacing, (turnNow.facing = lampAt + f.light));
   gl.uniform3f(U.uStyle, st.lines * T.contrast, st.satin * T.satin, st.level * T.level);
   gl.uniform1f(U.uSheen, st.sheen * T.sheen);
   // (In the vinyl style the grooves' brightness lifts everything drawn;
   // the glints are taken back out of it, so only their own brightness sets them.)
   gl.uniform1f(U.uGlint, (st.glint ?? 1.6) / (LOOK[T.look] ? 1 : Math.max(0.01, T.level)));
   gl.uniform3f(U.uHover, hover.r, hover.a, still || movers ? 0 : hover.on);
-  gl.uniform1f(U.uSwell, swell);
+  gl.uniform1f(U.uSwell, (turnNow.swell = swell));
   // A still frame (reduced motion) may be the last one drawn for a while, so
   // nothing passing (the needle, its ring, the pointer's light) goes in it.
   gl.uniform2f(U.uNeedle, needle.r, still ? 0 : needleOn * T.needle);
@@ -2003,7 +2070,7 @@ function frame(now, still) {
   gl.uniform2f(U.uCue, CUES[T.cue] ?? 1, T.cueAmt);
   gl.uniform2f(U.uOuter, g.out, g.top);
   gl.uniform2f(U.uGlintAmt, T.glints, 0);
-  gl.uniform4f(U.uGlintShape, T.gSize, T.gSharp, Math.max(1, Math.round(T.gCount)), glintSpin + f.phase);
+  gl.uniform4f(U.uGlintShape, T.gSize, T.gSharp, Math.max(1, Math.round(T.gCount)), (turnNow.glint = glintSpin + f.phase));
   gl.uniform1f(U.uGlintSpread, Math.max(0, T.gSpread * (1 + f.spread)));
   gl.uniformMatrix3fv(U.uHueM, false, hueTurn((T.gHue * Math.PI) / 180 + f.hue));
   // (Only while the tilt is in use: the shader only has it then, see variant.)
@@ -2024,7 +2091,7 @@ function frame(now, still) {
   const cone = coneShape();
   // (The cone keeps to the lamp's own place: only its own hover, Cone
   // follows, moves it; Lamp follows moves the lamp's light alone.)
-  gl.uniform4f(U.uCone, lampAt + f.cone + (T.coneDir * Math.PI) / 180, cone.scale, 0, T.coneReach);
+  gl.uniform4f(U.uCone, (turnNow.cone = lampAt + f.cone + (T.coneDir * Math.PI) / 180), cone.scale, 0, T.coneReach);
   gl.uniform2f(U.uConeEdge, cone.lo, cone.hi);
   gl.uniform4f(U.uConeTint, ...rgbOf(T.coneTint), T.cones === 'one' ? 1 : 0);
   gl.uniform1f(U.uConeLight, T.cone);
@@ -2057,12 +2124,131 @@ function frame(now, still) {
   // (Only once the live app has been showing a moment: while it and the
   // screenshot cross-fade, the record shows through a little.)
   const cv = liveSince && now - liveSince > 1500 && geo?.cover;
-  gl.uniform4f(U.uCover, cv ? cv[0] : 0, cv ? cv[1] : 0, cv ? cv[2] : 0, cv ? cv[3] : 0);
+  const cover = [cv ? cv[0] : 0, cv ? cv[1] : 0, cv ? cv[2] : 0, cv ? cv[3] : 0];
+  gl.uniform4f(U.uCover, ...cover);
   gl.enable(gl.SCISSOR_TEST);
   gl.scissor(0, h - Math.max(y0, y1), w, Math.max(0, y1 - y0));
   gl.clearColor(0, 0, 0, 0);
+  // At rest: the kept picture turned on (see REPROJECT), when it can be.
+  if (y1 > y0 && !still && restNow && turned(now, w, h, y0, y1, g, cover, mode)) return;
   gl.clear(gl.COLOR_BUFFER_BIT);
   if (y1 > y0) gl.drawArrays(gl.TRIANGLES, 0, 3);
+}
+
+// The frames at rest, turned from a kept one (REPROJECT). The values the
+// turn sets, as set this frame; and the kept frame's.
+const turnNow = { spin: 0, facing: 0, swell: 0, glint: 0, cone: 0 };
+const holesNow = { list: new Float32Array(16), count: 0, r: 0 };
+let restNow = false;
+// A new frame is worked out in full every KEEP frames (and whenever
+// anything but the turn and the swell has changed): the turned ones drift
+// from it by a few pixels at most, and it's under the app's screen's edge
+// by more than that (MARGIN, CSS px), so nothing turns in from under it.
+const KEEP = 4;
+const MARGIN = 24;
+// (And it's worked out a little past the canvas's edges and the strip
+// that's drawn, so what turns in at an edge is there to read: EDGE, device px.)
+const EDGE = 48;
+const kept = { tex: null, fbo: null, size: '', key: '', n: 0, spin: 0, swell: 0, d: [0, 0, 0] };
+let rp = null;
+const wrapA = (x) => Math.atan2(Math.sin(x), Math.cos(x));
+// (Kept in half floats: finer than the screen's 8 bits, so the dither still
+// has the soft gradients to work on, at half a full float's memory.)
+const half = (() => {
+  try {
+    const h = gl && gl.getExtension('OES_texture_half_float');
+    return h && gl.getExtension('OES_texture_half_float_linear') && gl.getExtension('EXT_color_buffer_half_float') ? h.HALF_FLOAT_OES : 0;
+  } catch { return 0; }
+})();
+const keepOK = !!half;
+function turned(now, w, h, y0, y1, g, cover, mode) {
+  if (T.atRest !== 'turned' || !keepOK || LOOK[T.look] || !U.uRaw || T.warp !== 'none' || g.up || tiltNow.some(Boolean) || mode >= 4.5 || needle.on || ripple.on) return false;
+  if (!rp) {
+    try {
+      const sh = (type, src) => { const x = gl.createShader(type); gl.shaderSource(x, src); gl.compileShader(x); if (!gl.getShaderParameter(x, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(x)); return x; };
+      const p = gl.createProgram();
+      gl.attachShader(p, sh(gl.VERTEX_SHADER, VERT));
+      gl.attachShader(p, sh(gl.FRAGMENT_SHADER, REPROJECT));
+      gl.bindAttribLocation(p, 0, 'p');
+      gl.linkProgram(p);
+      if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p));
+      const u = {};
+      for (const k of ['uSize', 'uDpr', 'uCentre', 'uGeo', 'uHz', 'uCover', 'uHoles', 'uHoleCount', 'uHoleR', 'uTurn', 'uGain', 'uKept', 'uKeptSize', 'uKeptM']) u[k] = gl.getUniformLocation(p, k);
+      rp = { p, u };
+    } catch (err) {
+      console.warn('hero-fx:', err);
+      rp = false;
+    }
+  }
+  if (!rp) return false;
+  const t = turnNow;
+  // (Everything that sets the picture, but the turn and the swell.)
+  const key = JSON.stringify([w, h, y0, y1, box.w, cover, g.cx, g.cy, g.d0, g.tilt, g.r0, g.R, g.hz, g.out, g.top, holesNow.count, Array.from(holesNow.list), holesNow.r, shown, T, hover.on > 0.01 ? hover : 0]);
+  // (The lamp, its cone and the glints must be turning with the disc.)
+  const d = [wrapA(t.facing - t.spin), wrapA(t.cone - t.spin), wrapA(t.glint - t.spin)];
+  const turn = wrapA(t.spin - kept.spin);
+  const fresh = key !== kept.key || ++kept.n >= KEEP || Math.abs(turn) > 0.03 || d.some((v, i) => Math.abs(v - kept.d[i]) > 1e-5);
+  if (fresh) {
+    const W = w + 2 * EDGE, H = h + 2 * EDGE;
+    if (kept.size !== `${W}x${H}`) {
+      if (!kept.tex) { kept.tex = gl.createTexture(); kept.fbo = gl.createFramebuffer(); }
+      gl.bindTexture(gl.TEXTURE_2D, kept.tex);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, W, H, 0, gl.RGBA, half, null);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      gl.bindTexture(gl.TEXTURE_2D, null);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, kept.fbo);
+      gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, kept.tex, 0);
+      const ok = gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE;
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+      if (!ok) { kept.size = ''; return false; }
+      kept.size = `${W}x${H}`;
+    }
+    // The full picture, without the holes and the dither, and with the
+    // app's screen's edge kept a margin in.
+    gl.bindTexture(gl.TEXTURE_2D, null);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, kept.fbo);
+    gl.viewport(0, 0, W, H);
+    gl.scissor(0, H - EDGE - Math.max(y0, y1) - EDGE, W, Math.max(0, y1 - y0) + 2 * EDGE);
+    gl.uniform1f(U.uRaw, 1);
+    gl.uniform2f(U.uOrigin, EDGE, EDGE);
+    const m = cover[2] > cover[0] ? MARGIN : 0;
+    gl.uniform4f(U.uCover, cover[0] + m, cover[1] + m, cover[2] - m, cover[3] - m);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    gl.uniform1f(U.uRaw, 0);
+    gl.uniform2f(U.uOrigin, 0, 0);
+    gl.uniform4f(U.uCover, ...cover);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.viewport(0, 0, w, h);
+    gl.scissor(0, h - Math.max(y0, y1), w, Math.max(0, y1 - y0));
+    Object.assign(kept, { key, n: 0, spin: t.spin, swell: t.swell, d });
+  }
+  const u = rp.u;
+  gl.useProgram(rp.p);
+  gl.uniform2f(u.uSize, w, h);
+  gl.uniform1f(u.uDpr, w / box.w);
+  gl.uniform2f(u.uCentre, g.cx, g.cy);
+  gl.uniform2f(u.uGeo, g.d0, g.tilt);
+  gl.uniform1f(u.uHz, g.hz);
+  gl.uniform4f(u.uCover, ...cover);
+  gl.uniform4fv(u.uHoles, holesNow.list);
+  gl.uniform1f(u.uHoleCount, holesNow.count);
+  gl.uniform1f(u.uHoleR, holesNow.r);
+  gl.uniform1f(u.uTurn, wrapA(t.spin - kept.spin));
+  gl.uniform1f(u.uGain, (1 + 0.08 * t.swell) / (1 + 0.08 * kept.swell));
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(gl.TEXTURE_2D, kept.tex);
+  gl.uniform1i(u.uKept, 0);
+  gl.uniform2f(u.uKeptSize, w + 2 * EDGE, h + 2 * EDGE);
+  gl.uniform1f(u.uKeptM, EDGE);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+  gl.bindTexture(gl.TEXTURE_2D, null);
+  gl.useProgram(prog);
+  return true;
 }
 
 function draw(now) {
@@ -2091,7 +2277,9 @@ function draw(now) {
   if (busy ? now - lastDraw > 12 : paced ? now - lastDraw > 1000 / fps - 8 : slot !== lastSlot) {
     lastSlot = slot;
     lastDraw = now;
+    restNow = !busy;
     frame(now, false);
+    restNow = false;
   }
   if (busy) {
     requestAnimationFrame(draw);
@@ -2446,6 +2634,10 @@ tw?.slider({ ...look, label: 'Hero record: dust fibres', min: 0, max: 1, step: 0
 tw?.select({ ...look, label: 'Hero record: speck style', value: T.speck, show: () => cur() && T.cue === 'dust', onInput: redraw('speck'), options: [['hyphen', 'Dashes (first)'], ['motes', 'Dust motes'], ['scratches', 'Hairline scratches'], ['scuffs', 'Scuffs'], ['sparkle', 'Sparkle'], ['lint', 'Lint'], ['smudge', 'Smudges']] });
 tw?.slider({ ...look, label: 'Hero record: render resolution', min: 0.3, max: 1, step: 0.05, value: T.res, show: () => !STYLE[T.look]?.crisp, onInput: reshape('res') });
 tw?.slider({ ...look, label: 'Hero record: frames a second at rest', min: 10, max: 30, step: 1, value: T.fps, onInput: (v) => { T.fps = v; } });
+// The frames at rest turned on from a full one every fourth (REPROJECT),
+// for about a third less of the GPU (each in full is how it was before;
+// between the full ones a dust speck can soften by a few levels).
+tw?.select({ ...look, label: 'Hero record: frames at rest', value: T.atRest, options: [['full', 'Each worked out in full'], ['turned', 'Turned on from a full one every fourth (lighter)']], onInput: (v) => { T.atRest = v; kept.key = ''; wake(); } });
 
 // GLINTS: in each song a few short runs of groove catch the lamp, fixed on
 // the disc and going round, brightest as they pass through the lamp's
