@@ -460,8 +460,8 @@ vec3 paint(float x, float y, float a, float r) {
 // uNat.x: how much; uNat2: size, softness, glow, glow size; uNat3:
 // brightness, how much it needs the light, size variety, fibres. near: 1
 // where any speck lies in the cells looked at (onlyNear: that alone).
-// One speck (its cell id, and h its first hash): what it adds at q.
-// (Shared by natDust and the dust drawn as sprites, see RELIT.)
+// speckAt: one speck (its cell id, and h its first hash), what it adds at q
+// (shared by natDust and the dust drawn as sprites, see RELIT).
 float speckAt(vec2 id, float h, vec2 q, vec2 dqx, vec2 dqy, float det) {
       float CR = 9.0;
       float CT = 9.0;
@@ -3228,9 +3228,10 @@ tw?.select({ ...look, label: 'Hero record: speck style', value: T.speck, show: (
 tw?.slider({ ...look, label: 'Hero record: render resolution', min: 0.3, max: 1, step: 0.05, value: T.res, show: () => !STYLE[T.look]?.crisp, onInput: reshape('res') });
 tw?.select({ ...look, label: 'Hero record: frames a second while the pointer moves it', value: String(T.busyFps), options: [['30', '30 (on the app\'s frames)'], ['60', '60']], onInput: (v) => { T.busyFps = +v; } });
 tw?.slider({ ...look, label: 'Hero record: frames a second at rest', min: 10, max: 30, step: 1, value: T.fps, onInput: (v) => { T.fps = v; } });
-// The frames at rest turned on from a full one (REPROJECT), with the dust
-// drawn live: well under half the GPU's work at rest, the same picture to
-// within a few levels. "Each worked out in full" is the old path.
+// How each frame is drawn: relit from the layer baked once (RELIT, the
+// default: the same picture to a level, at rest and while the pointer, the
+// needle or a scroll moves it); turned on from a full one at rest
+// (REPROJECT, within a few levels); or each worked out in full, the old path.
 tw?.select({ ...look, label: 'Hero record: frames at rest', value: T.atRest, options: [['relit', 'Relit from a layer baked once (lightest)'], ['turned', 'Turned on from a full one (lighter)'], ['full', 'Each worked out in full']], onInput: (v) => { T.atRest = v; kept.key = ''; lit.key = ''; wake(); } });
 
 // GLINTS: in each song a few short runs of groove catch the lamp, fixed on
