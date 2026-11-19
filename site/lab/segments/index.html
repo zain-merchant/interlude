@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hero clips lab</title>
+<meta name="robots" content="noindex">
+<style>
+  /* Trying the hero as recorded clips: pick the hand, which clips play and
+     in what order, and the codec. Not linked from the site; the site's own
+     hero plays it too, with Tune > Hero > Performance > demo. */
+  :root { --bg: #09090b; --panel: #111114; --fg: #eceae4; --fg-2: rgb(236 234 228 / 0.68); --line: rgb(255 255 255 / 0.1); }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 32px 16px 64px; background: var(--bg); color: var(--fg); font: 14px/1.5 system-ui, sans-serif; }
+  main { max-width: 1200px; margin: 0 auto; }
+  h1 { margin: 0 0 4px; font-size: 22px; font-weight: 600; }
+  p { margin: 0 0 16px; color: var(--fg-2); max-width: 70ch; }
+  .bar { display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: center; margin: 0 0 16px; }
+  .bar label { display: inline-flex; gap: 6px; align-items: center; }
+  button { font: inherit; color: var(--fg); background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px; cursor: pointer; }
+  button[aria-pressed="true"] { background: #2a2a30; }
+  select { font: inherit; }
+  .screen { position: relative; aspect-ratio: 1440 / 920; border-radius: 16px; overflow: hidden; background: #000; }
+  iframe { position: absolute; left: 0; top: 0; width: 1440px; height: 920px; border: 0; transform-origin: 0 0; }
+  .level { height: 4px; width: 0; background: #ff9b45; margin-top: 10px; border-radius: 2px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Hero clips</h1>
+  <p>The hero recorded from the real app as clips, one per step, in both hands. A switch of hands moves the screen and the controller at once; the clips swap at the end of the step.</p>
+  <div class="bar">
+    <span><button type="button" data-mode="mouse" aria-pressed="true">Mouse</button> <button type="button" data-mode="controller" aria-pressed="false">Controller</button></span>
+    <span id="steps"></span>
+    <label>Codec <select id="codec"><option value="">Best for this browser</option><option>av1</option><option>hevc</option><option>h264</option></select></label>
+    <button type="button" id="reload">Restart</button>
+    <span id="info"></span>
+  </div>
+  <div class="screen"><iframe title="Hero clips" id="f"></iframe></div>
+  <div class="level" id="level"></div>
+</main>
+<script type="module">
+  const f = document.getElementById('f');
+  const fit = () => (f.style.transform = `scale(${f.parentElement.clientWidth / 1440})`);
+  new ResizeObserver(fit).observe(f.parentElement);
+  const M = await fetch('clips/manifest.json').then((r) => r.json());
+  const steps = document.getElementById('steps');
+  for (const s of M.steps) steps.insertAdjacentHTML('beforeend', `<label><input type="checkbox" checked value="${s.name}" data-i="${M.steps.indexOf(s)}"> ${s.name} (${(s.frames / M.fps).toFixed(1)} s)</label> `);
+  let mode = 'mouse';
+  const load = () => {
+    const on = [...steps.querySelectorAll('input:checked')].map((i) => i.dataset.i);
+    const codec = document.getElementById('codec').value;
+    f.src = `hero.html?steps=${on.join(',')}&mode=${mode}${codec ? `&codec=${codec}` : ''}`;
+  };
+  steps.addEventListener('change', load);
+  document.getElementById('codec').addEventListener('change', load);
+  document.getElementById('reload').addEventListener('click', load);
+  for (const b of document.querySelectorAll('[data-mode]')) b.addEventListener('click', () => {
+    mode = b.dataset.mode;
+    for (const o of document.querySelectorAll('[data-mode]')) o.setAttribute('aria-pressed', String(o === b));
+    f.contentWindow?.postMessage({ interlude: 'mode', mode }, '*');
+  });
+  addEventListener('message', (e) => {
+    if (e.data?.interlude === 'level') document.getElementById('level').style.width = `${Math.round(e.data.level * 100)}%`;
+    if (e.data?.interlude === 'hero-ready') document.getElementById('info').textContent = `Playing ${f.contentDocument?.documentElement.dataset.codec ?? ''}`;
+  });
+  load();
+</script>
+</body>
+</html>
