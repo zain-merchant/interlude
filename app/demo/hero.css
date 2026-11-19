@@ -152,13 +152,8 @@ svg.links { position: absolute; inset: 0; z-index: 255; pointer-events: none; ov
   box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08), inset 0 1px 0 rgb(255 255 255 / 0.14);
 }
 
-/* A running loop: in the app only its number takes the deck's colour, too
-   quiet to catch in a demo, so here the button lights in that colour too. */
-#hero .perf button.big[aria-pressed="true"] {
-  background: color-mix(in srgb, var(--deck) 16%, transparent);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--deck) 55%, transparent);
-  transition: background-color var(--snappy-ms) var(--snappy), box-shadow var(--snappy-ms) var(--snappy);
-}
+/* (A running loop shows as the app shows it: its number in the deck's
+   colour, nothing more.) */
 
 /* The library's background-analysis note ("analyzing, 12 to go") would
    otherwise flicker in the demo's first seconds. */
