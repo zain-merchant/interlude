@@ -910,18 +910,7 @@
     // under it follows; the switch picks mouse or controller.
     (async () => {
       const loaded = new Promise((ok) => (document.readyState === 'complete' ? ok() : addEventListener('load', ok, { once: true })));
-      // The record behind the hero. (Not waited for: the rest of the hero
-      // is set up meanwhile.)
-      let fx = null;
-      import('./hero-fx.js?v=20261119h10')
-        .then((m) => {
-          fx = m;
-          // The choices made while trying things out, now fixed: the needle
-          // on the record, its blend style.
-          fx.setVariant('needle');
-          fx.setStyle('blend');
-        })
-        .catch(() => {});
+      const fx = await import('./hero-fx.js?v=20261119h13').catch(() => null);
       const frame = document.querySelector('.stage-frame');
       const screen = frame.querySelector('.screen');
       const live = frame.querySelector('.live');
@@ -1170,9 +1159,11 @@
       });
 
       // The choices made while trying things out, now fixed: the pulse line
-      // for the controller link, the stacked Recording picture (the
-      // record's are set as it loads, above).
+      // for the controller link, the needle on the record, the stacked
+      // Recording picture.
       const input = 'line';
+      fx?.setVariant('needle');
+      fx?.setStyle('blend');
       document.documentElement.dataset.reclayout = 'stacked';
       // Being tried: the Decks picture with Sync alone, or Sync with the
       // deck's cues and loop under it.
