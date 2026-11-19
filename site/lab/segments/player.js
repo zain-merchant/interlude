@@ -238,7 +238,9 @@ function setCursorStyle(mode) {
   stage.innerHTML = html ?? '';
   cursor = stage.firstElementChild;
   cursorState = ['', '', ''];
-  // The arrow's resting turn (hero.css: 11deg plus the lean).
+  // The arrow's resting turn (hero.css: 11deg plus the lean; the markup
+  // was recorded mid-lean, so that goes first).
+  cursor?.style.removeProperty('--lean');
   arrow = cursor?.querySelector('.ss-cursor__arrow') ?? null;
   arrowRest = arrow ? parseFloat(getComputedStyle(arrow).rotate) || 0 : 0;
 }
