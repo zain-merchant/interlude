@@ -36,7 +36,57 @@ const beam = (u, id, x0, y0, x1, y1, w0, w1, col) => {
 };
 const rings = (cx, cy, r0, step, n, col, sw = 0.6, op = 0.5) => Array.from({ length: n }, (_, i) => `<circle cx="${cx}" cy="${cy}" r="${(r0 + i * step).toFixed(2)}" fill="none" stroke="${col}" stroke-width="${sw}" stroke-opacity="${op}"/>`).join('');
 
+// The overlap of two rings of radius 20 at x 39 and 61: a lens from
+// (50, 33.3) to (50, 66.7), 18 wide at its middle.
+const LENS = 'M50 33.33 A20 20 0 0 1 50 66.67 A20 20 0 0 1 50 33.33 Z';
+// A ring split like light through glass: the deck's colour, pure, with a
+// thin cool fringe peeking out up and to the left and a warm one down and
+// to the right. Both rings go in one call, so where they cross (and only
+// there) their light adds up: B is laid over A as light, A's fringes and
+// B's likewise.
+const chromaRings = (w = 2.6, off = 1.5, fw = 1.1, fo = 0.9) => {
+  const fr = (cx) => `<circle cx="${cx - off}" cy="${50 - off * 0.45}" r="20" fill="none" stroke="#3fe0ff" stroke-width="${fw}" opacity="${fo}"/><circle cx="${cx + off}" cy="${50 + off * 0.45}" r="20" fill="none" stroke="#ff4f6a" stroke-width="${fw}" opacity="${fo}"/>`;
+  return `<g style="isolation:isolate">${fr(39)}<g style="mix-blend-mode:plus-lighter">${fr(61)}</g></g>` +
+    `<g style="isolation:isolate"><circle cx="39" cy="50" r="20" fill="none" stroke="${A}" stroke-width="${w}"/><circle cx="61" cy="50" r="20" fill="none" stroke="${B}" stroke-width="${w}" style="mix-blend-mode:plus-lighter"/></g>`;
+};
+
 export const LOGOS = [
+  // ── Chromatic rings, white where they overlap ────────────────────────
+  {
+    id: 'chroma-white', family: 'light', name: 'Chromatic rings, white overlap', lockup: 'classic',
+    note: 'The two rings in their own blue and orange, each edged with a cool and a warm fringe as if seen through a lens, and the overlap a solid white lens: where the two lights add up.',
+    art: (u) => `<defs>${blur(u, 'g', 2.4)}</defs>
+      <g filter="url(#${u('g')})" opacity="0.55">${chromaRings(3.4)}</g>
+      <path d="${LENS}" fill="${W}"/>
+      ${chromaRings()}`,
+  },
+  {
+    id: 'chroma-white-glow', family: 'light', name: 'Chromatic rings, glowing overlap', lockup: 'light',
+    note: 'The white lens gives off light of its own: a soft bloom spills from it over the rings, so the overlap is the brightest thing there, as light adding up is.',
+    art: (u) => `<defs>${blur(u, 'g', 2.6)}${blur(u, 'w', 3)}${blur(u, 'e', 0.3)}</defs>
+      <g filter="url(#${u('g')})" opacity="0.5">${chromaRings(3.4)}</g>
+      ${chromaRings(2.2)}
+      <path d="${LENS}" fill="${W}" opacity="0.7" filter="url(#${u('w')})"/>
+      <path d="${LENS}" fill="${W}" filter="url(#${u('e')})"/>`,
+  },
+  {
+    id: 'chroma-white-fringe', family: 'light', name: 'Chromatic rings, tinted lens', lockup: 'classic',
+    note: 'The white lens is lit from both sides: a breath of blue along the edge ring A draws, of orange along ring B\'s, white through the middle, so you can see the two colours making it.',
+    art: (u) => `<defs><clipPath id="${u('c')}"><path d="${LENS}"/></clipPath>${blur(u, 'g', 2.4)}${blur(u, 'f', 1.6)}</defs>
+      <g filter="url(#${u('g')})" opacity="0.55">${chromaRings(3.4)}</g>
+      <path d="${LENS}" fill="${W}"/>
+      <g clip-path="url(#${u('c')})"><g filter="url(#${u('f')})"><circle cx="39" cy="50" r="20" fill="none" stroke="#9fd2ff" stroke-width="4"/><circle cx="61" cy="50" r="20" fill="none" stroke="#ffc896" stroke-width="4"/></g></g>
+      ${chromaRings()}`,
+  },
+  {
+    id: 'chroma-white-neon', family: 'light', name: 'Chromatic neon, white overlap', lockup: 'regular',
+    note: 'Thicker rings like lit tubes, a wide glow round each and their fringes further apart, with a flat white lens between them like a lit panel.',
+    art: (u) => `<defs>${blur(u, 'g', 4.2)}</defs>
+      <g filter="url(#${u('g')})" opacity="0.7">${chromaRings(5, 2.2, 2)}</g>
+      <path d="${LENS}" fill="${W}"/>
+      ${chromaRings(3.6, 2.2, 1.4)}
+      <g style="isolation:isolate"><circle cx="39" cy="50" r="20" fill="none" stroke="#d6ecff" stroke-width="0.9" opacity="0.85"/><circle cx="61" cy="50" r="20" fill="none" stroke="#ffe4cc" stroke-width="0.9" opacity="0.85"/></g>`,
+  },
   // ── Light: the lamp, the glints, two beams ──────────────────────────
   {
     id: 'beams', family: 'light', name: 'Two beams', lockup: 'classic',
