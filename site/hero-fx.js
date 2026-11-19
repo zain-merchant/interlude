@@ -123,6 +123,7 @@ const TURN = (Math.PI * 2) / 40;
 // is (so how many there are).
 const T = {
   fps: 30, // frames a second at rest
+  busyFps: 30, // and while the pointer's light, the needle or a twist moves it (30: on the app's frames; 60: smoother)
   atRest: 'turned', // frames at rest turned on from a full one (see REPROJECT), or each worked out in full ('full')
   drop: 108, needle: 0.8, life: 0.2, persp: 0.85, cue: 'dust', cueAmt: 1, res: 0.85,
   speck: 'hyphen',
@@ -1999,6 +2000,7 @@ new ResizeObserver(([e]) => {
 let last = performance.now();
 let lastSlot = -1;
 let lastDraw = 0;
+let lastBusySlot = -1;
 // Between frames at rest the loop sleeps on a timer instead of asking for
 // every frame of the screen (60 or 120 a second) only to skip most of them.
 let nap = 0;
@@ -2376,8 +2378,13 @@ function draw(now) {
   // time, which can be from just before the slot began: the frame woken for
   // a new slot is then always counted in it.)
   const slot = Math.floor(((performance.timeOrigin + Math.max(now, performance.now())) * fps) / 1000);
-  if (busy ? now - lastDraw > 12 : paced ? now - lastDraw > 1000 / fps - 8 : slot !== lastSlot) {
+  // (Busy at 30, it draws on the same 30ths of a second as the app, so the
+  // page composites once for both; at 60 it draws unless it drew under 12ms
+  // ago, every frame at 60Hz and every other one at 120Hz.)
+  const bslot = Math.floor(((performance.timeOrigin + Math.max(now, performance.now())) * T.busyFps) / 1000);
+  if (busy ? (T.busyFps >= 60 ? now - lastDraw > 12 : bslot !== lastBusySlot) : paced ? now - lastDraw > 1000 / fps - 8 : slot !== lastSlot) {
     lastSlot = slot;
+    lastBusySlot = bslot;
     lastDraw = now;
     restNow = !busy;
     frame(now, false);
@@ -2737,6 +2744,7 @@ tw?.slider({ ...look, label: 'Hero record: dust size variety', min: 0, max: 1, s
 tw?.slider({ ...look, label: 'Hero record: dust fibres', min: 0, max: 1, step: 0.05, value: T.dustFibres, show: dustOn, onInput: redraw('dustFibres') });
 tw?.select({ ...look, label: 'Hero record: speck style', value: T.speck, show: () => cur() && T.cue === 'dust', onInput: redraw('speck'), options: [['hyphen', 'Dashes (first)'], ['motes', 'Dust motes'], ['scratches', 'Hairline scratches'], ['scuffs', 'Scuffs'], ['sparkle', 'Sparkle'], ['lint', 'Lint'], ['smudge', 'Smudges']] });
 tw?.slider({ ...look, label: 'Hero record: render resolution', min: 0.3, max: 1, step: 0.05, value: T.res, show: () => !STYLE[T.look]?.crisp, onInput: reshape('res') });
+tw?.select({ ...look, label: 'Hero record: frames a second while the pointer moves it', value: String(T.busyFps), options: [['30', '30 (on the app\'s frames)'], ['60', '60']], onInput: (v) => { T.busyFps = +v; } });
 tw?.slider({ ...look, label: 'Hero record: frames a second at rest', min: 10, max: 30, step: 1, value: T.fps, onInput: (v) => { T.fps = v; } });
 // The frames at rest turned on from a full one (REPROJECT), with the dust
 // drawn live: well under half the GPU's work at rest, the same picture to
