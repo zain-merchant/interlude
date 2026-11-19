@@ -588,7 +588,7 @@ const MAIN = `
 // frame, reads that back and lights it.)
 #ifdef RELIT
 uniform sampler2D uSt0;  // the baked layer: L so far, the grooves' lines, in a song, where in it
-uniform sampler2D uSt1;  // and: which song, the pressing warp's two counts (k1 + 32 k2)
+uniform sampler2D uSt1;  // and: which song, the pressing warp's two counts (k1 + 32 k2), the disc's edge, the rim's lead-in
 uniform sampler2D uConeT; // the cone round the disc (CONE_FS)
 uniform sampler2D uGlT;   // the glints (GLINT_FS)
 #endif
@@ -727,7 +727,19 @@ void main() {
 #endif
 #ifdef BAKE
   gl_FragData[0] = vec4(L, lines, inSong, u);
-  gl_FragData[1] = vec4(idx, floor(mid / 140.0) + 3.0 + 32.0 * (floor(mid / 90.0) + 5.0), 0.0, 0.0);
+  gl_FragData[1] = vec4(idx, floor(mid / 140.0) + 3.0 + 32.0 * (floor(mid / 90.0) + 5.0), edge, lead);
+  return;
+#endif
+#ifdef BAKE2
+  // (And, 8 bits each: the lip's shape (its light but for the lamp's), the
+  // cone's reach, the dither, and 1 where the picture is drawn at all.)
+  float dlb = (r - (R - 2.5)) / max(1.3, fr * 1.2);
+#ifdef CONE
+  float rfb = smoothstep(R * (1.0 - uCone.w) - 0.3 * R, R * (1.0 - uCone.w), r);
+#else
+  float rfb = 1.0;
+#endif
+  gl_FragColor = vec4(exp(-dlb * dlb) * mix(0.35, 1.0, clamp((uGeo.x / max(1.0, px.y + uHz) - 1.0) * 4.0, 0.0, 1.0)), rfb, hash(gl_FragCoord.xy), 1.0);
   return;
 #endif
 
@@ -1828,6 +1840,113 @@ void main() {
   vec2 id = vec2(floor(gl_FragCoord.y), floor(gl_FragCoord.x) - 1.0);
   gl_FragColor = vec4(hash2(id + 31.0) >= 0.94 - 0.003 ? 1.0 : 0.0);
 }`;
+// FAST: the relit frame at rest, for the usual look (the spin shown by the
+// glints, the warp or spokes; glints plain or in the lamp's colours; solid
+// vinyl, no flecks) with nothing passing (no pointer's light, needle or
+// ring): MAIN's sums with everything that doesn't move baked (BAKE, BAKE2),
+// the cone and the glints read from their tables, and the lamp's light, the
+// sheen and the pressing's warp worked out from the angle. (The rest goes
+// through MAIN with RELIT.) Keep it in step with MAIN.
+const FAST = `
+uniform sampler2D uSt0;
+uniform sampler2D uSt1;
+uniform sampler2D uSt2;
+uniform sampler2D uConeT;
+uniform sampler2D uGlT;
+void main() {
+  vec2 uv = gl_FragCoord.xy / uSize;
+  vec4 s2 = texture2D(uSt2, uv);
+  if (s2.w < 0.5) { gl_FragColor = vec4(0.0); return; }
+  vec2 px = vec2(gl_FragCoord.x, uSize.y - gl_FragCoord.y) / uDpr;
+  vec2 q = discQ(px);
+  float r = length(q);
+  float a = atan(q.y, q.x);
+  vec4 s0 = texture2D(uSt0, uv);
+  vec4 s1 = texture2D(uSt1, uv);
+  float L = s0.x;
+  float lines = s0.y;
+  float inSong = s0.z;
+  float u = s0.w;
+  float idx = s1.x;
+  float k2 = floor(s1.y / 32.0);
+  float k1 = s1.y - 32.0 * k2;
+  float edge = s1.z;
+  float lead = s1.w;
+  float sheen = uSheen * cos(2.0 * (a - uFacing));
+  float b = a - uSpin;
+  float warp = (0.13 * sin(k1 * b + r / 80.0 + idx * 2.3) + 0.085 * sin(k2 * b - r / 55.0 + idx * 4.1)) * uGroove.w;
+  L *= 1.0 + sheen + warp * mix(0.6, 1.0, inSong);
+  float lamp = 0.5 + 0.5 * cos(2.0 * (a - uFacing));
+  lamp *= lamp;
+  float seg = 2.0 * PI / uGlintShape.z;
+  float ph = fract(sin(idx * 91.7) * 4375.5) * seg;
+  vec4 gt = texture2D(uGlT, vec2((0.5 + 255.0 * mod(a - uGlintShape.w - ph, seg) / seg) / 256.0, (idx * 64.0 + 0.5 + u * 63.0) / 2048.0));
+  float glint = gt.x * inSong;
+  float onLines = mix(1.0, clamp(0.4 + 0.6 * (1.0 + lines) * 0.5, 0.0, 1.3), uStyle.x);
+  float cueAmt = uCue.y * (1.0 - lead) * edge;
+  float gk = uGlint * (0.25 + 0.75 * lamp) * onLines * (1.0 - lead) * uGlintAmt.x;
+  vec3 gv = vec3(glint);
+  float Lg = gk * glint;
+  float cg = uChroma.y * mix(uAway, 1.0, lamp) * step(0.5, uChroma.x);
+  vec3 Gv = max(HUED(gk * (gv * BASE * (1.0 - cg) + 0.95 * cg * gt.yzw * inSong)), 0.0);
+  float after = 1.0;
+  if (uCue.x > 1.5 && uCue.x < 2.5) {
+    after = 1.0 + 1.6 * warp * cueAmt;
+  } else if (uCue.x > 2.5 && uCue.x < 3.5) {
+    float spk = 0.5 + 0.5 * cos(7.0 * b + sin(r / 120.0) * 0.6);
+    after = 1.0 + 0.28 * pow(spk, 6.0) * cueAmt;
+  }
+  float awayK = mix(uAwayB, 1.0, lamp);
+  L *= after * awayK;
+  Lg *= after * awayK;
+  Gv *= after * awayK;
+  L += 1.1 * s2.x * (0.45 + 0.55 * lamp);
+  float lift = uStyle.z * edge * (1.0 + 0.08 * uSwell);
+  float alpha = lift * L;
+  vec3 base = BASE;
+  if (uTint > 0.0) {
+    float side = sin(a - uFacing);
+    vec3 c = side < 0.0 ? BLUE : ORANGE;
+    base = mix(BASE, 0.95 * c, clamp(0.85 * uTint * smoothstep(0.1, 0.9, abs(side)), 0.0, 1.0));
+  }
+  vec4 vx = vec4(0.0);
+  if (uVinyl.w + uThru.x + uThru.y + uThru.z + uThru.w + uConeLight > 0.0) {
+    vec3 V = uVinyl.rgb;
+    float vm = maxc(V);
+    vec3 Vn = mix(vec3(1.0), V / max(vm, 1e-3), smoothstep(0.0, 0.03, vm));
+    vec3 HI = mix(Vn, vec3(1.0), 0.65);
+    vec2 ct = texture2D(uConeT, vec2((a - uCone.x) / (2.0 * PI), 0.5)).xy;
+    float inWedge = ct.x * s2.y;
+    float halo = ct.y * s2.y;
+    vec3 CT = uConeTint.rgb;
+    float wedge = uThru.y * inWedge;
+    base = mix(base, mix(Vn, vec3(1.0), 0.15), uThru.z);
+    base = mix(base, HI * CT, min(wedge, 1.0));
+    float vboost = 1.0 + 2.5 * wedge * max(lines, 0.0) * inSong;
+    alpha *= vboost;
+    float sw = 1.0 + 0.15 * uSwell;
+    vx += vec4(V, 1.0) * uVinyl.w * mix(0.5, 1.0, inSong) * edge * sw;
+    float thr = mix(0.7, 1.0, inSong) * edge * sw;
+    vx += vec4(Vn, 1.0) * uThru.x * 0.015 * thr;
+    vx += vec4(Vn * CT, 1.0) * uConeLight * (0.05 * inWedge + 0.05 * halo) * thr;
+    vx += vec4(HI * CT, 1.0) * 0.05 * wedge * inSong * edge;
+  }
+  vec3 col = base * alpha + lift * Gv + vx.rgb;
+  alpha += lift * max(max(Lg, maxc(Gv)), 0.0) + vx.a;
+  for (int i = 0; i < 4; i++) {
+    if (float(i) >= uHoleCount) break;
+    vec4 h = uHoles[i];
+    if (px.x < h.x - 1.0 || px.x > h.z + 1.0 || px.y < h.y - 1.0 || px.y > h.w + 1.0) continue;
+    vec2 hc = 0.5 * (h.xy + h.zw);
+    vec2 hq = abs(px - hc) - (0.5 * (h.zw - h.xy) - uHoleR);
+    float sd = length(max(hq, 0.0)) + min(max(hq.x, hq.y), 0.0) - uHoleR;
+    float inside = 1.0 - smoothstep(-1.0, 0.0, sd);
+    col *= 1.0 - inside;
+    alpha *= 1.0 - inside;
+  }
+  float n = (s2.z - 0.5) / 255.0;
+  gl_FragColor = vec4(max(col + n, 0.0), clamp(alpha + n, 0.0, 1.0));
+}`;
 // The lamp's cone round the disc, one row, 2048 across (angle from where
 // it points, 0 to 2 pi): how far in its clean-edged wedge, and its halo.
 const CONE_FS = `
@@ -2015,7 +2134,7 @@ function build(n, defs) {
     return s;
   };
   // WebGL 1 needs the derivatives extension switched on in the shader.
-  const frag = '#extension GL_OES_standard_derivatives : enable\n' + (defs.includes('KEEP3') || defs.includes('BAKE') ? '#extension GL_EXT_draw_buffers : require\n' : '') + defs + (n === 'turn' ? HEAD + REPROJECT : n === 'specks' ? HEAD + SPECKS_FS : n === 'dust' ? HEAD + DUST_FS : n === 'cone' ? HEAD + CONE_FS : n === 'glints' ? HEAD + GLINT_FS : n ? `#define LOOK ${n}\n${HEAD}${LOOKS}` : HEAD + MAIN);
+  const frag = '#extension GL_OES_standard_derivatives : enable\n' + (defs.includes('KEEP3') || defs.includes('BAKE') ? '#extension GL_EXT_draw_buffers : require\n' : '') + defs + (n === 'turn' ? HEAD + REPROJECT : n === 'specks' ? HEAD + SPECKS_FS : n === 'dust' ? HEAD + DUST_FS : n === 'cone' ? HEAD + CONE_FS : n === 'fast' ? HEAD + FAST : n === 'glints' ? HEAD + GLINT_FS : n ? `#define LOOK ${n}\n${HEAD}${LOOKS}` : HEAD + MAIN);
   const p = gl.createProgram();
   gl.attachShader(p, shader(gl.VERTEX_SHADER, n === 'dust' ? DUST_VS : VERT));
   gl.attachShader(p, shader(gl.FRAGMENT_SHADER, frag));
@@ -2652,7 +2771,7 @@ function turned(now, w, h, y0, y1, g, cover, mode) {
 // natDust works it out. Anything that bends the disc per frame (the drag's
 // or the pointer's tilt, the glass, the top's warps) takes the full path;
 // so do the other styles.
-const lit = { s0: null, s1: null, fbo: null, size: '', key: '', bake: null, comp: null, dust: null, defs: '', specks: null, nSpecks: 0, rows: 0, cone: null, glints: null, coneKey: '', glintKey: '' };
+const lit = { s0: null, s1: null, s2: null, fbo: null, fbo2: null, bake2: null, fast: null, size: '', key: '', bake: null, comp: null, dust: null, defs: '', specks: null, nSpecks: 0, rows: 0, cone: null, glints: null, coneKey: '', glintKey: '' };
 // The two small tables the light is read from (CONE_FS, GLINT_FS), redone
 // only when what shapes them changes: the cone's width, edges and sides;
 // the songs, and the glints' size, sharpness, count, colour and spread.
@@ -2700,9 +2819,11 @@ function relit(w, h, g, cover, mode) {
   try {
     if (lit.defs !== defs) {
       lit.bake = build(0, `${defs}#define BAKE\n`);
+      lit.bake2 = build(0, `${defs}#define BAKE2\n`);
       lit.comp = build(0, `${defs}#define RELIT\n`);
+      lit.fast = build('fast', defs);
       lit.dust = build('dust', defs);
-      for (const e of [lit.comp, lit.dust]) for (const k of ['uSt0', 'uSt1', 'uConeT', 'uGlT']) e.u[k] = gl.getUniformLocation(e.p, k);
+      for (const e of [lit.comp, lit.fast, lit.dust]) for (const k of ['uSt0', 'uSt1', 'uSt2', 'uConeT', 'uGlT']) e.u[k] = gl.getUniformLocation(e.p, k);
       lit.defs = defs;
       lit.key = '';
     }
@@ -2712,7 +2833,16 @@ function relit(w, h, g, cover, mode) {
     return false;
   }
   if (lit.size !== `${w}x${h}`) {
-    if (!lit.s0) { lit.s0 = gl.createTexture(); lit.s1 = gl.createTexture(); lit.fbo = gl.createFramebuffer(); }
+    if (!lit.s0) { lit.s0 = gl.createTexture(); lit.s1 = gl.createTexture(); lit.s2 = gl.createTexture(); lit.fbo = gl.createFramebuffer(); lit.fbo2 = gl.createFramebuffer(); }
+    gl.bindTexture(gl.TEXTURE_2D, lit.s2);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, lit.fbo2);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, lit.s2, 0);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     for (const tx of [lit.s0, lit.s1]) {
       gl.bindTexture(gl.TEXTURE_2D, tx);
       gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, half, null);
@@ -2734,7 +2864,7 @@ function relit(w, h, g, cover, mode) {
   }
   // Bake, when anything it depends on has changed. (The whole canvas, not
   // just the strip on screen, so scrolling never needs it again.)
-  const key = JSON.stringify(BAKED.map((n) => uniNow.get(n)?.[1]).concat([T.contrast, T.satin, T.lineW, T.pitch, T.pitchOut, style]));
+  const key = JSON.stringify(BAKED.map((n) => uniNow.get(n)?.[1]).concat([T.contrast, T.satin, T.lineW, T.pitch, T.pitchOut, T.coneReach, style]));
   if (key !== lit.key) {
     gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, null);
     gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, null);
@@ -2742,6 +2872,11 @@ function relit(w, h, g, cover, mode) {
     given(lit.bake);
     gl.bindFramebuffer(gl.FRAMEBUFFER, lit.fbo);
     gl.disable(gl.SCISSOR_TEST);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    gl.useProgram(lit.bake2.p);
+    given(lit.bake2);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, lit.fbo2);
     gl.clear(gl.COLOR_BUFFER_BIT);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
@@ -2759,12 +2894,19 @@ function relit(w, h, g, cover, mode) {
   gl.bindTexture(gl.TEXTURE_2D, coneT);
   gl.activeTexture(gl.TEXTURE3);
   gl.bindTexture(gl.TEXTURE_2D, glT);
-  gl.useProgram(lit.comp.p);
-  given(lit.comp);
-  gl.uniform1i(lit.comp.u.uSt0, 0);
-  gl.uniform1i(lit.comp.u.uSt1, 1);
-  gl.uniform1i(lit.comp.u.uConeT, 2);
-  gl.uniform1i(lit.comp.u.uGlT, 3);
+  gl.activeTexture(gl.TEXTURE4);
+  gl.bindTexture(gl.TEXTURE_2D, lit.s2);
+  // (At rest, with the usual look, the lighter pass: FAST.)
+  const passing = uniNow.get('uHover')?.[1][2] || uniNow.get('uNeedle')?.[1][1] || uniNow.get('uRipple')?.[1][1];
+  const pal = CHROMA[T.chroma] ?? 0;
+  const e = !passing && T.cue !== 'dust' && (pal === 0 || pal === 3) && T.finish !== 'chromatic' && !(T.flecks > 0) ? lit.fast : lit.comp;
+  gl.useProgram(e.p);
+  given(e);
+  gl.uniform1i(e.u.uSt0, 0);
+  gl.uniform1i(e.u.uSt1, 1);
+  gl.uniform1i(e.u.uConeT, 2);
+  gl.uniform1i(e.u.uGlT, 3);
+  gl.uniform1i(e.u.uSt2, 4);
   gl.clear(gl.COLOR_BUFFER_BIT);
   gl.drawArrays(gl.TRIANGLES, 0, 3);
   // The dust, over it.
@@ -2781,7 +2923,7 @@ function relit(w, h, g, cover, mode) {
     gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
     gl.disable(gl.BLEND);
   }
-  for (const k of [3, 2, 1, 0]) { gl.activeTexture(gl.TEXTURE0 + k); gl.bindTexture(gl.TEXTURE_2D, null); }
+  for (const k of [4, 3, 2, 1, 0]) { gl.activeTexture(gl.TEXTURE0 + k); gl.bindTexture(gl.TEXTURE_2D, null); }
   gl.useProgram(prog);
   return true;
 }
