@@ -459,7 +459,7 @@
               width="1440" height="900" fetchpriority="high" alt="Interlude with two tracks loaded: waveforms across the top, two decks either side of the mixer, and the library below.">
           </picture>
           <!-- The real app on its simulated engine, played by a script (app/demo). Loaded after the page. -->
-          <iframe class="live" title="Interlude mixing one track into the next" tabindex="-1" aria-hidden="true" data-src="demo/hero.html?v=20261119p3"></iframe>
+          <iframe class="live" title="Interlude mixing one track into the next" tabindex="-1" aria-hidden="true" data-src="demo/hero.html?v=20261119p4"></iframe>
         </div>
       </div>
       <div class="shot-bar">
@@ -1052,7 +1052,7 @@
       // Chrome more to decode than running the app, at twice the size.
       const clip = (m) => (m === 'mouse' ? 'hero/hero-mouse.mp4' : null);
       // ?hero=live plays the live app, for comparing.
-      let render = new URLSearchParams(location.search).get('hero') === 'live' ? 'live' : 'video';
+      let render = ['live', 'clips'].includes(new URLSearchParams(location.search).get('hero')) ? 'live' : 'video';
       let liveReady = false;
       // One video per version, made when first shown, so a switch keeps the
       // last one on screen until the next is playing.
@@ -1125,6 +1125,24 @@
       }, { once: true });
       window.tune?.select({ label: 'Hero: render', folder: 'Performance', value: render, options: [['video', 'A video of the app'], ['live', 'The live app']],
         onInput: (v) => { render = v; start(); } });
+      // Being tried: what plays in the frame. The live app, or the hero as
+      // recorded clips, one per step of the script in both hands
+      // (lab/segments, made by app/demo/segments/record.mjs). ?hero=clips
+      // picks the clips too.
+      const DEMOS = { app: live.dataset.src, clips: 'lab/segments/hero.html?v=20261119s1' };
+      let demo = new URLSearchParams(location.search).get('hero') === 'clips' ? 'clips' : 'app';
+      const pickDemo = (v) => {
+        if (!DEMOS[v]) return;
+        demo = v;
+        live.dataset.src = DEMOS[v];
+        if (live.getAttribute('src') && live.getAttribute('src') !== DEMOS[v]) {
+          liveReady = false;
+          delete frame.dataset.live;
+          live.src = DEMOS[v];
+        }
+      };
+      pickDemo(demo);
+      window.tune?.select({ label: 'Hero: demo', folder: 'Performance', value: demo, options: [['app', 'The live app'], ['clips', 'Recorded clips (prototype)']], onInput: pickDemo });
       // Being tried: how the controller is drawn (app/demo/controller-skins.css).
       // Kept here too, so a pick made before the app has loaded is sent once
       // it's ready.

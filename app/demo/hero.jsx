@@ -112,6 +112,7 @@ async function press(a, el, act = () => el.click(), opts, at = spot(el)) {
   await a.click(undefined, opts);
   el.removeAttribute('data-demo-pressed');
   act();
+  window.__heroAlign?.acted?.();
   setTimeout(() => el.removeAttribute('data-demo-hover'), 380);
 }
 
@@ -208,6 +209,7 @@ async function hwPress(a, target, act, label, appEl) {
   el?.removeAttribute('data-hw-pressed');
   await Promise.all([tap, landed]);
   act();
+  window.__heroAlign?.acted?.();
   await a.wait(HOLD_AFTER);
   done();
 }
@@ -837,6 +839,20 @@ const features = () => (mode === 'controller' ? controllerFeatures : mouseFeatur
 let round = 0;
 
 /**
+ * Marks the start of a step. For recording only (app/demo/segments): a
+ * recorder that sets window.__heroAlign before this page loads can line
+ * the two hands up step by step, so each step lasts as long and the app
+ * answers at the same moment whichever hand plays it, and clips of the
+ * two can follow one another. Without it this is just a.mark.
+ */
+async function mark(a, name) {
+  const align = window.__heroAlign;
+  if (align) await align.before?.(name, mode, engine);
+  a.mark(name);
+  if (align) await align.after?.(name, mode);
+}
+
+/**
  * One transition, from the playing deck to the waiting one. It reads where
  * the set is first, so it can pick up from any point: after a switch of
  * hands, or a pause while the page was out of view.
@@ -885,7 +901,7 @@ async function transition(a) {
 
   // An empty deck gets a record first.
   if (!engine.decks[to].loaded) {
-    a.mark('load');
+    await mark(a, 'load');
     const row = rowByTitle(SET[nextInSet++ % SET.length]);
     if (row) await act(a, hands, 'load', to, row);
     await a.wait(1600);
@@ -894,43 +910,43 @@ async function transition(a) {
   if (!engine.decks[to].playing) {
     // Sync the waiting deck to the one playing: the tempo jumps, the pitch
     // fader moves, the beats fall into line.
-    a.mark('sync');
+    await mark(a, 'sync');
     await act(a, hands, 'sync', to);
     await a.wait(1300);
 
     // Mute its vocals so they don't clash while both play.
     if (stemsAndBass && features().muteVocals) {
-      a.mark('stems');
+      await mark(a, 'stems');
       await act(a, features, 'muteVocals', to, true);
       await a.wait(700);
     }
 
     // Start it, on the beat.
-    a.mark('play');
+    await mark(a, 'play');
     await act(a, hands, 'play', to);
     await a.wait(1000);
   }
 
   if (stemsAndBass) {
     // Take the bass out of the old record, so the two basslines never fight.
-    a.mark('eq');
+    await mark(a, 'eq');
     await act(a, features, 'killLow', from);
     await a.wait(500);
   } else if (features().loop) {
     // Hold the new record on a four-beat loop while it comes in.
-    a.mark('loop');
+    await mark(a, 'loop');
     await act(a, features, 'loop', to, true);
     await a.wait(900);
   }
 
   // Bring it in.
-  a.mark('crossfade');
+  await mark(a, 'crossfade');
   await act(a, hands, 'crossfade', to === 0 ? -1 : 1);
   await a.wait(500);
 
   if (stemsAndBass && features().muteVocals) {
     // And now its vocals.
-    a.mark('stems');
+    await mark(a, 'stems');
     await act(a, features, 'muteVocals', to, false);
     await a.wait(700);
   } else if (!stemsAndBass) {
@@ -938,14 +954,14 @@ async function transition(a) {
     await act(a, features, 'loop', to, false);
     await a.wait(400);
     if (features().echo) {
-      a.mark('fx');
+      await mark(a, 'fx');
       await act(a, features, 'echo', from, true);
       await a.wait(900);
     }
   }
 
   // Stop the record that went out.
-  a.mark('stop');
+  await mark(a, 'stop');
   await act(a, hands, 'play', from);
   await a.wait(600);
 
@@ -955,7 +971,7 @@ async function transition(a) {
   await a.wait(400);
 
   // And put the next one on.
-  a.mark('load');
+  await mark(a, 'load');
   const row = rowByTitle(SET[nextInSet++ % SET.length]);
   if (row) await act(a, hands, 'load', from, row);
   await a.wait(2200);
@@ -1016,7 +1032,8 @@ function Hero() {
             : { at: { x: 960, y: 551 }, style: 'arrow', idle: false }}
           script={transition}
         >
-          {() => <Controller shown={hand === 'controller'} />}
+          {/* (A recorder can show it in both hands: segments/record.mjs.) */}
+          {() => <Controller shown={hand === 'controller' || !!window.__heroAlign?.controller} />}
         </Stage>
       </div>
     </>
