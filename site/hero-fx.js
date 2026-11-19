@@ -122,6 +122,7 @@ const TURN = (Math.PI * 2) / 40;
 // and the fixed sheen, each times its usual; songLen: how long each song
 // is (so how many there are).
 const T = {
+  fps: 30, // frames a second at rest
   drop: 108, needle: 0.8, life: 0.2, persp: 0.85, cue: 'dust', cueAmt: 1, res: 0.85,
   speck: 'hyphen',
   twistRate: 12, twistMax: 20, twistEase: 0.6, // scrolling twists it: degrees per 1000px, at most, settling in s
@@ -266,6 +267,7 @@ uniform vec2 uCentre;    // record centre, CSS pixels from the canvas's top left
 uniform vec2 uGeo;       // distance from the centre to the horizon, and the tilt
 uniform vec4 uHoles[4];  // the hero's buttons, where nothing may show through
 uniform float uHoleCount;
+uniform vec4 uCover;     // where the app's screen always hides the record (CSS px)
 uniform float uHoleR;     // the buttons' corner radius
 uniform vec2 uSpan;      // inner radius, and the radius the groove spacing is set by
 uniform vec2 uOuter;     // outer radius: round most of it, and up top
@@ -451,6 +453,8 @@ vec3 paint(float x, float y, float a, float r) {
 const MAIN = `
 void main() {
   vec2 px = vec2(gl_FragCoord.x, uSize.y - gl_FragCoord.y) / uDpr;
+  // Behind the app's screen nothing would show: nothing is worked out.
+  if (px.x > uCover.x && px.x < uCover.z && px.y > uCover.y && px.y < uCover.w) { gl_FragColor = vec4(0.0); return; }
   vec2 q = discQ(px);
   float r = length(q);
   // How the disc moves under a device pixel (for things drawn to the
@@ -492,6 +496,8 @@ void main() {
     if (float(i) >= uTrackCount) break;
     vec2 t = uTracks[i];
     float soft = max(3.0, fr * 1.5);
+    // (The songs run outward in order: none further out can reach here.)
+    if (r < t.x - soft) break;
     float w = smoothstep(t.x - soft, t.x + soft, r) * (1.0 - smoothstep(t.y - soft, t.y + soft, r));
     if (w > inSong) { inSong = w; u = clamp((r - t.x) / (t.y - t.x), 0.0, 1.0); idx = float(i); mid = 0.5 * (t.x + t.y); }
   }
@@ -513,12 +519,27 @@ void main() {
   // (uGroove.z: wider lines, as a share of the spacing.)
   float sig = clamp(0.8 * fg, 0.025 * uGroove.z, 0.1 * uGroove.z);
   float norm = 0.0;
+  // Harmonic k: its weight in the line's shape, exp(-2 pi^2 sig^2 k^2);
+  // how far it's faded by the pixel, exp(-7 fg^2 k^2); and cos(2 pi k g).
+  // All three are stepped from one harmonic to the next by multiplying
+  // (exp(-a k^2) by a ratio that itself shrinks by exp(-2a) each step; the
+  // cosine by the Chebyshev rule), not worked out afresh 16 times over:
+  // the same numbers for a fraction of the GPU's work on every pixel.
+  float aS = 2.0 * PI * PI * sig * sig;
+  float aF = 7.0 * fg * fg;
+  float coef = exp(-aS), coefR = exp(-3.0 * aS), coefS = exp(-2.0 * aS);
+  float att = exp(-aF), attR = exp(-3.0 * aF), attS = exp(-2.0 * aF);
+  float c1 = cos(2.0 * PI * fract(g));
+  float cPrev = 1.0, cK = c1;
   for (int k = 1; k <= 16; k++) {
     float fk = float(k);
-    float coef = exp(-2.0 * PI * PI * sig * sig * fk * fk);   // line shape
     norm += 2.0 * coef;
-    float att = exp(-7.0 * fk * fk * fg * fg) * (1.0 - smoothstep(0.3, 0.48, fk * fg));
-    lines += 2.0 * coef * att * cos(2.0 * PI * fk * g);
+    // (Past 0.48 a harmonic is fully faded out: only its share of the
+    // average is still counted.)
+    if (fk * fg < 0.48) lines += 2.0 * coef * att * (1.0 - smoothstep(0.3, 0.48, fk * fg)) * cK;
+    coef *= coefR; coefR *= coefS;
+    att *= attR; attR *= attS;
+    float cN = 2.0 * c1 * cK - cPrev; cPrev = cK; cK = cN;
   }
   lines /= norm; // the brightest line sits +1 over the average, which stays 1
 
@@ -1110,6 +1131,8 @@ vec2 lookQ(vec2 px) {
 
 void main() {
   vec2 px = vec2(gl_FragCoord.x, uSize.y - gl_FragCoord.y) / uDpr;
+  // Behind the app's screen nothing would show: nothing is worked out.
+  if (px.x > uCover.x && px.x < uCover.z && px.y > uCover.y && px.y < uCover.w) { gl_FragColor = vec4(0.0); return; }
   // The disc under this pixel and its neighbours, worked out for each
   // pixel (dFdx is only per block of four, and steps where the disc
   // foreshortens fast): how it moves under a device pixel.
@@ -1529,9 +1552,16 @@ const STYLE = Object.fromEntries(STYLE_LIST.map(([k, , d]) => [k, d]));
 let prog = null;
 let U = {};
 let geo = null;
+// When the live app took over the screen from its screenshot.
+let liveSince = 0;
+{
+  const fr = screen?.closest('.stage-frame');
+  const mark = () => { liveSince = fr.hasAttribute('data-live') ? performance.now() : 0; };
+  if (fr) { mark(); new MutationObserver(mark).observe(fr, { attributes: true, attributeFilter: ['data-live'] }); }
+}
 
 // One program per style, compiled the first time it's shown.
-const NAMES = ['uSize', 'uDpr', 'uCentre', 'uGeo', 'uHoles', 'uHoleCount', 'uHoleR', 'uSpan', 'uSpin', 'uFacing', 'uStyle', 'uSheen', 'uGlint', 'uHover', 'uSwell', 'uNeedle', 'uRipple', 'uTouch', 'uHz', 'uCue', 'uTracks', 'uTrackCount',
+const NAMES = ['uSize', 'uDpr', 'uCentre', 'uGeo', 'uHoles', 'uHoleCount', 'uCover', 'uHoleR', 'uSpan', 'uSpin', 'uFacing', 'uStyle', 'uSheen', 'uGlint', 'uHover', 'uSwell', 'uNeedle', 'uRipple', 'uTouch', 'uHz', 'uCue', 'uTracks', 'uTrackCount',
   'uOuter', 'uGlintAmt', 'uChroma', 'uSpeck', 'uNat', 'uNat2', 'uNat3', 'uAway', 'uAwayB', 'uTint', 'uWarp', 'uLens', 'uHoverMode', 'uPtr', 'uVinyl', 'uVinylFin', 'uThru', 'uGroove',
   'uGlintShape', 'uGlintSpread', 'uHueM', 'uTilt', 'uCone', 'uConeTint', 'uConeEdge', 'uConeLight'];
 const progs = new Map();
@@ -1611,10 +1641,16 @@ function init() {
 // frame: reading positions forces the browser to lay the page out.
 let measured = 0;
 addEventListener('resize', () => (measured = 0));
+// The page's scroll and the canvas's place on the page, kept here: reading
+// either from the page every frame makes the browser lay it out early, on
+// every refresh of the screen (120 a second on some), drawn or not.
+let scrollPos = scrollY;
+let canvasTop = 0;
 function layout(now) {
   if (geo && now - measured < 500) return geo;
   measured = now;
   const c = canvas.getBoundingClientRect();
+  canvasTop = c.top + scrollPos;
   const s = screen.getBoundingClientRect();
   const cx = s.left - c.left + s.width / 2;
   // The centre sits just behind the top of the screen; the disc is about
@@ -1677,7 +1713,12 @@ function layout(now) {
   // And the canvas ends where the record does, not 2000px down.
   canvas.style.height = `${Math.ceil(end + Math.max(0, T.bfEnd) + 8)}px`;
   topFade(Math.round(s.top - c.top), Math.round(s.top - c.top + s.height * 0.3), Math.round(end), c.width);
-  geo = { ...g, key, R, r0, box, out, top, Rmax };
+  // Where the app always covers the record, in either mode: in controller
+  // mode it shrinks to 91% from its top and tips back 3 degrees, so this
+  // keeps clear of its sides and foot (and its rounded corners).
+  const cw = box.r - box.l, ch = box.b - box.t;
+  const cover = [box.l + cw * 0.08, box.t + ch * 0.04, box.r - cw * 0.08, box.b - ch * 0.14];
+  geo = { ...g, key, R, r0, box, out, top, Rmax, cover };
   return geo;
 }
 
@@ -1715,8 +1756,8 @@ const local = (e) => {
   return { x: e.clientX - c.left, y: e.clientY - c.top };
 };
 // (Scrolling: wake, so the twist eases to where the page now is.)
-const twistTo = () => (reduced.matches ? 0 : (Math.min(T.twistMax, (scrollY / 1000) * T.twistRate) * Math.PI) / 180);
-addEventListener('scroll', () => { if (T.twistRate) wake(); }, { passive: true });
+const twistTo = () => (reduced.matches ? 0 : (Math.min(T.twistMax, (scrollPos / 1000) * T.twistRate) * Math.PI) / 180);
+addEventListener('scroll', () => { scrollPos = scrollY; if (T.twistRate) wake(); }, { passive: true });
 addEventListener('pointermove', (e) => {
   if (e.pointerType === 'touch') return;
   const p = local(e);
@@ -1788,7 +1829,7 @@ function frame(now, still) {
   want *= Math.exp(-dt * 1.4);
   // The scroll's twist: so many degrees per 1000px down the page, no more
   // than its cap, reached on a spring that settles in about scrollEase s.
-  const aim = reduced.matches ? 0 : (Math.min(T.twistMax, (scrollY / 1000) * T.twistRate) * Math.PI) / 180;
+  const aim = twistTo();
   const k = (2 * Math.PI / Math.max(0.05, T.twistEase)) ** 2;
   const c = 2 * Math.sqrt(k);
   for (let i = 0, n = Math.ceil(dt / 0.008); i < n; i++) {
@@ -1940,9 +1981,23 @@ function frame(now, still) {
   gl.uniform1f(U.uVinylFin, T.finish === 'chromatic' ? 1 : 0);
   gl.uniform4f(U.uThru, T.through, T.wedge, T.lineTint, T.flecks);
   gl.uniform4f(U.uGroove, T.pitch, T.pitchOut, T.lineW, T.press);
+  // Only what's on screen is drawn, and a quarter of a screen either side
+  // (for a quick scroll between frames): the rest isn't seen, and every
+  // pixel of the record costs the GPU a lot.
+  const ks = h / canvas.clientHeight;
+  const ct = canvasTop - scrollPos;
+  const mg = innerHeight * 0.25;
+  const y0 = Math.max(0, Math.floor((-ct - mg) * ks));
+  const y1 = Math.min(h, Math.ceil((innerHeight - ct + mg) * ks));
+  // (Only once the live app has been showing a moment: while it and the
+  // screenshot cross-fade, the record shows through a little.)
+  const cv = liveSince && now - liveSince > 1500 && geo?.cover;
+  gl.uniform4f(U.uCover, cv ? cv[0] : 0, cv ? cv[1] : 0, cv ? cv[2] : 0, cv ? cv[3] : 0);
+  gl.enable(gl.SCISSOR_TEST);
+  gl.scissor(0, h - Math.max(y0, y1), w, Math.max(0, y1 - y0));
   gl.clearColor(0, 0, 0, 0);
   gl.clear(gl.COLOR_BUFFER_BIT);
-  gl.drawArrays(gl.TRIANGLES, 0, 3);
+  if (y1 > y0) gl.drawArrays(gl.TRIANGLES, 0, 3);
 }
 
 function draw(now) {
@@ -1958,8 +2013,11 @@ function draw(now) {
   const busy = hover.on > 0.01 || needle.on || ripple.on || fx.moving || twist !== twistTo() || drag.on || drag.x !== 0 || drag.y !== 0;
   // (On the first frame of each 30th of a second on the wall clock, the
   // same frames the app in the screen draws on, app/demo/pause.js.)
-  const slot = Math.floor((performance.timeOrigin + now) / (1000 / 30));
-  if (busy || slot !== lastSlot) { lastSlot = slot; frame(now, false); }
+  // (And busy, never more than 60 a second: a 120Hz screen would otherwise
+  // draw the record twice as often again, for a light that already looks
+  // smooth at 60.)
+  const slot = Math.floor(((performance.timeOrigin + now) * (busy ? 60 : T.fps)) / 1000) + (busy ? 0.5 : 0);
+  if (slot !== lastSlot) { lastSlot = slot; frame(now, false); }
   requestAnimationFrame(draw);
 }
 
@@ -2301,6 +2359,7 @@ tw?.slider({ ...look, label: 'Hero record: dust size variety', min: 0, max: 1, s
 tw?.slider({ ...look, label: 'Hero record: dust fibres', min: 0, max: 1, step: 0.05, value: T.dustFibres, show: dustOn, onInput: redraw('dustFibres') });
 tw?.select({ ...look, label: 'Hero record: speck style', value: T.speck, show: () => cur() && T.cue === 'dust', onInput: redraw('speck'), options: [['hyphen', 'Dashes (first)'], ['motes', 'Dust motes'], ['scratches', 'Hairline scratches'], ['scuffs', 'Scuffs'], ['sparkle', 'Sparkle'], ['lint', 'Lint'], ['smudge', 'Smudges']] });
 tw?.slider({ ...look, label: 'Hero record: render resolution', min: 0.3, max: 1, step: 0.05, value: T.res, show: () => !STYLE[T.look]?.crisp, onInput: reshape('res') });
+tw?.slider({ ...look, label: 'Hero record: frames a second at rest', min: 10, max: 30, step: 1, value: T.fps, onInput: (v) => { T.fps = v; } });
 
 // GLINTS: in each song a few short runs of groove catch the lamp, fixed on
 // the disc and going round, brightest as they pass through the lamp's

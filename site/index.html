@@ -453,7 +453,7 @@
           <img class="poster" src="img/screenshot-1x.jpg" srcset="img/screenshot-1x.jpg 1440w, img/screenshot.jpg 2880w" sizes="(max-width: 1200px) 100vw, 1200px"
             width="1440" height="900" alt="Interlude with two tracks loaded: waveforms across the top, two decks either side of the mixer, and the library below.">
           <!-- The real app on its simulated engine, played by a script (app/demo). Loaded after the page. -->
-          <iframe class="live" title="Interlude mixing one track into the next" tabindex="-1" aria-hidden="true" data-src="demo/hero.html?v=20261118p3"></iframe>
+          <iframe class="live" title="Interlude mixing one track into the next" tabindex="-1" aria-hidden="true" data-src="demo/hero.html?v=20261119h1"></iframe>
         </div>
       </div>
       <div class="shot-bar">
@@ -894,8 +894,8 @@
 
   <!-- The feature cards' pictures (built from app/demo, see the README).
        Their styles are down here, so the first screen never waits for them. -->
-  <link rel="stylesheet" href="demo/cards.css?v=20261118p2">
-  <script type="module" async src="demo/cards.js?v=20261118p2"></script>
+  <link rel="stylesheet" href="demo/cards.css?v=20261119h1">
+  <script type="module" async src="demo/cards.js?v=20261119h1"></script>
   <script>
     // The hero. The screenshot shows first; once the page has loaded, the
     // live app takes its place (unless the visitor prefers less motion).
@@ -903,7 +903,7 @@
     // same at any width. It tells us how loud it's playing, and the glow
     // under it follows; the switch picks mouse or controller.
     (async () => {
-      const fx = await import('./hero-fx.js?v=20261118p6').catch(() => null);
+      const fx = await import('./hero-fx.js?v=20261119h3').catch(() => null);
       const frame = document.querySelector('.stage-frame');
       const screen = frame.querySelector('.screen');
       const live = frame.querySelector('.live');
