@@ -124,7 +124,7 @@ const TURN = (Math.PI * 2) / 40;
 const T = {
   fps: 30, // frames a second at rest
   busyFps: 30, // and while the pointer's light, the needle or a twist moves it (30: on the app's frames; 60: smoother)
-  atRest: 'turned', // frames at rest turned on from a full one (see REPROJECT), or each worked out in full ('full')
+  atRest: 'relit', // frames relit from a layer baked once (see RELIT), turned on from a full one at rest (see REPROJECT), or each worked out in full ('full')
   drop: 108, needle: 0.8, life: 0.2, persp: 0.85, cue: 'dust', cueAmt: 1, res: 0.85,
   speck: 'hyphen',
   twistRate: 12, twistMax: 20, twistEase: 0.6, // scrolling twists it: degrees per 1000px, at most, settling in s
@@ -460,26 +460,13 @@ vec3 paint(float x, float y, float a, float r) {
 // uNat.x: how much; uNat2: size, softness, glow, glow size; uNat3:
 // brightness, how much it needs the light, size variety, fibres. near: 1
 // where any speck lies in the cells looked at (onlyNear: that alone).
-float natDust(vec2 q, vec2 dqx, vec2 dqy, float r, float b, bool onlyNear, out float near) {
-  near = 0.0;
-  float det = dqx.x * dqy.y - dqy.x * dqx.y;
-  float nat = 0.0;
-  float CR = 9.0;
-  float CT = 9.0;
-  float thr = 1.0 - 0.06 * uNat.x;
-  float th0 = mod(b, 2.0 * PI);
-  float row0 = floor(r / CR);
-  for (int j = -1; j <= 1; j++) {
-    float row = row0 + float(j);
-    float rc = (row + 0.5) * CR;
-    if (rc <= 0.0) continue;
-    float col0 = floor(th0 * rc / CT);
-    for (int i = -1; i <= 1; i++) {
-      vec2 id = vec2(row, col0 + float(i));
-      float h = hash2(id + 31.0);
-      if (h < thr) continue;
-      near = 1.0;
-      if (onlyNear) continue;
+// One speck (its cell id, and h its first hash): what it adds at q.
+// (Shared by natDust and the dust drawn as sprites, see RELIT.)
+float speckAt(vec2 id, float h, vec2 q, vec2 dqx, vec2 dqy, float det) {
+      float CR = 9.0;
+      float CT = 9.0;
+      float rc = (id.x + 0.5) * CR;
+      float row = id.x;
       float h1 = hash2(id * 1.3 + 2.9);
       float h2 = hash2(id * 0.7 + 6.1);
       float h3 = hash2(id * 1.9 + 8.3);
@@ -518,14 +505,85 @@ float natDust(vec2 q, vec2 dqx, vec2 dqy, float r, float b, bool onlyNear, out f
       // Brightness on a steep curve: most dust faint, the odd speck
       // catching the light properly.
       float bright = 0.12 + 0.88 * pow(fract(h * 61.0), 2.5);
-      nat += spec * bright * mix(1.0, 0.06 + 0.94 * ls, uNat3.y);
+      return spec * bright * mix(1.0, 0.06 + 0.94 * ls, uNat3.y);
+}
+float natDust(vec2 q, vec2 dqx, vec2 dqy, float r, float b, bool onlyNear, out float near) {
+  near = 0.0;
+  float det = dqx.x * dqy.y - dqy.x * dqx.y;
+  float nat = 0.0;
+  float CR = 9.0;
+  float CT = 9.0;
+  float thr = 1.0 - 0.06 * uNat.x;
+  float th0 = mod(b, 2.0 * PI);
+  float row0 = floor(r / CR);
+  for (int j = -1; j <= 1; j++) {
+    float row = row0 + float(j);
+    float rc = (row + 0.5) * CR;
+    if (rc <= 0.0) continue;
+    float col0 = floor(th0 * rc / CT);
+    for (int i = -1; i <= 1; i++) {
+      vec2 id = vec2(row, col0 + float(i));
+      float h = hash2(id + 31.0);
+      if (h < thr) continue;
+      near = 1.0;
+      if (onlyNear) continue;
+      nat += speckAt(id, h, q, dqx, dqy, det);
     }
   }
   return nat;
 }
+// What a unit of dust's light adds at a pixel (colour; alpha), as MAIN
+// adds it: times the lift, the base colour (the lamp's tint and the
+// vinyl's, see MAIN) and the cone's groove boost. Only the dust drawn as
+// sprites (RELIT) uses it; MAIN works the same out inline, so the two must
+// stay in step.
+vec4 dustMul(float a, float b, float r, float R, float edge, float lines, float inSong) {
+  float lift = uStyle.z * edge * (1.0 + 0.08 * uSwell);
+  vec3 base = BASE;
+  if (uTint > 0.0) {
+    float side = sin(a - uFacing);
+    vec3 c = side < 0.0 ? BLUE : ORANGE;
+    base = mix(BASE, 0.95 * c, clamp(0.85 * uTint * smoothstep(0.1, 0.9, abs(side)), 0.0, 1.0));
+  }
+  float vboost = 1.0;
+  if (uVinyl.w + uThru.x + uThru.y + uThru.z + uThru.w + uConeLight > 0.0) {
+    vec3 V = uVinyl.rgb;
+    float vm = maxc(V);
+    vec3 Vn = mix(vec3(1.0), V / max(vm, 1e-3), smoothstep(0.0, 0.03, vm));
+    if (uVinylFin > 0.5) {
+      Vn = hue(0.5 * cos(a - uFacing) + r / 900.0 + 0.12 * sin(2.0 * b + r / 260.0));
+      Vn /= maxc(Vn);
+    }
+    vec3 HI = mix(Vn, vec3(1.0), uVinylFin > 0.5 ? 0.55 : 0.65);
+#ifdef CONE
+    float xc = uConeTint.w > 0.5 ? wrap(a - uCone.x) : 0.5 * wrap(2.0 * (a - uCone.x));
+    float cc = cos(clamp(xc * uCone.y, -0.5 * PI, 0.5 * PI));
+    float lampC = cc * cc * cc * cc;
+    float rf = smoothstep(R * (1.0 - uCone.w) - 0.3 * R, R * (1.0 - uCone.w), r);
+#else
+    float lampC = 0.5 + 0.5 * cos(2.0 * (a - uCone.x));
+    lampC *= lampC;
+    float rf = 1.0;
+#endif
+    float inWedge = smoothstep(uConeEdge.x, uConeEdge.y, lampC) * rf;
+    float wedge = uThru.y * inWedge;
+    base = mix(base, mix(Vn, vec3(1.0), 0.15), uThru.z);
+    base = mix(base, HI * uConeTint.rgb, min(wedge, 1.0));
+    vboost = 1.0 + 2.5 * wedge * max(lines, 0.0) * inSong;
+  }
+  return vec4(base * lift * vboost, lift * vboost);
+}
 `;
 const MAIN = `
-#ifdef KEEP3
+// (BAKE and RELIT: the record drawn from a layer that never moves, see
+// RELIT in the script. BAKE works out, once, what depends only on where a
+// pixel lies on the disc (the grooves, the songs, the lead-in); RELIT, each
+// frame, reads that back and lights it.)
+#ifdef RELIT
+uniform sampler2D uSt0;  // the baked layer: L so far, the grooves' lines, in a song, where in it
+uniform sampler2D uSt1;  // and: which song, the pressing warp's two counts, the angle
+#endif
+#if defined(KEEP3) || defined(BAKE)
 #define OUT0 { gl_FragData[0] = vec4(0.0); gl_FragData[1] = vec4(0.0); return; }
 #else
 #define OUT0 { gl_FragColor = vec4(0.0); return; }
@@ -568,6 +626,14 @@ void main() {
   // Out at the rim: a smooth lead-in with no grooves, then the raised lip.
   float lead = smoothstep(R - 34.0, R - 26.0, r);
 
+#ifdef RELIT
+  vec4 st0 = texture2D(uSt0, gl_FragCoord.xy / uSize);
+  vec4 st1 = texture2D(uSt1, gl_FragCoord.xy / uSize);
+  float lines = st0.y;
+  float inSong = st0.z;
+  float u = st0.w;
+  float idx = st1.x;
+#else
   // Which song this radius is in, and where in it.
   float inSong = 0.0;
   float u = 0.0;
@@ -636,7 +702,12 @@ void main() {
     for (int k = 1; k <= 16; k++) { norm += 2.0 * w; w *= wR; wR *= wS; }
   }
   lines /= norm; // the brightest line sits +1 over the average, which stays 1
+#endif
 
+#ifdef RELIT
+  float fine = mix(0.7, 1.0 + lines, inSong);
+  float L = st0.x;
+#else
   // Each song: a soft band, a little louder in its middle, its loudness
   // drifting gently across it, as the music does.
   float loud = 0.82 + 0.18 * sin(PI * u) + 0.07 * sin(r / 18.0 + idx * 1.7) * sin(r / 50.0 + idx);
@@ -644,14 +715,25 @@ void main() {
   float fine = mix(0.7, 1.0 + lines, inSong);
   float L = mix(1.0, satin, uStyle.y) * mix(1.0, fine, uStyle.x);
   L = mix(L, 0.5, lead);
+#endif
+#ifdef BAKE
+  gl_FragData[0] = vec4(L, lines, inSong, u);
+  gl_FragData[1] = vec4(idx, floor(mid / 140.0) + 3.0, floor(mid / 90.0) + 5.0, a);
+  return;
+#endif
 
   // Light. The fixed sheen: two broad wedges either side of the centre.
   float sheen = uSheen * cos(2.0 * (a - uFacing));
   // The pressing is never perfectly even: a soft warp in it, a few hundred
   // pixels across, curling with the radius, turning with the record.
   float b = a - uSpin;
+#ifdef RELIT
+  float k1 = st1.y;
+  float k2 = st1.z;
+#else
   float k1 = floor(mid / 140.0) + 3.0;
   float k2 = floor(mid / 90.0) + 5.0;
+#endif
   float warp = (0.13 * sin(k1 * b + r / 80.0 + idx * 2.3) + 0.085 * sin(k2 * b - r / 55.0 + idx * 4.1)) * uGroove.w;
   L *= 1.0 + sheen + warp * mix(0.6, 1.0, inSong);
 
@@ -803,7 +885,8 @@ void main() {
   Lg *= after * awayK;
   Gv *= after * awayK;
 
-  // Natural dust (natDust, in HEAD).
+  // Natural dust (natDust, in HEAD). (RELIT: drawn after, as sprites.)
+#ifndef RELIT
   if (uNat.x > 0.0) {
     float near;
 #ifdef KEEP3
@@ -814,6 +897,7 @@ void main() {
     L += 7.0 * uNat3.x * nat * mix(1.0, 0.45 + 0.55 * lamp, uNat3.y) * edge * (1.0 - lead);
 #endif
   }
+#endif
   // The lip at the very edge catches the light: a fine bright line that
   // shows the disc's outline, brightest where the lamp falls.
   float dl = (r - (R - 2.5)) / max(1.3, fr * 1.2);
@@ -825,7 +909,18 @@ void main() {
   // (Only the hover picked is compiled in; those that move the light draw
   // nothing here: HOVER, see variant.)
 #if HOVER <= 6
+#ifdef RELIT
+  // (Only near the pointer's light: past these it adds under 1e-6. Across
+  // the grooves (record px) and along them, as each light is shaped; the
+  // lamp's streak runs out along a whole radius, so it's never cut short.)
+  float gR = uHoverMode < 0.5 ? 140.0 : (uHoverMode < 2.5 ? 60.0 : 170.0) * fr * uDpr;
+  float gA = uHoverMode < 0.5 ? 900.0 : uHoverMode < 2.5 ? 700.0 : uHoverMode < 3.5 ? 1250.0 : 960.0;
+  bool nearH = (uHoverMode > 0.5 && uHoverMode < 1.5)
+    || (abs(r - uHover.x) < gR && length(q - uHover.x * vec2(cos(uHover.y), sin(uHover.y))) < 1.25 * gA * max(1.0, 100.0 / max(uHover.x, 1.0)) + 2.0 * gR + 50.0);
+  if (on > 0.0 && nearH) {
+#else
   if (on > 0.0) {
+#endif
     float shine = mix(1.0, clamp(0.25 + 0.75 * (1.0 + lines) * 0.5, 0.0, 1.3), uStyle.x);
     float da = atan(sin(a - uHover.y), cos(a - uHover.y));
     float k = uTouch * on * mix(0.6, 1.0, inSong);
@@ -1009,7 +1104,7 @@ void main() {
   // (Where dust lies is told by 4 added to the alpha's multiplier, which is
   // never over 2: see REPROJECT.)
   gl_FragData[1] = vec4(base * lift * vboost, lift * vboost + 4.0 * dustNear);
-#else
+#elif !defined(BAKE)
   if (uRaw > 0.5) { gl_FragColor = vec4(col, alpha); return; }
 
   // Nothing shows through the hero's buttons (one is see-through).
@@ -1687,6 +1782,108 @@ void main() {
   gl_FragColor = vec4(max(col + n, 0.0), clamp(alpha + n, 0.0, 1.0));
 }`;
 
+// The natural dust, drawn as sprites over the relit picture (see RELIT):
+// one small quad per speck, placed where the speck lies now, each pixel of
+// it working out that speck exactly as natDust does, and only where natDust
+// would look for it (the 3 x 3 cells round the pixel's own), so the dust is
+// the same as the full picture's.
+// SPECKS_FS: which cells may hold a speck (for any amount of dust), worked
+// out once on the GPU with natDust's own hash: row up the y axis, column
+// (+1) along x.
+const SPECKS_FS = `
+void main() {
+  vec2 id = vec2(floor(gl_FragCoord.y), floor(gl_FragCoord.x) - 1.0);
+  gl_FragColor = vec4(hash2(id + 31.0) >= 0.94 - 0.003 ? 1.0 : 0.0);
+}`;
+const DUST_VS = `
+attribute vec4 p;        // the speck's cell (row, column), and the quad's corner
+uniform vec2 uSize;
+uniform float uDpr;
+uniform vec2 uCentre;
+uniform vec2 uGeo;
+uniform float uHz;
+uniform float uSpin;
+uniform vec2 uNat;
+uniform vec4 uNat2;
+uniform vec4 uNat3;
+varying vec2 vId;
+float hash2(vec2 p) { vec3 p3 = fract(vec3(p.xyx) * 0.1031); p3 += dot(p3, p3.yzx + 33.33); return fract((p3.x + p3.y) * p3.z); }
+void main() {
+  vec2 id = p.xy;
+  vId = id;
+  gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
+  float h = hash2(id + 31.0);
+  // (A hair under the threshold: the pixels test it again exactly.)
+  if (h < 1.0 - 0.06 * uNat.x - 0.002) return;
+  float h1 = hash2(id * 1.3 + 2.9);
+  float h2 = hash2(id * 0.7 + 6.1);
+  float h3 = hash2(id * 1.9 + 8.3);
+  float rs = (id.x + 0.2 + 0.6 * h1) * 9.0;
+  float ang = (id.y + 0.2 + 0.6 * h2) * 9.0 / ((id.x + 0.5) * 9.0) + uSpin;
+  vec2 q = rs * vec2(cos(ang), sin(ang));
+  // Where that lies on the page (discQ, undone: nothing bends it here).
+  float f = 1.0 - q.y * uGeo.y / uGeo.x;
+  if (f <= 0.02) return;
+  vec2 px = vec2(uCentre.x + q.x / f, uGeo.x / f - uHz);
+  // How far it can reach, CSS px (its glow, stretch, clump and fibre), and
+  // a pixel more.
+  float size = (0.25 + 2.3 * pow(h3, mix(1.2, 5.0, uNat3.z))) * uNat2.x;
+  float s2 = max(size * size, 0.0025);
+  float asp = 1.0 + 1.6 * h2 * h2;
+  float e = asp * sqrt(9.0 * s2 * max(2.6, uNat2.w * uNat2.w * 9.0)) + 2.6 * size + sqrt(4.0 * s2);
+  if (fract(h * 53.0) > 1.0 - 0.16 * uNat3.w) {
+    float len = (4.0 + 12.0 * h2) * max(0.4, uNat2.x);
+    e = max(e, len + 0.06 * len * len + 2.0);
+  }
+  e = (e + 1.5) * uDpr;
+  vec2 dev = vec2(px.x * uDpr, uSize.y - px.y * uDpr) + p.zw * e;
+  gl_Position = vec4(dev / uSize * 2.0 - 1.0, 0.0, 1.0);
+}`;
+const DUST_FS = `
+uniform sampler2D uSt0;
+varying vec2 vId;
+void main() {
+  vec2 px = vec2(gl_FragCoord.x, uSize.y - gl_FragCoord.y) / uDpr;
+  if (px.x > uCover.x && px.x < uCover.z && px.y > uCover.y && px.y < uCover.w) discard;
+  vec2 q = discQ(px);
+  vec2 dqx = dFdx(q);
+  vec2 dqy = dFdy(q);
+  float r = length(q);
+  float fr = max(fwidth(r), 1e-3);
+  if (r > max(uOuter.x, uOuter.y) + 2.0 * fr) discard;
+  float a = atan(q.y, q.x);
+  float b = a - uSpin;
+  // Only where natDust looks for this speck: its row within one of the
+  // pixel's, its column within one of the pixel's in that row.
+  if (abs(vId.x - floor(r / 9.0)) > 1.5) discard;
+  float rc = (vId.x + 0.5) * 9.0;
+  if (rc <= 0.0 || abs(vId.y - floor(mod(b, 2.0 * PI) * rc / 9.0)) > 1.5) discard;
+  float h = hash2(vId + 31.0);
+  if (h < 1.0 - 0.06 * uNat.x) discard;
+  float det = dqx.x * dqy.y - dqy.x * dqx.y;
+  float nat = speckAt(vId, h, q, dqx, dqy, det);
+  // As MAIN adds it: where the disc is, away from the rim's lead-in, more
+  // in the lamp's light; times what a unit of it adds there.
+  float farSide = smoothstep(0.15, 0.7, -q.y / max(r, 1.0));
+  float R = mix(uOuter.x, uOuter.y, farSide);
+  float edge = smoothstep(uSpan.x, uSpan.x + 40.0, r) * (1.0 - smoothstep(R - fr, R + fr, r));
+  float lead = smoothstep(R - 34.0, R - 26.0, r);
+  float lamp = 0.5 + 0.5 * cos(2.0 * (a - uFacing));
+  lamp *= lamp;
+  float dl = 7.0 * uNat3.x * nat * mix(1.0, 0.45 + 0.55 * lamp, uNat3.y) * edge * (1.0 - lead);
+  vec4 st0 = texture2D(uSt0, gl_FragCoord.xy / uSize);
+  vec4 o = dustMul(a, b, r, R, edge, st0.y, st0.z) * dl;
+  for (int i = 0; i < 4; i++) {
+    if (float(i) >= uHoleCount) break;
+    vec4 hb = uHoles[i];
+    vec2 hc = 0.5 * (hb.xy + hb.zw);
+    vec2 hq = abs(px - hc) - (0.5 * (hb.zw - hb.xy) - uHoleR);
+    float sd = length(max(hq, 0.0)) + min(max(hq.x, hq.y), 0.0) - uHoleR;
+    o *= smoothstep(-1.0, 0.0, sd);
+  }
+  gl_FragColor = o;
+}`;
+
 // The styles, by name: n is its program (0 the vinyl, the others
 // LOOK in LOOKS). crisp: drawn at the screen's full resolution whatever
 // the render resolution, since fine lines, dots and cells go soft when
@@ -1733,9 +1930,9 @@ function build(n, defs) {
     return s;
   };
   // WebGL 1 needs the derivatives extension switched on in the shader.
-  const frag = '#extension GL_OES_standard_derivatives : enable\n' + (defs.includes('KEEP3') ? '#extension GL_EXT_draw_buffers : require\n' : '') + defs + (n === 'turn' ? HEAD + REPROJECT : n ? `#define LOOK ${n}\n${HEAD}${LOOKS}` : HEAD + MAIN);
+  const frag = '#extension GL_OES_standard_derivatives : enable\n' + (defs.includes('KEEP3') || defs.includes('BAKE') ? '#extension GL_EXT_draw_buffers : require\n' : '') + defs + (n === 'turn' ? HEAD + REPROJECT : n === 'specks' ? HEAD + SPECKS_FS : n === 'dust' ? HEAD + DUST_FS : n ? `#define LOOK ${n}\n${HEAD}${LOOKS}` : HEAD + MAIN);
   const p = gl.createProgram();
-  gl.attachShader(p, shader(gl.VERTEX_SHADER, VERT));
+  gl.attachShader(p, shader(gl.VERTEX_SHADER, n === 'dust' ? DUST_VS : VERT));
   gl.attachShader(p, shader(gl.FRAGMENT_SHADER, frag));
   gl.bindAttribLocation(p, 0, 'p');
   gl.linkProgram(p);
@@ -1784,10 +1981,11 @@ function use(n) {
   measured = 0;
 }
 
+let buf = null;
 function init() {
   if (!gl) return false;
   gl.getExtension('OES_standard_derivatives');
-  const buf = gl.createBuffer();
+  buf = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, buf);
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
   gl.enableVertexAttribArray(0);
@@ -2212,7 +2410,9 @@ function frame(now, still) {
   gl.enable(gl.SCISSOR_TEST);
   gl.scissor(0, h - Math.max(y0, y1), w, Math.max(0, y1 - y0));
   gl.clearColor(0, 0, 0, 0);
-  // At rest: the kept picture turned on (see REPROJECT), when it can be.
+  // Relit from the baked layer (see RELIT), when it can be; or at rest, the
+  // kept picture turned on (see REPROJECT).
+  if (y1 > y0 && !still && relit(w, h, g, cover, mode)) return;
   if (y1 > y0 && !still && restNow && turned(now, w, h, y0, y1, g, cover, mode)) return;
   gl.clear(gl.COLOR_BUFFER_BIT);
   if (y1 > y0) gl.drawArrays(gl.TRIANGLES, 0, 3);
@@ -2350,6 +2550,162 @@ function turned(now, w, h, y0, y1, g, cover, mode) {
   gl.bindTexture(gl.TEXTURE_2D, null);
   gl.useProgram(prog);
   return true;
+}
+
+// RELIT: the record drawn each frame from a layer baked once.
+// Most of what the full picture works out depends only on where a pixel
+// lies on the disc: which groove, which song and where in it, the grooves'
+// filtering to the pixel. Turning the disc, the lamp, the glints, the
+// pointer's light, the needle and the scroll's twist change none of it,
+// only the light laid on it. So that part is baked into two half-float
+// textures the canvas's size (BAKE, the full picture's own sums), redone
+// only when the record's place, shape, grooves or songs change (the
+// layout, a slider for those, the window), and each frame (RELIT) reads it
+// back and works out the light: the full picture's own code, minus its two
+// costliest loops. The dust is drawn on top as sprites (DUST_VS, DUST_FS),
+// each speck where it lies now and only its own pixels, worked out as
+// natDust works it out. Anything that bends the disc per frame (the drag's
+// or the pointer's tilt, the glass, the top's warps) takes the full path;
+// so do the other styles.
+const lit = { s0: null, s1: null, fbo: null, size: '', key: '', bake: null, comp: null, dust: null, defs: '', specks: null, nSpecks: 0, rows: 0 };
+// (The uniforms the baked layer depends on, by name.)
+const BAKED = ['uSize', 'uDpr', 'uCentre', 'uGeo', 'uSpan', 'uOuter', 'uGroove', 'uTracks', 'uTrackCount', 'uWarp', 'uLens', 'uHz', 'uTilt', 'uCover'];
+function relit(w, h, g, cover, mode) {
+  if (T.atRest !== 'relit' || !keepOK || LOOK[T.look] || T.warp !== 'none' || g.up || tiltNow.some(Boolean) || mode >= 4.5) return false;
+  const defs = variant();
+  try {
+    if (lit.defs !== defs) {
+      lit.bake = build(0, `${defs}#define BAKE\n`);
+      lit.comp = build(0, `${defs}#define RELIT\n`);
+      lit.dust = build('dust', defs);
+      for (const e of [lit.comp, lit.dust]) for (const k of ['uSt0', 'uSt1']) e.u[k] = gl.getUniformLocation(e.p, k);
+      lit.defs = defs;
+      lit.key = '';
+    }
+  } catch (err) {
+    console.warn('hero-fx:', err);
+    T.atRest = 'turned';
+    return false;
+  }
+  if (lit.size !== `${w}x${h}`) {
+    if (!lit.s0) { lit.s0 = gl.createTexture(); lit.s1 = gl.createTexture(); lit.fbo = gl.createFramebuffer(); }
+    for (const tx of [lit.s0, lit.s1]) {
+      gl.bindTexture(gl.TEXTURE_2D, tx);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, half, null);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    }
+    gl.bindTexture(gl.TEXTURE_2D, null);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, lit.fbo);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, mrt.COLOR_ATTACHMENT0_WEBGL, gl.TEXTURE_2D, lit.s0, 0);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, mrt.COLOR_ATTACHMENT1_WEBGL, gl.TEXTURE_2D, lit.s1, 0);
+    mrt.drawBuffersWEBGL([mrt.COLOR_ATTACHMENT0_WEBGL, mrt.COLOR_ATTACHMENT1_WEBGL]);
+    const ok = gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    if (!ok) { T.atRest = 'turned'; return false; }
+    lit.size = `${w}x${h}`;
+    lit.key = '';
+  }
+  // Bake, when anything it depends on has changed. (The whole canvas, not
+  // just the strip on screen, so scrolling never needs it again.)
+  const key = JSON.stringify(BAKED.map((n) => uniNow.get(n)?.[1]).concat([T.contrast, T.satin, T.lineW, T.pitch, T.pitchOut, style]));
+  if (key !== lit.key) {
+    gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, null);
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, null);
+    gl.useProgram(lit.bake.p);
+    given(lit.bake);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, lit.fbo);
+    gl.disable(gl.SCISSOR_TEST);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.enable(gl.SCISSOR_TEST);
+    lit.key = key;
+  }
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(gl.TEXTURE_2D, lit.s0);
+  gl.activeTexture(gl.TEXTURE1);
+  gl.bindTexture(gl.TEXTURE_2D, lit.s1);
+  gl.useProgram(lit.comp.p);
+  given(lit.comp);
+  gl.uniform1i(lit.comp.u.uSt0, 0);
+  gl.uniform1i(lit.comp.u.uSt1, 1);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+  // The dust, over it.
+  if ((T.dust ?? 0) > 0 && specks(g)) {
+    gl.useProgram(lit.dust.p);
+    given(lit.dust);
+    gl.uniform1i(lit.dust.u.uSt0, 0);
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.ONE, gl.ONE);
+    gl.bindBuffer(gl.ARRAY_BUFFER, lit.specks);
+    gl.vertexAttribPointer(0, 4, gl.FLOAT, false, 0, 0);
+    gl.drawArrays(gl.TRIANGLES, 0, lit.nSpecks * 6);
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+    gl.disable(gl.BLEND);
+  }
+  gl.activeTexture(gl.TEXTURE1);
+  gl.bindTexture(gl.TEXTURE_2D, null);
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(gl.TEXTURE_2D, null);
+  gl.useProgram(prog);
+  return true;
+}
+// The cells that may hold a speck, out to the rim (for any amount of
+// dust): found once on the GPU (SPECKS_FS) and read back, then one quad
+// (two triangles) each.
+function specks(g) {
+  const rows = Math.ceil(Math.max(g.out, g.top) / 9) + 3;
+  if (lit.specks && rows <= lit.rows) return true;
+  try {
+    const sp = build('specks', variant());
+    const W = Math.ceil(2 * Math.PI * (rows + 0.5)) + 4;
+    const tx = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, tx);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, W, rows, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+    const fb = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tx, 0);
+    gl.useProgram(sp.p);
+    gl.disable(gl.SCISSOR_TEST);
+    gl.viewport(0, 0, W, rows);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    const px = new Uint8Array(W * rows * 4);
+    gl.readPixels(0, 0, W, rows, gl.RGBA, gl.UNSIGNED_BYTE, px);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.enable(gl.SCISSOR_TEST);
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    gl.deleteFramebuffer(fb);
+    gl.deleteTexture(tx);
+    gl.deleteProgram(sp.p);
+    const v = [];
+    const C = [-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1];
+    for (let row = 0; row < rows; row++) {
+      // (natDust's columns: 0 to the last whole one round, and one either side.)
+      const last = Math.floor(2 * Math.PI * (row + 0.5)) + 1;
+      for (let col = -1; col <= last; col++) {
+        if (!px[(row * W + col + 1) * 4]) continue;
+        for (let k = 0; k < 12; k += 2) v.push(row, col, C[k], C[k + 1]);
+      }
+    }
+    if (!lit.specks) lit.specks = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, lit.specks);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(v), gl.STATIC_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    lit.nSpecks = v.length / 24;
+    lit.rows = rows;
+    gl.useProgram(prog);
+    return true;
+  } catch (err) {
+    console.warn('hero-fx:', err);
+    T.atRest = 'turned';
+    gl.useProgram(prog);
+    return false;
+  }
 }
 
 function draw(now) {
@@ -2749,7 +3105,7 @@ tw?.slider({ ...look, label: 'Hero record: frames a second at rest', min: 10, ma
 // The frames at rest turned on from a full one (REPROJECT), with the dust
 // drawn live: well under half the GPU's work at rest, the same picture to
 // within a few levels. "Each worked out in full" is the old path.
-tw?.select({ ...look, label: 'Hero record: frames at rest', value: T.atRest, options: [['turned', 'Turned on from a full one (lighter)'], ['full', 'Each worked out in full']], onInput: (v) => { T.atRest = v; kept.key = ''; wake(); } });
+tw?.select({ ...look, label: 'Hero record: frames at rest', value: T.atRest, options: [['relit', 'Relit from a layer baked once (lightest)'], ['turned', 'Turned on from a full one (lighter)'], ['full', 'Each worked out in full']], onInput: (v) => { T.atRest = v; kept.key = ''; lit.key = ''; wake(); } });
 
 // GLINTS: in each song a few short runs of groove catch the lamp, fixed on
 // the disc and going round, brightest as they pass through the lamp's
