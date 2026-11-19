@@ -62,6 +62,39 @@ export const LOGOS = [
       <path d="M50 30.2 A25 25 0 0 1 50 69.8 A25 25 0 0 1 50 30.2 Z" fill="${W}" opacity="0.92"/>`,
   },
   {
+    id: 'venn-soft', family: 'light', name: 'Venn of light, soft', lockup: 'classic',
+    note: 'Two soft discs of light added together: where they overlap the blue and orange really sum to white, and the edge of that lens is as soft as the light itself.',
+    art: (u) => `<defs>${blur(u, 'b', 2.6)}</defs>
+      <g filter="url(#${u('b')})" style="isolation:isolate"><circle cx="39" cy="50" r="22" fill="${A}" opacity="0.95"/><circle cx="61" cy="50" r="22" fill="${B}" opacity="0.95" style="mix-blend-mode:plus-lighter"/></g>`,
+  },
+  {
+    id: 'venn-spot', family: 'light', name: 'Venn of light, spotlit', lockup: 'regular',
+    note: 'Two spotlights on a dark floor: even in the middle, falling off at the rim, and white where the two pools of light overlap.',
+    art: (u) => `<defs>${radial(u, 'a', [[0, A, 1], [0.72, A, 0.92], [1, A, 0]])}${radial(u, 'b', [[0, B, 1], [0.72, B, 0.92], [1, B, 0]])}</defs>
+      <g style="isolation:isolate"><circle cx="39" cy="50" r="24" fill="url(#${u('a')})"/><circle cx="61" cy="50" r="24" fill="url(#${u('b')})" style="mix-blend-mode:plus-lighter"/></g>`,
+  },
+  {
+    id: 'venn-glow', family: 'light', name: 'Venn of light, glowing', lockup: 'light',
+    note: 'Pools of light brightest at their centres and fading out, overlapping further, with a soft bloom round them; the white grows out of the overlap rather than being drawn on it.',
+    art: (u) => `<defs>${blur(u, 'bl', 5)}${radial(u, 'a', [[0, A, 1], [0.5, A, 0.85], [1, A, 0]])}${radial(u, 'b', [[0, B, 1], [0.5, B, 0.85], [1, B, 0]])}</defs>
+      <g filter="url(#${u('bl')})" opacity="0.6" style="isolation:isolate"><circle cx="41" cy="50" r="24" fill="${A}"/><circle cx="59" cy="50" r="24" fill="${B}" style="mix-blend-mode:plus-lighter"/></g>
+      <g style="isolation:isolate"><circle cx="41" cy="50" r="25" fill="url(#${u('a')})"/><circle cx="59" cy="50" r="25" fill="url(#${u('b')})" style="mix-blend-mode:plus-lighter"/></g>`,
+  },
+  {
+    id: 'venn-rings-light', family: 'light', name: 'Venn of light, rings', lockup: 'classic',
+    note: 'Today\'s two rings drawn in light: each a glowing line, and where they cross they add up to two white sparks.',
+    art: (u) => `<defs>${blur(u, 'b', 2.4)}</defs>
+      <g filter="url(#${u('b')})" style="isolation:isolate"><circle cx="39" cy="50" r="20" fill="none" stroke="${A}" stroke-width="6"/><circle cx="61" cy="50" r="20" fill="none" stroke="${B}" stroke-width="6" style="mix-blend-mode:plus-lighter"/></g>
+      <g style="isolation:isolate"><circle cx="39" cy="50" r="20" fill="none" stroke="${A}" stroke-width="2.6"/><circle cx="61" cy="50" r="20" fill="none" stroke="${B}" stroke-width="2.6" style="mix-blend-mode:plus-lighter"/></g>`,
+  },
+  {
+    id: 'venn-haze', family: 'light', name: 'Venn of light, hazy', lockup: 'serif',
+    note: 'Lit discs with a crisp-ish core and a wide haze, the way light looks through a little smoke on stage; the overlap glows white and spills.',
+    art: (u) => `<defs>${blur(u, 'h', 7)}${blur(u, 'c', 1.4)}</defs>
+      <g filter="url(#${u('h')})" opacity="0.75" style="isolation:isolate"><circle cx="39" cy="50" r="23" fill="${A}"/><circle cx="61" cy="50" r="23" fill="${B}" style="mix-blend-mode:plus-lighter"/></g>
+      <g filter="url(#${u('c')})" opacity="0.85" style="isolation:isolate"><circle cx="39" cy="50" r="19" fill="${A}"/><circle cx="61" cy="50" r="19" fill="${B}" style="mix-blend-mode:plus-lighter"/></g>`,
+  },
+  {
     id: 'venn-chroma', family: 'light', name: 'Chromatic rings', lockup: 'classic',
     note: 'Today\'s two rings, split like light through a lens: each edge carries a cool and a warm fringe.',
     art: (u) => {
