@@ -123,7 +123,7 @@ const TURN = (Math.PI * 2) / 40;
 // is (so how many there are).
 const T = {
   fps: 30, // frames a second at rest
-  atRest: 'full', // frames at rest each worked out in full, or 'turned' on from a full one (see REPROJECT)
+  atRest: 'turned', // frames at rest turned on from a full one (see REPROJECT), or each worked out in full ('full')
   drop: 108, needle: 0.8, life: 0.2, persp: 0.85, cue: 'dust', cueAmt: 1, res: 0.85,
   speck: 'hyphen',
   twistRate: 12, twistMax: 20, twistEase: 0.6, // scrolling twists it: degrees per 1000px, at most, settling in s
@@ -452,14 +452,89 @@ vec3 paint(float x, float y, float a, float r) {
   glintColour(x, y, a, r, 1.0, gv, tv);
   return max(HUED(gv * mix(BASE, tv * 0.95, uChroma.y * step(0.5, uChroma.x))), 0.0);
 }
+// Natural dust lying on the disc and turning with it, on top of whatever
+// shows the spin, as it really sits on a record: mostly specks too small
+// to make out, a few larger, none quite round, some in little clumps, the
+// odd fibre; each catching the lamp as it turns through the light.
+// uNat.x: how much; uNat2: size, softness, glow, glow size; uNat3:
+// brightness, how much it needs the light, size variety, fibres. near: 1
+// where any speck lies in the cells looked at (onlyNear: that alone).
+float natDust(vec2 q, vec2 dqx, vec2 dqy, float r, float b, bool onlyNear, out float near) {
+  near = 0.0;
+  float det = dqx.x * dqy.y - dqy.x * dqx.y;
+  float nat = 0.0;
+  float CR = 9.0;
+  float CT = 9.0;
+  float thr = 1.0 - 0.06 * uNat.x;
+  float th0 = mod(b, 2.0 * PI);
+  float row0 = floor(r / CR);
+  for (int j = -1; j <= 1; j++) {
+    float row = row0 + float(j);
+    float rc = (row + 0.5) * CR;
+    if (rc <= 0.0) continue;
+    float col0 = floor(th0 * rc / CT);
+    for (int i = -1; i <= 1; i++) {
+      vec2 id = vec2(row, col0 + float(i));
+      float h = hash2(id + 31.0);
+      if (h < thr) continue;
+      near = 1.0;
+      if (onlyNear) continue;
+      float h1 = hash2(id * 1.3 + 2.9);
+      float h2 = hash2(id * 0.7 + 6.1);
+      float h3 = hash2(id * 1.9 + 8.3);
+      float rs = (row + 0.2 + 0.6 * h1) * CR;
+      float ang = (id.y + 0.2 + 0.6 * h2) * CT / rc + uSpin;
+      vec2 rh = vec2(cos(ang), sin(ang));
+      vec2 D = q - rs * rh;
+      vec2 v = vec2(dqy.y * D.x - dqy.x * D.y, dqx.x * D.y - dqx.y * D.x) / (det * uDpr);
+      float ls = 0.5 + 0.5 * cos(2.0 * (ang - uFacing));
+      ls *= ls;
+      // Size: most tiny, a few larger, how unevenly set by the variety;
+      // all scaled by the size.
+      float size = (0.25 + 2.3 * pow(h3, mix(1.2, 5.0, uNat3.z))) * uNat2.x;
+      float phi = h1 * PI;
+      vec2 dd = vec2(cos(phi), sin(phi));
+      float asp = 1.0 + 1.6 * h2 * h2;
+      vec2 w = vec2(dot(v, dd) / asp, dot(v, vec2(-dd.y, dd.x)));
+      float d2 = dot(w, w);
+      float s2 = max(size * size, 0.0025);
+      // Its core (sharper or softer), and its glow round it.
+      float spec = mix(exp(-d2 / s2), exp(-d2 / (s2 * 2.6)) * 0.75, uNat2.y)
+                 + uNat2.z * 0.35 * exp(-d2 / (s2 * uNat2.w * uNat2.w * 9.0));
+      // A clump: a second speck beside it.
+      if (fract(h * 37.0) > 0.68) {
+        vec2 o = (vec2(h2, h1) - 0.5) * size * 2.6;
+        vec2 w2 = v - o;
+        spec += 0.55 * exp(-dot(w2, w2) / (s2 * 0.45));
+      }
+      // The odd fibre: thin, gently curved, lying any which way.
+      if (fract(h * 53.0) > 1.0 - 0.16 * uNat3.w) {
+        float ua = dot(v, dd);
+        float wa = dot(v, vec2(-dd.y, dd.x)) - (h3 - 0.5) * 0.12 * ua * ua;
+        float len = (4.0 + 12.0 * h2) * max(0.4, uNat2.x);
+        spec += 0.7 * exp(-wa * wa / (0.22 * max(0.2, uNat2.x))) * (1.0 - smoothstep(0.6 * len, len, abs(ua)));
+      }
+      // Brightness on a steep curve: most dust faint, the odd speck
+      // catching the light properly.
+      float bright = 0.12 + 0.88 * pow(fract(h * 61.0), 2.5);
+      nat += spec * bright * mix(1.0, 0.06 + 0.94 * ls, uNat3.y);
+    }
+  }
+  return nat;
+}
 `;
 const MAIN = `
+#ifdef KEEP3
+#define OUT0 { gl_FragData[0] = vec4(0.0); gl_FragData[1] = vec4(0.0); return; }
+#else
+#define OUT0 { gl_FragColor = vec4(0.0); return; }
+#endif
 void main() {
   // (uOrigin: where the canvas's corner is in what's drawn to, when that's
   // the kept frame with a margin round it, see REPROJECT.)
   vec2 px = vec2(gl_FragCoord.x - uOrigin.x, uSize.y - (gl_FragCoord.y - uOrigin.y)) / uDpr;
   // Behind the app's screen nothing would show: nothing is worked out.
-  if (px.x > uCover.x && px.x < uCover.z && px.y > uCover.y && px.y < uCover.w) { gl_FragColor = vec4(0.0); return; }
+  if (px.x > uCover.x && px.x < uCover.z && px.y > uCover.y && px.y < uCover.w) OUT0
   vec2 q = discQ(px);
   float r = length(q);
   // How the disc moves under a device pixel (for things drawn to the
@@ -486,7 +561,7 @@ void main() {
   float rr = r - GLASS_M * lens * (r - uHover.x);
   float frr = max(fwidth(rr), 1e-3);
 
-  if (r > max(uOuter.x, uOuter.y) + 2.0 * fr) { gl_FragColor = vec4(0.0); return; }
+  if (r > max(uOuter.x, uOuter.y) + 2.0 * fr) OUT0
   // The disc, with a crisp edge, and the label hidden behind the screen.
   float edge = smoothstep(uSpan.x, uSpan.x + 40.0, r) * (1.0 - smoothstep(R - fr, R + fr, r));
   // Out at the rim: a smooth lead-in with no grooves, then the raised lip.
@@ -722,75 +797,21 @@ void main() {
   // Away from the lamp, the grooves and glints a share as bright as where
   // it faces (uAwayB; 1 leaves them as the lamp has them).
   float awayK = mix(uAwayB, 1.0, lamp);
+  float dustNear = 0.0;
   L *= after * awayK;
   Lg *= after * awayK;
   Gv *= after * awayK;
 
-  // Natural dust lying on the disc and turning with it, on top of whatever
-  // shows the spin, as it really sits on a record: mostly specks too small
-  // to make out, a few larger, none quite round, some in little clumps, the
-  // odd fibre; each catching the lamp as it turns through the light.
-  // uNat.x: how much; uNat2: size, softness, glow, glow size; uNat3:
-  // brightness, how much it needs the light, size variety, fibres.
+  // Natural dust (natDust, in HEAD).
   if (uNat.x > 0.0) {
-    float det = dqx.x * dqy.y - dqy.x * dqx.y;
-    float nat = 0.0;
-    float CR = 9.0;
-    float CT = 9.0;
-    float thr = 1.0 - 0.06 * uNat.x;
-    float th0 = mod(b, 2.0 * PI);
-    float row0 = floor(r / CR);
-    for (int j = -1; j <= 1; j++) {
-      float row = row0 + float(j);
-      float rc = (row + 0.5) * CR;
-      if (rc <= 0.0) continue;
-      float col0 = floor(th0 * rc / CT);
-      for (int i = -1; i <= 1; i++) {
-        vec2 id = vec2(row, col0 + float(i));
-        float h = hash2(id + 31.0);
-        if (h < thr) continue;
-        float h1 = hash2(id * 1.3 + 2.9);
-        float h2 = hash2(id * 0.7 + 6.1);
-        float h3 = hash2(id * 1.9 + 8.3);
-        float rs = (row + 0.2 + 0.6 * h1) * CR;
-        float ang = (id.y + 0.2 + 0.6 * h2) * CT / rc + uSpin;
-        vec2 rh = vec2(cos(ang), sin(ang));
-        vec2 D = q - rs * rh;
-        vec2 v = vec2(dqy.y * D.x - dqy.x * D.y, dqx.x * D.y - dqx.y * D.x) / (det * uDpr);
-        float ls = 0.5 + 0.5 * cos(2.0 * (ang - uFacing));
-        ls *= ls;
-        // Size: most tiny, a few larger, how unevenly set by the variety;
-        // all scaled by the size.
-        float size = (0.25 + 2.3 * pow(h3, mix(1.2, 5.0, uNat3.z))) * uNat2.x;
-        float phi = h1 * PI;
-        vec2 dd = vec2(cos(phi), sin(phi));
-        float asp = 1.0 + 1.6 * h2 * h2;
-        vec2 w = vec2(dot(v, dd) / asp, dot(v, vec2(-dd.y, dd.x)));
-        float d2 = dot(w, w);
-        float s2 = max(size * size, 0.0025);
-        // Its core (sharper or softer), and its glow round it.
-        float spec = mix(exp(-d2 / s2), exp(-d2 / (s2 * 2.6)) * 0.75, uNat2.y)
-                   + uNat2.z * 0.35 * exp(-d2 / (s2 * uNat2.w * uNat2.w * 9.0));
-        // A clump: a second speck beside it.
-        if (fract(h * 37.0) > 0.68) {
-          vec2 o = (vec2(h2, h1) - 0.5) * size * 2.6;
-          vec2 w2 = v - o;
-          spec += 0.55 * exp(-dot(w2, w2) / (s2 * 0.45));
-        }
-        // The odd fibre: thin, gently curved, lying any which way.
-        if (fract(h * 53.0) > 1.0 - 0.16 * uNat3.w) {
-          float ua = dot(v, dd);
-          float wa = dot(v, vec2(-dd.y, dd.x)) - (h3 - 0.5) * 0.12 * ua * ua;
-          float len = (4.0 + 12.0 * h2) * max(0.4, uNat2.x);
-          spec += 0.7 * exp(-wa * wa / (0.22 * max(0.2, uNat2.x))) * (1.0 - smoothstep(0.6 * len, len, abs(ua)));
-        }
-        // Brightness on a steep curve: most dust faint, the odd speck
-        // catching the light properly.
-        float bright = 0.12 + 0.88 * pow(fract(h * 61.0), 2.5);
-        nat += spec * bright * mix(1.0, 0.06 + 0.94 * ls, uNat3.y);
-      }
-    }
+    float near;
+#ifdef KEEP3
+    natDust(q, dqx, dqy, r, b, true, near);
+    dustNear = near;
+#else
+    float nat = natDust(q, dqx, dqy, r, b, false, near);
     L += 7.0 * uNat3.x * nat * mix(1.0, 0.45 + 0.55 * lamp, uNat3.y) * edge * (1.0 - lead);
+#endif
   }
   // The lip at the very edge catches the light: a fine bright line that
   // shows the disc's outline, brightest where the lamp falls.
@@ -897,6 +918,7 @@ void main() {
   // rather than grey; chromatic, that hue shifts round the disc with the
   // lamp's angle, as on oil-slick vinyl, with swirls that turn with it.
   vec4 vx = vec4(0.0);
+  float vboost = 1.0;
   if (uVinyl.w + uThru.x + uThru.y + uThru.z + uThru.w + uConeLight > 0.0) {
     vec3 V = uVinyl.rgb;
     float vm = maxc(V);
@@ -928,7 +950,8 @@ void main() {
     base = mix(base, mix(Vn, vec3(1.0), 0.15), uThru.z);
     base = mix(base, HI * CT, min(wedge, 1.0));
     // (In the wedges the grooves' lines light up, not the gaps between.)
-    alpha *= 1.0 + 2.5 * wedge * max(lines, 0.0) * inSong;
+    vboost = 1.0 + 2.5 * wedge * max(lines, 0.0) * inSong;
+    alpha *= vboost;
     float sw = 1.0 + 0.15 * uSwell;
     float body = uVinyl.w * mix(0.5, 1.0, inSong) * edge * sw;
     vx += vec4(V, 1.0) * body;
@@ -977,7 +1000,15 @@ void main() {
   }
 
   // (Kept as it is for the frames at rest to turn, see REPROJECT: the
-  // buttons and the dither are laid on there, fresh each frame.)
+  // buttons and the dither are laid on there, fresh each frame; and the
+  // dust is drawn there too, from what it would add here (its light times
+  // base, lift and the cone's boost) and where it lies.)
+#ifdef KEEP3
+  gl_FragData[0] = vec4(col, alpha);
+  // (Where dust lies is told by 4 added to the alpha's multiplier, which is
+  // never over 2: see REPROJECT.)
+  gl_FragData[1] = vec4(base * lift * vboost, lift * vboost + 4.0 * dustNear);
+#else
   if (uRaw > 0.5) { gl_FragColor = vec4(col, alpha); return; }
 
   // Nothing shows through the hero's buttons (one is see-through).
@@ -997,6 +1028,7 @@ void main() {
   // Dither, so the soft gradients never step into bands.
   float n = (hash(gl_FragCoord.xy) - 0.5) / 255.0;
   gl_FragColor = vec4(max(col + n, 0.0), clamp(alpha + n, 0.0, 1.0));
+#endif
 }`;
 
 // The other styles: the same disc, songs, turn, pointer, needle and music,
@@ -1563,25 +1595,15 @@ void main() {
 // buttons' holes and the dither, as the full picture lays them on. The
 // grooves are circles, so turning them moves them along themselves.
 const REPROJECT = `
-precision highp float;
-uniform vec2 uSize;
-uniform float uDpr;
-uniform vec2 uCentre;
-uniform vec2 uGeo;
-uniform float uHz;
-uniform vec4 uCover;
-uniform vec4 uHoles[4];
-uniform float uHoleCount;
-uniform float uHoleR;
 uniform float uTurn;      // how far the disc has turned since the kept frame
 uniform float uGain;      // the swell's change since
-uniform sampler2D uKept;
+uniform sampler2D uKept;  // the kept frame, without its dust
+uniform sampler2D uMul;   // what a unit of dust adds there (colour, alpha; 4 more on the alpha where dust lies)
 uniform vec2 uKeptSize;   // the kept frame, device px: the canvas and a margin all round
 uniform float uKeptM;     // that margin
-float hash(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
 // Read with a Catmull-Rom curve (nine taps of the texture's own linear
-// filter), not straight linear: a fine groove or a speck read between
-// pixels keeps its sharpness instead of softening.
+// filter), not straight linear: a fine groove read between pixels keeps
+// its sharpness instead of softening.
 vec4 sharp(vec2 uv) {
   vec2 sp = uv * uKeptSize;
   vec2 tc = floor(sp - 0.5) + 0.5;
@@ -1600,16 +1622,54 @@ vec4 sharp(vec2 uv) {
 }
 void main() {
   vec2 px = vec2(gl_FragCoord.x, uSize.y - gl_FragCoord.y) / uDpr;
-  if (px.x > uCover.x && px.x < uCover.z && px.y > uCover.y && px.y < uCover.w) { gl_FragColor = vec4(0.0); return; }
+  // (Where the disc is under this pixel now, plain: nothing bends it at
+  // rest. Worked out before anything returns, for the dust's derivatives.)
   float f = uGeo.x / max(1.0, px.y + uHz);
   vec2 q = vec2((px.x - uCentre.x) * f, (1.0 - f) * uGeo.x / uGeo.y);
+  vec2 dqx = dFdx(q);
+  vec2 dqy = dFdy(q);
+  float r = length(q);
+  float fr = max(fwidth(r), 1e-3);
+  if (px.x > uCover.x && px.x < uCover.z && px.y > uCover.y && px.y < uCover.w) { gl_FragColor = vec4(0.0); return; }
   float c = cos(uTurn), s = sin(uTurn);
   vec2 q0 = vec2(c * q.x + s * q.y, c * q.y - s * q.x);
   float f0 = 1.0 - q0.y * uGeo.y / uGeo.x;
   vec2 p0 = vec2(uCentre.x + q0.x / max(f0, 1e-4), uGeo.x / max(f0, 1e-4) - uHz);
   vec2 uv = (vec2(p0.x * uDpr, uSize.y - p0.y * uDpr) + uKeptM) / uKeptSize;
-  vec4 o = max(sharp(uv), 0.0) * uGain;
-  if (f0 <= 0.0 || uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) o = vec4(0.0);
+  if (f0 <= 0.0 || uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) { gl_FragColor = vec4(0.0); return; }
+  vec4 o = max(sharp(uv), 0.0);
+  // The dust, drawn here as the full picture draws it (natDust), where the
+  // kept frame says some lies.
+  // (The four kept pixels round here, each read on its own: one where dust
+  // lies says so, and each one's multiplier is freed of that mark before
+  // they're blended, so a speck where the disc is foreshortened to under
+  // a pixel is neither lost nor lit wrong.)
+  vec2 tp = uv * uKeptSize - 0.5;
+  vec2 i0 = floor(tp);
+  vec2 ft = tp - i0;
+  vec4 m00 = texture2D(uMul, (i0 + vec2(0.5, 0.5)) / uKeptSize);
+  vec4 m10 = texture2D(uMul, (i0 + vec2(1.5, 0.5)) / uKeptSize);
+  vec4 m01 = texture2D(uMul, (i0 + vec2(0.5, 1.5)) / uKeptSize);
+  vec4 m11 = texture2D(uMul, (i0 + vec2(1.5, 1.5)) / uKeptSize);
+  if (uNat.x > 0.0 && max(max(m00.a, m10.a), max(m01.a, m11.a)) > 3.0) {
+    m00.a -= m00.a > 3.0 ? 4.0 : 0.0;
+    m10.a -= m10.a > 3.0 ? 4.0 : 0.0;
+    m01.a -= m01.a > 3.0 ? 4.0 : 0.0;
+    m11.a -= m11.a > 3.0 ? 4.0 : 0.0;
+    vec4 m = mix(mix(m00, m10, ft.x), mix(m01, m11, ft.x), ft.y);
+    float a = atan(q.y, q.x);
+    float farSide = smoothstep(0.15, 0.7, -q.y / max(r, 1.0));
+    float R = mix(uOuter.x, uOuter.y, farSide);
+    float edge = smoothstep(uSpan.x, uSpan.x + 40.0, r) * (1.0 - smoothstep(R - fr, R + fr, r));
+    float lead = smoothstep(R - 34.0, R - 26.0, r);
+    float lamp = 0.5 + 0.5 * cos(2.0 * (a - uFacing));
+    lamp *= lamp;
+    float near;
+    float nat = natDust(q, dqx, dqy, r, a - uSpin, false, near);
+    float dl = 7.0 * uNat3.x * nat * mix(1.0, 0.45 + 0.55 * lamp, uNat3.y) * edge * (1.0 - lead);
+    o += m * dl;
+  }
+  o *= uGain;
   vec3 col = o.rgb;
   float alpha = o.a;
   for (int i = 0; i < 4; i++) {
@@ -1672,7 +1732,7 @@ function build(n, defs) {
     return s;
   };
   // WebGL 1 needs the derivatives extension switched on in the shader.
-  const frag = '#extension GL_OES_standard_derivatives : enable\n' + defs + (n ? `#define LOOK ${n}\n${HEAD}${LOOKS}` : HEAD + MAIN);
+  const frag = '#extension GL_OES_standard_derivatives : enable\n' + (defs.includes('KEEP3') ? '#extension GL_EXT_draw_buffers : require\n' : '') + defs + (n === 'turn' ? HEAD + REPROJECT : n ? `#define LOOK ${n}\n${HEAD}${LOOKS}` : HEAD + MAIN);
   const p = gl.createProgram();
   gl.attachShader(p, shader(gl.VERTEX_SHADER, VERT));
   gl.attachShader(p, shader(gl.FRAGMENT_SHADER, frag));
@@ -1714,6 +1774,8 @@ function use(n) {
   }
   prog = e.p;
   U = e.u;
+  locName = new Map(Object.entries(U).filter(([, v]) => v).map(([k, v]) => [v, k]));
+  uniNow.clear();
   gl.useProgram(prog);
   shown = key;
   // Each program keeps its own uniforms: lay everything out afresh.
@@ -2159,93 +2221,108 @@ function frame(now, still) {
 const turnNow = { spin: 0, facing: 0, swell: 0, glint: 0, cone: 0 };
 const holesNow = { list: new Float32Array(16), count: 0, r: 0 };
 let restNow = false;
-// A new frame is worked out in full every KEEP frames (and whenever
-// anything but the turn and the swell has changed): the turned ones drift
-// from it by a few pixels at most, and it's under the app's screen's edge
-// by more than that (MARGIN, CSS px), so nothing turns in from under it.
-const KEEP = 4;
-const MARGIN = 24;
-// (And it's worked out a little past the canvas's edges and the strip
-// that's drawn, so what turns in at an edge is there to read: EDGE, device px.)
-const EDGE = 48;
-const kept = { tex: null, fbo: null, size: '', key: '', n: 0, spin: 0, swell: 0, d: [0, 0, 0] };
-let rp = null;
+// A new frame is worked out in full every KEEP frames at most (and whenever
+// anything but the turn and the swell has changed, or the disc has turned
+// so far that something on it could have moved past a margin): the turned
+// ones drift from it by a few pixels, and it's worked out under the app's
+// screen's edge by MARGIN CSS px and past the canvas's edges and the strip
+// that's drawn by EDGE device px, so what turns in at an edge is there.
+const KEEP = 12;
+const MARGIN = 48;
+const EDGE = 96;
+const kept = { a: null, b: null, fbo: null, size: '', key: '', n: 0, spin: 0, swell: 0, d: [0, 0, 0] };
 const wrapA = (x) => Math.atan2(Math.sin(x), Math.cos(x));
 // (Kept in half floats: finer than the screen's 8 bits, so the dither still
-// has the soft gradients to work on, at half a full float's memory.)
+// has the soft gradients to work on, at half a full float's memory; both
+// textures drawn by one pass, WEBGL_draw_buffers.)
 const half = (() => {
   try {
     const h = gl && gl.getExtension('OES_texture_half_float');
     return h && gl.getExtension('OES_texture_half_float_linear') && gl.getExtension('EXT_color_buffer_half_float') ? h.HALF_FLOAT_OES : 0;
   } catch { return 0; }
 })();
-const keepOK = !!half;
-function turned(now, w, h, y0, y1, g, cover, mode) {
-  if (T.atRest !== 'turned' || !keepOK || LOOK[T.look] || !U.uRaw || T.warp !== 'none' || g.up || tiltNow.some(Boolean) || mode >= 4.5 || needle.on || ripple.on) return false;
-  if (!rp) {
-    try {
-      const sh = (type, src) => { const x = gl.createShader(type); gl.shaderSource(x, src); gl.compileShader(x); if (!gl.getShaderParameter(x, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(x)); return x; };
-      const p = gl.createProgram();
-      gl.attachShader(p, sh(gl.VERTEX_SHADER, VERT));
-      gl.attachShader(p, sh(gl.FRAGMENT_SHADER, REPROJECT));
-      gl.bindAttribLocation(p, 0, 'p');
-      gl.linkProgram(p);
-      if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p));
-      const u = {};
-      for (const k of ['uSize', 'uDpr', 'uCentre', 'uGeo', 'uHz', 'uCover', 'uHoles', 'uHoleCount', 'uHoleR', 'uTurn', 'uGain', 'uKept', 'uKeptSize', 'uKeptM']) u[k] = gl.getUniformLocation(p, k);
-      rp = { p, u };
-    } catch (err) {
-      console.warn('hero-fx:', err);
-      rp = false;
-    }
+const mrt = (() => { try { return gl && gl.getExtension('WEBGL_draw_buffers'); } catch { return null; } })();
+const keepOK = !!half && !!mrt;
+// Every uniform the full picture's program is given, as last given, by
+// name: the kept frame's program and the turning one are given the same.
+const uniNow = new Map();
+let locName = new Map();
+if (gl) {
+  for (const fn of ['uniform1f', 'uniform2f', 'uniform3f', 'uniform4f', 'uniform2fv', 'uniform4fv', 'uniform1i', 'uniformMatrix3fv']) {
+    const o = gl[fn].bind(gl);
+    gl[fn] = (loc, ...args) => {
+      const n = loc && locName.get(loc);
+      if (n) uniNow.set(n, [o, args]);
+      return o(loc, ...args);
+    };
   }
-  if (!rp) return false;
+}
+const keepProgs = new Map();
+let rp = null;
+function given(e) {
+  for (const [n, [o, args]] of uniNow) if (e.u[n]) o(e.u[n], ...args);
+}
+function turned(now, w, h, y0, y1, g, cover, mode) {
+  if (T.atRest !== 'turned' || !keepOK || LOOK[T.look] || T.warp !== 'none' || g.up || tiltNow.some(Boolean) || mode >= 4.5 || needle.on || ripple.on) return false;
+  const defs = variant();
+  let kp = keepProgs.get(defs);
+  try {
+    if (!kp) keepProgs.set(defs, (kp = build(0, `${defs}#define KEEP3\n`)));
+    if (!rp) {
+      rp = build('turn', defs);
+      for (const k of ['uTurn', 'uGain', 'uKept', 'uMul', 'uKeptSize', 'uKeptM']) rp.u[k] = gl.getUniformLocation(rp.p, k);
+    }
+  } catch (err) {
+    console.warn('hero-fx:', err);
+    T.atRest = 'full';
+    return false;
+  }
   const t = turnNow;
   // (Everything that sets the picture, but the turn and the swell.)
   const key = JSON.stringify([w, h, y0, y1, box.w, cover, g.cx, g.cy, g.d0, g.tilt, g.r0, g.R, g.hz, g.out, g.top, holesNow.count, Array.from(holesNow.list), holesNow.r, shown, T, hover.on > 0.01 ? hover : 0]);
   // (The lamp, its cone and the glints must be turning with the disc.)
   const d = [wrapA(t.facing - t.spin), wrapA(t.cone - t.spin), wrapA(t.glint - t.spin)];
   const turn = wrapA(t.spin - kept.spin);
-  // (Nor turned so far that something could move further on the page
-  // than the margins: the disc's rim, where the page is nearest, moves
-  // g.out / f CSS px a radian, f the perspective's scale at the canvas's
-  // foot.)
+  // (The disc's rim, where the page is nearest, moves g.out / f CSS px a
+  // radian, f the perspective's scale at the canvas's foot.)
   const fFoot = g.d0 / Math.max(1, box.h + g.hz);
   const most = (Math.min(MARGIN, EDGE / (w / box.w)) * fFoot) / Math.max(1, g.out);
   const fresh = key !== kept.key || ++kept.n >= KEEP || Math.abs(turn) > most || d.some((v, i) => Math.abs(v - kept.d[i]) > 1e-5);
+  const W = w + 2 * EDGE, H = h + 2 * EDGE;
   if (fresh) {
-    const W = w + 2 * EDGE, H = h + 2 * EDGE;
     if (kept.size !== `${W}x${H}`) {
-      if (!kept.tex) { kept.tex = gl.createTexture(); kept.fbo = gl.createFramebuffer(); }
-      gl.bindTexture(gl.TEXTURE_2D, kept.tex);
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, W, H, 0, gl.RGBA, half, null);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      if (!kept.a) { kept.a = gl.createTexture(); kept.b = gl.createTexture(); kept.fbo = gl.createFramebuffer(); }
+      for (const tx of [kept.a, kept.b]) {
+        gl.bindTexture(gl.TEXTURE_2D, tx);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, W, H, 0, gl.RGBA, half, null);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      }
       gl.bindTexture(gl.TEXTURE_2D, null);
       gl.bindFramebuffer(gl.FRAMEBUFFER, kept.fbo);
-      gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, kept.tex, 0);
+      gl.framebufferTexture2D(gl.FRAMEBUFFER, mrt.COLOR_ATTACHMENT0_WEBGL, gl.TEXTURE_2D, kept.a, 0);
+      gl.framebufferTexture2D(gl.FRAMEBUFFER, mrt.COLOR_ATTACHMENT1_WEBGL, gl.TEXTURE_2D, kept.b, 0);
+      mrt.drawBuffersWEBGL([mrt.COLOR_ATTACHMENT0_WEBGL, mrt.COLOR_ATTACHMENT1_WEBGL]);
       const ok = gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE;
       gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-      if (!ok) { kept.size = ''; return false; }
+      if (!ok) { kept.size = ''; T.atRest = 'full'; return false; }
       kept.size = `${W}x${H}`;
     }
-    // The full picture, without the holes and the dither, and with the
-    // app's screen's edge kept a margin in.
+    // The full picture, without the dust, the holes and the dither, and
+    // with the app's screen's edge kept a margin in; and the dust's part.
+    gl.useProgram(kp.p);
+    given(kp);
+    gl.uniform2f(kp.u.uOrigin, EDGE, EDGE);
+    const m = cover[2] > cover[0] ? MARGIN : 0;
+    gl.uniform4f(kp.u.uCover, cover[0] + m, cover[1] + m, cover[2] - m, cover[3] - m);
     gl.bindTexture(gl.TEXTURE_2D, null);
     gl.bindFramebuffer(gl.FRAMEBUFFER, kept.fbo);
     gl.viewport(0, 0, W, H);
     gl.scissor(0, H - EDGE - Math.max(y0, y1) - EDGE, W, Math.max(0, y1 - y0) + 2 * EDGE);
-    gl.uniform1f(U.uRaw, 1);
-    gl.uniform2f(U.uOrigin, EDGE, EDGE);
-    const m = cover[2] > cover[0] ? MARGIN : 0;
-    gl.uniform4f(U.uCover, cover[0] + m, cover[1] + m, cover[2] - m, cover[3] - m);
     gl.clear(gl.COLOR_BUFFER_BIT);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
-    gl.uniform1f(U.uRaw, 0);
-    gl.uniform2f(U.uOrigin, 0, 0);
-    gl.uniform4f(U.uCover, ...cover);
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     gl.viewport(0, 0, w, h);
     gl.scissor(0, h - Math.max(y0, y1), w, Math.max(0, y1 - y0));
@@ -2253,24 +2330,21 @@ function turned(now, w, h, y0, y1, g, cover, mode) {
   }
   const u = rp.u;
   gl.useProgram(rp.p);
-  gl.uniform2f(u.uSize, w, h);
-  gl.uniform1f(u.uDpr, w / box.w);
-  gl.uniform2f(u.uCentre, g.cx, g.cy);
-  gl.uniform2f(u.uGeo, g.d0, g.tilt);
-  gl.uniform1f(u.uHz, g.hz);
-  gl.uniform4f(u.uCover, ...cover);
-  gl.uniform4fv(u.uHoles, holesNow.list);
-  gl.uniform1f(u.uHoleCount, holesNow.count);
-  gl.uniform1f(u.uHoleR, holesNow.r);
+  given(rp);
   gl.uniform1f(u.uTurn, wrapA(t.spin - kept.spin));
   gl.uniform1f(u.uGain, (1 + 0.08 * t.swell) / (1 + 0.08 * kept.swell));
   gl.activeTexture(gl.TEXTURE0);
-  gl.bindTexture(gl.TEXTURE_2D, kept.tex);
+  gl.bindTexture(gl.TEXTURE_2D, kept.a);
   gl.uniform1i(u.uKept, 0);
-  gl.uniform2f(u.uKeptSize, w + 2 * EDGE, h + 2 * EDGE);
+  gl.activeTexture(gl.TEXTURE1);
+  gl.bindTexture(gl.TEXTURE_2D, kept.b);
+  gl.uniform1i(u.uMul, 1);
+  gl.uniform2f(u.uKeptSize, W, H);
   gl.uniform1f(u.uKeptM, EDGE);
   gl.clear(gl.COLOR_BUFFER_BIT);
   gl.drawArrays(gl.TRIANGLES, 0, 3);
+  gl.bindTexture(gl.TEXTURE_2D, null);
+  gl.activeTexture(gl.TEXTURE0);
   gl.bindTexture(gl.TEXTURE_2D, null);
   gl.useProgram(prog);
   return true;
@@ -2664,10 +2738,10 @@ tw?.slider({ ...look, label: 'Hero record: dust fibres', min: 0, max: 1, step: 0
 tw?.select({ ...look, label: 'Hero record: speck style', value: T.speck, show: () => cur() && T.cue === 'dust', onInput: redraw('speck'), options: [['hyphen', 'Dashes (first)'], ['motes', 'Dust motes'], ['scratches', 'Hairline scratches'], ['scuffs', 'Scuffs'], ['sparkle', 'Sparkle'], ['lint', 'Lint'], ['smudge', 'Smudges']] });
 tw?.slider({ ...look, label: 'Hero record: render resolution', min: 0.3, max: 1, step: 0.05, value: T.res, show: () => !STYLE[T.look]?.crisp, onInput: reshape('res') });
 tw?.slider({ ...look, label: 'Hero record: frames a second at rest', min: 10, max: 30, step: 1, value: T.fps, onInput: (v) => { T.fps = v; } });
-// Being tried: the frames at rest turned on from a full one every fourth
-// (REPROJECT), for about a third less of the GPU. Off for now: between the
-// full frames a few fine dust fibres can read a little brighter or dimmer.
-tw?.select({ ...look, label: 'Hero record: frames at rest', value: T.atRest, options: [['full', 'Each worked out in full'], ['turned', 'Turned on from a full one every fourth (lighter)']], onInput: (v) => { T.atRest = v; kept.key = ''; wake(); } });
+// The frames at rest turned on from a full one (REPROJECT), with the dust
+// drawn live: well under half the GPU's work at rest, the same picture to
+// within a few levels. "Each worked out in full" is the old path.
+tw?.select({ ...look, label: 'Hero record: frames at rest', value: T.atRest, options: [['turned', 'Turned on from a full one (lighter)'], ['full', 'Each worked out in full']], onInput: (v) => { T.atRest = v; kept.key = ''; wake(); } });
 
 // GLINTS: in each song a few short runs of groove catch the lamp, fixed on
 // the disc and going round, brightest as they pass through the lamp's
