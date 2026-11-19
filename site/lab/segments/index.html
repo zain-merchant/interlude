@@ -54,7 +54,7 @@
     host.replaceChildren();
     const order = [...steps.querySelectorAll('input:checked')].map((i) => i.dataset.i);
     clips = await mountClips(host, {
-      base: 'clips/', hand: mode, order, codec: document.getElementById('codec').value || undefined,
+      base: 'clips/', hand: mode, order, codec: document.getElementById('codec').value || undefined, log: new URLSearchParams(location.search).has('log'),
       onReady: () => (document.getElementById('info').textContent = `Playing ${clips?.codec ?? ''}`),
       onLevels: (ls) => (document.getElementById('level').style.width = `${Math.round(ls[ls.length - 1] * 100)}%`),
     });
