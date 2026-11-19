@@ -459,7 +459,7 @@
               width="1440" height="900" fetchpriority="high" alt="Interlude with two tracks loaded: waveforms across the top, two decks either side of the mixer, and the library below.">
           </picture>
           <!-- The real app on its simulated engine, played by a script (app/demo). Loaded after the page. -->
-          <iframe class="live" title="Interlude mixing one track into the next" tabindex="-1" aria-hidden="true" data-src="demo/hero.html?v=20261119p1"></iframe>
+          <iframe class="live" title="Interlude mixing one track into the next" tabindex="-1" aria-hidden="true" data-src="demo/hero.html?v=20261119p3"></iframe>
         </div>
       </div>
       <div class="shot-bar">
@@ -913,7 +913,7 @@
       // The record behind the hero. (Not waited for: the rest of the hero
       // is set up meanwhile.)
       let fx = null;
-      import('./hero-fx.js?v=20261119h8')
+      import('./hero-fx.js?v=20261119h10')
         .then((m) => {
           fx = m;
           // The choices made while trying things out, now fixed: the needle
@@ -970,10 +970,24 @@
         }
         if (e.data?.interlude === 'camera') camera(e.data);
         if (e.data?.interlude === 'level') {
-          glowTo(e.data.level);
           fx?.hear(e.data.level);
+          glowSoon(e.data.level);
         }
       });
+      // (The app reports its level as it draws a frame, so the report comes
+      // in just after that frame. Laid on the glow straight away it would
+      // need a frame of its own; it's held for the start of the app's next
+      // one, the first frame of the next 30th of a second, so the page is
+      // put together once per app frame, not twice.)
+      let heard = 0;
+      let glowWait = 0;
+      function glowSoon(l) {
+        heard = l;
+        if (glowWait) return;
+        const now = performance.timeOrigin + performance.now();
+        const wait = (Math.floor(now / (1000 / 30)) + 1) * (1000 / 30) - now + 1;
+        glowWait = setTimeout(() => requestAnimationFrame(() => { glowWait = 0; glowTo(heard); }), wait);
+      }
 
       // The glow under the frame swells with the level. It's set on the glow
       // alone (a custom property on the frame would restyle everything in
