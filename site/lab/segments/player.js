@@ -36,6 +36,25 @@ const cursorLayer = document.querySelector('.cursor-layer');
 const stage = cursorLayer.querySelector('.ss-stage');
 const post = (m) => window.parent?.postMessage(m, '*');
 
+// The page's messages, from the very start: what comes before the clips
+// are ready to play (the page sends 'pause' as this frame loads) is kept
+// and applied once they are.
+let booted = false;
+const early = {};
+window.addEventListener('message', (e) => {
+  const m = e.data;
+  if (m?.interlude === 'css') for (const [k, v] of Object.entries(m.vars || {})) document.documentElement.style.setProperty(k, v);
+  if (!booted) {
+    if (m?.interlude === 'mode') early.hand = m.mode;
+    if (m?.interlude === 'pause') early.paused = !!m.paused;
+    return;
+  }
+  if (m?.interlude === 'mode') setHand(m.mode);
+  if (m?.interlude === 'pause') setPaused(!!m.paused);
+  // ('fps', 'input' and 'controller' are for the live app: the clips are
+  // recorded at 30 a second, with the line and the current controller.)
+});
+
 const M = await fetch('clips/manifest.json').then((r) => r.json());
 const style = document.createElement('style');
 style.textContent = M.css;
@@ -154,6 +173,7 @@ async function start(mode, i) {
   const was = cur;
   cur = { mode, i, app, ctl, tl, last: -1 };
   if (paused) return;
+  cur.started = true;
   app.play().catch(() => {});
   ctl?.play().catch(() => {});
   front(app, appEls);
@@ -314,20 +334,20 @@ function setPaused(p) {
   if (p === paused) return;
   paused = p;
   document.documentElement.toggleAttribute('data-paused', p);
-  for (const v of [...appEls, ...ctlEls]) if (v.classList.contains('front')) p ? v.pause() : v.play().catch(() => {});
-  if (!p && cur && !cur.app.classList.contains('front')) start(cur.mode, cur.i);
+  // All of them, a clip coming in included; back on, the current clip's.
+  if (p) for (const v of [...appEls, ...ctlEls]) v.pause();
+  else if (cur && !cur.started) start(cur.mode, cur.i);
+  else for (const v of [cur?.app, cur?.ctl]) v?.play().catch(() => {});
 }
 
-window.addEventListener('message', (e) => {
-  const m = e.data;
-  if (m?.interlude === 'mode') setHand(m.mode);
-  if (m?.interlude === 'pause') setPaused(!!m.paused);
-  if (m?.interlude === 'css') for (const [k, v] of Object.entries(m.vars || {})) document.documentElement.style.setProperty(k, v);
-  // ('fps', 'input' and 'controller' are for the live app: the clips are
-  // recorded at 30 a second, with the line and the current controller.)
-});
 
 // Off we go: the first clip, then the page is told.
+booted = true;
+if (early.hand) {
+  hand = early.hand === 'controller' ? 'controller' : 'mouse';
+  hero.dataset.hand = hand;
+}
+if (early.paused) setPaused(true);
 setCursorStyle(hand);
 await start(hand, order[0]);
 const first = cur.app;
