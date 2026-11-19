@@ -123,7 +123,7 @@ const TURN = (Math.PI * 2) / 40;
 // is (so how many there are).
 const T = {
   fps: 30, // frames a second at rest
-  atRest: 'turned', // frames at rest turned on from a full one (see REPROJECT), or each worked out in full ('full')
+  atRest: 'full', // frames at rest each worked out in full, or 'turned' on from a full one (see REPROJECT)
   drop: 108, needle: 0.8, life: 0.2, persp: 0.85, cue: 'dust', cueAmt: 1, res: 0.85,
   speck: 'hyphen',
   twistRate: 12, twistMax: 20, twistEase: 0.6, // scrolling twists it: degrees per 1000px, at most, settling in s
@@ -2206,7 +2206,13 @@ function turned(now, w, h, y0, y1, g, cover, mode) {
   // (The lamp, its cone and the glints must be turning with the disc.)
   const d = [wrapA(t.facing - t.spin), wrapA(t.cone - t.spin), wrapA(t.glint - t.spin)];
   const turn = wrapA(t.spin - kept.spin);
-  const fresh = key !== kept.key || ++kept.n >= KEEP || Math.abs(turn) > 0.03 || d.some((v, i) => Math.abs(v - kept.d[i]) > 1e-5);
+  // (Nor turned so far that something could move further on the page
+  // than the margins: the disc's rim, where the page is nearest, moves
+  // g.out / f CSS px a radian, f the perspective's scale at the canvas's
+  // foot.)
+  const fFoot = g.d0 / Math.max(1, box.h + g.hz);
+  const most = (Math.min(MARGIN, EDGE / (w / box.w)) * fFoot) / Math.max(1, g.out);
+  const fresh = key !== kept.key || ++kept.n >= KEEP || Math.abs(turn) > most || d.some((v, i) => Math.abs(v - kept.d[i]) > 1e-5);
   if (fresh) {
     const W = w + 2 * EDGE, H = h + 2 * EDGE;
     if (kept.size !== `${W}x${H}`) {
@@ -2658,9 +2664,9 @@ tw?.slider({ ...look, label: 'Hero record: dust fibres', min: 0, max: 1, step: 0
 tw?.select({ ...look, label: 'Hero record: speck style', value: T.speck, show: () => cur() && T.cue === 'dust', onInput: redraw('speck'), options: [['hyphen', 'Dashes (first)'], ['motes', 'Dust motes'], ['scratches', 'Hairline scratches'], ['scuffs', 'Scuffs'], ['sparkle', 'Sparkle'], ['lint', 'Lint'], ['smudge', 'Smudges']] });
 tw?.slider({ ...look, label: 'Hero record: render resolution', min: 0.3, max: 1, step: 0.05, value: T.res, show: () => !STYLE[T.look]?.crisp, onInput: reshape('res') });
 tw?.slider({ ...look, label: 'Hero record: frames a second at rest', min: 10, max: 30, step: 1, value: T.fps, onInput: (v) => { T.fps = v; } });
-// The frames at rest turned on from a full one every fourth (REPROJECT),
-// for about a third less of the GPU (each in full is how it was before;
-// between the full ones a dust speck can soften by a few levels).
+// Being tried: the frames at rest turned on from a full one every fourth
+// (REPROJECT), for about a third less of the GPU. Off for now: between the
+// full frames a few fine dust fibres can read a little brighter or dimmer.
 tw?.select({ ...look, label: 'Hero record: frames at rest', value: T.atRest, options: [['full', 'Each worked out in full'], ['turned', 'Turned on from a full one every fourth (lighter)']], onInput: (v) => { T.atRest = v; kept.key = ''; wake(); } });
 
 // GLINTS: in each song a few short runs of groove catch the lamp, fixed on
