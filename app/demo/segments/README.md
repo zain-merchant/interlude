@@ -64,9 +64,20 @@ never rebuilt under anyone:
 - Two video elements per layer cross over: the next clip starts a frame
   before the last ends and comes forward once its first frame is up.
 - Codec: AV1 where the browser decodes it in hardware (MediaCapabilities
-  `powerEfficient`), else HEVC, else H.264.
+  `powerEfficient`), else HEVC, else H.264. Size: the 1x set (`@1x`) where
+  the screen is at most about 1600 device pixels across (phones, small
+  windows), else 2x.
 - Loading: the first clip, then each next one as the last starts, then
-  (idly, after a few seconds) the rest.
+  (idly, after a few seconds, on a fast connection) the rest. On a slow or
+  metered one: only the next step's controller clip ahead, and once the
+  loop is in, the next step's twin (at 1x). At a switch, the controller
+  clip loads first, then the other hand's next clip, then the twin.
+
+## The music
+
+The page's glow and the record's swell follow the clips' level timeline,
+set a dozen times a second (Tune > Hero > Performance > react to the music,
+or `?react=off`, turns that off).
 
 ## What a UI change in the app needs
 
