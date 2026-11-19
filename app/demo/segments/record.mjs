@@ -327,9 +327,9 @@ if (PHASE === 'all' || PHASE === 'record') {
       fs.writeFileSync(path.join(OUT, 'clips', `${name}.json`), JSON.stringify(timelines[k]));
       const dir = path.join(tmp, `${mode}-${k}`);
       if (mode === 'controller' && k === 0) await ffmpeg(['-i', path.join(dir, 'mask.png'), '-vf', 'alphaextract', path.join(OUT, 'clips', 'controller-mask.png')]);
-      // (The twin gets a keyframe every half second, so starting it partway
+      // (The twin gets a keyframe every 2 s, so starting it partway
       // through, at a switch nobody hovered first, is quick.)
-      const layers = mode === 'mouse' ? [['appc', 'p', 300], ['app', 'a', 15], ['ctl', 'c', 300]] : [['app', 'a', 300], ['ctl', 'c', 300]];
+      const layers = mode === 'mouse' ? [['appc', 'p', 300], ['app', 'a', 60], ['ctl', 'c', 300]] : [['app', 'a', 300], ['ctl', 'c', 300]];
       for (const [layer, pre, gop] of layers) {
         for (const codec of CODECS) await encode(path.join(dir, `${pre}%04d.png`), path.join(OUT, 'clips', `${name}.${layer}.${codec}.mp4`), codec, gop);
       }
