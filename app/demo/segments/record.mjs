@@ -238,15 +238,7 @@ if (PHASE === 'css') {
   const file = path.join(OUT, 'clips', 'manifest.json');
   const manifest = JSON.parse(fs.readFileSync(file, 'utf8'));
   manifest.css = await extractCss();
-  // And each hand's cursor markup, as Stageshow draws it.
-  for (const m of MODES) {
-    const run = await open(m, null);
-    for (let i = 0; i < FPS; i++) await run.step();
-    const html = await run.page.evaluate(() => document.querySelector('.hero-stage .ss-cursor')?.outerHTML);
-    const style = await run.page.evaluate(() => document.querySelector('.hero-stage .ss-cursor')?.dataset.style);
-    manifest.modes[m] = { ...manifest.modes[m], cursor: { [style]: html } };
-    await run.ctx.close();
-  }
+
   fs.writeFileSync(file, JSON.stringify(manifest, null, 1));
 }
 
@@ -258,7 +250,7 @@ if (PHASE === 'all' || PHASE === 'record') {
   const end = bounds[bounds.length - 1];
   const manifest = { fps: FPS, scale: SCALE, codecs: CODECS, steps: plan.names.map((name, i) => ({ name, frames: Math.round(plan.len[i] / FRAME) })), modes: {} };
   for (const mode of REC_MODES) {
-    const timelines = plan.names.map(() => ({ level: [], cursor: [], links: [] }));
+    const timelines = plan.names.map(() => ({ level: [], links: [] }));
     let ctlBox = null;
     let cdp = null;
     let cursorHtml = {};
@@ -302,28 +294,44 @@ if (PHASE === 'all' || PHASE === 'record') {
       });
       const tl = timelines[k];
       tl.level[f] = t.level;
-      tl.cursor[f] = t.cursor;
       tl.links[f] = t.links.length ? t.links : 0;
       if (t.style && !cursorHtml[t.style]) cursorHtml[t.style] = t.html;
-      // The controller alone.
       const hide = (css) => page.evaluate((css) => (document.getElementById('rec-hide').textContent = css), css);
-      await hide('.app-host, .ss-cursor, svg.links { visibility: hidden !important; }');
-      await shot(ctlBox, path.join(dir, `c${String(f).padStart(4, '0')}.png`));
-      // The app alone, flat.
+      const n = String(f).padStart(4, '0');
+      // The controller alone: with the controller hand's fingertip on it,
+      // which goes when the controller does; without the mouse's arrow.
+      if (mode === 'controller' && k === 0 && f === 0) {
+        // (Its outline at rest, without a fingertip, for the mask.)
+        await hide('.app-host, .ss-cursor, svg.links { visibility: hidden !important; }');
+        await shot(ctlBox, path.join(dir, 'mask.png'));
+      }
+      await hide(`.app-host, svg.links${mode === 'mouse' ? ', .ss-cursor' : ''} { visibility: hidden !important; }`);
+      await shot(ctlBox, path.join(dir, `c${n}.png`));
+      // The app alone, flat; and in the mouse hand the same with the arrow
+      // in it, the clip that normally plays (the one without is its twin,
+      // crossed to when the hand is switched mid-step).
       await hide('.desk, .ss-cursor, svg.links { visibility: hidden !important; } .app-host { transform: none !important; }');
-      await shot({ x: 0, y: 0, width: 1440, height: 900 }, path.join(dir, `a${String(f).padStart(4, '0')}.png`));
+      await shot({ x: 0, y: 0, width: 1440, height: 900 }, path.join(dir, `a${n}.png`));
+      if (mode === 'mouse') {
+        await hide('.desk, svg.links { visibility: hidden !important; } .app-host { transform: none !important; }');
+        await shot({ x: 0, y: 0, width: 1440, height: 900 }, path.join(dir, `p${n}.png`));
+      }
       await hide('');
       if (f % 30 === 0) console.log(`${mode} step ${k} frame ${f}`);
     });
     // The controller's outline at rest, for the page to show it through.
-    manifest.modes[mode] = { cursor: cursorHtml };
+    // Which app clip plays in this hand, and its twin without the cursor.
+    manifest.modes[mode] = mode === 'mouse' ? { play: 'appc', twin: 'app' } : { play: 'app', twin: null };
     for (let k = 0; k < plan.names.length; k++) {
       const name = `${mode}-${k}-${plan.names[k]}`;
       fs.writeFileSync(path.join(OUT, 'clips', `${name}.json`), JSON.stringify(timelines[k]));
       const dir = path.join(tmp, `${mode}-${k}`);
-      if (mode === 'controller' && k === 0) await ffmpeg(['-i', path.join(dir, 'c0000.png'), '-vf', 'alphaextract', path.join(OUT, 'clips', 'controller-mask.png')]);
-      for (const [layer, pre] of [['app', 'a'], ['ctl', 'c']]) {
-        for (const codec of CODECS) await encode(path.join(dir, `${pre}%04d.png`), path.join(OUT, 'clips', `${name}.${layer}.${codec}.mp4`), codec);
+      if (mode === 'controller' && k === 0) await ffmpeg(['-i', path.join(dir, 'mask.png'), '-vf', 'alphaextract', path.join(OUT, 'clips', 'controller-mask.png')]);
+      // (The twin gets a keyframe every half second, so starting it partway
+      // through, at a switch nobody hovered first, is quick.)
+      const layers = mode === 'mouse' ? [['appc', 'p', 300], ['app', 'a', 15], ['ctl', 'c', 300]] : [['app', 'a', 300], ['ctl', 'c', 300]];
+      for (const [layer, pre, gop] of layers) {
+        for (const codec of CODECS) await encode(path.join(dir, `${pre}%04d.png`), path.join(OUT, 'clips', `${name}.${layer}.${codec}.mp4`), codec, gop);
       }
       console.log('encoded', name);
     }
@@ -371,13 +379,13 @@ function ffmpeg(a) {
     p.on('close', (c) => (c ? fail(new Error(`ffmpeg exited ${c}`)) : ok()));
   });
 }
-function encode(input, file, codec) {
+function encode(input, file, codec, gop = 300) {
   const vf = ['-vf', 'scale=out_color_matrix=bt709:out_range=tv,format=yuv420p'];
   const tags = ['-colorspace', 'bt709', '-color_primaries', 'bt709', '-color_trc', 'bt709', '-color_range', 'tv'];
   const c = {
-    av1: ['-c:v', 'libsvtav1', '-preset', '5', '-crf', '38', '-g', '300', '-svtav1-params', 'log-level=0'],
-    hevc: ['-c:v', 'libx265', '-preset', 'slow', '-crf', '26', '-tag:v', 'hvc1', '-x265-params', 'log-level=error'],
-    h264: ['-c:v', 'libx264', '-preset', 'slow', '-crf', '24', '-tune', 'animation'],
+    av1: ['-c:v', 'libsvtav1', '-preset', '5', '-crf', '38', '-g', String(gop), '-svtav1-params', 'log-level=0'],
+    hevc: ['-c:v', 'libx265', '-preset', 'slow', '-crf', '26', '-g', String(gop), '-tag:v', 'hvc1', '-x265-params', 'log-level=error'],
+    h264: ['-c:v', 'libx264', '-preset', 'slow', '-crf', '24', '-g', String(gop), '-tune', 'animation'],
   }[codec];
   return ffmpeg(['-framerate', String(FPS), '-i', input, ...vf, ...c, ...tags, '-movflags', '+faststart', file]);
 }
