@@ -188,7 +188,7 @@
       "Lamp.cone colour": "#ffffff",
       "Lamp.cones": "two",
       "Lamp.lamp colour (sides)": 0,
-      "Motion.spin speed": 0.6,
+      "Motion.spin speed": 0.25,
       "Motion.scroll twist per 1000px (°)": 36,
       "Motion.scroll twist at most (°)": 69,
       "Motion.scroll twist settles in (s)": 1.55,

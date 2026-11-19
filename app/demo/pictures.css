@@ -344,17 +344,17 @@
 @keyframes p-paddown { from { scale: 1; } to { scale: var(--depth); } }
 @keyframes p-padup { from { scale: var(--depth); } to { scale: 1; } }
 @keyframes p-padhit {
-  0% { background-color: rgb(255 255 255 / 0.07); box-shadow: inset 0 0 0 1px var(--line); animation-timing-function: var(--press); }
+  0% { background-color: var(--pad-bg, rgb(255 255 255 / 0.07)); box-shadow: var(--pad-shadow, inset 0 0 0 1px var(--line)); animation-timing-function: var(--press); }
   10% { background-color: var(--deck-b); box-shadow: 0 0 14px rgb(240 220 192 / 0.5), inset 0 0 0 1px rgb(255 255 255 / 0.2); animation-timing-function: var(--snappy); }
   28% { background-color: rgb(240 220 192 / 0.85); box-shadow: 0 0 12px rgb(240 220 192 / 0.38), inset 0 0 0 1px rgb(255 255 255 / 0.12); animation-timing-function: cubic-bezier(0.25, 0.6, 0.4, 1); }
-  100% { background-color: rgb(255 255 255 / 0.07); box-shadow: 0 0 0 rgb(240 220 192 / 0), inset 0 0 0 1px var(--line); }
+  100% { background-color: var(--pad-bg, rgb(255 255 255 / 0.07)); box-shadow: var(--pad-shadow, 0 0 0 rgb(240 220 192 / 0), inset 0 0 0 1px var(--line)); }
 }
 /* An unaccented hit (the hat): the same shape, softer and shorter. */
 @keyframes p-padhit-soft {
-  0% { background-color: rgb(255 255 255 / 0.07); box-shadow: inset 0 0 0 1px var(--line); animation-timing-function: var(--press); }
+  0% { background-color: var(--pad-bg, rgb(255 255 255 / 0.07)); box-shadow: var(--pad-shadow, inset 0 0 0 1px var(--line)); animation-timing-function: var(--press); }
   15% { background-color: rgb(240 220 192 / 0.62); box-shadow: 0 0 8px rgb(240 220 192 / 0.28), inset 0 0 0 1px rgb(255 255 255 / 0.14); animation-timing-function: var(--snappy); }
   38% { background-color: rgb(240 220 192 / 0.45); box-shadow: 0 0 6px rgb(240 220 192 / 0.18), inset 0 0 0 1px rgb(255 255 255 / 0.08); animation-timing-function: cubic-bezier(0.25, 0.6, 0.4, 1); }
-  100% { background-color: rgb(255 255 255 / 0.07); box-shadow: 0 0 0 rgb(240 220 192 / 0), inset 0 0 0 1px var(--line); }
+  100% { background-color: var(--pad-bg, rgb(255 255 255 / 0.07)); box-shadow: var(--pad-shadow, 0 0 0 rgb(240 220 192 / 0), inset 0 0 0 1px var(--line)); }
 }
 .p-remap { display: flex; align-items: center; gap: 6px; }
 /* The new key's cap is sized for the longest it can say, so the swap never resizes it. */
@@ -650,7 +650,9 @@
 
 /* Sampler pads with a sample loaded: a faint glow of their own colour,
    so the slots in use read at a glance, before, between and after hits. */
-.p-extras .p-pads--lg i[data-loaded] { background: rgb(240 220 192 / 0.3); box-shadow: inset 0 0 0 1px rgb(240 220 192 / 0.45), 0 0 10px rgb(240 220 192 / 0.12); }
+/* (A hit flashes from this and settles back to it: the flash's keyframes
+   start and end on --pad-bg and --pad-shadow.) */
+.p-extras .p-pads--lg i[data-loaded] { --pad-bg: rgb(240 220 192 / 0.3); --pad-shadow: 0 0 10px rgb(240 220 192 / 0.12), inset 0 0 0 1px rgb(240 220 192 / 0.45); background: var(--pad-bg); box-shadow: var(--pad-shadow); }
 
 /* The install pictures sit where the features' do (24px in), with corners
    a touch rounder than before so they sit easier with the card's 18px
