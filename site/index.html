@@ -14,7 +14,7 @@
   <!-- Geist, served from here (no other site to reach before the page can
        draw its text); the Latin file is fetched straight away. -->
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="style.css?v=20261118l1">
+  <link rel="stylesheet" href="style.css?v=20261119p1">
   <script src="tune.js?v=20261118v1c"></script>
   <script>
     // Live updates while working on the site locally (the dev server
@@ -450,10 +450,16 @@
       <div class="stage-frame" data-mode="mouse">
         <div class="glow" aria-hidden="true"></div>
         <div class="screen">
-          <img class="poster" src="img/screenshot-1x.jpg" srcset="img/screenshot-1x.jpg 1440w, img/screenshot.jpg 2880w" sizes="(max-width: 1200px) 100vw, 1200px"
-            width="1440" height="900" alt="Interlude with two tracks loaded: waveforms across the top, two decks either side of the mixer, and the library below.">
+          <!-- The screenshot is what shows first (and all that shows on a slow
+               connection), so it's fetched first, as AVIF where it can be
+               (a third the size of the JPEG, the same picture). -->
+          <picture>
+            <source type="image/avif" srcset="img/screenshot-1x.avif 1440w, img/screenshot.avif 2880w" sizes="(max-width: 1200px) 100vw, 1200px">
+            <img class="poster" src="img/screenshot-1x.jpg" srcset="img/screenshot-1x.jpg 1440w, img/screenshot.jpg 2880w" sizes="(max-width: 1200px) 100vw, 1200px"
+              width="1440" height="900" fetchpriority="high" alt="Interlude with two tracks loaded: waveforms across the top, two decks either side of the mixer, and the library below.">
+          </picture>
           <!-- The real app on its simulated engine, played by a script (app/demo). Loaded after the page. -->
-          <iframe class="live" title="Interlude mixing one track into the next" tabindex="-1" aria-hidden="true" data-src="demo/hero.html?v=20261119h1"></iframe>
+          <iframe class="live" title="Interlude mixing one track into the next" tabindex="-1" aria-hidden="true" data-src="demo/hero.html?v=20261119p1"></iframe>
         </div>
       </div>
       <div class="shot-bar">
@@ -903,7 +909,19 @@
     // same at any width. It tells us how loud it's playing, and the glow
     // under it follows; the switch picks mouse or controller.
     (async () => {
-      const fx = await import('./hero-fx.js?v=20261119h4').catch(() => null);
+      const loaded = new Promise((ok) => (document.readyState === 'complete' ? ok() : addEventListener('load', ok, { once: true })));
+      // The record behind the hero. (Not waited for: the rest of the hero
+      // is set up meanwhile.)
+      let fx = null;
+      import('./hero-fx.js?v=20261119h6')
+        .then((m) => {
+          fx = m;
+          // The choices made while trying things out, now fixed: the needle
+          // on the record, its blend style.
+          fx.setVariant('needle');
+          fx.setStyle('blend');
+        })
+        .catch(() => {});
       const frame = document.querySelector('.stage-frame');
       const screen = frame.querySelector('.screen');
       const live = frame.querySelector('.live');
@@ -1031,6 +1049,8 @@
       const showOnly = (el) => {
         live.style.visibility = el === live ? '' : 'hidden';
         for (const v of Object.values(videos)) v.style.display = v === el ? '' : 'none';
+        // (A recording showing paces the record's frames, hero-fx.js beat.)
+        fx?.pacer?.(!!el && el !== live);
       };
       function videoFor(m) {
         if (videos[m]) return videos[m];
@@ -1057,6 +1077,7 @@
             const l = rec.level[Math.floor(meta.mediaTime * rec.fps) % rec.frames] ?? 0;
             glowTo(l);
             fx?.hear(l);
+            fx?.beat?.(now);
           }
           v.requestVideoFrameCallback(tick);
         };
@@ -1064,8 +1085,11 @@
         return v;
       }
       // Starts whichever the hero plays as. A video is shown once it plays.
+      // Nothing starts until the page has loaded (go, below), so the app
+      // never competes with the page's own first screen for the network.
+      let go = false;
       function start() {
-        if (reduced.matches) return;
+        if (reduced.matches || !go) return;
         if (useVideo()) {
           const v = videoFor(mode);
           if (!v.paused && v.readyState >= 3) showOnly(v);
@@ -1082,7 +1106,7 @@
       // is loaded (paused, so it costs nothing) as the pointer nears the
       // switch, so it's mostly ready by the click.
       document.querySelector('.switch').addEventListener('pointerenter', () => {
-        if (!reduced.matches && !live.getAttribute('src')) live.src = live.dataset.src;
+        if (!reduced.matches && go && !live.getAttribute('src')) live.src = live.dataset.src;
       }, { once: true });
       window.tune?.select({ label: 'Hero: render', folder: 'Performance', value: render, options: [['video', 'A video of the app'], ['live', 'The live app']],
         onInput: (v) => { render = v; start(); } });
@@ -1120,11 +1144,9 @@
       });
 
       // The choices made while trying things out, now fixed: the pulse line
-      // for the controller link, the needle on the record, the stacked
-      // Recording picture.
+      // for the controller link, the stacked Recording picture (the
+      // record's are set as it loads, above).
       const input = 'line';
-      fx?.setVariant('needle');
-      fx?.setStyle('blend');
       document.documentElement.dataset.reclayout = 'stacked';
       // Being tried: the Decks picture with Sync alone, or Sync with the
       // deck's cues and loop under it.
@@ -1132,9 +1154,11 @@
         onInput: (v) => (document.documentElement.dataset.decklayout = v) });
       if (!window.tune) document.documentElement.dataset.decklayout = 'stacked';
 
-      // The hero starts loading straight away, so it's on screen (and the
-      // switch has something to act on) as soon as possible.
-      start();
+      // The hero starts once the page has loaded.
+      loaded.then(() => {
+        go = true;
+        start();
+      });
     })();
 
     // The name in the footer, and what it does under the pointer (see
@@ -1148,6 +1172,15 @@
       const w = document.querySelector('.foot-word');
       if (!w) return;
       const d = document.documentElement;
+      // Its script loads as the footer nears (it's at the very end of the
+      // page), or straight away while tuning.
+      const tuning = !!window.tune?.shown;
+      if (!tuning && 'IntersectionObserver' in window) {
+        await new Promise((ok) => {
+          const io = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) { io.disconnect(); ok(); } }, { rootMargin: '1500px 0px' });
+          io.observe(w);
+        });
+      }
       const fx = await import('./foot-fx.js?v=20261118d1').catch(() => null);
       addEventListener('foot-fit', () => fx?.relayout());
       // Without tune.js (or an older one), each control still applies its default.
@@ -1465,6 +1498,24 @@
           if (!i) el.style.setProperty('--grain-img', url);
         }
       };
+      // The flicker (swap) is stepped from a timer at its own rate: as a CSS
+      // animation it restyled every layer on every frame of the screen (60
+      // or 120 a second) to change a few times a second. Only layers in
+      // view step; with reduced motion it holds still.
+      const still = matchMedia('(prefers-reduced-motion: reduce)');
+      let fps = 6;
+      let timer = 0;
+      let at = 0;
+      const step = () => {
+        at = (at + 1) % 8;
+        for (const e of els) if (!e.hasAttribute('data-off')) e.style.setProperty('--grain-img', `var(--grain-f${at})`);
+      };
+      const flicker = () => {
+        clearInterval(timer);
+        timer = 0;
+        if (G.move === 'swap' && !still.matches) timer = setInterval(step, 1000 / fps);
+      };
+      still.addEventListener?.('change', flicker);
       const put = () => {
         tile();
         el.style.setProperty('--grain-size', `${200 * G.size}px`);
@@ -1472,6 +1523,7 @@
         el.style.mixBlendMode = G.blend;
         el.dataset.move = G.move;
         el.style.setProperty('--grain-fade', String(G.fade));
+        flicker();
       };
       const t = window.tune;
       const set = (k) => (v) => { G[k] = v; put(); };
@@ -1486,7 +1538,7 @@
       // same number of the screen's frames. And how long the slow drift
       // takes to come round.
       const FPS = [30, 20, 15, 12, 10, 7.5, 6, 5, 4, 3];
-      t?.select({ label: 'Grain: flicker rate', value: '6', options: FPS.map((f) => [String(f), `${f} a second (every ${60 / f} frames)`]), onInput: (v) => el.style.setProperty('--grain-fps', v) });
+      t?.select({ label: 'Grain: flicker rate', value: '6', options: FPS.map((f) => [String(f), `${f} a second (every ${60 / f} frames)`]), onInput: (v) => { el.style.setProperty('--grain-fps', v); fps = +v || 6; flicker(); } });
       t?.slider({ label: 'Grain: jump distance', min: 0.02, max: 1.5, step: 0.01, value: 0.3, onInput: (v) => el.style.setProperty('--grain-jump', String(v)) });
       t?.slider({ label: 'Grain: drift time', min: 4, max: 60, step: 1, value: 20, unit: 's', onInput: (v) => el.style.setProperty('--grain-drift', `${v}s`) });
       t?.slider({ label: 'Grain: fades out toward the features', min: 0, max: 1, step: 0.05, value: G.fade, onInput: set('fade') });

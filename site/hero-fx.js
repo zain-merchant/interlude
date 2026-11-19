@@ -496,8 +496,10 @@ void main() {
     if (float(i) >= uTrackCount) break;
     vec2 t = uTracks[i];
     float soft = max(3.0, fr * 1.5);
-    // (The songs run outward in order: none further out can reach here.)
+    // (The songs run outward in order: none further out can reach here,
+    // and one wholly inside it adds nothing.)
     if (r < t.x - soft) break;
+    if (r > t.y + soft) continue;
     float w = smoothstep(t.x - soft, t.x + soft, r) * (1.0 - smoothstep(t.y - soft, t.y + soft, r));
     if (w > inSong) { inSong = w; u = clamp((r - t.x) / (t.y - t.x), 0.0, 1.0); idx = float(i); mid = 0.5 * (t.x + t.y); }
   }
@@ -531,15 +533,26 @@ void main() {
   float att = exp(-aF), attR = exp(-3.0 * aF), attS = exp(-2.0 * aF);
   float c1 = cos(2.0 * PI * fract(g));
   float cPrev = 1.0, cK = c1;
+  // Only as many as this pixel can show: past 0.48 cycles a device pixel a
+  // harmonic is fully faded out, and so is every one after it. (Where the
+  // grooves are fine on the screen that's only the first two or three.)
   for (int k = 1; k <= 16; k++) {
     float fk = float(k);
-    norm += 2.0 * coef;
-    // (Past 0.48 a harmonic is fully faded out: only its share of the
-    // average is still counted.)
-    if (fk * fg < 0.48) lines += 2.0 * coef * att * (1.0 - smoothstep(0.3, 0.48, fk * fg)) * cK;
+    if (fk * fg >= 0.48) break;
+    lines += 2.0 * coef * att * (1.0 - smoothstep(0.3, 0.48, fk * fg)) * cK;
     coef *= coefR; coefR *= coefS;
     att *= attR; attR *= attS;
     float cN = 2.0 * c1 * cK - cPrev; cPrev = cK; cK = cN;
+  }
+  // The average still counts all 16 (norm, each weighing 2 exp(-aS k^2)):
+  // summed in closed form (Poisson summation, the same to a millionth)
+  // wherever the 16th is too faint to matter, which with the line widths
+  // in use is everywhere; one by one otherwise.
+  if (aS > 0.047) {
+    norm = sqrt(PI / aS) * (1.0 + 2.0 * exp(-PI * PI / aS)) - 1.0;
+  } else {
+    float w = exp(-aS), wR = exp(-3.0 * aS), wS = exp(-2.0 * aS);
+    for (int k = 1; k <= 16; k++) { norm += 2.0 * w; w *= wR; wR *= wS; }
   }
   lines /= norm; // the brightest line sits +1 over the average, which stays 1
 
@@ -1809,7 +1822,12 @@ addEventListener('pointerdown', (e) => {
 }, { passive: true });
 
 function wake() {
-  if (!prog || running) return;
+  if (!prog) return;
+  // Asleep between frames at rest: something's moving now, so draw at once.
+  if (running) {
+    if (nap || resting) { clearTimeout(nap); nap = 0; resting = false; requestAnimationFrame(draw); }
+    return;
+  }
   if (reduced.matches) {
     frame(performance.now(), true);
     return;
@@ -1820,9 +1838,40 @@ function wake() {
   requestAnimationFrame(draw);
 }
 
+// The canvas's size in CSS px, kept from a ResizeObserver: asking the
+// canvas every frame made the browser lay the page out first whenever the
+// app in the screen had changed it.
+const box = { w: canvas.clientWidth, h: canvas.clientHeight };
+new ResizeObserver(([e]) => {
+  box.w = Math.round(e.contentRect.width);
+  box.h = Math.round(e.contentRect.height);
+  wake();
+}).observe(canvas);
+
 let last = performance.now();
 let lastSlot = -1;
 let lastDraw = 0;
+// Between frames at rest the loop sleeps on a timer instead of asking for
+// every frame of the screen (60 or 120 a second) only to skip most of them.
+let nap = 0;
+// Or, while the hero's screen plays its recording, the frames at rest come
+// with the video's own (beat, from the page): the record and the video then
+// change on the same frames, so the page is put together 30 times a second
+// rather than 60. (A timer carries on if the video stalls.)
+let paced = false;
+let resting = false;
+export function pacer(on) {
+  paced = !!on;
+  if (!paced && resting) { resting = false; clearTimeout(nap); nap = 0; requestAnimationFrame(draw); }
+}
+export function beat(now) {
+  if (!resting || !running) return;
+  resting = false;
+  clearTimeout(nap);
+  nap = 0;
+  draw(now);
+}
+
 function frame(now, still) {
   const dt = still ? 0 : Math.min(0.1, (now - last) / 1000);
   last = now;
@@ -1830,8 +1879,8 @@ function frame(now, still) {
   // grooves are soft light, so full Retina resolution buys little and costs
   // four times the pixels.
   const dpr = Math.min(2, devicePixelRatio || 1) * (STYLE[T.look]?.crisp ? 1 : T.res);
-  const w = Math.round(canvas.clientWidth * dpr);
-  const h = Math.round(canvas.clientHeight * dpr);
+  const w = Math.round(box.w * dpr);
+  const h = Math.round(box.h * dpr);
   if (canvas.width !== w || canvas.height !== h) {
     canvas.width = w;
     canvas.height = h;
@@ -1930,7 +1979,7 @@ function frame(now, still) {
   const st = STYLES[style];
   gl.viewport(0, 0, w, h);
   gl.uniform2f(U.uSize, w, h);
-  gl.uniform1f(U.uDpr, w / canvas.clientWidth);
+  gl.uniform1f(U.uDpr, w / box.w);
   gl.uniform2f(U.uCentre, g.cx, g.cy);
   gl.uniform2f(U.uGeo, g.d0, g.tilt);
   gl.uniform2f(U.uSpan, g.r0, g.R);
@@ -1998,7 +2047,7 @@ function frame(now, still) {
   // Only what's on screen is drawn, and a quarter of a screen either side
   // (for a quick scroll between frames): the rest isn't seen, and every
   // pixel of the record costs the GPU a lot.
-  const ks = h / canvas.clientHeight;
+  const ks = h / box.h;
   const ct = canvasTop - scrollPos;
   const mg = innerHeight * 0.25;
   // (A still frame, left showing when the record stops, is drawn whole:
@@ -2017,6 +2066,9 @@ function frame(now, still) {
 }
 
 function draw(now) {
+  nap = 0;
+  resting = false;
+  if (!running) return;
   if (reduced.matches || !visible) {
     running = false;
     // Stopping: the last frame left showing is a still one, with nothing
@@ -2034,13 +2086,25 @@ function draw(now) {
   // smooth at 60.)
   // (Busy, it draws unless it drew under 12ms ago: every frame at 60Hz,
   // every other one at 120Hz.)
-  const slot = Math.floor(((performance.timeOrigin + now) * T.fps) / 1000);
-  if (busy ? now - lastDraw > 12 : slot !== lastSlot) {
+  const fps = T.fps;
+  const slot = Math.floor(((performance.timeOrigin + now) * fps) / 1000);
+  if (busy ? now - lastDraw > 12 : paced ? now - lastDraw > 1000 / fps - 8 : slot !== lastSlot) {
     lastSlot = slot;
     lastDraw = now;
     frame(now, false);
   }
-  requestAnimationFrame(draw);
+  if (busy) {
+    requestAnimationFrame(draw);
+    return;
+  }
+  if (paced) {
+    resting = true;
+    nap = setTimeout(() => { nap = 0; resting = false; requestAnimationFrame(draw); }, 100);
+    return;
+  }
+  // At rest: sleep until just before the next slot, then take one frame.
+  const wait = ((slot + 1) * 1000) / fps - (performance.timeOrigin + performance.now()) - 3;
+  nap = setTimeout(() => { nap = 0; requestAnimationFrame(draw); }, Math.max(0, wait));
 }
 
 // The page's mask (style.css) fades the canvas's top 230px out: clear at
