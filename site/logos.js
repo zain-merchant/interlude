@@ -88,6 +88,56 @@ export const LOGOS = [
       <g style="isolation:isolate"><circle cx="39" cy="50" r="20" fill="none" stroke="${A}" stroke-width="2.6"/><circle cx="61" cy="50" r="20" fill="none" stroke="${B}" stroke-width="2.6" style="mix-blend-mode:plus-lighter"/></g>`,
   },
   {
+    id: 'rings-neon', family: 'light', name: 'Rings of light, neon', lockup: 'classic',
+    note: 'Each ring a tube of light: a hot, nearly white core inside its colour, a wide glow round it; where the two cross they flare white.',
+    art: (u) => {
+      const ring = (cx, col, f) => `<circle cx="${cx}" cy="50" r="20" fill="none" stroke="${col}" stroke-width="${f}"/>`;
+      const both = (f, a, b, extra = '') => `<g ${extra} style="isolation:isolate">${ring(39, a, f)}<g style="mix-blend-mode:plus-lighter">${ring(61, b, f)}</g></g>`;
+      return `<defs>${blur(u, 'g', 4)}${blur(u, 'm', 1.4)}</defs>
+        ${both(8, A, B, `filter="url(#${u('g')})" opacity="0.7"`)}${both(3.6, A, B, `filter="url(#${u('m')})"`)}${both(1.2, '#d8ecff', '#ffe6cc')}`;
+    },
+  },
+  {
+    id: 'rings-prism', family: 'light', name: 'Rings of light, prism', lockup: 'light',
+    note: 'Each ring split like light through glass into three: cyan, blue and violet for A; yellow, orange and red for B. Added together, they turn white where they cross.',
+    art: (u) => {
+      const split = (cx, cols) => cols.map(([dx, dy, c]) => `<circle cx="${cx + dx}" cy="${50 + dy}" r="20" fill="none" stroke="${c}" stroke-width="2.2" style="mix-blend-mode:plus-lighter"/>`).join('');
+      return `<defs>${blur(u, 'g', 2.6)}${blur(u, 's', 0.5)}</defs>
+        <g filter="url(#${u('g')})" opacity="0.6" style="isolation:isolate">${split(39, [[-1.4, -0.6, '#35e0ff'], [0, 0, A], [1.4, 0.6, '#8a6bff']])}${split(61, [[-1.4, -0.6, '#ffe14d'], [0, 0, B], [1.4, 0.6, '#ff4d5e']])}</g>
+        <g filter="url(#${u('s')})" style="isolation:isolate">${split(39, [[-1.4, -0.6, '#35e0ff'], [0, 0, A], [1.4, 0.6, '#8a6bff']])}${split(61, [[-1.4, -0.6, '#ffe14d'], [0, 0, B], [1.4, 0.6, '#ff4d5e']])}</g>`;
+    },
+  },
+  {
+    id: 'rings-fringe', family: 'light', name: 'Rings of light, fringed', lockup: 'regular',
+    note: 'Two glowing rings with the lamp\'s fringes on every edge: cool on the inside of each line, warm on the outside, like the glints on the hero\'s record.',
+    art: (u) => {
+      const ring = (cx, col) => `<circle cx="${cx}" cy="50" r="18.6" fill="none" stroke="#4fd8ff" stroke-width="1.6" style="mix-blend-mode:plus-lighter"/><circle cx="${cx}" cy="50" r="21.4" fill="none" stroke="#ff7a4f" stroke-width="1.6" style="mix-blend-mode:plus-lighter"/><circle cx="${cx}" cy="50" r="20" fill="none" stroke="${col}" stroke-width="2.6" style="mix-blend-mode:plus-lighter"/>`;
+      return `<defs>${blur(u, 'g', 3)}${blur(u, 's', 0.45)}</defs>
+        <g filter="url(#${u('g')})" opacity="0.65" style="isolation:isolate">${ring(39, A)}${ring(61, B)}</g>
+        <g filter="url(#${u('s')})" style="isolation:isolate">${ring(39, A)}${ring(61, B)}</g>`;
+    },
+  },
+  {
+    id: 'rings-lamp', family: 'light', name: 'Rings of light, lamplit', lockup: 'serif',
+    note: 'The rings caught by a lamp from above: each brightest at the top and fading round to nothing, so they read as light on metal; where they cross, a flare.',
+    art: (u) => {
+      const g = (id, col) => `<linearGradient id="${u(id)}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${col}"/><stop offset="0.55" stop-color="${col}" stop-opacity="0.55"/><stop offset="1" stop-color="${col}" stop-opacity="0.08"/></linearGradient>`;
+      const rings = (w) => `<circle cx="39" cy="50" r="20" fill="none" stroke="url(#${u('a')})" stroke-width="${w}"/><circle cx="61" cy="50" r="20" fill="none" stroke="url(#${u('b')})" stroke-width="${w}" style="mix-blend-mode:plus-lighter"/>`;
+      return `<defs>${g('a', A)}${g('b', B)}${blur(u, 'gl', 3.4)}${radial(u, 'f', [[0, W, 1], [0.35, W, 0.6], [1, W, 0]])}</defs>
+        <g filter="url(#${u('gl')})" opacity="0.8" style="isolation:isolate">${rings(6)}</g><g style="isolation:isolate">${rings(2.4)}</g>
+        <circle cx="50" cy="33.3" r="6" fill="url(#${u('f')})"/>`;
+    },
+  },
+  {
+    id: 'rings-double', family: 'light', name: 'Rings of light, grooves', lockup: 'caps',
+    note: 'Each deck as two fine rings of light, like a pair of grooves catching the lamp; where the sets cross they weave into a bright net.',
+    art: (u) => {
+      const set = (cx, col) => [18.2, 21.8].map((r) => `<circle cx="${cx}" cy="50" r="${r}" fill="none" stroke="${col}" stroke-width="1.5" style="mix-blend-mode:plus-lighter"/>`).join('');
+      return `<defs>${blur(u, 'g', 2.6)}</defs>
+        <g filter="url(#${u('g')})" opacity="0.75" style="isolation:isolate">${set(39, A)}${set(61, B)}</g><g style="isolation:isolate">${set(39, A)}${set(61, B)}</g>`;
+    },
+  },
+  {
     id: 'venn-haze', family: 'light', name: 'Venn of light, hazy', lockup: 'serif',
     note: 'Lit discs with a crisp-ish core and a wide haze, the way light looks through a little smoke on stage; the overlap glows white and spills.',
     art: (u) => `<defs>${blur(u, 'h', 7)}${blur(u, 'c', 1.4)}</defs>
