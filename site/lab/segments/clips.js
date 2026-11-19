@@ -109,7 +109,15 @@ export async function mountClips(host, opts = {}) {
     return 'h264';
   }
   const codec = await pickCodec();
-  root.dataset.codec = codec;
+  // Where the screen shows the app at no more than about 1440 device pixels
+  // across (a phone, a small window), the 1x set (manifest.small): a third to
+  // a quarter of the bytes for the same picture there. On a slow or metered
+  // connection, the twin comes at 1x too (it only shows for the rest of a
+  // step, while the screen eases back).
+  const net = navigator.connection;
+  const slow = !!net && (net.saveData || /(^|-)(2g|3g)$/.test(net.effectiveType ?? ''));
+  const small = !!M.small && host.getBoundingClientRect().width * devicePixelRatio <= 1600 ? M.small : '';
+  root.dataset.codec = codec + small;
 
   // Loading: one file at a time, in the order asked for, each held as a
   // blob so a clip that's in can start at once.
@@ -149,9 +157,9 @@ export async function mountClips(host, opts = {}) {
   }
   const name = (mode, i) => `${base}${mode}-${i}-${STEPS[i].name}`;
   const layer = (mode, which) => M.modes[mode]?.[which] ?? (which === 'play' ? 'app' : null);
-  const appUrl = (mode, i, which = 'play') => `${name(mode, i)}.${layer(mode, which)}.${codec}.mp4`;
+  const appUrl = (mode, i, which = 'play') => `${name(mode, i)}.${layer(mode, which)}${which === 'twin' && slow && M.small ? M.small : small}.${codec}.mp4`;
   const clip = (mode, i, first) => ({ tl: want(`${name(mode, i)}.json`, first), app: want(appUrl(mode, i), first) });
-  const ctlClip = (mode, i, first) => want(`${name(mode, i)}.ctl.${codec}.mp4`, first);
+  const ctlClip = (mode, i, first) => want(`${name(mode, i)}.ctl${small}.${codec}.mp4`, first);
   const twinClip = (i, first) => (layer('mouse', 'twin') ? want(appUrl('mouse', i, 'twin'), first) : null);
   const isReady = (mode, i) => files.get(`${name(mode, i)}.json`)?.ready && files.get(appUrl(mode, i))?.ready;
 
@@ -206,27 +214,62 @@ export async function mountClips(host, opts = {}) {
 
   async function start(mode, i) {
     const c = clip(mode, i, true);
-    const [tl, appSrc] = await Promise.all([c.tl.promise, c.app.promise]);
-    const app = await prime(appEls, appSrc, `${mode}-${i}`);
+    const twinReady = !!layer('mouse', 'twin') && files.get(appUrl('mouse', i, 'twin'))?.ready;
+    // A mouse clip while the controller is up (its own clip wasn't in time):
+    // the one without the arrow.
+    const bare = mode === 'mouse' && hand !== 'mouse' && twinReady;
+    // Back to the mouse from the controller: the arrow fades in over its
+    // clip, from the twin without it, rather than popping up.
+    const fadeIn = mode === 'mouse' && hand === 'mouse' && cur?.mode === 'controller' && twinReady;
+    const [tl, appSrc] = await Promise.all([c.tl.promise, bare ? twinClip(i).promise : c.app.promise]);
+    const app = await prime(appEls, appSrc, `${mode}-${i}${bare ? '-twin' : ''}`);
+    let under = null;
+    if (fadeIn) {
+      cur = { ...cur, twin: app };
+      under = await prime(appEls, await twinClip(i).promise, `mouse-${i}-twin`);
+    }
     let ctl = null;
     if (deskShown()) ctl = await prime(ctlEls, await ctlClip(mode, i, true).promise, `${mode}-${i}`);
     else for (const v of ctlEls) v.pause();
     const was = cur;
-    cur = { mode, i, app, ctl, tl, last: -1 };
+    cur = { mode, i, app, ctl, tl, last: -1, under };
     // (The last clip's twin, if one ran, isn't needed now.)
     if (was?.twin && was.twin !== app) was.twin.pause();
     if (!paused) begin();
   }
   /** Plays the clip that's in place. */
   function begin() {
-    const { app, ctl, mode } = cur;
+    const { app, ctl, mode, under } = cur;
     cur.started = true;
     app.play().catch(() => {});
     ctl?.play().catch(() => {});
-    front(app, appEls);
+    if (under) {
+      // The twin in front first, the clip with the arrow fading in over it.
+      under.play().catch(() => {});
+      front(under, appEls);
+      app.style.opacity = '0';
+      app.style.zIndex = '2';
+      app.requestVideoFrameCallback?.(() => {
+        app.style.transition = 'opacity 180ms cubic-bezier(0.2, 0, 0, 1)';
+        app.style.opacity = '1';
+        setTimeout(() => {
+          app.style.transition = app.style.opacity = app.style.zIndex = '';
+          front(app, appEls);
+          cur.under = null;
+        }, 220);
+      });
+    } else front(app, appEls);
     if (ctl) front(ctl, ctlEls);
     clearLinks();
     toEnd();
+    // Still in the other hand (its clip wasn't in): the hand's next one, and
+    // the twin for the step after, before anything else.
+    if (mode !== hand) {
+      const n = order[(pos + 1) % order.length];
+      if (hand === 'controller') twinClip(n, true);
+      if (hand === 'controller') ctlClip(hand, n, true);
+      clip(hand, n, true);
+    }
     ahead();
     if (prepared && mode === 'mouse' && hand === 'mouse') rollTwin();
   }
@@ -242,13 +285,16 @@ export async function mountClips(host, opts = {}) {
       if (cur !== at || paused) return;
       const frame = (now, meta) => {
         if (cur !== at || paused) return;
-        if (Math.round(meta.mediaTime * M.fps) >= n - 2) return advance();
+        if (Math.round(meta.mediaTime * M.fps) >= n - 2) return advance(at);
         cur.app.requestVideoFrameCallback(frame);
       };
       cur.app.requestVideoFrameCallback(frame);
     }, Math.max(0, left));
   }
-  function advance() {
+  function advance(at) {
+    // (Once per clip, however many loops reached its end.)
+    if (at.advanced) return;
+    at.advanced = true;
     pos = (pos + 1) % order.length;
     const i = order[pos];
     // The other hand's clip if it's in; if not, this hand's, and try again next step.
@@ -261,11 +307,22 @@ export async function mountClips(host, opts = {}) {
     const next = order[(pos + 1) % order.length];
     clip(hand, next);
     if (deskShown()) ctlClip(hand, next);
+    // On a slow connection, once this hand's clips are all in, the twin for
+    // the step after this one, so a tap on the switch takes the arrow away
+    // at once there too.
+    if (slow && hand === 'mouse' && order.every((i) => isReady('mouse', i))) twinClip(next);
+    // (And on a slow connection the next step's controller clip, small, so a
+    // switch raises the controller with its picture at once.)
+    if (slow) ctlClip(hand, next);
     if (idled) return;
     idled = true;
-    const net = navigator.connection;
-    if (net && (net.saveData || /(^|-)(2g|3g)$/.test(net.effectiveType ?? ''))) return;
     const idle = window.requestIdleCallback ?? ((f) => setTimeout(f, 0));
+    if (slow) {
+      // On a slow or metered connection only this hand's controller clips
+      // (small), so a switch raises the controller with its picture at once.
+      setTimeout(() => idle(() => ctlClip(hand, order[pos])), 4000);
+      return;
+    }
     setTimeout(() => idle(() => {
       for (const i of order) ctlClip(hand, i);
       const other = hand === 'mouse' ? 'controller' : 'mouse';
@@ -278,10 +335,10 @@ export async function mountClips(host, opts = {}) {
 
   // The twin: the mouse clip without its arrow, run in step under it while
   // a switch may come, and crossed to when it does.
-  async function rollTwin() {
+  async function rollTwin(first = true) {
     const at = cur;
     if (!at || at.mode !== 'mouse' || at.twin || !twinClip(at.i)) return;
-    const src = await twinClip(at.i, true).promise;
+    const src = await twinClip(at.i, first).promise;
     if (cur !== at) return;
     const el = await prime(appEls, src, `mouse-${at.i}-twin`, at.app.currentTime + 0.1);
     if (cur !== at) return;
@@ -291,7 +348,7 @@ export async function mountClips(host, opts = {}) {
   async function crossToTwin() {
     const at = cur;
     if (!at || at.mode !== 'mouse') return;
-    if (!at.twin) await rollTwin();
+    if (!at.twin) await rollTwin(false);
     const el = at.twin;
     if (cur !== at || !el) return;
     if (Math.abs(el.currentTime - at.app.currentTime) > 0.05) el.currentTime = at.app.currentTime + 0.03;
@@ -366,11 +423,25 @@ export async function mountClips(host, opts = {}) {
     root.dataset.hand = hand;
     clearLinks();
     // Switching away from the mouse: its arrow goes at once.
-    if (hand === 'controller' && cur?.mode === 'mouse') crossToTwin();
+    if (hand === 'controller' && cur?.mode === 'mouse') {
+      // What to load first, on a slow connection: this step's controller
+      // clip (small; without it the controller would rise empty), then the
+      // next step's in the controller hand (the swap waits for it), then the
+      // twin that takes the arrow away. (Each asked for first jumps the queue,
+      // so they're asked for in reverse.)
+      const next = order[(pos + 1) % order.length];
+      twinClip(cur.i, true);
+      ctlClip('controller', next, true);
+      clip('controller', next, true);
+      ctlClip(cur.mode, cur.i, true);
+      crossToTwin();
+    }
+    // Back to the mouse: the twin for the arrow to fade in over, next step.
+    if (hand === 'mouse') twinClip(order[(pos + 1) % order.length], true);
     // A controller coming in shows this step's controller clip, in step.
     if (hand === 'controller' && cur && !cur.ctl) syncDesk();
-    clip(hand, order[(pos + 1) % order.length], true);
-    if (hand === 'controller') ctlClip(hand, order[(pos + 1) % order.length], true);
+    clip(hand, order[(pos + 1) % order.length]);
+    if (hand === 'controller') ctlClip(hand, order[(pos + 1) % order.length]);
   }
   async function syncDesk() {
     const at = cur;

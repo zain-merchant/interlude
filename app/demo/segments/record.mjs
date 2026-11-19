@@ -322,6 +322,7 @@ if (PHASE === 'all' || PHASE === 'record') {
     // The controller's outline at rest, for the page to show it through.
     // Which app clip plays in this hand, and its twin without the cursor.
     manifest.modes[mode] = mode === 'mouse' ? { play: 'appc', twin: 'app' } : { play: 'app', twin: null };
+    manifest.small = '@1x';
     for (let k = 0; k < plan.names.length; k++) {
       const name = `${mode}-${k}-${plan.names[k]}`;
       fs.writeFileSync(path.join(OUT, 'clips', `${name}.json`), JSON.stringify(timelines[k]));
@@ -329,9 +330,14 @@ if (PHASE === 'all' || PHASE === 'record') {
       if (mode === 'controller' && k === 0) await ffmpeg(['-i', path.join(dir, 'mask.png'), '-vf', 'alphaextract', path.join(OUT, 'clips', 'controller-mask.png')]);
       // (The twin gets a keyframe every 2 s, so starting it partway
       // through, at a switch nobody hovered first, is quick.)
+      // Each also at 1x (manifest.small), for small screens and for the twin
+      // on slow connections.
       const layers = mode === 'mouse' ? [['appc', 'p', 300], ['app', 'a', 60], ['ctl', 'c', 300]] : [['app', 'a', 300], ['ctl', 'c', 300]];
       for (const [layer, pre, gop] of layers) {
-        for (const codec of CODECS) await encode(path.join(dir, `${pre}%04d.png`), path.join(OUT, 'clips', `${name}.${layer}.${codec}.mp4`), codec, gop);
+        for (const codec of CODECS) {
+          await encode(path.join(dir, `${pre}%04d.png`), path.join(OUT, 'clips', `${name}.${layer}.${codec}.mp4`), codec, gop);
+          await encode(path.join(dir, `${pre}%04d.png`), path.join(OUT, 'clips', `${name}.${layer}@1x.${codec}.mp4`), codec, gop, layer === 'ctl' ? Math.round(ctlBox.width) : 1440);
+        }
       }
       console.log('encoded', name);
     }
@@ -379,8 +385,8 @@ function ffmpeg(a) {
     p.on('close', (c) => (c ? fail(new Error(`ffmpeg exited ${c}`)) : ok()));
   });
 }
-function encode(input, file, codec, gop = 300) {
-  const vf = ['-vf', 'scale=out_color_matrix=bt709:out_range=tv,format=yuv420p'];
+function encode(input, file, codec, gop = 300, width = 0) {
+  const vf = ['-vf', `scale=${width ? `${width}:-2:flags=lanczos:` : ''}out_color_matrix=bt709:out_range=tv,format=yuv420p`];
   const tags = ['-colorspace', 'bt709', '-color_primaries', 'bt709', '-color_trc', 'bt709', '-color_range', 'tv'];
   const c = {
     av1: ['-c:v', 'libsvtav1', '-preset', '5', '-crf', '38', '-g', String(gop), '-svtav1-params', 'log-level=0'],
