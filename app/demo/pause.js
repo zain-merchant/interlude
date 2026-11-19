@@ -30,11 +30,15 @@ let pumping = false;
 function schedule() {
   const now = performance.timeOrigin + performance.now();
   const slot = Math.floor(now / every);
-  if (slot === lastSlot) setTimeout(() => raf(pump), Math.max(0, (slot + 1) * every - now - 3));
+  // (Just after the next slot begins, so the frame taken is its first.)
+  if (slot === lastSlot) setTimeout(() => raf(pump), Math.max(0, (slot + 1) * every - now + 1));
   else raf(pump);
 }
 function pump(t) {
-  const slot = Math.floor((performance.timeOrigin + t) / every);
+  // (From the clock as this runs, not the frame's own time, which can be
+  // from just before the slot began: the frame woken for a new slot is then
+  // always counted in it, here and in the record's loop alike.)
+  const slot = Math.floor((performance.timeOrigin + Math.max(t, performance.now())) / every);
   if (slot === lastSlot) {
     schedule();
     return;

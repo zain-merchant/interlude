@@ -2292,7 +2292,10 @@ function draw(now) {
   // (Busy, it draws unless it drew under 12ms ago: every frame at 60Hz,
   // every other one at 120Hz.)
   const fps = T.fps;
-  const slot = Math.floor(((performance.timeOrigin + now) * fps) / 1000);
+  // (The slot is read from the clock as this runs, not the frame's own
+  // time, which can be from just before the slot began: the frame woken for
+  // a new slot is then always counted in it.)
+  const slot = Math.floor(((performance.timeOrigin + Math.max(now, performance.now())) * fps) / 1000);
   if (busy ? now - lastDraw > 12 : paced ? now - lastDraw > 1000 / fps - 8 : slot !== lastSlot) {
     lastSlot = slot;
     lastDraw = now;
@@ -2309,8 +2312,10 @@ function draw(now) {
     nap = setTimeout(() => { nap = 0; resting = false; requestAnimationFrame(draw); }, 100);
     return;
   }
-  // At rest: sleep until just before the next slot, then take one frame.
-  const wait = ((slot + 1) * 1000) / fps - (performance.timeOrigin + performance.now()) - 3;
+  // At rest: sleep until just after the next slot begins, then take one
+  // frame (the first of that slot: waking any earlier could land on the
+  // last frame of this one and need a second).
+  const wait = ((slot + 1) * 1000) / fps - (performance.timeOrigin + performance.now()) + 1;
   nap = setTimeout(() => { nap = 0; requestAnimationFrame(draw); }, Math.max(0, wait));
 }
 
