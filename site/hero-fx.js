@@ -2619,7 +2619,7 @@ function frame(now, still) {
   gl.clearColor(0, 0, 0, 0);
   // Relit from the baked layer (see RELIT), when it can be; or at rest, the
   // kept picture turned on (see REPROJECT).
-  if (y1 > y0 && !still && relit(w, h, g, cover, mode)) return;
+  if (y1 > y0 && !still && relit(w, h, g, cover, mode, y0, y1)) return;
   if (y1 > y0 && !still && restNow && turned(now, w, h, y0, y1, g, cover, mode)) return;
   gl.clear(gl.COLOR_BUFFER_BIT);
   if (y1 > y0) gl.drawArrays(gl.TRIANGLES, 0, 3);
@@ -2813,7 +2813,7 @@ function table(name, w, h, wrapS, key) {
 }
 // (The uniforms the baked layer depends on, by name.)
 const BAKED = ['uSize', 'uDpr', 'uCentre', 'uGeo', 'uSpan', 'uOuter', 'uGroove', 'uTracks', 'uTrackCount', 'uWarp', 'uLens', 'uHz', 'uTilt', 'uCover'];
-function relit(w, h, g, cover, mode) {
+function relit(w, h, g, cover, mode, y0, y1) {
   // (The glass bends the grooves under the pointer, and a tilt the whole
   // disc, each frame: those take the full path. The hovers that move the
   // lamp, its cone, the glints or their colour only change the light.)
@@ -2911,7 +2911,24 @@ function relit(w, h, g, cover, mode) {
   gl.uniform1i(e.u.uGlT, 3);
   gl.uniform1i(e.u.uSt2, 4);
   gl.clear(gl.COLOR_BUFFER_BIT);
-  gl.drawArrays(gl.TRIANGLES, 0, 3);
+  // (Not under the app's screen, where nothing shows: the strip is drawn
+  // as the bands round it, two device px inside its edge, so the pixels
+  // there are never started at all. The edge itself is the shader's.)
+  const k = w / box.w;
+  const cx0 = Math.ceil(cover[0] * k) + 2, cx1 = Math.floor(cover[2] * k) - 2;
+  const cy0 = h - Math.floor(cover[3] * k) + 2, cy1 = h - Math.ceil(cover[1] * k) - 2;
+  const sy0 = h - y1, sy1 = h - y0;
+  if (cover[2] > cover[0] && cx1 > cx0 && cy1 > cy0 && cy0 < sy1 && cy1 > sy0) {
+    const band = (x0, ya, x1, yb) => {
+      const a = Math.max(ya, sy0), b = Math.min(yb, sy1);
+      if (x1 > x0 && b > a) { gl.scissor(x0, a, x1 - x0, b - a); gl.drawArrays(gl.TRIANGLES, 0, 3); }
+    };
+    band(0, sy0, w, cy0);
+    band(0, cy1, w, sy1);
+    band(0, cy0, cx0, cy1);
+    band(cx1, cy0, w, cy1);
+    gl.scissor(0, sy0, w, sy1 - sy0);
+  } else gl.drawArrays(gl.TRIANGLES, 0, 3);
   // The dust, over it.
   if ((T.dust ?? 0) > 0 && specks(g)) {
     gl.useProgram(lit.dust.p);
