@@ -8,7 +8,7 @@
 <style>
   /* Trying the hero as recorded clips: pick the hand, which clips play and
      in what order, and the codec. Not linked from the site; the site's own
-     hero plays it too, with Tune > Hero > Performance > demo. */
+     hero plays them too, with Tune > Hero > Performance > demo. */
   :root { --bg: #09090b; --panel: #111114; --fg: #eceae4; --fg-2: rgb(236 234 228 / 0.68); --line: rgb(255 255 255 / 0.1); }
   * { box-sizing: border-box; }
   body { margin: 0; padding: 32px 16px 64px; background: var(--bg); color: var(--fg); font: 14px/1.5 system-ui, sans-serif; }
@@ -21,48 +21,53 @@
   button[aria-pressed="true"] { background: #2a2a30; }
   select { font: inherit; }
   .screen { position: relative; aspect-ratio: 1440 / 920; border-radius: 16px; overflow: hidden; background: #000; }
-  iframe { position: absolute; left: 0; top: 0; width: 1440px; height: 920px; border: 0; transform-origin: 0 0; }
+  .host { position: absolute; left: 0; top: 0; width: 1440px; height: 920px; transform-origin: 0 0; }
   .level { height: 4px; width: 0; background: #ff9b45; margin-top: 10px; border-radius: 2px; }
 </style>
 </head>
 <body>
 <main>
   <h1>Hero clips</h1>
-  <p>The hero recorded from the real app as clips, one per step, in both hands. A switch of hands moves the screen and the controller at once; the clips swap at the end of the step.</p>
+  <p>The hero recorded from the real app as clips, one per step, in both hands. A switch of hands moves the screen and the controller at once and the arrow goes with it; the clips swap at the end of the step.</p>
   <div class="bar">
-    <span><button type="button" data-mode="mouse" aria-pressed="true">Mouse</button> <button type="button" data-mode="controller" aria-pressed="false">Controller</button></span>
+    <span id="hands"><button type="button" data-mode="mouse" aria-pressed="true">Mouse</button> <button type="button" data-mode="controller" aria-pressed="false">Controller</button></span>
     <span id="steps"></span>
     <label>Codec <select id="codec"><option value="">Best for this browser</option><option>av1</option><option>hevc</option><option>h264</option></select></label>
     <button type="button" id="reload">Restart</button>
     <span id="info"></span>
   </div>
-  <div class="screen"><iframe title="Hero clips" id="f"></iframe></div>
+  <div class="screen"><div class="host" id="host"></div></div>
   <div class="level" id="level"></div>
 </main>
 <script type="module">
-  const f = document.getElementById('f');
-  const fit = () => (f.style.transform = `scale(${f.parentElement.clientWidth / 1440})`);
-  new ResizeObserver(fit).observe(f.parentElement);
+  import { mountClips } from './clips.js?v=20261119c1';
+  const host = document.getElementById('host');
+  const fit = () => (host.style.transform = `scale(${host.parentElement.clientWidth / 1440})`);
+  new ResizeObserver(fit).observe(host.parentElement);
   const M = await fetch('clips/manifest.json').then((r) => r.json());
   const steps = document.getElementById('steps');
-  for (const s of M.steps) steps.insertAdjacentHTML('beforeend', `<label><input type="checkbox" checked value="${s.name}" data-i="${M.steps.indexOf(s)}"> ${s.name} (${(s.frames / M.fps).toFixed(1)} s)</label> `);
+  for (const s of M.steps) steps.insertAdjacentHTML('beforeend', `<label><input type="checkbox" checked data-i="${M.steps.indexOf(s)}"> ${s.name} (${(s.frames / M.fps).toFixed(1)} s)</label> `);
   let mode = 'mouse';
-  const load = () => {
-    const on = [...steps.querySelectorAll('input:checked')].map((i) => i.dataset.i);
-    const codec = document.getElementById('codec').value;
-    f.src = `hero.html?steps=${on.join(',')}&mode=${mode}${codec ? `&codec=${codec}` : ''}`;
-  };
+  let clips = null;
+  async function load() {
+    clips?.setPaused(true);
+    host.replaceChildren();
+    const order = [...steps.querySelectorAll('input:checked')].map((i) => i.dataset.i);
+    clips = await mountClips(host, {
+      base: 'clips/', hand: mode, order, codec: document.getElementById('codec').value || undefined,
+      onReady: () => (document.getElementById('info').textContent = `Playing ${clips?.codec ?? ''}`),
+      onLevels: (ls) => (document.getElementById('level').style.width = `${Math.round(ls[ls.length - 1] * 100)}%`),
+    });
+  }
   steps.addEventListener('change', load);
   document.getElementById('codec').addEventListener('change', load);
   document.getElementById('reload').addEventListener('click', load);
-  for (const b of document.querySelectorAll('[data-mode]')) b.addEventListener('click', () => {
+  const hands = document.getElementById('hands');
+  for (const [ev, on] of [['pointerenter', true], ['focusin', true], ['pointerleave', false], ['focusout', false]]) hands.addEventListener(ev, () => clips?.prepare(on && mode === 'mouse'));
+  for (const b of hands.querySelectorAll('[data-mode]')) b.addEventListener('click', () => {
     mode = b.dataset.mode;
-    for (const o of document.querySelectorAll('[data-mode]')) o.setAttribute('aria-pressed', String(o === b));
-    f.contentWindow?.postMessage({ interlude: 'mode', mode }, '*');
-  });
-  addEventListener('message', (e) => {
-    if (e.data?.interlude === 'level') document.getElementById('level').style.width = `${Math.round(e.data.level * 100)}%`;
-    if (e.data?.interlude === 'hero-ready') document.getElementById('info').textContent = `Playing ${f.contentDocument?.documentElement.dataset.codec ?? ''}`;
+    for (const o of hands.querySelectorAll('[data-mode]')) o.setAttribute('aria-pressed', String(o === b));
+    clips?.setHand(mode);
   });
   load();
 </script>
