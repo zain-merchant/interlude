@@ -25,10 +25,18 @@ let every = 1000 / 60;
 let lastSlot = -1;
 const waiting = new Map();
 let pumping = false;
+// Between those frames it sleeps on a timer rather than waking for every
+// frame of the screen (60 or 120 a second) only to skip it.
+function schedule() {
+  const now = performance.timeOrigin + performance.now();
+  const slot = Math.floor(now / every);
+  if (slot === lastSlot) setTimeout(() => raf(pump), Math.max(0, (slot + 1) * every - now - 3));
+  else raf(pump);
+}
 function pump(t) {
   const slot = Math.floor((performance.timeOrigin + t) / every);
   if (slot === lastSlot) {
-    raf(pump);
+    schedule();
     return;
   }
   lastSlot = slot;
@@ -46,7 +54,7 @@ window.requestAnimationFrame = (cb) => {
   waiting.set(++next, cb);
   if (!pumping) {
     pumping = true;
-    raf(pump);
+    schedule();
   }
   return next;
 };
