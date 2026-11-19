@@ -173,9 +173,11 @@ h1 { margin: 0; font-size: clamp(48px, 9vw, 88px); font-weight: 600; letter-spac
     radial-gradient(60% 70% at 30% 60%, rgb(201 220 242 / 0.5), transparent 70%),
     radial-gradient(60% 70% at 70% 60%, rgb(240 220 192 / 0.42), transparent 70%);
   filter: blur(60px);
-  /* Set from the level by the page's script, a few times a second. */
+  /* Set from the level by the page's script, on each of the app's frames
+     (eased there, not by a transition); on its own layer, so that only
+     moves what's drawn. */
   opacity: 0.16;
-  transition: opacity 90ms linear, transform 90ms linear;
+  will-change: opacity, transform;
 }
 /* Under the frame, centred: the switch and, beside it, what it means. Three
    layers only: a quiet track, a filled thumb, plain text. The controller
