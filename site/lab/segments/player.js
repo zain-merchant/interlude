@@ -178,6 +178,10 @@ function ahead() {
   if (deskShown()) ctlClip(hand, next);
   if (idled) return;
   idled = true;
+  // On a slow or metered connection, nothing ahead of need: the other
+  // hand's clips load when it's asked for (the swap waits for them).
+  const net = navigator.connection;
+  if (net && (net.saveData || /(^|-)(2g|3g)$/.test(net.effectiveType ?? ''))) return;
   const idle = window.requestIdleCallback ?? ((f) => setTimeout(f, 0));
   setTimeout(() => idle(() => {
     for (const i of order) ctlClip(hand, i);
@@ -234,7 +238,12 @@ function setCursorStyle(mode) {
   stage.innerHTML = html ?? '';
   cursor = stage.firstElementChild;
   cursorState = ['', '', ''];
+  // The arrow's resting turn (hero.css: 11deg plus the lean).
+  arrow = cursor?.querySelector('.ss-cursor__arrow') ?? null;
+  arrowRest = arrow ? parseFloat(getComputedStyle(arrow).rotate) || 0 : 0;
 }
+let arrow = null;
+let arrowRest = 0;
 const NS = 'http://www.w3.org/2000/svg';
 let paths = [];
 function draw(tl, f) {
@@ -242,9 +251,13 @@ function draw(tl, f) {
   if (lvl != null) post({ interlude: 'level', level: lvl });
   const c = tl.cursor[f];
   if (cursor && c) {
+    // Where it is, and the arrow's turn set on the arrow itself (not as
+    // --lean on the cursor, which would restyle all of it); each only when
+    // it changes. (Tried as compositor animations over the whole clip: they
+    // kept the page making frames at the screen's rate, which cost more.)
     const [t, lean, attrs] = c;
     if (t !== cursorState[0]) cursor.style.transform = t;
-    if (lean !== cursorState[1]) cursor.style.setProperty('--lean', lean);
+    if (lean !== cursorState[1] && arrow) arrow.style.rotate = `${(arrowRest + (parseFloat(lean) || 0)).toFixed(2)}deg`;
     if (attrs !== cursorState[2]) {
       for (const a of [...cursor.attributes]) if (a.name.startsWith('data-')) cursor.removeAttribute(a.name);
       for (const kv of attrs.split(' ').filter(Boolean)) {
@@ -322,9 +335,9 @@ const ready = () => {
 };
 if (first.requestVideoFrameCallback) first.requestVideoFrameCallback(ready);
 else ready();
-// For measuring: each presented frame of either app element, with its clip.
+// For measuring (?log): each presented frame of either app element, with its clip.
 window.__frames = [];
-for (const el of appEls) {
+if (q.has('log')) for (const el of appEls) {
   const log = (now, meta) => {
     window.__frames.push([Math.round(now * 10) / 10, el === appEls[0] ? 0 : 1, el.dataset.clip?.slice(6), Math.round(meta.mediaTime * 1000), meta.presentedFrames]);
     if (window.__frames.length > 4000) window.__frames.splice(0, 1000);
