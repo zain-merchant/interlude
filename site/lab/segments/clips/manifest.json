@@ -30,14 +30,12 @@
  ],
  "modes": {
   "controller": {
-   "cursor": {
-    "touch": "<div class=\"ss-cursor\" data-style=\"touch\" data-kind=\"pointer\" aria-hidden=\"true\" style=\"transform: translate(720px, 1120px); --lean: 0.00deg;\"><span class=\"ss-cursor__streak\"></span><div class=\"ss-cursor__press\"><span class=\"ss-cursor__dot\"></span></div></div>"
-   }
+   "play": "app",
+   "twin": null
   },
   "mouse": {
-   "cursor": {
-    "arrow": "<div class=\"ss-cursor\" data-style=\"arrow\" data-kind=\"pointer\" aria-hidden=\"true\" data-pressed=\"true\" style=\"transform: translate(1276.51px, 484.04px); --lean: 8.84deg;\"><div class=\"ss-cursor__press\"><div class=\"ss-cursor__glyph\" data-glyph=\"pointer\" data-active=\"true\" style=\"margin-left: -4px; margin-top: -3px; transform-origin: 4px 3px;\"><svg width=\"22\" height=\"22\" viewBox=\"0 0 22 22\" class=\"ss-cursor__arrow\" aria-hidden=\"true\"><path d=\"M4 3 18.5 9.6 11.8 11.8 9.6 18.5Z\"></path></svg></div><div class=\"ss-cursor__glyph\" data-glyph=\"ibeam\" data-active=\"false\" style=\"margin-left: -5px; margin-top: -8px; transform-origin: 5px 8px;\"><svg width=\"10\" height=\"16\" viewBox=\"0 0 10 16\" fill=\"none\" overflow=\"visible\"><path d=\"M3 1H7M3 15H7M5 1V15\" stroke-width=\"2.6\" stroke-linecap=\"round\" style=\"stroke: var(--ss-cursor-edge, #fff);\"></path><path d=\"M3 1H7M3 15H7M5 1V15\" stroke-width=\"1\" stroke-linecap=\"round\" style=\"stroke: var(--ss-cursor-line, #000);\"></path></svg></div></div></div>"
-   }
+   "play": "appc",
+   "twin": "app"
   }
  },
  "controllerBox": {
