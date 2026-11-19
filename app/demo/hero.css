@@ -41,6 +41,9 @@ html, body { margin: 0; width: 1440px; height: 920px; overflow: hidden; backgrou
      pivoting on its tip (the hotspot, 4 × 3 in its 22px box). */
   transform-origin: 4px 3px;
   rotate: calc(11deg + var(--lean, 0deg));
+  /* Its own layer, so steering it only turns what's already drawn: the
+     arrow and its three shadows aren't drawn again every frame. */
+  will-change: rotate;
 }
 .hero-stage .ss-stage .ss-cursor .ss-cursor__arrow path {
   fill: #fff;
