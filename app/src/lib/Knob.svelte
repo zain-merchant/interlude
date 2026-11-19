@@ -121,15 +121,23 @@
     }),
   );
   const half = 0.5 / (TICKS - 1);
+  const lit = (tk) => hi - lo > 0.02 && tk.p >= lo - half && tk.p <= hi + half;
 </script>
 
 <div class="knob" style:--c={arc ?? 'var(--fg)'}>
   <div class="wrap" style:width="{box}px" style:height="{box}px">
     <svg width={box} height={box} viewBox="{-box / 2} {-box / 2} {box} {box}" aria-hidden="true">
+      <!-- The lit ticks in a group of their own, glowing as one: one filter
+           for the ring rather than one per tick, which costs a lot to
+           repaint as the knob turns. -->
       {#each ticks as tk}
-        <line x1={tk.x1} y1={tk.y1} x2={tk.x2} y2={tk.y2} class:major={tk.major}
-          class:on={hi - lo > 0.02 && tk.p >= lo - half && tk.p <= hi + half} />
+        {#if !lit(tk)}<line x1={tk.x1} y1={tk.y1} x2={tk.x2} y2={tk.y2} class:major={tk.major} />{/if}
       {/each}
+      <g class="lit">
+        {#each ticks as tk}
+          {#if lit(tk)}<line x1={tk.x1} y1={tk.y1} x2={tk.x2} y2={tk.y2} class="on" class:major={tk.major} />{/if}
+        {/each}
+      </g>
     </svg>
     <div
       bind:this={dial}
@@ -192,6 +200,8 @@
   line.on {
     stroke: var(--c);
     stroke-width: 1.8;
+  }
+  .lit {
     filter: drop-shadow(0 0 0.75px var(--c));
   }
   .knob:has(.dial.killed) line.on {
