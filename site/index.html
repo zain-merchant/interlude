@@ -947,9 +947,11 @@
       }
 
       let mode = 'mouse';
-      // Being tried: whether the glow and the record follow the music at all
-      // (Tune > Hero > Performance > react to the music; ?react=off).
-      let react = new URLSearchParams(location.search).get('react') !== 'off';
+      // Whether the glow and the record follow the music: off. Measured, the
+      // glow moved at most 6/255 in a band under the screen and the record's
+      // swell at most 5/255, nothing anyone sees, for a few points of CPU.
+      // (Tune > Hero > Performance > react to the music; ?react=on.)
+      let react = new URLSearchParams(location.search).get('react') === 'on';
       // Being tried: the live app in its frame, or the recorded clips played
       // in the page (startClips, below).
       let demo = new URLSearchParams(location.search).get('hero') === 'clips' ? 'clips' : 'app';
