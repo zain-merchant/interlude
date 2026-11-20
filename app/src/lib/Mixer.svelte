@@ -162,7 +162,7 @@
   <div class="fwrap" class:mirror={deck === 1}>
     <div class="frow">
       <!-- #60 (UI audit flag): ticks, over and what only matter while meters is on. -->
-      <Meter level={engine.deckLevels[deck]} ticks={deck === 0 ? 'right' : 'left'} what="{D}" />
+      <Meter level={engine.deckLevels[deck]} ticks={deck === 0 ? 'right' : 'left'} what={D} />
       <Fader vertical bind:value={ch.fader} reset={1} label="{D} volume"
         onchange={(v) => control({ type: 'setFader', deck, value: v })} />
     </div>
