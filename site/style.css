@@ -179,10 +179,11 @@ h1 { margin: 0; font-size: clamp(48px, 9vw, 88px); font-weight: 600; letter-spac
   opacity: 0.16;
   will-change: opacity, transform;
 }
-/* Under the frame, centred: the switch and, beside it, what it means. Three
-   layers only: a quiet track, a filled thumb, plain text. The controller
-   version plays inside the same frame, so this never moves. */
-.shot-bar { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 10px 16px; width: max-content; max-width: 100%; margin: 28px auto 0; }
+/* Above the frame, centred: the switch and, beside it, what it means, where
+   the eye lands before the app. Three layers only: a quiet track, a light
+   thumb, plain text. The controller version plays inside the same frame,
+   so this never moves. */
+.shot-bar { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 10px 14px; width: max-content; max-width: 100%; margin: 0 auto 22px; }
 /* Plain words, no badge: full-strength white, a weight up, with a soft
    dark halo behind the letters so they read over the record. */
 .shot-tag { display: inline-flex; align-items: center; height: 36px; color: #f4f3ef; font-size: 13.5px; font-weight: 500; text-shadow: 0 1px 2px rgb(9 9 11 / 0.9), 0 0 14px rgb(9 9 11 / 0.95), 0 0 28px rgb(9 9 11 / 0.8); }
@@ -211,12 +212,12 @@ main { position: relative; isolation: isolate; }
   position: relative;
   display: inline-grid;
   grid-template-columns: 1fr 1fr;
-  padding: 3px;
-  border-radius: 10px;
+  padding: 4px;
+  border-radius: 12px;
   /* Near solid, so it reads over the record's grooves (no blur: a blur
      inside the shot's layers is what went wrong before). */
-  background: rgb(22 22 26 / 0.92);
-  box-shadow: inset 0 0 0 1px var(--line), 0 6px 20px rgb(0 0 0 / 0.35);
+  background: rgb(28 28 33 / 0.94);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.14), 0 8px 28px rgb(0 0 0 / 0.45);
 }
 .switch button {
   position: relative;
@@ -225,32 +226,34 @@ main { position: relative; isolation: isolate; }
   align-items: center;
   justify-content: center;
   gap: 7px;
-  height: 30px;
-  padding: 0 14px;
+  height: 36px;
+  padding: 0 18px;
   border: 0;
-  border-radius: 7px;
+  border-radius: 8px;
   background: none;
-  color: var(--fg-3);
-  font: 500 13px var(--font);
+  color: rgb(244 243 239 / 0.62);
+  font: 500 14px var(--font);
   cursor: pointer;
   transition: color 0.2s;
 }
-.switch button:hover { color: var(--fg-2); }
-.switch button[aria-checked="true"] { color: var(--fg); }
-.switch svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.3; stroke-linejoin: round; }
+.switch button:hover { color: var(--fg); }
+/* The one picked is dark on the light thumb. */
+.switch button[aria-checked="true"] { color: #0b0b0d; }
+.switch svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.3; stroke-linejoin: round; }
 .switch button[data-mode="mouse"] svg { fill: currentColor; stroke-width: 1; }
 .switch .thumb {
   position: absolute;
-  top: 3px;
-  bottom: 3px;
-  left: 3px;
-  width: calc(50% - 3px);
-  border-radius: 7px;
-  background: rgb(255 255 255 / 0.1);
+  top: 4px;
+  bottom: 4px;
+  left: 4px;
+  width: calc(50% - 4px);
+  border-radius: 8px;
+  background: #f4f3ef;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
   transition: transform var(--smooth-ms) var(--smooth);
 }
-.stage-frame[data-mode="controller"] ~ .shot-bar .thumb,
-.shot:has(.stage-frame[data-mode="controller"]) .thumb { transform: translateX(100%); }
+.switch[data-mode="controller"] .thumb { transform: translateX(100%); }
+.switch button:focus-visible { outline: 2px solid var(--deck-a, #8fc7ff); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) {
   .stage-frame { transform: none; }
   .shot-bar { display: none; }
@@ -611,12 +614,16 @@ html[data-hero="split"] .lede {
    right edge; the supporting line and the facts run under the headline. */
 html[data-hero="split"] .cta { grid-area: cta; align-self: end; flex-wrap: nowrap; gap: 8px; margin: 0 0 0.6em; }
 html[data-hero="split"] .cta .btn.big { flex: 1 1 auto; justify-content: center; padding: 0 18px; font-size: 15px; }
-/* Over the record: GitHub is a surface, not a tint, so no grooves show through. */
+/* Over the record: GitHub is a surface, not a tint, so no grooves show
+   through. (The record leaves a hole under it, hero-fx.js, so what's behind
+   is only the page and the grain: the colour it used to blur that into is
+   laid on solid instead, which costs nothing to draw each frame. Was
+   rgb(19 19 23 / 0.92) over a 12px backdrop blur.) */
 html[data-hero="split"] .cta .btn.ghost {
-  background: rgb(19 19 23 / 0.92); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+  background: rgb(18 18 22);
   box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.13), inset 0 1px 0 rgb(255 255 255 / 0.05);
 }
-html[data-hero="split"] .cta .btn.ghost:hover { background: rgb(30 30 35 / 0.96); }
+html[data-hero="split"] .cta .btn.ghost:hover { background: rgb(29 29 34); }
 /* The facts: each its own item, a gap between them; one line on desktop,
    wrapping whole only on narrow screens. */
 html[data-hero="split"] .meta {
@@ -1060,8 +1067,9 @@ html[data-hero][data-herotext="card"] .cta .btn.big svg { width: 16px; height: 1
 /* Same 44px box as Download, but a dark button with only a hairline reads
    shorter beside a light filled one (the light one spreads). So it gets a
    body of its own, a lit fill the full height, and the ring sits on that. */
-html[data-hero][data-herotext="card"] .cta .btn.ghost { background: rgb(255 255 255 / 0.09); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.12), inset 0 1px 0 rgb(255 255 255 / 0.08); }
-html[data-hero][data-herotext="card"] .cta .btn.ghost:hover { background: rgb(255 255 255 / 0.13); }
+/* (White at 0.09 and 0.13 over the blurred page and grain, measured: laid on solid.) */
+html[data-hero][data-herotext="card"] .cta .btn.ghost { background: rgb(33 33 35); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.12), inset 0 1px 0 rgb(255 255 255 / 0.08); }
+html[data-hero][data-herotext="card"] .cta .btn.ghost:hover { background: rgb(43 43 45); }
 /* The nav's buttons, just after the capsule forms (Nav: buttons arrive,
    after): each fades up from a touch smaller and a little soft, GitHub then
    Download 50ms on; out together, quicker. Opacity, scale and filter only,

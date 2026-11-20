@@ -115,7 +115,11 @@
       "Layout.rule": "none",
       "Controller.controller style": "current",
       "Performance.app frame rate": 30,
-      "Performance.render": "live",
+      // (Was "Performance.render": "live", the live app over a video of it;
+      // the hero is now the recorded clips, the live app a pick here.)
+      "Performance.demo": "clips",
+      "Layout.starts with": "controller",
+      "Layout.switches by itself": "on",
       "controller comes in from (px, minus is above) (px)": -40,
       "controller follows the screen by (ms) (ms)": 135,
       "controller blur as it comes in (px)": 10,
