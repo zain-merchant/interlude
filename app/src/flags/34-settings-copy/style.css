@@ -1,0 +1,9 @@
+/* #34: paragraphs at a reading width (about 70 characters); control rows
+   keep the section's 520px. */
+:root[data-flag-settings-copy] .settings .display p {
+  max-width: 440px;
+}
+/* The one line under the Output select. */
+:root[data-flag-settings-copy] .settings .display p.under {
+  margin-top: 8px;
+}
