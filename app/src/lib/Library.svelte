@@ -115,6 +115,8 @@
   // #7 (UI audit flag): edge-empty-views: an empty playlist or folder says so, not "No tracks yet. Add a music folder".
   const emptyView = $derived(
     !flag('edge-empty-views') ? null
+    // #86 (UI audit flag): copy-toasts names the menu way in too.
+    : view.kind === 'playlist' && flag('copy-toasts') ? `This playlist is empty. Drag tracks onto its name, or right-click a track and choose Add to ${playlistName(view.id)}.`
     : view.kind === 'playlist' ? 'This playlist is empty. Drag tracks onto its name to add them.'
     : view.kind === 'folder' ? `No music files found in ${(view.path ?? '').split(/[\\/]/).filter(Boolean).pop()}.`
     : null,
@@ -268,7 +270,7 @@
     await refresh();
     if (undoable)
       pushEdit({
-        label: `Removed ${short(f)} from the library`,
+        label: `Removed ${q(short(f))} from the library`,
         undo: () => restoreFolder(f),
         redo: () => removeFolder(f, { undoable: false }),
       });
@@ -299,6 +301,9 @@
 
   // Playlists. Every change can be undone, and none touches the files.
   const playlistName = (id) => playlists.find((p) => p.id === id)?.name ?? 'playlist';
+  // #86 (UI audit flag): copy-toasts sets names off in quotes and says what was made ("Created playlist “New playlist”").
+  const copy = () => flag('copy-toasts');
+  const q = (s) => (copy() ? `“${s}”` : s);
 
   /** Makes a playlist (holding `paths`) and starts naming it. */
   async function newPlaylist(paths = []) {
@@ -308,7 +313,7 @@
     playlists = await backend.playlists();
     renaming = id;
     pushEdit({
-      label: `Made ${name}`,
+      label: copy() ? `Created playlist ${q(name)}` : `Made ${name}`,
       undo: async () => { await backend.deletePlaylist(id); await refresh({ keep: true }); },
       redo: async () => { await backend.createPlaylist(name, paths); await refresh({ keep: true }); },
     });
@@ -322,7 +327,7 @@
     await backend.renamePlaylist(id, name);
     playlists = await backend.playlists();
     pushEdit({
-      label: `Renamed ${old} to ${name}`,
+      label: `Renamed ${q(old)} to ${q(name)}`,
       undo: async () => { await backend.renamePlaylist(id, old); playlists = await backend.playlists(); },
       redo: async () => { await backend.renamePlaylist(id, name); playlists = await backend.playlists(); },
     });
@@ -336,7 +341,7 @@
     await refresh({ keep: view.kind !== 'all' });
     let current = id;
     pushEdit({
-      label: `Deleted ${name}`,
+      label: copy() ? `Deleted playlist ${q(name)}` : `Deleted ${name}`,
       undo: async () => { current = await backend.createPlaylist(name, paths); await refresh({ keep: true }); },
       redo: async () => { await backend.deletePlaylist(current); await refresh({ keep: true }); },
     });
@@ -349,8 +354,10 @@
     const added = paths.filter((p) => !before.includes(p)).length;
     await refresh({ keep: true });
     const name = playlistName(id);
+    // #86 (UI audit flag): copy-toasts: nothing changed, so nothing to undo.
+    if (!added && copy()) return showToast(paths.length === 1 ? `Already in ${q(name)}` : `All already in ${q(name)}`);
     pushEdit({
-      label: added ? `Added ${added === 1 ? 'a track' : `${added} tracks`} to ${name}` : `Already in ${name}`,
+      label: added ? `Added ${added === 1 ? 'a track' : `${added} tracks`} to ${q(name)}` : `Already in ${name}`,
       undo: async () => { await backend.setPlaylistTracks(id, before); await refresh({ keep: true }); },
       redo: async () => { await backend.addToPlaylist(id, paths); await refresh({ keep: true }); },
     });
@@ -371,7 +378,7 @@
   }
 
   function removeFromPlaylist(t) {
-    reorder(all.filter((x) => x.path !== t.path).map((x) => x.path), `Removed ${t.title} from ${playlistName(view.id)}`);
+    reorder(all.filter((x) => x.path !== t.path).map((x) => x.path), `Removed ${q(t.title)} from ${q(playlistName(view.id))}`);
   }
 
   // Drag to reorder: only in a playlist shown in its own order, unfiltered.
@@ -397,7 +404,7 @@
     paths.splice(from, 1);
     if (to > from) to--;
     paths.splice(to, 0, moving);
-    reorder(paths, `Moved ${drag.track.title}`);
+    reorder(paths, `Moved ${q(drag.track.title)}`);
   }
 
   /** History session label: "Fri 31 Oct", with the time if a day has two. */
@@ -536,7 +543,7 @@
   };
   const playlistMenu = (e, p) =>
     openMenu(e, [
-      { label: 'Rename', action: () => (renaming = p.id) },
+      { label: copy() ? 'Rename playlist' : 'Rename', action: () => (renaming = p.id) },
       '-',
       { label: 'Delete playlist', action: () => deletePlaylist(p.id) },
     ]);
