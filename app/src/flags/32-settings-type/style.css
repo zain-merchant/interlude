@@ -28,10 +28,13 @@
 :root[data-flag-settings-type] .settings section > :last-child {
   margin-bottom: 0;
 }
-:root[data-flag-settings-type] .settings .scroll > section + section,
-:root[data-flag-settings-type] .settings .scroll > section + :is(section, p),
-:root[data-flag-settings-type] .settings .cols > section + section {
+:root[data-flag-settings-type] .settings .scroll > section + :is(section, p) {
   margin-top: 24px;
+}
+/* In the Keyboard page's columns a top margin would push down whichever
+   group starts a column; the gap goes under each group instead. */
+:root[data-flag-settings-type] .settings .cols > section:not(:last-child) {
+  padding-bottom: 24px;
 }
 
 /* S6: content fades out under the header rule and at the foot instead of

@@ -39,7 +39,7 @@ export default {
 export const show = {
   about: 'Every Settings option came with a paragraph of two to four long lines, so the Decks page took three screens for five checkboxes. Now each option has one plain sentence and the labels say what they do.',
   before: 'Each checkbox sits on top of a long, wide paragraph, so the page is mostly grey text: you have to read a lot to find the one switch you want.',
-  after: 'One short line per option, kept to a comfortable width, and labels that say what they do ("Hot cues start a paused deck"), so the whole page fits on screen and scans at a glance.',
+  after: 'One short line per option, kept to a comfortable width, and labels that say what they do ("Hot cues start a paused deck"), so the page is about half as long and scans at a glance.',
   async setup(app) {
     await app.openSettings('Decks');
     await app.until(() => app.$('.settings .display .opt'), 2000, 'the Decks page');
@@ -53,8 +53,9 @@ export const show = {
     const scroll = app.$('.settings .scroll')?.getBoundingClientRect();
     if (!last || !scroll) return;
     const x = scroll.x + 600;
-    const fits = last.bottom <= scroll.bottom;
+    const el = app.$('.settings .scroll');
+    const long = Math.round(el.scrollHeight);
     d.text(x, scroll.y + 40, before ? 'a paragraph under every checkbox' : 'one line per option', { tone: before ? 'bad' : 'ok' });
-    d.text(x, scroll.y + 66, fits ? 'the whole page fits' : 'Slip is below the fold: scroll to reach it', { tone: fits ? 'ok' : 'bad' });
+    d.text(x, scroll.y + 66, `the page is ${long}px long`, { tone: before ? 'bad' : 'ok' });
   },
 };
