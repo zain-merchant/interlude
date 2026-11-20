@@ -31,6 +31,10 @@
 //   clips.setHand('controller'); clips.setPaused(true); clips.setVars({...});
 //   clips.prepare(true)   the hand may be about to switch (pointer on the
 //                         toggle): the twin starts, in step, under the clip.
+// The newest manifest this player plays (its "schema"; none means 1). A set
+// made for a newer player is refused, and the poster stays.
+// app/scripts/hero-clips.mjs reads this to fetch only sets it plays.
+export const CLIPS_SCHEMA = 1;
 const TICK = 1000 / 12;
 
 /** The base styles, scoped to the player's root. */
@@ -88,6 +92,7 @@ export async function mountClips(host, opts = {}) {
   const base = opts.base ?? 'hero/clips/';
   // (Asked again each time, it's small: it names the recording the clips are from.)
   const M = await fetch(`${base}manifest.json`, { cache: 'no-cache' }).then((r) => r.json());
+  if ((M.schema ?? 1) > CLIPS_SCHEMA) throw new Error(`clips: set ${M.source} is schema ${M.schema}, this player plays ${CLIPS_SCHEMA}`);
   const root = document.createElement('div');
   root.className = 'hero-clips';
   root.innerHTML = `<div class="app-host"><video muted playsinline></video><video muted playsinline></video><video muted playsinline></video></div>

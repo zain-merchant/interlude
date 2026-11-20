@@ -4,6 +4,9 @@
   "version": "0.1.0",
   "license": "GPL-3.0-or-later",
   "type": "module",
+  "config": {
+    "heroClipsRepo": "zain-merchant/interlude"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -14,7 +17,10 @@
     "dev:site": "vite --config demo/vite.config.js",
     "build:site": "vite build --config demo/vite.config.js",
     "clips": "node demo/segments/record.mjs",
-    "build:site:all": "npm run build:site && node demo/segments/record.mjs --if-changed"
+    "clips:fetch": "node scripts/hero-clips.mjs fetch",
+    "clips:publish": "node scripts/hero-clips.mjs publish",
+    "site:pages": "node scripts/hero-clips.mjs pages",
+    "build:site:all": "npm run build:site && node scripts/hero-clips.mjs fetch && node demo/segments/record.mjs --if-changed"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.9.0",
