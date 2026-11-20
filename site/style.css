@@ -576,6 +576,9 @@ details p { margin: 0; padding-bottom: 20px; color: var(--fg-2); max-width: 62ch
    never takes the pointer, so the footer's links above it stay clickable;
    the script works out the hover from where the pointer is. */
 .foot { overflow: hidden; background: var(--foot-bg, transparent); }
+/* A finger dragged sideways anywhere on the footer works the word's lens;
+   up and down still scrolls the page, and a pinch still zooms. */
+.foot { touch-action: pan-y pinch-zoom; }
 .foot-word {
   position: relative; display: block; width: min(1120px, 100% - 32px); margin: 28px auto calc(var(--foot-cut, 0.33) * -1em); text-align: left; text-indent: var(--foot-indent, 0px); white-space: nowrap; user-select: none; pointer-events: none;
   /* As wide as the column above (index.html measures it into --foot-fs). */

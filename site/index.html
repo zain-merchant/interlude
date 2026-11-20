@@ -1279,8 +1279,9 @@
     // panel, where each thing on screen has one control. The word itself
     // ignores the pointer (so the links above it work), so the hover is
     // worked out from where the pointer is over its letters. On phones,
-    // holding a finger on the word works the same, and the first time the
-    // word comes into view it plays once.
+    // holding a finger on the word works the same (and dragging it sideways
+    // moves the lens), and the first time the word comes into view it plays
+    // once.
     (async () => {
       const w = document.querySelector('.foot-word');
       if (!w) return;
@@ -1442,14 +1443,29 @@
         const r = w.getBoundingClientRect();
         if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom && !e.target.closest?.('a, button, .dialkit-root')) e.preventDefault();
       });
+      // (A finger's ring waits for a tap, or for the finger to move sideways:
+      // the footer keeps up and down for scrolling, style.css, so a scroll
+      // that starts on the word sets nothing off.)
+      let fstart = null;
       addEventListener('pointerdown', (e) => {
         if (e.button !== 0 || e.target.closest?.('a, button, .dialkit-root')) return;
         const r = w.getBoundingClientRect();
         if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) return;
         const c = canvas?.getBoundingClientRect();
-        if (c) fx?.click?.({ x: e.clientX - c.left, y: e.clientY - c.top });
+        if (!c) return;
+        const p = { x: e.clientX - c.left, y: e.clientY - c.top };
+        if (e.pointerType !== 'touch') return fx?.click?.(p);
+        fstart = { id: e.pointerId, x: e.clientX, y: e.clientY, p, on: false };
       });
-      // Held and dragged, the lens goes with the pointer; let go, it springs back.
+      addEventListener('pointermove', (e) => {
+        if (!fstart || e.pointerId !== fstart.id || fstart.on) return;
+        const dx = e.clientX - fstart.x, dy = e.clientY - fstart.y;
+        if (Math.abs(dx) > 6 && Math.abs(dx) > Math.abs(dy)) { fstart.on = true; fx?.click?.(fstart.p); }
+      }, { passive: true });
+      addEventListener('pointerup', (e) => { if (fstart && !fstart.on && e.pointerId === fstart.id) fx?.click?.(fstart.p); fstart = null; });
+      addEventListener('pointercancel', () => (fstart = null));
+      // Held and dragged (a finger: dragged sideways), the lens goes with the
+      // pointer; let go, it springs back.
       addEventListener('pointermove', (e) => {
         if (!(e.buttons & 1)) return;
         const c = canvas?.getBoundingClientRect();
