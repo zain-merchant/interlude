@@ -13,3 +13,24 @@
   /* The column's inset is 8px, or the panel padding under #2. */
   border-bottom-right-radius: max(4px, calc(var(--r-panel) - var(--library-inset, 8px))) var(--r-panel);
 }
+
+/* Li9 (C38): while there is more below, the list and the sidebar fade out
+   over their last 16px instead of slicing a row or a heading in half.
+   Library.svelte sets data-more while either can still scroll down, so at
+   the end nothing fades (and #16's room under the last row stays clear). */
+:root[data-flag-library-clip] section.library :is([data-region='tracks'], [data-region='sidebar'])[data-more] {
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 16px), transparent);
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 16px), transparent);
+}
+
+/* Li6: the list's own focus ring followed its new, uneven corners (square
+   at the top, rounded at one bottom corner). The ring goes round the row
+   the arrow keys move instead, in the list's own 1px style. With #14 on,
+   #14 draws this ring in its 2px style. */
+:root[data-flag-library-clip]:not([data-flag-states]) section.library [data-region='tracks']:focus-visible {
+  outline: none;
+}
+:root[data-flag-library-clip]:not([data-flag-states]) section.library [data-region='tracks']:focus-visible .row.sel {
+  outline: 1px solid var(--fg-3);
+  outline-offset: -1px;
+}

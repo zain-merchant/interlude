@@ -12,19 +12,29 @@
 // With #16 (library-end) on, the room under the last row now sits against
 // the card's edge: scrolled to the end, the last row still stops above the
 // corner. With #2 (concentric), this rule replaces its radius on the list.
+//
+// Folded in (batch Li9, C38; Li6):
+// - While there's more to scroll, the list and the sidebar fade out over
+//   their last 16px (mask-image) instead of slicing a row or the History
+//   heading in half; at the end of the scroll nothing fades. Library.svelte
+//   sets data-more on either while it can scroll further down.
+// - History lists ten days, then "Show all 14" opens the rest in place.
+// - The list's focus ring followed its new uneven corners (square at the
+//   top, one rounded bottom corner); it now rings the selected row instead
+//   (1px, the list's own style; #14 draws it 2px when on).
 export default {
   id: 'library-clip',
   n: 20,
   title: 'Track list runs to the library\'s edge',
   group: 'Layout',
-  notes: 'Rows run to the library card\'s bottom edge and are cut there, by the card\'s own corner, instead of by a rounded box 8px inside it.',
+  notes: 'Rows run to the library card\'s bottom edge and are cut there, by the card\'s own corner, instead of by a rounded box 8px inside it. The list and sidebar fade over 16px while more is below; History has "Show all" past ten days; the list\'s focus ring goes on the selected row.',
 };
 
 /** Show me: a selected row straddling the bottom of the track list, a loupe on the library's bottom-right corner, flipping. */
 export const show = {
-  about: 'Tracks scrolling off the bottom of the list were cut by a rounded edge floating 8px above the bottom of the library. Now they run to the library\'s own edge and corner.',
+  about: 'Tracks scrolling off the bottom of the list were cut by a rounded edge floating 8px above the bottom of the library, and the sidebar sliced its last heading in half. Now the list runs to the library\'s own edge and corner, and both fade out gently while there\'s more below.',
   before: "Scroll the track list: rows disappear behind a curved edge that sits a little above the library's real bottom, so a highlighted row gets cut by a corner in mid-air.",
-  after: "Rows run all the way to the library's bottom edge and tuck under its own rounded corner, so the list looks like it continues below rather than being chopped off.",
+  after: "Rows run all the way to the library's bottom edge and fade out under its own rounded corner, so the list looks like it continues below rather than being chopped off. The sidebar fades the same way.",
   async setup(app, ctx) {
     const list = app.$("[data-region='tracks']");
     // Scroll down a little, select the last row wholly in view, then scroll

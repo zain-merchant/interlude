@@ -418,6 +418,23 @@
     return twice ? `${day}, ${d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}` : day;
   }
   const HISTORY_SHOWN = 10;
+  // #20 (UI audit flag): library-clip: "Show all" under History once there are more than HISTORY_SHOWN days.
+  let allHistory = $state(false);
+  const historyShown = $derived(flag('library-clip') && allHistory ? sessions.length : HISTORY_SHOWN);
+
+  // #20 (UI audit flag): library-clip fades the list's and the sidebar's foot while more is below (data-more).
+  let nav = $state(/** @type {HTMLElement | null} */ (null));
+  let listMore = $state(false);
+  let navMore = $state(false);
+  const below = (el) => !!el && el.scrollTop + el.clientHeight < el.scrollHeight - 1;
+  function edges() {
+    listMore = below(scroller);
+    navMore = below(nav);
+  }
+  $effect(() => {
+    void [flag('library-clip'), viewHeight, sorted.length, sessions.length, playlists.length, folders.length, historyShown];
+    edges();
+  });
 
   function select(i) {
     if (!sorted.length) return;
@@ -575,7 +592,8 @@
 </script>
 
 <section class="library" aria-label="Library">
-  <nav data-region="sidebar" aria-label="Library, playlists and history">
+  <nav data-region="sidebar" aria-label="Library, playlists and history" bind:this={nav} onscroll={edges}
+    data-more={flag('library-clip') && navMore ? '' : undefined}>
     <div class="h">Library</div>
     <button class="item" class:on={view.kind === 'all'} aria-current={view.kind === 'all'} onclick={() => pick(null)}>
       <span>All tracks</span>{#if total !== null}<small class="num">{total.toLocaleString()}</small>{/if}
@@ -606,13 +624,16 @@
 
     {#if sessions.length}
       <div class="h sec">History</div>
-      {#each sessions.slice(0, HISTORY_SHOWN) as x (x.start)}
+      {#each sessions.slice(0, historyShown) as x (x.start)}
         {@const on = view.kind === 'session' && view.start === x.start}
         <button class="item" class:on aria-current={on} onclick={() => show({ kind: 'session', start: x.start })}
           use:tip={() => `Played ${new Date(x.start).toLocaleString()}`}>
           <span>{sessionLabel(x)}</span><small class="num">{x.count.toLocaleString()}</small>
         </button>
       {/each}
+      {#if flag('library-clip') && !allHistory && sessions.length > HISTORY_SHOWN}
+        <button class="add" onclick={() => (allHistory = true)}>Show all {sessions.length.toLocaleString()}</button>
+      {/if}
     {/if}
   </nav>
 
@@ -663,8 +684,8 @@
       {/each}
     </div>
 
-    <div class="scroll" bind:this={scroller} bind:clientHeight={viewHeight} onscroll={() => (scrollTop = scroller.scrollTop)}
-      tabindex="0" onkeydown={listKey} role="listbox" aria-label="Tracks" data-region="tracks"
+    <div class="scroll" bind:this={scroller} bind:clientHeight={viewHeight} onscroll={() => ((scrollTop = scroller.scrollTop), edges())}
+      tabindex="0" onkeydown={listKey} role="listbox" aria-label="Tracks" data-region="tracks" data-more={flag('library-clip') && listMore ? '' : undefined}
       aria-activedescendant={sorted[selected] ? `track-${selected}` : undefined}>
       {#if error}
         <div class="empty">{error}</div>
