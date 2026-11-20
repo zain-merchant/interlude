@@ -1,0 +1,40 @@
+/* #91 (against the doc): a roomier library. Row pitch and text size are
+   set together (Library.svelte reads the pitch for its virtual list); the
+   sidebar's items take the same pitch, so they still meet the track rows
+   (#3's alignment). */
+:root[data-flag-library-roomy] section.library {
+  --roomy-row: 28px;
+  --roomy-text: var(--t-sm);
+}
+:root[data-flag-library-roomy][data-flag-library-roomy-rows='32'] section.library {
+  --roomy-row: 32px;
+  --roomy-text: 14px;
+}
+:root[data-flag-library-roomy][data-flag-library-roomy-rows='36'] section.library {
+  --roomy-row: 36px;
+  --roomy-text: var(--t-md);
+}
+:root[data-flag-library-roomy] section.library .scroll .row {
+  height: var(--roomy-row);
+  font-size: var(--roomy-text);
+}
+:root[data-flag-library-roomy] section.library [data-region='sidebar'] :is(.item, .add) {
+  height: var(--roomy-row);
+  font-size: var(--roomy-text);
+}
+/* Sidebar sections: a clear break above Playlists and History, and the
+   Library heading as close to its first item as the others are to theirs,
+   instead of every label sitting on the track rows' grid. */
+:root[data-flag-library-roomy][data-flag-library-roomy-sections='airy'] section.library nav > .h:first-child {
+  height: auto;
+  margin-bottom: 0;
+  padding-bottom: 4px;
+  display: block;
+}
+:root[data-flag-library-roomy][data-flag-library-roomy-sections='airy'] section.library nav > .h.sec {
+  height: auto;
+  margin-top: 24px;
+  padding-bottom: 4px;
+  line-height: normal;
+  display: block;
+}
