@@ -1158,6 +1158,11 @@
     // ...and their script (React and the scenes, about 200 KB) only once the
     // first card is near, so a phone's first screen never waits on it.
     const pictures = () => import('./demo/cards.js?v=20261119h1');
+    // A card's picture plays again when a mouse moves over it, or on a tap.
+    // A finger's move is the page scrolling, so it's kept from the cards
+    // here. (Here rather than in app/demo, whose every change would have the
+    // hero's clips recorded again.)
+    document.addEventListener('pointermove', (e) => { if (e.pointerType === 'touch' && e.target.closest?.('[data-picture]')) e.stopPropagation(); }, { capture: true, passive: true });
     const first = document.querySelector('[data-picture]');
     if (!first || !('IntersectionObserver' in window)) pictures();
     else new IntersectionObserver((es, io) => { if (es.some((e) => e.isIntersecting)) { io.disconnect(); pictures(); } }, { rootMargin: '600px 0px' }).observe(first);
