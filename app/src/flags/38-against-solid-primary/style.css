@@ -1,0 +1,16 @@
+/* #38 (against the doc): a solid primary on Settings' Done and on each
+   dialog's main action (its last button), whether or not #27 is on. The
+   look is #27's: --fg fill, --ink text, weight 500. */
+:root[data-flag-against-solid-primary]
+  :is(.settings .main .bar > .btn:last-child, .card[role='dialog'] .actions > .btn:last-child) {
+  background: var(--fg);
+  box-shadow: none;
+  color: var(--ink);
+  font-weight: 500;
+}
+:root[data-flag-against-solid-primary]
+  :is(.settings .main .bar > .btn:last-child, .card[role='dialog'] .actions > .btn:last-child):hover:not(:disabled, [aria-disabled='true']) {
+  background: #fff;
+  box-shadow: none;
+  color: var(--ink);
+}
