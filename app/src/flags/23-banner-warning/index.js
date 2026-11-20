@@ -42,6 +42,7 @@ export const show = {
   about: "When your audio device dropped out mid-set, the banner looked like an update notice, and its one way out, \"Play through MacBook Pro Speakers\", looked switched off. Now it's an amber warning with a clear button.",
   before: 'The device-lost banner is the same grey as an update notice, with a white icon, and the button to keep playing through the laptop is so faint it looks disabled.',
   after: 'The banner is edged and marked in amber, so it reads as a warning at a glance, and "Play through …" is a solid button: the obvious thing to press.',
+  needs: { 'edge-banner': true }, // the banner floats over the waveforms, as designed
   async setup(app) {
     app.mock.lose();
     await app.until(() => app.$('.banner'), 3000, 'the banner');
@@ -51,12 +52,14 @@ export const show = {
     app.mock?.restore();
   },
   target: '.banner',
+  badge: (app, ctx) => ctx.at,
   aid(d, app, ctx) {
     const b = app.$('.banner')?.getBoundingClientRect();
     if (!b) return;
     const zoom = 1.5;
     const size = { w: Math.min(innerWidth - 32, (b.width + 24) * zoom), h: (b.height + 20) * zoom };
     const l = d.loupe('banner', { x: b.x - 12, y: b.y - 10 }, { zoom, size, at: { x: Math.max(16, b.x + b.width / 2 - size.w / 2), y: b.bottom + 40 } });
+    ctx.at = new DOMRect(l.rect.x, l.rect.bottom + 40, 10, 10);
     const before = ctx.phase === 'before';
     d.text(l.rect.x + 10, l.rect.bottom + 16, before ? 'grey like an update notice; the button looks switched off' : 'amber: a warning; the way out is the one solid button', { tone: before ? 'bad' : 'ok', fixed: true });
   },

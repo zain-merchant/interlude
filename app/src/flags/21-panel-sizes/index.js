@@ -39,7 +39,7 @@
 export default {
   id: 'panel-sizes',
   n: 21,
-  title: 'Every panel edge can be dragged, and springs back to its designed size',
+  title: 'A grip on every panel edge, and designed sizes',
   group: 'Layout',
   notes:
     'Grips on the waveforms, library, sampler and sidebar edges (visible at rest, brighter on hover). Designed sizes: waveforms 136, decks 360 (⌥-drag, 340 to 400), sampler 40, sidebar 200; library the rest. Double-click resets with the site spring; sizes kept in oss-dj.panelSizes. The sampler shortens the library, never the decks.',

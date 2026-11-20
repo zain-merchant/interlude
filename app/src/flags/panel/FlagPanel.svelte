@@ -921,6 +921,9 @@
     translate: -50% 0;
     width: 440px;
     display: grid;
+    /* One column the card's width: a long title ellipsizes instead of
+       widening the column past the card. */
+    grid-template-columns: minmax(0, 1fr);
     gap: 10px;
     padding: 12px 12px 12px 14px;
     border-radius: 16px;

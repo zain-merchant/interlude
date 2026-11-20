@@ -1,0 +1,36 @@
+/* #26: small fixes to the toast, the banner and the dialogs' surface
+   (the critique panel's polish backlog). */
+
+/* d-K57: Undo at the message's weight; its outline already marks it as the
+   button. */
+:root[data-flag-overlay-polish] .toastbox .toast .undo {
+  font-weight: 400;
+}
+/* e-K52: 8px round the Undo chip on every side (it was 4px on three sides
+   and 12px before the message), as #15 already does for the banner. */
+:root[data-flag-overlay-polish] .toastbox .toast:has(.undo):not([data-docked]) {
+  padding: var(--space-2, 8px) var(--space-2, 8px) var(--space-2, 8px) var(--space-3, 12px);
+}
+:root[data-flag-overlay-polish][data-flag-concentric] .toastbox .toast:has(.undo) {
+  border-radius: calc(var(--r) + 8px);
+}
+/* e-K53: the banner's button label sat about 1px under its sentence: the
+   message and the button share a baseline. */
+:root[data-flag-overlay-polish] .banner {
+  align-items: baseline;
+}
+:root[data-flag-overlay-polish] .banner svg {
+  align-self: center;
+}
+/* e-K59: one surface for everything that floats over the app. Menus, the
+   toast and the banner use --popover (#1b1c20); the dialogs had their own
+   hard-coded #121214. */
+:root[data-flag-overlay-polish] {
+  --dialog: #121214;
+}
+:root[data-flag-overlay-polish][data-flag-overlay-polish-surface='popover'] {
+  --dialog: var(--popover);
+}
+:root[data-flag-overlay-polish] .backdrop > .card[role='dialog'] {
+  background: var(--dialog);
+}
