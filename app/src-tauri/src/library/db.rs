@@ -1186,7 +1186,13 @@ mod tests {
             .unwrap();
         // Still shown, but queued to be redone.
         let old = db.analysis(p).unwrap().unwrap();
-        assert_eq!(old, Analysis { outdated: true, ..a });
+        assert_eq!(
+            old,
+            Analysis {
+                outdated: true,
+                ..a
+            }
+        );
         assert!(!old.complete());
         // Redoing it brings it up to date.
         db.save_analysis(p, &a, Some(0.1), false).unwrap();
