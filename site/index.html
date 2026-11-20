@@ -374,14 +374,19 @@
       window.navMeasure = measure;
       // The menu opens out of the capsule: opened from the bar at the top of
       // the page, the bar draws in to the capsule first (index.html, menu).
+      // (Let go, it's what it was before, unless the page has since
+      // scrolled far enough either way to say otherwise.)
+      let before = 0;
+      const toShape = (to) => {
+        shape.to = to;
+        d.toggleAttribute('data-capsule', to === 1);
+        if (reduced.matches) { shape.x = to; shape.v = 0; act.x = act.to = to; act.v = 0; }
+      };
       window.navHold = (on) => {
+        if (on === held) return;
         held = on;
-        if (on && shape.to !== 1) {
-          shape.to = 1;
-          d.toggleAttribute('data-capsule', true);
-          if (reduced.matches) { shape.x = 1; shape.v = 0; act.x = act.to = 1; act.v = 0; }
-        }
-        if (!on) read();
+        if (on) { before = shape.to; toShape(1); }
+        else { toShape(before); read(); }
         wake();
       };
       window.tune?.slider({ id: 'nav-word', label: 'Nav: name size before capsule', folder: 'Settled', min: 18, max: 96, step: 1, value: 32, unit: 'px', css: '--brand-word', onInput: () => requestAnimationFrame(measure) });
