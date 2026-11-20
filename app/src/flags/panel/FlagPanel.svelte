@@ -184,17 +184,20 @@
   // ── Show me ───────────────────────────────────────────────────────────
   const showing = $derived(current.id ? FLAGS.find((f) => f.id === current.id) : null);
   const story = $derived(showing ? SHOWS[showing.id] ?? {} : {});
-  /** Where focus goes back to after a show. */
-  let returnTo = /** @type {HTMLElement | null} */ (null);
-  function start(f, e) {
-    returnTo = /** @type {HTMLElement} */ (e?.currentTarget ?? null);
+  /** The flag whose Show me was pressed, and where the list was scrolled: put back after the show. */
+  let back = /** @type {{ id: string, scroll: number } | null} */ (null);
+  function start(f) {
+    back = { id: f.id, scroll: box?.querySelector('.fp-scroll')?.scrollTop ?? 0 };
     showMe(f.id);
   }
   async function done() {
     stopShow();
     await tick();
-    returnTo?.isConnected && returnTo.focus();
-    returnTo = null;
+    if (!back) return;
+    const list = box?.querySelector('.fp-scroll');
+    if (list) list.scrollTop = back.scroll;
+    /** @type {HTMLElement | null} */ (box?.querySelector(`[data-flag="${CSS.escape(back.id)}"] .fp-show`) ?? null)?.focus();
+    back = null;
   }
 
   // The card keeps off the targets and the marks: the first free spot
@@ -220,7 +223,9 @@
       { x: M, y: (innerHeight - h) / 2 },
     ];
     const k = r.width / (card.offsetWidth || 1) || 1;
-    const at = spots.find((s) => !hits({ ...s, w, h }, avoid)) ?? spots[0];
+    // The first free spot; failing that, the one that covers least.
+    const cover = (s) => avoid.reduce((n, a) => n + Math.max(0, Math.min(s.x + w, a.right) - Math.max(s.x, a.left)) * Math.max(0, Math.min(s.y + h, a.bottom) - Math.max(s.y, a.top)), 0);
+    const at = spots.find((s) => !hits({ ...s, w, h }, avoid)) ?? spots.reduce((b, s) => (cover(s) < cover(b) ? s : b));
     cardAt = { x: at.x / k, y: at.y / k };
   }
   $effect(() => {
@@ -387,7 +392,7 @@
               <ul>
                 {#each list as f (f.id)}
                   {@const sets = Object.entries(f.settings ?? {})}
-                  <li class="fp-flag" class:on={isOn(f)}>
+                  <li class="fp-flag" class:on={isOn(f)} data-flag={f.id}>
                     <div class="fp-flag-main">
                       <span class="fp-n">{f.n}</span>
                       <span class="fp-title">{f.title}</span>
@@ -405,7 +410,7 @@
                           </button>
                         {/if}
                         {#if SHOWS[f.id]}
-                          <button type="button" class="fp-show" onclick={(e) => start(f, e)} aria-label="Show me: {f.title}">
+                          <button type="button" class="fp-show" onclick={() => start(f)} aria-label="Show me: {f.title}">
                             <svg viewBox="0 0 16 16" aria-hidden="true"><path class="fill" d="M5.5 4v8l6-4z" /></svg>Show me
                           </button>
                         {/if}

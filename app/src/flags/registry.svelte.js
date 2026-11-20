@@ -8,16 +8,16 @@
 //   read flag('<id>') or setting('<id>', '<key>') from this file)
 //
 // All flags are off by default, and off is exactly the app as it was. The
-// DialKit panel (FlagDials.svelte, dev builds only) turns them on and tunes
-// their settings; this file stays the one place the picks live. To ship
-// one, keep its folder's changes and drop its gate.
+// audit's panel (panel/FlagPanel.svelte, dev builds only) turns them on and
+// tunes their settings; this file stays the one place the picks live. To
+// ship one, keep its folder's changes and drop its gate.
 //
 // Settings: { key: { type: 'range', min, max, step, default, unit? } }
 // becomes the CSS variable --flag-<id>-<key>; { type: 'choice', options:
 // [[value, label], ...], default } becomes :root[data-flag-<id>-<key>=value].
-// Only each flag's default export: a flag's `show` (its Show me steps) is
-// for the dev-only FlagDials, which reads it itself (show/show.svelte.js), so
-// it stays out of production builds.
+// Only each flag's default export: a flag's `show` (its Show me steps and
+// the panel's words for it) is for the dev-only panel, which reads it itself
+// (show/show.svelte.js), so it stays out of production builds.
 const modules = import.meta.glob('./*/index.js', { eager: true, import: 'default' });
 import.meta.glob('./*/style.css', { eager: true });
 

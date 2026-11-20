@@ -52,20 +52,20 @@ function textWidth(s, font = FONT) {
 
 const CSS = `
 .flag-show { position: fixed; inset: 0; z-index: 9999; pointer-events: none; contain: strict; }
-.flag-show svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
-.flag-show text { font: ${FONT}; font-variant-numeric: tabular-nums; dominant-baseline: central; }
-.flag-show text.big { font: ${BIG}; letter-spacing: .01em; }
-.flag-show .ring { fill: none; stroke: ${C.ink}; stroke-width: 2; animation: flag-show-ring 2.6s ease-out forwards; }
-.flag-show .dim { fill: rgb(0 0 0 / .5); animation: flag-show-dim 2.6s ease-out forwards; }
+.flag-show > svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.flag-show > svg text { font: ${FONT}; font-variant-numeric: tabular-nums; dominant-baseline: central; }
+.flag-show > svg text.big { font: ${BIG}; letter-spacing: .01em; }
+.flag-show > svg .ring { fill: none; stroke: ${C.ink}; stroke-width: 2; animation: flag-show-ring 2.6s ease-out forwards; }
+.flag-show > svg .dim { fill: rgb(0 0 0 / .5); animation: flag-show-dim 2.6s ease-out forwards; }
 @keyframes flag-show-ring { 0% { opacity: 0; } 8%, 60% { opacity: 1; } 100% { opacity: 0; visibility: hidden; } }
 @keyframes flag-show-dim { 0% { opacity: 0; } 10%, 45% { opacity: 1; } 100% { opacity: 0; visibility: hidden; } }
-@media (prefers-reduced-motion: reduce) { .flag-show .dim { display: none; } .flag-show .ring { animation: none; } }
-.flag-show .loupe { position: absolute; overflow: hidden; border-radius: 10px; background: #000;
+@media (prefers-reduced-motion: reduce) { .flag-show > svg .dim { display: none; } .flag-show > svg .ring { animation: none; } }
+.flag-show > div > .loupe { position: absolute; overflow: hidden; border-radius: 10px; background: #000;
   box-shadow: 0 0 0 1px rgb(255 255 255 / .3), 0 12px 40px rgb(0 0 0 / .7); }
-.flag-show .loupe > .stage { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
-.flag-show .loupe > .cap { position: absolute; left: 6px; bottom: 6px; padding: 0 6px; border-radius: 5px;
+.flag-show > div > .loupe > .stage { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+.flag-show > div > .loupe > .cap { position: absolute; left: 6px; bottom: 6px; padding: 0 6px; border-radius: 5px;
   background: rgb(16 16 16 / .9); color: ${C.label}; font: ${FONT}; line-height: ${TAG_H}px; }
-.flag-show .legend { position: absolute; padding: 8px 10px; border-radius: 10px;
+.flag-show > div > .legend { position: absolute; padding: 8px 10px; border-radius: 10px;
   background: rgb(16 16 16 / .92); box-shadow: inset 0 0 0 1px rgb(255 255 255 / .14);
   color: ${C.label}; font: ${FONT}; line-height: 17px; font-variant-numeric: tabular-nums; white-space: pre; }
 `;

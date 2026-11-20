@@ -1,14 +1,22 @@
 # UI audit flags
 
 Each change being tried in the UI audit is a flag: off by default, and off
-is exactly the app as it was. In a dev build (`npm run dev`) a
-[DialKit](https://github.com/joshpuckett/dialkit) panel at the bottom right
-(press <kbd>`</kbd> to open and close it) turns flags on and tunes them: a
-folder per group, and in it a folder per flag with its **Flag** switch, its
-**Show me** and its settings. A dot marks the flags that are on; a flag's
-notes are the tooltip of its folder. Picks are remembered in the browser
-(`registry.svelte.js` keeps them; the panel mirrors them both ways).
-`FlagDials.svelte` is the panel, loaded only by dev builds.
+is exactly the app as it was. In a dev build (`npm run dev`) the audit's
+panel (`panel/FlagPanel.svelte`, loaded only by dev builds) turns flags on
+and tunes them. It has a row per flag, grouped by area: its number, its
+title, a line on what it fixes, a **Show me** and an on/off switch. A
+flag's settings open under its row while it's on (or with the sliders
+button beside Show me). There's a search field, All on / All off and a
+count of what's on.
+
+<kbd>`</kbd> folds the panel down to a pill and opens it again. Drag it by
+its header (or drag the pill) and it docks to the nearest corner or edge
+of the window; with the header (or the pill) focused, the arrow keys move
+it from dock to dock. Where it is and whether it's folded are kept in
+localStorage (`interlude.flags.panel`). The picks themselves live in
+`registry.svelte.js`, which keeps them in localStorage
+(`interlude.flags`); the panel reads every flag from there, so a new flag
+folder just appears in it.
 
 Each flag becomes its own issue and pull request. To ship one: keep its
 folder's styles and its hooks, then remove its gate (the
@@ -19,8 +27,10 @@ folder's styles and its hooks, then remove its gate (the
 A folder `NN-name/`, where NN is the audit item's number:
 
 - `index.js`: `export default { id, n, title, group, notes, settings }`.
-  `id` is short kebab-case; `n` is the item number; `group` is the panel's
-  folder (Shape, Layout, Stability, Controls, Type and colour, Polish).
+  `id` is short kebab-case; `n` is the item number; `title` says what it
+  does in plain words; `group` is the panel's heading (Shape, Layout,
+  Stability, Controls, Type and colour, Polish). `notes` are for whoever
+  ships it (what changed and where); the panel shows the show's `about`.
 - `style.css`: every rule starts with `:root[data-flag-<id>]`, so nothing
   applies while the flag is off.
 - Optional hooks in components, only where CSS can't do it:
@@ -32,10 +42,10 @@ A folder `NN-name/`, where NN is the audit item's number:
 Settings, shown in the flag's folder:
 
 - `{ type: 'range', min, max, step, default, unit, label }` becomes the CSS
-  variable `--flag-<id>-<key>` (with its unit), and a DialKit slider.
+  variable `--flag-<id>-<key>` (with its unit), and a slider in the panel.
 - `{ type: 'choice', options: [[value, label], ...], default, label }`
   becomes the attribute `:root[data-flag-<id>-<key>="<value>"]` while the
-  flag is on, and a DialKit select. Use it for variants to compare (button styles, border
+  flag is on, and a segmented choice in the panel. Use it for variants to compare (button styles, border
   treatments).
 
 `16-library-end/` is a complete example: a style, a range setting and one
@@ -43,34 +53,43 @@ gated hook.
 
 ## Show me
 
-Each flag's folder has a **Show me** button. It turns the flag on, sets the
-app up so the change is on screen (loads a track, opens a tab or a dialog,
-unplugs the simulated audio device…), rings where to look for a few seconds,
-and draws a visual aid over the app until **Done**. A card says in a
-sentence what to look at, with the flag's own switch to compare off and on;
-**Guides** hides the aid, **Replay** plays an entrance again, **Again**
-reruns the setup. While it runs, the panel folds down to that flag's folder
-and moves off the targets.
+Each flag's row has a **Show me**. It turns the flag on, sets the app up so
+the change is on screen (loads a track, opens a tab or a dialog, unplugs
+the simulated audio device…), rings where to look, and then flips the flag
+off and on every couple of seconds, with a big **Before** / **After** label
+by the change, so the difference is the thing that moves. The panel turns
+into a card that says, in plain words, what was wrong (Before) and what's
+different now and why it's better for someone using the app (After). On
+the card: Before / After to pin one, Flip to start or stop flipping,
+Labels to hide the marks, Slow motion (for entrances), Replay, Again and
+Done (or <kbd>Esc</kbd>). Done leaves the flag on. The card keeps off what's
+being shown.
 
-A flag describes this in an optional `show` export in its `index.js`:
+Write for someone who isn't a designer: the problem as a user would notice
+it, then the fix; no jargon unless it's explained in a few words. A flag
+describes its show in an optional `show` export in its `index.js`:
 
 ```js
 export const show = {
-  note: 'One plain sentence: what to look at.',
+  about: "The row's line: the problem as you'd notice it, then the fix.",
+  before: 'The card, flag off: what goes wrong, in plain words.',
+  after: "The card, flag on: what's different, and why it's better.",
   needs: { 'stress-data': { set: 'worst' } }, // other flags it needs (stress-data reloads the page)
-  reload: false,          // true if turning this flag on needs a reload (stress-data itself)
+  reload: false,  // true if turning this flag on needs a reload (it can't flip then)
+  flip: true,     // false: no Before / After (the card has the flag's switch instead)
+  period: 1700,   // ms each of Before and After stays up
+  motion: false,  // true for entrances: they run slowed down (Slow motion on the card)
   async setup(app, ctx) { // put the app in the state where the change shows
-    const low = app.$$('.mixer .ch')[0].querySelectorAll('.knob')[3].querySelector('button.label');
-    await app.click(low);
-    // Once the change is on screen: where things are with the flag on and off.
-    ctx.parts = () => [app.$('.mixer .cen')];
-    ctx.b = app.both('no-shift', ctx.parts());
+    if (!app.loaded(0)) await app.loadTrack(0);
+    ctx.rest = app.snap([app.$("[data-region='deck0'] .overview")]); // where it sits before the change
+    await show.each(app, ctx, true);
   },
-  target: '.mixer .knob', // or (app, ctx) => element(s) or rects: what to ring
-  aid(d, app, ctx) {      // called ten times a second while the show is up
-    // Dashed: where it is with the flag the other way (only if it differs).
-    const other = app.other('no-shift', ctx.b);
-    d.ghost(other[0], ctx.parts()[0].getBoundingClientRect(), { label: 'off: master' });
+  async each(app, ctx, on) {}, // after every flip: put the state back (a field the flip closed, a toast that went)
+  target: '.mixer .knob', // or (app, ctx) => element(s) or rects: what to ring and keep the card off
+  badge: (app, ctx) => rect, // where the Before / After label goes (default: over the targets)
+  aid(d, app, ctx) {      // ten times a second; ctx.phase is 'before' or 'after'
+    const live = app.$("[data-region='deck0'] .overview").getBoundingClientRect();
+    d.moved(ctx.rest[0], live, { what: 'waveform', side: 'below' }); // "waveform moved 13px down" / "waveform stays put"
   },
   async replay(app, ctx) {}, // optional: adds a Replay button
   cleanup(app, ctx) {},      // optional: undo setup that would surprise (zoom, a lost device)
@@ -84,21 +103,23 @@ export const show = {
 `forceStates` (puts controls in :hover / :active / :focus-visible through
 data-show-* attributes), `snap`, `textRect`, `both(id, els)` and
 `other(id, both)` (rects with the flag on and off, measured without
-painting, and the pair for the flag the other way from now), `without(id,
-fn)`, `rectsWithout(id, els)`, `setFlag`, `mock` (`__mockAudio`). Measure
-with the flag flipped once, in `setup`, not in `aid`.
+painting), `without(id, fn)`, `rectsWithout(id, els)`, `setFlag`, `mock`
+(`__mockAudio`). Measure in `setup`, not in `aid`.
 
 `d` (show/overlay.js) draws in window pixels, in one visual language:
 **ink** (magenta) for what to look at (the ring as a show starts, `box`,
 `hguide` / `vguide`, `measure` with its value in a filled tag, `grid`,
-`padding`); **ghost** (dashed white) for the flag the other way
-(`ghost(other, live, { label })` draws only what differs and says by how
-much); **tags** (`text(x, y, s, { anchor, tone: 'ok' | 'bad' })`) that place
-themselves clear of each other and of small targets, with a leader if they
-had to move; **loupes** (`loupe(key, src, { zoom, size, near })`) placed
-beside what they magnify, returning a `map` to draw over them with `clip`
-and `path`. Keep to the fewest marks that make the point. The panel and
-the card keep off the targets and the marks.
+`padding`); **dashed white** for where something sits normally;
+**tags** (`text(x, y, s, { anchor, tone: 'ok' | 'bad' })`) in plain words,
+red dot for the problem, green for the fix, placed clear of each other and
+of small targets, with a leader if they had to move; `moved(rest, live, {
+what })` says what moved and by how much, or that it stays put;
+**loupes** (`loupe(key, src, { zoom, size, near, at })`) magnify a live
+copy beside the thing, flipping with it, and return a `map` to draw over
+them with `clip` and `path`; `motion(near, { curves, phase, now, legend })`
+charts how an entrance moves. The Before / After label is drawn for you.
+Keep to the fewest marks that make the point; for changes that are only
+about looks, a flipping loupe with a plain caption says it best.
 
 Everything is drawn in one fixed layer (`.flag-show`) outside the app, and
 `show` exports are only read by the dev-only panel, so production builds

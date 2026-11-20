@@ -10,7 +10,7 @@
   transform: none;
   max-width: min(640px, calc(100vw - 48px));
 }
-/* Dev builds only: the audit's own panel sits in that corner; clear it. */
-:root[data-flag-declutter-toast][data-flag-declutter-toast-place='corner']:has(body > .flag-dials) .toastbox .toast {
+/* Dev builds only: when the audit's own panel is docked in that corner, clear it. */
+:root[data-flag-declutter-toast][data-flag-declutter-toast-place='corner']:has(body > .fp [data-dock='br']) .toastbox .toast {
   bottom: 64px;
 }
