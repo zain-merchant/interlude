@@ -1731,6 +1731,23 @@ html[data-note="sleeve"] .rec {
   }
   html[data-note="sleeve"] .founder { margin: 0 calc(14px + var(--shift)) 0 auto; translate: var(--note-nudge, 8px) 0; }
 }
+/* On a touch screen the record is pulled out by a tap or by hand
+   (index.html): the record, and a round handle over the sleeve's window,
+   take a finger's drag for themselves; the sleeve still scrolls the page.
+   Nothing on it is selected or called out by a long press. Where there's
+   no room beside the sleeve (a phone) the record comes out downward, so
+   there's room kept under the sleeve for it. */
+.rec-grab { display: none; }
+@media not all and (hover: hover) and (pointer: fine) {
+  html[data-note="sleeve"] .rec { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+}
+@media (pointer: coarse) and (prefers-reduced-motion: no-preference) {
+  html[data-note="sleeve"] .rec { touch-action: none; }
+  html[data-note="sleeve"] .rec-grab { display: block; position: absolute; left: var(--hx); top: var(--hy); width: calc(var(--hr) * 2); height: calc(var(--hr) * 2); translate: -50% -50%; border-radius: 50%; touch-action: none; }
+}
+@media (max-width: 620px) and (prefers-reduced-motion: no-preference) {
+  @media not all and (hover: hover) and (pointer: fine) { html[data-note="sleeve"] .founder { margin-bottom: 92px; } }
+}
 /* (The page cuts it at the window's edge, never a section's.) */
 body { overflow-x: clip; }
 html[data-note="sleeve"] .founder h3 { color: #17140e; margin: 0 0 12px; }
