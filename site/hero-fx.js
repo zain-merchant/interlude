@@ -128,7 +128,7 @@ const TURN = (Math.PI * 2) / 40;
 const T = {
   fps: 30, // frames a second at rest
   busyFps: 30, // and while the pointer's light, the needle or a twist moves it (30: on the app's frames; 60: smoother)
-  atRest: 'relit', // frames relit from a layer baked once (see RELIT), turned on from a full one at rest (see REPROJECT), or each worked out in full ('full')
+  atRest: 'split', // frames relit from a layer baked once (see RELIT), lit only every STEP-th frame and mixed (see SPLIT) with what passes over drawn alone ('split'), relit with what passes over drawn alone ('overlay') or not ('relit'), turned on from a full one at rest (see REPROJECT, 'turned'), or each worked out in full ('full')
   drop: 108, needle: 0.8, life: 0.2, persp: 0.85, cue: 'dust', cueAmt: 1, res: 0.85,
   speck: 'hyphen',
   twistRate: 12, twistMax: 20, twistEase: 0.6, // scrolling twists it: degrees per 1000px, at most, settling in s
@@ -1857,10 +1857,10 @@ uniform sampler2D uSt1;
 uniform sampler2D uSt2;
 uniform sampler2D uConeT;
 uniform sampler2D uGlT;
-void main() {
+vec4 fastAt() {
   vec2 uv = gl_FragCoord.xy / uSize;
   vec4 s2 = texture2D(uSt2, uv);
-  if (s2.w < 0.5) { gl_FragColor = vec4(0.0); return; }
+  if (s2.w < 0.5) return vec4(0.0);
   vec2 px = vec2(gl_FragCoord.x, uSize.y - gl_FragCoord.y) / uDpr;
   vec2 q = discQ(px);
   float r = length(q);
@@ -1949,7 +1949,117 @@ void main() {
     alpha *= 1.0 - inside;
   }
   float n = (s2.z - 0.5) / 255.0;
-  gl_FragColor = vec4(max(col + n, 0.0), clamp(alpha + n, 0.0, 1.0));
+  return vec4(max(col + n, 0.0), clamp(alpha + n, 0.0, 1.0));
+}
+#ifndef MIXED
+void main() { gl_FragColor = fastAt(); }
+#endif`;
+// SPLIT (the frames at rest, see split in the script): two frames of FAST
+// kept, worked out a step apart, and each frame on screen mixed from them by
+// how far between the two it falls. The light on the disc changes by under a
+// level a frame, so the mix is FAST to a level or two; except where a
+// glint's table wraps round (GLINT_FS: one glint's turn ends and the next
+// begins on the next column, the colour stepping there), which the turn
+// carries across a thin wedge of each song in a step. Mixed, a step would
+// come out as a ramp, so there (between where the wrap stood in the two kept
+// frames, a column or two wider) FAST is worked out for the very frame.
+const MIX_FS = `
+uniform sampler2D uK0;
+uniform sampler2D uK1;
+uniform float uF;
+uniform vec2 uGw; // where the glints stood (uGlintShape.w) in the two kept frames
+void main() {
+  vec2 uv = gl_FragCoord.xy / uSize;
+  vec4 s0 = texture2D(uSt0, uv);
+  if (s0.z > 0.0) {
+    vec2 q = discQ(vec2(gl_FragCoord.x, uSize.y - gl_FragCoord.y) / uDpr);
+    float a = atan(q.y, q.x);
+    float idx = texture2D(uSt1, uv).x;
+    float seg = 2.0 * PI / uGlintShape.z;
+    float ph = fract(sin(idx * 91.7) * 4375.5) * seg;
+    float m0 = mod(a - uGw.x - ph, seg);
+    float d = atan(sin(uGw.y - uGw.x), cos(uGw.y - uGw.x));
+    float pad = 2.0 * seg / 255.0;
+    if (d >= 0.0 ? (m0 < d + pad || m0 > seg - pad) : (m0 > seg + d - pad || m0 < pad)) {
+      gl_FragColor = fastAt();
+      return;
+    }
+  }
+  gl_FragColor = mix(texture2D(uK0, uv), texture2D(uK1, uv), uF);
+}`;
+// What passes over the record, worked out alone and added over FAST (or the
+// mix), where RELIT would work the whole picture out again: each only adds
+// light (MAIN: col += lift * Hv and alpha += lift * maxc(Hv) for the
+// pointer's; warm * w and w for the needle's groove and its ring) before the
+// holes multiply, so the sum is the same picture. uPart: 0 the pointer's
+// light (Arc in lamp light, HOVER 4; the others take RELIT), 1 the needle's
+// groove, 2 its ring. Each drawn over a strip round where it can reach (see
+// lights), MAIN's own gate deciding inside it. Keep it in step with MAIN.
+const LIGHT_FS = `
+uniform sampler2D uSt0;
+uniform sampler2D uSt1;
+uniform float uPart;
+void main() {
+  vec2 px = vec2(gl_FragCoord.x, uSize.y - gl_FragCoord.y) / uDpr;
+  vec2 q = discQ(px);
+  float r = length(q);
+  float fr = max(fwidth(r), 1e-3);
+  if (px.x > uCover.x && px.x < uCover.z && px.y > uCover.y && px.y < uCover.w) discard;
+  if (r > max(uOuter.x, uOuter.y) + 2.0 * fr) discard;
+  vec2 uv = gl_FragCoord.xy / uSize;
+  vec4 st0 = texture2D(uSt0, uv);
+  float lines = st0.y;
+  float inSong = st0.z;
+  float edge = texture2D(uSt1, uv).z;
+  vec3 col = vec3(0.0);
+  float alpha = 0.0;
+  vec3 warm = vec3(0.95, 0.86, 0.74);
+  if (uPart < 0.5) {
+    float a = atan(q.y, q.x);
+    float on = uHover.z;
+    float gR = 170.0 * fr * uDpr;
+    float gA = 960.0;
+    bool nearH = uGlintShape.y < 0.999
+      || (abs(r - uHover.x) < gR && length(q - uHover.x * vec2(cos(uHover.y), sin(uHover.y))) < 1.25 * gA * max(1.0, 100.0 / max(uHover.x, 1.0)) + 2.0 * gR + 50.0);
+    if (!(on > 0.0 && nearH)) discard;
+    float shine = mix(1.0, clamp(0.25 + 0.75 * (1.0 + lines) * 0.5, 0.0, 1.3), uStyle.x);
+    float da = atan(sin(a - uHover.y), cos(a - uHover.y));
+    float k = uTouch * on * mix(0.6, 1.0, inSong);
+    float drc = (r - uHover.x) / (fr * uDpr);
+    float run = da * max(uHover.x, 100.0);
+    float w = 10.0;
+    float x = drc / (1.7 * w);
+    float y = run / 240.0;
+    float glow = 0.3 * exp(-drc * drc / (16.0 * w * w) - y * y);
+    float e = 7.0 * k * (0.4 + 0.6 * shine);
+    vec3 Hv = e * (0.85 * paint(x, y, a, r) + glow * BASE);
+    float lift = uStyle.z * edge * (1.0 + 0.08 * uSwell);
+    col = lift * Hv;
+    alpha = lift * maxc(Hv);
+  } else if (uPart < 1.5) {
+    float d = (r - uNeedle.x) / max(3.0, fr * 1.2);
+    float band = exp(-d * d * 0.5) * uNeedle.y * edge;
+    float onl = mix(1.0, clamp(0.35 + 0.65 * (1.0 + lines) * 0.5, 0.0, 1.2), uStyle.x);
+    alpha = 0.45 * band * onl;
+    col = warm * alpha;
+  } else {
+    float fine = mix(0.7, 1.0 + lines, inSong);
+    float d = (r - uRipple.x) / 20.0;
+    alpha = 0.1 * exp(-d * d) * uRipple.y * edge * mix(1.0, fine, uStyle.x);
+    col = warm * alpha;
+  }
+  for (int i = 0; i < 4; i++) {
+    if (float(i) >= uHoleCount) break;
+    vec4 h = uHoles[i];
+    if (px.x < h.x - 1.0 || px.x > h.z + 1.0 || px.y < h.y - 1.0 || px.y > h.w + 1.0) continue;
+    vec2 hc = 0.5 * (h.xy + h.zw);
+    vec2 hq = abs(px - hc) - (0.5 * (h.zw - h.xy) - uHoleR);
+    float sd = length(max(hq, 0.0)) + min(max(hq.x, hq.y), 0.0) - uHoleR;
+    float inside = 1.0 - smoothstep(-1.0, 0.0, sd);
+    col *= 1.0 - inside;
+    alpha *= 1.0 - inside;
+  }
+  gl_FragColor = vec4(col, alpha);
 }`;
 // The lamp's cone round the disc, one row, 2048 across (angle from where
 // it points, 0 to 2 pi): how far in its clean-edged wedge, and its halo.
@@ -2156,7 +2266,7 @@ function warm(n, defs) {
 }
 const ready = () => !parallel || [...warmed.values()].every((w) => w.done || (w.done = gl.getProgramParameter(w.p, parallel.COMPLETION_STATUS_KHR)));
 // WebGL 1 needs the derivatives extension switched on in the shader.
-const fragOf = (n, defs) => '#extension GL_OES_standard_derivatives : enable\n' + (defs.includes('KEEP3') || defs.includes('BAKE') ? '#extension GL_EXT_draw_buffers : require\n' : '') + defs + (n === 'turn' ? HEAD + REPROJECT : n === 'specks' ? HEAD + SPECKS_FS : n === 'dust' ? HEAD + DUST_FS : n === 'cone' ? HEAD + CONE_FS : n === 'fast' ? HEAD + FAST : n === 'glints' ? HEAD + GLINT_FS : n ? `#define LOOK ${n}\n${HEAD}${LOOKS}` : HEAD + MAIN);
+const fragOf = (n, defs) => '#extension GL_OES_standard_derivatives : enable\n' + (defs.includes('KEEP3') || defs.includes('BAKE') ? '#extension GL_EXT_draw_buffers : require\n' : '') + defs + (n === 'turn' ? HEAD + REPROJECT : n === 'specks' ? HEAD + SPECKS_FS : n === 'dust' ? HEAD + DUST_FS : n === 'cone' ? HEAD + CONE_FS : n === 'fast' ? HEAD + FAST : n === 'mix' ? `${HEAD}#define MIXED\n${FAST}${MIX_FS}` : n === 'light' ? HEAD + LIGHT_FS : n === 'glints' ? HEAD + GLINT_FS : n ? `#define LOOK ${n}\n${HEAD}${LOOKS}` : HEAD + MAIN);
 function build(n, defs) {
   const w = warmed.get(`${n}|${defs}`);
   if (w) {
@@ -2240,9 +2350,9 @@ function init() {
     const n = LOOK[T.look] ?? 0;
     const d = variant();
     warm(n, d);
-    if (!n && T.atRest === 'relit') {
+    if (!n && ['split', 'overlay', 'relit'].includes(T.atRest)) {
       for (const x of ['BAKE', 'BAKE2', 'RELIT']) warm(0, `${d}#define ${x}\n`);
-      for (const x of ['fast', 'dust', 'specks', 'cone', 'glints']) warm(x, d);
+      for (const x of ['fast', 'dust', 'specks', 'cone', 'glints', 'mix', 'light']) warm(x, d);
     }
     const poll = () => {
       if (!ready()) return requestAnimationFrame(poll);
@@ -2577,6 +2687,9 @@ function frame(now, still) {
   const g = layout(now);
   swell += (want - swell) * Math.min(1, dt * (want > swell ? 2.5 : 1));
   want *= Math.exp(-dt * 1.4);
+  // (Settled to nothing once it's far under a level: SPLIT's kept frames
+  // wait for the swell to hold still.)
+  if (swell < 1e-4 && want < 1e-4) swell = want = 0;
   // The scroll's twist: so many degrees per 1000px down the page, no more
   // than its cap, reached on a spring that settles in about scrollEase s.
   const aim = twistTo();
@@ -2947,11 +3060,13 @@ function table(name, w, h, wrapS, key) {
 }
 // (The uniforms the baked layer depends on, by name.)
 const BAKED = ['uSize', 'uDpr', 'uCentre', 'uGeo', 'uSpan', 'uOuter', 'uGroove', 'uTracks', 'uTrackCount', 'uWarp', 'uLens', 'uHz', 'uTilt', 'uCover'];
+// (The ways relit draws, see litFrame.)
+const LIT = ['split', 'overlay', 'relit'];
 function relit(w, h, g, cover, mode, y0, y1) {
   // (The glass bends the grooves under the pointer, and a tilt the whole
   // disc, each frame: those take the full path. The hovers that move the
   // lamp, its cone, the glints or their colour only change the light.)
-  if (T.atRest !== 'relit' || !keepOK || LOOK[T.look] || T.warp !== 'none' || g.up || tiltNow.some(Boolean) || (mode > 4.5 && mode < 6.5)) return false;
+  if (!LIT.includes(T.atRest) || !keepOK || LOOK[T.look] || T.warp !== 'none' || g.up || tiltNow.some(Boolean) || (mode > 4.5 && mode < 6.5)) return false;
   const defs = variant();
   try {
     if (lit.defs !== defs) {
@@ -2960,7 +3075,10 @@ function relit(w, h, g, cover, mode, y0, y1) {
       lit.comp = build(0, `${defs}#define RELIT\n`);
       lit.fast = build('fast', defs);
       lit.dust = build('dust', defs);
-      for (const e of [lit.comp, lit.fast, lit.dust]) for (const k of ['uSt0', 'uSt1', 'uSt2', 'uConeT', 'uGlT']) e.u[k] = gl.getUniformLocation(e.p, k);
+      lit.mix = build('mix', defs);
+      lit.light = build('light', defs);
+      for (const e of [lit.comp, lit.fast, lit.dust, lit.mix, lit.light]) for (const k of ['uSt0', 'uSt1', 'uSt2', 'uConeT', 'uGlT', 'uK0', 'uK1', 'uF', 'uGw', 'uPart']) e.u[k] = gl.getUniformLocation(e.p, k);
+      ks.valid = false;
       lit.defs = defs;
       lit.key = '';
     }
@@ -3033,21 +3151,79 @@ function relit(w, h, g, cover, mode, y0, y1) {
   gl.bindTexture(gl.TEXTURE_2D, glT);
   gl.activeTexture(gl.TEXTURE4);
   gl.bindTexture(gl.TEXTURE_2D, lit.s2);
-  // (At rest, with the usual look, the lighter pass: FAST.)
-  const passing = uniNow.get('uHover')?.[1][2] || uniNow.get('uNeedle')?.[1][1] || uniNow.get('uRipple')?.[1][1];
+  // (A check's hook, see check: the same instant drawn the way 'relit'
+  // draws it, into a frame of its own, before this one.)
+  const chk = window.__heroCheck;
+  if (chk && !chk.px) check(chk, w, h, g, cover, mode, y0, y1);
+  litFrame(T.atRest, null, w, h, g, cover, mode, y0, y1);
+  if (chk && chk.ref && !chk.px) {
+    chk.px = new Uint8Array(w * h * 4);
+    gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, chk.px);
+    chk.path = litPath;
+  }
+  for (const k of [6, 5, 4, 3, 2, 1, 0]) { gl.activeTexture(gl.TEXTURE0 + k); gl.bindTexture(gl.TEXTURE_2D, null); }
+  gl.useProgram(prog);
+  return true;
+}
+// One frame, relit, into fb (null: the canvas), the baked layers and tables
+// bound (units 0 to 4). how: 'relit' works out what's passing over the
+// record (the pointer's light, the needle, its ring) with the rest, the
+// whole picture again (RELIT); 'overlay' draws it alone over the at-rest
+// pass (FAST), and 'split' that too, over FAST mixed from two kept frames.
+let litPath = '';
+function litFrame(how, fb, w, h, g, cover, mode, y0, y1) {
+  const hv = uniNow.get('uHover')?.[1][2];
+  const nd = uniNow.get('uNeedle')?.[1][1];
+  const rp = uniNow.get('uRipple')?.[1][1];
+  const passing = hv || nd || rp;
+  // (At rest, with the usual look, the lighter pass: FAST; and with what
+  // passes drawn alone, also while it passes: of the pointer's lights, only
+  // Arc in lamp light is drawn alone, the others take RELIT.)
   const pal = CHROMA[T.chroma] ?? 0;
-  const e = !passing && T.cue !== 'dust' && (pal === 0 || pal === 3) && T.finish !== 'chromatic' && !(T.flecks > 0) ? lit.fast : lit.comp;
-  gl.useProgram(e.p);
-  given(e);
+  const plain = T.cue !== 'dust' && (pal === 0 || pal === 3) && T.finish !== 'chromatic' && !(T.flecks > 0);
+  const alone = how !== 'relit' && (!hv || mode === 4);
+  const e = plain && (!passing || alone) ? lit.fast : lit.comp;
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+  litPath = e === lit.fast ? 'fast' : 'comp';
+  if (!(e === lit.fast && how === 'split' && split(fb, w, h, y0, y1, cover))) {
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+    gl.useProgram(e.p);
+    given(e);
+    samplers(e);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    bands(w, h, y0, y1, cover);
+  }
+  // The dust, over it.
+  if ((T.dust ?? 0) > 0 && specks(g)) {
+    gl.useProgram(lit.dust.p);
+    given(lit.dust);
+    gl.uniform1i(lit.dust.u.uSt0, 0);
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.ONE, gl.ONE);
+    gl.bindBuffer(gl.ARRAY_BUFFER, lit.specks);
+    gl.vertexAttribPointer(0, 4, gl.FLOAT, false, 0, 0);
+    gl.drawArrays(gl.TRIANGLES, 0, lit.nSpecks * 6);
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+    gl.disable(gl.BLEND);
+  }
+  // And what's passing, alone, over it.
+  if (e === lit.fast && passing) {
+    lights(w, h, hv, nd, rp);
+    litPath += '+light';
+  }
+}
+function samplers(e) {
   gl.uniform1i(e.u.uSt0, 0);
   gl.uniform1i(e.u.uSt1, 1);
   gl.uniform1i(e.u.uConeT, 2);
   gl.uniform1i(e.u.uGlT, 3);
   gl.uniform1i(e.u.uSt2, 4);
-  gl.clear(gl.COLOR_BUFFER_BIT);
-  // (Not under the app's screen, where nothing shows: the strip is drawn
-  // as the bands round it, two device px inside its edge, so the pixels
-  // there are never started at all. The edge itself is the shader's.)
+}
+// (Not under the app's screen, where nothing shows: the strip is drawn as
+// the bands round it, two device px inside its edge, so the pixels there are
+// never started at all. The edge itself is the shader's.)
+function bands(w, h, y0, y1, cover) {
   const k = w / box.w;
   const cx0 = Math.ceil(cover[0] * k) + 2, cx1 = Math.floor(cover[2] * k) - 2;
   const cy0 = h - Math.floor(cover[3] * k) + 2, cy1 = h - Math.ceil(cover[1] * k) - 2;
@@ -3063,23 +3239,231 @@ function relit(w, h, g, cover, mode, y0, y1) {
     band(cx1, cy0, w, cy1);
     gl.scissor(0, sy0, w, sy1 - sy0);
   } else gl.drawArrays(gl.TRIANGLES, 0, 3);
-  // The dust, over it.
-  if ((T.dust ?? 0) > 0 && specks(g)) {
-    gl.useProgram(lit.dust.p);
-    given(lit.dust);
-    gl.uniform1i(lit.dust.u.uSt0, 0);
-    gl.enable(gl.BLEND);
-    gl.blendFunc(gl.ONE, gl.ONE);
-    gl.bindBuffer(gl.ARRAY_BUFFER, lit.specks);
-    gl.vertexAttribPointer(0, 4, gl.FLOAT, false, 0, 0);
-    gl.drawArrays(gl.TRIANGLES, 0, lit.nSpecks * 6);
-    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-    gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
-    gl.disable(gl.BLEND);
+}
+
+// SPLIT: the frames at rest, with the lit disc (FAST, without its dust)
+// worked out only every STEP-th frame, one step ahead. At rest everything
+// in it turns together at one known rate (the spin, the lamp and so its
+// cone, the glints), so where it will all stand a step on is known: two
+// frames are kept, a step apart, and each frame on screen mixes them by how
+// far between them it falls (MIX_FS), then the dust and whatever's passing
+// are drawn over it live, so they move every frame. Kept frames are only
+// used while the turn is rigid: a frame where anything else changed (the
+// scroll's twist turning the disc alone, a drifting lamp, the swell, the
+// layout, a setting) is worked out directly, as 'overlay' does, and they're
+// made again once it holds for a frame. Two more canvas-size RGBA8 textures.
+const STEP = 10;
+// (What passes over the record, drawn alone, never goes in them; and the
+// four that turn, compared apart: where the lamp, its cone and the glints
+// stand against the spin.)
+const PASSING = ['uHover', 'uPtr', 'uNeedle', 'uRipple'];
+const TURNING = ['uSpin', 'uFacing', 'uCone', 'uGlintShape'];
+const ks = { tex: [], fb: [], size: '', key: '', ph: [0, 0, 0], spin0: 0, gw: [0, 0], valid: false };
+function split(fb, w, h, y0, y1, cover) {
+  if (!keysOK(w, h)) return false;
+  const get = (n) => uniNow.get(n)[1];
+  const now = turnNow.spin;
+  const gs = get('uGlintShape');
+  const ph = [wrapA(get('uFacing')[0] - now), wrapA(get('uCone')[0] - now), wrapA(gs[3] - T.gRide * now)];
+  const key = JSON.stringify([...uniNow].filter(([n]) => !TURNING.includes(n) && !PASSING.includes(n)).map(([n, [, a]]) => [n, a]).concat([y0, y1, cover, gs[0], gs[1], gs[2]]));
+  const step = (TURN * T.life * STEP) / T.fps;
+  // (A step's turn of the glints must stay well inside one glint's turn,
+  // see MIX_FS.)
+  const ok = step > 0 && Math.abs(step * T.gRide) < Math.PI / gs[2];
+  let f = wrapA(now - ks.spin0) / step;
+  if (key !== ks.key || ph.some((v, i) => Math.abs(wrapA(v - ks.ph[i])) > 1e-5) || !ok) {
+    ks.key = key;
+    ks.ph = ph;
+    ks.valid = false;
+    litPath = 'direct';
+    return false;
   }
-  for (const k of [4, 3, 2, 1, 0]) { gl.activeTexture(gl.TEXTURE0 + k); gl.bindTexture(gl.TEXTURE_2D, null); }
-  gl.useProgram(prog);
+  if (!ks.valid || !(f >= 0 && f < 2)) {
+    // Start over: kept frames now and a step on.
+    keyFrame(0, 0, w, h, y0, y1, cover);
+    keyFrame(1, step, w, h, y0, y1, cover);
+    ks.spin0 = now;
+    f = 0;
+    ks.valid = true;
+  } else if (f >= 1) {
+    // Past the second: it becomes the first, and the next is worked out.
+    ks.tex.reverse();
+    ks.fb.reverse();
+    ks.gw[0] = ks.gw[1];
+    ks.spin0 = wrapA(ks.spin0 + step);
+    keyFrame(1, wrapA(ks.spin0 + step - now), w, h, y0, y1, cover);
+    f -= 1;
+  }
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+  const m = lit.mix;
+  gl.useProgram(m.p);
+  given(m);
+  samplers(m);
+  gl.activeTexture(gl.TEXTURE5);
+  gl.bindTexture(gl.TEXTURE_2D, ks.tex[0]);
+  gl.activeTexture(gl.TEXTURE6);
+  gl.bindTexture(gl.TEXTURE_2D, ks.tex[1]);
+  gl.uniform1i(m.u.uK0, 5);
+  gl.uniform1i(m.u.uK1, 6);
+  gl.uniform1f(m.u.uF, Math.min(1, Math.max(0, f)));
+  gl.uniform2f(m.u.uGw, ks.gw[0], ks.gw[1]);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+  bands(w, h, y0, y1, cover);
+  litPath = 'mix';
   return true;
+}
+function keysOK(w, h) {
+  if (ks.size === `${w}x${h}`) return true;
+  // (Made on a unit of their own, so the textures bound for the passes stay put.)
+  gl.activeTexture(gl.TEXTURE7);
+  for (let i = 0; i < 2; i++) {
+    ks.tex[i] ||= gl.createTexture();
+    ks.fb[i] ||= gl.createFramebuffer();
+    gl.bindTexture(gl.TEXTURE_2D, ks.tex[i]);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+    for (const [k, v] of [[gl.TEXTURE_MIN_FILTER, gl.NEAREST], [gl.TEXTURE_MAG_FILTER, gl.NEAREST], [gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE], [gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE]]) gl.texParameteri(gl.TEXTURE_2D, k, v);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, ks.fb[i]);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, ks.tex[i], 0);
+    if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) {
+      gl.bindTexture(gl.TEXTURE_2D, null);
+      T.atRest = 'overlay';
+      return false;
+    }
+  }
+  gl.bindTexture(gl.TEXTURE_2D, null);
+  ks.size = `${w}x${h}`;
+  ks.valid = false;
+  return true;
+}
+// FAST into kept frame i, `ahead` radians of turn on: the spin, the lamp
+// (and so its cone) and the glints all move on together at rest.
+function keyFrame(i, ahead, w, h, y0, y1, cover) {
+  const e = lit.fast;
+  const get = (n) => uniNow.get(n)[1];
+  gl.bindFramebuffer(gl.FRAMEBUFFER, ks.fb[i]);
+  gl.useProgram(e.p);
+  given(e);
+  samplers(e);
+  gl.uniform1f(e.u.uSpin, get('uSpin')[0] + ahead);
+  gl.uniform1f(e.u.uFacing, get('uFacing')[0] + ahead);
+  const c = get('uCone');
+  gl.uniform4f(e.u.uCone, c[0] + ahead, c[1], c[2], c[3]);
+  const gs = get('uGlintShape');
+  ks.gw[i] = gs[3] + ahead * T.gRide;
+  gl.uniform4f(e.u.uGlintShape, gs[0], gs[1], gs[2], ks.gw[i]);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+  bands(w, h, y0, y1, cover);
+}
+
+// What's passing, each alone (LIGHT_FS), added over a strip round where it
+// can reach: the pointer's light along its groove, as far as it reaches
+// (exp(-y^2), y = run / 240, is under 1/2000 by 700 record px) and 120 CSS
+// px across (its glow, exp(-drc^2 / 1600), under 1/1000 by 105); the
+// needle's groove 5.5 of its widths (max(3, 1.2 fwidth(r)) record px) either
+// side, all the way round; its ring 90 record px either side (4.5 of its
+// widths). Across is measured as the shader measures it (fwidth(r)), a
+// quarter more for the change within the strip; the strip's outer edge is
+// pushed out so its straight sides never cut inside the arc.
+const hm = { buf: null };
+function lights(w, h, hv, nd, rp) {
+  const [cx] = uniNow.get('uCentre')[1];
+  const [d0, t] = uniNow.get('uGeo')[1];
+  const hz = uniNow.get('uHz')[1][0];
+  const dpr = uniNow.get('uDpr')[1][0];
+  const toPx = (r, a) => { const qx = r * Math.cos(a), qy = r * Math.sin(a); const f = 1 - (qy * t) / d0; return f > 0.02 ? [((cx + qx / f) * dpr) / w * 2 - 1, 1 - ((d0 / f - hz) * dpr) / h * 2] : null; };
+  const rOf = (x, y) => { const f = d0 / Math.max(1, y + hz); return Math.hypot((x - cx) * f, ((1 - f) * d0) / t); };
+  // (Record px per CSS px across, as fwidth(r) * uDpr, an L1 sum, at r, a.)
+  const across = (r, a) => {
+    const qx = r * Math.cos(a), qy = r * Math.sin(a);
+    const f = 1 - (qy * t) / d0;
+    if (f <= 0.02) return 0;
+    const x = cx + qx / f, y = d0 / f - hz;
+    const r0 = rOf(x, y);
+    return Math.abs(rOf(x + 1, y) - r0) + Math.abs(rOf(x, y + 1) - r0);
+  };
+  // (Its inner edge one circle, as far in as the strip reaches across
+  // anywhere along it, or the centre itself: so it's a ring of convex quads
+  // or a fan, and no pixel is ever covered twice, which would add the light
+  // twice. A strip whose inner edge stepped in to the centre and out again
+  // left slivers that did, now and then, on phones. Round the whole disc,
+  // the last point is the first.)
+  const strip = (rc, half, a0, a1, S) => {
+    const step = (a1 - a0) / S;
+    const full = a1 - a0 > 2 * Math.PI - 1e-6;
+    const n = full ? S : S + 1;
+    const dR = Array.from({ length: n }, (_, i) => half(a0 + step * i) * 1.25 + 4);
+    const rIn = Math.max(0, rc - Math.max(...dR));
+    const grow = 1 / Math.cos(step / 2);
+    const O = toPx(0, 0);
+    const pts = dR.map((d, i) => { const a = a0 + step * i; return [rIn > 0 ? toPx(rIn, a) : O, toPx((rc + d) * grow, a)]; });
+    const v = [];
+    for (let i = 1; i <= S; i++) {
+      const p = pts[i - 1], c = pts[full ? i % S : i];
+      if (!p[0] || !p[1] || !c[0] || !c[1]) continue;
+      if (rIn > 0) v.push(...p[0], ...p[1], ...c[0]);
+      v.push(...p[1], ...c[1], ...c[0]);
+    }
+    return v;
+  };
+  const L = lit.light;
+  gl.useProgram(L.p);
+  given(L);
+  gl.uniform1i(L.u.uSt0, 0);
+  gl.uniform1i(L.u.uSt1, 1);
+  if (!hm.buf) hm.buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, hm.buf);
+  gl.enable(gl.BLEND);
+  gl.blendFunc(gl.ONE, gl.ONE);
+  const draw = (part, v) => {
+    if (!v.length) return;
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(v), gl.DYNAMIC_DRAW);
+    gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+    gl.uniform1f(L.u.uPart, part);
+    gl.drawArrays(gl.TRIANGLES, 0, v.length / 2);
+  };
+  if (hv) {
+    const [rH, aH] = uniNow.get('uHover')[1];
+    const da = Math.min(Math.PI, 700 / Math.max(rH, 100));
+    draw(0, strip(rH, (a) => 120 * across(rH, a), aH - da, aH + da, 48));
+  }
+  if (nd) {
+    const rN = uniNow.get('uNeedle')[1][0];
+    draw(1, strip(rN, (a) => 5.5 * Math.max(3, (1.2 * across(rN, a)) / dpr), -Math.PI, Math.PI, 160));
+  }
+  if (rp) draw(2, strip(uniNow.get('uRipple')[1][0], () => 90, -Math.PI, Math.PI, 160));
+  gl.disable(gl.BLEND);
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+}
+
+// For checks (the look against the reference, frame by frame): set
+// window.__heroCheck = {} and the next relit frame fills in ref (this
+// instant as 'relit' draws it: FAST, or RELIT while anything passes, with
+// the dust), full (the whole picture worked out in full, MAIN) and px (the
+// frame as drawn), each w x h RGBA from the bottom row up, and path (how
+// it was drawn). Nothing is done while it isn't set.
+function check(chk, w, h, g, cover, mode, y0, y1) {
+  const fb = gl.createFramebuffer();
+  const tx = gl.createTexture();
+  gl.activeTexture(gl.TEXTURE7);
+  gl.bindTexture(gl.TEXTURE_2D, tx);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tx, 0);
+  const read = () => { const px = new Uint8Array(w * h * 4); gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, px); return px; };
+  gl.useProgram(prog);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+  chk.full = read();
+  litFrame('relit', fb, w, h, g, cover, mode, y0, y1);
+  chk.ref = read();
+  chk.refPath = litPath;
+  Object.assign(chk, { w, h, y0, y1 });
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  gl.deleteFramebuffer(fb);
+  gl.activeTexture(gl.TEXTURE7);
+  gl.bindTexture(gl.TEXTURE_2D, null);
+  gl.deleteTexture(tx);
 }
 // The cells that may hold a speck, out to the rim (for any amount of
 // dust): found once on the GPU (SPECKS_FS) and read back, then one quad
@@ -3528,11 +3912,14 @@ tw?.select({ ...look, label: 'Hero record: speck style', value: T.speck, show: (
 tw?.slider({ ...look, label: 'Hero record: render resolution', min: 0.3, max: 1, step: 0.05, value: T.res, show: () => !STYLE[T.look]?.crisp, onInput: reshape('res') });
 tw?.select({ ...look, label: 'Hero record: frames a second while the pointer moves it', value: String(T.busyFps), options: [['30', '30 (on the app\'s frames)'], ['60', '60']], onInput: (v) => { T.busyFps = +v; } });
 tw?.slider({ ...look, label: 'Hero record: frames a second at rest', min: 10, max: 30, step: 1, value: T.fps, onInput: (v) => { T.fps = v; } });
-// How each frame is drawn: relit from the layer baked once (RELIT, the
-// default: the same picture to a level, at rest and while the pointer, the
-// needle or a scroll moves it); turned on from a full one at rest
+// How each frame is drawn: relit from the layer baked once (RELIT), with
+// the lit disc worked out only every 10th frame and mixed, and the dust and
+// what passes over it (the pointer's light, the needle and its ring) drawn
+// alone (SPLIT, the default: the same picture to a level or two); relit
+// each frame, what passes drawn alone; relit each frame, the whole picture
+// worked out again while anything passes; turned on from a full one at rest
 // (REPROJECT, within a few levels); or each worked out in full, the old path.
-tw?.select({ ...look, label: 'Hero record: frames at rest', value: T.atRest, options: [['relit', 'Relit from a layer baked once (lightest)'], ['turned', 'Turned on from a full one (lighter)'], ['full', 'Each worked out in full']], onInput: (v) => { T.atRest = v; kept.key = ''; lit.key = ''; wake(); } });
+tw?.select({ ...look, label: 'Hero record: frames at rest', value: T.atRest, options: [['split', 'Lit every 10th frame and mixed, what passes drawn alone (lightest)'], ['overlay', 'Relit, what passes drawn alone'], ['relit', 'Relit from a layer baked once'], ['turned', 'Turned on from a full one'], ['full', 'Each worked out in full']], onInput: (v) => { T.atRest = v; kept.key = ''; lit.key = ''; ks.key = ''; ks.valid = false; wake(); } });
 
 // GLINTS: in each song a few short runs of groove catch the lamp, fixed on
 // the disc and going round, brightest as they pass through the lamp's
