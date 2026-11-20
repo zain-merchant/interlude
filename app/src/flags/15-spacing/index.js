@@ -17,7 +17,7 @@ export default {
   n: 15,
   title: 'Even margins everywhere',
   group: 'Layout',
-  notes: 'Mixer sides pad 16 like every panel; library cells, search, menus, tooltips, toast, banner, Settings rows and the two dialogs move onto 4/8/12/16 (24 for dialogs).',
+  notes: 'Mixer sides pad 16 like every panel; library cells, search, menus, tooltips, toast, banner, Settings rows and the two dialogs move onto 4/8/12/16 (24 for dialogs). Settings\' Mixxx note gets its 12px gap back.',
 };
 
 /** Show me: the inner margins of the mixer against the decks beside it, shaded with their sizes, flipping. */

@@ -125,3 +125,10 @@
 :root[data-flag-spacing] .card[aria-labelledby='import-title'] .summary {
   margin-top: var(--space-dialog);
 }
+
+/* Settings > Controllers (critique panel S10, C65): the Mixxx note's 12px
+   gap was cancelled by `.display p { margin: 0 0 12px }`, so it sat right
+   under the device row's rule. */
+:root[data-flag-spacing] .settings .display p.gap {
+  margin-top: var(--space-3);
+}

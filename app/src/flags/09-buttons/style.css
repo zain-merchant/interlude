@@ -76,3 +76,16 @@
   background: var(--flag-buttons-bg-on);
   box-shadow: var(--flag-buttons-ring-on);
 }
+
+/* Settings > Display (critique panel S7): the Interface size − and + were
+   23×32px slivers with a 6px glyph (.btn.sm has min-width: 0). Square
+   32×32 buttons with a 16px glyph, and the 100% readout on the buttons'
+   text baseline. */
+:root[data-flag-buttons] .settings .size[role='group'] .btn.sm:is([aria-label='Smaller'], [aria-label='Bigger']) {
+  width: var(--h-md);
+  padding: 0;
+  font-size: var(--t-md);
+}
+:root[data-flag-buttons] .settings .size[role='group'] {
+  align-items: baseline;
+}

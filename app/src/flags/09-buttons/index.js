@@ -14,7 +14,7 @@ export default {
   title: 'Buttons that look pressable',
   group: 'Controls',
   notes:
-    'Outline (tune weight and strength), tonal fill, glass, ghost with a fill, or raised keys. Hover, selected and pressed follow each style.',
+    'Outline (tune weight and strength), tonal fill, glass, ghost with a fill, or raised keys. Hover, selected and pressed follow each style. Settings\' Interface size − and + are square 32px buttons.',
   settings: {
     style: {
       type: 'choice',
