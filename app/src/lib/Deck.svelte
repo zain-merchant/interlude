@@ -7,7 +7,7 @@
   import { untrack } from 'svelte';
   import { padMode, padModeTab } from './padmode.svelte.js';
   import { tempoPickup } from './pickup.svelte.js';
-  import { engine, tracks, control, nextGrid, setGrid } from './engine.svelte.js';
+  import { engine, tracks, control, nextGrid, setGrid, ejectTrack } from './engine.svelte.js';
   import { pushEdit } from './undo.svelte.js';
   import { dropTarget } from './dnd.svelte.js';
   import { tip, tipText } from './tooltip.svelte.js';
@@ -42,6 +42,19 @@
     const t = tracks[deck];
     if (!t) return;
     const has = !!t.beatgrid;
+    // #54 (UI audit flag): deck-polish puts Set BPM… first, says the grid step, and spells "playhead".
+    if (flag('deck-polish'))
+      return openMenu(e, [
+        { label: 'Set BPM…', action: () => (editingBpm = true) },
+        { label: 'Halve BPM', enabled: has, action: () => gridEdit('halve', 'Halved the BPM') },
+        { label: 'Double BPM', enabled: has, action: () => gridEdit('double', 'Doubled the BPM') },
+        '-',
+        { label: 'Set downbeat at playhead', enabled: has, action: () => gridEdit('downbeat', 'Moved the downbeat') },
+        { label: 'Move grid 10 ms earlier', enabled: has, action: () => gridEdit('nudge', 'Moved the grid 10 ms earlier', -0.01) },
+        { label: 'Move grid 10 ms later', enabled: has, action: () => gridEdit('nudge', 'Moved the grid 10 ms later', 0.01) },
+        '-',
+        { label: 'Reset to detected grid', enabled: !!t.gridLocked, action: () => gridEdit('reset', 'Reset the beatgrid') },
+      ]);
     openMenu(e, [
       { label: 'Halve BPM', enabled: has, action: () => gridEdit('halve', 'Halved the BPM') },
       { label: 'Double BPM', enabled: has, action: () => gridEdit('double', 'Doubled the BPM') },
@@ -268,7 +281,16 @@
       ? `Click to make the ${timeMode.big === 'remaining' ? 'elapsed' : 'remaining'} time the big one`
       : '';
   const headerMenu = (e) =>
-    openMenu(e, [{ label: 'Show in library', action: () => onreveal(t.path), enabled: !!t }]);
+    openMenu(e, [
+      { label: 'Show in library', action: () => onreveal(t.path), enabled: !!t },
+      // #54 (UI audit flag): deck-polish adds Eject, so the menu isn't one lone command (not while playing).
+      ...(flag('deck-polish') ? [{ label: 'Eject', action: () => ejectTrack(deck), enabled: !!t && !d.playing }] : []),
+    ]);
+  // #54 (UI audit flag): deck-polish can set the tenths of a second apart (class "t").
+  const clock = (s) => {
+    const m = flag('deck-polish') && setting('deck-polish', 'tenths') === 'dim' ? /^(.*)(\.\d)$/.exec(s) : null;
+    return m ? { whole: m[1], tenth: m[2] } : { whole: s, tenth: '' };
+  };
 </script>
 
 <section class="deck" class:mirror={deck === 1} style:--deck={deck === 0 ? 'var(--deck-a)' : 'var(--deck-b)'}
@@ -305,11 +327,13 @@
 
     <div class="overview"><Waveform {deck} mode="overview" /></div>
 
-    <!-- #40 (UI audit flag): time-remaining; with it off, the times are as before. -->
-    {#if flag('time-remaining')}
+    <!-- #40, #54 (UI audit flags): time-remaining, deck-polish's tenths; with both off, the times are as before. -->
+    {#if flag('time-remaining') || flag('deck-polish')}
+    {@const el = clock(fmt(d.position))}
+    {@const rm = clock(fmt(d.position - d.duration))}
     <div class="times" {...timesProps} use:tip={timesTip}>
-      <span class="el num"><span class="sr">Elapsed </span>{fmt(d.position)}</span>
-      <span class="rm num" class:ending class:last={ending && d.duration - d.position < 10}><span class="sr">Remaining </span>{fmt(d.position - d.duration)}</span>
+      <span class="el num"><span class="sr">Elapsed </span>{el.whole}{#if el.tenth}<span class="t">{el.tenth}</span>{/if}</span>
+      <span class="rm num" class:ending class:last={ending && d.duration - d.position < 10}><span class="sr">Remaining </span>{rm.whole}{#if rm.tenth}<span class="t">{rm.tenth}</span>{/if}</span>
     </div>
     {:else}
     <div class="times">

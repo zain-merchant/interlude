@@ -46,6 +46,6 @@ export const show = {
     if (!o || !row) return;
     const before = ctx.phase === 'before';
     d.text(o.right + 10, o.top + o.height / 2, `overview ${Math.round(o.height)}px tall`, { tone: before ? 'bad' : 'ok', free: true });
-    d.moved(before ? ctx.rest.off[1] : ctx.rest.on[1], row, { what: 'cue row' });
+    d.moved(ctx.rest.off[1], row, { what: 'cue row' });
   },
 };

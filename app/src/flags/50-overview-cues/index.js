@@ -28,7 +28,7 @@ export default {
   },
 };
 
-/** Show me: deck A with three hot cues set; flipping shows plain lines (before) and numbered chips (after) on the overview, magnified. */
+/** Show me: deck A with three hot cues set; flipping shows plain lines (before) and numbered chips (after) on the overview. */
 export const show = {
   about: "On the deck's overview a hot cue was just a coloured line, so you had to match colours to know which was which. Now each one carries its number, as on the scrolling waveform.",
   before: "Three hot cues on the overview are three thin coloured lines: which one is cue 2? You have to remember the colours.",
@@ -47,14 +47,16 @@ export const show = {
     await app.seek(0, 0.05);
   },
   target: "[data-region='deck0'] .overview",
-  badge: (app, ctx) => ctx.at,
+  badge: (app) => {
+    const o = app.$("[data-region='deck0'] .overview")?.getBoundingClientRect();
+    return o && new DOMRect(o.right - 120, o.top, 120, o.height);
+  },
+  // The overview is a canvas, which a loupe can't copy, so the marks are
+  // read in place.
   aid(d, app, ctx) {
     const o = app.$("[data-region='deck0'] .overview")?.getBoundingClientRect();
     if (!o) return;
-    const z = 2;
-    const l = d.loupe('ov', { x: o.left - 4, y: o.top - 4 }, { zoom: z, size: { w: Math.min(900, (o.width + 8) * z), h: (o.height + 8) * z }, near: o, caption: '' });
-    ctx.at = l.rect;
     const before = ctx.phase === 'before';
-    d.text(l.at.x + 10, l.at.y + l.rect.height + 16, before ? 'hot cues: coloured lines, no numbers' : 'hot cues: numbered, like the scrolling lane', { tone: before ? 'bad' : 'ok', fixed: true });
+    d.text(o.left + o.width / 2, o.bottom + 16, before ? 'hot cues: coloured lines, no numbers' : 'hot cues: numbered chips, like the scrolling lane; minute ticks along the foot', { anchor: 'middle', tone: before ? 'bad' : 'ok' });
   },
 };

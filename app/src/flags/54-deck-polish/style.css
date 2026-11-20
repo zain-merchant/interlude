@@ -1,0 +1,20 @@
+/* #54: small deck fixes from the panel's backlog. */
+
+/* Hot cue numbers at the same weight as the deck's other numerals
+   (b-K62), and the number a little closer to its time (d-K64: the
+   tabular "1" has wide side bearings, so 8px looked wider than the dot's
+   gap). */
+:root[data-flag-deck-polish] [data-region^='deck'] .perf .tc {
+  gap: 6px;
+}
+:root[data-flag-deck-polish] [data-region^='deck'] .perf .tc b {
+  font-weight: 400;
+}
+
+/* Tenths of a second one step quieter than the minutes and seconds
+   beside them (b-K67), so the time reads at a glance and the flicker of
+   the last digit recedes. Relative to its number, so it follows flag 18's
+   ending colour and flag 40's big/small swap. */
+:root[data-flag-deck-polish] [data-region^='deck'] .times .t {
+  opacity: 0.64;
+}

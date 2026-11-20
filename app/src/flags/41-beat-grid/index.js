@@ -31,7 +31,7 @@ export default {
   },
 };
 
-/** Show me: both decks playing; flipping shows the faint grid under the ribbon (before) and the grid over it (after), magnified. */
+/** Show me: both decks playing; flipping shows the faint grid under the ribbon (before) and the grid over it (after). */
 export const show = {
   about: "The beat and bar lines on the scrolling waveforms were so faint, and drawn under the waveform, that you couldn't line the two decks' beats up by eye. Now bars are clear lines and beats are ticks along the edges.",
   before: 'Look for the bars on the waveforms: the lines are almost invisible and the waveform covers them, so matching the two decks\' beats is guesswork.',
@@ -43,15 +43,16 @@ export const show = {
     await app.seek(1, 0.3);
   },
   target: (app) => [app.$("[data-region='waves']")],
-  badge: (app, ctx) => ctx.at,
+  badge: (app) => {
+    const w = app.$("[data-region='waves']")?.getBoundingClientRect();
+    return w && new DOMRect(w.left + 24, w.top, 160, w.height);
+  },
+  // The lanes are canvases, which a loupe can't copy, so the grid is read
+  // in place.
   aid(d, app, ctx) {
     const w = app.$("[data-region='waves']")?.getBoundingClientRect();
     if (!w) return;
-    const z = 2;
-    const src = { x: w.left + w.width / 2 + 8, y: w.top };
-    const l = d.loupe('grid', src, { zoom: z, size: { w: Math.min(720, (w.width / 2 - 40) * z), h: w.height * z }, near: w, caption: '' });
-    ctx.at = l.rect;
     const before = ctx.phase === 'before';
-    d.text(l.at.x + 10, l.at.y + l.rect.height + 16, before ? 'bars and beats: barely there, under the waveform' : 'bars: clear lines; beats: ticks at the edges', { tone: before ? 'bad' : 'ok', fixed: true });
+    d.text(w.left + w.width / 2, w.bottom + 16, before ? 'bars and beats: barely there, under the waveform' : 'bars: clear lines (brighter every 16 bars); beats: ticks at the lane edges', { anchor: 'middle', tone: before ? 'bad' : 'ok' });
   },
 };
