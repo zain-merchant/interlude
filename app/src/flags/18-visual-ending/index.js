@@ -13,7 +13,15 @@ export default {
   notes: 'While playing, the remaining time turns the warning colour in the last seconds, and pulses in the last ten.',
   settings: {
     secs: { type: 'range', min: 10, max: 60, step: 5, default: 30, label: 'Warn from (s)' },
-    pulse: { type: 'choice', options: [['on', 'Pulse'], ['off', 'Steady']], default: 'on', label: 'Last ten seconds' },
+    pulse: {
+      type: 'choice',
+      label: 'Last ten seconds',
+      default: 'on',
+      options: [
+        ['on', 'Pulse', 'In the last ten seconds the warning colour also pulses slowly, so it catches your eye even while you look at the other deck (never under reduced motion).'],
+        ['off', 'Steady', 'The warning colour stays steady to the end: calmer, but easier to miss.'],
+      ],
+    },
   },
 };
 
