@@ -821,6 +821,117 @@ html[data-nav="morph"] .nav-actions .btn.ghost svg { width: 17px; height: 17px; 
 html[data-nav="morph"] .nav-actions .btn:not(.ghost) { gap: 6px; padding: 0 14px 0 11px; }
 html[data-nav="morph"] .nav-dl { display: block; width: 15px; height: 15px; }
 html[data-nav="morph"] .nav-dl path { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ── The menu (narrow screens) ──────────────────────────────────────────
+   The button: two bars that turn into a cross. In the bar it sits at the
+   row's right end; in the capsule at its right end, 6px in, like the icon
+   at the other end (index.html moves it with the capsule). */
+.menu-btn, .menu, .menu-scrim { display: none; }
+@media (max-width: 860px) {
+  .menu-btn {
+    position: absolute; right: 0; top: 50%; translate: 0 -50%; z-index: 1;
+    display: grid; place-items: center; width: 36px; height: 36px; padding: 0; border: 0; border-radius: calc(var(--cap-r, 14px) - 6px);
+    background: transparent; color: var(--fg); cursor: pointer; will-change: transform;
+    transition: background-color var(--snappy-ms) var(--snappy);
+  }
+  .menu-btn i {
+    grid-area: 1 / 1; width: 18px; height: 1.5px; border-radius: 1px; background: currentColor;
+    translate: 0 -3.5px; transition: translate var(--smooth-ms) var(--smooth), rotate var(--smooth-ms) var(--smooth);
+  }
+  .menu-btn i + i { translate: 0 3.5px; }
+  html[data-menu] .menu-btn i { translate: 0 0; rotate: 45deg; }
+  html[data-menu] .menu-btn i + i { rotate: -45deg; }
+  @media (hover: hover) and (pointer: fine) { .menu-btn:hover { background: rgb(255 255 255 / 0.07); } }
+  @media not all and (hover: hover) and (pointer: fine) { .menu-btn:active { background: rgb(255 255 255 / 0.07); } }
+  .menu-btn:focus-visible { outline-offset: 0; }
+  /* The capsule keeps the brand, Download and the button; GitHub moves to
+     the menu on a phone. The capsule's own buttons step aside while the
+     menu is open (it has them, larger). */
+  @media (max-width: 480px) { html[data-nav="morph"] .nav-actions .btn.ghost { display: none; } }
+  html[data-menu][data-nav="morph"][data-navacts] .nav.nav .nav-actions .btn { opacity: 0; scale: 0.96; filter: blur(4px); transition: opacity 120ms ease-out, scale 120ms ease-out, filter 120ms ease-out; }
+
+  /* The page behind: dimmed and blurred, and out of reach; it doesn't
+     scroll (no layout change: the scrollbar's room is kept). */
+  html[data-menu] { overflow: hidden; scrollbar-gutter: stable; }
+  .menu-scrim {
+    display: block; position: fixed; inset: 0; z-index: -1; touch-action: none;
+    background: rgb(5 5 7 / 0.5); -webkit-backdrop-filter: blur(6px) saturate(0.9); backdrop-filter: blur(6px) saturate(0.9);
+    opacity: 0; visibility: hidden; pointer-events: none;
+    transition: opacity var(--snappy-ms) var(--snappy), visibility 0s linear var(--snappy-ms);
+  }
+  html[data-menu] .menu-scrim { opacity: 1; visibility: visible; pointer-events: auto; transition: opacity var(--smooth-ms) var(--smooth), visibility 0s; }
+
+  /* The sheet: the capsule's glass, as wide as the capsule and as tall as
+     what's in it. Shut, all that shows of it is a capsule-high strip at
+     the top (the box round it, .menu, clips the rest away); it opens by
+     sliding down out of that, its words held still in place (moved back
+     up by just as much) so it's the glass that reveals them, like a blind.
+     Only transforms and opacity move, on the compositor; nothing is laid
+     out as it opens or shuts. Over the capsule exactly, so it reads as the
+     capsule growing. */
+  .menu {
+    --top: calc(var(--nav-pad, 10px) + env(safe-area-inset-top, 0px));
+    --side: calc(12px + max(env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px)));
+    --r: var(--cap-r, 14px);
+    display: block; position: fixed; z-index: -1; top: var(--top); left: var(--side); right: var(--side);
+    border-radius: var(--r); overflow: hidden;
+    visibility: hidden; pointer-events: none;
+    transition: visibility 0s linear var(--snappy-ms);
+  }
+  html[data-menu] .menu { visibility: visible; pointer-events: auto; transition: visibility 0s; }
+  .menu-sheet {
+    position: relative; overflow: hidden; border-radius: var(--r);
+    background: rgb(16 16 19 / 0.9); -webkit-backdrop-filter: blur(24px) saturate(1.4); backdrop-filter: blur(24px) saturate(1.4);
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.09), inset 0 1px 0 rgb(255 255 255 / 0.05);
+    translate: 0 calc(48px - 100%); opacity: 0; will-change: translate, opacity;
+    transition: translate var(--snappy-ms) var(--snappy), opacity 140ms ease-in 120ms;
+  }
+  html[data-menu] .menu-sheet { translate: 0 0; opacity: 1; transition: translate var(--smooth-ms) var(--smooth), opacity 90ms ease-out; }
+  .menu-in {
+    max-height: calc(100vh - var(--top) - 12px - env(safe-area-inset-bottom, 0px));
+    max-height: calc(100dvh - var(--top) - 12px - env(safe-area-inset-bottom, 0px));
+    overflow-y: auto; overscroll-behavior: contain; padding: 60px 8px 8px;
+    translate: 0 calc(100% - 48px); will-change: translate;
+    transition: translate var(--snappy-ms) var(--snappy);
+  }
+  html[data-menu] .menu-in { translate: 0 0; transition: translate var(--smooth-ms) var(--smooth); }
+  /* A hairline under the capsule's row, the brand and the cross above it. */
+  .menu-in::before { content: ''; position: absolute; top: 48px; left: 14px; right: 14px; height: 1px; background: rgb(255 255 255 / 0.07); }
+
+  /* The sections, large, in the headline's own type; the two that leave
+     the site carry a small arrow. Each comes in a beat after the one
+     above it as the sheet opens, and all go at once as it shuts. */
+  .menu-links { display: grid; }
+  .menu-links a, .menu-foot {
+    opacity: 0; translate: 0 -8px; filter: blur(3px);
+    transition: opacity 110ms ease-out, translate 110ms ease-out, filter 110ms ease-out;
+  }
+  html[data-menu] :is(.menu-links a, .menu-foot) {
+    opacity: 1; translate: 0 0; filter: blur(0);
+    transition: opacity 260ms ease-out, translate var(--smooth-ms) var(--smooth), filter 260ms ease-out, background-color var(--snappy-ms) var(--snappy), color var(--snappy-ms) var(--snappy);
+    transition-delay: calc(70ms + var(--i, 0) * 32ms), calc(70ms + var(--i, 0) * 32ms), calc(70ms + var(--i, 0) * 32ms), 0s, 0s;
+  }
+  .menu-links a {
+    display: flex; align-items: center; justify-content: space-between; height: 56px; padding: 0 14px; border-radius: calc(var(--r) - 6px);
+    color: var(--fg); text-decoration: none; font-size: clamp(27px, 7.6vw, 34px); font-weight: 600; letter-spacing: -0.035em; line-height: 1;
+  }
+  .menu-links .mo { width: 20px; height: 20px; flex: none; fill: none; stroke: var(--fg-3); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+  @media (hover: hover) and (pointer: fine) { .menu-links a:hover { background: rgb(255 255 255 / 0.05); } }
+  @media not all and (hover: hover) and (pointer: fine) { .menu-links a:active { background: rgb(255 255 255 / 0.06); color: var(--fg-2); } }
+  .menu-links a:focus-visible { outline-offset: -2px; }
+  .menu-foot { margin-top: 14px; padding: 16px 6px 6px; border-top: 1px solid rgb(255 255 255 / 0.07); }
+  .menu-foot .btn { width: 100%; justify-content: center; border-radius: calc(var(--r) - 4px); }
+  .menu-foot .btn svg path { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  .menu-foot p { margin: 12px 0 2px; text-align: center; color: var(--fg-3); font-size: 13px; }
+}
+/* (Where there's no blur behind glass, the sheet is all but solid.) */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .menu-sheet { background: rgb(16 16 19 / 0.97); } }
+/* Less motion: it fades in and out where it stands. */
+@media (max-width: 860px) and (prefers-reduced-motion: reduce) {
+  .menu-sheet, html[data-menu] .menu-sheet, .menu-in, html[data-menu] .menu-in { translate: none; }
+  .menu-links a, .menu-foot, html[data-menu] :is(.menu-links a, .menu-foot) { translate: none; filter: none; transition-delay: 0s; }
+  .menu-btn i { transition: none; }
+}
 /* ── Hero: text layouts (being tried) ─────────────────────────────────────
    Picked in the Try panel ("Hero: text layout", data-herotext on <html>);
    without it the hero is the layout above (the buttons beside the
