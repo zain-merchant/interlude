@@ -44,9 +44,14 @@
   content: '';
   position: fixed;
   inset: var(--flag-polish-dialog-lib, 100%) 0 0;
-  z-index: -1;
+  z-index: 0;
   -webkit-backdrop-filter: blur(6px);
   backdrop-filter: blur(6px);
+}
+/* Above the blur (WebKit only blurs from a layer above the scrim's own). */
+:root[data-flag-polish-dialog][data-flag-polish-dialog-scrim='library'] .backdrop > .card[role='dialog'] {
+  position: relative;
+  z-index: 1;
 }
 :root[data-flag-polish-dialog][data-flag-polish-dialog-scrim='before'] .backdrop:has(> .card[role='dialog']) {
   background: rgb(5 5 6 / 0.72);
