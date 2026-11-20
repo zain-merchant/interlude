@@ -950,7 +950,9 @@ async function transition(a) {
     await act(a, features, 'muteVocals', to, false);
     await a.wait(700);
   } else if (!stemsAndBass) {
-    // Let the loop go, and send the old record out on an echo.
+    // Let the loop go, and send the old record out on an echo. (Each move
+    // its own step, so a recording can line the hands up on it.)
+    await mark(a, 'unloop');
     await act(a, features, 'loop', to, false);
     await a.wait(400);
     if (features().echo) {
@@ -966,6 +968,7 @@ async function transition(a) {
   await a.wait(600);
 
   // Put its channel back as it was: EQ to the middle, echo off.
+  await mark(a, 'reset');
   if (stemsAndBass) await act(a, features, 'resetLow', from);
   else await act(a, features, 'echo', from, false);
   await a.wait(400);
