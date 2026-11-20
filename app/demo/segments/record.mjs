@@ -623,18 +623,25 @@ if (PHASE === 'all' || PHASE === 'encode') {
   await ffmpeg(['-i', first, '-q:v', '3', path.join(IMG, 'screenshot.jpg')]);
   await ffmpeg(['-i', first, '-vf', 'scale=1440:-2:flags=lanczos', '-q:v', '3', path.join(IMG, 'screenshot-1x.jpg')]);
   for (const [w, f] of [[2880, 'screenshot.avif'], [1440, 'screenshot-1x.avif']]) {
-    await ffmpeg(['-i', first, '-vf', `scale=${w}:-2:flags=lanczos,format=yuv420p`, '-c:v', 'libaom-av1', '-still-picture', '1', '-crf', '30', '-cpu-used', '4', path.join(IMG, f)]).catch(() => ffmpeg(['-i', first, '-vf', `scale=${w}:-2:flags=lanczos,format=yuv420p`, '-c:v', 'libsvtav1', '-crf', '30', '-frames:v', '1', path.join(IMG, f)]));
+    await ffmpeg(['-i', first, '-vf', `scale=${w}:-2:flags=lanczos,format=yuv420p`, '-c:v', 'libsvtav1', '-crf', '30', '-frames:v', '1', '-svtav1-params', 'log-level=0', path.join(IMG, f)]);
   }
 
-  // Timelines: per hand, one file (levels as thousandths; link lines only on the frames that have them).
+  // Timelines: per hand, one file: levels as thousandths; link lines only on
+  // the frames that have them, each [class, path, opacity, dash, offset] with
+  // the classes and paths in tables (a few hundred paths, used again and
+  // again) and numbers to a tenth of a pixel.
   for (const mode of MODES) {
-    const out = STEPS.map((k) => {
+    const classes = [];
+    const paths = [];
+    const idx = (list, v) => { let i = list.indexOf(v); if (i < 0) { i = list.length; list.push(v); } return i; };
+    const tenth = (str) => String(str).replace(/-?\d+\.\d+/g, (n) => String(Math.round(+n * 10) / 10));
+    const steps = STEPS.map((k) => {
       const t = JSON.parse(fs.readFileSync(path.join(WORK, `timeline-${mode}-${k}.json`), 'utf8'));
       const links = {};
-      t.links.forEach((l, f) => { if (l) links[f] = l; });
+      t.links.forEach((l, f) => { if (l) links[f] = l.map(([c, d, op, da, dof]) => [idx(classes, c), idx(paths, tenth(d)), op, tenth(da), tenth(dof)]); });
       return { level: t.level.map((x) => Math.round((x ?? 0) * 1000)), links };
     });
-    fs.writeFileSync(path.join(OUT, `${mode}.json`), JSON.stringify(out));
+    fs.writeFileSync(path.join(OUT, `${mode}.json`), JSON.stringify({ classes, paths, steps }));
   }
   const manifest = {
     source: SOURCE, fps: FPS, scale: SCALE, codecs: CODECS, small: '@1x', steps,

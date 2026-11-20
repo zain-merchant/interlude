@@ -21,8 +21,8 @@
   <!-- Geist, served from here (no other site to reach before the page can
        draw its text); the Latin file is fetched straight away. -->
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="style.css?v=20261119p2">
-  <script src="tune.js?v=20261118v1c"></script>
+  <link rel="stylesheet" href="style.css?v=20261120a">
+  <script src="tune.js?v=20261120a"></script>
   <script>
     // Live updates while working on the site locally (the dev server
     // streams the files whose contents changed). Stylesheets swap in place,
@@ -454,6 +454,19 @@
     </section>
 
     <section class="shot wrap" aria-label="Interlude in action">
+      <!-- Above the screen: what plays it, the mouse or a controller. -->
+      <div class="shot-bar">
+        <div class="switch" role="radiogroup" aria-label="Play it with" data-mode="mouse">
+          <button type="button" role="radio" aria-checked="true" data-mode="mouse">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5 12.5 7.4 8.6 8.6 7.4 12.5Z"/></svg>Mouse
+          </button>
+          <button type="button" role="radio" aria-checked="false" data-mode="controller">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="1.5" y="4" width="13" height="8" rx="2"/><circle cx="5" cy="8" r="1.8"/><circle cx="11" cy="8" r="1.8"/></svg>Controller
+          </button>
+          <i class="thumb" aria-hidden="true"></i>
+        </div>
+        <span class="shot-tag">Works with 140+ MIDI controllers</span>
+      </div>
       <div class="stage-frame" data-mode="mouse">
         <div class="glow" aria-hidden="true"></div>
         <div class="screen">
@@ -466,20 +479,8 @@
               width="1440" height="900" fetchpriority="high" alt="Interlude with two tracks loaded: waveforms across the top, two decks either side of the mixer, and the library below.">
           </picture>
           <!-- The real app on its simulated engine, played by a script (app/demo). Loaded after the page. -->
-          <iframe class="live" title="Interlude mixing one track into the next" tabindex="-1" aria-hidden="true" data-src="demo/hero.html?v=20261119p4"></iframe>
+          <iframe class="live" title="Interlude mixing one track into the next" tabindex="-1" aria-hidden="true" data-src="demo/hero.html?v=20261120a"></iframe>
         </div>
-      </div>
-      <div class="shot-bar">
-        <div class="switch" role="radiogroup" aria-label="Play it with">
-          <button type="button" role="radio" aria-checked="true" data-mode="mouse">
-            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5 12.5 7.4 8.6 8.6 7.4 12.5Z"/></svg>Mouse
-          </button>
-          <button type="button" role="radio" aria-checked="false" data-mode="controller">
-            <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="1.5" y="4" width="13" height="8" rx="2"/><circle cx="5" cy="8" r="1.8"/><circle cx="11" cy="8" r="1.8"/></svg>Controller
-          </button>
-          <i class="thumb" aria-hidden="true"></i>
-        </div>
-        <span class="shot-tag">Works with 140+ MIDI controllers</span>
       </div>
     </section>
 
@@ -908,7 +909,14 @@
   <!-- The feature cards' pictures (built from app/demo, see the README).
        Their styles are down here, so the first screen never waits for them. -->
   <link rel="stylesheet" href="demo/cards.css?v=20261119h1">
-  <script type="module" async src="demo/cards.js?v=20261119h1"></script>
+  <script type="module">
+    // ...and their script (React and the scenes, about 200 KB) only once the
+    // first card is near, so a phone's first screen never waits on it.
+    const pictures = () => import('./demo/cards.js?v=20261119h1');
+    const first = document.querySelector('[data-picture]');
+    if (!first || !('IntersectionObserver' in window)) pictures();
+    else new IntersectionObserver((es, io) => { if (es.some((e) => e.isIntersecting)) { io.disconnect(); pictures(); } }, { rootMargin: '600px 0px' }).observe(first);
+  </script>
   <script>
     // The hero. The screenshot shows first; once the page has loaded, the
     // live app takes its place (unless the visitor prefers less motion).
@@ -917,7 +925,7 @@
     // under it follows; the switch picks mouse or controller.
     (async () => {
       const loaded = new Promise((ok) => (document.readyState === 'complete' ? ok() : addEventListener('load', ok, { once: true })));
-      const fx = await import('./hero-fx.js?v=20261119r2').catch(() => null);
+      const fx = await import('./hero-fx.js?v=20261120a').catch(() => null);
       const frame = document.querySelector('.stage-frame');
       const screen = frame.querySelector('.screen');
       const live = frame.querySelector('.live');
@@ -953,27 +961,35 @@
         live.style.transform = `translate(${tx}px, ${ty}px) scale(${S})`;
       }
 
-      let mode = 'mouse';
+      const q = new URLSearchParams(location.search);
+      // The hand it plays with: the controller (owner's pick), or the mouse
+      // (?hand=mouse). Tune > Hero > Layout > starts with.
+      let mode = q.get('hand') === 'mouse' ? 'mouse' : 'controller';
       // Whether the glow and the record follow the music: off. Measured, the
       // glow moved at most 6/255 in a band under the screen and the record's
       // swell at most 5/255, nothing anyone sees, for a few points of CPU.
       // (Tune > Hero > Performance > react to the music; ?react=on.)
-      let react = new URLSearchParams(location.search).get('react') === 'on';
-      // Being tried: the live app in its frame, or the recorded clips played
-      // in the page (startClips, below).
-      let demo = new URLSearchParams(location.search).get('hero') === 'clips' ? 'clips' : 'app';
+      let react = q.get('react') === 'on';
+      // What plays in the frame: the hero as recorded clips, played here in
+      // the page (hero/clips.js, made by `npm run clips` in app/, see
+      // app/demo/segments), or the live app in its frame (?hero=app, or Tune >
+      // Hero > Performance > demo).
+      let demo = q.get('hero') === 'app' || q.get('hero') === 'live' ? 'app' : 'clips';
       let clips = null;
       let clipsHost = null;
       let clipsReady = false;
+      let clipsFailed = false;
+      let liveReady = false;
       addEventListener('message', (e) => {
         if (e.source !== live.contentWindow) return;
         if (e.data?.interlude === 'hero-ready') {
           liveReady = true;
-          if (!useVideo()) frame.dataset.live = '';
+          if (demo === 'app') frame.dataset.live = '';
           live.contentWindow.postMessage({ interlude: 'mode', mode }, '*');
           live.contentWindow.postMessage({ interlude: 'input', style: input }, '*');
           live.contentWindow.postMessage({ interlude: 'controller', v: 'club', skin: heroSkin }, '*');
           live.contentWindow.postMessage({ interlude: 'css', vars: heroVars }, '*');
+          if (demo === 'app') soon();
         }
         if (e.data?.interlude === 'camera') camera(e.data);
         if (e.data?.interlude === 'level' && react) {
@@ -1033,18 +1049,14 @@
         if (s !== gs.s) glow.style.transform = `scale(${(gs.s = s)})`;
       }
 
-      // Nobody can see the app while its screen is scrolled out of view or
-      // the tab is hidden, so it's paused then (app/demo/pause.js): nothing
-      // in it draws until it's back.
+      // Nobody can see the hero while its screen is scrolled out of view or
+      // the tab is hidden, so it's paused then: the clips stop, and the live
+      // app (app/demo/pause.js) draws nothing until it's back.
       let onScreen = true;
       const pauseIfHidden = () => {
         const hidden = !onScreen || document.hidden;
-        live.contentWindow?.postMessage({ interlude: 'pause', paused: hidden || useVideo() || demo === 'clips' }, '*');
+        live.contentWindow?.postMessage({ interlude: 'pause', paused: hidden || demo !== 'app' }, '*');
         clips?.setPaused(hidden || demo !== 'clips');
-        for (const [m, v] of Object.entries(videos)) {
-          if (hidden || !useVideo() || m !== mode) v.pause();
-          else v.play().catch(() => {});
-        }
       };
       new IntersectionObserver(([e]) => {
         onScreen = e.isIntersecting;
@@ -1071,118 +1083,65 @@
       live.addEventListener('load', sendFps);
       window.tune?.slider({ label: 'Hero: app frame rate', folder: 'Performance', min: 20, max: 60, step: 5, value: 30, onInput: (v) => { appFps = v; sendFps(); } });
 
-      // Or the hero as a video of itself: the same demo, recorded frame by
-      // frame by `npm run bake:hero` (app/demo/bake-hero.mjs) into hero/, so
-      // it's made again whenever the app's UI changes. Playing a video costs
-      // a fraction of running the app. What it gives up: a switch of hands
-      // cuts to the other recording instead of carrying the same set on
-      // (each loops without a seam, six mixes long), and it plays at 30
-      // frames a second. The level the app reported is recorded with it, so
-      // the glow and the record still follow the music. The controller
-      // version always plays live: around the eased-back app the page has
-      // to show through, and a see-through video (VP9 with alpha) cost
-      // Chrome more to decode than running the app, at twice the size.
-      const clip = (m) => (m === 'mouse' ? 'hero/hero-mouse.mp4' : null);
-      // ?hero=live plays the live app, for comparing.
-      let render = ['live', 'clips'].includes(new URLSearchParams(location.search).get('hero')) ? 'live' : 'video';
-      let liveReady = false;
-      // One video per version, made when first shown, so a switch keeps the
-      // last one on screen until the next is playing.
-      const videos = {};
-      const levels = {};
-      const useVideo = () => render === 'video' && !!clip(mode);
-      // The app's frame is only made invisible, not taken out of the layout,
-      // so an app loaded behind the video lays itself out as it will show.
+      // The frame shows one thing: the live app's frame is only made
+      // invisible, not taken out of the layout, so an app loaded behind the
+      // clips lays itself out as it will show.
       const showOnly = (el) => {
         live.style.visibility = el === live ? '' : 'hidden';
         if (clipsHost) clipsHost.style.visibility = el === clipsHost ? '' : 'hidden';
-        for (const v of Object.values(videos)) v.style.display = v === el ? '' : 'none';
-        // (A recording showing paces the record's frames, hero-fx.js beat.)
-        // (Not the clips: they keep no frame-by-frame beat.)
-        fx?.pacer?.(!!el && el !== live && el !== clipsHost);
       };
-      function videoFor(m) {
-        if (videos[m]) return videos[m];
-        const v = (videos[m] = document.createElement('video'));
-        v.className = 'live baked';
-        Object.assign(v, { muted: true, loop: true, playsInline: true, preload: 'auto', disablePictureInPicture: true, tabIndex: -1, src: clip(m) });
-        v.setAttribute('aria-hidden', 'true');
-        v.style.display = 'none';
-        live.after(v);
-        fetch(`hero/hero-${m}.json`).then((r) => r.json()).then((j) => (levels[m] = j)).catch(() => {});
-        v.addEventListener('playing', () => {
-          if (!useVideo() || mode !== m) return;
-          showOnly(v);
-          frame.dataset.live = '';
-        });
-        // Asked to play again once it can, in case the first ask came too early.
-        v.addEventListener('canplay', pauseIfHidden);
-        // Not recorded yet (or not playable here): the live app instead.
-        v.addEventListener('error', () => { render = 'live'; start(); });
-        // Each frame shown, the level recorded with it.
-        const tick = (now, meta) => {
-          const rec = levels[m];
-          if (rec && useVideo() && mode === m) {
-            const l = rec.level[Math.floor(meta.mediaTime * rec.fps) % rec.frames] ?? 0;
-            glowTo(l);
-            fx?.hear(l);
-            fx?.beat?.(now);
-          }
-          v.requestVideoFrameCallback(tick);
-        };
-        v.requestVideoFrameCallback?.(tick);
-        return v;
-      }
-      // Starts whichever the hero plays as. A video is shown once it plays.
-      // Nothing starts until the page has loaded (go, below), so the app
-      // never competes with the page's own first screen for the network.
+      // Starts whichever the hero plays as. Nothing starts until the page has
+      // loaded (go, below), so neither competes with the page's own first
+      // screen for the network.
       let go = false;
       function start() {
         if (reduced.matches || !go) return;
-        if (useVideo()) {
-          const v = videoFor(mode);
-          if (!v.paused && v.readyState >= 3) showOnly(v);
-          pauseIfHidden();
-          return;
+        if (demo === 'clips') {
+          // (Clips that can't play here leave the screenshot: not the live app,
+          // which would cost the most exactly where video won't play.)
+          if (clipsFailed) { showOnly(null); delete frame.dataset.live; return; }
+          return startClips();
         }
-        if (demo === 'clips') return startClips();
         showOnly(live);
-        if (!live.getAttribute('src')) live.src = live.dataset.src;
+        if (!live.getAttribute('src')) live.src = `${live.dataset.src}&mode=${mode}`;
         if (liveReady) frame.dataset.live = '';
         else delete frame.dataset.live;
         pauseIfHidden();
       }
-      // The controller version plays live: with the video showing, the app
-      // is loaded (paused, so it costs nothing) as the pointer nears the
-      // switch, so it's mostly ready by the click.
-      document.querySelector('.switch').addEventListener('pointerenter', () => {
-        if (!reduced.matches && go && demo === 'app' && !live.getAttribute('src')) live.src = live.dataset.src;
-      }, { once: true });
-      window.tune?.select({ label: 'Hero: render', folder: 'Performance', value: render, options: [['video', 'A video of the app'], ['live', 'The live app']],
-        onInput: (v) => { render = v; start(); } });
-      // Being tried: what plays in the frame. The live app, or the hero as
-      // recorded clips, one per step of the script in both hands, played
-      // here in the page (lab/segments/clips.js, made by
-      // app/demo/segments/record.mjs). ?hero=clips picks the clips too.
       async function startClips() {
         if (!clipsHost) {
           clipsHost = document.createElement('div');
           clipsHost.className = 'live clips';
           clipsHost.setAttribute('aria-hidden', 'true');
           live.after(clipsHost);
-          const { mountClips } = await import('./lab/segments/clips.js?v=20261119c1');
-          clips = await mountClips(clipsHost, {
-            base: 'lab/segments/clips/', hand: mode, paused: true,
-            onReady: () => {
-              clipsReady = true;
-              if (demo === 'clips' && !useVideo()) frame.dataset.live = '';
-            },
-            onLevels: (ls) => {
-              if (!react || demo !== 'clips' || !ls.length) return;
-              for (const l of ls) fx?.hear(l);
-              glowSet(ls[ls.length - 1]);
-            },
-          });
+          try {
+            const { mountClips } = await import('./hero/clips.js?v=20261120c');
+            clips = await mountClips(clipsHost, {
+              base: 'hero/clips/', hand: mode, paused: true, log: q.has('log'),
+              onReady: () => {
+                clipsReady = true;
+                if (demo === 'clips') frame.dataset.live = '';
+                soon();
+              },
+              // The automatic switch, made as a step ends (see soon).
+              onSwitch: (h) => { if (!touched && h !== mode) setMode(h, 'auto', 'boundary'); },
+              onLevels: (ls) => {
+                if (!react || demo !== 'clips' || !ls.length) return;
+                for (const l of ls) fx?.hear(l);
+                glowSet(ls[ls.length - 1]);
+              },
+              // Nothing this browser can play: the screenshot stays.
+              onFail: () => {
+                clipsFailed = true;
+                clips?.setPaused(true);
+                delete frame.dataset.live;
+              },
+            });
+          } catch (e) {
+            console.warn('hero: clips', e);
+            clipsFailed = true;
+            return;
+          }
           clips.setVars(heroVars);
           if (clips.hand !== mode) clips.setHand(mode);
         }
@@ -1192,22 +1151,17 @@
         pauseIfHidden();
       }
       const pickDemo = (v) => {
-        if (v !== 'app' && v !== 'clips') return;
+        // (An address that names one, ?hero=app, wins over the panel's default.)
+        if ((v !== 'app' && v !== 'clips') || (!go && q.has('hero'))) return;
         demo = v;
         if (go) start();
       };
-      window.tune?.select({ label: 'Hero: demo', folder: 'Performance', value: demo, options: [['app', 'The live app'], ['clips', 'Recorded clips (prototype)']], onInput: pickDemo });
+      window.tune?.select({ label: 'Hero: demo', folder: 'Performance', value: demo, options: [['clips', 'Recorded clips'], ['app', 'The live app']], onInput: pickDemo });
       window.tune?.select({ label: 'Hero: react to the music', folder: 'Performance', value: react ? 'on' : 'off', options: [['on', 'The glow and the record follow it'], ['off', 'They stay at rest']], onInput: (v) => {
         react = v !== 'off';
         if (!react) glowSet(0);
       } });
-      // The clips cross to the twin without the arrow as the hand switches;
-      // with the pointer on the switch (or focus in it) the twin is started
-      // underneath, so the click shows at once.
-      const sw = document.querySelector('.switch');
-      for (const [ev, on] of [['pointerenter', true], ['focusin', true], ['pointerdown', true], ['pointerleave', false], ['focusout', false]]) {
-        sw.addEventListener(ev, () => clips?.prepare(on && mode === 'mouse'));
-      }
+
       // Being tried: how the controller is drawn (app/demo/controller-skins.css).
       // Kept here too, so a pick made before the app has loaded is sent once
       // it's ready.
@@ -1221,26 +1175,77 @@
         live.contentWindow?.postMessage({ interlude: 'controller', v: 'club', skin: v }, '*');
       } });
 
-      const buttons = [...document.querySelectorAll('.switch button')];
-      for (const b of buttons) {
-        b.addEventListener('click', () => {
-          mode = b.dataset.mode;
-          frame.dataset.mode = mode;
-          if (mode === 'mouse') camera({ zoom: 1 });
-          for (const o of buttons) o.setAttribute('aria-checked', String(o === b));
-          // The other recording, or the live app (started now if it hasn't been).
-          start();
-          live.contentWindow?.postMessage({ interlude: 'mode', mode }, '*');
-          clips?.setHand(mode);
-        });
+      // The switch. A pick is told to the page as an 'interlude:hand' event
+      // on document ({ hand, auto }), for whatever wants to hear it (sounds).
+      const sw = document.querySelector('.switch');
+      const buttons = [...sw.querySelectorAll('button')];
+      function setMode(m, how = 'click', at) {
+        if (m === mode && how !== 'init') return;
+        mode = m;
+        frame.dataset.mode = mode;
+        if (mode === 'mouse') camera({ zoom: 1 });
+        for (const o of buttons) o.setAttribute('aria-checked', String(o.dataset.mode === mode));
+        start();
+        live.contentWindow?.postMessage({ interlude: 'mode', mode }, '*');
+        clips?.setHand(mode, at);
+        sw.dataset.mode = mode;
+        if (how !== 'init') document.dispatchEvent(new CustomEvent('interlude:hand', { detail: { hand: mode, auto: how === 'auto' } }));
       }
-      document.querySelector('.switch').addEventListener('keydown', (e) => {
+      for (const b of buttons) b.addEventListener('click', () => { touched = true; clips?.setHand(b.dataset.mode); setMode(b.dataset.mode); });
+      sw.addEventListener('keydown', (e) => {
         if (!['ArrowLeft', 'ArrowRight'].includes(e.key)) return;
         const i = buttons.findIndex((b) => b.getAttribute('aria-checked') === 'true');
         const next = buttons[(i + (e.key === 'ArrowRight' ? 1 : buttons.length - 1)) % buttons.length];
         next.click();
         next.focus();
       });
+      // The clips cross to the twin without the arrow as the hand switches;
+      // with the pointer on the switch (or focus in it) the twin is started
+      // underneath, so the click shows at once.
+      for (const [ev, on] of [['pointerenter', true], ['focusin', true], ['pointerdown', true], ['pointerleave', false], ['focusout', false]]) {
+        sw.addEventListener(ev, () => clips?.prepare(on && mode === 'mouse'));
+      }
+      // So that both are seen: it opens on the mouse and switches to the
+      // controller by itself a few seconds in, the switch's thumb sliding
+      // over as if pressed, once the controller's clips are in. Not if the
+      // visitor has touched the switch, nor for anyone who asked for less
+      // motion. (Tune > Hero > Layout > switches by itself.)
+      let touched = false;
+      // (What it starts with and whether it switches, kept apart from the hand
+      // showing now: the panel restores its values once it has loaded, which
+      // may be after the switch.)
+      let first = mode;
+      let selfSwitch = q.get('auto') !== 'off' && !q.has('hand');
+      let auto = false;
+      const opening = () => {
+        auto = first === 'controller' && selfSwitch && !reduced.matches;
+        setMode(auto ? 'mouse' : first, 'init');
+      };
+      window.tune?.select({ label: 'Hero: starts with', folder: 'Layout', value: first, options: [['controller', 'The controller'], ['mouse', 'The mouse']], onInput: (v) => {
+        if (v === first || go || q.has('hand')) return;
+        first = v;
+        opening();
+      } });
+      window.tune?.select({ label: 'Hero: switches by itself', folder: 'Layout', value: selfSwitch ? 'on' : 'off', options: [['on', 'Opens on the mouse, then the controller'], ['off', 'Stays as it starts']], onInput: (v) => {
+        if ((v === 'on') === selfSwitch || go || q.has('auto')) return;
+        selfSwitch = v === 'on';
+        opening();
+      } });
+      opening();
+      let autoTimer = 0;
+      function soon() {
+        if (!auto || autoTimer) return;
+        auto = false;
+        autoTimer = setTimeout(function again() {
+          if (touched || mode !== 'mouse') return;
+          // (On screen, and with the controller's clips in, so it shows at once.)
+          if (!onScreen || document.hidden) { autoTimer = setTimeout(again, 700); return; }
+          // The clips switch as the step ends (no clip crossed mid-step); the live app at once.
+          if (demo === 'clips' && clips) clips.switchAtBoundary('controller');
+          else setMode('controller', 'auto');
+        }, 3500);
+      }
+      addEventListener('pointerdown', (e) => { if (e.target.closest?.('.switch')) touched = true; }, { capture: true });
 
       // The choices made while trying things out, now fixed: the pulse line
       // for the controller link, the needle on the record, the stacked
