@@ -26,7 +26,7 @@ export default {
 
 /** Show me: the Import dialog, with any text off the type scale tagged with its size and weight. */
 export const show = {
-  note: 'The Import dialog: any text off the scale (sizes 11–32, weights 300–500) is tagged in red; flip the flag to see them.',
+  note: 'The Import dialog: any text off the scale (11, 13, 16, 24 or 32px; weight 300 to 500) is tagged in red; flip the flag to see some.',
   async setup(app) {
     await app.openImport();
   },

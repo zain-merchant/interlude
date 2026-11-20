@@ -251,6 +251,7 @@
 <svelte:head>
   {@html `<style data-flag-dials>
 .dialkit-root { zoom: ${unzoom}; }
+.dialkit-root .dialkit-panel { z-index: 10001; }
 .dialkit-root .dialkit-folder-title-row { min-width: 0; }
 .dialkit-root .dialkit-folder .dialkit-folder .dialkit-folder-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dialkit-root .dialkit-folder-title::after { margin-left: 8px; color: rgb(255 255 255 / 0.4); font-weight: 400; }
@@ -308,6 +309,7 @@ ${marks}</style>`}
     translate: -50% 0;
     width: 380px;
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: 8px;
     padding: 12px;
     border-radius: 14px;
@@ -373,6 +375,8 @@ ${marks}</style>`}
     margin-left: auto;
   }
   .sw {
+    flex: none;
+    white-space: nowrap;
     display: flex;
     align-items: center;
     gap: 6px;

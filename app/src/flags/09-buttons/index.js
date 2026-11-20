@@ -33,17 +33,17 @@ export default {
   },
 };
 
-/** Show me: the buttons the style applies to, with loupes on two of them. */
+/** Show me: the buttons the style applies to, with loupes on Sync and Rec. */
 export const show = {
-  note: 'The restyled buttons, with loupes on Sync and a headphone button: click through Style.',
+  note: 'The restyled buttons are ringed, with loupes on Sync and Rec: click through Style.',
   async setup(app) {
     if (!app.loaded(0)) await app.loadTrack(0);
   },
   target: (app) => [app.$("[data-region='deck0'] .btn.sync"), app.$("[data-region='deck0'] .btn.jumps"), app.$('section.library .btn.samp'), app.$('section.library .btn.gear'), ...app.$$('.mixer .hp'), app.$('.mixer button.rec')],
   aid(d, app) {
     const sync = app.$("[data-region='deck0'] .btn.sync")?.getBoundingClientRect();
-    const hp = app.$('.mixer .hp')?.getBoundingClientRect();
+    const rec = app.$('.mixer button.rec')?.getBoundingClientRect();
     if (sync) d.loupe('sync', { x: sync.x - 6, y: sync.y - 6 }, { zoom: 3, size: { w: 340, h: 150 }, near: sync, caption: 'Sync, 3×' });
-    if (hp) d.loupe('hp', { x: hp.x - 8, y: hp.y - 8 }, { zoom: 4, size: { w: 200, h: 140 }, near: hp, caption: 'headphone cue, 4×' });
+    if (rec) d.loupe('rec', { x: rec.x - 8, y: rec.y - 8 }, { zoom: 4, size: { w: 4 * (rec.width + 16), h: 4 * (rec.height + 16) }, near: rec, caption: 'Rec, 4×' });
   },
 };

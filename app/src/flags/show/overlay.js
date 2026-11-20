@@ -88,6 +88,17 @@ export function createOverlay() {
   let clone = /** @type {HTMLElement | null} */ (null);
   let cloneAt = 0;
   let cloneKey = '';
+  /** Where the app's scrolled elements are scrolled to: [index among all elements, top, left]. */
+  let scrolls = /** @type {[number, number, number][]} */ ([]);
+  /** Puts a copy's scrolled elements where the app's are (a copy starts at the top). */
+  function scrollLike(copy) {
+    if (!scrolls.length) return;
+    const all = copy.querySelectorAll('*');
+    for (const [i, top, left] of scrolls) {
+      const e = all[i];
+      if (e) (e.scrollTop = top), (e.scrollLeft = left);
+    }
+  }
 
   /** A copy of the whole app for loupes. It takes the same classes, so the
    * same rules (and the same flags on <html>) style it; it is re-taken
@@ -103,10 +114,18 @@ export function createOverlay() {
     c.setAttribute('inert', '');
     const cs = getComputedStyle(src);
     c.style.cssText = `width:${src.offsetWidth}px;height:${src.offsetHeight}px;display:${cs.display};position:relative;`;
+    scrolls = [];
+    src.querySelectorAll('*').forEach((e, i) => {
+      if (e.scrollTop || e.scrollLeft) scrolls.push([i, e.scrollTop, e.scrollLeft]);
+    });
     clone = c;
     cloneAt = performance.now();
     cloneKey = key;
-    for (const l of loupes.values()) l.querySelector('.stage')?.replaceChildren(c.cloneNode(true));
+    for (const l of loupes.values()) {
+      const copy = /** @type {HTMLElement} */ (c.cloneNode(true));
+      l.querySelector('.stage')?.replaceChildren(copy);
+      scrollLike(copy);
+    }
     return c;
   }
 
@@ -135,11 +154,13 @@ export function createOverlay() {
           el.className = 'loupe';
           const stage = document.createElement('div');
           stage.className = 'stage';
-          stage.append(c.cloneNode(true));
+          const copy = /** @type {HTMLElement} */ (c.cloneNode(true));
+          stage.append(copy);
           const cap = document.createElement('div');
           cap.className = 'cap';
           el.append(stage, cap);
           loupeLayer.append(el);
+          scrollLike(copy);
           loupes.set(l.key, el);
         }
         el.style.cssText = `left:${l.at.x}px;top:${l.at.y}px;width:${l.size.w}px;height:${l.size.h}px;`;
@@ -182,6 +203,8 @@ export function createDraw(opts = {}) {
   // regions, which labels sit inside) and whatever an aid protects.
   const keepOff = (opts.targets ?? []).filter((r) => r.width * r.height < 90000).map(box4);
   const taken = [];
+  /** What the aid covers (boxes, loupes, labels), for the controls to keep off. */
+  const marks = [];
 
   /**
    * A label at (x, y) (its vertical middle). o.anchor: 'start' | 'middle' |
@@ -204,6 +227,7 @@ export function createDraw(opts = {}) {
   const box = (r, o = {}) => {
     if (!r) return;
     const b = box4(r);
+    marks.push(b);
     aid += `<rect x="${r1(b.x)}" y="${r1(b.y)}" width="${r1(b.w)}" height="${r1(b.h)}" fill="${o.fill ?? 'none'}" stroke="${o.c ?? C.ink}" stroke-width="${o.w ?? 1.5}"${o.dash ? ` stroke-dasharray="${o.dash}"` : ''} rx="${o.rx ?? 3}"/>`;
     if (o.label) text(b.x, o.below ? b.y + b.h + 4 + TAG_H / 2 : b.y - 4 - TAG_H / 2, o.label, { tone: o.tone });
   };
@@ -218,7 +242,7 @@ export function createDraw(opts = {}) {
       let best = null;
       for (const [dx, dy] of t.o.fixed ? [[0, 0]] : tries) {
         const c = { x: Math.max(4, Math.min(vw - t.w - 4, t.x + dx)), y: Math.max(4, Math.min(vh - t.h - 4, t.y + dy)), w: t.w, h: t.h };
-        if (!taken.some((a) => overlaps(c, a, 2)) && !keepOff.some((a) => overlaps(c, a, 1))) {
+        if (!taken.some((a) => overlaps(c, a, 2)) && (t.o.free || !keepOff.some((a) => overlaps(c, a, 1)))) {
           best = c;
           break;
         }
@@ -403,10 +427,11 @@ export function createDraw(opts = {}) {
       const fill = 'rgb(255 79 163 / .22)';
       const sides = o.sides ?? 'trbl';
       const band = (x, y, w, h) => (aid += `<rect x="${r1(x)}" y="${r1(y)}" width="${r1(w)}" height="${r1(h)}" fill="${fill}"/>`);
-      if (sides.includes('l') && p.l) (band(r.x, r.y, p.l, r.height), text(r.x + p.l / 2, r.y + r.height / 2, pxl(p.l), { fill: true, anchor: 'middle' }));
-      if (sides.includes('r') && p.r) (band(r.right - p.r, r.y, p.r, r.height), text(r.right - p.r / 2, r.y + r.height / 2, pxl(p.r), { fill: true, anchor: 'middle' }));
-      if (sides.includes('t') && p.t) (band(r.x, r.y, r.width, p.t), text(r.x + r.width / 2, r.y + p.t / 2, pxl(p.t), { fill: true, anchor: 'middle' }));
-      if (sides.includes('b') && p.b) (band(r.x, r.bottom - p.b, r.width, p.b), text(r.x + r.width / 2, r.bottom - p.b / 2, pxl(p.b), { fill: true, anchor: 'middle' }));
+      const tag = { fill: true, anchor: 'middle', free: true };
+      if (sides.includes('l') && p.l) (band(r.x, r.y, p.l, r.height), text(r.x + p.l / 2, r.y + r.height / 2, pxl(p.l), tag));
+      if (sides.includes('r') && p.r) (band(r.right - p.r, r.y, p.r, r.height), text(r.right - p.r / 2, r.y + r.height / 2, pxl(p.r), tag));
+      if (sides.includes('t') && p.t) (band(r.x, r.y, r.width, p.t), text(r.x + r.width / 2, r.y + p.t / 2, pxl(p.t), tag));
+      if (sides.includes('b') && p.b) (band(r.x, r.bottom - p.b, r.width, p.b), text(r.x + r.width / 2, r.bottom - p.b / 2, pxl(p.b), tag));
       if (o.label) text(r.x, r.y - 4 - TAG_H / 2, o.label);
     },
     /**
@@ -432,7 +457,8 @@ export function createDraw(opts = {}) {
           { x: n.x - g - size.w, y: n.y },
         ].map((s) => ({ x: Math.max(8, Math.min(vw - size.w - 8, s.x)), y: Math.max(8, Math.min(vh - size.h - 8, s.y)), w: size.w, h: size.h }));
         const free = spots.find((s) => !overlaps(s, view, 4) && !overlaps(s, n, 4) && !taken.some((t) => overlaps(s, t, 4)) && !keepOff.some((k) => overlaps(s, k, 2)));
-        at = free ?? spots[0];
+        // Failing that, anywhere off what it magnifies.
+        at = free ?? spots.find((s) => !overlaps(s, view, 4) && !overlaps(s, n, 4)) ?? spots[0];
       }
       taken.push({ x: at.x, y: at.y, w: size.w, h: size.h });
       loupes.push({ key, src: { x: src.x, y: src.y }, zoom, size, at, caption: o.caption });
@@ -444,8 +470,11 @@ export function createDraw(opts = {}) {
     legend(lines, at = { x: 16, y: 16 }) {
       html += `<div class="legend" style="left:${r1(at.x)}px;top:${r1(at.y)}px">${lines.map(esc).join('\n')}</div>`;
     },
-    /** @returns {{ dim: string, hl: string, aid: string, html: string, loupes: any[] }} */
-    done: () => ({ dim, hl, aid: aid + layout(), html, loupes }),
+    /** @returns {{ dim: string, hl: string, aid: string, html: string, loupes: any[], marks: DOMRect[] }} */
+    done() {
+      const labels = layout();
+      return { dim, hl, aid: aid + labels, html, loupes, marks: [...marks, ...taken].map((m) => new DOMRect(m.x, m.y, m.w, m.h)) };
+    },
   };
   return d;
 }

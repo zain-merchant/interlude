@@ -26,6 +26,6 @@ export const show = {
     if (!p) return;
     const r = p.getBoundingClientRect();
     const done = getComputedStyle(p).getPropertyValue('--flag-visual-analysis-done').trim();
-    d.loupe('bar', { x: r.left - 6, y: r.top - 4 }, { zoom: 3, size: { w: Math.min(420, (r.width + 12) * 3), h: (r.height + 10) * 3 }, near: r, caption: done ? `${done} analysed, 3×` : '3×' });
+    d.loupe('bar', { x: r.left - 6, y: r.top - 4 }, { zoom: 3, size: { w: Math.min(420, (r.width + 12) * 3), h: (r.height + 18) * 3 }, near: r, caption: done ? `${done} analysed, 3×` : '3×' });
   },
 };

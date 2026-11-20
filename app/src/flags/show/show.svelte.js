@@ -116,6 +116,7 @@ export async function showMe(id, resumed = false) {
   overlay = createOverlay();
   const t0 = performance.now();
   let aidFailed = false;
+  let marked = '';
   const tick = () => {
     if (me !== run || !overlay) return;
     const t = (performance.now() - t0) / 1000;
@@ -130,7 +131,12 @@ export async function showMe(id, resumed = false) {
         current.error = `Aid: ${/** @type {any} */ (e)?.message ?? e}`;
       }
     }
-    overlay.render(d.done());
+    const out = d.done();
+    overlay.render(out);
+    // The panel and the card keep off the targets and what the aid draws.
+    const avoid = [...rects, ...out.marks];
+    const sig = avoid.map((r) => `${Math.round(r.x / 8)},${Math.round(r.y / 8)},${Math.round(r.width / 8)},${Math.round(r.height / 8)}`).join(' ');
+    if (sig !== marked) ((marked = sig), (current.avoid = avoid));
   };
   tick();
   timer = setInterval(tick, 100);

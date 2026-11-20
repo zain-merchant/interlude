@@ -14,7 +14,7 @@ export default {
 
 /** Show me: searches for something with exactly one result, with the count as it reads off. */
 export const show = {
-  note: 'Searched down to one track: the count beside the search says "1 track".',
+  note: 'Searched down to one track: the count beside the search reads "1 track".',
   async setup(app, ctx) {
     const count = () => app.$('section.library .bar .count');
     // Find a search with exactly one result among the tracks' own titles.

@@ -25,9 +25,9 @@ export const show = {
     const r = ov.getBoundingClientRect();
     await app.click(ov, { clientX: r.x + r.width * 0.8, clientY: r.y + r.height / 2 });
     await app.search('Printworks');
-    ctx.els = () => [app.$("[data-region='deck0'] .times .el"), app.$("[data-region='deck0'] .times .rm"), app.rows().find((x) => x.textContent.includes('Printworks'))?.querySelectorAll('.n.num')[1]];
+    ctx.els = () => [app.$("[data-region='deck0'] .times .rm"), app.rows().find((x) => x.textContent.includes('Printworks'))?.querySelectorAll('.n.num')[1]];
     // The same times as they read with the flag off, and on.
-    const read = () => ctx.els().map((e) => e?.textContent.trim() ?? '');
+    const read = () => ctx.els().map((e) => e?.textContent.match(/[−-]?\d+(:\d\d)+(\.\d)?/)?.[0] ?? '');
     ctx.text = { on: app.isOn('stress-hours') ? read() : app.without('stress-hours', read), off: app.without('stress-hours', read) };
   },
   target: (app) => [app.$("[data-region='deck0'] .times"), app.rows().find((r) => r.textContent.includes('Printworks'))?.querySelectorAll('.n.num')[1]],
@@ -37,7 +37,7 @@ export const show = {
     ctx.els().forEach((e, i) => {
       const r = e?.getBoundingClientRect();
       if (!r || !other[i]) return;
-      d.text(i === 0 ? r.left : r.right, r.bottom + 14, `${word}: ${other[i]}`, { anchor: i === 0 ? 'start' : 'end' });
+      d.text(r.right, r.bottom + 14, `${word}: ${other[i]}`, { anchor: 'end' });
     });
   },
 };

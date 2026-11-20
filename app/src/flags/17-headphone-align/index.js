@@ -25,23 +25,28 @@ export default {
   },
 };
 
-/** Show me: each fader's axis down through its headphone button, with the verdict. */
+/** Show me: each fader's axis down through its headphone button, the verdict, and the button with the flag off dashed. */
 export const show = {
-  note: "The line is each fader's axis: the headphone button now sits on it (or spans the strip, in Strip).",
+  note: "The line is each fader's axis: the headphone button sits on it (dashed is where it sits with the flag off).",
+  setup(app, ctx) {
+    ctx.b = app.both('headphone-align', app.$$('.mixer .fwrap .hp'));
+  },
   target: '.mixer .hp',
-  aid(d, app) {
-    for (const wrap of app.$$('.mixer .fwrap')) {
+  aid(d, app, ctx) {
+    const other = app.other('headphone-align', ctx.b);
+    app.$$('.mixer .fwrap').forEach((wrap, i) => {
       const fader = app.$('.fader', wrap)?.getBoundingClientRect();
       const meter = app.$('.meter', wrap)?.getBoundingClientRect();
       const hp = app.$('.hp', wrap)?.getBoundingClientRect();
-      if (!fader || !hp) continue;
+      if (!fader || !hp) return;
       const axis = fader.left + fader.width / 2;
       d.vguide(axis, { y1: fader.top, y2: hp.bottom + 4 });
+      if (other[i]) d.ghost(other[i], hp, { label: false });
       const c = hp.left + hp.width / 2;
       const off = c - axis;
       const spans = meter && Math.abs(hp.left - Math.min(fader.left, meter.left)) < 0.5 && Math.abs(hp.right - Math.max(fader.right, meter.right)) < 0.5;
       const ok = Math.abs(off) < 0.5 || spans;
       d.text(axis, hp.bottom + 15, Math.abs(off) < 0.5 ? 'on the axis' : spans ? 'spans the strip' : `${Math.round(Math.abs(off) * 10) / 10}px off`, { anchor: 'middle', tone: ok ? 'ok' : 'bad' });
-    }
+    });
   },
 };

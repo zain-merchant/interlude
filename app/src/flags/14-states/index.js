@@ -61,8 +61,12 @@ export const show = {
       if (!el) continue;
       el.toggleAttribute(`data-show-${state}`, on);
       const r = el.getBoundingClientRect();
-      // The state's name, filled while it's applied.
-      d.text(r.x + r.width / 2, r.y - 13, on ? word[state] : 'rest', { anchor: 'middle', fill: on, fixed: true });
+      // The state's name, filled while it's applied: above the control, or
+      // beside it for a list item (the one above it would be covered).
+      const listed = el.closest("[data-region='sidebar']");
+      const label = on ? word[state] : 'rest';
+      if (listed) d.text(r.right + 8, r.y + r.height / 2, label, { fill: on, fixed: true });
+      else d.text(r.x + r.width / 2, r.y - 13, label, { anchor: 'middle', fill: on, fixed: true });
     }
     const nudge = app.$("[data-region='deck1'] .pitch .nudge")?.getBoundingClientRect();
     if (nudge) d.text(nudge.x + nudge.width / 2, nudge.bottom + 13, 'disabled', { anchor: 'middle' });

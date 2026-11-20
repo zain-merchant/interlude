@@ -25,15 +25,17 @@ export const show = {
   note: "A selected row straddles the list's bottom: it's cut by the card's own edge and corner; dashed is the old clip, 8px inside.",
   async setup(app, ctx) {
     const list = app.$("[data-region='tracks']");
-    // Select a row, then scroll so it straddles the list's bottom edge.
-    const rows = app.rows();
-    const row = rows[Math.min(rows.length - 1, 6)];
+    // Scroll down a little, select the last row wholly in view, then scroll
+    // back until its middle is on the list's bottom edge.
+    list.scrollTop = 300;
+    await app.wait(80);
+    const lr = list.getBoundingClientRect();
+    const row = app.rows().filter((r) => r.getBoundingClientRect().bottom < lr.bottom - 2).pop();
     await app.click(row);
     await app.wait(60);
-    const lr = list.getBoundingClientRect();
     const rr = app.$("[data-region='tracks'] .row.sel").getBoundingClientRect();
-    list.scrollTop += rr.top + rr.height / 2 - lr.bottom;
-    await app.wait(60);
+    list.scrollTop -= lr.bottom - (rr.top + rr.height / 2);
+    await app.wait(80);
     // The list's own clip with the flag off: its box and corner.
     ctx.off = app.without('library-clip', () => ({ r: DOMRect.fromRect(list.getBoundingClientRect()), rad: parseFloat(getComputedStyle(list).borderBottomRightRadius) || 0 }));
   },

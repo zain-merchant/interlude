@@ -26,7 +26,7 @@ export default {
 
 /** Show me: zooms the interface in until deck A's mode row is under 320px, with hot cues set. */
 export const show = {
-  note: "Zoomed in until deck A's mode row is under 320px, with two hot cues set: they fit (off, \"1 Set2 Set\" runs together). Done restores the zoom.",
+  note: "Zoomed in until deck A's mode row is under 320px: the two hot cues fit (off, they run together). Done restores the zoom.",
   async setup(app, ctx) {
     if (!app.loaded(0)) await app.loadTrack(0);
     await app.tab(0, 'Cues');

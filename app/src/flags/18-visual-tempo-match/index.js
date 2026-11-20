@@ -31,7 +31,9 @@ export const show = {
       if (!m || !cap) continue;
       const my = m.top + m.height / 2;
       const cy = cap.top + cap.height / 2;
-      d.measure(m.left - 8, cy, m.left - 8, my, { label: `${'BA'[n]}'s tempo`, side: 'left' });
+      // From the cap to the mark, named at the mark.
+      d.measure(m.left - 8, cy, m.left - 8, my, { label: '' });
+      d.text(m.left - 14, my, `${'BA'[n]}'s tempo`, { anchor: 'end' });
     }
   },
 };
