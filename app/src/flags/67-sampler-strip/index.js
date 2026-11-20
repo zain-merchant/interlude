@@ -46,9 +46,14 @@ export const show = {
     const k = app.$('.sampler .knob')?.getBoundingClientRect();
     const slots = app.$$('.sampler .slot').map((e) => e.getBoundingClientRect());
     if (!s || !k || slots.length < 3) return;
-    const zoom = 3;
-    const a = d.loupe('slots', { x: slots[0].left - 8, y: s.top - 4 }, { zoom, size: { w: (slots[1].right + 8 - slots[0].left + 8) * zoom, h: (s.height + 8) * zoom }, at: { x: s.left, y: s.top - (s.height + 8) * zoom - 40 }, caption: '' });
-    const b = d.loupe('level', { x: k.left - 40, y: s.top - 4 }, { zoom, size: { w: (s.right + 8 - k.left + 40) * zoom, h: (s.height + 8) * zoom }, at: { x: s.right - (s.right + 8 - k.left + 40) * zoom, y: s.top - (s.height + 8) * zoom - 40 }, caption: '' });
+    // Two loupes side by side over the strip: the first two slots, and the Level dial with the ×.
+    const h = s.height + 8;
+    const wa = slots[1].right + 8 - (slots[0].left - 8);
+    const wb = s.right + 8 - (k.left - 40);
+    const zoom = Math.min(3, (innerWidth - 48) / 2 / Math.max(wa, wb));
+    const y = Math.max(8, s.top - h * zoom - 40);
+    const a = d.loupe('slots', { x: slots[0].left - 8, y: s.top - 4 }, { zoom, size: { w: wa * zoom, h: h * zoom }, at: { x: 16, y }, caption: '' });
+    const b = d.loupe('level', { x: k.left - 40, y: s.top - 4 }, { zoom, size: { w: wb * zoom, h: h * zoom }, at: { x: innerWidth - 16 - wb * zoom, y }, caption: '' });
     ctx.at = a.rect;
     const after = ctx.phase === 'after';
     d.text(a.rect.x, a.rect.bottom + 16, after ? 'outlined, "Drop a track", click loads the selected track' : 'blank wells: no hint, a click does nothing', { tone: after ? 'ok' : 'bad', fixed: true });

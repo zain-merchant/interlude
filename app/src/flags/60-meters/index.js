@@ -68,6 +68,6 @@ export const show = {
     const l = d.loupe('meters', src, { zoom, size: { w: w * zoom, h: h * zoom }, near: app.$('.mixer').getBoundingClientRect(), caption: '' });
     ctx.at = l.rect;
     const after = ctx.phase === 'after';
-    d.text(l.rect.x, l.rect.bottom + 16, after ? 'held peaks, a red clip light that stays until clicked, 0 / −6 / −18 dB marks, the master as long as the channels' : 'no scale, no held peak, the clip flash is already gone, and the master is a short stub', { tone: after ? 'ok' : 'bad', fixed: true });
+    d.text(l.rect.x, l.rect.bottom + 16, after ? 'held peaks, a clip light that stays, dB marks, a full-length master' : 'no scale, no held peak, the clip flash is gone, a short master', { tone: after ? 'ok' : 'bad', fixed: true });
   },
 };
