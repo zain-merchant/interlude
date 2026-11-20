@@ -1,0 +1,42 @@
+/* #24 (C15): focus rings only after keyboard navigation. App.svelte sets
+   html[data-input='keys'] when Tab, an arrow, Home/End, a Page key or F6
+   moves focus, and clears it on any pointer press. Until then a focused
+   control draws no ring, however the browser judges :focus-visible (it
+   counts any key, so W to play lit the tab you'd just clicked). Text
+   fields keep theirs: you click them to type into them, and the ring says
+   where the typing goes. The ring is hidden by colour, not removed, so
+   nothing moves when it comes back. */
+:root[data-flag-focus-after-keys]:not([data-input='keys'])
+  :focus-visible:not(input:not([type='checkbox'], [type='radio'], [type='range'], [type='button']), textarea, [contenteditable='true']) {
+  outline-color: transparent !important;
+}
+/* Components that draw focus as a fill or a lit grip rather than an
+   outline: the same rule. */
+:root[data-flag-focus-after-keys]:not([data-input='keys']) .app > .split:focus-visible i {
+  background: transparent;
+}
+
+/* Ring colour (d-K55): --fg-2 is the same grey as secondary text and the
+   panel rules, so on a busy panel the ring reads as one more line. */
+:root[data-flag-focus-after-keys][data-flag-focus-after-keys-colour='fg'] {
+  --focus-ring: var(--fg);
+}
+:root[data-flag-focus-after-keys][data-flag-focus-after-keys-colour='fg'] :focus-visible {
+  outline-color: var(--fg);
+}
+
+/* Against the doc (d-K76): the ring sits on the control's own edge, where
+   its hover fill is, instead of 2px outside it with a 2px gap. */
+:root[data-flag-focus-after-keys][data-flag-focus-after-keys-shape='tile'] :focus-visible {
+  outline-offset: -2px;
+}
+
+/* The rings #14 draws on a wrapper rather than the focused element (the
+   crossfader with its ruler, a knob round its ticks, an upright fader
+   round its cap): hidden the same way. */
+:root[data-flag-focus-after-keys]:not([data-input='keys']) :is(.xr:has(.fader:focus-visible), .knob .wrap:has(> .dial:focus-visible)) {
+  outline-color: transparent !important;
+}
+:root[data-flag-focus-after-keys]:not([data-input='keys']) .fader.vertical:focus-visible::before {
+  box-shadow: none !important;
+}
