@@ -34,6 +34,8 @@
   let renaming = $state(null);
   let all = $state([]);
   let total = $state(null); // track count across every folder
+  // #85 (UI audit flag): folder-counts: each music folder's track count, kept from the last All tracks (or that folder's) load.
+  let folderCounts = $state(/** @type {Record<string, number>} */ ({}));
   let query = $state('');
   /** The selected track, by path, so it stays selected when rows reorder. */
   let selPath = $state(null);
@@ -232,6 +234,9 @@
       byPath = new Map();
       for (const t of all) byPath.set(t.path, [...(byPath.get(t.path) ?? []), t]);
       if (view.kind === 'all') total = all.length;
+      // #85 (UI audit flag): folder-counts (counted always; only shown with the flag on).
+      if (view.kind === 'all') folderCounts = Object.fromEntries(folders.map((f) => [f, all.filter((t) => inFolder(t.path, f)).length]));
+      else if (view.kind === 'folder' && view.path) folderCounts = { ...folderCounts, [view.path]: all.length };
       if (!keep) selectIndex(0);
     } catch (e) {
       error = String(e);
@@ -239,6 +244,9 @@
       loading = false;
     }
   }
+
+  /** Whether `path` is inside music folder `f`. */
+  const inFolder = (path, f) => path.startsWith(f.endsWith('/') || f.endsWith('\\') ? f : `${f}/`) || path.startsWith(`${f}\\`);
 
   export async function addFolder() {
     const path = await backend.pickFolder();
@@ -561,7 +569,7 @@
     {#each folders as f}
       <button class="item" class:on={folder === f} aria-current={folder === f} onclick={() => pick(f)}
         oncontextmenu={(e) => folderMenu(e, f)} use:tip={() => f}>
-        <span>{short(f)}</span>{#if folder === f && !loading}<small class="num">{all.length.toLocaleString()}</small>{/if}
+        <span>{short(f)}</span>{#if folder === f && !loading}<small class="num">{all.length.toLocaleString()}</small>{:else if flag('folder-counts') && folderCounts[f] != null}<small class="num">{folderCounts[f].toLocaleString()}</small>{/if}
       </button>
     {/each}
     <button class="add" onclick={addFolder}>+ Add music folder</button>
