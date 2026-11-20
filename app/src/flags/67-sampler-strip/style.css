@@ -14,3 +14,13 @@
 :root[data-flag-sampler-strip] .sampler .slot:not(.set):hover {
   box-shadow: var(--well-shadow), inset 0 0 0 1px var(--line-2);
 }
+
+/* The hint shortens to "Drop" where a slot is too narrow for "Drop a track". */
+:root[data-flag-sampler-strip] .sampler .slot {
+  container-type: inline-size;
+}
+@container (max-width: 112px) {
+  :root[data-flag-sampler-strip] .sampler .slot .hint .more {
+    display: none;
+  }
+}

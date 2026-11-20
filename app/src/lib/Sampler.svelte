@@ -80,7 +80,8 @@
         use:dropTarget={{ ondrop: (t) => put(i, t) }} use:tip={() => slotTip(i)}>
         <span class="n num">{i + 1}</span>
         <!-- #67 (UI audit flag): the first empty slot says what it's for. -->
-        <span class="name">{sampler.loading[i] ? 'Loading…' : (s?.title ?? (flag('sampler-strip') && i === firstEmpty ? 'Drop a track' : ''))}</span>
+        {#if flag('sampler-strip') && !s && !sampler.loading[i] && i === firstEmpty}<span class="name hint">Drop<span class="more">{' a track'}</span></span>
+        {:else}<span class="name">{sampler.loading[i] ? 'Loading…' : (s?.title ?? '')}</span>{/if}
         {#if l?.playing}<i class="bar" aria-hidden="true"></i>{/if}
       </button>
     {/each}

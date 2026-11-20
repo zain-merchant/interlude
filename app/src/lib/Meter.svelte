@@ -1,6 +1,6 @@
 <script>
   import { flag, setting } from '../flags/registry.svelte.js';
-  import { tip } from './tooltip.svelte.js';
+  import { tip, tipText } from './tooltip.svelte.js';
   import { untrack } from 'svelte';
 
   /**
@@ -47,7 +47,7 @@
     {/if}
     {#if clipped}
       <button class="reset" aria-label="Clear the clip light{what ? `, ${what}` : ''}" onclick={() => (clipped = false)}
-        use:tip={() => (over ? 'The limiter caught a peak here · click to clear' : 'This level reached 0 dB · click to clear')}></button>
+        use:tip={() => tipText(over ? 'The limiter caught a peak here' : 'This level reached 0 dB', '', 'click to clear')}></button>
     {/if}
   </div>
 {:else}
