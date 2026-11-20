@@ -25,3 +25,11 @@
   max-width: calc(100% - 2 * var(--pad));
   white-space: nowrap;
 }
+/* The round-2 capture pass: floating over the library's foot it covered
+   the last track rows. While a banner shows, the library keeps that strip
+   clear (the banner's 48px, its 28px from the window's bottom, 8px of air):
+   the list and the sidebar end above it, and the banner sits on empty
+   glass. */
+:root[data-flag-edge-banner] .app:has(> .banner) section.library :is(nav, .main) {
+  padding-bottom: calc(48px + var(--pad) + 8px);
+}

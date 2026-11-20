@@ -36,7 +36,8 @@
 :root[data-flag-import-links] .card[aria-labelledby='import-title'] .steps li.of {
   width: auto;
   height: auto;
-  margin-left: 6px;
+  /* The steps' own 8px gap, the same as between the dashes. */
+  margin-left: 0;
   background: none;
   font-size: var(--t-xs);
   color: var(--fg-3);
@@ -72,5 +73,12 @@
 }
 :root[data-flag-import-links] .card[aria-labelledby='import-title'] .file small .when {
   margin-left: calc(8px - 0.25em);
-  color: var(--fg-3);
+  /* --fg-3 at 11px on the raised row was 4.4:1; the gap sets it apart. */
+  color: var(--fg-2);
+}
+/* A section's rhythm is one step: 16px from its heading to the row, and
+   16px from the row to its "Choose a different …" link (it was 8). */
+:root[data-flag-import-links] .card[aria-labelledby='import-title'] .found + .link,
+:root[data-flag-import-links] .card[aria-labelledby='import-title'] .link {
+  margin-top: 16px;
 }

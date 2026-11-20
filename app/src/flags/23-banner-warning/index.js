@@ -11,7 +11,7 @@
 // (--warn) triangle on a neutral --line-2 edge (an amber ring echoed Cue's),
 // one line with the icon, text and button on one centre line, the device
 // name at weight 500,
-// and shorter copy ("Decks are held. Waiting for it to come back…"). Its
+// and shorter copy ("Decks are held until it's back"; it used to end on a "…" that read as cut off). Its
 // button is the solid primary (ink on --fg, 24px, weight 500), the one
 // main action the dialogs use too (#27, owner's call 3 (a): a solid button
 // only inside dialogs and alert banners), 32px like Report's Save. #7

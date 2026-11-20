@@ -26,7 +26,10 @@
   color: var(--fg);
 }
 :root[data-flag-nudge-pill] [data-region^='deck'] .pitch .nudge button:active:not([aria-disabled='true']) {
-  background: var(--sel);
+  /* Pressed sinks, like every button under #14 (a step darker than rest;
+     --sel read as hover). */
+  background: var(--well);
+  transition: background-color 60ms ease-out;
 }
 :root[data-flag-nudge-pill] [data-region^='deck'] .pitch .nudge:has(button[aria-disabled='true']) {
   opacity: 0.4;

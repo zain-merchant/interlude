@@ -27,8 +27,10 @@
 //
 // Later (critique panel, F1-F3, E5, E10, Li4, Li6):
 // - Pressed darkened the whole button with brightness(0.85), label too, and
-//   holding Cue made it look switched off. Now a press fills the face
-//   (--sel) and never dims the label; a held Cue lights its amber at 12%,
+//   holding Cue made it look switched off. Now a press sinks the face into
+//   the panel (the --well fill and inner shadow plus a 1px inset edge, in
+//   60ms: a step darker than rest, where hover is a step lighter, so a held
+//   button never reads as hovered) and never dims the label; a held Cue lights its amber at 12%,
 //   like a cueing Play (#6); Play itself still darkens a touch.
 // - Track rows fill when pressed. A hovered tab shows its label at full
 //   strength (no underline: that's the selected tab's); column headings go

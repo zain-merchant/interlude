@@ -394,7 +394,11 @@
     sampler: { def: 40, min: 40, max: 56 }, // the strip, plus a 12px gap above
     sidebar: { def: 200, min: 160, max: 320 },
   };
-  const LIB_MIN = 160;
+  const LIB_MIN = 160; // what a drag can take the library down to
+  // What a short window keeps for the library before the waveforms and
+  // decks give way (176px at 1024×760 with the sampler open was a strip of
+  // four rows).
+  const LIB_FIT = 240;
   const PANEL_KEY = 'oss-dj.panelSizes';
   const sized = $derived(flag('edge-tall') || flag('panel-sizes'));
   /** The sizes asked for; what each row gets (`rows`) also depends on the window. */
@@ -421,11 +425,12 @@
   const samplerRow = $derived(sized ? sizes.sampler + 12 : SAMPLER_H);
   /** Height for the waveforms, decks and library rows together. */
   const avail = $derived(Math.max(winHeight, APP_MIN_H) - (macWindow ? TOP_STRIP : 12) - 12 - 12 - (sampler.open ? samplerRow : 0));
-  /** What each row gets: the library first gives way to 160, then the waveforms to 96, then the decks to 340. */
+  /** What each row gets: the library first gives way to 240, then the waveforms to 96, then the decks to 340.
+   *  (Waveforms dragged past their designed size are kept until the library is at 160.) */
   const rows = $derived.by(() => {
     let waves = Math.min(sizes.waves, Math.max(PANEL.waves.min, Math.round(winHeight / 2)));
     let decks = Math.max(PANEL.decks.min, Math.min(PANEL.decks.max, sizes.decks));
-    let short = LIB_MIN - (avail - waves - decks);
+    let short = (sizes.waves > PANEL.waves.def ? LIB_MIN : LIB_FIT) - (avail - waves - decks);
     if (short > 0) {
       const w = Math.max(PANEL.waves.min, waves - short);
       short -= waves - w;
@@ -762,7 +767,7 @@
     <div class="banner" class:lost={flag('banner-warning')} role="alert">
       <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.8 15 14H1z" /><path d="M8 6.2v3.6M8 11.6v.4" /></svg>
       {#if flag('banner-warning')}
-        <span><b>{engine.audio.device} disconnected.</b> Decks are held. Waiting for it to come back…</span>
+        <span><b>{engine.audio.device} disconnected.</b> Decks are held until it's back.</span>
       {:else}
         <span><b>{engine.audio.device} disconnected.</b> Decks are held where they stopped and carry on when it's back.</span>
       {/if}

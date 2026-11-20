@@ -18,7 +18,8 @@
 //   waveforms   136px  flexible  96 to half the window  gentle 6px snap
 //   decks       360px  fixed     340 to 400             firm 16px detent
 //   sampler      40px  fixed     40 to 56               firm
-//   library     the rest (at least 160), gentle snap where the waveforms
+//   library     the rest (a short window keeps 240 for it; a drag can
+//               take it to 160), gentle snap where the waveforms
 //               are at 136
 //   sidebar     200px  flexible  160 to 320             gentle 6px snap
 // Which neighbour gives way (owner's call 10, (a)): the decks move as one

@@ -10,7 +10,7 @@
 // the size they were designed at (360px and 136px, from the 1440×900
 // layout) and the library takes the rest, with no 560px cap, so a tall
 // window shows more tracks. A short window gives way in order: the library
-// down to 160px, then the waveforms down to 96px, then the decks down to
+// down to 240px, then the waveforms down to 96px, then the decks down to
 // 340px; below the app's minimum the page scrolls. The sampler's strip
 // comes out of the library, so the decks never jump when it opens. The
 // sizes are worked out in App.svelte (rows) and set as --waves / --decks;
@@ -22,7 +22,7 @@ export default {
   n: 7,
   title: 'Tall windows give the extra room to the library',
   group: 'Stability',
-  notes: 'Waveforms 136px and decks 360px, as designed; the library takes the rest (no 560px cap). Short windows: library to 160, then waveforms to 96, then decks to 340. The sampler shortens the library, not the decks. App.svelte works out the rows.',
+  notes: 'Waveforms 136px and decks 360px, as designed; the library takes the rest (no 560px cap). Short windows: library to 240, then waveforms to 96, then decks to 340. The sampler shortens the library, not the decks. App.svelte works out the rows.',
 };
 
 /** Show me: zooms the interface out to 80% to stand in for a tall screen; flipping shows the decks stretching (before) and the waveforms growing instead (after). */

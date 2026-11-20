@@ -13,7 +13,9 @@
 // 10px it sat over deck A's play head; pinned inside deck A's lane it read
 // as "deck A is broken". It now sits centred at the foot of the window,
 // over the library panel's bottom edge, on one line, never over the
-// waveforms or the decks. No dismiss: it's a live fault and clears itself.
+// waveforms or the decks; the library keeps the strip under it clear, so
+// it never covers a track row. No dismiss: it's a live fault and clears
+// itself.
 export default {
   id: 'edge-banner',
   n: 7,

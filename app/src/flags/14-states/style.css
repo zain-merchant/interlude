@@ -55,6 +55,7 @@
     .settings .key,
     .deck .val,
     .deck .range,
+    .deck .lock,
     .deck .nudge button,
     .deck .jumps button,
     .zoom button,
@@ -66,9 +67,13 @@
   ):active:not(:disabled, [aria-disabled='true'], .jumps) {
   transform: scale(0.97);
 }
-/* ...and darkens the face, never the label (F2): the fill goes to the
-   selected fill. Play is solid, so it darkens as a whole; Cue is engaged
-   while held, so it takes its amber at 12%, like a cueing Play (#6). */
+/* ...and sinks into the panel, never dimming the label (F2, then the
+   round-2 capture pass: a held button looked like a hovered one, since
+   hover lightens and the old pressed fill was barely different). Pressed
+   is a step darker than rest: the recessed well (--well) with its inner
+   shadow and a 1px inset edge, reached in 60ms so a tap shows. Play is
+   solid, so it darkens as a whole; Cue is engaged while held, so it takes
+   its amber at 12%, like a cueing Play (#6). */
 :root[data-flag-states]
   :is(
     .btn:not(.play, .cue, .primary),
@@ -78,6 +83,7 @@
     .settings .key,
     .deck .val,
     .deck .range,
+    .deck .lock,
     .deck .nudge button,
     .deck .jumps button,
     .zoom button,
@@ -86,14 +92,22 @@
     .perf button,
     .fx button,
     .stems .stem
-  ):active:not(:disabled, [aria-disabled='true'], .jumps) {
-  background: var(--sel);
+  ):active:active:not(:disabled, [aria-disabled='true'], .jumps) {
+  /* :active twice: one step above #9's hover rules, which would otherwise
+     win while the pointer is still over the button. */
+  background: var(--well);
+  box-shadow: var(--well-shadow), inset 0 0 0 1px var(--line-2);
+  transition:
+    background-color 60ms ease-out,
+    box-shadow 60ms ease-out,
+    transform 60ms ease-out;
 }
 :root[data-flag-states] .btn.play:active:not(:disabled, [aria-disabled='true']) {
   filter: brightness(0.9);
 }
 :root[data-flag-states] .btn.cue:active:not(:disabled, [aria-disabled='true']) {
   background: color-mix(in srgb, var(--cue) 12%, transparent);
+  transition: background-color 60ms ease-out, transform 60ms ease-out;
 }
 /* Pressed, list items, track rows and tabs: the selected fill, no shrink. */
 :root[data-flag-states] :is([data-region='sidebar'] :is(.item, .add), nav[aria-label='Settings pages'] .item, .modes button, [data-region='tracks'] .row):active {

@@ -9,8 +9,8 @@
 // at --fg-2 with a quiet underline, lined up with the file name.
 // Details: "rekordbox" in its own spelling, "versions 5, 6 and 7", "3 hours
 // ago" for "3 h ago", the path and its age on one 11px line, the path at
-// --fg-2 (--fg-3 read 4.41:1 on the raised row) and the age a step quieter
-// after an 8px gap (the review asked for " · "; the brief rules out middle
+// --fg-2 (--fg-3 read 4.41:1 on the raised row) and the age, also --fg-2
+// (--fg-3 was 4.4:1), after an 8px gap (the review asked for " · "; the brief rules out middle
 // dots, so space sets them apart, as #10 does), idle step dashes at --fg-4
 // (from 1.34:1) with "1 of 4" beside them. From the backlog: each source is
 // a heading and its rows, not an outlined card round a filled row round a
