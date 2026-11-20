@@ -2124,8 +2124,15 @@
           });
           io.observe(tk);
           tk.addEventListener('pointerenter', () => to(0));
-          tk.addEventListener('pointerleave', () => to(1));
-          addEventListener('resize', make);
+          // (A finger lifted: it waits a moment before it runs again, so a
+          // second tap can aim at what the first stopped.)
+          let resume = 0;
+          tk.addEventListener('pointerleave', (e) => { clearTimeout(resume); if (e.pointerType === 'touch') resume = setTimeout(() => to(1), 1500); else to(1); });
+          tk.addEventListener('pointerenter', () => clearTimeout(resume));
+          // (Only a change of width moves it: a phone's toolbar coming and
+          // going as the page scrolls changes only the height.)
+          let lastW = innerWidth;
+          addEventListener('resize', () => { if (innerWidth !== lastW) { lastW = innerWidth; make(); } });
           document.fonts?.ready.then(make);
         }
       })

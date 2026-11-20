@@ -324,6 +324,11 @@
     css.rel = 'stylesheet';
     css.href = `${base}vendor/dialkit/styles.css?v=2`;
     document.head.append(css);
+    // On a touch screen, up and down on a slider scrolls the panel (a
+    // sideways drag still moves it).
+    const touch = document.createElement('style');
+    touch.textContent = '@media (pointer: coarse) { .dialkit-root .dialkit-slider { touch-action: pan-y; } }';
+    document.head.append(touch);
     lib = new Promise((done, fail) => {
       const s = document.createElement('script');
       s.src = `${base}vendor/dialkit/browser.global.js?v=4`;
