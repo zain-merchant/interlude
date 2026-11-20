@@ -25,10 +25,10 @@ export default {
     room: {
       type: 'choice',
       options: [
-        ['gap', '12px from the Filter dial', "Each channel's fader, meter and button move 7px toward the middle, so the button keeps a clear 12px from the Filter dial's ticks (d-K53)."],
-        ['tight', 'As now', 'The strip stays where it is; the button comes within 5px of the Filter dial\'s ticks.'],
+        ['tight', 'As now', 'The strip stays where it is: the button comes within 5px of the Filter dial\'s ticks, but the middle keeps its room for the master meters.'],
+        ['gap', '12px from the Filter dial', "Each channel's fader, meter and button move 7px toward the middle, so the button clears the Filter dial's ticks by 12px (d-K53); with #60's full-length master meters, the right channel's meter then sits close to the master pair."],
       ],
-      default: 'gap',
+      default: 'tight',
       label: 'Room by the Filter dial',
     },
   },

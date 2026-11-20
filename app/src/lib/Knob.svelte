@@ -66,6 +66,13 @@
   function down(e) {
     if (e.button !== 0) return;
     e.currentTarget.setPointerCapture(e.pointerId);
+    // #62 (UI audit flag): a press on the ring focuses the dial as a press on the cap does. The
+    // press's own focus change is cancelled, and focusing here, inside the pointer event, keeps
+    // the focus ring off (it's a pointer focus, not a keyboard one).
+    if (grabRing && e.target !== dial && !dial.contains(e.target)) {
+      e.preventDefault();
+      dial.focus({ preventScroll: true });
+    }
 
     dragging = true;
     raw = pos;
@@ -81,9 +88,7 @@
   function up() {
     if (!dragging) return;
     dragging = false;
-    // #62 (UI audit flag): a grab on the ring leaves the dial focused, as one on the cap does
-    // (after the press, which would otherwise move focus to the page).
-    if (grabRing) dial.focus({ preventScroll: true });
+
     hideTip(dial);
   }
   function wheel(e) {
