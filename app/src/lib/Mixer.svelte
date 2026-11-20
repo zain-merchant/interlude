@@ -202,13 +202,14 @@
   {@render knobs(1)}
 
   <div class="xf">
-    <i class="end" style:background="var(--deck-a)"></i>
+    <!-- #56 (UI audit flag, decks builder): deck-letters names each side with its deck's letter, under that channel's dials. -->
+    {#if flag('deck-letters')}<span class="letter" style:color="var(--deck-a)" aria-hidden="true">A</span>{:else}<i class="end" style:background="var(--deck-a)"></i>{/if}
     <div class="xr">
     <Ruler value={(crossfader + 1) / 2} from={0.5} n={41} major={10} color="var(--fg)" height={8} />
     <Fader tick value={crossfader} min={-1} max={1} reset={0} label="Crossfader" onchange={setCrossfader}
       format={(v) => (Math.abs(v) < 0.005 ? 'centre' : `${Math.round(Math.abs(v) * 100)}% to ${flag('deck-names') ? (v < 0 ? 'the left deck' : 'the right deck') : v < 0 ? 'A' : 'B'}`)} />
     </div>
-    <i class="end" style:background="var(--deck-b)"></i>
+    {#if flag('deck-letters')}<span class="letter" style:color="var(--deck-b)" aria-hidden="true">B</span>{:else}<i class="end" style:background="var(--deck-b)"></i>{/if}
   </div>
 </section>
 
@@ -355,5 +356,11 @@
     width: 3px;
     height: 14px;
     border-radius: 2px;
+  }
+  /* #56 (UI audit flag): the deck's letter in place of its colour bar. */
+  .letter {
+    width: 8px;
+    font: 500 var(--t-xs) / 1 var(--font);
+    text-align: center;
   }
 </style>
