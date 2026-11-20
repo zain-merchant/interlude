@@ -206,12 +206,24 @@
   const visible = $derived(sorted.slice(first, first + Math.ceil(viewHeight / ROW) + 10));
   const onDeck = (t) => [0, 1].filter((d) => tracks[d]?.path === t.path);
   // #18 (UI audit flag): the keys to mix into: the playing decks', or the loaded ones' if none plays (class:mix on .k).
-  const mixKeys = $derived.by(() => {
+  const mixFrom = $derived.by(() => {
     if (!flag('visual-key-match')) return [];
     const loaded = [0, 1].filter((d) => tracks[d] && engine.decks[d].key);
     const from = loaded.some((d) => engine.decks[d].playing) ? loaded.filter((d) => engine.decks[d].playing) : loaded;
-    return from.map((d) => playingKey(engine.decks[d].key, engine.decks[d].rate, engine.decks[d].keylock));
+    return from.map((d) => ({ d, key: playingKey(engine.decks[d].key, engine.decks[d].rate, engine.decks[d].keylock) }));
   });
+  const mixKeys = $derived(mixFrom.map((m) => m.key));
+  /** #18 (UI audit flag): the decks a key mixes with, for its tooltip and its underline's colour. */
+  const mixWith = (key) => mixFrom.filter((m) => keysMix(m.key, key));
+  const side = (d) => ['left', 'right'][d];
+  /** #18 (UI audit flag): a mixing key's tooltip says which deck it goes with, by position ("Mixes with the left deck (C, 8B)"). */
+  function keyTip(key) {
+    const own = `${keyLongName(key)} (${camelot(key)})`;
+    const w = mixWith(key);
+    if (!w.length) return own;
+    if (w.length > 1) return tipText(own, 'Mixes with both decks');
+    return tipText(own, `Mixes with the ${side(w[0].d)} deck (${keyName(w[0].key)}, ${camelot(w[0].key)})`);
+  }
 
   /** Loads the current view. `keep` holds on to the selection (after an edit). */
   async function refresh({ keep = false } = {}) {
@@ -680,6 +692,7 @@
         <!-- #81 (UI audit flag): library-sort keeps every heading's arrow in place (a ghost on hover), so nothing shifts. -->
         <button class="sort" class:on class:num={c.num} aria-pressed={on}
           aria-label="Sort by {c.label.toLowerCase()}{on ? (sortOn.dir > 0 ? ', ascending' : ', descending') : ''}"
+          use:tip={() => (c.by === 'key' && flag('visual-key-match') ? 'Underlined: mixes with what’s playing' : '')}
           onclick={() => sortBy(c.by)}>{c.label}{#if on || flag('library-sort')}<svg viewBox="0 0 10 10" aria-hidden="true" class:down={on && sortOn.dir < 0} class:ghost={!on}><path d="M2.5 6.5 5 4l2.5 2.5" /></svg>{/if}</button>
       {/each}
     </div>
@@ -720,7 +733,8 @@
             <span class="t">{#if t.missing}<span class="k" use:tip={() => `File not found: ${t.path}`}>{t.title}</span><span class="sr">, file not found</span>{:else if markOn}{#each marks(t.title) as m}{#if m.hit}<mark>{m.s}</mark>{:else}{m.s}{/if}{/each}{:else}{t.title}{/if}</span>
             <span>{#if markOn}{#each marks(t.artist) as m}{#if m.hit}<mark>{m.s}</mark>{:else}{m.s}{/if}{/each}{:else}{t.artist}{/if}</span>
             <span class="n num" class:none={a && !a.bpm}>{a ? bpmText(a) || NONE : ''}</span>
-            <span class:none={a && !a.key}>{#if a?.key}<span class="k" class:mix={mixKeys.some((k) => keysMix(k, a.key))} use:tip={() => `${keyLongName(a.key)} (${camelot(a.key)})`}>{keyName(a.key)}</span>{:else if a}{NONE}{/if}</span>
+            <span class:none={a && !a.key}>{#if a?.key}<span class="k" class:mix={mixKeys.some((k) => keysMix(k, a.key))} use:tip={() => keyTip(a.key)}
+                style:--mix-deck={flag('visual-key-match') && mixWith(a.key).length === 1 ? `var(--deck-${'ab'[mixWith(a.key)[0].d]})` : undefined}>{keyName(a.key)}</span>{:else if a}{NONE}{/if}</span>
             <span class="n num" class:none={a?.failed}>{a ? timeText(a) || NONE : ''}</span>
             <span>{t.folder}</span>
             {#if decks.length && flag('deck-names')}<span class="sr">, on the {decks.map((d) => ['left', 'right'][d]).join(' and ')} {decks.length > 1 ? 'decks' : 'deck'}</span>{:else if decks.length}<span class="sr">, on deck {decks.map((d) => 'AB'[d]).join(' and ')}</span>{/if}

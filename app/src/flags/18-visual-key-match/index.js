@@ -9,6 +9,14 @@
 // nothing plays). "Mixes" is the usual rule: the same Camelot number, or
 // one step round the wheel with the same letter. Hooks: key.js (keysMix),
 // Deck.svelte, Library.svelte.
+//
+// Library (batch Li1): an underline reads as a link, and nothing said what
+// it meant. A library key that mixes now says so in its tooltip, naming the
+// deck by position ("B minor (10A)  Mixes with the left deck (C, 8B)"), the
+// Key heading's tooltip explains the mark ("Underlined: mixes with what's
+// playing"), and under the deck-colour option (now the default) a library
+// key's underline takes the colour of the one deck it goes with (grey when
+// it goes with both).
 export default {
   id: 'visual-key-match',
   n: 18,
@@ -16,15 +24,24 @@ export default {
   group: 'Polish',
   notes: 'The deck key is underlined when it mixes with the other deck, and so are library keys that mix with the playing deck (Camelot: same number, or ±1 with the same letter).',
   settings: {
-    colour: { type: 'choice', options: [['fg', 'Grey'], ['go', 'Green'], ['deck', 'Deck colour']], default: 'fg', label: 'Underline colour' },
+    colour: {
+      type: 'choice',
+      label: 'Underline colour',
+      default: 'deck',
+      options: [
+        ['deck', 'Deck colour', 'The underline takes the colour of the deck the key goes with (ice for the left, cream for the right), so you see which deck it suits.'],
+        ['fg', 'Grey', 'A quiet grey underline: the same mark whichever deck it goes with.'],
+        ['go', 'Green', 'A green underline: loudest, but green reads as "go" or "in sync", and the app keeps colour for the decks.'],
+      ],
+    },
   },
 };
 
 /** Show me: two decks whose keys mix; flipping shows the keys plain (before) and the ones that mix underlined (after). */
 export const show = {
-  about: 'To know whether two tracks would sound right together you had to work out their keys yourself. Now keys that go together are underlined, on the decks and in the library.',
+  about: 'To know whether two tracks would sound right together you had to work out their keys yourself. Now keys that go together are underlined, on the decks and in the library, and pointing at one says which deck it goes with.',
   before: 'The decks and the library show each track\'s key ("Bm 10A"), but whether two of them sound good mixed is left to you to work out.',
-  after: 'When the two decks\' keys go together, both are underlined, and so is every library track whose key goes with what\'s playing: a shortlist for the next track.',
+  after: 'When the two decks\' keys go together, both are underlined, and so is every library track whose key goes with what\'s playing: a shortlist for the next track. The underline takes the colour of the deck it suits, and its tooltip says "Mixes with the left deck".',
   async setup(app) {
     if (!app.loaded(0)) await app.loadTrack(0);
     // With the flag on, library keys that mix are marked; load one on B.

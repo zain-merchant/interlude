@@ -22,3 +22,9 @@
 :root[data-flag-visual-key-match][data-flag-visual-key-match-colour='deck'] [data-region^='deck'] .bpm .unit .key.mix.mix {
   text-decoration-color: var(--deck);
 }
+/* Library (Li1): under the deck-colour option a key's underline takes the
+   colour of the one deck it mixes with (Library.svelte sets --mix-deck on
+   the key; a key that goes with both decks keeps the grey mark). */
+:root[data-flag-visual-key-match][data-flag-visual-key-match-colour='deck'] [data-region='tracks'] .row .k.mix {
+  text-decoration-color: var(--mix-deck, var(--fg-2));
+}
