@@ -3,20 +3,20 @@
    the rest 2.4 : 1.6 of 5.2 (Folder's 1.2), as before, but stop at 360 and
    240; Folder takes what's left. (% of the row, since fr can't go in min().) */
 :root[data-flag-library-columns] section.library .row {
-  --lc-fixed: calc(26px + 64px + 68px + 64px);
+  --lc-fixed: calc(26px + 64px + var(--lib-key, 68px) + 64px);
   grid-template-columns:
     26px
     minmax(0, min(360px, calc((100% - var(--lc-fixed)) * 2.4 / 5.2)))
     minmax(0, min(240px, calc((100% - var(--lc-fixed)) * 1.6 / 5.2)))
-    64px 68px 64px minmax(0, 1fr);
+    64px var(--lib-key, 68px) 64px minmax(0, 1fr);
 }
 :root[data-flag-library-columns][data-flag-spacing] section.library .row {
-  --lc-fixed: calc(24px + 64px + 68px + 64px);
+  --lc-fixed: calc(24px + 64px + var(--lib-key, 68px) + 64px);
   grid-template-columns:
     24px
     minmax(0, min(360px, calc((100% - var(--lc-fixed)) * 2.4 / 5.2)))
     minmax(0, min(240px, calc((100% - var(--lc-fixed)) * 1.6 / 5.2)))
-    64px 68px 64px minmax(0, 1fr);
+    64px var(--lib-key, 68px) 64px minmax(0, 1fr);
 }
 /* 24px between the numbers: Key and Folder start 24px after the text
    before them (the cell before pads its right side by 6, or 8 under #15). */

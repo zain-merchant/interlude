@@ -213,6 +213,8 @@
     return from.map((d) => ({ d, key: playingKey(engine.decks[d].key, engine.decks[d].rate, engine.decks[d].keylock) }));
   });
   const mixKeys = $derived(mixFrom.map((m) => m.key));
+  // #89 (UI audit flag): key-notation: how the Key column writes a key (null: as today, musical).
+  const notation = $derived(flag('key-notation') ? setting('key-notation', 'show') : null);
   /** #18 (UI audit flag): the decks a key mixes with, for its tooltip and its underline's colour. */
   const mixWith = (key) => mixFrom.filter((m) => keysMix(m.key, key));
   const side = (d) => ['left', 'right'][d];
@@ -736,7 +738,8 @@
             <span>{#if markOn}{#each marks(t.artist) as m}{#if m.hit}<mark>{m.s}</mark>{:else}{m.s}{/if}{/each}{:else}{t.artist}{/if}</span>
             <span class="n num" class:none={a && !a.bpm}>{a ? bpmText(a) || NONE : ''}</span>
             <span class:none={a && !a.key}>{#if a?.key}<span class="k" class:mix={mixKeys.some((k) => keysMix(k, a.key))} use:tip={() => keyTip(a.key)}
-                style:--mix-deck={flag('visual-key-match') && mixWith(a.key).length === 1 ? `var(--deck-${'ab'[mixWith(a.key)[0].d]})` : undefined}>{keyName(a.key)}</span>{:else if a}{NONE}{/if}</span>
+                style:--mix-deck={flag('visual-key-match') && mixWith(a.key).length === 1 ? `var(--deck-${'ab'[mixWith(a.key)[0].d]})` : undefined}><!-- #89 (UI audit flag): key-notation: Musical, Camelot or both, as the decks show it.
+                -->{#if notation === 'camelot'}{camelot(a.key)}{:else if notation === 'both'}{keyName(a.key)} <span class="cam">{camelot(a.key)}</span>{:else}{keyName(a.key)}{/if}</span>{:else if a}{NONE}{/if}</span>
             <span class="n num" class:none={a?.failed}>{a ? timeText(a) || NONE : ''}</span>
             <span>{t.folder}</span>
             {#if decks.length && flag('deck-names')}<span class="sr">, on the {decks.map((d) => ['left', 'right'][d]).join(' and ')} {decks.length > 1 ? 'decks' : 'deck'}</span>{:else if decks.length}<span class="sr">, on deck {decks.map((d) => 'AB'[d]).join(' and ')}</span>{/if}

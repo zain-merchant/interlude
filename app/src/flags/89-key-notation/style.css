@@ -1,0 +1,21 @@
+/* #89: the Key column in the decks' notation. "Both" writes the Camelot
+   code after the key, a step smaller and dimmer, as the decks do, so the
+   column widens to hold "C♯m 12A". */
+:root[data-flag-key-notation] section.library .row .k .cam {
+  padding: 0;
+  font-size: var(--t-xs);
+  color: var(--fg-3);
+}
+:root[data-flag-key-notation] section.library .row .k.mix .cam {
+  color: inherit;
+}
+:root[data-flag-key-notation][data-flag-key-notation-show='both'] section.library {
+  /* Read by #80's column sizes. */
+  --lib-key: 80px;
+}
+:root[data-flag-key-notation][data-flag-key-notation-show='both']:not([data-flag-library-columns]) section.library .row {
+  grid-template-columns: 26px minmax(0, 2.4fr) minmax(0, 1.6fr) 64px 72px 64px minmax(0, 1.2fr);
+}
+:root[data-flag-key-notation][data-flag-key-notation-show='both'][data-flag-spacing]:not([data-flag-library-columns]) section.library .row {
+  grid-template-columns: 24px minmax(0, 2.4fr) minmax(0, 1.6fr) 64px 76px 64px minmax(0, 1.2fr);
+}
