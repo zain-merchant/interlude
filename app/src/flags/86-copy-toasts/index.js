@@ -16,7 +16,7 @@
 // playlist names both ways to fill it (drag, or the track's menu). Hooks:
 // Library.svelte (q(), the labels, emptyView with #7 on). Other files read
 // this flag too: App.svelte for "Loaded “Title” on …" (layout builder) and
-// Fader/Knob for "Reset to 0.0 dB" (mixer builder, E14), if they've added it.
+// Fader/Knob menus for "Reset to 0.0 dB", "Reset to centre" (mixer, E14).
 export default {
   id: 'copy-toasts',
   n: 86,

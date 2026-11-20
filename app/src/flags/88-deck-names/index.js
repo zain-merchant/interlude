@@ -7,14 +7,15 @@
 // high". With the flag on they say what you see: "the left deck", "the
 // right deck". Each builder hooks their own strings on flag('deck-names'):
 // Library.svelte (the track menu, screen-reader text), App.svelte (toasts
-// and announcements), Mixer.svelte (control names), Settings.svelte and
-// Report.svelte, as they land.
+// and announcements), Deck, Performance, FxUnit and Stems (announcements,
+// undo labels, region names, tooltips), Mixer and Knob (control names,
+// "Kill left deck high EQ", "40% to the left deck"), Settings and Report.
 export default {
   id: 'deck-names',
   n: 88,
   title: 'Say "left deck" and "right deck", not A and B',
   group: 'Polish',
-  notes: 'Copy names decks by position ("the left deck") instead of letters the UI never shows. Hooks in Library.svelte (row menu, sr text); App, Mixer, Settings and Report hook the same id.',
+  notes: 'Copy names decks by position ("the left deck") instead of letters the UI never shows. Hooks: Library, App, Deck, Performance, FxUnit, Stems, Mixer, Knob, Settings, Report.',
 };
 
 /** Show me: the track menu, reopened on each flip: "Load to deck A" (before), "Load to the left deck" (after). */

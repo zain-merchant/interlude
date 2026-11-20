@@ -18,6 +18,10 @@ export const show = {
   before: 'Search down to a single result and the count beside the search reads "1 tracks".',
   after: 'It reads "1 track", as you would write it.',
   async setup(app, ctx) {
+    // #84 (search-scope) counts a search against the total ("1 of 48 tracks"), where this
+    // flag's word doesn't show: off for the show, back after.
+    ctx.scope = app.isOn('search-scope');
+    if (ctx.scope) app.setFlag('search-scope', false);
     const count = () => app.$('section.library .bar .count');
     // Find a search with exactly one result among the tracks' own titles.
     const titles = app.rows().map((r) => r.querySelector('.t')?.textContent.trim()).filter(Boolean);
@@ -30,6 +34,9 @@ export const show = {
     // The count's own words (not the analysis note after them), on and off.
     const words = () => (count()?.firstChild?.textContent ?? '').trim();
     ctx.text = { on: words(), off: app.without('stress-plural', words) };
+  },
+  cleanup(app, ctx) {
+    if (ctx.scope) app.setFlag('search-scope', true);
   },
   target: 'section.library .bar .count',
   badge: (app) => app.textRect(app.$('section.library .bar .count')),

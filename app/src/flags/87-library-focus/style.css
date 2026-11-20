@@ -5,11 +5,11 @@
    sidebar's current list steps down to the raised fill with no edge, and
    gets the full look back while focus is in the sidebar, when the list's
    selection steps down instead. Beats #4's selected looks. */
-:root[data-flag-library-focus] section.library [data-region='sidebar']:not(:focus-within) .item.on {
+:root[data-flag-library-focus] section.library [data-region='sidebar']:not(:has(:focus-visible)) .item.on {
   background: var(--raise);
   box-shadow: none;
 }
-:root[data-flag-library-focus] section.library:has([data-region='sidebar']:focus-within) [data-region='tracks'] .row.sel {
+:root[data-flag-library-focus] section.library:has([data-region='sidebar'] :focus-visible) [data-region='tracks'] .row.sel {
   background: var(--raise);
   box-shadow: none;
 }

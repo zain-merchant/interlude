@@ -6,9 +6,9 @@
 // translating in your head. With the flag on, the Key column follows a
 // notation picked here: both (as the decks), Camelot only, or musical only.
 // In the shipped version this is a Display setting (Display › Key) that the
-// decks read too; the panel's choice stands in for it. The decks' half is
-// the decks builder's (Deck.svelte reads setting('key-notation', 'show'));
-// until it lands, the decks keep showing both. Sorting by Key already
+// decks read too; the panel's choice stands in for it. The decks follow the
+// same choice (Deck.svelte: Camelot shows only "8B", musical only "C",
+// both as before). Sorting by Key already
 // follows the Camelot wheel. Hooks: Library.svelte (notation, the Key cell);
 // #80 reads --lib-key for the wider column.
 export default {
@@ -16,7 +16,7 @@ export default {
   n: 89,
   title: 'The library writes keys the way the decks do',
   group: 'Type and colour',
-  notes: 'Key column notation: both ("Bm 10A", Camelot at --t-xs --fg-3), Camelot only, or musical only. Column widens to 72px (80 under #80) for both. Ships as Display › Key, read by decks too.',
+  notes: 'Key column notation: both ("Bm 10A", Camelot at --t-xs --fg-3), Camelot only, or musical only. Column widens to 72px (80 under #80) for both. The decks follow the same choice (Deck.svelte). Ships as Display › Key.',
   settings: {
     show: {
       type: 'choice',

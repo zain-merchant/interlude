@@ -447,9 +447,47 @@
     navMore = below(nav);
   }
   $effect(() => {
-    void [flag('library-clip'), viewHeight, sorted.length, sessions.length, playlists.length, folders.length, historyShown];
+    void [flag('library-clip'), viewHeight, sorted.length, sessions.length, playlists.length, folders.length, historyShown, ROW];
     edges();
   });
+  // Other flags change row and heading sizes: measure again when any flag or setting changes.
+  $effect(() => {
+    if (!flag('library-clip')) return;
+    let raf = 0;
+    const watch = new MutationObserver(() => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(edges);
+    });
+    watch.observe(document.documentElement, { attributes: true });
+    return () => {
+      watch.disconnect();
+      cancelAnimationFrame(raf);
+    };
+  });
+
+  /**
+   * A tooltip that only exists while a flag asks for one: pass null and the
+   * node has no tip at all (an empty tip would still hide the one showing).
+   * @param {HTMLElement} node
+   * @param {(() => string) | null} get
+   */
+  function flagTip(node, get) {
+    let t = get ? tip(node, get) : null;
+    return {
+      /** @param {(() => string) | null} next */
+      update(next) {
+        if (next && t) t.update(next);
+        else if (next) t = tip(node, next);
+        else if (t) {
+          t.destroy();
+          t = null;
+        }
+      },
+      destroy() {
+        t?.destroy();
+      },
+    };
+  }
 
   function select(i) {
     if (!sorted.length) return;
@@ -698,7 +736,7 @@
         <!-- #81 (UI audit flag): library-sort keeps every heading's arrow in place (a ghost on hover), so nothing shifts. -->
         <button class="sort" class:on class:num={c.num} aria-pressed={on}
           aria-label="Sort by {c.label.toLowerCase()}{on ? (sortOn.dir > 0 ? ', ascending' : ', descending') : ''}"
-          use:tip={() => (c.by === 'key' && flag('visual-key-match') ? 'Underlined: mixes with what’s playing' : '')}
+          use:flagTip={c.by === 'key' && flag('visual-key-match') ? () => 'Underlined: mixes with what’s playing' : null}
           onclick={() => sortBy(c.by)}>{c.label}{#if on || flag('library-sort')}<svg viewBox="0 0 10 10" aria-hidden="true" class:down={on && sortOn.dir < 0} class:ghost={!on}><path d="M2.5 6.5 5 4l2.5 2.5" /></svg>{/if}</button>
       {/each}
     </div>
@@ -735,9 +773,9 @@
             ondragleave={(e) => { if (!e.currentTarget.contains(/** @type {Node} */ (e.relatedTarget))) dropAt = null; }}
             onclick={() => { selectIndex(index); scroller.focus({ preventScroll: true }); }} ondblclick={() => autoLoad(t)} onkeydown={() => {}}
             oncontextmenu={(e) => rowMenu(e, t, index)}
-            use:tip={() => (flag('library-polish') && index === selected && !t.missing ? `Double-click to load, or ${keyLabel('deck.0.load')} / ${keyLabel('deck.1.load')}` : '')}>
+            use:flagTip={flag('library-polish') && index === selected && !t.missing ? () => `Double-click to load, or ${keyLabel('deck.0.load')} / ${keyLabel('deck.1.load')}` : null}>
             <!-- #90 (UI audit flag): library-polish: the selected row's tip says how to load it (c-K83). -->
-            <span class="ld">{#each decks as d}{#if flag('deck-letters')}<i class="dl" class:b={d === 1} aria-hidden="true">{'AB'[d]}</i>{:else}<b class:b={d === 1} aria-hidden="true"></b>{/if}{/each}</span>
+            <span class="ld">{#each decks as d}<b class:b={d === 1} aria-hidden="true"></b>{#if flag('deck-letters')}<i class="dl" class:b={d === 1} aria-hidden="true">{'AB'[d]}</i>{/if}{/each}</span>
             <span class="t">{#if t.missing}<span class="k" use:tip={() => `File not found: ${t.path}`}>{t.title}</span><span class="sr">, file not found</span>{:else if markOn}{#each marks(t.title) as m}{#if m.hit}<mark>{m.s}</mark>{:else}{m.s}{/if}{/each}{:else}{t.title}{/if}</span>
             <span>{#if markOn}{#each marks(t.artist) as m}{#if m.hit}<mark>{m.s}</mark>{:else}{m.s}{/if}{/each}{:else}{t.artist}{/if}</span>
             <span class="n num" class:none={a && !a.bpm}>{a ? bpmText(a) || NONE : ''}</span>
@@ -745,7 +783,7 @@
                 style:--mix-deck={flag('visual-key-match') && mixWith(a.key).length === 1 ? `var(--deck-${'ab'[mixWith(a.key)[0].d]})` : undefined}><!-- #89 (UI audit flag): key-notation: Musical, Camelot or both, as the decks show it.
                 -->{#if notation === 'camelot'}{camelot(a.key)}{:else if notation === 'both'}{keyName(a.key)} <span class="cam">{camelot(a.key)}</span>{:else}{keyName(a.key)}{/if}</span>{:else if a}{NONE}{/if}</span>
             <span class="n num" class:none={a?.failed}>{a ? timeText(a) || NONE : ''}</span>
-            <span>{t.folder}</span>
+            <span>{#if markOn}{#each marks(t.folder) as m}{#if m.hit}<mark>{m.s}</mark>{:else}{m.s}{/if}{/each}{:else}{t.folder}{/if}</span>
             {#if decks.length && flag('deck-names')}<span class="sr">, on the {decks.map((d) => ['left', 'right'][d]).join(' and ')} {decks.length > 1 ? 'decks' : 'deck'}</span>{:else if decks.length}<span class="sr">, on deck {decks.map((d) => 'AB'[d]).join(' and ')}</span>{/if}
           </div>
         {/each}
@@ -1087,7 +1125,7 @@
     background: var(--deck-b);
   }
   /* deck-letters (UI audit flag, decks builder's; against the doc): the
-     deck's letter in place of the bar. Only rendered while that flag is on. */
+     deck's letter beside its bar. Only rendered while that flag is on. */
   .ld .dl {
     font: 500 var(--t-xs) / 1 var(--font);
     font-style: normal;
