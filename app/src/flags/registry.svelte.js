@@ -21,7 +21,7 @@
 const modules = import.meta.glob('./*/index.js', { eager: true, import: 'default' });
 import.meta.glob('./*/style.css', { eager: true });
 
-/** @typedef {{ id: string, n: number, title: string, group?: string, issue?: string, notes?: string, settings?: Record<string, any> }} Flag */
+/** @typedef {{ id: string, n: number, title: string, group?: string, issue?: string, notes?: string, against?: string, settings?: Record<string, any> }} Flag */
 /** @type {Flag[]} */
 export const FLAGS = Object.values(modules)
   .map((m) => /** @type {any} */ (m))
@@ -48,12 +48,31 @@ export const flags = $state({
       Object.fromEntries(Object.entries(f.settings ?? {}).map(([k, s]) => [k, saved.settings?.[f.id]?.[k] ?? s.default])),
     ]),
   ),
+  /** Choice settings marked as decided: { [flag id]: { [setting key]: value } }. */
+  /** @type {Record<string, Record<string, any>>} */
+  locked: saved.locked && typeof saved.locked === 'object' ? saved.locked : {},
 });
 
 /** Whether a flag is on. */
 export const flag = (/** @type {string} */ id) => flags.on[id] ?? false;
 /** A flag's setting (its default while the flag is off is still returned). */
 export const setting = (/** @type {string} */ id, /** @type {string} */ key) => flags.settings[id]?.[key];
+
+/** The recommended value of a choice setting: its `recommended`, or else its default. */
+export const recommended = (/** @type {any} */ s) => s?.recommended ?? s?.default;
+/** Whether a choice setting is locked in (decided), and to what. */
+export const lockedAt = (/** @type {string} */ id, /** @type {string} */ key) => flags.locked[id]?.[key];
+/** Locks a choice setting at its current value, or unlocks it. */
+export function setLocked(/** @type {string} */ id, /** @type {string} */ key, /** @type {boolean} */ on) {
+  if (on) flags.locked[id] = { ...(flags.locked[id] ?? {}), [key]: flags.settings[id][key] };
+  else if (flags.locked[id]) {
+    const { [key]: _, ...rest } = flags.locked[id];
+    if (Object.keys(rest).length) flags.locked[id] = rest;
+    else delete flags.locked[id];
+  }
+}
+/** Everything picked, for the panel's export: what's on, every setting, and what's locked in. */
+export const picks = () => JSON.parse(JSON.stringify({ on: flags.on, settings: flags.settings, locked: flags.locked }));
 
 function apply() {
   const root = document.documentElement;
@@ -76,7 +95,7 @@ $effect.root(() => {
   $effect(() => {
     apply();
     try {
-      localStorage.setItem(KEY, JSON.stringify({ on: flags.on, settings: flags.settings }));
+      localStorage.setItem(KEY, JSON.stringify({ on: flags.on, settings: flags.settings, locked: flags.locked }));
     } catch {}
   });
 });

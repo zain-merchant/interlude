@@ -17,12 +17,13 @@
   // what's different now, Before / After (flipping on its own, or pinned),
   // and Guides, Replay, Again and Done. The card keeps off what's shown.
   import { tick, onMount } from 'svelte';
-  import { FLAGS, flags } from '../registry.svelte.js';
+  import { FLAGS, flags, picks, recommended, lockedAt, setLocked } from '../registry.svelte.js';
   import { SHOWS, current, showMe, stopShow, replay, resumePending, setPhase, setFlipping, setSlow } from '../show/show.svelte.js';
   import { uiZoom } from '../../lib/uizoom.svelte.js';
   import Switch from './Switch.svelte';
   import Slider from './Slider.svelte';
   import Segmented from './Segmented.svelte';
+  import Options from './Options.svelte';
 
   // ── Where it is ───────────────────────────────────────────────────────
   const STORE = 'interlude.flags.panel';
@@ -76,6 +77,23 @@
     if (on && disclosed[f.id] === false) delete disclosed[f.id];
   }
   const all = (on) => FLAGS.forEach((f) => (flags.on[f.id] = on));
+
+  // Export: every pick (on, settings, locked in) as JSON on the clipboard.
+  let copied = $state(false);
+  async function exportPicks() {
+    const text = JSON.stringify(picks(), null, 2);
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      console.log(text);
+    }
+    copied = true;
+    setTimeout(() => (copied = false), 1600);
+  }
+  /** A flag's choice settings, for the Show me card's option switcher. */
+  const choices = (f) => Object.entries(f?.settings ?? {}).filter(([, s]) => s.type === 'choice');
+  /** The sentence for a choice setting's current option. */
+  const explainOf = (f, k, s) => s.options.find(([v]) => String(v) === String(flags.settings[f.id][k]))?.[2] ?? '';
 
   // ── Moving it ─────────────────────────────────────────────────────────
   let box = /** @type {HTMLElement | null} */ ($state(null));
@@ -310,6 +328,29 @@
         </div>
         <p class="fp-note">{story.after ?? story.note}</p>
       {/if}
+      {#if !current.busy}
+        {#each choices(showing) as [k, s] (k)}
+          {@const locked = lockedAt(showing.id, k) !== undefined}
+          <div class="fp-card-opt">
+            <div class="fp-phase">
+              <span class="fp-label">{s.label ?? k}</span>
+              {#if locked}
+                <span class="fp-locked-at">{s.options.find(([v]) => String(v) === String(flags.settings[showing.id][k]))?.[1]}</span>
+              {:else}
+                <Segmented
+                  label={s.label ?? k}
+                  options={s.options.map(([v, label]) => [v, label])}
+                  value={flags.settings[showing.id][k]}
+                  onchange={(v) => (flags.settings[showing.id][k] = v)}
+                />
+              {/if}
+              <button type="button" class="fp-chip fp-lock-chip" aria-pressed={locked} onclick={() => setLocked(showing.id, k, !locked)}
+                title={locked ? 'Unlock: try the other options again' : 'Lock in: mark this pick as decided'}>{locked ? 'Locked in' : 'Lock in'}</button>
+            </div>
+            <p class="fp-explain">{#if String(flags.settings[showing.id][k]) === String(recommended(s))}<span class="fp-rec">recommended</span>{/if}{explainOf(showing, k, s)}</p>
+          </div>
+        {/each}
+      {/if}
       {#if current.error}<p class="fp-err">{current.error}</p>{/if}
 
       <div class="fp-acts">
@@ -368,6 +409,7 @@
         <div class="fp-head-acts">
           <button type="button" class="fp-text-btn" onclick={() => all(true)}>All on</button>
           <button type="button" class="fp-text-btn" onclick={() => all(false)}>All off</button>
+          <button type="button" class="fp-text-btn" onclick={exportPicks} title="Copy every pick, setting and lock as JSON">{copied ? 'Copied' : 'Export'}</button>
           <button type="button" class="fp-icon" aria-label="Fold the panel (backquote key)" title="Fold (backquote key)" onclick={() => fold(true)}>
             <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 6l3.5 3.5L11.5 6" /></svg>
           </button>
@@ -421,16 +463,13 @@
                         {/if}
                         <Switch checked={isOn(f)} label="{f.title}: {isOn(f) ? 'on' : 'off'}" onchange={(v) => toggle(f, v)} />
                       </div>
-                      {#if about(f)}<p class="fp-about">{about(f)}</p>{/if}
+                      {#if about(f)}<p class="fp-about">{#if f.against}<span class="fp-against" title={`The design doc: ${f.against}`}>Against the doc</span>{/if}{about(f)}</p>{/if}
                     </div>
                     {#if settingsOpen(f)}
                       <div class="fp-settings">
                         {#each sets as [k, s] (k)}
                           {#if s.type === 'choice'}
-                            <div class="fp-setting">
-                              <span class="fp-label">{s.label ?? k}</span>
-                              <Segmented label={s.label ?? k} options={s.options} bind:value={flags.settings[f.id][k]} />
-                            </div>
+                            <Options id={f.id} {k} {s} />
                           {:else}
                             <Slider label={s.label ?? k} min={s.min} max={s.max} step={s.step} unit={s.unit ?? ''} bind:value={flags.settings[f.id][k]} />
                           {/if}
@@ -841,10 +880,6 @@
     gap: 6px;
     padding: 0 10px 10px 36px;
   }
-  .fp-setting {
-    display: grid;
-    gap: 4px;
-  }
   .fp-label {
     font-size: 11px;
     font-weight: 500;
@@ -973,6 +1008,62 @@
     font-size: 13px;
     line-height: 18px;
     color: var(--fp-fg-2);
+  }
+  .fp-card-opt {
+    display: grid;
+    gap: 4px;
+    padding-top: 8px;
+    border-top: 1px solid var(--fp-line);
+  }
+  .fp-card-opt .fp-label {
+    flex: none;
+    min-width: 56px;
+  }
+  .fp-card-opt :global(.fp-seg) {
+    flex: 0 1 auto;
+    min-width: 0;
+  }
+  .fp-lock-chip {
+    flex: none;
+    height: 24px;
+    margin-left: auto;
+    padding: 0 9px;
+    font-size: 11px;
+  }
+  .fp-explain {
+    margin: 0 0 0 64px;
+    font-size: 12px;
+    line-height: 17px;
+    color: var(--fp-fg-2);
+    text-wrap: pretty;
+  }
+  .fp-locked-at {
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .fp-rec {
+    display: inline-block;
+    margin-right: 6px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: rgb(79 227 155 / 0.12);
+    font-size: 10.5px;
+    font-weight: 500;
+    line-height: 16px;
+    color: #7fe9b4;
+    vertical-align: 1px;
+  }
+  .fp-against {
+    display: inline-block;
+    margin-right: 6px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: rgb(255 176 92 / 0.14);
+    font-size: 10.5px;
+    font-weight: 500;
+    line-height: 16px;
+    color: #ffc58a;
+    vertical-align: 1px;
   }
   .fp-err {
     margin: 0;
