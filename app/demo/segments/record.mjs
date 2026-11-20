@@ -537,8 +537,8 @@ function encode(input, file, codec, gop, width = 0) {
   const tags = ['-colorspace', 'bt709', '-color_primaries', 'bt709', '-color_trc', 'bt709', '-color_range', 'tv'];
   const c = {
     av1: ['-c:v', 'libsvtav1', '-preset', '6', '-crf', '38', '-g', String(gop), '-svtav1-params', 'log-level=0'],
-    hevc: ['-c:v', 'libx265', '-preset', 'slow', '-crf', '26', '-g', String(gop), '-tag:v', 'hvc1', '-x265-params', 'log-level=error:pools=4'],
-    h264: ['-c:v', 'libx264', '-preset', 'slow', '-crf', '24', '-g', String(gop), '-tune', 'animation', '-threads', '4'],
+    hevc: ['-c:v', 'libx265', '-preset', 'fast', '-crf', '26', '-g', String(gop), '-tag:v', 'hvc1', '-x265-params', 'log-level=error:pools=4'],
+    h264: ['-c:v', 'libx264', '-preset', 'medium', '-crf', '24', '-g', String(gop), '-tune', 'animation', '-threads', '4'],
   }[codec];
   return ffmpeg(['-i', input, ...vf, ...c, ...tags, '-an', '-movflags', '+faststart', file]);
 }
@@ -550,26 +550,39 @@ async function pool(jobs, n) {
 
 if (PHASE === 'all' || PHASE === 'encode') {
   fs.mkdirSync(OUT, { recursive: true });
-  const info = JSON.parse(fs.readFileSync(path.join(WORK, `part-controller-${FROM}.json`), 'utf8'));
+  const infoFile = path.join(WORK, `part-controller-${FROM}.json`);
+  // (Still recording, --partial: the controller box's width from its master.)
+  const info = fs.existsSync(infoFile) ? JSON.parse(fs.readFileSync(infoFile, 'utf8')) : { box: { width: +execFileSync('ffprobe', ['-v', 'error', '-select_streams', 'v:0', '-show_entries', 'stream=width', '-of', 'csv=p=0', masterOf('controller', FROM, 'ctl')]).toString() / SCALE } };
   const box = info.box;
   const jobs = [];
+  // (--partial: only the steps recorded so far, while the rest record; files
+  // already encoded are kept, unless --fresh.)
+  const have = (f) => !args.fresh && fs.existsSync(f) && fs.statSync(f).size > 0;
+  const enc1 = (input, file, ...a) => () => (have(file) ? null : encode(input, file + '.part.mp4', ...a).then(() => fs.renameSync(file + '.part.mp4', file)));
   for (const mode of MODES) {
     for (const k of STEPS) {
+      if (args.partial && !fs.existsSync(path.join(WORK, `timeline-${mode}-${k}.json`))) continue;
       const name = `${mode}-${k - FROM}`;
       for (const [layer] of layersOf(mode)) {
         const out = layer === 'appc' ? 'app' : mode === 'mouse' && layer === 'app' ? 'twin' : layer;
         for (const codec of CODECS) {
           const width = layer === 'ctl' ? Math.round(box.width) : W;
           // The twin: at 1x only, and a keyframe every 2 s so it can start partway through.
-          if (out !== 'twin') jobs.push(() => encode(masterOf(mode, k, layer), path.join(OUT, `${name}.${out}.${codec}.mp4`), codec, 300));
-          jobs.push(() => encode(masterOf(mode, k, layer), path.join(OUT, `${name}.${out}@1x.${codec}.mp4`), codec, out === 'twin' ? 60 : 300, width));
+          if (out !== 'twin') jobs.push(enc1(masterOf(mode, k, layer), path.join(OUT, `${name}.${out}.${codec}.mp4`), codec, 300));
+          jobs.push(enc1(masterOf(mode, k, layer), path.join(OUT, `${name}.${out}@1x.${codec}.mp4`), codec, out === 'twin' ? 60 : 300, width));
         }
       }
     }
   }
   log(`encoding ${jobs.length} files`);
   let done = 0;
-  await pool(jobs.map((j) => async () => { await j(); if (++done % 20 === 0) log(`  ${done}/${jobs.length}`); }), Math.max(2, Math.floor(os.cpus().length / 3)));
+  await pool(jobs.map((j) => async () => { await j(); if (++done % 20 === 0) log(`  ${done}/${jobs.length}`); }), +(args.encoders ?? Math.max(2, Math.floor(os.cpus().length / 3))));
+  if (args.partial) {
+    log('encoded what was recorded so far');
+    await browser.close();
+    server.close();
+    process.exit(0);
+  }
   // (White where the controller is, as see-through as it is there: its shadow
   // shows through at its own strength. An alpha mask, which every browser takes.)
   await ffmpeg(['-i', path.join(WORK, 'mask.png'), '-vf', 'format=rgba,lutrgb=r=255:g=255:b=255', path.join(OUT, 'controller-mask.png')]);
