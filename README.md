@@ -15,20 +15,23 @@ the report it saves.
 ## Features
 
 - **Decks:** BPM, beatgrid and key found on load; sync that matches tempo
-  and beat phase; 8 hot cues, beat loops and beat jump; slip, quantize and
-  key lock; scrolling three-band waveforms with a full-track overview.
+  and beat phase; 8 hot cues, beat loops and beat jump; slip, quantize,
+  key lock, key shift and key sync; scrolling three-band waveforms with a full-track overview.
 - **Mixer and effects:** trim, 3-band EQ with full kills, filter,
   crossfader, headphone cue with a cue/master blend; echo, reverb, flanger
-  and phaser timed to the beat; auto gain so tracks start level; a master
+  and phaser timed to the beat; sixteen hold-to-play pad FX (rolls,
+  trans, brake, spin back, sweeps and more) on the controller's PAD FX
+  pads; auto gain so tracks start level; a master
   limiter so the output never clips.
 - **Stems:** mute or solo vocals, melody, bass and drums on each deck.
   Tracks are split on your Mac, nothing is uploaded.
 - **Library:** instant search, playlists, a history of every set, and
   import from Rekordbox and Serato with cues, loops and grids. Your music
   files are never changed.
-- **Controllers:** the Pioneer DDJ-FLX4 is mapped in full. More than 140
-  others connect through the bundled Mixxx mappings, and MIDI learn covers
-  the rest.
+- **Controllers:** the Pioneer DDJ-FLX4 is mapped in full. More than 150
+  others connect through the bundled Mixxx mappings (including untested
+  ones for the DDJ-FLX6, DDJ-FLX10, DDJ-800, XDJ-RX3, XDJ-AZ and OPUS-QUAD),
+  and MIDI learn covers the rest.
 - **And:** set recording to WAV, an 8-slot sampler, fully remappable
   keyboard shortcuts, and MP3, AAC, FLAC, WAV, AIFF, OGG and ALAC support.
 
@@ -221,6 +224,9 @@ learned controller mappings, `Music/oss-dj recordings`, and on a Mac the UI
 settings, to their new places (see `app/src-tauri/src/paths.rs`).
 
 ## Roadmap
+
+The full list of what's still missing next to rekordbox, Serato and djay is
+in [docs/parity.md](docs/parity.md).
 
 - More controllers tested and mapped in full, beyond the DDJ-FLX4.
 - Crates and smart playlists.

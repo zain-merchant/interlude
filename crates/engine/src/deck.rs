@@ -41,6 +41,9 @@ const MIN_LOOP_SECS: f64 = 0.01;
 /// doesn't click.
 const JUMP_FADE_FRAMES: u32 = 128;
 
+/// How far key shift goes either way, in semitones.
+pub const KEY_SHIFT_MAX: i32 = 12;
+
 /// Crossfade length, in output frames, when keylock turns off mid-play.
 const KEYLOCK_FADE: usize = 256;
 
@@ -92,6 +95,8 @@ pub(crate) struct Deck {
     pub scratching: bool,
     /// Keylock: tempo changes keep the track's pitch.
     pub keylock: bool,
+    /// Key shift in semitones, on top of any change the tempo makes.
+    pub key_shift: i32,
     /// Slip mode: scratches, loops, held hot cues and pauses leave a
     /// shadow play head running in time underneath, and playback picks up
     /// from it when they end, as if the track had played on.
@@ -152,6 +157,7 @@ impl Deck {
             jog_bend: 0.0,
             scratching: false,
             keylock: false,
+            key_shift: 0,
             slip: false,
             slip_pos: None,
             slip_hot: None,
@@ -192,6 +198,7 @@ impl Deck {
         self.spinning_up = false;
         self.vel = 0.0;
         self.jog_bend = 0.0;
+        self.key_shift = 0;
         self.set_stems(ALL_STEMS);
         for g in &mut self.stem_gain {
             g.snap();
@@ -838,12 +845,22 @@ impl Deck {
         let ratio = track.sample_rate as f64 / self.out_rate;
         let tempo = (self.rate + self.bend + self.jog_bend).max(0.0);
         let step = self.normal_step();
+        // How fast the grains read the source, which sets the pitch: normal
+        // speed with keylock, the deck's speed without, either one moved by
+        // the key shift.
+        let shift = 2f64.powf(self.key_shift as f64 / 12.0);
+        let grain = if self.keylock { ratio } else { step } * shift;
         // Scratching is meant to bend the pitch, and far from normal speed
-        // grains sound worse than a pitch change, so keylock sits those out,
-        // as does a record spinning back up after the hand lets go.
+        // grains sound worse than a pitch change, so keylock and key shift
+        // sit those out, as does a record spinning back up after the hand
+        // lets go.
         let hand_off = !self.following && !self.spinning_up;
-        let stretch = self.keylock && self.playing && hand_off && (0.5..=2.0).contains(&tempo);
-        // Turning keylock off mid-play: the grains and the play head are a
+        let stretch = (self.keylock || self.key_shift != 0)
+            && self.playing
+            && hand_off
+            && tempo > 0.0
+            && (0.5..=2.0).contains(&(step / grain));
+        // Turning keylock (or key shift) off mid-play: the grains and the play head are a
         // few milliseconds apart, so crossfade from one to the other.
         let mut fade_out = 0;
         if stretch {
@@ -870,10 +887,10 @@ impl Deck {
                 ..base
             };
             let read = |pos: f64| stretch::read(&src, pos);
-            let grains = (n < fade_out).then(|| self.stretch.next(&src, self.pos, step, ratio));
+            let grains = (n < fade_out).then(|| self.stretch.next(&src, self.pos, step, grain));
             if self.playing || self.following {
                 (l, r) = if stretch {
-                    self.stretch.next(&src, self.pos, step, ratio)
+                    self.stretch.next(&src, self.pos, step, grain)
                 } else {
                     read(self.pos)
                 };

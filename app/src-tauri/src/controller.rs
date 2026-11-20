@@ -134,11 +134,44 @@ pub fn start(app: &AppHandle, engine: Arc<Mutex<EngineHandle>>, shared: Arc<Shar
         .or_else(dj_controller::Catalog::source_mappings_dir);
     let mut dirs: Vec<PathBuf> = dir.into_iter().collect();
     dirs.extend(dj_controller::Catalog::default_dirs_with(bundled));
+    app.manage(MappingDirs(dirs.clone()));
     app.manage(ControllerService::start_with(host, dirs));
 }
 
 /// Where the app keeps its own controller mappings.
 pub struct MappingDir(Option<PathBuf>);
+
+/// Every folder mappings are loaded from, in order.
+pub struct MappingDirs(Vec<PathBuf>);
+
+/// The MIDI controllers there's a mapping for, by name, for picking your
+/// model when setting one up step by step. Read once, then remembered.
+#[tauri::command]
+pub async fn controller_models(dirs: tauri::State<'_, MappingDirs>) -> Result<Vec<String>, ()> {
+    static MODELS: std::sync::OnceLock<Vec<String>> = std::sync::OnceLock::new();
+    Ok(MODELS
+        .get_or_init(|| {
+            let catalog = dj_controller::Catalog::load(&dirs.0);
+            let mut names: Vec<String> = catalog
+                .entries()
+                .iter()
+                .filter(|e| e.preset().is_none_or(|p| !p.is_hid() && !p.is_exact()))
+                .map(|e| e.name.trim().to_owned())
+                .filter(|n| !n.is_empty())
+                .collect();
+            names.sort_by_key(|n| n.to_lowercase());
+            names.dedup();
+            names
+        })
+        .clone())
+}
+
+/// Pauses every connected controller while one is set up step by step, so
+/// pressing PLAY to teach it doesn't start a deck.
+#[tauri::command]
+pub fn controllers_pause(service: tauri::State<'_, ControllerService>, paused: bool) {
+    service.set_paused(paused);
+}
 
 /// The connected controllers' names, or null if there are none.
 #[tauri::command]
@@ -316,14 +349,14 @@ pub fn learned_mapping(dir: tauri::State<'_, MappingDir>, port: String) -> Vec<B
 }
 
 /// Saves a learned mapping for `port` and reconnects so it takes effect.
-/// No bindings deletes it.
+/// No bindings deletes it. Returns the mapping file, for sharing.
 #[tauri::command]
 pub fn save_learned_mapping(
     service: tauri::State<'_, ControllerService>,
     dir: tauri::State<'_, MappingDir>,
     port: String,
     bindings: Vec<BindingInfo>,
-) -> Result<(), String> {
+) -> Result<String, String> {
     let d = dir.0.as_ref().ok_or("no app data folder")?;
     let file = learned_file(d, &port);
     if bindings.is_empty() {
@@ -347,5 +380,5 @@ pub fn save_learned_mapping(
         std::fs::write(&file, xml).map_err(|e| format!("{}: {e}", file.display()))?;
     }
     service.reload();
-    Ok(())
+    Ok(file.display().to_string())
 }

@@ -5,3 +5,10 @@ dist/
 *.wav
 !crates/**/tests/fixtures/*.wav
 app/src-tauri/gen/
+!app/src-tauri/samples/*.wav
+
+# Beat evaluation data and caches
+tools/beat-eval/data/
+tools/beat-eval/.cache/
+tools/beat-eval/.venv/
+__pycache__/
