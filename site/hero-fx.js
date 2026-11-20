@@ -39,6 +39,10 @@ const gl = canvas.getContext('webgl', { premultipliedAlpha: true, antialias: fal
 const HORIZON = 1400;
 // Where the far rim sits, CSS px from the canvas's top.
 const RIM_TOP = 24;
+// The wide window the record's place was set on: the app's screen this wide
+// (CSS px), its top this far below the canvas's (see layout).
+const REF_W = 1120;
+const REF_TOP = 389.5625;
 
 /** A point on the page (CSS pixels from the canvas's top left) on the disc.
  *  The same sum as the shader's discQ, warps and all. */
@@ -2128,7 +2132,40 @@ const NAMES = ['uSize', 'uDpr', 'uCentre', 'uGeo', 'uHoles', 'uHoleCount', 'uCov
   'uGlintShape', 'uGlintSpread', 'uHueM', 'uTilt', 'uCone', 'uConeTint', 'uConeEdge', 'uConeLight', 'uRaw', 'uOrigin'];
 const progs = new Map();
 let shown = '';
+// Programs started ahead (warm), compiled and linked off the page's thread
+// where the browser can (KHR_parallel_shader_compile): asking whether one
+// worked blocks until it's done, so the first frame waits until they all
+// are (ready) instead, and the page never stops for them.
+const warmed = new Map();
+let parallel = null;
+function warm(n, defs) {
+  const key = `${n}|${defs}`;
+  if (!parallel || warmed.has(key)) return;
+  const shader = (type, src) => {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src);
+    gl.compileShader(s);
+    return s;
+  };
+  const p = gl.createProgram();
+  gl.attachShader(p, shader(gl.VERTEX_SHADER, n === 'dust' ? DUST_VS : VERT));
+  gl.attachShader(p, shader(gl.FRAGMENT_SHADER, fragOf(n, defs)));
+  gl.bindAttribLocation(p, 0, 'p');
+  gl.linkProgram(p);
+  warmed.set(key, { p, done: false });
+}
+const ready = () => !parallel || [...warmed.values()].every((w) => w.done || (w.done = gl.getProgramParameter(w.p, parallel.COMPLETION_STATUS_KHR)));
+// WebGL 1 needs the derivatives extension switched on in the shader.
+const fragOf = (n, defs) => '#extension GL_OES_standard_derivatives : enable\n' + (defs.includes('KEEP3') || defs.includes('BAKE') ? '#extension GL_EXT_draw_buffers : require\n' : '') + defs + (n === 'turn' ? HEAD + REPROJECT : n === 'specks' ? HEAD + SPECKS_FS : n === 'dust' ? HEAD + DUST_FS : n === 'cone' ? HEAD + CONE_FS : n === 'fast' ? HEAD + FAST : n === 'glints' ? HEAD + GLINT_FS : n ? `#define LOOK ${n}\n${HEAD}${LOOKS}` : HEAD + MAIN);
 function build(n, defs) {
+  const w = warmed.get(`${n}|${defs}`);
+  if (w) {
+    warmed.delete(`${n}|${defs}`);
+    if (!gl.getProgramParameter(w.p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(w.p));
+    const u = {};
+    for (const k of NAMES) u[k] = gl.getUniformLocation(w.p, k);
+    return { p: w.p, u };
+  }
   const shader = (type, src) => {
     const s = gl.createShader(type);
     gl.shaderSource(s, src);
@@ -2136,8 +2173,7 @@ function build(n, defs) {
     if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
     return s;
   };
-  // WebGL 1 needs the derivatives extension switched on in the shader.
-  const frag = '#extension GL_OES_standard_derivatives : enable\n' + (defs.includes('KEEP3') || defs.includes('BAKE') ? '#extension GL_EXT_draw_buffers : require\n' : '') + defs + (n === 'turn' ? HEAD + REPROJECT : n === 'specks' ? HEAD + SPECKS_FS : n === 'dust' ? HEAD + DUST_FS : n === 'cone' ? HEAD + CONE_FS : n === 'fast' ? HEAD + FAST : n === 'glints' ? HEAD + GLINT_FS : n ? `#define LOOK ${n}\n${HEAD}${LOOKS}` : HEAD + MAIN);
+  const frag = fragOf(n, defs);
   const p = gl.createProgram();
   gl.attachShader(p, shader(gl.VERTEX_SHADER, n === 'dust' ? DUST_VS : VERT));
   gl.attachShader(p, shader(gl.FRAGMENT_SHADER, frag));
@@ -2197,6 +2233,25 @@ function init() {
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
   gl.enableVertexAttribArray(0);
   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+  parallel = gl.getExtension('KHR_parallel_shader_compile');
+  if (parallel) {
+    // The programs the first frames will want, started together; the record
+    // starts once they're in.
+    const n = LOOK[T.look] ?? 0;
+    const d = variant();
+    warm(n, d);
+    if (!n && T.atRest === 'relit') {
+      for (const x of ['BAKE', 'BAKE2', 'RELIT']) warm(0, `${d}#define ${x}\n`);
+      for (const x of ['fast', 'dust', 'specks', 'cone', 'glints']) warm(x, d);
+    }
+    const poll = () => {
+      if (!ready()) return requestAnimationFrame(poll);
+      use(n);
+      wake();
+    };
+    requestAnimationFrame(poll);
+    return true;
+  }
   use(LOOK[T.look] ?? 0);
   return true;
 }
@@ -2236,20 +2291,31 @@ function layout(now) {
   canvasTop = c.top + scrollPos;
   const s = screen.getBoundingClientRect();
   const cx = s.left - c.left + s.width / 2;
+  // The composition was set on a wide window, where the app's screen is
+  // REF_W across with its top REF_TOP below the canvas's; on a narrower one
+  // all of it (the drop, the disc, the horizon, where the far rim lands)
+  // scales with the screen, so a phone sees the same record from the same
+  // angle, only smaller, rather than a small disc stretched up to the top.
+  const k = Math.min(1, s.width / REF_W);
+  const sTop = s.top - c.top;
   // The centre sits just behind the top of the screen; the disc is about
   // 1.8 times the content's width across.
-  const cy = s.top - c.top + s.height * 0.14 + T.drop;
-  const R = Math.min(c.width * 0.7, s.width * 0.9);
+  const cy = sTop + s.height * 0.14 + T.drop * k;
+  const R = s.width * 0.9;
   const r0 = R * 0.12;
-  // Tilt it back just enough that its far rim lands near the top of the
-  // canvas (behind the headline).
-  const hz = horizon();
+  // Tilt it back just enough that its far rim lands where it does on the
+  // wide window: near the top of the canvas there, behind the headline.
+  const hz = horizon() * k;
   const d0 = cy + hz;
-  const tilt = Math.max(0.2, ((d0 / (RIM_TOP + T.drop + hz) - 1) * d0) / R);
+  const rimY = sTop - (REF_TOP - RIM_TOP - T.drop) * k;
+  const tilt = Math.max(0.2, ((d0 / (rimY + hz) - 1) * d0) / R);
   // The hero's buttons, so nothing shows through them.
   const holes = [...document.querySelectorAll('.hero .btn')].slice(0, 4).map((b) => {
     const r = b.getBoundingClientRect();
-    return [r.left - c.left, r.top - c.top, r.right - c.left, r.bottom - c.top];
+    // (The see-through one's hole half a pixel wider: its soft edge then
+    // shows the page, as its old backdrop blur did, not a bright groove.)
+    const g = b.classList.contains('ghost') ? (window.__holeGrow ?? 0.5) : 0;
+    return [r.left - c.left - g, r.top - c.top - g, r.right - c.left + g, r.bottom - c.top + g];
   });
   // The record runs on past the mouse/controller switch under the screen
   // and fades out to nothing at the next section's heading ("Install").
@@ -2268,11 +2334,11 @@ function layout(now) {
   if (geo?.key === key) return Object.assign(geo, { box, cover: coverOf(box) });
   // The bends up top (see toRecord): more rings above, as a share of the
   // half above the centre; the lens's place and size.
-  const g = { cx, cy, hz, d0, tilt, up: T.up, half: c.width / 2, lens: [cx, RIM_TOP + T.drop + (cy - RIM_TOP - T.drop) * 0.45, Math.max(200, c.width * 0.3)] };
+  const g = { cx, cy, hz, d0, tilt, up: T.up, half: c.width / 2, lens: [cx, rimY + (cy - rimY) * 0.45, Math.max(200, c.width * 0.3)] };
   // How far out it runs: all round, and (with more rings above) up top as
   // far as the rings now reach at the top of the canvas.
   const out = R * T.size;
-  let top = T.up > 0 ? Math.max(out, toRecord(cx, RIM_TOP + T.drop, g).r) : out;
+  let top = T.up > 0 ? Math.max(out, toRecord(cx, rimY, g).r) : out;
   // Rings past the rim, up top only (reach): the disc's far edge carried
   // further out toward the top of the canvas, share `reach` of the way.
   // Nothing else moves: the same centre, tilt and perspective, so all
