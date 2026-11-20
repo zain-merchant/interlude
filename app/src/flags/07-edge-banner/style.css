@@ -10,3 +10,15 @@
 :root[data-flag-edge-banner] .app > .banner {
   width: max-content;
 }
+
+/* Later (critique panel E12): pinned inside the waveform panel, 8px from
+   its top and lined up with the lane names, instead of 2px above the
+   panel's edge over the middle of deck A's lane, where it covered the play
+   head and the beat markers. It stops short of the middle, where the play
+   heads are, and wraps rather than cross it. */
+:root[data-flag-edge-banner] .app > .banner {
+  top: calc(var(--top) + 8px);
+  left: calc(var(--gap) + var(--pad));
+  transform: none;
+  max-width: calc(50% - var(--gap) - var(--pad) - 24px);
+}

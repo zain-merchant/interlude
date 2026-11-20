@@ -743,11 +743,16 @@
   </div>
 
   {#if engine.audio?.state === 'lost'}
-    <div class="banner" role="alert">
+    <!-- #23 (UI audit flag): banner-warning: the lost device is a warning (amber), with one clear way out. -->
+    <div class="banner" class:lost={flag('banner-warning')} role="alert">
       <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.8 15 14H1z" /><path d="M8 6.2v3.6M8 11.6v.4" /></svg>
-      <span><b>{engine.audio.device} disconnected.</b> Decks are held where they stopped and carry on when it's back.</span>
+      {#if flag('banner-warning')}
+        <span><b>{engine.audio.device} disconnected.</b> Decks are held. Waiting for it to come back…</span>
+      {:else}
+        <span><b>{engine.audio.device} disconnected.</b> Decks are held where they stopped and carry on when it's back.</span>
+      {/if}
       {#if engine.audio.fallback && engine.audio.fallback !== engine.audio.device}
-        <button class="btn sm" onclick={() => backend.useDefaultOutput?.()}>Play through {engine.audio.fallback}</button>
+        <button class="btn sm" class:primary={flag('banner-warning')} onclick={() => backend.useDefaultOutput?.()}>Play through {engine.audio.fallback}</button>
       {/if}
     </div>
   {:else if healthText}

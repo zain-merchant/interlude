@@ -8,19 +8,25 @@
 // decks lost its height (48px at 1440×900), squashing the mixer's dials
 // together; at the smallest window the page started to scroll. The toast
 // holder and the screen-reader live region were extra rows too (1px).
+//
+// Later (critique panel E12): floating at top: 10px, centred, it sat 2px
+// above the waveform panel's edge right over deck A's play head and beat
+// markers. It's now pinned inside the panel, 8px down, lined up with the
+// lane names, and stops short of the middle where the play heads are
+// (wrapping instead). No dismiss: it's a live fault and clears itself.
 export default {
   id: 'edge-banner',
   n: 7,
   title: 'Banners float instead of squeezing the decks',
   group: 'Stability',
-  notes: 'A lost audio device, a restored library or an update shows its banner over the top of the window, as designed, instead of as an extra row that shrinks the decks.',
+  notes: 'A lost audio device, a restored library or an update shows its banner over the top of the window, as designed, instead of as an extra row that shrinks the decks. It sits inside the waveform panel on the left, clear of the play heads.',
 };
 
 /** Show me: unplugs the simulated audio device, which raises its banner; flipping shows the decks squashed (before) and untouched (after). */
 export const show = {
   about: 'A warning banner (audio device lost, update ready) squeezed the whole app to make room for itself. Now it floats over the top and the decks keep their size.',
   before: 'Unplug the audio device and its banner takes a row of the layout: the decks lose about 48px of height and the mixer\'s dials crowd together, right when you need them.',
-  after: 'The banner floats over the top of the window, as it was meant to, and the decks and mixer stay exactly as they were.',
+  after: 'The banner floats inside the top-left of the waveform panel, clear of the play heads in the middle, and the decks and mixer stay exactly as they were.',
   async setup(app, ctx) {
     ctx.parts = () => [app.deck(0), app.$('.mixer'), app.deck(1)];
     // The decks as they are with no banner.

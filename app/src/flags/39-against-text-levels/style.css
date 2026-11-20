@@ -1,0 +1,14 @@
+/* #39 (against the doc): the quiet and off text levels, and the caption
+   size, as the judges asked. Not under Increase Contrast (app.css has its
+   own levels there). */
+@media not (prefers-contrast: more) {
+  :root[data-flag-against-text-levels]:is([data-flag-against-text-levels-quiet='brighter'], [data-flag-against-text-levels-quiet='both']) {
+    --fg-3: rgb(236 234 228 / 0.6);
+  }
+  :root[data-flag-against-text-levels][data-flag-against-text-levels-off='brighter'] {
+    --fg-4: rgb(236 234 228 / 0.4);
+  }
+}
+:root[data-flag-against-text-levels]:is([data-flag-against-text-levels-quiet='larger'], [data-flag-against-text-levels-quiet='both']) {
+  --t-xs: 12px;
+}

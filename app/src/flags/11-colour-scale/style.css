@@ -29,3 +29,10 @@
 :root[data-flag-colour-scale] .fader .tick {
   background: rgb(255 255 255 / 0.5);
 }
+
+/* E11 (critique panel): small grey text on a raised or tonal fill uses
+   --fg-2: the toast's ⌘Z was --fg-3 at 4.15:1. (Import's path line is
+   #29's, the sidebar's selected count #87's.) */
+:root[data-flag-colour-scale] .toast .undo kbd {
+  color: var(--fg-2);
+}

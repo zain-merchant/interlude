@@ -10,12 +10,15 @@
 //   glyph button (beat jump, loop, FX beats) is --fg-2. They match now.
 // - Optionally, the deck's inactive mode tabs (--fg-3) can match the other
 //   inactive navigation, the library sidebar and Settings (--fg-2).
+// Later (critique panel): the mixer's fader scale marks were 14% white
+// (about 1.6:1) and go to 30%, the default tick to 50% (M7); small grey
+// text on a raised fill moves to --fg-2, here the toast's ⌘Z (E11).
 export default {
   id: 'colour-scale',
   n: 11,
   title: 'Arrows and notes at the right brightness',
   group: 'Type and colour',
-  notes: 'Analysis note off the disabled level; nudge arrows match the other arrow buttons; optionally deck tabs match the other navigation.',
+  notes: 'Analysis note off the disabled level; nudge arrows match the other arrow buttons; fader scale marks readable; the toast\'s ⌘Z at --fg-2; optionally deck tabs match the other navigation.',
   settings: {
     tabs: { type: 'choice', options: [['fg-3', 'Tabs as now', 'Inactive deck tabs stay at the quietest level, so the active tab stands out most.'], ['fg-2', 'Tabs like nav', 'Inactive deck tabs at the same level as the library sidebar and Settings pages: one rule for all navigation.']], default: 'fg-3', label: 'Inactive deck tabs' },
   },
