@@ -10,6 +10,25 @@
   color: var(--fg-2);
 }
 
+/* A tip's key (E9): without the dot, "deck B E" and "S eight one-shot
+   slots" ran the key into the words. The key now comes last, as a small
+   keycap like Settings' (tooltip.svelte.js marks it, Tooltip.svelte draws
+   it). */
+:root[data-flag-no-dots] [role='tooltip'] .key {
+  display: inline-grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  margin: -1px 0 -1px calc(8px - 0.25em);
+  padding: 0 5px;
+  box-sizing: border-box;
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 1px var(--line-2);
+  color: var(--fg-2);
+  font: 400 var(--t-xs) / 1 var(--font);
+  vertical-align: middle;
+}
+
 /* The deck's line under the BPM: key, then its Camelot code a step
    quieter, then the unit. */
 :root[data-flag-no-dots] [data-region^='deck'] .bpm .unit .cam {

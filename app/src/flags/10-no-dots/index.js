@@ -8,15 +8,30 @@
 // bright and the rest step down a level. Hooks: Tooltip.svelte, Deck.svelte,
 // Library.svelte, Import.svelte. The EQ knob's "Low · kill" label is left
 // alone (another flag owns it).
+//
+// Later (critique E9): without the dot a tip's key ran into its words
+// ("Match tempo and beats to deck B E", "Show sampler S eight one-shot
+// slots"). The key now goes last as a small keycap (11px, 18px tall, a
+// --line-2 outline, --fg-2), like the keys on the Settings keyboard page.
+// tooltip.svelte.js marks which part is a key (any command's current key,
+// or Esc); Tooltip.svelte draws it.
 export default {
   id: 'no-dots',
   n: 10,
   title: 'Space instead of middle dots',
   group: 'Type and colour',
-  notes: 'Tooltips, the deck key/BPM line, the library count and import sources: parts are spaced and stepped in tone instead of joined with " · ".',
+  notes: 'Tooltips, the deck key/BPM line, the library count and import sources: parts are spaced and stepped in tone instead of joined with " · ". A tip\'s key goes last, as a small keycap.',
   settings: {
     gap: { type: 'range', min: 4, max: 16, step: 1, default: 8, unit: 'px', label: 'Gap between parts' },
-    tone: { type: 'choice', options: [['step', 'Step down'], ['same', 'Same tone']], default: 'step', label: 'Later parts' },
+    tone: {
+      type: 'choice',
+      options: [
+        ['step', 'Step down', 'The first part (the name) stays bright and the rest go a shade quieter, so the space reads as a break between parts.'],
+        ['same', 'Same tone', 'Every part in the same colour, set apart by space alone: simpler, but the parts can run together.'],
+      ],
+      default: 'step',
+      label: 'Later parts',
+    },
   },
 };
 

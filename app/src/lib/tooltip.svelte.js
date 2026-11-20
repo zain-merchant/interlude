@@ -4,6 +4,8 @@
 // it as a live readout while they're dragged.
 
 import { flag } from '../flags/registry.svelte.js';
+import { keys, keyLabel } from './commands.js';
+import { keymap } from './keymap.svelte.js';
 
 export const tooltip = $state({ text: '', x: 0, y: 0, below: false, visible: false });
 // #12 (UI audit flag): whether the tip showing came straight from another, so it skips its entrance.
@@ -83,5 +85,15 @@ export function tip(node, text) {
   };
 }
 
+// #10 (UI audit flag): no-dots: a part that is a key (a command's current key, or Esc) is marked
+// with an invisible separator, so the tip can draw it as a keycap at its end.
+export const KEY_MARK = '\u2063';
+const keyLabels = () => new Set([...Object.keys(keys), ...Object.keys(keymap.overrides)].map(keyLabel).filter(Boolean).concat('Esc'));
+
 /** Joins tooltip parts, skipping empty ones. */
-export const tipText = (...parts) => parts.filter(Boolean).join(' · ');
+export const tipText = (...parts) => {
+  const list = parts.filter(Boolean);
+  if (!flag('no-dots')) return list.join(' · ');
+  const k = keyLabels();
+  return list.map((p) => (k.has(p) ? KEY_MARK + p : p)).join(' · ');
+};
