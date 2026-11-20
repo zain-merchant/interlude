@@ -73,21 +73,26 @@
     key: (t) => keyRank(t.analysis?.key),
     time: (t) => t.analysis?.duration ?? null,
   };
+  // #81 (UI audit flag): library-sort: with no column picked, the scan's lists sort by Artist (then Title), and say so.
+  const sortOn = $derived(!sort.by && flag('library-sort') && !ordered ? { by: /** @type {typeof sort.by} */ ('artist'), dir: sort.dir } : sort);
   const sorted = $derived.by(() => {
-    if (!sort.by) return results;
-    const value = SORT_VALUE[sort.by];
-    const dir = sort.dir;
+    if (!sortOn.by) return results;
+    const value = SORT_VALUE[sortOn.by];
+    const dir = sortOn.dir;
+    // #81 (UI audit flag): library-sort breaks ties on Artist by Title.
+    const then = flag('library-sort') && sortOn.by === 'artist';
     return results
       .map((t) => ({ t, v: value(t) }))
       .sort((a, b) => {
         if (a.v == null || b.v == null) return a.v == null ? (b.v == null ? 0 : 1) : -1;
-        return (typeof a.v === 'string' ? collator.compare(a.v, b.v) : a.v - b.v) * dir;
+        const c = (typeof a.v === 'string' ? collator.compare(a.v, b.v) : a.v - b.v) * dir;
+        return c || !then ? c : collator.compare(a.t.title, b.t.title);
       })
       .map((x) => x.t);
   });
   /** @param {typeof sort.by} by */
   function sortBy(by) {
-    sort = { by, dir: sort.by === by && sort.dir > 0 ? -1 : 1 };
+    sort = { by, dir: sortOn.by === by && sortOn.dir > 0 ? -1 : 1 };
   }
   /** @type {{ by: typeof sort.by, label: string, num?: boolean }[]} */
   const COLUMNS = [
@@ -597,10 +602,11 @@
     <div class="row head" role="group" aria-label="Sort tracks">
       <span></span>
       {#each COLUMNS as c}
-        {@const on = sort.by === c.by}
+        {@const on = sortOn.by === c.by}
+        <!-- #81 (UI audit flag): library-sort keeps every heading's arrow in place (a ghost on hover), so nothing shifts. -->
         <button class="sort" class:on class:num={c.num} aria-pressed={on}
-          aria-label="Sort by {c.label.toLowerCase()}{on ? (sort.dir > 0 ? ', ascending' : ', descending') : ''}"
-          onclick={() => sortBy(c.by)}>{c.label}{#if on}<svg viewBox="0 0 10 10" aria-hidden="true" class:down={sort.dir < 0}><path d="M2.5 6.5 5 4l2.5 2.5" /></svg>{/if}</button>
+          aria-label="Sort by {c.label.toLowerCase()}{on ? (sortOn.dir > 0 ? ', ascending' : ', descending') : ''}"
+          onclick={() => sortBy(c.by)}>{c.label}{#if on || flag('library-sort')}<svg viewBox="0 0 10 10" aria-hidden="true" class:down={on && sortOn.dir < 0} class:ghost={!on}><path d="M2.5 6.5 5 4l2.5 2.5" /></svg>{/if}</button>
       {/each}
     </div>
 

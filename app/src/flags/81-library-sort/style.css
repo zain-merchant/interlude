@@ -1,0 +1,39 @@
+/* #81: the headings say how the list is sorted, and answer the pointer.
+   Every heading keeps a slot for its arrow (Library.svelte renders it on
+   every heading under this flag), invisible until hovered, so neither the
+   word nor its neighbours move. In the number columns the arrow sits on the
+   left, so the word stays over its right-aligned digits (as #5 does). */
+:root[data-flag-library-sort] section.library .head .sort {
+  border-radius: 6px;
+  transition: color 140ms ease, background-color 140ms ease;
+}
+:root[data-flag-library-sort] section.library .head .sort.num {
+  flex-direction: row-reverse;
+  justify-content: flex-start;
+}
+:root[data-flag-library-sort] section.library .head .sort svg {
+  transition: opacity 140ms ease;
+}
+:root[data-flag-library-sort] section.library .head .sort svg.ghost {
+  opacity: 0;
+  color: var(--fg-4);
+}
+/* Hover: the label goes to full strength (beats #14's step to --fg-2) and
+   the ghost arrow shows which way a click would sort. */
+:root[data-flag-library-sort] section.library .head .sort:hover,
+:root[data-flag-library-sort] section.library .head .sort:not(.on):hover {
+  color: var(--fg);
+}
+:root[data-flag-library-sort] section.library .head .sort:hover svg.ghost {
+  opacity: 1;
+}
+/* Pressed: a fill, so a click visibly lands. */
+:root[data-flag-library-sort] section.library .head .sort:active {
+  background: var(--hover);
+}
+@media (prefers-reduced-motion: reduce) {
+  :root[data-flag-library-sort] section.library .head .sort,
+  :root[data-flag-library-sort] section.library .head .sort svg {
+    transition-duration: 0s;
+  }
+}
