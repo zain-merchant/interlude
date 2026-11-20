@@ -663,6 +663,8 @@
     inset: 0;
     z-index: 45;
     display: grid;
+    /* One full-height row, so the popup's height (and centring) can't be pushed by a tall page. */
+    grid-template-rows: minmax(0, 1fr);
     place-items: center;
     padding: 24px;
     background: rgb(5 5 6 / 0.6);
@@ -673,6 +675,7 @@
     height: min(640px, 100%);
     display: grid;
     grid-template-columns: 200px minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
     gap: var(--gap);
     padding: var(--gap);
     border-radius: 14px;
