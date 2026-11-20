@@ -10,6 +10,8 @@
   import { setSlip } from './performance.js';
   import { keyLabel } from './commands.js';
   import { backend } from './backend.js';
+  import { flag } from '../flags/registry.svelte.js';
+  import { pushEdit } from './undo.svelte.js';
 
   /**
    * Settings sit over the library, never over the decks, and don't block
@@ -19,15 +21,19 @@
    */
   let { page = $bindable('keyboard'), onclose, onimport, onreport, onupdates } = $props();
 
-  const GROUPS = [
-    { name: 'Deck A', test: (id) => id.startsWith('deck.0.') },
-    { name: 'Deck B', test: (id) => id.startsWith('deck.1.') },
-    { name: 'Mixer', test: (id) => id.startsWith('mixer.') },
-    { name: 'Library', test: (id) => id.startsWith('library.') },
-    { name: 'View', test: (id) => id.startsWith('view.') },
-    { name: 'App', test: () => true },
-  ];
+  // #26 (UI audit flag): deck-names: the decks named by where they sit, as the screen shows them.
+  const deckName = (i) => (flag('deck-names') ? ['Left deck', 'Right deck'][i] : `Deck ${'AB'[i]}`);
   const groups = $derived.by(() => {
+    const GROUPS = [
+      { name: deckName(0), test: (id) => id.startsWith('deck.0.') },
+      { name: deckName(1), test: (id) => id.startsWith('deck.1.') },
+      // #34 (UI audit flag): settings-copy: Quantize applies to both decks, so it's filed there, not under Mixer.
+      ...(flag('settings-copy') ? [{ name: 'Both decks', test: (id) => id === 'mixer.quantize' }] : []),
+      { name: 'Mixer', test: (id) => id.startsWith('mixer.') },
+      { name: 'Library', test: (id) => id.startsWith('library.') },
+      { name: 'View', test: (id) => id.startsWith('view.') },
+      { name: 'App', test: () => true },
+    ];
     const left = Object.keys(keys);
     return GROUPS.map((g) => {
       const ids = left.filter(g.test);
@@ -36,9 +42,19 @@
     }).filter((g) => g.ids.length);
   });
 
+  // #34 (UI audit flag): settings-copy: clearer names for a few commands, here on the Keyboard page.
+  const RENAMED = {
+    where: 'Speak the play position',
+    'mixer.quantize': 'Quantize: snap to the beat',
+    'view.uiZoomIn': 'Interface size: larger',
+    'view.uiZoomOut': 'Interface size: smaller',
+    'view.uiZoomReset': 'Interface size: reset to 100%',
+  };
+  const nameOf = (id) => (flag('settings-copy') && RENAMED[id.replace(/^deck\.\d\./, '')]) || commandName(id);
+
   const fullName = (id) => {
     const g = groups.find((g) => g.ids.includes(id));
-    return g && g.name.startsWith('Deck') ? `${g.name} ${commandName(id).toLowerCase()}` : commandName(id);
+    return g && /^deck\.\d\./.test(id) ? `${g.name} ${nameOf(id).toLowerCase()}` : nameOf(id);
   };
 
   /** The command being recorded, and what's waiting on a conflict. */
@@ -114,10 +130,46 @@
   }
 
   function resetAll() {
+    // #37 (UI audit flag): settings-undo: Reset all can be taken back from the toast or with ⌘Z.
+    const before = flag('settings-undo') ? { ...keymap.overrides } : null;
     keymap.overrides = {};
     saveKeymap();
     pending = null;
     announce('All shortcuts are back to their defaults');
+    if (before) {
+      pushEdit({
+        label: 'All shortcuts reset',
+        undo: () => {
+          keymap.overrides = { ...before };
+          saveKeymap();
+        },
+        redo: () => {
+          keymap.overrides = {};
+          saveKeymap();
+        },
+      });
+    }
+  }
+  /** One shortcut back to its default. */
+  function resetOne(id) {
+    // #37 (UI audit flag): settings-undo: a row's Reset can be taken back too.
+    const had = flag('settings-undo') ? keymap.overrides[id] : undefined;
+    commit(id, keys[id] ?? null);
+    announce(`${fullName(id)} is back to ${keyLabel(id) || 'no shortcut'}`);
+    if (had !== undefined) {
+      const name = fullName(id);
+      pushEdit({
+        label: `${name} reset`,
+        undo: () => {
+          keymap.overrides[id] = had;
+          saveKeymap();
+        },
+        redo: () => {
+          delete keymap.overrides[id];
+          saveKeymap();
+        },
+      });
+    }
   }
 
   function panelKey(e) {
@@ -127,6 +179,36 @@
       if (pending) pending = null;
       else onclose();
     }
+  }
+
+  /** @type {['keyboard' | 'decks' | 'audio' | 'display' | 'library' | 'stems' | 'controllers', string][]} */
+  const PAGES = [
+    ['keyboard', 'Keyboard'],
+    ['decks', 'Decks'],
+    ['audio', 'Audio'],
+    ['display', 'Display'],
+    ['library', 'Library'],
+    ['stems', 'Stems'],
+    ['controllers', 'Controllers'],
+  ];
+  // #24 (UI audit flag): focus-after-keys: the page list is one tab stop. Clicking a page moves
+  // focus to it (without a ring), and the arrow keys, Home and End move and open pages, so
+  // focus never stays on Keyboard while another page shows.
+  const roving = $derived(flag('focus-after-keys'));
+  function goPage(id, e) {
+    page = id;
+    if (roving) /** @type {HTMLElement} */ (e.currentTarget).focus({ preventScroll: true, focusVisible: false });
+  }
+  function navKey(e) {
+    if (!roving) return;
+    const i = PAGES.findIndex(([id]) => id === page);
+    const n = { ArrowDown: i + 1, ArrowUp: i - 1, Home: 0, End: PAGES.length - 1 }[e.key];
+    if (n === undefined || !/** @type {Element} */ (e.target).matches('[data-page]')) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const next = PAGES[(n + PAGES.length) % PAGES.length][0];
+    page = next;
+    tick().then(() => root?.querySelector(`nav [data-page="${next}"]`)?.focus());
   }
 
   onMount(() => {
@@ -250,9 +332,9 @@
       [`[EffectRack1_EffectUnit${n}]`, 'mix', 'Effect amount'],
     ];
   };
-  const ACTIONS = [
-    { name: 'Deck A', list: deckActions(1) },
-    { name: 'Deck B', list: deckActions(2) },
+  const ACTIONS = $derived([
+    { name: deckName(0), list: deckActions(1) },
+    { name: deckName(1), list: deckActions(2) },
     { name: 'Mixer', list: [
       ['[Master]', 'crossfader', 'Crossfader'],
       ['[Master]', 'gain', 'Master level'],
@@ -262,8 +344,8 @@
       ['[Library]', 'MoveDown', 'Browse down'],
     ] },
     { name: 'Sampler', list: [1, 2, 3, 4, 5, 6, 7, 8].map((i) => [`[Sampler${i}]`, 'cue_gotoandplay', `Play sample ${i}`]) },
-  ].map((g) => ({ name: g.name, list: g.list.map(([group, key, label]) => ({ id: `${group} ${key}`, group, key, label: `${g.name}: ${label}` })) }));
-  const ALL_ACTIONS = ACTIONS.flatMap((g) => g.list);
+  ].map((g) => ({ name: g.name, list: g.list.map(([group, key, label]) => ({ id: `${group} ${key}`, group, key, label: `${g.name}: ${label}` })) })));
+  const ALL_ACTIONS = $derived(ACTIONS.flatMap((g) => g.list));
   const actionLabel = (b) => ALL_ACTIONS.find((a) => a.group === b.group && a.key === b.key)?.label ?? `${b.group} ${b.key}`;
 
   /** @type {{ connected: { port: string, mapping: string, learned: boolean }[], ports: string[], learned: string[] } | null} */
@@ -273,7 +355,7 @@
   /** @type {import('./backend.js').Binding[]} */
   let bindings = $state([]);
   let saved = $state('[]');
-  let action = $state(ALL_ACTIONS[0].id);
+  let action = $state('[Channel1] play');
   let learning = $state(false);
   const dirty = $derived(JSON.stringify(bindings) !== saved);
 
@@ -375,13 +457,28 @@
   async function saveBindings(list) {
     stopLearn();
     ctlError = '';
+    const port = learnPort;
+    const was = JSON.parse(saved);
     try {
-      await backend.saveLearnedMapping(learnPort, list);
+      await backend.saveLearnedMapping(port, list);
       bindings = list;
       saved = JSON.stringify(list);
-      announce(list.length ? `Mapping for ${learnPort} saved` : `Mapping for ${learnPort} deleted`);
+      announce(list.length ? `Mapping for ${port} saved` : `Mapping for ${port} deleted`);
     } catch (e) {
       ctlError = String(e);
+      return refreshControllers();
+    }
+    // #37 (UI audit flag): settings-undo: deleting a mapping can be taken back.
+    if (flag('settings-undo') && !list.length && was.length) {
+      const back = async (to) => {
+        await backend.saveLearnedMapping(port, to);
+        if (learnPort === port) {
+          bindings = to;
+          saved = JSON.stringify(to);
+        }
+        refreshControllers();
+      };
+      pushEdit({ label: `Mapping for ${port} deleted`, undo: () => back(was), redo: () => back([]) });
     }
     refreshControllers();
   }
@@ -392,22 +489,14 @@
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <div class="settings" role="dialog" aria-modal="false" aria-label="Settings" bind:this={root} onkeydown={panelKey} tabindex="-1">
-  <nav aria-label="Settings pages">
+  <!-- svelte-ignore a11y_no_noninteractive_element_interactions (the arrow keys move between pages: #24 focus-after-keys) -->
+  <nav aria-label="Settings pages" onkeydown={navKey}>
     <div class="h">Settings</div>
-    <button class="item" class:on={page === 'keyboard'} aria-current={page === 'keyboard' ? 'page' : undefined}
-      onclick={() => (page = 'keyboard')}>Keyboard</button>
-    <button class="item" class:on={page === 'decks'} aria-current={page === 'decks' ? 'page' : undefined}
-      onclick={() => (page = 'decks')}>Decks</button>
-    <button class="item" class:on={page === 'audio'} aria-current={page === 'audio' ? 'page' : undefined}
-      onclick={() => (page = 'audio')}>Audio</button>
-    <button class="item" class:on={page === 'display'} aria-current={page === 'display' ? 'page' : undefined}
-      onclick={() => (page = 'display')}>Display</button>
-    <button class="item" class:on={page === 'library'} aria-current={page === 'library' ? 'page' : undefined}
-      onclick={() => (page = 'library')}>Library</button>
-    <button class="item" class:on={page === 'stems'} aria-current={page === 'stems' ? 'page' : undefined}
-      onclick={() => (page = 'stems')}>Stems</button>
-    <button class="item" class:on={page === 'controllers'} aria-current={page === 'controllers' ? 'page' : undefined}
-      onclick={() => (page = 'controllers')}>Controllers</button>
+    {#each PAGES as [id, label] (id)}
+      <button class="item" class:on={page === id} aria-current={page === id ? 'page' : undefined}
+        data-page={roving ? id : undefined} tabindex={roving ? (page === id ? 0 : -1) : undefined}
+        onclick={(e) => goPage(id, e)}>{label}</button>
+    {/each}
     <div class="foot">
       {#if onupdates}<button class="item" onclick={onupdates}>Check for updates</button>{/if}
       {#if onreport}<button class="item" onclick={onreport}>Report a problem…</button>{/if}
@@ -419,7 +508,9 @@
       <h2>{{ keyboard: 'Keyboard', decks: 'Decks', audio: 'Audio', library: 'Library', stems: 'Stems', controllers: 'Controllers' }[page] ?? 'Display'}</h2>
       {#if page === 'keyboard'}
         <p>Click a shortcut, then press the new key. Backspace removes it, Esc cancels.</p>
-        <button class="btn sm" onclick={resetAll} disabled={!Object.keys(keymap.overrides).length}>Reset all</button>
+        {#if !flag('settings-undo')}
+          <button class="btn sm" onclick={resetAll} disabled={!Object.keys(keymap.overrides).length}>Reset all</button>
+        {/if}
       {:else}
         <span class="sp"></span>
       {/if}
@@ -435,14 +526,15 @@
               {#each g.ids as id}
                 {@const b = binding(id)}
                 <div class="row" class:active={recording === id || pending?.id === id}>
-                  <span class="name">{commandName(id)}</span>
+                  <span class="name">{nameOf(id)}</span>
                   {#if changed(id)}
-                    <button class="reset" onclick={() => { commit(id, keys[id] ?? null); announce(`${fullName(id)} is back to ${keyLabel(id) || 'no shortcut'}`); }}
+                    <button class="reset" onclick={() => resetOne(id)}
                       aria-label="Reset {fullName(id)} to {keys[id]?.label ?? 'no shortcut'}">Reset</button>
                   {/if}
+                  <!-- #32 (UI audit flag): settings-type: an unassigned key says "Set" rather than a dash that looks like the minus key. -->
                   <button class="key num" class:rec={recording === id} class:none={!b} data-key={id}
                     aria-label={recording === id ? `Press a key for ${fullName(id)}` : `${fullName(id)}, ${b ? b.label : 'no shortcut'}. Change`}
-                    onclick={() => record(id)}>{recording === id ? 'Press a key…' : (b?.label ?? '—')}</button>
+                    onclick={() => record(id)}>{recording === id ? 'Press a key…' : (b?.label ?? (flag('settings-type') ? 'Set' : '—'))}</button>
                 </div>
                 {#if note?.id === id}
                   <div class="inline" role="status">{note.text}</div>
@@ -458,19 +550,32 @@
             </section>
           {/each}
         </div>
+        <!-- #37 (UI audit flag): settings-undo: Reset all at the foot of the page, away from Done, and undoable. -->
+        {#if flag('settings-undo')}
+          <div class="reset-all">
+            <button class="btn sm ghost" onclick={resetAll} disabled={!Object.keys(keymap.overrides).length}>Reset all shortcuts</button>
+          </div>
+        {/if}
       {:else if page === 'stems'}
         <section class="display">
           <h3>Separation model</h3>
           {#if !stems}
             <p>{stemsError || 'Loading…'}</p>
           {:else if stems.model.state === 'ready'}
-            <p>Ready. Each track you load is split into vocals, melody, bass and drums on this computer, starting at the play head, so the part you're about to play is ready first.</p>
+            <!-- #33 (UI audit flag): stems-model: says it's installed, and its size. #34 (UI audit flag): settings-copy: one sentence. -->
+            {#if flag('stems-model')}<p class="installed">Installed, {mb(stems.modelBytes)}</p>{/if}
+            <p>{flag('settings-copy') ? 'Each track you load is split into vocals, melody, bass and drums on this computer, starting at the play head.' : "Ready. Each track you load is split into vocals, melody, bass and drums on this computer, starting at the play head, so the part you're about to play is ready first."}</p>
           {:else if stems.model.state === 'downloading'}
             <p>Downloading, {mb(stems.model.done)} of {mb(stems.model.total)}…</p>
             <div class="bar-track" role="progressbar" aria-label="Model download" aria-valuemin="0" aria-valuemax="100"
               aria-valuenow={Math.round((stems.model.done / stems.model.total) * 100)}><i style:width="{(stems.model.done / stems.model.total) * 100}%"></i></div>
           {:else}
-            <p>Stems need a one-time {mb(stems.modelBytes)} download: HTDemucs, an open model (MIT licence) that runs on this computer. Nothing is uploaded.</p>
+            {#if flag('settings-copy')}
+              <!-- #34 (UI audit flag): settings-copy: one sentence; the size is on the button; American spelling, like the rest of the app. -->
+              <p>Stems need a one-time download of HTDemucs, an open model (MIT license) that runs on this computer, so nothing is uploaded.</p>
+            {:else}
+              <p>Stems need a one-time {mb(stems.modelBytes)} download: HTDemucs, an open model (MIT licence) that runs on this computer. Nothing is uploaded.</p>
+            {/if}
             {#if stems.model.state === 'failed'}<p class="err" role="alert">{stems.model.error}</p>{/if}
             <div class="size"><button class="btn sm" onclick={download}>{stems.model.state === 'failed' ? 'Try again' : `Download (${mb(stems.modelBytes)})`}</button></div>
           {/if}
@@ -478,13 +583,30 @@
         {#if stems}
           <section class="display">
             <h3>Splitting</h3>
-            <label class="check"><input type="checkbox" checked={stems.enabled} onchange={(e) => setStems({ enabled: e.currentTarget.checked })} />
-              Split tracks into stems when they load</label>
+            {#if flag('settings-checks') || flag('stems-model')}
+              <!-- #35 (UI audit flag): settings-checks: the same checkbox row as every other page.
+                   #33 (UI audit flag): stems-model: off and unavailable until the model is installed. -->
+              {@const ready = !flag('stems-model') || stems.model.state === 'ready'}
+              <label class={flag('settings-checks') ? 'opt' : 'check'} class:off={!ready}>
+                <input type="checkbox" checked={stems.enabled && ready} disabled={!ready} onchange={(e) => setStems({ enabled: e.currentTarget.checked })} />
+                <span>Split tracks into stems when they load</span>
+              </label>
+              {#if !ready}<p class="needs">Needs the separation model</p>{/if}
+            {:else}
+              <label class="check"><input type="checkbox" checked={stems.enabled} onchange={(e) => setStems({ enabled: e.currentTarget.checked })} />
+                Split tracks into stems when they load</label>
+            {/if}
           </section>
           <section class="display">
             <h3>Stems cache</h3>
-            <p>Finished stems are kept so a track you've played before has them at once. The oldest go first when it's full. Using {gb(stems.cacheBytes)}.</p>
+            {#if flag('settings-copy')}
+              <p>Finished stems are kept so a track you've played before has them at once; the oldest go first. Using {gb(stems.cacheBytes)}.</p>
+            {:else}
+              <p>Finished stems are kept so a track you've played before has them at once. The oldest go first when it's full. Using {gb(stems.cacheBytes)}.</p>
+            {/if}
             <div class="size">
+              <!-- #31 (UI audit flag): select-chevron: a caption names the menu. -->
+              {#if flag('select-chevron')}<span class="cap">Keep up to</span>{/if}
               <select class="btn sm" aria-label="Stems cache size" value={stems.cacheGb} onchange={(e) => setStems({ cacheGb: Number(e.currentTarget.value) })}>
                 {#each CACHE_SIZES as n}<option value={n}>{n ? `${n} GB` : 'Off'}</option>{/each}
               </select>
@@ -494,6 +616,43 @@
           {#if stemsError}<p class="err" role="alert">{stemsError}</p>{/if}
         {/if}
       {:else if page === 'decks'}
+        {#if flag('settings-copy')}
+          <!-- #34 (UI audit flag): settings-copy: one sentence per option; labels say what they do; keys named as the user has them. -->
+          <section class="display">
+            <h3>Hot cues</h3>
+            <label class="opt">
+              <input type="checkbox" checked={deckSettings.hotCuePlays} onchange={(e) => setDeckSetting('hotCuePlays', e.currentTarget.checked)} />
+              <span>Hot cues start a paused deck</span>
+            </label>
+            <p>Turn this off to play only while the pad is held, like the Cue button.</p>
+          </section>
+          <section class="display">
+            <h3>Sync</h3>
+            <label class="opt">
+              <input type="checkbox" checked={deckSettings.autoSync} onchange={(e) => setDeckSetting('autoSync', e.currentTarget.checked)} />
+              <span>Sync when a deck starts</span>
+            </label>
+            <p>Starting a deck while the other plays brings it in on that deck's tempo and beat.</p>
+          </section>
+          <section class="display">
+            <h3>Quantize</h3>
+            <label class="opt">
+              <input type="checkbox" checked={deckSettings.quantize} onchange={(e) => setDeckSetting('quantize', e.currentTarget.checked)} />
+              <span>Quantize: snap to the beat</span>
+            </label>
+            <p>Hot cues, loops and jumps land on the nearest beat{#if keyLabel('mixer.quantize')}; {keyLabel('mixer.quantize')} turns it on and off{/if}.</p>
+          </section>
+          <section class="display">
+            <h3>Slip</h3>
+            <p>After a scratch, loop or held cue, the track carries on from where it would have been, so you stay in time.</p>
+            {#each [0, 1] as i}
+              <label class="opt">
+                <input type="checkbox" checked={!!engine.decks[i].slip} onchange={(e) => setSlip(i, e.currentTarget.checked)} />
+                <span>{flag('deck-names') ? `Slip on the ${deckName(i).toLowerCase()}` : `Slip on deck ${'AB'[i]}`}</span>
+              </label>
+            {/each}
+          </section>
+        {:else}
         <section class="display">
           <h3>Hot cues</h3>
           <label class="opt">
@@ -523,26 +682,34 @@
           {#each [0, 1] as i}
             <label class="opt">
               <input type="checkbox" checked={!!engine.decks[i].slip} onchange={(e) => setSlip(i, e.currentTarget.checked)} />
-              <span>Slip on deck {'AB'[i]}</span>
+              <span>{flag('deck-names') ? `Slip on the ${deckName(i).toLowerCase()}` : `Slip on deck ${'AB'[i]}`}</span>
             </label>
           {/each}
           <p>After a scratch, loop, held hot cue or pause, the track picks up where it would have been playing all along, so you stay in time. {#if keyLabel('deck.0.slip') && keyLabel('deck.1.slip')}Press {keyLabel('deck.0.slip')} or {keyLabel('deck.1.slip')} to turn it on or off mid-set.{' '}{/if}The deck shows "Slip" while it's on.</p>
         </section>
+        {/if}
       {:else if page === 'audio'}
         <section class="display">
           <h3>Output</h3>
-          <p>Where the master plays. Automatic uses your controller's sound card when it's plugged in, so its headphone output works, and this computer's speakers otherwise. Pick a device to play through it even with the controller connected; the controller still works for everything else.</p>
+          {#if !flag('settings-copy')}
+            <p>Where the master plays. Automatic uses your controller's sound card when it's plugged in, so its headphone output works, and this computer's speakers otherwise. Pick a device to play through it even with the controller connected; the controller still works for everything else.</p>
+          {/if}
           {#if outputs}
             <div class="size">
               <select class="btn sm" aria-label="Audio output" value={outputs.choice ?? ''} disabled={switching}
                 onchange={(e) => pickOutput(e.currentTarget.value)}>
-                <option value="">Automatic</option>
+                <!-- #34 (UI audit flag): settings-copy: Automatic names the device it picked. -->
+                <option value="">{flag('settings-copy') && !outputs.choice && engine.audio?.device ? `Automatic: ${engine.audio.device}` : 'Automatic'}</option>
                 {#each outputs.devices as d}<option value={d}>{d}</option>{/each}
                 {#if outputs.choice && !outputs.devices.includes(outputs.choice)}
                   <option value={outputs.choice}>{outputs.choice} (not connected)</option>
                 {/if}
               </select>
             </div>
+            {#if flag('settings-copy')}
+              <!-- #34 (UI audit flag): settings-copy: the control first, one line under it, and headphone cue folded in here. -->
+              <p class="under">Automatic uses your controller when it's plugged in, so headphone cue works, and this computer otherwise.</p>
+            {/if}
             {#if outputs.choice && !outputs.devices.includes(outputs.choice)}
               <p>{outputs.choice} isn't connected, so the app is playing through the automatic choice for now.</p>
             {/if}
@@ -551,10 +718,12 @@
           {/if}
           {#if outputs && outputError}<p class="err" role="alert">{outputError}</p>{/if}
         </section>
+        {#if !flag('settings-copy')}
         <section class="display">
           <h3>Headphones</h3>
           <p>Headphone cue comes out of channels 3 and 4 of the output, which DJ controllers have and laptop speakers don't. Playing through the speakers, the controller's headphone socket is silent.</p>
         </section>
+        {/if}
       {:else if page === 'controllers'}
         <section class="display">
           <h3>Connected</h3>
@@ -564,24 +733,34 @@
             <p>No mapped controller is connected. Plug one in, or teach the app one below.</p>
           {:else}
             {#each ctl.connected as c}
-              <div class="row"><span class="name">{c.port}</span><span class="dim">{c.learned ? 'Your mapping' : c.mapping}</span></div>
+              <div class="row"><span class="name">{c.port}</span><span class="dim">{c.learned ? 'Your mapping' : flag('settings-copy') ? `Mapping: ${c.mapping}` : c.mapping}</span></div>
             {/each}
           {/if}
-          <p class="gap">Mixxx mappings work as they are, MIDI and HID (such as Traktor Kontrol controllers): put a <code>.midi.xml</code> or <code>.hid.xml</code> file and its scripts in the app's <code>controllers</code> folder, or install Mixxx and its mappings are picked up.</p>
+          {#if flag('settings-copy')}
+            <p class="gap">Mixxx MIDI and HID mappings work as they are. Add your own to the app's controllers folder.</p>
+          {:else}
+            <p class="gap">Mixxx mappings work as they are, MIDI and HID (such as Traktor Kontrol controllers): put a <code>.midi.xml</code> or <code>.hid.xml</code> file and its scripts in the app's <code>controllers</code> folder, or install Mixxx and its mappings are picked up.</p>
+          {/if}
         </section>
         <section class="display">
           <h3>MIDI learn</h3>
-          <p>Map a controller yourself: pick an action, press Learn, then move the button, knob or fader for it. Each learned control moves on to the next action. A mapping you make here is used for that controller ahead of any other.</p>
+          {#if flag('settings-copy')}
+            <p>Pick an action, press Learn, then move the control for it; each one moves on to the next action.</p>
+          {:else}
+            <p>Map a controller yourself: pick an action, press Learn, then move the button, knob or fader for it. Each learned control moves on to the next action. A mapping you make here is used for that controller ahead of any other.</p>
+          {/if}
           {#if ctl && !ctl.ports.length}
             <p>No MIDI controller is plugged in.</p>
           {:else if ctl}
             <div class="size">
+              {#if flag('select-chevron')}<span class="cap">Controller</span>{/if}
               <select class="btn sm" aria-label="Controller" value={learnPort} disabled={learning}
                 onchange={(e) => pickPort(e.currentTarget.value)}>
                 {#each ctl.ports as p}<option value={p}>{p}{ctl.learned.includes(p) ? ' (your mapping)' : ''}</option>{/each}
               </select>
             </div>
             <div class="size gap">
+              {#if flag('select-chevron')}<span class="cap">Action</span>{/if}
               <select class="btn sm" aria-label="Action" bind:value={action}>
                 {#each ACTIONS as g}
                   <optgroup label={g.name}>
@@ -608,7 +787,8 @@
             {/if}
             <div class="size gap">
               <button class="btn sm" onclick={() => saveBindings(bindings)} disabled={!dirty || !bindings.length}>Save</button>
-              <button class="btn sm" onclick={() => pickPort(learnPort)} disabled={!dirty}>Undo changes</button>
+              <!-- #37 (UI audit flag): settings-undo: names what it throws away, so it isn't mistaken for the app's Undo. -->
+              <button class="btn sm" onclick={() => pickPort(learnPort)} disabled={!dirty}>{flag('settings-undo') ? 'Revert mapping' : 'Undo changes'}</button>
               {#if ctl.learned.includes(learnPort)}
                 <button class="btn sm" onclick={() => saveBindings([])}>Delete mapping</button>
               {/if}
@@ -623,11 +803,11 @@
             <input type="checkbox" checked={autoGain.on} onchange={(e) => setAutoGain(e.currentTarget.checked)} />
             <span>Auto gain</span>
           </label>
-          <p>Tracks load at the same loudness, so you can leave trim near the middle. Trim still works on top. Applies to the next track you load.</p>
+          <p>{flag('settings-copy') ? 'Tracks load at the same loudness, so trim can stay near the middle.' : 'Tracks load at the same loudness, so you can leave trim near the middle. Trim still works on top. Applies to the next track you load.'}</p>
         </section>
         <section class="display">
           <h3>Import from another app</h3>
-          <p>Bring over your Rekordbox or Serato library: cue points, loops, beatgrids and playlists. Your music files aren't changed, and anything you've set here stays as it is.</p>
+          <p>{flag('settings-copy') ? 'Bring over cue points, loops, beatgrids and playlists from rekordbox or Serato; your music files aren\'t changed.' : "Bring over your Rekordbox or Serato library: cue points, loops, beatgrids and playlists. Your music files aren't changed, and anything you've set here stays as it is."}</p>
           <div class="size">
             <button class="btn sm" onclick={onimport}>Import a library…</button>
           </div>
@@ -635,12 +815,12 @@
       {:else}
         <section class="display">
           <h3>Interface size</h3>
-          <p>Scales everything, text and controls alike. {keyLabel('view.uiZoomIn')} and {keyLabel('view.uiZoomOut')} do the same from anywhere.</p>
+          <p>{#if flag('settings-copy')}Scales text and controls alike; {keyLabel('view.uiZoomIn')} and {keyLabel('view.uiZoomOut')} work from anywhere.{:else}Scales everything, text and controls alike. {keyLabel('view.uiZoomIn')} and {keyLabel('view.uiZoomOut')} do the same from anywhere.{/if}</p>
           <div class="size" role="group" aria-label="Interface size">
             <button class="btn sm" onclick={() => stepUiZoom(-1)} disabled={uiZoom.scale <= uiZoomSteps[0]} aria-label="Smaller">−</button>
             <span class="num" aria-live="polite">{pct(uiZoom.scale)}</span>
             <button class="btn sm" onclick={() => stepUiZoom(1)} disabled={uiZoom.scale >= uiZoomSteps.at(-1)} aria-label="Bigger">+</button>
-            <button class="btn sm" onclick={() => setUiZoom(1)} disabled={uiZoom.scale === 1}>Actual size</button>
+            <button class="btn sm" onclick={() => setUiZoom(1)} disabled={uiZoom.scale === 1}>{flag('settings-copy') ? 'Reset to 100%' : 'Actual size'}</button>
           </div>
         </section>
       {/if}
