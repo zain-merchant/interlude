@@ -6,7 +6,6 @@
 }
 :root[data-flag-polish-dialog][data-flag-polish-dialog-curve='spring'] {
   --flag-polish-dialog-curve: linear(0, 0.101, 0.207, 0.309, 0.405, 0.491, 0.569, 0.636, 0.695, 0.745, 0.788, 0.824, 0.854, 0.88, 0.901, 0.918, 0.933, 0.945, 0.955, 0.963, 0.97, 0.975, 0.98, 0.984, 0.987, 0.989, 0.991, 0.993, 0.994, 0.995, 0.996, 0.997, 0.997, 0.998, 0.998, 0.999, 0.999, 0.999, 1);
-  --flag-polish-dialog-ms: 301ms;
 }
 :root[data-flag-polish-dialog] .backdrop:has(> .card[role='dialog']) {
   animation: flag-polish-dialog-fade 160ms cubic-bezier(0.23, 1, 0.32, 1);
@@ -15,6 +14,12 @@
   animation:
     flag-polish-dialog-opaque 80ms ease-out,
     flag-polish-dialog-rise var(--flag-polish-dialog-ms, 220ms) var(--flag-polish-dialog-curve);
+}
+/* The spring runs its own 301ms (the Duration slider is for the ease-out). */
+:root[data-flag-polish-dialog][data-flag-polish-dialog-curve='spring'] .backdrop > .card[role='dialog'] {
+  animation:
+    flag-polish-dialog-opaque 80ms ease-out,
+    flag-polish-dialog-rise 301ms var(--flag-polish-dialog-curve);
 }
 @keyframes flag-polish-dialog-fade {
   from {

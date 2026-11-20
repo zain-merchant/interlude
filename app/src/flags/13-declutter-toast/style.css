@@ -31,7 +31,15 @@
   padding-bottom: 0;
 }
 :root[data-flag-declutter-toast] .toastbox .toast[data-docked] .undo {
+  flex: none;
   height: var(--h-sm);
+}
+/* A message longer than the gap ends in an ellipsis; Undo stays whole. */
+:root[data-flag-declutter-toast] .toastbox .toast[data-docked] > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 :root[data-flag-declutter-toast]:has(.toastbox .toast[data-docked]) section.library .bar .count {
   visibility: hidden;

@@ -16,7 +16,7 @@ export default {
   group: 'Polish',
   notes: 'The undo toast rises 8px over 160ms on a strong ease-out instead of blinking on; it turns opaque in the first 80ms so nothing shows through its words.',
   settings: {
-    ms: { type: 'range', min: 100, max: 400, step: 20, default: 160, unit: 'ms', label: 'Rise (ease-out)' },
+    rise: { type: 'range', min: 100, max: 400, step: 20, default: 160, unit: 'ms', label: 'Rise (ease-out)' },
     curve: {
       type: 'choice',
       label: 'Feel',
@@ -53,7 +53,8 @@ export const show = {
     const t = app.$('.toastbox .toast');
     if (!t) return;
     const r = t.getBoundingClientRect();
-    const a = t.getAnimations().find((x) => Number(x.effect?.getComputedTiming?.().endTime) > 0);
+    // The rise, not the 80ms fade: the longest of the toast's transitions.
+    const a = t.getAnimations().reduce((m, x) => (Number(x.effect?.getComputedTiming?.().endTime) > Number(m?.effect?.getComputedTiming?.().endTime ?? 0) ? x : m), null);
     const now = a && a.playState === 'running' ? Number(a.currentTime ?? 0) / Number(a.effect.getComputedTiming().endTime || 1) : 1;
     d.motion(r, {
       title: 'How far in it is, over time',

@@ -566,9 +566,11 @@
 
   // #13 (UI audit flag): declutter-toast: "In the toolbar" docks the toast in
   // the library's toolbar, between the search field and Sampler (over the
-  // track count), when it fits there; otherwise it keeps the corner.
+  // track count), never over the rows; a message longer than the gap is cut
+  // short with an ellipsis (Undo stays whole). Only with no room at all
+  // (under 160px) does it fall back to the corner.
   let toastEl = $state(/** @type {HTMLElement | null} */ (null));
-  let toastDock = $state(/** @type {{ left: number, top: number } | null} */ (null));
+  let toastDock = $state(/** @type {{ left: number, top: number, max: number } | null} */ (null));
   $effect(() => {
     void toast.id;
     void winHeight;
@@ -581,9 +583,8 @@
     const from = document.querySelector('section.library .bar .search')?.getBoundingClientRect();
     const to = document.querySelector('section.library .bar .samp')?.getBoundingClientRect();
     if (!from || !to) return void (toastDock = null);
-    const w = el.offsetWidth;
     const room = (to.left - from.right) / k - 24;
-    toastDock = w <= room ? { left: from.right / k + 12, top: (from.top + from.height / 2) / k - el.offsetHeight / 2 } : null;
+    toastDock = room >= 160 ? { left: from.right / k + 12, top: (from.top + from.height / 2) / k - el.offsetHeight / 2, max: room } : null;
   });
 
   // #12 (UI audit flag): polish-dialog: where the library starts, so a dialog's
@@ -726,8 +727,8 @@
   {/if}
 
   <div class="below">
-    {#if flag('panel-sizes')}
-      <!-- #21 (UI audit flag): panel-sizes: the sidebar's edge, over the library's divider. -->
+    {#if flag('panel-sizes') && (settings === null || flag('settings-panel'))}
+      <!-- #21 (UI audit flag): panel-sizes: the sidebar's edge, over the library's divider (and Settings' page list, with #36). -->
       <!-- svelte-ignore a11y_no_noninteractive_tabindex, a11y_no_noninteractive_element_interactions -->
       <div class="grip side" class:dragging={grab?.which === 'sidebar'} role="separator" aria-orientation="vertical" aria-label="Resize sidebar"
         aria-valuenow={sizes.sidebar} aria-valuemin={PANEL.sidebar.min} aria-valuemax={PANEL.sidebar.max} tabindex="0"
@@ -778,7 +779,7 @@
     {#if toast.text}
       <!-- #13 (UI audit flag): declutter-toast: hovering holds the toast; docked in the toolbar when chosen. -->
       <!-- svelte-ignore a11y_no_static_element_interactions (hover only pauses its timer; the toast is announced by its role="status" box) -->
-      <div class="toast" bind:this={toastEl} data-docked={toastDock ? '' : undefined} style:left={toastDock ? `${toastDock.left}px` : undefined} style:top={toastDock ? `${toastDock.top}px` : undefined}
+      <div class="toast" bind:this={toastEl} data-docked={toastDock ? '' : undefined} style:left={toastDock ? `${toastDock.left}px` : undefined} style:top={toastDock ? `${toastDock.top}px` : undefined} style:max-width={toastDock ? `${toastDock.max}px` : undefined}
         onpointerenter={() => flag('declutter-toast') && holdToast()} onpointerleave={() => flag('declutter-toast') && releaseToast()}>
         <span>{toast.text}</span>
         {#if toast.undo}

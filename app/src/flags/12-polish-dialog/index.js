@@ -68,7 +68,8 @@ export const show = {
     const card = app.$(".card[aria-labelledby='report-title']");
     if (!card) return;
     const r = card.getBoundingClientRect();
-    const a = card.getAnimations().find((x) => x.effect?.getTiming?.().duration > 0);
+    // The rise, not the 80ms fade: the longest of the card's animations.
+    const a = card.getAnimations().reduce((m, x) => (Number(x.effect?.getTiming?.().duration) > Number(m?.effect?.getTiming?.().duration ?? 0) ? x : m), null);
     const t = a ? Number(a.currentTime ?? 0) / Number(a.effect.getComputedTiming().endTime || 1) : 1;
     d.motion(r, {
       title: 'How far in it is, over time',

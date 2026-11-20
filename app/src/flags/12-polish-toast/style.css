@@ -14,7 +14,7 @@
 :root[data-flag-polish-toast] .toastbox .toast {
   transition:
     opacity 80ms ease-out,
-    translate var(--flag-polish-toast-ms, 160ms) var(--flag-polish-toast-curve);
+    translate var(--flag-polish-toast-rise, 160ms) var(--flag-polish-toast-curve);
   @starting-style {
     opacity: 0;
     translate: 0 8px;

@@ -52,6 +52,9 @@ export const show = {
   after: 'Every panel edge has a faint grip you can drag (the waveforms, the library, the sampler, the sidebar), and a double-click springs it back to its designed size. The sampler takes its room from the library, so the decks stay exactly where they were.',
   period: 2000,
   async setup(app, ctx) {
+    // #7 shares the size model; off for the show, so Before is today's app.
+    ctx.tall = app.isOn('edge-tall');
+    if (ctx.tall) app.setFlag('edge-tall', false);
     const sampler = () => app.$('section.library .bar .samp');
     ctx.opened = !app.$('.app.sampling');
     if (!ctx.opened) {
@@ -67,6 +70,7 @@ export const show = {
   },
   cleanup(app, ctx) {
     if (ctx.opened && app.$('.app.sampling')) app.$('section.library .bar .samp')?.click();
+    if (ctx.tall) app.setFlag('edge-tall', true);
   },
   target: (app) => [app.deck(0), app.$('.sampler')],
   badge: (app) => app.$('.mixer')?.getBoundingClientRect(),

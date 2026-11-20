@@ -31,12 +31,16 @@ export const show = {
   before: 'On a tall window every spare pixel goes to the decks: their buttons float in empty space, and the track list, where you look for the next song, stays a short strip.',
   after: 'The decks and waveforms stay the size they were designed at, and the track list gets the extra room, so you see more tracks at once.',
   async setup(app, ctx) {
+    // #21 shares the size model; off for the show, so Before is today's app.
+    ctx.sizes = app.isOn('panel-sizes');
+    if (ctx.sizes) app.setFlag('panel-sizes', false);
     // Zoomed out, the window is taller in the app's own pixels: a tall screen.
     ctx.was = app.zoom(0.8);
     await app.wait(300);
   },
   cleanup(app, ctx) {
     if (ctx.was != null) app.zoom(ctx.was);
+    if (ctx.sizes) app.setFlag('panel-sizes', true);
   },
   target: (app) => [app.$('.waves'), app.deck(0), app.$('section.library')],
   badge: (app) => app.$('section.library')?.getBoundingClientRect(),
