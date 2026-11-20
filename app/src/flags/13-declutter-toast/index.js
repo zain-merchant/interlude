@@ -32,7 +32,6 @@ export default {
       options: [
         ['toolbar', 'In the toolbar', "Takes the track count's place beside the search field, so it never covers a row; on a small window a long title is cut short, with Undo always whole."],
         ['corner', 'Bottom right', "Sits on the list's bottom-right corner: the whole message always shows, but it covers the ends of the last rows (Key, Time, Folder) for a few seconds."],
-        ['centre', 'Bottom centre', "Where it was: over the middle of the list, on the titles you're browsing."],
       ],
       default: 'toolbar',
     },

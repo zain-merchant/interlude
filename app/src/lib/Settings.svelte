@@ -21,6 +21,21 @@
    */
   let { page = $bindable('keyboard'), onclose, onimport, onreport, onupdates } = $props();
 
+  // #32 (UI audit flag): settings-type: the page fades at its edges like the track list (#20): the top
+  // only once scrolled (data-scrolled), the foot only while more is below (data-more).
+  let scrollEl = $state(/** @type {HTMLElement | null} */ (null));
+  let scrollUp = $state(false);
+  let scrollMore = $state(false);
+  function scrollEdges() {
+    if (!scrollEl) return;
+    scrollUp = scrollEl.scrollTop > 0;
+    scrollMore = scrollEl.scrollTop + scrollEl.clientHeight < scrollEl.scrollHeight - 1;
+  }
+  $effect(() => {
+    void page;
+    if (flag('settings-type')) tick().then(scrollEdges);
+  });
+
   // #26 (UI audit flag): deck-names: the decks named by where they sit, as the screen shows them.
   const deckName = (i) => (flag('deck-names') ? ['Left deck', 'Right deck'][i] : `Deck ${'AB'[i]}`);
   const groups = $derived.by(() => {
@@ -137,17 +152,20 @@
     pending = null;
     announce('All shortcuts are back to their defaults');
     if (before) {
-      pushEdit({
-        label: 'All shortcuts reset',
-        undo: () => {
-          keymap.overrides = { ...before };
-          saveKeymap();
+      pushEdit(
+        {
+          label: 'Reset all shortcuts',
+          undo: () => {
+            keymap.overrides = { ...before };
+            saveKeymap();
+          },
+          redo: () => {
+            keymap.overrides = {};
+            saveKeymap();
+          },
         },
-        redo: () => {
-          keymap.overrides = {};
-          saveKeymap();
-        },
-      });
+        { ms: 8000 },
+      );
     }
   }
   /** One shortcut back to its default. */
@@ -517,7 +535,8 @@
       <button class="btn sm" onclick={onclose}>Done</button>
     </div>
 
-    <div class="scroll">
+    <div class="scroll" bind:this={scrollEl} onscroll={() => flag('settings-type') && scrollEdges()}
+      data-scrolled={flag('settings-type') && scrollUp ? '' : undefined} data-more={flag('settings-type') && scrollMore ? '' : undefined}>
       {#if page === 'keyboard'}
         <div class="cols">
           {#each groups as g}
@@ -591,7 +610,7 @@
                 <input type="checkbox" checked={stems.enabled && ready} disabled={!ready} onchange={(e) => setStems({ enabled: e.currentTarget.checked })} />
                 <span>Split tracks into stems when they load</span>
               </label>
-              {#if !ready}<p class="needs">Needs the separation model</p>{/if}
+              {#if !ready}<p class="needs">Download the separation model above to turn this on.</p>{/if}
             {:else}
               <label class="check"><input type="checkbox" checked={stems.enabled} onchange={(e) => setStems({ enabled: e.currentTarget.checked })} />
                 Split tracks into stems when they load</label>
@@ -622,7 +641,7 @@
             <h3>Hot cues</h3>
             <label class="opt">
               <input type="checkbox" checked={deckSettings.hotCuePlays} onchange={(e) => setDeckSetting('hotCuePlays', e.currentTarget.checked)} />
-              <span>Hot cues start a paused deck</span>
+              <span>Start a paused deck</span>
             </label>
             <p>Turn this off to play only while the pad is held, like the Cue button.</p>
           </section>
@@ -632,25 +651,25 @@
               <input type="checkbox" checked={deckSettings.autoSync} onchange={(e) => setDeckSetting('autoSync', e.currentTarget.checked)} />
               <span>Sync when a deck starts</span>
             </label>
-            <p>Starting a deck while the other plays brings it in on that deck's tempo and beat.</p>
+            <p>Starting a deck while the other plays matches its tempo and beat.</p>
           </section>
           <section class="display">
             <h3>Quantize</h3>
             <label class="opt">
               <input type="checkbox" checked={deckSettings.quantize} onchange={(e) => setDeckSetting('quantize', e.currentTarget.checked)} />
-              <span>Quantize: snap to the beat</span>
+              <span>Snap to the beat</span>
             </label>
             <p>Hot cues, loops and jumps land on the nearest beat{#if keyLabel('mixer.quantize')}; {keyLabel('mixer.quantize')} turns it on and off{/if}.</p>
           </section>
           <section class="display">
             <h3>Slip</h3>
-            <p>After a scratch, loop or held cue, the track carries on from where it would have been, so you stay in time.</p>
             {#each [0, 1] as i}
               <label class="opt">
                 <input type="checkbox" checked={!!engine.decks[i].slip} onchange={(e) => setSlip(i, e.currentTarget.checked)} />
                 <span>{flag('deck-names') ? `Slip on the ${deckName(i).toLowerCase()}` : `Slip on deck ${'AB'[i]}`}</span>
               </label>
             {/each}
+            <p>After a scratch, loop or held cue, the track carries on from where it would have been, so you stay in time.</p>
           </section>
         {:else}
         <section class="display">

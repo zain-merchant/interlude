@@ -57,6 +57,12 @@
 :root[data-flag-grid] .library .head {
   height: 24px;
 }
+/* The column headings 2px lower, inside their 24px row, so "Title" and
+   the sidebar's "All tracks" share a centre line (they were 1.7px apart);
+   the row and the list below keep their places. */
+:root[data-flag-grid] .library .head > * {
+  translate: 0 2px;
+}
 /* Later section headings are one row too (an 8px space, a 16px line and
    4 under it), so the playlists below stay on the pitch. */
 :root[data-flag-grid] .library nav > .h.sec {

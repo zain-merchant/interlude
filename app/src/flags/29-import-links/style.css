@@ -3,18 +3,23 @@
    brighter than the notes around them, full strength on hover. Lined up
    with the file name above, not the card's edge. */
 :root[data-flag-import-links] .card[aria-labelledby='import-title'] .link {
+  /* = the found row's left padding, so its first glyph sits on the file
+     name's (14px; 16 with #15). */
   margin-left: 14px;
   color: var(--fg-2);
   /* Longhands: WebKit ignores a colour or thickness in the shorthand. */
   text-decoration-line: underline;
   text-decoration-thickness: 1px;
-  text-decoration-color: color-mix(in srgb, var(--fg) 30%, transparent);
+  text-decoration-color: var(--fg-3);
   text-underline-offset: 3px;
   transition: color 140ms ease, text-decoration-color 140ms ease;
 }
 :root[data-flag-import-links] .card[aria-labelledby='import-title'] .link:hover:not(:disabled) {
   color: var(--fg);
-  text-decoration-color: color-mix(in srgb, var(--fg) 60%, transparent);
+  text-decoration-color: var(--fg-2);
+}
+:root[data-flag-import-links][data-flag-spacing] .card[aria-labelledby='import-title'] .link {
+  margin-left: var(--space-4, 16px);
 }
 /* Step dashes: the idle ones at the off level, not the 1.34:1 rule
    colour, with the step in words beside them; the row is 16px tall, so the
@@ -58,11 +63,14 @@
 :root[data-flag-import-links] .card[aria-labelledby='import-title'] .file b {
   font-weight: 400;
 }
-/* Where and when on two lines, both at --fg-2: on the raised row --fg-3
-   is 4.41:1 (E11). The age steps down in size instead. */
+/* Where and when on one 11px line (the review: two identical lines read
+   as a list): the path at --fg-2 (on the raised row --fg-3 was 4.41:1,
+   E11), then the age a step quieter, set apart by 8px, not a dot. */
 :root[data-flag-import-links] .card[aria-labelledby='import-title'] .file small {
+  font-size: var(--t-xs);
   color: var(--fg-2);
 }
-:root[data-flag-import-links] .card[aria-labelledby='import-title'] .file small.when {
-  font-size: var(--t-xs);
+:root[data-flag-import-links] .card[aria-labelledby='import-title'] .file small .when {
+  margin-left: calc(8px - 0.25em);
+  color: var(--fg-3);
 }

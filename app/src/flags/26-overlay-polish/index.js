@@ -8,7 +8,8 @@
 //   they share a baseline now.
 // - e-K59: menus, the toast and the banner float on --popover (#1b1c20)
 //   but the two dialogs hard-coded #121214. A --dialog token (app.css when
-//   shipped) for both; "Same as menus" sets it to --popover.
+//   shipped) for both, set to --popover so everything that floats over the
+//   app is one surface.
 // - e-K66: the Report text box's edge was 1.25:1 against the dialog; 16%
 //   white at rest.
 // Already elsewhere: the toast's radius against its real inset (c-K56,
@@ -18,18 +19,7 @@ export default {
   n: 26,
   title: 'Toast, banner and dialog details',
   group: 'Polish',
-  notes: 'Undo at weight 400 with 8px round it; the banner\'s button on its sentence\'s baseline; one --dialog surface token for both dialogs (or the menus\' --popover).',
-  settings: {
-    surface: {
-      type: 'choice',
-      label: 'Dialog surface',
-      default: 'popover',
-      options: [
-        ['popover', 'Same as menus', 'Dialogs on the same grey as menus, the toast and the banner, so everything that floats over the app is one surface.'],
-        ['dialog', 'Darker, as now', 'Dialogs keep their darker #121214 (now a named token): they sit a step further back than the small popups.'],
-      ],
-    },
-  },
+  notes: 'Undo at weight 400 with 8px round it; the banner\'s button on its sentence\'s baseline; one surface for both dialogs and the popups (--popover).',
 };
 
 /** Show me: a load brings the toast up; a loupe on it flips the Undo's weight and insets. */

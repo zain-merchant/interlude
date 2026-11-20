@@ -13,7 +13,7 @@ export default {
   n: 37,
   title: 'Resetting shortcuts can be undone',
   group: 'Controls',
-  notes: 'Reset all, a row\'s Reset and Delete mapping push an undoable edit (toast with Undo, ⌘Z). Reset all moves from beside Done to the end of the Keyboard page as a ghost button. "Undo changes" becomes "Revert mapping".',
+  notes: 'Reset all, a row\'s Reset and Delete mapping push an undoable edit (toast with Undo, ⌘Z). Reset all moves from beside Done to below all the Keyboard page\'s columns, in the row Reset\'s quiet text style; its message ("Reset all shortcuts", Undo) stays 8s and, with #13 in the toolbar, shows in the Settings header left of Done (App.svelte). "Undo changes" becomes "Revert mapping".',
 };
 
 /** Show me: Settings > Keyboard with one changed shortcut, flipping; Done ringed with what sits beside it. */

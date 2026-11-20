@@ -28,23 +28,20 @@
 :root[data-flag-states] .menu button.danger:not(:disabled) span {
   color: var(--kill);
 }
-/* Deck tabs and sort headers: hover is a step towards selected, not the
-   same thing. A hovered tab shows a faint underline. */
+/* Deck tabs and sort headers: hover is a step towards selected, never
+   the same thing. A hovered tab brightens its label only (the underline is
+   the selected tab's alone); a hovered heading goes to --fg-2, under the
+   sorted heading's --fg. */
 :root[data-flag-states] .modes button:not(.on):hover {
   color: var(--fg);
 }
-:root[data-flag-states] .modes button:not(.on):hover::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -1px;
-  height: 2px;
-  border-radius: 1px;
-  background: var(--fg-4);
-}
 :root[data-flag-states] .head .sort:not(.on):hover {
-  color: var(--fg);
+  color: var(--fg-2);
+}
+/* A pressed sidebar item: its count at --fg-2 on the --sel fill (--fg-3
+   there was 4.3:1). */
+:root[data-flag-states] [data-region='sidebar'] .item:active small {
+  color: var(--fg-2);
 }
 
 /* Pressed, buttons: shrink to 97% (as .btn already does) and darken the

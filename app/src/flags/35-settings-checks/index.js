@@ -7,26 +7,14 @@
 // off centre) where every other page uses .opt; it uses .opt now (hook in
 // Settings.svelte). Disabled boxes keep the off level.
 //
-// Backlog c-K52: a ticked box is a solid --fg square, the brightest mark on
-// the page. "Softer" fills it at --fg-2 instead; taste, so it's a choice and
-// today's solid stays the default.
+// Backlog c-K52 (a ticked box is the brightest mark on the page): kept
+// solid; the softer variant was dropped in the per-fix review.
 export default {
   id: 'settings-checks',
   n: 35,
   title: 'Checkboxes that look ready to tick',
   group: 'Controls',
-  notes: 'Unchecked boxes outlined at --fg-3 (was --fg-4, the disabled level); Stems uses the same .opt row as other pages. Optional softer tick fill.',
-  settings: {
-    fill: {
-      type: 'choice',
-      label: 'Ticked',
-      default: 'solid',
-      options: [
-        ['solid', 'Solid', 'A ticked box is a solid white square, as today: unmistakably on.'],
-        ['soft', 'Softer', 'A ticked box is filled a step greyer, so a page of ticks is calmer; still clearly on.'],
-      ],
-    },
-  },
+  notes: 'Unchecked boxes outlined at --fg-3 (was --fg-4, the disabled level); Stems uses the same .opt row as other pages.',
 };
 
 /** Show me: Settings > Decks with the Slip boxes unticked, flipping; a loupe on them. */

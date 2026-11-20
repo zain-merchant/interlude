@@ -8,7 +8,10 @@
 // Later (critique panel, Mo1): the whole card faded from 0 over the full
 // 220ms, so for the first frames the library's text showed through the
 // toast's words. The card is now opaque within 80ms while the rise takes
-// 160ms. The site's snappy spring (301ms) is there to compare.
+// 160ms. Docked in the library toolbar (#13) it rises only 4px, with the
+// fade, over 180ms, and the track count under it cross-fades (180ms out,
+// 140ms back). The toast itself still leaves at once (a fade-out would
+// need an outro hook on the toast in App.svelte).
 export default {
   id: 'polish-toast',
   n: 12,
@@ -17,15 +20,6 @@ export default {
   notes: 'The undo toast rises 8px over 160ms on a strong ease-out instead of blinking on; it turns opaque in the first 80ms so nothing shows through its words.',
   settings: {
     rise: { type: 'range', min: 100, max: 400, step: 20, default: 160, unit: 'ms', label: 'Rise (ease-out)' },
-    curve: {
-      type: 'choice',
-      label: 'Feel',
-      default: 'ease',
-      options: [
-        ['ease', 'Ease-out', 'Covers most of the way at once and settles, over the time above; the app\'s own entrance curve.'],
-        ['spring', 'Site spring', 'The website\'s snappy spring (301ms): a touch softer at the end, so the app would feel like the site.'],
-      ],
-    },
   },
 };
 

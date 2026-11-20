@@ -1,21 +1,41 @@
-/* #23: the lost-device banner is a warning. The update and library
-   banners stay neutral. */
+/* #23: the lost-device banner is a warning by its icon, not its edge (an
+   amber ring echoed Cue's). One line: 16px to the icon, 8px to the
+   message, 16px to the button, 8px round the button; the panel radius,
+   concentric with the button's. The update and library banners stay as
+   they are. */
 :root[data-flag-banner-warning] .banner.lost {
-  box-shadow:
-    inset 0 0 0 1px color-mix(in srgb, var(--warn) 45%, transparent),
-    0 12px 32px rgb(0 0 0 / 0.45);
+  align-items: center;
+  gap: 0;
+  min-height: 48px;
+  box-sizing: border-box;
+  padding: 8px 8px 8px 16px;
+  border-radius: var(--r-panel);
+  background: var(--popover);
+  box-shadow: inset 0 0 0 1px var(--line-2), 0 20px 50px rgb(0 0 0 / 0.3);
+  white-space: nowrap;
 }
 :root[data-flag-banner-warning] .banner.lost svg {
+  align-self: center;
+  margin-right: 8px;
   stroke: var(--warn);
 }
 :root[data-flag-banner-warning] .banner.lost b {
   font-weight: 500;
 }
-/* Its one way out is the main action: solid, ink on --fg (the dialogs'
-   primary, E3), 24px inside the banner. */
+/* Too long for the window: the message gives way, the button stays whole. */
+:root[data-flag-banner-warning] .banner.lost > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* Its one way out is the main action: the dialogs' solid primary (E3),
+   as tall as Report's Save. */
 :root[data-flag-banner-warning] .banner.lost .btn.primary {
-  height: var(--h-sm);
-  padding: 0 10px;
+  flex: none;
+  height: var(--h-md);
+  margin-left: 16px;
+  padding: 0 12px;
+  border-radius: var(--r);
   background: var(--fg);
   box-shadow: none;
   color: var(--ink);
@@ -24,13 +44,4 @@
 :root[data-flag-banner-warning] .banner.lost .btn.primary:hover:not(:disabled) {
   background: #fff;
   color: var(--ink);
-}
-:root[data-flag-banner-warning][data-flag-banner-warning-action='outline'] .banner.lost .btn.primary {
-  background: transparent;
-  box-shadow: inset 0 0 0 1px var(--line-2);
-  color: var(--fg);
-}
-:root[data-flag-banner-warning][data-flag-banner-warning-action='outline'] .banner.lost .btn.primary:hover:not(:disabled) {
-  background: var(--hover);
-  color: var(--fg);
 }

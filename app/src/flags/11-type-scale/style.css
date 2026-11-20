@@ -2,12 +2,9 @@
    and three weights (300 large numerals, 400 text, 500 small headings).
    Each rule mirrors the component's own selector so it wins outright. */
 
-/* Tooltips: 12 -> 13 (or 11). */
-:root[data-flag-type-scale][data-flag-type-scale-tip='sm'] .tip[role='tooltip'] {
+/* Tooltips: 12 -> 13. */
+:root[data-flag-type-scale] .tip[role='tooltip'] {
   font-size: var(--t-sm);
-}
-:root[data-flag-type-scale][data-flag-type-scale-tip='xs'] .tip[role='tooltip'] {
-  font-size: var(--t-xs);
 }
 
 /* Settings: shortcut keys and status notes are values and sentences (13);
@@ -28,9 +25,6 @@
   font-size: var(--t-lg);
   font-weight: 400;
   letter-spacing: -0.02em;
-}
-:root[data-flag-type-scale][data-flag-type-scale-titles='500'] .card[role='dialog'] h2 {
-  font-weight: 500;
 }
 
 /* Import dialog: 12 -> 13 for sentences and controls, 11 for metadata;

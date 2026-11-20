@@ -26,9 +26,6 @@
    toast and the banner use --popover (#1b1c20); the dialogs had their own
    hard-coded #121214. */
 :root[data-flag-overlay-polish] {
-  --dialog: #121214;
-}
-:root[data-flag-overlay-polish][data-flag-overlay-polish-surface='popover'] {
   --dialog: var(--popover);
 }
 :root[data-flag-overlay-polish] .backdrop > .card[role='dialog'] {

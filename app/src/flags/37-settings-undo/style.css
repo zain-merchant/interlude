@@ -1,8 +1,17 @@
-/* #37: Reset all at the foot of the Keyboard page, a quiet ghost button
-   under a rule. */
+/* #37: Reset all below all three columns of the Keyboard page, the full
+   width of the page under a rule, in the per-row Reset's quiet text style
+   (not red, not filled). */
 :root[data-flag-settings-undo] .settings .reset-all {
+  width: 100%;
   max-width: 1080px;
+  box-sizing: border-box;
   margin-top: 24px;
   padding-top: 12px;
   border-top: 1px solid var(--line);
+}
+:root[data-flag-settings-undo] .settings .reset-all .btn {
+  color: var(--fg-3);
+}
+:root[data-flag-settings-undo] .settings .reset-all .btn:hover:not(:disabled) {
+  color: var(--fg);
 }

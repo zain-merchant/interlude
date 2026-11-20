@@ -167,10 +167,9 @@
               <button class="found" onclick={() => read(f.source)} disabled={step === 'reading'}>
                 <span class="file">
                   <b>{title(f.source)}</b>
-                  <!-- #29 (UI audit flag): import-links: where, and when, each on its own line. -->
+                  <!-- #29 (UI audit flag): import-links: where, then when a step quieter, on one line. -->
                   {#if flag('import-links')}
-                    <small>{where(f.source.path)}{f.source.kind === 'serato' ? `/${fileName(f.source.path)}` : ''}</small>
-                    <small class="when">{ago(f.modified, app.verb)}</small>
+                    <small>{where(f.source.path)}{f.source.kind === 'serato' ? `/${fileName(f.source.path)}` : ''} <span class="when">{ago(f.modified, app.verb)}</span></small>
                   <!-- #10 (UI audit flag): where and when set apart by space, not a middle dot. -->
                   {:else if flag('no-dots')}
                     <small>{where(f.source.path)}{f.source.kind === 'serato' ? `/${fileName(f.source.path)}` : ''} <span class="when">{ago(f.modified, app.verb)}</span></small>

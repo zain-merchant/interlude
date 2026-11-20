@@ -37,11 +37,21 @@
   padding-bottom: 24px;
 }
 
-/* S6: content fades out under the header rule and at the foot instead of
-   being sliced. */
+/* S6: content fades at its edges instead of being sliced, with the track
+   list's edge (#20, the per-fix review's one soft-edge spec): 16px to a 30%
+   floor, the top only once scrolled, the foot only while more is below
+   (Settings.svelte sets data-scrolled and data-more). */
 :root[data-flag-settings-type] .settings .scroll {
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 12px, #000 calc(100% - 12px), transparent);
-  mask-image: linear-gradient(to bottom, transparent 0, #000 12px, #000 calc(100% - 12px), transparent);
+  --clip-top: #000;
+  --clip-foot: #000;
+  -webkit-mask-image: linear-gradient(to bottom, var(--clip-top) 0, #000 16px, #000 calc(100% - 16px), var(--clip-foot) 100%);
+  mask-image: linear-gradient(to bottom, var(--clip-top) 0, #000 16px, #000 calc(100% - 16px), var(--clip-foot) 100%);
+}
+:root[data-flag-settings-type] .settings .scroll[data-scrolled] {
+  --clip-top: rgb(0 0 0 / 0.3);
+}
+:root[data-flag-settings-type] .settings .scroll[data-more] {
+  --clip-foot: rgb(0 0 0 / 0.3);
 }
 
 /* S8: Check for updates and Report a problem are actions, not pages: small,
@@ -77,16 +87,11 @@
   border-color: var(--fg-4);
   color: var(--fg-2);
 }
-/* The deck headings stay in view while their long lists scroll. */
+/* The Keyboard page's group headings scroll with their lists (a sticky
+   heading in a multi-column flow can't stay level across columns: only
+   the first was pulled up, and its band didn't match the panel). */
 :root[data-flag-settings-type] .settings .cols h3 {
-  position: sticky;
-  /* Up through the scroller's top padding, so nothing shows above it. */
-  top: calc(-1 * var(--pad));
-  z-index: 1;
-  margin: calc(-1 * var(--pad)) 0 0;
-  padding: var(--pad) 0 8px;
-  /* The panel's own tone at the top of the page, then a short fade. */
-  background: linear-gradient(to bottom, #18191c calc(100% - 8px), transparent);
+  margin: 0 0 8px;
 }
 /* The columns stop at three comfortable widths, so a name and its key sit
    closer together on a wide window. */

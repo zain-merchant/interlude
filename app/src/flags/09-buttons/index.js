@@ -14,7 +14,7 @@ export default {
   title: 'Buttons that look pressable',
   group: 'Controls',
   notes:
-    'Outline (tune weight and strength), tonal fill, glass, ghost with a fill, or raised keys. Hover, selected and pressed follow each style. Settings\' Interface size − and + are square 32px buttons.',
+    'Outline (tune weight and strength), tonal fill, glass or raised keys. Hover, selected and pressed follow each style. Settings\' Interface size − and + are square 32px buttons.',
   settings: {
     style: {
       type: 'choice',
@@ -24,7 +24,6 @@ export default {
         ['outline', 'Outline', 'Today\'s look, a thin outline; tune its weight and strength below.'],
         ['tonal', 'Tonal fill', 'A soft grey fill and no outline: reads as pressable and stays quiet beside Play.'],
         ['glass', 'Glass', 'A small pane of the panels\' glass with a lit top edge: matches the panels, a little busier.'],
-        ['ghost', 'Ghost + fill', 'Almost bare until you point at it: the calmest, but buttons are harder to spot.'],
         ['raised', 'Raised', 'Keys that stand off the panel and latch down when on: the most physical, the most visual weight.'],
       ],
     },

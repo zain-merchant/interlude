@@ -13,7 +13,8 @@
 // scrim hid the decks' times and waveforms, which hurts most when you
 // report a problem mid-set (E8, C58): the scrim is now 50% with no blur
 // over the decks, and the blur stays over the library only (App.svelte
-// passes the library's top as --flag-polish-dialog-lib).
+// passes the library's top as --flag-polish-dialog-lib), fading in across the
+// gutter above it so there's no seam.
 export default {
   id: 'polish-dialog',
   n: 12,
@@ -22,15 +23,6 @@ export default {
   notes: 'Import and Report dialogs: strong ease-out curve instead of the built-in one, from scale 0.97, opaque within 80ms. A lighter scrim with no blur over the decks.',
   settings: {
     ms: { type: 'range', min: 120, max: 320, step: 20, default: 220, unit: 'ms', label: 'Duration (ease-out)' },
-    curve: {
-      type: 'choice',
-      label: 'Feel',
-      default: 'ease',
-      options: [
-        ['ease', 'Ease-out', 'Covers most of the way at once and settles, over the time above.'],
-        ['spring', 'Site spring', 'The website\'s snappy spring (301ms), so dialogs feel like the site.'],
-      ],
-    },
     scrim: {
       type: 'choice',
       label: 'Behind it',
@@ -38,7 +30,6 @@ export default {
       options: [
         ['library', 'Decks clear', 'Half-dark with no blur over the decks, so you can still read the times and waveforms; the library behind stays blurred.'],
         ['none', 'No blur', 'Half-dark everywhere and nothing blurred: the simplest, but the busy track list shows through more.'],
-        ['before', 'As it was', 'Dark and blurred over everything, decks included: the dialog stands out most, but the playing decks are hidden.'],
       ],
     },
   },

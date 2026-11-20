@@ -7,10 +7,6 @@
 :root[data-flag-polish-toast] {
   --flag-polish-toast-curve: cubic-bezier(0.23, 1, 0.32, 1);
 }
-/* The site's snappy spring (site/style.css), for comparison. */
-:root[data-flag-polish-toast][data-flag-polish-toast-curve='spring'] {
-  --flag-polish-toast-curve: linear(0, 0.101, 0.207, 0.309, 0.405, 0.491, 0.569, 0.636, 0.695, 0.745, 0.788, 0.824, 0.854, 0.88, 0.901, 0.918, 0.933, 0.945, 0.955, 0.963, 0.97, 0.975, 0.98, 0.984, 0.987, 0.989, 0.991, 0.993, 0.994, 0.995, 0.996, 0.997, 0.997, 0.998, 0.998, 0.999, 0.999, 0.999, 1);
-}
 :root[data-flag-polish-toast] .toastbox .toast {
   transition:
     opacity 80ms ease-out,
@@ -20,8 +16,24 @@
     translate: 0 8px;
   }
 }
-:root[data-flag-polish-toast][data-flag-polish-toast-curve='spring'] .toastbox .toast {
+
+/* In the library toolbar (#13's default place) a long rise would come up
+   out of the column headings: there it rises 4px and fades in together
+   over 180ms, and the track count it covers fades out over the same time
+   (back in over 140ms when the message goes), so the two are never both
+   fully there. */
+:root[data-flag-polish-toast][data-flag-declutter-toast][data-flag-declutter-toast-place='toolbar'] .toastbox .toast {
   transition:
-    opacity 80ms ease-out,
-    translate 301ms var(--flag-polish-toast-curve);
+    opacity 180ms var(--flag-polish-toast-curve),
+    translate 180ms var(--flag-polish-toast-curve);
+  @starting-style {
+    opacity: 0;
+    translate: 0 4px;
+  }
+}
+:root[data-flag-polish-toast][data-flag-declutter-toast] section.library .bar .count {
+  transition: opacity 140ms ease-out;
+}
+:root[data-flag-polish-toast][data-flag-declutter-toast]:has(.toastbox .toast[data-docked]) section.library .bar .count {
+  transition: opacity 180ms var(--flag-polish-toast-curve);
 }

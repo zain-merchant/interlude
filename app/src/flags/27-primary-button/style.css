@@ -30,21 +30,3 @@
   background: var(--fg);
   color: var(--ink);
 }
-
-/* Option: no fill. The main action is the brightest label, with an
-   outline, and Play stays the only solid control on screen. */
-:root[data-flag-primary-button][data-flag-primary-button-style='ring'] .btn.primary,
-:root[data-flag-primary-button][data-flag-primary-button-style='ring'] .btn.primary:hover:not(:disabled, [aria-disabled='true']) {
-  background: transparent;
-  box-shadow: inset 0 0 0 1px var(--line-2);
-  color: var(--fg);
-}
-:root[data-flag-primary-button][data-flag-primary-button-style='ring'] .btn.primary:hover:not(:disabled, [aria-disabled='true']) {
-  background: var(--hover);
-  box-shadow: inset 0 0 0 1px var(--fg-3);
-}
-:root[data-flag-primary-button][data-flag-primary-button-style='ring'] .card[aria-labelledby='import-title'] .found .go.primary {
-  background: transparent;
-  box-shadow: inset 0 0 0 1px var(--fg-3);
-  color: var(--fg);
-}

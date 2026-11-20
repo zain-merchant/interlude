@@ -5,8 +5,10 @@
 //   screens for five checkboxes. Each option now has one sentence (the
 //   detail belongs in docs/guide.md), and paragraphs stop at 440px (about
 //   70 characters) while control rows keep 520.
-// - Labels say what they do: "Hot cues start a paused deck" (c-K78),
-//   "Quantize: snap to the beat", with its shortcut filed under a new
+// - Labels say what they do without echoing their heading: under "Hot
+//   cues", "Start a paused deck"; under "Quantize", "Snap to the beat"
+//   (the Keyboard page's command is still "Quantize: snap to the beat"),
+//   with its shortcut filed under a new
 //   "Both decks" group on the Keyboard page instead of Mixer; help text
 //   names the key the user actually has (it hard-coded "B").
 // - One name for interface size: "Interface size: larger / smaller /
@@ -24,8 +26,8 @@
 //   own to the app's controllers folder." (No "Show folder" button: the
 //   backend has no call that opens that folder yet.) The connected row
 //   says "Mapping: Pioneer DDJ-FLX4" (c-K45).
-// - Slip's shared description sits above both checkboxes, not under the
-//   second (c-K76).
+// - Every description follows its control, Slip's included (the review
+//   asked for one order on the page). Sync's note is one line.
 // Hooks in Settings.svelte.
 export default {
   id: 'settings-copy',
@@ -39,7 +41,7 @@ export default {
 export const show = {
   about: 'Every Settings option came with a paragraph of two to four long lines, so the Decks page took three screens for five checkboxes. Now each option has one plain sentence and the labels say what they do.',
   before: 'Each checkbox sits on top of a long, wide paragraph, so the page is mostly grey text: you have to read a lot to find the one switch you want.',
-  after: 'One short line per option, kept to a comfortable width, and labels that say what they do ("Hot cues start a paused deck"), so the page is about half as long and scans at a glance.',
+  after: 'One short line per option, kept to a comfortable width, and labels that say what they do ("Start a paused deck" under Hot cues), so the page is about half as long and scans at a glance.',
   async setup(app) {
     await app.openSettings('Decks');
     await app.until(() => app.$('.settings .display .opt'), 2000, 'the Decks page');

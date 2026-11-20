@@ -21,7 +21,8 @@ function place(node, text) {
   tooltip.x = r.left + r.width / 2;
   // Above the control unless there's no room; never over its own value.
   // #61 (UI audit flag): eq-kill: a control may ask for its tip below (data-tip-below, set only while that flag is on).
-  tooltip.below = node.dataset.tipBelow !== undefined || r.top < 40;
+  // #30 (UI audit flag): tooltip-wrap: the library toolbar's tips open below, clear of the decks above.
+  tooltip.below = node.dataset.tipBelow !== undefined || r.top < 40 || (flag('tooltip-wrap') && !!node.closest('section.library .bar'));
   tooltip.y = tooltip.below ? r.bottom + 8 : r.top - 8;
   tooltip.visible = true;
   owner = node;
@@ -94,7 +95,8 @@ const keyLabels = () => new Set([...Object.keys(keys), ...Object.keys(keymap.ove
 /** Joins tooltip parts, skipping empty ones. */
 export const tipText = (...parts) => {
   const list = parts.filter(Boolean);
-  if (!flag('no-dots')) return list.join(' · ');
+  // #30 (UI audit flag): tooltip-wrap marks keys too, to put the keycap at the end of the title line.
+  if (!flag('no-dots') && !flag('tooltip-wrap')) return list.join(' · ');
   const k = keyLabels();
   return list.map((p) => (k.has(p) ? KEY_MARK + p : p)).join(' · ');
 };

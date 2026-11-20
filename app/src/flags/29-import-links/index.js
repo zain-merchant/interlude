@@ -8,8 +8,10 @@
 // used different verbs. Now both say "Choose a different file…" / "…folder…",
 // at --fg-2 with a quiet underline, lined up with the file name.
 // Details: "rekordbox" in its own spelling, "versions 5, 6 and 7", "3 hours
-// ago" for "3 h ago", the path and its age on two lines (the age read 4.41:1
-// on the raised row; both lines are --fg-2 now), idle step dashes at --fg-4
+// ago" for "3 h ago", the path and its age on one 11px line, the path at
+// --fg-2 (--fg-3 read 4.41:1 on the raised row) and the age a step quieter
+// after an 8px gap (the review asked for " · "; the brief rules out middle
+// dots, so space sets them apart, as #10 does), idle step dashes at --fg-4
 // (from 1.34:1) with "1 of 4" beside them. From the backlog: each source is
 // a heading and its rows, not an outlined card round a filled row round a
 // chip; the found file is regular weight under its bold source; the Serato
@@ -23,7 +25,7 @@ export default {
   title: "Import's links look like links",
   group: 'Polish',
   notes:
-    'Links at --fg-2 with an underline, one verb, aligned with the file name. rekordbox spelling, versions in words, "hours ago", path and age on two lines at --fg-2, step dashes at --fg-4 with "1 of 4". Sources without the outlined card.',
+    'Links at --fg-2 with an underline, one verb, aligned with the file name. rekordbox spelling, versions in words, "hours ago", path and age on one 11px line (age a step quieter), step dashes at --fg-4 with "1 of 4". Sources without the outlined card.',
 };
 
 /** Show me: the Import dialog's first step, flipping; the "different file" link and the found row in a loupe. */

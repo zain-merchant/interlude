@@ -570,21 +570,35 @@
   // short with an ellipsis (Undo stays whole). Only with no room at all
   // (under 160px) does it fall back to the corner.
   let toastEl = $state(/** @type {HTMLElement | null} */ (null));
-  let toastDock = $state(/** @type {{ left: number, top: number, max: number } | null} */ (null));
+  let toastDock = $state(/** @type {{ left: number, top: number, max: number, at?: string } | null} */ (null));
   $effect(() => {
     void toast.id;
     void winHeight;
     const el = toastEl;
-    if (!el || !flag('declutter-toast') || setting('declutter-toast', 'place') !== 'toolbar' || settings !== null) {
+    if (!el || !flag('declutter-toast') || setting('declutter-toast', 'place') !== 'toolbar') {
       toastDock = null;
       return;
     }
     const k = Number(document.documentElement.style.zoom) || 1;
+    // #37 (UI audit flag): settings-undo: with Settings over the library, the toast sits in its header, left of Done.
+    if (settings !== null) {
+      const done = document.querySelector('.settings .main .bar > .btn:last-child')?.getBoundingClientRect();
+      // The end of the words before Done (the page's instruction line stretches to Done; its text doesn't).
+      const before = document.querySelector('.settings .main .bar > .btn:last-child')?.previousElementSibling;
+      const text = before && document.createRange();
+      text?.selectNodeContents(before);
+      const prev = text?.getBoundingClientRect();
+      if (!flag('settings-undo') || !done || !prev) return void (toastDock = null);
+      const room = (done.left - prev.right) / k - 24;
+      // Its right edge 8px before Done, on Done's centre line (placed from its right: data-docked="settings").
+      toastDock = room >= 160 ? { left: done.left / k - 8, top: (done.top + done.height / 2) / k, max: room, at: 'settings' } : null;
+      return;
+    }
     const from = document.querySelector('section.library .bar .search')?.getBoundingClientRect();
     const to = document.querySelector('section.library .bar .samp')?.getBoundingClientRect();
     if (!from || !to) return void (toastDock = null);
     const room = (to.left - from.right) / k - 24;
-    toastDock = room >= 160 ? { left: from.right / k + 12, top: (from.top + from.height / 2) / k - el.offsetHeight / 2, max: room } : null;
+    toastDock = room >= 160 ? { left: from.right / k + 12, top: (from.top + from.height / 2) / k, max: room, at: 'toolbar' } : null;
   });
 
   // #12 (UI audit flag): polish-dialog: where the library starts, so a dialog's
@@ -779,7 +793,7 @@
     {#if toast.text}
       <!-- #13 (UI audit flag): declutter-toast: hovering holds the toast; docked in the toolbar when chosen. -->
       <!-- svelte-ignore a11y_no_static_element_interactions (hover only pauses its timer; the toast is announced by its role="status" box) -->
-      <div class="toast" bind:this={toastEl} data-docked={toastDock ? '' : undefined} style:left={toastDock ? `${toastDock.left}px` : undefined} style:top={toastDock ? `${toastDock.top}px` : undefined} style:max-width={toastDock ? `${toastDock.max}px` : undefined}
+      <div class="toast" bind:this={toastEl} data-docked={toastDock ? toastDock.at : undefined} style:left={toastDock ? `${toastDock.left}px` : undefined} style:top={toastDock ? `${toastDock.top}px` : undefined} style:max-width={toastDock ? `${toastDock.max}px` : undefined}
         onpointerenter={() => flag('declutter-toast') && holdToast()} onpointerleave={() => flag('declutter-toast') && releaseToast()}>
         <span>{toast.text}</span>
         {#if toast.undo}
@@ -1014,21 +1028,33 @@
   .grip:focus-visible {
     outline: none;
   }
+  /* The sidebar's edge: no pill (beside a scrolling list it read as a
+     scrollbar), just an 8px strip centred on the 1px divider; on hover,
+     drag or focus the divider itself lights from top to bottom. */
   .below > .grip.side {
     position: absolute;
     top: 0;
     bottom: 0;
-    left: calc(var(--library-sidebar) - 6px);
+    left: calc(var(--library-sidebar) - 4px);
     z-index: 6;
-    width: 12px;
-    display: grid;
-    place-items: center;
+    width: 8px;
     cursor: col-resize;
     touch-action: none;
   }
   .grip.side i {
-    width: 3px;
-    height: 36px;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 3px;
+    width: 1px;
+    height: auto;
+    border-radius: 0;
+    background: transparent;
+  }
+  .grip.side:hover i,
+  .grip.side.dragging i,
+  .grip.side:focus-visible i {
+    background: var(--fg-3);
   }
   .toast {
     position: fixed;

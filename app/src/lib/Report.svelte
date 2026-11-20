@@ -22,7 +22,7 @@
   // short enough not to leave one word on its own line. #26 (deck-names): the decks by side, not letter.
   const placeholder = $derived.by(() => {
     const sides = flag('deck-names');
-    if (flag('report-copy')) return sides ? 'e.g. Loading a track on the right deck while the left one played cut the sound' : 'e.g. Loading a track on deck B while A played cut the sound';
+    if (flag('report-copy')) return sides ? 'e.g. I loaded a track on the right deck while the left one was playing, and the sound cut out' : 'e.g. I loaded a track on deck B while A was playing, and the sound cut out';
     return sides ? 'e.g. I loaded a track on the right deck while the left one was playing and the audio cut out' : 'e.g. I loaded a track on deck B while A was playing and the audio cut out';
   });
 
@@ -73,12 +73,14 @@
       </div>
     {:else}
       {#if flag('report-copy')}
-        <p class="lead">Say what you were doing and what went wrong. The report also includes the app's version and logs, your macOS version, and your audio device and controllers, but no music files. It saves a file on your Desktop for you to send.</p>
+        <p class="lead">Say what you were doing and what went wrong.</p>
       {:else}
       <p class="lead">Say what you were doing and what went wrong. The report also includes the app's logs and your system, but no music files.</p>
       {/if}
       <textarea aria-label="What happened" bind:this={field} bind:value={description} rows="6"
         {placeholder}></textarea>
+      <!-- #28 (UI audit flag): report-copy: what's in the file and where it goes, as small print under the box. -->
+      {#if flag('report-copy')}<p class="fine">Saves a file to your Desktop with the app's version and logs, your macOS version, audio device and controllers. No music files.</p>{/if}
       {#if error}<p class="error" role="alert">{error}</p>{/if}
       <div class="actions">
         <button class="btn ghost" onclick={onclose}>Cancel</button>

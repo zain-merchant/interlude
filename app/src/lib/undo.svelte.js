@@ -58,12 +58,12 @@ export function releaseToast() {
   timer = setTimeout(hideToast, wait);
 }
 
-/** Records an edit that has just happened, and offers to undo it. */
-export function pushEdit(edit) {
+/** Records an edit that has just happened, and offers to undo it. `ms`: how long the toast stays. */
+export function pushEdit(edit, { ms = undefined } = {}) {
   past.push(edit);
   if (past.length > LIMIT) past.shift();
   future.length = 0;
-  showToast(edit.label, { undo: true });
+  showToast(edit.label, { undo: true, ms });
 }
 
 let busy = false;

@@ -16,18 +16,13 @@
   background: transparent;
 }
 
-/* Ring colour (d-K55): --fg-2 is the same grey as secondary text and the
-   panel rules, so on a busy panel the ring reads as one more line. */
-:root[data-flag-focus-after-keys][data-flag-focus-after-keys-colour='fg'] {
-  --focus-ring: var(--fg);
+/* The selected track row: #14 rings the row inside the focused list, so
+   the rule above (on the focused element) never reached it. */
+:root[data-flag-focus-after-keys]:not([data-input='keys']) [data-region='tracks']:focus-visible .row.sel {
+  outline-color: transparent !important;
 }
-:root[data-flag-focus-after-keys][data-flag-focus-after-keys-colour='fg'] :focus-visible {
-  outline-color: var(--fg);
-}
-
-/* Against the doc (d-K76): the ring sits on the control's own edge, where
-   its hover fill is, instead of 2px outside it with a 2px gap. */
-:root[data-flag-focus-after-keys][data-flag-focus-after-keys-shape='tile'] :focus-visible {
+/* Deck tabs: the ring inside the tab, clear of the selected underline. */
+:root[data-flag-focus-after-keys] .modes button:focus-visible {
   outline-offset: -2px;
 }
 

@@ -32,16 +32,6 @@
   --flag-buttons-ring-on: inset 0 0 0 1px rgb(255 255 255 / 0.12), inset 0 1px 0 rgb(255 255 255 / 0.2);
 }
 
-/* Ghost with a fill: almost bare at rest, a fill and outline on hover. */
-:root[data-flag-buttons][data-flag-buttons-style='ghost'] {
-  --flag-buttons-bg: rgb(255 255 255 / 0.03);
-  --flag-buttons-ring: none;
-  --flag-buttons-bg-hover: rgb(255 255 255 / 0.07);
-  --flag-buttons-ring-hover: inset 0 0 0 1px var(--line-2);
-  --flag-buttons-bg-on: rgb(255 255 255 / 0.11);
-  --flag-buttons-ring-on: inset 0 0 0 1px var(--line-2);
-}
-
 /* Raised: a key that stands off the panel; selected ones latch down into
    it. */
 :root[data-flag-buttons][data-flag-buttons-style='raised'] {

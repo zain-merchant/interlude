@@ -17,26 +17,16 @@
 //
 // The design doc keeps one solid primary, Play. Owner's call 3: allow a
 // solid primary only inside dialogs and alert banners, never on the
-// performance surface (recommended, the default), or give main actions
-// full-strength text and an outline with no fill.
+// performance surface (decided; the outlined variant was dropped in the
+// per-fix review). Save stays enabled with an empty box: the logs alone
+// are useful.
 export default {
   id: 'primary-button',
   n: 27,
   title: "Each dialog's main button looks like one",
   group: 'Controls',
   notes:
-    'Shared .btn.primary (solid --fg, --ink text, 500). Report: Save and Done; Import: the newest library found gets the solid Import chip, others tonal. Option: outlined instead of solid.',
-  settings: {
-    style: {
-      type: 'choice',
-      label: 'Main button',
-      default: 'solid',
-      options: [
-        ['solid', 'Solid', 'A light filled button, only in dialogs and alert banners: the one thing to press stands out at once, and Play stays the only solid control on the decks.'],
-        ['ring', 'Outlined', 'Full-strength text with an outline and no fill, so Play stays the only solid control anywhere; the main action is clear, but quieter.'],
-      ],
-    },
-  },
+    'Shared .btn.primary (solid --fg, --ink text, 500). Report: Save and Done; Import: the newest library found gets the solid Import chip, others tonal.',
 };
 
 /** Show me: the Report dialog, its Save button in a loupe beside Cancel; flipping between the tonal grey that read as disabled and the main button. */

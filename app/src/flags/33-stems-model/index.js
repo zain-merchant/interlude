@@ -4,7 +4,7 @@
 // On Settings > Stems the Split tracks box was ticked while "Download
 // (84 MB)" was still offered, and nothing said whether the model was there.
 // With the flag on the box is unticked and unavailable until the model is
-// installed, with "Needs the separation model" under it, and once it's
+// installed, with "Download the separation model above to turn this on" under it, and once it's
 // installed the model section says "Installed, 84 MB" (hooks in
 // Settings.svelte). The deck's Stems tab line ("Stems need a one-time
 // 84 MB download", with a way to get it) is requested from the decks
@@ -15,14 +15,14 @@ export default {
   n: 33,
   title: "Stems don't claim to be on before they can be",
   group: 'Controls',
-  notes: 'Settings > Stems: Split tracks is off and disabled until the model is ready, with "Needs the separation model"; "Installed, 84 MB" once it is. Deck Stems tab: requested from the decks builder.',
+  notes: 'Settings > Stems: Split tracks is off and disabled until the model is ready, with "Download the separation model above to turn this on"; "Installed, 84 MB" once it is. Disabled at the app\'s 40%; the earlier choice comes back once it is installed. Deck Stems tab: the decks builder\'s line.',
 };
 
 /** Show me: Settings > Stems with the model not yet downloaded, flipping; the Split tracks box ringed. */
 export const show = {
   about: 'Settings showed "Split tracks into stems" ticked while the model that does the splitting was still waiting to be downloaded, so it looked on but did nothing. Now it stays off until the model is installed, and says so.',
   before: 'The box is ticked, so stems look switched on, but the model they need is still offered for download above it: nothing will be split, and nothing tells you why.',
-  after: 'Until the model is downloaded the box is off and greyed out, with "Needs the separation model" under it. Once it\'s in, the page says "Installed, 84 MB".',
+  after: 'Until the model is downloaded the box is off and greyed out, with "Download the separation model above to turn this on" under it. Once it\'s in, the page says "Installed, 84 MB".',
   async setup(app) {
     await app.openSettings('Stems');
     await app.until(() => app.$$('.settings .display h3').find((h) => /Splitting/.test(h.textContent)), 3000, 'the Splitting section');

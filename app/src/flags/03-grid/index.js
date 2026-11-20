@@ -30,7 +30,7 @@ export default {
   n: 3,
   title: 'Things side by side line up',
   group: 'Layout',
-  notes: 'Deck header 44px; nudge, headphone and Rec on the mode row\'s bottom line; sidebar and tracks on one 28px pitch; Master column on whole pixels; lane names centred on the zoom control. Overlay draws the grid.',
+  notes: 'Deck header 44px; nudge, headphone and Rec on the mode row\'s bottom line; sidebar and tracks on one 28px pitch; Master column on whole pixels; lane names centred on the zoom control. Column headings share a centre line with the sidebar\'s first item. The grid overlay is a dev tool (this panel only).',
   settings: {
     overlay: {
       type: 'choice',
@@ -47,8 +47,8 @@ export default {
 
 /** Show me: the line under deck A's controls and the mixer's buttons, and the library's sidebar against its track names (a loupe), flipping. */
 export const show = {
-  about: "Things meant to sit on one line missed it by a few pixels: Rec floated mid-mixer, the sidebar's words sat lower than the track names. Now they line up.",
-  before: "Rec floats in the middle of the mixer, the ‹ › under the pitch fader end lower than the buttons beside them, and the sidebar's words sit a little below the track names next to them.",
+  about: "Things meant to sit on one line missed it by a few pixels: the sidebar's words sat lower than the track names, the deck title off its BPM. Now they line up.",
+  before: "The − + under the pitch fader end lower than the buttons beside them, and the sidebar's words sit a little below the track names next to them.",
   after: 'They all end on one line, and each sidebar item sits level with a track row, so the screen reads as tidy rows instead of near misses.',
   target: (app) => [app.$("[data-region='deck0'] .pitch .nudge"), ...app.$$('.mixer .hp'), app.$('.mixer button.rec')],
   badge: (app, ctx) => ctx.at,

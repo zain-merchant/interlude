@@ -10,9 +10,11 @@
 // Shortcuts don't count. Text fields keep their ring when clicked, since
 // it marks where typing goes.
 //
-// Also here, as settings: the ring's colour (d-K55: --fg-2 is the grey of
-// secondary text and rules; full --fg reads as a ring, not a line), and an
-// Against the doc shape that puts the ring on the control's own edge.
+// The ring stays the doc's grey (--fg-2), 2px with a 2px gap (the review
+// dropped the full-white and on-the-edge variants); deck tabs take it
+// inside, where the outside ring ran into the selected underline. The
+// selected track row's ring (drawn by #14 on a child of the focused list)
+// follows the same keys-only rule.
 // The radii that make every ring round, and the crossfader, fader and knob
 // rings, are #14's (states).
 export default {
@@ -21,27 +23,7 @@ export default {
   title: 'Focus rings only after you use the keys',
   group: 'Controls',
   notes:
-    'Rings show only after Tab, arrows, Home/End, Page keys or F6, and go away on any click (App.svelte sets html[data-input="keys"]). Text fields keep their ring. Ring colour and an against-the-doc tile shape are settings.',
-  settings: {
-    colour: {
-      type: 'choice',
-      label: 'Ring colour',
-      default: 'fg',
-      options: [
-        ['fg', 'Full white', 'The ring in the brightest text colour, so it reads as a ring and not as one more grey line on a busy panel.'],
-        ['fg-2', 'Grey, as now', 'The secondary grey the ring uses today: quieter, but the same grey as labels and dividers.'],
-      ],
-    },
-    shape: {
-      type: 'choice',
-      label: 'Ring shape',
-      default: 'outside',
-      options: [
-        ['outside', '2px outside', "The design doc's ring: 2px wide with a 2px gap round the control, the same on everything."],
-        ['tile', 'On the edge', 'Against the design doc ("a designed 2px ring with a 2px gap"): the ring sits on the control\'s own edge, where its hover fill is, so it\'s no bigger than the control. Judges found the outside ring looked oversized next to the hover tile.'],
-      ],
-    },
-  },
+    'Rings show only after Tab, arrows, Home/End, Page keys or F6, and go away on any click (App.svelte sets html[data-input="keys"]). Text fields keep their ring. The ring is the doc\'s grey; deck tabs ring inside.',
 };
 
 /** Show me: click deck A's Loop tab, then press the play key; the tab is focused but nothing was navigated by key. Flipping shows the ring stuck on it (before) and gone (after). */
