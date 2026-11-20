@@ -120,6 +120,35 @@
 
   // #8 (UI audit flag): stress-plural says "1 track", not "1 tracks".
   const tracksWord = $derived(flag('stress-plural') && results.length === 1 ? 'track' : 'tracks');
+  // #84 (UI audit flag): search-scope: a search's count keeps the total ("4 of 48 tracks").
+  const countText = $derived(
+    flag('search-scope') && query.trim()
+      ? `${results.length.toLocaleString()} of ${all.length.toLocaleString()} ${all.length === 1 ? 'track' : 'tracks'}`
+      : `${results.length.toLocaleString()} ${tracksWord}`,
+  );
+  // #84 (UI audit flag): search-scope: the view a search runs in, for "Nothing in All tracks matches …".
+  const viewName = $derived(
+    view.kind === 'folder' ? short(view.path ?? '')
+    : view.kind === 'playlist' ? playlistName(view.id)
+    : view.kind === 'session' ? (sessions.find((x) => x.start === view.start) ? sessionLabel(sessions.find((x) => x.start === view.start)) : 'History')
+    : 'All tracks',
+  );
+  // #84 (UI audit flag): search-scope marks the searched words in titles and artists.
+  const markOn = $derived(flag('search-scope') && !!query.trim());
+  /** Splits `text` into runs that match a searched word and runs that don't. */
+  function marks(text) {
+    const words = query.toLowerCase().split(/\s+/).filter(Boolean);
+    const lower = (text ?? '').toLowerCase();
+    if (!text || lower.length !== text.length) return [{ s: text ?? '', hit: false }];
+    const hit = new Array(text.length).fill(false);
+    for (const w of words) for (let i = lower.indexOf(w); i >= 0; i = lower.indexOf(w, i + w.length)) hit.fill(true, i, i + w.length);
+    const out = [];
+    for (let i = 0; i < text.length; i++) {
+      if (out.length && out[out.length - 1].hit === hit[i]) out[out.length - 1].s += text[i];
+      else out.push({ s: text[i], hit: hit[i] });
+    }
+    return out;
+  }
 
   /** Tracks still waiting for their length, BPM and key. */
   const pending = $derived(all.reduce((n, t) => n + (t.analysis ? 0 : 1), 0));
@@ -579,10 +608,10 @@
       </label>
       <!-- #10 (UI audit flag): the analysis note set apart by space, not a middle dot. -->
       {#if flag('no-dots')}
-        <span class="count num">{loading ? 'Scanning…' : `${results.length.toLocaleString()} ${tracksWord}`}{#if !loading && pending}{' '}<span
+        <span class="count num">{loading ? 'Scanning…' : countText}{#if !loading && pending}{' '}<span
             class="pending" style:--flag-visual-analysis-done={analysisDone} use:tip={() => 'Finding each track’s length, BPM and key in the background'}>analyzing, {pending.toLocaleString()} to go</span>{/if}</span>
       {:else}
-      <span class="count num">{loading ? 'Scanning…' : `${results.length.toLocaleString()} ${tracksWord}`}{#if !loading && pending}<span
+      <span class="count num">{loading ? 'Scanning…' : countText}{#if !loading && pending}<span
           class="pending" style:--flag-visual-analysis-done={analysisDone} use:tip={() => 'Finding each track’s length, BPM and key in the background'}> · analyzing, {pending.toLocaleString()} to go</span>{/if}</span>
       {/if}
       <button class="btn sm samp" class:on={sampler.open} aria-pressed={sampler.open}
@@ -624,6 +653,9 @@
           <p>No tracks yet.</p>
           <button class="btn sm" onclick={addFolder}>Add a music folder</button>
         </div>
+      {:else if !loading && !results.length && flag('search-scope')}
+        <!-- #84 (UI audit flag): search-scope: name the view, and offer the way out. -->
+        <div class="empty"><p>Nothing in {viewName} matches “{query.trim()}”.</p><button class="btn sm" onclick={clearSearch}>Clear search (Esc)</button></div>
       {:else if !loading && !results.length}
         <div class="empty">Nothing matches “{query}”.</div>
       {/if}
@@ -642,8 +674,8 @@
             onclick={() => { selectIndex(index); scroller.focus({ preventScroll: true }); }} ondblclick={() => autoLoad(t)} onkeydown={() => {}}
             oncontextmenu={(e) => rowMenu(e, t, index)}>
             <span class="ld">{#each decks as d}<b class:b={d === 1} aria-hidden="true"></b>{/each}</span>
-            <span class="t">{#if t.missing}<span class="k" use:tip={() => `File not found: ${t.path}`}>{t.title}</span><span class="sr">, file not found</span>{:else}{t.title}{/if}</span>
-            <span>{t.artist}</span>
+            <span class="t">{#if t.missing}<span class="k" use:tip={() => `File not found: ${t.path}`}>{t.title}</span><span class="sr">, file not found</span>{:else if markOn}{#each marks(t.title) as m}{#if m.hit}<mark>{m.s}</mark>{:else}{m.s}{/if}{/each}{:else}{t.title}{/if}</span>
+            <span>{#if markOn}{#each marks(t.artist) as m}{#if m.hit}<mark>{m.s}</mark>{:else}{m.s}{/if}{/each}{:else}{t.artist}{/if}</span>
             <span class="n num" class:none={a && !a.bpm}>{a ? bpmText(a) || NONE : ''}</span>
             <span class:none={a && !a.key}>{#if a?.key}<span class="k" class:mix={mixKeys.some((k) => keysMix(k, a.key))} use:tip={() => `${keyLongName(a.key)} (${camelot(a.key)})`}>{keyName(a.key)}</span>{:else if a}{NONE}{/if}</span>
             <span class="n num" class:none={a?.failed}>{a ? timeText(a) || NONE : ''}</span>

@@ -1,0 +1,27 @@
+/* #84: a search you can see into and get out of. */
+
+/* The clear button: a 24px target with an 8px cross at --fg-2 (was a 6px
+   cross in 20px at --fg-3). The cross spans 6 of the icon's 16 units, so
+   the icon is 8 × 16 / 6 px; its stroke is scaled back to 1.5px. */
+:root[data-flag-search-scope] section.library .search .clear {
+  width: 24px;
+  height: 24px;
+  margin-right: -6px;
+  color: var(--fg-2);
+}
+:root[data-flag-search-scope] section.library .search .clear:is(:hover, :focus-visible) {
+  color: var(--fg);
+}
+:root[data-flag-search-scope] section.library .search .clear svg {
+  width: calc(8px * 16 / 6);
+  height: calc(8px * 16 / 6);
+  stroke-width: 1.125;
+}
+
+/* Matched words in titles and artists: full strength and a step bolder,
+   no fill (a highlighter fill would fight the selected row). */
+:root[data-flag-search-scope] section.library .row mark {
+  background: none;
+  color: var(--fg);
+  font-weight: 500;
+}
