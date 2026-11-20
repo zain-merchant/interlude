@@ -4,11 +4,12 @@
   import FxUnit from './FxUnit.svelte';
   import Performance from './Performance.svelte';
   import Stems from './Stems.svelte';
+  import Grid from './Grid.svelte';
   import { untrack } from 'svelte';
   import { padMode, padModeTab } from './padmode.svelte.js';
   import { tempoPickup } from './pickup.svelte.js';
-  import { engine, tracks, control, nextGrid, setGrid } from './engine.svelte.js';
-  import { pushEdit } from './undo.svelte.js';
+  import { engine, tracks, control } from './engine.svelte.js';
+  import { bpmEdit, gridEdit, gridMenu, gridMode } from './grid.svelte.js';
   import { dropTarget } from './dnd.svelte.js';
   import { tip, tipText } from './tooltip.svelte.js';
   import { arrive } from './arrive.js';
@@ -16,42 +17,18 @@
   import { keyLabel } from './commands.js';
   import { announce } from './announce.svelte.js';
   import { keyName, keyLongName, camelot, playingKey } from './key.js';
-  import { toggleSlip, beatJump, hasGrid, beatsLabel } from './performance.js';
+  import { toggleSlip, beatJump, hasGrid, beatsLabel, setKeyShift, keyStep, keySync, canKeySync, KEY_SHIFT_MAX } from './performance.js';
+  import { findPhrases, phraseAt, PHRASE_NAMES } from './phrases.js';
 
   /** @type {{ deck: number, onload: (deck: number, track: any) => void, onreveal: (path: string) => void, onsettings?: (page: string) => void }} */
   let { deck, onload, onreveal, onsettings } = $props();
 
   const name = $derived(deck === 0 ? 'A' : 'B');
 
-  // Fixing the beatgrid: right-click the BPM, or double-click it to type one.
-  let editingBpm = $state(false);
-  /** Applies a grid change, with Undo back to the grid before it. */
-  async function gridEdit(op, label, value) {
-    const t = tracks[deck];
-    if (!t) return;
-    const before = t.gridLocked ? t.beatgrid : null;
-    const after = op === 'reset' ? null : nextGrid(t.beatgrid, op, d.position, value);
-    if (op !== 'reset' && !after) return;
-    await setGrid(deck, after);
-    announce(`${label} on deck ${name}`);
-    pushEdit({ label: `${label} on deck ${name}`, undo: () => setGrid(deck, before), redo: () => setGrid(deck, after) });
-  }
-  const gridMenu = (e) => {
-    const t = tracks[deck];
-    if (!t) return;
-    const has = !!t.beatgrid;
-    openMenu(e, [
-      { label: 'Halve BPM', enabled: has, action: () => gridEdit('halve', 'Halved the BPM') },
-      { label: 'Double BPM', enabled: has, action: () => gridEdit('double', 'Doubled the BPM') },
-      { label: 'Set BPM…', action: () => (editingBpm = true) },
-      '-',
-      { label: 'Set downbeat at play head', enabled: has, action: () => gridEdit('downbeat', 'Moved the downbeat') },
-      { label: 'Move grid earlier', enabled: has, action: () => gridEdit('nudge', 'Moved the grid earlier', -0.01) },
-      { label: 'Move grid later', enabled: has, action: () => gridEdit('nudge', 'Moved the grid later', 0.01) },
-      '-',
-      { label: 'Reset to detected grid', enabled: !!t.gridLocked, action: () => gridEdit('reset', 'Reset the beatgrid') },
-    ]);
-  };
+  // Fixing the beatgrid: right-click the BPM (or the waveform), or
+  // double-click the BPM to type one.
+  const editingBpm = $derived(bpmEdit.deck === deck);
+  const openGridMenu = (e) => tracks[deck] && openMenu(e, gridMenu(deck));
   const focusBpm = (node) => {
     node.focus();
     node.select();
@@ -59,13 +36,13 @@
   function bpmKey(e) {
     e.stopPropagation();
     if (e.key === 'Enter') finishBpm(e.currentTarget.value);
-    else if (e.key === 'Escape') editingBpm = false;
+    else if (e.key === 'Escape') bpmEdit.deck = -1;
   }
   function finishBpm(text) {
     if (!editingBpm) return;
-    editingBpm = false;
+    bpmEdit.deck = -1;
     const v = parseFloat(String(text).replace(',', '.'));
-    if (v > 0 && Math.abs(v - d.bpm) > 1e-6) gridEdit('bpm', `Set the BPM to ${+v.toFixed(2)}`, v);
+    if (v > 0 && Math.abs(v - d.bpm) > 1e-6) gridEdit(deck, 'bpm', `Set the BPM to ${+v.toFixed(2)}`, v);
   }
   const other = $derived(deck === 0 ? 'B' : 'A');
   const RANGES = [0.08, 0.16, 0.5];
@@ -92,9 +69,10 @@
     { id: 'loop', label: 'Loop' },
     { id: 'fx', label: 'FX' },
     { id: 'stems', label: 'Stems' },
+    { id: 'grid', label: 'Grid' },
   ];
   const storageKey = () => `oss-dj.deckMode.${deck}`;
-  /** @type {'cues' | 'loop' | 'fx' | 'stems'} */
+  /** @type {'cues' | 'loop' | 'fx' | 'stems' | 'grid'} */
   let mode = $state('cues');
   try {
     const saved = localStorage.getItem(storageKey());
@@ -102,10 +80,16 @@
   } catch {}
   function setMode(m) {
     mode = m;
+    // Grid isn't remembered: while it's open, dragging the waveform slides
+    // the grid instead of scratching, which shouldn't greet a new session.
+    if (m === 'grid') return;
     try {
       localStorage.setItem(storageKey(), m);
     } catch {}
   }
+  $effect(() => {
+    gridMode[deck] = mode === 'grid';
+  });
   // A pad mode button on the controller shows the controls its pads now
   // play, as rekordbox does.
   $effect(() => {
@@ -134,8 +118,12 @@
   // or nudging doesn't make the BPM and key jump around.
   const bpm = $derived(d.bpm > 0 ? d.bpm * d.rate : 0);
   const atCue = $derived(!!t && !d.playing && Math.abs(d.position - d.cue) < 0.01);
-  const pk = $derived(t ? playingKey(d.key, d.rate, d.keylock) : null);
+  const pk = $derived(t ? playingKey(d.key, d.rate, d.keylock, d.keyShift ?? 0) : null);
   const canSync = $derived(!!t && d.bpm > 0 && engine.decks[1 - deck].bpm > 0);
+  // Phrases (intro, build, drop...) from the waveform on the grid; found
+  // again when the grid changes.
+  const phrases = $derived(t ? findPhrases(t.bins, t.binsPerSec, t.beatgrid, t.duration) : []);
+  const now = $derived(t?.beatgrid ? phraseAt(phrases, d.position, t.beatgrid) : null);
 
   let lastTouch = 0;
 
@@ -209,13 +197,34 @@
   const slipTip = () =>
     tipText('Slip on: after a scratch, loop, held hot cue or pause, the track picks up where it would have been. Click to turn off', keyLabel(`deck.${deck}.slip`));
   const rangeTip = () => `Tempo ${pct(ratePct)}, fader range ±${Math.round(range * 100)}%. Click to change the range`;
+  const st = (n) => `${Math.abs(n)} ${Math.abs(n) === 1 ? 'semitone' : 'semitones'}`;
   const keyTip = () => {
     if (!pk) return '';
     const track = `${keyLongName(d.key)} (${camelot(d.key)})`;
-    if (!pk.shift) return `Key ${track}`;
-    const st = Math.abs(pk.shift) === 1 ? 'semitone' : 'semitones';
-    return `Key ${keyLongName(pk)} (${camelot(pk)}): the track is in ${track}, shifted ${pk.shift > 0 ? 'up' : 'down'} ${Math.abs(pk.shift)} ${st} by the tempo. Key lock keeps the original key.`;
+    const tempo = pk.shift - pk.keyShift;
+    const parts = [
+      pk.keyShift && `key shift ${pk.keyShift > 0 ? 'up' : 'down'} ${st(pk.keyShift)}`,
+      tempo && `the tempo ${tempo > 0 ? 'up' : 'down'} ${st(tempo)}`,
+    ].filter(Boolean);
+    const now = pk.shift ? `Key ${keyLongName(pk)} (${camelot(pk)}): the track is in ${track}, moved by ${parts.join(' and ')}` : `Key ${track}${pk.keyShift ? `, after key shift ${pk.keyShift > 0 ? 'up' : 'down'} ${st(pk.keyShift)} and the tempo back` : ''}`;
+    return `${now}. Click to shift the key`;
   };
+  // The key shift menu, from a click (or keyboard press) on the key.
+  function keyMenu(e) {
+    if (!pk) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const r = e.currentTarget.getBoundingClientRect();
+    const at = e.clientX || e.clientY ? e : { clientX: r.left, clientY: r.bottom, preventDefault() {}, stopPropagation() {} };
+    const ks = d.keyShift ?? 0;
+    openMenu(at, [
+      { label: 'Key up a semitone', action: () => keyStep(deck, 1), key: keyLabel(`deck.${deck}.keyUp`), enabled: ks < KEY_SHIFT_MAX },
+      { label: 'Key down a semitone', action: () => keyStep(deck, -1), key: keyLabel(`deck.${deck}.keyDown`), enabled: ks > -KEY_SHIFT_MAX },
+      { label: "Back to the track's key", action: () => setKeyShift(deck, 0), key: keyLabel(`deck.${deck}.keyReset`), enabled: ks !== 0 },
+      '-',
+      { label: `Match deck ${other}'s key`, action: () => keySync(deck), key: keyLabel(`deck.${deck}.keySync`), enabled: canKeySync(deck) },
+    ]);
+  }
   const bend = (v) => () => t && control({ type: 'setBend', deck, bend: v });
 
   const regionLabel = $derived(
@@ -240,8 +249,8 @@
           <div class="artist">Drag a track here or press {keyLabel(`deck.${deck}.load`)}</div>
         {/if}
       </div>
-      <div class="bpm" oncontextmenu={gridMenu} ondblclick={() => t && (editingBpm = true)} role="group" aria-label="Tempo"
-        use:tip={() => (editingBpm ? '' : d.bpm > 0 ? `Track tempo ${d.bpm.toFixed(2)} BPM${t?.gridLocked ? ', beatgrid fixed by hand' : ''}. Right-click to fix the beatgrid` : t ? 'No clear beat found. Double-click to set the BPM' : '')}>
+      <div class="bpm" oncontextmenu={openGridMenu} ondblclick={() => t && (bpmEdit.deck = deck)} role="group" aria-label="Tempo"
+        use:tip={() => (editingBpm ? '' : d.bpm > 0 ? `Track tempo ${d.bpm.toFixed(2)} BPM${t?.gridLocked ? ', beatgrid fixed by hand' : ''}. Right-click here or on the waveform to fix the beatgrid` : t ? 'No clear beat found. Double-click to set the BPM' : '')}>
         {#if editingBpm}
           <input class="big num edit" value={d.bpm > 0 ? +d.bpm.toFixed(2) : ''} inputmode="decimal" aria-label="Track BPM" spellcheck="false"
             use:focusBpm onkeydown={bpmKey} onblur={(e) => finishBpm(e.currentTarget.value)} />
@@ -249,14 +258,29 @@
           <!-- The tempo arrives with the track, and again when analysis finds it. -->
           <div class="big num" use:arrive={{ key: `${t?.path}:${d.bpm > 0}`, delay: 40 }}>{bpm > 0 ? bpm.toFixed(2) : '—'}</div>
         {/if}
-        <div class="unit" use:arrive={{ key: `${t?.path}:${!!pk}`, delay: 60 }}>{#if pk}<span class="key" class:shifted={pk.shift} use:tip={keyTip}>{keyName(pk)} · {camelot(pk)}</span>{" · "}{/if}BPM</div>
+        <div class="unit" use:arrive={{ key: `${t?.path}:${!!pk}`, delay: 60 }}>{#if pk}<button class="key" class:shifted={pk.shift} aria-label="Key {keyName(pk)}, {camelot(pk)}{pk.keyShift ? `, shifted ${pk.keyShift > 0 ? 'up' : 'down'} ${st(pk.keyShift)}` : ''}. Shift the key"
+          aria-haspopup="menu" onclick={keyMenu} oncontextmenu={keyMenu} ondblclick={(e) => e.stopPropagation()} use:tip={keyTip}>{keyName(pk)} · {camelot(pk)}{#if pk.keyShift}<span class="ks num">{pk.keyShift > 0 ? '+' : '−'}{Math.abs(pk.keyShift)}</span>{/if}<svg viewBox="0 0 10 10" aria-hidden="true"><path d="M2.5 4l2.5 2.5L7.5 4" /></svg></button>{" · "}{/if}BPM</div>
       </div>
     </header>
 
-    <div class="overview" use:arrive={{ key: t?.path, delay: 0, y: 0, blur: 0, duration: 280 }}><Waveform {deck} mode="overview" /></div>
+    <div class="overview" use:arrive={{ key: t?.path, delay: 0, y: 0, blur: 0, duration: 280 }}>
+      <Waveform {deck} mode="overview" />
+      {#if phrases.length}
+        <div class="phrases" aria-hidden="true">
+          {#each phrases as p (p.start)}
+            <span class="phrase {p.kind}" style:left="{(p.start / t.duration) * 100}%" style:width="{((p.end - p.start) / t.duration) * 100}%"></span>
+          {/each}
+        </div>
+      {/if}
+    </div>
 
     <div class="times" use:arrive={{ key: t?.path, delay: 40, y: 3, blur: 0 }}>
       <span class="el num"><span class="sr">Elapsed </span>{fmt(d.position)}</span>
+      {#if now}
+        <span class="now {now.phrase.kind}" use:tip={() => `${PHRASE_NAMES[now.phrase.kind]}: ${now.phrase.bars} bars, energy ${now.phrase.energy} of 10. Found from the waveform on the beatgrid`}>
+          {PHRASE_NAMES[now.phrase.kind]} · <span class="num">{now.barsLeft}</span> {now.barsLeft === 1 ? 'bar' : 'bars'} left
+        </span>
+      {/if}
       <span class="rm num"><span class="sr">Remaining </span>{fmt(d.position - d.duration)}</span>
     </div>
 
@@ -265,15 +289,17 @@
         {#each MODES as m}
           {@const busy = (m.id === 'loop' && d.looping) || (m.id === 'fx' && d.fx?.on) || (m.id === 'stems' && (d.stems ?? 15) !== 15)}
           <button role="tab" class:on={mode === m.id} aria-selected={mode === m.id} tabindex={mode === m.id ? 0 : -1}
-            onclick={() => setMode(m.id)} use:tip={() => (busy ? `${m.label} (active)` : m.label)}>
+            onclick={() => setMode(m.id)} use:tip={() => (busy ? `${m.label} (active)` : m.id === 'grid' ? 'Grid: fix the beatgrid. While open, drag the waveform to slide it' : m.label)}>
             {m.label}{#if busy}<i aria-label="active"></i>{/if}
           </button>
         {/each}
       </div>
 
-    <div class="strip" role="tabpanel" aria-label={MODES.find((m) => m.id === mode)?.label}>
+    <div class="strip" class:cues={mode === 'cues'} role="tabpanel" aria-label={MODES.find((m) => m.id === mode)?.label}>
       {#if mode === 'fx'}
         <FxUnit {deck} />
+      {:else if mode === 'grid'}
+        <Grid {deck} />
       {:else if mode === 'stems'}
         <Stems {deck} onsettings={() => onsettings?.('stems')} />
       {:else}
@@ -447,6 +473,34 @@
     font-weight: 300;
     color: var(--fg-2);
   }
+  /* Phrases: a thin strip along the bottom of the overview, and the one
+     playing between the times. */
+  .phrases {
+    position: absolute;
+    inset: auto 0 0 0;
+    height: 3px;
+    pointer-events: none;
+  }
+  .phrase {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    background: var(--phrase);
+    box-shadow: inset -1px 0 0 var(--well);
+  }
+  .now {
+    font-size: var(--t-xs);
+    color: var(--phrase);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .intro, .outro { --phrase: var(--fg-4); }
+  .verse { --phrase: var(--fg-3); }
+  .breakdown { --phrase: var(--hc-2); }
+  .build { --phrase: var(--warn); }
+  .drop { --phrase: var(--hc-3); }
+  .now.intro, .now.outro, .now.verse { color: var(--fg-2); }
 
   /* Tabs, the mode row and the transport share the deck's four columns, so
      the tab bar spans the deck and every edge lines up. */
@@ -458,7 +512,7 @@
   }
   .modes {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 8px;
     border-bottom: 1px solid var(--line);
   }
@@ -501,6 +555,11 @@
     min-height: var(--h-lg);
     display: grid;
     align-items: center;
+  }
+  /* The hot cues fit themselves to the room the deck has (two rows, or one
+     compact row in a short window), so they measure the strip. */
+  .strip.cues {
+    container-type: size;
   }
   .transport {
     display: grid;
@@ -660,10 +719,44 @@
     clip-path: inset(50%);
     white-space: nowrap;
   }
+  /* The key opens the key shift menu: a chevron, as on the FX picker, says
+     so, and hover gives it a fill like other ghost buttons. */
   .key {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    margin: 0 -2px 0 -5px;
+    padding: 0 2px 0 5px;
     color: var(--fg-3);
+    font: inherit;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 120ms ease, color 120ms ease;
   }
-  .key.shifted {
+  .key svg {
+    width: 9px;
+    height: 9px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.4;
+    opacity: 0.7;
+  }
+  .key.shifted,
+  .key:hover {
     color: var(--fg);
+  }
+  .key:hover {
+    background: var(--hover);
+  }
+  .key:focus-visible {
+    outline: 2px solid var(--deck);
+    outline-offset: 1px;
+  }
+  /* Key shift, in semitones, after the key it gives. */
+  .ks {
+    margin-left: 0.35em;
+    color: var(--deck);
   }
 </style>

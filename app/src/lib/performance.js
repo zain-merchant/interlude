@@ -1,4 +1,4 @@
-// Hot cues, loops, beat jump and slip: the actions shared by the deck's pads,
+// Hot cues, loops, beat jump, slip and key shift: the actions shared by the deck's pads,
 // the keyboard (commands.js) and nothing else. The engine does the work;
 // these only check a command makes sense and send it.
 
@@ -6,8 +6,9 @@ import { engine, tracks, control } from './engine.svelte.js';
 import { announce } from './announce.svelte.js';
 import { deckSettings, setDeckSetting, saveSlip } from './decksettings.svelte.js';
 
-/** Hot cues the deck shows as pads. The engine and the FLX4 have eight. */
-export const PADS = 4;
+/** Hot cues the deck shows as pads: all eight, like the engine and the
+ * FLX4, in two rows of four laid out like the controller's pads. */
+export const PADS = 8;
 
 const deckName = (deck) => 'AB'[deck];
 /** True when the deck's track has a beatgrid, which loops and jumps need. */
@@ -65,6 +66,34 @@ export function setSlip(deck, on) {
 /** Slip mode on or off. */
 export const toggleSlip = (deck) => setSlip(deck, !engine.decks[deck].slip);
 
+/** How far key shift goes either way, in semitones, as in the engine. */
+export const KEY_SHIFT_MAX = 12;
+
+const semis = (n) => `${n > 0 ? '+' : n < 0 ? '−' : ''}${Math.abs(n)} ${Math.abs(n) === 1 ? 'semitone' : 'semitones'}`;
+
+/** Sets a deck's key shift, in semitones from the track's key. */
+export function setKeyShift(deck, semitones) {
+  if (!tracks[deck]) return;
+  const s = Math.max(-KEY_SHIFT_MAX, Math.min(KEY_SHIFT_MAX, semitones));
+  control({ type: 'setKeyShift', deck, semitones: s });
+  // Shown at once; the engine's next report agrees.
+  engine.decks[deck].keyShift = s;
+  announce(s ? `Deck ${deckName(deck)} key ${semis(s)}` : `Deck ${deckName(deck)} back to the track's key`);
+}
+
+/** Moves a deck's key a semitone up (1) or down (-1). */
+export const keyStep = (deck, dir) => setKeyShift(deck, (engine.decks[deck].keyShift ?? 0) + dir);
+
+/** True when both decks have a key, which key sync needs. */
+export const canKeySync = (deck) => !!tracks[deck] && !!engine.decks[deck].key && !!tracks[1 - deck] && !!engine.decks[1 - deck].key;
+
+/** Shifts a deck's key to the other deck's. */
+export function keySync(deck) {
+  if (!canKeySync(deck)) return;
+  control({ type: 'keySync', deck });
+  announce(`Deck ${deckName(deck)} key matched to deck ${deckName(1 - deck)}`);
+}
+
 /** Quantize, for both decks, from Settings > Decks (B toggles it too). */
 export function toggleQuantize() {
   const on = !deckSettings.quantize;
@@ -111,6 +140,16 @@ export function runPerformance(id, down) {
       return true;
     case 'slip':
       if (down) toggleSlip(deck);
+      return true;
+    case 'keyUp':
+    case 'keyDown':
+      if (down) keyStep(deck, m[2] === 'keyUp' ? 1 : -1);
+      return true;
+    case 'keyReset':
+      if (down) setKeyShift(deck, 0);
+      return true;
+    case 'keySync':
+      if (down) keySync(deck);
       return true;
   }
   return false;

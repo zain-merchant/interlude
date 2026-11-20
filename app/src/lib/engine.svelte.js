@@ -5,7 +5,7 @@ import { backend } from './backend.js';
 import { autoGain } from './autogain.svelte.js';
 
 const emptyDeck = () => ({
-  loaded: false, playing: false, position: 0, duration: 0, cue: 0, rate: 1, speed: 1, bpm: 0, key: null, keylock: false, generation: 0, peak: 0,
+  loaded: false, playing: false, position: 0, duration: 0, cue: 0, rate: 1, speed: 1, bpm: 0, key: null, keylock: false, keyShift: 0, generation: 0, peak: 0,
   hotCues: Array(8).fill(null), loopIn: null, loopOut: null, looping: false, loopBeats: 4, stems: 0b1111,
   slip: false, slipPosition: null,
 });
@@ -228,6 +228,14 @@ function frame(now) {
 
 export function startEngineLoop() {
   requestAnimationFrame(frame);
+  // Beat This! refines a deck's grid in the background after it loads.
+  backend.onDeckBeatgrid?.(({ deck, path, beatgrid }) => {
+    const t = tracks[deck];
+    if (t && t.path === path && !t.gridLocked) {
+      tracks[deck] = { ...t, beatgrid };
+      wake();
+    }
+  });
   // Input can change what's drawn (zoom, resize, settings) without
   // changing engine state, so any of it restarts the frame loop.
   for (const type of ['pointerdown', 'keydown', 'wheel', 'resize', 'focus']) {

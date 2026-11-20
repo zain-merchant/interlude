@@ -17,7 +17,7 @@ const accelerator = (b) => (b?.mod ? ['CmdOrCtrl', b.shift && 'Shift', b.code].f
 /**
  * Builds the menu and makes it the app menu.
  * @param {(id: string) => void} run runs a command from commands.js
- * @param {{ addFolder: () => void, importLibrary: () => void, keyboard: () => void, report: () => void, checkUpdates: () => void, undoInField: (redo: boolean) => boolean }} actions
+ * @param {{ addFolder: () => void, importLibrary: () => void, keyboard: () => void, report: () => void, controllerSetup: () => void, checkUpdates: () => void, undoInField: (redo: boolean) => boolean }} actions
  */
 export async function installAppMenu(run, actions) {
   if (!hasAppMenu) return;
@@ -112,7 +112,7 @@ export async function installAppMenu(run, actions) {
       ]),
       sub('Deck', [...deckItems(0), sep(), ...deckItems(1)]),
       sub('Window', [pre('Minimize'), pre('Maximize'), sep(), pre('CloseWindow')]),
-      sub('Help', [item('Keyboard Shortcuts', actions.keyboard), sep(), item('Report a Problem…', actions.report)]),
+      sub('Help', [item('Keyboard Shortcuts', actions.keyboard), item('Controller Not Working…', actions.controllerSetup), sep(), item('Report a Problem…', actions.report)]),
     ]),
   });
   await menu.setAsAppMenu();

@@ -2,11 +2,18 @@
   import { onMount } from 'svelte';
   import { Waveform2D, themeColors, HOT_CUES } from './waveform-2d.js';
   import { tracks, engine, displayPos, displaySlip, onFrame, scrubStart, scrubTo, scrubEnd } from './engine.svelte.js';
+  import { openMenu } from './menu.svelte.js';
+  import { gridMenu, gridMode, startSlide, slide, endSlide } from './grid.svelte.js';
 
   /** @type {{ deck: number, mode?: 'scroll' | 'overview', seconds?: number, onzoom?: (factor: number) => void }} */
   let { deck, mode = 'scroll', seconds = 12, onzoom } = $props();
 
   let canvas;
+  /** Seconds of the track the scrolling view spans: `seconds` of real
+   * time at the deck's tempo. A sped-up deck shows more of its track, so
+   * two synced decks scroll at the same speed with their beats equally
+   * spaced, whatever their own BPMs. */
+  const span = () => seconds * (engine.decks[deck]?.rate > 0.05 ? engine.decks[deck].rate : 1);
   let failed = $state(false);
   /** Hot cue number chips over the scrolling view, moved every frame. */
   const chips = [];
@@ -54,7 +61,7 @@
         slip: bin(displaySlip[deck]),
       };
       if (mode === 'scroll') {
-        const perPx = (seconds * bps) / w;
+        const perPx = (span() * bps) / w;
         const start = playhead - (w / 2) * perPx;
         gl.draw({
           mode, start, perPx, playhead, cue, colors, ...marks,
@@ -89,9 +96,17 @@
   let drag = null;
   let dragging = $state(false);
 
+  // In grid edit mode, dragging slides the beatgrid instead.
+  const editing = $derived(mode === 'scroll' && gridMode[deck]);
+  let sliding = null;
+
   function down(e) {
     if (!tracks[deck] || e.button !== 0) return;
     canvas.setPointerCapture(e.pointerId);
+    if (editing) {
+      if (tracks[deck].beatgrid) sliding = { x: e.clientX, state: startSlide(deck) };
+      return;
+    }
     drag = { x: e.clientX, from: displayPos[deck], live: mode === 'overview' };
     if (drag.live) begin(e);
   }
@@ -102,21 +117,32 @@
     move(e);
   }
   function move(e) {
-    if (!drag) return;
     const r = canvas.getBoundingClientRect();
+    if (sliding) slide(deck, sliding.state, ((e.clientX - sliding.x) / r.width) * span());
+    if (!drag) return;
     if (mode === 'overview') {
       const x = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
       scrubTo(deck, x * tracks[deck].duration);
     } else if (drag.live) {
-      scrubTo(deck, drag.from - ((e.clientX - drag.x) / r.width) * seconds, e.timeStamp);
+      scrubTo(deck, drag.from - ((e.clientX - drag.x) / r.width) * span(), e.timeStamp);
     } else if (Math.abs(e.clientX - drag.x) > 3) {
       begin(e);
     }
   }
   function up() {
+    if (sliding) endSlide(deck, sliding.state);
+    sliding = null;
     if (drag?.live) scrubEnd(deck);
     drag = null;
     dragging = false;
+  }
+
+  // Right-click the scrolling view to fix the beatgrid where you clicked.
+  function menu(e) {
+    if (mode !== 'scroll' || !tracks[deck]) return;
+    const r = canvas.getBoundingClientRect();
+    const at = displayPos[deck] + ((e.clientX - r.left) / r.width - 0.5) * span();
+    openMenu(e, gridMenu(deck, Math.max(0, Math.min(tracks[deck].duration, at))));
   }
 
   // ⌘/Ctrl + scroll zooms; plain scroll scratches through a paused track.
@@ -140,7 +166,7 @@
     if (!wheelTimer && Math.abs(d) < WHEEL_MIN) return;
     if (!wheelTimer) scrubStart(deck, { scratch: true });
     clearTimeout(wheelTimer);
-    scrubTo(deck, displayPos[deck] + (d / canvas.clientWidth) * seconds, e.timeStamp);
+    scrubTo(deck, displayPos[deck] + (d / canvas.clientWidth) * span(), e.timeStamp);
     wheelTimer = setTimeout(() => {
       wheelTimer = null;
       scrubEnd(deck);
@@ -152,12 +178,14 @@
   <canvas
     bind:this={canvas}
     class:dragging
+    class:editing
     onpointerdown={down}
     onpointermove={move}
     onpointerup={up}
     onpointercancel={up}
     onlostpointercapture={up}
     onwheel={wheel}
+    oncontextmenu={menu}
     aria-hidden="true"
   ></canvas>
   {#if mode === 'scroll'}
@@ -188,6 +216,9 @@
   }
   .wave:not(.empty).overview canvas {
     cursor: pointer;
+  }
+  .wave:not(.empty) canvas.editing {
+    cursor: ew-resize;
   }
   .wave:not(.empty) canvas.dragging {
     cursor: grabbing;

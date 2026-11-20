@@ -9,10 +9,12 @@
 //! The performance pads send on their own channels: 8 and 9 (plain and
 //! with SHIFT) for deck 1, 10 and 11 for deck 2, with a different note
 //! range for each pad mode. The controller switches pad modes itself;
-//! hot cue, beat loop, beat jump, sampler and stems (PAD FX1) modes are
-//! mapped. Both decks' sampler pads play the same eight slots. In PAD FX1
-//! mode the top pads mute and unmute vocals, melody, bass and drums, and
-//! the bottom pads play one of them alone. SHIFT + a beat jump pad jumps
+//! hot cue, beat loop, beat jump, sampler, pad FX and stems modes are
+//! mapped. Both decks' sampler pads play the same eight slots. PAD FX1 and
+//! PAD FX2 hold sixteen pad effects that play while a pad is held. Stems
+//! are on KEYBOARD (SHIFT + HOT CUE), where Mixxx puts them too: the top
+//! pads mute and unmute vocals, melody, bass and drums, and the bottom
+//! pads play one of them alone. SHIFT + a beat jump pad jumps
 //! 16 times as far (4 to 32 bars), and SHIFT + PLAY turns slip mode on and
 //! off; the FLX4 has no slip button of its own. The pad mode buttons light
 //! for the mode each deck is in (the controller doesn't light them itself)
@@ -23,13 +25,20 @@
 //! does: SELECT changes the effect (SHIFT goes back), BEAT ◀ ▶ the beat
 //! length, LEVEL/DEPTH the level, and ON/OFF switches it (SHIFT + ON/OFF
 //! turns both decks' effects off). Moving the lever moves the effect to the
-//! new channel; MASTER (1&2) runs it on both decks together. Not mapped yet:
-//! the other pad modes. The headphone level and master level knobs work in
+//! new channel; MASTER (1&2) runs it on both decks together.
+//!
+//! KEY SHIFT (SHIFT + SAMPLER) sets the deck's key: the top pads to the
+//! track's own key, +1, +2 and +3 semitones, the bottom pads to key sync
+//! (the other deck's key), -1, -2 and -3, so each column is a distance from
+//! the original. With SHIFT, pads 7 and 8 step down and up a semitone at a
+//! time, as far as an octave. The pad for the current shift lights.
+//!
+//! The headphone level and master level knobs work in
 //! the controller's own sound card and send no MIDI.
 
 use dj_engine::dsp::{EQ_KILL_DB, EQ_MAX_DB};
 use dj_engine::fx::FX_BEATS;
-use dj_engine::{Command, DeckId, EqBand, FxKind, ALL_STEMS, HOT_CUES, NUM_DECKS, STEMS};
+use dj_engine::{Command, DeckId, EqBand, FxKind, PadFx, ALL_STEMS, HOT_CUES, NUM_DECKS, STEMS};
 
 use std::time::{Duration, Instant};
 
@@ -67,10 +76,14 @@ const JUMP_FORWARD: u8 = 0x3D;
 const PAD_CH: u8 = 7;
 // First note of each pad mode; pads 1 to 8 follow.
 const PAD_HOT_CUE: u8 = 0x00;
-const PAD_STEMS: u8 = 0x10;
+const PAD_FX1: u8 = 0x10;
 const PAD_BEAT_JUMP: u8 = 0x20;
 const PAD_SAMPLER: u8 = 0x30;
+/// KEYBOARD mode's pads, which play stems here.
+const PAD_STEMS: u8 = 0x40;
+const PAD_FX2: u8 = 0x50;
 const PAD_BEAT_LOOP: u8 = 0x60;
+const PAD_KEY_SHIFT: u8 = 0x70;
 /// Pad mode buttons (deck notes), as (button, SHIFT + button): HOT CUE /
 /// KEYBOARD, PAD FX1 / PAD FX2, BEAT JUMP / BEAT LOOP, SAMPLER / KEY SHIFT.
 /// Each pair shares one LED.
@@ -85,6 +98,17 @@ const PAD_LOOP_BEATS: [f64; 8] = [0.25, 0.5, 1.0, 2.0, 4.0, 8.0, 16.0, 32.0];
 /// Jump of each pad in beat jump mode, in beats: back on the left pad of
 /// each pair, forward on the right.
 const PAD_JUMP_BEATS: [f64; 8] = [-1.0, 1.0, -2.0, 2.0, -4.0, 4.0, -8.0, 8.0];
+/// Key shift of each pad in key shift mode, in semitones; `None` is key sync.
+const PAD_KEY_SHIFTS: [Option<i32>; 8] = [
+    Some(0),
+    Some(1),
+    Some(2),
+    Some(3),
+    None,
+    Some(-1),
+    Some(-2),
+    Some(-3),
+];
 /// SHIFT + a beat jump pad jumps this many times as far: 4, 8, 16 and 32
 /// bars, for skipping whole phrases.
 const PAD_JUMP_SHIFT: f64 = 16.0;
@@ -151,7 +175,9 @@ const SENT_HISTORY: usize = 32;
 struct DeckState {
     shift: bool,
     range_index: usize,
-    /// Rate the hardware fader last asked for.
+    /// Where the hardware fader last sat (0.0 top ..= 1.0 bottom), and the
+    /// rate that meant in the range it was in.
+    fader_value: Option<f64>,
     fader_rate: Option<f64>,
     /// Rates this mapping sent lately, newest first. The engine reports
     /// a rate a moment after it's sent, so while the fader moves quickly the
@@ -188,6 +214,7 @@ impl Default for DeckState {
         Self {
             shift: false,
             range_index: 0,
+            fader_value: None,
             fader_rate: None,
             sent_rates: [None; SENT_HISTORY],
             took_over: None,
@@ -262,9 +289,33 @@ impl Flx4 {
         PITCH_RANGES[self.decks[d].range_index]
     }
 
+    /// Widens deck `d`'s range until the deck's `rate` fits, so the fader
+    /// can always reach a tempo set elsewhere (SYNC, the app's fader, which
+    /// widens its own range the same way) and take it over. Only while the
+    /// fader doesn't control the tempo: its position then means nothing yet.
+    fn fit_range(&mut self, d: usize, rate: f64) {
+        let s = &mut self.decks[d];
+        if s.owns(rate) {
+            return;
+        }
+        let before = s.range_index;
+        while (rate - 1.0).abs() > PITCH_RANGES[s.range_index] + 1e-9
+            && s.range_index + 1 < PITCH_RANGES.len()
+        {
+            s.range_index += 1;
+        }
+        if s.range_index != before {
+            let range = PITCH_RANGES[s.range_index];
+            s.fader_rate = s.fader_value.map(|v| 1.0 - range + v * 2.0 * range);
+        }
+    }
+
     /// Handles a pitch fader move to `value` (0.0 top ..= 1.0 bottom).
     /// Top is slower, like a turntable.
     fn tempo(&mut self, d: usize, value: f64, state: &State, out: &mut Vec<Action>) {
+        if state.decks[d].loaded {
+            self.fit_range(d, state.decks[d].rate);
+        }
         let range = self.range(d);
         let rate = 1.0 - range + value * 2.0 * range;
         let deck = &state.decks[d];
@@ -274,6 +325,7 @@ impl Flx4 {
             .fader_rate
             .is_some_and(|prev| (prev - deck.rate) * (rate - deck.rate) <= 0.0);
         let close = (rate - deck.rate).abs() < PICKUP_TOLERANCE;
+        s.fader_value = Some(value);
         s.fader_rate = Some(rate);
         // A stopped deck can jump; a playing one would lurch audibly.
         if in_control || crossed || close || !deck.playing {
@@ -296,6 +348,7 @@ impl Flx4 {
         // the current one again rather than jump.
         s.sent_rates = [None; SENT_HISTORY];
         s.took_over = None;
+        s.fader_value = None;
         s.fader_rate = None;
     }
 
@@ -382,6 +435,18 @@ impl Flx4 {
                 };
                 Command::SetStems { deck, mask }
             }
+            // Pad FX play while held, with or without SHIFT.
+            (PAD_FX1 | PAD_FX2, _, _) => {
+                let bank = if mode == PAD_FX2 { 8 } else { 0 };
+                let Some(fx) = PadFx::from_index(bank + i) else {
+                    return vec![];
+                };
+                if pressed {
+                    Command::PadFxPress { deck, fx }
+                } else {
+                    Command::PadFxRelease { deck, fx }
+                }
+            }
             (PAD_HOT_CUE, false, true) => Command::HotCuePress { deck, index: i },
             (PAD_HOT_CUE, false, false) => Command::HotCueRelease { deck, index: i },
             (PAD_HOT_CUE, true, true) => Command::HotCueClear { deck, index: i },
@@ -392,6 +457,19 @@ impl Flx4 {
             (PAD_BEAT_JUMP, _, true) => Command::BeatJump {
                 deck,
                 beats: PAD_JUMP_BEATS[i] * if shift { PAD_JUMP_SHIFT } else { 1.0 },
+            },
+            (PAD_KEY_SHIFT, false, true) => match PAD_KEY_SHIFTS[i] {
+                Some(semitones) => Command::SetKeyShift { deck, semitones },
+                None => Command::KeySync { deck },
+            },
+            // SHIFT: pads 7 and 8 step down and up; the rest work as without.
+            (PAD_KEY_SHIFT, true, true) => match (i, PAD_KEY_SHIFTS[i]) {
+                (6 | 7, _) => Command::SetKeyShift {
+                    deck,
+                    semitones: state.decks[d].key_shift + if i == 7 { 1 } else { -1 },
+                },
+                (_, Some(semitones)) => Command::SetKeyShift { deck, semitones },
+                (_, None) => Command::KeySync { deck },
             },
             _ => return vec![],
         };
@@ -674,6 +752,11 @@ impl Mapping for Flx4 {
     /// tempo, so the screen can show where to move it to take over.
     fn poll(&mut self, state: &State) -> Vec<Action> {
         let mut out = vec![];
+        for d in 0..NUM_DECKS {
+            if state.decks[d].loaded {
+                self.fit_range(d, state.decks[d].rate);
+            }
+        }
         for (d, s) in self.decks.iter_mut().enumerate() {
             let deck = &state.decks[d];
             let waiting = s.fader_rate.filter(|_| deck.loaded && !s.owns(deck.rate));
@@ -734,8 +817,28 @@ fn all_leds(state: &State) -> Vec<Led> {
                     deck.loaded && deck.stems == 1 << i,
                 ));
             }
+            // The pad for the shift now set lights, as does SHIFT's
+            // step pad for the way it went past ±3.
+            for (i, semis) in PAD_KEY_SHIFTS.iter().enumerate() {
+                let on = deck.loaded
+                    && match (status == NOTE_ON | (pads + 1), i) {
+                        (true, 6) => deck.key_shift < -3,
+                        (true, 7) => deck.key_shift > 3,
+                        _ => *semis == Some(deck.key_shift),
+                    };
+                out.push((status, PAD_KEY_SHIFT + i as u8, on));
+            }
             for (i, slot) in state.sampler.slots.iter().enumerate().take(8) {
                 out.push((status, PAD_SAMPLER + i as u8, slot.loaded));
+            }
+            // Pad FX pads light while held.
+            for (i, fx) in PadFx::ALL.iter().enumerate() {
+                let note = if i < 8 {
+                    PAD_FX1 + i as u8
+                } else {
+                    PAD_FX2 + i as u8 - 8
+                };
+                out.push((status, note, deck.pad_fx == Some(*fx)));
             }
         }
     }
@@ -746,10 +849,13 @@ fn all_leds(state: &State) -> Vec<Led> {
 fn pad_mode_of(note: u8) -> Option<PadMode> {
     match note & !0x07 {
         PAD_HOT_CUE => Some(PadMode::HotCue),
-        PAD_STEMS => Some(PadMode::PadFx1),
+        PAD_FX1 => Some(PadMode::PadFx1),
+        PAD_FX2 => Some(PadMode::PadFx2),
+        PAD_STEMS => Some(PadMode::Keyboard),
         PAD_BEAT_JUMP => Some(PadMode::BeatJump),
         PAD_SAMPLER => Some(PadMode::Sampler),
         PAD_BEAT_LOOP => Some(PadMode::BeatLoop),
+        PAD_KEY_SHIFT => Some(PadMode::KeyShift),
         _ => None,
     }
 }
@@ -978,6 +1084,48 @@ mod tests {
     }
 
     #[test]
+    fn pitch_fader_widens_its_range_to_reach_a_synced_tempo() {
+        // SYNC to a pitched-up deck can ask for more than the fader's ±8%.
+        let mut m = Flx4::new();
+        let mut s = st();
+        s.decks[0].playing = true;
+        assert_eq!(fourteen(&mut m, 0, TEMPO, 8192, &s).len(), 1);
+        s.decks[0].rate = 1.10;
+        // The app's marker already shows the fader on the wider ±16% scale,
+        // still at the centre.
+        let p = m.poll(&s);
+        assert!(
+            p.iter().any(|a| matches!(a, Action::TempoPickup { fader: Some(r), .. } if (r - 1.0).abs() < 1e-3)),
+            "{p:?}"
+        );
+        // Pulled all the way down it passes 1.10 and takes over.
+        let c = fourteen(&mut m, 0, TEMPO, 16383, &s);
+        assert!(
+            matches!(c[..], [Command::SetRate { rate, .. }] if (rate - 1.16).abs() < 1e-9),
+            "{c:?}"
+        );
+    }
+
+    #[test]
+    fn pitch_fader_keeps_its_range_for_tempos_it_set() {
+        let mut m = Flx4::new();
+        let mut s = st();
+        s.decks[0].playing = true;
+        assert_eq!(fourteen(&mut m, 0, TEMPO, 8192, &s).len(), 1);
+        let c = fourteen(&mut m, 0, TEMPO, 16383, &s);
+        let [Command::SetRate { rate, .. }] = c[..] else {
+            panic!("{c:?}")
+        };
+        s.decks[0].rate = rate;
+        m.poll(&s);
+        let c = fourteen(&mut m, 0, TEMPO, 0, &s);
+        assert!(
+            matches!(c[..], [Command::SetRate { rate, .. }] if (rate - 0.92).abs() < 1e-9),
+            "{c:?}"
+        );
+    }
+
+    #[test]
     fn app_shows_where_the_tempo_fader_waits_after_sync() {
         let mut m = Flx4::new();
         let mut s = st();
@@ -1091,6 +1239,14 @@ mod tests {
                 index: 2
             }
         ));
+        // All eight pads are hot cues: pad 8 is hot cue 8.
+        assert!(matches!(
+            one(&mut m, [0x97, 0x07, 0x7F], &s),
+            Command::HotCuePress {
+                deck: DeckId::A,
+                index: 7
+            }
+        ));
         // SHIFT + pad clears, on deck 2's shifted channel.
         assert!(matches!(
             one(&mut m, [0x9A, 0x07, 0x7F], &s),
@@ -1111,14 +1267,14 @@ mod tests {
         s.decks[1].stems = 0b1111;
         // Pad 1 mutes vocals; pad 4 (deck B, with SHIFT) mutes drums.
         assert!(matches!(
-            one(&mut m, [0x97, 0x10, 0x7F], &s),
+            one(&mut m, [0x97, 0x40, 0x7F], &s),
             Command::SetStems {
                 deck: DeckId::A,
                 mask: 0b1110
             }
         ));
         assert!(matches!(
-            one(&mut m, [0x9A, 0x13, 0x7F], &s),
+            one(&mut m, [0x9A, 0x43, 0x7F], &s),
             Command::SetStems {
                 deck: DeckId::B,
                 mask: 0b0111
@@ -1126,20 +1282,64 @@ mod tests {
         ));
         // Pad 7 plays bass alone; pressed again, everything comes back.
         assert!(matches!(
-            one(&mut m, [0x97, 0x16, 0x7F], &s),
+            one(&mut m, [0x97, 0x46, 0x7F], &s),
             Command::SetStems { mask: 0b0100, .. }
         ));
         s.decks[0].stems = 0b0100;
         assert!(matches!(
-            one(&mut m, [0x97, 0x16, 0x7F], &s),
+            one(&mut m, [0x97, 0x46, 0x7F], &s),
             Command::SetStems { mask: 0b1111, .. }
         ));
-        assert!(cmds(m.handle(&[0x97, 0x16, 0x00], &s)).is_empty());
+        assert!(cmds(m.handle(&[0x97, 0x46, 0x00], &s)).is_empty());
         // LEDs: bass lit on top, its solo pad lit below.
         let leds = m.leds(&s);
         let lit = |note: u8| leds.contains(&vec![0x97, note, 0x7F]);
-        assert!(lit(0x12) && lit(0x16));
-        assert!(!lit(0x10) && !lit(0x14));
+        assert!(lit(0x42) && lit(0x46));
+        assert!(!lit(0x40) && !lit(0x44));
+    }
+
+    #[test]
+    fn pad_fx_pads_play_while_held() {
+        let mut m = Flx4::new();
+        let s = st();
+        // PAD FX1 pad 1: echo, on press and off on release.
+        assert!(matches!(
+            one(&mut m, [0x97, 0x10, 0x7F], &s),
+            Command::PadFxPress {
+                deck: DeckId::A,
+                fx: PadFx::Echo
+            }
+        ));
+        assert!(matches!(
+            one(&mut m, [0x97, 0x10, 0x00], &s),
+            Command::PadFxRelease {
+                deck: DeckId::A,
+                fx: PadFx::Echo
+            }
+        ));
+        // PAD FX2 pad 8 on deck B, with SHIFT held: the flanger.
+        assert!(matches!(
+            one(&mut m, [0x9A, 0x57, 0x7F], &s),
+            Command::PadFxPress {
+                deck: DeckId::B,
+                fx: PadFx::Flanger
+            }
+        ));
+    }
+
+    #[test]
+    fn pad_mode_buttons_put_stems_on_keyboard() {
+        let mut m = Flx4::new();
+        let s = st();
+        // SHIFT + HOT CUE is the KEYBOARD button.
+        let acts = m.handle(&[0x90, 0x69, 0x7F], &s);
+        assert!(acts.iter().any(|a| matches!(
+            a,
+            Action::PadMode {
+                deck: DeckId::A,
+                mode: PadMode::Keyboard
+            }
+        )));
     }
 
     #[test]
@@ -1171,6 +1371,59 @@ mod tests {
             one(&mut m, [0x9A, 0x27, 0x7F], &s),
             Command::BeatJump { deck: DeckId::B, beats } if beats == 128.0
         ));
+    }
+
+    #[test]
+    fn key_shift_pads() {
+        let mut m = Flx4::new();
+        let mut s = st();
+        let shift = |c| match c {
+            Command::SetKeyShift { semitones, .. } => semitones,
+            c => panic!("{c:?}"),
+        };
+        assert_eq!(shift(one(&mut m, [0x97, 0x70, 0x7F], &s)), 0);
+        assert_eq!(shift(one(&mut m, [0x97, 0x73, 0x7F], &s)), 3);
+        assert_eq!(shift(one(&mut m, [0x99, 0x77, 0x7F], &s)), -3);
+        assert!(matches!(
+            one(&mut m, [0x99, 0x74, 0x7F], &s),
+            Command::KeySync { deck: DeckId::B }
+        ));
+        assert_eq!(m.decks[1].pad_mode, PadMode::KeyShift);
+        // SHIFT steps from wherever it is.
+        s.decks[0].key_shift = 3;
+        assert_eq!(shift(one(&mut m, [0x98, 0x77, 0x7F], &s)), 4);
+        assert_eq!(shift(one(&mut m, [0x98, 0x76, 0x7F], &s)), 2);
+        assert_eq!(shift(one(&mut m, [0x98, 0x71, 0x7F], &s)), 1);
+        // Releases do nothing.
+        assert!(cmds(m.handle(&[0x97, 0x71, 0x00], &s)).is_empty());
+    }
+
+    #[test]
+    fn key_shift_leds() {
+        let mut m = Flx4::new();
+        let mut s = st();
+        let lit = |m: &mut Flx4, s: &State| -> Vec<Vec<u8>> {
+            m.reset_leds();
+            m.leds(s)
+                .into_iter()
+                .filter(|l| l[2] == 0x7F && (0x70..0x78).contains(&l[1]) && l[0] <= 0x98)
+                .collect()
+        };
+        assert_eq!(
+            lit(&mut m, &s),
+            vec![vec![0x97, 0x70, 0x7F], vec![0x98, 0x70, 0x7F]]
+        );
+        s.decks[0].key_shift = 2;
+        assert_eq!(
+            lit(&mut m, &s),
+            vec![vec![0x97, 0x72, 0x7F], vec![0x98, 0x72, 0x7F]]
+        );
+        // With SHIFT, pad 7 steps down rather than meaning -2.
+        s.decks[0].key_shift = -2;
+        assert_eq!(lit(&mut m, &s), vec![vec![0x97, 0x76, 0x7F]]);
+        // Past -3 only SHIFT's step-down pad lights.
+        s.decks[0].key_shift = -5;
+        assert_eq!(lit(&mut m, &s), vec![vec![0x98, 0x76, 0x7F]]);
     }
 
     #[test]

@@ -1,8 +1,9 @@
-//! Keylock: change a deck's tempo without changing its pitch.
+//! Keylock and key shift: change a deck's tempo without changing its
+//! pitch, or its pitch without changing its tempo.
 //!
 //! Uses WSOLA (waveform-similarity overlap-add). Two Hann-windowed grains,
 //! each about 40 ms long, overlap by half. Each grain reads the source at
-//! normal pitch; a new grain starts every half grain, taken from wherever
+//! normal pitch (or, for key shift, a little faster or slower); a new grain starts every half grain, taken from wherever
 //! the deck's play head has got to, so the tempo follows the play head while
 //! the pitch stays put. To avoid phasing, the new grain's start is nudged by
 //! up to ~12 ms to the spot whose waveform best matches what the old grain
@@ -103,11 +104,12 @@ impl Stretcher {
     }
 
     /// The next output frame. `pos` is the deck's play head (source frames),
-    /// `step` how far it moves per output frame, and `ratio` the source to
-    /// output sample rate ratio (the step at normal speed).
-    pub fn next(&mut self, src: &Source, pos: f64, step: f64, ratio: f64) -> (f32, f32) {
+    /// `step` how far it moves per output frame, and `grain` how far each
+    /// grain reads per output frame, which sets the pitch: the source to
+    /// output sample rate ratio plays at the track's own pitch.
+    pub fn next(&mut self, src: &Source, pos: f64, step: f64, grain: f64) -> (f32, f32) {
         if self.until_next == 0 {
-            self.start_grain(src, pos, step, ratio);
+            self.start_grain(src, pos, step, grain);
             self.until_next = self.hop;
         }
         self.until_next -= 1;
@@ -121,13 +123,13 @@ impl Stretcher {
             let (gl, gr) = read(src, g.src);
             l += gl * w;
             r += gr * w;
-            g.src += ratio;
+            g.src += grain;
             g.phase += 1;
         }
         (l, r)
     }
 
-    fn start_grain(&mut self, src: &Source, pos: f64, step: f64, ratio: f64) {
+    fn start_grain(&mut self, src: &Source, pos: f64, step: f64, grain: f64) {
         let n = self.window.len();
         let (old, new) = if self.grains[0].phase >= n {
             (1, 0)
@@ -136,11 +138,11 @@ impl Stretcher {
         };
         // Place the grain so its middle, where it's loudest, lands on the
         // play head: half a grain from now the play head is at
-        // pos + hop * step, and the grain at start + hop * ratio.
-        let target = pos + self.hop as f64 * (step - ratio);
+        // pos + hop * step, and the grain at start + hop * grain.
+        let target = pos + self.hop as f64 * (step - grain);
         let reference = self.grains[old].src;
-        let search = (SEARCH_SECS * self.out_rate * ratio).round() as i64;
-        let len = (MATCH_SECS * self.out_rate * ratio).round().max(8.0) as i64;
+        let search = (SEARCH_SECS * self.out_rate * grain).round() as i64;
+        let len = (MATCH_SECS * self.out_rate * grain).round().max(8.0) as i64;
         let offset = best_offset(src, reference, target, search, len);
         self.grains[new] = Grain {
             // Keep the reference's sub-frame position, so a perfect match

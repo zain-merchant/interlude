@@ -167,7 +167,7 @@
   </div>
   {#if kill !== undefined}
     <button class="label" class:killed onclick={toggleKill} aria-pressed={killed}
-      use:tip={() => (killed ? `Bring back ${name}` : `Kill ${name}`)}>{label}{killed ? ' · kill' : ''}</button>
+      use:tip={() => (killed ? `Bring back ${name}` : `Kill ${name}`)}>{label}</button>
   {:else if label}
     <span class="label">{label}</span>
   {/if}
