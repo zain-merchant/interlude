@@ -62,7 +62,8 @@ pub struct LibraryTrack {
     format: String,
     /// The file wasn't found in the last scan. Its cues are kept.
     missing: bool,
-    /// Length, BPM and key once analyzed; `None` until then.
+    /// Length, BPM and key once analyzed; `None` until then. Kept, marked
+    /// outdated, while a newer analyzer redoes it.
     analysis: Option<Analysis>,
 }
 
@@ -78,6 +79,9 @@ pub struct Analysis {
     /// analyzer gets back to them.
     loudness: Option<Loudness>,
     failed: bool,
+    /// Found by an older analyzer. Shown until the analyzer redoes it, so
+    /// an update that improves detection doesn't blank the library.
+    outdated: bool,
 }
 
 impl From<TrackSummary> for Analysis {
@@ -88,6 +92,7 @@ impl From<TrackSummary> for Analysis {
             key: s.key,
             loudness: Some(s.loudness),
             failed: false,
+            outdated: false,
         }
     }
 }
@@ -99,12 +104,13 @@ impl Analysis {
         key: None,
         loudness: None,
         failed: true,
+        outdated: false,
     };
 
-    /// Nothing left to analyze: everything is measured, or the file
-    /// couldn't be decoded.
+    /// Nothing left to analyze: everything is measured by the current
+    /// analyzer, or the file couldn't be decoded.
     fn complete(&self) -> bool {
-        self.failed || self.loudness.is_some()
+        !self.outdated && (self.failed || self.loudness.is_some())
     }
 }
 
