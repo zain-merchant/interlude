@@ -89,3 +89,36 @@
 :root[data-flag-buttons] .settings .size[role='group'] {
   align-items: baseline;
 }
+
+/* D5 (decks builder's request): Key lock (and Slip) rest like Sync, so
+   they read as buttons; on keeps the selected look. */
+:root[data-flag-buttons] [data-region^='deck'] .pitch .lock {
+  background: var(--flag-buttons-bg);
+  box-shadow: var(--flag-buttons-ring);
+  color: var(--fg-2);
+}
+:root[data-flag-buttons] [data-region^='deck'] .pitch .lock:hover {
+  background: var(--flag-buttons-bg-hover);
+  box-shadow: var(--flag-buttons-ring-hover);
+  color: var(--fg);
+}
+:root[data-flag-buttons] [data-region^='deck'] .pitch .lock.on,
+:root[data-flag-buttons] [data-region^='deck'] .pitch .lock.on:hover {
+  background: var(--flag-buttons-bg-on);
+  box-shadow: var(--flag-buttons-ring-on), inset 0 0 0 1px var(--line-2);
+  color: var(--fg);
+}
+/* D18: Cue rests like Sync (the style's fill, amber label); the amber ring
+   shows only at the cue point (.lit). */
+:root[data-flag-buttons] [data-region^='deck'] .transport .cue {
+  background: var(--flag-buttons-bg);
+  box-shadow: var(--flag-buttons-ring);
+}
+:root[data-flag-buttons] [data-region^='deck'] .transport .cue:hover:not([aria-disabled='true']) {
+  background: var(--flag-buttons-bg-hover);
+  box-shadow: var(--flag-buttons-ring-hover);
+}
+:root[data-flag-buttons] [data-region^='deck'] .transport .cue.lit,
+:root[data-flag-buttons] [data-region^='deck'] .transport .cue.lit:hover {
+  box-shadow: inset 0 0 0 1.5px var(--cue);
+}

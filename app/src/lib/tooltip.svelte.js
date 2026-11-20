@@ -20,7 +20,8 @@ function place(node, text) {
   tooltip.text = text;
   tooltip.x = r.left + r.width / 2;
   // Above the control unless there's no room; never over its own value.
-  tooltip.below = r.top < 40;
+  // #61 (UI audit flag): eq-kill: a control may ask for its tip below (data-tip-below, set only while that flag is on).
+  tooltip.below = node.dataset.tipBelow !== undefined || r.top < 40;
   tooltip.y = tooltip.below ? r.bottom + 8 : r.top - 8;
   tooltip.visible = true;
   owner = node;

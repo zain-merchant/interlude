@@ -20,3 +20,12 @@
 :root[data-flag-colour-scale][data-flag-colour-scale-tabs='fg-2'] [data-region^='deck'] .modes button:not(.on):hover {
   color: var(--fg);
 }
+
+/* M7 (mixer builder's request): fader scale marks readable (were 14%
+   white, about 1.6:1); the default tick to 0.5. */
+:root[data-flag-colour-scale] .fader .mark {
+  background: rgb(255 255 255 / 0.3);
+}
+:root[data-flag-colour-scale] .fader .tick {
+  background: rgb(255 255 255 / 0.5);
+}

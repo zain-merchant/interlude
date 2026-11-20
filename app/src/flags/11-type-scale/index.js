@@ -19,8 +19,8 @@ export default {
   group: 'Type and colour',
   notes: 'Snaps the stray 12px and 22px text and the one 600 weight onto the --t-* scale and 300/400/500. Tooltips can go to 13 or 11.',
   settings: {
-    tip: { type: 'choice', options: [['sm', 'Tooltips 13'], ['xs', 'Tooltips 11']], default: 'sm', label: 'Tooltip size' },
-    titles: { type: 'choice', options: [['400', 'Regular'], ['500', 'Medium']], default: '400', label: 'Dialog title weight' },
+    tip: { type: 'choice', options: [['sm', 'Tooltips 13', 'Tooltips at the body size: the easiest to read.'], ['xs', 'Tooltips 11', 'Tooltips at the caption size: smaller and quieter, a bit harder to read at a distance.']], default: 'sm', label: 'Tooltip size' },
+    titles: { type: 'choice', options: [['400', 'Regular', 'Dialog titles at the deck title\'s weight, so big text is always light.'], ['500', 'Medium', 'Dialog titles a step bolder, so they stand out more from the text under them.']], default: '400', label: 'Dialog title weight' },
   },
 };
 

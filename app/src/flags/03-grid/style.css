@@ -85,3 +85,8 @@
 :root[data-flag-grid][data-flag-grid-overlay='16'] body::after {
   --u: 16px;
 }
+
+/* D21 (decks builder's request): the deck title and BPM share a baseline. */
+:root[data-flag-grid] [data-region^='deck'] header {
+  align-items: last baseline;
+}

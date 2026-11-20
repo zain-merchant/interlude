@@ -35,9 +35,9 @@ export default {
     overlay: {
       type: 'choice',
       options: [
-        ['off', 'Off'],
-        ['4', '4px'],
-        ['16', '16px'],
+        ['off', 'Off', 'No overlay: the app as it will ship.'],
+        ['4', '4px', 'Draws the 4px grid every size and gap sits on, to check small alignments.'],
+        ['16', '16px', 'Draws a coarser 16px grid, to check that panels and rows line up across the window.'],
       ],
       default: 'off',
       label: 'Grid overlay',

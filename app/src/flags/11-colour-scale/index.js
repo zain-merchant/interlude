@@ -17,7 +17,7 @@ export default {
   group: 'Type and colour',
   notes: 'Analysis note off the disabled level; nudge arrows match the other arrow buttons; optionally deck tabs match the other navigation.',
   settings: {
-    tabs: { type: 'choice', options: [['fg-3', 'Tabs as now'], ['fg-2', 'Tabs like nav']], default: 'fg-3', label: 'Inactive deck tabs' },
+    tabs: { type: 'choice', options: [['fg-3', 'Tabs as now', 'Inactive deck tabs stay at the quietest level, so the active tab stands out most.'], ['fg-2', 'Tabs like nav', 'Inactive deck tabs at the same level as the library sidebar and Settings pages: one rule for all navigation.']], default: 'fg-3', label: 'Inactive deck tabs' },
   },
 };
 
