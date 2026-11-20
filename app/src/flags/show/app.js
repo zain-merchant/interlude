@@ -269,7 +269,8 @@ export async function reset() {
     const open = $(".card[role='dialog'], .settings, .menu");
     if (!open) break;
     const done = $$('.settings .bar button').find((b) => b.textContent.trim() === 'Done');
-    if ($(".card[role='dialog']") || $('.menu') || !done) await key('Escape', { target: document.body });
+    // At the dialog or menu itself: their Escape handlers sit on them, not the window.
+    if ($(".card[role='dialog']") || $('.menu') || !done) await key('Escape', { target: open });
     else await click(done);
     await wait(120);
   }

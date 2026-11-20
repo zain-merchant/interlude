@@ -56,17 +56,21 @@ A flag describes this in an optional `show` export in its `index.js`:
 
 ```js
 export const show = {
-  note: 'What changed and what to compare.',
+  note: 'One plain sentence: what to look at.',
   needs: { 'stress-data': { set: 'worst' } }, // other flags it needs (stress-data reloads the page)
   reload: false,          // true if turning this flag on needs a reload (stress-data itself)
   async setup(app, ctx) { // put the app in the state where the change shows
-    await app.loadTrack(0);
-    ctx.rest = app.snap([app.$('.mixer .cen')]);
-    await app.click(app.$('.mixer .knob button.label'));
+    const low = app.$$('.mixer .ch')[0].querySelectorAll('.knob')[3].querySelector('button.label');
+    await app.click(low);
+    // Once the change is on screen: where things are with the flag on and off.
+    ctx.parts = () => [app.$('.mixer .cen')];
+    ctx.b = app.both('no-shift', ctx.parts());
   },
-  target: '.mixer .knob', // or (app, ctx) => element(s) or rects: what to outline
+  target: '.mixer .knob', // or (app, ctx) => element(s) or rects: what to ring
   aid(d, app, ctx) {      // called ten times a second while the show is up
-    d.ghost(ctx.rest[0], app.$('.mixer .cen').getBoundingClientRect(), { label: 'master' });
+    // Dashed: where it is with the flag the other way (only if it differs).
+    const other = app.other('no-shift', ctx.b);
+    d.ghost(other[0], ctx.parts()[0].getBoundingClientRect(), { label: 'off: master' });
   },
   async replay(app, ctx) {}, // optional: adds a Replay button
   cleanup(app, ctx) {},      // optional: undo setup that would surprise (zoom, a lost device)
@@ -78,15 +82,27 @@ export const show = {
 `selectRow(n | 'last' | 'text')`, `loadTrack(deck, row)`, `play`, `pause`,
 `tab(deck, 'Loop')`, `openSettings`, `openImport`, `openReport`, `zoom`,
 `forceStates` (puts controls in :hover / :active / :focus-visible through
-data-show-* attributes), `snap`, `textRect`, `rectsWithout(id, els)` (rects
-with a flag off, measured without painting), `setFlag`, `mock`
-(`__mockAudio`). `d` (show/overlay.js) draws in window pixels: `box`,
-`line`, `text`, `hguide`, `vguide`, `measure`, `grid`, `circle`, `dot`,
-`arrow`, `ghost(rest, live)`, `padding(el)`, `loupe(key, rect)`, `legend`.
+data-show-* attributes), `snap`, `textRect`, `both(id, els)` and
+`other(id, both)` (rects with the flag on and off, measured without
+painting, and the pair for the flag the other way from now), `without(id,
+fn)`, `rectsWithout(id, els)`, `setFlag`, `mock` (`__mockAudio`). Measure
+with the flag flipped once, in `setup`, not in `aid`.
+
+`d` (show/overlay.js) draws in window pixels, in one visual language:
+**ink** (magenta) for what to look at (the ring as a show starts, `box`,
+`hguide` / `vguide`, `measure` with its value in a filled tag, `grid`,
+`padding`); **ghost** (dashed white) for the flag the other way
+(`ghost(other, live, { label })` draws only what differs and says by how
+much); **tags** (`text(x, y, s, { anchor, tone: 'ok' | 'bad' })`) that place
+themselves clear of each other and of small targets, with a leader if they
+had to move; **loupes** (`loupe(key, src, { zoom, size, near })`) placed
+beside what they magnify, returning a `map` to draw over them with `clip`
+and `path`. Keep to the fewest marks that make the point. The panel and
+the card keep off the targets and the marks.
 
 Everything is drawn in one fixed layer (`.flag-show`) outside the app, and
-`show` exports are only read by the dev-only bar, so production builds don't
-contain them and every flag off is still the app as it was.
+`show` exports are only read by the dev-only panel, so production builds
+don't contain them and every flag off is still the app as it was.
 
 ## Rules
 

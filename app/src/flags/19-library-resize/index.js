@@ -21,12 +21,14 @@ export default {
 
 /** Show me: points at the resize handle; while it's dragged, the pointer's line and the library's top are compared. */
 export const show = {
-  note: 'Drag the ringed handle above the library: its top follows the pointer as you drag (off, it waits until you let go).',
+  note: 'Drag the ringed handle above the library: its top follows the pointer as you drag (off, it waits until you let go). The line is where it should be.',
   target: '.app > .split',
   setup(app, ctx) {
     const move = (e) => (ctx.pointer = ctx.held ? e.clientY : null);
     const down = (e) => {
       ctx.held = !!/** @type {Element} */ (e.target).closest?.('.app > .split');
+      // Where the library's top sits from the pointer as the drag starts.
+      ctx.grab = (app.$('section.library')?.getBoundingClientRect().top ?? 0) - e.clientY;
       move(e);
     };
     const up = () => ((ctx.held = false), (ctx.pointer = null));
@@ -50,10 +52,12 @@ export const show = {
       d.text(split.left + split.width / 2, split.top - 13, 'drag me', { anchor: 'middle', fixed: true });
       return;
     }
-    // While dragging: the pointer's line, and the gap to the library's top.
-    d.hguide(ctx.pointer, { x1: lib.left, x2: lib.right });
-    const gap = Math.round(lib.top - 6 - ctx.pointer);
-    if (Math.abs(gap) > 1) d.measure(lib.left + 260, ctx.pointer, lib.left + 260, lib.top, { label: `library ${Math.abs(gap)}px behind`, tone: 'bad' });
-    else d.text(lib.left + 260, ctx.pointer - 13, 'library follows', { tone: 'ok' });
+    // While dragging: where the library's top should be (it kept its
+    // distance from the pointer), and how far behind it is.
+    const want = ctx.pointer + (ctx.grab ?? 0);
+    d.hguide(want, { x1: lib.left, x2: lib.right });
+    const lag = Math.round(lib.top - want);
+    if (Math.abs(lag) > 1) d.measure(lib.left + 260, want, lib.left + 260, lib.top, { label: `library ${Math.abs(lag)}px off (or at its limit)` });
+    else d.text(lib.left + 260, want - 13, 'library follows', { tone: 'ok' });
   },
 };

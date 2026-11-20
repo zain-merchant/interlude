@@ -136,7 +136,10 @@ export async function showMe(id, resumed = false) {
     // The panel and the card keep off the targets and what the aid draws.
     const avoid = [...rects, ...out.marks];
     const sig = avoid.map((r) => `${Math.round(r.x / 8)},${Math.round(r.y / 8)},${Math.round(r.width / 8)},${Math.round(r.height / 8)}`).join(' ');
-    if (sig !== marked) ((marked = sig), (current.avoid = avoid));
+    if (sig !== marked) {
+      marked = sig;
+      current.avoid = avoid;
+    }
   };
   tick();
   timer = setInterval(tick, 100);
