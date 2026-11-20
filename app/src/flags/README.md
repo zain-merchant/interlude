@@ -48,6 +48,40 @@ Settings, shown in the flag's folder:
   flag is on, and a segmented choice in the panel. Use it for variants to compare (button styles, border
   treatments).
 
+### Options with explanations, and locking one in
+
+Every `choice` option carries a third entry: one plain sentence on what
+that option does and why you'd pick it. The `default` is the recommended
+pick, and the panel marks it "recommended" (add `recommended: '<value>'`
+only in the rare case the recommendation isn't the default):
+
+```js
+place: {
+  type: 'choice',
+  label: 'Place',
+  default: 'toolbar', // the recommended pick
+  options: [
+    ['toolbar', 'In the toolbar', 'Sits beside the track count, so it never covers a row.'],
+    ['corner', 'Bottom right', 'Floats over the Time and Folder columns, the ones you read least.'],
+  ],
+},
+```
+
+In the panel each option is its own small line under the flag's row:
+its label, "recommended" on the default, and the sentence. Clicking a line
+tries it live; the current one is marked. **Lock in** marks the current
+pick as decided (a small lock; one click unlocks). Locks are kept with the
+picks in localStorage (`interlude.flags`, as `locked: { <id>: { <key>:
+'<value>' } }`) and come along in the panel's export. The Show me card
+shows the same options as a segmented group, with the chosen option's
+sentence under it, so you can click through them while Before / After is
+on screen.
+
+A flag that goes against the design doc on purpose (the owner asked to
+judge some of the panel's rejected ideas) sets `against: '<the doc rule it
+breaks, quoted>'` in its default export, and its `about` says what the
+judges argued. The panel tags its row "Against the doc".
+
 `16-library-end/` is a complete example: a style, a range setting and one
 gated hook.
 
