@@ -9,7 +9,7 @@
 export default {
   id: 'polish-dialog',
   n: 12,
-  title: 'Dialogs open on a strong ease-out',
+  title: 'Dialogs arrive quickly',
   group: 'Polish',
   notes: 'Import and Report dialogs: strong ease-out curve instead of the built-in one, from scale 0.97.',
   settings: {

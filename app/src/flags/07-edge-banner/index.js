@@ -16,24 +16,38 @@ export default {
   notes: 'A lost audio device, a restored library or an update shows its banner over the top of the window, as designed, instead of as an extra row that shrinks the decks.',
 };
 
-/** Show me: unplugs the simulated audio device, which raises the banner, and ghosts the decks with the flag off. */
+/** Show me: unplugs the simulated audio device, which raises its banner; flipping shows the decks squashed (before) and untouched (after). */
 export const show = {
-  note: 'The audio device is unplugged and its banner is up; dashed is where the decks would be with the flag off.',
+  about: 'A warning banner (audio device lost, update ready) squeezed the whole app to make room for itself. Now it floats over the top and the decks keep their size.',
+  before: 'Unplug the audio device and its banner takes a row of the layout: the decks lose about 48px of height and the mixer\'s dials crowd together, right when you need them.',
+  after: 'The banner floats over the top of the window, as it was meant to, and the decks and mixer stay exactly as they were.',
   async setup(app, ctx) {
+    ctx.parts = () => [app.deck(0), app.$('.mixer'), app.deck(1)];
+    // The decks as they are with no banner.
+    ctx.rest = app.both('edge-banner', ctx.parts());
     app.mock.lose();
     await app.until(() => app.$('.banner'), 3000, 'the banner');
     await app.wait(100);
-    ctx.parts = () => [app.deck(0), app.$('.mixer'), app.deck(1)];
-    ctx.b = app.both('edge-banner', ctx.parts());
   },
   cleanup(app) {
     app.mock?.restore();
   },
   target: '.banner',
+  badge: (app) => app.deck(0)?.getBoundingClientRect(),
   aid(d, app, ctx) {
-    const other = app.other('edge-banner', ctx.b);
-    const off = app.isOn('edge-banner') ? 'off:' : 'on:';
-    // One label, on deck A: the three move alike.
-    ctx.parts().forEach((el, i) => el && d.ghost(other[i], el.getBoundingClientRect(), { label: i ? false : `${off} decks`, side: 'below' }));
+    const rest = ctx.phase === 'before' ? ctx.rest.off : ctx.rest.on;
+    const live = ctx.parts().map((e) => e?.getBoundingClientRect());
+    const [a, m, b] = live;
+    if (!a || !b || !m || !rest[0]) return;
+    const lost = Math.round(rest[0].bottom - a.bottom);
+    const x = m.x + m.width / 2;
+    if (Math.abs(lost) > 0.5) {
+      // Dashed: where the decks' bottom edge is with no banner; the gap is what they lost.
+      d.line(rest[0].x, rest[0].bottom, rest[2].right, rest[0].bottom, { c: d.C.ghost, dash: '5 4', w: 1.5 });
+      d.arrow(x, rest[0].bottom, x, a.bottom + 2, { c: d.C.bad });
+      d.text(x, (a.bottom + rest[0].bottom) / 2, `decks squashed ${lost}px shorter (dashed: their bottom without the banner)`, { anchor: 'middle', tone: 'bad', free: true });
+    } else {
+      d.text(x, a.bottom + 16, 'decks and mixer keep their full size', { anchor: 'middle', tone: 'ok', free: true });
+    }
   },
 };

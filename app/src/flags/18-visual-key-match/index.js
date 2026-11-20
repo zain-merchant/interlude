@@ -12,7 +12,7 @@
 export default {
   id: 'visual-key-match',
   n: 18,
-  title: 'Mark keys that mix',
+  title: 'Underline keys that go together',
   group: 'Polish',
   notes: 'The deck key is underlined when it mixes with the other deck, and so are library keys that mix with the playing deck (Camelot: same number, or ±1 with the same letter).',
   settings: {
@@ -20,25 +20,35 @@ export default {
   },
 };
 
-/** Show me: two decks whose keys mix; the marks are the change, tagged once each. */
+/** Show me: two decks whose keys mix; flipping shows the keys plain (before) and the ones that mix underlined (after). */
 export const show = {
-  note: "The two decks' keys mix, so both are underlined, and so are the library keys that mix with the playing deck.",
+  about: 'To know whether two tracks would sound right together you had to work out their keys yourself. Now keys that go together are underlined, on the decks and in the library.',
+  before: 'The decks and the library show each track\'s key ("Bm 10A"), but whether two of them sound good mixed is left to you to work out.',
+  after: 'When the two decks\' keys go together, both are underlined, and so is every library track whose key goes with what\'s playing: a shortlist for the next track.',
   async setup(app) {
     if (!app.loaded(0)) await app.loadTrack(0);
     // With the flag on, library keys that mix are marked; load one on B.
     await app.until(() => app.$("[data-region='tracks'] .row .k.mix"), 2000, 'a key that mixes');
     const loadedA = app.deck(0).querySelector('.name')?.textContent.trim();
-    const row = app.rows().find((r) => r.querySelector('.k.mix') && !r.textContent.includes(loadedA));
+    // Rather a track in a neighbouring key than the same one: it shows the rule better.
+    const keyA = app.rows().find((r) => r.textContent.includes(loadedA))?.querySelector('.k')?.textContent.trim();
+    const mixes = app.rows().filter((r) => r.querySelector('.k.mix') && !r.textContent.includes(loadedA));
+    const row = mixes.find((r) => r.querySelector('.k')?.textContent.trim() !== keyA) ?? mixes[0];
     await app.loadTrack(1, app.rows().indexOf(row));
   },
-  target: (app) => [app.$("[data-region='deck0'] .bpm .unit .key"), app.$("[data-region='deck1'] .bpm .unit .key"), ...app.$$("[data-region='tracks'] .row .k.mix").slice(0, 4)],
-  aid(d, app) {
+  target: (app) => [app.$("[data-region='deck0'] .bpm .unit .key"), app.$("[data-region='deck1'] .bpm .unit .key")],
+  badge: (app) => app.$$('button.sort').find((b) => b.textContent.trim().startsWith('Key'))?.getBoundingClientRect(),
+  aid(d, app, ctx) {
+    const before = ctx.phase === 'before';
     for (const n of [0, 1]) {
       const k = app.$(`[data-region='deck${n}'] .bpm .unit .key`)?.getBoundingClientRect();
-      if (k) d.text(k.x + k.width / 2, k.bottom + 14, 'mixes', { anchor: 'middle', tone: 'ok' });
+      if (k) d.text(k.x + k.width / 2, k.bottom + 16, before ? 'do these two mix?' : 'these two mix', { anchor: 'middle', tone: before ? 'bad' : 'ok' });
     }
-    // The library's marked keys: one tag by the first in view.
-    const first = app.$$("[data-region='tracks'] .row .k.mix").map((k) => k.getBoundingClientRect()).find((r) => r.top > 0 && r.bottom < d.vh);
-    if (first) d.text(first.right + 8, first.top + first.height / 2, 'mixes with the playing deck', { tone: 'ok' });
+    // The library's Key column.
+    const inView = (r) => r.top > 0 && r.bottom < d.vh;
+    const keys = app.$$("[data-region='tracks'] .row .k").map((k) => k.getBoundingClientRect()).filter(inView);
+    const marked = app.$$("[data-region='tracks'] .row .k.mix").map((k) => k.getBoundingClientRect()).filter(inView);
+    const at = before ? keys[0] : marked[0];
+    if (at) d.text(at.right + 10, at.top + at.height / 2, before ? "which of these go with what's loaded? work it out" : "underlined: goes with what's loaded", { tone: before ? 'bad' : 'ok' });
   },
 };

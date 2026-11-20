@@ -13,9 +13,11 @@ export default {
   notes: 'An empty playlist reads "This playlist is empty. Drag tracks onto its name to add them." instead of offering to add a music folder.',
 };
 
-/** Show me: makes (or reuses) an empty playlist and opens it. */
+/** Show me: makes (or reuses) an empty playlist and opens it; flipping shows the wrong message (before) and the right one (after). */
 export const show = {
-  note: 'An empty playlist is open: read what it says (off, it offers to add a music folder).',
+  about: 'An empty playlist said the whole library was empty and offered to add a music folder. Now it says the playlist is empty and how to fill it.',
+  before: 'Open a new, empty playlist and it says "No tracks yet" with an "Add a music folder" button, as if your library were gone. That button won\'t put anything in the playlist.',
+  after: 'It says "This playlist is empty" and tells you to drag tracks onto its name, which is how you actually fill it.',
   async setup(app) {
     // A playlist this made before (still empty: no count beside it), or a new one.
     const find = () => app.$$("[data-region='sidebar'] .item").find((b) => /^New playlist/.test(b.querySelector('span')?.textContent.trim() ?? '') && !Number(b.querySelector('small')?.textContent));
@@ -32,4 +34,16 @@ export const show = {
     await app.until(() => app.$("[data-region='tracks'] .empty, section.library .empty"), 2000, 'the empty view');
   },
   target: 'section.library .empty',
+  badge: (app) => {
+    const r = app.textRect(app.$('section.library .empty'));
+    return r && new DOMRect(r.x - 10, r.y - 8, r.width, r.height);
+  },
+  aid(d, app, ctx) {
+    const e = app.$('section.library .empty');
+    const r = e && (app.textRect(e) ?? e.getBoundingClientRect());
+    if (!r) return;
+    const before = ctx.phase === 'before';
+    d.box(new DOMRect(r.x - 10, r.y - 8, r.width + 20, r.height + 16), { c: before ? d.C.bad : d.C.ok, w: 1.5, rx: 8 });
+    d.text(r.x + r.width / 2, r.bottom + 24, before ? 'talks about the whole library, offers the wrong fix' : 'says what is empty, and how to fill it', { anchor: 'middle', tone: before ? 'bad' : 'ok' });
+  },
 };

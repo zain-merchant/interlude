@@ -12,7 +12,7 @@
 export default {
   id: 'borders',
   n: 4,
-  title: 'Border contrast',
+  title: 'Clearer edges and selection',
   group: 'Controls',
   notes:
     'Edges: brighter, softer, a dark keyline, a top-lit edge, or a faint inner glow, applied to panels, dividers, outlines and wells together. Selected: how the selected library row and sidebar items are edged.',
@@ -43,17 +43,34 @@ export default {
   },
 };
 
-/** Show me: loupes on a panel's edge and on the selected library row. */
+/** Show me: loupes on deck A's edge and on the selected library row, flipping between today's edges and the chosen treatment. */
 export const show = {
-  note: "Loupes on deck A's edge and the selected row's: click through Edges and Selected, and flip the flag to see today's.",
+  about: 'Panel edges and the selected track were drawn with the same faint grey line, so the selected row was easy to lose. Now edges catch the light and the selection stands out.',
+  before: 'Every panel is outlined by an even, faint grey line, and the selected track row gets only a thin outline: on a dark screen it is easy to lose.',
+  after: "Panels get a lit top edge, like light from above, so they lift off the background, and the selected row gets the same lit edge so you can find it at a glance. (Edges and Selected in this flag's settings try other looks.)",
   async setup(app) {
     await app.selectRow(2);
+    /** @type {HTMLElement} */ (document.activeElement)?.blur?.();
   },
   target: (app) => [app.$("[data-region='tracks'] .row.sel")],
-  aid(d, app) {
+  badge: (app, ctx) => ctx.at,
+  aid(d, app, ctx) {
+    const before = ctx.phase === 'before';
     const deck = app.deck(0)?.getBoundingClientRect();
     const row = app.$("[data-region='tracks'] .row.sel")?.getBoundingClientRect();
-    if (deck) d.loupe('edge', { x: deck.x - 6, y: deck.y - 6 }, { zoom: 5, size: { w: 240, h: 120 }, near: new DOMRect(deck.x, deck.y, 48, 24), caption: 'deck A edge, 5×' });
-    if (row) d.loupe('row', { x: row.x - 6, y: row.y - 6 }, { zoom: 5, size: { w: 240, h: 120 }, near: new DOMRect(row.x, row.y, 48, row.height), caption: 'selected row, 5×' });
+    if (deck) {
+      const zoom = 7;
+      const l = d.loupe('edge', { x: deck.x - 5, y: deck.y - 5 }, { zoom, size: { w: 420, h: 150 }, at: { x: deck.x + 90, y: deck.y + 30 }, caption: '' });
+      ctx.at = l.rect;
+      d.text(l.rect.x + 150, l.rect.y + 62, before ? 'top: a faint grey line' : 'top: a bright, lit edge', { tone: before ? 'bad' : 'ok', fixed: true });
+      d.text(l.rect.x + 50, l.rect.bottom - 40, before ? 'sides: the same grey' : 'sides: fade away', { fixed: true });
+      d.text(l.rect.x + 10, l.rect.bottom - 16, "deck A's top-left corner, 7× bigger", { fixed: true });
+    }
+    if (row) {
+      const zoom = 4;
+      const l = d.loupe('row', { x: row.x - 6, y: row.y - 10 }, { zoom, size: { w: 440, h: 192 }, at: { x: 600, y: 300 }, caption: '' });
+      d.text(l.rect.x + 10, l.rect.y + 16, before ? 'selected row: a thin grey outline' : 'selected row: lit top edge, brighter fill', { tone: before ? 'bad' : 'ok', fixed: true });
+      d.text(l.rect.x + 10, l.rect.bottom - 16, 'the selected track row, 4× bigger', { fixed: true });
+    }
   },
 };

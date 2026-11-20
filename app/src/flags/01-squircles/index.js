@@ -22,7 +22,7 @@
 export default {
   id: 'squircles',
   n: 1,
-  title: 'Squircle corners',
+  title: 'Smoother rounded corners',
   group: 'Shape',
   notes:
     'Figma-style smoothed corners on every rounded rect; circles and capsules unchanged. Smoothing changes the curve, not the corner\'s size (0% is the plain radius). Native corner-shape in Chrome 139+; in WebKit (Safari, the app) a clip with the ring redrawn along the curve, so borders are never cropped.',

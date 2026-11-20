@@ -20,40 +20,44 @@ export default {
   },
 };
 
-/** Show me: the deck's key line, the library count and a tooltip, with the gaps between their parts measured. */
+/** Show me: loupes on deck A's key line, the library count and a tooltip, flipping between " · " joins and spaced parts. */
 export const show = {
-  note: "Deck A's key line, the library count and a tooltip: parts are spaced (measured) instead of joined by \" · \".",
+  about: 'Bits of information were strung together with " · " dots everywhere, which made short lines look busy. Now they are set apart by a little space, with the less important part a shade dimmer.',
+  before: 'The key under the BPM ("C · 8B · BPM"), the library count and every tooltip join their parts with middle dots: lots of tiny marks that say nothing.',
+  after: 'A small gap separates the parts and the extra detail is a step dimmer, so the main word stands out and the line reads more quietly.',
   async setup(app) {
     if (!app.loaded(0)) await app.loadTrack(0);
+    await show.each(app);
+  },
+  // Point at the crossfader, so its tooltip is up (again after a flip).
+  async each(app) {
     app.hover("[aria-label='Crossfader']");
     await app.until(() => app.$("[role='tooltip']"), 2000, 'the tooltip');
   },
   target: (app) => [app.$("[data-region='deck0'] .bpm .unit"), app.$('section.library .bar .count'), app.$("[role='tooltip']")],
-  aid(d, app) {
-    /** Measures the gaps between consecutive rects, just under them. */
-    const gaps = (rects) => {
-      for (let i = 1; i < rects.length; i++) {
-        const a = rects[i - 1];
-        const b = rects[i];
-        if (b.left - a.right > 0.5) d.measure(a.right, Math.max(a.bottom, b.bottom) + 3, b.left, Math.max(a.bottom, b.bottom) + 3, { label: `${Math.round(b.left - a.right)}` });
-      }
+  badge: (app, ctx) => ctx.at,
+  aid(d, app, ctx) {
+    const before = ctx.phase === 'before';
+    /** A loupe on `el`'s text at `zoom`, placed at `at`, with a caption under it. */
+    const look = (key, el, zoom, at, caption) => {
+      const r = el && (app.textRect(el) ?? el.getBoundingClientRect());
+      if (!r) return null;
+      const src = { x: r.x - 8, y: r.y - 3 };
+      const size = { w: Math.round((r.width + 40) * zoom), h: Math.round((r.height + 6) * zoom) };
+      const l = d.loupe(key, src, { zoom, size, at, caption: '' });
+      d.text(l.rect.x, l.rect.bottom + 14, caption, { tone: before ? 'bad' : 'ok', fixed: true });
+      return l;
     };
-    const node = (n) => {
-      const range = document.createRange();
-      range.selectNodeContents(n);
-      return range.getBoundingClientRect();
-    };
-    // Each place's parts: element children and text runs, in order.
-    const parts = (el) =>
-      [...el.childNodes]
-        .filter((n) => n.textContent.trim())
-        .map((n) => (n.nodeType === 1 ? /** @type {Element} */ (n).getBoundingClientRect() : node(n)))
-        .filter((r) => r.width);
-    const tip = app.$("[role='tooltip']");
-    if (tip) gaps(app.$$('.part', tip).map((p) => p.getBoundingClientRect()));
     const unit = app.$("[data-region='deck0'] .bpm .unit");
-    if (unit) gaps(parts(unit));
+    const ur = unit?.getBoundingClientRect();
+    const a = ur && look('key', unit, 4, { x: ur.right - 330, y: ur.bottom + 40 }, before ? 'key, code and unit joined by dots' : 'key and code, then the unit, set apart by space');
+    if (a) ctx.at = a.rect;
     const count = app.$('section.library .bar .count');
-    if (count) gaps(parts(count));
+    const cr = count?.getBoundingClientRect();
+    // The library's count, while it has an analysis note after it.
+    if (cr && app.$('section.library .bar .count .pending')) look('count', count, 3, { x: cr.x + 120, y: cr.bottom + 40 }, before ? 'count and analysis joined by a dot' : 'count, then a gap, then the analysis');
+    const tip = app.$("[role='tooltip']");
+    const tr = tip?.getBoundingClientRect();
+    if (tr) look('tip', tip, 2.5, { x: tr.x - 120, y: tr.y - 140 }, before ? 'tooltip parts joined by dots' : 'tooltip parts spaced, details dimmer');
   },
 };

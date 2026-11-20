@@ -28,7 +28,7 @@
 export default {
   id: 'grid',
   n: 3,
-  title: 'Onto the 4px grid, edges lined up',
+  title: 'Things side by side line up',
   group: 'Layout',
   notes: 'Deck header 44px; nudge, headphone and Rec on the mode row\'s bottom line; sidebar and tracks on one 28px pitch; Master column on whole pixels; lane names centred on the zoom control. Overlay draws the grid.',
   settings: {
@@ -45,56 +45,62 @@ export default {
   },
 };
 
-/** Show me: the 4px grid over deck A and the mixer, and the lines that should meet, each with its verdict. */
+/** Show me: the line under deck A's controls and the mixer's buttons, and the library's sidebar against its track names (a loupe), flipping. */
 export const show = {
-  note: 'On the 4px grid, with the lines that should meet: a green dot is lined up, a red one says by how much it misses.',
+  about: "Things meant to sit on one line missed it by a few pixels: Rec floated mid-mixer, the sidebar's words sat lower than the track names. Now they line up.",
+  before: "Rec floats in the middle of the mixer, the ‹ › under the pitch fader end lower than the buttons beside them, and the sidebar's words sit a little below the track names next to them.",
+  after: 'They all end on one line, and each sidebar item sits level with a track row, so the screen reads as tidy rows instead of near misses.',
   target: (app) => [app.$("[data-region='deck0'] .pitch .nudge"), ...app.$$('.mixer .hp'), app.$('.mixer button.rec')],
-  aid(d, app) {
-    const r1 = (n) => Math.round(n * 10) / 10;
-    const near = (a, b) => Math.abs(a - b) < 0.5;
-    const miss = (a, b) => `${a > b ? '+' : '−'}${r1(Math.abs(a - b))}px`;
+  badge: (app, ctx) => ctx.at,
+  aid(d, app, ctx) {
+    const before = ctx.phase === 'before';
     const deckA = app.deck(0)?.getBoundingClientRect();
     const mixer = app.$('.mixer')?.getBoundingClientRect();
-    if (deckA && mixer) d.grid(new DOMRect(deckA.x, deckA.y, mixer.right - deckA.x, deckA.height), 4);
-
-    // The mode row's bottom line, and the four that should end on it.
     const mp = app.$("[data-region='deck0'] .mp")?.getBoundingClientRect();
-    if (mp && mixer) {
+    if (deckA && mixer && mp) {
       const y = mp.bottom;
-      const ends = [app.$("[data-region='deck0'] .pitch .nudge"), app.$$('.mixer .hp')[0], app.$('.mixer button.rec'), app.$$('.mixer .hp')[1]]
-        .map((e) => e?.getBoundingClientRect())
-        .filter(Boolean);
-      const off = ends.filter((r) => !near(r.bottom, y));
-      d.hguide(y, { x1: deckA.x, x2: mixer.right, label: off.length ? "mode row's line" : "mode row's line: nudge, headphones and Rec end on it", lx: deckA.x + 8, tone: off.length ? 'bad' : 'ok' });
-      for (const r of off) d.text(r.x + r.width / 2, y + 14, miss(r.bottom, y), { anchor: 'middle', tone: 'bad' });
+      ctx.at = new DOMRect(deckA.x + 16, y - 40, 10, 10);
+      d.hguide(y, { x1: deckA.x + 8, x2: mixer.right - 8, c: before ? d.C.ghost : d.C.ok, dash: '6 4' });
+      const nudge = app.$("[data-region='deck0'] .pitch .nudge")?.getBoundingClientRect();
+      const rec = app.$('.mixer button.rec')?.getBoundingClientRect();
+      const off = (r) => r && Math.abs(r.bottom - y) > 0.5;
+      if (before) {
+        if (off(nudge)) d.text(nudge.right + 8, nudge.bottom + 14, `‹ › end ${Math.round(nudge.bottom - y)}px below the line`, { tone: 'bad' });
+        if (off(rec)) {
+          d.box(rec, { c: d.C.bad, w: 1.5, rx: 8 });
+          d.text(rec.x + rec.width / 2, rec.y - 16, 'Rec floats mid-mixer', { anchor: 'middle', tone: 'bad' });
+        }
+      } else {
+        d.text(mixer.x + 12, y + 16, 'pitch ‹ ›, headphones and Rec all end on this line', { tone: 'ok' });
+      }
     }
-    // The deck header: a multiple of 4.
-    const h = app.$("[data-region='deck0'] header")?.getBoundingClientRect();
-    if (h) {
-      const ok = near(h.height / 4, Math.round(h.height / 4));
-      d.measure(h.right + 8, h.top, h.right + 8, h.bottom, { label: `${r1(h.height)}`, tone: ok ? 'ok' : 'bad' });
-    }
-    // Sidebar items against the track rows: one verdict for all of them.
-    const items = app.$$("[data-region='sidebar'] .item").map((e) => e.getBoundingClientRect()).slice(0, 6);
-    const tops = [app.$('section.library .row.head'), ...app.rows()].map((e) => e?.getBoundingClientRect().top).filter((v) => v != null);
+    // The library: each track name's middle, carried across the sidebar.
     const main = app.$('section.library .main')?.getBoundingClientRect();
-    if (items.length && main && tops.length) {
-      const worst = items.reduce((w, r) => {
-        const n = tops.reduce((a, b) => (Math.abs(b - r.top) < Math.abs(a - r.top) ? b : a), Infinity);
-        return Math.abs(r.top - n) > Math.abs(w) ? r.top - n : w;
-      }, 0);
-      for (const r of items) d.line(r.left, r.top, main.left + 160, r.top, { dash: '2 3', opacity: 0.7 });
-      d.text(main.left + 166, items[0].top, Math.abs(worst) < 0.5 ? 'sidebar items on the row lines' : `sidebar items ${miss(worst, 0)} off the rows`, { tone: Math.abs(worst) < 0.5 ? 'ok' : 'bad' });
-    }
-    // The lane name against the zoom control's centre line.
-    const who = app.$('.waves .lane .who')?.getBoundingClientRect();
-    const zoom = app.$('.waves .zoom')?.getBoundingClientRect();
-    if (who && zoom) {
-      const y = zoom.top + zoom.height / 2;
-      const wy = who.top + who.height / 2;
-      const ok = near(wy, y);
-      d.hguide(y, { x1: who.right + 6, x2: zoom.left - 6, dash: '2 3' });
-      d.text(who.right + 12, y, ok ? 'lane name centred on the zoom control' : `lane name ${miss(wy, y)} off the zoom control's centre`, { tone: ok ? 'ok' : 'bad' });
+    const nav = app.$('section.library nav')?.getBoundingClientRect();
+    const names = app.rows().slice(0, 6).map((r) => r.querySelector('.t') ?? r).map((e) => app.textRect(e) ?? e.getBoundingClientRect());
+    const items = app.$$("[data-region='sidebar'] .item").slice(1, 6);
+    if (main && nav && names.length > 3 && items.length) {
+      const words = items.map((e) => app.textRect(e.querySelector('span') ?? e)).filter(Boolean);
+      // How far the sidebar's words sit from the track name beside them.
+      let worst = 0;
+      for (const w of words) {
+        const c = w.top + w.height / 2;
+        const near = names.map((n) => n.top + n.height / 2).reduce((a, b) => (Math.abs(b - c) < Math.abs(a - c) ? b : a), Infinity);
+        const inView = c > names[0].top - 4 && c < names[3].bottom + 4;
+        if (inView && Math.abs(c - near) < 10 && Math.abs(c - near) > Math.abs(worst)) worst = c - near;
+      }
+      const ok = Math.abs(worst) < 0.75;
+      const zoom = 2.5;
+      const src = { x: nav.x + 8, y: names[0].top - 8 };
+      const size = { w: Math.round((main.x + 120 - src.x) * zoom), h: Math.round((names[3].bottom + 6 - src.y) * zoom) };
+      const l = d.loupe('lib', src, { zoom, size, at: { x: d.vw - size.w - 24, y: main.y + 72 }, caption: '' });
+      for (const n of names) {
+        const a = l.map(src.x, n.top + n.height / 2);
+        if (a.y < l.rect.y + 4 || a.y > l.rect.bottom - 4) continue;
+        d.line(l.rect.x, a.y, l.rect.right, a.y, { c: ok ? d.C.ok : d.C.ghost, dash: '5 4', opacity: 0.9 });
+      }
+      d.text(l.rect.x, l.rect.bottom + 16, ok ? 'sidebar words sit level with the track names' : `sidebar words sit ${Math.round(Math.abs(worst) * 10) / 10}px ${worst > 0 ? 'below' : 'above'} the track names`, { tone: ok ? 'ok' : 'bad', fixed: true });
+      d.text(l.rect.x, l.rect.y - 14, 'sidebar and track names, 2.5× bigger. Dashed: the middle of each track name', { fixed: true });
     }
   },
 };

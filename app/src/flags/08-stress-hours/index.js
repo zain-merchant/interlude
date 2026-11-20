@@ -15,28 +15,38 @@ export default {
   notes: 'Library Time, deck elapsed/remaining and hot cue times read h:mm:ss past an hour (a recorded mix, a long live set) instead of 134:33.',
 };
 
-/** Show me: the two-hour live set from the worst-case data, on deck A and in the library, each time tagged with how it reads off. */
+/** Show me: the two-hour live set on deck A and in the library; flipping shows its times as minutes only (before) and in hours (after). */
 export const show = {
-  note: 'The 2-hour set is loaded: its times read in hours; each tag is how it reads with the flag off.',
+  about: 'Times over an hour read as minutes, like "134:33", which you had to work out. Now they read in hours: "2:14:33".',
+  before: 'A two-hour live set reads "134:33" in the library and "107:38" on the deck: minutes only, so you have to do the sum to know how long it is.',
+  after: 'Past an hour the times read in hours, minutes and seconds ("2:14:33"), like a clock, so a long set reads at a glance. Shorter tracks are unchanged.',
   needs: { 'stress-data': { set: 'worst' } },
   async setup(app, ctx) {
     await app.loadTrack(0, 'Printworks');
-    // Past the first hour, so elapsed reads in hours too.
+    // Past the first hour, so the time played reads in hours too.
     await app.seek(0, 0.8);
     await app.search('Printworks');
     ctx.els = () => [app.$("[data-region='deck0'] .times .el"), app.$("[data-region='deck0'] .times .rm"), app.rows().find((x) => x.textContent.includes('Printworks'))?.querySelectorAll('.n.num')[1]];
-    // The same times as they read with the flag off, and on.
-    const read = () => ctx.els().map((e) => e?.textContent.match(/[−-]?\d+(:\d\d)+(\.\d)?/)?.[0] ?? '');
-    ctx.text = { on: app.isOn('stress-hours') ? read() : app.without('stress-hours', read), off: app.without('stress-hours', read) };
   },
   target: (app) => [app.$("[data-region='deck0'] .times"), app.rows().find((r) => r.textContent.includes('Printworks'))?.querySelectorAll('.n.num')[1]],
+  badge: (app) => app.$("[data-region='deck0'] .times")?.getBoundingClientRect(),
   aid(d, app, ctx) {
-    const other = app.isOn('stress-hours') ? ctx.text.off : ctx.text.on;
-    const word = app.isOn('stress-hours') ? 'off' : 'on';
+    const before = ctx.phase === 'before';
+    const say = (s) => {
+      const m = s.match(/(\d+):(\d\d)(?::(\d\d))?/);
+      if (!m) return '';
+      const [h, min] = m[3] ? [Number(m[1]), Number(m[2])] : [Math.floor(Number(m[1]) / 60), Number(m[1]) % 60];
+      if (!h) return '';
+      return before ? `${m[3] ? '' : Number(m[1]) + ' minutes: '}that's ${h} h ${min} min` : `${h} h ${min} min, read straight off`;
+    };
     ctx.els().forEach((e, i) => {
-      const r = e?.getBoundingClientRect();
-      if (!r || !other[i]) return;
-      d.text(i ? r.right : r.left, r.bottom + 14, `${word}: ${other[i]}`, { anchor: i ? 'end' : 'start' });
+      const r = app.textRect(e) ?? e?.getBoundingClientRect();
+      const s = say(e?.textContent ?? '');
+      if (!r || !s) return;
+      const tone = before ? 'bad' : 'ok';
+      d.box(new DOMRect(r.x - 4, r.y - 3, r.width + 8, r.height + 6), { c: before ? d.C.bad : d.C.ok, w: 1.5, rx: 4 });
+      if (i === 0) d.text(r.right + 12, r.top + r.height / 2, s, { tone, free: true });
+      else d.text(r.right + 4, r.bottom + 16, s, { anchor: 'end', tone });
     });
   },
 };

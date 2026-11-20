@@ -11,7 +11,7 @@
 export default {
   id: 'declutter-toast',
   n: 13,
-  title: 'Toasts stay on one line and off the titles',
+  title: 'Load messages stay on one line and off the titles',
   group: 'Stability',
   notes: 'Toasts size to their text (one line up to the window width) and, by default, sit bottom right instead of over the library\'s titles.',
   settings: {
@@ -27,29 +27,34 @@ export default {
   },
 };
 
-/** Show me: loads the longest title in view so the toast is wide, and ghosts where it sits with the flag off. */
+/** Show me: loads a long title so the toast is wide; flipping shows it over the track titles (before) and tucked in the corner (after). */
 export const show = {
-  note: 'The longest title loaded, so the toast is wide; dashed is where it sits with the flag off, over the titles.',
+  about: 'After every load, the "Loaded … Undo" message sat over the track titles you were browsing, and long titles made it wrap. Now it stays on one line in the bottom-right corner.',
+  before: 'Load a track and its message pops up in the middle of the library, on top of the titles you are reading to pick the next track, and stays there for six seconds.',
+  after: 'The message sits in the bottom-right corner, over the Time and Folder columns you rarely read, on one line, so the titles stay in view.',
+  period: 2200,
   async setup(app, ctx) {
-    await show.replay(app, ctx);
-  },
-  async replay(app, ctx) {
+    // The two longest titles in view, loaded in turn, so each flip brings a fresh toast.
     const rows = app.rows().filter((r) => !r.textContent.includes(', on deck'));
-    const longest = rows.reduce((a, r) => ((r.querySelector('.t')?.textContent.length ?? 0) > (a?.querySelector('.t')?.textContent.length ?? 0) ? r : a), null);
-    await app.loadTrack(0, app.rows().indexOf(longest));
-    const toast = await app.until(() => app.$('.toastbox .toast'), 2000, 'the toast');
-    await app.wait(400);
-    ctx.b = app.both('declutter-toast', [toast]);
+    const len = (r) => r.querySelector('.t')?.textContent.trim().length ?? 0;
+    ctx.titles = [...rows].sort((a, b) => len(b) - len(a)).slice(0, 2).map((r) => r.querySelector('.t').textContent.trim());
+    ctx.turn = 0;
+    await show.each(app, ctx);
+  },
+  async each(app, ctx) {
+    const t = ctx.titles[ctx.turn++ % ctx.titles.length];
+    await app.loadTrack(0, t);
+    await app.clearSearch();
+    await app.until(() => app.$('.toastbox .toast'), 2000, 'the toast');
+    await app.wait(250);
   },
   target: '.toastbox .toast',
+  badge: (app) => app.$('.toastbox .toast')?.getBoundingClientRect(),
   aid(d, app, ctx) {
-    const t = app.$('.toastbox .toast');
-    if (!t || !ctx.b) return;
-    const other = app.other('declutter-toast', ctx.b)[0];
-    const r = t.getBoundingClientRect();
-    // Just the outline and a word: it moves and resizes, so no distances.
-    d.box(other, { c: d.C.ghost, dash: '4 3', w: 1.25 });
-    d.text(other.x, other.y - 13, app.isOn('declutter-toast') ? 'flag off' : 'flag on');
-    d.protect(r);
+    const t = app.$('.toastbox .toast')?.getBoundingClientRect();
+    if (!t) return;
+    const before = ctx.phase === 'before';
+    d.protect(t);
+    d.text(t.right, t.y - 19, before ? 'covers the track list' : 'out of the way, in the corner', { anchor: 'end', tone: before ? 'bad' : 'ok' });
   },
 };

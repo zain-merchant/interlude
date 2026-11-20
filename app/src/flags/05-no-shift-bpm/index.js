@@ -28,7 +28,8 @@ export const show = {
     await show.each(app, ctx);
   },
   // Flipping the flag can close the field: open it again each time.
-  async each(app) {
+  async each(app, ctx) {
+    void ctx;
     const D = "[data-region='deck0']";
     if (app.$(`${D} .bpm input, ${D} .bpm .edit`)) return;
     await app.dblclick(`${D} .bpm .big`);

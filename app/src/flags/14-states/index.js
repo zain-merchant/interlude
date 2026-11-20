@@ -27,48 +27,55 @@
 export default {
   id: 'states',
   n: 14,
-  title: 'States: hover, pressed, selected, focus, disabled',
+  title: 'Every control answers pointing, pressing and focus alike',
   group: 'Controls',
   notes:
     'One rule per state across every control: hover fills, pressed shrinks and darkens, selected fills, focus is the 2px ring (now also on the track list and search), disabled is always 40%.',
 };
 
-/** Show me: a few controls step in and out of hover, pressed and focus; deck B's nudge shows disabled. */
+/** Show me: five controls held in a state (pointed at, pressed, keyboard focus, can't be used); flipping shows how each looked before and after. */
 export const show = {
-  note: 'The tagged controls switch between rest and hover, pressed or focus every 1.2s; deck B\'s empty nudge shows disabled.',
+  about: 'Controls answered hovering, pressing and keyboard focus in different ways, and some not at all. Now every control answers the same way, so you always know what you\'re touching.',
+  before: 'Held in a state: the tab you point at looks already selected, a sidebar item shows nothing when pressed, keyboard focus on the search is a faint line, and a button that can\'t be used looks usable.',
+  after: 'Pointing shows a faint underline, pressing fills it, keyboard focus is a clear ring, and a control you can\'t use is dimmed.',
   async setup(app, ctx) {
     if (!app.loaded(0)) await app.loadTrack(0);
     await app.tab(0, 'Cues');
     ctx.unforce = app.forceStates();
     const D = "[data-region='deck0']";
+    const nudge = app.$$("[data-region^='deck'] .pitch .nudge").find((n) => n.querySelector("button[aria-disabled='true']"));
     ctx.items = () => [
-      ['hover', app.$$(`${D} .modes button`).find((b) => b.textContent.trim().startsWith('Loop'))],
-      ['hover', app.$("button.sort[aria-label^='Sort by artist']")],
-      ['active', app.$(`${D} .btn.sync`)],
-      ['active', app.$$("[data-region='sidebar'] .item")[1]],
-      ['focus', app.$("input[aria-label='Search the library']")],
+      { state: 'hover', el: app.$$(`${D} .modes button`).find((b) => b.textContent.trim().startsWith('Loop')), what: 'pointing at it', was: 'looks already selected', now: 'a faint underline' },
+      { state: 'active', el: app.$$("[data-region='sidebar'] .item")[1], what: 'pressing it', was: 'no response', now: 'fills', side: true },
+      { state: 'focus', el: app.$("input[aria-label='Search the library']"), what: 'keyboard focus', was: 'a faint line', now: 'a clear ring' },
+      { state: null, el: nudge, what: "can't be used", was: 'looks usable', now: 'dimmed', zoom: 3, key: 'nudge' },
     ];
-    ctx.t0 = performance.now();
+    for (const it of ctx.items()) if (it.state && it.el) it.el.setAttribute(`data-show-${it.state}`, '');
   },
   cleanup(app, ctx) {
     ctx.unforce?.();
   },
-  target: (app) => [app.$$("[data-region='deck0'] .modes button")[1], app.$("[data-region='deck0'] .btn.sync"), app.$("input[aria-label='Search the library']"), app.$("[data-region='deck1'] .pitch .nudge")],
+  target: (app, ctx) => (ctx.items ? ctx.items().map((i) => i.el).filter(Boolean) : []),
+  badge: () => new DOMRect(16, 16, 10, 10),
   aid(d, app, ctx) {
-    const on = Math.floor((performance.now() - ctx.t0) / 1200) % 2 === 1;
-    const word = { hover: 'hover', active: 'pressed', focus: 'focus' };
-    for (const [state, el] of ctx.items()) {
-      if (!el) continue;
-      el.toggleAttribute(`data-show-${state}`, on);
-      const r = el.getBoundingClientRect();
-      // The state's name, filled while it's applied: above the control, or
-      // beside it for a list item (the one above it would be covered).
-      const listed = el.closest("[data-region='sidebar']");
-      const label = on ? word[state] : 'rest';
-      if (listed) d.text(r.right + 8, r.y + r.height / 2, label, { fill: on, fixed: true });
-      else d.text(r.x + r.width / 2, r.y - 13, label, { anchor: 'middle', fill: on, fixed: true });
+    const before = ctx.phase === 'before';
+    for (const it of ctx.items()) {
+      if (!it.el) continue;
+      if (it.state && !it.el.hasAttribute(`data-show-${it.state}`)) it.el.setAttribute(`data-show-${it.state}`, '');
+      const r = it.el.getBoundingClientRect();
+      const label = `${it.what}: ${before ? it.was : it.now}`;
+      const tone = before ? 'bad' : 'ok';
+      // Small controls get a magnified copy beside them, the label under it.
+      if (it.zoom) {
+        const z = it.zoom;
+        const src = { x: r.x - 8, y: r.y - 8 };
+        const l = d.loupe(it.key, src, { zoom: z, size: { w: (r.width + 16) * z, h: (r.height + 16) * z }, near: r, caption: '' });
+        d.text(l.at.x + l.rect.width / 2, l.at.y + l.rect.height + 14, label, { anchor: 'middle', tone });
+        continue;
+      }
+      if (it.side) d.text(r.right + 8, r.y + r.height / 2, label, { tone, fixed: true });
+      else if (it.below) d.text(r.x + r.width / 2, r.bottom + 14, label, { anchor: 'middle', tone });
+      else d.text(r.x + r.width / 2, r.y - 14, label, { anchor: 'middle', tone });
     }
-    const nudge = app.$("[data-region='deck1'] .pitch .nudge")?.getBoundingClientRect();
-    if (nudge) d.text(nudge.x + nudge.width / 2, nudge.bottom + 13, 'disabled', { anchor: 'middle' });
   },
 };

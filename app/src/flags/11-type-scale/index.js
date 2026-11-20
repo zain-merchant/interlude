@@ -15,7 +15,7 @@
 export default {
   id: 'type-scale',
   n: 11,
-  title: 'Five sizes, three weights',
+  title: 'Text in five clear sizes',
   group: 'Type and colour',
   notes: 'Snaps the stray 12px and 22px text and the one 600 weight onto the --t-* scale and 300/400/500. Tooltips can go to 13 or 11.',
   settings: {
@@ -24,33 +24,47 @@ export default {
   },
 };
 
-/** Show me: the Import dialog, with any text off the type scale tagged with its size and weight. */
+/** Show me: the Import dialog, flipping; before, the text in sizes between the app's five is boxed. */
 export const show = {
-  note: 'The Import dialog: any text off the scale (11, 13, 16, 24 or 32px; weight 300 to 500) is tagged in red; flip the flag to see some.',
+  about: 'Text came in a few odd in-between sizes (12 next to 11 and 13, 22 next to 24), so dialogs like Import looked slightly uneven. Now every text is one of five sizes.',
+  before: 'In the Import dialog, the boxed text uses sizes the rest of the app never does (12px beside 11 and 13, a 22px title beside 24): too close to tell apart on purpose, so it just looks a little off.',
+  after: 'Every text is one of five clearly different sizes and three weights, so headings, sentences and small print each look like what they are, the same everywhere.',
   async setup(app) {
     await app.openImport();
   },
-  target: ".card[aria-labelledby='import-title']",
-  aid(d, app) {
+  // The dialog's top half: the card below keeps clear of it (the rest is more of the same).
+  target: (app) => {
+    const c = app.$(".card[aria-labelledby='import-title']")?.getBoundingClientRect();
+    return c ? [new DOMRect(c.x, c.y, c.width, Math.min(c.height, 340))] : [];
+  },
+  badge: (app) => app.$(".card[aria-labelledby='import-title']")?.getBoundingClientRect(),
+  aid(d, app, ctx) {
     const card = app.$(".card[aria-labelledby='import-title']");
     if (!card) return;
     const SIZES = [11, 13, 16, 24, 32];
     const WEIGHTS = [300, 400, 500];
+    const said = new Set();
     let off = 0;
     for (const el of [card, ...card.querySelectorAll('*')]) {
       const own = [...el.childNodes].some((c) => c.nodeType === 3 && c.textContent.trim());
       if (!own) continue;
       const r = app.textRect(el);
-      if (!r || !r.width) continue;
+      if (!r || !r.width || r.bottom > card.getBoundingClientRect().top + 340) continue;
       const cs = getComputedStyle(el);
       const size = Math.round(parseFloat(cs.fontSize) * 10) / 10;
       const weight = Number(cs.fontWeight);
-      if (SIZES.includes(size) && WEIGHTS.includes(weight)) continue;
+      const odd = !SIZES.includes(size);
+      const heavy = !WEIGHTS.includes(weight);
+      if (!odd && !heavy) continue;
       off++;
-      d.box(r, { c: d.C.bad, w: 1, rx: 2 });
-      d.text(r.right + 6, r.top + r.height / 2, `${size}/${weight}`, { tone: 'bad' });
+      d.box(new DOMRect(r.x - 2, r.y - 1, r.width + 4, r.height + 2), { c: d.C.bad, w: 1.25, rx: 3 });
+      const what = odd ? `${size}px` : `weight ${weight}`;
+      if (said.has(what)) continue;
+      said.add(what);
+      d.text(r.right + 8, r.top + r.height / 2, odd ? `${size}px: an in-between size` : `weight ${weight}: heavier than anything else`, { tone: 'bad' });
     }
     const cr = card.getBoundingClientRect();
-    if (!off) d.text(cr.left, cr.top - 14, 'every text on the scale', { tone: 'ok', fixed: true });
+    if (!off) d.text(cr.right - 8, cr.top - 19, 'every text here is one of the five sizes', { anchor: 'end', tone: 'ok', fixed: true });
+    void ctx;
   },
 };

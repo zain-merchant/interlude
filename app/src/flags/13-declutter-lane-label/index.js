@@ -9,37 +9,44 @@
 export default {
   id: 'declutter-lane-label',
   n: 13,
-  title: 'Lane labels stop before the play head',
+  title: 'Waveform titles stop before the play head',
   group: 'Stability',
   notes: 'The track name over each waveform lane ends with an ellipsis before the centre line instead of running across it.',
 };
 
-/** Show me: a very long title on deck A's lane, the room to the play head measured; dashed is how far it runs with the flag off, if further. */
+/** Show me: a very long title on deck A's waveform, in a narrow window; flipping shows it running over the play head (before) and stopping short (after). */
 export const show = {
-  note: "Deck A's lane has a very long title: it stops before the play head (off, in a narrow window, it runs across).",
+  about: 'A long track title over its waveform ran across the play head line, right where you watch the beats. Now it stops short with "…".',
+  before: 'Load a track with a long title (a remaster, a live set) and its name runs straight across the play head, covering the waveform where the beat is playing.',
+  after: 'The name ends with "…" before the play head, so the middle of the waveform stays clear. The full title is still on the deck and in the library.',
   needs: { 'stress-data': { set: 'worst' } },
   async setup(app, ctx) {
-    await app.loadTrack(0, 'Strings of Life');
+    await app.loadTrack(0, "Can't Get You Out Of My Head");
     await app.clearSearch();
-    const who = app.$('.waves .lane .who');
-    // The name's own extent with the flag off.
-    ctx.off = app.without('declutter-lane-label', () => DOMRect.fromRect(app.textRect(who) ?? who.getBoundingClientRect()));
+    // A smaller window (1024 wide in the app's own pixels): the lanes are
+    // narrower, so a long title reaches the middle.
+    ctx.was = app.zoom(Math.max(1, innerWidth / 1024));
+    await app.wait(250);
+  },
+  cleanup(app, ctx) {
+    if (ctx.was != null) app.zoom(ctx.was);
   },
   target: (app) => [app.$('.waves .lane .who')],
+  badge: (app) => app.$('.waves .lane .who')?.getBoundingClientRect(),
   aid(d, app, ctx) {
     const lane = app.$('.waves .lane')?.getBoundingClientRect();
     const who = app.$('.waves .lane .who');
     if (!lane || !who) return;
     const x = lane.left + lane.width / 2;
-    const r = app.textRect(who) ?? who.getBoundingClientRect();
-    const end = Math.min(r.right, who.getBoundingClientRect().right);
-    const gap = x - end;
+    const box = who.getBoundingClientRect();
+    const r = app.textRect(who) ?? box;
+    // The visible end of the name (it's cut at its box when it ends in "…").
+    const end = Math.min(r.right, box.right);
+    d.vguide(x, { y1: lane.top, y2: lane.bottom, dash: '3 3' });
+    d.text(x + 6, lane.bottom - 12, 'play head', { free: true });
     const y = r.top + r.height / 2;
-    if (app.isOn('declutter-lane-label') && ctx.off && ctx.off.right > end + 1) {
-      d.box(new DOMRect(end, ctx.off.top - 2, ctx.off.right - end, ctx.off.height + 4), { c: d.C.ghost, dash: '4 3', w: 1.25 });
-      d.text(ctx.off.right, ctx.off.bottom + 14, 'off: runs to here', { anchor: 'end' });
-    }
-    if (gap > 0) d.measure(end, y, x, y, { label: `${Math.round(gap)}px clear`, side: 'below', tone: 'ok' });
-    else d.text(x + 8, y, `${Math.round(-gap)}px over the play head`, { tone: 'bad' });
+    if (end > x) d.text(x + 10, r.bottom + 14, 'title runs over the play head', { tone: 'bad' });
+    else d.text(end + 8, r.bottom + 14, `title stops ${Math.round(x - end)}px before the play head`, { tone: 'ok' });
+    void y;
   },
 };

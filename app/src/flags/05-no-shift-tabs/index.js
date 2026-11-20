@@ -7,22 +7,47 @@
 export default {
   id: 'no-shift-tabs',
   n: 5,
-  title: 'Mode tabs keep still when their dot lights',
+  title: 'Deck tabs keep still when their dot lights',
   group: 'Stability',
   notes: 'Loop / FX / Stems labels no longer slide 5px when a loop, effect or muted stem turns their dot on.',
 };
 
-/** Show me: starts a loop on deck A, which lights the Loop tab's dot, and ghosts the word with the flag off. */
+/** The box of `word`'s own letters inside el (no spaces, no dot). */
+function wordRect(el, word) {
+  if (!el) return null;
+  const walk = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+  while (walk.nextNode()) {
+    const n = walk.currentNode;
+    const i = n.textContent.indexOf(word);
+    if (i < 0) continue;
+    const r = document.createRange();
+    r.setStart(n, i);
+    r.setEnd(n, i + word.length);
+    return r.getBoundingClientRect();
+  }
+  return null;
+}
+
+/** Show me: starts a loop on deck A, which lights the Loop tab's dot; flipping shows the word sliding (before) and holding (after). */
 export const show = {
-  note: "A loop lit the Loop tab's dot; dashed is where the word would be with the flag off.",
+  about: 'When a loop or effect was running, its tab\'s little dot pushed the word "Loop" or "FX" sideways. Now the word stays put.',
+  before: 'Start a loop: a dot lights up after "Loop" and drags the word to the left, and back again when the loop ends.',
+  after: 'The dot hangs just after the word without pushing it, so the tab label never moves.',
   async setup(app, ctx) {
     if (!app.loaded(0)) await app.loadTrack(0);
     await app.tab(0, 'Cues');
     const loopTab = () => app.$$("[data-region='deck0'] .modes button").find((b) => b.textContent.trim().startsWith('Loop'));
-    if (!loopTab().querySelector('i')) await app.key('KeyR', { target: document.body });
+    if (loopTab().querySelector('i')) await app.key('KeyR', { target: document.body });
+    await app.wait(150);
+    ctx.tab = loopTab;
+    ctx.word = () => wordRect(loopTab(), 'Loop');
+    // Where the word sits with no loop, flag on and off.
+    const was = app.isOn('no-shift-tabs');
+    const at = (on) => (app.setFlag('no-shift-tabs', on), DOMRect.fromRect(ctx.word()));
+    ctx.rest = { on: at(true), off: at(false) };
+    app.setFlag('no-shift-tabs', was);
+    await app.key('KeyR', { target: document.body });
     await app.until(() => loopTab().querySelector('i'), 1500, 'the loop dot');
-    ctx.word = () => app.textRect(loopTab());
-    ctx.b = { on: [ctx.word()], off: [app.without('no-shift-tabs', () => ctx.word())] };
   },
   async replay(app) {
     await app.key('KeyR', { target: document.body });
@@ -30,7 +55,19 @@ export const show = {
     await app.key('KeyR', { target: document.body });
   },
   target: (app) => app.$$("[data-region='deck0'] .modes button").find((b) => b.textContent.trim().startsWith('Loop')),
+  badge: (app, ctx) => ctx.tab?.()?.getBoundingClientRect(),
   aid(d, app, ctx) {
-    d.ghost(app.other('no-shift-tabs', ctx.b)[0], ctx.word(), { label: app.isOn('no-shift-tabs') ? 'off:' : 'on:', side: 'below' });
+    const rest = ctx.phase === 'before' ? ctx.rest.off : ctx.rest.on;
+    const word = ctx.word();
+    const tab = ctx.tab()?.getBoundingClientRect();
+    d.moved(rest, word, { what: '"Loop"', side: 'below', still: '"Loop" stays put' });
+    // The tab four times bigger, with where the word should be dashed in it.
+    if (tab && rest) {
+      const z = 4;
+      const src = { x: tab.x + tab.width / 2 - 45, y: tab.y + tab.height / 2 - 14 };
+      const l = d.loupe('tab', src, { zoom: z, size: { w: 360, h: 112 }, near: new DOMRect(src.x, src.y, 90, 28), caption: 'Loop tab, 4×' });
+      const a = l.map(rest.x, rest.y);
+      d.clip(l.rect, () => d.box(new DOMRect(a.x, a.y, rest.width * z, rest.height * z), { c: d.C.ghost, dash: '6 4', w: 1.5 }));
+    }
   },
 };

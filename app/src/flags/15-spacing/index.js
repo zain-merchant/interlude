@@ -15,24 +15,33 @@
 export default {
   id: 'spacing',
   n: 15,
-  title: 'One spacing scale: 4, 8, 12, 16',
+  title: 'Even margins everywhere',
   group: 'Layout',
   notes: 'Mixer sides pad 16 like every panel; library cells, search, menus, tooltips, toast, banner, Settings rows and the two dialogs move onto 4/8/12/16 (24 for dialogs).',
 };
 
-/** Show me: the paddings the flag changes, shaded with their sizes. */
+/** Show me: the inner margins of the mixer against the decks beside it, shaded with their sizes, flipping. */
 export const show = {
-  note: 'The changed paddings are shaded with their sizes: mixer sides, search, library cells and toast; flip the flag to compare.',
+  about: 'Inside panels and popups the margins were a mix of near-identical sizes (12 here, 16 there, 10, 14, 6), so edges looked slightly ragged. Now every gap is 4, 8, 12 or 16.',
+  before: "The mixer keeps its knobs 12px from its edges while the decks either side keep 16px, and the search box, library rows, toast and menus each have their own odd margin: close, but not the same.",
+  after: 'Every panel keeps its contents 16px from its edges, and the smaller gaps are 4, 8 or 12, so neighbouring panels match and the whole window feels even.',
   async setup(app) {
-    await app.loadTrack(0, 2);
+    if (!app.loaded(0)) await app.loadTrack(0);
   },
-  target: (app) => [app.$('.mixer'), app.$('section.library .search'), app.rows()[0], app.$('.toastbox .toast')],
-  aid(d, app) {
-    d.padding(app.$('.mixer'), { sides: 'lr' });
-    d.padding(app.$('section.library .search'), { sides: 'lr' });
-    const row = app.rows()[0];
-    const cell = row ? [...row.children].find((c) => c.offsetWidth > 30) : null;
-    d.padding(cell, { sides: 'l' });
-    d.padding(app.$('.toastbox .toast'), { sides: 'tl' });
+  target: (app) => [app.$('.mixer')],
+  badge: (app) => app.$('.mixer')?.getBoundingClientRect(),
+  aid(d, app, ctx) {
+    const mixer = app.$('.mixer');
+    const decks = [app.deck(0), app.deck(1)];
+    if (!mixer || decks.some((x) => !x)) return;
+    d.padding(mixer, { sides: 'lr' });
+    d.padding(decks[0], { sides: 'r' });
+    d.padding(decks[1], { sides: 'l' });
+    const pl = parseFloat(getComputedStyle(mixer).paddingLeft);
+    const dl = parseFloat(getComputedStyle(decks[0]).paddingRight);
+    const same = Math.abs(pl - dl) < 0.5;
+    const r = mixer.getBoundingClientRect();
+    d.text(r.x + r.width / 2, r.bottom + 40, same ? `mixer and decks: the same ${Math.round(pl)}px margin` : `mixer margin ${Math.round(pl)}px, decks ${Math.round(dl)}px`, { anchor: 'middle', tone: same ? 'ok' : 'bad', fixed: true });
+    void ctx;
   },
 };

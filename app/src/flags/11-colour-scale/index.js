@@ -13,7 +13,7 @@
 export default {
   id: 'colour-scale',
   n: 11,
-  title: 'Text levels by role',
+  title: 'Arrows and notes at the right brightness',
   group: 'Type and colour',
   notes: 'Analysis note off the disabled level; nudge arrows match the other arrow buttons; optionally deck tabs match the other navigation.',
   settings: {
@@ -21,40 +21,39 @@ export default {
   },
 };
 
-/** Show me: deck A's nudge arrows beside the other arrow buttons, each pair tagged with its text level. */
+/** Show me: deck A's pitch-nudge ‹ › and its beat-jump ‹ ›, side by side in two loupes, flipping; the library's analysis note too while it's there. */
 export const show = {
-  note: "Deck A's nudge ‹ › now share the other arrows' text level (each pair is tagged); off, nudge is a step dimmer.",
-  async setup(app, ctx) {
+  about: "The ‹ › under the pitch fader were dimmer than every other ‹ ›, so they looked switched off; the library's 'analyzing' note used the faint grey of disabled things. Now each uses the brightness of its kind.",
+  before: 'The pitch nudge ‹ › are a step dimmer than the beat-jump ‹ › next to them, so they look disabled even though they work, and live notes like "analyzing, 12 to go" are hard to read.',
+  after: "All the ‹ › arrow buttons share one brightness, so working buttons look working, and live information is as readable as the text beside it.",
+  async setup(app) {
     if (!app.loaded(0)) await app.loadTrack(0);
-    await app.tab(0, 'Loop');
-    // The tokens' computed colours, from a probe in the app's own scope.
-    const probe = document.createElement('span');
-    app.$('.app').append(probe);
-    ctx.levels = ['fg', 'fg-2', 'fg-3', 'fg-4'].map((t) => {
-      probe.style.color = `var(--${t})`;
-      return [t, getComputedStyle(probe).color];
-    });
-    probe.remove();
   },
-  target: (app) => [app.$("[data-region='deck0'] .pitch .nudge"), app.$("[data-region='deck0'] .perf"), app.$("[data-region='deck0'] .transport .jumps")],
+  target: (app) => [app.$("[data-region='deck0'] .pitch .nudge"), app.$("[data-region='deck0'] .transport .jumps")],
+  badge: (app, ctx) => ctx.at,
   aid(d, app, ctx) {
-    const level = (el) => {
-      const c = getComputedStyle(el).color;
-      return ctx.levels.find(([, v]) => v === c)?.[0] ?? 'other';
-    };
-    const D = "[data-region='deck0']";
-    const pairs = [
-      [app.$$(`${D} .pitch .nudge button`), 'nudge'],
-      [app.$$(`${D} .perf .tb.ar`), 'loop'],
-      [app.$$(`${D} .transport .jumps button`), 'jump'],
-    ];
-    const ref = level(pairs[1][0][0] ?? document.body);
-    for (const [els, name] of pairs) {
-      if (!els.length) continue;
-      const rs = els.map((e) => e.getBoundingClientRect());
-      const l = level(els[0]);
-      const x = (Math.min(...rs.map((r) => r.left)) + Math.max(...rs.map((r) => r.right))) / 2;
-      d.text(x, Math.max(...rs.map((r) => r.bottom)) + 14, `${name}: ${l}`, { anchor: 'middle', tone: l === ref ? 'ok' : 'bad' });
+    const before = ctx.phase === 'before';
+    const nudge = app.$("[data-region='deck0'] .pitch .nudge")?.getBoundingClientRect();
+    const jumps = app.$("[data-region='deck0'] .transport .jumps")?.getBoundingClientRect();
+    if (!nudge || !jumps) return;
+    // The same size and zoom for both, side by side, so their brightness compares directly.
+    const zoom = 5;
+    const vw = 44;
+    const vh = Math.max(nudge.height, 24) + 8;
+    const size = { w: vw * zoom, h: vh * zoom };
+    const y = 230;
+    const a = d.loupe('nudge', { x: nudge.x + nudge.width / 2 - vw / 2, y: nudge.y + nudge.height / 2 - vh / 2 }, { zoom, size, at: { x: 640, y }, caption: '' });
+    const b = d.loupe('jump', { x: jumps.x + 2, y: jumps.y + jumps.height / 2 - vh / 2 }, { zoom, size, at: { x: 640 + size.w + 16, y }, caption: '' });
+    ctx.at = a.rect;
+    d.text(a.rect.x, a.rect.bottom + 14, 'pitch nudge ‹ ›', { fixed: true });
+    d.text(b.rect.x, b.rect.bottom + 14, 'beat jump ‹', { fixed: true });
+    d.text(a.rect.x, a.rect.bottom + 40, before ? 'nudge is dimmer: it looks switched off' : 'the same brightness: both look ready to press', { tone: before ? 'bad' : 'ok', fixed: true });
+    // The analysis note, while the library is still being analysed.
+    const p = app.$('section.library .bar .count .pending');
+    const pr = p?.getBoundingClientRect();
+    if (pr) {
+      const l = d.loupe('note', { x: pr.x - 6, y: pr.y - 4 }, { zoom: 3, size: { w: Math.round((pr.width + 12) * 3), h: Math.round((pr.height + 8) * 3) }, at: { x: pr.x, y: pr.bottom + 50 }, caption: '' });
+      d.text(l.rect.x, l.rect.bottom + 14, before ? 'faint, like a disabled item' : 'as readable as the count beside it', { tone: before ? 'bad' : 'ok', fixed: true });
     }
   },
 };

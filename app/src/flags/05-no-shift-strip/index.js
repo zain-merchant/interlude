@@ -21,9 +21,11 @@ export default {
   notes: 'Hot cue times, loop and beat-jump sizes, the effect name and On/Off sit in fixed slots, so the controls beside them stay put.',
 };
 
-/** Show me: shrinks deck A's loop from 4 beats to 1/4 and ghosts the arrows with the flag off. */
+/** Show me: shrinks deck A's loop from 4 beats to 1/4; flipping shows its arrows sliding (before) and holding (after). */
 export const show = {
-  note: "Deck A's loop went from 4 beats to 1/4; dashed is where the arrows would be with the flag off.",
+  about: 'Changing a loop size, an effect or a hot cue resized its button, which nudged the arrows and buttons beside it. Now each value has a fixed slot and nothing around it moves.',
+  before: 'Halve the loop from 4 beats to 1/4: the size label gets wider, so the ‹ › arrows on either side slide away from where your mouse was.',
+  after: 'The size sits in a slot made for its longest value, so the arrows stay exactly where they were and you can keep clicking.',
   async setup(app, ctx) {
     if (!app.loaded(0)) await app.loadTrack(0);
     await app.tab(0, 'Loop');
@@ -33,27 +35,30 @@ export const show = {
       const [a, b] = s.split('/').map(Number);
       return b ? a / b : a;
     };
-    // To 4 beats, then down to 1/4.
+    // To 4 beats, measured, then down to 1/4.
     for (let i = 0; i < 10 && size() !== 4; i++) await app.click(`${D} button[aria-label='${size() < 4 ? 'Double loop' : 'Halve loop'}']`);
+    ctx.parts = () => app.$$(`${D} .perf .tb.ar`);
+    ctx.rest = app.both('no-shift-strip', ctx.parts());
     for (let i = 0; i < 4; i++) await app.click(`${D} button[aria-label='Halve loop']`);
-    ctx.parts = () => [...app.$$(`${D} .perf .tb.ar`), ...app.$$(`${D} .transport .jumps button`)];
-    ctx.b = app.both('no-shift-strip', ctx.parts());
   },
-  target: (app) => [app.$("[data-region='deck0'] .perf"), app.$("[data-region='deck0'] .transport .jumps")],
+  target: "[data-region='deck0'] .perf",
+  badge: (app) => app.$("[data-region='deck0'] .perf")?.getBoundingClientRect(),
   aid(d, app, ctx) {
-    const other = app.other('no-shift-strip', ctx.b);
-    const off = app.isOn('no-shift-strip') ? 'off' : 'on';
-    // Each row's pair of arrows, with one label under the pair.
-    for (const [a, b, name] of [[0, 1, 'loop arrows'], [2, 3, 'jump arrows']]) {
-      const els = [ctx.parts()[a], ctx.parts()[b]];
-      if (!els[0] || !els[1]) continue;
-      const live = els.map((e) => e.getBoundingClientRect());
-      const was = [other[a], other[b]];
-      const moved = live.map((r, i) => d.ghost(was[i], r, { label: false }));
-      if (!moved.some(Boolean)) continue;
-      const most = Math.max(...live.map((r, i) => Math.max(Math.abs(r.x - was[i].x), Math.abs(r.right - was[i].right))));
-      const bottom = Math.max(live[0].bottom, live[1].bottom);
-      d.text((live[0].left + live[1].right) / 2, bottom + 14, `${off}: ${name} move ${Math.round(most * 10) / 10}px`, { anchor: 'middle' });
-    }
+    const rest = ctx.phase === 'before' ? ctx.rest.off : ctx.rest.on;
+    const live = ctx.parts().map((e) => e.getBoundingClientRect());
+    let most = 0;
+    live.forEach((r, i) => {
+      if (!rest[i]) return;
+      const dx = Math.max(Math.abs(r.x - rest[i].x), Math.abs(r.right - rest[i].right));
+      if (dx > 0.5) {
+        most = Math.max(most, dx);
+        d.box(rest[i], { c: d.C.ghost, dash: '4 3', w: 1.25 });
+      }
+    });
+    if (live.length < 2) return;
+    const x = (live[0].left + live[live.length - 1].right) / 2;
+    const y = Math.max(...live.map((r) => r.bottom)) + 16;
+    if (most) d.text(x, y, `loop arrows slid ${Math.round(most)}px (dashed: where they were)`, { anchor: 'middle', tone: 'bad' });
+    else d.text(x, y, 'loop arrows stay put', { anchor: 'middle', tone: 'ok' });
   },
 };

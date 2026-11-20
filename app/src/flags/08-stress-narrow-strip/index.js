@@ -19,14 +19,16 @@
 export default {
   id: 'stress-narrow-strip',
   n: 8,
-  title: 'Mode row fits the smallest window',
+  title: 'Deck buttons fit the smallest window',
   group: 'Stability',
   notes: 'Below a 320px mode row (windows under about 1,180px wide): hot cues show colour + time or just the number, stems stack dot over name, FX drops separators and the chevron. Wider decks are unchanged.',
 };
 
-/** Show me: zooms the interface in until deck A's mode row is under 320px, with hot cues set. */
+/** Show me: zooms the interface in until deck A's mode row is under 320px, with two hot cues set; flipping shows them running together (before) and fitting (after). */
 export const show = {
-  note: "Zoomed in until deck A's mode row is under 320px: the two hot cues fit (off, they run together). Done restores the zoom.",
+  about: 'In the smallest window the hot cue, stem and effect buttons ran into each other ("1 Set2 Set3 Set") or got cut off. Now they drop what\'s shown elsewhere and fit.',
+  before: 'With the window as small as it goes, the hot cue buttons overlap: their numbers and times run together and you can\'t tell which cue is which.',
+  after: 'Each cue shows just its colour and time (or its number when empty), so all four fit side by side and stay readable.',
   async setup(app, ctx) {
     if (!app.loaded(0)) await app.loadTrack(0);
     await app.tab(0, 'Cues');
@@ -38,22 +40,23 @@ export const show = {
         await app.click(`${D} button[aria-label='Jump forward ${app.$(`${D} .transport .jumps .num`)?.textContent.trim() ?? 4} beats']`).catch(() => {});
       }
     }
-    ctx.was = app.zoom(1);
-    for (const z of [1.1, 1.25, 1.5, 1.75]) {
-      if (app.$(`${D} .mp`).offsetWidth < 320) break;
-      app.zoom(z);
-      await app.wait(150);
-    }
+    // Zoomed in so the window is as wide as the smallest one the app allows
+    // (1024px in its own pixels), where the row is 234px.
+    ctx.was = app.zoom(Math.max(1, innerWidth / 1024));
+    await app.wait(200);
   },
   cleanup(app, ctx) {
     if (ctx.was != null) app.zoom(ctx.was);
   },
-  target: "[data-region='deck0'] .mp",
-  aid(d, app) {
-    const mp = app.$("[data-region='deck0'] .mp");
-    const r = mp?.getBoundingClientRect();
-    if (!r) return;
-    const w = mp.offsetWidth;
-    d.measure(r.left, r.top - 6, r.right, r.top - 6, { label: `${w}px (narrow under 320)`, side: 'above', tone: w < 320 ? 'ok' : 'bad' });
+  target: "[data-region='deck0'] .perf",
+  badge: (app, ctx) => ctx.at,
+  aid(d, app, ctx) {
+    const mp = app.$("[data-region='deck0'] .perf")?.getBoundingClientRect();
+    if (!mp) return;
+    const before = ctx.phase === 'before';
+    // The cue row, twice as big, beside it.
+    const l = d.loupe('cues', { x: mp.x - 6, y: mp.y + mp.height / 2 - 22 }, { zoom: 2, size: { w: Math.min(760, (mp.width + 12) * 2), h: 88 }, near: mp, caption: '' });
+    ctx.at = l.rect;
+    d.text(l.at.x + 10, l.at.y + l.rect.height - 14, before ? 'hot cues run into each other' : 'each hot cue fits its own slot', { tone: before ? 'bad' : 'ok', fixed: true });
   },
 };

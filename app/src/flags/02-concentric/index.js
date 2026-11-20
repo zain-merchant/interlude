@@ -22,7 +22,7 @@
 export default {
   id: 'concentric',
   n: 2,
-  title: 'Concentric inset corners',
+  title: 'Rounded corners that nest evenly',
   group: 'Shape',
   notes:
     'One panel radius and one panel padding for every panel; every inner radius is the panel radius less its inset (at least 4px). Tune both below: controls follow.',
@@ -32,43 +32,97 @@ export default {
   },
 };
 
-/** Show me: loupes on two nestings, each corner's radius drawn as a circle: one shared centre is concentric. */
+/** Show me: a loupe on Cue in deck A's rounded corner, flipping; the gap between the two curves measured at the side and round the corner. */
 export const show = {
-  note: 'Nested corners share one centre: in each loupe the circles are the corners\' radii, the dot their centre.',
-  target: (app) => [app.$('.waves .zoom'), app.$("[data-region='deck0'] .transport .btn.cue")],
-  aid(d, app) {
-    /** One corner's radius and centre, in window px. */
-    const corner = (el, which) => {
+  about: "A rounded button near a panel's rounded corner left an uneven gap, wider at the corner than along the sides. Now inner corners follow the outer ones, so the gap stays even.",
+  before: "Look at the gap between Cue and the corner of its panel: it's wider round the corner than along the edges, so the button looks slightly out of place.",
+  after: "Every inner corner is the panel's corner made smaller by the gap, so the gap is the same all the way round and the two shapes look like they belong together.",
+  target: (app) => [app.$("[data-region='deck0'] .transport .btn.cue")],
+  badge: (app, ctx) => ctx.at,
+  aid(d, app, ctx) {
+    const rad = (el, prop) => {
       const r = el.getBoundingClientRect();
-      const cs = getComputedStyle(el);
-      const prop = { tr: 'borderTopRightRadius', bl: 'borderBottomLeftRadius' }[which];
-      const rad = Math.min(parseFloat(cs[prop]) || 0, r.width / 2, r.height / 2);
-      return { cx: which === 'tr' ? r.right - rad : r.left + rad, cy: which === 'tr' ? r.top + rad : r.bottom - rad, rad };
+      return Math.min(parseFloat(getComputedStyle(el)[prop]) || 0, r.width / 2, r.height / 2);
     };
-    /** A loupe on `view` with the corners of `els` (outermost first) as circles. */
-    const nest = (key, els, which, view, zoom, caption) => {
-      if (els.some((e) => !e)) return;
-      const cs = els.map((e) => corner(e, which));
-      const l = d.loupe(key, view, { zoom, size: { w: view.width * zoom, h: view.height * zoom }, near: view, caption: '' });
-      d.clip(l.rect, () => {
-        for (const c of cs) {
-          const p = l.map(c.cx, c.cy);
-          d.circle(p.x, p.y, c.rad * zoom, { dash: '4 3', w: 1.25 });
+    /** A line clipped to rect b (the loupe), drawn only where it's inside. */
+    const seg = (b, x1, y1, x2, y2, o) => {
+      let t0 = 0;
+      let t1 = 1;
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+      for (const [p, q] of [[-dx, x1 - b.x], [dx, b.right - x1], [-dy, y1 - b.y], [dy, b.bottom - y1]]) {
+        if (p === 0) {
+          if (q < 0) return;
+        } else {
+          const t = q / p;
+          if (p < 0) t0 = Math.max(t0, t);
+          else t1 = Math.min(t1, t);
         }
-        for (const c of cs) {
-          const p = l.map(c.cx, c.cy);
-          d.dot(p.x, p.y, { r: 3 });
-        }
-      });
-      const apart = Math.max(...cs.map((c) => Math.hypot(c.cx - cs[0].cx, c.cy - cs[0].cy)));
-      const ok = apart < 0.75;
-      d.text(l.at.x + 8, l.at.y + l.rect.height - 15, `${caption}: ${ok ? 'one centre' : `centres ${Math.round(apart * 10) / 10}px apart`}`, { tone: ok ? 'ok' : 'bad', fixed: true });
+      }
+      if (t0 < t1) d.line(x1 + t0 * dx, y1 + t0 * dy, x1 + t1 * dx, y1 + t1 * dy, o);
     };
-    const waves = app.$('.waves');
-    const wr = waves?.getBoundingClientRect();
-    if (wr) nest('waves', [waves, app.$('.waves .zoom'), app.$(".waves .zoom button[aria-label='Zoom in']")], 'tr', new DOMRect(wr.right - 104, wr.top - 4, 108, 52), 3, 'waveforms › zoom › +');
-    const deck = app.deck(0);
-    const dr = deck?.getBoundingClientRect();
-    if (dr) nest('deck', [deck, app.$("[data-region='deck0'] .transport .btn.cue")], 'bl', new DOMRect(dr.left - 4, dr.bottom - 68, 76, 72), 3, 'deck A › Cue');
+    /**
+     * A loupe on one corner of `outer` with `inner` near it. sx, sy: which
+     * corner (-1 left / +1 right, -1 top / +1 bottom). Draws the even-gap
+     * line (dashed) and measures the gap at the side and round the corner.
+     */
+    const nest = (key, outer, inner, sx, sy, zoom, size, at, caption) => {
+      if (!outer || !inner) return null;
+      const prop = `border${sy < 0 ? 'Top' : 'Bottom'}${sx < 0 ? 'Left' : 'Right'}Radius`;
+      const O = outer.getBoundingClientRect();
+      const I = inner.getBoundingClientRect();
+      const R = rad(outer, prop);
+      const r = rad(inner, prop);
+      const cx = sx < 0 ? O.left : O.right;
+      const cy = sy < 0 ? O.top : O.bottom;
+      const ix = sx < 0 ? I.left : I.right;
+      const iy = sy < 0 ? I.top : I.bottom;
+      const gap = Math.min(Math.abs(ix - cx), Math.abs(iy - cy));
+      // The corners' centres, and where each curve crosses the diagonal.
+      const oc = { x: cx - sx * R, y: cy - sy * R };
+      const ic = { x: ix - sx * r, y: iy - sy * r };
+      const k = Math.SQRT1_2;
+      const op = { x: oc.x + sx * R * k, y: oc.y + sy * R * k };
+      const ip = { x: ic.x + sx * r * k, y: ic.y + sy * r * k };
+      const diag = Math.hypot(op.x - ip.x, op.y - ip.y);
+      const even = Math.abs(diag - gap) < 1.5;
+      // The view: the outer corner a little in from the loupe's own corner.
+      const vw = size.w / zoom;
+      const vh = size.h / zoom;
+      const src = { x: sx < 0 ? cx - 5 : cx + 5 - vw, y: sy < 0 ? cy - 5 : cy + 5 - vh };
+      const l = d.loupe(key, src, { zoom, size, at, caption: '' });
+      const b = l.rect;
+      const m = (x, y) => l.map(x, y);
+      // An even gap: the panel's edge moved in by the gap at the side.
+      const e = Math.max(0, R - gap);
+      const far = 200;
+      const g0 = m(cx - sx * gap, cy - sy * (gap + e + far));
+      const g1 = m(cx - sx * gap, cy - sy * (gap + e));
+      const g2 = m(cx - sx * (gap + e), cy - sy * gap);
+      const g3 = m(cx - sx * (gap + e + far), cy - sy * gap);
+      seg(b, g0.x, g0.y, g1.x, g1.y, { c: d.C.ghost, dash: '5 4', w: 1.5 });
+      seg(b, g2.x, g2.y, g3.x, g3.y, { c: d.C.ghost, dash: '5 4', w: 1.5 });
+      if (e) {
+        const E = e * zoom;
+        const sweep = sx * sy > 0 ? 1 : 0;
+        d.path(`M${g1.x} ${g1.y}A${E} ${E} 0 0 ${sweep} ${g2.x} ${g2.y}`, { c: d.C.ghost, dash: '5 4', w: 1.5 });
+      }
+      // The gap round the corner, and at the side.
+      const c = even ? d.C.ok : d.C.bad;
+      const a = m(op.x, op.y);
+      const p = m(ip.x, ip.y);
+      seg(b, a.x, a.y, p.x, p.y, { c, w: 2.5 });
+      // The side: along the edge that runs across the loupe, past the curves.
+      const sx0 = ix - sx * (Math.max(r, R - gap) + 14);
+      const s0 = m(sx0, cy);
+      const s1 = m(sx0, iy);
+      seg(b, s0.x, s0.y, s1.x, s1.y, { c, w: 2.5 });
+      d.text(b.x + 10, b.y + 16, 'dashed: an even gap from the edge', { fixed: true });
+      d.text(b.x + 10, b.bottom - 38, caption, { fixed: true });
+      d.text(b.x + 10, b.bottom - 16, even ? `even gap: ${Math.round(gap)}px all the way round` : `gap: ${Math.round(gap)}px at the side, ${Math.round(diag)}px round the corner`, { tone: even ? 'ok' : 'bad', fixed: true });
+      return l;
+    };
+    const a = nest('deck', app.deck(0), app.$("[data-region='deck0'] .transport .btn.cue"), -1, 1, 6, { w: 320, h: 260 }, { x: 160, y: 180 }, "Cue in deck A's corner, 6× bigger");
+    if (a) ctx.at = a.rect;
   },
 };

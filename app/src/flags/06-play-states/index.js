@@ -19,7 +19,7 @@
 export default {
   id: 'play-states',
   n: 6,
-  title: 'Play button states',
+  title: 'The play button shows which deck is playing',
   group: 'Controls',
   notes:
     'Paused stays solid white; playing steps back (deck tint, outline, or pressed in); cue preview shows an amber ring and a play glyph; an empty deck shows an empty outline.',
@@ -37,22 +37,29 @@ export default {
   },
 };
 
-/** Show me: deck A playing, deck B paused, each play button tagged with its state. */
+/** Show me: deck A playing, deck B paused; flipping shows the two play buttons alike (before) and told apart (after). */
 export const show = {
-  note: 'Deck A plays, deck B is paused: compare the two play buttons, and try Playing.',
+  about: 'The play button looked the same playing or paused, so you couldn\'t tell at a glance which deck was running. Now a playing deck\'s button steps back into its colour.',
+  before: 'Deck A is playing and deck B is paused, but both play buttons are the same solid white block: you have to listen, or look for the moving waveform.',
+  after: 'The paused button stays solid white, ready to press; the playing one turns into a quieter button in its deck\'s colour. One glance tells you which deck is running.',
   async setup(app) {
     if (!app.loaded(0)) await app.loadTrack(0);
     if (!app.loaded(1)) await app.loadTrack(1);
     await app.play(0);
   },
   target: (app) => [app.playButton(0), app.playButton(1)],
-  aid(d, app) {
+  badge: (app) => app.playButton(0)?.getBoundingClientRect(),
+  aid(d, app, ctx) {
+    const before = ctx.phase === 'before';
     for (const n of [0, 1]) {
       const b = app.playButton(n);
       if (!b) continue;
       const r = b.getBoundingClientRect();
-      const state = b.getAttribute('aria-disabled') === 'true' ? 'empty deck' : b.hasAttribute('data-cueing') ? 'cueing' : b.classList.contains('on') ? 'playing' : 'paused';
-      d.text(r.x + r.width / 2, r.bottom + 14, state, { anchor: 'middle', fixed: true });
+      const playing = b.classList.contains('on');
+      const label = playing
+        ? before ? `deck ${'AB'[n]} playing: the same white block` : `deck ${'AB'[n]} playing: steps back, in its colour`
+        : before ? `deck ${'AB'[n]} paused: the same white block` : `deck ${'AB'[n]} paused: solid, ready to press`;
+      d.text(r.x + r.width / 2, r.bottom + 16, label, { anchor: 'middle', tone: before && playing ? 'bad' : before ? undefined : 'ok' });
     }
   },
 };

@@ -12,16 +12,39 @@ export default {
   notes: 'In right-aligned columns the sort arrow sits to the left of the heading, so the heading no longer jumps 14px.',
 };
 
-/** Show me: sorts the library by BPM and ghosts where the heading's word would be with the flag off. */
+/** The box of `word`'s own letters inside el (no spaces, no arrow). */
+function wordRect(el, word) {
+  if (!el) return null;
+  const walk = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+  while (walk.nextNode()) {
+    const n = walk.currentNode;
+    const i = n.textContent.indexOf(word);
+    if (i < 0) continue;
+    const r = document.createRange();
+    r.setStart(n, i);
+    r.setEnd(n, i + word.length);
+    return r.getBoundingClientRect();
+  }
+  return null;
+}
+
+/** Show me: sorts the library by BPM; flipping shows the heading jumping left (before) and staying over its numbers (after). */
 export const show = {
-  note: 'Sorted by BPM; dashed is where the word "BPM" would be with the flag off.',
+  about: "Sorting by BPM or Time pushed the column's heading sideways to make room for the arrow. Now the heading stays over its numbers.",
+  before: 'Click "BPM" to sort by it: an arrow appears after the word and shoves it to the left, off its column, and back when you sort by something else.',
+  after: 'The arrow goes in front of the word instead, so "BPM" stays right above its numbers.',
   async setup(app, ctx) {
     const title = app.$("button.sort[aria-label^='Sort by title']");
-    // Sort by title first (the app's default), then by BPM.
+    const bpm = () => app.$("button.sort[aria-label^='Sort by bpm']");
+    // Sort by title first (the app's default), measure the word, then sort by BPM.
     for (let i = 0; i < 3 && !title.classList.contains('on'); i++) await app.click(title);
-    await app.click("button.sort[aria-label^='Sort by bpm']");
-    ctx.word = () => app.textRect(app.$("button.sort[aria-label^='Sort by bpm']"));
-    ctx.b = { on: [ctx.word()], off: [app.without('no-shift-sort', () => ctx.word())] };
+    ctx.word = () => wordRect(bpm(), 'BPM');
+    // The word's own box, not the whole button.
+    const was = app.isOn('no-shift-sort');
+    const at = (on) => (app.setFlag('no-shift-sort', on), DOMRect.fromRect(ctx.word()));
+    ctx.rest = { on: at(true), off: at(false) };
+    app.setFlag('no-shift-sort', was);
+    await app.click(bpm());
   },
   async replay(app) {
     await app.click("button.sort[aria-label^='Sort by title']");
@@ -29,7 +52,9 @@ export const show = {
     await app.click("button.sort[aria-label^='Sort by bpm']");
   },
   target: "button.sort[aria-label^='Sort by bpm']",
+  badge: (app) => app.$("button.sort[aria-label^='Sort by bpm']")?.getBoundingClientRect(),
   aid(d, app, ctx) {
-    d.ghost(app.other('no-shift-sort', ctx.b)[0], ctx.word(), { label: app.isOn('no-shift-sort') ? 'off:' : 'on:', side: 'below' });
+    const rest = ctx.phase === 'before' ? ctx.rest.off : ctx.rest.on;
+    d.moved(rest, ctx.word(), { what: '"BPM"', side: 'left', still: '"BPM" stays over its column' });
   },
 };

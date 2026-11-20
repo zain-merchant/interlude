@@ -16,21 +16,34 @@ export default {
   },
 };
 
-/** Show me: selects the last row and measures the room under it, with a loupe on the list's foot. */
+/** Show me: the last library row selected, a loupe on the list's foot, flipping. */
 export const show = {
-  note: 'The last row is selected: the room under it is measured, and the loupe shows it clear of the rounded foot.',
-  async setup(app) {
+  about: 'Selecting the last track in the library pushed it flush against the rounded bottom edge, clipping its corners. Now there is a little room under it.',
+  before: 'Go to the last track (End key): its highlight is jammed against the bottom of the list and the rounded edge cuts its corners off.',
+  after: 'A small gap under the last row keeps the whole highlight in view, so the end of the list looks like an end, not a cut.',
+  async setup(app, ctx) {
+    await show.each(app);
+  },
+  // Each flip selects the last row again, so the list scrolls the way it would.
+  async each(app) {
     await app.selectRow('last');
+    await app.wait(80);
   },
   target: "[data-region='tracks'] .row.sel",
-  aid(d, app) {
+  badge: (app, ctx) => ctx.at,
+  aid(d, app, ctx) {
+    const before = ctx.phase === 'before';
     const row = app.$("[data-region='tracks'] .row.sel")?.getBoundingClientRect();
     const list = app.$("[data-region='tracks']")?.getBoundingClientRect();
     if (!row || !list) return;
+    const zoom = 4;
+    const size = { w: 400, h: 200 };
+    const src = { x: list.left - 6, y: list.bottom - size.h / zoom + 8 };
+    const l = d.loupe('foot', src, { zoom, size, at: { x: list.left + 380, y: list.bottom - size.h - 70 }, caption: '' });
+    ctx.at = l.rect;
     const gap = list.bottom - row.bottom;
-    const x = row.left + 40;
-    if (gap > 0.5) d.measure(x, row.bottom, x, list.bottom, { label: `${Math.round(gap * 10) / 10}`, side: 'right', tone: 'ok' });
-    else d.text(x, list.bottom - 9, 'touches the foot', { tone: 'bad' });
-    d.loupe('foot', { x: list.left - 4, y: list.bottom - 30 }, { zoom: 4, size: { w: 240, h: 136 }, near: new DOMRect(list.left, list.bottom - 30, 60, 34), caption: 'list foot, 4×' });
+    d.text(l.rect.x + 10, l.rect.y + 16, 'the last row and the bottom of the list, 4× bigger', { fixed: true });
+    d.text(l.rect.x + 10, l.rect.bottom + 16, gap > 0.5 ? `${Math.round(gap)}px of room under the last row` : 'the last row touches the bottom: its corners are cut', { tone: gap > 0.5 ? 'ok' : 'bad', fixed: true });
+    void before;
   },
 };

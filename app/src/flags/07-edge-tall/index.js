@@ -17,10 +17,13 @@ export default {
   },
 };
 
-/** Show me: zooms the interface out to 80% so the window is tall enough, and marks the decks' cap. */
+/** Show me: zooms the interface out to 80% to stand in for a tall screen; flipping shows the decks stretching (before) and the waveforms growing instead (after). */
 export const show = {
-  note: "Zoomed out to 80% for a tall window: the decks stop at the line and the waveforms take the rest. Done restores the zoom.",
+  about: 'On a tall screen the decks stretched into big empty panels while the waveforms stayed thin. Now the decks stop at a sensible height and the waveforms get the extra room.',
+  before: 'On a tall window every spare pixel goes to the decks: their buttons float in empty space, while the waveforms you actually watch stay a thin strip.',
+  after: 'The decks stop growing at a set height and the waveforms take the rest, so you get bigger, more readable waveforms instead of empty panels.',
   async setup(app, ctx) {
+    // Zoomed out, the window is taller in the app's own pixels: a tall screen.
     ctx.was = app.zoom(0.8);
     await app.wait(300);
   },
@@ -28,15 +31,18 @@ export const show = {
     if (ctx.was != null) app.zoom(ctx.was);
   },
   target: (app) => [app.$('.waves'), app.deck(0)],
-  aid(d, app) {
+  badge: (app) => app.$('.waves')?.getBoundingClientRect(),
+  aid(d, app, ctx) {
     const deck = app.deck(0)?.getBoundingClientRect();
     const waves = app.$('.waves')?.getBoundingClientRect();
-    const deckB = app.deck(1)?.getBoundingClientRect();
     if (!deck || !waves) return;
-    const cap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--flag-edge-tall-decks')) || 460;
-    // getBoundingClientRect is in zoomed px here; the cap is in CSS px.
+    const before = ctx.phase === 'before';
+    // Heights in the app's own pixels (the window is zoomed out).
     const k = deck.height / (app.deck(0).offsetHeight || deck.height);
-    d.hguide(deck.top + cap * k, { x1: deck.left, x2: deckB?.right ?? deck.right, label: `deck cap, ${cap}px`, lx: deck.left + 8 });
-    d.measure(waves.right - 24, waves.top, waves.right - 24, waves.bottom, { label: `waveforms ${Math.round(app.$('.waves').offsetHeight)}`, side: 'left' });
+    const px = (h) => `${Math.round(h / k)}px`;
+    const x = deck.left + 6;
+    d.measure(x, waves.top + 4, x, waves.bottom - 4, { label: `waveforms ${px(waves.height)} tall`, side: 'right' });
+    d.measure(x, deck.top + 4, x, deck.bottom - 4, { label: `decks ${px(deck.height)} tall`, side: 'right' });
+    d.text(deck.left + 24, deck.top + deck.height * 0.62, before ? 'decks stretch into empty space; waveforms stay thin' : 'decks stop at a set height; the waveforms get the room', { tone: before ? 'bad' : 'ok' });
   },
 };

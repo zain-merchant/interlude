@@ -11,7 +11,7 @@
 export default {
   id: 'buttons',
   n: 9,
-  title: 'Button styles',
+  title: 'Buttons that look pressable',
   group: 'Controls',
   notes:
     'Outline (tune weight and strength), tonal fill, glass, ghost with a fill, or raised keys. Hover, selected and pressed follow each style.',
@@ -33,17 +33,38 @@ export default {
   },
 };
 
-/** Show me: the buttons the style applies to, with loupes on Sync and Rec. */
+/** Show me: loupes on deck A's Sync and beat-jump buttons and on the library's Sampler and settings buttons, flipping between today's outlined buttons and the chosen style. */
 export const show = {
-  note: 'The restyled buttons are ringed, with loupes on Sync and Rec: click through Style.',
+  about: 'Ordinary buttons were empty outlines, so they read as frames rather than things to press. Now they have a soft solid fill.',
+  before: 'Sync, Sampler, Rec and the other everyday buttons are hollow boxes with a thin grey outline: they look more like frames than buttons, and the screen fills up with lines.',
+  after: "They're soft grey shapes with no outline, so they read as buttons at a glance and the screen looks calmer. (Style in this flag's settings tries other looks.)",
   async setup(app) {
     if (!app.loaded(0)) await app.loadTrack(0);
+    // Both decks loaded, so Sync is live rather than dimmed.
+    if (!app.loaded(1)) await app.loadTrack(1);
   },
   target: (app) => [app.$("[data-region='deck0'] .btn.sync"), app.$("[data-region='deck0'] .btn.jumps"), app.$('section.library .btn.samp'), app.$('section.library .btn.gear'), ...app.$$('.mixer .hp'), app.$('.mixer button.rec')],
-  aid(d, app) {
+  badge: (app, ctx) => ctx.at,
+  aid(d, app, ctx) {
+    const before = ctx.phase === 'before';
     const sync = app.$("[data-region='deck0'] .btn.sync")?.getBoundingClientRect();
+    const jumps = app.$("[data-region='deck0'] .btn.jumps")?.getBoundingClientRect();
+    if (sync && jumps) {
+      const zoom = 2.5;
+      const src = { x: sync.x - 8, y: sync.y - 8 };
+      const size = { w: Math.round((jumps.right + 8 - src.x) * zoom), h: Math.round((sync.height + 16) * zoom) };
+      const l = d.loupe('deck', src, { zoom, size, at: { x: 40, y: 200 }, caption: '' });
+      ctx.at = l.rect;
+      d.text(l.rect.x + 10, l.rect.bottom - 16, "deck A's Sync and beat jump, 2.5× bigger", { fixed: true });
+      d.text(l.rect.x + 10, l.rect.y + 16, before ? 'hollow: a thin outline' : 'filled: a soft grey shape', { tone: before ? 'bad' : 'ok', fixed: true });
+    }
     const rec = app.$('.mixer button.rec')?.getBoundingClientRect();
-    if (sync) d.loupe('sync', { x: sync.x - 6, y: sync.y - 6 }, { zoom: 3, size: { w: 340, h: 150 }, near: sync, caption: 'Sync, 3×' });
-    if (rec) d.loupe('rec', { x: rec.x - 8, y: rec.y - 8 }, { zoom: 4, size: { w: 4 * (rec.width + 16), h: 4 * (rec.height + 16) }, near: rec, caption: 'Rec, 4×' });
+    if (rec) {
+      const zoom = 4;
+      const src = { x: rec.x - 10, y: rec.y - 8 };
+      const size = { w: Math.round((rec.width + 20) * zoom), h: Math.round((rec.height + 16) * zoom) };
+      const l = d.loupe('rec', src, { zoom, size, at: { x: rec.right + 120, y: rec.y - size.h / 2 }, caption: '' });
+      d.text(l.rect.x + 10, l.rect.bottom - 16, "the mixer's Rec, 4×", { fixed: true });
+    }
   },
 };
