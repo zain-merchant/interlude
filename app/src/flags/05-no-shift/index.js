@@ -20,9 +20,9 @@ export default {
       type: 'choice',
       label: 'Kill mark',
       options: [
-        ['strike', 'Strike'],
-        ['dot', 'Dot'],
-        ['colour', 'Colour only'],
+        ['strike', 'Strike', 'A killed band\'s label turns red and is struck through, so it reads as "off" even without colour.'],
+        ['dot', 'Dot', 'A small red dot appears beside a killed band\'s label; the word itself stays readable.'],
+        ['colour', 'Colour only', 'The label only turns red: the quietest, but it relies on colour alone.'],
       ],
       default: 'strike',
     },
