@@ -1,9 +1,14 @@
 # UI audit flags
 
 Each change being tried in the UI audit is a flag: off by default, and off
-is exactly the app as it was. The toggle bar at the bottom right of a dev
-build (`npm run dev`, then press <kbd>`</kbd>) turns flags on and tunes them.
-Picks are remembered in the browser.
+is exactly the app as it was. In a dev build (`npm run dev`) a
+[DialKit](https://github.com/joshpuckett/dialkit) panel at the bottom right
+(press <kbd>`</kbd> to open and close it) turns flags on and tunes them: a
+folder per group, and in it a folder per flag with its **Flag** switch, its
+**Show me** and its settings. A dot marks the flags that are on; a flag's
+notes are the tooltip of its folder. Picks are remembered in the browser
+(`registry.svelte.js` keeps them; the panel mirrors them both ways).
+`FlagDials.svelte` is the panel, loaded only by dev builds.
 
 Each flag becomes its own issue and pull request. To ship one: keep its
 folder's styles and its hooks, then remove its gate (the
@@ -14,8 +19,8 @@ folder's styles and its hooks, then remove its gate (the
 A folder `NN-name/`, where NN is the audit item's number:
 
 - `index.js`: `export default { id, n, title, group, notes, settings }`.
-  `id` is short kebab-case; `n` is the item number; `group` is the bar's
-  heading (Shape, Layout, Stability, Controls, Type and colour, Polish).
+  `id` is short kebab-case; `n` is the item number; `group` is the panel's
+  folder (Shape, Layout, Stability, Controls, Type and colour, Polish).
 - `style.css`: every rule starts with `:root[data-flag-<id>]`, so nothing
   applies while the flag is off.
 - Optional hooks in components, only where CSS can't do it:
@@ -24,13 +29,13 @@ A folder `NN-name/`, where NN is the audit item's number:
   `// #NN (UI audit flag): …` comment. With the flag off, the hook must
   leave behaviour and markup exactly as before.
 
-Settings, shown under the flag's More button:
+Settings, shown in the flag's folder:
 
 - `{ type: 'range', min, max, step, default, unit, label }` becomes the CSS
-  variable `--flag-<id>-<key>` (with its unit).
+  variable `--flag-<id>-<key>` (with its unit), and a DialKit slider.
 - `{ type: 'choice', options: [[value, label], ...], default, label }`
   becomes the attribute `:root[data-flag-<id>-<key>="<value>"]` while the
-  flag is on. Use it for variants to compare (button styles, border
+  flag is on, and a DialKit select. Use it for variants to compare (button styles, border
   treatments).
 
 `16-library-end/` is a complete example: a style, a range setting and one
@@ -38,15 +43,14 @@ gated hook.
 
 ## Show me
 
-Each flag's row in the bar has a **Show me** button. It turns the flag on,
-sets the app up so the change is on screen (loads a track, opens a tab or a
-dialog, unplugs the simulated audio device…), outlines where to look for a
-few seconds, and draws a visual aid over the app (guides, a grid, measured
-gaps, ghosts of where things were, loupes) until **Done**. The note at the top
-of the panel says what changed and what to compare; **Guides** hides the aid,
-**Replay** plays an entrance again, **Again** reruns the setup. The panel can
-be dragged by its header (double-click the header to put it back) and moves
-off the targets while a show runs.
+Each flag's folder has a **Show me** button. It turns the flag on, sets the
+app up so the change is on screen (loads a track, opens a tab or a dialog,
+unplugs the simulated audio device…), rings where to look for a few seconds,
+and draws a visual aid over the app until **Done**. A card says in a
+sentence what to look at, with the flag's own switch to compare off and on;
+**Guides** hides the aid, **Replay** plays an entrance again, **Again**
+reruns the setup. While it runs, the panel folds down to that flag's folder
+and moves off the targets.
 
 A flag describes this in an optional `show` export in its `index.js`:
 

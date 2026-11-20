@@ -2,7 +2,7 @@
 // change is on screen, highlights where it is, and draws the flag's visual
 // aid over the app until it's dismissed. Each flag describes this in an
 // optional `show` export in its index.js (see ../README.md). This file is
-// only reached from FlagBar.svelte, which only loads in dev builds, so none
+// only reached from FlagDials.svelte, which only loads in dev builds, so none
 // of it (nor any flag's `show`) ships.
 import { FLAGS, flags } from '../registry.svelte.js';
 import { kit, setFlag, setSetting, wait } from './app.js';
@@ -158,3 +158,6 @@ export async function resumePending() {
 }
 
 export { setSetting };
+
+// A handle for scripted checks (screenshots of every Show me).
+/** @type {any} */ (globalThis).__flagShow = { showMe, stopShow, replay, current, SHOWS };

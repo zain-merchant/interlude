@@ -7,7 +7,7 @@ import { FLAGS, flags } from '../registry.svelte.js';
 import { tooltip } from '../../lib/tooltip.svelte.js';
 import { uiZoom, setUiZoom } from '../../lib/uizoom.svelte.js';
 
-const OVERLAY = '.flag-show, .flagbar';
+const OVERLAY = '.flag-show, .flag-dials, .dialkit-root';
 export const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 const frame = () => new Promise((r) => requestAnimationFrame(() => r(undefined)));
 
