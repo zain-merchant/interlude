@@ -13,14 +13,42 @@
 
 /* Tenths of a second one step quieter than the minutes and seconds
    beside them (b-K67), so the time reads at a glance and the flicker of
-   the last digit recedes. Relative to its number, so it follows flag 18's
-   ending colour and flag 40's big/small swap. */
+   the last digit recedes: under the big time --fg-2, under the small one
+   --fg-3 (4.5:1 or better on the deck glass; an opacity step on --fg-2
+   fell to 3.4:1). Flag 18's ending colour and an empty deck set their own. */
 :root[data-flag-deck-polish] [data-region^='deck'] .times .t {
-  opacity: 0.64;
+  color: var(--fg-3);
+}
+:root[data-flag-deck-polish] [data-region^='deck'] .times:not([data-big='remaining']) .el .t,
+:root[data-flag-deck-polish] [data-region^='deck'] .times[data-big='remaining'] .rm .t {
+  color: var(--fg-2);
 }
 
 /* The deck title's baseline meets the BPM numerals' baseline (the doc:
    "text lines up with text"); was 3px apart. */
 :root[data-flag-deck-polish] [data-region^='deck'] header {
   align-items: first baseline;
+}
+
+/* The title gets the room it can: the BPM sits 8px from it (was 12), and
+   it's set a hair tighter. Where the deck is narrow (a header under 300px,
+   the smallest windows) the title drops to --t-md and the BPM numerals to
+   --t-lg on the same 28px line, so about 18 characters of the title show
+   instead of 8. Deck.svelte cuts it at a glyph, with no space before the
+   "…". */
+:root[data-flag-deck-polish] [data-region^='deck'] header {
+  gap: 8px;
+  container-type: inline-size;
+}
+:root[data-flag-deck-polish] [data-region^='deck'] .name {
+  letter-spacing: -0.025em;
+}
+@container (max-width: 299px) {
+  :root[data-flag-deck-polish] [data-region^='deck'] .name {
+    font-size: var(--t-md);
+    letter-spacing: -0.01em;
+  }
+  :root[data-flag-deck-polish] [data-region^='deck'] .bpm .big {
+    font-size: var(--t-lg);
+  }
 }

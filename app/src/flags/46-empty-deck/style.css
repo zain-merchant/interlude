@@ -23,6 +23,7 @@
    tenths don't dim again on top of --fg-4. */
 :root[data-flag-empty-deck] [data-region^='deck']:has(.title .name.dim) .times .t {
   opacity: 1;
+  color: inherit;
 }
 
 /* With deck-spare-height's taller overview, the load hint moves into the

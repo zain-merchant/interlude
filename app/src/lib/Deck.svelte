@@ -314,6 +314,43 @@
   };
   // #89 (UI audit flag): key-notation's choice (both, camelot or musical) for the deck's key too.
   const kn = $derived(flag('key-notation') ? setting('key-notation', 'show') : 'both');
+  // #54 (UI audit flag): the title cut to fit its box at a glyph boundary,
+  // trailing spaces dropped before the "…" (CSS's ellipsis keeps them, so a
+  // cut after a word read "Concrete …"); null while the whole title fits.
+  let fittedTitle = $state(/** @type {string | null} */ (null));
+  /** @type {CanvasRenderingContext2D | null} */
+  let measureCtx = null;
+  function fitTitle(node, title) {
+    const fit = () => {
+      const cs = getComputedStyle(node);
+      measureCtx ??= document.createElement('canvas').getContext('2d');
+      if (!measureCtx) return;
+      measureCtx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+      const ls = parseFloat(cs.letterSpacing) || 0;
+      const width = (s) => measureCtx.measureText(s).width + ls * s.length;
+      const room = node.clientWidth;
+      if (width(title) <= room + 0.5) return (fittedTitle = null);
+      let lo = 0, hi = title.length;
+      while (lo < hi) {
+        const mid = (lo + hi + 1) >> 1;
+        if (width(title.slice(0, mid).trimEnd() + '…') <= room) lo = mid;
+        else hi = mid - 1;
+      }
+      fittedTitle = title.slice(0, lo).trimEnd() + '…';
+    };
+    const ro = new ResizeObserver(fit);
+    ro.observe(node);
+    return {
+      update(next) {
+        title = next;
+        fit();
+      },
+      destroy() {
+        ro.disconnect();
+        fittedTitle = null;
+      },
+    };
+  }
   const headerMenu = (e) =>
     openMenu(e, [
       { label: 'Show in library', action: () => onreveal(t.path), enabled: !!t },
@@ -335,7 +372,12 @@
     <header oncontextmenu={headerMenu}>
       <div class="title">
         {#if t}
-          <div class="name" use:tip={() => t.path}>{t.title}</div>
+          <!-- #54 (UI audit flag): deck-polish cuts a long title at a glyph, never leaving a space before the "…". -->
+          {#if flag('deck-polish')}
+            <div class="name" use:tip={() => t.path} use:fitTitle={t.title}>{fittedTitle ?? t.title}</div>
+          {:else}
+            <div class="name" use:tip={() => t.path}>{t.title}</div>
+          {/if}
           <div class="artist">{t.artist || 'Unknown artist'}</div>
         {:else}
           <div class="name dim">Empty deck</div>
