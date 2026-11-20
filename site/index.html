@@ -83,7 +83,10 @@
       d.dataset.hero = 'split';
       d.dataset.herotext = 'card';
       d.dataset.nav = 'morph';
-      const scrolled = () => d.toggleAttribute('data-scrolled', scrollY > 8);
+      // iOS Safari shows :active on a touch only when the page listens for
+      // touches; this one does nothing else.
+      document.addEventListener('touchstart', () => {}, { passive: true });
+      const scrolled =() => d.toggleAttribute('data-scrolled', scrollY > 8);
       addEventListener('scroll', scrolled, { passive: true });
       scrolled();
     })();

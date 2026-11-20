@@ -54,6 +54,19 @@ body {
 
 a { color: inherit; }
 img { max-width: 100%; height: auto; display: block; }
+/* On touch screens. No grey box flashed over whatever's tapped (every
+   control has a press state of its own: each hover rule below has an
+   :active twin for screens without a mouse); the text kept at its size when
+   a phone turns sideways; no double-tap zoom on controls, so a quick second
+   tap is a second tap (a pinch still zooms); and nothing that's pressed
+   rather than read gets selected by a long press. None of it changes
+   anything for a mouse. */
+html { -webkit-tap-highlight-color: transparent; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+a, button, summary, [role="radio"], .btn { touch-action: manipulation; }
+@media not all and (hover: hover) and (pointer: fine) {
+  .btn, .switch, summary { -webkit-user-select: none; user-select: none; }
+  summary:active { color: var(--fg-2); }
+}
 :focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; border-radius: 6px; }
 
 .wrap { width: min(1120px, 100% - 32px); margin-inline: auto; }
@@ -75,7 +88,8 @@ img { max-width: 100%; height: auto; display: block; }
 .brand span { font-family: var(--wm-font, inherit); text-transform: var(--wm-case, none); }
 .links { display: flex; gap: 22px; margin-right: auto; font-size: 14px; }
 .links a { color: var(--fg-2); text-decoration: none; }
-.links a:hover { color: var(--fg); }
+@media (hover: hover) and (pointer: fine) { .links a:hover { color: var(--fg); } }
+@media not all and (hover: hover) and (pointer: fine) { .links a:active { color: var(--fg); } }
 .nav-actions { display: flex; gap: 8px; }
 
 /* Buttons */
@@ -93,10 +107,12 @@ img { max-width: 100%; height: auto; display: block; }
   text-decoration: none;
   transition: transform var(--snappy-ms) var(--snappy), background-color var(--snappy-ms) var(--snappy);
 }
-.btn:hover { background: #fff; }
+@media (hover: hover) and (pointer: fine) { .btn:hover { background: #fff; } }
+@media not all and (hover: hover) and (pointer: fine) { .btn:active { background: #fff; } }
 .btn:active { transform: scale(0.97); }
 .btn.ghost { background: rgb(255 255 255 / 0.06); color: var(--fg); box-shadow: inset 0 0 0 1px var(--line-2); }
-.btn.ghost:hover { background: rgb(255 255 255 / 0.1); }
+@media (hover: hover) and (pointer: fine) { .btn.ghost:hover { background: rgb(255 255 255 / 0.1); } }
+@media not all and (hover: hover) and (pointer: fine) { .btn.ghost:active { background: rgb(255 255 255 / 0.1); } }
 .btn.small { height: 34px; padding: 0 14px; font-size: 14px; border-radius: 8px; }
 .btn.big { height: 48px; padding: 0 22px; font-size: 16px; border-radius: 12px; }
 .btn svg { width: 16px; height: 16px; flex: none; }
@@ -236,7 +252,8 @@ main { position: relative; isolation: isolate; }
   cursor: pointer;
   transition: color 0.2s;
 }
-.switch button:hover { color: var(--fg); }
+@media (hover: hover) and (pointer: fine) { .switch button:hover { color: var(--fg); } }
+@media not all and (hover: hover) and (pointer: fine) { .switch button:active { color: var(--fg); } }
 /* The one picked is dark on the light thumb. */
 .switch button[aria-checked="true"] { color: #0b0b0d; }
 .switch svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.3; stroke-linejoin: round; }
@@ -338,7 +355,8 @@ pre {
 .founder-body i.gap { margin-top: 8px; }
 .founder-ask { margin: 0 0 6px; }
 .founder-ask a { color: var(--fg); text-decoration: underline; text-decoration-color: rgb(236 234 228 / 0.35); text-underline-offset: 3px; }
-.founder-ask a:hover { text-decoration-color: var(--fg); }
+@media (hover: hover) and (pointer: fine) { .founder-ask a:hover { text-decoration-color: var(--fg); } }
+@media not all and (hover: hover) and (pointer: fine) { .founder-ask a:active { text-decoration-color: var(--fg); } }
 .founder-sig { display: block; width: 150px; height: auto; margin: 0 0 0 -6px; fill: none; stroke: var(--fg); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 /* Written in once, the first time the note is seen: the name, then the dot,
    then the line under it. */
@@ -366,7 +384,8 @@ pre {
 .oss-links { display: flex; flex-wrap: wrap; gap: 10px; }
 .oss .btn { background: #0b0b0d; color: var(--fg); box-shadow: none; }
 .oss .btn.ghost { background: rgb(11 11 13 / 0.06); color: #0b0b0d; box-shadow: inset 0 0 0 1px rgb(11 11 13 / 0.16); }
-.oss .btn.ghost:hover { background: rgb(11 11 13 / 0.1); }
+@media (hover: hover) and (pointer: fine) { .oss .btn.ghost:hover { background: rgb(11 11 13 / 0.1); } }
+@media not all and (hover: hover) and (pointer: fine) { .oss .btn.ghost:active { background: rgb(11 11 13 / 0.1); } }
 /* The latest changes, on a light surface that fades out to the right
    into the cream card, so it's never a card in a card: the surface, its
    edge and the rules between the rows all fade the same way. Tuned in the
@@ -397,7 +416,8 @@ pre {
 .oss-commits { margin: 0; padding: 0; list-style: none; }
 .oss-commits li + li { border-top: 1px solid; border-image: linear-gradient(to right, rgb(11 11 13 / calc(var(--oss-line) * 0.8)) var(--oss-from), transparent var(--oss-to)) 1 0 0 0; }
 .oss-commits a { display: flex; align-items: baseline; gap: 16px; padding: 7px 2px; color: rgb(11 11 13 / 0.78); text-decoration: none; font-size: 14px; }
-.oss-commits a:hover .oss-msg { color: #0b0b0d; text-decoration: underline; text-decoration-color: rgb(11 11 13 / 0.3); text-underline-offset: 3px; }
+@media (hover: hover) and (pointer: fine) { .oss-commits a:hover .oss-msg { color: #0b0b0d; text-decoration: underline; text-decoration-color: rgb(11 11 13 / 0.3); text-underline-offset: 3px; } }
+@media not all and (hover: hover) and (pointer: fine) { .oss-commits a:active .oss-msg { color: #0b0b0d; text-decoration: underline; text-decoration-color: rgb(11 11 13 / 0.3); text-underline-offset: 3px; } }
 .oss-msg { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .oss-msg b { font-weight: 600; color: #0b0b0d; }
 .oss-commits time { flex: none; color: rgb(11 11 13 / 0.45); font-size: 13px; font-variant-numeric: tabular-nums; }
@@ -411,11 +431,13 @@ pre {
 .oss:is([data-look="glass"], [data-look="bright"], [data-look="open"]) p { color: var(--fg-2); }
 .oss:is([data-look="glass"], [data-look="bright"], [data-look="open"]) .btn { background: var(--fg); color: #0b0b0d; }
 .oss:is([data-look="glass"], [data-look="bright"], [data-look="open"]) .btn.ghost { background: rgb(255 255 255 / 0.06); color: var(--fg); box-shadow: inset 0 0 0 1px var(--line-2); }
-.oss:is([data-look="glass"], [data-look="bright"], [data-look="open"]) .btn.ghost:hover { background: rgb(255 255 255 / 0.1); }
+@media (hover: hover) and (pointer: fine) { .oss:is([data-look="glass"], [data-look="bright"], [data-look="open"]) .btn.ghost:hover { background: rgb(255 255 255 / 0.1); } }
+@media not all and (hover: hover) and (pointer: fine) { .oss:is([data-look="glass"], [data-look="bright"], [data-look="open"]) .btn.ghost:active { background: rgb(255 255 255 / 0.1); } }
 .oss:is([data-look="glass"], [data-look="bright"], [data-look="open"]) .oss-log h4 { color: var(--fg-3); border-image: none; border-bottom-color: rgb(255 255 255 / 0.08); }
 .oss:is([data-look="glass"], [data-look="bright"], [data-look="open"]) .oss-commits li + li { border-image: none; border-top-color: rgb(255 255 255 / 0.06); }
 .oss:is([data-look="glass"], [data-look="bright"], [data-look="open"]) .oss-commits a { color: var(--fg-2); }
-.oss:is([data-look="glass"], [data-look="bright"], [data-look="open"]) .oss-commits a:hover .oss-msg { color: var(--fg); text-decoration-color: rgb(236 234 228 / 0.35); }
+@media (hover: hover) and (pointer: fine) { .oss:is([data-look="glass"], [data-look="bright"], [data-look="open"]) .oss-commits a:hover .oss-msg { color: var(--fg); text-decoration-color: rgb(236 234 228 / 0.35); } }
+@media not all and (hover: hover) and (pointer: fine) { .oss:is([data-look="glass"], [data-look="bright"], [data-look="open"]) .oss-commits a:active .oss-msg { color: var(--fg); text-decoration-color: rgb(236 234 228 / 0.35); } }
 .oss:is([data-look="glass"], [data-look="bright"], [data-look="open"]) .oss-msg b { color: var(--fg); }
 .oss:is([data-look="glass"], [data-look="bright"], [data-look="open"]) .oss-commits time { color: var(--fg-3); }
 .oss:is([data-look="glass"], [data-look="bright"], [data-look="open"]) .oss-empty a { color: var(--fg-2); }
@@ -468,7 +490,8 @@ pre {
 .oss[data-look="white-dark"] .oss-commits li + li { border-top-color: rgb(255 255 255 / 0.06); }
 .oss[data-look="white-dark"] .oss-commits a { color: var(--fg-2); }
 .oss[data-look="white-dark"] .oss-commits time { color: var(--fg-3); }
-.oss[data-look="white-dark"] .oss-commits a:hover .oss-msg { color: var(--fg); }
+@media (hover: hover) and (pointer: fine) { .oss[data-look="white-dark"] .oss-commits a:hover .oss-msg { color: var(--fg); } }
+@media not all and (hover: hover) and (pointer: fine) { .oss[data-look="white-dark"] .oss-commits a:active .oss-msg { color: var(--fg); } }
 @media (max-width: 860px) {
   .faq-row { grid-template-columns: 1fr; gap: 40px; }
   .founder { position: static; max-width: 520px; }
@@ -511,7 +534,8 @@ details p { margin: 0; padding-bottom: 20px; color: var(--fg-2); max-width: 62ch
 .foot-grid > div:first-child { max-width: 440px; margin-right: 32px; }
 .foot h4 { margin: 0 0 12px; color: var(--fg-3); font-size: 13px; font-weight: 500; }
 .foot-grid > div > a:not(.brand) { display: block; width: fit-content; padding: 3px 0; color: var(--fg-2); text-decoration: none; font-size: 14px; }
-.foot-grid > div > a:not(.brand):hover { color: var(--fg); }
+@media (hover: hover) and (pointer: fine) { .foot-grid > div > a:not(.brand):hover { color: var(--fg); } }
+@media not all and (hover: hover) and (pointer: fine) { .foot-grid > div > a:not(.brand):active { color: var(--fg); } }
 .small-print { color: var(--fg-3); font-size: 13px; }
 .legal { margin-top: 14px; max-width: 36em; font-size: 12px; line-height: 1.6; color: var(--fg-3); opacity: 0.8; }
 
@@ -542,7 +566,8 @@ details p { margin: 0; padding-bottom: 20px; color: var(--fg-2); max-width: 62ch
   height: 26px; padding: 0 9px; border: 0; border-radius: 7px; background: rgb(255 255 255 / 0.05); color: var(--fg-2);
   font: 500 12px var(--font); cursor: pointer; box-shadow: inset 0 0 0 1px var(--line);
 }
-.try button:hover { color: var(--fg); background: rgb(255 255 255 / 0.08); }
+@media (hover: hover) and (pointer: fine) { .try button:hover { color: var(--fg); background: rgb(255 255 255 / 0.08); } }
+@media not all and (hover: hover) and (pointer: fine) { .try button:active { color: var(--fg); background: rgb(255 255 255 / 0.08); } }
 .try button[aria-pressed="true"] { color: #111; background: var(--fg); box-shadow: none; }
 
 /* The name, very large, across the foot of the page and running off its
@@ -623,7 +648,8 @@ html[data-hero="split"] .cta .btn.ghost {
   background: rgb(18 18 22);
   box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.13), inset 0 1px 0 rgb(255 255 255 / 0.05);
 }
-html[data-hero="split"] .cta .btn.ghost:hover { background: rgb(29 29 34); }
+@media (hover: hover) and (pointer: fine) { html[data-hero="split"] .cta .btn.ghost:hover { background: rgb(29 29 34); } }
+@media not all and (hover: hover) and (pointer: fine) { html[data-hero="split"] .cta .btn.ghost:active { background: rgb(29 29 34); } }
 /* The facts: each its own item, a gap between them; one line on desktop,
    wrapping whole only on narrow screens. */
 html[data-hero="split"] .meta {
@@ -675,7 +701,8 @@ html[data-nav="pill"] .links { margin-inline: auto; }
 html[data-nav="pill"] .nav-actions { gap: 6px; }
 html[data-nav="pill"] .nav-actions .btn { height: 36px; border-radius: 999px; }
 html[data-nav="pill"] .nav-actions .btn.ghost { box-shadow: none; background: transparent; color: var(--fg-2); }
-html[data-nav="pill"] .nav-actions .btn.ghost:hover { color: var(--fg); background: rgb(255 255 255 / 0.06); }
+@media (hover: hover) and (pointer: fine) { html[data-nav="pill"] .nav-actions .btn.ghost:hover { color: var(--fg); background: rgb(255 255 255 / 0.06); } }
+@media not all and (hover: hover) and (pointer: fine) { html[data-nav="pill"] .nav-actions .btn.ghost:active { color: var(--fg); background: rgb(255 255 255 / 0.06); } }
 
 /* Clear: no bar at the top of the page, only the words over the record;
    the bar fades in once the page scrolls. */
@@ -700,7 +727,8 @@ html[data-nav="centred"] .links { margin: 0; gap: 30px; font-size: 13.5px; }
 html[data-nav="centred"] .nav-actions { justify-self: end; align-items: center; gap: 4px; }
 html[data-nav="centred"] .nav-actions .btn { height: 30px; font-size: 13.5px; }
 html[data-nav="centred"] .nav-actions .btn.ghost { background: none; box-shadow: none; color: var(--fg-2); padding: 0 10px; }
-html[data-nav="centred"] .nav-actions .btn.ghost:hover { color: var(--fg); }
+@media (hover: hover) and (pointer: fine) { html[data-nav="centred"] .nav-actions .btn.ghost:hover { color: var(--fg); } }
+@media not all and (hover: hover) and (pointer: fine) { html[data-nav="centred"] .nav-actions .btn.ghost:active { color: var(--fg); } }
 html[data-nav="centred"] .nav-actions .btn:not(.ghost) { padding: 0 14px; border-radius: 999px; }
 
 @media (max-width: 860px) {
@@ -765,7 +793,8 @@ html[data-nav="morph"] .nav-actions .btn.ghost {
   background: transparent; box-shadow: none; color: var(--fg-2);
 }
 html[data-nav="morph"] .nav-actions .btn.ghost svg { width: 17px; height: 17px; }
-html[data-nav="morph"] .nav-actions .btn.ghost:hover { color: var(--fg); background: rgb(255 255 255 / 0.07); }
+@media (hover: hover) and (pointer: fine) { html[data-nav="morph"] .nav-actions .btn.ghost:hover { color: var(--fg); background: rgb(255 255 255 / 0.07); } }
+@media not all and (hover: hover) and (pointer: fine) { html[data-nav="morph"] .nav-actions .btn.ghost:active { color: var(--fg); background: rgb(255 255 255 / 0.07); } }
 html[data-nav="morph"] .nav-actions .btn:not(.ghost) { gap: 6px; padding: 0 14px 0 11px; }
 html[data-nav="morph"] .nav-dl { display: block; width: 15px; height: 15px; }
 html[data-nav="morph"] .nav-dl path { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
@@ -838,7 +867,8 @@ html[data-hero][data-herotext]:not([data-herotext="numeral"]) .meta #version::be
 html[data-hero]:is([data-herotext="card"], [data-herotext="rail"], [data-herotext="stack"]) .meta #version::after {
   content: "What\2019s new \2192"; color: var(--fg-3); font-weight: 400; transition: color 0.15s;
 }
-html[data-hero][data-herotext] .meta #version:hover::after { color: var(--fg); }
+@media (hover: hover) and (pointer: fine) { html[data-hero][data-herotext] .meta #version:hover::after { color: var(--fg); } }
+@media not all and (hover: hover) and (pointer: fine) { html[data-hero][data-herotext] .meta #version:active::after { color: var(--fg); } }
 
 /* Card: the release as its title ("Interlude 0.1.3", What's new beside
    it), what it is and what it runs on in one quiet line, then the
@@ -858,7 +888,8 @@ html[data-hero][data-herotext="card"] .dl-head { grid-area: head; display: grid;
 .dl-name { grid-area: name; color: var(--fg); font-size: 18px; font-weight: 500; letter-spacing: -0.012em; }
 .dl-ver { font-variant-numeric: tabular-nums; }
 .dl-new { grid-area: new; color: var(--fg-3); font-size: 13px; text-decoration: underline; text-decoration-color: rgb(236 234 228 / 0.25); text-underline-offset: 3px; transition: color 0.15s, text-decoration-color 0.15s; }
-.dl-new:hover { color: var(--fg); text-decoration-color: var(--fg); }
+@media (hover: hover) and (pointer: fine) { .dl-new:hover { color: var(--fg); text-decoration-color: var(--fg); } }
+@media not all and (hover: hover) and (pointer: fine) { .dl-new:active { color: var(--fg); text-decoration-color: var(--fg); } }
 .dl-sub { grid-area: sub; margin: 0; color: var(--fg-2); font-size: 14px; text-wrap: balance; }
 /* What it needs, under the buttons, where requirements usually sit. */
 .dl-req { display: none; }
@@ -889,22 +920,26 @@ html[data-hero][data-herotext="card"]:is([data-cardsurface="outline"], [data-car
 .dl-vlink, .dl-new2 { display: none; }
 html[data-cardnew="under"] .dl-new, html[data-cardnew="right"] .dl-new { display: none; }
 html[data-hero][data-herotext="card"][data-cardnew="right"] .dl-vlink { display: block; grid-area: new; color: var(--fg-3); font-size: 13px; font-variant-numeric: tabular-nums; text-decoration: underline; text-decoration-color: rgb(236 234 228 / 0.25); text-underline-offset: 3px; }
-html[data-hero][data-herotext="card"][data-cardnew="right"] .dl-vlink:hover { color: var(--fg); text-decoration-color: var(--fg); }
+@media (hover: hover) and (pointer: fine) { html[data-hero][data-herotext="card"][data-cardnew="right"] .dl-vlink:hover { color: var(--fg); text-decoration-color: var(--fg); } }
+@media not all and (hover: hover) and (pointer: fine) { html[data-hero][data-herotext="card"][data-cardnew="right"] .dl-vlink:active { color: var(--fg); text-decoration-color: var(--fg); } }
 html[data-hero][data-herotext="card"][data-cardnew="under"] .hero-side { grid-template-columns: 1fr auto; grid-template-areas: "head head" "cta cta" "req new2" "foot foot"; }
 html[data-hero][data-herotext="card"][data-cardnew="under"] .dl-req { text-align: left; }
 html[data-hero][data-herotext="card"][data-cardnew="under"] .dl-new2 { display: block; grid-area: new2; margin-top: 12px; color: var(--fg-3); font-size: 12.5px; text-decoration: underline; text-decoration-color: rgb(236 234 228 / 0.25); text-underline-offset: 3px; }
-html[data-hero][data-herotext="card"][data-cardnew="under"] .dl-new2:hover { color: var(--fg); text-decoration-color: var(--fg); }
+@media (hover: hover) and (pointer: fine) { html[data-hero][data-herotext="card"][data-cardnew="under"] .dl-new2:hover { color: var(--fg); text-decoration-color: var(--fg); } }
+@media not all and (hover: hover) and (pointer: fine) { html[data-hero][data-herotext="card"][data-cardnew="under"] .dl-new2:active { color: var(--fg); text-decoration-color: var(--fg); } }
 /* Two quieter ways (Hero: what's new): the title is the link to the
    release notes; or the version is a small chip beside the name. Either
    way only the requirement sits under the buttons. */
 .dl-name a { color: inherit; text-decoration: none; }
 html:not([data-cardnew="title"]) .dl-title { pointer-events: none; }
 html[data-cardnew="title"] .dl-new, html[data-cardnew="pill"] .dl-new { display: none; }
-html[data-cardnew="title"] .dl-name a:hover { text-decoration: underline; text-decoration-color: rgb(236 234 228 / 0.4); text-underline-offset: 4px; }
+@media (hover: hover) and (pointer: fine) { html[data-cardnew="title"] .dl-name a:hover { text-decoration: underline; text-decoration-color: rgb(236 234 228 / 0.4); text-underline-offset: 4px; } }
+@media not all and (hover: hover) and (pointer: fine) { html[data-cardnew="title"] .dl-name a:active { text-decoration: underline; text-decoration-color: rgb(236 234 228 / 0.4); text-underline-offset: 4px; } }
 .dl-pill { display: none; }
 html[data-cardnew="pill"] .dl-ver { display: none; }
 html[data-cardnew="pill"] .dl-pill { display: inline-flex; align-items: center; height: 20px; margin-left: 8px; padding: 0 7px; border-radius: 6px; vertical-align: 2px; color: var(--fg-2); font-size: 12px; font-weight: 500; font-variant-numeric: tabular-nums; text-decoration: none; background: rgb(255 255 255 / 0.07); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1); transition: color 0.15s, background-color 0.15s; }
-html[data-cardnew="pill"] .dl-pill:hover { color: var(--fg); background: rgb(255 255 255 / 0.12); }
+@media (hover: hover) and (pointer: fine) { html[data-cardnew="pill"] .dl-pill:hover { color: var(--fg); background: rgb(255 255 255 / 0.12); } }
+@media not all and (hover: hover) and (pointer: fine) { html[data-cardnew="pill"] .dl-pill:active { color: var(--fg); background: rgb(255 255 255 / 0.12); } }
 /* The requirement up top, under the line beneath the name, and the buttons
    at the foot of the column, level with the end of the line under the
    headline (Hero: requirement). */
@@ -916,7 +951,8 @@ html[data-hero][data-herotext="card"][data-cardreq="top"] .dl-new2 { display: no
 .dl-vtext { display: none; }
 html[data-cardnew="link"] .dl-new, html[data-cardnew="link"] .dl-ver { display: none; }
 html[data-cardnew="link"] .dl-vtext { display: inline; margin-left: 8px; color: var(--fg-3); font-size: 14px; font-weight: 400; font-variant-numeric: tabular-nums; text-decoration: underline; text-decoration-color: rgb(236 234 228 / 0.3); text-underline-offset: 3px; pointer-events: auto; }
-html[data-cardnew="link"] .dl-vtext:hover { color: var(--fg); text-decoration-color: var(--fg); }
+@media (hover: hover) and (pointer: fine) { html[data-cardnew="link"] .dl-vtext:hover { color: var(--fg); text-decoration-color: var(--fg); } }
+@media not all and (hover: hover) and (pointer: fine) { html[data-cardnew="link"] .dl-vtext:active { color: var(--fg); text-decoration-color: var(--fg); } }
 /* The line under the name as the licence and What's new: spaced apart on
    one line, or as one sentence (Hero: what's new, spaced / sentence). */
 .dl-sub2, .dl-sub3 { display: none; }
@@ -925,7 +961,8 @@ html[data-cardnew="spaced"] .dl-new, html[data-cardnew="sentence"] .dl-new { dis
 html[data-hero][data-herotext="card"][data-cardsub="spaced"] .dl-sub2 { display: flex; gap: 20px; grid-area: sub; margin: 0; color: var(--fg-2); font-size: 14px; }
 html[data-hero][data-herotext="card"][data-cardsub="sentence"] .dl-sub3 { display: block; grid-area: sub; margin: 0; color: var(--fg-2); font-size: 14px; }
 .dl-rel { color: var(--fg-2); text-decoration: underline; text-decoration-color: rgb(236 234 228 / 0.3); text-underline-offset: 3px; transition: color 0.15s, text-decoration-color 0.15s; }
-.dl-rel:hover { color: var(--fg); text-decoration-color: var(--fg); }
+@media (hover: hover) and (pointer: fine) { .dl-rel:hover { color: var(--fg); text-decoration-color: var(--fg); } }
+@media not all and (hover: hover) and (pointer: fine) { .dl-rel:active { color: var(--fg); text-decoration-color: var(--fg); } }
 /* The version in the title, or beside What's new (Hero: card title). */
 .dl-new-ver { display: none; }
 html[data-cardtitle="name"] .dl-ver { display: none; }
@@ -973,7 +1010,8 @@ html[data-hero][data-herotext="numeral"] .meta #version {
   display: flex; flex-direction: column; align-items: flex-start; gap: 6px; margin-bottom: 14px;
   color: rgb(236 234 228 / 0.42); font-size: 84px; font-weight: 300; letter-spacing: -0.05em; line-height: 0.9;
 }
-html[data-hero][data-herotext="numeral"] .meta #version:hover { color: rgb(236 234 228 / 0.7); }
+@media (hover: hover) and (pointer: fine) { html[data-hero][data-herotext="numeral"] .meta #version:hover { color: rgb(236 234 228 / 0.7); } }
+@media not all and (hover: hover) and (pointer: fine) { html[data-hero][data-herotext="numeral"] .meta #version:active { color: rgb(236 234 228 / 0.7); } }
 html[data-hero][data-herotext="numeral"] .meta #version::after {
   content: "What\2019s new in this release \2192"; color: var(--fg-2); font-size: 13px; font-weight: 400; letter-spacing: 0; line-height: 1.4;
 }
@@ -1055,7 +1093,8 @@ html[data-hero][data-herotext="card"][data-cardsub="facts"] .cta { margin-top: 2
 /* The version link's look (Hero: version link). Match: the name's own size
    and baseline, a quieter grey, the underline thin and low. */
 html[data-cardnew="link"][data-cardvlink="match"] .dl-vtext { margin-left: 7px; font-size: inherit; font-weight: 400; letter-spacing: -0.01em; color: rgb(236 234 228 / 0.5); text-decoration-thickness: 1px; text-decoration-color: rgb(236 234 228 / 0.28); text-underline-offset: 4px; }
-html[data-cardnew="link"][data-cardvlink="match"] .dl-vtext:hover { color: var(--fg); text-decoration-color: rgb(236 234 228 / 0.7); }
+@media (hover: hover) and (pointer: fine) { html[data-cardnew="link"][data-cardvlink="match"] .dl-vtext:hover { color: var(--fg); text-decoration-color: rgb(236 234 228 / 0.7); } }
+@media not all and (hover: hover) and (pointer: fine) { html[data-cardnew="link"][data-cardvlink="match"] .dl-vtext:active { color: var(--fg); text-decoration-color: rgb(236 234 228 / 0.7); } }
 html[data-cardnew="link"][data-cardvlink="right"] .dl-vtext { display: none; }
 html[data-hero][data-herotext="card"][data-cardnew="link"][data-cardvlink="right"] .dl-vlink { display: block; grid-area: new; color: var(--fg-3); font-size: 13px; font-variant-numeric: tabular-nums; text-decoration: underline; text-decoration-color: rgb(236 234 228 / 0.25); text-underline-offset: 3px; }
 /* The hero's two buttons: the same 44px, a touch tighter, each as wide as
@@ -1069,7 +1108,8 @@ html[data-hero][data-herotext="card"] .cta .btn.big svg { width: 16px; height: 1
    body of its own, a lit fill the full height, and the ring sits on that. */
 /* (White at 0.09 and 0.13 over the blurred page and grain, measured: laid on solid.) */
 html[data-hero][data-herotext="card"] .cta .btn.ghost { background: rgb(33 33 35); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.12), inset 0 1px 0 rgb(255 255 255 / 0.08); }
-html[data-hero][data-herotext="card"] .cta .btn.ghost:hover { background: rgb(43 43 45); }
+@media (hover: hover) and (pointer: fine) { html[data-hero][data-herotext="card"] .cta .btn.ghost:hover { background: rgb(43 43 45); } }
+@media not all and (hover: hover) and (pointer: fine) { html[data-hero][data-herotext="card"] .cta .btn.ghost:active { background: rgb(43 43 45); } }
 /* The nav's buttons, just after the capsule forms (Nav: buttons arrive,
    after): each fades up from a touch smaller and a little soft, GitHub then
    Download 50ms on; out together, quicker. Opacity, scale and filter only,
@@ -1106,7 +1146,8 @@ html[data-hero][data-herotext="card"][data-cardblock="sentence"] .dl-cap2 { disp
 .dl-cap { align-items: center; flex-wrap: wrap; row-gap: 4px; }
 .dl-cap > * + *::before { content: ''; display: inline-block; width: 1px; height: 11px; margin: 0 10px; vertical-align: -1px; background: rgb(255 255 255 / 0.24); }
 .dl-cv { color: inherit; font-variant-numeric: tabular-nums; text-decoration: underline; text-decoration-color: rgb(236 234 228 / 0.4); text-decoration-thickness: 1px; text-underline-offset: 3px; transition: color 0.15s, text-decoration-color 0.15s; }
-.dl-cv:hover { color: var(--fg); text-decoration-color: rgb(236 234 228 / 0.7); }
+@media (hover: hover) and (pointer: fine) { .dl-cv:hover { color: var(--fg); text-decoration-color: rgb(236 234 228 / 0.7); } }
+@media not all and (hover: hover) and (pointer: fine) { .dl-cv:active { color: var(--fg); text-decoration-color: rgb(236 234 228 / 0.7); } }
 
 /* Open source looks (Tune, Open source: look). All keep the words,
    the buttons and the latest changes; they differ in surface and layout. Shared: the updates sit straight on the card, no inner surface,
@@ -1116,7 +1157,8 @@ html[data-hero][data-herotext="card"][data-cardblock="sentence"] .dl-cap2 { disp
 .oss:is([data-look="tight"], [data-look^="doors"], [data-look^="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .oss-log h4 { margin: 0; padding: 0 0 10px; border-image: none; border-bottom: 1px solid var(--oss-rule); font-size: 13px; line-height: 18px; color: var(--oss-dim); }
 .oss:is([data-look="tight"], [data-look^="doors"], [data-look^="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .oss-commits li + li { border-image: none; border-top: 1px solid var(--oss-rule2); }
 .oss:is([data-look="tight"], [data-look^="doors"], [data-look^="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .oss-commits a { padding: 9px 0; font-size: 14px; color: var(--oss-ink); transition: color 150ms ease; }
-.oss:is([data-look="tight"], [data-look^="doors"], [data-look^="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .oss-commits a:hover .oss-msg { color: var(--oss-strong); text-decoration: none; }
+@media (hover: hover) and (pointer: fine) { .oss:is([data-look="tight"], [data-look^="doors"], [data-look^="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .oss-commits a:hover .oss-msg { color: var(--oss-strong); text-decoration: none; } }
+@media not all and (hover: hover) and (pointer: fine) { .oss:is([data-look="tight"], [data-look^="doors"], [data-look^="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .oss-commits a:active .oss-msg { color: var(--oss-strong); text-decoration: none; } }
 .oss:is([data-look="tight"], [data-look^="doors"], [data-look^="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .oss-area { color: inherit; font-weight: 500; }
 .oss:is([data-look="tight"], [data-look^="doors"], [data-look^="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .oss-commits time { font-size: 12.5px; color: var(--oss-dim); }
 .oss:is([data-look="tight"], [data-look^="doors"], [data-look^="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .oss-empty a { color: var(--oss-ink); }
@@ -1133,14 +1175,17 @@ html[data-hero][data-herotext="card"][data-cardblock="sentence"] .dl-cap2 { disp
 }
 .oss:is([data-look^="poster"], [data-look="cards"]) p { color: var(--fg-2); }
 .oss:is([data-look^="poster"], [data-look="cards"]) .btn { background: var(--fg); color: #0b0b0d; }
-.oss:is([data-look^="poster"], [data-look="cards"]) .btn:hover { background: #fff; }
+@media (hover: hover) and (pointer: fine) { .oss:is([data-look^="poster"], [data-look="cards"]) .btn:hover { background: #fff; } }
+@media not all and (hover: hover) and (pointer: fine) { .oss:is([data-look^="poster"], [data-look="cards"]) .btn:active { background: #fff; } }
 .oss:is([data-look^="poster"], [data-look="cards"]) .btn.ghost { background: transparent; color: var(--fg); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.16); }
-.oss:is([data-look^="poster"], [data-look="cards"]) .btn.ghost:hover { background: rgb(255 255 255 / 0.06); }
+@media (hover: hover) and (pointer: fine) { .oss:is([data-look^="poster"], [data-look="cards"]) .btn.ghost:hover { background: rgb(255 255 255 / 0.06); } }
+@media not all and (hover: hover) and (pointer: fine) { .oss:is([data-look^="poster"], [data-look="cards"]) .btn.ghost:active { background: rgb(255 255 255 / 0.06); } }
 /* The buttons, one size smaller than the hero's, the second a ring only. */
 /* (The site's standard button: 40px, 15px type, the same as everywhere.) */
 .oss:is([data-look="tight"], [data-look^="doors"], [data-look^="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .btn { height: 40px; padding: 0 16px; border-radius: 10px; font-size: 15px; }
 .oss:is([data-look="tight"], [data-look^="doors"], [data-look="feed"], [data-look="gitlog"]) .btn.ghost { background: transparent; box-shadow: inset 0 0 0 1px rgb(11 11 13 / 0.16); }
-.oss:is([data-look="tight"], [data-look^="doors"], [data-look="feed"], [data-look="gitlog"]) .btn.ghost:hover { background: rgb(11 11 13 / 0.05); }
+@media (hover: hover) and (pointer: fine) { .oss:is([data-look="tight"], [data-look^="doors"], [data-look="feed"], [data-look="gitlog"]) .btn.ghost:hover { background: rgb(11 11 13 / 0.05); } }
+@media not all and (hover: hover) and (pointer: fine) { .oss:is([data-look="tight"], [data-look^="doors"], [data-look="feed"], [data-look="gitlog"]) .btn.ghost:active { background: rgb(11 11 13 / 0.05); } }
 .oss:is([data-look="tight"], [data-look^="doors"], [data-look^="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) h3 { font-size: 28px; letter-spacing: -0.028em; margin: 0 0 10px; }
 /* (Body copy is 16px, as in every card.) */
 .oss:is([data-look="tight"], [data-look^="doors"], [data-look^="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) p { font-size: 16px; max-width: 24em; margin: 0 0 22px; }
@@ -1197,7 +1242,8 @@ html[data-nav="morph"][data-navacts="island"] .nav[data-acts-in] .nav-actions .b
 .oss[data-look^="doors"] .oss-log { grid-column: 2; grid-row: 2 / span 2; padding: 18px 28px 0; }
 .oss[data-look^="doors"] .oss-links > .btn { grid-row: 4; justify-self: start; margin: 20px 28px 26px; }
 .oss[data-look^="doors"] .oss-links > .btn:not(.ghost) { grid-column: 1; background: var(--fg); color: #0b0b0d; }
-.oss[data-look^="doors"] .oss-links > .btn:not(.ghost):hover { background: #fff; }
+@media (hover: hover) and (pointer: fine) { .oss[data-look^="doors"] .oss-links > .btn:not(.ghost):hover { background: #fff; } }
+@media not all and (hover: hover) and (pointer: fine) { .oss[data-look^="doors"] .oss-links > .btn:not(.ghost):active { background: #fff; } }
 .oss[data-look^="doors"] .oss-links > .btn.ghost { grid-column: 2; }
 
 /* Poster: no card. The heading as big as the page allows, on two lines,
@@ -1217,7 +1263,8 @@ html[data-nav="morph"][data-navacts="island"] .nav[data-acts-in] .nav-actions .b
 .oss-track { display: flex; width: max-content; will-change: transform; }
 .oss-track a { display: flex; align-items: baseline; gap: 8px; padding-right: 40px; color: var(--oss-ink); font-size: 14px; white-space: nowrap; text-decoration: none; }
 .oss-track a .oss-msg { text-decoration: underline; text-decoration-color: transparent; text-decoration-thickness: 1px; text-underline-offset: 3px; transition: text-decoration-color 150ms ease, color 150ms ease; }
-.oss-track a:hover .oss-msg { color: var(--oss-strong); text-decoration-color: currentColor; }
+@media (hover: hover) and (pointer: fine) { .oss-track a:hover .oss-msg { color: var(--oss-strong); text-decoration-color: currentColor; } }
+@media not all and (hover: hover) and (pointer: fine) { .oss-track a:active .oss-msg { color: var(--oss-strong); text-decoration-color: currentColor; } }
 .oss-track a .oss-sha { display: none; }
 .oss-track time { font-size: 12.5px; color: var(--oss-dim); }
 @media (prefers-reduced-motion: reduce) { .oss-ticker { overflow-x: auto; } }
@@ -1252,7 +1299,8 @@ html[data-nav="morph"][data-navacts="island"] .nav[data-acts-in] .nav-actions .b
 .oss[data-look="cards"] .oss-commits li:nth-child(n + 4) { display: none; }
 .oss[data-look="cards"] .oss-commits a { height: 100%; box-sizing: border-box; flex-direction: column; align-items: stretch; gap: 14px; padding: 18px 18px 16px; border-radius: 14px;
   background: rgb(255 255 255 / 0.035); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08); transition: background-color 150ms ease, color 150ms ease; }
-.oss[data-look="cards"] .oss-commits a:hover { background: rgb(255 255 255 / 0.06); }
+@media (hover: hover) and (pointer: fine) { .oss[data-look="cards"] .oss-commits a:hover { background: rgb(255 255 255 / 0.06); } }
+@media not all and (hover: hover) and (pointer: fine) { .oss[data-look="cards"] .oss-commits a:active { background: rgb(255 255 255 / 0.06); } }
 .oss[data-look="cards"] .oss-msg { white-space: normal; font-size: 15px; line-height: 1.4; color: var(--oss-strong); }
 .oss[data-look="cards"] .oss-area { display: block; margin-bottom: 4px; font-size: 12.5px; }
 .oss[data-look="cards"] .oss-commits time { margin-top: auto; }
@@ -1299,7 +1347,8 @@ html[data-nav="morph"][data-navacts="island"] .nav[data-acts-in] .nav-actions .b
   color: var(--fg);
 }
 .oss[data-look="doors-dark"] .oss-links > .btn.ghost { color: var(--fg); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.16); }
-.oss[data-look="doors-dark"] .oss-links > .btn.ghost:hover { background: rgb(255 255 255 / 0.06); }
+@media (hover: hover) and (pointer: fine) { .oss[data-look="doors-dark"] .oss-links > .btn.ghost:hover { background: rgb(255 255 255 / 0.06); } }
+@media not all and (hover: hover) and (pointer: fine) { .oss[data-look="doors-dark"] .oss-links > .btn.ghost:active { background: rgb(255 255 255 / 0.06); } }
 
 /* Poster, three ways. poster-card: in a dark card like the note beside
    the FAQ. poster-light: in the light card, the page's one light surface
@@ -1315,9 +1364,11 @@ html[data-nav="morph"][data-navacts="island"] .nav[data-acts-in] .nav-actions .b
 /* The second line a plain grey, no tint: clearly the quieter half. */
 .oss[data-look="poster-light"] .oss-h2 { color: #949494; }
 .oss[data-look="poster-light"] .btn { background: #0b0b0d; color: var(--fg); }
-.oss[data-look="poster-light"] .btn:hover { background: #222226; }
+@media (hover: hover) and (pointer: fine) { .oss[data-look="poster-light"] .btn:hover { background: #222226; } }
+@media not all and (hover: hover) and (pointer: fine) { .oss[data-look="poster-light"] .btn:active { background: #222226; } }
 .oss[data-look="poster-light"] .btn.ghost { background: transparent; color: #0b0b0d; box-shadow: inset 0 0 0 1px rgb(11 11 13 / 0.16); }
-.oss[data-look="poster-light"] .btn.ghost:hover { background: rgb(11 11 13 / 0.05); }
+@media (hover: hover) and (pointer: fine) { .oss[data-look="poster-light"] .btn.ghost:hover { background: rgb(11 11 13 / 0.05); } }
+@media not all and (hover: hover) and (pointer: fine) { .oss[data-look="poster-light"] .btn.ghost:active { background: rgb(11 11 13 / 0.05); } }
 /* In a card, the running line sits along the card's foot, edge to edge. */
 .oss:is([data-look="poster-card"], [data-look="poster-light"]) .oss-log { margin: 0 -48px; padding: 16px 48px; border-bottom: 0; }
 .oss[data-look="poster-light"] .oss-log { border-top-color: rgb(11 11 13 / 0.1); }
@@ -1687,7 +1738,8 @@ html[data-note="sleeve"] .founder-body i:nth-child(n + 5) { width: min(var(--w),
 html[data-note="sleeve"] .founder-ask { max-width: 56%; margin: auto 0 var(--ask-gap, 6px); line-height: 1.4; font-size: 13.5px; }
 /* Links as everywhere else on the page: the underline faint, full on hover. */
 html[data-note="sleeve"] .founder-ask a { color: #17140e; text-decoration-color: rgb(28 24 18 / 0.35); white-space: nowrap; }
-html[data-note="sleeve"] .founder-ask a:hover { text-decoration-color: #17140e; }
+@media (hover: hover) and (pointer: fine) { html[data-note="sleeve"] .founder-ask a:hover { text-decoration-color: #17140e; } }
+@media not all and (hover: hover) and (pointer: fine) { html[data-note="sleeve"] .founder-ask a:active { text-decoration-color: #17140e; } }
 /* The signature smaller, without the line under it (it read as a rule the
    rest didn't line up with). */
 html[data-note="sleeve"] .founder-sig { stroke: #23315c; width: 86px; margin: 0 0 0 -3px; }
@@ -1706,7 +1758,7 @@ html[data-note="label"] .rec-spin { transition: rotate 1.4s cubic-bezier(0.3, 0,
 html[data-note="label"] .founder[data-sign]:not([data-signed]) .rec-spin { rotate: -540deg; transition: none; }
 html[data-note="label"] .founder[data-signed] .rec-spin { animation: rec-down 1.8s cubic-bezier(0.12, 0.6, 0.2, 1); }
 @keyframes rec-down { from { rotate: -540deg; } to { rotate: 0deg; } }
-html[data-note="label"] .founder:hover .rec-spin { rotate: 360deg; }
+@media (hover: hover) and (pointer: fine) { html[data-note="label"] .founder:hover .rec-spin { rotate: 360deg; } }
 html[data-note="label"] .founder > :not(.rec) { transition: opacity 0.6s ease 1.1s; }
 html[data-note="label"] .founder[data-sign]:not([data-signed]) > :not(.rec) { opacity: 0; }
 html[data-note="label"] .founder h3 { color: #17140e; font-size: 14px; margin: 0 0 8px; }
