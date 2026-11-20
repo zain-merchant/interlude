@@ -6,22 +6,49 @@
 // With the flag on they use a strong ease-out (cubic-bezier(0.23, 1,
 // 0.32, 1)), which covers most of the distance at once and settles, and
 // start from scale 0.97 rather than 0.99 so the motion reads. CSS only.
+//
+// Later (critique panel): the card faded from 0 for its whole entrance, so
+// the mixer and list showed through its words for the first frames (Mo1);
+// it's now opaque within 80ms while it rises. And the 72% black, blurred
+// scrim hid the decks' times and waveforms, which hurts most when you
+// report a problem mid-set (E8, C58): the scrim is now 50% with no blur
+// over the decks, and the blur stays over the library only (App.svelte
+// passes the library's top as --flag-polish-dialog-lib).
 export default {
   id: 'polish-dialog',
   n: 12,
   title: 'Dialogs arrive quickly',
   group: 'Polish',
-  notes: 'Import and Report dialogs: strong ease-out curve instead of the built-in one, from scale 0.97.',
+  notes: 'Import and Report dialogs: strong ease-out curve instead of the built-in one, from scale 0.97, opaque within 80ms. A lighter scrim with no blur over the decks.',
   settings: {
-    ms: { type: 'range', min: 120, max: 320, step: 20, default: 220, unit: 'ms', label: 'Duration' },
+    ms: { type: 'range', min: 120, max: 320, step: 20, default: 220, unit: 'ms', label: 'Duration (ease-out)' },
+    curve: {
+      type: 'choice',
+      label: 'Feel',
+      default: 'ease',
+      options: [
+        ['ease', 'Ease-out', 'Covers most of the way at once and settles, over the time above.'],
+        ['spring', 'Site spring', 'The website\'s snappy spring (301ms), so dialogs feel like the site.'],
+      ],
+    },
+    scrim: {
+      type: 'choice',
+      label: 'Behind it',
+      default: 'library',
+      options: [
+        ['library', 'Decks clear', 'Half-dark with no blur over the decks, so you can still read the times and waveforms; the library behind stays blurred.'],
+        ['none', 'No blur', 'Half-dark everywhere and nothing blurred: the simplest, but the busy track list shows through more.'],
+        ['before', 'As it was', 'Dark and blurred over everything, decks included: the dialog stands out most, but the playing decks are hidden.'],
+      ],
+    },
   },
 };
 
 /** Show me: the Report dialog opens again and again, slowed down, flag off then on; a chart of how far it has come. */
 export const show = {
-  about: 'Dialogs drifted in slowly at first, so they felt late. Now they arrive at once and settle gently.',
-  before: 'The dialog creeps in: its first moments, the ones you notice, barely move, so it feels a beat late.',
-  after: 'It covers most of the way straight away and then eases to a stop, so it feels quick without being abrupt.',
+  about: 'Dialogs drifted in slowly, see-through at first, and the dark blur behind them hid the playing decks. Now they arrive at once, solid, and the decks stay readable behind them.',
+  before: 'The dialog creeps in, see-through for its first moments, and a heavy dark blur covers everything, so you lose the time left on a playing deck while you type.',
+  after: 'It covers most of the way straight away and is solid almost at once. Behind it the decks are only dimmed, not blurred, so the times and waveforms stay readable.',
   motion: true,
   period: 2000,
   async setup(app) {

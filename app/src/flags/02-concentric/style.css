@@ -80,3 +80,9 @@
 :root[data-flag-concentric] .banner .btn {
   border-radius: var(--r);
 }
+/* With #15 spacing the toast pads 4px round Undo, not 6 (and docked in the
+   toolbar by #13 it's 4px too), so its radius follows the real inset. */
+:root[data-flag-concentric][data-flag-spacing] .toastbox .toast,
+:root[data-flag-concentric] .toastbox .toast[data-docked] {
+  border-radius: calc(var(--r) + 4px);
+}

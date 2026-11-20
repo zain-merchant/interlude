@@ -21,11 +21,11 @@
   import { keyboardMenu, htmlMenu } from './lib/menu.svelte.js';
   import { tip, tipText } from './lib/tooltip.svelte.js';
   import { live, announce } from './lib/announce.svelte.js';
-  import { toast, showToast, hideToast, pushEdit, undo, redo } from './lib/undo.svelte.js';
+  import { toast, showToast, hideToast, holdToast, releaseToast, pushEdit, undo, redo } from './lib/undo.svelte.js';
   import { stepUiZoom, setUiZoom } from './lib/uizoom.svelte.js';
   import { installAppMenu } from './lib/appmenu.js';
   import { runPerformance } from './lib/performance.js';
-  import { flag } from './flags/registry.svelte.js';
+  import { flag, setting } from './flags/registry.svelte.js';
   import { start as startSquircles } from './flags/01-squircles/squircles.js';
   import { padMode, setPadMode } from './lib/padmode.svelte.js';
   import { tempoPickup } from './lib/pickup.svelte.js';
@@ -420,6 +420,38 @@
     }).catch((e) => console.error('menu', e));
   });
 
+  // #13 (UI audit flag): declutter-toast: "In the toolbar" docks the toast in
+  // the library's toolbar, between the search field and Sampler (over the
+  // track count), when it fits there; otherwise it keeps the corner.
+  let toastEl = $state(/** @type {HTMLElement | null} */ (null));
+  let toastDock = $state(/** @type {{ left: number, top: number } | null} */ (null));
+  $effect(() => {
+    void toast.id;
+    void winHeight;
+    const el = toastEl;
+    if (!el || !flag('declutter-toast') || setting('declutter-toast', 'place') !== 'toolbar' || settings !== null) {
+      toastDock = null;
+      return;
+    }
+    const k = Number(document.documentElement.style.zoom) || 1;
+    const from = document.querySelector('section.library .bar .search')?.getBoundingClientRect();
+    const to = document.querySelector('section.library .bar .samp')?.getBoundingClientRect();
+    if (!from || !to) return void (toastDock = null);
+    const w = el.offsetWidth;
+    const room = (to.left - from.right) / k - 24;
+    toastDock = w <= room ? { left: from.right / k + 12, top: (from.top + from.height / 2) / k - el.offsetHeight / 2 } : null;
+  });
+
+  // #12 (UI audit flag): polish-dialog: where the library starts, so a dialog's
+  // scrim blurs the library but leaves the decks clear.
+  $effect(() => {
+    const root = document.documentElement;
+    if (!flag('polish-dialog') || !(importing || reporting)) return void root.style.removeProperty('--flag-polish-dialog-lib');
+    void winHeight;
+    const top = document.querySelector('.app > .below')?.getBoundingClientRect().top;
+    if (top != null) root.style.setProperty('--flag-polish-dialog-lib', `${top / (Number(root.style.zoom) || 1)}px`);
+  });
+
   /** True while the sampler is showing because of the controller's SAMPLER button. */
   let samplerFromPads = false;
 
@@ -545,7 +577,10 @@
 
   <div class="toastbox" role="status">
     {#if toast.text}
-      <div class="toast">
+      <!-- #13 (UI audit flag): declutter-toast: hovering holds the toast; docked in the toolbar when chosen. -->
+      <!-- svelte-ignore a11y_no_static_element_interactions (hover only pauses its timer; the toast is announced by its role="status" box) -->
+      <div class="toast" bind:this={toastEl} data-docked={toastDock ? '' : undefined} style:left={toastDock ? `${toastDock.left}px` : undefined} style:top={toastDock ? `${toastDock.top}px` : undefined}
+        onpointerenter={() => flag('declutter-toast') && holdToast()} onpointerleave={() => flag('declutter-toast') && releaseToast()}>
         <span>{toast.text}</span>
         {#if toast.undo}
           <button class="undo" onclick={() => { hideToast(); undo(); }}>Undo <kbd>{keyLabel('edit.undo')}</kbd></button>

@@ -11,7 +11,7 @@
 //   zoom pill (P in) and its buttons (2 in)   R − P, R − P − 2
 //   search clear button (6 in)                R − P − 6
 //   menu items (4 in)                         --r − 4
-//   toast, banner (around Undo / buttons)     --r + 6, --r + 8
+//   toast, banner (around Undo / buttons)     --r + its inset (6, or 4 with #15), --r + 8
 // Both are settings, to tune live. The defaults (R 24, P 16) keep today's
 // 16px padding and 8px controls, so the panels round more and the mixer
 // (12px sides) and the library (8px) pad 16 like the decks.
