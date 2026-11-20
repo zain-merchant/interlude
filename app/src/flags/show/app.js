@@ -6,6 +6,7 @@ import { flushSync } from 'svelte';
 import { FLAGS, flags } from '../registry.svelte.js';
 import { tooltip } from '../../lib/tooltip.svelte.js';
 import { uiZoom, setUiZoom } from '../../lib/uizoom.svelte.js';
+import { tracks, scrubStart, scrubTo, scrubEnd } from '../../lib/engine.svelte.js';
 
 const OVERLAY = '.flag-show, .flag-dials, .dialkit-root';
 export const wait = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -153,6 +154,20 @@ export async function play(n) {
 export async function pause(n) {
   const b = playButton(n);
   if (b?.classList.contains('on')) await click(b);
+}
+
+/**
+ * Moves deck n to a fraction of its track, as dragging its overview does
+ * (a synthetic press can't take pointer capture, so this goes straight to
+ * the same calls).
+ */
+export async function seek(n, fraction) {
+  const t = tracks[n];
+  if (!t) throw new Error(`Nothing loaded on deck ${'AB'[n]}`);
+  scrubStart(n);
+  scrubTo(n, fraction * t.duration);
+  scrubEnd(n);
+  await wait(120);
 }
 
 /** Opens a deck's mode tab: Cues, Loop, FX or Stems. */
@@ -344,7 +359,7 @@ export const FLAG_IDS = FLAGS.map((f) => f.id);
 /** Everything above, as the `app` a show's setup(app) and aid(d, app) get. */
 export const kit = {
   $, $$, until, wait, click, dblclick, hover, unhover, key, type, deck, rows, loaded, search, clearSearch, selectRow, loadTrack,
-  playButton, play, pause, tab, zoom, forceStates, hideTips, tooltip, openSettings, openImport, openReport, reset, setFlag, setSetting, isOn, without, rectsWithout, both, other, textRect, snap,
+  playButton, play, pause, seek, tab, zoom, forceStates, hideTips, tooltip, openSettings, openImport, openReport, reset, setFlag, setSetting, isOn, without, rectsWithout, both, other, textRect, snap,
   get mock() {
     return globalThis.__mockAudio;
   },

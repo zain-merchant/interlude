@@ -79,7 +79,7 @@ export const show = {
 
 `app` (show/app.js) drives the app through its own controls: `$`, `$$`,
 `click`, `dblclick`, `hover`, `key('KeyR', { shift })`, `type`, `search`,
-`selectRow(n | 'last' | 'text')`, `loadTrack(deck, row)`, `play`, `pause`,
+`selectRow(n | 'last' | 'text')`, `loadTrack(deck, row)`, `play`, `pause`, `seek(deck, 0.9)`,
 `tab(deck, 'Loop')`, `openSettings`, `openImport`, `openReport`, `zoom`,
 `forceStates` (puts controls in :hover / :active / :focus-visible through
 data-show-* attributes), `snap`, `textRect`, `both(id, els)` and

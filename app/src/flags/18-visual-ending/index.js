@@ -22,10 +22,8 @@ export const show = {
   note: "Deck A is playing its last ~25s: the remaining time turns the warning colour, and pulses in the last ten.",
   async setup(app) {
     if (!app.loaded(0)) await app.loadTrack(0);
-    const ov = app.$("[data-region='deck0'] .overview");
-    const r = ov.getBoundingClientRect();
     // The mock's tracks run 5 to 8 minutes; 93% in is about 25 seconds from the end.
-    await app.click(ov, { clientX: r.x + r.width * 0.93, clientY: r.y + r.height / 2 });
+    await app.seek(0, 0.93);
     await app.play(0);
   },
   target: "[data-region='deck0'] .times .rm",

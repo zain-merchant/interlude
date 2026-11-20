@@ -53,6 +53,7 @@ const CSS = `
 .flag-show .dim { fill: rgb(0 0 0 / .5); animation: flag-show-dim 2.6s ease-out forwards; }
 @keyframes flag-show-ring { 0% { opacity: 0; } 8%, 60% { opacity: 1; } 100% { opacity: 0; visibility: hidden; } }
 @keyframes flag-show-dim { 0% { opacity: 0; } 10%, 45% { opacity: 1; } 100% { opacity: 0; visibility: hidden; } }
+@media (prefers-reduced-motion: reduce) { .flag-show .dim { display: none; } .flag-show .ring { animation: none; } }
 .flag-show .loupe { position: absolute; overflow: hidden; border-radius: 10px; background: #000;
   box-shadow: 0 0 0 1px rgb(255 255 255 / .3), 0 12px 40px rgb(0 0 0 / .7); }
 .flag-show .loupe > .stage { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
@@ -427,11 +428,15 @@ export function createDraw(opts = {}) {
       const fill = 'rgb(255 79 163 / .22)';
       const sides = o.sides ?? 'trbl';
       const band = (x, y, w, h) => (aid += `<rect x="${r1(x)}" y="${r1(y)}" width="${r1(w)}" height="${r1(h)}" fill="${fill}"/>`);
+      // Each size just outside the element, off its band: under a side band,
+      // over the top one, under the bottom one.
       const tag = { fill: true, anchor: 'middle', free: true };
-      if (sides.includes('l') && p.l) (band(r.x, r.y, p.l, r.height), text(r.x + p.l / 2, r.y + r.height / 2, pxl(p.l), tag));
-      if (sides.includes('r') && p.r) (band(r.right - p.r, r.y, p.r, r.height), text(r.right - p.r / 2, r.y + r.height / 2, pxl(p.r), tag));
-      if (sides.includes('t') && p.t) (band(r.x, r.y, r.width, p.t), text(r.x + r.width / 2, r.y + p.t / 2, pxl(p.t), tag));
-      if (sides.includes('b') && p.b) (band(r.x, r.bottom - p.b, r.width, p.b), text(r.x + r.width / 2, r.bottom - p.b / 2, pxl(p.b), tag));
+      const below = r.bottom + 4 + TAG_H / 2;
+      const above = r.y - 4 - TAG_H / 2;
+      if (sides.includes('l') && p.l) (band(r.x, r.y, p.l, r.height), text(r.x + p.l / 2, below, pxl(p.l), tag));
+      if (sides.includes('r') && p.r) (band(r.right - p.r, r.y, p.r, r.height), text(r.right - p.r / 2, below, pxl(p.r), tag));
+      if (sides.includes('t') && p.t) (band(r.x, r.y, r.width, p.t), text(r.x + r.width / 2, above, pxl(p.t), tag));
+      if (sides.includes('b') && p.b) (band(r.x, r.bottom - p.b, r.width, p.b), text(r.x + r.width / 2, below, pxl(p.b), tag));
       if (o.label) text(r.x, r.y - 4 - TAG_H / 2, o.label);
     },
     /**

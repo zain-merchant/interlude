@@ -16,7 +16,7 @@ export default {
 
 /** Show me: a very long title on deck A's lane, the room to the play head measured; dashed is how far it runs with the flag off, if further. */
 export const show = {
-  note: "Deck A's lane has a very long title: it ends before the play head (in a window too narrow for it, with an ellipsis; off, it runs across).",
+  note: "Deck A's lane has a very long title: it stops before the play head (off, in a narrow window, it runs across).",
   needs: { 'stress-data': { set: 'worst' } },
   async setup(app, ctx) {
     await app.loadTrack(0, 'Strings of Life');

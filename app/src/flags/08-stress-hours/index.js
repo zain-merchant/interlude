@@ -21,11 +21,10 @@ export const show = {
   needs: { 'stress-data': { set: 'worst' } },
   async setup(app, ctx) {
     await app.loadTrack(0, 'Printworks');
-    const ov = app.$("[data-region='deck0'] .overview");
-    const r = ov.getBoundingClientRect();
-    await app.click(ov, { clientX: r.x + r.width * 0.8, clientY: r.y + r.height / 2 });
+    // Past the first hour, so elapsed reads in hours too.
+    await app.seek(0, 0.8);
     await app.search('Printworks');
-    ctx.els = () => [app.$("[data-region='deck0'] .times .rm"), app.rows().find((x) => x.textContent.includes('Printworks'))?.querySelectorAll('.n.num')[1]];
+    ctx.els = () => [app.$("[data-region='deck0'] .times .el"), app.$("[data-region='deck0'] .times .rm"), app.rows().find((x) => x.textContent.includes('Printworks'))?.querySelectorAll('.n.num')[1]];
     // The same times as they read with the flag off, and on.
     const read = () => ctx.els().map((e) => e?.textContent.match(/[−-]?\d+(:\d\d)+(\.\d)?/)?.[0] ?? '');
     ctx.text = { on: app.isOn('stress-hours') ? read() : app.without('stress-hours', read), off: app.without('stress-hours', read) };
@@ -37,7 +36,7 @@ export const show = {
     ctx.els().forEach((e, i) => {
       const r = e?.getBoundingClientRect();
       if (!r || !other[i]) return;
-      d.text(r.right, r.bottom + 14, `${word}: ${other[i]}`, { anchor: 'end' });
+      d.text(i ? r.right : r.left, r.bottom + 14, `${word}: ${other[i]}`, { anchor: i ? 'end' : 'start' });
     });
   },
 };
