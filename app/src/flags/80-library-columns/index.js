@@ -32,16 +32,14 @@ export const show = {
     const head = app.$('section.library .head')?.getBoundingClientRect();
     const list = app.$("[data-region='tracks']")?.getBoundingClientRect();
     if (!head || !list) return;
-    // The second visible row: the title's end and the BPM's start.
+    // The second visible row: from the title to the numbers.
     const row = app.rows().find((r) => r.getBoundingClientRect().top > list.top + 20);
     if (!row) return;
-    const t = app.textRect(row.querySelector('.t'));
     const cells = [...row.children];
+    const title = app.textRect(cells[1]);
     const bpm = app.textRect(cells[3]);
     const key = app.textRect(cells[4]);
-    const time = app.textRect(cells[5]);
-    if (t && bpm) d.measure(t.right + 2, t.bottom + 10, bpm.left - 2, t.bottom + 10, { label: `${Math.round(bpm.left - t.right)}px from title to BPM`, side: 'below', tone: before ? 'bad' : 'ok' });
+    if (title && bpm) d.measure(title.left, title.bottom + 10, bpm.left - 2, title.bottom + 10, { label: `${Math.round(bpm.left - title.left)}px from the title to its BPM`, side: 'below', tone: before ? 'bad' : 'ok' });
     if (bpm && key) d.measure(bpm.right, bpm.top - 6, key.left, bpm.top - 6, { side: 'above' });
-    if (key && time) d.measure(key.right, key.top - 6, time.left, key.top - 6, { side: 'above' });
   },
 };
