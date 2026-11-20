@@ -21,9 +21,9 @@ export default {
   notes: 'Hot cue times, loop and beat-jump sizes, the effect name and On/Off sit in fixed slots, so the controls beside them stay put.',
 };
 
-/** Show me: shrinks deck A's loop from 4 beats to 1/4 and ghosts the arrows beside it. */
+/** Show me: shrinks deck A's loop from 4 beats to 1/4 and ghosts the arrows with the flag off. */
 export const show = {
-  note: "Deck A's loop went from 4 beats to 1/4: ghosts show the loop and beat-jump arrows held still. Toggle: off, they move 2 to 4px. Hot cues and FX get the same slots.",
+  note: "Deck A's loop went from 4 beats to 1/4; dashed is where the arrows would be with the flag off.",
   async setup(app, ctx) {
     if (!app.loaded(0)) await app.loadTrack(0);
     await app.tab(0, 'Loop');
@@ -33,17 +33,27 @@ export const show = {
       const [a, b] = s.split('/').map(Number);
       return b ? a / b : a;
     };
-    // Back to 4 beats.
+    // To 4 beats, then down to 1/4.
     for (let i = 0; i < 10 && size() !== 4; i++) await app.click(`${D} button[aria-label='${size() < 4 ? 'Double loop' : 'Halve loop'}']`);
-    ctx.parts = () => [...app.$$(`${D} .perf .tb.ar`), app.$(`${D} .perf .big`), ...app.$$(`${D} .transport .jumps button`)];
-    ctx.names = ['loop ‹', 'loop ›', 'loop size', 'jump ‹', 'jump ›'];
-    ctx.rest = app.snap(ctx.parts());
-    // Where they stand with the flag off, too: the ghost compares like with like.
-    ctx.restOff = app.without('no-shift-strip', () => app.snap(ctx.parts()));
     for (let i = 0; i < 4; i++) await app.click(`${D} button[aria-label='Halve loop']`);
+    ctx.parts = () => [...app.$$(`${D} .perf .tb.ar`), ...app.$$(`${D} .transport .jumps button`)];
+    ctx.b = app.both('no-shift-strip', ctx.parts());
   },
   target: (app) => [app.$("[data-region='deck0'] .perf"), app.$("[data-region='deck0'] .transport .jumps")],
   aid(d, app, ctx) {
-    ctx.parts().forEach((el, i) => el && d.ghost((app.isOn('no-shift-strip') ? ctx.rest : ctx.restOff)[i], el.getBoundingClientRect(), { label: ctx.names[i], below: i % 2 === 1 }));
+    const other = app.other('no-shift-strip', ctx.b);
+    const off = app.isOn('no-shift-strip') ? 'off' : 'on';
+    // Each row's pair of arrows, with one label under the pair.
+    for (const [a, b, name] of [[0, 1, 'loop arrows'], [2, 3, 'jump arrows']]) {
+      const els = [ctx.parts()[a], ctx.parts()[b]];
+      if (!els[0] || !els[1]) continue;
+      const live = els.map((e) => e.getBoundingClientRect());
+      const was = [other[a], other[b]];
+      const moved = live.map((r, i) => d.ghost(was[i], r, { label: false }));
+      if (!moved.some(Boolean)) continue;
+      const most = Math.max(...live.map((r, i) => Math.max(Math.abs(r.x - was[i].x), Math.abs(r.right - was[i].right))));
+      const bottom = Math.max(live[0].bottom, live[1].bottom);
+      d.text((live[0].left + live[1].right) / 2, bottom + 14, `${off}: ${name} move ${Math.round(most * 10) / 10}px`, { anchor: 'middle' });
+    }
   },
 };

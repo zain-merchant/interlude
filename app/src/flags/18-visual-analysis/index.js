@@ -13,9 +13,9 @@ export default {
   notes: 'A hairline under "analyzing, N to go" fills as the library is analysed.',
 };
 
-/** Show me: the worst-case library, still analysing, with the progress hairline under its note. */
+/** Show me: the worst-case library analysing, with a loupe on the hairline under its count. */
 export const show = {
-  note: "Worst-case data on, 1,284 tracks analysing: watch the hairline under \"analyzing, N to go\" fill. Off, there's only the number.",
+  note: 'With 1,284 tracks analysing, the hairline under "analyzing, N to go" fills (loupe).',
   needs: { 'stress-data': { set: 'worst' } },
   async setup(app) {
     await app.until(() => app.$('section.library .bar .count .pending'), 4000, 'the analysis note');
@@ -26,7 +26,6 @@ export const show = {
     if (!p) return;
     const r = p.getBoundingClientRect();
     const done = getComputedStyle(p).getPropertyValue('--flag-visual-analysis-done').trim();
-    d.text(r.x, r.bottom + 12, `progress ${done || '—'}`);
-    d.box(new DOMRect(r.x, r.bottom - 3, r.width, 5), { c: d.C.aid, dash: '2 2' });
+    d.loupe('bar', { x: r.left - 6, y: r.top - 4 }, { zoom: 3, size: { w: Math.min(420, (r.width + 12) * 3), h: (r.height + 10) * 3 }, near: r, caption: done ? `${done} analysed, 3×` : '3×' });
   },
 };

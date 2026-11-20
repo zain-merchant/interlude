@@ -19,9 +19,9 @@ export default {
   notes: 'Dragging the handle above the library resizes it under the pointer, every frame, instead of collapsing it to 12px until you let go (the handle took the title strip\'s "drag" class).',
 };
 
-/** Show me: points at the handle and, while you drag it, draws the pointer against the library's top edge. */
+/** Show me: points at the resize handle; while it's dragged, the pointer's line and the library's top are compared. */
 export const show = {
-  note: 'Drag the outlined handle above the library: the pink line is the pointer, the box the library. On, its top follows; off, it drops to 12px until you let go.',
+  note: 'Drag the ringed handle above the library: its top follows the pointer as you drag (off, it waits until you let go).',
   target: '.app > .split',
   setup(app, ctx) {
     const move = (e) => (ctx.pointer = ctx.held ? e.clientY : null);
@@ -44,11 +44,16 @@ export const show = {
   },
   aid(d, app, ctx) {
     const lib = app.$('section.library')?.getBoundingClientRect();
-    if (!lib) return;
-    d.box(lib, { c: d.C.aid, dash: '3 3', label: `library ${Math.round(lib.height)}px` });
-    if (ctx.pointer != null) {
-      const off = Math.round(lib.top - 6 - ctx.pointer);
-      d.hguide(ctx.pointer, { c: d.C.hl, label: off ? `pointer: library top ${off > 0 ? off + 'px below' : -off + 'px above'} it` : 'pointer: library top follows', lx: lib.left + 220 });
+    const split = app.$('.app > .split')?.getBoundingClientRect();
+    if (!lib || !split) return;
+    if (ctx.pointer == null) {
+      d.text(split.left + split.width / 2, split.top - 13, 'drag me', { anchor: 'middle', fixed: true });
+      return;
     }
+    // While dragging: the pointer's line, and the gap to the library's top.
+    d.hguide(ctx.pointer, { x1: lib.left, x2: lib.right });
+    const gap = Math.round(lib.top - 6 - ctx.pointer);
+    if (Math.abs(gap) > 1) d.measure(lib.left + 260, ctx.pointer, lib.left + 260, lib.top, { label: `library ${Math.abs(gap)}px behind`, tone: 'bad' });
+    else d.text(lib.left + 260, ctx.pointer - 13, 'library follows', { tone: 'ok' });
   },
 };

@@ -45,15 +45,15 @@ export default {
 
 /** Show me: loupes on a panel's edge and on the selected library row. */
 export const show = {
-  note: "Loupes on deck A's edge and the selected library row. Click through Edges and Selected under More, and turn the flag off to compare with today's.",
+  note: "Loupes on deck A's edge and the selected row's: click through Edges and Selected, and flip the flag to see today's.",
   async setup(app) {
     await app.selectRow(2);
   },
-  target: (app) => [app.deck(0), app.$("[data-region='tracks'] .row.sel")],
+  target: (app) => [app.$("[data-region='tracks'] .row.sel")],
   aid(d, app) {
     const deck = app.deck(0)?.getBoundingClientRect();
     const row = app.$("[data-region='tracks'] .row.sel")?.getBoundingClientRect();
-    if (deck) d.loupe('edge', { x: deck.x - 6, y: deck.y - 6 }, { zoom: 5, size: { w: 260, h: 110 }, at: { x: 16, y: 14 }, caption: 'deck A edge, 5×' });
-    if (row) d.loupe('row', { x: row.x - 6, y: row.y - 6 }, { zoom: 5, size: { w: 260, h: 110 }, at: { x: 290, y: 14 }, caption: 'selected row edge, 5×' });
+    if (deck) d.loupe('edge', { x: deck.x - 6, y: deck.y - 6 }, { zoom: 5, size: { w: 240, h: 120 }, near: new DOMRect(deck.x, deck.y, 48, 24), caption: 'deck A edge, 5×' });
+    if (row) d.loupe('row', { x: row.x - 6, y: row.y - 6 }, { zoom: 5, size: { w: 240, h: 120 }, near: new DOMRect(row.x, row.y, 48, row.height), caption: 'selected row, 5×' });
   },
 };

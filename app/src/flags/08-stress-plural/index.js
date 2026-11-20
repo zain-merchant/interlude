@@ -12,23 +12,26 @@ export default {
   notes: 'The library count reads "1 track" for a single result.',
 };
 
-/** Show me: searches for something with exactly one result and points at the count. */
+/** Show me: searches for something with exactly one result, with the count as it reads off. */
 export const show = {
-  note: "Searched down to one track: read the count beside the search. Off, \"1 tracks\"; on, \"1 track\".",
+  note: 'Searched down to one track: the count beside the search says "1 track".',
   async setup(app, ctx) {
-    const count = () => app.$('section.library .bar .count')?.textContent ?? '';
+    const count = () => app.$('section.library .bar .count');
     // Find a search with exactly one result among the tracks' own titles.
     const titles = app.rows().map((r) => r.querySelector('.t')?.textContent.trim()).filter(Boolean);
     const tries = [...new Set(titles.map((t) => t + ' Extended'))].concat(titles);
     for (const q of tries) {
       await app.search(q);
-      if (/^\s*1\s+track/.test(count())) return;
+      if (/^\s*1\s+track/.test(count()?.textContent ?? '')) break;
     }
-    throw new Error('No search with exactly one result');
+    if (!/^\s*1\s+track/.test(count()?.textContent ?? '')) throw new Error('No search with exactly one result');
+    // The count's own words (not the analysis note after them), on and off.
+    const words = () => (count()?.firstChild?.textContent ?? '').trim();
+    ctx.text = { on: words(), off: app.without('stress-plural', words) };
   },
   target: 'section.library .bar .count',
-  aid(d, app) {
-    const r = app.$('section.library .bar .count')?.getBoundingClientRect();
-    if (r) d.text(r.x, r.bottom + 10, 'the count');
+  aid(d, app, ctx) {
+    const r = app.textRect(app.$('section.library .bar .count'));
+    if (r) d.text(r.x, r.bottom + 14, app.isOn('stress-plural') ? `off: ${ctx.text.off}` : `on: ${ctx.text.on}`);
   },
 };

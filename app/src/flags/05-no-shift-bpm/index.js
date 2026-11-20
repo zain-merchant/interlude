@@ -14,28 +14,28 @@ export default {
   notes: 'The BPM field opened by double-click has the same box as the number it replaces, so the deck below no longer drops 11px.',
 };
 
-/** Show me: opens deck A's BPM field and ghosts where the deck's rows stood. */
+/** Show me: opens deck A's BPM field and ghosts where things would be with the flag off. */
 export const show = {
-  note: "Deck A's BPM field is open; ghosts show the rows below held still. To compare, turn the flag off and press Replay: off, the field is 42px wider and the deck drops 11px.",
+  note: "Deck A's BPM field is open; dashed is where it and the rows below would be with the flag off.",
   async setup(app, ctx) {
     if (!app.loaded(0)) await app.loadTrack(0);
     const D = "[data-region='deck0']";
-    ctx.parts = () => [app.$(`${D} .title`), app.$(`${D} .bpm`), app.$(`${D} .overview`), app.$(`${D} .times`), app.$(`${D} .modes`), app.$(`${D} .transport`)];
-    ctx.names = ['title', 'BPM', 'overview', 'times', 'tabs', 'transport'];
-    ctx.rest = app.snap(ctx.parts());
-    // Where they stand with the flag off, too: the ghost compares like with like.
-    ctx.restOff = app.without('no-shift-bpm', () => app.snap(ctx.parts()));
     await app.dblclick(`${D} .bpm .big`);
     await app.until(() => app.$(`${D} .bpm input, ${D} .bpm .edit`), 1500, 'the BPM field');
+    ctx.parts = () => [app.$(`${D} .bpm`), app.$(`${D} .overview`)];
+    ctx.names = ['BPM', 'rows below'];
+    ctx.b = app.both('no-shift-bpm', ctx.parts());
   },
   target: "[data-region='deck0'] .bpm",
-  async replay(app, ctx) {
+  async replay(app) {
     const D = "[data-region='deck0']";
     await app.key('Escape', { target: app.$(`${D} .bpm input`) ?? document.body });
     await app.wait(500);
     await app.dblclick(`${D} .bpm .big`);
   },
   aid(d, app, ctx) {
-    ctx.parts().forEach((el, i) => el && d.ghost((app.isOn('no-shift-bpm') ? ctx.rest : ctx.restOff)[i], el.getBoundingClientRect(), { label: ctx.names[i], below: i === 1 }));
+    const other = app.other('no-shift-bpm', ctx.b);
+    const off = app.isOn('no-shift-bpm') ? 'off:' : 'on:';
+    ctx.parts().forEach((el, i) => el && d.ghost(other[i], el.getBoundingClientRect(), { label: `${off} ${ctx.names[i]}`, side: i ? 'below' : 'above' }));
   },
 };

@@ -15,7 +15,7 @@ export default {
 
 /** Show me: makes (or reuses) an empty playlist and opens it. */
 export const show = {
-  note: "An empty playlist is open: read its message. Off, it says \"No tracks yet\" and offers to add a music folder.",
+  note: 'An empty playlist is open: read what it says (off, it offers to add a music folder).',
   async setup(app) {
     // A playlist this made before (still empty: no count beside it), or a new one.
     const find = () => app.$$("[data-region='sidebar'] .item").find((b) => /^New playlist/.test(b.querySelector('span')?.textContent.trim() ?? '') && !Number(b.querySelector('small')?.textContent));
@@ -31,9 +31,5 @@ export const show = {
     await app.click(item);
     await app.until(() => app.$("[data-region='tracks'] .empty, section.library .empty"), 2000, 'the empty view');
   },
-  target: "section.library .empty",
-  aid(d, app) {
-    const r = app.$('section.library .empty')?.getBoundingClientRect();
-    if (r) d.text(r.x + r.width / 2, r.y - 12, 'what an empty playlist says', { anchor: 'middle' });
-  },
+  target: 'section.library .empty',
 };

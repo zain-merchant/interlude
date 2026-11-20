@@ -37,9 +37,9 @@ export default {
   },
 };
 
-/** Show me: deck A playing, deck B paused, each play button labelled with its state. */
+/** Show me: deck A playing, deck B paused, each play button tagged with its state. */
 export const show = {
-  note: "Deck A is playing and deck B paused, labelled: compare the two play buttons (Playing style under More). Off, both are the same white block.",
+  note: 'Deck A plays, deck B is paused: compare the two play buttons, and try Playing.',
   async setup(app) {
     if (!app.loaded(0)) await app.loadTrack(0);
     if (!app.loaded(1)) await app.loadTrack(1);
@@ -52,7 +52,7 @@ export const show = {
       if (!b) continue;
       const r = b.getBoundingClientRect();
       const state = b.getAttribute('aria-disabled') === 'true' ? 'empty deck' : b.hasAttribute('data-cueing') ? 'cueing' : b.classList.contains('on') ? 'playing' : 'paused';
-      d.text(r.x + r.width / 2, r.y - 10, `${'AB'[n]}: ${state}`, { anchor: 'middle' });
+      d.text(r.x + r.width / 2, r.bottom + 14, state, { anchor: 'middle', fixed: true });
     }
   },
 };

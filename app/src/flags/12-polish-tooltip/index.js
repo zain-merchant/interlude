@@ -19,10 +19,10 @@ export default {
   },
 };
 
-/** Show me: points at deck A's EQ labels one after another, as a hand scanning the mixer would. */
+/** Show me: points along deck A's EQ labels, so the first tip waits and the next ones don't. */
 export const show = {
-  note: "Pointed along deck A's EQ labels: the first tip waits, the next ones show at once. Replay with the flag off: each waits 600ms.",
-  async setup(app, ctx) {
+  note: "Pointed along deck A's EQ labels: the first tip waits, the next show at once (off, each waits). Replay runs it again.",
+  async setup(app) {
     await show.replay(app);
   },
   async replay(app) {
@@ -41,6 +41,6 @@ export const show = {
     const tip = app.$("[role='tooltip']");
     if (!tip) return;
     const r = tip.getBoundingClientRect();
-    d.text(r.x, r.y - 10, tip.hasAttribute('data-warm') ? 'no entrance (followed on)' : 'first tip: waited, faded in');
+    d.text(r.x + r.width / 2, r.y - 14, tip.hasAttribute('data-warm') ? 'shown at once' : 'waited, then faded in', { anchor: 'middle' });
   },
 };

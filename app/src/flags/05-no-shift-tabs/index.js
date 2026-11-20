@@ -12,21 +12,17 @@ export default {
   notes: 'Loop / FX / Stems labels no longer slide 5px when a loop, effect or muted stem turns their dot on.',
 };
 
-/** Show me: starts a loop on deck A, which lights the Loop tab's dot, and ghosts the tab's word. */
+/** Show me: starts a loop on deck A, which lights the Loop tab's dot, and ghosts the word with the flag off. */
 export const show = {
-  note: "A loop lit the Loop tab's dot: the ghost shows the word held still. Toggle: off, it slides 5px left. Replay turns the loop off and on.",
+  note: "A loop lit the Loop tab's dot; dashed is where the word would be with the flag off.",
   async setup(app, ctx) {
     if (!app.loaded(0)) await app.loadTrack(0);
     await app.tab(0, 'Cues');
     const loopTab = () => app.$$("[data-region='deck0'] .modes button").find((b) => b.textContent.trim().startsWith('Loop'));
-    ctx.word = () => app.textRect(loopTab());
-    if (loopTab().querySelector('i')) await app.key('KeyR', { target: document.body });
-    await app.wait(80);
-    ctx.rest = ctx.word();
-    ctx.restOff = app.without('no-shift-tabs', () => ctx.word());
-    await app.key('KeyR', { target: document.body });
+    if (!loopTab().querySelector('i')) await app.key('KeyR', { target: document.body });
     await app.until(() => loopTab().querySelector('i'), 1500, 'the loop dot');
-    ctx.tab = loopTab;
+    ctx.word = () => app.textRect(loopTab());
+    ctx.b = { on: [ctx.word()], off: [app.without('no-shift-tabs', () => ctx.word())] };
   },
   async replay(app) {
     await app.key('KeyR', { target: document.body });
@@ -35,6 +31,6 @@ export const show = {
   },
   target: (app) => app.$$("[data-region='deck0'] .modes button").find((b) => b.textContent.trim().startsWith('Loop')),
   aid(d, app, ctx) {
-    d.ghost(app.isOn('no-shift-tabs') ? ctx.rest : ctx.restOff, ctx.word(), { label: 'Loop', below: true });
+    d.ghost(app.other('no-shift-tabs', ctx.b)[0], ctx.word(), { label: app.isOn('no-shift-tabs') ? 'off:' : 'on:', side: 'below' });
   },
 };

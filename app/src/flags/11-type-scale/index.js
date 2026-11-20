@@ -24,9 +24,9 @@ export default {
   },
 };
 
-/** Show me: opens the Import dialog and labels every text with its size and weight. */
+/** Show me: the Import dialog, with any text off the type scale tagged with its size and weight. */
 export const show = {
-  note: "The Import dialog, every text labelled size/weight: red is off the scale (12, 22, 600). Toggle to watch the reds go.",
+  note: 'The Import dialog: any text off the scale (sizes 11–32, weights 300–500) is tagged in red; flip the flag to see them.',
   async setup(app) {
     await app.openImport();
   },
@@ -36,9 +36,8 @@ export const show = {
     if (!card) return;
     const SIZES = [11, 13, 16, 24, 32];
     const WEIGHTS = [300, 400, 500];
-    let n = 0;
+    let off = 0;
     for (const el of [card, ...card.querySelectorAll('*')]) {
-      if (n > 80) break;
       const own = [...el.childNodes].some((c) => c.nodeType === 3 && c.textContent.trim());
       if (!own) continue;
       const r = app.textRect(el);
@@ -46,9 +45,12 @@ export const show = {
       const cs = getComputedStyle(el);
       const size = Math.round(parseFloat(cs.fontSize) * 10) / 10;
       const weight = Number(cs.fontWeight);
-      const ok = SIZES.includes(size) && WEIGHTS.includes(weight);
-      d.text(r.right + 4, r.top + r.height / 2, `${size}/${weight}`, { c: ok ? d.C.ok : d.C.bad });
-      n++;
+      if (SIZES.includes(size) && WEIGHTS.includes(weight)) continue;
+      off++;
+      d.box(r, { c: d.C.bad, w: 1, rx: 2 });
+      d.text(r.right + 6, r.top + r.height / 2, `${size}/${weight}`, { tone: 'bad' });
     }
+    const cr = card.getBoundingClientRect();
+    if (!off) d.text(cr.left, cr.top - 14, 'every text on the scale', { tone: 'ok', fixed: true });
   },
 };

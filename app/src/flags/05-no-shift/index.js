@@ -29,21 +29,17 @@ export default {
   },
 };
 
-/** Show me: kills deck A's Low and ghosts where the mixer's columns stood. */
+/** Show me: kills deck A's Low and ghosts where the mixer's columns would be with the flag off. */
 export const show = {
-  note: "Deck A's Low is killed: ghosts show the mixer's columns held still. Toggle: off, \"Low · kill\" widens the column and the mixer shifts 9px.",
+  note: "Deck A's Low is killed; dashed is where the mixer's columns would be with the flag off.",
   target: (app) => app.$$('.mixer .ch')[0]?.querySelectorAll('.knob')[3],
   async setup(app, ctx) {
-    ctx.parts = () => [app.$('.mixer .fwrap'), app.$('.mixer .cen'), app.$('.mixer .fwrap.mirror'), app.$$('.mixer .ch')[1]];
-    ctx.names = ['fader A', 'master', 'fader B', 'channel B'];
     const low = () => app.$$('.mixer .ch')[0].querySelectorAll('.knob')[3].querySelector('button.label');
-    if (low().classList.contains('killed')) await app.click(low());
-    // At rest (nothing killed) the mixer is the same with the flag on or off.
-    ctx.rest = app.snap(ctx.parts());
-    // Where they stand with the flag off, too: the ghost compares like with like.
-    ctx.restOff = app.without('no-shift', () => app.snap(ctx.parts()));
-    await app.click(low());
+    if (!low().classList.contains('killed')) await app.click(low());
     await app.until(() => low().classList.contains('killed'), 1000, 'the kill');
+    ctx.parts = () => [app.$$('.mixer .ch')[0], app.$('.mixer .cen')];
+    ctx.names = ['channel A', 'master'];
+    ctx.b = app.both('no-shift', ctx.parts());
   },
   async replay(app) {
     const low = () => app.$$('.mixer .ch')[0].querySelectorAll('.knob')[3].querySelector('button.label');
@@ -52,6 +48,8 @@ export const show = {
     await app.click(low());
   },
   aid(d, app, ctx) {
-    ctx.parts().forEach((el, i) => el && d.ghost((app.isOn('no-shift') ? ctx.rest : ctx.restOff)[i], el.getBoundingClientRect(), { label: ctx.names[i], below: i % 2 === 1 }));
+    const other = app.other('no-shift', ctx.b);
+    const off = app.isOn('no-shift') ? 'off:' : 'on:';
+    ctx.parts().forEach((el, i) => el && d.ghost(other[i], el.getBoundingClientRect(), { label: `${off} ${ctx.names[i]}`, side: 'above' }));
   },
 };

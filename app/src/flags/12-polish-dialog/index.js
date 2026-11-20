@@ -17,9 +17,9 @@ export default {
   },
 };
 
-/** Show me: opens the Report dialog; Replay closes and opens it again. */
+/** Show me: opens the Report dialog (Replay opens it again). */
 export const show = {
-  note: "The Report dialog just opened: watch it arrive. Press Replay with the flag off and on to compare the entrance.",
+  note: 'The Report dialog just opened: press Replay with the flag off and on to compare its entrance.',
   async setup(app) {
     await app.openReport();
   },

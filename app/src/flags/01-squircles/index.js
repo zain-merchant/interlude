@@ -32,15 +32,28 @@ export default {
   },
 };
 
-/** Show me: loupes on a panel corner and a button corner. */
+/** Show me: loupes on deck A's corner and Sync's, with today's round corner dashed over each. */
 export const show = {
-  note: "Loupes on deck A's and Sync's corners: same corner size, a smoother curve, the border following it. Drag Smoothing under More (0% is today's corner).",
+  note: 'Corners ease into their curve; in each loupe the dashed arc is today\'s round corner.',
+  setup(app, ctx) {
+    const els = () => [app.deck(0), app.$("[data-region='deck0'] .btn.sync")];
+    // The plain radius each corner has with the flag off.
+    ctx.radius = app.without('squircles', () => els().map((e) => (e ? parseFloat(getComputedStyle(e).borderTopLeftRadius) || 0 : 0)));
+    ctx.els = els;
+  },
   target: (app) => [app.deck(0), app.$("[data-region='deck0'] .btn.sync")],
-  aid(d, app) {
-    const deck = app.deck(0)?.getBoundingClientRect();
-    const sync = app.$("[data-region='deck0'] .btn.sync")?.getBoundingClientRect();
-    const how = CSS.supports('corner-shape', 'superellipse(2)') ? 'corner-shape' : 'clip + redrawn ring';
-    if (deck) d.loupe('panel', { x: deck.x - 4, y: deck.y - 4 }, { zoom: 6, size: { w: 216, h: 120 }, at: { x: 16, y: 10 }, caption: `deck A corner, 6× (${how})` });
-    if (sync) d.loupe('button', { x: sync.x - 3, y: sync.y - 3 }, { zoom: 6, size: { w: 216, h: 120 }, at: { x: 244, y: 10 }, caption: 'Sync corner, 6×' });
+  aid(d, app, ctx) {
+    const [deck, sync] = ctx.els().map((e) => e?.getBoundingClientRect());
+    /** A loupe on a top-left corner with the plain arc of radius r over it. */
+    const corner = (key, r, rad, zoom, size, caption) => {
+      const src = { x: r.x - 3, y: r.y - 3 };
+      const l = d.loupe(key, src, { zoom, size, near: new DOMRect(r.x, r.y, size.w / zoom, size.h / zoom), caption });
+      const a = l.map(r.x, r.y + rad);
+      const b = l.map(r.x + rad, r.y);
+      const R = rad * zoom;
+      d.clip(l.rect, () => d.path(`M${a.x} ${a.y}A${R} ${R} 0 0 1 ${b.x} ${b.y}`, { c: d.C.ghost, dash: '5 4', w: 1.5 }));
+    };
+    if (deck) corner('panel', deck, ctx.radius[0], 6, { w: 210, h: 170 }, 'deck A, 6×');
+    if (sync) corner('button', sync, ctx.radius[1], 8, { w: 170, h: 130 }, 'Sync, 8×');
   },
 };

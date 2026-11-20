@@ -33,9 +33,9 @@ export default {
   },
 };
 
-/** Show me: every button the style applies to, labelled, with a loupe on two of them. */
+/** Show me: the buttons the style applies to, with loupes on two of them. */
 export const show = {
-  note: "The restyled buttons are outlined, with loupes on Sync and a headphone button. Click through Style under More, and turn the flag off to compare.",
+  note: 'The restyled buttons, with loupes on Sync and a headphone button: click through Style.',
   async setup(app) {
     if (!app.loaded(0)) await app.loadTrack(0);
   },
@@ -43,11 +43,7 @@ export const show = {
   aid(d, app) {
     const sync = app.$("[data-region='deck0'] .btn.sync")?.getBoundingClientRect();
     const hp = app.$('.mixer .hp')?.getBoundingClientRect();
-    if (sync) d.loupe('sync', { x: sync.x - 6, y: sync.y - 6 }, { zoom: 4, size: { w: 300, h: 120 }, at: { x: 16, y: 10 }, caption: 'Sync, 4×' });
-    if (hp) d.loupe('hp', { x: hp.x - 8, y: hp.y - 6 }, { zoom: 4, size: { w: 200, h: 120 }, at: { x: 330, y: 10 }, caption: 'headphone cue, 4×' });
-    for (const el of [app.$("[data-region='deck0'] .btn.sync"), app.$("[data-region='deck0'] .btn.jumps"), app.$('section.library .btn.samp'), app.$('.mixer button.rec')]) {
-      const r = el?.getBoundingClientRect();
-      if (r) d.box(r, { c: d.C.aid, dash: '2 2' });
-    }
+    if (sync) d.loupe('sync', { x: sync.x - 6, y: sync.y - 6 }, { zoom: 3, size: { w: 340, h: 150 }, near: sync, caption: 'Sync, 3×' });
+    if (hp) d.loupe('hp', { x: hp.x - 8, y: hp.y - 8 }, { zoom: 4, size: { w: 200, h: 140 }, near: hp, caption: 'headphone cue, 4×' });
   },
 };

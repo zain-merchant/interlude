@@ -17,9 +17,9 @@ export default {
   },
 };
 
-/** Show me: deck A playing its last half minute. */
+/** Show me: plays deck A's last ~25 seconds, so its remaining time warns. */
 export const show = {
-  note: "Deck A is playing its last ~25s: its remaining time turns the warning colour, and pulses in the last ten. Off, it looks the same.",
+  note: "Deck A is playing its last ~25s: the remaining time turns the warning colour, and pulses in the last ten.",
   async setup(app) {
     if (!app.loaded(0)) await app.loadTrack(0);
     const ov = app.$("[data-region='deck0'] .overview");
@@ -33,6 +33,7 @@ export const show = {
     const rm = app.$("[data-region='deck0'] .times .rm");
     if (!rm) return;
     const r = rm.getBoundingClientRect();
-    d.text(r.right, r.bottom + 10, rm.classList.contains('last') ? 'last ten seconds' : rm.classList.contains('ending') ? 'ending' : 'remaining', { anchor: 'end' });
+    const state = rm.classList.contains('last') ? 'last ten seconds' : rm.classList.contains('ending') ? 'ending' : null;
+    if (state) d.text(r.right, r.bottom + 14, state, { anchor: 'end', fixed: true });
   },
 };

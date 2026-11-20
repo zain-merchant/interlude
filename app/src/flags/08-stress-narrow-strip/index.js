@@ -26,7 +26,7 @@ export default {
 
 /** Show me: zooms the interface in until deck A's mode row is under 320px, with hot cues set. */
 export const show = {
-  note: "Zoomed in until deck A's mode row is under 320px (measured), with two hot cues set. Off, \"1 Set2 Set\" runs together; on, they fit. Done restores the zoom.",
+  note: "Zoomed in until deck A's mode row is under 320px, with two hot cues set: they fit (off, \"1 Set2 Set\" runs together). Done restores the zoom.",
   async setup(app, ctx) {
     if (!app.loaded(0)) await app.loadTrack(0);
     await app.tab(0, 'Cues');
@@ -54,6 +54,6 @@ export const show = {
     const r = mp?.getBoundingClientRect();
     if (!r) return;
     const w = mp.offsetWidth;
-    d.measure(r.left, r.top - 8, r.right, r.top - 8, { above: true, c: w < 320 ? d.C.ok : d.C.bad, label: `mode row ${w}px (applies under 320)` });
+    d.measure(r.left, r.top - 6, r.right, r.top - 6, { label: `${w}px (narrow under 320)`, side: 'above', tone: w < 320 ? 'ok' : 'bad' });
   },
 };

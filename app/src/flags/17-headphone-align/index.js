@@ -25,9 +25,9 @@ export default {
   },
 };
 
-/** Show me: guides on each channel's fader axis and meter edges, against the headphone button. */
+/** Show me: each fader's axis down through its headphone button, with the verdict. */
 export const show = {
-  note: "Guides on each fader's axis and the strip's edges. Off, the headphone button sits 4.5px off the axis; on, it's centred on it (or spans the strip).",
+  note: "The line is each fader's axis: the headphone button now sits on it (or spans the strip, in Strip).",
   target: '.mixer .hp',
   aid(d, app) {
     for (const wrap of app.$$('.mixer .fwrap')) {
@@ -36,20 +36,12 @@ export const show = {
       const hp = app.$('.hp', wrap)?.getBoundingClientRect();
       if (!fader || !hp) continue;
       const axis = fader.left + fader.width / 2;
-      const y1 = fader.top;
-      const y2 = hp.bottom + 6;
-      d.vguide(axis, { y1, y2, c: d.C.aid });
-      if (meter) {
-        const l = Math.min(fader.left, meter.left);
-        const r = Math.max(fader.right, meter.right);
-        d.vguide(l, { y1, y2, c: d.C.ghost, dash: '1 3' });
-        d.vguide(r, { y1, y2, c: d.C.ghost, dash: '1 3' });
-      }
+      d.vguide(axis, { y1: fader.top, y2: hp.bottom + 4 });
       const c = hp.left + hp.width / 2;
       const off = c - axis;
-      const ok = Math.abs(off) < 0.5 || (meter && Math.abs(hp.left - Math.min(fader.left, meter.left)) < 0.5 && Math.abs(hp.right - Math.max(fader.right, meter.right)) < 0.5);
-      d.dot(c, hp.top + hp.height / 2, { c: ok ? d.C.ok : d.C.bad });
-      d.text(c, hp.bottom + 12, Math.abs(off) < 0.5 ? 'on the axis' : ok ? 'spans the strip' : `${off > 0 ? '+' : ''}${Math.round(off * 10) / 10}px off the axis`, { c: ok ? d.C.ok : d.C.bad, anchor: 'middle' });
+      const spans = meter && Math.abs(hp.left - Math.min(fader.left, meter.left)) < 0.5 && Math.abs(hp.right - Math.max(fader.right, meter.right)) < 0.5;
+      const ok = Math.abs(off) < 0.5 || spans;
+      d.text(axis, hp.bottom + 15, Math.abs(off) < 0.5 ? 'on the axis' : spans ? 'spans the strip' : `${Math.round(Math.abs(off) * 10) / 10}px off`, { anchor: 'middle', tone: ok ? 'ok' : 'bad' });
     }
   },
 };

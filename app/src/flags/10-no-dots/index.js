@@ -22,7 +22,7 @@ export default {
 
 /** Show me: the deck's key line, the library count and a tooltip, with the gaps between their parts measured. */
 export const show = {
-  note: "Deck A's key line, the library count and a tooltip, with the gaps measured. Off, the parts are joined by \" · \"; on, by space and a step in tone.",
+  note: "Deck A's key line, the library count and a tooltip: parts are spaced (measured) instead of joined by \" · \".",
   async setup(app) {
     if (!app.loaded(0)) await app.loadTrack(0);
     app.hover("[aria-label='Crossfader']");
@@ -30,44 +30,30 @@ export const show = {
   },
   target: (app) => [app.$("[data-region='deck0'] .bpm .unit"), app.$('section.library .bar .count'), app.$("[role='tooltip']")],
   aid(d, app) {
-    const gaps = (parts, label) => {
-      for (let i = 1; i < parts.length; i++) {
-        const a = parts[i - 1].getBoundingClientRect();
-        const b = parts[i].getBoundingClientRect();
-        if (b.left > a.right) d.measure(a.right, a.bottom + 4, b.left, a.bottom + 4, { label: `${Math.round(b.left - a.right)}` });
-      }
-      if (parts[0] && label) {
-        const r = parts[0].getBoundingClientRect();
-        d.text(r.x, r.y - 10, label);
+    /** Measures the gaps between consecutive rects, just under them. */
+    const gaps = (rects) => {
+      for (let i = 1; i < rects.length; i++) {
+        const a = rects[i - 1];
+        const b = rects[i];
+        if (b.left - a.right > 0.5) d.measure(a.right, Math.max(a.bottom, b.bottom) + 3, b.left, Math.max(a.bottom, b.bottom) + 3, { label: `${Math.round(b.left - a.right)}` });
       }
     };
+    const node = (n) => {
+      const range = document.createRange();
+      range.selectNodeContents(n);
+      return range.getBoundingClientRect();
+    };
+    // Each place's parts: element children and text runs, in order.
+    const parts = (el) =>
+      [...el.childNodes]
+        .filter((n) => n.textContent.trim())
+        .map((n) => (n.nodeType === 1 ? /** @type {Element} */ (n).getBoundingClientRect() : node(n)))
+        .filter((r) => r.width);
     const tip = app.$("[role='tooltip']");
-    if (tip) {
-      const parts = app.$$('.part', tip);
-      if (parts.length) gaps(parts, 'tooltip');
-      else d.text(tip.getBoundingClientRect().x, tip.getBoundingClientRect().y - 10, 'tooltip (dots: flag off)');
-    }
+    if (tip) gaps(app.$$('.part', tip).map((p) => p.getBoundingClientRect()));
     const unit = app.$("[data-region='deck0'] .bpm .unit");
-    const key = app.$("[data-region='deck0'] .bpm .unit .key");
-    if (unit && key) {
-      const kr = key.getBoundingClientRect();
-      const ur = app.textRect(unit);
-      if (ur) d.text(ur.right, ur.bottom + 10, 'key line', { anchor: 'end' });
-      // The unit text after the key.
-      const rest = [...unit.childNodes].filter((n) => n.nodeType === 3 && n.textContent.trim());
-      if (rest.length) {
-        const range = document.createRange();
-        range.selectNode(rest[rest.length - 1]);
-        const rr = range.getBoundingClientRect();
-        if (rr.left > kr.right) d.measure(kr.right, kr.bottom + 3, rr.left, kr.bottom + 3, { label: `${Math.round(rr.left - kr.right)}` });
-      }
-    }
-    const pend = app.$('section.library .bar .count .pending');
-    if (pend) {
-      const pr = pend.getBoundingClientRect();
-      const cr = app.textRect(app.$('section.library .bar .count'));
-      d.text(pr.x, pr.bottom + 10, 'analysis note');
-      if (cr) d.box(cr, { dash: '2 2' });
-    }
+    if (unit) gaps(parts(unit));
+    const count = app.$('section.library .bar .count');
+    if (count) gaps(parts(count));
   },
 };

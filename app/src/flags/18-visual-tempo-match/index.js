@@ -16,9 +16,9 @@ export default {
   notes: 'A mark beside each pitch fader, in the other deck\'s colour, where this deck would match the other\'s tempo. Hollow at the end when out of range.',
 };
 
-/** Show me: two decks at different tempos, with the match marks on their pitch faders. */
+/** Show me: two decks at different tempos; the gap from each fader cap to its match mark is measured. */
 export const show = {
-  note: "Two decks at different tempos: the mark by each pitch fader is the other deck's tempo, the bar the gap to the cap. Off, no marks.",
+  note: "The decks are at different tempos: the mark by each pitch fader is where it would match the other deck.",
   async setup(app) {
     await app.loadTrack(0, 1);
     await app.loadTrack(1, 0);
@@ -31,7 +31,7 @@ export const show = {
       if (!m || !cap) continue;
       const my = m.top + m.height / 2;
       const cy = cap.top + cap.height / 2;
-      d.measure(m.left - 6, cy, m.left - 6, my, { label: `${'BA'[n]}'s tempo` });
+      d.measure(m.left - 8, cy, m.left - 8, my, { label: `${'BA'[n]}'s tempo`, side: 'left' });
     }
   },
 };

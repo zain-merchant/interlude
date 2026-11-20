@@ -16,9 +16,9 @@ export default {
   },
 };
 
-/** Show me: selects the last library row and measures what's under it. */
+/** Show me: selects the last row and measures the room under it, with a loupe on the list's foot. */
 export const show = {
-  note: "The last row is selected; the bar measures the room under it. On, 6px; off, it touches the list's rounded foot (see the loupe).",
+  note: 'The last row is selected: the room under it is measured, and the loupe shows it clear of the rounded foot.',
   async setup(app) {
     await app.selectRow('last');
   },
@@ -28,7 +28,9 @@ export const show = {
     const list = app.$("[data-region='tracks']")?.getBoundingClientRect();
     if (!row || !list) return;
     const gap = list.bottom - row.bottom;
-    d.measure(row.left + 60, row.bottom, row.left + 60, list.bottom, { c: gap > 0.5 ? d.C.ok : d.C.bad, label: gap > 0.5 ? `${Math.round(gap * 10) / 10}px under the last row` : 'touches the foot' });
-    d.loupe('foot', { x: list.left - 4, y: list.bottom - 30 }, { zoom: 4, size: { w: 260, h: 140 }, at: { x: 16, y: 14 }, caption: 'list foot, 4×' });
+    const x = row.left + 40;
+    if (gap > 0.5) d.measure(x, row.bottom, x, list.bottom, { label: `${Math.round(gap * 10) / 10}`, side: 'right', tone: 'ok' });
+    else d.text(x, list.bottom - 9, 'touches the foot', { tone: 'bad' });
+    d.loupe('foot', { x: list.left - 4, y: list.bottom - 30 }, { zoom: 4, size: { w: 240, h: 136 }, near: new DOMRect(list.left, list.bottom - 30, 60, 34), caption: 'list foot, 4×' });
   },
 };

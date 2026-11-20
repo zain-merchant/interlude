@@ -18,7 +18,8 @@ export const SHOWS = Object.fromEntries(
 );
 
 const PENDING = 'interlude.flags.show-pending';
-const HIGHLIGHT_S = 4.5;
+/** How long the ring around the targets lasts (overlay.js fades it). */
+const HIGHLIGHT_S = 2.8;
 
 export const current = $state({
   /** @type {string | null} */ id: null,
@@ -118,8 +119,9 @@ export async function showMe(id, resumed = false) {
   const tick = () => {
     if (me !== run || !overlay) return;
     const t = (performance.now() - t0) / 1000;
-    const d = createDraw();
-    if (t < HIGHLIGHT_S + 0.2) for (const r of targetRects(show)) d.highlight(r, t);
+    const rects = targetRects(show);
+    const d = createDraw({ targets: rects });
+    if (t < HIGHLIGHT_S) d.highlight(rects, t);
     if (current.aid && show.aid && !aidFailed) {
       try {
         show.aid(d, kit, ctx);

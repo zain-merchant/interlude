@@ -45,67 +45,56 @@ export default {
   },
 };
 
-/** Show me: the 4px grid over deck A, the mixer and the library, with guides on the lines that should meet. */
+/** Show me: the 4px grid over deck A and the mixer, and the lines that should meet, each with its verdict. */
 export const show = {
-  note: "4px grid with guides: nudge, headphone and Rec should end on the mode row's line, sidebar items on track rows. Green is on, red is off by the px shown. Toggle to watch.",
-  target: (app) => [app.$("[data-region='deck0'] header"), app.$("[data-region='deck0'] .pitch .nudge"), ...app.$$('.mixer .hp'), app.$('.mixer button.rec'), app.$("[data-region='sidebar']")],
+  note: 'On the 4px grid, with the lines that should meet: a green dot is lined up, a red one says by how much it misses.',
+  target: (app) => [app.$("[data-region='deck0'] .pitch .nudge"), ...app.$$('.mixer .hp'), app.$('.mixer button.rec')],
   aid(d, app) {
-    const { C } = d;
     const r1 = (n) => Math.round(n * 10) / 10;
     const near = (a, b) => Math.abs(a - b) < 0.5;
-    const off = (a, b) => (near(a, b) ? 'on the line' : `${a > b ? '+' : ''}${r1(a - b)}px`);
+    const miss = (a, b) => `${a > b ? '+' : '−'}${r1(Math.abs(a - b))}px`;
     const deckA = app.deck(0)?.getBoundingClientRect();
     const mixer = app.$('.mixer')?.getBoundingClientRect();
     if (deckA && mixer) d.grid(new DOMRect(deckA.x, deckA.y, mixer.right - deckA.x, deckA.height), 4);
-    const lib = app.$('section.library')?.getBoundingClientRect();
-    if (lib) d.grid(new DOMRect(lib.x, lib.y, Math.min(lib.width, 620), Math.min(lib.height, 220)), 4);
 
-    // The mode row's bottom line, and what should end on it.
+    // The mode row's bottom line, and the four that should end on it.
     const mp = app.$("[data-region='deck0'] .mp")?.getBoundingClientRect();
     if (mp && mixer) {
       const y = mp.bottom;
-      d.hguide(y, { x1: deckA.x, x2: mixer.right, label: `mode row bottom, y ${r1(y)}`, lx: deckA.x + 4 });
-      const ends = [
-        ['nudge', app.$("[data-region='deck0'] .pitch .nudge")],
-        ['headphone A', app.$$('.mixer .hp')[0]],
-        ['Rec', app.$('.mixer button.rec')],
-        ['headphone B', app.$$('.mixer .hp')[1]],
-      ];
-      ends.forEach(([name, el], i) => {
-        const r = el?.getBoundingClientRect();
-        if (!r) return;
-        const c = near(r.bottom, y) ? C.ok : C.bad;
-        d.box(r, { c, w: 1.5 });
-        d.text(r.x + r.width / 2, y + 12 + (i % 2) * 15, `${name} ${off(r.bottom, y)}`, { c, anchor: 'middle' });
-      });
+      const ends = [app.$("[data-region='deck0'] .pitch .nudge"), app.$$('.mixer .hp')[0], app.$('.mixer button.rec'), app.$$('.mixer .hp')[1]]
+        .map((e) => e?.getBoundingClientRect())
+        .filter(Boolean);
+      const off = ends.filter((r) => !near(r.bottom, y));
+      d.hguide(y, { x1: deckA.x, x2: mixer.right, label: off.length ? "mode row's line" : "mode row's line: nudge, headphones and Rec end on it", lx: deckA.x + 8, tone: off.length ? 'bad' : 'ok' });
+      for (const r of off) d.text(r.x + r.width / 2, y + 14, miss(r.bottom, y), { anchor: 'middle', tone: 'bad' });
     }
-    // Deck header: a multiple of 4 or not.
+    // The deck header: a multiple of 4.
     const h = app.$("[data-region='deck0'] header")?.getBoundingClientRect();
     if (h) {
       const ok = near(h.height / 4, Math.round(h.height / 4));
-      d.measure(h.right + 6, h.top, h.right + 6, h.bottom, { c: ok ? C.ok : C.bad, label: `header ${r1(h.height)}px` });
+      d.measure(h.right + 8, h.top, h.right + 8, h.bottom, { label: `${r1(h.height)}`, tone: ok ? 'ok' : 'bad' });
     }
-    // Sidebar items against the track list's rows (its header and rows).
-    const items = app.$$("[data-region='sidebar'] .item, [data-region='sidebar'] .add").map((e) => e.getBoundingClientRect());
+    // Sidebar items against the track rows: one verdict for all of them.
+    const items = app.$$("[data-region='sidebar'] .item").map((e) => e.getBoundingClientRect()).slice(0, 6);
     const tops = [app.$('section.library .row.head'), ...app.rows()].map((e) => e?.getBoundingClientRect().top).filter((v) => v != null);
     const main = app.$('section.library .main')?.getBoundingClientRect();
-    for (const r of items.slice(0, 6)) {
-      if (!main || r.top > main.bottom) continue;
-      const nearest = tops.reduce((a, b) => (Math.abs(b - r.top) < Math.abs(a - r.top) ? b : a), Infinity);
-      const c = near(nearest, r.top) ? C.ok : C.bad;
-      d.line(r.left, r.top, main.left + 420, r.top, { c, dash: '3 3' });
-      d.text(main.left + 424, r.top, near(nearest, r.top) ? 'meets a row' : `${r1(r.top - nearest)}px off the row`, { c });
+    if (items.length && main && tops.length) {
+      const worst = items.reduce((w, r) => {
+        const n = tops.reduce((a, b) => (Math.abs(b - r.top) < Math.abs(a - r.top) ? b : a), Infinity);
+        return Math.abs(r.top - n) > Math.abs(w) ? r.top - n : w;
+      }, 0);
+      for (const r of items) d.line(r.left, r.top, main.left + 160, r.top, { dash: '2 3', opacity: 0.7 });
+      d.text(main.left + 166, items[0].top, Math.abs(worst) < 0.5 ? 'sidebar items on the row lines' : `sidebar items ${miss(worst, 0)} off the rows`, { tone: Math.abs(worst) < 0.5 ? 'ok' : 'bad' });
     }
-    // Lane name against the zoom control's centre line.
+    // The lane name against the zoom control's centre line.
     const who = app.$('.waves .lane .who')?.getBoundingClientRect();
     const zoom = app.$('.waves .zoom')?.getBoundingClientRect();
     if (who && zoom) {
       const y = zoom.top + zoom.height / 2;
       const wy = who.top + who.height / 2;
-      const c = near(wy, y) ? C.ok : C.bad;
-      d.hguide(y, { c, label: `lane name's centre ${off(wy, y)} from the zoom control's`, lx: who.right + 40 });
-      d.box(who, { c });
-      d.box(zoom, { c });
+      const ok = near(wy, y);
+      d.hguide(y, { x1: who.right + 6, x2: zoom.left - 6, dash: '2 3' });
+      d.text(who.right + 12, y, ok ? 'lane name centred on the zoom control' : `lane name ${miss(wy, y)} off the zoom control's centre`, { tone: ok ? 'ok' : 'bad' });
     }
   },
 };

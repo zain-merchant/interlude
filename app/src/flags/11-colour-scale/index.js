@@ -21,9 +21,9 @@ export default {
   },
 };
 
-/** Show me: labels the text of the controls this touches with the colour level each is drawn at. */
+/** Show me: deck A's nudge arrows beside the other arrow buttons, each pair tagged with its text level. */
 export const show = {
-  note: "Text labelled with its colour level: compare deck A's nudge ‹ › with the loop and jump ‹ ›. Off, nudge is fg-3; on, fg-2 like the others.",
+  note: "Deck A's nudge ‹ › now share the other arrows' text level (each pair is tagged); off, nudge is a step dimmer.",
   async setup(app, ctx) {
     if (!app.loaded(0)) await app.loadTrack(0);
     await app.tab(0, 'Loop');
@@ -36,26 +36,25 @@ export const show = {
     });
     probe.remove();
   },
-  target: (app) => [app.$("[data-region='deck0'] .pitch .nudge"), app.$("[data-region='deck0'] .modes"), app.$('section.library .bar .count')],
+  target: (app) => [app.$("[data-region='deck0'] .pitch .nudge"), app.$("[data-region='deck0'] .perf"), app.$("[data-region='deck0'] .transport .jumps")],
   aid(d, app, ctx) {
     const level = (el) => {
       const c = getComputedStyle(el).color;
-      return ctx.levels.find(([, v]) => v === c)?.[0] ?? c.replace(/\s/g, '');
+      return ctx.levels.find(([, v]) => v === c)?.[0] ?? 'other';
     };
     const D = "[data-region='deck0']";
-    const els = [
-      ...app.$$(`${D} .pitch .nudge button`),
-      ...app.$$(`${D} .perf .tb.ar`),
-      ...app.$$(`${D} .transport .jumps button`),
-      ...app.$$(`${D} .modes button`),
-      app.$('section.library .bar .count'),
-      app.$('section.library .bar .count .pending'),
-    ].filter(Boolean);
-    els.forEach((el, i) => {
-      const r = el.getBoundingClientRect();
-      if (!r.width) return;
-      d.text(r.x + r.width / 2, i % 2 ? r.bottom + 9 : r.y - 9, level(el), { anchor: 'middle' });
-    });
-    d.legend(['text levels', ...ctx.levels.map(([t, c]) => `${t.padEnd(5)} ${c}`)], { x: 16, y: 14 });
+    const pairs = [
+      [app.$$(`${D} .pitch .nudge button`), 'nudge'],
+      [app.$$(`${D} .perf .tb.ar`), 'loop'],
+      [app.$$(`${D} .transport .jumps button`), 'jump'],
+    ];
+    const ref = level(pairs[1][0][0] ?? document.body);
+    for (const [els, name] of pairs) {
+      if (!els.length) continue;
+      const rs = els.map((e) => e.getBoundingClientRect());
+      const l = level(els[0]);
+      const x = (Math.min(...rs.map((r) => r.left)) + Math.max(...rs.map((r) => r.right))) / 2;
+      d.text(x, Math.max(...rs.map((r) => r.bottom)) + 14, `${name}: ${l}`, { anchor: 'middle', tone: l === ref ? 'ok' : 'bad' });
+    }
   },
 };

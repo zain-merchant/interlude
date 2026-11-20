@@ -20,9 +20,9 @@ export default {
   },
 };
 
-/** Show me: two decks whose keys mix, and the library keys that mix with them. */
+/** Show me: two decks whose keys mix; the marks are the change, tagged once each. */
 export const show = {
-  note: "Two decks whose keys mix: both keys and the library keys that mix are underlined and labelled. Off, nothing marks them.",
+  note: "The two decks' keys mix, so both are underlined, and so are the library keys that mix with the playing deck.",
   async setup(app) {
     if (!app.loaded(0)) await app.loadTrack(0);
     // With the flag on, library keys that mix are marked; load one on B.
@@ -33,10 +33,12 @@ export const show = {
   },
   target: (app) => [app.$("[data-region='deck0'] .bpm .unit .key"), app.$("[data-region='deck1'] .bpm .unit .key"), ...app.$$("[data-region='tracks'] .row .k.mix").slice(0, 4)],
   aid(d, app) {
-    for (const k of app.$$("[data-region='deck0'] .bpm .unit .key, [data-region='deck1'] .bpm .unit .key, [data-region='tracks'] .row .k.mix").slice(0, 24)) {
-      const r = k.getBoundingClientRect();
-      if (r.bottom < 0 || r.top > d.vh) continue;
-      d.text(r.right + 4, r.top + r.height / 2, k.classList.contains('mix') ? 'mixes' : 'no match', { c: k.classList.contains('mix') ? d.C.ok : d.C.aid });
+    for (const n of [0, 1]) {
+      const k = app.$(`[data-region='deck${n}'] .bpm .unit .key`)?.getBoundingClientRect();
+      if (k) d.text(k.x + k.width / 2, k.bottom + 14, 'mixes', { anchor: 'middle', tone: 'ok' });
     }
+    // The library's marked keys: one tag by the first in view.
+    const first = app.$$("[data-region='tracks'] .row .k.mix").map((k) => k.getBoundingClientRect()).find((r) => r.top > 0 && r.bottom < d.vh);
+    if (first) d.text(first.right + 8, first.top + first.height / 2, 'mixes with the playing deck', { tone: 'ok' });
   },
 };

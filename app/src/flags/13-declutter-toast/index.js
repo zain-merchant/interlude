@@ -27,9 +27,9 @@ export default {
   },
 };
 
-/** Show me: loads the longest title in view so the toast is wide, and ghosts where it would sit with the flag off. */
+/** Show me: loads the longest title in view so the toast is wide, and ghosts where it sits with the flag off. */
 export const show = {
-  note: "The longest title loaded, so the toast is up: dashed blue is where it sits with the flag off (half width, over the titles).",
+  note: 'The longest title loaded, so the toast is wide; dashed is where it sits with the flag off, over the titles.',
   async setup(app, ctx) {
     await show.replay(app, ctx);
   },
@@ -38,16 +38,18 @@ export const show = {
     const longest = rows.reduce((a, r) => ((r.querySelector('.t')?.textContent.length ?? 0) > (a?.querySelector('.t')?.textContent.length ?? 0) ? r : a), null);
     await app.loadTrack(0, app.rows().indexOf(longest));
     const toast = await app.until(() => app.$('.toastbox .toast'), 2000, 'the toast');
-    ctx.off = app.rectsWithout('declutter-toast', [toast])[0];
+    await app.wait(400);
+    ctx.b = app.both('declutter-toast', [toast]);
   },
   target: '.toastbox .toast',
   aid(d, app, ctx) {
     const t = app.$('.toastbox .toast');
-    if (!t) return;
-    d.box(ctx.off, { c: d.C.ghost, dash: '3 3', label: 'flag off' });
+    if (!t || !ctx.b) return;
+    const other = app.other('declutter-toast', ctx.b)[0];
     const r = t.getBoundingClientRect();
-    d.text(r.x, r.y - 9, app.isOn('declutter-toast') ? 'flag on' : 'flag off');
-    const title = app.$("button.sort[aria-label^='Sort by title']")?.getBoundingClientRect();
-    if (title) d.box(new DOMRect(title.x, title.y, title.width, (app.$("[data-region='tracks']")?.getBoundingClientRect().bottom ?? title.bottom) - title.y), { c: d.C.aid, dash: '1 4', label: 'titles column' });
+    // Just the outline and a word: it moves and resizes, so no distances.
+    d.box(other, { c: d.C.ghost, dash: '4 3', w: 1.25 });
+    d.text(other.x, other.y - 13, app.isOn('declutter-toast') ? 'flag off' : 'flag on');
+    d.protect(r);
   },
 };

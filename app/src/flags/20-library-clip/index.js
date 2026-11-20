@@ -20,10 +20,10 @@ export default {
   notes: 'Rows run to the library card\'s bottom edge and are cut there, by the card\'s own corner, instead of by a rounded box 8px inside it.',
 };
 
-/** Show me: selects a row that straddles the bottom edge, with the card's and the list's edges drawn. */
+/** Show me: a selected row straddles the list's bottom; a loupe on the corner, with the old clip dashed. */
 export const show = {
-  note: "A selected row straddles the list's bottom. On, it's cut by the card's own edge and corner; off, by a rounded box 8px inside it (see the loupe).",
-  async setup(app) {
+  note: "A selected row straddles the list's bottom: it's cut by the card's own edge and corner; dashed is the old clip, 8px inside.",
+  async setup(app, ctx) {
     const list = app.$("[data-region='tracks']");
     // Select a row, then scroll so it straddles the list's bottom edge.
     const rows = app.rows();
@@ -34,15 +34,19 @@ export const show = {
     const rr = app.$("[data-region='tracks'] .row.sel").getBoundingClientRect();
     list.scrollTop += rr.top + rr.height / 2 - lr.bottom;
     await app.wait(60);
+    // The list's own clip with the flag off: its box and corner.
+    ctx.off = app.without('library-clip', () => ({ r: DOMRect.fromRect(list.getBoundingClientRect()), rad: parseFloat(getComputedStyle(list).borderBottomRightRadius) || 0 }));
   },
   target: "[data-region='tracks'] .row.sel",
-  aid(d, app) {
+  aid(d, app, ctx) {
     const card = app.$('section.library')?.getBoundingClientRect();
-    const list = app.$("[data-region='tracks']")?.getBoundingClientRect();
-    if (card) d.box(card, { c: d.C.aid, w: 1, label: 'library card', below: false });
-    if (list) d.box(list, { c: d.C.ghost, dash: '3 3' });
-    if (list) d.text(list.right - 4, list.bottom - 10, 'list clips here', { c: d.C.ghost, anchor: 'end' });
-    const sel = app.$("[data-region='tracks'] .row.sel")?.getBoundingClientRect();
-    if (card && sel) d.loupe('foot', { x: card.right - 70, y: card.bottom - 40 }, { zoom: 4, size: { w: 280, h: 180 }, at: { x: 16, y: 14 }, caption: 'bottom right corner, 4×' });
+    if (!card) return;
+    const l = d.loupe('foot', { x: card.right - 66, y: card.bottom - 44 }, { zoom: 4, size: { w: 280, h: 200 }, near: new DOMRect(card.right - 66, card.bottom - 44, 70, 50), caption: 'bottom right, 4×' });
+    const off = ctx.off;
+    if (off && app.isOn('library-clip')) {
+      const a = l.map(off.r.right, off.r.bottom);
+      const rad = off.rad * l.zoom;
+      d.clip(l.rect, () => d.path(`M${a.x} ${l.rect.y}V${a.y - rad}A${rad} ${rad} 0 0 1 ${a.x - rad} ${a.y}H${l.rect.x}`, { c: d.C.ghost, dash: '5 4', w: 1.5 }));
+    }
   },
 };

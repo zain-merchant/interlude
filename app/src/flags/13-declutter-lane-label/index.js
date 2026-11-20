@@ -16,7 +16,7 @@ export default {
 
 /** Show me: a very long title on deck A's lane, with the play head marked. */
 export const show = {
-  note: "Worst-case data on, a very long title on deck A; the line is the play head. On, the name stops 16px before it; off, it runs across.",
+  note: "A very long title on deck A's lane stops short of the play head (off, it runs across).",
   needs: { 'stress-data': { set: 'worst' } },
   async setup(app) {
     await app.loadTrack(0, 'Strings of Life');
@@ -28,10 +28,11 @@ export const show = {
     const who = app.$('.waves .lane .who');
     if (!lane || !who) return;
     const x = lane.left + lane.width / 2;
-    d.vguide(x, { y1: lane.top, y2: lane.bottom, c: d.C.aid, label: 'play head', ly: lane.bottom - 10 });
     const r = app.textRect(who) ?? who.getBoundingClientRect();
     const end = Math.min(r.right, who.getBoundingClientRect().right);
     const gap = x - end;
-    d.measure(end, r.bottom + 4, x, r.bottom + 4, { c: gap > 0 ? d.C.ok : d.C.bad, label: gap > 0 ? `${Math.round(gap)}px clear` : `${Math.round(-gap)}px over` });
+    const y = r.top + r.height / 2;
+    if (gap > 0) d.measure(end, y, x, y, { label: `${Math.round(gap)}px clear`, side: 'below', tone: 'ok' });
+    else d.text(x + 8, y, `${Math.round(-gap)}px over the play head`, { tone: 'bad' });
   },
 };

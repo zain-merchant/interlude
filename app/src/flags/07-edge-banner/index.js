@@ -16,23 +16,24 @@ export default {
   notes: 'A lost audio device, a restored library or an update shows its banner over the top of the window, as designed, instead of as an extra row that shrinks the decks.',
 };
 
-/** Show me: disconnects the simulated audio device, which raises the banner, and ghosts the decks. */
+/** Show me: unplugs the simulated audio device, which raises the banner, and ghosts the decks with the flag off. */
 export const show = {
-  note: "The simulated audio device is unplugged and its banner is up: ghosts show the decks and library held still. Toggle: off, the decks lose 49px.",
+  note: 'The audio device is unplugged and its banner is up; dashed is where the decks would be with the flag off.',
   async setup(app, ctx) {
-    ctx.parts = () => [app.deck(0), app.$('.mixer'), app.$('section.library')];
-    ctx.names = ['deck A', 'mixer', 'library'];
-    ctx.rest = app.snap(ctx.parts());
-    // Where they stand with the flag off, too: the ghost compares like with like.
-    ctx.restOff = app.without('edge-banner', () => app.snap(ctx.parts()));
     app.mock.lose();
     await app.until(() => app.$('.banner'), 3000, 'the banner');
+    await app.wait(100);
+    ctx.parts = () => [app.deck(0), app.$('.mixer'), app.deck(1)];
+    ctx.b = app.both('edge-banner', ctx.parts());
   },
   cleanup(app) {
     app.mock?.restore();
   },
   target: '.banner',
   aid(d, app, ctx) {
-    ctx.parts().forEach((el, i) => el && d.ghost((app.isOn('edge-banner') ? ctx.rest : ctx.restOff)[i], el.getBoundingClientRect(), { label: ctx.names[i] }));
+    const other = app.other('edge-banner', ctx.b);
+    const off = app.isOn('edge-banner') ? 'off:' : 'on:';
+    // One label, on deck A: the three move alike.
+    ctx.parts().forEach((el, i) => el && d.ghost(other[i], el.getBoundingClientRect(), { label: i ? false : `${off} decks`, side: 'below' }));
   },
 };

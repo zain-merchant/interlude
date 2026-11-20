@@ -251,7 +251,8 @@
 <svelte:head>
   {@html `<style data-flag-dials>
 .dialkit-root { zoom: ${unzoom}; }
-.dialkit-root .dialkit-folder .dialkit-folder .dialkit-folder-title { white-space: normal; overflow: visible; text-overflow: clip; line-height: 1.3; }
+.dialkit-root .dialkit-folder-title-row { min-width: 0; }
+.dialkit-root .dialkit-folder .dialkit-folder .dialkit-folder-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dialkit-root .dialkit-folder-title::after { margin-left: 8px; color: rgb(255 255 255 / 0.4); font-weight: 400; }
 .dialkit-root .dialkit-folder-title::before { display: inline-block; width: 6px; height: 6px; margin: 0 6px 1px 0; border-radius: 3px; vertical-align: middle; }
 ${marks}</style>`}

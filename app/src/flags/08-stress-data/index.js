@@ -32,12 +32,11 @@ export default {
 
 /** Show me: the worst-case library (the page reloads to swap the data in). */
 export const show = {
-  note: "Reloaded with the worst-case library: long, RTL and emoji titles, odd BPMs, a 2-hour set. Browse and load a few; other sets under More, then Again.",
+  note: 'Reloaded with the worst-case library: browse and load a few. Other sets are under Data, then Again.',
   reload: true,
-  target: (app) => [app.$("[data-region='tracks']"), app.$('section.library .bar .count')],
+  target: (app) => [app.$('section.library .bar .count')],
   aid(d, app) {
-    const count = app.$('section.library .bar .count');
-    const r = count?.getBoundingClientRect();
-    if (r) d.text(r.x, r.bottom + 10, `set: ${document.documentElement.getAttribute('data-flag-stress-data-set')}`);
+    const r = app.$('section.library .bar .count')?.getBoundingClientRect();
+    if (r) d.text(r.x, r.bottom + 14, `data: ${document.documentElement.getAttribute('data-flag-stress-data-set')}`);
   },
 };

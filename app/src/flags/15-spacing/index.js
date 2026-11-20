@@ -20,20 +20,19 @@ export default {
   notes: 'Mixer sides pad 16 like every panel; library cells, search, menus, tooltips, toast, banner, Settings rows and the two dialogs move onto 4/8/12/16 (24 for dialogs).',
 };
 
-/** Show me: paddings drawn as measured bands with their sizes: the mixer, the search, the library cells, the toast. */
+/** Show me: the paddings the flag changes, shaded with their sizes. */
 export const show = {
-  note: "Paddings drawn with their sizes: mixer sides, search, library cells, toast. Toggle and read the numbers (12 to 16, 10 to 8, 6 to 8, 14/6 to 12/4).",
+  note: 'The changed paddings are shaded with their sizes: mixer sides, search, library cells and toast; flip the flag to compare.',
   async setup(app) {
     await app.loadTrack(0, 2);
   },
   target: (app) => [app.$('.mixer'), app.$('section.library .search'), app.rows()[0], app.$('.toastbox .toast')],
   aid(d, app) {
-    d.padding(app.$('.mixer'), { sides: 'lr', label: 'mixer' });
-    d.padding(app.$('section.library .search'), { sides: 'lr', label: 'search' });
+    d.padding(app.$('.mixer'), { sides: 'lr' });
+    d.padding(app.$('section.library .search'), { sides: 'lr' });
     const row = app.rows()[0];
-    const cells = row ? [...row.children].filter((c) => c.offsetWidth > 30).slice(0, 2) : [];
-    cells.forEach((c, i) => d.padding(c, { sides: 'lr', label: i ? '' : 'library cells' }));
-    const toast = app.$('.toastbox .toast');
-    if (toast) d.padding(toast, { sides: 'tlr', label: 'toast' });
+    const cell = row ? [...row.children].find((c) => c.offsetWidth > 30) : null;
+    d.padding(cell, { sides: 'l' });
+    d.padding(app.$('.toastbox .toast'), { sides: 'tl' });
   },
 };

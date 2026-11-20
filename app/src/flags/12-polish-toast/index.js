@@ -15,9 +15,9 @@ export default {
   },
 };
 
-/** Show me: loads a track, which brings up the "Loaded … Undo" toast; Replay loads another. */
+/** Show me: loads a track so the toast comes up (Replay loads another). */
 export const show = {
-  note: "A load brought up the toast: watch it arrive. Replay with the flag off and on: on, it rises and fades in; off, it blinks on.",
+  note: 'A load brought up the toast: press Replay with the flag off and on (on, it rises and fades in).',
   async setup(app) {
     await app.loadTrack(0, 3);
     await app.until(() => app.$('.toastbox .toast'), 2000, 'the toast');

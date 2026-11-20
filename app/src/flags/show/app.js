@@ -303,6 +303,24 @@ export function rectsWithout(id, els) {
   return out;
 }
 
+/**
+ * Rects of `els` with flag `id` on and with it off, measured now (the flag
+ * is put back at once; nothing is painted in between). A show takes these
+ * once its change is on screen, and its aid ghosts the other one.
+ */
+export function both(id, els) {
+  const was = flags.on[id];
+  const at = () => els.map((e) => (e ? DOMRect.fromRect(e.getBoundingClientRect()) : null));
+  setFlag(id, true);
+  const on = at();
+  setFlag(id, false);
+  const off = at();
+  setFlag(id, was);
+  return { on, off };
+}
+/** Of both(id, …)'s rects, the ones for the flag the other way from now. */
+export const other = (id, b) => (flags.on[id] ? b.off : b.on);
+
 /** The box of an element's own text (not its padding), or null. */
 export function textRect(e) {
   if (!e) return null;
@@ -325,7 +343,7 @@ export const FLAG_IDS = FLAGS.map((f) => f.id);
 /** Everything above, as the `app` a show's setup(app) and aid(d, app) get. */
 export const kit = {
   $, $$, until, wait, click, dblclick, hover, unhover, key, type, deck, rows, loaded, search, clearSearch, selectRow, loadTrack,
-  playButton, play, pause, tab, zoom, forceStates, hideTips, tooltip, openSettings, openImport, openReport, reset, setFlag, setSetting, isOn, without, rectsWithout, textRect, snap,
+  playButton, play, pause, tab, zoom, forceStates, hideTips, tooltip, openSettings, openImport, openReport, reset, setFlag, setSetting, isOn, without, rectsWithout, both, other, textRect, snap,
   get mock() {
     return globalThis.__mockAudio;
   },
