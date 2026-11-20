@@ -2372,6 +2372,7 @@ addEventListener('pointerdown', (e) => {
   Object.assign(needle, { on: true, r, born: now });
   Object.assign(ripple, { on: true, r, born: now });
   Object.assign(quiet, { x: p.x, y: p.y, on: true });
+  dispatchEvent(new CustomEvent('record:needle'));   // sfx.js: the needle's sound
   wake();
 }, { passive: true });
 
