@@ -195,10 +195,14 @@ const server = http.createServer((req, res) => {
 await new Promise((r) => server.listen(0, '127.0.0.1', r));
 const base = `http://127.0.0.1:${server.address().port}/demo/hero.html`;
 const MAC_CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
-const browser = await chromium.launch({ executablePath: process.env.CHROMIUM || (fs.existsSync(MAC_CHROME) ? MAC_CHROME : undefined) });
+// A recording part draws the page at 2x for real (a 2x window), not
+// emulated: a 2x capture of an emulated 2x page is drawn again at that scale
+// for each capture, two to three times slower, for the same picture.
+const NATIVE = !!args.part;
+const browser = await chromium.launch({ executablePath: process.env.CHROMIUM || (fs.existsSync(MAC_CHROME) ? MAC_CHROME : undefined), args: NATIVE ? [`--force-device-scale-factor=${SCALE}`, `--window-size=${W},${920 + 87}`] : [] });
 
 async function open(mode, plan, scale = SCALE) {
-  const ctx = await browser.newContext({ viewport: { width: W, height: 920 }, deviceScaleFactor: scale });
+  const ctx = await browser.newContext(NATIVE && scale === SCALE ? { viewport: null } : { viewport: { width: W, height: 920 }, deviceScaleFactor: scale });
   await ctx.addInitScript(install(plan));
   const page = await ctx.newPage();
   const errors = [];
@@ -371,7 +375,9 @@ function encoder(file, codecArgs) {
   const done = new Promise((res, rej) => ff.on('close', (c) => (c ? rej(new Error(`ffmpeg exited ${c} for ${file}`)) : res())));
   return { write: (buf) => new Promise((r) => (ff.stdin.write(buf) ? r() : ff.stdin.once('drain', r))), end: () => (ff.stdin.end(), done) };
 }
-const MASTER = ['-c:v', 'libx264rgb', '-preset', 'veryfast', '-crf', '0', '-g', '300'];
+// (Lean: no lookahead or B-frames and two threads, so several recording at
+// once don't hold gigabytes of 2880 x 1800 frames between them.)
+const MASTER = ['-c:v', 'libx264rgb', '-preset', 'veryfast', '-crf', '0', '-g', '300', '-bf', '0', '-rc-lookahead', '0', '-threads', '2'];
 const layersOf = (mode) => (mode === 'mouse' ? [['appc', 'app+cursor'], ['app', 'app'], ['ctl', 'ctl']] : [['app', 'app'], ['ctl', 'ctl']]);
 const masterOf = (mode, k, layer) => path.join(masters, `${mode}-${k}.${layer}.mkv`);
 
@@ -385,7 +391,9 @@ async function recordPart(mode, a, b) {
   await page.evaluate(() => { const s = document.createElement('style'); s.id = 'rec-hide'; document.head.append(s); });
   const hide = (css) => page.evaluate((css) => (document.getElementById('rec-hide').textContent = css), css);
   // (At the page's own pixel ratio, within the viewport: no re-layout per capture.)
-  const shot = async (clip, k = 1) => (await cdp.send('Page.captureScreenshot', { format: 'png', optimizeForSpeed: true, clip: { ...clip, scale: SCALE * k } })).data;
+  const shot = async (clip, k = 1) => (await cdp.send('Page.captureScreenshot', { format: 'png', optimizeForSpeed: true, clip: { ...clip, scale: k } })).data;
+  const vp = await page.evaluate(() => [innerWidth, innerHeight, devicePixelRatio]);
+  if (vp.join() !== `${W},920,${SCALE}`) throw new Error(`the window came out ${vp.join()}, not ${W} x 920 at ${SCALE}x`);
   // To the part's first step, without capturing.
   await run.until(a);
   // The controller's box at rest, with room for its shadow, on whole device pixels.
@@ -427,10 +435,19 @@ async function recordPart(mode, a, b) {
   for (;;) {
     const now = await page.evaluate(() => performance.now());
     while (k < b && now >= bounds[k + 1] - 0.5) {
-      if (enc) await Promise.all(Object.values(enc).map((e) => e.end()));
+      if (enc) {
+        await Promise.all(Object.values(enc).map((e) => e.end()));
+        // (Done: kept, so a recording stopped partway can carry on from here.)
+        fs.writeFileSync(path.join(WORK, `timeline-${mode}-${k}.json`), JSON.stringify(timelines[k]));
+      }
       enc = null;
       k++;
       f = 0;
+    }
+    // Recorded already, by an earlier run: on to the next step without capturing.
+    if (k < b && !enc && fs.existsSync(path.join(WORK, `timeline-${mode}-${k}.json`))) {
+      await run.until(k + 1);
+      continue;
     }
     if (k >= b) {
       // The next boundary too (the next part's first frame, or the next
@@ -472,7 +489,6 @@ async function recordPart(mode, a, b) {
     await run.step();
   }
   if (run.errors.length) console.warn(`${mode}: page errors: ${run.errors.join('; ')}`);
-  for (const [kk, t] of Object.entries(timelines)) fs.writeFileSync(path.join(WORK, `timeline-${mode}-${kk}.json`), JSON.stringify(t));
   fs.writeFileSync(path.join(WORK, `part-${mode}-${a}.json`), JSON.stringify(info));
   await run.ctx.close();
 }
@@ -554,7 +570,9 @@ if (PHASE === 'all' || PHASE === 'encode') {
   log(`encoding ${jobs.length} files`);
   let done = 0;
   await pool(jobs.map((j) => async () => { await j(); if (++done % 20 === 0) log(`  ${done}/${jobs.length}`); }), Math.max(2, Math.floor(os.cpus().length / 3)));
-  await ffmpeg(['-i', path.join(WORK, 'mask.png'), '-vf', 'alphaextract', path.join(OUT, 'controller-mask.png')]);
+  // (White where the controller is, as see-through as it is there: its shadow
+  // shows through at its own strength. An alpha mask, which every browser takes.)
+  await ffmpeg(['-i', path.join(WORK, 'mask.png'), '-vf', 'format=rgba,lutrgb=r=255:g=255:b=255', path.join(OUT, 'controller-mask.png')]);
 
   // Which boundaries look different between the hands (beyond the meters'
   // run-to-run flicker): the player blends there rather than cutting when it
