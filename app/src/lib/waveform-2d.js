@@ -177,7 +177,7 @@ export class Waveform2D {
       ctx.fillRect(cx - 1, 0, 2, h);
       ctx.globalAlpha = 1;
       // #50 (UI audit flag): overview-cues puts the lane's numbered chip at the top of each overview marker.
-      if (view.cueChips) return this.chip(cx, w, i + 1, c.hot[i % c.hot.length], c.ink);
+      if (view.cueChips && view.mode === 'overview') return this.chip(cx, w, i + 1, c.hot[i % c.hot.length], c.ink);
       ctx.beginPath();
       ctx.moveTo(cx - 4, 0);
       ctx.lineTo(cx + 4, 0);

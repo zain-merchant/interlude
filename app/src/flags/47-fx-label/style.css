@@ -11,3 +11,15 @@
   color: var(--fg-3);
   white-space: nowrap;
 }
+
+/* Where the mode row is narrow (windows under about 1,300px wide) the
+   caption would crowd the beat length next to it, so it shows only from
+   400px; the dial's tooltip names it either way. */
+:root[data-flag-fx-label] [data-region^='deck'] .mp {
+  container-type: inline-size;
+}
+@container (max-width: 399px) {
+  :root[data-flag-fx-label] [data-region^='deck'] .fx .knob::after {
+    content: none;
+  }
+}

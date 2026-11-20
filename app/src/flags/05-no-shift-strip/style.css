@@ -27,7 +27,7 @@
      separators go (the columns do their job). */
   :root[data-flag-no-shift-strip] [data-region^='deck'] .fx {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(min-content, 1fr));
     align-items: center;
     justify-items: center;
     gap: 8px;
@@ -107,5 +107,8 @@
 @container (max-width: 95px) {
   :root[data-flag-no-shift-strip] [data-region^='deck'] .transport .jumps small {
     display: none;
+  }
+  :root[data-flag-no-shift-strip] [data-region^='deck'] .transport .jumps span {
+    font-size: var(--t-xs);
   }
 }

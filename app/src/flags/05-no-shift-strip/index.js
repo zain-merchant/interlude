@@ -13,12 +13,23 @@
 // control never moves the one next to it. Hot cue and FX slots apply where
 // the deck has room (320px and up); in the narrowest decks they'd overflow,
 // so those keep their old sizing (see stress-narrow-strip for that width).
+//
+// Also, from the critique panel's build list (all with the room for them,
+// so 320px and up, except the unit):
+// - D4: the beat-jump size names its unit, "4" over "beats" (Deck.svelte
+//   renders the unit only with this flag; it hides below 96px).
+// - D11: the FX row sits on the deck's four columns (effect, length,
+//   level, on), one item centred per column, no separators.
+// - D20: on the Loop tab, ÷2 and ×2 sit right beside the size they change
+//   and the jump arrows take the outer quarter columns (Performance.svelte
+//   puts them in that order with this flag).
+// - b-K51: an empty hot cue's "Set" is centred in its slot like a time.
 export default {
   id: 'no-shift-strip',
   n: 5,
   title: 'Cues, loop, FX and beat jump hold their places',
   group: 'Stability',
-  notes: 'Hot cue times, loop and beat-jump sizes, the effect name and On/Off sit in fixed slots, so the controls beside them stay put.',
+  notes: 'Hot cue times, loop and beat-jump sizes, the effect name and On/Off sit in fixed slots, so the controls beside them stay put. The jump size says "beats"; FX sits on the four columns; Loop puts ÷2 and ×2 beside the size.',
 };
 
 /** Show me: shrinks deck A's loop from 4 beats to 1/4; flipping shows its arrows sliding (before) and holding (after). */

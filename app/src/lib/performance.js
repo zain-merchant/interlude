@@ -4,12 +4,15 @@
 
 import { engine, tracks, control } from './engine.svelte.js';
 import { announce } from './announce.svelte.js';
+import { flag } from '../flags/registry.svelte.js';
 import { deckSettings, setDeckSetting, saveSlip } from './decksettings.svelte.js';
 
 /** Hot cues the deck shows as pads. The engine and the FLX4 have eight. */
 export const PADS = 4;
 
 const deckName = (deck) => 'AB'[deck];
+// #88 (UI audit flag): deck-names says "Left deck" / "Right deck" ("Deck A" otherwise).
+const Deck = (deck) => (flag('deck-names') ? (deck === 0 ? 'Left deck' : 'Right deck') : `Deck ${deckName(deck)}`);
 /** True when the deck's track has a beatgrid, which loops and jumps need. */
 export const hasGrid = (deck) => !!tracks[deck] && engine.decks[deck].bpm > 0;
 
@@ -28,14 +31,14 @@ export function hotCue(deck, index, down) {
 export function clearHotCue(deck, index) {
   if (!tracks[deck] || engine.decks[deck].hotCues?.[index] == null) return;
   control({ type: 'hotCueClear', deck, index });
-  announce(`Deck ${deckName(deck)} hot cue ${index + 1} cleared`);
+  announce(`${Deck(deck)} hot cue ${index + 1} cleared`);
 }
 
 export function loopToggle(deck) {
   if (!hasGrid(deck)) return;
   const d = engine.decks[deck];
   control({ type: 'loopToggle', deck });
-  announce(d.looping ? `Deck ${deckName(deck)} loop off` : `Deck ${deckName(deck)} looping ${beatsLabel(d.loopBeats)} beats`);
+  announce(d.looping ? `${Deck(deck)} loop off` : `${Deck(deck)} looping ${beatsLabel(d.loopBeats)} beats`);
 }
 
 /** Halves (0.5) or doubles (2) the loop size and the loop playing. */
@@ -59,7 +62,7 @@ export function setSlip(deck, on) {
   // Shown at once; the engine's next report agrees.
   engine.decks[deck].slip = on;
   saveSlip(deck, on);
-  announce(`Deck ${deckName(deck)} slip ${on ? 'on' : 'off'}`);
+  announce(`${Deck(deck)} slip ${on ? 'on' : 'off'}`);
 }
 
 /** Slip mode on or off. */

@@ -282,7 +282,7 @@
       role: 'button',
       tabindex: 0,
       onclick: swapTimes,
-      onkeydown: (e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), swapTimes()),
+      onkeydown: (e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), e.stopPropagation(), swapTimes()),
     };
   });
   const timesTip = () =>

@@ -6,8 +6,10 @@
 //   readout 7px.
 // - Turning slip on added a row to the pitch column: the fader lost 32px
 //   of travel and its cap jumped, and the nudge buttons moved down.
-// The readout now keeps a box for "−00.00%" with the number right-aligned
-// and the range line reserved, and slip shares the key lock's row, so the
+// The readout now keeps a box exactly as wide as "−00.00%" (3.9em),
+// centred on the fader's column, with the number right-aligned in it and
+// the range line reserved (a wider right-aligned box sat the % 7-8px off
+// its fader: build list D8), and slip shares the key lock's row, so the
 // fader never changes length.
 export default {
   id: 'no-shift-pitch',
