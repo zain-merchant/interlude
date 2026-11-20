@@ -737,7 +737,7 @@
             oncontextmenu={(e) => rowMenu(e, t, index)}
             use:tip={() => (flag('library-polish') && index === selected && !t.missing ? `Double-click to load, or ${keyLabel('deck.0.load')} / ${keyLabel('deck.1.load')}` : '')}>
             <!-- #90 (UI audit flag): library-polish: the selected row's tip says how to load it (c-K83). -->
-            <span class="ld">{#each decks as d}<b class:b={d === 1} aria-hidden="true"></b>{/each}</span>
+            <span class="ld">{#each decks as d}{#if flag('deck-letters')}<i class="dl" class:b={d === 1} aria-hidden="true">{'AB'[d]}</i>{:else}<b class:b={d === 1} aria-hidden="true"></b>{/if}{/each}</span>
             <span class="t">{#if t.missing}<span class="k" use:tip={() => `File not found: ${t.path}`}>{t.title}</span><span class="sr">, file not found</span>{:else if markOn}{#each marks(t.title) as m}{#if m.hit}<mark>{m.s}</mark>{:else}{m.s}{/if}{/each}{:else}{t.title}{/if}</span>
             <span>{#if markOn}{#each marks(t.artist) as m}{#if m.hit}<mark>{m.s}</mark>{:else}{m.s}{/if}{/each}{:else}{t.artist}{/if}</span>
             <span class="n num" class:none={a && !a.bpm}>{a ? bpmText(a) || NONE : ''}</span>
@@ -1085,6 +1085,16 @@
   }
   .ld b.b {
     background: var(--deck-b);
+  }
+  /* deck-letters (UI audit flag, decks builder's; against the doc): the
+     deck's letter in place of the bar. Only rendered while that flag is on. */
+  .ld .dl {
+    font: 500 var(--t-xs) / 1 var(--font);
+    font-style: normal;
+    color: var(--deck-a);
+  }
+  .ld .dl.b {
+    color: var(--deck-b);
   }
   .empty {
     position: absolute;
