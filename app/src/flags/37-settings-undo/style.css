@@ -1,0 +1,8 @@
+/* #37: Reset all at the foot of the Keyboard page, a quiet ghost button
+   under a rule. */
+:root[data-flag-settings-undo] .settings .reset-all {
+  max-width: 1080px;
+  margin-top: 24px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
