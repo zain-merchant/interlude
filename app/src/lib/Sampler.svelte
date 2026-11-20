@@ -80,14 +80,14 @@
         use:dropTarget={{ ondrop: (t) => put(i, t) }} use:tip={() => slotTip(i)}>
         <span class="n num">{i + 1}</span>
         <!-- #67 (UI audit flag): the first empty slot says what it's for. -->
-        {#if flag('sampler-strip') && !s && !sampler.loading[i] && i === firstEmpty}<span class="name hint">Drop<span class="more">{' a track'}</span></span>
+        {#if flag('sampler-strip') && !s && !sampler.loading[i] && i === firstEmpty}<span class="name hint">Drag<span class="more">{' a track'}</span>{' here'}</span>
         {:else}<span class="name">{sampler.loading[i] ? 'Loading…' : (s?.title ?? '')}</span>{/if}
         {#if l?.playing}<i class="bar" aria-hidden="true"></i>{/if}
       </button>
     {/each}
   </div>
   <!-- #67 / #66 (UI audit flags): sampler-strip's smaller dial fits the strip; knob-rings' quieter ring. -->
-  <Knob label="Level" name="Sampler level" size={flag('sampler-strip') ? 16 : 22} fromMin arc={flag('knob-rings') ? 'var(--fg-2)' : undefined} value={sampler.level} min={0} max={1} reset={0.8}
+  <Knob label="Level" name="Sampler level" size={flag('sampler-strip') ? 14 : 22} fromMin arc={flag('knob-rings') ? 'var(--fg-2)' : undefined} value={sampler.level} min={0} max={1} reset={0.8}
     format={(v) => `${Math.round(v * 100)}%`} onchange={setSamplerLevel} />
   <button class="close" aria-label="Hide sampler" onclick={() => setSamplerOpen(false)}
     use:tip={() => tipText('Hide sampler', keyLabel('view.sampler'), 'slots keep playing from a controller')}>

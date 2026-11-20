@@ -6,3 +6,8 @@
   cursor: ns-resize;
   touch-action: none;
 }
+/* Where the round grab area overlaps an EQ kill label, the label wins. */
+:root[data-flag-hit-areas] .knob button.label {
+  position: relative;
+  z-index: 1;
+}

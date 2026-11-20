@@ -38,15 +38,16 @@
 
 {#if on}
   <!-- #60 (UI audit flag): clip light on top, the bar under it, peak hold and dB marks. -->
-  <div class="meter m60" class:clipped style:--l="{fill * 100}%" style:--pk="{peak * 100}%">
+  <div class="meter m60" class:clipped style:--l="{fill * 100}%" style:--pk={peak}>
     <i class="clip" aria-hidden="true"></i>
     <i class="bar" aria-hidden="true"></i>
     {#if peak > 0.01}<i class="peak" aria-hidden="true"></i>{/if}
     {#if ticks}
-      {#each DB as db}<i class="db {ticks}" style:--p="{(db + 48) / 48}" aria-hidden="true"></i>{/each}
+      {#each DB as db}<i class="db {ticks}" class:zero={db === 0} style:--p={(db + 48) / 48} aria-hidden="true"></i>{/each}
     {/if}
     {#if clipped}
-      <button class="reset" aria-label="Clear the clip light{what ? `, ${what}` : ''}" onclick={() => (clipped = false)}
+      <!-- The light and 4px round it, reaching out only on the side away from the fader. -->
+      <button class="reset {ticks || 'right'}" aria-label="Clear the clip light{what ? `, ${what}` : ''}" onclick={() => (clipped = false)}
         use:tip={() => tipText(over ? 'The limiter caught a peak here' : 'This level reached 0 dB', '', 'click to clear')}></button>
     {/if}
   </div>
@@ -119,15 +120,19 @@
     left: 0;
     right: 0;
     height: 1px;
-    top: calc(var(--top) + (100% - var(--top)) * (1 - var(--pk) / 100%));
+    top: calc(var(--top) + (100% - var(--top)) * (1 - var(--pk)));
     background: var(--fg);
   }
-  /* 0, −6 and −18 dB: 3px marks, 2px clear of the bar. */
+  /* 0, −6 and −18 dB: 3px marks, 2px clear of the bar; 0 dB longer and brighter. */
   .m60 .db {
     width: 3px;
     height: 1px;
     top: calc(var(--top) + (100% - var(--top)) * (1 - var(--p)));
     background: var(--fg-4);
+  }
+  .m60 .db.zero {
+    width: 5px;
+    background: var(--fg-2);
   }
   .m60 .db.right {
     left: calc(100% + 2px);
@@ -137,11 +142,20 @@
   }
   .m60 .reset {
     position: absolute;
-    inset: 0 -4px;
+    top: -4px;
+    height: 12px;
+    left: 0;
+    right: 0;
     padding: 0;
     border: 0;
     border-radius: 2px;
     background: none;
     cursor: pointer;
+  }
+  .m60 .reset.right {
+    right: -4px;
+  }
+  .m60 .reset.left {
+    left: -4px;
   }
 </style>

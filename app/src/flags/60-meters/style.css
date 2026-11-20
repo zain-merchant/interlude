@@ -1,7 +1,8 @@
 /* #60: meters with a scale, a peak hold and a clip light (Meter.svelte
-   draws those), and a master pair as long as the channel meters. */
+   draws those), and a taller master pair. Rec drops to the headphone
+   buttons' line in both layouts, so the pair ends on the channel meters' foot. */
 
-/* Beside: the master pair spans the column from the top to the line above
+/* The grid both layouts share; as set here, Beside (an option): the master pair spans the column from the top to the line above
    Rec, which drops to the headphone buttons' line. The channel strips are
    the same (fader and meter, 8px, the 24px headphone button), so all four
    meters share one top and one bottom, and a level sits at one height on
@@ -37,7 +38,7 @@
   bottom: -2px;
 }
 
-/* Below: the pair stays centred under the dials and runs down to the same
+/* Below (the default): the pair stays centred under the dials and runs down to the same
    bottom line as the channel meters (shorter than them, but level at the foot). */
 :root[data-flag-meters][data-flag-meters-master='below'] .mixer .cen {
   grid-template-columns: auto;
@@ -55,29 +56,4 @@
 :root[data-flag-meters][data-flag-meters-master='below'] .mixer .cen > .mpair .lim {
   left: calc(100% + 8px);
   right: auto;
-}
-
-/* Split: left meter left of the dials, right meter right of them, full
-   length, so the middle column stays symmetrical like the channels. */
-:root[data-flag-meters][data-flag-meters-master='split'] .mixer .cen {
-  grid-template-columns: 5px auto 5px;
-}
-:root[data-flag-meters][data-flag-meters-master='split'] .mixer .cen > .knob:nth-child(1) {
-  grid-area: 1 / 2;
-}
-:root[data-flag-meters][data-flag-meters-master='split'] .mixer .cen > .knob:nth-child(2) {
-  grid-area: 2 / 2;
-}
-:root[data-flag-meters][data-flag-meters-master='split'] .mixer .cen > .mpair {
-  grid-area: 1 / 1 / 4 / 4;
-  justify-self: stretch;
-  justify-content: space-between;
-}
-:root[data-flag-meters][data-flag-meters-master='split'] .mixer .cen > .rec {
-  grid-area: 4 / 1 / 5 / 4;
-}
-:root[data-flag-meters][data-flag-meters-master='split'] .mixer .cen > .mpair .lim {
-  left: 50%;
-  right: auto;
-  transform: translateX(-50%);
 }

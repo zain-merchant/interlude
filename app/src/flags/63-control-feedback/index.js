@@ -2,16 +2,17 @@
 //
 // Hovering a fader lightened its cap by a hair, hovering a dial changed
 // nothing, and dragging looked the same as hovering. With the flag on
-// (CSS only): a hovered dial brightens its idle ticks (0.16 / 0.28 to
-// 0.24 / 0.36) and lifts its cap a step; a dial being turned also gets a
-// thin --fg-3 ring on the cap. A hovered fader cap goes one step lighter
-// than today's hover, and a dragged one adds the same ring.
+// (CSS only): a hovered dial lays 5% white (--hover) over its cap and lifts
+// its idle ticks to --fg-3; a dial being turned also gets a thin --fg-3
+// ring on the cap. A hovered fader cap gets the same 5% layer (its centre
+// line is already full white, #f4f3ee, brighter than --fg, so it stays),
+// and a dragged one adds the ring. 140ms ease.
 export default {
   id: 'control-feedback',
   n: 63,
   title: 'Dials and faders light up under the pointer',
   group: 'Controls',
-  notes: 'CSS only. Dial hover follows #62: on the cap without it, the whole ring with it. .dragging (Knob.svelte, Fader.svelte) gets an inset --fg-3 ring.',
+  notes: 'CSS only. Hover = inset 99px --hover layer (box-shadow, so it eases) + idle ticks --fg-3. Dial hover follows #62: on the cap without it, the whole ring with it. .dragging (Knob.svelte, Fader.svelte) adds an inset --fg-3 ring.',
 };
 
 /** Show me: channel A's High dial hovered and its Mid being turned, channel A's fader hovered and B's dragged; a loupe, flipping. */

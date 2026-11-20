@@ -3,35 +3,14 @@
 // Under each channel fader sits the fader and its level meter, with the
 // headphone (cue) button below them. The button was centred on the pair as
 // a whole, so it sat 4.5px off the fader's axis and nowhere near the meter:
-// aligned to neither. This puts it under the fader, which is the line the
-// eye follows down the channel, or (the other choice) spans the fader and
-// meter together so its edges meet theirs.
+// aligned to neither. This puts it under the fader, the fader's width
+// (28px), which is the line the eye follows down the channel.
 export default {
   id: 'headphone-align',
   n: 17,
   title: 'Headphone button lined up with the fader',
   group: 'Layout',
-  notes: 'Fader: the button is the fader\'s width and centred on its slot. Strip: it spans fader and meter, edge to edge. Room (d-K53): the channel strips move 7px inward so the button clears the Filter dial by 12px.',
-  settings: {
-    to: {
-      type: 'choice',
-      options: [
-        ['fader', 'Fader', "The button sits right under the fader, on the line your eye follows down the channel."],
-        ['strip', 'Fader and meter', 'The button spans the fader and its meter, so its edges meet theirs; it sits a little off the fader\'s line.'],
-      ],
-      default: 'fader',
-      label: 'Align to',
-    },
-    room: {
-      type: 'choice',
-      options: [
-        ['tight', 'As now', 'The strip stays where it is: the button comes within 5px of the Filter dial\'s ticks, but the middle keeps its room for the master meters.'],
-        ['gap', '12px from the Filter dial', "Each channel's fader, meter and button move 7px toward the middle, so the button clears the Filter dial's ticks by 12px (d-K53); with #60's full-length master meters, the right channel's meter then sits close to the master pair."],
-      ],
-      default: 'tight',
-      label: 'Room by the Filter dial',
-    },
-  },
+  notes: 'The button is the fader\'s width and centred on its slot. (Reviewed: 4-5px from the Filter dial\'s ticks is acceptable; spanning fader and meter, and moving the strips inward, were dropped.)',
 };
 
 /** Show me: each channel fader's centre line carried down through its headphone button, and a loupe on channel A's, flipping. */

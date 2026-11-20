@@ -28,8 +28,8 @@
   /** Height of the channel dial columns; on a short mixer the dials shrink so their labels never overlap. */
   let chHeight = $state(0);
   // Each dial takes its size plus 24px (tick ring and label), with 4px between dials.
-  // #61 (UI audit flag): eq-kill's 20px kill buttons add 4px under three of the five dials.
-  const knob = $derived(chHeight ? Math.max(14, Math.min(KNOB, Math.floor((chHeight - 16) / 5 - 24 - (flag('eq-kill') ? 2.4 : 0)))) : KNOB);
+  // #61 (UI audit flag): eq-kill's kill buttons add 9px under three of the five dials and the captions 5px under two.
+  const knob = $derived(chHeight ? Math.max(14, Math.min(KNOB, Math.floor((chHeight - 16) / 5 - 24 - (flag('eq-kill') ? 7.4 : 0)))) : KNOB);
   const color = (deck) => (deck === 0 ? 'var(--deck-a)' : 'var(--deck-b)');
   const channels = $state([0, 1].map(() => ({ gain: 0, eq: [0, 0, 0], filter: 0, fader: 1, pfl: false })));
   let master = $state(0);
