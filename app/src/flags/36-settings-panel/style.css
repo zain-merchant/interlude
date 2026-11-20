@@ -1,0 +1,27 @@
+/* #36: one glass panel, the library's: a sidebar column and the page. */
+:root[data-flag-settings-panel] .settings[role='dialog'] {
+  grid-template-columns: var(--library-sidebar, 200px) minmax(0, 1fr);
+  gap: 0;
+  border-radius: var(--r-panel);
+  background: var(--glass-fill);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-edge);
+}
+:root[data-flag-settings-panel] .settings nav {
+  min-height: 0;
+  padding: 8px;
+  border-right: 1px solid var(--line);
+  overflow-y: auto;
+}
+:root[data-flag-settings-panel][data-flag-concentric] .settings nav {
+  padding: var(--pad);
+}
+/* The page is the panel's right side now, not a panel of its own. */
+:root[data-flag-settings-panel] .settings .main {
+  border-radius: 0;
+  background: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: none;
+}
