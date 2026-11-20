@@ -9,7 +9,7 @@ import { inTauri } from './backend.js';
  */
 
 /** The HTML fallback's state, drawn by ContextMenu.svelte. */
-export const htmlMenu = $state({ items: /** @type {MenuEntry[]} */ ([]), x: 0, y: 0, open: false, returnFocus: null });
+export const htmlMenu = $state({ items: /** @type {MenuEntry[]} */ ([]), x: 0, y: 0, open: false, returnFocus: null, keyboard: false });
 
 // macOS shows accelerators in its own glyphs; translate ours.
 const accel = (k) =>
@@ -44,6 +44,8 @@ export async function openMenu(e, items) {
   htmlMenu.x = e.clientX;
   htmlMenu.y = e.clientY;
   htmlMenu.returnFocus = document.activeElement;
+  // #14 (UI audit flag): states: whether the keyboard opened it (keyboardMenu sends an untrusted event).
+  htmlMenu.keyboard = !e.isTrusted;
   htmlMenu.open = true;
 }
 

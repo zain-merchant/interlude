@@ -13,10 +13,25 @@
 :root[data-flag-states] .menu button:is(:hover, :focus-visible):not(:disabled) {
   background: var(--sel);
 }
+/* E10: focus follows the pointer (ContextMenu.svelte), so the one lit row
+   is the focused one; hover alone lights nothing, or a menu opened under
+   the pointer lit two rows at once. A clear 12% highlight, label at full
+   strength; destructive items in --kill. */
+:root[data-flag-states] .menu button:hover:not(:focus):not(:disabled) {
+  background: none;
+}
+:root[data-flag-states] .menu button:focus:not(:disabled) {
+  background: rgb(255 255 255 / 0.12);
+  color: var(--fg);
+  outline: none;
+}
+:root[data-flag-states] .menu button.danger:not(:disabled) span {
+  color: var(--kill);
+}
 /* Deck tabs and sort headers: hover is a step towards selected, not the
    same thing. A hovered tab shows a faint underline. */
 :root[data-flag-states] .modes button:not(.on):hover {
-  color: var(--fg-2);
+  color: var(--fg);
 }
 :root[data-flag-states] .modes button:not(.on):hover::after {
   content: '';
@@ -26,10 +41,10 @@
   bottom: -1px;
   height: 2px;
   border-radius: 1px;
-  background: var(--line-2);
+  background: var(--fg-4);
 }
 :root[data-flag-states] .head .sort:not(.on):hover {
-  color: var(--fg-2);
+  color: var(--fg);
 }
 
 /* Pressed, buttons: shrink to 97% (as .btn already does) and darken the
@@ -53,11 +68,44 @@
     .stems .stem
   ):active:not(:disabled, [aria-disabled='true'], .jumps) {
   transform: scale(0.97);
-  filter: brightness(0.85);
 }
-/* Pressed, list items and tabs: the selected fill, no shrink. */
-:root[data-flag-states] :is([data-region='sidebar'] :is(.item, .add), nav[aria-label='Settings pages'] .item, .modes button):active {
+/* ...and darkens the face, never the label (F2): the fill goes to the
+   selected fill. Play is solid, so it darkens as a whole; Cue is engaged
+   while held, so it takes its amber at 12%, like a cueing Play (#6). */
+:root[data-flag-states]
+  :is(
+    .btn:not(.play, .cue, .primary),
+    .mixer .hp,
+    .mixer button.rec,
+    .toast .undo,
+    .settings .key,
+    .deck .val,
+    .deck .range,
+    .deck .nudge button,
+    .deck .jumps button,
+    .zoom button,
+    .search .clear,
+    .sampler .close,
+    .perf button,
+    .fx button,
+    .stems .stem
+  ):active:not(:disabled, [aria-disabled='true'], .jumps) {
   background: var(--sel);
+}
+:root[data-flag-states] .btn.play:active:not(:disabled, [aria-disabled='true']) {
+  filter: brightness(0.9);
+}
+:root[data-flag-states] .btn.cue:active:not(:disabled, [aria-disabled='true']) {
+  background: color-mix(in srgb, var(--cue) 12%, transparent);
+}
+/* Pressed, list items, track rows and tabs: the selected fill, no shrink. */
+:root[data-flag-states] :is([data-region='sidebar'] :is(.item, .add), nav[aria-label='Settings pages'] .item, .modes button, [data-region='tracks'] .row):active {
+  background: var(--sel);
+}
+/* Column headings (Li4): pressed is a fill, so a click visibly lands. */
+:root[data-flag-states] .head .sort:active {
+  border-radius: 6px;
+  background: var(--hover);
 }
 /* A held hot cue (.pressed) is pressed, not hovered. */
 :root[data-flag-states] .perf .tc.pressed {
@@ -69,10 +117,17 @@
   background: var(--sel);
 }
 
-/* Focus: the one 2px ring, 2px out; inset where the edge would clip it. */
+/* Focus: the one 2px ring, 2px out; inset where the edge would clip it.
+   The track list (Li6): the ring goes round the selected row, the thing
+   the arrow keys move, not round the whole list (whose corners #20 makes
+   uneven). */
 :root[data-flag-states] [data-region='tracks']:focus-visible {
-  outline: 2px solid var(--fg-2);
+  outline: none;
+}
+:root[data-flag-states] [data-region='tracks']:focus-visible .row.sel {
+  outline: 2px solid var(--focus-ring, var(--fg-2));
   outline-offset: -2px;
+  border-radius: var(--r);
 }
 /* The search field: the same ring in place of its own 1px focus ring. */
 :root[data-flag-states] .search:focus-within {
@@ -89,4 +144,55 @@
 :root[data-flag-states] :is(.btn:disabled, .btn[aria-disabled='true']),
 :root[data-flag-states] .deck .nudge button[aria-disabled='true'] {
   opacity: 0.4;
+}
+
+/* Round rings everywhere (F1): the tabs, sort headings and faders had
+   square ones (radius 0). */
+:root[data-flag-states] :is(.modes button, .head .sort, .fader) {
+  border-radius: var(--r);
+}
+/* The crossfader: the ring goes round the fader and its scale together,
+   4px out, instead of cutting through the ruler's ticks. */
+:root[data-flag-states] .xr .fader:focus-visible {
+  outline: none;
+}
+:root[data-flag-states] .xr:has(.fader:focus-visible) {
+  border-radius: var(--r);
+  outline: 2px solid var(--focus-ring, var(--fg-2));
+  outline-offset: 4px;
+}
+/* Upright faders: the cap overhangs the track's ends by half its height,
+   so the ring is drawn round the cap's whole travel, 2px clear of it. */
+:root[data-flag-states] .fader.vertical:focus-visible {
+  outline: none;
+}
+:root[data-flag-states] .fader.vertical:focus-visible::before {
+  content: '';
+  position: absolute;
+  inset: -8px -2px;
+  border-radius: var(--r);
+  box-shadow: 0 0 0 2px var(--focus-ring, var(--fg-2));
+  pointer-events: none;
+}
+/* Knobs: a round ring outside the tick ring, not a square one through it. */
+:root[data-flag-states] .knob .dial:focus-visible {
+  outline: none;
+}
+:root[data-flag-states] .knob .wrap:has(> .dial:focus-visible) {
+  border-radius: 50%;
+  outline: 2px solid var(--focus-ring, var(--fg-2));
+  outline-offset: 1px;
+}
+
+/* A hot cue (F3): hovering an empty slot lifts its label to --fg-2, so
+   the hover fill doesn't drop it under 4.5:1. */
+:root[data-flag-states] .perf .tc:not(.set):hover:not([aria-disabled='true']) :is(b, span) {
+  color: var(--fg-2);
+}
+
+/* The Report box (E5): one ring, the app's, inside the field, so it
+   doesn't run past the text column; no extra border or second ring. */
+:root[data-flag-states] .card[aria-labelledby='report-title'] textarea:focus-visible {
+  outline: 2px solid var(--focus-ring, var(--fg-2));
+  outline-offset: -2px;
 }
