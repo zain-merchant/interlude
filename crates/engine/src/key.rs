@@ -1,5 +1,12 @@
 //! Musical key detection.
 //!
+//! The key comes from KeyNet, a small convolutional network trained on
+//! electronic music ([`crate::keynet`]). It reads a constant-Q spectrogram
+//! of the whole track and scores all 24 keys.
+//!
+//! A chromagram runs alongside it, and decides whether there is a key at
+//! all:
+//!
 //! 1. Mix to mono and downsample to about 11 kHz; key lives below that.
 //! 2. Take an FFT of each ~0.7 s frame and fold the spectrum from 55 Hz to
 //!    1.76 kHz onto the 12 pitch classes (a chromagram). Each frame is
@@ -7,7 +14,10 @@
 //! 3. Correlate the track's average chroma with a major and a minor key
 //!    profile rotated to all 12 tonics, and pick the best of the 24.
 //!
-//! Like every key detector, it can mistake a key for its relative
+//! Audio without tonal content (silence, pure drums) has no key. For clips
+//! too short for the network, the chromagram's key is used.
+//!
+//! Like every key detector, both can mistake a key for its relative
 //! major/minor or a fifth away; those are also the harmonically compatible
 //! neighbours, so the error is gentle for mixing.
 
@@ -70,6 +80,25 @@ impl Key {
         )
     }
 
+    /// The smallest shift, in semitones (-5..=6), that puts this key on the
+    /// same Camelot code as `other`: the same key, or its relative major or
+    /// minor, so the two mix in key.
+    pub fn shift_to(self, other: Key) -> i32 {
+        // The relative major or minor in this key's mode: A minor is
+        // relative to C major, three semitones up.
+        let target = match (self.minor, other.minor) {
+            (true, false) => other.tonic as i32 - 3,
+            (false, true) => other.tonic as i32 + 3,
+            _ => other.tonic as i32,
+        };
+        let d = (target - self.tonic as i32).rem_euclid(12);
+        if d > 6 {
+            d - 12
+        } else {
+            d
+        }
+    }
+
     /// 1..=24 for storing in an atomic; 0 means no key.
     pub(crate) fn code(key: Option<Key>) -> u32 {
         key.map_or(0, |k| 1 + k.tonic as u32 + if k.minor { 12 } else { 0 })
@@ -107,10 +136,20 @@ pub fn detect_key(stereo: &[f32], sample_rate: u32) -> Option<Key> {
     b.finish()
 }
 
+/// The key the chromagram alone finds, as [`detect_key`] did before
+/// KeyNet. For comparing the two (`examples/key_eval.rs`).
+#[doc(hidden)]
+pub fn detect_key_chroma(stereo: &[f32], sample_rate: u32) -> Option<Key> {
+    let mut b = KeyBuilder::new(sample_rate);
+    b.push(stereo);
+    b.finish_chroma()
+}
+
 /// Detects the key of audio fed in pieces of any size, so a track can be
 /// analyzed while it is still being decoded. The result is the same as
 /// [`detect_key`] on the whole track.
 pub(crate) struct KeyBuilder {
+    net: crate::keynet::Spectrogram,
     factor: usize,
     lp: [Biquad; 2],
     /// Frames to skip before keeping the next one.
@@ -124,6 +163,7 @@ impl KeyBuilder {
         let factor = (sr / TARGET_RATE).floor().max(1.0) as usize;
         let rate = sr / factor as f64;
         Self {
+            net: crate::keynet::Spectrogram::new(sr),
             factor,
             // Anti-alias before keeping every `factor`-th sample.
             lp: [
@@ -138,7 +178,9 @@ impl KeyBuilder {
     /// Adds interleaved stereo samples (an even number).
     pub fn push(&mut self, stereo: &[f32]) {
         for [l, r] in stereo.as_chunks::<2>().0 {
-            let x = self.lp[0].process(0.5 * (l + r));
+            let mono = 0.5 * (l + r);
+            self.net.push(mono);
+            let x = self.lp[0].process(mono);
             let x = self.lp[1].process(x);
             if self.skip == 0 {
                 self.chroma.push(x);
@@ -149,6 +191,13 @@ impl KeyBuilder {
     }
 
     pub fn finish(self) -> Option<Key> {
+        let chroma = key_of(&self.chroma.finish()?)?;
+        Some(self.net.key().unwrap_or(chroma))
+    }
+
+    /// The chromagram's key alone, without the network: the detector used
+    /// before KeyNet, kept to compare against.
+    pub fn finish_chroma(self) -> Option<Key> {
         key_of(&self.chroma.finish()?)
     }
 }
@@ -336,6 +385,33 @@ mod tests {
     use super::*;
 
     const SR: u32 = 44_100;
+
+    #[test]
+    fn shift_to_matches_the_camelot_code() {
+        let am = Key::new(9, true); // 8A
+        let c = Key::new(0, false); // 8B
+        let d = Key::new(2, false); // 10B
+        assert_eq!(c.shift_to(c), 0);
+        assert_eq!(d.shift_to(c), -2);
+        assert_eq!(c.shift_to(d), 2);
+        // Relative minor and major share a code: no shift needed.
+        assert_eq!(am.shift_to(c), 0);
+        assert_eq!(c.shift_to(am), 0);
+        // Bm to C major's code (8A, A minor): two down.
+        assert_eq!(Key::new(11, true).shift_to(c), -2);
+        // Every pair lands on the other key's code, within a tritone.
+        for a in 0..24 {
+            for b in 0..24 {
+                let (x, y) = (Key::new(a % 12, a >= 12), Key::new(b % 12, b >= 12));
+                let s = x.shift_to(y);
+                assert!((-5..=6).contains(&s));
+                assert_eq!(
+                    x.transpose(s).camelot().trim_end_matches(['A', 'B']),
+                    y.camelot().trim_end_matches(['A', 'B'])
+                );
+            }
+        }
+    }
 
     fn freq(midi: i32) -> f64 {
         440.0 * 2f64.powf((midi - 69) as f64 / 12.0)

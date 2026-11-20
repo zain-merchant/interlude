@@ -50,6 +50,25 @@ pub struct ControllerService {
     /// MIDI learn: inputs opened on every port, and what they've seen.
     learning: Mutex<Option<Vec<MidiInputConnection<()>>>>,
     detector: Arc<Mutex<Detector>>,
+    /// While set, connected controllers drive nothing.
+    paused: Arc<AtomicBool>,
+}
+
+/// Passes a controller's actions on unless the controllers are paused.
+struct Pausable {
+    host: Arc<dyn Host>,
+    paused: Arc<AtomicBool>,
+}
+
+impl Host for Pausable {
+    fn state(&self) -> State {
+        self.host.state()
+    }
+    fn act(&self, action: Action) {
+        if !self.paused.load(Ordering::Relaxed) {
+            self.host.act(action);
+        }
+    }
 }
 
 impl ControllerService {
@@ -67,6 +86,11 @@ impl ControllerService {
         let reload = Arc::new(AtomicBool::new(false));
         let connected = Arc::new(Mutex::new(vec![]));
         let log = std::env::var_os("INTERLUDE_MIDI_LOG").is_some();
+        let paused = Arc::new(AtomicBool::new(false));
+        let host: Arc<dyn Host> = Arc::new(Pausable {
+            host,
+            paused: paused.clone(),
+        });
         let thread = {
             let (stop, reload, connected) = (stop.clone(), reload.clone(), connected.clone());
             std::thread::Builder::new()
@@ -81,7 +105,15 @@ impl ControllerService {
             thread: Mutex::new(thread),
             learning: Mutex::new(None),
             detector: Arc::new(Mutex::new(Detector::new())),
+            paused,
         }
+    }
+
+    /// Pauses (or resumes) every connected controller: while paused,
+    /// moving a control does nothing, so setting one up step by step
+    /// doesn't start a deck playing. MIDI learn still hears everything.
+    pub fn set_paused(&self, paused: bool) {
+        self.paused.store(paused, Ordering::Relaxed);
     }
 
     /// Loads the mapping files again and reconnects every controller, e.g.
@@ -471,4 +503,38 @@ pub fn monitor_all(
                 .ok()
         })
         .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::atomic::AtomicUsize;
+
+    #[derive(Default)]
+    struct Counter(AtomicUsize);
+
+    impl Host for Counter {
+        fn state(&self) -> State {
+            State::default()
+        }
+        fn act(&self, _: Action) {
+            self.0.fetch_add(1, Ordering::Relaxed);
+        }
+    }
+
+    #[test]
+    fn paused_controllers_drive_nothing() {
+        let counter = Arc::new(Counter::default());
+        let paused = Arc::new(AtomicBool::new(false));
+        let host = Pausable {
+            host: counter.clone(),
+            paused: paused.clone(),
+        };
+        host.act(Action::Browse(1));
+        paused.store(true, Ordering::Relaxed);
+        host.act(Action::Browse(1));
+        paused.store(false, Ordering::Relaxed);
+        host.act(Action::Browse(1));
+        assert_eq!(counter.0.load(Ordering::Relaxed), 2);
+    }
 }

@@ -9,6 +9,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "check": "svelte-check",
+    "test": "node --test src/lib/*.test.js",
     "tauri": "tauri",
     "dev:site": "vite --config demo/vite.config.js",
     "build:site": "vite build --config demo/vite.config.js",

@@ -39,8 +39,9 @@
       {#if it === '-'}
         <div class="sep" role="separator"></div>
       {:else}
-        <button role="menuitem" disabled={it.enabled === false} onclick={() => run(it)}>
-          <span>{it.label}</span>{#if it.key}<kbd>{it.key}</kbd>{/if}
+        <button role={it.checked != null ? 'menuitemcheckbox' : 'menuitem'} aria-checked={it.checked ?? undefined}
+          disabled={it.enabled === false} onclick={() => run(it)}>
+          <span>{#if it.checked != null}<i class="tick" aria-hidden="true">{it.checked ? '✓' : ''}</i>{/if}{it.label}</span>{#if it.key}<kbd>{it.key}</kbd>{/if}
         </button>
       {/if}
     {/each}
@@ -82,6 +83,13 @@
   }
   button:disabled {
     color: var(--fg-4);
+  }
+  .tick {
+    display: inline-block;
+    width: 16px;
+    margin-left: -2px;
+    font-style: normal;
+    color: var(--fg-2);
   }
   kbd {
     font: inherit;

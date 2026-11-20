@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::{FxKind, Track};
+use crate::{FxKind, PadFx, Track};
 
 /// Which deck a command targets.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -212,6 +212,20 @@ pub enum Command {
         deck: DeckId,
         on: bool,
     },
+    /// Key shift: play the track this many semitones higher (or lower, if
+    /// negative) without changing its tempo, clamped to ±[`KEY_SHIFT_MAX`].
+    /// It adds to any change the tempo makes with keylock off. Loading a
+    /// track puts it back to 0.
+    SetKeyShift {
+        deck: DeckId,
+        semitones: i32,
+    },
+    /// Key sync: shift the deck's key so it plays in the same key as the
+    /// other deck (or its relative major or minor, the same Camelot code),
+    /// by the smallest shift. Does nothing unless both tracks have a key.
+    KeySync {
+        deck: DeckId,
+    },
     /// Which stems are audible: bit `n` is [`crate::Stem`] `n`. Every bit
     /// set plays the track as it is. A freshly loaded deck has all stems on.
     SetStems {
@@ -302,6 +316,17 @@ pub enum Command {
         deck: DeckId,
         beats: f32,
     },
+    /// A pad FX pad pressed: the effect plays while it's held. Pressing
+    /// another switches to that one.
+    PadFxPress {
+        deck: DeckId,
+        fx: PadFx,
+    },
+    /// A pad FX pad let go. Echo and reverb tails ring out.
+    PadFxRelease {
+        deck: DeckId,
+        fx: PadFx,
+    },
     /// Channel fader, 0.0..=1.0.
     SetFader {
         deck: DeckId,
@@ -380,6 +405,8 @@ impl Command {
             | SetRate { deck, .. }
             | SetBend { deck, .. }
             | SetKeylock { deck, .. }
+            | SetKeyShift { deck, .. }
+            | KeySync { deck, .. }
             | SetSlip { deck, .. }
             | ScratchStart { deck, .. }
             | ScratchEnd { deck, .. }

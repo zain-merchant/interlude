@@ -59,7 +59,7 @@ impl FxKind {
 /// Topology-preserving state-variable filter (Simper/Zavalishin), which
 /// stays clean while its cutoff is swept quickly.
 #[derive(Debug, Clone, Copy, Default)]
-struct Svf {
+pub(crate) struct Svf {
     a1: f32,
     a2: f32,
     a3: f32,
@@ -69,7 +69,7 @@ struct Svf {
 }
 
 impl Svf {
-    fn set(&mut self, freq: f32, q: f32, sample_rate: f32) {
+    pub(crate) fn set(&mut self, freq: f32, q: f32, sample_rate: f32) {
         let freq = freq.clamp(10.0, sample_rate * 0.45);
         let g = (PI * freq / sample_rate).tan();
         self.k = 1.0 / q;
@@ -80,7 +80,7 @@ impl Svf {
 
     /// Returns (low-pass, high-pass) for one channel.
     #[inline]
-    fn process(&mut self, ch: usize, x: f32) -> (f32, f32) {
+    pub(crate) fn process(&mut self, ch: usize, x: f32) -> (f32, f32) {
         let v3 = x - self.ic2[ch];
         let v1 = self.a1 * self.ic1[ch] + self.a2 * v3;
         let v2 = self.ic2[ch] + self.a2 * self.ic1[ch] + self.a3 * v3;
@@ -152,7 +152,7 @@ impl Filter {
 
 /// A stereo delay line with fractional reads.
 #[derive(Debug, Clone)]
-struct DelayLine {
+pub(crate) struct DelayLine {
     buf: [Vec<f32>; 2],
     write: usize,
 }
@@ -165,7 +165,7 @@ impl DelayLine {
         }
     }
 
-    fn len(&self) -> usize {
+    pub(crate) fn len(&self) -> usize {
         self.buf[0].len()
     }
 
@@ -198,11 +198,13 @@ impl DelayLine {
 
 /// Tape-style echo: the repeats darken and fade.
 #[derive(Debug, Clone)]
-struct Echo {
-    line: DelayLine,
+pub(crate) struct Echo {
+    pub(crate) line: DelayLine,
     /// Delay time in frames, smoothed so tempo and beat changes glide.
-    time: Smoothed,
+    pub(crate) time: Smoothed,
     tone: [f32; 2],
+    /// How much of each repeat goes round again.
+    pub(crate) feedback: f32,
 }
 
 impl Echo {
@@ -210,29 +212,30 @@ impl Echo {
     /// One-pole low-pass coefficient in the feedback path.
     const DAMP: f32 = 0.35;
 
-    fn new(sample_rate: f32) -> Self {
+    pub(crate) fn new(sample_rate: f32) -> Self {
         Self {
             line: DelayLine::new((MAX_ECHO_SECS * sample_rate) as usize + 4),
             time: Smoothed::new(sample_rate * 0.5, 60.0, sample_rate),
             tone: [0.0; 2],
+            feedback: Self::FEEDBACK,
         }
     }
 
     #[inline]
-    fn process(&mut self, l: f32, r: f32) -> (f32, f32) {
+    pub(crate) fn process(&mut self, l: f32, r: f32) -> (f32, f32) {
         let d = self.time.tick();
         let out = [self.line.read(0, d), self.line.read(1, d)];
         for (t, o) in self.tone.iter_mut().zip(out) {
             *t += (o - *t) * (1.0 - Self::DAMP);
         }
         self.line.write(
-            l + self.tone[0] * Self::FEEDBACK,
-            r + self.tone[1] * Self::FEEDBACK,
+            l + self.tone[0] * self.feedback,
+            r + self.tone[1] * self.feedback,
         );
         (out[0], out[1])
     }
 
-    fn clear(&mut self) {
+    pub(crate) fn clear(&mut self) {
         self.line.clear();
         self.tone = [0.0; 2];
     }
@@ -291,7 +294,7 @@ impl Allpass {
 /// Schroeder-Moorer reverb with the well-known Freeverb tunings. The beat
 /// length sets the decay: longer beats, bigger room.
 #[derive(Debug, Clone)]
-struct Reverb {
+pub(crate) struct Reverb {
     combs: [Vec<Comb>; 2],
     allpasses: [Vec<Allpass>; 2],
     feedback: Smoothed,
@@ -305,7 +308,7 @@ impl Reverb {
     const INPUT: f32 = 0.015;
     const WET: f32 = 3.0;
 
-    fn new(sample_rate: f32) -> Self {
+    pub(crate) fn new(sample_rate: f32) -> Self {
         let scale = sample_rate / 44_100.0;
         let len = |n: usize, ch: usize| ((n + ch * Self::SPREAD) as f32 * scale) as usize;
         Self {
@@ -323,13 +326,13 @@ impl Reverb {
     }
 
     /// Maps a beat length to the comb feedback (room size).
-    fn set_beats(&mut self, beats: f32) {
+    pub(crate) fn set_beats(&mut self, beats: f32) {
         let t = (beats.max(0.125).log2() + 3.0) / 6.0; // 1/8 beat → 0, 8 beats → 1
         self.feedback.set(0.70 + 0.27 * t.clamp(0.0, 1.0));
     }
 
     #[inline]
-    fn process(&mut self, l: f32, r: f32) -> (f32, f32) {
+    pub(crate) fn process(&mut self, l: f32, r: f32) -> (f32, f32) {
         let fb = self.feedback.tick();
         let input = (l + r) * Self::INPUT;
         let mut out = [0.0f32; 2];
@@ -347,7 +350,7 @@ impl Reverb {
         (out[0], out[1])
     }
 
-    fn clear(&mut self) {
+    pub(crate) fn clear(&mut self) {
         for c in self.combs.iter_mut().flatten() {
             c.buf.fill(0.0);
             c.store = 0.0;
@@ -360,7 +363,7 @@ impl Reverb {
 
 /// Jet-plane sweep: a short delay modulated over the beat length.
 #[derive(Debug, Clone)]
-struct Flanger {
+pub(crate) struct Flanger {
     line: DelayLine,
     sample_rate: f32,
 }
@@ -370,7 +373,7 @@ impl Flanger {
     const MAX_MS: f32 = 6.0;
     const FEEDBACK: f32 = 0.6;
 
-    fn new(sample_rate: f32) -> Self {
+    pub(crate) fn new(sample_rate: f32) -> Self {
         Self {
             line: DelayLine::new((Self::MAX_MS * 0.002 * sample_rate) as usize + 8),
             sample_rate,
@@ -378,7 +381,7 @@ impl Flanger {
     }
 
     #[inline]
-    fn process(&mut self, l: f32, r: f32, lfo: f32) -> (f32, f32) {
+    pub(crate) fn process(&mut self, l: f32, r: f32, lfo: f32) -> (f32, f32) {
         let ms = Self::MIN_MS + (Self::MAX_MS - Self::MIN_MS) * lfo;
         let d = ms * 0.001 * self.sample_rate;
         let out = [self.line.read(0, d), self.line.read(1, d)];
@@ -387,7 +390,7 @@ impl Flanger {
         (out[0], out[1])
     }
 
-    fn clear(&mut self) {
+    pub(crate) fn clear(&mut self) {
         self.line.clear();
     }
 }

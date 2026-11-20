@@ -82,4 +82,5 @@ reading the analyser's bins. A few details:
   transport's fourth button is beat jump.
 - Hot cues use eight slot colours (`--hc-1` to `--hc-8`), on the cue row,
   the overview and the waveform.
-- The sampler strip and the settings page are glass panels too.
+- The settings page is a glass panel too. The sampler strip sits inside
+  the library panel, under its search bar.
