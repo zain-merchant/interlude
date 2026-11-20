@@ -2338,7 +2338,7 @@ function layout(now) {
   if (geo?.key === key) return Object.assign(geo, { box, cover: coverOf(box) });
   // The bends up top (see toRecord): more rings above, as a share of the
   // half above the centre; the lens's place and size.
-  const g = { cx, cy, hz, d0, tilt, up: T.up, half: c.width / 2, lens: [cx, rimY + (cy - rimY) * 0.45, Math.max(200, c.width * 0.3)] };
+  const g = { cx, cy, hz, d0, tilt, rimY, up: T.up, half: c.width / 2, lens: [cx, rimY + (cy - rimY) * 0.45, Math.max(200, c.width * 0.3)] };
   // How far out it runs: all round, and (with more rings above) up top as
   // far as the rings now reach at the top of the canvas.
   const out = R * T.size;
@@ -2418,7 +2418,9 @@ addEventListener('pointermove', (e) => {
 document.documentElement.addEventListener('pointerleave', () => Object.assign(hover, { x: -1e4, y: -1e4 }));
 // Dragging on the record (not on a link or a control): it tips the way
 // it's dragged, a little, and springs back when let go.
+// (Not a finger: a finger's drag is the page scrolling.)
 addEventListener('pointerdown', (e) => {
+  if (e.pointerType === 'touch') return;
   if (!geo || !T.dragTilt || reduced.matches || e.button !== 0 || e.target.closest('a, button, input, select, summary, iframe, .shot, .dialkit-root, .nav')) return;
   const p = local(e);
   if (p.y < 0 || p.y > canvas.clientHeight) return;
@@ -2433,9 +2435,12 @@ addEventListener('pointermove', (e) => {
   wake();
 }, { passive: true });
 for (const ev of ['pointerup', 'pointercancel', 'blur']) addEventListener(ev, () => { if (!drag.on) return; drag.on = false; drag.tx = drag.ty = 0; wake(); });
-addEventListener('pointerdown', (e) => {
-  if (touch !== 'needle' || !geo || e.target.closest('a, button, input, select, summary, iframe, .shot, .dialkit-root')) return;
-  const p = local(e);
+// The needle. A mouse (or a pen) drops it as it's pressed; a finger only on
+// a tap (down and up again close by, quickly, the page not scrolled), so a
+// swipe that scrolls the page drops nothing. (Not on the nav, its glass
+// included: a click there is meant for the nav.)
+const NEEDLE_SKIP = 'a, button, input, select, summary, iframe, .shot, .dialkit-root, .nav';
+function dropNeedle(p) {
   const { r } = toRecord(p.x, p.y, geo);
   if (r < geo.r0 || r > geo.Rmax) return;
   const now = performance.now();
@@ -2443,7 +2448,61 @@ addEventListener('pointerdown', (e) => {
   Object.assign(ripple, { on: true, r, born: now });
   Object.assign(quiet, { x: p.x, y: p.y, on: true });
   wake();
+}
+let tap = null;
+addEventListener('pointerdown', (e) => {
+  if (touch !== 'needle' || !geo || e.target.closest(NEEDLE_SKIP)) return;
+  if (e.pointerType !== 'touch') return dropNeedle(local(e));
+  tap = { id: e.pointerId, x: e.clientX, y: e.clientY, t: performance.now(), p: local(e) };
 }, { passive: true });
+addEventListener('pointerup', (e) => {
+  if (!tap || e.pointerId !== tap.id) return;
+  const ok = performance.now() - tap.t < 500 && Math.hypot(e.clientX - tap.x, e.clientY - tap.y) < 10;
+  const p = tap.p;
+  tap = null;
+  if (ok && geo) dropNeedle(p);
+}, { passive: true });
+addEventListener('pointercancel', () => (tap = null), { passive: true });
+
+// A finger: the light goes where it is, also while it scrolls the page
+// (touchmove keeps coming during a scroll, pointermove doesn't; passive, so
+// the scroll is never held up). It fades on the same timer as a still mouse
+// (T.still) once the finger stops or lifts. Any touch ends the sweep.
+// (Its place from the kept scroll and canvas top, not a layout read per move.)
+const finger = (e) => {
+  if (sweep.at && e.type === 'touchstart') sweep.at = 0;
+  if (e.touches.length !== 1 || e.target.closest?.('.nav, .dialkit-root')) return;
+  const t = e.touches[0];
+  const p = canvasTop ? { x: t.clientX, y: t.clientY - (canvasTop - scrollPos) } : local(t);
+  Object.assign(hover, p, { moved: performance.now() });
+  if (quiet.on && Math.hypot(p.x - quiet.x, p.y - quiet.y) > 40) quiet.on = false;
+  wake();
+};
+addEventListener('touchstart', finger, { passive: true });
+addEventListener('touchmove', finger, { passive: true });
+
+// Where there's no hover: once, after the hero has come in, the light
+// sweeps slowly across the record's far side, so it's seen that the record
+// answers to a touch. (Never with less motion; a touch stops it.)
+const sweep = { at: 0 };
+export function demo() {
+  if (reduced.matches || !geo || !prog) return;
+  sweep.at = performance.now();
+  wake();
+}
+// Its path, at t from 0 to 1: left to right, across the record a little
+// way above the app's screen (clear of the switch over it), bowed up a touch in the middle (as the far
+// grooves are), eased in and out.
+function sweepPoint(now) {
+  const t = (now - sweep.at) / 3200;
+  if (t >= 1 || !geo) { sweep.at = 0; return; }
+  const e = t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2;
+  const b = geo.box;
+  const w = b.r - b.l;
+  const x = b.l - w * 0.08 + w * 1.16 * e;
+  const y = b.t - Math.max(90, (b.t - geo.rimY) * 0.62) - Math.sin(Math.PI * e) * w * 0.05;
+  Object.assign(hover, { x, y, moved: now });
+}
 
 function wake() {
   if (!prog) return;
@@ -2558,6 +2617,8 @@ function frame(now, still) {
   // Hover: wherever the pointer is over the record, over the app's screen
   // and the page's words and buttons too (the screen takes no pointer of
   // its own, so its moves reach us), unless the touch is switched off.
+  // (The sweep, where there's no hover, moves the light itself.)
+  if (sweep.at) sweepPoint(now);
   const { r: hr, a: ha } = toRecord(hover.x, hover.y, g);
   // And only while the pointer moves: a little after it stops, its light
   // fades away, so no groove is left looking selected under a still pointer.
@@ -3083,7 +3144,7 @@ function draw(now) {
   }
   // At rest (no pointer light, no needle) the record only turns slowly, so
   // 30 frames a second is plenty; the pointer's light gets the full 60.
-  const busy = hover.on > 0.01 || needle.on || ripple.on || fx.moving || twist !== twistTo() || drag.on || drag.x !== 0 || drag.y !== 0;
+  const busy = hover.on > 0.01 || sweep.at || needle.on || ripple.on || fx.moving || twist !== twistTo() || drag.on || drag.x !== 0 || drag.y !== 0;
   // (On the first frame of each 30th of a second on the wall clock, the
   // same frames the app in the screen draws on, app/demo/pause.js.)
   // (And busy, never more than 60 a second: a 120Hz screen would otherwise
