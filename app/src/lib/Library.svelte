@@ -114,12 +114,11 @@
   const selectIndex = (i) => (selPath = sorted[i]?.path ?? null);
 
   // #7 (UI audit flag): edge-empty-views: an empty playlist or folder says so, not "No tracks yet. Add a music folder".
+  // Two short lines: what's empty, then how to fill it.
   const emptyView = $derived(
     !flag('edge-empty-views') ? null
-    // #86 (UI audit flag): copy-toasts names the menu way in too.
-    : view.kind === 'playlist' && flag('copy-toasts') ? `This playlist is empty. Drag tracks onto its name, or right-click a track and choose Add to ${playlistName(view.id)}.`
-    : view.kind === 'playlist' ? 'This playlist is empty. Drag tracks onto its name to add them.'
-    : view.kind === 'folder' ? `No music files found in ${(view.path ?? '').split(/[\\/]/).filter(Boolean).pop()}.`
+    : view.kind === 'playlist' ? ['This playlist is empty.', 'Drag tracks onto its name in the sidebar.']
+    : view.kind === 'folder' ? ['No music in this folder.', 'Add music files to it in Finder.']
     : null,
   );
 
@@ -133,8 +132,8 @@
   );
   // #84 (UI audit flag): search-scope: the view a search runs in, for "Nothing in All tracks matches …".
   const viewName = $derived(
-    view.kind === 'folder' ? short(view.path ?? '')
-    : view.kind === 'playlist' ? playlistName(view.id)
+    view.kind === 'folder' ? `“${short(view.path ?? '')}”`
+    : view.kind === 'playlist' ? `“${playlistName(view.id)}”`
     : view.kind === 'session' ? (sessions.find((x) => x.start === view.start) ? sessionLabel(sessions.find((x) => x.start === view.start)) : 'History')
     : 'All tracks',
   );
@@ -216,13 +215,13 @@
   const mixKeys = $derived(mixFrom.map((m) => m.key));
   // #89 (UI audit flag): key-notation: how the Key column writes a key (null: as today, musical).
   const notation = $derived(flag('key-notation') ? setting('key-notation', 'show') : null);
-  /** #18 (UI audit flag): the decks a key mixes with, for its tooltip and its underline's colour. */
+  /** #18 (UI audit flag): the decks a key mixes with, for its tooltip. */
   const mixWith = (key) => mixFrom.filter((m) => keysMix(m.key, key));
   const side = (d) => ['left', 'right'][d];
   /** #18 (UI audit flag): a mixing key's tooltip says which deck it goes with, by position ("Mixes with the left deck (C, 8B)"). */
-  function keyTip(key) {
+  function keyTip(key, loaded = false) {
     const own = `${keyLongName(key)} (${camelot(key)})`;
-    const w = mixWith(key);
+    const w = loaded ? [] : mixWith(key);
     if (!w.length) return own;
     if (w.length > 1) return tipText(own, 'Mixes with both decks');
     return tipText(own, `Mixes with the ${side(w[0].d)} deck (${keyName(w[0].key)}, ${camelot(w[0].key)})`);
@@ -441,10 +440,14 @@
   let nav = $state(/** @type {HTMLElement | null} */ (null));
   let listMore = $state(false);
   let navMore = $state(false);
+  let listUp = $state(false);
+  let navUp = $state(false);
   const below = (el) => !!el && el.scrollTop + el.clientHeight < el.scrollHeight - 1;
   function edges() {
     listMore = below(scroller);
     navMore = below(nav);
+    listUp = !!scroller && scroller.scrollTop > 0;
+    navUp = !!nav && nav.scrollTop > 0;
   }
   $effect(() => {
     void [flag('library-clip'), viewHeight, sorted.length, sessions.length, playlists.length, folders.length, historyShown, ROW];
@@ -602,9 +605,10 @@
     // Choosing "Replace" in the menu is the confirmation, so it loads at once.
     const playing = (d) => engine.decks[d].playing;
     // #88 (UI audit flag): deck-names says "the left deck", as the screen shows it, not a letter it never shows.
-    const on = (d) => (flag('deck-names') ? `the ${['left', 'right'][d]} deck` : `deck ${'AB'[d]}`);
+    const named = flag('deck-names');
+    const on = (d) => (named ? `${['left', 'right'][d]} deck` : `deck ${'AB'[d]}`);
     const load = [0, 1].map((d) => ({
-      label: t.missing ? 'File not found' : playing(d) ? `Replace the playing track on ${on(d)}` : `Load to ${on(d)}`,
+      label: t.missing ? 'File not found' : playing(d) ? (named ? `Replace track on ${on(d)}` : `Replace the playing track on ${on(d)}`) : `Load to ${on(d)}`,
       key: playing(d) ? undefined : keyLabel(`deck.${d}.load`),
       enabled: !t.missing,
       action: () => onload(d, t, { force: true }),
@@ -646,7 +650,7 @@
 
 <section class="library" aria-label="Library">
   <nav data-region="sidebar" aria-label="Library, playlists and history" bind:this={nav} onscroll={edges}
-    data-more={flag('library-clip') && navMore ? '' : undefined}>
+    data-more={flag('library-clip') && navMore ? '' : undefined} data-scrolled={flag('library-clip') && navUp ? '' : undefined}>
     <div class="h">Library</div>
     <button class="item" class:on={view.kind === 'all'} aria-current={view.kind === 'all'} onclick={() => pick(null)}>
       <span>All tracks</span>{#if total !== null}<small class="num">{total.toLocaleString()}</small>{/if}
@@ -733,21 +737,21 @@
       <span></span>
       {#each COLUMNS as c}
         {@const on = sortOn.by === c.by}
-        <!-- #81 (UI audit flag): library-sort keeps every heading's arrow in place (a ghost on hover), so nothing shifts. -->
+        <!-- #81 (UI audit flag): library-sort gives every heading a slot for its arrow (hidden unless sorted), so nothing shifts. -->
         <button class="sort" class:on class:num={c.num} aria-pressed={on}
           aria-label="Sort by {c.label.toLowerCase()}{on ? (sortOn.dir > 0 ? ', ascending' : ', descending') : ''}"
-          use:flagTip={c.by === 'key' && flag('visual-key-match') ? () => 'Underlined: mixes with what’s playing' : null}
+          use:flagTip={c.by === 'key' && flag('visual-key-match') ? () => 'A line under a key: it mixes with what’s loaded' : null}
           onclick={() => sortBy(c.by)}>{c.label}{#if on || flag('library-sort')}<svg viewBox="0 0 10 10" aria-hidden="true" class:down={on && sortOn.dir < 0} class:ghost={!on}><path d="M2.5 6.5 5 4l2.5 2.5" /></svg>{/if}</button>
       {/each}
     </div>
 
     <div class="scroll" bind:this={scroller} bind:clientHeight={viewHeight} onscroll={() => ((scrollTop = scroller.scrollTop), edges())}
-      tabindex="0" onkeydown={listKey} role="listbox" aria-label="Tracks" data-region="tracks" data-more={flag('library-clip') && listMore ? '' : undefined}
+      tabindex="0" onkeydown={listKey} role="listbox" aria-label="Tracks" data-region="tracks" data-more={flag('library-clip') && listMore ? '' : undefined} data-scrolled={flag('library-clip') && listUp ? '' : undefined}
       aria-activedescendant={sorted[selected] ? `track-${selected}` : undefined}>
       {#if error}
         <div class="empty">{error}</div>
       {:else if !loading && !all.length && emptyView}
-        <div class="empty"><p>{emptyView}</p></div>
+        <div class="empty"><p class="what">{emptyView[0]}</p><p class="how">{emptyView[1]}</p></div>
       {:else if !loading && !all.length}
         <div class="empty">
           <p>No tracks yet.</p>
@@ -755,7 +759,7 @@
         </div>
       {:else if !loading && !results.length && flag('search-scope')}
         <!-- #84 (UI audit flag): search-scope: name the view, and offer the way out. -->
-        <div class="empty"><p>Nothing in {viewName} matches “{query.trim()}”.</p><button class="btn sm" onclick={clearSearch}>Clear search (Esc)</button></div>
+        <div class="empty"><p>Nothing in {viewName} matches “{query.trim()}”.</p><button class="btn sm" onclick={clearSearch}>Clear search<kbd class="hint">esc</kbd></button></div>
       {:else if !loading && !results.length}
         <div class="empty">Nothing matches “{query}”.</div>
       {/if}
@@ -779,8 +783,7 @@
             <span class="t">{#if t.missing}<span class="k" use:tip={() => `File not found: ${t.path}`}>{t.title}</span><span class="sr">, file not found</span>{:else if markOn}{#each marks(t.title) as m}{#if m.hit}<mark>{m.s}</mark>{:else}{m.s}{/if}{/each}{:else}{t.title}{/if}</span>
             <span>{#if markOn}{#each marks(t.artist) as m}{#if m.hit}<mark>{m.s}</mark>{:else}{m.s}{/if}{/each}{:else}{t.artist}{/if}</span>
             <span class="n num" class:none={a && !a.bpm}>{a ? bpmText(a) || NONE : ''}</span>
-            <span class:none={a && !a.key}>{#if a?.key}<span class="k" class:mix={mixKeys.some((k) => keysMix(k, a.key))} use:tip={() => keyTip(a.key)}
-                style:--mix-deck={flag('visual-key-match') && mixWith(a.key).length === 1 ? `var(--deck-${'ab'[mixWith(a.key)[0].d]})` : undefined}><!-- #89 (UI audit flag): key-notation: Musical, Camelot or both, as the decks show it.
+            <span class:none={a && !a.key}>{#if a?.key}<span class="k" class:mix={!decks.length && mixKeys.some((k) => keysMix(k, a.key))} use:tip={() => keyTip(a.key, decks.length > 0)}><!-- #89 (UI audit flag): key-notation: Camelot, or both as the decks show it.
                 -->{#if notation === 'camelot'}{camelot(a.key)}{:else if notation === 'both'}{keyName(a.key)} <span class="cam">{camelot(a.key)}</span>{:else}{keyName(a.key)}{/if}</span>{:else if a}{NONE}{/if}</span>
             <span class="n num" class:none={a?.failed}>{a ? timeText(a) || NONE : ''}</span>
             <span>{#if markOn}{#each marks(t.folder) as m}{#if m.hit}<mark>{m.s}</mark>{:else}{m.s}{/if}{/each}{:else}{t.folder}{/if}</span>
@@ -1146,5 +1149,19 @@
   }
   .empty p {
     margin: 0;
+  }
+  /* edge-empty-views (#7): what's empty, then 4px under it, how to fill it. */
+  .empty .what {
+    color: var(--fg-2);
+  }
+  .empty .how {
+    margin-top: -4px;
+    color: var(--fg-3);
+  }
+  /* search-scope (#84): the key hint 8px after "Clear search", as Undo's ⌘Z. */
+  .empty .btn:has(.hint) {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
   }
 </style>

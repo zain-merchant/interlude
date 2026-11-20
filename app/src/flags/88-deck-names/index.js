@@ -5,7 +5,8 @@
 // and position tell them apart), yet toasts, menus, tooltips and Settings
 // named them by letter: "Load to deck A", "Deck B is playing", "Kill deck A
 // high". With the flag on they say what you see: "the left deck", "the
-// right deck". Each builder hooks their own strings on flag('deck-names'):
+// right deck" in sentences, and tersely in menus ("Load to left deck",
+// "Replace track on left deck", like "Add to Friday warmup"). Each builder hooks their own strings on flag('deck-names'):
 // Library.svelte (the track menu, screen-reader text), App.svelte (toasts
 // and announcements), Deck, Performance, FxUnit and Stems (announcements,
 // undo labels, region names, tooltips), Mixer and Knob (control names,
@@ -18,11 +19,11 @@ export default {
   notes: 'Copy names decks by position ("the left deck") instead of letters the UI never shows. Hooks: Library, App, Deck, Performance, FxUnit, Stems, Mixer, Knob, Settings, Report.',
 };
 
-/** Show me: the track menu, reopened on each flip: "Load to deck A" (before), "Load to the left deck" (after). */
+/** Show me: the track menu, reopened on each flip: "Load to deck A" (before), "Load to left deck" (after). */
 export const show = {
   about: 'Menus and messages talked about "deck A" and "deck B", but no deck is labelled with a letter, so you had to guess which is which. Now they say "the left deck" and "the right deck".',
   before: 'Right-click a track: "Load to deck A", "Load to deck B". Nothing on screen is called A or B, so which is which?',
-  after: '"Load to the left deck", "Load to the right deck": the words match what you see.',
+  after: '"Load to left deck", "Load to right deck": the words match what you see.',
   async setup(app, ctx) {
     await app.clearSearch();
     await show.each(app, ctx);

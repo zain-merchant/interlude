@@ -592,6 +592,7 @@ export function createMockBackend() {
     },
     pickRekordboxXml: async () => '~/Desktop/rekordbox.xml',
     pickSeratoFolder: async () => '/Volumes/USB/_Serato_',
-    pickFolder: async () => null,
+    // #7 (UI audit flag): a show (or a check) can hand the picker a folder, e.g. an empty one.
+    pickFolder: async () => globalThis.__mockPickFolder ?? null,
   };
 }

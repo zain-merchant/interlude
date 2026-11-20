@@ -14,10 +14,11 @@
 // corner. With #2 (concentric), this rule replaces its radius on the list.
 //
 // Folded in (batch Li9, C38; Li6):
-// - While there's more to scroll, the list and the sidebar fade out over
-//   their last 16px (mask-image) instead of slicing a row or the History
-//   heading in half; at the end of the scroll nothing fades. Library.svelte
-//   sets data-more on either while it can scroll further down.
+// - One soft edge, top and bottom: while there's more to scroll past an
+//   edge, the list and the sidebar fade over 16px there, down to 30% (a
+//   row cut at the edge stays legible), instead of slicing a row or the
+//   History heading in half. At rest the top is crisp; at the end of the
+//   scroll the foot is. Library.svelte sets data-more and data-scrolled.
 // - History lists ten days, then "Show all 14" opens the rest in place.
 // - The list's focus ring followed its new uneven corners (square at the
 //   top, one rounded bottom corner); it now rings the selected row instead
@@ -27,7 +28,7 @@ export default {
   n: 20,
   title: 'Track list runs to the library\'s edge',
   group: 'Layout',
-  notes: 'Rows run to the library card\'s bottom edge and are cut there, by the card\'s own corner, instead of by a rounded box 8px inside it. The list and sidebar fade over 16px while more is below; History has "Show all" past ten days; the list\'s focus ring goes on the selected row.',
+  notes: 'Rows run to the library card\'s bottom edge and are cut there, by the card\'s own corner, instead of by a rounded box 8px inside it. The list and sidebar fade over 16px to 30% at an edge with more beyond it (top only once scrolled); History has "Show all" past ten days; the list\'s focus ring goes on the selected row.',
 };
 
 /** Show me: a selected row straddling the bottom of the track list, a loupe on the library's bottom-right corner, flipping. */

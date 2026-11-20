@@ -6,7 +6,7 @@
 // selections and nothing said which one the arrow keys, the browse knob
 // and Enter would move. With the flag on, the track list keeps the full
 // selection (it's what those keys act on, from anywhere) and the sidebar's
-// current list steps down to the raised fill with no edge. While keyboard
+// current list steps down to a 3% fill (half of --raise) with no edge. While keyboard
 // focus is in the sidebar the two swap. The count in the sidebar's current
 // pill goes from --fg-3 to --fg-2, since --fg-3 on that fill dropped under
 // 4.5:1 (E11). CSS only. Built here rather than in #4 (borders) and #11
@@ -16,7 +16,7 @@ export default {
   n: 87,
   title: 'Only the list the keys move looks selected',
   group: 'Polish',
-  notes: 'Sidebar current item: --raise, no edge, unless the sidebar has focus (then the track list\'s selection steps down instead). Selected sidebar count --fg-2. Beats #4.',
+  notes: 'Sidebar current item: 3% white fill, no edge, --fg text, unless the sidebar has focus (then the track list\'s selection steps down instead). Selected sidebar count --fg-2. Beats #4.',
 };
 
 /** Show me: All tracks current and a row selected; flipping shows two equal pills (before) and one (after). */

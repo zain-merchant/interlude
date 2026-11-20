@@ -34,6 +34,10 @@ export const show = {
   before: 'Click "BPM" to sort by it: an arrow appears after the word and shoves it to the left, off its column, and back when you sort by something else.',
   after: 'The arrow goes in front of the word instead, so "BPM" stays right above its numbers.',
   async setup(app, ctx) {
+    // #81 (library-sort) gives every heading a fixed arrow slot, so with it on
+    // nothing shoves and the Before would show no change: off for the show.
+    ctx.sort = app.isOn('library-sort');
+    if (ctx.sort) app.setFlag('library-sort', false);
     const title = app.$("button.sort[aria-label^='Sort by title']");
     const bpm = () => app.$("button.sort[aria-label^='Sort by bpm']");
     // Sort by title first (the app's default), measure the word, then sort by BPM.
@@ -50,6 +54,9 @@ export const show = {
     await app.click("button.sort[aria-label^='Sort by title']");
     await app.wait(500);
     await app.click("button.sort[aria-label^='Sort by bpm']");
+  },
+  cleanup(app, ctx) {
+    if (ctx.sort) app.setFlag('library-sort', true);
   },
   target: "button.sort[aria-label^='Sort by bpm']",
   badge: (app) => app.$("button.sort[aria-label^='Sort by bpm']")?.getBoundingClientRect(),

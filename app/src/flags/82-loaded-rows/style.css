@@ -1,20 +1,19 @@
-/* #82: which deck a track is on, at a glance. The bar runs the row's full
-   height, on the side of the deck it's on (left deck at the row's left
-   edge, right deck at its right edge, past Folder), and the title takes
-   that deck's colour (both pass 12:1 on the panel). Positioned on the row,
-   so the grid's columns are untouched. */
+/* #82: which deck a track is on, at a glance. A 2×20px bar 6px in from the
+   row's left end (inside the selection pill's rounded end), in the deck's
+   colour; a track on both decks shows two, 2px apart, the left deck's
+   first. The title takes the deck's colour (both pass 12:1 on the panel).
+   Positioned on the row, so the grid's columns are untouched. */
 :root[data-flag-loaded-rows] section.library .scroll .row .ld b {
   position: absolute;
-  top: 3px;
-  bottom: 3px;
-  left: 1px;
-  width: 3px;
-  height: auto;
-  border-radius: 2px;
+  top: 50%;
+  left: 6px;
+  width: 2px;
+  height: 20px;
+  margin-top: -10px;
+  border-radius: 1px;
 }
-:root[data-flag-loaded-rows] section.library .scroll .row .ld b.b {
-  left: auto;
-  right: 1px;
+:root[data-flag-loaded-rows] section.library .scroll .row .ld b ~ b {
+  left: 10px;
 }
 :root[data-flag-loaded-rows] section.library .scroll .row:has(.ld b:not(.b)) .t {
   color: var(--deck-a);

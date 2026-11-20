@@ -1,4 +1,4 @@
-// #86 (Li11, C59; backlog c-K36; E10's menu label; E14 via the mixer):
+// #86 (Li11, C59; E10's menu label; E14 via the mixer):
 // the library's messages read like a log.
 //
 // Making a playlist toasted "Made New playlist", which reads as a sentence
@@ -12,9 +12,8 @@
 //   Removed “Night Shift” from “Peak time”, Moved “Lucid”,
 //   Removed “House” from the library;
 // "Already in “Peak time”" is a plain message with no Undo; the playlist
-// menu says "Rename playlist" (to match "Delete playlist"); and an empty
-// playlist names both ways to fill it (drag, or the track's menu). Hooks:
-// Library.svelte (q(), the labels, emptyView with #7 on). Other files read
+// menu says "Rename playlist" (to match "Delete playlist"). Hooks:
+// Library.svelte (q(), the labels). Other files read
 // this flag too: App.svelte for "Loaded “Title” on …" (layout builder) and
 // Fader/Knob menus for "Reset to 0.0 dB", "Reset to centre" (mixer, E14).
 export default {
@@ -22,7 +21,7 @@ export default {
   n: 86,
   title: 'Library messages say what happened, in plain words',
   group: 'Polish',
-  notes: 'Toasts: "Created playlist “New playlist”", names in quotes, no Undo on "Already in"; "Rename playlist" in the playlist menu; the empty playlist mentions the track menu (with #7). App.svelte and Fader/Knob hook the same id.',
+  notes: 'Toasts: "Created playlist “New playlist”", names in quotes, no Undo on "Already in"; "Rename playlist" in the playlist menu. App.svelte and Fader/Knob hook the same id.',
 };
 
 /** Show me: makes a playlist; flipping shows "Made New playlist" (before) and "Created playlist “New playlist”" (after). */
