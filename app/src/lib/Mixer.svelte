@@ -254,8 +254,10 @@
   .fwrap.mirror .frow {
     flex-direction: row;
   }
+  /* The headphone cue spans the fader and meter above it, so its edges
+     line up with both. */
   .fwrap .hp {
-    justify-self: center;
+    width: auto;
   }
   .mpair {
     position: relative;
