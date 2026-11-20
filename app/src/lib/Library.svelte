@@ -300,7 +300,10 @@
   }
 
   // Playlists. Every change can be undone, and none touches the files.
-  const playlistName = (id) => playlists.find((p) => p.id === id)?.name ?? 'playlist';
+  // (Declared as functions so the empty view and #84's view name above can use them.)
+  function playlistName(id) {
+    return playlists.find((p) => p.id === id)?.name ?? 'playlist';
+  }
   // #86 (UI audit flag): copy-toasts sets names off in quotes and says what was made ("Created playlist “New playlist”").
   const copy = () => flag('copy-toasts');
   const q = (s) => (copy() ? `“${s}”` : s);
@@ -520,7 +523,9 @@
     search?.select();
   }
 
-  const short = (p) => p.split(/[\\/]/).filter(Boolean).pop() ?? p;
+  function short(p) {
+    return p.split(/[\\/]/).filter(Boolean).pop() ?? p;
+  }
 
   const rowMenu = (e, t, index) => {
     selectIndex(index);
