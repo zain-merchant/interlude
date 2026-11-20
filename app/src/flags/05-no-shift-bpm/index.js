@@ -41,6 +41,6 @@ export const show = {
     if (!app.$("[data-region='deck0'] .bpm input, [data-region='deck0'] .bpm .edit")) return;
     const [bpm, wave] = ctx.parts().map((e) => e?.getBoundingClientRect());
     d.moved(ctx.rest[1], wave, { what: 'waveform and everything below', side: 'below', still: 'waveform and everything below stay put' });
-    d.moved(ctx.rest[0], bpm, { what: 'tempo box', side: 'left', quiet: true });
+    if (ctx.phase === 'before') d.moved(ctx.rest[0], bpm, { what: 'tempo box', side: 'left', quiet: true });
   },
 };

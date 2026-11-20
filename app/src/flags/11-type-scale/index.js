@@ -32,11 +32,7 @@ export const show = {
   async setup(app) {
     await app.openImport();
   },
-  // The dialog's top half: the card below keeps clear of it (the rest is more of the same).
-  target: (app) => {
-    const c = app.$(".card[aria-labelledby='import-title']")?.getBoundingClientRect();
-    return c ? [new DOMRect(c.x, c.y, c.width, Math.min(c.height, 340))] : [];
-  },
+  target: ".card[aria-labelledby='import-title']",
   badge: (app) => app.$(".card[aria-labelledby='import-title']")?.getBoundingClientRect(),
   aid(d, app, ctx) {
     const card = app.$(".card[aria-labelledby='import-title']");

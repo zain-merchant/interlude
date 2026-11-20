@@ -8,7 +8,13 @@
 
   let el = /** @type {HTMLElement | null} */ ($state(null));
   let held = $state(false);
+  let W = $state(0);
+  let nameW = $state(0);
+  let valW = $state(0);
   const frac = $derived(Math.max(0, Math.min(1, (value - min) / (max - min))));
+  // The handle fades where it would run through the name or the value.
+  const hx = $derived(frac * (W - 3));
+  const over = $derived(W > 0 && ((hx > 4 && hx < 14 + nameW) || (hx > W - 16 - valW && hx < W - 6)));
   const decimals = $derived((String(step).split('.')[1] ?? '').length);
   const shown = $derived(`${Number(value).toFixed(decimals)}${unit}`);
   const steps = $derived(Math.round((max - min) / step));
@@ -41,6 +47,7 @@
   class="fp-slider"
   class:held
   bind:this={el}
+  bind:clientWidth={W}
   role="slider"
   tabindex="0"
   aria-label={label}
@@ -60,9 +67,9 @@
       {#each { length: steps - 1 } as _, i}<i style:left="{((i + 1) / steps) * 100}%"></i>{/each}
     </span>
   {/if}
-  <span class="handle" style:left="calc({frac * 100}% - {frac * 3}px)"></span>
-  <span class="name">{label}</span>
-  <span class="val">{shown}</span>
+  <span class="handle" class:over style:left="calc({frac * 100}% - {frac * 3}px)"></span>
+  <span class="name" bind:clientWidth={nameW}>{label}</span>
+  <span class="val" bind:clientWidth={valW}>{shown}</span>
 </div>
 
 <style>
@@ -110,6 +117,10 @@
     translate: 0 -50%;
     border-radius: 2px;
     background: rgb(255 255 255 / 0.9);
+    transition: opacity 0.15s;
+  }
+  .handle.over {
+    opacity: 0.2;
   }
   .name,
   .val {

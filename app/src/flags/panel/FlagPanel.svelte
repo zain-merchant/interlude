@@ -134,11 +134,11 @@
     const k = next.width / (el.offsetWidth || 1) || 1;
     el.style.translate = `${(from.left - next.left) / k}px ${(from.top - next.top) / k}px`;
     el.getBoundingClientRect();
-    el.style.transition = matchMedia('(prefers-reduced-motion: reduce)').matches ? 'none' : 'translate 0.35s var(--fp-ease)';
+    el.style.transition = matchMedia('(prefers-reduced-motion: reduce)').matches ? 'none' : 'translate 0.28s var(--fp-ease)';
     el.style.translate = '0px 0px';
     setTimeout(() => {
       if (el.isConnected) (el.style.transition = ''), (el.style.translate = '');
-    }, 380);
+    }, 300);
   }
   /** The arrow keys on the header (or the pill) move it to the next dock that way. */
   function nudge(e) {
@@ -163,13 +163,16 @@
 
   // ── Keys ──────────────────────────────────────────────────────────────
   const typing = (t) => t instanceof HTMLInputElement || t instanceof HTMLTextAreaElement || t?.isContentEditable;
+  // Esc ends a show whatever the app has focused (a show may keep a field
+  // open), so it's taken before the app sees it; not inside the panel's own fields.
+  function escape(e) {
+    // Only a real key: shows press Escape themselves to close dialogs.
+    if (e.key !== 'Escape' || !e.isTrusted || !current.id || /** @type {Element} */ (e.target)?.closest?.('.fp')) return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    done();
+  }
   function windowKey(e) {
-    if (e.key === 'Escape' && current.id && !typing(e.target)) {
-      e.preventDefault();
-      e.stopImmediatePropagation();
-      done();
-      return;
-    }
     if (e.key !== '`' || e.metaKey || e.ctrlKey || e.altKey || (typing(e.target) && !/** @type {Element} */ (e.target).closest('.fp'))) return;
     e.preventDefault();
     if (!current.id) fold(!folded);
@@ -242,6 +245,8 @@
 
   onMount(() => {
     resumePending();
+    addEventListener('keydown', escape, true);
+    return () => removeEventListener('keydown', escape, true);
   });
 </script>
 
@@ -441,14 +446,14 @@
         {/each}
         {#if !shown.length}<p class="fp-empty">Nothing matches “{query}”.</p>{/if}
       </div>
-      <footer class="fp-foot"><kbd>`</kbd> folds it · drag the top to move it</footer>
+      <footer class="fp-foot"><kbd aria-label="backquote">&#96;</kbd> folds it · drag the top to move it, or use the arrow keys on it</footer>
     </section>
   {/if}
 </div>
 
 <style>
   .fp {
-    --fp-bg: rgb(20 20 24 / 0.9);
+    --fp-bg: rgb(20 20 24 / 0.95);
     --fp-fg: #eceae4;
     --fp-fg-2: rgb(236 234 228 / 0.68);
     --fp-fg-3: rgb(236 234 228 / 0.46);
@@ -563,7 +568,7 @@
     cursor: grab;
     touch-action: none;
     user-select: none;
-    animation: fp-in 0.22s var(--fp-ease);
+    animation: fp-in 0.16s var(--fp-ease);
   }
   .fp-pill b {
     font-weight: 500;
@@ -597,7 +602,7 @@
     max-height: min(760px, calc(100vh - 32px));
     border-radius: 16px;
     outline: none;
-    animation: fp-in 0.22s var(--fp-ease);
+    animation: fp-in 0.16s var(--fp-ease);
   }
   @keyframes fp-in {
     from {
@@ -863,13 +868,15 @@
   kbd {
     display: inline-grid;
     place-items: center;
-    min-width: 16px;
-    height: 16px;
+    min-width: 18px;
+    height: 18px;
     margin-right: 2px;
     border-radius: 4px;
     background: rgb(255 255 255 / 0.08);
-    font: 500 11px var(--fp-mono);
-    color: var(--fp-fg-2);
+    overflow: hidden;
+    /* The backquote sits at the top of its line: set low so it shows centred. */
+    font: 600 17px/27px var(--fp-mono);
+    color: var(--fp-fg);
   }
 
   /* The card, while a show runs. */
@@ -882,14 +889,14 @@
     gap: 10px;
     padding: 12px 12px 12px 14px;
     border-radius: 16px;
-    animation: fp-in 0.22s var(--fp-ease);
+    animation: fp-in 0.16s var(--fp-ease);
   }
   .fp-card[data-placed] {
     bottom: auto;
     translate: none;
     transition:
-      left 0.35s var(--fp-ease),
-      top 0.35s var(--fp-ease);
+      left 0.25s var(--fp-ease),
+      top 0.25s var(--fp-ease);
   }
   .fp-card-head {
     display: flex;
