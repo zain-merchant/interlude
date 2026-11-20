@@ -12,9 +12,11 @@ export default {
   notes: 'The library count reads "1 track" for a single result.',
 };
 
-/** Show me: searches for something with exactly one result, with the count as it reads off. */
+/** Show me: searched down to one track; the count flips between "1 tracks" and "1 track". */
 export const show = {
-  note: 'Searched down to one track: the count beside the search reads "1 track".',
+  about: 'A search with one result said "1 tracks". Now it says "1 track".',
+  before: 'Search down to a single result and the count beside the search reads "1 tracks".',
+  after: 'It reads "1 track", as you would write it.',
   async setup(app, ctx) {
     const count = () => app.$('section.library .bar .count');
     // Find a search with exactly one result among the tracks' own titles.
@@ -30,8 +32,12 @@ export const show = {
     ctx.text = { on: words(), off: app.without('stress-plural', words) };
   },
   target: 'section.library .bar .count',
+  badge: (app) => app.textRect(app.$('section.library .bar .count')),
   aid(d, app, ctx) {
     const r = app.textRect(app.$('section.library .bar .count'));
-    if (r) d.text(r.x, r.bottom + 14, app.isOn('stress-plural') ? `off: ${ctx.text.off}` : `on: ${ctx.text.on}`);
+    if (!r) return;
+    const before = ctx.phase === 'before';
+    d.box(new DOMRect(r.x - 4, r.y - 3, r.width + 8, r.height + 6), { c: before ? d.C.bad : d.C.ok, w: 1.5, rx: 4 });
+    d.text(r.x, r.bottom + 16, before ? 'says "tracks" for one' : 'one track, one "track"', { tone: before ? 'bad' : 'ok' });
   },
 };

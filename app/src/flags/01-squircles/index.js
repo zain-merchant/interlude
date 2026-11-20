@@ -32,9 +32,11 @@ export default {
   },
 };
 
-/** Show me: loupes on deck A's corner and Sync's, with today's round corner dashed over each. */
+/** Show me: loupes on deck A's corner and Sync's, flipping between the plain round corner and the smoothed one. */
 export const show = {
-  note: 'Corners ease into their curve; in each loupe the dashed arc is today\'s round corner.',
+  about: 'Rounded corners bent suddenly, like a circle stuck onto a box. Now they ease into the curve, the way Apple\'s do.',
+  before: 'Each corner is a quarter circle: the straight edge turns into the curve all at once, which looks a little stiff up close.',
+  after: 'The edge starts bending earlier and more gradually, so corners look softer and more finished. Their size is the same.',
   setup(app, ctx) {
     const els = () => [app.deck(0), app.$("[data-region='deck0'] .btn.sync")];
     // The plain radius each corner has with the flag off.
@@ -42,18 +44,39 @@ export const show = {
     ctx.els = els;
   },
   target: (app) => [app.deck(0), app.$("[data-region='deck0'] .btn.sync")],
+  badge: (app, ctx) => ctx.at,
   aid(d, app, ctx) {
     const [deck, sync] = ctx.els().map((e) => e?.getBoundingClientRect());
-    /** A loupe on a top-left corner with the plain arc of radius r over it. */
-    const corner = (key, r, rad, zoom, size, caption) => {
-      const src = { x: r.x - 3, y: r.y - 3 };
-      const l = d.loupe(key, src, { zoom, size, near: new DOMRect(r.x, r.y, size.w / zoom, size.h / zoom), caption });
+    const smooth = (app.isOn('squircles') ? Number(document.documentElement.style.getPropertyValue('--flag-squircles-smoothing')) || 60 : 0) / 100;
+    const on = ctx.phase !== 'before';
+    /** A loupe on a top-left corner: the plain round corner dashed over it, and where each version starts to bend. */
+    const corner = (key, r, rad, zoom, size, at, caption) => {
+      const src = { x: r.x - 4, y: r.y - 4 };
+      const l = d.loupe(key, src, { zoom, size, at, caption: '' });
       const a = l.map(r.x, r.y + rad);
       const b = l.map(r.x + rad, r.y);
       const R = rad * zoom;
-      d.clip(l.rect, () => d.path(`M${a.x} ${a.y}A${R} ${R} 0 0 1 ${b.x} ${b.y}`, { c: d.C.ghost, dash: '5 4', w: 1.5 }));
+      d.clip(l.rect, () => {
+        d.path(`M${a.x} ${a.y}A${R} ${R} 0 0 1 ${b.x} ${b.y}`, { c: d.C.ghost, dash: '5 4', w: 1.5 });
+        // Where the edge starts to bend: the plain corner at its radius, the smooth one further along.
+        const top = l.map(r.x, r.y).y;
+        const plain = l.map(r.x + rad, r.y).x;
+        const soft = l.map(r.x + Math.min(rad * 1.6, r.width / 2), r.y).x;
+        d.line(plain, top - 10, plain, top + 10, { c: on ? d.C.ghost : d.C.bad, w: 2 });
+        d.line(soft, top - 10, soft, top + 10, { c: on ? d.C.ok : 'rgb(255 255 255 / .2)', w: 2 });
+      });
+      d.text(l.at.x + 10, l.at.y + l.rect.height - 16, caption, { fixed: true });
+      return l;
     };
-    if (deck) corner('panel', deck, ctx.radius[0], 6, { w: 210, h: 170 }, 'deck A, 6×');
-    if (sync) corner('button', sync, ctx.radius[1], 8, { w: 170, h: 130 }, 'Sync, 8×');
+    if (deck) {
+      const l = corner('panel', deck, ctx.radius[0], 9, { w: 330, h: 250 }, { x: 590, y: 150 }, "deck A's top-left corner, 9× bigger");
+      ctx.at = l.rect;
+      const top = l.map(deck.x, deck.y).y;
+      const plain = l.map(deck.x + ctx.radius[0], deck.y).x;
+      d.text(plain - 6, top - 22, on ? 'old bend started here' : 'the bend starts here, suddenly', { anchor: on ? 'end' : 'start', tone: on ? undefined : 'bad', fixed: true });
+      if (on) d.text(l.map(deck.x + ctx.radius[0] * 1.6, deck.y).x + 6, top + 26, 'now it starts here, gently', { tone: 'ok', fixed: true });
+    }
+    if (sync) corner('button', sync, ctx.radius[1], 12, { w: 240, h: 180 }, { x: 590, y: 414 }, "Sync button's corner, 12×");
+    void smooth;
   },
 };

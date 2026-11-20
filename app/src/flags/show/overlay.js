@@ -29,6 +29,8 @@ const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
 const r1 = (n) => Math.round(n * 10) / 10;
 /** A px value as a short label: 4, 4.5, 12.3. */
 export const pxl = (n) => `${Math.abs(n) < 0.05 ? 0 : r1(n)}`;
+/** A px value for plain labels: whole pixels from 3px up, tenths below. */
+export const pxw = (n) => (Math.abs(n) >= 3 ? `${Math.round(Math.abs(n))}` : pxl(Math.abs(n)));
 
 const FONT = "500 11px 'Geist Variable', 'Helvetica Neue', Arial, sans-serif";
 const BIG = "600 13px 'Geist Variable', 'Helvetica Neue', Arial, sans-serif";
@@ -527,11 +529,11 @@ export function createDraw(opts = {}) {
       }
       box(rest, { c: C.ghost, dash: '4 3', w: 1.25 });
       const parts = [];
-      if (big(dy) && !big(dh)) parts.push(`${pxl(Math.abs(dy))}px ${dy > 0 ? 'down' : 'up'}`);
-      if (big(dx) && !big(dw)) parts.push(`${pxl(Math.abs(dx))}px ${dx > 0 ? 'right' : 'left'}`);
+      if (big(dy) && !big(dh)) parts.push(`${pxw(dy)}px ${dy > 0 ? 'down' : 'up'}`);
+      if (big(dx) && !big(dw)) parts.push(`${pxw(dx)}px ${dx > 0 ? 'right' : 'left'}`);
       const grew = [];
-      if (big(dw)) grew.push(`${pxl(Math.abs(dw))}px ${dw > 0 ? 'wider' : 'narrower'}`);
-      if (big(dh)) grew.push(`${pxl(Math.abs(dh))}px ${dh > 0 ? 'taller' : 'shorter'}`);
+      if (big(dw)) grew.push(`${pxw(dw)}px ${dw > 0 ? 'wider' : 'narrower'}`);
+      if (big(dh)) grew.push(`${pxw(dh)}px ${dh > 0 ? 'taller' : 'shorter'}`);
       const rcx = rest.x + rest.width / 2;
       const rcy = rest.y + rest.height / 2;
       const lcx = live.x + live.width / 2;
@@ -540,6 +542,86 @@ export function createDraw(opts = {}) {
       const said = [parts.length ? `moved ${parts.join(', ')}` : '', grew.length ? `got ${grew.join(', ')}` : ''].filter(Boolean).join(', ');
       at(rest, o.label ?? `${what}${said}`, 'bad');
       return true;
+    },
+    /**
+     * A small chart of how an entrance moves: how far along it is (up)
+     * against time (across), one curve per phase, the one playing now
+     * bright with a dot at where the live animation is. `curves`:
+     * { before: [x1, y1, x2, y2], after: [...] } (cubic-bezier control
+     * points), `now`: the progress of the animation playing (0 to 1) or
+     * null, `phase`: which one is playing. Placed beside `near`.
+     */
+    motion(near, o = {}) {
+      const W = 240;
+      const H = 166;
+      const n = near ? box4(near) : { x: vw - W - 16, y: 16, w: 0, h: 0 };
+      const spots = [
+        { x: n.x + n.w + 14, y: n.y },
+        { x: n.x - 14 - W, y: n.y },
+        { x: n.x, y: n.y + n.h + 14 },
+        { x: n.x, y: n.y - 14 - H },
+      ].map((p) => ({ x: Math.max(8, Math.min(vw - W - 8, p.x)), y: Math.max(8, Math.min(vh - H - 8, p.y)), w: W, h: H }));
+      const at = spots.find((p) => !overlaps(p, n, 4) && !taken.some((t) => overlaps(p, t, 4))) ?? spots[0];
+      taken.push(at);
+      marks.push(at);
+      // The plot inside the panel.
+      const px = at.x + 34;
+      const py = at.y + 30;
+      const pw = W - 48;
+      const ph = H - 88;
+      const bez = (c, t) => {
+        const [x1, y1, x2, y2] = c;
+        const f = (a, b, u) => 3 * a * u * (1 - u) ** 2 + 3 * b * u * u * (1 - u) + u ** 3;
+        return [f(x1, x2, t), f(y1, y2, t)];
+      };
+      const curve = (c) => {
+        let p = '';
+        for (let i = 0; i <= 40; i++) {
+          const [x, y] = bez(c, i / 40);
+          p += `${i ? 'L' : 'M'}${r1(px + x * pw)} ${r1(py + ph - y * ph)}`;
+        }
+        return p;
+      };
+      /** y for a given x (progress at a time), by bisection. */
+      const yAt = (c, x) => {
+        let lo = 0;
+        let hi = 1;
+        for (let i = 0; i < 24; i++) {
+          const m = (lo + hi) / 2;
+          if (bez(c, m)[0] < x) lo = m;
+          else hi = m;
+        }
+        return bez(c, (lo + hi) / 2)[1];
+      };
+      let g = `<rect x="${r1(at.x)}" y="${r1(at.y)}" width="${W}" height="${H}" rx="10" fill="rgb(16 16 16 / .94)" stroke="rgb(255 255 255 / .14)"/>`;
+      g += `<text x="${r1(at.x + 12)}" y="${r1(at.y + 15)}" fill="${C.label}">${esc(o.title ?? 'How far it has come in')}</text>`;
+      g += `<path d="M${px} ${py}V${py + ph}H${px + pw}" stroke="rgb(255 255 255 / .25)" fill="none"/>`;
+      g += `<text x="${r1(px + pw)}" y="${r1(py + ph + 12)}" fill="rgb(255 255 255 / .5)" text-anchor="end">time →</text>`;
+      g += `<text x="${r1(px - 6)}" y="${r1(py)}" fill="rgb(255 255 255 / .5)" text-anchor="end">all</text>`;
+      g += `<text x="${r1(px - 6)}" y="${r1(py + ph)}" fill="rgb(255 255 255 / .5)" text-anchor="end">0</text>`;
+      for (const k of ['before', 'after']) {
+        const c = o.curves?.[k];
+        if (!c) continue;
+        const live = o.phase === k;
+        const col = k === 'after' ? C.ok : C.bad;
+        g += `<path d="${curve(c)}" fill="none" stroke="${col}" stroke-width="${live ? 2 : 1.25}" stroke-opacity="${live ? 1 : 0.4}"${k === 'before' ? ' stroke-dasharray="4 3"' : ''}/>`;
+      }
+      // A quarter of the way through: how far each has got.
+      const q = 0.25;
+      g += `<line x1="${r1(px + q * pw)}" y1="${py}" x2="${r1(px + q * pw)}" y2="${py + ph}" stroke="rgb(255 255 255 / .18)" stroke-dasharray="2 3"/>`;
+      if (o.now != null && o.curves?.[o.phase]) {
+        const t = Math.max(0, Math.min(1, o.now));
+        const y = yAt(o.curves[o.phase], t);
+        g += `<circle cx="${r1(px + t * pw)}" cy="${r1(py + ph - y * ph)}" r="4" fill="#fff" stroke="#000"/>`;
+      }
+      const lines = o.legend ?? [];
+      lines.forEach((l, i) => {
+        const ly = at.y + H - 14 - (lines.length - 1 - i) * 15;
+        g += `<circle cx="${r1(at.x + 16)}" cy="${r1(ly)}" r="3" fill="${l.tone === 'ok' ? C.ok : C.bad}"/>`;
+        g += `<text x="${r1(at.x + 24)}" y="${r1(ly)}" fill="${C.label}">${esc(l.text)}</text>`;
+      });
+      aid += g;
+      return at;
     },
     /** A small panel of text lines (pre-formatted), placed at x, y. */
     legend(lines, at = { x: 16, y: 16 }) {

@@ -14,32 +14,32 @@ export default {
   notes: 'The BPM field opened by double-click has the same box as the number it replaces, so the deck below no longer drops 11px.',
 };
 
-/** Show me: opens deck A's BPM field and ghosts where things would be with the flag off. */
+/** Show me: deck A's BPM field open; flipping shows the deck dropping (before) and staying put (after). */
 export const show = {
-  note: "Deck A's BPM field is open; dashed is where it and the rows below would be with the flag off. Flipping the flag closes the field: press Replay.",
+  about: 'Typing a new tempo made the whole deck jump down. Now nothing moves while you type.',
+  before: 'Double-click the BPM to type a tempo: the box grows, and the waveform and everything under it drop down until you finish.',
+  after: "The box is exactly the number's size, so the deck stays where it was while you type.",
   async setup(app, ctx) {
     if (!app.loaded(0)) await app.loadTrack(0);
     const D = "[data-region='deck0']";
+    ctx.parts = () => [app.$(`${D} .bpm`), app.$(`${D} .overview`)];
+    // Where they sit before you start typing.
+    ctx.rest = app.snap(ctx.parts());
+    await show.each(app, ctx);
+  },
+  // Flipping the flag can close the field: open it again each time.
+  async each(app) {
+    const D = "[data-region='deck0']";
+    if (app.$(`${D} .bpm input, ${D} .bpm .edit`)) return;
     await app.dblclick(`${D} .bpm .big`);
     await app.until(() => app.$(`${D} .bpm input, ${D} .bpm .edit`), 1500, 'the BPM field');
-    ctx.parts = () => [app.$(`${D} .bpm`), app.$(`${D} .overview`)];
-    ctx.names = ['BPM', 'rows below'];
-    ctx.b = app.both('no-shift-bpm', ctx.parts());
   },
   target: "[data-region='deck0'] .bpm",
-  async replay(app, ctx) {
-    const D = "[data-region='deck0']";
-    await app.key('Escape', { target: app.$(`${D} .bpm input`) ?? document.body });
-    await app.wait(500);
-    await app.dblclick(`${D} .bpm .big`);
-    await app.until(() => app.$(`${D} .bpm input, ${D} .bpm .edit`), 1500, 'the BPM field');
-    ctx.b = app.both('no-shift-bpm', ctx.parts());
-  },
+  badge: (app) => app.$("[data-region='deck0'] .bpm")?.getBoundingClientRect(),
   aid(d, app, ctx) {
-    // Only while the field is open: the ghosts are of that state.
     if (!app.$("[data-region='deck0'] .bpm input, [data-region='deck0'] .bpm .edit")) return;
-    const other = app.other('no-shift-bpm', ctx.b);
-    const off = app.isOn('no-shift-bpm') ? 'off:' : 'on:';
-    ctx.parts().forEach((el, i) => el && d.ghost(other[i], el.getBoundingClientRect(), { label: `${off} ${ctx.names[i]}`, side: i ? 'below' : 'above' }));
+    const [bpm, wave] = ctx.parts().map((e) => e?.getBoundingClientRect());
+    d.moved(ctx.rest[1], wave, { what: 'waveform and everything below', side: 'below', still: 'waveform and everything below stay put' });
+    d.moved(ctx.rest[0], bpm, { what: 'tempo box', side: 'left', quiet: true });
   },
 };
