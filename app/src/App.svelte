@@ -452,6 +452,25 @@
     if (top != null) root.style.setProperty('--flag-polish-dialog-lib', `${top / (Number(root.style.zoom) || 1)}px`);
   });
 
+  // #24 (UI audit flag): focus-after-keys: html[data-input='keys'] while the
+  // keyboard is moving focus (Tab, arrows, Home/End, Page keys, F6), cleared
+  // by any pointer press, so focus rings show only after navigating by key.
+  // A shortcut like W (play) doesn't count: it acts, it doesn't move focus.
+  $effect(() => {
+    if (!flag('focus-after-keys')) return;
+    const root = document.documentElement;
+    const NAV = new Set(['Tab', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Home', 'End', 'PageUp', 'PageDown', 'F6']);
+    const keys = (e) => NAV.has(e.key) && (root.dataset.input = 'keys');
+    const pointer = () => delete root.dataset.input;
+    addEventListener('keydown', keys, true);
+    addEventListener('pointerdown', pointer, true);
+    return () => {
+      removeEventListener('keydown', keys, true);
+      removeEventListener('pointerdown', pointer, true);
+      delete root.dataset.input;
+    };
+  });
+
   /** True while the sampler is showing because of the controller's SAMPLER button. */
   let samplerFromPads = false;
 
