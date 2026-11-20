@@ -13,7 +13,8 @@
     "tauri": "tauri",
     "dev:site": "vite --config demo/vite.config.js",
     "build:site": "vite build --config demo/vite.config.js",
-    "bake:hero": "npm run build:site && node demo/bake-hero.mjs"
+    "clips": "node demo/segments/record.mjs",
+    "build:site:all": "npm run build:site && node demo/segments/record.mjs --if-changed"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.9.0",

@@ -210,8 +210,16 @@ could not verify" warning. Set up once on the release Mac:
 After that `release.sh` finds the certificate and the password itself, and
 Tauri signs the app and sends it to Apple to notarize (a few minutes).
 
-**The website** is `site/`, plain HTML and CSS, with no build step and no
-CI. To publish or update it, push that folder to the `gh-pages` branch:
+**The website** is `site/`, plain HTML and CSS, with no CI. Its animated
+parts are built from the app: the hero's demo and the feature cards'
+pictures (`site/demo`) and the hero's recorded clips (`site/hero/clips`,
+see `app/demo/segments/README.md`). Before publishing, bring them up to date
+and commit what changed (the clips are only recorded again if the app, the
+demo or the recorder changed):
+```sh
+npm --prefix app run build:site:all
+```
+Then push that folder to the `gh-pages` branch:
 ```sh
 git subtree push --prefix site origin gh-pages
 ```
