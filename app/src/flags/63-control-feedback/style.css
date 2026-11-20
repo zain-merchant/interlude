@@ -1,0 +1,32 @@
+/* #63: dials and faders answer the pointer. Hover brightens a dial's
+   ticks and lifts its cap a step; while it's turned, a thin ring sits on
+   the cap. Faders: hover lifts the cap one step more than today, and a
+   drag adds the same ring, so pressed no longer looks like hover. */
+
+/* Hover: on the cap, or on the whole ring when hit-areas (#62) makes the ring the handle. */
+:root[data-flag-control-feedback]:not([data-flag-hit-areas]) .knob .wrap:has(.dial:hover) line:not(.on),
+:root[data-flag-control-feedback][data-flag-hit-areas] .knob .wrap:hover line:not(.on),
+:root[data-flag-control-feedback] .knob .wrap:has(.dial.dragging) line:not(.on) {
+  stroke: rgb(255 255 255 / 0.24);
+}
+:root[data-flag-control-feedback]:not([data-flag-hit-areas]) .knob .wrap:has(.dial:hover) line.major:not(.on),
+:root[data-flag-control-feedback][data-flag-hit-areas] .knob .wrap:hover line.major:not(.on),
+:root[data-flag-control-feedback] .knob .wrap:has(.dial.dragging) line.major:not(.on) {
+  stroke: rgb(255 255 255 / 0.36);
+}
+:root[data-flag-control-feedback]:not([data-flag-hit-areas]) .knob .wrap:has(.dial:hover) .dial::after,
+:root[data-flag-control-feedback][data-flag-hit-areas] .knob .wrap:hover .dial::after,
+:root[data-flag-control-feedback] .knob .dial.dragging::after {
+  background: radial-gradient(circle at 40% 30%, #45464c, #2c2d31 70%);
+}
+:root[data-flag-control-feedback] .knob .dial.dragging {
+  box-shadow: 0 0 0 1px #08080a, 0 3px 6px rgb(0 0 0 / 0.6), inset 0 1px 0 rgb(255 255 255 / 0.1), inset 0 0 0 1px var(--fg-3);
+}
+
+:root[data-flag-control-feedback] .fader:hover .cap,
+:root[data-flag-control-feedback] .fader.dragging .cap {
+  background: linear-gradient(180deg, #53545b, #36373d);
+}
+:root[data-flag-control-feedback] .fader.dragging .cap {
+  box-shadow: 0 0 0 1px #08080a, 0 3px 5px rgb(0 0 0 / 0.6), inset 0 1px 0 rgb(255 255 255 / 0.1), inset 0 0 0 1px var(--fg-3);
+}

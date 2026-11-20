@@ -1,0 +1,10 @@
+/* #64: one scale on the crossfader. The fader's own quarter marks go
+   (its centre tick stays), and the ruler is inset 6px each side to the
+   cap's travel, so its ends and quarters land where the cap does. */
+:root[data-flag-crossfader-scale] .mixer .xr .fader .mark {
+  display: none;
+}
+:root[data-flag-crossfader-scale] .mixer .xr .ruler {
+  width: calc(100% - 12px);
+  margin: 0 6px;
+}

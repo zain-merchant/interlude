@@ -2,6 +2,7 @@
   import { showTip, hideTip, tip, tipText } from './tooltip.svelte.js';
   import { openMenu } from './menu.svelte.js';
   import { detent, keyValue } from './control.js';
+  import { flag } from '../flags/registry.svelte.js';
 
   /**
    * A fader drawn with plain elements, so it looks and behaves the same in
@@ -56,6 +57,8 @@
     }
   }
   const readout = () => tipText(label, format(value));
+  // #86 (UI audit flag): copy-toasts says what the reset goes back to.
+  const resetLabel = () => (flag('copy-toasts') ? `Reset to ${format(reset)}` : 'Reset to default');
 
   function pos(e) {
     const r = track.getBoundingClientRect();
@@ -131,7 +134,7 @@
   ondblclick={() => set(reset)}
   onkeydown={key}
   onwheel={wheel}
-  oncontextmenu={(e) => openMenu(e, [{ label: 'Reset to default', action: () => set(reset) }])}
+  oncontextmenu={(e) => openMenu(e, [{ label: resetLabel(), action: () => set(reset) }])}
   use:tip={() => note || tipText(label, format(value), 'double-click to reset')}
 >
   <div class="line"></div>

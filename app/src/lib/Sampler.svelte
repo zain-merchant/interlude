@@ -9,6 +9,7 @@
   import { dropTarget } from './dnd.svelte.js';
   import { engine } from './engine.svelte.js';
   import { keyLabel } from './commands.js';
+  import { flag } from '../flags/registry.svelte.js';
   import { sampler, SLOTS, loadSample, clearSample, playSample, stopSample, setSamplerLevel, setSamplerOpen } from './sampler.svelte.js';
 
   /** @type {{ onmessage?: (text: string) => void, selected?: () => any }} */
@@ -16,6 +17,7 @@
 
   const slots = Array.from({ length: SLOTS }, (_, i) => i);
   const live = (i) => engine.sampler?.slots[i];
+  const firstEmpty = $derived(slots.find((i) => !sampler.slots[i] && !sampler.loading[i]) ?? -1);
   const len = (s) => (s >= 10 ? `${Math.round(s)} s` : `${s.toFixed(1)} s`);
 
   async function put(i, track) {
@@ -28,6 +30,8 @@
   }
 
   function down(e, i) {
+    // #67 (UI audit flag): sampler-strip loads the library's selected track into an empty slot on click.
+    if (flag('sampler-strip') && e.button === 0 && !sampler.slots[i] && !sampler.loading[i]) return put(i, selected());
     if (e.button !== 0 || !sampler.slots[i]) return;
     if (e.shiftKey) stopSample(i);
     else playSample(i);
@@ -41,6 +45,8 @@
   const slotTip = (i) => {
     const s = sampler.slots[i];
     if (sampler.loading[i]) return 'Loading…';
+    // #67 (UI audit flag): the empty slot's tip says a click works too.
+    if (!s && flag('sampler-strip')) return tipText(`Slot ${i + 1} is empty`, '', selected() ? 'click to put the selected track here, or drag one in' : 'drag a track here, or select one and click');
     if (!s) return tipText(`Slot ${i + 1} is empty`, '', 'drag a track here');
     const d = live(i)?.duration;
     return tipText(`${s.title}${d ? `, ${len(d)}` : ''}`, '', 'click to play, ⇧-click to stop');
@@ -52,7 +58,10 @@
       { label: 'Play', action: () => playSample(i), enabled: !!s },
       { label: 'Stop', action: () => stopSample(i), enabled: !!live(i)?.playing },
       '-',
-      { label: pick ? `Put ${pick.title} here` : 'Put the selected track here', action: () => put(i, pick), enabled: !!pick },
+      // #68 (UI audit flag): mixer-polish names the slot the menu acts on (it can be half under the menu).
+      flag('mixer-polish')
+        ? { label: pick ? `Load ${pick.title} into slot ${i + 1}` : `Load the selected track into slot ${i + 1}`, action: () => put(i, pick), enabled: !!pick }
+        : { label: pick ? `Put ${pick.title} here` : 'Put the selected track here', action: () => put(i, pick), enabled: !!pick },
       { label: 'Clear slot', action: () => clearSample(i), enabled: !!s },
     ]);
   }
@@ -64,18 +73,20 @@
     {#each slots as i}
       {@const s = sampler.slots[i]}
       {@const l = live(i)}
-      <button class="slot" class:set={!!s} class:playing={l?.playing} aria-disabled={!s}
+      <button class="slot" class:set={!!s} class:playing={l?.playing} aria-disabled={!s && !flag('sampler-strip')}
         aria-label={s ? `Slot ${i + 1}, ${s.title}${l?.playing ? ', playing' : ''}` : `Slot ${i + 1}, empty`}
         style:--p={l?.playing ? l.progress : 0}
         onpointerdown={(e) => down(e, i)} onkeydown={(e) => key(e, i)} oncontextmenu={(e) => menu(e, i)}
         use:dropTarget={{ ondrop: (t) => put(i, t) }} use:tip={() => slotTip(i)}>
         <span class="n num">{i + 1}</span>
-        <span class="name">{sampler.loading[i] ? 'Loading…' : (s?.title ?? '')}</span>
+        <!-- #67 (UI audit flag): the first empty slot says what it's for. -->
+        <span class="name">{sampler.loading[i] ? 'Loading…' : (s?.title ?? (flag('sampler-strip') && i === firstEmpty ? 'Drop a track' : ''))}</span>
         {#if l?.playing}<i class="bar" aria-hidden="true"></i>{/if}
       </button>
     {/each}
   </div>
-  <Knob label="Level" name="Sampler level" size={22} fromMin value={sampler.level} min={0} max={1} reset={0.8}
+  <!-- #67 / #66 (UI audit flags): sampler-strip's smaller dial fits the strip; knob-rings' quieter ring. -->
+  <Knob label="Level" name="Sampler level" size={flag('sampler-strip') ? 16 : 22} fromMin arc={flag('knob-rings') ? 'var(--fg-2)' : undefined} value={sampler.level} min={0} max={1} reset={0.8}
     format={(v) => `${Math.round(v * 100)}%`} onchange={setSamplerLevel} />
   <button class="close" aria-label="Hide sampler" onclick={() => setSamplerOpen(false)}
     use:tip={() => tipText('Hide sampler', keyLabel('view.sampler'), 'slots keep playing from a controller')}>

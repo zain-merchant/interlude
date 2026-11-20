@@ -66,6 +66,7 @@
   function down(e) {
     if (e.button !== 0) return;
     e.currentTarget.setPointerCapture(e.pointerId);
+
     dragging = true;
     raw = pos;
     showTip(dial, readout());
@@ -80,6 +81,9 @@
   function up() {
     if (!dragging) return;
     dragging = false;
+    // #62 (UI audit flag): a grab on the ring leaves the dial focused, as one on the cap does
+    // (after the press, which would otherwise move focus to the page).
+    if (grabRing) dial.focus({ preventScroll: true });
     hideTip(dial);
   }
   function wheel(e) {
@@ -102,9 +106,15 @@
       set(kill);
     }
   }
+  // #62 (UI audit flag): hit-areas moves the gestures from the cap to the
+  // whole tick ring (.wrap); with it off they stay on the cap (.dial).
+  const grabRing = $derived(flag('hit-areas'));
+  const onRing = (fn) => (e) => grabRing && fn(e);
+  const onCap = (fn) => (e) => !grabRing && fn(e);
   const menu = (e) =>
     openMenu(e, [
-      { label: 'Reset to default', action: () => set(reset), key: '' },
+      // #86 (UI audit flag): copy-toasts says what the reset goes back to.
+      { label: flag('copy-toasts') ? `Reset to ${format(reset)}` : 'Reset to default', action: () => set(reset), key: '' },
       ...(kill !== undefined ? [{ label: killed ? 'Bring back' : 'Kill', action: toggleKill }] : []),
     ]);
   const TICKS = 27;
@@ -127,7 +137,15 @@
 </script>
 
 <div class="knob" style:--c={arc ?? 'var(--fg)'}>
-  <div class="wrap" style:width="{box}px" style:height="{box}px">
+  <!-- svelte-ignore a11y_no_static_element_interactions (the dial inside is the slider; the ring only widens where it grabs) -->
+  <div class="wrap" style:width="{box}px" style:height="{box}px"
+    onpointerdown={onRing(down)}
+    onpointermove={onRing(move)}
+    onpointerup={onRing(up)}
+    onpointercancel={onRing(up)}
+    ondblclick={onRing(() => set(reset))}
+    onwheel={onRing(wheel)}
+    oncontextmenu={onRing(menu)}>
     <svg width={box} height={box} viewBox="{-box / 2} {-box / 2} {box} {box}" aria-hidden="true">
       {#each ticks as tk}
         <line x1={tk.x1} y1={tk.y1} x2={tk.x2} y2={tk.y2} class:major={tk.major}
@@ -149,19 +167,20 @@
       style:width="{size}px"
       style:height="{size}px"
       style:--rot="{angle(pos)}deg"
-      onpointerdown={down}
-      onpointermove={move}
-      onpointerup={up}
-      onpointercancel={up}
-      ondblclick={() => set(reset)}
-      onwheel={wheel}
+      onpointerdown={onCap(down)}
+      onpointermove={onCap(move)}
+      onpointerup={onCap(up)}
+      onpointercancel={onCap(up)}
+      ondblclick={onCap(() => set(reset))}
+      onwheel={onCap(wheel)}
       onkeydown={key}
-      oncontextmenu={menu}
+      oncontextmenu={onCap(menu)}
       use:tip={() => tipText(name, format(value), 'double-click to reset')}
     ><i></i></div>
   </div>
   {#if kill !== undefined}
-    <button class="label" class:killed onclick={toggleKill} aria-pressed={killed}
+    <!-- #61 (UI audit flag): eq-kill opens the kill's tooltip under the label, off the knob. -->
+    <button class="label" class:killed onclick={toggleKill} aria-pressed={killed} data-tip-below={flag('eq-kill') ? '' : undefined}
       use:tip={() => (killed ? `Bring back ${name}` : `Kill ${name}`)}>{label}{killText}</button>
   {:else if label}
     <span class="label">{label}</span>

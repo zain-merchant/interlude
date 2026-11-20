@@ -9,6 +9,7 @@
   import { engine, control as send } from './engine.svelte.js';
   import { backend } from './backend.js';
   import { announce } from './announce.svelte.js';
+  import { flag } from '../flags/registry.svelte.js';
 
   /** @type {{ onmessage?: (text: string) => void }} */
   let { onmessage = () => {} } = $props();
@@ -27,7 +28,8 @@
   /** Height of the channel dial columns; on a short mixer the dials shrink so their labels never overlap. */
   let chHeight = $state(0);
   // Each dial takes its size plus 24px (tick ring and label), with 4px between dials.
-  const knob = $derived(chHeight ? Math.max(14, Math.min(KNOB, Math.floor((chHeight - 16) / 5 - 24))) : KNOB);
+  // #61 (UI audit flag): eq-kill's 20px kill buttons add 4px under three of the five dials.
+  const knob = $derived(chHeight ? Math.max(14, Math.min(KNOB, Math.floor((chHeight - 16) / 5 - 24 - (flag('eq-kill') ? 2.4 : 0)))) : KNOB);
   const color = (deck) => (deck === 0 ? 'var(--deck-a)' : 'var(--deck-b)');
   const channels = $state([0, 1].map(() => ({ gain: 0, eq: [0, 0, 0], filter: 0, fader: 1, pfl: false })));
   let master = $state(0);
@@ -171,9 +173,10 @@
   {@render knobs(0)}
   {@render strip(0)}
   <div class="cen">
-    <Knob label="Master" name="Master volume" size={26} fromMin bind:value={master} min={-24} max={6} reset={0} format={db}
+    <!-- #66 (UI audit flag): knob-rings draws the global rings a step quieter, and Cue mix from 12 o'clock. -->
+    <Knob label="Master" name="Master volume" size={26} fromMin arc={flag('knob-rings') ? 'var(--fg-2)' : undefined} bind:value={master} min={-24} max={6} reset={0} format={db}
       onchange={(v) => control({ type: 'setMasterGain', db: v })} />
-    <Knob label="Cue mix" name="Headphone cue mix" size={22} fromMin bind:value={cueMix} min={0} max={1} reset={0.5}
+    <Knob label="Cue mix" name="Headphone cue mix" size={22} fromMin={!flag('knob-rings')} arc={flag('knob-rings') ? 'var(--fg-2)' : undefined} bind:value={cueMix} min={0} max={1} reset={0.5}
       format={(v) => `${Math.round((1 - v) * 100)}% cue, ${Math.round(v * 100)}% master`}
       onchange={(v) => control({ type: 'setCueMix', value: v })} />
     <div class="mpair" use:tip={() => engine.limiting >= 0.5

@@ -1,0 +1,8 @@
+/* #62: a dial grabs on its whole tick ring, not only on the cap. The ring
+   box is round, so neighbouring dials (which overlap by a few pixels)
+   don't steal each other's corners. */
+:root[data-flag-hit-areas] .knob .wrap {
+  border-radius: 50%;
+  cursor: ns-resize;
+  touch-action: none;
+}

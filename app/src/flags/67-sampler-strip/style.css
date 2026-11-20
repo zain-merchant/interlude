@@ -1,0 +1,16 @@
+/* #67: the sampler strip. The Level dial (16px cap, 34px with its ticks)
+   fits inside the 40px strip, 8px from its label and 8px more from the
+   close ×. Empty slots get a faint ring over the well and a hand cursor. */
+:root[data-flag-sampler-strip] .sampler .knob {
+  gap: 8px;
+}
+:root[data-flag-sampler-strip] .sampler .close {
+  margin-left: 8px;
+}
+:root[data-flag-sampler-strip] .sampler .slot:not(.set) {
+  box-shadow: var(--well-shadow), inset 0 0 0 1px var(--line);
+  cursor: pointer;
+}
+:root[data-flag-sampler-strip] .sampler .slot:not(.set):hover {
+  box-shadow: var(--well-shadow), inset 0 0 0 1px var(--line-2);
+}
