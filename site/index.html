@@ -117,6 +117,31 @@
           <svg class="nav-dl on-mac" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2.5v7.5m0 0L4.75 6.75M8 10l3.25-3.25M3.5 13h9"/></svg><svg class="nav-dl on-phone" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 9.5V2m0 0L5.25 4.75M8 2l2.75 2.75M5.5 7H5a1.5 1.5 0 0 0-1.5 1.5v4A1.5 1.5 0 0 0 5 14h6a1.5 1.5 0 0 0 1.5-1.5v-4A1.5 1.5 0 0 0 11 7h-.5"/></svg><span class="on-mac">Download</span><span class="on-phone">Send to Mac</span>
         </a>
       </div>
+      <!-- Narrow screens: the sections are in a menu (below). -->
+      <button class="menu-btn" type="button" aria-expanded="false" aria-controls="menu" aria-label="Menu"><i></i><i></i></button>
+    </div>
+    <!-- The menu: a sheet of the capsule's glass that grows down out of it,
+         over the page, which dims and blurs behind it. -->
+    <div class="menu-scrim" aria-hidden="true"></div>
+    <div class="menu" id="menu" role="dialog" aria-modal="true" aria-label="Menu">
+      <div class="menu-sheet">
+        <div class="menu-in">
+          <nav class="menu-links" aria-label="Sections">
+            <a href="#install" style="--i: 0">Install</a>
+            <a href="#features" style="--i: 1">Features</a>
+            <a href="#faq" style="--i: 2">FAQ</a>
+            <a href="https://github.com/zain-merchant/interlude/releases" target="_blank" rel="noopener" style="--i: 3">Changelog<svg class="mo" viewBox="0 0 16 16" aria-hidden="true"><path d="M5.5 4.5h6v6M11.5 4.5l-7 7"/></svg></a>
+            <a href="https://github.com/zain-merchant/interlude" target="_blank" rel="noopener" style="--i: 4">GitHub<svg class="mo" viewBox="0 0 16 16" aria-hidden="true"><path d="M5.5 4.5h6v6M11.5 4.5l-7 7"/></svg></a>
+          </nav>
+          <div class="menu-foot" style="--i: 5">
+            <a class="btn big" href="https://github.com/zain-merchant/interlude/releases/latest/download/Interlude.dmg">
+              <svg class="on-mac" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v8m0 0L4.5 6.5M8 10l3.5-3.5M3 13h10"/></svg><svg class="on-phone" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 9.5V2m0 0L5.25 4.75M8 2l2.75 2.75M5.5 7H5a1.5 1.5 0 0 0-1.5 1.5v4A1.5 1.5 0 0 0 5 14h6a1.5 1.5 0 0 0 1.5-1.5v-4A1.5 1.5 0 0 0 11 7h-.5"/></svg>
+              <span class="on-mac">Download for Mac</span><span class="on-phone">Get it on your Mac</span>
+            </a>
+            <p>Free and open source, for macOS 11+ on Apple silicon</p>
+          </div>
+        </div>
+      </div>
     </div>
   </header>
   <script>
@@ -148,6 +173,7 @@
       const word = brand.querySelector('span');
       const links = row.querySelector('.links');
       const acts = row.querySelector('.nav-actions');
+      const menuBtn = row.querySelector('.menu-btn');
       const reduced = matchMedia('(prefers-reduced-motion: reduce)');
       // The name is --brand-word (30px) in the bar and 15px in the capsule;
       // the icon is --brand-icon (40px) in the bar and 36px in the capsule.
@@ -190,12 +216,16 @@
         const left = (W - capW) / 2;
         const bx = left + end;
         const lx = bx + bw + gap;
-        const ax = narrow ? left + capW - end - aw : lx + lw + gapA;
+        // (Narrow, the menu button takes the capsule's right end, the
+        // actions just inside it.)
+        const mw = narrow ? menuBtn.offsetWidth : 0;
+        const ax = narrow ? left + capW - end - aw - (mw ? mw + 4 : 0) : lx + lw + gapA;
         geo = { W, H: nav.clientHeight, side: left, right: W - left - capW, b: bx - (x0 + brand.offsetLeft), l: lx - (x0 + links.offsetLeft), a: ax - (x0 + acts.offsetLeft) };
         // The actions keep to what's beside them on the way, so the space
         // never closes up: just after the links (wide), or just inside the
         // capsule's closing right end (narrow).
         geo.k = narrow ? geo.right : -geo.l;
+        geo.m = mw ? left + capW - end - mw - (x0 + menuBtn.offsetLeft) : 0;
         draw();
       }
       // Springs, both critically damped (nothing overshoots): the shape eases
@@ -249,6 +279,7 @@
         // well before it settles, so they're clear of the buttons early.
         const pl = (d.dataset.navacts || 'island') === 'island' ? 1 - (1 - p) ** 2 : p;
         links.style.transform = `translate(${r(geo.l * pl)}px, ${r(dy * v)}px)`;
+        if (geo.m || menuBtn.style.transform) menuBtn.style.transform = geo.m ? `translate(${r(geo.m * p)}px, ${r(dy * v)}px)` : '';
         // The actions (Nav: buttons arrive). In every way but the old one
         // they ride the capsule's right end, fixed inside it, so they never
         // slide past anything or outside it:
@@ -295,7 +326,10 @@
       // lockup is hidden.)
       const heads = [...document.querySelectorAll('.hero .lockup, .hero .tagline')];
       const headline = () => heads.find((e) => e.offsetHeight > 8) ?? cta;
+      // (Held as a capsule while the menu is open, whatever the scroll.)
+      let held = false;
       function read() {
+        if (held) return;
         const h = headline().getBoundingClientRect();
         const NAV = geo?.H ?? 60;
         const to = h.top < NAV + 8 ? 1 : h.top > NAV + 40 ? 0 : shape.to;
@@ -332,12 +366,24 @@
       addEventListener('resize', measure);
       // Another nav (the Try panel): hand the items back to the stylesheet.
       new MutationObserver(() => {
-        for (const e of [glass, edge, brand, icon, word, links, acts, ...btns]) e.removeAttribute('style');
+        for (const e of [glass, edge, brand, icon, word, links, acts, menuBtn, ...btns]) e.removeAttribute('style');
         geo = null;
         measure();
         wake();
       }).observe(d, { attributeFilter: ['data-nav'] });
       window.navMeasure = measure;
+      // The menu opens out of the capsule: opened from the bar at the top of
+      // the page, the bar draws in to the capsule first (index.html, menu).
+      window.navHold = (on) => {
+        held = on;
+        if (on && shape.to !== 1) {
+          shape.to = 1;
+          d.toggleAttribute('data-capsule', true);
+          if (reduced.matches) { shape.x = 1; shape.v = 0; act.x = act.to = 1; act.v = 0; }
+        }
+        if (!on) read();
+        wake();
+      };
       window.tune?.slider({ id: 'nav-word', label: 'Nav: name size before capsule', folder: 'Settled', min: 18, max: 96, step: 1, value: 32, unit: 'px', css: '--brand-word', onInput: () => requestAnimationFrame(measure) });
       // The capsule's corners: the icon's own (its squircle's corner, about
       // 8px at 36px, plus the 6px between), so everything inside is
@@ -399,6 +445,67 @@
       // Opened part way down the page: start as a capsule.
       read();
       if (shape.to) { shape.x = act.x = act.to = 1; draw(); }
+    });
+  </script>
+
+  <script>
+    // The menu, on narrow screens (the sections don't fit in the nav). The
+    // button opens it; it closes on the button again, Escape, a tap outside
+    // it, or a pick. While it's open the page behind it holds still and is
+    // out of reach (inert), so focus stays in the menu. All of its motion is
+    // in style.css, on transitions (so a quick second tap turns it round
+    // from wherever it has got to); here only the state changes.
+    addEventListener('DOMContentLoaded', () => {
+      const d = document.documentElement;
+      const nav = document.querySelector('.nav');
+      const btn = nav?.querySelector('.menu-btn');
+      const menu = document.getElementById('menu');
+      if (!btn || !menu) return;
+      const scrim = nav.querySelector('.menu-scrim');
+      const wide = matchMedia('(min-width: 861px)');
+      const behind = () => [document.querySelector('main'), document.querySelector('footer'), ...nav.querySelectorAll('.nav-row > :not(.menu-btn)')];
+      const items = () => [btn, ...menu.querySelectorAll('a[href]')].filter((e) => e.getClientRects().length);
+      let open = false;
+      let release = 0;
+      function set(v, { refocus = false, follow = false } = {}) {
+        if (v === open) return;
+        open = v;
+        btn.setAttribute('aria-expanded', String(v));
+        btn.setAttribute('aria-label', v ? 'Close menu' : 'Menu');
+        for (const e of behind()) if (e) e.inert = v;
+        d.toggleAttribute('data-menu', v);
+        // (Picking a section: the capsule stays a capsule while the page
+        // scrolls there, rather than opening to the bar and back.)
+        clearTimeout(release);
+        if (v || !follow) window.navHold?.(v);
+        else {
+          const done = () => { clearTimeout(release); removeEventListener('scrollend', done); window.navHold?.(false); };
+          addEventListener('scrollend', done, { once: true });
+          release = setTimeout(done, 1200);
+        }
+        if (v) menu.querySelector('a[href]')?.focus({ preventScroll: true });
+        else if (refocus) btn.focus({ preventScroll: true });
+      }
+      btn.addEventListener('click', () => set(!open));
+      scrim.addEventListener('click', () => set(false));
+      // (A pick closes it straight away, before the link is followed, so
+      // the page can scroll to a section.)
+      menu.addEventListener('click', (e) => {
+        const a = e.target.closest('a[href]');
+        if (a && !e.defaultPrevented) set(false, { follow: a.getAttribute('href').startsWith('#') });
+      });
+      document.addEventListener('keydown', (e) => {
+        if (!open) return;
+        if (e.key === 'Escape') { e.preventDefault(); set(false, { refocus: true }); return; }
+        if (e.key !== 'Tab') return;
+        // (Round and round its own items, the button included, the same in
+        // every browser: Safari's Tab otherwise skips links.)
+        const list = items();
+        const i = list.indexOf(document.activeElement);
+        e.preventDefault();
+        list[(i + (e.shiftKey ? -1 : 1) + list.length) % list.length]?.focus();
+      });
+      wide.addEventListener('change', () => wide.matches && set(false));
     });
   </script>
 
@@ -1558,7 +1665,7 @@
         if (!inView) return;
         const r = w.getBoundingClientRect();
         const inside = x >= r.left && x <= r.right && y >= r.top + r.height * 0.1 && y <= r.bottom
-          && !target?.closest?.('a, button, .dialkit-root');
+          && !target?.closest?.('a, button, .dialkit-root, .nav');
         if (inside) {
           w.style.setProperty('--x', `${x - r.left}px`);
           w.style.setProperty('--y', `${y - r.top}px`);
@@ -1578,7 +1685,7 @@
       // that starts on the word sets nothing off.)
       let fstart = null;
       addEventListener('pointerdown', (e) => {
-        if (e.button !== 0 || e.target.closest?.('a, button, .dialkit-root')) return;
+        if (e.button !== 0 || e.target.closest?.('a, button, .dialkit-root, .nav')) return;
         const r = w.getBoundingClientRect();
         if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) return;
         const c = canvas?.getBoundingClientRect();
