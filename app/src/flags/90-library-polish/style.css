@@ -1,0 +1,30 @@
+/* #90: library polish from the critique's backlog. */
+
+/* a-K51 / c-K50: "+ Add music folder" and "+ New playlist" had a typed
+   plus. A drawn 12px plus at --fg-3 sits where the typed one did, its
+   stroke starting with the items' text above it. */
+:root[data-flag-library-polish] section.library [data-region='sidebar'] .add:has(> svg.plus) {
+  justify-content: flex-start;
+  gap: 6px;
+}
+:root[data-flag-library-polish] section.library [data-region='sidebar'] .add > svg.plus {
+  flex: none;
+  width: 12px;
+  height: 12px;
+  margin-left: -1px;
+  fill: none;
+  stroke: var(--fg-3);
+  stroke-width: 1.3;
+  stroke-linecap: round;
+}
+/* The label: an action, so a step up from --fg-3, like the items (a-K51);
+   or kept quiet below them (c-K50). */
+:root[data-flag-library-polish][data-flag-library-polish-add='action'] section.library [data-region='sidebar'] .add:has(> svg.plus) {
+  color: var(--fg-2);
+}
+:root[data-flag-library-polish] section.library [data-region='sidebar'] .add:has(> svg.plus):hover {
+  color: var(--fg);
+}
+:root[data-flag-library-polish] section.library [data-region='sidebar'] .add:has(> svg.plus):hover > svg.plus {
+  stroke: var(--fg-2);
+}

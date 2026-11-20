@@ -618,7 +618,8 @@
         <span>{short(f)}</span>{#if folder === f && !loading}<small class="num">{all.length.toLocaleString()}</small>{:else if flag('folder-counts') && folderCounts[f] != null}<small class="num">{folderCounts[f].toLocaleString()}</small>{/if}
       </button>
     {/each}
-    <button class="add" onclick={addFolder}>+ Add music folder</button>
+    <!-- #90 (UI audit flag): library-polish draws the plus as an icon. -->
+    <button class="add" onclick={addFolder}>{#if flag('library-polish')}<svg class="plus" viewBox="0 0 12 12" aria-hidden="true"><path d="M6 1.5v9M1.5 6h9" /></svg><span>Add music folder</span>{:else}+ Add music folder{/if}</button>
 
     <div class="h sec">Playlists</div>
     {#each playlists as p (p.id)}
@@ -634,7 +635,7 @@
         </button>
       {/if}
     {/each}
-    <button class="add" onclick={() => newPlaylist()}>+ New playlist</button>
+    <button class="add" onclick={() => newPlaylist()}>{#if flag('library-polish')}<svg class="plus" viewBox="0 0 12 12" aria-hidden="true"><path d="M6 1.5v9M1.5 6h9" /></svg><span>New playlist</span>{:else}+ New playlist{/if}</button>
 
     {#if sessions.length}
       <div class="h sec">History</div>
@@ -732,7 +733,9 @@
             ondragend={() => { dropAt = null; endDrag(); }} ondragover={(e) => rowDragOver(e, index)} ondrop={rowDrop}
             ondragleave={(e) => { if (!e.currentTarget.contains(/** @type {Node} */ (e.relatedTarget))) dropAt = null; }}
             onclick={() => { selectIndex(index); scroller.focus({ preventScroll: true }); }} ondblclick={() => autoLoad(t)} onkeydown={() => {}}
-            oncontextmenu={(e) => rowMenu(e, t, index)}>
+            oncontextmenu={(e) => rowMenu(e, t, index)}
+            use:tip={() => (flag('library-polish') && index === selected && !t.missing ? `Double-click to load, or ${keyLabel('deck.0.load')} / ${keyLabel('deck.1.load')}` : '')}>
+            <!-- #90 (UI audit flag): library-polish: the selected row's tip says how to load it (c-K83). -->
             <span class="ld">{#each decks as d}<b class:b={d === 1} aria-hidden="true"></b>{/each}</span>
             <span class="t">{#if t.missing}<span class="k" use:tip={() => `File not found: ${t.path}`}>{t.title}</span><span class="sr">, file not found</span>{:else if markOn}{#each marks(t.title) as m}{#if m.hit}<mark>{m.s}</mark>{:else}{m.s}{/if}{/each}{:else}{t.title}{/if}</span>
             <span>{#if markOn}{#each marks(t.artist) as m}{#if m.hit}<mark>{m.s}</mark>{:else}{m.s}{/if}{/each}{:else}{t.artist}{/if}</span>
