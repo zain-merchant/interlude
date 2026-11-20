@@ -1,0 +1,7 @@
+/* #57 (against the design doc): an idle tab names what its mode is doing
+   ("2 set", "4", "Echo", "1 off"), 11px --fg-3 after its label. */
+:root[data-flag-against-tab-status] [data-region^='deck'] .modes button .st {
+  margin-left: 6px;
+  font-size: var(--t-xs);
+  color: var(--fg-3);
+}

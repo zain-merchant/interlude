@@ -12,7 +12,8 @@
    * @type {{ deck: number }}
    */
   let { deck } = $props();
-  const name = $derived(deck === 0 ? 'A' : 'B');
+  // #88 (UI audit flag): deck-names says "Left deck" / "Right deck".
+  const Dn = $derived(flag('deck-names') ? (deck === 0 ? 'Left deck' : 'Right deck') : `Deck ${deck === 0 ? 'A' : 'B'}`);
 
   const KINDS = [
     { id: 'echo', label: 'Echo', beats: 'Echo time' },
@@ -76,8 +77,8 @@
   });
 </script>
 
-<div class="fx" role="group" aria-label="Deck {name} effects">
-  <button class="tb kind" aria-haspopup="menu" aria-label="Deck {name} effect, {k.label}" {...press(pick)}
+<div class="fx" role="group" aria-label="{Dn} effects">
+  <button class="tb kind" aria-haspopup="menu" aria-label="{Dn} effect, {k.label}" {...press(pick)}
     use:tip={() => 'Choose effect'}>{k.label}<svg viewBox="0 0 10 10" aria-hidden="true"><path d="M2.5 4l2.5 2.5L7.5 4" /></svg></button>
   <span class="sep"></span>
   <div class="beats" use:tip={() => `${k.beats}: ${beatText(beats)} ${beats > 1 ? 'beats' : 'beat'}`}>
@@ -87,7 +88,7 @@
   </div>
   <span class="sep"></span>
   <!-- #43 (UI audit flag): on-state dims the level ring while the effect is off. -->
-  <Knob label="" name="Deck {name} {k.label.toLowerCase()} level" bind:value={level} min={0} max={1} reset={0.5} size={20} fromMin
+  <Knob label="" name="{Dn} {k.label.toLowerCase()} level" bind:value={level} min={0} max={1} reset={0.5} size={20} fromMin
     arc={flag('on-state') && !on ? 'var(--fg-3)' : 'var(--deck)'} format={(v) => `${Math.round(v * 100)}%`} onchange={(v) => control({ type: 'setFxLevel', deck, value: v })} />
   <span class="sep"></span>
   <button class="tb tog" class:live={on} aria-pressed={on} {...press(toggle)}

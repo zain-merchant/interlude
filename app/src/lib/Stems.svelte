@@ -7,6 +7,8 @@
   import { tip, tipText } from './tooltip.svelte.js';
   import { keyLabel } from './commands.js';
   import { STEMS, stemsOf, usable, soloed, toggleStem, soloStem } from './stems.svelte.js';
+  import { flag } from '../flags/registry.svelte.js';
+  import { backend } from './backend.js';
 
   /** @type {{ deck: number, onsettings?: () => void }} */
   let { deck, onsettings } = $props();
@@ -15,6 +17,16 @@
   const s = $derived(stemsOf(deck));
   const can = $derived(usable(deck));
   const solo = $derived(soloed(s.mask));
+  // #33 (UI audit flag): stems-model says on the tab that the model is needed, with its size, instead of four dead buttons.
+  const needsModel = $derived(flag('stems-model') && !!t && s.state === 'needsModel');
+  let modelSize = $state('');
+  $effect(() => {
+    if (!needsModel || modelSize) return;
+    backend
+      .stemsInfo?.()
+      .then((i) => i?.modelBytes && (modelSize = `${Math.round(i.modelBytes / 1024 / 1024)} MB `))
+      .catch(() => {});
+  });
 
   /** Why the buttons can't be used, or '' if they can. */
   const why = $derived.by(() => {
@@ -59,7 +71,10 @@
   };
 </script>
 
-<div class="stems" role="group" aria-label="Deck {'AB'[deck]} stems" style:--deck={deck === 0 ? 'var(--deck-a)' : 'var(--deck-b)'}>
+<div class="stems" role="group" aria-label="{flag('deck-names') ? (deck === 0 ? 'Left deck' : 'Right deck') : `Deck ${'AB'[deck]}`} stems" style:--deck={deck === 0 ? 'var(--deck-a)' : 'var(--deck-b)'}>
+  {#if needsModel}
+  <p class="need">Stems need a one-time {modelSize}download <button onclick={() => onsettings?.()}>Get it</button></p>
+  {:else}
   <div class="row">
     {#each STEMS as name, i}
       {@const on = !!((s.mask >> i) & 1)}
@@ -69,6 +84,7 @@
         onkeydown={(e) => key(e, i)} use:tip={() => stemTip(i)}><i></i>{name}</button>
     {/each}
   </div>
+  {/if}
   {#if t && (s.state === 'splitting' || s.state === 'starting')}
     <div class="progress" role="progressbar" aria-label="Splitting into stems" aria-valuemin="0" aria-valuemax="100"
       aria-valuenow={Math.round(s.ready * 100)}><i style:transform="scaleX({Math.round(s.ready * 200) / 200})"></i></div>
@@ -132,6 +148,27 @@
   }
   .stem.solo i {
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--deck) 25%, transparent);
+  }
+  /* #33 (UI audit flag): the one line shown while the model isn't installed. */
+  .need {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 8px;
+    margin: 0;
+    color: var(--fg-3);
+  }
+  .need button {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--fg);
+    font: inherit;
+    text-decoration: underline 1px color-mix(in srgb, var(--fg) 30%, transparent);
+    text-underline-offset: 3px;
+  }
+  .need button:hover {
+    text-decoration-color: var(--fg);
   }
   .progress {
     position: absolute;

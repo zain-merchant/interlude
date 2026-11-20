@@ -1,0 +1,5 @@
+/* #57 (against the design doc): the deck's recessed overview gets a
+   visible 1px edge on top of its inner shadow. */
+:root[data-flag-against-deck-wells] [data-region^='deck'] .overview {
+  box-shadow: var(--well-shadow), inset 0 0 0 1px var(--line-2);
+}

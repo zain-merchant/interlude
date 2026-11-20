@@ -4,7 +4,7 @@
   import FxUnit from './FxUnit.svelte';
   import Performance from './Performance.svelte';
   import Stems from './Stems.svelte';
-  import { untrack } from 'svelte';
+  import { untrack, tick } from 'svelte';
   import { padMode, padModeTab } from './padmode.svelte.js';
   import { tempoPickup } from './pickup.svelte.js';
   import { engine, tracks, control, nextGrid, setGrid, ejectTrack } from './engine.svelte.js';
@@ -24,6 +24,11 @@
   let { deck, onload, onreveal, onsettings } = $props();
 
   const name = $derived(deck === 0 ? 'A' : 'B');
+  // #88 (UI audit flag): deck-names calls the decks left and right in words ("Deck A" otherwise).
+  const lr = (n) => (n === 0 ? 'left deck' : 'right deck');
+  const Dn = $derived(flag('deck-names') ? (deck === 0 ? 'Left deck' : 'Right deck') : `Deck ${name}`);
+  const dn = $derived(flag('deck-names') ? lr(deck) : `deck ${name}`);
+  const otherDn = $derived(flag('deck-names') ? lr(1 - deck) : `deck ${deck === 0 ? 'B' : 'A'}`);
 
   // Fixing the beatgrid: right-click the BPM, or double-click it to type one.
   let editingBpm = $state(false);
@@ -35,8 +40,8 @@
     const after = op === 'reset' ? null : nextGrid(t.beatgrid, op, d.position, value);
     if (op !== 'reset' && !after) return;
     await setGrid(deck, after);
-    announce(`${label} on deck ${name}`);
-    pushEdit({ label: `${label} on deck ${name}`, undo: () => setGrid(deck, before), redo: () => setGrid(deck, after) });
+    announce(`${label} on ${dn}`);
+    pushEdit({ label: `${label} on ${dn}`, undo: () => setGrid(deck, before), redo: () => setGrid(deck, after) });
   }
   const gridMenu = (e) => {
     const t = tracks[deck];
@@ -135,7 +140,11 @@
     e.preventDefault();
     e.stopPropagation();
     setMode(MODES[(i + dir + MODES.length) % MODES.length].id);
-    /** @type {HTMLElement} */ (e.currentTarget.querySelector('[aria-selected="true"]'))?.focus();
+    const list = /** @type {HTMLElement} */ (e.currentTarget);
+    const focus = () => /** @type {HTMLElement} */ (list.querySelector('[aria-selected="true"]'))?.focus();
+    // #54 (UI audit flag): deck-polish waits for the new tab to be selected before focusing it (focus stayed on the old tab).
+    if (flag('deck-polish')) tick().then(focus);
+    else focus();
   }
   // Pitch fader position, -1..1. Up is slower, like a turntable.
   let pitch = $state(0);
@@ -212,7 +221,7 @@
     lastTouch = performance.now();
     pitch = Math.max(-1, Math.min(1, (1 - rate) / range));
     control({ type: 'setRate', deck, rate: 1 - pitch * range });
-    announce(`Deck ${name} pitch range plus or minus ${Math.round(range * 100)} percent`);
+    announce(`${Dn} pitch range plus or minus ${Math.round(range * 100)} percent`);
   }
 
   function fmt(s) {
@@ -237,7 +246,7 @@
   const sync = () => {
     if (!canSync) return;
     control({ type: 'sync', deck });
-    announce(`Deck ${name} synced to deck ${other}`);
+    announce(`${Dn} synced to ${otherDn}`);
   };
   const toggleKeylock = () => control({ type: 'setKeylock', deck, on: !d.keylock });
   const slipTip = () =>
@@ -258,11 +267,11 @@
     if (pickupRate !== null) return `The controller's tempo fader is at ${pct((pickupRate - 1) * 100)}. Move it to the marker and it takes over`;
     if (tempoMatch === null) return '';
     const o = engine.decks[1 - deck];
-    return tipText(`Deck ${name} pitch`, pct(ratePct), 'double-click to reset', `the mark is where it matches the other deck (${(o.bpm * o.rate).toFixed(2)})`);
+    return tipText(`${Dn} pitch`, pct(ratePct), 'double-click to reset', `the mark is where it matches the other deck (${(o.bpm * o.rate).toFixed(2)})`);
   });
 
   const regionLabel = $derived(
-    t ? `Deck ${name}, ${t.title}${t.artist ? ` by ${t.artist}` : ''}, ${d.playing ? 'playing' : 'paused'}${bpm ? `, ${bpm.toFixed(0)} BPM` : ''}` : `Deck ${name}, empty`,
+    t ? `${Dn}, ${t.title}${t.artist ? ` by ${t.artist}` : ''}, ${d.playing ? 'playing' : 'paused'}${bpm ? `, ${bpm.toFixed(0)} BPM` : ''}` : `${Dn}, empty`,
   );
   // #40 (UI audit flag): time-remaining makes the time left the big number; with its swap setting on 'click', clicking the pair swaps them (both decks, remembered).
   const timesProps = $derived.by(() => {
@@ -280,6 +289,23 @@
     flag('time-remaining') && setting('time-remaining', 'swap') === 'click'
       ? `Click to make the ${timeMode.big === 'remaining' ? 'elapsed' : 'remaining'} time the big one`
       : '';
+  // #57 (UI audit flag): against-tab-status: what an idle tab's mode is doing, in a word or two.
+  const tabStatus = (id) => {
+    if (!t) return '';
+    if (id === 'cues') {
+      const n = (d.hotCues ?? []).slice(0, 8).filter((c) => c != null).length;
+      return n ? `${n} set` : '';
+    }
+    if (id === 'loop') return d.looping ? jumpSize : '';
+    if (id === 'fx') return d.fx?.on ? String(d.fx.kind ?? '').replace(/^./, (c) => c.toUpperCase()) : '';
+    if (id === 'stems') {
+      const off = 4 - [0, 1, 2, 3].filter((i) => ((d.stems ?? 15) >> i) & 1).length;
+      return off ? `${off} off` : '';
+    }
+    return '';
+  };
+  // #89 (UI audit flag): key-notation's choice (both, camelot or musical) for the deck's key too.
+  const kn = $derived(flag('key-notation') ? setting('key-notation', 'show') : 'both');
   const headerMenu = (e) =>
     openMenu(e, [
       { label: 'Show in library', action: () => onreveal(t.path), enabled: !!t },
@@ -318,9 +344,9 @@
         {/if}
         <!-- #10 (UI audit flag): key, Camelot code and unit set apart by space and tone, not middle dots. -->
         {#if flag('no-dots')}
-          <div class="unit">{#if pk}<span class="key" class:shifted={pk.shift} class:mix={keyMix} use:tip={keyTip}>{keyName(pk)} <span class="cam">{camelot(pk)}</span></span>{' '}{/if}<span class="u">BPM</span></div>
+          <div class="unit">{#if pk}<span class="key" class:shifted={pk.shift} class:mix={keyMix} use:tip={keyTip}>{#if kn === 'camelot'}<span class="cam">{camelot(pk)}</span>{:else if kn === 'musical'}{keyName(pk)}{:else}{keyName(pk)} <span class="cam">{camelot(pk)}</span>{/if}</span>{' '}{/if}<span class="u">BPM</span></div>
         {:else}
-        <div class="unit">{#if pk}<span class="key" class:shifted={pk.shift} class:mix={keyMix} use:tip={keyTip}>{keyName(pk)} · {camelot(pk)}</span>{" · "}{/if}BPM</div>
+        <div class="unit">{#if pk}<span class="key" class:shifted={pk.shift} class:mix={keyMix} use:tip={keyTip}>{kn === 'camelot' ? camelot(pk) : kn === 'musical' ? keyName(pk) : `${keyName(pk)} · ${camelot(pk)}`}</span>{" · "}{/if}BPM</div>
         {/if}
       </div>
     </header>
@@ -343,12 +369,12 @@
     {/if}
 
     <div class="mp">
-      <div class="modes" role="tablist" aria-label="Deck {name} controls" tabindex="-1" onkeydown={modeKey}>
+      <div class="modes" role="tablist" aria-label="{Dn} controls" tabindex="-1" onkeydown={modeKey}>
         {#each MODES as m}
           {@const busy = (m.id === 'loop' && d.looping) || (m.id === 'fx' && d.fx?.on) || (m.id === 'stems' && (d.stems ?? 15) !== 15)}
           <button role="tab" class:on={mode === m.id} aria-selected={mode === m.id} tabindex={mode === m.id ? 0 : -1}
             onclick={() => setMode(m.id)} use:tip={() => (busy ? `${m.label} (active)` : m.label)}>
-            {m.label}{#if busy}<i aria-label="active"></i>{/if}
+            {m.label}{#if busy}<i aria-label="active"></i>{/if}{#if flag('against-tab-status') && mode !== m.id && tabStatus(m.id)}<small class="st">{tabStatus(m.id)}</small>{/if}
           </button>
         {/each}
       </div>
@@ -378,12 +404,12 @@
         onkeydowncapture={(e) => (e.key === ' ' || e.key === 'Enter') && (cueHeld = flag('play-states'))}
         onkeyupcapture={() => (cueHeld = false)}
         onblur={() => (cueHeld = false)}
-        use:tip={() => (t ? tipText('Cue', keyLabel(`deck.${deck}.cue`), 'hold to preview') : `Load a track onto deck ${name} first`)}
+        use:tip={() => (t ? tipText('Cue', keyLabel(`deck.${deck}.cue`), 'hold to preview') : `Load a track onto ${dn} first`)}
       >Cue</button>
       <!-- #6 (UI audit flag): mark the play button while Cue is held and the track previews from the cue point. -->
       <button class="btn play" class:on={d.playing} aria-disabled={!t} aria-pressed={d.playing} aria-label={d.playing ? 'Pause' : 'Play'}
         data-cueing={flag('play-states') && cueHeld && d.playing ? '' : undefined}
-        {...press(play)} use:tip={() => (t ? tipText(d.playing ? 'Pause' : 'Play', keyLabel(`deck.${deck}.play`)) : `Load a track onto deck ${name} first`)}>
+        {...press(play)} use:tip={() => (t ? tipText(d.playing ? 'Pause' : 'Play', keyLabel(`deck.${deck}.play`)) : `Load a track onto ${dn} first`)}>
         {#if d.playing}
           <svg viewBox="0 0 16 16"><rect x="3" y="2" width="3.5" height="12" rx="1" /><rect x="9.5" y="2" width="3.5" height="12" rx="1" /></svg>
         {:else}
@@ -391,7 +417,7 @@
         {/if}
       </button>
       <button class="btn sync" aria-disabled={!canSync} {...press(sync)}
-        use:tip={() => (canSync ? tipText(`Match tempo and beats to deck ${other}`, keyLabel(`deck.${deck}.sync`)) : `Sync needs a beat on both decks`)}>Sync</button>
+        use:tip={() => (canSync ? tipText(`Match tempo and beats to ${otherDn}`, keyLabel(`deck.${deck}.sync`)) : `Sync needs a beat on both decks`)}>Sync</button>
       <div class="btn jumps" role="group" aria-label="Beat jump">
         {#each [{ dir: -1, id: 'jumpBack', label: 'Jump back', glyph: '‹' }, { dir: 1, id: 'jumpForward', label: 'Jump forward', glyph: '›' }] as j, i}
           <button aria-label="{j.label} {jumpSize} {d.loopBeats === 1 ? 'beat' : 'beats'}" aria-disabled={!grid} style:order={i * 2}
@@ -406,17 +432,17 @@
 
   <div class="pitch">
     <button class="val num" class:off={Math.abs(ratePct) > 0.005} onclick={cycleRange}
-      aria-label="Deck {name} tempo {pct(ratePct)}, pitch range plus or minus {Math.round(range * 100)} percent. Click to change the range"
+      aria-label="{Dn} tempo {pct(ratePct)}, pitch range plus or minus {Math.round(range * 100)} percent. Click to change the range"
       use:tip={rangeTip}>{pct(ratePct)}{#if range !== RANGES[0]}<span class="rng">±{Math.round(range * 100)}</span>{/if}</button>
     <div class="pitch-fader">
-      <Fader vertical big tick value={pitch} min={-1} max={1} reset={0} label="Deck {name} pitch" onchange={setPitch}
+      <Fader vertical big tick value={pitch} min={-1} max={1} reset={0} label="{Dn} pitch" onchange={setPitch}
         format={(v) => pct(-v * range * 100)} {ghost} match={tempoMatch}
         note={pitchNote} />
     </div>
     {#if d.slip}
       <!-- Slip is set in Settings > Decks or with its key; the deck only
            shows it while it's on, so it's never on by surprise. -->
-      <button class="range lock on" aria-pressed="true" aria-label="Deck {name} slip on, click to turn off" {...press(() => toggleSlip(deck))}
+      <button class="range lock on" aria-pressed="true" aria-label="{Dn} slip on, click to turn off" {...press(() => toggleSlip(deck))}
         use:tip={slipTip}>Slip</button>
     {/if}
     <div class="nudge">

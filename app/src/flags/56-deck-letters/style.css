@@ -1,0 +1,36 @@
+/* #56 (against the design doc): an "A" or "B" on each deck and lane. A
+   small tile in the deck's colour before the deck's title, and the
+   letter in place of the lane's colour bar. (Mixer channels and library
+   rows draw theirs in Mixer.svelte and Library.svelte on the same flag.) */
+:root[data-flag-deck-letters] [data-region^='deck'] header::before {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--deck) 14%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--deck) 35%, transparent);
+  color: var(--deck);
+  font: 500 var(--t-sm) / 1 var(--font);
+}
+:root[data-flag-deck-letters] [data-region='deck0'] header::before {
+  content: 'A';
+}
+:root[data-flag-deck-letters] [data-region='deck1'] header::before {
+  content: 'B';
+}
+:root[data-flag-deck-letters] .waves .lane .who i {
+  display: none;
+}
+:root[data-flag-deck-letters] .waves .lane .who::before {
+  content: 'A';
+  display: inline-block;
+  margin-right: 8px;
+  font-weight: 500;
+  color: var(--deck-a);
+}
+:root[data-flag-deck-letters] .waves .lane.b .who::before {
+  content: 'B';
+  color: var(--deck-b);
+}

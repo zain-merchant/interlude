@@ -1,0 +1,29 @@
+/* #56 (against the design doc): hot cues as pads. Each slot is a 40px
+   pad on the deck's columns: an empty one a quiet outlined tile, a set one
+   tinted in its slot's colour, pressed a step stronger. */
+:root[data-flag-against-cue-pads] [data-region^='deck'] .perf .tc {
+  justify-self: stretch;
+  justify-content: center;
+  height: 40px;
+  padding: 0 6px;
+  background: var(--raise);
+  box-shadow: inset 0 0 0 1px var(--line-2);
+}
+:root[data-flag-against-cue-pads] [data-region^='deck'] .perf .tc:hover:not([aria-disabled='true']) {
+  background: rgb(255 255 255 / 0.09);
+}
+:root[data-flag-against-cue-pads] [data-region^='deck'] .perf .tc.set {
+  background: color-mix(in srgb, var(--hc) 16%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--hc) 45%, transparent);
+}
+:root[data-flag-against-cue-pads] [data-region^='deck'] .perf .tc.set:hover:not([aria-disabled='true']) {
+  background: color-mix(in srgb, var(--hc) 24%, transparent);
+}
+:root[data-flag-against-cue-pads] [data-region^='deck'] .perf .tc.pressed,
+:root[data-flag-against-cue-pads] [data-region^='deck'] .perf .tc.set:active {
+  background: color-mix(in srgb, var(--hc) 34%, transparent);
+}
+/* Eight: two rows of four, 36px each. */
+:root[data-flag-against-cue-pads][data-flag-against-cue-pads-count='eight'] [data-region^='deck'] .perf .tc {
+  height: 36px;
+}

@@ -1,0 +1,8 @@
+/* #56 (against the design doc): times and BPM at a heavier weight than
+   the doc's light (300). */
+:root[data-flag-against-heavy-numerals] [data-region^='deck'] :is(.bpm .big, .times .el, .times .rm) {
+  font-weight: 400;
+}
+:root[data-flag-against-heavy-numerals][data-flag-against-heavy-numerals-weight='medium'] [data-region^='deck'] :is(.bpm .big, .times .el, .times .rm) {
+  font-weight: 500;
+}

@@ -1,0 +1,7 @@
+/* #57 (against the design doc): the waveforms' near-white cores toned
+   down to a little under the deck's own white. The waveforms read the
+   colours again when the flag flips (Waveform.svelte). */
+:root[data-flag-against-wave-cores] {
+  --a-high: #a7bad2;
+  --b-high: #d2bc9d;
+}

@@ -1,0 +1,18 @@
+/* #56 (against the design doc): stronger deck colours. The waveforms
+   read them again when the flag flips (Waveform.svelte). */
+:root[data-flag-against-deck-colours][data-flag-against-deck-colours-look='contrast'] {
+  --deck-a: #a9c9f2;
+  --a-low: #3d6290;
+  --a-high: #eef5ff;
+  --deck-b: #f4cf9c;
+  --b-low: #8a6334;
+  --b-high: #fff4e4;
+}
+:root[data-flag-against-deck-colours][data-flag-against-deck-colours-look='hue'] {
+  --deck-a: #5aa9ff;
+  --a-low: #22508c;
+  --a-high: #d8ebff;
+  --deck-b: #ff9a3d;
+  --b-low: #8c4a12;
+  --b-high: #ffe4c9;
+}

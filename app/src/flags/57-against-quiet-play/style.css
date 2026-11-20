@@ -1,0 +1,11 @@
+/* #57 (against the design doc): a paused, ready Play is a quiet button
+   (the tonal fill and a hairline, white glyph) instead of the solid white
+   slab; playing keeps whatever look it has. */
+:root[data-flag-against-quiet-play] [data-region^='deck'] .transport .btn.play:not(.on, [aria-disabled='true']) {
+  background: var(--raise);
+  color: var(--fg);
+  box-shadow: inset 0 0 0 1px var(--line-2);
+}
+:root[data-flag-against-quiet-play] [data-region^='deck'] .transport .btn.play:not(.on, [aria-disabled='true']):hover {
+  background: rgb(255 255 255 / 0.1);
+}

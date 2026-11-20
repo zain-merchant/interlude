@@ -14,6 +14,9 @@
 // - e-K47, e-K69, e-K70: the BPM menu puts "Set BPM…" first (a click
 //   that lands on the first item no longer halves the tempo), says the
 //   grid step ("Move grid 10 ms earlier"), and spells "playhead".
+// - Arrow keys on the deck's mode tabs moved the selection but left focus
+//   on the old tab (reported by the layout builder); it now waits a tick
+//   and focuses the newly selected tab.
 // Not done, per the backlog's own advice: b-K56 (lane corners: "leave"),
 // b-K72 (deck B's veiled colour: "leave"), e-K46 (menus open at the
 // pointer: platform convention). Lever B3 (a phase meter, a-K31/b-K41)
@@ -24,7 +27,7 @@ export default {
   n: 54,
   title: 'Deck details: play head, cue numbers, tenths, menus',
   group: 'Polish',
-  notes: 'Keylined play head; hot cue numbers at weight 400 and 6px from their time; quieter tenths; Eject in the deck header menu; BPM menu: Set BPM first, "10 ms" steps, "playhead".',
+  notes: 'Keylined play head; hot cue numbers at weight 400 and 6px from their time; quieter tenths; Eject in the deck header menu; BPM menu: Set BPM first, "10 ms" steps, "playhead"; arrow keys on the mode tabs keep focus on the selected tab.',
   settings: {
     tenths: {
       type: 'choice',

@@ -8,7 +8,7 @@
   import { keyLabel } from './commands.js';
   import { PADS, hasGrid, beatsLabel, hotCue, clearHotCue, loopToggle, loopScale, beatJump } from './performance.js';
   import { deckSettings } from './decksettings.svelte.js';
-  import { flag } from '../flags/registry.svelte.js';
+  import { flag, setting } from '../flags/registry.svelte.js';
   import { hms } from '../flags/08-stress-hours/time.js';
 
   /** @type {{ deck: number, show?: 'all' | 'cues' | 'loop' }} */
@@ -22,6 +22,8 @@
   const noGrid = $derived(t ? 'Needs a beatgrid, and none was found for this track' : 'Load a track first');
 
   let held = $state(-1);
+  // #56 (UI audit flag): against-cue-pads' "eight" option draws all eight hot cues (the four past PADS show only where the deck is wide).
+  const pads = $derived(flag('against-cue-pads') && setting('against-cue-pads', 'count') === 'eight' ? 8 : PADS);
 
   // #8 (UI audit flag): stress-hours shows hot cues past an hour as h:mm:ss.
   const mmss = (s) => (flag('stress-hours') && s >= 3600 ? hms(s) : `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`);
@@ -69,8 +71,8 @@
 
 <div class="perf">
   {#if show !== 'loop'}
-  <div class="row" role="group" aria-label="Deck {'AB'[deck]} hot cues">
-    {#each Array.from({ length: PADS }, (_, i) => i) as i}
+  <div class="row" role="group" aria-label="{flag('deck-names') ? (deck === 0 ? 'Left deck' : 'Right deck') : `Deck ${'AB'[deck]}`} hot cues">
+    {#each Array.from({ length: pads }, (_, i) => i) as i}
       {@const set = d.hotCues?.[i] != null}
       <button class="tc" class:set class:pressed={held === i} aria-disabled={!t} style:--hc="var(--hc-{i + 1})"
         aria-label={set ? `Hot cue ${i + 1}, at ${fmt(d.hotCues[i])}` : `Set hot cue ${i + 1}`}
@@ -105,7 +107,7 @@
       use:tip={() => (grid ? tipText(d.looping ? 'Exit loop' : `Loop ${size} ${beatsWord}`, keyLabel(`deck.${deck}.loop`)) : noGrid)}
     ><b class="num">{size}</b><span>{beatsWord}</span></button>
   {/snippet}
-  <div class="grp" role="group" aria-label="Deck {'AB'[deck]} loop">
+  <div class="grp" role="group" aria-label="{flag('deck-names') ? (deck === 0 ? 'Left deck' : 'Right deck') : `Deck ${'AB'[deck]}`} loop">
     {#if flag('no-shift-strip')}
       <!-- #5 (UI audit flag): no-shift-strip puts ÷2 and ×2 beside the value they change, the jump arrows outside them. -->
       {@render back()}{@render halve('÷2')}{@render value()}{@render double('×2')}{@render forward()}

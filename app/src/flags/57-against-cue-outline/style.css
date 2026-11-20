@@ -1,0 +1,9 @@
+/* #57 (against the design doc): Cue at rest as strong as Play's weight
+   in the row: the full-strength amber ring (today only at hover or at the
+   cue point), or that ring with an amber tint. */
+:root[data-flag-against-cue-outline] [data-region^='deck'] .transport .cue:not([aria-disabled='true']) {
+  box-shadow: inset 0 0 0 1.5px var(--cue);
+}
+:root[data-flag-against-cue-outline][data-flag-against-cue-outline-look='tint'] [data-region^='deck'] .transport .cue:not([aria-disabled='true']) {
+  background: color-mix(in srgb, var(--cue) 12%, transparent);
+}

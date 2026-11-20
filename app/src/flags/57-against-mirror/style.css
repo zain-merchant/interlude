@@ -1,0 +1,23 @@
+/* #57 (against the design doc): the right deck mirrors more of the left.
+   Transport: Cue sits next to the mixer on both decks (the right deck's
+   row runs beat jump, Sync, Play, Cue). Pitch outside: the right deck's
+   pitch column moves to its outer edge, so both titles start at the same
+   distance from the mixer side. */
+:root[data-flag-against-mirror]:is([data-flag-against-mirror-what='transport'], [data-flag-against-mirror-what='both']) [data-region='deck1'] .transport > .cue {
+  order: 4;
+}
+:root[data-flag-against-mirror]:is([data-flag-against-mirror-what='transport'], [data-flag-against-mirror-what='both']) [data-region='deck1'] .transport > .play {
+  order: 3;
+}
+:root[data-flag-against-mirror]:is([data-flag-against-mirror-what='transport'], [data-flag-against-mirror-what='both']) [data-region='deck1'] .transport > .sync {
+  order: 2;
+}
+:root[data-flag-against-mirror]:is([data-flag-against-mirror-what='transport'], [data-flag-against-mirror-what='both']) [data-region='deck1'] .transport > .jumps {
+  order: 1;
+}
+:root[data-flag-against-mirror]:is([data-flag-against-mirror-what='pitch'], [data-flag-against-mirror-what='both']) [data-region='deck1'] {
+  grid-template-columns: minmax(0, 1fr) 56px;
+}
+:root[data-flag-against-mirror]:is([data-flag-against-mirror-what='pitch'], [data-flag-against-mirror-what='both']) [data-region='deck1'] .pitch {
+  order: 0;
+}

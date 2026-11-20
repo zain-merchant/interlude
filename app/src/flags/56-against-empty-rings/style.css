@@ -1,0 +1,14 @@
+/* #56 (against the design doc): empty things a level brighter than the
+   doc's "off" (--fg-4, 30%). Empty hot cue rings at --fg-3; with the
+   "and disabled" option, the deck's disabled controls at 60% instead of
+   40%. */
+:root[data-flag-against-empty-rings] [data-region^='deck'] .perf .tc:not(.set) i {
+  box-shadow: inset 0 0 0 1px var(--fg-3);
+}
+:root[data-flag-against-empty-rings][data-flag-against-empty-rings-reach='disabled'] [data-region^='deck'] :is(.perf, .fx, .stems) [aria-disabled='true'],
+:root[data-flag-against-empty-rings][data-flag-against-empty-rings-reach='disabled'] [data-region^='deck'] .transport .jumps button[aria-disabled='true'] {
+  opacity: 0.6;
+}
+:root[data-flag-against-empty-rings][data-flag-against-empty-rings-reach='disabled'] [data-region^='deck'] .transport > .btn[aria-disabled='true']:not(.play) {
+  opacity: 0.75;
+}
