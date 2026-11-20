@@ -1,9 +1,11 @@
-/* #7: the deck row grows up to a maximum; the waveform row takes what's
-   left (it keeps its 136px minimum). Grid sizing fills the capped row
-   first, so nothing changes until the decks reach their cap. */
+/* #7: every row at its designed size (App.svelte works them out: --waves
+   136, --decks 360, the sampler's strip), and the library takes the rest,
+   so a tall window gives its extra height to the track list. A short
+   window gives way in order: library to 160, waveforms to 96, decks to
+   340 (App.svelte). */
 :root[data-flag-edge-tall] .app {
-  grid-template-rows: minmax(136px, 1fr) minmax(300px, var(--flag-edge-tall-decks, 460px)) var(--gap) var(--lib);
+  grid-template-rows: var(--waves, 136px) var(--decks, 360px) var(--gap) minmax(160px, 1fr);
 }
 :root[data-flag-edge-tall] .app.sampling {
-  grid-template-rows: minmax(136px, 1fr) minmax(300px, var(--flag-edge-tall-decks, 460px)) var(--sampler) var(--gap) var(--lib);
+  grid-template-rows: var(--waves, 136px) var(--decks, 360px) var(--sampler) var(--gap) minmax(160px, 1fr);
 }

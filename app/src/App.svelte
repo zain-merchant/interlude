@@ -42,7 +42,13 @@
   let zoom = $state(12);
   const say = (msg) => showToast(msg);
 
-  const playingMsg = (deck) => `Deck ${'AB'[deck]} is playing. Pause it first.`;
+  // #88 (UI audit flag): deck-names: decks are named by side ("left deck"), as
+  // the screen never shows a letter; off, "deck A" / "Deck A" as before.
+  const deckName = (deck, start = false) =>
+    flag('deck-names') ? `${start ? (deck ? 'Right' : 'Left') : deck ? 'right' : 'left'} deck` : `${start ? 'Deck' : 'deck'} ${'AB'[deck]}`;
+  // #86 (UI audit flag): copy-toasts: the track title set off in quotes.
+  const titled = (t) => (flag('copy-toasts') ? `“${t}”` : t);
+  const playingMsg = (deck) => `${deckName(deck, true)} is playing. Pause it first.`;
 
   // Loading onto a playing deck stops what the room hears, so it takes a
   // second press: the first only warns. Any load onto the same deck within
@@ -60,8 +66,8 @@
       return true;
     }
     replacing = { deck, until: now + REPLACE_MS };
-    showToast(`Deck ${'AB'[deck]} is playing. Load again within 3 seconds to replace it.`, { ms: REPLACE_MS });
-    announce(`Deck ${'AB'[deck]} is playing. Load again within 3 seconds to replace it.`);
+    showToast(`${deckName(deck, true)} is playing. Load again within 3 seconds to replace it.`, { ms: REPLACE_MS });
+    announce(`${deckName(deck, true)} is playing. Load again within 3 seconds to replace it.`);
     return false;
   }
 
@@ -73,9 +79,9 @@
     const before = deckSnapshot(deck);
     try {
       await loadTrack(deck, track);
-      announce(`Loaded ${track.title} on deck ${'AB'[deck]}`);
+      announce(`Loaded ${titled(track.title)} on ${deckName(deck)}`);
     } catch (e) {
-      say(`Couldn't load ${track.title}: ${e}`);
+      say(`Couldn't load ${titled(track.title)}: ${e}`);
       return;
     }
     let after = null;
@@ -91,7 +97,7 @@
       return now;
     };
     pushEdit({
-      label: `Loaded ${track.title} on deck ${'AB'[deck]}`,
+      label: `Loaded ${titled(track.title)} on ${deckName(deck)}`,
       undo: async () => {
         const now = await swap(before)();
         if (now === false) return false;
@@ -167,16 +173,15 @@
 
   /** Speaks where a deck is: time, bar and whether it's playing. */
   function readPosition(deck) {
-    const n = 'AB'[deck];
     const t = tracks[deck];
-    if (!t) return announce(`Deck ${n} is empty`);
+    if (!t) return announce(`${deckName(deck, true)} is empty`);
     const d = engine.decks[deck];
     const spoken = (s) => {
       const m = Math.floor(s / 60);
       const sec = Math.floor(s - m * 60);
       return `${m} minute${m === 1 ? '' : 's'} ${sec} second${sec === 1 ? '' : 's'}`;
     };
-    const parts = [`Deck ${n}`, `${spoken(d.position)} of ${spoken(d.duration)}`];
+    const parts = [deckName(deck, true), `${spoken(d.position)} of ${spoken(d.duration)}`];
     const g = t.beatgrid;
     if (g?.bpm) {
       const bar = (s) => Math.floor(Math.max(0, ((s - g.firstBeat) * g.bpm) / 60) / 4) + 1;
@@ -238,7 +243,7 @@
       case 'deck.1.sync':
         if (down && loaded(deck) && engine.decks[deck].bpm && engine.decks[1 - deck].bpm) {
           control({ type: 'sync', deck });
-          announce(`Deck ${'AB'[deck]} synced`);
+          announce(`${deckName(deck, true)} synced`);
         }
         break;
       case 'deck.0.slower':
@@ -373,20 +378,118 @@
     libHeight = Number(localStorage.getItem(LIB_KEY)) || LIB_DEFAULT;
   } catch {}
   const SAMPLER_H = 52; // a 40px strip and the 12px gap above it
-  const libMax = $derived(Math.max(160, Math.min(560, Math.max(winHeight, APP_MIN_H) - (macWindow ? TOP_STRIP : 12) - 12 - 136 - 12 - 12 - 300 - (sampler.open ? SAMPLER_H : 0))));
-  const lib = $derived(Math.max(160, Math.min(libMax, libHeight)));
+
+  // #7 (UI audit flag): edge-tall, and #21 panel-sizes: every row has one
+  // designed size (taken from the 1440×900 layout); the library takes what's
+  // left, so a tall window gives its extra height to the track list. A short
+  // window gives way in order: the library down to 160px, then the
+  // waveforms down to 96px, then the decks down to 340px. The decks move as
+  // one block: the library's handle sizes the library (the waveforms give
+  // way), the waveforms' handle sizes the waveforms (the library gives way),
+  // and only ⌥-dragging either deck edge changes the decks. The sampler
+  // takes its strip from the library, never from the decks.
+  const PANEL = {
+    waves: { def: 136, min: 96 }, // the row, with the 12px gap under the panel
+    decks: { def: 360, min: 340, max: 400 },
+    sampler: { def: 40, min: 40, max: 56 }, // the strip, plus a 12px gap above
+    sidebar: { def: 200, min: 160, max: 320 },
+  };
+  const LIB_MIN = 160;
+  const PANEL_KEY = 'oss-dj.panelSizes';
+  const sized = $derived(flag('edge-tall') || flag('panel-sizes'));
+  /** The sizes asked for; what each row gets (`rows`) also depends on the window. */
+  const sizes = $state({ waves: PANEL.waves.def, decks: PANEL.decks.def, sampler: PANEL.sampler.def, sidebar: PANEL.sidebar.def });
+  // #21: the sizes are kept, in one key. The old library height is read once
+  // to seed it (and left in place, so turning the flag off loses nothing).
+  if (flag('panel-sizes')) {
+    try {
+      const kept = JSON.parse(localStorage.getItem(PANEL_KEY) ?? 'null');
+      if (kept) Object.assign(sizes, kept);
+      else if (localStorage.getItem(LIB_KEY)) {
+        const avail = Math.max(innerHeight, APP_MIN_H) - (macWindow ? TOP_STRIP : 12) - 24;
+        sizes.waves = Math.max(PANEL.waves.min, avail - PANEL.decks.def - Number(localStorage.getItem(LIB_KEY)));
+      }
+    } catch {}
+  }
+  $effect(() => {
+    const s = JSON.stringify(sizes);
+    if (!flag('panel-sizes')) return;
+    try {
+      localStorage.setItem(PANEL_KEY, s);
+    } catch {}
+  });
+  const samplerRow = $derived(sized ? sizes.sampler + 12 : SAMPLER_H);
+  /** Height for the waveforms, decks and library rows together. */
+  const avail = $derived(Math.max(winHeight, APP_MIN_H) - (macWindow ? TOP_STRIP : 12) - 12 - 12 - (sampler.open ? samplerRow : 0));
+  /** What each row gets: the library first gives way to 160, then the waveforms to 96, then the decks to 340. */
+  const rows = $derived.by(() => {
+    let waves = Math.min(sizes.waves, Math.max(PANEL.waves.min, Math.round(winHeight / 2)));
+    let decks = Math.max(PANEL.decks.min, Math.min(PANEL.decks.max, sizes.decks));
+    let short = LIB_MIN - (avail - waves - decks);
+    if (short > 0) {
+      const w = Math.max(PANEL.waves.min, waves - short);
+      short -= waves - w;
+      waves = w;
+      decks = Math.max(PANEL.decks.min, decks - short);
+    }
+    return { waves, decks, lib: Math.max(LIB_MIN, avail - waves - decks) };
+  });
+  /** The waveforms' largest size with the decks as they are: half the window, and the library keeps 160. */
+  const wavesMax = $derived(Math.max(PANEL.waves.min, Math.min(Math.round(winHeight / 2), avail - rows.decks - LIB_MIN)));
+
+  const libMax = $derived(sized ? Math.max(LIB_MIN, avail - rows.decks - PANEL.waves.min) : Math.max(160, Math.min(560, Math.max(winHeight, APP_MIN_H) - (macWindow ? TOP_STRIP : 12) - 12 - 136 - 12 - 12 - 300 - (sampler.open ? SAMPLER_H : 0))));
+  const lib = $derived(sized ? rows.lib : Math.max(160, Math.min(libMax, libHeight)));
+  /** A snap: within `band` of `at`, it's `at`. */
+  const snapTo = (v, at, band) => (Math.abs(v - at) <= band ? at : v);
+  const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+  // The library's height as the waveforms' size, which gives way for it.
+  const libSnap = $derived(avail - PANEL.waves.def - rows.decks);
+  function setWaves(h) {
+    sizes.waves = Math.round(clamp(snapTo(h, PANEL.waves.def, 6), PANEL.waves.min, wavesMax));
+  }
+  function setDecks(h) {
+    sizes.decks = Math.round(clamp(snapTo(h, PANEL.decks.def, 16), PANEL.decks.min, PANEL.decks.max));
+  }
+  function setSampler(h) {
+    sizes.sampler = Math.round(clamp(snapTo(h, PANEL.sampler.def, 8), PANEL.sampler.min, PANEL.sampler.max));
+  }
+  function setSidebar(w) {
+    sizes.sidebar = Math.round(clamp(snapTo(w, PANEL.sidebar.def, 6), PANEL.sidebar.min, PANEL.sidebar.max));
+  }
   function setLib(h) {
+    if (sized) {
+      // The waveforms give way; the gentle snap is where they're at 136.
+      setWaves(avail - rows.decks - snapTo(h, libSnap, 6));
+      return;
+    }
     libHeight = Math.max(160, Math.min(libMax, h));
     try {
       localStorage.setItem(LIB_KEY, String(libHeight));
     } catch {}
   }
+  // #21: a double-click resets a panel to its designed size, settling on
+  // the site's snappy spring (none under reduced motion).
+  let settling = $state(false);
+  let settleTimer;
+  function settle(fn) {
+    settling = true;
+    clearTimeout(settleTimer);
+    requestAnimationFrame(() => {
+      fn();
+      settleTimer = setTimeout(() => (settling = false), 340);
+    });
+  }
   let split = $state(null);
   const splitDown = (e) => {
     e.currentTarget.setPointerCapture(e.pointerId);
-    split = { y: e.clientY, h: lib };
+    // #21: ⌥-drag on a deck edge sizes the decks instead.
+    split = { y: e.clientY, h: lib, decks: flag('panel-sizes') && e.altKey ? rows.decks : null };
   };
-  const splitMove = (e) => split && setLib(split.h - (e.clientY - split.y));
+  const splitMove = (e) => {
+    if (!split) return;
+    if (split.decks != null) setDecks(split.decks + (e.clientY - split.y));
+    else setLib(split.h - (e.clientY - split.y));
+  };
   const splitKey = (e) => {
     const step = e.shiftKey ? 96 : 24;
     if (e.key === 'ArrowUp') setLib(lib + step);
@@ -397,6 +500,47 @@
     e.preventDefault();
     e.stopPropagation();
   };
+  const splitReset = () => (sized ? settle(() => (flag('panel-sizes') ? setWaves(PANEL.waves.def) : (sizes.waves = PANEL.waves.def))) : setLib(LIB_DEFAULT));
+
+  // #21 (UI audit flag): panel-sizes: the other handles. Each drags its
+  // panel with the pointer (no easing), takes the same keys as the library's
+  // (arrows ±24, ⇧ ±96, Home and End for min and max) and resets on a
+  // double-click.
+  /** @type {{ which: string, at: number, from: number } | null} */
+  let grab = $state(null);
+  const GRIPS = {
+    waves: { get: () => rows.waves, set: setWaves, min: () => PANEL.waves.min, max: () => wavesMax, def: PANEL.waves.def, axis: 'y', dir: 1 },
+    decks: { get: () => rows.decks, set: setDecks, min: () => PANEL.decks.min, max: () => PANEL.decks.max, def: PANEL.decks.def, axis: 'y', dir: -1 },
+    sampler: { get: () => sizes.sampler, set: setSampler, min: () => PANEL.sampler.min, max: () => PANEL.sampler.max, def: PANEL.sampler.def, axis: 'y', dir: -1 },
+    sidebar: { get: () => sizes.sidebar, set: setSidebar, min: () => PANEL.sidebar.min, max: () => PANEL.sidebar.max, def: PANEL.sidebar.def, axis: 'x', dir: 1 },
+  };
+  function gripDown(e, which) {
+    e.currentTarget.setPointerCapture(e.pointerId);
+    // ⌥ on the waveforms' edge (the decks' top edge) sizes the decks.
+    const w = which === 'waves' && e.altKey ? 'decks' : which;
+    grab = { which: w, at: GRIPS[w].axis === 'x' ? e.clientX : e.clientY, from: GRIPS[w].get() };
+  }
+  function gripMove(e) {
+    if (!grab) return;
+    const g = GRIPS[grab.which];
+    const k = Number(document.documentElement.style.zoom) || 1;
+    const d = ((g.axis === 'x' ? e.clientX : e.clientY) - grab.at) / k;
+    g.set(grab.from + g.dir * d);
+  }
+  function gripKey(e, which) {
+    const g = GRIPS[which];
+    const step = (e.shiftKey ? 96 : 24) * g.dir;
+    const more = g.axis === 'x' ? 'ArrowRight' : 'ArrowDown';
+    const less = g.axis === 'x' ? 'ArrowLeft' : 'ArrowUp';
+    if (e.key === more) g.set(g.get() + step);
+    else if (e.key === less) g.set(g.get() - step);
+    else if (e.key === 'Home') g.set(g.min());
+    else if (e.key === 'End') g.set(g.max());
+    else return;
+    e.preventDefault();
+    e.stopPropagation();
+  }
+  const gripReset = (which) => settle(() => GRIPS[which].set(GRIPS[which].def));
 
   /** Undo / redo in a focused text field, for the menu's ⌘Z. True if it was one. */
   function undoInField(again) {
@@ -521,7 +665,10 @@
 
 <svelte:window onkeydown={keydown} onkeyup={keyup} onblur={blur} oncontextmenu={contextmenu} />
 
-<div class="app" class:sampling={sampler.open} class:mac-window={macWindow} style:--top="{macWindow ? TOP_STRIP : 12}px" style:--lib="{lib}px" style:--sampler="{SAMPLER_H}px"  bind:clientHeight={winHeight}>
+<!-- #7 / #21 (UI audit flags): edge-tall, panel-sizes: the rows' sizes (--waves, --decks) and the sidebar's, while either is on. -->
+<div class="app" class:sampling={sampler.open} class:mac-window={macWindow} class:settling style:--top="{macWindow ? TOP_STRIP : 12}px" style:--lib="{lib}px" style:--sampler="{samplerRow}px"
+  style:--waves={sized ? `${rows.waves}px` : undefined} style:--decks={sized ? `${rows.decks}px` : undefined}
+  style:--library-sidebar={flag('panel-sizes') ? `${sizes.sidebar}px` : undefined} bind:clientHeight={winHeight}>
   <Backdrop a="var(--deck-a)" b="var(--deck-b)" tint={0.25} />
   {#if macWindow}
     <!-- The window buttons' strip: drag it to move the window, double-click
@@ -553,13 +700,41 @@
 
   <!-- svelte-ignore a11y_no_noninteractive_tabindex, a11y_no_noninteractive_element_interactions (a focusable separator is the ARIA window-splitter pattern) -->
   <!-- #19 (UI audit flag): library-resize: while dragging, the handle is marked "dragging", not "drag", which is also the title strip's class (.app > .drag is absolutely placed, so the handle left the grid and the library fell into its 12px row until the drag ended). -->
-  <div class="split" class:drag={split && !flag('library-resize')} class:dragging={split && flag('library-resize')} role="separator" aria-orientation="horizontal" aria-label="Resize library"
+  <!-- #21 (UI audit flag): panel-sizes marks the handle "dragging" too, so it works without #19. -->
+  <div class="split" class:drag={split && !flag('library-resize') && !flag('panel-sizes')} class:dragging={split && (flag('library-resize') || flag('panel-sizes'))} role="separator" aria-orientation="horizontal" aria-label="Resize library"
     aria-valuenow={Math.round(lib)} aria-valuemin={160} aria-valuemax={Math.round(libMax)} tabindex="0"
     onpointerdown={splitDown} onpointermove={splitMove} onpointerup={() => (split = null)} onpointercancel={() => (split = null)}
-    ondblclick={() => setLib(LIB_DEFAULT)} onkeydown={splitKey}
-    use:tip={() => 'Drag to resize the library, double-click to reset'}><i></i></div>
+    ondblclick={splitReset} onkeydown={splitKey}
+    use:tip={() => (flag('panel-sizes') ? 'Drag to resize the library, ⌥-drag for the decks, double-click to reset' : 'Drag to resize the library, double-click to reset')}><i></i></div>
+
+  {#if flag('panel-sizes')}
+    <!-- #21 (UI audit flag): panel-sizes: the waveforms' bottom edge and the sampler's top edge get the library's handle. Placed absolutely, out of the grid. -->
+    <!-- svelte-ignore a11y_no_noninteractive_tabindex, a11y_no_noninteractive_element_interactions (a focusable separator is the ARIA window-splitter pattern) -->
+    <div class="grip" class:dragging={grab?.which === 'waves' || grab?.which === 'decks'} style:top="calc(var(--top) + {rows.waves - 12}px)" role="separator" aria-orientation="horizontal" aria-label="Resize waveforms"
+      aria-valuenow={rows.waves} aria-valuemin={PANEL.waves.min} aria-valuemax={wavesMax} tabindex="0"
+      onpointerdown={(e) => gripDown(e, 'waves')} onpointermove={gripMove} onpointerup={() => (grab = null)} onpointercancel={() => (grab = null)}
+      ondblclick={() => gripReset('waves')} onkeydown={(e) => gripKey(e, 'waves')}
+      use:tip={() => 'Drag to resize the waveforms, ⌥-drag for the decks, double-click to reset'}><i></i></div>
+    {#if sampler.open}
+      <!-- svelte-ignore a11y_no_noninteractive_tabindex, a11y_no_noninteractive_element_interactions -->
+      <div class="grip" class:dragging={grab?.which === 'sampler'} style:top="calc(var(--top) + {rows.waves + rows.decks}px)" role="separator" aria-orientation="horizontal" aria-label="Resize sampler"
+        aria-valuenow={sizes.sampler} aria-valuemin={PANEL.sampler.min} aria-valuemax={PANEL.sampler.max} tabindex="0"
+        onpointerdown={(e) => gripDown(e, 'sampler')} onpointermove={gripMove} onpointerup={() => (grab = null)} onpointercancel={() => (grab = null)}
+        ondblclick={() => gripReset('sampler')} onkeydown={(e) => gripKey(e, 'sampler')}
+        use:tip={() => 'Drag to resize the sampler, double-click to reset'}><i></i></div>
+    {/if}
+  {/if}
 
   <div class="below">
+    {#if flag('panel-sizes')}
+      <!-- #21 (UI audit flag): panel-sizes: the sidebar's edge, over the library's divider. -->
+      <!-- svelte-ignore a11y_no_noninteractive_tabindex, a11y_no_noninteractive_element_interactions -->
+      <div class="grip side" class:dragging={grab?.which === 'sidebar'} role="separator" aria-orientation="vertical" aria-label="Resize sidebar"
+        aria-valuenow={sizes.sidebar} aria-valuemin={PANEL.sidebar.min} aria-valuemax={PANEL.sidebar.max} tabindex="0"
+        onpointerdown={(e) => gripDown(e, 'sidebar')} onpointermove={gripMove} onpointerup={() => (grab = null)} onpointercancel={() => (grab = null)}
+        ondblclick={() => gripReset('sidebar')} onkeydown={(e) => gripKey(e, 'sidebar')}
+        use:tip={() => 'Drag to resize the sidebar, double-click to reset'}><i></i></div>
+    {/if}
     <div class="libwrap" inert={settings !== null}>
       <Library bind:this={library} onload={load} onsettings={() => openSettings()} />
     </div>
@@ -804,6 +979,50 @@
   }
   .split:focus-visible {
     outline: none;
+  }
+  /* #21 (UI audit flag): panel-sizes: the other handles, drawn like the
+     library's; out of the grid, over the gaps they resize. */
+  .app > .grip {
+    position: absolute;
+    left: var(--gap);
+    right: var(--gap);
+    z-index: 6;
+    height: var(--gap);
+    display: grid;
+    place-items: center;
+    cursor: row-resize;
+    touch-action: none;
+  }
+  .grip i {
+    width: 36px;
+    height: 3px;
+    border-radius: 2px;
+    background: var(--fg-4);
+    transition: background-color 140ms ease;
+  }
+  .grip:hover i,
+  .grip.dragging i,
+  .grip:focus-visible i {
+    background: var(--fg-3);
+  }
+  .grip:focus-visible {
+    outline: none;
+  }
+  .below > .grip.side {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: calc(var(--library-sidebar) - 6px);
+    z-index: 6;
+    width: 12px;
+    display: grid;
+    place-items: center;
+    cursor: col-resize;
+    touch-action: none;
+  }
+  .grip.side i {
+    width: 3px;
+    height: 36px;
   }
   .toast {
     position: fixed;
