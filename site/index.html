@@ -1267,6 +1267,10 @@
       loaded.then(() => {
         go = true;
         start();
+        // Where there's no mouse to light the record, it shows once that it
+        // answers to one: a slow sweep of light across it, once the screen
+        // has risen into place (hero-fx.js; none with less motion).
+        if (!matchMedia('(hover: hover) and (pointer: fine)').matches) setTimeout(() => fx?.demo?.(), 1300);
       });
     })();
 
