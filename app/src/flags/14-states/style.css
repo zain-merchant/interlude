@@ -196,3 +196,9 @@
   outline: 2px solid var(--focus-ring, var(--fg-2));
   outline-offset: -2px;
 }
+
+/* b-K35 (polish backlog, with F2): enabled Sync's label at full strength,
+   so it differs from the disabled one (40%) by more than a small step. */
+:root[data-flag-states] [data-region^='deck'] .transport .btn.sync:not([aria-disabled='true']) {
+  color: var(--fg);
+}

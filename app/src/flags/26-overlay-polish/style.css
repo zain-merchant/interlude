@@ -34,3 +34,8 @@
 :root[data-flag-overlay-polish] .backdrop > .card[role='dialog'] {
   background: var(--dialog);
 }
+/* e-K66: the Report box's edge was 1.25:1 against the dialog; a little
+   stronger at rest, so the field reads as a field. */
+:root[data-flag-overlay-polish] .card[aria-labelledby='report-title'] textarea:not(:focus) {
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.16);
+}

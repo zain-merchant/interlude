@@ -9,6 +9,8 @@
 // - e-K59: menus, the toast and the banner float on --popover (#1b1c20)
 //   but the two dialogs hard-coded #121214. A --dialog token (app.css when
 //   shipped) for both; "Same as menus" sets it to --popover.
+// - e-K66: the Report text box's edge was 1.25:1 against the dialog; 16%
+//   white at rest.
 // Already elsewhere: the toast's radius against its real inset (c-K56,
 // e-K51) is in #2; hover holds the toast (e-K64, C20) in #13.
 export default {
