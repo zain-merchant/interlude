@@ -212,16 +212,22 @@ Tauri signs the app and sends it to Apple to notarize (a few minutes).
 
 **The website** is `site/`, plain HTML and CSS, with no CI. Its animated
 parts are built from the app: the hero's demo and the feature cards'
-pictures (`site/demo`) and the hero's recorded clips (`site/hero/clips`,
-see `app/demo/segments/README.md`). Before publishing, bring them up to date
-and commit what changed (the clips are only recorded again if the app, the
-demo or the recorder changed):
+pictures (`site/demo`, committed) and the hero's recorded clips and poster
+(`site/hero/clips` and `site/img/screenshot*`, not in git: they're kept in
+the `hero-clips` pre-release, see `app/demo/segments/README.md`). Before
+publishing, bring them up to date (this fetches the published clips, and
+records them again only if the app, the demo or the recorder changed; then
+`npm --prefix app run clips:publish`) and commit what changed:
 ```sh
 npm --prefix app run build:site:all
 ```
-Then push that folder to the `gh-pages` branch:
+`git subtree push` would publish only what git has, so the site without its
+clips. Instead, make one commit of the site with the clips and push that
+(it has no history, so old clip sets don't pile up in `gh-pages`; it
+replaces the branch's history, so agree the switch with the repo owner):
 ```sh
-git subtree push --prefix site origin gh-pages
+npm --prefix app run site:pages     # prints the push, e.g.:
+git push --force origin <commit>:refs/heads/gh-pages
 ```
 It's served at [interludedj.com](https://interludedj.com) (`site/CNAME`;
 DNS at Namecheap points the domain at GitHub Pages).
