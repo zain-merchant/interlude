@@ -28,12 +28,29 @@
   // #41, #43, #50, #52, #54 (UI audit flags): what the canvas draws differently with them on.
   const wf = () => ({
     beatGrid: flag('beat-grid'),
-    edge: flag('beat-grid') ? setting('beat-grid', 'edge') : '',
+    edge: flag('beat-grid') ? 'soft' : '',
     clipStart: flag('lane-start'),
     cueChips: flag('overview-cues'),
-    ticks: flag('overview-cues') && setting('overview-cues', 'ticks') === 'minutes',
     keyline: flag('deck-polish'),
+    axis: flag('zoom-pill'),
     loopTint: flag('on-state'),
+  });
+
+  // #49 (UI audit flag): the play head's x in device px, at the waves
+  // panel's horizontal centre; measured when the lane's size changes.
+  const zoomAxis = $derived(mode === 'scroll' && flag('zoom-pill'));
+  let axis = { w: -1, x: 0 };
+  function axisX(w) {
+    if (axis.w !== w) {
+      const panel = canvas.closest('.waves')?.getBoundingClientRect();
+      const lane = canvas.getBoundingClientRect();
+      axis = { w, x: panel && lane.width ? (panel.left + panel.width / 2 - lane.left) * (w / lane.width) : w / 2 };
+    }
+    return axis.x;
+  }
+  $effect(() => {
+    zoomAxis;
+    axis = { w: -1, x: 0 };
   });
 
   // The frame loop sleeps while nothing moves; a flag flipping wakes it
@@ -90,7 +107,8 @@
       };
       if (mode === 'scroll') {
         const perPx = (seconds * bps) / w;
-        const start = playhead - (w / 2) * perPx;
+        // #49 (UI audit flag): zoom-pill puts the play head on the waveforms panel's centre (the window's axis), not the shortened lane's.
+        const start = playhead - (zoomAxis ? axisX(w) : w / 2) * perPx;
         gl.draw({
           mode, start, perPx, playhead, cue, colors, ...marks, ...flagView,
           beatLen: grid ? (60 / grid.bpm) * bps : 0,
@@ -111,8 +129,7 @@
         // lane is drawn again only when it moves that far, not every frame.
         const perPx = Math.max(count, 1) / w;
         const q = (b) => (b < 0 ? b : Math.round(b / (perPx / 4)) * (perPx / 4));
-        gl.draw({ mode, start: 0, perPx, playhead: q(playhead), cue, colors, ...marks, slip: q(marks.slip), ...flagView,
-          secsPerBin: 1 / bps });
+        gl.draw({ mode, start: 0, perPx, playhead: q(playhead), cue, colors, ...marks, slip: q(marks.slip), ...flagView });
       }
     });
     return off;

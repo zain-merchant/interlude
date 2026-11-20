@@ -1,10 +1,9 @@
 /* #43: a running loop (and an engaged effect, a stem playing alone) reads
    as on where you already look: the value itself lights up in the deck's
-   own white, and on the waveforms the loop's stretch is tinted in the
-   deck's colour (waveform-2d.js). No box, no fill. The Look setting tries
-   a thin ring or an underline instead of the dot. Nothing changes size
+   own white with a filled dot (hollow at rest), and on the waveforms the
+   loop's stretch is tinted in the deck's colour between its in and out
+   lines (waveform-2d.js). No box, no fill, and nothing changes size
    between off and on. */
-
 :root[data-flag-on-state] [data-region^='deck'] .mp {
   container-type: inline-size;
 }
@@ -28,86 +27,70 @@
   color: var(--deck);
 }
 
-/* FX on: the same, on its word. */
-:root[data-flag-on-state] [data-region^='deck'] .fx .tog {
-  transition: color 140ms ease;
+/* The dot: pinned to the left edge of the number's slot (a slot as wide as
+   "1/16" plus the dot), so it doesn't move when 4 becomes 1/4; 8px from
+   the number at its widest. Vertically centred on the numeral (Geist's
+   figures are about 0.71em tall, so their centre sits 0.355em above the
+   baseline). Hollow --fg-3 at rest, filled in the deck colour while the
+   loop runs (the doc's stem idiom). The number keeps its right edge, so
+   "beats" holds its place too. */
+:root[data-flag-on-state] [data-region^='deck'] .perf .grp > .big b {
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: space-between;
+  min-width: calc(2.2em + 14px);
 }
-
-/* Look "text" (recommended): a 6px dot before the value, hollow --fg-3
-   at rest and filled in the deck colour while it runs (the doc's stem
-   idiom: filled on, hollow off). FX uses the same dot. */
-:root[data-flag-on-state][data-flag-on-state-look='text'] [data-region^='deck'] .perf .big b::before {
-  /* Inside the number's own box, so it stays 6px from the number whatever
-     slot the number sits in. On the text's baseline: an empty box's
-     baseline is its bottom, so the dot centres on the x-height of "beats". */
+:root[data-flag-on-state] [data-region^='deck'] .perf .grp > .big span {
+  min-width: 2.6em;
+  text-align: left;
+}
+:root[data-flag-on-state] [data-region^='deck'] .perf .big b::before {
   content: '';
-  display: inline-block;
-  vertical-align: baseline;
+  flex: none;
+  position: relative;
+  top: calc(3px - 0.355em);
   width: 6px;
   height: 6px;
-  margin-right: 6px;
+  margin-right: 8px;
   border-radius: 50%;
   box-shadow: inset 0 0 0 1px var(--fg-3);
   transition: background-color 140ms ease, box-shadow 140ms ease;
 }
-:root[data-flag-on-state][data-flag-on-state-look='text'] [data-region^='deck'] .perf .big.live b::before {
+:root[data-flag-on-state] [data-region^='deck'] .perf .big.live b::before {
   background: var(--deck);
   box-shadow: none;
 }
-/* In the narrowest decks (a mode row under 320px) the row has no room
-   for the dot; the brighter deck-coloured size says it alone. */
+/* In the narrowest decks (a mode row under 320px) there is no room for
+   the dot and its slot; the brighter deck-coloured size says it alone. */
 @container (max-width: 319px) {
-  :root[data-flag-on-state][data-flag-on-state-look='text'] [data-region^='deck'] .perf .big b::before {
+  :root[data-flag-on-state] [data-region^='deck'] .perf .grp > .big b {
+    display: inline;
+    min-width: 0;
+  }
+  :root[data-flag-on-state] [data-region^='deck'] .perf .big b::before {
     content: none;
   }
 }
-:root[data-flag-on-state][data-flag-on-state-look='text'] [data-region^='deck'] .fx .tog i {
+
+/* FX on: the same dot, and its word in the deck colour when on (as today). */
+:root[data-flag-on-state] [data-region^='deck'] .fx .tog {
+  transition: color 140ms ease;
+}
+:root[data-flag-on-state] [data-region^='deck'] .fx .tog i {
   width: 6px;
   height: 6px;
   box-shadow: inset 0 0 0 1px var(--fg-3);
 }
-:root[data-flag-on-state][data-flag-on-state-look='text'] [data-region^='deck'] .fx .tog.live i {
+:root[data-flag-on-state] [data-region^='deck'] .fx .tog.live i {
   background: var(--deck);
   box-shadow: none;
 }
 
-/* Look "ring": a 1px ring in the deck colour at low strength while on, no
-   fill. */
-:root[data-flag-on-state][data-flag-on-state-look='ring'] [data-region^='deck'] :is(.perf .big.live, .fx .tog.live, .stems .stem.solo) {
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--deck) 40%, transparent);
-}
-
-/* Look "underline": the deck colour as a 2px line under the value, like
-   the selected tab's. */
-:root[data-flag-on-state][data-flag-on-state-look='underline'] [data-region^='deck'] :is(.perf .big, .fx .tog, .stems .stem) {
-  position: relative;
-}
-:root[data-flag-on-state][data-flag-on-state-look='underline'] [data-region^='deck'] :is(.perf .big.live, .fx .tog.live, .stems .stem.solo)::after {
-  content: '';
-  position: absolute;
-  left: 12px;
-  right: 12px;
-  bottom: 2px;
-  height: 2px;
-  border-radius: 1px;
-  background: var(--deck);
-}
-
 /* Stems: a muted stem's hollow dot is readable (--fg-3); one playing alone
-   keeps the deck colour (as today) without its halo, and takes the look's
-   ring or underline. */
+   keeps the deck colour (as today) without its halo. */
 :root[data-flag-on-state] [data-region^='deck'] .stems .stem.muted i {
   box-shadow: inset 0 0 0 1px var(--fg-3);
 }
 :root[data-flag-on-state] [data-region^='deck'] .stems .stem.solo i {
   box-shadow: none;
-}
-
-/* With no-shift-strip's fixed-width size button (a mode row of 320px and
-   up), room for the dot too. The row is a size container whenever
-   no-shift-strip is on. */
-@container (min-width: 320px) {
-  :root[data-flag-on-state][data-flag-on-state-look='text'][data-flag-no-shift-strip] [data-region^='deck'] .perf .grp > .big {
-    min-width: 126px;
-  }
 }

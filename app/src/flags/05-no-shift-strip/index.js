@@ -23,18 +23,19 @@
 // - D20: on the Loop tab, ÷2 and ×2 sit right beside the size they change
 //   and the jump arrows take the outer quarter columns (Performance.svelte
 //   puts them in that order with this flag).
-// - b-K51: an empty hot cue's "Set" is centred in its slot like a time.
+// - Hot cues: dot, a one-figure number slot, then the value, 6px apart and
+//   left-aligned, so "1 Set" and "2 1:07" start their value at the same x.
 export default {
   id: 'no-shift-strip',
   n: 5,
   title: 'Cues, loop, FX and beat jump hold their places',
   group: 'Stability',
-  notes: 'Hot cue times, loop and beat-jump sizes, the effect name and On/Off sit in fixed slots, so the controls beside them stay put. The jump size says "beats"; FX sits on the four columns; Loop puts ÷2 and ×2 beside the size.',
+  notes: 'Hot cue times, loop and beat-jump sizes, the effect name and On/Off sit in fixed slots, so the controls beside them stay put. The jump size reads "4" over "beats"; FX sits on the four columns; the Loop row runs ‹ ÷2 size ×2 › (½ and 2× relabelled ÷2 and ×2), the size button one width with its contents centred; hot cue values start at one x.',
 };
 
 /** Show me: shrinks deck A's loop from 4 beats to 1/4; flipping shows its arrows sliding (before) and holding (after). */
 export const show = {
-  about: 'Changing a loop size, an effect or a hot cue resized its button, which nudged the arrows and buttons beside it. Now each value has a fixed slot and nothing around it moves.',
+  about: 'Changing a loop size, an effect or a hot cue resized its button, which nudged the arrows and buttons beside it. Now each value has a fixed slot and nothing around it moves. The Loop row also reorders to ‹ ÷2 size ×2 › (½ and 2× become ÷2 and ×2, beside the size they change), and the beat-jump button names its unit ("4" over "beats").',
   before: 'Halve the loop from 4 beats to 1/4: the size label gets wider, so the ‹ › arrows on either side slide away from where your mouse was.',
   after: 'The size sits in a slot made for its longest value, so the arrows stay exactly where they were and you can keep clicking.',
   async setup(app, ctx) {

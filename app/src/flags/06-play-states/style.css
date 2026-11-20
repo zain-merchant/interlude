@@ -19,27 +19,21 @@
 :root[data-flag-play-states][data-flag-play-states-playing='lit'] .transport .btn.play.on:hover {
   background: color-mix(in srgb, var(--deck) 94%, #fff);
 }
-:root[data-flag-play-states][data-flag-play-states-playing='lit'] .transport .btn.play:not(.on, [aria-disabled='true']) {
-  background: transparent;
+/* Paused (and empty): the tonal tile every resting button has (flag 09's
+   surface when it's on), no outline: an outline belongs to Cue armed at
+   its cue point. An empty deck's tile dims with the 40% disabled rule, to
+   Cue's and Sync's disabled grey. */
+:root[data-flag-play-states][data-flag-play-states-playing='lit'] .transport .btn.play:not(.on) {
+  background: var(--flag-buttons-bg, var(--raise));
   color: var(--fg);
-  box-shadow: inset 0 0 0 1px var(--fg-2);
+  box-shadow: none;
 }
 :root[data-flag-play-states][data-flag-play-states-playing='lit'] .transport .btn.play:not(.on, [aria-disabled='true']):hover {
-  background: var(--hover);
-  box-shadow: inset 0 0 0 1px var(--fg);
+  background: var(--flag-buttons-bg-hover, var(--hover));
+  box-shadow: none;
 }
-
-/* Playing: deck tint. A glass fill and ring in the deck's own white, the
-   pause glyph in that colour, like the other "live" marks (FX on, a
-   running loop). */
-:root[data-flag-play-states][data-flag-play-states-playing='tint'] .transport .btn.play.on {
-  background: color-mix(in srgb, var(--deck) 14%, transparent);
-  color: var(--deck);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--deck) 50%, transparent);
-}
-:root[data-flag-play-states][data-flag-play-states-playing='tint'] .transport .btn.play.on:hover {
-  background: color-mix(in srgb, var(--deck) 20%, transparent);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--deck) 70%, transparent);
+:root[data-flag-play-states][data-flag-play-states-playing='lit'] .transport .btn.play[aria-disabled='true'] {
+  opacity: 0.4;
 }
 
 /* Playing: outline. Solid when it's waiting, a bright outline while it
@@ -51,17 +45,6 @@
 }
 :root[data-flag-play-states][data-flag-play-states-playing='outline'] .transport .btn.play.on:hover {
   background: var(--hover);
-}
-
-/* Playing: pressed in. The button latches down into a dark well, glyph in
-   the deck's colour. */
-:root[data-flag-play-states][data-flag-play-states-playing='sunk'] .transport .btn.play.on {
-  background: var(--well);
-  color: var(--deck);
-  box-shadow: inset 0 2px 4px rgb(0 0 0 / 0.5), inset 0 0 0 1px var(--line-2);
-}
-:root[data-flag-play-states][data-flag-play-states-playing='sunk'] .transport .btn.play.on:hover {
-  background: rgb(0 0 0 / 0.18);
 }
 
 /* Cueing: Cue held, the track previewing from the cue point. An amber

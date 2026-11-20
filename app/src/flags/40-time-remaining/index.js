@@ -8,10 +8,10 @@
 // the left and remaining on the right, so flag 18's ending colour still
 // lands on the remaining time.
 //
-// Swap setting: 'click' (the recommendation, C8 option b) makes the pair a
-// button: click it (or Enter/Space) to make the other time big, for both
-// decks; the choice is kept in localStorage as oss-dj.timeMode. 'fixed'
-// (C8 option a) always shows the time left big.
+// The pair is a button (C8 option b): click it (or Enter/Space) to make the
+// other time big, for both decks; the choice is kept in localStorage as
+// oss-dj.timeMode. Its tooltip says so ("Click to show time played" / "time
+// left"), and a press that drags more than 3px doesn't swap.
 // Hooks: Deck.svelte (the .times attributes), mode.svelte.js (the shared
 // choice).
 export default {
@@ -20,17 +20,6 @@ export default {
   title: 'Time left is the big number',
   group: 'Type and colour',
   notes: 'Each deck shows the time left big and the time played small (sizes swap in place). Clicking the times swaps them back for both decks, remembered as oss-dj.timeMode.',
-  settings: {
-    swap: {
-      type: 'choice',
-      label: 'Swapping',
-      default: 'click',
-      options: [
-        ['click', 'Click to swap', 'Time left is big to start with; click either time to make the other one big instead, for both decks, and it stays that way.'],
-        ['fixed', 'Always time left', 'Time left is always the big number, and clicking the times does nothing.'],
-      ],
-    },
-  },
 };
 
 /** Show me: deck A playing mid-track; flipping shows the time played big (before) and the time left big (after), magnified. */

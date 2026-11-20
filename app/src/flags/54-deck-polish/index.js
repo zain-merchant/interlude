@@ -8,7 +8,10 @@
 // - d-K64: the hot cue's number-to-time gap is 6px (the tabular "1" has
 //   wide side bearings, so 8px read wider than the dot's gap).
 // - b-K67: the tenths of a second are a step quieter than the minutes and
-//   seconds (Tenths setting; Deck.svelte splits the time when it's on).
+//   seconds (Deck.svelte splits the time when it's on).
+// - Times round to tenths before minutes and seconds are split, so 59.96 s
+//   reads 1:00.0, never 0:60.0 (on the deck and in hot cue tooltips).
+// - The deck title's baseline meets the BPM numerals' baseline.
 // - e-K45: the deck header's right-click menu was one lone command; it
 //   gets Eject (off while playing).
 // - e-K47, e-K69, e-K70: the BPM menu puts "Set BPM…" first (a click
@@ -28,17 +31,6 @@ export default {
   title: 'Deck details: play head, cue numbers, tenths, menus',
   group: 'Polish',
   notes: 'Keylined play head; hot cue numbers at weight 400 and 6px from their time; quieter tenths; Eject in the deck header menu; BPM menu: Set BPM first, "10 ms" steps, "playhead"; arrow keys on the mode tabs keep focus on the selected tab.',
-  settings: {
-    tenths: {
-      type: 'choice',
-      label: 'Tenths of a second',
-      default: 'dim',
-      options: [
-        ['dim', 'Quieter', 'The last digit (tenths) is a step dimmer than minutes and seconds, so the time reads at a glance and the fast-changing digit doesn\'t pull the eye.'],
-        ['same', 'Same', 'Every digit of the time at the same strength, as today.'],
-      ],
-    },
-  },
 };
 
 /** Show me: deck A playing with a hot cue set; flipping shows the time and cue row as they were (before) and polished (after), magnified. */

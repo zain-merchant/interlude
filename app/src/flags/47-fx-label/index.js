@@ -2,21 +2,21 @@
 //
 // The FX row's level knob had no label (FxUnit.svelte passes label=""),
 // so its dial was the one unnamed control on the deck. With the flag a
-// "Level" caption (11px --fg-3, like the mixer's dial captions) sits
-// beside the dial. CSS only: the caption is the knob's ::after.
+// "Level" caption (11px --fg-3) sits beside the dial. CSS only: the
+// caption is the knob's ::after.
 export default {
   id: 'fx-label',
   n: 47,
   title: 'The FX level dial says "Level"',
   group: 'Polish',
-  notes: 'A "Level" caption beside the FX level dial (11px --fg-3).',
+  notes: 'The FX level dial is captioned Level beside the dial (11px --fg-3).',
 };
 
 /** Show me: deck A's FX tab; flipping shows the unnamed dial (before) and its caption (after), magnified. */
 export const show = {
   about: 'On the FX tab the small dial had no name, so you had to hover it to learn it sets the effect level. Now it says "Level".',
   before: 'The FX row has a small unnamed dial: is it the effect amount, the time, a filter?',
-  after: 'The dial is captioned "Level", like the dials in the mixer.',
+  after: 'The dial is captioned "Level" beside it.',
   async setup(app) {
     if (!app.loaded(0)) await app.loadTrack(0);
     await app.tab(0, 'FX');

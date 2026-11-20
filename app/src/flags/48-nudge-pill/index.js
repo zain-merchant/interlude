@@ -2,35 +2,25 @@
 //
 // Two bare ‹ › glyphs floated under each pitch fader. They looked like
 // the beat-jump arrows, but they bend the tempo while held. With the flag
-// they're one outlined 24px pill split in two (inset 1px --line-2, --r, a
-// 1px --line divider); hit areas stay 28×24. The Glyph setting is owner's
-// call 8: − / + (the recommendation, audit C27: nudge is slower/faster,
-// not back/forward) or the ‹ › arrows as today. Hook: Deck.svelte
-// (nudgeGlyph).
+// they're one 24px pill split in two on the tonal surface every resting
+// button has (no outline: an outline means Cue armed), with a 1px --line-2
+// divider; hit areas stay 28×24. The glyphs are − and + (owner's call 8,
+// audit C27: nudge is slower/faster, not back/forward), and each half's
+// tooltip says "Hold to nudge slower" / "faster". On an empty deck the
+// pill dims with the 40% rule. Hook: Deck.svelte (nudgeGlyph, nudgeTip).
 export default {
   id: 'nudge-pill',
   n: 48,
   title: 'The nudge buttons look like buttons',
   group: 'Controls',
-  notes: 'The two nudge buttons under each pitch fader become one outlined pill split in two, with − / + glyphs (or the old ‹ ›).',
-  settings: {
-    glyph: {
-      type: 'choice',
-      label: 'Glyphs',
-      default: 'signs',
-      options: [
-        ['signs', '− and +', 'Slower and faster, which is what nudging does; no longer the same arrows as beat jump, which moves the play position.'],
-        ['arrows', '‹ and ›', "Keeps today's arrows; only the pill shape is new."],
-      ],
-    },
-  },
+  notes: 'The two nudge buttons under each pitch fader become one tonal pill split in two, with − / + glyphs and "Hold to nudge slower/faster" tooltips.',
 };
 
 /** Show me: deck A's pitch column; flipping shows two stray arrows (before) and the pill (after), magnified. */
 export const show = {
-  about: 'Under each pitch fader, two small ‹ › arrows floated on their own. They looked like the beat-jump arrows but bend the tempo. Now they are one outlined pill with − and +.',
+  about: 'Under each pitch fader, two small ‹ › arrows floated on their own. They looked like the beat-jump arrows but bend the tempo. Now they are one small pill with − and +, on the same surface as the buttons around it.',
   before: 'Two bare ‹ › glyphs sit under the pitch fader. They look like decoration, or like the beat-jump arrows, not like buttons that slow down or speed up the track.',
-  after: 'They are one small outlined pill split in two, − for a touch slower and + for a touch faster while you hold it.',
+  after: 'They are one small pill split in two, − for a touch slower and + for a touch faster while you hold it, on the same grey surface as Key lock below.',
   async setup(app) {
     if (!app.loaded(0)) await app.loadTrack(0);
   },

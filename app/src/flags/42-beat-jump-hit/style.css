@@ -8,3 +8,12 @@
   width: 100%;
   min-width: 0;
 }
+
+/* The hover and press fill keeps the control's outer corners and is square
+   where the two halves meet the size between them. */
+:root[data-flag-beat-jump-hit] [data-region^='deck'] .transport .jumps button {
+  border-radius: var(--r) 0 0 var(--r);
+}
+:root[data-flag-beat-jump-hit] [data-region^='deck'] .transport .jumps button + button {
+  border-radius: 0 var(--r) var(--r) 0;
+}

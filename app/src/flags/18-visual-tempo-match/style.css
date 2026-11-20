@@ -10,9 +10,15 @@
   background: var(--flag-visual-tempo-match-other);
   pointer-events: none;
 }
+/* Out of range: pinned to the end of the travel it lies beyond, at half
+   strength. */
 :root[data-flag-visual-tempo-match] [data-region^='deck'] .pitch-fader .fader.vertical .match.out {
-  background: none;
-  box-shadow: inset 0 0 0 1px var(--flag-visual-tempo-match-other);
+  opacity: 0.5;
+}
+/* Matched (within 0.05 BPM, the mark under the handle): the handle's
+   centre line takes the other deck's colour. */
+:root[data-flag-visual-tempo-match] [data-region^='deck'] .pitch-fader.matched .fader.vertical .cap::after {
+  background: var(--flag-visual-tempo-match-other);
 }
 :root[data-flag-visual-tempo-match] [data-region='deck0'] {
   --flag-visual-tempo-match-other: var(--deck-b);

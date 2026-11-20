@@ -25,3 +25,9 @@
   border-radius: 6px;
   background: rgb(11 11 13 / 0.7);
 }
+
+/* An empty lane draws no chip: just its deck bar, as before the flag (an
+   empty dark chip read as a broken label). */
+:root[data-flag-declutter-lane-label] .waves .lane:has(.wave.empty) .who {
+  background: none;
+}

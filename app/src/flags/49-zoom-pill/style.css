@@ -1,7 +1,9 @@
 /* #49: the waveform zoom gets its own 44px gutter at the right of the
    strip, so it never covers the waveform coming in. It stands upright on
-   the lane divider: an opaque popover pill with the glass edge, 24×24
-   buttons. */
+   the lane divider on the tonal surface every resting button has (no
+   outline), 24×24 buttons. The lanes, their hairline and the waveform end
+   before the gutter, the waveform fading out over its last 12px; the play
+   head stays on the panel's centre, the window's axis (Waveform.svelte). */
 :root[data-flag-zoom-pill] .waves {
   padding-right: 44px;
 }
@@ -16,18 +18,29 @@
   height: auto;
   padding: 4px 0;
   border-radius: var(--r);
-  background: var(--popover);
-  box-shadow: var(--glass-edge);
+  background: var(--flag-buttons-bg, var(--raise));
+  box-shadow: none;
+  color: var(--fg-2);
 }
 :root[data-flag-zoom-pill] .waves .zoom button {
   width: var(--h-sm);
   height: var(--h-sm);
   border-radius: 6px;
+  color: var(--fg-2);
   font-size: var(--t-md);
+}
+:root[data-flag-zoom-pill] .waves .zoom button:hover {
+  background: var(--flag-buttons-bg-hover, var(--hover));
+  color: var(--fg);
 }
 :root[data-flag-zoom-pill] .waves .zoom span {
   min-width: 0;
   font-size: var(--t-xs);
   line-height: 16px;
   white-space: nowrap;
+}
+
+:root[data-flag-zoom-pill] .waves .lane canvas {
+  -webkit-mask-image: linear-gradient(to left, transparent 0, #000 12px);
+  mask-image: linear-gradient(to left, transparent 0, #000 12px);
 }

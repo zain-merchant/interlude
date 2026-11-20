@@ -168,6 +168,8 @@
     if (!flag('visual-tempo-match') || !t || !tracks[1 - deck] || !(d.bpm > 0) || !(o.bpm > 0)) return null;
     return (1 - (o.bpm * o.rate) / d.bpm) / range;
   });
+  // #18 (UI audit flag): the two tempos agree to within 0.05 BPM.
+  const tempoMatched = $derived(tempoMatch !== null && Math.abs(bpm - engine.decks[1 - deck].bpm * engine.decks[1 - deck].rate) < 0.05);
   // #18 (UI audit flag): this deck's key mixes with the other deck's (as each sounds now); class:mix on .key.
   const keyMix = $derived.by(() => {
     if (!flag('visual-key-match') || !pk || !tracks[1 - deck]) return false;
@@ -227,9 +229,11 @@
   function fmt(s) {
     if (!isFinite(s)) return '0:00.0';
     // #8 (UI audit flag): stress-hours shows h:mm:ss.s past an hour.
-    if (flag('stress-hours') && Math.abs(s) >= 3600) return hms(s, 1);
+    if (flag('stress-hours') && Math.abs(s) >= 3600) return hms(flag('deck-polish') ? Math.round(s * 10) / 10 : s, 1);
     const sign = s < 0 ? '−' : '';
     s = Math.abs(s);
+    // #54 (UI audit flag): deck-polish rounds to tenths before splitting, so 59.96 s reads 1:00.0, not 0:60.0.
+    if (flag('deck-polish')) s = Math.round(s * 10) / 10;
     const m = Math.floor(s / 60);
     const sec = (s - m * 60).toFixed(1).padStart(4, '0');
     return `${sign}${m}:${sec}`;
@@ -261,7 +265,8 @@
   };
   const bend = (v) => () => t && control({ type: 'setBend', deck, bend: v });
   // #48 (UI audit flag): nudge-pill's glyph setting can show − and + (slower, faster) instead of ‹ ›.
-  const nudgeGlyph = (n) => (flag('nudge-pill') && setting('nudge-pill', 'glyph') === 'signs' ? (n.v < 0 ? '−' : '+') : n.glyph);
+  const nudgeGlyph = (n) => (flag('nudge-pill') ? (n.v < 0 ? '−' : '+') : n.glyph);
+  const nudgeTip = (n) => (flag('nudge-pill') ? tipText(`Hold to nudge ${n.v < 0 ? 'slower' : 'faster'}`, keyLabel(`deck.${deck}.${n.id}`)) : tipText(n.label, keyLabel(`deck.${deck}.${n.id}`), 'hold'));
   // #18 (UI audit flag): visual-tempo-match's mark explained in the pitch fader's tooltip.
   const pitchNote = $derived.by(() => {
     if (pickupRate !== null) return `The controller's tempo fader is at ${pct((pickupRate - 1) * 100)}. Move it to the marker and it takes over`;
@@ -274,21 +279,24 @@
     t ? `${Dn}, ${t.title}${t.artist ? ` by ${t.artist}` : ''}, ${d.playing ? 'playing' : 'paused'}${bpm ? `, ${bpm.toFixed(0)} BPM` : ''}` : `${Dn}, empty`,
   );
   // #40 (UI audit flag): time-remaining makes the time left the big number; with its swap setting on 'click', clicking the pair swaps them (both decks, remembered).
+  // A press that moves more than 3px is a drag, not a click.
+  let timesDown = null;
   const timesProps = $derived.by(() => {
     if (!flag('time-remaining')) return {};
-    if (setting('time-remaining', 'swap') !== 'click') return { 'data-big': 'remaining' };
     return {
       'data-big': timeMode.big,
       role: 'button',
       tabindex: 0,
-      onclick: swapTimes,
+      onpointerdown: (e) => (timesDown = { x: e.clientX, y: e.clientY }),
+      onclick: (e) => {
+        const moved = timesDown && e.detail > 0 && Math.hypot(e.clientX - timesDown.x, e.clientY - timesDown.y) > 3;
+        timesDown = null;
+        if (!moved) swapTimes();
+      },
       onkeydown: (e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), e.stopPropagation(), swapTimes()),
     };
   });
-  const timesTip = () =>
-    flag('time-remaining') && setting('time-remaining', 'swap') === 'click'
-      ? `Click to make the ${timeMode.big === 'remaining' ? 'elapsed' : 'remaining'} time the big one`
-      : '';
+  const timesTip = () => (flag('time-remaining') ? (timeMode.big === 'remaining' ? 'Click to show time played' : 'Click to show time left') : '');
   // #57 (UI audit flag): against-tab-status: what an idle tab's mode is doing, in a word or two.
   const tabStatus = (id) => {
     if (!t) return '';
@@ -314,7 +322,7 @@
     ]);
   // #54 (UI audit flag): deck-polish can set the tenths of a second apart (class "t").
   const clock = (s) => {
-    const m = flag('deck-polish') && setting('deck-polish', 'tenths') === 'dim' ? /^(.*)(\.\d)$/.exec(s) : null;
+    const m = flag('deck-polish') ? /^(.*)(\.\d)$/.exec(s) : null;
     return m ? { whole: m[1], tenth: m[2] } : { whole: s, tenth: '' };
   };
 </script>
@@ -342,8 +350,11 @@
         {:else}
           <div class="big num">{bpm > 0 ? bpm.toFixed(2) : '—'}</div>
         {/if}
+        <!-- #44 (UI audit flag): pitch-readout: a loaded deck's line is its key alone; "BPM" only under an empty deck's dash. -->
         <!-- #10 (UI audit flag): key, Camelot code and unit set apart by space and tone, not middle dots. -->
-        {#if flag('no-dots')}
+        {#if flag('pitch-readout')}
+          <div class="unit">{#if pk}<span class="key" class:shifted={pk.shift} class:mix={keyMix} use:tip={keyTip}>{#if kn === 'camelot'}<span class="cam">{camelot(pk)}</span>{:else if kn === 'musical'}{keyName(pk)}{:else}{keyName(pk)} <span class="cam">{camelot(pk)}</span>{/if}</span>{:else}<span class="u">BPM</span>{/if}</div>
+        {:else if flag('no-dots')}
           <div class="unit">{#if pk}<span class="key" class:shifted={pk.shift} class:mix={keyMix} use:tip={keyTip}>{#if kn === 'camelot'}<span class="cam">{camelot(pk)}</span>{:else if kn === 'musical'}{keyName(pk)}{:else}{keyName(pk)} <span class="cam">{camelot(pk)}</span>{/if}</span>{' '}{/if}<span class="u">BPM</span></div>
         {:else}
         <div class="unit">{#if pk}<span class="key" class:shifted={pk.shift} class:mix={keyMix} use:tip={keyTip}>{kn === 'camelot' ? camelot(pk) : kn === 'musical' ? keyName(pk) : `${keyName(pk)} · ${camelot(pk)}`}</span>{" · "}{/if}BPM</div>
@@ -351,7 +362,8 @@
       </div>
     </header>
 
-    <div class="overview"><Waveform {deck} mode="overview" /></div>
+    <!-- #46 (UI audit flag): empty-deck (with deck-spare-height) shows the load hint inside the empty well. -->
+    <div class="overview" data-hint={flag('empty-deck') && !t ? `Drag a track here or press ${keyLabel(`deck.${deck}.load`)}` : undefined}><Waveform {deck} mode="overview" /></div>
 
     <!-- #40, #54 (UI audit flags): time-remaining, deck-polish's tenths; with both off, the times are as before. -->
     {#if flag('time-remaining') || flag('deck-polish')}
@@ -434,7 +446,8 @@
     <button class="val num" class:off={Math.abs(ratePct) > 0.005} onclick={cycleRange}
       aria-label="{Dn} tempo {pct(ratePct)}, pitch range plus or minus {Math.round(range * 100)} percent. Click to change the range"
       use:tip={rangeTip}>{pct(ratePct)}{#if range !== RANGES[0]}<span class="rng">±{Math.round(range * 100)}</span>{/if}</button>
-    <div class="pitch-fader">
+    <!-- #18 (UI audit flag): visual-tempo-match marks the tempos as matched (the handle's line takes the other deck's colour). -->
+    <div class="pitch-fader" class:matched={tempoMatched}>
       <Fader vertical big tick value={pitch} min={-1} max={1} reset={0} label="{Dn} pitch" onchange={setPitch}
         format={(v) => pct(-v * range * 100)} {ghost} match={tempoMatch}
         note={pitchNote} />
@@ -444,6 +457,9 @@
            shows it while it's on, so it's never on by surprise. -->
       <button class="range lock on" aria-pressed="true" aria-label="{Dn} slip on, click to turn off" {...press(() => toggleSlip(deck))}
         use:tip={slipTip}>Slip</button>
+    {:else if flag('no-shift-pitch') && engine.decks[1 - deck].slip}
+      <!-- #5 (UI audit flag): no-shift-pitch keeps Slip's row on this deck too while the other deck has it, so the decks mirror. -->
+      <div class="slip-room" aria-hidden="true"></div>
     {/if}
     <div class="nudge">
       {#each [{ v: -0.04, label: 'Nudge slower', glyph: '‹', id: 'slower' }, { v: 0.04, label: 'Nudge faster', glyph: '›', id: 'faster' }] as n}
@@ -451,7 +467,7 @@
           onpointerdown={(e) => e.button === 0 && bend(n.v)()} onpointerup={bend(0)} onpointerleave={bend(0)}
           onkeydown={(e) => (e.key === ' ' || e.key === 'Enter') && !e.repeat && (e.preventDefault(), bend(n.v)())}
           onkeyup={(e) => (e.key === ' ' || e.key === 'Enter') && bend(0)()}
-          use:tip={() => tipText(n.label, keyLabel(`deck.${deck}.${n.id}`), 'hold')}>{nudgeGlyph(n)}</button>
+          use:tip={() => nudgeTip(n)}>{nudgeGlyph(n)}</button>
       {/each}
     </div>
     <button class="range lock kl" class:on={d.keylock} aria-pressed={d.keylock} {...press(toggleKeylock)}

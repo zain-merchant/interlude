@@ -21,7 +21,6 @@ export default {
       options: [
         ['mint', 'Light mint', 'A pale mint, clearly apart from slot 2\'s green and from the decks\' whites.'],
         ['lilac', 'Light lilac', 'A pale lilac; close-ish to slot 3\'s purple, so it relies on lightness to tell them apart.'],
-        ['lime', 'Lime', 'A yellow-green; brighter, but nearer slot 6\'s olive yellow.'],
       ],
     },
   },

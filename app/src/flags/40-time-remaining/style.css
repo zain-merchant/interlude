@@ -22,12 +22,12 @@
 
 /* Click to swap: the pair is one button. A hover lifts the small number,
    which is the one a click brings forward. */
-:root[data-flag-time-remaining][data-flag-time-remaining-swap='click'] [data-region^='deck'] .times[data-big] {
+:root[data-flag-time-remaining][data-region^='deck'] .times[data-big] {
   cursor: pointer;
   border-radius: 6px;
 }
-:root[data-flag-time-remaining][data-flag-time-remaining-swap='click'] [data-region^='deck'] .times[data-big='remaining']:hover .el,
-:root[data-flag-time-remaining][data-flag-time-remaining-swap='click'] [data-region^='deck'] .times[data-big='elapsed']:hover .rm:not(.ending) {
+:root[data-flag-time-remaining][data-region^='deck'] .times[data-big='remaining']:hover .el,
+:root[data-flag-time-remaining][data-region^='deck'] .times[data-big='elapsed']:hover .rm:not(.ending) {
   color: var(--fg);
 }
 :root[data-flag-time-remaining] [data-region^='deck'] .times[data-big]:focus-visible {

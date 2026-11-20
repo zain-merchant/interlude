@@ -18,3 +18,9 @@
 :root[data-flag-deck-polish] [data-region^='deck'] .times .t {
   opacity: 0.64;
 }
+
+/* The deck title's baseline meets the BPM numerals' baseline (the doc:
+   "text lines up with text"); was 3px apart. */
+:root[data-flag-deck-polish] [data-region^='deck'] header {
+  align-items: first baseline;
+}

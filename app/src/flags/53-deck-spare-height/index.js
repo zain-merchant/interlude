@@ -6,26 +6,14 @@
 // flag the deck body's rows are `auto minmax(32px, 1fr) auto auto auto`:
 // the overview takes the spare height (about 80px at the designed 360px
 // deck), and the mode row hugs its tabs, 8px under the tab rule.
-// Fit setting: 'overview' (default) or 'tight', which keeps the overview
-// at 48px and collects the spare room above the transport, for the
-// panel-sizes flag to trim.
+// Loaded or empty, the same rows, so loading a track moves nothing (with
+// empty-deck on, an empty well holds the load hint).
 export default {
   id: 'deck-spare-height',
   n: 53,
   title: "The deck's spare height goes to the overview",
   group: 'Layout',
   notes: 'Deck body rows become auto minmax(32px, 1fr) auto auto auto: the overview grows into the dead space and the mode row sits right under its tabs.',
-  settings: {
-    fit: {
-      type: 'choice',
-      label: 'Spare height',
-      default: 'overview',
-      options: [
-        ['overview', 'To the overview', "The deck's overview waveform grows into the empty band, so you see the whole track bigger; the cue row sits right under its tabs."],
-        ['tight', 'Tight', 'The overview stays a thin strip; the cue row sits under its tabs and the spare room gathers above the transport, ready for the panel-sizes flag to trim the deck.'],
-      ],
-    },
-  },
 };
 
 /** Show me: both decks loaded on the Cues tab; flipping shows the cue row floating in an empty band (before) and the taller overview (after). */

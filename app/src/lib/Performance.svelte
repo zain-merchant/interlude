@@ -28,6 +28,7 @@
   // #8 (UI audit flag): stress-hours shows hot cues past an hour as h:mm:ss.
   const mmss = (s) => (flag('stress-hours') && s >= 3600 ? hms(s) : `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`);
   function fmt(s) {
+    if (flag('deck-polish')) s = Math.round(s * 10) / 10; // #54 (UI audit flag): round before splitting (no "0:60.0")
     if (flag('stress-hours') && s >= 3600) return hms(s, 1); // #8 (UI audit flag)
     const m = Math.floor(s / 60);
     return `${m}:${(s - m * 60).toFixed(1).padStart(4, '0')}`;

@@ -122,7 +122,7 @@ export class Waveform2D {
    *           beatLen?: number, firstBeat?: number, hotCues?: number[],
    *           loopIn?: number, loopOut?: number, looping?: boolean, slip?: number,
    *           flags?: string, beatGrid?: boolean, edge?: string, clipStart?: boolean, cueChips?: boolean,
-   *           ticks?: boolean, keyline?: boolean, loopTint?: boolean, secsPerBin?: number }} view
+   *           keyline?: boolean, loopTint?: boolean }} view
    *   Positions are in bins, -1 for none; `perPx` is bins per device pixel.
    */
   draw(view) {
@@ -148,23 +148,12 @@ export class Waveform2D {
       // #43 (UI audit flag): on-state tints a running loop's stretch in the deck's colour.
       ctx.fillStyle = view.loopTint && view.looping ? rgba(c.mid, 0.12) : `rgba(255,255,255,${view.looping ? 0.08 : 0.04})`;
       ctx.fillRect(a, 0, b - a, h);
-      // #43 (UI audit flag): and brackets it, a 2px deck-colour edge along its top and bottom.
-      if (view.loopTint && view.looping) {
-        ctx.fillStyle = rgba(c.mid, 0.9);
-        ctx.fillRect(a, 0, b - a, 2);
-        ctx.fillRect(a, h - 2, b - a, 2);
-      }
     }
     if (this.count) {
       if (view.mode === 'scroll') this.ribbon(w, h, view, spp, c);
       else this.overview(w, h, c);
       if (grid && view.beatGrid) this.grid(w, h, view, spp, x); // #41 (UI audit flag)
-      // #50 (UI audit flag): overview-cues' minute ticks along the overview's foot.
-      if (view.mode === 'overview' && view.ticks && view.secsPerBin > 0) {
-        ctx.fillStyle = 'rgba(236,234,228,0.3)';
-        const per = 60 / view.secsPerBin;
-        for (let b = per; b < this.count; b += per) ctx.fillRect(Math.round(x(b)), h - 3, 1, 3);
-      }
+
       // The played part: a dark veil so what's ahead is what reads.
       const px = Math.max(0, Math.min(w, x(view.playhead)));
       ctx.fillStyle = view.mode === 'scroll' ? 'rgba(12,12,14,0.5)' : 'rgba(12,12,14,0.55)';
@@ -175,6 +164,8 @@ export class Waveform2D {
       ctx.fillRect(Math.round(x(view.loopIn)) - 0.5, 0, 1, h);
       ctx.fillRect(Math.round(x(view.loopOut)) - 0.5, 0, 1, h);
     }
+    /** #50 (UI audit flag): overview chips, drawn after their lines so close ones can stack. */
+    const chips = [];
     view.hotCues?.forEach((cue, i) => {
       if (cue < 0) return;
       const cx = x(cue);
@@ -184,13 +175,22 @@ export class Waveform2D {
       ctx.fillRect(cx - 1, 0, 2, h);
       ctx.globalAlpha = 1;
       // #50 (UI audit flag): overview-cues puts the lane's numbered chip at the top of each overview marker.
-      if (view.cueChips && view.mode === 'overview') return this.chip(cx, w, i + 1, c.hot[i % c.hot.length], c.ink);
+      if (view.cueChips && view.mode === 'overview') return chips.push([cx, i]);
       ctx.beginPath();
       ctx.moveTo(cx - 4, 0);
       ctx.lineTo(cx + 4, 0);
       ctx.lineTo(cx, 4);
       ctx.closePath();
       ctx.fill();
+    });
+    // Close cues stack: each chip takes the first 12px row where it clears
+    // the chips already drawn by a pixel.
+    const rows = [];
+    chips.sort((a, b) => a[0] - b[0]).forEach(([cx, i]) => {
+      let row = 0;
+      while ((rows[row] ?? -Infinity) > cx - 13) row++;
+      rows[row] = cx;
+      this.chip(cx, w, i + 1, c.hot[i % c.hot.length], c.ink, row * 13);
     });
     if (view.cue >= 0) {
       const cx = x(view.cue);
@@ -241,16 +241,24 @@ export class Waveform2D {
    */
   grid(w, h, view, spp, x) {
     const { ctx } = this;
+    const dpr = window.devicePixelRatio || 1;
     const len = view.beatLen;
     const first = Math.ceil((view.start - view.firstBeat) / len);
     const barsOnly = len / spp < 6;
     const tick = 6;
+    // Lighten only, so a line crossing the ribbon's white core can't draw a
+    // darker seam through it.
+    ctx.globalCompositeOperation = 'screen';
     for (let b = first; ; b++) {
       const bx = Math.round(x(view.firstBeat + b * len));
-      if (bx > w) break;
+      if (bx > w + 2) break;
       const n = ((b % 64) + 64) % 64;
-      if (n % 4 === 0) {
-        ctx.fillStyle = n === 0 ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.2)';
+      if (n === 0) {
+        // A phrase (every 16th bar): 2 device px, twice the bar's strength.
+        ctx.fillStyle = 'rgba(255,255,255,0.45)';
+        ctx.fillRect(bx - 1 / dpr, 0, 2 / dpr, h);
+      } else if (n % 4 === 0) {
+        ctx.fillStyle = 'rgba(255,255,255,0.2)';
         ctx.fillRect(bx, 0, 1, h);
       } else if (!barsOnly) {
         ctx.fillStyle = 'rgba(255,255,255,0.15)';
@@ -258,23 +266,24 @@ export class Waveform2D {
         ctx.fillRect(bx, h - tick, 1, tick);
       }
     }
+    ctx.globalCompositeOperation = 'source-over';
   }
 
   /** #50 (UI audit flag): a hot cue's numbered chip, 12px tall, at the top of its overview line. */
-  chip(cx, w, n, fill, ink) {
+  chip(cx, w, n, fill, ink, top = 0) {
     const { ctx } = this;
     const cw = 12, ch = 12;
     const left = Math.max(0, Math.min(w - cw, Math.round(cx - cw / 2)));
     ctx.fillStyle = fill;
     ctx.beginPath();
-    if (ctx.roundRect) ctx.roundRect(left, 0, cw, ch, [0, 0, 3, 3]);
-    else ctx.rect(left, 0, cw, ch);
+    if (ctx.roundRect) ctx.roundRect(left, top, cw, ch, top ? 3 : [0, 0, 3, 3]);
+    else ctx.rect(left, top, cw, ch);
     ctx.fill();
     ctx.fillStyle = rgba(ink, 1);
     ctx.font = `600 11px ${this.font ?? 'sans-serif'}`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(String(n), left + cw / 2, ch / 2 + 0.5);
+    ctx.fillText(String(n), left + cw / 2, top + ch / 2 + 0.5);
   }
 
   /** Fills one band's shape. `glow` draws only its blurred shadow. */

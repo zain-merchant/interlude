@@ -6,10 +6,11 @@
 // the flag:
 // - The tempo % is 13px tabular (--t-sm), --fg-2 at zero and --fg off
 //   zero (Deck.svelte's .off).
-// - The key is its own word at 13px --fg-2 (Camelot --fg-3; a shifted key
-//   stays --fg), and "BPM" stays an 11px --fg-3 caption 8px after it.
-// - A small "−" at the top of the pitch fader and "+" at the bottom, 11px
-//   --fg-4 (up is slower, like a turntable).
+// - On a loaded deck the line under the BPM is the key alone at 13px
+//   --fg-2 (Camelot --fg-3; a shifted key stays --fg), right-aligned to the
+//   numerals; "BPM" shows only under an empty deck's dash (Deck.svelte).
+// (The −/+ marks at the fader's ends were dropped in review: they read as
+// a doubled tick and a second nudge pair.)
 // Flag 05's no-shift-pitch box is sized in em, so it grows with the 13px
 // readout and still fits the 56px column.
 export default {
@@ -17,14 +18,14 @@ export default {
   n: 44,
   title: 'Tempo % and key big enough to read',
   group: 'Type and colour',
-  notes: 'Tempo % at 13px (dim at zero), the key as its own 13px word apart from the "BPM" caption, and − / + at the ends of the pitch fader.',
+  notes: 'Tempo % at 13px (dim at zero); the key alone at 13px under the BPM on a loaded deck ("BPM" only under an empty deck\'s dash).',
 };
 
 /** Show me: deck A nudged off zero; flipping shows the 11px readouts (before) and the 13px ones (after), magnified. */
 export const show = {
-  about: 'The tempo % over the pitch fader, which you watch while matching beats by hand, and the key under the BPM were the smallest text on the deck. Now both are body size, and the fader shows which end is faster.',
+  about: 'The tempo % over the pitch fader, which you watch while matching beats by hand, and the key under the BPM were the smallest text on the deck. Now both are body size.',
   before: 'The tempo reads "+0.00%" in tiny type, and the key is squeezed onto the "BPM" caption line, so "BPM" looks like it labels the key.',
-  after: 'The tempo % and the key are a size up and easy to read, "BPM" is a caption on its own, and − / + at the ends of the fader say which way is slower and faster.',
+  after: 'The tempo % and the key are a size up and easy to read, and the key sits alone under the BPM ("BPM" only appears under an empty deck\'s dash).',
   async setup(app, ctx) {
     if (!app.loaded(0)) await app.loadTrack(0);
     if (!app.loaded(1)) await app.loadTrack(1);
@@ -41,6 +42,6 @@ export const show = {
     const l = d.loupe('readouts', { x: x0, y: y0 }, { zoom: z, size: { w: w * z, h: 70 * z }, near: b, caption: '' });
     ctx.at = l.rect;
     const before = ctx.phase === 'before';
-    d.text(l.at.x + 10, l.at.y + l.rect.height + 16, before ? 'tempo % and key: 11px, the key on the BPM caption' : 'tempo % and key: 13px; BPM a caption of its own', { tone: before ? 'bad' : 'ok', fixed: true });
+    d.text(l.at.x + 10, l.at.y + l.rect.height + 16, before ? 'tempo % and key: 11px, the key on the BPM caption' : 'tempo % and key: 13px; the key alone under the BPM', { tone: before ? 'bad' : 'ok', fixed: true });
   },
 };

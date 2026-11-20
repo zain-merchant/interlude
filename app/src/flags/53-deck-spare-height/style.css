@@ -3,9 +3,6 @@
 :root[data-flag-deck-spare-height] [data-region^='deck'] .body {
   grid-template-rows: auto minmax(32px, 1fr) auto auto auto;
 }
-:root[data-flag-deck-spare-height][data-flag-deck-spare-height-fit='tight'] [data-region^='deck'] .body {
-  grid-template-rows: auto minmax(32px, 48px) auto 1fr auto;
-}
 :root[data-flag-deck-spare-height] [data-region^='deck'] .mp {
   grid-template-rows: auto auto;
   align-content: start;

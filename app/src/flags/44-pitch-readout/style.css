@@ -6,9 +6,10 @@
   font-size: var(--t-sm);
   font-variant-numeric: tabular-nums;
 }
-/* The key is its own word at 13px --fg-2 (Camelot --fg-3), and "BPM"
-   stays an 11px --fg-3 caption 8px after it, so it labels the number
-   above it, not the key. */
+/* On a loaded deck the line under the BPM is the key alone, 13px --fg-2
+   (Camelot --fg-3), right-aligned to the numerals; "BPM" shows only under
+   an empty deck's dash (11px --fg-3), where it says what the dash is
+   (Deck.svelte renders the line this way with the flag on). */
 :root[data-flag-pitch-readout] [data-region^='deck'] .bpm .unit {
   display: flex;
   align-items: baseline;
@@ -24,27 +25,4 @@
 }
 :root[data-flag-pitch-readout] [data-region^='deck'] .bpm .unit .key .cam {
   color: var(--fg-3);
-}
-
-/* Which way the fader goes: "−" at the top (slower), "+" at the bottom,
-   11px --fg-4, past the ends of the slot on the scale's side. */
-:root[data-flag-pitch-readout] [data-region^='deck'] .pitch-fader {
-  position: relative;
-}
-:root[data-flag-pitch-readout] [data-region^='deck'] .pitch-fader::before,
-:root[data-flag-pitch-readout] [data-region^='deck'] .pitch-fader::after {
-  position: absolute;
-  left: calc(50% + 15px);
-  font-size: var(--t-xs);
-  line-height: 1;
-  color: var(--fg-4);
-  pointer-events: none;
-}
-:root[data-flag-pitch-readout] [data-region^='deck'] .pitch-fader::before {
-  content: '−';
-  top: -3px;
-}
-:root[data-flag-pitch-readout] [data-region^='deck'] .pitch-fader::after {
-  content: '+';
-  bottom: -3px;
 }

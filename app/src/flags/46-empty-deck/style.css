@@ -18,3 +18,29 @@
 :root[data-flag-empty-deck] .waves .lane .who .hint {
   display: none;
 }
+
+/* With deck-polish's quieter tenths, an empty time stays one grey: the
+   tenths don't dim again on top of --fg-4. */
+:root[data-flag-empty-deck] [data-region^='deck']:has(.title .name.dim) .times .t {
+  opacity: 1;
+}
+
+/* With deck-spare-height's taller overview, the load hint moves into the
+   empty well, where the track will appear, centred at --t-sm --fg-3; the
+   subtitle line keeps its room (hidden), so loading a track moves nothing.
+   Still once per deck. */
+:root[data-flag-empty-deck][data-flag-deck-spare-height] [data-region^='deck'] .overview[data-hint]::after {
+  content: attr(data-hint);
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 0 var(--pad);
+  font-size: var(--t-sm);
+  color: var(--fg-3);
+  text-align: center;
+  pointer-events: none;
+}
+:root[data-flag-empty-deck][data-flag-deck-spare-height] [data-region^='deck']:has(.title .name.dim) .title .artist {
+  visibility: hidden;
+}

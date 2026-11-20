@@ -15,9 +15,14 @@
     text-align: left;
   }
 
-  /* Hot cues: the time slot's text centred, so "Set" sits on the column's
-     centre like a time does (backlog b-K51). */
-  :root[data-flag-no-shift-strip] [data-region^='deck'] .perf .tc span {
+  /* Hot cues: dot, a one-figure slot for the number, then the value,
+     6px apart and left-aligned, so "1 Set" and "2 1:07" put their value at
+     the same distance from the dot. */
+  :root[data-flag-no-shift-strip] [data-region^='deck'] .perf .tc {
+    gap: 6px;
+  }
+  :root[data-flag-no-shift-strip] [data-region^='deck'] .perf .tc b {
+    width: 1ch;
     text-align: center;
   }
 

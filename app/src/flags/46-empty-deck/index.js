@@ -9,6 +9,10 @@
 // tab and its underline go --fg-3, the beat-jump size dims with its
 // arrows, and the lanes drop their hint (the deck header keeps it, once
 // per deck). Pitch and Key lock stay live: they work without a track.
+// With deck-polish's quieter tenths on, an empty time stays one grey. With
+// deck-spare-height on, the hint moves from the subtitle into the empty
+// overview well, centred (Deck.svelte puts it on the well as data-hint),
+// and the subtitle keeps its room so loading a track moves nothing.
 export default {
   id: 'empty-deck',
   n: 46,

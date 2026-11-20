@@ -7,7 +7,8 @@
 // zoom control. The label now stops short of the centre with an ellipsis;
 // the full title is on the deck and in the library. It also sits on a
 // dark backing like the zoom pill's (rgb(11 11 13 / 0.7), 24px tall), so
-// the waveform's peaks no longer cut through the letters.
+// the waveform's peaks no longer cut through the letters. An empty lane
+// draws no chip, only its deck bar.
 export default {
   id: 'declutter-lane-label',
   n: 13,

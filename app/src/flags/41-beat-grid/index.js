@@ -3,32 +3,21 @@
 // Beat lines were 3% white and bar lines 7%, drawn under the ribbon
 // (waveform-2d.js beats()), so you couldn't line up the two lanes' beats by
 // eye or find a phrase. With the flag the grid is drawn over the ribbon,
-// before the veil and the markers (grid()): bars are 1px lines at 20%
-// white, every 16th bar (a phrase) at 35%, and beats are 6px ticks at the
-// lane's top and bottom edges at 15%, so the waveform between stays clear.
-// When beats are closer than 6px only bars are drawn, as before.
-//
-// Edge setting (backlog b-K37): the 1px edge along the ribbon's outer
-// band was 55% of the high band's colour and traced every transient's
-// fin. 'soft' (default) draws it at 25%; 'crisp' keeps it as it was.
+// before the veil and the markers (grid()), lighten-only ('screen') so a
+// line crossing the ribbon's white core can't seam it: bars are 1px lines
+// at 20% white, every 16th bar (a phrase) a 2-device-px line at 45%, and
+// beats are 6px ticks at the lane's top and bottom edges at 15%, so the
+// waveform between stays clear. When beats are closer than 6px only bars
+// are drawn, as before. The 1px edge along the ribbon's outer band (55% of
+// the high band's colour, tracing every transient's fin; backlog b-K37)
+// drops to 25%.
 // Hooks: waveform-2d.js (draw, grid, ribbonShape), Waveform.svelte.
 export default {
   id: 'beat-grid',
   n: 41,
   title: 'A beat grid you can see on the waveforms',
   group: 'Type and colour',
-  notes: 'Bars as 1px lines over the ribbon (phrases every 16 bars brighter), beats as short ticks at the lane edges. The ribbon\'s fin-tracing edge softens to 25%.',
-  settings: {
-    edge: {
-      type: 'choice',
-      label: 'Ribbon edge',
-      default: 'soft',
-      options: [
-        ['soft', 'Soft', 'The thin bright line along the waveform\'s edge is toned down, so the shape reads calm and the grid lines stand out.'],
-        ['crisp', 'Crisp', 'The edge line stays as bright as today, tracing every spike.'],
-      ],
-    },
-  },
+  notes: 'Bars as 1px lines over the ribbon (phrases every 16 bars twice as wide and bright), beats as short ticks at the lane edges, all lighten-only. The ribbon\'s fin-tracing edge softens to 25%.',
 };
 
 /** Show me: both decks playing; flipping shows the faint grid under the ribbon (before) and the grid over it (after). */
