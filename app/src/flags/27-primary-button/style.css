@@ -1,0 +1,50 @@
+/* #27 (C50, E3): one main-action button. The look Import's own .btn.primary
+   had, as a shared class: a solid light fill with dark text, the control
+   height and radius. Dialogs and alert banners mark their one main action
+   with it (Report, Import; the device-lost banner's button is #23's).
+   Allowed there only, never on the performance surface (owner's call 3). */
+:root[data-flag-primary-button] .btn.primary {
+  height: var(--h-md);
+  border-radius: var(--r);
+  background: var(--fg);
+  box-shadow: none;
+  color: var(--ink);
+  font-weight: 500;
+}
+:root[data-flag-primary-button] .btn.primary:hover:not(:disabled, [aria-disabled='true']) {
+  background: #fff;
+  box-shadow: none;
+  color: var(--ink);
+}
+:root[data-flag-primary-button] .btn.primary:disabled {
+  opacity: 0.4;
+}
+/* Import's rows: the newest library found carries the solid chip; the
+   others a quiet tonal one. Both say Import. */
+:root[data-flag-primary-button] .card[aria-labelledby='import-title'] .found .go {
+  border-radius: var(--r);
+  background: rgb(255 255 255 / 0.08);
+  color: var(--fg);
+}
+:root[data-flag-primary-button] .card[aria-labelledby='import-title'] .found .go.primary {
+  background: var(--fg);
+  color: var(--ink);
+}
+
+/* Option: no fill. The main action is the brightest label, with an
+   outline, and Play stays the only solid control on screen. */
+:root[data-flag-primary-button][data-flag-primary-button-style='ring'] .btn.primary,
+:root[data-flag-primary-button][data-flag-primary-button-style='ring'] .btn.primary:hover:not(:disabled, [aria-disabled='true']) {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--line-2);
+  color: var(--fg);
+}
+:root[data-flag-primary-button][data-flag-primary-button-style='ring'] .btn.primary:hover:not(:disabled, [aria-disabled='true']) {
+  background: var(--hover);
+  box-shadow: inset 0 0 0 1px var(--fg-3);
+}
+:root[data-flag-primary-button][data-flag-primary-button-style='ring'] .card[aria-labelledby='import-title'] .found .go.primary {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--fg-3);
+  color: var(--fg);
+}

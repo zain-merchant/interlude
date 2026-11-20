@@ -1,0 +1,11 @@
+/* #28 (E4, E5): the Report text box drops the browser's resize grip, which
+   sat in its rounded corner (the box is tall enough for a few lines and
+   scrolls past that). */
+:root[data-flag-report-copy] .card[aria-labelledby='report-title'] textarea {
+  resize: none;
+}
+/* The close × (e-K32): its glyph sat 7px inside the content's right edge;
+   it now meets the edge, keeping its 28px target. */
+:root[data-flag-report-copy] .card[aria-labelledby='report-title'] .close {
+  margin-right: -7px;
+}
