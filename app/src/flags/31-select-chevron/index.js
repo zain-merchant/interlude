@@ -37,7 +37,7 @@ export const show = {
     // Over the decks, left of the card, clear of Settings.
     const top = app.$('.settings')?.getBoundingClientRect().top ?? 500;
     const src = { x: a.x - 12, y: a.y - 10 };
-    const vw = 260;
+    const vw = 330;
     const vh = b.bottom - a.y + 20;
     const zoom = Math.min(2.5, 470 / vw, (top - 72) / vh);
     const size = { w: Math.round(vw * zoom), h: Math.round(vh * zoom) };
