@@ -1,41 +1,71 @@
-// Records the hero as clips, one per step of the script, for the
-// segmented-video prototype (site/lab/segments). A prototype: it records the
-// first mix's opening steps in both hands; see README.md here.
+// Records the website's hero as clips, one per step of the script, in both
+// hands, for the player in site/hero/clips.js. See README.md here.
 //
-//   node demo/segments/record.mjs [--site DIR] [--out DIR] [--steps 5]
-//                                 [--scale 2] [--phase all|plan|record]
+//   npm run clips                  (in app/: everything, into site/hero/clips)
+//   node demo/segments/record.mjs [--if-changed] [--jobs 3] [--codecs hevc,h264]
+//        [--out DIR] [--work DIR] [--phase all|plan|record|encode] [--keep]
 //
-// --site is a copy of the site whose demo/ was built from this hero.jsx
-// (vite build --config demo/vite.config.js --outDir <copy>/demo), so a
-// recording never rebuilds the live site/demo under anyone.
+// --if-changed  does nothing when the app, the demo and this script are as
+//               they were for the clips already there (their hash is in the
+//               manifest), so a publish step can always run it.
+// --jobs        recording processes per hand (each replays the script to its
+//               part without capturing, then records that part).
+// --codecs      what to encode: hevc, h264, av1 (AV1 is off by default: it
+//               only plays where the browser decodes it in hardware, and
+//               was barely smaller than HEVC here).
+// --work        where the build, the plan, the lossless masters and the
+//               logs go (default: the system's temp folder). The masters let
+//               the delivery files be encoded again (--phase encode) without
+//               recording again.
 //
-// Time is Stageshow's virtual clock, as in bake-hero.mjs: the same run
-// gives the same frames every time. Three passes:
+// Time is Stageshow's virtual clock, as in the demo's own tests: the same run
+// gives the same frames every time (the level meters aside, which follow the
+// engine's own clock and can differ by a few levels from run to run).
 //
-//   plan    each hand plays the steps unaligned; the script reports when
-//           each step starts and when the app answers in it (hero.jsx
-//           mark() and acted()). From that, each step gets a length and,
-//           per hand, a wait at its start, so the app answers at the same
-//           moment in both hands and every step ends on the same app.
-//   check   both hands again, lined up; the engine at every step boundary
-//           must match between the hands (play heads, rates, what's
-//           playing, stems, crossfader, EQ, tabs) or the recording stops.
-//   record  both hands, lined up, layer by layer, each frame:
-//             app         the app alone, flat (in the controller hand too:
-//                         the page tips it back itself), without the
-//                         cursor, the controller or the link lines;
-//             controller  the controller alone, over nothing, in its box
-//                         (the page shows it through its outline);
-//             timeline    the cursor (its transform, lean and data-*), the
-//                         link lines (path, opacity, dash) and the music's
-//                         level, which the page's glow and record follow.
-//           Then each step's frames become one clip per layer, in AV1,
-//           HEVC and H.264 (bt709, limited range, 4:2:0).
-import { spawn } from 'node:child_process';
+// 1. Build the demo (vite, demo/vite.config.js) into the work folder.
+// 2. Plan. Each hand plays the script; hero.jsx reports when each step
+//    starts (mark()) and when the app answers in it (acted()), hooks that
+//    only do anything when a recorder sets window.__heroAlign. From that,
+//    each step gets one length for both hands and each hand a wait at its
+//    start, so the app answers at the same moment in both and every step
+//    ends on the same app (checked: the engine at every boundary must match
+//    between the hands, play heads within POS_TOLERANCE). Rounds until it
+//    holds.
+// 3. The loop. The set never ends and never quite repeats: decks trade
+//    sides each mix, the two routines alternate, the set is three records,
+//    so the app comes round every six mixes (CYCLE_MIXES), but each mix's
+//    Sync lines the new record up on the beat of the one playing, so the
+//    play heads come round a little later each time (the cycle isn't a
+//    whole number of beats). The last step of the cycle is lengthened by
+//    the fraction of a beat that makes it come round exactly; then the
+//    cycle's first boundary and the next cycle's first are compared, in the
+//    engine and in pixels. The clips are that cycle, from LOOP_FROM steps
+//    in (the first mixes start from the set-up, not from the cycle), so the
+//    player loops it without a seam.
+// 4. Record, each hand in --jobs parts at once. Each frame, in layers:
+//      app   the app alone, flat (the page tips it back itself in the
+//            controller hand), without the controller or the link lines.
+//            In the mouse hand twice: with the arrow (appc, what plays) and
+//            without (app, its twin, crossed to when the hand switches
+//            mid-step).
+//      ctl   the controller alone in its box (and the controller hand's
+//            fingertip on it, which goes when the controller does).
+//    and a timeline: the music's level and the link lines. Each layer of a
+//    step is piped into a lossless master (H.264 RGB, crf 0).
+// 5. Encode: each master to HEVC and H.264 (and AV1 if asked), at 2x and
+//    1x (manifest.small); the twin at 1x only (it shows for the rest of a
+//    step at most, while the screen eases back). Plus the controller's
+//    outline (controller-mask.png), a poster (the cycle's first frame, for
+//    the page to show until the clips play: site/img/screenshot*), and
+//    manifest.json (steps, timelines, boundaries that differ between the
+//    hands, the controller's box and how it moves when it comes and goes,
+//    the styles the player needs from the demo's own stylesheets).
+import { spawn, execFileSync } from 'node:child_process';
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
+import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import ts from 'typescript';
 import { chromium } from 'playwright-core';
@@ -44,21 +74,66 @@ const here = (p) => fileURLToPath(new URL(p, import.meta.url));
 const args = Object.fromEntries(
   process.argv.slice(2).reduce((a, x, i, all) => (x.startsWith('--') ? [...a, [x.slice(2), all[i + 1]?.startsWith('--') ? true : (all[i + 1] ?? true)]] : a), []),
 );
-const SITE = path.resolve(args.site ?? here('../../../site'));
-const OUT = path.resolve(args.out ?? here('../../../site/lab/segments'));
-const STEPS = +(args.steps ?? 5);
-const SCALE = +(args.scale ?? 2);
+const APP = here('../..');
+const OUT = path.resolve(args.out ?? here('../../../site/hero/clips'));
+const IMG = path.resolve(here('../../../site/img'));
+const WORK = path.resolve(args.work ?? path.join(os.tmpdir(), 'interlude-clips'));
+const SITE = path.join(WORK, 'site');
+const SCALE = 2;
 const FPS = 30;
 const FRAME = 1000 / FPS;
 const PHASE = args.phase ?? 'all';
 const MODES = ['mouse', 'controller'];
-// Which hands to record (the plan always plays both).
-const REC_MODES = (args.modes ?? MODES.join(',')).split(',');
+const JOBS = +(args.jobs ?? 3);
+const CODECS = String(args.codecs ?? 'hevc,h264').split(',');
+// The app comes round every six mixes (two routines, three records).
+const CYCLE_MIXES = 6;
+// Where the loop starts: the first mixes start from the set-up (Lucid, the
+// decks' tabs as the app opens), so the cycle is taken from the third mix.
+const LOOP_FROM_MIX = 2;
 // Settling time added to every step, so whatever eases out at its end
 // (a hover, a tooltip, a link fading) has gone in both hands.
 const MARGIN = 300;
-const CODECS = (args.codecs ?? 'av1,hevc,h264').split(',');
-fs.mkdirSync(path.join(OUT, 'clips'), { recursive: true });
+// How far apart the hands may leave a deck's play head at a step boundary
+// (s): a mouse click lands on a frame and a controller key's pulse a little
+// after one, so a stopped deck synced by each sits a few ms apart.
+const POS_TOLERANCE = 0.012;
+const W = 1440;
+const H = 900;
+fs.mkdirSync(WORK, { recursive: true });
+const log = (...a) => console.log(new Date().toISOString().slice(11, 19), ...a);
+
+// What the clips are made from: if none of it changed, nor this script,
+// the clips already there are up to date.
+function sourceHash() {
+  const h = crypto.createHash('sha256');
+  const walk = (d) => {
+    for (const e of fs.readdirSync(d, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+      const p = path.join(d, e.name);
+      if (e.isDirectory()) { if (e.name !== 'node_modules') walk(p); }
+      else if (!/\.(md|png)$/.test(e.name) || p.includes(`${path.sep}src${path.sep}`)) { h.update(path.relative(APP, p)); h.update(fs.readFileSync(p)); }
+    }
+  };
+  for (const d of ['src', 'demo']) walk(path.join(APP, d));
+  for (const f of ['package-lock.json', 'svelte.config.js']) h.update(fs.readFileSync(path.join(APP, f)));
+  h.update(JSON.stringify({ SCALE, FPS, CODECS, CYCLE_MIXES, LOOP_FROM_MIX }));
+  return h.digest('hex').slice(0, 16);
+}
+const SOURCE = sourceHash();
+const manifestFile = path.join(OUT, 'manifest.json');
+if (args['if-changed'] && fs.existsSync(manifestFile)) {
+  const m = JSON.parse(fs.readFileSync(manifestFile, 'utf8'));
+  if (m.source === SOURCE) {
+    console.log(`clips: up to date (${SOURCE}), nothing to do`);
+    process.exit(0);
+  }
+}
+
+// 1. The demo, built into the work folder (never site/demo, which may be in use).
+if (PHASE === 'all' || PHASE === 'plan') {
+  log('building the demo');
+  execFileSync('npx', ['vite', 'build', '--config', 'demo/vite.config.js', '--outDir', path.join(SITE, 'demo'), '--emptyOutDir', '--logLevel', 'warn'], { cwd: APP, stdio: 'inherit' });
+}
 
 const clockSrc = ts.transpileModule(fs.readFileSync(here('../stageshow/clock.ts'), 'utf8'), {
   compilerOptions: { target: ts.ScriptTarget.ES2020, module: ts.ModuleKind.ESNext },
@@ -72,7 +147,7 @@ addEventListener('message', (e) => { if (e.data?.interlude === 'level') window._
   const plan = ${JSON.stringify(plan)};
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   const snap = (engine) => ({
-    decks: engine.decks.map((d) => ({ loaded: d.loaded, playing: d.playing, pos: +d.position.toFixed(3), rate: +d.rate.toFixed(5), looping: d.looping, stems: d.stems, bpm: d.bpm })),
+    decks: engine.decks.map((d) => ({ loaded: d.loaded, playing: d.playing, pos: +d.position.toFixed(4), rate: +d.rate.toFixed(5), looping: d.looping, stems: d.stems, bpm: d.bpm })),
     xf: engine.mixer?.crossfader ?? null,
     tabs: [...document.querySelectorAll('[role="tab"][aria-selected="true"]')].map((t) => t.textContent.trim()),
     eq: [...document.querySelectorAll('[role="slider"][aria-label$="EQ"]')].map((s) => s.getAttribute('aria-valuenow')),
@@ -101,9 +176,15 @@ addEventListener('message', (e) => { if (e.data?.interlude === 'level') window._
       if (this.cur) this.log.push({ type: 'act', i: this.cur.i, t: performance.now() });
     },
   };
+  // Steps the clock until the script has marked step k (or n frames).
+  window.__until = async (k, n = 1e9) => {
+    let f = 0;
+    while (window.__heroAlign.i < k && f < n) { await window.__stageshow.clock.step(1); f++; }
+    return f;
+  };
 })();`;
 
-// The site, served as it is.
+// The built demo, served as it is.
 const types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.png': 'image/png', '.woff2': 'font/woff2', '.json': 'application/json' };
 const server = http.createServer((req, res) => {
   const f = path.join(SITE, decodeURIComponent(new URL(req.url, 'http://x').pathname));
@@ -116,8 +197,8 @@ const base = `http://127.0.0.1:${server.address().port}/demo/hero.html`;
 const MAC_CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM || (fs.existsSync(MAC_CHROME) ? MAC_CHROME : undefined) });
 
-async function open(mode, plan) {
-  const ctx = await browser.newContext({ viewport: { width: 1440, height: 920 }, deviceScaleFactor: SCALE });
+async function open(mode, plan, scale = SCALE) {
+  const ctx = await browser.newContext({ viewport: { width: W, height: 920 }, deviceScaleFactor: scale });
   await ctx.addInitScript(install(plan));
   const page = await ctx.newPage();
   const errors = [];
@@ -126,46 +207,38 @@ async function open(mode, plan) {
   // No transitions on the app's own box: the recorder lays it flat and back
   // between captures, and the screen's easing is the page's job.
   await page.addStyleTag({ content: '.app-host { transition: none !important; }' });
+  const until = (k, n) => page.evaluate(([k, n]) => window.__until(k, n), [k, n]);
   const step = () => page.evaluate(() => window.__stageshow.clock.step(1));
-  const log = () => page.evaluate(() => window.__heroAlign.log);
-  return { ctx, page, step, log, errors };
+  const marks = () => page.evaluate(() => window.__heroAlign.log);
+  return { ctx, page, until, step, marks, errors };
 }
 
-/** Plays until the step after the last one wanted starts; returns the log. */
-async function play(mode, plan, onFrame) {
-  const run = await open(mode, plan);
-  let guard = FPS * 300;
-  for (;;) {
-    await run.step();
-    const now = await run.page.evaluate(() => performance.now());
-    if (onFrame) await onFrame(run, now);
-    const marks = (await run.log()).filter((e) => e.type === 'mark');
-    if (marks.length > STEPS) break;
-    if (guard-- <= 0) throw new Error(`${mode}: the script never got through ${STEPS} steps`);
-  }
-  const log = await run.log();
+/** Plays a hand until the script marks step `steps`; returns the log. */
+async function play(mode, plan, steps) {
+  const run = await open(mode, plan, 1);
+  const f = await run.until(steps);
+  if (f >= 1e9) throw new Error(`${mode}: the script never got to step ${steps}`);
+  const l = await run.marks();
   if (run.errors.length) console.warn(`${mode}: page errors: ${run.errors.join('; ')}`);
   await run.ctx.close();
-  return log;
+  return l;
 }
 
 /**
  * Each step from a run's log: when it started, how long its own moves took
  * (to when the script reached the next step, before any wait there), when
- * the app last answered in it (after the wait at its start), and the
- * engine at its end.
+ * the app last answered in it (a step is one move: hero.jsx marks each) (after the wait at its start), and the
+ * engine at its start and end.
  */
-const steps = (log, plan, mode) => {
-  const marks = log.filter((e) => e.type === 'mark');
-  return marks.slice(0, STEPS).map((m, i) => {
+const stepsOf = (l, plan, mode, n) => {
+  const marks = l.filter((e) => e.type === 'mark');
+  return marks.slice(0, n).map((m, i) => {
     const pre = plan?.pre[i]?.[mode] ?? 0;
-    const acts = log.filter((e) => e.type === 'act' && e.i === i);
-    const arrive = log.find((e) => e.type === 'arrive' && e.i === i);
+    const acts = l.filter((e) => e.type === 'act' && e.i === i);
+    const arrive = l.find((e) => e.type === 'arrive' && e.i === i);
     return { name: m.name, start: m.t, own: arrive.t - m.t - pre, act: acts.length ? acts[acts.length - 1].t - m.t - pre : 0, state: m.state, endState: marks[i + 1].state };
   });
 };
-// How far apart the hands may leave a deck's play head at a step boundary.
-const POS_TOLERANCE = 0.012;
 /** Two engine states as strings, play heads within POS_TOLERANCE made equal, and the largest gap. */
 function compare(x, y) {
   let gap = 0;
@@ -178,185 +251,370 @@ function compare(x, y) {
   return [JSON.stringify(x), JSON.stringify(y2), gap];
 }
 const ceilFrame = (ms) => Math.ceil(ms / FRAME - 1e-6) * FRAME;
-
-// 1. Plan, and 2. check. Each round plays both hands with the last plan
-// (none at first) and works out the next from how long each step's own
-// moves took and when the app answered; the hands can play a step a little
-// differently once lined up (a stem is ready sooner or later), so it goes
-// round until a run with the plan leaves the app the same at every step
-// boundary in both hands.
-let plan;
-const planFile = path.join(OUT, 'plan.json');
 const toFrame = (ms) => Math.round(ms / FRAME) * FRAME;
+
+// 2 and 3. The plan.
+const planFile = path.join(WORK, 'plan.json');
+let plan;
 if (PHASE === 'all' || PHASE === 'plan') {
+  // How many steps make the cycle, and where it starts, from a first run.
+  const probe = (await play('mouse', null, 140)).filter((e) => e.type === 'mark');
+  const mixStarts = probe.map((m, i) => (m.name === 'sync' ? i : -1)).filter((i) => i >= 0);
+  const from = mixStarts[LOOP_FROM_MIX];
+  const until = mixStarts[LOOP_FROM_MIX + CYCLE_MIXES];
+  const names = probe.map((m) => m.name);
+  const cycle = until - from;
+  if (names.slice(from, until).join() !== names.slice(until, until + cycle).join()) throw new Error(`the script doesn't repeat every ${CYCLE_MIXES} mixes: ${names.join(' ')}`);
+  // Steps planned: up to the start of the next cycle, and its first step.
+  const N = until + 1;
+  // Where the cycle is lengthened to come round on time: the step before its
+  // last mix's Sync (the record that will be playing as the cycle comes
+  // round is lined up on the beat of the one playing then; a little more
+  // time before that moves where on the beat it starts, and nothing else).
+  const padAt = mixStarts[LOOP_FROM_MIX + CYCLE_MIXES - 1] - 1;
+  log(`cycle: steps ${from} to ${until} (${cycle} steps), planning ${N}`);
   let last = null;
+  let pad = 0;
   for (let round = 0; ; round++) {
-    if (round > 5) throw new Error('the hands never lined up');
+    if (round > 8) throw new Error('the hands never lined up, or the cycle never came round');
     const runs = {};
-    for (const m of MODES) runs[m] = steps(await play(m, last), last, m);
-    const names = runs.mouse.map((s) => s.name).join();
-    if (names !== runs.controller.map((s) => s.name).join()) throw new Error(`the hands play different steps: ${names} / ${runs.controller.map((s) => s.name)}`);
+    const logs = {};
+    await Promise.all(MODES.map(async (m) => { logs[m] = await play(m, last, N); runs[m] = stepsOf(logs[m], last, m, N); }));
+    const nm = runs.mouse.map((s) => s.name).join();
+    if (nm !== runs.controller.map((s) => s.name).join()) throw new Error(`the hands play different steps: ${nm} / ${runs.controller.map((s) => s.name)}`);
     if (last) {
       let bad = 0;
-      for (let i = 0; i < STEPS; i++) {
-        const [a, b, gap] = compare(runs.mouse[i].endState, runs.controller[i].endState);
-        const acts = MODES.map((m) => (runs[m][i].act + last.pre[i][m]).toFixed(1)).join(' / ');
-        console.log(`  step ${i} ${last.names[i]}: starts ${MODES.map((m) => runs[m][i].start.toFixed(1)).join(' / ')}, app answers at +${acts} ms, ends ${a === b ? `the same${gap ? ` (play heads ${Math.round(gap * 1000)} ms apart)` : ''}` : 'DIFFERENTLY'}`);
+      for (let i = 0; i < N; i++) {
+        const [a, b] = compare(runs.mouse[i].endState, runs.controller[i].endState);
         if (a !== b) {
           bad++;
-          console.log('    mouse     ', a);
-          console.log('    controller', b);
+          log(`  step ${i} ${last.names[i]} ends differently in the hands`);
+          log('    mouse     ', a);
+          log('    controller', b);
         }
       }
-      if (!bad) break;
+      if (!bad) {
+        // Lined up. Does the cycle come round? (Every hand, every deck: the
+        // play heads at its start and at the next one's.)
+        const s0 = runs.mouse[from].state;
+        const s1 = runs.mouse[until].state;
+        const [a, b, gap] = compare(s0, s1);
+        // How much later the play heads come round, in the set's own time.
+        const drift = s0.decks.map((d, i) => (d.playing ? (s1.decks[i].pos - d.pos) / (s1.decks[i].rate || 1) : null)).filter((x) => x !== null);
+        const d = drift.length ? drift.reduce((x, y) => x + y) / drift.length : 0;
+        log(`round ${round}: lined up; the cycle comes round ${(d * 1000).toFixed(1)} ms late${a === b ? '' : ' and differently otherwise'}`);
+        // (Within 3 ms: a tenth of a pixel on the scrolling waveforms.)
+        if (Math.abs(d) <= 0.003 && compareLoose(s0, s1)) break;
+        if (round > 6) throw new Error(`the cycle won't come round: ${(d * 1000).toFixed(1)} ms`);
+        if (a !== b && !compareLoose(s0, s1)) {
+          log('    start', a);
+          log('    next ', b);
+        }
+        // Lengthen the step before the last mix's Sync by the part of a beat
+        // that brings it round on time (a whole number of frames: the beat is
+        // 900/59 of a frame at 118 BPM, so a 59th of a frame can be reached,
+        // 0.56 ms).
+        const deck = s0.decks.find((x) => x.playing);
+        const beat = 60 / (deck.bpm * deck.rate);
+        let best = null;
+        for (let f = 0; f < 120; f++) {
+          const r = (((d + f / FPS) % beat) + beat) % beat;
+          const e = Math.min(r, beat - r);
+          if (!best || e < best.e - 1e-9) best = { f, e };
+        }
+        if (best.f === 0) throw new Error(`the cycle drifts ${(d * 1000).toFixed(1)} ms and no padding brings it round`);
+        pad += best.f;
+        last.len[padAt] += best.f * FRAME;
+        last.pad = pad;
+        log(`  step ${padAt} ${best.f} frames longer (${pad} in all); expect ${(best.e * 1000).toFixed(1)} ms`);
+        continue;
+      }
     }
     const pre = [];
     const len = [];
-    for (let i = 0; i < STEPS; i++) {
+    for (let i = 0; i < N; i++) {
       // Where the app answers counting the wait before: the later hand's
-      // moment is the one both meet, to the frame. (Each hand answers on
-      // frames of its own phase, a mouse click on the frame and a key's
-      // pulse a little after it, so they can't meet closer than that: a
-      // few milliseconds, which only shows as a stopped deck's play head
-      // set a fraction of a pixel apart by Sync. POS_TOLERANCE allows it.)
+      // moment is the one both meet, to the frame.
       const at = Object.fromEntries(MODES.map((m) => [m, runs[m][i].act + (last?.pre[i][m] ?? 0)]));
       const act = Math.max(...Object.values(at));
       pre[i] = Object.fromEntries(MODES.map((m) => [m, (last?.pre[i][m] ?? 0) + toFrame(act - at[m])]));
-      len[i] = ceilFrame(Math.max(...MODES.map((m) => runs[m][i].own + pre[i][m])) + MARGIN);
+      len[i] = ceilFrame(Math.max(...MODES.map((m) => runs[m][i].own + pre[i][m])) + MARGIN) + (i === padAt ? pad * FRAME : 0);
     }
-    // The first step starts at the same moment in both, on a frame.
     const t0 = last?.t0 ?? 1000 + ceilFrame(Math.max(...MODES.map((m) => runs[m][0].start)) - 1000 + FRAME);
-    last = { t0, pre, len, names: runs.mouse.map((s) => s.name) };
-    console.log(`round ${round}: plan`, JSON.stringify(last));
+    last = { t0, pre, len, names: runs.mouse.map((s) => s.name), from, until, padAt, pad };
+    log(`round ${round}: planned`);
   }
   plan = last;
   fs.writeFileSync(planFile, JSON.stringify(plan, null, 1));
 } else plan = JSON.parse(fs.readFileSync(planFile, 'utf8'));
 
-// Only the styles again, into an existing manifest.
-if (PHASE === 'css') {
-  const file = path.join(OUT, 'clips', 'manifest.json');
-  const manifest = JSON.parse(fs.readFileSync(file, 'utf8'));
-  manifest.css = await extractCss();
-
-  fs.writeFileSync(file, JSON.stringify(manifest, null, 1));
+/** The same app apart from the play heads (they're compared on their own). */
+function compareLoose(x, y) {
+  const strip = (s) => JSON.stringify({ ...s, decks: s.decks.map(({ pos, ...d }) => d) });
+  return strip(x) === strip(y);
 }
 
-// 3. Record.
-if (PHASE === 'all' || PHASE === 'record') {
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'segments-'));
-  const bounds = [plan.t0];
-  for (const l of plan.len) bounds.push(bounds[bounds.length - 1] + l);
-  const end = bounds[bounds.length - 1];
-  const manifest = { fps: FPS, scale: SCALE, codecs: CODECS, steps: plan.names.map((name, i) => ({ name, frames: Math.round(plan.len[i] / FRAME) })), modes: {} };
-  for (const mode of REC_MODES) {
-    const timelines = plan.names.map(() => ({ level: [], links: [] }));
-    let ctlBox = null;
-    let cdp = null;
-    let cursorHtml = {};
-    const shot = async (clip, file) => {
-      // (Beyond the viewport: otherwise a capture scaled past the page's own
-      // pixel ratio can come back cut short at the foot.)
-      const { data } = await cdp.send('Page.captureScreenshot', { format: 'png', optimizeForSpeed: true, captureBeyondViewport: true, clip: { ...clip, scale: SCALE } });
-      fs.writeFileSync(file, Buffer.from(data, 'base64'));
-    };
-    await play(mode, plan, async (run, now) => {
-      if (now < plan.t0 - 0.5 || now >= end - 0.5) return;
-      const page = run.page;
-      if (!cdp) {
-        cdp = await run.ctx.newCDPSession(page);
-        await cdp.send('Emulation.setDefaultBackgroundColorOverride', { color: { r: 0, g: 0, b: 0, a: 0 } });
-        await page.evaluate(() => { const s = document.createElement('style'); s.id = 'rec-hide'; document.head.append(s); });
-        // The controller's box at rest, with room for its shadow, on whole device pixels.
-        ctlBox = await page.evaluate((scale) => {
-          const r = document.querySelector('.desk .hw').getBoundingClientRect();
-          const pad = 28;
-          const even = (v) => Math.round((v * scale) / 2) * (2 / scale);
-          const x = even(Math.max(0, r.left - pad));
-          const y = even(Math.max(0, r.top - pad));
-          return { x, y, width: even(Math.min(1440, r.right + pad) - x), height: even(Math.min(920, r.bottom + pad + 12) - y) };
-        }, SCALE);
-        manifest.controllerBox = ctlBox;
-      }
-      const k = bounds.findIndex((b, i) => now >= b - 0.5 && now < bounds[i + 1] - 0.5);
-      const f = Math.round((now - bounds[k]) / FRAME);
-      const dir = path.join(tmp, `${mode}-${k}`);
-      fs.mkdirSync(dir, { recursive: true });
-      // The timeline, as the page is.
-      const t = await page.evaluate(() => {
-        const c = document.querySelector('.hero-stage .ss-cursor');
-        const attrs = c ? [...c.attributes].filter((a) => a.name.startsWith('data-')).map((a) => `${a.name}=${a.value}`).join(' ') : '';
-        const links = [...document.querySelectorAll('svg.links > path')].map((p) => {
-          const cs = getComputedStyle(p);
-          return [p.getAttribute('class'), p.getAttribute('d'), +(+cs.opacity).toFixed(3), cs.strokeDasharray, cs.strokeDashoffset];
-        });
-        return { level: Math.round(window.__level * 1000) / 1000, cursor: [c?.style.transform ?? '', c?.style.getPropertyValue('--lean') ?? '', attrs], links, html: c?.outerHTML, style: c?.dataset.style };
-      });
-      const tl = timelines[k];
-      tl.level[f] = t.level;
-      tl.links[f] = t.links.length ? t.links : 0;
-      if (t.style && !cursorHtml[t.style]) cursorHtml[t.style] = t.html;
-      const hide = (css) => page.evaluate((css) => (document.getElementById('rec-hide').textContent = css), css);
-      const n = String(f).padStart(4, '0');
-      // The controller alone: with the controller hand's fingertip on it,
-      // which goes when the controller does; without the mouse's arrow.
-      if (mode === 'controller' && k === 0 && f === 0) {
-        // (Its outline at rest, without a fingertip, for the mask.)
-        await hide('.app-host, .ss-cursor, svg.links { visibility: hidden !important; }');
-        await shot(ctlBox, path.join(dir, 'mask.png'));
-      }
-      await hide(`.app-host, svg.links${mode === 'mouse' ? ', .ss-cursor' : ''} { visibility: hidden !important; }`);
-      await shot(ctlBox, path.join(dir, `c${n}.png`));
-      // The app alone, flat; and in the mouse hand the same with the arrow
-      // in it, the clip that normally plays (the one without is its twin,
-      // crossed to when the hand is switched mid-step).
-      await hide('.desk, .ss-cursor, svg.links { visibility: hidden !important; } .app-host { transform: none !important; }');
-      await shot({ x: 0, y: 0, width: 1440, height: 900 }, path.join(dir, `a${n}.png`));
-      if (mode === 'mouse') {
-        await hide('.desk, svg.links { visibility: hidden !important; } .app-host { transform: none !important; }');
-        await shot({ x: 0, y: 0, width: 1440, height: 900 }, path.join(dir, `p${n}.png`));
-      }
-      await hide('');
-      if (f % 30 === 0) console.log(`${mode} step ${k} frame ${f}`);
+const bounds = [plan.t0];
+for (const l of plan.len) bounds.push(bounds[bounds.length - 1] + l);
+const FROM = plan.from;
+const UNTIL = plan.until;
+const STEPS = Array.from({ length: UNTIL - FROM }, (_, j) => FROM + j);
+const frames = (k) => Math.round(plan.len[k] / FRAME);
+const masters = path.join(WORK, 'masters');
+const boundsDir = path.join(WORK, 'bounds');
+fs.mkdirSync(masters, { recursive: true });
+fs.mkdirSync(boundsDir, { recursive: true });
+
+/** ffmpeg reading PNG frames on stdin. */
+function encoder(file, codecArgs) {
+  const ff = spawn('ffmpeg', ['-y', '-hide_banner', '-loglevel', 'error', '-f', 'image2pipe', '-framerate', String(FPS), '-c:v', 'png', '-i', '-', ...codecArgs, file], { stdio: ['pipe', 'inherit', 'inherit'] });
+  const done = new Promise((res, rej) => ff.on('close', (c) => (c ? rej(new Error(`ffmpeg exited ${c} for ${file}`)) : res())));
+  return { write: (buf) => new Promise((r) => (ff.stdin.write(buf) ? r() : ff.stdin.once('drain', r))), end: () => (ff.stdin.end(), done) };
+}
+const MASTER = ['-c:v', 'libx264rgb', '-preset', 'veryfast', '-crf', '0', '-g', '300'];
+const layersOf = (mode) => (mode === 'mouse' ? [['appc', 'app+cursor'], ['app', 'app'], ['ctl', 'ctl']] : [['app', 'app'], ['ctl', 'ctl']]);
+const masterOf = (mode, k, layer) => path.join(masters, `${mode}-${k}.${layer}.mkv`);
+
+// 4. Record: one hand's steps [a, b), in a process of its own (this one,
+// run with --part).
+async function recordPart(mode, a, b) {
+  const run = await open(mode, plan);
+  const { page } = run;
+  const cdp = await run.ctx.newCDPSession(page);
+  await cdp.send('Emulation.setDefaultBackgroundColorOverride', { color: { r: 0, g: 0, b: 0, a: 0 } });
+  await page.evaluate(() => { const s = document.createElement('style'); s.id = 'rec-hide'; document.head.append(s); });
+  const hide = (css) => page.evaluate((css) => (document.getElementById('rec-hide').textContent = css), css);
+  // (At the page's own pixel ratio, within the viewport: no re-layout per capture.)
+  const shot = async (clip, k = 1) => (await cdp.send('Page.captureScreenshot', { format: 'png', optimizeForSpeed: true, clip: { ...clip, scale: SCALE * k } })).data;
+  // To the part's first step, without capturing.
+  await run.until(a);
+  // The controller's box at rest, with room for its shadow, on whole device pixels.
+  const box = await page.evaluate((scale) => {
+    const r = document.querySelector('.desk .hw').getBoundingClientRect();
+    const pad = 28;
+    const even = (v) => Math.round((v * scale) / 2) * (2 / scale);
+    const x = even(Math.max(0, r.left - pad));
+    const y = even(Math.max(0, r.top - pad));
+    return { x, y, width: even(Math.min(1440, r.right + pad) - x), height: even(Math.min(920, r.bottom + pad + 12) - y) };
+  }, SCALE);
+  const info = { box };
+  if (mode === 'controller' && a === FROM) {
+    // Its outline at rest, without a fingertip, for the mask; and where it
+    // is when it's away (controller.css: --hw-from above, scale 0.985 before
+    // the tilt), so the page can move the clip the same way.
+    await hide('.app-host, .ss-cursor, svg.links { visibility: hidden !important; }');
+    fs.writeFileSync(path.join(WORK, 'mask.png'), Buffer.from(await shot(box), 'base64'));
+    info.away = await page.evaluate(() => {
+      const hw = document.querySelector('.desk .hw');
+      const r0 = hw.getBoundingClientRect();
+      const was = hw.getAttribute('style') ?? '';
+      const from = -100;
+      hw.style.transition = 'none';
+      hw.style.transform = getComputedStyle(hw).transform === 'none' ? '' : `translateY(${from}px) ${getComputedStyle(hw).transform} scale(0.985)`;
+      const r1 = hw.getBoundingClientRect();
+      hw.setAttribute('style', was);
+      // Per px of --hw-from: how far its middle moves; and how much smaller it is.
+      return { rest: [r0.left, r0.top, r0.width, r0.height], perPx: ((r1.top + r1.height / 2) - (r0.top + r0.height / 2)) / from, dx: ((r1.left + r1.width / 2) - (r0.left + r0.width / 2)) / from, scale: r1.width / r0.width };
     });
-    // The controller's outline at rest, for the page to show it through.
-    // Which app clip plays in this hand, and its twin without the cursor.
-    manifest.modes[mode] = mode === 'mouse' ? { play: 'appc', twin: 'app' } : { play: 'app', twin: null };
-    manifest.small = '@1x';
-    for (let k = 0; k < plan.names.length; k++) {
-      const name = `${mode}-${k}-${plan.names[k]}`;
-      fs.writeFileSync(path.join(OUT, 'clips', `${name}.json`), JSON.stringify(timelines[k]));
-      const dir = path.join(tmp, `${mode}-${k}`);
-      if (mode === 'controller' && k === 0) await ffmpeg(['-i', path.join(dir, 'mask.png'), '-vf', 'alphaextract', path.join(OUT, 'clips', 'controller-mask.png')]);
-      // (The twin gets a keyframe every 2 s, so starting it partway
-      // through, at a switch nobody hovered first, is quick.)
-      // Each also at 1x (manifest.small), for small screens and for the twin
-      // on slow connections.
-      const layers = mode === 'mouse' ? [['appc', 'p', 300], ['app', 'a', 60], ['ctl', 'c', 300]] : [['app', 'a', 300], ['ctl', 'c', 300]];
-      for (const [layer, pre, gop] of layers) {
-        for (const codec of CODECS) {
-          await encode(path.join(dir, `${pre}%04d.png`), path.join(OUT, 'clips', `${name}.${layer}.${codec}.mp4`), codec, gop);
-          await encode(path.join(dir, `${pre}%04d.png`), path.join(OUT, 'clips', `${name}.${layer}@1x.${codec}.mp4`), codec, gop, layer === 'ctl' ? Math.round(ctlBox.width) : 1440);
-        }
+  }
+  const layers = layersOf(mode);
+  let k = a;
+  let f = 0;
+  let enc = null;
+  let tl = null;
+  const timelines = {};
+  const open1 = (k) => Object.fromEntries(layers.map(([l]) => [l, encoder(masterOf(mode, k, l), MASTER)]));
+  for (;;) {
+    const now = await page.evaluate(() => performance.now());
+    while (k < b && now >= bounds[k + 1] - 0.5) {
+      if (enc) await Promise.all(Object.values(enc).map((e) => e.end()));
+      enc = null;
+      k++;
+      f = 0;
+    }
+    if (k >= b) {
+      // The next boundary too (the next part's first frame, or the next
+      // cycle's): to compare.
+      await hide('.desk, .ss-cursor, svg.links { visibility: hidden !important; } .app-host { transform: none !important; }');
+      fs.writeFileSync(path.join(boundsDir, `${mode}-${b}-end.png`), Buffer.from(await shot({ x: 0, y: 0, width: W, height: H }, mode === 'mouse' ? 1 / SCALE : 1), 'base64'));
+      break;
+    }
+    f = Math.round((now - bounds[k]) / FRAME);
+    if (!enc) {
+      enc = open1(k);
+      tl = timelines[k] = { level: [], links: [] };
+    }
+    const t = await page.evaluate(() => {
+      const links = [...document.querySelectorAll('svg.links > path')].map((p) => {
+        const cs = getComputedStyle(p);
+        return [p.getAttribute('class'), p.getAttribute('d'), +(+cs.opacity).toFixed(3), cs.strokeDasharray, cs.strokeDashoffset];
+      });
+      return { level: Math.round(window.__level * 1000) / 1000, links };
+    });
+    tl.level[f] = t.level;
+    tl.links[f] = t.links.length ? t.links : 0;
+    // The controller alone: with the controller hand's fingertip on it,
+    // without the mouse's arrow.
+    await hide(`.app-host, svg.links${mode === 'mouse' ? ', .ss-cursor' : ''} { visibility: hidden !important; }`);
+    await enc.ctl.write(Buffer.from(await shot(box), 'base64'));
+    // The app alone, flat; and in the mouse hand with the arrow too. (The
+    // mouse hand's flat one is its twin, only ever played at 1x: taken at 1x.)
+    await hide('.desk, .ss-cursor, svg.links { visibility: hidden !important; } .app-host { transform: none !important; }');
+    const flat = Buffer.from(await shot({ x: 0, y: 0, width: W, height: H }, mode === 'mouse' ? 1 / SCALE : 1), 'base64');
+    await enc.app.write(flat);
+    if (f === 0) fs.writeFileSync(path.join(boundsDir, `${mode}-${k}.png`), flat);
+    if (mode === 'mouse') {
+      await hide('.desk, svg.links { visibility: hidden !important; } .app-host { transform: none !important; }');
+      await enc.appc.write(Buffer.from(await shot({ x: 0, y: 0, width: W, height: H }), 'base64'));
+    }
+    await hide('');
+    if (f % 60 === 0) log(`${mode} step ${k} frame ${f}/${frames(k)}`);
+    await run.step();
+  }
+  if (run.errors.length) console.warn(`${mode}: page errors: ${run.errors.join('; ')}`);
+  for (const [kk, t] of Object.entries(timelines)) fs.writeFileSync(path.join(WORK, `timeline-${mode}-${kk}.json`), JSON.stringify(t));
+  fs.writeFileSync(path.join(WORK, `part-${mode}-${a}.json`), JSON.stringify(info));
+  await run.ctx.close();
+}
+
+if (args.part) {
+  const [mode, a, b] = String(args.part).split(':');
+  await recordPart(mode, +a, +b);
+  await browser.close();
+  server.close();
+  process.exit(0);
+}
+
+if (PHASE === 'all' || PHASE === 'record') {
+  // Each hand in JOBS parts of about the same number of frames, each its own process.
+  const total = STEPS.reduce((s, k) => s + frames(k), 0);
+  const parts = [];
+  for (const mode of MODES) {
+    let a = FROM;
+    let acc = 0;
+    for (let k = FROM; k < UNTIL; k++) {
+      acc += frames(k);
+      if (acc >= (total / JOBS) * (parts.filter((p) => p.mode === mode).length + 1) - 1 || k === UNTIL - 1) {
+        parts.push({ mode, a, b: k + 1 });
+        a = k + 1;
       }
-      console.log('encoded', name);
     }
   }
-  // The cursor's and the links' own styles, from the page's stylesheets, so
-  // the player draws them as the demo does.
-  manifest.css = await extractCss();
-  // Another run may have recorded the other hand into the same place.
-  const file = path.join(OUT, 'clips', 'manifest.json');
-  if (fs.existsSync(file)) manifest.modes = { ...JSON.parse(fs.readFileSync(file, 'utf8')).modes, ...manifest.modes };
-  fs.writeFileSync(file, JSON.stringify(manifest, null, 1));
-  if (args.keep) console.log('frames kept in', tmp);
-  else fs.rmSync(tmp, { recursive: true, force: true });
+  log(`recording ${total} frames a hand in ${parts.length} parts`);
+  await Promise.all(parts.map((p) => new Promise((ok, fail) => {
+    const out = fs.openSync(path.join(WORK, `part-${p.mode}-${p.a}.log`), 'w');
+    const c = spawn(process.execPath, [fileURLToPath(import.meta.url), '--part', `${p.mode}:${p.a}:${p.b}`, '--work', WORK, '--out', OUT, '--phase', 'part', '--codecs', CODECS.join(',')], { stdio: ['ignore', out, out] });
+    c.on('close', (code) => (code ? fail(new Error(`part ${p.mode} ${p.a}-${p.b} failed: see ${WORK}/part-${p.mode}-${p.a}.log`)) : ok()));
+  })));
+  log('recorded');
+}
+
+// 5. Encode, and the manifest.
+function ffmpeg(a) {
+  return new Promise((ok, fail) => {
+    const p = spawn('ffmpeg', ['-y', '-hide_banner', '-loglevel', 'error', ...a], { stdio: ['ignore', 'inherit', 'inherit'] });
+    p.on('close', (c) => (c ? fail(new Error(`ffmpeg exited ${c}: ${a.join(' ')}`)) : ok()));
+  });
+}
+function encode(input, file, codec, gop, width = 0) {
+  const vf = ['-vf', `${width ? `scale=${width}:-2:flags=lanczos,` : ''}scale=out_color_matrix=bt709:out_range=tv,format=yuv420p`];
+  const tags = ['-colorspace', 'bt709', '-color_primaries', 'bt709', '-color_trc', 'bt709', '-color_range', 'tv'];
+  const c = {
+    av1: ['-c:v', 'libsvtav1', '-preset', '6', '-crf', '38', '-g', String(gop), '-svtav1-params', 'log-level=0'],
+    hevc: ['-c:v', 'libx265', '-preset', 'slow', '-crf', '26', '-g', String(gop), '-tag:v', 'hvc1', '-x265-params', 'log-level=error:pools=4'],
+    h264: ['-c:v', 'libx264', '-preset', 'slow', '-crf', '24', '-g', String(gop), '-tune', 'animation', '-threads', '4'],
+  }[codec];
+  return ffmpeg(['-i', input, ...vf, ...c, ...tags, '-an', '-movflags', '+faststart', file]);
+}
+/** Runs the jobs, `n` at a time. */
+async function pool(jobs, n) {
+  let i = 0;
+  await Promise.all(Array.from({ length: n }, async () => { while (i < jobs.length) await jobs[i++](); }));
+}
+
+if (PHASE === 'all' || PHASE === 'encode') {
+  fs.mkdirSync(OUT, { recursive: true });
+  const info = JSON.parse(fs.readFileSync(path.join(WORK, `part-controller-${FROM}.json`), 'utf8'));
+  const box = info.box;
+  const jobs = [];
+  for (const mode of MODES) {
+    for (const k of STEPS) {
+      const name = `${mode}-${k - FROM}`;
+      for (const [layer] of layersOf(mode)) {
+        const out = layer === 'appc' ? 'app' : mode === 'mouse' && layer === 'app' ? 'twin' : layer;
+        for (const codec of CODECS) {
+          const width = layer === 'ctl' ? Math.round(box.width) : W;
+          // The twin: at 1x only, and a keyframe every 2 s so it can start partway through.
+          if (out !== 'twin') jobs.push(() => encode(masterOf(mode, k, layer), path.join(OUT, `${name}.${out}.${codec}.mp4`), codec, 300));
+          jobs.push(() => encode(masterOf(mode, k, layer), path.join(OUT, `${name}.${out}@1x.${codec}.mp4`), codec, out === 'twin' ? 60 : 300, width));
+        }
+      }
+    }
+  }
+  log(`encoding ${jobs.length} files`);
+  let done = 0;
+  await pool(jobs.map((j) => async () => { await j(); if (++done % 20 === 0) log(`  ${done}/${jobs.length}`); }), Math.max(2, Math.floor(os.cpus().length / 3)));
+  await ffmpeg(['-i', path.join(WORK, 'mask.png'), '-vf', 'alphaextract', path.join(OUT, 'controller-mask.png')]);
+
+  // Which boundaries look different between the hands (beyond the meters'
+  // run-to-run flicker): the player blends there rather than cutting when it
+  // swaps hands. And the cycle's own seam, and the joins between parts.
+  const diff = (x, y) => {
+    try {
+      const r = execFileSync('magick', [x, '-resize', '1440x900!', y, '-resize', '1440x900!', '-compose', 'difference', '-composite', '-threshold', '6%', '-morphology', 'open', 'square:2', '-format', '%[fx:mean*w*h]', 'info:'], { stdio: ['ignore', 'pipe', 'ignore'] }).toString();
+      return Math.round(+r);
+    } catch { return -1; }
+  };
+  const steps = STEPS.map((k) => ({ name: plan.names[k], frames: frames(k) }));
+  const report = [];
+  for (const k of STEPS) {
+    const n = diff(path.join(boundsDir, `mouse-${k}.png`), path.join(boundsDir, `controller-${k}.png`));
+    steps[k - FROM].blend = n > 200;
+    report.push(`${k - FROM} ${plan.names[k]}: ${n} px differ between the hands`);
+  }
+  for (const mode of MODES) {
+    for (const f of fs.readdirSync(boundsDir).filter((x) => x.startsWith(`${mode}-`) && x.endsWith('-end.png'))) {
+      const b = +f.split('-')[1];
+      const other = b === UNTIL ? `${mode}-${FROM}.png` : `${mode}-${b}.png`;
+      report.push(`${mode} ${b === UNTIL ? 'loop seam' : `join at ${b - FROM}`}: ${diff(path.join(boundsDir, f), path.join(boundsDir, other))} px differ`);
+    }
+  }
+  fs.writeFileSync(path.join(WORK, 'bounds.txt'), report.join('\n'));
+  log(report.join('\n'));
+
+  // The poster: the cycle's first frame, flat, without the arrow.
+  const first = path.join(boundsDir, `controller-${FROM}.png`);
+  await ffmpeg(['-i', first, '-q:v', '3', path.join(IMG, 'screenshot.jpg')]);
+  await ffmpeg(['-i', first, '-vf', 'scale=1440:-2:flags=lanczos', '-q:v', '3', path.join(IMG, 'screenshot-1x.jpg')]);
+  for (const [w, f] of [[2880, 'screenshot.avif'], [1440, 'screenshot-1x.avif']]) {
+    await ffmpeg(['-i', first, '-vf', `scale=${w}:-2:flags=lanczos,format=yuv420p`, '-c:v', 'libaom-av1', '-still-picture', '1', '-crf', '30', '-cpu-used', '4', path.join(IMG, f)]).catch(() => ffmpeg(['-i', first, '-vf', `scale=${w}:-2:flags=lanczos,format=yuv420p`, '-c:v', 'libsvtav1', '-crf', '30', '-frames:v', '1', path.join(IMG, f)]));
+  }
+
+  // Timelines: per hand, one file (levels as thousandths; link lines only on the frames that have them).
+  for (const mode of MODES) {
+    const out = STEPS.map((k) => {
+      const t = JSON.parse(fs.readFileSync(path.join(WORK, `timeline-${mode}-${k}.json`), 'utf8'));
+      const links = {};
+      t.links.forEach((l, f) => { if (l) links[f] = l; });
+      return { level: t.level.map((x) => Math.round((x ?? 0) * 1000)), links };
+    });
+    fs.writeFileSync(path.join(OUT, `${mode}.json`), JSON.stringify(out));
+  }
+  const manifest = {
+    source: SOURCE, fps: FPS, scale: SCALE, codecs: CODECS, small: '@1x', steps,
+    modes: { mouse: { play: 'app', twin: 'twin' }, controller: { play: 'app', twin: null } },
+    controllerBox: box, controllerAway: info.away, css: await extractCss(),
+  };
+  fs.writeFileSync(manifestFile, JSON.stringify(manifest, null, 1));
+  const bytes = fs.readdirSync(OUT).reduce((s, f) => s + fs.statSync(path.join(OUT, f)).size, 0);
+  log(`wrote ${OUT}: ${fs.readdirSync(OUT).length} files, ${(bytes / 1e6).toFixed(1)} MB`);
+  if (!args.keep) fs.rmSync(masters, { recursive: true, force: true });
 }
 
 async function extractCss() {
-  const run = await open('mouse', null);
+  const run = await open('mouse', null, 1);
   const css = await run.page.evaluate(() => {
-    const keep = /ss-cursor|svg\.links|\.link-line|\.link-spark/;
+    const keep = /svg\.links|\.link-line|\.link-spark/;
     const out = [];
     const walk = (rules) => {
       for (const r of rules) {
@@ -377,23 +635,6 @@ async function extractCss() {
   });
   await run.ctx.close();
   return css;
-}
-
-function ffmpeg(a) {
-  return new Promise((ok, fail) => {
-    const p = spawn('ffmpeg', ['-y', '-hide_banner', '-loglevel', 'error', ...a], { stdio: ['ignore', 'inherit', 'inherit'] });
-    p.on('close', (c) => (c ? fail(new Error(`ffmpeg exited ${c}`)) : ok()));
-  });
-}
-function encode(input, file, codec, gop = 300, width = 0) {
-  const vf = ['-vf', `scale=${width ? `${width}:-2:flags=lanczos:` : ''}out_color_matrix=bt709:out_range=tv,format=yuv420p`];
-  const tags = ['-colorspace', 'bt709', '-color_primaries', 'bt709', '-color_trc', 'bt709', '-color_range', 'tv'];
-  const c = {
-    av1: ['-c:v', 'libsvtav1', '-preset', '5', '-crf', '38', '-g', String(gop), '-svtav1-params', 'log-level=0'],
-    hevc: ['-c:v', 'libx265', '-preset', 'slow', '-crf', '26', '-g', String(gop), '-tag:v', 'hvc1', '-x265-params', 'log-level=error'],
-    h264: ['-c:v', 'libx264', '-preset', 'slow', '-crf', '24', '-g', String(gop), '-tune', 'animation'],
-  }[codec];
-  return ffmpeg(['-framerate', String(FPS), '-i', input, ...vf, ...c, ...tags, '-movflags', '+faststart', file]);
 }
 
 await browser.close();
