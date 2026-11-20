@@ -1,0 +1,10 @@
+/* #42: each beat-jump arrow fills its third of the control. .btn centres
+   its children (place-items: center), so the arrows shrank to their glyph
+   and only a ~13px strip answered the pointer. */
+:root[data-flag-beat-jump-hit] [data-region^='deck'] .transport .jumps {
+  justify-items: stretch;
+}
+:root[data-flag-beat-jump-hit] [data-region^='deck'] .transport .jumps button {
+  width: 100%;
+  min-width: 0;
+}

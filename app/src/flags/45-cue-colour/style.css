@@ -1,0 +1,19 @@
+/* #45: amber means the Cue point only. Hot cue slots move up one hue and
+   none of them equals --cue; slot 8 takes a new hue (its setting). The
+   waveforms read these when the flag flips (Waveform.svelte). */
+:root[data-flag-cue-colour] {
+  --hc-1: #ef7a64;
+  --hc-2: #6fd08c;
+  --hc-3: #c99cff;
+  --hc-4: #5fd4d4;
+  --hc-5: #ff9fc8;
+  --hc-6: #d8d27a;
+  --hc-7: #7cb6ff;
+  --hc-8: #a6ead2;
+}
+:root[data-flag-cue-colour][data-flag-cue-colour-eight='lilac'] {
+  --hc-8: #e3c7ff;
+}
+:root[data-flag-cue-colour][data-flag-cue-colour-eight='lime'] {
+  --hc-8: #b9e36a;
+}

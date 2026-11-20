@@ -1,0 +1,22 @@
+/* #48: the nudge pair is one outlined 24px pill split in two, so it reads
+   as a control (not two stray glyphs like the beat-jump arrows). Hit
+   areas stay 28×24. */
+:root[data-flag-nudge-pill] [data-region^='deck'] .pitch .nudge {
+  width: 56px;
+  height: var(--h-sm);
+  border-radius: var(--r);
+  box-shadow: inset 0 0 0 1px var(--line-2);
+}
+:root[data-flag-nudge-pill] [data-region^='deck'] .pitch .nudge button {
+  height: var(--h-sm);
+  border-radius: var(--r) 0 0 var(--r);
+  color: var(--fg-2);
+  line-height: 1;
+}
+:root[data-flag-nudge-pill] [data-region^='deck'] .pitch .nudge button + button {
+  border-radius: 0 var(--r) var(--r) 0;
+  box-shadow: inset 1px 0 0 var(--line);
+}
+:root[data-flag-nudge-pill][data-flag-nudge-pill-glyph='signs'] [data-region^='deck'] .pitch .nudge button {
+  font-size: var(--t-sm);
+}

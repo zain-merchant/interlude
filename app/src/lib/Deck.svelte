@@ -18,6 +18,7 @@
   import { keyName, keyLongName, camelot, playingKey, keysMix } from './key.js';
   import { toggleSlip, beatJump, hasGrid, beatsLabel } from './performance.js';
   import { hms } from '../flags/08-stress-hours/time.js';
+  import { timeMode, swapTimes } from '../flags/40-time-remaining/mode.svelte.js';
 
   /** @type {{ deck: number, onload: (deck: number, track: any) => void, onreveal: (path: string) => void, onsettings?: (page: string) => void }} */
   let { deck, onload, onreveal, onsettings } = $props();
@@ -237,10 +238,35 @@
     return `Key ${keyLongName(pk)} (${camelot(pk)}): the track is in ${track}, shifted ${pk.shift > 0 ? 'up' : 'down'} ${Math.abs(pk.shift)} ${st} by the tempo. Key lock keeps the original key.`;
   };
   const bend = (v) => () => t && control({ type: 'setBend', deck, bend: v });
+  // #48 (UI audit flag): nudge-pill's glyph setting can show − and + (slower, faster) instead of ‹ ›.
+  const nudgeGlyph = (n) => (flag('nudge-pill') && setting('nudge-pill', 'glyph') === 'signs' ? (n.v < 0 ? '−' : '+') : n.glyph);
+  // #18 (UI audit flag): visual-tempo-match's mark explained in the pitch fader's tooltip.
+  const pitchNote = $derived.by(() => {
+    if (pickupRate !== null) return `The controller's tempo fader is at ${pct((pickupRate - 1) * 100)}. Move it to the marker and it takes over`;
+    if (tempoMatch === null) return '';
+    const o = engine.decks[1 - deck];
+    return tipText(`Deck ${name} pitch`, pct(ratePct), 'double-click to reset', `the mark is where it matches the other deck (${(o.bpm * o.rate).toFixed(2)})`);
+  });
 
   const regionLabel = $derived(
     t ? `Deck ${name}, ${t.title}${t.artist ? ` by ${t.artist}` : ''}, ${d.playing ? 'playing' : 'paused'}${bpm ? `, ${bpm.toFixed(0)} BPM` : ''}` : `Deck ${name}, empty`,
   );
+  // #40 (UI audit flag): time-remaining makes the time left the big number; with its swap setting on 'click', clicking the pair swaps them (both decks, remembered).
+  const timesProps = $derived.by(() => {
+    if (!flag('time-remaining')) return {};
+    if (setting('time-remaining', 'swap') !== 'click') return { 'data-big': 'remaining' };
+    return {
+      'data-big': timeMode.big,
+      role: 'button',
+      tabindex: 0,
+      onclick: swapTimes,
+      onkeydown: (e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), swapTimes()),
+    };
+  });
+  const timesTip = () =>
+    flag('time-remaining') && setting('time-remaining', 'swap') === 'click'
+      ? `Click to make the ${timeMode.big === 'remaining' ? 'elapsed' : 'remaining'} time the big one`
+      : '';
   const headerMenu = (e) =>
     openMenu(e, [{ label: 'Show in library', action: () => onreveal(t.path), enabled: !!t }]);
 </script>
@@ -279,10 +305,18 @@
 
     <div class="overview"><Waveform {deck} mode="overview" /></div>
 
+    <!-- #40 (UI audit flag): time-remaining; with it off, the times are as before. -->
+    {#if flag('time-remaining')}
+    <div class="times" {...timesProps} use:tip={timesTip}>
+      <span class="el num"><span class="sr">Elapsed </span>{fmt(d.position)}</span>
+      <span class="rm num" class:ending class:last={ending && d.duration - d.position < 10}><span class="sr">Remaining </span>{fmt(d.position - d.duration)}</span>
+    </div>
+    {:else}
     <div class="times">
       <span class="el num"><span class="sr">Elapsed </span>{fmt(d.position)}</span>
       <span class="rm num" class:ending class:last={ending && d.duration - d.position < 10}><span class="sr">Remaining </span>{fmt(d.position - d.duration)}</span>
     </div>
+    {/if}
 
     <div class="mp">
       <div class="modes" role="tablist" aria-label="Deck {name} controls" tabindex="-1" onkeydown={modeKey}>
@@ -340,7 +374,8 @@
             onpointerdown={(e) => e.button === 0 && beatJump(deck, j.dir, e.shiftKey)} onclick={(e) => e.detail === 0 && beatJump(deck, j.dir, e.shiftKey)}
             use:tip={() => (grid ? tipText(`${j.label} ${jumpSize} ${d.loopBeats === 1 ? 'beat' : 'beats'}`, keyLabel(`deck.${deck}.${j.id}`), `⇧ for 4 bars (${keyLabel(`deck.${deck}.${j.id}Long`)})`) : 'Needs a beatgrid')}>{j.glyph}</button>
         {/each}
-        <span class="num" style:order="1">{jumpSize}</span>
+        <!-- #5 (UI audit flag): no-shift-strip names the unit ("4" over "beats"); it hides where the slot is too narrow. -->
+        <span class="num" style:order="1">{jumpSize}{#if flag('no-shift-strip')}<small>{d.loopBeats === 1 ? 'beat' : 'beats'}</small>{/if}</span>
       </div>
     </div>
   </div>
@@ -352,7 +387,7 @@
     <div class="pitch-fader">
       <Fader vertical big tick value={pitch} min={-1} max={1} reset={0} label="Deck {name} pitch" onchange={setPitch}
         format={(v) => pct(-v * range * 100)} {ghost} match={tempoMatch}
-        note={pickupRate === null ? '' : `The controller's tempo fader is at ${pct((pickupRate - 1) * 100)}. Move it to the marker and it takes over`} />
+        note={pitchNote} />
     </div>
     {#if d.slip}
       <!-- Slip is set in Settings > Decks or with its key; the deck only
@@ -366,7 +401,7 @@
           onpointerdown={(e) => e.button === 0 && bend(n.v)()} onpointerup={bend(0)} onpointerleave={bend(0)}
           onkeydown={(e) => (e.key === ' ' || e.key === 'Enter') && !e.repeat && (e.preventDefault(), bend(n.v)())}
           onkeyup={(e) => (e.key === ' ' || e.key === 'Enter') && bend(0)()}
-          use:tip={() => tipText(n.label, keyLabel(`deck.${deck}.${n.id}`), 'hold')}>{n.glyph}</button>
+          use:tip={() => tipText(n.label, keyLabel(`deck.${deck}.${n.id}`), 'hold')}>{nudgeGlyph(n)}</button>
       {/each}
     </div>
     <button class="range lock kl" class:on={d.keylock} aria-pressed={d.keylock} {...press(toggleKeylock)}

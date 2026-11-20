@@ -1,11 +1,11 @@
 /* #18: the other deck's tempo, marked beside the pitch fader's slot on
-   the side away from the scale marks. */
+   the side away from the scale marks, 2px clear of the slot. */
 :root[data-flag-visual-tempo-match] [data-region^='deck'] .pitch-fader .fader.vertical .match {
   position: absolute;
   left: 50%;
-  width: 8px;
+  width: 10px;
   height: 3px;
-  margin: 0 0 -1.5px -16px;
+  margin: 0 0 -1.5px -14px;
   border-radius: 1.5px;
   background: var(--flag-visual-tempo-match-other);
   pointer-events: none;

@@ -15,21 +15,50 @@
     text-align: left;
   }
 
-  /* FX: the effect name and On/Off sit in the row's two outer columns, so
-     their length doesn't push the middle; the beat length, level and
-     separators stay centred. */
+  /* Hot cues: the time slot's text centred, so "Set" sits on the column's
+     centre like a time does (backlog b-K51). */
+  :root[data-flag-no-shift-strip] [data-region^='deck'] .perf .tc span {
+    text-align: center;
+  }
+
+  /* FX: on the deck's four columns like the cues, the tabs and the
+     transport (batch D11): effect, length, level, on. Each sits centred in
+     its own column, so a longer effect name can't push the others, and the
+     separators go (the columns do their job). */
   :root[data-flag-no-shift-strip] [data-region^='deck'] .fx {
     display: grid;
-    grid-template-columns: minmax(max-content, 1fr) auto auto auto auto auto minmax(max-content, 1fr);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    align-items: center;
+    justify-items: center;
+    gap: 8px;
+  }
+  :root[data-flag-no-shift-strip] [data-region^='deck'] .fx .sep {
+    display: none;
+  }
+  :root[data-flag-no-shift-strip] [data-region^='deck'] .fx .tog {
+    min-width: 3.8em;
+  }
+
+  /* Loop: ÷2 and ×2 hug the value they change, and the jump arrows sit in
+     the outer columns, centred over Cue and the beat jump below (batch
+     D20; Performance.svelte puts them in this order). */
+  :root[data-flag-no-shift-strip] [data-region^='deck'] .perf .grp {
+    display: grid;
+    grid-template-columns: calc((100% - 24px) / 4) minmax(0, 1fr) auto minmax(0, 1fr) calc((100% - 24px) / 4);
     align-items: center;
     column-gap: 8px;
   }
-  :root[data-flag-no-shift-strip] [data-region^='deck'] .fx .kind {
+  :root[data-flag-no-shift-strip] [data-region^='deck'] .perf .grp > .ar {
+    justify-self: center;
+  }
+  :root[data-flag-no-shift-strip] [data-region^='deck'] .perf .grp > .ar + .tb {
+    justify-self: end;
+  }
+  :root[data-flag-no-shift-strip] [data-region^='deck'] .perf .grp > .big + .tb {
     justify-self: start;
   }
-  :root[data-flag-no-shift-strip] [data-region^='deck'] .fx .tog {
-    justify-self: end;
-    min-width: 3.8em;
+  :root[data-flag-no-shift-strip] [data-region^='deck'] .perf .grp > .tb:not(.ar) {
+    font-size: var(--t-sm);
   }
 }
 
@@ -54,4 +83,29 @@
 :root[data-flag-no-shift-strip] [data-region^='deck'] .transport .jumps span {
   text-align: center;
   white-space: nowrap;
+}
+
+/* The size reads as a length: the number at --t-sm --fg-2 with its unit
+   under it ("beats", --t-xs --fg-3), stacked so both fit the middle
+   third (batch D4). The control measures itself and drops the unit where
+   it's too narrow for it (the smallest windows). */
+:root[data-flag-no-shift-strip] [data-region^='deck'] .transport .jumps {
+  container-type: inline-size;
+}
+:root[data-flag-no-shift-strip] [data-region^='deck'] .transport .jumps span {
+  display: grid;
+  justify-items: center;
+  font-size: var(--t-sm);
+  line-height: 15px;
+  color: var(--fg-2);
+}
+:root[data-flag-no-shift-strip] [data-region^='deck'] .transport .jumps small {
+  font-size: var(--t-xs);
+  line-height: 13px;
+  color: var(--fg-3);
+}
+@container (max-width: 95px) {
+  :root[data-flag-no-shift-strip] [data-region^='deck'] .transport .jumps small {
+    display: none;
+  }
 }

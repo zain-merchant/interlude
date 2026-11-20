@@ -4,6 +4,7 @@
   import { engine, control as send } from './engine.svelte.js';
   import { tip, tipText } from './tooltip.svelte.js';
   import { openMenu } from './menu.svelte.js';
+  import { flag } from '../flags/registry.svelte.js';
 
   /**
    * One deck's beat FX unit: effect, beat length, level, on. The channel
@@ -85,8 +86,9 @@
     <button class="tb ar" aria-label="Longer" aria-disabled={beats >= BEATS[BEATS.length - 1]} {...press(() => step(1))}>›</button>
   </div>
   <span class="sep"></span>
+  <!-- #43 (UI audit flag): on-state dims the level ring while the effect is off. -->
   <Knob label="" name="Deck {name} {k.label.toLowerCase()} level" bind:value={level} min={0} max={1} reset={0.5} size={20} fromMin
-    arc={'var(--deck)'} format={(v) => `${Math.round(v * 100)}%`} onchange={(v) => control({ type: 'setFxLevel', deck, value: v })} />
+    arc={flag('on-state') && !on ? 'var(--fg-3)' : 'var(--deck)'} format={(v) => `${Math.round(v * 100)}%`} onchange={(v) => control({ type: 'setFxLevel', deck, value: v })} />
   <span class="sep"></span>
   <button class="tb tog" class:live={on} aria-pressed={on} {...press(toggle)}
     use:tip={() => `${k.label} ${on ? 'on' : 'off'}`}><i></i>{on ? 'On' : 'Off'}</button>

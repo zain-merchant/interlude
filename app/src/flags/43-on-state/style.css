@@ -1,0 +1,71 @@
+/* #43: one "on" mark for the mode row's toggles (loop, FX on, stems): a
+   6px dot before the label, filled in the deck's colour when on and
+   hollow --fg-3 when off; on also lifts the label to --fg on a --sel
+   fill. The doc's Text Row stays: no pads. */
+
+/* Loop: the value is the loop's on/off. At rest it gets --raise so it
+   reads as the row's one control. */
+:root[data-flag-on-state] [data-region^='deck'] .perf .big {
+  gap: 6px;
+  background: var(--raise);
+}
+:root[data-flag-on-state] [data-region^='deck'] .perf .big::before {
+  content: '';
+  flex: none;
+  align-self: center;
+  width: 6px;
+  height: 6px;
+  margin-right: 2px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px var(--fg-3);
+}
+:root[data-flag-on-state] [data-region^='deck'] .perf .big:hover:not([aria-disabled='true']) {
+  background: rgb(255 255 255 / 0.09);
+}
+:root[data-flag-on-state] [data-region^='deck'] .perf .big.live {
+  color: var(--fg);
+  background: var(--sel);
+  box-shadow: inset 0 0 0 1px var(--line-2);
+}
+:root[data-flag-on-state] [data-region^='deck'] .perf .big.live::before {
+  background: var(--deck);
+  box-shadow: none;
+}
+:root[data-flag-on-state] [data-region^='deck'] .perf .big.live span {
+  color: var(--fg-2);
+  opacity: 1;
+}
+
+/* FX on: the word stays ("On" / "Off"); the dot and the fill say it. */
+:root[data-flag-on-state] [data-region^='deck'] .fx .tog i {
+  width: 6px;
+  height: 6px;
+  box-shadow: inset 0 0 0 1px var(--fg-3);
+}
+:root[data-flag-on-state] [data-region^='deck'] .fx .tog.live {
+  color: var(--fg);
+  background: var(--sel);
+  box-shadow: inset 0 0 0 1px var(--line-2);
+}
+:root[data-flag-on-state] [data-region^='deck'] .fx .tog.live i {
+  background: var(--deck);
+  box-shadow: none;
+}
+
+/* Stems: the same 6px dot (filled while the stem plays, hollow --fg-3
+   when muted); one playing alone gets the on fill. */
+:root[data-flag-on-state] [data-region^='deck'] .stems .stem i {
+  width: 6px;
+  height: 6px;
+}
+:root[data-flag-on-state] [data-region^='deck'] .stems .stem.muted i {
+  box-shadow: inset 0 0 0 1px var(--fg-3);
+}
+:root[data-flag-on-state] [data-region^='deck'] .stems .stem.solo {
+  color: var(--fg);
+  background: var(--sel);
+  box-shadow: inset 0 0 0 1px var(--line-2);
+}
+:root[data-flag-on-state] [data-region^='deck'] .stems .stem.solo i {
+  box-shadow: none;
+}

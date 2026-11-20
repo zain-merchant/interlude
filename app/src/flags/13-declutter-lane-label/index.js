@@ -5,13 +5,15 @@
 // remaster with its mix name and label, a live set) ran across the play
 // head and over the waveform it was labelling, and on lane A towards the
 // zoom control. The label now stops short of the centre with an ellipsis;
-// the full title is on the deck and in the library.
+// the full title is on the deck and in the library. It also sits on a
+// dark backing like the zoom pill's (rgb(11 11 13 / 0.7), 24px tall), so
+// the waveform's peaks no longer cut through the letters.
 export default {
   id: 'declutter-lane-label',
   n: 13,
   title: 'Waveform titles stop before the play head',
   group: 'Stability',
-  notes: 'The track name over each waveform lane ends with an ellipsis before the centre line instead of running across it.',
+  notes: 'The track name over each waveform lane ends with an ellipsis before the centre line instead of running across it, on a dark backing so peaks don\'t cut through it.',
 };
 
 /** Show me: a very long title on deck A's waveform, in a narrow window; flipping shows it running over the play head (before) and stopping short (after). */

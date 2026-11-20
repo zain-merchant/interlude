@@ -1,0 +1,36 @@
+/* #40: the big number is the time left. The two times keep their places
+   (elapsed left, remaining right); only which one is big changes, so
+   flag 18's ending colour stays on the remaining time. */
+:root[data-flag-time-remaining] [data-region^='deck'] .times[data-big] {
+  align-items: baseline;
+}
+:root[data-flag-time-remaining] [data-region^='deck'] .times[data-big='remaining'] .rm {
+  font-size: var(--t-lg);
+  font-weight: 300;
+  line-height: 28px;
+  letter-spacing: -0.03em;
+}
+:root[data-flag-time-remaining] [data-region^='deck'] .times[data-big='remaining'] .rm:not(.ending) {
+  color: var(--fg);
+}
+:root[data-flag-time-remaining] [data-region^='deck'] .times[data-big='remaining'] .el {
+  font-size: var(--t-md);
+  line-height: normal;
+  letter-spacing: normal;
+  color: var(--fg-2);
+}
+
+/* Click to swap: the pair is one button. A hover lifts the small number,
+   which is the one a click brings forward. */
+:root[data-flag-time-remaining][data-flag-time-remaining-swap='click'] [data-region^='deck'] .times[data-big] {
+  cursor: pointer;
+  border-radius: 6px;
+}
+:root[data-flag-time-remaining][data-flag-time-remaining-swap='click'] [data-region^='deck'] .times[data-big='remaining']:hover .el,
+:root[data-flag-time-remaining][data-flag-time-remaining-swap='click'] [data-region^='deck'] .times[data-big='elapsed']:hover .rm:not(.ending) {
+  color: var(--fg);
+}
+:root[data-flag-time-remaining] [data-region^='deck'] .times[data-big]:focus-visible {
+  outline: 2px solid var(--fg-2);
+  outline-offset: 2px;
+}

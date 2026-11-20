@@ -1,9 +1,15 @@
-/* #5: the tempo readout. A box wide enough for "−00.00%" (tabular), the
-   number right-aligned so the % stays put, and the range line's room kept
-   below it whether or not it shows. */
+/* #5: the tempo readout. A box exactly as wide as "−00.00%" (3.9em,
+   tabular) centred on the fader's column, the number right-aligned in it
+   so the % stays put, and the range line's room kept below it whether or
+   not it shows. (A wider, right-aligned box sat the % 7-8px off its
+   fader: batch D8.) */
 :root[data-flag-no-shift-pitch] [data-region^='deck'] .pitch .val {
-  min-width: calc(5ch + 1.4em + 8px);
+  box-sizing: content-box;
+  width: 3.9em;
+  padding-inline: 2px;
+  justify-self: center;
   justify-items: end;
+  text-align: right;
   align-self: start;
   grid-template-rows: auto calc(var(--t-xs) * 1.3);
 }

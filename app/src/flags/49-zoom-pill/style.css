@@ -1,0 +1,33 @@
+/* #49: the waveform zoom gets its own 44px gutter at the right of the
+   strip, so it never covers the waveform coming in. It stands upright on
+   the lane divider: an opaque popover pill with the glass edge, 24×24
+   buttons. */
+:root[data-flag-zoom-pill] .waves {
+  padding-right: 44px;
+}
+:root[data-flag-zoom-pill] .waves .zoom {
+  top: 50%;
+  right: 6px;
+  bottom: auto;
+  transform: translateY(-50%);
+  flex-direction: column;
+  gap: 2px;
+  width: 32px;
+  height: auto;
+  padding: 4px 0;
+  border-radius: var(--r);
+  background: var(--popover);
+  box-shadow: var(--glass-edge);
+}
+:root[data-flag-zoom-pill] .waves .zoom button {
+  width: var(--h-sm);
+  height: var(--h-sm);
+  border-radius: 6px;
+  font-size: var(--t-md);
+}
+:root[data-flag-zoom-pill] .waves .zoom span {
+  min-width: 0;
+  font-size: var(--t-xs);
+  line-height: 16px;
+  white-space: nowrap;
+}

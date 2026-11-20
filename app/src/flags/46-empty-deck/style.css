@@ -1,0 +1,20 @@
+/* #46: an empty deck looks empty. Its numbers sit at the doc's "empty"
+   level (--fg-4), the selected tab drops to --fg-3, the beat-jump size
+   dims with its arrows, and the load hint shows once, in the deck's
+   header (the lane keeps just its deck bar). Pitch and Key lock stay
+   live: they work without a track. */
+:root[data-flag-empty-deck] [data-region^='deck']:has(.title .name.dim) :is(.bpm .big, .times .el, .times .rm) {
+  color: var(--fg-4);
+}
+:root[data-flag-empty-deck] [data-region^='deck']:has(.title .name.dim) .modes button.on {
+  color: var(--fg-3);
+}
+:root[data-flag-empty-deck] [data-region^='deck']:has(.title .name.dim) .modes button.on::after {
+  background: var(--fg-3);
+}
+:root[data-flag-empty-deck] [data-region^='deck'] .transport .jumps:has(button[aria-disabled='true']) span {
+  opacity: 0.4;
+}
+:root[data-flag-empty-deck] .waves .lane .who .hint {
+  display: none;
+}

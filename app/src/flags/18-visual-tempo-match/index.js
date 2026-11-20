@@ -7,13 +7,16 @@
 // at the other deck's tempo. Move the cap onto the mark and the tempos
 // match; the gap between cap and mark is the tempo difference. When the
 // other tempo is beyond the fader's range, the mark sits hollow at the end.
-// Hooks: Fader.svelte (match prop), Deck.svelte.
+// The mark is 10×3px, 2px clear of the slot, and the fader's tooltip says
+// what it is ("the mark is where it matches the other deck (119.00)").
+// Hooks: Fader.svelte (match prop), Deck.svelte (match, and the tooltip
+// through Fader's note).
 export default {
   id: 'visual-tempo-match',
   n: 18,
   title: 'A mark on the pitch slider shows where tempos match',
   group: 'Polish',
-  notes: 'A mark beside each pitch fader, in the other deck\'s colour, where this deck would match the other\'s tempo. Hollow at the end when out of range.',
+  notes: 'A mark beside each pitch fader, in the other deck\'s colour, where this deck would match the other\'s tempo. Hollow at the end when out of range. The fader\'s tooltip explains it.',
 };
 
 /** Show me: two decks at different tempos; flipping shows the pitch fader bare (before) and with its match mark (after), magnified. */

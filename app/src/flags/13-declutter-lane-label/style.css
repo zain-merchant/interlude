@@ -13,3 +13,15 @@
   margin-right: 8px;
   vertical-align: -2px;
 }
+
+/* The title sits on the zoom pill's backing, so the waveform's peaks
+   don't cut through its letters (batch D13). Same 24px height as the
+   pill; the text stays where it was (the box grows outwards). */
+:root[data-flag-declutter-lane-label] .waves .lane .who {
+  left: calc(var(--pad) - 8px);
+  top: 4px;
+  padding: 2px 8px;
+  line-height: 20px;
+  border-radius: 6px;
+  background: rgb(11 11 13 / 0.7);
+}

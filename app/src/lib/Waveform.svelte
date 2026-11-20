@@ -1,7 +1,8 @@
 <script>
   import { onMount } from 'svelte';
   import { Waveform2D, themeColors, HOT_CUES } from './waveform-2d.js';
-  import { tracks, engine, displayPos, displaySlip, onFrame, scrubStart, scrubTo, scrubEnd } from './engine.svelte.js';
+  import { tracks, engine, displayPos, displaySlip, onFrame, scrubStart, scrubTo, scrubEnd, wake } from './engine.svelte.js';
+  import { flag, setting } from '../flags/registry.svelte.js';
 
   /** @type {{ deck: number, mode?: 'scroll' | 'overview', seconds?: number, onzoom?: (factor: number) => void }} */
   let { deck, mode = 'scroll', seconds = 12, onzoom } = $props();
@@ -20,6 +21,31 @@
     };
   }
 
+  // #45, #56 (UI audit flags): flags that change the theme's colours; the
+  // canvas reads them again when one flips.
+  const colorFlags = () =>
+    `${flag('cue-colour')}|${setting('cue-colour', 'eight')}|${flag('against-deck-colours')}|${setting('against-deck-colours', 'look')}|${flag('against-wave-cores')}`;
+  // #41, #50, #52, #54 (UI audit flags): what the canvas draws differently with them on.
+  const wf = () => ({
+    beatGrid: flag('beat-grid'),
+    edge: flag('beat-grid') ? setting('beat-grid', 'edge') : '',
+    clipStart: flag('lane-start'),
+    cueChips: flag('overview-cues'),
+    ticks: flag('overview-cues') && setting('overview-cues', 'ticks') === 'minutes',
+    keyline: flag('deck-polish'),
+  });
+
+  // The frame loop sleeps while nothing moves; a flag flipping wakes it
+  // to redraw (not on the first run, so with every flag off nothing new
+  // happens).
+  let watched = false;
+  $effect(() => {
+    colorFlags();
+    wf();
+    if (watched) wake();
+    watched = true;
+  });
+
   onMount(() => {
     let gl;
     try {
@@ -29,10 +55,18 @@
       failed = true;
       return;
     }
-    const colors = themeColors(deck);
+    let colors = themeColors(deck);
+    let colorKey = '';
+    gl.font = getComputedStyle(canvas).fontFamily; // #50 (UI audit flag): the overview chips' numbers
     let uploaded = null;
-
     const off = onFrame(() => {
+      const ck = colorFlags();
+      if (ck !== colorKey) {
+        if (colorKey) colors = themeColors(deck);
+        colorKey = ck;
+      }
+      const f = wf();
+      const flagView = { ...f, flags: Object.values(f).join('|') };
       const t = tracks[deck];
       const bins = t?.bins ?? null;
       if (bins !== uploaded) {
@@ -57,7 +91,7 @@
         const perPx = (seconds * bps) / w;
         const start = playhead - (w / 2) * perPx;
         gl.draw({
-          mode, start, perPx, playhead, cue, colors, ...marks,
+          mode, start, perPx, playhead, cue, colors, ...marks, ...flagView,
           beatLen: grid ? (60 / grid.bpm) * bps : 0,
           firstBeat: grid ? grid.firstBeat * bps : 0,
         });
@@ -76,7 +110,8 @@
         // lane is drawn again only when it moves that far, not every frame.
         const perPx = Math.max(count, 1) / w;
         const q = (b) => (b < 0 ? b : Math.round(b / (perPx / 4)) * (perPx / 4));
-        gl.draw({ mode, start: 0, perPx, playhead: q(playhead), cue, colors, ...marks, slip: q(marks.slip) });
+        gl.draw({ mode, start: 0, perPx, playhead: q(playhead), cue, colors, ...marks, slip: q(marks.slip), ...flagView,
+          secsPerBin: 1 / bps });
       }
     });
     return off;

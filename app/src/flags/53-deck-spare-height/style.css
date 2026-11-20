@@ -1,0 +1,12 @@
+/* #53: the deck's spare height goes to the overview, not to an empty band
+   around the mode row. The row hugs its tabs (8px under the tab rule). */
+:root[data-flag-deck-spare-height] [data-region^='deck'] .body {
+  grid-template-rows: auto minmax(32px, 1fr) auto auto auto;
+}
+:root[data-flag-deck-spare-height][data-flag-deck-spare-height-fit='tight'] [data-region^='deck'] .body {
+  grid-template-rows: auto minmax(32px, 48px) auto 1fr auto;
+}
+:root[data-flag-deck-spare-height] [data-region^='deck'] .mp {
+  grid-template-rows: auto auto;
+  align-content: start;
+}

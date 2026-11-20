@@ -1,0 +1,50 @@
+/* #44: the tempo % and the key read at body size. */
+
+/* The tempo % over the pitch fader: 13px tabular; at zero --fg-2, off zero
+   --fg (Deck.svelte's .off). */
+:root[data-flag-pitch-readout] [data-region^='deck'] .pitch .val {
+  font-size: var(--t-sm);
+  font-variant-numeric: tabular-nums;
+}
+/* The key is its own word at 13px --fg-2 (Camelot --fg-3), and "BPM"
+   stays an 11px --fg-3 caption 8px after it, so it labels the number
+   above it, not the key. */
+:root[data-flag-pitch-readout] [data-region^='deck'] .bpm .unit {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 8px;
+}
+:root[data-flag-pitch-readout] [data-region^='deck'] .bpm .unit .key {
+  font-size: var(--t-sm);
+  color: var(--fg-2);
+}
+:root[data-flag-pitch-readout] [data-region^='deck'] .bpm .unit .key.shifted {
+  color: var(--fg);
+}
+:root[data-flag-pitch-readout] [data-region^='deck'] .bpm .unit .key .cam {
+  color: var(--fg-3);
+}
+
+/* Which way the fader goes: "−" at the top (slower), "+" at the bottom,
+   11px --fg-4, past the ends of the slot on the scale's side. */
+:root[data-flag-pitch-readout] [data-region^='deck'] .pitch-fader {
+  position: relative;
+}
+:root[data-flag-pitch-readout] [data-region^='deck'] .pitch-fader::before,
+:root[data-flag-pitch-readout] [data-region^='deck'] .pitch-fader::after {
+  position: absolute;
+  left: calc(50% + 15px);
+  font-size: var(--t-xs);
+  line-height: 1;
+  color: var(--fg-4);
+  pointer-events: none;
+}
+:root[data-flag-pitch-readout] [data-region^='deck'] .pitch-fader::before {
+  content: '−';
+  top: -3px;
+}
+:root[data-flag-pitch-readout] [data-region^='deck'] .pitch-fader::after {
+  content: '+';
+  bottom: -3px;
+}

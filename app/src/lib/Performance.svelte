@@ -81,21 +81,37 @@
   </div>
   {/if}
   {#if show !== 'cues'}
-  <div class="grp" role="group" aria-label="Deck {'AB'[deck]} loop">
+  {#snippet halve(glyph)}
     <button class="tb" aria-label="Halve loop" aria-disabled={!t} {...press(() => loopScale(deck, 0.5))}
-      use:tip={() => tipText('Halve loop', keyLabel(`deck.${deck}.loopHalve`))}>½</button>
+      use:tip={() => tipText('Halve loop', keyLabel(`deck.${deck}.loopHalve`))}>{glyph}</button>
+  {/snippet}
+  {#snippet double(glyph)}
+    <button class="tb" aria-label="Double loop" aria-disabled={!t} {...press(() => loopScale(deck, 2))}
+      use:tip={() => tipText('Double loop', keyLabel(`deck.${deck}.loopDouble`))}>{glyph}</button>
+  {/snippet}
+  {#snippet back()}
     <button class="tb ar" aria-label="Jump back {size} {beatsWord}" aria-disabled={!grid}
       onpointerdown={(e) => e.button === 0 && beatJump(deck, -1, e.shiftKey)} onclick={(e) => e.detail === 0 && beatJump(deck, -1, e.shiftKey)}
       use:tip={() => (grid ? tipText(`Jump back ${size} ${beatsWord}`, keyLabel(`deck.${deck}.jumpBack`)) : noGrid)}>‹</button>
+  {/snippet}
+  {#snippet forward()}
+    <button class="tb ar" aria-label="Jump forward {size} {beatsWord}" aria-disabled={!grid}
+      onpointerdown={(e) => e.button === 0 && beatJump(deck, 1, e.shiftKey)} onclick={(e) => e.detail === 0 && beatJump(deck, 1, e.shiftKey)}
+      use:tip={() => (grid ? tipText(`Jump forward ${size} ${beatsWord}`, keyLabel(`deck.${deck}.jumpForward`)) : noGrid)}>›</button>
+  {/snippet}
+  {#snippet value()}
     <button class="big" class:live={d.looping} aria-pressed={d.looping} aria-disabled={!grid}
       {...press(() => loopToggle(deck))}
       use:tip={() => (grid ? tipText(d.looping ? 'Exit loop' : `Loop ${size} ${beatsWord}`, keyLabel(`deck.${deck}.loop`)) : noGrid)}
     ><b class="num">{size}</b><span>{beatsWord}</span></button>
-    <button class="tb ar" aria-label="Jump forward {size} {beatsWord}" aria-disabled={!grid}
-      onpointerdown={(e) => e.button === 0 && beatJump(deck, 1, e.shiftKey)} onclick={(e) => e.detail === 0 && beatJump(deck, 1, e.shiftKey)}
-      use:tip={() => (grid ? tipText(`Jump forward ${size} ${beatsWord}`, keyLabel(`deck.${deck}.jumpForward`)) : noGrid)}>›</button>
-    <button class="tb" aria-label="Double loop" aria-disabled={!t} {...press(() => loopScale(deck, 2))}
-      use:tip={() => tipText('Double loop', keyLabel(`deck.${deck}.loopDouble`))}>2×</button>
+  {/snippet}
+  <div class="grp" role="group" aria-label="Deck {'AB'[deck]} loop">
+    {#if flag('no-shift-strip')}
+      <!-- #5 (UI audit flag): no-shift-strip puts ÷2 and ×2 beside the value they change, the jump arrows outside them. -->
+      {@render back()}{@render halve('÷2')}{@render value()}{@render double('×2')}{@render forward()}
+    {:else}
+      {@render halve('½')}{@render back()}{@render value()}{@render forward()}{@render double('2×')}
+    {/if}
   </div>
   {/if}
 </div>

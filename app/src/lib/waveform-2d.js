@@ -39,6 +39,10 @@ export class Waveform2D {
     this.ctx = ctx;
     this.count = 0;
     this.version = 0;
+    /** #50 (UI audit flag): the font for the overview's hot cue numbers. */
+    this.font = 'sans-serif';
+    /** #52 (UI audit flag): lane-start; see sample(). */
+    this.strict = false;
     this.setBins(new Uint8Array(0));
   }
 
@@ -68,6 +72,10 @@ export class Waveform2D {
 
   /** The loudest value of each band between two bins. */
   sample(i0, i1) {
+    // #52 (UI audit flag): lane-start tests the range before clamping, so a
+    // window wholly before the track's start (or past its end) is silence,
+    // not a copy of the first bin.
+    if (this.strict && (i1 <= 0 || i0 >= this.count)) return null;
     i0 = Math.max(0, Math.floor(i0));
     i1 = Math.min(this.count, Math.max(i0 + 1, Math.ceil(i1)));
     if (i0 >= this.count || i1 <= 0) return null;
@@ -98,6 +106,7 @@ export class Waveform2D {
       this.canvas.width, this.canvas.height, window.devicePixelRatio || 1, this.version,
       view.start, view.perPx, view.playhead, view.cue, view.mode,
       view.beatLen ?? 0, view.firstBeat ?? 0, view.loopIn ?? -1, view.loopOut ?? -1, !!view.looping, view.slip ?? -1,
+      view.flags ?? '', // #41, #50, #52 (UI audit flags): their states, so flipping one redraws.
       ...(view.hotCues ?? []),
     ];
     const last = this.lastKey;
@@ -111,7 +120,9 @@ export class Waveform2D {
    * @param {{ mode: 'scroll' | 'overview', start: number, perPx: number, playhead: number, cue: number,
    *           colors: ReturnType<typeof themeColors> & { low: number[], mid: number[], high: number[] },
    *           beatLen?: number, firstBeat?: number, hotCues?: number[],
-   *           loopIn?: number, loopOut?: number, looping?: boolean, slip?: number }} view
+   *           loopIn?: number, loopOut?: number, looping?: boolean, slip?: number,
+   *           flags?: string, beatGrid?: boolean, edge?: string, clipStart?: boolean, cueChips?: boolean,
+   *           ticks?: boolean, keyline?: boolean, secsPerBin?: number }} view
    *   Positions are in bins, -1 for none; `perPx` is bins per device pixel.
    */
   draw(view) {
@@ -127,7 +138,11 @@ export class Waveform2D {
     const x = (bin) => (bin - view.start) / spp;
     const c = view.colors;
 
-    if (view.mode === 'scroll' && view.beatLen > 0) this.beats(w, h, view, spp, x);
+    // #52 (UI audit flag): lane-start (sample() reads it; the ribbon's tiles are keyed on it).
+    this.strict = !!view.clipStart;
+    // #41 (UI audit flag): beat-grid draws the grid over the ribbon instead (below).
+    const grid = view.mode === 'scroll' && view.beatLen > 0;
+    if (grid && !view.beatGrid) this.beats(w, h, view, spp, x);
     if (view.loopIn >= 0 && view.loopOut > view.loopIn) {
       const a = x(view.loopIn), b = x(view.loopOut);
       ctx.fillStyle = `rgba(255,255,255,${view.looping ? 0.08 : 0.04})`;
@@ -136,6 +151,13 @@ export class Waveform2D {
     if (this.count) {
       if (view.mode === 'scroll') this.ribbon(w, h, view, spp, c);
       else this.overview(w, h, c);
+      if (grid && view.beatGrid) this.grid(w, h, view, spp, x); // #41 (UI audit flag)
+      // #50 (UI audit flag): overview-cues' minute ticks along the overview's foot.
+      if (view.mode === 'overview' && view.ticks && view.secsPerBin > 0) {
+        ctx.fillStyle = 'rgba(236,234,228,0.3)';
+        const per = 60 / view.secsPerBin;
+        for (let b = per; b < this.count; b += per) ctx.fillRect(Math.round(x(b)), h - 3, 1, 3);
+      }
       // The played part: a dark veil so what's ahead is what reads.
       const px = Math.max(0, Math.min(w, x(view.playhead)));
       ctx.fillStyle = view.mode === 'scroll' ? 'rgba(12,12,14,0.5)' : 'rgba(12,12,14,0.55)';
@@ -154,6 +176,8 @@ export class Waveform2D {
       ctx.globalAlpha = 0.9;
       ctx.fillRect(cx - 1, 0, 2, h);
       ctx.globalAlpha = 1;
+      // #50 (UI audit flag): overview-cues puts the lane's numbered chip at the top of each overview marker.
+      if (view.cueChips) return this.chip(cx, w, i + 1, c.hot[i % c.hot.length], c.ink);
       ctx.beginPath();
       ctx.moveTo(cx - 4, 0);
       ctx.lineTo(cx + 4, 0);
@@ -176,6 +200,12 @@ export class Waveform2D {
       ctx.fillRect(Math.round(x(view.slip)) - 0.5, 0, 1, h);
     }
     if (view.playhead >= 0) {
+      // #54 (UI audit flag): deck-polish keylines the play head, so it reads against the near-white core.
+      if (view.keyline) {
+        ctx.fillStyle = 'rgba(0,0,0,0.5)';
+        ctx.fillRect(x(view.playhead) - 1.75, 0, 1, h);
+        ctx.fillRect(x(view.playhead) + 0.75, 0, 1, h);
+      }
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(x(view.playhead) - 0.75, 0, 1.5, h);
     }
@@ -195,6 +225,49 @@ export class Waveform2D {
       ctx.fillStyle = bar ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.03)';
       ctx.fillRect(Math.round(bx), 0, 1, h);
     }
+  }
+
+  /**
+   * #41 (UI audit flag): the beat grid drawn over the ribbon. Bars are 1px
+   * lines (every 16th bar, a phrase, stronger); beats are short ticks at
+   * the lane's top and bottom edges, so the waveform between stays clear.
+   */
+  grid(w, h, view, spp, x) {
+    const { ctx } = this;
+    const len = view.beatLen;
+    const first = Math.ceil((view.start - view.firstBeat) / len);
+    const barsOnly = len / spp < 6;
+    const tick = 6;
+    for (let b = first; ; b++) {
+      const bx = Math.round(x(view.firstBeat + b * len));
+      if (bx > w) break;
+      const n = ((b % 64) + 64) % 64;
+      if (n % 4 === 0) {
+        ctx.fillStyle = n === 0 ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.2)';
+        ctx.fillRect(bx, 0, 1, h);
+      } else if (!barsOnly) {
+        ctx.fillStyle = 'rgba(255,255,255,0.15)';
+        ctx.fillRect(bx, 0, 1, tick);
+        ctx.fillRect(bx, h - tick, 1, tick);
+      }
+    }
+  }
+
+  /** #50 (UI audit flag): a hot cue's numbered chip, 12px tall, at the top of its overview line. */
+  chip(cx, w, n, fill, ink) {
+    const { ctx } = this;
+    const cw = 12, ch = 12;
+    const left = Math.max(0, Math.min(w - cw, Math.round(cx - cw / 2)));
+    ctx.fillStyle = fill;
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(left, 0, cw, ch, [0, 0, 3, 3]);
+    else ctx.rect(left, 0, cw, ch);
+    ctx.fill();
+    ctx.fillStyle = rgba(ink, 1);
+    ctx.font = `600 11px ${this.font ?? 'sans-serif'}`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(String(n), left + cw / 2, ch / 2 + 0.5);
   }
 
   /** Fills one band's shape. `glow` draws only its blurred shadow. */
@@ -237,7 +310,7 @@ export class Waveform2D {
   ribbon(w, h, view, spp, c) {
     const { ctx, canvas } = this;
     const dpr = window.devicePixelRatio || 1;
-    const key = `${this.version}|${spp}|${canvas.height}|${dpr}`;
+    const key = `${this.version}|${spp}|${canvas.height}|${dpr}|${this.strict ? 1 : 0}|${view.edge ?? ''}`;
     if (!this.tiles || this.tilesKey !== key || this.tilesColors !== c) {
       this.tiles = new Map();
       this.spare = [];
@@ -256,7 +329,7 @@ export class Waveform2D {
     if (++this.steady < 3) {
       ctx.save();
       ctx.translate(-off, 0);
-      this.ribbonShape(ctx, ctx, off, off + w, spp, h, c);
+      this.ribbonShape(ctx, ctx, off, off + w, spp, h, c, view.edge);
       ctx.restore();
       return;
     }
@@ -270,7 +343,7 @@ export class Waveform2D {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     for (let t = first; t <= last; t++) {
       let tile = this.tiles.get(t);
-      if (!tile) this.tiles.set(t, (tile = this.ribbonTile(t, spp, h, c, dpr)));
+      if (!tile) this.tiles.set(t, (tile = this.ribbonTile(t, spp, h, c, dpr, view.edge)));
       const dx = Math.round((t * TILE - off) * dpr);
       ctx.globalCompositeOperation = 'lighter';
       ctx.drawImage(tile.bands, dx, 0);
@@ -285,7 +358,7 @@ export class Waveform2D {
    * canvas, and the crisp edge (drawn over them) on another, so placing
    * them gives what drawing straight onto the lane would.
    */
-  ribbonTile(t, spp, h, c, dpr) {
+  ribbonTile(t, spp, h, c, dpr, edgeStyle) {
     const old = this.spare.pop();
     const make = (el) => {
       if (!el) {
@@ -302,7 +375,7 @@ export class Waveform2D {
     };
     const [bands, ctx] = make(old?.bands);
     const [edge, ectx] = make(old?.edge);
-    this.ribbonShape(ctx, ectx, t * TILE, (t + 1) * TILE, spp, h, c);
+    this.ribbonShape(ctx, ectx, t * TILE, (t + 1) * TILE, spp, h, c, edgeStyle);
     return { bands, edge };
   }
 
@@ -312,7 +385,7 @@ export class Waveform2D {
    * then the crisp edge on `ectx`. Columns run a little past both ends so
    * the glow and the smoothing are whole up to them.
    */
-  ribbonShape(ctx, ectx, x0, x1, spp, h, c) {
+  ribbonShape(ctx, ectx, x0, x1, spp, h, c, edge) {
     const mid = h / 2;
     const amp = h / 2;
     const step = STEP;
@@ -345,7 +418,8 @@ export class Waveform2D {
     this.band(ctx, cols, step, shift, mid, amp, 2, 0.34, c.high, 0.55, h);
     ctx.globalCompositeOperation = 'source-over';
     // A crisp edge on the outer band so the shape reads sharp under the glow.
-    ectx.strokeStyle = rgba(c.high, 0.55);
+    // #41 (UI audit flag): beat-grid's edge setting can soften it ('soft'), so it stops tracing every fin.
+    ectx.strokeStyle = rgba(c.high, edge === 'soft' ? 0.25 : 0.55);
     ectx.lineWidth = 1;
     for (const sign of [1, -1]) {
       ectx.beginPath();
@@ -435,6 +509,7 @@ export function themeColors(deck) {
     mid: cssColor(`var(--deck-${p})`),
     high: cssColor(`var(--${p}-high)`),
     fg: cssColor('var(--fg)'),
+    ink: cssColor('var(--ink)'),
     cue: cssColor('var(--cue)'),
     hot: Array.from({ length: HOT_CUES }, (_, i) => `rgb(${cssColor(`var(--hc-${i + 1})`).join(',')})`),
   };

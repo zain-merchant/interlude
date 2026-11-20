@@ -1,9 +1,32 @@
 /* #6: play button states. Paused keeps the app's solid white; the other
    states are told apart by fill, edge and glyph, not hue alone. */
 
-/* Paused, hovered: a touch brighter, so it answers the pointer. */
+/* Paused, hovered: a touch brighter, so it answers the pointer (not
+   pure white, which jumped out of the deck's own white). */
 :root[data-flag-play-states] .transport .btn.play:not(.on, [aria-disabled='true']):hover {
-  background: #fff;
+  background: color-mix(in srgb, var(--fg) 70%, #fff);
+}
+
+/* Playing: lit (batch D2). The button is solid in the deck's own white
+   while the deck runs, like a CDJ's play lamp, and an outline while it's
+   paused and ready. Play stays the one solid control: solid while it's
+   doing its job. */
+:root[data-flag-play-states][data-flag-play-states-playing='lit'] .transport .btn.play.on {
+  background: var(--deck);
+  color: var(--ink);
+  box-shadow: none;
+}
+:root[data-flag-play-states][data-flag-play-states-playing='lit'] .transport .btn.play.on:hover {
+  background: color-mix(in srgb, var(--deck) 94%, #fff);
+}
+:root[data-flag-play-states][data-flag-play-states-playing='lit'] .transport .btn.play:not(.on, [aria-disabled='true']) {
+  background: transparent;
+  color: var(--fg);
+  box-shadow: inset 0 0 0 1px var(--fg-2);
+}
+:root[data-flag-play-states][data-flag-play-states-playing='lit'] .transport .btn.play:not(.on, [aria-disabled='true']):hover {
+  background: var(--hover);
+  box-shadow: inset 0 0 0 1px var(--fg);
 }
 
 /* Playing: deck tint. A glass fill and ring in the deck's own white, the
