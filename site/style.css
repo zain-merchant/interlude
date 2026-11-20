@@ -2083,3 +2083,20 @@ html[data-lablogo="plain"] .lg-rings circle:nth-child(-n + 2) { display: none; }
    data-nolog): the link to them on GitHub where the ticker runs. */
 .oss[data-nolog] .oss-commits { display: block; margin: 0; padding: 0; list-style: none; }
 .oss[data-nolog] .oss-commits .oss-empty a { padding: 0; font-size: 14px; text-decoration: underline; text-decoration-color: rgb(11 11 13 / 0.2); text-underline-offset: 3px; }
+
+/* The sound switch (sfx.js): a speaker at the start of the nav's actions,
+   quiet until hovered; waves when on, a cross when off. Kept on phones
+   (where the GitHub button goes), 40px there for a thumb. */
+.sfx-btn { display: inline-grid; place-items: center; flex: none; width: 34px; height: 34px; align-self: center; padding: 0; border: 0; border-radius: 9px;
+  background: none; color: var(--fg-3); cursor: pointer; transition: color 150ms, background-color 150ms; -webkit-tap-highlight-color: transparent; }
+.sfx-btn:hover { color: var(--fg); background: rgb(255 255 255 / 0.06); }
+.sfx-btn:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+.sfx-btn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
+.sfx-btn[aria-pressed="true"] .sfx-off, .sfx-btn[aria-pressed="false"] .sfx-on { display: none; }
+@media (max-width: 860px) { .sfx-btn { width: 40px; height: 40px; } }
+/* In the footer's App column, a line like the links above it: the
+   nav's speaker is hidden at the top of the page in some nav styles
+   (morph), and this one is always where people look for settings. */
+.foot .sfx-foot { display: flex; gap: 7px; width: auto; height: auto; padding: 3px 0; border-radius: 4px; background: none; color: var(--fg-2); font: inherit; font-size: 14px; }
+.foot .sfx-foot:hover { color: var(--fg); background: none; }
+.foot .sfx-foot svg { width: 15px; height: 15px; }

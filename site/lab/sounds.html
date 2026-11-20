@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sound lab</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* Every interface sound on the site (sfx.js), each slot's variants side
+     by side: click one to hear it and pick it. The page plays the shipping
+     module, so what's heard here is what the site plays. Not linked. */
+  :root { --bg: #09090b; --panel: #111114; --fg: #eceae4; --fg-2: rgb(236 234 228 / 0.68); --fg-3: rgb(236 234 228 / 0.5); --fg-4: rgb(236 234 228 / 0.3);
+    --line: rgb(255 255 255 / 0.08); --line-2: rgb(255 255 255 / 0.14); --deck-a: #c9dcf2; --deck-b: #f0dcc0; --ok: #8fd6a4; --warn: #f0c27a;
+    --mono: 'Geist Mono', ui-monospace, Menlo, monospace; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 48px 16px 96px; background: var(--bg); color: var(--fg); font: 15px/1.5 Geist, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  main { max-width: 1040px; margin: 0 auto; }
+  h1 { margin: 0 0 6px; font-size: 28px; font-weight: 600; letter-spacing: -0.02em; }
+  h2 { margin: 56px 0 6px; font-size: 20px; font-weight: 600; letter-spacing: -0.01em; }
+  p { margin: 0 0 12px; color: var(--fg-2); max-width: 66ch; }
+  code, .mono { font-family: var(--mono); font-size: 0.86em; }
+  button { font: inherit; color: inherit; }
+
+  .bar { position: sticky; top: 0; z-index: 2; display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; margin: 24px -16px 8px; padding: 12px 16px;
+    background: rgb(9 9 11 / 0.86); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); }
+  .bar label { display: flex; gap: 10px; align-items: center; color: var(--fg-2); font-size: 13.5px; }
+  .bar input[type=range] { width: 140px; accent-color: var(--deck-a); }
+  .bar .out { min-width: 4ch; font-family: var(--mono); font-size: 12.5px; color: var(--fg-3); }
+  .bar .sp { flex: 1; }
+  .act { height: 32px; padding: 0 12px; border: 0; border-radius: 9px; background: rgb(255 255 255 / 0.07); box-shadow: inset 0 0 0 1px var(--line); cursor: pointer; font-size: 13.5px; }
+  .act:hover { background: rgb(255 255 255 / 0.11); }
+  .act.primary { background: var(--fg); color: #0b0b0d; box-shadow: none; }
+  .act.primary:hover { background: #fff; }
+  .note { font-size: 13px; color: var(--fg-3); }
+
+  .slots { display: grid; gap: 12px; }
+  .slot { display: grid; grid-template-columns: 200px 1fr; gap: 8px 20px; padding: 18px; border-radius: 14px; background: var(--panel); box-shadow: inset 0 0 0 1px var(--line); }
+  .slot h3 { margin: 0; font-size: 16px; font-weight: 600; }
+  .slot h3 small { margin-left: 6px; font: 500 11.5px var(--mono); color: var(--fg-4); }
+  .slot .where { margin: 4px 0 0; font-size: 13px; color: var(--fg-3); }
+  .vars { display: flex; flex-wrap: wrap; gap: 8px; align-content: start; }
+  .var { display: grid; grid-template-columns: auto auto; align-items: center; gap: 2px 10px; min-width: 150px; padding: 10px 12px; border: 0; border-radius: 11px; text-align: left; cursor: pointer;
+    background: rgb(255 255 255 / 0.04); box-shadow: inset 0 0 0 1px var(--line); transition: background 120ms, box-shadow 120ms; }
+  .var:hover { background: rgb(255 255 255 / 0.07); }
+  .var[aria-checked=true] { background: rgb(201 220 242 / 0.1); box-shadow: inset 0 0 0 1px rgb(201 220 242 / 0.5); }
+  .var b { font-weight: 500; font-size: 14px; }
+  .var .db { grid-column: 1 / -1; font: 11.5px var(--mono); color: var(--fg-4); }
+  .var .db.off { color: var(--warn); }
+  .var .chg { grid-column: 1 / -1; font-size: 12px; color: var(--warn); opacity: 0.85; }
+  .var .dir { display: flex; gap: 4px; justify-self: end; }
+  .var .dir span { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 6px; font-size: 12px; color: var(--fg-3); box-shadow: inset 0 0 0 1px var(--line); }
+  .var .dir span:hover { color: var(--fg); background: rgb(255 255 255 / 0.08); }
+  .var.none b { color: var(--fg-3); }
+  @media (max-width: 640px) { .slot { grid-template-columns: 1fr; } }
+
+  /* The try-it area: the site's own markup patterns, wired by sfx.js's
+     start() exactly as on the page. */
+  .try { display: grid; gap: 16px; padding: 20px; border-radius: 16px; background: var(--panel); box-shadow: inset 0 0 0 1px var(--line); }
+  .try .nav { display: flex; flex-wrap: wrap; align-items: center; gap: 18px; padding: 10px 14px; border-radius: 12px; box-shadow: inset 0 0 0 1px var(--line); font-size: 14px; }
+  .try .nav a:not(.btn) { color: var(--fg-2); text-decoration: none; }
+  .try .nav a:not(.btn):hover { color: var(--fg); }
+  .btn.small { height: 32px; padding: 0 12px; font-size: 13.5px; border-radius: 8px; }
+  .try .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .btn { display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 16px; border-radius: 10px; border: 0; background: var(--fg); color: #0b0b0d; font-weight: 500; font-size: 14.5px; text-decoration: none; cursor: pointer; }
+  .btn.ghost { background: rgb(255 255 255 / 0.06); color: var(--fg); box-shadow: inset 0 0 0 1px var(--line-2); }
+  .switch { position: relative; display: inline-flex; padding: 3px; border-radius: 10px; background: rgb(255 255 255 / 0.05); box-shadow: inset 0 0 0 1px var(--line); }
+  .switch button { position: relative; z-index: 1; height: 30px; padding: 0 14px; border: 0; border-radius: 7px; background: none; color: var(--fg-3); cursor: pointer; font-size: 13.5px; }
+  .switch button[aria-checked=true] { color: var(--fg); background: rgb(255 255 255 / 0.1); }
+  details { max-width: 520px; border-top: 1px solid var(--line); padding: 10px 0; }
+  details:last-of-type { border-bottom: 1px solid var(--line); }
+  summary { cursor: pointer; font-weight: 500; }
+  details p { margin: 6px 0 0; font-size: 14px; }
+  .pads { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+  .record { position: relative; aspect-ratio: 1; max-width: 260px; border-radius: 50%; cursor: crosshair; touch-action: pan-y;
+    background: radial-gradient(circle, var(--deck-b) 0 13%, #151518 13.5% 15%, transparent 15.5%), repeating-radial-gradient(circle, #121215 0 3px, #1b1b1f 3px 4px); box-shadow: 0 0 0 1px var(--line-2), 0 10px 30px rgb(0 0 0 / 0.5); }
+  .record i { position: absolute; width: 10px; height: 10px; margin: -5px; border-radius: 50%; background: var(--deck-a); opacity: 0; pointer-events: none; transition: opacity 600ms; }
+  .wordpad { display: grid; place-items: center; min-height: 160px; border-radius: 14px; overflow: hidden; background: #0d0d10; box-shadow: inset 0 0 0 1px var(--line); user-select: none; -webkit-user-select: none; touch-action: pan-y; }
+  .foot-word { font-size: clamp(56px, 11vw, 120px); font-weight: 600; letter-spacing: -0.05em; color: rgb(255 255 255 / 0.12); cursor: grab; }
+  .pads figcaption { margin-top: 8px; font-size: 13px; color: var(--fg-3); }
+
+  textarea { width: 100%; min-height: 90px; padding: 12px; border-radius: 10px; border: 0; background: #0d0d10; color: var(--fg-2); box-shadow: inset 0 0 0 1px var(--line); font: 12.5px/1.5 var(--mono); resize: vertical; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Sound lab</h1>
+  <p>Every interface sound on the site, from <code>sfx.js</code> as it ships: short drum-machine voices (909 and 808 hats, rim, clap, shaker, snare tick, high tom) and plucks and house stabs, all in <b>A minor</b> (A, C, E and G, the notes of Am7, A4 = 440), so any cues heard together are consonant. Opening, switching to Controller, downloading and turning sound on rise; the way back is the same sound, single and softer. Click a variant to hear it and pick it; the arrows play a direction.</p>
+  <p class="note">The softness is modelled on Raphael Salaja’s Pond UI sounds (very short, a gentle filtered contact on the attack, a trace of a small room); his originals are at the bottom for reference. Each variant is trimmed to its slot’s level against Pond’s tap (K-weighted with a 150Hz high-pass for small speakers, loudest 100ms); Measure re-checks.</p>
+  <p class="note">The site plays only on a click, tap or key (never hover or scroll), only after the first one, and never while the tab is hidden. Use headphones and a quiet system volume: these are meant to sit under everything.</p>
+
+  <div class="bar">
+    <label>Master <input id="master" type="range" min="0" max="2" step="0.05" value="1"><span class="out" id="masterOut">1.00</span></label>
+    <button class="act" id="all" type="button">Play every pick</button>
+    <button class="act" id="measure" type="button">Measure</button>
+    <span class="sp"></span>
+    <button class="act" id="save" type="button">Use picks on the site (this browser)</button>
+    <button class="act primary" id="copy" type="button">Copy picks</button>
+  </div>
+  <p class="note" id="status">Picks (and the master level) are saved in this browser only when you press “Use picks on the site”; then the real page on this origin plays them.</p>
+
+  <div class="slots" id="slots"></div>
+
+  <h2>Try it on the page’s own controls</h2>
+  <p>The same markup patterns as the site, wired by <code>start()</code>, the same function the site uses: press with a mouse (sounds on press), tap on a phone (sounds on lift, never on a scroll), or use Tab and Enter.</p>
+  <div class="try" id="try">
+    <nav class="nav" aria-label="Sample nav">
+      <a href="#x" class="brand">Interlude</a><a href="#x">Install</a><a href="#x">Features</a><a href="#x">FAQ</a><a href="#x">Changelog</a>
+      <span style="flex:1"></span>
+      <a class="btn small" href="#Interlude.dmg">Download</a>
+    </nav>
+    <div class="row">
+      <a class="btn" href="#Interlude.dmg">Download for Mac</a>
+      <a class="btn ghost" href="#x">View on GitHub</a>
+      <button class="btn ghost" type="button" data-sfx="copy">Copy (data-sfx="copy")</button>
+      <a href="#x" style="color:var(--fg-2)">A link in the text (silent)</a>
+    </div>
+    <div class="row">
+      <div class="switch" role="radiogroup" aria-label="Play it with">
+        <button type="button" role="radio" aria-checked="true" data-mode="mouse">Mouse</button>
+        <button type="button" role="radio" aria-checked="false" data-mode="controller">Controller</button>
+      </div>
+      <span class="note">dispatches <code>hero:hand</code>, like the hero’s switch</span>
+    </div>
+    <div>
+      <details open><summary>Is it really free?</summary><p>Yes. Free and open source.</p></details>
+      <details><summary>Will my controller work?</summary><p>Over 140 MIDI controllers are mapped.</p></details>
+      <details><summary>Does it change my music files?</summary><p>No.</p></details>
+    </div>
+    <div class="pads">
+      <figure style="margin:0">
+        <div class="record" id="record"><i></i></div>
+        <figcaption>The record: click to drop the needle (<code>record:needle</code>).</figcaption>
+      </figure>
+      <figure style="margin:0">
+        <div class="wordpad"><span class="foot-word">Interlude</span></div>
+        <figcaption>The footer word: press for the lens knock.</figcaption>
+      </figure>
+    </div>
+  </div>
+
+  <h2>Reference: Pond’s originals</h2>
+  <p>Raphael Salaja’s Pond UI patch (<code>packages/ui/src/sounds</code>), as published and at its own level. Not used on the site; here to compare softness and loudness.</p>
+  <div class="vars" id="pond"></div>
+
+  <h2>Output</h2>
+  <p>Copy picks writes the <code>PICKS</code> line for <code>sfx.js</code>. After Measure, each variant’s loudness against Pond’s tap is here too.</p>
+  <textarea id="out" readonly spellcheck="false"></textarea>
+</main>
+
+<script type="module">
+  import { SLOTS, TRIMS, POND, PICKS, pick, play, start, setMaster, master, context, definition } from '../sfx.js';
+  import { renderToBuffer, defineSound } from '../sfx/audio.js?v=1';
+
+  window.__sfxLog = [];   // every cue that actually played, in order
+  start({ on: true });
+  const $ = (s) => document.querySelector(s);
+  const status = (t) => { $('#status').textContent = t; };
+  const DIRS = new Set(['hand', 'faq', 'power']);
+  const measured = {};   // slot -> variant -> dB against Pond's tap, after trim
+
+  // ---- the slots ----
+  function render() {
+    const root = $('#slots'); root.textContent = '';
+    for (const [slot, s] of Object.entries(SLOTS)) {
+      const el = document.createElement('section'); el.className = 'slot';
+      el.innerHTML = `<div><h3>${slot}<small>${s.db} dB vs Pond tap</small></h3><p class="where"></p></div><div class="vars" role="radiogroup" aria-label="${slot}"></div>`;
+      el.querySelector('.where').textContent = s.where;
+      const vars = el.querySelector('.vars');
+      for (const [key, v] of [...Object.entries(s.v), ['none', { label: 'None' }]]) {
+        const b = document.createElement('button');
+        b.type = 'button'; b.className = 'var' + (key === 'none' ? ' none' : ''); b.setAttribute('role', 'radio');
+        b.setAttribute('aria-checked', String(pick(slot) === key)); b.dataset.sfx = 'none';
+        b.innerHTML = `<b></b>${DIRS.has(slot) && key !== 'none' ? '<span class="dir"><span data-d="1" title="On / open / to Controller">→</span><span data-d="-1" title="Off / close / to Mouse">←</span></span>' : '<span></span>'}<span class="db"></span>`;
+        b.querySelector('b').textContent = v.label;
+        const dbEl = b.querySelector('.db'), m = measured[slot]?.[key], t = TRIMS[slot + '.' + key];
+        if (key === 'none') dbEl.textContent = 'silent';
+        else if (m == null) dbEl.textContent = t == null ? 'not trimmed yet' : `trim ${t} dB`;
+        else { dbEl.textContent = `${m > 0 ? '+' : ''}${m.toFixed(1)} dB vs Pond tap`; if (Math.abs(m - s.db) > 1.5) dbEl.classList.add('off'); }
+        b.addEventListener('click', (e) => {
+          pick(slot, key);
+          for (const x of vars.children) x.setAttribute('aria-checked', String(x === b));
+          const d = Number(e.target.closest('[data-d]')?.dataset.d || 1);
+          if (key !== 'none') play(slot, { d }, key, true);
+          writeOut();
+        });
+        vars.append(b);
+      }
+      root.append(el);
+    }
+  }
+  // Pond's originals, to hear (not picked)
+  for (const [name, def] of Object.entries(POND)) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'var'; b.dataset.sfx = 'none';
+    b.innerHTML = '<b></b><span></span><span class="db">as published</span>';
+    b.querySelector('b').textContent = name;
+    b.addEventListener('click', () => { if (context()) defineSound(def)(); });
+    $('#pond').append(b);
+  }
+
+  // ---- loudness: K-weighted (BS.1770's shelf, a small speaker's 150Hz high-pass), loudest 100ms ----
+  async function loudness(def, gain = 1) {
+    const raw = await renderToBuffer(def, { duration: 1.2, numberOfChannels: 2, sampleRate: 48000 }, { volume: gain });
+    const off = new OfflineAudioContext(2, raw.length, raw.sampleRate);
+    const src = off.createBufferSource(); src.buffer = raw;
+    const shelf = off.createBiquadFilter(); shelf.type = 'highshelf'; shelf.frequency.value = 1500; shelf.gain.value = 4;
+    const hpf = off.createBiquadFilter(); hpf.type = 'highpass'; hpf.frequency.value = 150; hpf.Q.value = 0.71;   // not BS.1770's 38Hz: laptop and phone speakers give nothing much below 150Hz
+    src.connect(shelf).connect(hpf).connect(off.destination); src.start();
+    const k = await off.startRendering();
+    const W = Math.round(k.sampleRate * 0.1), hop = Math.round(k.sampleRate * 0.005), chans = [k.getChannelData(0), k.getChannelData(1)];
+    let best = 0, peak = 0;
+    for (const c of chans) for (let j = 0; j < c.length; j++) peak = Math.max(peak, Math.abs(raw.getChannelData(chans.indexOf(c))[j]));
+    for (let i = 0; i + W <= k.length; i += hop) {
+      let ms = 0;
+      for (const c of chans) { let sum = 0; for (let j = i; j < i + W; j++) sum += c[j] * c[j]; ms += sum / W; }
+      if (ms > best) best = ms;
+    }
+    return { db: 10 * Math.log10(best || 1e-12), peak: 20 * Math.log10(peak || 1e-12) };
+  }
+  const avg = async (def, gain) => { let a = 0, p = -200; for (let i = 0; i < 4; i++) { const r = await loudness(def, gain); a += r.db; p = Math.max(p, r.peak); } return { db: a / 4, peak: p }; };
+  async function measureAll() {
+    status('Measuring…');
+    const ref = (await avg(POND['Pond: tap'])).db;
+    const raw = {};
+    for (const [slot, s] of Object.entries(SLOTS)) {
+      measured[slot] = {};
+      for (const key of Object.keys(s.v)) {
+        let worst = -200, peak = -200;
+        // both directions, the louder decides
+        for (const d of DIRS.has(slot) ? [1, -1] : [1]) { const r = await avg(definition(slot, key, { d })); if (d === 1) worst = r.db; peak = Math.max(peak, r.peak); }
+        const t = Math.round((s.db - (worst - ref)) * 10) / 10;
+        TRIMS[slot + '.' + key] = t;
+        measured[slot][key] = s.db;   // after the trim, by construction; re-measured below
+        raw[slot + '.' + key] = { raw: Math.round((worst - ref) * 10) / 10, trim: t, peakAfterTrim: Math.round((peak + t) * 10) / 10 };
+      }
+    }
+    // check: render again with the trims on
+    for (const [slot, s] of Object.entries(SLOTS)) for (const key of Object.keys(s.v)) {
+      const r = await avg(definition(slot, key), 10 ** (TRIMS[slot + '.' + key] / 20));
+      measured[slot][key] = Math.round((r.db - ref) * 10) / 10;
+    }
+    window.__measured = raw;
+    render(); writeOut();
+    status('Measured and trimmed: each variant now sits at its slot’s level (the number on it); the TRIMS for sfx.js are in Output.');
+  }
+
+  function picksNow() { return Object.fromEntries(Object.keys(SLOTS).map((s) => [s, pick(s) || 'none'])); }
+  function writeOut() {
+    let t = `export const PICKS = ${JSON.stringify(picksNow()).replace(/"(\w+)":/g, '$1: ').replace(/"/g, "'").replace(/,/g, ', ')};`;
+    if (level !== 1) t += `\n// master level: replace the 1 in \`export let master = +picks.master || 1\` with ${level}`;
+    if (Object.keys(measured).length) t += `\n\nexport const TRIMS = ${JSON.stringify(TRIMS)};`;
+    $('#out').value = t;
+  }
+
+  let level = master;
+  $('#master').value = level; $('#masterOut').textContent = level.toFixed(2);
+  $('#master').addEventListener('input', (e) => { level = +e.target.value; setMaster(level); $('#masterOut').textContent = level.toFixed(2); writeOut(); });
+  $('#measure').addEventListener('click', measureAll);
+  $('#all').addEventListener('click', async () => {
+    for (const slot of Object.keys(SLOTS)) {
+      if (!pick(slot) || pick(slot) === 'none') continue;
+      status(`Playing ${slot}`);
+      play(slot, { d: 1 }, null, true);
+      await new Promise((r) => setTimeout(r, 600));
+    }
+    status('Played every pick, in slot order.');
+  });
+  $('#copy').addEventListener('click', async () => {
+    writeOut();
+    try { await navigator.clipboard.writeText($('#out').value); status('Copied the PICKS line (and any measurements).'); play('copy'); }
+    catch { $('#out').select(); status('Couldn’t reach the clipboard; the text is selected in Output.'); }
+  });
+  $('#save').addEventListener('click', () => {
+    try { localStorage.setItem('interlude-sound-picks', JSON.stringify({ ...picksNow(), master: level })); status('Saved: the site on this origin now plays these picks (clear them with localStorage.removeItem("interlude-sound-picks")).'); }
+    catch { status('This browser wouldn’t save them.'); }
+  });
+  for (const b of [$('#all'), $('#measure'), $('#save'), $('#copy'), $('#master')]) b.dataset.sfx = 'none';
+
+  // ---- the try area ----
+  $('#try').addEventListener('click', (e) => { if (e.target.closest('a')) e.preventDefault(); });
+  const sw = $('.switch');
+  const setHand = (hand) => {
+    for (const b of sw.querySelectorAll('button')) b.setAttribute('aria-checked', String(b.dataset.mode === hand));
+    document.dispatchEvent(new CustomEvent('hero:hand', { detail: { hand } }));
+  };
+  sw.addEventListener('click', (e) => { const b = e.target.closest('button'); if (b && b.getAttribute('aria-checked') !== 'true') setHand(b.dataset.mode); });
+  sw.addEventListener('keydown', (e) => { if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { e.preventDefault(); setHand(e.key === 'ArrowRight' ? 'controller' : 'mouse'); sw.querySelector('[aria-checked=true]').focus(); } });
+  // like hero-fx.js: a pointerdown on the grooves (not the label) drops the needle
+  const rec = $('#record'), dot = rec.querySelector('i');
+  addEventListener('pointerdown', (e) => {
+    const r = rec.getBoundingClientRect(), x = e.clientX - r.left - r.width / 2, y = e.clientY - r.top - r.height / 2, d = Math.hypot(x, y) / (r.width / 2);
+    if (d < 0.16 || d > 1) return;
+    dot.style.left = `${x + r.width / 2}px`; dot.style.top = `${y + r.height / 2}px`; dot.style.transition = 'none'; dot.style.opacity = 1;
+    requestAnimationFrame(() => { dot.style.transition = ''; dot.style.opacity = 0; });
+    dispatchEvent(new CustomEvent('record:needle'));
+  }, { passive: true });
+  // the footer's mousedown never selects the word's text
+  $('.wordpad').addEventListener('mousedown', (e) => e.preventDefault());
+
+  render(); writeOut();
+  window.__lab = { SLOTS, TRIMS, measureAll, loudness, measured, context, definition };
+</script>
+</body>
+</html>
