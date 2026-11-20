@@ -114,7 +114,7 @@
           GitHub
         </a>
         <a class="btn small" href="https://github.com/zain-merchant/interlude/releases/latest/download/Interlude.dmg">
-          <svg class="nav-dl" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2.5v7.5m0 0L4.75 6.75M8 10l3.25-3.25M3.5 13h9"/></svg>Download
+          <svg class="nav-dl on-mac" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2.5v7.5m0 0L4.75 6.75M8 10l3.25-3.25M3.5 13h9"/></svg><svg class="nav-dl on-phone" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 9.5V2m0 0L5.25 4.75M8 2l2.75 2.75M5.5 7H5a1.5 1.5 0 0 0-1.5 1.5v4A1.5 1.5 0 0 0 5 14h6a1.5 1.5 0 0 0 1.5-1.5v-4A1.5 1.5 0 0 0 11 7h-.5"/></svg><span class="on-mac">Download</span><span class="on-phone">Send to Mac</span>
         </a>
       </div>
     </div>
@@ -435,8 +435,8 @@
       </div>
       <div class="cta">
         <a class="btn big" href="https://github.com/zain-merchant/interlude/releases/latest/download/Interlude.dmg">
-          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v8m0 0L4.5 6.5M8 10l3.5-3.5M3 13h10"/></svg>
-          Download for Mac
+          <svg class="on-mac" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v8m0 0L4.5 6.5M8 10l3.5-3.5M3 13h10"/></svg><svg class="on-phone" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 9.5V2m0 0L5.25 4.75M8 2l2.75 2.75M5.5 7H5a1.5 1.5 0 0 0-1.5 1.5v4A1.5 1.5 0 0 0 5 14h6a1.5 1.5 0 0 0 1.5-1.5v-4A1.5 1.5 0 0 0 11 7h-.5"/></svg>
+          <span class="on-mac">Download for Mac</span><span class="on-phone">Get it on your Mac</span>
         </a>
         <a class="btn ghost big" href="https://github.com/zain-merchant/interlude" target="_blank" rel="noopener">View on GitHub</a>
       </div>
@@ -973,7 +973,7 @@
       </div>
       <div>
         <h4>App</h4>
-        <a href="https://github.com/zain-merchant/interlude/releases/latest/download/Interlude.dmg">Download</a>
+        <a href="https://github.com/zain-merchant/interlude/releases/latest/download/Interlude.dmg"><span class="on-mac">Download</span><span class="on-phone">Get it on your Mac</span></a>
         <a href="https://github.com/zain-merchant/interlude/releases" target="_blank" rel="noopener">Changelog</a>
         <a href="#faq">FAQ</a>
       </div>
@@ -988,6 +988,57 @@
     <span class="foot-word" data-text="Interlude" aria-hidden="true">Interlude</span>
   </footer>
 
+  <script>
+    // Download on a phone or a tablet: the app is for a Mac, so a .dmg is no
+    // use here. Every download link instead hands the site's address on, to
+    // open on the Mac: the share sheet where there is one (AirDrop, Messages,
+    // a note to self), else it's copied, and says so. The links' words change
+    // with it (style.css, .on-phone). Nothing changes where there's a mouse.
+    (() => {
+      const phone = matchMedia('(hover: none) and (pointer: coarse)');
+      const url = document.querySelector('meta[property="og:url"]')?.content || location.href;
+      let toast = null, hide = 0;
+      const say = (text) => {
+        if (!toast) {
+          toast = document.createElement('div');
+          toast.className = 'toast';
+          toast.setAttribute('role', 'status');
+          document.body.append(toast);
+        }
+        toast.innerHTML = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7"/></svg>';
+        toast.append(text);
+        clearTimeout(hide);
+        // (Shown on the next frame, so it eases in from where it rests.)
+        requestAnimationFrame(() => toast.toggleAttribute('data-on', true));
+        hide = setTimeout(() => toast.removeAttribute('data-on'), 2200);
+      };
+      const copy = async () => {
+        try { await navigator.clipboard.writeText(url); return true; } catch {}
+        // (Older browsers, or no clipboard access: the old way.)
+        const t = document.createElement('textarea');
+        t.value = url;
+        t.setAttribute('readonly', '');
+        Object.assign(t.style, { position: 'fixed', top: '0', left: '0', opacity: '0', fontSize: '16px' });
+        document.body.append(t);
+        t.select();
+        t.setSelectionRange(0, url.length);
+        let ok = false;
+        try { ok = document.execCommand('copy'); } catch {}
+        t.remove();
+        return ok;
+      };
+      document.addEventListener('click', async (e) => {
+        const a = e.target.closest?.('a[href$="/Interlude.dmg"]');
+        if (!a || !phone.matches || e.defaultPrevented || e.button) return;
+        e.preventDefault();
+        if (navigator.share) {
+          try { await navigator.share({ title: 'Interlude', text: 'Interlude, a free DJ app for Mac. Open this on your Mac to download it.', url }); return; }
+          catch (err) { if (err?.name === 'AbortError') return; }
+        }
+        say(await copy() ? 'Link copied. Open it on your Mac.' : url.replace(/^https?:\/\/|\/$/g, ''));
+      });
+    })();
+  </script>
   <!-- The feature cards' pictures (built from app/demo, see the README).
        Their styles are down here, so the first screen never waits for them. -->
   <link rel="stylesheet" href="demo/cards.css?v=20261119h1">
