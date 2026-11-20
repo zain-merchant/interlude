@@ -26,7 +26,6 @@
     "@tailwindcss/vite": "^4.3.4",
     "@tauri-apps/cli": "^2.9.0",
     "cn": "^0.5.2",
-    "dialkit": "2.2.1",
     "shadcn-svelte": "^1.7.2",
     "svelte": "^5.40.0",
     "svelte-check": "^4.3.0",

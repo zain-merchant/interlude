@@ -8,7 +8,7 @@ import { tooltip } from '../../lib/tooltip.svelte.js';
 import { uiZoom, setUiZoom } from '../../lib/uizoom.svelte.js';
 import { tracks, scrubStart, scrubTo, scrubEnd } from '../../lib/engine.svelte.js';
 
-const OVERLAY = '.flag-show, .flag-dials, .dialkit-root';
+const OVERLAY = '.flag-show, .fp';
 export const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 const frame = () => new Promise((r) => requestAnimationFrame(() => r(undefined)));
 

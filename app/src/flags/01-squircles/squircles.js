@@ -35,7 +35,7 @@
 
 const MIN_R = 4;
 const FAR = 160; // the outer rect's reach past the element: room for shadows and focus rings
-const SKIP = '.flag-dials, .dialkit-root, .flag-show, svg, svg *';
+const SKIP = '.fp, .flag-show, svg, svg *';
 // When an element that draws nothing at rest may start to.
 const STATES = ":hover, :active, :focus-visible, .on, .sel, .set, .lit, .playing, .rec, [aria-pressed='true'], [aria-checked='true'], [aria-selected='true'], [aria-expanded='true']";
 

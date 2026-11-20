@@ -31,17 +31,20 @@ const r1 = (n) => Math.round(n * 10) / 10;
 export const pxl = (n) => `${Math.abs(n) < 0.05 ? 0 : r1(n)}`;
 
 const FONT = "500 11px 'Geist Variable', 'Helvetica Neue', Arial, sans-serif";
+const BIG = "600 13px 'Geist Variable', 'Helvetica Neue', Arial, sans-serif";
 const TAG_H = 18;
+const BADGE_H = 26;
 let ctx2d = /** @type {CanvasRenderingContext2D | null} */ (null);
 const widths = new Map();
 /** The width of a label's text. */
-function textWidth(s) {
-  let w = widths.get(s);
+function textWidth(s, font = FONT) {
+  const k = font + s;
+  let w = widths.get(k);
   if (w != null) return w;
   ctx2d ??= document.createElement('canvas').getContext('2d');
-  if (ctx2d) ctx2d.font = FONT;
-  w = ctx2d ? ctx2d.measureText(s).width : s.length * 6.2;
-  widths.set(s, w);
+  if (ctx2d) ctx2d.font = font;
+  w = ctx2d ? ctx2d.measureText(s).width : s.length * (font === FONT ? 6.2 : 7.6);
+  widths.set(k, w);
   return w;
 }
 
@@ -49,6 +52,7 @@ const CSS = `
 .flag-show { position: fixed; inset: 0; z-index: 9999; pointer-events: none; contain: strict; }
 .flag-show svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
 .flag-show text { font: ${FONT}; font-variant-numeric: tabular-nums; dominant-baseline: central; }
+.flag-show text.big { font: ${BIG}; letter-spacing: .01em; }
 .flag-show .ring { fill: none; stroke: ${C.ink}; stroke-width: 2; animation: flag-show-ring 2.6s ease-out forwards; }
 .flag-show .dim { fill: rgb(0 0 0 / .5); animation: flag-show-dim 2.6s ease-out forwards; }
 @keyframes flag-show-ring { 0% { opacity: 0; } 8%, 60% { opacity: 1; } 100% { opacity: 0; visibility: hidden; } }
@@ -89,6 +93,8 @@ export function createOverlay() {
   let clone = /** @type {HTMLElement | null} */ (null);
   let cloneAt = 0;
   let cloneKey = '';
+  /** When the flags on <html> last changed: the copy is taken again a beat after (some flags restyle from script). */
+  let keyAt = 0;
   /** Where the app's scrolled elements are scrolled to: [index among all elements, top, left]. */
   let scrolls = /** @type {[number, number, number][]} */ ([]);
   /** Puts a copy's scrolled elements where the app's are (a copy starts at the top). */
@@ -106,7 +112,10 @@ export function createOverlay() {
    * every second or so to follow the app's state. */
   function appClone() {
     const key = [...document.documentElement.attributes].map((a) => a.name + a.value).join();
-    if (clone && performance.now() - cloneAt < 1200 && key === cloneKey) return clone;
+    const now = performance.now();
+    if (key !== cloneKey) keyAt = now;
+    const settling = now - keyAt < 450 && now - cloneAt > 120;
+    if (clone && now - cloneAt < 1200 && key === cloneKey && !settling) return clone;
     const src = document.getElementById('app');
     if (!src) return null;
     const c = /** @type {HTMLElement} */ (src.cloneNode(true));
@@ -216,10 +225,14 @@ export function createDraw(opts = {}) {
     const str = String(s);
     if (!str) return;
     const dot = o.tone === 'ok' || o.tone === 'bad';
-    const w = Math.ceil(textWidth(str)) + 12 + (dot ? 10 : 0);
+    const big = !!o.big;
+    const h = big ? BADGE_H : TAG_H;
+    const w = Math.ceil(textWidth(str, big ? BIG : FONT)) + (big ? 20 : 12) + (dot ? (big ? 14 : 10) : 0);
     const anchor = o.anchor ?? 'start';
     const bx = anchor === 'middle' ? x - w / 2 : anchor === 'end' ? x - w : x;
-    tags.push({ x: bx, y: y - TAG_H / 2, w, h: TAG_H, str, dot, o, ax: x, ay: y });
+    const t = { x: bx, y: y - h / 2, w, h, str, dot, o, ax: x, ay: y };
+    if (o.first) tags.unshift(t);
+    else tags.push(t);
   };
   const line = (x1, y1, x2, y2, o = {}) => {
     aid += `<line x1="${r1(x1)}" y1="${r1(y1)}" x2="${r1(x2)}" y2="${r1(y2)}" stroke="${o.c ?? C.ink}" stroke-width="${o.w ?? 1}"${o.dash ? ` stroke-dasharray="${o.dash}"` : ''}${o.opacity ? ` stroke-opacity="${o.opacity}"` : ''} shape-rendering="crispEdges"/>`;
@@ -251,21 +264,24 @@ export function createDraw(opts = {}) {
       best ??= { x: Math.max(4, Math.min(vw - t.w - 4, t.x)), y: Math.max(4, Math.min(vh - t.h - 4, t.y)), w: t.w, h: t.h };
       taken.push(best);
       // Moved well away from where it was asked for: a leader back to it.
-      const cy = best.y + TAG_H / 2;
+      const cy = best.y + t.h / 2;
       if (Math.abs(best.y - t.y) > 30 || Math.abs(best.x - t.x) > 50) {
         const ex = Math.max(best.x, Math.min(best.x + best.w, t.ax));
-        const ey = t.ay < best.y ? best.y : t.ay > best.y + TAG_H ? best.y + TAG_H : cy;
+        const ey = t.ay < best.y ? best.y : t.ay > best.y + t.h ? best.y + t.h : cy;
         out += `<line x1="${r1(ex)}" y1="${r1(ey)}" x2="${r1(t.ax)}" y2="${r1(t.ay)}" stroke="rgb(255 255 255 / .45)" stroke-width="1"/>`;
       }
-      const bg = t.o.fill ? C.ink : 'rgb(16 16 16 / .92)';
-      const fg = t.o.fill ? '#140810' : C.label;
-      out += `<rect x="${r1(best.x)}" y="${r1(best.y)}" width="${r1(best.w)}" height="${TAG_H}" rx="5" fill="${bg}"${t.o.fill ? '' : ' stroke="rgb(255 255 255 / .14)" stroke-width="1"'}/>`;
-      let tx = best.x + 6;
+      const big = !!t.o.big;
+      const bg = t.o.bg ?? (t.o.fill ? C.ink : 'rgb(16 16 16 / .92)');
+      const fg = t.o.fg ?? (t.o.fill ? '#140810' : C.label);
+      const stroke = t.o.fill || t.o.bg ? '' : ' stroke="rgb(255 255 255 / .14)" stroke-width="1"';
+      out += `<rect x="${r1(best.x)}" y="${r1(best.y)}" width="${r1(best.w)}" height="${t.h}" rx="${big ? 8 : 5}" fill="${bg}"${stroke}/>`;
+      let tx = best.x + (big ? 10 : 6);
       if (t.dot) {
-        out += `<circle cx="${r1(tx + 3)}" cy="${r1(best.y + TAG_H / 2)}" r="3" fill="${t.o.tone === 'ok' ? C.ok : C.bad}"/>`;
-        tx += 10;
+        const rad = big ? 4 : 3;
+        out += `<circle cx="${r1(tx + rad)}" cy="${r1(cy)}" r="${rad}" fill="${t.o.tone === 'ok' ? C.ok : C.bad}"${t.o.bg ? ' stroke="rgb(0 0 0 / .35)" stroke-width="1"' : ''}/>`;
+        tx += big ? 14 : 10;
       }
-      out += `<text x="${r1(tx)}" y="${r1(best.y + TAG_H / 2 + 0.5)}" fill="${fg}">${esc(t.str)}</text>`;
+      out += `<text${big ? ' class="big"' : ''} x="${r1(tx)}" y="${r1(cy + 0.5)}" fill="${fg}">${esc(t.str)}</text>`;
     }
     return out;
   }
@@ -470,6 +486,60 @@ export function createDraw(opts = {}) {
       box(view, { c: C.ink, w: 1, rx: 1 });
       const map = (x, y) => ({ x: at.x + (x - src.x) * zoom, y: at.y + (y - src.y) * zoom });
       return { at, map, zoom, rect: new DOMRect(at.x, at.y, size.w, size.h) };
+    },
+    /**
+     * The phase of a flipping show, big, on the top left of `r` (the
+     * targets, or what a show says it's about): "Before" with a red dot,
+     * "After" with a green one.
+     */
+    badge(phase, r, o = {}) {
+      const b = r ? box4(r) : { x: 16, y: 16 + BADGE_H, w: 0, h: 0 };
+      const before = phase === 'before';
+      const s = `${before ? 'Before' : 'After'}${o.slow ? '  (slowed down)' : ''}`;
+      const y = b.y - 6 - BADGE_H / 2 < 4 ? b.y + 6 + BADGE_H / 2 : b.y - 6 - BADGE_H / 2;
+      text(b.x, y, s, { big: true, first: true, tone: before ? 'bad' : 'ok', bg: before ? '#f2f2f2' : '#f2f2f2', fg: '#121212' });
+    },
+    /**
+     * Whether `live` has moved from `rest` (where it sits normally): if it
+     * has, a dashed outline where it should be, an arrow, and a red tag
+     * "<what> moved 13px down"; if not, a green tag "<what> stays put".
+     * o.side: where the tag goes ('above' | 'below' | 'left' | 'right').
+     * o.quiet: say nothing when it stays put.
+     */
+    moved(rest, live, o = {}) {
+      if (!rest || !live) return false;
+      const dx = live.x - rest.x;
+      const dy = live.y - rest.y;
+      const dw = live.width - rest.width;
+      const dh = live.height - rest.height;
+      const big = (n) => Math.abs(n) > 0.5;
+      const what = o.what ? `${o.what} ` : '';
+      const side = o.side ?? 'above';
+      const at = (r, s, tone) => {
+        if (side === 'below') text(r.x, r.y + r.height + 6 + TAG_H / 2, s, { tone });
+        else if (side === 'left') text(r.x - 8, r.y + r.height / 2, s, { anchor: 'end', tone });
+        else if (side === 'right') text(r.x + r.width + 8, r.y + r.height / 2, s, { tone });
+        else text(r.x, r.y - 6 - TAG_H / 2, s, { tone });
+      };
+      if (!big(dx) && !big(dy) && !big(dw) && !big(dh)) {
+        if (!o.quiet) at(live, o.still ?? `${what}stays put`, 'ok');
+        return false;
+      }
+      box(rest, { c: C.ghost, dash: '4 3', w: 1.25 });
+      const parts = [];
+      if (big(dy) && !big(dh)) parts.push(`${pxl(Math.abs(dy))}px ${dy > 0 ? 'down' : 'up'}`);
+      if (big(dx) && !big(dw)) parts.push(`${pxl(Math.abs(dx))}px ${dx > 0 ? 'right' : 'left'}`);
+      const grew = [];
+      if (big(dw)) grew.push(`${pxl(Math.abs(dw))}px ${dw > 0 ? 'wider' : 'narrower'}`);
+      if (big(dh)) grew.push(`${pxl(Math.abs(dh))}px ${dh > 0 ? 'taller' : 'shorter'}`);
+      const rcx = rest.x + rest.width / 2;
+      const rcy = rest.y + rest.height / 2;
+      const lcx = live.x + live.width / 2;
+      const lcy = live.y + live.height / 2;
+      if (Math.hypot(lcx - rcx, lcy - rcy) > 6 && !grew.length) d.arrow(rcx, rcy, lcx, lcy, { c: C.bad });
+      const said = [parts.length ? `moved ${parts.join(', ')}` : '', grew.length ? `got ${grew.join(', ')}` : ''].filter(Boolean).join(', ');
+      at(rest, o.label ?? `${what}${said}`, 'bad');
+      return true;
     },
     /** A small panel of text lines (pre-formatted), placed at x, y. */
     legend(lines, at = { x: 16, y: 16 }) {

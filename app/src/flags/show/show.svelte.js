@@ -1,9 +1,10 @@
 // "Show me" (dev builds only): turns a flag on, sets the app up so its
-// change is on screen, highlights where it is, and draws the flag's visual
-// aid over the app until it's dismissed. Each flag describes this in an
-// optional `show` export in its index.js (see ../README.md). This file is
-// only reached from FlagDials.svelte, which only loads in dev builds, so none
-// of it (nor any flag's `show`) ships.
+// change is on screen, and then flips the flag off and on every couple of
+// seconds, with a big Before / After label, so the difference is the thing
+// that moves. The flag's visual aid is drawn over the app until Done. Each
+// flag describes this in an optional `show` export in its index.js (see
+// ../README.md). This file is only reached from the dev-only panel
+// (../panel/FlagPanel.svelte), so none of it (nor any flag's `show`) ships.
 import { FLAGS, flags } from '../registry.svelte.js';
 import { kit, setFlag, setSetting, wait } from './app.js';
 import { createOverlay, createDraw } from './overlay.js';
@@ -20,27 +21,42 @@ export const SHOWS = Object.fromEntries(
 const PENDING = 'interlude.flags.show-pending';
 /** How long the ring around the targets lasts (overlay.js fades it). */
 const HIGHLIGHT_S = 2.8;
+/** How long each of Before and After stays up while flipping. */
+const PERIOD = 1700;
+/** Slow motion for shows about movement: animations run at this rate. */
+const SLOW = 0.25;
 
 export const current = $state({
   /** @type {string | null} */ id: null,
-  note: '',
   error: '',
   busy: false,
   /** Whether the visual aid is drawn. */
   aid: true,
   hasAid: false,
   hasReplay: false,
-  /** @type {DOMRect[]} where the targets are, for the panel to keep clear of */
+  /** 'before' (flag off) or 'after' (flag on). */
+  phase: /** @type {'before' | 'after'} */ ('after'),
+  /** Whether it flips between the two on its own. */
+  flipping: false,
+  /** Whether this show can flip at all (a flag that needs a reload can't). */
+  canFlip: false,
+  /** Movement shows: whether animations are slowed down. */
+  slow: false,
+  hasSlow: false,
+  /** @type {DOMRect[]} where the targets are, for the card to keep clear of */
   avoid: [],
 });
 
 let overlay = /** @type {ReturnType<typeof createOverlay> | null} */ (null);
 let timer = 0;
 let run = 0;
+/** Bumped on every phase change, so a flip loop knows it's been overtaken. */
+let turn = 0;
 /** @type {any} */
 let ctx = {};
 /** The show running, for its cleanup. */
 let active = /** @type {any} */ (null);
+let slowRaf = 0;
 
 /** The targets as rects (a show's target is a selector, elements or rects). */
 function targetRects(show) {
@@ -56,18 +72,88 @@ function targets(show) {
   }
 }
 
-/** Ends the current show: the overlay goes, the app stays as it is. */
+/** Slows every running animation and transition in the app (not the overlay's own). */
+function slowLoop() {
+  cancelAnimationFrame(slowRaf);
+  if (!current.slow) {
+    for (const a of document.getAnimations()) if (a.playbackRate !== 1 && !isOverlay(a)) a.playbackRate = 1;
+    return;
+  }
+  const step = () => {
+    for (const a of document.getAnimations()) if (a.playbackRate !== SLOW && !isOverlay(a)) a.playbackRate = SLOW;
+    slowRaf = requestAnimationFrame(step);
+  };
+  step();
+}
+const isOverlay = (a) => {
+  const t = /** @type {any} */ (a.effect)?.target;
+  return t instanceof Element && !!t.closest('.flag-show, .fp');
+};
+
+/** Ends the current show: the overlay goes, the flag is left on. */
 export function stopShow() {
+  const id = current.id;
   run++;
+  turn++;
   clearInterval(timer);
   try {
     active?.cleanup?.(kit, ctx);
   } catch {}
+  current.slow = false;
+  slowLoop();
+  if (id && active && !active.reload) setFlag(id, true);
   active = null;
   overlay?.destroy();
   overlay = null;
   ctx = {};
-  Object.assign(current, { id: null, note: '', error: '', busy: false, hasAid: false, hasReplay: false, avoid: [] });
+  Object.assign(current, { id: null, error: '', busy: false, hasAid: false, hasReplay: false, hasSlow: false, flipping: false, canFlip: false, phase: 'after', avoid: [] });
+}
+
+/** Puts the show in one phase (the flag off for 'before', on for 'after') and sets the app up for it again. */
+async function enter(phase) {
+  const me = ++turn;
+  const show = active;
+  const id = current.id;
+  if (!show || !id) return;
+  current.phase = phase;
+  ctx.phase = phase;
+  setFlag(id, phase === 'after');
+  try {
+    await show.each?.(kit, ctx, phase === 'after');
+  } catch (e) {
+    if (me === turn) current.error = String(/** @type {any} */ (e)?.message ?? e);
+  }
+  return me;
+}
+
+/** Flips Before → After → Before… until stopped or overtaken. */
+async function flipLoop() {
+  const show = active;
+  const r = run;
+  let me = await enter('before');
+  while (current.flipping && run === r && me === turn) {
+    await wait(show?.period ?? PERIOD);
+    if (!current.flipping || run !== r || me !== turn) return;
+    me = await enter(current.phase === 'before' ? 'after' : 'before');
+  }
+}
+
+/** Pins one phase (stops flipping), from the card or a script. */
+export async function setPhase(/** @type {'before' | 'after'} */ phase) {
+  if (!current.id) return;
+  current.flipping = false;
+  await enter(phase);
+}
+/** Starts or stops flipping. */
+export function setFlipping(on = true) {
+  if (!current.id || !current.canFlip) return;
+  current.flipping = on;
+  if (on) flipLoop();
+  else turn++;
+}
+export function setSlow(on = true) {
+  current.slow = on;
+  slowLoop();
 }
 
 /** Runs flag `id`'s show. */
@@ -78,7 +164,8 @@ export async function showMe(id, resumed = false) {
   stopShow();
   active = show;
   const me = run;
-  Object.assign(current, { id, note: show.note ?? '', busy: true, hasAid: !!show.aid, hasReplay: !!show.replay, aid: true });
+  const canFlip = show.flip !== false && !show.reload;
+  Object.assign(current, { id, busy: true, hasAid: !!show.aid, hasReplay: !!show.replay, aid: true, canFlip, flipping: false, phase: 'after', hasSlow: !!show.motion, slow: !!show.motion });
   try {
     // Flags the show needs too (stress-data, with a reload).
     const needs = { ...(show.needs ?? {}) };
@@ -100,7 +187,7 @@ export async function showMe(id, resumed = false) {
     }
     await kit.reset();
     if (me !== run) return;
-    ctx = {};
+    ctx = { phase: 'after' };
     await show.setup?.(kit, ctx);
     if (me !== run) return;
     const first = targets(show).find((e) => e instanceof Element);
@@ -113,6 +200,7 @@ export async function showMe(id, resumed = false) {
   if (me !== run) return;
   current.busy = false;
   current.avoid = targetRects(show);
+  slowLoop();
   overlay = createOverlay();
   const t0 = performance.now();
   let aidFailed = false;
@@ -131,9 +219,14 @@ export async function showMe(id, resumed = false) {
         current.error = `Aid: ${/** @type {any} */ (e)?.message ?? e}`;
       }
     }
+    // The phase, by what it's about, unless the show places it itself.
+    if (current.canFlip && show.badge !== false && current.aid) {
+      const at = typeof show.badge === 'function' ? show.badge(kit, ctx) : null;
+      d.badge(current.phase, at ?? union(rects), { slow: current.slow });
+    }
     const out = d.done();
     overlay.render(out);
-    // The panel and the card keep off the targets and what the aid draws.
+    // The card keeps off the targets and what the aid draws.
     const avoid = [...rects, ...out.marks];
     const sig = avoid.map((r) => `${Math.round(r.x / 8)},${Math.round(r.y / 8)},${Math.round(r.width / 8)},${Math.round(r.height / 8)}`).join(' ');
     if (sig !== marked) {
@@ -143,6 +236,18 @@ export async function showMe(id, resumed = false) {
   };
   tick();
   timer = setInterval(tick, 100);
+  if (canFlip) {
+    current.flipping = true;
+    flipLoop();
+  }
+}
+
+/** The box around a few rects (the badge sits on its top left). */
+function union(rects) {
+  if (!rects.length) return null;
+  const x = Math.min(...rects.map((r) => r.x));
+  const y = Math.min(...rects.map((r) => r.y));
+  return new DOMRect(x, y, Math.max(...rects.map((r) => r.right)) - x, Math.max(...rects.map((r) => r.bottom)) - y);
 }
 
 /** Plays the change again (an entrance, a toast), for shows that have one. */
@@ -171,4 +276,4 @@ export async function resumePending() {
 export { setSetting };
 
 // A handle for scripted checks (screenshots of every Show me).
-/** @type {any} */ (globalThis).__flagShow = { showMe, stopShow, replay, current, SHOWS };
+/** @type {any} */ (globalThis).__flagShow = { showMe, stopShow, replay, setPhase, setFlipping, setSlow, current, SHOWS };
