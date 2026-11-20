@@ -122,7 +122,7 @@ export class Waveform2D {
    *           beatLen?: number, firstBeat?: number, hotCues?: number[],
    *           loopIn?: number, loopOut?: number, looping?: boolean, slip?: number,
    *           flags?: string, beatGrid?: boolean, edge?: string, clipStart?: boolean, cueChips?: boolean,
-   *           ticks?: boolean, keyline?: boolean, secsPerBin?: number }} view
+   *           ticks?: boolean, keyline?: boolean, loopTint?: boolean, secsPerBin?: number }} view
    *   Positions are in bins, -1 for none; `perPx` is bins per device pixel.
    */
   draw(view) {
@@ -145,8 +145,15 @@ export class Waveform2D {
     if (grid && !view.beatGrid) this.beats(w, h, view, spp, x);
     if (view.loopIn >= 0 && view.loopOut > view.loopIn) {
       const a = x(view.loopIn), b = x(view.loopOut);
-      ctx.fillStyle = `rgba(255,255,255,${view.looping ? 0.08 : 0.04})`;
+      // #43 (UI audit flag): on-state tints a running loop's stretch in the deck's colour.
+      ctx.fillStyle = view.loopTint && view.looping ? rgba(c.mid, 0.12) : `rgba(255,255,255,${view.looping ? 0.08 : 0.04})`;
       ctx.fillRect(a, 0, b - a, h);
+      // #43 (UI audit flag): and brackets it, a 2px deck-colour edge along its top and bottom.
+      if (view.loopTint && view.looping) {
+        ctx.fillStyle = rgba(c.mid, 0.9);
+        ctx.fillRect(a, 0, b - a, 2);
+        ctx.fillRect(a, h - 2, b - a, 2);
+      }
     }
     if (this.count) {
       if (view.mode === 'scroll') this.ribbon(w, h, view, spp, c);
@@ -164,7 +171,7 @@ export class Waveform2D {
       ctx.fillRect(0, 0, px, h);
     }
     if (view.loopIn >= 0 && view.loopOut > view.loopIn) {
-      ctx.fillStyle = view.looping ? rgba(c.fg, 0.85) : 'rgba(255,255,255,0.35)';
+      ctx.fillStyle = view.looping ? rgba(view.loopTint ? c.mid : c.fg, 0.85) : 'rgba(255,255,255,0.35)';
       ctx.fillRect(Math.round(x(view.loopIn)) - 0.5, 0, 1, h);
       ctx.fillRect(Math.round(x(view.loopOut)) - 0.5, 0, 1, h);
     }

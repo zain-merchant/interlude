@@ -25,7 +25,7 @@
   // canvas reads them again when one flips.
   const colorFlags = () =>
     `${flag('cue-colour')}|${setting('cue-colour', 'eight')}|${flag('against-deck-colours')}|${setting('against-deck-colours', 'look')}|${flag('against-wave-cores')}`;
-  // #41, #50, #52, #54 (UI audit flags): what the canvas draws differently with them on.
+  // #41, #43, #50, #52, #54 (UI audit flags): what the canvas draws differently with them on.
   const wf = () => ({
     beatGrid: flag('beat-grid'),
     edge: flag('beat-grid') ? setting('beat-grid', 'edge') : '',
@@ -33,6 +33,7 @@
     cueChips: flag('overview-cues'),
     ticks: flag('overview-cues') && setting('overview-cues', 'ticks') === 'minutes',
     keyline: flag('deck-polish'),
+    loopTint: flag('on-state'),
   });
 
   // The frame loop sleeps while nothing moves; a flag flipping wakes it

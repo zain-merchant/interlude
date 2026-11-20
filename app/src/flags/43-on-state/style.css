@@ -1,71 +1,113 @@
-/* #43: one "on" mark for the mode row's toggles (loop, FX on, stems): a
-   6px dot before the label, filled in the deck's colour when on and
-   hollow --fg-3 when off; on also lifts the label to --fg on a --sel
-   fill. The doc's Text Row stays: no pads. */
+/* #43: a running loop (and an engaged effect, a stem playing alone) reads
+   as on where you already look: the value itself lights up in the deck's
+   own white, and on the waveforms the loop's stretch is tinted in the
+   deck's colour (waveform-2d.js). No box, no fill. The Look setting tries
+   a thin ring or an underline instead of the dot. Nothing changes size
+   between off and on. */
 
-/* Loop: the value is the loop's on/off. At rest it gets --raise so it
-   reads as the row's one control. */
-:root[data-flag-on-state] [data-region^='deck'] .perf .big {
-  gap: 6px;
-  background: var(--raise);
+:root[data-flag-on-state] [data-region^='deck'] .mp {
+  container-type: inline-size;
 }
-:root[data-flag-on-state] [data-region^='deck'] .perf .big::before {
-  content: '';
-  flex: none;
-  align-self: center;
-  width: 6px;
-  height: 6px;
-  margin-right: 2px;
-  border-radius: 50%;
-  box-shadow: inset 0 0 0 1px var(--fg-3);
-}
-:root[data-flag-on-state] [data-region^='deck'] .perf .big:hover:not([aria-disabled='true']) {
-  background: rgb(255 255 255 / 0.09);
-}
-:root[data-flag-on-state] [data-region^='deck'] .perf .big.live {
-  color: var(--fg);
-  background: var(--sel);
-  box-shadow: inset 0 0 0 1px var(--line-2);
-}
-:root[data-flag-on-state] [data-region^='deck'] .perf .big.live::before {
-  background: var(--deck);
-  box-shadow: none;
-}
-:root[data-flag-on-state] [data-region^='deck'] .perf .big.live span {
+
+/* Loop: at rest the size is a step quieter (--fg-2, "beats" --fg-3);
+   running, both go to the deck's white. */
+:root[data-flag-on-state] [data-region^='deck'] .perf .big b {
+  white-space: nowrap;
   color: var(--fg-2);
+  transition: color 140ms ease;
+}
+:root[data-flag-on-state] [data-region^='deck'] .perf .big.live b,
+:root[data-flag-on-state] [data-region^='deck'] .perf .big.live span {
+  color: var(--deck);
   opacity: 1;
 }
+:root[data-flag-on-state] [data-region^='deck'] .perf .big:hover:not([aria-disabled='true']) b {
+  color: var(--fg);
+}
+:root[data-flag-on-state] [data-region^='deck'] .perf .big.live:hover:not([aria-disabled='true']) b {
+  color: var(--deck);
+}
 
-/* FX on: the word stays ("On" / "Off"); the dot and the fill say it. */
-:root[data-flag-on-state] [data-region^='deck'] .fx .tog i {
+/* FX on: the same, on its word. */
+:root[data-flag-on-state] [data-region^='deck'] .fx .tog {
+  transition: color 140ms ease;
+}
+
+/* Look "text" (recommended): a 6px dot before the value, hollow --fg-3
+   at rest and filled in the deck colour while it runs (the doc's stem
+   idiom: filled on, hollow off). FX uses the same dot. */
+:root[data-flag-on-state][data-flag-on-state-look='text'] [data-region^='deck'] .perf .big b::before {
+  /* Inside the number's own box, so it stays 6px from the number whatever
+     slot the number sits in. On the text's baseline: an empty box's
+     baseline is its bottom, so the dot centres on the x-height of "beats". */
+  content: '';
+  display: inline-block;
+  vertical-align: baseline;
+  width: 6px;
+  height: 6px;
+  margin-right: 6px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px var(--fg-3);
+  transition: background-color 140ms ease, box-shadow 140ms ease;
+}
+:root[data-flag-on-state][data-flag-on-state-look='text'] [data-region^='deck'] .perf .big.live b::before {
+  background: var(--deck);
+  box-shadow: none;
+}
+/* In the narrowest decks (a mode row under 320px) the row has no room
+   for the dot; the brighter deck-coloured size says it alone. */
+@container (max-width: 319px) {
+  :root[data-flag-on-state][data-flag-on-state-look='text'] [data-region^='deck'] .perf .big b::before {
+    content: none;
+  }
+}
+:root[data-flag-on-state][data-flag-on-state-look='text'] [data-region^='deck'] .fx .tog i {
   width: 6px;
   height: 6px;
   box-shadow: inset 0 0 0 1px var(--fg-3);
 }
-:root[data-flag-on-state] [data-region^='deck'] .fx .tog.live {
-  color: var(--fg);
-  background: var(--sel);
-  box-shadow: inset 0 0 0 1px var(--line-2);
-}
-:root[data-flag-on-state] [data-region^='deck'] .fx .tog.live i {
+:root[data-flag-on-state][data-flag-on-state-look='text'] [data-region^='deck'] .fx .tog.live i {
   background: var(--deck);
   box-shadow: none;
 }
 
-/* Stems: the same 6px dot (filled while the stem plays, hollow --fg-3
-   when muted); one playing alone gets the on fill. */
-:root[data-flag-on-state] [data-region^='deck'] .stems .stem i {
-  width: 6px;
-  height: 6px;
+/* Look "ring": a 1px ring in the deck colour at low strength while on, no
+   fill. */
+:root[data-flag-on-state][data-flag-on-state-look='ring'] [data-region^='deck'] :is(.perf .big.live, .fx .tog.live, .stems .stem.solo) {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--deck) 40%, transparent);
 }
+
+/* Look "underline": the deck colour as a 2px line under the value, like
+   the selected tab's. */
+:root[data-flag-on-state][data-flag-on-state-look='underline'] [data-region^='deck'] :is(.perf .big, .fx .tog, .stems .stem) {
+  position: relative;
+}
+:root[data-flag-on-state][data-flag-on-state-look='underline'] [data-region^='deck'] :is(.perf .big.live, .fx .tog.live, .stems .stem.solo)::after {
+  content: '';
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 2px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--deck);
+}
+
+/* Stems: a muted stem's hollow dot is readable (--fg-3); one playing alone
+   keeps the deck colour (as today) without its halo, and takes the look's
+   ring or underline. */
 :root[data-flag-on-state] [data-region^='deck'] .stems .stem.muted i {
   box-shadow: inset 0 0 0 1px var(--fg-3);
 }
-:root[data-flag-on-state] [data-region^='deck'] .stems .stem.solo {
-  color: var(--fg);
-  background: var(--sel);
-  box-shadow: inset 0 0 0 1px var(--line-2);
-}
 :root[data-flag-on-state] [data-region^='deck'] .stems .stem.solo i {
   box-shadow: none;
+}
+
+/* With no-shift-strip's fixed-width size button (a mode row of 320px and
+   up), room for the dot too. The row is a size container whenever
+   no-shift-strip is on. */
+@container (min-width: 320px) {
+  :root[data-flag-on-state][data-flag-on-state-look='text'][data-flag-no-shift-strip] [data-region^='deck'] .perf .grp > .big {
+    min-width: 126px;
+  }
 }

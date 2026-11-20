@@ -44,8 +44,8 @@
      D20; Performance.svelte puts them in this order). */
   :root[data-flag-no-shift-strip] [data-region^='deck'] .perf .grp {
     display: grid;
-    grid-template-columns: calc((100% - 24px) / 4) minmax(0, 1fr) auto minmax(0, 1fr) calc((100% - 24px) / 4);
-    align-items: center;
+    grid-template-columns: auto minmax(0, 1fr) auto minmax(0, 1fr) auto;
+    align-items: baseline;
     column-gap: 8px;
   }
   :root[data-flag-no-shift-strip] [data-region^='deck'] .perf .grp > .ar {
@@ -62,17 +62,28 @@
   }
 }
 
-/* Loop: the size is right-aligned in a slot that fits "1/16" (and 1/32),
-   and the word fits "beats", so the button keeps one width. The row then
-   needs 233px, which fits the window's minimum (234px at 1024×760); below
-   that (960 wide) a 1/16 loop overflowed the row before this flag too. */
-:root[data-flag-no-shift-strip] [data-region^='deck'] .perf .big b {
-  min-width: 1.95em;
-  text-align: right;
+/* Where the row is wide enough (a quarter column each for the arrows and
+   room for ÷2, the size and ×2 between them) the arrows sit in the outer
+   quarter columns, over Cue and the beat jump below. */
+@container (min-width: 420px) {
+  :root[data-flag-no-shift-strip] [data-region^='deck'] .perf .grp {
+    grid-template-columns: calc((100% - 24px) / 4) minmax(0, 1fr) auto minmax(0, 1fr) calc((100% - 24px) / 4);
+  }
 }
-:root[data-flag-no-shift-strip] [data-region^='deck'] .perf .big span {
-  min-width: 2.6em;
-  text-align: left;
+
+/* The size button holds one width (it fits "1/16 beats") and centres its
+   contents, so "4 beats" sits on the button's centre line rather than
+   being pushed right by an empty slot, and ÷2 / ×2 never move. The row
+   then needs about 240px with a 1/16 loop; the window's minimum gives it
+   234 (at 1024×760 stress-narrow-strip tightens its side buttons to fit),
+   and below that a 1/16 loop overflowed before this flag too. */
+:root[data-flag-no-shift-strip] [data-region^='deck'] .perf .grp > .big {
+  min-width: 114px;
+  justify-content: center;
+}
+:root[data-flag-no-shift-strip] [data-region^='deck'] .perf .grp > .big b,
+:root[data-flag-no-shift-strip] [data-region^='deck'] .perf .grp > .big span {
+  min-width: 0;
 }
 
 /* Beat jump in the transport: three equal parts, so the size in the middle
