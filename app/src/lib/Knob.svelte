@@ -117,6 +117,8 @@
       { label: flag('copy-toasts') ? `Reset to ${format(reset)}` : 'Reset to default', action: () => set(reset), key: '' },
       ...(kill !== undefined ? [{ label: killed ? 'Bring back' : 'Kill', action: toggleKill }] : []),
     ]);
+  // #88 (UI audit flag): with deck-names the name starts "Left deck …", which reads "Kill left deck high EQ" mid-sentence.
+  const tipName = () => (flag('deck-names') ? name.charAt(0).toLowerCase() + name.slice(1) : name);
   const TICKS = 27;
   const R = $derived(size / 2 + 7);
   const box = $derived(size + 18);
@@ -181,7 +183,7 @@
   {#if kill !== undefined}
     <!-- #61 (UI audit flag): eq-kill opens the kill's tooltip under the label, off the knob. -->
     <button class="label" class:killed onclick={toggleKill} aria-pressed={killed} data-tip-below={flag('eq-kill') ? '' : undefined}
-      use:tip={() => (killed ? `Bring back ${name}` : `Kill ${name}`)}>{label}{killText}</button>
+      use:tip={() => (killed ? `Bring back ${tipName()}` : `Kill ${tipName()}`)}>{label}{killText}</button>
   {:else if label}
     <span class="label">{label}</span>
   {/if}

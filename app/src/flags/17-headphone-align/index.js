@@ -11,16 +11,25 @@ export default {
   n: 17,
   title: 'Headphone button lined up with the fader',
   group: 'Layout',
-  notes: 'Fader: the button is the fader\'s width and centred on its slot. Strip: it spans fader and meter, edge to edge.',
+  notes: 'Fader: the button is the fader\'s width and centred on its slot. Strip: it spans fader and meter, edge to edge. Room (d-K53): the channel strips move 7px inward so the button clears the Filter dial by 12px.',
   settings: {
     to: {
       type: 'choice',
       options: [
-        ['fader', 'Fader'],
-        ['strip', 'Fader and meter'],
+        ['fader', 'Fader', "The button sits right under the fader, on the line your eye follows down the channel."],
+        ['strip', 'Fader and meter', 'The button spans the fader and its meter, so its edges meet theirs; it sits a little off the fader\'s line.'],
       ],
       default: 'fader',
       label: 'Align to',
+    },
+    room: {
+      type: 'choice',
+      options: [
+        ['gap', '12px from the Filter dial', "Each channel's fader, meter and button move 7px toward the middle, so the button keeps a clear 12px from the Filter dial's ticks (d-K53)."],
+        ['tight', 'As now', 'The strip stays where it is; the button comes within 5px of the Filter dial\'s ticks.'],
+      ],
+      default: 'gap',
+      label: 'Room by the Filter dial',
     },
   },
 };

@@ -139,15 +139,17 @@
 {#snippet knobs(deck)}
   {@const ch = channels[deck]}
   {@const n = deck === 0 ? 'A' : 'B'}
+  <!-- #88 (UI audit flag): deck-names calls the decks left and right. -->
+  {@const D = flag('deck-names') ? (deck === 0 ? 'Left deck' : 'Right deck') : `Deck ${n}`}
   <div class="ch" bind:clientHeight={chHeight}>
-    <Knob label="Trim" name="Deck {n} trim" size={knob} bind:value={ch.gain} min={-12} max={12} reset={0} format={db} arc={color(deck)}
+    <Knob label="Trim" name="{D} trim" size={knob} bind:value={ch.gain} min={-12} max={12} reset={0} format={db} arc={color(deck)}
       onchange={(v) => control({ type: 'setGain', deck, db: v })} />
     {#each BANDS as { label, band }}
-      <Knob {label} name="Deck {n} {label.toLowerCase()} EQ" size={knob} bind:value={ch.eq[band]} min={KILL} max={EQ_MAX} reset={0} kill={KILL} taper={eqTaper} format={db}
+      <Knob {label} name="{D} {label.toLowerCase()} EQ" size={knob} bind:value={ch.eq[band]} min={KILL} max={EQ_MAX} reset={0} kill={KILL} taper={eqTaper} format={db}
         arc={color(deck)}
         onchange={(v) => control({ type: 'setEq', deck, band, db: v })} />
     {/each}
-    <Knob label="Filter" name="Deck {n} filter" size={knob} bind:value={ch.filter} min={-1} max={1} reset={0} format={filterText} arc={color(deck)}
+    <Knob label="Filter" name="{D} filter" size={knob} bind:value={ch.filter} min={-1} max={1} reset={0} format={filterText} arc={color(deck)}
       onchange={(v) => control({ type: 'setFilter', deck, value: v })} />
   </div>
 {/snippet}
@@ -155,14 +157,16 @@
 {#snippet strip(deck)}
   {@const ch = channels[deck]}
   {@const n = deck === 0 ? 'A' : 'B'}
+  <!-- #88 (UI audit flag): deck-names calls the decks left and right. -->
+  {@const D = flag('deck-names') ? (deck === 0 ? 'Left deck' : 'Right deck') : `Deck ${n}`}
   <div class="fwrap" class:mirror={deck === 1}>
     <div class="frow">
       <!-- #60 (UI audit flag): ticks, over and what only matter while meters is on. -->
-      <Meter level={engine.deckLevels[deck]} ticks={deck === 0 ? 'right' : 'left'} what="Deck {n}" />
-      <Fader vertical bind:value={ch.fader} reset={1} label="Deck {n} volume"
+      <Meter level={engine.deckLevels[deck]} ticks={deck === 0 ? 'right' : 'left'} what="{D}" />
+      <Fader vertical bind:value={ch.fader} reset={1} label="{D} volume"
         onchange={(v) => control({ type: 'setFader', deck, value: v })} />
     </div>
-    <button class="hp" class:on={ch.pfl} aria-pressed={ch.pfl} aria-label="Deck {n} headphone cue"
+    <button class="hp" class:on={ch.pfl} aria-pressed={ch.pfl} aria-label="{D} headphone cue"
       onclick={() => togglePfl(deck)} use:tip={() => tipText(`Headphone cue ${ch.pfl ? 'on' : 'off'}`, keyLabel(`deck.${deck}.pfl`))}>
       <svg viewBox="0 0 16 16"><path d="M2.5 10V8a5.5 5.5 0 0 1 11 0v2" /><rect x="2" y="9.5" width="3" height="4.5" rx="1" /><rect x="11" y="9.5" width="3" height="4.5" rx="1" /></svg>
     </button>
@@ -202,7 +206,7 @@
     <div class="xr">
     <Ruler value={(crossfader + 1) / 2} from={0.5} n={41} major={10} color="var(--fg)" height={8} />
     <Fader tick value={crossfader} min={-1} max={1} reset={0} label="Crossfader" onchange={setCrossfader}
-      format={(v) => (Math.abs(v) < 0.005 ? 'centre' : `${Math.round(Math.abs(v) * 100)}% to ${v < 0 ? 'A' : 'B'}`)} />
+      format={(v) => (Math.abs(v) < 0.005 ? 'centre' : `${Math.round(Math.abs(v) * 100)}% to ${flag('deck-names') ? (v < 0 ? 'the left deck' : 'the right deck') : v < 0 ? 'A' : 'B'}`)} />
     </div>
     <i class="end" style:background="var(--deck-b)"></i>
   </div>

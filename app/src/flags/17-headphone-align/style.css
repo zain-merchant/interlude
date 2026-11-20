@@ -18,3 +18,13 @@
   justify-self: stretch;
   width: auto;
 }
+
+/* d-K53: under its fader, the headphone button came within 5px of the
+   Filter dial's ticks. Each channel strip moves 7px toward the middle, so
+   12px (--gap) separates the button from the tick ring. */
+:root[data-flag-headphone-align][data-flag-headphone-align-room='gap'] .mixer .fwrap:not(.mirror) {
+  margin-left: 7px;
+}
+:root[data-flag-headphone-align][data-flag-headphone-align-room='gap'] .mixer .fwrap.mirror {
+  margin-right: 7px;
+}
