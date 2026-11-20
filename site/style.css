@@ -836,7 +836,7 @@ html[data-nav="morph"] .nav-dl path { fill: none; stroke: currentColor; stroke-w
   }
   .menu-btn i {
     grid-area: 1 / 1; width: 18px; height: 1.5px; border-radius: 1px; background: currentColor;
-    translate: 0 -3.5px; transition: translate var(--smooth-ms) var(--smooth), rotate var(--smooth-ms) var(--smooth);
+    translate: 0 -3.5px; transition: translate var(--snappy-ms) var(--snappy), rotate var(--snappy-ms) var(--snappy);
   }
   .menu-btn i + i { translate: 0 3.5px; }
   html[data-menu] .menu-btn i { translate: 0 0; rotate: 45deg; }
@@ -848,7 +848,7 @@ html[data-nav="morph"] .nav-dl path { fill: none; stroke: currentColor; stroke-w
      the menu on a phone. The capsule's own buttons step aside while the
      menu is open (it has them, larger). */
   @media (max-width: 480px) { html[data-nav="morph"] .nav-actions .btn.ghost { display: none; } }
-  html[data-menu][data-nav="morph"][data-navacts] .nav.nav .nav-actions .btn { opacity: 0; scale: 0.96; filter: blur(4px); transition: opacity 120ms ease-out, scale 120ms ease-out, filter 120ms ease-out; }
+  html[data-menu][data-nav="morph"][data-navacts] .nav.nav .nav-actions .btn { opacity: 0; scale: 0.96; transition: opacity 120ms ease-out, scale 120ms ease-out; }
 
   /* The page behind: dimmed and blurred, and out of reach; it doesn't
      scroll (no layout change: the scrollbar's room is kept). */
@@ -884,7 +884,7 @@ html[data-nav="morph"] .nav-dl path { fill: none; stroke: currentColor; stroke-w
     background: rgb(16 16 19 / 0.9); -webkit-backdrop-filter: blur(24px) saturate(1.4); backdrop-filter: blur(24px) saturate(1.4);
     box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.09), inset 0 1px 0 rgb(255 255 255 / 0.05);
     translate: 0 calc(48px - 100%); opacity: 0; will-change: translate, opacity;
-    transition: translate var(--snappy-ms) var(--snappy), opacity 140ms ease-in 120ms;
+    transition: translate var(--snappy-ms) var(--snappy), opacity 140ms ease-out 120ms;
   }
   html[data-menu] .menu-sheet { translate: 0 0; opacity: 1; transition: translate var(--smooth-ms) var(--smooth), opacity 90ms ease-out; }
   .menu-in {
@@ -903,13 +903,13 @@ html[data-nav="morph"] .nav-dl path { fill: none; stroke: currentColor; stroke-w
      above it as the sheet opens, and all go at once as it shuts. */
   .menu-links { display: grid; }
   .menu-links a, .menu-foot {
-    opacity: 0; translate: 0 -8px; filter: blur(3px);
-    transition: opacity 110ms ease-out, translate 110ms ease-out, filter 110ms ease-out;
+    opacity: 0; translate: 0 -8px;
+    transition: opacity 110ms ease-out, translate 110ms ease-out;
   }
   html[data-menu] :is(.menu-links a, .menu-foot) {
-    opacity: 1; translate: 0 0; filter: blur(0);
-    transition: opacity 260ms ease-out, translate var(--smooth-ms) var(--smooth), filter 260ms ease-out, background-color var(--snappy-ms) var(--snappy), color var(--snappy-ms) var(--snappy);
-    transition-delay: calc(70ms + var(--i, 0) * 32ms), calc(70ms + var(--i, 0) * 32ms), calc(70ms + var(--i, 0) * 32ms), 0s, 0s;
+    opacity: 1; translate: 0 0;
+    transition: opacity 260ms ease-out, translate var(--smooth-ms) var(--smooth), background-color var(--snappy-ms) var(--snappy), color var(--snappy-ms) var(--snappy);
+    transition-delay: calc(70ms + var(--i, 0) * 32ms), calc(70ms + var(--i, 0) * 32ms), 0s, 0s;
   }
   .menu-links a {
     display: flex; align-items: center; justify-content: space-between; height: 56px; padding: 0 14px; border-radius: calc(var(--r) - 6px);
@@ -929,7 +929,7 @@ html[data-nav="morph"] .nav-dl path { fill: none; stroke: currentColor; stroke-w
 /* Less motion: it fades in and out where it stands. */
 @media (max-width: 860px) and (prefers-reduced-motion: reduce) {
   .menu-sheet, html[data-menu] .menu-sheet, .menu-in, html[data-menu] .menu-in { translate: none; }
-  .menu-links a, .menu-foot, html[data-menu] :is(.menu-links a, .menu-foot) { translate: none; filter: none; transition-delay: 0s; }
+  .menu-links a, .menu-foot, html[data-menu] :is(.menu-links a, .menu-foot) { translate: none; transition-delay: 0s; }
   .menu-btn i { transition: none; }
 }
 /* ── Hero: text layouts (being tried) ─────────────────────────────────────

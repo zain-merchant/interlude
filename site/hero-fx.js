@@ -2467,10 +2467,13 @@ addEventListener('pointercancel', () => (tap = null), { passive: true });
 // A finger: the light goes where it is, also while it scrolls the page
 // (touchmove keeps coming during a scroll, pointermove doesn't; passive, so
 // the scroll is never held up). It fades on the same timer as a still mouse
-// (T.still) once the finger stops or lifts. Any touch ends the sweep.
+// (T.still) once the finger stops or lifts. Any touch ends the sweep (or
+// keeps it from starting: the light has been found already).
 // (Its place from the kept scroll and canvas top, not a layout read per move.)
+let fingered = false;
 const finger = (e) => {
-  if (sweep.at && e.type === 'touchstart') sweep.at = 0;
+  fingered = true;
+  sweep.at = 0;
   if (e.touches.length !== 1 || e.target.closest?.('.nav, .dialkit-root')) return;
   const t = e.touches[0];
   const p = canvasTop ? { x: t.clientX, y: t.clientY - (canvasTop - scrollPos) } : local(t);
@@ -2486,7 +2489,7 @@ addEventListener('touchmove', finger, { passive: true });
 // answers to a touch. (Never with less motion; a touch stops it.)
 const sweep = { at: 0 };
 export function demo() {
-  if (reduced.matches || !geo || !prog) return;
+  if (reduced.matches || !geo || !prog || fingered) return;
   sweep.at = performance.now();
   wake();
 }

@@ -21,7 +21,7 @@
   <!-- Geist, served from here (no other site to reach before the page can
        draw its text); the Latin file is fetched straight away. -->
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="style.css?v=20261120m">
+  <link rel="stylesheet" href="style.css?v=20261120n">
   <script src="tune.js?v=20261120m"></script>
   <script>
     // Live updates while working on the site locally (.claude/serve.py
@@ -471,7 +471,7 @@
       const behind = () => [document.querySelector('main'), document.querySelector('footer'), ...nav.querySelectorAll('.nav-row > :not(.menu-btn)')];
       const items = () => [btn, ...menu.querySelectorAll('a[href]')].filter((e) => e.getClientRects().length);
       let open = false;
-      let release = 0;
+      let release = 0, done = null;
       function set(v, { refocus = false, follow = false } = {}) {
         if (v === open) return;
         open = v;
@@ -482,9 +482,10 @@
         // (Picking a section: the capsule stays a capsule while the page
         // scrolls there, rather than opening to the bar and back.)
         clearTimeout(release);
+        if (done) { removeEventListener('scrollend', done); done = null; }
         if (v || !follow) window.navHold?.(v);
         else {
-          const done = () => { clearTimeout(release); removeEventListener('scrollend', done); window.navHold?.(false); };
+          done = () => { clearTimeout(release); removeEventListener('scrollend', done); done = null; window.navHold?.(false); };
           addEventListener('scrollend', done, { once: true });
           release = setTimeout(done, 1200);
         }
@@ -953,7 +954,8 @@
           note.append(grab);
           let noClick = 0;
           note.addEventListener('pointerdown', (e) => {
-            if (e.pointerType !== 'touch' || !sleeve() || !e.target.closest('.rec, .rec-grab')) return;
+            // (One finger at a time: a second one doesn't take it over.)
+            if (held || e.pointerType !== 'touch' || !sleeve() || !e.target.closest('.rec, .rec-grab')) return;
             if (x < 0.01) dir = way();
             held = { id: e.pointerId, x0: e.clientX, y0: e.clientY, at: x, moved: false, v: 0, t: performance.now(), p: x };
           });
@@ -986,6 +988,9 @@
           };
           addEventListener('pointerup', letGo);
           addEventListener('pointercancel', letGo);
+          // (Scrolled out of sight while out, it goes home: nothing turns
+          // where it can't be seen.)
+          if ('IntersectionObserver' in window) new IntersectionObserver(([e]) => { if (!e.isIntersecting && inside && !held) go(false); }).observe(note);
           // A click on the record turns it over, a quick flip like a coin's,
           // to its other side (side B, on blue paper), and back again on the
           // next; a glint crosses it as it lands. On a spring of its own.
@@ -1175,7 +1180,7 @@
     // under it follows; the switch picks mouse or controller.
     (async () => {
       const loaded = new Promise((ok) => (document.readyState === 'complete' ? ok() : addEventListener('load', ok, { once: true })));
-      const fx = await import('./hero-fx.js?v=20261120m').catch(() => null);
+      const fx = await import('./hero-fx.js?v=20261120n').catch(() => null);
       const frame = document.querySelector('.stage-frame');
       const screen = frame.querySelector('.screen');
       const live = frame.querySelector('.live');
