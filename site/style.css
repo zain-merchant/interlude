@@ -2028,6 +2028,25 @@ html[data-lablogo="plain"] .lg-rings circle:nth-child(-n + 2) { display: none; }
 /* The rings' outline (Note: rings logo outline; under 1.25 it's hidden by the rings themselves). */
 .lg-rings circle:nth-child(-n + 2) { stroke-width: var(--lab-outline, 2.5); }
 
+/* Touch screens: every control at least 44px to a finger (Apple's measure).
+   Where the control is drawn smaller, an invisible ::before widens what
+   takes the touch, without moving anything; where there's room, the
+   control itself grows. (Links in the middle of a sentence keep their line.) */
+@media (pointer: coarse) {
+  .nav .brand, .nav-actions .btn, .dl-cv, .foot .brand, .oss-commits a, .foot-grid > div > a:not(.brand) { position: relative; }
+  :is(.nav .brand, .nav-actions .btn, .menu-btn, .switch button, .dl-cv, .foot .brand, .oss-commits a, .foot-grid > div > a:not(.brand))::before { content: ''; position: absolute; }
+  .nav .brand::before { inset: -4px 0; }
+  .nav-actions .btn::before { inset: -4px -2px; }
+  .menu-btn::before { inset: -4px; }
+  .switch button::before { inset: -4px 0; }
+  .dl-cv::before { inset: -13px -4px; }
+  .foot .brand::before { inset: -10px 0; }
+  .oss .oss-links .btn { height: 44px; }
+  .oss-commits a::before { inset: -11px 0; }
+  .foot-grid > div > a:not(.brand) { padding: 8px 0; }
+  .foot-grid > div > a:not(.brand)::before { inset: -3px -9px; }
+}
+
 /* ── Narrow screens (last, so it wins over the layouts above) ── */
 @media (max-width: 860px) {
   /* The open source card: one column, its heading, words and buttons in
