@@ -526,8 +526,10 @@
     selectIndex(index);
     // Choosing "Replace" in the menu is the confirmation, so it loads at once.
     const playing = (d) => engine.decks[d].playing;
+    // #88 (UI audit flag): deck-names says "the left deck", as the screen shows it, not a letter it never shows.
+    const on = (d) => (flag('deck-names') ? `the ${['left', 'right'][d]} deck` : `deck ${'AB'[d]}`);
     const load = [0, 1].map((d) => ({
-      label: t.missing ? 'File not found' : playing(d) ? `Replace the playing track on deck ${'AB'[d]}` : `Load to deck ${'AB'[d]}`,
+      label: t.missing ? 'File not found' : playing(d) ? `Replace the playing track on ${on(d)}` : `Load to ${on(d)}`,
       key: playing(d) ? undefined : keyLabel(`deck.${d}.load`),
       enabled: !t.missing,
       action: () => onload(d, t, { force: true }),
@@ -695,7 +697,7 @@
             <span class:none={a && !a.key}>{#if a?.key}<span class="k" class:mix={mixKeys.some((k) => keysMix(k, a.key))} use:tip={() => `${keyLongName(a.key)} (${camelot(a.key)})`}>{keyName(a.key)}</span>{:else if a}{NONE}{/if}</span>
             <span class="n num" class:none={a?.failed}>{a ? timeText(a) || NONE : ''}</span>
             <span>{t.folder}</span>
-            {#if decks.length}<span class="sr">, on deck {decks.map((d) => 'AB'[d]).join(' and ')}</span>{/if}
+            {#if decks.length && flag('deck-names')}<span class="sr">, on the {decks.map((d) => ['left', 'right'][d]).join(' and ')} {decks.length > 1 ? 'decks' : 'deck'}</span>{:else if decks.length}<span class="sr">, on deck {decks.map((d) => 'AB'[d]).join(' and ')}</span>{/if}
           </div>
         {/each}
       </div>
