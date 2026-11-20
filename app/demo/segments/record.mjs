@@ -532,13 +532,18 @@ function ffmpeg(a) {
     p.on('close', (c) => (c ? fail(new Error(`ffmpeg exited ${c}: ${a.join(' ')}`)) : ok()));
   });
 }
+// HEVC on a Mac by the media engine (VideoToolbox): measured on a 2x app
+// clip, quality 66 gives the size and SSIM of x265 fast at crf 26 (about
+// 440 KB, 0.992) ten times faster. Elsewhere, or with --software, x265.
+const VT = process.platform === 'darwin' && !args.software;
 function encode(input, file, codec, gop, width = 0) {
   const vf = ['-vf', `${width ? `scale=${width}:-2:flags=lanczos,` : ''}scale=out_color_matrix=bt709:out_range=tv,format=yuv420p`];
   const tags = ['-colorspace', 'bt709', '-color_primaries', 'bt709', '-color_trc', 'bt709', '-color_range', 'tv'];
   const c = {
     av1: ['-c:v', 'libsvtav1', '-preset', '6', '-crf', '38', '-g', String(gop), '-svtav1-params', 'log-level=0'],
-    hevc: ['-c:v', 'libx265', '-preset', 'fast', '-crf', '26', '-g', String(gop), '-tag:v', 'hvc1', '-x265-params', 'log-level=error:pools=4'],
-    h264: ['-c:v', 'libx264', '-preset', 'medium', '-crf', '24', '-g', String(gop), '-tune', 'animation', '-threads', '4'],
+    hevc: VT ? ['-c:v', 'hevc_videotoolbox', '-q:v', '66', '-profile:v', 'main', '-g', String(gop), '-tag:v', 'hvc1'] : ['-c:v', 'libx265', '-preset', 'fast', '-crf', '26', '-g', String(gop), '-tag:v', 'hvc1', '-x265-params', 'log-level=error:pools=4'],
+    // (At 2x, x264's faster preset: a tenth bigger than medium, a quarter of the time.)
+    h264: ['-c:v', 'libx264', '-preset', width ? 'medium' : 'faster', '-crf', '24', '-g', String(gop), '-tune', 'animation', '-threads', '4'],
   }[codec];
   return ffmpeg(['-i', input, ...vf, ...c, ...tags, '-an', '-movflags', '+faststart', file]);
 }

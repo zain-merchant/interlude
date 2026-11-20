@@ -2246,8 +2246,12 @@ function init() {
     }
     const poll = () => {
       if (!ready()) return requestAnimationFrame(poll);
-      use(n);
-      wake();
+      try {
+        use(n);
+        wake();
+      } catch (err) {
+        console.warn('hero-fx:', err);
+      }
     };
     requestAnimationFrame(poll);
     return true;
@@ -2314,7 +2318,7 @@ function layout(now) {
     const r = b.getBoundingClientRect();
     // (The see-through one's hole half a pixel wider: its soft edge then
     // shows the page, as its old backdrop blur did, not a bright groove.)
-    const g = b.classList.contains('ghost') ? (window.__holeGrow ?? 0.5) : 0;
+    const g = b.classList.contains('ghost') ? 0.5 : 0;
     return [r.left - c.left - g, r.top - c.top - g, r.right - c.left + g, r.bottom - c.top + g];
   });
   // The record runs on past the mouse/controller switch under the screen
