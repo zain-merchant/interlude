@@ -12,9 +12,9 @@
   import { backend } from './backend.js';
 
   /**
-   * Settings sit over the library, never over the decks, and don't block
-   * them: performance keys keep working while this is open, except while a
-   * shortcut is being recorded.
+   * Settings open as a popup over the whole window. Performance keys keep
+   * working while it's open, except while a shortcut is being recorded.
+   * Clicking outside it or pressing Escape closes it.
    * @type {{ page?: 'keyboard' | 'decks' | 'audio' | 'display' | 'library' | 'stems' | 'controllers', onclose: () => void, onimport?: () => void, onreport?: () => void, onupdates?: () => void, onsetup?: () => void }}
    */
   let { page = $bindable('keyboard'), onclose, onimport, onreport, onupdates, onsetup } = $props();
@@ -391,7 +391,8 @@
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-<div class="settings" role="dialog" aria-modal="false" aria-label="Settings" bind:this={root} onkeydown={panelKey} tabindex="-1">
+<div class="backdrop" role="presentation" onpointerdown={(e) => { if (e.target === e.currentTarget) onclose(); }}>
+<div class="settings" role="dialog" aria-modal="true" aria-label="Settings" bind:this={root} onkeydown={panelKey} tabindex="-1">
   <nav aria-label="Settings pages">
     <div class="h">Settings</div>
     <button class="item" class:on={page === 'keyboard'} aria-current={page === 'keyboard' ? 'page' : undefined}
@@ -654,15 +655,40 @@
     </div>
   </div>
 </div>
+</div>
 
 <style>
-  .settings {
-    position: absolute;
+  .backdrop {
+    position: fixed;
     inset: 0;
-    z-index: 20;
+    z-index: 45;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    background: rgb(5 5 6 / 0.6);
+    animation: fade 0.16s ease-out;
+  }
+  .settings {
+    width: min(960px, 100%);
+    height: min(640px, 100%);
     display: grid;
     grid-template-columns: 200px minmax(0, 1fr);
     gap: var(--gap);
+    padding: var(--gap);
+    border-radius: 14px;
+    background: #121214;
+    box-shadow: inset 0 0 0 1px var(--line-2), 0 24px 80px rgb(0 0 0 / 0.5);
+    outline: none;
+    animation: rise 0.2s ease-out;
+  }
+  @keyframes fade {
+    from { opacity: 0; }
+  }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(8px) scale(0.99); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .backdrop, .settings { animation: none; }
   }
   nav {
     display: flex;
@@ -699,7 +725,7 @@
     background: var(--sel);
     color: var(--fg);
   }
-  /* The page is a glass panel, like the track list it covers. */
+  /* The page is a glass panel inside the popup. */
   .main {
     display: flex;
     flex-direction: column;
