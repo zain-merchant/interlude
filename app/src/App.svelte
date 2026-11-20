@@ -101,7 +101,7 @@
     });
   }
 
-  // Settings open over the library, leaving the decks in reach.
+  // Settings open as a popup over the whole window.
   let settings = $state(null); // null, 'keyboard', 'decks', 'audio', 'display', 'library', 'stems' or 'controllers'
 
   // Muted stems drop out of the waveforms.
@@ -518,19 +518,17 @@
   </div>
 
   <!-- svelte-ignore a11y_no_noninteractive_tabindex, a11y_no_noninteractive_element_interactions (a focusable separator is the ARIA window-splitter pattern) -->
-  <div class="split" class:drag={split} role="separator" aria-orientation="horizontal" aria-label="Resize library"
+  <div class="split" class:dragging={split} role="separator" aria-orientation="horizontal" aria-label="Resize library"
     aria-valuenow={Math.round(lib)} aria-valuemin={160} aria-valuemax={Math.round(libMax)} tabindex="0"
     onpointerdown={splitDown} onpointermove={splitMove} onpointerup={() => (split = null)} onpointercancel={() => (split = null)}
     ondblclick={() => setLib(LIB_DEFAULT)} onkeydown={splitKey}
     use:tip={() => 'Drag to resize the library, double-click to reset'}><i></i></div>
 
   <div class="below">
-    <div class="libwrap" inert={settings !== null}>
+    <div class="libwrap">
       <Library bind:this={library} onload={load} onsettings={() => openSettings()} onmessage={say}
         onimport={openImport} onempty={() => { if (once('importOffer')) openImport(); }} />
     </div>
-    {#if settings}<Settings bind:page={settings} onclose={() => (settings = null)} onimport={() => { settings = null; openImport(); }}
-      onreport={openReport} onupdates={checkUpdatesNow} onsetup={openControllerSetup} />{/if}
   </div>
 
   {#if engine.audio?.state === 'lost'}
@@ -576,6 +574,8 @@
 <Tooltip />
 <ContextMenu />
 
+{#if settings}<Settings bind:page={settings} onclose={() => (settings = null)} onimport={() => { settings = null; openImport(); }}
+  onreport={openReport} onupdates={checkUpdatesNow} onsetup={openControllerSetup} />{/if}
 {#if importing}<Import onclose={() => (importing = false)} ondone={() => library.reload()} />{/if}
 {#if reporting}<Report onclose={() => (reporting = false)} context={reportContext} />{/if}
 {#if settingUp}<ControllerSetup onclose={() => (settingUp = false)} />{/if}
@@ -615,10 +615,6 @@
   .libwrap {
     display: grid;
     min-height: 0;
-  }
-  /* Settings open over the library; its glass would show the list through. */
-  .libwrap[inert] {
-    visibility: hidden;
   }
   .banner {
     position: absolute;
@@ -759,7 +755,7 @@
     transition: background-color 140ms ease;
   }
   .split:hover i,
-  .split.drag i,
+  .split.dragging i,
   .split:focus-visible i {
     background: var(--fg-3);
   }
