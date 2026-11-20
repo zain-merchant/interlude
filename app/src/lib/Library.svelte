@@ -202,8 +202,9 @@
   });
   const selectIndex = (i) => (selPath = sorted[i]?.path ?? null);
 
-  /** Tracks still waiting for their length, BPM and key. */
-  const pending = $derived(all.reduce((n, t) => n + (t.analysis ? 0 : 1), 0));
+  /** Tracks still waiting for their length, BPM and key, or showing ones an
+   * older version of the analyzer found until it redoes them. */
+  const pending = $derived(all.reduce((n, t) => n + (t.analysis && !t.analysis.outdated ? 0 : 1), 0));
   const bpmText = (a) => {
     if (!a?.bpm) return '';
     const r = Math.round(a.bpm);
@@ -224,7 +225,7 @@
     let off = null;
     let gone = false;
     backend.onLibraryAnalysis?.((e) => {
-      for (const t of byPath.get(e.path) ?? []) t.analysis = { duration: e.duration, bpm: e.bpm, key: e.key, failed: e.failed };
+      for (const t of byPath.get(e.path) ?? []) t.analysis = { duration: e.duration, bpm: e.bpm, key: e.key, failed: e.failed, outdated: e.outdated };
     }).then((fn) => (gone ? fn() : (off = fn)));
     return () => {
       gone = true;
