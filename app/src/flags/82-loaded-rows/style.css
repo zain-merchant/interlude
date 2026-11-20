@@ -1,0 +1,28 @@
+/* #82: which deck a track is on, at a glance. The bar runs the row's full
+   height, on the side of the deck it's on (left deck at the row's left
+   edge, right deck at its right edge, past Folder), and the title takes
+   that deck's colour (both pass 12:1 on the panel). Positioned on the row,
+   so the grid's columns are untouched. */
+:root[data-flag-loaded-rows] section.library .scroll .row .ld b {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  left: 1px;
+  width: 3px;
+  height: auto;
+  border-radius: 2px;
+}
+:root[data-flag-loaded-rows] section.library .scroll .row .ld b.b {
+  left: auto;
+  right: 1px;
+}
+:root[data-flag-loaded-rows] section.library .scroll .row:has(.ld b:not(.b)) .t {
+  color: var(--deck-a);
+}
+:root[data-flag-loaded-rows] section.library .scroll .row:has(.ld b.b) .t {
+  color: var(--deck-b);
+}
+/* On both decks: the bars say so; the title stays white. */
+:root[data-flag-loaded-rows] section.library .scroll .row:has(.ld b:not(.b)):has(.ld b.b) .t {
+  color: var(--fg);
+}
