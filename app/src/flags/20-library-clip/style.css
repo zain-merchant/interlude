@@ -36,6 +36,13 @@
   mask-image: linear-gradient(to bottom, var(--clip-top) 0, #000 16px, #000 calc(100% - 16px), var(--clip-foot) 100%);
 }
 
+/* A section heading whose first item is still below the sidebar's foot
+   isn't drawn (Library.svelte marks it data-cut): no heading stranded,
+   or cut in half, at the edge. It comes back as its first item scrolls in. */
+:root[data-flag-library-clip] section.library [data-region='sidebar'] > .h[data-cut] {
+  visibility: hidden;
+}
+
 /* Li6: the list's own focus ring followed its new, uneven corners (square
    at the top, rounded at one bottom corner). The ring goes round the row
    the arrow keys move instead, in the list's own 1px style. With #14 on,

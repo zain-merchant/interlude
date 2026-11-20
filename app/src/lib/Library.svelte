@@ -448,6 +448,15 @@
     navMore = below(nav);
     listUp = !!scroller && scroller.scrollTop > 0;
     navUp = !!nav && nav.scrollTop > 0;
+    // A section heading keeps with its first item: while that item is out of
+    // view below, the heading is hidden (data-cut) rather than left alone
+    // at, or half under, the sidebar's foot.
+    if (!nav) return;
+    const foot = nav.getBoundingClientRect().bottom - 8;
+    for (const h of nav.querySelectorAll(':scope > .h')) {
+      const next = h.nextElementSibling;
+      h.toggleAttribute('data-cut', flag('library-clip') && !!next && next.getBoundingClientRect().top > foot);
+    }
   }
   $effect(() => {
     void [flag('library-clip'), viewHeight, sorted.length, sessions.length, playlists.length, folders.length, historyShown, ROW];

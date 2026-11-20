@@ -6,6 +6,10 @@
 //   label stays --fg-3, a step below the items (c-K50; the per-fix review
 //   picked it over --fg-2, so a new playlist and "+ New playlist" read
 //   clearly apart).
+// - Sidebar sections (round 2 capture pass): with #3's grid, the Library
+//   heading sat 17px above its first item but Playlists and History only
+//   5px, with 9px above them. Each later heading now takes two 28px rows:
+//   24px above, the label, 17px to its first item, like Library's.
 // - c-K83: nothing on screen said how to load the selected track. Its
 //   tooltip now says "Double-click to load, or ⇧← / ⇧→".
 // Looked at and left alone, per the checkers: a-K64 (the count repeats the
@@ -22,7 +26,7 @@ export default {
   n: 90,
   title: 'Library details',
   group: 'Polish',
-  notes: 'Sidebar add actions get a drawn 12px plus (label stays --fg-3); the selected row\'s tooltip says how to load it.',
+  notes: 'Sidebar add actions get a drawn 12px plus (label stays --fg-3); with #3, section headings take two rows (24px above, 17px to the first item, like Library); the selected row\'s tooltip says how to load it.',
 };
 
 /** Show me: a loupe on the sidebar's add actions, flipping typed plus and drawn plus. */

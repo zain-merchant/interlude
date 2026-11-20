@@ -1,21 +1,29 @@
 /* #80: columns sized to what they hold. Fixed tracks: the marker (26, or
    24 under #15), BPM 64, Key 56 + 12 and Time 64. Title and Artist share
    the rest 2.4 : 1.6 of 5.2 (Folder's 1.2), as before, but stop at 360 and
-   240; Folder takes what's left. (% of the row, since fr can't go in min().) */
+   240 on a list up to 1200px wide (1440 windows); past that the caps grow
+   with the list (half and three tenths of the extra width), so a wide
+   window's columns spread across it instead of leaving its right third
+   empty. Folder takes what's left. (% of the row, since fr can't go in
+   min().) */
+:root[data-flag-library-columns] section.library {
+  --lc-title: max(360px, calc(360px + (100% - 1200px) * 0.5));
+  --lc-artist: max(240px, calc(240px + (100% - 1200px) * 0.3));
+}
 :root[data-flag-library-columns] section.library .row {
   --lc-fixed: calc(26px + 64px + var(--lib-key, 68px) + 64px);
   grid-template-columns:
     26px
-    minmax(0, min(360px, calc((100% - var(--lc-fixed)) * 2.4 / 5.2)))
-    minmax(0, min(240px, calc((100% - var(--lc-fixed)) * 1.6 / 5.2)))
+    minmax(0, min(var(--lc-title), calc((100% - var(--lc-fixed)) * 2.4 / 5.2)))
+    minmax(0, min(var(--lc-artist), calc((100% - var(--lc-fixed)) * 1.6 / 5.2)))
     64px var(--lib-key, 68px) 64px minmax(0, 1fr);
 }
 :root[data-flag-library-columns][data-flag-spacing] section.library .row {
   --lc-fixed: calc(24px + 64px + var(--lib-key, 68px) + 64px);
   grid-template-columns:
     24px
-    minmax(0, min(360px, calc((100% - var(--lc-fixed)) * 2.4 / 5.2)))
-    minmax(0, min(240px, calc((100% - var(--lc-fixed)) * 1.6 / 5.2)))
+    minmax(0, min(var(--lc-title), calc((100% - var(--lc-fixed)) * 2.4 / 5.2)))
+    minmax(0, min(var(--lc-artist), calc((100% - var(--lc-fixed)) * 1.6 / 5.2)))
     64px var(--lib-key, 68px) 64px minmax(0, 1fr);
 }
 /* 24px between the numbers: Key and Folder start 24px after the text

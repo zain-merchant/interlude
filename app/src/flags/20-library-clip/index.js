@@ -19,6 +19,9 @@
 //   row cut at the edge stays legible), instead of slicing a row or the
 //   History heading in half. At rest the top is crisp; at the end of the
 //   scroll the foot is. Library.svelte sets data-more and data-scrolled.
+// - A sidebar section heading keeps with its first item: while that item
+//   is still below the foot, the heading isn't drawn, so "History" is never
+//   stranded, or cut in half, at the panel's bottom edge.
 // - History lists ten days, then "Show all 14" opens the rest in place.
 // - The list's focus ring followed its new uneven corners (square at the
 //   top, one rounded bottom corner); it now rings the selected row instead
