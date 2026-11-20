@@ -155,7 +155,8 @@
   {@const n = deck === 0 ? 'A' : 'B'}
   <div class="fwrap" class:mirror={deck === 1}>
     <div class="frow">
-      <Meter level={engine.deckLevels[deck]} />
+      <!-- #60 (UI audit flag): ticks, over and what only matter while meters is on. -->
+      <Meter level={engine.deckLevels[deck]} ticks={deck === 0 ? 'right' : 'left'} what="Deck {n}" />
       <Fader vertical bind:value={ch.fader} reset={1} label="Deck {n} volume"
         onchange={(v) => control({ type: 'setFader', deck, value: v })} />
     </div>
@@ -178,8 +179,8 @@
     <div class="mpair" use:tip={() => engine.limiting >= 0.5
       ? `Master level. The limiter is turning the mix down ${engine.limiting.toFixed(1)} dB to stop it distorting; lower the master or channel levels.`
       : 'Master level'}>
-      <Meter level={engine.masterLevels[0]} />
-      <Meter level={engine.masterLevels[1]} />
+      <Meter level={engine.masterLevels[0]} ticks="left" over={engine.limiting >= 0.5} what="master left" />
+      <Meter level={engine.masterLevels[1]} over={engine.limiting >= 0.5} what="master right" />
       {#if engine.limiting >= 0.5}<span class="lim" aria-hidden="true">LIM</span>{/if}
     </div>
     {#if rec}
