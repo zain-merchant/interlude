@@ -21,8 +21,8 @@
   <!-- Geist, served from here (no other site to reach before the page can
        draw its text); the Latin file is fetched straight away. -->
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="style.css?v=20261120a">
-  <script src="tune.js?v=20261120a"></script>
+  <link rel="stylesheet" href="style.css?v=20261120m">
+  <script src="tune.js?v=20261120m"></script>
   <script>
     // Live updates while working on the site locally (the dev server
     // streams the files whose contents changed). Stylesheets swap in place,
@@ -1175,7 +1175,7 @@
     // under it follows; the switch picks mouse or controller.
     (async () => {
       const loaded = new Promise((ok) => (document.readyState === 'complete' ? ok() : addEventListener('load', ok, { once: true })));
-      const fx = await import('./hero-fx.js?v=20261120a').catch(() => null);
+      const fx = await import('./hero-fx.js?v=20261120m').catch(() => null);
       const frame = document.querySelector('.stage-frame');
       const screen = frame.querySelector('.screen');
       const live = frame.querySelector('.live');
