@@ -623,6 +623,37 @@ export function createDraw(opts = {}) {
       aid += g;
       return at;
     },
+    /**
+     * Text contrast, measured live, on a scale with the 4.5 to 1 line: for
+     * changes to a text level that are too small to see (a few % of white)
+     * but move it across the line. `el` is the text; `bg` the surface it
+     * sits on (rgb). Draws at { x, y, w }; returns the ratio.
+     */
+    contrast(el, at, o = {}) {
+      const rgba = el ? getComputedStyle(el).color.match(/[\d.]+/g)?.map(Number) : null;
+      if (!rgba) return 0;
+      const a = rgba[3] ?? 1;
+      const bg = o.bg ?? [28, 29, 33];
+      const lum = (c) => {
+        const [r, g, b] = c.map((v) => {
+          const s = v / 255;
+          return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+        });
+        return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+      };
+      const fg = rgba.slice(0, 3).map((v, i) => v * a + bg[i] * (1 - a));
+      const ratio = (lum(fg) + 0.05) / (lum(bg) + 0.05);
+      const lo = o.lo ?? 4;
+      const hi = o.hi ?? 7;
+      const x = (v) => at.x + ((Math.min(hi, Math.max(lo, v)) - lo) / (hi - lo)) * at.w;
+      const ok = ratio >= (o.okAt ?? 4.6);
+      box({ x: at.x, y: at.y - 4, w: at.w, h: 8 }, { c: 'rgb(255 255 255 / .2)', fill: 'rgb(16 16 16 / .9)', w: 1, rx: 4 });
+      box({ x: at.x, y: at.y - 4, w: Math.max(2, x(ratio) - at.x), h: 8 }, { c: ok ? C.ok : C.bad, fill: ok ? C.ok : C.bad, w: 1, rx: 4 });
+      line(x(4.5), at.y - 12, x(4.5), at.y + 12, { c: C.ghost, w: 2 });
+      text(x(4.5), at.y + 24, '4.5 to 1: the minimum for small text', { anchor: 'middle', fixed: true });
+      text(at.x, at.y - 30, `${o.what ?? 'text'} at ${Math.round(a * 100)}%: ${ratio.toFixed(2)} to 1`, { tone: ok ? 'ok' : 'bad', fixed: true });
+      return ratio;
+    },
     /** A small panel of text lines (pre-formatted), placed at x, y. */
     legend(lines, at = { x: 16, y: 16 }) {
       html += `<div class="legend" style="left:${r1(at.x)}px;top:${r1(at.y)}px">${lines.map(esc).join('\n')}</div>`;

@@ -21,7 +21,7 @@
 const modules = import.meta.glob('./*/index.js', { eager: true, import: 'default' });
 import.meta.glob('./*/style.css', { eager: true });
 
-/** @typedef {{ id: string, n: number, title: string, group?: string, issue?: string, notes?: string, against?: string, settings?: Record<string, any> }} Flag */
+/** @typedef {{ id: string, n: number, title: string, group?: string, issue?: string, notes?: string, against?: string, superseded?: string, settings?: Record<string, any> }} Flag */
 /** @type {Flag[]} */
 export const FLAGS = Object.values(modules)
   .map((m) => /** @type {any} */ (m))
@@ -53,6 +53,14 @@ export const flags = $state({
   locked: saved.locked && typeof saved.locked === 'object' ? saved.locked : {},
 });
 
+/**
+ * The visual directions (#92 and up, the "Direction" group): whole-app looks
+ * that sit on top of the fixes. They're opt-in, one at a time, and a Show me
+ * for a fix pauses them (show/show.svelte.js).
+ */
+export const isDirection = (/** @type {Flag | undefined} */ f) => f?.group === 'Direction';
+export const DIRECTIONS = FLAGS.filter(isDirection).map((f) => f.id);
+
 /** Whether a flag is on. */
 export const flag = (/** @type {string} */ id) => flags.on[id] ?? false;
 /** A flag's setting (its default while the flag is off is still returned). */
@@ -74,7 +82,19 @@ export function setLocked(/** @type {string} */ id, /** @type {string} */ key, /
 /** Everything picked, for the panel's export: what's on, every setting, and what's locked in. */
 export const picks = () => JSON.parse(JSON.stringify({ on: flags.on, settings: flags.settings, locked: flags.locked }));
 
+/** Bumped each time the flags are applied to <html>: canvases that read CSS colours compare it to know when to read them again. */
+let rev = 0;
+export const flagsRev = () => rev;
+/** Reads every flag and setting, so an effect that calls it runs again when any of them changes. */
+export function watchFlags() {
+  for (const f of FLAGS) {
+    void flags.on[f.id];
+    for (const k in flags.settings[f.id]) void flags.settings[f.id][k];
+  }
+}
+
 function apply() {
+  rev++;
   const root = document.documentElement;
   for (const f of FLAGS) {
     const on = flags.on[f.id];

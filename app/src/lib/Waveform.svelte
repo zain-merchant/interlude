@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { Waveform2D, themeColors, HOT_CUES } from './waveform-2d.js';
   import { tracks, engine, displayPos, displaySlip, onFrame, scrubStart, scrubTo, scrubEnd, wake } from './engine.svelte.js';
-  import { flag, setting } from '../flags/registry.svelte.js';
+  import { flag, flagsRev, watchFlags } from '../flags/registry.svelte.js';
 
   /** @type {{ deck: number, mode?: 'scroll' | 'overview', seconds?: number, onzoom?: (factor: number) => void }} */
   let { deck, mode = 'scroll', seconds = 12, onzoom } = $props();
@@ -21,11 +21,10 @@
     };
   }
 
-  // #45, #56 (UI audit flags): flags that change the theme's colours; the
-  // canvas reads them again when one flips.
-  // #92-94 (UI audit flags): the three visual directions set their own waveform colours.
-  const colorFlags = () =>
-    `${flag('cue-colour')}|${setting('cue-colour', 'eight')}|${flag('against-deck-colours')}|${setting('against-deck-colours', 'look')}|${flag('against-wave-cores')}|${flag('dir-quiet')}|${flag('dir-warm')}|${flag('dir-graphic')}|${flag('dir-graphic2')}|${flag('dir-sleeve')}`; // #97, #98: round 2's directions
+  // UI audit flags (#11, #45, #56, #57, the directions #92 and up, …) can
+  // change the theme's colours: the canvas reads them again whenever any
+  // flag or setting changes (the registry bumps flagsRev), not only for a
+  // list of flags that could fall behind.
   // #41, #43, #50, #52, #54 (UI audit flags): what the canvas draws differently with them on.
   const wf = () => ({
     beatGrid: flag('beat-grid'),
@@ -59,7 +58,7 @@
   // happens).
   let watched = false;
   $effect(() => {
-    colorFlags();
+    watchFlags();
     wf();
     if (watched) wake();
     watched = true;
@@ -75,13 +74,13 @@
       return;
     }
     let colors = themeColors(deck);
-    let colorKey = '';
+    let colorKey = -1;
     gl.font = getComputedStyle(canvas).fontFamily; // #50 (UI audit flag): the overview chips' numbers
     let uploaded = null;
     const off = onFrame(() => {
-      const ck = colorFlags();
+      const ck = flagsRev();
       if (ck !== colorKey) {
-        if (colorKey) colors = themeColors(deck);
+        if (colorKey !== -1) colors = themeColors(deck);
         colorKey = ck;
       }
       const f = wf();

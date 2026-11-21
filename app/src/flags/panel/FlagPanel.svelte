@@ -17,7 +17,7 @@
   // what's different now, Before / After (flipping on its own, or pinned),
   // and Guides, Replay, Again and Done. The card keeps off what's shown.
   import { tick, onMount } from 'svelte';
-  import { FLAGS, flags, picks, recommended, lockedAt, setLocked } from '../registry.svelte.js';
+  import { FLAGS, flags, picks, recommended, lockedAt, setLocked, isDirection } from '../registry.svelte.js';
   import { SHOWS, current, showMe, stopShow, replay, resumePending, setPhase, setFlipping, setSlow } from '../show/show.svelte.js';
   import { uiZoom } from '../../lib/uizoom.svelte.js';
   import Switch from './Switch.svelte';
@@ -76,7 +76,15 @@
     // Turned on: its settings open (unless they were closed by hand).
     if (on && disclosed[f.id] === false) delete disclosed[f.id];
   }
-  const all = (on) => FLAGS.forEach((f) => (flags.on[f.id] = on));
+  // All on is every fix: the directions (#92 and up) are whole-app looks,
+  // opt-in and one at a time, so it leaves them as they are.
+  const all = (on) => FLAGS.forEach((f) => (on && isDirection(f) ? null : (flags.on[f.id] = on)));
+  /** The direction that's on, if any: it changes how every fix looks, so the panel says so. */
+  const direction = $derived(FLAGS.find((f) => isDirection(f) && flags.on[f.id]) ?? null);
+  /** A flag by id, for the card's notes. */
+  const byId = (id) => FLAGS.find((f) => f.id === id);
+  /** Flags that are on and hide this one's change (its show's masks and overrides): its switch alone changes nothing while they're on. */
+  const hiddenBy = (f) => [...(SHOWS[f.id]?.masks ?? []), ...(SHOWS[f.id]?.overrides ?? [])].filter((m) => flags.on[m]).map(byId).filter(Boolean);
 
   // Export: every pick (on, settings, locked in) as JSON on the clipboard.
   let copied = $state(false);
@@ -351,6 +359,22 @@
           </div>
         {/each}
       {/if}
+      {#if !current.busy && (current.masked.length || current.overridden.length || current.paused.length)}
+        <ul class="fp-also">
+          {#each current.masked as m (m)}
+            {@const g = byId(m)}
+            <li>Before also turns off <b>{g?.n} {g?.title}</b>, which is on and hides this change; After puts it back.</li>
+          {/each}
+          {#each current.overridden as m (m)}
+            {@const g = byId(m)}
+            <li><b>{g?.n} {g?.title}</b> is off while this shows: it overrides this change, so After would show it instead. It comes back on Done.</li>
+          {/each}
+          {#each current.paused as d (d)}
+            {@const g = byId(d)}
+            <li><b>{g?.title}</b> is paused while this shows, so you see the fix on today's look. It comes back on Done.</li>
+          {/each}
+        </ul>
+      {/if}
       {#if current.error}<p class="fp-err">{current.error}</p>{/if}
 
       <div class="fp-acts">
@@ -372,7 +396,7 @@
       class:dragging
       data-dock={dock}
       bind:this={box}
-      aria-label="UI audit, {count} of {FLAGS.length} on. Open the panel (backquote key); arrow keys move it"
+      aria-label="UI audit, {count} of {FLAGS.length} on{direction ? `, ${direction.title} on` : ''}. Open the panel (backquote key); arrow keys move it"
       onpointerdown={grab}
       onpointermove={drag}
       onpointerup={(e) => {
@@ -387,6 +411,7 @@
       <i class="fp-dot" class:lit={count > 0}></i>
       <b>UI audit</b>
       <span class="fp-count">{count} on</span>
+      {#if direction}<span class="fp-pill-dir" title="{direction.title} is on: it changes how every fix looks">direction on</span>{/if}
       <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 10l3.5-3.5 3.5 3.5" /></svg>
     </button>
   {:else}
@@ -415,6 +440,12 @@
           </button>
         </div>
       </header>
+      {#if direction}
+        <div class="fp-dir" role="status">
+          <p><b>{direction.title}</b> is on. It restyles the whole app on top of the fixes, so a fix can look different or not change at all while it's on. Show me pauses it.</p>
+          <button type="button" class="fp-text-btn" onclick={() => (flags.on[direction.id] = false)}>Turn off</button>
+        </div>
+      {/if}
       <label class="fp-search">
         <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="4.25" /><path d="M10.25 10.25L13 13" /></svg>
         <input
@@ -463,7 +494,8 @@
                         {/if}
                         <Switch checked={isOn(f)} label="{f.title}: {isOn(f) ? 'on' : 'off'}" onchange={(v) => toggle(f, v)} />
                       </div>
-                      {#if about(f)}<p class="fp-about">{#if f.against}<span class="fp-against" title={`The design doc: ${f.against}`}>Against the doc</span>{/if}{about(f)}</p>{/if}
+                      {#if hiddenBy(f).length}<p class="fp-hidden">No visible change while {hiddenBy(f).map((g) => `${g.n} ${g.title}`).join(' or ')} is on. Show me turns it off for Before.</p>{/if}
+                      {#if about(f)}<p class="fp-about">{#if f.against}<span class="fp-against" title={`The design doc: ${f.against}`}>Against the doc</span>{/if}{#if f.superseded}{@const by = byId(f.superseded)}<span class="fp-against fp-superseded" title={`${by?.title}: with it on, this flag changes nothing more`}>Part of {by?.n}</span>{/if}{about(f)}</p>{/if}
                     </div>
                     {#if settingsOpen(f)}
                       <div class="fp-settings">
@@ -1067,6 +1099,61 @@
     line-height: 16px;
     color: #ffc58a;
     vertical-align: 1px;
+  }
+  .fp-hidden {
+    grid-column: 2 / -1;
+    margin: 2px 0 0;
+    color: #ffd38a;
+    font-size: 11.5px;
+    line-height: 15px;
+  }
+  .fp-pill-dir {
+    padding: 0 6px;
+    border-radius: 999px;
+    background: rgb(255 196 80 / 0.16);
+    color: #ffd38a;
+    font-size: 11px;
+    line-height: 16px;
+  }
+  .fp-superseded {
+    background: rgb(255 255 255 / 0.08);
+    color: var(--fp-fg-2);
+  }
+  .fp-also {
+    margin: 8px 0 0;
+    padding: 0;
+    list-style: none;
+    color: var(--fp-fg-2);
+    font-size: 12px;
+    line-height: 16px;
+  }
+  .fp-also li + li {
+    margin-top: 4px;
+  }
+  .fp-also b,
+  .fp-dir b {
+    color: var(--fp-fg);
+    font-weight: 500;
+  }
+  .fp-dir {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin: 0 12px 8px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: rgb(255 196 80 / 0.1);
+    box-shadow: inset 0 0 0 1px rgb(255 196 80 / 0.28);
+    color: var(--fp-fg-2);
+    font-size: 12px;
+    line-height: 16px;
+  }
+  .fp-dir p {
+    margin: 0;
+    flex: 1;
+  }
+  .fp-dir .fp-text-btn {
+    flex: none;
   }
   .fp-err {
     margin: 0;

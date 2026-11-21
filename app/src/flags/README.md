@@ -109,6 +109,8 @@ export const show = {
   before: 'The card, flag off: what goes wrong, in plain words.',
   after: "The card, flag on: what's different, and why it's better.",
   needs: { 'stress-data': { set: 'worst' } }, // other flags it needs (stress-data reloads the page)
+  masks: ['buttons'], // flags that do the same thing while on: Before turns them off too (see below)
+  overrides: ['x'],   // flags that override this change while on: off for the whole show
   reload: false,  // true if turning this flag on needs a reload (it can't flip then)
   flip: true,     // false: no Before / After (the card has the flag's switch instead)
   period: 1700,   // ms each of Before and After stays up
@@ -129,6 +131,29 @@ export const show = {
   cleanup(app, ctx) {},      // optional: undo setup that would surprise (zoom, a lost device)
 };
 ```
+
+**Before is "as if this fix weren't made".** Some fixes are hidden by
+another flag that's on, and with every fix on, flipping only this flag
+then changes nothing. When that flag does the same thing (a later flag
+that took the change over), the show lists it in `masks`: Before turns it
+off too and After puts it back. When it does something else to the same
+thing (After would show it instead of this fix), the show lists it in
+`overrides`: it's off for the whole show. Either way it comes back on
+Done (or on a reload mid-show), the card says which, and the flag's row
+in the panel says its switch alone changes nothing while that flag is on.
+A flag that no longer changes anything on its own (everything it did moved
+into another flag) says so in its `about` and sets `superseded: '<id>'` in
+its default export; the panel tags its row.
+
+**Directions are paused.** The directions (#92 and up, the "Direction"
+group) restyle the whole app on top of the fixes, so a fix's show pauses
+the one that's on and puts it back on Done; the card says so. All on turns
+on every fix but no direction, and while a direction is on the panel says
+so at the top, with a button to turn it off.
+
+Canvases (the waveforms) read the theme's colours again whenever any flag
+or setting changes (`flagsRev` in the registry), so a flag that changes a
+colour token shows on them too.
 
 `app` (show/app.js) drives the app through its own controls: `$`, `$$`,
 `click`, `dblclick`, `hover`, `key('KeyR', { shift })`, `type`, `search`,

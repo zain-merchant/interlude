@@ -5,7 +5,7 @@
 // flag describes this in an optional `show` export in its index.js (see
 // ../README.md). This file is only reached from the dev-only panel
 // (../panel/FlagPanel.svelte), so none of it (nor any flag's `show`) ships.
-import { FLAGS, flags } from '../registry.svelte.js';
+import { FLAGS, flags, isDirection, DIRECTIONS } from '../registry.svelte.js';
 import { kit, setFlag, setSetting, wait } from './app.js';
 import { createOverlay, createDraw } from './overlay.js';
 
@@ -45,6 +45,12 @@ export const current = $state({
   hasSlow: false,
   /** @type {DOMRect[]} where the targets are, for the card to keep clear of */
   avoid: [],
+  /** Other flags that were on and hide this change: Before turns them off too (the show's `masks`). @type {string[]} */
+  masked: [],
+  /** Other flags that were on and override this change: off for the whole show (the show's `overrides`). @type {string[]} */
+  overridden: [],
+  /** Directions that were on, paused while a fix is shown (back on Done). @type {string[]} */
+  paused: [],
 });
 
 let overlay = /** @type {ReturnType<typeof createOverlay> | null} */ (null);
@@ -90,6 +96,40 @@ const isOverlay = (a) => {
   return t instanceof Element && !!t.closest('.flag-show, .fp');
 };
 
+/**
+ * Before means "as if this fix weren't made". Some fixes are hidden by
+ * another flag that's on. When that flag does the same thing (a later flag
+ * that took the change over), a show lists it in `masks`: Before turns it
+ * off too, After puts it back. When it does something else to the same
+ * thing (it overrides the change, so After would show it instead), the
+ * show lists it in `overrides`: it's off for the whole show.
+ */
+const onOf = (ids) => (ids ?? []).filter((m) => flags.on[m]);
+
+/**
+ * What a show turned off, to turn back on: kept in sessionStorage too, so a
+ * reload in the middle of a show (Vite's, or the user's) doesn't leave the
+ * flag, its masks or a paused direction off for good.
+ */
+const RESTORE = 'interlude.flags.show-restore';
+function remember(ids) {
+  try {
+    if (ids.length) sessionStorage.setItem(RESTORE, JSON.stringify(ids));
+    else sessionStorage.removeItem(RESTORE);
+  } catch {}
+}
+/** Puts back what the show turned off (masks, overrides, a paused direction). */
+function restore() {
+  for (const m of [...current.masked, ...current.overridden, ...current.paused]) if (!flags.on[m]) setFlag(m, true);
+  remember([]);
+}
+// A show that was running when the page reloaded: put its flags back.
+try {
+  const left = JSON.parse(sessionStorage.getItem(RESTORE) ?? '[]');
+  sessionStorage.removeItem(RESTORE);
+  for (const m of left) if (m in flags.on) flags.on[m] = true;
+} catch {}
+
 /** Ends the current show: the overlay goes, the flag is left on. */
 export function stopShow() {
   const id = current.id;
@@ -101,12 +141,13 @@ export function stopShow() {
   } catch {}
   current.slow = false;
   slowLoop();
+  restore();
   if (id && active && !active.reload) setFlag(id, true);
   active = null;
   overlay?.destroy();
   overlay = null;
   ctx = {};
-  Object.assign(current, { id: null, error: '', busy: false, hasAid: false, hasReplay: false, hasSlow: false, flipping: false, canFlip: false, phase: 'after', avoid: [] });
+  Object.assign(current, { id: null, error: '', busy: false, hasAid: false, hasReplay: false, hasSlow: false, flipping: false, canFlip: false, phase: 'after', avoid: [], masked: [], overridden: [], paused: [] });
 }
 
 /** Puts the show in one phase (the flag off for 'before', on for 'after') and sets the app up for it again. */
@@ -117,6 +158,7 @@ async function enter(phase) {
   if (!show || !id) return;
   current.phase = phase;
   ctx.phase = phase;
+  for (const m of current.masked) setFlag(m, phase === 'after');
   setFlag(id, phase === 'after');
   try {
     await show.each?.(kit, ctx, phase === 'after');
@@ -185,6 +227,17 @@ export async function showMe(id, resumed = false) {
       location.reload();
       return;
     }
+    // A direction restyles the whole app on top of the fixes; while a fix
+    // is shown it's paused, so Before and After are today's app and the
+    // fix (it comes back on Done).
+    if (!isDirection(f)) {
+      current.paused = onOf(DIRECTIONS);
+      for (const d of current.paused) setFlag(d, false);
+    }
+    current.masked = onOf(show.masks);
+    current.overridden = onOf(show.overrides);
+    for (const m of current.overridden) setFlag(m, false);
+    remember([...current.masked, ...current.overridden, ...current.paused, ...(show.reload ? [] : [id])]);
     await kit.reset();
     if (me !== run) return;
     ctx = { phase: 'after' };
@@ -276,4 +329,11 @@ export async function resumePending() {
 export { setSetting };
 
 // A handle for scripted checks (screenshots of every Show me).
-/** @type {any} */ (globalThis).__flagShow = { showMe, stopShow, replay, setPhase, setFlipping, setSlow, current, SHOWS };
+/** @type {any} */ (globalThis).__flagShow = {
+  showMe, stopShow, replay, setPhase, setFlipping, setSlow, current, SHOWS, kit,
+  /** The running show's context (its measurements), and its targets as rects now. */
+  get ctx() {
+    return ctx;
+  },
+  rects: () => (active ? targetRects(active) : []),
+};
