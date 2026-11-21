@@ -16,7 +16,8 @@
   let { onload, onsettings } = $props();
 
   // #91 (UI audit flag): library-roomy (against the doc) sets a taller row pitch.
-  const ROW = $derived(flag('library-roomy') ? Number(setting('library-roomy', 'rows')) || 28 : 28);
+  // #102 (UI audit flag): dir-crate makes the library the main place, with taller rows.
+  const ROW = $derived(flag('dir-crate') ? 40 : flag('library-roomy') ? Number(setting('library-roomy', 'rows')) || 28 : 28);
 
   let folders = $state([]);
   /**

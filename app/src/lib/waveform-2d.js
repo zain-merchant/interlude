@@ -43,6 +43,8 @@ export class Waveform2D {
     this.font = 'sans-serif';
     /** #52 (UI audit flag): lane-start; see sample(). */
     this.strict = false;
+    /** #101 (UI audit flag): dir-centerline's half ribbon, '' for the whole ribbon. */
+    this.half = '';
     this.setBins(new Uint8Array(0));
   }
 
@@ -122,7 +124,7 @@ export class Waveform2D {
    *           beatLen?: number, firstBeat?: number, hotCues?: number[],
    *           loopIn?: number, loopOut?: number, looping?: boolean, slip?: number,
    *           flags?: string, beatGrid?: boolean, edge?: string, clipStart?: boolean, cueChips?: boolean,
-   *           keyline?: boolean, loopTint?: boolean }} view
+   *           keyline?: boolean, loopTint?: boolean, half?: string }} view
    *   Positions are in bins, -1 for none; `perPx` is bins per device pixel.
    */
   draw(view) {
@@ -140,6 +142,8 @@ export class Waveform2D {
 
     // #52 (UI audit flag): lane-start (sample() reads it; the ribbon's tiles are keyed on it).
     this.strict = !!view.clipStart;
+    // #101 (UI audit flag): dir-centerline's half ribbons ('up' sits on the lane's bottom edge, 'down' hangs from its top).
+    this.half = view.half ?? '';
     // #41 (UI audit flag): beat-grid draws the grid over the ribbon instead (below).
     const grid = view.mode === 'scroll' && view.beatLen > 0;
     if (grid && !view.beatGrid) this.beats(w, h, view, spp, x);
@@ -307,7 +311,7 @@ export class Waveform2D {
       ctx.shadowOffsetX = 0;
       return;
     }
-    const g = ctx.createLinearGradient(0, 0, 0, h);
+    const g = ctx.createLinearGradient(0, mid - amp, 0, mid + amp); // (0, h) unless #101's half ribbon moves the axis
     g.addColorStop(0, rgba(color, alpha * 0.35));
     g.addColorStop(0.5, rgba(color, alpha));
     g.addColorStop(1, rgba(color, alpha * 0.35));
@@ -326,7 +330,7 @@ export class Waveform2D {
   ribbon(w, h, view, spp, c) {
     const { ctx, canvas } = this;
     const dpr = window.devicePixelRatio || 1;
-    const key = `${this.version}|${spp}|${canvas.height}|${dpr}|${this.strict ? 1 : 0}|${view.edge ?? ''}`;
+    const key = `${this.version}|${spp}|${canvas.height}|${dpr}|${this.strict ? 1 : 0}|${view.edge ?? ''}${this.half ? `|${this.half}` : ''}`; // #101 (UI audit flag): half
     if (!this.tiles || this.tilesKey !== key || this.tilesColors !== c) {
       this.tiles = new Map();
       this.spare = [];
@@ -402,8 +406,9 @@ export class Waveform2D {
    * the glow and the smoothing are whole up to them.
    */
   ribbonShape(ctx, ectx, x0, x1, spp, h, c, edge) {
-    const mid = h / 2;
-    const amp = h / 2;
+    // #101 (UI audit flag): dir-centerline's half ribbon: the axis on the lane's edge, at the lane's full height.
+    const mid = this.half === 'up' ? h : this.half === 'down' ? 0 : h / 2;
+    const amp = this.half ? h : h / 2;
     const step = STEP;
     const dt = spp * step;
     const k0 = Math.floor((x0 - MARGIN) / step);

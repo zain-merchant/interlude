@@ -1,0 +1,1213 @@
+/* #101 (UI audit flag; a visual direction): Centerline.
+
+   The layout is the swing: both scrolling waveforms on one axis across
+   most of the window, each deck's title, tempo and time in the field's
+   corners, the decks a console of controls under it. The material is
+   #99's, crisper. Every rule is under the tripled
+   :root[data-flag-dir-centerline] attribute. */
+
+/* Material: carried over from #99 (Listening room), made crisper (see the
+   layout section for what this direction changes). */
+
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] {
+  /* The room and its surfaces. */
+  --bg: #0b0b0c;
+  --rm-room: #0b0b0c;
+  --rm-window: #060607;
+  --rm-plate: #1c1c1e;
+  --rm-plate-2: #18181a;
+  --rm-well: #070708;
+  --rm-key: #313134;
+  --rm-key-2: #29292c;
+  --rm-key-hi: #38383c;
+  --rm-key-hi-2: #303034;
+  --rm-down: #19191b;
+  --rm-on-top: #0f0f10;
+
+  /* Edges: the lit top, the dark underside, the lip of a cut. */
+  --rm-lit: rgb(255 252 246 / 0.075);
+  --rm-lit-key: rgb(255 252 246 / 0.12);
+  --rm-lit-key-hi: rgb(255 252 246 / 0.16);
+  --rm-lip: rgb(255 252 246 / 0.045);
+  --rm-under: rgb(0 0 0 / 0.6);
+  --rm-lift: 0 1px 2px rgb(0 0 0 / 0.3), 0 2px 6px -1px rgb(0 0 0 / 0.35);
+
+  /* The surfaces as recipes. */
+  --rm-plate-fill: linear-gradient(180deg, var(--rm-plate), var(--rm-plate-2) 120px);
+  --rm-plate-edge: inset 0 1px 0 var(--rm-lit), inset 0 0 0 1px rgb(255 252 246 / 0.025), 0 0 0 1px rgb(0 0 0 / 0.55), 0 1px 0 1px rgb(0 0 0 / 0.35), 0 12px 28px -10px rgb(0 0 0 / 0.8);
+  --rm-well-edge: inset 0 1px 0 rgb(0 0 0 / 0.65), inset 0 3px 5px -1px rgb(0 0 0 / 0.6), inset 0 0 0 1px rgb(0 0 0 / 0.25), 0 1px 0 rgb(255 252 246 / 0.06);
+  /* The same cut, drawn over whatever fills the well (a waveform). */
+  --rm-cut: inset 0 1px 0 rgb(0 0 0 / 0.7), inset 0 3px 3px -2px rgb(0 0 0 / 0.7), inset 0 0 0 1px rgb(0 0 0 / 0.3), inset 0 -1px 0 rgb(255 252 246 / 0.05);
+  --rm-key-fill: linear-gradient(180deg, var(--rm-key), var(--rm-key-2));
+  --rm-key-fill-hi: linear-gradient(180deg, var(--rm-key-hi), var(--rm-key-hi-2));
+  --rm-key-edge: inset 0 1px 0 var(--rm-lit-key), inset 0 -1px 0 rgb(0 0 0 / 0.14), var(--rm-lift);
+  --rm-key-edge-hi: inset 0 1px 0 var(--rm-lit-key-hi), inset 0 -1px 0 rgb(0 0 0 / 0.14), var(--rm-lift);
+  --rm-down-fill: var(--rm-down);
+  --rm-down-edge: inset 0 1px 2px rgb(0 0 0 / 0.55), inset 0 1px 0 rgb(0 0 0 / 0.35), 0 1px 0 var(--rm-lip);
+
+  /* Text: today's three levels on a paper white. */
+  --fg: #eeebe4;
+  --fg-2: rgb(238 235 228 / 0.64);
+  --fg-3: rgb(238 235 228 / 0.5);
+  --fg-4: rgb(238 235 228 / 0.3);
+  --ink: #151517;
+  --rm-paper: #efebe3;
+
+  --raise: rgb(255 252 246 / 0.06);
+  --hover: rgb(255 252 246 / 0.045);
+  --sel: rgb(255 252 246 / 0.08);
+  --line: rgb(255 252 246 / 0.07);
+  --line-2: rgb(255 252 246 / 0.11);
+  --popover: #1e1e20;
+
+  /* Roles. */
+  --cue: #e8b04a;
+  --kill: #ff6b5f;
+  --warn: #ff6b5f;
+  --focus-ring: rgb(239 235 227 / 0.72);
+
+  /* Hot cues: one lightness, a little less chroma, so they read as a set. */
+  --hc-1: #e6ae5e;
+  --hc-2: #8db3e2;
+  --hc-3: #e49a84;
+  --hc-4: #8fc79a;
+  --hc-5: #b9a2de;
+  --hc-6: #82c3c1;
+  --hc-7: #e0a0bc;
+  --hc-8: #cdc689;
+
+  /* The glass becomes solid plate for anything still using the tokens. */
+  --glass-fill: var(--rm-plate-fill);
+  --glass-blur: none;
+  --glass-edge: var(--rm-plate-edge);
+  --well: var(--rm-well);
+  --well-shadow: var(--rm-well-edge);
+
+  /* The baseline's button tokens (flag 09) become the key. */
+  --flag-buttons-bg: var(--rm-key-fill);
+  --flag-buttons-ring: var(--rm-key-edge);
+  --flag-buttons-bg-hover: var(--rm-key-fill-hi);
+  --flag-buttons-ring-hover: var(--rm-key-edge-hi);
+  --flag-buttons-bg-on: var(--rm-down-fill);
+  --flag-buttons-ring-on: var(--rm-down-edge);
+
+  --rm-press-ms: 90ms;
+  --rm-ease: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* Latched: the one "on". Pushed in below the keys round it, the role
+   colour (--on, set on each control) rising in the lower face, the label
+   in it. Declared on the controls
+   so var(--on) resolves per control. */
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] :is(button, .btn) {
+  /* Flat: the owner didn't want a gradient on a latched key. */
+  --rm-on-fill: color-mix(in srgb, var(--on, var(--fg)) 9%, var(--rm-on-top));
+  --rm-on-edge: inset 0 2px 4px -1px rgb(0 0 0 / 0.9), inset 0 1px 0 rgb(0 0 0 / 0.55), 0 1px 0 var(--rm-lip);
+}
+
+/* ── The room ───────────────────────────────────────────────────────── */
+
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] body,
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .app {
+  background: var(--rm-room);
+}
+/* Today's drifting pools go: the room is still. */
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .bd {
+  background: var(--rm-room);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .bd i {
+  display: none;
+}
+
+/* Plates: solid, lit along the top edge, a short hard shadow under. */
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .decks > section,
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] section.library,
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .settings,
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .glass:not(.waves) {
+  background: var(--rm-plate-fill);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: var(--rm-plate-edge);
+}
+
+/* The waveform window: cut into the room rather than standing on it. */
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .waves.glass {
+  padding-right: 0;
+  background:
+    repeating-radial-gradient(ellipse 140% 100% at 50% 520%, rgb(255 252 246 / 0.035) 0 1px, transparent 1.5px 5px),
+    var(--rm-window);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: 0 1px 0 var(--rm-lip);
+}
+/* The cut is drawn over the lanes, so the waveform passes under its top
+   edge and you look into the window rather than at it. */
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .waves.glass::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow: inset 0 1px 0 rgb(0 0 0 / 0.75), inset 0 6px 10px -4px rgb(0 0 0 / 0.8), inset 0 0 0 1px rgb(0 0 0 / 0.3), inset 0 -1px 0 rgb(255 252 246 / 0.05);
+}
+/* No fade at either end: the window's edge cuts the waveform, and the zoom
+   control sits on it as a small plate. */
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .waves .lane canvas {
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .waves .zoom {
+  z-index: 2;
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .waves .lane .who {
+  z-index: 2;
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .lane + .lane {
+  border-top-color: rgb(0 0 0 / 0.7);
+  box-shadow: 0 -1px 0 rgb(255 252 246 / 0.035);
+}
+/* The zoom control: a small plate laid over the window, lit along the
+   top, held off the waveform by a dark edge. */
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .zoom {
+  background: rgb(30 30 32 / 0.94);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: inset 0 1px 0 var(--rm-lit), 0 0 0 1px rgb(0 0 0 / 0.4), 0 2px 6px -1px rgb(0 0 0 / 0.5);
+}
+
+/* ── Decks ─────────────────────────────────────────────────────────── */
+
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] header .name {
+  font-size: var(--t-md);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--fg);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] header .name.dim {
+  font-weight: 400;
+  color: var(--fg-3);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] header .artist {
+  color: var(--fg-3);
+}
+/* The two figures lead: full paper white, light, set close. */
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .bpm .big {
+  font-size: var(--t-xl);
+  font-weight: 300;
+  letter-spacing: -0.02em;
+  color: var(--fg);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .bpm .unit,
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .bpm .key {
+  color: var(--fg-3);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .times .rm {
+  color: var(--fg);
+  letter-spacing: -0.02em;
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .times .el {
+  color: var(--fg-3);
+}
+
+/* The overview: a well cut into the plate, with a record's grooves in
+   it: 1px rings 4px apart round a spindle far below, showing where the
+   waveform leaves the well dark. Still, and drawn once: a background. The
+   cut (shadow under the top edge, lit lower lip) is drawn over the
+   waveform, so you look into the well; its shadow is kept to the top
+   2px, so the cue flags the canvas draws at the top edge stay clear. */
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .overview {
+  background:
+    repeating-radial-gradient(circle at 50% 900%, rgb(255 252 246 / 0.045) 0 1px, transparent 1.5px 4px),
+    var(--rm-well);
+  box-shadow: 0 1px 0 rgb(255 252 246 / 0.06);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .overview::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow: var(--rm-cut);
+}
+
+/* Tabs: a segmented control. A well, and the current mode a key standing
+   up out of it. The underline goes. */
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .modes {
+  gap: 0;
+  padding: 3px;
+  border: 0;
+  border-radius: 11px;
+  background: var(--rm-well);
+  box-shadow: var(--rm-well-edge);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .modes button {
+  height: 26px;
+  border-radius: 8px;
+  color: var(--fg-3);
+  font-weight: 500;
+  transition: color 160ms var(--rm-ease), background 160ms var(--rm-ease), box-shadow 160ms var(--rm-ease);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .modes button:hover {
+  color: var(--fg-2);
+  background: none;
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .modes button.on {
+  color: var(--fg);
+  background: var(--rm-key-fill);
+  box-shadow: var(--rm-key-edge);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .modes button.on::after {
+  content: none;
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .modes button:focus-visible::before {
+  content: none !important;
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline][data-input='keys'] [data-region^='deck'] .modes button:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 0;
+}
+
+/* The mode row: plain text over the plate; hover a faint tile. */
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .strip .tc {
+  border-radius: 8px;
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .strip .tc:hover {
+  background: var(--hover);
+}
+
+/* Transport: four keys. */
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .transport > .btn {
+  border-radius: 10px;
+  font-weight: 500;
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .btn {
+  transition:
+    background var(--rm-press-ms) var(--rm-ease),
+    box-shadow var(--rm-press-ms) var(--rm-ease),
+    color var(--rm-press-ms) var(--rm-ease),
+    translate var(--rm-press-ms) var(--rm-ease);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .btn:active:not(:disabled, [aria-disabled='true']) {
+  transform: none;
+  translate: 0 1px;
+}
+/* Pressed: any key goes into the plate while it's held. */
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] :is(.btn:not(.ghost), .mixer .hp, .mixer button.rec, .knob button.label, .toast .undo, [data-region^='deck'] .pitch .lock):active:not(:disabled, [aria-disabled='true']) {
+  background: var(--rm-down-fill);
+  box-shadow: var(--rm-down-edge);
+}
+
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .transport .cue {
+  --on: var(--cue);
+  color: var(--cue);
+  background: var(--rm-key-fill);
+  box-shadow: var(--rm-key-edge);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .transport .cue:hover:not([aria-disabled='true']) {
+  background: var(--rm-key-fill-hi);
+  box-shadow: var(--rm-key-edge-hi);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .transport .cue.lit,
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .transport .cue.lit:hover {
+  background: var(--rm-on-fill);
+  box-shadow: var(--rm-on-edge);
+}
+
+/* Play: a key with a paper glyph; playing, latched down in the deck's
+   colour. Never a pale slab. */
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .transport .btn.play,
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .transport .btn.play:not(.on) {
+  --on: var(--deck);
+  color: var(--fg);
+  background: var(--rm-key-fill);
+  box-shadow: var(--rm-key-edge);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .transport .btn.play:not(.on, [aria-disabled='true']):hover {
+  background: var(--rm-key-fill-hi);
+  box-shadow: var(--rm-key-edge-hi);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .transport .btn.play.on,
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .transport .btn.play.on:hover {
+  color: var(--deck);
+  background: var(--rm-on-fill);
+  box-shadow: var(--rm-on-edge);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .transport .btn.play.on[data-cueing] {
+  --on: var(--cue);
+  color: var(--cue);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .transport .btn[aria-disabled='true'] {
+  opacity: 1;
+  color: var(--fg-4);
+  background: none;
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .transport .sync {
+  color: var(--fg-2);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .transport .sync.on,
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .transport .sync.pressed {
+  --on: var(--deck);
+  color: var(--deck);
+  background: var(--rm-on-fill);
+  box-shadow: var(--rm-on-edge);
+}
+/* Beat jump: one line, "4 beats", the number at the keys' label size
+   and the unit beside it on the same baseline. The middle is a fixed
+   width (it gives way first in a narrow window), so the arrows' hit
+   areas don't move as the size changes. */
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .transport .jumps {
+  grid-template-columns: minmax(24px, 1fr) minmax(0, 48px) minmax(24px, 1fr);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .transport .jumps span {
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  gap: 4px;
+  white-space: nowrap;
+  font-size: var(--t-md);
+  font-weight: 400;
+  line-height: 20px;
+  color: var(--fg);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .transport .jumps small {
+  font-size: var(--t-xs);
+  line-height: 20px;
+  color: var(--fg-3);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .transport .jumps button {
+  font-size: var(--t-md);
+  color: var(--fg-3);
+}
+@container (max-width: 95px) {
+  :root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .transport .jumps span {
+    font-size: var(--t-sm);
+  }
+}
+
+/* The pitch column. */
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .pitch .val {
+  color: var(--fg-2);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .pitch .nudge {
+  border-radius: 9px;
+  background: var(--rm-well);
+  box-shadow: var(--rm-well-edge);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .pitch .nudge button {
+  border-radius: 7px;
+  color: var(--fg-2);
+  background: none;
+  box-shadow: none;
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .pitch .nudge button:hover:not([aria-disabled='true']) {
+  background: var(--hover);
+  color: var(--fg);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .pitch .nudge::before,
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .pitch .nudge::after {
+  display: none;
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .pitch .lock {
+  --on: var(--deck);
+  border-radius: 10px;
+  background: var(--rm-key-fill);
+  box-shadow: var(--rm-key-edge);
+  color: var(--fg-2);
+  font-weight: 500;
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .pitch .lock:hover {
+  background: var(--rm-key-fill-hi);
+  box-shadow: var(--rm-key-edge-hi);
+  color: var(--fg);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .pitch .lock.on,
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .pitch .lock.on:hover {
+  color: var(--deck);
+  background: var(--rm-on-fill);
+  box-shadow: var(--rm-on-edge);
+}
+
+/* Faders: a slot cut into the plate, a key for a cap. */
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .fader .line {
+  background: #040405;
+  box-shadow: inset 0 1px 1px rgb(0 0 0 / 0.8), 0 1px 0 var(--rm-lip);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .fader .cap {
+  border-radius: 4px;
+  background: linear-gradient(180deg, #39393c, #2a2a2d);
+  box-shadow: inset 0 1px 0 rgb(255 252 246 / 0.16), 0 1px 2px rgb(0 0 0 / 0.4), 0 3px 6px -2px rgb(0 0 0 / 0.45);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .fader .cap::after {
+  background: var(--rm-paper);
+  box-shadow: none;
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .fader:hover .cap,
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .fader.dragging .cap {
+  background: linear-gradient(180deg, #424246, #313134);
+}
+
+/* ── Mixer ─────────────────────────────────────────────────────────── */
+
+/* Dials: keys turned round. The same face, lit top edge and dark
+   underside; a paper index. */
+/* Dials: a flat cap in the keys' tone inside a knurled skirt (the
+   texture turns with the dial, as it would); a fine dark groove between
+   them. */
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .knob .dial {
+  --rm-cap: #333336;
+  --rm-ridge: #3b3b3f;
+  background:
+    radial-gradient(circle closest-side, var(--rm-cap) 0 70%, #19191b 72% 77%, transparent 79%),
+    repeating-conic-gradient(var(--rm-ridge) 0 5deg, #1e1e20 5deg 10deg);
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.5);
+}
+/* The light on the cap and the shadow under it sit on the wrap, which
+   doesn't turn, so the top edge stays lit wherever the dial points. The
+   wrap is the dial plus 9px each side (Knob.svelte). */
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .knob .wrap::before,
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .knob .wrap::after {
+  content: '';
+  position: absolute;
+  inset: 9px;
+  border-radius: 50%;
+  pointer-events: none;
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .knob .wrap::before {
+  box-shadow: var(--rm-lift);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .knob .wrap::after {
+  background: linear-gradient(180deg, rgb(255 252 246 / 0.07), rgb(255 252 246 / 0) 55%, rgb(0 0 0 / 0.12));
+  box-shadow: inset 0 1px 0 rgb(255 252 246 / 0.13);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .knob .dial::after {
+  content: none;
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .knob .dial i {
+  background: var(--rm-paper);
+  box-shadow: none;
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .knob .dial.killed i {
+  background: var(--fg-4);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .knob .wrap:has(.dial:hover) .dial,
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .knob .dial.dragging {
+  --rm-cap: #3b3b3f;
+  --rm-ridge: #444448;
+}
+/* The scale: one dot per mark (a zero dash with a round cap), every dot
+   on the same radius. Knob.svelte starts majors 1px further in than
+   minors (R - 3.5 against R - 2.5), so majors move their dot 1px out
+   along the mark; the middle sits at 12 o'clock and the ends are mirror
+   images. The lit arc is the same dots, brighter. */
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .knob line {
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-dasharray: 0 100;
+  filter: none;
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .knob line.major {
+  stroke-dashoffset: -1;
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .knob line:not(.on) {
+  stroke: rgb(255 252 246 / 0.18);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .knob line.major:not(.on) {
+  stroke: rgb(255 252 246 / 0.4);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .knob line.on {
+  stroke-width: 2.1;
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .knob .label {
+  color: var(--fg-3);
+}
+
+/* EQ kill: a label first, like Trim's and Filter's, so the mixer isn't
+   a wall of keys. Pointing at it raises it into a key (and its tooltip
+   says "Kill high"), so you find that it presses; killed, it's latched
+   into the plate in red, the knob's arc red with it. */
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .knob button.label {
+  --on: var(--kill);
+  border-radius: 6px;
+  background: none;
+  box-shadow: none;
+  color: var(--fg-3);
+  font-weight: 400;
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .knob button.label:hover {
+  background: var(--rm-key-fill);
+  box-shadow: var(--rm-key-edge);
+  color: var(--fg);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .knob button.label.killed,
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .knob button.label.killed:hover {
+  background: linear-gradient(180deg, var(--rm-on-top) 30%, color-mix(in srgb, var(--kill) 16%, var(--rm-on-top)));
+  box-shadow: var(--rm-on-edge);
+  color: var(--kill);
+  font-weight: 500;
+}
+
+/* Meters: a slot, filled in the deck's own white; the top 3 dB paper,
+   over 0 dB red. The master in paper. */
+/* The deck whites carry too little colour for a bar you read at a
+   glance, so the meters take a deeper tone of each: a slate blue for the
+   ice deck, a tan for the cream (kept soft: saturated blue and orange
+   read as legacy DJ software), rising to the deck's own white. */
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .mixer .fwrap {
+  --mc: #a7c3e4;
+  --mc-lo: #58799f;
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .mixer .fwrap.mirror {
+  --mc: #e8cda6;
+  --mc-lo: #977550;
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .mixer .cen .mpair {
+  --mc: #d9d3c7;
+  --mc-lo: #7d776d;
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .mixer .meter .bar,
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .mixer .meter .clip {
+  background: #040405;
+  box-shadow: inset 0 1px 1px rgb(0 0 0 / 0.8), 0 1px 0 var(--rm-lip);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .mixer .meter .bar::after {
+  background: linear-gradient(to top, var(--mc-lo) 0, var(--mc) 88%, var(--fg) 88% 97.9%, var(--kill) 97.9%);
+  box-shadow: none;
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .mixer .meter:not(.m60) {
+  background: #040405;
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .mixer .meter:not(.m60)::after {
+  background: linear-gradient(to top, var(--mc-lo) 0, var(--mc) 82%, var(--fg) 82% 95%, var(--kill) 95%);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .mixer .meter.clipped .clip {
+  background: var(--kill);
+  box-shadow: none;
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .mixer .meter .peak {
+  background: var(--fg);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .mixer .lim {
+  color: var(--kill);
+}
+
+/* Headphone cue: a key; on, latched down in amber. */
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .mixer .hp,
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .mixer .hp:not(.on) {
+  --on: var(--cue);
+  border-radius: 8px;
+  background: var(--rm-key-fill);
+  box-shadow: var(--rm-key-edge);
+  color: var(--fg-2);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .mixer .hp:hover {
+  background: var(--rm-key-fill-hi);
+  box-shadow: var(--rm-key-edge-hi);
+  color: var(--fg);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .mixer .hp.on,
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .mixer .hp.on:hover {
+  color: var(--cue);
+  background: var(--rm-on-fill);
+  box-shadow: var(--rm-on-edge);
+}
+/* Rec: a key; recording, latched down in red. */
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .mixer button.rec {
+  --on: var(--kill);
+  border-radius: 8px;
+  background: var(--rm-key-fill);
+  box-shadow: var(--rm-key-edge);
+  color: var(--fg-2);
+  font-weight: 500;
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .mixer button.rec:hover {
+  background: var(--rm-key-fill-hi);
+  box-shadow: var(--rm-key-edge-hi);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .mixer button.rec.on,
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .mixer button.rec.on:hover {
+  color: var(--fg);
+  background: var(--rm-on-fill);
+  box-shadow: var(--rm-on-edge);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .mixer button.rec.on .dot {
+  background: var(--kill);
+  box-shadow: none;
+}
+/* The crossfader scale's lit mark: no halo. */
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] svg.ruler line.on {
+  filter: none;
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .mixer .xf {
+  border-top-color: rgb(0 0 0 / 0.55);
+  box-shadow: inset 0 1px 0 rgb(255 252 246 / 0.035);
+}
+
+/* ── Library ───────────────────────────────────────────────────────── */
+
+/* Section heads and column heads: small, set a touch heavier, in
+   sentence case. */
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] section.library nav .h,
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .settings nav .h {
+  font-size: var(--t-xs);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  color: var(--fg-3);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] section.library nav .item,
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] section.library nav .add {
+  border-radius: 8px;
+  transition: background 140ms var(--rm-ease), color 140ms var(--rm-ease), box-shadow 140ms var(--rm-ease);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] section.library nav .item:hover,
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] section.library nav .add:hover {
+  background: var(--hover);
+  color: var(--fg);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] section.library nav .item.on,
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] section.library nav .item.on:hover {
+  color: var(--fg);
+  background: var(--rm-key-fill);
+  box-shadow: var(--rm-key-edge);
+}
+/* The sidebar's edge: a cut, not a hairline. */
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] section.library nav {
+  border-right-color: rgb(0 0 0 / 0.5);
+  box-shadow: 1px 0 0 rgb(255 252 246 / 0.035);
+}
+
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] section.library .bar .search {
+  border-radius: 10px;
+  background: var(--rm-well);
+  box-shadow: var(--rm-well-edge);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] section.library .bar .search:focus-within {
+  box-shadow: var(--rm-well-edge), 0 0 0 2px var(--focus-ring);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] section.library .bar :is(.samp, .gear) {
+  border-radius: 10px;
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] section.library .bar .samp.on {
+  --on: var(--fg);
+  background: var(--rm-on-fill);
+  box-shadow: var(--rm-on-edge);
+}
+
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] section.library .row.head {
+  border-bottom-color: rgb(0 0 0 / 0.5);
+  box-shadow: 0 1px 0 rgb(255 252 246 / 0.035);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] section.library .row.head .sort {
+  font-size: var(--t-xs);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  color: var(--fg-3);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] section.library .row.head .sort:hover,
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] section.library .row.head .sort.on {
+  color: var(--fg-2);
+  background: none;
+}
+
+/* Rows: hover a faint tile; selected stands up as a key. */
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] section.library .scroll .row {
+  border-radius: 9px;
+  transition: background 120ms var(--rm-ease);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] section.library .scroll .row:hover {
+  background: var(--hover);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] section.library .scroll .row.sel,
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] section.library .scroll .row.sel:hover {
+  background: linear-gradient(180deg, #242426, #1f1f21);
+  box-shadow: inset 0 1px 0 rgb(255 252 246 / 0.07), 0 1px 3px rgb(0 0 0 / 0.22);
+  color: var(--fg);
+}
+/* Key match: a small dot after the key instead of an underline. */
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region='tracks'] .row .k.mix {
+  box-shadow: none;
+  padding-bottom: 0;
+  color: var(--fg);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region='tracks'] .row > span:has(> .k.mix) {
+  background: radial-gradient(circle, var(--fg-2) 0 2px, transparent 2.5px) no-repeat right 0 center / 6px 6px;
+}
+
+/* ── Messages ──────────────────────────────────────────────────────── */
+
+/* The toast: a small plate standing over the library. */
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .toastbox .toast {
+  border-radius: 10px;
+  background: linear-gradient(180deg, #222224, #1c1c1e);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: inset 0 1px 0 rgb(255 252 246 / 0.09), 0 0 0 1px rgb(0 0 0 / 0.3), 0 2px 8px -2px rgb(0 0 0 / 0.4);
+  font-weight: 500;
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .toastbox .toast .undo {
+  border-radius: 7px;
+  background: var(--rm-key-fill);
+  box-shadow: var(--rm-key-edge);
+}
+
+/* The device-lost banner: its own plate, across the top of the library
+   where the toolbar was. A deep red face, lit along the top like every
+   plate; the icon in red. No glow. */
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .app > .banner.lost {
+  top: auto;
+  bottom: calc(var(--gap) + var(--lib) - 58px);
+  left: calc(var(--gap) + var(--library-sidebar, 212px) + 8px);
+  right: calc(var(--gap) + 8px);
+  translate: none;
+  transform: none;
+  width: auto;
+  max-width: none;
+  min-height: 48px;
+  padding: 6px 6px 6px 16px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #3a1c18, #301714);
+  box-shadow: inset 0 1px 0 rgb(255 220 210 / 0.12), 0 0 0 1px rgb(0 0 0 / 0.55), 0 10px 24px -6px rgb(0 0 0 / 0.6);
+  color: rgb(255 236 230 / 0.72);
+  animation: rm-rise 220ms var(--rm-ease);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .app > .banner.lost b {
+  color: #fff3ef;
+  font-weight: 600;
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .app > .banner.lost svg {
+  width: 20px;
+  height: 20px;
+  margin-right: 10px;
+  stroke: var(--kill);
+  filter: none;
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .app > .banner.lost > span {
+  flex: 1;
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .app > .banner.lost .btn,
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .app > .banner.lost .btn.primary {
+  margin-left: 16px;
+  height: 36px;
+  border-radius: 9px;
+  background: linear-gradient(180deg, #55302a, #462823);
+  box-shadow: inset 0 1px 0 rgb(255 220 210 / 0.16), var(--rm-lift);
+  color: #fff3ef;
+  font-weight: 500;
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .app > .banner.lost .btn:hover:not(:disabled) {
+  background: linear-gradient(180deg, #603630, #4f2d27);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .app:has(> .banner.lost) .toastbox .toast[data-docked] {
+  visibility: hidden;
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .app:has(> .banner.lost) section.library :is(nav, .main) {
+  padding-bottom: 0;
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .app:has(> .banner.lost) section.library .main .bar {
+  visibility: hidden;
+}
+/* The decks are held: Play lets go of its colour. */
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .app:has(> .banner.lost) [data-region^='deck'] .transport .btn.play.on {
+  color: var(--fg-3);
+  background: var(--rm-down-fill);
+  box-shadow: var(--rm-down-edge);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .app > .banner:not(.lost) {
+  border-radius: 12px;
+  background: linear-gradient(180deg, #222224, #1c1c1e);
+  box-shadow: inset 0 1px 0 rgb(255 252 246 / 0.09), 0 0 0 1px rgb(0 0 0 / 0.5), 0 10px 24px -6px rgb(0 0 0 / 0.6);
+}
+@keyframes rm-rise {
+  from {
+    opacity: 0;
+    translate: 0 4px;
+  }
+}
+
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .tip {
+  border-radius: 8px;
+  background: #222224;
+  box-shadow: inset 0 1px 0 rgb(255 252 246 / 0.08), 0 0 0 1px rgb(0 0 0 / 0.5), 0 8px 20px -4px rgb(0 0 0 / 0.55);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .menu {
+  border-radius: 12px;
+  background: #202022;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: inset 0 1px 0 rgb(255 252 246 / 0.08), 0 0 0 1px rgb(0 0 0 / 0.5), 0 14px 32px -8px rgb(0 0 0 / 0.65);
+}
+
+/* ── Dialogs ───────────────────────────────────────────────────────── */
+
+/* One even dim over the room; no blur. */
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .backdrop:has(> .card[role='dialog']) {
+  background: rgb(6 5 4 / 0.62);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .backdrop:has(> .card[role='dialog'])::before {
+  content: none;
+}
+/* The card: the nearest plate, lit along the top. */
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .backdrop > .card[role='dialog'] {
+  border-radius: 20px;
+  background: linear-gradient(180deg, #1b1b1d, #171719);
+  box-shadow: inset 0 1px 0 rgb(255 252 246 / 0.09), 0 0 0 1px rgb(0 0 0 / 0.6), 0 24px 60px -12px rgb(0 0 0 / 0.75);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .backdrop > .card[role='dialog'] h2 {
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .backdrop > .card[role='dialog'] .found {
+  border-radius: 12px;
+  background: #121214;
+  box-shadow: inset 0 1px 0 rgb(0 0 0 / 0.5), inset 0 2px 4px rgb(0 0 0 / 0.25), 0 1px 0 var(--rm-lip);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .backdrop > .card[role='dialog'] .found:hover:not(:disabled) {
+  background: #151517;
+}
+/* Primary: the paper key (the site's Download); the rest are keys. */
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .backdrop > .card[role='dialog'] :is(.go, .btn.primary) {
+  display: inline-grid;
+  place-items: center;
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 9px;
+  background: linear-gradient(180deg, #f3f0e9, #e3dfd6);
+  color: var(--ink);
+  font-weight: 500;
+  box-shadow: inset 0 1px 0 #fff, var(--rm-lift);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .backdrop > .card[role='dialog'] .found + .found :is(.go, .btn.primary),
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .backdrop > .card[role='dialog'] .source + .source :is(.go, .btn.primary) {
+  background: var(--rm-key-fill);
+  box-shadow: var(--rm-key-edge);
+  color: var(--fg);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .backdrop > .card[role='dialog'] .link {
+  text-decoration: none;
+  color: var(--fg-2);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .backdrop > .card[role='dialog'] .link:hover {
+  color: var(--fg);
+}
+
+/* ── Settings ──────────────────────────────────────────────────────── */
+
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .settings nav .item {
+  border-radius: 8px;
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .settings nav .item:hover {
+  background: var(--hover);
+  box-shadow: none;
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .settings nav .item.on,
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .settings nav .item.on:hover {
+  color: var(--fg);
+  background: var(--rm-key-fill);
+  box-shadow: var(--rm-key-edge);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .settings section h3 {
+  font-size: var(--t-sm);
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--fg-2);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .settings select {
+  border-radius: 9px;
+  background-color: var(--rm-key);
+  box-shadow: var(--rm-key-edge);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .settings input[type='checkbox'] {
+  border-radius: 5px;
+  background: var(--rm-well);
+  box-shadow: var(--rm-well-edge);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .settings input[type='checkbox']:checked {
+  background: var(--rm-paper);
+  box-shadow: inset 0 1px 0 #fff, 0 1px 2px rgb(0 0 0 / 0.35);
+}
+
+/* ── Focus and everything else ─────────────────────────────────────── */
+
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] :focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .btn.ghost:hover:not(:disabled, [aria-disabled='true']) {
+  background: var(--hover);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .split i,
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .app > .grip:not(.side) i {
+  background: transparent;
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .split:hover i,
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .app > .grip:not(.side):hover i {
+  background: var(--fg-3);
+}
+
+
+/* ══ The console mixer (both directions) ════════════════════════════════
+
+   The mixer in a shorter row: each channel's dials in two columns, three
+   deep (Mixer.svelte sizes them for three rows), the master's two dials
+   side by side over its meters, Rec under them. */
+
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .decks {
+  grid-template-columns: minmax(0, 1fr) clamp(300px, 24vw, 352px) minmax(0, 1fr);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .mixer .ch {
+  grid-template-columns: auto auto;
+  column-gap: 4px;
+  align-content: space-between;
+}
+
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .mixer .cen {
+  grid-template-columns: auto auto;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  column-gap: 6px;
+  row-gap: 2px;
+  align-items: start;
+  justify-items: center;
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .mixer .cen > :nth-child(1) {
+  grid-area: 1 / 1;
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .mixer .cen > :nth-child(2) {
+  grid-area: 2 / 1;
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .mixer .cen .mpair {
+  grid-area: 1 / 2 / 3 / 3;
+  height: auto;
+  min-height: 0;
+  align-self: stretch;
+  margin: 6px 0 16px;
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .mixer .cen .rec {
+  grid-area: 3 / 1 / 4 / 3;
+  align-self: end;
+}
+
+
+/* ══ Layout: Centerline ═════════════════════════════════════════════════
+
+   The window, top to bottom: the field (both scrolling waveforms on one
+   axis, most of the height), the console (deck, mixer, deck: controls
+   only), the library. The field's corners carry each deck's title, tempo
+   and time remaining: the left deck along the top edge, the right deck
+   along the bottom, each on a small plate laid over the waveform. */
+
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .app {
+  --cl-console: 248px;
+  /* The library keeps its handle, up to 30% of the window. */
+  --cl-lib: min(var(--lib), 30vh);
+  --cl-inset: 12px;
+  /* From the field's bottom edge to the window's: the right deck's
+     corners are placed from it. */
+  --cl-below: calc(var(--gap) + var(--cl-lib) + var(--gap) + var(--cl-console) + var(--gap));
+  grid-template-rows: minmax(160px, 1fr) var(--cl-console) var(--gap) var(--cl-lib);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .app.sampling {
+  --cl-below: calc(var(--gap) + var(--cl-lib) + var(--gap) + var(--sampler) + var(--cl-console) + var(--gap));
+  grid-template-rows: minmax(140px, 1fr) var(--cl-console) var(--sampler) var(--gap) var(--cl-lib);
+}
+/* The rows are this direction's own, so the panel-size handles placed for
+   today's rows go (the library's handle stays). */
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .app > .grip:not(.side) {
+  display: none;
+}
+
+/* ── The field ── */
+
+/* Two half lanes meeting on the axis: the left deck's ribbon rises from
+   it, the right deck's hangs from it (Waveform.svelte draws the halves). */
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .waves {
+  grid-template-rows: 1fr 1fr;
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .waves .lane + .lane {
+  border-top: 0;
+  box-shadow: none;
+}
+/* The axis: a hairline the two ribbons meet on. */
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .waves .lane + .lane::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -0.5px;
+  height: 1px;
+  z-index: 1;
+  background: rgb(255 255 255 / 0.1);
+  pointer-events: none;
+}
+/* The titles are in the corners now. */
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .waves .lane .who {
+  display: none;
+}
+/* Hot cue numbers sit on the axis for both decks. */
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .waves .lane.b .wave .chip {
+  top: 4px;
+  bottom: auto;
+}
+/* Zoom: a small plate on the axis at the right edge. */
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .waves .zoom {
+  top: 50%;
+  right: var(--cl-inset);
+  translate: 0 -50%;
+}
+
+/* ── The corners ── */
+
+/* The deck's header and times leave the deck for the field: they're
+   placed against the window (the decks row and the deck itself stop
+   being positioned). */
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .app > .decks,
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .decks > [data-region^='deck'],
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .decks > [data-region^='deck'] .body {
+  position: static;
+}
+/* With the decks row no longer positioned it would paint under the
+   backdrop; the room is the app's own background here, so the backdrop
+   goes. */
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .app > .bd {
+  display: none;
+}
+/* The squircle flag's clip (#1) would clip them to the deck: a plain
+   radius instead. */
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .decks > [data-region^='deck'] {
+  clip-path: none;
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] header {
+  position: absolute;
+  z-index: 3;
+  left: calc(var(--gap) + var(--cl-inset));
+  right: calc(var(--gap) + var(--cl-inset) + var(--cl-times));
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  pointer-events: none;
+  --cl-times: 132px;
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region='deck0'] header {
+  top: calc(var(--top) + var(--cl-inset));
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region='deck1'] header {
+  bottom: calc(var(--cl-below) + var(--cl-inset));
+  align-items: flex-end;
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] header > * {
+  pointer-events: auto;
+}
+/* The title: one line, title then artist, on a small plate. The tempo
+   and the time: one plate in two halves, the time at the corner. */
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] header {
+  display: flex;
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] header .title {
+  flex: 0 1 auto;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+  max-width: 52%;
+  height: 34px;
+  padding: 8px 14px 0;
+  border-radius: 10px;
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] header .title .name {
+  flex: 0 1 auto;
+  min-width: 0;
+  font-size: var(--t-md);
+  font-weight: 500;
+  line-height: 18px;
+  letter-spacing: -0.01em;
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] header .title .artist {
+  flex: 0 100 auto;
+  min-width: 0;
+  font-size: var(--t-sm);
+  line-height: 18px;
+  color: var(--fg-3);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] header .title,
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] header .bpm,
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .times {
+  background: rgb(24 23 21 / 0.92);
+  box-shadow: inset 0 1px 0 var(--rm-lit), 0 0 0 1px rgb(0 0 0 / 0.45), 0 2px 8px -2px rgb(0 0 0 / 0.6);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] header .bpm {
+  flex: none;
+  margin-right: -8px;
+  height: 62px;
+  padding: 8px 14px 0 16px;
+  border-radius: 10px 0 0 10px;
+  justify-items: end;
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] header .bpm .big {
+  line-height: 28px;
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .times {
+  position: absolute;
+  z-index: 3;
+  right: calc(var(--gap) + var(--cl-inset));
+  width: var(--cl-times);
+  --cl-times: 132px;
+  height: 62px;
+  padding: 8px 16px 0 14px;
+  border-radius: 0 10px 10px 0;
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: flex-end;
+  justify-content: flex-end;
+  gap: 0;
+  /* The hairline between the halves. */
+  background-image: linear-gradient(rgb(255 246 232 / 0.07), rgb(255 246 232 / 0.07));
+  background-size: 1px 38px;
+  background-position: 0 12px;
+  background-repeat: no-repeat;
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region='deck0'] .times {
+  top: calc(var(--top) + var(--cl-inset));
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region='deck1'] .times {
+  bottom: calc(var(--cl-below) + var(--cl-inset));
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .times > span {
+  text-align: right;
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .times .rm {
+  font-size: var(--t-xl);
+  font-weight: 300;
+  line-height: 28px;
+  letter-spacing: -0.03em;
+  color: var(--fg);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .times .el {
+  font-size: var(--t-xs);
+  font-weight: 400;
+  line-height: 17px;
+  letter-spacing: 0;
+  color: var(--fg-3);
+}
+
+/* ── The console ── */
+
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .decks > [data-region^='deck'] {
+  padding: 16px;
+  gap: 16px;
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .body {
+  grid-template-rows: 44px minmax(0, 1fr) auto;
+  gap: 12px;
+}
+
+
+/* The lost-device banner: over the top of the library, as in #99. */
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .app > .banner.lost {
+  bottom: calc(var(--gap) + var(--cl-lib) - 58px);
+}
