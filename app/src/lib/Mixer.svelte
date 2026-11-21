@@ -186,8 +186,8 @@
     <div class="mpair" use:tip={() => engine.limiting >= 0.5
       ? `Master level. The limiter is turning the mix down ${engine.limiting.toFixed(1)} dB to stop it distorting; lower the master or channel levels.`
       : 'Master level'}>
-      <Meter level={engine.masterLevels[0]} ticks="left" over={engine.limiting >= 0.5} what="master left" />
-      <Meter level={engine.masterLevels[1]} over={engine.limiting >= 0.5} what="master right" />
+      <Meter level={engine.masterLevels[0]} ticks="left" what="master left" />
+      <Meter level={engine.masterLevels[1]} what="master right" />
       {#if engine.limiting >= 0.5}<span class="lim" aria-hidden="true">LIM</span>{/if}
     </div>
     {#if rec}

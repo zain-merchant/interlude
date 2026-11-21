@@ -4,20 +4,24 @@
   import { untrack } from 'svelte';
 
   /**
-   * A thin level meter, filled from the bottom. `level` is linear peak, 0..1.
+   * A thin level meter, filled from the bottom. `level` is linear peak: 1 is
+   * full scale (0 dBFS), and a real over reads above it.
    * #60 (UI audit flag) adds, while `meters` is on: `ticks` ('left' |
-   * 'right') draws the 0, −6 and −18 dB marks on that side; `over` latches
-   * the clip light as well (the master's limiter catching a peak); `what`
-   * names the meter in the clip light's tooltip.
-   * @type {{ level?: number, ticks?: 'left' | 'right' | '', over?: boolean, what?: string }}
+   * 'right') draws the 0, −6 and −18 dB marks on that side; `what` names
+   * the meter in the clip light's tooltip.
+   * @type {{ level?: number, ticks?: 'left' | 'right' | '', what?: string }}
    */
-  let { level = 0, ticks = '', over = false, what = '' } = $props();
+  let { level = 0, ticks = '', what = '' } = $props();
   // Map -48..0 dBFS onto the meter: green to 62%, amber to 82%, red above.
   const fill = $derived(Math.max(0, Math.min(1, (20 * Math.log10(Math.max(level, 1e-6)) + 48) / 48)));
 
   // #60 (UI audit flag): peak hold and clip latch. The held peak stays put
   // for a moment (the setting, 1.5 s by default), then drops to the level
-  // now; a level at 0 dBFS (or `over`) lights the clip light until clicked.
+  // now. The clip light latches only on a real over: a peak above full
+  // scale (0 dBFS). A track peaking at exactly full scale isn't clipping,
+  // and the master can't go over (its limiter, shown by LIM, holds it under).
+  /** Above full scale, with a hair of room for float rounding (+0.001 dB). */
+  const OVER = 1.0001;
   const on = $derived(flag('meters'));
   let peak = $state(0);
   let clipped = $state(false);
@@ -25,7 +29,7 @@
   $effect(() => {
     if (!on) return;
     const f = fill;
-    if (level >= 0.999 || over) clipped = true;
+    if (level > OVER) clipped = true;
     if (f >= untrack(() => peak)) {
       peak = f;
       clearTimeout(hold);
@@ -48,7 +52,7 @@
     {#if clipped}
       <!-- The light and 4px round it, reaching out only on the side away from the fader. -->
       <button class="reset {ticks || 'right'}" aria-label="Clear the clip light{what ? `, ${what}` : ''}" onclick={() => (clipped = false)}
-        use:tip={() => tipText(over ? 'The limiter caught a peak here' : 'This level reached 0 dB', '', 'click to clear')}></button>
+        use:tip={() => tipText('This level went over 0 dB', '', 'click to clear')}></button>
     {/if}
   </div>
 {:else}

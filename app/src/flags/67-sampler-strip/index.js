@@ -15,7 +15,7 @@ export default {
   n: 67,
   title: 'Sampler slots say what they take, and the Level dial fits',
   group: 'Controls',
-  notes: 'Sampler.svelte: Knob size 14, "Drag a track here" in the first empty slot (it moves on as slots fill), click an empty slot = put(selected()), empty slots not aria-disabled. style.css: dial 2px down to centre its ring, gap 8, --line ring on empty wells, hint --fg-3, container query for the short hint.',
+  notes: 'Sampler.svelte: Knob size 14, "Drag a track here" in the first empty slot (it moves on as slots fill), click an empty slot = put(selected()), empty slots not aria-disabled. style.css: dial 1px down (ring 6px clear at the top, cap on the centre line of the label), gap 8, 9px left of the label to match the 9px of ring right of the cap, --line ring on empty wells, hint --fg-3, container query for the short hint.',
 };
 
 /** Show me: the sampler open with a track selected; loupes on the first slots and on the Level dial, flipping. */
