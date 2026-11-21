@@ -9,8 +9,9 @@
 // waveforms and Settings couldn't be given more room.
 //
 // Now the waveforms' bottom edge, the decks' bottom edge (the library's
-// handle) and the sampler's top edge each get the library's grip, drawn at
-// --fg-4 at rest and --fg-3 on hover, drag or focus. The sidebar's edge has
+// handle) and the sampler's top edge each get the library's grip, hidden at
+// rest and drawn at --fg-3 on hover, drag or focus (round 2: grey pills at
+// rest read as scrollbar thumbs). The sidebar's edge has
 // no pill (beside a scrolling list it read as a scrollbar): an 8px strip on
 // the divider shows the resize cursor, and the divider lights from top to
 // bottom on hover, drag or focus. Each panel has one designed size, taken from the 1440×900 layout,
@@ -45,14 +46,14 @@ export default {
   title: 'A grip on every panel edge, and designed sizes',
   group: 'Layout',
   notes:
-    'Grips on the waveforms, library and sampler edges (visible at rest, brighter on hover); the sidebar divider lights on hover. Designed sizes: waveforms 136, decks 360 (⌥-drag, 340 to 400), sampler 40, sidebar 200; library the rest. Double-click resets with the site spring; sizes kept in oss-dj.panelSizes. The sampler shortens the library, never the decks.',
+    'Grips on the waveforms, library and sampler edges (hidden at rest, --fg-3 on hover, drag or focus); the sidebar divider lights on hover. Designed sizes: waveforms 136, decks 360 (⌥-drag, 340 to 400), sampler 40, sidebar 200; library the rest. Double-click resets with the site spring; sizes kept in oss-dj.panelSizes. The sampler shortens the library, never the decks.',
 };
 
 /** Show me: opens the sampler; flipping shows the decks shoved up and no grips (before), the decks in place and a grip on every edge (after). Replay drags the waveforms' edge and lets it spring back. */
 export const show = {
   about: "Only the library's edge could be dragged, you couldn't see where to grab it, and opening the sampler shoved the decks up. Now every panel edge has a grip, each panel springs back to its designed size, and the decks never squash or stretch.",
   before: "There's one hidden handle, above the library. Open the sampler and the decks get 52px shorter: every button jumps up and the mixer's dials crowd together.",
-  after: 'Every panel edge can be dragged: the waveforms, the library and the sampler have a faint grip, and the sidebar\'s divider lights up when you point at it, and a double-click springs it back to its designed size. The sampler takes its room from the library, so the decks stay exactly where they were.',
+  after: 'Every panel edge can be dragged: point at the gap above or below the waveforms, the library or the sampler and a grip lights up (the sidebar\'s divider lights the same way), and a double-click springs it back to its designed size. The sampler takes its room from the library, so the decks stay exactly where they were.',
   period: 2000,
   async setup(app, ctx) {
     // #7 shares the size model; off for the show, so Before is today's app.

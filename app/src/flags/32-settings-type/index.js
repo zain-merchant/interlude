@@ -16,7 +16,7 @@
 //   the minus key; hook in Settings.svelte), a slashed zero tells 0 from O,
 //   the group headings sit level across the columns and scroll with their
 //   lists (sticky ones staggered in the multi-column flow), the columns
-//   stop at 1080px, and runs of related shortcuts get 8px of air.
+//   run the full width (each row stops at 360px), and runs of related shortcuts get 8px of air.
 // - Backlog: inline code at 0.92em (c-K44); text-only rows on the baseline
 //   (c-K51); whole-pixel line height (c-K47); column width (c-K66); slashed
 //   zero (c-K80); groups (c-K81).
@@ -26,7 +26,7 @@ export default {
   n: 32,
   title: 'Settings headings lead the page',
   group: 'Type and colour',
-  notes: 'Settings: h2 16/500, h3 13/500 --fg, p line-height 20px, sections 24px apart, scroll fades like the track list (16px to 30%, top only once scrolled), quiet footer actions, keyboard caps 52px with a dashed "Set" slot when unassigned, group headings level across the columns, 1080px columns.',
+  notes: 'Settings: h2 16/500, h3 13/500 --fg, p line-height 20px, sections 24px apart, scroll fades like the track list (16px to 30%, top only once scrolled), quiet footer actions, keyboard caps 52px with a dashed "Set" slot when unassigned, group headings level across the columns, full-width columns with rows capped at 360px. On Decks, a section with one option has no heading; its label names it ("Hot cues start a paused deck", "Quantize: snap to the beat"), so headings only lead groups (c-K07).',
 };
 
 /** Show me: Settings > Audio and Keyboard, flipping; a loupe on the Output heading and its text. */

@@ -86,3 +86,13 @@
 :root[data-flag-concentric] .toastbox .toast[data-docked] {
   border-radius: calc(var(--r) + 4px);
 }
+/* Docked in the toolbar (#13) the toast stays a pill, the shape that tells
+   it from a control: 16px on its 32px height. Its Undo, 4px in, is a
+   capsule to match (16 - 4 = 12 on its 24px), so the two curves run
+   side by side instead of the pill pinching a square-cornered chip. */
+:root[data-flag-concentric] .toastbox .toast[data-docked] {
+  border-radius: calc(var(--r) + 8px);
+}
+:root[data-flag-concentric] .toastbox .toast[data-docked] .undo {
+  border-radius: calc(var(--r) + 4px);
+}

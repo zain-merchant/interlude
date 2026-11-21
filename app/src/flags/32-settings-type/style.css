@@ -93,10 +93,12 @@
 :root[data-flag-settings-type] .settings .cols h3 {
   margin: 0 0 8px;
 }
-/* The columns stop at three comfortable widths, so a name and its key sit
-   closer together on a wide window. */
-:root[data-flag-settings-type] .settings .cols {
-  max-width: 1080px;
+/* The columns run the page's full width, so the last one ends under Done
+   (a 1080px cap stopped them about 104px short). Each row stops at 360px
+   instead, so a name and its key still sit close together on a wide
+   window. */
+:root[data-flag-settings-type] .settings .cols .row {
+  max-width: 360px;
 }
 /* A little air before each run of related shortcuts (hot cues, stems,
    loops, beat jumps). */

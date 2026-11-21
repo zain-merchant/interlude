@@ -16,3 +16,14 @@
 :root[data-flag-key-notation][data-flag-key-notation-show='both'][data-flag-spacing]:not([data-flag-library-columns]) section.library .row {
   grid-template-columns: 24px minmax(0, 2.4fr) minmax(0, 1.6fr) 64px 76px 64px minmax(0, 1.2fr);
 }
+/* "Both": the key name sits in a slot a little wider than the widest name
+   ("C♯m", 27px at 13px), so every row's Camelot code starts at one x (it
+   started wherever the name ended, c-K05). No padding or clipping of its
+   own: the row's span rule would pad it and, clipped, an inline-block
+   sits on its bottom edge instead of the text's baseline. */
+:root[data-flag-key-notation][data-flag-key-notation-show='both'] section.library .row .k .kn {
+  display: inline-block;
+  min-width: 2.3em;
+  padding: 0;
+  overflow: visible;
+}

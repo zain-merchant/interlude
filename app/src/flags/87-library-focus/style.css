@@ -2,18 +2,21 @@
    The track list is that pane unless the sidebar has keyboard focus: the
    browse knob, Shift-arrows and Enter all act on the list's selection
    wherever focus is, so it stays lit (it must read from the decks). The
-   sidebar's current list steps down to a 3% fill with no edge, and
-   gets the full look back while focus is in the sidebar, when the list's
-   selection steps down instead. Beats #4's selected looks. */
+   sidebar's current list steps down to the plain selected fill (--sel)
+   with no edge, and gets the full look back while focus is in the
+   sidebar, when the list's selection steps down instead. Beats #4's
+   selected looks. (A 3% fill sat under hover's 5%, so hovering another
+   list looked exactly like the current one, d-K06.) */
 :root[data-flag-library-focus] section.library [data-region='sidebar']:not(:has(:focus-visible)) .item.on,
 :root[data-flag-library-focus] section.library [data-region='sidebar']:not(:has(:focus-visible)) .item.on:hover {
-  /* Half of --raise, under --hover: a shape, not a second lit pill. */
-  background: rgb(255 255 255 / 0.03);
+  /* Above --hover, so a hovered list never looks current; no edge, so it
+     isn't a second lit pill. */
+  background: var(--sel);
   box-shadow: none;
   color: var(--fg);
 }
 :root[data-flag-library-focus] section.library:has([data-region='sidebar'] :focus-visible) [data-region='tracks'] .row.sel {
-  background: rgb(255 255 255 / 0.03);
+  background: var(--sel);
   box-shadow: none;
 }
 /* E11: a count on a raised or selected fill reads at --fg-2 (6.3:1);

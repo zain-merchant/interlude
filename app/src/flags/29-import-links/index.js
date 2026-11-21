@@ -11,8 +11,9 @@
 // ago" for "3 h ago", the path and its age on one 11px line, the path at
 // --fg-2 (--fg-3 read 4.41:1 on the raised row) and the age, also --fg-2
 // (--fg-3 was 4.4:1), after an 8px gap (the review asked for " · "; the brief rules out middle
-// dots, so space sets them apart, as #10 does), idle step dashes at --fg-4
-// (from 1.34:1) with "1 of 4" beside them. From the backlog: each source is
+// dots, so space sets them apart, as #10 does), the step as "1 of 4" in
+// words (round 2: the dashes beside it said the same thing twice, so
+// they're hidden). From the backlog: each source is
 // a heading and its rows, not an outlined card round a filled row round a
 // chip; the found file is regular weight under its bold source; the Serato
 // row is named "Serato folder" like "rekordbox.xml", its place on the line
@@ -25,7 +26,7 @@ export default {
   title: "Import's links look like links",
   group: 'Polish',
   notes:
-    'Links at --fg-2 with an underline, one verb, aligned with the file name. rekordbox spelling, versions in words, "hours ago", path and age on one 11px line (age a step quieter), step dashes at --fg-4 with "1 of 4". Sources without the outlined card.',
+    'Links at --fg-2 with an underline, one verb, aligned with the file name. rekordbox spelling, versions in words, "hours ago", path and age on one 11px line (age a step quieter), the step as "1 of 4" (no dashes). Sources without the outlined card.',
 };
 
 /** Show me: the Import dialog's first step, flipping; the "different file" link and the found row in a loupe. */

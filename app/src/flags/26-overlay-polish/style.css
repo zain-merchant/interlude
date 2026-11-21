@@ -11,7 +11,7 @@
 :root[data-flag-overlay-polish] .toastbox .toast:has(.undo):not([data-docked]) {
   padding: var(--space-2, 8px) var(--space-2, 8px) var(--space-2, 8px) var(--space-3, 12px);
 }
-:root[data-flag-overlay-polish][data-flag-concentric] .toastbox .toast:has(.undo) {
+:root[data-flag-overlay-polish][data-flag-concentric] .toastbox .toast:has(.undo):not([data-docked]) {
   border-radius: calc(var(--r) + 8px);
 }
 /* e-K53: the banner's button label sat about 1px under its sentence: the

@@ -19,14 +19,13 @@
 :root[data-flag-primary-button] .btn.primary:disabled {
   opacity: 0.4;
 }
-/* Import's rows: the newest library found carries the solid chip; the
-   others a quiet tonal one. Both say Import. */
+/* Import's rows: every source found gets the same tonal chip, all saying
+   Import; the newest says so in its age line ("exported 3 hours ago,
+   newest"). A solid chip on one row, beside a barely-there grey one on
+   the next, made the choice look made for you, at a step where the row
+   itself is the action (e-K12, e-K30). */
 :root[data-flag-primary-button] .card[aria-labelledby='import-title'] .found .go {
   border-radius: var(--r);
   background: rgb(255 255 255 / 0.08);
   color: var(--fg);
-}
-:root[data-flag-primary-button] .card[aria-labelledby='import-title'] .found .go.primary {
-  background: var(--fg);
-  color: var(--ink);
 }

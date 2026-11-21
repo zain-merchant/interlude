@@ -58,7 +58,7 @@
   ]);
   const apps = $derived(flag('import-links') ? APPS_29 : APPS);
   const appName = $derived(source?.kind === 'serato' ? 'Serato' : flag('import-links') ? 'rekordbox' : 'Rekordbox');
-  // #27 (UI audit flag): primary-button: the most recently exported library found is the one main action.
+  // #27 (UI audit flag): primary-button: the most recently exported library found is named as the newest.
   const newest = $derived(found.reduce((a, f) => (!a || f.modified > a.modified ? f : a), null));
   const foundFor = (kind) => found.filter((f) => f.source.kind === kind).slice(0, kind === 'rekordbox' ? 1 : 3);
   /** What a found library is called: the file, or for Serato where it lives. */
@@ -137,7 +137,7 @@
     <div class="top">
       <ol class="steps" aria-label="Step {stepIndex + 1} of {STEPS.length}">
         {#each STEPS as s, i}<li class:on={i <= stepIndex}></li>{/each}
-        <!-- #29 (UI audit flag): import-links: the step in words beside the dashes. -->
+        <!-- #29 (UI audit flag): import-links: the step in words (its style.css hides the dashes). -->
         {#if flag('import-links')}<li class="of num" aria-hidden="true">{stepIndex + 1} of {STEPS.length}</li>{/if}
       </ol>
       {#if step !== 'running'}
@@ -169,15 +169,15 @@
                   <b>{title(f.source)}</b>
                   <!-- #29 (UI audit flag): import-links: where, then when a step quieter, on one line. -->
                   {#if flag('import-links')}
-                    <small>{where(f.source.path)}{f.source.kind === 'serato' ? `/${fileName(f.source.path)}` : ''} <span class="when">{ago(f.modified, app.verb)}</span></small>
+                    <small>{where(f.source.path)}{f.source.kind === 'serato' ? `/${fileName(f.source.path)}` : ''} <span class="when">{ago(f.modified, app.verb)}{#if flag('primary-button') && f === newest && found.length > 1}, newest{/if}</span></small>
                   <!-- #10 (UI audit flag): where and when set apart by space, not a middle dot. -->
                   {:else if flag('no-dots')}
-                    <small>{where(f.source.path)}{f.source.kind === 'serato' ? `/${fileName(f.source.path)}` : ''} <span class="when">{ago(f.modified, app.verb)}</span></small>
+                    <small>{where(f.source.path)}{f.source.kind === 'serato' ? `/${fileName(f.source.path)}` : ''} <span class="when">{ago(f.modified, app.verb)}{#if flag('primary-button') && f === newest && found.length > 1}, newest{/if}</span></small>
                   {:else}
                   <small>{where(f.source.path)}{f.source.kind === 'serato' ? `/${fileName(f.source.path)}` : ''} · {ago(f.modified, app.verb)}</small>
                   {/if}
                 </span>
-                <!-- #27 (UI audit flag): primary-button: "Import" on each, the solid chip on the newest only. -->
+                <!-- #27 (UI audit flag): primary-button: "Import" on each, the same tonal chip; the newest says so in its age line. -->
                 {#if flag('primary-button')}<span class="go" class:primary={f === newest}>Import</span>{:else}<span class="go">Continue</span>{/if}
               </button>
             {/each}

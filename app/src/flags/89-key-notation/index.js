@@ -16,7 +16,7 @@ export default {
   n: 89,
   title: 'The library writes keys the way the decks do',
   group: 'Type and colour',
-  notes: 'Key column notation: both ("Bm 10A", one size and colour) or Camelot only. Column widens to 72px (88 under #80) for both. The decks follow the same choice (Deck.svelte). Ships as Display › Key.',
+  notes: 'Key column notation: both ("Bm 10A", one size and colour) or Camelot only. Column widens to 72px (88 under #80) for both; the key name sits in a 2.3em slot so the codes line up (Library.svelte wraps it in .kn). The decks follow the same choice (Deck.svelte). Ships as Display › Key.',
   settings: {
     show: {
       type: 'choice',

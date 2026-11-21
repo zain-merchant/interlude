@@ -9,10 +9,11 @@
 // Import's local .btn.primary becomes a shared class (style.css): solid
 // --fg fill, --ink text, weight 500, the control height and radius. Each
 // dialog's one main action uses it: Report's Save (and Done once saved),
-// Import's Import and Done. On Import's first step only the most recently
-// exported library gets the solid chip; the others a tonal one, and both
-// say Import. Cancel stays a ghost button. The device-lost banner's
-// recovery button uses the same class under #23. Hooks: Report.svelte,
+// Import's Import and Done. On Import's first step every library found
+// gets the same tonal Import chip (round 2: one solid chip beside a faint
+// one made the choice for you); the newest says so in its age line
+// ("exported 3 hours ago, newest"). Cancel stays a ghost button. The
+// device-lost banner's button keeps the class but #23 draws it tonal. Hooks: Report.svelte,
 // Import.svelte.
 //
 // The design doc keeps one solid primary, Play. Owner's call 3: allow a
@@ -26,7 +27,7 @@ export default {
   title: "Each dialog's main button looks like one",
   group: 'Controls',
   notes:
-    'Shared .btn.primary (solid --fg, --ink text, 500). Report: Save and Done; Import: the newest library found gets the solid Import chip, others tonal.',
+    'Shared .btn.primary (solid --fg, --ink text, 500). Report: Save and Done; Import: every library found gets the same tonal Import chip, the newest named in its age line.',
 };
 
 /** Show me: the Report dialog, its Save button in a loupe beside Cancel; flipping between the tonal grey that read as disabled and the main button. */

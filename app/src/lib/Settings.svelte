@@ -638,15 +638,17 @@
         {#if flag('settings-copy')}
           <!-- #34 (UI audit flag): settings-copy: one sentence per option; labels say what they do; keys named as the user has them. -->
           <section class="display">
-            <h3>Hot cues</h3>
+            <!-- #32 (UI audit flag): settings-type drops a heading over a single option; the label carries its name. -->
+            {#if !flag('settings-type')}<h3>Hot cues</h3>{/if}
             <label class="opt">
               <input type="checkbox" checked={deckSettings.hotCuePlays} onchange={(e) => setDeckSetting('hotCuePlays', e.currentTarget.checked)} />
-              <span>Start a paused deck</span>
+              <span>{flag('settings-type') ? 'Hot cues start a paused deck' : 'Start a paused deck'}</span>
             </label>
             <p>Turn this off to play only while the pad is held, like the Cue button.</p>
           </section>
           <section class="display">
-            <h3>Sync</h3>
+            <!-- #32 (UI audit flag): settings-type drops a heading over a single option; the label carries its name. -->
+            {#if !flag('settings-type')}<h3>Sync</h3>{/if}
             <label class="opt">
               <input type="checkbox" checked={deckSettings.autoSync} onchange={(e) => setDeckSetting('autoSync', e.currentTarget.checked)} />
               <span>Sync when a deck starts</span>
@@ -654,10 +656,11 @@
             <p>Starting a deck while the other plays matches its tempo and beat.</p>
           </section>
           <section class="display">
-            <h3>Quantize</h3>
+            <!-- #32 (UI audit flag): settings-type drops a heading over a single option; the label carries its name. -->
+            {#if !flag('settings-type')}<h3>Quantize</h3>{/if}
             <label class="opt">
               <input type="checkbox" checked={deckSettings.quantize} onchange={(e) => setDeckSetting('quantize', e.currentTarget.checked)} />
-              <span>Snap to the beat</span>
+              <span>{flag('settings-type') ? 'Quantize: snap to the beat' : 'Snap to the beat'}</span>
             </label>
             <p>Hot cues, loops and jumps land on the nearest beat{#if keyLabel('mixer.quantize')}; {keyLabel('mixer.quantize')} turns it on and off{/if}.</p>
           </section>
@@ -673,15 +676,17 @@
           </section>
         {:else}
         <section class="display">
-          <h3>Hot cues</h3>
+          <!-- #32 (UI audit flag): settings-type drops a heading over a single option; the label carries its name. -->
+          {#if !flag('settings-type')}<h3>Hot cues</h3>{/if}
           <label class="opt">
             <input type="checkbox" checked={deckSettings.hotCuePlays} onchange={(e) => setDeckSetting('hotCuePlays', e.currentTarget.checked)} />
-            <span>Start a paused deck</span>
+            <span>{flag('settings-type') ? 'Hot cues start a paused deck' : 'Start a paused deck'}</span>
           </label>
           <p>A hot cue on a paused deck plays the track from there. Turn this off to play only while the pad is held and go back when it's let go, like the cue button.</p>
         </section>
         <section class="display">
-          <h3>Sync</h3>
+          <!-- #32 (UI audit flag): settings-type drops a heading over a single option; the label carries its name. -->
+          {#if !flag('settings-type')}<h3>Sync</h3>{/if}
           <label class="opt">
             <input type="checkbox" checked={deckSettings.autoSync} onchange={(e) => setDeckSetting('autoSync', e.currentTarget.checked)} />
             <span>Sync when a deck starts</span>
@@ -689,10 +694,11 @@
           <p>Starting a deck with play, cue or a hot cue while the other deck is playing brings it in at that deck's tempo and on its beat, as if you'd pressed Sync.</p>
         </section>
         <section class="display">
-          <h3>Quantize</h3>
+          <!-- #32 (UI audit flag): settings-type drops a heading over a single option; the label carries its name. -->
+          {#if !flag('settings-type')}<h3>Quantize</h3>{/if}
           <label class="opt">
             <input type="checkbox" checked={deckSettings.quantize} onchange={(e) => setDeckSetting('quantize', e.currentTarget.checked)} />
-            <span>Snap to the beat</span>
+            <span>{flag('settings-type') ? 'Quantize: snap to the beat' : 'Snap to the beat'}</span>
           </label>
           <p>Hot cues and loops you set land on the nearest beat, and jumping to a hot cue or back into a loop while a track plays stays in time. Turn this off to set and jump exactly where you press. B turns it on and off too.</p>
         </section>

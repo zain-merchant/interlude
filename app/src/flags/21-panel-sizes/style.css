@@ -11,11 +11,13 @@
   grid-template-columns: var(--library-sidebar, 200px) minmax(0, 1fr);
 }
 
-/* The library's grip, always faintly there (it was invisible until you
-   happened to hover the gap, C63): --fg-4 at rest, --fg-3 on hover, drag
-   or focus, like the new grips. */
-:root[data-flag-panel-sizes] .app > .split:not(:hover, .dragging, :focus-visible) > i {
-  background: var(--fg-4);
+/* Grips show only when you reach for them: transparent at rest, --fg-3
+   while the pointer is over the 12px gutter (which shows the resize
+   cursor), during a drag, or with keyboard focus, as the sidebar's divider
+   already does. Drawn at rest, the three grey pills (two of them 44px
+   apart round the sampler) read as scrollbar thumbs (b-K39, f-K22). */
+:root[data-flag-panel-sizes] .app > .grip:not(:hover, .dragging, :focus-visible) > i {
+  background: transparent;
 }
 
 /* A double-click reset settles on the site's snappy spring (301ms); a drag

@@ -792,8 +792,8 @@
             <span class="t">{#if t.missing}<span class="k" use:tip={() => `File not found: ${t.path}`}>{t.title}</span><span class="sr">, file not found</span>{:else if markOn}{#each marks(t.title) as m}{#if m.hit}<mark>{m.s}</mark>{:else}{m.s}{/if}{/each}{:else}{t.title}{/if}</span>
             <span>{#if markOn}{#each marks(t.artist) as m}{#if m.hit}<mark>{m.s}</mark>{:else}{m.s}{/if}{/each}{:else}{t.artist}{/if}</span>
             <span class="n num" class:none={a && !a.bpm}>{a ? bpmText(a) || NONE : ''}</span>
-            <span class:none={a && !a.key}>{#if a?.key}<span class="k" class:mix={!decks.length && mixKeys.some((k) => keysMix(k, a.key))} use:tip={() => keyTip(a.key, decks.length > 0)}><!-- #89 (UI audit flag): key-notation: Camelot, or both as the decks show it.
-                -->{#if notation === 'camelot'}{camelot(a.key)}{:else if notation === 'both'}{keyName(a.key)} <span class="cam">{camelot(a.key)}</span>{:else}{keyName(a.key)}{/if}</span>{:else if a}{NONE}{/if}</span>
+            <span class:none={a && !a.key}>{#if a?.key}<span class="k" class:mix={!decks.length && mixKeys.some((k) => keysMix(k, a.key))} use:tip={() => keyTip(a.key, decks.length > 0)}><!-- #89 (UI audit flag): key-notation: Camelot, or both as the decks show it (the name in a slot, so the codes line up).
+                -->{#if notation === 'camelot'}{camelot(a.key)}{:else if notation === 'both'}<span class="kn">{keyName(a.key)}</span> <span class="cam">{camelot(a.key)}</span>{:else}{keyName(a.key)}{/if}</span>{:else if a}{NONE}{/if}</span>
             <span class="n num" class:none={a?.failed}>{a ? timeText(a) || NONE : ''}</span>
             <span>{#if markOn}{#each marks(t.folder) as m}{#if m.hit}<mark>{m.s}</mark>{:else}{m.s}{/if}{/each}{:else}{t.folder}{/if}</span>
             {#if decks.length && flag('deck-names')}<span class="sr">, on the {decks.map((d) => ['left', 'right'][d]).join(' and ')} {decks.length > 1 ? 'decks' : 'deck'}</span>{:else if decks.length}<span class="sr">, on deck {decks.map((d) => 'AB'[d]).join(' and ')}</span>{/if}

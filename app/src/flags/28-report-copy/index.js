@@ -7,8 +7,9 @@
 // reportContext (App.svelte): the file holds what you write, the app's
 // version, macOS version and chip, the audio output and any controllers,
 // and this and the last session's logs, and it's saved to the Desktop. The
-// lead is now the instruction alone, on one line; the small print under the
-// box says what the file holds and where it goes (no support address
+// lead is now the instruction alone, on one line; the line under the box
+// (13px --fg-2: it's what you agree to send, not fine print) says what the
+// file holds and where it goes (no support address
 // exists in the app, so none is named); the button says "Save to Desktop".
 // The placeholder reads as one plain sentence. The text
 // box loses the browser's resize grip in its rounded corner, and the close

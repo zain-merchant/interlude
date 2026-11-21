@@ -197,7 +197,8 @@
     const a = engine.audio;
     if (a?.state === 'lost' && lostDevice === null) {
       lostDevice = a.device;
-      announce(`${a.device} disconnected. Decks are held where they stopped.`);
+      // #23 (UI audit flag): banner-warning: the announcement says what the banner says.
+      announce(flag('banner-warning') ? `${a.device} disconnected. Decks paused. They carry on when it's back.` : `${a.device} disconnected. Decks are held where they stopped.`);
     } else if (a?.state === 'connected' && lostDevice !== null) {
       say(a.device === lostDevice ? `${a.device} is back` : `Playing through ${a.device}`);
       announce(`Audio is back on ${a.device}`);
@@ -763,16 +764,16 @@
   </div>
 
   {#if engine.audio?.state === 'lost'}
-    <!-- #23 (UI audit flag): banner-warning: the lost device is a warning (amber), with one clear way out. -->
+    <!-- #23 (UI audit flag): banner-warning: the lost device is a warning (amber), with one clear way out (tonal, so it doesn't outshout the warning). -->
     <div class="banner" class:lost={flag('banner-warning')} role="alert">
       <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.8 15 14H1z" /><path d="M8 6.2v3.6M8 11.6v.4" /></svg>
       {#if flag('banner-warning')}
-        <span><b>{engine.audio.device} disconnected.</b> Decks are held until it's back.</span>
+        <span><b>{engine.audio.device} disconnected.</b> Decks paused. They carry on when it's back.</span>
       {:else}
         <span><b>{engine.audio.device} disconnected.</b> Decks are held where they stopped and carry on when it's back.</span>
       {/if}
       {#if engine.audio.fallback && engine.audio.fallback !== engine.audio.device}
-        <button class="btn sm" class:primary={flag('banner-warning')} onclick={() => backend.useDefaultOutput?.()}>Play through {engine.audio.fallback}</button>
+        <button class="btn sm" class:primary={flag('banner-warning')} onclick={() => backend.useDefaultOutput?.()}>{flag('banner-warning') ? 'Use' : 'Play through'} {engine.audio.fallback}</button>
       {/if}
     </div>
   {:else if healthText}
