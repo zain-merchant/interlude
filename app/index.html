@@ -7,6 +7,18 @@
   </head>
   <body>
     <div id="app"></div>
+    <!-- Prototype: record platter styles. One empty section per style; the bar picks which one the decks draw. -->
+    <prototype-switcher>
+      <section data-style="record-strip" data-variant="Record + Strip" data-note="Waveform stays the flat strip beside the record; the record shows the spin and the tonearm"></section>
+      <section data-style="cue-ring-strip" data-variant="Cue Ring + Strip" data-note="Flat strip for the waveform, plus a thin progress ring with cue dots around the record"></section>
+      <section data-style="record-sleeve" data-variant="Record + Sleeve" data-note="A cued deck shows its record waiting in a sleeve made from the track's waveform; play slides the sleeve away"></section>
+      <section data-style="smoked-arm" data-variant="Smoked Record" data-note="Dark record, waveform ring hugging it, glass centre with BPM, key and pitch, tonearm"></section>
+      <section data-style="clear-arm" data-variant="Clear Record" data-note="See-through record tinted in the deck colour, same ring, centre and tonearm"></section>
+      <section data-style="waveform-grooves" data-variant="Waveform Grooves" data-note="The overview is printed into the grooves between centre and rim; nothing outside the record"></section>
+      <section data-style="strobe-rim" data-variant="Strobe Rim" data-note="Platter dots stand still at true speed and drift when the pitch is off"></section>
+      <section data-style="beat-centre" data-variant="Beat Centre" data-note="Clear record whose centre counts the four beats of the bar"></section>
+    </prototype-switcher>
     <script type="module" src="/src/main.js"></script>
+    <script type="module" src="/src/proto/main.js"></script>
   </body>
 </html>
