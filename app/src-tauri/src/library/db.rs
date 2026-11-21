@@ -16,8 +16,8 @@ use super::tags::Tags;
 use super::Analysis;
 
 /// Bumped when BPM or key detection changes enough that saved results
-/// should be redone. Tracks analyzed by an older version are analyzed
-/// again in the background.
+/// should be redone. Tracks analyzed by an older version keep showing their
+/// old results while they're analyzed again in the background.
 pub const ANALYSIS_VERSION: i64 = 4;
 
 const BACKUPS_KEPT: usize = 7;
@@ -902,12 +902,12 @@ impl Db {
 }
 
 /// Reads the eight analysis columns starting at `at`. `None` when the track
-/// hasn't been analyzed by the current analyzer.
+/// hasn't been analyzed yet. A result from an older analyzer is kept, marked
+/// outdated, so its BPM and key stay on screen until it's redone.
 fn analysis_from(r: &rusqlite::Row<'_>, at: usize) -> rusqlite::Result<Option<Analysis>> {
-    let version: Option<i64> = r.get(at)?;
-    if version != Some(ANALYSIS_VERSION) {
+    let Some(version): Option<i64> = r.get(at)? else {
         return Ok(None);
-    }
+    };
     let failed: bool = r.get(at + 1)?;
     let tonic: Option<u8> = r.get(at + 4)?;
     let minor: Option<bool> = r.get(at + 5)?;
@@ -919,6 +919,7 @@ fn analysis_from(r: &rusqlite::Row<'_>, at: usize) -> rusqlite::Result<Option<An
         key: tonic.zip(minor).map(|(t, m)| Key::new(t, m)),
         loudness: peak.map(|peak| Loudness { lufs, peak }),
         failed,
+        outdated: version != ANALYSIS_VERSION,
     }))
 }
 
@@ -1046,6 +1047,7 @@ mod tests {
                 peak: 0.98,
             }),
             failed: false,
+            outdated: false,
         };
         db.save_analysis(p, &a, Some(0.12), false).unwrap();
         db.save_analysis(p, &a, None, false).unwrap();
@@ -1071,6 +1073,7 @@ mod tests {
             key: None,
             loudness: None,
             failed: false,
+            outdated: false,
         };
         db.save_analysis(p, &a, Some(0.1), false).unwrap();
         assert_eq!(db.locked_grid(p).unwrap(), None);
@@ -1099,6 +1102,7 @@ mod tests {
             key: None,
             loudness: None,
             failed: false,
+            outdated: false,
         };
         // Loaded onto a deck: the DSP grid, then Beat This!'s.
         db.save_analysis(p, &a(123.9), Some(0.4), false).unwrap();
@@ -1144,6 +1148,7 @@ mod tests {
                 peak: 0.0,
             }),
             failed: false,
+            outdated: false,
         };
         db.save_analysis(p, &silent, None, false).unwrap();
         let back = db.analysis(p).unwrap().unwrap();
@@ -1160,14 +1165,40 @@ mod tests {
     }
 
     #[test]
-    fn old_analysis_versions_count_as_not_analyzed() {
+    fn old_analysis_versions_are_kept_but_marked_outdated() {
         let db = Db::open_in_memory().unwrap();
         let p = Path::new("/m/a.mp3");
-        db.save_analysis(p, &Analysis::FAILED, None, false).unwrap();
+        let a = Analysis {
+            duration: Some(300.0),
+            bpm: Some(124.0),
+            key: Some(Key::new(9, true)),
+            loudness: Some(Loudness {
+                lufs: Some(-9.0),
+                peak: 0.9,
+            }),
+            failed: false,
+            outdated: false,
+        };
+        db.save_analysis(p, &a, Some(0.1), false).unwrap();
+        assert!(db.analysis(p).unwrap().unwrap().complete());
         db.conn
-            .execute("UPDATE tracks SET analysis_version = 0", [])
+            .execute("UPDATE tracks SET analysis_version = 2", [])
             .unwrap();
-        assert_eq!(db.analysis(p).unwrap(), None);
+        // Still shown, but queued to be redone.
+        let old = db.analysis(p).unwrap().unwrap();
+        assert_eq!(
+            old,
+            Analysis {
+                outdated: true,
+                ..a
+            }
+        );
+        assert!(!old.complete());
+        // Redoing it brings it up to date.
+        db.save_analysis(p, &a, Some(0.1), false).unwrap();
+        assert!(db.analysis(p).unwrap().unwrap().complete());
+        // A track never analyzed still has nothing to show.
+        assert_eq!(db.analysis(Path::new("/m/new.mp3")).unwrap(), None);
     }
 
     #[test]
