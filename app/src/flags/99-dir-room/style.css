@@ -64,7 +64,7 @@
   --rm-plate-edge: inset 0 1px 0 var(--rm-lit), inset 0 0 0 1px rgb(255 246 232 / 0.025), 0 0 0 1px rgb(0 0 0 / 0.55), 0 1px 0 1px rgb(0 0 0 / 0.35), 0 12px 28px -10px rgb(0 0 0 / 0.8);
   --rm-well-edge: inset 0 1px 0 rgb(0 0 0 / 0.65), inset 0 3px 5px -1px rgb(0 0 0 / 0.6), inset 0 0 0 1px rgb(0 0 0 / 0.25), 0 1px 0 rgb(255 246 232 / 0.06);
   /* The same cut, drawn over whatever fills the well (a waveform). */
-  --rm-cut: inset 0 1px 0 rgb(0 0 0 / 0.7), inset 0 4px 6px -2px rgb(0 0 0 / 0.75), inset 0 0 0 1px rgb(0 0 0 / 0.3), inset 0 -1px 0 rgb(255 246 232 / 0.05);
+  --rm-cut: inset 0 1px 0 rgb(0 0 0 / 0.7), inset 0 3px 3px -2px rgb(0 0 0 / 0.7), inset 0 0 0 1px rgb(0 0 0 / 0.3), inset 0 -1px 0 rgb(255 246 232 / 0.05);
   --rm-key-fill: linear-gradient(180deg, var(--rm-key), var(--rm-key-2));
   --rm-key-fill-hi: linear-gradient(180deg, var(--rm-key-hi), var(--rm-key-hi-2));
   --rm-key-edge: inset 0 1px 0 var(--rm-lit-key), inset 0 -1px 0 rgb(0 0 0 / 0.14), var(--rm-lift);
@@ -261,7 +261,8 @@
    it: 1px rings 4px apart round a spindle far below, showing where the
    waveform leaves the well dark. Still, and drawn once: a background. The
    cut (shadow under the top edge, lit lower lip) is drawn over the
-   waveform, so you look into the well. */
+   waveform, so you look into the well; its shadow is kept to the top
+   2px, so the cue flags the canvas draws at the top edge stay clear. */
 :root[data-flag-dir-room][data-flag-dir-room] [data-region^='deck'] .overview {
   background:
     repeating-radial-gradient(circle at 50% 900%, rgb(255 246 232 / 0.045) 0 1px, transparent 1.5px 4px),
