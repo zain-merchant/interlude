@@ -139,8 +139,9 @@ that took the change over), the show lists it in `masks`: Before turns it
 off too and After puts it back. When it does something else to the same
 thing (After would show it instead of this fix), the show lists it in
 `overrides`: it's off for the whole show. Either way it comes back on
-Done (or on a reload mid-show), the card says which, and the flag's row
-in the panel says its switch alone changes nothing while that flag is on.
+Done (or on a reload mid-show), the card says which, and while that flag
+is on the flag's row in the panel says so ("Shows less while …" for
+`masks`, "Hidden while …" for `overrides`).
 A flag that no longer changes anything on its own (everything it did moved
 into another flag) says so in its `about` and sets `superseded: '<id>'` in
 its default export; the panel tags its row.

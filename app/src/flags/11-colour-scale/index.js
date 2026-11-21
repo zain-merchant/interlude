@@ -21,8 +21,11 @@ export default {
 
 /** Show me: deck A's pitch-nudge − and + and its beat-jump − and +, side by side in two loupes, flipping; the library's analysis note too while it's there. */
 export const show = {
-  // Before turns these off too (they hide this change while on): #48 nudge-pill also puts the nudge − and + at --fg-2, so with it on they don't change here.
-  masks: ['nudge-pill'],
+  // #48 nudge-pill also puts the nudge − and + at --fg-2, so with it on
+  // they don't change here; it also reshapes them. #39 against-text-levels
+  // lifts --fg-3 to 60%, so the dim nudge is 60% against 64%. Both are off
+  // for the whole show (back on Done).
+  overrides: ['nudge-pill', 'against-text-levels'],
   about: "The − and + under the pitch fader were dimmer than every other − and +, so they looked switched off; the library's 'analyzing' note used the faint grey of disabled things. Now each uses the brightness of its kind. (48 also brightens the nudge − and +.)",
   before: 'The pitch nudge − and + are a step dimmer than the beat-jump − and + next to them, so they look disabled even though they work, and live notes like "analyzing, 12 to go" are hard to read.',
   after: "All the − and + arrow buttons share one brightness, so working buttons look working, and live information is as readable as the text beside it.",
