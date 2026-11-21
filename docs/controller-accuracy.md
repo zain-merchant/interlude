@@ -80,7 +80,7 @@ Regenerate this table with `dj accuracy`.
 | Pioneer-DDJ-FLX6 | 846 | 666 | 86 | 8 | 0 | 0 |
 | Pioneer-DDJ-SB | 262 | 219 | 0 | 35 | 0 | 0 |
 | Pioneer-DDJ-SB2 | 508 | 430 | 0 | 73 | 0 | 0 |
-| Pioneer-DDJ-SB3 | 410 | 268 | 17 | 19 | 4 | 0 |
+| Pioneer-DDJ-SB3 | 410 | 268 | 17 | 19 | 0 | 0 |
 | Pioneer-OPUS-QUAD | 311 | 269 | 60 | 8 | 0 | 0 |
 | Pioneer-XDJ-AZ | 942 | 566 | 45 | 12 | 0 | 0 |
 | Pioneer-XDJ-RX3 | 797 | 642 | 68 | 8 | 0 | 0 |
