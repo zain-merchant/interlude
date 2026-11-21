@@ -4,7 +4,7 @@
 // the label was a plain 11px caption, identical to "Trim" and "Filter", so
 // nothing said you could click it; its tooltip then covered the knob. With
 // the flag on the three kill labels rest as small outlined buttons (20px,
-// 4px radius, a --line-2 ring, one width, 4px clear of the dial's ticks),
+// 4px radius, a --line-2 ring, one width, 1px under the dial's ticks),
 // a killed band fills with a red tint, and
 // the tooltip opens under the label (Knob.svelte sets data-tip-below; it
 // needs layout's one-line `place()` change in tooltip.svelte.js).
@@ -13,7 +13,7 @@ export default {
   n: 61,
   title: 'EQ kills look like buttons',
   group: 'Controls',
-  notes: 'Knob.svelte: data-tip-below on the kill label while on. style.css: 20px outlined label button, 36px min width (High\'s own width), 4px clear of the ticks, red tint when killed; Trim/Filter captions drop to match. Mixer.svelte: dial size gives up 7.4px per dial on short mixers.',
+  notes: 'Knob.svelte: data-tip-below on the kill label while on. style.css: 20px outlined label button, 36px min width (High\'s own width), tucked into its ring box 1px under the ticks so its word sits about as far under the dial as Trim\'s and Filter\'s (round 2: the boxes lower down and the captions dropped 3px overfilled the column, so labels sat as close to the next dial as to their own), red tint when killed. Mixer.svelte: dial size gives up 7.4px per dial on short mixers.',
 };
 
 /** Show me: channel A's Mid killed, a loupe on channel A's EQ column, flipping. */

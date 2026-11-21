@@ -75,7 +75,8 @@
     grab = e.target.classList?.contains('cap') ? f - t : 0;
     last = f;
     raw = value;
-    if (!grab) {
+    // #62 (UI audit flag): hit-areas: a press anywhere on the track starts a relative drag from where the fader is, like the dials; it never jumps the level to the press.
+    if (!grab && !flag('hit-areas')) {
       const g = Math.min(1, Math.max(0, f));
       raw = min + (invert ? 1 - g : g) * (max - min);
       set(raw);

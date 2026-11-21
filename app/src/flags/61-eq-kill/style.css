@@ -1,13 +1,16 @@
 /* #61: the EQ kill labels (High / Mid / Low) rest as small outlined
    buttons, so they read as switches and not as captions like Trim and
-   Filter. Each sits 4px clear of its dial's lowest ticks, and all three
-   share one width. Trim and Filter's captions drop by the same amount, so
-   every label in the column sits at one distance under its dial. The dial
-   size gives up the extra height on short mixers (Mixer.svelte). */
+   Filter. Each box tucks up into the empty foot of its dial's ring box,
+   1px under the lowest ticks, so its word sits about as far under the dial
+   as Trim's and Filter's (which keep their place); all three share one
+   width. Round 2: the 20px boxes 5px down and the captions dropped 3px
+   to match overfilled the column, so every label sat as close to the next
+   dial as to its own (Trim 1.5px off High's ticks, a-K02, f-K06). The dial
+   size gives up the rest on short mixers (Mixer.svelte). */
 :root[data-flag-eq-kill] .knob button.label {
   height: 20px;
   min-width: 36px;
-  margin: -1px 0 0;
+  margin: -5px 0 0;
   padding: 0 6px;
   line-height: 20px;
   text-align: center;
@@ -18,9 +21,6 @@
   /* Over its dial's ring box, so the whole button takes the click. */
   position: relative;
   z-index: 1;
-}
-:root[data-flag-eq-kill] .mixer .ch .knob span.label {
-  margin-top: 3px;
 }
 :root[data-flag-eq-kill] .knob button.label:hover {
   background: var(--hover);

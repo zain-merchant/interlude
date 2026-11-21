@@ -4,6 +4,11 @@
 // wheel, double-click and right-click handlers from the cap (.dial) to
 // the ring (.wrap), and pressing the ring focuses the dial like the cap
 // does. Every dial gets it: mixer, FX level and the sampler's Level.
+// Faders (round 2, C11, approved in round 1 and never built): a press on
+// a fader's track threw the cap there (full volume to half in one click,
+// d-K03). Now every press, cap or track, starts a relative drag from the
+// fader's current value, as the dials do; keys and double-click reset are
+// unchanged (Fader.svelte). Channel faders, crossfader and pitch.
 // The flag id is shared: the deck and library builders gate their own
 // 24px-target rules (zoom buttons, search clear) on it too.
 export default {
@@ -11,7 +16,7 @@ export default {
   n: 62,
   title: 'Dials grab on their whole ring',
   group: 'Controls',
-  notes: 'Knob.svelte: gesture handlers on .wrap while on, on .dial while off (onRing/onCap). style.css: round .wrap so overlapping rings split cleanly, ns-resize cursor.',
+  notes: 'Knob.svelte: gesture handlers on .wrap while on, on .dial while off (onRing/onCap). style.css: round .wrap so overlapping rings split cleanly, ns-resize cursor. Fader.svelte: a press on the track drags from the current value instead of jumping there.',
 };
 
 /** Show me: channel A's dials with the area that takes the pointer drawn on each. */
