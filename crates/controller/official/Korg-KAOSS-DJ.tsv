@@ -1,0 +1,110 @@
+# KAOSS DJ — Korg "KAOSS DJ Owner's Manual", MIDI controller list (Common = MIDI ch 7, Deck A = ch 8, Deck B = ch 9)
+# source: https://cdn.korg.com/us/support/download/files/3712d559e956c0edb50a9c9e8b1e1d4e.pdf
+# Controls marked with an LED in the list are given as "both". The Play/pause button is printed as an icon.
+both	B6	14	Headphone knob (audioless mode)	
+both	B6	15	Balance knob (audioless mode)	
+both	B6	16	Master knob (audioless mode)	
+in	B6	1E	Browse knob	[Library] MoveVertical
+in	96	22	Touchpad mode button (hold)	
+in	B6	1F	Program/value knob	
+both	96	0B	Program/value knob (push)	
+both	96	21	Tap button	
+in	96	20	Hold button	
+in	B6	0C	Touchpad X	
+in	B6	0D	Touchpad Y	
+in	B6	17	Crossfader	[Master] crossfader
+both	97	15	Deck A Touch slider left (Pitch-)	
+both	98	15	Deck B Touch slider left (Pitch-)	
+both	97	16	Deck A Touch slider centre (Search)	
+both	98	16	Deck B Touch slider centre (Search)	
+both	97	17	Deck A Touch slider right (Pitch+)	
+both	98	17	Deck B Touch slider right (Pitch+)	
+in	B7	21	Deck A Touch slider (Pitch+) position	
+in	B8	21	Deck B Touch slider (Pitch+) position	
+both	97	0F	Deck A Touch slider left (Loop In, loop mode)	
+both	98	0F	Deck B Touch slider left (Loop In, loop mode)	
+both	97	10	Deck A Touch slider centre (Loop On/Off, loop mode)	
+both	98	10	Deck B Touch slider centre (Loop On/Off, loop mode)	
+both	97	11	Deck A Touch slider right (Loop Out, loop mode)	
+both	98	11	Deck B Touch slider right (Loop Out, loop mode)	
+both	97	12	Deck A Touch slider left (Hot Cue1, hot cue mode)	[Channel1] hotcue_1_activate
+both	98	12	Deck B Touch slider left (Hot Cue1, hot cue mode)	[Channel2] hotcue_1_activate
+both	97	13	Deck A Touch slider centre (Hot Cue2, hot cue mode)	[Channel1] hotcue_2_activate
+both	98	13	Deck B Touch slider centre (Hot Cue2, hot cue mode)	[Channel2] hotcue_2_activate
+both	97	14	Deck A Touch slider right (Hot Cue3, hot cue mode)	[Channel1] hotcue_3_activate
+both	98	14	Deck B Touch slider right (Hot Cue3, hot cue mode)	[Channel2] hotcue_3_activate
+both	B7	1B	Deck A EQ Hi	[EqualizerRack1_[Channel1]_Effect1] parameter3
+both	B8	1B	Deck B EQ Hi	[EqualizerRack1_[Channel2]_Effect1] parameter3
+both	B7	1C	Deck A EQ Mid	[EqualizerRack1_[Channel1]_Effect1] parameter2
+both	B8	1C	Deck B EQ Mid	[EqualizerRack1_[Channel2]_Effect1] parameter2
+both	B7	1D	Deck A EQ Lo	[EqualizerRack1_[Channel1]_Effect1] parameter1
+both	B8	1D	Deck B EQ Lo	[EqualizerRack1_[Channel2]_Effect1] parameter1
+both	B7	1A	Deck A Gain knob	[Channel1] pregain
+both	B8	1A	Deck B Gain knob	[Channel2] pregain
+in	97	0E	Deck A Load button	[Channel1] LoadSelectedTrack
+in	98	0E	Deck B Load button	[Channel2] LoadSelectedTrack
+in	97	23	Deck A Load button (hold)	
+in	98	23	Deck B Load button (hold)	
+both	97	18	Deck A Fx button	
+both	98	18	Deck B Fx button	
+both	97	19	Deck A Headphone cue button	[Channel1] pfl
+both	98	19	Deck B Headphone cue button	[Channel2] pfl
+in	97	1F	Deck A Touch wheel on/off	
+in	98	1F	Deck B Touch wheel on/off	
+in	B7	0E	Deck A Touch wheel	
+in	B8	0E	Deck B Touch wheel	
+in	B7	19	Deck A Pitch fader	[Channel1] rate
+in	B8	19	Deck B Pitch fader	[Channel2] rate
+both	97	1A	Deck A Shift button	
+both	98	1A	Deck B Shift button	
+both	97	1B	Deck A Play/pause button	[Channel1] play
+both	98	1B	Deck B Play/pause button	[Channel2] play
+both	97	1D	Deck A Sync button	[Channel1] sync_enabled|beatsync
+both	98	1D	Deck B Sync button	[Channel2] sync_enabled|beatsync
+both	97	1E	Deck A Cue button	[Channel1] cue_default
+both	98	1E	Deck B Cue button	[Channel2] cue_default
+in	B7	18	Deck A Level fader	[Channel1] volume
+in	B8	18	Deck B Level fader	[Channel2] volume
+out	97	3C	Deck A Level meter segment 1	
+out	97	3D	Deck A Level meter segment 2	
+out	97	3E	Deck A Level meter segment 3	
+out	97	3F	Deck A Level meter segment 4	
+out	97	40	Deck A Level meter segment 5	
+out	97	41	Deck A Level meter segment 6	
+out	97	42	Deck A Level meter segment 7	
+out	97	43	Deck A Level meter segment 8	
+out	98	3C	Deck B Level meter segment 1	
+out	98	3D	Deck B Level meter segment 2	
+out	98	3E	Deck B Level meter segment 3	
+out	98	3F	Deck B Level meter segment 4	
+out	98	40	Deck B Level meter segment 5	
+out	98	41	Deck B Level meter segment 6	
+out	98	42	Deck B Level meter segment 7	
+out	98	43	Deck B Level meter segment 8	
+extra-in	96	07	SHIFT layer, touch pad and sampler messages the manual's MIDI list leaves out
+extra-in	96	4A	SHIFT layer, touch pad and sampler messages the manual's MIDI list leaves out
+extra-in	96	4B	SHIFT layer, touch pad and sampler messages the manual's MIDI list leaves out
+extra-in	96	4C	SHIFT layer, touch pad and sampler messages the manual's MIDI list leaves out
+extra-in	96	4D	SHIFT layer, touch pad and sampler messages the manual's MIDI list leaves out
+extra-in	97	20	SHIFT layer, touch pad and sampler messages the manual's MIDI list leaves out
+extra-in	97	28	SHIFT layer, touch pad and sampler messages the manual's MIDI list leaves out
+extra-in	97	29	SHIFT layer, touch pad and sampler messages the manual's MIDI list leaves out
+extra-in	97	2A	SHIFT layer, touch pad and sampler messages the manual's MIDI list leaves out
+extra-in	97	2B	SHIFT layer, touch pad and sampler messages the manual's MIDI list leaves out
+extra-in	97	2C	SHIFT layer, touch pad and sampler messages the manual's MIDI list leaves out
+extra-in	97	2D	SHIFT layer, touch pad and sampler messages the manual's MIDI list leaves out
+extra-in	98	20	SHIFT layer, touch pad and sampler messages the manual's MIDI list leaves out
+extra-in	98	28	SHIFT layer, touch pad and sampler messages the manual's MIDI list leaves out
+extra-in	98	29	SHIFT layer, touch pad and sampler messages the manual's MIDI list leaves out
+extra-in	98	2A	SHIFT layer, touch pad and sampler messages the manual's MIDI list leaves out
+extra-in	98	2B	SHIFT layer, touch pad and sampler messages the manual's MIDI list leaves out
+extra-in	98	2C	SHIFT layer, touch pad and sampler messages the manual's MIDI list leaves out
+extra-in	98	2D	SHIFT layer, touch pad and sampler messages the manual's MIDI list leaves out
+extra-in	B6	11	SHIFT layer, touch pad and sampler messages the manual's MIDI list leaves out
+extra-in	B6	12	SHIFT layer, touch pad and sampler messages the manual's MIDI list leaves out
+extra-in	B7	0F	SHIFT layer, touch pad and sampler messages the manual's MIDI list leaves out
+extra-in	B7	10	SHIFT layer, touch pad and sampler messages the manual's MIDI list leaves out
+extra-in	B8	0C	SHIFT layer, touch pad and sampler messages the manual's MIDI list leaves out
+extra-in	B8	0D	SHIFT layer, touch pad and sampler messages the manual's MIDI list leaves out
+extra-in	B8	0F	SHIFT layer, touch pad and sampler messages the manual's MIDI list leaves out
+extra-in	B8	10	SHIFT layer, touch pad and sampler messages the manual's MIDI list leaves out

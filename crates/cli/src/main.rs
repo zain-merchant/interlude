@@ -24,10 +24,11 @@ fn main() {
         Some("play") if args.len() >= 2 => play(&args[1], args.get(2).map(String::as_str)),
         Some("midi") => midi(args.get(1).and_then(|s| s.parse().ok())),
         Some("mappings") => mappings(&args[1..]),
+        Some("accuracy") => accuracy(args.get(1).map(String::as_str)),
         Some("latency") => latency(args.get(1).and_then(|s| s.parse().ok()).unwrap_or(10)),
         _ => {
             eprintln!(
-                "usage:\n  dj info <file>\n  dj render <a> <b> <out.wav> [secs]\n  dj play <a> [b]\n  dj midi [secs]\n  dj mappings [dir...]\n  dj latency [secs]"
+                "usage:\n  dj info <file>\n  dj render <a> <b> <out.wav> [secs]\n  dj play <a> [b]\n  dj midi [secs]\n  dj mappings [dir...]\n  dj accuracy [controller dir]\n  dj latency [secs]"
             );
             std::process::exit(2);
         }
@@ -323,6 +324,40 @@ fn mappings(dirs: &[String]) -> Result<()> {
         for d in &dirs {
             eprintln!("  {}", d.display());
         }
+    }
+    Ok(())
+}
+
+/// Compares each Mixxx mapping that has a manufacturer MIDI list in
+/// `official/` with that list, as a Markdown table.
+fn accuracy(dir: Option<&str>) -> Result<()> {
+    use dj_controller::{mixxx::Preset, official};
+    let root = std::path::PathBuf::from(dir.unwrap_or("crates/controller"));
+    let mut tables: Vec<_> = std::fs::read_dir(root.join("official"))?
+        .filter_map(|e| e.ok().map(|e| e.path()))
+        .filter(|p| p.extension().is_some_and(|e| e == "tsv"))
+        .collect();
+    tables.sort();
+    println!("| Controller | Messages in list | Bound | Checked and right | Script (unchecked) | Exceptions | Problems |");
+    println!("|---|---:|---:|---:|---:|---:|---:|");
+    for path in tables {
+        let stem = path
+            .file_stem()
+            .unwrap_or_default()
+            .to_string_lossy()
+            .into_owned();
+        let table = official::Table::load(&path)?;
+        let preset = Preset::load(&root.join("mappings").join(format!("{stem}.midi.xml")))?;
+        let r = official::check(&table, &preset);
+        println!(
+            "| {stem} | {} | {} | {} | {} | {} | {} |",
+            r.official_inputs,
+            r.bound,
+            r.correct,
+            r.scripted,
+            r.extras,
+            r.problems().len()
+        );
     }
     Ok(())
 }

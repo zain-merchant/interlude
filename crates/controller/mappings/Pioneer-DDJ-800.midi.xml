@@ -485,7 +485,7 @@
             <control>
                 <description>RELOOP/EXIT (DECK1) - press - (loop off) openDJ: new beat loop of beatloop_size at the play position, (loop on) Loop exit</description>
                 <group>[Channel1]</group>
-                <key>beatloop_activate</key>
+                <key>reloop_toggle</key>
                 <status>0x90</status>
                 <midino>0x4D</midino>
                 <options>
@@ -495,7 +495,7 @@
             <control>
                 <description>RELOOP/EXIT (DECK2) - press - (loop off) openDJ: new beat loop of beatloop_size at the play position, (loop on) Loop exit</description>
                 <group>[Channel2]</group>
-                <key>beatloop_activate</key>
+                <key>reloop_toggle</key>
                 <status>0x91</status>
                 <midino>0x4D</midino>
                 <options>

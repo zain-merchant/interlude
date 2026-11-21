@@ -907,18 +907,6 @@
                     <normal/>
                 </options>
             </control>
-            <control>
-                <!-- S4 Headphones [UNIMPLEMENTED] -->
-                <status>0x80</status>
-                <midino>0x30</midino>
-                <group>[Sampler4]</group>
-                <key>pfl</key>
-                <description>
-                </description>
-                <options>
-                    <normal/>
-                </options>
-            </control>
             <!-- Samplers Controls [Sample Mode] -->
             <!-- Hotcue Controls [Cue Mode] 0% -->
             <control>

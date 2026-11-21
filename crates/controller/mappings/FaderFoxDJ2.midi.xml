@@ -3,7 +3,7 @@
   <info>
     <name>FaderFox DJ2</name>
     <author>Sacha Berger, Gosseyn</author>
-    <description>MIDI Mapping for FaderFoxDJ2</description>
+    <description>MIDI Mapping for FaderFoxDJ2. Setup 1 (MIDI channel 16) controls decks 1 and 2, setup 2 (channel 1) decks 3 and 4, as in the DJ2 manual.</description>
     <manual>faderfox_dj2</manual>
   </info>
   <controller id="FaderFoxDJ2" port="Port">
@@ -14,8 +14,20 @@
       <control>
         <group>[Master]</group>
         <key>crossfader</key>
+        <status>0xBF</status>
+        <midino>0x03</midino>
+      </control>
+      <control>
+        <group>[Master]</group>
+        <key>crossfader</key>
         <status>0xB0</status>
         <midino>0x03</midino>
+      </control>
+      <control>
+        <group>[Master]</group>
+        <key>headMix</key>
+        <status>0xBF</status>
+        <midino>0x0c</midino>
       </control>
       <control>
         <group>[Master]</group>
@@ -30,24 +42,26 @@
       <control>
         <group>[Channel1]</group>
         <key>pregain</key>
+        <status>0xBF</status>
+        <midino>0x07</midino>
+        <options><diff/></options>
+      </control>
+      <control>
+        <group>[Channel3]</group>
+        <key>pregain</key>
         <status>0xB0</status>
         <midino>0x07</midino>
         <options><diff/></options>
       </control>
       <control>
         <group>[Channel1]</group>
-        <key>mute</key>
-        <status>0x90</status>
-        <midino>0x48</midino>
+        <key>jog</key>
+        <status>0xBF</status>
+        <midino>0x0E</midino>
+    <options><diff/></options>
       </control>
       <control>
-        <group>[Channel1]</group>
-        <key>mute</key>
-        <status>0x80</status>
-        <midino>0x48</midino>
-      </control>
-      <control>
-        <group>[Channel1]</group>
+        <group>[Channel3]</group>
         <key>jog</key>
         <status>0xB0</status>
         <midino>0x0E</midino>
@@ -56,17 +70,36 @@
       <control>
         <group>[Channel1]</group>
         <key>sync_enabled</key>
+        <status>0x9F</status>
+        <midino>0x09</midino>
+      </control>
+      <control>
+        <group>[Channel3]</group>
+        <key>sync_enabled</key>
         <status>0x90</status>
         <midino>0x09</midino>
       </control>
       <control>
         <group>[Channel1]</group>
         <key>sync_enabled</key>
+        <status>0x8F</status>
+        <midino>0x09</midino>
+      </control>
+      <control>
+        <group>[Channel3]</group>
+        <key>sync_enabled</key>
         <status>0x80</status>
         <midino>0x09</midino>
       </control>
       <control>
         <group>[Channel1]</group>
+        <key>rate</key>
+        <status>0xBF</status>
+        <midino>0x1b</midino>
+        <options><diff/></options>
+      </control>
+      <control>
+        <group>[Channel3]</group>
         <key>rate</key>
         <status>0xB0</status>
         <midino>0x1b</midino>
@@ -75,11 +108,23 @@
       <control>
     <group>[Channel1]</group>
     <key>LoadSelectedTrack</key>
+    <status>0x9F</status>
+    <midino>0x0F</midino>
+      </control>
+      <control>
+    <group>[Channel3]</group>
+    <key>LoadSelectedTrack</key>
     <status>0x90</status>
     <midino>0x0F</midino>
       </control>
       <control>
     <group>[Channel1]</group>
+    <key>LoadSelectedTrack</key>
+    <status>0x8F</status>
+    <midino>0x0F</midino>
+      </control>
+      <control>
+    <group>[Channel3]</group>
     <key>LoadSelectedTrack</key>
     <status>0x80</status>
     <midino>0x0F</midino>
@@ -89,11 +134,23 @@
       <control>
         <group>[Channel1]</group>
         <key>rate_temp_up</key>
+        <status>0x9F</status>
+        <midino>0x1d</midino>
+      </control>
+      <control>
+        <group>[Channel3]</group>
+        <key>rate_temp_up</key>
         <status>0x90</status>
         <midino>0x1d</midino>
       </control>
       <control>
         <group>[Channel1]</group>
+        <key>rate_temp_up</key>
+        <status>0x8F</status>
+        <midino>0x1d</midino>
+      </control>
+      <control>
+        <group>[Channel3]</group>
         <key>rate_temp_up</key>
         <status>0x80</status>
         <midino>0x1d</midino>
@@ -101,11 +158,23 @@
       <control>
         <group>[Channel1]</group>
         <key>rate_temp_down</key>
+        <status>0x9F</status>
+        <midino>0x1c</midino>
+      </control>
+      <control>
+        <group>[Channel3]</group>
+        <key>rate_temp_down</key>
         <status>0x90</status>
         <midino>0x1c</midino>
       </control>
       <control>
         <group>[Channel1]</group>
+        <key>rate_temp_down</key>
+        <status>0x8F</status>
+        <midino>0x1c</midino>
+      </control>
+      <control>
+        <group>[Channel3]</group>
         <key>rate_temp_down</key>
         <status>0x80</status>
         <midino>0x1c</midino>
@@ -113,11 +182,23 @@
       <control>
         <group>[Channel1]</group>
         <key>rate_temp_up_small</key>
+        <status>0x9F</status>
+        <midino>0x2c</midino>
+      </control>
+      <control>
+        <group>[Channel3]</group>
+        <key>rate_temp_up_small</key>
         <status>0x90</status>
         <midino>0x2c</midino>
       </control>
       <control>
         <group>[Channel1]</group>
+        <key>rate_temp_up_small</key>
+        <status>0x8F</status>
+        <midino>0x2c</midino>
+      </control>
+      <control>
+        <group>[Channel3]</group>
         <key>rate_temp_up_small</key>
         <status>0x80</status>
         <midino>0x2c</midino>
@@ -125,11 +206,23 @@
       <control>
         <group>[Channel1]</group>
         <key>rate_temp_down_small</key>
+        <status>0x9F</status>
+        <midino>0x2b</midino>
+      </control>
+      <control>
+        <group>[Channel3]</group>
+        <key>rate_temp_down_small</key>
         <status>0x90</status>
         <midino>0x2b</midino>
       </control>
       <control>
         <group>[Channel1]</group>
+        <key>rate_temp_down_small</key>
+        <status>0x8F</status>
+        <midino>0x2b</midino>
+      </control>
+      <control>
+        <group>[Channel3]</group>
         <key>rate_temp_down_small</key>
         <status>0x80</status>
         <midino>0x2b</midino>
@@ -137,11 +230,23 @@
       <control>
         <group>[Channel1]</group>
         <key>play</key>
+        <status>0x9F</status>
+        <midino>0x1a</midino>
+      </control>
+      <control>
+        <group>[Channel3]</group>
+        <key>play</key>
         <status>0x90</status>
         <midino>0x1a</midino>
       </control>
       <control>
         <group>[Channel1]</group>
+        <key>play</key>
+        <status>0x8F</status>
+        <midino>0x1a</midino>
+      </control>
+      <control>
+        <group>[Channel3]</group>
         <key>play</key>
         <status>0x80</status>
         <midino>0x1a</midino>
@@ -149,11 +254,23 @@
       <control>
         <group>[Channel1]</group>
         <key>keylock</key>
+        <status>0x9F</status>
+        <midino>0x21</midino>
+      </control>
+      <control>
+        <group>[Channel3]</group>
+        <key>keylock</key>
         <status>0x90</status>
         <midino>0x21</midino>
       </control>
       <control>
         <group>[Channel1]</group>
+        <key>keylock</key>
+        <status>0x8F</status>
+        <midino>0x21</midino>
+      </control>
+      <control>
+        <group>[Channel3]</group>
         <key>keylock</key>
         <status>0x80</status>
         <midino>0x21</midino>
@@ -161,11 +278,23 @@
       <control>
         <group>[Channel1]</group>
         <key>beats_translate_curpos</key>
+        <status>0x9F</status>
+        <midino>0x18</midino>
+      </control>
+      <control>
+        <group>[Channel3]</group>
+        <key>beats_translate_curpos</key>
         <status>0x90</status>
         <midino>0x18</midino>
       </control>
       <control>
         <group>[Channel1]</group>
+        <key>beats_translate_curpos</key>
+        <status>0x8F</status>
+        <midino>0x18</midino>
+      </control>
+      <control>
+        <group>[Channel3]</group>
         <key>beats_translate_curpos</key>
         <status>0x80</status>
         <midino>0x18</midino>
@@ -173,11 +302,23 @@
       <control>
         <group>[Channel1]</group>
         <key>cue_default</key>
+        <status>0x9F</status>
+        <midino>0x19</midino>
+      </control>
+      <control>
+        <group>[Channel3]</group>
+        <key>cue_default</key>
         <status>0x90</status>
         <midino>0x19</midino>
       </control>
       <control>
         <group>[Channel1]</group>
+        <key>cue_default</key>
+        <status>0x8F</status>
+        <midino>0x19</midino>
+      </control>
+      <control>
+        <group>[Channel3]</group>
         <key>cue_default</key>
         <status>0x80</status>
         <midino>0x19</midino>
@@ -185,11 +326,23 @@
       <control>
         <group>[Channel1]</group>
         <key>beatjump_1_backward</key>
+        <status>0x9F</status>
+        <midino>0x29</midino>
+      </control>
+      <control>
+        <group>[Channel3]</group>
+        <key>beatjump_1_backward</key>
         <status>0x90</status>
         <midino>0x29</midino>
       </control>
       <control>
         <group>[Channel1]</group>
+        <key>beatjump_1_backward</key>
+        <status>0x8F</status>
+        <midino>0x29</midino>
+      </control>
+      <control>
+        <group>[Channel3]</group>
         <key>beatjump_1_backward</key>
         <status>0x80</status>
         <midino>0x29</midino>
@@ -197,11 +350,23 @@
       <control>
         <group>[Channel1]</group>
         <key>beatjump_1_forward</key>
+        <status>0x9F</status>
+        <midino>0x28</midino>
+      </control>
+      <control>
+        <group>[Channel3]</group>
+        <key>beatjump_1_forward</key>
         <status>0x90</status>
         <midino>0x28</midino>
       </control>
       <control>
         <group>[Channel1]</group>
+        <key>beatjump_1_forward</key>
+        <status>0x8F</status>
+        <midino>0x28</midino>
+      </control>
+      <control>
+        <group>[Channel3]</group>
         <key>beatjump_1_forward</key>
         <status>0x80</status>
         <midino>0x28</midino>
@@ -209,11 +374,23 @@
       <control>
         <group>[Channel1]</group>
         <key>quantize</key>
+        <status>0x9F</status>
+        <midino>0x27</midino>
+      </control>
+      <control>
+        <group>[Channel3]</group>
+        <key>quantize</key>
         <status>0x90</status>
         <midino>0x27</midino>
       </control>
       <control>
         <group>[Channel1]</group>
+        <key>quantize</key>
+        <status>0x8F</status>
+        <midino>0x27</midino>
+      </control>
+      <control>
+        <group>[Channel3]</group>
         <key>quantize</key>
         <status>0x80</status>
         <midino>0x27</midino>
@@ -221,11 +398,23 @@
       <control>
         <group>[Channel1]</group>
         <key>reverse</key>
+        <status>0x9F</status>
+        <midino>0x30</midino>
+      </control>
+      <control>
+        <group>[Channel3]</group>
+        <key>reverse</key>
         <status>0x90</status>
         <midino>0x30</midino>
       </control>
       <control>
         <group>[Channel1]</group>
+        <key>reverse</key>
+        <status>0x8F</status>
+        <midino>0x30</midino>
+      </control>
+      <control>
+        <group>[Channel3]</group>
         <key>reverse</key>
         <status>0x80</status>
         <midino>0x30</midino>
@@ -235,17 +424,35 @@
       <control>
         <group>[EqualizerRack1_[Channel1]_Effect1]</group>
         <key>parameter1</key>
+        <status>0xBF</status>
+        <midino>0x01</midino>
+      </control>
+      <control>
+        <group>[EqualizerRack1_[Channel3]_Effect1]</group>
+        <key>parameter1</key>
         <status>0xB0</status>
         <midino>0x01</midino>
       </control>
       <control>
         <group>[EqualizerRack1_[Channel1]_Effect1]</group>
         <key>button_parameter1</key>
+        <status>0x9F</status>
+        <midino>0x17</midino>
+      </control>
+      <control>
+        <group>[EqualizerRack1_[Channel3]_Effect1]</group>
+        <key>button_parameter1</key>
         <status>0x90</status>
         <midino>0x17</midino>
       </control>
       <control>
         <group>[EqualizerRack1_[Channel1]_Effect1]</group>
+        <key>button_parameter1</key>
+        <status>0x8F</status>
+        <midino>0x17</midino>
+      </control>
+      <control>
+        <group>[EqualizerRack1_[Channel3]_Effect1]</group>
         <key>button_parameter1</key>
         <status>0x80</status>
         <midino>0x17</midino>
@@ -253,17 +460,35 @@
       <control>
         <group>[EqualizerRack1_[Channel1]_Effect1]</group>
         <key>parameter2</key>
+        <status>0xBF</status>
+        <midino>0x02</midino>
+      </control>
+      <control>
+        <group>[EqualizerRack1_[Channel3]_Effect1]</group>
+        <key>parameter2</key>
         <status>0xB0</status>
         <midino>0x02</midino>
       </control>
      <control>
         <group>[EqualizerRack1_[Channel1]_Effect1]</group>
         <key>button_parameter2</key>
+        <status>0x9F</status>
+        <midino>0x20</midino>
+      </control>
+     <control>
+        <group>[EqualizerRack1_[Channel3]_Effect1]</group>
+        <key>button_parameter2</key>
         <status>0x90</status>
         <midino>0x20</midino>
       </control>
       <control>
         <group>[EqualizerRack1_[Channel1]_Effect1]</group>
+        <key>button_parameter2</key>
+        <status>0x8F</status>
+        <midino>0x20</midino>
+      </control>
+      <control>
+        <group>[EqualizerRack1_[Channel3]_Effect1]</group>
         <key>button_parameter2</key>
         <status>0x80</status>
         <midino>0x20</midino>
@@ -271,17 +496,35 @@
       <control>
         <group>[EqualizerRack1_[Channel1]_Effect1]</group>
         <key>parameter3</key>
+        <status>0xBF</status>
+        <midino>0x05</midino>
+      </control>
+      <control>
+        <group>[EqualizerRack1_[Channel3]_Effect1]</group>
+        <key>parameter3</key>
         <status>0xB0</status>
         <midino>0x05</midino>
       </control>
       <control>
         <group>[EqualizerRack1_[Channel1]_Effect1]</group>
         <key>button_parameter3</key>
+        <status>0x9F</status>
+        <midino>0x26</midino>
+      </control>
+      <control>
+        <group>[EqualizerRack1_[Channel3]_Effect1]</group>
+        <key>button_parameter3</key>
         <status>0x90</status>
         <midino>0x26</midino>
       </control>
       <control>
         <group>[EqualizerRack1_[Channel1]_Effect1]</group>
+        <key>button_parameter3</key>
+        <status>0x8F</status>
+        <midino>0x26</midino>
+      </control>
+      <control>
+        <group>[EqualizerRack1_[Channel3]_Effect1]</group>
         <key>button_parameter3</key>
         <status>0x80</status>
         <midino>0x26</midino>
@@ -289,17 +532,35 @@
       <control>
         <group>[Channel1]</group>
         <key>volume</key>
+        <status>0xBF</status>
+        <midino>0x00</midino>
+      </control>
+      <control>
+        <group>[Channel3]</group>
+        <key>volume</key>
         <status>0xB0</status>
         <midino>0x00</midino>
       </control>
       <control>
         <group>[Channel1]</group>
         <key>pfl</key>
+        <status>0x9F</status>
+        <midino>0x11</midino>
+      </control>
+      <control>
+        <group>[Channel3]</group>
+        <key>pfl</key>
         <status>0x90</status>
         <midino>0x11</midino>
       </control>
       <control>
         <group>[Channel1]</group>
+        <key>pfl</key>
+        <status>0x8F</status>
+        <midino>0x11</midino>
+      </control>
+      <control>
+        <group>[Channel3]</group>
         <key>pfl</key>
         <status>0x80</status>
         <midino>0x11</midino>
@@ -309,48 +570,96 @@
       <control>
         <group>[EffectRack1_EffectUnit1]</group>
         <key>group_[Channel1]_enable</key>
+        <status>0x9F</status>
+        <midino>0x14</midino>
+      </control>
+      <control>
+        <group>[EffectRack1_EffectUnit1]</group>
+        <key>group_[Channel3]_enable</key>
         <status>0x90</status>
         <midino>0x14</midino>
       </control>
       <control>
         <group>[EffectRack1_EffectUnit1]</group>
         <key>group_[Channel1]_enable</key>
+        <status>0x8F</status>
+        <midino>0x14</midino>
+      </control>
+      <control>
+        <group>[EffectRack1_EffectUnit1]</group>
+        <key>group_[Channel3]_enable</key>
         <status>0x80</status>
         <midino>0x14</midino>
       </control>
       <control>
         <group>[EffectRack1_EffectUnit2]</group>
         <key>group_[Channel1]_enable</key>
+        <status>0x9F</status>
+        <midino>0x15</midino>
+      </control>
+      <control>
+        <group>[EffectRack1_EffectUnit2]</group>
+        <key>group_[Channel3]_enable</key>
         <status>0x90</status>
         <midino>0x15</midino>
       </control>
       <control>
         <group>[EffectRack1_EffectUnit2]</group>
         <key>group_[Channel1]_enable</key>
+        <status>0x8F</status>
+        <midino>0x15</midino>
+      </control>
+      <control>
+        <group>[EffectRack1_EffectUnit2]</group>
+        <key>group_[Channel3]_enable</key>
         <status>0x80</status>
         <midino>0x15</midino>
       </control>
       <control>
         <group>[EffectRack1_EffectUnit3]</group>
         <key>group_[Channel1]_enable</key>
+        <status>0x9F</status>
+        <midino>0x23</midino>
+      </control>
+      <control>
+        <group>[EffectRack1_EffectUnit3]</group>
+        <key>group_[Channel3]_enable</key>
         <status>0x90</status>
         <midino>0x23</midino>
       </control>
       <control>
         <group>[EffectRack1_EffectUnit3]</group>
         <key>group_[Channel1]_enable</key>
+        <status>0x8F</status>
+        <midino>0x23</midino>
+      </control>
+      <control>
+        <group>[EffectRack1_EffectUnit3]</group>
+        <key>group_[Channel3]_enable</key>
         <status>0x80</status>
         <midino>0x23</midino>
       </control>
       <control>
         <group>[EffectRack1_EffectUnit4]</group>
         <key>group_[Channel1]_enable</key>
+        <status>0x9F</status>
+        <midino>0x24</midino>
+      </control>
+      <control>
+        <group>[EffectRack1_EffectUnit4]</group>
+        <key>group_[Channel3]_enable</key>
         <status>0x90</status>
         <midino>0x24</midino>
       </control>
       <control>
         <group>[EffectRack1_EffectUnit4]</group>
         <key>group_[Channel1]_enable</key>
+        <status>0x8F</status>
+        <midino>0x24</midino>
+      </control>
+      <control>
+        <group>[EffectRack1_EffectUnit4]</group>
+        <key>group_[Channel3]_enable</key>
         <status>0x80</status>
         <midino>0x24</midino>
       </control>
@@ -361,24 +670,26 @@
       <control>
         <group>[Channel2]</group>
         <key>pregain</key>
+        <status>0xBF</status>
+        <midino>0x0a</midino>
+        <options><diff/></options>
+      </control>
+      <control>
+        <group>[Channel4]</group>
+        <key>pregain</key>
         <status>0xB0</status>
         <midino>0x0a</midino>
         <options><diff/></options>
       </control>
       <control>
         <group>[Channel2]</group>
-        <key>mute</key>
-        <status>0x90</status>
-        <midino>0x4d</midino>
+        <key>jog</key>
+        <status>0xBF</status>
+        <midino>0x0F</midino>
+    <options><diff/></options>
       </control>
       <control>
-        <group>[Channel2]</group>
-        <key>mute</key>
-        <status>0x80</status>
-        <midino>0x4d</midino>
-      </control>
-      <control>
-        <group>[Channel2]</group>
+        <group>[Channel4]</group>
         <key>jog</key>
         <status>0xB0</status>
         <midino>0x0F</midino>
@@ -387,17 +698,37 @@
       <control>
         <group>[Channel2]</group>
         <key>sync_enabled</key>
+        <status>0x9F</status>
+        <midino>0x0A</midino>
+      </control>
+      <control>
+        <group>[Channel4]</group>
+        <key>sync_enabled</key>
         <status>0x90</status>
         <midino>0x0A</midino>
       </control>
       <control>
         <group>[Channel2]</group>
         <key>sync_enabled</key>
+        <status>0x8F</status>
+        <midino>0x0A</midino>
+      </control>
+      <control>
+        <group>[Channel4]</group>
+        <key>sync_enabled</key>
         <status>0x80</status>
         <midino>0x0A</midino>
       </control>
       <control>
         <group>[Channel2]</group>
+        <key>rate</key>
+        <status>0xBF</status>
+        <midino>0x1c</midino>
+        <options><diff/>
+    </options>
+      </control>
+      <control>
+        <group>[Channel4]</group>
         <key>rate</key>
         <status>0xB0</status>
         <midino>0x1c</midino>
@@ -407,11 +738,23 @@
       <control>
     <group>[Channel2]</group>
     <key>LoadSelectedTrack</key>
+    <status>0x9F</status>
+    <midino>0x10</midino>
+      </control>
+      <control>
+    <group>[Channel4]</group>
+    <key>LoadSelectedTrack</key>
     <status>0x90</status>
     <midino>0x10</midino>
       </control>
       <control>
     <group>[Channel2]</group>
+    <key>LoadSelectedTrack</key>
+    <status>0x8F</status>
+    <midino>0x10</midino>
+      </control>
+      <control>
+    <group>[Channel4]</group>
     <key>LoadSelectedTrack</key>
     <status>0x80</status>
     <midino>0x10</midino>
@@ -421,11 +764,23 @@
       <control>
         <group>[Channel2]</group>
         <key>rate_temp_up</key>
+        <status>0x9F</status>
+        <midino>0x3b</midino>
+      </control>
+      <control>
+        <group>[Channel4]</group>
+        <key>rate_temp_up</key>
         <status>0x90</status>
         <midino>0x3b</midino>
       </control>
       <control>
         <group>[Channel2]</group>
+        <key>rate_temp_up</key>
+        <status>0x8F</status>
+        <midino>0x3b</midino>
+      </control>
+      <control>
+        <group>[Channel4]</group>
         <key>rate_temp_up</key>
         <status>0x80</status>
         <midino>0x3b</midino>
@@ -433,11 +788,23 @@
       <control>
         <group>[Channel2]</group>
         <key>rate_temp_down</key>
+        <status>0x9F</status>
+        <midino>0x3a</midino>
+      </control>
+      <control>
+        <group>[Channel4]</group>
+        <key>rate_temp_down</key>
         <status>0x90</status>
         <midino>0x3a</midino>
       </control>
       <control>
         <group>[Channel2]</group>
+        <key>rate_temp_down</key>
+        <status>0x8F</status>
+        <midino>0x3a</midino>
+      </control>
+      <control>
+        <group>[Channel4]</group>
         <key>rate_temp_down</key>
         <status>0x80</status>
         <midino>0x3a</midino>
@@ -445,11 +812,23 @@
       <control>
         <group>[Channel2]</group>
         <key>rate_temp_up_small</key>
+        <status>0x9F</status>
+        <midino>0x4a</midino>
+      </control>
+      <control>
+        <group>[Channel4]</group>
+        <key>rate_temp_up_small</key>
         <status>0x90</status>
         <midino>0x4a</midino>
       </control>
       <control>
         <group>[Channel2]</group>
+        <key>rate_temp_up_small</key>
+        <status>0x8F</status>
+        <midino>0x4a</midino>
+      </control>
+      <control>
+        <group>[Channel4]</group>
         <key>rate_temp_up_small</key>
         <status>0x80</status>
         <midino>0x4a</midino>
@@ -457,11 +836,23 @@
       <control>
         <group>[Channel2]</group>
         <key>rate_temp_down_small</key>
+        <status>0x9F</status>
+        <midino>0x49</midino>
+      </control>
+      <control>
+        <group>[Channel4]</group>
+        <key>rate_temp_down_small</key>
         <status>0x90</status>
         <midino>0x49</midino>
       </control>
       <control>
         <group>[Channel2]</group>
+        <key>rate_temp_down_small</key>
+        <status>0x8F</status>
+        <midino>0x49</midino>
+      </control>
+      <control>
+        <group>[Channel4]</group>
         <key>rate_temp_down_small</key>
         <status>0x80</status>
         <midino>0x49</midino>
@@ -469,11 +860,23 @@
        <control>
         <group>[Channel2]</group>
         <key>play</key>
+        <status>0x9F</status>
+        <midino>0x38</midino>
+      </control>
+       <control>
+        <group>[Channel4]</group>
+        <key>play</key>
         <status>0x90</status>
         <midino>0x38</midino>
       </control>
       <control>
         <group>[Channel2]</group>
+        <key>play</key>
+        <status>0x8F</status>
+        <midino>0x38</midino>
+      </control>
+      <control>
+        <group>[Channel4]</group>
         <key>play</key>
         <status>0x80</status>
         <midino>0x38</midino>
@@ -481,11 +884,23 @@
       <control>
         <group>[Channel2]</group>
         <key>keylock</key>
+        <status>0x9F</status>
+        <midino>0x3f</midino>
+      </control>
+      <control>
+        <group>[Channel4]</group>
+        <key>keylock</key>
         <status>0x90</status>
         <midino>0x3f</midino>
       </control>
       <control>
         <group>[Channel2]</group>
+        <key>keylock</key>
+        <status>0x8F</status>
+        <midino>0x3f</midino>
+      </control>
+      <control>
+        <group>[Channel4]</group>
         <key>keylock</key>
         <status>0x80</status>
         <midino>0x3f</midino>
@@ -493,11 +908,23 @@
       <control>
         <group>[Channel2]</group>
         <key>beats_translate_curpos</key>
+        <status>0x9F</status>
+        <midino>0x36</midino>
+      </control>
+      <control>
+        <group>[Channel4]</group>
+        <key>beats_translate_curpos</key>
         <status>0x90</status>
         <midino>0x36</midino>
       </control>
       <control>
         <group>[Channel2]</group>
+        <key>beats_translate_curpos</key>
+        <status>0x8F</status>
+        <midino>0x36</midino>
+      </control>
+      <control>
+        <group>[Channel4]</group>
         <key>beats_translate_curpos</key>
         <status>0x80</status>
         <midino>0x36</midino>
@@ -505,11 +932,23 @@
       <control>
         <group>[Channel2]</group>
         <key>cue_default</key>
+        <status>0x9F</status>
+        <midino>0x37</midino>
+      </control>
+      <control>
+        <group>[Channel4]</group>
+        <key>cue_default</key>
         <status>0x90</status>
         <midino>0x37</midino>
       </control>
       <control>
         <group>[Channel2]</group>
+        <key>cue_default</key>
+        <status>0x8F</status>
+        <midino>0x37</midino>
+      </control>
+      <control>
+        <group>[Channel4]</group>
         <key>cue_default</key>
         <status>0x80</status>
         <midino>0x37</midino>
@@ -517,11 +956,23 @@
       <control>
         <group>[Channel2]</group>
         <key>beatjump_1_backward</key>
+        <status>0x9F</status>
+        <midino>0x47</midino>
+      </control>
+      <control>
+        <group>[Channel4]</group>
+        <key>beatjump_1_backward</key>
         <status>0x90</status>
         <midino>0x47</midino>
       </control>
       <control>
         <group>[Channel2]</group>
+        <key>beatjump_1_backward</key>
+        <status>0x8F</status>
+        <midino>0x47</midino>
+      </control>
+      <control>
+        <group>[Channel4]</group>
         <key>beatjump_1_backward</key>
         <status>0x80</status>
         <midino>0x47</midino>
@@ -529,11 +980,23 @@
       <control>
         <group>[Channel2]</group>
         <key>beatjump_1_forward</key>
+        <status>0x9F</status>
+        <midino>0x46</midino>
+      </control>
+      <control>
+        <group>[Channel4]</group>
+        <key>beatjump_1_forward</key>
         <status>0x90</status>
         <midino>0x46</midino>
       </control>
       <control>
         <group>[Channel2]</group>
+        <key>beatjump_1_forward</key>
+        <status>0x8F</status>
+        <midino>0x46</midino>
+      </control>
+      <control>
+        <group>[Channel4]</group>
         <key>beatjump_1_forward</key>
         <status>0x80</status>
         <midino>0x46</midino>
@@ -541,11 +1004,23 @@
       <control>
         <group>[Channel2]</group>
         <key>quantize</key>
+        <status>0x9F</status>
+        <midino>0x45</midino>
+      </control>
+      <control>
+        <group>[Channel4]</group>
+        <key>quantize</key>
         <status>0x90</status>
         <midino>0x45</midino>
       </control>
       <control>
         <group>[Channel2]</group>
+        <key>quantize</key>
+        <status>0x8F</status>
+        <midino>0x45</midino>
+      </control>
+      <control>
+        <group>[Channel4]</group>
         <key>quantize</key>
         <status>0x80</status>
         <midino>0x45</midino>
@@ -553,11 +1028,23 @@
       <control>
         <group>[Channel2]</group>
         <key>reverse</key>
+        <status>0x9F</status>
+        <midino>0x4e</midino>
+      </control>
+      <control>
+        <group>[Channel4]</group>
+        <key>reverse</key>
         <status>0x90</status>
         <midino>0x4e</midino>
       </control>
       <control>
         <group>[Channel2]</group>
+        <key>reverse</key>
+        <status>0x8F</status>
+        <midino>0x4e</midino>
+      </control>
+      <control>
+        <group>[Channel4]</group>
         <key>reverse</key>
         <status>0x80</status>
         <midino>0x4e</midino>
@@ -567,17 +1054,35 @@
       <control>
         <group>[EqualizerRack1_[Channel2]_Effect1]</group>
         <key>parameter1</key>
+        <status>0xBF</status>
+        <midino>0x0b</midino>
+      </control>
+      <control>
+        <group>[EqualizerRack1_[Channel4]_Effect1]</group>
+        <key>parameter1</key>
         <status>0xB0</status>
         <midino>0x0b</midino>
       </control>
       <control>
         <group>[EqualizerRack1_[Channel2]_Effect1]</group>
         <key>button_parameter1</key>
+        <status>0x9F</status>
+        <midino>0x35</midino>
+      </control>
+      <control>
+        <group>[EqualizerRack1_[Channel4]_Effect1]</group>
+        <key>button_parameter1</key>
         <status>0x90</status>
         <midino>0x35</midino>
       </control>
       <control>
         <group>[EqualizerRack1_[Channel2]_Effect1]</group>
+        <key>button_parameter1</key>
+        <status>0x8F</status>
+        <midino>0x35</midino>
+      </control>
+      <control>
+        <group>[EqualizerRack1_[Channel4]_Effect1]</group>
         <key>button_parameter1</key>
         <status>0x80</status>
         <midino>0x35</midino>
@@ -585,17 +1090,35 @@
       <control>
         <group>[EqualizerRack1_[Channel2]_Effect1]</group>
         <key>parameter2</key>
+        <status>0xBF</status>
+        <midino>0x08</midino>
+      </control>
+      <control>
+        <group>[EqualizerRack1_[Channel4]_Effect1]</group>
+        <key>parameter2</key>
         <status>0xB0</status>
         <midino>0x08</midino>
       </control>
        <control>
         <group>[EqualizerRack1_[Channel2]_Effect1]</group>
         <key>button_parameter2</key>
+        <status>0x9F</status>
+        <midino>0x22</midino>
+      </control>
+       <control>
+        <group>[EqualizerRack1_[Channel4]_Effect1]</group>
+        <key>button_parameter2</key>
         <status>0x90</status>
         <midino>0x22</midino>
       </control>
       <control>
         <group>[EqualizerRack1_[Channel2]_Effect1]</group>
+        <key>button_parameter2</key>
+        <status>0x8F</status>
+        <midino>0x22</midino>
+      </control>
+      <control>
+        <group>[EqualizerRack1_[Channel4]_Effect1]</group>
         <key>button_parameter2</key>
         <status>0x80</status>
         <midino>0x22</midino>
@@ -603,17 +1126,35 @@
       <control>
         <group>[EqualizerRack1_[Channel2]_Effect1]</group>
         <key>parameter3</key>
+        <status>0xBF</status>
+        <midino>0x09</midino>
+      </control>
+      <control>
+        <group>[EqualizerRack1_[Channel4]_Effect1]</group>
+        <key>parameter3</key>
         <status>0xB0</status>
         <midino>0x09</midino>
       </control>
       <control>
         <group>[EqualizerRack1_[Channel2]_Effect1]</group>
         <key>button_parameter3</key>
+        <status>0x9F</status>
+        <midino>0x44</midino>
+      </control>
+      <control>
+        <group>[EqualizerRack1_[Channel4]_Effect1]</group>
+        <key>button_parameter3</key>
         <status>0x90</status>
         <midino>0x44</midino>
       </control>
       <control>
         <group>[EqualizerRack1_[Channel2]_Effect1]</group>
+        <key>button_parameter3</key>
+        <status>0x8F</status>
+        <midino>0x44</midino>
+      </control>
+      <control>
+        <group>[EqualizerRack1_[Channel4]_Effect1]</group>
         <key>button_parameter3</key>
         <status>0x80</status>
         <midino>0x44</midino>
@@ -621,11 +1162,23 @@
       <control>
         <group>[Channel2]</group>
         <key>volume</key>
+        <status>0xBF</status>
+        <midino>0x0d</midino>
+      </control>
+      <control>
+        <group>[Channel4]</group>
+        <key>volume</key>
         <status>0xB0</status>
         <midino>0x0d</midino>
       </control>
       <control>
         <group>[Channel2]</group>
+        <key>pfl</key>
+        <status>0x9F</status>
+        <midino>0x13</midino>
+      </control>
+      <control>
+        <group>[Channel4]</group>
         <key>pfl</key>
         <status>0x90</status>
         <midino>0x13</midino>
@@ -633,11 +1186,23 @@
       <control>
         <group>[Channel2]</group>
         <key>pfl</key>
+        <status>0x8F</status>
+        <midino>0x13</midino>
+      </control>
+      <control>
+        <group>[Channel4]</group>
+        <key>pfl</key>
         <status>0x80</status>
         <midino>0x13</midino>
       </control>
       <control>
         <group>[Channel2]</group>
+        <key>filter</key>
+        <status>0x8F</status>
+        <midino>0x22</midino>
+      </control>
+      <control>
+        <group>[Channel4]</group>
         <key>filter</key>
         <status>0x80</status>
         <midino>0x22</midino>
@@ -647,48 +1212,96 @@
       <control>
         <group>[EffectRack1_EffectUnit1]</group>
         <key>group_[Channel2]_enable</key>
+        <status>0x9F</status>
+        <midino>0x33</midino>
+      </control>
+      <control>
+        <group>[EffectRack1_EffectUnit1]</group>
+        <key>group_[Channel4]_enable</key>
         <status>0x90</status>
         <midino>0x33</midino>
       </control>
       <control>
         <group>[EffectRack1_EffectUnit1]</group>
         <key>group_[Channel2]_enable</key>
+        <status>0x8F</status>
+        <midino>0x33</midino>
+      </control>
+      <control>
+        <group>[EffectRack1_EffectUnit1]</group>
+        <key>group_[Channel4]_enable</key>
         <status>0x80</status>
         <midino>0x33</midino>
       </control>
       <control>
         <group>[EffectRack1_EffectUnit2]</group>
         <key>group_[Channel2]_enable</key>
+        <status>0x9F</status>
+        <midino>0x32</midino>
+      </control>
+      <control>
+        <group>[EffectRack1_EffectUnit2]</group>
+        <key>group_[Channel4]_enable</key>
         <status>0x90</status>
         <midino>0x32</midino>
       </control>
       <control>
         <group>[EffectRack1_EffectUnit2]</group>
         <key>group_[Channel2]_enable</key>
+        <status>0x8F</status>
+        <midino>0x32</midino>
+      </control>
+      <control>
+        <group>[EffectRack1_EffectUnit2]</group>
+        <key>group_[Channel4]_enable</key>
         <status>0x80</status>
         <midino>0x32</midino>
       </control>
       <control>
         <group>[EffectRack1_EffectUnit3]</group>
         <key>group_[Channel2]_enable</key>
+        <status>0x9F</status>
+        <midino>0x42</midino>
+      </control>
+      <control>
+        <group>[EffectRack1_EffectUnit3]</group>
+        <key>group_[Channel4]_enable</key>
         <status>0x90</status>
         <midino>0x42</midino>
       </control>
       <control>
         <group>[EffectRack1_EffectUnit3]</group>
         <key>group_[Channel2]_enable</key>
+        <status>0x8F</status>
+        <midino>0x42</midino>
+      </control>
+      <control>
+        <group>[EffectRack1_EffectUnit3]</group>
+        <key>group_[Channel4]_enable</key>
         <status>0x80</status>
         <midino>0x42</midino>
       </control>
       <control>
         <group>[EffectRack1_EffectUnit4]</group>
         <key>group_[Channel2]_enable</key>
+        <status>0x9F</status>
+        <midino>0x41</midino>
+      </control>
+      <control>
+        <group>[EffectRack1_EffectUnit4]</group>
+        <key>group_[Channel4]_enable</key>
         <status>0x90</status>
         <midino>0x41</midino>
       </control>
       <control>
         <group>[EffectRack1_EffectUnit4]</group>
         <key>group_[Channel2]_enable</key>
+        <status>0x8F</status>
+        <midino>0x41</midino>
+      </control>
+      <control>
+        <group>[EffectRack1_EffectUnit4]</group>
+        <key>group_[Channel4]_enable</key>
         <status>0x80</status>
         <midino>0x41</midino>
       </control>
@@ -698,8 +1311,20 @@
       <control>
     <group>[EffectRack1_EffectUnit1]</group>
     <key>mix</key>
+    <status>0xBF</status>
+    <midino>0x04</midino>
+      </control>
+      <control>
+    <group>[EffectRack1_EffectUnit1]</group>
+    <key>mix</key>
     <status>0xB0</status>
     <midino>0x04</midino>
+      </control>
+      <control>
+    <group>[EffectRack1_EffectUnit1]</group>
+    <key>super1</key>
+    <status>0xBF</status>
+    <midino>0x06</midino>
       </control>
       <control>
     <group>[EffectRack1_EffectUnit1]</group>
@@ -710,8 +1335,20 @@
       <control>
     <group>[EffectRack1_EffectUnit2]</group>
     <key>mix</key>
+    <status>0xBF</status>
+    <midino>0x14</midino>
+      </control>
+      <control>
+    <group>[EffectRack1_EffectUnit2]</group>
+    <key>mix</key>
     <status>0xB0</status>
     <midino>0x14</midino>
+      </control>
+      <control>
+    <group>[EffectRack1_EffectUnit2]</group>
+    <key>super1</key>
+    <status>0xBF</status>
+    <midino>0x16</midino>
       </control>
       <control>
     <group>[EffectRack1_EffectUnit2]</group>
@@ -725,8 +1362,20 @@
       <control>
     <group>[Playlist]</group>
     <key>SelectNextTrack</key>
+    <status>0x9F</status>
+    <midino>0x0B</midino>
+      </control>
+      <control>
+    <group>[Playlist]</group>
+    <key>SelectNextTrack</key>
     <status>0x90</status>
     <midino>0x0B</midino>
+      </control>
+      <control>
+    <group>[Playlist]</group>
+    <key>SelectPrevTrack</key>
+    <status>0x9F</status>
+    <midino>0x0C</midino>
       </control>
       <control>
     <group>[Playlist]</group>

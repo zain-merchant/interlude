@@ -1,0 +1,92 @@
+# TRAKTOR KONTROL X1 — Native Instruments "TRAKTOR KONTROL X1 Manual" 9.4 Default MIDI Mapping Table
+# source: https://www.native-instruments.com/fileadmin/ni_media/downloads/manuals/traktor/traktor_kontrol_x1_manual_english.pdf
+# The table is a diagram of CC numbers (MIDI channel 1 assumed; it can be changed in Controller Editor).
+# Left/right refer to the two halves of the unit (deck 1/deck 2). The diagram does not list LED messages.
+in	B0	08	FX ON (left)	
+in	B0	00	FX DRY/WET knob (left)	
+in	B0	01	FX DRY/WET knob (right)	
+in	B0	09	FX ON (right)	
+in	B0	0A	FX button 1 (left)	
+in	B0	02	FX knob 1 (left)	
+in	B0	03	FX knob 1 (right)	
+in	B0	0B	FX button 1 (right)	
+in	B0	0C	FX button 2 (left)	
+in	B0	04	FX knob 2 (left)	
+in	B0	05	FX knob 2 (right)	
+in	B0	0D	FX button 2 (right)	
+in	B0	0E	FX button 3 (left)	
+in	B0	06	FX knob 3 (left)	
+in	B0	07	FX knob 3 (right)	
+in	B0	0F	FX button 3 (right)	
+in	B0	10	Browse encoder (left)	
+in	B0	11	Browse encoder (right)	
+in	B0	14	FX 1 (left deck)	
+in	B0	16	FX 2 (left deck)	
+in	B0	15	FX 1 (right deck)	
+in	B0	17	FX 2 (right deck)	
+in	B0	1A	Loop encoder (left deck)	
+in	B0	1B	Loop encoder (right deck)	
+in	B0	1C	IN (left deck)	[Channel1] loop_in
+in	B0	1E	OUT (left deck)	[Channel1] loop_out
+in	B0	1D	IN (right deck)	[Channel2] loop_in
+in	B0	1F	OUT (right deck)	[Channel2] loop_out
+in	B0	20	< BEAT (left deck)	
+in	B0	22	BEAT > (left deck)	
+in	B0	21	< BEAT (right deck)	
+in	B0	23	BEAT > (right deck)	
+in	B0	24	CUE | REL (left deck)	[Channel1] cue_default
+in	B0	26	CUP | ABS (left deck)	
+in	B0	25	CUE | REL (right deck)	[Channel2] cue_default
+in	B0	27	CUP | ABS (right deck)	
+in	B0	28	PLAY (left deck)	[Channel1] play
+in	B0	2A	SYNC (left deck)	[Channel1] sync_enabled|beatsync
+in	B0	29	PLAY (right deck)	[Channel2] play
+in	B0	2B	SYNC (right deck)	[Channel2] sync_enabled|beatsync
+in	B0	34	FX ON (left) +SHIFT	
+in	B0	2C	FX DRY/WET knob (left) +SHIFT	
+in	B0	2D	FX DRY/WET knob (right) +SHIFT	
+in	B0	35	FX ON (right) +SHIFT	
+in	B0	36	FX button 1 (left) +SHIFT	
+in	B0	2E	FX knob 1 (left) +SHIFT	
+in	B0	2F	FX knob 1 (right) +SHIFT	
+in	B0	37	FX button 1 (right) +SHIFT	
+in	B0	38	FX button 2 (left) +SHIFT	
+in	B0	30	FX knob 2 (left) +SHIFT	
+in	B0	31	FX knob 2 (right) +SHIFT	
+in	B0	39	FX button 2 (right) +SHIFT	
+in	B0	3A	FX button 3 (left) +SHIFT	
+in	B0	32	FX knob 3 (left) +SHIFT	
+in	B0	33	FX knob 3 (right) +SHIFT	
+in	B0	3B	FX button 3 (right) +SHIFT	
+in	B0	3C	Browse encoder (left) +SHIFT	
+in	B0	3D	Browse encoder (right) +SHIFT	
+in	B0	40	FX 1 (left deck) +SHIFT	
+in	B0	42	FX 2 (left deck) +SHIFT	
+in	B0	41	FX 1 (right deck) +SHIFT	
+in	B0	43	FX 2 (right deck) +SHIFT	
+in	B0	46	Loop encoder (left deck) +SHIFT	
+in	B0	47	Loop encoder (right deck) +SHIFT	
+in	B0	48	IN (left deck) +SHIFT	
+in	B0	4A	OUT (left deck) +SHIFT	
+in	B0	49	IN (right deck) +SHIFT	
+in	B0	4B	OUT (right deck) +SHIFT	
+in	B0	4C	< BEAT (left deck) +SHIFT	
+in	B0	4E	BEAT > (left deck) +SHIFT	
+in	B0	4D	< BEAT (right deck) +SHIFT	
+in	B0	4F	BEAT > (right deck) +SHIFT	
+in	B0	50	CUE | REL (left deck) +SHIFT	
+in	B0	52	CUP | ABS (left deck) +SHIFT	
+in	B0	51	CUE | REL (right deck) +SHIFT	
+in	B0	53	CUP | ABS (right deck) +SHIFT	
+in	B0	54	PLAY (left deck) +SHIFT	
+in	B0	56	SYNC (left deck) +SHIFT	
+in	B0	55	PLAY (right deck) +SHIFT	
+in	B0	57	SYNC (right deck) +SHIFT	
+extra-in	B0	12	button CC the default-mapping diagram leaves out
+extra-in	B0	13	button CC the default-mapping diagram leaves out
+extra-in	B0	18	button CC the default-mapping diagram leaves out
+extra-in	B0	19	button CC the default-mapping diagram leaves out
+extra-in	B0	3E	button CC the default-mapping diagram leaves out
+extra-in	B0	3F	button CC the default-mapping diagram leaves out
+extra-in	B0	44	button CC the default-mapping diagram leaves out
+extra-in	B0	45	button CC the default-mapping diagram leaves out

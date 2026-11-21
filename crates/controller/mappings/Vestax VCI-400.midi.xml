@@ -79,24 +79,6 @@
                 </options>
             </control>
             <control>
-                <group>[Channel1]</group>
-                <key>beatsync</key>
-                <status>0xB2</status>
-                <midino>0x01</midino>
-                <options>
-                    <normal/>
-                </options>
-            </control>
-            <control>
-                <group>[Channel2]</group>
-                <key>beatsync</key>
-                <status>0xB3</status>
-                <midino>0x01</midino>
-                <options>
-                    <normal/>
-                </options>
-            </control>
-            <control>
                 <group>[EffectRack1_EffectUnit1_Effect1]</group>
                 <key>parameter1</key>
                 <description>MIDI Learned from 54 messages.</description>
@@ -169,24 +151,6 @@
                 <group>[Master]</group>
                 <key>VestaxVCI400.fx2ToggleButton2</key>
                 <status>0x9D</status>
-                <midino>0x02</midino>
-                <options>
-                    <script-binding/>
-                </options>
-            </control>
-            <control>
-                <group>[Channel1]</group>
-                <key>VestaxVCI400.loadTrack</key>
-                <status>0xB2</status>
-                <midino>0x02</midino>
-                <options>
-                    <script-binding/>
-                </options>
-            </control>
-            <control>
-                <group>[Channel2]</group>
-                <key>VestaxVCI400.loadTrack</key>
-                <status>0xB3</status>
                 <midino>0x02</midino>
                 <options>
                     <script-binding/>
@@ -1280,15 +1244,6 @@
                 <midino>0x14</midino>
                 <options>
                     <normal/>
-                </options>
-            </control>
-            <control>
-                <group>[Channel1]</group>
-                <key>VestaxVCI400.beatLoop</key>
-                <status>0xB2</status>
-                <midino>0x14</midino>
-                <options>
-                    <script-binding/>
                 </options>
             </control>
             <control>

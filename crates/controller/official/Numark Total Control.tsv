@@ -1,0 +1,91 @@
+# Total Control — Numark "Total Control MIDI map" (diagram)
+# source: https://www.numark.com/images/product_downloads/totalcontrol_midimap.pdf
+# The map is a diagram of fixed note/CC numbers with no control names and no channel; names here describe
+# the position on the diagram, and MIDI channel 1 is assumed. Only the crossfader carries an expect. The map lists no LED messages.
+in	90	30	top-left button column, row 1 (note 48)	
+in	90	38	top-left button column, row 2 (note 56)	
+in	90	40	top-left button column, row 3 (note 64)	
+in	90	31	left button row 2, left (note 49)	
+in	90	32	left button row 2, right (note 50)	
+in	90	39	left button row 4, left (note 57)	
+in	90	3A	left button row 4, right (note 58)	
+in	90	41	left button row 5, left (note 65)	
+in	90	42	left button row 5, right (note 66)	
+in	90	49	left button above jog, left (note 73)	
+in	90	4A	left button above jog, right (note 74)	
+in	90	4B	centre-left button (note 75)	
+in	90	48	centre button (note 72)	
+in	90	34	centre-right button (note 52)	
+in	90	37	top-right button column, row 1 (note 55)	
+in	90	3F	top-right button column, row 2 (note 63)	
+in	90	47	top-right button column, row 3 (note 71)	
+in	90	35	right button row 2, left (note 53)	
+in	90	36	right button row 2, right (note 54)	
+in	90	3D	right button row 4, left (note 61)	
+in	90	3E	right button row 4, right (note 62)	
+in	90	45	right button row 5, left (note 69)	
+in	90	46	right button row 5, right (note 70)	
+in	90	4D	right button above jog, left (note 77)	
+in	90	4E	right button above jog, right (note 78)	
+in	90	33	bottom-left button 1 (note 51)	
+in	90	3B	bottom-left button 2 (note 59)	
+in	90	43	bottom-left button 3 (note 67)	
+in	90	3C	bottom-right button 1 (note 60)	
+in	90	44	bottom-right button 2 (note 68)	
+in	90	4C	bottom-right button 3 (note 76)	
+in	90	50	left EQ knob 1 (press) (note 80)	
+in	90	55	left EQ knob 2 (press) (note 85)	
+in	90	53	left EQ knob 3 (press) (note 83)	
+in	90	52	right EQ knob 1 (press) (note 82)	
+in	90	51	right EQ knob 2 (press) (note 81)	
+in	90	54	right EQ knob 3 (press) (note 84)	
+in	90	4F	centre browse knob (press) (note 79)	
+in	B0	00	left knob row 1, left (CC 0)	
+in	B0	01	left knob row 1, right (CC 1)	
+in	B0	02	left knob row 3, left (CC 2)	
+in	B0	03	left knob row 3, right (CC 3)	
+in	B0	0D	top-centre-left knob (CC 13)	
+in	B0	0E	top-centre-right knob (CC 14)	
+in	B0	04	right knob row 1, left (CC 4)	
+in	B0	05	right knob row 1, right (CC 5)	
+in	B0	06	right knob row 3, left (CC 6)	
+in	B0	07	right knob row 3, right (CC 7)	
+in	B0	17	centre knob 1 (CC 23)	
+in	B0	16	centre knob 2 (CC 22)	
+in	B0	0F	centre knob 3 (CC 15)	
+in	B0	10	left EQ knob 1 (CC 16)	
+in	B0	12	left EQ knob 2 (CC 18)	
+in	B0	14	left EQ knob 3 (CC 20)	
+in	B0	11	right EQ knob 1 (CC 17)	
+in	B0	13	right EQ knob 2 (CC 19)	
+in	B0	15	right EQ knob 3 (CC 21)	
+in	B0	1A	centre browse knob (turn) (CC 26)	
+in	B0	0B	left long slider (CC 11)	
+in	B0	0C	right long slider (CC 12)	
+in	B0	08	left centre fader (CC 8)	
+in	B0	09	right centre fader (CC 9)	
+in	B0	0A	horizontal fader (crossfader) (CC 10)	[Master] crossfader
+in	B0	19	left jog wheel (CC 25)	
+in	B0	18	right jog wheel (CC 24)	
+extra-out	90	32	LED; the official map is a diagram of the controls and shows no LEDs
+extra-out	90	34	LED; the official map is a diagram of the controls and shows no LEDs
+extra-out	90	35	LED; the official map is a diagram of the controls and shows no LEDs
+extra-out	90	36	LED; the official map is a diagram of the controls and shows no LEDs
+extra-out	90	37	LED; the official map is a diagram of the controls and shows no LEDs
+extra-out	90	3C	LED; the official map is a diagram of the controls and shows no LEDs
+extra-out	90	3E	LED; the official map is a diagram of the controls and shows no LEDs
+extra-out	90	3F	LED; the official map is a diagram of the controls and shows no LEDs
+extra-out	90	40	LED; the official map is a diagram of the controls and shows no LEDs
+extra-out	90	41	LED; the official map is a diagram of the controls and shows no LEDs
+extra-out	90	42	LED; the official map is a diagram of the controls and shows no LEDs
+extra-out	90	43	LED; the official map is a diagram of the controls and shows no LEDs
+extra-out	90	46	LED; the official map is a diagram of the controls and shows no LEDs
+extra-out	90	4C	LED; the official map is a diagram of the controls and shows no LEDs
+extra-out	90	4E	LED; the official map is a diagram of the controls and shows no LEDs
+extra-out	90	4F	LED; the official map is a diagram of the controls and shows no LEDs
+extra-out	90	50	LED; the official map is a diagram of the controls and shows no LEDs
+extra-out	90	51	LED; the official map is a diagram of the controls and shows no LEDs
+extra-out	90	52	LED; the official map is a diagram of the controls and shows no LEDs
+extra-out	90	53	LED; the official map is a diagram of the controls and shows no LEDs
+extra-out	90	54	LED; the official map is a diagram of the controls and shows no LEDs
+extra-out	90	55	LED; the official map is a diagram of the controls and shows no LEDs
