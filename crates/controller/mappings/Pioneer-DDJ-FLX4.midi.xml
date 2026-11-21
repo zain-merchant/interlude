@@ -2934,7 +2934,7 @@
                 <group>[Channel1]</group>
                 <key>play_indicator</key>
                 <status>0x90</status>  <!-- First byte sent to device -->
-                <midino>0x47</midino>  <!-- Second byte -->
+                <midino>0x0E</midino>  <!-- Second byte -->
                 <on>0x7F</on>
                 <minimum>0.5</minimum>
             </output>
@@ -2942,7 +2942,7 @@
                 <group>[Channel2]</group>
                 <key>play_indicator</key>
                 <status>0x91</status>  <!-- First byte sent to device -->
-                <midino>0x47</midino>  <!-- Second byte -->
+                <midino>0x0E</midino>  <!-- Second byte -->
                 <on>0x7F</on>
                 <minimum>0.5</minimum>
             </output>
@@ -2970,7 +2970,7 @@
                 <group>[Channel1]</group>
                 <key>cue_indicator</key>
                 <status>0x90</status>
-                <midino>0x47</midino>
+                <midino>0x48</midino>
                 <on>0x7F</on>
                 <minimum>0.5</minimum>
             </output>
@@ -2978,7 +2978,7 @@
                 <group>[Channel2]</group>
                 <key>cue_indicator</key>
                 <status>0x91</status>
-                <midino>0x47</midino>
+                <midino>0x48</midino>
                 <on>0x7F</on>
                 <minimum>0.5</minimum>
             </output>

@@ -1,4 +1,5 @@
 # DDJ-FLX4 — AlphaTheta "List of MIDI messages" Ver 1.0
+# FX ON/OFF: footnote *4, the button's LED follows note on/off sent back to these same messages.
 # source: https://downloads.support.alphatheta.com/software_info/dj-controllers/DDJ-FLX4/DDJ-FLX4_MIDI_message_List_E1.pdf
 both	90	0B	DECK1 PLAY/PAUSE	[Channel1] play
 both	90	0E	DECK1 PLAY/PAUSE +SHIFT	
@@ -64,10 +65,10 @@ in	94	4B	BEAT ▷
 in	94	6B	BEAT ▷ +SHIFT	
 in	B4	02	LEVEL/DEPTH MSB	
 in	B4	22	LEVEL/DEPTH LSB	
-in	94	47	FX ON/OFF (CH1, CH1&CH2)	
-in	95	47	FX ON/OFF (CH2)	
-in	94	43	FX ON/OFF +SHIFT (CH1, CH1&CH2)	
-in	95	43	FX ON/OFF +SHIFT (CH2)	
+both	94	47	FX ON/OFF (CH1, CH1&CH2)	
+both	95	47	FX ON/OFF (CH2)	
+both	94	43	FX ON/OFF +SHIFT (CH1, CH1&CH2)	
+both	95	43	FX ON/OFF +SHIFT (CH2)	
 in	B6	08	MASTER LEVEL MSB	
 in	B6	28	MASTER LEVEL LSB	
 in	96	63	MASTER CUE	
