@@ -18,8 +18,8 @@
      cue points, the headphone cue). Red is kill, Rec and clip. Yellow only
      on the device-lost icon. There are no solid light buttons anywhere.
    - One state grammar, everywhere: rest = a tonal fill (5%) and an
-     --fg-2 label, no outline; hover = 8% and an --fg label; pressed = a
-     shade darker than rest, no scale; on = a tint of the role colour (14%)
+     --fg-2 label, no outline; hover = 10% and an --fg label; pressed = sinks
+     into the panel (a dark well, an inner shadow, 60ms), no scale; on = a tint of the role colour (14%)
      with the label or glyph in that colour; selected = --sel (9%) and an
      --fg label, never a hairline; focus = the 2px --fg-2 ring, keys only;
      disabled = --fg-4 label, no fill.
@@ -78,14 +78,14 @@
   /* The baseline's button tokens (flag 09) become the one tonal control. */
   --flag-buttons-bg: rgb(255 255 255 / 0.05);
   --flag-buttons-ring: none;
-  --flag-buttons-bg-hover: rgb(255 255 255 / 0.08);
+  --flag-buttons-bg-hover: rgb(255 255 255 / 0.1);
   --flag-buttons-ring-hover: none;
   --flag-buttons-bg-on: rgb(255 255 255 / 0.09);
   --flag-buttons-ring-on: none;
 
   --dq-rest: rgb(255 255 255 / 0.05);
-  --dq-hover: rgb(255 255 255 / 0.08);
-  --dq-press: rgb(255 255 255 / 0.03);
+  --dq-hover: rgb(255 255 255 / 0.1);
+  --dq-press: rgb(0 0 0 / 0.22);
 }
 
 /* On, the one recipe: a tint of the control's own role colour (--role),
@@ -303,7 +303,7 @@
 }
 :root[data-flag-dir-quiet][data-flag-dir-quiet] :is(.btn:not(.ghost), .mixer .hp, .mixer button.rec, .toast .undo, [data-region^='deck'] .pitch .lock, .knob button.label):active:not(:disabled, [aria-disabled='true']) {
   background: var(--dq-press) !important;
-  box-shadow: none !important;
+  box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.4) !important;
   transition-duration: 60ms;
 }
 /* Cue: amber label at rest; at the cue point, the amber tint. */

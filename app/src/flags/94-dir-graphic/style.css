@@ -1033,3 +1033,9 @@
   border-radius: 0 !important;
   background: linear-gradient(to top, rgb(244 243 239 / 0.42) 0 75%, rgb(244 243 239 / 0.92) 75% 97.9%, var(--kill) 97.9%) !important;
 }
+
+/* The limiter's word: red, the mixer's warning colour (yellow is the
+   device-lost band's alone). */
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .mixer .lim {
+  color: var(--kill) !important;
+}
