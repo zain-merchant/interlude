@@ -43,7 +43,7 @@ export default {
     },
   },
   notes:
-    "Whole-app look in style.css (built from a source with a short prefix; every rule is under the doubled :root[data-flag-dir-room-graphic] attribute). Tokens first, then the room, decks, keys, mixer, library, floating layer, dialogs, settings, and last the light appearance. Deck.svelte puts the tempo's decimals in a span.frac while this flag (or 97, 98) is on; ship that span with it. only-one.svelte.js keeps one Direction flag on at a time.",
+    "Whole-app look in style.css (built from a source with a short prefix; every rule is under the tripled :root[data-flag-dir-room-graphic] attribute, since the sheet loads before flags 11 to 99 in path order and has to out-rank their ties). Tokens first, then the room, decks, keys, mixer, library, floating layer, dialogs, settings, and last the light appearance. Deck.svelte puts the tempo's decimals in a span.frac while this flag (or 97, 98) is on; ship that span with it. only-one.svelte.js keeps one Direction flag on at a time. The deck header's two baselines (title with tempo, artist with key) come from deck-polish (#54)'s grid; this flag only sizes the type to fit it.",
 };
 
 /** Show me: both decks playing, flipping between today and this direction. */
