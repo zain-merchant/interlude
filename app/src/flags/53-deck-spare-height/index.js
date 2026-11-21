@@ -13,7 +13,7 @@ export default {
   n: 53,
   title: "The deck's spare height goes to the overview",
   group: 'Layout',
-  notes: 'Deck body rows become auto minmax(32px, 1fr) auto auto auto: the overview grows into the dead space and the mode row sits right under its tabs.',
+  notes: 'Deck body rows become auto minmax(32px, 1fr) auto auto auto: the overview grows into the dead space and the mode row sits right under its tabs. With no band left above the transport, its buttons\' tooltips open below them (tooltip.svelte.js hook), off the hot cue row.',
 };
 
 /** Show me: both decks loaded on the Cues tab; flipping shows the cue row floating in an empty band (before) and the taller overview (after). */

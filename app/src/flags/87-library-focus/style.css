@@ -19,6 +19,12 @@
   background: var(--sel);
   box-shadow: none;
 }
+/* Hovering another list lifts its fill (--hover, 5%) but keeps its
+   label at rest: only the current list's label is at full strength, so
+   hover never reads as a second current list (Li3). */
+:root[data-flag-library-focus] section.library [data-region='sidebar'] .item:not(.on):hover {
+  color: var(--fg-2);
+}
 /* E11: a count on a raised or selected fill reads at --fg-2 (6.3:1);
    --fg-3 on the fill dropped under 4.5:1. */
 :root[data-flag-library-focus] section.library [data-region='sidebar'] .item.on small {

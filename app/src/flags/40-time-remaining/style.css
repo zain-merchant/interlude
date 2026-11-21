@@ -24,7 +24,7 @@
    which is the one a click brings forward. */
 :root[data-flag-time-remaining] [data-region^='deck'] .times[data-big] {
   cursor: pointer;
-  border-radius: 6px;
+  border-radius: var(--r);
 }
 :root[data-flag-time-remaining] [data-region^='deck'] .times[data-big='remaining']:hover .el,
 :root[data-flag-time-remaining] [data-region^='deck'] .times[data-big='elapsed']:hover .rm:not(.ending) {

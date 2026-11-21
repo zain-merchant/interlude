@@ -41,7 +41,7 @@ export default {
 export const show = {
   about: 'Every Settings option came with a paragraph of two to four long lines, so the Decks page took three screens for five checkboxes. Now each option has one plain sentence and the labels say what they do.',
   before: 'Each checkbox sits on top of a long, wide paragraph, so the page is mostly grey text: you have to read a lot to find the one switch you want.',
-  after: 'One short line per option, kept to a comfortable width, and labels that say what they do ("Start a paused deck" under Hot cues), so the page is about half as long and scans at a glance.',
+  after: 'One short line per option, kept to a comfortable width, and labels that say what they do ("Start a paused deck" for hot cues), so the page is about half as long and scans at a glance.',
   async setup(app) {
     await app.openSettings('Decks');
     await app.until(() => app.$('.settings .display .opt'), 2000, 'the Decks page');

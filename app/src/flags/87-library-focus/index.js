@@ -17,12 +17,12 @@ export default {
   n: 87,
   title: 'Only the list the keys move looks selected',
   group: 'Polish',
-  notes: 'Sidebar current item: --sel fill (above hover), no edge, --fg text, unless the sidebar has focus (then the track list\'s selection steps down instead). Selected sidebar count --fg-2. Beats #4.',
+  notes: 'Sidebar current item: --sel fill (above hover), no edge; a hovered list keeps its --fg-2 label; --fg text, unless the sidebar has focus (then the track list\'s selection steps down instead). Selected sidebar count --fg-2. Beats #4.',
 };
 
 /** Show me: All tracks current and a row selected; flipping shows two equal pills (before) and one (after). */
 export const show = {
-  about: 'The sidebar\'s current list and the selected track were lit the same way, so you couldn\'t tell which one the arrow keys would move. Now only the track list is lit; the sidebar\'s current list is a quieter shade.',
+  about: 'The sidebar\'s current list and the selected track were lit the same way, so you couldn\'t tell which one the arrow keys would move. Now only the track list is fully lit; the sidebar\'s current list keeps a plain fill without the edge, and hovering another list never looks the same.',
   before: '"All tracks" and the selected track look exactly alike: two selections, and no sign which one the arrow keys, the browse knob and Enter act on.',
   after: 'The selected track is the one lit pill, because that\'s what the keys move. "All tracks" is marked more quietly, as where you are rather than what you\'re on.',
   async setup(app) {

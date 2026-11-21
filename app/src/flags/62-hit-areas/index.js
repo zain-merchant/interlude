@@ -21,9 +21,9 @@ export default {
 
 /** Show me: channel A's dials with the area that takes the pointer drawn on each. */
 export const show = {
-  about: 'A mixer dial only reacted if you hit its small centre cap; grabbing the ring of ticks around it did nothing. Now the whole ring is the handle.',
+  about: 'A mixer dial only reacted if you hit its small centre cap; grabbing the ring of ticks around it did nothing. Now the whole ring is the handle. And a click on a fader\'s track no longer throws the level there: it drags from where the fader is.',
   before: 'Only the small cap in the middle of each dial takes the pointer (outlined). Catch the ring of ticks instead, as you would in a hurry, and nothing happens.',
-  after: 'The whole dial, ticks and all, takes the pointer (outlined): about four times the area, so a quick grab lands.',
+  after: 'The whole dial, ticks and all, takes the pointer (outlined): about four times the area, so a quick grab lands. A press on a fader\'s track (not shown) now drags from the current level instead of jumping to it.',
   setup() {},
   target: (app) => app.$$('.mixer .ch')[0]?.querySelectorAll('.knob .wrap') ?? [],
   aid(d, app, ctx) {

@@ -22,7 +22,7 @@
 /* Paused (and empty): the tonal tile every resting button has (flag 09's
    surface when it's on), no outline: an outline belongs to Cue armed at
    its cue point. An empty deck's tile dims with the 40% disabled rule, to
-   Cue's and Sync's disabled grey. */
+   Cue's disabled grey (disabled Sync drops its tile, #14). */
 :root[data-flag-play-states][data-flag-play-states-playing='lit'] .transport .btn.play:not(.on) {
   background: var(--flag-buttons-bg, var(--raise));
   color: var(--fg);
