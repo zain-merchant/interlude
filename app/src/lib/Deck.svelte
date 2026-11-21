@@ -5,6 +5,8 @@
   import Performance from './Performance.svelte';
   import Stems from './Stems.svelte';
   import Grid from './Grid.svelte';
+  import Platter from '../proto/Platter.svelte';
+  import { platter as platterProto, STYLES as PLATTER_STYLES } from '../proto/platter.svelte.js';
   import { untrack } from 'svelte';
   import { padMode, padModeTab } from './padmode.svelte.js';
   import { tempoPickup } from './pickup.svelte.js';
@@ -237,49 +239,55 @@
   style:--drop-color={deck === 0 ? 'var(--deck-a)' : 'var(--deck-b)'} aria-label={regionLabel} data-region="deck{deck}"
   use:dropTarget={{ ondrop: (track) => onload(deck, track), blocked: () => d.playing }}>
   <div class="body">
+    <!-- Prototype: the record sits on the outer side, title and times beside it. -->
+    <div class="top">
+      <Platter {deck} />
+      <div class="side">
     <!-- svelte-ignore a11y_no_static_element_interactions -->
-    <header oncontextmenu={headerMenu}>
-      <div class="title">
-        {#if t}
-          <div class="name" use:tip={() => t.path}>{t.title}</div>
-          <div class="artist">{t.artist || 'Unknown artist'}</div>
-        {:else}
-          <div class="name dim">Empty deck</div>
-          <div class="artist">Drag a track here or press {keyLabel(`deck.${deck}.load`)}</div>
-        {/if}
-      </div>
-      <div class="bpm" oncontextmenu={openGridMenu} ondblclick={() => t && (bpmEdit.deck = deck)} role="group" aria-label="Tempo"
-        use:tip={() => (editingBpm ? '' : d.bpm > 0 ? `Track tempo ${d.bpm.toFixed(2)} BPM${t?.gridLocked ? ', beatgrid fixed by hand' : ''}. Right-click here or on the waveform to fix the beatgrid` : t ? 'No clear beat found. Double-click to set the BPM' : '')}>
-        {#if editingBpm}
-          <input class="big num edit" value={d.bpm > 0 ? +d.bpm.toFixed(2) : ''} inputmode="decimal" aria-label="Track BPM" spellcheck="false"
-            use:focusBpm onkeydown={bpmKey} onblur={(e) => finishBpm(e.currentTarget.value)} />
-        {:else}
-          <div class="big num">{bpm > 0 ? bpm.toFixed(2) : '—'}</div>
-        {/if}
-        <div class="unit">{#if pk}<button class="key" class:shifted={pk.shift} aria-label="Key {keyName(pk)}, {camelot(pk)}{pk.keyShift ? `, shifted ${pk.keyShift > 0 ? 'up' : 'down'} ${st(pk.keyShift)}` : ''}. Shift the key"
-          aria-haspopup="menu" onclick={keyMenu} oncontextmenu={keyMenu} ondblclick={(e) => e.stopPropagation()} use:tip={keyTip}>{keyName(pk)} · {camelot(pk)}{#if pk.keyShift}<span class="ks num">{pk.keyShift > 0 ? '+' : '−'}{Math.abs(pk.keyShift)}</span>{/if}<svg viewBox="0 0 10 10" aria-hidden="true"><path d="M2.5 4l2.5 2.5L7.5 4" /></svg></button>{" · "}{/if}BPM</div>
-      </div>
-    </header>
-
-    <div class="overview">
-      <Waveform {deck} mode="overview" />
-      {#if phrases.length}
-        <div class="phrases" aria-hidden="true">
-          {#each phrases as p (p.start)}
-            <span class="phrase {p.kind}" style:left="{(p.start / t.duration) * 100}%" style:width="{((p.end - p.start) / t.duration) * 100}%"></span>
-          {/each}
+      <header oncontextmenu={headerMenu}>
+        <div class="title">
+          {#if t}
+            <div class="name" use:tip={() => t.path}>{t.title}</div>
+            <div class="artist">{t.artist || 'Unknown artist'}</div>
+          {:else}
+            <div class="name dim">Empty deck</div>
+            <div class="artist">Drag a track here or press {keyLabel(`deck.${deck}.load`)}</div>
+          {/if}
+        </div>
+        <div class="bpm" oncontextmenu={openGridMenu} ondblclick={() => t && (bpmEdit.deck = deck)} role="group" aria-label="Tempo"
+          use:tip={() => (editingBpm ? '' : d.bpm > 0 ? `Track tempo ${d.bpm.toFixed(2)} BPM${t?.gridLocked ? ', beatgrid fixed by hand' : ''}. Right-click here or on the waveform to fix the beatgrid` : t ? 'No clear beat found. Double-click to set the BPM' : '')}>
+          {#if editingBpm}
+            <input class="big num edit" value={d.bpm > 0 ? +d.bpm.toFixed(2) : ''} inputmode="decimal" aria-label="Track BPM" spellcheck="false"
+              use:focusBpm onkeydown={bpmKey} onblur={(e) => finishBpm(e.currentTarget.value)} />
+          {:else}
+            <div class="big num">{bpm > 0 ? bpm.toFixed(2) : '—'}</div>
+          {/if}
+          <div class="unit">{#if pk}<button class="key" class:shifted={pk.shift} aria-label="Key {keyName(pk)}, {camelot(pk)}{pk.keyShift ? `, shifted ${pk.keyShift > 0 ? 'up' : 'down'} ${st(pk.keyShift)}` : ''}. Shift the key"
+            aria-haspopup="menu" onclick={keyMenu} oncontextmenu={keyMenu} ondblclick={(e) => e.stopPropagation()} use:tip={keyTip}>{keyName(pk)} · {camelot(pk)}{#if pk.keyShift}<span class="ks num">{pk.keyShift > 0 ? '+' : '−'}{Math.abs(pk.keyShift)}</span>{/if}<svg viewBox="0 0 10 10" aria-hidden="true"><path d="M2.5 4l2.5 2.5L7.5 4" /></svg></button>{" · "}{/if}BPM</div>
+        </div>
+      </header>
+      {#if PLATTER_STYLES[platterProto.style]?.strip}
+        <div class="overview strip-ov">
+          <Waveform {deck} mode="overview" />
+          {#if phrases.length}
+            <div class="phrases" aria-hidden="true">
+              {#each phrases as p (p.start)}
+                <span class="phrase {p.kind}" style:left="{(p.start / t.duration) * 100}%" style:width="{((p.end - p.start) / t.duration) * 100}%"></span>
+              {/each}
+            </div>
+          {/if}
         </div>
       {/if}
-    </div>
-
     <div class="times">
-      <span class="el num"><span class="sr">Elapsed </span>{fmt(d.position)}</span>
-      {#if now}
-        <span class="now {now.phrase.kind}" use:tip={() => `${PHRASE_NAMES[now.phrase.kind]}: ${now.phrase.bars} bars, energy ${now.phrase.energy} of 10. Found from the waveform on the beatgrid`}>
-          {PHRASE_NAMES[now.phrase.kind]} · <span class="num">{now.barsLeft}</span> {now.barsLeft === 1 ? 'bar' : 'bars'} left
-        </span>
-      {/if}
-      <span class="rm num"><span class="sr">Remaining </span>{fmt(d.position - d.duration)}</span>
+        <span class="el num"><span class="sr">Elapsed </span>{fmt(d.position)}</span>
+        {#if now}
+          <span class="now {now.phrase.kind}" use:tip={() => `${PHRASE_NAMES[now.phrase.kind]}: ${now.phrase.bars} bars, energy ${now.phrase.energy} of 10. Found from the waveform on the beatgrid`}>
+            {PHRASE_NAMES[now.phrase.kind]} · <span class="num">{now.barsLeft}</span> {now.barsLeft === 1 ? 'bar' : 'bars'} left
+          </span>
+        {/if}
+        <span class="rm num"><span class="sr">Remaining </span>{fmt(d.position - d.duration)}</span>
+      </div>
+      </div>
     </div>
 
     <div class="mp">
@@ -382,10 +390,52 @@
   }
   .body {
     display: grid;
-    grid-template-rows: auto minmax(32px, 48px) auto 1fr auto;
+    grid-template-rows: minmax(0, 1fr) 112px auto;
     gap: 12px;
     min-width: 0;
     min-height: 0;
+  }
+  .top {
+    display: flex;
+    gap: 16px;
+    min-height: 0;
+  }
+  .mirror .top {
+    flex-direction: row-reverse;
+  }
+  .side {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 14px;
+  }
+  .mirror .side {
+    text-align: right;
+  }
+  /* BPM and key are in the record's centre in this prototype. */
+  .side .bpm {
+    display: none;
+  }
+  .side .times {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+  .mirror .side .times {
+    align-items: flex-end;
+  }
+  .side .overview {
+    height: 44px;
+    flex: none;
+  }
+  .side .now {
+    order: 3;
+  }
+  .side .el {
+    font-size: var(--t-xl);
+    line-height: 34px;
   }
   header {
     display: flex;
