@@ -8,18 +8,20 @@
    * full scale (0 dBFS), and a real over reads above it.
    * #60 (UI audit flag) adds, while `meters` is on: `ticks` ('left' |
    * 'right') draws the 0, −6 and −18 dB marks on that side; `what` names
-   * the meter in the clip light's tooltip.
-   * @type {{ level?: number, ticks?: 'left' | 'right' | '', what?: string }}
+   * the meter in the clip light's tooltip; `light` false leaves out the
+   * clip light and its space (the master, which can't go over).
+   * @type {{ level?: number, ticks?: 'left' | 'right' | '', what?: string, light?: boolean }}
    */
-  let { level = 0, ticks = '', what = '' } = $props();
+  let { level = 0, ticks = '', what = '', light = true } = $props();
   // Map -48..0 dBFS onto the meter: green to 62%, amber to 82%, red above.
   const fill = $derived(Math.max(0, Math.min(1, (20 * Math.log10(Math.max(level, 1e-6)) + 48) / 48)));
 
   // #60 (UI audit flag): peak hold and clip latch. The held peak stays put
   // for a moment (the setting, 1.5 s by default), then drops to the level
   // now. The clip light latches only on a real over: a peak above full
-  // scale (0 dBFS). A track peaking at exactly full scale isn't clipping,
-  // and the master can't go over (its limiter, shown by LIM, holds it under).
+  // scale (0 dBFS). A track peaking at exactly full scale isn't clipping.
+  // The master can't go over (its limiter, shown by LIM, holds it under),
+  // so its meters have no light (`light` false): the bar runs to the top.
   /** Above full scale, with a hair of room for float rounding (+0.001 dB). */
   const OVER = 1.0001;
   const on = $derived(flag('meters'));
@@ -29,7 +31,7 @@
   $effect(() => {
     if (!on) return;
     const f = fill;
-    if (level > OVER) clipped = true;
+    if (light && level > OVER) clipped = true;
     if (f >= untrack(() => peak)) {
       peak = f;
       clearTimeout(hold);
@@ -41,9 +43,9 @@
 </script>
 
 {#if on}
-  <!-- #60 (UI audit flag): clip light on top, the bar under it, peak hold and dB marks. -->
-  <div class="meter m60" class:clipped style:--l="{fill * 100}%" style:--pk={peak}>
-    <i class="clip" aria-hidden="true"></i>
+  <!-- #60 (UI audit flag): clip light on top (channels only), the bar under it, peak hold and dB marks. -->
+  <div class="meter m60" class:clipped class:nolight={!light} style:--l="{fill * 100}%" style:--pk={peak}>
+    {#if light}<i class="clip" aria-hidden="true"></i>{/if}
     <i class="bar" aria-hidden="true"></i>
     {#if peak > 0.01}<i class="peak" aria-hidden="true"></i>{/if}
     {#if ticks}
@@ -109,6 +111,13 @@
     bottom: 0;
     border-radius: 1px 1px 2px 2px;
     background: #070708;
+  }
+  /* No clip light (the master): no space kept for one, the bar is the whole meter. */
+  .m60.nolight {
+    --top: 0px;
+  }
+  .m60.nolight .bar {
+    border-radius: 2px;
   }
   .m60 .bar::after {
     content: '';

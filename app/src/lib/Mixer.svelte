@@ -161,7 +161,7 @@
   {@const D = flag('deck-names') ? (deck === 0 ? 'Left deck' : 'Right deck') : `Deck ${n}`}
   <div class="fwrap" class:mirror={deck === 1}>
     <div class="frow">
-      <!-- #60 (UI audit flag): ticks, over and what only matter while meters is on. -->
+      <!-- #60 (UI audit flag): ticks and what only matter while meters is on. -->
       <Meter level={engine.deckLevels[deck]} ticks={deck === 0 ? 'right' : 'left'} what={D} />
       <Fader vertical bind:value={ch.fader} reset={1} label="{D} volume"
         onchange={(v) => control({ type: 'setFader', deck, value: v })} />
@@ -186,8 +186,9 @@
     <div class="mpair" use:tip={() => engine.limiting >= 0.5
       ? `Master level. The limiter is turning the mix down ${engine.limiting.toFixed(1)} dB to stop it distorting; lower the master or channel levels.`
       : 'Master level'}>
-      <Meter level={engine.masterLevels[0]} ticks="left" what="master left" />
-      <Meter level={engine.masterLevels[1]} what="master right" />
+      <!-- #60 (UI audit flag): the limiter keeps the master under full scale, so its meters have no clip light. -->
+      <Meter level={engine.masterLevels[0]} ticks="left" light={false} />
+      <Meter level={engine.masterLevels[1]} light={false} />
       {#if engine.limiting >= 0.5}<span class="lim" aria-hidden="true">LIM</span>{/if}
     </div>
     {#if rec}

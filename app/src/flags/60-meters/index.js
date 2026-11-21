@@ -5,9 +5,10 @@
 // channel meters that run the fader's height, so the same level sat at
 // different heights. With the flag on (hooks: Meter.svelte, Mixer.svelte):
 // - a 1px peak-hold line that stays for a moment (the Hold setting);
-// - a 4px clip light on top that stays red until clicked, lit only by a
-//   real over (a peak above 0 dBFS; a track peaking at full scale doesn't
-//   light it, and the master's limiter, shown by LIM, keeps it under);
+// - on the channel meters, a 4px clip light on top that stays red until
+//   clicked, lit only by a real over (a peak above 0 dBFS; a track peaking
+//   at full scale doesn't light it). The master meters have none: the
+//   limiter, shown by LIM, keeps the master under full scale;
 // - marks at 0, −6 and −18 dB on the side facing the middle;
 // - colour zones in dBFS: green under −12, amber to −1, red above;
 // - the master pair taller, down to the channel meters' foot, centred
@@ -17,7 +18,7 @@ export default {
   n: 60,
   title: 'Meters with a scale, peak hold and a clip light',
   group: 'Controls',
-  notes: 'Meter.svelte: peak hold (setTimeout, no frame loop, unitless --pk), latched clip light (above 0 dBFS only, a button only while lit, its target the light plus 4px, away from the fader), 0 dB mark 5px --fg-2, −6/−18 3px --fg-4, zones at −12 and −1 dBFS on the bar under the light. Mixer.svelte passes ticks/what. style.css: the master pair under the dials (default) or beside them.',
+  notes: 'Meter.svelte: peak hold (setTimeout, no frame loop, unitless --pk), latched clip light (channels only, `light` false on the master; above 0 dBFS only, a button only while lit, its target the light plus 4px, away from the fader), 0 dB mark 5px --fg-2, −6/−18 3px --fg-4, zones at −12 and −1 dBFS on the bar under the light. Mixer.svelte passes ticks/what/light. style.css: the master pair under the dials (default) or beside them, its bars level with the channel bars.',
   settings: {
     master: {
       type: 'choice',
@@ -25,7 +26,7 @@ export default {
       default: 'below',
       options: [
         ['below', 'Under the dials', 'The pair stays centred under Master and Cue mix, on the same middle line as Rec and the crossfader, and runs down to the channel meters\' foot.'],
-        ['beside', 'Full length, beside the dials', 'The pair runs exactly as long as the channel meters, but Master and Cue mix move off the mixer\'s middle line to make room.'],
+        ['beside', 'Full length, beside the dials', 'The pair runs exactly as long as the channel meters\' bars, so a level sits at one height on all four, but Master and Cue mix move off the mixer\'s middle line to make room.'],
       ],
     },
     hold: { type: 'range', min: 0.5, max: 3, step: 0.1, default: 1.5, unit: '', label: 'Peak hold (s)' },
@@ -34,9 +35,9 @@ export default {
 
 /** Show me: both decks playing, a clip lit on channel A, the mixer's meters ringed and magnified. */
 export const show = {
-  about: "A red flash on a meter was gone before you could look, nothing marked 0 dB, and the master meters were a short stub beside the channel meters. Now each meter has a scale, holds its last peak, keeps a red clip light on until you click it, and the master meters run down to the same foot as the channel ones.",
+  about: "A red flash on a meter was gone before you could look, nothing marked 0 dB, and the master meters were a short stub beside the channel meters. Now each meter has a scale, holds its last peak, keeps a red clip light on each channel until you click it, and the master meters run down to the same foot as the channel ones.",
   before: 'The meters are plain bars: a peak flickers and is gone, a clip is a red flash you missed, there is no 0 dB mark, and the master pair is a short stub, so the same level sits lower on the channels than on the master.',
-  after: 'A thin line holds each peak for a moment, a red light at the top stays on after a clip until you click it, small marks show 0 dB (the longer one), −6 and −18 dB, and the master meters are taller and end on the channel meters\' line.',
+  after: 'A thin line holds each peak for a moment, a red light at the top of a channel meter stays on after a clip until you click it, small marks show 0 dB (the longer one), −6 and −18 dB, and the master meters are taller and end on the channel meters\' line.',
   async setup(app, ctx) {
     if (!app.loaded(0)) await app.loadTrack(0);
     if (!app.loaded(1)) await app.loadTrack(1);

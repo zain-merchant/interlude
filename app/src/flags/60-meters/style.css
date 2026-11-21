@@ -1,11 +1,13 @@
-/* #60: meters with a scale, a peak hold and a clip light (Meter.svelte
-   draws those), and a taller master pair. Rec drops to the headphone
+/* #60: meters with a scale, a peak hold and, on the channels, a clip light
+   (Meter.svelte draws those), and a taller master pair. Rec drops to the headphone
    buttons' line in both layouts, so the pair ends on the channel meters' foot. */
 
 /* The grid both layouts share; as set here, Beside (an option): the master pair spans the column from the top to the line above
    Rec, which drops to the headphone buttons' line. The channel strips are
-   the same (fader and meter, 8px, the 24px headphone button), so all four
-   meters share one top and one bottom, and a level sits at one height on
+   the same (fader and meter, 8px, the 24px headphone button). The master
+   meters have no clip light, so the pair starts 5px down (the channel
+   light's 4px and its 1px gap), at the top of the channel bars: all four
+   bars share one top and one bottom, and a level sits at one height on
    every meter. Master and Cue mix stack beside the pair. */
 :root[data-flag-meters] .mixer .cen {
   grid-template-columns: auto auto;
@@ -30,6 +32,9 @@
   grid-area: 4 / 1 / 5 / 3;
   justify-self: center;
   align-self: end;
+}
+:root[data-flag-meters][data-flag-meters-master='beside'] .mixer .cen > .mpair {
+  margin-top: 5px;
 }
 /* LIM sits at the foot of the pair, on the dials' side, clear of channel B. */
 :root[data-flag-meters] .mixer .cen > .mpair .lim {
