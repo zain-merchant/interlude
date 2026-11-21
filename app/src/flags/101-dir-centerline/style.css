@@ -959,37 +959,44 @@
    side by side over its meters, Rec under them. */
 
 :root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .decks {
-  grid-template-columns: minmax(0, 1fr) clamp(300px, 24vw, 352px) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) clamp(316px, 25vw, 360px) minmax(0, 1fr);
 }
 :root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .mixer .ch {
-  grid-template-columns: auto auto;
-  column-gap: 4px;
+  grid-template-columns: 36px 36px;
+  column-gap: 2px;
+  justify-items: center;
   align-content: space-between;
 }
 
+/* The master: its dials down the middle, its two meters either side of
+   them (left and right), Rec under them. */
 :root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .mixer .cen {
-  grid-template-columns: auto auto;
+  position: relative;
+  grid-template-columns: 1fr;
   grid-template-rows: auto auto minmax(0, 1fr);
-  column-gap: 6px;
   row-gap: 2px;
-  align-items: start;
+  padding: 0 14px;
+  min-width: 84px;
   justify-items: center;
 }
-:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .mixer .cen > :nth-child(1) {
-  grid-area: 1 / 1;
-}
-:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .mixer .cen > :nth-child(2) {
-  grid-area: 2 / 1;
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .mixer .cen > :is(:nth-child(1), :nth-child(2)) {
+  position: relative;
+  z-index: 1;
 }
 :root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .mixer .cen .mpair {
-  grid-area: 1 / 2 / 3 / 3;
-  height: auto;
-  min-height: 0;
-  align-self: stretch;
-  margin: 6px 0 16px;
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  top: 6px;
+  grid-area: auto;
+  justify-self: stretch;
+  align-self: start;
+  width: auto;
+  height: 104px;
+  justify-content: space-between;
 }
 :root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .mixer .cen .rec {
-  grid-area: 3 / 1 / 4 / 3;
+  grid-area: 3 / 1;
   align-self: end;
 }
 
@@ -1003,7 +1010,7 @@
    along the bottom, each on a small plate laid over the waveform. */
 
 :root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .app {
-  --cl-console: 248px;
+  --cl-console: 236px;
   /* The library keeps its handle, up to 30% of the window. */
   --cl-lib: min(var(--lib), 30vh);
   --cl-inset: 12px;
@@ -1151,6 +1158,21 @@
 :root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] header .bpm .big {
   line-height: 28px;
 }
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] header .bpm .unit {
+  font-size: var(--t-sm);
+  line-height: 17px;
+}
+/* The deck's colour: a short bar before the title, as on today's lanes. */
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] header .title::before {
+  content: '';
+  flex: none;
+  align-self: center;
+  width: 3px;
+  height: 12px;
+  margin: -6px 0 0 -2px;
+  border-radius: 2px;
+  background: var(--deck);
+}
 :root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .times {
   position: absolute;
   z-index: 3;
@@ -1188,7 +1210,7 @@
   color: var(--fg);
 }
 :root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .times .el {
-  font-size: var(--t-xs);
+  font-size: var(--t-sm);
   font-weight: 400;
   line-height: 17px;
   letter-spacing: 0;
