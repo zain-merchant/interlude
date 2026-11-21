@@ -23,8 +23,9 @@
 
   // #45, #56 (UI audit flags): flags that change the theme's colours; the
   // canvas reads them again when one flips.
+  // #92-94 (UI audit flags): the three visual directions set their own waveform colours.
   const colorFlags = () =>
-    `${flag('cue-colour')}|${setting('cue-colour', 'eight')}|${flag('against-deck-colours')}|${setting('against-deck-colours', 'look')}|${flag('against-wave-cores')}`;
+    `${flag('cue-colour')}|${setting('cue-colour', 'eight')}|${flag('against-deck-colours')}|${setting('against-deck-colours', 'look')}|${flag('against-wave-cores')}|${flag('dir-quiet')}|${flag('dir-warm')}|${flag('dir-graphic')}`;
   // #41, #43, #50, #52, #54 (UI audit flags): what the canvas draws differently with them on.
   const wf = () => ({
     beatGrid: flag('beat-grid'),
