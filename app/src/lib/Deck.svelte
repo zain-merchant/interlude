@@ -390,14 +390,14 @@
   }
   .body {
     display: grid;
-    grid-template-rows: minmax(0, 1fr) 112px auto;
+    grid-template-rows: minmax(0, 1fr) 84px auto;
     gap: 12px;
     min-width: 0;
     min-height: 0;
   }
   .top {
     display: flex;
-    gap: 16px;
+    gap: 30px;
     min-height: 0;
   }
   .mirror .top {
