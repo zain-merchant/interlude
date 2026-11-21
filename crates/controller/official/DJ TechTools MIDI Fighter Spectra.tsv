@@ -1,0 +1,240 @@
+# MIDI Fighter Spectra — DJ TechTools "Midi Fighter Spectra User Guide", Appendix 1
+# source: https://s3.amazonaws.com/MF_Support_Docs/Midi+Fighter+Spectra+User+Guide.pdf
+# Default base channel 3: triggers send notes on channel 3 (CCs on 4 with Momentary CC); colour = note on ch 3,
+# animation = note on ch 4. Side buttons are given as Note/CC per the appendix (their function is configurable).
+in	93	16	Bank 1 Left side button 1	
+in	B4	16	Bank 1 Left side button 1 (CC)	
+in	93	15	Bank 1 Left side button 2	
+in	B4	15	Bank 1 Left side button 2 (CC)	
+in	93	14	Bank 1 Left side button 3	
+in	B4	14	Bank 1 Left side button 3 (CC)	
+in	93	19	Bank 1 Right side button 1	
+in	B4	19	Bank 1 Right side button 1 (CC)	
+in	93	18	Bank 1 Right side button 2	
+in	B4	18	Bank 1 Right side button 2 (CC)	
+in	93	17	Bank 1 Right side button 3	
+in	B4	17	Bank 1 Right side button 3 (CC)	
+both	92	30	Bank 1 Arcade Button 1 (LED colour by velocity)	
+in	B3	30	Bank 1 Arcade Button 1 (Momentary CC option)	
+out	93	30	Bank 1 Arcade Button 1 animation	
+both	92	31	Bank 1 Arcade Button 2 (LED colour by velocity)	
+in	B3	31	Bank 1 Arcade Button 2 (Momentary CC option)	
+out	93	31	Bank 1 Arcade Button 2 animation	
+both	92	32	Bank 1 Arcade Button 3 (LED colour by velocity)	
+in	B3	32	Bank 1 Arcade Button 3 (Momentary CC option)	
+out	93	32	Bank 1 Arcade Button 3 animation	
+both	92	33	Bank 1 Arcade Button 4 (LED colour by velocity)	
+in	B3	33	Bank 1 Arcade Button 4 (Momentary CC option)	
+out	93	33	Bank 1 Arcade Button 4 animation	
+both	92	2C	Bank 1 Arcade Button 5 (LED colour by velocity)	
+in	B3	2C	Bank 1 Arcade Button 5 (Momentary CC option)	
+out	93	2C	Bank 1 Arcade Button 5 animation	
+both	92	2D	Bank 1 Arcade Button 6 (LED colour by velocity)	
+in	B3	2D	Bank 1 Arcade Button 6 (Momentary CC option)	
+out	93	2D	Bank 1 Arcade Button 6 animation	
+both	92	2E	Bank 1 Arcade Button 7 (LED colour by velocity)	
+in	B3	2E	Bank 1 Arcade Button 7 (Momentary CC option)	
+out	93	2E	Bank 1 Arcade Button 7 animation	
+both	92	2F	Bank 1 Arcade Button 8 (LED colour by velocity)	
+in	B3	2F	Bank 1 Arcade Button 8 (Momentary CC option)	
+out	93	2F	Bank 1 Arcade Button 8 animation	
+both	92	28	Bank 1 Arcade Button 9 (LED colour by velocity)	
+in	B3	28	Bank 1 Arcade Button 9 (Momentary CC option)	
+both	93	28	Bank 1 Arcade Button 9 animation	
+both	92	29	Bank 1 Arcade Button 10 (LED colour by velocity)	
+in	B3	29	Bank 1 Arcade Button 10 (Momentary CC option)	
+both	93	29	Bank 1 Arcade Button 10 animation	
+both	92	2A	Bank 1 Arcade Button 11 (LED colour by velocity)	
+in	B3	2A	Bank 1 Arcade Button 11 (Momentary CC option)	
+both	93	2A	Bank 1 Arcade Button 11 animation	
+both	92	2B	Bank 1 Arcade Button 12 (LED colour by velocity)	
+in	B3	2B	Bank 1 Arcade Button 12 (Momentary CC option)	
+both	93	2B	Bank 1 Arcade Button 12 animation	
+both	92	24	Bank 1 Arcade Button 13 (LED colour by velocity)	
+in	B3	24	Bank 1 Arcade Button 13 (Momentary CC option)	
+both	93	24	Bank 1 Arcade Button 13 animation	
+both	92	25	Bank 1 Arcade Button 14 (LED colour by velocity)	
+in	B3	25	Bank 1 Arcade Button 14 (Momentary CC option)	
+both	93	25	Bank 1 Arcade Button 14 animation	
+both	92	26	Bank 1 Arcade Button 15 (LED colour by velocity)	
+in	B3	26	Bank 1 Arcade Button 15 (Momentary CC option)	
+both	93	26	Bank 1 Arcade Button 15 animation	
+both	92	27	Bank 1 Arcade Button 16 (LED colour by velocity)	
+in	B3	27	Bank 1 Arcade Button 16 (Momentary CC option)	
+both	93	27	Bank 1 Arcade Button 16 animation	
+in	93	1C	Bank 2 Left side button 1	
+in	B4	1C	Bank 2 Left side button 1 (CC)	
+in	93	1B	Bank 2 Left side button 2	
+in	B4	1B	Bank 2 Left side button 2 (CC)	
+in	93	1A	Bank 2 Left side button 3	
+in	B4	1A	Bank 2 Left side button 3 (CC)	
+in	93	1F	Bank 2 Right side button 1	
+in	B4	1F	Bank 2 Right side button 1 (CC)	
+in	93	1E	Bank 2 Right side button 2	
+in	B4	1E	Bank 2 Right side button 2 (CC)	
+in	93	1D	Bank 2 Right side button 3	
+in	B4	1D	Bank 2 Right side button 3 (CC)	
+both	92	40	Bank 2 Arcade Button 1 (LED colour by velocity)	
+in	B3	40	Bank 2 Arcade Button 1 (Momentary CC option)	
+out	93	40	Bank 2 Arcade Button 1 animation	
+both	92	41	Bank 2 Arcade Button 2 (LED colour by velocity)	
+in	B3	41	Bank 2 Arcade Button 2 (Momentary CC option)	
+out	93	41	Bank 2 Arcade Button 2 animation	
+both	92	42	Bank 2 Arcade Button 3 (LED colour by velocity)	
+in	B3	42	Bank 2 Arcade Button 3 (Momentary CC option)	
+out	93	42	Bank 2 Arcade Button 3 animation	
+both	92	43	Bank 2 Arcade Button 4 (LED colour by velocity)	
+in	B3	43	Bank 2 Arcade Button 4 (Momentary CC option)	
+out	93	43	Bank 2 Arcade Button 4 animation	
+both	92	3C	Bank 2 Arcade Button 5 (LED colour by velocity)	
+in	B3	3C	Bank 2 Arcade Button 5 (Momentary CC option)	
+out	93	3C	Bank 2 Arcade Button 5 animation	
+both	92	3D	Bank 2 Arcade Button 6 (LED colour by velocity)	
+in	B3	3D	Bank 2 Arcade Button 6 (Momentary CC option)	
+out	93	3D	Bank 2 Arcade Button 6 animation	
+both	92	3E	Bank 2 Arcade Button 7 (LED colour by velocity)	
+in	B3	3E	Bank 2 Arcade Button 7 (Momentary CC option)	
+out	93	3E	Bank 2 Arcade Button 7 animation	
+both	92	3F	Bank 2 Arcade Button 8 (LED colour by velocity)	
+in	B3	3F	Bank 2 Arcade Button 8 (Momentary CC option)	
+out	93	3F	Bank 2 Arcade Button 8 animation	
+both	92	38	Bank 2 Arcade Button 9 (LED colour by velocity)	
+in	B3	38	Bank 2 Arcade Button 9 (Momentary CC option)	
+out	93	38	Bank 2 Arcade Button 9 animation	
+both	92	39	Bank 2 Arcade Button 10 (LED colour by velocity)	
+in	B3	39	Bank 2 Arcade Button 10 (Momentary CC option)	
+out	93	39	Bank 2 Arcade Button 10 animation	
+both	92	3A	Bank 2 Arcade Button 11 (LED colour by velocity)	
+in	B3	3A	Bank 2 Arcade Button 11 (Momentary CC option)	
+out	93	3A	Bank 2 Arcade Button 11 animation	
+both	92	3B	Bank 2 Arcade Button 12 (LED colour by velocity)	
+in	B3	3B	Bank 2 Arcade Button 12 (Momentary CC option)	
+out	93	3B	Bank 2 Arcade Button 12 animation	
+both	92	34	Bank 2 Arcade Button 13 (LED colour by velocity)	
+in	B3	34	Bank 2 Arcade Button 13 (Momentary CC option)	
+out	93	34	Bank 2 Arcade Button 13 animation	
+both	92	35	Bank 2 Arcade Button 14 (LED colour by velocity)	
+in	B3	35	Bank 2 Arcade Button 14 (Momentary CC option)	
+out	93	35	Bank 2 Arcade Button 14 animation	
+both	92	36	Bank 2 Arcade Button 15 (LED colour by velocity)	
+in	B3	36	Bank 2 Arcade Button 15 (Momentary CC option)	
+out	93	36	Bank 2 Arcade Button 15 animation	
+both	92	37	Bank 2 Arcade Button 16 (LED colour by velocity)	
+in	B3	37	Bank 2 Arcade Button 16 (Momentary CC option)	
+out	93	37	Bank 2 Arcade Button 16 animation	
+in	93	22	Bank 3 Left side button 1	
+in	B4	22	Bank 3 Left side button 1 (CC)	
+in	93	21	Bank 3 Left side button 2	
+in	B4	21	Bank 3 Left side button 2 (CC)	
+in	93	20	Bank 3 Left side button 3	
+in	B4	20	Bank 3 Left side button 3 (CC)	
+in	B4	25	Bank 3 Right side button 1 (CC)	
+in	B4	24	Bank 3 Right side button 2 (CC)	
+in	93	23	Bank 3 Right side button 3	
+in	B4	23	Bank 3 Right side button 3 (CC)	
+both	92	50	Bank 3 Arcade Button 1 (LED colour by velocity)	
+in	B3	50	Bank 3 Arcade Button 1 (Momentary CC option)	
+out	93	50	Bank 3 Arcade Button 1 animation	
+both	92	51	Bank 3 Arcade Button 2 (LED colour by velocity)	
+in	B3	51	Bank 3 Arcade Button 2 (Momentary CC option)	
+out	93	51	Bank 3 Arcade Button 2 animation	
+both	92	52	Bank 3 Arcade Button 3 (LED colour by velocity)	
+in	B3	52	Bank 3 Arcade Button 3 (Momentary CC option)	
+out	93	52	Bank 3 Arcade Button 3 animation	
+both	92	53	Bank 3 Arcade Button 4 (LED colour by velocity)	
+in	B3	53	Bank 3 Arcade Button 4 (Momentary CC option)	
+out	93	53	Bank 3 Arcade Button 4 animation	
+both	92	4C	Bank 3 Arcade Button 5 (LED colour by velocity)	
+in	B3	4C	Bank 3 Arcade Button 5 (Momentary CC option)	
+out	93	4C	Bank 3 Arcade Button 5 animation	
+both	92	4D	Bank 3 Arcade Button 6 (LED colour by velocity)	
+in	B3	4D	Bank 3 Arcade Button 6 (Momentary CC option)	
+out	93	4D	Bank 3 Arcade Button 6 animation	
+both	92	4E	Bank 3 Arcade Button 7 (LED colour by velocity)	
+in	B3	4E	Bank 3 Arcade Button 7 (Momentary CC option)	
+out	93	4E	Bank 3 Arcade Button 7 animation	
+both	92	4F	Bank 3 Arcade Button 8 (LED colour by velocity)	
+in	B3	4F	Bank 3 Arcade Button 8 (Momentary CC option)	
+out	93	4F	Bank 3 Arcade Button 8 animation	
+both	92	48	Bank 3 Arcade Button 9 (LED colour by velocity)	
+in	B3	48	Bank 3 Arcade Button 9 (Momentary CC option)	
+out	93	48	Bank 3 Arcade Button 9 animation	
+both	92	49	Bank 3 Arcade Button 10 (LED colour by velocity)	
+in	B3	49	Bank 3 Arcade Button 10 (Momentary CC option)	
+out	93	49	Bank 3 Arcade Button 10 animation	
+both	92	4A	Bank 3 Arcade Button 11 (LED colour by velocity)	
+in	B3	4A	Bank 3 Arcade Button 11 (Momentary CC option)	
+out	93	4A	Bank 3 Arcade Button 11 animation	
+both	92	4B	Bank 3 Arcade Button 12 (LED colour by velocity)	
+in	B3	4B	Bank 3 Arcade Button 12 (Momentary CC option)	
+out	93	4B	Bank 3 Arcade Button 12 animation	
+both	92	44	Bank 3 Arcade Button 13 (LED colour by velocity)	
+in	B3	44	Bank 3 Arcade Button 13 (Momentary CC option)	
+out	93	44	Bank 3 Arcade Button 13 animation	
+both	92	45	Bank 3 Arcade Button 14 (LED colour by velocity)	
+in	B3	45	Bank 3 Arcade Button 14 (Momentary CC option)	
+out	93	45	Bank 3 Arcade Button 14 animation	
+both	92	46	Bank 3 Arcade Button 15 (LED colour by velocity)	
+in	B3	46	Bank 3 Arcade Button 15 (Momentary CC option)	
+out	93	46	Bank 3 Arcade Button 15 animation	
+both	92	47	Bank 3 Arcade Button 16 (LED colour by velocity)	
+in	B3	47	Bank 3 Arcade Button 16 (Momentary CC option)	
+out	93	47	Bank 3 Arcade Button 16 animation	
+in	B4	28	Bank 4 Left side button 1 (CC)	
+in	B4	27	Bank 4 Left side button 2 (CC)	
+in	B4	26	Bank 4 Left side button 3 (CC)	
+in	B4	2B	Bank 4 Right side button 1 (CC)	
+in	B4	2A	Bank 4 Right side button 2 (CC)	
+in	B4	29	Bank 4 Right side button 3 (CC)	
+both	92	60	Bank 4 Arcade Button 1 (LED colour by velocity)	
+in	B3	60	Bank 4 Arcade Button 1 (Momentary CC option)	
+out	93	60	Bank 4 Arcade Button 1 animation	
+both	92	61	Bank 4 Arcade Button 2 (LED colour by velocity)	
+in	B3	61	Bank 4 Arcade Button 2 (Momentary CC option)	
+out	93	61	Bank 4 Arcade Button 2 animation	
+both	92	62	Bank 4 Arcade Button 3 (LED colour by velocity)	
+in	B3	62	Bank 4 Arcade Button 3 (Momentary CC option)	
+out	93	62	Bank 4 Arcade Button 3 animation	
+both	92	63	Bank 4 Arcade Button 4 (LED colour by velocity)	
+in	B3	63	Bank 4 Arcade Button 4 (Momentary CC option)	
+out	93	63	Bank 4 Arcade Button 4 animation	
+both	92	5C	Bank 4 Arcade Button 5 (LED colour by velocity)	
+in	B3	5C	Bank 4 Arcade Button 5 (Momentary CC option)	
+out	93	5C	Bank 4 Arcade Button 5 animation	
+both	92	5D	Bank 4 Arcade Button 6 (LED colour by velocity)	
+in	B3	5D	Bank 4 Arcade Button 6 (Momentary CC option)	
+out	93	5D	Bank 4 Arcade Button 6 animation	
+both	92	5E	Bank 4 Arcade Button 7 (LED colour by velocity)	
+in	B3	5E	Bank 4 Arcade Button 7 (Momentary CC option)	
+out	93	5E	Bank 4 Arcade Button 7 animation	
+both	92	5F	Bank 4 Arcade Button 8 (LED colour by velocity)	
+in	B3	5F	Bank 4 Arcade Button 8 (Momentary CC option)	
+out	93	5F	Bank 4 Arcade Button 8 animation	
+both	92	58	Bank 4 Arcade Button 9 (LED colour by velocity)	
+in	B3	58	Bank 4 Arcade Button 9 (Momentary CC option)	
+out	93	58	Bank 4 Arcade Button 9 animation	
+both	92	59	Bank 4 Arcade Button 10 (LED colour by velocity)	
+in	B3	59	Bank 4 Arcade Button 10 (Momentary CC option)	
+out	93	59	Bank 4 Arcade Button 10 animation	
+both	92	5A	Bank 4 Arcade Button 11 (LED colour by velocity)	
+in	B3	5A	Bank 4 Arcade Button 11 (Momentary CC option)	
+out	93	5A	Bank 4 Arcade Button 11 animation	
+both	92	5B	Bank 4 Arcade Button 12 (LED colour by velocity)	
+in	B3	5B	Bank 4 Arcade Button 12 (Momentary CC option)	
+out	93	5B	Bank 4 Arcade Button 12 animation	
+both	92	54	Bank 4 Arcade Button 13 (LED colour by velocity)	
+in	B3	54	Bank 4 Arcade Button 13 (Momentary CC option)	
+out	93	54	Bank 4 Arcade Button 13 animation	
+both	92	55	Bank 4 Arcade Button 14 (LED colour by velocity)	
+in	B3	55	Bank 4 Arcade Button 14 (Momentary CC option)	
+out	93	55	Bank 4 Arcade Button 14 animation	
+both	92	56	Bank 4 Arcade Button 15 (LED colour by velocity)	
+in	B3	56	Bank 4 Arcade Button 15 (Momentary CC option)	
+out	93	56	Bank 4 Arcade Button 15 animation	
+both	92	57	Bank 4 Arcade Button 16 (LED colour by velocity)	
+in	B3	57	Bank 4 Arcade Button 16 (Momentary CC option)	
+out	93	57	Bank 4 Arcade Button 16 animation	
+out	93	10	Ground LED 1	
+out	93	11	Ground LED 2	
+out	93	12	Ground LED 3	
+out	93	13	Ground LED 4	

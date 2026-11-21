@@ -1847,16 +1847,6 @@
                 </options>
             </control>
             <control>
-                <group>[EffectRack1]</group>
-                <key>show</key>
-                <description>Toggle Effect view, Button: SHIFT &amp; left LOAD (Deck 2 active)</description>
-                <status>0x96</status>
-                <midino>0x60</midino>
-                <options>
-                    <normal />
-                </options>
-            </control>
-            <control>
                 <group>[Channel2]</group>
                 <key>PioneerDDJSB2.loadButton</key>
                 <description>Load selected Deck 2, Button: right LOAD (Deck 2 active)</description>
@@ -1884,16 +1874,6 @@
                 <midino>0x49</midino>
                 <options>
                     <script-binding />
-                </options>
-            </control>
-            <control>
-                <group>[Samplers]</group>
-                <key>show_samplers</key>
-                <description>Toggle Sampler view, Button: SHIFT &amp; right LOAD (Deck 4 active)</description>
-                <status>0x96</status>
-                <midino>0x61</midino>
-                <options>
-                    <normal />
                 </options>
             </control>
             <control>

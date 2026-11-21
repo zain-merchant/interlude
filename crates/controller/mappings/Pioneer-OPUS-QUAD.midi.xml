@@ -3151,38 +3151,6 @@
                 <on>0x7F</on>
                 <minimum>0.5</minimum>
             </output>
-            <output>
-                <group>[Channel1]</group>
-                <key>pfl</key>
-                <status>0xB4</status>
-                <midino>0x46</midino>
-                <on>0x7F</on>
-                <minimum>0.5</minimum>
-            </output>
-            <output>
-                <group>[Channel2]</group>
-                <key>pfl</key>
-                <status>0xB4</status>
-                <midino>0x47</midino>
-                <on>0x7F</on>
-                <minimum>0.5</minimum>
-            </output>
-            <output>
-                <group>[Channel3]</group>
-                <key>pfl</key>
-                <status>0xB4</status>
-                <midino>0x48</midino>
-                <on>0x7F</on>
-                <minimum>0.5</minimum>
-            </output>
-            <output>
-                <group>[Channel4]</group>
-                <key>pfl</key>
-                <status>0xB4</status>
-                <midino>0x49</midino>
-                <on>0x7F</on>
-                <minimum>0.5</minimum>
-            </output>
         </outputs>
     </controller>
 </MixxxControllerPreset>

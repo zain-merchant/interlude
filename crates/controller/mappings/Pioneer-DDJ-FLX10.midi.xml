@@ -6710,36 +6710,6 @@
                 </options>
             </control>
             <control>
-                <description>CROSSFADER ASSIGN (DECK2) - switch to A</description>
-                <group>[Channel2]</group>
-                <key>PioneerDDJFLX10.crossfaderAssign</key>
-                <status>0x91</status>
-                <midino>0x16</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>CROSSFADER ASSIGN (DECK2) - switch to THRU</description>
-                <group>[Channel2]</group>
-                <key>PioneerDDJFLX10.crossfaderAssign</key>
-                <status>0x91</status>
-                <midino>0x1D</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>CROSSFADER ASSIGN (DECK2) - switch to B</description>
-                <group>[Channel2]</group>
-                <key>PioneerDDJFLX10.crossfaderAssign</key>
-                <status>0x91</status>
-                <midino>0x18</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
                 <description>ACTIVE PART DRUMS (DECK2) - press - mute or unmute those stems (openDJ)</description>
                 <group>[Channel2]</group>
                 <key>PioneerDDJFLX10.activePartPressed</key>
@@ -6850,36 +6820,6 @@
                 </options>
             </control>
             <control>
-                <description>CROSSFADER ASSIGN (DECK3) - switch to A</description>
-                <group>[Channel3]</group>
-                <key>PioneerDDJFLX10.crossfaderAssign</key>
-                <status>0x92</status>
-                <midino>0x16</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>CROSSFADER ASSIGN (DECK3) - switch to THRU</description>
-                <group>[Channel3]</group>
-                <key>PioneerDDJFLX10.crossfaderAssign</key>
-                <status>0x92</status>
-                <midino>0x1D</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>CROSSFADER ASSIGN (DECK3) - switch to B</description>
-                <group>[Channel3]</group>
-                <key>PioneerDDJFLX10.crossfaderAssign</key>
-                <status>0x92</status>
-                <midino>0x18</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
                 <description>ACTIVE PART DRUMS (DECK3) - press - mute or unmute those stems (openDJ)</description>
                 <group>[Channel3]</group>
                 <key>PioneerDDJFLX10.activePartPressed</key>
@@ -6985,36 +6925,6 @@
                 <key>PioneerDDJFLX10.beatJumpForward</key>
                 <status>0x93</status>
                 <midino>0x5F</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>CROSSFADER ASSIGN (DECK4) - switch to A</description>
-                <group>[Channel4]</group>
-                <key>PioneerDDJFLX10.crossfaderAssign</key>
-                <status>0x93</status>
-                <midino>0x16</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>CROSSFADER ASSIGN (DECK4) - switch to THRU</description>
-                <group>[Channel4]</group>
-                <key>PioneerDDJFLX10.crossfaderAssign</key>
-                <status>0x93</status>
-                <midino>0x1D</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>CROSSFADER ASSIGN (DECK4) - switch to B</description>
-                <group>[Channel4]</group>
-                <key>PioneerDDJFLX10.crossfaderAssign</key>
-                <status>0x93</status>
-                <midino>0x18</midino>
                 <options>
                     <Script-Binding />
                 </options>

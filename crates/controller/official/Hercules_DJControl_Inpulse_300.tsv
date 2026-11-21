@@ -1,0 +1,513 @@
+# DJControl Inpulse 300 — Hercules "MIDI commands" V1.2
+# source: https://ts.hercules.com/download/sound/manuals/DJC_Inpulse300/DJControlInpulse300_MIDI_Commands_V_1_2.pdf
+# Note: the PDF's "Deck A + Shift" LED section lists the deck B addresses (97 08…) again, so no LEDs are listed for 96 08-0F, 96 18-1F etc.; rows follow the PDF as printed.
+in	90	01	BEATMATCH_GUIDE	
+in	90	00	BROWSE_PUSH	
+in	90	02	PFL_MASTER	
+both	90	03	ASSISTANT	
+in	93	00	SH + BRO- WSE_PUSH	
+in	93	02	SH + PFL_MASTER	
+both	91	00	FX_ON_A	
+both	91	01	SLIP_A	
+both	91	02	QUANTIZE_A	
+both	91	03	VINYL_A	
+in	91	04	SHIFT_A	
+both	91	05	SYNC_A	[Channel1] sync_enabled|beatsync
+both	91	06	CUE_A	[Channel1] cue_default
+both	91	07	PLAY_A	[Channel1] play
+in	91	08	JOG_TOUCH_A	
+both	91	09	DECK1 LOOP_IN	[Channel1] loop_in
+both	91	0A	DECK1 LOOP_OUT	[Channel1] loop_out
+in	91	0B	DECK1 LOOP_IN_(Long	
+both	91	0C	PFL_A	[Channel1] pfl
+in	91	0D	LOAD_A	[Channel1] LoadSelectedTrack
+in	91	0E	DECK1 LOAD_A_(Long	
+in	91	0F	MODE1_A	
+in	91	10	MODE2_A	
+in	91	11	MODE3_A	
+in	91	12	MODE4_A	
+in	91	13	DECK1 MODE5_A_(Long	
+in	91	14	DECK1 MODE6_A_(Long	
+in	91	15	DECK1 MODE7_A_(Long	
+in	91	16	DECK1 MODE8_A_(Long	
+in	91	25	DECK1 PADFX_SELECT_1 A	
+in	91	26	DECK1 PADFX_SELECT_2 A	
+in	91	27	DECK1 PADFX_SELECT_3 A	
+in	91	28	DECK1 PADFX_SELECT_4 A	
+in	91	29	DECK1 PADFX_SELECT_5 A	
+in	91	2A	DECK1 PADFX_SELECT_6 A	
+in	91	2B	FX2_ON_A	
+both	96	00	P1_A (MODE1)	
+both	96	01	P2_A (MODE1)	
+both	96	02	P3_A (MODE1)	
+both	96	03	P4_A (MODE1)	
+both	96	04	P5_A (MODE1)	
+both	96	05	P6_A (MODE1)	
+both	96	06	P7_A (MODE1)	
+both	96	07	P8_A (MODE1)	
+both	96	10	P1_A (MODE2)	
+both	96	11	P2_A (MODE2)	
+both	96	12	P3_A (MODE2)	
+both	96	13	P4_A (MODE2)	
+both	96	14	P5_A (MODE2)	
+both	96	15	P6_A (MODE2)	
+both	96	16	P7_A (MODE2)	
+both	96	17	P8_A (MODE2)	
+both	96	20	P1_A (MODE3)	
+both	96	21	P2_A (MODE3)	
+both	96	22	P3_A (MODE3)	
+both	96	23	P4_A (MODE3)	
+both	96	24	P5_A (MODE3)	
+both	96	25	P6_A (MODE3)	
+both	96	26	P7_A (MODE3)	
+both	96	27	P8_A (MODE3)	
+both	96	30	P1_A (MODE4)	
+both	96	31	P2_A (MODE4)	
+both	96	32	P3_A (MODE4)	
+both	96	33	P4_A (MODE4)	
+both	96	34	P5_A (MODE4)	
+both	96	35	P6_A (MODE4)	
+both	96	36	P7_A (MODE4)	
+both	96	37	P8_A (MODE4)	
+both	96	40	P1_A (MODE5)	
+both	96	41	P2_A (MODE5)	
+both	96	42	P3_A (MODE5)	
+both	96	43	P4_A (MODE5)	
+both	96	44	P5_A (MODE5)	
+both	96	45	P6_A (MODE5)	
+both	96	46	P7_A (MODE5)	
+both	96	47	P8_A (MODE5)	
+both	96	50	P1_A (MODE6)	
+both	96	51	P2_A (MODE6)	
+both	96	52	P3_A (MODE6)	
+both	96	53	P4_A (MODE6)	
+both	96	54	P5_A (MODE6)	
+both	96	55	P6_A (MODE6)	
+both	96	56	P7_A (MODE6)	
+both	96	57	P8_A (MODE6)	
+both	96	60	P1_A (MODE7)	
+both	96	61	P2_A (MODE7)	
+both	96	62	P3_A (MODE7)	
+both	96	63	P4_A (MODE7)	
+both	96	64	P5_A (MODE7)	
+both	96	65	P6_A (MODE7)	
+both	96	66	P7_A (MODE7)	
+both	96	67	P8_A (MODE7)	
+both	96	70	P1_A (MODE8)	
+both	96	71	P2_A (MODE8)	
+both	96	72	P3_A (MODE8)	
+both	96	73	P4_A (MODE8)	
+both	96	74	P5_A (MODE8)	
+both	96	75	P6_A (MODE8)	
+both	96	76	P7_A (MODE8)	
+both	96	77	P8_A (MODE8)	
+both	94	00	SH + FX_ON_A	
+both	94	01	SH + SLIP_A	
+both	94	02	SH + QUANTIZE_A	
+both	94	03	SH + VINYL_A	
+both	94	05	SH + SYNC_A	
+both	94	06	SH + CUE_A	
+both	94	07	SH + PLAY_A	
+in	94	08	SH + JOG_TOUCH_A	
+both	94	09	DECK1 SH + LOOP_IN	
+both	94	0C	DECK1 SH + LOOP_IN_(Long	
+in	94	0D	SH + PFL_A	
+in	96	08	SH + P1_A (MODE1)	
+in	96	09	SH + P2_A (MODE1)	
+in	96	0A	SH + P3_A (MODE1)	
+in	96	0B	SH + P4_A (MODE1)	
+in	96	0C	SH + P5_A (MODE1)	
+in	96	0D	SH + P6_A (MODE1)	
+in	96	0E	SH + P7_A (MODE1)	
+in	96	0F	SH + P8_A (MODE1)	
+in	96	18	SH + P1_A (MODE2)	
+in	96	19	SH + P2_A (MODE2)	
+in	96	1A	SH + P3_A (MODE2)	
+in	96	1B	SH + P4_A (MODE2)	
+in	96	1C	SH + P5_A (MODE2)	
+in	96	1D	SH + P6_A (MODE2)	
+in	96	1E	SH + P7_A (MODE2)	
+in	96	1F	SH + P8_A (MODE2)	
+in	96	28	SH + P1_A (MODE3)	
+in	96	29	SH + P2_A (MODE3)	
+in	96	2A	SH + P3_A (MODE3)	
+in	96	2B	SH + P4_A (MODE3)	
+in	96	2C	SH + P5_A (MODE3)	
+in	96	2D	SH + P6_A (MODE3)	
+in	96	2E	SH + P7_A (MODE3)	
+in	96	2F	SH + P8_A (MODE3)	
+in	96	38	SH + P1_A (MODE4)	
+in	96	39	SH + P2_A (MODE4)	
+in	96	3A	SH + P3_A (MODE4)	
+in	96	3B	SH + P4_A (MODE4)	
+in	96	3C	SH + P5_A (MODE4)	
+in	96	3D	SH + P6_A (MODE4)	
+in	96	3E	SH + P7_A (MODE4)	
+in	96	3F	SH + P8_A (MODE4)	
+in	96	48	SH + P1_A (MODE5)	
+in	96	49	SH + P2_A (MODE5)	
+in	96	4A	SH + P3_A (MODE5)	
+in	96	4B	SH + P4_A (MODE5)	
+in	96	4C	SH + P5_A (MODE5)	
+in	96	4D	SH + P6_A (MODE5)	
+in	96	4E	SH + P7_A (MODE5)	
+in	96	4F	SH + P8_A (MODE5)	
+in	96	58	SH + P1_A (MODE6)	
+in	96	59	SH + P2_A (MODE6)	
+in	96	5A	SH + P3_A (MODE6)	
+in	96	5B	SH + P4_A (MODE6)	
+in	96	5C	SH + P5_A (MODE6)	
+in	96	5D	SH + P6_A (MODE6)	
+in	96	5E	SH + P7_A (MODE6)	
+in	96	5F	SH + P8_A (MODE6)	
+in	96	68	SH + P1_A (MODE7)	
+in	96	69	SH + P2_A (MODE7)	
+in	96	6A	SH + P3_A (MODE7)	
+in	96	6B	SH + P4_A (MODE7)	
+in	96	6C	SH + P5_A (MODE7)	
+in	96	6D	SH + P6_A (MODE7)	
+in	96	6E	SH + P7_A (MODE7)	
+in	96	6F	SH + P8_A (MODE7)	
+in	96	78	SH + P1_A (MODE8)	
+in	96	79	SH + P2_A (MODE8)	
+in	96	7A	SH + P3_A (MODE8)	
+in	96	7B	SH + P4_A (MODE8)	
+in	96	7C	SH + P5_A (MODE8)	
+in	96	7D	SH + P6_A (MODE8)	
+in	96	7E	SH + P7_A (MODE8)	
+in	96	7F	SH + P8_A (MODE8)	
+both	92	00	FX_ON_B	
+both	92	01	SLIP_B	
+both	92	02	QUANTIZE_B	
+both	92	03	VINYL_B	
+in	92	04	SHIFT_B	
+both	92	05	SYNC_B	[Channel2] sync_enabled|beatsync
+both	92	06	CUE_B	[Channel2] cue_default
+both	92	07	PLAY_B	[Channel2] play
+in	92	08	JOG_TOUCH_B	
+both	92	09	LOOP_IN_B	[Channel2] loop_in
+both	92	0A	LOOP_OUT_B	[Channel2] loop_out
+in	92	0B	DECK2 LOOP_IN_B_(Lon	
+both	92	0C	PFL_B	[Channel2] pfl
+in	92	0D	LOAD_B	[Channel2] LoadSelectedTrack
+in	92	0E	DECK2 LOAD_B_(Long	
+in	92	0F	MODE1_B	
+in	92	10	MODE2_B	
+in	92	11	MODE3_B	
+in	92	12	MODE4_B	
+in	92	13	DECK2 MODE5_B_(Long	
+in	92	14	DECK2 MODE6_B_(Long	
+in	92	15	DECK2 MODE7_B_(Long	
+in	92	16	DECK2 MODE8_B_(Long	
+in	92	25	DECK2 PADFX_SELECT_1 B	
+in	92	26	DECK2 PADFX_SELECT_2 B	
+in	92	27	DECK2 PADFX_SELECT_3 B	
+in	92	28	DECK2 PADFX_SELECT_4 B	
+in	92	29	DECK2 PADFX_SELECT_5 B	
+in	92	2A	DECK2 PADFX_SELECT_6 B	
+in	92	2B	FX2_ON_B	
+both	97	00	P1_B (MODE1)	
+both	97	01	P2_B (MODE1)	
+both	97	02	P3_B (MODE1)	
+both	97	03	P4_B (MODE1)	
+both	97	04	P5_B (MODE1)	
+both	97	05	P6_B (MODE1)	
+both	97	06	P7_B (MODE1)	
+both	97	07	P8_B (MODE1)	
+both	97	10	P1_B (MODE2)	
+both	97	11	P2_B (MODE2)	
+both	97	12	P3_B (MODE2)	
+both	97	13	P4_B (MODE2)	
+both	97	14	P5_B (MODE2)	
+both	97	15	P6_B (MODE2)	
+both	97	16	P7_B (MODE2)	
+both	97	17	P8_B (MODE2)	
+both	97	20	P1_B (MODE3)	
+both	97	21	P2_B (MODE3)	
+both	97	22	P3_B (MODE3)	
+both	97	23	P4_B (MODE3)	
+both	97	24	P5_B (MODE3)	
+both	97	25	P6_B (MODE3)	
+both	97	26	P7_B (MODE3)	
+both	97	27	P8_B (MODE3)	
+both	97	30	P1_B (MODE4)	
+both	97	31	P2_B (MODE4)	
+both	97	32	P3_B (MODE4)	
+both	97	33	P4_B (MODE4)	
+both	97	34	P5_B (MODE4)	
+both	97	35	P6_B (MODE4)	
+both	97	36	P7_B (MODE4)	
+both	97	37	P8_B (MODE4)	
+both	97	40	P1_B (MODE5)	
+both	97	41	P2_B (MODE5)	
+both	97	42	P3_B (MODE5)	
+both	97	43	P4_B (MODE5)	
+both	97	44	P5_B (MODE5)	
+both	97	45	P6_B (MODE5)	
+both	97	46	P7_B (MODE5)	
+both	97	47	P8_B (MODE5)	
+both	97	50	P1_B (MODE6)	
+both	97	51	P2_B (MODE6)	
+both	97	52	P3_B (MODE6)	
+both	97	53	P4_B (MODE6)	
+both	97	54	P5_B (MODE6)	
+both	97	55	P6_B (MODE6)	
+both	97	56	P7_B (MODE6)	
+both	97	57	P8_B (MODE6)	
+both	97	60	P1_B (MODE7)	
+both	97	61	P2_B (MODE7)	
+both	97	62	P3_B (MODE7)	
+both	97	63	P4_B (MODE7)	
+both	97	64	P5_B (MODE7)	
+both	97	65	P6_B (MODE7)	
+both	97	66	P7_B (MODE7)	
+both	97	67	P8_B (MODE7)	
+both	97	70	P1_B (MODE8)	
+both	97	71	P2_B (MODE8)	
+both	97	72	P3_B (MODE8)	
+both	97	73	P4_B (MODE8)	
+both	97	74	P5_B (MODE8)	
+both	97	75	P6_B (MODE8)	
+both	97	76	P7_B (MODE8)	
+both	97	77	P8_B (MODE8)	
+both	94	0A	SH + LOOP_OUT_B	
+both	97	08	SH + P1_B (MODE1)	
+both	97	09	SH + P2_B (MODE1)	
+both	97	0B	SH + P4_B (MODE1)	
+both	97	0C	SH + P5_B (MODE1)	
+both	97	0E	SH + P7_B (MODE1)	
+both	97	0F	SH + P8_B (MODE1)	
+both	97	18	SH + P1_B (MODE2)	
+both	97	19	SH + P2_B (MODE2)	
+both	97	1A	SH + P3_B (MODE2)	
+both	97	1B	SH + P4_B (MODE2)	
+both	97	1C	SH + P5_B (MODE2)	
+both	97	1D	SH + P6_B (MODE2)	
+both	97	1E	SH + P7_B (MODE2)	
+both	97	1F	SH + P8_B (MODE2)	
+both	97	28	SH + P1_B (MODE3)	
+both	97	29	SH + P2_B (MODE3)	
+both	97	2A	SH + P3_B (MODE3)	
+both	97	2B	SH + P4_B (MODE3)	
+both	97	2C	SH + P5_B (MODE3)	
+both	97	2D	SH + P6_B (MODE3)	
+both	97	2E	SH + P7_B (MODE3)	
+both	97	2F	SH + P8_B (MODE3)	
+both	97	38	SH + P1_B (MODE4)	
+both	97	39	SH + P2_B (MODE4)	
+both	97	3B	SH + P4_B (MODE4)	
+both	97	3C	SH + P5_B (MODE4)	
+both	97	3E	SH + P7_B (MODE4)	
+both	97	3F	SH + P8_B (MODE4)	
+both	97	48	SH + P1_B (MODE5)	
+both	97	49	SH + P2_B (MODE5)	
+both	97	4B	SH + P4_B (MODE5)	
+both	97	4C	SH + P5_B (MODE5)	
+both	97	4E	SH + P7_B (MODE5)	
+both	97	4F	SH + P8_B (MODE5)	
+both	97	58	SH + P1_B (MODE6)	
+both	97	59	SH + P2_B (MODE6)	
+both	97	5A	SH + P3_B (MODE6)	
+both	97	5B	SH + P4_B (MODE6)	
+both	97	5C	SH + P5_B (MODE6)	
+both	97	5D	SH + P6_B (MODE6)	
+both	97	5E	SH + P7_B (MODE6)	
+both	97	5F	SH + P8_B (MODE6)	
+both	97	68	SH + P1_B (MODE7)	
+both	97	69	SH + P2_B (MODE7)	
+both	97	6A	SH + P3_B (MODE7)	
+both	97	6B	SH + P4_B (MODE7)	
+both	97	6C	SH + P5_B (MODE7)	
+both	97	6E	SH + P7_B (MODE7)	
+both	97	6F	SH + P8_B (MODE7)	
+both	97	78	SH + P1_B (MODE8)	
+both	97	79	SH + P2_B (MODE8)	
+both	97	7B	SH + P4_B (MODE8)	
+both	97	7C	SH + P5_B (MODE8)	
+both	97	7E	SH + P7_B (MODE8)	
+both	97	7F	SH + P8_B (MODE8)	
+in	B0	00	XFADER	[Master] crossfader
+in	B0	20	XFADER_LSB	
+in	B0	01	BROWSE_ENC	[Library] MoveVertical
+in	B0	02	BROWSE_ENC_ASSI STANT	
+both	B0	03	VOL_MASTER	
+in	B0	23	VOL_MASTER_LSB	
+both	B0	04	VOL_HDP	
+in	B0	24	VOL_HDP_LSB	
+in	B3	01	BROWSE_ENC	
+in	B1	00	VOL_A	[Channel1] volume
+in	B1	01	FILTER_A	[QuickEffectRack1_[Channel1]] super1
+in	B1	02	LOW_A	[EqualizerRack1_[Channel1]_Effect1] parameter1
+in	B1	03	MID_A	[EqualizerRack1_[Channel1]_Effect1] parameter2
+in	B1	04	HIGH_A	[EqualizerRack1_[Channel1]_Effect1] parameter3
+in	B1	05	GAIN_A	[Channel1] pregain
+in	B1	06	FX_LVL_A	
+in	B1	07	DRY_WET_A	
+in	B1	08	PITCH_DA	[Channel1] rate
+in	B1	09	JOG_A	
+in	B1	0A	JOG_SCRATCH_A	
+in	B1	0C	DECK1 JOG_PADSCRATCH_ A	
+in	B1	0D	PAD_FX_1&2_A	
+in	B1	20	DECK1 VOL_A_LSB	
+in	B1	21	DECK1 FILTER_A_LSB	
+in	B1	22	DECK1 LOW_A_LSB	
+in	B1	23	DECK1 MID_A_LSB	
+in	B1	24	DECK1 HIGH_A_LSB	
+in	B1	25	DECK1 GAIN_A_LSB	
+in	B1	26	DECK1 FX_LVL_A_LSB	
+in	B1	27	DECK1 DRY_WET_A_LSB	
+in	B1	28	DECK1 PITCH_A_LSB	
+in	B4	00	SH + VOL_A	
+in	B4	01	SH + FILTER_A	
+in	B4	02	SH + LOW_A	
+in	B4	03	SH + MID_A	
+in	B4	04	SH + HIGH_A	
+in	B4	05	SH + GAIN_A	
+in	B4	06	SH + FX_LVL_A	
+in	B4	07	SH + DRY_WET_A	
+in	B4	08	SH + PITCH_DA	
+in	B4	09	SH + JOG_A	
+in	B4	0A	SH + JOG_SCRATCH_A	
+in	B4	20	DECK1 SH + VOL_A_LSB	
+in	B4	21	DECK1 SH + FILTER_A_LSB	
+in	B4	22	DECK1 SH + LOW_A_LSB	
+in	B4	23	DECK1 SH + MID_A_LSB	
+in	B4	24	DECK1 SH + HIGH_A_LSB	
+in	B4	25	DECK1 SH + GAIN_A_LSB	
+in	B4	26	DECK1 SH + FX_LVL_A_LSB	
+in	B4	27	DECK1 SH + DRY_WET_A_LSB	
+in	B4	28	DECK1 SH + PITCH_A_LSB	
+in	B2	00	VOL_B	[Channel2] volume
+in	B2	01	FILTER_B	[QuickEffectRack1_[Channel2]] super1
+in	B2	02	LOW_B	[EqualizerRack1_[Channel2]_Effect1] parameter1
+in	B2	03	MID_B	[EqualizerRack1_[Channel2]_Effect1] parameter2
+in	B2	04	HIGH_B	[EqualizerRack1_[Channel2]_Effect1] parameter3
+in	B2	05	GAIN_B	[Channel2] pregain
+in	B2	06	FX_LVL_B	
+in	B2	07	DRY_WET_B	
+in	B2	08	PITCH_B	[Channel2] rate
+in	B2	09	JOG_B	
+in	B2	0A	JOG_SCRATCH_B	
+in	B2	0B	JOG_PAD_B	
+in	B2	0C	DECK2 JOG_PADSCRATCH_ B	
+in	B2	20	DECK2 VOL_B_LSB	
+in	B2	21	DECK2 FILTER_B_LSB	
+in	B2	22	DECK2 LOW_B_LSB	
+in	B2	23	DECK2 MID_B_LSB	
+in	B2	24	DECK2 HIGH_B_LSB	
+in	B2	25	DECK2 GAIN_B_LSB	
+in	B2	26	DECK2 FX_LVL_B_LSB	
+in	B2	27	DECK2 DRY_WET_B_LSB	
+in	B2	28	DECK2 PITCH_B_LSB	
+in	B5	00	SH + VOL_B	
+in	B5	01	SH + FILTER_B	
+in	B5	02	SH + LOW_B	
+in	B5	03	SH + MID_B	
+in	B5	04	SH + HIGH_B	
+in	B5	05	SH + GAIN_B	
+in	B5	06	SH + FX_LVL_B	
+in	B5	07	SH + DRY_WET_B	
+in	B5	08	SH + PITCH_B	
+in	B5	09	SH + JOG_B	
+in	B5	0A	SH + JOG_SCRATCH_B	
+in	B5	20	DECK2 SH + VOL_B_LSB	
+in	B5	21	DECK2 SH + FILTER_B_LSB	
+in	B5	22	DECK2 SH + LOW_B_LSB	
+in	B5	23	DECK2 SH + MID_B_LSB	
+in	B5	24	DECK2 SH + HIGH_B_LSB	
+in	B5	25	DECK2 SH + GAIN_B_LSB	
+in	B5	26	DECK2 SH + FX_LVL_B_LSB	
+in	B5	27	DECK2 SH + DRY_WET_B_LSB	
+in	B5	28	DECK2 SH + PITCH_B_LSB	
+out	97	0A	SH + P3_B (MODE1)	
+out	97	0D	SH + P6_B (MODE1)	
+out	97	3A	SH + P3_B (MODE4)	
+out	97	3D	SH + P6_B (MODE4)	
+out	97	4A	SH + P3_B (MODE5)	
+out	97	4D	SH + P6_B (MODE5)	
+out	97	6D	SH + P6_B (MODE7)	
+out	97	7A	SH + P3_B (MODE8)	
+out	97	7D	SH + P6_B (MODE8)	
+out	90	06	VUMETER1_MASTER_L	
+out	90	07	VUMETER2_MASTER_L	
+out	90	08	VUMETER3_MASTER_L	
+out	90	09	VUMETER4_MASTER_L	
+out	90	0A	VUMETER5_MASTER_L	
+out	90	0B	VUMETER1_MASTER_R	
+out	90	0C	VUMETER2_MASTER_R	
+out	90	0D	VUMETER3_MASTER_R	
+out	90	0E	VUMETER4_MASTER_R	
+out	90	0F	VUMETER5_MASTER_R	
+out	B0	40	VUMETER_MASTER_L	
+out	B0	41	VUMETER_MASTER_R	
+out	91	17	VUMETER1_DA	
+out	91	18	VUMETER2_DA	
+out	91	19	VUMETER3_DA	
+out	91	1A	VUMETER4_DA	
+out	91	1B	VUMETER5_DA	
+out	B1	40	DECK1 VUMETER_DA_GLOBAL	
+out	B1	29	DECK1 SH + VUMETER_DA_GLOBAL	
+out	92	17	VUMETER1_DB	
+out	92	18	VUMETER2_DB	
+out	92	19	VUMETER3_DB	
+out	92	1A	VUMETER4_DB	
+out	92	1B	VUMETER5_DB	
+out	B2	40	DECK2 VUMETER_DB_GLOBAL	
+out	B2	29	DECK2 SH + VUMETER_DB_GLOBAL	
+out	91	1E	DECK1 PITCH_UP_A_(ON)	
+out	91	1F	DECK1 PITCH_DOWN_A_(ON)	
+out	92	1E	DECK2 PITCH_UP_B_(ON)	
+out	92	1F	DECK2 PITCH_DOWN_B_(ON)	
+out	91	23	DECK1 PITCH_UP_A_(OFF)	
+out	91	24	DECK1 PITCH_DOWN_A_(OFF)	
+out	92	23	DECK2 PITCH_UP_B_(OFF)	
+out	92	24	DECK2 PITCH_DOWN_B_(OFF)	
+out	91	1C	JOG_BEND_LEFT_A_(ON)	
+out	91	1D	JOG_BEND_RIGHT_A_(ON)	
+out	92	1C	JOG_BEND_LEFT_B_(ON)	
+out	92	1D	JOG_BEND_RIGHT_B_(ON)	
+out	91	21	JOG_BEND_LEFT_A_(OFF)	
+out	91	22	JOG_BEND_RIGHT_A_(OFF)	
+out	92	21	JOG_BEND_LEFT_B_(OFF)	
+out	92	22	JOG_BEND_RIGHT_B_(OFF)	
+out	90	05	ENERGY LEVEL	
+extra-out	90	04	used by Hercules' own mapping; their list misprints the SHIFT sections (deck B + SHIFT is on channel 6, deck A + SHIFT pad LEDs on 96)
+extra-out	93	05	used by Hercules' own mapping; their list misprints the SHIFT sections (deck B + SHIFT is on channel 6, deck A + SHIFT pad LEDs on 96)
+extra-in	95	00	used by Hercules' own mapping; their list misprints the SHIFT sections (deck B + SHIFT is on channel 6, deck A + SHIFT pad LEDs on 96)
+extra-in	95	02	used by Hercules' own mapping; their list misprints the SHIFT sections (deck B + SHIFT is on channel 6, deck A + SHIFT pad LEDs on 96)
+extra-in	95	05	used by Hercules' own mapping; their list misprints the SHIFT sections (deck B + SHIFT is on channel 6, deck A + SHIFT pad LEDs on 96)
+extra-in	95	06	used by Hercules' own mapping; their list misprints the SHIFT sections (deck B + SHIFT is on channel 6, deck A + SHIFT pad LEDs on 96)
+extra-in	95	07	used by Hercules' own mapping; their list misprints the SHIFT sections (deck B + SHIFT is on channel 6, deck A + SHIFT pad LEDs on 96)
+extra-in	95	08	used by Hercules' own mapping; their list misprints the SHIFT sections (deck B + SHIFT is on channel 6, deck A + SHIFT pad LEDs on 96)
+extra-in	95	09	used by Hercules' own mapping; their list misprints the SHIFT sections (deck B + SHIFT is on channel 6, deck A + SHIFT pad LEDs on 96)
+extra-in	95	0A	used by Hercules' own mapping; their list misprints the SHIFT sections (deck B + SHIFT is on channel 6, deck A + SHIFT pad LEDs on 96)
+extra-out	96	08	used by Hercules' own mapping; their list misprints the SHIFT sections (deck B + SHIFT is on channel 6, deck A + SHIFT pad LEDs on 96)
+extra-out	96	09	used by Hercules' own mapping; their list misprints the SHIFT sections (deck B + SHIFT is on channel 6, deck A + SHIFT pad LEDs on 96)
+extra-out	96	0A	used by Hercules' own mapping; their list misprints the SHIFT sections (deck B + SHIFT is on channel 6, deck A + SHIFT pad LEDs on 96)
+extra-out	96	0B	used by Hercules' own mapping; their list misprints the SHIFT sections (deck B + SHIFT is on channel 6, deck A + SHIFT pad LEDs on 96)
+extra-out	96	0C	used by Hercules' own mapping; their list misprints the SHIFT sections (deck B + SHIFT is on channel 6, deck A + SHIFT pad LEDs on 96)
+extra-out	96	0D	used by Hercules' own mapping; their list misprints the SHIFT sections (deck B + SHIFT is on channel 6, deck A + SHIFT pad LEDs on 96)
+extra-out	96	0E	used by Hercules' own mapping; their list misprints the SHIFT sections (deck B + SHIFT is on channel 6, deck A + SHIFT pad LEDs on 96)
+extra-out	96	0F	used by Hercules' own mapping; their list misprints the SHIFT sections (deck B + SHIFT is on channel 6, deck A + SHIFT pad LEDs on 96)
+extra-out	96	38	used by Hercules' own mapping; their list misprints the SHIFT sections (deck B + SHIFT is on channel 6, deck A + SHIFT pad LEDs on 96)
+extra-out	96	39	used by Hercules' own mapping; their list misprints the SHIFT sections (deck B + SHIFT is on channel 6, deck A + SHIFT pad LEDs on 96)
+extra-out	96	3A	used by Hercules' own mapping; their list misprints the SHIFT sections (deck B + SHIFT is on channel 6, deck A + SHIFT pad LEDs on 96)
+extra-out	96	3B	used by Hercules' own mapping; their list misprints the SHIFT sections (deck B + SHIFT is on channel 6, deck A + SHIFT pad LEDs on 96)
+extra-out	96	3C	used by Hercules' own mapping; their list misprints the SHIFT sections (deck B + SHIFT is on channel 6, deck A + SHIFT pad LEDs on 96)
+extra-out	96	3D	used by Hercules' own mapping; their list misprints the SHIFT sections (deck B + SHIFT is on channel 6, deck A + SHIFT pad LEDs on 96)
+extra-out	96	3E	used by Hercules' own mapping; their list misprints the SHIFT sections (deck B + SHIFT is on channel 6, deck A + SHIFT pad LEDs on 96)
+extra-out	96	3F	used by Hercules' own mapping; their list misprints the SHIFT sections (deck B + SHIFT is on channel 6, deck A + SHIFT pad LEDs on 96)
+extra-out	96	58	used by Hercules' own mapping; their list misprints the SHIFT sections (deck B + SHIFT is on channel 6, deck A + SHIFT pad LEDs on 96)
+extra-out	96	59	used by Hercules' own mapping; their list misprints the SHIFT sections (deck B + SHIFT is on channel 6, deck A + SHIFT pad LEDs on 96)
+extra-out	96	5A	used by Hercules' own mapping; their list misprints the SHIFT sections (deck B + SHIFT is on channel 6, deck A + SHIFT pad LEDs on 96)
+extra-out	96	5B	used by Hercules' own mapping; their list misprints the SHIFT sections (deck B + SHIFT is on channel 6, deck A + SHIFT pad LEDs on 96)
+extra-out	96	5C	used by Hercules' own mapping; their list misprints the SHIFT sections (deck B + SHIFT is on channel 6, deck A + SHIFT pad LEDs on 96)
+extra-out	96	5D	used by Hercules' own mapping; their list misprints the SHIFT sections (deck B + SHIFT is on channel 6, deck A + SHIFT pad LEDs on 96)
+extra-out	96	5E	used by Hercules' own mapping; their list misprints the SHIFT sections (deck B + SHIFT is on channel 6, deck A + SHIFT pad LEDs on 96)
+extra-out	96	5F	used by Hercules' own mapping; their list misprints the SHIFT sections (deck B + SHIFT is on channel 6, deck A + SHIFT pad LEDs on 96)
+extra-in	97	0A	used by Hercules' own mapping; their list misprints the SHIFT sections (deck B + SHIFT is on channel 6, deck A + SHIFT pad LEDs on 96)
+extra-in	97	0D	used by Hercules' own mapping; their list misprints the SHIFT sections (deck B + SHIFT is on channel 6, deck A + SHIFT pad LEDs on 96)
+extra-in	97	3A	used by Hercules' own mapping; their list misprints the SHIFT sections (deck B + SHIFT is on channel 6, deck A + SHIFT pad LEDs on 96)
+extra-in	97	3D	used by Hercules' own mapping; their list misprints the SHIFT sections (deck B + SHIFT is on channel 6, deck A + SHIFT pad LEDs on 96)
+extra-in	97	4A	used by Hercules' own mapping; their list misprints the SHIFT sections (deck B + SHIFT is on channel 6, deck A + SHIFT pad LEDs on 96)
+extra-in	97	4D	used by Hercules' own mapping; their list misprints the SHIFT sections (deck B + SHIFT is on channel 6, deck A + SHIFT pad LEDs on 96)

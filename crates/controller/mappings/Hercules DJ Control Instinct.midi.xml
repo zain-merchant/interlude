@@ -137,9 +137,9 @@
             </control>
             <control>
                 <status>0x80</status>
-                <midino>0xf</midino>
+                <midino>0x0F</midino>
                 <group>[Channel1]</group>
-                <key>hotcue_1_clear</key>
+                <key>hotcue_3_activate</key>
                 <description></description>
                 <options>
                     <normal/>
@@ -149,7 +149,7 @@
                 <status>0x80</status>
                 <midino>0x10</midino>
                 <group>[Channel1]</group>
-                <key>hotcue_2_clear</key>
+                <key>hotcue_4_activate</key>
                 <description></description>
                 <options>
                     <normal/>
@@ -463,7 +463,7 @@
                 <status>0x80</status>
                 <midino>0x29</midino>
                 <group>[Channel2]</group>
-                <key>hotcue_1_clear</key>
+                <key>hotcue_3_activate</key>
                 <description></description>
                 <options>
                     <normal/>
@@ -481,9 +481,9 @@
             </control>
             <control>
                 <status>0x80</status>
-                <midino>0x2a</midino>
+                <midino>0x2A</midino>
                 <group>[Channel2]</group>
-                <key>hotcue_2_clear</key>
+                <key>hotcue_4_activate</key>
                 <description></description>
                 <options>
                     <normal/>
@@ -601,9 +601,9 @@
             </control>
             <control>
                 <status>0x90</status>
-                <midino>0xf</midino>
+                <midino>0x0F</midino>
                 <group>[Channel1]</group>
-                <key>hotcue_1_clear</key>
+                <key>hotcue_3_activate</key>
                 <description></description>
                 <options>
                     <normal/>
@@ -623,7 +623,7 @@
                 <status>0x90</status>
                 <midino>0x10</midino>
                 <group>[Channel1]</group>
-                <key>hotcue_2_clear</key>
+                <key>hotcue_4_activate</key>
                 <description></description>
                 <options>
                     <normal/>
@@ -863,7 +863,7 @@
                 <status>0x90</status>
                 <midino>0x29</midino>
                 <group>[Channel2]</group>
-                <key>hotcue_1_clear</key>
+                <key>hotcue_3_activate</key>
                 <description></description>
                 <options>
                     <normal/>
@@ -871,9 +871,9 @@
             </control>
             <control>
                 <status>0x90</status>
-                <midino>0x2a</midino>
+                <midino>0x2A</midino>
                 <group>[Channel2]</group>
-                <key>hotcue_2_clear</key>
+                <key>hotcue_4_activate</key>
                 <description></description>
                 <options>
                     <normal/>
@@ -1097,7 +1097,7 @@
                 <minimum>0.5</minimum>
                 <maximum>1</maximum>
                 <status>0x90</status>
-                <midino>0x19</midino>
+                <midino>0x27</midino>
                 <on>0x7f</on>
                 <off>0x0</off>
             </output>
@@ -1153,7 +1153,7 @@
                 <minimum>0.5</minimum>
                 <maximum>1</maximum>
                 <status>0x90</status>
-                <midino>0x1a</midino>
+                <midino>0x28</midino>
                 <on>0x7f</on>
                 <off>0x0</off>
             </output>
@@ -1200,34 +1200,6 @@
                 <minimum>0.5</minimum>
             </output>
             <output>
-                <group>[Channel1]</group>
-                <key>loop_enabled</key>
-                <description></description>
-                <options>
-                    <normal/>
-                </options>
-                <minimum>0.5</minimum>
-                <maximum>1</maximum>
-                <status>0x90</status>
-                <midino>0x34</midino>
-                <on>0x7f</on>
-                <off>0x0</off>
-            </output>
-            <output>
-                <group>[Channel1]</group>
-                <key>loop_enabled</key>
-                <description></description>
-                <options>
-                    <normal/>
-                </options>
-                <minimum>0.5</minimum>
-                <maximum>1</maximum>
-                <status>0x90</status>
-                <midino>0x33</midino>
-                <on>0x7f</on>
-                <off>0x0</off>
-            </output>
-            <output>
                 <group>[Channel2]</group>
                 <key>play</key>
                 <description></description>
@@ -1252,34 +1224,6 @@
                 <maximum>1</maximum>
                 <status>0x90</status>
                 <midino>0x1b</midino>
-                <on>0x7f</on>
-                <off>0x0</off>
-            </output>
-            <output>
-                <group>[Channel2]</group>
-                <key>loop_enabled</key>
-                <description></description>
-                <options>
-                    <normal/>
-                </options>
-                <minimum>0.5</minimum>
-                <maximum>1</maximum>
-                <status>0x90</status>
-                <midino>0x48</midino>
-                <on>0x7f</on>
-                <off>0x0</off>
-            </output>
-            <output>
-                <group>[Channel2]</group>
-                <key>loop_enabled</key>
-                <description></description>
-                <options>
-                    <normal/>
-                </options>
-                <minimum>0.5</minimum>
-                <maximum>1</maximum>
-                <status>0x90</status>
-                <midino>0x47</midino>
                 <on>0x7f</on>
                 <off>0x0</off>
             </output>

@@ -1,0 +1,45 @@
+# DJ Control MP3 — Hercules "User Manual", MIDI input commands
+# source: https://ts.hercules.com/download/sound/manuals/DJ_Control_MP3/DJ_Control_MP3_Manual_English.pdf
+in	B0	08	Left Play/Pause	[Channel1] play
+in	B0	09	Left Cue	[Channel1] cue_default
+in	B0	0B	Left Prev. Track	
+in	B0	0C	Left Next Track	
+in	B0	14	Left Pitch Bend "-"	
+in	B0	13	Left Pitch Bend "+"	
+in	B0	0A	Left Auto Beat Select	
+in	B0	1B	Left Mouse Button	
+in	B0	16	Left Master Tempo	
+in	B0	07	Left FX Select	
+in	B0	0F	Left FX "1"	
+in	B0	0E	Left FX "2"	
+in	B0	0D	Left FX "3"	
+in	B0	15	Left headphone monitoring button	
+in	B0	02	Right Play/Pause	[Channel2] play
+in	B0	03	Right Cue	[Channel2] cue_default
+in	B0	05	Right Prev. Track	
+in	B0	06	Right Next Track	
+in	B0	18	Right Pitch Bend "-"	
+in	B0	17	Right Pitch Bend "+"	
+in	B0	04	Right Auto Beat Select	
+in	B0	1C	Right Mouse Button	
+in	B0	1A	Right Master Tempo	
+in	B0	01	Right FX Select	
+in	B0	10	Right FX "1"	
+in	B0	11	Right FX "2"	
+in	B0	12	Right FX "3"	
+in	B0	19	Right headphone monitoring button	
+in	B0	31	Cross Fader	[Master] crossfader
+in	B0	36	Left Jog Wheel	
+in	B0	37	Right Jog Wheel	
+in	B0	34	Left Pitch Knob	
+in	B0	35	Right Pitch Knob	
+in	B0	2E	Left Base Knob	
+in	B0	2F	Left Medium Knob	
+in	B0	30	Left Treble Knob	
+in	B0	2B	Right Base Knob	
+in	B0	2C	Right Medium Knob	
+in	B0	2D	Right Treble Knob	
+in	B0	32	Left Volume Slider	[Channel1] volume
+in	B0	33	Right Volume Slider	[Channel2] volume
+in	B0	39	Ministick Y-Axis	
+in	B0	38	Ministick X-Axis	

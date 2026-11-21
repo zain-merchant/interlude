@@ -61,7 +61,6 @@
       <control><status>0xB0</status><midino>0x12</midino><group>[Channel1]</group><key>HileVci100.faders</key><options><Script-Binding/></options></control>
       <control><status>0xB0</status><midino>0x0e</midino><group>[Channel1]</group><key>HileVci100.faders</key><options><Script-Binding/></options></control>
       <control><status>0x90</status><midino>0x0c</midino><group>[Channel1]</group><key>HileVci100.buttons</key><options><Script-Binding/></options></control>
-      <control><status>0x90</status><midino>0x2e</midino><group>[Channel1]</group><key>HileVci100.buttons</key><options><Script-Binding/></options></control>
       <control><status>0x90</status><midino>0x6b</midino><group>[Channel1]</group><key>HileVci100.buttons</key><options><Script-Binding/></options></control>
       <control><status>0x90</status><midino>0x32</midino><group>[Channel1]</group><key>HileVci100.buttons</key><options><Script-Binding/></options></control>
       <control><status>0x90</status><midino>0x33</midino><group>[Channel1]</group><key>HileVci100.buttons</key><options><Script-Binding/></options></control>
@@ -80,7 +79,6 @@
       <control><status>0xB0</status><midino>0x13</midino><group>[Channel2]</group><key>HileVci100.faders</key><options><Script-Binding/></options></control>
       <control><status>0xB0</status><midino>0x0f</midino><group>[Channel2]</group><key>HileVci100.faders</key><options><Script-Binding/></options></control>
       <control><status>0x90</status><midino>0x0d</midino><group>[Channel2]</group><key>HileVci100.buttons</key><options><Script-Binding/></options></control>
-      <control><status>0x90</status><midino>0x2f</midino><group>[Channel1]</group><key>HileVci100.buttons</key><options><Script-Binding/></options></control>
       <control><status>0x90</status><midino>0x6c</midino><group>[Channel2]</group><key>HileVci100.buttons</key><options><Script-Binding/></options></control>
       <control><status>0x90</status><midino>0x36</midino><group>[Channel2]</group><key>HileVci100.buttons</key><options><Script-Binding/></options></control>
       <control><status>0x90</status><midino>0x37</midino><group>[Channel2]</group><key>HileVci100.buttons</key><options><Script-Binding/></options></control>
