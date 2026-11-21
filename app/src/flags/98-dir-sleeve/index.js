@@ -15,7 +15,7 @@ export default {
   against:
     '"The app is dark only" and the Liquid Glass material: panels are solid paper, light, with ink type. The case for it: the site\'s own paper, the two deck whites finally used at full size, and raised keys, a segmented switch and layered panes all read most clearly on a light ground.',
   notes:
-    "Whole-app look in style.css. The light tokens are set on #app, not :root, so the waveform canvases (which read their colours from body) keep today's dark-screen colours.",
+    "Whole-app look in style.css. The light tokens are set on #app, not :root, so the waveform canvases (which read their colours from body) keep today's dark-screen colours. Deck.svelte puts the tempo's decimals in a span.frac while this flag (or 97) is on; ship that span with it.",
 };
 
 /** Show me: both decks playing, flipping between today and Sleeve. */

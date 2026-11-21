@@ -103,7 +103,8 @@
      rest      a raised key, label --fg-2
      hover     the key a step lighter, label --fg
      pressed   down 1px into the panel (--d-key-down), at once
-     on        stays down, dark (--d-on), label or glyph in its role colour
+     on        stays down, dark (--d-on), label or glyph in its role colour;
+               it doesn't change on hover, so it never looks like it's off
      selected  a raised thumb on a sunk track (tabs); a flat tone (rows, lists)
      focus     one 2px ring, keys only
      disabled  flat, label --fg-4 */
@@ -331,6 +332,10 @@
   font-weight: 500 !important;
   color: var(--fg-2) !important;
 }
+/* A key the tempo has shifted reads at full strength, as today. */
+:root[data-flag-dir-graphic2][data-flag-dir-graphic2] [data-region^='deck'] .bpm .key.shifted {
+  color: var(--fg) !important;
+}
 :root[data-flag-dir-graphic2][data-flag-dir-graphic2] [data-region^='deck'] .bpm .key .cam {
   color: var(--fg-3) !important;
 }
@@ -550,21 +555,28 @@
 }
 
 /* ---------- Mixer ---------- */
-/* Dials: a round key with one index line. */
+/* Dials: a round key with one index line. The dial itself turns, so its lit
+   face is drawn on a layer that turns back: the light stays overhead. */
 :root[data-flag-dir-graphic2][data-flag-dir-graphic2] .knob .dial,
 :root[data-flag-dir-graphic2][data-flag-dir-graphic2] .knob .dial.dragging {
-  background: var(--d-dial) !important;
-  box-shadow: var(--d-dial-edge) !important;
+  background: none !important;
+  box-shadow: none !important;
+  scale: 1.22;
 }
-:root[data-flag-dir-graphic2][data-flag-dir-graphic2] .knob .dial,
-:root[data-flag-dir-graphic2][data-flag-dir-graphic2] .knob .dial.dragging {
-  transform: scale(1.22);
-}
-:root[data-flag-dir-graphic2][data-flag-dir-graphic2] .knob .dial::after,
-:root[data-flag-dir-graphic2][data-flag-dir-graphic2] .knob .dial::before {
+:root[data-flag-dir-graphic2][data-flag-dir-graphic2] .knob .dial::after {
   content: none !important;
 }
-:root[data-flag-dir-graphic2][data-flag-dir-graphic2] .knob .wrap:hover .dial {
+:root[data-flag-dir-graphic2][data-flag-dir-graphic2] .knob .dial::before {
+  content: '' !important;
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: -1;
+  border-radius: 50% !important;
+  background: var(--d-dial) !important;
+  box-shadow: var(--d-dial-edge) !important;
+  transform: rotate(calc(var(--rot, 0deg) * -1)) !important;
+}
+:root[data-flag-dir-graphic2][data-flag-dir-graphic2] .knob .wrap:hover .dial::before {
   background: var(--d-dial-hover) !important;
 }
 :root[data-flag-dir-graphic2][data-flag-dir-graphic2] .knob .dial i {
@@ -855,6 +867,17 @@
 }
 :root[data-flag-dir-graphic2][data-flag-dir-graphic2] .backdrop .card .link:hover {
   color: var(--fg) !important;
+}
+
+/* A text box is a field, like search. */
+:root[data-flag-dir-graphic2][data-flag-dir-graphic2] .backdrop .card textarea {
+  background: var(--d-field) !important;
+  box-shadow: var(--d-field-edge) !important;
+  color: var(--fg) !important;
+}
+:root[data-flag-dir-graphic2][data-flag-dir-graphic2] .backdrop .card textarea:focus-visible {
+  box-shadow: var(--d-field-edge), 0 0 0 2px var(--d-focus) !important;
+  outline: none !important;
 }
 
 /* ---------- Settings ---------- */

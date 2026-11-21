@@ -17,7 +17,7 @@ export default {
   against:
     '"Times and BPM are large and light" (set at 600 weight so they lead), the Liquid Glass material (panels go solid), and "One solid primary control, Play" (Play is a key like the rest; playing, it stays down and its glyph takes the deck colour).',
   notes:
-    "Whole-app look in style.css, from the tokens at its top. Waveform band colours are today's; only the hot cue palette changes (Waveform.svelte re-reads it when the flag flips).",
+    "Whole-app look in style.css, from the tokens at its top. Waveform band colours are today's; only the hot cue palette changes (Waveform.svelte re-reads it when the flag flips). Deck.svelte puts the tempo's decimals in a span.frac while this flag (or 98) is on, so they can step down like the time's tenths; ship that span with it.",
 };
 
 /** Show me: both decks playing, flipping between today and this look. */
