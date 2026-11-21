@@ -40,13 +40,13 @@
   --bg: #0c0b0a;
   --rm-room: #0c0b0a;
   --rm-window: #070606;
-  --rm-plate: #1a1917;
-  --rm-plate-2: #151412;
+  --rm-plate: #1e1c19;
+  --rm-plate-2: #171513;
   --rm-well: #0a0908;
-  --rm-key: #2d2b28;
-  --rm-key-2: #22201e;
-  --rm-key-hi: #35322e;
-  --rm-key-hi-2: #292724;
+  --rm-key: #34312d;
+  --rm-key-2: #272421;
+  --rm-key-hi: #3c3934;
+  --rm-key-hi-2: #2e2b27;
   --rm-down: #11100f;
 
   /* Edges: the lit top, the dark underside, the lip of a cut. */
@@ -57,7 +57,7 @@
   --rm-under: rgb(0 0 0 / 0.6);
 
   /* The surfaces as recipes. */
-  --rm-plate-fill: linear-gradient(180deg, var(--rm-plate), var(--rm-plate-2) 180px);
+  --rm-plate-fill: linear-gradient(180deg, var(--rm-plate), var(--rm-plate-2) 200px);
   --rm-plate-edge: inset 0 1px 0 var(--rm-lit), inset 0 0 0 1px rgb(255 246 232 / 0.025), 0 0 0 1px rgb(0 0 0 / 0.55), 0 1px 0 1px rgb(0 0 0 / 0.35), 0 12px 28px -10px rgb(0 0 0 / 0.8);
   --rm-well-edge: inset 0 1px 0 rgb(0 0 0 / 0.55), inset 0 2px 5px rgb(0 0 0 / 0.35), 0 1px 0 var(--rm-lip);
   --rm-key-fill: linear-gradient(180deg, var(--rm-key), var(--rm-key-2));
@@ -121,7 +121,7 @@
    (--on, set on each control), the label in it. Declared on the controls
    so var(--on) resolves per control. */
 :root[data-flag-dir-room][data-flag-dir-room] :is(button, .btn) {
-  --rm-on-fill: linear-gradient(180deg, color-mix(in srgb, var(--on, var(--fg)) 9%, var(--rm-down)), color-mix(in srgb, var(--on, var(--fg)) 17%, var(--rm-down)));
+  --rm-on-fill: linear-gradient(180deg, color-mix(in srgb, var(--on, var(--fg)) 15%, var(--rm-down)), color-mix(in srgb, var(--on, var(--fg)) 26%, var(--rm-down)));
   --rm-on-edge: inset 0 2px 3px -1px rgb(0 0 0 / 0.8), inset 0 1px 0 rgb(0 0 0 / 0.5), 0 1px 0 var(--rm-lip);
 }
 
@@ -161,11 +161,15 @@
   border-top-color: rgb(0 0 0 / 0.7);
   box-shadow: 0 -1px 0 rgb(255 246 232 / 0.035);
 }
-:root[data-flag-dir-room][data-flag-dir-room] .zoom {
-  background: var(--rm-plate-fill);
+/* The zoom control and the lane titles are small plates laid over the
+   window: the room's plate tone, lit along the top, held off the
+   waveform by a dark edge. */
+:root[data-flag-dir-room][data-flag-dir-room] .zoom,
+:root[data-flag-dir-room][data-flag-dir-room] .waves .lane:not(:has(.wave.empty)) .who {
+  background: rgb(26 25 23 / 0.92);
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
-  box-shadow: var(--rm-key-edge);
+  box-shadow: inset 0 1px 0 var(--rm-lit), 0 0 0 1px rgb(0 0 0 / 0.45), 0 2px 4px -1px rgb(0 0 0 / 0.5);
 }
 
 /* ── Decks ─────────────────────────────────────────────────────────── */
@@ -406,7 +410,7 @@
 /* Dials: keys turned round. The same face, lit top edge and dark
    underside; a paper index. */
 :root[data-flag-dir-room][data-flag-dir-room] .knob .dial {
-  background: #2b2926;
+  background: #34312d;
   box-shadow: 0 0 0 1px rgb(0 0 0 / 0.45);
 }
 /* The light on the cap and the shadow under it sit on the wrap, which
@@ -439,7 +443,7 @@
 }
 :root[data-flag-dir-room][data-flag-dir-room] .knob .wrap:has(.dial:hover) .dial,
 :root[data-flag-dir-room][data-flag-dir-room] .knob .dial.dragging {
-  background: #34312d;
+  background: #3c3934;
 }
 /* The scale: quiet marks, so ten dials don't make ten rings. */
 /* The scale as dots at the inner end of each mark (a zero dash with a
@@ -467,6 +471,7 @@
   background: var(--rm-key-fill);
   box-shadow: var(--rm-key-edge);
   color: var(--fg-2);
+  font-weight: 500;
 }
 :root[data-flag-dir-room][data-flag-dir-room] .knob button.label:hover {
   background: var(--rm-key-fill-hi);
