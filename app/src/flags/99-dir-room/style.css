@@ -21,7 +21,7 @@
      pressed  pushed into the plate (dark face, shadow inside), while held;
      on       latched down: pushed in, darker than the keys round it, its
               label in its role colour and the colour coming up from the
-              bottom of the face, with a lit lower lip (Play, Cue at the cue point, Key
+              bottom of the face (Play, Cue at the cue point, Key
               lock, headphone cue, EQ kill, Rec, FX, Sampler);
      selected a key standing up out of a well (the segmented tabs, the
               sidebar, Settings' pages, the selected track);
@@ -43,12 +43,12 @@
   --rm-window: #070606;
   --rm-plate: #1e1c19;
   --rm-plate-2: #171513;
-  --rm-well: #0a0908;
+  --rm-well: #080707;
   --rm-key: #34312d;
   --rm-key-2: #272421;
   --rm-key-hi: #3c3934;
   --rm-key-hi-2: #2e2b27;
-  --rm-down: #11100f;
+  --rm-down: #1b1917;
   --rm-on-top: #0f0e0d;
 
   /* Edges: the lit top, the dark underside, the lip of a cut. */
@@ -57,17 +57,20 @@
   --rm-lit-key-hi: rgb(255 246 232 / 0.16);
   --rm-lip: rgb(255 246 232 / 0.045);
   --rm-under: rgb(0 0 0 / 0.6);
+  --rm-lift: 0 1px 2px rgb(0 0 0 / 0.3), 0 2px 6px -1px rgb(0 0 0 / 0.35);
 
   /* The surfaces as recipes. */
   --rm-plate-fill: linear-gradient(180deg, var(--rm-plate), var(--rm-plate-2) 200px);
   --rm-plate-edge: inset 0 1px 0 var(--rm-lit), inset 0 0 0 1px rgb(255 246 232 / 0.025), 0 0 0 1px rgb(0 0 0 / 0.55), 0 1px 0 1px rgb(0 0 0 / 0.35), 0 12px 28px -10px rgb(0 0 0 / 0.8);
-  --rm-well-edge: inset 0 1px 0 rgb(0 0 0 / 0.55), inset 0 2px 5px rgb(0 0 0 / 0.35), 0 1px 0 var(--rm-lip);
+  --rm-well-edge: inset 0 1px 0 rgb(0 0 0 / 0.65), inset 0 3px 5px -1px rgb(0 0 0 / 0.6), inset 0 0 0 1px rgb(0 0 0 / 0.25), 0 1px 0 rgb(255 246 232 / 0.06);
+  /* The same cut, drawn over whatever fills the well (a waveform). */
+  --rm-cut: inset 0 1px 0 rgb(0 0 0 / 0.7), inset 0 4px 6px -2px rgb(0 0 0 / 0.75), inset 0 0 0 1px rgb(0 0 0 / 0.3), inset 0 -1px 0 rgb(255 246 232 / 0.05);
   --rm-key-fill: linear-gradient(180deg, var(--rm-key), var(--rm-key-2));
   --rm-key-fill-hi: linear-gradient(180deg, var(--rm-key-hi), var(--rm-key-hi-2));
-  --rm-key-edge: inset 0 1px 0 var(--rm-lit-key), inset 0 -1px 0 rgb(0 0 0 / 0.18), 0 1px 0 var(--rm-under), 0 2px 4px -1px rgb(0 0 0 / 0.5);
-  --rm-key-edge-hi: inset 0 1px 0 var(--rm-lit-key-hi), inset 0 -1px 0 rgb(0 0 0 / 0.18), 0 1px 0 var(--rm-under), 0 2px 4px -1px rgb(0 0 0 / 0.5);
+  --rm-key-edge: inset 0 1px 0 var(--rm-lit-key), inset 0 -1px 0 rgb(0 0 0 / 0.14), var(--rm-lift);
+  --rm-key-edge-hi: inset 0 1px 0 var(--rm-lit-key-hi), inset 0 -1px 0 rgb(0 0 0 / 0.14), var(--rm-lift);
   --rm-down-fill: var(--rm-down);
-  --rm-down-edge: inset 0 2px 3px -1px rgb(0 0 0 / 0.8), inset 0 1px 0 rgb(0 0 0 / 0.5), 0 1px 0 var(--rm-lip);
+  --rm-down-edge: inset 0 1px 2px rgb(0 0 0 / 0.55), inset 0 1px 0 rgb(0 0 0 / 0.35), 0 1px 0 var(--rm-lip);
 
   /* Text: today's three levels on a paper white. */
   --fg: #eeebe4;
@@ -120,12 +123,12 @@
 }
 
 /* Latched: the one "on". Pushed in below the keys round it, the role
-   colour (--on, set on each control) rising in the lower face and on the
-   lower lip, the label in it. Declared on the controls
+   colour (--on, set on each control) rising in the lower face, the label
+   in it. Declared on the controls
    so var(--on) resolves per control. */
 :root[data-flag-dir-room][data-flag-dir-room] :is(button, .btn) {
-  --rm-on-fill: linear-gradient(180deg, var(--rm-on-top) 30%, color-mix(in srgb, var(--on, var(--fg)) 13%, var(--rm-on-top)));
-  --rm-on-edge: inset 0 2px 4px -1px rgb(0 0 0 / 0.9), inset 0 1px 0 rgb(0 0 0 / 0.55), inset 0 -1px 0 color-mix(in srgb, var(--on, var(--fg)) 34%, transparent), 0 1px 0 var(--rm-lip);
+  --rm-on-fill: linear-gradient(180deg, var(--rm-on-top) 30%, color-mix(in srgb, var(--on, var(--fg)) 17%, var(--rm-on-top)));
+  --rm-on-edge: inset 0 2px 4px -1px rgb(0 0 0 / 0.9), inset 0 1px 0 rgb(0 0 0 / 0.55), 0 1px 0 var(--rm-lip);
 }
 
 /* ── The room ───────────────────────────────────────────────────────── */
@@ -155,24 +158,69 @@
 
 /* The waveform window: cut into the room rather than standing on it. */
 :root[data-flag-dir-room][data-flag-dir-room] .waves.glass {
-  background: var(--rm-window);
+  padding-right: 0;
+  background:
+    repeating-radial-gradient(ellipse 140% 100% at 50% 520%, rgb(255 246 232 / 0.035) 0 1px, transparent 1.5px 5px),
+    var(--rm-window);
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
-  box-shadow: inset 0 1px 0 rgb(0 0 0 / 0.7), inset 0 3px 8px rgb(0 0 0 / 0.5), 0 1px 0 var(--rm-lip);
+  box-shadow: 0 1px 0 var(--rm-lip);
+}
+/* The cut is drawn over the lanes, so the waveform passes under its top
+   edge and you look into the window rather than at it. */
+:root[data-flag-dir-room][data-flag-dir-room] .waves.glass::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow: inset 0 1px 0 rgb(0 0 0 / 0.75), inset 0 6px 10px -4px rgb(0 0 0 / 0.8), inset 0 0 0 1px rgb(0 0 0 / 0.3), inset 0 -1px 0 rgb(255 246 232 / 0.05);
+}
+/* No fade at either end: the window's edge cuts the waveform, and the zoom
+   control sits on it as a small plate. */
+:root[data-flag-dir-room][data-flag-dir-room] .waves .lane canvas {
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+:root[data-flag-dir-room][data-flag-dir-room] .waves .zoom {
+  z-index: 2;
+}
+:root[data-flag-dir-room][data-flag-dir-room] .waves .lane .who {
+  z-index: 2;
 }
 :root[data-flag-dir-room][data-flag-dir-room] .lane + .lane {
   border-top-color: rgb(0 0 0 / 0.7);
   box-shadow: 0 -1px 0 rgb(255 246 232 / 0.035);
 }
-/* The zoom control and the lane titles are small plates laid over the
-   window: the room's plate tone, lit along the top, held off the
-   waveform by a dark edge. */
-:root[data-flag-dir-room][data-flag-dir-room] .zoom,
-:root[data-flag-dir-room][data-flag-dir-room] .waves .lane:not(:has(.wave.empty)) .who {
-  background: rgb(26 25 23 / 0.92);
+/* The zoom control: a small plate laid over the window, lit along the
+   top, held off the waveform by a dark edge. */
+:root[data-flag-dir-room][data-flag-dir-room] .zoom {
+  background: rgb(30 28 25 / 0.94);
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
-  box-shadow: inset 0 1px 0 var(--rm-lit), 0 0 0 1px rgb(0 0 0 / 0.45), 0 2px 4px -1px rgb(0 0 0 / 0.5);
+  box-shadow: inset 0 1px 0 var(--rm-lit), 0 0 0 1px rgb(0 0 0 / 0.4), 0 2px 6px -1px rgb(0 0 0 / 0.5);
+}
+
+/* Lane titles, three ways (the "title" setting):
+   label  the title alone, no backing; a dark halo (the site's shot tag)
+          keeps it legible where a peak passes behind it;
+   inset  a small recess cut into the window, the title in it;
+   plate  a small plate laid over the waveform, like the zoom control. */
+:root[data-flag-dir-room][data-flag-dir-room][data-flag-dir-room-title='plate'] .waves .lane:not(:has(.wave.empty)) .who {
+  background: rgb(30 28 25 / 0.94);
+  box-shadow: inset 0 1px 0 var(--rm-lit), 0 0 0 1px rgb(0 0 0 / 0.4), 0 2px 6px -1px rgb(0 0 0 / 0.5);
+}
+:root[data-flag-dir-room][data-flag-dir-room][data-flag-dir-room-title='inset'] .waves .lane:not(:has(.wave.empty)) .who {
+  background: rgb(5 4 4 / 0.9);
+  box-shadow: inset 0 1px 0 rgb(0 0 0 / 0.7), inset 0 2px 4px -1px rgb(0 0 0 / 0.7), 0 1px 0 rgb(255 246 232 / 0.06);
+  color: var(--fg-2);
+}
+:root[data-flag-dir-room][data-flag-dir-room][data-flag-dir-room-title='label'] .waves .lane .who {
+  background: none;
+  box-shadow: none;
+  color: var(--fg-2);
+  text-shadow: 0 1px 2px rgb(7 6 6 / 0.95), 0 0 8px rgb(7 6 6 / 0.9), 0 0 16px rgb(7 6 6 / 0.7);
 }
 
 /* ── Decks ─────────────────────────────────────────────────────────── */
@@ -210,14 +258,24 @@
 }
 
 /* The overview: a well cut into the plate, with a record's grooves in
-   it. Fine rings (8% paper, 3px apart) round a spindle far below, so they run almost level and
-   show only where the waveform leaves the well dark. Still, and drawn
-   once: a background, not a layer. */
+   it: 1px rings 4px apart round a spindle far below, showing where the
+   waveform leaves the well dark. Still, and drawn once: a background. The
+   cut (shadow under the top edge, lit lower lip) is drawn over the
+   waveform, so you look into the well. */
 :root[data-flag-dir-room][data-flag-dir-room] [data-region^='deck'] .overview {
   background:
-    repeating-radial-gradient(circle at 50% 1400%, rgb(255 246 232 / 0.08) 0 0.6px, transparent 1.1px 3px),
+    repeating-radial-gradient(circle at 50% 900%, rgb(255 246 232 / 0.045) 0 1px, transparent 1.5px 4px),
     var(--rm-well);
-  box-shadow: var(--rm-well-edge);
+  box-shadow: 0 1px 0 rgb(255 246 232 / 0.06);
+}
+:root[data-flag-dir-room][data-flag-dir-room] [data-region^='deck'] .overview::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow: var(--rm-cut);
 }
 
 /* Tabs: a segmented control. A well, and the current mode a key standing
@@ -342,8 +400,37 @@
   background: var(--rm-on-fill);
   box-shadow: var(--rm-on-edge);
 }
+/* Beat jump: one line, "4 beats", the number at the keys' label size
+   and the unit beside it on the same baseline. The middle is a fixed
+   width (it gives way first in a narrow window), so the arrows' hit
+   areas don't move as the size changes. */
+:root[data-flag-dir-room][data-flag-dir-room] [data-region^='deck'] .transport .jumps {
+  grid-template-columns: minmax(24px, 1fr) minmax(0, 48px) minmax(24px, 1fr);
+}
 :root[data-flag-dir-room][data-flag-dir-room] [data-region^='deck'] .transport .jumps span {
-  color: var(--fg-2);
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  gap: 4px;
+  white-space: nowrap;
+  font-size: var(--t-md);
+  font-weight: 400;
+  line-height: 20px;
+  color: var(--fg);
+}
+:root[data-flag-dir-room][data-flag-dir-room] [data-region^='deck'] .transport .jumps small {
+  font-size: var(--t-xs);
+  line-height: 20px;
+  color: var(--fg-3);
+}
+:root[data-flag-dir-room][data-flag-dir-room] [data-region^='deck'] .transport .jumps button {
+  font-size: var(--t-md);
+  color: var(--fg-3);
+}
+@container (max-width: 95px) {
+  :root[data-flag-dir-room][data-flag-dir-room] [data-region^='deck'] .transport .jumps span {
+    font-size: var(--t-sm);
+  }
 }
 
 /* The pitch column. */
@@ -397,7 +484,7 @@
 :root[data-flag-dir-room][data-flag-dir-room] .fader .cap {
   border-radius: 4px;
   background: linear-gradient(180deg, #3a3733, #2a2825);
-  box-shadow: inset 0 1px 0 rgb(255 246 232 / 0.16), 0 1px 0 var(--rm-under), 0 3px 6px -1px rgb(0 0 0 / 0.55);
+  box-shadow: inset 0 1px 0 rgb(255 246 232 / 0.16), 0 1px 2px rgb(0 0 0 / 0.4), 0 3px 6px -2px rgb(0 0 0 / 0.45);
 }
 :root[data-flag-dir-room][data-flag-dir-room] .fader .cap::after {
   background: var(--rm-paper);
@@ -412,9 +499,16 @@
 
 /* Dials: keys turned round. The same face, lit top edge and dark
    underside; a paper index. */
+/* Dials: a flat cap in the keys' tone inside a knurled skirt (the
+   texture turns with the dial, as it would); a fine dark groove between
+   them. */
 :root[data-flag-dir-room][data-flag-dir-room] .knob .dial {
-  background: #34312d;
-  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.45);
+  --rm-cap: #35322e;
+  --rm-ridge: #3d3a35;
+  background:
+    radial-gradient(circle closest-side, var(--rm-cap) 0 70%, #1a1816 72% 77%, transparent 79%),
+    repeating-conic-gradient(var(--rm-ridge) 0 5deg, #1f1d1b 5deg 10deg);
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.5);
 }
 /* The light on the cap and the shadow under it sit on the wrap, which
    doesn't turn, so the top edge stays lit wherever the dial points. The
@@ -428,7 +522,7 @@
   pointer-events: none;
 }
 :root[data-flag-dir-room][data-flag-dir-room] .knob .wrap::before {
-  box-shadow: 0 1px 0 var(--rm-under), 0 2px 5px -1px rgb(0 0 0 / 0.6);
+  box-shadow: var(--rm-lift);
 }
 :root[data-flag-dir-room][data-flag-dir-room] .knob .wrap::after {
   background: linear-gradient(180deg, rgb(255 246 232 / 0.07), rgb(255 246 232 / 0) 55%, rgb(0 0 0 / 0.12));
@@ -446,58 +540,78 @@
 }
 :root[data-flag-dir-room][data-flag-dir-room] .knob .wrap:has(.dial:hover) .dial,
 :root[data-flag-dir-room][data-flag-dir-room] .knob .dial.dragging {
-  background: #3c3934;
+  --rm-cap: #3d3a35;
+  --rm-ridge: #45413c;
 }
-/* The scale: quiet marks, so ten dials don't make ten rings. */
-/* The scale as dots at the inner end of each mark (a zero dash with a
-   round cap), quieter than ten rings of lines; the lit arc stays a line. */
-:root[data-flag-dir-room][data-flag-dir-room] .knob line:not(.on) {
-  stroke: rgb(255 246 232 / 0.16);
-  stroke-width: 1.6;
+/* The scale: one dot per mark (a zero dash with a round cap), every dot
+   on the same radius. Knob.svelte starts majors 1px further in than
+   minors (R - 3.5 against R - 2.5), so majors move their dot 1px out
+   along the mark; the middle sits at 12 o'clock and the ends are mirror
+   images. The lit arc is the same dots, brighter. */
+:root[data-flag-dir-room][data-flag-dir-room] .knob line {
+  stroke-width: 1.7;
   stroke-linecap: round;
   stroke-dasharray: 0 100;
+  filter: none;
+}
+:root[data-flag-dir-room][data-flag-dir-room] .knob line.major {
+  stroke-dashoffset: -1;
+}
+:root[data-flag-dir-room][data-flag-dir-room] .knob line:not(.on) {
+  stroke: rgb(255 246 232 / 0.18);
 }
 :root[data-flag-dir-room][data-flag-dir-room] .knob line.major:not(.on) {
-  stroke: rgb(255 246 232 / 0.34);
+  stroke: rgb(255 246 232 / 0.4);
 }
 :root[data-flag-dir-room][data-flag-dir-room] .knob line.on {
-  filter: none;
+  stroke-width: 2.1;
 }
 :root[data-flag-dir-room][data-flag-dir-room] .knob .label {
   color: var(--fg-3);
 }
 
-/* EQ kill: a small key; killed, latched down in red. */
+/* EQ kill: a label first, like Trim's and Filter's, so the mixer isn't
+   a wall of keys. Pointing at it raises it into a key (and its tooltip
+   says "Kill high"), so you find that it presses; killed, it's latched
+   into the plate in red, the knob's arc red with it. */
 :root[data-flag-dir-room][data-flag-dir-room] .knob button.label {
   --on: var(--kill);
   border-radius: 6px;
-  background: var(--rm-key-fill);
-  box-shadow: var(--rm-key-edge);
-  color: var(--fg-2);
-  font-weight: 500;
+  background: none;
+  box-shadow: none;
+  color: var(--fg-3);
+  font-weight: 400;
 }
 :root[data-flag-dir-room][data-flag-dir-room] .knob button.label:hover {
-  background: var(--rm-key-fill-hi);
-  box-shadow: var(--rm-key-edge-hi);
+  background: var(--rm-key-fill);
+  box-shadow: var(--rm-key-edge);
   color: var(--fg);
 }
 :root[data-flag-dir-room][data-flag-dir-room] .knob button.label.killed,
 :root[data-flag-dir-room][data-flag-dir-room] .knob button.label.killed:hover {
-  background: var(--rm-on-fill);
+  background: linear-gradient(180deg, var(--rm-on-top) 30%, color-mix(in srgb, var(--kill) 16%, var(--rm-on-top)));
   box-shadow: var(--rm-on-edge);
   color: var(--kill);
+  font-weight: 500;
 }
 
 /* Meters: a slot, filled in the deck's own white; the top 3 dB paper,
    over 0 dB red. The master in paper. */
+/* The deck whites carry too little colour for a bar you read at a
+   glance, so the meters take a deeper tone of each: a slate blue for the
+   ice deck, a tan for the cream (kept soft: saturated blue and orange
+   read as legacy DJ software), rising to the deck's own white. */
 :root[data-flag-dir-room][data-flag-dir-room] .mixer .fwrap {
-  --mc: var(--deck-a);
+  --mc: #a7c3e4;
+  --mc-lo: #58799f;
 }
 :root[data-flag-dir-room][data-flag-dir-room] .mixer .fwrap.mirror {
-  --mc: var(--deck-b);
+  --mc: #e8cda6;
+  --mc-lo: #977550;
 }
 :root[data-flag-dir-room][data-flag-dir-room] .mixer .cen .mpair {
-  --mc: rgb(238 235 228 / 0.72);
+  --mc: #d9d3c7;
+  --mc-lo: #7d776d;
 }
 :root[data-flag-dir-room][data-flag-dir-room] .mixer .meter .bar,
 :root[data-flag-dir-room][data-flag-dir-room] .mixer .meter .clip {
@@ -505,14 +619,14 @@
   box-shadow: inset 0 1px 1px rgb(0 0 0 / 0.8), 0 1px 0 var(--rm-lip);
 }
 :root[data-flag-dir-room][data-flag-dir-room] .mixer .meter .bar::after {
-  background: linear-gradient(to top, color-mix(in srgb, var(--mc) 58%, #050404) 0, color-mix(in srgb, var(--mc) 88%, #050404) 88%, var(--fg) 88% 97.9%, var(--kill) 97.9%);
+  background: linear-gradient(to top, var(--mc-lo) 0, var(--mc) 88%, var(--fg) 88% 97.9%, var(--kill) 97.9%);
   box-shadow: none;
 }
 :root[data-flag-dir-room][data-flag-dir-room] .mixer .meter:not(.m60) {
   background: #050404;
 }
 :root[data-flag-dir-room][data-flag-dir-room] .mixer .meter:not(.m60)::after {
-  background: linear-gradient(to top, color-mix(in srgb, var(--mc) 58%, #050404) 0, color-mix(in srgb, var(--mc) 88%, #050404) 82%, var(--fg) 82% 95%, var(--kill) 95%);
+  background: linear-gradient(to top, var(--mc-lo) 0, var(--mc) 82%, var(--fg) 82% 95%, var(--kill) 95%);
 }
 :root[data-flag-dir-room][data-flag-dir-room] .mixer .meter.clipped .clip {
   background: var(--kill);
@@ -655,8 +769,8 @@
 }
 :root[data-flag-dir-room][data-flag-dir-room] section.library .scroll .row.sel,
 :root[data-flag-dir-room][data-flag-dir-room] section.library .scroll .row.sel:hover {
-  background: linear-gradient(180deg, #262421, #201e1c);
-  box-shadow: var(--rm-key-edge);
+  background: linear-gradient(180deg, #262421, #211f1c);
+  box-shadow: inset 0 1px 0 rgb(255 246 232 / 0.07), 0 1px 3px rgb(0 0 0 / 0.22);
   color: var(--fg);
 }
 /* Key match: a small dot after the key instead of an underline. */
@@ -677,7 +791,7 @@
   background: linear-gradient(180deg, #24221f, #1e1c1a);
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
-  box-shadow: inset 0 1px 0 rgb(255 246 232 / 0.09), 0 0 0 1px rgb(0 0 0 / 0.5), 0 10px 24px -6px rgb(0 0 0 / 0.6);
+  box-shadow: inset 0 1px 0 rgb(255 246 232 / 0.09), 0 0 0 1px rgb(0 0 0 / 0.3), 0 2px 8px -2px rgb(0 0 0 / 0.4);
   font-weight: 500;
 }
 :root[data-flag-dir-room][data-flag-dir-room] .toastbox .toast .undo {
@@ -726,7 +840,7 @@
   height: 36px;
   border-radius: 9px;
   background: linear-gradient(180deg, #55302a, #462823);
-  box-shadow: inset 0 1px 0 rgb(255 220 210 / 0.16), 0 1px 0 var(--rm-under), 0 2px 4px -1px rgb(0 0 0 / 0.45);
+  box-shadow: inset 0 1px 0 rgb(255 220 210 / 0.16), var(--rm-lift);
   color: #fff3ef;
   font-weight: 500;
 }
@@ -812,7 +926,7 @@
   background: linear-gradient(180deg, #f3f0e9, #e3dfd6);
   color: var(--ink);
   font-weight: 500;
-  box-shadow: inset 0 1px 0 #fff, 0 1px 0 rgb(0 0 0 / 0.6), 0 2px 4px -1px rgb(0 0 0 / 0.45);
+  box-shadow: inset 0 1px 0 #fff, var(--rm-lift);
 }
 :root[data-flag-dir-room][data-flag-dir-room] .backdrop > .card[role='dialog'] .found + .found :is(.go, .btn.primary),
 :root[data-flag-dir-room][data-flag-dir-room] .backdrop > .card[role='dialog'] .source + .source :is(.go, .btn.primary) {
@@ -862,7 +976,7 @@
 }
 :root[data-flag-dir-room][data-flag-dir-room] .settings input[type='checkbox']:checked {
   background: var(--rm-paper);
-  box-shadow: inset 0 1px 0 #fff, 0 1px 0 rgb(0 0 0 / 0.6);
+  box-shadow: inset 0 1px 0 #fff, 0 1px 2px rgb(0 0 0 / 0.35);
 }
 
 /* ── Focus and everything else ─────────────────────────────────────── */

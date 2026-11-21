@@ -18,6 +18,18 @@ export default {
   title: 'Direction: Listening room, done well',
   group: 'Direction',
   against: '"One solid primary control, Play" and the outlined-control depth step: Play is a raised key that latches down in its deck colour, and controls are raised keys rather than outlines. Also the Liquid Glass blur: panels are solid.',
+  settings: {
+    title: {
+      type: 'choice',
+      label: 'Lane titles',
+      default: 'label',
+      options: [
+        ['inset', 'Cut in', 'A small recess in the waveform window with the title in it: it reads as part of the window, not something laid on it.'],
+        ['label', 'Label only', 'Just the title, held off the waveform by a soft dark halo: covers nothing, but a loud passage can crowd it.'],
+        ['plate', 'Small plate', 'A small raised plate over the waveform, like the zoom control: the clearest, but it covers the most.'],
+      ],
+    },
+  },
   notes: 'Whole-app look in style.css (built from a source with a short prefix; every rule is under the doubled :root[data-flag-dir-room] attribute so the baseline flags\' choice rules can\'t out-rank it). Tokens first, then the room, decks, mixer, library, messages, dialogs, settings. No hooks in components. only-one.svelte.js keeps one Direction flag on at a time.',
 };
 
