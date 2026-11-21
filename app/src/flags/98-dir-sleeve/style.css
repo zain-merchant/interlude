@@ -347,6 +347,13 @@
 :root[data-flag-dir-sleeve][data-flag-dir-sleeve] [data-region^='deck'] .bpm .big .frac {
   color: var(--fg-3) !important;
 }
+/* A track playing out: the time goes red (flag 18), tenths a step quieter. */
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] [data-region^='deck'] .times .rm.ending .t {
+  color: color-mix(in srgb, var(--kill) 62%, transparent) !important;
+}
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] [data-region^='deck']:has(header .name.dim) .bpm .big {
+  font-weight: 400 !important;
+}
 /* An empty deck's figures wait at the off level. */
 :root[data-flag-dir-sleeve][data-flag-dir-sleeve] [data-region^='deck']:has(header .name.dim) :is(.bpm .big, .times .num, .times .t) {
   color: var(--fg-4) !important;
@@ -554,7 +561,7 @@
   --d-role: var(--deck);
 }
 :root[data-flag-dir-sleeve][data-flag-dir-sleeve] [data-region^='deck'] .nudge {
-  border-radius: var(--r) !important;
+  border-radius: 6px !important;
   overflow: hidden;
 }
 :root[data-flag-dir-sleeve][data-flag-dir-sleeve] [data-region^='deck'] .nudge button {
@@ -606,7 +613,7 @@
 }
 :root[data-flag-dir-sleeve][data-flag-dir-sleeve] .knob .dial,
 :root[data-flag-dir-sleeve][data-flag-dir-sleeve] .knob .dial.dragging {
-  transform: scale(1.3);
+  transform: scale(1.22);
 }
 :root[data-flag-dir-sleeve][data-flag-dir-sleeve] .knob .dial::after,
 :root[data-flag-dir-sleeve][data-flag-dir-sleeve] .knob .dial::before {
@@ -627,16 +634,14 @@
 :root[data-flag-dir-sleeve][data-flag-dir-sleeve] .knob .dial.killed i {
   background: var(--kill) !important;
 }
-/* The ring: three marks at rest (both ends and the middle); the ticks up to
-   the value fill in as it's turned, so the ring reads as a gauge. */
+/* The ring is a gauge: empty at rest, and the ticks up to the value fill in
+   as the dial is turned. */
 :root[data-flag-dir-sleeve][data-flag-dir-sleeve] .knob line {
   stroke: transparent !important;
   stroke-width: 1 !important;
   filter: none !important;
 }
-:root[data-flag-dir-sleeve][data-flag-dir-sleeve] .knob line.major:not(:first-child, :last-child) {
-  stroke: var(--d-tick-major) !important;
-}
+
 :root[data-flag-dir-sleeve][data-flag-dir-sleeve] .knob line.on {
   stroke: var(--d-tick-on) !important;
 }
@@ -665,7 +670,7 @@
   box-shadow: var(--d-slot-edge) !important;
 }
 :root[data-flag-dir-sleeve][data-flag-dir-sleeve] .meter.m60 .bar::after {
-  background: linear-gradient(to top, var(--d-meter, rgb(236 234 228 / 0.7)) 0 80%, #fff 80% 97.9%, var(--kill) 97.9%) !important;
+  background: linear-gradient(to top, var(--d-meter, rgb(236 234 228 / 0.62)) 0 90%, var(--d-peak) 90% 97.9%, var(--kill) 97.9%) !important;
 }
 :root[data-flag-dir-sleeve][data-flag-dir-sleeve] .mixer .fwrap:not(.mirror) .meter {
   --d-meter: #c9dcf2;
@@ -685,12 +690,13 @@
 :root[data-flag-dir-sleeve][data-flag-dir-sleeve] .meter.m60 .db.zero {
   background: var(--fg-3) !important;
 }
+/* Small keys (24px tall) take a 6px corner; the 44px keys take 8. */
 :root[data-flag-dir-sleeve][data-flag-dir-sleeve] .mixer .hp {
-  border-radius: var(--r) !important;
+  border-radius: 6px !important;
   --d-role: var(--cue);
 }
 :root[data-flag-dir-sleeve][data-flag-dir-sleeve] .mixer button.rec {
-  border-radius: var(--r) !important;
+  border-radius: 6px !important;
   --d-role: var(--d-on-fg);
 }
 :root[data-flag-dir-sleeve][data-flag-dir-sleeve] .mixer button.rec .dot {
@@ -872,7 +878,7 @@
   color: var(--fg-2) !important;
 }
 :root[data-flag-dir-sleeve][data-flag-dir-sleeve] .tip kbd {
-  background: var(--d-hover) !important;
+  background: var(--d-sel) !important;
   box-shadow: none !important;
   color: var(--fg-2) !important;
   border-radius: 4px !important;
@@ -985,6 +991,17 @@
   font-weight: 600 !important;
 }
 /* Drop targets: ink outlines, since the deck whites don't show on paper. */
-:root[data-flag-dir-sleeve][data-flag-dir-sleeve] #app :is([data-region^='deck'], section.library, .sampler) {
-  --drop-color: #131316;
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] #app [data-drop] {
+  outline-color: rgb(19 19 22 / 0.4) !important;
+}
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] #app [data-drop='over'] {
+  outline-color: #131316 !important;
+  background-image: linear-gradient(rgb(19 19 22 / 0.06), transparent) !important;
+}
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] #app [data-drop='blocked-over'] {
+  outline-color: var(--kill) !important;
+}
+/* The Rec dot sits on ink while recording: the brighter red. */
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] .mixer button.rec.on .dot {
+  background: #ff6b5f !important;
 }
