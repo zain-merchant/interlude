@@ -1,0 +1,652 @@
+/* #96 (UI audit flag; a visual direction): Instrument.
+
+   The bigger swing. Interlude as one made object instead of glass cards
+   floating on a backdrop: a single machined face (the chassis) with
+   screens set into it, and keys standing on it.
+
+   - The chassis: one graphite surface edge to edge, lit from above. No
+     panels, no blur, no backdrop pools. Regions are told apart by what's
+     on the face, not by boxes around it.
+   - Screens: everything you read is on black glass set into the face: the
+     waveform lanes, each deck's readout (title, tempo, overview, times),
+     the meters, the track list, and the messages (toast and banner). On
+     true black the waveforms and the numerals are the brightest things
+     there are, so brightness lands where the information is.
+   - Keys: everything you touch stands on the chassis in its material,
+     sinks when pressed and stays down when on (the same grammar as 95).
+     Deck tabs are a segmented control cut into the face.
+   - Colour: ice and cream on the screens; amber is cue, red is critical;
+     no glow, ever. A screen's light is its content, nothing added.
+
+   Against the doc: the Liquid Glass material and the backdrop ("a faint
+   gradient … the pools drift") are replaced by the chassis. */
+
+:root[data-flag-dir-instrument][data-flag-dir-instrument] {
+  /* The chassis. */
+  --in-ch: #252629;
+  --in-ch-hi: #2b2c30;
+  --in-ch-lo: #202124;
+  --in-seam-dark: rgb(0 0 0 / 0.5);
+  --in-seam-light: rgb(255 255 255 / 0.045);
+
+  /* Screens: black glass in a cut bezel. */
+  --in-scr: #09090b;
+  --in-scr-rim: rgb(0 0 0 / 0.85);
+  --in-scr-lip: rgb(255 255 255 / 0.07);
+  --in-scr-line: rgb(255 255 255 / 0.07);
+
+  /* Keys on the chassis. */
+  --in-face: linear-gradient(180deg, #36373c, #2e2f33);
+  --in-face-hover: linear-gradient(180deg, #3c3d43, #333438);
+  --in-raised: inset 0 1px 0 rgb(255 255 255 / 0.09), 0 0 0 1px rgb(0 0 0 / 0.5), 0 1px 1px rgb(0 0 0 / 0.3), 0 2px 4px -1px rgb(0 0 0 / 0.4);
+  --in-raised-hover: inset 0 1px 0 rgb(255 255 255 / 0.12), 0 0 0 1px rgb(0 0 0 / 0.5), 0 1px 1px rgb(0 0 0 / 0.3), 0 3px 6px -1px rgb(0 0 0 / 0.45);
+  --in-sunk-bg: #1d1e21;
+  --in-sunk: inset 0 1px 2px rgb(0 0 0 / 0.55), inset 0 0 0 1px rgb(0 0 0 / 0.35), 0 1px 0 var(--in-seam-light);
+
+  /* Text: the chassis is lighter than today's glass, so the quieter levels
+     come up a step to keep their contrast. */
+  --fg-2: rgb(236 234 228 / 0.68);
+  --fg-3: rgb(236 234 228 / 0.55);
+  --fg-4: rgb(236 234 228 / 0.32);
+
+  --well: var(--in-scr);
+  --well-shadow: inset 0 1px 2px rgb(0 0 0 / 0.7), inset 0 0 0 1px var(--in-scr-rim), 0 1px 0 var(--in-scr-lip);
+  --popover: #2a2b2f;
+  --warn: var(--kill);
+
+  --flag-buttons-bg: var(--in-face);
+  --flag-buttons-ring: var(--in-raised);
+  --flag-buttons-bg-hover: var(--in-face-hover);
+  --flag-buttons-ring-hover: var(--in-raised-hover);
+  --flag-buttons-bg-on: var(--in-sunk-bg);
+  --flag-buttons-ring-on: var(--in-sunk);
+}
+
+:root[data-flag-dir-instrument][data-flag-dir-instrument] :is(button, .btn) {
+  --in-on-bg: linear-gradient(180deg, color-mix(in srgb, var(--lit, var(--fg)) 12%, var(--in-sunk-bg)), color-mix(in srgb, var(--lit, var(--fg)) 17%, var(--in-sunk-bg)));
+}
+
+/* ── The chassis ────────────────────────────────────────────────────── */
+
+:root[data-flag-dir-instrument][data-flag-dir-instrument] body,
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .app {
+  background: linear-gradient(180deg, var(--in-ch-hi), var(--in-ch-lo));
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .bd {
+  display: none;
+}
+/* Panels dissolve into the face. */
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .decks > section,
+:root[data-flag-dir-instrument][data-flag-dir-instrument] section.library,
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .settings {
+  background: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: none;
+  border-radius: 0;
+}
+/* The seams: a machined line between deck, mixer and deck. */
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .decks > section.mixer {
+  position: relative;
+  overflow: visible;
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .decks > section.mixer::before,
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .decks > section.mixer::after {
+  content: '';
+  position: absolute;
+  top: 16px;
+  bottom: 16px;
+  width: 2px;
+  background: linear-gradient(90deg, var(--in-seam-dark) 50%, var(--in-seam-light) 50%);
+  pointer-events: none;
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .decks > section.mixer::before {
+  left: -7px;
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .decks > section.mixer::after {
+  right: -7px;
+}
+
+/* ── Screens ────────────────────────────────────────────────────────── */
+
+/* The waveform lanes: one long screen. */
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .waves.glass {
+  border-radius: 12px;
+  background: var(--in-scr);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: inset 0 0 0 1px var(--in-scr-rim), inset 0 2px 3px rgb(0 0 0 / 0.6), 0 1px 0 var(--in-scr-lip), 0 -1px 0 rgb(0 0 0 / 0.25);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .lane + .lane {
+  border-top-color: var(--in-scr-line);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .who {
+  padding: 0 !important;
+  background: none !important;
+  box-shadow: none !important;
+  color: var(--fg-3);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .zoom {
+  background: none;
+  box-shadow: none;
+}
+
+/* Each deck's readout: title and tempo, overview, times, on one screen
+   that bleeds 12px past the deck's columns, so the text inside still
+   lines up with the keys below. Drawn in three parts that meet flush. */
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .decks > section[data-region^='deck'] {
+  column-gap: 28px;
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .body {
+  row-gap: 0;
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .body > header,
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .body > .overview,
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .body > .times {
+  margin-left: -16px;
+  margin-right: -16px;
+  padding-left: 16px;
+  padding-right: 16px;
+  background: var(--in-scr);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .body > header {
+  margin-top: -16px;
+  padding-top: 16px;
+  padding-bottom: 12px;
+  border-radius: 12px 12px 0 0;
+  box-shadow: inset 0 1px 0 var(--in-scr-rim), inset 1px 0 0 var(--in-scr-rim), inset -1px 0 0 var(--in-scr-rim), inset 0 3px 3px -1px rgb(0 0 0 / 0.55), 0 -1px 0 rgb(0 0 0 / 0.25);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .body > .overview {
+  border-radius: 0;
+  box-shadow: inset 1px 0 0 var(--in-scr-rim), inset -1px 0 0 var(--in-scr-rim);
+  overflow: visible;
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .body > .overview > .wave {
+  border-radius: 6px;
+  overflow: hidden;
+  background: #0d0d10;
+  outline: 1px solid var(--in-scr-line);
+  outline-offset: -1px;
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .body > .times {
+  padding-top: 12px;
+  padding-bottom: 14px;
+  border-radius: 0 0 12px 12px;
+  box-shadow: inset 0 -1px 0 var(--in-scr-rim), inset 1px 0 0 var(--in-scr-rim), inset -1px 0 0 var(--in-scr-rim), 0 1px 0 var(--in-scr-lip);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .body > .mp {
+  margin-top: 12px;
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .body > .transport {
+  margin-top: 12px;
+}
+
+/* On the screen: tempo and time left lead, the title is the site's h3
+   voice at 16px, the rest steps down. */
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] header .name {
+  font-size: var(--t-md);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] header .artist,
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .bpm .unit,
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .bpm .key,
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .times .el {
+  color: var(--fg-3);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .bpm .big,
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .times .rm {
+  color: var(--fg);
+}
+
+/* Tabs: a segmented control cut into the face (32 + 1px, as today). */
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .modes {
+  gap: 0;
+  padding: 3px;
+  margin-bottom: 1px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--in-sunk-bg);
+  box-shadow: var(--in-sunk);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .modes button {
+  height: 26px;
+  border-radius: 7px;
+  color: var(--fg-3);
+  font-weight: 500;
+  transition: color 140ms ease, background-color 140ms ease, box-shadow 140ms ease;
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .modes button:hover {
+  color: var(--fg-2);
+  background: none;
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .modes button.on {
+  color: var(--fg);
+  background: var(--in-face);
+  box-shadow: var(--in-raised);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .modes button.on::after {
+  content: none;
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .modes button:focus-visible::before {
+  content: none !important;
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument][data-input='keys'] [data-region^='deck'] .modes button:focus-visible {
+  outline: 2px solid var(--fg-2);
+  outline-offset: 1px;
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .strip .tc:hover {
+  background: rgb(255 255 255 / 0.05);
+}
+
+/* ── Keys ───────────────────────────────────────────────────────────── */
+
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .btn:active:not(:disabled, [aria-disabled='true']) {
+  transform: none;
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] :is(.btn:not(.ghost), .mixer .hp, .mixer button.rec, .toast .undo, [data-region^='deck'] .pitch .lock, [data-region^='deck'] .pitch .nudge, .knob button.label):active:not(:disabled, [aria-disabled='true']) {
+  background: var(--in-sunk-bg);
+  box-shadow: var(--in-sunk);
+  translate: 0 1px;
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .transport > .btn {
+  border-radius: 10px;
+  font-weight: 500;
+  transition: background 60ms ease, box-shadow 60ms ease, color 140ms ease, translate 60ms ease;
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .transport .cue {
+  --lit: var(--cue);
+  color: var(--cue);
+  background: var(--in-face);
+  box-shadow: var(--in-raised);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .transport .btn.play,
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .transport .btn.play:not(.on) {
+  --lit: var(--deck);
+  color: var(--fg);
+  background: var(--in-face);
+  box-shadow: var(--in-raised);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .transport :is(.cue, .btn.play):not(.on, .lit, [aria-disabled='true']):hover {
+  background: var(--in-face-hover);
+  box-shadow: var(--in-raised-hover);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .transport .cue.lit,
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .transport .cue.lit:hover,
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .transport .btn.play.on,
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .transport .btn.play.on:hover {
+  background: var(--in-on-bg);
+  box-shadow: var(--in-sunk);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .transport .btn.play.on {
+  color: var(--deck);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .transport .btn.play.on[data-cueing] {
+  --lit: var(--cue);
+  color: var(--cue);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .transport .btn[aria-disabled='true'],
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .transport .btn.play[aria-disabled='true'] {
+  opacity: 1;
+  color: var(--fg-4);
+  background: none;
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.25), 0 1px 0 var(--in-seam-light);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .transport .sync,
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .transport .jumps span {
+  color: var(--fg-2);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .transport .jumps button {
+  border-radius: 8px;
+}
+
+/* The pitch column. */
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .pitch .val {
+  color: var(--fg-2);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .pitch .nudge {
+  border-radius: 8px;
+  background: var(--in-face);
+  box-shadow: var(--in-raised);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .pitch .nudge button {
+  background: none;
+  box-shadow: none;
+  color: var(--fg-2);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .pitch .nudge button:hover:not([aria-disabled='true']) {
+  color: var(--fg);
+  background: rgb(255 255 255 / 0.05);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .pitch .lock {
+  --lit: var(--deck);
+  border-radius: 10px;
+  background: var(--in-face);
+  box-shadow: var(--in-raised);
+  color: var(--fg-2);
+  font-weight: 500;
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .pitch .lock:hover {
+  background: var(--in-face-hover);
+  box-shadow: var(--in-raised-hover);
+  color: var(--fg);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .pitch .lock.on,
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .pitch .lock.on:hover {
+  color: var(--deck);
+  background: var(--in-on-bg);
+  box-shadow: var(--in-sunk);
+}
+
+/* Faders: a slot cut through the face; a machined cap. */
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .fader .line {
+  background: #0a0a0c;
+  box-shadow: inset 0 1px 1px rgb(0 0 0 / 0.8), 0 1px 0 var(--in-seam-light);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .fader .cap {
+  border-radius: 4px;
+  background: linear-gradient(180deg, #4a4b51, #36373c);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.16), 0 0 0 1px rgb(0 0 0 / 0.6), 0 1px 1px rgb(0 0 0 / 0.35), 0 3px 6px -1px rgb(0 0 0 / 0.5);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .fader:hover .cap,
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .fader.dragging .cap {
+  background: linear-gradient(180deg, #54555c, #3b3c41);
+}
+
+/* ── Mixer ──────────────────────────────────────────────────────────── */
+
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .knob .dial {
+  background: none;
+  box-shadow: none;
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .knob .dial::after {
+  inset: 0;
+  transform: rotate(calc(-1 * var(--rot)));
+  background: linear-gradient(180deg, #434449, #303135);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.14), 0 0 0 1px rgb(0 0 0 / 0.6), 0 1px 1px rgb(0 0 0 / 0.35), 0 3px 6px -1px rgb(0 0 0 / 0.5);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .knob .wrap:has(.dial:hover) .dial::after,
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .knob .dial.dragging::after {
+  background: linear-gradient(180deg, #4c4d53, #35363a);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .knob .dial i {
+  background: var(--fg);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .knob .dial.killed i {
+  background: var(--fg-4);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .knob line {
+  stroke: rgb(255 255 255 / 0.14);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .knob line.major {
+  stroke: rgb(255 255 255 / 0.26);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .knob line.on {
+  filter: none;
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .knob .label {
+  color: var(--fg-3);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .knob button.label {
+  --lit: var(--kill);
+  border-radius: 6px;
+  color: var(--fg-2);
+  background: var(--in-face);
+  box-shadow: var(--in-raised);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .knob button.label:hover {
+  color: var(--fg);
+  background: var(--in-face-hover);
+  box-shadow: var(--in-raised-hover);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .knob button.label.killed,
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .knob button.label.killed:hover {
+  color: var(--kill);
+  background: var(--in-on-bg);
+  box-shadow: var(--in-sunk);
+}
+
+/* Meters: lit segments behind black glass, in the deck's white. */
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .mixer .fwrap {
+  --mc: var(--deck-a);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .mixer .fwrap.mirror {
+  --mc: var(--deck-b);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .mixer .cen .mpair {
+  --mc: rgb(236 234 228 / 0.75);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .mixer .meter .bar,
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .mixer .meter .clip,
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .mixer .meter:not(.m60) {
+  background: var(--in-scr);
+  box-shadow: inset 0 0 0 1px var(--in-scr-rim), 0 1px 0 var(--in-scr-lip);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .mixer .meter .bar::after {
+  background: linear-gradient(to top, color-mix(in srgb, var(--mc) 62%, transparent) 0, var(--mc) 88%, var(--fg) 88% 97.9%, var(--kill) 97.9%);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .mixer .meter:not(.m60)::after {
+  background: linear-gradient(to top, color-mix(in srgb, var(--mc) 62%, transparent) 0, var(--mc) 82%, var(--fg) 82% 95%, var(--kill) 95%);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .mixer .meter.clipped .clip {
+  background: var(--kill);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .mixer .lim {
+  color: var(--kill);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .mixer .hp,
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .mixer .hp:not(.on) {
+  --lit: var(--cue);
+  border-radius: 8px;
+  background: var(--in-face);
+  box-shadow: var(--in-raised);
+  color: var(--fg-2);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .mixer .hp:hover {
+  background: var(--in-face-hover);
+  box-shadow: var(--in-raised-hover);
+  color: var(--fg);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .mixer .hp.on,
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .mixer .hp.on:hover {
+  color: var(--cue);
+  background: var(--in-on-bg);
+  box-shadow: var(--in-sunk);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .mixer button.rec {
+  --lit: var(--kill);
+  border-radius: 8px;
+  background: var(--in-face);
+  box-shadow: var(--in-raised);
+  color: var(--fg-2);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .mixer button.rec:hover {
+  background: var(--in-face-hover);
+  box-shadow: var(--in-raised-hover);
+  color: var(--fg);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .mixer button.rec.on,
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .mixer button.rec.on:hover {
+  color: var(--fg);
+  background: var(--in-on-bg);
+  box-shadow: var(--in-sunk);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .mixer button.rec.on .dot {
+  background: var(--kill);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .mixer .xf {
+  border-top-color: var(--in-seam-dark);
+  box-shadow: inset 0 1px 0 var(--in-seam-light);
+}
+
+/* ── Library ────────────────────────────────────────────────────────── */
+
+/* The sidebar is on the face; the track list is a screen. */
+:root[data-flag-dir-instrument][data-flag-dir-instrument] section.library nav {
+  border-right: 0;
+  padding-left: 0;
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] section.library nav .item,
+:root[data-flag-dir-instrument][data-flag-dir-instrument] section.library nav .add {
+  border-radius: 8px;
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] section.library nav .item:hover,
+:root[data-flag-dir-instrument][data-flag-dir-instrument] section.library nav .add:hover {
+  background: rgb(255 255 255 / 0.05);
+  color: var(--fg);
+  box-shadow: none;
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] section.library nav .item.on,
+:root[data-flag-dir-instrument][data-flag-dir-instrument] section.library nav .item.on:hover {
+  color: var(--fg);
+  background: var(--in-face);
+  box-shadow: var(--in-raised);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] section.library .main {
+  padding-right: 0;
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] section.library .bar .search {
+  border-radius: 10px;
+  background: var(--in-sunk-bg);
+  box-shadow: var(--in-sunk);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] section.library .bar .search:focus-within {
+  box-shadow: var(--in-sunk), 0 0 0 2px var(--fg-2);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] section.library .bar :is(.samp, .gear) {
+  border-radius: 10px;
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] section.library .row.head {
+  margin-top: 4px;
+  padding: 6px 6px 0;
+  border-bottom: 0;
+  border-radius: 12px 12px 0 0;
+  background: var(--in-scr);
+  box-shadow: inset 0 1px 0 var(--in-scr-rim), inset 1px 0 0 var(--in-scr-rim), inset -1px 0 0 var(--in-scr-rim), inset 0 3px 3px -1px rgb(0 0 0 / 0.55);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] section.library .row.head .sort:hover,
+:root[data-flag-dir-instrument][data-flag-dir-instrument] section.library .row.head .sort.on {
+  background: none;
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] section.library .scroll {
+  padding: 0 6px 6px;
+  border-radius: 0 0 12px 12px;
+  background: var(--in-scr);
+  box-shadow: inset 0 -1px 0 var(--in-scr-rim), inset 1px 0 0 var(--in-scr-rim), inset -1px 0 0 var(--in-scr-rim), 0 1px 0 var(--in-scr-lip);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] section.library .scroll .row {
+  border-radius: 6px;
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] section.library .scroll .row:hover {
+  background: rgb(255 255 255 / 0.04);
+  box-shadow: none;
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] section.library .scroll .row.sel,
+:root[data-flag-dir-instrument][data-flag-dir-instrument] section.library .scroll .row.sel:hover {
+  background: rgb(255 255 255 / 0.09);
+  box-shadow: none;
+  color: var(--fg);
+}
+
+/* ── Messages: on screens ───────────────────────────────────────────── */
+
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .toastbox .toast {
+  border-radius: 10px;
+  background: var(--in-scr);
+  box-shadow: inset 0 0 0 1px var(--in-scr-rim), inset 0 2px 3px rgb(0 0 0 / 0.6), 0 1px 0 var(--in-scr-lip);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .toastbox .toast .undo {
+  border-radius: 7px;
+  background: rgb(255 255 255 / 0.08);
+  box-shadow: none;
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .app > .banner {
+  border-radius: 12px;
+  background: var(--in-scr);
+  box-shadow: inset 0 0 0 1px var(--in-scr-rim), 0 1px 0 var(--in-scr-lip), 0 0 0 4px var(--in-ch), 0 12px 32px rgb(0 0 0 / 0.5);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .app > .banner.lost svg {
+  stroke: var(--kill);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .app > .banner .btn,
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .app > .banner .btn.primary {
+  border-radius: 8px;
+  background: var(--in-face);
+  box-shadow: var(--in-raised);
+  color: var(--fg);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .tip {
+  border-radius: 8px;
+  background: var(--in-scr);
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.08), 0 8px 24px rgb(0 0 0 / 0.5);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .menu {
+  border-radius: 12px;
+  background: var(--popover);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.08), 0 0 0 1px rgb(0 0 0 / 0.5), 0 16px 40px rgb(0 0 0 / 0.55);
+}
+
+/* ── Dialogs: a plate of the chassis lifted off the face ────────────── */
+
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .backdrop > .card[role='dialog'] {
+  border-radius: 18px;
+  background: linear-gradient(180deg, #2e2f33, #27282b);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.09), 0 0 0 1px rgb(0 0 0 / 0.55), 0 40px 80px -16px rgb(0 0 0 / 0.7);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .backdrop > .card[role='dialog'] .found {
+  border-radius: 12px;
+  background: var(--in-scr);
+  box-shadow: inset 0 0 0 1px var(--in-scr-rim), inset 0 2px 3px rgb(0 0 0 / 0.6), 0 1px 0 var(--in-scr-lip);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .backdrop > .card[role='dialog'] :is(.go, .btn.primary) {
+  display: inline-grid;
+  place-items: center;
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #f4f3ef, #e2e0da);
+  color: var(--ink);
+  font-weight: 500;
+  box-shadow: inset 0 1px 0 #fff, 0 0 0 1px rgb(0 0 0 / 0.5), 0 1px 2px rgb(0 0 0 / 0.4);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .backdrop > .card[role='dialog'] .found + .found :is(.go, .btn.primary),
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .backdrop > .card[role='dialog'] .source + .source :is(.go, .btn.primary) {
+  background: var(--in-face);
+  box-shadow: var(--in-raised);
+  color: var(--fg);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .backdrop > .card[role='dialog'] .link {
+  text-decoration: none;
+  color: var(--fg-2);
+}
+
+/* ── Settings: the face, with its lists on screens ──────────────────── */
+
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .settings {
+  background: linear-gradient(180deg, var(--in-ch-hi), var(--in-ch-lo));
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .settings nav .item.on,
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .settings nav .item.on:hover {
+  color: var(--fg);
+  background: var(--in-face);
+  box-shadow: var(--in-raised);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .settings select {
+  border-radius: 8px;
+  background: var(--in-face);
+  box-shadow: var(--in-raised);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .settings input[type='checkbox'] {
+  border-radius: 5px;
+  background: var(--in-sunk-bg);
+  box-shadow: var(--in-sunk);
+}
+
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .split i,
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .app > .grip:not(.side) i {
+  background: transparent;
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .split:hover i,
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .app > .grip:not(.side):hover i {
+  background: var(--fg-3);
+}

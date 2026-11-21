@@ -1,0 +1,663 @@
+/* #95 (UI audit flag; a visual direction): Layered.
+
+   Today's app, made tactile. Same graphite, same glass, same waveforms and
+   the same two deck whites; what changes is that every surface has a place
+   on one z-axis, lit by one light from above, and every control is a thing
+   you press.
+
+   The depth ladder, back to front (one light, from the top):
+     0  page     the graphite, held still
+     1  panel    glass: a lit top edge, a crisp rim, a shadow on the page
+    -1  well     cut into a panel: dark, shadowed under its top lip, its
+                 bottom lip catching the light (overview, lanes, search,
+                 meter and fader slots, the tab track)
+     2  key      raised off the panel: a lit top bevel, a contact shadow
+     3  float    toast, banner, menus, tips: above the panels
+     4  sheet    dialogs: the top of the stack
+
+   One state grammar for every control:
+     rest      raised key, --fg-2 label
+     hover     the face brightens, the label goes to --fg
+     pressed   sinks into the panel (60ms), no scale
+     on        latched down: stays sunk, its face tinted 14% with its
+               role colour, the label or glyph in that colour
+     selected  a raised thumb in a sunk track (tabs, sidebar, Settings, rows)
+     focus     the doc's 2px ring, keys only
+     disabled  flat, at the off level
+
+   Colour roles: ice and cream are the decks only. Amber is cue only (Cue,
+   cue points, headphone cue). Red is critical (kill, Rec, clip, the
+   limiter, device lost). No yellow and no green: meters run in the deck's
+   own white. No glow anywhere; colour is only ever a tint or a label. */
+
+:root[data-flag-dir-layered][data-flag-dir-layered] {
+  /* Light: one source, above. */
+  --ly-top: rgb(255 255 255 / 0.1);
+  --ly-top-hover: rgb(255 255 255 / 0.14);
+  --ly-lip: rgb(255 255 255 / 0.05);
+
+  /* 1  panel */
+  --glass-fill: linear-gradient(180deg, rgb(255 255 255 / 0.062), rgb(255 255 255 / 0.034));
+  --glass-blur: blur(30px) saturate(1.2);
+  --glass-edge: inset 0 1px 0 rgb(255 255 255 / 0.1), inset 0 0 0 1px rgb(255 255 255 / 0.055), 0 0 0 1px rgb(0 0 0 / 0.4), 0 2px 3px rgb(0 0 0 / 0.22), 0 18px 40px -12px rgb(0 0 0 / 0.6);
+
+  /* -1  well */
+  --well: rgb(0 0 0 / 0.3);
+  --well-shadow: inset 0 1px 2px rgb(0 0 0 / 0.5), inset 0 0 0 1px rgb(0 0 0 / 0.22), 0 1px 0 var(--ly-lip);
+
+  /* 2  key */
+  --ly-face: linear-gradient(180deg, rgb(255 255 255 / 0.088), rgb(255 255 255 / 0.05));
+  --ly-face-hover: linear-gradient(180deg, rgb(255 255 255 / 0.12), rgb(255 255 255 / 0.072));
+  --ly-raised: inset 0 1px 0 var(--ly-top), inset 0 0 0 1px rgb(255 255 255 / 0.025), 0 0 0 1px rgb(0 0 0 / 0.28), 0 1px 1px rgb(0 0 0 / 0.3), 0 2px 4px -1px rgb(0 0 0 / 0.35);
+  --ly-raised-hover: inset 0 1px 0 var(--ly-top-hover), inset 0 0 0 1px rgb(255 255 255 / 0.035), 0 0 0 1px rgb(0 0 0 / 0.28), 0 1px 1px rgb(0 0 0 / 0.3), 0 3px 6px -1px rgb(0 0 0 / 0.38);
+  /* Sunk: a pressed key, a latched one, a tab track. */
+  --ly-sunk-bg: rgb(0 0 0 / 0.26);
+  --ly-sunk: inset 0 1px 2px rgb(0 0 0 / 0.5), inset 0 0 0 1px rgb(0 0 0 / 0.2), 0 1px 0 var(--ly-lip);
+
+  /* 3  float, 4  sheet: opaque, so text over the waveforms stays sharp. */
+  --ly-float: #1c1d21;
+  --ly-float-edge: inset 0 1px 0 rgb(255 255 255 / 0.09), inset 0 0 0 1px rgb(255 255 255 / 0.06), 0 0 0 1px rgb(0 0 0 / 0.45), 0 4px 8px rgb(0 0 0 / 0.25), 0 16px 36px -8px rgb(0 0 0 / 0.6);
+  --ly-sheet: #1a1b1f;
+  --ly-sheet-edge: inset 0 1px 0 rgb(255 255 255 / 0.1), inset 0 0 0 1px rgb(255 255 255 / 0.06), 0 0 0 1px rgb(0 0 0 / 0.5), 0 8px 16px rgb(0 0 0 / 0.3), 0 40px 80px -16px rgb(0 0 0 / 0.7);
+  --popover: var(--ly-float);
+
+  /* Roles. */
+  --warn: var(--kill);
+
+  /* The baseline's button tokens (flag 09) become the raised key. */
+  --flag-buttons-bg: var(--ly-face);
+  --flag-buttons-ring: var(--ly-raised);
+  --flag-buttons-bg-hover: var(--ly-face-hover);
+  --flag-buttons-ring-hover: var(--ly-raised-hover);
+  --flag-buttons-bg-on: var(--ly-sunk-bg);
+  --flag-buttons-ring-on: var(--ly-sunk);
+}
+
+/* "On", in a role colour (--lit), declared on the controls themselves so
+   var(--lit) resolves to each control's own role. Latched down, tinted. */
+:root[data-flag-dir-layered][data-flag-dir-layered] :is(button, .btn) {
+  --ly-on-bg: linear-gradient(180deg, color-mix(in srgb, var(--lit, var(--fg)) 16%, transparent), color-mix(in srgb, var(--lit, var(--fg)) 22%, transparent)), var(--ly-sunk-bg);
+  --ly-on: inset 0 1px 2px rgb(0 0 0 / 0.45), inset 0 0 0 1px rgb(0 0 0 / 0.16), 0 1px 0 var(--ly-lip);
+}
+
+/* ── 0  The page: today's graphite, held still ───────────────────────── */
+
+:root[data-flag-dir-layered][data-flag-dir-layered] .bd i {
+  animation: none !important;
+}
+
+/* ── 1  Panels ──────────────────────────────────────────────────────── */
+
+:root[data-flag-dir-layered][data-flag-dir-layered] .decks > section,
+:root[data-flag-dir-layered][data-flag-dir-layered] .waves.glass,
+:root[data-flag-dir-layered][data-flag-dir-layered] section.library,
+:root[data-flag-dir-layered][data-flag-dir-layered] .settings {
+  background: var(--glass-fill);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-edge);
+}
+
+/* ── Waveform lanes ──────────────────────────────────────────────────── */
+
+/* The lanes are one well across the panel. */
+:root[data-flag-dir-layered][data-flag-dir-layered] .lane + .lane {
+  border-top-color: rgb(0 0 0 / 0.4);
+  box-shadow: 0 -1px 0 rgb(255 255 255 / 0.035);
+}
+/* Lane titles: a small raised tag on the glass, left of the play head. */
+:root[data-flag-dir-layered][data-flag-dir-layered] .who {
+  border-radius: 6px;
+  background: var(--ly-float) !important;
+  box-shadow: var(--ly-float-edge) !important;
+  color: var(--fg-2);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] .zoom {
+  border-radius: 10px;
+  background: var(--ly-sunk-bg);
+  box-shadow: var(--ly-sunk);
+}
+
+/* ── Decks ───────────────────────────────────────────────────────────── */
+
+/* Hierarchy: time left and tempo lead (32/300, full white); the title is
+   the site's h3 voice at the app's 16px; everything else steps down. */
+:root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] header .name {
+  font-size: var(--t-md);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] header .name.dim {
+  font-weight: 400;
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] header .artist {
+  color: var(--fg-3);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] .bpm .big {
+  color: var(--fg);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] .bpm .unit,
+:root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] .bpm .key {
+  color: var(--fg-3);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] .times .rm {
+  color: var(--fg);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] .times .el {
+  color: var(--fg-3);
+}
+
+/* The overview: a well cut into the deck. */
+:root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] .overview {
+  background: var(--well);
+  box-shadow: var(--well-shadow);
+}
+
+/* Tabs: a segmented control. A sunk track the width of the deck's four
+   columns, a raised thumb on the current mode. 32px + 1px, as today's
+   tabs and their underline, so nothing below moves. */
+:root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] .modes {
+  gap: 0;
+  padding: 3px;
+  margin-bottom: 1px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--ly-sunk-bg);
+  box-shadow: var(--ly-sunk);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] .modes button {
+  height: 26px;
+  border-radius: 7px;
+  color: var(--fg-3);
+  font-weight: 500;
+  transition: color 140ms ease, background-color 140ms ease, box-shadow 140ms ease;
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] .modes button:hover {
+  color: var(--fg-2);
+  background: none;
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] .modes button.on {
+  color: var(--fg);
+  background: var(--ly-face);
+  box-shadow: var(--ly-raised);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] .modes button.on::after {
+  content: none;
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] .modes button:focus-visible::before {
+  content: none !important;
+}
+:root[data-flag-dir-layered][data-flag-dir-layered][data-input='keys'] [data-region^='deck'] .modes button:focus-visible {
+  outline: 2px solid var(--fg-2);
+  outline-offset: 1px;
+}
+
+/* The mode row: quiet text controls on the panel. */
+:root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] .strip .tc:hover {
+  background: var(--hover);
+}
+
+/* Transport: four raised keys. */
+:root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] .transport > .btn {
+  border-radius: 10px;
+  font-weight: 500;
+  transition: background 60ms ease, box-shadow 60ms ease, color 140ms ease, translate 60ms ease;
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] .btn:active:not(:disabled, [aria-disabled='true']) {
+  transform: none;
+}
+/* Pressed: every raised control sinks into the panel. */
+:root[data-flag-dir-layered][data-flag-dir-layered] :is(.btn:not(.ghost), .mixer .hp, .mixer button.rec, .toast .undo, [data-region^='deck'] .pitch .lock):active:not(:disabled, [aria-disabled='true']) {
+  background: var(--ly-sunk-bg);
+  box-shadow: var(--ly-sunk);
+  translate: 0 1px;
+}
+
+/* Cue: a raised key with an amber label; at the cue point it latches. */
+:root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] .transport .cue {
+  --lit: var(--cue);
+  color: var(--cue);
+  background: var(--ly-face);
+  box-shadow: var(--ly-raised);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] .transport .cue:hover:not([aria-disabled='true']) {
+  background: var(--ly-face-hover);
+  box-shadow: var(--ly-raised-hover);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] .transport .cue.lit,
+:root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] .transport .cue.lit:hover {
+  background: var(--ly-on-bg);
+  box-shadow: var(--ly-on);
+}
+
+/* Play: raised at rest with a white glyph. Playing, it latches down and
+   takes its deck's white: tinted face, glyph in the deck colour. No slab. */
+:root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] .transport .btn.play,
+:root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] .transport .btn.play:not(.on) {
+  --lit: var(--deck);
+  color: var(--fg);
+  background: var(--ly-face);
+  box-shadow: var(--ly-raised);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] .transport .btn.play:not(.on, [aria-disabled='true']):hover {
+  background: var(--ly-face-hover);
+  box-shadow: var(--ly-raised-hover);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] .transport .btn.play.on,
+:root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] .transport .btn.play.on:hover {
+  color: var(--deck);
+  background: var(--ly-on-bg);
+  box-shadow: var(--ly-on);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] .transport .btn.play.on[data-cueing] {
+  --lit: var(--cue);
+  color: var(--cue);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] .transport .btn[aria-disabled='true'],
+:root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] .transport .btn.play[aria-disabled='true'] {
+  opacity: 1;
+  color: var(--fg-4);
+  background: rgb(255 255 255 / 0.025);
+  box-shadow: none;
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] .transport .sync {
+  color: var(--fg-2);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] .transport .jumps button {
+  border-radius: 8px;
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] .transport .jumps span {
+  color: var(--fg-2);
+}
+
+/* The pitch column. */
+:root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] .pitch .val {
+  color: var(--fg-2);
+}
+/* Nudge: one raised key split in two, like the beat jump key. */
+:root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] .pitch .nudge {
+  border-radius: 8px;
+  background: var(--ly-face);
+  box-shadow: var(--ly-raised);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] .pitch .nudge button {
+  color: var(--fg-2);
+  background: none;
+  box-shadow: none;
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] .pitch .nudge button:hover:not([aria-disabled='true']) {
+  color: var(--fg);
+  background: rgb(255 255 255 / 0.04);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] .pitch .nudge button:active:not([aria-disabled='true']) {
+  background: var(--ly-sunk-bg);
+  box-shadow: var(--ly-sunk);
+  translate: none;
+}
+/* Key lock: raised; latched in the deck's white while on. */
+:root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] .pitch .lock {
+  --lit: var(--deck);
+  border-radius: 10px;
+  background: var(--ly-face);
+  box-shadow: var(--ly-raised);
+  color: var(--fg-2);
+  font-weight: 500;
+  transition: background 60ms ease, box-shadow 60ms ease, color 140ms ease;
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] .pitch .lock:hover {
+  background: var(--ly-face-hover);
+  box-shadow: var(--ly-raised-hover);
+  color: var(--fg);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] .pitch .lock.on,
+:root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] .pitch .lock.on:hover {
+  color: var(--deck);
+  background: var(--ly-on-bg);
+  box-shadow: var(--ly-on);
+}
+
+/* Faders: the slot is a well; the cap is a raised key with a white index. */
+:root[data-flag-dir-layered][data-flag-dir-layered] .fader .line {
+  background: rgb(0 0 0 / 0.55);
+  box-shadow: inset 0 1px 1px rgb(0 0 0 / 0.6), 0 1px 0 var(--ly-lip);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] .fader .cap {
+  border-radius: 4px;
+  background: linear-gradient(180deg, #45464c, #313237);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.16), 0 0 0 1px rgb(0 0 0 / 0.55), 0 1px 1px rgb(0 0 0 / 0.35), 0 3px 6px -1px rgb(0 0 0 / 0.5);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] .fader:hover .cap,
+:root[data-flag-dir-layered][data-flag-dir-layered] .fader.dragging .cap {
+  background: linear-gradient(180deg, #4e4f56, #36373d);
+}
+
+/* ── Mixer: the same keys and wells as the decks ────────────────────── */
+
+/* Dials: a raised round key in the panel's material, lit from above. The
+   dial element turns, so its face is drawn on a layer that turns back
+   (the light stays on top) and only the index turns with the value. */
+:root[data-flag-dir-layered][data-flag-dir-layered] .knob .dial {
+  background: none;
+  box-shadow: none;
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] .knob .dial::after {
+  inset: 0;
+  transform: rotate(calc(-1 * var(--rot)));
+  background: linear-gradient(180deg, #404147, #2c2d32);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.14), 0 0 0 1px rgb(0 0 0 / 0.55), 0 1px 1px rgb(0 0 0 / 0.35), 0 3px 6px -1px rgb(0 0 0 / 0.5);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] .knob .wrap:has(.dial:hover) .dial::after,
+:root[data-flag-dir-layered][data-flag-dir-layered] .knob .dial.dragging::after {
+  background: linear-gradient(180deg, #4a4b52, #313238);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] .knob .dial i {
+  background: var(--fg);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] .knob .dial.killed i {
+  background: var(--fg-4);
+}
+/* The value ring: quiet ticks, the value in the panel's white. */
+:root[data-flag-dir-layered][data-flag-dir-layered] .knob line {
+  stroke: rgb(255 255 255 / 0.12);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] .knob line.major {
+  stroke: rgb(255 255 255 / 0.22);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] .knob line.on {
+  filter: none;
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] .knob .label {
+  color: var(--fg-3);
+}
+/* EQ kill: a small raised key, like every switch; killed, it latches red. */
+:root[data-flag-dir-layered][data-flag-dir-layered] .knob button.label {
+  --lit: var(--kill);
+  border-radius: 6px;
+  color: var(--fg-2);
+  background: var(--ly-face);
+  box-shadow: var(--ly-raised);
+  transition: background 60ms ease, box-shadow 60ms ease, color 140ms ease;
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] .knob button.label:hover {
+  color: var(--fg);
+  background: var(--ly-face-hover);
+  box-shadow: var(--ly-raised-hover);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] .knob button.label:active {
+  background: var(--ly-sunk-bg);
+  box-shadow: var(--ly-sunk);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] .knob button.label.killed,
+:root[data-flag-dir-layered][data-flag-dir-layered] .knob button.label.killed:hover {
+  color: var(--kill);
+  background: var(--ly-on-bg);
+  box-shadow: var(--ly-on);
+}
+
+/* Meters: a well, the level in the deck's own white; the top 3 dB full
+   white, over 0 dB red. The master in the panel's white. */
+:root[data-flag-dir-layered][data-flag-dir-layered] .mixer .fwrap {
+  --mc: var(--deck-a);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] .mixer .fwrap.mirror {
+  --mc: var(--deck-b);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] .mixer .cen .mpair {
+  --mc: rgb(236 234 228 / 0.72);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] .mixer .meter .bar,
+:root[data-flag-dir-layered][data-flag-dir-layered] .mixer .meter .clip,
+:root[data-flag-dir-layered][data-flag-dir-layered] .mixer .meter:not(.m60) {
+  background: rgb(0 0 0 / 0.55);
+  box-shadow: inset 0 1px 1px rgb(0 0 0 / 0.6), 0 1px 0 var(--ly-lip);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] .mixer .meter .bar::after {
+  background: linear-gradient(to top, color-mix(in srgb, var(--mc) 62%, transparent) 0, var(--mc) 88%, var(--fg) 88% 97.9%, var(--kill) 97.9%);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] .mixer .meter:not(.m60)::after {
+  background: linear-gradient(to top, color-mix(in srgb, var(--mc) 62%, transparent) 0, var(--mc) 82%, var(--fg) 82% 95%, var(--kill) 95%);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] .mixer .meter.clipped .clip {
+  background: var(--kill);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] .mixer .lim {
+  color: var(--kill);
+}
+
+/* Headphone cue: a raised key; on, it latches amber (cue). */
+:root[data-flag-dir-layered][data-flag-dir-layered] .mixer .hp,
+:root[data-flag-dir-layered][data-flag-dir-layered] .mixer .hp:not(.on) {
+  --lit: var(--cue);
+  border-radius: 8px;
+  background: var(--ly-face);
+  box-shadow: var(--ly-raised);
+  color: var(--fg-2);
+  transition: background 60ms ease, box-shadow 60ms ease, color 140ms ease;
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] .mixer .hp:hover {
+  background: var(--ly-face-hover);
+  box-shadow: var(--ly-raised-hover);
+  color: var(--fg);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] .mixer .hp.on,
+:root[data-flag-dir-layered][data-flag-dir-layered] .mixer .hp.on:hover {
+  color: var(--cue);
+  background: var(--ly-on-bg);
+  box-shadow: var(--ly-on);
+}
+/* Rec: raised; recording, it latches red. */
+:root[data-flag-dir-layered][data-flag-dir-layered] .mixer button.rec {
+  --lit: var(--kill);
+  border-radius: 8px;
+  background: var(--ly-face);
+  box-shadow: var(--ly-raised);
+  color: var(--fg-2);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] .mixer button.rec:hover {
+  background: var(--ly-face-hover);
+  box-shadow: var(--ly-raised-hover);
+  color: var(--fg);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] .mixer button.rec.on,
+:root[data-flag-dir-layered][data-flag-dir-layered] .mixer button.rec.on:hover {
+  color: var(--fg);
+  background: var(--ly-on-bg);
+  box-shadow: var(--ly-on);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] .mixer button.rec.on .dot {
+  background: var(--kill);
+}
+/* The crossfader row sits under a groove, not a hairline. */
+:root[data-flag-dir-layered][data-flag-dir-layered] .mixer .xf {
+  border-top-color: rgb(0 0 0 / 0.4);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.035);
+}
+
+/* ── Library ─────────────────────────────────────────────────────────── */
+
+/* Sidebar: selected is a raised thumb; hover only lifts the label. */
+:root[data-flag-dir-layered][data-flag-dir-layered] section.library nav {
+  border-right-color: rgb(0 0 0 / 0.4);
+  box-shadow: 1px 0 0 rgb(255 255 255 / 0.035);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] section.library nav .item,
+:root[data-flag-dir-layered][data-flag-dir-layered] section.library nav .add {
+  border-radius: 8px;
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] section.library nav .item:hover,
+:root[data-flag-dir-layered][data-flag-dir-layered] section.library nav .add:hover {
+  background: var(--hover);
+  color: var(--fg);
+  box-shadow: none;
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] section.library nav .item.on,
+:root[data-flag-dir-layered][data-flag-dir-layered] section.library nav .item.on:hover {
+  color: var(--fg);
+  background: var(--ly-face);
+  box-shadow: var(--ly-raised);
+}
+
+/* Toolbar: search is a well; Sampler and Settings are raised keys. */
+:root[data-flag-dir-layered][data-flag-dir-layered] section.library .bar .search {
+  border-radius: 10px;
+  background: var(--well);
+  box-shadow: var(--well-shadow);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] section.library .bar .search:focus-within {
+  box-shadow: var(--well-shadow), 0 0 0 2px var(--fg-2);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] section.library .bar :is(.samp, .gear) {
+  border-radius: 10px;
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] section.library .bar .samp.on {
+  background: var(--ly-on-bg);
+  box-shadow: var(--ly-on);
+  color: var(--fg);
+}
+
+/* Column heads: a groove under them, not a hairline. */
+:root[data-flag-dir-layered][data-flag-dir-layered] section.library .row.head {
+  border-bottom-color: rgb(0 0 0 / 0.4);
+  box-shadow: 0 1px 0 rgb(255 255 255 / 0.035);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] section.library .row.head .sort:hover,
+:root[data-flag-dir-layered][data-flag-dir-layered] section.library .row.head .sort.on {
+  background: none;
+}
+
+/* Rows: hover a faint fill; selected a raised thumb, as in the sidebar. */
+:root[data-flag-dir-layered][data-flag-dir-layered] section.library .scroll .row {
+  border-radius: 8px;
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] section.library .scroll .row:hover {
+  background: rgb(255 255 255 / 0.035);
+  box-shadow: none;
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] section.library .scroll .row.sel,
+:root[data-flag-dir-layered][data-flag-dir-layered] section.library .scroll .row.sel:hover {
+  background: var(--ly-face);
+  box-shadow: var(--ly-raised);
+  color: var(--fg);
+}
+
+/* ── 3  Floating: toast, banner, tips, menus ─────────────────────────── */
+
+:root[data-flag-dir-layered][data-flag-dir-layered] .toastbox .toast {
+  border-radius: 12px;
+  background: var(--ly-float);
+  box-shadow: var(--ly-float-edge);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] .toastbox .toast .undo {
+  border-radius: 8px;
+  background: var(--ly-face);
+  box-shadow: var(--ly-raised);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] .toastbox .toast .undo:hover {
+  background: var(--ly-face-hover);
+  box-shadow: var(--ly-raised-hover);
+}
+
+/* Device lost: a floating sheet with a red mark, the one critical thing. */
+:root[data-flag-dir-layered][data-flag-dir-layered] .app > .banner {
+  border-radius: 14px;
+  background: var(--ly-float);
+  box-shadow: var(--ly-float-edge);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] .app > .banner.lost svg {
+  stroke: var(--kill);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] .app > .banner .btn,
+:root[data-flag-dir-layered][data-flag-dir-layered] .app > .banner .btn.primary {
+  border-radius: 8px;
+  background: var(--ly-face);
+  box-shadow: var(--ly-raised);
+  color: var(--fg);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] .app > .banner .btn:hover:not(:disabled) {
+  background: var(--ly-face-hover);
+  box-shadow: var(--ly-raised-hover);
+}
+
+:root[data-flag-dir-layered][data-flag-dir-layered] .tip {
+  border-radius: 8px;
+  background: var(--ly-float);
+  box-shadow: var(--ly-float-edge);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] .menu {
+  border-radius: 12px;
+  background: var(--ly-float);
+  box-shadow: var(--ly-float-edge);
+}
+
+/* ── 4  Dialogs: the top sheet ──────────────────────────────────────── */
+
+:root[data-flag-dir-layered][data-flag-dir-layered] .backdrop > .card[role='dialog'] {
+  border-radius: 20px;
+  background: var(--ly-sheet);
+  box-shadow: var(--ly-sheet-edge);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] .backdrop > .card[role='dialog'] .found {
+  border-radius: 12px;
+  background: var(--well);
+  box-shadow: var(--well-shadow);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] .backdrop > .card[role='dialog'] .found:hover:not(:disabled) {
+  background: rgb(0 0 0 / 0.22);
+}
+/* One primary: the site's light button. Everything else a raised key. */
+:root[data-flag-dir-layered][data-flag-dir-layered] .backdrop > .card[role='dialog'] :is(.go, .btn.primary) {
+  display: inline-grid;
+  place-items: center;
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #f4f3ef, #e4e2dc);
+  color: var(--ink);
+  font-weight: 500;
+  box-shadow: inset 0 1px 0 #fff, 0 0 0 1px rgb(0 0 0 / 0.4), 0 1px 2px rgb(0 0 0 / 0.4);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] .backdrop > .card[role='dialog'] .found + .found :is(.go, .btn.primary),
+:root[data-flag-dir-layered][data-flag-dir-layered] .backdrop > .card[role='dialog'] .source + .source :is(.go, .btn.primary) {
+  background: var(--ly-face);
+  box-shadow: var(--ly-raised);
+  color: var(--fg);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] .backdrop > .card[role='dialog'] .link {
+  text-decoration: none;
+  color: var(--fg-2);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] .backdrop > .card[role='dialog'] .link:hover {
+  color: var(--fg);
+}
+
+/* ── Settings ────────────────────────────────────────────────────────── */
+
+:root[data-flag-dir-layered][data-flag-dir-layered] .settings nav .item {
+  border-radius: 8px;
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] .settings nav .item:hover {
+  background: var(--hover);
+  box-shadow: none;
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] .settings nav .item.on,
+:root[data-flag-dir-layered][data-flag-dir-layered] .settings nav .item.on:hover {
+  color: var(--fg);
+  background: var(--ly-face);
+  box-shadow: var(--ly-raised);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] .settings select {
+  border-radius: 8px;
+  background: var(--ly-face);
+  box-shadow: var(--ly-raised);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] .settings input[type='checkbox'] {
+  border-radius: 5px;
+  background: var(--well);
+  box-shadow: var(--well-shadow);
+}
+
+/* ── Everywhere ─────────────────────────────────────────────────────── */
+
+:root[data-flag-dir-layered][data-flag-dir-layered] .btn {
+  transition: background 60ms ease, box-shadow 60ms ease, color 140ms ease, translate 60ms ease;
+}
