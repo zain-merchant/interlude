@@ -1857,10 +1857,10 @@ uniform sampler2D uSt1;
 uniform sampler2D uSt2;
 uniform sampler2D uConeT;
 uniform sampler2D uGlT;
-vec4 fastAt() {
+void main() {
   vec2 uv = gl_FragCoord.xy / uSize;
   vec4 s2 = texture2D(uSt2, uv);
-  if (s2.w < 0.5) return vec4(0.0);
+  if (s2.w < 0.5) { gl_FragColor = vec4(0.0); return; }
   vec2 px = vec2(gl_FragCoord.x, uSize.y - gl_FragCoord.y) / uDpr;
   vec2 q = discQ(px);
   float r = length(q);
@@ -1949,43 +1949,28 @@ vec4 fastAt() {
     alpha *= 1.0 - inside;
   }
   float n = (s2.z - 0.5) / 255.0;
-  return vec4(max(col + n, 0.0), clamp(alpha + n, 0.0, 1.0));
-}
-#ifndef MIXED
-void main() { gl_FragColor = fastAt(); }
-#endif`;
+  gl_FragColor = vec4(max(col + n, 0.0), clamp(alpha + n, 0.0, 1.0));
+}`;
 // SPLIT (the frames at rest, see split in the script): two frames of FAST
 // kept, worked out a step apart, and each frame on screen mixed from them by
-// how far between the two it falls. The light on the disc changes by under a
-// level a frame, so the mix is FAST to a level or two; except where a
-// glint's table wraps round (GLINT_FS: one glint's turn ends and the next
-// begins on the next column, the colour stepping there), which the turn
-// carries across a thin wedge of each song in a step. Mixed, a step would
-// come out as a ramp, so there (between where the wrap stood in the two kept
-// frames, a column or two wider) FAST is worked out for the very frame.
+// how far between the two it falls.
 const MIX_FS = `
 uniform sampler2D uK0;
 uniform sampler2D uK1;
 uniform float uF;
-uniform vec2 uGw; // where the glints stood (uGlintShape.w) in the two kept frames
 void main() {
   vec2 uv = gl_FragCoord.xy / uSize;
-  vec4 s0 = texture2D(uSt0, uv);
-  if (s0.z > 0.0) {
-    vec2 q = discQ(vec2(gl_FragCoord.x, uSize.y - gl_FragCoord.y) / uDpr);
-    float a = atan(q.y, q.x);
-    float idx = texture2D(uSt1, uv).x;
-    float seg = 2.0 * PI / uGlintShape.z;
-    float ph = fract(sin(idx * 91.7) * 4375.5) * seg;
-    float m0 = mod(a - uGw.x - ph, seg);
-    float d = atan(sin(uGw.y - uGw.x), cos(uGw.y - uGw.x));
-    float pad = 2.0 * seg / 255.0;
-    if (d >= 0.0 ? (m0 < d + pad || m0 > seg - pad) : (m0 > seg + d - pad || m0 < pad)) {
-      gl_FragColor = fastAt();
-      return;
-    }
-  }
   gl_FragColor = mix(texture2D(uK0, uv), texture2D(uK1, uv), uF);
+}`;
+// Where each song's glints start their turn (FAST's ph, over seg): the sine
+// of a large number, which only the GPU itself works out the same, so read
+// back once, 16 bits each (see seams).
+const PH_FS = `
+void main() {
+  float f = fract(sin(floor(gl_FragCoord.x) * 91.7) * 4375.5);
+  float v = floor(f * 65535.0 + 0.5);
+  float hi = floor(v / 256.0);
+  gl_FragColor = vec4(hi / 255.0, (v - hi * 256.0) / 255.0, 0.0, 1.0);
 }`;
 // What passes over the record, worked out alone and added over FAST (or the
 // mix), where RELIT would work the whole picture out again: each only adds
@@ -2266,7 +2251,7 @@ function warm(n, defs) {
 }
 const ready = () => !parallel || [...warmed.values()].every((w) => w.done || (w.done = gl.getProgramParameter(w.p, parallel.COMPLETION_STATUS_KHR)));
 // WebGL 1 needs the derivatives extension switched on in the shader.
-const fragOf = (n, defs) => '#extension GL_OES_standard_derivatives : enable\n' + (defs.includes('KEEP3') || defs.includes('BAKE') ? '#extension GL_EXT_draw_buffers : require\n' : '') + defs + (n === 'turn' ? HEAD + REPROJECT : n === 'specks' ? HEAD + SPECKS_FS : n === 'dust' ? HEAD + DUST_FS : n === 'cone' ? HEAD + CONE_FS : n === 'fast' ? HEAD + FAST : n === 'mix' ? `${HEAD}#define MIXED\n${FAST}${MIX_FS}` : n === 'light' ? HEAD + LIGHT_FS : n === 'glints' ? HEAD + GLINT_FS : n ? `#define LOOK ${n}\n${HEAD}${LOOKS}` : HEAD + MAIN);
+const fragOf = (n, defs) => '#extension GL_OES_standard_derivatives : enable\n' + (defs.includes('KEEP3') || defs.includes('BAKE') ? '#extension GL_EXT_draw_buffers : require\n' : '') + defs + (n === 'turn' ? HEAD + REPROJECT : n === 'specks' ? HEAD + SPECKS_FS : n === 'dust' ? HEAD + DUST_FS : n === 'cone' ? HEAD + CONE_FS : n === 'fast' ? HEAD + FAST : n === 'mix' ? HEAD + MIX_FS : n === 'ph' ? HEAD + PH_FS : n === 'light' ? HEAD + LIGHT_FS : n === 'glints' ? HEAD + GLINT_FS : n ? `#define LOOK ${n}\n${HEAD}${LOOKS}` : HEAD + MAIN);
 function build(n, defs) {
   const w = warmed.get(`${n}|${defs}`);
   if (w) {
@@ -3077,7 +3062,7 @@ function relit(w, h, g, cover, mode, y0, y1) {
       lit.dust = build('dust', defs);
       lit.mix = build('mix', defs);
       lit.light = build('light', defs);
-      for (const e of [lit.comp, lit.fast, lit.dust, lit.mix, lit.light]) for (const k of ['uSt0', 'uSt1', 'uSt2', 'uConeT', 'uGlT', 'uK0', 'uK1', 'uF', 'uGw', 'uPart']) e.u[k] = gl.getUniformLocation(e.p, k);
+      for (const e of [lit.comp, lit.fast, lit.dust, lit.mix, lit.light]) for (const k of ['uSt0', 'uSt1', 'uSt2', 'uConeT', 'uGlT', 'uK0', 'uK1', 'uF', 'uPart']) e.u[k] = gl.getUniformLocation(e.p, k);
       ks.valid = false;
       lit.defs = defs;
       lit.key = '';
@@ -3223,7 +3208,7 @@ function samplers(e) {
 // (Not under the app's screen, where nothing shows: the strip is drawn as
 // the bands round it, two device px inside its edge, so the pixels there are
 // never started at all. The edge itself is the shader's.)
-function bands(w, h, y0, y1, cover) {
+function bands(w, h, y0, y1, cover, draw = () => gl.drawArrays(gl.TRIANGLES, 0, 3)) {
   const k = w / box.w;
   const cx0 = Math.ceil(cover[0] * k) + 2, cx1 = Math.floor(cover[2] * k) - 2;
   const cy0 = h - Math.floor(cover[3] * k) + 2, cy1 = h - Math.ceil(cover[1] * k) - 2;
@@ -3231,14 +3216,14 @@ function bands(w, h, y0, y1, cover) {
   if (cover[2] > cover[0] && cx1 > cx0 && cy1 > cy0 && cy0 < sy1 && cy1 > sy0) {
     const band = (x0, ya, x1, yb) => {
       const a = Math.max(ya, sy0), b = Math.min(yb, sy1);
-      if (x1 > x0 && b > a) { gl.scissor(x0, a, x1 - x0, b - a); gl.drawArrays(gl.TRIANGLES, 0, 3); }
+      if (x1 > x0 && b > a) { gl.scissor(x0, a, x1 - x0, b - a); draw(); }
     };
     band(0, sy0, w, cy0);
     band(0, cy1, w, sy1);
     band(0, cy0, cx0, cy1);
     band(cx1, cy0, w, cy1);
     gl.scissor(0, sy0, w, sy1 - sy0);
-  } else gl.drawArrays(gl.TRIANGLES, 0, 3);
+  } else draw();
 }
 
 // SPLIT: the frames at rest, with the lit disc (FAST, without its dust)
@@ -3246,8 +3231,9 @@ function bands(w, h, y0, y1, cover) {
 // in it turns together at one known rate (the spin, the lamp and so its
 // cone, the glints), so where it will all stand a step on is known: two
 // frames are kept, a step apart, and each frame on screen mixes them by how
-// far between them it falls (MIX_FS), then the dust and whatever's passing
-// are drawn over it live, so they move every frame. Kept frames are only
+// far between them it falls (MIX_FS; FAST itself over the thin wedges where
+// a glint's table wraps round, see seams), then the dust and whatever's
+// passing are drawn over it live, so they move every frame. Kept frames are only
 // used while the turn is rigid: a frame where anything else changed (the
 // scroll's twist turning the disc alone, a drifting lamp, the swell, the
 // layout, a setting) is worked out directly, as 'overlay' does, and they're
@@ -3258,7 +3244,7 @@ const STEP = 10;
 // stand against the spin.)
 const PASSING = ['uHover', 'uPtr', 'uNeedle', 'uRipple'];
 const TURNING = ['uSpin', 'uFacing', 'uCone', 'uGlintShape'];
-const ks = { tex: [], fb: [], size: '', key: '', ph: [0, 0, 0], spin0: 0, gw: [0, 0], valid: false };
+const ks = { tex: [], fb: [], size: '', key: '', ph: [0, 0, 0], spin0: 0, gw: [0, 0], valid: false, wedges: -1 };
 function split(fb, w, h, y0, y1, cover) {
   if (!keysOK(w, h)) return false;
   const get = (n) => uniNow.get(n)[1];
@@ -3268,7 +3254,7 @@ function split(fb, w, h, y0, y1, cover) {
   const key = JSON.stringify([...uniNow].filter(([n]) => !TURNING.includes(n) && !PASSING.includes(n)).map(([n, [, a]]) => [n, a]).concat([y0, y1, cover, gs[0], gs[1], gs[2]]));
   const step = (TURN * T.life * STEP) / T.fps;
   // (A step's turn of the glints must stay well inside one glint's turn,
-  // see MIX_FS.)
+  // see seams.)
   const ok = step > 0 && Math.abs(step * T.gRide) < Math.PI / gs[2];
   let f = wrapA(now - ks.spin0) / step;
   if (key !== ks.key || ph.some((v, i) => Math.abs(wrapA(v - ks.ph[i])) > 1e-5) || !ok) {
@@ -3285,6 +3271,7 @@ function split(fb, w, h, y0, y1, cover) {
     ks.spin0 = now;
     f = 0;
     ks.valid = true;
+    ks.wedges = -1;
   } else if (f >= 1) {
     // Past the second: it becomes the first, and the next is worked out.
     ks.tex.reverse();
@@ -3293,6 +3280,7 @@ function split(fb, w, h, y0, y1, cover) {
     ks.spin0 = wrapA(ks.spin0 + step);
     keyFrame(1, wrapA(ks.spin0 + step - now), w, h, y0, y1, cover);
     f -= 1;
+    ks.wedges = -1;
   }
   gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
   const m = lit.mix;
@@ -3306,11 +3294,81 @@ function split(fb, w, h, y0, y1, cover) {
   gl.uniform1i(m.u.uK0, 5);
   gl.uniform1i(m.u.uK1, 6);
   gl.uniform1f(m.u.uF, Math.min(1, Math.max(0, f)));
-  gl.uniform2f(m.u.uGw, ks.gw[0], ks.gw[1]);
   gl.clear(gl.COLOR_BUFFER_BIT);
   bands(w, h, y0, y1, cover);
+  seams(fb, w, h, y0, y1, cover);
   litPath = 'mix';
   return true;
+}
+// Except where a glint's table wraps round (GLINT_FS: one glint's turn ends
+// and the next begins on the next column, its colour stepping there): the
+// turn carries that step across a thin wedge of each song in a step, which
+// mixed would come out as a ramp (thin lines, plainest on phones, where more
+// of the inner songs show). Over those wedges, between where the wrap stood
+// in the two kept frames and two columns wider, FAST is worked out for the
+// very frame. (Its sums only; their union's covered, overlaps don't matter.
+// The wedges stand where they do for as long as the two kept frames do.)
+function seams(fb, w, h, y0, y1, cover) {
+  if (!lit.ph) {
+    // Once: the glints' phase in each song, as FAST has it.
+    const p = build('ph', lit.defs);
+    const tx = gl.createTexture(), pf = gl.createFramebuffer();
+    gl.activeTexture(gl.TEXTURE7);
+    gl.bindTexture(gl.TEXTURE_2D, tx);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, MAX_TRACKS, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, pf);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tx, 0);
+    gl.useProgram(p.p);
+    gl.disable(gl.SCISSOR_TEST);
+    gl.viewport(0, 0, MAX_TRACKS, 1);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    const px = new Uint8Array(MAX_TRACKS * 4);
+    gl.readPixels(0, 0, MAX_TRACKS, 1, gl.RGBA, gl.UNSIGNED_BYTE, px);
+    lit.ph = Array.from({ length: MAX_TRACKS }, (_, i) => (px[i * 4] * 256 + px[i * 4 + 1]) / 65535);
+    gl.viewport(0, 0, w, h);
+    gl.enable(gl.SCISSOR_TEST);
+    gl.bindTexture(gl.TEXTURE_2D, null);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+    gl.deleteTexture(tx);
+    gl.deleteFramebuffer(pf);
+    gl.deleteProgram(p.p);
+  }
+  if (!hm.seams) hm.seams = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, hm.seams);
+  if (ks.wedges < 0) {
+    const tr = uniNow.get('uTracks')[1][0];
+    const n = uniNow.get('uTrackCount')[1][0];
+    const z = uniNow.get('uGlintShape')[1][2];
+    const seg = (2 * Math.PI) / z;
+    const d = wrapA(ks.gw[1] - ks.gw[0]);
+    const pad = (2 * seg) / 255 + 1e-3;
+    // (Past each song's ends by the most its edge is ever softened over.)
+    const M = 64;
+    const v = [];
+    for (let i = 0; i < n; i++) {
+      const r0 = Math.max(0, tr[i * 2] - M), r1 = tr[i * 2 + 1] + M;
+      for (let k = 0; k < z; k++) {
+        const b = ks.gw[0] + lit.ph[i] * seg + k * seg;
+        const a0 = b + Math.min(0, d) - pad, a1 = b + Math.max(0, d) + pad;
+        const g = 1 / Math.cos((a1 - a0) / 2);
+        const p = [lightPx(r0, a0), lightPx(r1 * g, a0), lightPx(r1 * g, a1), lightPx(r0, a1)];
+        if (p.some((x) => !x)) continue;
+        v.push(...p[0], ...p[1], ...p[3], ...p[1], ...p[2], ...p[3]);
+      }
+    }
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(v), gl.DYNAMIC_DRAW);
+    ks.wedges = v.length / 2;
+  }
+  if (ks.wedges) {
+    const e = lit.fast;
+    gl.useProgram(e.p);
+    given(e);
+    samplers(e);
+    gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+    bands(w, h, y0, y1, cover, () => gl.drawArrays(gl.TRIANGLES, 0, ks.wedges));
+  }
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
 }
 function keysOK(w, h) {
   if (ks.size === `${w}x${h}`) return true;
@@ -3364,13 +3422,26 @@ function keyFrame(i, ahead, w, h, y0, y1, cover) {
 // widths). Across is measured as the shader measures it (fwidth(r)), a
 // quarter more for the change within the strip; the strip's outer edge is
 // pushed out so its straight sides never cut inside the arc.
-const hm = { buf: null };
+const hm = { buf: null, seams: null };
+// Where a point on the disc (radius, angle) lies on the canvas, in clip
+// space (discQ undone: nothing bends it on these paths), or null past the
+// horizon.
+function lightPx(r, a) {
+  const [cx] = uniNow.get('uCentre')[1];
+  const [d0, t] = uniNow.get('uGeo')[1];
+  const hz = uniNow.get('uHz')[1][0];
+  const dpr = uniNow.get('uDpr')[1][0];
+  const [w, h] = uniNow.get('uSize')[1];
+  const qx = r * Math.cos(a), qy = r * Math.sin(a);
+  const f = 1 - (qy * t) / d0;
+  return f > 0.02 ? [((cx + qx / f) * dpr) / w * 2 - 1, 1 - ((d0 / f - hz) * dpr) / h * 2] : null;
+}
 function lights(w, h, hv, nd, rp) {
   const [cx] = uniNow.get('uCentre')[1];
   const [d0, t] = uniNow.get('uGeo')[1];
   const hz = uniNow.get('uHz')[1][0];
   const dpr = uniNow.get('uDpr')[1][0];
-  const toPx = (r, a) => { const qx = r * Math.cos(a), qy = r * Math.sin(a); const f = 1 - (qy * t) / d0; return f > 0.02 ? [((cx + qx / f) * dpr) / w * 2 - 1, 1 - ((d0 / f - hz) * dpr) / h * 2] : null; };
+  const toPx = lightPx;
   const rOf = (x, y) => { const f = d0 / Math.max(1, y + hz); return Math.hypot((x - cx) * f, ((1 - f) * d0) / t); };
   // (Record px per CSS px across, as fwidth(r) * uDpr, an L1 sum, at r, a.)
   const across = (r, a) => {
