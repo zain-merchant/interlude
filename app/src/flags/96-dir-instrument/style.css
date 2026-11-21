@@ -175,7 +175,7 @@
   box-shadow: inset 1px 0 0 var(--in-scr-rim), inset -1px 0 0 var(--in-scr-rim);
 }
 :root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .body > .overview > .wave {
-  border-radius: 6px;
+  border-radius: 8px;
   overflow: hidden;
   background: #0d0d10;
   outline: 1px solid var(--in-scr-line);
@@ -219,7 +219,10 @@
 
 /* Tabs: a segmented control cut into the face (32 + 1px, as today). */
 :root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .modes {
-  gap: 0;
+  /* Each thumb sits under its transport key, 3px in from the key's edges
+     (the keys are 8px apart; 3 + 8 + 3 = 14), so tab and key share a
+     centre line and the focus ring never meets a neighbour. */
+  gap: 14px;
   padding: 3px;
   margin-bottom: 1px;
   border: 0;
@@ -251,7 +254,7 @@
 }
 :root[data-flag-dir-instrument][data-flag-dir-instrument][data-input='keys'] [data-region^='deck'] .modes button:focus-visible {
   outline: 2px solid var(--fg-2);
-  outline-offset: 1px;
+  outline-offset: -2px;
 }
 :root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .strip .tc:hover {
   background: rgb(255 255 255 / 0.05);
@@ -717,4 +720,65 @@
 :root[data-flag-dir-instrument][data-flag-dir-instrument] .split:hover i,
 :root[data-flag-dir-instrument][data-flag-dir-instrument] .app > .grip:not(.side):hover i {
   background: var(--fg-3);
+}
+
+/* Increase Contrast: the same steps up as app.css, from this face's levels. */
+@media (prefers-contrast: more) {
+  :root[data-flag-dir-instrument][data-flag-dir-instrument] {
+    --fg-2: rgb(236 234 228 / 0.82);
+    --fg-3: rgb(236 234 228 / 0.72);
+    --fg-4: rgb(236 234 228 / 0.52);
+    --in-scr-line: rgb(255 255 255 / 0.18);
+  }
+}
+
+/* ── Sampler, shortcut keys, the Report field ───────────────────────── */
+
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .sampler {
+  background: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: none;
+}
+/* A loaded slot is a pad: a raised key; empty slots stay wells; playing,
+   it latches down. */
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .sampler .slot.set {
+  background: var(--in-face);
+  box-shadow: var(--in-raised);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .sampler .slot.set:hover {
+  background: var(--in-face-hover);
+  box-shadow: var(--in-raised-hover);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .sampler .slot.set:active,
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .sampler .slot.playing,
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .sampler .slot.playing:hover {
+  background: var(--in-on-bg);
+  box-shadow: var(--in-sunk);
+}
+/* Settings > Keyboard: each shortcut is a small key, not an outlined box. */
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .settings .key {
+  background: var(--in-face);
+  box-shadow: var(--in-raised);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .settings .key:hover {
+  background: var(--in-face-hover);
+  box-shadow: var(--in-raised-hover);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .settings .key.none {
+  background: none;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.06);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .settings .key.rec {
+  background: var(--in-sunk-bg);
+  box-shadow: var(--in-sunk), 0 0 0 1.5px var(--fg-2);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .settings .row,
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .settings .inline {
+  border-bottom-color: rgb(255 255 255 / 0.05);
+}
+/* The Report field is a well (a screen here). */
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .card[role='dialog'] textarea {
+  background: var(--in-scr);
+  box-shadow: inset 0 0 0 1px var(--in-scr-rim), inset 0 2px 3px rgb(0 0 0 / 0.6), 0 1px 0 var(--in-scr-lip);
 }

@@ -15,6 +15,17 @@ export default {
   title: 'Direction D: Layered',
   group: 'Direction',
   against: '"One solid primary control, Play": Play is a raised key that latches down and takes its deck\'s white while playing, so the brightest things on screen are the time left and the tempo, not two pale slabs.',
+  settings: {
+    title: {
+      type: 'choice',
+      label: 'Track title',
+      default: 'light',
+      options: [
+        ['light', "Today's voice, lighter", "The title stays large (24px) in today's voice, set at the numbers' light weight, so the deck keeps its character and the tempo and time left still lead."],
+        ['h3', 'Small and firm', "The site's heading voice at 16px: long titles fit without cutting off, and the numbers lead by a wider margin, but the deck loses some of today's character."],
+      ],
+    },
+  },
   notes: 'Whole-app look in style.css, built on a depth ladder of tokens (--ly-*): panel, well, raised key, sunk, float, sheet. The baseline\'s button tokens (flag 09) map onto the raised key. Dial faces are drawn on .dial::after turned back by -var(--rot), so the light stays on top while the index turns. One direction at a time: only-one.svelte.js (reads the Direction group from the registry).',
 };
 

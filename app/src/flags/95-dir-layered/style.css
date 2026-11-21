@@ -122,12 +122,18 @@
 
 /* Hierarchy: time left and tempo lead (32/300, full white); the title is
    the site's h3 voice at the app's 16px; everything else steps down. */
+/* The title keeps today's large, light voice, at the numerals' weight
+   (24/300), so it stays the deck's name and the 32px figures still lead.
+   The h3 option sets it in the site's h3 voice at 16/500 instead. */
 :root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] header .name {
+  font-weight: 300;
+}
+:root[data-flag-dir-layered][data-flag-dir-layered][data-flag-dir-layered-title='h3'] [data-region^='deck'] header .name {
   font-size: var(--t-md);
   font-weight: 500;
   letter-spacing: -0.01em;
 }
-:root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] header .name.dim {
+:root[data-flag-dir-layered][data-flag-dir-layered][data-flag-dir-layered-title='h3'] [data-region^='deck'] header .name.dim {
   font-weight: 400;
 }
 :root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] header .artist {
@@ -157,7 +163,10 @@
    columns, a raised thumb on the current mode. 32px + 1px, as today's
    tabs and their underline, so nothing below moves. */
 :root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] .modes {
-  gap: 0;
+  /* Each thumb sits under its transport key, 3px in from the key's edges
+     (the keys are 8px apart; 3 + 8 + 3 = 14), so tab and key share a
+     centre line and the focus ring never meets a neighbour. */
+  gap: 14px;
   padding: 3px;
   margin-bottom: 1px;
   border: 0;
@@ -189,7 +198,7 @@
 }
 :root[data-flag-dir-layered][data-flag-dir-layered][data-input='keys'] [data-region^='deck'] .modes button:focus-visible {
   outline: 2px solid var(--fg-2);
-  outline-offset: 1px;
+  outline-offset: -2px;
 }
 
 /* The mode row: quiet text controls on the panel. */
@@ -669,4 +678,49 @@
 
 :root[data-flag-dir-layered][data-flag-dir-layered] .btn {
   transition: background 60ms ease, box-shadow 60ms ease, color 140ms ease, translate 60ms ease;
+}
+
+/* ── Sampler, shortcut keys, the Report field ───────────────────────── */
+
+/* A loaded slot is a pad: a raised key; empty slots stay wells; playing,
+   it latches down. */
+:root[data-flag-dir-layered][data-flag-dir-layered] .sampler .slot.set {
+  background: var(--ly-face);
+  box-shadow: var(--ly-raised);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] .sampler .slot.set:hover {
+  background: var(--ly-face-hover);
+  box-shadow: var(--ly-raised-hover);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] .sampler .slot.set:active,
+:root[data-flag-dir-layered][data-flag-dir-layered] .sampler .slot.playing,
+:root[data-flag-dir-layered][data-flag-dir-layered] .sampler .slot.playing:hover {
+  background: var(--ly-on-bg);
+  box-shadow: var(--ly-sunk);
+}
+/* Settings > Keyboard: each shortcut is a small key, not an outlined box. */
+:root[data-flag-dir-layered][data-flag-dir-layered] .settings .key {
+  background: var(--ly-face);
+  box-shadow: var(--ly-raised);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] .settings .key:hover {
+  background: var(--ly-face-hover);
+  box-shadow: var(--ly-raised-hover);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] .settings .key.none {
+  background: none;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.06);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] .settings .key.rec {
+  background: var(--ly-sunk-bg);
+  box-shadow: var(--ly-sunk), 0 0 0 1.5px var(--fg-2);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] .settings .row,
+:root[data-flag-dir-layered][data-flag-dir-layered] .settings .inline {
+  border-bottom-color: rgb(255 255 255 / 0.05);
+}
+/* The Report field is a well. */
+:root[data-flag-dir-layered][data-flag-dir-layered] .card[role='dialog'] textarea {
+  background: var(--well);
+  box-shadow: var(--well-shadow);
 }
