@@ -1,3 +1,16 @@
+/* Geist (SIL Open Font License, fonts/LICENSE-geist.txt): one variable
+   file, declared at the four weights the page was designed with (300, 400,
+   500, 600), as Google Fonts served it, so a weight in between (or bold)
+   lands on the nearest of these just as it always has. */
+@font-face { font-family: 'Geist'; font-style: normal; font-display: swap; font-weight: 300; src: url(fonts/geist-latin.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'Geist'; font-style: normal; font-display: swap; font-weight: 400; src: url(fonts/geist-latin.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'Geist'; font-style: normal; font-display: swap; font-weight: 500; src: url(fonts/geist-latin.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'Geist'; font-style: normal; font-display: swap; font-weight: 600; src: url(fonts/geist-latin.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'Geist'; font-style: normal; font-display: swap; font-weight: 300; src: url(fonts/geist-latin-ext.woff2) format('woff2'); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: 'Geist'; font-style: normal; font-display: swap; font-weight: 400; src: url(fonts/geist-latin-ext.woff2) format('woff2'); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: 'Geist'; font-style: normal; font-display: swap; font-weight: 500; src: url(fonts/geist-latin-ext.woff2) format('woff2'); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: 'Geist'; font-style: normal; font-display: swap; font-weight: 600; src: url(fonts/geist-latin-ext.woff2) format('woff2'); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+
 :root {
   color-scheme: dark;
   --bg: #09090b;
@@ -15,6 +28,18 @@
   --mono: 'Geist Mono', ui-monospace, Menlo, monospace;
 }
 
+/* The site's springs, the same as the pictures' (app/demo/springs.js,
+   springs.css): snappy for presses and small changes, smooth for moves and
+   fades, glide for big travel. Each a linear() curve and the time it runs. */
+:root {
+  --snappy-ms: 301ms;
+  --snappy: linear(0, 0.101, 0.207, 0.309, 0.405, 0.491, 0.569, 0.636, 0.695, 0.745, 0.788, 0.824, 0.854, 0.88, 0.901, 0.918, 0.933, 0.945, 0.955, 0.963, 0.97, 0.975, 0.98, 0.984, 0.987, 0.989, 0.991, 0.993, 0.994, 0.995, 0.996, 0.997, 0.997, 0.998, 0.998, 0.999, 0.999, 0.999, 1);
+  --smooth-ms: 495ms;
+  --smooth: linear(0, 0.065, 0.13, 0.195, 0.258, 0.318, 0.375, 0.429, 0.48, 0.528, 0.572, 0.612, 0.649, 0.684, 0.715, 0.744, 0.769, 0.793, 0.814, 0.834, 0.851, 0.867, 0.881, 0.894, 0.905, 0.915, 0.925, 0.933, 0.94, 0.947, 0.953, 0.958, 0.963, 0.967, 0.97, 0.974, 0.977, 0.979, 0.982, 0.984, 0.986, 0.987, 0.989, 0.99, 0.991, 0.992, 0.993, 0.994, 0.995, 0.995, 0.996, 0.996, 0.997, 0.997, 0.997, 0.998, 0.998, 0.998, 0.998, 0.999, 0.999, 0.999, 1);
+  --glide-ms: 977ms;
+  --glide: linear(0, 0.033, 0.066, 0.099, 0.133, 0.166, 0.198, 0.231, 0.262, 0.293, 0.324, 0.353, 0.382, 0.41, 0.437, 0.463, 0.488, 0.512, 0.536, 0.558, 0.58, 0.601, 0.621, 0.64, 0.658, 0.676, 0.692, 0.708, 0.724, 0.738, 0.752, 0.765, 0.778, 0.79, 0.801, 0.812, 0.822, 0.832, 0.841, 0.85, 0.858, 0.866, 0.874, 0.881, 0.887, 0.894, 0.9, 0.906, 0.911, 0.916, 0.921, 0.925, 0.93, 0.934, 0.938, 0.941, 0.945, 0.948, 0.951, 0.954, 0.957, 0.959, 0.961, 0.964, 0.966, 0.968, 0.97, 0.972, 0.973, 0.975, 0.976, 0.978, 0.979, 0.98, 0.982, 0.983, 0.984, 0.985, 0.986, 0.987, 0.987, 0.988, 0.989, 0.989, 0.99, 0.991, 0.991, 0.992, 0.992, 0.993, 0.993, 0.994, 0.994, 0.994, 0.995, 0.995, 0.995, 0.996, 0.996, 0.996, 0.996, 0.997, 0.997, 0.997, 0.997, 0.997, 0.998, 0.998, 0.998, 0.998, 0.998, 0.998, 0.998, 0.998, 0.999, 0.999, 0.999, 0.999, 0.999, 0.999, 1);
+}
+
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
@@ -29,6 +54,19 @@ body {
 
 a { color: inherit; }
 img { max-width: 100%; height: auto; display: block; }
+/* On touch screens. No grey box flashed over whatever's tapped (every
+   control has a press state of its own: each hover rule below has an
+   :active twin for screens without a mouse); the text kept at its size when
+   a phone turns sideways; no double-tap zoom on controls, so a quick second
+   tap is a second tap (a pinch still zooms); and nothing that's pressed
+   rather than read gets selected by a long press. None of it changes
+   anything for a mouse. */
+html { -webkit-tap-highlight-color: transparent; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+a, button, summary, [role="radio"], .btn { touch-action: manipulation; }
+@media not all and (hover: hover) and (pointer: fine) {
+  .btn, .switch, summary { -webkit-user-select: none; user-select: none; }
+  summary:active { color: var(--fg-2); }
+}
 :focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; border-radius: 6px; }
 
 .wrap { width: min(1120px, 100% - 32px); margin-inline: auto; }
@@ -44,10 +82,14 @@ img { max-width: 100%; height: auto; display: block; }
   border-bottom: 1px solid var(--line);
 }
 .nav-row { display: flex; align-items: center; gap: 24px; height: 60px; }
-.brand { display: inline-flex; align-items: center; gap: 10px; font-weight: 600; text-decoration: none; letter-spacing: -0.01em; }
+/* (The wordmark's style can be swapped while logos are tried: --wm-*, set
+   from lab/logos.html's lockups by index.html.) */
+.brand { display: inline-flex; align-items: center; gap: 10px; font-weight: var(--wm-weight, 600); text-decoration: none; letter-spacing: var(--wm-track-s, -0.01em); }
+.brand span { font-family: var(--wm-font, inherit); text-transform: var(--wm-case, none); }
 .links { display: flex; gap: 22px; margin-right: auto; font-size: 14px; }
 .links a { color: var(--fg-2); text-decoration: none; }
-.links a:hover { color: var(--fg); }
+@media (hover: hover) and (pointer: fine) { .links a:hover { color: var(--fg); } }
+@media not all and (hover: hover) and (pointer: fine) { .links a:active { color: var(--fg); } }
 .nav-actions { display: flex; gap: 8px; }
 
 /* Buttons */
@@ -63,20 +105,42 @@ img { max-width: 100%; height: auto; display: block; }
   font-weight: 500;
   font-size: 15px;
   text-decoration: none;
-  transition: transform 0.12s ease-out, background-color 0.15s;
+  transition: transform var(--snappy-ms) var(--snappy), background-color var(--snappy-ms) var(--snappy);
 }
-.btn:hover { background: #fff; }
+@media (hover: hover) and (pointer: fine) { .btn:hover { background: #fff; } }
+@media not all and (hover: hover) and (pointer: fine) { .btn:active { background: #fff; } }
 .btn:active { transform: scale(0.97); }
 .btn.ghost { background: rgb(255 255 255 / 0.06); color: var(--fg); box-shadow: inset 0 0 0 1px var(--line-2); }
-.btn.ghost:hover { background: rgb(255 255 255 / 0.1); }
+@media (hover: hover) and (pointer: fine) { .btn.ghost:hover { background: rgb(255 255 255 / 0.1); } }
+@media not all and (hover: hover) and (pointer: fine) { .btn.ghost:active { background: rgb(255 255 255 / 0.1); } }
 .btn.small { height: 34px; padding: 0 14px; font-size: 14px; border-radius: 8px; }
 .btn.big { height: 48px; padding: 0 22px; font-size: 16px; border-radius: 12px; }
 .btn svg { width: 16px; height: 16px; flex: none; }
 .btn svg path { fill: currentColor; }
 .btn.big svg path { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 
+/* Phones and tablets (no mouse, a finger): the download links say what
+   they do there, hand the address on to a Mac (index.html). Each says it
+   both ways; one shows. */
+@media (hover: none) and (pointer: coarse) { .on-mac { display: none !important; } }
+@media not all and (hover: none) and (pointer: coarse) { .on-phone { display: none !important; } }
+/* What was done, said for a moment at the foot of the screen, on the same
+   glass as the nav's capsule. */
+.toast {
+  position: fixed; z-index: 60; left: 50%; bottom: max(20px, calc(env(safe-area-inset-bottom, 0px) + 12px));
+  display: flex; align-items: center; gap: 8px; max-width: calc(100% - 32px); padding: 11px 16px 11px 13px; border-radius: 14px;
+  background: rgb(16 16 19 / 0.82); -webkit-backdrop-filter: blur(20px) saturate(1.4); backdrop-filter: blur(20px) saturate(1.4);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1), inset 0 1px 0 rgb(255 255 255 / 0.06), 0 12px 40px rgb(0 0 0 / 0.5);
+  color: var(--fg); font-size: 14px; font-weight: 500; line-height: 1.3; white-space: nowrap;
+  translate: -50% 12px; scale: 0.96; opacity: 0; pointer-events: none;
+  transition: translate var(--snappy-ms) var(--snappy), scale var(--snappy-ms) var(--snappy), opacity 0.2s ease-out;
+}
+.toast[data-on] { translate: -50% 0; scale: 1; opacity: 1; transition: translate var(--smooth-ms) var(--smooth), scale var(--smooth-ms) var(--smooth), opacity 0.18s ease-out; }
+.toast svg { width: 16px; height: 16px; flex: none; fill: none; stroke: var(--ring); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+@media (prefers-reduced-motion: reduce) { .toast, .toast[data-on] { translate: -50% 0; scale: 1; transition: opacity 0.2s; } }
+
 /* Hero */
-.hero { text-align: center; padding: 96px 0 56px; }
+.hero { position: relative; text-align: center; padding: 96px 0 56px; }
 .hero-icon { margin: 0 auto 28px; filter: drop-shadow(0 18px 40px rgb(62 198 255 / 0.18)); }
 h1 { margin: 0; font-size: clamp(48px, 9vw, 88px); font-weight: 600; letter-spacing: -0.04em; line-height: 1; }
 .tagline { max-width: 34em; margin: 20px auto 0; color: var(--fg-2); font-size: clamp(17px, 2.2vw, 20px); text-wrap: balance; }
@@ -85,18 +149,159 @@ h1 { margin: 0; font-size: clamp(48px, 9vw, 88px); font-weight: 600; letter-spac
 .meta a { color: var(--fg-2); }
 .meta span { margin: 0 6px; }
 
-/* Screenshot */
-.shot video {
-  display: block;
-  width: 100%;
-  height: auto;
-  background: #0b0c0f;
-  border-radius: 14px;
-  box-shadow: 0 0 0 1px var(--line-2), 0 40px 120px rgb(0 0 0 / 0.6), 0 0 160px -40px rgb(62 198 255 / 0.25);
+/* Screenshot, then the live app. It sits flat; the glow under it follows
+   the music (--level, 0 to 1, sent by the app). */
+.stage-frame {
+  --level: 0;
+  position: relative;
+}
+.screen {
+  position: relative;
+  aspect-ratio: 1440 / 900;
+  /* The app's own corner at this scale: its panels' 16px plus its 12px margin. */
+  border-radius: calc(28px * var(--s));
+  background: #09090b;
+  box-shadow: 0 40px 120px rgb(0 0 0 / 0.6);
+}
+.screen picture { display: contents; border-radius: inherit; }
+.screen .poster { width: 100%; border-radius: inherit; transition: opacity 0.6s ease-out; }
+.screen .live {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1440px;
+  height: 920px;
+  border: 0;
+  background: transparent;
+  transform: scale(var(--s));
+  transform-origin: 0 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--smooth-ms) var(--smooth), transform var(--glide-ms) var(--glide);
+}
+.stage-frame[data-live] .live { opacity: 1; }
+/* The camera crops to the frame as it pushes in. */
+.stage-frame[data-live] .screen { overflow: hidden; }
+/* In controller mode the frame shows 20px more below it (the app page is
+   920 tall: the app's 900 and clear space), so the controller rises from
+   just above the toggle. The strip opens at once; it closes only after
+   the controller has gone back down, so it never cuts it off. */
+.stage-frame[data-live] .screen { overflow: visible; clip-path: inset(0 0 0 0 round calc(28px * var(--s))); transition: clip-path 0s linear var(--glide-ms); }
+.stage-frame[data-live][data-mode="controller"] .screen { clip-path: inset(0 0 calc(-20px * var(--s)) 0 round calc(28px * var(--s)) calc(28px * var(--s)) 0 0); transition-delay: 0s; }
+/* Live, the app draws its own edge and shadow (it moves within the frame). */
+.stage-frame[data-live] .screen { background: none; box-shadow: none; }
+/* The screenshot's edge, until the live app (which draws its own) takes over:
+   inside the box, so nothing can clip it. */
+.screen::after {
+  content: ''; position: absolute; inset: 0; z-index: 1; border-radius: inherit; pointer-events: none;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08), inset 0 1px 0 rgb(255 255 255 / 0.14);
+}
+.stage-frame[data-live] .screen::after { display: none; }
+.stage-frame[data-live] .poster { opacity: 0; }
+/* A soft light under the frame in the decks' cool and warm whites, swelling
+   with the output level. */
+.glow {
+  position: absolute;
+  inset: 8% 6% -6%;
+  z-index: -1;
+  border-radius: 40%;
+  background:
+    radial-gradient(60% 70% at 30% 60%, rgb(201 220 242 / 0.5), transparent 70%),
+    radial-gradient(60% 70% at 70% 60%, rgb(240 220 192 / 0.42), transparent 70%);
+  filter: blur(60px);
+  /* Set from the level by the page's script, on each of the app's frames
+     (eased there, not by a transition); on its own layer, so that only
+     moves what's drawn. */
+  opacity: 0.16;
+  will-change: opacity, transform;
+}
+/* Above the frame, centred: the switch and, beside it, what it means, where
+   the eye lands before the app. Three layers only: a quiet track, a light
+   thumb, plain text. The controller version plays inside the same frame,
+   so this never moves. */
+.shot-bar { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 10px 14px; width: max-content; max-width: 100%; margin: 0 auto 22px; }
+/* Plain words, no badge: full-strength white, a weight up, with a soft
+   dark halo behind the letters so they read over the record. */
+.shot-tag { display: inline-flex; align-items: center; height: 36px; color: #f4f3ef; font-size: 13.5px; font-weight: 500; text-shadow: 0 1px 2px rgb(9 9 11 / 0.9), 0 0 14px rgb(9 9 11 / 0.95), 0 0 28px rgb(9 9 11 / 0.8); }
+
+/* Behind the hero: rings rippling out from the screen (hero-fx.js), on a
+   canvas the page's full width, from the top of the page to below the
+   hero, fading out at its foot. Nothing clips it. */
+main { position: relative; isolation: isolate; }
+.ripples {
+  position: absolute; left: 0; top: 0; z-index: -1; width: 100%; height: min(2000px, 230vh); pointer-events: none;
+  /* Nearly clear at the top of the page, rising to full behind the words
+     (the record does its own shading), a step quieter beside the app and
+     on past the switch under it, then fading out to nothing at --fx-end,
+     the next section's heading (hero-fx.js sets all three from the page). */
+  --fx-top: 600px; --fx-mid: 900px; --fx-end: 1400px;
+  --fx-mask: linear-gradient(to bottom, transparent 0, rgb(0 0 0 / 0.06) 60px, rgb(0 0 0 / 0.5) 140px, #000 min(230px, var(--fx-top)), #000 var(--fx-top), rgb(0 0 0 / 0.75) var(--fx-mid), rgb(0 0 0 / 0.75) calc(var(--fx-end) - 110px), transparent var(--fx-end));
+  -webkit-mask-image: var(--fx-mask);
+  mask-image: var(--fx-mask);
+}
+/* Decorative layers run the page's full width, never a content column's,
+   so no edge of theirs can show. */
+.shot { --s: 0.78; position: relative; }
+
+/* Mouse or controller: two options and a thumb that slides between them. */
+.switch {
+  position: relative;
+  display: inline-grid;
+  grid-template-columns: 1fr 1fr;
+  padding: 4px;
+  border-radius: 12px;
+  /* Near solid, so it reads over the record's grooves (no blur: a blur
+     inside the shot's layers is what went wrong before). */
+  background: rgb(28 28 33 / 0.94);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.14), 0 8px 28px rgb(0 0 0 / 0.45);
+}
+.switch button {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 36px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: rgb(244 243 239 / 0.62);
+  font: 500 14px var(--font);
+  cursor: pointer;
+  transition: color 0.2s;
+}
+@media (hover: hover) and (pointer: fine) { .switch button:hover { color: var(--fg); } }
+@media not all and (hover: hover) and (pointer: fine) { .switch button:active { color: var(--fg); } }
+/* The one picked is dark on the light thumb. */
+.switch button[aria-checked="true"] { color: #0b0b0d; }
+.switch svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.3; stroke-linejoin: round; }
+.switch button[data-mode="mouse"] svg { fill: currentColor; stroke-width: 1; }
+.switch .thumb {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 4px;
+  width: calc(50% - 4px);
+  border-radius: 8px;
+  background: #f4f3ef;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
+  transition: transform var(--smooth-ms) var(--smooth);
+}
+.switch[data-mode="controller"] .thumb { transform: translateX(100%); }
+.switch button:focus-visible { outline: 2px solid var(--deck-a, #8fc7ff); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) {
+  .stage-frame { transform: none; }
+  .shot-bar { display: none; }
 }
 
 /* Sections */
-.section { padding: 112px 0 0; }
+:root { --section-gap: 112px; }
+/* Every section the same distance from the one before: 112px from the end
+   of one's content to the start of the next (the open source card and the
+   footer's rule too). 80px on phones. */
+.section { padding: var(--section-gap) 0 0; }
 h2 { margin: 0 0 40px; font-size: clamp(30px, 4.4vw, 42px); font-weight: 600; letter-spacing: -0.03em; line-height: 1.1; }
 h3 { margin: 0 0 8px; font-size: 18px; font-weight: 500; letter-spacing: -0.01em; }
 b { font-weight: 500; color: var(--fg); }
@@ -123,20 +328,201 @@ pre {
 /* Features */
 .groups { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
 .group { padding: 24px; border-radius: 14px; background: var(--panel); box-shadow: inset 0 0 0 1px var(--line); }
+/* Each card opens with its picture: no box of its own, lit softly from
+   above in the card's deck colour and fading down into the card. Some
+   pictures run to the card's edge; the card cuts them. */
+.steps li[data-picture], .group[data-picture] { padding: 0; overflow: hidden; display: flex; flex-direction: column; }
+.steps li[data-picture] > :not(.pic), .group[data-picture] > :not(.pic) { margin-inline: 24px; }
+.steps li[data-picture] > :last-child, .group[data-picture] > :last-child { margin-bottom: 24px; }
+.pic {
+  --tone: 201 220 242;
+  background: radial-gradient(80% 90% at 50% 0%, rgb(var(--tone) / 0.07), transparent 70%);
+  -webkit-mask-image: linear-gradient(to bottom, #000 84%, transparent);
+  mask-image: linear-gradient(to bottom, #000 84%, transparent);
+}
+.steps li:nth-child(2) .pic, .group:nth-child(2n) .pic { --tone: 240 220 192; }
 .group h3 { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
 .dot { width: 8px; height: 8px; border-radius: 50%; }
 .dot.a { background: var(--deck-a); }
 .dot.b { background: var(--deck-b); }
 .group ul { margin: 0; padding: 0; list-style: none; }
-.group li { padding: 7px 0; color: var(--fg-2); border-top: 1px solid var(--line); font-size: 15px; }
-.group li:first-child { border-top: 0; }
+.group li { color: var(--fg-2); font-size: 15px; }
+/* Feature lists: a name, then what it means, on alternating bands. The
+   bands bleed out to the card's padding so the words line up with the
+   heading; each row is one line, the same height. */
+.group ul { display: grid; grid-template-columns: max-content 1fr; margin-inline: -10px; }
+.group li {
+  grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; column-gap: 14px; align-items: baseline;
+  padding: 8px 10px; border-radius: 9px; font-size: 14px; line-height: 20px; white-space: nowrap;
+}
+.group li:nth-child(odd) { background: rgb(255 255 255 / 0.035); }
+.group li b { font-weight: 450; color: var(--fg); }
+.group li span { color: var(--fg-2); overflow: hidden; text-overflow: ellipsis; }
 
-/* FAQ */
+/* FAQ, and beside it a small card with where to go next, kept in view
+   while the questions scroll past. */
+.faq-row { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 64px; align-items: start; }
 .faq { max-width: 760px; }
+.founder {
+  position: sticky; top: 96px; padding: 24px; border-radius: 18px;
+  background: var(--panel); box-shadow: inset 0 0 0 1px var(--line);
+  color: var(--fg-2); font-size: 14.5px; line-height: 1.6;
+}
+.founder h3 { margin: 0 0 14px; color: var(--fg); font-size: 17px; font-weight: 500; }
+/* Skeleton lines where the note's text will go. */
+.founder-body { display: grid; gap: 9px; margin-bottom: 18px; }
+.founder-body i { display: block; width: var(--w); height: 9px; border-radius: 5px; background: rgb(255 255 255 / 0.07); }
+.founder-body i.gap { margin-top: 8px; }
+.founder-ask { margin: 0 0 6px; }
+.founder-ask a { color: var(--fg); text-decoration: underline; text-decoration-color: rgb(236 234 228 / 0.35); text-underline-offset: 3px; }
+@media (hover: hover) and (pointer: fine) { .founder-ask a:hover { text-decoration-color: var(--fg); } }
+@media not all and (hover: hover) and (pointer: fine) { .founder-ask a:active { text-decoration-color: var(--fg); } }
+.founder-sig { display: block; width: 150px; height: auto; margin: 0 0 0 -6px; fill: none; stroke: var(--fg); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+/* Written in once, the first time the note is seen: the name, then the dot,
+   then the line under it. */
+.founder-sig path { stroke-dasharray: 1; stroke-dashoffset: 0; }
+.founder[data-sign] .founder-sig path { stroke-dashoffset: 1; }
+.founder[data-signed] .founder-sig path { stroke-dashoffset: 0; transition: stroke-dashoffset 1.1s cubic-bezier(0.45, 0, 0.25, 1); }
+.founder[data-signed] .founder-sig path:nth-child(2) { transition-duration: 0.12s; transition-delay: 1.1s; }
+.founder[data-signed] .founder-sig path:nth-child(3) { transition-duration: 0.45s; transition-delay: 1.25s; }
+/* The open source card: the page's one light surface, so it closes the
+   page. Its right half shows the work rather than saying it: the latest
+   changes, a small dark log set into the card. */
+.oss {
+  /* Frosted glass, brighter than the hero's (its brightness, the
+     brightness it fades to at the right and its blur are in Tune, Open
+     source). */
+  -webkit-backdrop-filter: blur(var(--oss-blur)) saturate(1.2); backdrop-filter: blur(var(--oss-blur)) saturate(1.2);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.18), inset 0 1px 0 rgb(255 255 255 / 0.5);
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 28px; align-items: center;
+  margin-top: 64px; padding: 26px 26px 26px 32px; border-radius: 18px;
+  background: rgb(240 238 233 / var(--oss-card)); color: #0b0b0d;
+}
+.oss-text { padding-left: 0; }
+.oss h3 { margin: 0 0 8px; font-size: clamp(24px, 2.4vw, 31px); font-weight: 600; letter-spacing: -0.03em; line-height: 1.05; text-wrap: balance; }
+.oss p { margin: 0 0 18px; max-width: 28em; color: rgb(11 11 13 / 0.66); font-size: 15.5px; line-height: 1.5; text-wrap: pretty; }
+.oss-links { display: flex; flex-wrap: wrap; gap: 10px; }
+.oss .btn { background: #0b0b0d; color: var(--fg); box-shadow: none; }
+.oss .btn.ghost { background: rgb(11 11 13 / 0.06); color: #0b0b0d; box-shadow: inset 0 0 0 1px rgb(11 11 13 / 0.16); }
+@media (hover: hover) and (pointer: fine) { .oss .btn.ghost:hover { background: rgb(11 11 13 / 0.1); } }
+@media not all and (hover: hover) and (pointer: fine) { .oss .btn.ghost:active { background: rgb(11 11 13 / 0.1); } }
+/* The latest changes, on a light surface that fades out to the right
+   into the cream card, so it's never a card in a card: the surface, its
+   edge and the rules between the rows all fade the same way. Tuned in the
+   Tune panel (Open source): how white (--oss-a), where the fade starts and
+   ends (--oss-from, --oss-to), and how strong the rules are (--oss-line). */
+/* (On the root, where the Tune sliders set them, so a slider wins.) */
+:root { --oss-a: 0.62; --oss-from: 35%; --oss-to: 100%; --oss-line: 0.1; --oss-card: 0.9; --oss-card-end: 0.12; --oss-blur: 30px; }
+/* What fades (Tune, Open source: what fades; data-fade on .oss): the
+   outer cream card, leaving the updates' light surface whole on the page;
+   or the updates' surface, into a whole cream card. */
+.oss[data-look="cream"][data-fade="outer"] { background: linear-gradient(to right, rgb(240 238 233 / var(--oss-card)) var(--oss-from), rgb(240 238 233 / var(--oss-card-end)) var(--oss-to)); }
+.oss:not([data-fade="inner"]) .oss-log::before { -webkit-mask-image: none; mask-image: none; background: #f6f5f1; box-shadow: 0 0 0 1px rgb(11 11 13 / 0.08), 0 18px 36px -22px rgb(0 0 0 / 0.5); }
+.oss:not([data-fade="inner"]) .oss-log h4 { border-image: none; border-bottom-color: rgb(11 11 13 / var(--oss-line)); }
+.oss:not([data-fade="inner"]) .oss-commits li + li { border-image: none; border-top-color: rgb(11 11 13 / calc(var(--oss-line) * 0.8)); }
+.oss-log { position: relative; isolation: isolate; min-width: 0; padding: 0 16px 2px; }
+.oss-log::before {
+  content: ''; position: absolute; inset: 0; z-index: -1; border-radius: 14px;
+  background: rgb(255 255 255 / var(--oss-a)); box-shadow: inset 0 0 0 1px rgb(11 11 13 / calc(var(--oss-line) * 0.8));
+  -webkit-mask-image: linear-gradient(to right, #000 var(--oss-from), transparent var(--oss-to));
+  mask-image: linear-gradient(to right, #000 var(--oss-from), transparent var(--oss-to));
+}
+/* The header's rule runs the full width; the header is about a row tall,
+   its text a half size under the rows', on the same left edge. */
+.oss-log h4 {
+  margin: 0 -16px; padding: 11px 18px 10px; color: rgb(11 11 13 / 0.55); font-size: 12.5px; font-weight: 400; line-height: 16px;
+  border-bottom: 1px solid; border-image: linear-gradient(to right, rgb(11 11 13 / var(--oss-line)) var(--oss-from), transparent var(--oss-to)) 0 0 1 0;
+}
+.oss-commits { margin: 0; padding: 0; list-style: none; }
+.oss-commits li + li { border-top: 1px solid; border-image: linear-gradient(to right, rgb(11 11 13 / calc(var(--oss-line) * 0.8)) var(--oss-from), transparent var(--oss-to)) 1 0 0 0; }
+.oss-commits a { display: flex; align-items: baseline; gap: 16px; padding: 7px 2px; color: rgb(11 11 13 / 0.78); text-decoration: none; font-size: 14px; }
+@media (hover: hover) and (pointer: fine) { .oss-commits a:hover .oss-msg { color: #0b0b0d; text-decoration: underline; text-decoration-color: rgb(11 11 13 / 0.3); text-underline-offset: 3px; } }
+@media not all and (hover: hover) and (pointer: fine) { .oss-commits a:active .oss-msg { color: #0b0b0d; text-decoration: underline; text-decoration-color: rgb(11 11 13 / 0.3); text-underline-offset: 3px; } }
+.oss-msg { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.oss-msg b { font-weight: 600; color: #0b0b0d; }
+.oss-commits time { flex: none; color: rgb(11 11 13 / 0.45); font-size: 13px; font-variant-numeric: tabular-nums; }
+.oss-empty a { display: block; padding: 14px 2px; color: rgb(11 11 13 / 0.7); }
+/* The card's looks (Tune, Open source: look; data-look on .oss). Cream is
+   the light card above. The others are glass, with white text:
+     glass   the download card's own glass, the updates on a lighter pane
+     bright  a brighter frosted card, the updates on a darker inset
+     open    no card: the words on the page, the updates alone in glass */
+.oss:is([data-look="glass"], [data-look="bright"], [data-look="open"]) { color: var(--fg); background: none; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+.oss:is([data-look="glass"], [data-look="bright"], [data-look="open"]) p { color: var(--fg-2); }
+.oss:is([data-look="glass"], [data-look="bright"], [data-look="open"]) .btn { background: var(--fg); color: #0b0b0d; }
+.oss:is([data-look="glass"], [data-look="bright"], [data-look="open"]) .btn.ghost { background: rgb(255 255 255 / 0.06); color: var(--fg); box-shadow: inset 0 0 0 1px var(--line-2); }
+@media (hover: hover) and (pointer: fine) { .oss:is([data-look="glass"], [data-look="bright"], [data-look="open"]) .btn.ghost:hover { background: rgb(255 255 255 / 0.1); } }
+@media not all and (hover: hover) and (pointer: fine) { .oss:is([data-look="glass"], [data-look="bright"], [data-look="open"]) .btn.ghost:active { background: rgb(255 255 255 / 0.1); } }
+.oss:is([data-look="glass"], [data-look="bright"], [data-look="open"]) .oss-log h4 { color: var(--fg-3); border-image: none; border-bottom-color: rgb(255 255 255 / 0.08); }
+.oss:is([data-look="glass"], [data-look="bright"], [data-look="open"]) .oss-commits li + li { border-image: none; border-top-color: rgb(255 255 255 / 0.06); }
+.oss:is([data-look="glass"], [data-look="bright"], [data-look="open"]) .oss-commits a { color: var(--fg-2); }
+@media (hover: hover) and (pointer: fine) { .oss:is([data-look="glass"], [data-look="bright"], [data-look="open"]) .oss-commits a:hover .oss-msg { color: var(--fg); text-decoration-color: rgb(236 234 228 / 0.35); } }
+@media not all and (hover: hover) and (pointer: fine) { .oss:is([data-look="glass"], [data-look="bright"], [data-look="open"]) .oss-commits a:active .oss-msg { color: var(--fg); text-decoration-color: rgb(236 234 228 / 0.35); } }
+.oss:is([data-look="glass"], [data-look="bright"], [data-look="open"]) .oss-msg b { color: var(--fg); }
+.oss:is([data-look="glass"], [data-look="bright"], [data-look="open"]) .oss-commits time { color: var(--fg-3); }
+.oss:is([data-look="glass"], [data-look="bright"], [data-look="open"]) .oss-empty a { color: var(--fg-2); }
+.oss[data-look="glass"] {
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.065), rgb(255 255 255 / 0.03));
+  -webkit-backdrop-filter: blur(30px) saturate(1.25); backdrop-filter: blur(30px) saturate(1.25);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08), inset 0 1px 0 rgb(255 255 255 / 0.14), 0 20px 50px rgb(0 0 0 / 0.3);
+}
+.oss[data-look="glass"] .oss-log::before { -webkit-mask-image: none; mask-image: none; background: rgb(255 255 255 / 0.045); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.07); }
+.oss[data-look="bright"] {
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.15), rgb(255 255 255 / 0.08));
+  -webkit-backdrop-filter: blur(30px) saturate(1.3); backdrop-filter: blur(30px) saturate(1.3);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.14), inset 0 1px 0 rgb(255 255 255 / 0.28), 0 24px 60px rgb(0 0 0 / 0.35);
+}
+.oss[data-look="bright"] .oss-log::before { -webkit-mask-image: none; mask-image: none; background: rgb(0 0 0 / 0.22); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.06), inset 0 1px 2px rgb(0 0 0 / 0.25); }
+.oss[data-look="open"] { padding-left: 0; padding-right: 0; }
+.oss[data-look="open"] .oss-log::before {
+  -webkit-mask-image: none; mask-image: none;
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.07), rgb(255 255 255 / 0.035));
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08), inset 0 1px 0 rgb(255 255 255 / 0.14), 0 20px 50px rgb(0 0 0 / 0.3);
+}
+.oss[data-look="open"] .oss-log { -webkit-backdrop-filter: blur(30px) saturate(1.25); backdrop-filter: blur(30px) saturate(1.25); border-radius: 14px; }
+/* White: a bright white card, the words dark, in five ways of holding the
+   updates (Tune, Open source: look):
+     white-flat     the updates straight on the card, under their header
+     white-divided  the same, a hairline between the words and the updates
+     white-inset    the updates on a slightly deeper tone of the card
+     white-glass    the card frosted white, nearly opaque
+     white-dark     the updates on a dark inset */
+.oss[data-look^="white"] {
+  background: #f6f5f1; color: #0b0b0d; -webkit-backdrop-filter: none; backdrop-filter: none;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.7), 0 1px 2px rgb(0 0 0 / 0.2), 0 24px 60px -12px rgb(0 0 0 / 0.45);
+}
+.oss[data-look^="white"] .oss-log h4 { border-image: none; border-bottom-color: rgb(11 11 13 / 0.1); }
+.oss[data-look^="white"] .oss-commits li + li { border-image: none; border-top-color: rgb(11 11 13 / 0.08); }
+.oss:is([data-look="white-flat"], [data-look="white-divided"], [data-look="white-glass"]) .oss-log { padding: 0; }
+.oss:is([data-look="white-flat"], [data-look="white-divided"], [data-look="white-glass"]) .oss-log::before { background: none; box-shadow: none; }
+.oss:is([data-look="white-flat"], [data-look="white-divided"], [data-look="white-glass"]) .oss-log h4 { margin: 0; padding: 0 0 10px; }
+.oss:is([data-look="white-flat"], [data-look="white-divided"], [data-look="white-glass"]) .oss-commits a { padding-left: 0; padding-right: 0; }
+.oss[data-look="white-divided"] { gap: 36px; }
+.oss[data-look="white-divided"] .oss-log { padding-left: 32px; border-left: 1px solid rgb(11 11 13 / 0.1); }
+.oss[data-look="white-inset"] .oss-log::before { background: #eceae4; box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.06), inset 0 0 0 1px rgb(11 11 13 / 0.05); }
+.oss[data-look="white-glass"] {
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.94), rgb(246 245 241 / 0.88));
+  -webkit-backdrop-filter: blur(30px) saturate(1.3); backdrop-filter: blur(30px) saturate(1.3);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.5), inset 0 1px 0 #fff, 0 24px 60px -12px rgb(0 0 0 / 0.45);
+}
+.oss[data-look="white-dark"] .oss-log::before { background: #121215; box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.06), 0 10px 24px -14px rgb(0 0 0 / 0.6); }
+.oss[data-look="white-dark"] .oss-log h4 { color: var(--fg-3); border-bottom-color: rgb(255 255 255 / 0.08); }
+.oss[data-look="white-dark"] .oss-commits li + li { border-top-color: rgb(255 255 255 / 0.06); }
+.oss[data-look="white-dark"] .oss-commits a { color: var(--fg-2); }
+.oss[data-look="white-dark"] .oss-commits time { color: var(--fg-3); }
+@media (hover: hover) and (pointer: fine) { .oss[data-look="white-dark"] .oss-commits a:hover .oss-msg { color: var(--fg); } }
+@media not all and (hover: hover) and (pointer: fine) { .oss[data-look="white-dark"] .oss-commits a:active .oss-msg { color: var(--fg); } }
+@media (max-width: 860px) {
+  .faq-row { grid-template-columns: 1fr; gap: 40px; }
+  .founder { position: static; max-width: 520px; }
+  .oss { grid-template-columns: 1fr; gap: 28px; margin-top: 56px; padding: 24px; }
+  .oss-text { padding: 4px 4px 0; }
+}
 details { border-top: 1px solid var(--line); }
 details:last-child { border-bottom: 1px solid var(--line); }
 summary {
   display: flex;
+  align-items: center;
   justify-content: space-between;
   gap: 16px;
   padding: 18px 0;
@@ -146,28 +532,1554 @@ summary {
   list-style: none;
 }
 summary::-webkit-details-marker { display: none; }
-summary::after { content: '+'; color: var(--fg-3); font-weight: 400; transition: transform 0.2s ease-out; }
-details[open] summary::after { transform: rotate(45deg); }
-details p { margin: 0 0 20px; color: var(--fg-2); max-width: 62ch; }
+/* The plus, drawn as two bars so it sits exactly in the middle of its own
+   box and turns about its centre into the cross. Both bars are solid and
+   the whole mark is faded at once, so where they cross isn't any brighter;
+   2px bars in a 12px box land on whole pixels either side of the centre. */
+/* Open, it's the same mark turned 45 degrees into a cross: the same bars,
+   the same length. */
+summary::after {
+  content: ''; flex: none; width: 18px; height: 18px; margin-right: -3px; align-self: center; opacity: 0.5;
+  background: linear-gradient(var(--fg), var(--fg)) center / 12px 2px no-repeat, linear-gradient(var(--fg), var(--fg)) center / 2px 12px no-repeat;
+  transition: transform var(--snappy-ms) var(--snappy);
+}
+details[open]:not([data-closing]) summary::after { transform: rotate(45deg); }
+details p { margin: 0; padding-bottom: 20px; color: var(--fg-2); max-width: 62ch; }
 
 /* Footer */
-.foot { margin-top: 128px; padding: 48px 0 40px; border-top: 1px solid var(--line); }
-.foot-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 32px; }
+.foot { margin-top: var(--section-gap); padding: 48px 0 40px; border-top: 1px solid var(--line); }
+/* The name and small print on the left; App and Project together on the
+   right, a fixed 64px apart, with at least 96px between them and the text. */
+.foot-grid { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; column-gap: 64px; row-gap: 32px; }
+.foot-grid > div:first-child { max-width: 440px; margin-right: 32px; }
 .foot h4 { margin: 0 0 12px; color: var(--fg-3); font-size: 13px; font-weight: 500; }
-.foot-grid > div > a:not(.brand) { display: block; padding: 3px 0; color: var(--fg-2); text-decoration: none; font-size: 14px; }
-.foot-grid > div > a:not(.brand):hover { color: var(--fg); }
+.foot-grid > div > a:not(.brand) { display: block; width: fit-content; padding: 3px 0; color: var(--fg-2); text-decoration: none; font-size: 14px; }
+@media (hover: hover) and (pointer: fine) { .foot-grid > div > a:not(.brand):hover { color: var(--fg); } }
+@media not all and (hover: hover) and (pointer: fine) { .foot-grid > div > a:not(.brand):active { color: var(--fg); } }
 .small-print { color: var(--fg-3); font-size: 13px; }
-.legal { margin-top: 40px; }
+.legal { margin-top: 14px; max-width: 36em; font-size: 12px; line-height: 1.6; color: var(--fg-3); opacity: 0.8; }
 
 @media (max-width: 860px) {
   .steps, .groups { grid-template-columns: 1fr; }
   .links { display: none; }
   .nav-row { justify-content: space-between; }
   .hero { padding-top: 64px; }
-  .section { padding-top: 80px; }
+  :root { --section-gap: 80px; }
   .foot-grid { grid-template-columns: 1fr 1fr; }
   .foot-grid > div:first-child { grid-column: 1 / -1; }
 }
 @media (max-width: 420px) {
   .nav-actions .ghost { display: none; }
 }
+
+/* Trying out: the panel at the bottom right (localhost, or ?try). */
+.try {
+  position: fixed; right: 16px; bottom: 16px; z-index: 50; display: grid; gap: 10px; width: 300px; padding: 12px 12px 14px; border-radius: 14px;
+  background: rgb(20 20 24 / 0.9); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
+  box-shadow: inset 0 0 0 1px var(--line-2), 0 20px 50px rgb(0 0 0 / 0.55); font-size: 12px;
+}
+.try > b { font-weight: 600; color: var(--fg-3); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; }
+.try__group { display: grid; gap: 6px; }
+.try__group > span { color: var(--fg-2); }
+.try__group > div { display: flex; flex-wrap: wrap; gap: 4px; }
+.try button {
+  height: 26px; padding: 0 9px; border: 0; border-radius: 7px; background: rgb(255 255 255 / 0.05); color: var(--fg-2);
+  font: 500 12px var(--font); cursor: pointer; box-shadow: inset 0 0 0 1px var(--line);
+}
+@media (hover: hover) and (pointer: fine) { .try button:hover { color: var(--fg); background: rgb(255 255 255 / 0.08); } }
+@media not all and (hover: hover) and (pointer: fine) { .try button:active { color: var(--fg); background: rgb(255 255 255 / 0.08); } }
+.try button[aria-pressed="true"] { color: #111; background: var(--fg); box-shadow: none; }
+
+/* The name, very large, across the foot of the page and running off its
+   bottom edge. On hover, a record's grooves show in the letters round the
+   pointer: arcs round a spindle below the word, like the record above. It
+   never takes the pointer, so the footer's links above it stay clickable;
+   the script works out the hover from where the pointer is. */
+.foot { overflow: hidden; background: var(--foot-bg, transparent); }
+/* A finger dragged sideways anywhere on the footer works the word's lens;
+   up and down still scrolls the page, and a pinch still zooms. */
+.foot { touch-action: pan-y pinch-zoom; }
+.foot-word {
+  position: relative; display: block; width: min(1120px, 100% - 32px); margin: 28px auto calc(var(--foot-cut, 0.33) * -1em); text-align: left; text-indent: var(--foot-indent, 0px); white-space: nowrap; user-select: none; pointer-events: none;
+  /* As wide as the column above (index.html measures it into --foot-fs). */
+  font-size: var(--foot-fs, clamp(96px, 21vw, 340px)); font-weight: 600; letter-spacing: -0.055em; line-height: 0.9;
+  color: var(--foot-letter, rgb(255 255 255 / 0.045));
+  --x: 50%; --y: 50%; --on: 0;
+}
+.foot-word::after {
+  content: attr(data-text); position: absolute; inset: 0;
+  /* The first version's grooves, with the gap between them halved. */
+  background: repeating-radial-gradient(ellipse 100% 50% at 50% 135%, rgb(255 255 255 / 0.6) 0 1px, transparent 1.5px var(--groove, 8px));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  -webkit-mask-image: radial-gradient(circle at var(--x) var(--y), #000, transparent 320px);
+  mask-image: radial-gradient(circle at var(--x) var(--y), #000, transparent 320px);
+  opacity: var(--on); transition: opacity 0.5s ease-out;
+}
+@media (hover: none) { .foot-word::after { display: none; } }
+/* Drawn as a record instead (foot-fx.js): the canvas draws the letters too,
+   so the page's own are hidden. The canvas runs a little above and below
+   the line box, where the tall letters reach. */
+.foot-base { display: inline-block; width: 0; height: 0; }
+.foot-fx { display: none; position: absolute; left: 0; top: -0.25em; width: 100%; height: calc(100% + 0.35em); pointer-events: none; }
+html[data-foot-gl] .foot-word { color: transparent; }
+html[data-foot-gl] .foot-word::after { display: none; }
+html[data-foot-gl] .foot-fx { display: block; }
+
+.try__hint { margin: -4px 0 6px; max-width: 26em; font-size: 12px; line-height: 1.45; color: var(--fg-3); }
+
+/* ── Hero and nav layouts (begin) ─────────────────────────────────────────
+   The hero is Split (data-hero="split", set in <head>). The nav is picked in
+   the Try panel (data-nav): "morph", bar to capsule, by default; "bar" is
+   the design above. */
+
+/* The hero, split, on the screen's edges. One type scale, one 8px rhythm:
+     headline  clamp(56px, 5.6vw, 80px), leading 1.02: the largest by far,
+               two lines at every desktop width
+     support   20px, a full two-line measure
+     facts     13px, on one line
+   The name and icon are the nav's (bigger there at the top of the page);
+   the hero keeps its <h1> for the outline, unseen. Left, everything that
+   reads: the headline close under the nav, the supporting paragraph, the
+   facts. Right, as wide as the buttons and no wider, on the screen's right
+   edge: the buttons, standing on the same line as the facts, so the text
+   block and the buttons share one foot. */
+html[data-hero="split"] .hero {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: auto auto auto;
+  grid-template-areas: "tag cta" "lede lede" "meta meta";
+  column-gap: 48px; text-align: left; padding: 64px 0 80px;
+}
+html[data-hero="split"] .lockup {
+  position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+}
+html[data-hero="split"] .tagline {
+  grid-area: tag; align-self: end; max-width: none; margin: 0 0 0 -0.05em; color: var(--fg);
+  font-size: clamp(56px, 5.6vw, 80px); font-weight: 600; letter-spacing: -0.045em; line-height: 1.02; text-wrap: balance;
+}
+html[data-hero="split"] .lede {
+  grid-area: lede; margin: 24px 0 0; max-width: 31em; color: var(--fg-2); font-size: 20px; line-height: 1.45; text-wrap: pretty;
+}
+/* The buttons stand level with the headline's last line, on the screen's
+   right edge; the supporting line and the facts run under the headline. */
+html[data-hero="split"] .cta { grid-area: cta; align-self: end; flex-wrap: nowrap; gap: 8px; margin: 0 0 0.6em; }
+html[data-hero="split"] .cta .btn.big { flex: 1 1 auto; justify-content: center; padding: 0 18px; font-size: 15px; }
+/* Over the record: GitHub is a surface, not a tint, so no grooves show
+   through. (The record leaves a hole under it, hero-fx.js, so what's behind
+   is only the page and the grain: the colour it used to blur that into is
+   laid on solid instead, which costs nothing to draw each frame. Was
+   rgb(19 19 23 / 0.92) over a 12px backdrop blur.) */
+html[data-hero="split"] .cta .btn.ghost {
+  background: rgb(18 18 22);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.13), inset 0 1px 0 rgb(255 255 255 / 0.05);
+}
+@media (hover: hover) and (pointer: fine) { html[data-hero="split"] .cta .btn.ghost:hover { background: rgb(29 29 34); } }
+@media not all and (hover: hover) and (pointer: fine) { html[data-hero="split"] .cta .btn.ghost:active { background: rgb(29 29 34); } }
+/* The facts: each its own item, a gap between them; one line on desktop,
+   wrapping whole only on narrow screens. */
+html[data-hero="split"] .meta {
+  grid-area: meta; display: flex; flex-wrap: wrap; gap: 4px 16px; margin: 16px 0 0; font-size: 13px; line-height: 1.5;
+}
+html[data-hero="split"] .meta > span[aria-hidden] { display: none; }
+html[data-hero="split"] .meta .mi { margin: 0; white-space: nowrap; }
+.meta .mi { margin: 0; }
+/* "open-source" never breaks at its hyphen. */
+.tagline .nw { white-space: nowrap; }
+.lede { display: none; }
+html[data-hero="split"] .lede { display: block; }
+/* Narrower: one column. */
+@media (max-width: 900px) {
+  html[data-hero="split"] .hero {
+    grid-template-columns: minmax(0, 1fr); grid-template-rows: none;
+    grid-template-areas: "tag" "lede" "cta" "meta"; padding: 48px 0 56px;
+  }
+  html[data-hero="split"] .tagline { font-size: clamp(44px, 9vw, 72px); }
+  html[data-hero="split"] .lede { margin: 16px 0 0; font-size: 18px; }
+  html[data-hero="split"] .cta { justify-content: flex-start; margin: 32px 0 0; }
+  html[data-hero="split"] .cta .btn.big { flex: 0 0 auto; padding: 0 22px; font-size: 16px; }
+}
+@media (max-width: 480px) {
+  html[data-hero="split"] .hero { padding-top: 40px; }
+  html[data-hero="split"] .tagline { font-size: clamp(40px, 11.4vw, 48px); }
+  html[data-hero="split"] .lede { font-size: 17px; }
+  html[data-hero="split"] .cta { margin-top: 32px; }
+  html[data-hero="split"] .cta .btn.big { flex: 1 1 auto; height: 46px; padding: 0 14px; font-size: 15px; }
+}
+
+/* Capsule: a floating, rounded bar over the page, its links centred. */
+html[data-nav="pill"] .nav {
+  padding: 12px 0; background: none; border-bottom: 0;
+  -webkit-backdrop-filter: none; backdrop-filter: none; pointer-events: none;
+}
+html[data-nav="pill"] .nav-row {
+  pointer-events: auto; width: min(940px, 100% - 24px); height: 52px; padding: 0 8px 0 16px; gap: 20px;
+  border-radius: 999px; background: rgb(22 22 26 / 0.6);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4); backdrop-filter: blur(20px) saturate(1.4);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08), inset 0 1px 0 rgb(255 255 255 / 0.06), 0 10px 36px rgb(0 0 0 / 0.32);
+  transition: background-color 0.3s, box-shadow 0.3s;
+}
+html[data-nav="pill"][data-scrolled] .nav-row {
+  background: rgb(22 22 26 / 0.8);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1), inset 0 1px 0 rgb(255 255 255 / 0.06), 0 14px 44px rgb(0 0 0 / 0.5);
+}
+html[data-nav="pill"] .links { margin-inline: auto; }
+html[data-nav="pill"] .nav-actions { gap: 6px; }
+html[data-nav="pill"] .nav-actions .btn { height: 36px; border-radius: 999px; }
+html[data-nav="pill"] .nav-actions .btn.ghost { box-shadow: none; background: transparent; color: var(--fg-2); }
+@media (hover: hover) and (pointer: fine) { html[data-nav="pill"] .nav-actions .btn.ghost:hover { color: var(--fg); background: rgb(255 255 255 / 0.06); } }
+@media not all and (hover: hover) and (pointer: fine) { html[data-nav="pill"] .nav-actions .btn.ghost:active { color: var(--fg); background: rgb(255 255 255 / 0.06); } }
+
+/* Clear: no bar at the top of the page, only the words over the record;
+   the bar fades in once the page scrolls. */
+html[data-nav="clear"] .nav {
+  background: rgb(9 9 11 / 0); border-bottom-color: transparent;
+  -webkit-backdrop-filter: blur(0) saturate(1); backdrop-filter: blur(0) saturate(1);
+  transition: background-color 0.3s, border-color 0.3s, backdrop-filter 0.3s, -webkit-backdrop-filter 0.3s;
+}
+html[data-nav="clear"][data-scrolled] .nav {
+  background: rgb(9 9 11 / 0.78); border-bottom-color: var(--line);
+  -webkit-backdrop-filter: blur(16px) saturate(1.2); backdrop-filter: blur(16px) saturate(1.2);
+}
+html[data-nav="clear"] .nav-row { height: 64px; }
+
+/* Centred: name left, links centred on the page, actions right, all one
+   step lighter: GitHub as a plain link, a small rounded Download. */
+html[data-nav="centred"] .nav { background: rgb(9 9 11 / 0.66); border-bottom-color: rgb(255 255 255 / 0.06); }
+html[data-nav="centred"] .nav-row { display: grid; grid-template-columns: 1fr auto 1fr; height: 56px; }
+html[data-nav="centred"] .nav .brand { font-weight: 500; }
+html[data-nav="centred"] .nav .brand img { width: 22px; height: 22px; }
+html[data-nav="centred"] .links { margin: 0; gap: 30px; font-size: 13.5px; }
+html[data-nav="centred"] .nav-actions { justify-self: end; align-items: center; gap: 4px; }
+html[data-nav="centred"] .nav-actions .btn { height: 30px; font-size: 13.5px; }
+html[data-nav="centred"] .nav-actions .btn.ghost { background: none; box-shadow: none; color: var(--fg-2); padding: 0 10px; }
+@media (hover: hover) and (pointer: fine) { html[data-nav="centred"] .nav-actions .btn.ghost:hover { color: var(--fg); } }
+@media not all and (hover: hover) and (pointer: fine) { html[data-nav="centred"] .nav-actions .btn.ghost:active { color: var(--fg); } }
+html[data-nav="centred"] .nav-actions .btn:not(.ghost) { padding: 0 14px; border-radius: 999px; }
+
+@media (max-width: 860px) {
+  html[data-nav="centred"] .nav-row { display: flex; }
+  html[data-nav="pill"] .nav-row { padding-left: 14px; }
+}
+/* Bar to capsule (the default). At the top, a quiet full-width bar: the
+   brand left and large (a 32px icon, the name at 22px), the sections
+   right, no buttons (the hero's are just below). Scrolled, it darkens.
+   Once the hero's buttons are gone it draws in to a floating capsule, 48px
+   tall, and the brand settles to its compact size (the name at 15px): the
+   icon (a 36px circle) and the Download pill each sit 6px in from its
+   ends, concentric with them (capsule radius 24 = 18 + 6); GitHub and
+   Download come in at the end.
+   index.html moves it all with a spring, writing only clip-path (the
+   glass), opacity and transform; nothing here changes size or place. */
+.nav-dl, .nav-glass, .nav-edge { display: none; }
+html[data-nav="morph"] { scroll-padding-top: 80px; }
+/* The bar grows to fit a large name or icon (they're tuned in the Tune
+   panel); the capsule is always 48px, 10px down. */
+html[data-nav="morph"] { --nav-h: max(60px, calc(var(--brand-word) * 1.35), calc(var(--brand-icon) * 1px + 20px)); }
+html[data-nav="morph"] { --nav-pad: 10px; }
+html[data-nav="morph"] .nav {
+  height: calc(var(--nav-h) + var(--nav-pad)); padding-top: var(--nav-pad); box-sizing: border-box; background: none; border-bottom: 0; -webkit-backdrop-filter: none; backdrop-filter: none;
+}
+/* The glass: one box, always blurred (the blur never changes). There are
+   only two states, the clear bar and the capsule: the glass is unseen in
+   the bar however far the page has scrolled, and the script fades it in
+   as it cuts it down to the capsule. */
+html[data-nav="morph"] .nav-glass {
+  display: block; position: absolute; z-index: -1; left: 0; top: 0; width: 100%; height: calc(var(--nav-h) + var(--nav-pad) + 1px); pointer-events: none;
+  background: rgb(16 16 19 / 0.74);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4); backdrop-filter: blur(20px) saturate(1.4);
+  opacity: 0; will-change: opacity;
+}
+/* The capsule's hairline edge and soft shadow; the script fades it in as
+   the glass closes on it, and sets its left and width. */
+html[data-nav="morph"] .nav-edge {
+  display: none; position: absolute; z-index: -1; top: 10px; left: 0; width: 0; height: 48px; border-radius: 24px;
+  pointer-events: none; opacity: 0; will-change: opacity;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.09), inset 0 1px 0 rgb(255 255 255 / 0.05), 0 12px 40px rgb(0 0 0 / 0.42);
+}
+html[data-nav="morph"] .nav-row { position: relative; height: var(--nav-h); gap: 22px; }
+html[data-nav="morph"] .links { margin: 0 0 0 auto; gap: 26px; }
+/* The icon is laid out at its capsule size (36px) and drawn at 32px in the
+   bar; the name is laid out at its bar size (22px) and drawn smaller in the
+   capsule. Only transforms change between them. */
+html[data-nav="morph"] .nav .brand { gap: 10px; }
+html[data-nav="morph"] { --brand-word: 32px; --brand-icon: 40; }
+html[data-nav="morph"] .nav .brand img { width: 36px; height: 36px; transform-origin: 0 50%; transform: scale(calc(var(--brand-icon) / 36)); }
+html[data-nav="morph"] .nav .brand span { font-size: calc(var(--brand-word) * var(--wm-size, 1)); font-weight: var(--wm-weight, 600); letter-spacing: var(--wm-track, -0.03em); line-height: 1; text-box: trim-both cap alphabetic; transform-origin: 0 50%; transform: translateX(calc((var(--brand-icon) - 36) * 1px + var(--brand-gap, 12px) - 10px)); }
+html[data-nav="morph"] .nav .brand, html[data-nav="morph"] .nav .brand img, html[data-nav="morph"] .nav .brand span,
+html[data-nav="morph"] .nav .links, html[data-nav="morph"] .nav-actions { will-change: transform; }
+/* The actions wait, unseen and unfocusable, at the bar's right end. */
+html[data-nav="morph"] .nav-actions {
+  position: absolute; right: 0; top: 50%; translate: 0 -50%; align-items: center; gap: 4px; opacity: 0; visibility: hidden;
+}
+/* Inside the capsule, 6px in from its edge: corners its radius less 6. */
+html[data-nav="morph"] .nav-actions .btn { height: 36px; border-radius: calc(var(--cap-r, 14px) - 6px); font-size: 13.5px; }
+html[data-nav="morph"] .nav-actions .btn.ghost {
+  display: inline-flex; justify-content: center; width: 36px; padding: 0; gap: 0; font-size: 0;
+  background: transparent; box-shadow: none; color: var(--fg-2);
+}
+html[data-nav="morph"] .nav-actions .btn.ghost svg { width: 17px; height: 17px; }
+@media (hover: hover) and (pointer: fine) { html[data-nav="morph"] .nav-actions .btn.ghost:hover { color: var(--fg); background: rgb(255 255 255 / 0.07); } }
+@media not all and (hover: hover) and (pointer: fine) { html[data-nav="morph"] .nav-actions .btn.ghost:active { color: var(--fg); background: rgb(255 255 255 / 0.07); } }
+html[data-nav="morph"] .nav-actions .btn:not(.ghost) { gap: 6px; padding: 0 14px 0 11px; }
+html[data-nav="morph"] .nav-dl { display: block; width: 15px; height: 15px; }
+html[data-nav="morph"] .nav-dl path { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ── The menu (narrow screens) ──────────────────────────────────────────
+   The button: two bars that turn into a cross. In the bar it sits at the
+   row's right end; in the capsule at its right end, 6px in, like the icon
+   at the other end (index.html moves it with the capsule). */
+.menu-btn, .menu, .menu-scrim { display: none; }
+@media (max-width: 860px) {
+  .menu-btn {
+    position: absolute; right: 0; top: 50%; translate: 0 -50%; z-index: 1;
+    display: grid; place-items: center; width: 36px; height: 36px; padding: 0; border: 0; border-radius: calc(var(--cap-r, 14px) - 6px);
+    background: transparent; color: var(--fg); cursor: pointer; will-change: transform;
+    transition: background-color var(--snappy-ms) var(--snappy);
+  }
+  .menu-btn i {
+    grid-area: 1 / 1; width: 18px; height: 1.5px; border-radius: 1px; background: currentColor;
+    translate: 0 -3.5px; transition: translate var(--snappy-ms) var(--snappy), rotate var(--snappy-ms) var(--snappy);
+  }
+  .menu-btn i + i { translate: 0 3.5px; }
+  html[data-menu] .menu-btn i { translate: 0 0; rotate: 45deg; }
+  html[data-menu] .menu-btn i + i { rotate: -45deg; }
+  @media (hover: hover) and (pointer: fine) { .menu-btn:hover { background: rgb(255 255 255 / 0.07); } }
+  @media not all and (hover: hover) and (pointer: fine) { .menu-btn:active { background: rgb(255 255 255 / 0.07); } }
+  .menu-btn:focus-visible { outline-offset: 0; }
+  /* The capsule keeps the brand, Download and the button; GitHub moves to
+     the menu on a phone. The capsule's own buttons step aside while the
+     menu is open (it has them, larger). */
+  @media (max-width: 480px) { html[data-nav="morph"] .nav-actions .btn.ghost { display: none; } }
+  html[data-menu][data-nav="morph"][data-navacts] .nav.nav .nav-actions .btn { opacity: 0; scale: 0.96; transition: opacity 120ms ease-out, scale 120ms ease-out; }
+
+  /* The page behind: dimmed and blurred, and out of reach; it doesn't
+     scroll (no layout change: the scrollbar's room is kept). */
+  html[data-menu] { overflow: hidden; scrollbar-gutter: stable; }
+  .menu-scrim {
+    display: block; position: fixed; inset: 0; z-index: -1; touch-action: none;
+    background: rgb(5 5 7 / 0.5); -webkit-backdrop-filter: blur(6px) saturate(0.9); backdrop-filter: blur(6px) saturate(0.9);
+    opacity: 0; visibility: hidden; pointer-events: none;
+    transition: opacity var(--snappy-ms) var(--snappy), visibility 0s linear var(--snappy-ms);
+  }
+  html[data-menu] .menu-scrim { opacity: 1; visibility: visible; pointer-events: auto; transition: opacity var(--smooth-ms) var(--smooth), visibility 0s; }
+
+  /* The sheet: the capsule's glass, as wide as the capsule and as tall as
+     what's in it. Shut, all that shows of it is a capsule-high strip at
+     the top (the box round it, .menu, clips the rest away); it opens by
+     sliding down out of that, its words held still in place (moved back
+     up by just as much) so it's the glass that reveals them, like a blind.
+     Only transforms and opacity move, on the compositor; nothing is laid
+     out as it opens or shuts. Over the capsule exactly, so it reads as the
+     capsule growing. */
+  .menu {
+    --top: calc(var(--nav-pad, 10px) + env(safe-area-inset-top, 0px));
+    --side: calc(12px + max(env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px)));
+    --r: var(--cap-r, 14px);
+    display: block; position: fixed; z-index: -1; top: var(--top); left: var(--side); right: var(--side);
+    border-radius: var(--r); overflow: hidden;
+    visibility: hidden; pointer-events: none;
+    transition: visibility 0s linear var(--snappy-ms);
+  }
+  html[data-menu] .menu { visibility: visible; pointer-events: auto; transition: visibility 0s; }
+  .menu-sheet {
+    position: relative; overflow: hidden; border-radius: var(--r);
+    background: rgb(16 16 19 / 0.9); -webkit-backdrop-filter: blur(24px) saturate(1.4); backdrop-filter: blur(24px) saturate(1.4);
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.09), inset 0 1px 0 rgb(255 255 255 / 0.05);
+    translate: 0 calc(48px - 100%); opacity: 0; will-change: translate, opacity;
+    transition: translate var(--snappy-ms) var(--snappy), opacity 140ms ease-out 120ms;
+  }
+  html[data-menu] .menu-sheet { translate: 0 0; opacity: 1; transition: translate var(--smooth-ms) var(--smooth), opacity 90ms ease-out; }
+  .menu-in {
+    max-height: calc(100vh - var(--top) - 12px - env(safe-area-inset-bottom, 0px));
+    max-height: calc(100dvh - var(--top) - 12px - env(safe-area-inset-bottom, 0px));
+    overflow-y: auto; overscroll-behavior: contain; padding: 60px 8px 8px;
+    translate: 0 calc(100% - 48px); will-change: translate;
+    transition: translate var(--snappy-ms) var(--snappy);
+  }
+  html[data-menu] .menu-in { translate: 0 0; transition: translate var(--smooth-ms) var(--smooth); }
+  /* A hairline under the capsule's row, the brand and the cross above it. */
+  .menu-in::before { content: ''; position: absolute; top: 48px; left: 14px; right: 14px; height: 1px; background: rgb(255 255 255 / 0.07); }
+
+  /* The sections, large, in the headline's own type; the two that leave
+     the site carry a small arrow. Each comes in a beat after the one
+     above it as the sheet opens, and all go at once as it shuts. */
+  .menu-links { display: grid; }
+  .menu-links a, .menu-foot {
+    opacity: 0; translate: 0 -8px;
+    transition: opacity 110ms ease-out, translate 110ms ease-out;
+  }
+  html[data-menu] :is(.menu-links a, .menu-foot) {
+    opacity: 1; translate: 0 0;
+    transition: opacity 260ms ease-out, translate var(--smooth-ms) var(--smooth), background-color var(--snappy-ms) var(--snappy), color var(--snappy-ms) var(--snappy);
+    transition-delay: calc(70ms + var(--i, 0) * 32ms), calc(70ms + var(--i, 0) * 32ms), 0s, 0s;
+  }
+  .menu-links a {
+    display: flex; align-items: center; justify-content: space-between; height: 56px; padding: 0 14px; border-radius: calc(var(--r) - 6px);
+    color: var(--fg); text-decoration: none; font-size: clamp(27px, 7.6vw, 34px); font-weight: 600; letter-spacing: -0.035em; line-height: 1;
+  }
+  .menu-links .mo { width: 20px; height: 20px; flex: none; fill: none; stroke: var(--fg-3); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+  @media (hover: hover) and (pointer: fine) { .menu-links a:hover { background: rgb(255 255 255 / 0.05); } }
+  @media not all and (hover: hover) and (pointer: fine) { .menu-links a:active { background: rgb(255 255 255 / 0.06); color: var(--fg-2); } }
+  .menu-links a:focus-visible { outline-offset: -2px; }
+  .menu-foot { margin-top: 14px; padding: 16px 6px 6px; border-top: 1px solid rgb(255 255 255 / 0.07); }
+  .menu-foot .btn { width: 100%; justify-content: center; border-radius: calc(var(--r) - 4px); }
+  .menu-foot .btn svg path { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  .menu-foot p { margin: 12px 0 2px; text-align: center; color: var(--fg-3); font-size: 13px; }
+}
+/* (Where there's no blur behind glass, the sheet is all but solid.) */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .menu-sheet { background: rgb(16 16 19 / 0.97); } }
+/* Less motion: it fades in and out where it stands. */
+@media (max-width: 860px) and (prefers-reduced-motion: reduce) {
+  .menu-sheet, html[data-menu] .menu-sheet, .menu-in, html[data-menu] .menu-in { translate: none; }
+  .menu-links a, .menu-foot, html[data-menu] :is(.menu-links a, .menu-foot) { translate: none; transition-delay: 0s; }
+  .menu-btn i { transition: none; }
+}
+/* ── Hero: text layouts (being tried) ─────────────────────────────────────
+   Picked in the Try panel ("Hero: text layout", data-herotext on <html>);
+   without it the hero is the layout above (the buttons beside the
+   headline). All of them keep the headline big and left-aligned, first in
+   the hero (so the nav still turns to its capsule on it), with the line
+   under it close and large enough to read as its pair:
+     headline  clamp(44px, 4.3vw, 62px)
+     line      clamp(23px, 1.9vw, 27px), brighter than before
+   What changes between them is where the buttons and the facts go
+   (.hero-side, no box of its own unless a layout makes it one) and how the
+   facts are set. Every surface over the record is near-solid, like the
+   GitHub button. The grids are for desktop only; under 900px every layout
+   is one column. */
+.hero-side { display: contents; }
+.hero .dmg, .meta .fi { display: none; }
+/* (The page's two display headings, this and the open source card's, share
+   one size, tracking and leading.) */
+html[data-hero][data-herotext] .tagline { max-width: 9.8em; font-size: clamp(44px, 4.3vw, 62px); letter-spacing: -0.045em; line-height: 1.02; }
+html[data-hero][data-herotext] .lede {
+  grid-area: lede; max-width: 21em; margin: 18px 0 0; color: rgb(236 234 228 / 0.86);
+  font-size: clamp(23px, 1.9vw, 27px); line-height: 1.3; letter-spacing: -0.016em;
+  text-shadow: 0 1px 18px rgb(9 9 11 / 0.9), 0 0 2px rgb(9 9 11 / 0.6);
+}
+html[data-hero][data-herotext] .cta { grid-area: cta; justify-content: flex-start; flex-wrap: nowrap; gap: 10px; margin: 0; }
+html[data-hero][data-herotext] .cta .btn { white-space: nowrap; }
+html[data-hero][data-herotext] .cta .btn.big { flex: 0 0 auto; padding: 0 22px; font-size: 15px; }
+html[data-hero][data-herotext] .meta { grid-area: meta; margin: 0; font-size: 14px; line-height: 1.45; color: var(--fg-2); }
+html[data-hero][data-herotext] .meta a { text-decoration: none; }
+/* In a box of its own (card, rail, download card, the joined pill). */
+html[data-hero]:is([data-herotext="card"], [data-herotext="rail"], [data-herotext="segment"], [data-herotext="dmg"]) .hero-side {
+  grid-area: side; display: flex; flex-direction: column; min-width: 0;
+}
+html[data-hero]:is([data-herotext="card"], [data-herotext="rail"], [data-herotext="dmg"]) .cta .btn.big { flex: 1 1 0; justify-content: center; padding: 0 16px; }
+/* A surface over the record. */
+html[data-hero]:is([data-herotext="card"], [data-herotext="dmg"]) .hero-side,
+html[data-hero][data-herotext="stack"] .meta {
+  border-radius: 20px; background: rgb(17 17 21 / 0.9); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1), inset 0 1px 0 rgb(255 255 255 / 0.05), 0 20px 50px rgb(0 0 0 / 0.4);
+}
+
+/* The facts, set as a little piece of type rather than a table (card,
+   rail, panel): what it is, plainly; what it runs on, with a chip; then,
+   under a hairline, the release (a lit dot, what's new) and the licence
+   as a footnote. */
+html[data-hero]:is([data-herotext="card"], [data-herotext="rail"], [data-herotext="stack"]) .meta {
+  display: grid; grid-template-columns: 1fr auto; grid-template-areas: "free free" "os os" "ver lic"; gap: 0;
+}
+html[data-hero]:is([data-herotext="card"], [data-herotext="rail"], [data-herotext="stack"]) .meta [data-k="Price"] {
+  grid-area: free; color: var(--fg); font-size: 18px; font-weight: 500; letter-spacing: -0.012em;
+}
+html[data-hero]:is([data-herotext="card"], [data-herotext="rail"], [data-herotext="stack"]) .meta [data-k="Price"]::after { content: "."; }
+html[data-hero]:is([data-herotext="card"], [data-herotext="rail"], [data-herotext="stack"]) .meta [data-k="Runs on"] {
+  grid-area: os; display: flex; align-items: center; gap: 8px; margin-top: 4px;
+}
+html[data-hero][data-herotext] .meta .fi { display: block; flex: none; width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.2; stroke-linecap: round; opacity: 0.8; }
+html[data-hero]:is([data-herotext="card"], [data-herotext="rail"], [data-herotext="stack"]) .meta :is(#version, [data-k="License"]) {
+  margin-top: 16px; padding-top: 14px; border-top: 1px solid rgb(255 255 255 / 0.1);
+}
+html[data-hero]:is([data-herotext="card"], [data-herotext="rail"], [data-herotext="stack"]) .meta [data-k="License"] {
+  grid-area: lic; padding-left: 16px; color: var(--fg-3); font-size: 12px; text-align: right; align-self: stretch; line-height: 20px;
+}
+/* The release: a lit dot, the version, what's new. */
+html[data-hero][data-herotext] .meta #version { grid-area: ver; display: inline-flex; align-items: center; gap: 8px; color: var(--fg); font-size: 13px; font-weight: 500; font-variant-numeric: tabular-nums; line-height: 20px; }
+html[data-hero][data-herotext]:not([data-herotext="numeral"]) .meta #version::before {
+  content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--ring); box-shadow: 0 0 8px rgb(62 198 255 / 0.8);
+}
+html[data-hero]:is([data-herotext="card"], [data-herotext="rail"], [data-herotext="stack"]) .meta #version::after {
+  content: "What\2019s new \2192"; color: var(--fg-3); font-weight: 400; transition: color 0.15s;
+}
+@media (hover: hover) and (pointer: fine) { html[data-hero][data-herotext] .meta #version:hover::after { color: var(--fg); } }
+@media not all and (hover: hover) and (pointer: fine) { html[data-hero][data-herotext] .meta #version:active::after { color: var(--fg); } }
+
+/* Card: the release as its title ("Interlude 0.1.3", What's new beside
+   it), what it is and what it runs on in one quiet line, then the
+   buttons. Its surface is the app's own panels' glass (app/src/app.css:
+   --glass-fill, --glass-blur, --glass-edge), so it reads as part of the
+   same thing. */
+.dl-head { display: none; }
+html[data-hero][data-herotext="card"] .hero-side {
+  display: grid; grid-template-columns: 1fr; grid-template-areas: "head" "cta" "req" "foot"; align-content: start;
+  padding: 22px 24px 24px;
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.065), rgb(255 255 255 / 0.03));
+  -webkit-backdrop-filter: blur(30px) saturate(1.25); backdrop-filter: blur(30px) saturate(1.25);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08), inset 0 1px 0 rgb(255 255 255 / 0.14), 0 20px 50px rgb(0 0 0 / 0.3);
+}
+html[data-hero][data-herotext="card"] .meta { display: none; }
+html[data-hero][data-herotext="card"] .dl-head { grid-area: head; display: grid; grid-template-columns: 1fr auto; grid-template-areas: "name new" "sub sub"; align-items: baseline; row-gap: 4px; }
+.dl-name { grid-area: name; color: var(--fg); font-size: 18px; font-weight: 500; letter-spacing: -0.012em; }
+.dl-ver { font-variant-numeric: tabular-nums; }
+.dl-new { grid-area: new; color: var(--fg-3); font-size: 13px; text-decoration: underline; text-decoration-color: rgb(236 234 228 / 0.25); text-underline-offset: 3px; transition: color 0.15s, text-decoration-color 0.15s; }
+@media (hover: hover) and (pointer: fine) { .dl-new:hover { color: var(--fg); text-decoration-color: var(--fg); } }
+@media not all and (hover: hover) and (pointer: fine) { .dl-new:active { color: var(--fg); text-decoration-color: var(--fg); } }
+.dl-sub { grid-area: sub; margin: 0; color: var(--fg-2); font-size: 14px; text-wrap: balance; }
+/* What it needs, under the buttons, where requirements usually sit. */
+.dl-req { display: none; }
+html[data-hero][data-herotext="card"] .dl-req { display: block; grid-area: req; margin: 12px 0 0; color: var(--fg-3); font-size: 12.5px; text-align: center; }
+html[data-hero][data-herotext="card"][data-cardlic="foot"] .dl-foot { margin-top: 2px; }
+/* The card's surface (Hero: card surface): the app's glass, an outline
+   only, or no card with a hairline beside it. */
+html[data-hero][data-herotext="card"][data-cardsurface="outline"] .hero-side {
+  background: none; -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.14);
+}
+html[data-hero][data-herotext="card"][data-cardsurface="rule"] .hero-side {
+  position: relative; background: none; -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: none; border-radius: 0;
+  padding: 4px 0 4px 28px;
+}
+/* The rule (Hero: frame): beside the words, midway to the headline, or
+   none. */
+html[data-hero][data-herotext="card"][data-cardsurface="rule"] .hero-side::before { content: ''; position: absolute; top: 4px; bottom: 4px; left: 0; width: 1px; background: rgb(255 255 255 / 0.14); }
+/* The words stay put whichever it is; only the rule moves. Midway is
+   measured (index.html sets --rule-mid): half way from the end of the
+   headline's longest line to the words. */
+html[data-hero][data-herotext="card"][data-cardsurface="rule"][data-cardrule="mid"] .hero-side::before { left: var(--rule-mid, -18px); }
+html[data-hero][data-herotext="card"][data-cardsurface="rule"][data-cardrule="none"] .hero-side::before { content: none; }
+html[data-hero][data-herotext="card"][data-cardsurface="rule"] :is(.dl-req, .dl-foot) { text-align: left; }
+html[data-hero][data-herotext="card"]:is([data-cardsurface="outline"], [data-cardsurface="rule"]) :is(.dl-head, .dl-req, .dl-foot) { text-shadow: 0 1px 12px rgb(9 9 11 / 0.9); }
+/* Where What's new goes (Hero: what's new): beside the title (as above),
+   under View on GitHub with the requirement on its left, or the version
+   alone on the right of the title. */
+.dl-vlink, .dl-new2 { display: none; }
+html[data-cardnew="under"] .dl-new, html[data-cardnew="right"] .dl-new { display: none; }
+html[data-hero][data-herotext="card"][data-cardnew="right"] .dl-vlink { display: block; grid-area: new; color: var(--fg-3); font-size: 13px; font-variant-numeric: tabular-nums; text-decoration: underline; text-decoration-color: rgb(236 234 228 / 0.25); text-underline-offset: 3px; }
+@media (hover: hover) and (pointer: fine) { html[data-hero][data-herotext="card"][data-cardnew="right"] .dl-vlink:hover { color: var(--fg); text-decoration-color: var(--fg); } }
+@media not all and (hover: hover) and (pointer: fine) { html[data-hero][data-herotext="card"][data-cardnew="right"] .dl-vlink:active { color: var(--fg); text-decoration-color: var(--fg); } }
+html[data-hero][data-herotext="card"][data-cardnew="under"] .hero-side { grid-template-columns: 1fr auto; grid-template-areas: "head head" "cta cta" "req new2" "foot foot"; }
+html[data-hero][data-herotext="card"][data-cardnew="under"] .dl-req { text-align: left; }
+html[data-hero][data-herotext="card"][data-cardnew="under"] .dl-new2 { display: block; grid-area: new2; margin-top: 12px; color: var(--fg-3); font-size: 12.5px; text-decoration: underline; text-decoration-color: rgb(236 234 228 / 0.25); text-underline-offset: 3px; }
+@media (hover: hover) and (pointer: fine) { html[data-hero][data-herotext="card"][data-cardnew="under"] .dl-new2:hover { color: var(--fg); text-decoration-color: var(--fg); } }
+@media not all and (hover: hover) and (pointer: fine) { html[data-hero][data-herotext="card"][data-cardnew="under"] .dl-new2:active { color: var(--fg); text-decoration-color: var(--fg); } }
+/* Two quieter ways (Hero: what's new): the title is the link to the
+   release notes; or the version is a small chip beside the name. Either
+   way only the requirement sits under the buttons. */
+.dl-name a { color: inherit; text-decoration: none; }
+html:not([data-cardnew="title"]) .dl-title { pointer-events: none; }
+html[data-cardnew="title"] .dl-new, html[data-cardnew="pill"] .dl-new { display: none; }
+@media (hover: hover) and (pointer: fine) { html[data-cardnew="title"] .dl-name a:hover { text-decoration: underline; text-decoration-color: rgb(236 234 228 / 0.4); text-underline-offset: 4px; } }
+@media not all and (hover: hover) and (pointer: fine) { html[data-cardnew="title"] .dl-name a:active { text-decoration: underline; text-decoration-color: rgb(236 234 228 / 0.4); text-underline-offset: 4px; } }
+.dl-pill { display: none; }
+html[data-cardnew="pill"] .dl-ver { display: none; }
+html[data-cardnew="pill"] .dl-pill { display: inline-flex; align-items: center; height: 20px; margin-left: 8px; padding: 0 7px; border-radius: 6px; vertical-align: 2px; color: var(--fg-2); font-size: 12px; font-weight: 500; font-variant-numeric: tabular-nums; text-decoration: none; background: rgb(255 255 255 / 0.07); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1); transition: color 0.15s, background-color 0.15s; }
+@media (hover: hover) and (pointer: fine) { html[data-cardnew="pill"] .dl-pill:hover { color: var(--fg); background: rgb(255 255 255 / 0.12); } }
+@media not all and (hover: hover) and (pointer: fine) { html[data-cardnew="pill"] .dl-pill:active { color: var(--fg); background: rgb(255 255 255 / 0.12); } }
+/* The requirement up top, under the line beneath the name, and the buttons
+   at the foot of the column, level with the end of the line under the
+   headline (Hero: requirement). */
+html[data-hero][data-herotext="card"][data-cardreq="top"] .hero-side { grid-template-areas: "head head" "req req" "cta cta" "foot foot"; grid-template-rows: auto auto 1fr auto; align-self: stretch; }
+html[data-hero][data-herotext="card"][data-cardreq="top"] .dl-req { margin: 4px 0 0; text-align: left; font-size: 14px; color: var(--fg-3); }
+html[data-hero][data-herotext="card"][data-cardreq="top"] .cta { align-self: end; margin-top: 20px; }
+html[data-hero][data-herotext="card"][data-cardreq="top"] .dl-new2 { display: none; }
+/* The version as a plain link beside the name (Hero: what's new, link). */
+.dl-vtext { display: none; }
+html[data-cardnew="link"] .dl-new, html[data-cardnew="link"] .dl-ver { display: none; }
+html[data-cardnew="link"] .dl-vtext { display: inline; margin-left: 8px; color: var(--fg-3); font-size: 14px; font-weight: 400; font-variant-numeric: tabular-nums; text-decoration: underline; text-decoration-color: rgb(236 234 228 / 0.3); text-underline-offset: 3px; pointer-events: auto; }
+@media (hover: hover) and (pointer: fine) { html[data-cardnew="link"] .dl-vtext:hover { color: var(--fg); text-decoration-color: var(--fg); } }
+@media not all and (hover: hover) and (pointer: fine) { html[data-cardnew="link"] .dl-vtext:active { color: var(--fg); text-decoration-color: var(--fg); } }
+/* The line under the name as the licence and What's new: spaced apart on
+   one line, or as one sentence (Hero: what's new, spaced / sentence). */
+.dl-sub2, .dl-sub3 { display: none; }
+html[data-cardsub="spaced"] .dl-sub, html[data-cardsub="sentence"] .dl-sub,
+html[data-cardnew="spaced"] .dl-new, html[data-cardnew="sentence"] .dl-new { display: none; }
+html[data-hero][data-herotext="card"][data-cardsub="spaced"] .dl-sub2 { display: flex; gap: 20px; grid-area: sub; margin: 0; color: var(--fg-2); font-size: 14px; }
+html[data-hero][data-herotext="card"][data-cardsub="sentence"] .dl-sub3 { display: block; grid-area: sub; margin: 0; color: var(--fg-2); font-size: 14px; }
+.dl-rel { color: var(--fg-2); text-decoration: underline; text-decoration-color: rgb(236 234 228 / 0.3); text-underline-offset: 3px; transition: color 0.15s, text-decoration-color 0.15s; }
+@media (hover: hover) and (pointer: fine) { .dl-rel:hover { color: var(--fg); text-decoration-color: var(--fg); } }
+@media not all and (hover: hover) and (pointer: fine) { .dl-rel:active { color: var(--fg); text-decoration-color: var(--fg); } }
+/* The version in the title, or beside What's new (Hero: card title). */
+.dl-new-ver { display: none; }
+html[data-cardtitle="name"] .dl-ver { display: none; }
+html[data-cardtitle="name"] .dl-new-ver { display: inline; }
+/* The licence: in the line, a footnote under the buttons, or not at all
+   (Hero: licence). */
+.dl-foot { display: none; }
+html:not([data-cardlic="line"]) .dl-lic { display: none; }
+html[data-hero][data-herotext="card"][data-cardlic="foot"] .dl-foot { display: block; grid-area: foot; margin: 14px 0 0; color: var(--fg-3); font-size: 12px; text-align: center; }
+/* The buttons at the foot. */
+html[data-hero][data-herotext="card"] .cta { grid-area: cta; margin-top: 18px; }
+
+/* Rail: the same, open, behind a hairline. */
+html[data-hero][data-herotext="rail"] .meta { margin-top: 24px; }
+html[data-hero][data-herotext="rail"] .meta > * { text-shadow: 0 1px 12px rgb(9 9 11 / 0.95), 0 0 2px rgb(9 9 11 / 0.8); }
+
+/* Panel: the buttons under the line, on the headline's edge; the facts in
+   a panel on the right, its foot level with the buttons'. */
+html[data-hero][data-herotext="stack"] .cta { margin-top: 36px; }
+html[data-hero][data-herotext="stack"] .meta { padding: 20px 22px 16px; }
+
+/* Joined pill: the two buttons as one, the facts as a sentence under it. */
+html[data-hero][data-herotext="segment"] .cta { gap: 0; }
+html[data-hero][data-herotext="segment"] .cta .btn.big { flex: 1 1 auto; justify-content: center; padding: 0 22px; }
+html[data-hero][data-herotext="segment"] .cta .btn:first-child { border-radius: 999px 0 0 999px; padding-left: 24px; }
+html[data-hero][data-herotext="segment"] .cta .btn.ghost { border-radius: 0 999px 999px 0; padding-right: 24px; }
+html[data-hero][data-herotext="segment"] .meta { display: block; margin-top: 16px; padding-left: 4px; font-size: 14px; line-height: 1.6; text-wrap: pretty; text-shadow: 0 1px 12px rgb(9 9 11 / 0.95); }
+html[data-hero][data-herotext="segment"] .meta > * { display: inline; margin: 0; white-space: normal; }
+html[data-hero][data-herotext="segment"] .meta #version { display: inline; margin-right: 2px; }
+html[data-hero][data-herotext="segment"] .meta #version::before { display: inline-block; margin: 0 7px 2px 0; vertical-align: middle; }
+html[data-hero][data-herotext="segment"] .meta #version::after { content: " \2014"; color: var(--fg-2); font-weight: 400; }
+html[data-hero][data-herotext="segment"] .meta [data-k="Price"]::after { content: ","; }
+html[data-hero][data-herotext="segment"] .meta [data-k="Runs on"]::before { content: "for "; }
+html[data-hero][data-herotext="segment"] .meta [data-k="Runs on"]::after { content: "."; }
+html[data-hero][data-herotext="segment"] .meta [data-k="License"] { color: var(--fg-3); }
+html[data-hero][data-herotext="segment"] .meta [data-k="License"]::before { content: "Licensed "; }
+html[data-hero][data-herotext="segment"] .meta [data-k="License"]::after { content: "."; }
+html[data-hero][data-herotext="segment"] .meta .fi { display: none; }
+
+/* Numeral: the buttons under the line; on the right, the version large and
+   quiet, the facts under it. */
+html[data-hero][data-herotext="numeral"] .cta { margin-top: 36px; }
+html[data-hero][data-herotext="numeral"] .meta { display: flex; flex-direction: column; gap: 4px; text-shadow: 0 1px 12px rgb(9 9 11 / 0.95); }
+html[data-hero][data-herotext="numeral"] .meta #version {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 6px; margin-bottom: 14px;
+  color: rgb(236 234 228 / 0.42); font-size: 84px; font-weight: 300; letter-spacing: -0.05em; line-height: 0.9;
+}
+@media (hover: hover) and (pointer: fine) { html[data-hero][data-herotext="numeral"] .meta #version:hover { color: rgb(236 234 228 / 0.7); } }
+@media not all and (hover: hover) and (pointer: fine) { html[data-hero][data-herotext="numeral"] .meta #version:active { color: rgb(236 234 228 / 0.7); } }
+html[data-hero][data-herotext="numeral"] .meta #version::after {
+  content: "What\2019s new in this release \2192"; color: var(--fg-2); font-size: 13px; font-weight: 400; letter-spacing: 0; line-height: 1.4;
+}
+html[data-hero][data-herotext="numeral"] .meta [data-k="Price"] { color: var(--fg); font-weight: 500; }
+html[data-hero][data-herotext="numeral"] .meta [data-k="Runs on"] { display: flex; align-items: center; gap: 8px; }
+html[data-hero][data-herotext="numeral"] .meta [data-k="License"] { color: var(--fg-3); font-size: 12px; }
+
+/* Download card: the file itself, its button, and the rest of the facts. */
+html[data-hero][data-herotext="dmg"] .hero-side { padding: 20px; }
+html[data-hero][data-herotext="dmg"] .dmg { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; }
+html[data-hero][data-herotext="dmg"] .dmg img { width: 44px; height: 44px; filter: drop-shadow(0 6px 16px rgb(62 198 255 / 0.2)); }
+html[data-hero][data-herotext="dmg"] .dmg b { display: block; font-size: 16px; font-weight: 500; line-height: 1.3; }
+html[data-hero][data-herotext="dmg"] .dmg small { display: block; color: var(--fg-2); font-size: 13px; line-height: 1.4; }
+html[data-hero][data-herotext="dmg"] .cta .btn.big:first-child { flex-grow: 1.5; }
+html[data-hero][data-herotext="dmg"] .meta {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; margin: 18px -20px -20px; padding: 12px 20px;
+  border-top: 1px solid rgb(255 255 255 / 0.08); font-size: 12px; color: var(--fg-3);
+}
+html[data-hero][data-herotext="dmg"] .meta [data-k="Runs on"] { display: none; }
+html[data-hero][data-herotext="dmg"] .meta #version { font-size: 12px; }
+html[data-hero][data-herotext="dmg"] .meta [data-k="License"] { margin-left: auto; }
+
+/* Inside a box, everything takes its full width. */
+html[data-hero]:is([data-herotext="card"], [data-herotext="rail"], [data-herotext="segment"], [data-herotext="dmg"]) .hero .hero-side > * { align-self: stretch; }
+
+/* Desktop: the grids. */
+@media (min-width: 901px) {
+  html[data-hero][data-herotext] .hero { grid-template-rows: none; row-gap: 0; column-gap: 64px; padding: 64px 0 80px; }
+  html[data-hero][data-herotext="card"] .hero { grid-template-columns: minmax(0, 1fr) 380px; grid-template-areas: "tag side" "lede side"; }
+  html[data-hero][data-herotext="rail"] .hero { grid-template-columns: minmax(0, 1fr) 372px; grid-template-areas: "tag side" "lede side"; }
+  html[data-hero][data-herotext="rail"] .hero-side { padding: 4px 0 4px 32px; border-left: 1px solid rgb(255 255 255 / 0.14); }
+  html[data-hero][data-herotext="stack"] .hero { grid-template-columns: minmax(0, 1fr) 320px; grid-template-areas: "tag meta" "lede meta" "cta meta"; }
+  html[data-hero][data-herotext="segment"] .hero { grid-template-columns: minmax(0, 1fr) 360px; grid-template-areas: "tag side" "lede side"; }
+  html[data-hero][data-herotext="numeral"] .hero { grid-template-columns: minmax(0, 1fr) 300px; grid-template-areas: "tag meta" "lede meta" "cta meta"; }
+  html[data-hero][data-herotext="dmg"] .hero { grid-template-columns: minmax(0, 1fr) 372px; grid-template-areas: "tag side" "lede side"; }
+  html[data-hero][data-herotext] :is(.hero-side, .meta) { align-self: end; }
+  html[data-hero][data-herotext] .tagline { align-self: end; }
+}
+/* Narrower: one column for every layout. */
+@media (max-width: 900px) {
+  html[data-hero][data-herotext] .hero { grid-template-areas: "tag" "lede" "side" "cta" "meta"; }
+  html[data-hero][data-herotext] .tagline { font-size: clamp(40px, 7.6vw, 56px); }
+  html[data-hero][data-herotext] .lede { margin-top: 14px; font-size: 22px; }
+  html[data-hero][data-herotext] .hero-side { margin-top: 28px; }
+  html[data-hero]:is([data-herotext="stack"], [data-herotext="numeral"]) .cta { margin-top: 28px; }
+  html[data-hero]:is([data-herotext="stack"], [data-herotext="numeral"]) .meta { margin-top: 24px; }
+  html[data-hero][data-herotext="numeral"] .meta #version { font-size: 64px; }
+}
+@media (max-width: 480px) {
+  html[data-hero][data-herotext] .tagline { font-size: clamp(36px, 10vw, 40px); }
+  html[data-hero][data-herotext] .lede { font-size: 20px; }
+  html[data-hero][data-herotext] .cta .btn.big { flex: 1 1 0; justify-content: center; padding: 0 12px; height: 46px; }
+  html[data-hero]:is([data-herotext="card"], [data-herotext="dmg"]) .hero-side { padding: 18px; }
+  html[data-hero][data-herotext="dmg"] .meta { margin: 18px -18px -18px; padding: 12px 18px; }
+}
+/* ── Hero and nav layouts (end) ── */
+
+/* Install steps: the number sits just above its heading, close to it, on
+   the same left edge as the heading and the text. */
+.steps li[data-picture] > .num:not(.pic) { margin-bottom: 6px; }
+
+/* Nothing may scroll the page sideways (parked nav buttons, decorative
+   layers); clip, unlike hidden, keeps the sticky nav working. */
+html, body { overflow-x: clip; }
+
+/* On phones the four facts sit two by two, so none is left alone on a line. */
+@media (max-width: 560px) {
+  html[data-hero="split"] .meta { display: grid; grid-template-columns: auto 1fr; gap: 4px 20px; }
+}
+
+/* With the version as the link (Hero: what's new, link): under the name,
+   the licence and what it runs on, spaced apart on one line; nothing under
+   the buttons. */
+.dl-facts { display: none; }
+html[data-hero][data-herotext="card"][data-cardsub="facts"] .dl-sub { display: none; }
+html[data-hero][data-herotext="card"][data-cardsub="facts"] .dl-facts { display: flex; flex-wrap: wrap; gap: 2px 16px; grid-area: sub; margin: 0; color: var(--fg-2); font-size: 14px; }
+html[data-hero][data-herotext="card"][data-cardsub="facts"] :is(.dl-req, .dl-new2) { display: none; }
+html[data-hero][data-herotext="card"][data-cardsub="facts"] .cta { margin-top: 20px; }
+/* The version link's look (Hero: version link). Match: the name's own size
+   and baseline, a quieter grey, the underline thin and low. */
+html[data-cardnew="link"][data-cardvlink="match"] .dl-vtext { margin-left: 7px; font-size: inherit; font-weight: 400; letter-spacing: -0.01em; color: rgb(236 234 228 / 0.5); text-decoration-thickness: 1px; text-decoration-color: rgb(236 234 228 / 0.28); text-underline-offset: 4px; }
+@media (hover: hover) and (pointer: fine) { html[data-cardnew="link"][data-cardvlink="match"] .dl-vtext:hover { color: var(--fg); text-decoration-color: rgb(236 234 228 / 0.7); } }
+@media not all and (hover: hover) and (pointer: fine) { html[data-cardnew="link"][data-cardvlink="match"] .dl-vtext:active { color: var(--fg); text-decoration-color: rgb(236 234 228 / 0.7); } }
+html[data-cardnew="link"][data-cardvlink="right"] .dl-vtext { display: none; }
+html[data-hero][data-herotext="card"][data-cardnew="link"][data-cardvlink="right"] .dl-vlink { display: block; grid-area: new; color: var(--fg-3); font-size: 13px; font-variant-numeric: tabular-nums; text-decoration: underline; text-decoration-color: rgb(236 234 228 / 0.25); text-underline-offset: 3px; }
+/* The hero's two buttons: the same 44px, a touch tighter, each as wide as
+   its words (less room at the sides than above and below). GitHub's edge a
+   step brighter, so its outline reads the same size as Download's fill. */
+html[data-hero][data-herotext="card"] .cta { gap: 8px; }
+html[data-hero][data-herotext="card"] .cta .btn.big { flex: 0 0 auto; box-sizing: border-box; height: 44px; padding: 0 13px; gap: 7px; font-size: 15px; border-radius: 11px; }
+html[data-hero][data-herotext="card"] .cta .btn.big svg { width: 16px; height: 16px; margin-left: -1px; }
+/* Same 44px box as Download, but a dark button with only a hairline reads
+   shorter beside a light filled one (the light one spreads). So it gets a
+   body of its own, a lit fill the full height, and the ring sits on that. */
+/* (White at 0.09 and 0.13 over the blurred page and grain, measured: laid on solid.) */
+html[data-hero][data-herotext="card"] .cta .btn.ghost { background: rgb(33 33 35); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.12), inset 0 1px 0 rgb(255 255 255 / 0.08); }
+@media (hover: hover) and (pointer: fine) { html[data-hero][data-herotext="card"] .cta .btn.ghost:hover { background: rgb(43 43 45); } }
+@media not all and (hover: hover) and (pointer: fine) { html[data-hero][data-herotext="card"] .cta .btn.ghost:active { background: rgb(43 43 45); } }
+/* The nav's buttons, just after the capsule forms (Nav: buttons arrive,
+   after): each fades up from a touch smaller and a little soft, GitHub then
+   Download 50ms on; out together, quicker. Opacity, scale and filter only,
+   so the compositor runs them. */
+html[data-nav="morph"][data-navacts="after"] .nav-actions .btn {
+  opacity: 0; scale: 0.92; filter: blur(3px); will-change: opacity, scale;
+  transition: opacity 140ms ease-out, scale 160ms var(--snappy), filter 140ms ease-out, background-color var(--snappy-ms) var(--snappy);
+}
+html[data-nav="morph"][data-navacts="after"] .nav[data-acts-in] .nav-actions .btn {
+  opacity: 1; scale: 1; filter: blur(0);
+  transition: opacity 260ms cubic-bezier(0.23, 1, 0.32, 1), scale var(--snappy-ms) var(--snappy), filter 260ms cubic-bezier(0.23, 1, 0.32, 1), background-color var(--snappy-ms) var(--snappy);
+}
+html[data-nav="morph"][data-navacts="after"] .nav[data-acts-in] .nav-actions .btn + .btn { transition-delay: 50ms, 50ms, 50ms, 0ms; }
+html[data-nav="morph"] .nav-actions { will-change: transform, opacity; }
+/* The words beside the headline sit on its foot: the column is only as tall
+   as what's in it, its last line level with the end of the line under the
+   headline, and the rule beside it runs exactly that height. */
+html[data-hero][data-herotext="card"] .hero-side { align-self: end; }
+
+/* Hero: download block. Caption and sentence put the release facts under
+   the buttons, small and quiet, as Mac download pages do; the buttons lead
+   straight from the headline. Head is the earlier layout, the name and its
+   facts above them. */
+.dl-cap, .dl-cap2 { display: none; }
+html[data-hero][data-herotext="card"]:is([data-cardblock="caption"], [data-cardblock="sentence"]) .dl-head { display: none; }
+html[data-hero][data-herotext="card"]:is([data-cardblock="caption"], [data-cardblock="sentence"]) .cta { margin-top: 0; }
+html[data-hero][data-herotext="card"][data-cardblock="caption"] .dl-cap,
+html[data-hero][data-herotext="card"][data-cardblock="sentence"] .dl-cap2 {
+  display: flex; grid-area: req; margin: 14px 0 0; color: var(--fg-2); font-size: 13px; line-height: 18px;
+  text-shadow: 0 1px 12px rgb(9 9 11 / 0.9);
+}
+html[data-hero][data-herotext="card"][data-cardblock="sentence"] .dl-cap2 { display: block; max-width: 300px; text-wrap: balance; }
+/* The caption's three facts, each after a short hairline rather than a dot. */
+.dl-cap { align-items: center; flex-wrap: wrap; row-gap: 4px; }
+.dl-cap > * + *::before { content: ''; display: inline-block; width: 1px; height: 11px; margin: 0 10px; vertical-align: -1px; background: rgb(255 255 255 / 0.24); }
+.dl-cv { color: inherit; font-variant-numeric: tabular-nums; text-decoration: underline; text-decoration-color: rgb(236 234 228 / 0.4); text-decoration-thickness: 1px; text-underline-offset: 3px; transition: color 0.15s, text-decoration-color 0.15s; }
+@media (hover: hover) and (pointer: fine) { .dl-cv:hover { color: var(--fg); text-decoration-color: rgb(236 234 228 / 0.7); } }
+@media not all and (hover: hover) and (pointer: fine) { .dl-cv:active { color: var(--fg); text-decoration-color: rgb(236 234 228 / 0.7); } }
+
+/* Open source looks (Tune, Open source: look). All keep the words,
+   the buttons and the latest changes; they differ in surface and layout. Shared: the updates sit straight on the card, no inner surface,
+   and a change's area ("Mappings:") is quieter than the change itself. */
+.oss:is([data-look="tight"], [data-look^="doors"], [data-look^="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .oss-log { padding: 0; }
+.oss:is([data-look="tight"], [data-look^="doors"], [data-look^="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .oss-log::before { content: none; }
+.oss:is([data-look="tight"], [data-look^="doors"], [data-look^="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .oss-log h4 { margin: 0; padding: 0 0 10px; border-image: none; border-bottom: 1px solid var(--oss-rule); font-size: 13px; line-height: 18px; color: var(--oss-dim); }
+.oss:is([data-look="tight"], [data-look^="doors"], [data-look^="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .oss-commits li + li { border-image: none; border-top: 1px solid var(--oss-rule2); }
+.oss:is([data-look="tight"], [data-look^="doors"], [data-look^="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .oss-commits a { padding: 9px 0; font-size: 14px; color: var(--oss-ink); transition: color 150ms ease; }
+@media (hover: hover) and (pointer: fine) { .oss:is([data-look="tight"], [data-look^="doors"], [data-look^="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .oss-commits a:hover .oss-msg { color: var(--oss-strong); text-decoration: none; } }
+@media not all and (hover: hover) and (pointer: fine) { .oss:is([data-look="tight"], [data-look^="doors"], [data-look^="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .oss-commits a:active .oss-msg { color: var(--oss-strong); text-decoration: none; } }
+.oss:is([data-look="tight"], [data-look^="doors"], [data-look^="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .oss-area { color: inherit; font-weight: 500; }
+.oss:is([data-look="tight"], [data-look^="doors"], [data-look^="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .oss-commits time { font-size: 12.5px; color: var(--oss-dim); }
+.oss:is([data-look="tight"], [data-look^="doors"], [data-look^="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .oss-empty a { color: var(--oss-ink); }
+/* Light surfaces' inks. */
+.oss:is([data-look="tight"], [data-look^="doors"], [data-look="feed"], [data-look="gitlog"]) {
+  --oss-ink: rgb(11 11 13 / 0.8); --oss-strong: #0b0b0d; --oss-dim: rgb(11 11 13 / 0.46); --oss-rule: rgb(11 11 13 / 0.1); --oss-rule2: rgb(11 11 13 / 0.07);
+  background: #f6f5f1; color: #0b0b0d; -webkit-backdrop-filter: none; backdrop-filter: none;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.7), 0 1px 2px rgb(0 0 0 / 0.2), 0 24px 60px -12px rgb(0 0 0 / 0.45);
+}
+/* Dark ones. */
+.oss:is([data-look^="poster"], [data-look="cards"]) {
+  --oss-ink: rgb(236 234 228 / 0.78); --oss-strong: var(--fg); --oss-dim: rgb(236 234 228 / 0.42); --oss-rule: rgb(255 255 255 / 0.09); --oss-rule2: rgb(255 255 255 / 0.06);
+  color: var(--fg); -webkit-backdrop-filter: none; backdrop-filter: none;
+}
+.oss:is([data-look^="poster"], [data-look="cards"]) p { color: var(--fg-2); }
+.oss:is([data-look^="poster"], [data-look="cards"]) .btn { background: var(--fg); color: #0b0b0d; }
+@media (hover: hover) and (pointer: fine) { .oss:is([data-look^="poster"], [data-look="cards"]) .btn:hover { background: #fff; } }
+@media not all and (hover: hover) and (pointer: fine) { .oss:is([data-look^="poster"], [data-look="cards"]) .btn:active { background: #fff; } }
+.oss:is([data-look^="poster"], [data-look="cards"]) .btn.ghost { background: transparent; color: var(--fg); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.16); }
+@media (hover: hover) and (pointer: fine) { .oss:is([data-look^="poster"], [data-look="cards"]) .btn.ghost:hover { background: rgb(255 255 255 / 0.06); } }
+@media not all and (hover: hover) and (pointer: fine) { .oss:is([data-look^="poster"], [data-look="cards"]) .btn.ghost:active { background: rgb(255 255 255 / 0.06); } }
+/* The buttons, one size smaller than the hero's, the second a ring only. */
+/* (The site's standard button: 40px, 15px type, the same as everywhere.) */
+.oss:is([data-look="tight"], [data-look^="doors"], [data-look^="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) .btn { height: 40px; padding: 0 16px; border-radius: 10px; font-size: 15px; }
+.oss:is([data-look="tight"], [data-look^="doors"], [data-look="feed"], [data-look="gitlog"]) .btn.ghost { background: transparent; box-shadow: inset 0 0 0 1px rgb(11 11 13 / 0.16); }
+@media (hover: hover) and (pointer: fine) { .oss:is([data-look="tight"], [data-look^="doors"], [data-look="feed"], [data-look="gitlog"]) .btn.ghost:hover { background: rgb(11 11 13 / 0.05); } }
+@media not all and (hover: hover) and (pointer: fine) { .oss:is([data-look="tight"], [data-look^="doors"], [data-look="feed"], [data-look="gitlog"]) .btn.ghost:active { background: rgb(11 11 13 / 0.05); } }
+.oss:is([data-look="tight"], [data-look^="doors"], [data-look^="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) h3 { font-size: 28px; letter-spacing: -0.028em; margin: 0 0 10px; }
+/* (Body copy is 16px, as in every card.) */
+.oss:is([data-look="tight"], [data-look^="doors"], [data-look^="poster"], [data-look="feed"], [data-look="cards"], [data-look="gitlog"]) p { font-size: 16px; max-width: 24em; margin: 0 0 22px; }
+
+/* 1. Tight: the current one, edited. The heading's top lines up with the
+   updates' header and the buttons' foot with the last change, so both
+   columns share a top and a bottom instead of the words floating in the
+   middle; the divider runs only as tall as the list; even padding. */
+.oss[data-look="tight"] { grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 0; align-items: stretch; padding: 30px 32px 28px; border-radius: 20px; }
+.oss[data-look="tight"] .oss-text { display: flex; flex-direction: column; padding-right: 40px; }
+.oss[data-look="tight"] .oss-links { margin-top: auto; }
+.oss[data-look="tight"] .oss-log { padding-left: 32px; border-left: 1px solid rgb(11 11 13 / 0.09); }
+.oss[data-look="tight"] .oss-commits li:last-child a { padding-bottom: 0; }
+
+
+/* Nav: buttons arrive, island. The buttons wait where they end up and the
+   capsule closes round them; they surface in place, a touch soft and a
+   hair small, Download then GitHub 40ms on, on a strong ease-out. They go
+   quicker and together. Opacity, scale and filter only: the compositor
+   runs them, so a busy page (the hero playing) can't make them stutter. */
+html[data-nav="morph"][data-navacts="island"] .nav-actions .btn {
+  opacity: 0; scale: 0.96; filter: blur(4px); will-change: opacity, scale, filter;
+  transition: opacity 120ms ease-out, scale 120ms ease-out, filter 120ms ease-out, background-color var(--snappy-ms) var(--snappy);
+}
+html[data-nav="morph"][data-navacts="island"] .nav[data-acts-in] .nav-actions .btn {
+  opacity: 1; scale: 1; filter: blur(0);
+  transition: opacity 300ms cubic-bezier(0.23, 1, 0.32, 1), scale 300ms cubic-bezier(0.23, 1, 0.32, 1), filter 300ms cubic-bezier(0.23, 1, 0.32, 1), background-color var(--snappy-ms) var(--snappy);
+}
+html[data-nav="morph"][data-navacts="island"] .nav[data-acts-in] .nav-actions .btn:first-child { transition-delay: var(--nav-stagger, 90ms), var(--nav-stagger, 90ms), var(--nav-stagger, 90ms), 0ms; }
+
+/* Open source, from scratch. Each one below rearranges the same pieces:
+   the heading in its two halves (.oss-h1, .oss-h2), the line about it,
+   the two buttons, and the latest changes. */
+.oss-sha, .oss-ticker { display: none; }
+.oss-h1, .oss-h2 { display: inline; }
+
+/* Two doors: the heading's two halves are the card's two ways in. A dark
+   door for an idea, a light one for building it, with the changes behind
+   it: what building it looks like. */
+.oss[data-look^="doors"] {
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.5fr); grid-template-rows: auto auto 1fr auto; gap: 0 12px; align-items: start;
+  padding: 10px; border-radius: 22px; background: #e7e5df;
+}
+.oss[data-look^="doors"] :is(.oss-text, h3, .oss-links) { display: contents; }
+.oss[data-look^="doors"]::before, .oss[data-look^="doors"]::after { content: ''; grid-row: 1 / -1; border-radius: 14px; z-index: 0; align-self: stretch; }
+.oss[data-look^="doors"]::before { grid-column: 1; background: #0e0e10; }
+.oss[data-look^="doors"]::after { grid-column: 2; background: #f8f7f3; box-shadow: 0 1px 2px rgb(0 0 0 / 0.06); }
+.oss[data-look^="doors"] > *, .oss[data-look^="doors"] .oss-text > *, .oss[data-look^="doors"] h3 > *, .oss[data-look^="doors"] .oss-links > * { position: relative; z-index: 1; }
+.oss[data-look^="doors"] :is(.oss-h1, .oss-h2) { display: block; grid-row: 1; padding: 26px 28px 0; font-size: 26px; font-weight: 600; letter-spacing: -0.026em; line-height: 1.1; }
+.oss[data-look^="doors"] .oss-h1 { grid-column: 1; color: var(--fg); }
+.oss[data-look^="doors"] .oss-h2 { grid-column: 2; }
+.oss[data-look^="doors"] .oss-h2::first-letter { text-transform: uppercase; }
+.oss[data-look^="doors"] p { grid-column: 1; grid-row: 2; margin: 10px 0 0; padding: 0 28px; max-width: none; color: rgb(236 234 228 / 0.66); }
+.oss[data-look^="doors"] .oss-log { grid-column: 2; grid-row: 2 / span 2; padding: 18px 28px 0; }
+.oss[data-look^="doors"] .oss-links > .btn { grid-row: 4; justify-self: start; margin: 20px 28px 26px; }
+.oss[data-look^="doors"] .oss-links > .btn:not(.ghost) { grid-column: 1; background: var(--fg); color: #0b0b0d; }
+@media (hover: hover) and (pointer: fine) { .oss[data-look^="doors"] .oss-links > .btn:not(.ghost):hover { background: #fff; } }
+@media not all and (hover: hover) and (pointer: fine) { .oss[data-look^="doors"] .oss-links > .btn:not(.ghost):active { background: #fff; } }
+.oss[data-look^="doors"] .oss-links > .btn.ghost { grid-column: 2; }
+
+/* Poster: no card. The heading as big as the page allows, on two lines,
+   the line about it and the buttons beside its foot, and the changes
+   running past underneath in one quiet line (stops while you're on it). */
+.oss[data-look^="poster"] { grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); column-gap: 56px; row-gap: 40px; align-items: end; padding: 0; background: none; box-shadow: none; border-radius: 0; }
+.oss[data-look^="poster"] .oss-text { display: contents; }
+.oss[data-look^="poster"] h3 { grid-column: 1; font-size: clamp(44px, 5.4vw, 76px); letter-spacing: -0.045em; line-height: 0.98; margin: 0; }
+.oss[data-look^="poster"] :is(.oss-h1, .oss-h2) { display: block; }
+.oss[data-look^="poster"] .oss-h2 { color: rgb(236 234 228 / 0.45); }
+.oss[data-look^="poster"] p { grid-column: 2; grid-row: 1; align-self: end; margin: 0 0 64px; }
+.oss[data-look^="poster"] .oss-links { grid-column: 2; grid-row: 1; align-self: end; }
+.oss[data-look^="poster"] .oss-log { grid-column: 1 / -1; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; column-gap: 24px; padding: 14px 0; border-top: 1px solid rgb(255 255 255 / 0.1); border-bottom: 1px solid rgb(255 255 255 / 0.1); }
+.oss[data-look^="poster"] .oss-log h4 { border: 0; padding: 0; }
+.oss[data-look^="poster"] .oss-commits { display: none; }
+.oss[data-look^="poster"] .oss-ticker { display: block; overflow: hidden; -webkit-mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent); mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent); }
+.oss-track { display: flex; width: max-content; will-change: transform; }
+.oss-track a { display: flex; align-items: baseline; gap: 8px; padding-right: 40px; color: var(--oss-ink); font-size: 14px; white-space: nowrap; text-decoration: none; }
+.oss-track a .oss-msg { text-decoration: underline; text-decoration-color: transparent; text-decoration-thickness: 1px; text-underline-offset: 3px; transition: text-decoration-color 150ms ease, color 150ms ease; }
+@media (hover: hover) and (pointer: fine) { .oss-track a:hover .oss-msg { color: var(--oss-strong); text-decoration-color: currentColor; } }
+@media not all and (hover: hover) and (pointer: fine) { .oss-track a:active .oss-msg { color: var(--oss-strong); text-decoration-color: currentColor; } }
+.oss-track a .oss-sha { display: none; }
+.oss-track time { font-size: 12.5px; color: var(--oss-dim); }
+@media (prefers-reduced-motion: reduce) { .oss-ticker { overflow-x: auto; } }
+
+/* The newest change, big: the changes lead. The latest one is set as a
+   headline with when above it; the rest follow small and fade with age.
+   The heading, words and buttons sit beside it, on its foot. */
+.oss[data-look="feed"] { grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 56px; align-items: end; padding: 34px 36px 32px; border-radius: 20px; }
+.oss[data-look="feed"] .oss-text { order: 2; }
+.oss[data-look="feed"] .oss-log h4 { border: 0; padding-bottom: 14px; }
+.oss[data-look="feed"] .oss-commits li + li { border-top: 0; }
+.oss[data-look="feed"] .oss-commits li:first-child a { flex-direction: column-reverse; gap: 8px; padding: 0 0 22px; }
+.oss[data-look="feed"] .oss-commits li:first-child .oss-msg { white-space: normal; font-size: 26px; line-height: 1.18; letter-spacing: -0.022em; font-weight: 500; color: var(--oss-strong); text-wrap: balance; }
+.oss[data-look="feed"] .oss-commits li:first-child .oss-area { display: block; font-size: 14px; letter-spacing: 0; font-weight: 400; margin-bottom: 4px; }
+.oss[data-look="feed"] .oss-commits li:not(:first-child) a { padding: 5px 0; font-size: 13.5px; }
+.oss[data-look="feed"] .oss-commits li:nth-child(3) { opacity: 0.8; }
+.oss[data-look="feed"] .oss-commits li:nth-child(4) { opacity: 0.62; }
+.oss[data-look="feed"] .oss-commits li:nth-child(5) { opacity: 0.46; }
+.oss[data-look="feed"] .oss-commits li:nth-child(6) { opacity: 0.32; }
+
+/* Centred, three change cards: the heading and its line centred over the
+   three latest changes, each a small card of its own (what it touched,
+   the change, when). */
+.oss[data-look="cards"] { grid-template-columns: 1fr; justify-items: center; gap: 36px; padding: 0; background: none; box-shadow: none; border-radius: 0; text-align: center; }
+.oss[data-look="cards"] h3 { font-size: clamp(30px, 3.2vw, 40px); letter-spacing: -0.035em; }
+.oss[data-look="cards"] p { margin-left: auto; margin-right: auto; }
+.oss[data-look="cards"] .oss-links { justify-content: center; }
+.oss[data-look="cards"] .oss-log { width: 100%; text-align: left; }
+.oss[data-look="cards"] .oss-log h4 { border: 0; text-align: center; padding-bottom: 14px; }
+.oss[data-look="cards"] .oss-commits { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.oss[data-look="cards"] .oss-commits li + li { border-top: 0; }
+.oss[data-look="cards"] .oss-commits li:nth-child(n + 4) { display: none; }
+.oss[data-look="cards"] .oss-commits a { height: 100%; box-sizing: border-box; flex-direction: column; align-items: stretch; gap: 14px; padding: 18px 18px 16px; border-radius: 14px;
+  background: rgb(255 255 255 / 0.035); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08); transition: background-color 150ms ease, color 150ms ease; }
+@media (hover: hover) and (pointer: fine) { .oss[data-look="cards"] .oss-commits a:hover { background: rgb(255 255 255 / 0.06); } }
+@media not all and (hover: hover) and (pointer: fine) { .oss[data-look="cards"] .oss-commits a:active { background: rgb(255 255 255 / 0.06); } }
+.oss[data-look="cards"] .oss-msg { white-space: normal; font-size: 15px; line-height: 1.4; color: var(--oss-strong); }
+.oss[data-look="cards"] .oss-area { display: block; margin-bottom: 4px; font-size: 12.5px; }
+.oss[data-look="cards"] .oss-commits time { margin-top: auto; }
+
+/* The log as git shows it: the words on the light card, and the changes
+   on a dark panel set into it, each with its short hash, one line each,
+   in the typeface the code is written in. */
+.oss[data-look="gitlog"] { grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.3fr); gap: 36px; align-items: stretch; padding: 12px 12px 12px 36px; border-radius: 22px; }
+.oss[data-look="gitlog"] .oss-text { display: flex; flex-direction: column; justify-content: center; padding: 24px 0; }
+.oss[data-look="gitlog"] .oss-log { --oss-ink: rgb(236 234 228 / 0.82); --oss-strong: #fff; --oss-dim: rgb(236 234 228 / 0.4); --oss-rule: rgb(255 255 255 / 0.08);
+  padding: 18px 22px 16px; border-radius: 14px; background: #0f0f12; box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.06), 0 10px 30px -14px rgb(0 0 0 / 0.5); font-family: ui-monospace, 'SF Mono', Menlo, monospace; }
+.oss[data-look="gitlog"] .oss-log h4 { font-family: inherit; font-size: 12px; padding-bottom: 10px; margin-bottom: 6px; }
+.oss[data-look="gitlog"] .oss-commits li + li { border-top: 0; }
+.oss[data-look="gitlog"] .oss-commits a { gap: 14px; padding: 5px 0; font-size: 12.5px; }
+.oss[data-look="gitlog"] .oss-sha { display: inline; flex: none; color: #ff9b45; font: inherit; }
+.oss[data-look="gitlog"] .oss-commits time { font-size: 12px; }
+
+@media (max-width: 860px) {
+  .oss[data-look="tight"] { grid-template-columns: 1fr; gap: 28px; }
+  .oss[data-look="tight"] .oss-text { padding-right: 0; }
+  .oss[data-look="tight"] .oss-log { padding-left: 0; border-left: 0; }
+  .oss:is([data-look^="poster"], [data-look="feed"], [data-look="gitlog"]) { grid-template-columns: 1fr; gap: 28px; }
+  .oss[data-look^="poster"] :is(p, .oss-links) { grid-column: 1; grid-row: auto; margin: 0; }
+  .oss[data-look^="doors"] { grid-template-columns: 1fr; grid-template-rows: none; }
+  .oss[data-look^="doors"]::before, .oss[data-look^="doors"]::after { content: none; }
+  .oss[data-look^="doors"] :is(.oss-h1, .oss-h2, p, .oss-log, .oss-links > .btn) { grid-column: 1; grid-row: auto; }
+  .oss[data-look="cards"] .oss-commits { grid-template-columns: 1fr; }
+  .oss[data-look="gitlog"] { padding: 12px; }
+  .oss[data-look="gitlog"] .oss-text { padding: 16px 16px 0; }
+}
+
+/* Two doors, three ways (Open source: look). doors: the two inside one
+   light frame. doors-apart: two cards of their own, a dark one and a light
+   one, no frame. doors-dark: two dark cards, the same surface as the note
+   beside the FAQ, so the end of the page is all one material. */
+.oss[data-look^="doors"] :is(.oss-h1, .oss-h2) { font-size: 28px; padding-top: 30px; }
+.oss[data-look^="doors"] .oss-links > .btn { margin-bottom: 28px; }
+.oss[data-look="doors-apart"], .oss[data-look="doors-dark"] { padding: 0; gap: 0 14px; background: none; box-shadow: none; border-radius: 0; }
+.oss[data-look="doors-apart"]::before, .oss[data-look="doors-dark"]::before { border-radius: 18px; background: var(--panel); box-shadow: inset 0 0 0 1px var(--line); }
+.oss[data-look="doors-apart"]::after { border-radius: 18px; box-shadow: 0 1px 2px rgb(0 0 0 / 0.2), 0 24px 60px -12px rgb(0 0 0 / 0.45); }
+.oss[data-look="doors-dark"]::after { border-radius: 18px; background: var(--panel); box-shadow: inset 0 0 0 1px var(--line); }
+.oss[data-look="doors-dark"] {
+  --oss-ink: rgb(236 234 228 / 0.78); --oss-strong: var(--fg); --oss-dim: rgb(236 234 228 / 0.42); --oss-rule: rgb(255 255 255 / 0.09); --oss-rule2: rgb(255 255 255 / 0.06);
+  color: var(--fg);
+}
+.oss[data-look="doors-dark"] .oss-links > .btn.ghost { color: var(--fg); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.16); }
+@media (hover: hover) and (pointer: fine) { .oss[data-look="doors-dark"] .oss-links > .btn.ghost:hover { background: rgb(255 255 255 / 0.06); } }
+@media not all and (hover: hover) and (pointer: fine) { .oss[data-look="doors-dark"] .oss-links > .btn.ghost:active { background: rgb(255 255 255 / 0.06); } }
+
+/* Poster, three ways. poster-card: in a dark card like the note beside
+   the FAQ. poster-light: in the light card, the page's one light surface
+   at its close. poster-open: no card, and the FAQ's questions go in a
+   card instead, so the two sections don't run together. */
+.oss[data-look="poster-card"], .oss[data-look="poster-light"] { padding: 48px 48px 0; border-radius: 18px; row-gap: 40px; }
+.oss[data-look="poster-card"] { background: var(--panel); box-shadow: inset 0 0 0 1px var(--line); }
+.oss[data-look="poster-light"] {
+  --oss-ink: rgb(11 11 13 / 0.8); --oss-strong: #0b0b0d; --oss-dim: rgb(11 11 13 / 0.46);
+  background: #f6f5f1; color: #0b0b0d; box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.7), 0 1px 2px rgb(0 0 0 / 0.2), 0 24px 60px -12px rgb(0 0 0 / 0.45);
+}
+.oss[data-look="poster-light"] p { color: rgb(11 11 13 / 0.62); }
+/* The second line a plain grey, no tint: clearly the quieter half. */
+.oss[data-look="poster-light"] .oss-h2 { color: #949494; }
+.oss[data-look="poster-light"] .btn { background: #0b0b0d; color: var(--fg); }
+@media (hover: hover) and (pointer: fine) { .oss[data-look="poster-light"] .btn:hover { background: #222226; } }
+@media not all and (hover: hover) and (pointer: fine) { .oss[data-look="poster-light"] .btn:active { background: #222226; } }
+.oss[data-look="poster-light"] .btn.ghost { background: transparent; color: #0b0b0d; box-shadow: inset 0 0 0 1px rgb(11 11 13 / 0.16); }
+@media (hover: hover) and (pointer: fine) { .oss[data-look="poster-light"] .btn.ghost:hover { background: rgb(11 11 13 / 0.05); } }
+@media not all and (hover: hover) and (pointer: fine) { .oss[data-look="poster-light"] .btn.ghost:active { background: rgb(11 11 13 / 0.05); } }
+/* In a card, the running line sits along the card's foot, edge to edge. */
+.oss:is([data-look="poster-card"], [data-look="poster-light"]) .oss-log { margin: 0 -48px; padding: 16px 48px; border-bottom: 0; }
+.oss[data-look="poster-light"] .oss-log { border-top-color: rgb(11 11 13 / 0.1); }
+.oss[data-look="poster-open"] { margin-top: 96px; }
+body:has(.oss[data-look="poster-open"]) .faq { padding: 8px 28px 10px; border-radius: 18px; background: var(--panel); box-shadow: inset 0 0 0 1px var(--line); }
+body:has(.oss[data-look="poster-open"]) .faq details:first-child { border-top: 0; }
+body:has(.oss[data-look="poster-open"]) .faq details:last-child { border-bottom: 0; }
+@media (max-width: 860px) {
+  .oss[data-look="doors-apart"], .oss[data-look="doors-dark"] { gap: 14px; }
+  .oss:is([data-look="poster-card"], [data-look="poster-light"]) { padding: 28px 24px 0; }
+  .oss:is([data-look="poster-card"], [data-look="poster-light"]) .oss-log { margin: 0 -24px; padding: 14px 24px; }
+}
+/* In a card the poster's heading is a size smaller, so it stays on two
+   lines; the doors show the four latest changes, so the idea door isn't
+   left mostly empty beside them. */
+.oss:is([data-look="poster-card"], [data-look="poster-light"]) { grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); }
+.oss:is([data-look="poster-card"], [data-look="poster-light"]) h3 { font-size: clamp(44px, 4.3vw, 62px); line-height: 1.02; }
+.oss[data-look^="doors"] .oss-commits li:nth-child(n + 5) { display: none; }
+
+/* The open source card's own gap above it, the same as between sections. */
+.oss { margin-top: var(--section-gap) !important; }
+
+/* Light card extras (Tune, Open source: light card extra). */
+.oss[data-extra]:not([data-extra="none"]) { position: relative; isolation: isolate; }
+/* A record's grooves, centred on the card's bottom right corner and
+   running all the way in, faint, fading out towards the words. */
+.oss[data-extra="grooves"] { overflow: hidden; }
+.oss[data-extra="grooves"]::after {
+  content: ''; position: absolute; z-index: -1; right: 0; bottom: 0; width: 1100px; height: 1100px; translate: 50% 50%; border-radius: 50%; pointer-events: none;
+  background: repeating-radial-gradient(circle, rgb(11 11 13 / 0.075) 0 1px, transparent 1px 6px);
+  -webkit-mask-image: radial-gradient(circle, #000 15%, transparent 50%); mask-image: radial-gradient(circle, #000 15%, transparent 50%);
+}
+/* The heading rises in, a line at a time, once the card is mostly in
+   view; then the words and buttons. Once only. */
+.oss[data-extra="reveal"] :is(.oss-h1, .oss-h2, p, .oss-links) { transition: opacity 700ms cubic-bezier(0.23, 1, 0.32, 1), translate 700ms cubic-bezier(0.23, 1, 0.32, 1), filter 700ms cubic-bezier(0.23, 1, 0.32, 1); }
+.oss[data-extra="reveal"]:not([data-in]) :is(.oss-h1, .oss-h2, p, .oss-links) { opacity: 0; translate: 0 24px; filter: blur(6px); }
+.oss[data-extra="reveal"] .oss-h2 { transition-delay: 90ms; }
+.oss[data-extra="reveal"] p { transition-delay: 200ms; }
+.oss[data-extra="reveal"] .oss-links { transition-delay: 260ms; }
+@media (prefers-reduced-motion: reduce) { .oss[data-extra="reveal"] :is(.oss-h1, .oss-h2, p, .oss-links) { opacity: 1 !important; translate: none !important; filter: none !important; } }
+
+/* Cards (Tune, Cards: style). Quiet: of a piece with the page's other
+   surfaces. A soft light from the top instead of a flat fill, a 1px edge
+   with a brighter top, 18px corners like the open source card, and the
+   feature lists on hairlines instead of alternating bands. */
+html[data-cards="quiet"] :is(.steps li, .group) {
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.045), rgb(255 255 255 / 0.015) 55%);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.07), inset 0 1px 0 rgb(255 255 255 / 0.08);
+}
+html[data-cards="quiet"] :is(.steps li, .group) h3 { font-size: 18px; font-weight: 500; letter-spacing: -0.012em; }
+html[data-cards="quiet"] .group ul { margin-inline: 0; }
+html[data-cards="quiet"] .group li { padding: 9px 0; border-radius: 0; }
+html[data-cards="quiet"] .group li:nth-child(odd) { background: none; }
+html[data-cards="quiet"] .group li + li { box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06); }
+html[data-cards="quiet"] .num { font: 500 12px/1 var(--font, inherit); font-variant-numeric: tabular-nums; letter-spacing: 0.02em; color: var(--fg-3); }
+
+/* Open: no card. The picture sits in its own rounded panel, and the
+   heading and words sit under it on the page, like the FAQ's list. */
+html[data-cards="open"] :is(.steps li, .group) { background: none; box-shadow: none; overflow: visible; }
+html[data-cards="open"] :is(.steps li, .group) > :not(.pic) { margin-inline: 4px !important; }
+html[data-cards="open"] :is(.steps li, .group) .pic { border-radius: 16px; overflow: hidden; margin-bottom: 18px;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.07), inset 0 1px 0 rgb(255 255 255 / 0.08); background-color: rgb(255 255 255 / 0.025);
+  -webkit-mask-image: none; mask-image: none; }
+html[data-cards="open"] .group ul { margin-inline: 0; }
+html[data-cards="open"] .group li { padding: 9px 0; border-radius: 0; }
+html[data-cards="open"] .group li:nth-child(odd) { background: none; }
+html[data-cards="open"] .group li + li { box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06); }
+html[data-cards="open"] .groups { row-gap: 48px; column-gap: 28px; }
+html[data-cards="open"] .steps { column-gap: 28px; }
+
+/* Features: heading mark (Tune). The dot is hidden in every mark but its
+   own; the others put the card's deck colour somewhere else. */
+html[data-mark]:not([data-mark="dot"]) .group h3 .dot { display: none; }
+.group { position: relative; }
+/* Edge: a short lit line along the card's top edge, brightest in the
+   middle and gone at the ends, like light catching the rim. */
+html[data-mark="edge"] .group::before {
+  content: ''; position: absolute; z-index: 2; top: 0; left: 18%; right: 18%; height: 1px; pointer-events: none;
+  background: linear-gradient(90deg, transparent, var(--mark) 50%, transparent);
+  box-shadow: 0 0 12px 0 var(--mark);
+  opacity: 0.8;
+}
+.group:nth-child(odd) { --mark: var(--deck-a); }
+.group:nth-child(even) { --mark: var(--deck-b); }
+/* Glow: the deck colour as a soft light from the card's top left. */
+html[data-mark="glow"] .group::before {
+  content: ''; position: absolute; z-index: 0; inset: 0; border-radius: inherit; pointer-events: none;
+  background: radial-gradient(60% 45% at 0% 0%, color-mix(in srgb, var(--mark) 14%, transparent), transparent 70%);
+}
+/* Tick: a short rounded bar in the deck colour, the heading's height. */
+html[data-mark="tick"] .group h3::before { content: ''; flex: none; width: 3px; height: 15px; border-radius: 2px; background: var(--mark); }
+
+/* A change's area ("Mappings:") in the change's own colour, a step heavier. */
+.oss-area { font-weight: 500; }
+
+/* Between sections (Tune, Sections: between). Each keeps the same 112px
+   from the content above to the heading; only what sits in that space
+   changes. */
+.section { position: relative; counter-increment: sec; }
+main { counter-reset: sec; }
+/* Rule: a hairline across the column, half way, fading at its ends. */
+html[data-between="rule"] :is(#install, #features, #faq)::before {
+  content: ''; position: absolute; left: 50%; translate: -50% 0; top: calc(var(--section-gap) / 2); height: 1px; width: min(1120px, 100% - 32px);
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.09) 15%, rgb(255 255 255 / 0.09) 85%, transparent);
+}
+/* Grooves: a narrow strip of a record's grooves, half way, in place of a
+   rule. */
+html[data-between="grooves"] :is(#install, #features, #faq)::before {
+  content: ''; position: absolute; left: 50%; top: calc(var(--section-gap) / 2 - 20px); width: min(1120px, 100% - 32px); height: 40px; translate: -50% 0; pointer-events: none;
+  background: repeating-radial-gradient(ellipse 120% 600% at 50% 800%, rgb(255 255 255 / 0.07) 0 1px, transparent 1px 6px);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 25%, #000 75%, transparent), linear-gradient(transparent, #000 40%, #000 60%, transparent); -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(90deg, transparent, #000 25%, #000 75%, transparent), linear-gradient(transparent, #000 40%, #000 60%, transparent); mask-composite: intersect;
+}
+/* Glow: a soft light behind each heading in the decks' colours, alternating. */
+html[data-between="glow"] :is(#install, #features, #faq)::before {
+  content: ''; position: absolute; z-index: -1; left: 50%; top: var(--section-gap); width: 1100px; height: 420px; translate: -50% -45%; pointer-events: none;
+  background: radial-gradient(closest-side, rgb(201 220 242 / 0.07), transparent);
+}
+html[data-between="glow"] #features::before { background: radial-gradient(closest-side, rgb(240 220 192 / 0.07), transparent); }
+/* Eyebrow: each heading numbered above it, small. */
+html[data-between="eyebrow"] :is(#install, #features, #faq) > h2::before {
+  content: counter(sec, decimal-leading-zero); display: block; margin-bottom: 14px;
+  color: var(--fg-3); font: 500 13px/1 var(--mono); letter-spacing: 0.02em;
+}
+
+
+/* The note beside the FAQ (Tune, Note: style). */
+/* Tilt: set down a little crooked, like a note left on the desk. */
+html[data-note="tilt"] .founder, html[data-note="letter"] .founder { rotate: -1.6deg; transform-origin: 50% 0; }
+/* Overhang: the signature larger, running out past the card's corner. */
+html[data-note="overhang"] .founder-sig, html[data-note="letter"] .founder-sig { width: 200px; margin: -4px -56px -46px auto; position: relative; }
+html[data-note="overhang"] .founder, html[data-note="letter"] .founder { overflow: visible; }
+/* Paper: a sheet of warm off-white, dark ink, a soft shadow under it. */
+html[data-note="paper"] .founder, html[data-note="letter"] .founder {
+  background: #efebe2; color: rgb(20 18 14 / 0.7);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 20px 40px -16px rgb(0 0 0 / 0.6);
+}
+html[data-note="paper"] .founder h3, html[data-note="letter"] .founder h3 { color: #17150f; }
+html[data-note="paper"] .founder-body i, html[data-note="letter"] .founder-body i { background: rgb(20 18 14 / 0.1); }
+html[data-note="paper"] .founder-ask a, html[data-note="letter"] .founder-ask a { color: #17150f; text-decoration-color: rgb(20 18 14 / 0.35); }
+html[data-note="paper"] .founder-sig, html[data-note="letter"] .founder-sig { stroke: #1d2a52; }
+/* Lined: the dark card ruled like a notebook page, a faint margin line. */
+html[data-note="lined"] .founder {
+  background:
+    linear-gradient(90deg, transparent 15px, rgb(255 120 100 / 0.16) 15px 16px, transparent 16px),
+    repeating-linear-gradient(transparent 0 25px, rgb(255 255 255 / 0.045) 25px 26px),
+    var(--panel);
+  background-position: 0 0, 0 56px, 0 0;
+}
+
+/* The light poster's "Latest updates and changes": darker, so it reads as
+   a label rather than a hint. */
+.oss[data-look="poster-light"] .oss-log h4 { color: rgb(11 11 13 / 0.64); }
+
+/* Features: heading (Tune). How much the heading stands above its list.
+   big: the heading larger and heavier. quiet: the list's names and
+   descriptions a step quieter, so the heading leads. both: the two. */
+html:is([data-fhead="big"], [data-fhead="both"]) :is(.group, .steps li) h3 { font-size: 22px !important; font-weight: 600 !important; letter-spacing: -0.02em !important; margin-bottom: 16px; }
+html:is([data-fhead="quiet"], [data-fhead="both"]) .group li b { color: var(--fg-2); font-weight: 450; }
+html:is([data-fhead="quiet"], [data-fhead="both"]) .group li span { color: var(--fg-3); }
+/* Marks on the heading itself (Features: heading mark). Underline: a
+   short line in the card's deck colour under the heading. Count: how
+   many things the card lists, small, beside the heading. */
+html[data-mark="underline"] :is(.group, .steps li) h3 { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
+html[data-mark="underline"] :is(.group, .steps li) h3::after { content: ''; width: 22px; height: 2px; border-radius: 1px; background: var(--mark); box-shadow: 0 0 10px var(--mark); }
+html[data-mark="count"] .group h3::after { content: attr(data-count); margin-left: auto; padding: 2px 8px; border-radius: 999px; font: 500 12px/18px var(--mono); color: var(--mark); background: color-mix(in srgb, var(--mark) 12%, transparent); }
+
+/* Note: ruled (the default). Set down a touch crooked to the right, on a
+   college-ruled page: faint blue rules every 24px with the text sitting on
+   them (the note runs on a 24px line, the placeholder lines one to a
+   rule), a soft red double margin line down the left, and the signature
+   on the right, a little smaller. */
+html[data-note="ruled"] .founder {
+  rotate: 1.4deg; transform-origin: 50% 0;
+  padding: 24px 24px 18px 34px; line-height: 24px;
+  background:
+    linear-gradient(90deg, transparent 18px, rgb(240 120 110 / 0.22) 18px 19px, transparent 19px 21px, rgb(240 120 110 / 0.14) 21px 22px, transparent 22px),
+    repeating-linear-gradient(to bottom, transparent 0 23px, rgb(150 180 235 / 0.09) 23px 24px) 0 24px / 100% calc(100% - 48px) no-repeat,
+    var(--panel);
+  box-shadow: inset 0 0 0 1px var(--line), 0 18px 40px -18px rgb(0 0 0 / 0.7);
+}
+html[data-note="ruled"] .founder h3 { margin: 0 0 24px; line-height: 24px; }
+html[data-note="ruled"] .founder-body { grid-auto-rows: 24px; gap: 0; margin-bottom: 24px; }
+html[data-note="ruled"] .founder-body i { align-self: end; margin-bottom: 6px; height: 8px; }
+html[data-note="ruled"] .founder-body i.gap { margin-top: 0; grid-row: span 2; }
+html[data-note="ruled"] .founder-ask { margin: 0; }
+html[data-note="ruled"] .founder-sig { width: 124px; margin: 2px -6px 0 auto; }
+
+/* Cards (Tune, Cards: style). Hairlines: the cards as they were, only the
+   feature lists on hairlines instead of alternating bands (and the 18px
+   corners every card on the page now shares). */
+html[data-cards="hairlines"] :is(.steps li, .group) { border-radius: 18px; }
+html[data-cards="hairlines"] .group ul { margin-inline: 0; }
+html[data-cards="hairlines"] .group li { padding: 9px 0; border-radius: 0; }
+html[data-cards="hairlines"] .group li:nth-child(odd) { background: none; }
+html[data-cards="hairlines"] .group li + li { box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06); }
+
+/* The install steps, built like the feature cards: the picture, then the
+   heading at the features' size with the same mark under it, its step
+   number on the right of the heading in a small pill in the card's deck
+   colour (as the features' count would sit), then the words. */
+.steps li:nth-child(odd) { --mark: var(--deck-a); }
+.steps li:nth-child(even) { --mark: var(--deck-b); }
+/* The install steps are the feature card itself: the same picture, the
+   same heading (here with its step's number in a badge before the words),
+   the same space under it, then the words where the feature's rows are. */
+/* The badge sits centred on the heading's capitals, not on its line box
+   (which carries room for descenders below, so centring on it leaves the
+   badge low): the words' box is trimmed to their cap height and baseline
+   (text-box), the heading keeps its usual height, and both are centred in
+   it. Browsers without text-box fall back to centring on the line. */
+.steps li[data-picture] h3 { display: flex; align-items: center; gap: 10px; min-height: 1.6em; }
+.steps li[data-picture] h3 .t { display: block; text-box: trim-both cap alphabetic; }
+/* The badge: the step's number in the heading's own type, neutral, its
+   corners those of the app's A/B deck badges; centred on the words. */
+.steps li[data-picture] h3 .num { flex: none; margin: 0; font: inherit; font-size: 14px; font-weight: 600; line-height: 1; color: var(--fg-2); }
+html[data-stepnum="badge"] .steps li[data-picture] h3 .num { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 7px; background: rgb(255 255 255 / 0.07); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08); }
+/* (The number inside the badge trimmed the same way, so it's centred in it
+   by its own capitals too.) */
+.steps li[data-picture] h3 .num { text-box: trim-both cap alphabetic; }
+/* The words start where a feature's first row's words do. */
+.steps li[data-picture] > p { margin: 0; padding-top: 9px; }
+
+/* Features, set apart (Tune, Features: band). Every way keeps one rhythm:
+   96px from the install cards' foot to the band's edge, 96px inside it
+   from its edge to the heading and from the last card to its foot, and
+   96px from its foot to the FAQ's heading (64px on phones). */
+:root { --band: 96px; }
+@media (max-width: 860px) { :root { --band: 64px; } }
+html:not([data-fband="none"]) #features { margin-top: var(--band); padding-top: var(--band); padding-bottom: var(--band); }
+html:not([data-fband="none"]) #faq { padding-top: var(--band); }
+html:not([data-fband="none"]) #features::before {
+  content: ''; position: absolute; z-index: -1; top: 0; bottom: 0; left: 50%; width: 100vw; translate: -50% 0; pointer-events: none;
+}
+/* Lift: a full-width band a shade lighter than the page, a hairline at
+   each edge. */
+html[data-fband="lift"] #features::before { background: rgb(255 255 255 / 0.022); border-block: 1px solid rgb(255 255 255 / 0.06); }
+/* Recess: the band a shade darker than the page, as if pressed in, with
+   a soft shadow under its top edge. */
+/* Recess: the band a shade darker than the page (not as dark as it was),
+   as if pressed in, with a soft shadow under its top edge and a hairline
+   along each edge. Its colour and the hairlines' are on Tune (Features:
+   band colour, band edge colour). */
+html[data-fband="recess"] #features::before {
+  background: var(--band-bg, #070709);
+  border-block: 1px solid var(--band-line, rgb(255 255 255 / 0.07));
+  box-shadow: inset 0 14px 24px -14px rgb(0 0 0 / 0.7);
+}
+/* Panel: one big rounded panel round the features, inside the page's
+   margins, the cards on it. */
+/* (A panel keeps 56px inside on every side, top, bottom and sides alike.) */
+html[data-fband="panel"] #features { padding-top: 56px; padding-bottom: 56px; }
+html[data-fband="panel"] #features::before { width: min(100vw - 16px, 100% + 112px); border-radius: 32px; background: rgb(255 255 255 / 0.025); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.06), inset 0 1px 0 rgb(255 255 255 / 0.06); }
+/* Tint: the full-width band lit faintly in the decks' colours, cool on the
+   left and warm on the right, its edges fading into the page. */
+html[data-fband="tint"] #features::before {
+  background: linear-gradient(90deg, rgb(201 220 242 / 0.05), rgb(255 255 255 / 0.015) 50%, rgb(240 220 192 / 0.05));
+  -webkit-mask-image: linear-gradient(transparent, #000 18%, #000 82%, transparent); mask-image: linear-gradient(transparent, #000 18%, #000 82%, transparent);
+}
+/* Grooves: the full-width band cut with a record's grooves, very faint,
+   round a centre far below, with hairline edges. */
+html[data-fband="grooves"] #features::before {
+  background: repeating-radial-gradient(ellipse 140% 120% at 50% 160%, rgb(255 255 255 / 0.035) 0 1px, transparent 1px 9px), rgb(255 255 255 / 0.012);
+  border-block: 1px solid rgb(255 255 255 / 0.06);
+}
+
+
+/* The Interlude record (built in index.html) for the note's record styles.
+   Hidden unless one of them is chosen. Its light (.rec-sheen) stays still
+   while the disc turns under it, as light on a real record does. */
+.rec { display: none; }
+html:is([data-note="sleeve"], [data-note="label"]) .rec { display: block; position: absolute; aspect-ratio: 1; pointer-events: none; }
+.rec-spin, .rec-disc, .rec-sheen { position: absolute; inset: 0; width: 100%; height: 100%; }
+.rec-disc { display: none; border-radius: 50%; filter: drop-shadow(0 14px 24px rgb(0 0 0 / 0.55)); }
+html[data-note="sleeve"] .rec-disc:first-child, html[data-note="sleeve"] .rec-back, html[data-note="label"] .rec-disc:last-child { display: block; }
+/* Side A faces you; side B is on its back, and shows when it's turned over. */
+.rec { perspective: 900px; }
+.rec-flip { position: absolute; inset: 0; transform-style: preserve-3d; }
+.rec-spin { transform-style: preserve-3d; }
+.rec-disc { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.rec-back { transform: rotateY(180deg); }
+/* The record out of its sleeve is part of the note: on it, the note stays
+   hovered (and the record stays out); a click on it turns it over. */
+html[data-note="sleeve"] .rec { pointer-events: auto; cursor: pointer; }
+html[data-note="sleeve"] .founder.over-rec { cursor: pointer; }
+/* As it lands, a glint crosses it. */
+.rec::after { content: ''; position: absolute; inset: 0; border-radius: 50%; pointer-events: none; opacity: 0;
+  background: linear-gradient(115deg, transparent 38%, rgb(255 255 255 / 0.28) 50%, transparent 62%) no-repeat; background-size: 300% 100%; background-position: 100% 0; }
+.rec.rec-glint::after { animation: rec-glint 0.7s 0.18s cubic-bezier(0.22, 1, 0.36, 1) both; }
+@keyframes rec-glint { from { opacity: 1; background-position: 100% 0; } to { opacity: 1; background-position: 0% 0; } }
+.rec-sheen {
+  border-radius: 50%;
+  background: conic-gradient(from -35deg, transparent 0deg, rgb(255 255 255 / 0.10) 22deg, transparent 52deg, transparent 180deg, rgb(255 255 255 / 0.07) 202deg, transparent 232deg);
+  -webkit-mask-image: radial-gradient(circle, transparent calc(var(--lab) - 1%), #000 calc(var(--lab) + 2%), #000 98%, transparent 99%);
+  mask-image: radial-gradient(circle, transparent calc(var(--lab) - 1%), #000 calc(var(--lab) + 2%), #000 98%, transparent 99%);
+}
+html[data-note="sleeve"] .rec { --lab: 34%; }
+html[data-note="label"] .rec { --lab: 52%; }
+@keyframes rec-turn { to { rotate: 360deg; } }
+
+/* Note: sleeve. A die-cut "company" sleeve of warm paper with the note
+   printed on it and a round window cut in its corner; the record inside
+   turns slowly, its label showing through the window, and its edge shows
+   out of the sleeve's open side. It slides a little further out as the
+   note comes into view. */
+html[data-note="sleeve"] .founder {
+  --hx: 72%; --hy: calc(60% - var(--rec-lift, 12px)); --hr: 50px;
+  /* A record sleeve's corners are all but square: card cut to size. */
+  aspect-ratio: auto; width: 292px; height: 292px; box-sizing: border-box; margin-inline: auto; padding: 16px 22px 14px; display: flex; flex-direction: column; border-radius: var(--sleeve-r, 4px); overflow: visible; rotate: var(--sleeve-tilt, -1.5deg); transform-origin: 50% 0;
+  background: none; box-shadow: none; color: rgb(28 24 18 / 0.72);
+}
+html[data-note="sleeve"] .founder::after {
+  content: ''; position: absolute; z-index: -2; inset: 0; border-radius: inherit;
+  background:
+    linear-gradient(90deg, transparent calc(100% - 3px), rgb(0 0 0 / 0.14) calc(100% - 1px)),
+    /* Ring wear: the faint round mark a record leaves pressed into its
+       sleeve, a hair lighter, where its rim sits. */
+    radial-gradient(circle at var(--hx) var(--hy), transparent 112px, rgb(255 255 255 / 0.16) 115.5px, rgb(80 64 40 / 0.06) 117px, transparent 120px),
+    /* Wear: its corners and edges scuffed lighter where it's been
+       handled, the rim a little frayed, and two faint old stains. */
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 292 292' preserveAspectRatio='none'%3E%3Cdefs%3E%3Cfilter id='g' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='2' seed='5'/%3E%3CfeColorMatrix values='0 0 0 0 1  0 0 0 0 0.99  0 0 0 0 0.96  0 0 0 2.4 -1'/%3E%3CfeComposite in2='SourceGraphic' operator='in'/%3E%3C/filter%3E%3CradialGradient id='c'%3E%3Cstop offset='0' stop-color='%23fff' stop-opacity='1'/%3E%3Cstop offset='1' stop-color='%23fff' stop-opacity='0'/%3E%3C/radialGradient%3E%3Cfilter id='s' x='-30%25' y='-30%25' width='160%25' height='160%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.03' numOctaves='2' seed='7'/%3E%3CfeDisplacementMap in='SourceGraphic' scale='16' xChannelSelector='R' yChannelSelector='G'/%3E%3CfeGaussianBlur stdDeviation='1.1'/%3E%3C/filter%3E%3C/defs%3E%3Cg filter='url%28%23s%29'%3E%3Ccircle cx='236' cy='46' r='30' fill='%237a5a30' fill-opacity='0.03' stroke='%236e4f28' stroke-opacity='0.05' stroke-width='2'/%3E%3Cellipse cx='10' cy='156' rx='20' ry='15' fill='%237a5a30' fill-opacity='0.045'/%3E%3C/g%3E%3Cg filter='url%28%23g%29' opacity='0.6'%3E%3Ccircle cx='0' cy='0' r='24' fill='url%28%23c%29'/%3E%3Ccircle cx='292' cy='0' r='18' fill='url%28%23c%29'/%3E%3Ccircle cx='0' cy='292' r='30' fill='url%28%23c%29'/%3E%3Ccircle cx='292' cy='292' r='22' fill='url%28%23c%29'/%3E%3Crect x='0' y='0' width='292' height='292' fill='none' stroke='%23fff' stroke-width='4.5'/%3E%3Crect x='289' y='0' width='3' height='292' fill='%23fff'/%3E%3C/g%3E%3C/svg%3E") 0 0 / 100% 100% no-repeat,
+    /* Paper: a grain (no fibres, so no streaks), and a soft, even
+       mottling under it. */
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.62' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.3 0 0 0 0 0.25 0 0 0 0 0.18 0 0 0 0.19 0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='m'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.028' numOctaves='3' seed='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.4 0 0 0 0 0.32 0 0 0 0 0.2 0 0 0 0.22 -0.06'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23m)'/%3E%3C/svg%3E"),
+    /* Its edges a touch darker, handled. */
+    radial-gradient(130% 130% at 50% 45%, transparent 60%, rgb(80 64 40 / 0.12)),
+    linear-gradient(160deg, #ece6d8, #e2dacb);
+  -webkit-mask: radial-gradient(circle var(--hr) at var(--hx) var(--hy), transparent 98%, #000); mask: radial-gradient(circle var(--hr) at var(--hx) var(--hy), transparent 98%, #000);
+  filter: drop-shadow(0 22px 30px rgb(0 0 0 / 0.5)) drop-shadow(0 1px 1px rgb(0 0 0 / 0.3));
+}
+/* The window's cut edge: a hair of shadow inside its rim. */
+html[data-note="sleeve"] .founder::before {
+  content: ''; position: absolute; z-index: -1; left: var(--hx); top: var(--hy); width: calc(var(--hr) * 2); height: calc(var(--hr) * 2); translate: -50% -50%; border-radius: 50%;
+  box-shadow: inset 0 2px 5px rgb(0 0 0 / 0.45), inset 0 0 0 1px rgb(0 0 0 / 0.18);
+}
+/* The record: centred on the window, a little larger than the sleeve's
+   reach, so its edge stands out of the open side. */
+/* At rest the record sits in the sleeve, still, its edge just showing at
+   the open side. On hover it slides out to the side and spins up (the
+   turning is index.html's, eased up and down); off, it slows, stops and
+   slides home. */
+html[data-note="sleeve"] .rec {
+  z-index: -3; width: 80%; left: calc(var(--hx) - 40%); top: calc(var(--hy) - 40%);
+}
+/* (The slide out is index.html's, on a spring.) */
+/* Beside the FAQ, pushed a little right (Note: push right, against how
+   far a tilted corner juts toward the questions), and kept clear of the
+   window's edge: the record, out at its furthest, reaches --rec-over past
+   the sleeve (index.html sets it); when the page's margin can't hold that,
+   the note's column widens and the FAQ narrows by just what's missing. */
+@media (min-width: 861px) {
+  html[data-note="sleeve"] .faq-row {
+    --shift: max(0px, var(--rec-over, 133px) + var(--note-nudge, 8px) + 28px - 14px - max(16px, (100vw - 1120px) / 2));
+    grid-template-columns: minmax(0, 1fr) calc(320px + var(--shift));
+  }
+  html[data-note="sleeve"] .founder { margin: 0 calc(14px + var(--shift)) 0 auto; translate: var(--note-nudge, 8px) 0; }
+}
+/* On a touch screen the record is pulled out by a tap or by hand
+   (index.html): the record, and a round handle over the sleeve's window,
+   take a finger's drag for themselves; the sleeve still scrolls the page.
+   Nothing on it is selected or called out by a long press. Where there's
+   no room beside the sleeve (a phone) the record comes out downward, so
+   there's room kept under the sleeve for it. */
+.rec-grab { display: none; }
+@media not all and (hover: hover) and (pointer: fine) {
+  html[data-note="sleeve"] .rec { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+}
+@media (pointer: coarse) and (prefers-reduced-motion: no-preference) {
+  html[data-note="sleeve"] .rec { touch-action: none; }
+  html[data-note="sleeve"] .rec-grab { display: block; position: absolute; left: var(--hx); top: var(--hy); width: calc(var(--hr) * 2); height: calc(var(--hr) * 2); translate: -50% -50%; border-radius: 50%; touch-action: none; }
+}
+@media (max-width: 620px) and (prefers-reduced-motion: no-preference) {
+  @media not all and (hover: hover) and (pointer: fine) { html[data-note="sleeve"] .founder { margin-bottom: 92px; } }
+}
+/* (The page cuts it at the window's edge, never a section's.) */
+body { overflow-x: clip; }
+html[data-note="sleeve"] .founder h3 { color: #17140e; margin: 0 0 12px; }
+html[data-note="sleeve"] .founder-body { margin-bottom: 14px; gap: 7px; }
+html[data-note="sleeve"] .founder-body i.gap { margin-top: 6px; }
+html[data-note="sleeve"] .founder-body i { background: rgb(28 24 18 / 0.11); }
+html[data-note="sleeve"] .founder-body i:nth-child(n + 5) { width: min(var(--w), 48%); }
+html[data-note="sleeve"] .founder-ask { max-width: 56%; margin: auto 0 var(--ask-gap, 6px); line-height: 1.4; font-size: 13.5px; }
+/* Links as everywhere else on the page: the underline faint, full on hover. */
+html[data-note="sleeve"] .founder-ask a { color: #17140e; text-decoration-color: rgb(28 24 18 / 0.35); white-space: nowrap; }
+@media (hover: hover) and (pointer: fine) { html[data-note="sleeve"] .founder-ask a:hover { text-decoration-color: #17140e; } }
+@media not all and (hover: hover) and (pointer: fine) { html[data-note="sleeve"] .founder-ask a:active { text-decoration-color: #17140e; } }
+/* The signature smaller, without the line under it (it read as a rule the
+   rest didn't line up with). */
+html[data-note="sleeve"] .founder-sig { stroke: #23315c; width: 86px; margin: 0 0 0 -3px; }
+html[data-note="sleeve"] .founder-sig path:nth-child(3) { display: none; }
+
+/* Note: white label. A promo pressing with a plain white label, the note
+   written on the label. As it comes into view it spins down to a stop;
+   on hover it turns once more and back, like a record nudged under the
+   hand. The question sits under the record. */
+html[data-note="label"] .founder {
+  aspect-ratio: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;
+  padding: 0 26%; margin-bottom: 52px; background: none; box-shadow: none; border-radius: 50%; overflow: visible; color: rgb(28 24 18 / 0.7);
+}
+html[data-note="label"] .rec { z-index: -1; inset: 0; width: 100%; }
+html[data-note="label"] .rec-spin { transition: rotate 1.4s cubic-bezier(0.3, 0, 0.2, 1); }
+html[data-note="label"] .founder[data-sign]:not([data-signed]) .rec-spin { rotate: -540deg; transition: none; }
+html[data-note="label"] .founder[data-signed] .rec-spin { animation: rec-down 1.8s cubic-bezier(0.12, 0.6, 0.2, 1); }
+@keyframes rec-down { from { rotate: -540deg; } to { rotate: 0deg; } }
+@media (hover: hover) and (pointer: fine) { html[data-note="label"] .founder:hover .rec-spin { rotate: 360deg; } }
+html[data-note="label"] .founder > :not(.rec) { transition: opacity 0.6s ease 1.1s; }
+html[data-note="label"] .founder[data-sign]:not([data-signed]) > :not(.rec) { opacity: 0; }
+html[data-note="label"] .founder h3 { color: #17140e; font-size: 14px; margin: 0 0 8px; }
+html[data-note="label"] .founder-body { width: 100%; justify-items: center; gap: 6px; margin-bottom: 4px; }
+html[data-note="label"] .founder-body i { background: rgb(28 24 18 / 0.12); height: 6px; }
+html[data-note="label"] .founder-body i:nth-child(n + 4) { display: none; }
+html[data-note="label"] .founder-sig { stroke: #23315c; width: 78px; margin: 0 auto; }
+html[data-note="label"] .founder-ask { position: absolute; top: calc(100% + 18px); left: 0; right: 0; margin: 0; color: var(--fg-2); font-size: 14px; }
+@media (prefers-reduced-motion: reduce) {
+  html:is([data-note="sleeve"], [data-note="label"]) .rec-spin { animation: none !important; rotate: none !important; }
+  html[data-note="sleeve"] .rec { transition: none; }
+}
+
+/* Feature cards, fine-tuned. The heading sits closer to its list than to
+   the picture above it: 40px or so of the picture's own space above it,
+   8px below it to the first row. */
+html:is([data-fhead="big"], [data-fhead="both"]) :is(.group, .steps li) h3 { margin-bottom: var(--fh-gap, 0px) !important; }
+/* The list's names a touch brighter than the descriptions' grey: about
+   15% of the way from the quiet grey toward white. */
+html:is([data-fhead="quiet"], [data-fhead="both"]) .group li b { color: color-mix(in srgb, var(--fg-2) 85%, var(--fg)); }
+/* Pictures that run off their bottom edge (Controllers, Add music) fade
+   out sooner, so they end about where the others do instead of running
+   down to the heading. */
+/* (The pictures that run off their foot fade on their own curve,
+   pictures.css --bleed-fade; the controller's is on the Tune sliders.) */
+
+/* Features: layout (Tune). Apart: the cards with a little more room
+   between them (24px). One card: all six in one panel, ruled into cells
+   by hairlines. */
+/* (The install steps take the same layout and gap as the features.) */
+html[data-flayout="apart"] :is(.groups, .steps) { gap: var(--fgap, 24px); }
+/* One card: the cards' own surface and edge on the whole panel, and the
+   six cells clear on it, ruled apart by the same hairline as the edge. */
+html[data-flayout="one"] :is(.groups, .steps) { gap: 0; border-radius: 18px; overflow: hidden; background: var(--panel); box-shadow: inset 0 0 0 1px var(--line); }
+html[data-flayout="one"] :is(.group, .steps > li) { border-radius: 0 !important; box-shadow: none !important; background: none !important; }
+html[data-flayout="one"] :is(.group, .steps > li):not(:nth-child(3n)) { box-shadow: inset -1px 0 0 var(--line) !important; }
+html[data-flayout="one"] .group:nth-child(-n + 3) { box-shadow: inset 0 -1px 0 var(--line) !important; }
+html[data-flayout="one"] .group:nth-child(-n + 2) { box-shadow: inset -1px 0 0 var(--line), inset 0 -1px 0 var(--line) !important; }
+@media (max-width: 860px) {
+  html[data-flayout="one"] :is(.group, .steps > li) { box-shadow: none !important; }
+  html[data-flayout="one"] :is(.group + .group, .steps > li + li) { box-shadow: inset 0 1px 0 var(--line) !important; }
+}
+
+/* Grooves, kept off the words: the paragraph, the buttons and the running
+   changes each sit on a patch of the card's own colour that feathers out
+   at its edges, so the grooves fade away round them instead of running
+   through them. */
+.oss[data-extra="grooves"] :is(.oss-text p, .oss-links) { position: relative; z-index: 0; }
+.oss[data-extra="grooves"] :is(.oss-text p, .oss-links)::before {
+  content: ''; position: absolute; z-index: -1; inset: -18px -26px; border-radius: 40px; background: #f6f5f1; filter: blur(14px);
+}
+.oss[data-extra="grooves"] .oss-log { background: linear-gradient(to bottom, rgb(246 245 241 / 0.6), #f6f5f1 40%); }
+
+/* Ghosts: two paler copies of the card behind it, each a little narrower
+   and lifted, so it reads as the top card of a deck (after the stacked
+   cards in UI shots on Cosmos). */
+.oss[data-extra="ghosts"] { isolation: auto !important; }
+.oss[data-extra="ghosts"]::before, .oss[data-extra="ghosts"]::after {
+  content: ''; position: absolute; z-index: -1; left: 50%; top: 0; height: 60px; border-radius: 18px 18px 0 0; pointer-events: none;
+  background: rgb(246 245 241 / 0.16); box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.25), inset 0 0 0 1px rgb(255 255 255 / 0.06);
+}
+.oss[data-extra="ghosts"]::before { width: 94%; translate: -50% -12px; }
+.oss[data-extra="ghosts"]::after { width: 88%; translate: -50% -24px; background: rgb(246 245 241 / 0.07); }
+/* Glow: the card on a soft light in the decks' colours, cool on the left
+   and warm on the right, spilling out round its edges. */
+.oss[data-extra="glow"] { isolation: auto !important; }
+.oss[data-extra="glow"]::before {
+  content: ''; position: absolute; z-index: -1; inset: 10% 4% -6%; border-radius: 50%; pointer-events: none;
+  background: linear-gradient(90deg, rgb(110 170 255 / 0.7), rgb(255 160 90 / 0.65)); filter: blur(56px); opacity: 0.85;
+}
+
+/* Film grain over the record behind the hero, under everything else: the
+   same box as the record's canvas, the noise tile (index.html builds it)
+   repeated at --grain-size, fading out toward the features (--grain-fade:
+   1 fades it over the last third, 0 keeps it to the end). */
+.grain {
+  position: absolute; left: 0; top: 0; z-index: -1; width: 100%; height: min(2000px, 230vh); pointer-events: none;
+  background-image: var(--grain-img); background-size: var(--grain-size, 200px);
+  /* (Coming in under the nav, so the bar's edge never cuts it.) */
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, transparent 60px, #000 220px, #000 calc(100% - 66% * var(--grain-fade, 1)), transparent);
+  mask-image: linear-gradient(to bottom, transparent 0, transparent 60px, #000 220px, #000 calc(100% - 66% * var(--grain-fade, 1)), transparent);
+}
+/* Film: the grain jumps to a new place eight times a second, as each frame
+   of film has its own; slow: it drifts. */
+/* (Film: eight places in turn, at --grain-fps, a whole fraction of the
+   screen's 60 a second so each lasts the same number of frames; slow: a
+   drift that takes --grain-drift to come round.) */
+.grain[data-move="film"] { animation: grain-film calc(8s / var(--grain-fps, 6)) steps(8) infinite; }
+.grain[data-move="slow"] { animation: grain-slow var(--grain-drift, 20s) linear infinite; }
+/* Swap: eight different frames of grain, each held for a beat, in turn,
+   at the same rate (the way film's grain changes from frame to frame,
+   without moving). Stepped by the page's script (index.html, the grain),
+   only as often as it changes. */
+/* (Each jump moves the grain by up to about 70px, times --grain-jump.) */
+@keyframes grain-film {
+  0% { background-position: 0 0; } 12.5% { background-position: calc(-37px * var(--grain-jump, 1)) calc(21px * var(--grain-jump, 1)); } 25% { background-position: calc(53px * var(--grain-jump, 1)) calc(-44px * var(--grain-jump, 1)); } 37.5% { background-position: calc(-71px * var(--grain-jump, 1)) calc(-9px * var(--grain-jump, 1)); }
+  50% { background-position: calc(19px * var(--grain-jump, 1)) calc(63px * var(--grain-jump, 1)); } 62.5% { background-position: calc(-48px * var(--grain-jump, 1)) calc(37px * var(--grain-jump, 1)); } 75% { background-position: calc(66px * var(--grain-jump, 1)) calc(12px * var(--grain-jump, 1)); } 87.5% { background-position: calc(-13px * var(--grain-jump, 1)) calc(-58px * var(--grain-jump, 1)); } 100% { background-position: 0 0; }
+}
+@keyframes grain-slow { to { background-position: 200px 120px; } }
+@media (prefers-reduced-motion: reduce) { .grain { animation: none !important; } }
+.grain[data-off] { animation-play-state: paused; }
+
+/* The footer's grain: the whole footer, over its background and the big
+   word (and its effect), under the logo and the links. */
+.foot { position: relative; isolation: isolate; }
+.grain--foot { inset: 0; height: auto; z-index: 1; -webkit-mask-image: none; mask-image: none; }
+.foot-grid { position: relative; z-index: 2; }
+/* The features' grain: across the band, over its background and under
+   the cards (the same grain as the hero's and the footer's). */
+.grain--band { top: 0; bottom: 0; left: 50%; width: 100vw; height: auto; translate: -50% 0; -webkit-mask-image: none; mask-image: none; }
+
+/* The record labels' logo (Tune › Note: label logo). */
+html:not([data-lablogo="tile"]) .lg-tile, html[data-lablogo="tile"] .lg-rings { display: none; }
+/* Plain: the rings with no outline (the outline is the first of each pair). */
+html[data-lablogo="plain"] .lg-rings circle:nth-child(-n + 2) { display: none; }
+/* The rings' outline (Note: rings logo outline; under 1.25 it's hidden by the rings themselves). */
+.lg-rings circle:nth-child(-n + 2) { stroke-width: var(--lab-outline, 2.5); }
+
+/* Touch screens: every control at least 44px to a finger (Apple's measure).
+   Where the control is drawn smaller, an invisible ::before widens what
+   takes the touch, without moving anything; where there's room, the
+   control itself grows. (Links in the middle of a sentence keep their line.) */
+@media (pointer: coarse) {
+  .nav .brand, .nav-actions .btn, .dl-cv, .foot .brand, .oss-commits a, .foot-grid > div > a:not(.brand) { position: relative; }
+  :is(.nav .brand, .nav-actions .btn, .menu-btn, .switch button, .dl-cv, .foot .brand, .oss-commits a, .foot-grid > div > a:not(.brand))::before { content: ''; position: absolute; }
+  .nav .brand::before { inset: -4px 0; }
+  .nav-actions .btn::before { inset: -4px -2px; }
+  .menu-btn::before { inset: -4px; }
+  .switch button::before { inset: -4px 0; }
+  .dl-cv::before { inset: -13px -4px; }
+  .foot .brand::before { inset: -10px 0; }
+  .oss .oss-links .btn { height: 44px; }
+  .oss-commits a::before { inset: -11px 0; }
+  .foot-grid > div > a:not(.brand) { padding: 8px 0; }
+  .foot-grid > div > a:not(.brand)::before { inset: -3px -9px; }
+}
+
+/* ── Narrow screens (last, so it wins over the layouts above) ── */
+@media (max-width: 860px) {
+  /* The open source card: one column, its heading, words and buttons in
+     turn, the latest changes under them with their label above. */
+  .oss:is([data-look="poster-card"], [data-look="poster-light"]) { grid-template-columns: 1fr; row-gap: 24px; }
+  .oss:is([data-look="poster-card"], [data-look="poster-light"]) .oss-links { margin-bottom: 4px; }
+  .oss:is([data-look="poster-card"], [data-look="poster-light"]) .oss-log { grid-template-columns: 1fr; row-gap: 8px; }
+}
+@media (max-width: 900px) {
+  /* The download block lines up with the headline: no indent for a rule
+     that isn't drawn. */
+  html[data-hero][data-herotext="card"][data-cardsurface="rule"] .hero-side { padding-left: 0; }
+  html[data-hero][data-herotext="card"][data-cardsurface="rule"] .hero-side::before { content: none; }
+}
+@media (max-width: 480px) {
+  /* The two buttons share the width, the same size; the caption a size
+     smaller so its three facts fit on a line. */
+  html[data-hero][data-herotext="card"] .cta .btn.big { flex: 1 1 0; justify-content: center; padding: 0 10px; }
+  html[data-hero][data-herotext="card"] .dl-cap { font-size: 12px; }
+  .dl-cap > * + *::before { margin: 0 7px; }
+  /* The open source heading's halves each on one line. */
+  .oss:is([data-look="poster-card"], [data-look="poster-light"]) h3 { font-size: clamp(30px, 9.4vw, 44px); }
+}
+@media (max-width: 370px) {
+  /* Too narrow for both buttons on a line: one above the other, full width;
+     the licence on a line of its own. */
+  html[data-hero][data-herotext="card"] .cta { flex-direction: column; }
+  html[data-hero][data-herotext="card"] .cta .btn.big { flex: none; width: 100%; }
+  .dl-cap > :last-child { flex-basis: 100%; }
+  .dl-cap > :last-child::before { display: none; }
+}
+
+/* The open source card when its latest changes can't be had (index.html,
+   data-nolog): the link to them on GitHub where the ticker runs. */
+.oss[data-nolog] .oss-commits { display: block; margin: 0; padding: 0; list-style: none; }
+.oss[data-nolog] .oss-commits .oss-empty a { padding: 0; font-size: 14px; text-decoration: underline; text-decoration-color: rgb(11 11 13 / 0.2); text-underline-offset: 3px; }

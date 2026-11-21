@@ -210,10 +210,24 @@ could not verify" warning. Set up once on the release Mac:
 After that `release.sh` finds the certificate and the password itself, and
 Tauri signs the app and sends it to Apple to notarize (a few minutes).
 
-**The website** is `site/`, plain HTML and CSS, with no build step and no
-CI. To publish or update it, push that folder to the `gh-pages` branch:
+**The website** is `site/`, plain HTML and CSS, with no CI. Its animated
+parts are built from the app: the hero's demo and the feature cards'
+pictures (`site/demo`, committed) and the hero's recorded clips and poster
+(`site/hero/clips` and `site/img/screenshot*`, not in git: they're kept in
+the `hero-clips` pre-release, see `app/demo/segments/README.md`). Before
+publishing, bring them up to date (this fetches the published clips, and
+records them again only if the app, the demo or the recorder changed; then
+`npm --prefix app run clips:publish`) and commit what changed:
 ```sh
-git subtree push --prefix site origin gh-pages
+npm --prefix app run build:site:all
+```
+`git subtree push` would publish only what git has, so the site without its
+clips. Instead, make one commit of the site with the clips and push that
+(it has no history, so old clip sets don't pile up in `gh-pages`; it
+replaces the branch's history, so agree the switch with the repo owner):
+```sh
+npm --prefix app run site:pages     # prints the push, e.g.:
+git push --force origin <commit>:refs/heads/gh-pages
 ```
 It's served at [interludedj.com](https://interludedj.com) (`site/CNAME`;
 DNS at Namecheap points the domain at GitHub Pages).

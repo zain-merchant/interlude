@@ -12,6 +12,7 @@
   import { bpmEdit, gridEdit, gridMenu, gridMode } from './grid.svelte.js';
   import { dropTarget } from './dnd.svelte.js';
   import { tip, tipText } from './tooltip.svelte.js';
+  import { arrive } from './arrive.js';
   import { openMenu } from './menu.svelte.js';
   import { keyLabel } from './commands.js';
   import { announce } from './announce.svelte.js';
@@ -241,8 +242,8 @@
     <header oncontextmenu={headerMenu}>
       <div class="title">
         {#if t}
-          <div class="name" use:tip={() => t.path}>{t.title}</div>
-          <div class="artist">{t.artist || 'Unknown artist'}</div>
+          <div class="name" use:tip={() => t.path} use:arrive={{ key: t.path }}>{t.title}</div>
+          <div class="artist" use:arrive={{ key: t.path, delay: 20 }}>{t.artist || 'Unknown artist'}</div>
         {:else}
           <div class="name dim">Empty deck</div>
           <div class="artist">Drag a track here or press {keyLabel(`deck.${deck}.load`)}</div>
@@ -254,14 +255,15 @@
           <input class="big num edit" value={d.bpm > 0 ? +d.bpm.toFixed(2) : ''} inputmode="decimal" aria-label="Track BPM" spellcheck="false"
             use:focusBpm onkeydown={bpmKey} onblur={(e) => finishBpm(e.currentTarget.value)} />
         {:else}
-          <div class="big num">{bpm > 0 ? bpm.toFixed(2) : '—'}</div>
+          <!-- The tempo arrives with the track, and again when analysis finds it. -->
+          <div class="big num" use:arrive={{ key: `${t?.path}:${d.bpm > 0}`, delay: 40 }}>{bpm > 0 ? bpm.toFixed(2) : '—'}</div>
         {/if}
-        <div class="unit">{#if pk}<button class="key" class:shifted={pk.shift} aria-label="Key {keyName(pk)}, {camelot(pk)}{pk.keyShift ? `, shifted ${pk.keyShift > 0 ? 'up' : 'down'} ${st(pk.keyShift)}` : ''}. Shift the key"
+        <div class="unit" use:arrive={{ key: `${t?.path}:${!!pk}`, delay: 60 }}>{#if pk}<button class="key" class:shifted={pk.shift} aria-label="Key {keyName(pk)}, {camelot(pk)}{pk.keyShift ? `, shifted ${pk.keyShift > 0 ? 'up' : 'down'} ${st(pk.keyShift)}` : ''}. Shift the key"
           aria-haspopup="menu" onclick={keyMenu} oncontextmenu={keyMenu} ondblclick={(e) => e.stopPropagation()} use:tip={keyTip}>{keyName(pk)} · {camelot(pk)}{#if pk.keyShift}<span class="ks num">{pk.keyShift > 0 ? '+' : '−'}{Math.abs(pk.keyShift)}</span>{/if}<svg viewBox="0 0 10 10" aria-hidden="true"><path d="M2.5 4l2.5 2.5L7.5 4" /></svg></button>{" · "}{/if}BPM</div>
       </div>
     </header>
 
-    <div class="overview">
+    <div class="overview" use:arrive={{ key: t?.path, delay: 0, y: 0, blur: 0, duration: 280 }}>
       <Waveform {deck} mode="overview" />
       {#if phrases.length}
         <div class="phrases" aria-hidden="true">
@@ -272,7 +274,7 @@
       {/if}
     </div>
 
-    <div class="times">
+    <div class="times" use:arrive={{ key: t?.path, delay: 40, y: 3, blur: 0 }}>
       <span class="el num"><span class="sr">Elapsed </span>{fmt(d.position)}</span>
       {#if now}
         <span class="now {now.phrase.kind}" use:tip={() => `${PHRASE_NAMES[now.phrase.kind]}: ${now.phrase.bars} bars, energy ${now.phrase.energy} of 10. Found from the waveform on the beatgrid`}>
