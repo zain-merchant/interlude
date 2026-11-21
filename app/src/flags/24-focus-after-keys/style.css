@@ -21,9 +21,20 @@
 :root[data-flag-focus-after-keys]:not([data-input='keys']) [data-region='tracks']:focus-visible .row.sel {
   outline-color: transparent !important;
 }
-/* Deck tabs: the ring inside the tab, clear of the selected underline. */
+/* Deck tabs: the ring inside the tab, ending 4px above the selected
+   underline so the two never touch (d-K19; an inset outline sat right on
+   it). An outline can't stop short at one side, so the ring is drawn as
+   the tab's ::before, only once keys are in use. */
 :root[data-flag-focus-after-keys] .modes button:focus-visible {
-  outline-offset: -2px;
+  outline: none;
+}
+:root[data-flag-focus-after-keys][data-input='keys'] .modes button:focus-visible::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 5px;
+  border-radius: var(--r);
+  box-shadow: inset 0 0 0 2px var(--focus-ring, var(--fg-2));
+  pointer-events: none;
 }
 
 /* The rings #14 draws on a wrapper rather than the focused element (the

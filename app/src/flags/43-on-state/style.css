@@ -27,17 +27,17 @@
   color: var(--deck);
 }
 
-/* The dot: pinned to the left edge of the number's slot (a slot as wide as
-   "1/16" plus the dot), so it doesn't move when 4 becomes 1/4; 8px from
-   the number at its widest. Vertically centred on the numeral (Geist's
-   figures are about 0.71em tall, so their centre sits 0.355em above the
-   baseline). Hollow --fg-3 at rest, filled in the deck colour while the
-   loop runs (the doc's stem idiom). The number keeps its right edge, so
-   "beats" holds its place too. */
+/* The dot: 8px before the number's ink, inside a slot as wide as "1/16"
+   plus the dot, so the number keeps its right edge and "beats" holds its
+   place when 4 becomes 1/4. It sits on the row's centre line, level with
+   ÷2 and ×2. (Pinned to the slot's left edge and lifted to the figures'
+   middle, it floated about 45px from a 4 and high, reading as a degree
+   sign, b-K04.) Hollow --fg-3 at rest, filled in the deck colour while the
+   loop runs (the doc's stem idiom). */
 :root[data-flag-on-state] [data-region^='deck'] .perf .grp > .big b {
   display: inline-flex;
   align-items: baseline;
-  justify-content: space-between;
+  justify-content: flex-end;
   min-width: calc(2.2em + 14px);
 }
 :root[data-flag-on-state] [data-region^='deck'] .perf .grp > .big span {
@@ -47,8 +47,7 @@
 :root[data-flag-on-state] [data-region^='deck'] .perf .big b::before {
   content: '';
   flex: none;
-  position: relative;
-  top: calc(3px - 0.355em);
+  align-self: center;
   width: 6px;
   height: 6px;
   margin-right: 8px;

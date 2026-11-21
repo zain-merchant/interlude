@@ -17,3 +17,9 @@
 :root[data-flag-beat-jump-hit] [data-region^='deck'] .transport .jumps button + button {
   border-radius: 0 var(--r) var(--r) 0;
 }
+
+/* A keyboard ring sits inside its arrow's third, on the same corners, so
+   it doesn't spill over the size between the arrows (d-K18). */
+:root[data-flag-beat-jump-hit] [data-region^='deck'] .transport .jumps button:focus-visible {
+  outline-offset: -2px;
+}

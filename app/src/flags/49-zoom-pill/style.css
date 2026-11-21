@@ -2,7 +2,7 @@
    strip, so it never covers the waveform coming in. It stands upright on
    the lane divider on the tonal surface every resting button has (no
    outline), 24×24 buttons. The lanes, their hairline and the waveform end
-   before the gutter, the waveform fading out over its last 12px; the play
+   before the gutter, the waveform fading in and out over 24px at both ends; the play
    head stays on the panel's centre, the window's axis (Waveform.svelte). */
 :root[data-flag-zoom-pill] .waves {
   padding-right: 44px;
@@ -40,7 +40,11 @@
   white-space: nowrap;
 }
 
+/* Both ends of each lane fade the same way, over 24px: the right end into
+   the zoom's gutter, the left end before the panel's rounded corner cuts
+   it (it faded on the right only, over 12px, and was sliced on the left,
+   b-K24, f-K20). */
 :root[data-flag-zoom-pill] .waves .lane canvas {
-  -webkit-mask-image: linear-gradient(to left, transparent 0, #000 12px);
-  mask-image: linear-gradient(to left, transparent 0, #000 12px);
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 24px, #000 calc(100% - 24px), transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0, #000 24px, #000 calc(100% - 24px), transparent 100%);
 }

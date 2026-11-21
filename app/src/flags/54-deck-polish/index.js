@@ -11,9 +11,12 @@
 //   seconds (Deck.svelte splits the time when it's on).
 // - Times round to tenths before minutes and seconds are split, so 59.96 s
 //   reads 1:00.0, never 0:60.0 (on the deck and in hot cue tooltips).
-// - The deck title's baseline meets the BPM numerals' baseline.
+// - The deck header is a 2×2 grid (title | BPM over artist | key), each
+//   row on one baseline, the BPM and key on one right edge, the title cut
+//   24px (2 × --gap) before the BPM (round 2: it ran to 8px of it and the
+//   key line sat 3px above the artist).
 // - e-K45: the deck header's right-click menu was one lone command; it
-//   gets Eject (off while playing).
+//   gets Eject (off while playing), which offers Undo like a load (e-K29).
 // - e-K47, e-K69, e-K70: the BPM menu puts "Set BPM…" first (a click
 //   that lands on the first item no longer halves the tempo), says the
 //   grid step ("Move grid 10 ms earlier"), and spells "playhead".
@@ -30,7 +33,7 @@ export default {
   n: 54,
   title: 'Deck details: play head, cue numbers, tenths, menus',
   group: 'Polish',
-  notes: 'Keylined play head; hot cue numbers at weight 400 and 6px from their time; quieter tenths; Eject in the deck header menu; BPM menu: Set BPM first, "10 ms" steps, "playhead"; arrow keys on the mode tabs keep focus on the selected tab.',
+  notes: 'Keylined play head; hot cue numbers at weight 400 and 6px from their time; quieter tenths; the header a 2×2 baseline grid with 24px before the BPM; Eject (with Undo) in the deck header menu; BPM menu: Set BPM first, "10 ms" steps, "playhead"; arrow keys on the mode tabs keep focus on the selected tab.',
 };
 
 /** Show me: deck A playing with a hot cue set; flipping shows the time and cue row as they were (before) and polished (after), magnified. */

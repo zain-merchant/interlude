@@ -6,8 +6,9 @@
 // waveforms panel keeps a 44px gutter on its right, so the lanes end
 // before it, and the pill stands upright in it, centred on the lane
 // divider, on the tonal surface of the other resting buttons, buttons
-// 24×24 (--h-sm) with a --t-md glyph. The waveform fades out over its last
-// 12px instead of ending in a hard cut, and the play head stays on the
+// 24×24 (--h-sm) with a --t-md glyph. The waveform fades in and out over
+// 24px at both ends instead of ending in a hard cut (or, on the left, under
+// the panel's corner), and the play head stays on the
 // waveforms panel's centre (the window's axis, where the crossfader's
 // centre sits), not the shortened lane's (Waveform.svelte hook).
 export default {
@@ -15,7 +16,7 @@ export default {
   n: 49,
   title: 'Waveform zoom moves off the waveform',
   group: 'Layout',
-  notes: 'A 44px gutter at the right of the waveforms holds the zoom pill upright on the lane divider (tonal, 24px buttons); the lanes end before it with a 12px fade, and the play head stays on the window\'s centre line.',
+  notes: 'A 44px gutter at the right of the waveforms holds the zoom pill upright on the lane divider (tonal, 24px buttons); the lanes end before it, fading over 24px at both ends, and the play head stays on the window\'s centre line.',
 };
 
 /** Show me: both decks loaded; flipping shows the pill over the incoming waveform (before) and in its own gutter (after). */

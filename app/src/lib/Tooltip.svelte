@@ -6,11 +6,11 @@
   // Keep the tip inside the window. #30 (UI audit flag): tooltip-wrap: 16px (--pad) from the edges.
   const edge = $derived(flag('tooltip-wrap') ? 16 : 8);
   const left = $derived(Math.max(edge, Math.min(window.innerWidth - width - edge, tooltip.x - width / 2)));
-  // #10 (UI audit flag): no-dots: the words, then any key as a keycap at the end.
+  // #10 (UI audit flag): no-dots: the words, then any key at the end, set apart (a bare dim glyph).
   const parts = $derived(tooltip.text.split(' · '));
   const words = $derived(parts.filter((p) => !p.startsWith(KEY_MARK)));
   const keycaps = $derived(parts.filter((p) => p.startsWith(KEY_MARK)).map((p) => p.slice(1)));
-  // #30 (UI audit flag): tooltip-wrap: a tip with a description is a title line (keycap at its end) over the description.
+  // #30 (UI audit flag): tooltip-wrap: a tip with a description is a title line (its key at the end) over the description.
   const rest = $derived(words.slice(1).join(' '));
   const twoLines = $derived(flag('tooltip-wrap') && rest.length > 24);
 </script>

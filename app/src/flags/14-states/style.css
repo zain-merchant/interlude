@@ -109,6 +109,12 @@
   background: color-mix(in srgb, var(--cue) 12%, transparent);
   transition: background-color 60ms ease-out, transform 60ms ease-out;
 }
+/* The deck's Cue, held: the same amber tint, scoped to the transport so it
+   outranks #9's hover fill there (the hover fill won, so a held Cue showed
+   only hover, d-K02). */
+:root[data-flag-states] [data-region^='deck'] .transport .btn.cue:active:not(:disabled, [aria-disabled='true']) {
+  background: color-mix(in srgb, var(--cue) 12%, transparent);
+}
 /* Pressed, list items, track rows and tabs: the selected fill, no shrink. */
 :root[data-flag-states] :is([data-region='sidebar'] :is(.item, .add), nav[aria-label='Settings pages'] .item, .modes button, [data-region='tracks'] .row):active {
   background: var(--sel);
@@ -208,8 +214,12 @@
   outline-offset: -2px;
 }
 
-/* b-K35 (polish backlog, with F2): enabled Sync's label at full strength,
-   so it differs from the disabled one (40%) by more than a small step. */
-:root[data-flag-states] [data-region^='deck'] .transport .btn.sync:not([aria-disabled='true']) {
-  color: var(--fg);
+/* Sync is an action, not a switch: enabled, it rests at --fg-2 like every
+   tonal button (--fg on hover). Lifting enabled Sync's label to --fg
+   (b-K35) made it the one bright word in the transport, so it looked
+   engaged (b-K10, d-K05). Enabled and disabled now differ by the fill:
+   disabled Sync drops its tonal tile and sits at 40%, about --fg-4. */
+:root[data-flag-states] [data-region^='deck'] .transport .btn.sync[aria-disabled='true'] {
+  background: none;
+  box-shadow: none;
 }

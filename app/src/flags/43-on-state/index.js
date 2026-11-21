@@ -16,9 +16,9 @@
 //   level ring dims to --fg-3 while off (FxUnit.svelte hook).
 // - A muted stem's hollow dot is --fg-3 (was --fg-4); one playing alone
 //   keeps the deck colour, without the halo.
-// The loop size's dot: 6px, pinned to the left edge of the number's slot
-// (it doesn't move when 4 becomes 1/4), 8px from the number at its widest,
-// centred on the numeral; hollow --fg-3 at rest, filled in the deck colour
+// The loop size's dot: 6px, 8px before the number's ink, on the row's
+// centre line (the number keeps its right edge in a fixed slot, so
+// "beats" doesn't move when 4 becomes 1/4); hollow --fg-3 at rest, filled in the deck colour
 // while running (the doc's stem idiom). FX uses the same dot. Below a
 // 320px mode row the dot drops out and the brighter size says it alone.
 // Nothing changes size between off and on.

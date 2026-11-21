@@ -35,7 +35,9 @@
 
 const MIN_R = 4;
 const FAR = 160; // the outer rect's reach past the element: room for shadows and focus rings
-const SKIP = '.fp, .flag-show, svg, svg *';
+// Deck tabs draw their selected underline a pixel past their own box; a
+// clip would notch both its ends (b-K28), so they keep CSS's round corners.
+const SKIP = '.fp, .flag-show, svg, svg *, .modes button';
 // When an element that draws nothing at rest may start to.
 const STATES = ":hover, :active, :focus-visible, .on, .sel, .set, .lit, .playing, .rec, [aria-pressed='true'], [aria-checked='true'], [aria-selected='true'], [aria-expanded='true']";
 

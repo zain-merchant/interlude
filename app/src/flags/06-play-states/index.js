@@ -14,8 +14,10 @@
 //   at the 40% disabled strength.
 // - Tint, Outline (experiments): paused stays the solid white block and
 //   playing steps back from solid.
-// - Cueing (Cue held, previewing from the cue point): a cue-amber ring
-//   and a play glyph, since pressing Play then keeps the track playing.
+// - Cueing (Cue held, previewing from the cue point): Play keeps its paused
+//   look with a play glyph, since pressing Play then keeps the track
+//   playing (round 2: its old amber ring put the press's feedback on Play
+//   instead of the held Cue, d-K02).
 //   Deck.svelte tracks whether the on-screen Cue button is held (pointer
 //   or Space/Enter on it) and sets data-cueing on Play. The engine doesn't
 //   report a cue preview, so the Cue key shortcut and a controller's Cue
@@ -28,7 +30,7 @@ export default {
   title: 'The play button shows which deck is playing',
   group: 'Controls',
   notes:
-    'Lit (default): playing is solid in the deck\'s white, paused is a tonal tile (no outline). The experiments keep paused solid white and step playing back (deck tint, outline). Cue preview shows an amber ring and a play glyph; an empty deck dims the tile (an empty outline in the experiments). Paused hover no longer jumps to pure white.',
+    'Lit (default): playing is solid in the deck\'s white, paused is a tonal tile (no outline). The experiments keep paused solid white and step playing back (deck tint, outline). While Cue is held (preview), Play keeps its paused look with a play glyph; an empty deck dims the tile (an empty outline in the experiments). Paused hover no longer jumps to pure white.',
   settings: {
     playing: {
       type: 'choice',

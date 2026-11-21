@@ -6,7 +6,7 @@
 // dimmed; and "Drag a track here or press ⇧←" appeared four times across
 // the lanes and decks. With the flag, on a deck with no track: the BPM
 // dash and both times are --fg-4 (the doc's empty level), the selected
-// tab and its underline go --fg-3, the beat-jump size dims with its
+// tab goes --fg-2 and its underline --fg-3 (a step above the other tabs), the beat-jump size dims with its
 // arrows, and the lanes drop their hint (the deck header keeps it, once
 // per deck). Pitch and Key lock stay live: they work without a track.
 // With deck-polish's quieter tenths on, an empty time stays one grey. With
@@ -18,7 +18,7 @@ export default {
   n: 46,
   title: 'An empty deck looks empty',
   group: 'Polish',
-  notes: 'With no track: BPM dash and times at --fg-4, the selected tab at --fg-3, the jump size dims with its arrows, and the load hint shows once per deck (not on the lanes too).',
+  notes: 'With no track: BPM dash and times at --fg-4, the selected tab at --fg-2 with a --fg-3 underline (still above the other tabs), the jump size dims with its arrows, and the load hint shows once per deck (not on the lanes too).',
 };
 
 /** Show me: deck B ejected; flipping shows bright zeros and four hints (before) and a quiet empty deck (after). */

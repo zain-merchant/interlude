@@ -8,7 +8,7 @@
 // placement already measures the tip's width, so a wrapped tip stays
 // centred on its control. Also from the backlog: the tip's radius is the
 // controls' --r (it was 6px), and it gets the menus' drop shadow, since it
-// floats over busy waveforms and knobs. The key as a keycap is #10's.
+// floats over busy waveforms and knobs. The key's look (a bare dim glyph) is #10's.
 export default {
   id: 'tooltip-wrap',
   n: 30,

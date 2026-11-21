@@ -24,21 +24,30 @@
   color: var(--fg-2);
 }
 
-/* The deck title's baseline meets the BPM numerals' baseline (the doc:
-   "text lines up with text"); was 3px apart. */
-:root[data-flag-deck-polish] [data-region^='deck'] header {
-  align-items: first baseline;
-}
-
-/* The title gets the room it can: the BPM sits 8px from it (was 12), and
-   it's set a hair tighter. Where the deck is narrow (a header under 300px,
+/* The header is a 2×2 grid: title | BPM over artist | key. Each row
+   puts its two on one baseline (the title with the BPM numerals, the artist
+   with the key: they were 3px apart, since lining up only the first row
+   pushed the BPM column up by the difference between a 24px and a 32px
+   figure in the same 28px line), and the BPM and key end on one right
+   edge. The title keeps 24px (2 × --gap) clear of the BPM and is cut
+   there, so a long one can't run on into the numerals (it sat 8px off and
+   read as one string). Where the deck is narrow (a header under 300px,
    the smallest windows) the title drops to --t-md and the BPM numerals to
-   --t-lg on the same 28px line, so about 18 characters of the title show
-   instead of 8. Deck.svelte cuts it at a glyph, with no space before the
-   "…". */
+   --t-lg on the same 28px line, so more of the title shows. Deck.svelte
+   cuts it at a glyph, with no space before the "…". */
 :root[data-flag-deck-polish] [data-region^='deck'] header {
-  gap: 8px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto auto;
+  gap: 0 calc(2 * var(--gap));
+  align-items: baseline;
   container-type: inline-size;
+}
+:root[data-flag-deck-polish] [data-region^='deck'] header > :is(.title, .bpm) {
+  grid-row: 1 / span 2;
+  display: grid;
+  grid-template-rows: subgrid;
+  align-items: baseline;
 }
 :root[data-flag-deck-polish] [data-region^='deck'] .name {
   letter-spacing: -0.025em;

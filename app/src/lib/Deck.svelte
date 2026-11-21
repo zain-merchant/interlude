@@ -7,8 +7,8 @@
   import { untrack, tick } from 'svelte';
   import { padMode, padModeTab } from './padmode.svelte.js';
   import { tempoPickup } from './pickup.svelte.js';
-  import { engine, tracks, control, nextGrid, setGrid, ejectTrack } from './engine.svelte.js';
-  import { pushEdit } from './undo.svelte.js';
+  import { engine, tracks, control, nextGrid, setGrid, ejectTrack, deckSnapshot, restoreDeck } from './engine.svelte.js';
+  import { pushEdit, showToast } from './undo.svelte.js';
   import { dropTarget } from './dnd.svelte.js';
   import { tip, tipText } from './tooltip.svelte.js';
   import { flag, setting } from '../flags/registry.svelte.js';
@@ -42,6 +42,22 @@
     await setGrid(deck, after);
     announce(`${label} on ${dn}`);
     pushEdit({ label: `${label} on ${dn}`, undo: () => setGrid(deck, before), redo: () => setGrid(deck, after) });
+  }
+  // #54 (UI audit flag): deck-polish's Eject offers Undo, like a load: ⌘Z or the toast puts the track back where it was.
+  // Undo and redo refuse a playing deck, as a load's do.
+  async function eject() {
+    const t = tracks[deck];
+    const before = deckSnapshot(deck);
+    if (!t || !before) return;
+    await ejectTrack(deck);
+    const title = flag('copy-toasts') ? `“${t.title}”` : t.title;
+    announce(`Ejected ${title} from ${dn}`);
+    const busy = () => engine.decks[deck].playing && (showToast(`${Dn} is playing. Pause it first.`), true);
+    pushEdit({
+      label: `Ejected ${title} from ${dn}`,
+      undo: async () => (busy() ? false : restoreDeck(deck, before)),
+      redo: async () => (busy() ? false : ejectTrack(deck)),
+    });
   }
   const gridMenu = (e) => {
     const t = tracks[deck];
@@ -355,7 +371,7 @@
     openMenu(e, [
       { label: 'Show in library', action: () => onreveal(t.path), enabled: !!t },
       // #54 (UI audit flag): deck-polish adds Eject, so the menu isn't one lone command (not while playing).
-      ...(flag('deck-polish') ? [{ label: 'Eject', action: () => ejectTrack(deck), enabled: !!t && !d.playing }] : []),
+      ...(flag('deck-polish') ? [{ label: 'Eject', action: eject, enabled: !!t && !d.playing }] : []),
     ]);
   // #54 (UI audit flag): deck-polish can set the tenths of a second apart (class "t").
   const clock = (s) => {

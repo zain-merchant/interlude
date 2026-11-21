@@ -16,7 +16,7 @@
 }
 
 /* A tip with a description: the title on line one with its key at the
-   right end, the description under it in --fg-2, both 13px. */
+   right end (a bare --fg-3 glyph, as #10 sets keys), the description under it in --fg-2, both 13px. */
 :root[data-flag-tooltip-wrap] .tip[role='tooltip'] .l1 {
   display: flex;
   align-items: baseline;
@@ -25,17 +25,9 @@
   color: var(--fg);
 }
 :root[data-flag-tooltip-wrap] .tip[role='tooltip'] .l1 .key {
-  display: inline-grid;
-  place-items: center;
-  min-width: 18px;
-  height: 18px;
-  margin: -1px 0 -1px auto;
-  padding: 0 5px;
-  box-sizing: border-box;
-  border-radius: 4px;
-  box-shadow: inset 0 0 0 1px var(--line-2);
-  color: var(--fg-2);
-  font: 400 var(--t-xs) var(--font);
+  margin: 0 0 0 auto;
+  color: var(--fg-3);
+  font: inherit;
 }
 :root[data-flag-tooltip-wrap] .tip[role='tooltip'] .l2 {
   display: block;

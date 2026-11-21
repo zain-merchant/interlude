@@ -7,19 +7,25 @@
   width: 56px;
   height: var(--h-sm);
   border-radius: var(--r);
-  overflow: hidden;
   background: var(--flag-buttons-bg, var(--raise));
   box-shadow: none;
 }
 :root[data-flag-nudge-pill] [data-region^='deck'] .pitch .nudge button {
   height: var(--h-sm);
-  border-radius: 0;
+  border-radius: var(--r) 0 0 var(--r);
   color: var(--fg-2);
   font-size: var(--t-sm);
   line-height: 1;
 }
 :root[data-flag-nudge-pill] [data-region^='deck'] .pitch .nudge button + button {
+  border-radius: 0 var(--r) var(--r) 0;
   box-shadow: inset 1px 0 0 var(--line-2);
+}
+/* Each half carries the pill's outer corners itself (the pill no longer
+   clips them), so a keyboard ring goes round the whole half, inside it.
+   Clipping the pill cut the ring down to a 2px bar (d-K01). */
+:root[data-flag-nudge-pill] [data-region^='deck'] .pitch .nudge button:focus-visible {
+  outline-offset: -2px;
 }
 :root[data-flag-nudge-pill] [data-region^='deck'] .pitch .nudge button:hover:not([aria-disabled='true']) {
   background: var(--flag-buttons-bg-hover, var(--hover));

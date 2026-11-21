@@ -25,7 +25,7 @@ export default {
   title: 'Smoother rounded corners',
   group: 'Shape',
   notes:
-    'Figma-style smoothed corners on every rounded rect; circles and capsules unchanged. Smoothing changes the curve, not the corner\'s size (0% is the plain radius). Native corner-shape in Chrome 139+; in WebKit (Safari, the app) a clip with the ring redrawn along the curve, so borders are never cropped.',
+    'Figma-style smoothed corners on every rounded rect; circles and capsules unchanged. Smoothing changes the curve, not the corner\'s size (0% is the plain radius). Native corner-shape in Chrome 139+; in WebKit (Safari, the app) a clip with the ring redrawn along the curve, so borders are never cropped. Deck tabs are left round: a clip notched their selected underline.',
   settings: {
     // A plain number (0 to 100) rather than a %.
     smoothing: { type: 'range', min: 0, max: 100, step: 5, default: 60, unit: '', label: 'Smoothing %' },

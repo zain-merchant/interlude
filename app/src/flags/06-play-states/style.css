@@ -47,12 +47,21 @@
   background: var(--hover);
 }
 
-/* Cueing: Cue held, the track previewing from the cue point. An amber
-   ring and fill and a play glyph (pressing Play now keeps it playing). */
-:root[data-flag-play-states][data-flag-play-states-playing] .transport .btn.play.on[data-cueing] {
-  background: color-mix(in srgb, var(--cue) 12%, transparent);
-  color: var(--cue);
-  box-shadow: inset 0 0 0 1.5px var(--cue);
+/* Cueing: Cue held, the track previewing from the cue point. Play looks
+   just as it does paused, with the play glyph (pressing Play now keeps it
+   playing): the held Cue is the one amber thing on screen. An amber ring
+   and fill here put the press's feedback on the wrong button (d-K02), and
+   an outline means Cue armed, on Cue only. Play is .on while cueing, so
+   without this it would flash its lit fill. */
+:root[data-flag-play-states][data-flag-play-states-playing='lit'] .transport .btn.play.on[data-cueing] {
+  background: var(--flag-buttons-bg, var(--raise));
+  color: var(--fg);
+  box-shadow: none;
+}
+:root[data-flag-play-states][data-flag-play-states-playing]:not([data-flag-play-states-playing='lit']) .transport .btn.play.on[data-cueing] {
+  background: var(--fg);
+  color: var(--ink);
+  box-shadow: none;
 }
 :root[data-flag-play-states][data-flag-play-states-playing] .transport .btn.play.on[data-cueing] svg {
   display: none;

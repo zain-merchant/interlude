@@ -11,8 +11,8 @@
 //
 // Later (critique E9): without the dot a tip's key ran into its words
 // ("Match tempo and beats to deck B E", "Show sampler S eight one-shot
-// slots"). The key now goes last as a small keycap (11px, 18px tall, a
-// --line-2 outline, --fg-2), like the keys on the Settings keyboard page.
+// slots"). The key now goes last, 8px after the words, as a bare dim glyph
+// (--fg-3, no box), as the search field, toast and menus show keys (rule 6).
 // tooltip.svelte.js marks which part is a key (any command's current key,
 // or Esc); Tooltip.svelte draws it.
 export default {
@@ -20,7 +20,7 @@ export default {
   n: 10,
   title: 'Space instead of middle dots',
   group: 'Type and colour',
-  notes: 'Tooltips, the deck key/BPM line, the library count and import sources: parts are spaced and stepped in tone instead of joined with " · ". A tip\'s key goes last, as a small keycap.',
+  notes: 'Tooltips, the deck key/BPM line, the library count and import sources: parts are spaced and stepped in tone instead of joined with " · ". A tip\'s key goes last, a bare --fg-3 glyph 8px after the words.',
   settings: {
     gap: { type: 'range', min: 4, max: 16, step: 1, default: 8, unit: 'px', label: 'Gap between parts' },
     tone: {
