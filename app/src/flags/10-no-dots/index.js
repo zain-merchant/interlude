@@ -37,6 +37,9 @@ export default {
 
 /** Show me: loupes on deck A's key line, the library count and a tooltip, flipping between " · " joins and spaced parts. */
 export const show = {
+  // Before turns these off too: with #30 tooltip-wrap the tip's name and detail sit on two lines (no dot), and
+  // with #44 pitch-readout the deck's key line drops its dots and unit, so with them on only the count changes.
+  masks: ['tooltip-wrap', 'pitch-readout'],
   about: 'Bits of information were strung together with " · " dots everywhere, which made short lines look busy. Now they are set apart by a little space, with the less important part a shade dimmer.',
   before: 'The key under the BPM ("C · 8B · BPM"), the library count and every tooltip join their parts with middle dots: lots of tiny marks that say nothing.',
   after: 'A small gap separates the parts and the extra detail is a step dimmer, so the main word stands out and the line reads more quietly.',

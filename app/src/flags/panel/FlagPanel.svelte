@@ -83,8 +83,8 @@
   const direction = $derived(FLAGS.find((f) => isDirection(f) && flags.on[f.id]) ?? null);
   /** A flag by id, for the card's notes. */
   const byId = (id) => FLAGS.find((f) => f.id === id);
-  /** Flags that are on and hide this one's change (its show's masks and overrides): its switch alone changes nothing while they're on. */
-  const hiddenBy = (f) => [...(SHOWS[f.id]?.masks ?? []), ...(SHOWS[f.id]?.overrides ?? [])].filter((m) => flags.on[m]).map(byId).filter(Boolean);
+  /** Flags that are on and hide some or all of this one's change (its show's masks or overrides), as "NN title" names. */
+  const hiddenBy = (f, key) => (SHOWS[f.id]?.[key] ?? []).filter((m) => flags.on[m]).map(byId).filter(Boolean).map((g) => `${g.n} ${g.title}`).join(' or ');
 
   // Export: every pick (on, settings, locked in) as JSON on the clipboard.
   let copied = $state(false);
@@ -363,7 +363,7 @@
         <ul class="fp-also">
           {#each current.masked as m (m)}
             {@const g = byId(m)}
-            <li>Before also turns off <b>{g?.n} {g?.title}</b>, which is on and hides this change; After puts it back.</li>
+            <li>Before also turns off <b>{g?.n} {g?.title}</b>: it's on and does the same, so without that the change wouldn't show. After puts it back.</li>
           {/each}
           {#each current.overridden as m (m)}
             {@const g = byId(m)}
@@ -494,7 +494,8 @@
                         {/if}
                         <Switch checked={isOn(f)} label="{f.title}: {isOn(f) ? 'on' : 'off'}" onchange={(v) => toggle(f, v)} />
                       </div>
-                      {#if hiddenBy(f).length}<p class="fp-hidden">No visible change while {hiddenBy(f).map((g) => `${g.n} ${g.title}`).join(' or ')} is on. Show me turns it off for Before.</p>{/if}
+                      {#if hiddenBy(f, 'masks')}<p class="fp-hidden">Shows less while {hiddenBy(f, 'masks')} is on (it does the same); Show me turns that off for Before.</p>{/if}
+                      {#if hiddenBy(f, 'overrides')}<p class="fp-hidden">Hidden while {hiddenBy(f, 'overrides')} is on (it overrides this); Show me turns that off while it shows.</p>{/if}
                       {#if about(f)}<p class="fp-about">{#if f.against}<span class="fp-against" title={`The design doc: ${f.against}`}>Against the doc</span>{/if}{#if f.superseded}{@const by = byId(f.superseded)}<span class="fp-against fp-superseded" title={`${by?.title}: with it on, this flag changes nothing more`}>Part of {by?.n}</span>{/if}{about(f)}</p>{/if}
                     </div>
                     {#if settingsOpen(f)}

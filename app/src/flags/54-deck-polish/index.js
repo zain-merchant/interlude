@@ -56,8 +56,9 @@ export const show = {
     const t = app.$("[data-region='deck0'] .times")?.getBoundingClientRect();
     const row = app.$("[data-region='deck0'] .perf .tc")?.getBoundingClientRect();
     if (!t || !row) return;
-    const z = 2;
-    const l = d.loupe('times', { x: t.left - 8, y: t.top - 6 }, { zoom: z, size: { w: Math.min(800, (t.width + 16) * z), h: (row.bottom - t.top + 12) * z }, near: t, caption: '' });
+    // Both times in view: the time left on the right is the big one (with #40 the elapsed one is quiet throughout), so a loupe cut at 800px lost it.
+    const z = Math.min(2, 800 / (t.width + 16));
+    const l = d.loupe('times', { x: t.left - 8, y: t.top - 6 }, { zoom: z, size: { w: (t.width + 16) * z, h: (row.bottom - t.top + 12) * z }, near: t, caption: '' });
     ctx.at = l.rect;
     const before = ctx.phase === 'before';
     d.text(l.at.x + 10, l.at.y + l.rect.height + 16, before ? 'tenths as loud as minutes; cue number bolder than the rest' : 'tenths step back; cue number matches', { tone: before ? 'bad' : 'ok', fixed: true });
