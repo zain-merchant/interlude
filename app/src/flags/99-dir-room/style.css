@@ -19,8 +19,9 @@
      rest     a key, standing up;
      hover    its face a step lighter;
      pressed  pushed into the plate (dark face, shadow inside), while held;
-     on       latched down: pushed in, its face filled with its role colour,
-              its label in that colour (Play, Cue at the cue point, Key
+     on       latched down: pushed in, darker than the keys round it, its
+              label in its role colour and the colour coming up from the
+              bottom of the face, with a lit lower lip (Play, Cue at the cue point, Key
               lock, headphone cue, EQ kill, Rec, FX, Sampler);
      selected a key standing up out of a well (the segmented tabs, the
               sidebar, Settings' pages, the selected track);
@@ -48,6 +49,7 @@
   --rm-key-hi: #3c3934;
   --rm-key-hi-2: #2e2b27;
   --rm-down: #11100f;
+  --rm-on-top: #0f0e0d;
 
   /* Edges: the lit top, the dark underside, the lip of a cut. */
   --rm-lit: rgb(255 246 232 / 0.075);
@@ -121,8 +123,8 @@
    (--on, set on each control), the label in it. Declared on the controls
    so var(--on) resolves per control. */
 :root[data-flag-dir-room][data-flag-dir-room] :is(button, .btn) {
-  --rm-on-fill: linear-gradient(180deg, color-mix(in srgb, var(--on, var(--fg)) 15%, var(--rm-down)), color-mix(in srgb, var(--on, var(--fg)) 26%, var(--rm-down)));
-  --rm-on-edge: inset 0 2px 3px -1px rgb(0 0 0 / 0.8), inset 0 1px 0 rgb(0 0 0 / 0.5), 0 1px 0 var(--rm-lip);
+  --rm-on-fill: linear-gradient(180deg, var(--rm-on-top) 30%, color-mix(in srgb, var(--on, var(--fg)) 13%, var(--rm-on-top)));
+  --rm-on-edge: inset 0 2px 4px -1px rgb(0 0 0 / 0.9), inset 0 1px 0 rgb(0 0 0 / 0.55), inset 0 -1px 0 color-mix(in srgb, var(--on, var(--fg)) 34%, transparent), 0 1px 0 var(--rm-lip);
 }
 
 /* ── The room ───────────────────────────────────────────────────────── */
@@ -207,12 +209,12 @@
 }
 
 /* The overview: a well cut into the plate, with a record's grooves in
-   it. Fine rings round a spindle far below, so they run almost level and
+   it. Fine rings (8% paper, 3px apart) round a spindle far below, so they run almost level and
    show only where the waveform leaves the well dark. Still, and drawn
    once: a background, not a layer. */
 :root[data-flag-dir-room][data-flag-dir-room] [data-region^='deck'] .overview {
   background:
-    repeating-radial-gradient(circle at 50% 1400%, rgb(255 246 232 / 0.05) 0 0.5px, transparent 1px 3px),
+    repeating-radial-gradient(circle at 50% 1400%, rgb(255 246 232 / 0.08) 0 0.6px, transparent 1.1px 3px),
     var(--rm-well);
   box-shadow: var(--rm-well-edge);
 }
@@ -564,6 +566,10 @@
 :root[data-flag-dir-room][data-flag-dir-room] .mixer button.rec.on .dot {
   background: var(--kill);
   box-shadow: none;
+}
+/* The crossfader scale's lit mark: no halo. */
+:root[data-flag-dir-room][data-flag-dir-room] svg.ruler line.on {
+  filter: none;
 }
 :root[data-flag-dir-room][data-flag-dir-room] .mixer .xf {
   border-top-color: rgb(0 0 0 / 0.55);
