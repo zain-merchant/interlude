@@ -58,11 +58,33 @@ pub struct Table {
 /// Note off arrives as note off or as note on with velocity 0; a mapping
 /// may bind either, and the list gives note on. Both count as the same
 /// message.
+///
+/// Pitch bend has no control number (both data bytes are the value), so
+/// any data1 counts as the same message.
 fn address(status: u8, data1: u8) -> (u8, u8) {
-    if status & 0xF0 == 0x80 {
-        (0x90 | (status & 0x0F), data1)
-    } else {
-        (status, data1)
+    match status & 0xF0 {
+        0x80 => (0x90 | (status & 0x0F), data1),
+        0xE0 => (status, 0),
+        _ => (status, data1),
+    }
+}
+
+/// Mixxx keeps old names for some controls working; a binding by the old
+/// name is the same control.
+fn canonical(group: &str, key: &str) -> (String, String) {
+    let eq = |param: &str| {
+        (
+            format!("[EqualizerRack1_{group}_Effect1]"),
+            param.to_owned(),
+        )
+    };
+    match (group, key) {
+        (g, "filterHigh") if g.starts_with("[Channel") => eq("parameter3"),
+        (g, "filterMid") if g.starts_with("[Channel") => eq("parameter2"),
+        (g, "filterLow") if g.starts_with("[Channel") => eq("parameter1"),
+        (_, "reloop_exit") => (group.to_owned(), "reloop_toggle".to_owned()),
+        ("[Playlist]", "SelectTrackKnob") => ("[Library]".to_owned(), "MoveVertical".to_owned()),
+        _ => (group.to_owned(), key.to_owned()),
     }
 }
 
@@ -72,8 +94,7 @@ fn hex(s: &str) -> Option<u8> {
 
 impl Table {
     pub fn load(path: &Path) -> Result<Table, String> {
-        let text =
-            std::fs::read_to_string(path).map_err(|e| format!("{}: {e}", path.display()))?;
+        let text = std::fs::read_to_string(path).map_err(|e| format!("{}: {e}", path.display()))?;
         Table::parse(&text).map_err(|e| format!("{}: {e}", path.display()))
     }
 
@@ -92,7 +113,9 @@ impl Table {
             }
             let cols: Vec<&str> = raw.split('\t').map(str::trim).collect();
             if cols.len() < 4 {
-                return Err(format!("line {line}: expected at least 4 tab-separated columns"));
+                return Err(format!(
+                    "line {line}: expected at least 4 tab-separated columns"
+                ));
             }
             let dir = match cols[0] {
                 "in" => Dir::In,
@@ -173,10 +196,14 @@ impl Report {
     pub fn problems(&self) -> Vec<String> {
         let mut out = vec![];
         for (s, d, what) in &self.unknown_inputs {
-            out.push(format!("listens to {s:02X} {d:02X} ({what}), which the controller never sends"));
+            out.push(format!(
+                "listens to {s:02X} {d:02X} ({what}), which the controller never sends"
+            ));
         }
         for (s, d, what) in &self.unknown_outputs {
-            out.push(format!("lights {s:02X} {d:02X} ({what}), which isn't an LED on the controller"));
+            out.push(format!(
+                "lights {s:02X} {d:02X} ({what}), which isn't an LED on the controller"
+            ));
         }
         for (row, got) in &self.wrong {
             let want: Vec<String> = row
@@ -200,10 +227,14 @@ impl Report {
 /// Compares `preset` with the controller's official list.
 pub fn check(table: &Table, preset: &Preset) -> Report {
     let mut r = Report::default();
-    let official_in: BTreeSet<(u8, u8)> =
-        table.inputs().map(|row| address(row.status, row.data1)).collect();
-    let official_out: BTreeSet<(u8, u8)> =
-        table.outputs().map(|row| address(row.status, row.data1)).collect();
+    let official_in: BTreeSet<(u8, u8)> = table
+        .inputs()
+        .map(|row| address(row.status, row.data1))
+        .collect();
+    let official_out: BTreeSet<(u8, u8)> = table
+        .outputs()
+        .map(|row| address(row.status, row.data1))
+        .collect();
 
     let mut bindings: BTreeMap<(u8, u8), Vec<&crate::mixxx::Input>> = BTreeMap::new();
     for (s, d, input) in preset.inputs_with_midi() {
@@ -212,7 +243,8 @@ pub fn check(table: &Table, preset: &Preset) -> Report {
     for (&(s, d), inputs) in &bindings {
         if !official_in.contains(&(s, d)) {
             for i in inputs {
-                r.unknown_inputs.push((s, d, format!("{} {}", i.group, i.key)));
+                r.unknown_inputs
+                    .push((s, d, format!("{} {}", i.group, i.key)));
             }
         }
     }
@@ -221,7 +253,8 @@ pub fn check(table: &Table, preset: &Preset) -> Report {
         let (s, d) = o.midi();
         let a = address(s, d);
         if !official_out.contains(&a) && seen_out.insert((a, o.key.clone())) {
-            r.unknown_outputs.push((a.0, a.1, format!("{} {}", o.group, o.key)));
+            r.unknown_outputs
+                .push((a.0, a.1, format!("{} {}", o.group, o.key)));
         }
     }
 
@@ -246,14 +279,19 @@ pub fn check(table: &Table, preset: &Preset) -> Report {
             continue;
         }
         let ok = plain.iter().all(|i| {
-            row.expect
-                .iter()
-                .any(|(g, keys)| *g == i.group && keys.iter().any(|k| *k == i.key))
+            let (group, key) = canonical(&i.group, &i.key);
+            row.expect.iter().any(|(g, keys)| {
+                keys.iter()
+                    .any(|k| canonical(g, k) == (group.clone(), key.clone()))
+            })
         });
         if ok {
             r.correct += 1;
         } else {
-            let got = plain.iter().map(|i| format!("{} {}", i.group, i.key)).collect();
+            let got = plain
+                .iter()
+                .map(|i| format!("{} {}", i.group, i.key))
+                .collect();
             r.wrong.push((row.clone(), got));
         }
     }
@@ -290,8 +328,31 @@ mod tests {
         let t = Table::parse(TABLE).unwrap();
         assert_eq!(t.source, "test");
         assert_eq!(t.rows.len(), 3);
-        assert_eq!(t.rows[0].expect, vec![("[Channel1]".into(), vec!["play".into()])]);
+        assert_eq!(
+            t.rows[0].expect,
+            vec![("[Channel1]".into(), vec!["play".into()])]
+        );
         assert_eq!(t.rows[1].dir, Dir::Both);
+    }
+
+    #[test]
+    fn old_names_and_pitch_bend_match() {
+        let t = Table::parse(
+            "in\tB0\t07\tEQ HI\t[EqualizerRack1_[Channel1]_Effect1] parameter3\n\
+             in\tE0\t00\tPITCH\t[Channel1] rate",
+        )
+        .unwrap();
+        let p = preset(
+            &[
+                control("[Channel1]", "filterHigh", 0xB0, 0x07),
+                control("[Channel1]", "rate", 0xE0, 0x50),
+            ]
+            .concat(),
+            "",
+        );
+        let r = check(&t, &p);
+        assert!(r.is_exact(), "{:?}", r.problems());
+        assert_eq!(r.correct, 2);
     }
 
     #[test]
@@ -303,7 +364,10 @@ mod tests {
         assert_eq!(
             t.rows[0].expect,
             vec![
-                ("[EqualizerRack1_[Channel1]_Effect1]".into(), vec!["parameter3".into()]),
+                (
+                    "[EqualizerRack1_[Channel1]_Effect1]".into(),
+                    vec!["parameter3".into()]
+                ),
                 ("[Master]".into(), vec!["crossfader".into()]),
             ]
         );
