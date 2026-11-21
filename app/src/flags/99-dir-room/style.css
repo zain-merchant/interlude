@@ -119,8 +119,9 @@
   --rm-ease: cubic-bezier(0.23, 1, 0.32, 1);
 }
 
-/* Latched: the one "on". Pushed in, the face filled with the role colour
-   (--on, set on each control), the label in it. Declared on the controls
+/* Latched: the one "on". Pushed in below the keys round it, the role
+   colour (--on, set on each control) rising in the lower face and on the
+   lower lip, the label in it. Declared on the controls
    so var(--on) resolves per control. */
 :root[data-flag-dir-room][data-flag-dir-room] :is(button, .btn) {
   --rm-on-fill: linear-gradient(180deg, var(--rm-on-top) 30%, color-mix(in srgb, var(--on, var(--fg)) 13%, var(--rm-on-top)));
