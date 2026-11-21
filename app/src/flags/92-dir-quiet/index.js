@@ -6,7 +6,7 @@
 // whole app from its own tokens in style.css; with the flag off nothing
 // changes. The idea, rules and risks are in the directions README.
 //
-// Quiet: an Apple pro app at night. Nothing shines except what you read:
+// Quiet: the doc's graphite and glass, made calmer. Nothing shines except what you read:
 // remaining time and tempo are the brightest things on screen. Controls are
 // tone, not outlines; "on" is a tint of the thing's own colour; the mixer is
 // flat discs and thin deck-coloured meters; waveforms peak at the deck's

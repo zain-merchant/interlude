@@ -8,7 +8,7 @@
 // Graphic: the site's display voice used as structure. Solid black panels
 // (no frosted glass), bold tight type with the times and tempo set heavy,
 // small capitals for every label, and one way to show "on": a dot that fills
-// (the cue, stems and Rec dots, extended to every switch). Braun-style flat
+// (the cue, stems and Rec dots, extended to every switch). Flat
 // dials, segmented meters, waveforms printed flat. Instant motion.
 export default {
   id: 'dir-graphic',

@@ -1,7 +1,7 @@
 /* #94 (UI audit flag; a visual direction): Graphic.
 
-   The site's display voice used as structure, in the Braun / Teenage
-   Engineering school: solid black panels, bold tight type, small capitals
+   The site's display voice used as structure, flat as print: solid black
+   panels, bold tight type, small capitals
    for every label, and one sign for "on" everywhere, a dot that fills.
    Every rule is scoped under :root[data-flag-dir-graphic] (doubled, so the
    round-2 flags' choice-setting rules don't out-specify it; this file loads
@@ -35,7 +35,7 @@
    body 13/400.
    Material: flat. No blur, no gradients, no shadows; 1px hairlines inside
    the edge (the site's cards). Radii 14 (panels) and 6 (controls).
-   Mixer: Braun dials (a flat disc, a thick white index to the rim, the
+   Mixer: flat dials (a flat disc, a thick white index to the rim, the
    value ring in grey), segmented grey meters with white top segments,
    black slots, flat caps with one white line.
    Waveforms: printed flat, a mid-tone body and a core at the deck colour,
@@ -532,7 +532,7 @@
 }
 
 /* ---------- Mixer ---------- */
-/* Braun dials: a flat disc, a thick white index to the rim. */
+/* Flat dials: a flat disc, a thick white index to the rim. */
 :root[data-flag-dir-graphic][data-flag-dir-graphic] .knob .dial,
 :root[data-flag-dir-graphic][data-flag-dir-graphic] .knob .dial.dragging {
   background: #1b1b1e !important;
