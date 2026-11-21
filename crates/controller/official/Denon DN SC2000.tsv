@@ -1,7 +1,7 @@
 # DN-SC2000 — Denon DJ "Owner's Manual", MIDI Command List / Data transmission and reception
 # source: https://cdn.inmusicbrands.com/denondj/legacy/dnsc2000/DN-SC2000_ownersmanual.pdf
 # n = MIDI channel 0-7, set in pairs (BROWSE = CH1-2 is the default pair); rows are given for CH1 and CH2
-# as deck 1 and deck 2. Note off is 0x8n. Pitch slider (pitch bend 0xEn) is not listed.
+# as deck 1 and deck 2. Note off is 0x8n.
 # LEDs: 0xBn with data1 = ON (0x4A) / OFF (0x4B) / BLINK ON (0x4C) trigger and data2 = LED number.
 in	90	58	DECK1 FX UNIT	
 in	90	03	DECK1 DECK CHG.	
@@ -109,3 +109,5 @@ in	B1	5D	DECK2 FILTER KNOB
 out	B1	4A	DECK2 LED ON trigger (data2 = LED number)	
 out	B1	4B	DECK2 LED OFF trigger (data2 = LED number)	
 out	B1	4C	DECK2 LED BLINK ON trigger (data2 = LED number)	
+in	E0	00	DECK1 PITCH SLIDER (pitch bend)	[Channel1] rate
+in	E1	00	DECK2 PITCH SLIDER (pitch bend)	[Channel2] rate

@@ -2,7 +2,7 @@
 # source: https://cdn.inmusicbrands.com/denondj/legacy/mc3000/MC3000EM_ENG_IM_v00.pdf
 # Messages are given as 0x9n/0xBn with n = MIDI channel 0-3; the list does not say which deck uses which n,
 # so every message is listed on n=0..3 and deck transport controls carry no expect. Note off is 0x8n.
-# Pitch slider (pitch bend 0xEn) is not listed. LEDs: 0xBn, data1 = ON/OFF/BLINK trigger, data2 = LED number.
+# LEDs: 0xBn, data1 = ON/OFF/BLINK trigger, data2 = LED number.
 in	90	01	n=0 CUE (DECK A)	[Channel1] pfl
 in	90	02	n=0 CUE (DECK C)	[Channel3] pfl
 in	90	03	n=0 DECK CHG. A	
@@ -451,3 +451,7 @@ out	B3	4A	n=3 LED ON trigger (data2 = LED number)
 out	B3	4B	n=3 LED OFF trigger (data2 = LED number)	
 out	B3	4C	n=3 LED BLINK ON trigger (data2 = LED number)	
 out	B3	50	n=3 CUE LED ON trigger (data2 = LED number)	
+in	E0	00	n=0 Pitch Slider (pitch bend)	
+in	E1	00	n=1 Pitch Slider (pitch bend)	
+in	E2	00	n=2 Pitch Slider (pitch bend)	
+in	E3	00	n=3 Pitch Slider (pitch bend)	

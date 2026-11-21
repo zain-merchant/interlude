@@ -2,7 +2,7 @@
 # source: https://www.reloop.com/media/catalog/product/pdf/2/2/4/224964_Reloop_IM.pdf
 # The original Mixage manual was not found on reloop.com; this is the Interface Edition MK2 chart.
 # MIDI channel 1 (the default). SW/CENTER/LED/LEVEL = 0x9n, VR/ENC = 0xBn (as the chart notes say).
-# Pitch faders (pitch bend 0xEn) are not listed. CUE1-4 are the Sync/CUP/Cue/Play buttons (manual T16-T19), so they carry no expect.
+# CUE1-4 are the Sync/CUP/Cue/Play buttons (manual T16-T19), so they carry no expect.
 in	90	1F	TRAX (push)	
 in	B0	1F	TRAX (turn)	[Library] MoveVertical
 in	90	5E	TRAX +SHIFT (push)	
@@ -121,3 +121,7 @@ both	90	1C	CD2 HP	[Channel2] pfl
 in	90	5B	CD2 HP +SHIFT	
 out	90	1D	CH1 Level Meter	
 out	90	1E	CH2 Level Meter	
+in	E0	00	CD1 PITCH (pitch bend, MIDI CH = 1)	[Channel1] rate
+in	E1	00	CD2 PITCH (pitch bend, MIDI CH = 1)	[Channel2] rate
+in	E2	00	CD1 PITCH +SHIFT (pitch bend)	
+in	E3	00	CD2 PITCH +SHIFT (pitch bend)	

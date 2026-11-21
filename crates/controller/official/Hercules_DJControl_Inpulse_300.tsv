@@ -1,6 +1,7 @@
 # DJControl Inpulse 300 — Hercules "MIDI commands" V1.2
 # source: https://ts.hercules.com/download/sound/manuals/DJC_Inpulse300/DJControlInpulse300_MIDI_Commands_V_1_2.pdf
-both	90	01		
+# Note: the PDF's "Deck A + Shift" LED section lists the deck B addresses (97 08…) again, so no LEDs are listed for 96 08-0F, 96 18-1F etc.; rows follow the PDF as printed.
+in	90	01	BEATMATCH_GUIDE	
 in	90	00	BROWSE_PUSH	
 in	90	02	PFL_MASTER	
 both	90	03	ASSISTANT	

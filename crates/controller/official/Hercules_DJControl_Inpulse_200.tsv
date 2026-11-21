@@ -1,6 +1,7 @@
 # DJControl Inpulse 200 — Hercules "MIDI commands" V1.0
 # source: https://ts.hercules.com/download/sound/manuals/DJC_Inpulse200/DJControlInpulse200_MIDI_Commands_V_1_0.pdf
-both	90	01		
+# Note: the PDF lists "Deck B + Shift" on 94 (the same addresses as Deck A + Shift), and its "Deck A + Shift" LED section repeats the deck B names; rows follow the PDF as printed.
+in	90	01	BEATMATCH_GUIDE	
 in	90	00	BROWSE_PUSH	
 in	90	02	PFL_MASTER	
 both	90	03	ASSISTANT	

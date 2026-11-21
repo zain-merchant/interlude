@@ -1,6 +1,6 @@
 # Terminal Mix 2/4 — Reloop "Terminal Mix 4 Instruction Manual", MIDI assignment table
 # source: https://www.reloop.com/media/catalog/product/pdf/2/2/4/224849_Reloop_IM.pdf
-# Pitch fader (pitch bend 0xEn) is not listed. For VR controls that also send a note, the note is sent at the knob's marked position.
+# For VR controls that also send a note, the note is sent at the knob's marked position.
 both	90	01	DECKA RANGE	
 both	90	47	DECKA RANGE +SHIFT	
 both	91	01	DECKB RANGE	
@@ -437,3 +437,7 @@ in	90	44	CF D A
 in	90	45	CF D THRU	
 in	90	46	CF D B	
 in	B0	46	CF CURVE	
+in	E0	00	DECKA PITCH BEND(middle) (pitch fader, pitch bend)	[Channel1] rate
+in	E1	00	DECKB PITCH BEND(middle) (pitch fader, pitch bend)	[Channel2] rate
+in	E2	00	DECKC PITCH BEND(middle) (pitch fader, pitch bend)	[Channel3] rate
+in	E3	00	DECKD PITCH BEND(middle) (pitch fader, pitch bend)	[Channel4] rate

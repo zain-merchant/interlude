@@ -1,6 +1,5 @@
 # Beatmix 2/4 — Reloop "Beatmix 2/4 MIDI map" (the same map is linked from the MK2 product pages)
 # source: https://www.reloop.com/media/custom/upload/Reloop-bm2_4_midi_map.pdf
-# Pitch faders (pitch bend 0xE1-0xE4, 14-bit value in data1/data2) are not listed.
 both	91	00	L-PAD1 (Blue)	
 both	91	08	L-PAD1 (Blue) +SHIFT	
 both	93	00	L-PAD1 (Blue)	
@@ -427,3 +426,7 @@ out	93	72	M-CUE3 +SHIFT
 out	91	72	M-CUE1 +SHIFT	
 out	94	72	M-CUE4 +SHIFT	
 out	92	72	M-CUE2 +SHIFT	
+in	E1	00	L-PITCH (DECK1, pitch bend)	[Channel1] rate
+in	E3	00	L-PITCH (DECK3, pitch bend)	[Channel3] rate
+in	E2	00	R-PITCH (DECK2, pitch bend)	[Channel2] rate
+in	E4	00	R-PITCH (DECK4, pitch bend)	[Channel4] rate

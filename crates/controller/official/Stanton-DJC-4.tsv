@@ -1,7 +1,7 @@
 # DJC.4 — Stanton "DJC.4 Owner's Manual" v1.1, MIDI MAP
 # source: https://web.archive.org/web/2014id_/http://stantondj.com/pdf/products/controllers/djc4/DJC.4ManualV1.1.pdf
 # Mode 1 channels: deck A n=0, B n=1, C n=2, D n=3, centre n=0 (Modes 2-4 add 4/8/12; not listed).
-# Pitch faders (pitch bend 0xEn) are not listed. Meters: CC with the value selecting the segment.
+# Meters: CC with the value selecting the segment.
 in	90	01	DECKA AUTO_LOOP	
 in	90	33	DECKA AUTO_LOOP +SHIFT	
 in	91	01	DECKB AUTO_LOOP	
@@ -408,3 +408,7 @@ out	92	27	DECKC FILTER_ON LED
 out	93	27	DECKD FILTER_ON LED	
 out	90	2E	TX LED	
 out	90	2F	FX LED	
+in	E0	00	DECKA PITCH_FADER (pitch bend)	[Channel1] rate
+in	E1	00	DECKB PITCH_FADER (pitch bend)	[Channel2] rate
+in	E2	00	DECKC PITCH_FADER (pitch bend)	[Channel3] rate
+in	E3	00	DECKD PITCH_FADER (pitch bend)	[Channel4] rate

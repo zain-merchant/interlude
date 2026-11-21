@@ -32,10 +32,10 @@ both	90	26	LOOP 2 TRACK Left
 both	90	27	VINYL Left	
 both	90	28	SEARCH << Left	
 both	90	29	SEARCH >> Left	
-both	90	2A	CUE MIDILOG 1	[Channel1] pfl
-both	90	2B	CUE MIDILOG 2	[Channel2] pfl
-both	90	2C	CUE MIDILOG 3	[Channel3] pfl
-both	90	2D	CUE MIDILOG 4	[Channel4] pfl
+both	90	2A	CUE MIDILOG 1	
+both	90	2B	CUE MIDILOG 2	
+both	90	2C	CUE MIDILOG 3	
+both	90	2D	CUE MIDILOG 4	
 both	90	2E	CUE Right	[Channel2] cue_default
 both	90	2F	PLAY > Right	[Channel2] play
 both	90	30	PAUSE || Right	
@@ -93,26 +93,26 @@ in	90	63	XF ASSIGN 3 Right
 in	90	64	XF ASSIGN 4 Right	
 in	90	65	LOAD Left	[Channel1] LoadSelectedTrack
 in	90	66	LOAD Right	[Channel2] LoadSelectedTrack
-in	B0	00	MIDILOG 1 GAIN	[Channel1] pregain
-in	B0	01	MIDILOG 1 TREBLE	[EqualizerRack1_[Channel1]_Effect1] parameter3
-in	B0	02	MIDILOG 1 MID	[EqualizerRack1_[Channel1]_Effect1] parameter2
-in	B0	03	MIDILOG 1 BASS	[EqualizerRack1_[Channel1]_Effect1] parameter1
-in	B0	04	MIDILOG 1 LINE	[Channel1] volume
-in	B0	05	MIDILOG 2 GAIN	[Channel2] pregain
-in	B0	06	MIDILOG 2 TREBLE	[EqualizerRack1_[Channel2]_Effect1] parameter3
-in	B0	07	MIDILOG 2 MID	[EqualizerRack1_[Channel2]_Effect1] parameter2
-in	B0	08	MIDILOG 2 BASS	[EqualizerRack1_[Channel2]_Effect1] parameter1
-in	B0	09	MIDILOG 2 LINE	[Channel2] volume
-in	B0	0A	MIDILOG 3 GAIN	[Channel3] pregain
-in	B0	0B	MIDILOG 3 TREBLE	[EqualizerRack1_[Channel3]_Effect1] parameter3
-in	B0	0C	MIDILOG 3 MID	[EqualizerRack1_[Channel3]_Effect1] parameter2
-in	B0	0D	MIDILOG 3 BASS	[EqualizerRack1_[Channel3]_Effect1] parameter1
-in	B0	0E	MIDILOG 3 LINE	[Channel3] volume
-in	B0	0F	MIDILOG 4 GAIN	[Channel4] pregain
-in	B0	10	MIDILOG 4 TREBLE	[EqualizerRack1_[Channel4]_Effect1] parameter3
-in	B0	11	MIDILOG 4 MID	[EqualizerRack1_[Channel4]_Effect1] parameter2
-in	B0	12	MIDILOG 4 BASS	[EqualizerRack1_[Channel4]_Effect1] parameter1
-in	B0	13	MIDILOG 4 LINE	[Channel4] volume
+in	B0	00	MIDILOG 1 GAIN	
+in	B0	01	MIDILOG 1 TREBLE	
+in	B0	02	MIDILOG 1 MID	
+in	B0	03	MIDILOG 1 BASS	
+in	B0	04	MIDILOG 1 LINE	
+in	B0	05	MIDILOG 2 GAIN	
+in	B0	06	MIDILOG 2 TREBLE	
+in	B0	07	MIDILOG 2 MID	
+in	B0	08	MIDILOG 2 BASS	
+in	B0	09	MIDILOG 2 LINE	
+in	B0	0A	MIDILOG 3 GAIN	
+in	B0	0B	MIDILOG 3 TREBLE	
+in	B0	0C	MIDILOG 3 MID	
+in	B0	0D	MIDILOG 3 BASS	
+in	B0	0E	MIDILOG 3 LINE	
+in	B0	0F	MIDILOG 4 GAIN	
+in	B0	10	MIDILOG 4 TREBLE	
+in	B0	11	MIDILOG 4 MID	
+in	B0	12	MIDILOG 4 BASS	
+in	B0	13	MIDILOG 4 LINE	
 in	B0	14	MIC 1 GAIN	
 in	B0	15	MIC 1 TREBLE	
 in	B0	16	MIC 1 MID	
