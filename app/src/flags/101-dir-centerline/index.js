@@ -20,7 +20,7 @@ export default {
   title: 'Direction: Centerline',
   group: 'Direction',
   against: 'The layout in the design doc ("waveform lanes on top, deck, mixer and deck below them"): the lanes become one field on a shared axis that takes most of the window, and the decks\' titles, tempos and times move into its corners. Also the Liquid Glass blur and "one solid primary control, Play", as in #99.',
-  notes: 'style.css is built from two sources with a short prefix (every rule is under the tripled :root[data-flag-dir-centerline] attribute): the material (from #99, crisper) and the layout. Hooks: Waveform.svelte passes half: \'up\' | \'down\' to the scrolling lanes and waveform-2d.js draws a half ribbon on the lane\'s edge (ribbonShape, band\'s gradient, the tile key); Mixer.svelte sizes the channel dials for three rows (dialRows), shared with #102. only-one.svelte.js keeps one Direction flag on at a time.',
+  notes: 'style.css is built from two sources with a short prefix (every rule is under the tripled :root[data-flag-dir-centerline] attribute): the material (from #99, crisper) and the layout. Hooks: Waveform.svelte passes half: \'up\' | \'down\' to the scrolling lanes and waveform-2d.js draws a half ribbon on the lane\'s edge (ribbonShape, band\'s gradient, the tile key); Mixer.svelte sizes the channel dials for three rows (dialRows), shared with #102. The library row is clamp(160px, --lib − 98px, 60vh), so the handle still works both ways, within App.svelte\'s range for --lib (160 to about 410px). only-one.svelte.js keeps one Direction flag on at a time.',
 };
 
 /** Show me: both decks playing, flipping between today and this direction. */

@@ -17,7 +17,7 @@ export default {
   title: 'Direction: Crate',
   group: 'Direction',
   against: 'The layout in the design doc ("waveform lanes on top, deck, mixer and deck below them, the library at the bottom"): the library moves to the top and the decks become a strip under it. Also the Liquid Glass blur and "one solid primary control, Play", as in #99.',
-  notes: 'style.css is built from two sources with a short prefix (every rule is under the tripled :root[data-flag-dir-crate] attribute): the material (from #99, crisper) and the layout, which places the app\'s rows with grid areas. Hooks: Library.svelte puts rows on a 40px pitch (ROW); Mixer.svelte sizes the channel dials for three rows (dialRows), shared with #101. only-one.svelte.js keeps one Direction flag on at a time.',
+  notes: 'style.css is built from two sources with a short prefix (every rule is under the tripled :root[data-flag-dir-crate] attribute): the material (from #99, crisper) and the layout, which places the app\'s rows with grid areas. Hooks: Library.svelte puts rows on a 40px pitch (ROW); Mixer.svelte sizes the channel dials for three rows (dialRows), shared with #101. The lanes take clamp(72px, --lib × 0.6 − 113px, 320px), so dragging the library\'s handle up grows them and down shrinks them, within App.svelte\'s range for --lib (160 to about 410px). only-one.svelte.js keeps one Direction flag on at a time.',
 };
 
 /** Show me: both decks playing, flipping between today and this direction. */

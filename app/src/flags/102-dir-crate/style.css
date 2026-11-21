@@ -201,7 +201,8 @@
 :root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .bpm .key {
   color: var(--fg-3);
 }
-:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .times .rm {
+/* (#18's ending colour on the remaining time stays.) */
+:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .times .rm:not(.ending) {
   color: var(--fg);
   letter-spacing: -0.02em;
 }
@@ -958,7 +959,7 @@
    side by side over its meters, Rec under them. */
 
 :root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] .decks {
-  grid-template-columns: minmax(0, 1fr) clamp(316px, 25vw, 360px) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) clamp(324px, 25vw, 360px) minmax(0, 1fr);
 }
 :root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] .mixer .ch {
   grid-template-columns: 36px 36px;
@@ -999,6 +1000,22 @@
   align-self: end;
 }
 
+/* A narrow window: the dial columns and the master's middle close up so
+   both channels fit the 324px mixer. */
+@media (max-width: 1295px) {
+  :root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] .mixer {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+  :root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] .mixer .ch {
+    grid-template-columns: 32px 32px;
+  }
+  :root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] .mixer .cen {
+    min-width: 72px;
+    padding: 0 10px;
+  }
+}
+
 
 /* ══ Layout: Crate ══════════════════════════════════════════════════════
 
@@ -1010,8 +1027,11 @@
 
 :root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] .app {
   --cr-strip: 252px;
-  /* The lanes take what the library's handle gives them. */
-  --cr-lanes: clamp(84px, calc(var(--lib) - 248px), 320px);
+  /* The lanes take what the library's handle gives them: dragging it up
+     grows them, down shrinks them. The handle's range (160 to about
+     410px, set in App.svelte for today's rows) maps to 72 to about
+     133px; today's default (368px) gives 108px. */
+  --cr-lanes: clamp(72px, calc(var(--lib) * 0.6 - 113px), 320px);
   grid-template-rows: minmax(200px, 1fr) var(--gap) var(--cr-lanes) var(--cr-strip);
   grid-template-areas: 'lib' 'split' 'waves' 'decks';
 }
@@ -1100,19 +1120,36 @@
 :root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .times > span {
   text-align: right;
 }
-:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .times .rm {
+/* Whichever time is big (remaining unless #40's click swapped it) leads
+   in full white; the other steps down. #18's ending colour on the
+   remaining time is left alone. */
+:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .times:not([data-big='elapsed']) .rm,
+:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .times[data-big='elapsed'] .el {
   font-size: var(--t-lg);
   font-weight: 300;
   line-height: 20px;
   letter-spacing: -0.03em;
+}
+:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .times:not([data-big='elapsed']) .rm:not(.ending),
+:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .times[data-big='elapsed'] .el {
   color: var(--fg);
 }
-:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .times .el {
+:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .times:not([data-big='elapsed']) .el,
+:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .times[data-big='elapsed'] .rm {
   font-size: var(--t-xs);
   font-weight: 400;
   line-height: 16px;
   letter-spacing: 0;
+}
+:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .times:not([data-big='elapsed']) .el,
+:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .times[data-big='elapsed'] .rm:not(.ending) {
   color: var(--fg-3);
+}
+:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .times[data-big='elapsed'] {
+  flex-direction: column;
+}
+:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .times[data-big]:hover :is(.el, .rm:not(.ending)) {
+  color: var(--fg);
 }
 :root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .mp {
   gap: 6px;

@@ -202,7 +202,8 @@
 :root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .bpm .key {
   color: var(--fg-3);
 }
-:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .times .rm {
+/* (#18's ending colour on the remaining time stays.) */
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .times .rm:not(.ending) {
   color: var(--fg);
   letter-spacing: -0.02em;
 }
@@ -959,7 +960,7 @@
    side by side over its meters, Rec under them. */
 
 :root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .decks {
-  grid-template-columns: minmax(0, 1fr) clamp(316px, 25vw, 360px) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) clamp(324px, 25vw, 360px) minmax(0, 1fr);
 }
 :root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .mixer .ch {
   grid-template-columns: 36px 36px;
@@ -1000,6 +1001,22 @@
   align-self: end;
 }
 
+/* A narrow window: the dial columns and the master's middle close up so
+   both channels fit the 324px mixer. */
+@media (max-width: 1295px) {
+  :root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .mixer {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+  :root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .mixer .ch {
+    grid-template-columns: 32px 32px;
+  }
+  :root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .mixer .cen {
+    min-width: 72px;
+    padding: 0 10px;
+  }
+}
+
 
 /* ══ Layout: Centerline ═════════════════════════════════════════════════
 
@@ -1011,8 +1028,10 @@
 
 :root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .app {
   --cl-console: 236px;
-  /* The library keeps its handle, up to 30% of the window. */
-  --cl-lib: min(var(--lib), 30vh);
+  /* The library keeps its handle: today's default (368px at 900) gives
+     270px here, and the handle's range (160 to about 410px, set in
+     App.svelte for today's rows) maps to 160 to about 312px. */
+  --cl-lib: clamp(160px, calc(var(--lib) - 98px), 60vh);
   --cl-inset: 12px;
   /* From the field's bottom edge to the window's: the right deck's
      corners are placed from it. */
@@ -1061,11 +1080,18 @@
   top: 4px;
   bottom: auto;
 }
-/* Zoom: a small plate on the axis at the right edge. */
+/* Zoom: a small plate lying along the axis at the right edge, clear of
+   the corner plates at any height. */
 :root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .waves .zoom {
   top: 50%;
+  bottom: auto;
   right: var(--cl-inset);
-  translate: 0 -50%;
+  translate: none;
+  transform: translateY(-50%);
+  flex-direction: row;
+  width: auto;
+  height: 28px;
+  padding: 0 4px;
 }
 
 /* ── The corners ── */
@@ -1098,7 +1124,7 @@
   align-items: flex-start;
   gap: 8px;
   pointer-events: none;
-  --cl-times: 132px;
+  --cl-times: 164px;
 }
 :root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region='deck0'] header {
   top: calc(var(--top) + var(--cl-inset));
@@ -1178,7 +1204,7 @@
   z-index: 3;
   right: calc(var(--gap) + var(--cl-inset));
   width: var(--cl-times);
-  --cl-times: 132px;
+  --cl-times: 164px;
   height: 62px;
   padding: 8px 16px 0 14px;
   border-radius: 0 10px 10px 0;
@@ -1202,19 +1228,36 @@
 :root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .times > span {
   text-align: right;
 }
-:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .times .rm {
+/* Whichever time is big (remaining unless #40's click swapped it) leads
+   in full white; the other steps down. #18's ending colour on the
+   remaining time is left alone. */
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .times:not([data-big='elapsed']) .rm,
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .times[data-big='elapsed'] .el {
   font-size: var(--t-xl);
   font-weight: 300;
   line-height: 28px;
   letter-spacing: -0.03em;
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .times:not([data-big='elapsed']) .rm:not(.ending),
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .times[data-big='elapsed'] .el {
   color: var(--fg);
 }
-:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .times .el {
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .times:not([data-big='elapsed']) .el,
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .times[data-big='elapsed'] .rm {
   font-size: var(--t-sm);
   font-weight: 400;
   line-height: 17px;
   letter-spacing: 0;
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .times:not([data-big='elapsed']) .el,
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .times[data-big='elapsed'] .rm:not(.ending) {
   color: var(--fg-3);
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .times[data-big='elapsed'] {
+  flex-direction: column;
+}
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck'] .times[data-big]:hover :is(.el, .rm:not(.ending)) {
+  color: var(--fg);
 }
 
 /* ── The console ── */
@@ -1232,4 +1275,10 @@
 /* The lost-device banner: over the top of the library, as in #99. */
 :root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] .app > .banner.lost {
   bottom: calc(var(--gap) + var(--cl-lib) - 58px);
+}
+
+/* An empty deck: its title plate says "Empty deck" and no more (the load
+   hint is in the overview's well, #46). */
+:root[data-flag-dir-centerline][data-flag-dir-centerline][data-flag-dir-centerline] [data-region^='deck']:has(.title .name.dim) header .title .artist {
+  display: none;
 }
