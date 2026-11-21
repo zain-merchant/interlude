@@ -30,9 +30,28 @@ export const show = {
   before: 'The list shows each track\'s key, but which of them go with the track on the deck is left for you to work out.',
   after: 'Keys that go with what\'s loaded are brighter, with a thin grey line under the key and its code: a shortlist for the next track. Point at one and it says which deck it goes with.',
   async setup(app) {
-    if (!app.loaded(0)) await app.loadTrack(0);
     await app.clearSearch();
     app.$("[data-region='tracks']").scrollTop = 0;
+    // A shortlist of one is easy to miss: put the tracks on the decks (of
+    // the first few rows) whose keys mark the most rows in view. Nothing
+    // plays, so keys that go with either loaded deck are marked.
+    const marked = () => app.$$("[data-region='tracks'] .row .k.mix").filter((k) => k.getBoundingClientRect().bottom < innerHeight).length;
+    const pick = async (deck, rows) => {
+      let best = { row: rows[0], n: -1 };
+      for (const row of rows) {
+        await app.loadTrack(deck, row);
+        app.$("[data-region='tracks']").scrollTop = 0;
+        await app.wait(60);
+        const n = marked();
+        if (n > best.n) best = { row, n };
+        if (n >= 4) break;
+      }
+      if (marked() < best.n) await app.loadTrack(deck, best.row);
+      app.$("[data-region='tracks']").scrollTop = 0;
+      return best;
+    };
+    const a = await pick(0, [1, 0, 2, 3, 4, 5]);
+    if (a.n < 4) await pick(1, [4, 5, 6, 7, 3, 2].filter((r) => r !== a.row));
     await app.until(() => app.$("[data-region='tracks'] .row .k.mix"), 2000, 'a key that mixes');
   },
   target: (app) => app.$$("[data-region='tracks'] .row .k.mix").slice(0, 6),

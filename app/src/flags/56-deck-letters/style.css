@@ -34,3 +34,16 @@
   content: 'B';
   color: var(--deck-b);
 }
+
+/* With #54 deck-polish the header is a grid (title | BPM, two rows): the
+   tile took a cell of its own and pushed the title and BPM down a row,
+   28px of the deck's height (which #53 gives the overview). It takes its
+   own first column instead, 12px before the title, as in the flex header. */
+:root[data-flag-deck-letters][data-flag-deck-polish] [data-region^='deck'] header {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+}
+:root[data-flag-deck-letters][data-flag-deck-polish] [data-region^='deck'] header::before {
+  grid-row: 1;
+  align-self: start;
+  margin-right: calc(var(--gap) - 2 * var(--gap));
+}

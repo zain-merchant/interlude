@@ -16,12 +16,17 @@ export default {
   n: 19,
   title: 'Library resizes live as you drag',
   group: 'Stability',
+  // #21 panel-sizes does this too (it marks the handle "dragging" itself),
+  // so with #21 on this flag changes nothing: shipping #21 ships this.
+  superseded: 'panel-sizes',
   notes: 'Dragging the handle above the library resizes it under the pointer, every frame, instead of collapsing it to 12px until you let go (the handle took the title strip\'s "drag" class).',
 };
 
 /** Show me: drags the handle above the library down and holds it, once per flip; before, the library collapses while held; after, it follows the pointer. */
 export const show = {
-  about: 'Dragging the bar above the library to resize it made the library collapse to a thin strip until you let go, so you couldn\'t see the size you were picking. Now it follows your pointer as you drag.',
+  // Before turns these off too (they hide this change while on): #21 panel-sizes makes the handle follow the pointer itself (App.svelte: library-resize || panel-sizes), so with it on this flag changes nothing.
+  masks: ['panel-sizes'],
+  about: 'Dragging the bar above the library to resize it made the library collapse to a thin strip until you let go, so you couldn\'t see the size you were picking. Now it follows your pointer as you drag. (Also part of 21: with 21 on, this one changes nothing more.)',
   before: 'Grab the bar above the library and drag: the library collapses to a thin strip and the layout jumps, and you only see the new size once you let go.',
   after: 'The library\'s top edge follows your pointer the whole way, so you can see exactly how big it will be before you let go.',
   period: 1600,

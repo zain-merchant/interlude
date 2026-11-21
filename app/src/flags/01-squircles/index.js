@@ -37,7 +37,9 @@ export const show = {
   about: 'Rounded corners bent suddenly, like a circle stuck onto a box. Now they ease into the curve, the way Apple\'s do.',
   before: 'Each corner is a quarter circle: the straight edge turns into the curve all at once, which looks a little stiff up close.',
   after: 'The edge starts bending earlier and more gradually, so corners look softer and more finished. Their size is the same.',
-  setup(app, ctx) {
+  async setup(app, ctx) {
+    // On an empty deck Sync is a disabled label with no fill: no corner to see.
+    if (!app.loaded(0)) await app.loadTrack(0);
     const els = () => [app.deck(0), app.$("[data-region='deck0'] .btn.sync")];
     // The plain radius each corner has with the flag off.
     ctx.radius = app.without('squircles', () => els().map((e) => (e ? parseFloat(getComputedStyle(e).borderTopLeftRadius) || 0 : 0)));

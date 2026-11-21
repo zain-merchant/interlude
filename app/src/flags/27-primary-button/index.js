@@ -32,6 +32,8 @@ export default {
 
 /** Show me: the Report dialog, its Save button in a loupe beside Cancel; flipping between the tonal grey that read as disabled and the main button. */
 export const show = {
+  // Before turns these off too (they hide this change while on): #38 makes every dialog's last button solid too, so with it on Save is solid either way.
+  masks: ['against-solid-primary'],
   about: 'In the Report dialog the main button, Save, was a grey that looked switched off next to Cancel, and Import used a different solid chip twice. Now each dialog has one clearly marked main button, styled the same everywhere.',
   before: "Report's Save button is a grey box like any other button, and next to Cancel it can read as switched off, so it isn't clear it's the thing to press.",
   after: 'Save is the one solid button in the dialog, so it reads as the thing to press; Cancel stays quiet beside it.',

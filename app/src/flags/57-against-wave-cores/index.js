@@ -19,6 +19,10 @@ export default {
 
 /** Show me: both decks loaded; flipping shows the near-white cores (before) and calmer ones (after). */
 export const show = {
+  // #56 against-deck-colours sets the waveform bands itself, so with it on
+  // the cores don't change, and After would show its bands: it's off for
+  // the whole show (back on Done).
+  overrides: ['against-deck-colours'],
   about: 'Against the design doc\'s waveform colours. Judges found the near-white centre of the waveforms brighter than the numbers you need to read. Turn this on to judge calmer cores.',
   before: 'The centre of each waveform is near-white, as the design doc sets it: the brightest thing on screen over long stretches.',
   after: 'The centres are a little darker than each deck\'s white, so the waveforms glow less and the readouts stand out more. The cost: less sparkle on the loud parts.',

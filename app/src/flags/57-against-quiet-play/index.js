@@ -20,6 +20,8 @@ export default {
 
 /** Show me: deck A playing, deck B paused; flipping shows the paused solid block (before) and a quiet paused button (after). */
 export const show = {
+  // Before turns these off too (they hide this change while on): #6 play-states already makes a paused Play quiet (lit while playing), so with it on this changes nothing.
+  masks: ['play-states'],
   about: 'Against the design doc, which keeps Play solid white. Judges found a paused deck\'s solid Play the brightest thing on screen, drawing the eye to the deck that isn\'t running. Turn this on to judge a quieter paused Play (flag 06\'s "Lit while playing" is the fuller fix).',
   before: 'Deck B is paused and its Play is the solid white block, the brightest surface in the window, as the design doc intends.',
   after: 'Deck B\'s paused Play is a quiet button with a white triangle, so the bright surfaces on screen belong to what\'s playing. The cost: Play no longer stands out as the one solid control.',

@@ -40,7 +40,18 @@ export const show = {
     await app.clearSearch();
     app.$("[data-region='tracks']").scrollTop = 0;
   },
-  target: (app) => [app.$("[data-region='deck0'] .bpm .unit .key"), app.$$('section.library .head .sort').find((b) => b.textContent.trim().startsWith('Key'))],
+  // The list's key cells are what change (the deck already writes both): ring the ones in view.
+  target: (app) => [
+    app.$("[data-region='deck0'] .bpm .unit .key"),
+    app.$$('section.library .head .sort').find((b) => b.textContent.trim().startsWith('Key')),
+    ...app
+      .$$("[data-region='tracks'] .row .k")
+      .filter((k) => {
+        const r = k.getBoundingClientRect();
+        return r.top > 0 && r.bottom < innerHeight;
+      })
+      .slice(0, 8),
+  ],
   aid(d, app, ctx) {
     const before = ctx.phase === 'before';
     const keys = app.$$("[data-region='tracks'] .row .k").map((k) => k.getBoundingClientRect()).filter((r) => r.top > 0 && r.bottom < d.vh);

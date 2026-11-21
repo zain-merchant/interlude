@@ -22,6 +22,8 @@ export default {
 
 /** Show me: the inner margins of the mixer against the decks beside it, shaded with their sizes, flipping. */
 export const show = {
+  // Before turns these off too (they hide this change while on): #2 concentric also sets every panel's padding (the mixer's 12 to 16), so with it on the mixer doesn't move here.
+  masks: ['concentric'],
   about: 'Inside panels and popups the margins were a mix of near-identical sizes (12 here, 16 there, 10, 14, 6), so edges looked slightly ragged. Now every gap is 4, 8, 12 or 16.',
   before: "The mixer keeps its knobs 12px from its edges while the decks either side keep 16px, and the search box, library rows, toast and menus each have their own odd margin: close, but not the same.",
   after: 'Every panel keeps its contents 16px from its edges, and the smaller gaps are 4, 8 or 12, so neighbouring panels match and the whole window feels even.',

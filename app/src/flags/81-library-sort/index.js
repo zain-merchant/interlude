@@ -21,6 +21,8 @@ export default {
 
 /** Show me: All tracks with no column picked; flipping shows no arrow (before) and Artist's arrow with the list in artist order (after). */
 export const show = {
+  // Before turns these off too (they hide this change while on): #14 states also brightens a hovered heading, so with it on only the arrow changes.
+  masks: ['states'],
   about: 'The track list had an order, but no column heading said what it was, and pointing at a heading barely changed it. Now Artist shows its arrow, and a heading you point at brightens a step.',
   before: "No heading has an arrow, so you can't tell how the list is ordered, or that clicking a heading sorts by it.",
   after: 'Artist shows its arrow and the list is in artist order, then title. Point at another heading and it brightens a step, still dimmer than Artist: click to sort by it.',
@@ -44,5 +46,12 @@ export const show = {
     const title = ctx.title?.getBoundingClientRect();
     if (artist) d.text(artist.x + 6, artist.bottom + 44, before ? 'sorted by what?' : 'sorted by artist: the arrow says so', { tone: before ? 'bad' : 'ok' });
     if (title) d.text(title.x + 6, title.bottom + 44, before ? 'pointed at: barely changes' : 'pointed at: a step brighter, still below Artist', { tone: before ? 'bad' : 'ok' });
+    // The headings are small grey words: magnified from Title to Artist's arrow.
+    if (artist && title) {
+      const z = 2.5;
+      const vw = Math.min(artist.right + 24 - title.x, 560 / z);
+      const vh = artist.height + 8;
+      d.loupe('heads', { x: title.x - 4, y: artist.y - 4 }, { zoom: z, size: { w: vw * z, h: vh * z }, at: { x: title.x - 4, y: artist.bottom + 70 }, caption: '' });
+    }
   },
 };

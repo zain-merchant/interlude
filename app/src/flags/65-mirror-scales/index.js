@@ -32,7 +32,14 @@ export const show = {
       d.vguide(axis, { y1: r.top, y2: r.bottom, c: d.C.ghost, dash: '4 3' });
       const right = m.left > axis;
       const ok = i % 2 === 0 ? right : !right;
-      if (i % 2 === 1) d.text(r.left + r.width / 2, r.bottom + 14, right ? 'marks on the right, like the left side' : 'marks mirrored', { anchor: 'middle', tone: ok ? 'ok' : 'bad' });
+      if (i % 2 === 1) {
+        // The marks are 5px dashes a few pixels from the slot: magnified, the side they sit on reads at once.
+        const z = 4;
+        const vw = 40;
+        const vh = 56;
+        const l = d.loupe(`fader${i}`, { x: axis - vw / 2, y: r.top + r.height / 2 - vh / 2 }, { zoom: z, size: { w: vw * z, h: vh * z }, near: r, caption: '' });
+        d.text(l.rect.x + l.rect.width / 2, l.rect.bottom + 16, right ? 'marks on the right, like the left side' : 'marks mirrored: on the inside', { anchor: 'middle', tone: ok ? 'ok' : 'bad', fixed: true });
+      }
     });
     void after;
   },

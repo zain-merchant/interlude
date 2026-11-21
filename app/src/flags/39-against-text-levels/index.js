@@ -53,6 +53,10 @@ export const show = {
     const perf = app.$("[data-region='deck0'] .perf")?.getBoundingClientRect();
     const m = app.$('.mixer')?.getBoundingClientRect();
     if (perf) d.loupe('cues', { x: perf.x, y: perf.y + perf.height / 2 - 20 }, { zoom: 2.5, size: { w: 340, h: 100 }, near: perf });
-    if (m) d.loupe('captions', { x: m.x + 8, y: m.y + 40 }, { zoom: 3, size: { w: 300, h: 240 }, near: m });
+    if (m) {
+      const l = d.loupe('captions', { x: m.x + 8, y: m.y + 40 }, { zoom: 3, size: { w: 300, h: 240 }, near: m });
+      // A step of 10% white is hard to judge by eye: the captions' contrast, measured live.
+      d.contrast(app.$('.mixer .knob button.label'), { x: l.rect.x, y: l.rect.bottom + 46, w: l.rect.width }, { what: 'captions', lo: 4, hi: 7 });
+    }
   },
 };

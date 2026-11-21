@@ -21,7 +21,9 @@ export default {
 
 /** Show me: deck A's pitch-nudge − and + and its beat-jump − and +, side by side in two loupes, flipping; the library's analysis note too while it's there. */
 export const show = {
-  about: "The − and + under the pitch fader were dimmer than every other − and +, so they looked switched off; the library's 'analyzing' note used the faint grey of disabled things. Now each uses the brightness of its kind.",
+  // Before turns these off too (they hide this change while on): #48 nudge-pill also puts the nudge − and + at --fg-2, so with it on they don't change here.
+  masks: ['nudge-pill'],
+  about: "The − and + under the pitch fader were dimmer than every other − and +, so they looked switched off; the library's 'analyzing' note used the faint grey of disabled things. Now each uses the brightness of its kind. (48 also brightens the nudge − and +.)",
   before: 'The pitch nudge − and + are a step dimmer than the beat-jump − and + next to them, so they look disabled even though they work, and live notes like "analyzing, 12 to go" are hard to read.',
   after: "All the − and + arrow buttons share one brightness, so working buttons look working, and live information is as readable as the text beside it.",
   async setup(app) {
@@ -46,6 +48,13 @@ export const show = {
     d.text(a.rect.x, a.rect.bottom + 14, 'pitch nudge − and +', { fixed: true });
     d.text(b.rect.x, b.rect.bottom + 14, 'beat jump ‹', { fixed: true });
     d.text(a.rect.x, a.rect.bottom + 40, before ? 'nudge is dimmer: it looks switched off' : 'the same brightness: both look ready to press', { tone: before ? 'bad' : 'ok', fixed: true });
+    // The mixer's fader marks (M7): 14% white to 30%.
+    const fader = app.$('.mixer .fwrap .fader')?.getBoundingClientRect();
+    if (fader) {
+      const fv = { w: 36, h: 60 };
+      const f = d.loupe('marks', { x: fader.x + fader.width / 2 - fv.w / 2, y: fader.y + fader.height / 2 - fv.h / 2 }, { zoom: 4, size: { w: fv.w * 4, h: fv.h * 4 }, near: fader, caption: '' });
+      d.text(f.rect.x, f.rect.bottom + 14, before ? 'fader marks at 14%: barely there' : 'fader marks at 30%: readable', { tone: before ? 'bad' : 'ok', fixed: true });
+    }
     // The analysis note, while the library is still being analysed.
     const p = app.$('section.library .bar .count .pending');
     const pr = p?.getBoundingClientRect();

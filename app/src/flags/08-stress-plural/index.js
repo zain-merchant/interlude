@@ -39,12 +39,18 @@ export const show = {
     if (ctx.scope) app.setFlag('search-scope', true);
   },
   target: 'section.library .bar .count',
-  badge: (app) => app.textRect(app.$('section.library .bar .count')),
+  badge: (app, ctx) => ctx.at,
   aid(d, app, ctx) {
     const r = app.textRect(app.$('section.library .bar .count'));
     if (!r) return;
     const before = ctx.phase === 'before';
     d.box(new DOMRect(r.x - 4, r.y - 3, r.width + 8, r.height + 6), { c: before ? d.C.bad : d.C.ok, w: 1.5, rx: 4 });
-    d.text(r.x, r.bottom + 16, before ? 'says "tracks" for one' : 'one track, one "track"', { tone: before ? 'bad' : 'ok' });
+    // The change is one letter: magnified, it reads from across the room.
+    const z = 4;
+    const w = 90;
+    const h = r.height + 12;
+    const l = d.loupe('count', { x: r.x - 6, y: r.y - 6 }, { zoom: z, size: { w: w * z, h: h * z }, at: { x: r.x - 6, y: r.bottom + 44 }, caption: '' });
+    ctx.at = l.rect;
+    d.text(l.rect.x, l.rect.bottom + 16, before ? 'says "tracks" for one' : 'one track, one "track"', { tone: before ? 'bad' : 'ok', fixed: true });
   },
 };
