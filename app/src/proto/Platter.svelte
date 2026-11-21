@@ -41,7 +41,7 @@
   const size = $derived(Math.max(120, Math.floor(box)));
   // The record fills the box, less room for an outer waveform ring or the
   // strobe rim, so there's little dead space around it.
-  const vr = $derived(Math.round(size / 2 - (S.ring === 'outer' ? platter.ringWidth + 4 : S.ring === 'cues' ? 9 : S.strobe ? 9 : 1)));
+  const vr = $derived(Math.round(size / 2 - (S.ring === 'outer' ? platter.ringWidth + 14 : S.ring === 'cues' ? 9 : S.strobe ? 9 : 1)));
   const hubD = $derived(Math.round(vr * 2 * platter.hub / 100));
   const dpr = Math.min(2, typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1);
 
@@ -87,29 +87,46 @@
     let x = seed;
     const rnd = () => ((x = (x * 16807) % 2147483647) / 2147483647);
     if (finish === 'clear') {
-      disc0(R, '#0f0f12');
-      [0.55, 0.72, 0.88].forEach((f) => ring(R * f, 'rgba(255,255,255,.05)', Math.max(3, R * 0.04)));
-      const tint = g.createRadialGradient(-R * 0.25, -R * 0.3, R * 0.1, 0, 0, R);
-      tint.addColorStop(0, rgba(col.c, 0.34));
-      tint.addColorStop(1, rgba(col.c, 0.15));
+      // The platter mat, seen through the record.
+      disc0(R, '#0c0c0f');
+      for (let r = R * 0.3; r < R; r += Math.max(3, R * 0.035)) ring(r, 'rgba(255,255,255,.028)', 1);
+      // Tinted vinyl: denser at the rim, where light travels through more of it.
+      const tint = g.createRadialGradient(0, 0, hr, 0, 0, R);
+      tint.addColorStop(0, rgba(col.c, 0.16));
+      tint.addColorStop(0.7, rgba(col.c, 0.22));
+      tint.addColorStop(1, rgba(col.c, 0.42));
       disc0(R, tint);
+      const pool = g.createRadialGradient(-R * 0.35, -R * 0.4, 0, -R * 0.35, -R * 0.4, R * 0.9);
+      pool.addColorStop(0, rgba(col.high, 0.16));
+      pool.addColorStop(1, rgba(col.high, 0));
+      disc0(R, pool);
     } else {
       const base = g.createRadialGradient(0, 0, R * 0.3, 0, 0, R);
       base.addColorStop(0, '#0e0e11');
       base.addColorStop(1, '#070709');
       disc0(R, base);
     }
-    const gaps = [0.3, 0.55, 0.78].map((f) => hr + (R - hr) * f);
-    for (let r = hr + 3; r < R - 2; r += 1.1) {
-      const near = gaps.some((v) => Math.abs(r - v) < 1.4);
-      ring(r, near ? 'rgba(255,255,255,.012)' : `rgba(255,255,255,${(0.018 + rnd() * 0.05) * gr})`, 0.6);
+    // Grooves, in bands with smooth gaps between tracks.
+    const gaps = [0.22, 0.47, 0.71].map((f) => hr + (R - hr) * f);
+    for (let r = hr + 4; r < R - 3; r += 0.9) {
+      const near = gaps.some((v) => Math.abs(r - v) < 1.6);
+      if (near) continue;
+      ring(r, finish === 'clear' ? `rgba(255,255,255,${(0.02 + rnd() * 0.05) * gr})` : `rgba(255,255,255,${(0.018 + rnd() * 0.05) * gr})`, 0.5);
     }
-    ring(R - 1, finish === 'clear' ? rgba(col.c, 0.55) : 'rgba(255,255,255,.10)', 1);
+    gaps.forEach((v) => ring(v, finish === 'clear' ? rgba(col.high, 0.1) : 'rgba(255,255,255,.04)', 2.4));
+    // Bevelled edge: a bright lip and a darker band inside it.
+    ring(R - 0.75, finish === 'clear' ? rgba(col.high, 0.75) : 'rgba(255,255,255,.14)', 1.5);
+    ring(R - 3, 'rgba(0,0,0,.25)', 2.5);
+    // Lead-out: a smooth band just outside the centre.
+    ring(hr + 2, finish === 'clear' ? rgba(col.c, 0.35) : 'rgba(255,255,255,.06)', 2);
     // A mark on the record so the spin reads even when it's slow.
     g.save();
     g.rotate(-Math.PI / 2);
-    g.fillStyle = finish === 'clear' ? '#f4f2ec' : rgba(col.c, 0.95);
-    g.fillRect(hr + 3, -1.1, Math.max(8, (R - hr) * 0.3), 2.2);
+    g.fillStyle = '#f4f2ec';
+    g.globalAlpha = 0.85;
+    g.beginPath();
+    g.roundRect ? g.roundRect(hr + 6, -1.25, Math.max(8, (R - hr) * 0.32), 2.5, 1.25) : g.rect(hr + 6, -1.25, Math.max(8, (R - hr) * 0.32), 2.5);
+    g.fill();
     g.restore();
   });
 
@@ -154,43 +171,49 @@
     }
     const frac = Math.max(0, Math.min(1, pos / t.duration));
     let r0, r1;
-    if (S.ring === 'outer') { r0 = vr + 3; r1 = vr + 3 + platter.ringWidth; }
+    if (S.ring === 'outer') { r0 = vr + 4; r1 = vr + 4 + platter.ringWidth; }
     else { r0 = hubD / 2 + 4; r1 = vr - 3; }
-    const grooves = S.ring === 'grooves';
+    const mid = (r0 + r1) / 2, half = (r1 - r0) / 2;
+    // A faint track under the ring, so quiet passages still read as part of it.
+    g.beginPath(); g.arc(c, c, mid, 0, Math.PI * 2); g.strokeStyle = 'rgba(255,255,255,.045)'; g.lineWidth = r1 - r0; g.stroke();
     g.lineCap = 'butt';
-    const w = (Math.PI * 2 * r1) / SEG;
+    const w = (Math.PI * 2 * mid) / SEG;
+    const line = (a, from, to, color, width) => {
+      const ca = Math.cos(a), sa = Math.sin(a);
+      g.beginPath(); g.moveTo(c + ca * from, c + sa * from); g.lineTo(c + ca * to, c + sa * to);
+      g.strokeStyle = color; g.lineWidth = width; g.stroke();
+    };
     for (let s = 0; s < SEG; s++) {
-      const f = (s + 0.5) / SEG, a = f * Math.PI * 2 - Math.PI / 2, ca = Math.cos(a), sa = Math.sin(a);
+      const f = (s + 0.5) / SEG, a = f * Math.PI * 2 - Math.PI / 2;
       const lo = bands[0][s], mi = bands[1][s], hi = bands[2][s];
       const played = f < frac;
-      const amp = Math.max(0.06, lo * 0.55 + mi * 0.45);
-      if (grooves) {
-        // Drawn from the middle of the groove band outwards and inwards, like the overview.
-        const mid = (r0 + r1) / 2, half = ((r1 - r0) / 2) * amp, hh = ((r1 - r0) / 2) * hi * 0.45;
-        g.beginPath(); g.moveTo(c + ca * (mid - half), c + sa * (mid - half)); g.lineTo(c + ca * (mid + half), c + sa * (mid + half));
-        g.strokeStyle = played ? 'rgba(236,234,228,.13)' : rgba(col.low, 0.85); g.lineWidth = w * 0.7; g.stroke();
-        g.beginPath(); g.moveTo(c + ca * (mid - hh), c + sa * (mid - hh)); g.lineTo(c + ca * (mid + hh), c + sa * (mid + hh));
-        g.strokeStyle = played ? 'rgba(236,234,228,.2)' : rgba(col.high, 0.9); g.lineWidth = w * 0.5; g.stroke();
-      } else {
-        const len = (r1 - r0) * amp;
-        g.beginPath(); g.moveTo(c + ca * r0, c + sa * r0); g.lineTo(c + ca * (r0 + len), c + sa * (r0 + len));
-        g.strokeStyle = played ? 'rgba(236,234,228,.16)' : rgba(col.c, 0.45 + hi * 0.5); g.lineWidth = w * 0.62; g.stroke();
-      }
+      // Low outside, mids, highs in the core: the overview's three bands, wrapped round.
+      const lh = half * Math.max(0.08, lo * 0.7 + mi * 0.3), mh = half * mi * 0.7, hh = half * hi * 0.42;
+      line(a, mid - lh, mid + lh, played ? 'rgba(236,234,228,.10)' : rgba(col.low, 0.95), w * 0.82);
+      if (mh > 0.5) line(a, mid - mh, mid + mh, played ? 'rgba(236,234,228,.16)' : rgba(col.c, 0.8), w * 0.82);
+      if (hh > 0.5) line(a, mid - hh, mid + hh, played ? 'rgba(236,234,228,.24)' : rgba(col.high, 0.95), w * 0.6);
     }
     // Loop, memory cue, hot cues.
+    const at = (sec) => (sec / t.duration) * Math.PI * 2 - Math.PI / 2;
     if (d.looping && d.loopIn != null && d.loopOut != null) {
-      g.beginPath();
-      g.arc(c, c, r1 + 2, (d.loopIn / t.duration) * Math.PI * 2 - Math.PI / 2, (d.loopOut / t.duration) * Math.PI * 2 - Math.PI / 2);
+      g.beginPath(); g.arc(c, c, r1 + 3, at(d.loopIn), at(d.loopOut));
       g.strokeStyle = rgba(col.c, 0.9); g.lineWidth = 2; g.stroke();
     }
-    const tick = (sec, color, wdt, outer) => {
-      const a = (sec / t.duration) * Math.PI * 2 - Math.PI / 2, ca = Math.cos(a), sa = Math.sin(a);
-      g.beginPath(); g.moveTo(c + ca * (r0 - 1), c + sa * (r0 - 1)); g.lineTo(c + ca * outer, c + sa * outer);
-      g.strokeStyle = color; g.lineWidth = wdt; g.stroke();
+    const flag = (sec, color, len) => {
+      const a = at(sec), ca = Math.cos(a), sa = Math.sin(a);
+      line(a, r0, r1, color, 1.5);
+      g.beginPath(); g.arc(c + ca * (r1 + len), c + sa * (r1 + len), Math.max(2, platter.ringWidth * 0.17), 0, Math.PI * 2); g.fillStyle = color; g.fill();
     };
-    tick(d.cue, 'rgba(232,176,74,.9)', 1.5, r1);
-    d.hotCues.forEach((h, i) => h != null && tick(h, HC[i], 2, r1 + 3));
-    tick(pos, '#f4f2ec', 2, r1 + 2);
+    if (d.cue != null && t) flag(d.cue, 'rgba(232,176,74,.95)', 4);
+    d.hotCues.forEach((h, i) => h != null && flag(h, HC[i], 4));
+    // Playhead: a bright line across the ring and a notch pointing in.
+    const a = at(pos), ca = Math.cos(a), sa = Math.sin(a), px = -sa, py = ca, tip = r1 + 2, base = r1 + 9;
+    line(a, r0 - 2, r1 + 1, '#f4f2ec', 2);
+    g.beginPath();
+    g.moveTo(c + ca * tip, c + sa * tip);
+    g.lineTo(c + ca * base + px * 4, c + sa * base + py * 4);
+    g.lineTo(c + ca * base - px * 4, c + sa * base - py * 4);
+    g.closePath(); g.fillStyle = '#f4f2ec'; g.fill();
   }
 
   function drawStrobe() {
@@ -211,12 +234,12 @@
   // The tonearm: pivot in the outer top corner, the stylus riding from the
   // outer groove to the label as the track plays.
   const armG = $derived.by(() => {
-    const px = deck === 0 ? size * 0.99 : size * 0.01, py = size * 0.035;
+    const px = deck === 0 ? size + 6 : -6, py = size * 0.1;
     const dx = size / 2 - px, dy = size / 2 - py, dist = Math.hypot(dx, dy);
-    return { px, py, base: Math.atan2(dy, dx), dist, L: dist * 0.98 };
+    return { px, py, base: Math.atan2(dy, dx), dist, L: dist * 0.8 };
   });
   function armAngle(pos) {
-    const G = armG, inner = hubD / 2 + 6, outer = vr - 5;
+    const G = armG, inner = hubD / 2 + 7, outer = vr - 6;
     const f = t ? Math.max(0, Math.min(1, pos / t.duration)) : 0;
     const r = outer - (outer - inner) * f;
     const off = Math.acos(Math.max(-1, Math.min(1, (G.L * G.L + G.dist * G.dist - r * r) / (2 * G.L * G.dist))));
@@ -240,7 +263,7 @@
         strobeAngle += dt * drift * (platter.rpm / 60) * 360 * 6;
         strobeEl.style.transform = `rotate(${(strobeAngle % 360).toFixed(2)}deg)`;
       }
-      if (arm) arm.style.transform = `rotate(${armAngle(pos).toFixed(2)}deg)`;
+      if (arm) arm.style.transform = `rotate(${(armAngle(pos) + (d.playing ? 0 : deck === 0 ? -1.2 : 1.2)).toFixed(2)}deg)`;
       drawRing(pos);
       const g = t?.beatgrid;
       beat = g && g.bpm > 0 ? Math.floor(((pos - g.firstBeat) * g.bpm) / 60) : -1;
@@ -303,10 +326,50 @@
         <div class="k">No track</div>
       {/if}
     </div>
-    {#if platter.arm}
-      <div class="arm-base" style:left="{armG.px}px" style:top="{armG.py}px" style:--s={size / 200}></div>
-      <div class="arm" bind:this={arm} style:left="{armG.px}px" style:top="{armG.py}px" style:width="{armG.L}px" style:--s={size / 200}><i></i></div>
-      <div class="arm-cap" style:left="{armG.px}px" style:top="{armG.py}px" style:--s={size / 200}></div>
+    {#if platter.arm && S.arm !== 'none'}
+      {@const k = size / 200}
+      <div class="tonearm {S.arm}" class:down={d.playing} style:left="{armG.px}px" style:top="{armG.py}px" style:--s={k} style:--deckc={deck === 0 ? 'var(--deck-a)' : 'var(--deck-b)'}>
+        {#if S.arm !== 'needle'}
+          <div class="pivot"></div>
+        {/if}
+        <div class="swing" bind:this={arm}>
+          <svg width={armG.L + 40 * k} height={40 * k} viewBox="{-30 * k} {-20 * k} {armG.L + 40 * k} {40 * k}" aria-hidden="true">
+            <defs>
+              <linearGradient id="tube{deck}" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#f6f4ee" /><stop offset="0.45" stop-color="#c9c7c0" /><stop offset="1" stop-color="#7d7b76" />
+              </linearGradient>
+              <linearGradient id="weight{deck}" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#4a4a50" /><stop offset="0.5" stop-color="#232327" /><stop offset="1" stop-color="#121214" />
+              </linearGradient>
+            </defs>
+            {#if S.arm === 'needle'}
+              <line x1="0" y1="0" x2={armG.L} y2="0" stroke="rgba(244,242,236,.75)" stroke-width={1.4 * k} stroke-linecap="round" />
+              <circle cx="0" cy="0" r={4 * k} fill="#f4f2ec" />
+              <circle cx={armG.L} cy="0" r={4.5 * k} fill="var(--deckc)" stroke="#f4f2ec" stroke-width={1.5 * k} />
+            {:else}
+              <!-- counterweight -->
+              <rect x={-26 * k} y={-6.5 * k} width={18 * k} height={13 * k} rx={2.5 * k} fill="url(#weight{deck})" stroke="rgba(255,255,255,.12)" stroke-width="0.75" />
+              <rect x={-24 * k} y={-6.5 * k} width={1.2 * k} height={13 * k} fill="rgba(255,255,255,.18)" />
+              {#if S.arm === 's-arm'}
+                <path d="M {-8 * k} 0 L {armG.L * 0.3} 0 C {armG.L * 0.5} 0, {armG.L * 0.52} {-7 * k}, {armG.L * 0.7} {-7 * k} C {armG.L * 0.8} {-7 * k}, {armG.L * 0.84} 0, {armG.L - 16 * k} 0"
+                  fill="none" stroke="url(#tube{deck})" stroke-width={3.6 * k} stroke-linecap="round" />
+              {:else}
+                <rect x={-8 * k} y={-1.8 * k} width={armG.L - 8 * k} height={3.6 * k} rx={1.8 * k} fill="url(#tube{deck})" />
+              {/if}
+              <!-- headshell, cartridge and finger lift -->
+              <g transform="translate({armG.L} 0) rotate(-16)">
+                <rect x={-17 * k} y={-5 * k} width={21 * k} height={10 * k} rx={1.5 * k} fill="#1d1d21" stroke="rgba(255,255,255,.16)" stroke-width="0.75" />
+                <rect x={-12 * k} y={-3.2 * k} width={11 * k} height={6.4 * k} rx={1 * k} fill="var(--deckc)" />
+                <rect x={-16 * k} y={-9 * k} width={2 * k} height={5 * k} rx={1 * k} fill="#c9c7c0" />
+              </g>
+              <circle cx={armG.L} cy="0" r={1.6 * k} fill="#f4f2ec" />
+            {/if}
+          </svg>
+        </div>
+        {#if S.arm !== 'needle'}
+          <div class="cap"></div>
+        {/if}
+      </div>
     {/if}
     </div>
     {#if S.sleeve}
@@ -339,14 +402,6 @@
   /* Waiting in the sleeve: smaller, pushed toward the mixer, mostly covered. */
   .rec.pending {
     transform: translateX(calc(var(--dir) * 17%)) scale(0.84);
-  }
-  .rec.pending .arm,
-  .rec.pending .arm-base,
-  .rec.pending .arm-cap {
-    opacity: 0;
-  }
-  .arm, .arm-base, .arm-cap {
-    transition: opacity 300ms ease;
   }
   .sleeve {
     position: absolute;
@@ -463,45 +518,55 @@
   .beats i.one.on {
     background: var(--deck);
   }
-  /* Tonearm */
-  .arm-base {
+  /* Tonearm: rests a touch above the record while paused, drops when playing. */
+  .tonearm {
+    position: absolute;
+    width: 0;
+    height: 0;
+    z-index: 3;
+    pointer-events: none;
+  }
+  .pivot {
     position: absolute;
     width: calc(30px * var(--s));
     height: calc(30px * var(--s));
     margin: calc(-15px * var(--s)) 0 0 calc(-15px * var(--s));
     border-radius: 50%;
-    background: radial-gradient(circle at 40% 35%, #3a3a3f, #18181b 70%);
-    box-shadow: 0 6px 14px rgb(0 0 0 / 0.6), inset 0 1px 0 rgb(255 255 255 / 0.15);
-    pointer-events: none;
+    background:
+      radial-gradient(circle, #2a2a2f 38%, transparent 40%),
+      conic-gradient(from 200deg, #6b6a70, #d8d6d0, #77767b, #3c3c41, #a9a7a2, #6b6a70);
+    box-shadow: 0 6px 16px rgb(0 0 0 / 0.6), inset 0 0 0 1px rgb(255 255 255 / 0.12);
   }
-  .arm {
+  .cap {
     position: absolute;
-    height: calc(3.5px * var(--s));
-    margin-top: calc(-1.75px * var(--s));
-    transform-origin: 0 50%;
-    border-radius: 2px;
-    background: linear-gradient(#e9e7e1, #9c9a94);
-    box-shadow: 0 8px 10px rgb(0 0 0 / 0.45);
-    pointer-events: none;
-  }
-  .arm i {
-    position: absolute;
-    right: calc(-12px * var(--s));
-    top: calc(-4px * var(--s));
-    width: calc(18px * var(--s));
-    height: calc(11px * var(--s));
-    border-radius: 2px;
-    background: linear-gradient(#2a2a2e, #141416);
-    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.12);
-    transform: rotate(18deg);
-  }
-  .arm-cap {
-    position: absolute;
-    width: calc(10px * var(--s));
-    height: calc(10px * var(--s));
-    margin: calc(-5px * var(--s)) 0 0 calc(-5px * var(--s));
+    width: calc(9px * var(--s));
+    height: calc(9px * var(--s));
+    margin: calc(-4.5px * var(--s)) 0 0 calc(-4.5px * var(--s));
     border-radius: 50%;
-    background: #d9d7d0;
-    pointer-events: none;
+    background: radial-gradient(circle at 35% 30%, #fff, #b9b7b1);
+  }
+  .swing {
+    position: absolute;
+    left: 0;
+    top: 0;
+    transform-origin: 0 0;
+    transition: filter 300ms ease;
+    filter: drop-shadow(0 calc(9px * var(--s)) calc(5px * var(--s)) rgb(0 0 0 / 0.5));
+  }
+  .tonearm.down .swing {
+    filter: drop-shadow(0 calc(3px * var(--s)) calc(2px * var(--s)) rgb(0 0 0 / 0.6));
+  }
+  .swing svg {
+    display: block;
+    position: absolute;
+    left: calc(-30px * var(--s));
+    top: calc(-20px * var(--s));
+    overflow: visible;
+  }
+  .rec.pending .tonearm {
+    opacity: 0;
+  }
+  .tonearm {
+    transition: opacity 300ms ease;
   }
 </style>

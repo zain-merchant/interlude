@@ -3,8 +3,8 @@
   import { platter, savePlatter, resetPlatter } from './platter.svelte.js';
   let open = $state(false);
   const RANGES = [
-    { key: 'hub', label: 'Centre size', min: 45, max: 75, unit: '%' },
-    { key: 'ringWidth', label: 'Waveform ring', min: 6, max: 20, unit: ' px' },
+    { key: 'hub', label: 'Centre size', min: 50, max: 80, unit: '%' },
+    { key: 'ringWidth', label: 'Waveform ring', min: 8, max: 28, unit: ' px' },
     { key: 'grooves', label: 'Grooves', min: 0, max: 100, unit: '%' },
     { key: 'sheen', label: 'Sheen', min: 0, max: 100, unit: '%' },
   ];
