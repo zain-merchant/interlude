@@ -2,7 +2,7 @@
 # source: https://cdn.inmusicbrands.com/denondj/MC6000Mk2/MC6000MK2_MIDI_Command_List.zip
 # Messages are given as 0x9n/0xBn with n = MIDI channel 0-3; the list does not say which deck uses which n,
 # so every message is listed on n=0..3 and deck transport controls carry no expect. Note off is 0x8n.
-# Pitch slider (pitch bend 0xEn) is not listed. LEDs: 0xBn, data1 = ON/OFF/BLINK trigger, data2 = LED number.
+# LEDs: 0xBn, data1 = ON/OFF/BLINK trigger, data2 = LED number.
 in	90	01	n=0 CUE MIXER CH1	[Channel1] pfl
 in	90	02	n=0 CUE MIXER CH2	[Channel2] pfl
 in	90	03	n=0 DECK CHG. 1	
@@ -631,3 +631,7 @@ out	B3	86	METER 7 (CH4)
 out	B3	87	METER 8 (CH4)	
 out	B3	88	METER 9 (CH4)	
 out	B3	89	METER PEAK (CH4)	
+in	E0	00	n=0 Pitch Slider (pitch bend)	
+in	E1	00	n=1 Pitch Slider (pitch bend)	
+in	E2	00	n=2 Pitch Slider (pitch bend)	
+in	E3	00	n=3 Pitch Slider (pitch bend)	

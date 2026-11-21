@@ -1,6 +1,6 @@
 # Beatpad — Reloop "BEATPAD MIDI MAP" V1.2
 # source: https://www.reloop.com/media/custom/upload/Reloop-Reloop_Beatpad_MidiMap_v1.2.pdf
-# Pitch faders (pitch bend 0xE0-0xE3) are not listed. MIDI1 column: Normal, then +SHIFT.
+# MIDI1 column: Normal, then +SHIFT.
 both	90	41	L-Pitch Bend (-) Button	
 both	90	01	L-Pitch Bend (-) Button +SHIFT	
 both	90	42	L-Pitch Bend (+) Button	
@@ -237,3 +237,7 @@ out	91	69	R-RGB1 Color
 out	91	6A	R-RGB2 Color	
 out	91	6B	R-RGB3 Color	
 out	91	6C	R-RGB4 Color	
+in	E0	00	L-Pitch(Normal) (pitch bend)	[Channel1] rate
+in	E1	00	R-Pitch(Normal) (pitch bend)	[Channel2] rate
+in	E2	00	L-Pitch(Shift) (pitch bend)	
+in	E3	00	R-Pitch(Shift) (pitch bend)	

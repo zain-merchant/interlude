@@ -68,10 +68,10 @@ in	B0	13	DECK1 CH FADER MSB	[Channel1] volume
 in	B0	33	DECK1 CH FADER LSB	
 in	B1	13	DECK2 CH FADER MSB	[Channel2] volume
 in	B1	33	DECK2 CH FADER LSB	
-in	90	66	DECK1 CROSSFADER / CH FADER (Fader Start) (Zero → not Zero)	
-in	91	66	DECK2 CROSSFADER / CH FADER (Fader Start) (Zero → not Zero)	
-in	90	52	DECK1 CROSSFADER / CH FADER (Fader Start) (Not Zero → Zero)	
-in	91	52	DECK2 CROSSFADER / CH FADER (Fader Start) (Not Zero → Zero)	
+in	90	66	DECK1 CROSSFADER / CH FADER (Fader Start) (Zero → not Zero) +SHIFT	
+in	91	66	DECK2 CROSSFADER / CH FADER (Fader Start) (Zero → not Zero) +SHIFT	
+in	90	52	DECK1 CROSSFADER / CH FADER (Fader Start) (Not Zero → Zero) +SHIFT	
+in	91	52	DECK2 CROSSFADER / CH FADER (Fader Start) (Not Zero → Zero) +SHIFT	
 in	B0	04	DECK1 TRIM MSB	
 in	B0	24	DECK1 TRIM LSB	
 in	B1	04	DECK2 TRIM MSB	
@@ -90,12 +90,12 @@ in	B1	0F	DECK2 EQ LOW MSB	[EqualizerRack1_[Channel2]_Effect1] parameter1
 in	B1	2F	DECK2 EQ LOW LSB	
 both	90	54	DECK1 CH CUE (Headphone)	[Channel1] pfl
 both	91	54	DECK2 CH CUE (Headphone)	[Channel2] pfl
-both	90	68	DECK1 (Headphone)	
-both	91	68	DECK2 (Headphone)	
+both	90	68	DECK1 (Headphone) +SHIFT	
+both	91	68	DECK2 (Headphone) +SHIFT	
 in	B6	08	MASTER LEVEL MSB	
 in	B6	28	MASTER LEVEL LSB	
 both	96	63	MASTER CUE	
-both	96	78	MASTER CUE	
+both	96	78	MASTER CUE +SHIFT	
 in	B6	0C	HEADPHONES MIXING MSB	
 in	B6	2C	HEADPHONES MIXING LSB	
 in	B6	0D	HEADPHONES LEVEL MSB	
@@ -107,18 +107,18 @@ in	B6	37	FILTER (CH1) LSB
 in	B6	18	FILTER (CH2) MSB	[QuickEffectRack1_[Channel2]] super1
 in	B6	38	FILTER (CH2) LSB	
 in	94	4A	BEAT ◀	
-in	94	66	BEAT ◀	
+in	94	66	BEAT ◀ +SHIFT	
 in	94	4B	BEAT ▶	
-in	94	6B	BEAT ▶	
+in	94	6B	BEAT ▶ +SHIFT	
 in	94	63	BEAT FX SELECT	
-in	94	64	BEAT FX SELECT	
+in	94	64	BEAT FX SELECT +SHIFT	
 in	94	10	BEAT FX CH SELECT (CH 1)	
 in	94	11	BEAT FX CH SELECT (CH 2)	
 in	94	14	BEAT FX CH SELECT (MASTER)	
 in	B4	02	BEAT FX LEVEL/DEPTH MSB	
 in	B4	22	BEAT FX LEVEL/DEPTH LSB	
 both	94	47	BEAT FX ON/OFF	
-both	94	43	ON/OFF	
+both	94	43	ON/OFF +SHIFT	
 both	97	00	DECK1 PAD 1 (HOT CUE mode)	[Channel1] hotcue_1_activate
 both	99	00	DECK2 PAD 1 (HOT CUE mode)	[Channel2] hotcue_1_activate
 both	98	00	DECK1 PAD 1 (HOT CUE mode) +SHIFT	
@@ -147,10 +147,10 @@ both	97	50	DECK1 PAD 1 (PAD FX mode 2)
 both	99	50	DECK2 PAD 1 (PAD FX mode 2)	
 both	98	50	DECK1 PAD 1 (PAD FX mode 2) +SHIFT	
 both	9A	50	DECK2 PAD 1 (PAD FX mode 2) +SHIFT	
-both	97	70	DECK1 PAD 1	
-both	99	70	DECK2 PAD 1	
-both	98	70	DECK1 PAD 1 +SHIFT	
-both	9A	70	DECK2 PAD 1 +SHIFT	
+both	97	70	DECK1 PAD 1 (KEY SHIFT mode)	
+both	99	70	DECK2 PAD 1 (KEY SHIFT mode)	
+both	98	70	DECK1 PAD 1 (KEY SHIFT mode) +SHIFT	
+both	9A	70	DECK2 PAD 1 (KEY SHIFT mode) +SHIFT	
 both	97	01	DECK1 PAD 2 (HOT CUE mode)	[Channel1] hotcue_2_activate
 both	99	01	DECK2 PAD 2 (HOT CUE mode)	[Channel2] hotcue_2_activate
 both	98	01	DECK1 PAD 2 (HOT CUE mode) +SHIFT	
@@ -179,10 +179,10 @@ both	97	51	DECK1 PAD 2 (PAD FX mode 2)
 both	99	51	DECK2 PAD 2 (PAD FX mode 2)	
 both	98	51	DECK1 PAD 2 (PAD FX mode 2) +SHIFT	
 both	9A	51	DECK2 PAD 2 (PAD FX mode 2) +SHIFT	
-both	97	71	DECK1 PAD 2	
-both	99	71	DECK2 PAD 2	
-both	98	71	DECK1 PAD 2 +SHIFT	
-both	9A	71	DECK2 PAD 2 +SHIFT	
+both	97	71	DECK1 PAD 2 (KEY SHIFT mode)	
+both	99	71	DECK2 PAD 2 (KEY SHIFT mode)	
+both	98	71	DECK1 PAD 2 (KEY SHIFT mode) +SHIFT	
+both	9A	71	DECK2 PAD 2 (KEY SHIFT mode) +SHIFT	
 both	97	02	DECK1 PAD 3 (HOT CUE mode)	[Channel1] hotcue_3_activate
 both	99	02	DECK2 PAD 3 (HOT CUE mode)	[Channel2] hotcue_3_activate
 both	98	02	DECK1 PAD 3 (HOT CUE mode) +SHIFT	
@@ -211,10 +211,10 @@ both	97	52	DECK1 PAD 3 (PAD FX mode 2)
 both	99	52	DECK2 PAD 3 (PAD FX mode 2)	
 both	98	52	DECK1 PAD 3 (PAD FX mode 2) +SHIFT	
 both	9A	52	DECK2 PAD 3 (PAD FX mode 2) +SHIFT	
-both	97	72	DECK1 PAD 3	
-both	99	72	DECK2 PAD 3	
-both	98	72	DECK1 PAD 3 +SHIFT	
-both	9A	72	DECK2 PAD 3 +SHIFT	
+both	97	72	DECK1 PAD 3 (KEY SHIFT mode)	
+both	99	72	DECK2 PAD 3 (KEY SHIFT mode)	
+both	98	72	DECK1 PAD 3 (KEY SHIFT mode) +SHIFT	
+both	9A	72	DECK2 PAD 3 (KEY SHIFT mode) +SHIFT	
 both	97	03	DECK1 PAD 4 (HOT CUE mode)	[Channel1] hotcue_4_activate
 both	99	03	DECK2 PAD 4 (HOT CUE mode)	[Channel2] hotcue_4_activate
 both	98	03	DECK1 PAD 4 (HOT CUE mode) +SHIFT	
@@ -243,10 +243,10 @@ both	97	53	DECK1 PAD 4 (PAD FX mode 2)
 both	99	53	DECK2 PAD 4 (PAD FX mode 2)	
 both	98	53	DECK1 PAD 4 (PAD FX mode 2) +SHIFT	
 both	9A	53	DECK2 PAD 4 (PAD FX mode 2) +SHIFT	
-both	97	73	DECK1 PAD 4	
-both	99	73	DECK2 PAD 4	
-both	98	73	DECK1 PAD 4 +SHIFT	
-both	9A	73	DECK2 PAD 4 +SHIFT	
+both	97	73	DECK1 PAD 4 (KEY SHIFT mode)	
+both	99	73	DECK2 PAD 4 (KEY SHIFT mode)	
+both	98	73	DECK1 PAD 4 (KEY SHIFT mode) +SHIFT	
+both	9A	73	DECK2 PAD 4 (KEY SHIFT mode) +SHIFT	
 both	97	04	DECK1 PAD 5 (HOT CUE mode)	[Channel1] hotcue_5_activate
 both	99	04	DECK2 PAD 5 (HOT CUE mode)	[Channel2] hotcue_5_activate
 both	98	04	DECK1 PAD 5 (HOT CUE mode) +SHIFT	
@@ -275,10 +275,10 @@ both	97	54	DECK1 PAD 5 (PAD FX mode 2)
 both	99	54	DECK2 PAD 5 (PAD FX mode 2)	
 both	98	54	DECK1 PAD 5 (PAD FX mode 2) +SHIFT	
 both	9A	54	DECK2 PAD 5 (PAD FX mode 2) +SHIFT	
-both	97	74	DECK1 PAD 5	
-both	99	74	DECK2 PAD 5	
-both	98	74	DECK1 PAD 5 +SHIFT	
-both	9A	74	DECK2 PAD 5 +SHIFT	
+both	97	74	DECK1 PAD 5 (KEY SHIFT mode)	
+both	99	74	DECK2 PAD 5 (KEY SHIFT mode)	
+both	98	74	DECK1 PAD 5 (KEY SHIFT mode) +SHIFT	
+both	9A	74	DECK2 PAD 5 (KEY SHIFT mode) +SHIFT	
 both	97	05	DECK1 PAD 6 (HOT CUE mode)	[Channel1] hotcue_6_activate
 both	99	05	DECK2 PAD 6 (HOT CUE mode)	[Channel2] hotcue_6_activate
 both	98	05	DECK1 PAD 6 (HOT CUE mode) +SHIFT	
@@ -307,10 +307,10 @@ both	97	55	DECK1 PAD 6 (PAD FX mode 2)
 both	99	55	DECK2 PAD 6 (PAD FX mode 2)	
 both	98	55	DECK1 PAD 6 (PAD FX mode 2) +SHIFT	
 both	9A	55	DECK2 PAD 6 (PAD FX mode 2) +SHIFT	
-both	97	75	DECK1 PAD 6	
-both	99	75	DECK2 PAD 6	
-both	98	75	DECK1 PAD 6 +SHIFT	
-both	9A	75	DECK2 PAD 6 +SHIFT	
+both	97	75	DECK1 PAD 6 (KEY SHIFT mode)	
+both	99	75	DECK2 PAD 6 (KEY SHIFT mode)	
+both	98	75	DECK1 PAD 6 (KEY SHIFT mode) +SHIFT	
+both	9A	75	DECK2 PAD 6 (KEY SHIFT mode) +SHIFT	
 both	97	06	DECK1 PAD 7 (HOT CUE mode)	[Channel1] hotcue_7_activate
 both	99	06	DECK2 PAD 7 (HOT CUE mode)	[Channel2] hotcue_7_activate
 both	98	06	DECK1 PAD 7 (HOT CUE mode) +SHIFT	
@@ -339,10 +339,10 @@ both	97	56	DECK1 PAD 7 (PAD FX mode 2)
 both	99	56	DECK2 PAD 7 (PAD FX mode 2)	
 both	98	56	DECK1 PAD 7 (PAD FX mode 2) +SHIFT	
 both	9A	56	DECK2 PAD 7 (PAD FX mode 2) +SHIFT	
-both	97	76	DECK1 PAD 7	
-both	99	76	DECK2 PAD 7	
-both	98	76	DECK1 PAD 7 +SHIFT	
-both	9A	76	DECK2 PAD 7 +SHIFT	
+both	97	76	DECK1 PAD 7 (KEY SHIFT mode)	
+both	99	76	DECK2 PAD 7 (KEY SHIFT mode)	
+both	98	76	DECK1 PAD 7 (KEY SHIFT mode) +SHIFT	
+both	9A	76	DECK2 PAD 7 (KEY SHIFT mode) +SHIFT	
 both	97	07	DECK1 PAD 8 (HOT CUE mode)	[Channel1] hotcue_8_activate
 both	99	07	DECK2 PAD 8 (HOT CUE mode)	[Channel2] hotcue_8_activate
 both	98	07	DECK1 PAD 8 (HOT CUE mode) +SHIFT	
@@ -371,26 +371,26 @@ both	97	57	DECK1 PAD 8 (PAD FX mode 2)
 both	99	57	DECK2 PAD 8 (PAD FX mode 2)	
 both	98	57	DECK1 PAD 8 (PAD FX mode 2) +SHIFT	
 both	9A	57	DECK2 PAD 8 (PAD FX mode 2) +SHIFT	
-both	97	77	DECK1 PAD 8	
-both	99	77	DECK2 PAD 8	
-both	98	77	DECK1 PAD 8 +SHIFT	
-both	9A	77	DECK2 PAD 8 +SHIFT	
+both	97	77	DECK1 PAD 8 (KEY SHIFT mode)	
+both	99	77	DECK2 PAD 8 (KEY SHIFT mode)	
+both	98	77	DECK1 PAD 8 (KEY SHIFT mode) +SHIFT	
+both	9A	77	DECK2 PAD 8 (KEY SHIFT mode) +SHIFT	
 both	90	1B	DECK1 HOT CUE	
 both	91	1B	DECK2 HOT CUE	
-both	90	69	DECK1 HOT CUE	
-both	91	69	DECK2 HOT CUE	
+both	90	69	DECK1 HOT CUE +SHIFT	
+both	91	69	DECK2 HOT CUE +SHIFT	
 both	90	6D	DECK1 BEAT LOOP	
 both	91	6D	DECK2 BEAT LOOP	
-both	90	1E	DECK1 BEAT LOOP	
-both	91	1E	DECK2 BEAT LOOP	
+both	90	1E	DECK1 BEAT LOOP +SHIFT	
+both	91	1E	DECK2 BEAT LOOP +SHIFT	
 both	90	20	DECK1 BEAT JUMP	
 both	91	20	DECK2 BEAT JUMP	
-both	90	6B	DECK1 BEAT JUMP	
-both	91	6B	DECK2 BEAT JUMP	
+both	90	6B	DECK1 BEAT JUMP +SHIFT	
+both	91	6B	DECK2 BEAT JUMP +SHIFT	
 both	90	22	DECK1 SAMPER	
 both	91	22	DECK2 SAMPER	
-both	90	6F	DECK1 SAMPER	
-both	91	6F	DECK2 SAMPER	
+both	90	6F	DECK1 SAMPER +SHIFT	
+both	91	6F	DECK2 SAMPER +SHIFT	
 out	9F	00	LOADED (CH 1)	
 out	9F	01	LOADED (CH 2)	
 out	9F	4B	LEVEL METER SETTING	

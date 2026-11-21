@@ -52,10 +52,10 @@ both	90	1F	DECK1 SYNC (7[L,R])	[Channel1] sync_enabled|beatsync
 both	91	1F	DECK2 SYNC (7[L,R])	[Channel2] sync_enabled|beatsync
 both	92	1F	DECK3 SYNC (7[L,R])	[Channel3] sync_enabled|beatsync
 both	93	1F	DECK4 SYNC (7[L,R])	[Channel4] sync_enabled|beatsync
-in	90	47	DECK1 SYNC (7[L,R], Long press)	
-in	91	47	DECK2 SYNC (7[L,R], Long press)	
-in	92	47	DECK3 SYNC (7[L,R], Long press)	
-in	93	47	DECK4 SYNC (7[L,R], Long press)	
+in	90	47	DECK1 SYNC (7[L,R], Long press) +SHIFT	
+in	91	47	DECK2 SYNC (7[L,R], Long press) +SHIFT	
+in	92	47	DECK3 SYNC (7[L,R], Long press) +SHIFT	
+in	93	47	DECK4 SYNC (7[L,R], Long press) +SHIFT	
 both	90	1E	DECK1 MASTER (7[L,R])	
 both	91	1E	DECK2 MASTER (7[L,R])	
 both	92	1E	DECK3 MASTER (7[L,R])	
@@ -136,10 +136,10 @@ both	90	06	DECK1 LOOP IN (19[L,R])	[Channel1] loop_in
 both	91	06	DECK2 LOOP IN (19[L,R])	[Channel2] loop_in
 both	92	06	DECK3 LOOP IN (19[L,R])	[Channel3] loop_in
 both	93	06	DECK4 LOOP IN (19[L,R])	[Channel4] loop_in
-both	90	45	DECK1 LOOP IN (19[L,R], Long press)	
-both	91	45	DECK2 LOOP IN (19[L,R], Long press)	
-both	92	45	DECK3 LOOP IN (19[L,R], Long press)	
-both	93	45	DECK4 LOOP IN (19[L,R], Long press)	
+both	90	45	DECK1 LOOP IN (19[L,R], Long press) +SHIFT	
+both	91	45	DECK2 LOOP IN (19[L,R], Long press) +SHIFT	
+both	92	45	DECK3 LOOP IN (19[L,R], Long press) +SHIFT	
+both	93	45	DECK4 LOOP IN (19[L,R], Long press) +SHIFT	
 both	90	07	DECK1 LOOP OUT (19[L,R])	[Channel1] loop_out
 both	91	07	DECK2 LOOP OUT (19[L,R])	[Channel2] loop_out
 both	92	07	DECK3 LOOP OUT (19[L,R])	[Channel3] loop_out
@@ -238,10 +238,10 @@ in	B4	11	CH FADER Deck 1	[Channel1] volume
 in	B4	12	CH FADER Deck 2	[Channel2] volume
 in	B4	13	CH FADER Deck 3	[Channel3] volume
 in	B4	14	CH FADER Deck 4	[Channel4] volume
-in	B4	41	CROSSFADER ASSIGN CH 1 (Mixer Settings/ UTILITY *) A	
-in	B4	42	CROSSFADER ASSIGN CH 2 (Mixer Settings/ UTILITY *) A	
-in	B4	43	CROSSFADER ASSIGN CH 3 (Mixer Settings/ UTILITY *) A	
-in	B4	44	CROSSFADER ASSIGN CH 4 (Mixer Settings/ UTILITY *) A	
+in	B4	41	CROSSFADER ASSIGN CH 1 (Mixer Settings/UTILITY; data2 A=00, THRU=40, B=7F)	
+in	B4	42	CROSSFADER ASSIGN CH 2 (Mixer Settings/UTILITY; data2 A=00, THRU=40, B=7F)	
+in	B4	43	CROSSFADER ASSIGN CH 3 (Mixer Settings/UTILITY; data2 A=00, THRU=40, B=7F)	
+in	B4	44	CROSSFADER ASSIGN CH 4 (Mixer Settings/UTILITY; data2 A=00, THRU=40, B=7F)	
 in	94	3D	INPUT SELECT SWITCH (CH3) (Mixer Settings/ UTILITY *) DECK/PC	
 in	94	41	INPUT SELECT SWITCH (CH4) (Mixer Settings/ UTILITY *) DECK/PC	
 in	B4	01	TRIM Deck 1	[Channel1] pregain
@@ -281,64 +281,64 @@ in	B4	61	MIC 2 EQ LOW
 in	B4	62	MIC 1 EQ MID	
 in	B4	63	MIC 2 EQ MID	
 in	B4	1E	MIC 1 EQ HI	
-in	B0	4F	DECK1 ROTARY SELECTOR +SHIFT	
-in	B0	60	DECK1 ROTARY SELECTOR	
-in	90	33	DECK1 ROTARY SELECTOR +SHIFT	
-in	90	61	DECK1 ROTARY SELECTOR	
-in	90	32	DECK1 BACK +SHIFT	
-in	90	5F	DECK1 BACK	
-in	90	30	DECK1 TAG TRACK/REMOVE +SHIFT	
-in	90	62	DECK1 TAG TRACK/REMOVE	
-in	90	31	DECK1 TRACK FILTER +SHIFT	
-in	90	5D	DECK1 TRACK FILTER	
+in	B0	4F	DECK1 ROTARY SELECTOR	
+in	B0	60	DECK1 ROTARY SELECTOR +SHIFT	
+in	90	33	DECK1 ROTARY SELECTOR	
+in	90	61	DECK1 ROTARY SELECTOR +SHIFT	
+in	90	32	DECK1 BACK	
+in	90	5F	DECK1 BACK +SHIFT	
+in	90	30	DECK1 TAG TRACK/REMOVE	
+in	90	62	DECK1 TAG TRACK/REMOVE +SHIFT	
+in	90	31	DECK1 TRACK FILTER	
+in	90	5D	DECK1 TRACK FILTER +SHIFT	
 both	90	22	DECK1 HOT CUE GATE CUE	
 both	91	22	DECK2 HOT CUE GATE CUE	
 both	92	22	DECK3 HOT CUE GATE CUE	
 both	93	22	DECK4 HOT CUE GATE CUE	
-both	90	26	DECK1 HOT CUE GATE CUE	
-both	91	26	DECK2 HOT CUE GATE CUE	
-both	92	26	DECK3 HOT CUE GATE CUE	
-both	93	26	DECK4 HOT CUE GATE CUE	
+both	90	26	DECK1 HOT CUE GATE CUE +SHIFT	
+both	91	26	DECK2 HOT CUE GATE CUE +SHIFT	
+both	92	26	DECK3 HOT CUE GATE CUE +SHIFT	
+both	93	26	DECK4 HOT CUE GATE CUE +SHIFT	
 both	90	23	DECK1 BEAT LOOP BEAT LOOP2	
 both	91	23	DECK2 BEAT LOOP BEAT LOOP2	
 both	92	23	DECK3 BEAT LOOP BEAT LOOP2	
 both	93	23	DECK4 BEAT LOOP BEAT LOOP2	
-both	90	27	DECK1 BEAT LOOP BEAT LOOP2	
-both	91	27	DECK2 BEAT LOOP BEAT LOOP2	
-both	92	27	DECK3 BEAT LOOP BEAT LOOP2	
-both	93	27	DECK4 BEAT LOOP BEAT LOOP2	
+both	90	27	DECK1 BEAT LOOP BEAT LOOP2 +SHIFT	
+both	91	27	DECK2 BEAT LOOP BEAT LOOP2 +SHIFT	
+both	92	27	DECK3 BEAT LOOP BEAT LOOP2 +SHIFT	
+both	93	27	DECK4 BEAT LOOP BEAT LOOP2 +SHIFT	
 both	90	24	DECK1 SLIP LOOP KEY SHIFT	
 both	91	24	DECK2 SLIP LOOP KEY SHIFT	
 both	92	24	DECK3 SLIP LOOP KEY SHIFT	
 both	93	24	DECK4 SLIP LOOP KEY SHIFT	
-both	90	28	DECK1 SLIP LOOP KEY SHIFT	
-both	91	28	DECK2 SLIP LOOP KEY SHIFT	
-both	92	28	DECK3 SLIP LOOP KEY SHIFT	
-both	93	28	DECK4 SLIP LOOP KEY SHIFT	
+both	90	28	DECK1 SLIP LOOP KEY SHIFT +SHIFT	
+both	91	28	DECK2 SLIP LOOP KEY SHIFT +SHIFT	
+both	92	28	DECK3 SLIP LOOP KEY SHIFT +SHIFT	
+both	93	28	DECK4 SLIP LOOP KEY SHIFT +SHIFT	
 both	90	25	DECK1 BEAT JUMP BEAT JUMP2	
 both	91	25	DECK2 BEAT JUMP BEAT JUMP2	
 both	92	25	DECK3 BEAT JUMP BEAT JUMP2	
 both	93	25	DECK4 BEAT JUMP BEAT JUMP2	
-both	90	29	DECK1 BEAT JUMP BEAT JUMP2	
-both	91	29	DECK2 BEAT JUMP BEAT JUMP2	
-both	92	29	DECK3 BEAT JUMP BEAT JUMP2	
-both	93	29	DECK4 BEAT JUMP BEAT JUMP2	
+both	90	29	DECK1 BEAT JUMP BEAT JUMP2 +SHIFT	
+both	91	29	DECK2 BEAT JUMP BEAT JUMP2 +SHIFT	
+both	92	29	DECK3 BEAT JUMP BEAT JUMP2 +SHIFT	
+both	93	29	DECK4 BEAT JUMP BEAT JUMP2 +SHIFT	
 both	95	00	DECK1 Performance Pad2 HOT CUE mode	
 both	96	00	DECK2 Performance Pad2 HOT CUE mode	
 both	97	00	DECK3 Performance Pad2 HOT CUE mode	
 both	98	00	DECK4 Performance Pad2 HOT CUE mode	
-both	95	01	DECK1 Performance Pad2	
-both	96	01	DECK2 Performance Pad2	
-both	97	01	DECK3 Performance Pad2	
-both	98	01	DECK4 Performance Pad2	
+both	95	01	DECK1 Performance Pad2 +SHIFT	
+both	96	01	DECK2 Performance Pad2 +SHIFT	
+both	97	01	DECK3 Performance Pad2 +SHIFT	
+both	98	01	DECK4 Performance Pad2 +SHIFT	
 both	95	02	DECK1 Performance Pad2 BEAT LOOP mode	
 both	96	02	DECK2 Performance Pad2 BEAT LOOP mode	
 both	97	02	DECK3 Performance Pad2 BEAT LOOP mode	
 both	98	02	DECK4 Performance Pad2 BEAT LOOP mode	
-both	95	03	DECK1 Performance Pad2	
-both	96	03	DECK2 Performance Pad2	
-both	97	03	DECK3 Performance Pad2	
-both	98	03	DECK4 Performance Pad2	
+both	95	03	DECK1 Performance Pad2 +SHIFT	
+both	96	03	DECK2 Performance Pad2 +SHIFT	
+both	97	03	DECK3 Performance Pad2 +SHIFT	
+both	98	03	DECK4 Performance Pad2 +SHIFT	
 both	95	04	DECK1 Performance Pad2 SLIP LOOP mode (PAD FX BANK1, Page1 Page2)	
 both	95	05	DECK1 Performance Pad2 SLIP LOOP mode (PAD FX BANK1, Page1 Page2)	
 both	96	04	DECK2 Performance Pad2 SLIP LOOP mode (PAD FX BANK1, Page1 Page2)	
@@ -355,66 +355,66 @@ both	97	06	DECK3 Performance Pad2 (PAD FX BANK2, Page1 Page2)
 both	97	07	DECK3 Performance Pad2 (PAD FX BANK2, Page1 Page2)	
 both	98	06	DECK4 Performance Pad2 (PAD FX BANK2, Page1 Page2)	
 both	98	07	DECK4 Performance Pad2 (PAD FX BANK2, Page1 Page2)	
-both	95	08	DECK1 Performance Pad2	
-both	96	08	DECK2 Performance Pad2	
-both	97	08	DECK3 Performance Pad2	
-both	98	08	DECK4 Performance Pad2	
+both	95	08	DECK1 Performance Pad2 +SHIFT	
+both	96	08	DECK2 Performance Pad2 +SHIFT	
+both	97	08	DECK3 Performance Pad2 +SHIFT	
+both	98	08	DECK4 Performance Pad2 +SHIFT	
 both	95	09	DECK1 Performance Pad2 BEAT JUMP mode	
 both	96	09	DECK2 Performance Pad2 BEAT JUMP mode	
 both	97	09	DECK3 Performance Pad2 BEAT JUMP mode	
 both	98	09	DECK4 Performance Pad2 BEAT JUMP mode	
-both	95	0A	DECK1 Performance Pad2	
-both	96	0A	DECK2 Performance Pad2	
-both	97	0A	DECK3 Performance Pad2	
-both	98	0A	DECK4 Performance Pad2	
+both	95	0A	DECK1 Performance Pad2 +SHIFT	
+both	96	0A	DECK2 Performance Pad2 +SHIFT	
+both	97	0A	DECK3 Performance Pad2 +SHIFT	
+both	98	0A	DECK4 Performance Pad2 +SHIFT	
 both	95	0B	DECK1 Performance Pad2 GATE CUE mode	
 both	96	0B	DECK2 Performance Pad2 GATE CUE mode	
 both	97	0B	DECK3 Performance Pad2 GATE CUE mode	
 both	98	0B	DECK4 Performance Pad2 GATE CUE mode	
-both	95	0C	DECK1 Performance Pad2	
-both	96	0C	DECK2 Performance Pad2	
-both	97	0C	DECK3 Performance Pad2	
-both	98	0C	DECK4 Performance Pad2	
+both	95	0C	DECK1 Performance Pad2 +SHIFT	
+both	96	0C	DECK2 Performance Pad2 +SHIFT	
+both	97	0C	DECK3 Performance Pad2 +SHIFT	
+both	98	0C	DECK4 Performance Pad2 +SHIFT	
 both	95	0D	DECK1 Performance Pad2 BEAT LOOP2 mode	
 both	96	0D	DECK2 Performance Pad2 BEAT LOOP2 mode	
 both	97	0D	DECK3 Performance Pad2 BEAT LOOP2 mode	
 both	98	0D	DECK4 Performance Pad2 BEAT LOOP2 mode	
-both	95	0E	DECK1 Performance Pad2	
-both	96	0E	DECK2 Performance Pad2	
-both	97	0E	DECK3 Performance Pad2	
-both	98	0E	DECK4 Performance Pad2	
+both	95	0E	DECK1 Performance Pad2 +SHIFT	
+both	96	0E	DECK2 Performance Pad2 +SHIFT	
+both	97	0E	DECK3 Performance Pad2 +SHIFT	
+both	98	0E	DECK4 Performance Pad2 +SHIFT	
 both	95	0F	DECK1 Performance Pad2 KEY SHIFT mode	
 both	96	0F	DECK2 Performance Pad2 KEY SHIFT mode	
 both	97	0F	DECK3 Performance Pad2 KEY SHIFT mode	
 both	98	0F	DECK4 Performance Pad2 KEY SHIFT mode	
-both	95	10	DECK1 Performance Pad2	
-both	96	10	DECK2 Performance Pad2	
-both	97	10	DECK3 Performance Pad2	
-both	98	10	DECK4 Performance Pad2	
+both	95	10	DECK1 Performance Pad2 +SHIFT	
+both	96	10	DECK2 Performance Pad2 +SHIFT	
+both	97	10	DECK3 Performance Pad2 +SHIFT	
+both	98	10	DECK4 Performance Pad2 +SHIFT	
 both	95	11	DECK1 Performance Pad2 BEAT JUMP2 mode	
 both	96	11	DECK2 Performance Pad2 BEAT JUMP2 mode	
 both	97	11	DECK3 Performance Pad2 BEAT JUMP2 mode	
 both	98	11	DECK4 Performance Pad2 BEAT JUMP2 mode	
-both	95	12	DECK1 Performance Pad2	
-both	96	12	DECK2 Performance Pad2	
-both	97	12	DECK3 Performance Pad2	
-both	98	12	DECK4 Performance Pad2	
+both	95	12	DECK1 Performance Pad2 +SHIFT	
+both	96	12	DECK2 Performance Pad2 +SHIFT	
+both	97	12	DECK3 Performance Pad2 +SHIFT	
+both	98	12	DECK4 Performance Pad2 +SHIFT	
 both	95	13	DECK1 Performance Pad2 HOT CUE mode	
 both	96	13	DECK2 Performance Pad2 HOT CUE mode	
 both	97	13	DECK3 Performance Pad2 HOT CUE mode	
 both	98	13	DECK4 Performance Pad2 HOT CUE mode	
-both	95	14	DECK1 Performance Pad2	
-both	96	14	DECK2 Performance Pad2	
-both	97	14	DECK3 Performance Pad2	
-both	98	14	DECK4 Performance Pad2	
+both	95	14	DECK1 Performance Pad2 +SHIFT	
+both	96	14	DECK2 Performance Pad2 +SHIFT	
+both	97	14	DECK3 Performance Pad2 +SHIFT	
+both	98	14	DECK4 Performance Pad2 +SHIFT	
 both	95	15	DECK1 Performance Pad2 BEAT LOOP mode	
 both	96	15	DECK2 Performance Pad2 BEAT LOOP mode	
 both	97	15	DECK3 Performance Pad2 BEAT LOOP mode	
 both	98	15	DECK4 Performance Pad2 BEAT LOOP mode	
-both	95	16	DECK1 Performance Pad2	
-both	96	16	DECK2 Performance Pad2	
-both	97	16	DECK3 Performance Pad2	
-both	98	16	DECK4 Performance Pad2	
+both	95	16	DECK1 Performance Pad2 +SHIFT	
+both	96	16	DECK2 Performance Pad2 +SHIFT	
+both	97	16	DECK3 Performance Pad2 +SHIFT	
+both	98	16	DECK4 Performance Pad2 +SHIFT	
 both	95	17	DECK1 Performance Pad2 SLIP LOOP mode (PAD FX BANK1, Page1 Page2)	
 both	95	18	DECK1 Performance Pad2 SLIP LOOP mode (PAD FX BANK1, Page1 Page2)	
 both	96	17	DECK2 Performance Pad2 SLIP LOOP mode (PAD FX BANK1, Page1 Page2)	
@@ -431,66 +431,66 @@ both	97	19	DECK3 Performance Pad2 (PAD FX BANK2, Page1 Page2)
 both	97	1A	DECK3 Performance Pad2 (PAD FX BANK2, Page1 Page2)	
 both	98	19	DECK4 Performance Pad2 (PAD FX BANK2, Page1 Page2)	
 both	98	1A	DECK4 Performance Pad2 (PAD FX BANK2, Page1 Page2)	
-both	95	1B	DECK1 Performance Pad2	
-both	96	1B	DECK2 Performance Pad2	
-both	97	1B	DECK3 Performance Pad2	
-both	98	1B	DECK4 Performance Pad2	
+both	95	1B	DECK1 Performance Pad2 +SHIFT	
+both	96	1B	DECK2 Performance Pad2 +SHIFT	
+both	97	1B	DECK3 Performance Pad2 +SHIFT	
+both	98	1B	DECK4 Performance Pad2 +SHIFT	
 both	95	1C	DECK1 Performance Pad2 BEAT JUMP mode	
 both	96	1C	DECK2 Performance Pad2 BEAT JUMP mode	
 both	97	1C	DECK3 Performance Pad2 BEAT JUMP mode	
 both	98	1C	DECK4 Performance Pad2 BEAT JUMP mode	
-both	95	1D	DECK1 Performance Pad2	
-both	96	1D	DECK2 Performance Pad2	
-both	97	1D	DECK3 Performance Pad2	
-both	98	1D	DECK4 Performance Pad2	
+both	95	1D	DECK1 Performance Pad2 +SHIFT	
+both	96	1D	DECK2 Performance Pad2 +SHIFT	
+both	97	1D	DECK3 Performance Pad2 +SHIFT	
+both	98	1D	DECK4 Performance Pad2 +SHIFT	
 both	95	1E	DECK1 Performance Pad2 GATE CUE mode	
 both	96	1E	DECK2 Performance Pad2 GATE CUE mode	
 both	97	1E	DECK3 Performance Pad2 GATE CUE mode	
 both	98	1E	DECK4 Performance Pad2 GATE CUE mode	
-both	95	1F	DECK1 Performance Pad2	
-both	96	1F	DECK2 Performance Pad2	
-both	97	1F	DECK3 Performance Pad2	
-both	98	1F	DECK4 Performance Pad2	
+both	95	1F	DECK1 Performance Pad2 +SHIFT	
+both	96	1F	DECK2 Performance Pad2 +SHIFT	
+both	97	1F	DECK3 Performance Pad2 +SHIFT	
+both	98	1F	DECK4 Performance Pad2 +SHIFT	
 both	95	20	DECK1 Performance Pad2 BEAT LOOP2 mode	
 both	96	20	DECK2 Performance Pad2 BEAT LOOP2 mode	
 both	97	20	DECK3 Performance Pad2 BEAT LOOP2 mode	
 both	98	20	DECK4 Performance Pad2 BEAT LOOP2 mode	
-both	95	21	DECK1 Performance Pad2	
-both	96	21	DECK2 Performance Pad2	
-both	97	21	DECK3 Performance Pad2	
-both	98	21	DECK4 Performance Pad2	
+both	95	21	DECK1 Performance Pad2 +SHIFT	
+both	96	21	DECK2 Performance Pad2 +SHIFT	
+both	97	21	DECK3 Performance Pad2 +SHIFT	
+both	98	21	DECK4 Performance Pad2 +SHIFT	
 both	95	22	DECK1 Performance Pad2 KEY SHIFT mode	
 both	96	22	DECK2 Performance Pad2 KEY SHIFT mode	
 both	97	22	DECK3 Performance Pad2 KEY SHIFT mode	
 both	98	22	DECK4 Performance Pad2 KEY SHIFT mode	
-both	95	23	DECK1 Performance Pad2	
-both	96	23	DECK2 Performance Pad2	
-both	97	23	DECK3 Performance Pad2	
-both	98	23	DECK4 Performance Pad2	
+both	95	23	DECK1 Performance Pad2 +SHIFT	
+both	96	23	DECK2 Performance Pad2 +SHIFT	
+both	97	23	DECK3 Performance Pad2 +SHIFT	
+both	98	23	DECK4 Performance Pad2 +SHIFT	
 both	95	24	DECK1 Performance Pad2 BEAT JUMP2 mode	
 both	96	24	DECK2 Performance Pad2 BEAT JUMP2 mode	
 both	97	24	DECK3 Performance Pad2 BEAT JUMP2 mode	
 both	98	24	DECK4 Performance Pad2 BEAT JUMP2 mode	
-both	95	25	DECK1 Performance Pad2	
-both	96	25	DECK2 Performance Pad2	
-both	97	25	DECK3 Performance Pad2	
-both	98	25	DECK4 Performance Pad2	
+both	95	25	DECK1 Performance Pad2 +SHIFT	
+both	96	25	DECK2 Performance Pad2 +SHIFT	
+both	97	25	DECK3 Performance Pad2 +SHIFT	
+both	98	25	DECK4 Performance Pad2 +SHIFT	
 both	95	26	DECK1 Performance Pad3 HOT CUE mode	
 both	96	26	DECK2 Performance Pad3 HOT CUE mode	
 both	97	26	DECK3 Performance Pad3 HOT CUE mode	
 both	98	26	DECK4 Performance Pad3 HOT CUE mode	
-both	95	27	DECK1 Performance Pad3	
-both	96	27	DECK2 Performance Pad3	
-both	97	27	DECK3 Performance Pad3	
-both	98	27	DECK4 Performance Pad3	
+both	95	27	DECK1 Performance Pad3 +SHIFT	
+both	96	27	DECK2 Performance Pad3 +SHIFT	
+both	97	27	DECK3 Performance Pad3 +SHIFT	
+both	98	27	DECK4 Performance Pad3 +SHIFT	
 both	95	28	DECK1 Performance Pad3 BEAT LOOP mode	
 both	96	28	DECK2 Performance Pad3 BEAT LOOP mode	
 both	97	28	DECK3 Performance Pad3 BEAT LOOP mode	
 both	98	28	DECK4 Performance Pad3 BEAT LOOP mode	
-both	95	29	DECK1 Performance Pad3	
-both	96	29	DECK2 Performance Pad3	
-both	97	29	DECK3 Performance Pad3	
-both	98	29	DECK4 Performance Pad3	
+both	95	29	DECK1 Performance Pad3 +SHIFT	
+both	96	29	DECK2 Performance Pad3 +SHIFT	
+both	97	29	DECK3 Performance Pad3 +SHIFT	
+both	98	29	DECK4 Performance Pad3 +SHIFT	
 both	95	2A	DECK1 Performance Pad3 SLIP LOOP mode (PAD FX BANK1, Page1 Page2)	
 both	95	2B	DECK1 Performance Pad3 SLIP LOOP mode (PAD FX BANK1, Page1 Page2)	
 both	96	2A	DECK2 Performance Pad3 SLIP LOOP mode (PAD FX BANK1, Page1 Page2)	
@@ -507,66 +507,66 @@ both	97	2C	DECK3 Performance Pad3 (PAD FX BANK2, Page1 Page2)
 both	97	2D	DECK3 Performance Pad3 (PAD FX BANK2, Page1 Page2)	
 both	98	2C	DECK4 Performance Pad3 (PAD FX BANK2, Page1 Page2)	
 both	98	2D	DECK4 Performance Pad3 (PAD FX BANK2, Page1 Page2)	
-both	95	2E	DECK1 Performance Pad3	
-both	96	2E	DECK2 Performance Pad3	
-both	97	2E	DECK3 Performance Pad3	
-both	98	2E	DECK4 Performance Pad3	
+both	95	2E	DECK1 Performance Pad3 +SHIFT	
+both	96	2E	DECK2 Performance Pad3 +SHIFT	
+both	97	2E	DECK3 Performance Pad3 +SHIFT	
+both	98	2E	DECK4 Performance Pad3 +SHIFT	
 both	95	2F	DECK1 Performance Pad3 BEAT JUMP mode	
 both	96	2F	DECK2 Performance Pad3 BEAT JUMP mode	
 both	97	2F	DECK3 Performance Pad3 BEAT JUMP mode	
 both	98	2F	DECK4 Performance Pad3 BEAT JUMP mode	
-both	95	30	DECK1 Performance Pad3	
-both	96	30	DECK2 Performance Pad3	
-both	97	30	DECK3 Performance Pad3	
-both	98	30	DECK4 Performance Pad3	
+both	95	30	DECK1 Performance Pad3 +SHIFT	
+both	96	30	DECK2 Performance Pad3 +SHIFT	
+both	97	30	DECK3 Performance Pad3 +SHIFT	
+both	98	30	DECK4 Performance Pad3 +SHIFT	
 both	95	31	DECK1 Performance Pad3 GATE CUE mode	
 both	96	31	DECK2 Performance Pad3 GATE CUE mode	
 both	97	31	DECK3 Performance Pad3 GATE CUE mode	
 both	98	31	DECK4 Performance Pad3 GATE CUE mode	
-both	95	32	DECK1 Performance Pad3	
-both	96	32	DECK2 Performance Pad3	
-both	97	32	DECK3 Performance Pad3	
-both	98	32	DECK4 Performance Pad3	
+both	95	32	DECK1 Performance Pad3 +SHIFT	
+both	96	32	DECK2 Performance Pad3 +SHIFT	
+both	97	32	DECK3 Performance Pad3 +SHIFT	
+both	98	32	DECK4 Performance Pad3 +SHIFT	
 both	95	33	DECK1 Performance Pad3 BEAT LOOP2 mode	
 both	96	33	DECK2 Performance Pad3 BEAT LOOP2 mode	
 both	97	33	DECK3 Performance Pad3 BEAT LOOP2 mode	
 both	98	33	DECK4 Performance Pad3 BEAT LOOP2 mode	
-both	95	34	DECK1 Performance Pad3	
-both	96	34	DECK2 Performance Pad3	
-both	97	34	DECK3 Performance Pad3	
-both	98	34	DECK4 Performance Pad3	
+both	95	34	DECK1 Performance Pad3 +SHIFT	
+both	96	34	DECK2 Performance Pad3 +SHIFT	
+both	97	34	DECK3 Performance Pad3 +SHIFT	
+both	98	34	DECK4 Performance Pad3 +SHIFT	
 both	95	35	DECK1 Performance Pad3 KEY SHIFT mode	
 both	96	35	DECK2 Performance Pad3 KEY SHIFT mode	
 both	97	35	DECK3 Performance Pad3 KEY SHIFT mode	
 both	98	35	DECK4 Performance Pad3 KEY SHIFT mode	
-both	95	36	DECK1 Performance Pad3	
-both	96	36	DECK2 Performance Pad3	
-both	97	36	DECK3 Performance Pad3	
-both	98	36	DECK4 Performance Pad3	
+both	95	36	DECK1 Performance Pad3 +SHIFT	
+both	96	36	DECK2 Performance Pad3 +SHIFT	
+both	97	36	DECK3 Performance Pad3 +SHIFT	
+both	98	36	DECK4 Performance Pad3 +SHIFT	
 both	95	37	DECK1 Performance Pad3 BEAT JUMP2 mode	
 both	96	37	DECK2 Performance Pad3 BEAT JUMP2 mode	
 both	97	37	DECK3 Performance Pad3 BEAT JUMP2 mode	
 both	98	37	DECK4 Performance Pad3 BEAT JUMP2 mode	
-both	95	38	DECK1 Performance Pad3	
-both	96	38	DECK2 Performance Pad3	
-both	97	38	DECK3 Performance Pad3	
-both	98	38	DECK4 Performance Pad3	
+both	95	38	DECK1 Performance Pad3 +SHIFT	
+both	96	38	DECK2 Performance Pad3 +SHIFT	
+both	97	38	DECK3 Performance Pad3 +SHIFT	
+both	98	38	DECK4 Performance Pad3 +SHIFT	
 both	95	39	DECK1 Performance Pad4 HOT CUE mode	
 both	96	39	DECK2 Performance Pad4 HOT CUE mode	
 both	97	39	DECK3 Performance Pad4 HOT CUE mode	
 both	98	39	DECK4 Performance Pad4 HOT CUE mode	
-both	95	3A	DECK1 Performance Pad4	
-both	96	3A	DECK2 Performance Pad4	
-both	97	3A	DECK3 Performance Pad4	
-both	98	3A	DECK4 Performance Pad4	
+both	95	3A	DECK1 Performance Pad4 +SHIFT	
+both	96	3A	DECK2 Performance Pad4 +SHIFT	
+both	97	3A	DECK3 Performance Pad4 +SHIFT	
+both	98	3A	DECK4 Performance Pad4 +SHIFT	
 both	95	3B	DECK1 Performance Pad4 BEAT LOOP mode	
 both	96	3B	DECK2 Performance Pad4 BEAT LOOP mode	
 both	97	3B	DECK3 Performance Pad4 BEAT LOOP mode	
 both	98	3B	DECK4 Performance Pad4 BEAT LOOP mode	
-both	95	3C	DECK1 Performance Pad4	
-both	96	3C	DECK2 Performance Pad4	
-both	97	3C	DECK3 Performance Pad4	
-both	98	3C	DECK4 Performance Pad4	
+both	95	3C	DECK1 Performance Pad4 +SHIFT	
+both	96	3C	DECK2 Performance Pad4 +SHIFT	
+both	97	3C	DECK3 Performance Pad4 +SHIFT	
+both	98	3C	DECK4 Performance Pad4 +SHIFT	
 both	95	3D	DECK1 Performance Pad4 SLIP LOOP mode (PAD FX BANK1, Page1 Page2)	
 both	95	3E	DECK1 Performance Pad4 SLIP LOOP mode (PAD FX BANK1, Page1 Page2)	
 both	96	3D	DECK2 Performance Pad4 SLIP LOOP mode (PAD FX BANK1, Page1 Page2)	
@@ -583,66 +583,66 @@ both	97	3F	DECK3 Performance Pad4 (PAD FX BANK2, Page1 Page2)
 both	97	40	DECK3 Performance Pad4 (PAD FX BANK2, Page1 Page2)	
 both	98	3F	DECK4 Performance Pad4 (PAD FX BANK2, Page1 Page2)	
 both	98	40	DECK4 Performance Pad4 (PAD FX BANK2, Page1 Page2)	
-both	95	41	DECK1 Performance Pad4	
-both	96	41	DECK2 Performance Pad4	
-both	97	41	DECK3 Performance Pad4	
-both	98	41	DECK4 Performance Pad4	
+both	95	41	DECK1 Performance Pad4 +SHIFT	
+both	96	41	DECK2 Performance Pad4 +SHIFT	
+both	97	41	DECK3 Performance Pad4 +SHIFT	
+both	98	41	DECK4 Performance Pad4 +SHIFT	
 both	95	42	DECK1 Performance Pad4 BEAT JUMP mode	
 both	96	42	DECK2 Performance Pad4 BEAT JUMP mode	
 both	97	42	DECK3 Performance Pad4 BEAT JUMP mode	
 both	98	42	DECK4 Performance Pad4 BEAT JUMP mode	
-both	95	43	DECK1 Performance Pad4	
-both	96	43	DECK2 Performance Pad4	
-both	97	43	DECK3 Performance Pad4	
-both	98	43	DECK4 Performance Pad4	
+both	95	43	DECK1 Performance Pad4 +SHIFT	
+both	96	43	DECK2 Performance Pad4 +SHIFT	
+both	97	43	DECK3 Performance Pad4 +SHIFT	
+both	98	43	DECK4 Performance Pad4 +SHIFT	
 both	95	44	DECK1 Performance Pad4 GATE CUE mode	
 both	96	44	DECK2 Performance Pad4 GATE CUE mode	
 both	97	44	DECK3 Performance Pad4 GATE CUE mode	
 both	98	44	DECK4 Performance Pad4 GATE CUE mode	
-both	95	45	DECK1 Performance Pad4	
-both	96	45	DECK2 Performance Pad4	
-both	97	45	DECK3 Performance Pad4	
-both	98	45	DECK4 Performance Pad4	
+both	95	45	DECK1 Performance Pad4 +SHIFT	
+both	96	45	DECK2 Performance Pad4 +SHIFT	
+both	97	45	DECK3 Performance Pad4 +SHIFT	
+both	98	45	DECK4 Performance Pad4 +SHIFT	
 both	95	46	DECK1 Performance Pad4 BEAT LOOP2 mode	
 both	96	46	DECK2 Performance Pad4 BEAT LOOP2 mode	
 both	97	46	DECK3 Performance Pad4 BEAT LOOP2 mode	
 both	98	46	DECK4 Performance Pad4 BEAT LOOP2 mode	
-both	95	47	DECK1 Performance Pad4	
-both	96	47	DECK2 Performance Pad4	
-both	97	47	DECK3 Performance Pad4	
-both	98	47	DECK4 Performance Pad4	
+both	95	47	DECK1 Performance Pad4 +SHIFT	
+both	96	47	DECK2 Performance Pad4 +SHIFT	
+both	97	47	DECK3 Performance Pad4 +SHIFT	
+both	98	47	DECK4 Performance Pad4 +SHIFT	
 both	95	48	DECK1 Performance Pad4 KEY SHIFT mode	
 both	96	48	DECK2 Performance Pad4 KEY SHIFT mode	
 both	97	48	DECK3 Performance Pad4 KEY SHIFT mode	
 both	98	48	DECK4 Performance Pad4 KEY SHIFT mode	
-both	95	49	DECK1 Performance Pad4	
-both	96	49	DECK2 Performance Pad4	
-both	97	49	DECK3 Performance Pad4	
-both	98	49	DECK4 Performance Pad4	
+both	95	49	DECK1 Performance Pad4 +SHIFT	
+both	96	49	DECK2 Performance Pad4 +SHIFT	
+both	97	49	DECK3 Performance Pad4 +SHIFT	
+both	98	49	DECK4 Performance Pad4 +SHIFT	
 both	95	4A	DECK1 Performance Pad4 BEAT JUMP2 mode	
 both	96	4A	DECK2 Performance Pad4 BEAT JUMP2 mode	
 both	97	4A	DECK3 Performance Pad4 BEAT JUMP2 mode	
 both	98	4A	DECK4 Performance Pad4 BEAT JUMP2 mode	
-both	95	4B	DECK1 Performance Pad4	
-both	96	4B	DECK2 Performance Pad4	
-both	97	4B	DECK3 Performance Pad4	
-both	98	4B	DECK4 Performance Pad4	
+both	95	4B	DECK1 Performance Pad4 +SHIFT	
+both	96	4B	DECK2 Performance Pad4 +SHIFT	
+both	97	4B	DECK3 Performance Pad4 +SHIFT	
+both	98	4B	DECK4 Performance Pad4 +SHIFT	
 both	99	00	DECK1 Performance Pad5 HOT CUE mode	
 both	9A	00	DECK2 Performance Pad5 HOT CUE mode	
 both	9B	00	DECK3 Performance Pad5 HOT CUE mode	
 both	9C	00	DECK4 Performance Pad5 HOT CUE mode	
-both	99	01	DECK1 Performance Pad5	
-both	9A	01	DECK2 Performance Pad5	
-both	9B	01	DECK3 Performance Pad5	
-both	9C	01	DECK4 Performance Pad5	
+both	99	01	DECK1 Performance Pad5 +SHIFT	
+both	9A	01	DECK2 Performance Pad5 +SHIFT	
+both	9B	01	DECK3 Performance Pad5 +SHIFT	
+both	9C	01	DECK4 Performance Pad5 +SHIFT	
 both	99	02	DECK1 Performance Pad5 BEAT LOOP mode	
 both	9A	02	DECK2 Performance Pad5 BEAT LOOP mode	
 both	9B	02	DECK3 Performance Pad5 BEAT LOOP mode	
 both	9C	02	DECK4 Performance Pad5 BEAT LOOP mode	
-both	99	03	DECK1 Performance Pad5	
-both	9A	03	DECK2 Performance Pad5	
-both	9B	03	DECK3 Performance Pad5	
-both	9C	03	DECK4 Performance Pad5	
+both	99	03	DECK1 Performance Pad5 +SHIFT	
+both	9A	03	DECK2 Performance Pad5 +SHIFT	
+both	9B	03	DECK3 Performance Pad5 +SHIFT	
+both	9C	03	DECK4 Performance Pad5 +SHIFT	
 both	99	04	DECK1 Performance Pad5 SLIP LOOP mode (PAD FX BANK1, Page1 Page2)	
 both	99	05	DECK1 Performance Pad5 SLIP LOOP mode (PAD FX BANK1, Page1 Page2)	
 both	9A	04	DECK2 Performance Pad5 SLIP LOOP mode (PAD FX BANK1, Page1 Page2)	
@@ -659,66 +659,66 @@ both	9B	06	DECK3 Performance Pad5 (PAD FX BANK2, Page1 Page2)
 both	9B	07	DECK3 Performance Pad5 (PAD FX BANK2, Page1 Page2)	
 both	9C	06	DECK4 Performance Pad5 (PAD FX BANK2, Page1 Page2)	
 both	9C	07	DECK4 Performance Pad5 (PAD FX BANK2, Page1 Page2)	
-both	99	08	DECK1 Performance Pad5	
-both	9A	08	DECK2 Performance Pad5	
-both	9B	08	DECK3 Performance Pad5	
-both	9C	08	DECK4 Performance Pad5	
+both	99	08	DECK1 Performance Pad5 +SHIFT	
+both	9A	08	DECK2 Performance Pad5 +SHIFT	
+both	9B	08	DECK3 Performance Pad5 +SHIFT	
+both	9C	08	DECK4 Performance Pad5 +SHIFT	
 both	99	09	DECK1 Performance Pad5 BEAT JUMP mode	
 both	9A	09	DECK2 Performance Pad5 BEAT JUMP mode	
 both	9B	09	DECK3 Performance Pad5 BEAT JUMP mode	
 both	9C	09	DECK4 Performance Pad5 BEAT JUMP mode	
-both	99	0A	DECK1 Performance Pad5	
-both	9A	0A	DECK2 Performance Pad5	
-both	9B	0A	DECK3 Performance Pad5	
-both	9C	0A	DECK4 Performance Pad5	
+both	99	0A	DECK1 Performance Pad5 +SHIFT	
+both	9A	0A	DECK2 Performance Pad5 +SHIFT	
+both	9B	0A	DECK3 Performance Pad5 +SHIFT	
+both	9C	0A	DECK4 Performance Pad5 +SHIFT	
 both	99	0B	DECK1 Performance Pad5 GATE CUE mode	
 both	9A	0B	DECK2 Performance Pad5 GATE CUE mode	
 both	9B	0B	DECK3 Performance Pad5 GATE CUE mode	
 both	9C	0B	DECK4 Performance Pad5 GATE CUE mode	
-both	99	0C	DECK1 Performance Pad5	
-both	9A	0C	DECK2 Performance Pad5	
-both	9B	0C	DECK3 Performance Pad5	
-both	9C	0C	DECK4 Performance Pad5	
+both	99	0C	DECK1 Performance Pad5 +SHIFT	
+both	9A	0C	DECK2 Performance Pad5 +SHIFT	
+both	9B	0C	DECK3 Performance Pad5 +SHIFT	
+both	9C	0C	DECK4 Performance Pad5 +SHIFT	
 both	99	0D	DECK1 Performance Pad5 BEAT LOOP2 mode	
 both	9A	0D	DECK2 Performance Pad5 BEAT LOOP2 mode	
 both	9B	0D	DECK3 Performance Pad5 BEAT LOOP2 mode	
 both	9C	0D	DECK4 Performance Pad5 BEAT LOOP2 mode	
-both	99	0E	DECK1 Performance Pad5	
-both	9A	0E	DECK2 Performance Pad5	
-both	9B	0E	DECK3 Performance Pad5	
-both	9C	0E	DECK4 Performance Pad5	
+both	99	0E	DECK1 Performance Pad5 +SHIFT	
+both	9A	0E	DECK2 Performance Pad5 +SHIFT	
+both	9B	0E	DECK3 Performance Pad5 +SHIFT	
+both	9C	0E	DECK4 Performance Pad5 +SHIFT	
 both	99	0F	DECK1 Performance Pad5 KEY SHIFT mode	
 both	9A	0F	DECK2 Performance Pad5 KEY SHIFT mode	
 both	9B	0F	DECK3 Performance Pad5 KEY SHIFT mode	
 both	9C	0F	DECK4 Performance Pad5 KEY SHIFT mode	
-both	99	10	DECK1 Performance Pad5	
-both	9A	10	DECK2 Performance Pad5	
-both	9B	10	DECK3 Performance Pad5	
-both	9C	10	DECK4 Performance Pad5	
+both	99	10	DECK1 Performance Pad5 +SHIFT	
+both	9A	10	DECK2 Performance Pad5 +SHIFT	
+both	9B	10	DECK3 Performance Pad5 +SHIFT	
+both	9C	10	DECK4 Performance Pad5 +SHIFT	
 both	99	11	DECK1 Performance Pad5 BEAT JUMP2 mode	
 both	9A	11	DECK2 Performance Pad5 BEAT JUMP2 mode	
 both	9B	11	DECK3 Performance Pad5 BEAT JUMP2 mode	
 both	9C	11	DECK4 Performance Pad5 BEAT JUMP2 mode	
-both	99	12	DECK1 Performance Pad5	
-both	9A	12	DECK2 Performance Pad5	
-both	9B	12	DECK3 Performance Pad5	
-both	9C	12	DECK4 Performance Pad5	
+both	99	12	DECK1 Performance Pad5 +SHIFT	
+both	9A	12	DECK2 Performance Pad5 +SHIFT	
+both	9B	12	DECK3 Performance Pad5 +SHIFT	
+both	9C	12	DECK4 Performance Pad5 +SHIFT	
 both	99	13	DECK1 Performance Pad6 HOT CUE mode	
 both	9A	13	DECK2 Performance Pad6 HOT CUE mode	
 both	9B	13	DECK3 Performance Pad6 HOT CUE mode	
 both	9C	13	DECK4 Performance Pad6 HOT CUE mode	
-both	99	14	DECK1 Performance Pad6	
-both	9A	14	DECK2 Performance Pad6	
-both	9B	14	DECK3 Performance Pad6	
-both	9C	14	DECK4 Performance Pad6	
+both	99	14	DECK1 Performance Pad6 +SHIFT	
+both	9A	14	DECK2 Performance Pad6 +SHIFT	
+both	9B	14	DECK3 Performance Pad6 +SHIFT	
+both	9C	14	DECK4 Performance Pad6 +SHIFT	
 both	99	15	DECK1 Performance Pad6 BEAT LOOP mode	
 both	9A	15	DECK2 Performance Pad6 BEAT LOOP mode	
 both	9B	15	DECK3 Performance Pad6 BEAT LOOP mode	
 both	9C	15	DECK4 Performance Pad6 BEAT LOOP mode	
-both	99	16	DECK1 Performance Pad6	
-both	9A	16	DECK2 Performance Pad6	
-both	9B	16	DECK3 Performance Pad6	
-both	9C	16	DECK4 Performance Pad6	
+both	99	16	DECK1 Performance Pad6 +SHIFT	
+both	9A	16	DECK2 Performance Pad6 +SHIFT	
+both	9B	16	DECK3 Performance Pad6 +SHIFT	
+both	9C	16	DECK4 Performance Pad6 +SHIFT	
 both	99	17	DECK1 Performance Pad6 SLIP LOOP mode (PAD FX BANK1, Page1 Page2)	
 both	99	18	DECK1 Performance Pad6 SLIP LOOP mode (PAD FX BANK1, Page1 Page2)	
 both	9A	17	DECK2 Performance Pad6 SLIP LOOP mode (PAD FX BANK1, Page1 Page2)	
@@ -735,66 +735,66 @@ both	9B	19	DECK3 Performance Pad6 (PAD FX BANK2, Page1 Page2)
 both	9B	1A	DECK3 Performance Pad6 (PAD FX BANK2, Page1 Page2)	
 both	9C	19	DECK4 Performance Pad6 (PAD FX BANK2, Page1 Page2)	
 both	9C	1A	DECK4 Performance Pad6 (PAD FX BANK2, Page1 Page2)	
-both	99	1B	DECK1 Performance Pad6	
-both	9A	1B	DECK2 Performance Pad6	
-both	9B	1B	DECK3 Performance Pad6	
-both	9C	1B	DECK4 Performance Pad6	
+both	99	1B	DECK1 Performance Pad6 +SHIFT	
+both	9A	1B	DECK2 Performance Pad6 +SHIFT	
+both	9B	1B	DECK3 Performance Pad6 +SHIFT	
+both	9C	1B	DECK4 Performance Pad6 +SHIFT	
 both	99	1C	DECK1 Performance Pad6 BEAT JUMP mode	
 both	9A	1C	DECK2 Performance Pad6 BEAT JUMP mode	
 both	9B	1C	DECK3 Performance Pad6 BEAT JUMP mode	
 both	9C	1C	DECK4 Performance Pad6 BEAT JUMP mode	
-both	99	1D	DECK1 Performance Pad6	
-both	9A	1D	DECK2 Performance Pad6	
-both	9B	1D	DECK3 Performance Pad6	
-both	9C	1D	DECK4 Performance Pad6	
+both	99	1D	DECK1 Performance Pad6 +SHIFT	
+both	9A	1D	DECK2 Performance Pad6 +SHIFT	
+both	9B	1D	DECK3 Performance Pad6 +SHIFT	
+both	9C	1D	DECK4 Performance Pad6 +SHIFT	
 both	99	1E	DECK1 Performance Pad6 GATE CUE mode	
 both	9A	1E	DECK2 Performance Pad6 GATE CUE mode	
 both	9B	1E	DECK3 Performance Pad6 GATE CUE mode	
 both	9C	1E	DECK4 Performance Pad6 GATE CUE mode	
-both	99	1F	DECK1 Performance Pad6	
-both	9A	1F	DECK2 Performance Pad6	
-both	9B	1F	DECK3 Performance Pad6	
-both	9C	1F	DECK4 Performance Pad6	
+both	99	1F	DECK1 Performance Pad6 +SHIFT	
+both	9A	1F	DECK2 Performance Pad6 +SHIFT	
+both	9B	1F	DECK3 Performance Pad6 +SHIFT	
+both	9C	1F	DECK4 Performance Pad6 +SHIFT	
 both	99	20	DECK1 Performance Pad6 BEAT LOOP2 mode	
 both	9A	20	DECK2 Performance Pad6 BEAT LOOP2 mode	
 both	9B	20	DECK3 Performance Pad6 BEAT LOOP2 mode	
 both	9C	20	DECK4 Performance Pad6 BEAT LOOP2 mode	
-both	99	21	DECK1 Performance Pad6	
-both	9A	21	DECK2 Performance Pad6	
-both	9B	21	DECK3 Performance Pad6	
-both	9C	21	DECK4 Performance Pad6	
+both	99	21	DECK1 Performance Pad6 +SHIFT	
+both	9A	21	DECK2 Performance Pad6 +SHIFT	
+both	9B	21	DECK3 Performance Pad6 +SHIFT	
+both	9C	21	DECK4 Performance Pad6 +SHIFT	
 both	99	22	DECK1 Performance Pad6 KEY SHIFT mode	
 both	9A	22	DECK2 Performance Pad6 KEY SHIFT mode	
 both	9B	22	DECK3 Performance Pad6 KEY SHIFT mode	
 both	9C	22	DECK4 Performance Pad6 KEY SHIFT mode	
-both	99	23	DECK1 Performance Pad6	
-both	9A	23	DECK2 Performance Pad6	
-both	9B	23	DECK3 Performance Pad6	
-both	9C	23	DECK4 Performance Pad6	
+both	99	23	DECK1 Performance Pad6 +SHIFT	
+both	9A	23	DECK2 Performance Pad6 +SHIFT	
+both	9B	23	DECK3 Performance Pad6 +SHIFT	
+both	9C	23	DECK4 Performance Pad6 +SHIFT	
 both	99	24	DECK1 Performance Pad6 BEAT JUMP2 mode	
 both	9A	24	DECK2 Performance Pad6 BEAT JUMP2 mode	
 both	9B	24	DECK3 Performance Pad6 BEAT JUMP2 mode	
 both	9C	24	DECK4 Performance Pad6 BEAT JUMP2 mode	
-both	99	25	DECK1 Performance Pad6	
-both	9A	25	DECK2 Performance Pad6	
-both	9B	25	DECK3 Performance Pad6	
-both	9C	25	DECK4 Performance Pad6	
+both	99	25	DECK1 Performance Pad6 +SHIFT	
+both	9A	25	DECK2 Performance Pad6 +SHIFT	
+both	9B	25	DECK3 Performance Pad6 +SHIFT	
+both	9C	25	DECK4 Performance Pad6 +SHIFT	
 both	99	26	DECK1 Performance Pad7 HOT CUE mode	
 both	9A	26	DECK2 Performance Pad7 HOT CUE mode	
 both	9B	26	DECK3 Performance Pad7 HOT CUE mode	
 both	9C	26	DECK4 Performance Pad7 HOT CUE mode	
-both	99	27	DECK1 Performance Pad7	
-both	9A	27	DECK2 Performance Pad7	
-both	9B	27	DECK3 Performance Pad7	
-both	9C	27	DECK4 Performance Pad7	
+both	99	27	DECK1 Performance Pad7 +SHIFT	
+both	9A	27	DECK2 Performance Pad7 +SHIFT	
+both	9B	27	DECK3 Performance Pad7 +SHIFT	
+both	9C	27	DECK4 Performance Pad7 +SHIFT	
 both	99	28	DECK1 Performance Pad7 BEAT LOOP mode	
 both	9A	28	DECK2 Performance Pad7 BEAT LOOP mode	
 both	9B	28	DECK3 Performance Pad7 BEAT LOOP mode	
 both	9C	28	DECK4 Performance Pad7 BEAT LOOP mode	
-both	99	29	DECK1 Performance Pad7	
-both	9A	29	DECK2 Performance Pad7	
-both	9B	29	DECK3 Performance Pad7	
-both	9C	29	DECK4 Performance Pad7	
+both	99	29	DECK1 Performance Pad7 +SHIFT	
+both	9A	29	DECK2 Performance Pad7 +SHIFT	
+both	9B	29	DECK3 Performance Pad7 +SHIFT	
+both	9C	29	DECK4 Performance Pad7 +SHIFT	
 both	99	2A	DECK1 Performance Pad7 SLIP LOOP mode (PAD FX BANK1, Page1 Page2)	
 both	99	2B	DECK1 Performance Pad7 SLIP LOOP mode (PAD FX BANK1, Page1 Page2)	
 both	9A	2A	DECK2 Performance Pad7 SLIP LOOP mode (PAD FX BANK1, Page1 Page2)	
@@ -811,66 +811,66 @@ both	99	2D	DECK1 Performance Pad7
 both	9A	2D	DECK2 Performance Pad7	
 both	9B	2D	DECK3 Performance Pad7	
 both	9C	2D	DECK4 Performance Pad7	
-both	99	2E	DECK1 Performance Pad7	
-both	9A	2E	DECK2 Performance Pad7	
-both	9B	2E	DECK3 Performance Pad7	
-both	9C	2E	DECK4 Performance Pad7	
+both	99	2E	DECK1 Performance Pad7 +SHIFT	
+both	9A	2E	DECK2 Performance Pad7 +SHIFT	
+both	9B	2E	DECK3 Performance Pad7 +SHIFT	
+both	9C	2E	DECK4 Performance Pad7 +SHIFT	
 both	99	2F	DECK1 Performance Pad7 BEAT JUMP mode	
 both	9A	2F	DECK2 Performance Pad7 BEAT JUMP mode	
 both	9B	2F	DECK3 Performance Pad7 BEAT JUMP mode	
 both	9C	2F	DECK4 Performance Pad7 BEAT JUMP mode	
-both	99	30	DECK1 Performance Pad7	
-both	9A	30	DECK2 Performance Pad7	
-both	9B	30	DECK3 Performance Pad7	
-both	9C	30	DECK4 Performance Pad7	
+both	99	30	DECK1 Performance Pad7 +SHIFT	
+both	9A	30	DECK2 Performance Pad7 +SHIFT	
+both	9B	30	DECK3 Performance Pad7 +SHIFT	
+both	9C	30	DECK4 Performance Pad7 +SHIFT	
 both	99	31	DECK1 Performance Pad7 GATE CUE mode	
 both	9A	31	DECK2 Performance Pad7 GATE CUE mode	
 both	9B	31	DECK3 Performance Pad7 GATE CUE mode	
 both	9C	31	DECK4 Performance Pad7 GATE CUE mode	
-both	99	32	DECK1 Performance Pad7	
-both	9A	32	DECK2 Performance Pad7	
-both	9B	32	DECK3 Performance Pad7	
-both	9C	32	DECK4 Performance Pad7	
+both	99	32	DECK1 Performance Pad7 +SHIFT	
+both	9A	32	DECK2 Performance Pad7 +SHIFT	
+both	9B	32	DECK3 Performance Pad7 +SHIFT	
+both	9C	32	DECK4 Performance Pad7 +SHIFT	
 both	99	33	DECK1 Performance Pad7 BEAT LOOP2 mode	
 both	9A	33	DECK2 Performance Pad7 BEAT LOOP2 mode	
 both	9B	33	DECK3 Performance Pad7 BEAT LOOP2 mode	
 both	9C	33	DECK4 Performance Pad7 BEAT LOOP2 mode	
-both	99	34	DECK1 Performance Pad7	
-both	9A	34	DECK2 Performance Pad7	
-both	9B	34	DECK3 Performance Pad7	
-both	9C	34	DECK4 Performance Pad7	
+both	99	34	DECK1 Performance Pad7 +SHIFT	
+both	9A	34	DECK2 Performance Pad7 +SHIFT	
+both	9B	34	DECK3 Performance Pad7 +SHIFT	
+both	9C	34	DECK4 Performance Pad7 +SHIFT	
 both	99	35	DECK1 Performance Pad7 KEY SHIFT mode	
 both	9A	35	DECK2 Performance Pad7 KEY SHIFT mode	
 both	9B	35	DECK3 Performance Pad7 KEY SHIFT mode	
 both	9C	35	DECK4 Performance Pad7 KEY SHIFT mode	
-both	99	36	DECK1 Performance Pad7	
-both	9A	36	DECK2 Performance Pad7	
-both	9B	36	DECK3 Performance Pad7	
-both	9C	36	DECK4 Performance Pad7	
+both	99	36	DECK1 Performance Pad7 +SHIFT	
+both	9A	36	DECK2 Performance Pad7 +SHIFT	
+both	9B	36	DECK3 Performance Pad7 +SHIFT	
+both	9C	36	DECK4 Performance Pad7 +SHIFT	
 both	99	37	DECK1 Performance Pad7 BEAT JUMP2 mode	
 both	9A	37	DECK2 Performance Pad7 BEAT JUMP2 mode	
 both	9B	37	DECK3 Performance Pad7 BEAT JUMP2 mode	
 both	9C	37	DECK4 Performance Pad7 BEAT JUMP2 mode	
-both	99	38	DECK1 Performance Pad7	
-both	9A	38	DECK2 Performance Pad7	
-both	9B	38	DECK3 Performance Pad7	
-both	9C	38	DECK4 Performance Pad7	
+both	99	38	DECK1 Performance Pad7 +SHIFT	
+both	9A	38	DECK2 Performance Pad7 +SHIFT	
+both	9B	38	DECK3 Performance Pad7 +SHIFT	
+both	9C	38	DECK4 Performance Pad7 +SHIFT	
 both	99	39	DECK1 Performance Pad8 HOT CUE mode	
 both	9A	39	DECK2 Performance Pad8 HOT CUE mode	
 both	9B	39	DECK3 Performance Pad8 HOT CUE mode	
 both	9C	39	DECK4 Performance Pad8 HOT CUE mode	
-both	99	3A	DECK1 Performance Pad8	
-both	9A	3A	DECK2 Performance Pad8	
-both	9B	3A	DECK3 Performance Pad8	
-both	9C	3A	DECK4 Performance Pad8	
+both	99	3A	DECK1 Performance Pad8 +SHIFT	
+both	9A	3A	DECK2 Performance Pad8 +SHIFT	
+both	9B	3A	DECK3 Performance Pad8 +SHIFT	
+both	9C	3A	DECK4 Performance Pad8 +SHIFT	
 both	99	3B	DECK1 Performance Pad8 BEAT LOOP mode	
 both	9A	3B	DECK2 Performance Pad8 BEAT LOOP mode	
 both	9B	3B	DECK3 Performance Pad8 BEAT LOOP mode	
 both	9C	3B	DECK4 Performance Pad8 BEAT LOOP mode	
-both	99	3C	DECK1 Performance Pad8	
-both	9A	3C	DECK2 Performance Pad8	
-both	9B	3C	DECK3 Performance Pad8	
-both	9C	3C	DECK4 Performance Pad8	
+both	99	3C	DECK1 Performance Pad8 +SHIFT	
+both	9A	3C	DECK2 Performance Pad8 +SHIFT	
+both	9B	3C	DECK3 Performance Pad8 +SHIFT	
+both	9C	3C	DECK4 Performance Pad8 +SHIFT	
 both	99	3D	DECK1 Performance Pad8 SLIP LOOP mode (PAD FX BANK1, Page1 Page2)	
 both	9A	3D	DECK2 Performance Pad8 SLIP LOOP mode (PAD FX BANK1, Page1 Page2)	
 both	9B	3D	DECK3 Performance Pad8 SLIP LOOP mode (PAD FX BANK1, Page1 Page2)	
@@ -887,50 +887,50 @@ both	9B	3F	DECK3 Performance Pad8 (PAD FX BANK2, Page1 Page2)
 both	9B	40	DECK3 Performance Pad8 (PAD FX BANK2, Page1 Page2)	
 both	9C	3F	DECK4 Performance Pad8 (PAD FX BANK2, Page1 Page2)	
 both	9C	40	DECK4 Performance Pad8 (PAD FX BANK2, Page1 Page2)	
-both	99	41	DECK1 Performance Pad8	
-both	9A	41	DECK2 Performance Pad8	
-both	9B	41	DECK3 Performance Pad8	
-both	9C	41	DECK4 Performance Pad8	
+both	99	41	DECK1 Performance Pad8 +SHIFT	
+both	9A	41	DECK2 Performance Pad8 +SHIFT	
+both	9B	41	DECK3 Performance Pad8 +SHIFT	
+both	9C	41	DECK4 Performance Pad8 +SHIFT	
 both	99	42	DECK1 Performance Pad8 BEAT JUMP mode	
 both	9A	42	DECK2 Performance Pad8 BEAT JUMP mode	
 both	9B	42	DECK3 Performance Pad8 BEAT JUMP mode	
 both	9C	42	DECK4 Performance Pad8 BEAT JUMP mode	
-both	99	43	DECK1 Performance Pad8	
-both	9A	43	DECK2 Performance Pad8	
-both	9B	43	DECK3 Performance Pad8	
-both	9C	43	DECK4 Performance Pad8	
+both	99	43	DECK1 Performance Pad8 +SHIFT	
+both	9A	43	DECK2 Performance Pad8 +SHIFT	
+both	9B	43	DECK3 Performance Pad8 +SHIFT	
+both	9C	43	DECK4 Performance Pad8 +SHIFT	
 both	99	44	DECK1 Performance Pad8 GATE CUE mode	
 both	9A	44	DECK2 Performance Pad8 GATE CUE mode	
 both	9B	44	DECK3 Performance Pad8 GATE CUE mode	
 both	9C	44	DECK4 Performance Pad8 GATE CUE mode	
-both	99	45	DECK1 Performance Pad8	
-both	9A	45	DECK2 Performance Pad8	
-both	9B	45	DECK3 Performance Pad8	
-both	9C	45	DECK4 Performance Pad8	
+both	99	45	DECK1 Performance Pad8 +SHIFT	
+both	9A	45	DECK2 Performance Pad8 +SHIFT	
+both	9B	45	DECK3 Performance Pad8 +SHIFT	
+both	9C	45	DECK4 Performance Pad8 +SHIFT	
 both	99	46	DECK1 Performance Pad8 BEAT LOOP2 mode	
 both	9A	46	DECK2 Performance Pad8 BEAT LOOP2 mode	
 both	9B	46	DECK3 Performance Pad8 BEAT LOOP2 mode	
 both	9C	46	DECK4 Performance Pad8 BEAT LOOP2 mode	
-both	99	47	DECK1 Performance Pad8	
-both	9A	47	DECK2 Performance Pad8	
-both	9B	47	DECK3 Performance Pad8	
-both	9C	47	DECK4 Performance Pad8	
+both	99	47	DECK1 Performance Pad8 +SHIFT	
+both	9A	47	DECK2 Performance Pad8 +SHIFT	
+both	9B	47	DECK3 Performance Pad8 +SHIFT	
+both	9C	47	DECK4 Performance Pad8 +SHIFT	
 both	99	48	DECK1 Performance Pad8 KEY SHIFT mode	
 both	9A	48	DECK2 Performance Pad8 KEY SHIFT mode	
 both	9B	48	DECK3 Performance Pad8 KEY SHIFT mode	
 both	9C	48	DECK4 Performance Pad8 KEY SHIFT mode	
-both	99	49	DECK1 Performance Pad8	
-both	9A	49	DECK2 Performance Pad8	
-both	9B	49	DECK3 Performance Pad8	
-both	9C	49	DECK4 Performance Pad8	
+both	99	49	DECK1 Performance Pad8 +SHIFT	
+both	9A	49	DECK2 Performance Pad8 +SHIFT	
+both	9B	49	DECK3 Performance Pad8 +SHIFT	
+both	9C	49	DECK4 Performance Pad8 +SHIFT	
 both	99	4A	DECK1 Performance Pad8 BEAT JUMP2 mode	
 both	9A	4A	DECK2 Performance Pad8 BEAT JUMP2 mode	
 both	9B	4A	DECK3 Performance Pad8 BEAT JUMP2 mode	
 both	9C	4A	DECK4 Performance Pad8 BEAT JUMP2 mode	
-both	99	4B	DECK1 Performance Pad8	
-both	9A	4B	DECK2 Performance Pad8	
-both	9B	4B	DECK3 Performance Pad8	
-both	9C	4B	DECK4 Performance Pad8	
+both	99	4B	DECK1 Performance Pad8 +SHIFT	
+both	9A	4B	DECK2 Performance Pad8 +SHIFT	
+both	9B	4B	DECK3 Performance Pad8 +SHIFT	
+both	9C	4B	DECK4 Performance Pad8 +SHIFT	
 in	B0	64	DECK1 PC Control mode	
 in	B1	64	DECK2 PC Control mode	
 in	B2	64	DECK3 PC Control mode	
@@ -955,3 +955,10 @@ out	BD	06	Cue Marker (DECK3) MSB
 out	BD	26	Cue Marker (DECK3) LSB	
 out	BD	07	Cue Marker (DECK4) MSB	
 out	BD	27	Cue Marker (DECK4) LSB	
+in	94	3B	INPUT SELECT SWITCH (CH3) LINE	
+in	94	3C	INPUT SELECT SWITCH (CH3) PHONO	
+in	94	3E	INPUT SELECT SWITCH (CH3) Bluetooth	
+in	94	3F	INPUT SELECT SWITCH (CH4) LINE	
+in	94	40	INPUT SELECT SWITCH (CH4) PHONO	
+in	94	42	INPUT SELECT SWITCH (CH4) Bluetooth	
+in	B4	60	MIC 2 EQ HI	

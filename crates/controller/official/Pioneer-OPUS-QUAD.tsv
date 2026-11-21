@@ -4,26 +4,26 @@ in	B0	22	DECK1 Jog whee (top) el
 in	B1	22	DECK2 Jog whee (top) el	
 in	B2	22	DECK3 Jog whee (top) el	
 in	B3	22	DECK4 Jog whee (top) el	
-in	B0	29	DECK1 Jog wheel (top) (1[L,R])	
-in	B1	29	DECK2 Jog wheel (top) (1[L,R])	
-in	B2	29	DECK3 Jog wheel (top) (1[L,R])	
-in	B3	29	DECK4 Jog wheel (top) (1[L,R])	
+in	B0	29	DECK1 Jog wheel (top) (1[L,R]) +SHIFT	
+in	B1	29	DECK2 Jog wheel (top) (1[L,R]) +SHIFT	
+in	B2	29	DECK3 Jog wheel (top) (1[L,R]) +SHIFT	
+in	B3	29	DECK4 Jog wheel (top) (1[L,R]) +SHIFT	
 in	90	20	DECK1 Jog wheel (top) (1[L,R], touch)	
 in	91	20	DECK2 Jog wheel (top) (1[L,R], touch)	
 in	92	20	DECK3 Jog wheel (top) (1[L,R], touch)	
 in	93	20	DECK4 Jog wheel (top) (1[L,R], touch)	
-in	90	48	DECK1 Jog wheel (top) (1[L,R])	
-in	91	48	DECK2 Jog wheel (top) (1[L,R])	
-in	92	48	DECK3 Jog wheel (top) (1[L,R])	
-in	93	48	DECK4 Jog wheel (top) (1[L,R])	
-in	B0	21	DECK1 Jog wheel (Side) (1[L,R]) +SHIFT	
-in	B1	21	DECK2 Jog wheel (Side) (1[L,R]) +SHIFT	
-in	B2	21	DECK3 Jog wheel (Side) (1[L,R]) +SHIFT	
-in	B3	21	DECK4 Jog wheel (Side) (1[L,R]) +SHIFT	
-in	B0	26	DECK1 Jog wheel (Side) (1[L,R])	
-in	B1	26	DECK2 Jog wheel (Side) (1[L,R])	
-in	B2	26	DECK3 Jog wheel (Side) (1[L,R])	
-in	B3	26	DECK4 Jog wheel (Side) (1[L,R])	
+in	90	48	DECK1 Jog wheel (top) (1[L,R]) +SHIFT	
+in	91	48	DECK2 Jog wheel (top) (1[L,R]) +SHIFT	
+in	92	48	DECK3 Jog wheel (top) (1[L,R]) +SHIFT	
+in	93	48	DECK4 Jog wheel (top) (1[L,R]) +SHIFT	
+in	B0	21	DECK1 Jog wheel (Side) (1[L,R])	
+in	B1	21	DECK2 Jog wheel (Side) (1[L,R])	
+in	B2	21	DECK3 Jog wheel (Side) (1[L,R])	
+in	B3	21	DECK4 Jog wheel (Side) (1[L,R])	
+in	B0	26	DECK1 Jog wheel (Side) (1[L,R]) +SHIFT	
+in	B1	26	DECK2 Jog wheel (Side) (1[L,R]) +SHIFT	
+in	B2	26	DECK3 Jog wheel (Side) (1[L,R]) +SHIFT	
+in	B3	26	DECK4 Jog wheel (Side) (1[L,R]) +SHIFT	
 in	B0	00	DECK1 TEMPO (2[L,R])	
 in	B1	00	DECK2 TEMPO (2[L,R])	
 in	B2	00	DECK3 TEMPO (2[L,R])	
@@ -88,14 +88,14 @@ in	B0	2E	DECK1 BEAT LOO OP
 in	B1	2E	DECK2 BEAT LOO OP	
 in	B2	2E	DECK3 BEAT LOO OP	
 in	B3	2E	DECK4 BEAT LOO OP	
-in	90	43	DECK1 BEAT LOOP (14[L,R]) +SHIFT	
-in	91	43	DECK2 BEAT LOOP (14[L,R]) +SHIFT	
-in	92	43	DECK3 BEAT LOOP (14[L,R]) +SHIFT	
-in	93	43	DECK4 BEAT LOOP (14[L,R]) +SHIFT	
-in	90	44	DECK1 BEAT LOOP (14[L,R])	
-in	91	44	DECK2 BEAT LOOP (14[L,R])	
-in	92	44	DECK3 BEAT LOOP (14[L,R])	
-in	93	44	DECK4 BEAT LOOP (14[L,R])	
+in	90	43	DECK1 BEAT LOOP (14[L,R])	
+in	91	43	DECK2 BEAT LOOP (14[L,R])	
+in	92	43	DECK3 BEAT LOOP (14[L,R])	
+in	93	43	DECK4 BEAT LOOP (14[L,R])	
+in	90	44	DECK1 BEAT LOOP (14[L,R]) +SHIFT	
+in	91	44	DECK2 BEAT LOOP (14[L,R]) +SHIFT	
+in	92	44	DECK3 BEAT LOOP (14[L,R]) +SHIFT	
+in	93	44	DECK4 BEAT LOOP (14[L,R]) +SHIFT	
 both	90	06	DECK1 LOOP IN (14[L,R], Long)	
 both	91	06	DECK2 LOOP IN (14[L,R], Long)	
 both	92	06	DECK3 LOOP IN (14[L,R], Long)	
@@ -112,18 +112,18 @@ in	90	2C	DECK1 BEAT JUMP F FWD
 in	91	2C	DECK2 BEAT JUMP F FWD	
 in	92	2C	DECK3 BEAT JUMP F FWD	
 in	93	2C	DECK4 BEAT JUMP F FWD	
-in	90	49	DECK1 BEAT JUMP FWD (16[L,R])	
-in	91	49	DECK2 BEAT JUMP FWD (16[L,R])	
-in	92	49	DECK3 BEAT JUMP FWD (16[L,R])	
-in	93	49	DECK4 BEAT JUMP FWD (16[L,R])	
-in	90	2D	DECK1 BEAT JUMP REV (17[L,R]) +SHIFT	
-in	91	2D	DECK2 BEAT JUMP REV (17[L,R]) +SHIFT	
-in	92	2D	DECK3 BEAT JUMP REV (17[L,R]) +SHIFT	
-in	93	2D	DECK4 BEAT JUMP REV (17[L,R]) +SHIFT	
-in	90	4A	DECK1 BEAT JUMP REV (17[L,R])	
-in	91	4A	DECK2 BEAT JUMP REV (17[L,R])	
-in	92	4A	DECK3 BEAT JUMP REV (17[L,R])	
-in	93	4A	DECK4 BEAT JUMP REV (17[L,R])	
+in	90	49	DECK1 BEAT JUMP FWD (16[L,R]) +SHIFT	
+in	91	49	DECK2 BEAT JUMP FWD (16[L,R]) +SHIFT	
+in	92	49	DECK3 BEAT JUMP FWD (16[L,R]) +SHIFT	
+in	93	49	DECK4 BEAT JUMP FWD (16[L,R]) +SHIFT	
+in	90	2D	DECK1 BEAT JUMP REV (17[L,R])	
+in	91	2D	DECK2 BEAT JUMP REV (17[L,R])	
+in	92	2D	DECK3 BEAT JUMP REV (17[L,R])	
+in	93	2D	DECK4 BEAT JUMP REV (17[L,R])	
+in	90	4A	DECK1 BEAT JUMP REV (17[L,R]) +SHIFT	
+in	91	4A	DECK2 BEAT JUMP REV (17[L,R]) +SHIFT	
+in	92	4A	DECK3 BEAT JUMP REV (17[L,R]) +SHIFT	
+in	93	4A	DECK4 BEAT JUMP REV (17[L,R]) +SHIFT	
 both	90	21	DECK1 SLIP REVERSE (18[L,R])	
 both	91	21	DECK2 SLIP REVERSE (18[L,R])	
 both	92	21	DECK3 SLIP REVERSE (18[L,R])	
@@ -136,70 +136,70 @@ both	90	00	DECK1 PLAY/PAUSE (20[L,R])	[Channel1] play
 both	91	00	DECK2 PLAY/PAUSE (20[L,R])	[Channel2] play
 both	92	00	DECK3 PLAY/PAUSE (20[L,R])	[Channel3] play
 both	93	00	DECK4 PLAY/PAUSE (20[L,R])	[Channel4] play
-both	90	08	DECK1 HOT CUE A (20[L,R])	
-both	91	08	DECK2 HOT CUE A (20[L,R])	
-both	92	08	DECK3 HOT CUE A (20[L,R])	
-both	93	08	DECK4 HOT CUE A (20[L,R])	
-both	90	0A	DECK1 HOT CUE A (21[L,R])	[Channel1] hotcue_1_activate
-both	91	0A	DECK2 HOT CUE A (21[L,R])	[Channel2] hotcue_1_activate
-both	92	0A	DECK3 HOT CUE A (21[L,R])	[Channel3] hotcue_1_activate
-both	93	0A	DECK4 HOT CUE A (21[L,R])	[Channel4] hotcue_1_activate
-both	90	0B	DECK1 HOT CUE B (21[L,R])	
-both	91	0B	DECK2 HOT CUE B (21[L,R])	
-both	92	0B	DECK3 HOT CUE B (21[L,R])	
-both	93	0B	DECK4 HOT CUE B (21[L,R])	
-both	90	0C	DECK1 HOT CUE B (22[L,R])	[Channel1] hotcue_2_activate
-both	91	0C	DECK2 HOT CUE B (22[L,R])	[Channel2] hotcue_2_activate
-both	92	0C	DECK3 HOT CUE B (22[L,R])	[Channel3] hotcue_2_activate
-both	93	0C	DECK4 HOT CUE B (22[L,R])	[Channel4] hotcue_2_activate
-both	90	0D	DECK1 HOT CUE C (22[L,R])	
-both	91	0D	DECK2 HOT CUE C (22[L,R])	
-both	92	0D	DECK3 HOT CUE C (22[L,R])	
-both	93	0D	DECK4 HOT CUE C (22[L,R])	
-both	90	0E	DECK1 HOT CUE C (23[L,R])	[Channel1] hotcue_3_activate
-both	91	0E	DECK2 HOT CUE C (23[L,R])	[Channel2] hotcue_3_activate
-both	92	0E	DECK3 HOT CUE C (23[L,R])	[Channel3] hotcue_3_activate
-both	93	0E	DECK4 HOT CUE C (23[L,R])	[Channel4] hotcue_3_activate
-both	90	0F	DECK1 HOT CUE D (23[L,R])	
-both	91	0F	DECK2 HOT CUE D (23[L,R])	
-both	92	0F	DECK3 HOT CUE D (23[L,R])	
-both	93	0F	DECK4 HOT CUE D (23[L,R])	
-both	90	14	DECK1 HOT CUE D (24[L,R])	[Channel1] hotcue_4_activate
-both	91	14	DECK2 HOT CUE D (24[L,R])	[Channel2] hotcue_4_activate
-both	92	14	DECK3 HOT CUE D (24[L,R])	[Channel3] hotcue_4_activate
-both	93	14	DECK4 HOT CUE D (24[L,R])	[Channel4] hotcue_4_activate
-both	90	15	DECK1 HOT CUE E (24[L,R])	
-both	91	15	DECK2 HOT CUE E (24[L,R])	
-both	92	15	DECK3 HOT CUE E (24[L,R])	
-both	93	15	DECK4 HOT CUE E (24[L,R])	
-both	90	16	DECK1 HOT CUE E (25[L,R])	[Channel1] hotcue_5_activate
-both	91	16	DECK2 HOT CUE E (25[L,R])	[Channel2] hotcue_5_activate
-both	92	16	DECK3 HOT CUE E (25[L,R])	[Channel3] hotcue_5_activate
-both	93	16	DECK4 HOT CUE E (25[L,R])	[Channel4] hotcue_5_activate
-both	90	17	DECK1 HOT CUE F (25[L,R])	
-both	91	17	DECK2 HOT CUE F (25[L,R])	
-both	92	17	DECK3 HOT CUE F (25[L,R])	
-both	93	17	DECK4 HOT CUE F (25[L,R])	
-both	90	18	DECK1 HOT CUE F (26[L,R])	[Channel1] hotcue_6_activate
-both	91	18	DECK2 HOT CUE F (26[L,R])	[Channel2] hotcue_6_activate
-both	92	18	DECK3 HOT CUE F (26[L,R])	[Channel3] hotcue_6_activate
-both	93	18	DECK4 HOT CUE F (26[L,R])	[Channel4] hotcue_6_activate
-both	90	19	DECK1 HOT CUE G (26[L,R])	
-both	91	19	DECK2 HOT CUE G (26[L,R])	
-both	92	19	DECK3 HOT CUE G (26[L,R])	
-both	93	19	DECK4 HOT CUE G (26[L,R])	
-both	90	1A	DECK1 HOT CUE G (27[L,R])	[Channel1] hotcue_7_activate
-both	91	1A	DECK2 HOT CUE G (27[L,R])	[Channel2] hotcue_7_activate
-both	92	1A	DECK3 HOT CUE G (27[L,R])	[Channel3] hotcue_7_activate
-both	93	1A	DECK4 HOT CUE G (27[L,R])	[Channel4] hotcue_7_activate
-both	90	1B	DECK1 HOT CUE H (27[L,R])	
-both	91	1B	DECK2 HOT CUE H (27[L,R])	
-both	92	1B	DECK3 HOT CUE H (27[L,R])	
-both	93	1B	DECK4 HOT CUE H (27[L,R])	
-both	90	1C	DECK1 HOT CUE H (28[L,R])	[Channel1] hotcue_8_activate
-both	91	1C	DECK2 HOT CUE H (28[L,R])	[Channel2] hotcue_8_activate
-both	92	1C	DECK3 HOT CUE H (28[L,R])	[Channel3] hotcue_8_activate
-both	93	1C	DECK4 HOT CUE H (28[L,R])	[Channel4] hotcue_8_activate
+both	90	08	DECK1 HOT CUE A (21[L,R])	[Channel1] hotcue_1_activate
+both	91	08	DECK2 HOT CUE A (21[L,R])	[Channel2] hotcue_1_activate
+both	92	08	DECK3 HOT CUE A (21[L,R])	[Channel3] hotcue_1_activate
+both	93	08	DECK4 HOT CUE A (21[L,R])	[Channel4] hotcue_1_activate
+both	90	0A	DECK1 HOT CUE A (21[L,R]) +SHIFT	
+both	91	0A	DECK2 HOT CUE A (21[L,R]) +SHIFT	
+both	92	0A	DECK3 HOT CUE A (21[L,R]) +SHIFT	
+both	93	0A	DECK4 HOT CUE A (21[L,R]) +SHIFT	
+both	90	0B	DECK1 HOT CUE B (22[L,R])	[Channel1] hotcue_2_activate
+both	91	0B	DECK2 HOT CUE B (22[L,R])	[Channel2] hotcue_2_activate
+both	92	0B	DECK3 HOT CUE B (22[L,R])	[Channel3] hotcue_2_activate
+both	93	0B	DECK4 HOT CUE B (22[L,R])	[Channel4] hotcue_2_activate
+both	90	0C	DECK1 HOT CUE B (22[L,R]) +SHIFT	
+both	91	0C	DECK2 HOT CUE B (22[L,R]) +SHIFT	
+both	92	0C	DECK3 HOT CUE B (22[L,R]) +SHIFT	
+both	93	0C	DECK4 HOT CUE B (22[L,R]) +SHIFT	
+both	90	0D	DECK1 HOT CUE C (23[L,R])	[Channel1] hotcue_3_activate
+both	91	0D	DECK2 HOT CUE C (23[L,R])	[Channel2] hotcue_3_activate
+both	92	0D	DECK3 HOT CUE C (23[L,R])	[Channel3] hotcue_3_activate
+both	93	0D	DECK4 HOT CUE C (23[L,R])	[Channel4] hotcue_3_activate
+both	90	0E	DECK1 HOT CUE C (23[L,R]) +SHIFT	
+both	91	0E	DECK2 HOT CUE C (23[L,R]) +SHIFT	
+both	92	0E	DECK3 HOT CUE C (23[L,R]) +SHIFT	
+both	93	0E	DECK4 HOT CUE C (23[L,R]) +SHIFT	
+both	90	0F	DECK1 HOT CUE D (24[L,R])	[Channel1] hotcue_4_activate
+both	91	0F	DECK2 HOT CUE D (24[L,R])	[Channel2] hotcue_4_activate
+both	92	0F	DECK3 HOT CUE D (24[L,R])	[Channel3] hotcue_4_activate
+both	93	0F	DECK4 HOT CUE D (24[L,R])	[Channel4] hotcue_4_activate
+both	90	14	DECK1 HOT CUE D (24[L,R]) +SHIFT	
+both	91	14	DECK2 HOT CUE D (24[L,R]) +SHIFT	
+both	92	14	DECK3 HOT CUE D (24[L,R]) +SHIFT	
+both	93	14	DECK4 HOT CUE D (24[L,R]) +SHIFT	
+both	90	15	DECK1 HOT CUE E (25[L,R])	[Channel1] hotcue_5_activate
+both	91	15	DECK2 HOT CUE E (25[L,R])	[Channel2] hotcue_5_activate
+both	92	15	DECK3 HOT CUE E (25[L,R])	[Channel3] hotcue_5_activate
+both	93	15	DECK4 HOT CUE E (25[L,R])	[Channel4] hotcue_5_activate
+both	90	16	DECK1 HOT CUE E (25[L,R]) +SHIFT	
+both	91	16	DECK2 HOT CUE E (25[L,R]) +SHIFT	
+both	92	16	DECK3 HOT CUE E (25[L,R]) +SHIFT	
+both	93	16	DECK4 HOT CUE E (25[L,R]) +SHIFT	
+both	90	17	DECK1 HOT CUE F (26[L,R])	[Channel1] hotcue_6_activate
+both	91	17	DECK2 HOT CUE F (26[L,R])	[Channel2] hotcue_6_activate
+both	92	17	DECK3 HOT CUE F (26[L,R])	[Channel3] hotcue_6_activate
+both	93	17	DECK4 HOT CUE F (26[L,R])	[Channel4] hotcue_6_activate
+both	90	18	DECK1 HOT CUE F (26[L,R]) +SHIFT	
+both	91	18	DECK2 HOT CUE F (26[L,R]) +SHIFT	
+both	92	18	DECK3 HOT CUE F (26[L,R]) +SHIFT	
+both	93	18	DECK4 HOT CUE F (26[L,R]) +SHIFT	
+both	90	19	DECK1 HOT CUE G (27[L,R])	[Channel1] hotcue_7_activate
+both	91	19	DECK2 HOT CUE G (27[L,R])	[Channel2] hotcue_7_activate
+both	92	19	DECK3 HOT CUE G (27[L,R])	[Channel3] hotcue_7_activate
+both	93	19	DECK4 HOT CUE G (27[L,R])	[Channel4] hotcue_7_activate
+both	90	1A	DECK1 HOT CUE G (27[L,R]) +SHIFT	
+both	91	1A	DECK2 HOT CUE G (27[L,R]) +SHIFT	
+both	92	1A	DECK3 HOT CUE G (27[L,R]) +SHIFT	
+both	93	1A	DECK4 HOT CUE G (27[L,R]) +SHIFT	
+both	90	1B	DECK1 HOT CUE H (28[L,R])	[Channel1] hotcue_8_activate
+both	91	1B	DECK2 HOT CUE H (28[L,R])	[Channel2] hotcue_8_activate
+both	92	1B	DECK3 HOT CUE H (28[L,R])	[Channel3] hotcue_8_activate
+both	93	1B	DECK4 HOT CUE H (28[L,R])	[Channel4] hotcue_8_activate
+both	90	1C	DECK1 HOT CUE H (28[L,R]) +SHIFT	
+both	91	1C	DECK2 HOT CUE H (28[L,R]) +SHIFT	
+both	92	1C	DECK3 HOT CUE H (28[L,R]) +SHIFT	
+both	93	1C	DECK4 HOT CUE H (28[L,R]) +SHIFT	
 in	90	3F	DECK1 SHIFT (29[L,R])	
 in	91	3F	DECK2 SHIFT (29[L,R])	
 in	92	3F	DECK3 SHIFT (29[L,R])	
@@ -285,22 +285,22 @@ in	B4	49	CH CUE (Headphone) CH 4
 in	B4	18	MASTER LEVEL	
 in	B4	19	BOOTH MONITOR R LEVEL	
 in	B4	27	ZONE LEVE EL	
-in	B0	4F	DECK1 Smart Rotary Selector +SHIFT	
-in	B0	60	DECK1 Smart Rotary Selector	
-in	90	33	DECK1 Smart Rotary Selector +SHIFT	
-in	90	61	DECK1 Smart Rotary Selector	
-in	90	31	DECK1 Smart Rotary Selector +SHIFT	
-in	90	5D	DECK1 Smart Rotary Selector (tilt up)	
-in	90	34	DECK1 Smart Rotary Selector +SHIFT	
-in	90	35	DECK1 Smart Rotary Selector (tilt down)	
-in	90	37	DECK1 Smart Rotary Selector +SHIFT	
-in	90	38	DECK1 Smart Rotary Selector (tilt left)	
-in	90	39	DECK1 Smart Rotary Selector +SHIFT	
-in	90	3A	DECK1 Smart Rotary Selector (tilt right)	
-in	90	32	DECK1 BACK +SHIFT	
-in	90	5F	DECK1 BACK	
-in	90	30	DECK1 TAG TRACK/REMOVE +SHIFT	
-in	90	62	DECK1 TAG TRACK/REMOVE	
+in	B0	4F	DECK1 Smart Rotary Selector	
+in	B0	60	DECK1 Smart Rotary Selector +SHIFT	
+in	90	33	DECK1 Smart Rotary Selector	
+in	90	61	DECK1 Smart Rotary Selector +SHIFT	
+in	90	31	DECK1 Smart Rotary Selector	
+in	90	5D	DECK1 Smart Rotary Selector (tilt up) +SHIFT	
+in	90	34	DECK1 Smart Rotary Selector	
+in	90	35	DECK1 Smart Rotary Selector (tilt down) +SHIFT	
+in	90	37	DECK1 Smart Rotary Selector	
+in	90	38	DECK1 Smart Rotary Selector (tilt left) +SHIFT	
+in	90	39	DECK1 Smart Rotary Selector	
+in	90	3A	DECK1 Smart Rotary Selector (tilt right) +SHIFT	
+in	90	32	DECK1 BACK	
+in	90	5F	DECK1 BACK +SHIFT	
+in	90	30	DECK1 TAG TRACK/REMOVE	
+in	90	62	DECK1 TAG TRACK/REMOVE +SHIFT	
 in	B0	64	DECK1 PC CONTROL M MODE	
 in	B1	64	DECK2 PC CONTROL M MODE	
 in	B2	64	DECK3 PC CONTROL M MODE	

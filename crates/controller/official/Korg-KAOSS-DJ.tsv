@@ -21,12 +21,12 @@ both	97	17	Deck A Touch slider right (Pitch+)
 both	98	17	Deck B Touch slider right (Pitch+)	
 in	B7	21	Deck A Touch slider (Pitch+) position	
 in	B8	21	Deck B Touch slider (Pitch+) position	
-both	97	0F	Deck A Touch slider left (Loop In, loop mode)	[Channel1] loop_in
-both	98	0F	Deck B Touch slider left (Loop In, loop mode)	[Channel2] loop_in
+both	97	0F	Deck A Touch slider left (Loop In, loop mode)	
+both	98	0F	Deck B Touch slider left (Loop In, loop mode)	
 both	97	10	Deck A Touch slider centre (Loop On/Off, loop mode)	
 both	98	10	Deck B Touch slider centre (Loop On/Off, loop mode)	
-both	97	11	Deck A Touch slider right (Loop Out, loop mode)	[Channel1] loop_out
-both	98	11	Deck B Touch slider right (Loop Out, loop mode)	[Channel2] loop_out
+both	97	11	Deck A Touch slider right (Loop Out, loop mode)	
+both	98	11	Deck B Touch slider right (Loop Out, loop mode)	
 both	97	12	Deck A Touch slider left (Hot Cue1, hot cue mode)	[Channel1] hotcue_1_activate
 both	98	12	Deck B Touch slider left (Hot Cue1, hot cue mode)	[Channel2] hotcue_1_activate
 both	97	13	Deck A Touch slider centre (Hot Cue2, hot cue mode)	[Channel1] hotcue_2_activate

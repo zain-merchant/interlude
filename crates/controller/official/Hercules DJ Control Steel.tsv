@@ -1,46 +1,46 @@
 # DJ Control Steel — Hercules "User Manual", MIDI messages (x = MIDI channel, given here as channel 1)
 # source: https://ts.hercules.com/download/sound/manuals/DJSteel/01_DJ%20Control%20Steel_Eng.pdf
-in	B0	01	Left Keypad 1	
-in	B0	02	Left Keypad 2	
-in	B0	03	Left Keypad 3	
-in	B0	04	Left Keypad 4	
-in	B0	05	Left Keypad 5	
-in	B0	06	Left Keypad 6	
-in	B0	07	Left Sync	[Channel1] sync_enabled|beatsync
-in	B0	08	Left Beatlock	
+both	B0	01	Left Keypad 1 / LED left key 1	
+both	B0	02	Left Keypad 2 / LED left key 2	
+both	B0	03	Left Keypad 3 / LED left key 3	
+both	B0	04	Left Keypad 4 / LED left key 4	
+both	B0	05	Left Keypad 5 / LED left key 5	
+both	B0	06	Left Keypad 6 / LED left key 6	
+both	B0	07	Left Sync / LED left Sync	[Channel1] sync_enabled|beatsync
+both	B0	08	Left Beatlock / LED left pitch bend +	
 in	B0	09	Left Previous	
 in	B0	0A	Left Next	
-in	B0	0B	Left Play/Pause	[Channel1] play
-in	B0	0C	Left Cue	[Channel1] cue_default
-in	B0	0D	Left Stop	
-in	B0	0E	Left Kill Treble	
-in	B0	0F	Left Kill Medium	
-in	B0	10	Left Kill Bass	
-in	B0	11	Left Reset	
-in	B0	12	Left Load	[Channel1] LoadSelectedTrack
-in	B0	13	Left Source	
-in	B0	14	Left Headphone Cue	[Channel1] pfl
-in	B0	15	Right Beatlock	
-in	B0	16	Right Load	[Channel2] LoadSelectedTrack
-in	B0	17	Right Source	
-in	B0	18	Right Headphone Cue	[Channel2] pfl
-in	B0	19	Right Keypad 1	
-in	B0	1A	Right Keypad 2	
-in	B0	1B	Right Keypad 3	
-in	B0	1C	Right Keypad 4	
-in	B0	1D	Right Keypad 5	
-in	B0	1E	Right Keypad 6	
-in	B0	1F	Right Sync	[Channel2] sync_enabled|beatsync
-in	B0	20	Right Reset	
+both	B0	0B	Left Play/Pause / LED left Play	[Channel1] play
+both	B0	0C	Left Cue / LED left Cue	[Channel1] cue_default
+both	B0	0D	Left Stop / LED left Stop	
+both	B0	0E	Left Kill Treble / LED left KillTreb	
+both	B0	0F	Left Kill Medium / LED left KillMed	
+both	B0	10	Left Kill Bass / LED left KillBass	
+both	B0	11	Left Reset / LED left pitch bend -	
+both	B0	12	Left Load / LED Folders	[Channel1] LoadSelectedTrack
+both	B0	13	Left Source / LED left Mode	
+both	B0	14	Left Headphone Cue / LED left CueSelect	[Channel1] pfl
+both	B0	15	Right Beatlock / LED right pitch bend +	
+both	B0	16	Right Load / LED Files	[Channel2] LoadSelectedTrack
+both	B0	17	Right Source / LED right Mode	
+both	B0	18	Right Headphone Cue / LED right CueSelect	[Channel2] pfl
+both	B0	19	Right Keypad 1 / LED right key 1	
+both	B0	1A	Right Keypad 2 / LED right key 2	
+both	B0	1B	Right Keypad 3 / LED right key 3	
+both	B0	1C	Right Keypad 4 / LED right key 4	
+both	B0	1D	Right Keypad 5 / LED right key 5	
+both	B0	1E	Right Keypad 6 / LED right key 6	
+both	B0	1F	Right Sync / LED right Sync	[Channel2] sync_enabled|beatsync
+both	B0	20	Right Reset / LED right pitch bend +	
 in	B0	21	Right Previous	
 in	B0	22	Right Next	
-in	B0	23	Right Play/Pause	[Channel2] play
-in	B0	24	Right Cue	[Channel2] cue_default
-in	B0	25	Right Stop	
-in	B0	26	Right Kill Treble	
-in	B0	27	Right Kill Medium	
-in	B0	28	Right Kill Bass	
-in	B0	29	Scratch	
+both	B0	23	Right Play/Pause / LED right Play	[Channel2] play
+both	B0	24	Right Cue / LED right Cue	[Channel2] cue_default
+both	B0	25	Right Stop / LED right Stop	
+both	B0	26	Right Kill Treble / LED right KillTreb	
+both	B0	27	Right Kill Medium / LED right KillMed	
+both	B0	28	Right Kill Bass / LED right KillBass	
+both	B0	29	Scratch / LED_Scratch	
 in	B0	2A	Menu Up	
 in	B0	2B	Menu Down	
 in	B0	2C	Menu Left	
@@ -48,70 +48,71 @@ in	B0	2D	Menu Right
 in	B0	2E	Talkover State	
 in	B0	2F	Left Jog Wheel	
 in	B0	30	Right Jog Wheel	
-in	B0	31	Left Pitch	
-in	B0	32	Left Volume	[Channel1] volume
-in	B0	33	Left Gain	[Channel1] pregain
-in	B0	34	Left Treble	[EqualizerRack1_[Channel1]_Effect1] parameter3
-in	B0	35	Left Medium	[EqualizerRack1_[Channel1]_Effect1] parameter2
-in	B0	36	Left Bass	[EqualizerRack1_[Channel1]_Effect1] parameter1
-in	B0	37	Balance	
-in	B0	38	Main Volume	
+both	B0	31	Left Pitch / Blink LED left key 1	
+both	B0	32	Left Volume / Blink LED left key 2	[Channel1] volume
+both	B0	33	Left Gain / Blink LED left key 3	[Channel1] pregain
+both	B0	34	Left Treble / Blink LED left key 4	[EqualizerRack1_[Channel1]_Effect1] parameter3
+both	B0	35	Left Medium / Blink LED left key 5	[EqualizerRack1_[Channel1]_Effect1] parameter2
+both	B0	36	Left Bass / Blink LED left key 6	[EqualizerRack1_[Channel1]_Effect1] parameter1
+both	B0	37	Balance / Blink LED left Sync	
+both	B0	38	Main Volume / Blink LED left pitch bend+	
 in	B0	39	Cross Fader	[Master] crossfader
 in	B0	3A	Cue Mix	
-in	B0	3B	Right Pitch	
-in	B0	3C	Right Volume	[Channel2] volume
-in	B0	3D	Right Gain	[Channel2] pregain
-in	B0	3E	Right Treble	[EqualizerRack1_[Channel2]_Effect1] parameter3
-in	B0	3F	Right Medium	[EqualizerRack1_[Channel2]_Effect1] parameter2
-in	B0	40	Right Bass	[EqualizerRack1_[Channel2]_Effect1] parameter1
-in	B0	41	Controls 1 Deck A	
-in	B0	42	Controls 2 Deck A	
-in	B0	43	Controls 1 Deck B	
-in	B0	44	Controls 2 Deck B	
+both	B0	3B	Right Pitch / Blink LED left Play	
+both	B0	3C	Right Volume / Blink LED left Cue	[Channel2] volume
+both	B0	3D	Right Gain / Blink LED left Stop	[Channel2] pregain
+both	B0	3E	Right Treble / Blink LED left KillTreb	[EqualizerRack1_[Channel2]_Effect1] parameter3
+both	B0	3F	Right Medium / Blink LED left KillMed	[EqualizerRack1_[Channel2]_Effect1] parameter2
+both	B0	40	Right Bass / Blink LED left KillBass	[EqualizerRack1_[Channel2]_Effect1] parameter1
+both	B0	41	Controls 1 Deck A / Blink LED left pitch bend-	
+both	B0	42	Controls 2 Deck A / Blink LED Folders	
+both	B0	43	Controls 1 Deck B / Blink LED_left Mode	
+both	B0	44	Controls 2 Deck B / Blink LED left CueSel	
 in	B0	45	DECK1 Controls 1 Select A	
-in	B0	46	DECK2 Controls 2 Select B	
-in	B0	47	VOL_HP	
-in	B0	64	Left Shift + Key 1	
-in	B0	65	Left Shift + Key 2	
-in	B0	66	Left Shift + Key 3	
-in	B0	67	Left Shift + Key 4	
-in	B0	68	Left Shift + Key 5	
-in	B0	69	Left Shift + Key 6	
-in	B0	6A	Right Shift + Key 1	
-in	B0	6B	Right Shift + Key 2	
-in	B0	6C	Right Shift + Key 3	
-in	B0	6D	Right Shift + Key 4	
-in	B0	6E	Right Shift + Key 5	
-in	B0	6F	Right Shift + Key 6	
-in	B0	70	Apply ctrl on Deck A	
+both	B0	46	DECK2 Controls 2 Select B / Blink LED right Stop	
+both	B0	47	VOL_HP / Blink LED Files	
+both	B0	64	Left Shift + Key 1 / LED left shift + Key 1	
+both	B0	65	Left Shift + Key 2 / LED left shift + Key 2	
+both	B0	66	Left Shift + Key 3 / LED left shift + Key 3	
+both	B0	67	Left Shift + Key 4 / LED left shift + Key 4	
+both	B0	68	Left Shift + Key 5 / LED left shift + Key 5	
+both	B0	69	Left Shift + Key 6 / LED left shift + Key 6	
+both	B0	6A	Right Shift + Key 1 / LED right shift + Key 1	
+both	B0	6B	Right Shift + Key 2 / LED right shift + Key 2	
+both	B0	6C	Right Shift + Key 3 / LED right shift + Key 3	
+both	B0	6D	Right Shift + Key 4 / LED right shift + Key 4	
+both	B0	6E	Right Shift + Key 5 / LED right shift + Key 5	
+both	B0	6F	Right Shift + Key 6 / LED right shift + Key 6	
+both	B0	70	Apply ctrl on Deck A / Update_All_Analogs	
 in	B0	71	Apply ctrl on Deck B	
 in	B0	72	Apply ctrl on Select	
 in	B0	73	Left Shift Status	
-in	B0	74	Right Shift Status	
-in	B0	4A	Blink LED right key 1	
-in	B0	4B	Blink LED right key 2	
-in	B0	4C	Blink LED right key 3	
-in	B0	4D	Blink LED right key 4	
-in	B0	4E	Blink LED right key 5	
-in	B0	50	Blink LED right key 6	
-in	B0	53	Blink LED right Play	
-in	B0	54	Blink LED right Cue	
-in	B0	55	Blink LED right pitch bend-	
-in	B0	57	Blink LED right Mode	
-in	B0	58	Blink LED right CueSel	
-in	B0	59	Blink LED Scratch	
-in	B0	5A	Blink LED right KillTreb	
-in	B0	5B	Blink LED right KillMed	
-in	B0	5C	Blink LED right KillBass	
-in	B0	5F	Blink LED right Sync	
-in	B0	60	Blink LED right pitch bend+	
-in	B0	75	Blink LED left shift + Key 2	
-in	B0	76	Blink LED left shift + Key 3	
-in	B0	77	Blink LED left shift + Key 4	
-in	B0	78	Blink LED left shift + Key 5	
-in	B0	79	Blink LED left shift + Key 6	
-in	B0	7A	Blink LED right shift + Key 1	
-in	B0	7B	Blink LED right shift + Key 2	
-in	B0	7C	Blink LED right shift + Key 3	
-in	B0	7D	Blink LED right shift + Key 4	
-in	B0	7E	Blink LED right shift + Key 5	
+both	B0	74	Right Shift Status / Blink LED left shift + Key	
+out	B0	4A	Blink LED right key 1	
+out	B0	4B	Blink LED right key 2	
+out	B0	4C	Blink LED right key 3	
+out	B0	4D	Blink LED right key 4	
+out	B0	4E	Blink LED right key 5	
+out	B0	50	Blink LED right key 6	
+out	B0	53	Blink LED right Play	
+out	B0	54	Blink LED right Cue	
+out	B0	55	Blink LED right pitch bend-	
+out	B0	57	Blink LED right Mode	
+out	B0	58	Blink LED right CueSel	
+out	B0	59	Blink LED Scratch	
+out	B0	5A	Blink LED right KillTreb	
+out	B0	5B	Blink LED right KillMed	
+out	B0	5C	Blink LED right KillBass	
+out	B0	5F	Blink LED right Sync	
+out	B0	60	Blink LED right pitch bend+	
+out	B0	75	Blink LED left shift + Key 2	
+out	B0	76	Blink LED left shift + Key 3	
+out	B0	77	Blink LED left shift + Key 4	
+out	B0	78	Blink LED left shift + Key 5	
+out	B0	79	Blink LED left shift + Key 6	
+out	B0	7A	Blink LED right shift + Key 1	
+out	B0	7B	Blink LED right shift + Key 2	
+out	B0	7C	Blink LED right shift + Key 3	
+out	B0	7D	Blink LED right shift + Key 4	
+out	B0	7E	Blink LED right shift + Key 5	
+out	B0	7F	Blink LED right shift + Key 6	
