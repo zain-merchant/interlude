@@ -23,9 +23,7 @@
 
 :root[data-flag-dir-instrument][data-flag-dir-instrument] {
   /* The chassis. */
-  --in-ch: #252629;
-  --in-ch-hi: #2b2c30;
-  --in-ch-lo: #202124;
+  --in-ch: #303135;
   --in-seam-dark: rgb(0 0 0 / 0.5);
   --in-seam-light: rgb(255 255 255 / 0.045);
 
@@ -36,11 +34,11 @@
   --in-scr-line: rgb(255 255 255 / 0.07);
 
   /* Keys on the chassis. */
-  --in-face: linear-gradient(180deg, #36373c, #2e2f33);
-  --in-face-hover: linear-gradient(180deg, #3c3d43, #333438);
+  --in-face: linear-gradient(180deg, #424349, #393a3f);
+  --in-face-hover: linear-gradient(180deg, #494a50, #3f4045);
   --in-raised: inset 0 1px 0 rgb(255 255 255 / 0.09), 0 0 0 1px rgb(0 0 0 / 0.5), 0 1px 1px rgb(0 0 0 / 0.3), 0 2px 4px -1px rgb(0 0 0 / 0.4);
   --in-raised-hover: inset 0 1px 0 rgb(255 255 255 / 0.12), 0 0 0 1px rgb(0 0 0 / 0.5), 0 1px 1px rgb(0 0 0 / 0.3), 0 3px 6px -1px rgb(0 0 0 / 0.45);
-  --in-sunk-bg: #1d1e21;
+  --in-sunk-bg: #242528;
   --in-sunk: inset 0 1px 2px rgb(0 0 0 / 0.55), inset 0 0 0 1px rgb(0 0 0 / 0.35), 0 1px 0 var(--in-seam-light);
 
   /* Text: the chassis is lighter than today's glass, so the quieter levels
@@ -70,7 +68,7 @@
 
 :root[data-flag-dir-instrument][data-flag-dir-instrument] body,
 :root[data-flag-dir-instrument][data-flag-dir-instrument] .app {
-  background: linear-gradient(180deg, var(--in-ch-hi), var(--in-ch-lo));
+  background: var(--in-ch);
 }
 :root[data-flag-dir-instrument][data-flag-dir-instrument] .bd {
   display: none;
@@ -107,6 +105,18 @@
   right: -7px;
 }
 
+/* And one across, in the gap between the decks and the library. */
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .app > .split::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(50% - 1px);
+  height: 2px;
+  background: linear-gradient(180deg, var(--in-seam-dark) 50%, var(--in-seam-light) 50%);
+  pointer-events: none;
+}
+
 /* ── Screens ────────────────────────────────────────────────────────── */
 
 /* The waveform lanes: one long screen. */
@@ -120,11 +130,15 @@
 :root[data-flag-dir-instrument][data-flag-dir-instrument] .lane + .lane {
   border-top-color: var(--in-scr-line);
 }
+/* Lane titles: screen text on a patch of the screen's black, so they
+   stay readable over the waveform. */
 :root[data-flag-dir-instrument][data-flag-dir-instrument] .who {
-  padding: 0 !important;
-  background: none !important;
+  padding: 2px 8px 2px 6px !important;
+  margin-left: -6px;
+  border-radius: 5px;
+  background: rgb(9 9 11 / 0.82) !important;
   box-shadow: none !important;
-  color: var(--fg-3);
+  color: var(--fg-2);
 }
 :root[data-flag-dir-instrument][data-flag-dir-instrument] .zoom {
   background: none;
@@ -159,7 +173,6 @@
 :root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .body > .overview {
   border-radius: 0;
   box-shadow: inset 1px 0 0 var(--in-scr-rim), inset -1px 0 0 var(--in-scr-rim);
-  overflow: visible;
 }
 :root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .body > .overview > .wave {
   border-radius: 6px;
@@ -187,6 +200,11 @@
   font-size: var(--t-md);
   font-weight: 500;
   letter-spacing: -0.01em;
+  color: var(--deck);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] header .name.dim {
+  color: var(--fg-3);
+  font-weight: 400;
 }
 :root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] header .artist,
 :root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .bpm .unit,
@@ -376,7 +394,7 @@
   background: var(--fg-4);
 }
 :root[data-flag-dir-instrument][data-flag-dir-instrument] .knob line {
-  stroke: rgb(255 255 255 / 0.14);
+  stroke: rgb(255 255 255 / 0.1);
 }
 :root[data-flag-dir-instrument][data-flag-dir-instrument] .knob line.major {
   stroke: rgb(255 255 255 / 0.26);
@@ -492,7 +510,7 @@
 }
 :root[data-flag-dir-instrument][data-flag-dir-instrument] section.library nav .item:hover,
 :root[data-flag-dir-instrument][data-flag-dir-instrument] section.library nav .add:hover {
-  background: rgb(255 255 255 / 0.05);
+  background: rgb(255 255 255 / 0.03);
   color: var(--fg);
   box-shadow: none;
 }
@@ -517,8 +535,11 @@
   border-radius: 10px;
 }
 :root[data-flag-dir-instrument][data-flag-dir-instrument] section.library .row.head {
+  box-sizing: border-box;
+  height: 36px;
   margin-top: 4px;
-  padding: 6px 6px 0;
+  margin-bottom: 0;
+  padding: 8px 6px 0;
   border-bottom: 0;
   border-radius: 12px 12px 0 0;
   background: var(--in-scr);
@@ -560,20 +581,54 @@
   background: rgb(255 255 255 / 0.08);
   box-shadow: none;
 }
+/* Device lost takes the library toolbar's place, as a screen: the row
+   where messages already appear (the toast docks there), next to the
+   decks, covering no lane and no track. */
 :root[data-flag-dir-instrument][data-flag-dir-instrument] .app > .banner {
-  border-radius: 12px;
+  border-radius: 10px;
   background: var(--in-scr);
-  box-shadow: inset 0 0 0 1px var(--in-scr-rim), 0 1px 0 var(--in-scr-lip), 0 0 0 4px var(--in-ch), 0 12px 32px rgb(0 0 0 / 0.5);
+  box-shadow: inset 0 0 0 1px var(--in-scr-rim), inset 0 2px 3px rgb(0 0 0 / 0.6), 0 1px 0 var(--in-scr-lip);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .app > .banner.lost {
+  top: auto;
+  bottom: calc(var(--gap) + var(--lib) - 48px);
+  left: calc(var(--gap) + var(--library-sidebar, 200px) + 16px);
+  right: var(--gap);
+  translate: none;
+  transform: none;
+  width: auto;
+  max-width: none;
+  min-height: 0;
+  height: 32px;
+  box-sizing: border-box;
+  padding: 0 4px 0 12px;
+  font-size: var(--t-sm);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .app > .banner.lost > span {
+  flex: 1;
 }
 :root[data-flag-dir-instrument][data-flag-dir-instrument] .app > .banner.lost svg {
   stroke: var(--kill);
 }
 :root[data-flag-dir-instrument][data-flag-dir-instrument] .app > .banner .btn,
 :root[data-flag-dir-instrument][data-flag-dir-instrument] .app > .banner .btn.primary {
-  border-radius: 8px;
-  background: var(--in-face);
-  box-shadow: var(--in-raised);
+  height: 24px;
+  border-radius: 7px;
+  background: rgb(255 255 255 / 0.1);
+  box-shadow: none;
   color: var(--fg);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .app > .banner .btn:hover:not(:disabled) {
+  background: rgb(255 255 255 / 0.15);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .app:has(> .banner.lost) section.library .main {
+  padding-bottom: 0;
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .app:has(> .banner.lost) section.library .main .bar {
+  visibility: hidden;
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .app:has(> .banner.lost) .toastbox .toast[data-docked] {
+  visibility: hidden;
 }
 :root[data-flag-dir-instrument][data-flag-dir-instrument] .tip {
   border-radius: 8px;
@@ -622,8 +677,21 @@
 
 /* ── Settings: the face, with its lists on screens ──────────────────── */
 
-:root[data-flag-dir-instrument][data-flag-dir-instrument] .settings {
-  background: linear-gradient(180deg, var(--in-ch-hi), var(--in-ch-lo));
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .settings,
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .settings[role='dialog'] {
+  background: var(--in-ch);
+  box-shadow: none;
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .settings[role='dialog'] nav {
+  border-right-color: var(--in-seam-dark);
+  box-shadow: 1px 0 0 var(--in-seam-light);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .settings .bar {
+  border-bottom-color: var(--in-seam-dark);
+  box-shadow: 0 1px 0 var(--in-seam-light);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .settings nav .item:hover {
+  background: rgb(255 255 255 / 0.03);
 }
 :root[data-flag-dir-instrument][data-flag-dir-instrument] .settings nav .item.on,
 :root[data-flag-dir-instrument][data-flag-dir-instrument] .settings nav .item.on:hover {

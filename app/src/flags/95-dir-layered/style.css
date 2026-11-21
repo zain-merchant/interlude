@@ -358,7 +358,7 @@
 }
 /* The value ring: quiet ticks, the value in the panel's white. */
 :root[data-flag-dir-layered][data-flag-dir-layered] .knob line {
-  stroke: rgb(255 255 255 / 0.12);
+  stroke: rgb(255 255 255 / 0.09);
 }
 :root[data-flag-dir-layered][data-flag-dir-layered] .knob line.major {
   stroke: rgb(255 255 255 / 0.22);
@@ -486,7 +486,7 @@
 }
 :root[data-flag-dir-layered][data-flag-dir-layered] section.library nav .item:hover,
 :root[data-flag-dir-layered][data-flag-dir-layered] section.library nav .add:hover {
-  background: var(--hover);
+  background: rgb(255 255 255 / 0.03);
   color: var(--fg);
   box-shadow: none;
 }
@@ -632,11 +632,20 @@
 
 /* ── Settings ────────────────────────────────────────────────────────── */
 
+/* The page's dividers: grooves, as in the library. */
+:root[data-flag-dir-layered][data-flag-dir-layered] .settings[role='dialog'] nav {
+  border-right-color: rgb(0 0 0 / 0.4);
+  box-shadow: 1px 0 0 rgb(255 255 255 / 0.035);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] .settings .bar {
+  border-bottom-color: rgb(0 0 0 / 0.4);
+  box-shadow: 0 1px 0 rgb(255 255 255 / 0.035);
+}
 :root[data-flag-dir-layered][data-flag-dir-layered] .settings nav .item {
   border-radius: 8px;
 }
 :root[data-flag-dir-layered][data-flag-dir-layered] .settings nav .item:hover {
-  background: var(--hover);
+  background: rgb(255 255 255 / 0.03);
   box-shadow: none;
 }
 :root[data-flag-dir-layered][data-flag-dir-layered] .settings nav .item.on,
