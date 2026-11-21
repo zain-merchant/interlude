@@ -43,16 +43,16 @@
   --rm-plate: #1a1917;
   --rm-plate-2: #151412;
   --rm-well: #0a0908;
-  --rm-key: #2a2825;
-  --rm-key-2: #222120;
-  --rm-key-hi: #322f2c;
-  --rm-key-hi-2: #292725;
+  --rm-key: #2d2b28;
+  --rm-key-2: #22201e;
+  --rm-key-hi: #35322e;
+  --rm-key-hi-2: #292724;
   --rm-down: #11100f;
 
   /* Edges: the lit top, the dark underside, the lip of a cut. */
   --rm-lit: rgb(255 246 232 / 0.075);
-  --rm-lit-key: rgb(255 246 232 / 0.1);
-  --rm-lit-key-hi: rgb(255 246 232 / 0.14);
+  --rm-lit-key: rgb(255 246 232 / 0.12);
+  --rm-lit-key-hi: rgb(255 246 232 / 0.16);
   --rm-lip: rgb(255 246 232 / 0.045);
   --rm-under: rgb(0 0 0 / 0.6);
 
@@ -62,8 +62,8 @@
   --rm-well-edge: inset 0 1px 0 rgb(0 0 0 / 0.55), inset 0 2px 5px rgb(0 0 0 / 0.35), 0 1px 0 var(--rm-lip);
   --rm-key-fill: linear-gradient(180deg, var(--rm-key), var(--rm-key-2));
   --rm-key-fill-hi: linear-gradient(180deg, var(--rm-key-hi), var(--rm-key-hi-2));
-  --rm-key-edge: inset 0 1px 0 var(--rm-lit-key), 0 1px 0 var(--rm-under), 0 2px 4px -1px rgb(0 0 0 / 0.45);
-  --rm-key-edge-hi: inset 0 1px 0 var(--rm-lit-key-hi), 0 1px 0 var(--rm-under), 0 2px 4px -1px rgb(0 0 0 / 0.45);
+  --rm-key-edge: inset 0 1px 0 var(--rm-lit-key), inset 0 -1px 0 rgb(0 0 0 / 0.18), 0 1px 0 var(--rm-under), 0 2px 4px -1px rgb(0 0 0 / 0.5);
+  --rm-key-edge-hi: inset 0 1px 0 var(--rm-lit-key-hi), inset 0 -1px 0 rgb(0 0 0 / 0.18), 0 1px 0 var(--rm-under), 0 2px 4px -1px rgb(0 0 0 / 0.5);
   --rm-down-fill: var(--rm-down);
   --rm-down-edge: inset 0 2px 3px -1px rgb(0 0 0 / 0.8), inset 0 1px 0 rgb(0 0 0 / 0.5), 0 1px 0 var(--rm-lip);
 
@@ -442,11 +442,16 @@
   background: #34312d;
 }
 /* The scale: quiet marks, so ten dials don't make ten rings. */
-:root[data-flag-dir-room][data-flag-dir-room] .knob line:not(.on, .major) {
-  stroke: transparent;
+/* The scale as dots at the inner end of each mark (a zero dash with a
+   round cap), quieter than ten rings of lines; the lit arc stays a line. */
+:root[data-flag-dir-room][data-flag-dir-room] .knob line:not(.on) {
+  stroke: rgb(255 246 232 / 0.16);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-dasharray: 0 100;
 }
-:root[data-flag-dir-room][data-flag-dir-room] .knob line.major {
-  stroke: rgb(255 246 232 / 0.22);
+:root[data-flag-dir-room][data-flag-dir-room] .knob line.major:not(.on) {
+  stroke: rgb(255 246 232 / 0.34);
 }
 :root[data-flag-dir-room][data-flag-dir-room] .knob line.on {
   filter: none;
@@ -656,7 +661,7 @@
 
 /* The toast: a small plate standing over the library. */
 :root[data-flag-dir-room][data-flag-dir-room] .toastbox .toast {
-  border-radius: 12px;
+  border-radius: 10px;
   background: linear-gradient(180deg, #24221f, #1e1c1a);
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
@@ -664,7 +669,7 @@
   font-weight: 500;
 }
 :root[data-flag-dir-room][data-flag-dir-room] .toastbox .toast .undo {
-  border-radius: 8px;
+  border-radius: 7px;
   background: var(--rm-key-fill);
   box-shadow: var(--rm-key-edge);
 }
