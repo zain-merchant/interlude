@@ -410,3 +410,7 @@ both	97	77	DECK1 PERFORMANCE PAD 8 (in TRANS mode)
 both	98	77	DECK2 PERFORMANCE PAD 8 (in TRANS mode)	
 both	97	7F	DECK1 PERFORMANCE PAD 8 (in TRANS mode) +SHIFT	
 both	98	7F	DECK2 PERFORMANCE PAD 8 (in TRANS mode) +SHIFT	
+extra-in	96	48	printed greyed out in the list (LOAD for decks 3/4, and SHIFT + browser), but printed
+extra-in	96	49	printed greyed out in the list (LOAD for decks 3/4, and SHIFT + browser), but printed
+extra-in	96	60	printed greyed out in the list (LOAD for decks 3/4, and SHIFT + browser), but printed
+extra-in	96	61	printed greyed out in the list (LOAD for decks 3/4, and SHIFT + browser), but printed
