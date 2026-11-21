@@ -290,7 +290,7 @@
     </div>
     <div class="sheen" style:width="{vr * 2}px" style:height="{vr * 2}px" style:left="{size / 2 - vr}px" style:top="{size / 2 - vr}px"></div>
     <canvas class="wave-ring" bind:this={ringCv}></canvas>
-    <div class="hub" style:width="{hubD}px" style:height="{hubD}px" style:left="{size / 2 - hubD / 2}px" style:top="{size / 2 - hubD / 2}px" style:font-size="{hubD / 7.4}px">
+    <div class="hub" style:width="{hubD}px" style:height="{hubD}px" style:left="{size / 2 - hubD / 2}px" style:top="{size / 2 - hubD / 2}px" style:font-size="{hubD / 6.6}px">
       {#if t}
         <div class="b num">{bpm > 0 ? bpm.toFixed(2) : '—'}</div>
         <div class="k">{pk ? `${keyName(pk)} · ${camelot(pk)}` : 'BPM'}</div>
@@ -426,11 +426,12 @@
     backdrop-filter: blur(6px);
   }
   .clear .hub {
-    background: radial-gradient(circle at 35% 30%, rgb(255 255 255 / 0.14), rgb(255 255 255 / 0.04) 60%), rgb(14 14 16 / 0.62);
+    background: radial-gradient(circle at 35% 30%, rgb(255 255 255 / 0.12), rgb(255 255 255 / 0.03) 60%), rgb(14 14 16 / 0.8);
   }
   .hub .b {
-    font-size: 1.9em;
+    font-size: 1.75em;
     font-weight: 300;
+    color: var(--fg);
     letter-spacing: -0.03em;
     line-height: 1.05;
   }
@@ -439,8 +440,8 @@
     color: var(--deck);
   }
   .hub .p {
-    font-size: 0.85em;
-    color: var(--fg-3);
+    font-size: 0.8em;
+    color: var(--fg-2);
   }
   .hub .p.off {
     color: var(--fg-2);
