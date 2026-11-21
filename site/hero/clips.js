@@ -27,7 +27,7 @@
 // frames and while a link is drawn.
 //
 //   const clips = await mountClips(host, { base, hand, codec, paused,
-//     onReady, onLevels, onFail });
+//     onReady, onLevels, onPhase, onFail });
 //   clips.setHand('controller'); clips.setPaused(true); clips.setVars({...});
 //   clips.prepare(true)   the hand may be about to switch (pointer on the
 //                         toggle): the twin starts, in step, under the clip.
@@ -627,6 +627,26 @@ export async function mountClips(host, opts = {}) {
     at.last = f;
     if (at.mode === hand && anyLinks(at.tl, f, 4)) linkFrames();
     for (const c of [at.ctl, at.twin, at.arrow]) if (c && !c.seeking && !c.paused && Math.abs(c.currentTime - t) > 0.1) c.currentTime = t + 0.04;
+    if (at.app !== phasedEl) phaseOf(at.app);
+  }
+  // Each frame that shows a new picture of the app, its time (onPhase), so
+  // what else moves with it (the record behind it, the grain) can change on
+  // the same frames, and the page is put together once for all of them.
+  // (Every one: now and then the pictures move over by a frame of the
+  // screen's to keep time. Only a callback in the frame its picture was
+  // shown in, to be seen at the next, counts; now and then one comes a frame
+  // late. In Safari, where a video is put on screen apart from the page,
+  // every callback comes after, so none counts there.)
+  let phasedEl = null;
+  function phaseOf(el) {
+    phasedEl = el;
+    if (!opts.onPhase || !el.requestVideoFrameCallback) return;
+    const cb = (now, meta) => {
+      if (paused || phasedEl !== el || cur?.app !== el) { if (phasedEl === el) phasedEl = null; return; }
+      if (meta.presentationTime - now > -4 && meta.expectedDisplayTime - now > 4) opts.onPhase(now);
+      el.requestVideoFrameCallback(cb);
+    };
+    el.requestVideoFrameCallback(cb);
   }
 
   /** The hand; at: 'boundary' when it's switched as one step ends (nothing to cross mid-step). */

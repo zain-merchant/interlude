@@ -2653,6 +2653,36 @@ export function beat(now) {
   nap = 0;
   draw(now);
 }
+// Or, while the hero's clips play, its 30ths of a second are the clips'
+// own: the page passes on the time of a frame that showed a new picture of
+// the app (phase), and the record draws on the frames a whole number of
+// 30ths of a second from it, so the page is put together once for both,
+// not once for each (on the wall clock they often fell on different frames:
+// 50 to 60 a second rather than 30). Kept for a few seconds at a time;
+// after that, the wall clock's 30ths again.
+const lock = { t: 0, at: -1e9 };
+export function phase(t) {
+  // (Moved by whole 30ths to lie nearest the last one, so a 30th's number
+  // stays the same from one report to the next.)
+  const p = 1000 / 30;
+  lock.t = locked() ? t - p * Math.round((t - lock.t) / p) : t;
+  lock.at = performance.now();
+}
+// (Which 30th a frame starting at now is in, and when a 30th starts: with a
+// lock, each starts LEAD of a 30th before a clip's frame, so that frame,
+// and not the one before it, even at 120Hz, is the first in it.)
+const LEAD = 0.15;
+const locked = () => performance.now() - lock.at < 3000;
+function slotOf(now, fps) {
+  if (locked()) return Math.floor(((now - lock.t) * fps) / 1000 + LEAD);
+  // (Read from the clock as this runs, not the frame's own time, which can
+  // be from just before the slot began: the frame woken for a new slot is
+  // then always counted in it.)
+  return Math.floor(((performance.timeOrigin + Math.max(now, performance.now())) * fps) / 1000);
+}
+function slotStart(slot, fps) {
+  return locked() ? lock.t + ((slot - LEAD) * 1000) / fps : (slot * 1000) / fps - performance.timeOrigin;
+}
 
 function frame(now, still) {
   const dt = still ? 0 : Math.min(0.1, (now - last) / 1000);
@@ -3611,14 +3641,11 @@ function draw(now) {
   // (Busy, it draws unless it drew under 12ms ago: every frame at 60Hz,
   // every other one at 120Hz.)
   const fps = T.fps;
-  // (The slot is read from the clock as this runs, not the frame's own
-  // time, which can be from just before the slot began: the frame woken for
-  // a new slot is then always counted in it.)
-  const slot = Math.floor(((performance.timeOrigin + Math.max(now, performance.now())) * fps) / 1000);
+  const slot = slotOf(now, fps);
   // (Busy at 30, it draws on the same 30ths of a second as the app, so the
   // page composites once for both; at 60 it draws unless it drew under 12ms
   // ago, every frame at 60Hz and every other one at 120Hz.)
-  const bslot = Math.floor(((performance.timeOrigin + Math.max(now, performance.now())) * T.busyFps) / 1000);
+  const bslot = slotOf(now, T.busyFps);
   if (busy ? (T.busyFps >= 60 ? now - lastDraw > 12 : bslot !== lastBusySlot) : paced ? now - lastDraw > 1000 / fps - 8 : slot !== lastSlot) {
     lastSlot = slot;
     lastBusySlot = bslot;
@@ -3639,7 +3666,7 @@ function draw(now) {
   // At rest: sleep until just after the next slot begins, then take one
   // frame (the first of that slot: waking any earlier could land on the
   // last frame of this one and need a second).
-  const wait = ((slot + 1) * 1000) / fps - (performance.timeOrigin + performance.now()) + 1;
+  const wait = slotStart(slot + 1, fps) - performance.now() + 1;
   nap = setTimeout(() => { nap = 0; requestAnimationFrame(draw); }, Math.max(0, wait));
 }
 
