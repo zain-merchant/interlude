@@ -106,12 +106,14 @@ impl Table {
             if let Some(e) = cols.get(4).filter(|e| !e.is_empty()) {
                 for part in e.split(';') {
                     let part = part.trim();
+                    // Groups nest brackets ("[EqualizerRack1_[Channel1]_Effect1]")
+                    // but never hold spaces, so the group ends at the first one.
                     let (group, keys) = part
-                        .strip_prefix('[')
-                        .and_then(|p| p.split_once(']'))
+                        .split_once(char::is_whitespace)
+                        .filter(|(g, _)| g.starts_with('[') && g.ends_with(']'))
                         .ok_or(format!("line {line}: expect must look like [Group] key"))?;
                     let keys = keys.split('|').map(|k| k.trim().to_owned()).collect();
-                    expect.push((format!("[{group}]"), keys));
+                    expect.push((group.to_owned(), keys));
                 }
             }
             t.rows.push(Row {
@@ -290,6 +292,21 @@ mod tests {
         assert_eq!(t.rows.len(), 3);
         assert_eq!(t.rows[0].expect, vec![("[Channel1]".into(), vec!["play".into()])]);
         assert_eq!(t.rows[1].dir, Dir::Both);
+    }
+
+    #[test]
+    fn groups_may_nest_brackets() {
+        let t = Table::parse(
+            "in\tB0\t07\tEQ HI\t[EqualizerRack1_[Channel1]_Effect1] parameter3; [Master] crossfader",
+        )
+        .unwrap();
+        assert_eq!(
+            t.rows[0].expect,
+            vec![
+                ("[EqualizerRack1_[Channel1]_Effect1]".into(), vec!["parameter3".into()]),
+                ("[Master]".into(), vec!["crossfader".into()]),
+            ]
+        );
     }
 
     #[test]
