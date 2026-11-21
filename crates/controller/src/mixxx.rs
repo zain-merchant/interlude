@@ -96,6 +96,13 @@ pub struct Output {
     max: f64,
 }
 
+impl Output {
+    /// The status byte and number the LED message is sent with.
+    pub fn midi(&self) -> (u8, u8) {
+        (self.status, self.midino)
+    }
+}
+
 /// A script file the mapping loads, and the object its functions hang off.
 #[derive(Debug, Clone)]
 pub struct ScriptFile {
