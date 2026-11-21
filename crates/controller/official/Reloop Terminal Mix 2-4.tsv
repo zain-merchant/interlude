@@ -441,3 +441,6 @@ in	E0	00	DECKA PITCH BEND(middle) (pitch fader, pitch bend)	[Channel1] rate
 in	E1	00	DECKB PITCH BEND(middle) (pitch fader, pitch bend)	[Channel2] rate
 in	E2	00	DECKC PITCH BEND(middle) (pitch fader, pitch bend)	[Channel3] rate
 in	E3	00	DECKD PITCH BEND(middle) (pitch fader, pitch bend)	[Channel4] rate
+extra-both	92	22	decks C/D SYNC and brake; the list misprints decks C/D SYNC on channels 1/2
+extra-in	92	68	decks C/D SYNC and brake; the list misprints decks C/D SYNC on channels 1/2
+extra-both	93	22	decks C/D SYNC and brake; the list misprints decks C/D SYNC on channels 1/2

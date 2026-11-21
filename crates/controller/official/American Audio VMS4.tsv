@@ -145,3 +145,27 @@ in	B0	32	SCRATCH WHEEL Right (MSB)
 in	B0	33	SCRATCH WHEEL Right (LSB)	
 in	B0	2E	Touch pad X	
 in	B0	2F	Touch pad Y	
+extra-in	91	0C	SHIFT layer (sent on channel 2) and pitch faders (pitch bend); the table covers channel 1 only
+extra-in	91	0D	SHIFT layer (sent on channel 2) and pitch faders (pitch bend); the table covers channel 1 only
+extra-in	91	0F	SHIFT layer (sent on channel 2) and pitch faders (pitch bend); the table covers channel 1 only
+extra-in	91	10	SHIFT layer (sent on channel 2) and pitch faders (pitch bend); the table covers channel 1 only
+extra-in	91	1D	SHIFT layer (sent on channel 2) and pitch faders (pitch bend); the table covers channel 1 only
+extra-in	91	27	SHIFT layer (sent on channel 2) and pitch faders (pitch bend); the table covers channel 1 only
+extra-in	91	28	SHIFT layer (sent on channel 2) and pitch faders (pitch bend); the table covers channel 1 only
+extra-in	91	29	SHIFT layer (sent on channel 2) and pitch faders (pitch bend); the table covers channel 1 only
+extra-in	91	2E	SHIFT layer (sent on channel 2) and pitch faders (pitch bend); the table covers channel 1 only
+extra-in	91	2F	SHIFT layer (sent on channel 2) and pitch faders (pitch bend); the table covers channel 1 only
+extra-in	91	31	SHIFT layer (sent on channel 2) and pitch faders (pitch bend); the table covers channel 1 only
+extra-in	91	32	SHIFT layer (sent on channel 2) and pitch faders (pitch bend); the table covers channel 1 only
+extra-in	91	3F	SHIFT layer (sent on channel 2) and pitch faders (pitch bend); the table covers channel 1 only
+extra-in	91	49	SHIFT layer (sent on channel 2) and pitch faders (pitch bend); the table covers channel 1 only
+extra-in	91	4A	SHIFT layer (sent on channel 2) and pitch faders (pitch bend); the table covers channel 1 only
+extra-in	91	4B	SHIFT layer (sent on channel 2) and pitch faders (pitch bend); the table covers channel 1 only
+extra-in	91	54	SHIFT layer (sent on channel 2) and pitch faders (pitch bend); the table covers channel 1 only
+extra-in	91	56	SHIFT layer (sent on channel 2) and pitch faders (pitch bend); the table covers channel 1 only
+extra-in	91	57	SHIFT layer (sent on channel 2) and pitch faders (pitch bend); the table covers channel 1 only
+extra-in	91	58	SHIFT layer (sent on channel 2) and pitch faders (pitch bend); the table covers channel 1 only
+extra-in	B1	28	SHIFT layer (sent on channel 2) and pitch faders (pitch bend); the table covers channel 1 only
+extra-in	B1	2D	SHIFT layer (sent on channel 2) and pitch faders (pitch bend); the table covers channel 1 only
+extra-in	E0	00	SHIFT layer (sent on channel 2) and pitch faders (pitch bend); the table covers channel 1 only
+extra-in	E1	00	SHIFT layer (sent on channel 2) and pitch faders (pitch bend); the table covers channel 1 only

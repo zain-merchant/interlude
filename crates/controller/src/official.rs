@@ -16,6 +16,15 @@
 //! `|`, and several of those separated by `;`. Bindings to script functions
 //! can't be checked this way and are counted separately.
 //!
+//! A few mappings listen to messages a manufacturer's list leaves out or
+//! gets wrong (a known misprint, a section missing from the document).
+//! Those are kept as `extra-in`, `extra-out` or `extra-both` rows, with the
+//! reason in place of the control name, so every exception is written down:
+//!
+//! ```text
+//! extra-in   95  05  deck B + SHIFT: the list repeats deck A's channel
+//! ```
+//!
 //! [`check`] compares a Mixxx mapping with its table: messages the mapping
 //! listens to that the controller never sends, LEDs it lights that don't
 //! exist, and controls bound to the wrong thing.
@@ -37,6 +46,8 @@ pub enum Dir {
 #[derive(Debug, Clone)]
 pub struct Row {
     pub dir: Dir,
+    /// Not in the manufacturer's list; kept for the reason in `control`.
+    pub extra: bool,
     pub status: u8,
     pub data1: u8,
     /// The control's name in the manufacturer's list.
@@ -117,14 +128,20 @@ impl Table {
                     "line {line}: expected at least 4 tab-separated columns"
                 ));
             }
-            let dir = match cols[0] {
+            let (extra, d) = match cols[0].strip_prefix("extra-") {
+                Some(d) => (true, d),
+                None => (false, cols[0]),
+            };
+            let dir = match d {
                 "in" => Dir::In,
                 "out" => Dir::Out,
                 "both" => Dir::Both,
                 d => return Err(format!("line {line}: unknown direction {d:?}")),
             };
             let status = hex(cols[1]).ok_or(format!("line {line}: bad status {:?}", cols[1]))?;
-            let data1 = hex(cols[2]).ok_or(format!("line {line}: bad data1 {:?}", cols[2]))?;
+            let data1 = hex(cols[2])
+                .filter(|d| *d < 0x80)
+                .ok_or(format!("line {line}: bad data1 {:?}", cols[2]))?;
             let mut expect = vec![];
             if let Some(e) = cols.get(4).filter(|e| !e.is_empty()) {
                 for part in e.split(';') {
@@ -139,8 +156,12 @@ impl Table {
                     expect.push((group.to_owned(), keys));
                 }
             }
+            if extra && cols[3].is_empty() {
+                return Err(format!("line {line}: an extra row needs a reason"));
+            }
             t.rows.push(Row {
                 dir,
+                extra,
                 status,
                 data1,
                 control: cols[3].to_owned(),
@@ -168,6 +189,8 @@ impl Table {
 pub struct Report {
     /// Messages the controller sends, per the list.
     pub official_inputs: usize,
+    /// `extra-` rows: messages kept although the list leaves them out.
+    pub extras: usize,
     /// Of those, the ones the mapping binds.
     pub bound: usize,
     /// Bound to what the list says (rows with an `expect`).
@@ -258,8 +281,9 @@ pub fn check(table: &Table, preset: &Preset) -> Report {
         }
     }
 
+    r.extras = table.rows.iter().filter(|row| row.extra).count();
     let mut counted = BTreeSet::new();
-    for row in table.inputs() {
+    for row in table.inputs().filter(|row| !row.extra) {
         let a = address(row.status, row.data1);
         if !counted.insert((a, row.control.clone())) {
             continue;
@@ -333,6 +357,16 @@ mod tests {
             vec![("[Channel1]".into(), vec!["play".into()])]
         );
         assert_eq!(t.rows[1].dir, Dir::Both);
+    }
+
+    #[test]
+    fn extra_rows_are_allowed_but_need_a_reason() {
+        assert!(Table::parse("extra-in\t95\t05\t").is_err());
+        let t = Table::parse("in\t90\t0B\tPLAY\nextra-in\t95\t05\tmisprint").unwrap();
+        let p = preset(&control("[Channel2]", "play", 0x95, 0x05), "");
+        let r = check(&t, &p);
+        assert!(r.is_exact(), "{:?}", r.problems());
+        assert_eq!((r.official_inputs, r.extras), (1, 1));
     }
 
     #[test]

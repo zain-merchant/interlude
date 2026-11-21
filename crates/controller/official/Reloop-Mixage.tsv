@@ -125,3 +125,4 @@ in	E0	00	CD1 PITCH (pitch bend, MIDI CH = 1)	[Channel1] rate
 in	E1	00	CD2 PITCH (pitch bend, MIDI CH = 1)	[Channel2] rate
 in	E2	00	CD1 PITCH +SHIFT (pitch bend)	
 in	E3	00	CD2 PITCH +SHIFT (pitch bend)	
+extra-in	90	31	the only list on reloop.com is for the Mixage Interface Edition MK2

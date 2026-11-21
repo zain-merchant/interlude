@@ -276,3 +276,4 @@ out	B0	7C	LOCK_JOG_DC
 out	B0	7D	LOCK_JOG_DD	
 out	B0	7E	SET_XF_CURVE	
 out	B0	7F	Update_All_Controls	
+extra-in	B0	46	jog sensitivity setting sent by the unit; not in the list

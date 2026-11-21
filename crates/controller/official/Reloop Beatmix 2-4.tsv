@@ -430,3 +430,15 @@ in	E1	00	L-PITCH (DECK1, pitch bend)	[Channel1] rate
 in	E3	00	L-PITCH (DECK3, pitch bend)	[Channel3] rate
 in	E2	00	R-PITCH (DECK2, pitch bend)	[Channel2] rate
 in	E4	00	R-PITCH (DECK4, pitch bend)	[Channel4] rate
+extra-in	91	71	FX knob push (with and without SHIFT); not in the list
+extra-in	91	72	FX knob push (with and without SHIFT); not in the list
+extra-in	91	73	FX knob push (with and without SHIFT); not in the list
+extra-in	91	74	FX knob push (with and without SHIFT); not in the list
+extra-in	91	75	FX knob push (with and without SHIFT); not in the list
+extra-in	91	76	FX knob push (with and without SHIFT); not in the list
+extra-in	92	71	FX knob push (with and without SHIFT); not in the list
+extra-in	92	72	FX knob push (with and without SHIFT); not in the list
+extra-in	92	73	FX knob push (with and without SHIFT); not in the list
+extra-in	92	74	FX knob push (with and without SHIFT); not in the list
+extra-in	92	75	FX knob push (with and without SHIFT); not in the list
+extra-in	92	76	FX knob push (with and without SHIFT); not in the list

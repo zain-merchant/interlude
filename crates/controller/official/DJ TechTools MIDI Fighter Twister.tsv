@@ -217,3 +217,4 @@ out	B2	3E	Bank 4 Encoder 15 animation
 both	B0	3F	Bank 4 Encoder 16 (turn; display value)	
 both	B1	3F	Bank 4 Encoder 16 switch (CC, default; RGB colour)	
 out	B2	3F	Bank 4 Encoder 16 animation	
+extra-in	B1	25	push switch of encoder 38 (bank 3), on channel 2 like the other switches

@@ -117,7 +117,7 @@
             <!--Loop In/Out-->
             <control>
                 <group>[Channel1]</group>
-                <key>beatloop_4_activate</key>
+                <key>loop_in</key>
                 <description>Loop In button</description>
                 <status>0x91</status>
                 <midino>0x09</midino>
@@ -127,7 +127,7 @@
             </control>
             <control>
                 <group>[Channel1]</group>
-                <key>reloop_toggle</key>
+                <key>loop_out</key>
                 <description>Loop Out button</description>
                 <status>0x91</status>
                 <midino>0x0A</midino>
@@ -216,7 +216,7 @@
             <!--Loop In/Out-->
             <control>
                 <group>[Channel2]</group>
-                <key>beatloop_4_activate</key>
+                <key>loop_in</key>
                 <description>Loop In button</description>
                 <status>0x92</status>
                 <midino>0x09</midino>
@@ -226,7 +226,7 @@
             </control>
             <control>
                 <group>[Channel2]</group>
-                <key>reloop_toggle</key>
+                <key>loop_out</key>
                 <description>Loop Out button</description>
                 <status>0x92</status>
                 <midino>0x0A</midino>

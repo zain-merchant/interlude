@@ -67,3 +67,25 @@ in	B0	09	right centre fader (CC 9)
 in	B0	0A	horizontal fader (crossfader) (CC 10)	[Master] crossfader
 in	B0	19	left jog wheel (CC 25)	
 in	B0	18	right jog wheel (CC 24)	
+extra-out	90	32	LED; the official map is a diagram of the controls and shows no LEDs
+extra-out	90	34	LED; the official map is a diagram of the controls and shows no LEDs
+extra-out	90	35	LED; the official map is a diagram of the controls and shows no LEDs
+extra-out	90	36	LED; the official map is a diagram of the controls and shows no LEDs
+extra-out	90	37	LED; the official map is a diagram of the controls and shows no LEDs
+extra-out	90	3C	LED; the official map is a diagram of the controls and shows no LEDs
+extra-out	90	3E	LED; the official map is a diagram of the controls and shows no LEDs
+extra-out	90	3F	LED; the official map is a diagram of the controls and shows no LEDs
+extra-out	90	40	LED; the official map is a diagram of the controls and shows no LEDs
+extra-out	90	41	LED; the official map is a diagram of the controls and shows no LEDs
+extra-out	90	42	LED; the official map is a diagram of the controls and shows no LEDs
+extra-out	90	43	LED; the official map is a diagram of the controls and shows no LEDs
+extra-out	90	46	LED; the official map is a diagram of the controls and shows no LEDs
+extra-out	90	4C	LED; the official map is a diagram of the controls and shows no LEDs
+extra-out	90	4E	LED; the official map is a diagram of the controls and shows no LEDs
+extra-out	90	4F	LED; the official map is a diagram of the controls and shows no LEDs
+extra-out	90	50	LED; the official map is a diagram of the controls and shows no LEDs
+extra-out	90	51	LED; the official map is a diagram of the controls and shows no LEDs
+extra-out	90	52	LED; the official map is a diagram of the controls and shows no LEDs
+extra-out	90	53	LED; the official map is a diagram of the controls and shows no LEDs
+extra-out	90	54	LED; the official map is a diagram of the controls and shows no LEDs
+extra-out	90	55	LED; the official map is a diagram of the controls and shows no LEDs

@@ -241,3 +241,18 @@ in	E0	00	L-Pitch(Normal) (pitch bend)	[Channel1] rate
 in	E1	00	R-Pitch(Normal) (pitch bend)	[Channel2] rate
 in	E2	00	L-Pitch(Shift) (pitch bend)	
 in	E3	00	R-Pitch(Shift) (pitch bend)	
+extra-in	91	32	jog wheel, filter and SysEx messages the list prints differently or leaves out
+extra-in	91	35	jog wheel, filter and SysEx messages the list prints differently or leaves out
+extra-in	91	72	jog wheel, filter and SysEx messages the list prints differently or leaves out
+extra-in	91	73	jog wheel, filter and SysEx messages the list prints differently or leaves out
+extra-in	91	75	jog wheel, filter and SysEx messages the list prints differently or leaves out
+extra-in	B0	23	jog wheel, filter and SysEx messages the list prints differently or leaves out
+extra-in	B0	63	jog wheel, filter and SysEx messages the list prints differently or leaves out
+extra-in	B0	64	jog wheel, filter and SysEx messages the list prints differently or leaves out
+extra-in	B0	65	jog wheel, filter and SysEx messages the list prints differently or leaves out
+extra-in	B1	25	jog wheel, filter and SysEx messages the list prints differently or leaves out
+extra-in	B1	63	jog wheel, filter and SysEx messages the list prints differently or leaves out
+extra-in	B1	64	jog wheel, filter and SysEx messages the list prints differently or leaves out
+extra-in	B1	65	jog wheel, filter and SysEx messages the list prints differently or leaves out
+extra-in	B4	03	jog wheel, filter and SysEx messages the list prints differently or leaves out
+extra-in	F0	00	jog wheel, filter and SysEx messages the list prints differently or leaves out

@@ -209,3 +209,11 @@ in	B3	13	ENC6 (Platter Position) (ch 4)
 in	B4	13	ENC6 (Platter Position) (ch 5)	
 in	B5	13	ENC6 (Platter Position) (ch 6)	
 out	BE	2C	Master Meter LED Right (value selects segment 1-11) (ch 15)	
+extra-in	B2	31	14-bit LSB (CC n + 0x20) of the fader; the scanned map lists only the MSB
+extra-in	B2	32	14-bit LSB (CC n + 0x20) of the fader; the scanned map lists only the MSB
+extra-in	B3	31	14-bit LSB (CC n + 0x20) of the fader; the scanned map lists only the MSB
+extra-in	B3	32	14-bit LSB (CC n + 0x20) of the fader; the scanned map lists only the MSB
+extra-in	B4	31	14-bit LSB (CC n + 0x20) of the fader; the scanned map lists only the MSB
+extra-in	B4	32	14-bit LSB (CC n + 0x20) of the fader; the scanned map lists only the MSB
+extra-in	B5	31	14-bit LSB (CC n + 0x20) of the fader; the scanned map lists only the MSB
+extra-in	B5	32	14-bit LSB (CC n + 0x20) of the fader; the scanned map lists only the MSB
