@@ -19,6 +19,53 @@ const OFF = 20000;
 
 const rgba = (c, a) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
 
+/** Waveform looks under exploration; `?wave=<name>` picks one in the browser build. */
+export const STYLES = ['current', 'spectral', 'aurora', 'heat', 'contour', 'bars'];
+const STYLE = (() => {
+  try {
+    const s = new URLSearchParams(location.search).get('wave');
+    return STYLES.includes(s) ? s : 'current';
+  } catch {
+    return 'current';
+  }
+})();
+
+const hex = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+const lerp = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+/** Samples a list of colour stops at t (0..1). */
+function ramp(stops, t) {
+  t = Math.max(0, Math.min(1, t)) * (stops.length - 1);
+  const i = Math.min(stops.length - 2, Math.floor(t));
+  return lerp(stops[i], stops[i + 1], t - i);
+}
+const css = (c, a = 1) => `rgba(${c[0] | 0},${c[1] | 0},${c[2] | 0},${a})`;
+
+/** Spectral: kick rose, body gold, air cyan; each column mixes by its band balance. */
+const SPEC = { low: hex('#ff3d71'), mid: hex('#ffb43d'), high: hex('#3dcbff') };
+function spectralColor(v, lift = true) {
+  const [l, m, h] = v;
+  // Cubed weights so a column leans to its strongest band instead of mixing to grey.
+  const wl = l ** 3, wm = m ** 3 * 1.2, wh = h ** 3 * 2;
+  const s = wl + wm + wh || 1;
+  let c = [0, 1, 2].map((k) => (SPEC.low[k] * wl + SPEC.mid[k] * wm + SPEC.high[k] * wh) / s);
+  const g = (c[0] + c[1] + c[2]) / 3;
+  c = c.map((x) => Math.max(0, Math.min(255, g + (x - g) * 1.35)));
+  // Lift toward white as the column gets loud, so peaks read hottest.
+  return lift ? lerp(c, [255, 255, 255], Math.max(0, Math.max(l, m, h) - 0.75) * 1.2) : c;
+}
+/** Heat: loudness on a perceptual ramp, deep violet to white hot. */
+const HEAT = ['#1d1250', '#5a1f9e', '#b52f9a', '#ff5470', '#ffa24a', '#ffe9a8'].map(hex);
+/** Aurora: one vivid ramp per deck, low to high. */
+const AURORA = [
+  { low: hex('#4a3cff'), mid: hex('#21c8ff'), high: hex('#d6fff6') },
+  { low: hex('#ff2e7e'), mid: hex('#ff9a3c'), high: hex('#fff1cf') },
+];
+/** Contour: neon lines, one per band. */
+const CONTOUR = [
+  { low: hex('#7b6cff'), mid: hex('#2fe0d0'), high: hex('#f2fbff') },
+  { low: hex('#ff4f8b'), mid: hex('#ffc24a'), high: hex('#fff8ea') },
+];
+
 export class Waveform2D {
   /** @param {HTMLCanvasElement} canvas */
   constructor(canvas) {
@@ -120,8 +167,15 @@ export class Waveform2D {
       ctx.fillRect(a, 0, b - a, h);
     }
     if (this.count) {
-      if (view.mode === 'scroll') this.ribbon(w, h, view, spp, c);
-      else this.overview(w, h, c);
+      if (STYLE === 'current') {
+        if (view.mode === 'scroll') this.ribbon(w, h, view, spp, c);
+        else this.overview(w, h, c);
+      } else if (view.mode === 'scroll') {
+        const { cols, step, shift } = this.columns(w, view, spp);
+        this.paint(cols, step, shift, h, c, false);
+      } else {
+        this.paint(this.overviewCols(Math.round(w)), 1, 0, h, c, true);
+      }
     }
     // The grid sits over the waveform so it reads against loud parts too,
     // and under the veil so the played part dims with it.
@@ -300,6 +354,207 @@ export class Waveform2D {
     }
   }
 
+
+  /** The scrolling view's columns: track-fixed grid, lightly smoothed. */
+  columns(w, view, spp) {
+    const step = STYLE === 'bars' ? 4 : 2;
+    const dt = spp * step;
+    const k0 = Math.floor(view.start / dt);
+    const shift = (k0 * dt - view.start) / spp;
+    const raw = [];
+    for (let i = -2; i <= w / step + 4; i++) {
+      const t = (k0 + i) * dt;
+      raw.push(this.sample(t - dt / 2, t + dt / 2) ?? [0, 0, 0]);
+    }
+    const cols = [];
+    for (let i = 2; i < raw.length - 2; i++) {
+      const v = [0, 0, 0];
+      for (let k = 0; k < 3; k++) {
+        let s = 0;
+        for (let j = -2; j <= 2; j++) s += raw[i + j][k] * (3 - Math.abs(j));
+        v[k] = s / 9;
+      }
+      cols.push(v);
+    }
+    return { cols, step, shift };
+  }
+
+  /** A mirrored shape around the middle; `f(v)` is the half height, 0..1. */
+  shape(cols, step, shift, mid, amp, f) {
+    const { ctx } = this;
+    ctx.beginPath();
+    ctx.moveTo(shift, mid);
+    for (let i = 0; i < cols.length; i++) ctx.lineTo(shift + i * step, mid - f(cols[i]) * amp);
+    for (let i = cols.length - 1; i >= 0; i--) ctx.lineTo(shift + i * step, mid + f(cols[i]) * amp);
+    ctx.closePath();
+  }
+
+  /** One edge line (top and bottom) of a shape. */
+  edge(cols, step, shift, mid, amp, f) {
+    const { ctx } = this;
+    ctx.beginPath();
+    for (const sign of [1, -1]) {
+      cols.forEach((v, i) => {
+        const y = mid - sign * f(v) * amp;
+        i ? ctx.lineTo(shift + i * step, y) : ctx.moveTo(shift, y);
+      });
+    }
+  }
+
+  /** A gradient along x with one colour per column. */
+  hgrad(cols, step, shift, color, alpha) {
+    const n = cols.length;
+    const g = this.ctx.createLinearGradient(shift, 0, shift + (n - 1) * step, 0);
+    // A stop every few columns: colour changes slowly next to the shape's detail.
+    const every = Math.max(3, Math.floor(n / 240));
+    for (let i = 0; i < n; i += every) g.addColorStop(i / (n - 1), css(color(cols[i], i), alpha(cols[i])));
+    return g;
+  }
+
+  /** The exploratory looks, shared by the scrolling view and the overview. */
+  paint(cols, step, shift, h, c, overview) {
+    const { ctx } = this;
+    const mid = h / 2;
+    const amp = (h / 2) * (overview ? 0.98 : 0.96);
+    const outer = (v) => Math.max(v[0] * 0.95, v[1] * 0.66);
+    const vfade = (a, b) => {
+      const g = ctx.createLinearGradient(0, 0, 0, h);
+      g.addColorStop(0, `rgba(0,0,0,${b})`);
+      g.addColorStop(0.5, `rgba(0,0,0,${a})`);
+      g.addColorStop(1, `rgba(0,0,0,${b})`);
+      return g;
+    };
+
+    if (STYLE === 'spectral' || STYLE === 'heat') {
+      const color = STYLE === 'spectral'
+        ? (v) => spectralColor(v, !overview)
+        : (v) => ramp(HEAT, Math.max(v[0], v[1] * 0.9, v[2] * 0.7) ** (overview ? 2.2 : 0.8));
+      const k = overview ? 0.5 : 1;
+      // Each column's colour once; the layers below only change its alpha or tint.
+      const base = cols.map((v) => color(v));
+      const tint = (t) => (v, i) => (t ? lerp(base[i], [255, 255, 255], t) : base[i]);
+      // Body: the full envelope in each column's colour.
+      this.shape(cols, step, shift, mid, amp, outer);
+      ctx.fillStyle = this.hgrad(cols, step, shift, tint(0), () => 0.55);
+      ctx.fill();
+      // Mids, brighter, and the highs as a hot core.
+      ctx.globalCompositeOperation = 'lighter';
+      this.shape(cols, step, shift, mid, amp, (v) => v[1] * 0.6);
+      ctx.fillStyle = this.hgrad(cols, step, shift, tint(0), () => 0.35 * k);
+      ctx.fill();
+      this.shape(cols, step, shift, mid, amp, (v) => v[2] * 0.32);
+      ctx.fillStyle = this.hgrad(cols, step, shift, tint(0.55 * k), () => 0.6 * k);
+      ctx.fill();
+      ctx.globalCompositeOperation = 'source-over';
+      // Darken toward the edges so the middle carries the energy.
+      this.shape(cols, step, shift, mid, amp, outer);
+      ctx.fillStyle = vfade(0, 0.35);
+      ctx.fill();
+      if (!overview) {
+        this.edge(cols, step, shift, mid, amp, outer);
+        ctx.strokeStyle = this.hgrad(cols, step, shift, tint(0.25), () => 0.95);
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+      return;
+    }
+
+    if (STYLE === 'aurora') {
+      const p = AURORA[c.deck ?? 0];
+      const k = overview ? 0.6 : 1;
+      const fill = (f, col, a0, a1) => {
+        a0 *= k;
+        a1 *= k;
+        this.shape(cols, step, shift, mid, amp, f);
+        const g = ctx.createLinearGradient(0, 0, 0, h);
+        g.addColorStop(0, css(col, a1));
+        g.addColorStop(0.5, css(col, a0));
+        g.addColorStop(1, css(col, a1));
+        ctx.fillStyle = g;
+        ctx.fill();
+      };
+      ctx.globalCompositeOperation = 'lighter';
+      if (!overview) {
+        // A soft bloom under the lows, drawn off canvas so only its shadow lands.
+        const dpr = window.devicePixelRatio || 1;
+        ctx.save();
+        ctx.translate(-OFF, 0);
+        this.shape(cols, step, shift, mid, amp, (v) => v[0] * 0.95);
+        ctx.shadowColor = css(p.low, 0.55);
+        ctx.shadowBlur = 14 * dpr;
+        ctx.shadowOffsetX = OFF * dpr;
+        ctx.fillStyle = '#000';
+        ctx.fill();
+        ctx.restore();
+      }
+      fill((v) => v[0] * 0.95, p.low, 0.75, 0.25);
+      fill((v) => v[1] * 0.64, p.mid, 0.6, 0.2);
+      fill((v) => v[2] * 0.34, p.high, 0.8, 0.35);
+      ctx.globalCompositeOperation = 'source-over';
+      if (!overview) {
+        this.edge(cols, step, shift, mid, amp, (v) => v[0] * 0.95);
+        ctx.strokeStyle = css(lerp(p.low, [255, 255, 255], 0.45), 0.8);
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+      return;
+    }
+
+    if (STYLE === 'contour') {
+      const p = CONTOUR[c.deck ?? 0];
+      // A barely-there fill so the shape still has mass.
+      this.shape(cols, step, shift, mid, amp, outer);
+      ctx.fillStyle = css(p.low, 0.1);
+      ctx.fill();
+      this.shape(cols, step, shift, mid, amp, (v) => v[1] * 0.64);
+      ctx.fillStyle = css(p.mid, 0.08);
+      ctx.fill();
+      const lines = [
+        [(v) => v[0] * 0.95, p.low],
+        [(v) => v[1] * 0.64, p.mid],
+        [(v) => v[2] * 0.34, p.high],
+      ];
+      ctx.globalCompositeOperation = 'lighter';
+      for (const [f, col] of lines) {
+        this.edge(cols, step, shift, mid, amp, f);
+        if (!overview) {
+          ctx.strokeStyle = css(col, 0.22);
+          ctx.lineWidth = 4;
+          ctx.stroke();
+        }
+        ctx.strokeStyle = css(col, 0.95);
+        ctx.lineWidth = overview ? 1 : 1.25;
+        ctx.stroke();
+      }
+      ctx.globalCompositeOperation = 'source-over';
+      return;
+    }
+
+    if (STYLE === 'bars') {
+      // Crisp rounded bars, one per 3 px, coloured by band balance.
+      const bw = overview ? 1 : 2.5;
+      for (let i = 0; i < cols.length; i++) {
+        const v = cols[i];
+        const x = shift + i * step;
+        const o = outer(v) * amp;
+        const col = spectralColor(v, !overview);
+        ctx.fillStyle = css(col, overview ? 0.7 : 0.92);
+        if (overview) ctx.fillRect(x, mid - o, 1, o * 2);
+        else {
+          ctx.beginPath();
+          ctx.roundRect(x, mid - o, bw, Math.max(1, o * 2), 1);
+          ctx.fill();
+        }
+        const hi = v[2] * 0.34 * amp;
+        if (hi > 0.5) {
+          ctx.fillStyle = css(lerp(col, [255, 255, 255], overview ? 0.3 : 0.65), overview ? 0.5 : 0.9);
+          ctx.fillRect(x, mid - hi, bw, hi * 2);
+        }
+      }
+      return;
+    }
+  }
+
   /** The whole track in the lane's width, eased so it isn't spiky. Cached per width. */
   overviewCols(w) {
     const cache = this.overviewCache;
@@ -358,6 +613,7 @@ function cssColor(value) {
 export function themeColors(deck) {
   const p = deck === 0 ? 'a' : 'b';
   return {
+    deck,
     low: cssColor(`var(--${p}-low)`),
     mid: cssColor(`var(--deck-${p})`),
     high: cssColor(`var(--${p}-high)`),
