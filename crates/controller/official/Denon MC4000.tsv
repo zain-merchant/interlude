@@ -1,0 +1,146 @@
+# MC4000 — Denon DJ "MC4000 User Guide" v1.2, MIDI commands (Appendix)
+# source: https://cdn.inmusicbrands.com/denondj/MC4000/MC4000-User-Guide-v1.2_00.pdf
+# The guide says every LED receives the same message its button sends, so note rows are "both".
+both	90	06	DECK1 Platter Touch	
+both	91	06	DECK2 Platter Touch	
+both	90	07	DECK1 Vinyl Mode	
+both	90	10	DECK1 Vinyl Mode +SHIFT	
+both	91	07	DECK2 Vinyl Mode	
+both	91	10	DECK2 Vinyl Mode +SHIFT	
+both	90	0D	DECK1 Key Lock	
+both	90	0E	DECK1 Key Lock +SHIFT	
+both	91	0D	DECK2 Key Lock	
+both	91	0E	DECK2 Key Lock +SHIFT	
+both	90	0C	DECK1 Pitch Bend –	
+both	90	20	DECK1 Pitch Bend – +SHIFT	
+both	91	0C	DECK2 Pitch Bend –	
+both	91	20	DECK2 Pitch Bend – +SHIFT	
+both	90	0B	DECK1 Pitch Bend +	
+both	90	21	DECK1 Pitch Bend + +SHIFT	
+both	91	0B	DECK2 Pitch Bend +	
+both	91	21	DECK2 Pitch Bend + +SHIFT	
+both	90	02	DECK1 Sync	[Channel1] sync_enabled|beatsync
+both	90	03	DECK1 Sync +SHIFT	
+both	91	02	DECK2 Sync	[Channel2] sync_enabled|beatsync
+both	91	03	DECK2 Sync +SHIFT	
+both	90	01	DECK1 Cue (initial)	[Channel1] cue_default
+both	90	05	DECK1 Cue (initial) +SHIFT	
+both	91	01	DECK2 Cue (initial)	[Channel2] cue_default
+both	91	05	DECK2 Cue (initial) +SHIFT	
+both	90	00	DECK1 Play/Pause	[Channel1] play
+both	90	04	DECK1 Play/Pause +SHIFT	
+both	91	00	DECK2 Play/Pause	[Channel2] play
+both	91	04	DECK2 Play/Pause +SHIFT	
+both	90	1B	DECK1 Cue (headphone)	[Channel1] pfl
+both	91	1B	DECK2 Cue (headphone)	[Channel2] pfl
+both	94	32	DECK1 Auto	
+both	94	3F	DECK1 Auto +SHIFT	
+both	95	32	DECK2 Auto	
+both	95	3F	DECK2 Auto +SHIFT	
+both	94	34	DECK1 x1/2	
+both	94	38	DECK1 x1/2 +SHIFT	
+both	95	34	DECK2 x1/2	
+both	95	38	DECK2 x1/2 +SHIFT	
+both	94	35	DECK1 x2	
+both	94	39	DECK1 x2 +SHIFT	
+both	95	35	DECK2 x2	
+both	95	39	DECK2 x2 +SHIFT	
+both	94	33	DECK1 Reloop	
+both	94	3E	DECK1 Reloop +SHIFT	
+both	95	33	DECK2 Reloop	
+both	95	3E	DECK2 Reloop +SHIFT	
+both	94	14	DECK1 Hot Cue Pad 1	[Channel1] hotcue_1_activate
+both	94	1C	DECK1 Hot Cue Pad 1 +SHIFT	
+both	95	14	DECK2 Hot Cue Pad 1	[Channel2] hotcue_1_activate
+both	95	1C	DECK2 Hot Cue Pad 1 +SHIFT	
+both	94	15	DECK1 Hot Cue Pad 2	[Channel1] hotcue_2_activate
+both	94	1D	DECK1 Hot Cue Pad 2 +SHIFT	
+both	95	15	DECK2 Hot Cue Pad 2	[Channel2] hotcue_2_activate
+both	95	1D	DECK2 Hot Cue Pad 2 +SHIFT	
+both	94	16	DECK1 Hot Cue Pad 3	[Channel1] hotcue_3_activate
+both	94	1E	DECK1 Hot Cue Pad 3 +SHIFT	
+both	95	16	DECK2 Hot Cue Pad 3	[Channel2] hotcue_3_activate
+both	95	1E	DECK2 Hot Cue Pad 3 +SHIFT	
+both	94	17	DECK1 Hot Cue Pad 4	[Channel1] hotcue_4_activate
+both	94	1F	DECK1 Hot Cue Pad 4 +SHIFT	
+both	95	17	DECK2 Hot Cue Pad 4	[Channel2] hotcue_4_activate
+both	95	1F	DECK2 Hot Cue Pad 4 +SHIFT	
+both	98	00	DECK1 FX 1 On	
+both	98	0B	DECK1 FX 1 On +SHIFT	
+both	99	00	DECK2 FX 1 On	
+both	99	0B	DECK2 FX 1 On +SHIFT	
+both	98	01	DECK1 FX 2 On	
+both	98	0C	DECK1 FX 2 On +SHIFT	
+both	99	01	DECK2 FX 2 On	
+both	99	0C	DECK2 FX 2 On +SHIFT	
+both	98	02	DECK1 FX 3 On	
+both	98	0D	DECK1 FX 3 On +SHIFT	
+both	99	02	DECK2 FX 3 On	
+both	99	0D	DECK2 FX 3 On +SHIFT	
+both	98	04	DECK1 Tap	
+both	98	0A	DECK1 Tap +SHIFT	
+both	99	04	DECK2 Tap	
+both	99	0A	DECK2 Tap +SHIFT	
+both	98	41	DECK1 Beats	
+both	99	41	DECK2 Beats	
+both	9A	7F	DECK1 Pad Mode	
+both	9B	7F	DECK2 Pad Mode	
+both	9F	32	Shift	
+both	9F	1C	Split Cue	
+both	9F	02	Load 1	[Channel1] LoadSelectedTrack
+both	9F	1F	Library	
+both	9F	03	Load 2	[Channel2] LoadSelectedTrack
+both	9F	07	Back	
+both	9F	11	Back +SHIFT	
+both	9F	1B	Load Prep	
+both	9F	10	Load Prep +SHIFT	
+both	9F	21	Sampler Pad 1	
+both	9F	28	Sampler Pad 1 +SHIFT	
+both	9F	22	Sampler Pad 2	
+both	9F	29	Sampler Pad 2 +SHIFT	
+both	9F	23	Sampler Pad 3	
+both	9F	2A	Sampler Pad 3 +SHIFT	
+both	9F	24	Sampler Pad 4	
+both	9F	2B	Sampler Pad 4 +SHIFT	
+in	B0	06	DECK1 Jog Wheel	
+in	B1	06	DECK2 Jog Wheel	
+in	B8	03	DECK1 Beats Encoder	
+in	B9	03	DECK2 Beats Encoder	
+in	BF	00	Library Encoder	[Library] MoveVertical
+in	BF	01	Library Encoder +SHIFT	
+in	B8	00	DECK1 FX Knob 1	
+in	B8	0B	DECK1 FX Knob 1 +SHIFT	
+in	B9	00	DECK2 FX Knob 1	
+in	B9	0B	DECK2 FX Knob 1 +SHIFT	
+in	B8	01	DECK1 FX Knob 2	
+in	B8	0C	DECK1 FX Knob 2 +SHIFT	
+in	B9	01	DECK2 FX Knob 2	
+in	B9	0C	DECK2 FX Knob 2 +SHIFT	
+in	B8	02	DECK1 FX Knob 3	
+in	B8	0D	DECK1 FX Knob 3 +SHIFT	
+in	B9	02	DECK2 FX Knob 3	
+in	B9	0D	DECK2 FX Knob 3 +SHIFT	
+in	B0	16	DECK1 Level Knob	[Channel1] pregain
+in	B1	16	DECK2 Level Knob	[Channel2] pregain
+in	B0	17	DECK1 Hi Knob	[EqualizerRack1_[Channel1]_Effect1] parameter3
+in	B1	17	DECK2 Hi Knob	[EqualizerRack1_[Channel2]_Effect1] parameter3
+in	B0	18	DECK1 Mid Knob	[EqualizerRack1_[Channel1]_Effect1] parameter2
+in	B1	18	DECK2 Mid Knob	[EqualizerRack1_[Channel2]_Effect1] parameter2
+in	B0	19	DECK1 Low Knob	[EqualizerRack1_[Channel1]_Effect1] parameter1
+in	B1	19	DECK2 Low Knob	[EqualizerRack1_[Channel2]_Effect1] parameter1
+in	B0	1A	DECK1 Filter Knob	[QuickEffectRack1_[Channel1]] super1
+in	B1	1A	DECK2 Filter Knob	[QuickEffectRack1_[Channel2]] super1
+in	B0	1C	DECK1 Channel Fader	[Channel1] volume
+in	B1	1C	DECK2 Channel Fader	[Channel2] volume
+in	BF	1A	Sampler Knob	
+in	BF	08	Crossfader	[Master] crossfader
+in	BF	0C	Monitor Level Knob	
+in	BF	0D	Monitor Pan Knob	
+in	B0	09	DECK1 Pitch Fader LSB	
+in	B0	29	DECK1 Pitch Fader MSB	[Channel1] rate
+in	B1	09	DECK2 Pitch Fader LSB	
+in	B1	29	DECK2 Pitch Fader MSB	[Channel2] rate
+out	BF	18	LED Meters (both)	
+out	BF	44	LED Meters (left)	
+out	BF	45	LED Meters (right)	
+out	B0	75	All LEDs on	

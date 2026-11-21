@@ -1,0 +1,429 @@
+# Beatmix 2/4 — Reloop "Beatmix 2/4 MIDI map" (the same map is linked from the MK2 product pages)
+# source: https://www.reloop.com/media/custom/upload/Reloop-bm2_4_midi_map.pdf
+# Pitch faders (pitch bend 0xE1-0xE4, 14-bit value in data1/data2) are not listed.
+both	91	00	L-PAD1 (Blue)	
+both	91	08	L-PAD1 (Blue) +SHIFT	
+both	93	00	L-PAD1 (Blue)	
+both	93	08	L-PAD1 (Blue) +SHIFT	
+both	91	10	L-PAD1 (Red)	
+both	91	18	L-PAD1 (Red) +SHIFT	
+both	93	10	L-PAD1 (Red)	
+both	93	18	L-PAD1 (Red) +SHIFT	
+both	91	01	L-PAD2 (Blue)	
+both	91	09	L-PAD2 (Blue) +SHIFT	
+both	93	01	L-PAD2 (Blue)	
+both	93	09	L-PAD2 (Blue) +SHIFT	
+both	91	11	L-PAD2 (Red)	
+both	91	19	L-PAD2 (Red) +SHIFT	
+both	93	11	L-PAD2 (Red)	
+both	93	19	L-PAD2 (Red) +SHIFT	
+both	91	02	L-PAD3 (Blue)	
+both	91	0A	L-PAD3 (Blue) +SHIFT	
+both	93	02	L-PAD3 (Blue)	
+both	93	0A	L-PAD3 (Blue) +SHIFT	
+both	91	12	L-PAD3 (Red)	
+both	91	1A	L-PAD3 (Red) +SHIFT	
+both	93	12	L-PAD3 (Red)	
+both	93	1A	L-PAD3 (Red) +SHIFT	
+both	91	03	L-PAD4 (Blue)	
+both	91	0B	L-PAD4 (Blue) +SHIFT	
+both	93	03	L-PAD4 (Blue)	
+both	93	0B	L-PAD4 (Blue) +SHIFT	
+both	91	13	L-PAD4 (Red)	
+both	91	1B	L-PAD4 (Red) +SHIFT	
+both	93	13	L-PAD4 (Red)	
+both	93	1B	L-PAD4 (Red) +SHIFT	
+both	91	04	L-PAD5 (Blue)	
+both	91	0C	L-PAD5 (Blue) +SHIFT	
+both	93	04	L-PAD5 (Blue)	
+both	93	0C	L-PAD5 (Blue) +SHIFT	
+both	91	14	L-PAD5 (Red)	
+both	91	1C	L-PAD5 (Red) +SHIFT	
+both	93	14	L-PAD5 (Red)	
+both	93	1C	L-PAD5 (Red) +SHIFT	
+both	91	05	L-PAD6 (Blue)	
+both	91	0D	L-PAD6 (Blue) +SHIFT	
+both	93	05	L-PAD6 (Blue)	
+both	93	0D	L-PAD6 (Blue) +SHIFT	
+both	91	15	L-PAD6 (Red)	
+both	91	1D	L-PAD6 (Red) +SHIFT	
+both	93	15	L-PAD6 (Red)	
+both	93	1D	L-PAD6 (Red) +SHIFT	
+both	91	06	L-PAD7 (Blue)	
+both	91	0E	L-PAD7 (Blue) +SHIFT	
+both	93	06	L-PAD7 (Blue)	
+both	93	0E	L-PAD7 (Blue) +SHIFT	
+both	91	16	L-PAD7 (Red)	
+both	91	1E	L-PAD7 (Red) +SHIFT	
+both	93	16	L-PAD7 (Red)	
+both	93	1E	L-PAD7 (Red) +SHIFT	
+both	91	07	L-PAD8 (Blue)	
+both	91	0F	L-PAD8 (Blue) +SHIFT	
+both	93	07	L-PAD8 (Blue)	
+both	93	0F	L-PAD8 (Blue) +SHIFT	
+both	91	17	L-PAD8 (Red)	
+both	91	1F	L-PAD8 (Red) +SHIFT	
+both	93	17	L-PAD8 (Red)	
+both	93	1F	L-PAD8 (Red) +SHIFT	
+both	91	20	L-SHIFT (DECK1) / LED L-SYNC (DECK1)	
+both	91	21	L-SYNC (DECK1) / LED L-CUP (DECK1)	[Channel1] sync_enabled|beatsync
+both	91	61	L-SYNC (DECK1) +SHIFT / LED L-CUP (DECK1) +SHIFT	
+both	93	21	L-SYNC (DECK3) / LED L-CUP (DECK3)	[Channel3] sync_enabled|beatsync
+both	93	61	L-SYNC (DECK3) +SHIFT / LED L-CUP (DECK3) +SHIFT	
+both	91	22	L-CUP (DECK1) / LED L-Main CUE (DECK1)	
+both	91	62	L-CUP (DECK1) +SHIFT / LED L-Main CUE (DECK1) +SHIFT	
+both	93	22	L-CUP (DECK3) / LED L-Main CUE (DECK3)	
+both	93	62	L-CUP (DECK3) +SHIFT / LED L-Main CUE (DECK3) +SHIFT	
+both	91	23	L-Main CUE (DECK1) / LED L-PAUSE/PLAY (DECK1)	[Channel1] cue_default
+both	91	63	L-Main CUE (DECK1) +SHIFT / LED L-PAUSE/PLAY (DECK1) +SHIFT	
+both	93	23	L-Main CUE (DECK3) / LED L-PAUSE/PLAY (DECK3)	[Channel3] cue_default
+both	93	63	L-Main CUE (DECK3) +SHIFT / LED L-PAUSE/PLAY (DECK3) +SHIFT	
+both	91	24	L-PAUSE/PLAY (DECK1) / LED L-PITCH BEND + (DECK1)	[Channel1] play
+both	91	64	L-PAUSE/PLAY (DECK1) +SHIFT / LED L-PITCH BEND + (DECK1) +SHIFT	
+both	93	24	L-PAUSE/PLAY (DECK3) / LED L-PITCH BEND + (DECK3)	[Channel3] play
+both	93	64	L-PAUSE/PLAY (DECK3) +SHIFT / LED L-PITCH BEND + (DECK3) +SHIFT	
+both	91	25	L-BEATS Push (DECK1) / LED L-PITCH BEND - (DECK1)	
+both	91	65	L-BEATS Push (DECK1) +SHIFT / LED L-PITCH BEND - (DECK1) +SHIFT	
+both	93	25	L-BEATS Push (DECK3) / LED L-PITCH BEND - (DECK3)	
+both	93	65	L-BEATS Push (DECK3) +SHIFT / LED L-PITCH BEND - (DECK3) +SHIFT	
+in	91	26	L-PITCH BEND- (DECK1)	
+in	91	66	L-PITCH BEND- (DECK1) +SHIFT	
+in	93	26	L-PITCH BEND- (DECK3)	
+in	93	66	L-PITCH BEND- (DECK3) +SHIFT	
+in	91	27	L-PITCH BEND+ (DECK1)	
+in	91	67	L-PITCH BEND+ (DECK1) +SHIFT	
+in	93	27	L-PITCH BEND+ (DECK3)	
+in	93	67	L-PITCH BEND+ (DECK3) +SHIFT	
+in	91	28	L-DECK3	
+in	93	28	L-DECK3	
+in	91	29	L-PAD MODE1	
+in	91	2A	L-PAD MODE2	
+both	91	3F	L-TOUCH (DECK1) / LED L-JOG Wheel-16	
+in	91	7F	L-TOUCH (DECK1) +SHIFT	
+both	93	3F	L-TOUCH (DECK3) / LED L-JOG Wheel-16	
+in	93	7F	L-TOUCH (DECK3) +SHIFT	
+both	92	00	R-PAD1 (Blue)	
+both	92	08	R-PAD1 (Blue) +SHIFT	
+both	94	00	R-PAD1 (Blue)	
+both	94	08	R-PAD1 (Blue) +SHIFT	
+both	92	10	R-PAD1 (Red)	
+both	92	18	R-PAD1 (Red) +SHIFT	
+both	94	10	R-PAD1 (Red)	
+both	94	18	R-PAD1 (Red) +SHIFT	
+both	92	01	R-PAD2 (Blue)	
+both	92	09	R-PAD2 (Blue) +SHIFT	
+both	94	01	R-PAD2 (Blue)	
+both	94	09	R-PAD2 (Blue) +SHIFT	
+both	92	11	R-PAD2 (Red)	
+both	92	19	R-PAD2 (Red) +SHIFT	
+both	94	11	R-PAD2 (Red)	
+both	94	19	R-PAD2 (Red) +SHIFT	
+both	92	02	R-PAD3 (Blue)	
+both	92	0A	R-PAD3 (Blue) +SHIFT	
+both	94	02	R-PAD3 (Blue)	
+both	94	0A	R-PAD3 (Blue) +SHIFT	
+both	92	12	R-PAD3 (Red)	
+both	92	1A	R-PAD3 (Red) +SHIFT	
+both	94	12	R-PAD3 (Red)	
+both	94	1A	R-PAD3 (Red) +SHIFT	
+both	92	03	R-PAD4 (Blue)	
+both	92	0B	R-PAD4 (Blue) +SHIFT	
+both	94	03	R-PAD4 (Blue)	
+both	94	0B	R-PAD4 (Blue) +SHIFT	
+both	92	13	R-PAD4 (Red)	
+both	92	1B	R-PAD4 (Red) +SHIFT	
+both	94	13	R-PAD4 (Red)	
+both	94	1B	R-PAD4 (Red) +SHIFT	
+both	92	04	R-PAD5 (Blue)	
+both	92	0C	R-PAD5 (Blue) +SHIFT	
+both	94	04	R-PAD5 (Blue)	
+both	94	0C	R-PAD5 (Blue) +SHIFT	
+both	92	14	R-PAD5 (Red)	
+both	92	1C	R-PAD5 (Red) +SHIFT	
+both	94	14	R-PAD5 (Red)	
+both	94	1C	R-PAD5 (Red) +SHIFT	
+both	92	05	R-PAD6 (Blue)	
+both	92	0D	R-PAD6 (Blue) +SHIFT	
+both	94	05	R-PAD6 (Blue)	
+both	94	0D	R-PAD6 (Blue) +SHIFT	
+both	92	15	R-PAD6 (Red)	
+both	92	1D	R-PAD6 (Red) +SHIFT	
+both	94	15	R-PAD6 (Red)	
+both	94	1D	R-PAD6 (Red) +SHIFT	
+both	92	06	R-PAD7 (Blue)	
+both	92	0E	R-PAD7 (Blue) +SHIFT	
+both	94	06	R-PAD7 (Blue)	
+both	94	0E	R-PAD7 (Blue) +SHIFT	
+both	92	16	R-PAD7 (Red)	
+both	92	1E	R-PAD7 (Red) +SHIFT	
+both	94	16	R-PAD7 (Red)	
+both	94	1E	R-PAD7 (Red) +SHIFT	
+both	92	07	R-PAD8 (Blue)	
+both	92	0F	R-PAD8 (Blue) +SHIFT	
+both	94	07	R-PAD8 (Blue)	
+both	94	0F	R-PAD8 (Blue) +SHIFT	
+both	92	17	R-PAD8 (Red)	
+both	92	1F	R-PAD8 (Red) +SHIFT	
+both	94	17	R-PAD8 (Red)	
+both	94	1F	R-PAD8 (Red) +SHIFT	
+both	92	20	R-SHIFT (DECK2) / LED R-SYNC (DECK2)	
+both	92	21	R-SYNC (DECK2) / LED R-CUP (DECK2)	[Channel2] sync_enabled|beatsync
+both	92	61	R-SYNC (DECK2) +SHIFT / LED R-CUP (DECK2) +SHIFT	
+both	94	21	R-SYNC (DECK4) / LED R-CUP (DECK4)	[Channel4] sync_enabled|beatsync
+both	94	61	R-SYNC (DECK4) +SHIFT / LED R-CUP (DECK4) +SHIFT	
+both	92	22	R-CUP (DECK2) / LED R-Main CUE (DECK2)	
+both	92	62	R-CUP (DECK2) +SHIFT / LED R-Main CUE (DECK2) +SHIFT	
+both	94	22	R-CUP (DECK4) / LED R-Main CUE (DECK4)	
+both	94	62	R-CUP (DECK4) +SHIFT / LED R-Main CUE (DECK4) +SHIFT	
+both	92	23	R-Main CUE (DECK2) / LED R-PAUSE/PLAY (DECK2)	[Channel2] cue_default
+both	92	63	R-Main CUE (DECK2) +SHIFT / LED R-PAUSE/PLAY (DECK2) +SHIFT	
+both	94	23	R-Main CUE (DECK4) / LED R-PAUSE/PLAY (DECK4)	[Channel4] cue_default
+both	94	63	R-Main CUE (DECK4) +SHIFT / LED R-PAUSE/PLAY (DECK4) +SHIFT	
+both	92	24	R-PAUSE/PLAY (DECK2) / LED R-PITCH BEND + (DECK2)	[Channel2] play
+both	92	64	R-PAUSE/PLAY (DECK2) +SHIFT / LED R-PITCH BEND + (DECK2) +SHIFT	
+both	94	24	R-PAUSE/PLAY (DECK4) / LED R-PITCH BEND + (DECK4)	[Channel4] play
+both	94	64	R-PAUSE/PLAY (DECK4) +SHIFT / LED R-PITCH BEND + (DECK4) +SHIFT	
+both	92	25	R-BEATS Push (DECK2) / LED R-PITCH BEND - (DECK2)	
+both	92	65	R-BEATS Push (DECK2) +SHIFT / LED R-PITCH BEND - (DECK2) +SHIFT	
+both	94	25	R-BEATS Push (DECK4) / LED R-PITCH BEND - (DECK4)	
+both	94	65	R-BEATS Push (DECK4) +SHIFT / LED R-PITCH BEND - (DECK4) +SHIFT	
+in	92	26	R-PITCH BEND- (DECK2)	
+in	92	66	R-PITCH BEND- (DECK2) +SHIFT	
+in	94	26	R-PITCH BEND- (DECK4)	
+in	94	66	R-PITCH BEND- (DECK4) +SHIFT	
+in	92	27	R-PITCH BEND+ (DECK2)	
+in	92	67	R-PITCH BEND+ (DECK2) +SHIFT	
+in	94	27	R-PITCH BEND+ (DECK4)	
+in	94	67	R-PITCH BEND+ (DECK4) +SHIFT	
+in	92	28	R-DECK4	
+in	94	28	R-DECK4	
+in	92	29	R-PAD MODE1	
+in	92	2A	R-PAD MODE2	
+both	92	3F	R-TOUCH (DECK2) / LED R-JOG Wheel-16	
+in	92	7F	R-TOUCH (DECK2) +SHIFT	
+both	94	3F	R-TOUCH (DECK4) / LED R-JOG Wheel-16	
+in	94	7F	R-TOUCH (DECK4) +SHIFT	
+both	93	50	M-LOAD3	[Channel3] LoadSelectedTrack
+both	93	40	M-LOAD3 +SHIFT / LED L-PAD1 (PAD Mode 1) +SHIFT	
+both	91	50	M-LOAD1	[Channel1] LoadSelectedTrack
+both	91	40	M-LOAD1 +SHIFT / LED L-PAD1 (PAD Mode 1) +SHIFT	
+both	93	52	M-CUE3	[Channel3] pfl
+both	93	42	M-CUE3 +SHIFT / LED L-PAD3 (PAD Mode 1) +SHIFT	
+both	91	52	M-CUE1	[Channel1] pfl
+both	91	42	M-CUE1 +SHIFT / LED L-PAD3 (PAD Mode 1) +SHIFT	
+both	94	50	M-LOAD4 / LED M-LAOD4	[Channel4] LoadSelectedTrack
+both	94	40	M-LOAD4 +SHIFT / LED R-PAD1 (PAD Mode 1) +SHIFT	
+both	92	50	M-LOAD2	[Channel2] LoadSelectedTrack
+both	92	40	M-LOAD2 +SHIFT / LED R-PAD1 (PAD Mode 1) +SHIFT	
+both	94	52	M-CUE4	[Channel4] pfl
+both	94	42	M-CUE4 +SHIFT / LED R-PAD3 (PAD Mode 1) +SHIFT	
+both	92	52	M-CUE2	[Channel2] pfl
+both	92	42	M-CUE2 +SHIFT / LED R-PAD3 (PAD Mode 1) +SHIFT	
+in	95	08	M-BACK	
+in	95	48	M-BACK +SHIFT	
+in	95	09	M-Browser Push(TRAX)	
+in	95	49	M-Browser Push(TRAX) +SHIFT	
+in	B1	60	L-WHEEL	
+in	B1	70	L-WHEEL +SHIFT	
+in	B3	60	L-WHEEL	
+in	B3	70	L-WHEEL +SHIFT	
+in	B1	61	L-BEATS	
+in	B1	71	L-BEATS +SHIFT	
+in	B3	61	L-BEATS	
+in	B3	71	L-BEATS +SHIFT	
+in	B2	60	R-WHEEL	
+in	B2	70	R-WHEEL +SHIFT	
+in	B4	60	R-WHEEL	
+in	B4	70	R-WHEEL +SHIFT	
+in	B2	61	R-BEATS	
+in	B2	71	R-BEATS +SHIFT	
+in	B4	61	R-BEATS	
+in	B4	71	R-BEATS +SHIFT	
+in	B5	60	M-Browser(TRAX)	[Library] MoveVertical
+in	B5	70	M-Browser(TRAX) +SHIFT	
+in	B1	01	L-FX1	
+in	B1	41	L-FX1 +SHIFT	
+in	B1	02	L-FX2	
+in	B1	42	L-FX2 +SHIFT	
+in	B1	03	L-FX3	
+in	B1	43	L-FX3 +SHIFT	
+in	B2	01	R-FX1	
+in	B2	41	R-FX1 +SHIFT	
+in	B2	02	R-FX2	
+in	B2	42	R-FX2 +SHIFT	
+in	B2	03	R-FX3	
+in	B2	43	R-FX3 +SHIFT	
+in	B5	00	M-MASTER	
+in	B5	01	M-PHONES	
+in	B5	02	M-CUE MIX	
+in	B5	32	M-CUE MIX +SHIFT	
+in	B5	03	M-SAMPLER	
+in	B5	33	M-SAMPLER +SHIFT	
+in	B3	10	L-GAIN3	[Channel3] pregain
+in	B3	30	L-GAIN3 +SHIFT	
+in	B3	11	L-HIGH3	[EqualizerRack1_[Channel3]_Effect1] parameter3
+in	B3	31	L-HIGH3 +SHIFT	
+in	B3	12	L-MID3	[EqualizerRack1_[Channel3]_Effect1] parameter2
+in	B3	32	L-MID3 +SHIFT	
+in	B3	13	L-LOW3	[EqualizerRack1_[Channel3]_Effect1] parameter1
+in	B3	33	L-LOW3 +SHIFT	
+in	B3	14	L-CH3 (LINE FADER)	[Channel3] volume
+in	B3	34	L-CH3 (LINE FADER) +SHIFT	
+in	B1	10	L-GAIN1	[Channel1] pregain
+in	B1	30	L-GAIN1 +SHIFT	
+in	B1	11	L-HIGH1	[EqualizerRack1_[Channel1]_Effect1] parameter3
+in	B1	31	L-HIGH1 +SHIFT	
+in	B1	12	L-MID1	[EqualizerRack1_[Channel1]_Effect1] parameter2
+in	B1	32	L-MID1 +SHIFT	
+in	B1	13	L-LOW1	[EqualizerRack1_[Channel1]_Effect1] parameter1
+in	B1	33	L-LOW1 +SHIFT	
+in	B1	14	L-CH1 (LINE FADER)	[Channel1] volume
+in	B1	34	L-CH1 (LINE FADER) +SHIFT	
+in	B4	10	R-GAIN4	[Channel4] pregain
+in	B4	30	R-GAIN4 +SHIFT	
+in	B4	11	R-HIGH4	[EqualizerRack1_[Channel4]_Effect1] parameter3
+in	B4	31	R-HIGH4 +SHIFT	
+in	B4	12	R-MID4	[EqualizerRack1_[Channel4]_Effect1] parameter2
+in	B4	32	R-MID4 +SHIFT	
+in	B4	13	R-LOW4	[EqualizerRack1_[Channel4]_Effect1] parameter1
+in	B4	33	R-LOW4 +SHIFT	
+in	B4	14	R-CH4 (LINE FADER)	[Channel4] volume
+in	B4	34	R-CH4 (LINE FADER) +SHIFT	
+in	B2	10	R-GAIN2	[Channel2] pregain
+in	B2	30	R-GAIN2 +SHIFT	
+in	B2	11	R-HIGH2	[EqualizerRack1_[Channel2]_Effect1] parameter3
+in	B2	31	R-HIGH2 +SHIFT	
+in	B2	12	R-MID2	[EqualizerRack1_[Channel2]_Effect1] parameter2
+in	B2	32	R-MID2 +SHIFT	
+in	B2	13	R-LOW2	[EqualizerRack1_[Channel2]_Effect1] parameter1
+in	B2	33	R-LOW2 +SHIFT	
+in	B2	14	R-CH2 (LINE FADER)	[Channel2] volume
+in	B2	34	R-CH2 (LINE FADER) +SHIFT	
+in	B5	2F	M-FADER	[Master] crossfader
+in	B5	5F	M-FADER +SHIFT	
+out	91	48	L-PAD1 (PAD Mode 2) +SHIFT	
+out	93	48	L-PAD1 (PAD Mode 2) +SHIFT	
+out	91	41	L-PAD2 (PAD Mode 1) +SHIFT	
+out	93	41	L-PAD2 (PAD Mode 1) +SHIFT	
+out	91	49	L-PAD2 (PAD Mode 2) +SHIFT	
+out	93	49	L-PAD2 (PAD Mode 2) +SHIFT	
+out	91	4A	L-PAD3 (PAD Mode 2) +SHIFT	
+out	93	4A	L-PAD3 (PAD Mode 2) +SHIFT	
+out	91	43	L-PAD4 (PAD Mode 1) +SHIFT	
+out	93	43	L-PAD4 (PAD Mode 1) +SHIFT	
+out	91	4B	L-PAD4 (PAD Mode 2) +SHIFT	
+out	93	4B	L-PAD4 (PAD Mode 2) +SHIFT	
+out	91	44	L-PAD5 (PAD Mode 1) +SHIFT	
+out	93	44	L-PAD5 (PAD Mode 1) +SHIFT	
+out	91	4C	L-PAD5 (PAD Mode 2) +SHIFT	
+out	93	4C	L-PAD5 (PAD Mode 2) +SHIFT	
+out	91	45	L-PAD6 (PAD Mode 1) +SHIFT	
+out	93	45	L-PAD6 (PAD Mode 1) +SHIFT	
+out	91	4D	L-PAD6 (PAD Mode 2) +SHIFT	
+out	93	4D	L-PAD6 (PAD Mode 2) +SHIFT	
+out	91	46	L-PAD7 (PAD Mode 1) +SHIFT	
+out	93	46	L-PAD7 (PAD Mode 1) +SHIFT	
+out	91	4E	L-PAD7 (PAD Mode 2) +SHIFT	
+out	93	4E	L-PAD7 (PAD Mode 2) +SHIFT	
+out	91	47	L-PAD8 (PAD Mode 1) +SHIFT	
+out	93	47	L-PAD8 (PAD Mode 1) +SHIFT	
+out	91	4F	L-PAD8 (PAD Mode 2) +SHIFT	
+out	93	4F	L-PAD8 (PAD Mode 2) +SHIFT	
+out	91	60	L-SYNC (DECK1) +SHIFT	
+out	93	20	L-SYNC (DECK3)	
+out	93	60	L-SYNC (DECK3) +SHIFT	
+out	91	30	L-JOG Wheel-01	
+out	93	30	L-JOG Wheel-01	
+out	91	31	L-JOG Wheel-02	
+out	93	31	L-JOG Wheel-02	
+out	91	32	L-JOG Wheel-03	
+out	93	32	L-JOG Wheel-03	
+out	91	33	L-JOG Wheel-04	
+out	93	33	L-JOG Wheel-04	
+out	91	34	L-JOG Wheel-05	
+out	93	34	L-JOG Wheel-05	
+out	91	35	L-JOG Wheel-06	
+out	93	35	L-JOG Wheel-06	
+out	91	36	L-JOG Wheel-07	
+out	93	36	L-JOG Wheel-07	
+out	91	37	L-JOG Wheel-08	
+out	93	37	L-JOG Wheel-08	
+out	91	38	L-JOG Wheel-09	
+out	93	38	L-JOG Wheel-09	
+out	91	39	L-JOG Wheel-10	
+out	93	39	L-JOG Wheel-10	
+out	91	3A	L-JOG Wheel-11	
+out	93	3A	L-JOG Wheel-11	
+out	91	3B	L-JOG Wheel-12	
+out	93	3B	L-JOG Wheel-12	
+out	91	3C	L-JOG Wheel-13	
+out	93	3C	L-JOG Wheel-13	
+out	91	3D	L-JOG Wheel-14	
+out	93	3D	L-JOG Wheel-14	
+out	91	3E	L-JOG Wheel-15	
+out	93	3E	L-JOG Wheel-15	
+out	92	48	R-PAD1 (PAD Mode 2) +SHIFT	
+out	94	48	R-PAD1 (PAD Mode 2) +SHIFT	
+out	92	41	R-PAD2 (PAD Mode 1) +SHIFT	
+out	94	41	R-PAD2 (PAD Mode 1) +SHIFT	
+out	92	49	R-PAD2 (PAD Mode 2) +SHIFT	
+out	94	49	R-PAD2 (PAD Mode 2) +SHIFT	
+out	92	4A	R-PAD3 (PAD Mode 2) +SHIFT	
+out	94	4A	R-PAD3 (PAD Mode 2) +SHIFT	
+out	92	43	R-PAD4 (PAD Mode 1) +SHIFT	
+out	94	43	R-PAD4 (PAD Mode 1) +SHIFT	
+out	92	4B	R-PAD4 (PAD Mode 2) +SHIFT	
+out	94	4B	R-PAD4 (PAD Mode 2) +SHIFT	
+out	92	44	R-PAD5 (PAD Mode 1) +SHIFT	
+out	94	44	R-PAD5 (PAD Mode 1) +SHIFT	
+out	92	4C	R-PAD5 (PAD Mode 2) +SHIFT	
+out	94	4C	R-PAD5 (PAD Mode 2) +SHIFT	
+out	92	45	R-PAD6 (PAD Mode 1) +SHIFT	
+out	94	45	R-PAD6 (PAD Mode 1) +SHIFT	
+out	92	4D	R-PAD6 (PAD Mode 2) +SHIFT	
+out	94	4D	R-PAD6 (PAD Mode 2) +SHIFT	
+out	92	46	R-PAD7 (PAD Mode 1) +SHIFT	
+out	94	46	R-PAD7 (PAD Mode 1) +SHIFT	
+out	92	4E	R-PAD7 (PAD Mode 2) +SHIFT	
+out	94	4E	R-PAD7 (PAD Mode 2) +SHIFT	
+out	92	47	R-PAD8 (PAD Mode 1) +SHIFT	
+out	94	47	R-PAD8 (PAD Mode 1) +SHIFT	
+out	92	4F	R-PAD8 (PAD Mode 2) +SHIFT	
+out	94	4F	R-PAD8 (PAD Mode 2) +SHIFT	
+out	92	60	R-SYNC (DECK2) +SHIFT	
+out	94	20	R-SYNC (DECK4)	
+out	94	60	R-SYNC (DECK4) +SHIFT	
+out	92	30	R-JOG Wheel-01	
+out	94	30	R-JOG Wheel-01	
+out	92	31	R-JOG Wheel-02	
+out	94	31	R-JOG Wheel-02	
+out	92	32	R-JOG Wheel-03	
+out	94	32	R-JOG Wheel-03	
+out	92	33	R-JOG Wheel-04	
+out	94	33	R-JOG Wheel-04	
+out	92	34	R-JOG Wheel-05	
+out	94	34	R-JOG Wheel-05	
+out	92	35	R-JOG Wheel-06	
+out	94	35	R-JOG Wheel-06	
+out	92	36	R-JOG Wheel-07	
+out	94	36	R-JOG Wheel-07	
+out	92	37	R-JOG Wheel-08	
+out	94	37	R-JOG Wheel-08	
+out	92	38	R-JOG Wheel-09	
+out	94	38	R-JOG Wheel-09	
+out	92	39	R-JOG Wheel-10	
+out	94	39	R-JOG Wheel-10	
+out	92	3A	R-JOG Wheel-11	
+out	94	3A	R-JOG Wheel-11	
+out	92	3B	R-JOG Wheel-12	
+out	94	3B	R-JOG Wheel-12	
+out	92	3C	R-JOG Wheel-13	
+out	94	3C	R-JOG Wheel-13	
+out	92	3D	R-JOG Wheel-14	
+out	94	3D	R-JOG Wheel-14	
+out	92	3E	R-JOG Wheel-15	
+out	94	3E	R-JOG Wheel-15	
+out	93	72	M-CUE3 +SHIFT	
+out	91	72	M-CUE1 +SHIFT	
+out	94	72	M-CUE4 +SHIFT	
+out	92	72	M-CUE2 +SHIFT	

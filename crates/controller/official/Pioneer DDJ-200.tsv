@@ -1,0 +1,104 @@
+# DDJ-200 — Pioneer DJ "List of MIDI messages" E2
+# source: https://downloads.support.alphatheta.com/software_info/dj-controllers/DDJ-200/DDJ-200_MIDI_Message_List_E2.pdf
+in	B0	22	DECK1 JOG (Platter) (DECK, Vinyl mode On)	
+in	B1	22	DECK2 JOG (Platter) (DECK, Vinyl mode On)	
+in	B0	23	DECK1 JOG (Platter) (DECK, Vinyl mode Off)	
+in	B1	23	DECK2 JOG (Platter) (DECK, Vinyl mode Off)	
+in	B0	29	DECK1 JOG (Platter) (DECK)	
+in	B1	29	DECK2 JOG (Platter) (DECK)	
+in	90	36	DECK1 JOG (Platter) (DECK, touch)	
+in	91	36	DECK2 JOG (Platter) (DECK, touch)	
+in	90	67	DECK1 JOG (Platter) (D1)	
+in	91	67	DECK2 JOG (Platter) (D1)	
+in	B0	21	DECK1 JOG (Wheel side) (DECK)	
+in	B1	21	DECK2 JOG (Wheel side) (DECK)	
+both	90	58	DECK1 BEAT SYNC (DECK)	[Channel1] sync_enabled|beatsync
+both	91	58	DECK2 BEAT SYNC (DECK)	[Channel2] sync_enabled|beatsync
+in	90	5C	DECK1 BEAT SYNC (DECK, long press)	
+in	91	5C	DECK2 BEAT SYNC (DECK, long press)	
+both	90	60	DECK1 BEAT SYNC (D2)	
+both	91	60	DECK2 BEAT SYNC (D2)	
+in	B0	00	DECK1 Tempo (DECK) MSB	[Channel1] rate
+in	B0	20	DECK1 Tempo (DECK) LSB	
+in	B1	00	DECK2 Tempo (DECK) MSB	[Channel2] rate
+in	B1	20	DECK2 Tempo (DECK) LSB	
+both	90	0B	DECK1 PLAY/PAUSE (DECK)	[Channel1] play
+both	91	0B	DECK2 PLAY/PAUSE (DECK)	[Channel2] play
+both	90	47	DECK1 PLAY/PAUSE (D4)	
+both	91	47	DECK2 PLAY/PAUSE (D4)	
+both	90	0C	DECK1 CUE (DECK)	[Channel1] cue_default
+both	91	0C	DECK2 CUE (DECK)	[Channel2] cue_default
+both	90	48	DECK1 CUE (D5)	
+both	91	48	DECK2 CUE (D5)	
+in	90	3F	DECK1 SHIFT (DECK)	
+in	91	3F	DECK2 SHIFT (DECK)	
+in	B0	07	DECK1 EQ HI (MIXER, M1) MSB	
+in	B0	27	DECK1 EQ HI (MIXER, M1) LSB	
+in	B1	07	DECK2 EQ HI (MIXER, M1) MSB	
+in	B1	27	DECK2 EQ HI (MIXER, M1) LSB	
+in	B0	0B	DECK1 EQ MID (MIXER EFFECT) MSB	[EqualizerRack1_[Channel1]_Effect1] parameter2
+in	B0	2B	DECK1 EQ MID (MIXER EFFECT) LSB	
+in	B1	0B	DECK2 EQ MID (MIXER EFFECT) MSB	[EqualizerRack1_[Channel2]_Effect1] parameter2
+in	B1	2B	DECK2 EQ MID (MIXER EFFECT) LSB	
+in	B0	0F	DECK1 EQ LOW (MIXER EFFECT) MSB	[EqualizerRack1_[Channel1]_Effect1] parameter1
+in	B0	2F	DECK1 EQ LOW (MIXER EFFECT) LSB	
+in	B1	0F	DECK2 EQ LOW (MIXER EFFECT) MSB	[EqualizerRack1_[Channel2]_Effect1] parameter1
+in	B1	2F	DECK2 EQ LOW (MIXER EFFECT) LSB	
+in	B6	17	COLOR FX Parameter (CH1) (MIXER EFFECT) MSB	[QuickEffectRack1_[Channel1]] super1
+in	B6	37	COLOR FX Parameter (CH1) (MIXER EFFECT) LSB	
+in	B6	18	COLOR FX Parameter (CH2) (MIXER EFFECT) MSB	[QuickEffectRack1_[Channel2]] super1
+in	B6	38	COLOR FX Parameter (CH2) (MIXER EFFECT) LSB	
+both	96	63	MASTER CUE (MIXER EFFECT)	
+both	96	78	MASTER CUE (MIXER, M5)	
+both	90	54	DECK1 CUE (headphones) (MIXER EFFECT)	[Channel1] pfl
+both	91	54	DECK2 CUE (headphones) (MIXER EFFECT)	[Channel2] pfl
+both	90	68	DECK1 (headphones) (MIXER, M6)	
+both	91	68	DECK2 (headphones) (MIXER, M6)	
+in	B0	13	DECK1 CH FADER (MIXER EFFECT) MSB	[Channel1] volume
+in	B0	33	DECK1 CH FADER (MIXER EFFECT) LSB	
+in	B1	13	DECK2 CH FADER (MIXER EFFECT) MSB	[Channel2] volume
+in	B1	33	DECK2 CH FADER (MIXER EFFECT) LSB	
+in	B6	1F	CROSSFADER (MIXER EFFECT) MSB	[Master] crossfader
+in	B6	3F	CROSSFADER (MIXER EFFECT) LSB	
+both	90	66	DECK1 CROSSFADER /CH FADER (Fader Start) (MIXER, M7 M8, Zero → not Zero)	
+both	91	66	DECK2 CROSSFADER /CH FADER (Fader Start) (MIXER, M7 M8, Zero → not Zero)	
+both	90	52	DECK1 CROSSFADER /CH FADER (Fader Start) (MIXER, M7 M8, Not Zero → Zero)	
+both	91	52	DECK2 CROSSFADER /CH FADER (Fader Start) (MIXER, M7 M8, Not Zero → Zero)	
+both	96	59	TRANSITION FX (MIXER EFFECT)	
+both	96	5A	TRANSITION FX (EFFECT, F1)	
+both	97	00	DECK1 PAD 1 (PAD MIDI-OUT)	
+both	99	00	DECK2 PAD 1 (PAD MIDI-OUT)	
+both	98	00	DECK1 PAD 1 (PAD MIDI-OUT) +SHIFT	
+both	9A	00	DECK2 PAD 1 (PAD MIDI-OUT) +SHIFT	
+both	97	01	DECK1 PAD 2 (PAD MIDI-OUT)	
+both	99	01	DECK2 PAD 2 (PAD MIDI-OUT)	
+both	98	01	DECK1 PAD 2 (PAD MIDI-OUT) +SHIFT	
+both	9A	01	DECK2 PAD 2 (PAD MIDI-OUT) +SHIFT	
+both	97	02	DECK1 PAD 3 (PAD MIDI-OUT)	
+both	99	02	DECK2 PAD 3 (PAD MIDI-OUT)	
+both	98	02	DECK1 PAD 3 (PAD MIDI-OUT) +SHIFT	
+both	9A	02	DECK2 PAD 3 (PAD MIDI-OUT) +SHIFT	
+both	97	03	DECK1 PAD 4 (PAD MIDI-OUT)	
+both	99	03	DECK2 PAD 4 (PAD MIDI-OUT)	
+both	98	03	DECK1 PAD 4 (PAD MIDI-OUT) +SHIFT	
+both	9A	03	DECK2 PAD 4 (PAD MIDI-OUT) +SHIFT	
+both	97	04	DECK1 PAD 5 (PAD MIDI-OUT)	
+both	99	04	DECK2 PAD 5 (PAD MIDI-OUT)	
+both	98	04	DECK1 PAD 5 (PAD MIDI-OUT) +SHIFT	
+both	9A	04	DECK2 PAD 5 (PAD MIDI-OUT) +SHIFT	
+both	97	05	DECK1 PAD 6 (PAD MIDI-OUT)	
+both	99	05	DECK2 PAD 6 (PAD MIDI-OUT)	
+both	98	05	DECK1 PAD 6 (PAD MIDI-OUT) +SHIFT	
+both	9A	05	DECK2 PAD 6 (PAD MIDI-OUT) +SHIFT	
+both	97	06	DECK1 PAD 7 (PAD MIDI-OUT)	
+both	99	06	DECK2 PAD 7 (PAD MIDI-OUT)	
+both	98	06	DECK1 PAD 7 (PAD MIDI-OUT) +SHIFT	
+both	9A	06	DECK2 PAD 7 (PAD MIDI-OUT) +SHIFT	
+both	97	07	DECK1 PAD 8 (PAD MIDI-OUT)	
+both	99	07	DECK2 PAD 8 (PAD MIDI-OUT)	
+both	98	07	DECK1 PAD 8 (PAD MIDI-OUT) +SHIFT	
+both	9A	07	DECK2 PAD 8 (PAD MIDI-OUT) +SHIFT	
+out	9F	00	LOADED (CH1)	
+out	9F	01	LOADED (CH2)	
+out	90	17	DECK1 VINYL MODE	
+out	91	17	DECK2 VINYL MODE	
