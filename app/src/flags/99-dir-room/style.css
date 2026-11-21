@@ -37,17 +37,17 @@
 
 :root[data-flag-dir-room][data-flag-dir-room] {
   /* The room and its surfaces. */
-  --bg: #0b0a09;
-  --rm-room: #0b0a09;
+  --bg: #0c0b0a;
+  --rm-room: #0c0b0a;
   --rm-window: #070606;
-  --rm-plate: #161513;
-  --rm-plate-2: #131210;
+  --rm-plate: #1a1917;
+  --rm-plate-2: #151412;
   --rm-well: #0a0908;
   --rm-key: #2a2825;
   --rm-key-2: #222120;
   --rm-key-hi: #322f2c;
   --rm-key-hi-2: #292725;
-  --rm-down: #0e0d0c;
+  --rm-down: #11100f;
 
   /* Edges: the lit top, the dark underside, the lip of a cut. */
   --rm-lit: rgb(255 246 232 / 0.075);
@@ -57,15 +57,15 @@
   --rm-under: rgb(0 0 0 / 0.6);
 
   /* The surfaces as recipes. */
-  --rm-plate-fill: linear-gradient(180deg, var(--rm-plate), var(--rm-plate-2));
-  --rm-plate-edge: inset 0 1px 0 var(--rm-lit), 0 0 0 1px rgb(0 0 0 / 0.5), 0 2px 3px rgb(0 0 0 / 0.35), 0 18px 36px -16px rgb(0 0 0 / 0.7);
+  --rm-plate-fill: linear-gradient(180deg, var(--rm-plate), var(--rm-plate-2) 180px);
+  --rm-plate-edge: inset 0 1px 0 var(--rm-lit), inset 0 0 0 1px rgb(255 246 232 / 0.025), 0 0 0 1px rgb(0 0 0 / 0.55), 0 1px 0 1px rgb(0 0 0 / 0.35), 0 12px 28px -10px rgb(0 0 0 / 0.8);
   --rm-well-edge: inset 0 1px 0 rgb(0 0 0 / 0.55), inset 0 2px 5px rgb(0 0 0 / 0.35), 0 1px 0 var(--rm-lip);
   --rm-key-fill: linear-gradient(180deg, var(--rm-key), var(--rm-key-2));
   --rm-key-fill-hi: linear-gradient(180deg, var(--rm-key-hi), var(--rm-key-hi-2));
   --rm-key-edge: inset 0 1px 0 var(--rm-lit-key), 0 1px 0 var(--rm-under), 0 2px 4px -1px rgb(0 0 0 / 0.45);
   --rm-key-edge-hi: inset 0 1px 0 var(--rm-lit-key-hi), 0 1px 0 var(--rm-under), 0 2px 4px -1px rgb(0 0 0 / 0.45);
   --rm-down-fill: var(--rm-down);
-  --rm-down-edge: inset 0 1px 2px rgb(0 0 0 / 0.7), inset 0 0 0 1px rgb(0 0 0 / 0.3), 0 1px 0 var(--rm-lip);
+  --rm-down-edge: inset 0 2px 3px -1px rgb(0 0 0 / 0.8), inset 0 1px 0 rgb(0 0 0 / 0.5), 0 1px 0 var(--rm-lip);
 
   /* Text: today's three levels on a paper white. */
   --fg: #eeebe4;
@@ -121,8 +121,8 @@
    (--on, set on each control), the label in it. Declared on the controls
    so var(--on) resolves per control. */
 :root[data-flag-dir-room][data-flag-dir-room] :is(button, .btn) {
-  --rm-on-fill: linear-gradient(180deg, color-mix(in srgb, var(--on, var(--fg)) 13%, var(--rm-down)), color-mix(in srgb, var(--on, var(--fg)) 19%, var(--rm-down)));
-  --rm-on-edge: inset 0 1px 2px rgb(0 0 0 / 0.6), inset 0 0 0 1px color-mix(in srgb, var(--on, var(--fg)) 14%, transparent), 0 1px 0 var(--rm-lip);
+  --rm-on-fill: linear-gradient(180deg, color-mix(in srgb, var(--on, var(--fg)) 9%, var(--rm-down)), color-mix(in srgb, var(--on, var(--fg)) 17%, var(--rm-down)));
+  --rm-on-edge: inset 0 2px 3px -1px rgb(0 0 0 / 0.8), inset 0 1px 0 rgb(0 0 0 / 0.5), 0 1px 0 var(--rm-lip);
 }
 
 /* ── The room ───────────────────────────────────────────────────────── */
@@ -202,9 +202,14 @@
   color: var(--fg-3);
 }
 
-/* The overview: a well cut into the plate. */
+/* The overview: a well cut into the plate, with a record's grooves in
+   it. Fine rings round a spindle far below, so they run almost level and
+   show only where the waveform leaves the well dark. Still, and drawn
+   once: a background, not a layer. */
 :root[data-flag-dir-room][data-flag-dir-room] [data-region^='deck'] .overview {
-  background: var(--rm-well);
+  background:
+    repeating-radial-gradient(circle at 50% 1400%, rgb(255 246 232 / 0.05) 0 0.5px, transparent 1px 3px),
+    var(--rm-well);
   box-shadow: var(--rm-well-edge);
 }
 
@@ -242,7 +247,7 @@
 }
 :root[data-flag-dir-room][data-flag-dir-room][data-input='keys'] [data-region^='deck'] .modes button:focus-visible {
   outline: 2px solid var(--focus-ring);
-  outline-offset: 1px;
+  outline-offset: 0;
 }
 
 /* The mode row: plain text over the plate; hover a faint tile. */
@@ -401,8 +406,26 @@
 /* Dials: keys turned round. The same face, lit top edge and dark
    underside; a paper index. */
 :root[data-flag-dir-room][data-flag-dir-room] .knob .dial {
-  background: linear-gradient(180deg, #34312d, #24221f);
-  box-shadow: inset 0 1px 0 rgb(255 246 232 / 0.13), 0 1px 0 var(--rm-under), 0 2px 5px -1px rgb(0 0 0 / 0.55);
+  background: #2b2926;
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.45);
+}
+/* The light on the cap and the shadow under it sit on the wrap, which
+   doesn't turn, so the top edge stays lit wherever the dial points. The
+   wrap is the dial plus 9px each side (Knob.svelte). */
+:root[data-flag-dir-room][data-flag-dir-room] .knob .wrap::before,
+:root[data-flag-dir-room][data-flag-dir-room] .knob .wrap::after {
+  content: '';
+  position: absolute;
+  inset: 9px;
+  border-radius: 50%;
+  pointer-events: none;
+}
+:root[data-flag-dir-room][data-flag-dir-room] .knob .wrap::before {
+  box-shadow: 0 1px 0 var(--rm-under), 0 2px 5px -1px rgb(0 0 0 / 0.6);
+}
+:root[data-flag-dir-room][data-flag-dir-room] .knob .wrap::after {
+  background: linear-gradient(180deg, rgb(255 246 232 / 0.07), rgb(255 246 232 / 0) 55%, rgb(0 0 0 / 0.12));
+  box-shadow: inset 0 1px 0 rgb(255 246 232 / 0.13);
 }
 :root[data-flag-dir-room][data-flag-dir-room] .knob .dial::after {
   content: none;
@@ -416,13 +439,14 @@
 }
 :root[data-flag-dir-room][data-flag-dir-room] .knob .wrap:has(.dial:hover) .dial,
 :root[data-flag-dir-room][data-flag-dir-room] .knob .dial.dragging {
-  background: linear-gradient(180deg, #3c3934, #2a2724);
+  background: #34312d;
 }
-:root[data-flag-dir-room][data-flag-dir-room] .knob line {
-  stroke: rgb(255 246 232 / 0.16);
+/* The scale: quiet marks, so ten dials don't make ten rings. */
+:root[data-flag-dir-room][data-flag-dir-room] .knob line:not(.on, .major) {
+  stroke: transparent;
 }
 :root[data-flag-dir-room][data-flag-dir-room] .knob line.major {
-  stroke: rgb(255 246 232 / 0.3);
+  stroke: rgb(255 246 232 / 0.22);
 }
 :root[data-flag-dir-room][data-flag-dir-room] .knob line.on {
   filter: none;
@@ -755,11 +779,11 @@
 }
 :root[data-flag-dir-room][data-flag-dir-room] .backdrop > .card[role='dialog'] .found {
   border-radius: 12px;
-  background: var(--rm-well);
-  box-shadow: var(--rm-well-edge);
+  background: #131210;
+  box-shadow: inset 0 1px 0 rgb(0 0 0 / 0.5), inset 0 2px 4px rgb(0 0 0 / 0.25), 0 1px 0 var(--rm-lip);
 }
 :root[data-flag-dir-room][data-flag-dir-room] .backdrop > .card[role='dialog'] .found:hover:not(:disabled) {
-  background: #0e0d0c;
+  background: #161513;
 }
 /* Primary: the paper key (the site's Download); the rest are keys. */
 :root[data-flag-dir-room][data-flag-dir-room] .backdrop > .card[role='dialog'] :is(.go, .btn.primary) {
