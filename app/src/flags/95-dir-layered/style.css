@@ -105,13 +105,6 @@
   border-top-color: rgb(0 0 0 / 0.4);
   box-shadow: 0 -1px 0 rgb(255 255 255 / 0.035);
 }
-/* Lane titles: a small raised tag on the glass, left of the play head. */
-:root[data-flag-dir-layered][data-flag-dir-layered] .who {
-  border-radius: 6px;
-  background: var(--ly-float) !important;
-  box-shadow: var(--ly-float-edge) !important;
-  color: var(--fg-2);
-}
 :root[data-flag-dir-layered][data-flag-dir-layered] .zoom {
   border-radius: 10px;
   background: var(--ly-sunk-bg);

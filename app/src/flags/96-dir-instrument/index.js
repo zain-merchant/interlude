@@ -11,8 +11,8 @@
 // waveform, deck and library rows. On black glass the waveforms and the
 // numerals are the brightest things there are, so brightness lands on the
 // information without adding any light. Only one direction is on at a time
-// (95's only-one.svelte.js).
-if (typeof window !== 'undefined') setTimeout(() => import('../95-dir-layered/only-one.svelte.js'), 0);
+// (only-one.svelte.js, the same module as 95's, so either can ship alone).
+if (typeof window !== 'undefined') setTimeout(() => import('./only-one.svelte.js'), 0);
 
 export default {
   id: 'dir-instrument',
