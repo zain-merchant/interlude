@@ -1,0 +1,1027 @@
+/* #93 (UI audit flag; a visual direction): Listening room.
+
+   The marketing site's record room, brought into the app. The room is lit
+   by the decks themselves: a soft light in each deck's white sits behind
+   the glass and swells with that deck's level (light.svelte.js writes the
+   eased levels as --dir-la / --dir-lb). Film grain over everything, a
+   record's grooves in the overview wells and behind the waveform lanes,
+   smoked glass with a strong top light, and controls with a body: raised
+   at rest, pushed in and lit from inside when on.
+
+   The system, in one place:
+   - Light (where brightness goes): the deck light, then the numerals
+     (remaining and tempo at full --fg), then whatever is lit. Waveform
+     cores peak at the deck's own white, never past it. Nothing else is
+     pale: no solid slabs anywhere in the main window.
+   - Colour roles: ice and cream are the decks (their light, their lit
+     controls, their meters). Amber is cue, and only cue (Cue, headphone
+     cue, cue points). Red is critical (kill, Rec, clip, device lost).
+     Paper (#f2efe8) is the one primary in a dialog, as on the site.
+   - One state grammar: rest = raised (top-lit, a soft shadow under);
+     hover = the top light brightens; pressed = sinks into the panel on the
+     snappy spring; on = sunk and lit from inside in its role colour, the
+     label in that colour; selected = a raised thumb on a sunk track (the
+     site's switch); focus = a 2px warm ring 2px out; disabled = flat and
+     faint.
+   - Type: titles in the site's h3 voice (18/500, -0.01em); numerals light
+     (32/300, -0.02em); section heads in the site's micro-label (11/600,
+     +0.06em, capitals); every other caption 11/400 --fg-3.
+   - Material: warm graphite page, smoked glass (more body, blur 40,
+     saturate 1.5), a real top light, deep soft shadows; wells are dark and
+     grooved.
+   - Motion: the site's springs: --snappy (301ms) for presses, --smooth
+     (495ms) for tabs, messages and lights. The deck light breathes with
+     the music; none of it under reduced motion. */
+
+:root[data-flag-dir-warm][data-flag-dir-warm] {
+  --dw-snappy: linear(0, 0.101, 0.207, 0.309, 0.405, 0.491, 0.569, 0.636, 0.695, 0.745, 0.788, 0.824, 0.854, 0.88, 0.901, 0.918, 0.933, 0.945, 0.955, 0.963, 0.97, 0.975, 0.98, 0.984, 0.987, 0.989, 0.991, 0.993, 0.994, 0.995, 0.996, 0.997, 0.997, 0.998, 0.998, 0.999, 0.999, 0.999, 1);
+  --dw-smooth: linear(0, 0.065, 0.13, 0.195, 0.258, 0.318, 0.375, 0.429, 0.48, 0.528, 0.572, 0.612, 0.649, 0.684, 0.715, 0.744, 0.769, 0.793, 0.814, 0.834, 0.851, 0.867, 0.881, 0.894, 0.905, 0.915, 0.925, 0.933, 0.94, 0.947, 0.953, 0.958, 0.963, 0.967, 0.97, 0.974, 0.977, 0.979, 0.982, 0.984, 0.986, 0.987, 0.989, 0.99, 0.991, 0.992, 0.993, 0.994, 0.995, 0.995, 0.996, 0.996, 0.997, 0.997, 0.997, 0.998, 0.998, 0.998, 0.998, 0.999, 0.999, 0.999, 1);
+  --dw-snappy-ms: 301ms;
+  --dw-smooth-ms: 495ms;
+
+  /* Text: a warmer white, the same three levels. */
+  --bg: #0b0a09;
+  --fg: #f1ede5;
+  --fg-2: rgb(241 237 229 / 0.66);
+  --fg-3: rgb(241 237 229 / 0.5);
+  --fg-4: rgb(241 237 229 / 0.3);
+  --ink: #15130f;
+  --paper: #f2efe8;
+
+  --raise: rgb(255 246 232 / 0.06);
+  --hover: rgb(255 246 232 / 0.06);
+  --sel: rgb(255 246 232 / 0.09);
+  --line: rgb(255 244 228 / 0.07);
+  --line-2: rgb(255 244 228 / 0.12);
+  --popover: #1d1a17;
+
+  /* Smoked glass: a warm body under the frost, lit from above. */
+  --glass-fill: linear-gradient(180deg, rgb(255 246 232 / 0.075), rgb(255 246 232 / 0.02) 40%, rgb(255 246 232 / 0.015)), rgb(18 16 14 / 0.28);
+  --glass-blur: blur(40px) saturate(1.5);
+  --glass-edge: inset 0 1px 0 rgb(255 248 236 / 0.16), inset 0 0 0 1px rgb(255 244 228 / 0.06), inset 0 -1px 0 rgb(0 0 0 / 0.25), 0 2px 6px rgb(0 0 0 / 0.25), 0 30px 60px -10px rgb(0 0 0 / 0.55);
+  --well: rgb(4 3 2 / 0.42);
+  --well-shadow: inset 0 1px 3px rgb(0 0 0 / 0.55), inset 0 0 0 1px rgb(0 0 0 / 0.25), 0 1px 0 rgb(255 246 232 / 0.05);
+
+  /* The roles. */
+  --cue: #eaa94a;
+  --kill: #ff6a5c;
+  --warn: #ff6a5c;
+  --dw-focus: rgb(242 226 200 / 0.8);
+  --focus-ring: var(--dw-focus);
+
+  /* Waveforms: three tones of each deck's white, set so the additive
+     ribbon peaks at about the deck colour and never clips to white
+     (low x0.5 + mid x0.38 + high x0.55 at the core). */
+  --a-low: #2c3a4b;
+  --a-high: #9aaec6;
+  --b-low: #4a3a29;
+  --b-high: #bcac94;
+
+  /* Hot cues: one lightness, lower chroma, a family. */
+  --hc-1: #e6ae63;
+  --hc-2: #8fb3e0;
+  --hc-3: #e39a86;
+  --hc-4: #93c79c;
+  --hc-5: #b9a3dc;
+  --hc-6: #86c4c2;
+  --hc-7: #e0a2bd;
+  --hc-8: #cfc78c;
+
+  /* The baseline's button surface tokens (flag 09) become the raised key. */
+  --flag-buttons-bg: linear-gradient(180deg, rgb(255 246 232 / 0.1), rgb(255 246 232 / 0.045));
+  --flag-buttons-ring: inset 0 1px 0 rgb(255 248 236 / 0.13), inset 0 0 0 1px rgb(255 244 228 / 0.035), 0 1px 2px rgb(0 0 0 / 0.5), 0 2px 6px -2px rgb(0 0 0 / 0.4);
+  --flag-buttons-bg-hover: linear-gradient(180deg, rgb(255 246 232 / 0.14), rgb(255 246 232 / 0.065));
+  --flag-buttons-ring-hover: inset 0 1px 0 rgb(255 248 236 / 0.2), inset 0 0 0 1px rgb(255 244 228 / 0.05), 0 1px 2px rgb(0 0 0 / 0.5), 0 3px 8px -2px rgb(0 0 0 / 0.45);
+  --flag-buttons-bg-on: linear-gradient(180deg, rgb(0 0 0 / 0.3), rgb(0 0 0 / 0.16));
+  --flag-buttons-ring-on: inset 0 1px 3px rgb(0 0 0 / 0.6), inset 0 0 0 1px rgb(0 0 0 / 0.2), 0 1px 0 rgb(255 246 232 / 0.06);
+
+  /* The pieces of the grammar, for controls drawn outside .btn. */
+  --dw-raised-bg: var(--flag-buttons-bg);
+  --dw-raised: var(--flag-buttons-ring);
+  --dw-sunk-bg: linear-gradient(180deg, rgb(0 0 0 / 0.32), rgb(0 0 0 / 0.18));
+  --dw-sunk: inset 0 1px 3px rgb(0 0 0 / 0.6), inset 0 0 0 1px rgb(0 0 0 / 0.2), 0 1px 0 rgb(255 246 232 / 0.06);
+
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Lit: the one recipe for "on", in a role colour (--lit). Sunk into the
+   panel, a light coming up from inside it, the label in the colour.
+   Declared on the controls themselves, so var(--lit) resolves to each
+   control's own role. */
+:root[data-flag-dir-warm][data-flag-dir-warm] :is(button, .btn) {
+  --dw-lit-bg: radial-gradient(140% 120% at 50% 105%, color-mix(in srgb, var(--lit) 28%, transparent), color-mix(in srgb, var(--lit) 10%, transparent) 62%, color-mix(in srgb, var(--lit) 7%, transparent)), linear-gradient(180deg, rgb(0 0 0 / 0.34), rgb(0 0 0 / 0.14));
+  --dw-lit: inset 0 1px 3px rgb(0 0 0 / 0.55), inset 0 0 0 1px color-mix(in srgb, var(--lit) 34%, transparent), inset 0 -10px 18px -10px color-mix(in srgb, var(--lit) 55%, transparent), 0 0 22px -6px color-mix(in srgb, var(--lit) 55%, transparent), 0 1px 0 rgb(255 246 232 / 0.06);
+}
+
+/* ── The room ───────────────────────────────────────────────────────── */
+
+:root[data-flag-dir-warm][data-flag-dir-warm] body {
+  background: var(--bg);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] .app {
+  background: var(--bg);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] .bd {
+  background: radial-gradient(110% 70% at 50% -10%, #1b1814, #0b0a09 70%);
+}
+/* The deck light: a pool of each deck's white behind its panel, swelling
+   with its level. Inline opacity (Backdrop's tint) is overridden. */
+:root[data-flag-dir-warm][data-flag-dir-warm] .bd i.o1,
+:root[data-flag-dir-warm][data-flag-dir-warm] .bd i.o2 {
+  width: 50vw;
+  height: 70vh;
+  top: 8vh;
+  border-radius: 50%;
+  filter: blur(70px);
+  animation: none;
+  transition: opacity 120ms linear;
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] .bd i.o1 {
+  left: -2vw;
+  background: radial-gradient(closest-side, rgb(201 220 242 / 0.6), rgb(201 220 242 / 0.22) 50%, transparent);
+  opacity: calc(0.45 + var(--dir-la, 0.3) * 1.1) !important;
+  scale: calc(0.9 + var(--dir-la, 0.3) * 0.25);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] .bd i.o2 {
+  right: -2vw;
+  left: auto;
+  background: radial-gradient(closest-side, rgb(240 220 192 / 0.56), rgb(240 220 192 / 0.2) 50%, transparent);
+  opacity: calc(0.45 + var(--dir-lb, 0.3) * 1.1) !important;
+  scale: calc(0.9 + var(--dir-lb, 0.3) * 0.25);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] .bd i.o3 {
+  background: radial-gradient(circle, rgb(255 226 190 / 0.05), transparent 65%);
+}
+/* Film grain over everything, as over the site's hero. */
+:root[data-flag-dir-warm][data-flag-dir-warm] .app::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  pointer-events: none;
+  background-image: var(--grain);
+  background-size: 180px;
+  opacity: 0.09;
+  mix-blend-mode: overlay;
+}
+
+/* The site's glow under the frame, per deck: a soft light in the deck's
+   white spilling out under its panel, swelling with its level. */
+:root[data-flag-dir-warm][data-flag-dir-warm] [data-region='deck0'] {
+  --dw-l: var(--dir-la, 0.3);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] [data-region='deck1'] {
+  --dw-l: var(--dir-lb, 0.3);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] .decks > section[data-region^='deck'] {
+  box-shadow:
+    var(--glass-edge),
+    0 26px 70px -24px color-mix(in srgb, var(--deck) calc(12% + var(--dw-l) * 46%), transparent),
+    0 0 0 1px color-mix(in srgb, var(--deck) calc(2% + var(--dw-l) * 6%), transparent);
+}
+
+/* Panels: smoked glass, rounded a touch more, deep soft shadow. */
+:root[data-flag-dir-warm][data-flag-dir-warm] .decks > section,
+:root[data-flag-dir-warm][data-flag-dir-warm] .waves.glass,
+:root[data-flag-dir-warm][data-flag-dir-warm] section.library,
+:root[data-flag-dir-warm][data-flag-dir-warm] .settings {
+  background: var(--glass-fill);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-edge);
+}
+
+/* ── Waveform lanes ────────────────────────────────────────────────── */
+
+/* Behind the lanes, a record's grooves centred on the play head, far
+   below: arcs that read only where the waveform is thin. */
+:root[data-flag-dir-warm][data-flag-dir-warm] .waves.glass {
+  background:
+    repeating-radial-gradient(ellipse 140% 100% at 50% 520%, rgb(255 246 232 / 0.035) 0 1px, transparent 1.5px 5px),
+    var(--glass-fill);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] .lane + .lane {
+  border-top-color: rgb(0 0 0 / 0.35);
+  box-shadow: 0 -1px 0 rgb(255 246 232 / 0.04);
+}
+/* Lane titles: a backless --fg-3 label (owner's call 7, b). */
+:root[data-flag-dir-warm][data-flag-dir-warm] .who {
+  padding: 0 !important;
+  background: none !important;
+  box-shadow: none !important;
+  color: var(--fg-3);
+  font-size: var(--t-xs);
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.9), 0 0 10px rgb(0 0 0 / 0.8);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] .who i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  box-shadow: 0 0 8px color-mix(in srgb, var(--deck-a) 60%, transparent);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] .b .who i {
+  box-shadow: 0 0 8px color-mix(in srgb, var(--deck-b) 60%, transparent);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] .zoom {
+  background: rgb(14 12 10 / 0.7);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  box-shadow: inset 0 1px 0 rgb(255 248 236 / 0.1), 0 2px 8px rgb(0 0 0 / 0.4);
+}
+
+/* ── Decks ─────────────────────────────────────────────────────────── */
+
+/* The title in the site's h3 voice; the artist a step down. */
+:root[data-flag-dir-warm][data-flag-dir-warm] [data-region^='deck'] header .name {
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 28px;
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] [data-region^='deck'] header .name.dim {
+  font-weight: 400;
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] [data-region^='deck'] header .artist {
+  color: var(--fg-3);
+}
+/* Tempo and time remaining are the figures: full white, light, set. */
+:root[data-flag-dir-warm][data-flag-dir-warm] [data-region^='deck'] .bpm .big {
+  font-size: var(--t-xl);
+  font-weight: 300;
+  letter-spacing: -0.02em;
+  color: var(--fg);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] [data-region^='deck'] .bpm .unit,
+:root[data-flag-dir-warm][data-flag-dir-warm] [data-region^='deck'] .bpm .key {
+  color: var(--fg-3);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] [data-region^='deck'] .times .rm {
+  color: var(--fg);
+  letter-spacing: -0.02em;
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] [data-region^='deck'] .times .el {
+  color: var(--fg-2);
+  letter-spacing: -0.01em;
+}
+
+/* The overview: a dark well cut with a record's grooves. */
+:root[data-flag-dir-warm][data-flag-dir-warm] [data-region^='deck'] .overview {
+  background:
+    repeating-radial-gradient(circle at 50% 900%, rgb(255 246 232 / 0.04) 0 1px, transparent 1.5px 4px),
+    radial-gradient(120% 140% at 50% 0%, rgb(255 246 232 / 0.025), transparent 60%),
+    var(--well);
+  box-shadow: var(--well-shadow);
+  border-radius: 10px;
+}
+
+/* Tabs: the site's switch. A sunk track, a raised warm thumb on the
+   current mode; the old underline goes. */
+:root[data-flag-dir-warm][data-flag-dir-warm] [data-region^='deck'] .modes {
+  gap: 0;
+  padding: 3px;
+  border: 0;
+  border-radius: 11px;
+  background: var(--dw-sunk-bg);
+  box-shadow: var(--dw-sunk);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] [data-region^='deck'] .modes button {
+  height: 26px;
+  border-radius: 8px;
+  color: var(--fg-3);
+  font-weight: 500;
+  transition: color var(--dw-smooth-ms) var(--dw-smooth), background var(--dw-smooth-ms) var(--dw-smooth), box-shadow var(--dw-smooth-ms) var(--dw-smooth);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] [data-region^='deck'] .modes button:hover {
+  color: var(--fg-2);
+  background: none;
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] [data-region^='deck'] .modes button.on {
+  color: var(--fg);
+  background: linear-gradient(180deg, rgb(255 246 232 / 0.13), rgb(255 246 232 / 0.07));
+  box-shadow: inset 0 1px 0 rgb(255 248 236 / 0.16), 0 1px 2px rgb(0 0 0 / 0.5), 0 2px 6px -2px rgb(0 0 0 / 0.5);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] [data-region^='deck'] .modes button.on::after {
+  content: none;
+}
+/* Keyboard focus on a tab (#24 shows it once keys are in use): the one
+   ring, round the tab, instead of #24's inset ring over the old underline. */
+:root[data-flag-dir-warm][data-flag-dir-warm] [data-region^='deck'] .modes button:focus-visible::before {
+  content: none !important;
+}
+:root[data-flag-dir-warm][data-flag-dir-warm][data-input='keys'] [data-region^='deck'] .modes button:focus-visible {
+  outline: 2px solid var(--dw-focus);
+  outline-offset: 1px;
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] [data-region^='deck'] .modes button i {
+  box-shadow: 0 0 6px var(--deck);
+}
+
+/* The mode row: cue slots, loop, FX, stems. Text controls; the lit ones
+   take the deck's light. */
+:root[data-flag-dir-warm][data-flag-dir-warm] [data-region^='deck'] .strip .tc {
+  border-radius: 8px;
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] [data-region^='deck'] .strip .tc:hover {
+  background: var(--hover);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] [data-region^='deck'] .strip .tc.set i,
+:root[data-flag-dir-warm][data-flag-dir-warm] [data-region^='deck'] .strip .tc i {
+  box-shadow: none;
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] [data-region^='deck'] .strip .tc.set i {
+  box-shadow: 0 0 6px var(--hc, var(--cue));
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] [data-region^='deck'] .perf .big.live b::before,
+:root[data-flag-dir-warm][data-flag-dir-warm] [data-region^='deck'] .fx .tog.live i,
+:root[data-flag-dir-warm][data-flag-dir-warm] [data-region^='deck'] .stems .stem:not(.muted) i {
+  box-shadow: 0 0 8px var(--deck);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] [data-region^='deck'] .perf .big.live b {
+  text-shadow: 0 0 18px color-mix(in srgb, var(--deck) 45%, transparent);
+}
+
+/* Transport: four keys with a body. */
+:root[data-flag-dir-warm][data-flag-dir-warm] [data-region^='deck'] .transport > .btn {
+  border-radius: 10px;
+  font-weight: 500;
+  transition:
+    background var(--dw-snappy-ms) var(--dw-snappy),
+    box-shadow var(--dw-snappy-ms) var(--dw-snappy),
+    color var(--dw-snappy-ms) var(--dw-snappy),
+    translate var(--dw-snappy-ms) var(--dw-snappy);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] .btn:active:not(:disabled, [aria-disabled='true']) {
+  transform: none;
+  translate: 0 1px;
+}
+/* Pressed: every raised control sinks into the panel. */
+:root[data-flag-dir-warm][data-flag-dir-warm] :is(.btn:not(.ghost), .mixer .hp, .mixer button.rec, .toast .undo, [data-region^='deck'] .pitch .lock):active:not(:disabled, [aria-disabled='true']) {
+  background: var(--dw-sunk-bg);
+  box-shadow: var(--dw-sunk);
+}
+
+/* Cue: a raised key with an amber label; at the cue point it's lit amber. */
+:root[data-flag-dir-warm][data-flag-dir-warm] [data-region^='deck'] .transport .cue {
+  --lit: var(--cue);
+  color: color-mix(in srgb, var(--cue) 88%, var(--fg));
+  background: var(--dw-raised-bg);
+  box-shadow: var(--dw-raised);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] [data-region^='deck'] .transport .cue:hover:not([aria-disabled='true']) {
+  background: var(--flag-buttons-bg-hover);
+  box-shadow: var(--flag-buttons-ring-hover);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] [data-region^='deck'] .transport .cue.lit,
+:root[data-flag-dir-warm][data-flag-dir-warm] [data-region^='deck'] .transport .cue.lit:hover {
+  color: var(--cue);
+  background: var(--dw-lit-bg);
+  box-shadow: var(--dw-lit);
+}
+
+/* Play: never a slab. At rest a raised key with a white glyph; playing,
+   sunk and lit from inside in the deck's own white, the glyph in it. */
+:root[data-flag-dir-warm][data-flag-dir-warm] [data-region^='deck'] .transport .btn.play,
+:root[data-flag-dir-warm][data-flag-dir-warm] [data-region^='deck'] .transport .btn.play:not(.on) {
+  --lit: var(--deck);
+  color: var(--fg);
+  background: var(--dw-raised-bg);
+  box-shadow: var(--dw-raised);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] [data-region^='deck'] .transport .btn.play:not(.on, [aria-disabled='true']):hover {
+  background: var(--flag-buttons-bg-hover);
+  box-shadow: var(--flag-buttons-ring-hover);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] [data-region^='deck'] .transport .btn.play.on,
+:root[data-flag-dir-warm][data-flag-dir-warm] [data-region^='deck'] .transport .btn.play.on:hover {
+  color: var(--deck);
+  background: var(--dw-lit-bg);
+  box-shadow: var(--dw-lit);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] [data-region^='deck'] .transport .btn.play.on svg {
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--deck) 70%, transparent));
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] [data-region^='deck'] .transport .btn.play.on[data-cueing] {
+  --lit: var(--cue);
+  color: var(--cue);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] [data-region^='deck'] .transport .btn.play[aria-disabled='true'] {
+  background: none;
+  box-shadow: inset 0 0 0 1px var(--line);
+  color: var(--fg-4);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] [data-region^='deck'] .transport .btn[aria-disabled='true'] {
+  opacity: 0.4;
+  background: none;
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] [data-region^='deck'] .transport .sync {
+  color: var(--fg-2);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] [data-region^='deck'] .transport .jumps button {
+  border-radius: 9px;
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] [data-region^='deck'] .transport .jumps span {
+  color: var(--fg-2);
+}
+
+/* The pitch column. */
+:root[data-flag-dir-warm][data-flag-dir-warm] [data-region^='deck'] .pitch .val {
+  color: var(--fg-2);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] [data-region^='deck'] .pitch .nudge {
+  border-radius: 9px;
+  background: var(--dw-sunk-bg);
+  box-shadow: var(--dw-sunk);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] [data-region^='deck'] .pitch .nudge button {
+  height: 24px;
+  border-radius: 7px;
+  color: var(--fg-2);
+  background: none;
+  box-shadow: none;
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] [data-region^='deck'] .pitch .nudge button:hover:not([aria-disabled='true']) {
+  background: rgb(255 246 232 / 0.07);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] [data-region^='deck'] .pitch .nudge::before,
+:root[data-flag-dir-warm][data-flag-dir-warm] [data-region^='deck'] .pitch .nudge::after {
+  display: none;
+}
+/* Key lock: raised, and lit in the deck's white while on. */
+:root[data-flag-dir-warm][data-flag-dir-warm] [data-region^='deck'] .pitch .lock {
+  --lit: var(--deck);
+  border-radius: 10px;
+  background: var(--dw-raised-bg);
+  box-shadow: var(--dw-raised);
+  color: var(--fg-2);
+  font-weight: 500;
+  transition: background var(--dw-snappy-ms) var(--dw-snappy), box-shadow var(--dw-snappy-ms) var(--dw-snappy), color var(--dw-snappy-ms) var(--dw-snappy);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] [data-region^='deck'] .pitch .lock:hover {
+  background: var(--flag-buttons-bg-hover);
+  box-shadow: var(--flag-buttons-ring-hover);
+  color: var(--fg);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] [data-region^='deck'] .pitch .lock.on,
+:root[data-flag-dir-warm][data-flag-dir-warm] [data-region^='deck'] .pitch .lock.on:hover {
+  color: var(--deck);
+  background: var(--dw-lit-bg);
+  box-shadow: var(--dw-lit);
+}
+
+/* Faders: a dark grooved slot and a matte cap that stands off it. */
+:root[data-flag-dir-warm][data-flag-dir-warm] .fader .line {
+  background: #050403;
+  box-shadow: inset 0 1px 2px #000, 0 1px 0 rgb(255 246 232 / 0.06);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] .fader .cap {
+  border-radius: 4px;
+  background: linear-gradient(180deg, #4a4540, #2b2825 55%, #252220);
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.7), inset 0 1px 0 rgb(255 246 232 / 0.18), 0 3px 6px rgb(0 0 0 / 0.55), 0 8px 14px -6px rgb(0 0 0 / 0.6);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] .fader .cap::after {
+  background: #f2ead8;
+  box-shadow: 0 0 4px rgb(242 234 216 / 0.35);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] .fader:hover .cap,
+:root[data-flag-dir-warm][data-flag-dir-warm] .fader.dragging .cap {
+  background: linear-gradient(180deg, #554f49, #312d29 55%, #2a2724);
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.7), inset 0 1px 0 rgb(255 246 232 / 0.24), 0 3px 6px rgb(0 0 0 / 0.55), 0 8px 14px -6px rgb(0 0 0 / 0.6);
+}
+
+/* ── Mixer ─────────────────────────────────────────────────────────── */
+
+/* Dials: matte machined caps. Top-lit, a darker skirt, a soft shadow
+   under; a cream index. No knurl. */
+:root[data-flag-dir-warm][data-flag-dir-warm] .knob .dial {
+  background: radial-gradient(circle at 50% 50%, #2c2925 0 58%, #1b1917 62% 100%);
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.75), inset 0 1px 0 rgb(255 246 232 / 0.12), 0 2px 4px rgb(0 0 0 / 0.6), 0 6px 12px -4px rgb(0 0 0 / 0.55);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] .knob .dial::after {
+  inset: 14%;
+  background: radial-gradient(circle at 50% 20%, #3d3934, #2a2723 70%);
+  box-shadow: inset 0 1px 0 rgb(255 246 232 / 0.14), 0 1px 2px rgb(0 0 0 / 0.5);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] .knob .dial i {
+  top: 10%;
+  height: 28%;
+  width: 2px;
+  background: #f2ead8;
+  box-shadow: 0 0 4px rgb(242 234 216 / 0.4);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] .knob .dial.killed i {
+  background: var(--fg-4);
+  box-shadow: none;
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] .knob .wrap:has(.dial:hover) .dial::after,
+:root[data-flag-dir-warm][data-flag-dir-warm] .knob .dial.dragging::after {
+  background: radial-gradient(circle at 50% 20%, #47423c, #2f2b27 70%);
+  box-shadow: inset 0 1px 0 rgb(255 246 232 / 0.2), 0 1px 2px rgb(0 0 0 / 0.5);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] .knob .dial.dragging {
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.75), inset 0 1px 0 rgb(255 246 232 / 0.12), 0 2px 4px rgb(0 0 0 / 0.6), 0 6px 12px -4px rgb(0 0 0 / 0.55);
+}
+/* The ring: idle ticks are faint dots; the lit arc glows softly. */
+/* Each tick drawn as a dot at its outer end (a zero dash, round cap). */
+:root[data-flag-dir-warm][data-flag-dir-warm] .knob line {
+  stroke: rgb(255 246 232 / 0.16);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-dasharray: 0 100;
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] .knob line.major {
+  stroke: rgb(255 246 232 / 0.3);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] .knob line.on {
+  stroke-width: 2.4;
+  filter: drop-shadow(0 0 2px var(--c));
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] .knob .label {
+  color: var(--fg-3);
+}
+
+/* EQ kill (owner's call 1, a): a small raised key like every button;
+   killed, it's sunk and lit red. */
+:root[data-flag-dir-warm][data-flag-dir-warm] .knob button.label {
+  --lit: var(--kill);
+  height: 20px;
+  min-width: 38px;
+  border-radius: 6px;
+  background: var(--dw-raised-bg);
+  box-shadow: var(--dw-raised);
+  color: var(--fg-2);
+  font-weight: 500;
+  transition: background var(--dw-snappy-ms) var(--dw-snappy), box-shadow var(--dw-snappy-ms) var(--dw-snappy), color var(--dw-snappy-ms) var(--dw-snappy);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] .knob button.label:hover {
+  background: var(--flag-buttons-bg-hover);
+  box-shadow: var(--flag-buttons-ring-hover);
+  color: var(--fg);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] .knob button.label:active {
+  background: var(--dw-sunk-bg);
+  box-shadow: var(--dw-sunk);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] .knob button.label.killed,
+:root[data-flag-dir-warm][data-flag-dir-warm] .knob button.label.killed:hover {
+  background: var(--dw-lit-bg);
+  box-shadow: var(--dw-lit);
+  color: var(--kill);
+}
+
+/* Meters: a warm, rounded bar in the deck's own white; the top 3 dB the
+   full white, over 0 dB red. The master in the room's white. */
+:root[data-flag-dir-warm][data-flag-dir-warm] .mixer .fwrap {
+  --mc: var(--deck-a);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] .mixer .fwrap.mirror {
+  --mc: var(--deck-b);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] .mixer .cen .mpair {
+  --mc: rgb(241 237 229 / 0.7);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] .mixer .meter .bar,
+:root[data-flag-dir-warm][data-flag-dir-warm] .mixer .meter .clip {
+  background: #050403;
+  box-shadow: inset 0 1px 1px rgb(0 0 0 / 0.8), 0 1px 0 rgb(255 246 232 / 0.05);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] .mixer .meter .bar::after {
+  background: linear-gradient(to top, color-mix(in srgb, var(--mc) 55%, transparent) 0, color-mix(in srgb, var(--mc) 85%, transparent) 88%, var(--fg) 88% 97.9%, var(--kill) 97.9%);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--mc) 40%, transparent);
+}
+/* (Without #60's meters: the plain bar takes the same colours.) */
+:root[data-flag-dir-warm][data-flag-dir-warm] .mixer .meter:not(.m60) {
+  background: #050403;
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] .mixer .meter:not(.m60)::after {
+  background: linear-gradient(to top, color-mix(in srgb, var(--mc) 55%, transparent) 0, color-mix(in srgb, var(--mc) 85%, transparent) 82%, var(--fg) 82% 95%, var(--kill) 95%);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] .mixer .meter.clipped .clip {
+  background: var(--kill);
+  box-shadow: 0 0 6px var(--kill);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] .mixer .meter .peak {
+  background: var(--fg);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] .mixer .lim {
+  color: var(--kill);
+}
+
+/* Headphone cue: a raised key; on, lit amber (cue). */
+:root[data-flag-dir-warm][data-flag-dir-warm] .mixer .hp,
+:root[data-flag-dir-warm][data-flag-dir-warm] .mixer .hp:not(.on) {
+  --lit: var(--cue);
+  border-radius: 7px;
+  background: var(--dw-raised-bg);
+  box-shadow: var(--dw-raised);
+  color: var(--fg-2);
+  transition: background var(--dw-snappy-ms) var(--dw-snappy), box-shadow var(--dw-snappy-ms) var(--dw-snappy), color var(--dw-snappy-ms) var(--dw-snappy);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] .mixer .hp:hover {
+  background: var(--flag-buttons-bg-hover);
+  box-shadow: var(--flag-buttons-ring-hover);
+  color: var(--fg);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] .mixer .hp.on,
+:root[data-flag-dir-warm][data-flag-dir-warm] .mixer .hp.on:hover {
+  color: var(--cue);
+  background: var(--dw-lit-bg);
+  box-shadow: var(--dw-lit);
+}
+/* Rec: raised; recording, lit red, the dot glowing. */
+:root[data-flag-dir-warm][data-flag-dir-warm] .mixer button.rec {
+  --lit: var(--kill);
+  border-radius: 7px;
+  background: var(--dw-raised-bg);
+  box-shadow: var(--dw-raised);
+  color: var(--fg-2);
+  font-weight: 500;
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] .mixer button.rec.on,
+:root[data-flag-dir-warm][data-flag-dir-warm] .mixer button.rec.on:hover {
+  color: var(--fg);
+  background: var(--dw-lit-bg);
+  box-shadow: var(--dw-lit);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] .mixer button.rec.on .dot {
+  background: var(--kill);
+  box-shadow: 0 0 8px var(--kill);
+}
+/* Crossfader row. */
+:root[data-flag-dir-warm][data-flag-dir-warm] .mixer .xf {
+  border-top: 0;
+  box-shadow: 0 -1px 0 rgb(0 0 0 / 0.35), inset 0 1px 0 rgb(255 246 232 / 0.04);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] .mixer .xf .end {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  box-shadow: 0 0 8px currentColor;
+}
+
+/* ── Library ───────────────────────────────────────────────────────── */
+
+/* Section heads: the site's micro-label. */
+:root[data-flag-dir-warm][data-flag-dir-warm] section.library nav .h,
+:root[data-flag-dir-warm][data-flag-dir-warm] .settings nav .h {
+  font-size: var(--t-xs);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+/* Sidebar: selected is a raised thumb; hover only lifts the label. */
+:root[data-flag-dir-warm][data-flag-dir-warm] section.library nav .item,
+:root[data-flag-dir-warm][data-flag-dir-warm] section.library nav .add {
+  border-radius: 8px;
+  transition: background var(--dw-smooth-ms) var(--dw-smooth), color 140ms ease, box-shadow var(--dw-smooth-ms) var(--dw-smooth);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] section.library nav .item:hover,
+:root[data-flag-dir-warm][data-flag-dir-warm] section.library nav .add:hover {
+  background: rgb(255 246 232 / 0.04);
+  color: var(--fg);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] section.library nav .item.on,
+:root[data-flag-dir-warm][data-flag-dir-warm] section.library nav .item.on:hover {
+  color: var(--fg);
+  background: linear-gradient(180deg, rgb(255 246 232 / 0.11), rgb(255 246 232 / 0.06));
+  box-shadow: inset 0 1px 0 rgb(255 248 236 / 0.13), 0 1px 2px rgb(0 0 0 / 0.45), 0 2px 6px -2px rgb(0 0 0 / 0.4);
+}
+/* The sidebar's edge: a groove, not a hairline. */
+:root[data-flag-dir-warm][data-flag-dir-warm] section.library nav {
+  border-right-color: rgb(0 0 0 / 0.35);
+  box-shadow: 1px 0 0 rgb(255 246 232 / 0.04);
+}
+
+/* Toolbar: search is a well; Sampler and Settings are raised keys. */
+:root[data-flag-dir-warm][data-flag-dir-warm] section.library .bar .search {
+  border-radius: 10px;
+  background: var(--well);
+  box-shadow: var(--well-shadow);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] section.library .bar .search:focus-within {
+  box-shadow: var(--well-shadow), 0 0 0 2px var(--dw-focus);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] section.library .bar :is(.samp, .gear) {
+  border-radius: 10px;
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] section.library .bar .samp.on {
+  --lit: var(--fg);
+  background: var(--dw-lit-bg);
+  box-shadow: var(--dw-lit);
+}
+
+/* The column heads: micro-labels, no hairline (the rows start the list). */
+:root[data-flag-dir-warm][data-flag-dir-warm] section.library .row.head {
+  border-bottom-color: transparent;
+  box-shadow: none;
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] section.library .row.head .sort {
+  font-size: var(--t-xs);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] section.library .row.head .sort:hover,
+:root[data-flag-dir-warm][data-flag-dir-warm] section.library .row.head .sort.on {
+  color: var(--fg-2);
+  background: none;
+}
+
+/* Rows: hover a faint lift; selected a raised pill, no hairline. */
+:root[data-flag-dir-warm][data-flag-dir-warm] section.library .scroll .row {
+  border-radius: 9px;
+  transition: background 140ms ease;
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] section.library .scroll .row:hover {
+  background: rgb(255 246 232 / 0.035);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] section.library .scroll .row.sel,
+:root[data-flag-dir-warm][data-flag-dir-warm] section.library .scroll .row.sel:hover {
+  background: linear-gradient(180deg, rgb(255 246 232 / 0.1), rgb(255 246 232 / 0.055));
+  box-shadow: inset 0 1px 0 rgb(255 248 236 / 0.12), 0 1px 2px rgb(0 0 0 / 0.45), 0 3px 8px -3px rgb(0 0 0 / 0.5);
+  color: var(--fg);
+}
+/* Loaded rows: the bar becomes a small light in the deck's colour. */
+:root[data-flag-dir-warm][data-flag-dir-warm] section.library .scroll .row .ld b {
+  width: 6px;
+  height: 6px;
+  margin-top: -3px;
+  border-radius: 50%;
+  left: 8px;
+  box-shadow: 0 0 8px var(--deck-a);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] section.library .scroll .row .ld b.b {
+  box-shadow: 0 0 8px var(--deck-b);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] section.library .scroll .row .ld b ~ b {
+  left: 16px;
+}
+/* Key match (owner's call 8, a): a 4px dot after the key, no underline. */
+:root[data-flag-dir-warm][data-flag-dir-warm] [data-region='tracks'] .row .k.mix {
+  box-shadow: none;
+  padding-bottom: 0;
+  color: var(--fg);
+}
+/* Drawn in the key cell's right edge, so it never costs the key its width. */
+:root[data-flag-dir-warm][data-flag-dir-warm] [data-region='tracks'] .row > span:has(> .k.mix) {
+  background: radial-gradient(circle, var(--fg-2) 0 2px, transparent 2.5px) no-repeat right 0 center / 6px 6px;
+}
+
+/* ── Messages ──────────────────────────────────────────────────────── */
+
+/* The toast: a small pane of the room's glass, rising on the smooth
+   spring. Undo is a raised key. */
+:root[data-flag-dir-warm][data-flag-dir-warm] .toastbox .toast {
+  border-radius: 12px;
+  background: rgb(29 26 23 / 0.86);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  backdrop-filter: blur(20px) saturate(1.4);
+  box-shadow: inset 0 1px 0 rgb(255 248 236 / 0.12), inset 0 0 0 1px rgb(255 244 228 / 0.07), 0 12px 40px rgb(0 0 0 / 0.5);
+  font-weight: 500;
+  transition: opacity 200ms ease-out, translate var(--dw-smooth-ms) var(--dw-smooth);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] .toastbox .toast .undo {
+  border-radius: 8px;
+  background: var(--dw-raised-bg);
+  box-shadow: var(--dw-raised);
+}
+
+/* The device-lost banner (owner's call 2, a): its own shape and colour,
+   across the top of the library where the toolbar was, so it sits next to
+   the decks and covers no lane and no track. Lit red from inside: it is
+   the one critical thing in the room. */
+:root[data-flag-dir-warm][data-flag-dir-warm] .app > .banner.lost {
+  top: auto;
+  bottom: calc(var(--gap) + var(--lib) - 58px);
+  left: calc(var(--gap) + var(--library-sidebar, 212px) + 8px);
+  right: calc(var(--gap) + 8px);
+  translate: none;
+  transform: none;
+  width: auto;
+  max-width: none;
+  min-height: 48px;
+  padding: 6px 6px 6px 16px;
+  border-radius: 14px;
+  background:
+    radial-gradient(60% 160% at 0% 50%, rgb(255 106 92 / 0.22), transparent 70%),
+    linear-gradient(180deg, rgb(52 22 18 / 0.96), rgb(36 16 13 / 0.96));
+  box-shadow: inset 0 1px 0 rgb(255 200 190 / 0.14), inset 0 0 0 1px rgb(255 106 92 / 0.28), 0 0 40px -8px rgb(255 106 92 / 0.35), 0 16px 40px rgb(0 0 0 / 0.5);
+  color: rgb(255 236 230 / 0.75);
+  animation: dw-rise var(--dw-smooth-ms) var(--dw-smooth);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] .app > .banner.lost b {
+  color: #fff4f0;
+  font-weight: 600;
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] .app > .banner.lost svg {
+  width: 20px;
+  height: 20px;
+  margin-right: 10px;
+  stroke: var(--kill);
+  filter: drop-shadow(0 0 6px rgb(255 106 92 / 0.6));
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] .app > .banner.lost > span {
+  flex: 1;
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] .app > .banner.lost .btn,
+:root[data-flag-dir-warm][data-flag-dir-warm] .app > .banner.lost .btn.primary {
+  margin-left: 16px;
+  height: 36px;
+  border-radius: 9px;
+  background: linear-gradient(180deg, rgb(255 236 230 / 0.16), rgb(255 236 230 / 0.08));
+  box-shadow: inset 0 1px 0 rgb(255 236 230 / 0.2), 0 1px 2px rgb(0 0 0 / 0.5);
+  color: #fff4f0;
+  font-weight: 500;
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] .app > .banner.lost .btn:hover:not(:disabled) {
+  background: linear-gradient(180deg, rgb(255 236 230 / 0.22), rgb(255 236 230 / 0.12));
+  color: #fff;
+}
+/* While it shows, the toolbar under it steps back (a toast docked there
+   too: the banner is the message); the list keeps its rows. */
+:root[data-flag-dir-warm][data-flag-dir-warm] .app:has(> .banner.lost) .toastbox .toast[data-docked] {
+  visibility: hidden;
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] .app:has(> .banner.lost) section.library :is(nav, .main) {
+  padding-bottom: 0;
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] .app:has(> .banner.lost) section.library .main .bar {
+  visibility: hidden;
+}
+/* The decks say they're held: Play's glyph dims. */
+:root[data-flag-dir-warm][data-flag-dir-warm] .app:has(> .banner.lost) [data-region^='deck'] .transport .btn.play.on {
+  color: var(--fg-3);
+  background: var(--dw-sunk-bg);
+  box-shadow: var(--dw-sunk);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] .app:has(> .banner.lost) [data-region^='deck'] .transport .btn.play.on svg {
+  filter: none;
+}
+/* Other banners (updates, health): the toast's glass. */
+:root[data-flag-dir-warm][data-flag-dir-warm] .app > .banner:not(.lost) {
+  border-radius: 12px;
+  background: rgb(29 26 23 / 0.9);
+  box-shadow: inset 0 1px 0 rgb(255 248 236 / 0.12), inset 0 0 0 1px rgb(255 244 228 / 0.07), 0 12px 40px rgb(0 0 0 / 0.5);
+}
+@keyframes dw-rise {
+  from {
+    opacity: 0;
+    translate: 0 6px;
+  }
+}
+
+/* Tooltips and menus: the toast's glass. */
+:root[data-flag-dir-warm][data-flag-dir-warm] .tip {
+  border-radius: 8px;
+  background: rgb(29 26 23 / 0.94);
+  box-shadow: inset 0 1px 0 rgb(255 248 236 / 0.1), inset 0 0 0 1px rgb(255 244 228 / 0.07), 0 8px 24px rgb(0 0 0 / 0.45);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] .menu {
+  border-radius: 12px;
+  background: rgb(29 26 23 / 0.94);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  backdrop-filter: blur(20px) saturate(1.4);
+  box-shadow: inset 0 1px 0 rgb(255 248 236 / 0.12), inset 0 0 0 1px rgb(255 244 228 / 0.07), 0 16px 40px rgb(0 0 0 / 0.55);
+}
+
+/* ── Dialogs ───────────────────────────────────────────────────────── */
+
+/* The backdrop (owner's call 6): one even treatment, the whole room
+   frosted and dimmed, so no seam at the library's edge. */
+:root[data-flag-dir-warm][data-flag-dir-warm] .backdrop:has(> .card[role='dialog']) {
+  background: rgb(8 7 6 / 0.45);
+  -webkit-backdrop-filter: blur(14px) saturate(1.2);
+  backdrop-filter: blur(14px) saturate(1.2);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] .backdrop:has(> .card[role='dialog'])::before {
+  content: none;
+}
+/* The card: the room's glass, thicker, with a real top light. */
+:root[data-flag-dir-warm][data-flag-dir-warm] .backdrop > .card[role='dialog'] {
+  border-radius: 20px;
+  background: linear-gradient(180deg, rgb(255 246 232 / 0.07), rgb(255 246 232 / 0.02) 30%), #1a1815;
+  box-shadow: inset 0 1px 0 rgb(255 248 236 / 0.16), inset 0 0 0 1px rgb(255 244 228 / 0.07), 0 40px 100px rgb(0 0 0 / 0.65), 0 8px 24px rgb(0 0 0 / 0.4);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] .backdrop > .card[role='dialog'] h2 {
+  font-weight: 600;
+  letter-spacing: -0.03em;
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] .backdrop > .card[role='dialog'] h3 {
+  font-weight: 500;
+}
+/* Sources are wells; the step marks are micro-labels' weight. */
+:root[data-flag-dir-warm][data-flag-dir-warm] .backdrop > .card[role='dialog'] .found {
+  border-radius: 12px;
+  background: var(--well);
+  box-shadow: var(--well-shadow);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] .backdrop > .card[role='dialog'] .found:hover:not(:disabled) {
+  background: rgb(4 3 2 / 0.3);
+}
+/* Primary: the paper button (the site's Download); the rest raised. */
+:root[data-flag-dir-warm][data-flag-dir-warm] .backdrop > .card[role='dialog'] :is(.go, .btn.primary) {
+  display: inline-grid;
+  place-items: center;
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 9px;
+  background: var(--paper);
+  color: var(--ink);
+  font-weight: 500;
+  box-shadow: inset 0 1px 0 #fff, 0 1px 2px rgb(0 0 0 / 0.5), 0 4px 12px -4px rgb(0 0 0 / 0.5);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] .backdrop > .card[role='dialog'] .found + .found :is(.go, .btn.primary),
+:root[data-flag-dir-warm][data-flag-dir-warm] .backdrop > .card[role='dialog'] .source + .source :is(.go, .btn.primary) {
+  background: var(--dw-raised-bg);
+  box-shadow: var(--dw-raised);
+  color: var(--fg);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] .backdrop > .card[role='dialog'] .link {
+  text-decoration: none;
+  color: var(--fg-2);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] .backdrop > .card[role='dialog'] .link:hover {
+  color: var(--fg);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] .backdrop > .card[role='dialog'] .close {
+  border-radius: 9px;
+}
+
+/* ── Settings ──────────────────────────────────────────────────────── */
+
+:root[data-flag-dir-warm][data-flag-dir-warm] .settings nav .item {
+  border-radius: 8px;
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] .settings nav .item:hover {
+  background: rgb(255 246 232 / 0.04);
+  box-shadow: none;
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] .settings nav .item.on,
+:root[data-flag-dir-warm][data-flag-dir-warm] .settings nav .item.on:hover {
+  color: var(--fg);
+  background: linear-gradient(180deg, rgb(255 246 232 / 0.11), rgb(255 246 232 / 0.06));
+  box-shadow: inset 0 1px 0 rgb(255 248 236 / 0.13), 0 1px 2px rgb(0 0 0 / 0.45), 0 2px 6px -2px rgb(0 0 0 / 0.4);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] .settings .bar h2 {
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] .settings section h3 {
+  font-size: var(--t-xs);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] .settings select {
+  border-radius: 9px;
+  background: var(--dw-raised-bg);
+  box-shadow: var(--dw-raised);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] .settings input[type='checkbox'] {
+  border-radius: 5px;
+  background: var(--well);
+  box-shadow: var(--well-shadow);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] .settings input[type='checkbox']:checked {
+  background: var(--paper);
+  box-shadow: 0 0 8px rgb(242 239 232 / 0.25);
+}
+
+/* ── Focus and buttons everywhere ──────────────────────────────────── */
+
+:root[data-flag-dir-warm][data-flag-dir-warm] :focus-visible {
+  outline: 2px solid var(--dw-focus);
+  outline-offset: 2px;
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] .btn {
+  border-radius: 9px;
+  transition:
+    background var(--dw-snappy-ms) var(--dw-snappy),
+    box-shadow var(--dw-snappy-ms) var(--dw-snappy),
+    color var(--dw-snappy-ms) var(--dw-snappy),
+    translate var(--dw-snappy-ms) var(--dw-snappy);
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] .btn.ghost:hover:not(:disabled, [aria-disabled='true']) {
+  background: rgb(255 246 232 / 0.05);
+}
+/* The grips between panels: hidden at rest. */
+:root[data-flag-dir-warm][data-flag-dir-warm] .split i,
+:root[data-flag-dir-warm][data-flag-dir-warm] .app > .grip:not(.side) i {
+  background: transparent;
+}
+:root[data-flag-dir-warm][data-flag-dir-warm] .split:hover i,
+:root[data-flag-dir-warm][data-flag-dir-warm] .app > .grip:not(.side):hover i {
+  background: var(--fg-3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root[data-flag-dir-warm][data-flag-dir-warm] .bd i.o1,
+  :root[data-flag-dir-warm][data-flag-dir-warm] .bd i.o2 {
+    scale: 1;
+    opacity: 0.75 !important;
+  }
+}

@@ -1,0 +1,922 @@
+/* #92 (UI audit flag; a visual direction): Quiet.
+
+   Nothing shines except what you read. The doc's graphite and glass, kept
+   and made calmer, with the brightness given back to the figures a DJ
+   reads mid-set: time remaining and tempo are the only full-white things
+   on screen. (Generated from the directions work folder's quiet.src.css;
+   :root[data-flag-dir-quiet][data-flag-dir-quiet] stands for :root[data-flag-dir-quiet][data-flag-dir-quiet], doubled so
+   the baseline flags' choice rules can't out-rank it.)
+
+   The system, in one place:
+   - Light: the numerals (remaining, BPM) at full --fg. Every other label
+     at --fg-2 or below. Waveform cores peak at the deck's own colour, not
+     white. The background pools are the doc's, at its quarter strength,
+     still, so the glass has something to be lit by.
+   - Colour roles: ice and cream are the decks, and only the decks (their
+     waveforms, Play while playing, Key lock on, the meters, a 1px light
+     along the top of each deck panel). Amber is cue, and only cue (Cue,
+     cue points, the headphone cue). Red is kill, Rec and clip. Yellow only
+     on the device-lost icon. There are no solid light buttons anywhere.
+   - One state grammar, everywhere: rest = a tonal fill (5%) and an
+     --fg-2 label, no outline; hover = 8% and an --fg label; pressed = a
+     shade darker than rest, no scale; on = a tint of the role colour (14%)
+     with the label or glyph in that colour; selected = --sel (9%) and an
+     --fg label, never a hairline; focus = the 2px --fg-2 ring, keys only;
+     disabled = --fg-4 label, no fill.
+   - Type: Geist. Titles 16/500 at -0.01em. Numerals 32/300 at -0.02em,
+     the tenths a step down. Captions 11/400 --fg-3, in sentence case.
+   - Material: graphite page, quieter glass (less saturation, one soft
+     shadow, a 1px top light), wells a step darker. Tone separates things,
+     not lines.
+   - Motion: 140ms ease-out for colour, nothing springs, nothing moves on
+     its own. */
+
+:root[data-flag-dir-quiet][data-flag-dir-quiet] {
+  --dq-ease: cubic-bezier(0.23, 1, 0.32, 1);
+  --dq-t: 140ms;
+
+  --fg: #eceae4;
+  --fg-2: rgb(236 234 228 / 0.62);
+  --fg-3: rgb(236 234 228 / 0.48);
+  --fg-4: rgb(236 234 228 / 0.28);
+
+  --raise: rgb(255 255 255 / 0.05);
+  --hover: rgb(255 255 255 / 0.08);
+  --sel: rgb(255 255 255 / 0.09);
+  --line: rgb(255 255 255 / 0.06);
+  --line-2: rgb(255 255 255 / 0.09);
+  --popover: #1c1d21;
+
+  --glass-fill: linear-gradient(180deg, rgb(255 255 255 / 0.055), rgb(255 255 255 / 0.028) 120px, rgb(255 255 255 / 0.024));
+  --glass-blur: blur(30px) saturate(1.1);
+  --glass-edge: inset 0 1px 0 rgb(255 255 255 / 0.08), inset 0 0 0 1px rgb(255 255 255 / 0.045), 0 24px 48px -16px rgb(0 0 0 / 0.5);
+  --well: rgb(0 0 0 / 0.34);
+  --well-shadow: inset 0 1px 1px rgb(0 0 0 / 0.35);
+
+  --cue: #e8b04a;
+  --kill: #f0675c;
+  --dq-focus: rgb(236 234 228 / 0.62);
+  --focus-ring: var(--dq-focus);
+
+  /* Waveforms: the ribbon is additive (low x0.5 + mid x0.38 + high x0.55),
+     so these peak at about each deck's colour and never clip to white. */
+  --a-low: #2f3d4f;
+  --a-high: #8fa3bb;
+  --b-low: #4d3e2e;
+  --b-high: #b5a48c;
+
+  /* Hot cues: one lightness, lower chroma, so they read as a family. */
+  --hc-1: #e2b064;
+  --hc-2: #8fb2de;
+  --hc-3: #e09a88;
+  --hc-4: #90c49c;
+  --hc-5: #b7a2da;
+  --hc-6: #86c2c0;
+  --hc-7: #dea2bc;
+  --hc-8: #ccc58e;
+
+  /* The baseline's button tokens (flag 09) become the one tonal control. */
+  --flag-buttons-bg: rgb(255 255 255 / 0.05);
+  --flag-buttons-ring: none;
+  --flag-buttons-bg-hover: rgb(255 255 255 / 0.08);
+  --flag-buttons-ring-hover: none;
+  --flag-buttons-bg-on: rgb(255 255 255 / 0.09);
+  --flag-buttons-ring-on: none;
+
+  --dq-rest: rgb(255 255 255 / 0.05);
+  --dq-hover: rgb(255 255 255 / 0.08);
+  --dq-press: rgb(255 255 255 / 0.03);
+}
+
+/* On, the one recipe: a tint of the control's own role colour (--role),
+   the label or glyph in that colour. */
+:root[data-flag-dir-quiet][data-flag-dir-quiet] :is(button, .btn) {
+  --dq-on-bg: color-mix(in srgb, var(--role, var(--fg)) 14%, transparent);
+  --dq-on-bg-hover: color-mix(in srgb, var(--role, var(--fg)) 19%, transparent);
+}
+
+/* ── The room ───────────────────────────────────────────────────────── */
+
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .bd {
+  background: radial-gradient(110% 80% at 50% 0%, #17181c, #09090b 72%);
+}
+/* The doc's pools at its quarter strength, still: enough light for the
+   glass's top edge to read. */
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .bd i {
+  animation: none;
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .bd i.o1 {
+  background: radial-gradient(circle, color-mix(in srgb, var(--a) 30%, transparent), transparent 62%);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .bd i.o2 {
+  background: radial-gradient(circle, color-mix(in srgb, var(--b) 26%, transparent), transparent 62%);
+}
+
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .decks > section,
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .waves.glass,
+:root[data-flag-dir-quiet][data-flag-dir-quiet] section.library,
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .settings {
+  background: var(--glass-fill);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-edge);
+}
+
+/* Signature: each deck panel's top edge catches its deck's light, and a
+   breath of that light falls a little way into the panel. */
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .decks > section[data-region^='deck'] {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--deck) 7%, transparent), transparent 120px),
+    var(--glass-fill);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--deck) 60%, transparent),
+    inset 0 0 0 1px rgb(255 255 255 / 0.04),
+    0 24px 48px -16px rgb(0 0 0 / 0.5);
+}
+
+/* Grips between panels: hidden until hovered. */
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .split i,
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .app > .grip:not(.side) i {
+  background: transparent;
+  transition: background var(--dq-t) var(--dq-ease);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .split:hover i,
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .app > .grip:not(.side):hover i {
+  background: var(--fg-3);
+}
+
+/* ── Waveform lanes ────────────────────────────────────────────────── */
+
+/* Lane titles go (owner's call 7, a): the deck and the list already name
+   the track. An empty lane keeps its hint. */
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .waves .who:not(:has(.hint)) {
+  display: none;
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .waves .who:has(.hint) {
+  background: none;
+  box-shadow: none;
+  color: var(--fg-3);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .lane + .lane {
+  border-top-color: rgb(255 255 255 / 0.04);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .waves .zoom {
+  background: rgb(20 21 24 / 0.7);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .waves .zoom button {
+  color: var(--fg-3);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .waves .zoom button:hover {
+  color: var(--fg);
+}
+
+/* ── Decks ─────────────────────────────────────────────────────────── */
+
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] header .name {
+  font-size: var(--t-md);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--fg);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] header .name.dim {
+  font-weight: 400;
+  color: var(--fg-3);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] header .artist {
+  color: var(--fg-3);
+}
+/* The figures: full white, light, set a little tighter. */
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .bpm .big {
+  font-size: var(--t-xl);
+  font-weight: 300;
+  letter-spacing: -0.02em;
+  color: var(--fg);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .bpm .unit,
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .bpm .key {
+  color: var(--fg-3);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .bpm .key.shifted {
+  color: var(--fg-2);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .times .rm,
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .times[data-big='elapsed'] .el {
+  letter-spacing: -0.02em;
+  color: var(--fg);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .times[data-big='elapsed'] .rm,
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .times:not([data-big='elapsed']) .el {
+  color: var(--fg-3);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .times .t {
+  color: var(--fg-3);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .pitch .val {
+  color: var(--fg-2);
+}
+
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .overview {
+  border-radius: 10px;
+  background: var(--well);
+  box-shadow: var(--well-shadow);
+}
+
+/* Tabs: labels in --fg-3, the current one --fg with a 1px line under it.
+   No tile on hover or press: tabs are text. */
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .modes button {
+  color: var(--fg-3);
+  background: none !important;
+  box-shadow: none;
+  transition: color var(--dq-t) var(--dq-ease);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .modes button:hover {
+  color: var(--fg-2);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .modes button.on {
+  color: var(--fg);
+  font-weight: 500;
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .modes button.on::after {
+  height: 1px;
+  background: var(--fg-2);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .modes {
+  border-bottom-color: rgb(255 255 255 / 0.05);
+}
+
+/* The mode row: cue slots, loop, FX and stems are text. A set cue's dot
+   is its colour; an empty slot's number at --fg-2 (owner's call 9's
+   in-doc answer). */
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .strip .tc {
+  border-radius: 8px;
+  transition: background var(--dq-t) var(--dq-ease), color var(--dq-t) var(--dq-ease);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .strip .tc:hover {
+  background: var(--dq-rest);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .strip .tc i {
+  box-shadow: none;
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .strip :is(.tb, .big, .kind, .tog, .stem) {
+  border-radius: 8px;
+  transition: background var(--dq-t) var(--dq-ease), color var(--dq-t) var(--dq-ease);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .strip :is(.tb, .big, .kind, .tog, .stem):hover {
+  background: var(--dq-rest);
+}
+/* A running loop and an effect that's on: the one "on", in the deck's
+   colour. */
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .perf .big.live,
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .fx .tog.live {
+  --role: var(--deck);
+  background: color-mix(in srgb, var(--deck) 10%, transparent);
+  color: var(--deck);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .perf .big.live b::before,
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .perf .big.live :is(b, span) {
+  color: var(--deck);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .modes button i {
+  background: var(--deck);
+  box-shadow: none;
+}
+
+/* Transport: four tonal keys, no outlines. */
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .transport > .btn,
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .transport > .btn:not(.on) {
+  border-radius: 10px;
+  background: var(--dq-rest);
+  box-shadow: none;
+  transition: background var(--dq-t) var(--dq-ease), color var(--dq-t) var(--dq-ease);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .transport > .btn:not(.cue, .play) {
+  color: var(--fg-2);
+  transition: background var(--dq-t) var(--dq-ease), color var(--dq-t) var(--dq-ease);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .transport > .btn:hover:not([aria-disabled='true']) {
+  background: var(--dq-hover);
+  color: var(--fg);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .btn:active:not(:disabled, [aria-disabled='true']) {
+  transform: none;
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] :is(.btn:not(.ghost), .mixer .hp, .mixer button.rec, .toast .undo, [data-region^='deck'] .pitch .lock, .knob button.label):active:not(:disabled, [aria-disabled='true']) {
+  background: var(--dq-press) !important;
+  box-shadow: none !important;
+  transition-duration: 60ms;
+}
+/* Cue: amber label at rest; at the cue point, the amber tint. */
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .transport .cue,
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .transport .cue:hover:not([aria-disabled='true']) {
+  --role: var(--cue);
+  color: var(--cue);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .transport .cue.lit,
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .transport .cue.lit:hover {
+  background: var(--dq-on-bg);
+  box-shadow: none;
+  color: var(--cue);
+}
+/* Play: never a slab. At rest a tonal key with an --fg glyph; playing,
+   tinted in the deck's colour, the glyph in it. */
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .transport .btn.play {
+  --role: var(--deck);
+  color: var(--fg);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .transport .btn.play.on,
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .transport .btn.play.on:hover {
+  background: var(--dq-on-bg);
+  box-shadow: none;
+  color: var(--deck);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .transport .btn.play.on:hover {
+  background: var(--dq-on-bg-hover);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .transport .btn.play.on[data-cueing] {
+  --role: var(--cue);
+  color: var(--cue);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .transport .btn[aria-disabled='true'] {
+  background: none;
+  color: var(--fg-4);
+  opacity: 1;
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .transport .jumps {
+  background: var(--dq-rest);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .transport .jumps button {
+  border-radius: 8px;
+  color: var(--fg-3);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .transport .jumps button:hover {
+  background: var(--dq-rest);
+  color: var(--fg);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .transport .jumps span {
+  color: var(--fg-2);
+}
+
+/* The pitch column: Key lock and nudge in the same grammar. */
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .pitch .lock {
+  --role: var(--deck);
+  border-radius: 10px;
+  background: var(--dq-rest);
+  box-shadow: none;
+  color: var(--fg-2);
+  transition: background var(--dq-t) var(--dq-ease), color var(--dq-t) var(--dq-ease);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .pitch .lock:hover {
+  background: var(--dq-hover);
+  box-shadow: none;
+  color: var(--fg);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .pitch .lock.on,
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .pitch .lock.on:hover {
+  background: var(--dq-on-bg);
+  box-shadow: none;
+  color: var(--deck);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .pitch .nudge {
+  border-radius: 8px;
+  background: var(--dq-rest);
+  box-shadow: none;
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .pitch .nudge::before,
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .pitch .nudge::after {
+  display: none;
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .pitch .nudge button {
+  background: none;
+  box-shadow: none;
+  color: var(--fg-3);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .pitch .nudge button:hover:not([aria-disabled='true']) {
+  background: var(--dq-rest);
+  color: var(--fg);
+}
+
+/* Faders: a dark slot, a flat cap with one light edge and one line. */
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .fader .line {
+  background: rgb(0 0 0 / 0.5);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.03);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .fader .tick {
+  background: var(--fg-4);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .fader .cap {
+  border-radius: 4px;
+  background: #2a2b30;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.1), 0 1px 3px rgb(0 0 0 / 0.5);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .fader .cap::after {
+  background: var(--fg);
+  box-shadow: none;
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .fader:hover .cap,
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .fader.dragging .cap {
+  background: #33343a;
+}
+
+/* ── Mixer ─────────────────────────────────────────────────────────── */
+
+/* Dials: a flat disc, one light edge, a 2px pointer. No knurl, no cap. */
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .knob .dial {
+  background: #232428;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.08), 0 1px 2px rgb(0 0 0 / 0.45);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .knob .dial::after {
+  content: none;
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .knob .dial i {
+  top: 12%;
+  height: 32%;
+  background: var(--fg);
+  box-shadow: none;
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .knob .dial.killed i {
+  background: var(--fg-4);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .knob .wrap:has(.dial:hover) .dial,
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .knob .dial.dragging {
+  background: #2b2c31;
+}
+/* The ring: hairline ticks; the value arc in a neutral grey (red when
+   killed), no glow. */
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .knob line {
+  stroke: rgb(255 255 255 / 0.1);
+  stroke-width: 1.2;
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .knob line.major {
+  stroke: rgb(255 255 255 / 0.2);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .knob line.on {
+  stroke: var(--fg-2);
+  stroke-width: 1.6;
+  filter: none;
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .knob:has(.dial.killed) line.on {
+  stroke: var(--kill);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .knob .label {
+  color: var(--fg-3);
+}
+/* EQ kill (owner's call 1, b): a caption like Trim and Filter that shows
+   a tile on hover; killed, the red tint (the one "on"). */
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .knob button.label {
+  --role: var(--kill);
+  height: 18px;
+  padding: 0 6px;
+  border-radius: 5px;
+  background: none;
+  box-shadow: none;
+  outline: 0;
+  color: var(--fg-3);
+  transition: background var(--dq-t) var(--dq-ease), color var(--dq-t) var(--dq-ease);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .knob button.label:hover {
+  background: var(--dq-rest);
+  box-shadow: none;
+  color: var(--fg);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .knob button.label.killed,
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .knob button.label.killed:hover {
+  background: var(--dq-on-bg);
+  box-shadow: none;
+  color: var(--kill);
+}
+
+/* Meters: a thin bar in the deck's own colour; the top 3 dB full white,
+   over 0 dB red. The master in --fg-2. No green, no yellow. */
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .mixer .fwrap {
+  --mc: var(--deck-a);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .mixer .fwrap.mirror {
+  --mc: var(--deck-b);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .mixer .cen .mpair {
+  --mc: rgb(236 234 228 / 0.62);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .mixer .meter .bar,
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .mixer .meter .clip {
+  background: rgb(0 0 0 / 0.45);
+  box-shadow: none;
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .mixer .meter .bar::after {
+  background: linear-gradient(to top, color-mix(in srgb, var(--mc) 60%, transparent) 0 88%, var(--fg) 88% 97.9%, var(--kill) 97.9%);
+  box-shadow: none;
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .mixer .meter:not(.m60) {
+  background: rgb(0 0 0 / 0.45);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .mixer .meter:not(.m60)::after {
+  background: linear-gradient(to top, color-mix(in srgb, var(--mc) 60%, transparent) 0 82%, var(--fg) 82% 95%, var(--kill) 95%);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .mixer .meter.clipped .clip {
+  background: var(--kill);
+  box-shadow: none;
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .mixer .meter .peak {
+  background: var(--fg-2);
+}
+/* Headphone cue: tonal; on, the amber tint (it's a cue). */
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .mixer .hp,
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .mixer .hp:not(.on) {
+  --role: var(--cue);
+  border-radius: 8px;
+  background: var(--dq-rest);
+  box-shadow: none;
+  color: var(--fg-3);
+  transition: background var(--dq-t) var(--dq-ease), color var(--dq-t) var(--dq-ease);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .mixer .hp:hover {
+  background: var(--dq-hover);
+  box-shadow: none;
+  color: var(--fg);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .mixer .hp.on,
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .mixer .hp.on:hover {
+  background: var(--dq-on-bg);
+  box-shadow: none;
+  color: var(--cue);
+}
+/* Rec: tonal; recording, the red tint. */
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .mixer button.rec {
+  --role: var(--kill);
+  border-radius: 8px;
+  background: var(--dq-rest);
+  box-shadow: none;
+  color: var(--fg-2);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .mixer button.rec.on,
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .mixer button.rec.on:hover {
+  background: var(--dq-on-bg);
+  box-shadow: none;
+  color: var(--fg);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .mixer button.rec .dot {
+  background: var(--fg-3);
+  box-shadow: none;
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .mixer button.rec.on .dot {
+  background: var(--kill);
+}
+/* The limiter's word: red is the mixer's warning colour; yellow is kept
+   for the device-lost icon alone. */
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .mixer .lim {
+  color: var(--kill);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .mixer .xf {
+  border-top-color: rgb(255 255 255 / 0.04);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .mixer .xf svg.ruler {
+  opacity: 0.6;
+}
+
+/* ── Library ───────────────────────────────────────────────────────── */
+
+:root[data-flag-dir-quiet][data-flag-dir-quiet] section.library nav .h,
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .settings nav .h {
+  font-size: var(--t-xs);
+  font-weight: 500;
+  color: var(--fg-3);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] section.library nav {
+  border-right-color: rgb(255 255 255 / 0.05);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] section.library nav .item,
+:root[data-flag-dir-quiet][data-flag-dir-quiet] section.library nav .add {
+  border-radius: 8px;
+  color: var(--fg-2);
+  box-shadow: none;
+  transition: background var(--dq-t) var(--dq-ease), color var(--dq-t) var(--dq-ease);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] section.library nav .item:hover,
+:root[data-flag-dir-quiet][data-flag-dir-quiet] section.library nav .add:hover {
+  background: rgb(255 255 255 / 0.04);
+  color: var(--fg);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] section.library nav .item.on,
+:root[data-flag-dir-quiet][data-flag-dir-quiet] section.library nav .item.on:hover {
+  background: var(--sel);
+  box-shadow: none;
+  color: var(--fg);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] section.library nav .item small {
+  color: var(--fg-3);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] section.library .bar .search {
+  border-radius: 10px;
+  background: var(--well);
+  box-shadow: var(--well-shadow);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] section.library .bar .search kbd,
+:root[data-flag-dir-quiet][data-flag-dir-quiet] section.library .bar .count {
+  color: var(--fg-3);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] section.library .bar :is(.samp, .gear) {
+  border-radius: 10px;
+  color: var(--fg-2);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] section.library .bar .samp:is(.on, .pressed, [aria-pressed='true']) {
+  --role: var(--fg);
+  background: var(--dq-on-bg);
+  color: var(--fg);
+}
+/* Column heads: captions, no rule under them (the rows start the list). */
+:root[data-flag-dir-quiet][data-flag-dir-quiet] section.library .row.head {
+  border-bottom-color: transparent;
+  box-shadow: none;
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] section.library .row.head .sort {
+  font-size: var(--t-xs);
+  color: var(--fg-3);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] section.library .row.head .sort:hover,
+:root[data-flag-dir-quiet][data-flag-dir-quiet] section.library .row.head .sort.on {
+  color: var(--fg-2);
+  background: none;
+}
+/* Rows: hover a faint fill, selected --sel; no hairlines, no top light. */
+:root[data-flag-dir-quiet][data-flag-dir-quiet] section.library .scroll .row {
+  border-radius: 8px;
+  transition: background 100ms var(--dq-ease);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] section.library .scroll .row:hover {
+  background: rgb(255 255 255 / 0.035);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] section.library .scroll .row.sel,
+:root[data-flag-dir-quiet][data-flag-dir-quiet] section.library .scroll .row.sel:hover {
+  background: var(--sel);
+  box-shadow: none;
+  color: var(--fg);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] section.library .scroll .row > span:not(.t) {
+  color: var(--fg-2);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] section.library .scroll .row.sel > span:not(.t) {
+  color: var(--fg);
+}
+/* Key match (owner's call 8, a): a 4px dot after the key, no underline. */
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region='tracks'] .row .k.mix {
+  box-shadow: none;
+  padding-bottom: 0;
+  text-decoration: none;
+  border-bottom: 0;
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region='tracks'] .row > span:has(> .k.mix) {
+  background: radial-gradient(circle, var(--fg-2) 0 2px, transparent 2.5px) no-repeat right 0 center / 6px 6px;
+}
+
+/* ── Messages ──────────────────────────────────────────────────────── */
+
+/* The toast: a small pane, one light edge, a quiet Undo. */
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .toastbox .toast {
+  border-radius: 10px;
+  background: rgb(28 29 33 / 0.92);
+  -webkit-backdrop-filter: blur(20px) saturate(1.2);
+  backdrop-filter: blur(20px) saturate(1.2);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.08), inset 0 0 0 1px rgb(255 255 255 / 0.05), 0 12px 32px rgb(0 0 0 / 0.45);
+  color: var(--fg-2);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .toastbox .toast .undo {
+  border-radius: 7px;
+  background: var(--dq-rest);
+  box-shadow: none;
+  color: var(--fg);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .toastbox .toast .undo:hover {
+  background: var(--dq-hover);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .toastbox .toast kbd {
+  color: var(--fg-3);
+}
+
+/* The device-lost banner (owner's call 2, a): its own shape, in the
+   library's toolbar row (next to the decks, over no lane and no track).
+   A neutral bar with a breath of amber, a 20px amber icon, a tonal button
+   with a full-strength label. The toolbar steps back while it shows. */
+:root[data-flag-dir-quiet][data-flag-dir-quiet] section.library .bar {
+  anchor-name: --dq-libbar;
+}
+@supports (anchor-name: --a) {
+  :root[data-flag-dir-quiet][data-flag-dir-quiet] .app > .banner.lost {
+    position: fixed;
+    position-anchor: --dq-libbar;
+    top: calc(anchor(top) - 4px);
+    left: calc(anchor(left) - 4px);
+    bottom: auto;
+    right: auto;
+    translate: none;
+    transform: none;
+    width: calc(anchor-size(width) + 8px);
+    max-width: none;
+    min-height: calc(anchor-size(height) + 8px);
+  }
+  :root[data-flag-dir-quiet][data-flag-dir-quiet] .app:has(> .banner.lost) section.library .main .bar {
+    visibility: hidden;
+  }
+  :root[data-flag-dir-quiet][data-flag-dir-quiet] .app:has(> .banner.lost) section.library :is(nav, .main) {
+    padding-bottom: 0;
+  }
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .app > .banner.lost {
+  padding: 4px 4px 4px 14px;
+  border-radius: 12px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--warn) 12%, #1d1e22), #1d1e22 60%);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.07), inset 0 0 0 1px rgb(255 255 255 / 0.06), 0 12px 32px rgb(0 0 0 / 0.45);
+  color: var(--fg-2);
+  animation: dq-in 160ms var(--dq-ease);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .app > .banner.lost b {
+  color: var(--fg);
+  font-weight: 500;
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .app > .banner.lost svg {
+  width: 20px;
+  height: 20px;
+  stroke: var(--warn);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .app > .banner.lost > span {
+  flex: 1;
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .app > .banner.lost .btn,
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .app > .banner.lost .btn.primary {
+  height: var(--h-md);
+  border-radius: 8px;
+  background: rgb(255 255 255 / 0.09);
+  box-shadow: none;
+  color: var(--fg);
+  font-weight: 500;
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .app > .banner.lost .btn:hover:not(:disabled) {
+  background: rgb(255 255 255 / 0.13);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .app:has(> .banner.lost) .toastbox .toast[data-docked] {
+  visibility: hidden;
+}
+/* The decks say they're held: Play's tint goes, the glyph dims. */
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .app:has(> .banner.lost) [data-region^='deck'] .transport .btn.play.on {
+  background: var(--dq-rest);
+  color: var(--fg-3);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .app > .banner:not(.lost) {
+  border-radius: 12px;
+  background: rgb(28 29 33 / 0.94);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.08), inset 0 0 0 1px rgb(255 255 255 / 0.05), 0 12px 32px rgb(0 0 0 / 0.45);
+}
+@keyframes dq-in {
+  from {
+    opacity: 0;
+    translate: 0 4px;
+  }
+}
+
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .tip {
+  border-radius: 8px;
+  background: rgb(28 29 33 / 0.96);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.07), inset 0 0 0 1px rgb(255 255 255 / 0.05), 0 8px 24px rgb(0 0 0 / 0.45);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .tip kbd {
+  background: none;
+  box-shadow: none;
+  color: var(--fg-3);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .menu {
+  border-radius: 10px;
+  background: rgb(28 29 33 / 0.96);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.07), inset 0 0 0 1px rgb(255 255 255 / 0.05), 0 16px 40px rgb(0 0 0 / 0.5);
+}
+
+/* ── Dialogs ───────────────────────────────────────────────────────── */
+
+/* Backdrop (owner's call 6, a): one even dim, no blur, decks still
+   readable. */
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .backdrop:has(> .card[role='dialog']) {
+  background: rgb(9 9 11 / 0.55);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .backdrop:has(> .card[role='dialog'])::before {
+  content: none;
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .app:has(.backdrop > .card[role='dialog']) :is(.libwrap, section.library) {
+  filter: none;
+}
+/* The card: the popover surface, one light edge, one deep shadow. */
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .backdrop > .card[role='dialog'] {
+  border-radius: 18px;
+  background: #1c1d21;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.08), inset 0 0 0 1px rgb(255 255 255 / 0.05), 0 32px 80px rgb(0 0 0 / 0.55);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .backdrop > .card[role='dialog'] h2 {
+  font-size: var(--t-lg);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .backdrop > .card[role='dialog'] .lead {
+  color: var(--fg-2);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .backdrop > .card[role='dialog'] h3 {
+  font-weight: 500;
+}
+/* "1 of 4" says it; the dashes go. */
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .backdrop > .card[role='dialog'] .steps > :not(.of) {
+  display: none;
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .backdrop > .card[role='dialog'] .of {
+  color: var(--fg-3);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .backdrop > .card[role='dialog'] .found {
+  border-radius: 12px;
+  background: rgb(255 255 255 / 0.035);
+  box-shadow: none;
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .backdrop > .card[role='dialog'] .found:hover:not(:disabled) {
+  background: rgb(255 255 255 / 0.05);
+}
+/* No cream slab: the primary is tonal, a weight up, full-strength label. */
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .backdrop > .card[role='dialog'] :is(.go, .btn.primary) {
+  display: inline-grid;
+  place-items: center;
+  height: var(--h-md);
+  padding: 0 14px;
+  border-radius: 8px;
+  background: rgb(255 255 255 / 0.1);
+  box-shadow: none;
+  color: var(--fg);
+  font-weight: 500;
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .backdrop > .card[role='dialog'] :is(.go, .btn.primary):hover {
+  background: rgb(255 255 255 / 0.14);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .backdrop > .card[role='dialog'] .link {
+  text-decoration: none;
+  color: var(--fg-2);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .backdrop > .card[role='dialog'] .link:hover {
+  color: var(--fg);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .backdrop > .card[role='dialog'] .close {
+  border-radius: 8px;
+  color: var(--fg-3);
+}
+
+/* ── Settings ──────────────────────────────────────────────────────── */
+
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .settings nav .item {
+  border-radius: 8px;
+  box-shadow: none;
+  color: var(--fg-2);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .settings nav .item:hover {
+  background: rgb(255 255 255 / 0.04);
+  box-shadow: none;
+  color: var(--fg);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .settings nav .item.on,
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .settings nav .item.on:hover {
+  background: var(--sel);
+  box-shadow: none;
+  color: var(--fg);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .settings .bar h2 {
+  font-size: var(--t-md);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .settings section h3 {
+  font-weight: 500;
+  color: var(--fg);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .settings select {
+  border-radius: 8px;
+  background-color: var(--dq-rest);
+  box-shadow: none;
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .settings select:hover {
+  background-color: var(--dq-hover);
+}
+
+/* ── Focus and buttons everywhere ──────────────────────────────────── */
+
+:root[data-flag-dir-quiet][data-flag-dir-quiet] :focus-visible {
+  outline: 2px solid var(--dq-focus);
+  outline-offset: 2px;
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet][data-input='keys'] [data-region^='deck'] .modes button:focus-visible {
+  outline: 2px solid var(--dq-focus);
+  outline-offset: 1px;
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .modes button:focus-visible::before {
+  content: none !important;
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .btn {
+  border-radius: 8px;
+  transition: background var(--dq-t) var(--dq-ease), color var(--dq-t) var(--dq-ease);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .btn.ghost:hover:not(:disabled, [aria-disabled='true']) {
+  background: rgb(255 255 255 / 0.05);
+}

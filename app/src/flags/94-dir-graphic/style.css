@@ -1,0 +1,1035 @@
+/* #94 (UI audit flag; a visual direction): Graphic.
+
+   The site's display voice used as structure, in the Braun / Teenage
+   Engineering school: solid black panels, bold tight type, small capitals
+   for every label, and one sign for "on" everywhere, a dot that fills.
+   Every rule is scoped under :root[data-flag-dir-graphic] (doubled, so the
+   round-2 flags' choice-setting rules don't out-specify it; this file loads
+   after them, so equal specificity wins).
+
+   THE SYSTEM
+   Colour roles
+     ink      #050506 page, #0e0e10 panels, #000 wells, #17171a controls.
+     type     --fg #f4f3ef for what you read; --fg-2 64% for labels you act
+              on; --fg-3 50% for captions; nothing else is white.
+     deck     ice #c9dcf2 / cream #f0dcc0: identity only (a dot before the
+              title, the lane dot, the loaded-row dot, Play's dot and glyph,
+              the waveform). Never a fill.
+     amber    #e8b04a: Cue and headphone cue, and nothing else.
+     red      --kill: kill, Rec, clip.
+     yellow   --warn #f2c94c: the device-lost band, and nowhere else.
+   Brightness, in order: the remaining time and BPM (34/600), the title, the
+   lit dots, the selected pill. Play is a dark control like the others.
+   State grammar (the same everywhere)
+     rest      solid #17171a, label --fg-2, no outline.
+     hover     one step lighter (#1f1f23), label --fg.
+     pressed   black (#000), at once. No scale.
+     on        the thing's dot fills in its role colour, label --fg. The
+               fill never changes. A hollow dot marks a switch at rest.
+     selected  inverted: a light pill (#e9e7e0) with dark text (tabs, the
+               sidebar and Settings' current page, the selected track).
+     focus     2px solid white, 2px off the edge (keys only).
+     disabled  35%.
+   Type: Geist. Numerals 34/600 at -0.035em, tabular; titles 16/600 at
+   -0.02em; every label 11/600 +0.06em capitals (the site's micro-label);
+   body 13/400.
+   Material: flat. No blur, no gradients, no shadows; 1px hairlines inside
+   the edge (the site's cards). Radii 14 (panels) and 6 (controls).
+   Mixer: Braun dials (a flat disc, a thick white index to the rim, the
+   value ring in grey), segmented grey meters with white top segments,
+   black slots, flat caps with one white line.
+   Waveforms: printed flat, a mid-tone body and a core at the deck colour,
+   never white.
+   Motion: instant. 60ms linear for colour, nothing slides or scales.
+   Signature: the dot. */
+
+/* ---------- Tokens ---------- */
+:root[data-flag-dir-graphic][data-flag-dir-graphic]:root[data-flag-dir-graphic][data-flag-dir-graphic] {
+  --bg: #050506;
+  --fg: #f4f3ef;
+  --fg-2: rgb(244 243 239 / 0.64);
+  --fg-3: rgb(244 243 239 / 0.5);
+  --fg-4: rgb(244 243 239 / 0.28);
+  --raise: #17171a;
+  --hover: #1f1f23;
+  --sel: #cfcdc6;
+  --line: rgb(255 255 255 / 0.07);
+  --line-2: rgb(255 255 255 / 0.12);
+  --glass-fill: #0e0e10;
+  --glass-blur: none;
+  --glass-edge: inset 0 0 0 1px rgb(255 255 255 / 0.07);
+  --well: #000;
+  --well-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.06);
+  --popover: #141416;
+  --r-panel: 14px;
+  --r: 6px;
+  --radius: 6px;
+  --ink: #0b0b0d;
+  --g-paper: #cfcdc6;
+  /* The same inverted look at half light, for the one long selection (a
+     track row), so it never out-shines the numerals. */
+  --g-paper-low: #94928c;
+  --g-ctl: #17171a;
+  --g-ctl-hover: #1f1f23;
+  --g-cap: 11px;
+  --g-dot: 6px;
+  /* Waveforms, printed: low and mid make a flat mid-tone body, the core
+     reaches the deck colour (the ribbon adds its bands: low/2 + mid*0.38 +
+     high*0.55), so nothing burns to white. */
+  --a-low: #6e82a0;
+  --deck-a: #c9dcf2;
+  --a-high: #4f565f;
+  --b-low: #786850;
+  --b-high: #6f675d;
+  /* Hot cues on one lightness, lower chroma: a family, none near red or green. */
+  --hc-1: #d9b26a;
+  --hc-2: #8fb3dc;
+  --hc-3: #d99a8a;
+  --hc-4: #8fc7a0;
+  --hc-5: #b7a3dc;
+  --hc-6: #82c4c4;
+  --hc-7: #d9a3bd;
+  --hc-8: #c4c08a;
+}
+
+/* ---------- Motion: instant ---------- */
+:root[data-flag-dir-graphic][data-flag-dir-graphic] *,
+:root[data-flag-dir-graphic][data-flag-dir-graphic] *::before,
+:root[data-flag-dir-graphic][data-flag-dir-graphic] *::after {
+  transition-duration: 60ms !important;
+  transition-timing-function: linear !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] :is(.btn, button, [role='slider'], .perf button, .fx button, .stems .stem):active {
+  transform: none !important;
+}
+
+/* ---------- Page and panels: solid ---------- */
+:root[data-flag-dir-graphic][data-flag-dir-graphic] body,
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .app {
+  background: var(--bg);
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .bd {
+  background: var(--bg);
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .bd i {
+  display: none;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] :is(.glass, .decks > section, section.library, .settings, .sampler) {
+  background: var(--glass-fill) !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  box-shadow: var(--glass-edge) !important;
+}
+/* Panel grips: a short hairline. */
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .split i {
+  background: var(--fg-4);
+}
+
+/* Focus: one ring. */
+:root[data-flag-dir-graphic][data-flag-dir-graphic] :focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+/* ---------- The micro-label ---------- */
+:root[data-flag-dir-graphic][data-flag-dir-graphic] :is(
+    [data-region^='deck'] .modes button,
+    [data-region^='deck'] .transport .btn.cue,
+    [data-region^='deck'] .transport .btn.sync,
+    [data-region^='deck'] .pitch .lock,
+    .mixer .knob .label,
+    section.library nav .h,
+    section.library .row.head .sort,
+    .settings nav .h,
+    .settings h3,
+    .waves .who
+  ) {
+  font-size: var(--g-cap) !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase;
+}
+
+/* ---------- Buttons: one grammar ---------- */
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .btn:not(.ghost),
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .btn:not(.ghost):is(:hover, .pressed, [aria-pressed='true']) {
+  background: var(--g-ctl);
+  box-shadow: none;
+  color: var(--fg-2);
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .btn:not(.ghost):hover:not(:disabled, [aria-disabled='true']) {
+  background: var(--g-ctl-hover);
+  color: var(--fg);
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .btn:not(.ghost):active:not(:disabled, [aria-disabled='true']) {
+  background: #000;
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .btn.ghost:hover:not(:disabled, [aria-disabled='true']) {
+  background: var(--g-ctl);
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .btn:disabled,
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .btn[aria-disabled='true'] {
+  opacity: 0.35;
+}
+/* Primary: inverted, the site's switch thumb. */
+:root[data-flag-dir-graphic][data-flag-dir-graphic] :is(.btn.primary, .go.primary),
+:root[data-flag-dir-graphic][data-flag-dir-graphic] :is(.btn.primary, .go.primary):hover:not(:disabled) {
+  background: var(--g-paper) !important;
+  color: var(--ink) !important;
+  box-shadow: none !important;
+  font-weight: 600 !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] :is(.btn.primary, .go.primary):hover:not(:disabled) {
+  background: #fff !important;
+}
+
+/* The dot: drawn on every switch. Hollow at rest, filled when on. */
+:root[data-flag-dir-graphic][data-flag-dir-graphic] :is(
+    [data-region^='deck'] .transport .btn.cue,
+    [data-region^='deck'] .transport .btn.play,
+    [data-region^='deck'] .pitch .lock
+  ) {
+  position: relative;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] :is(
+    [data-region^='deck'] .transport .btn.cue,
+    [data-region^='deck'] .transport .btn.play,
+    [data-region^='deck'] .pitch .lock
+  )::before {
+  content: '' !important;
+  position: absolute !important;
+  top: 8px;
+  left: 8px;
+  width: var(--g-dot) !important;
+  height: var(--g-dot) !important;
+  margin: 0 !important;
+  border-radius: 50% !important;
+  background: none !important;
+  box-shadow: inset 0 0 0 1px var(--g-dot-c, var(--fg-3)) !important;
+  clip-path: none !important;
+  transform: none !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] :is(
+    [data-region^='deck'] .transport .btn.cue.lit,
+    [data-region^='deck'] .transport .btn.play.on,
+    [data-region^='deck'] .pitch .lock.on
+  )::before {
+  background: var(--g-dot-c, var(--fg)) !important;
+  box-shadow: none !important;
+}
+
+/* ---------- Waveform lanes ---------- */
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .waves {
+  border-radius: var(--r-panel);
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .waves .lane + .lane {
+  border-color: var(--line) !important;
+}
+/* Lane titles: a backless caption with the deck's dot. */
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .waves .who {
+  background: none !important;
+  box-shadow: none !important;
+  color: var(--fg-3) !important;
+  padding-left: 0 !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .waves .who i {
+  width: var(--g-dot) !important;
+  height: var(--g-dot) !important;
+  border-radius: 50% !important;
+  align-self: center;
+  margin-right: 8px !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .waves .chip {
+  border-radius: 2px !important;
+  font-weight: 600;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .waves .zoom {
+  background: var(--glass-fill) !important;
+  box-shadow: inset 0 0 0 1px var(--line) !important;
+  border-radius: var(--r) !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .waves .zoom span {
+  font-weight: 600;
+  font-size: var(--g-cap);
+}
+
+/* ---------- Decks ---------- */
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] header .name {
+  font-size: var(--t-md) !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.02em !important;
+  line-height: 24px !important;
+}
+/* The deck's dot before its title: identity without a letter. */
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] header .name:not(.dim)::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 10px;
+  vertical-align: 2px;
+  border-radius: 50%;
+  background: var(--deck);
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] header .artist {
+  color: var(--fg-3) !important;
+  font-weight: 500;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .bpm .big,
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .times[data-big='remaining'] .rm,
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .times[data-big='elapsed'] .el,
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .times:not([data-big]) .el {
+  font-size: 34px !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.035em !important;
+  line-height: 34px !important;
+  color: var(--fg) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .times[data-big='remaining'] .el,
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .times[data-big='elapsed'] .rm,
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .times:not([data-big]) .rm {
+  font-size: var(--t-md) !important;
+  font-weight: 500 !important;
+  letter-spacing: -0.01em !important;
+  color: var(--fg-3) !important;
+}
+/* The tenths step down to grey, a weight lighter. */
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .times .t {
+  color: var(--fg-3) !important;
+  font-weight: 500;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .bpm .unit,
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .bpm .key {
+  font-size: var(--g-cap) !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.02em;
+  color: var(--fg-3) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .bpm .key.shifted {
+  color: var(--fg) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .overview {
+  border-radius: var(--r) !important;
+  background: var(--well) !important;
+  box-shadow: var(--well-shadow) !important;
+}
+
+/* Tabs: a row of small capitals; the current one is an inverted pill. */
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .modes {
+  border-bottom: 0 !important;
+  gap: 4px !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .modes button {
+  height: 28px !important;
+  border-radius: var(--r) !important;
+  color: var(--fg-3) !important;
+  background: none !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .modes button:hover {
+  color: var(--fg) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .modes button.on {
+  background: var(--g-paper) !important;
+  color: var(--ink) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .modes button.on::after {
+  content: none !important;
+}
+/* Keys: the one ring round the pill (no underline to dodge). */
+:root[data-flag-dir-graphic][data-flag-dir-graphic][data-input='keys'] [data-region^='deck'] .modes button:focus-visible {
+  outline: 2px solid #fff !important;
+  outline-offset: 2px;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic][data-input='keys'] [data-region^='deck'] .modes button:focus-visible::before {
+  content: none !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .modes button i {
+  width: 5px !important;
+  height: 5px !important;
+  vertical-align: 1px !important;
+  background: var(--deck) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .modes button.on i {
+  background: var(--ink) !important;
+}
+
+/* Mode row: hot cue slots, loop, FX, stems. */
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .perf .tc {
+  font-weight: 500;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .perf :is(.tb, .big),
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .fx :is(.tb, .kind) {
+  border-radius: var(--r) !important;
+  box-shadow: none !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .perf .big b {
+  font-weight: 600 !important;
+  letter-spacing: -0.03em;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .perf .big.live b,
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .perf .big.live span {
+  color: var(--fg) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .perf .big b::before,
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .fx .tog i,
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .stems .stem i {
+  width: var(--g-dot) !important;
+  height: var(--g-dot) !important;
+  border-radius: 50% !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .fx .tog {
+  font-size: var(--g-cap) !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .fx .tog.live {
+  color: var(--fg) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .stems .stem {
+  font-weight: 500;
+}
+
+/* Transport: dark solid buttons, labels in capitals. */
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .transport > * {
+  border-radius: var(--r) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .transport .btn.cue {
+  --g-dot-c: var(--cue);
+  color: var(--cue) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .transport .btn.cue,
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .transport .btn.cue:hover,
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .transport .btn.cue.lit {
+  background: var(--g-ctl) !important;
+  box-shadow: none !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .transport .btn.cue:hover:not([aria-disabled='true']) {
+  background: var(--g-ctl-hover) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .transport .btn.cue:active:not([aria-disabled='true']) {
+  background: #000 !important;
+}
+/* Play: a dark control like the rest. Playing, its dot and glyph take the
+   deck's colour; nothing else lights. */
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .transport .btn.play,
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .transport .btn.play:hover,
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .transport .btn.play.on,
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .transport .btn.play.on:hover {
+  --g-dot-c: var(--deck);
+  background: var(--g-ctl) !important;
+  color: var(--fg) !important;
+  box-shadow: none !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .transport .btn.play:hover:not([aria-disabled='true']) {
+  background: var(--g-ctl-hover) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .transport .btn.play:active:not([aria-disabled='true']) {
+  background: #000 !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .transport .btn.play.on {
+  color: var(--deck) !important;
+}
+/* Cueing while held (#6): the dot and glyph go amber. */
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .transport .btn.play.on[data-cueing] {
+  --g-dot-c: var(--cue);
+  color: var(--cue) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .transport .btn.play svg {
+  width: 13px;
+  height: 13px;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .transport .btn.jumps,
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .transport .btn.jumps:hover {
+  background: var(--g-ctl) !important;
+  box-shadow: none !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .transport .btn.jumps span {
+  font-weight: 600;
+  color: var(--fg) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .transport .btn.jumps small {
+  font-size: 9px !important;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fg-3) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .transport .btn.jumps button:hover:not([aria-disabled='true']) {
+  background: var(--g-ctl-hover) !important;
+}
+
+/* Pitch column. */
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .pitch .val {
+  font-weight: 600 !important;
+  letter-spacing: -0.01em;
+  color: var(--fg-2) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .pitch .val.off {
+  color: var(--fg) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .pitch .lock,
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .pitch .lock:hover,
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .pitch .lock.on,
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .pitch .lock.on:hover {
+  background: var(--g-ctl) !important;
+  box-shadow: none !important;
+  color: var(--fg-2) !important;
+  border-radius: var(--r) !important;
+  --g-dot-c: var(--deck);
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .pitch .lock:hover {
+  background: var(--g-ctl-hover) !important;
+  color: var(--fg) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .pitch .lock.on {
+  color: var(--fg) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .pitch .kl {
+  padding-top: 10px !important;
+  line-height: 13px !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .pitch .kl::before {
+  left: 50% !important;
+  margin-left: -3px !important;
+  top: 7px !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .nudge button,
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .nudge button:hover {
+  box-shadow: none !important;
+}
+
+/* ---------- Faders (pitch, channel, crossfader) ---------- */
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .fader .line {
+  background: #000 !important;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08) !important;
+  border-radius: 1px !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .fader .mark,
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .fader .tick {
+  background: rgb(255 255 255 / 0.16) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .fader .cap,
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .fader:hover .cap,
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .fader.dragging .cap {
+  background: #1f1f23 !important;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.16) !important;
+  border-radius: 2px !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .fader:hover .cap {
+  background: #2a2a2f !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .fader.dragging .cap {
+  box-shadow: inset 0 0 0 1px var(--fg-2) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .fader .cap::after {
+  background: var(--fg) !important;
+}
+
+/* ---------- Mixer ---------- */
+/* Braun dials: a flat disc, a thick white index to the rim. */
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .knob .dial,
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .knob .dial.dragging {
+  background: #1b1b1e !important;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.07) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .knob .dial::after {
+  content: none !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .knob .dial i {
+  top: 3px !important;
+  width: 3px !important;
+  height: 42% !important;
+  margin-left: -1.5px !important;
+  border-radius: 1.5px !important;
+  background: var(--fg) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .knob .dial.killed i {
+  background: var(--kill) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .knob .wrap:hover .dial,
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .knob .dial:hover {
+  background: #232327 !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .knob .dial.dragging {
+  box-shadow: inset 0 0 0 1px var(--fg-2) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .knob line {
+  stroke: rgb(255 255 255 / 0.1) !important;
+  filter: none !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .knob line.major {
+  stroke: rgb(255 255 255 / 0.2) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .knob line.on {
+  stroke: var(--fg-2) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .knob:has(.dial.killed) line.on {
+  stroke: var(--kill) !important;
+}
+/* EQ kills: captions, like Trim and Filter; killed, a red dot and red. */
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .knob button.label,
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .knob button.label:hover,
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .knob button.label.killed,
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .knob button.label.killed:hover {
+  background: none !important;
+  box-shadow: none !important;
+  min-width: 0 !important;
+  padding: 0 2px !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .knob .label {
+  color: var(--fg-3) !important;
+  font-size: 10px !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .knob button.label:hover {
+  color: var(--fg) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .knob button.label.killed {
+  color: var(--kill) !important;
+  position: relative;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .knob button.label.killed::before {
+  content: '';
+  position: absolute;
+  left: -7px;
+  top: 50%;
+  width: 5px;
+  height: 5px;
+  margin-top: -2.5px;
+  border-radius: 50%;
+  background: var(--kill);
+}
+
+/* Meters: segmented, grey with white top segments, clip red. */
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .meter.m60 .bar,
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .meter.m60 .clip {
+  background: #141416 !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .meter.m60 .bar {
+  -webkit-mask: repeating-linear-gradient(to top, #000 0 3px, transparent 3px 4px);
+  mask: repeating-linear-gradient(to top, #000 0 3px, transparent 3px 4px);
+  border-radius: 0 !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .meter.m60 .bar::after {
+  border-radius: 0 !important;
+  background: linear-gradient(to top, rgb(244 243 239 / 0.42) 0 75%, rgb(244 243 239 / 0.92) 75% 97.9%, var(--kill) 97.9%) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .meter.m60.clipped .clip {
+  background: var(--kill) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .meter.m60 .peak {
+  background: var(--fg) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .meter.m60 .db {
+  background: var(--fg-4) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .meter.m60 .db.zero {
+  background: var(--fg-2) !important;
+}
+
+/* Headphone cue: a dark square; on, an amber dot in its corner. */
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .mixer .hp,
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .mixer .hp:hover,
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .mixer .hp.on,
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .mixer .hp.on:hover {
+  position: relative;
+  background: var(--g-ctl) !important;
+  box-shadow: none !important;
+  color: var(--fg-3) !important;
+  border-radius: var(--r) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .mixer .hp:hover {
+  background: var(--g-ctl-hover) !important;
+  color: var(--fg) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .mixer .hp.on {
+  color: var(--fg) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .mixer .hp::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px var(--fg-4);
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .mixer .hp.on::after {
+  background: var(--cue);
+  box-shadow: none;
+}
+/* Rec: the original dot, hollow until it records. */
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .mixer button.rec,
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .mixer button.rec:hover,
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .mixer button.rec.on,
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .mixer button.rec.on:hover {
+  background: var(--g-ctl) !important;
+  box-shadow: none !important;
+  color: var(--fg-2) !important;
+  font-weight: 600;
+  border-radius: var(--r) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .mixer button.rec.on {
+  color: var(--fg) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .mixer button.rec .dot {
+  width: var(--g-dot) !important;
+  height: var(--g-dot) !important;
+  background: none !important;
+  box-shadow: inset 0 0 0 1px var(--kill) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .mixer button.rec.on .dot {
+  background: var(--kill) !important;
+  box-shadow: none !important;
+  animation: none !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .mixer .xf .end {
+  background: var(--fg-3) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .mixer .xf .ruler * {
+  stroke: rgb(255 255 255 / 0.18);
+}
+
+/* ---------- Library ---------- */
+:root[data-flag-dir-graphic][data-flag-dir-graphic] section.library nav .h {
+  color: var(--fg-3) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] section.library nav .item {
+  color: var(--fg-2) !important;
+  font-weight: 500;
+  border-radius: var(--r) !important;
+  box-shadow: none !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] section.library nav .item:hover {
+  background: var(--g-ctl) !important;
+  color: var(--fg) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] section.library nav .item.on,
+:root[data-flag-dir-graphic][data-flag-dir-graphic] section.library nav .item.on:hover {
+  background: var(--g-paper) !important;
+  color: var(--ink) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] section.library nav .item.on small {
+  color: rgb(11 11 13 / 0.55) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] section.library nav .add {
+  color: var(--fg-3) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] section.library .bar .search {
+  background: #000 !important;
+  box-shadow: inset 0 0 0 1px var(--line) !important;
+  border-radius: var(--r) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] section.library .bar .search:focus-within {
+  box-shadow: inset 0 0 0 1px var(--fg-3) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] section.library .bar kbd,
+:root[data-flag-dir-graphic][data-flag-dir-graphic] section.library .bar .count {
+  font-size: var(--g-cap) !important;
+  font-weight: 600;
+  color: var(--fg-3) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] section.library .row.head {
+  border-color: var(--line) !important;
+  box-shadow: none !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] section.library .row.head .sort {
+  color: var(--fg-3) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] section.library .row.head .sort.on {
+  color: var(--fg) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] section.library .scroll .row {
+  color: var(--fg-2);
+  border-radius: var(--r) !important;
+  box-shadow: none !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] section.library .scroll .row .t {
+  color: var(--fg) !important;
+  font-weight: 500;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] section.library .scroll .row .n {
+  color: var(--fg) !important;
+  font-weight: 500;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] section.library .scroll .row:hover {
+  background: var(--g-ctl) !important;
+}
+/* Selected: inverted. */
+:root[data-flag-dir-graphic][data-flag-dir-graphic] section.library .scroll .row.sel,
+:root[data-flag-dir-graphic][data-flag-dir-graphic] section.library .scroll .row.sel:hover {
+  background: var(--g-paper-low) !important;
+  box-shadow: none !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] section.library .scroll .row.sel,
+:root[data-flag-dir-graphic][data-flag-dir-graphic] section.library .scroll .row.sel span,
+:root[data-flag-dir-graphic][data-flag-dir-graphic] section.library .scroll .row.sel .t,
+:root[data-flag-dir-graphic][data-flag-dir-graphic] section.library .scroll .row.sel .n,
+:root[data-flag-dir-graphic][data-flag-dir-graphic] section.library .scroll .row.sel .k,
+:root[data-flag-dir-graphic][data-flag-dir-graphic] section.library .scroll .row.sel mark {
+  color: var(--ink) !important;
+}
+/* Search matches: set in full white and a weight up, not highlighted. */
+:root[data-flag-dir-graphic][data-flag-dir-graphic] section.library .scroll .row mark {
+  background: none !important;
+  color: var(--fg) !important;
+  font-weight: 700;
+  box-shadow: inset 0 -1.5px 0 currentColor;
+}
+/* On a deck: the deck's dot, not a bar; the title stays white. */
+:root[data-flag-dir-graphic][data-flag-dir-graphic] section.library .scroll .row .ld b {
+  width: var(--g-dot) !important;
+  height: var(--g-dot) !important;
+  margin-top: -3px !important;
+  left: 8px !important;
+  border-radius: 50% !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] section.library .scroll .row .ld b ~ b {
+  left: 16px !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] section.library .scroll .row:has(.ld b) .t {
+  color: var(--fg) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] section.library .scroll .row.sel:has(.ld b) .t {
+  color: var(--ink) !important;
+}
+/* Key match: a dot after the key, no underline. */
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region='tracks'] .row .k.mix {
+  box-shadow: none !important;
+  padding-bottom: 0 !important;
+  color: var(--fg) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region='tracks'] .row .k.mix::after {
+  content: '';
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  margin-left: 6px;
+  vertical-align: 2px;
+  border-radius: 50%;
+  background: var(--fg-2);
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region='tracks'] .row.sel .k.mix::after {
+  background: var(--ink);
+}
+
+/* ---------- Toast: a dark card, square-cornered ---------- */
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .toastbox .toast {
+  background: var(--popover) !important;
+  box-shadow: inset 0 0 0 1px var(--line-2) !important;
+  border-radius: var(--r) !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  font-weight: 500;
+  animation-duration: 80ms !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .toastbox .toast .undo,
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .toastbox .toast .undo:hover {
+  background: var(--g-ctl) !important;
+  box-shadow: none !important;
+  border-radius: 4px !important;
+  color: var(--fg) !important;
+  font-weight: 600;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .toastbox .toast .undo:hover {
+  background: var(--g-ctl-hover) !important;
+}
+
+/* ---------- Device lost: a yellow band over the library's toolbar ---------- */
+:root[data-flag-dir-graphic][data-flag-dir-graphic] section.library .bar {
+  anchor-name: --g-libbar;
+}
+@supports (anchor-name: --a) {
+  :root[data-flag-dir-graphic][data-flag-dir-graphic] .app > .banner.lost {
+    position: fixed !important;
+    position-anchor: --g-libbar;
+    top: calc(anchor(top) - 6px) !important;
+    left: calc(anchor(left) - 6px) !important;
+    bottom: auto !important;
+    translate: none !important;
+    width: calc(anchor-size(width) + 12px) !important;
+    max-width: none !important;
+    min-height: calc(anchor-size(height) + 12px) !important;
+  }
+  /* The list no longer keeps room for it at its foot. */
+  :root[data-flag-dir-graphic][data-flag-dir-graphic] .app:has(> .banner) section.library :is(nav, .main) {
+    padding-bottom: 0 !important;
+  }
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .banner.lost {
+  background: var(--warn) !important;
+  color: var(--ink) !important;
+  box-shadow: none !important;
+  border-radius: var(--r) !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  padding: 6px 6px 6px 14px !important;
+  font-weight: 500;
+  animation: none !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .banner.lost svg {
+  stroke: var(--ink) !important;
+  width: 18px;
+  height: 18px;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .banner.lost b {
+  font-weight: 700 !important;
+  color: var(--ink) !important;
+}
+/* Over the toolbar row, the docked toast included. */
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .app > .banner.lost {
+  z-index: 60 !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .banner.lost > span {
+  flex: 1;
+  color: var(--ink) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .banner.lost .btn.primary,
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .banner.lost .btn.primary:hover:not(:disabled) {
+  background: var(--ink) !important;
+  color: var(--fg) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .banner.lost .btn.primary:hover:not(:disabled) {
+  background: #000 !important;
+}
+
+/* ---------- Dialogs: a solid card on an even 70% black ---------- */
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .backdrop {
+  background: rgb(0 0 0 / 0.7) !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+/* One even scrim: no blur over the library (#12's split). */
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .backdrop::before {
+  content: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .backdrop .card {
+  background: #0e0e10 !important;
+  box-shadow: inset 0 0 0 1px var(--line-2) !important;
+  border-radius: var(--r-panel) !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  animation-duration: 80ms !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .backdrop .card h2 {
+  font-size: var(--t-lg) !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.03em !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .backdrop .card .lead {
+  color: var(--fg-2) !important;
+}
+/* Steps: "1 of 4" alone (#29), set as a label. */
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .backdrop .card .steps .of {
+  font-size: var(--g-cap);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fg-3) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .backdrop .card .src-name {
+  font-size: var(--g-cap) !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fg) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .backdrop .card .found {
+  background: var(--g-ctl) !important;
+  box-shadow: none !important;
+  border-radius: var(--r) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .backdrop .card .found:hover {
+  background: var(--g-ctl-hover) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .backdrop .card .go:not(.primary) {
+  background: #26262b !important;
+  box-shadow: none !important;
+  color: var(--fg) !important;
+  font-weight: 600;
+  border-radius: 4px !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .backdrop .card .go {
+  border-radius: 4px !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .backdrop .card .link {
+  text-decoration: none !important;
+  color: var(--fg-2) !important;
+  font-weight: 500;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .backdrop .card .link:hover {
+  color: var(--fg) !important;
+}
+
+/* ---------- Settings ---------- */
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .settings nav .item {
+  color: var(--fg-2) !important;
+  font-weight: 500;
+  border-radius: var(--r) !important;
+  box-shadow: none !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .settings nav .item:hover {
+  background: var(--g-ctl) !important;
+  color: var(--fg) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .settings nav .item.on,
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .settings nav .item.on:hover {
+  background: var(--g-paper) !important;
+  color: var(--ink) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .settings .bar h2 {
+  font-size: var(--t-md) !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.02em !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .settings h3 {
+  color: var(--fg-3) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .settings .bar .btn:last-child {
+  background: var(--g-paper) !important;
+  color: var(--ink) !important;
+  font-weight: 600;
+}
+
+/* ---------- Floating: tooltips and menus ---------- */
+:root[data-flag-dir-graphic][data-flag-dir-graphic] :is(.tip, .tooltip, .menu) {
+  background: var(--popover) !important;
+  box-shadow: inset 0 0 0 1px var(--line-2) !important;
+  border-radius: var(--r) !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+/* ---------- Smaller windows: the figures step down, so titles keep room ---------- */
+@media (max-width: 1200px) {
+  :root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .bpm .big,
+  :root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .times[data-big='remaining'] .rm,
+  :root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .times[data-big='elapsed'] .el,
+  :root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .times:not([data-big]) .el {
+    font-size: 28px !important;
+    line-height: 30px !important;
+  }
+  :root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] header .name:not(.dim)::before {
+    margin-right: 8px;
+  }
+}
+
+/* Meters without #60's scale (every other flag off): the same segments. */
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .meter:not(.m60) {
+  background: #141416 !important;
+  -webkit-mask: repeating-linear-gradient(to top, #000 0 3px, transparent 3px 4px);
+  mask: repeating-linear-gradient(to top, #000 0 3px, transparent 3px 4px);
+  border-radius: 0 !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .meter:not(.m60)::after {
+  border-radius: 0 !important;
+  background: linear-gradient(to top, rgb(244 243 239 / 0.42) 0 75%, rgb(244 243 239 / 0.92) 75% 97.9%, var(--kill) 97.9%) !important;
+}
