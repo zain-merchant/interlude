@@ -406,7 +406,8 @@
           <input class="big num edit" value={d.bpm > 0 ? +d.bpm.toFixed(2) : ''} inputmode="decimal" aria-label="Track BPM" spellcheck="false"
             use:focusBpm onkeydown={bpmKey} onblur={(e) => finishBpm(e.currentTarget.value)} />
         {:else}
-          <div class="big num">{bpm > 0 ? bpm.toFixed(2) : '—'}</div>
+          <!-- #97, #98 (UI audit flags): the tempo's decimals in their own span, so they can step down like the time's tenths. -->
+          <div class="big num">{#if bpm > 0 && (flag('dir-graphic2') || flag('dir-sleeve'))}{bpm.toFixed(2).slice(0, -3)}<span class="frac">{bpm.toFixed(2).slice(-3)}</span>{:else}{bpm > 0 ? bpm.toFixed(2) : '—'}{/if}</div>
         {/if}
         <!-- #44 (UI audit flag): pitch-readout: a loaded deck's line is its key alone; "BPM" only under an empty deck's dash. -->
         <!-- #10 (UI audit flag): key, Camelot code and unit set apart by space and tone, not middle dots. -->
