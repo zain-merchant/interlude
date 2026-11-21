@@ -1028,3 +1028,8 @@
 :root[data-flag-dir-sleeve][data-flag-dir-sleeve] .mixer button.rec.on .dot {
   background: #ff6b5f !important;
 }
+/* The tempo-match mark beside the pitch fader: ink, since the other deck's
+   white doesn't show on paper. */
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] .fader .match {
+  background: rgb(19 19 22 / 0.55) !important;
+}
