@@ -1,0 +1,633 @@
+# MC6000MK2 — Denon DJ "MC6000MK2 MIDI CMD List" (MIDI Command List spreadsheet)
+# source: https://cdn.inmusicbrands.com/denondj/MC6000Mk2/MC6000MK2_MIDI_Command_List.zip
+# Messages are given as 0x9n/0xBn with n = MIDI channel 0-3; the list does not say which deck uses which n,
+# so every message is listed on n=0..3 and deck transport controls carry no expect. Note off is 0x8n.
+# Pitch slider (pitch bend 0xEn) is not listed. LEDs: 0xBn, data1 = ON/OFF/BLINK trigger, data2 = LED number.
+in	90	01	n=0 CUE MIXER CH1	[Channel1] pfl
+in	90	02	n=0 CUE MIXER CH2	[Channel2] pfl
+in	90	03	n=0 DECK CHG. 1	
+in	90	04	n=0 VINYL MODE	
+in	90	05	n=0 CUE MIXER CH3	[Channel3] pfl
+in	90	06	n=0 KEY LOCK	
+in	90	07	n=0 CUE MIXER CH4	[Channel4] pfl
+in	90	08	n=0 DECK CHG. 2	
+in	90	09	n=0 DECK CHG. 3	
+in	90	0A	n=0 DECK CHG. 4	
+in	90	0C	n=0 BEND +	
+in	90	0D	n=0 BEND -	
+in	90	12	n=0 EFX2 SW (FX1)	
+in	90	13	n=0 EFX3 SW (FX1)	
+in	90	15	n=0 EFX1 SW (FX1)	
+in	90	17	n=0 HOT CUE1	
+in	90	18	n=0 HOT CUE2	
+in	90	19	n=0 HOT CUE3	
+in	90	1A	n=0 SAMP. SELECT	
+in	90	1B	n=0 X-F LINK	
+in	90	1C	n=0 VIDEO ON (L)	
+in	90	16	n=0 FILTER ON(L)	
+in	90	1E	n=0 FILTER ON(R)	
+in	90	1F	n=0 VIDEO ON (R)	
+in	90	20	n=0 HOT CUE4	
+in	90	21	n=0 SAMP.1	
+in	90	22	n=0 SAMP.2	
+in	90	23	n=0 SAMP.3	
+in	90	24	n=0 SAMP.4	
+in	90	1D	n=0 AUTO LOOP	
+in	90	2A	n=0 DUCKING	
+in	90	26	n=0 MIC ON 1	
+in	90	27	n=0 MIC ON 2	
+in	90	28	n=0 TRACK SELECT KNOB SW	
+in	90	29	n=0 FWD	
+in	90	30	n=0 BCK	
+in	90	2E	n=0 INPUT SOURCE SELECT LN1 (CH1)	
+in	90	2F	n=0 INPUT SOURCE SELECT PC (CH1)	
+in	90	31	n=0 X FADER ASSIGN (CH1) L	
+in	90	32	n=0 X FADER ASSIGN (CH1) THRU	
+in	90	33	n=0 X FADER ASSIGN (CH1) R	
+in	90	34	n=0 X FADER ASSIGN (CH2) L	
+in	90	35	n=0 X FADER ASSIGN (CH2) THRU	
+in	90	36	n=0 X FADER ASSIGN (CH2) R	
+in	90	3A	n=0 X FADER ASSIGN (CH3) L	
+in	90	3B	n=0 X FADER ASSIGN (CH3) THRU	
+in	90	3C	n=0 X FADER ASSIGN (CH3) R	
+in	90	3D	n=0 X FADER ASSIGN (CH4) L	
+in	90	3E	n=0 X FADER ASSIGN (CH4) THRU	
+in	90	3F	n=0 X FADER ASSIGN (CH4) R	
+in	90	37	n=0 LOOP IN	
+in	90	39	n=0 LOOP OUT	
+in	90	40	n=0 BEATS (FX1)	
+in	90	41	n=0 BEATS (FX2)	
+in	90	42	n=0 CUE	
+in	90	43	n=0 PLAY	
+in	90	44	n=0 ECHO ON 1	
+in	90	45	n=0 ECHO ON 2	
+in	90	46	n=0 TAP (FX1)	
+in	90	47	n=0 TAP (FX2)	
+in	90	4E	n=0 INPUT SOURCE SELECT LN2 (CH2)	
+in	90	4F	n=0 INPUT SOURCE SELECT PC (CH2)	
+in	90	50	n=0 CENSOR	
+in	90	51	n=0 Jogwheel touch (VINYL MODE =ON)	
+in	90	52	n=0 EFX2 SW (FX2)	
+in	90	53	n=0 EFX3 SW (FX2)	
+in	90	55	n=0 EFX1 SW (FX2)	
+in	90	56	n=0 Jogwheel touch (VINYL MODE =OFF)	
+in	90	58	n=0 DECK ASSIGN 1 (FX1)	
+in	90	59	n=0 DECK ASSIGN 2 (FX1)	
+in	90	5A	n=0 DECK ASSIGN 3 (FX1)	
+in	90	5B	n=0 DECK ASSIGN 4 (FX1)	
+in	90	5C	n=0 DECK ASSIGN 1 (FX2)	
+in	90	5D	n=0 DECK ASSIGN 2 (FX2)	
+in	90	5E	n=0 DECK ASSIGN 3 (FX2)	
+in	90	5F	n=0 DECK ASSIGN 4 (FX2)	
+in	90	60	n=0 SHIFT (DECK LEFT)	
+in	90	61	n=0 SHIFT (DECK RIGHT)	
+in	90	62	n=0 LOAD A	
+in	90	63	n=0 LOAD B	
+in	90	64	n=0 PANEL	
+in	90	65	n=0 LIST	
+in	90	4C	n=0 VIEW	
+in	90	6C	n=0 INPUT SOURCE SELECT LN1/2/3 (CH3)	
+in	90	6D	n=0 INPUT SOURCE SELECT PC (CH3)	
+in	90	6E	n=0 INPUT SOURCE SELECT LN1/2/4 (CH4)	
+in	90	6F	n=0 INPUT SOURCE SELECT PC (CH4)	
+in	90	4D	n=0 AREA	
+in	90	69	n=0 LOOP CUT -	
+in	90	6A	n=0 LOOP CUT +	
+in	90	6B	n=0 SYNC	
+in	B0	51	n=0 JOG WHEEL FWD/REV (VINYL MODE = ON)	
+in	B0	52	n=0 JOG WHEEL FWD/REV (VINYL MODE = OFF)	
+in	B0	54	n=0 TRACK SELECT KNOB	
+in	B0	55	n=0 EFX1 KNOB (FX1)	
+in	B0	56	n=0 EFX2 KNOB (FX1)	
+in	B0	57	n=0 EFX3 KNOB (FX1)	
+in	B0	58	n=0 BEATS KNOB (FX1)	
+in	B0	59	n=0 EFX1 KNOB (FX2)	
+in	B0	5A	n=0 EFX2 KNOB (FX2)	
+in	B0	5B	n=0 EFX3 KNOB (FX2)	
+in	B0	5C	n=0 BEATS KNOB (FX2)	
+in	B0	5D	n=0 VIDEO(L) KNOB	
+in	B0	5E	n=0 VIDEO(R) KNOB	
+in	B0	66	n=0 FILTER(L) KNOB	
+in	B0	67	n=0 FILTER(R) KNOB	
+in	B0	01	n=0 INPUT LEVEL (CH1)	[Channel1] pregain
+in	B0	02	n=0 EQ HIGH VR (CH1)	[EqualizerRack1_[Channel1]_Effect1] parameter3
+in	B0	03	n=0 EQ MID VR (CH1)	[EqualizerRack1_[Channel1]_Effect1] parameter2
+in	B0	04	n=0 EQ LOW VR (CH1)	[EqualizerRack1_[Channel1]_Effect1] parameter1
+in	B0	05	n=0 FADER (CH1)	[Channel1] volume
+in	B0	07	n=0 INPUT LEVEL (CH2)	[Channel2] pregain
+in	B0	08	n=0 EQ HIGH VR (CH2)	[EqualizerRack1_[Channel2]_Effect1] parameter3
+in	B0	09	n=0 EQ MID VR (CH2)	[EqualizerRack1_[Channel2]_Effect1] parameter2
+in	B0	0A	n=0 EQ LOW VR (CH2)	[EqualizerRack1_[Channel2]_Effect1] parameter1
+in	B0	0B	n=0 FADER (CH2)	[Channel2] volume
+in	B0	0C	n=0 INPUT LEVEL (CH3)	[Channel3] pregain
+in	B0	0D	n=0 EQ HIGH VR (CH3)	[EqualizerRack1_[Channel3]_Effect1] parameter3
+in	B0	0E	n=0 EQ MID VR (CH3)	[EqualizerRack1_[Channel3]_Effect1] parameter2
+in	B0	0F	n=0 EQ LOW VR (CH3)	[EqualizerRack1_[Channel3]_Effect1] parameter1
+in	B0	10	n=0 FADER (CH3)	[Channel3] volume
+in	B0	11	n=0 INPUT LEVEL (CH4)	[Channel4] pregain
+in	B0	12	n=0 EQ HIGH VR (CH4)	[EqualizerRack1_[Channel4]_Effect1] parameter3
+in	B0	13	n=0 EQ MID VR (CH4)	[EqualizerRack1_[Channel4]_Effect1] parameter2
+in	B0	14	n=0 EQ LOW VR (CH4)	[EqualizerRack1_[Channel4]_Effect1] parameter1
+in	B0	15	n=0 FADER (CH4)	[Channel4] volume
+in	B0	21	n=0 MIC1 EQ HIGH VR	
+in	B0	22	n=0 MIC1 EQ LOW VR	
+in	B0	23	n=0 MIC1 EQ MID VR	
+in	B0	31	n=0 MIC2 EQ HIGH VR	
+in	B0	32	n=0 MIC2 EQ LOW VR	
+in	B0	33	n=0 MIC2 EQ MID VR	
+in	B0	1C	n=0 ECHO VR	
+in	B0	16	n=0 CROSS FADER (AUDIO)	[Master] crossfader
+in	B0	17	n=0 CROSS FADER (VIDEO)	
+in	B0	19	n=0 MASTER LEVEL VR	
+in	B0	1B	n=0 BOOTH LEVEL VR	
+in	B0	41	n=0 BOOTH EQ HIGH VR	
+in	B0	42	n=0 BOOTH EQ LOW VR	
+in	B0	43	n=0 PAN VR	
+in	B0	44	n=0 PHONES VR	
+in	B0	45	n=0 X FADER CONTOUR	
+in	B0	46	n=0 X FADER SETTING (CH1)	
+in	B0	47	n=0 X FADER SETTING (CH2)	
+in	B0	48	n=0 X FADER SETTING (CH3)	
+in	B0	49	n=0 X FADER SETTING (CH4)	
+both	B0	4A	n=0 LN1/2/3/4<-> PC / n=0 LED ON trigger (data2 = LED number)	
+both	B0	4B	n=0 XF-LINK / n=0 LED OFF trigger (data2 = LED number)	
+in	91	01	n=1 CUE MIXER CH1	[Channel1] pfl
+in	91	02	n=1 CUE MIXER CH2	[Channel2] pfl
+in	91	03	n=1 DECK CHG. 1	
+in	91	04	n=1 VINYL MODE	
+in	91	05	n=1 CUE MIXER CH3	[Channel3] pfl
+in	91	06	n=1 KEY LOCK	
+in	91	07	n=1 CUE MIXER CH4	[Channel4] pfl
+in	91	08	n=1 DECK CHG. 2	
+in	91	09	n=1 DECK CHG. 3	
+in	91	0A	n=1 DECK CHG. 4	
+in	91	0C	n=1 BEND +	
+in	91	0D	n=1 BEND -	
+in	91	12	n=1 EFX2 SW (FX1)	
+in	91	13	n=1 EFX3 SW (FX1)	
+in	91	15	n=1 EFX1 SW (FX1)	
+in	91	17	n=1 HOT CUE1	
+in	91	18	n=1 HOT CUE2	
+in	91	19	n=1 HOT CUE3	
+in	91	1A	n=1 SAMP. SELECT	
+in	91	1B	n=1 X-F LINK	
+in	91	1C	n=1 VIDEO ON (L)	
+in	91	16	n=1 FILTER ON(L)	
+in	91	1E	n=1 FILTER ON(R)	
+in	91	1F	n=1 VIDEO ON (R)	
+in	91	20	n=1 HOT CUE4	
+in	91	21	n=1 SAMP.1	
+in	91	22	n=1 SAMP.2	
+in	91	23	n=1 SAMP.3	
+in	91	24	n=1 SAMP.4	
+in	91	1D	n=1 AUTO LOOP	
+in	91	2A	n=1 DUCKING	
+in	91	26	n=1 MIC ON 1	
+in	91	27	n=1 MIC ON 2	
+in	91	28	n=1 TRACK SELECT KNOB SW	
+in	91	29	n=1 FWD	
+in	91	30	n=1 BCK	
+in	91	2E	n=1 INPUT SOURCE SELECT LN1 (CH1)	
+in	91	2F	n=1 INPUT SOURCE SELECT PC (CH1)	
+in	91	31	n=1 X FADER ASSIGN (CH1) L	
+in	91	32	n=1 X FADER ASSIGN (CH1) THRU	
+in	91	33	n=1 X FADER ASSIGN (CH1) R	
+in	91	34	n=1 X FADER ASSIGN (CH2) L	
+in	91	35	n=1 X FADER ASSIGN (CH2) THRU	
+in	91	36	n=1 X FADER ASSIGN (CH2) R	
+in	91	3A	n=1 X FADER ASSIGN (CH3) L	
+in	91	3B	n=1 X FADER ASSIGN (CH3) THRU	
+in	91	3C	n=1 X FADER ASSIGN (CH3) R	
+in	91	3D	n=1 X FADER ASSIGN (CH4) L	
+in	91	3E	n=1 X FADER ASSIGN (CH4) THRU	
+in	91	3F	n=1 X FADER ASSIGN (CH4) R	
+in	91	37	n=1 LOOP IN	
+in	91	39	n=1 LOOP OUT	
+in	91	40	n=1 BEATS (FX1)	
+in	91	41	n=1 BEATS (FX2)	
+in	91	42	n=1 CUE	
+in	91	43	n=1 PLAY	
+in	91	44	n=1 ECHO ON 1	
+in	91	45	n=1 ECHO ON 2	
+in	91	46	n=1 TAP (FX1)	
+in	91	47	n=1 TAP (FX2)	
+in	91	4E	n=1 INPUT SOURCE SELECT LN2 (CH2)	
+in	91	4F	n=1 INPUT SOURCE SELECT PC (CH2)	
+in	91	50	n=1 CENSOR	
+in	91	51	n=1 Jogwheel touch (VINYL MODE =ON)	
+in	91	52	n=1 EFX2 SW (FX2)	
+in	91	53	n=1 EFX3 SW (FX2)	
+in	91	55	n=1 EFX1 SW (FX2)	
+in	91	56	n=1 Jogwheel touch (VINYL MODE =OFF)	
+in	91	58	n=1 DECK ASSIGN 1 (FX1)	
+in	91	59	n=1 DECK ASSIGN 2 (FX1)	
+in	91	5A	n=1 DECK ASSIGN 3 (FX1)	
+in	91	5B	n=1 DECK ASSIGN 4 (FX1)	
+in	91	5C	n=1 DECK ASSIGN 1 (FX2)	
+in	91	5D	n=1 DECK ASSIGN 2 (FX2)	
+in	91	5E	n=1 DECK ASSIGN 3 (FX2)	
+in	91	5F	n=1 DECK ASSIGN 4 (FX2)	
+in	91	60	n=1 SHIFT (DECK LEFT)	
+in	91	61	n=1 SHIFT (DECK RIGHT)	
+in	91	62	n=1 LOAD A	
+in	91	63	n=1 LOAD B	
+in	91	64	n=1 PANEL	
+in	91	65	n=1 LIST	
+in	91	4C	n=1 VIEW	
+in	91	6C	n=1 INPUT SOURCE SELECT LN1/2/3 (CH3)	
+in	91	6D	n=1 INPUT SOURCE SELECT PC (CH3)	
+in	91	6E	n=1 INPUT SOURCE SELECT LN1/2/4 (CH4)	
+in	91	6F	n=1 INPUT SOURCE SELECT PC (CH4)	
+in	91	4D	n=1 AREA	
+in	91	69	n=1 LOOP CUT -	
+in	91	6A	n=1 LOOP CUT +	
+in	91	6B	n=1 SYNC	
+in	B1	51	n=1 JOG WHEEL FWD/REV (VINYL MODE = ON)	
+in	B1	52	n=1 JOG WHEEL FWD/REV (VINYL MODE = OFF)	
+in	B1	54	n=1 TRACK SELECT KNOB	
+in	B1	55	n=1 EFX1 KNOB (FX1)	
+in	B1	56	n=1 EFX2 KNOB (FX1)	
+in	B1	57	n=1 EFX3 KNOB (FX1)	
+in	B1	58	n=1 BEATS KNOB (FX1)	
+in	B1	59	n=1 EFX1 KNOB (FX2)	
+in	B1	5A	n=1 EFX2 KNOB (FX2)	
+in	B1	5B	n=1 EFX3 KNOB (FX2)	
+in	B1	5C	n=1 BEATS KNOB (FX2)	
+in	B1	5D	n=1 VIDEO(L) KNOB	
+in	B1	5E	n=1 VIDEO(R) KNOB	
+in	B1	66	n=1 FILTER(L) KNOB	
+in	B1	67	n=1 FILTER(R) KNOB	
+in	B1	01	n=1 INPUT LEVEL (CH1)	[Channel1] pregain
+in	B1	02	n=1 EQ HIGH VR (CH1)	[EqualizerRack1_[Channel1]_Effect1] parameter3
+in	B1	03	n=1 EQ MID VR (CH1)	[EqualizerRack1_[Channel1]_Effect1] parameter2
+in	B1	04	n=1 EQ LOW VR (CH1)	[EqualizerRack1_[Channel1]_Effect1] parameter1
+in	B1	05	n=1 FADER (CH1)	[Channel1] volume
+in	B1	07	n=1 INPUT LEVEL (CH2)	[Channel2] pregain
+in	B1	08	n=1 EQ HIGH VR (CH2)	[EqualizerRack1_[Channel2]_Effect1] parameter3
+in	B1	09	n=1 EQ MID VR (CH2)	[EqualizerRack1_[Channel2]_Effect1] parameter2
+in	B1	0A	n=1 EQ LOW VR (CH2)	[EqualizerRack1_[Channel2]_Effect1] parameter1
+in	B1	0B	n=1 FADER (CH2)	[Channel2] volume
+in	B1	0C	n=1 INPUT LEVEL (CH3)	[Channel3] pregain
+in	B1	0D	n=1 EQ HIGH VR (CH3)	[EqualizerRack1_[Channel3]_Effect1] parameter3
+in	B1	0E	n=1 EQ MID VR (CH3)	[EqualizerRack1_[Channel3]_Effect1] parameter2
+in	B1	0F	n=1 EQ LOW VR (CH3)	[EqualizerRack1_[Channel3]_Effect1] parameter1
+in	B1	10	n=1 FADER (CH3)	[Channel3] volume
+in	B1	11	n=1 INPUT LEVEL (CH4)	[Channel4] pregain
+in	B1	12	n=1 EQ HIGH VR (CH4)	[EqualizerRack1_[Channel4]_Effect1] parameter3
+in	B1	13	n=1 EQ MID VR (CH4)	[EqualizerRack1_[Channel4]_Effect1] parameter2
+in	B1	14	n=1 EQ LOW VR (CH4)	[EqualizerRack1_[Channel4]_Effect1] parameter1
+in	B1	15	n=1 FADER (CH4)	[Channel4] volume
+in	B1	21	n=1 MIC1 EQ HIGH VR	
+in	B1	22	n=1 MIC1 EQ LOW VR	
+in	B1	23	n=1 MIC1 EQ MID VR	
+in	B1	31	n=1 MIC2 EQ HIGH VR	
+in	B1	32	n=1 MIC2 EQ LOW VR	
+in	B1	33	n=1 MIC2 EQ MID VR	
+in	B1	1C	n=1 ECHO VR	
+in	B1	16	n=1 CROSS FADER (AUDIO)	[Master] crossfader
+in	B1	17	n=1 CROSS FADER (VIDEO)	
+in	B1	19	n=1 MASTER LEVEL VR	
+in	B1	1B	n=1 BOOTH LEVEL VR	
+in	B1	41	n=1 BOOTH EQ HIGH VR	
+in	B1	42	n=1 BOOTH EQ LOW VR	
+in	B1	43	n=1 PAN VR	
+in	B1	44	n=1 PHONES VR	
+in	B1	45	n=1 X FADER CONTOUR	
+in	B1	46	n=1 X FADER SETTING (CH1)	
+in	B1	47	n=1 X FADER SETTING (CH2)	
+in	B1	48	n=1 X FADER SETTING (CH3)	
+in	B1	49	n=1 X FADER SETTING (CH4)	
+both	B1	4A	n=1 LN1/2/3/4<-> PC / n=1 LED ON trigger (data2 = LED number)	
+both	B1	4B	n=1 XF-LINK / n=1 LED OFF trigger (data2 = LED number)	
+in	92	01	n=2 CUE MIXER CH1	[Channel1] pfl
+in	92	02	n=2 CUE MIXER CH2	[Channel2] pfl
+in	92	03	n=2 DECK CHG. 1	
+in	92	04	n=2 VINYL MODE	
+in	92	05	n=2 CUE MIXER CH3	[Channel3] pfl
+in	92	06	n=2 KEY LOCK	
+in	92	07	n=2 CUE MIXER CH4	[Channel4] pfl
+in	92	08	n=2 DECK CHG. 2	
+in	92	09	n=2 DECK CHG. 3	
+in	92	0A	n=2 DECK CHG. 4	
+in	92	0C	n=2 BEND +	
+in	92	0D	n=2 BEND -	
+in	92	12	n=2 EFX2 SW (FX1)	
+in	92	13	n=2 EFX3 SW (FX1)	
+in	92	15	n=2 EFX1 SW (FX1)	
+in	92	17	n=2 HOT CUE1	
+in	92	18	n=2 HOT CUE2	
+in	92	19	n=2 HOT CUE3	
+in	92	1A	n=2 SAMP. SELECT	
+in	92	1B	n=2 X-F LINK	
+in	92	1C	n=2 VIDEO ON (L)	
+in	92	16	n=2 FILTER ON(L)	
+in	92	1E	n=2 FILTER ON(R)	
+in	92	1F	n=2 VIDEO ON (R)	
+in	92	20	n=2 HOT CUE4	
+in	92	21	n=2 SAMP.1	
+in	92	22	n=2 SAMP.2	
+in	92	23	n=2 SAMP.3	
+in	92	24	n=2 SAMP.4	
+in	92	1D	n=2 AUTO LOOP	
+in	92	2A	n=2 DUCKING	
+in	92	26	n=2 MIC ON 1	
+in	92	27	n=2 MIC ON 2	
+in	92	28	n=2 TRACK SELECT KNOB SW	
+in	92	29	n=2 FWD	
+in	92	30	n=2 BCK	
+in	92	2E	n=2 INPUT SOURCE SELECT LN1 (CH1)	
+in	92	2F	n=2 INPUT SOURCE SELECT PC (CH1)	
+in	92	31	n=2 X FADER ASSIGN (CH1) L	
+in	92	32	n=2 X FADER ASSIGN (CH1) THRU	
+in	92	33	n=2 X FADER ASSIGN (CH1) R	
+in	92	34	n=2 X FADER ASSIGN (CH2) L	
+in	92	35	n=2 X FADER ASSIGN (CH2) THRU	
+in	92	36	n=2 X FADER ASSIGN (CH2) R	
+in	92	3A	n=2 X FADER ASSIGN (CH3) L	
+in	92	3B	n=2 X FADER ASSIGN (CH3) THRU	
+in	92	3C	n=2 X FADER ASSIGN (CH3) R	
+in	92	3D	n=2 X FADER ASSIGN (CH4) L	
+in	92	3E	n=2 X FADER ASSIGN (CH4) THRU	
+in	92	3F	n=2 X FADER ASSIGN (CH4) R	
+in	92	37	n=2 LOOP IN	
+in	92	39	n=2 LOOP OUT	
+in	92	40	n=2 BEATS (FX1)	
+in	92	41	n=2 BEATS (FX2)	
+in	92	42	n=2 CUE	
+in	92	43	n=2 PLAY	
+in	92	44	n=2 ECHO ON 1	
+in	92	45	n=2 ECHO ON 2	
+in	92	46	n=2 TAP (FX1)	
+in	92	47	n=2 TAP (FX2)	
+in	92	4E	n=2 INPUT SOURCE SELECT LN2 (CH2)	
+in	92	4F	n=2 INPUT SOURCE SELECT PC (CH2)	
+in	92	50	n=2 CENSOR	
+in	92	51	n=2 Jogwheel touch (VINYL MODE =ON)	
+in	92	52	n=2 EFX2 SW (FX2)	
+in	92	53	n=2 EFX3 SW (FX2)	
+in	92	55	n=2 EFX1 SW (FX2)	
+in	92	56	n=2 Jogwheel touch (VINYL MODE =OFF)	
+in	92	58	n=2 DECK ASSIGN 1 (FX1)	
+in	92	59	n=2 DECK ASSIGN 2 (FX1)	
+in	92	5A	n=2 DECK ASSIGN 3 (FX1)	
+in	92	5B	n=2 DECK ASSIGN 4 (FX1)	
+in	92	5C	n=2 DECK ASSIGN 1 (FX2)	
+in	92	5D	n=2 DECK ASSIGN 2 (FX2)	
+in	92	5E	n=2 DECK ASSIGN 3 (FX2)	
+in	92	5F	n=2 DECK ASSIGN 4 (FX2)	
+in	92	60	n=2 SHIFT (DECK LEFT)	
+in	92	61	n=2 SHIFT (DECK RIGHT)	
+in	92	62	n=2 LOAD A	
+in	92	63	n=2 LOAD B	
+in	92	64	n=2 PANEL	
+in	92	65	n=2 LIST	
+in	92	4C	n=2 VIEW	
+in	92	6C	n=2 INPUT SOURCE SELECT LN1/2/3 (CH3)	
+in	92	6D	n=2 INPUT SOURCE SELECT PC (CH3)	
+in	92	6E	n=2 INPUT SOURCE SELECT LN1/2/4 (CH4)	
+in	92	6F	n=2 INPUT SOURCE SELECT PC (CH4)	
+in	92	4D	n=2 AREA	
+in	92	69	n=2 LOOP CUT -	
+in	92	6A	n=2 LOOP CUT +	
+in	92	6B	n=2 SYNC	
+in	B2	51	n=2 JOG WHEEL FWD/REV (VINYL MODE = ON)	
+in	B2	52	n=2 JOG WHEEL FWD/REV (VINYL MODE = OFF)	
+in	B2	54	n=2 TRACK SELECT KNOB	
+in	B2	55	n=2 EFX1 KNOB (FX1)	
+in	B2	56	n=2 EFX2 KNOB (FX1)	
+in	B2	57	n=2 EFX3 KNOB (FX1)	
+in	B2	58	n=2 BEATS KNOB (FX1)	
+in	B2	59	n=2 EFX1 KNOB (FX2)	
+in	B2	5A	n=2 EFX2 KNOB (FX2)	
+in	B2	5B	n=2 EFX3 KNOB (FX2)	
+in	B2	5C	n=2 BEATS KNOB (FX2)	
+in	B2	5D	n=2 VIDEO(L) KNOB	
+in	B2	5E	n=2 VIDEO(R) KNOB	
+in	B2	66	n=2 FILTER(L) KNOB	
+in	B2	67	n=2 FILTER(R) KNOB	
+in	B2	01	n=2 INPUT LEVEL (CH1)	[Channel1] pregain
+in	B2	02	n=2 EQ HIGH VR (CH1)	[EqualizerRack1_[Channel1]_Effect1] parameter3
+in	B2	03	n=2 EQ MID VR (CH1)	[EqualizerRack1_[Channel1]_Effect1] parameter2
+in	B2	04	n=2 EQ LOW VR (CH1)	[EqualizerRack1_[Channel1]_Effect1] parameter1
+in	B2	05	n=2 FADER (CH1)	[Channel1] volume
+in	B2	07	n=2 INPUT LEVEL (CH2)	[Channel2] pregain
+in	B2	08	n=2 EQ HIGH VR (CH2)	[EqualizerRack1_[Channel2]_Effect1] parameter3
+in	B2	09	n=2 EQ MID VR (CH2)	[EqualizerRack1_[Channel2]_Effect1] parameter2
+in	B2	0A	n=2 EQ LOW VR (CH2)	[EqualizerRack1_[Channel2]_Effect1] parameter1
+in	B2	0B	n=2 FADER (CH2)	[Channel2] volume
+in	B2	0C	n=2 INPUT LEVEL (CH3)	[Channel3] pregain
+in	B2	0D	n=2 EQ HIGH VR (CH3)	[EqualizerRack1_[Channel3]_Effect1] parameter3
+in	B2	0E	n=2 EQ MID VR (CH3)	[EqualizerRack1_[Channel3]_Effect1] parameter2
+in	B2	0F	n=2 EQ LOW VR (CH3)	[EqualizerRack1_[Channel3]_Effect1] parameter1
+in	B2	10	n=2 FADER (CH3)	[Channel3] volume
+in	B2	11	n=2 INPUT LEVEL (CH4)	[Channel4] pregain
+in	B2	12	n=2 EQ HIGH VR (CH4)	[EqualizerRack1_[Channel4]_Effect1] parameter3
+in	B2	13	n=2 EQ MID VR (CH4)	[EqualizerRack1_[Channel4]_Effect1] parameter2
+in	B2	14	n=2 EQ LOW VR (CH4)	[EqualizerRack1_[Channel4]_Effect1] parameter1
+in	B2	15	n=2 FADER (CH4)	[Channel4] volume
+in	B2	21	n=2 MIC1 EQ HIGH VR	
+in	B2	22	n=2 MIC1 EQ LOW VR	
+in	B2	23	n=2 MIC1 EQ MID VR	
+in	B2	31	n=2 MIC2 EQ HIGH VR	
+in	B2	32	n=2 MIC2 EQ LOW VR	
+in	B2	33	n=2 MIC2 EQ MID VR	
+in	B2	1C	n=2 ECHO VR	
+in	B2	16	n=2 CROSS FADER (AUDIO)	[Master] crossfader
+in	B2	17	n=2 CROSS FADER (VIDEO)	
+in	B2	19	n=2 MASTER LEVEL VR	
+in	B2	1B	n=2 BOOTH LEVEL VR	
+in	B2	41	n=2 BOOTH EQ HIGH VR	
+in	B2	42	n=2 BOOTH EQ LOW VR	
+in	B2	43	n=2 PAN VR	
+in	B2	44	n=2 PHONES VR	
+in	B2	45	n=2 X FADER CONTOUR	
+in	B2	46	n=2 X FADER SETTING (CH1)	
+in	B2	47	n=2 X FADER SETTING (CH2)	
+in	B2	48	n=2 X FADER SETTING (CH3)	
+in	B2	49	n=2 X FADER SETTING (CH4)	
+both	B2	4A	n=2 LN1/2/3/4<-> PC / n=2 LED ON trigger (data2 = LED number)	
+both	B2	4B	n=2 XF-LINK / n=2 LED OFF trigger (data2 = LED number)	
+in	93	01	n=3 CUE MIXER CH1	[Channel1] pfl
+in	93	02	n=3 CUE MIXER CH2	[Channel2] pfl
+in	93	03	n=3 DECK CHG. 1	
+in	93	04	n=3 VINYL MODE	
+in	93	05	n=3 CUE MIXER CH3	[Channel3] pfl
+in	93	06	n=3 KEY LOCK	
+in	93	07	n=3 CUE MIXER CH4	[Channel4] pfl
+in	93	08	n=3 DECK CHG. 2	
+in	93	09	n=3 DECK CHG. 3	
+in	93	0A	n=3 DECK CHG. 4	
+in	93	0C	n=3 BEND +	
+in	93	0D	n=3 BEND -	
+in	93	12	n=3 EFX2 SW (FX1)	
+in	93	13	n=3 EFX3 SW (FX1)	
+in	93	15	n=3 EFX1 SW (FX1)	
+in	93	17	n=3 HOT CUE1	
+in	93	18	n=3 HOT CUE2	
+in	93	19	n=3 HOT CUE3	
+in	93	1A	n=3 SAMP. SELECT	
+in	93	1B	n=3 X-F LINK	
+in	93	1C	n=3 VIDEO ON (L)	
+in	93	16	n=3 FILTER ON(L)	
+in	93	1E	n=3 FILTER ON(R)	
+in	93	1F	n=3 VIDEO ON (R)	
+in	93	20	n=3 HOT CUE4	
+in	93	21	n=3 SAMP.1	
+in	93	22	n=3 SAMP.2	
+in	93	23	n=3 SAMP.3	
+in	93	24	n=3 SAMP.4	
+in	93	1D	n=3 AUTO LOOP	
+in	93	2A	n=3 DUCKING	
+in	93	26	n=3 MIC ON 1	
+in	93	27	n=3 MIC ON 2	
+in	93	28	n=3 TRACK SELECT KNOB SW	
+in	93	29	n=3 FWD	
+in	93	30	n=3 BCK	
+in	93	2E	n=3 INPUT SOURCE SELECT LN1 (CH1)	
+in	93	2F	n=3 INPUT SOURCE SELECT PC (CH1)	
+in	93	31	n=3 X FADER ASSIGN (CH1) L	
+in	93	32	n=3 X FADER ASSIGN (CH1) THRU	
+in	93	33	n=3 X FADER ASSIGN (CH1) R	
+in	93	34	n=3 X FADER ASSIGN (CH2) L	
+in	93	35	n=3 X FADER ASSIGN (CH2) THRU	
+in	93	36	n=3 X FADER ASSIGN (CH2) R	
+in	93	3A	n=3 X FADER ASSIGN (CH3) L	
+in	93	3B	n=3 X FADER ASSIGN (CH3) THRU	
+in	93	3C	n=3 X FADER ASSIGN (CH3) R	
+in	93	3D	n=3 X FADER ASSIGN (CH4) L	
+in	93	3E	n=3 X FADER ASSIGN (CH4) THRU	
+in	93	3F	n=3 X FADER ASSIGN (CH4) R	
+in	93	37	n=3 LOOP IN	
+in	93	39	n=3 LOOP OUT	
+in	93	40	n=3 BEATS (FX1)	
+in	93	41	n=3 BEATS (FX2)	
+in	93	42	n=3 CUE	
+in	93	43	n=3 PLAY	
+in	93	44	n=3 ECHO ON 1	
+in	93	45	n=3 ECHO ON 2	
+in	93	46	n=3 TAP (FX1)	
+in	93	47	n=3 TAP (FX2)	
+in	93	4E	n=3 INPUT SOURCE SELECT LN2 (CH2)	
+in	93	4F	n=3 INPUT SOURCE SELECT PC (CH2)	
+in	93	50	n=3 CENSOR	
+in	93	51	n=3 Jogwheel touch (VINYL MODE =ON)	
+in	93	52	n=3 EFX2 SW (FX2)	
+in	93	53	n=3 EFX3 SW (FX2)	
+in	93	55	n=3 EFX1 SW (FX2)	
+in	93	56	n=3 Jogwheel touch (VINYL MODE =OFF)	
+in	93	58	n=3 DECK ASSIGN 1 (FX1)	
+in	93	59	n=3 DECK ASSIGN 2 (FX1)	
+in	93	5A	n=3 DECK ASSIGN 3 (FX1)	
+in	93	5B	n=3 DECK ASSIGN 4 (FX1)	
+in	93	5C	n=3 DECK ASSIGN 1 (FX2)	
+in	93	5D	n=3 DECK ASSIGN 2 (FX2)	
+in	93	5E	n=3 DECK ASSIGN 3 (FX2)	
+in	93	5F	n=3 DECK ASSIGN 4 (FX2)	
+in	93	60	n=3 SHIFT (DECK LEFT)	
+in	93	61	n=3 SHIFT (DECK RIGHT)	
+in	93	62	n=3 LOAD A	
+in	93	63	n=3 LOAD B	
+in	93	64	n=3 PANEL	
+in	93	65	n=3 LIST	
+in	93	4C	n=3 VIEW	
+in	93	6C	n=3 INPUT SOURCE SELECT LN1/2/3 (CH3)	
+in	93	6D	n=3 INPUT SOURCE SELECT PC (CH3)	
+in	93	6E	n=3 INPUT SOURCE SELECT LN1/2/4 (CH4)	
+in	93	6F	n=3 INPUT SOURCE SELECT PC (CH4)	
+in	93	4D	n=3 AREA	
+in	93	69	n=3 LOOP CUT -	
+in	93	6A	n=3 LOOP CUT +	
+in	93	6B	n=3 SYNC	
+in	B3	51	n=3 JOG WHEEL FWD/REV (VINYL MODE = ON)	
+in	B3	52	n=3 JOG WHEEL FWD/REV (VINYL MODE = OFF)	
+in	B3	54	n=3 TRACK SELECT KNOB	
+in	B3	55	n=3 EFX1 KNOB (FX1)	
+in	B3	56	n=3 EFX2 KNOB (FX1)	
+in	B3	57	n=3 EFX3 KNOB (FX1)	
+in	B3	58	n=3 BEATS KNOB (FX1)	
+in	B3	59	n=3 EFX1 KNOB (FX2)	
+in	B3	5A	n=3 EFX2 KNOB (FX2)	
+in	B3	5B	n=3 EFX3 KNOB (FX2)	
+in	B3	5C	n=3 BEATS KNOB (FX2)	
+in	B3	5D	n=3 VIDEO(L) KNOB	
+in	B3	5E	n=3 VIDEO(R) KNOB	
+in	B3	66	n=3 FILTER(L) KNOB	
+in	B3	67	n=3 FILTER(R) KNOB	
+in	B3	01	n=3 INPUT LEVEL (CH1)	[Channel1] pregain
+in	B3	02	n=3 EQ HIGH VR (CH1)	[EqualizerRack1_[Channel1]_Effect1] parameter3
+in	B3	03	n=3 EQ MID VR (CH1)	[EqualizerRack1_[Channel1]_Effect1] parameter2
+in	B3	04	n=3 EQ LOW VR (CH1)	[EqualizerRack1_[Channel1]_Effect1] parameter1
+in	B3	05	n=3 FADER (CH1)	[Channel1] volume
+in	B3	07	n=3 INPUT LEVEL (CH2)	[Channel2] pregain
+in	B3	08	n=3 EQ HIGH VR (CH2)	[EqualizerRack1_[Channel2]_Effect1] parameter3
+in	B3	09	n=3 EQ MID VR (CH2)	[EqualizerRack1_[Channel2]_Effect1] parameter2
+in	B3	0A	n=3 EQ LOW VR (CH2)	[EqualizerRack1_[Channel2]_Effect1] parameter1
+in	B3	0B	n=3 FADER (CH2)	[Channel2] volume
+in	B3	0C	n=3 INPUT LEVEL (CH3)	[Channel3] pregain
+in	B3	0D	n=3 EQ HIGH VR (CH3)	[EqualizerRack1_[Channel3]_Effect1] parameter3
+in	B3	0E	n=3 EQ MID VR (CH3)	[EqualizerRack1_[Channel3]_Effect1] parameter2
+in	B3	0F	n=3 EQ LOW VR (CH3)	[EqualizerRack1_[Channel3]_Effect1] parameter1
+in	B3	10	n=3 FADER (CH3)	[Channel3] volume
+in	B3	11	n=3 INPUT LEVEL (CH4)	[Channel4] pregain
+in	B3	12	n=3 EQ HIGH VR (CH4)	[EqualizerRack1_[Channel4]_Effect1] parameter3
+in	B3	13	n=3 EQ MID VR (CH4)	[EqualizerRack1_[Channel4]_Effect1] parameter2
+in	B3	14	n=3 EQ LOW VR (CH4)	[EqualizerRack1_[Channel4]_Effect1] parameter1
+in	B3	15	n=3 FADER (CH4)	[Channel4] volume
+in	B3	21	n=3 MIC1 EQ HIGH VR	
+in	B3	22	n=3 MIC1 EQ LOW VR	
+in	B3	23	n=3 MIC1 EQ MID VR	
+in	B3	31	n=3 MIC2 EQ HIGH VR	
+in	B3	32	n=3 MIC2 EQ LOW VR	
+in	B3	33	n=3 MIC2 EQ MID VR	
+in	B3	1C	n=3 ECHO VR	
+in	B3	16	n=3 CROSS FADER (AUDIO)	[Master] crossfader
+in	B3	17	n=3 CROSS FADER (VIDEO)	
+in	B3	19	n=3 MASTER LEVEL VR	
+in	B3	1B	n=3 BOOTH LEVEL VR	
+in	B3	41	n=3 BOOTH EQ HIGH VR	
+in	B3	42	n=3 BOOTH EQ LOW VR	
+in	B3	43	n=3 PAN VR	
+in	B3	44	n=3 PHONES VR	
+in	B3	45	n=3 X FADER CONTOUR	
+in	B3	46	n=3 X FADER SETTING (CH1)	
+in	B3	47	n=3 X FADER SETTING (CH2)	
+in	B3	48	n=3 X FADER SETTING (CH3)	
+in	B3	49	n=3 X FADER SETTING (CH4)	
+both	B3	4A	n=3 LN1/2/3/4<-> PC / n=3 LED ON trigger (data2 = LED number)	
+both	B3	4B	n=3 XF-LINK / n=3 LED OFF trigger (data2 = LED number)	
+out	B0	4C	n=0 LED BLINK ON trigger (data2 = LED number)	
+out	B0	50	n=0 MON CUE LED ON trigger (data2 = LED number)	
+out	B1	4C	n=1 LED BLINK ON trigger (data2 = LED number)	
+out	B1	50	n=1 MON CUE LED ON trigger (data2 = LED number)	
+out	B2	4C	n=2 LED BLINK ON trigger (data2 = LED number)	
+out	B2	50	n=2 MON CUE LED ON trigger (data2 = LED number)	
+out	B3	4C	n=3 LED BLINK ON trigger (data2 = LED number)	
+out	B3	50	n=3 MON CUE LED ON trigger (data2 = LED number)	
+out	B0	83	METER 4 (CH1)	
+out	B0	84	METER 5 (CH1)	
+out	B0	85	METER 6 (CH1)	
+out	B0	86	METER 7 (CH1)	
+out	B0	87	METER 8 (CH1)	
+out	B0	88	METER 9 (CH1)	
+out	B0	89	METER PEAK (CH1)	
+out	B2	83	METER 4 (CH2)	
+out	B2	84	METER 5 (CH2)	
+out	B2	85	METER 6 (CH2)	
+out	B2	86	METER 7 (CH2)	
+out	B2	87	METER 8 (CH2)	
+out	B2	88	METER 9 (CH2)	
+out	B2	89	METER PEAK (CH2)	
+out	B1	83	METER 4 (CH3)	
+out	B1	84	METER 5 (CH3)	
+out	B1	85	METER 6 (CH3)	
+out	B1	86	METER 7 (CH3)	
+out	B1	87	METER 8 (CH3)	
+out	B1	88	METER 9 (CH3)	
+out	B1	89	METER PEAK (CH3)	
+out	B3	83	METER 4 (CH4)	
+out	B3	84	METER 5 (CH4)	
+out	B3	85	METER 6 (CH4)	
+out	B3	86	METER 7 (CH4)	
+out	B3	87	METER 8 (CH4)	
+out	B3	88	METER 9 (CH4)	
+out	B3	89	METER PEAK (CH4)	

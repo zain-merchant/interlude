@@ -1,0 +1,238 @@
+# VCI-100MKII — Vestax "VCI-100MKII 取扱説明書" (Japanese owner's manual), MIDI MAP pp. 45-47 (scanned, transcribed by eye)
+# source: https://web.archive.org/web/2015id_/http://help.vestax.co.jp/ja/usr_data/file/manual_pdf/VCI-100MK2.pdf
+# Note names are converted with C-1 = 0 (the convention of the VCI-100 MIDI map, e.g. C3 = 30h). Deck A = ch 1,
+# B = ch 2, C = ch 3, D = ch 4, browser/crossfader/shift = ch 5. LEDs take the button's note on the deck's channel.
+# The EQ knobs are printed as EQ_Hi_Hi/EQ_Mid_Hi/EQ_Mid/EQ_Low but the panel labels them HI/MID/LOW/PAN, so EQ rows carry no expect.
+in	90	20	L - EFFECT TYPE Up (SW_01, ch 1)	
+in	92	20	L - EFFECT TYPE Up (SW_01, ch 3)	
+in	90	21	L - EFFECT TYPE Down (SW_02, ch 1)	
+in	92	21	L - EFFECT TYPE Down (SW_02, ch 3)	
+both	90	2C	L - EFX_Parameter_On (SW_03, ch 1)	
+in	90	4C	L - EFX_Parameter_On (SW_03, ch 1) +SHIFT	
+both	92	2C	L - EFX_Parameter_On (SW_03, ch 3)	
+in	92	4C	L - EFX_Parameter_On (SW_03, ch 3) +SHIFT	
+both	90	25	L - EFX_Parameter_Reset (SW_04, ch 1)	
+in	90	45	L - EFX_Parameter_Reset (SW_04, ch 1) +SHIFT	
+both	92	25	L - EFX_Parameter_Reset (SW_04, ch 3)	
+in	92	45	L - EFX_Parameter_Reset (SW_04, ch 3) +SHIFT	
+both	90	27	L - EFX_Parameter_1 (SW_05, ch 1)	
+in	90	47	L - EFX_Parameter_1 (SW_05, ch 1) +SHIFT	
+both	92	27	L - EFX_Parameter_1 (SW_05, ch 3)	
+in	92	47	L - EFX_Parameter_1 (SW_05, ch 3) +SHIFT	
+both	90	28	L - EFX_Parameter_2 (SW_06, ch 1)	
+in	90	48	L - EFX_Parameter_2 (SW_06, ch 1) +SHIFT	
+both	92	28	L - EFX_Parameter_2 (SW_06, ch 3)	
+in	92	48	L - EFX_Parameter_2 (SW_06, ch 3) +SHIFT	
+both	90	22	L - PLAY (SW_07, ch 1)	[Channel1] play
+in	90	42	L - PLAY (SW_07, ch 1) +SHIFT	
+both	92	22	L - PLAY (SW_07, ch 3)	[Channel3] play
+in	92	42	L - PLAY (SW_07, ch 3) +SHIFT	
+both	90	23	L - SET CUE (SW_08, ch 1)	
+in	90	43	L - SET CUE (SW_08, ch 1) +SHIFT	
+both	92	23	L - SET CUE (SW_08, ch 3)	
+in	92	43	L - SET CUE (SW_08, ch 3) +SHIFT	
+both	90	2A	L - I (SW_09, ch 1)	
+in	90	4A	L - I (SW_09, ch 1) +SHIFT	
+both	92	2A	L - I (SW_09, ch 3)	
+in	92	4A	L - I (SW_09, ch 3) +SHIFT	
+both	90	2B	L - II (SW_10, ch 1)	
+in	90	4B	L - II (SW_10, ch 1) +SHIFT	
+both	92	2B	L - II (SW_10, ch 3)	
+in	92	4B	L - II (SW_10, ch 3) +SHIFT	
+both	90	24	L - SYNC (SW_11, ch 1)	[Channel1] sync_enabled|beatsync
+in	90	44	L - SYNC (SW_11, ch 1) +SHIFT	
+both	92	24	L - SYNC (SW_11, ch 3)	[Channel3] sync_enabled|beatsync
+in	92	44	L - SYNC (SW_11, ch 3) +SHIFT	
+both	90	26	L - LOOP (SW_12, ch 1)	
+in	90	46	L - LOOP (SW_12, ch 1) +SHIFT	
+both	92	26	L - LOOP (SW_12, ch 3)	
+in	92	46	L - LOOP (SW_12, ch 3) +SHIFT	
+both	90	2D	L - KEY (SW_13, ch 1)	
+in	90	4D	L - KEY (SW_13, ch 1) +SHIFT	
+both	92	2D	L - KEY (SW_13, ch 3)	
+in	92	4D	L - KEY (SW_13, ch 3) +SHIFT	
+both	90	29	L - SIZE FWD (SW_14, ch 1)	
+in	90	49	L - SIZE FWD (SW_14, ch 1) +SHIFT	
+both	92	29	L - SIZE FWD (SW_14, ch 3)	
+in	92	49	L - SIZE FWD (SW_14, ch 3) +SHIFT	
+both	90	33	L - SIZE BACK (SW_15, ch 1)	
+in	90	53	L - SIZE BACK (SW_15, ch 1) +SHIFT	
+both	92	33	L - SIZE BACK (SW_15, ch 3)	
+in	92	53	L - SIZE BACK (SW_15, ch 3) +SHIFT	
+both	90	39	L - FILTER_ON (SW_16, ch 1)	
+both	92	39	L - FILTER_ON (SW_16, ch 3)	
+in	94	24	L - SHIFT (SW_17, ch 5)	
+in	90	34	L - Deck_Switch_A_Hold (SW_18, ch 1)	
+in	90	35	L - Deck_Switch_C_Hold (SW_19, ch 1)	
+both	90	36	L - MONITOR (SW_20, ch 1)	[Channel1] pfl
+in	90	52	L - MONITOR (SW_20, ch 1) +SHIFT	
+both	92	36	L - MONITOR (SW_20, ch 3)	[Channel3] pfl
+in	92	52	L - MONITOR (SW_20, ch 3) +SHIFT	
+both	90	3A	L - FX1 (SW_21, ch 1)	
+in	90	4F	L - FX1 (SW_21, ch 1) +SHIFT	
+both	92	3A	L - FX1 (SW_21, ch 3)	
+in	92	4F	L - FX1 (SW_21, ch 3) +SHIFT	
+both	90	38	L - FX2 (SW_22, ch 1)	
+in	90	50	L - FX2 (SW_22, ch 1) +SHIFT	
+both	92	38	L - FX2 (SW_22, ch 3)	
+in	92	50	L - FX2 (SW_22, ch 3) +SHIFT	
+in	91	20	R - EFFECT TYPE Up (SW_23, ch 2)	
+in	93	20	R - EFFECT TYPE Up (SW_23, ch 4)	
+in	91	21	R - EFFECT TYPE Down (SW_24, ch 2)	
+in	93	21	R - EFFECT TYPE Down (SW_24, ch 4)	
+both	91	28	R - EFX_Parameter_On (SW_25, ch 2)	
+in	91	48	R - EFX_Parameter_On (SW_25, ch 2) +SHIFT	
+both	93	28	R - EFX_Parameter_On (SW_25, ch 4)	
+in	93	48	R - EFX_Parameter_On (SW_25, ch 4) +SHIFT	
+both	91	25	R - EFX_Parameter_Reset (SW_26, ch 2)	
+in	91	45	R - EFX_Parameter_Reset (SW_26, ch 2) +SHIFT	
+both	93	25	R - EFX_Parameter_Reset (SW_26, ch 4)	
+in	93	45	R - EFX_Parameter_Reset (SW_26, ch 4) +SHIFT	
+both	91	27	R - EFX_Parameter_1 (SW_27, ch 2)	
+in	91	47	R - EFX_Parameter_1 (SW_27, ch 2) +SHIFT	
+both	93	27	R - EFX_Parameter_1 (SW_27, ch 4)	
+in	93	47	R - EFX_Parameter_1 (SW_27, ch 4) +SHIFT	
+both	91	2C	R - EFX_Parameter_2 (SW_28, ch 2)	
+in	91	4C	R - EFX_Parameter_2 (SW_28, ch 2) +SHIFT	
+both	93	2C	R - EFX_Parameter_2 (SW_28, ch 4)	
+in	93	4C	R - EFX_Parameter_2 (SW_28, ch 4) +SHIFT	
+both	91	22	R - PLAY (SW_29, ch 2)	[Channel2] play
+in	91	42	R - PLAY (SW_29, ch 2) +SHIFT	
+both	93	22	R - PLAY (SW_29, ch 4)	[Channel4] play
+in	93	42	R - PLAY (SW_29, ch 4) +SHIFT	
+both	91	23	R - SET CUE (SW_30, ch 2)	
+in	91	43	R - SET CUE (SW_30, ch 2) +SHIFT	
+both	93	23	R - SET CUE (SW_30, ch 4)	
+in	93	43	R - SET CUE (SW_30, ch 4) +SHIFT	
+both	91	2A	R - I (SW_31, ch 2)	
+in	91	4A	R - I (SW_31, ch 2) +SHIFT	
+both	93	2A	R - I (SW_31, ch 4)	
+in	93	4A	R - I (SW_31, ch 4) +SHIFT	
+both	91	2B	R - II (SW_32, ch 2)	
+in	91	4B	R - II (SW_32, ch 2) +SHIFT	
+both	93	2B	R - II (SW_32, ch 4)	
+in	93	4B	R - II (SW_32, ch 4) +SHIFT	
+both	91	24	R - SYNC (SW_33, ch 2)	[Channel2] sync_enabled|beatsync
+in	91	44	R - SYNC (SW_33, ch 2) +SHIFT	
+both	93	24	R - SYNC (SW_33, ch 4)	[Channel4] sync_enabled|beatsync
+in	93	44	R - SYNC (SW_33, ch 4) +SHIFT	
+both	91	33	R - LOOP (SW_34, ch 2)	
+in	91	53	R - LOOP (SW_34, ch 2) +SHIFT	
+both	93	33	R - LOOP (SW_34, ch 4)	
+in	93	53	R - LOOP (SW_34, ch 4) +SHIFT	
+both	91	2D	R - KEY (SW_35, ch 2)	
+in	91	4D	R - KEY (SW_35, ch 2) +SHIFT	
+both	93	2D	R - KEY (SW_35, ch 4)	
+in	93	4D	R - KEY (SW_35, ch 4) +SHIFT	
+both	91	26	R - SIZE FWD (SW_36, ch 2)	
+in	91	46	R - SIZE FWD (SW_36, ch 2) +SHIFT	
+both	93	26	R - SIZE FWD (SW_36, ch 4)	
+in	93	46	R - SIZE FWD (SW_36, ch 4) +SHIFT	
+both	91	29	R - SIZE BAK (SW_37, ch 2)	
+in	91	49	R - SIZE BAK (SW_37, ch 2) +SHIFT	
+both	93	29	R - SIZE BAK (SW_37, ch 4)	
+in	93	49	R - SIZE BAK (SW_37, ch 4) +SHIFT	
+both	91	39	R - FILTER_ON (SW_38, ch 2)	
+both	93	39	R - FILTER_ON (SW_38, ch 4)	
+in	94	34	R - SHIFT (SW_39, ch 5)	
+in	91	34	R - Deck_Switch_B_Hold (SW_40, ch 2)	
+in	93	34	R - Deck_Switch_B_Hold (SW_40, ch 4)	
+in	91	35	R - Deck_Switch_D_Hold (SW_41, ch 2)	
+in	93	35	R - Deck_Switch_D_Hold (SW_41, ch 4)	
+both	91	36	R - MONITOR (SW_42, ch 2)	[Channel2] pfl
+in	91	52	R - MONITOR (SW_42, ch 2) +SHIFT	
+both	93	36	R - MONITOR (SW_42, ch 4)	[Channel4] pfl
+in	93	52	R - MONITOR (SW_42, ch 4) +SHIFT	
+both	91	3A	R - FX1 (SW_43, ch 2)	
+in	91	4F	R - FX1 (SW_43, ch 2) +SHIFT	
+both	93	3A	R - FX1 (SW_43, ch 4)	
+in	93	4F	R - FX1 (SW_43, ch 4) +SHIFT	
+both	91	38	R - FX2 (SW_44, ch 2)	
+in	91	50	R - FX2 (SW_44, ch 2) +SHIFT	
+both	93	38	R - FX2 (SW_44, ch 4)	
+in	93	50	R - FX2 (SW_44, ch 4) +SHIFT	
+in	94	36	Brower_Preview (SW_45, ch 5)	
+in	94	37	Brower_Up (SW_46, ch 5)	
+in	94	38	Brower_Down (SW_47, ch 5)	
+in	90	37	Brower_Load_A/C (SW_48, ch 1)	[Channel1] LoadSelectedTrack
+in	92	37	Brower_Load_A/C (SW_48, ch 3)	[Channel3] LoadSelectedTrack
+in	91	37	Brower_Load_B/D (SW_49, ch 2)	[Channel2] LoadSelectedTrack
+in	93	37	Brower_Load_B/D (SW_49, ch 4)	[Channel4] LoadSelectedTrack
+in	90	3B	LEFT DECK touch (SW_50, ch 1)	
+in	92	3B	LEFT DECK touch (SW_50, ch 3)	
+in	91	3B	RIGHT DECK touch (SW_51, ch 2)	
+in	93	3B	RIGHT DECK touch (SW_51, ch 4)	
+in	B0	10	LEFT WHEEL (ENC01, ch 1)	
+in	B2	10	LEFT WHEEL (ENC01, ch 3)	
+in	B1	10	RIGHT WHEEL (ENC02, ch 2)	
+in	B3	10	RIGHT WHEEL (ENC02, ch 4)	
+in	B0	16	L - EFX_Wet/Dry (VR01, ch 1)	
+in	B2	16	L - EFX_Wet/Dry (VR01, ch 3)	
+in	B0	17	L - EFX_Parameter 1 (VR02, ch 1)	
+in	B2	17	L - EFX_Parameter 1 (VR02, ch 3)	
+in	B0	18	L - EFX_Parameter 2 (VR03, ch 1)	
+in	B2	18	L - EFX_Parameter 2 (VR03, ch 3)	
+in	B0	19	L - EFX_Parameter 3 (VR04, ch 1)	
+in	B2	19	L - EFX_Parameter 3 (VR04, ch 3)	
+in	B0	11	L - EQ_Hi_Hi (VR05, ch 1)	
+in	B2	11	L - EQ_Hi_Hi (VR05, ch 3)	
+in	B0	12	L - EQ_Mid_Hi (VR06, ch 1)	
+in	B2	12	L - EQ_Mid_Hi (VR06, ch 3)	
+in	B0	13	L - EQ_Mid (VR07, ch 1)	
+in	B2	13	L - EQ_Mid (VR07, ch 3)	
+in	B0	14	L - EQ_Low (VR08, ch 1)	
+in	B2	14	L - EQ_Low (VR08, ch 3)	
+in	B0	15	L - EQ_TRIM (VR09, ch 1)	[Channel1] pregain
+in	B2	15	L - EQ_TRIM (VR09, ch 3)	[Channel3] pregain
+in	B0	1A	L - Filter (VR10, ch 1)	[QuickEffectRack1_[Channel1]] super1
+in	B2	1A	L - Filter (VR10, ch 3)	[QuickEffectRack1_[Channel3]] super1
+in	B0	1B	L - Pitch_Fader (VR11, ch 1) MSB	[Channel1] rate
+in	B0	2B	L - Pitch_Fader (VR11, ch 1) LSB	
+in	B0	1E	L - Pitch_Fader (VR11, ch 1) +SHIFT MSB	
+in	B0	2E	L - Pitch_Fader (VR11, ch 1) +SHIFT LSB	
+in	B2	1B	L - Pitch_Fader (VR11, ch 3) MSB	[Channel3] rate
+in	B2	2B	L - Pitch_Fader (VR11, ch 3) LSB	
+in	B2	1E	L - Pitch_Fader (VR11, ch 3) +SHIFT MSB	
+in	B2	2E	L - Pitch_Fader (VR11, ch 3) +SHIFT LSB	
+in	B0	1C	L - Volume_Fader (VR12, ch 1) MSB	[Channel1] volume
+in	B0	2C	L - Volume_Fader (VR12, ch 1) LSB	
+in	B2	1C	L - Volume_Fader (VR12, ch 3) MSB	[Channel3] volume
+in	B2	2C	L - Volume_Fader (VR12, ch 3) LSB	
+in	B1	17	R - EFX_Wet/Dry (VR13, ch 2)	
+in	B3	17	R - EFX_Wet/Dry (VR13, ch 4)	
+in	B1	18	R - EFX_Parameter 1 (VR14, ch 2)	
+in	B3	18	R - EFX_Parameter 1 (VR14, ch 4)	
+in	B1	19	R - EFX_Parameter 2 (VR15, ch 2)	
+in	B3	19	R - EFX_Parameter 2 (VR15, ch 4)	
+in	B1	1A	R - EFX_Parameter 3 (VR16, ch 2)	
+in	B3	1A	R - EFX_Parameter 3 (VR16, ch 4)	
+in	B1	14	R - EQ_Hi_Hi (VR17, ch 2)	
+in	B3	14	R - EQ_Hi_Hi (VR17, ch 4)	
+in	B1	1C	R - EQ_Mid_Hi (VR18, ch 2)	
+in	B3	1C	R - EQ_Mid_Hi (VR18, ch 4)	
+in	B1	13	R - EQ_Mid (VR19, ch 2)	
+in	B3	13	R - EQ_Mid (VR19, ch 4)	
+in	B1	12	R - EQ_Low (VR20, ch 2)	
+in	B3	12	R - EQ_Low (VR20, ch 4)	
+in	B1	15	R - EQ_TRIM (VR21, ch 2)	[Channel2] pregain
+in	B3	15	R - EQ_TRIM (VR21, ch 4)	[Channel4] pregain
+in	B1	1B	R - Filter (VR22, ch 2)	[QuickEffectRack1_[Channel2]] super1
+in	B3	1B	R - Filter (VR22, ch 4)	[QuickEffectRack1_[Channel4]] super1
+in	B1	11	R - Pitch_Fader (VR23, ch 2) MSB	[Channel2] rate
+in	B1	21	R - Pitch_Fader (VR23, ch 2) LSB	
+in	B1	1E	R - Pitch_Fader (VR23, ch 2) +SHIFT MSB	
+in	B1	2E	R - Pitch_Fader (VR23, ch 2) +SHIFT LSB	
+in	B3	11	R - Pitch_Fader (VR23, ch 4) MSB	[Channel4] rate
+in	B3	21	R - Pitch_Fader (VR23, ch 4) LSB	
+in	B3	1E	R - Pitch_Fader (VR23, ch 4) +SHIFT MSB	
+in	B3	2E	R - Pitch_Fader (VR23, ch 4) +SHIFT LSB	
+in	B1	16	R - Volume_Fader (VR24, ch 2) MSB	[Channel2] volume
+in	B1	26	R - Volume_Fader (VR24, ch 2) LSB	
+in	B3	16	R - Volume_Fader (VR24, ch 4) MSB	[Channel4] volume
+in	B3	26	R - Volume_Fader (VR24, ch 4) LSB	
+in	B4	10	CROSS FADER (VR25, ch 5) MSB	[Master] crossfader
+in	B4	20	CROSS FADER (VR25, ch 5) LSB	
+in	B4	11	Fader Curve (VR26, ch 5)	
+in	B4	12	HeadPhone Volume (VR27, ch 5)	
+in	B4	13	HeadPhone Mixer (VR28, ch 5)	
+in	B4	14	MAIN Level Output (VR29, ch 5)	

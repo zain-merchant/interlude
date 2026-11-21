@@ -1,0 +1,265 @@
+# DDJ-SB — Pioneer DJ "List of MIDI messages" ver. 1.00
+# source: https://downloads.support.alphatheta.com/software_info/dj-controllers/DDJ-SB/DDJ-SB_List_of_MIDI_Messages_E.pdf
+both	90	0B	DECK1 PLAY/PAUSE	[Channel1] play
+both	91	0B	DECK2 PLAY/PAUSE	[Channel2] play
+both	90	47	DECK1 PLAY/PAUSE	
+both	91	47	DECK2 PLAY/PAUSE	
+both	90	0C	DECK1 CUE	[Channel1] cue_default
+both	91	0C	DECK2 CUE	[Channel2] cue_default
+both	90	48	DECK1 CUE	
+both	91	48	DECK2 CUE	
+both	90	58	DECK1 SYNC	[Channel1] sync_enabled|beatsync
+both	91	58	DECK2 SYNC	[Channel2] sync_enabled|beatsync
+both	90	5C	DECK1 SYNC	
+both	91	5C	DECK2 SYNC	
+in	B0	22	DECK1 SYNC (Vinyl On)	
+in	B1	22	DECK2 SYNC (Vinyl On)	
+in	B0	23	DECK1 JOG DIAL (Platter) (Vinyl Off)	
+in	B1	23	DECK2 JOG DIAL (Platter) (Vinyl Off)	
+in	B0	1F	DECK1 JOG DIAL	
+in	B1	1F	DECK2 JOG DIAL	
+in	90	36	DECK1 JOG DIAL (Platter) (touch, Vinyl On)	
+in	91	36	DECK2 JOG DIAL (Platter) (touch, Vinyl On)	
+in	90	35	DECK1 (Platter) (touch, Vinyl Off)	
+in	91	35	DECK2 (Platter) (touch, Vinyl Off)	
+in	90	67	DECK1 (Platter)	
+in	91	67	DECK2 (Platter)	
+in	B0	21	DECK1 JOG DIAL (Wheel side)	
+in	B1	21	DECK2 JOG DIAL (Wheel side)	
+in	B0	26	DECK1 (Wheel side)	
+in	B1	26	DECK2 (Wheel side)	
+in	B0	00	DECK1 TEMPO MSB	[Channel1] rate
+in	B0	20	DECK1 TEMPO LSB	
+in	B1	00	DECK2 TEMPO MSB	[Channel2] rate
+in	B1	20	DECK2 TEMPO LSB	
+in	B0	05	DECK1 TEMPO MSB	
+in	B0	25	DECK1 TEMPO LSB	
+in	B1	05	DECK2 TEMPO MSB	
+in	B1	25	DECK2 TEMPO LSB	
+both	90	17	DECK1 VINYL	
+both	91	17	DECK2 VINYL	
+both	90	4E	DECK1 VINYL	
+both	91	4E	DECK2 VINYL	
+both	90	1A	DECK1 KEYLOCK	
+both	91	1A	DECK2 KEYLOCK	
+both	90	60	DECK1 KEYLOCK	
+both	91	60	DECK2 KEYLOCK	
+in	90	3F	DECK1 SHIFT	
+in	91	3F	DECK2 SHIFT	
+in	B6	1F	CROSSFADER	
+in	B0	13	DECK1 CH FADER MSB	[Channel1] volume
+in	B0	33	DECK1 CH FADER LSB	
+in	B1	13	DECK2 CH FADER MSB	[Channel2] volume
+in	B1	33	DECK2 CH FADER LSB	
+in	90	66	DECK1 CH FADER (Zero→not Zero)	
+in	91	66	DECK2 CH FADER (Zero→not Zero)	
+in	90	51	DECK1 CH FADER (Zero→not Zero)	
+in	91	51	DECK2 CH FADER (Zero→not Zero)	
+in	90	52	DECK1 CH FADER (Not Zero→Zero)	
+in	91	52	DECK2 CH FADER (Not Zero→Zero)	
+in	B0	07	DECK1 EQ HIGH MSB	
+in	B0	27	DECK1 EQ HIGH LSB	
+in	B1	07	DECK2 EQ HIGH MSB	
+in	B1	27	DECK2 EQ HIGH LSB	
+in	B0	0B	DECK1 EQ MID MSB	[EqualizerRack1_[Channel1]_Effect1] parameter2
+in	B0	2B	DECK1 EQ MID LSB	
+in	B1	0B	DECK2 EQ MID MSB	[EqualizerRack1_[Channel2]_Effect1] parameter2
+in	B1	2B	DECK2 EQ MID LSB	
+in	B0	0F	DECK1 EQ LOW MSB	[EqualizerRack1_[Channel1]_Effect1] parameter1
+in	B0	2F	DECK1 EQ LOW LSB	
+in	B1	0F	DECK2 EQ LOW MSB	[EqualizerRack1_[Channel2]_Effect1] parameter1
+in	B1	2F	DECK2 EQ LOW LSB	
+in	B6	17	FILTER MSB	
+in	B6	37	FILTER LSB	
+in	B6	18	FILTER MSB	
+in	B6	38	FILTER LSB	
+both	90	54	DECK1 CUE (Headphone)	[Channel1] pfl
+both	91	54	DECK2 CUE (Headphone)	[Channel2] pfl
+both	90	68	DECK1 (Headphone)	
+both	91	68	DECK2 (Headphone)	
+in	B6	05	HEADPHONES MIX MSB	
+in	B6	25	HEADPHONES MIX LSB	
+both	94	47	FX1-1 ON	
+both	94	63	FX1-1 ON	
+both	94	48	FX1-2 ON	
+both	94	64	FX1-2 ON	
+both	94	49	FX1-3 ON	
+both	94	65	FX1-3 ON	
+in	B4	02	FX1-1 MSB	
+in	B4	22	FX1-1 LSB	
+in	B4	04	FX1-2 MSB	
+in	B4	24	FX1-2 LSB	
+in	B4	06	FX1-3 MSB	
+in	B4	26	FX1-3 LSB	
+in	B4	00	FX1 BEATS MSB	
+in	B4	20	FX1 BEATS LSB	
+both	95	47	FX2-1 ON	
+both	95	63	FX2-1 ON	
+both	95	48	FX2-2 ON	
+both	95	64	FX2-2 ON	
+both	95	49	FX2-3 ON	
+both	95	65	FX2-3 ON	
+in	B5	02	FX2-1 MSB	
+in	B5	22	FX2-1 LSB	
+in	B5	04	FX2-2 MSB	
+in	B5	24	FX2-2 LSB	
+in	B5	06	FX2-3 MSB	
+in	B5	26	FX2-3 LSB	
+in	B5	00	FX2 BEATS MSB	
+in	B5	20	FX2 BEATS LSB	
+in	B6	40	BROWSE	[Library] MoveVertical
+in	B6	64	BROWSE	
+in	96	41	BROWSE	
+in	96	42	BROWSE	
+in	96	46	LOAD (DECK1)	[Channel1] LoadSelectedTrack
+in	96	58	BROWSE (DECK1)	
+in	96	47	LOAD (DECK2)	[Channel2] LoadSelectedTrack
+in	96	59	LOAD (DECK2)	
+in	96	65	BACK	
+in	96	66	BACK	
+both	97	00	DECK1 PERFORMANCE PAD 1 (in HOT CUE mode)	[Channel1] hotcue_1_activate
+both	98	00	DECK2 PERFORMANCE PAD 1 (in HOT CUE mode)	[Channel2] hotcue_1_activate
+both	97	08	DECK1 BACK (in HOT CUE mode)	
+both	98	08	DECK2 BACK (in HOT CUE mode)	
+both	97	10	DECK1 PERFORMANCE PAD 1 (in AUTO LOOP mode)	
+both	98	10	DECK2 PERFORMANCE PAD 1 (in AUTO LOOP mode)	
+both	97	18	DECK1 BACK (in AUTO LOOP mode)	
+both	98	18	DECK2 BACK (in AUTO LOOP mode)	
+both	97	20	DECK1 PERFORMANCE PAD 1 (in MANUAL LOOP mode)	
+both	98	20	DECK2 PERFORMANCE PAD 1 (in MANUAL LOOP mode)	
+both	97	28	DECK1 BACK (in MANUAL LOOP mode)	
+both	98	28	DECK2 BACK (in MANUAL LOOP mode)	
+both	97	30	DECK1 PERFORMANCE PAD 1 (in SAMPLER mode)	
+both	98	30	DECK2 PERFORMANCE PAD 1 (in SAMPLER mode)	
+both	97	38	DECK1 BACK (in SAMPLER mode)	
+both	98	38	DECK2 BACK (in SAMPLER mode)	
+both	97	40	DECK1 PERFORMANCE PAD 1 (in HOT CUE 5-8 mode)	[Channel1] hotcue_5_activate
+both	98	40	DECK2 PERFORMANCE PAD 1 (in HOT CUE 5-8 mode)	[Channel2] hotcue_5_activate
+both	97	48	DECK1 PERFORMANCE PAD 1 (in HOT CUE 5-8 mode)	
+both	98	48	DECK2 PERFORMANCE PAD 1 (in HOT CUE 5-8 mode)	
+both	97	50	DECK1 PERFORMANCE PAD 1 (in ROLL mode)	
+both	98	50	DECK2 PERFORMANCE PAD 1 (in ROLL mode)	
+both	97	58	DECK1 PERFORMANCE PAD 1 (in ROLL mode)	
+both	98	58	DECK2 PERFORMANCE PAD 1 (in ROLL mode)	
+both	97	60	DECK1 PERFORMANCE PAD 1 (in HOT LOOP mode)	
+both	98	60	DECK2 PERFORMANCE PAD 1 (in HOT LOOP mode)	
+both	97	68	DECK1 PERFORMANCE PAD 1 (in HOT LOOP mode)	
+both	98	68	DECK2 PERFORMANCE PAD 1 (in HOT LOOP mode)	
+both	97	70	DECK1 PERFORMANCE PAD 1 (in BANK mode)	
+both	98	70	DECK2 PERFORMANCE PAD 1 (in BANK mode)	
+both	97	78	DECK1 PERFORMANCE PAD 1 (in BANK mode)	
+both	98	78	DECK2 PERFORMANCE PAD 1 (in BANK mode)	
+both	97	01	DECK1 PERFORMANCE PAD 2 (in HOT CUE mode)	[Channel1] hotcue_2_activate
+both	98	01	DECK2 PERFORMANCE PAD 2 (in HOT CUE mode)	[Channel2] hotcue_2_activate
+both	97	09	DECK1 PERFORMANCE PAD 1 (in HOT CUE mode)	
+both	98	09	DECK2 PERFORMANCE PAD 1 (in HOT CUE mode)	
+both	97	11	DECK1 PERFORMANCE PAD 2 (in AUTO LOOP mode)	
+both	98	11	DECK2 PERFORMANCE PAD 2 (in AUTO LOOP mode)	
+both	97	19	DECK1 PERFORMANCE PAD 1 (in AUTO LOOP mode)	
+both	98	19	DECK2 PERFORMANCE PAD 1 (in AUTO LOOP mode)	
+both	97	21	DECK1 PERFORMANCE PAD 2 (in MANUAL LOOP mode)	
+both	98	21	DECK2 PERFORMANCE PAD 2 (in MANUAL LOOP mode)	
+both	97	29	DECK1 PERFORMANCE PAD 1 (in MANUAL LOOP mode)	
+both	98	29	DECK2 PERFORMANCE PAD 1 (in MANUAL LOOP mode)	
+both	97	31	DECK1 PERFORMANCE PAD 2 (in SAMPLER mode)	
+both	98	31	DECK2 PERFORMANCE PAD 2 (in SAMPLER mode)	
+both	97	39	DECK1 PERFORMANCE PAD 1 (in SAMPLER mode)	
+both	98	39	DECK2 PERFORMANCE PAD 1 (in SAMPLER mode)	
+both	97	41	DECK1 PERFORMANCE PAD 2 (in HOT CUE 5-8 mode)	[Channel1] hotcue_6_activate
+both	98	41	DECK2 PERFORMANCE PAD 2 (in HOT CUE 5-8 mode)	[Channel2] hotcue_6_activate
+both	97	49	DECK1 PERFORMANCE PAD 2 (in HOT CUE 5-8 mode)	
+both	98	49	DECK2 PERFORMANCE PAD 2 (in HOT CUE 5-8 mode)	
+both	97	51	DECK1 PERFORMANCE PAD 2 (in ROLL mode)	
+both	98	51	DECK2 PERFORMANCE PAD 2 (in ROLL mode)	
+both	97	59	DECK1 PERFORMANCE PAD 2 (in ROLL mode)	
+both	98	59	DECK2 PERFORMANCE PAD 2 (in ROLL mode)	
+both	97	61	DECK1 PERFORMANCE PAD 2 (in HOT LOOP mode)	
+both	98	61	DECK2 PERFORMANCE PAD 2 (in HOT LOOP mode)	
+both	97	69	DECK1 PERFORMANCE PAD 2 (in HOT LOOP mode)	
+both	98	69	DECK2 PERFORMANCE PAD 2 (in HOT LOOP mode)	
+both	97	71	DECK1 PERFORMANCE PAD 2 (in BANK mode)	
+both	98	71	DECK2 PERFORMANCE PAD 2 (in BANK mode)	
+both	97	79	DECK1 PERFORMANCE PAD 2 (in BANK mode)	
+both	98	79	DECK2 PERFORMANCE PAD 2 (in BANK mode)	
+both	97	02	DECK1 PERFORMANCE PAD 3 (in HOT CUE mode)	[Channel1] hotcue_3_activate
+both	98	02	DECK2 PERFORMANCE PAD 3 (in HOT CUE mode)	[Channel2] hotcue_3_activate
+both	97	0A	DECK1 PERFORMANCE PAD 2 (in HOT CUE mode)	
+both	98	0A	DECK2 PERFORMANCE PAD 2 (in HOT CUE mode)	
+both	97	12	DECK1 PERFORMANCE PAD 3 (in AUTO LOOP mode)	
+both	98	12	DECK2 PERFORMANCE PAD 3 (in AUTO LOOP mode)	
+both	97	1A	DECK1 PERFORMANCE PAD 2 (in AUTO LOOP mode)	
+both	98	1A	DECK2 PERFORMANCE PAD 2 (in AUTO LOOP mode)	
+both	97	22	DECK1 PERFORMANCE PAD 3 (in MANUAL LOOP mode)	
+both	98	22	DECK2 PERFORMANCE PAD 3 (in MANUAL LOOP mode)	
+both	97	2A	DECK1 PERFORMANCE PAD 2 (in MANUAL LOOP mode)	
+both	98	2A	DECK2 PERFORMANCE PAD 2 (in MANUAL LOOP mode)	
+both	97	32	DECK1 PERFORMANCE PAD 3 (in SAMPLER mode)	
+both	98	32	DECK2 PERFORMANCE PAD 3 (in SAMPLER mode)	
+both	97	3A	DECK1 PERFORMANCE PAD 2 (in SAMPLER mode)	
+both	98	3A	DECK2 PERFORMANCE PAD 2 (in SAMPLER mode)	
+both	97	42	DECK1 PERFORMANCE PAD 3 (in HOT CUE 5-8 mode)	[Channel1] hotcue_7_activate
+both	98	42	DECK2 PERFORMANCE PAD 3 (in HOT CUE 5-8 mode)	[Channel2] hotcue_7_activate
+both	97	4A	DECK1 PERFORMANCE PAD 3 (in HOT CUE 5-8 mode)	
+both	98	4A	DECK2 PERFORMANCE PAD 3 (in HOT CUE 5-8 mode)	
+both	97	52	DECK1 PERFORMANCE PAD 3 (in ROLL mode)	
+both	98	52	DECK2 PERFORMANCE PAD 3 (in ROLL mode)	
+both	97	5A	DECK1 PERFORMANCE PAD 3 (in ROLL mode)	
+both	98	5A	DECK2 PERFORMANCE PAD 3 (in ROLL mode)	
+both	97	62	DECK1 PERFORMANCE PAD 3 (in HOT LOOP mode)	
+both	98	62	DECK2 PERFORMANCE PAD 3 (in HOT LOOP mode)	
+both	97	6A	DECK1 PERFORMANCE PAD 3 (in HOT LOOP mode)	
+both	98	6A	DECK2 PERFORMANCE PAD 3 (in HOT LOOP mode)	
+both	97	72	DECK1 PERFORMANCE PAD 3 (in BANK mode)	
+both	98	72	DECK2 PERFORMANCE PAD 3 (in BANK mode)	
+both	97	7A	DECK1 PERFORMANCE PAD 3 (in BANK mode)	
+both	98	7A	DECK2 PERFORMANCE PAD 3 (in BANK mode)	
+both	97	03	DECK1 PERFORMANCE PAD 4 (in HOT CUE mode)	[Channel1] hotcue_4_activate
+both	98	03	DECK2 PERFORMANCE PAD 4 (in HOT CUE mode)	[Channel2] hotcue_4_activate
+both	97	0B	DECK1 PERFORMANCE PAD 3 (in HOT CUE mode)	
+both	98	0B	DECK2 PERFORMANCE PAD 3 (in HOT CUE mode)	
+both	97	13	DECK1 PERFORMANCE PAD 4 (in AUTO LOOP mode)	
+both	98	13	DECK2 PERFORMANCE PAD 4 (in AUTO LOOP mode)	
+both	97	1B	DECK1 PERFORMANCE PAD 3 (in AUTO LOOP mode)	
+both	98	1B	DECK2 PERFORMANCE PAD 3 (in AUTO LOOP mode)	
+both	97	23	DECK1 PERFORMANCE PAD 4 (in MANUAL LOOP mode)	
+both	98	23	DECK2 PERFORMANCE PAD 4 (in MANUAL LOOP mode)	
+both	97	2B	DECK1 PERFORMANCE PAD 3 (in MANUAL LOOP mode)	
+both	98	2B	DECK2 PERFORMANCE PAD 3 (in MANUAL LOOP mode)	
+both	97	33	DECK1 PERFORMANCE PAD 4 (in SAMPLER mode)	
+both	98	33	DECK2 PERFORMANCE PAD 4 (in SAMPLER mode)	
+both	97	3B	DECK1 PERFORMANCE PAD 3 (in SAMPLER mode)	
+both	98	3B	DECK2 PERFORMANCE PAD 3 (in SAMPLER mode)	
+both	97	43	DECK1 PERFORMANCE PAD 4 (in HOT CUE 5-8 mode)	[Channel1] hotcue_8_activate
+both	98	43	DECK2 PERFORMANCE PAD 4 (in HOT CUE 5-8 mode)	[Channel2] hotcue_8_activate
+both	97	4B	DECK1 PERFORMANCE PAD 4 (in HOT CUE 5-8 mode)	
+both	98	4B	DECK2 PERFORMANCE PAD 4 (in HOT CUE 5-8 mode)	
+both	97	53	DECK1 PERFORMANCE PAD 4 (in ROLL mode)	
+both	98	53	DECK2 PERFORMANCE PAD 4 (in ROLL mode)	
+both	97	5B	DECK1 PERFORMANCE PAD 4 (in ROLL mode)	
+both	98	5B	DECK2 PERFORMANCE PAD 4 (in ROLL mode)	
+both	97	63	DECK1 PERFORMANCE PAD 4 (in HOT LOOP mode)	
+both	98	63	DECK2 PERFORMANCE PAD 4 (in HOT LOOP mode)	
+both	97	6B	DECK1 PERFORMANCE PAD 4 (in HOT LOOP mode)	
+both	98	6B	DECK2 PERFORMANCE PAD 4 (in HOT LOOP mode)	
+both	97	73	DECK1 PERFORMANCE PAD 4 (in BANK mode)	
+both	98	73	DECK2 PERFORMANCE PAD 4 (in BANK mode)	
+both	97	7B	DECK1 PERFORMANCE PAD 4 (in BANK mode)	
+both	98	7B	DECK2 PERFORMANCE PAD 4 (in BANK mode)	
+both	90	1B	DECK1 HOT CUE mode	
+both	91	1B	DECK2 HOT CUE mode	
+both	90	69	DECK1 HOT CUE mode	
+both	91	69	DECK2 HOT CUE mode	
+both	90	1E	DECK1 AUTO LOOP mode	
+both	91	1E	DECK2 AUTO LOOP mode	
+both	90	6B	DECK1 AUTO LOOP mode	
+both	91	6B	DECK2 AUTO LOOP mode	
+both	90	20	DECK1 MANUAL LOOP mode	
+both	91	20	DECK2 MANUAL LOOP mode	
+both	90	6D	DECK1 MANUAL LOOP mode	
+both	91	6D	DECK2 MANUAL LOOP mode	
+both	90	22	DECK1 SAMPLER mode	
+both	91	22	DECK2 SAMPLER mode	
+both	90	6F	DECK1 SAMPLER mode	
+both	91	6F	DECK2 SAMPLER mode	
+out	9B	09	DJ App. Connect	
+in	B6	3F	CROSSFADER LSB	

@@ -1,0 +1,494 @@
+# DJControl Inpulse 500 — Hercules "MIDI commands"
+# source: https://ts.hercules.com/download/sound/manuals/DJC_Inpulse500/DJControlInpulse500_MIDI_Commands.pdf
+both	91	07	DECK1 Play	[Channel1] play
+both	94	07	DECK1 Play +SHIFT	
+both	91	06	DECK1 Cue	[Channel1] cue_default
+both	94	06	DECK1 Cue +SHIFT	
+in	91	04	DECK1 Shift	
+both	91	09	DECK1 In	[Channel1] loop_in
+both	94	09	DECK1 In +SHIFT	
+in	91	0B	DECK1 In (Long press)	
+both	91	0A	DECK1 Out	[Channel1] loop_out
+both	94	0A	DECK1 Out +SHIFT	
+in	B1	0E	DECK1 Autoloop	
+in	B4	0E	DECK1 Autoloop +SHIFT	
+both	91	2C	DECK1 Autoloop	
+in	94	2C	DECK1 Autoloop +SHIFT	
+out	91	1C	DECK1 Fwd (Guide On)	
+out	91	21	DECK1 Fwd (Guide Off)	
+out	91	1D	DECK1 Rev (Guide On)	
+out	91	22	DECK1 Rev (Guide Off)	
+out	91	2D	DECK1 Beat-Align (Guide On)	
+out	91	2F	DECK1 Beat-Align (Guide Off)	
+both	91	05	DECK1 Sync	[Channel1] sync_enabled|beatsync
+both	94	05	DECK1 Sync +SHIFT	
+out	91	2E	DECK1 TePmlapyo (Guide Off)	
+out	91	1E	DECK1 Up (Guide On)	
+out	91	23	DECK1 Up (Guide Off)	
+out	91	1F	DECK1 Down (Guide On)	
+out	91	24	DECK1 Down (Guide Off)	
+in	B1	08	DECK1 Tempo Fader (MSB)	[Channel1] rate
+in	B1	28	DECK1 Tempo Fader (LSB)	
+in	B4	08	DECK1 Tempo Fader (MSB) +SHIFT	
+in	B4	28	DECK1 Tempo Fader (LSB) +SHIFT	
+in	B1	09	DECK1 Jog-wheel	
+in	B4	09	DECK1 Jog-wheel +SHIFT	
+in	B1	0A	DECK1 Jog-wheel (Vinyl)	
+in	B4	0A	DECK1 Jog-wheel (Vinyl) +SHIFT	
+both	91	03	DECK1 Vinyl	
+both	94	03	DECK1 Vinyl +SHIFT	
+both	91	01	DECK1 Slip	
+both	94	01	DECK1 Slip +SHIFT	
+both	91	02	DECK1 Quant	
+both	94	02	DECK1 Quant +SHIFT	
+out	91	30	DECK1 Big 1	
+both	91	0F	DECK1 Mode 1	
+both	91	13	DECK1 Mode 5 +SHIFT	
+in	91	40	DECK1 Mode 1A (Long press)	
+both	91	10	DECK1 Mode 2	
+both	91	14	DECK1 Mode 6 +SHIFT	
+in	91	41	DECK1 Mode 2A (Long press)	
+both	91	11	DECK1 Mode 3	
+both	91	15	DECK1 Mode 7	
+in	91	42	DECK1 Mode 3A (Long press)	
+both	91	12	DECK1 Mode 4 +SHIFT	
+both	91	16	DECK1 Mode 8	
+in	91	43	DECK1 Mode 4A (Long press)	
+both	96	00	DECK1 Pad 1 (Mode 1)	
+both	96	01	DECK1 Pad 2 (Mode 1)	
+both	96	02	DECK1 Pad 3 (Mode 1)	
+both	96	03	DECK1 Pad 4 (Mode 1)	
+both	96	04	DECK1 Pad 5 (Mode 1)	
+both	96	05	DECK1 Pad 6 (Mode 1)	
+both	96	06	DECK1 Pad 7 (Mode 1)	
+both	96	07	DECK1 Pad 8 (Mode 1)	
+both	96	08	DECK1 Pad 1 (Mode 1) +SHIFT	
+both	96	09	DECK1 Pad 2 (Mode 1) +SHIFT	
+both	96	0A	DECK1 Pad 3 (Mode 1) +SHIFT	
+both	96	0B	DECK1 Pad 4 (Mode 1) +SHIFT	
+both	96	0C	DECK1 Pad 5 (Mode 1) +SHIFT	
+both	96	0D	DECK1 Pad 6 (Mode 1) +SHIFT	
+both	96	0E	DECK1 Pad 7 (Mode 1) +SHIFT	
+both	96	0F	DECK1 Pad 8 (Mode 1) +SHIFT	
+both	96	10	DECK1 Pad 1 Play (Mode 2)	
+both	96	11	DECK1 Pad 2 (Mode 2)	
+both	96	12	DECK1 Pad 3 (Mode 2)	
+both	96	13	DECK1 Pad 4 (Mode 2)	
+both	96	14	DECK1 Pad 5 (Mode 2)	
+both	96	15	DECK1 Pad 6 (Mode 2)	
+both	96	16	DECK1 Pad 7 (Mode 2)	
+both	96	17	DECK1 Pad 8 (Mode 2)	
+both	96	18	DECK1 Pad 1 (Mode 2) +SHIFT	
+both	96	19	DECK1 Pad 2 (Mode 2) +SHIFT	
+both	96	1A	DECK1 Pad 3 (Mode 2) +SHIFT	
+both	96	1B	DECK1 Pad 4 (Mode 2) +SHIFT	
+both	96	1C	DECK1 Pad 5 (Mode 2) +SHIFT	
+both	96	1D	DECK1 Pad 6 (Mode 2) +SHIFT	
+both	96	1E	DECK1 Pad 7 (Mode 2) +SHIFT	
+both	96	1F	DECK1 Pad 8 (Mode 2) +SHIFT	
+both	96	20	DECK1 Pad 1 (Mode 3)	
+both	96	21	DECK1 Pad 2 (Mode 3)	
+both	96	22	DECK1 Pad 3 (Mode 3)	
+both	96	23	DECK1 Pad 4 (Mode 3)	
+both	96	24	DECK1 Pad 5 (Mode 3)	
+both	96	25	DECK1 Pad 6 (Mode 3)	
+both	96	26	DECK1 Pad 7 (Mode 3)	
+both	96	27	DECK1 Pad 8 (Mode 3)	
+both	96	28	DECK1 Pad 1 (Mode 3) +SHIFT	
+both	96	29	DECK1 Pad 2 (Mode 3) +SHIFT	
+both	96	2A	DECK1 Pad 3 (Mode 3) +SHIFT	
+both	96	2B	DECK1 Pad 4 (Mode 3) +SHIFT	
+both	96	2C	DECK1 Pad 5 (Mode 3) +SHIFT	
+both	96	2D	DECK1 Pad 6 (Mode 3) +SHIFT	
+both	96	2E	DECK1 Pad 7 (Mode 3) +SHIFT	
+both	96	2F	DECK1 Pad 8 (Mode 3) +SHIFT	
+both	96	30	DECK1 Pad 1 (Mode 4)	
+both	96	31	DECK1 Pad 2 (Mode 4)	
+both	96	32	DECK1 Pad 3 (Mode 4)	
+both	96	33	DECK1 Pad 4 (Mode 4)	
+both	96	34	DECK1 Pad 5 (Mode 4)	
+both	96	35	DECK1 Pad 6 (Mode 4)	
+both	96	36	DECK1 Pad 7 (Mode 4)	
+both	96	37	DECK1 Pad 8 (Mode 4)	
+both	96	38	DECK1 Pad 1 (Mode 4) +SHIFT	
+both	96	39	DECK1 Pad 2 (Mode 4) +SHIFT	
+both	96	3A	DECK1 Pad 3 (Mode 4) +SHIFT	
+both	96	3B	DECK1 Pad 4 (Mode 4) +SHIFT	
+both	96	3C	DECK1 Pad 5 (Mode 4) +SHIFT	
+both	96	3D	DECK1 Pad 6 (Mode 4) +SHIFT	
+both	96	3E	DECK1 Pad 7 (Mode 4) +SHIFT	
+both	96	3F	DECK1 Pad 8 (Mode 4) +SHIFT	
+both	96	40	DECK1 Pad 1 (Mode 5)	
+both	96	41	DECK1 Pad 2 (Mode 5)	
+both	96	42	DECK1 Pad 3 (Mode 5)	
+both	96	43	DECK1 Pad 4 (Mode 5)	
+both	96	44	DECK1 Pad 5 (Mode 5)	
+both	96	45	DECK1 Pad 6 (Mode 5)	
+both	96	46	DECK1 Pad 7 (Mode 5)	
+both	96	47	DECK1 Pad 8 (Mode 5)	
+both	96	48	DECK1 Pad 1 (Mode 5) +SHIFT	
+both	96	49	DECK1 Pad 2 (Mode 5) +SHIFT	
+both	96	4A	DECK1 Pad 3 Play (Mode 5) +SHIFT	
+both	96	4B	DECK1 Pad 4 (Mode 5) +SHIFT	
+both	96	4C	DECK1 Pad 5 (Mode 5) +SHIFT	
+both	96	4D	DECK1 Pad 6 (Mode 5) +SHIFT	
+both	96	4E	DECK1 Pad 7 (Mode 5) +SHIFT	
+both	96	4F	DECK1 Pad 8 (Mode 5) +SHIFT	
+both	96	50	DECK1 Pad 1 (Mode 6)	
+both	96	51	DECK1 Pad 2 (Mode 6)	
+both	96	52	DECK1 Pad 3 (Mode 6)	
+both	96	53	DECK1 Pad 4 (Mode 6)	
+both	96	54	DECK1 Pad 5 (Mode 6)	
+both	96	55	DECK1 Pad 6 (Mode 6)	
+both	96	56	DECK1 Pad 7 (Mode 6)	
+both	96	57	DECK1 Pad 8 (Mode 6)	
+both	96	58	DECK1 Pad 1 (Mode 6) +SHIFT	
+both	96	59	DECK1 Pad 2 (Mode 6) +SHIFT	
+both	96	5A	DECK1 Pad 3 (Mode 6) +SHIFT	
+both	96	5B	DECK1 Pad 4 (Mode 6) +SHIFT	
+both	96	5C	DECK1 Pad 5 (Mode 6) +SHIFT	
+both	96	5D	DECK1 Pad 6 (Mode 6) +SHIFT	
+both	96	5E	DECK1 Pad 7 (Mode 6) +SHIFT	
+both	96	5F	DECK1 Pad 8 (Mode 6) +SHIFT	
+both	96	60	DECK1 Pad 1 (Mode 7)	
+both	96	61	DECK1 Pad 2 (Mode 7)	
+both	96	62	DECK1 Pad 3 (Mode 7)	
+both	96	63	DECK1 Pad 4 (Mode 7)	
+both	96	64	DECK1 Pad 5 (Mode 7)	
+both	96	65	DECK1 Pad 6 (Mode 7)	
+both	96	66	DECK1 Pad 7 (Mode 7)	
+both	96	67	DECK1 Pad 8 (Mode 7)	
+both	96	68	DECK1 Pad 1 (Mode 7) +SHIFT	
+both	96	69	DECK1 Pad 2 (Mode 7) +SHIFT	
+both	96	6A	DECK1 Pad 3 (Mode 7) +SHIFT	
+both	96	6B	DECK1 Pad 4 (Mode 7) +SHIFT	
+both	96	6C	DECK1 Pad 5 (Mode 7) +SHIFT	
+both	96	6D	DECK1 Pad 6 (Mode 7) +SHIFT	
+both	96	6E	DECK1 Pad 7 (Mode 7) +SHIFT	
+both	96	6F	DECK1 Pad 8 (Mode 7) +SHIFT	
+both	96	70	DECK1 Pad 1 (Mode 8)	
+both	96	71	DECK1 Pad 2 (Mode 8)	
+both	96	72	DECK1 Pad 3 (Mode 8)	
+both	96	73	DECK1 Pad 4 (Mode 8)	
+both	96	74	DECK1 Pad 5 (Mode 8)	
+both	96	75	DECK1 Pad 6 (Mode 8)	
+both	96	76	DECK1 Pad 7 (Mode 8)	
+both	96	77	DECK1 Pad 8 (Mode 8)	
+both	96	78	DECK1 Pad 1 (Mode 8) +SHIFT	
+both	96	79	DECK1 Pad 2 (Mode 8) +SHIFT	
+both	96	7A	DECK1 Pad 3 (Mode 8) +SHIFT	
+both	96	7B	DECK1 Pad 4 (Mode 8) +SHIFT	
+both	96	7C	DECK1 Pad 5 (Mode 8) +SHIFT	
+both	96	7D	DECK1 Pad 6 (Mode 8) +SHIFT	
+both	96	7E	DECK1 Pad 7 (Mode 8) +SHIFT	
+both	96	7F	DECK1 Pad 8 (Mode 8) +SHIFT	
+in	B0	00	Xfader (MSB)	[Master] crossfader
+in	B0	20	Xfader (LSB)	
+in	90	18	Xfader curve	
+in	B0	0B	Xfader curve	
+in	B1	00	Deck 1 vol (MSB)	[Channel1] volume
+in	B4	20	Deck 1 vol (MSB) +SHIFT	
+in	B2	00	Deck 2 vol (MSB)	[Channel2] volume
+in	B2	20	Deck 2 vol (LSB)	
+in	B5	00	Deck 2 vol (MSB) +SHIFT	
+in	B5	20	Deck 2 vol (LSB) +SHIFT	
+both	91	0C	Deck 1 pfl	[Channel1] pfl
+both	94	0C	Deck 1 pfl +SHIFT	
+both	90	01	Guides	
+both	92	0C	Deck 2 pfl	[Channel2] pfl
+both	95	0C	Deck 2 pfl +SHIFT	
+in	B1	01	Deck1 Filter (MSB)	[QuickEffectRack1_[Channel1]] super1
+in	B1	21	Deck1 Filter (LSB)	
+in	B4	01	Deck1 Filter (MSB) +SHIFT	
+in	B4	21	Deck1 Filter (LSB) +SHIFT	
+in	B2	01	Deck2 Filter (MSB)	[QuickEffectRack1_[Channel2]] super1
+in	B2	21	Deck2 Filter (LSB)	
+in	B5	01	Deck2 Filter (MSB) +SHIFT	
+in	B5	21	Deck2 Filter (LSB) +SHIFT	
+both	90	14	Play	
+both	93	14	Fx1 +SHIFT	
+both	90	15	Fx2	
+both	93	15	Fx2 +SHIFT	
+both	90	16	Fx3	
+both	93	16	Fx3 +SHIFT	
+both	90	17	Fx4	
+both	93	17	Fx4 +SHIFT	
+in	B1	02	Deck1 Low (MSB)	[EqualizerRack1_[Channel1]_Effect1] parameter1
+in	B1	22	Deck1 Low (LSB)	
+in	B4	02	Deck1 Low (MSB) +SHIFT	
+in	B4	22	Deck1 Low (LSB) +SHIFT	
+in	B2	02	Deck2 low (MSB)	[EqualizerRack1_[Channel2]_Effect1] parameter1
+in	B2	22	Deck2 low (LSB)	
+in	B5	02	Deck2 low (MSB) +SHIFT	
+in	B5	22	Deck2 low (LSB) +SHIFT	
+in	B1	03	Deck1 mid (MSB)	[EqualizerRack1_[Channel1]_Effect1] parameter2
+in	B1	23	Deck1 mid (LSB)	
+in	B4	03	Deck1 mid (MSB) +SHIFT	
+in	B4	23	Deck1 mid (LSB) +SHIFT	
+in	B2	03	Deck2 mid (MSB)	[EqualizerRack1_[Channel2]_Effect1] parameter2
+in	B2	23	Deck2 mid (LSB)	
+in	B5	03	Deck2 mid (MSB) +SHIFT	
+in	B5	23	Deck2 mid (LSB) +SHIFT	
+in	B1	04	Deck1 hi (MSB)	[EqualizerRack1_[Channel1]_Effect1] parameter3
+in	B1	24	Deck1 hi (LSB)	
+in	B4	04	Deck1 hi (MSB) +SHIFT	
+in	B4	24	Deck1 hi (LSB) +SHIFT	
+in	B2	04	Deck2 hi (MSB)	[EqualizerRack1_[Channel2]_Effect1] parameter3
+in	B2	24	Deck2 hi (LSB)	
+in	B5	04	Deck2 hi (MSB) +SHIFT	
+in	B5	24	Deck2 hi (LSB) +SHIFT	
+in	B1	05	Deck1 gain (MSB)	[Channel1] pregain
+in	B1	25	Deck1 gain (LSB)	
+in	B4	05	Deck1 gain (MSB) +SHIFT	
+in	B4	25	Deck1 gain (LSB) +SHIFT	
+in	B2	05	DECK2 Play (MSB)	[Channel2] play
+in	B2	25	Play Deck 2 gain (LSB)	
+in	B5	05	Deck 2 gain (MSB) +SHIFT	
+in	B5	25	Play Deck 2 gain (LSB) +SHIFT	
+out	B1	40	Deck (Deck 1)	
+out	B2	40	DECK2 vumeter (Deck 2)	
+out	91	31	Deck vumeter Deck vumeter	
+out	91	32	Deck vumeter Deck vumeter	
+out	91	33	Deck vumeter Deck vumeter	
+out	91	34	Deck vumeter Deck vumeter	
+out	91	35	Deck vumeter Deck vumeter	
+out	91	36	Deck vumeter Deck vumeter	
+out	91	37	Deck vumeter Deck vumeter	
+out	91	38	Deck vumeter Deck vumeter	
+out	91	39	Deck	
+out	92	31	DECK2 vumeter	
+out	92	32	Deck vumeter Deck vumeter	
+out	92	33	Deck vumeter Deck vumeter	
+out	92	34	Deck vumeter Deck vumeter	
+out	92	35	Deck vumeter Deck vumeter	
+out	92	36	Deck vumeter Deck vumeter	
+out	92	37	Deck vumeter Deck vumeter	
+out	92	38	Deck vumeter Deck vumeter	
+out	92	39	Deck vumeter Deck vumeter	
+in	B0	06	Mic vol (MSB)	
+in	B0	26	Mic vol (LSB)	
+out	90	10	Mic Ring	
+out	90	11	Mic Ring	
+in	B0	07	Mic hi (MSB)	
+in	B0	27	Mic hi (LSB)	
+in	B0	08	Mic low (MSB)	
+in	B0	28	Mic low (LSB)	
+in	B0	09	Aux vol (MSB)	
+in	B0	29	Aux vol (LSB)	
+out	90	12	Aux Ring	
+out	90	13	Aux Ring	
+in	B0	0A	Aux Filter (MSB)	
+in	B0	2A	Aux Filter (LSB)	
+in	B0	03	Master vol (MSB)	
+in	B0	23	Master vol (LSB)	
+out	B0	40	Play (Deck 1)	
+out	B0	41	Play Master vumeter (Deck 2)	
+out	90	06	Play Master vumeter	
+out	90	07	Master	
+out	90	08	vumeter	
+out	90	09	Play Master vumeter	
+out	90	0A	Play Master vumeter	
+out	90	0B	Play Master vumeter	
+out	90	0C	Play Master vumeter	
+out	90	0D	Play Master vumeter	
+out	90	0E	Play Master vumeter	
+out	90	0F	Play Master vumeter	
+in	90	02	Master pfl	
+in	93	02	Master pfl +SHIFT	
+in	B0	05	Cue-Master (MSB)	
+in	B0	25	Cue-Master (LSB)	
+in	B0	04	Headphones (MSB)	
+in	B0	24	vol (LSB)	
+in	91	0D	DECK1 Load 1	
+in	94	0D	DECK1 Load 1 +SHIFT	
+in	91	0E	DECK1 Load 1 (Long press)	
+in	92	0D	DECK2 Load 2	
+in	95	0D	DECK2 Load 2 +SHIFT	
+in	92	0E	DECK2 Load 2 (Long press)	
+in	B0	01	Browse	[Library] MoveVertical
+in	B3	01	Browse +SHIFT	
+in	B0	02	Browse (+Assistant)	
+in	90	00	Browse	
+in	93	00	Browse +SHIFT	
+out	90	04	Browse	
+both	92	07	DECK2 Play	
+both	95	07	DECK2 Play +SHIFT	
+both	92	06	DECK2 Cue	[Channel2] cue_default
+both	95	06	DECK2 Cue +SHIFT	
+in	92	04	DECK2 Shift	
+both	92	09	DECK2 In	[Channel2] loop_in
+both	95	09	DECK2 In +SHIFT	
+in	92	0B	DECK2 In (Long press)	
+both	92	0A	DECK2 Out	[Channel2] loop_out
+both	95	0A	DECK2 Out +SHIFT	
+in	B2	0E	DECK2 Autoloop	
+in	B5	0E	DECK2 Autoloop +SHIFT	
+both	92	2C	DECK2 Autoloop	
+in	95	2C	DECK2 Autoloop +SHIFT	
+out	92	1C	DECK2 Play (Guide On)	
+out	92	21	DECK2 Fwd (Guide Off)	
+out	92	1D	DECK2 Rev (Guide On)	
+out	92	22	DECK2 Rev (Guide Off)	
+out	92	2D	DECK2 Beat-Align (Guide On)	
+out	92	2F	DECK2 Beat-Align (Guide Off)	
+both	92	05	DECK2 Sync	[Channel2] sync_enabled|beatsync
+both	95	05	DECK2 Sync +SHIFT	
+out	92	2E	DECK2 Tempo (Guide Off)	
+out	92	1E	DECK2 Up (Guide On)	
+out	92	23	DECK2 Up (Guide Off)	
+out	92	1F	DECK2 Down (Guide On)	
+out	92	24	DECK2 Down (Guide Off)	
+in	B2	08	DECK2 Tempo Fader (MSB)	[Channel2] rate
+in	B2	28	DECK2 Tempo Fader (LSB)	
+in	B5	08	DECK2 Tempo Fader (MSB) +SHIFT	
+in	B5	28	DECK2 Tempo Fader (LSB) +SHIFT	
+in	B2	09	DECK2 Jog-wheel	
+in	B5	09	DECK2 Jog-wheel +SHIFT	
+in	B2	0A	DECK2 Jog-wheel (Vinyl)	
+in	B5	0A	DECK2 Jog-wheel (Vinyl) +SHIFT	
+both	92	03	DECK2 Vinyl	
+both	95	03	DECK2 Vinyl +SHIFT	
+both	92	01	DECK2 Slip	
+both	95	01	DECK2 Slip +SHIFT	
+both	92	02	DECK2 Quant	
+both	95	02	DECK2 Quant +SHIFT	
+out	92	30	DECK2 Big 2	
+both	92	0F	DECK2 Mode 1	
+both	92	13	DECK2 Mode 5 +SHIFT	
+in	92	40	DECK2 Mode 1A (Long press)	
+both	92	10	DECK2 Mode 2	
+both	92	14	DECK2 Mode 6 +SHIFT	
+in	92	41	DECK2 Mode 2A (Long press)	
+both	92	11	DECK2 Mode 3	
+both	92	15	DECK2 Mode 7	
+in	92	42	DECK2 Mode 3A (Long press)	
+both	92	12	DECK2 Mode 4 +SHIFT	
+both	92	16	DECK2 Mode 8	
+both	97	00	DECK2 Pad 1 (Mode 1)	
+both	97	01	DECK2 Pad 2 (Mode 1)	
+both	97	02	DECK2 Pad 3 (Mode 1)	
+both	97	03	DECK2 Pad 4 (Mode 1)	
+both	97	04	DECK2 Pad 5 Play (Mode 1)	
+both	97	05	DECK2 Pad 6 (Mode 1)	
+both	97	06	DECK2 Pad 7 (Mode 1)	
+both	97	07	DECK2 Pad 8 (Mode 1)	
+both	97	08	DECK2 Pad 1 (Mode 1) +SHIFT	
+both	97	09	DECK2 Pad 2 (Mode 1) +SHIFT	
+both	97	0A	DECK2 Pad 3 (Mode 1) +SHIFT	
+both	97	0B	DECK2 Pad 4 (Mode 1) +SHIFT	
+both	97	0C	DECK2 Pad 5 (Mode 1) +SHIFT	
+both	97	0D	DECK2 Pad 6 (Mode 1) +SHIFT	
+both	97	0E	DECK2 Pad 7 (Mode 1) +SHIFT	
+both	97	0F	DECK2 Pad 8 (Mode 1) +SHIFT	
+both	97	10	DECK2 Pad 1 (Mode 2)	
+both	97	11	DECK2 Pad 2 (Mode 2)	
+both	97	12	DECK2 Pad 3 (Mode 2)	
+both	97	13	DECK2 Pad 4 (Mode 2)	
+both	97	14	DECK2 Pad 5 (Mode 2)	
+both	97	15	DECK2 Pad 6 (Mode 2)	
+both	97	16	DECK2 Pad 7 (Mode 2)	
+both	97	17	DECK2 Pad 8 (Mode 2)	
+both	97	18	DECK2 Pad 1 (Mode 2) +SHIFT	
+both	97	19	DECK2 Pad 2 (Mode 2) +SHIFT	
+both	97	1A	DECK2 Pad 3 (Mode 2) +SHIFT	
+both	97	1B	DECK2 Pad 4 (Mode 2) +SHIFT	
+both	97	1C	DECK2 Pad 5 (Mode 2) +SHIFT	
+both	97	1D	DECK2 Pad 6 (Mode 2) +SHIFT	
+both	97	1E	DECK2 Pad 7 (Mode 2) +SHIFT	
+both	97	1F	DECK2 Pad 8 (Mode 2) +SHIFT	
+both	97	20	DECK2 Pad 1 (Mode 3)	
+both	97	21	DECK2 Pad 2 (Mode 3)	
+both	97	22	DECK2 Pad 3 (Mode 3)	
+both	97	23	DECK2 Pad 4 (Mode 3)	
+both	97	24	DECK2 Pad 5 (Mode 3)	
+both	97	25	DECK2 Pad 6 (Mode 3)	
+both	97	26	DECK2 Pad 7 (Mode 3)	
+both	97	27	DECK2 Pad 8 (Mode 3)	
+both	97	28	DECK2 Pad 1 (Mode 3) +SHIFT	
+both	97	29	DECK2 Pad 2 (Mode 3) +SHIFT	
+both	97	2A	DECK2 Pad 3 (Mode 3) +SHIFT	
+both	97	2B	DECK2 Pad 4 (Mode 3) +SHIFT	
+both	97	2C	DECK2 Pad 5 (Mode 3) +SHIFT	
+both	97	2D	DECK2 Pad 6 (Mode 3) +SHIFT	
+both	97	2E	DECK2 Pad 7 (Mode 3) +SHIFT	
+both	97	2F	DECK2 Pad 8 (Mode 3) +SHIFT	
+both	97	30	DECK2 Pad 1 (Mode 4)	
+both	97	31	DECK2 Pad 2 (Mode 4)	
+both	97	32	DECK2 Pad 3 (Mode 4)	
+both	97	33	DECK2 Pad 4 (Mode 4)	
+both	97	34	DECK2 Pad 5 (Mode 4)	
+both	97	35	DECK2 Pad 6 (Mode 4)	
+both	97	36	DECK2 Pad 7 (Mode 4)	
+both	97	37	DECK2 Pad 8 (Mode 4)	
+both	97	38	DECK2 Pad 1 (Mode 4) +SHIFT	
+both	97	39	DECK2 Pad 2 (Mode 4) +SHIFT	
+both	97	3A	DECK2 Pad 3 (Mode 4) +SHIFT	
+both	97	3B	DECK2 Pad 4 (Mode 4) +SHIFT	
+both	97	3C	DECK2 Pad 5 (Mode 4) +SHIFT	
+both	97	3D	DECK2 Pad 6 (Mode 4) +SHIFT	
+both	97	3E	DECK2 Pad 7 Play (Mode 4) +SHIFT	
+both	97	3F	DECK2 Pad 8 (Mode 4) +SHIFT	
+both	97	40	DECK2 Pad 1 (Mode 5)	
+both	97	41	DECK2 Pad 2 (Mode 5)	
+both	97	42	DECK2 Pad 3 (Mode 5)	
+both	97	43	DECK2 Pad 4 (Mode 5)	
+both	97	44	DECK2 Pad 5 (Mode 5)	
+both	97	45	DECK2 Pad 6 (Mode 5)	
+both	97	46	DECK2 Pad 7 (Mode 5)	
+both	97	47	DECK2 Pad 8 (Mode 5)	
+both	97	48	DECK2 Pad 1 (Mode 5) +SHIFT	
+both	97	49	DECK2 Pad 2 (Mode 5) +SHIFT	
+both	97	4A	DECK2 Pad 3 (Mode 5) +SHIFT	
+both	97	4B	DECK2 Pad 4 (Mode 5) +SHIFT	
+both	97	4C	DECK2 Pad 5 (Mode 5) +SHIFT	
+both	97	4D	DECK2 Pad 6 (Mode 5) +SHIFT	
+both	97	4E	DECK2 Pad 7 (Mode 5) +SHIFT	
+both	97	4F	DECK2 Pad 8 (Mode 5) +SHIFT	
+both	97	50	DECK2 Pad 1 (Mode 6)	
+both	97	51	DECK2 Pad 2 (Mode 6)	
+both	97	52	DECK2 Pad 3 (Mode 6)	
+both	97	53	DECK2 Pad 4 (Mode 6)	
+both	97	54	DECK2 Pad 5 (Mode 6)	
+both	97	55	DECK2 Pad 6 (Mode 6)	
+both	97	56	DECK2 Pad 7 (Mode 6)	
+both	97	57	DECK2 Pad 8 (Mode 6)	
+both	97	58	DECK2 Pad 1 (Mode 6) +SHIFT	
+both	97	59	DECK2 Pad 2 (Mode 6) +SHIFT	
+both	97	5A	DECK2 Pad 3 (Mode 6) +SHIFT	
+both	97	5B	DECK2 Pad 4 (Mode 6) +SHIFT	
+both	97	5C	DECK2 Pad 5 (Mode 6) +SHIFT	
+both	97	5D	DECK2 Pad 6 (Mode 6) +SHIFT	
+both	97	5E	DECK2 Pad 7 (Mode 6) +SHIFT	
+both	97	5F	DECK2 Pad 8 (Mode 6) +SHIFT	
+both	97	60	DECK2 Pad 1 (Mode 7)	
+both	97	61	DECK2 Pad 2 (Mode 7)	
+both	97	62	DECK2 Pad 3 (Mode 7)	
+both	97	63	DECK2 Pad 4 (Mode 7)	
+both	97	64	DECK2 Pad 5 (Mode 7)	
+both	97	65	DECK2 Pad 6 (Mode 7)	
+both	97	66	DECK2 Pad 7 (Mode 7)	
+both	97	67	DECK2 Pad 8 (Mode 7)	
+both	97	68	DECK2 Pad 1 (Mode 7) +SHIFT	
+both	97	69	DECK2 Pad 2 (Mode 7) +SHIFT	
+both	97	6A	DECK2 Pad 3 (Mode 7) +SHIFT	
+both	97	6B	DECK2 Pad 4 (Mode 7) +SHIFT	
+both	97	6C	DECK2 Pad 5 (Mode 7) +SHIFT	
+both	97	6D	DECK2 Pad 6 (Mode 7) +SHIFT	
+both	97	6E	DECK2 Pad 7 (Mode 7) +SHIFT	
+both	97	6F	DECK2 Pad 8 (Mode 7) +SHIFT	
+both	97	70	DECK2 Pad 1 (Mode 8)	
+both	97	71	DECK2 Pad 2 (Mode 8)	
+both	97	72	DECK2 Pad 3 (Mode 8)	
+both	97	73	DECK2 Pad 4 (Mode 8)	
+both	97	74	DECK2 Pad 5 (Mode 8)	
+both	97	75	DECK2 Pad 6 (Mode 8)	
+both	97	76	DECK2 Pad 7 (Mode 8)	
+both	97	77	DECK2 Pad 8 (Mode 8)	
+both	97	78	DECK2 Pad 1 Play (Mode 8) +SHIFT	
+both	97	79	DECK2 Pad 2 (Mode 8) +SHIFT	
+both	97	7A	DECK2 Pad 3 (Mode 8) +SHIFT	
+both	97	7B	DECK2 Pad 4 (Mode 8) +SHIFT	
+both	97	7C	DECK2 Pad 5 (Mode 8) +SHIFT	
+both	97	7D	DECK2 Pad 6 (Mode 8) +SHIFT	
+both	97	7E	DECK2 Pad 7 (Mode 8) +SHIFT	
+both	97	7F	DECK2 Pad 8 (Mode 8) +SHIFT	

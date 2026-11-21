@@ -1,0 +1,220 @@
+# DJ2 — Faderfox "micromodul DJ2 User manual" V02, Controller-Nummern
+# source: http://www.faderfox.de/PDF/DJ2_User_manual_V02.PDF
+# Setup 1 (decks A/B) sends on channel 16, setup 2 (decks C/D) on channel 1. The manual lists no MIDI-controlled LEDs
+# (all rows are input); the manual lists the transport keys' alternative CC assignment separately.
+in	BF	03	setup 1 Crossfader	[Master] crossfader
+in	BF	00	setup 1 deck A Linefader	[Channel1] volume
+in	BF	0D	setup 1 deck B Linefader	[Channel2] volume
+in	BF	0C	setup 1 deck A Phones Mix	
+in	BF	05	setup 1 deck A EQ High	[EqualizerRack1_[Channel1]_Effect1] parameter3
+in	BF	1D	setup 1 deck A EQ High [FX mode]	
+in	BF	09	setup 1 deck B EQ High	[EqualizerRack1_[Channel2]_Effect1] parameter3
+in	BF	1E	setup 1 deck B EQ High [FX mode]	
+in	BF	02	setup 1 deck A EQ Mid	[EqualizerRack1_[Channel1]_Effect1] parameter2
+in	BF	19	setup 1 deck A EQ Mid [FX mode]	
+in	BF	08	setup 1 deck B EQ Mid	[EqualizerRack1_[Channel2]_Effect1] parameter2
+in	BF	1A	setup 1 deck B EQ Mid [FX mode]	
+in	BF	01	setup 1 deck A EQ Low	[EqualizerRack1_[Channel1]_Effect1] parameter1
+in	BF	17	setup 1 deck A EQ Low [FX mode]	
+in	BF	0B	setup 1 deck B EQ Low	[EqualizerRack1_[Channel2]_Effect1] parameter1
+in	BF	18	setup 1 deck B EQ Low [FX mode]	
+in	BF	06	setup 1 deck A Joystick Y	
+in	BF	21	setup 1 deck A Joystick Y [second/pressed]	
+in	BF	16	setup 1 deck B Joystick Y	
+in	BF	25	setup 1 deck B Joystick Y [second/pressed]	
+in	BF	04	setup 1 deck A Joystick X	
+in	BF	22	setup 1 deck A Joystick X [second/pressed]	
+in	BF	14	setup 1 deck B Joystick X	
+in	BF	26	setup 1 deck B Joystick X [second/pressed]	
+in	BF	0E	setup 1 deck A Seek/Scratch encoder	
+in	BF	10	setup 1 deck A Seek/Scratch encoder [second/pressed]	
+in	BF	0F	setup 1 deck B Seek/Scratch encoder	
+in	BF	11	setup 1 deck B Seek/Scratch encoder [second/pressed]	
+in	BF	1B	setup 1 deck A Pitch encoder	
+in	BF	1F	setup 1 deck A Pitch encoder [second/pressed]	
+in	BF	1C	setup 1 deck B Pitch encoder	
+in	BF	20	setup 1 deck B Pitch encoder [second/pressed]	
+in	BF	07	setup 1 deck A Gain encoder	[Channel1] pregain
+in	BF	0A	setup 1 deck B Gain encoder	[Channel2] pregain
+in	9F	09	setup 1 deck A Seek/Scratch encoder push	
+in	9F	0A	setup 1 deck B Seek/Scratch encoder push	
+in	9F	4F	setup 1 deck A Pitch encoder push +SHIFT	
+in	9F	50	setup 1 deck B Pitch encoder push +SHIFT	
+in	9F	0B	setup 1 deck A List up	
+in	9F	0C	setup 1 deck A List down	
+in	9F	0F	setup 1 deck A Load	[Channel1] LoadSelectedTrack
+in	9F	10	setup 1 deck B Load	[Channel2] LoadSelectedTrack
+in	9F	0D	setup 1 deck A List/Load/Seek/Scratch key +SHIFT	
+in	9F	0E	setup 1 deck B List/Load/Seek/Scratch key +SHIFT	
+in	9F	18	setup 1 deck A Cue/Pause	
+in	9F	27	setup 1 deck A Cue/Pause +SHIFT	
+in	9F	36	setup 1 deck B Cue/Pause	
+in	9F	45	setup 1 deck B Cue/Pause +SHIFT	
+in	9F	1A	setup 1 deck A Play/Pause	[Channel1] play
+in	9F	29	setup 1 deck A Play/Pause +SHIFT	
+in	9F	38	setup 1 deck B Play/Pause	[Channel2] play
+in	9F	47	setup 1 deck B Play/Pause +SHIFT	
+in	9F	19	setup 1 deck A Cue/Play	
+in	9F	28	setup 1 deck A Cue/Play +SHIFT	
+in	9F	37	setup 1 deck B Cue/Play	
+in	9F	46	setup 1 deck B Cue/Play +SHIFT	
+in	9F	21	setup 1 deck A Sync (blank key)	
+in	9F	30	setup 1 deck A Sync (blank key) +SHIFT	
+in	9F	3F	setup 1 deck B Sync (blank key)	
+in	9F	4E	setup 1 deck B Sync (blank key) +SHIFT	
+in	9F	1C	setup 1 deck A Pitch Bend down	
+in	9F	2B	setup 1 deck A Pitch Bend down +SHIFT	
+in	9F	3A	setup 1 deck B Pitch Bend down	
+in	9F	49	setup 1 deck B Pitch Bend down +SHIFT	
+in	9F	1D	setup 1 deck A Pitch Bend up	
+in	9F	2C	setup 1 deck A Pitch Bend up +SHIFT	
+in	9F	3B	setup 1 deck B Pitch Bend up	
+in	9F	4A	setup 1 deck B Pitch Bend up +SHIFT	
+in	9F	14	setup 1 deck A FX ctrl (outer)	
+in	9F	23	setup 1 deck A FX ctrl (outer) +SHIFT	
+in	9F	32	setup 1 deck B FX ctrl (outer)	
+in	9F	41	setup 1 deck B FX ctrl (outer) +SHIFT	
+in	9F	15	setup 1 deck A FX ctrl (inner)	
+in	9F	24	setup 1 deck A FX ctrl (inner) +SHIFT	
+in	9F	33	setup 1 deck B FX ctrl (inner)	
+in	9F	42	setup 1 deck B FX ctrl (inner) +SHIFT	
+in	9F	17	setup 1 deck A Kill	
+in	9F	26	setup 1 deck A Kill +SHIFT	
+in	9F	35	setup 1 deck B Kill	
+in	9F	44	setup 1 deck B Kill +SHIFT	
+in	9F	11	setup 1 deck A Cue (monitor)	[Channel1] pfl
+in	9F	20	setup 1 deck A Cue (monitor) +SHIFT	
+in	9F	13	setup 1 deck B Cue (monitor)	[Channel2] pfl
+in	9F	22	setup 1 deck B Cue (monitor) +SHIFT	
+in	BF	28	setup 1 deck A Cue/Pause (transport keys, alternative assignment)	
+in	BF	34	setup 1 deck A Cue/Pause (transport keys, alternative assignment) +SHIFT	
+in	BF	30	setup 1 deck B Cue/Pause (transport keys, alternative assignment)	
+in	BF	3C	setup 1 deck B Cue/Pause (transport keys, alternative assignment) +SHIFT	
+in	BF	27	setup 1 deck A Play/Pause (transport keys, alternative assignment)	
+in	BF	33	setup 1 deck A Play/Pause (transport keys, alternative assignment) +SHIFT	
+in	BF	2F	setup 1 deck B Play/Pause (transport keys, alternative assignment)	
+in	BF	3B	setup 1 deck B Play/Pause (transport keys, alternative assignment) +SHIFT	
+in	BF	2A	setup 1 deck A Cue/Play (transport keys, alternative assignment)	
+in	BF	36	setup 1 deck A Cue/Play (transport keys, alternative assignment) +SHIFT	
+in	BF	32	setup 1 deck B Cue/Play (transport keys, alternative assignment)	
+in	BF	3E	setup 1 deck B Cue/Play (transport keys, alternative assignment) +SHIFT	
+in	BF	29	setup 1 deck A Sync (transport keys, alternative assignment)	
+in	BF	35	setup 1 deck A Sync (transport keys, alternative assignment) +SHIFT	
+in	BF	31	setup 1 deck B Sync (transport keys, alternative assignment)	
+in	BF	3D	setup 1 deck B Sync (transport keys, alternative assignment) +SHIFT	
+in	BF	2B	setup 1 deck A Pitch Bend down (transport keys, alternative assignment)	
+in	BF	37	setup 1 deck A Pitch Bend down (transport keys, alternative assignment) +SHIFT	
+in	BF	2D	setup 1 deck B Pitch Bend down (transport keys, alternative assignment)	
+in	BF	39	setup 1 deck B Pitch Bend down (transport keys, alternative assignment) +SHIFT	
+in	BF	2C	setup 1 deck A Pitch Bend up (transport keys, alternative assignment)	
+in	BF	38	setup 1 deck A Pitch Bend up (transport keys, alternative assignment) +SHIFT	
+in	BF	2E	setup 1 deck B Pitch Bend up (transport keys, alternative assignment)	
+in	BF	3A	setup 1 deck B Pitch Bend up (transport keys, alternative assignment) +SHIFT	
+in	B0	03	setup 2 Crossfader	[Master] crossfader
+in	B0	00	setup 2 deck C Linefader	[Channel3] volume
+in	B0	0D	setup 2 deck D Linefader	[Channel4] volume
+in	B0	0C	setup 2 deck C Phones Mix	
+in	B0	05	setup 2 deck C EQ High	[EqualizerRack1_[Channel3]_Effect1] parameter3
+in	B0	1D	setup 2 deck C EQ High [FX mode]	
+in	B0	09	setup 2 deck D EQ High	[EqualizerRack1_[Channel4]_Effect1] parameter3
+in	B0	1E	setup 2 deck D EQ High [FX mode]	
+in	B0	02	setup 2 deck C EQ Mid	[EqualizerRack1_[Channel3]_Effect1] parameter2
+in	B0	19	setup 2 deck C EQ Mid [FX mode]	
+in	B0	08	setup 2 deck D EQ Mid	[EqualizerRack1_[Channel4]_Effect1] parameter2
+in	B0	1A	setup 2 deck D EQ Mid [FX mode]	
+in	B0	01	setup 2 deck C EQ Low	[EqualizerRack1_[Channel3]_Effect1] parameter1
+in	B0	17	setup 2 deck C EQ Low [FX mode]	
+in	B0	0B	setup 2 deck D EQ Low	[EqualizerRack1_[Channel4]_Effect1] parameter1
+in	B0	18	setup 2 deck D EQ Low [FX mode]	
+in	B0	06	setup 2 deck C Joystick Y	
+in	B0	21	setup 2 deck C Joystick Y [second/pressed]	
+in	B0	16	setup 2 deck D Joystick Y	
+in	B0	25	setup 2 deck D Joystick Y [second/pressed]	
+in	B0	04	setup 2 deck C Joystick X	
+in	B0	22	setup 2 deck C Joystick X [second/pressed]	
+in	B0	14	setup 2 deck D Joystick X	
+in	B0	26	setup 2 deck D Joystick X [second/pressed]	
+in	B0	0E	setup 2 deck C Seek/Scratch encoder	
+in	B0	10	setup 2 deck C Seek/Scratch encoder [second/pressed]	
+in	B0	0F	setup 2 deck D Seek/Scratch encoder	
+in	B0	11	setup 2 deck D Seek/Scratch encoder [second/pressed]	
+in	B0	1B	setup 2 deck C Pitch encoder	
+in	B0	1F	setup 2 deck C Pitch encoder [second/pressed]	
+in	B0	1C	setup 2 deck D Pitch encoder	
+in	B0	20	setup 2 deck D Pitch encoder [second/pressed]	
+in	B0	07	setup 2 deck C Gain encoder	[Channel3] pregain
+in	B0	0A	setup 2 deck D Gain encoder	[Channel4] pregain
+in	90	09	setup 2 deck C Seek/Scratch encoder push	
+in	90	0A	setup 2 deck D Seek/Scratch encoder push	
+in	90	4F	setup 2 deck C Pitch encoder push +SHIFT	
+in	90	50	setup 2 deck D Pitch encoder push +SHIFT	
+in	90	0B	setup 2 deck C List up	
+in	90	0C	setup 2 deck C List down	
+in	90	0F	setup 2 deck C Load	[Channel3] LoadSelectedTrack
+in	90	10	setup 2 deck D Load	[Channel4] LoadSelectedTrack
+in	90	0D	setup 2 deck C List/Load/Seek/Scratch key +SHIFT	
+in	90	0E	setup 2 deck D List/Load/Seek/Scratch key +SHIFT	
+in	90	18	setup 2 deck C Cue/Pause	
+in	90	27	setup 2 deck C Cue/Pause +SHIFT	
+in	90	36	setup 2 deck D Cue/Pause	
+in	90	45	setup 2 deck D Cue/Pause +SHIFT	
+in	90	1A	setup 2 deck C Play/Pause	[Channel3] play
+in	90	29	setup 2 deck C Play/Pause +SHIFT	
+in	90	38	setup 2 deck D Play/Pause	[Channel4] play
+in	90	47	setup 2 deck D Play/Pause +SHIFT	
+in	90	19	setup 2 deck C Cue/Play	
+in	90	28	setup 2 deck C Cue/Play +SHIFT	
+in	90	37	setup 2 deck D Cue/Play	
+in	90	46	setup 2 deck D Cue/Play +SHIFT	
+in	90	21	setup 2 deck C Sync (blank key)	
+in	90	30	setup 2 deck C Sync (blank key) +SHIFT	
+in	90	3F	setup 2 deck D Sync (blank key)	
+in	90	4E	setup 2 deck D Sync (blank key) +SHIFT	
+in	90	1C	setup 2 deck C Pitch Bend down	
+in	90	2B	setup 2 deck C Pitch Bend down +SHIFT	
+in	90	3A	setup 2 deck D Pitch Bend down	
+in	90	49	setup 2 deck D Pitch Bend down +SHIFT	
+in	90	1D	setup 2 deck C Pitch Bend up	
+in	90	2C	setup 2 deck C Pitch Bend up +SHIFT	
+in	90	3B	setup 2 deck D Pitch Bend up	
+in	90	4A	setup 2 deck D Pitch Bend up +SHIFT	
+in	90	14	setup 2 deck C FX ctrl (outer)	
+in	90	23	setup 2 deck C FX ctrl (outer) +SHIFT	
+in	90	32	setup 2 deck D FX ctrl (outer)	
+in	90	41	setup 2 deck D FX ctrl (outer) +SHIFT	
+in	90	15	setup 2 deck C FX ctrl (inner)	
+in	90	24	setup 2 deck C FX ctrl (inner) +SHIFT	
+in	90	33	setup 2 deck D FX ctrl (inner)	
+in	90	42	setup 2 deck D FX ctrl (inner) +SHIFT	
+in	90	17	setup 2 deck C Kill	
+in	90	26	setup 2 deck C Kill +SHIFT	
+in	90	35	setup 2 deck D Kill	
+in	90	44	setup 2 deck D Kill +SHIFT	
+in	90	11	setup 2 deck C Cue (monitor)	[Channel3] pfl
+in	90	20	setup 2 deck C Cue (monitor) +SHIFT	
+in	90	13	setup 2 deck D Cue (monitor)	[Channel4] pfl
+in	90	22	setup 2 deck D Cue (monitor) +SHIFT	
+in	B0	28	setup 2 deck C Cue/Pause (transport keys, alternative assignment)	
+in	B0	34	setup 2 deck C Cue/Pause (transport keys, alternative assignment) +SHIFT	
+in	B0	30	setup 2 deck D Cue/Pause (transport keys, alternative assignment)	
+in	B0	3C	setup 2 deck D Cue/Pause (transport keys, alternative assignment) +SHIFT	
+in	B0	27	setup 2 deck C Play/Pause (transport keys, alternative assignment)	
+in	B0	33	setup 2 deck C Play/Pause (transport keys, alternative assignment) +SHIFT	
+in	B0	2F	setup 2 deck D Play/Pause (transport keys, alternative assignment)	
+in	B0	3B	setup 2 deck D Play/Pause (transport keys, alternative assignment) +SHIFT	
+in	B0	2A	setup 2 deck C Cue/Play (transport keys, alternative assignment)	
+in	B0	36	setup 2 deck C Cue/Play (transport keys, alternative assignment) +SHIFT	
+in	B0	32	setup 2 deck D Cue/Play (transport keys, alternative assignment)	
+in	B0	3E	setup 2 deck D Cue/Play (transport keys, alternative assignment) +SHIFT	
+in	B0	29	setup 2 deck C Sync (transport keys, alternative assignment)	
+in	B0	35	setup 2 deck C Sync (transport keys, alternative assignment) +SHIFT	
+in	B0	31	setup 2 deck D Sync (transport keys, alternative assignment)	
+in	B0	3D	setup 2 deck D Sync (transport keys, alternative assignment) +SHIFT	
+in	B0	2B	setup 2 deck C Pitch Bend down (transport keys, alternative assignment)	
+in	B0	37	setup 2 deck C Pitch Bend down (transport keys, alternative assignment) +SHIFT	
+in	B0	2D	setup 2 deck D Pitch Bend down (transport keys, alternative assignment)	
+in	B0	39	setup 2 deck D Pitch Bend down (transport keys, alternative assignment) +SHIFT	
+in	B0	2C	setup 2 deck C Pitch Bend up (transport keys, alternative assignment)	
+in	B0	38	setup 2 deck C Pitch Bend up (transport keys, alternative assignment) +SHIFT	
+in	B0	2E	setup 2 deck D Pitch Bend up (transport keys, alternative assignment)	
+in	B0	3A	setup 2 deck D Pitch Bend up (transport keys, alternative assignment) +SHIFT	

@@ -1,0 +1,278 @@
+# DJ Console 4-Mx — Hercules "User Manual", MIDI messages (x = 1st MIDI channel, y = 2nd; given here as channels 1 and 2)
+# source: https://ts.hercules.com/download/sound/manuals/4Mx/01_Eng_DJ_Console_4Mx.pdf
+both	90	01	K1_DA	
+both	90	02	K2_DA	
+both	90	03	K3_DA	
+both	90	04	K4_DA	
+both	90	05	K5_DA	
+both	90	06	K6_DA	
+both	90	07	SHIFTED_K1_DA	
+both	90	08	SHIFTED_K2_DA	
+both	90	09	SHIFTED_K3_DA	
+both	90	0A	SHIFTED_K4_DA	
+both	90	0B	SHIFTED_K5_DA	
+both	90	0C	SHIFTED_K6_DA	
+both	90	0D	Cue_DA	[Channel1] cue_default
+both	90	0E	Play_DA	[Channel1] play
+both	90	0F	CueSel_DA	
+both	90	10	Stop_DA	
+both	90	11	Sync_DA	[Channel1] sync_enabled|beatsync
+in	90	12	Deck_DA	
+in	90	13	PIT_SP_DA	
+in	90	14	PIT_SM_DA	
+both	90	15	PIT_SR_DA	
+both	90	16	SOURCE_DA	
+both	90	17	KILL_T_DA	
+both	90	18	KILL_M_DA	
+both	90	19	KILL_B_DA	
+both	90	1A	JOG_TOUCH_DA	
+in	90	1B	Shift_State_DA	
+in	90	1C	Shift_DA	
+in	90	1D	PBM_DA	
+in	90	1E	PBP_DA	
+in	90	1F	Prev_DA	
+in	90	20	Next_DA	
+both	90	21	K1_DB	
+both	90	22	K2_DB	
+both	90	23	K3_DB	
+both	90	24	K4_DB	
+both	90	25	K5_DB	
+both	90	26	K6_DB	
+both	90	27	SHIFTED_K1_DB	
+both	90	28	SHIFTED_K2_DB	
+both	90	29	SHIFTED_K3_DB	
+both	90	2A	SHIFTED_K4_DB	
+both	90	2B	SHIFTED_K5_DB	
+both	90	2C	SHIFTED_K6_DB	
+both	90	2D	Cue_DB	[Channel2] cue_default
+both	90	2E	Play_DB	[Channel2] play
+both	90	2F	CueSel_DB	
+both	90	30	Stop_DB	
+both	90	31	Sync_DB	[Channel2] sync_enabled|beatsync
+in	90	32	Deck_DB	
+in	90	33	PIT_SP_DB	
+in	90	34	PIT_SM_DB	
+both	90	35	PIT_SR_DB	
+both	90	36	SOURCE_DB	
+both	90	37	KILL_T_DB	
+both	90	38	KILL_M_DB	
+both	90	39	KILL_B_DB	
+both	90	3A	JOG_TOUCH_DB	
+in	90	3B	Shift_State_DB	
+both	90	3C	AUTOMIX	
+both	90	3D	SCRATCH	
+both	90	3E	FILES	
+both	90	3F	FOLDERS	
+in	90	40	UP	
+both	90	41	DOWN	
+both	90	42	Shift_DB	
+both	90	43	PBM_DB	
+both	90	44	PBP_DB	
+both	90	45	Prev_DB	
+both	90	46	Next_DB	
+both	90	47	MIC	
+both	90	48	DECK_STATE_AC	
+both	90	49	DECK_STATE_BD	
+both	90	4A	Load_DA	[Channel1] LoadSelectedTrack
+both	90	4B	Load_DB	[Channel2] LoadSelectedTrack
+both	91	01	K1_DC	
+both	91	02	K2_DC	
+both	91	03	K3_DC	
+both	91	04	K4_DC	
+both	91	05	K5_DC	
+both	91	06	K6_DC	
+both	91	07	SHIFTED_K1_DC	
+both	91	08	SHIFTED_K2_DC	
+both	91	09	SHIFTED_K3_DC	
+both	91	0A	SHIFTED_K4_DC	
+both	91	0B	SHIFTED_K5_DC	
+both	91	0C	SHIFTED_K6_DC	
+both	91	0D	Cue_DC	[Channel3] cue_default
+both	91	0E	Play_DC	[Channel3] play
+both	91	0F	CueSel_DC	
+both	91	10	Stop_DC	
+both	91	11	Sync_DC	[Channel3] sync_enabled|beatsync
+in	91	13	PIT_SP_DC	
+in	91	14	PIT_SM_DC	
+both	91	15	PIT_SR_DC	
+both	91	16	SOURCE_DC	
+both	91	17	KILL_T_DC	
+both	91	18	KILL_M_DC	
+both	91	19	KILL_B_DC	
+both	91	1A	JOG_TOUCH_DC	
+in	91	1B	Shift_State_DC	
+in	91	1C	Shift_DC	
+in	91	1D	PBM_DC	
+in	91	1E	PBP_DC	
+in	91	1F	Prev_DC	
+in	91	20	Next_DC	
+both	91	21	K1_DD	
+both	91	22	K2_DD	
+both	91	23	K3_DD	
+both	91	24	K4_DD	
+both	91	25	K5_DD	
+both	91	26	K6_DD	
+both	91	27	SHIFTED_K1_DD	
+both	91	28	SHIFTED_K2_DD	
+both	91	29	SHIFTED_K3_DD	
+both	91	2A	SHIFTED_K4_DD	
+both	91	2B	SHIFTED_K5_DD	
+both	91	2C	SHIFTED_K6_DD	
+both	91	2D	Cue_DD	[Channel4] cue_default
+both	91	2E	Play_DD	[Channel4] play
+both	91	2F	CueSel_DD	
+both	91	30	Stop_DD	
+both	91	31	Sync_DD	[Channel4] sync_enabled|beatsync
+in	91	33	PIT_SP_DD	
+in	91	34	PIT_SM_DD	
+both	91	35	PIT_SR_DD	
+both	91	36	SOURCE_DD	
+both	91	37	KILL_T_DD	
+both	91	38	KILL_M_DD	
+both	91	39	KILL_B_DD	
+both	91	3A	JOG_TOUCH_DD	
+in	91	3B	Shift_State_DD	
+both	91	42	Shift_DD	
+both	91	43	PBM_DD	
+both	91	44	PBP_DD	
+both	91	45	Prev_DD	
+both	91	46	Next_DD	
+both	91	4A	Load_DC	[Channel3] LoadSelectedTrack
+both	91	4B	Load_DD	[Channel4] LoadSelectedTrack
+in	B0	01	JOG_SEEK_DA	
+in	B0	02	FX_DA	
+in	B0	03	VOL_DA	[Channel1] volume
+in	B0	04	GAIN_DA	[Channel1] pregain
+in	B0	05	PITCH_DA	
+in	B0	06	TREBLE_DA	[EqualizerRack1_[Channel1]_Effect1] parameter3
+in	B0	07	MEDIUM_DA	[EqualizerRack1_[Channel1]_Effect1] parameter2
+in	B0	08	BASS_DA	[EqualizerRack1_[Channel1]_Effect1] parameter1
+in	B0	09	JOG_SEEK_DB	
+in	B0	0A	FX_DB	
+in	B0	0B	VOL_DB	[Channel2] volume
+in	B0	0C	GAIN_DB	[Channel2] pregain
+in	B0	0D	PITCH_DB	
+in	B0	0E	TREBLE_DB	[EqualizerRack1_[Channel2]_Effect1] parameter3
+in	B0	0F	MEDIUM_DB	[EqualizerRack1_[Channel2]_Effect1] parameter2
+in	B0	10	BASS_DB	[EqualizerRack1_[Channel2]_Effect1] parameter1
+in	B0	11	JOG_SEEK_DC	
+in	B0	12	FX_DC	
+in	B0	13	VOL_DC	[Channel3] volume
+in	B0	14	GAIN_DC	[Channel3] pregain
+in	B0	15	PITCH_DC	
+in	B0	16	TREBLE_DC	[EqualizerRack1_[Channel3]_Effect1] parameter3
+in	B0	17	MEDIUM_DC	[EqualizerRack1_[Channel3]_Effect1] parameter2
+in	B0	18	BASS_DC	[EqualizerRack1_[Channel3]_Effect1] parameter1
+in	B0	19	JOG_SEEK_DD	
+in	B0	1A	FX_DD	
+in	B0	1B	VOL_DD	[Channel4] volume
+in	B0	1C	GAIN_DD	[Channel4] pregain
+in	B0	1D	PITCH_DD	
+in	B0	1E	TREBLE_DD	[EqualizerRack1_[Channel4]_Effect1] parameter3
+in	B0	1F	MEDIUM_DD	[EqualizerRack1_[Channel4]_Effect1] parameter2
+in	B0	20	BASS_DD	[EqualizerRack1_[Channel4]_Effect1] parameter1
+in	B0	21	VOL_MAIN	
+in	B0	22	XFADER	[Master] crossfader
+in	B0	23	CUE_TO_MIX	
+in	B0	24	JOG_SCR_DA	
+in	B0	25	JOG_SCR_DB	
+in	B0	26	JOG_SCR_DC	
+in	B0	27	JOG_SCR_DD	
+in	B0	28	PITCH_DA_LSBit	
+in	B0	29	PITCH_DB_LSBit	
+in	B0	2A	PITCH_DC_LSBit	
+in	B0	2B	PITCH_DD_LSBit	
+out	90	4C	BL_SHIFTED_K6_DA	
+out	90	4D	BL_Cue_DA	
+out	90	4E	BL_Play_DA	
+out	90	4F	BL_CueSel_DA	
+out	90	50	BL_Stop_DA	
+out	90	51	BL_Sync_DA	
+out	90	52	BL_Deck_DA	
+out	90	55	BL_PIT_SR_DA	
+out	90	56	BL_SOURCE_DA	
+out	90	57	BL_KILL_T_DA	
+out	90	58	BL_KILL_M_DA	
+out	90	59	BL_KILL_B_DA	
+out	90	5A	BL_JOG_TOUCH_DA	
+out	90	61	BL_K1_DB	
+out	90	62	BL_K2_DB	
+out	90	63	BL_K3_DB	
+out	90	64	BL_K4_DB	
+out	90	65	BL_K5_DB	
+out	90	66	BL_K6_DB	
+out	90	67	BL_SHIFTED_K1_DB	
+out	90	68	BL_SHIFTED_K2_DB	
+out	90	69	BL_SHIFTED_K3_DB	
+out	90	6A	BL_SHIFTED_K4_DB	
+out	90	6B	BL_SHIFTED_K5_DB	
+out	90	6C	BL_SHIFTED_K6_DB	
+out	90	6D	BL_Cue_DB	
+out	90	6E	BL_Play_DB	
+out	90	6F	BL_CueSel_DB	
+out	90	70	BL_Stop_DB	
+out	90	71	BL_Sync_DB	
+out	90	72	BL_Deck_DB	
+out	90	75	BL_PIT_SR_DB	
+out	90	76	BL_SOURCE_DB	
+out	90	77	BL_KILL_T_DB	
+out	90	78	BL_KILL_M_DB	
+out	90	79	BL_KILL_B_DB	
+out	90	7A	BL_JOG_TOUCH_DB	
+out	90	7C	BL_AUTOMIX	
+out	90	7D	BL_SCRATCH	
+out	90	7E	BL_FILES	
+out	90	7F	BL_FOLDERS	
+out	91	41	BL_K1_DC	
+out	91	47	BL_SHIFTED_K1_DC	
+out	91	48	BL_SHIFTED_K2_DC	
+out	91	49	BL_SHIFTED_K3_DC	
+out	91	4C	BL_SHIFTED_K6_DC	
+out	91	4D	BL_Cue_DC	
+out	91	4E	BL_Play_DC	
+out	91	4F	BL_CueSel_DC	
+out	91	50	BL_Stop_DC	
+out	91	51	BL_Sync_DC	
+out	91	55	BL_PIT_SR_DC	
+out	91	56	BL_SOURCE_DC	
+out	91	57	BL_KILL_T_DC	
+out	91	58	BL_KILL_M_DC	
+out	91	59	BL_KILL_B_DC	
+out	91	5A	BL_JOG_TOUCH_DC	
+out	91	61	BL_K1_DD	
+out	91	62	BL_K2_DD	
+out	91	63	BL_K3_DD	
+out	91	64	BL_K4_DD	
+out	91	65	BL_K5_DD	
+out	91	66	BL_K6_DD	
+out	91	67	BL_SHIFTED_K1_DD	
+out	91	68	BL_SHIFTED_K2_DD	
+out	91	69	BL_SHIFTED_K3_DD	
+out	91	6A	BL_SHIFTED_K4_DD	
+out	91	6B	BL_SHIFTED_K5_DD	
+out	91	6C	BL_SHIFTED_K6_DD	
+out	91	6D	BL_Cue_DD	
+out	91	6E	BL_Play_DD	
+out	91	6F	BL_CueSel_DD	
+out	91	70	BL_Stop_DD	
+out	91	71	BL_Sync_DD	
+out	91	75	BL_PIT_SR_DD	
+out	91	76	BL_SOURCE_DD	
+out	91	77	BL_KILL_T_DD	
+out	91	78	BL_KILL_M_DD	
+out	91	79	BL_KILL_B_DD	
+out	91	7A	BL_JOG_TOUCH_DD	
+out	B0	72	SET_SHIFT_DA	
+out	B0	73	SET_SHIFT_DB	
+out	B0	74	SET_SHIFT_DC	
+out	B0	75	SET_SHIFT_DD	
+out	B0	76	SET_DECK_AC	
+out	B0	77	SET_DECK_BD	
+out	B0	78	SET_DECK_MODE	
+out	B0	79	SET_JW_SENS	
+out	B0	7A	LOCK_JOG_DA	
+out	B0	7B	LOCK_JOG_DB	
+out	B0	7C	LOCK_JOG_DC	
+out	B0	7D	LOCK_JOG_DD	
+out	B0	7E	SET_XF_CURVE	
+out	B0	7F	Update_All_Controls	

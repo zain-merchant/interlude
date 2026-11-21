@@ -1,0 +1,28 @@
+# DJ2GO — Numark "DJ2GO UI and Communications Specification" Rev B
+# source: https://www.numark.com/images/product_downloads/dj2go___software_definition_and_midi_spec_v1.0.pdf
+both	90	33	A CUE	[Channel1] cue_default
+both	90	3B	A PLAY/PAUSE	[Channel1] play
+both	90	40	A SYNC	[Channel1] sync_enabled|beatsync
+both	90	65	A PFL	[Channel1] pfl
+in	90	4B	A LOAD	[Channel1] LoadSelectedTrack
+in	90	43	A PITCH BEND +	
+in	90	44	A PITCH BEND -	
+both	90	3C	B CUE	[Channel2] cue_default
+both	90	42	B PLAY/PAUSE	[Channel2] play
+both	90	47	B SYNC	[Channel2] sync_enabled|beatsync
+both	90	66	B PFL	[Channel2] pfl
+in	90	34	B LOAD	[Channel2] LoadSelectedTrack
+in	90	45	B PITCH BEND +	
+in	90	46	B PITCH BEND -	
+in	90	59	BACK	
+in	90	5A	ENTER	
+in	B0	08	A VOLUME	[Channel1] volume
+in	B0	09	B VOLUME	[Channel2] volume
+in	B0	0A	CROSSFADER	[Master] crossfader
+in	B0	0D	A PITCH	[Channel1] rate
+in	B0	0E	B PITCH	[Channel2] rate
+in	B0	17	Master Gain	
+in	B0	0B	Headphone Gain	
+in	B0	1A	BROWSE	[Library] MoveVertical
+in	B0	19	WHEEL A	
+in	B0	18	WHEEL B	

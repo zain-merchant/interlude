@@ -1,0 +1,247 @@
+# Launchpad Mini [MK3] — Novation "Launchpad Mini Programmer's Reference Manual"
+# source: https://fael-downloads-prod.focusrite.com/customer/prod/s3fs-public/downloads/Launchpad%20Mini%20-%20Programmers%20Reference%20Manual.pdf
+# Programmer mode layout; rows counted from the bottom. Channel 1 = static colour, 2 = flashing, 3 = pulsing.
+# In Programmer mode every pad/button also accepts the other message type for its LED; only the type it sends is listed.
+both	90	0B	pad row 1 column 1	
+both	90	0C	pad row 1 column 2	
+both	90	0D	pad row 1 column 3	
+both	90	0E	pad row 1 column 4	
+both	90	0F	pad row 1 column 5	
+both	90	10	pad row 1 column 6	
+both	90	11	pad row 1 column 7	
+both	90	12	pad row 1 column 8	
+both	B0	13	right button row 1	
+both	90	15	pad row 2 column 1	
+both	90	16	pad row 2 column 2	
+both	90	17	pad row 2 column 3	
+both	90	18	pad row 2 column 4	
+both	90	19	pad row 2 column 5	
+both	90	1A	pad row 2 column 6	
+both	90	1B	pad row 2 column 7	
+both	90	1C	pad row 2 column 8	
+both	B0	1D	right button row 2	
+both	90	1F	pad row 3 column 1	
+both	90	20	pad row 3 column 2	
+both	90	21	pad row 3 column 3	
+both	90	22	pad row 3 column 4	
+both	90	23	pad row 3 column 5	
+both	90	24	pad row 3 column 6	
+both	90	25	pad row 3 column 7	
+both	90	26	pad row 3 column 8	
+both	B0	27	right button row 3	
+both	90	29	pad row 4 column 1	
+both	90	2A	pad row 4 column 2	
+both	90	2B	pad row 4 column 3	
+both	90	2C	pad row 4 column 4	
+both	90	2D	pad row 4 column 5	
+both	90	2E	pad row 4 column 6	
+both	90	2F	pad row 4 column 7	
+both	90	30	pad row 4 column 8	
+both	B0	31	right button row 4	
+both	90	33	pad row 5 column 1	
+both	90	34	pad row 5 column 2	
+both	90	35	pad row 5 column 3	
+both	90	36	pad row 5 column 4	
+both	90	37	pad row 5 column 5	
+both	90	38	pad row 5 column 6	
+both	90	39	pad row 5 column 7	
+both	90	3A	pad row 5 column 8	
+both	B0	3B	right button row 5	
+both	90	3D	pad row 6 column 1	
+both	90	3E	pad row 6 column 2	
+both	90	3F	pad row 6 column 3	
+both	90	40	pad row 6 column 4	
+both	90	41	pad row 6 column 5	
+both	90	42	pad row 6 column 6	
+both	90	43	pad row 6 column 7	
+both	90	44	pad row 6 column 8	
+both	B0	45	right button row 6	
+both	90	47	pad row 7 column 1	
+both	90	48	pad row 7 column 2	
+both	90	49	pad row 7 column 3	
+both	90	4A	pad row 7 column 4	
+both	90	4B	pad row 7 column 5	
+both	90	4C	pad row 7 column 6	
+both	90	4D	pad row 7 column 7	
+both	90	4E	pad row 7 column 8	
+both	B0	4F	right button row 7	
+both	90	51	pad row 8 column 1	
+both	90	52	pad row 8 column 2	
+both	90	53	pad row 8 column 3	
+both	90	54	pad row 8 column 4	
+both	90	55	pad row 8 column 5	
+both	90	56	pad row 8 column 6	
+both	90	57	pad row 8 column 7	
+both	90	58	pad row 8 column 8	
+both	B0	59	right button row 8	
+both	B0	5B	top row button 1	
+both	B0	5C	top row button 2	
+both	B0	5D	top row button 3	
+both	B0	5E	top row button 4	
+both	B0	5F	top row button 5	
+both	B0	60	top row button 6	
+both	B0	61	top row button 7	
+both	B0	62	top row button 8	
+out	B0	63	logo LED	
+out	91	0B	pad row 1 column 1 LED flash	
+out	91	0C	pad row 1 column 2 LED flash	
+out	91	0D	pad row 1 column 3 LED flash	
+out	91	0E	pad row 1 column 4 LED flash	
+out	91	0F	pad row 1 column 5 LED flash	
+out	91	10	pad row 1 column 6 LED flash	
+out	91	11	pad row 1 column 7 LED flash	
+out	91	12	pad row 1 column 8 LED flash	
+out	B1	13	right button row 1 LED flash	
+out	91	15	pad row 2 column 1 LED flash	
+out	91	16	pad row 2 column 2 LED flash	
+out	91	17	pad row 2 column 3 LED flash	
+out	91	18	pad row 2 column 4 LED flash	
+out	91	19	pad row 2 column 5 LED flash	
+out	91	1A	pad row 2 column 6 LED flash	
+out	91	1B	pad row 2 column 7 LED flash	
+out	91	1C	pad row 2 column 8 LED flash	
+out	B1	1D	right button row 2 LED flash	
+out	91	1F	pad row 3 column 1 LED flash	
+out	91	20	pad row 3 column 2 LED flash	
+out	91	21	pad row 3 column 3 LED flash	
+out	91	22	pad row 3 column 4 LED flash	
+out	91	23	pad row 3 column 5 LED flash	
+out	91	24	pad row 3 column 6 LED flash	
+out	91	25	pad row 3 column 7 LED flash	
+out	91	26	pad row 3 column 8 LED flash	
+out	B1	27	right button row 3 LED flash	
+out	91	29	pad row 4 column 1 LED flash	
+out	91	2A	pad row 4 column 2 LED flash	
+out	91	2B	pad row 4 column 3 LED flash	
+out	91	2C	pad row 4 column 4 LED flash	
+out	91	2D	pad row 4 column 5 LED flash	
+out	91	2E	pad row 4 column 6 LED flash	
+out	91	2F	pad row 4 column 7 LED flash	
+out	91	30	pad row 4 column 8 LED flash	
+out	B1	31	right button row 4 LED flash	
+out	91	33	pad row 5 column 1 LED flash	
+out	91	34	pad row 5 column 2 LED flash	
+out	91	35	pad row 5 column 3 LED flash	
+out	91	36	pad row 5 column 4 LED flash	
+out	91	37	pad row 5 column 5 LED flash	
+out	91	38	pad row 5 column 6 LED flash	
+out	91	39	pad row 5 column 7 LED flash	
+out	91	3A	pad row 5 column 8 LED flash	
+out	B1	3B	right button row 5 LED flash	
+out	91	3D	pad row 6 column 1 LED flash	
+out	91	3E	pad row 6 column 2 LED flash	
+out	91	3F	pad row 6 column 3 LED flash	
+out	91	40	pad row 6 column 4 LED flash	
+out	91	41	pad row 6 column 5 LED flash	
+out	91	42	pad row 6 column 6 LED flash	
+out	91	43	pad row 6 column 7 LED flash	
+out	91	44	pad row 6 column 8 LED flash	
+out	B1	45	right button row 6 LED flash	
+out	91	47	pad row 7 column 1 LED flash	
+out	91	48	pad row 7 column 2 LED flash	
+out	91	49	pad row 7 column 3 LED flash	
+out	91	4A	pad row 7 column 4 LED flash	
+out	91	4B	pad row 7 column 5 LED flash	
+out	91	4C	pad row 7 column 6 LED flash	
+out	91	4D	pad row 7 column 7 LED flash	
+out	91	4E	pad row 7 column 8 LED flash	
+out	B1	4F	right button row 7 LED flash	
+out	91	51	pad row 8 column 1 LED flash	
+out	91	52	pad row 8 column 2 LED flash	
+out	91	53	pad row 8 column 3 LED flash	
+out	91	54	pad row 8 column 4 LED flash	
+out	91	55	pad row 8 column 5 LED flash	
+out	91	56	pad row 8 column 6 LED flash	
+out	91	57	pad row 8 column 7 LED flash	
+out	91	58	pad row 8 column 8 LED flash	
+out	B1	59	right button row 8 LED flash	
+out	B1	5B	top row button 1 LED flash	
+out	B1	5C	top row button 2 LED flash	
+out	B1	5D	top row button 3 LED flash	
+out	B1	5E	top row button 4 LED flash	
+out	B1	5F	top row button 5 LED flash	
+out	B1	60	top row button 6 LED flash	
+out	B1	61	top row button 7 LED flash	
+out	B1	62	top row button 8 LED flash	
+out	B1	63	logo LED LED flash	
+out	92	0B	pad row 1 column 1 LED pulse	
+out	92	0C	pad row 1 column 2 LED pulse	
+out	92	0D	pad row 1 column 3 LED pulse	
+out	92	0E	pad row 1 column 4 LED pulse	
+out	92	0F	pad row 1 column 5 LED pulse	
+out	92	10	pad row 1 column 6 LED pulse	
+out	92	11	pad row 1 column 7 LED pulse	
+out	92	12	pad row 1 column 8 LED pulse	
+out	B2	13	right button row 1 LED pulse	
+out	92	15	pad row 2 column 1 LED pulse	
+out	92	16	pad row 2 column 2 LED pulse	
+out	92	17	pad row 2 column 3 LED pulse	
+out	92	18	pad row 2 column 4 LED pulse	
+out	92	19	pad row 2 column 5 LED pulse	
+out	92	1A	pad row 2 column 6 LED pulse	
+out	92	1B	pad row 2 column 7 LED pulse	
+out	92	1C	pad row 2 column 8 LED pulse	
+out	B2	1D	right button row 2 LED pulse	
+out	92	1F	pad row 3 column 1 LED pulse	
+out	92	20	pad row 3 column 2 LED pulse	
+out	92	21	pad row 3 column 3 LED pulse	
+out	92	22	pad row 3 column 4 LED pulse	
+out	92	23	pad row 3 column 5 LED pulse	
+out	92	24	pad row 3 column 6 LED pulse	
+out	92	25	pad row 3 column 7 LED pulse	
+out	92	26	pad row 3 column 8 LED pulse	
+out	B2	27	right button row 3 LED pulse	
+out	92	29	pad row 4 column 1 LED pulse	
+out	92	2A	pad row 4 column 2 LED pulse	
+out	92	2B	pad row 4 column 3 LED pulse	
+out	92	2C	pad row 4 column 4 LED pulse	
+out	92	2D	pad row 4 column 5 LED pulse	
+out	92	2E	pad row 4 column 6 LED pulse	
+out	92	2F	pad row 4 column 7 LED pulse	
+out	92	30	pad row 4 column 8 LED pulse	
+out	B2	31	right button row 4 LED pulse	
+out	92	33	pad row 5 column 1 LED pulse	
+out	92	34	pad row 5 column 2 LED pulse	
+out	92	35	pad row 5 column 3 LED pulse	
+out	92	36	pad row 5 column 4 LED pulse	
+out	92	37	pad row 5 column 5 LED pulse	
+out	92	38	pad row 5 column 6 LED pulse	
+out	92	39	pad row 5 column 7 LED pulse	
+out	92	3A	pad row 5 column 8 LED pulse	
+out	B2	3B	right button row 5 LED pulse	
+out	92	3D	pad row 6 column 1 LED pulse	
+out	92	3E	pad row 6 column 2 LED pulse	
+out	92	3F	pad row 6 column 3 LED pulse	
+out	92	40	pad row 6 column 4 LED pulse	
+out	92	41	pad row 6 column 5 LED pulse	
+out	92	42	pad row 6 column 6 LED pulse	
+out	92	43	pad row 6 column 7 LED pulse	
+out	92	44	pad row 6 column 8 LED pulse	
+out	B2	45	right button row 6 LED pulse	
+out	92	47	pad row 7 column 1 LED pulse	
+out	92	48	pad row 7 column 2 LED pulse	
+out	92	49	pad row 7 column 3 LED pulse	
+out	92	4A	pad row 7 column 4 LED pulse	
+out	92	4B	pad row 7 column 5 LED pulse	
+out	92	4C	pad row 7 column 6 LED pulse	
+out	92	4D	pad row 7 column 7 LED pulse	
+out	92	4E	pad row 7 column 8 LED pulse	
+out	B2	4F	right button row 7 LED pulse	
+out	92	51	pad row 8 column 1 LED pulse	
+out	92	52	pad row 8 column 2 LED pulse	
+out	92	53	pad row 8 column 3 LED pulse	
+out	92	54	pad row 8 column 4 LED pulse	
+out	92	55	pad row 8 column 5 LED pulse	
+out	92	56	pad row 8 column 6 LED pulse	
+out	92	57	pad row 8 column 7 LED pulse	
+out	92	58	pad row 8 column 8 LED pulse	
+out	B2	59	right button row 8 LED pulse	
+out	B2	5B	top row button 1 LED pulse	
+out	B2	5C	top row button 2 LED pulse	
+out	B2	5D	top row button 3 LED pulse	
+out	B2	5E	top row button 4 LED pulse	
+out	B2	5F	top row button 5 LED pulse	
+out	B2	60	top row button 6 LED pulse	
+out	B2	61	top row button 7 LED pulse	
+out	B2	62	top row button 8 LED pulse	
+out	B2	63	logo LED LED pulse	

@@ -1,0 +1,822 @@
+# XDJ-RX3 — AlphaTheta "MIDI Message List" E1
+# source: https://downloads.support.alphatheta.com/software_info/all-in-one-dj-systems/XDJ-RX3/XDJ-RX3_MIDI_Message_List_E1.pdf
+in	B0	22	DECK1 Jog dial (Platter) +SHIFT	
+in	B1	22	DECK2 Jog dial (Platter) +SHIFT	
+in	B2	22	DECK3 Jog dial (Platter) +SHIFT	
+in	B3	22	DECK4 Jog dial (Platter) +SHIFT	
+in	B0	29	DECK1 Jog dial (Platter)	
+in	B1	29	DECK2 Jog dial (Platter)	
+in	B2	29	DECK3 Jog dial (Platter)	
+in	B3	29	DECK4 Jog dial (Platter)	
+in	90	20	DECK1 Jog dial (Platter) (touch) +SHIFT	
+in	91	20	DECK2 Jog dial (Platter) (touch) +SHIFT	
+in	92	20	DECK3 Jog dial (Platter) (touch) +SHIFT	
+in	93	20	DECK4 Jog dial (Platter) (touch) +SHIFT	
+in	90	48	DECK1 Jog dial (Platter) (touch)	
+in	91	48	DECK2 Jog dial (Platter) (touch)	
+in	92	48	DECK3 Jog dial (Platter) (touch)	
+in	93	48	DECK4 Jog dial (Platter) (touch)	
+in	B0	21	DECK1 Jog dial (Wheel side) +SHIFT	
+in	B1	21	DECK2 Jog dial (Wheel side) +SHIFT	
+in	B2	21	DECK3 Jog dial (Wheel side) +SHIFT	
+in	B3	21	DECK4 Jog dial (Wheel side) +SHIFT	
+in	B0	26	DECK1 Jog dial (Wheel side)	
+in	B1	26	DECK2 Jog dial (Wheel side)	
+in	B2	26	DECK3 Jog dial (Wheel side)	
+in	B3	26	DECK4 Jog dial (Wheel side)	
+in	B0	00	DECK1 TEMPO	
+in	B1	00	DECK2 TEMPO	
+in	B2	00	DECK3 TEMPO	
+in	B3	00	DECK4 TEMPO	
+in	B0	20	DECK1 TEMPO	[Channel1] rate
+in	B1	20	DECK2 TEMPO	[Channel2] rate
+in	B2	20	DECK3 TEMPO	[Channel3] rate
+in	B3	20	DECK4 TEMPO	[Channel4] rate
+both	90	11	DECK1 MASTER TEMP PO	
+both	91	11	DECK2 MASTER TEMP PO	
+both	92	11	DECK3 MASTER TEMP PO	
+both	93	11	DECK4 MASTER TEMP PO	
+in	90	10	DECK1 TEMPO RANGE E	
+in	91	10	DECK2 TEMPO RANGE E	
+in	92	10	DECK3 TEMPO RANGE E	
+in	93	10	DECK4 TEMPO RANGE E	
+both	90	1F	DECK1 SYNC (Long-Press)	
+both	91	1F	DECK2 SYNC (Long-Press)	
+both	92	1F	DECK3 SYNC (Long-Press)	
+both	93	1F	DECK4 SYNC (Long-Press)	
+in	90	47	DECK1 SYNC	[Channel1] sync_enabled|beatsync
+in	91	47	DECK2 SYNC	[Channel2] sync_enabled|beatsync
+in	92	47	DECK3 SYNC	[Channel3] sync_enabled|beatsync
+in	93	47	DECK4 SYNC	[Channel4] sync_enabled|beatsync
+both	90	1E	DECK1 MASTER	
+both	91	1E	DECK2 MASTER	
+both	92	1E	DECK3 MASTER	
+both	93	1E	DECK4 MASTER	
+both	90	12	DECK1 JOG MODE	
+both	91	12	DECK2 JOG MODE	
+both	92	12	DECK3 JOG MODE	
+both	93	12	DECK4 JOG MODE	
+in	90	2A	DECK1 VINYL SPEED ADJUST (har rdware button)	
+in	91	2A	DECK2 VINYL SPEED ADJUST (har rdware button)	
+in	92	2A	DECK3 VINYL SPEED ADJUST (har rdware button)	
+in	93	2A	DECK4 VINYL SPEED ADJUST (har rdware button)	
+in	B0	1E	DECK1 VINYL SPEED ADJUST (SHORT CUT) T Volume )	
+in	B1	1E	DECK2 VINYL SPEED ADJUST (SHORT CUT) T Volume )	
+in	B2	1E	DECK3 VINYL SPEED ADJUST (SHORT CUT) T Volume )	
+in	B3	1E	DECK4 VINYL SPEED ADJUST (SHORT CUT) T Volume )	
+in	90	04	DECK1 TRACK SEARCH FWD	
+in	91	04	DECK2 TRACK SEARCH FWD	
+in	92	04	DECK3 TRACK SEARCH FWD	
+in	93	04	DECK4 TRACK SEARCH FWD	
+in	90	05	DECK1 TRACK SEARCH R REV	
+in	91	05	DECK2 TRACK SEARCH R REV	
+in	92	05	DECK3 TRACK SEARCH R REV	
+in	93	05	DECK4 TRACK SEARCH R REV	
+in	90	02	DECK1 SEARCH FWD D	
+in	91	02	DECK2 SEARCH FWD D	
+in	92	02	DECK3 SEARCH FWD D	
+in	93	02	DECK4 SEARCH FWD D	
+in	90	03	DECK1 SEARCH REV V	
+in	91	03	DECK2 SEARCH REV V	
+in	92	03	DECK3 SEARCH REV V	
+in	93	03	DECK4 SEARCH REV V	
+both	90	21	DECK1 REVERSE	
+both	91	21	DECK2 REVERSE	
+both	92	21	DECK3 REVERSE	
+both	93	21	DECK4 REVERSE	
+both	90	2C	DECK1 SLIP	
+both	91	2C	DECK2 SLIP	
+both	92	2C	DECK3 SLIP	
+both	93	2C	DECK4 SLIP	
+both	90	06	DECK1 LOOP IN	[Channel1] loop_in
+both	91	06	DECK2 LOOP IN	[Channel2] loop_in
+both	92	06	DECK3 LOOP IN	[Channel3] loop_in
+both	93	06	DECK4 LOOP IN	[Channel4] loop_in
+in	90	45	DECK1 LOOP IN	
+in	91	45	DECK2 LOOP IN	
+in	92	45	DECK3 LOOP IN	
+in	93	45	DECK4 LOOP IN	
+both	90	07	DECK1 LOOP OUT	[Channel1] loop_out
+both	91	07	DECK2 LOOP OUT	[Channel2] loop_out
+both	92	07	DECK3 LOOP OUT	[Channel3] loop_out
+both	93	07	DECK4 LOOP OUT	[Channel4] loop_out
+both	90	08	DECK1 RELOOP/EXIT	[Channel1] reloop_toggle
+both	91	08	DECK2 RELOOP/EXIT	[Channel2] reloop_toggle
+both	92	08	DECK3 RELOOP/EXIT	[Channel3] reloop_toggle
+both	93	08	DECK4 RELOOP/EXIT	[Channel4] reloop_toggle
+in	90	0B	DECK1 CUE/LOOP CALL NEXT	
+in	91	0B	DECK2 CUE/LOOP CALL NEXT	
+in	92	0B	DECK3 CUE/LOOP CALL NEXT	
+in	93	0B	DECK4 CUE/LOOP CALL NEXT	
+in	90	0C	DECK1 CUE/LOOP CALL P PREV	
+in	91	0C	DECK2 CUE/LOOP CALL P PREV	
+in	92	0C	DECK3 CUE/LOOP CALL P PREV	
+in	93	0C	DECK4 CUE/LOOP CALL P PREV	
+in	90	0D	DECK1 CUE/LOOP DELE ETE	
+in	91	0D	DECK2 CUE/LOOP DELE ETE	
+in	92	0D	DECK3 CUE/LOOP DELE ETE	
+in	93	0D	DECK4 CUE/LOOP DELE ETE	
+in	90	0A	DECK1 CUE/LOOP MEMO ORY	
+in	91	0A	DECK2 CUE/LOOP MEMO ORY	
+in	92	0A	DECK3 CUE/LOOP MEMO ORY	
+in	93	0A	DECK4 CUE/LOOP MEMO ORY	
+both	90	00	DECK1 PLAY/PAUSE	[Channel1] play
+both	91	00	DECK2 PLAY/PAUSE	[Channel2] play
+both	92	00	DECK3 PLAY/PAUSE	[Channel3] play
+both	93	00	DECK4 PLAY/PAUSE	[Channel4] play
+both	90	01	DECK1 CUE	[Channel1] cue_default
+both	91	01	DECK2 CUE	[Channel2] cue_default
+both	92	01	DECK3 CUE	[Channel3] cue_default
+both	93	01	DECK4 CUE	[Channel4] cue_default
+both	90	51	DECK1 LOAD (hardware bu utton)	
+both	91	51	DECK2 LOAD (hardware bu utton)	
+both	92	51	DECK3 LOAD (hardware bu utton)	
+both	93	51	DECK4 LOAD (hardware bu utton)	
+in	B0	1C	DECK1 NEEDLE POSITIO (GUI/Overall waveform ON display)	
+in	B1	1C	DECK2 NEEDLE POSITIO (GUI/Overall waveform ON display)	
+in	B2	1C	DECK3 NEEDLE POSITIO (GUI/Overall waveform ON display)	
+in	B3	1C	DECK4 NEEDLE POSITIO (GUI/Overall waveform ON display)	
+in	90	36	DECK1 NEEDLE POSITIO (GUI/Overall waveform ON display)	
+in	91	36	DECK2 NEEDLE POSITIO (GUI/Overall waveform ON display)	
+in	92	36	DECK3 NEEDLE POSITIO (GUI/Overall waveform ON display)	
+in	93	36	DECK4 NEEDLE POSITIO (GUI/Overall waveform ON display)	
+in	90	0E	DECK1 TIME MODE（GUI/Time e display)	
+in	91	0E	DECK2 TIME MODE（GUI/Time e display)	
+in	92	0E	DECK3 TIME MODE（GUI/Time e display)	
+in	93	0E	DECK4 TIME MODE（GUI/Time e display)	
+in	90	0F	DECK1 TIME MODE（GUI/Time e display)	
+in	91	0F	DECK2 TIME MODE（GUI/Time e display)	
+in	92	0F	DECK3 TIME MODE（GUI/Time e display)	
+in	93	0F	DECK4 TIME MODE（GUI/Time e display)	
+both	90	09	DECK1 QUANTIZE	
+both	91	09	DECK2 QUANTIZE	
+both	92	09	DECK3 QUANTIZE	
+both	93	09	DECK4 QUANTIZE	
+in	B4	4C	BEAT LEFT	
+in	B4	4D	BEAT RIGHT	
+both	B4	4E	TAP	
+both	B4	7E	TAP	
+in	B4	27	CH SELECT CF.A	
+in	B4	28	CH SELECT CF. F.B	
+in	B4	1C	CH SELECT MI IC	
+in	B4	20	CH SELECT AU UX	
+in	B4	22	CH SELECT CH H1	
+in	B4	23	CH SELECT CH H2	
+in	B4	29	CH SELECT MAST TER	
+in	B4	2D	TIME	
+in	B4	5B	LEVEL DEPTH H	
+both	B4	72	X-PAD (GUI)	
+both	B4	34	BEAT EFFECT ON/OFF	
+in	B4	05	COLOR Deck 1	
+in	B4	0A	COLOR Deck 2	[QuickEffectRack1_[Channel2]] super1
+in	B4	16	COLOR Deck 3	[QuickEffectRack1_[Channel3]] super1
+in	B4	53	COLOR Deck 4	[QuickEffectRack1_[Channel4]] super1
+in	B4	6C	PARAMETER R	
+both	B4	69	SPACE	
+both	B4	6B	DUB ECHO	
+both	B4	6A	SWEEP	
+both	B4	55	NOISE	
+both	B4	56	CRUSH	
+both	B4	57	FILTER	
+in	B4	71	X-PAD (GUI) (Slider Mode)	
+in	B4	73	X-PAD (GUI) (Beat Mode)	
+in	B4	0B	CROSSFADER R	[Master] crossfader
+in	B4	11	CH FADER Deck 1	
+in	B4	12	CH FADER Deck 2	[Channel2] volume
+in	B4	13	CH FADER Deck 3	[Channel3] volume
+in	B4	14	CH FADER Deck 4	[Channel4] volume
+in	B4	5F	CROSSFADER ASSIGN	
+in	B4	01	TRIM Deck 1	
+in	B4	06	TRIM Deck 2	[Channel2] pregain
+in	B4	0C	TRIM Deck 3	[Channel3] pregain
+in	B4	50	TRIM Deck 4	[Channel4] pregain
+in	B4	02	EQ HIGH Deck 1	
+in	B4	07	EQ HIGH Deck 2	[EqualizerRack1_[Channel2]_Effect1] parameter3
+in	B4	0E	EQ HIGH Deck 3	[EqualizerRack1_[Channel3]_Effect1] parameter3
+in	B4	51	EQ HIGH Deck 4	[EqualizerRack1_[Channel4]_Effect1] parameter3
+in	B4	03	EQ MID Deck 1	[EqualizerRack1_[Channel1]_Effect1] parameter2
+in	B4	08	EQ MID Deck 2	[EqualizerRack1_[Channel2]_Effect1] parameter2
+in	B4	0F	EQ MID Deck 3	[EqualizerRack1_[Channel3]_Effect1] parameter2
+in	B4	5C	EQ MID Deck 4	[EqualizerRack1_[Channel4]_Effect1] parameter2
+in	B4	04	EQ LOW Deck 1	
+in	B4	09	EQ LOW Deck 2	[EqualizerRack1_[Channel2]_Effect1] parameter1
+in	B4	15	EQ LOW Deck 3	[EqualizerRack1_[Channel3]_Effect1] parameter1
+in	B4	52	EQ LOW Deck 4	[EqualizerRack1_[Channel4]_Effect1] parameter1
+in	B4	1B	HEADPHONES MIX XING	
+in	B4	1A	HEADPHONES LE EVEL	
+both	B4	46	CH CUE (Headphone) Deck 1	
+both	B4	47	CH CUE (Headphone) Deck 2	
+both	B4	48	CH CUE (Headphone) Deck 3	
+both	B4	49	CH CUE (Headphone) Deck 4	
+in	B4	4A	MASTER CUE (Head dphone)	
+in	B4	4B	LINK CUE (Headph hone)	
+in	B0	63	DECK1 INPUT SWITCH H	
+in	B1	63	DECK2 INPUT SWITCH H	
+in	B2	63	DECK3 INPUT SWITCH H	
+in	B3	63	DECK4 INPUT SWITCH H	
+in	B4	18	MASTER LEVEL	
+in	B4	19	BOOTH MONITOR L LEVEL	
+out	B0	02	DECK1 CH LEVEL METER	
+out	B1	02	DECK2 CH LEVEL METER	
+out	B2	02	DECK3 CH LEVEL METER	
+out	B3	02	DECK4 CH LEVEL METER	
+in	B4	77	AUX SELECT OFF	
+in	B4	78	AUX SELECT LINE	
+in	B4	79	AUX SELECT PORTABLE	
+in	B4	7A	AUX TRIM	
+in	B0	4F	DECK1 ROTARY SELECTOR +SHIFT	
+in	B0	60	DECK1 ROTARY SELECTOR	
+in	90	33	DECK1 ROTARY SELECTOR +SHIFT	
+in	90	61	DECK1 ROTARY SELECTOR	
+in	90	32	DECK1 BACK +SHIFT	
+in	90	5F	DECK1 BACK	
+in	90	30	DECK1 TAG TRACK/REMO OVE	
+in	90	62	DECK1 TAG TRACK/REMOVE	
+in	90	31	DECK1 TRACK FILTER R	
+in	90	5D	DECK1 TRACK FILTER	
+in	B0	66	DECK1 DECK 1/2	
+in	B1	66	DECK2 DECK 1/2	
+in	B2	66	DECK3 DECK 1/2	
+in	B3	66	DECK4 DECK 1/2	
+both	90	22	DECK1 HOT CUE EXTENSION1	
+both	91	22	DECK2 HOT CUE EXTENSION1	
+both	92	22	DECK3 HOT CUE EXTENSION1	
+both	93	22	DECK4 HOT CUE EXTENSION1	
+both	90	26	DECK1 HOT CUE EXTENSION1	
+both	91	26	DECK2 HOT CUE EXTENSION1	
+both	92	26	DECK3 HOT CUE EXTENSION1	
+both	93	26	DECK4 HOT CUE EXTENSION1	
+both	90	23	DECK1 BEAT LOOP EXTENSION2	
+both	91	23	DECK2 BEAT LOOP EXTENSION2	
+both	92	23	DECK3 BEAT LOOP EXTENSION2	
+both	93	23	DECK4 BEAT LOOP EXTENSION2	
+both	90	27	DECK1 BEAT LOOP EXTENSION2	
+both	91	27	DECK2 BEAT LOOP EXTENSION2	
+both	92	27	DECK3 BEAT LOOP EXTENSION2	
+both	93	27	DECK4 BEAT LOOP EXTENSION2	
+both	90	24	DECK1 SLIP LOOP EXTENSION3	
+both	91	24	DECK2 SLIP LOOP EXTENSION3	
+both	92	24	DECK3 SLIP LOOP EXTENSION3	
+both	93	24	DECK4 SLIP LOOP EXTENSION3	
+both	90	28	DECK1 SLIP LOOP EXTENSION3	
+both	91	28	DECK2 SLIP LOOP EXTENSION3	
+both	92	28	DECK3 SLIP LOOP EXTENSION3	
+both	93	28	DECK4 SLIP LOOP EXTENSION3	
+both	90	25	DECK1 BEAT JUMP	
+both	91	25	DECK2 BEAT JUMP	
+both	92	25	DECK3 BEAT JUMP	
+both	93	25	DECK4 BEAT JUMP	
+both	90	29	DECK1 BEAT JUMP EXTENSION4	
+both	91	29	DECK2 BEAT JUMP EXTENSION4	
+both	92	29	DECK3 BEAT JUMP EXTENSION4	
+both	93	29	DECK4 BEAT JUMP EXTENSION4	
+both	95	00	DECK1 Performance Pad 1 (HOT CUE mode BEAT LOOP mode SLIP LOOP mode BEAT JUMP mode EXTENSION1 mode EXTENSION2 mode EXTENSION3 mode EXTENSION4 mode)	
+both	96	00	DECK2 Performance Pad 1 (HOT CUE mode BEAT LOOP mode SLIP LOOP mode BEAT JUMP mode EXTENSION1 mode EXTENSION2 mode EXTENSION3 mode EXTENSION4 mode)	
+both	97	00	DECK3 Performance Pad 1 (HOT CUE mode BEAT LOOP mode SLIP LOOP mode BEAT JUMP mode EXTENSION1 mode EXTENSION2 mode EXTENSION3 mode EXTENSION4 mode)	
+both	98	00	DECK4 Performance Pad 1 (HOT CUE mode BEAT LOOP mode SLIP LOOP mode BEAT JUMP mode EXTENSION1 mode EXTENSION2 mode EXTENSION3 mode EXTENSION4 mode)	
+both	95	08	DECK1 Performance Pad 1 (HOT CUE mode)	[Channel1] hotcue_1_activate
+both	96	08	DECK2 Performance Pad 1 (HOT CUE mode)	[Channel2] hotcue_1_activate
+both	97	08	DECK3 Performance Pad 1 (HOT CUE mode)	[Channel3] hotcue_1_activate
+both	98	08	DECK4 Performance Pad 1 (HOT CUE mode)	[Channel4] hotcue_1_activate
+both	95	10	DECK1 Performance Pad 1	
+both	96	10	DECK2 Performance Pad 1	
+both	97	10	DECK3 Performance Pad 1	
+both	98	10	DECK4 Performance Pad 1	
+both	95	18	DECK1 Performance Pad 1 (BEAT LOOP mode)	
+both	96	18	DECK2 Performance Pad 1 (BEAT LOOP mode)	
+both	97	18	DECK3 Performance Pad 1 (BEAT LOOP mode)	
+both	98	18	DECK4 Performance Pad 1 (BEAT LOOP mode)	
+both	95	20	DECK1 Performance Pad 1	
+both	96	20	DECK2 Performance Pad 1	
+both	97	20	DECK3 Performance Pad 1	
+both	98	20	DECK4 Performance Pad 1	
+both	95	28	DECK1 Performance Pad 1 (SLIP LOOP mode)	
+both	96	28	DECK2 Performance Pad 1 (SLIP LOOP mode)	
+both	97	28	DECK3 Performance Pad 1 (SLIP LOOP mode)	
+both	98	28	DECK4 Performance Pad 1 (SLIP LOOP mode)	
+both	95	30	DECK1 Performance Pad 1 (BEAT JUMP mode)	
+both	96	30	DECK2 Performance Pad 1 (BEAT JUMP mode)	
+both	97	30	DECK3 Performance Pad 1 (BEAT JUMP mode)	
+both	98	30	DECK4 Performance Pad 1 (BEAT JUMP mode)	
+both	95	38	DECK1 Performance Pad 1 (BEAT JUMP mode)	
+both	96	38	DECK2 Performance Pad 1 (BEAT JUMP mode)	
+both	97	38	DECK3 Performance Pad 1 (BEAT JUMP mode)	
+both	98	38	DECK4 Performance Pad 1 (BEAT JUMP mode)	
+both	95	40	DECK1 Performance Pad 1 (EXTENSION1 mode)	
+both	96	40	DECK2 Performance Pad 1 (EXTENSION1 mode)	
+both	97	40	DECK3 Performance Pad 1 (EXTENSION1 mode)	
+both	98	40	DECK4 Performance Pad 1 (EXTENSION1 mode)	
+both	95	48	DECK1 Performance Pad 1 (EXTENSION1 mode)	
+both	96	48	DECK2 Performance Pad 1 (EXTENSION1 mode)	
+both	97	48	DECK3 Performance Pad 1 (EXTENSION1 mode)	
+both	98	48	DECK4 Performance Pad 1 (EXTENSION1 mode)	
+both	95	50	DECK1 Performance Pad 1 (EXTENSION2 mode)	
+both	96	50	DECK2 Performance Pad 1 (EXTENSION2 mode)	
+both	97	50	DECK3 Performance Pad 1 (EXTENSION2 mode)	
+both	98	50	DECK4 Performance Pad 1 (EXTENSION2 mode)	
+both	95	58	DECK1 Performance Pad 1 (EXTENSION2 mode)	
+both	96	58	DECK2 Performance Pad 1 (EXTENSION2 mode)	
+both	97	58	DECK3 Performance Pad 1 (EXTENSION2 mode)	
+both	98	58	DECK4 Performance Pad 1 (EXTENSION2 mode)	
+both	95	60	DECK1 Performance Pad 1	
+both	96	60	DECK2 Performance Pad 1	
+both	97	60	DECK3 Performance Pad 1	
+both	98	60	DECK4 Performance Pad 1	
+both	95	68	DECK1 Performance Pad 1 (EXTENSION3 mode)	
+both	96	68	DECK2 Performance Pad 1 (EXTENSION3 mode)	
+both	97	68	DECK3 Performance Pad 1 (EXTENSION3 mode)	
+both	98	68	DECK4 Performance Pad 1 (EXTENSION3 mode)	
+both	95	70	DECK1 Performance Pad 1	
+both	96	70	DECK2 Performance Pad 1	
+both	97	70	DECK3 Performance Pad 1	
+both	98	70	DECK4 Performance Pad 1	
+both	95	78	DECK1 Performance Pad 1 (EXTENSION4 mode)	
+both	96	78	DECK2 Performance Pad 1 (EXTENSION4 mode)	
+both	97	78	DECK3 Performance Pad 1 (EXTENSION4 mode)	
+both	98	78	DECK4 Performance Pad 1 (EXTENSION4 mode)	
+both	95	01	DECK1 Performance Pad 2 (HOT CUE mode BEAT LOOP mode SLIP LOOP mode BEAT JUMP mode EXTENSION1 mode EXTENSION2 mode EXTENSION3 mode EXTENSION4 mode)	
+both	96	01	DECK2 Performance Pad 2 (HOT CUE mode BEAT LOOP mode SLIP LOOP mode BEAT JUMP mode EXTENSION1 mode EXTENSION2 mode EXTENSION3 mode EXTENSION4 mode)	
+both	97	01	DECK3 Performance Pad 2 (HOT CUE mode BEAT LOOP mode SLIP LOOP mode BEAT JUMP mode EXTENSION1 mode EXTENSION2 mode EXTENSION3 mode EXTENSION4 mode)	
+both	98	01	DECK4 Performance Pad 2 (HOT CUE mode BEAT LOOP mode SLIP LOOP mode BEAT JUMP mode EXTENSION1 mode EXTENSION2 mode EXTENSION3 mode EXTENSION4 mode)	
+both	95	09	DECK1 Performance Pad 2 (HOT CUE mode)	[Channel1] hotcue_2_activate
+both	96	09	DECK2 Performance Pad 2 (HOT CUE mode)	[Channel2] hotcue_2_activate
+both	97	09	DECK3 Performance Pad 2 (HOT CUE mode)	[Channel3] hotcue_2_activate
+both	98	09	DECK4 Performance Pad 2 (HOT CUE mode)	[Channel4] hotcue_2_activate
+both	95	11	DECK1 Performance Pad 2	
+both	96	11	DECK2 Performance Pad 2	
+both	97	11	DECK3 Performance Pad 2	
+both	98	11	DECK4 Performance Pad 2	
+both	95	19	DECK1 Performance Pad 2 (BEAT LOOP mode)	
+both	96	19	DECK2 Performance Pad 2 (BEAT LOOP mode)	
+both	97	19	DECK3 Performance Pad 2 (BEAT LOOP mode)	
+both	98	19	DECK4 Performance Pad 2 (BEAT LOOP mode)	
+both	95	21	DECK1 Performance Pad 2	
+both	96	21	DECK2 Performance Pad 2	
+both	97	21	DECK3 Performance Pad 2	
+both	98	21	DECK4 Performance Pad 2	
+both	95	29	DECK1 Performance Pad 2 (SLIP LOOP mode)	
+both	96	29	DECK2 Performance Pad 2 (SLIP LOOP mode)	
+both	97	29	DECK3 Performance Pad 2 (SLIP LOOP mode)	
+both	98	29	DECK4 Performance Pad 2 (SLIP LOOP mode)	
+both	95	31	DECK1 Performance Pad 2	
+both	96	31	DECK2 Performance Pad 2	
+both	97	31	DECK3 Performance Pad 2	
+both	98	31	DECK4 Performance Pad 2	
+both	95	39	DECK1 Performance Pad 2 (BEAT JUMP mode)	
+both	96	39	DECK2 Performance Pad 2 (BEAT JUMP mode)	
+both	97	39	DECK3 Performance Pad 2 (BEAT JUMP mode)	
+both	98	39	DECK4 Performance Pad 2 (BEAT JUMP mode)	
+both	95	41	DECK1 Performance Pad 2 (EXTENSION1 mode)	
+both	96	41	DECK2 Performance Pad 2 (EXTENSION1 mode)	
+both	97	41	DECK3 Performance Pad 2 (EXTENSION1 mode)	
+both	98	41	DECK4 Performance Pad 2 (EXTENSION1 mode)	
+both	95	49	DECK1 Performance Pad 2 (EXTENSION1 mode)	
+both	96	49	DECK2 Performance Pad 2 (EXTENSION1 mode)	
+both	97	49	DECK3 Performance Pad 2 (EXTENSION1 mode)	
+both	98	49	DECK4 Performance Pad 2 (EXTENSION1 mode)	
+both	95	51	DECK1 Performance Pad 2 (EXTENSION2 mode)	
+both	96	51	DECK2 Performance Pad 2 (EXTENSION2 mode)	
+both	97	51	DECK3 Performance Pad 2 (EXTENSION2 mode)	
+both	98	51	DECK4 Performance Pad 2 (EXTENSION2 mode)	
+both	95	59	DECK1 Performance Pad 2 (EXTENSION2 mode)	
+both	96	59	DECK2 Performance Pad 2 (EXTENSION2 mode)	
+both	97	59	DECK3 Performance Pad 2 (EXTENSION2 mode)	
+both	98	59	DECK4 Performance Pad 2 (EXTENSION2 mode)	
+both	95	61	DECK1 Performance Pad 2	
+both	96	61	DECK2 Performance Pad 2	
+both	97	61	DECK3 Performance Pad 2	
+both	98	61	DECK4 Performance Pad 2	
+both	95	69	DECK1 Performance Pad 2 (EXTENSION3 mode)	
+both	96	69	DECK2 Performance Pad 2 (EXTENSION3 mode)	
+both	97	69	DECK3 Performance Pad 2 (EXTENSION3 mode)	
+both	98	69	DECK4 Performance Pad 2 (EXTENSION3 mode)	
+both	95	71	DECK1 Performance Pad 2	
+both	96	71	DECK2 Performance Pad 2	
+both	97	71	DECK3 Performance Pad 2	
+both	98	71	DECK4 Performance Pad 2	
+both	95	79	DECK1 Performance Pad 2 (EXTENSION4 mode)	
+both	96	79	DECK2 Performance Pad 2 (EXTENSION4 mode)	
+both	97	79	DECK3 Performance Pad 2 (EXTENSION4 mode)	
+both	98	79	DECK4 Performance Pad 2 (EXTENSION4 mode)	
+both	95	02	DECK1 Performance Pad 3 (HOT CUE mode BEAT LOOP mode SLIP LOOP mode BEAT JUMP mode EXTENSION1 mode EXTENSION2 mode EXTENSION3 mode EXTENSION4 mode)	
+both	96	02	DECK2 Performance Pad 3 (HOT CUE mode BEAT LOOP mode SLIP LOOP mode BEAT JUMP mode EXTENSION1 mode EXTENSION2 mode EXTENSION3 mode EXTENSION4 mode)	
+both	97	02	DECK3 Performance Pad 3 (HOT CUE mode BEAT LOOP mode SLIP LOOP mode BEAT JUMP mode EXTENSION1 mode EXTENSION2 mode EXTENSION3 mode EXTENSION4 mode)	
+both	98	02	DECK4 Performance Pad 3 (HOT CUE mode BEAT LOOP mode SLIP LOOP mode BEAT JUMP mode EXTENSION1 mode EXTENSION2 mode EXTENSION3 mode EXTENSION4 mode)	
+both	95	0A	DECK1 Performance Pad 3 (HOT CUE mode)	[Channel1] hotcue_3_activate
+both	96	0A	DECK2 Performance Pad 3 (HOT CUE mode)	[Channel2] hotcue_3_activate
+both	97	0A	DECK3 Performance Pad 3 (HOT CUE mode)	[Channel3] hotcue_3_activate
+both	98	0A	DECK4 Performance Pad 3 (HOT CUE mode)	[Channel4] hotcue_3_activate
+both	95	12	DECK1 Performance Pad 3 (BEAT LOOP mode)	
+both	96	12	DECK2 Performance Pad 3 (BEAT LOOP mode)	
+both	97	12	DECK3 Performance Pad 3 (BEAT LOOP mode)	
+both	98	12	DECK4 Performance Pad 3 (BEAT LOOP mode)	
+both	95	1A	DECK1 Performance Pad 3 (BEAT LOOP mode)	
+both	96	1A	DECK2 Performance Pad 3 (BEAT LOOP mode)	
+both	97	1A	DECK3 Performance Pad 3 (BEAT LOOP mode)	
+both	98	1A	DECK4 Performance Pad 3 (BEAT LOOP mode)	
+both	95	22	DECK1 Performance Pad 3 (SLIP LOOP mode)	
+both	96	22	DECK2 Performance Pad 3 (SLIP LOOP mode)	
+both	97	22	DECK3 Performance Pad 3 (SLIP LOOP mode)	
+both	98	22	DECK4 Performance Pad 3 (SLIP LOOP mode)	
+both	95	2A	DECK1 Performance Pad 3 (SLIP LOOP mode)	
+both	96	2A	DECK2 Performance Pad 3 (SLIP LOOP mode)	
+both	97	2A	DECK3 Performance Pad 3 (SLIP LOOP mode)	
+both	98	2A	DECK4 Performance Pad 3 (SLIP LOOP mode)	
+both	95	32	DECK1 Performance Pad 3	
+both	96	32	DECK2 Performance Pad 3	
+both	97	32	DECK3 Performance Pad 3	
+both	98	32	DECK4 Performance Pad 3	
+both	95	3A	DECK1 Performance Pad 3 (BEAT JUMP mode)	
+both	96	3A	DECK2 Performance Pad 3 (BEAT JUMP mode)	
+both	97	3A	DECK3 Performance Pad 3 (BEAT JUMP mode)	
+both	98	3A	DECK4 Performance Pad 3 (BEAT JUMP mode)	
+both	95	42	DECK1 Performance Pad 3	
+both	96	42	DECK2 Performance Pad 3	
+both	97	42	DECK3 Performance Pad 3	
+both	98	42	DECK4 Performance Pad 3	
+both	95	4A	DECK1 Performance Pad 3 (EXTENSION1 mode)	
+both	96	4A	DECK2 Performance Pad 3 (EXTENSION1 mode)	
+both	97	4A	DECK3 Performance Pad 3 (EXTENSION1 mode)	
+both	98	4A	DECK4 Performance Pad 3 (EXTENSION1 mode)	
+both	95	52	DECK1 Performance Pad 3 (EXTENSION2 mode)	
+both	96	52	DECK2 Performance Pad 3 (EXTENSION2 mode)	
+both	97	52	DECK3 Performance Pad 3 (EXTENSION2 mode)	
+both	98	52	DECK4 Performance Pad 3 (EXTENSION2 mode)	
+both	95	5A	DECK1 Performance Pad 3 (EXTENSION2 mode)	
+both	96	5A	DECK2 Performance Pad 3 (EXTENSION2 mode)	
+both	97	5A	DECK3 Performance Pad 3 (EXTENSION2 mode)	
+both	98	5A	DECK4 Performance Pad 3 (EXTENSION2 mode)	
+both	95	62	DECK1 Performance Pad 3 (EXTENSION3 mode)	
+both	96	62	DECK2 Performance Pad 3 (EXTENSION3 mode)	
+both	97	62	DECK3 Performance Pad 3 (EXTENSION3 mode)	
+both	98	62	DECK4 Performance Pad 3 (EXTENSION3 mode)	
+both	95	6A	DECK1 Performance Pad 3 (EXTENSION3 mode)	
+both	96	6A	DECK2 Performance Pad 3 (EXTENSION3 mode)	
+both	97	6A	DECK3 Performance Pad 3 (EXTENSION3 mode)	
+both	98	6A	DECK4 Performance Pad 3 (EXTENSION3 mode)	
+both	95	72	DECK1 Performance Pad 3	
+both	96	72	DECK2 Performance Pad 3	
+both	97	72	DECK3 Performance Pad 3	
+both	98	72	DECK4 Performance Pad 3	
+both	95	7A	DECK1 Performance Pad 3 (EXTENSION4 mode)	
+both	96	7A	DECK2 Performance Pad 3 (EXTENSION4 mode)	
+both	97	7A	DECK3 Performance Pad 3 (EXTENSION4 mode)	
+both	98	7A	DECK4 Performance Pad 3 (EXTENSION4 mode)	
+both	95	03	DECK1 Performance Pad 4 (HOT CUE mode BEAT LOOP mode SLIP LOOP mode BEAT JUMP mode EXTENSION1 mode EXTENSION2 mode EXTENSION3 mode EXTENSION4 mode)	
+both	96	03	DECK2 Performance Pad 4 (HOT CUE mode BEAT LOOP mode SLIP LOOP mode BEAT JUMP mode EXTENSION1 mode EXTENSION2 mode EXTENSION3 mode EXTENSION4 mode)	
+both	97	03	DECK3 Performance Pad 4 (HOT CUE mode BEAT LOOP mode SLIP LOOP mode BEAT JUMP mode EXTENSION1 mode EXTENSION2 mode EXTENSION3 mode EXTENSION4 mode)	
+both	98	03	DECK4 Performance Pad 4 (HOT CUE mode BEAT LOOP mode SLIP LOOP mode BEAT JUMP mode EXTENSION1 mode EXTENSION2 mode EXTENSION3 mode EXTENSION4 mode)	
+both	95	0B	DECK1 Performance Pad 4 (HOT CUE mode)	[Channel1] hotcue_4_activate
+both	96	0B	DECK2 Performance Pad 4 (HOT CUE mode)	[Channel2] hotcue_4_activate
+both	97	0B	DECK3 Performance Pad 4 (HOT CUE mode)	[Channel3] hotcue_4_activate
+both	98	0B	DECK4 Performance Pad 4 (HOT CUE mode)	[Channel4] hotcue_4_activate
+both	95	13	DECK1 Performance Pad 4	
+both	96	13	DECK2 Performance Pad 4	
+both	97	13	DECK3 Performance Pad 4	
+both	98	13	DECK4 Performance Pad 4	
+both	95	1B	DECK1 Performance Pad 4 (BEAT LOOP mode)	
+both	96	1B	DECK2 Performance Pad 4 (BEAT LOOP mode)	
+both	97	1B	DECK3 Performance Pad 4 (BEAT LOOP mode)	
+both	98	1B	DECK4 Performance Pad 4 (BEAT LOOP mode)	
+both	95	23	DECK1 Performance Pad 4 (SLIP LOOP mode)	
+both	96	23	DECK2 Performance Pad 4 (SLIP LOOP mode)	
+both	97	23	DECK3 Performance Pad 4 (SLIP LOOP mode)	
+both	98	23	DECK4 Performance Pad 4 (SLIP LOOP mode)	
+both	95	2B	DECK1 Performance Pad 4 (SLIP LOOP mode)	
+both	96	2B	DECK2 Performance Pad 4 (SLIP LOOP mode)	
+both	97	2B	DECK3 Performance Pad 4 (SLIP LOOP mode)	
+both	98	2B	DECK4 Performance Pad 4 (SLIP LOOP mode)	
+both	95	33	DECK1 Performance Pad 4 (BEAT JUMP mode)	
+both	96	33	DECK2 Performance Pad 4 (BEAT JUMP mode)	
+both	97	33	DECK3 Performance Pad 4 (BEAT JUMP mode)	
+both	98	33	DECK4 Performance Pad 4 (BEAT JUMP mode)	
+both	95	3B	DECK1 Performance Pad 4 (BEAT JUMP mode)	
+both	96	3B	DECK2 Performance Pad 4 (BEAT JUMP mode)	
+both	97	3B	DECK3 Performance Pad 4 (BEAT JUMP mode)	
+both	98	3B	DECK4 Performance Pad 4 (BEAT JUMP mode)	
+both	95	43	DECK1 Performance Pad 4 (EXTENSION1 mode)	
+both	96	43	DECK2 Performance Pad 4 (EXTENSION1 mode)	
+both	97	43	DECK3 Performance Pad 4 (EXTENSION1 mode)	
+both	98	43	DECK4 Performance Pad 4 (EXTENSION1 mode)	
+both	95	4B	DECK1 Performance Pad 4 (EXTENSION1 mode)	
+both	96	4B	DECK2 Performance Pad 4 (EXTENSION1 mode)	
+both	97	4B	DECK3 Performance Pad 4 (EXTENSION1 mode)	
+both	98	4B	DECK4 Performance Pad 4 (EXTENSION1 mode)	
+both	95	53	DECK1 Performance Pad 4	
+both	96	53	DECK2 Performance Pad 4	
+both	97	53	DECK3 Performance Pad 4	
+both	98	53	DECK4 Performance Pad 4	
+both	95	5B	DECK1 Performance Pad 4 (EXTENSION2 mode)	
+both	96	5B	DECK2 Performance Pad 4 (EXTENSION2 mode)	
+both	97	5B	DECK3 Performance Pad 4 (EXTENSION2 mode)	
+both	98	5B	DECK4 Performance Pad 4 (EXTENSION2 mode)	
+both	95	63	DECK1 Performance Pad 4 (EXTENSION3 mode)	
+both	96	63	DECK2 Performance Pad 4 (EXTENSION3 mode)	
+both	97	63	DECK3 Performance Pad 4 (EXTENSION3 mode)	
+both	98	63	DECK4 Performance Pad 4 (EXTENSION3 mode)	
+both	95	6B	DECK1 Performance Pad 4 (EXTENSION3 mode)	
+both	96	6B	DECK2 Performance Pad 4 (EXTENSION3 mode)	
+both	97	6B	DECK3 Performance Pad 4 (EXTENSION3 mode)	
+both	98	6B	DECK4 Performance Pad 4 (EXTENSION3 mode)	
+both	95	73	DECK1 Performance Pad 4 (EXTENSION4 mode)	
+both	96	73	DECK2 Performance Pad 4 (EXTENSION4 mode)	
+both	97	73	DECK3 Performance Pad 4 (EXTENSION4 mode)	
+both	98	73	DECK4 Performance Pad 4 (EXTENSION4 mode)	
+both	95	7B	DECK1 Performance Pad 4 (EXTENSION4 mode)	
+both	96	7B	DECK2 Performance Pad 4 (EXTENSION4 mode)	
+both	97	7B	DECK3 Performance Pad 4 (EXTENSION4 mode)	
+both	98	7B	DECK4 Performance Pad 4 (EXTENSION4 mode)	
+both	95	04	DECK1 Performance Pad 5 (HOT CUE mode BEAT LOOP mode SLIP LOOP mode BEAT JUMP mode EXTENSION1 mode EXTENSION2 mode EXTENSION3 mode EXTENSION4 mode)	
+both	96	04	DECK2 Performance Pad 5 (HOT CUE mode BEAT LOOP mode SLIP LOOP mode BEAT JUMP mode EXTENSION1 mode EXTENSION2 mode EXTENSION3 mode EXTENSION4 mode)	
+both	97	04	DECK3 Performance Pad 5 (HOT CUE mode BEAT LOOP mode SLIP LOOP mode BEAT JUMP mode EXTENSION1 mode EXTENSION2 mode EXTENSION3 mode EXTENSION4 mode)	
+both	98	04	DECK4 Performance Pad 5 (HOT CUE mode BEAT LOOP mode SLIP LOOP mode BEAT JUMP mode EXTENSION1 mode EXTENSION2 mode EXTENSION3 mode EXTENSION4 mode)	
+both	95	0C	DECK1 Performance Pad 5 (HOT CUE mode)	[Channel1] hotcue_5_activate
+both	96	0C	DECK2 Performance Pad 5 (HOT CUE mode)	[Channel2] hotcue_5_activate
+both	97	0C	DECK3 Performance Pad 5 (HOT CUE mode)	[Channel3] hotcue_5_activate
+both	98	0C	DECK4 Performance Pad 5 (HOT CUE mode)	[Channel4] hotcue_5_activate
+both	95	14	DECK1 Performance Pad 5	
+both	96	14	DECK2 Performance Pad 5	
+both	97	14	DECK3 Performance Pad 5	
+both	98	14	DECK4 Performance Pad 5	
+both	95	1C	DECK1 Performance Pad 5 (BEAT LOOP mode)	
+both	96	1C	DECK2 Performance Pad 5 (BEAT LOOP mode)	
+both	97	1C	DECK3 Performance Pad 5 (BEAT LOOP mode)	
+both	98	1C	DECK4 Performance Pad 5 (BEAT LOOP mode)	
+both	95	24	DECK1 Performance Pad 5	
+both	96	24	DECK2 Performance Pad 5	
+both	97	24	DECK3 Performance Pad 5	
+both	98	24	DECK4 Performance Pad 5	
+both	95	2C	DECK1 Performance Pad 5 (SLIP LOOP mode)	
+both	96	2C	DECK2 Performance Pad 5 (SLIP LOOP mode)	
+both	97	2C	DECK3 Performance Pad 5 (SLIP LOOP mode)	
+both	98	2C	DECK4 Performance Pad 5 (SLIP LOOP mode)	
+both	95	34	DECK1 Performance Pad 5 (BEAT JUMP mode)	
+both	96	34	DECK2 Performance Pad 5 (BEAT JUMP mode)	
+both	97	34	DECK3 Performance Pad 5 (BEAT JUMP mode)	
+both	98	34	DECK4 Performance Pad 5 (BEAT JUMP mode)	
+both	95	3C	DECK1 Performance Pad 5 (BEAT JUMP mode)	
+both	96	3C	DECK2 Performance Pad 5 (BEAT JUMP mode)	
+both	97	3C	DECK3 Performance Pad 5 (BEAT JUMP mode)	
+both	98	3C	DECK4 Performance Pad 5 (BEAT JUMP mode)	
+both	95	44	DECK1 Performance Pad 5 (EXTENSION1 mode)	
+both	96	44	DECK2 Performance Pad 5 (EXTENSION1 mode)	
+both	97	44	DECK3 Performance Pad 5 (EXTENSION1 mode)	
+both	98	44	DECK4 Performance Pad 5 (EXTENSION1 mode)	
+both	95	4C	DECK1 Performance Pad 5 (EXTENSION1 mode)	
+both	96	4C	DECK2 Performance Pad 5 (EXTENSION1 mode)	
+both	97	4C	DECK3 Performance Pad 5 (EXTENSION1 mode)	
+both	98	4C	DECK4 Performance Pad 5 (EXTENSION1 mode)	
+both	95	54	DECK1 Performance Pad 5	
+both	96	54	DECK2 Performance Pad 5	
+both	97	54	DECK3 Performance Pad 5	
+both	98	54	DECK4 Performance Pad 5	
+both	95	5C	DECK1 Performance Pad 5 (EXTENSION2 mode)	
+both	96	5C	DECK2 Performance Pad 5 (EXTENSION2 mode)	
+both	97	5C	DECK3 Performance Pad 5 (EXTENSION2 mode)	
+both	98	5C	DECK4 Performance Pad 5 (EXTENSION2 mode)	
+both	95	64	DECK1 Performance Pad 5	
+both	96	64	DECK2 Performance Pad 5	
+both	97	64	DECK3 Performance Pad 5	
+both	98	64	DECK4 Performance Pad 5	
+both	95	6C	DECK1 Performance Pad 5 (EXTENSION3 mode)	
+both	96	6C	DECK2 Performance Pad 5 (EXTENSION3 mode)	
+both	97	6C	DECK3 Performance Pad 5 (EXTENSION3 mode)	
+both	98	6C	DECK4 Performance Pad 5 (EXTENSION3 mode)	
+both	95	74	DECK1 Performance Pad 5	
+both	96	74	DECK2 Performance Pad 5	
+both	97	74	DECK3 Performance Pad 5	
+both	98	74	DECK4 Performance Pad 5	
+both	95	7C	DECK1 Performance Pad 5 (EXTENSION4 mode)	
+both	96	7C	DECK2 Performance Pad 5 (EXTENSION4 mode)	
+both	97	7C	DECK3 Performance Pad 5 (EXTENSION4 mode)	
+both	98	7C	DECK4 Performance Pad 5 (EXTENSION4 mode)	
+both	95	05	DECK1 Performance Pad 6 (HOT CUE mode BEAT LOOP mode SLIP LOOP mode BEAT JUMP mode EXTENSION1 mode EXTENSION2 mode EXTENSION3 mode EXTENSION4 mode)	
+both	96	05	DECK2 Performance Pad 6 (HOT CUE mode BEAT LOOP mode SLIP LOOP mode BEAT JUMP mode EXTENSION1 mode EXTENSION2 mode EXTENSION3 mode EXTENSION4 mode)	
+both	97	05	DECK3 Performance Pad 6 (HOT CUE mode BEAT LOOP mode SLIP LOOP mode BEAT JUMP mode EXTENSION1 mode EXTENSION2 mode EXTENSION3 mode EXTENSION4 mode)	
+both	98	05	DECK4 Performance Pad 6 (HOT CUE mode BEAT LOOP mode SLIP LOOP mode BEAT JUMP mode EXTENSION1 mode EXTENSION2 mode EXTENSION3 mode EXTENSION4 mode)	
+both	95	0D	DECK1 Performance Pad 6 (HOT CUE mode)	[Channel1] hotcue_6_activate
+both	96	0D	DECK2 Performance Pad 6 (HOT CUE mode)	[Channel2] hotcue_6_activate
+both	97	0D	DECK3 Performance Pad 6 (HOT CUE mode)	[Channel3] hotcue_6_activate
+both	98	0D	DECK4 Performance Pad 6 (HOT CUE mode)	[Channel4] hotcue_6_activate
+both	95	15	DECK1 Performance Pad 6	
+both	96	15	DECK2 Performance Pad 6	
+both	97	15	DECK3 Performance Pad 6	
+both	98	15	DECK4 Performance Pad 6	
+both	95	1D	DECK1 Performance Pad 6 (BEAT LOOP mode)	
+both	96	1D	DECK2 Performance Pad 6 (BEAT LOOP mode)	
+both	97	1D	DECK3 Performance Pad 6 (BEAT LOOP mode)	
+both	98	1D	DECK4 Performance Pad 6 (BEAT LOOP mode)	
+both	95	25	DECK1 Performance Pad 6	
+both	96	25	DECK2 Performance Pad 6	
+both	97	25	DECK3 Performance Pad 6	
+both	98	25	DECK4 Performance Pad 6	
+both	95	2D	DECK1 Performance Pad 6 (SLIP LOOP mode)	
+both	96	2D	DECK2 Performance Pad 6 (SLIP LOOP mode)	
+both	97	2D	DECK3 Performance Pad 6 (SLIP LOOP mode)	
+both	98	2D	DECK4 Performance Pad 6 (SLIP LOOP mode)	
+both	95	35	DECK1 Performance Pad 6 (BEAT JUMP mode)	
+both	96	35	DECK2 Performance Pad 6 (BEAT JUMP mode)	
+both	97	35	DECK3 Performance Pad 6 (BEAT JUMP mode)	
+both	98	35	DECK4 Performance Pad 6 (BEAT JUMP mode)	
+both	95	3D	DECK1 Performance Pad 6 (BEAT JUMP mode)	
+both	96	3D	DECK2 Performance Pad 6 (BEAT JUMP mode)	
+both	97	3D	DECK3 Performance Pad 6 (BEAT JUMP mode)	
+both	98	3D	DECK4 Performance Pad 6 (BEAT JUMP mode)	
+both	95	45	DECK1 Performance Pad 6 (EXTENSION1 mode)	
+both	96	45	DECK2 Performance Pad 6 (EXTENSION1 mode)	
+both	97	45	DECK3 Performance Pad 6 (EXTENSION1 mode)	
+both	98	45	DECK4 Performance Pad 6 (EXTENSION1 mode)	
+both	95	4D	DECK1 Performance Pad 6 (EXTENSION1 mode)	
+both	96	4D	DECK2 Performance Pad 6 (EXTENSION1 mode)	
+both	97	4D	DECK3 Performance Pad 6 (EXTENSION1 mode)	
+both	98	4D	DECK4 Performance Pad 6 (EXTENSION1 mode)	
+both	95	55	DECK1 Performance Pad 6 (EXTENSION2 mode)	
+both	96	55	DECK2 Performance Pad 6 (EXTENSION2 mode)	
+both	97	55	DECK3 Performance Pad 6 (EXTENSION2 mode)	
+both	98	55	DECK4 Performance Pad 6 (EXTENSION2 mode)	
+both	95	5D	DECK1 Performance Pad 6 (EXTENSION2 mode)	
+both	96	5D	DECK2 Performance Pad 6 (EXTENSION2 mode)	
+both	97	5D	DECK3 Performance Pad 6 (EXTENSION2 mode)	
+both	98	5D	DECK4 Performance Pad 6 (EXTENSION2 mode)	
+both	95	65	DECK1 Performance Pad 6	
+both	96	65	DECK2 Performance Pad 6	
+both	97	65	DECK3 Performance Pad 6	
+both	98	65	DECK4 Performance Pad 6	
+both	95	6D	DECK1 Performance Pad 6 (EXTENSION3 mode)	
+both	96	6D	DECK2 Performance Pad 6 (EXTENSION3 mode)	
+both	97	6D	DECK3 Performance Pad 6 (EXTENSION3 mode)	
+both	98	6D	DECK4 Performance Pad 6 (EXTENSION3 mode)	
+both	95	75	DECK1 Performance Pad 6	
+both	96	75	DECK2 Performance Pad 6	
+both	97	75	DECK3 Performance Pad 6	
+both	98	75	DECK4 Performance Pad 6	
+both	95	7D	DECK1 Performance Pad 6 (EXTENSION4 mode)	
+both	96	7D	DECK2 Performance Pad 6 (EXTENSION4 mode)	
+both	97	7D	DECK3 Performance Pad 6 (EXTENSION4 mode)	
+both	98	7D	DECK4 Performance Pad 6 (EXTENSION4 mode)	
+both	95	06	DECK1 Performance Pad 7 (HOT CUE mode BEAT LOOP mode SLIP LOOP mode BEAT JUMP mode EXTENSION1 mode EXTENSION2 mode EXTENSION3 mode EXTENSION4 mode)	
+both	96	06	DECK2 Performance Pad 7 (HOT CUE mode BEAT LOOP mode SLIP LOOP mode BEAT JUMP mode EXTENSION1 mode EXTENSION2 mode EXTENSION3 mode EXTENSION4 mode)	
+both	97	06	DECK3 Performance Pad 7 (HOT CUE mode BEAT LOOP mode SLIP LOOP mode BEAT JUMP mode EXTENSION1 mode EXTENSION2 mode EXTENSION3 mode EXTENSION4 mode)	
+both	98	06	DECK4 Performance Pad 7 (HOT CUE mode BEAT LOOP mode SLIP LOOP mode BEAT JUMP mode EXTENSION1 mode EXTENSION2 mode EXTENSION3 mode EXTENSION4 mode)	
+both	95	0E	DECK1 Performance Pad 7 (HOT CUE mode)	[Channel1] hotcue_7_activate
+both	96	0E	DECK2 Performance Pad 7 (HOT CUE mode)	[Channel2] hotcue_7_activate
+both	97	0E	DECK3 Performance Pad 7 (HOT CUE mode)	[Channel3] hotcue_7_activate
+both	98	0E	DECK4 Performance Pad 7 (HOT CUE mode)	[Channel4] hotcue_7_activate
+both	95	16	DECK1 Performance Pad 7 (BEAT LOOP mode)	
+both	96	16	DECK2 Performance Pad 7 (BEAT LOOP mode)	
+both	97	16	DECK3 Performance Pad 7 (BEAT LOOP mode)	
+both	98	16	DECK4 Performance Pad 7 (BEAT LOOP mode)	
+both	95	1E	DECK1 Performance Pad 7 (BEAT LOOP mode)	
+both	96	1E	DECK2 Performance Pad 7 (BEAT LOOP mode)	
+both	97	1E	DECK3 Performance Pad 7 (BEAT LOOP mode)	
+both	98	1E	DECK4 Performance Pad 7 (BEAT LOOP mode)	
+both	95	26	DECK1 Performance Pad 7 (SLIP LOOP mode)	
+both	96	26	DECK2 Performance Pad 7 (SLIP LOOP mode)	
+both	97	26	DECK3 Performance Pad 7 (SLIP LOOP mode)	
+both	98	26	DECK4 Performance Pad 7 (SLIP LOOP mode)	
+both	95	2E	DECK1 Performance Pad 7 (SLIP LOOP mode)	
+both	96	2E	DECK2 Performance Pad 7 (SLIP LOOP mode)	
+both	97	2E	DECK3 Performance Pad 7 (SLIP LOOP mode)	
+both	98	2E	DECK4 Performance Pad 7 (SLIP LOOP mode)	
+both	95	36	DECK1 Performance Pad 7	
+both	96	36	DECK2 Performance Pad 7	
+both	97	36	DECK3 Performance Pad 7	
+both	98	36	DECK4 Performance Pad 7	
+both	95	3E	DECK1 Performance Pad 7 (BEAT JUMP mode)	
+both	96	3E	DECK2 Performance Pad 7 (BEAT JUMP mode)	
+both	97	3E	DECK3 Performance Pad 7 (BEAT JUMP mode)	
+both	98	3E	DECK4 Performance Pad 7 (BEAT JUMP mode)	
+both	95	46	DECK1 Performance Pad 7	
+both	96	46	DECK2 Performance Pad 7	
+both	97	46	DECK3 Performance Pad 7	
+both	98	46	DECK4 Performance Pad 7	
+both	95	4E	DECK1 Performance Pad 7 (EXTENSION1 mode)	
+both	96	4E	DECK2 Performance Pad 7 (EXTENSION1 mode)	
+both	97	4E	DECK3 Performance Pad 7 (EXTENSION1 mode)	
+both	98	4E	DECK4 Performance Pad 7 (EXTENSION1 mode)	
+both	95	56	DECK1 Performance Pad 7 (EXTENSION2 mode)	
+both	96	56	DECK2 Performance Pad 7 (EXTENSION2 mode)	
+both	97	56	DECK3 Performance Pad 7 (EXTENSION2 mode)	
+both	98	56	DECK4 Performance Pad 7 (EXTENSION2 mode)	
+both	95	5E	DECK1 Performance Pad 7 (EXTENSION2 mode)	
+both	96	5E	DECK2 Performance Pad 7 (EXTENSION2 mode)	
+both	97	5E	DECK3 Performance Pad 7 (EXTENSION2 mode)	
+both	98	5E	DECK4 Performance Pad 7 (EXTENSION2 mode)	
+both	95	66	DECK1 Performance Pad 7 (EXTENSION3 mode)	
+both	96	66	DECK2 Performance Pad 7 (EXTENSION3 mode)	
+both	97	66	DECK3 Performance Pad 7 (EXTENSION3 mode)	
+both	98	66	DECK4 Performance Pad 7 (EXTENSION3 mode)	
+both	95	6E	DECK1 Performance Pad 7 (EXTENSION3 mode)	
+both	96	6E	DECK2 Performance Pad 7 (EXTENSION3 mode)	
+both	97	6E	DECK3 Performance Pad 7 (EXTENSION3 mode)	
+both	98	6E	DECK4 Performance Pad 7 (EXTENSION3 mode)	
+both	95	76	DECK1 Performance Pad 7	
+both	96	76	DECK2 Performance Pad 7	
+both	97	76	DECK3 Performance Pad 7	
+both	98	76	DECK4 Performance Pad 7	
+both	95	7E	DECK1 Performance Pad 7 (EXTENSION4 mode)	
+both	96	7E	DECK2 Performance Pad 7 (EXTENSION4 mode)	
+both	97	7E	DECK3 Performance Pad 7 (EXTENSION4 mode)	
+both	98	7E	DECK4 Performance Pad 7 (EXTENSION4 mode)	
+both	95	07	DECK1 Performance Pad 8 (HOT CUE mode BEAT LOOP mode SLIP LOOP mode BEAT JUMP mode EXTENSION1 mode EXTENSION2 mode EXTENSION3 mode EXTENSION4 mode)	
+both	96	07	DECK2 Performance Pad 8 (HOT CUE mode BEAT LOOP mode SLIP LOOP mode BEAT JUMP mode EXTENSION1 mode EXTENSION2 mode EXTENSION3 mode EXTENSION4 mode)	
+both	97	07	DECK3 Performance Pad 8 (HOT CUE mode BEAT LOOP mode SLIP LOOP mode BEAT JUMP mode EXTENSION1 mode EXTENSION2 mode EXTENSION3 mode EXTENSION4 mode)	
+both	98	07	DECK4 Performance Pad 8 (HOT CUE mode BEAT LOOP mode SLIP LOOP mode BEAT JUMP mode EXTENSION1 mode EXTENSION2 mode EXTENSION3 mode EXTENSION4 mode)	
+both	95	0F	DECK1 Performance Pad 8 (HOT CUE mode)	[Channel1] hotcue_8_activate
+both	96	0F	DECK2 Performance Pad 8 (HOT CUE mode)	[Channel2] hotcue_8_activate
+both	97	0F	DECK3 Performance Pad 8 (HOT CUE mode)	[Channel3] hotcue_8_activate
+both	98	0F	DECK4 Performance Pad 8 (HOT CUE mode)	[Channel4] hotcue_8_activate
+both	95	17	DECK1 Performance Pad 8 (BEAT LOOP mode)	
+both	96	17	DECK2 Performance Pad 8 (BEAT LOOP mode)	
+both	97	17	DECK3 Performance Pad 8 (BEAT LOOP mode)	
+both	98	17	DECK4 Performance Pad 8 (BEAT LOOP mode)	
+both	95	1F	DECK1 Performance Pad 8 (BEAT LOOP mode)	
+both	96	1F	DECK2 Performance Pad 8 (BEAT LOOP mode)	
+both	97	1F	DECK3 Performance Pad 8 (BEAT LOOP mode)	
+both	98	1F	DECK4 Performance Pad 8 (BEAT LOOP mode)	
+both	95	27	DECK1 Performance Pad 8 (SLIP LOOP mode)	
+both	96	27	DECK2 Performance Pad 8 (SLIP LOOP mode)	
+both	97	27	DECK3 Performance Pad 8 (SLIP LOOP mode)	
+both	98	27	DECK4 Performance Pad 8 (SLIP LOOP mode)	
+both	95	2F	DECK1 Performance Pad 8 (SLIP LOOP mode)	
+both	96	2F	DECK2 Performance Pad 8 (SLIP LOOP mode)	
+both	97	2F	DECK3 Performance Pad 8 (SLIP LOOP mode)	
+both	98	2F	DECK4 Performance Pad 8 (SLIP LOOP mode)	
+both	95	37	DECK1 Performance Pad 8 (BEAT JUMP mode)	
+both	96	37	DECK2 Performance Pad 8 (BEAT JUMP mode)	
+both	97	37	DECK3 Performance Pad 8 (BEAT JUMP mode)	
+both	98	37	DECK4 Performance Pad 8 (BEAT JUMP mode)	
+both	95	3F	DECK1 Performance Pad 8 (BEAT JUMP mode)	
+both	96	3F	DECK2 Performance Pad 8 (BEAT JUMP mode)	
+both	97	3F	DECK3 Performance Pad 8 (BEAT JUMP mode)	
+both	98	3F	DECK4 Performance Pad 8 (BEAT JUMP mode)	
+both	95	47	DECK1 Performance Pad 8	
+both	96	47	DECK2 Performance Pad 8	
+both	97	47	DECK3 Performance Pad 8	
+both	98	47	DECK4 Performance Pad 8	
+both	95	4F	DECK1 Performance Pad 8 (EXTENSION1 mode)	
+both	96	4F	DECK2 Performance Pad 8 (EXTENSION1 mode)	
+both	97	4F	DECK3 Performance Pad 8 (EXTENSION1 mode)	
+both	98	4F	DECK4 Performance Pad 8 (EXTENSION1 mode)	
+both	95	57	DECK1 Performance Pad 8	
+both	96	57	DECK2 Performance Pad 8	
+both	97	57	DECK3 Performance Pad 8	
+both	98	57	DECK4 Performance Pad 8	
+both	95	5F	DECK1 Performance Pad 8 (EXTENSION2 mode)	
+both	96	5F	DECK2 Performance Pad 8 (EXTENSION2 mode)	
+both	97	5F	DECK3 Performance Pad 8 (EXTENSION2 mode)	
+both	98	5F	DECK4 Performance Pad 8 (EXTENSION2 mode)	
+both	95	67	DECK1 Performance Pad 8 (EXTENSION3 mode)	
+both	96	67	DECK2 Performance Pad 8 (EXTENSION3 mode)	
+both	97	67	DECK3 Performance Pad 8 (EXTENSION3 mode)	
+both	98	67	DECK4 Performance Pad 8 (EXTENSION3 mode)	
+both	95	6F	DECK1 Performance Pad 8 (EXTENSION3 mode)	
+both	96	6F	DECK2 Performance Pad 8 (EXTENSION3 mode)	
+both	97	6F	DECK3 Performance Pad 8 (EXTENSION3 mode)	
+both	98	6F	DECK4 Performance Pad 8 (EXTENSION3 mode)	
+both	95	77	DECK1 Performance Pad 8 (EXTENSION4 mode)	
+both	96	77	DECK2 Performance Pad 8 (EXTENSION4 mode)	
+both	97	77	DECK3 Performance Pad 8 (EXTENSION4 mode)	
+both	98	77	DECK4 Performance Pad 8 (EXTENSION4 mode)	
+both	95	7F	DECK1 Performance Pad 8 (EXTENSION4 mode)	
+both	96	7F	DECK2 Performance Pad 8 (EXTENSION4 mode)	
+both	97	7F	DECK3 Performance Pad 8 (EXTENSION4 mode)	
+both	98	7F	DECK4 Performance Pad 8 (EXTENSION4 mode)	
+in	B0	64	DECK1 PC Control mod de	
+in	B1	64	DECK2 PC Control mod de	
+in	B2	64	DECK3 PC Control mod de	
+in	B3	64	DECK4 PC Control mod de	
+both	B4	65	Mixer mode	
+out	9B	00	Load Deck 1 (Trigger for LOAD illumination (Blinking LOAD button))	
+out	9B	01	Load Deck 2	
+out	9B	02	Load Deck 3	
+out	9B	03	Load Deck 4	
+out	BB	00	Load Deck 1 MSB	
+out	BB	20	Load Deck 1 LSB	
+out	BB	01	Load Deck 2 MSB	
+out	BB	21	Load Deck 2 LSB	
+out	BB	02	Load Deck 3 MSB	
+out	BB	22	Load Deck 3 LSB	
+out	BB	03	Load Deck 4 MSB	
+out	BB	23	Load Deck 4 LSB	
+out	BB	04	Load Deck 1 MSB	
+out	BB	24	Load Deck 1 LSB	
+out	BB	05	Load Deck 2 MSB	
+out	BB	25	Load Deck 2 LSB	
+out	BB	06	Load Deck 3 MSB	
+out	BB	26	Load Deck 3 LSB	
+out	BB	07	Load Deck 4 MSB	
+out	BB	27	Load Deck 4 LSB	
+in	B4	3A	EFFECT SELECT SLIP ROLL	
+in	B4	37	EFFECT SELECT ECHO	
+in	B4	33	EFFECT SELECT PING PONG	
+in	B4	2B	BEAT FX BANK(GUI) SPIRAL	
+in	B4	36	BEAT FX BANK(GUI) REVERB	
+in	B4	35	EFFECT SELECT TRANS	
+in	B4	3B	EFFECT SELECT FILTER	
+in	B4	32	EFFECT SELECT FLANGER	
+in	B4	39	BEAT FX BANK(GUI) PHASER	
+in	B4	3F	BEAT FX BANK(GUI) PITCH	
+in	B4	2E	BEAT FX BANK(GUI) ROLL	
+in	B4	3D	BEAT FX BANK(GUI) VINYL BRAKE	
+in	B4	3E	BEAT FX BANK(GUI) HELIX	

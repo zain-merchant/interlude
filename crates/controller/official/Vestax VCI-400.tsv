@@ -1,0 +1,211 @@
+# VCI-400 — Vestax "VCI-400 Owner's Manual", MIDI MAP pp. 22-23 (scanned, transcribed by eye)
+# source: https://web.archive.org/web/2015id_/http://help.vestax.co.jp/ja/usr_data/file/manual_pdf/VCI400s_Owners_Manual.pdf
+# CH-A..CH-D (decks A-D) use MIDI channels 3-6; FX left/right 13/14, master section 15, shift and crossfader 1.
+# Track pad Play/Cue expects use the Mode 1 rows (the LED table labels SW30/SW44 Cue and SW31/SW45 Play).
+both	9C	08	SW1 (FX Type Up / Left) (ch 13)	
+both	9C	09	SW2 (FX Type Down / Left) (ch 13)	
+both	9D	08	SW3 (FX Type Up / Left) (ch 14)	
+both	9D	09	SW4 (FX Type Down / Left) (ch 14)	
+both	9C	01	SW5 (FX Button 1 / Left) (ch 13)	
+both	9C	02	SW6 (FX Button 2 / Left) (ch 13)	
+both	9C	03	SW7 (FX Button 3 / Left) (ch 13)	
+both	9C	04	SW8 (FX Button 4 / Left) (ch 13)	
+both	9D	01	SW9 (FX Button 1 / Right) (ch 14)	
+both	9D	02	SW10 (FX Button 2 / Right) (ch 14)	
+both	9D	03	SW11 (FX Button 3 / Right) (ch 14)	
+both	9D	04	SW12 (FX Button 4 / Right) (ch 14)	
+in	90	01	SW13 (Shift / Left, Right) (ch 1)	
+both	92	07	SW14 (Cue 1) (ch 3)	[Channel1] hotcue_1_activate
+both	93	07	SW14 (Cue 1) (ch 4)	[Channel2] hotcue_1_activate
+both	94	07	SW14 (Cue 1) (ch 5)	[Channel3] hotcue_1_activate
+both	95	07	SW14 (Cue 1) (ch 6)	[Channel4] hotcue_1_activate
+both	92	08	SW15 (Cue 2) (ch 3)	[Channel1] hotcue_2_activate
+both	93	08	SW15 (Cue 2) (ch 4)	[Channel2] hotcue_2_activate
+both	94	08	SW15 (Cue 2) (ch 5)	[Channel3] hotcue_2_activate
+both	95	08	SW15 (Cue 2) (ch 6)	[Channel4] hotcue_2_activate
+both	92	09	SW16 (Cue 3) (ch 3)	[Channel1] hotcue_3_activate
+both	93	09	SW16 (Cue 3) (ch 4)	[Channel2] hotcue_3_activate
+both	94	09	SW16 (Cue 3) (ch 5)	[Channel3] hotcue_3_activate
+both	95	09	SW16 (Cue 3) (ch 6)	[Channel4] hotcue_3_activate
+both	92	0A	SW17 (Cue 4) (ch 3)	[Channel1] hotcue_4_activate
+both	93	0A	SW17 (Cue 4) (ch 4)	[Channel2] hotcue_4_activate
+both	94	0A	SW17 (Cue 4) (ch 5)	[Channel3] hotcue_4_activate
+both	95	0A	SW17 (Cue 4) (ch 6)	[Channel4] hotcue_4_activate
+both	92	0B	SW18 (Cue 5) (ch 3)	[Channel1] hotcue_5_activate
+both	93	0B	SW18 (Cue 5) (ch 4)	[Channel2] hotcue_5_activate
+both	94	0B	SW18 (Cue 5) (ch 5)	[Channel3] hotcue_5_activate
+both	95	0B	SW18 (Cue 5) (ch 6)	[Channel4] hotcue_5_activate
+both	92	0C	SW19 (Cue 6) (ch 3)	[Channel1] hotcue_6_activate
+both	93	0C	SW19 (Cue 6) (ch 4)	[Channel2] hotcue_6_activate
+both	94	0C	SW19 (Cue 6) (ch 5)	[Channel3] hotcue_6_activate
+both	95	0C	SW19 (Cue 6) (ch 6)	[Channel4] hotcue_6_activate
+both	92	0D	SW20 (Cue 7) (ch 3)	[Channel1] hotcue_7_activate
+both	93	0D	SW20 (Cue 7) (ch 4)	[Channel2] hotcue_7_activate
+both	94	0D	SW20 (Cue 7) (ch 5)	[Channel3] hotcue_7_activate
+both	95	0D	SW20 (Cue 7) (ch 6)	[Channel4] hotcue_7_activate
+both	92	0E	SW21 (Cue 8) (ch 3)	[Channel1] hotcue_8_activate
+both	93	0E	SW21 (Cue 8) (ch 4)	[Channel2] hotcue_8_activate
+both	94	0E	SW21 (Cue 8) (ch 5)	[Channel3] hotcue_8_activate
+both	95	0E	SW21 (Cue 8) (ch 6)	[Channel4] hotcue_8_activate
+both	92	15	SW22 (Mode 1) (ch 3)	
+both	93	15	SW22 (Mode 1) (ch 4)	
+both	94	15	SW22 (Mode 1) (ch 5)	
+both	95	15	SW22 (Mode 1) (ch 6)	
+both	92	16	SW23 (Mode 2) (ch 3)	
+both	93	16	SW23 (Mode 2) (ch 4)	
+both	94	16	SW23 (Mode 2) (ch 5)	
+both	95	16	SW23 (Mode 2) (ch 6)	
+both	92	17	SW24 (Mode 3) (ch 3)	
+both	93	17	SW24 (Mode 3) (ch 4)	
+both	94	17	SW24 (Mode 3) (ch 5)	
+both	95	17	SW24 (Mode 3) (ch 6)	
+both	92	18	SW25 (Mode 4) (ch 3)	
+both	93	18	SW25 (Mode 4) (ch 4)	
+both	94	18	SW25 (Mode 4) (ch 5)	
+both	95	18	SW25 (Mode 4) (ch 6)	
+both	94	1B	SW26 (Track Pad L1) / Mode 1 (ch 5)	
+both	94	1C	SW27 (Track Pad L2) / Mode 1 (ch 5)	
+both	94	1D	SW28 (Track Pad L3) / Mode 1 (ch 5)	
+both	94	1E	SW29 (Track Pad L4) / Mode 1 (ch 5)	
+both	92	19	SW30 (Track Pad L5) / Mode 1 (ch 3)	[Channel1] cue_default
+both	92	1A	SW31 (Track Pad L6) / Mode 1 (ch 3)	[Channel1] play
+both	94	1F	SW32 (Track Pad L1) / Mode 2 (ch 5)	
+both	94	20	SW33 (Track Pad L2) / Mode 2 (ch 5)	
+both	94	21	SW34 (Track Pad L3) / Mode 2 (ch 5)	
+both	94	22	SW35 (Track Pad L4) / Mode 2 (ch 5)	
+both	92	1B	SW36 (Track Pad L5) / Mode 2 (ch 3)	
+both	92	1C	SW37 (Track Pad L6) / Mode 2 (ch 3)	
+both	94	23	SW38 (Track Pad L1) / Mode 3 (ch 5)	
+both	94	24	SW39 (Track Pad L2) / Mode 3 (ch 5)	
+both	94	25	SW40 (Track Pad L3) / Mode 3 (ch 5)	
+both	94	26	SW41 (Track Pad L4) / Mode 3 (ch 5)	
+both	92	1D	SW42 (Track Pad L5) / Mode 3 (ch 3)	
+both	92	1E	SW43 (Track Pad L6) / Mode 3 (ch 3)	
+both	93	19	SW44 (Track Pad R1) / Mode 1 (ch 4)	[Channel2] cue_default
+both	93	1A	SW45 (Track Pad R2) / Mode 1 (ch 4)	[Channel2] play
+both	95	1B	SW46 (Track Pad R3) / Mode 1 (ch 6)	
+both	95	1C	SW47 (Track Pad R4) / Mode 1 (ch 6)	
+both	95	1D	SW48 (Track Pad R5) / Mode 1 (ch 6)	
+both	95	1E	SW49 (Track Pad R6) / Mode 1 (ch 6)	
+both	93	1B	SW50 (Track Pad R1) / Mode 2 (ch 4)	
+both	93	1C	SW51 (Track Pad R2) / Mode 2 (ch 4)	
+both	95	1F	SW52 (Track Pad R3) / Mode 2 (ch 6)	
+both	95	20	SW53 (Track Pad R4) / Mode 2 (ch 6)	
+both	95	21	SW54 (Track Pad R5) / Mode 2 (ch 6)	
+both	95	22	SW55 (Track Pad R6) / Mode 2 (ch 6)	
+both	93	1D	SW56 (Track Pad R1) / Mode 3 (ch 4)	
+both	93	1E	SW57 (Track Pad R2) / Mode 3 (ch 4)	
+both	95	23	SW58 (Track Pad R3) / Mode 3 (ch 6)	
+both	95	24	SW59 (Track Pad R4) / Mode 3 (ch 6)	
+both	95	25	SW60 (Track Pad R5) / Mode 3 (ch 6)	
+both	95	26	SW61 (Track Pad R6) / Mode 3 (ch 6)	
+in	9E	6A	SW62 (Master PFL) / first push (ch 15)	
+in	9E	69	SW63 (Master PFL) / second push (ch 15)	
+both	9E	6B	SW64 (F1) (ch 15)	
+both	9E	6C	SW65 (F2) (ch 15)	
+both	9E	6D	SW66 (F3) (ch 15)	
+both	9E	6E	SW67 (F4) (ch 15)	
+both	92	01	SW68 (SYNC) (ch 3)	[Channel1] sync_enabled|beatsync
+both	93	01	SW68 (SYNC) (ch 4)	[Channel2] sync_enabled|beatsync
+both	94	01	SW68 (SYNC) (ch 5)	[Channel3] sync_enabled|beatsync
+both	95	01	SW68 (SYNC) (ch 6)	[Channel4] sync_enabled|beatsync
+in	92	02	SW69 (LOAD) (ch 3)	[Channel1] LoadSelectedTrack
+in	93	02	SW69 (LOAD) (ch 4)	[Channel2] LoadSelectedTrack
+in	94	02	SW69 (LOAD) (ch 5)	[Channel3] LoadSelectedTrack
+in	95	02	SW69 (LOAD) (ch 6)	[Channel4] LoadSelectedTrack
+both	92	03	SW70 (FX Insert 1) (ch 3)	
+both	93	03	SW70 (FX Insert 1) (ch 4)	
+both	94	03	SW70 (FX Insert 1) (ch 5)	
+both	95	03	SW70 (FX Insert 1) (ch 6)	
+both	92	04	SW71 (FX Insert 2) (ch 3)	
+both	93	04	SW71 (FX Insert 2) (ch 4)	
+both	94	04	SW71 (FX Insert 2) (ch 5)	
+both	95	04	SW71 (FX Insert 2) (ch 6)	
+both	92	05	SW72 (PFL) (ch 3)	[Channel1] pfl
+both	93	05	SW72 (PFL) (ch 4)	[Channel2] pfl
+both	94	05	SW72 (PFL) (ch 5)	[Channel3] pfl
+both	95	05	SW72 (PFL) (ch 6)	[Channel4] pfl
+in	92	27	SW73 (Platter Touch) (ch 3)	
+in	93	27	SW73 (Platter Touch) (ch 4)	
+in	94	27	SW73 (Platter Touch) (ch 5)	
+in	95	27	SW73 (Platter Touch) (ch 6)	
+in	9E	71	SW74 (Browser Push) (ch 15)	
+in	9C	07	SW75 (FX ENC Push / Left) (ch 13)	
+in	9D	07	SW76 (FX ENC Push / Right) (ch 14)	
+in	92	11	SW77 (ENC 3 Push) (ch 3)	
+in	93	11	SW77 (ENC 3 Push) (ch 4)	
+in	94	11	SW77 (ENC 3 Push) (ch 5)	
+in	95	11	SW77 (ENC 3 Push) (ch 6)	
+in	92	14	SW78 (ENC 4 Push) (ch 3)	
+in	93	14	SW78 (ENC 4 Push) (ch 4)	
+in	94	14	SW78 (ENC 4 Push) (ch 5)	
+in	95	14	SW78 (ENC 4 Push) (ch 6)	
+in	92	06	SW79 (VINYL) (ch 3)	
+in	93	06	SW79 (VINYL) (ch 4)	
+in	94	06	SW79 (VINYL) (ch 5)	
+in	95	06	SW79 (VINYL) (ch 6)	
+in	92	22	SW80 (DECK SELECT-A) (ch 3)	
+in	92	23	SW81 (DECK SELECT-C) (ch 3)	
+in	93	22	SW82 (DECK SELECT-B) (ch 4)	
+in	93	23	SW83 (DECK SELECT-D) (ch 4)	
+in	92	1F	SW84 (Left side / MODE Left) (ch 3)	
+in	92	20	SW85 (Left side / MODE Center) (ch 3)	
+in	92	21	SW86 (Left side / MODE Right) (ch 3)	
+in	93	1F	SW87 (Right side / MODE Left) (ch 4)	
+in	93	20	SW88 (Right side / MODE Center) (ch 4)	
+in	93	21	SW89 (Right side / MODE Right) (ch 4)	
+in	BC	01	VR1 (FX Knob 1 / Left) (ch 13)	
+in	BC	02	VR2 (FX Knob 2 / Left) (ch 13)	
+in	BC	03	VR3 (FX Knob 3 / Left) (ch 13)	
+in	BD	01	VR4 (FX Knob 1 / Right) (ch 14)	
+in	BD	02	VR5 (FX Knob 2 / Right) (ch 14)	
+in	BD	03	VR6 (FX Knob 3 / Right) (ch 14)	
+in	B2	0C	VR7 (TRIM) (ch 3)	[Channel1] pregain
+in	B3	0C	VR7 (TRIM) (ch 4)	[Channel2] pregain
+in	B4	0C	VR7 (TRIM) (ch 5)	[Channel3] pregain
+in	B5	0C	VR7 (TRIM) (ch 6)	[Channel4] pregain
+in	B2	0D	VR8 (HI) (ch 3)	[EqualizerRack1_[Channel1]_Effect1] parameter3
+in	B3	0D	VR8 (HI) (ch 4)	[EqualizerRack1_[Channel2]_Effect1] parameter3
+in	B4	0D	VR8 (HI) (ch 5)	[EqualizerRack1_[Channel3]_Effect1] parameter3
+in	B5	0D	VR8 (HI) (ch 6)	[EqualizerRack1_[Channel4]_Effect1] parameter3
+in	B2	0E	VR9 (MID) (ch 3)	[EqualizerRack1_[Channel1]_Effect1] parameter2
+in	B3	0E	VR9 (MID) (ch 4)	[EqualizerRack1_[Channel2]_Effect1] parameter2
+in	B4	0E	VR9 (MID) (ch 5)	[EqualizerRack1_[Channel3]_Effect1] parameter2
+in	B5	0E	VR9 (MID) (ch 6)	[EqualizerRack1_[Channel4]_Effect1] parameter2
+in	B2	0F	VR10 (LOW) (ch 3)	[EqualizerRack1_[Channel1]_Effect1] parameter1
+in	B3	0F	VR10 (LOW) (ch 4)	[EqualizerRack1_[Channel2]_Effect1] parameter1
+in	B4	0F	VR10 (LOW) (ch 5)	[EqualizerRack1_[Channel3]_Effect1] parameter1
+in	B5	0F	VR10 (LOW) (ch 6)	[EqualizerRack1_[Channel4]_Effect1] parameter1
+in	B2	10	VR11 (FILTER) (ch 3)	[QuickEffectRack1_[Channel1]] super1
+in	B3	10	VR11 (FILTER) (ch 4)	[QuickEffectRack1_[Channel2]] super1
+in	B4	10	VR11 (FILTER) (ch 5)	[QuickEffectRack1_[Channel3]] super1
+in	B5	10	VR11 (FILTER) (ch 6)	[QuickEffectRack1_[Channel4]] super1
+both	B2	11	VR12 (Input Fader) (ch 3)	[Channel1] volume
+both	B3	11	VR12 (Input Fader) (ch 4)	[Channel2] volume
+both	B4	11	VR12 (Input Fader) (ch 5)	[Channel3] volume
+both	B5	11	VR12 (Input Fader) (ch 6)	[Channel4] volume
+in	B2	12	VR13 (Pitch Fader) (ch 3)	[Channel1] rate
+in	B3	12	VR13 (Pitch Fader) (ch 4)	[Channel2] rate
+in	B4	12	VR13 (Pitch Fader) (ch 5)	[Channel3] rate
+in	B5	12	VR13 (Pitch Fader) (ch 6)	[Channel4] rate
+in	BE	27	VR14 (F5 Volume) (ch 15)	
+in	B0	14	VR15 (Cross Fader) (ch 1)	[Master] crossfader
+in	BE	29	VR16 (CF CURVE) (ch 15)	
+in	BE	2A	VR17 (CUE / MASTER) (ch 15)	
+both	BE	2B	VR18 (MASTER) (ch 15)	
+in	BC	04	ENC1 (FX ENC / Left) (ch 13)	
+in	BD	04	ENC2 (FX ENC / Right) (ch 14)	
+in	B2	05	ENC3 (ch 3)	
+in	B3	05	ENC3 (ch 4)	
+in	B4	05	ENC3 (ch 5)	
+in	B5	05	ENC3 (ch 6)	
+in	B2	06	ENC4 (ch 3)	
+in	B3	06	ENC4 (ch 4)	
+in	B4	06	ENC4 (ch 5)	
+in	B5	06	ENC4 (ch 6)	
+in	BE	28	ENC5 (BROWSER) (ch 15)	[Library] MoveVertical
+in	B2	13	ENC6 (Platter Position) (ch 3)	
+in	B3	13	ENC6 (Platter Position) (ch 4)	
+in	B4	13	ENC6 (Platter Position) (ch 5)	
+in	B5	13	ENC6 (Platter Position) (ch 6)	
+out	BE	2C	Master Meter LED Right (value selects segment 1-11) (ch 15)	

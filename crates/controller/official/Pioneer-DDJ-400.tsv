@@ -1,0 +1,402 @@
+# DDJ-400 — Pioneer DJ "List of MIDI messages" version 1.00
+# source: https://downloads.support.alphatheta.com/software_info/dj-controllers/DDJ-400/DDJ-400_MIDI_Message_List_E1.pdf
+in	B6	40	Rotary Selector	[Library] MoveVertical
+in	B6	64	Rotary Selector +SHIFT	
+in	96	41	Rotary Selector	
+in	96	42	Rotary Selector +SHIFT	
+in	96	46	LOAD (DECK1)	[Channel1] LoadSelectedTrack
+in	96	68	LOAD (DECK1) +SHIFT	
+in	96	47	LOAD (DECK2)	[Channel2] LoadSelectedTrack
+in	96	7A	LOAD (DECK2) +SHIFT	
+both	90	0B	DECK1 PLAY/PAUSE	[Channel1] play
+both	91	0B	DECK2 PLAY/PAUSE	[Channel2] play
+both	90	47	DECK1 PLAY/PAUSE +SHIFT	
+both	91	47	DECK2 PLAY/PAUSE +SHIFT	
+both	90	0C	DECK1 CUE	[Channel1] cue_default
+both	91	0C	DECK2 CUE	[Channel2] cue_default
+both	90	48	DECK1 CUE +SHIFT	
+both	91	48	DECK2 CUE +SHIFT	
+in	B0	22	DECK1 JOG DIAL (Platter) (Vinyl mode On)	
+in	B1	22	DECK2 JOG DIAL (Platter) (Vinyl mode On)	
+in	B0	23	DECK1 JOG DIAL (Platter) (Vinyl mode Off)	
+in	B1	23	DECK2 JOG DIAL (Platter) (Vinyl mode Off)	
+in	B0	29	DECK1 JOG DIAL (Platter) +SHIFT	
+in	B1	29	DECK2 JOG DIAL (Platter) +SHIFT	
+in	90	36	DECK1 JOG DIAL (Platter) (touch)	
+in	91	36	DECK2 JOG DIAL (Platter) (touch)	
+in	90	67	DECK1 JOG DIAL (Platter) (touch) +SHIFT	
+in	91	67	DECK2 JOG DIAL (Platter) (touch) +SHIFT	
+in	B0	21	DECK1 JOG DIAL (Wheel side)	
+in	B1	21	DECK2 JOG DIAL (Wheel side)	
+in	B0	00	DECK1 TEMPO MSB	[Channel1] rate
+in	B0	20	DECK1 TEMPO LSB	
+in	B1	00	DECK2 TEMPO MSB	[Channel2] rate
+in	B1	20	DECK2 TEMPO LSB	
+both	90	58	DECK1 BEAT SYNC	[Channel1] sync_enabled|beatsync
+both	91	58	DECK2 BEAT SYNC	[Channel2] sync_enabled|beatsync
+in	90	5C	DECK1 BEAT SYNC (LONG)	
+in	91	5C	DECK2 BEAT SYNC (LONG)	
+both	90	60	DECK1 BEAT SYNC +SHIFT	
+both	91	60	DECK2 BEAT SYNC +SHIFT	
+both	90	10	DECK1 LOOP IN/4BEAT	[Channel1] loop_in
+both	91	10	DECK2 LOOP IN/4BEAT	[Channel2] loop_in
+in	90	14	DECK1 LOOP IN/4BEAT (LONG)	
+in	91	14	DECK2 LOOP IN/4BEAT (LONG)	
+both	90	4C	DECK1 LOOP IN/4BEAT +SHIFT	
+both	91	4C	DECK2 LOOP IN/4BEAT +SHIFT	
+both	90	11	DECK1 LOOP OUT	[Channel1] loop_out
+both	91	11	DECK2 LOOP OUT	[Channel2] loop_out
+both	90	4E	DECK1 LOOP OUT +SHIFT	
+both	91	4E	DECK2 LOOP OUT +SHIFT	
+both	90	4D	DECK1 RELOOP/EXIT	[Channel1] reloop_toggle
+both	91	4D	DECK2 RELOOP/EXIT	[Channel2] reloop_toggle
+both	90	50	DECK1 RELOOP/EXIT +SHIFT	
+both	91	50	DECK2 RELOOP/EXIT +SHIFT	
+in	90	51	DECK1 CUE/LOOP CALL ◀	
+in	91	51	DECK2 CUE/LOOP CALL ◀	
+in	90	3E	DECK1 CUE/LOOP CALL ◀ +SHIFT	
+in	91	3E	DECK2 CUE/LOOP CALL ◀ +SHIFT	
+in	90	53	DECK1 CUE/LOOP CALL ▶	
+in	91	53	DECK2 CUE/LOOP CALL ▶	
+in	90	3D	DECK1 CUE/LOOP CALL ▶ +SHIFT	
+in	91	3D	DECK2 CUE/LOOP CALL ▶ +SHIFT	
+in	90	3F	DECK1 SHIFT	
+in	91	3F	DECK2 SHIFT	
+in	B6	1F	CROSSFADER MSB	[Master] crossfader
+in	B6	3F	CROSSFADER LSB	
+in	B0	13	DECK1 CH FADER MSB	[Channel1] volume
+in	B0	33	DECK1 CH FADER LSB	
+in	B1	13	DECK2 CH FADER MSB	[Channel2] volume
+in	B1	33	DECK2 CH FADER LSB	
+in	90	66	DECK1 CROSSFADER / CH FADER (Fader Start) (Zero → not Zero)	
+in	91	66	DECK2 CROSSFADER / CH FADER (Fader Start) (Zero → not Zero)	
+in	90	52	DECK1 CROSSFADER / CH FADER (Fader Start) (Not Zero → Zero)	
+in	91	52	DECK2 CROSSFADER / CH FADER (Fader Start) (Not Zero → Zero)	
+in	B0	04	DECK1 TRIM MSB	
+in	B0	24	DECK1 TRIM LSB	
+in	B1	04	DECK2 TRIM MSB	
+in	B1	24	DECK2 TRIM LSB	
+in	B0	07	DECK1 EQ HI MSB	[EqualizerRack1_[Channel1]_Effect1] parameter3
+in	B0	27	DECK1 EQ HI LSB	
+in	B1	07	DECK2 EQ HI MSB	[EqualizerRack1_[Channel2]_Effect1] parameter3
+in	B1	27	DECK2 EQ HI LSB	
+in	B0	0B	DECK1 EQ MID MSB	[EqualizerRack1_[Channel1]_Effect1] parameter2
+in	B0	2B	DECK1 EQ MID LSB	
+in	B1	0B	DECK2 EQ MID MSB	[EqualizerRack1_[Channel2]_Effect1] parameter2
+in	B1	2B	DECK2 EQ MID LSB	
+in	B0	0F	DECK1 EQ LOW MSB	[EqualizerRack1_[Channel1]_Effect1] parameter1
+in	B0	2F	DECK1 EQ LOW LSB	
+in	B1	0F	DECK2 EQ LOW MSB	[EqualizerRack1_[Channel2]_Effect1] parameter1
+in	B1	2F	DECK2 EQ LOW LSB	
+both	90	54	DECK1 CH CUE (Headphone)	[Channel1] pfl
+both	91	54	DECK2 CH CUE (Headphone)	[Channel2] pfl
+both	90	68	DECK1 (Headphone)	
+both	91	68	DECK2 (Headphone)	
+in	B6	08	MASTER LEVEL MSB	
+in	B6	28	MASTER LEVEL LSB	
+both	96	63	MASTER CUE	
+both	96	78	MASTER CUE	
+in	B6	0C	HEADPHONES MIXING MSB	
+in	B6	2C	HEADPHONES MIXING LSB	
+in	B6	0D	HEADPHONES LEVEL MSB	
+in	B6	2D	HEADPHONES LEVEL LSB	
+out	B0	02	DECK1 CHANNEL LEVEL METER	
+out	B1	02	DECK2 CHANNEL LEVEL METER	
+in	B6	17	FILTER (CH1) MSB	
+in	B6	37	FILTER (CH1) LSB	
+in	B6	18	FILTER (CH2) MSB	[QuickEffectRack1_[Channel2]] super1
+in	B6	38	FILTER (CH2) LSB	
+in	94	4A	BEAT ◀	
+in	94	66	BEAT ◀	
+in	94	4B	BEAT ▶	
+in	94	6B	BEAT ▶	
+in	94	63	BEAT FX SELECT	
+in	94	64	BEAT FX SELECT	
+in	94	10	BEAT FX CH SELECT (CH 1)	
+in	94	11	BEAT FX CH SELECT (CH 2)	
+in	94	14	BEAT FX CH SELECT (MASTER)	
+in	B4	02	BEAT FX LEVEL/DEPTH MSB	
+in	B4	22	BEAT FX LEVEL/DEPTH LSB	
+both	94	47	BEAT FX ON/OFF	
+both	94	43	ON/OFF	
+both	97	00	DECK1 PAD 1 (HOT CUE mode)	[Channel1] hotcue_1_activate
+both	99	00	DECK2 PAD 1 (HOT CUE mode)	[Channel2] hotcue_1_activate
+both	98	00	DECK1 PAD 1 (HOT CUE mode) +SHIFT	
+both	9A	00	DECK2 PAD 1 (HOT CUE mode) +SHIFT	
+both	97	60	DECK1 PAD 1 (BEAT LOOP mode)	
+both	99	60	DECK2 PAD 1 (BEAT LOOP mode)	
+both	98	60	DECK1 PAD 1 (BEAT LOOP mode) +SHIFT	
+both	9A	60	DECK2 PAD 1 (BEAT LOOP mode) +SHIFT	
+both	97	20	DECK1 PAD 1 (BEAT JUMP mode)	
+both	99	20	DECK2 PAD 1 (BEAT JUMP mode)	
+both	98	20	DECK1 PAD 1 (BEAT JUMP mode) +SHIFT	
+both	9A	20	DECK2 PAD 1 (BEAT JUMP mode) +SHIFT	
+both	97	30	DECK1 PAD 1 (SAMPLER mode)	
+both	99	30	DECK2 PAD 1 (SAMPLER mode)	
+both	98	30	DECK1 PAD 1 (SAMPLER mode) +SHIFT	
+both	9A	30	DECK2 PAD 1 (SAMPLER mode) +SHIFT	
+both	97	40	DECK1 PAD 1 (KEYBOARD mode)	
+both	99	40	DECK2 PAD 1 (KEYBOARD mode)	
+both	98	40	DECK1 PAD 1 (KEYBOARD mode) +SHIFT	
+both	9A	40	DECK2 PAD 1 (KEYBOARD mode) +SHIFT	
+both	97	10	DECK1 PAD 1 (PAD FX mode 1)	
+both	99	10	DECK2 PAD 1 (PAD FX mode 1)	
+both	98	10	DECK1 PAD 1 (PAD FX mode 1) +SHIFT	
+both	9A	10	DECK2 PAD 1 (PAD FX mode 1) +SHIFT	
+both	97	50	DECK1 PAD 1 (PAD FX mode 2)	
+both	99	50	DECK2 PAD 1 (PAD FX mode 2)	
+both	98	50	DECK1 PAD 1 (PAD FX mode 2) +SHIFT	
+both	9A	50	DECK2 PAD 1 (PAD FX mode 2) +SHIFT	
+both	97	70	DECK1 PAD 1	
+both	99	70	DECK2 PAD 1	
+both	98	70	DECK1 PAD 1 +SHIFT	
+both	9A	70	DECK2 PAD 1 +SHIFT	
+both	97	01	DECK1 PAD 2 (HOT CUE mode)	[Channel1] hotcue_2_activate
+both	99	01	DECK2 PAD 2 (HOT CUE mode)	[Channel2] hotcue_2_activate
+both	98	01	DECK1 PAD 2 (HOT CUE mode) +SHIFT	
+both	9A	01	DECK2 PAD 2 (HOT CUE mode) +SHIFT	
+both	97	61	DECK1 PAD 2 (BEAT LOOP mode)	
+both	99	61	DECK2 PAD 2 (BEAT LOOP mode)	
+both	98	61	DECK1 PAD 2 (BEAT LOOP mode) +SHIFT	
+both	9A	61	DECK2 PAD 2 (BEAT LOOP mode) +SHIFT	
+both	97	21	DECK1 PAD 2 (BEAT JUMP mode)	
+both	99	21	DECK2 PAD 2 (BEAT JUMP mode)	
+both	98	21	DECK1 PAD 2 (BEAT JUMP mode) +SHIFT	
+both	9A	21	DECK2 PAD 2 (BEAT JUMP mode) +SHIFT	
+both	97	31	DECK1 PAD 2 (SAMPLER mode)	
+both	99	31	DECK2 PAD 2 (SAMPLER mode)	
+both	98	31	DECK1 PAD 2 (SAMPLER mode) +SHIFT	
+both	9A	31	DECK2 PAD 2 (SAMPLER mode) +SHIFT	
+both	97	41	DECK1 PAD 2 (KEYBOARD mode)	
+both	99	41	DECK2 PAD 2 (KEYBOARD mode)	
+both	98	41	DECK1 PAD 2 (KEYBOARD mode) +SHIFT	
+both	9A	41	DECK2 PAD 2 (KEYBOARD mode) +SHIFT	
+both	97	11	DECK1 PAD 2 (PAD FX mode 1)	
+both	99	11	DECK2 PAD 2 (PAD FX mode 1)	
+both	98	11	DECK1 PAD 2 (PAD FX mode 1) +SHIFT	
+both	9A	11	DECK2 PAD 2 (PAD FX mode 1) +SHIFT	
+both	97	51	DECK1 PAD 2 (PAD FX mode 2)	
+both	99	51	DECK2 PAD 2 (PAD FX mode 2)	
+both	98	51	DECK1 PAD 2 (PAD FX mode 2) +SHIFT	
+both	9A	51	DECK2 PAD 2 (PAD FX mode 2) +SHIFT	
+both	97	71	DECK1 PAD 2	
+both	99	71	DECK2 PAD 2	
+both	98	71	DECK1 PAD 2 +SHIFT	
+both	9A	71	DECK2 PAD 2 +SHIFT	
+both	97	02	DECK1 PAD 3 (HOT CUE mode)	[Channel1] hotcue_3_activate
+both	99	02	DECK2 PAD 3 (HOT CUE mode)	[Channel2] hotcue_3_activate
+both	98	02	DECK1 PAD 3 (HOT CUE mode) +SHIFT	
+both	9A	02	DECK2 PAD 3 (HOT CUE mode) +SHIFT	
+both	97	62	DECK1 PAD 3 (BEAT LOOP mode)	
+both	99	62	DECK2 PAD 3 (BEAT LOOP mode)	
+both	98	62	DECK1 PAD 3 (BEAT LOOP mode) +SHIFT	
+both	9A	62	DECK2 PAD 3 (BEAT LOOP mode) +SHIFT	
+both	97	22	DECK1 PAD 3 (BEAT JUMP mode)	
+both	99	22	DECK2 PAD 3 (BEAT JUMP mode)	
+both	98	22	DECK1 PAD 3 (BEAT JUMP mode) +SHIFT	
+both	9A	22	DECK2 PAD 3 (BEAT JUMP mode) +SHIFT	
+both	97	32	DECK1 PAD 3 (SAMPLER mode)	
+both	99	32	DECK2 PAD 3 (SAMPLER mode)	
+both	98	32	DECK1 PAD 3 (SAMPLER mode) +SHIFT	
+both	9A	32	DECK2 PAD 3 (SAMPLER mode) +SHIFT	
+both	97	42	DECK1 PAD 3 (KEYBOARD mode)	
+both	99	42	DECK2 PAD 3 (KEYBOARD mode)	
+both	98	42	DECK1 PAD 3 (KEYBOARD mode) +SHIFT	
+both	9A	42	DECK2 PAD 3 (KEYBOARD mode) +SHIFT	
+both	97	12	DECK1 PAD 3 (PAD FX mode 1)	
+both	99	12	DECK2 PAD 3 (PAD FX mode 1)	
+both	98	12	DECK1 PAD 3 (PAD FX mode 1) +SHIFT	
+both	9A	12	DECK2 PAD 3 (PAD FX mode 1) +SHIFT	
+both	97	52	DECK1 PAD 3 (PAD FX mode 2)	
+both	99	52	DECK2 PAD 3 (PAD FX mode 2)	
+both	98	52	DECK1 PAD 3 (PAD FX mode 2) +SHIFT	
+both	9A	52	DECK2 PAD 3 (PAD FX mode 2) +SHIFT	
+both	97	72	DECK1 PAD 3	
+both	99	72	DECK2 PAD 3	
+both	98	72	DECK1 PAD 3 +SHIFT	
+both	9A	72	DECK2 PAD 3 +SHIFT	
+both	97	03	DECK1 PAD 4 (HOT CUE mode)	[Channel1] hotcue_4_activate
+both	99	03	DECK2 PAD 4 (HOT CUE mode)	[Channel2] hotcue_4_activate
+both	98	03	DECK1 PAD 4 (HOT CUE mode) +SHIFT	
+both	9A	03	DECK2 PAD 4 (HOT CUE mode) +SHIFT	
+both	97	63	DECK1 PAD 4 (BEAT LOOP mode)	
+both	99	63	DECK2 PAD 4 (BEAT LOOP mode)	
+both	98	63	DECK1 PAD 4 (BEAT LOOP mode) +SHIFT	
+both	9A	63	DECK2 PAD 4 (BEAT LOOP mode) +SHIFT	
+both	97	23	DECK1 PAD 4 (BEAT JUMP mode)	
+both	99	23	DECK2 PAD 4 (BEAT JUMP mode)	
+both	98	23	DECK1 PAD 4 (BEAT JUMP mode) +SHIFT	
+both	9A	23	DECK2 PAD 4 (BEAT JUMP mode) +SHIFT	
+both	97	33	DECK1 PAD 4 (SAMPLER mode)	
+both	99	33	DECK2 PAD 4 (SAMPLER mode)	
+both	98	33	DECK1 PAD 4 (SAMPLER mode) +SHIFT	
+both	9A	33	DECK2 PAD 4 (SAMPLER mode) +SHIFT	
+both	97	43	DECK1 PAD 4 (KEYBOARD mode)	
+both	99	43	DECK2 PAD 4 (KEYBOARD mode)	
+both	98	43	DECK1 PAD 4 (KEYBOARD mode) +SHIFT	
+both	9A	43	DECK2 PAD 4 (KEYBOARD mode) +SHIFT	
+both	97	13	DECK1 PAD 4 (PAD FX mode 1)	
+both	99	13	DECK2 PAD 4 (PAD FX mode 1)	
+both	98	13	DECK1 PAD 4 (PAD FX mode 1) +SHIFT	
+both	9A	13	DECK2 PAD 4 (PAD FX mode 1) +SHIFT	
+both	97	53	DECK1 PAD 4 (PAD FX mode 2)	
+both	99	53	DECK2 PAD 4 (PAD FX mode 2)	
+both	98	53	DECK1 PAD 4 (PAD FX mode 2) +SHIFT	
+both	9A	53	DECK2 PAD 4 (PAD FX mode 2) +SHIFT	
+both	97	73	DECK1 PAD 4	
+both	99	73	DECK2 PAD 4	
+both	98	73	DECK1 PAD 4 +SHIFT	
+both	9A	73	DECK2 PAD 4 +SHIFT	
+both	97	04	DECK1 PAD 5 (HOT CUE mode)	[Channel1] hotcue_5_activate
+both	99	04	DECK2 PAD 5 (HOT CUE mode)	[Channel2] hotcue_5_activate
+both	98	04	DECK1 PAD 5 (HOT CUE mode) +SHIFT	
+both	9A	04	DECK2 PAD 5 (HOT CUE mode) +SHIFT	
+both	97	64	DECK1 PAD 5 (BEAT LOOP mode)	
+both	99	64	DECK2 PAD 5 (BEAT LOOP mode)	
+both	98	64	DECK1 PAD 5 (BEAT LOOP mode) +SHIFT	
+both	9A	64	DECK2 PAD 5 (BEAT LOOP mode) +SHIFT	
+both	97	24	DECK1 PAD 5 (BEAT JUMP mode)	
+both	99	24	DECK2 PAD 5 (BEAT JUMP mode)	
+both	98	24	DECK1 PAD 5 (BEAT JUMP mode) +SHIFT	
+both	9A	24	DECK2 PAD 5 (BEAT JUMP mode) +SHIFT	
+both	97	34	DECK1 PAD 5 (SAMPLER mode)	
+both	99	34	DECK2 PAD 5 (SAMPLER mode)	
+both	98	34	DECK1 PAD 5 (SAMPLER mode) +SHIFT	
+both	9A	34	DECK2 PAD 5 (SAMPLER mode) +SHIFT	
+both	97	44	DECK1 PAD 5 (KEYBOARD mode)	
+both	99	44	DECK2 PAD 5 (KEYBOARD mode)	
+both	98	44	DECK1 PAD 5 (KEYBOARD mode) +SHIFT	
+both	9A	44	DECK2 PAD 5 (KEYBOARD mode) +SHIFT	
+both	97	14	DECK1 PAD 5 (PAD FX mode 1)	
+both	99	14	DECK2 PAD 5 (PAD FX mode 1)	
+both	98	14	DECK1 PAD 5 (PAD FX mode 1) +SHIFT	
+both	9A	14	DECK2 PAD 5 (PAD FX mode 1) +SHIFT	
+both	97	54	DECK1 PAD 5 (PAD FX mode 2)	
+both	99	54	DECK2 PAD 5 (PAD FX mode 2)	
+both	98	54	DECK1 PAD 5 (PAD FX mode 2) +SHIFT	
+both	9A	54	DECK2 PAD 5 (PAD FX mode 2) +SHIFT	
+both	97	74	DECK1 PAD 5	
+both	99	74	DECK2 PAD 5	
+both	98	74	DECK1 PAD 5 +SHIFT	
+both	9A	74	DECK2 PAD 5 +SHIFT	
+both	97	05	DECK1 PAD 6 (HOT CUE mode)	[Channel1] hotcue_6_activate
+both	99	05	DECK2 PAD 6 (HOT CUE mode)	[Channel2] hotcue_6_activate
+both	98	05	DECK1 PAD 6 (HOT CUE mode) +SHIFT	
+both	9A	05	DECK2 PAD 6 (HOT CUE mode) +SHIFT	
+both	97	65	DECK1 PAD 6 (BEAT LOOP mode)	
+both	99	65	DECK2 PAD 6 (BEAT LOOP mode)	
+both	98	65	DECK1 PAD 6 (BEAT LOOP mode) +SHIFT	
+both	9A	65	DECK2 PAD 6 (BEAT LOOP mode) +SHIFT	
+both	97	25	DECK1 PAD 6 (BEAT JUMP mode)	
+both	99	25	DECK2 PAD 6 (BEAT JUMP mode)	
+both	98	25	DECK1 PAD 6 (BEAT JUMP mode) +SHIFT	
+both	9A	25	DECK2 PAD 6 (BEAT JUMP mode) +SHIFT	
+both	97	35	DECK1 PAD 6 (SAMPLER mode)	
+both	99	35	DECK2 PAD 6 (SAMPLER mode)	
+both	98	35	DECK1 PAD 6 (SAMPLER mode) +SHIFT	
+both	9A	35	DECK2 PAD 6 (SAMPLER mode) +SHIFT	
+both	97	45	DECK1 PAD 6 (KEYBOARD mode)	
+both	99	45	DECK2 PAD 6 (KEYBOARD mode)	
+both	98	45	DECK1 PAD 6 (KEYBOARD mode) +SHIFT	
+both	9A	45	DECK2 PAD 6 (KEYBOARD mode) +SHIFT	
+both	97	15	DECK1 PAD 6 (PAD FX mode 1)	
+both	99	15	DECK2 PAD 6 (PAD FX mode 1)	
+both	98	15	DECK1 PAD 6 (PAD FX mode 1) +SHIFT	
+both	9A	15	DECK2 PAD 6 (PAD FX mode 1) +SHIFT	
+both	97	55	DECK1 PAD 6 (PAD FX mode 2)	
+both	99	55	DECK2 PAD 6 (PAD FX mode 2)	
+both	98	55	DECK1 PAD 6 (PAD FX mode 2) +SHIFT	
+both	9A	55	DECK2 PAD 6 (PAD FX mode 2) +SHIFT	
+both	97	75	DECK1 PAD 6	
+both	99	75	DECK2 PAD 6	
+both	98	75	DECK1 PAD 6 +SHIFT	
+both	9A	75	DECK2 PAD 6 +SHIFT	
+both	97	06	DECK1 PAD 7 (HOT CUE mode)	[Channel1] hotcue_7_activate
+both	99	06	DECK2 PAD 7 (HOT CUE mode)	[Channel2] hotcue_7_activate
+both	98	06	DECK1 PAD 7 (HOT CUE mode) +SHIFT	
+both	9A	06	DECK2 PAD 7 (HOT CUE mode) +SHIFT	
+both	97	66	DECK1 PAD 7 (BEAT LOOP mode)	
+both	99	66	DECK2 PAD 7 (BEAT LOOP mode)	
+both	98	66	DECK1 PAD 7 (BEAT LOOP mode) +SHIFT	
+both	9A	66	DECK2 PAD 7 (BEAT LOOP mode) +SHIFT	
+both	97	26	DECK1 PAD 7 (BEAT JUMP mode)	
+both	99	26	DECK2 PAD 7 (BEAT JUMP mode)	
+both	98	26	DECK1 PAD 7 (BEAT JUMP mode) +SHIFT	
+both	9A	26	DECK2 PAD 7 (BEAT JUMP mode) +SHIFT	
+both	97	36	DECK1 PAD 7 (SAMPLER mode)	
+both	99	36	DECK2 PAD 7 (SAMPLER mode)	
+both	98	36	DECK1 PAD 7 (SAMPLER mode) +SHIFT	
+both	9A	36	DECK2 PAD 7 (SAMPLER mode) +SHIFT	
+both	97	46	DECK1 PAD 7 (KEYBOARD mode)	
+both	99	46	DECK2 PAD 7 (KEYBOARD mode)	
+both	98	46	DECK1 PAD 7 (KEYBOARD mode) +SHIFT	
+both	9A	46	DECK2 PAD 7 (KEYBOARD mode) +SHIFT	
+both	97	16	DECK1 PAD 7 (PAD FX mode 1)	
+both	99	16	DECK2 PAD 7 (PAD FX mode 1)	
+both	98	16	DECK1 PAD 7 (PAD FX mode 1) +SHIFT	
+both	9A	16	DECK2 PAD 7 (PAD FX mode 1) +SHIFT	
+both	97	56	DECK1 PAD 7 (PAD FX mode 2)	
+both	99	56	DECK2 PAD 7 (PAD FX mode 2)	
+both	98	56	DECK1 PAD 7 (PAD FX mode 2) +SHIFT	
+both	9A	56	DECK2 PAD 7 (PAD FX mode 2) +SHIFT	
+both	97	76	DECK1 PAD 7	
+both	99	76	DECK2 PAD 7	
+both	98	76	DECK1 PAD 7 +SHIFT	
+both	9A	76	DECK2 PAD 7 +SHIFT	
+both	97	07	DECK1 PAD 8 (HOT CUE mode)	[Channel1] hotcue_8_activate
+both	99	07	DECK2 PAD 8 (HOT CUE mode)	[Channel2] hotcue_8_activate
+both	98	07	DECK1 PAD 8 (HOT CUE mode) +SHIFT	
+both	9A	07	DECK2 PAD 8 (HOT CUE mode) +SHIFT	
+both	97	67	DECK1 PAD 8 (BEAT LOOP mode)	
+both	99	67	DECK2 PAD 8 (BEAT LOOP mode)	
+both	98	67	DECK1 PAD 8 (BEAT LOOP mode) +SHIFT	
+both	9A	67	DECK2 PAD 8 (BEAT LOOP mode) +SHIFT	
+both	97	27	DECK1 PAD 8 (BEAT JUMP mode)	
+both	99	27	DECK2 PAD 8 (BEAT JUMP mode)	
+both	98	27	DECK1 PAD 8 (BEAT JUMP mode) +SHIFT	
+both	9A	27	DECK2 PAD 8 (BEAT JUMP mode) +SHIFT	
+both	97	37	DECK1 PAD 8 (SAMPLER mode)	
+both	99	37	DECK2 PAD 8 (SAMPLER mode)	
+both	98	37	DECK1 PAD 8 (SAMPLER mode) +SHIFT	
+both	9A	37	DECK2 PAD 8 (SAMPLER mode) +SHIFT	
+both	97	47	DECK1 PAD 8 (KEYBOARD mode)	
+both	99	47	DECK2 PAD 8 (KEYBOARD mode)	
+both	98	47	DECK1 PAD 8 (KEYBOARD mode) +SHIFT	
+both	9A	47	DECK2 PAD 8 (KEYBOARD mode) +SHIFT	
+both	97	17	DECK1 PAD 8 (PAD FX mode 1)	
+both	99	17	DECK2 PAD 8 (PAD FX mode 1)	
+both	98	17	DECK1 PAD 8 (PAD FX mode 1) +SHIFT	
+both	9A	17	DECK2 PAD 8 (PAD FX mode 1) +SHIFT	
+both	97	57	DECK1 PAD 8 (PAD FX mode 2)	
+both	99	57	DECK2 PAD 8 (PAD FX mode 2)	
+both	98	57	DECK1 PAD 8 (PAD FX mode 2) +SHIFT	
+both	9A	57	DECK2 PAD 8 (PAD FX mode 2) +SHIFT	
+both	97	77	DECK1 PAD 8	
+both	99	77	DECK2 PAD 8	
+both	98	77	DECK1 PAD 8 +SHIFT	
+both	9A	77	DECK2 PAD 8 +SHIFT	
+both	90	1B	DECK1 HOT CUE	
+both	91	1B	DECK2 HOT CUE	
+both	90	69	DECK1 HOT CUE	
+both	91	69	DECK2 HOT CUE	
+both	90	6D	DECK1 BEAT LOOP	
+both	91	6D	DECK2 BEAT LOOP	
+both	90	1E	DECK1 BEAT LOOP	
+both	91	1E	DECK2 BEAT LOOP	
+both	90	20	DECK1 BEAT JUMP	
+both	91	20	DECK2 BEAT JUMP	
+both	90	6B	DECK1 BEAT JUMP	
+both	91	6B	DECK2 BEAT JUMP	
+both	90	22	DECK1 SAMPER	
+both	91	22	DECK2 SAMPER	
+both	90	6F	DECK1 SAMPER	
+both	91	6F	DECK2 SAMPER	
+out	9F	00	LOADED (CH 1)	
+out	9F	01	LOADED (CH 2)	
+out	9F	4B	LEVEL METER SETTING	
+out	90	17	DECK1 VINYL MODE	
+out	91	17	DECK2 VINYL MODE	
+out	9F	42	FADER START SETTING	
+out	9F	43	CROSSFADER REV. SETTING	
+out	BF	41	CUT LAG SETTING	
+out	BF	45	BACK SPIN LENGTH	

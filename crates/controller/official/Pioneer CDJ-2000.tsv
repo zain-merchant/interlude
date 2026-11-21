@@ -1,0 +1,75 @@
+# CDJ-2000 — Pioneer "Operating Instructions" DRB1474C, List of MIDI Messages
+# source: https://downloads.support.alphatheta.com/manuals/CDJ_2000_DRB1474C_manual.pdf
+# n (MIDI channel) is set on the unit; rows are given for the channels this mapping uses.
+in	B0	10	CH1 JOG (TOUCH)	
+in	B0	1D	CH1 TEMPO SLIDER	[Channel1] rate
+in	B0	1E	CH1 TOUCH/BRAKE	
+in	B0	1F	CH1 RELEASE/START	
+in	B0	30	CH1 JOG RING	
+in	B0	4F	CH1 ENCODER	
+in	90	00	CH1 PLAY/PAUSE	[Channel1] play
+in	90	01	CH1 CUE	[Channel1] cue_default
+in	90	02	CH1 SEARCH FWD	
+in	90	03	CH1 SEARCH REV	
+in	90	04	CH1 TRACK SEARCH NEXT	
+in	90	05	CH1 TRACK SEARCH REV	
+in	90	06	CH1 LOOP IN	[Channel1] loop_in
+in	90	07	CH1 LOOP OUT	[Channel1] loop_out
+in	90	08	CH1 RELOOP	
+in	90	0A	CH1 MEMORY	
+in	90	0B	CH1 CALL NEXT	
+in	90	0C	CH1 CALL PREV	
+in	90	0D	CH1 DELETE	
+in	90	0E	CH1 TIME/A.CUE	
+in	90	10	CH1 TEMPO RANGE	
+in	90	11	CH1 MASTER TEMPO	
+in	90	12	CH1 JOG MODE	
+in	90	18	CH1 HOT CUE A	[Channel1] hotcue_1_activate
+in	90	19	CH1 HOT CUE B	[Channel1] hotcue_2_activate
+in	90	1A	CH1 HOT CUE C	[Channel1] hotcue_3_activate
+in	90	1C	CH1 HOT CUE REC/CALL	
+in	90	1D	CH1 TEMPO RESET	
+in	90	20	CH1 JOG TOUCH	
+in	90	21	CH1 REVERSE	
+in	90	2A	CH1 4 BEAT LOOP	
+in	90	2F	CH1 EJECT	
+in	90	30	CH1 TAG TRACK	
+in	90	32	CH1 BACK	
+in	90	33	CH1 ENCODER PUSH	
+in	B0	1C	CH1 NEEDLE	
+in	B1	10	CH2 JOG (TOUCH)	
+in	B1	1D	CH2 TEMPO SLIDER	[Channel2] rate
+in	B1	1E	CH2 TOUCH/BRAKE	
+in	B1	1F	CH2 RELEASE/START	
+in	B1	30	CH2 JOG RING	
+in	B1	4F	CH2 ENCODER	
+in	91	00	CH2 PLAY/PAUSE	[Channel2] play
+in	91	01	CH2 CUE	[Channel2] cue_default
+in	91	02	CH2 SEARCH FWD	
+in	91	03	CH2 SEARCH REV	
+in	91	04	CH2 TRACK SEARCH NEXT	
+in	91	05	CH2 TRACK SEARCH REV	
+in	91	06	CH2 LOOP IN	[Channel2] loop_in
+in	91	07	CH2 LOOP OUT	[Channel2] loop_out
+in	91	08	CH2 RELOOP	
+in	91	0A	CH2 MEMORY	
+in	91	0B	CH2 CALL NEXT	
+in	91	0C	CH2 CALL PREV	
+in	91	0D	CH2 DELETE	
+in	91	0E	CH2 TIME/A.CUE	
+in	91	10	CH2 TEMPO RANGE	
+in	91	11	CH2 MASTER TEMPO	
+in	91	12	CH2 JOG MODE	
+in	91	18	CH2 HOT CUE A	[Channel2] hotcue_1_activate
+in	91	19	CH2 HOT CUE B	[Channel2] hotcue_2_activate
+in	91	1A	CH2 HOT CUE C	[Channel2] hotcue_3_activate
+in	91	1C	CH2 HOT CUE REC/CALL	
+in	91	1D	CH2 TEMPO RESET	
+in	91	20	CH2 JOG TOUCH	
+in	91	21	CH2 REVERSE	
+in	91	2A	CH2 4 BEAT LOOP	
+in	91	2F	CH2 EJECT	
+in	91	30	CH2 TAG TRACK	
+in	91	32	CH2 BACK	
+in	91	33	CH2 ENCODER PUSH	
+in	B1	1C	CH2 NEEDLE	
