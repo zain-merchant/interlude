@@ -81,3 +81,30 @@ out	98	40	Deck B Level meter segment 5
 out	98	41	Deck B Level meter segment 6	
 out	98	42	Deck B Level meter segment 7	
 out	98	43	Deck B Level meter segment 8	
+extra-in	96	07	SHIFT layer, touch pad and sampler messages the manual's MIDI list leaves out
+extra-in	96	4A	SHIFT layer, touch pad and sampler messages the manual's MIDI list leaves out
+extra-in	96	4B	SHIFT layer, touch pad and sampler messages the manual's MIDI list leaves out
+extra-in	96	4C	SHIFT layer, touch pad and sampler messages the manual's MIDI list leaves out
+extra-in	96	4D	SHIFT layer, touch pad and sampler messages the manual's MIDI list leaves out
+extra-in	97	20	SHIFT layer, touch pad and sampler messages the manual's MIDI list leaves out
+extra-in	97	28	SHIFT layer, touch pad and sampler messages the manual's MIDI list leaves out
+extra-in	97	29	SHIFT layer, touch pad and sampler messages the manual's MIDI list leaves out
+extra-in	97	2A	SHIFT layer, touch pad and sampler messages the manual's MIDI list leaves out
+extra-in	97	2B	SHIFT layer, touch pad and sampler messages the manual's MIDI list leaves out
+extra-in	97	2C	SHIFT layer, touch pad and sampler messages the manual's MIDI list leaves out
+extra-in	97	2D	SHIFT layer, touch pad and sampler messages the manual's MIDI list leaves out
+extra-in	98	20	SHIFT layer, touch pad and sampler messages the manual's MIDI list leaves out
+extra-in	98	28	SHIFT layer, touch pad and sampler messages the manual's MIDI list leaves out
+extra-in	98	29	SHIFT layer, touch pad and sampler messages the manual's MIDI list leaves out
+extra-in	98	2A	SHIFT layer, touch pad and sampler messages the manual's MIDI list leaves out
+extra-in	98	2B	SHIFT layer, touch pad and sampler messages the manual's MIDI list leaves out
+extra-in	98	2C	SHIFT layer, touch pad and sampler messages the manual's MIDI list leaves out
+extra-in	98	2D	SHIFT layer, touch pad and sampler messages the manual's MIDI list leaves out
+extra-in	B6	11	SHIFT layer, touch pad and sampler messages the manual's MIDI list leaves out
+extra-in	B6	12	SHIFT layer, touch pad and sampler messages the manual's MIDI list leaves out
+extra-in	B7	0F	SHIFT layer, touch pad and sampler messages the manual's MIDI list leaves out
+extra-in	B7	10	SHIFT layer, touch pad and sampler messages the manual's MIDI list leaves out
+extra-in	B8	0C	SHIFT layer, touch pad and sampler messages the manual's MIDI list leaves out
+extra-in	B8	0D	SHIFT layer, touch pad and sampler messages the manual's MIDI list leaves out
+extra-in	B8	0F	SHIFT layer, touch pad and sampler messages the manual's MIDI list leaves out
+extra-in	B8	10	SHIFT layer, touch pad and sampler messages the manual's MIDI list leaves out

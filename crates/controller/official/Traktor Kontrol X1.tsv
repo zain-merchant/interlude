@@ -82,3 +82,11 @@ in	B0	54	PLAY (left deck) +SHIFT
 in	B0	56	SYNC (left deck) +SHIFT	
 in	B0	55	PLAY (right deck) +SHIFT	
 in	B0	57	SYNC (right deck) +SHIFT	
+extra-in	B0	12	button CC the default-mapping diagram leaves out
+extra-in	B0	13	button CC the default-mapping diagram leaves out
+extra-in	B0	18	button CC the default-mapping diagram leaves out
+extra-in	B0	19	button CC the default-mapping diagram leaves out
+extra-in	B0	3E	button CC the default-mapping diagram leaves out
+extra-in	B0	3F	button CC the default-mapping diagram leaves out
+extra-in	B0	44	button CC the default-mapping diagram leaves out
+extra-in	B0	45	button CC the default-mapping diagram leaves out

@@ -111,3 +111,5 @@ out	B1	4B	DECK2 LED OFF trigger (data2 = LED number)
 out	B1	4C	DECK2 LED BLINK ON trigger (data2 = LED number)	
 in	E0	00	DECK1 PITCH SLIDER (pitch bend)	[Channel1] rate
 in	E1	00	DECK2 PITCH SLIDER (pitch bend)	[Channel2] rate
+extra-in	90	51	jog wheel touch, sent as a note on the jog's number; the list gives only the jog CC
+extra-in	91	51	jog wheel touch, sent as a note on the jog's number; the list gives only the jog CC

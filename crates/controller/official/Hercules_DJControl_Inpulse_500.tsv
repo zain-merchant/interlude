@@ -492,3 +492,15 @@ both	97	7C	DECK2 Pad 5 (Mode 8) +SHIFT
 both	97	7D	DECK2 Pad 6 (Mode 8) +SHIFT	
 both	97	7E	DECK2 Pad 7 (Mode 8) +SHIFT	
 both	97	7F	DECK2 Pad 8 (Mode 8) +SHIFT	
+extra-both	90	03	used by Hercules' own mapping; not in their list (which also misprints deck 1 volume LSB as B1 00)
+extra-out	90	05	used by Hercules' own mapping; not in their list (which also misprints deck 1 volume LSB as B1 00)
+extra-in	91	08	used by Hercules' own mapping; not in their list (which also misprints deck 1 volume LSB as B1 00)
+extra-in	92	08	used by Hercules' own mapping; not in their list (which also misprints deck 1 volume LSB as B1 00)
+extra-in	94	08	used by Hercules' own mapping; not in their list (which also misprints deck 1 volume LSB as B1 00)
+extra-in	95	08	used by Hercules' own mapping; not in their list (which also misprints deck 1 volume LSB as B1 00)
+extra-in	B1	0C	used by Hercules' own mapping; not in their list (which also misprints deck 1 volume LSB as B1 00)
+extra-in	B1	20	used by Hercules' own mapping; not in their list (which also misprints deck 1 volume LSB as B1 00)
+extra-in	B2	0C	used by Hercules' own mapping; not in their list (which also misprints deck 1 volume LSB as B1 00)
+extra-in	B4	00	used by Hercules' own mapping; not in their list (which also misprints deck 1 volume LSB as B1 00)
+extra-in	B4	0C	used by Hercules' own mapping; not in their list (which also misprints deck 1 volume LSB as B1 00)
+extra-in	B5	0C	used by Hercules' own mapping; not in their list (which also misprints deck 1 volume LSB as B1 00)

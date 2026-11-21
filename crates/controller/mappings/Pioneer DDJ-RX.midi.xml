@@ -1297,16 +1297,6 @@
             </control>
             <control>
                 <group>[Channel1]</group>
-                <key>PioneerDDJSX.samplerVelocityVolume</key>
-                <description>Sampler 1 play with velocity volume, Button: PAD1 (in SAMPLER-Mode, VELOCITY active, Deck 1 active)</description>
-                <status>0xB7</status>
-                <midino>0x30</midino>
-                <options>
-                    <script-binding/>
-                </options>
-            </control>
-            <control>
-                <group>[Channel1]</group>
                 <key>PioneerDDJSX.stopSamplerButtons</key>
                 <description>Sampler 1 stop, Button: SHIFT &amp; PAD1 (in SAMPLER-Mode, Deck 1 active)</description>
                 <status>0x97</status>
@@ -1320,16 +1310,6 @@
                 <key>PioneerDDJSX.samplerButtons</key>
                 <description>Sampler 2 play, Button: PAD2 (in SAMPLER-Mode, Deck 1 active)</description>
                 <status>0x97</status>
-                <midino>0x31</midino>
-                <options>
-                    <script-binding/>
-                </options>
-            </control>
-            <control>
-                <group>[Channel1]</group>
-                <key>PioneerDDJSX.samplerVelocityVolume</key>
-                <description>Sampler 2 play with velocity volume, Button: PAD2 (in SAMPLER-Mode, VELOCITY active, Deck 1 active)</description>
-                <status>0xB7</status>
                 <midino>0x31</midino>
                 <options>
                     <script-binding/>
@@ -1357,16 +1337,6 @@
             </control>
             <control>
                 <group>[Channel1]</group>
-                <key>PioneerDDJSX.samplerVelocityVolume</key>
-                <description>Sampler 3 play with velocity volume, Button: PAD3 (in SAMPLER-Mode, VELOCITY active, Deck 1 active)</description>
-                <status>0xB7</status>
-                <midino>0x32</midino>
-                <options>
-                    <script-binding/>
-                </options>
-            </control>
-            <control>
-                <group>[Channel1]</group>
                 <key>PioneerDDJSX.stopSamplerButtons</key>
                 <description>Sampler 3 stop, Button: SHIFT &amp; PAD3 (in SAMPLER-Mode, Deck 1 active)</description>
                 <status>0x97</status>
@@ -1380,16 +1350,6 @@
                 <key>PioneerDDJSX.samplerButtons</key>
                 <description>Sampler 4 play, Button: PAD4 (in SAMPLER-Mode, Deck 1 active)</description>
                 <status>0x97</status>
-                <midino>0x33</midino>
-                <options>
-                    <script-binding/>
-                </options>
-            </control>
-            <control>
-                <group>[Channel1]</group>
-                <key>PioneerDDJSX.samplerVelocityVolume</key>
-                <description>Sampler 4 play with velocity volume, Button: PAD4 (in SAMPLER-Mode, VELOCITY active, Deck 1 active)</description>
-                <status>0xB7</status>
                 <midino>0x33</midino>
                 <options>
                     <script-binding/>
@@ -1417,16 +1377,6 @@
             </control>
             <control>
                 <group>[Channel1]</group>
-                <key>PioneerDDJSX.samplerVelocityVolume</key>
-                <description>Sampler 5 play with velocity volume, Button: PAD5 (in SAMPLER-Mode, VELOCITY active, Deck 1 active)</description>
-                <status>0xB7</status>
-                <midino>0x34</midino>
-                <options>
-                    <script-binding/>
-                </options>
-            </control>
-            <control>
-                <group>[Channel1]</group>
                 <key>PioneerDDJSX.stopSamplerButtons</key>
                 <description>Sampler 5 stop, Button: SHIFT &amp; PAD5 (in SAMPLER-Mode, Deck 1 active)</description>
                 <status>0x97</status>
@@ -1440,16 +1390,6 @@
                 <key>PioneerDDJSX.samplerButtons</key>
                 <description>Sampler 6 play, Button: PAD6 (in SAMPLER-Mode, Deck 1 active)</description>
                 <status>0x97</status>
-                <midino>0x35</midino>
-                <options>
-                    <script-binding/>
-                </options>
-            </control>
-            <control>
-                <group>[Channel1]</group>
-                <key>PioneerDDJSX.samplerVelocityVolume</key>
-                <description>Sampler 6 play with velocity volume, Button: PAD6 (in SAMPLER-Mode, VELOCITY active, Deck 1 active)</description>
-                <status>0xB7</status>
                 <midino>0x35</midino>
                 <options>
                     <script-binding/>
@@ -1477,16 +1417,6 @@
             </control>
             <control>
                 <group>[Channel1]</group>
-                <key>PioneerDDJSX.samplerVelocityVolume</key>
-                <description>Sampler 7 play with velocity volume, Button: PAD7 (in SAMPLER-Mode, VELOCITY active, Deck 1 active)</description>
-                <status>0xB7</status>
-                <midino>0x36</midino>
-                <options>
-                    <script-binding/>
-                </options>
-            </control>
-            <control>
-                <group>[Channel1]</group>
                 <key>PioneerDDJSX.stopSamplerButtons</key>
                 <description>Sampler 7 stop, Button: SHIFT &amp; PAD7 (in SAMPLER-Mode, Deck 1 active)</description>
                 <status>0x97</status>
@@ -1500,16 +1430,6 @@
                 <key>PioneerDDJSX.samplerButtons</key>
                 <description>Sampler 8 play, Button: PAD8 (in SAMPLER-Mode, Deck 1 active)</description>
                 <status>0x97</status>
-                <midino>0x37</midino>
-                <options>
-                    <script-binding/>
-                </options>
-            </control>
-            <control>
-                <group>[Channel1]</group>
-                <key>PioneerDDJSX.samplerVelocityVolume</key>
-                <description>Sampler 8 play with velocity volume, Button: PAD8 (in SAMPLER-Mode, VELOCITY active, Deck 1 active)</description>
-                <status>0xB7</status>
                 <midino>0x37</midino>
                 <options>
                     <script-binding/>
@@ -1641,16 +1561,6 @@
                 <description>Set PAD-Mode, Button: SAMPLER LEFT (Deck 1 active)</description>
                 <status>0x90</status>
                 <midino>0x22</midino>
-                <options>
-                    <script-binding/>
-                </options>
-            </control>
-            <control>
-                <group>[Channel1]</group>
-                <key>PioneerDDJSX.toggleSamplerVelocityMode</key>
-                <description>Toggle Sampler-Pads behaviour: normal (max. volume) / velocity (volume = velocity), Button: SAMPLER Longpress (in SAMPLER-Mode, Deck 1 active)</description>
-                <status>0x90</status>
-                <midino>0x41</midino>
                 <options>
                     <script-binding/>
                 </options>
@@ -2757,16 +2667,6 @@
             </control>
             <control>
                 <group>[Channel2]</group>
-                <key>PioneerDDJSX.samplerVelocityVolume</key>
-                <description>Sampler 1 play with velocity volume, Button: PAD1 (in SAMPLER-Mode, VELOCITY active, Deck 2 active)</description>
-                <status>0xB8</status>
-                <midino>0x30</midino>
-                <options>
-                    <script-binding/>
-                </options>
-            </control>
-            <control>
-                <group>[Channel2]</group>
                 <key>PioneerDDJSX.stopSamplerButtons</key>
                 <description>Sampler 1 stop, Button: SHIFT &amp; PAD1 (in SAMPLER-Mode, Deck 2 active)</description>
                 <status>0x98</status>
@@ -2780,16 +2680,6 @@
                 <key>PioneerDDJSX.samplerButtons</key>
                 <description>Sampler 2 play, Button: PAD2 (in SAMPLER-Mode, Deck 2 active)</description>
                 <status>0x98</status>
-                <midino>0x31</midino>
-                <options>
-                    <script-binding/>
-                </options>
-            </control>
-            <control>
-                <group>[Channel2]</group>
-                <key>PioneerDDJSX.samplerVelocityVolume</key>
-                <description>Sampler 2 play with velocity volume, Button: PAD2 (in SAMPLER-Mode, VELOCITY active, Deck 2 active)</description>
-                <status>0xB8</status>
                 <midino>0x31</midino>
                 <options>
                     <script-binding/>
@@ -2817,16 +2707,6 @@
             </control>
             <control>
                 <group>[Channel2]</group>
-                <key>PioneerDDJSX.samplerVelocityVolume</key>
-                <description>Sampler 3 play with velocity volume, Button: PAD3 (in SAMPLER-Mode, VELOCITY active, Deck 2 active)</description>
-                <status>0xB8</status>
-                <midino>0x32</midino>
-                <options>
-                    <script-binding/>
-                </options>
-            </control>
-            <control>
-                <group>[Channel2]</group>
                 <key>PioneerDDJSX.stopSamplerButtons</key>
                 <description>Sampler 3 stop, Button: SHIFT &amp; PAD3 (in SAMPLER-Mode, Deck 2 active)</description>
                 <status>0x98</status>
@@ -2840,16 +2720,6 @@
                 <key>PioneerDDJSX.samplerButtons</key>
                 <description>Sampler 4 play, Button: PAD4 (in SAMPLER-Mode, Deck 2 active)</description>
                 <status>0x98</status>
-                <midino>0x33</midino>
-                <options>
-                    <script-binding/>
-                </options>
-            </control>
-            <control>
-                <group>[Channel2]</group>
-                <key>PioneerDDJSX.samplerVelocityVolume</key>
-                <description>Sampler 4 play with velocity volume, Button: PAD4 (in SAMPLER-Mode, VELOCITY active, Deck 2 active)</description>
-                <status>0xB8</status>
                 <midino>0x33</midino>
                 <options>
                     <script-binding/>
@@ -2877,16 +2747,6 @@
             </control>
             <control>
                 <group>[Channel2]</group>
-                <key>PioneerDDJSX.samplerVelocityVolume</key>
-                <description>Sampler 5 play with velocity volume, Button: PAD5 (in SAMPLER-Mode, VELOCITY active, Deck 2 active)</description>
-                <status>0xB8</status>
-                <midino>0x34</midino>
-                <options>
-                    <script-binding/>
-                </options>
-            </control>
-            <control>
-                <group>[Channel2]</group>
                 <key>PioneerDDJSX.stopSamplerButtons</key>
                 <description>Sampler 5 stop, Button: SHIFT &amp; PAD5 (in SAMPLER-Mode, Deck 2 active)</description>
                 <status>0x98</status>
@@ -2900,16 +2760,6 @@
                 <key>PioneerDDJSX.samplerButtons</key>
                 <description>Sampler 6 play, Button: PAD6 (in SAMPLER-Mode, Deck 2 active)</description>
                 <status>0x98</status>
-                <midino>0x35</midino>
-                <options>
-                    <script-binding/>
-                </options>
-            </control>
-            <control>
-                <group>[Channel2]</group>
-                <key>PioneerDDJSX.samplerVelocityVolume</key>
-                <description>Sampler 6 play with velocity volume, Button: PAD6 (in SAMPLER-Mode, VELOCITY active, Deck 2 active)</description>
-                <status>0xB8</status>
                 <midino>0x35</midino>
                 <options>
                     <script-binding/>
@@ -2937,16 +2787,6 @@
             </control>
             <control>
                 <group>[Channel2]</group>
-                <key>PioneerDDJSX.samplerVelocityVolume</key>
-                <description>Sampler 7 play with velocity volume, Button: PAD7 (in SAMPLER-Mode, VELOCITY active, Deck 2 active)</description>
-                <status>0xB8</status>
-                <midino>0x36</midino>
-                <options>
-                    <script-binding/>
-                </options>
-            </control>
-            <control>
-                <group>[Channel2]</group>
                 <key>PioneerDDJSX.stopSamplerButtons</key>
                 <description>Sampler 7 stop, Button: SHIFT &amp; PAD7 (in SAMPLER-Mode, Deck 2 active)</description>
                 <status>0x98</status>
@@ -2960,16 +2800,6 @@
                 <key>PioneerDDJSX.samplerButtons</key>
                 <description>Sampler 8 play, Button: PAD8 (in SAMPLER-Mode, Deck 2 active)</description>
                 <status>0x98</status>
-                <midino>0x37</midino>
-                <options>
-                    <script-binding/>
-                </options>
-            </control>
-            <control>
-                <group>[Channel2]</group>
-                <key>PioneerDDJSX.samplerVelocityVolume</key>
-                <description>Sampler 8 play with velocity volume, Button: PAD8 (in SAMPLER-Mode, VELOCITY active, Deck 2 active)</description>
-                <status>0xB8</status>
                 <midino>0x37</midino>
                 <options>
                     <script-binding/>
@@ -3101,16 +2931,6 @@
                 <description>Set PAD-Mode, Button: SAMPLER RIGHT (Deck 2 active)</description>
                 <status>0x91</status>
                 <midino>0x22</midino>
-                <options>
-                    <script-binding/>
-                </options>
-            </control>
-            <control>
-                <group>[Channel2]</group>
-                <key>PioneerDDJSX.toggleSamplerVelocityMode</key>
-                <description>Toggle Sampler-Pads behaviour: normal (max. volume) / velocity (volume = velocity), Button: SAMPLER Longpress (in SAMPLER-Mode, Deck 2 active)</description>
-                <status>0x91</status>
-                <midino>0x41</midino>
                 <options>
                     <script-binding/>
                 </options>
@@ -4217,16 +4037,6 @@
             </control>
             <control>
                 <group>[Channel3]</group>
-                <key>PioneerDDJSX.samplerVelocityVolume</key>
-                <description>Sampler 1 play with velocity volume, Button: PAD1 (in SAMPLER-Mode, VELOCITY active, Deck 3 active)</description>
-                <status>0xB9</status>
-                <midino>0x30</midino>
-                <options>
-                    <script-binding/>
-                </options>
-            </control>
-            <control>
-                <group>[Channel3]</group>
                 <key>PioneerDDJSX.stopSamplerButtons</key>
                 <description>Sampler 1 stop, Button: SHIFT &amp; PAD1 (in SAMPLER-Mode, Deck 3 active)</description>
                 <status>0x99</status>
@@ -4240,16 +4050,6 @@
                 <key>PioneerDDJSX.samplerButtons</key>
                 <description>Sampler 2 play, Button: PAD2 (in SAMPLER-Mode, Deck 3 active)</description>
                 <status>0x99</status>
-                <midino>0x31</midino>
-                <options>
-                    <script-binding/>
-                </options>
-            </control>
-            <control>
-                <group>[Channel3]</group>
-                <key>PioneerDDJSX.samplerVelocityVolume</key>
-                <description>Sampler 2 play with velocity volume, Button: PAD2 (in SAMPLER-Mode, VELOCITY active, Deck 3 active)</description>
-                <status>0xB9</status>
                 <midino>0x31</midino>
                 <options>
                     <script-binding/>
@@ -4277,16 +4077,6 @@
             </control>
             <control>
                 <group>[Channel3]</group>
-                <key>PioneerDDJSX.samplerVelocityVolume</key>
-                <description>Sampler 3 play with velocity volume, Button: PAD3 (in SAMPLER-Mode, VELOCITY active, Deck 3 active)</description>
-                <status>0xB9</status>
-                <midino>0x32</midino>
-                <options>
-                    <script-binding/>
-                </options>
-            </control>
-            <control>
-                <group>[Channel3]</group>
                 <key>PioneerDDJSX.stopSamplerButtons</key>
                 <description>Sampler 3 stop, Button: SHIFT &amp; PAD3 (in SAMPLER-Mode, Deck 3 active)</description>
                 <status>0x99</status>
@@ -4300,16 +4090,6 @@
                 <key>PioneerDDJSX.samplerButtons</key>
                 <description>Sampler 4 play, Button: PAD4 (in SAMPLER-Mode, Deck 3 active)</description>
                 <status>0x99</status>
-                <midino>0x33</midino>
-                <options>
-                    <script-binding/>
-                </options>
-            </control>
-            <control>
-                <group>[Channel3]</group>
-                <key>PioneerDDJSX.samplerVelocityVolume</key>
-                <description>Sampler 4 play with velocity volume, Button: PAD4 (in SAMPLER-Mode, VELOCITY active, Deck 3 active)</description>
-                <status>0xB9</status>
                 <midino>0x33</midino>
                 <options>
                     <script-binding/>
@@ -4337,16 +4117,6 @@
             </control>
             <control>
                 <group>[Channel3]</group>
-                <key>PioneerDDJSX.samplerVelocityVolume</key>
-                <description>Sampler 5 play with velocity volume, Button: PAD5 (in SAMPLER-Mode, VELOCITY active, Deck 3 active)</description>
-                <status>0xB9</status>
-                <midino>0x34</midino>
-                <options>
-                    <script-binding/>
-                </options>
-            </control>
-            <control>
-                <group>[Channel3]</group>
                 <key>PioneerDDJSX.stopSamplerButtons</key>
                 <description>Sampler 5 stop, Button: SHIFT &amp; PAD5 (in SAMPLER-Mode, Deck 3 active)</description>
                 <status>0x99</status>
@@ -4360,16 +4130,6 @@
                 <key>PioneerDDJSX.samplerButtons</key>
                 <description>Sampler 6 play, Button: PAD6 (in SAMPLER-Mode, Deck 3 active)</description>
                 <status>0x99</status>
-                <midino>0x35</midino>
-                <options>
-                    <script-binding/>
-                </options>
-            </control>
-            <control>
-                <group>[Channel3]</group>
-                <key>PioneerDDJSX.samplerVelocityVolume</key>
-                <description>Sampler 6 play with velocity volume, Button: PAD6 (in SAMPLER-Mode, VELOCITY active, Deck 3 active)</description>
-                <status>0xB9</status>
                 <midino>0x35</midino>
                 <options>
                     <script-binding/>
@@ -4397,16 +4157,6 @@
             </control>
             <control>
                 <group>[Channel3]</group>
-                <key>PioneerDDJSX.samplerVelocityVolume</key>
-                <description>Sampler 7 play with velocity volume, Button: PAD7 (in SAMPLER-Mode, VELOCITY active, Deck 3 active)</description>
-                <status>0xB9</status>
-                <midino>0x36</midino>
-                <options>
-                    <script-binding/>
-                </options>
-            </control>
-            <control>
-                <group>[Channel3]</group>
                 <key>PioneerDDJSX.stopSamplerButtons</key>
                 <description>Sampler 7 stop, Button: SHIFT &amp; PAD7 (in SAMPLER-Mode, Deck 3 active)</description>
                 <status>0x99</status>
@@ -4420,16 +4170,6 @@
                 <key>PioneerDDJSX.samplerButtons</key>
                 <description>Sampler 8 play, Button: PAD8 (in SAMPLER-Mode, Deck 3 active)</description>
                 <status>0x99</status>
-                <midino>0x37</midino>
-                <options>
-                    <script-binding/>
-                </options>
-            </control>
-            <control>
-                <group>[Channel3]</group>
-                <key>PioneerDDJSX.samplerVelocityVolume</key>
-                <description>Sampler 8 play with velocity volume, Button: PAD8 (in SAMPLER-Mode, VELOCITY active, Deck 3 active)</description>
-                <status>0xB9</status>
                 <midino>0x37</midino>
                 <options>
                     <script-binding/>
@@ -4561,16 +4301,6 @@
                 <description>Set PAD-Mode, Button: SAMPLER LEFT (Deck 3 active)</description>
                 <status>0x92</status>
                 <midino>0x22</midino>
-                <options>
-                    <script-binding/>
-                </options>
-            </control>
-            <control>
-                <group>[Channel3]</group>
-                <key>PioneerDDJSX.toggleSamplerVelocityMode</key>
-                <description>Toggle Sampler-Pads behaviour: normal (max. volume) / velocity (volume = velocity), Button: SAMPLER Longpress (in SAMPLER-Mode, Deck 3 active)</description>
-                <status>0x92</status>
-                <midino>0x41</midino>
                 <options>
                     <script-binding/>
                 </options>
@@ -5677,16 +5407,6 @@
             </control>
             <control>
                 <group>[Channel4]</group>
-                <key>PioneerDDJSX.samplerVelocityVolume</key>
-                <description>Sampler 1 play with velocity volume, Button: PAD1 (in SAMPLER-Mode, VELOCITY active, Deck 4 active)</description>
-                <status>0xBA</status>
-                <midino>0x30</midino>
-                <options>
-                    <script-binding/>
-                </options>
-            </control>
-            <control>
-                <group>[Channel4]</group>
                 <key>PioneerDDJSX.stopSamplerButtons</key>
                 <description>Sampler 1 stop, Button: SHIFT &amp; PAD1 (in SAMPLER-Mode, Deck 4 active)</description>
                 <status>0x9A</status>
@@ -5700,16 +5420,6 @@
                 <key>PioneerDDJSX.samplerButtons</key>
                 <description>Sampler 2 play, Button: PAD2 (in SAMPLER-Mode, Deck 4 active)</description>
                 <status>0x9A</status>
-                <midino>0x31</midino>
-                <options>
-                    <script-binding/>
-                </options>
-            </control>
-            <control>
-                <group>[Channel4]</group>
-                <key>PioneerDDJSX.samplerVelocityVolume</key>
-                <description>Sampler 2 play with velocity volume, Button: PAD2 (in SAMPLER-Mode, VELOCITY active, Deck 4 active)</description>
-                <status>0xBA</status>
                 <midino>0x31</midino>
                 <options>
                     <script-binding/>
@@ -5737,16 +5447,6 @@
             </control>
             <control>
                 <group>[Channel4]</group>
-                <key>PioneerDDJSX.samplerVelocityVolume</key>
-                <description>Sampler 3 play with velocity volume, Button: PAD3 (in SAMPLER-Mode, VELOCITY active, Deck 4 active)</description>
-                <status>0xBA</status>
-                <midino>0x32</midino>
-                <options>
-                    <script-binding/>
-                </options>
-            </control>
-            <control>
-                <group>[Channel4]</group>
                 <key>PioneerDDJSX.stopSamplerButtons</key>
                 <description>Sampler 3 stop, Button: SHIFT &amp; PAD3 (in SAMPLER-Mode, Deck 4 active)</description>
                 <status>0x9A</status>
@@ -5760,16 +5460,6 @@
                 <key>PioneerDDJSX.samplerButtons</key>
                 <description>Sampler 4 play, Button: PAD4 (in SAMPLER-Mode, Deck 4 active)</description>
                 <status>0x9A</status>
-                <midino>0x33</midino>
-                <options>
-                    <script-binding/>
-                </options>
-            </control>
-            <control>
-                <group>[Channel4]</group>
-                <key>PioneerDDJSX.samplerVelocityVolume</key>
-                <description>Sampler 4 play with velocity volume, Button: PAD4 (in SAMPLER-Mode, VELOCITY active, Deck 4 active)</description>
-                <status>0xBA</status>
                 <midino>0x33</midino>
                 <options>
                     <script-binding/>
@@ -5797,16 +5487,6 @@
             </control>
             <control>
                 <group>[Channel4]</group>
-                <key>PioneerDDJSX.samplerVelocityVolume</key>
-                <description>Sampler 5 play with velocity volume, Button: PAD5 (in SAMPLER-Mode, VELOCITY active, Deck 4 active)</description>
-                <status>0xBA</status>
-                <midino>0x34</midino>
-                <options>
-                    <script-binding/>
-                </options>
-            </control>
-            <control>
-                <group>[Channel4]</group>
                 <key>PioneerDDJSX.stopSamplerButtons</key>
                 <description>Sampler 5 stop, Button: SHIFT &amp; PAD5 (in SAMPLER-Mode, Deck 4 active)</description>
                 <status>0x9A</status>
@@ -5820,16 +5500,6 @@
                 <key>PioneerDDJSX.samplerButtons</key>
                 <description>Sampler 6 play, Button: PAD6 (in SAMPLER-Mode, Deck 4 active)</description>
                 <status>0x9A</status>
-                <midino>0x35</midino>
-                <options>
-                    <script-binding/>
-                </options>
-            </control>
-            <control>
-                <group>[Channel4]</group>
-                <key>PioneerDDJSX.samplerVelocityVolume</key>
-                <description>Sampler 6 play with velocity volume, Button: PAD6 (in SAMPLER-Mode, VELOCITY active, Deck 4 active)</description>
-                <status>0xBA</status>
                 <midino>0x35</midino>
                 <options>
                     <script-binding/>
@@ -5857,16 +5527,6 @@
             </control>
             <control>
                 <group>[Channel4]</group>
-                <key>PioneerDDJSX.samplerVelocityVolume</key>
-                <description>Sampler 7 play with velocity volume, Button: PAD7 (in SAMPLER-Mode, VELOCITY active, Deck 4 active)</description>
-                <status>0xBA</status>
-                <midino>0x36</midino>
-                <options>
-                    <script-binding/>
-                </options>
-            </control>
-            <control>
-                <group>[Channel4]</group>
                 <key>PioneerDDJSX.stopSamplerButtons</key>
                 <description>Sampler 7 stop, Button: SHIFT &amp; PAD7 (in SAMPLER-Mode, Deck 4 active)</description>
                 <status>0x9A</status>
@@ -5880,16 +5540,6 @@
                 <key>PioneerDDJSX.samplerButtons</key>
                 <description>Sampler 8 play, Button: PAD8 (in SAMPLER-Mode, Deck 4 active)</description>
                 <status>0x9A</status>
-                <midino>0x37</midino>
-                <options>
-                    <script-binding/>
-                </options>
-            </control>
-            <control>
-                <group>[Channel4]</group>
-                <key>PioneerDDJSX.samplerVelocityVolume</key>
-                <description>Sampler 8 play with velocity volume, Button: PAD8 (in SAMPLER-Mode, VELOCITY active, Deck 4 active)</description>
-                <status>0xBA</status>
                 <midino>0x37</midino>
                 <options>
                     <script-binding/>
@@ -6021,16 +5671,6 @@
                 <description>Set PAD-Mode, Button: SAMPLER RIGHT (Deck 4 active)</description>
                 <status>0x93</status>
                 <midino>0x22</midino>
-                <options>
-                    <script-binding/>
-                </options>
-            </control>
-            <control>
-                <group>[Channel4]</group>
-                <key>PioneerDDJSX.toggleSamplerVelocityMode</key>
-                <description>Toggle Sampler-Pads behaviour: normal (max. volume) / velocity (volume = velocity), Button: SAMPLER Longpress (in SAMPLER-Mode, Deck 4 active)</description>
-                <status>0x93</status>
-                <midino>0x41</midino>
                 <options>
                     <script-binding/>
                 </options>

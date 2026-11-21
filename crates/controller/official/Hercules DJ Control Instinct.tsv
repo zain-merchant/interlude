@@ -1,4 +1,5 @@
 # DJ Control Instinct — Hercules "Technical specifications" MIDI mapping (decimal; MIDI channel 1 assumed)
+# The sheet prints 0x26 as CUE_KP4_DB as well as 0x2A; every deck B button is deck A + 0x1A, so 0x26 is LOOP_KP4_DB.
 # source: https://ts.hercules.com/download/sound/manuals/DJ_Instinct/QSG/DJCInstinct_Technical_specifications.pdf
 both	90	01	FX_KP1_DA	
 both	90	02	FX_KP2_DA	
@@ -37,11 +38,11 @@ both	90	22	SAMPLE_KP4_DB
 both	90	23	LOOP_KP1_DB	
 both	90	24	LOOP_KP2_DB	
 both	90	25	LOOP_KP3_DB	
-both	90	26	CUE_KP4_DB	[Channel2] hotcue_4_activate
+both	90	26	LOOP_KP4_DB	
 both	90	27	CUE_KP1_DB	[Channel2] hotcue_1_activate
 both	90	28	CUE_KP2_DB	[Channel2] hotcue_2_activate
 both	90	29	CUE_KP3_DB	[Channel2] hotcue_3_activate
-both	90	2A	CUE_KP4_DB	
+both	90	2A	CUE_KP4_DB	[Channel2] hotcue_4_activate
 in	90	2B	PBM_DB	
 in	90	2C	PBP_DB	
 in	90	2D	PREV_DB	
@@ -72,3 +73,5 @@ in	B0	3B	VOL_DB	[Channel2] volume
 in	B0	3C	TREBLE_DB	[EqualizerRack1_[Channel2]_Effect1] parameter3
 in	B0	3D	MEDIUM_DB	[EqualizerRack1_[Channel2]_Effect1] parameter2
 in	B0	3E	BASS_DB	[EqualizerRack1_[Channel2]_Effect1] parameter1
+extra-in	B0	32	jog wheel turned while pressed; not in the specification sheet
+extra-in	B0	33	jog wheel turned while pressed; not in the specification sheet

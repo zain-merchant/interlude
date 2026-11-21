@@ -79,66 +79,34 @@
       <control>
         <!--autobeat_loop_1-->
         <group>[Channel1]</group>
-        <key>PioneerCDJ850.hotcue_1_activate</key>
+        <key>beatloop_1_activate</key>
         <status>0X90</status>
         <midino>0X28</midino>
-        <options> <script-binding/> </options>
-      </control>
-      <control>
-        <!--hot_cue_a-->
-        <group>[Channel1]</group>
-        <key>PioneerCDJ850.hotcue_1_activate</key>
-        <status>0X90</status>
-        <midino>0X18</midino>
-        <options> <script-binding/> </options>
+        <options> <normal/> </options>
       </control>
       <control>
         <!--autobeat_loop_2-->
         <group>[Channel1]</group>
-        <key>PioneerCDJ850.hotcue_2_activate</key>
+        <key>beatloop_2_activate</key>
         <status>0X90</status>
         <midino>0X29</midino>
-        <options> <script-binding/> </options>
-      </control>
-      <control>
-        <!--hot_cue_b-->
-        <group>[Channel1]</group>
-        <key>PioneerCDJ850.hotcue_2_activate</key>
-        <status>0X90</status>
-        <midino>0X19</midino>
-        <options> <script-binding/> </options>
+        <options> <normal/> </options>
       </control>
       <control>
         <!--autobeat_loop_4-->
         <group>[Channel1]</group>
-        <key>PioneerCDJ850.hotcue_3_activate</key>
+        <key>beatloop_4_activate</key>
         <status>0X90</status>
         <midino>0X2A</midino>
-        <options> <script-binding/> </options>
-      </control>
-      <control>
-        <!--hot_cue_c-->
-        <group>[Channel1]</group>
-        <key>PioneerCDJ850.hotcue_3_activate</key>
-        <status>0X90</status>
-        <midino>0X1A</midino>
-        <options> <script-binding/> </options>
+        <options> <normal/> </options>
       </control>
       <control>
         <!--autobeat_loop_8-->
         <group>[Channel1]</group>
-        <key>PioneerCDJ850.hotcue_4_activate</key>
+        <key>beatloop_8_activate</key>
         <status>0X90</status>
         <midino>0X2B</midino>
-        <options> <script-binding/> </options>
-      </control>
-      <control>
-        <!--hot_cue_call-->
-        <group>[Channel1]</group>
-        <key>PioneerCDJ850.hotcue_4_activate</key>
-        <status>0X90</status>
-        <midino>0X1C</midino>
-        <options> <script-binding/> </options>
+        <options> <normal/> </options>
       </control>
       <control>
         <!--jog_dial-->
@@ -189,14 +157,6 @@
         <key>loop_out</key>
         <status>0X90</status>
         <midino>0X07</midino>
-      </control>
-      <control>
-        <!--needle_touch-->
-        <group>[Channel1]</group>
-        <key>loop_scale</key>
-        <status>0XB0</status>
-        <midino>0X1C</midino>
-        <options> <invert/> </options>
       </control>
       <control>
         <!--play_pause-->
@@ -340,66 +300,34 @@
       <control>
         <!--autobeat_loop_1-->
         <group>[Channel2]</group>
-        <key>PioneerCDJ850.hotcue_1_activate</key>
+        <key>beatloop_1_activate</key>
         <status>0X91</status>
         <midino>0X28</midino>
-        <options> <script-binding/> </options>
-      </control>
-      <control>
-        <!--hot_cue_a-->
-        <group>[Channel2]</group>
-        <key>PioneerCDJ850.hotcue_1_activate</key>
-        <status>0X91</status>
-        <midino>0X18</midino>
-        <options> <script-binding/> </options>
+        <options> <normal/> </options>
       </control>
       <control>
         <!--autobeat_loop_2-->
         <group>[Channel2]</group>
-        <key>PioneerCDJ850.hotcue_2_activate</key>
+        <key>beatloop_2_activate</key>
         <status>0X91</status>
         <midino>0X29</midino>
-        <options> <script-binding/> </options>
-      </control>
-      <control>
-        <!--hot_cue_b-->
-        <group>[Channel2]</group>
-        <key>PioneerCDJ850.hotcue_2_activate</key>
-        <status>0X91</status>
-        <midino>0X19</midino>
-        <options> <script-binding/> </options>
+        <options> <normal/> </options>
       </control>
       <control>
         <!--autobeat_loop_4-->
         <group>[Channel2]</group>
-        <key>PioneerCDJ850.hotcue_3_activate</key>
+        <key>beatloop_4_activate</key>
         <status>0X91</status>
         <midino>0X2A</midino>
-        <options> <script-binding/> </options>
-      </control>
-      <control>
-        <!--hot_cue_c-->
-        <group>[Channel2]</group>
-        <key>PioneerCDJ850.hotcue_3_activate</key>
-        <status>0X91</status>
-        <midino>0X1A</midino>
-        <options> <script-binding/> </options>
+        <options> <normal/> </options>
       </control>
       <control>
         <!--autobeat_loop_8-->
         <group>[Channel2]</group>
-        <key>PioneerCDJ850.hotcue_4_activate</key>
+        <key>beatloop_8_activate</key>
         <status>0X91</status>
         <midino>0X2B</midino>
-        <options> <script-binding/> </options>
-      </control>
-      <control>
-        <!--hot_cue_call-->
-        <group>[Channel2]</group>
-        <key>PioneerCDJ850.hotcue_4_activate</key>
-        <status>0X91</status>
-        <midino>0X1C</midino>
-        <options> <script-binding/> </options>
+        <options> <normal/> </options>
       </control>
       <control>
         <!--jog_dial-->
@@ -450,14 +378,6 @@
         <key>loop_out</key>
         <status>0X91</status>
         <midino>0X07</midino>
-      </control>
-      <control>
-        <!--needle_touch-->
-        <group>[Channel2]</group>
-        <key>loop_scale</key>
-        <status>0XB1</status>
-        <midino>0X1C</midino>
-        <options> <invert/> </options>
       </control>
       <control>
         <!--play_pause-->
