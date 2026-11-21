@@ -78,7 +78,12 @@
           if (show) el.style.transform = `translateX(${x.toFixed(1)}px)`;
         });
       } else {
-        gl.draw({ mode, start: 0, perPx: Math.max(count, 1) / w, playhead, cue, colors, ...marks });
+        // The whole track in the lane: the play head crosses a pixel every
+        // fraction of a second, so it's placed to a quarter pixel and the
+        // lane is drawn again only when it moves that far, not every frame.
+        const perPx = Math.max(count, 1) / w;
+        const q = (b) => (b < 0 ? b : Math.round(b / (perPx / 4)) * (perPx / 4));
+        gl.draw({ mode, start: 0, perPx, playhead: q(playhead), cue, colors, ...marks, slip: q(marks.slip) });
       }
     });
     return off;

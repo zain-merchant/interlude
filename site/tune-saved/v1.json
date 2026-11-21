@@ -1,0 +1,335 @@
+{
+ "Add music": {
+  "values": {
+   "sweep starts (ms)": 0
+  },
+  "hidden": {}
+ },
+ "Cards": {
+  "values": {
+   "style": "quiet"
+  },
+  "hidden": {}
+ },
+ "Controllers picture": {
+  "values": {
+   "size": 1.15,
+   "up or down (px)": 0,
+   "fade length (px)": 46
+  },
+  "hidden": {}
+ },
+ "Dev": {
+  "values": {
+   "live updates": "ask"
+  },
+  "hidden": {}
+ },
+ "Features": {
+  "values": {
+   "heading": "both",
+   "band colour": "#040405",
+   "band edge colour": "#ffffff1a",
+   "band": "recess",
+   "heading to rows (px)": 6,
+   "gap between cards (px)": 24,
+   "layout": "apart",
+   "heading mark": "none",
+   "Settled.Decks picture": "stacked"
+  },
+  "hidden": {}
+ },
+ "Footer": {
+  "values": {
+   "mode": "ripples",
+   "Motion.ripple speed (em/s)": 0.25,
+   "Motion.ripple bend (px)": 1.25,
+   "Motion.ripple style": "breathe",
+   "Motion.ripple reach (em)": 1.3,
+   "Motion.ripple width (em)": 0.07,
+   "Motion.ripple interval (s)": 0.55,
+   "Motion.click ring reach": 1,
+   "Motion.click ring strength (×)": 7.5,
+   "Motion.fade in/out (s)": 0.9,
+   "Motion.hover": "follow",
+   "Click.click lens magnify": 0.8,
+   "Click.click lens size (em)": 0.14,
+   "Click.click lens springs back in (s)": 0.75,
+   "Click.click lens holds on a quick click (s)": 0.3,
+   "Click.click lens in-out swing": 0.55,
+   "Click.click wave strength": 0.6,
+   "Click.click wave reach (em)": 1,
+   "Click.click wave speed (em/s)": 1.6,
+   "Shape.groove spacing (px)": 6.25,
+   "Shape.groove arcs": "record",
+   "Shape.grooves per song (0: no gaps)": 0,
+   "Shape.song gap width (grooves)": 0.5,
+   "Shape.groove line width (px)": 1.5,
+   "Shape.groove tilt (°)": 0,
+   "Shape.word cut off at bottom (em)": 0.33,
+   "Shape.outline thickness (px)": 1.5,
+   "Colour.letter colour": "#000000",
+   "Colour.groove gap colour": "#000000",
+   "Colour.groove line colour": "#000000",
+   "Colour.outline colour": "#0d0d0d",
+   "Colour.page background": "#09090b00"
+  },
+  "hidden": {
+   "Motion.warp amount (px)": 3,
+   "Motion.ripple spacing (em)": 0.6,
+   "Motion.interference spread (em)": 0.45,
+   "Motion.plays for (s)": 2.5
+  }
+ },
+ "Footer:thumbnails": {},
+ "Grain": {
+  "values": {
+   "texture": "film",
+   "size": 0.75,
+   "amount": 0.12,
+   "contrast": 0.9,
+   "blend": "normal",
+   "movement": "swap",
+   "flicker rate": "6",
+   "jump distance": 0.03,
+   "drift time (s)": 30,
+   "fades out toward the features": 1
+  },
+  "hidden": {}
+ },
+ "Hero": {
+  "values": {
+   "Layout.download block": "caption",
+   "Layout.version link": "match",
+   "Layout.rule": "none",
+   "Controller.controller style": "current",
+   "Performance.app frame rate": 30,
+   "Performance.render": "live",
+   "controller comes in from (px, minus is above) (px)": -40,
+   "controller follows the screen by (ms) (ms)": 135,
+   "controller blur as it comes in (px)": 10,
+   "screen tilt in controller mode (°)": -3,
+   "screen scales from": "top"
+  },
+  "hidden": {}
+ },
+ "Hero record": {
+  "values": {
+   "style": "vinyl",
+   "Vinyl.vinyl preset": "custom",
+   "Vinyl.vinyl colour": "#000000",
+   "Vinyl.vinyl finish": "solid",
+   "Vinyl.vinyl body": 0,
+   "Vinyl.light through it": 0.4,
+   "Vinyl.grooves in its colour": 0.8,
+   "Vinyl.flecks": 0,
+   "Vinyl.groove spacing (px)": 4.5,
+   "Vinyl.spacing opens out by the rim (px)": 10,
+   "Vinyl.groove line width": 2.1,
+   "Vinyl.groove contrast": 1.7,
+   "Vinyl.groove brightness": 0.8,
+   "Vinyl.song bands": 1.5,
+   "Vinyl.song length": 1,
+   "Vinyl.sheen": 1.9,
+   "Vinyl.pressing warp": 2.1,
+   "Look.what shows the spin": "glints",
+   "Look.natural dust": 0.5,
+   "Look.dust size": 0.6,
+   "Look.dust softness": 0.25,
+   "Look.dust brightness": 0.65,
+   "Look.dust glow": 0.4,
+   "Look.dust glow size": 0.55,
+   "Look.dust only in the light": 0.45,
+   "Look.dust size variety": 0.45,
+   "Look.dust fibres": 0.2,
+   "Look.render resolution": 0.8,
+   "Glints.glint brightness": 3.12,
+   "Glints.glint size": 1.2,
+   "Glints.glint sharpness": 1,
+   "Glints.glints per turn": 4,
+   "Glints.glints turn with the disc (x)": 1,
+   "Glints.glint colour": "lamp",
+   "Glints.colour spread": 1.55,
+   "Glints.colour amount": 1,
+   "Glints.colour away from the lamp": 2.5,
+   "Glints.colour hue (°)": 0,
+   "Lamp.brightness away from the lamp": 1,
+   "Lamp.lamp movement": "turn",
+   "Lamp.cone direction (°)": 10,
+   "Lamp.cone width (°)": 40.7,
+   "Lamp.cone edge softness (°)": 6.3,
+   "Lamp.cone reach": 0.57,
+   "Lamp.cone glow": 0.2,
+   "Lamp.cone grooves": 0.1,
+   "Lamp.cone colour": "#ffffff",
+   "Lamp.cones": "two",
+   "Lamp.lamp colour (sides)": 0,
+   "Motion.spin speed": 0.6,
+   "Motion.scroll twist per 1000px (°)": 36,
+   "Motion.scroll twist at most (°)": 69,
+   "Motion.scroll twist settles in (s)": 1.55,
+   "Hover & needle.hover style": "litarc",
+   "Hover & needle.drag tips it": 0.35,
+   "Hover & needle.needle and hover strength": 0.5,
+   "Hover & needle.hover fades after still (s)": 1.2,
+   "Layout.shape preset": "custom",
+   "Layout.lower by (px)": 140,
+   "Layout.perspective": 0.6,
+   "Layout.rings all round": 2,
+   "Layout.more rings up top": 0,
+   "Layout.top fade starts at (px)": 66,
+   "Layout.top fade length (px)": 590,
+   "Layout.top warp": "none"
+  },
+  "hidden": {
+   "Look.glint colour amount": 0.6,
+   "Look.soft glints strength": 1,
+   "Look.glints mode strength": 1,
+   "Look.glint colour": "none",
+   "Look.lamp colour": 0,
+   "Vinyl.lamp wedges": 0,
+   "Layout.show to the top (mask)": 0,
+   "Hover & needle.tilt": 0.5,
+   "Hover & needle.colour turn": 0.5,
+   "Hover & needle.cone swing": 0.8,
+   "Hover & needle.lamp swing": 0.7,
+   "Hover & needle.glint slide": 0.6,
+   "Hover & needle.follow time (s)": 0.6,
+   "Layout.top warp strength": 0.5,
+   "Look.spin cue strength": 1,
+   "Look.speck style": "hyphen"
+  }
+ },
+ "Hero record:thumbnails": {},
+ "Install": {
+  "values": {
+   "step number": "badge"
+  },
+  "hidden": {}
+ },
+ "Knob": {
+  "values": {
+   "drive": "spring",
+   "Turn.spring": {
+    "type": "spring",
+    "stiffness": 11,
+    "damping": 7,
+    "mass": 0.5
+   },
+   "Turn.start speed": 2.4,
+   "Turn.at the stop": "settles"
+  },
+  "hidden": {}
+ },
+ "Knob (Apple spring)": {
+  "values": {
+   "duration (s)": 0.86,
+   "bounce": -0.3,
+   "mass": 0.75,
+   "lock at kill": "off",
+   "magnet strength": 1.8,
+   "magnet range": 0.21,
+   "initial velocity": 3.6
+  },
+  "hidden": {}
+ },
+ "Nav": {
+  "values": {
+   "Settled.name size before capsule (px)": 32,
+   "Settled.capsule corners": "14",
+   "Settled.buttons start at (%)": 75,
+   "Settled.button stagger (ms)": 180,
+   "Settled.space above the bar (px)": 8,
+   "Settled.icon size before capsule": 40,
+   "buttons arrive": "island",
+   "gap between icon and name before capsule (px)": 13
+  },
+  "hidden": {}
+ },
+ "Nav:thumbnails": {},
+ "Note": {
+  "values": {
+   "record flip time (s)": 0.6,
+   "record flip bounce": 0.22,
+   "label logo": "rings",
+   "side A label": "#fb8b38",
+   "side B label": "#3fc9ea",
+   "white label": "#ffbdd0",
+   "sleeve corner radius (px)": 4,
+   "sleeve tilt (deg)": 3,
+   "question to signature (px)": 4,
+   "rings logo outline": 3,
+   "record lifted off the sleeve bottom (px)": 12,
+   "record speed when out (rpm)": 9.7,
+   "how far the record comes out (%)": 42,
+   "push right (px)": 12,
+   "record slides out": {
+    "type": "spring",
+    "visualDuration": 0.5,
+    "bounce": 0.12
+   },
+   "record spins up": {
+    "type": "spring",
+    "visualDuration": 1.1,
+    "bounce": 0
+   },
+   "record slows down": {
+    "type": "spring",
+    "visualDuration": 1.6,
+    "bounce": 0
+   },
+   "style": "sleeve"
+  },
+  "hidden": {}
+ },
+ "Open source": {
+  "values": {
+   "look": "poster-light",
+   "light card extra": "grooves"
+  },
+  "hidden": {
+   "what fades": "none",
+   "card brightness": 1,
+   "card brightness at the right": 1,
+   "card blur (px)": 17,
+   "fade starts at (%)": 64,
+   "fade ends at (%)": 63,
+   "updates surface white": 0.62,
+   "lines": 0.1
+  }
+ },
+ "Sections": {
+  "values": {
+   "between": "none"
+  },
+  "hidden": {}
+ },
+ "Stems": {
+  "values": {
+   "drive": "spring",
+   "Motion.spring": {
+    "type": "spring",
+    "stiffness": 11,
+    "damping": 1,
+    "mass": 0.6
+   },
+   "Motion.start speed": 6,
+   "Motion.at the end": "caught",
+   "Stagger.stagger": "offset",
+   "Stagger.stagger step (ms)": 20
+  },
+  "hidden": {}
+ },
+ "Stems (Apple spring)": {
+  "values": {
+   "duration (s)": 0.23,
+   "bounce": 0.19,
+   "mass": 0.75,
+   "initial velocity": 8,
+   "stagger": "alternate",
+   "lag": 4.4,
+   "stagger step (ms)": 15.5
+  },
+  "hidden": {}
+ }
+}

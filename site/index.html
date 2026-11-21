@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Interlude: a free DJ app for the Mac</title>
-  <meta name="description" content="Interlude is a free, open-source DJ app for the Mac. Two decks, sync, stems, effects, a fast library, and support for 140+ controllers.">
+  <title>Interlude: a free DJ app for Mac</title>
+  <meta name="description" content="Interlude is a free, open-source DJ app for Mac. Two decks, sync, stems, effects, a fast library, and support for 140+ controllers.">
   <meta property="og:title" content="Interlude">
-  <meta property="og:description" content="A free, open-source DJ app for the Mac.">
+  <meta property="og:description" content="A free, open-source DJ app for Mac.">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Interlude">
   <meta property="og:url" content="https://interludedj.com/">
@@ -17,140 +17,583 @@
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:image" content="https://interludedj.com/img/og.png">
   <meta name="theme-color" content="#09090b">
-  <link rel="icon" href="img/icon.svg" type="image/svg+xml">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="img/icon.svg?v=2" type="image/svg+xml">
+  <!-- Geist, served from here (no other site to reach before the page can
+       draw its text); the Latin file is fetched straight away. -->
+  <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="style.css?v=20261119p2">
+  <script src="tune.js?v=20261118v1c"></script>
+  <script>
+    // Live updates while working on the site locally (.claude/serve.py
+    // streams the files whose contents changed). Stylesheets swap in place,
+    // here and in the hero's frame, keeping scroll and state; a change only
+    // to the hero's own files reloads just its frame; anything else puts a
+    // small "Reload" note in the corner instead of reloading under you
+    // (or reloads at once, or does nothing: Tune › Dev: live updates,
+    // remembered). Nothing at all happens anywhere but localhost.
+    if (/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && 'EventSource' in window) {
+      const KEY = 'interlude-live';
+      const mode = () => { try { return localStorage.getItem(KEY) || 'ask'; } catch { return 'ask'; } };
+      const swapCss = (doc, path) => {
+        for (const l of doc.querySelectorAll('link[rel="stylesheet"]')) {
+          const u = new URL(l.href, doc.baseURI);
+          if (u.origin !== location.origin || u.pathname !== path) continue;
+          u.searchParams.set('lr', Date.now());
+          const n = l.cloneNode();
+          n.href = u.href;
+          n.onload = () => l.remove();
+          l.after(n);
+        }
+      };
+      const frames = () => [...document.querySelectorAll('iframe')].filter((f) => { try { return f.contentDocument; } catch { return false; } });
+      let note = null;
+      const offer = () => {
+        if (note) return;
+        note = document.createElement('button');
+        note.type = 'button';
+        note.textContent = 'Site changed, reload';
+        Object.assign(note.style, { position: 'fixed', left: '16px', bottom: '16px', zIndex: 99999, padding: '8px 12px', borderRadius: '10px', border: '0', font: '500 13px/1 Geist, system-ui, sans-serif', color: '#0b0b0d', background: '#ece9e1', boxShadow: '0 8px 24px rgb(0 0 0 / 0.4)', cursor: 'pointer' });
+        note.onclick = () => location.reload();
+        document.body.append(note);
+      };
+      const es = new EventSource('/__events');
+      es.onmessage = (e) => {
+        let files;
+        try { files = JSON.parse(e.data); } catch { return; }
+        const m = mode();
+        if (m === 'off' || !files.length) return;
+        const css = files.filter((f) => f.endsWith('.css'));
+        const rest = files.filter((f) => !f.endsWith('.css'));
+        for (const f of css) { swapCss(document, f); for (const fr of frames()) swapCss(fr.contentDocument, f); }
+        if (!rest.length) return;
+        // Only the hero's frame's own files: reload just the frame.
+        const heroOnly = rest.every((f) => f.startsWith('/demo/') && !f.startsWith('/demo/cards'));
+        if (heroOnly) { for (const fr of frames()) if (/\/demo\/hero/.test(fr.src)) fr.contentWindow.location.reload(); return; }
+        if (m === 'reload') location.reload(); else offer();
+      };
+      window.__live = { set: (v) => { try { localStorage.setItem(KEY, v); } catch {} } };
+    }
+  </script>
+  <script>
+    // The hero's layout (Split) and the nav's (bar to capsule), set before
+    // the first paint so nothing jumps. The nav's look changes as the page
+    // scrolls.
+    (() => {
+      const d = document.documentElement;
+      d.dataset.hero = 'split';
+      d.dataset.herotext = 'card';
+      d.dataset.nav = 'morph';
+      const scrolled = () => d.toggleAttribute('data-scrolled', scrollY > 8);
+      addEventListener('scroll', scrolled, { passive: true });
+      scrolled();
+    })();
+  </script>
 </head>
 <body>
   <header class="nav">
+    <!-- The bar to capsule nav's glass and its edge (style.css). -->
+    <span class="nav-glass" aria-hidden="true"></span>
+    <span class="nav-edge" aria-hidden="true"></span>
     <div class="wrap nav-row">
       <a class="brand" href="#top" aria-label="Interlude home">
-        <img src="img/icon.svg" alt="" width="24" height="24">
+        <img src="img/icon.svg?v=2" alt="" width="24" height="24">
         <span>Interlude</span>
       </a>
       <nav class="links" aria-label="Sections">
         <a href="#install">Install</a>
         <a href="#features">Features</a>
         <a href="#faq">FAQ</a>
-        <a href="https://github.com/zain-merchant/interlude/releases">Changelog</a>
+        <a href="https://github.com/zain-merchant/interlude/releases" target="_blank" rel="noopener">Changelog</a>
       </nav>
       <div class="nav-actions">
-        <a class="btn ghost small" href="https://github.com/zain-merchant/interlude">
+        <!-- Interface sounds on or off (sfx.js), and again in the footer.
+             The boot script just below sets both from what was chosen before. -->
+        <button class="sfx-btn" type="button" aria-pressed="true" aria-label="Sound" title="Sound on">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.75 6.25h2L8 3.5v9L4.75 9.75h-2z"/><path class="sfx-on" d="M10.5 6.1a2.8 2.8 0 0 1 0 3.8M12.3 4.3a5.3 5.3 0 0 1 0 7.4"/><path class="sfx-off" d="M10.75 6.25l3.5 3.5m0-3.5-3.5 3.5"/></svg>
+        </button>
+        <a class="btn ghost small" href="https://github.com/zain-merchant/interlude" target="_blank" rel="noopener">
           <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
           GitHub
         </a>
-        <a class="btn small" href="https://github.com/zain-merchant/interlude/releases/latest/download/Interlude.dmg">Download</a>
+        <a class="btn small" href="https://github.com/zain-merchant/interlude/releases/latest/download/Interlude.dmg">
+          <svg class="nav-dl" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2.5v7.5m0 0L4.75 6.75M8 10l3.25-3.25M3.5 13h9"/></svg>Download
+        </a>
       </div>
     </div>
+    <script>
+      // Interface sounds (sfx.js): quiet, DJ-flavoured cues on clicks, taps
+      // and keys, never on hover or scroll. Nothing is fetched before the
+      // first tap or key, nor ever while sound is off. On by default, off
+      // for reduced motion or Save-Data; a choice made with the speaker is
+      // remembered and always wins.
+      (() => {
+        const K = 'interlude-sound';
+        let v = null, m = null;
+        try { v = localStorage.getItem(K); } catch {}
+        let on = v ? v === 'on' : !(matchMedia('(prefers-reduced-motion: reduce)').matches || navigator.connection?.saveData);
+        const load = () => (m ||= import('./sfx.js?v=1').then((x) => (x.start({ on }), x), () => (m = null)));
+        // Both speakers (the nav's, here; the footer's, once it's parsed).
+        const show = () => { for (const b of document.querySelectorAll('.sfx-btn')) { b.setAttribute('aria-pressed', on); b.title = on ? 'Sound on' : 'Sound off'; } };
+        show();
+        addEventListener('DOMContentLoaded', show, { once: true });
+        addEventListener('click', (e) => {
+          if (!e.target.closest?.('.sfx-btn')) return;
+          on = !on; show();
+          try { localStorage.setItem(K, on ? 'on' : 'off'); } catch {}
+          if (on || m) load().then((x) => x?.setOn(on));
+        });
+        // The first press or key anywhere but the speaker loads it.
+        const first = (e) => {
+          if (e.target.closest?.('.sfx-btn')) return;
+          removeEventListener('pointerdown', first, true); removeEventListener('keydown', first, true);
+          if (on) load();
+        };
+        addEventListener('pointerdown', first, true);
+        addEventListener('keydown', first, true);
+      })();
+    </script>
   </header>
+  <script>
+    // The nav, bar to capsule (data-nav="morph"). At the top of the page a
+    // quiet bar: the brand left, large, the sections right. As soon as the
+    // headline reaches it, the bar draws in to a floating capsule,
+    // the brand settles to its compact size, and the nav's own GitHub and
+    // Download slide in at its end. Back again once the headline is clear.
+    //
+    // The state comes from the scroll position, read once a frame, with a
+    // little give either way so it never flickers at the edge. The motion is
+    // a spring on one value, 0 (bar) to 1 (capsule): retargeting it keeps
+    // its speed, so a reversal halfway is seamless and a fast scroll never
+    // queues anything up. Each frame writes only clip-path (the glass),
+    // opacity and transform, straight onto the elements; nothing is laid
+    // out again. The actions have a spring of their own that starts once the
+    // shape has mostly formed. (Runs once the page is parsed: the hero
+    // comes after this script.)
+    addEventListener('DOMContentLoaded', () => {
+      const d = document.documentElement;
+      const nav = document.querySelector('.nav');
+      const row = nav.querySelector('.nav-row');
+      const cta = document.querySelector('.hero .cta');
+      if (!cta) return;
+      const glass = nav.querySelector('.nav-glass');
+      const edge = nav.querySelector('.nav-edge');
+      const brand = row.querySelector('.brand');
+      const icon = brand.querySelector('img');
+      const word = brand.querySelector('span');
+      const links = row.querySelector('.links');
+      const acts = row.querySelector('.nav-actions');
+      const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+      // The name is --brand-word (30px) in the bar and 15px in the capsule;
+      // the icon is --brand-icon (40px) in the bar and 36px in the capsule.
+      let WORD = 15 / 30, ICON = 40 / 36, CAP_R = 14, GAP = 10, PAD = 0;
+      const sizes = () => {
+        const cs = getComputedStyle(d);
+        CAP_R = parseFloat(cs.getPropertyValue('--cap-r')) || 14;
+        // (A wordmark tried at another size, --wm-size, still lands at about
+        // 15px in the capsule, and never under 12.)
+        const wm = parseFloat(cs.getPropertyValue('--wm-size')) || 1;
+        WORD = (15 * Math.max(0.8, Math.min(1, wm))) / ((parseFloat(cs.getPropertyValue('--brand-word')) || 30) * wm);
+        ICON = (parseFloat(cs.getPropertyValue('--brand-icon')) || 40) / 36;
+        const g = parseFloat(cs.getPropertyValue('--brand-gap'));
+        GAP = Number.isFinite(g) ? g : 12;
+        PAD = parseFloat(cs.getPropertyValue('--nav-pad')) || 0;
+      };
+      // Where the capsule puts each item, from their sizes in the bar (which
+      // never change), as offsets from where they sit in the bar.
+      let geo = null;
+      function measure() {
+        if (d.dataset.nav !== 'morph') return;
+        sizes();
+        const W = nav.clientWidth;
+        const x0 = row.getBoundingClientRect().left;
+        const narrow = getComputedStyle(links).display === 'none';
+        // The ends: 6px from the capsule's edge to the icon and to the
+        // Download pill, the same as above and below them (48 = 6 + 36 + 6).
+        // (The same space between the brand and the sections as between the
+        // sections and the actions.)
+        const end = 6, gap = 26, gapA = 26, inset = 12;
+        // The brand in the capsule: the 36px icon, then the name drawn at
+        // WORD of its laid-out (bar) size.
+        // (Its exact width, undoing whatever scale it's drawn at now.)
+        const ww = word.getBoundingClientRect().width / (1 - (1 - WORD) * shape.x);
+        const bw = icon.offsetWidth + 10 + ww * WORD;
+        // (Their boxes' exact widths: they only ever move, never scale.)
+        const lw = narrow ? 0 : links.getBoundingClientRect().width, aw = acts.getBoundingClientRect().width;
+        // Wide: the capsule hugs its contents, centred. Narrow: nearly edge to edge.
+        const capW = narrow ? W - inset * 2 : end + bw + gap + lw + gapA + aw + end;
+        const left = (W - capW) / 2;
+        const bx = left + end;
+        const lx = bx + bw + gap;
+        const ax = narrow ? left + capW - end - aw : lx + lw + gapA;
+        geo = { W, H: nav.clientHeight, side: left, right: W - left - capW, b: bx - (x0 + brand.offsetLeft), l: lx - (x0 + links.offsetLeft), a: ax - (x0 + acts.offsetLeft) };
+        // The actions keep to what's beside them on the way, so the space
+        // never closes up: just after the links (wide), or just inside the
+        // capsule's closing right end (narrow).
+        geo.k = narrow ? geo.right : -geo.l;
+        draw();
+      }
+      // Springs, both critically damped (nothing overshoots): the shape eases
+      // in over about 0.55s; the actions come in after it a touch quicker,
+      // and go quicker still (stiffness set as they're sent, in tick).
+      // (Nav: buttons start at.)
+      let actsAt = 0.55;
+      const shape = { x: 0, v: 0, to: 0, k: 130, c: 2 * Math.sqrt(130) };
+      const act = { x: 0, v: 0, to: 0, k: 170, c: 2 * Math.sqrt(170) };
+      const btns = [...acts.children];
+      const step = (s, dt) => {
+        const a = -s.k * (s.x - s.to) - s.c * s.v;
+        s.v += a * dt;
+        s.x += s.v * dt;
+        if (Math.abs(s.x - s.to) < 0.0005 && Math.abs(s.v) < 0.005) { s.x = s.to; s.v = 0; }
+      };
+      const clamp = (v) => Math.min(1, Math.max(0, v));
+      const r = (v) => Math.round(v * 1000) / 1000;
+      function draw() {
+        if (!geo) return;
+        const p = shape.x;
+        const q = act.x;
+        // One shape, outline and all: the bar lifts off first (its height
+        // and round ends come in ahead, v), then draws in from the sides (p),
+        // so it reads as the bar becoming a pill rather than a box shrinking.
+        // The glass is a lone absolutely placed box, so resizing it lays out
+        // nothing else.
+        const v = 1 - (1 - p) ** 2;
+        const left = geo.side * p, right = geo.right * p;
+        glass.style.left = `${r(left)}px`;
+        glass.style.width = `${r(geo.W - left - right)}px`;
+        glass.style.top = `${r(10 * v)}px`;
+        glass.style.height = `${r(geo.H + 1 - (geo.H - 47) * v)}px`;
+        glass.style.borderRadius = `${r(CAP_R * Math.min(1, v * 1.4))}px`;
+        glass.style.boxShadow = `inset 0 0 0 1px rgb(255 255 255 / ${r(0.09 * v)}), inset 0 1px 0 rgb(255 255 255 / ${r(0.05 * v)}), 0 12px 40px rgb(0 0 0 / ${r(0.42 * v)})`;
+        // Never a bar with a background: the glass comes in only as it
+        // closes on the capsule, and is gone again before it opens out.
+        glass.style.opacity = p > 0.001 ? String(r(clamp((p - 0.08) / 0.3))) : '';
+        // The bar's middle is 30px down, the capsule's 34px. The icon's box
+        // is 36px, drawn larger in the bar; the name follows its right edge.
+        const ic = ICON + (1 - ICON) * p;
+        // The capsule's middle is 34px down; the bar's is halfway down the
+        // row, below the top padding (--nav-pad).
+        const dy = 34 - (PAD + (geo.H - PAD) / 2);
+        brand.style.transform = `translate(${r(geo.b * p)}px, ${r(dy * v)}px)`;
+        icon.style.transform = `scale(${r(ic)})`;
+        // The bar's gap between icon and name (--brand-gap) closes to the
+        // capsule's 10px as it forms.
+        word.style.transform = `translateX(${r(36 * (ic - 1) + (GAP - 10) * (1 - p))}px) scale(${r(1 - (1 - WORD) * p)})`;
+        // In island the links travel on an eased share of the shape, home
+        // well before it settles, so they're clear of the buttons early.
+        const pl = (d.dataset.navacts || 'island') === 'island' ? 1 - (1 - p) ** 2 : p;
+        links.style.transform = `translate(${r(geo.l * pl)}px, ${r(dy * v)}px)`;
+        // The actions (Nav: buttons arrive). In every way but the old one
+        // they ride the capsule's right end, fixed inside it, so they never
+        // slide past anything or outside it:
+        //   with: they are part of the capsule, fading in with its glass, in
+        //     one motion; nothing of their own.
+        //   after: once the capsule is mostly formed they come up on their
+        //     own, GitHub then Download, on CSS transitions (run by the
+        //     compositor, so a busy page can't make them stutter).
+        //   old: they follow the links and fade in on a second spring.
+        const mode = d.dataset.navacts || 'island';
+        if (mode === 'old') {
+          acts.style.transform = `translate(${r(geo.a + geo.k * (1 - p))}px, ${r(dy)}px)`;
+          acts.style.opacity = '1';
+          const gate = clamp((p - 0.6) / 0.3);
+          btns.forEach((b, i) => {
+            const t = clamp(q * 1.3 - i * 0.25) * gate;
+            const e = 1 - (1 - t) ** 3;
+            b.style.opacity = r(e);
+            b.style.translate = t < 1 ? `${r(-6 * (1 - e))}px 0` : '';
+            b.style.scale = t < 1 ? String(r(0.94 + 0.06 * e)) : '';
+          });
+        } else {
+          // island: the way the Dynamic Island shows what's in it. The
+          //   buttons never move: they wait where they end up, and the
+          //   capsule closes round them; as soon as it has its glass and
+          //   the links are clear, they surface in place, Download first
+          //   (opacity, blur and a hair of scale, on the compositor).
+          const island = mode === 'island';
+          acts.style.transform = `translate(${r(geo.a + (island ? 0 : geo.right * (1 - p)))}px, ${r(dy)}px)`;
+          // (Opacity on the actions' own layer: the compositor fades it.)
+          acts.style.opacity = mode === 'with' ? String(r(clamp((p - 0.2) / 0.4) ** 1.5)) : '1';
+          // (island: the links come home ahead of the shape, below, so the
+          // buttons can surface as soon as the capsule has its glass.)
+          const on = (mode === 'after' && shape.to === 1 && p > 0.55) || (island && shape.to === 1 && p > actsAt);
+          if (nav.hasAttribute('data-acts-in') !== on) nav.toggleAttribute('data-acts-in', on);
+        }
+        const shown = (mode === 'old' ? q > 0.02 || act.to === 1 : p > 0.05) ? 'visible' : '';
+        if (acts.style.visibility !== shown) acts.style.visibility = shown;
+      }
+      // In as soon as the headline reaches the bar, so the bar's large name
+      // never sits over it; out once it's clear of the bar again, with a
+      // little give between so it never flickers at the edge. (The first of
+      // the hero's lines that's shown: the lockup, or the tagline when the
+      // lockup is hidden.)
+      const heads = [...document.querySelectorAll('.hero .lockup, .hero .tagline')];
+      const headline = () => heads.find((e) => e.offsetHeight > 8) ?? cta;
+      function read() {
+        const h = headline().getBoundingClientRect();
+        const NAV = geo?.H ?? 60;
+        const to = h.top < NAV + 8 ? 1 : h.top > NAV + 40 ? 0 : shape.to;
+        if (to === shape.to) return;
+        shape.to = to;
+        d.toggleAttribute('data-capsule', to === 1);
+        if (reduced.matches) { shape.x = to; shape.v = 0; act.x = act.to = to; act.v = 0; }
+      }
+      // One loop, running only while something moves.
+      let running = false, last = 0;
+      function tick(now) {
+        const dt = Math.max(0, Math.min(0.05, (now - last) / 1000 || 0.016));
+        last = now;
+        step(shape, dt);
+        // The actions follow once the shape is mostly formed; they go at once.
+        act.to = shape.to === 1 && shape.x > 0.6 ? 1 : 0;
+        act.k = act.to ? 170 : 420;
+        act.c = 2 * Math.sqrt(act.k);
+        step(act, dt);
+        draw();
+        const moving = shape.x !== shape.to || shape.v || act.x !== act.to || act.v || (shape.to === 1 && act.to === 0);
+        if (moving) requestAnimationFrame(tick);
+        else running = false;
+      }
+      function wake() {
+        if (running || d.dataset.nav !== 'morph') return;
+        running = true;
+        last = performance.now();
+        requestAnimationFrame(tick);
+      }
+      // Read where the buttons are in the scroll event (once a frame, before
+      // this frame's writes, so the read never forces a layout), then move.
+      addEventListener('scroll', () => { read(); wake(); }, { passive: true });
+      addEventListener('resize', measure);
+      // Another nav (the Try panel): hand the items back to the stylesheet.
+      new MutationObserver(() => {
+        for (const e of [glass, edge, brand, icon, word, links, acts, ...btns]) e.removeAttribute('style');
+        geo = null;
+        measure();
+        wake();
+      }).observe(d, { attributeFilter: ['data-nav'] });
+      window.navMeasure = measure;
+      window.tune?.slider({ id: 'nav-word', label: 'Nav: name size before capsule', folder: 'Settled', min: 18, max: 96, step: 1, value: 32, unit: 'px', css: '--brand-word', onInput: () => requestAnimationFrame(measure) });
+      // The capsule's corners: the icon's own (its squircle's corner, about
+      // 8px at 36px, plus the 6px between), so everything inside is
+      // concentric; or a full pill.
+      window.tune?.select({ label: 'Nav: capsule corners', folder: 'Settled', value: '14', options: [['14', 'Match the icon'], ['24', 'Pill']],
+        onInput: (v) => { d.style.setProperty('--cap-r', `${v}px`); requestAnimationFrame(measure); } });
+      d.dataset.navacts = 'island';
+      // When the buttons start to come in: how far the capsule has formed
+      // (0 to 100%), not a time, so it holds at any scroll speed. Below
+      // about 50% the links are still sliding past where the buttons sit.
+      window.tune?.slider({ label: 'Nav: buttons start at', folder: 'Settled', min: 0, max: 100, step: 5, value: 55, unit: '%', onInput: (v) => { actsAt = v / 100; draw(); } });
+      // How far apart the two buttons come in (Download, then GitHub).
+      window.tune?.slider({ label: 'Nav: button stagger', folder: 'Settled', min: 0, max: 300, step: 10, value: 90, unit: 'ms', css: '--nav-stagger' });
+      window.tune?.select({ label: 'Nav: buttons arrive', value: 'island', options: [['island', 'In place, as the capsule closes round them'], ['with', 'With the capsule, one motion'], ['after', 'Just after it forms, on their own'], ['old', 'Old: after the links, second spring']],
+        onInput: (v) => { d.dataset.navacts = v; for (const b of btns) b.removeAttribute('style'); nav.removeAttribute('data-acts-in'); draw(); } });
+      window.tune?.slider({ id: 'nav-pad', label: 'Nav: space above the bar', folder: 'Settled', min: 0, max: 40, step: 1, value: 10, unit: 'px', css: '--nav-pad', onInput: () => requestAnimationFrame(measure) });
+      window.tune?.slider({ label: 'Nav: gap between icon and name before capsule', min: 0, max: 40, step: 1, value: 12, unit: 'px', css: '--brand-gap', onInput: () => requestAnimationFrame(measure) });
+      window.tune?.slider({ id: 'nav-icon', label: 'Nav: icon size before capsule', folder: 'Settled', min: 28, max: 120, step: 1, value: 40, css: '--brand-icon', onInput: () => requestAnimationFrame(measure) });
+      // The hero's text beside the headline (data-herotext="card",
+      // style.css): Interlude and its version as a link, under it the
+      // licence and what it runs on, then the buttons, a rule beside it all.
+      // Two things still being tried (Hero › Layout): how the version link
+      // looks, and where the rule goes.
+      d.dataset.cardtitle = 'name';
+      d.dataset.cardlic = 'line';
+      d.dataset.cardsurface = 'rule';
+      d.dataset.cardnew = 'link';
+      d.dataset.cardsub = 'facts';
+      d.dataset.cardreq = 'under';
+      d.dataset.cardrule = 'near';
+      // The version link: beside the name at its size in a quieter grey,
+      // smaller beside it, or small on the right.
+      d.dataset.cardvlink = 'match';
+      // Where the release facts go: under the buttons as a quiet caption (the
+      // way Raycast, Linear and most Mac download pages do it), as a sentence
+      // there, or above the buttons under the name (the earlier layout).
+      d.dataset.cardblock = 'caption';
+      window.tune?.select({ label: 'Hero: download block', folder: 'Layout', value: 'caption', options: [['caption', 'Caption under the buttons'], ['sentence', 'One sentence under the buttons'], ['head', 'Name and facts above']], onInput: (v) => { d.dataset.cardblock = v; requestAnimationFrame(() => ruleMid()); } });
+      window.tune?.select({ label: 'Hero: version link', folder: 'Layout', value: 'match', options: [['match', 'Beside the name, its size'], ['small', 'Beside the name, smaller'], ['right', 'Small, on the right']], onInput: (v) => (d.dataset.cardvlink = v) });
+      // Midway, measured: from the end of the headline's longest line to the
+      // words beside it, the rule half way.
+      const ruleMid = () => {
+        const side = document.querySelector('.hero-side');
+        const lines = [...document.querySelectorAll('.hero .tagline, .hero .lede')];
+        if (!side || !lines.length) return;
+        let right = -Infinity;
+        for (const el of lines) { const rg = document.createRange(); rg.selectNodeContents(el); for (const r of rg.getClientRects()) right = Math.max(right, r.right); }
+        const sr = side.getBoundingClientRect();
+        const words = sr.left + parseFloat(getComputedStyle(side).paddingLeft || '0');
+        side.style.setProperty('--rule-mid', `${Math.round((right + words) / 2 - sr.left)}px`);
+      };
+      ruleMid();
+      document.fonts?.ready.then(ruleMid);
+      addEventListener('resize', () => requestAnimationFrame(ruleMid));
+      window.tune?.select({ label: 'Hero: rule', folder: 'Layout', value: 'near', options: [['near', 'Beside the words'], ['mid', 'Midway to the headline'], ['none', 'None']],
+        onInput: (v) => (d.dataset.cardrule = v) });
+      measure();
+      document.fonts?.ready.then(measure);
+      // Opened part way down the page: start as a capsule.
+      read();
+      if (shape.to) { shape.x = act.x = act.to = 1; draw(); }
+    });
+  </script>
 
   <main id="top">
+    <!-- A record's grooves round the hero's screen, with light moving over them (hero-fx.js). -->
+    <canvas class="ripples" aria-hidden="true"></canvas>
+    <!-- Film grain over the record behind the hero (and only that: the page's
+         words, buttons and the app sit above it). Tune › Grain. -->
+    <div class="grain" aria-hidden="true"></div>
     <section class="hero wrap">
-      <img class="hero-icon" src="img/icon.svg" alt="" width="88" height="88">
-      <h1>Interlude</h1>
-      <p class="tagline">A free, open-source DJ app for the Mac. Pro features with a fast, lightweight footprint.</p>
+      <div class="lockup">
+        <img class="hero-icon" src="img/icon.svg?v=2" alt="" width="88" height="88">
+        <h1>Interlude</h1>
+      </div>
+      <p class="tagline">A free, <span class="nw">open-source</span> DJ app for Mac</p>
+      <p class="lede">Pro features with a fast, lightweight footprint.</p>
+      <!-- The buttons and the facts. Laid out by the layouts in style.css
+           ("Hero: text layout"); in the current one it isn't a box of its own. -->
+      <div class="hero-side">
+      <!-- The card layout's head: the release itself, then what it is and
+           what it runs on, in one quiet line (style.css hides it elsewhere). -->
+      <div class="dl-head">
+        <b class="dl-name"><a class="dl-title" href="https://github.com/zain-merchant/interlude/releases/latest" target="_blank" rel="noopener" tabindex="-1">Interlude<span class="dl-ver"></span></a><a class="dl-vtext" href="https://github.com/zain-merchant/interlude/releases/latest" target="_blank" rel="noopener" title="What’s new">Latest</a><a class="dl-pill" href="https://github.com/zain-merchant/interlude/releases/latest" target="_blank" rel="noopener" title="What’s new">Latest</a></b>
+        <a class="dl-new" href="https://github.com/zain-merchant/interlude/releases/latest" target="_blank" rel="noopener">What’s new<span class="dl-new-ver"></span></a>
+        <a class="dl-vlink" href="https://github.com/zain-merchant/interlude/releases/latest" target="_blank" rel="noopener" title="What’s new">Latest release</a>
+        <p class="dl-sub">Free and open source<span class="dl-lic" title="GPL-3.0-or-later"> under GPLv3+</span></p>
+        <p class="dl-sub2"><span title="GPL-3.0-or-later">GPLv3+</span><a class="dl-rel" href="https://github.com/zain-merchant/interlude/releases/latest" target="_blank" rel="noopener">What’s new<span class="dl-new-ver"></span></a></p>
+        <p class="dl-facts"><span title="GPL-3.0-or-later">GPLv3+</span><span>macOS 11+ on Apple silicon</span></p>
+        <p class="dl-sub3">Open source under <span title="GPL-3.0-or-later">GPLv3+</span>. <a class="dl-rel" href="https://github.com/zain-merchant/interlude/releases/latest" target="_blank" rel="noopener">See what’s new<span class="dl-new-ver"></span></a></p>
+      </div>
+      <div class="dmg" aria-hidden="true">
+        <img src="img/icon.svg?v=2" alt="" width="44" height="44">
+        <span><b>Interlude.dmg</b><small>For macOS 11+ on Apple silicon</small></span>
+      </div>
       <div class="cta">
         <a class="btn big" href="https://github.com/zain-merchant/interlude/releases/latest/download/Interlude.dmg">
           <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v8m0 0L4.5 6.5M8 10l3.5-3.5M3 13h10"/></svg>
           Download for Mac
         </a>
-        <a class="btn ghost big" href="https://github.com/zain-merchant/interlude">View on GitHub</a>
+        <a class="btn ghost big" href="https://github.com/zain-merchant/interlude" target="_blank" rel="noopener">View on GitHub</a>
       </div>
+      <!-- Under the buttons, where Mac download pages put it: the version,
+           what it runs on, the licence (Hero: download block). -->
+      <p class="dl-cap"><a class="dl-cv" href="https://github.com/zain-merchant/interlude/releases/latest" target="_blank" rel="noopener" title="What’s new">Latest version</a><span>macOS 11+ on Apple silicon</span><span title="GPL-3.0-or-later">GPLv3+</span></p>
+      <p class="dl-cap2"><a class="dl-cv" href="https://github.com/zain-merchant/interlude/releases/latest" target="_blank" rel="noopener" title="What’s new">Latest version</a> for macOS 11+ on Apple silicon, licensed <span title="GPL-3.0-or-later">GPLv3+</span></p>
+      <p class="dl-req">Requires macOS 11+ on Apple silicon</p>
+      <a class="dl-new2" href="https://github.com/zain-merchant/interlude/releases/latest" target="_blank" rel="noopener">What’s new<span class="dl-new-ver"></span></a>
+      <p class="dl-foot">Licensed under <span title="GPL-3.0-or-later">GPLv3+</span></p>
       <p class="meta">
-        <a id="version" href="https://github.com/zain-merchant/interlude/releases/latest">Latest release</a>
-        <span aria-hidden="true">·</span> Free and open source
-        <span aria-hidden="true">·</span> macOS 11+ on Apple silicon
-        <span aria-hidden="true">·</span> GPL-3.0-or-later
+        <a id="version" data-k="Version" href="https://github.com/zain-merchant/interlude/releases/latest" target="_blank" rel="noopener">Latest release</a>
+        <span aria-hidden="true">·</span> <span class="mi" data-k="Price">Free and open source</span>
+        <span aria-hidden="true">·</span> <span class="mi" data-k="Runs on"><svg class="fi" viewBox="0 0 16 16" aria-hidden="true"><rect x="3.5" y="3.5" width="9" height="9" rx="2"/><path d="M6 1.5v2M10 1.5v2M6 12.5v2M10 12.5v2M1.5 6h2M1.5 10h2M12.5 6h2M12.5 10h2"/></svg>macOS 11+ on Apple silicon</span>
+        <span aria-hidden="true">·</span> <span class="mi" data-k="License" title="GPL-3.0-or-later">GPLv3+</span>
       </p>
+      </div>
     </section>
 
-    <section class="shot wrap" aria-label="Interlude in use">
-      <video id="demo" autoplay muted loop playsinline preload="auto" poster="img/demo-poster.jpg" width="1920" height="1200"
-        aria-label="Interlude mixing two tracks: both decks playing, sync, the stems tab and a crossfade.">
-        <source src="img/demo.webm" type="video/webm">
-        <source src="img/demo.mp4" type="video/mp4">
-      </video>
+    <section class="shot wrap" aria-label="Interlude in action">
+      <div class="stage-frame" data-mode="mouse">
+        <div class="glow" aria-hidden="true"></div>
+        <div class="screen">
+          <!-- The screenshot is what shows first (and all that shows on a slow
+               connection), so it's fetched first, as AVIF where it can be
+               (a third the size of the JPEG, the same picture). -->
+          <picture>
+            <source type="image/avif" srcset="img/screenshot-1x.avif 1440w, img/screenshot.avif 2880w" sizes="(max-width: 1200px) 100vw, 1200px">
+            <img class="poster" src="img/screenshot-1x.jpg" srcset="img/screenshot-1x.jpg 1440w, img/screenshot.jpg 2880w" sizes="(max-width: 1200px) 100vw, 1200px"
+              width="1440" height="900" fetchpriority="high" alt="Interlude with two tracks loaded: waveforms across the top, two decks either side of the mixer, and the library below.">
+          </picture>
+          <!-- The real app on its simulated engine, played by a script (app/demo). Loaded after the page. -->
+          <iframe class="live" title="Interlude mixing one track into the next" tabindex="-1" aria-hidden="true" data-src="demo/hero.html?v=20261119p4"></iframe>
+        </div>
+      </div>
+      <div class="shot-bar">
+        <div class="switch" role="radiogroup" aria-label="Play it with">
+          <button type="button" role="radio" aria-checked="true" data-mode="mouse">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5 12.5 7.4 8.6 8.6 7.4 12.5Z"/></svg>Mouse
+          </button>
+          <button type="button" role="radio" aria-checked="false" data-mode="controller">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="1.5" y="4" width="13" height="8" rx="2"/><circle cx="5" cy="8" r="1.8"/><circle cx="11" cy="8" r="1.8"/></svg>Controller
+          </button>
+          <i class="thumb" aria-hidden="true"></i>
+        </div>
+        <span class="shot-tag">Works with 140+ MIDI controllers</span>
+      </div>
     </section>
 
     <section id="install" class="wrap section">
-      <h2>Install</h2>
+      <h2>Install, import, and play</h2>
       <ol class="steps">
-        <li>
-          <span class="num">01</span>
-          <h3>Download</h3>
+        <li data-picture="download">
+          <h3><span class="num">1</span><span class="t">Download</span></h3>
           <p>Get <a href="https://github.com/zain-merchant/interlude/releases/latest/download/Interlude.dmg">Interlude.dmg</a>, open it, and drag Interlude into Applications.</p>
         </li>
-        <li>
-          <span class="num">02</span>
-          <h3>Open it</h3>
-          <p>Open Interlude from Applications or Spotlight.</p>
+        <li data-picture="open">
+          <h3><span class="num">2</span><span class="t">Open it</span></h3>
+          <p>Open Interlude from Applications or Spotlight. After that, it keeps itself up to date.</p>
         </li>
-        <li>
-          <span class="num">03</span>
-          <h3>Add your music</h3>
+        <li data-picture="music">
+          <h3><span class="num">3</span><span class="t">Add your music</span></h3>
           <p>Click <b>+ Add music folder</b>, or bring your library over from Rekordbox or Serato with File › Import. Plug in your controller and it connects by itself.</p>
         </li>
       </ol>
-      <p class="aside">After that, Interlude keeps itself up to date.</p>
     </section>
 
     <section id="features" class="wrap section">
-      <h2>Features</h2>
+      <div class="grain grain--band" aria-hidden="true"></div>
+      <h2>Everything you need for a full set</h2>
       <div class="groups">
-        <div class="group">
+        <div class="group" data-picture="decks">
           <h3><span class="dot a"></span>Decks</h3>
           <ul>
-            <li>BPM, beatgrid and key found on load</li>
-            <li>Sync that matches tempo and phase</li>
-            <li>8 hot cues, beat loops and beat jump</li>
-            <li>Slip mode, quantize and key lock</li>
-            <li>Scrolling waveforms in three bands</li>
+            <li><b>Analysis</b><span>BPM, key and beatgrid</span></li>
+            <li><b>Sync</b><span>Tempo and phase</span></li>
+            <li><b>Cues</b><span>Hot cues, loops, beat jump</span></li>
+            <li><b>Feel</b><span>Slip, quantize, key lock</span></li>
+            <li><b>Waveforms</b><span>Three-band, scrolling</span></li>
           </ul>
         </div>
-        <div class="group">
+        <div class="group" data-picture="mixer">
           <h3><span class="dot b"></span>Mixer and effects</h3>
           <ul>
-            <li>3-band EQ with full kills, trim and filter</li>
-            <li>Echo, reverb, flanger and phaser, timed to the beat</li>
-            <li>Auto gain, so every track starts level</li>
-            <li>A master limiter that never clips</li>
-            <li>Headphone cue with a cue/master blend</li>
+            <li><b>EQ</b><span>3 bands with full kills</span></li>
+            <li><b>Effects</b><span>Echo, reverb, flanger, phaser</span></li>
+            <li><b>Gain</b><span>Set for every track</span></li>
+            <li><b>Limiter</b><span>Never clips</span></li>
+            <li><b>Cue</b><span>Headphones, with a blend</span></li>
           </ul>
         </div>
-        <div class="group">
+        <div class="group" data-picture="stems">
           <h3><span class="dot a"></span>Stems</h3>
           <ul>
-            <li>Vocals, melody, bass and drums on every deck</li>
-            <li>Split on your Mac, nothing uploaded</li>
-            <li>Mute any stem live, on screen or from the pads</li>
+            <li><b>Parts</b><span>Vocals, melody, bass, drums</span></li>
+            <li><b>Split</b><span>On your Mac, offline</span></li>
+            <li><b>Mute</b><span>Live, or from the pads</span></li>
           </ul>
         </div>
-        <div class="group">
+        <div class="group" data-picture="library">
           <h3><span class="dot b"></span>Library</h3>
           <ul>
-            <li>Instant search across your whole collection</li>
-            <li>Playlists and a history of every set</li>
-            <li>Import from Rekordbox and Serato, cues included</li>
-            <li>MP3, AAC, FLAC, WAV, AIFF, OGG and ALAC</li>
+            <li><b>Search</b><span>Instant</span></li>
+            <li><b>Playlists</b><span>And your set history</span></li>
+            <li><b>Import</b><span>Rekordbox and Serato</span></li>
+            <li><b>Formats</b><span>Every common one</span></li>
           </ul>
         </div>
-        <div class="group">
+        <div class="group" data-picture="controllers">
           <h3><span class="dot a"></span>Controllers</h3>
           <ul>
-            <li>Pioneer DDJ-FLX4 mapped in full</li>
-            <li>140+ more through bundled Mixxx mappings</li>
-            <li>MIDI learn for anything else</li>
+            <li><b>DDJ-FLX4</b><span>Mapped in full</span></li>
+            <li><b>140+ more</b><span>Via Mixxx mappings</span></li>
+            <li><b>The rest</b><span>MIDI learn</span></li>
           </ul>
         </div>
-        <div class="group">
+        <div class="group" data-picture="recording">
           <h3><span class="dot b"></span>Recording and more</h3>
           <ul>
-            <li>Record your set to WAV in one click</li>
-            <li>A sampler with eight one-shot slots</li>
-            <li>Every shortcut can be remapped</li>
-            <li>Report a problem from the Help menu</li>
+            <li><b>Record</b><span>Your set, to WAV</span></li>
+            <li><b>Sampler</b><span>8 slots</span></li>
+            <li><b>Shortcuts</b><span>Remap any of them</span></li>
+            <li><b>Help</b><span>Report a problem</span></li>
           </ul>
         </div>
       </div>
@@ -158,8 +601,9 @@
 
     <section id="faq" class="wrap section">
       <h2>FAQ</h2>
+      <div class="faq-row">
       <div class="faq">
-        <details>
+        <details open>
           <summary>Is it really free?</summary>
           <p>Yes. There's no pro tier, no account and no subscription. Interlude is open source under the GPL, so anyone can read, change and share the code.</p>
         </details>
@@ -177,50 +621,1320 @@
         </details>
         <details>
           <summary>How do I report a bug?</summary>
-          <p>Choose Help › Report a Problem. Interlude saves a report with what you describe, the app's logs and your system (no music) to your Desktop, ready to send. You can also <a href="https://github.com/zain-merchant/interlude/issues">open an issue</a>.</p>
+          <p>Choose Help › Report a Problem. Interlude saves a report with what you describe, the app's logs and your system (no music) to your Desktop, ready to send. You can also <a href="https://github.com/zain-merchant/interlude/issues" target="_blank" rel="noopener">open an issue</a>.</p>
         </details>
       </div>
+      <!-- Beside the questions (below them on a narrow screen): a note from
+           the maker. Its body is still to be written: skeleton lines hold
+           its place. -->
+      <aside class="founder" aria-label="A note from the maker">
+        <h3>Hi, I'm Zain.</h3>
+        <div class="founder-body" aria-hidden="true">
+          <i style="--w: 100%"></i><i style="--w: 94%"></i><i style="--w: 97%"></i><i style="--w: 62%"></i>
+          <i class="gap" style="--w: 100%"></i><i style="--w: 91%"></i><i style="--w: 78%"></i>
+        </div>
+        <p class="founder-ask">Have a question? <a href="https://github.com/zain-merchant/interlude/issues/new" target="_blank" rel="noopener">Ask me on GitHub</a></p>
+        <!-- Signed by hand: one line, written in as the note comes into view. -->
+        <svg class="founder-sig" viewBox="0 0 176 70" role="img" aria-label="Zain">
+          <g transform="translate(8 0) skewX(-10)">
+            <path pathLength="1" d="M10 22 C 23 17, 43 13, 58 13 C 48 25, 30 40, 14 54 C 28 50, 42 49, 54 51 C 60 52, 65 46, 70 40 C 66 37, 59 38, 57 45 C 55 52, 63 53, 69 45 L 71 40 C 70 46, 70 52, 76 51 C 81 50, 84 45, 87 40 C 86 46, 86 52, 91 50 C 95 48, 97 43, 99 39 C 100 44, 99 49, 98 53 C 101 46, 105 39, 110 40 C 114 41, 112 48, 114 52 C 117 56, 128 50, 143 41"/>
+            <path pathLength="1" d="M88.5 31.5 l 3 -1.4"/>
+            <path pathLength="1" d="M16 63 C 56 60, 108 58, 160 48"/>
+          </g>
+        </svg>
+      </aside>
+      </div>
+      <!-- Last on the page before the footer: the project is made in the
+           open, shown rather than said: its latest changes, live from GitHub. -->
+      <div class="oss" data-look="poster-light" data-extra="none" data-fade="outer">
+        <div class="oss-text">
+          <h3><span class="oss-h1">Suggest an idea</span> <span class="oss-h2">or build it yourself</span></h3>
+          <p>Interlude is free and open source, so anyone can add features, fix bugs, or support new gear. Including you.</p>
+          <div class="oss-links">
+            <a class="btn" href="https://github.com/zain-merchant/interlude/issues/new" target="_blank" rel="noopener">Suggest an idea</a>
+            <a class="btn ghost" href="https://github.com/zain-merchant/interlude" target="_blank" rel="noopener">View on GitHub</a>
+          </div>
+        </div>
+        <div class="oss-log">
+          <h4>Latest updates and changes</h4>
+          <ol class="oss-commits"><li class="oss-empty"><a href="https://github.com/zain-merchant/interlude/commits" target="_blank" rel="noopener">See the latest changes on GitHub →</a></li></ol>
+        </div>
+      </div>
     </section>
+    <script>
+      // An Interlude record, drawn once and set into the note for its record
+      // styles (Note: style, sleeve and white label; style.css hides it
+      // otherwise). Vinyl with fine grooves and three smooth gaps between
+      // songs, a polished lip, a run-out round the label; the label either
+      // Interlude's own (its two rings, words round its edge) or a white
+      // label, the plain promo pressing DJs get, with the note on it.
+      (() => {
+        const note = document.querySelector('.founder');
+        if (!note) return;
+        const NS = 'http://www.w3.org/2000/svg';
+        const el = (n, a, p) => { const e = document.createElementNS(NS, n); for (const k in a) e.setAttribute(k, a[k]); p?.append(e); return e; };
+        const disc = (label, side = 'A') => {
+          const svg = el('svg', { viewBox: '-100 -100 200 200', class: 'rec-disc', 'aria-hidden': 'true' });
+          const defs = el('defs', {}, svg);
+          const tag = `${label}-${side}`;
+          const g = el('radialGradient', { id: `vin-${tag}` }, defs);
+          for (const [o, c] of [[0, '#1b1b20'], [0.55, '#0e0e11'], [0.96, '#121216'], [0.995, '#2b2b31'], [1, '#0b0b0d']]) el('stop', { offset: o, 'stop-color': c }, g);
+          el('circle', { r: 100, fill: `url(#vin-${tag})` }, svg);
+          const L = label === 'white' ? 52 : 34;
+          // Grooves, one every 0.9 units from the run-out to the lip, with
+          // the songs' gaps left smooth and catching a little more light.
+          const gaps = label === 'white' ? [[66, 68.2], [82, 84.2]] : [[52, 54.2], [68, 70.2], [83, 85.2]];
+          const grooves = el('g', { fill: 'none', stroke: 'rgb(255 255 255 / 0.05)', 'stroke-width': 0.28 }, svg);
+          for (let r = L + 4; r < 97; r += 0.9) if (!gaps.some(([a, b]) => r > a && r < b)) el('circle', { r: r.toFixed(2) }, grooves);
+          for (const [a, b] of gaps) el('circle', { r: (a + b) / 2, fill: 'none', stroke: 'rgb(255 255 255 / 0.075)', 'stroke-width': b - a }, svg);
+          el('circle', { r: 99.3, fill: 'none', stroke: 'rgb(255 255 255 / 0.14)', 'stroke-width': 0.5 }, svg);
+          // Marks on the vinyl that turn with it, so its turning shows across
+          // the whole disc, not only at the label: a few short stretches of
+          // groove catching more light (as a pressing's flaws do), and a
+          // scatter of fine dust. Fixed, so it's the same record each visit.
+          let seed = label === 'white' ? 7 : side === 'B' ? 11 : 3;
+          const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+          const marks = el('g', { fill: 'none', 'stroke-linecap': 'round' }, svg);
+          for (let i = 0; i < 6; i++) {
+            const r = L + 8 + rnd() * (95 - L - 8);
+            const a0 = rnd() * Math.PI * 2;
+            const a1 = a0 + 0.25 + rnd() * 0.5;
+            const p = (a) => `${(r * Math.cos(a)).toFixed(2)} ${(r * Math.sin(a)).toFixed(2)}`;
+            el('path', { d: `M ${p(a0)} A ${r} ${r} 0 0 1 ${p(a1)}`, stroke: `rgb(255 255 255 / ${(0.07 + rnd() * 0.08).toFixed(3)})`, 'stroke-width': (0.5 + rnd() * 0.9).toFixed(2) }, marks);
+          }
+          for (let i = 0; i < 26; i++) {
+            const r = L + 5 + rnd() * (96 - L - 5);
+            const a = rnd() * Math.PI * 2;
+            el('circle', { cx: (r * Math.cos(a)).toFixed(2), cy: (r * Math.sin(a)).toFixed(2), r: (0.18 + rnd() * rnd() * 0.6).toFixed(2), fill: `rgb(255 255 255 / ${(0.18 + rnd() * 0.3).toFixed(2)})` }, marks);
+          }
+          // The label, its words set round its edge, on paper with a grain.
+          const lab = el('g', { class: 'rec-label' }, svg);
+          // (Side A's label orange, side B's blue, as tuned.)
+          // (Its colour from a CSS variable, so Tune can change it: Note ›
+          // side A, side B, white label paper.)
+          const paperVar = label === 'white' ? '--lab-white' : side === 'B' ? '--lab-b' : '--lab-a';
+          const paperDef = label === 'white' ? '#f3f0e8' : side === 'B' ? '#3fc9ea' : '#fb8b38';
+          el('circle', { r: L, style: `fill: var(${paperVar}, ${paperDef})` }, lab);
+          const pf = el('filter', { id: `paper-${tag}`, x: '-10%', y: '-10%', width: '120%', height: '120%' }, defs);
+          el('feTurbulence', { type: 'fractalNoise', baseFrequency: '1.4', numOctaves: 3, seed: 4, result: 'n' }, pf);
+          el('feColorMatrix', { in: 'n', type: 'matrix', values: '0 0 0 0 0.35  0 0 0 0 0.28  0 0 0 0 0.2  0 0 0 0.9 -0.35', result: 'g' }, pf);
+          el('feComposite', { in: 'g', in2: 'SourceGraphic', operator: 'in' }, pf);
+          el('circle', { r: L, fill: '#000', filter: `url(#paper-${tag})` }, lab);
+          el('circle', { r: L - 0.6, fill: 'none', stroke: 'rgb(0 0 0 / 0.08)', 'stroke-width': 0.4 }, lab);
+          const id = `ring-${tag}`;
+          el('path', { id, d: `M 0 ${-(L - 5)} a ${L - 5} ${L - 5} 0 1 1 -0.01 0`, fill: 'none' }, defs);
+          // The words on it: a near-black ink with a little of the paper's own
+          // colour mixed in (so they sit on it rather than float), strong
+          // enough to read on any paper.
+          const ink = (k) => `fill: color-mix(in oklab, #141210 ${k}%, var(${paperVar}, ${paperDef}))`;
+          const fs = label === 'white' ? 3.6 : 3.5, ls = 0.9;
+          const t = el('text', { 'font-size': fs, 'letter-spacing': ls, style: ink(78), 'font-family': 'Geist, sans-serif', 'font-weight': 600 }, lab);
+          const year = `© ${new Date().getFullYear()}`;
+          // (Every label says the same: the white label record's too.) Each
+          // item on its own, with the same space between every two of them
+          // all the way round, from their measured widths (again once the
+          // font has loaded).
+          // The speed as a real fraction, built from small figures (a ⅓
+          // glyph isn't in the font, and its fallback looked wrong): the 1 up
+          // at the caps' height, a slash, the 3 on the baseline.
+          const k = 0.62, up = 0.7 * fs * (1 - k);
+          const rpm = [{ t: '33' }, { t: '1', k, dy: -up, ls: 0.15 }, { t: '/', k, dy: up / 2, ls: 0.15 }, { t: '3', k, dy: up / 2 }, { t: ' RPM' }];
+          const words = ['INTERLUDE', 'FREE', 'OPEN SOURCE', 'STEREO', rpm, year].map((w) => (typeof w === 'string' ? [{ t: w }] : w));
+          const tps = words.map((parts) => {
+            const tp = el('textPath', { href: `#${id}` }, t);
+            for (const q of parts) {
+              const a = {};
+              if (q.k) a['font-size'] = fs * q.k;
+              if (q.dy) a.dy = q.dy;
+              if (q.ls != null) a['letter-spacing'] = q.ls;
+              el('tspan', a, tp).textContent = q.t;
+            }
+            return tp;
+          });
+          const C = 2 * Math.PI * (L - 5);
+          const place = () => {
+            const ctx = document.createElement('canvas').getContext('2d');
+            const has = 'letterSpacing' in ctx;
+            const width = (q) => {
+              const size = fs * (q.k || 1), sp = q.ls ?? ls;
+              ctx.font = `600 ${size * 10}px Geist, sans-serif`;
+              if (has) ctx.letterSpacing = `${sp * 10}px`;
+              return ctx.measureText(q.t).width / 10 + (has ? 0 : sp * q.t.length);
+            };
+            const wd = words.map((parts) => parts.reduce((x, q) => x + width(q), 0));
+            const g = (C - wd.reduce((x, y) => x + y, 0)) / words.length;
+            let at = 0;
+            tps.forEach((tp, i) => { tp.setAttribute('startOffset', at.toFixed(2)); at += wd[i] + g; });
+          };
+          place();
+          document.fonts?.ready.then(place);
+          if (label !== 'white') {
+            // The app's icon itself, small: its two rings on its own dark
+            // tile, so they read on any paper, whatever colour it is.
+            // Two ways (Note: label logo): the rings alone, small, each with a
+            // fine outline in the label's ink so a ring the same colour as the
+            // paper still reads; or the rings on the icon's own dark tile.
+            const ringsG = el('g', { class: 'lg-rings' }, lab);
+            for (const [cx, col] of [[-2.5, '#4aa8ff'], [2.5, '#ff9b45']]) el('circle', { cx, cy: -12, r: 3.9, fill: 'none', 'stroke-width': 2.5, style: `stroke: color-mix(in oklab, #141210 88%, var(${paperVar}, ${paperDef}))` }, ringsG);
+            for (const [cx, col] of [[-2.5, '#4aa8ff'], [2.5, '#ff9b45']]) el('circle', { cx, cy: -12, r: 3.9, fill: 'none', stroke: col, 'stroke-width': 1.25 }, ringsG);
+            const tileG = el('g', { class: 'lg-tile' }, lab);
+            el('rect', { x: -7.5, y: -19.5, width: 15, height: 15, rx: 3.6, fill: '#121216' }, tileG);
+            el('circle', { cx: -2.3, cy: -12, r: 3.6, fill: 'none', stroke: '#4aa8ff', 'stroke-width': 1.2 }, tileG);
+            el('circle', { cx: 2.3, cy: -12, r: 3.6, fill: 'none', stroke: '#ff9b45', 'stroke-width': 1.2 }, tileG);
+            // Its name under it, larger; under that, which side.
+            const n = el('text', { y: 11, 'text-anchor': 'middle', 'font-size': 7.4, 'font-weight': 650, 'letter-spacing': -0.25, style: ink(92), 'font-family': 'Geist, sans-serif' }, lab);
+            n.textContent = 'Interlude';
+            const sb = el('text', { y: 18, 'text-anchor': 'middle', 'font-size': 3.3, 'font-weight': 600, 'letter-spacing': 0.9, style: ink(70), 'font-family': 'Geist, sans-serif' }, lab);
+            sb.textContent = `SIDE ${side}`;
+            el('circle', { r: 1.3, fill: '#0b0b0d' }, lab);
+          }
+          return svg;
+        };
+        const rec = document.createElement('div');
+        rec.className = 'rec';
+        rec.setAttribute('aria-hidden', 'true');
+        const spin = document.createElement('div');
+        spin.className = 'rec-spin';
+        // Side A, side B on its back (turned over), and the white label.
+        const back = disc('brand', 'B');
+        back.classList.add('rec-back');
+        spin.append(disc('brand'), back, disc('white'));
+        // (Turned over as a whole on a click: the sleeve's record flips.)
+        const flip = document.createElement('div');
+        flip.className = 'rec-flip';
+        flip.append(spin);
+        // The light on the vinyl stays put while the record turns under it.
+        const sheen = document.createElement('i');
+        sheen.className = 'rec-sheen';
+        rec.append(flip, sheen);
+        note.prepend(rec);
+        // The sleeve's record: on hover it slides out to the side and spins
+        // up to its speed; off, it slows to a stop and slides home. Both on
+        // Apple-style springs (a duration and a bounce, as in SwiftUI), set
+        // on the Note sliders. Its speed, how far out it comes.
+        if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          const S = { rpm: 9.7, out: 42, slide: { visualDuration: 0.5, bounce: 0.12 }, spinUp: { visualDuration: 1.1, bounce: 0 }, spinDown: { visualDuration: 1.6, bounce: 0 } };
+          // A spring's stiffness and damping (mass 1) from its duration and
+          // bounce, the way SwiftUI turns one into the other.
+          const kc = (sp) => { const d = Math.max(0.05, sp.visualDuration ?? 0.6); const b = Math.min(0.95, Math.max(0, sp.bounce ?? 0)); return [(2 * Math.PI / d) ** 2, (4 * Math.PI * (1 - b)) / d]; };
+          let ang = 0, vel = 0, velV = 0, x = 0, xV = 0, inside = false, last = 0, on = false;
+          const step = (now) => {
+            const dt = Math.min(0.05, (now - last) / 1000 || 0.016); last = now;
+            const wantV = inside ? S.rpm * 6 : 0; // degrees a second
+            const wantX = inside ? 1 : 0;
+            const [k1, c1] = kc(inside ? S.spinUp : S.spinDown);
+            const [k2, c2] = kc(S.slide);
+            for (let i = 0, n = Math.ceil(dt / 0.008); i < n; i++) {
+              const h = dt / n;
+              velV += (k1 * (wantV - vel) - c1 * velV) * h; vel += velV * h;
+              xV += (k2 * (wantX - x) - c2 * xV) * h; x += xV * h;
+            }
+            ang = (ang + Math.max(0, vel) * dt) % 360;
+            spin.style.rotate = `${ang}deg`;
+            rec.style.translate = `${x * S.out}% 0`;
+            const settled = Math.abs(vel - wantV) < 0.5 && Math.abs(velV) < 0.5 && Math.abs(x - wantX) < 0.001 && Math.abs(xV) < 0.001;
+            if (!settled || inside) requestAnimationFrame(step); else { vel = wantV; x = wantX; rec.style.translate = `${x * S.out}% 0`; on = false; }
+          };
+          const go = (v) => { if (document.documentElement.dataset.note !== 'sleeve') return; inside = v; if (!on) { on = true; last = 0; requestAnimationFrame(step); } };
+          note.addEventListener('pointerenter', () => go(true));
+          note.addEventListener('pointerleave', () => go(false));
+          // A click on the record turns it over, a quick flip like a coin's,
+          // to its other side (side B, on blue paper), and back again on the
+          // next; a glint crosses it as it lands. On a spring of its own.
+          S.flip = { visualDuration: 0.6, bounce: 0.22 };
+          let fa = 0, fv = 0, fTo = 0, fOn = false, fLast = 0;
+          const fstep = (now) => {
+            const dt = Math.min(0.05, (now - fLast) / 1000 || 0.016); fLast = now;
+            const [k, c] = kc(S.flip);
+            for (let i = 0, n = Math.ceil(dt / 0.008); i < n; i++) { const h = dt / n; fv += (k * (fTo - fa) - c * fv) * h; fa += fv * h; }
+            flip.style.transform = `rotateY(${fa}deg)`;
+            if (Math.abs(fa - fTo) > 0.05 || Math.abs(fv) > 0.05) requestAnimationFrame(fstep);
+            else { fa = fTo; flip.style.transform = `rotateY(${fa}deg)`; fOn = false; }
+          };
+          // (Anywhere over the record's disc counts, in the sleeve or out of
+          // it, except on the note's link; the pointer shows it can be clicked.)
+          const overRec = (e) => {
+            if (e.target.closest?.('a')) return false;
+            const r = rec.getBoundingClientRect();
+            const R = Math.max(r.width, r.height) / 2;
+            return Math.hypot(e.clientX - (r.left + r.width / 2), e.clientY - (r.top + r.height / 2)) <= R;
+          };
+          note.addEventListener('pointermove', (e) => note.classList.toggle('over-rec', document.documentElement.dataset.note === 'sleeve' && overRec(e)), { passive: true });
+          note.addEventListener('pointerleave', () => note.classList.remove('over-rec'));
+          note.addEventListener('click', (e) => {
+            if (document.documentElement.dataset.note !== 'sleeve' || !overRec(e)) return;
+            fTo += 180;
+            rec.classList.remove('rec-glint'); void rec.offsetWidth; rec.classList.add('rec-glint');
+            if (!fOn) { fOn = true; fLast = 0; requestAnimationFrame(fstep); }
+          });
+          // (Time and bounce as their own sliders, so the time can run long.)
+          window.tune?.slider({ label: 'Note: record flip time', min: 0.2, max: 4, step: 0.05, value: S.flip.visualDuration, unit: 's', onInput: (v) => (S.flip = { ...S.flip, visualDuration: v }) });
+          window.tune?.slider({ label: 'Note: record flip bounce', min: 0, max: 0.8, step: 0.01, value: S.flip.bounce, onInput: (v) => (S.flip = { ...S.flip, bounce: v }) });
+          // The labels' paper.
+          const root = document.documentElement.style;
+          document.documentElement.dataset.lablogo = 'tile';
+          window.tune?.select({ label: 'Note: label logo', value: 'tile', options: [['tile', 'Rings on the icon tile'], ['plain', 'Rings alone, no outline'], ['rings', 'Rings, outlined']], onInput: (v) => (document.documentElement.dataset.lablogo = v) });
+          window.tune?.color({ label: 'Note: side A label', value: '#fb8b38', onInput: (v) => root.setProperty('--lab-a', v) });
+          window.tune?.color({ label: 'Note: side B label', value: '#3fc9ea', onInput: (v) => root.setProperty('--lab-b', v) });
+          window.tune?.color({ label: 'Note: white label', value: '#f3f0e8', onInput: (v) => root.setProperty('--lab-white', v) });
+          const t = window.tune;
+          t?.slider({ label: 'Note: sleeve corner radius', min: 0, max: 16, step: 0.5, value: 4, unit: 'px', css: '--sleeve-r' });
+          t?.slider({ label: 'Note: sleeve tilt', min: -8, max: 8, step: 0.25, value: -1.5, unit: 'deg', css: '--sleeve-tilt' });
+          t?.slider({ label: 'Note: question to signature', min: 0, max: 40, step: 1, value: 6, unit: 'px', css: '--ask-gap' });
+          t?.slider({ label: 'Note: rings logo outline', min: 0, max: 4, step: 0.05, value: 2.5, css: '--lab-outline' });
+          // (The record, its hole and the ring worn into the sleeve move together.)
+          t?.slider({ label: 'Note: record lifted off the sleeve bottom', min: 0, max: 48, step: 1, value: 12, unit: 'px', css: '--rec-lift' });
+          t?.slider({ label: 'Note: record speed when out', min: 5, max: 78, step: 0.1, value: S.rpm, unit: 'rpm', onInput: (v) => (S.rpm = v) });
+          // (How far past the sleeve the record reaches when out, for the
+          // layout to keep it clear of the window's edge: it's 80% of the
+          // sleeve wide, its middle 72% across, and slides out its own width
+          // times the share.)
+          const over = () => document.documentElement.style.setProperty('--rec-over', `${Math.round(292 * 0.12 + 292 * 0.8 * S.out / 100)}px`);
+          over();
+          t?.slider({ label: 'Note: how far the record comes out', min: 10, max: 70, step: 1, value: S.out, unit: '%', onInput: (v) => { S.out = v; over(); } });
+          t?.slider({ label: 'Note: push right', min: 0, max: 40, step: 1, value: 8, unit: 'px', css: '--note-nudge' });
+          t?.spring({ label: 'Note: record slides out', value: { type: 'spring', ...S.slide }, onInput: (v) => (S.slide = v) });
+          t?.spring({ label: 'Note: record spins up', value: { type: 'spring', ...S.spinUp }, onInput: (v) => (S.spinUp = v) });
+          t?.spring({ label: 'Note: record slows down', value: { type: 'spring', ...S.spinDown }, onInput: (v) => (S.spinDown = v) });
+        }
+      })();
+      // The note's signature is written in the first time it's mostly in
+      // view (shown whole straight away when motion is reduced).
+      (() => {
+        const note = document.querySelector('.founder');
+        if (!note || matchMedia('(prefers-reduced-motion: reduce)').matches || !('IntersectionObserver' in window)) return;
+        note.toggleAttribute('data-sign', true);
+        const io = new IntersectionObserver(([e]) => {
+          if (!e.isIntersecting) return;
+          note.toggleAttribute('data-signed', true);
+          io.disconnect();
+        }, { threshold: 0.6 });
+        io.observe(note);
+      })();
+    </script>
   </main>
 
   <footer class="foot">
+    <!-- The same film grain as over the hero's record (one set of controls,
+         Tune › Grain): over the footer's background and its big word, under
+         the logo and the links. -->
+    <div class="grain grain--foot" aria-hidden="true"></div>
     <div class="wrap foot-grid">
       <div>
-        <a class="brand" href="#top"><img src="img/icon.svg" alt="" width="20" height="20"><span>Interlude</span></a>
-        <p class="small-print">A free DJ app for the Mac.</p>
+        <a class="brand" href="#top"><img src="img/icon.svg?v=2" alt="" width="20" height="20"><span>Interlude</span></a>
+        <p class="small-print">A free DJ app for Mac</p>
+        <p class="small-print legal">Interlude is free software under the GNU GPL v3 or later. Controller mappings come from the <a href="https://mixxx.org" target="_blank" rel="noopener">Mixxx</a> project (GPL-2.0-or-later). Interlude isn't affiliated with Pioneer DJ, Rekordbox, Serato or Mixxx; their names belong to their owners.</p>
       </div>
       <div>
         <h4>App</h4>
         <a href="https://github.com/zain-merchant/interlude/releases/latest/download/Interlude.dmg">Download</a>
-        <a href="https://github.com/zain-merchant/interlude/releases">Changelog</a>
+        <a href="https://github.com/zain-merchant/interlude/releases" target="_blank" rel="noopener">Changelog</a>
         <a href="#faq">FAQ</a>
+        <button class="sfx-btn sfx-foot" type="button" aria-pressed="true" title="Sound on"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.75 6.25h2L8 3.5v9L4.75 9.75h-2z"/><path class="sfx-on" d="M10.5 6.1a2.8 2.8 0 0 1 0 3.8M12.3 4.3a5.3 5.3 0 0 1 0 7.4"/><path class="sfx-off" d="M10.75 6.25l3.5 3.5m0-3.5-3.5 3.5"/></svg>Sounds</button>
       </div>
       <div>
         <h4>Project</h4>
-        <a href="https://github.com/zain-merchant/interlude">GitHub</a>
-        <a href="https://github.com/zain-merchant/interlude/issues">Issues</a>
-        <a href="https://github.com/zain-merchant/interlude/blob/main/LICENSE">License</a>
+        <a href="https://github.com/zain-merchant/interlude" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://github.com/zain-merchant/interlude/issues" target="_blank" rel="noopener">Issues</a>
+        <a href="https://github.com/zain-merchant/interlude/blob/main/LICENSE" target="_blank" rel="noopener">License</a>
       </div>
     </div>
-    <p class="wrap small-print legal">Interlude is free software under the GNU GPL v3 or later. Controller mappings come from the <a href="https://mixxx.org">Mixxx</a> project (GPL-2.0-or-later). Interlude isn't affiliated with Pioneer DJ, Rekordbox, Serato or Mixxx; their names belong to their owners.</p>
+
+    <span class="foot-word" data-text="Interlude" aria-hidden="true">Interlude</span>
   </footer>
 
+  <!-- The feature cards' pictures (built from app/demo, see the README).
+       Their styles are down here, so the first screen never waits for them. -->
+  <link rel="stylesheet" href="demo/cards.css?v=20261119h1">
+  <script type="module" async src="demo/cards.js?v=20261119h1"></script>
   <script>
-    // No moving hero for people who asked for less motion: the poster stays.
-    if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      const v = document.getElementById('demo');
-      v.removeAttribute('autoplay');
-      v.pause();
-    }
+    // The hero. The screenshot shows first; once the page has loaded, the
+    // live app takes its place (unless the visitor prefers less motion).
+    // The app runs at 1440 × 900 and is scaled to the frame, so it looks the
+    // same at any width. It tells us how loud it's playing, and the glow
+    // under it follows; the switch picks mouse or controller.
+    (async () => {
+      const loaded = new Promise((ok) => (document.readyState === 'complete' ? ok() : addEventListener('load', ok, { once: true })));
+      const fx = await import('./hero-fx.js?v=20261119r2').catch(() => null);
+      const frame = document.querySelector('.stage-frame');
+      const screen = frame.querySelector('.screen');
+      const live = frame.querySelector('.live');
+      const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+      const fit = () => frame.parentElement.style.setProperty('--s', String(screen.clientWidth / 1440));
+
+      // The site's springs (style.css :root), for animations run from here.
+      const spring = (n) => getComputedStyle(document.documentElement).getPropertyValue(`--${n}`).trim();
+      // The screen rises into place out of a soft blur as the page opens.
+      if (!reduced.matches) {
+        frame.animate(
+          { opacity: [0, 1], transform: ['translateY(28px) scale(0.985)', 'none'], filter: ['blur(10px)', 'blur(0)'] },
+          { duration: parseFloat(spring('glide-ms')), easing: spring('glide'), fill: 'backwards' },
+        );
+      }
+      new ResizeObserver(fit).observe(screen);
+      fit();
+
+      // The camera: the app asks to ease in on a point (in its own 1440 × 900
+      // pixels) at a zoom; the frame crops, so the view pushes in and back.
+      function camera({ x, y, zoom }) {
+        if (!zoom || zoom <= 1.01 || reduced.matches) {
+          live.style.transform = '';
+          return;
+        }
+        const s = screen.clientWidth / 1440;
+        const W = screen.clientWidth;
+        const H = screen.clientHeight;
+        const S = s * zoom;
+        // Bring the point most of the way to the middle, never past an edge.
+        const tx = Math.min(0, Math.max(W - 1440 * S, (x * s + (W / 2 - x * s) * 0.7) - x * S));
+        const ty = Math.min(0, Math.max(H - 900 * S, (y * s + (H / 2 - y * s) * 0.7) - y * S));
+        live.style.transform = `translate(${tx}px, ${ty}px) scale(${S})`;
+      }
+
+      let mode = 'mouse';
+      // Whether the glow and the record follow the music: off. Measured, the
+      // glow moved at most 6/255 in a band under the screen and the record's
+      // swell at most 5/255, nothing anyone sees, for a few points of CPU.
+      // (Tune > Hero > Performance > react to the music; ?react=on.)
+      let react = new URLSearchParams(location.search).get('react') === 'on';
+      // Being tried: the live app in its frame, or the recorded clips played
+      // in the page (startClips, below).
+      let demo = new URLSearchParams(location.search).get('hero') === 'clips' ? 'clips' : 'app';
+      let clips = null;
+      let clipsHost = null;
+      let clipsReady = false;
+      addEventListener('message', (e) => {
+        if (e.source !== live.contentWindow) return;
+        if (e.data?.interlude === 'hero-ready') {
+          liveReady = true;
+          if (!useVideo()) frame.dataset.live = '';
+          live.contentWindow.postMessage({ interlude: 'mode', mode }, '*');
+          live.contentWindow.postMessage({ interlude: 'input', style: input }, '*');
+          live.contentWindow.postMessage({ interlude: 'controller', v: 'club', skin: heroSkin }, '*');
+          live.contentWindow.postMessage({ interlude: 'css', vars: heroVars }, '*');
+        }
+        if (e.data?.interlude === 'camera') camera(e.data);
+        if (e.data?.interlude === 'level' && react) {
+          fx?.hear(e.data.level);
+          glowSoon(e.data.level);
+        }
+      });
+      // (The app reports its level as it draws a frame, so the report comes
+      // in just after that frame. Laid on the glow straight away it would
+      // need a frame of its own; it's held for the start of the app's next
+      // one, the first frame of the next 30th of a second, so the page is
+      // put together once per app frame, not twice.)
+      let heard = 0;
+      let glowWait = 0;
+      function glowSoon(l) {
+        heard = l;
+        if (glowWait) return;
+        const now = performance.timeOrigin + performance.now();
+        const wait = (Math.floor(now / (1000 / 30)) + 1) * (1000 / 30) - now + 1;
+        glowWait = setTimeout(() => requestAnimationFrame(() => { glowWait = 0; glowTo(heard); }), wait);
+      }
+
+      // The glow under the frame swells with the level. It's set on the glow
+      // alone (a custom property on the frame would restyle everything in
+      // it, the app's frame included, 30 times a second), straight onto its
+      // opacity and scale, retargeted at most 12 times a second and eased
+      // toward each over 90ms. The easing is stepped here, on each of the
+      // app's frames (its level reports come with them, 30 a second), not
+      // as a CSS transition: one of those was always running, which kept the
+      // page drawing at the screen's own rate (60 or 120 a second).
+      const glow = frame.querySelector('.glow');
+      let glowAt = 0;
+      const gs = { o0: 0.16, s0: 0.97, o1: 0.16, s1: 0.97, t: 0, o: '', s: '' };
+      function glowStep(now) {
+        if (!glow) return;
+        const k = Math.min(1, (now - gs.t) / 90);
+        const o = (gs.o0 + (gs.o1 - gs.o0) * k).toFixed(3);
+        const s = (gs.s0 + (gs.s1 - gs.s0) * k).toFixed(4);
+        if (o !== gs.o) glow.style.opacity = gs.o = o;
+        if (s !== gs.s) glow.style.transform = `scale(${(gs.s = s)})`;
+      }
+      function glowTo(l) {
+        const now = performance.now();
+        glowStep(now);
+        if (!glow || now - glowAt < 80) return;
+        glowAt = now;
+        Object.assign(gs, { o0: +gs.o || 0.16, s0: +gs.s || 0.97, o1: 0.16 + l * 0.34, s1: 0.97 + l * 0.05, t: now });
+      }
+      // For the recorded clips, which tell the level a dozen times a second
+      // and nothing between: the glow goes straight to it, with no frames of
+      // easing in between. (At rest when the music isn't followed.)
+      function glowSet(l) {
+        if (!glow) return;
+        const o = (0.16 + l * 0.34).toFixed(3);
+        const s = (0.97 + l * 0.05).toFixed(4);
+        if (o !== gs.o) glow.style.opacity = gs.o = o;
+        if (s !== gs.s) glow.style.transform = `scale(${(gs.s = s)})`;
+      }
+
+      // Nobody can see the app while its screen is scrolled out of view or
+      // the tab is hidden, so it's paused then (app/demo/pause.js): nothing
+      // in it draws until it's back.
+      let onScreen = true;
+      const pauseIfHidden = () => {
+        const hidden = !onScreen || document.hidden;
+        live.contentWindow?.postMessage({ interlude: 'pause', paused: hidden || useVideo() || demo === 'clips' }, '*');
+        clips?.setPaused(hidden || demo !== 'clips');
+        for (const [m, v] of Object.entries(videos)) {
+          if (hidden || !useVideo() || m !== mode) v.pause();
+          else v.play().catch(() => {});
+        }
+      };
+      new IntersectionObserver(([e]) => {
+        onScreen = e.isIntersecting;
+        pauseIfHidden();
+      }, { rootMargin: '100px 0px' }).observe(frame);
+      document.addEventListener('visibilitychange', pauseIfHidden);
+      live.addEventListener('load', pauseIfHidden);
+      // Being tried: the app's frame rate while it plays. 30 halves what it
+      // costs to run; the cursor and waveforms move a little less smoothly.
+      let appFps = 30;
+      // The pushed-back screen in controller mode: how far it tips (negative
+      // tips its top toward you) and where it scales from.
+      const heroVars = { '--tilt': '-3deg', '--anchor': '50% 0%' };
+      const sendVars = () => {
+        live.contentWindow?.postMessage({ interlude: 'css', vars: heroVars }, '*');
+        clips?.setVars(heroVars);
+      };
+      window.tune?.slider({ label: 'Hero: controller comes in from (px, minus is above)', min: -160, max: 160, step: 2, value: -40, unit: 'px', onInput: (v) => { heroVars['--hw-from'] = `${v}px`; sendVars(); } });
+      window.tune?.slider({ label: 'Hero: controller follows the screen by (ms)', min: 0, max: 500, step: 5, value: 110, unit: 'ms', onInput: (v) => { heroVars['--hw-delay'] = `${v}ms`; sendVars(); } });
+      window.tune?.slider({ label: 'Hero: controller blur as it comes in', min: 0, max: 30, step: 0.5, value: 10, unit: 'px', onInput: (v) => { heroVars['--hw-blur'] = `${v}px`; sendVars(); } });
+      window.tune?.slider({ label: 'Hero: screen tilt in controller mode', min: -10, max: 10, step: 0.5, value: -3, unit: '°', onInput: (v) => { heroVars['--tilt'] = `${v}deg`; sendVars(); } });
+      window.tune?.select({ label: 'Hero: screen scales from', value: 'top', options: [['top', 'Its top'], ['center', 'Its middle'], ['bottom', 'Its bottom']], onInput: (v) => { heroVars['--anchor'] = { top: '50% 0%', center: '50% 50%', bottom: '50% 100%' }[v]; sendVars(); } });
+      const sendFps = () => live.contentWindow?.postMessage({ interlude: 'fps', fps: appFps }, '*');
+      live.addEventListener('load', sendFps);
+      window.tune?.slider({ label: 'Hero: app frame rate', folder: 'Performance', min: 20, max: 60, step: 5, value: 30, onInput: (v) => { appFps = v; sendFps(); } });
+
+      // Or the hero as a video of itself: the same demo, recorded frame by
+      // frame by `npm run bake:hero` (app/demo/bake-hero.mjs) into hero/, so
+      // it's made again whenever the app's UI changes. Playing a video costs
+      // a fraction of running the app. What it gives up: a switch of hands
+      // cuts to the other recording instead of carrying the same set on
+      // (each loops without a seam, six mixes long), and it plays at 30
+      // frames a second. The level the app reported is recorded with it, so
+      // the glow and the record still follow the music. The controller
+      // version always plays live: around the eased-back app the page has
+      // to show through, and a see-through video (VP9 with alpha) cost
+      // Chrome more to decode than running the app, at twice the size.
+      const clip = (m) => (m === 'mouse' ? 'hero/hero-mouse.mp4' : null);
+      // ?hero=live plays the live app, for comparing.
+      let render = ['live', 'clips'].includes(new URLSearchParams(location.search).get('hero')) ? 'live' : 'video';
+      let liveReady = false;
+      // One video per version, made when first shown, so a switch keeps the
+      // last one on screen until the next is playing.
+      const videos = {};
+      const levels = {};
+      const useVideo = () => render === 'video' && !!clip(mode);
+      // The app's frame is only made invisible, not taken out of the layout,
+      // so an app loaded behind the video lays itself out as it will show.
+      const showOnly = (el) => {
+        live.style.visibility = el === live ? '' : 'hidden';
+        if (clipsHost) clipsHost.style.visibility = el === clipsHost ? '' : 'hidden';
+        for (const v of Object.values(videos)) v.style.display = v === el ? '' : 'none';
+        // (A recording showing paces the record's frames, hero-fx.js beat.)
+        // (Not the clips: they keep no frame-by-frame beat.)
+        fx?.pacer?.(!!el && el !== live && el !== clipsHost);
+      };
+      function videoFor(m) {
+        if (videos[m]) return videos[m];
+        const v = (videos[m] = document.createElement('video'));
+        v.className = 'live baked';
+        Object.assign(v, { muted: true, loop: true, playsInline: true, preload: 'auto', disablePictureInPicture: true, tabIndex: -1, src: clip(m) });
+        v.setAttribute('aria-hidden', 'true');
+        v.style.display = 'none';
+        live.after(v);
+        fetch(`hero/hero-${m}.json`).then((r) => r.json()).then((j) => (levels[m] = j)).catch(() => {});
+        v.addEventListener('playing', () => {
+          if (!useVideo() || mode !== m) return;
+          showOnly(v);
+          frame.dataset.live = '';
+        });
+        // Asked to play again once it can, in case the first ask came too early.
+        v.addEventListener('canplay', pauseIfHidden);
+        // Not recorded yet (or not playable here): the live app instead.
+        v.addEventListener('error', () => { render = 'live'; start(); });
+        // Each frame shown, the level recorded with it.
+        const tick = (now, meta) => {
+          const rec = levels[m];
+          if (rec && useVideo() && mode === m) {
+            const l = rec.level[Math.floor(meta.mediaTime * rec.fps) % rec.frames] ?? 0;
+            glowTo(l);
+            fx?.hear(l);
+            fx?.beat?.(now);
+          }
+          v.requestVideoFrameCallback(tick);
+        };
+        v.requestVideoFrameCallback?.(tick);
+        return v;
+      }
+      // Starts whichever the hero plays as. A video is shown once it plays.
+      // Nothing starts until the page has loaded (go, below), so the app
+      // never competes with the page's own first screen for the network.
+      let go = false;
+      function start() {
+        if (reduced.matches || !go) return;
+        if (useVideo()) {
+          const v = videoFor(mode);
+          if (!v.paused && v.readyState >= 3) showOnly(v);
+          pauseIfHidden();
+          return;
+        }
+        if (demo === 'clips') return startClips();
+        showOnly(live);
+        if (!live.getAttribute('src')) live.src = live.dataset.src;
+        if (liveReady) frame.dataset.live = '';
+        else delete frame.dataset.live;
+        pauseIfHidden();
+      }
+      // The controller version plays live: with the video showing, the app
+      // is loaded (paused, so it costs nothing) as the pointer nears the
+      // switch, so it's mostly ready by the click.
+      document.querySelector('.switch').addEventListener('pointerenter', () => {
+        if (!reduced.matches && go && demo === 'app' && !live.getAttribute('src')) live.src = live.dataset.src;
+      }, { once: true });
+      window.tune?.select({ label: 'Hero: render', folder: 'Performance', value: render, options: [['video', 'A video of the app'], ['live', 'The live app']],
+        onInput: (v) => { render = v; start(); } });
+      // Being tried: what plays in the frame. The live app, or the hero as
+      // recorded clips, one per step of the script in both hands, played
+      // here in the page (lab/segments/clips.js, made by
+      // app/demo/segments/record.mjs). ?hero=clips picks the clips too.
+      async function startClips() {
+        if (!clipsHost) {
+          clipsHost = document.createElement('div');
+          clipsHost.className = 'live clips';
+          clipsHost.setAttribute('aria-hidden', 'true');
+          live.after(clipsHost);
+          const { mountClips } = await import('./lab/segments/clips.js?v=20261119c1');
+          clips = await mountClips(clipsHost, {
+            base: 'lab/segments/clips/', hand: mode, paused: true,
+            onReady: () => {
+              clipsReady = true;
+              if (demo === 'clips' && !useVideo()) frame.dataset.live = '';
+            },
+            onLevels: (ls) => {
+              if (!react || demo !== 'clips' || !ls.length) return;
+              for (const l of ls) fx?.hear(l);
+              glowSet(ls[ls.length - 1]);
+            },
+          });
+          clips.setVars(heroVars);
+          if (clips.hand !== mode) clips.setHand(mode);
+        }
+        showOnly(clipsHost);
+        if (clipsReady) frame.dataset.live = '';
+        else delete frame.dataset.live;
+        pauseIfHidden();
+      }
+      const pickDemo = (v) => {
+        if (v !== 'app' && v !== 'clips') return;
+        demo = v;
+        if (go) start();
+      };
+      window.tune?.select({ label: 'Hero: demo', folder: 'Performance', value: demo, options: [['app', 'The live app'], ['clips', 'Recorded clips (prototype)']], onInput: pickDemo });
+      window.tune?.select({ label: 'Hero: react to the music', folder: 'Performance', value: react ? 'on' : 'off', options: [['on', 'The glow and the record follow it'], ['off', 'They stay at rest']], onInput: (v) => {
+        react = v !== 'off';
+        if (!react) glowSet(0);
+      } });
+      // The clips cross to the twin without the arrow as the hand switches;
+      // with the pointer on the switch (or focus in it) the twin is started
+      // underneath, so the click shows at once.
+      const sw = document.querySelector('.switch');
+      for (const [ev, on] of [['pointerenter', true], ['focusin', true], ['pointerdown', true], ['pointerleave', false], ['focusout', false]]) {
+        sw.addEventListener(ev, () => clips?.prepare(on && mode === 'mouse'));
+      }
+      // Being tried: how the controller is drawn (app/demo/controller-skins.css).
+      // Kept here too, so a pick made before the app has loaded is sent once
+      // it's ready.
+      let heroSkin = 'current';
+      window.tune?.select({ label: 'Hero: controller style', folder: 'Controller', value: heroSkin, options: [
+        ['current', 'Silver, halfway to studio (current)'], ['graphite', 'Graphite (the finish before)'],
+        ['polish', 'Silver, polish only'], ['most', 'Silver, most of the way to studio'], ['flat', 'Flat'], ['bauhaus', 'Modernist'], ['te', 'Studio industrial'],
+        ['blueprint', 'Blueprint'], ['riso', 'Risograph'], ['hifi', '70s hi-fi'],
+      ], onInput: (v) => {
+        heroSkin = v;
+        live.contentWindow?.postMessage({ interlude: 'controller', v: 'club', skin: v }, '*');
+      } });
+
+      const buttons = [...document.querySelectorAll('.switch button')];
+      for (const b of buttons) {
+        b.addEventListener('click', () => {
+          mode = b.dataset.mode;
+          frame.dataset.mode = mode;
+          if (mode === 'mouse') camera({ zoom: 1 });
+          for (const o of buttons) o.setAttribute('aria-checked', String(o === b));
+          // The other recording, or the live app (started now if it hasn't been).
+          start();
+          live.contentWindow?.postMessage({ interlude: 'mode', mode }, '*');
+          clips?.setHand(mode);
+        });
+      }
+      document.querySelector('.switch').addEventListener('keydown', (e) => {
+        if (!['ArrowLeft', 'ArrowRight'].includes(e.key)) return;
+        const i = buttons.findIndex((b) => b.getAttribute('aria-checked') === 'true');
+        const next = buttons[(i + (e.key === 'ArrowRight' ? 1 : buttons.length - 1)) % buttons.length];
+        next.click();
+        next.focus();
+      });
+
+      // The choices made while trying things out, now fixed: the pulse line
+      // for the controller link, the needle on the record, the stacked
+      // Recording picture.
+      const input = 'line';
+      fx?.setVariant('needle');
+      fx?.setStyle('blend');
+      document.documentElement.dataset.reclayout = 'stacked';
+      // Being tried: the Decks picture with Sync alone, or Sync with the
+      // deck's cues and loop under it.
+      window.tune?.select({ label: 'Features: Decks picture', folder: 'Settled', value: 'stacked', options: [['stacked', 'Sync, then cues and a loop'], ['single', 'Sync only']],
+        onInput: (v) => (document.documentElement.dataset.decklayout = v) });
+      if (!window.tune) document.documentElement.dataset.decklayout = 'stacked';
+
+      // The hero starts once the page has loaded.
+      loaded.then(() => {
+        go = true;
+        start();
+      });
+    })();
+
+    // The name in the footer, and what it does under the pointer (see
+    // foot-fx.js for each mode). Lamp unless picked otherwise in the Tune
+    // panel, where each thing on screen has one control. The word itself
+    // ignores the pointer (so the links above it work), so the hover is
+    // worked out from where the pointer is over its letters. On phones,
+    // holding a finger on the word works the same, and the first time the
+    // word comes into view it plays once.
+    (async () => {
+      const w = document.querySelector('.foot-word');
+      if (!w) return;
+      const d = document.documentElement;
+      // Its script loads as the footer nears (it's at the very end of the
+      // page), or straight away while tuning.
+      const tuning = !!window.tune?.shown;
+      if (!tuning && 'IntersectionObserver' in window) {
+        await new Promise((ok) => {
+          const io = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) { io.disconnect(); ok(); } }, { rootMargin: '1500px 0px' });
+          io.observe(w);
+        });
+      }
+      const fx = await import('./foot-fx.js?v=20261118d1').catch(() => null);
+      addEventListener('foot-fit', () => fx?.relayout());
+      // Without tune.js (or an older one), each control still applies its default.
+      const own = (o) => o.onInput?.(o.value);
+      const tune = { slider: own, select: own, color: own, refresh: () => {}, ...window.tune };
+      const redraw = () => fx?.wake();
+      // Modes from before this panel was tidied map to the nearest one now.
+      const OLD = { sound: 'ripples', 'lamp-stylus': 'lamp-warp' };
+      let mode = 'lamp';
+      const setMode = (v) => {
+        const m = fx?.isGL(v) ? v : OLD[v] || 'lamp';
+        const gl = !!fx?.ready;
+        // Without WebGL the word falls back to the first version, in CSS.
+        d.dataset.foot = gl ? m : 'css';
+        d.toggleAttribute('data-foot-gl', gl);
+        if (fx) { fx.T.mode = m; fx.relayout(); }
+        if (m !== mode) { mode = m; tune.refresh('Footer'); }
+      };
+      tune.select({ label: 'Footer: mode', value: 'lamp', onInput: setMode, options: [
+        ['lamp', 'Lamp'],
+        ['lamp-warp', 'Lamp + warp'],
+        ['ripples', 'Ripples'],
+        ['lamp-ripples', 'Lamp + ripples'],
+      ] });
+      const set = (key) => (v) => { if (fx) { fx.T[key] = v; redraw(); } };
+      tune.slider({ label: 'Footer: warp amount', folder: 'Motion', min: 0, max: 10, step: 0.25, value: 3, unit: 'px',
+        show: () => mode === 'lamp-warp', onInput: set('warp') });
+      const rippling = () => mode === 'ripples' || mode === 'lamp-ripples';
+      tune.slider({ label: 'Footer: ripple speed', folder: 'Motion', min: 0.2, max: 2.5, step: 0.05, value: 0.85, unit: 'em/s',
+        show: rippling, onInput: set('rippleSpeed') });
+      tune.slider({ label: 'Footer: ripple bend', folder: 'Motion', min: 0, max: 8, step: 0.25, value: 2, unit: 'px',
+        show: rippling, onInput: set('rippleBend') });
+      // How rings are set off (see STYLES in foot-fx.js), and what only
+      // some styles have.
+      let style = 'breathe';
+      tune.select({ label: 'Footer: ripple style', folder: 'Motion', value: 'breathe', show: rippling, onInput: (v) => {
+        set('rippleStyle')(v);
+        if (v !== style) { style = v; tune.refresh('Footer'); }
+      }, options: [
+        ['wake', 'Wake'],
+        ['drop', 'Drop'],
+        ['breathe', 'Breathe'],
+        ['trail', 'Trail'],
+        ['interference', 'Interference'],
+      ] });
+      tune.slider({ label: 'Footer: ripple reach', folder: 'Motion', min: 0.5, max: 6, step: 0.1, value: 2.2, unit: 'em',
+        show: rippling, onInput: set('rippleReach') });
+      tune.slider({ label: 'Footer: ripple width', folder: 'Motion', min: 0.02, max: 0.3, step: 0.005, value: 0.07, unit: 'em',
+        show: rippling, onInput: set('rippleWidth') });
+      tune.slider({ label: 'Footer: ripple spacing', folder: 'Motion', min: 0.1, max: 2, step: 0.05, value: 0.6, unit: 'em',
+        show: () => rippling() && (style === 'wake' || style === 'trail'), onInput: set('rippleSpacing') });
+      tune.slider({ label: 'Footer: ripple interval', folder: 'Motion', min: 0.3, max: 4, step: 0.05, value: 0.95, unit: 's',
+        show: () => rippling() && (style === 'breathe' || style === 'interference'), onInput: set('rippleInterval') });
+      tune.slider({ label: 'Footer: interference spread', folder: 'Motion', min: 0.1, max: 1.5, step: 0.05, value: 0.45, unit: 'em',
+        show: () => rippling() && style === 'interference', onInput: set('rippleSpread') });
+      // How long the whole effect takes to come in and go when the pointer
+      // comes over the word and leaves it.
+      tune.slider({ label: 'Footer: click ring reach', folder: 'Motion', min: 0.3, max: 4, step: 0.05, value: 1.6, onInput: set('clickReach') });
+      tune.slider({ label: 'Footer: click ring strength', folder: 'Motion', min: 1, max: 10, step: 0.25, value: 4, unit: '×', onInput: set('clickBend') });
+      tune.slider({ label: 'Footer: click lens magnify', folder: 'Click', min: 0, max: 0.95, step: 0.01, value: 0.8, onInput: set('knock') });
+      tune.slider({ label: 'Footer: click lens size', folder: 'Click', min: 0.03, max: 1.2, step: 0.01, value: 0.4, unit: 'em', onInput: set('knockSize') });
+      tune.slider({ label: 'Footer: click lens springs back in (s)', folder: 'Click', min: 0.15, max: 4, step: 0.05, value: 1.5, onInput: set('knockTime') });
+      tune.slider({ label: 'Footer: click lens holds on a quick click (s)', folder: 'Click', min: 0.15, max: 2, step: 0.05, value: 0.45, onInput: set('knockHold') });
+      tune.slider({ label: 'Footer: click lens in-out swing', folder: 'Click', min: 0, max: 0.9, step: 0.05, value: 0.15, onInput: set('knockBounce') });
+      tune.slider({ label: 'Footer: drag wake spacing', folder: 'Click', min: 0.03, max: 0.6, step: 0.01, value: 0.12, unit: 'em', onInput: set('wakeSpacing') });
+      tune.slider({ label: 'Footer: drag wake reach (0: no wake)', folder: 'Click', min: 0, max: 2, step: 0.05, value: 0.6, onInput: set('wakeReach') });
+      tune.slider({ label: 'Footer: drag stretch', folder: 'Click', min: 0, max: 3, step: 0.05, value: 1.2, onInput: set('dragStretch') });
+      tune.slider({ label: 'Footer: click wave strength', folder: 'Click', min: 0, max: 1.5, step: 0.05, value: 0.3, onInput: set('knockWave') });
+      tune.slider({ label: 'Footer: click wave reach', folder: 'Click', min: 0.1, max: 4, step: 0.05, value: 1, unit: 'em', onInput: set('knockReach') });
+      tune.slider({ label: 'Footer: click wave speed', folder: 'Click', min: 0.3, max: 6, step: 0.1, value: 1.6, unit: 'em/s', onInput: set('knockSpeed') });
+      tune.slider({ label: 'Footer: fade in/out', folder: 'Motion', min: 0, max: 2, step: 0.05, value: 0.5, unit: 's', onInput: set('fade') });
+      // What sets it off: there only while the pointer is over the word, or
+      // set off as the pointer comes near and left to play out and fade on
+      // its own, wherever the pointer goes.
+      let trigger = 'follow';
+      tune.select({ label: 'Footer: hover', folder: 'Motion', value: 'follow', onInput: (v) => { set('trigger')(v); if (v !== trigger) { trigger = v; tune.refresh('Footer'); } }, options: [
+        ['follow', 'While the pointer is on it'],
+        ['once', 'Starts when near, plays out on its own'],
+      ] });
+      tune.slider({ label: 'Footer: plays for', folder: 'Motion', min: 0.5, max: 8, step: 0.25, value: 2.5, unit: 's',
+        show: () => trigger === 'once', onInput: set('hold') });
+
+      tune.slider({ label: 'Footer: groove spacing', folder: 'Shape', min: 1.5, max: 12, step: 0.25, value: 8, unit: 'px', onInput: (v) => {
+        d.style.setProperty('--groove', `${v}px`);
+        set('pitch')(v);
+      } });
+      // The grooves' shape: long shallow arcs, or a record's round ones.
+      tune.select({ label: 'Footer: groove arcs', folder: 'Shape', value: 'flat', onInput: (v) => { if (fx) { fx.T.arc = v; fx.relayout(); } }, options: [
+        ['flat', 'Long and shallow'],
+        ['record', 'Round, like a record'],
+      ] });
+      // Gaps between songs, the smooth bands where one track ends.
+      tune.slider({ label: 'Footer: grooves per song (0: no gaps)', folder: 'Shape', min: 0, max: 24, step: 1, value: 0, onInput: set('songs') });
+      tune.slider({ label: 'Footer: song gap width', folder: 'Shape', min: 0.5, max: 4, step: 0.1, value: 1.6, unit: 'grooves', onInput: set('songGap') });
+      tune.slider({ label: 'Footer: groove line width', folder: 'Shape', min: 0.5, max: 6, step: 0.05, value: 1.25, unit: 'px', onInput: set('lineWidth') });
+      tune.slider({ label: 'Footer: groove tilt', folder: 'Shape', min: -90, max: 90, step: 1, value: 0, unit: '°', onInput: set('tilt') });
+      tune.slider({ label: 'Footer: word cut off at bottom', folder: 'Shape', min: 0, max: 0.6, step: 0.01, value: 0.33, unit: 'em', onInput: (v) => {
+        d.style.setProperty('--foot-cut', String(v));
+      } });
+      tune.slider({ label: 'Footer: outline thickness', folder: 'Shape', min: 0, max: 6, step: 0.25, value: 0, unit: 'px', onInput: set('stroke') });
+
+      // Each colour carries its own opacity (DialKit's picker has an
+      // opacity track, and hands back #rrggbbaa below 100%).
+      const colour = (key, after) => (v) => {
+        const c = fx?.rgba(v);
+        if (c) { fx.T[key] = c; redraw(); }
+        after?.(v);
+      };
+      tune.color({ label: 'Footer: letter colour', folder: 'Colour', value: '#ffffff0b', onInput: colour('letter', (v) => {
+        w.style.setProperty('--foot-letter', v);
+      }) });
+      tune.color({ label: 'Footer: groove gap colour', folder: 'Colour', value: '#00000000', onInput: colour('gap') });
+      tune.color({ label: 'Footer: groove line colour', folder: 'Colour', value: '#ffffff13', onInput: colour('line') });
+      tune.color({ label: 'Footer: outline colour', folder: 'Colour', value: '#ffffff', onInput: colour('outline') });
+      // The footer's own background (the page's unless changed).
+      tune.color({ label: 'Footer: page background', folder: 'Colour', value: '#09090b', onInput: (v) => {
+        if (v === '#09090b') d.style.removeProperty('--foot-bg');
+        else d.style.setProperty('--foot-bg', v);
+      } });
+      const canvas = w.querySelector('.foot-fx');
+      let on = false;
+      let last = null;
+      // Whether a point on the page is over the word (below the top of its
+      // letters, and not on a link, a button or the Tune panel).
+      // (Only while the word is on screen: elsewhere on the page nothing is
+      // measured as the pointer moves or the page scrolls.)
+      let inView = false;
+      if ('IntersectionObserver' in window) new IntersectionObserver(([e]) => { inView = e.isIntersecting; if (!inView && on) { on = false; w.style.setProperty('--on', '0'); fx?.point(null); } }).observe(w);
+      else inView = true;
+      const check = (x, y, target) => {
+        if (!inView) return;
+        const r = w.getBoundingClientRect();
+        const inside = x >= r.left && x <= r.right && y >= r.top + r.height * 0.1 && y <= r.bottom
+          && !target?.closest?.('a, button, .dialkit-root');
+        if (inside) {
+          w.style.setProperty('--x', `${x - r.left}px`);
+          w.style.setProperty('--y', `${y - r.top}px`);
+          const c = canvas?.getBoundingClientRect();
+          if (c) fx?.point({ x: x - c.left, y: y - c.top });
+        } else if (on) fx?.point(null);
+        if (inside !== on) { on = inside; w.style.setProperty('--on', on ? '1' : '0'); }
+      };
+      // A click on the word sends a ring out from where it was clicked.
+      // (Clicking there selects no text, however many times.)
+      addEventListener('mousedown', (e) => {
+        const r = w.getBoundingClientRect();
+        if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom && !e.target.closest?.('a, button, .dialkit-root')) e.preventDefault();
+      });
+      addEventListener('pointerdown', (e) => {
+        if (e.button !== 0 || e.target.closest?.('a, button, .dialkit-root')) return;
+        const r = w.getBoundingClientRect();
+        if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) return;
+        const c = canvas?.getBoundingClientRect();
+        if (c) fx?.click?.({ x: e.clientX - c.left, y: e.clientY - c.top });
+      });
+      // Held and dragged, the lens goes with the pointer; let go, it springs back.
+      addEventListener('pointermove', (e) => {
+        if (!(e.buttons & 1)) return;
+        const c = canvas?.getBoundingClientRect();
+        if (c) fx?.drag?.({ x: e.clientX - c.left, y: e.clientY - c.top });
+      }, { passive: true });
+      for (const t of ['pointerup', 'pointercancel', 'blur']) addEventListener(t, () => fx?.release?.());
+      const leave = () => {
+        last = null;
+        if (on) { on = false; w.style.setProperty('--on', '0'); fx?.point(null); }
+      };
+      addEventListener('pointermove', (e) => {
+        // A finger counts only while it's down (and not scrolling the page).
+        if (e.pointerType === 'touch' && !e.buttons) return;
+        last = { x: e.clientX, y: e.clientY, target: e.target };
+        check(e.clientX, e.clientY, e.target);
+      }, { passive: true });
+      addEventListener('pointerdown', (e) => {
+        if (e.pointerType !== 'touch') return;
+        last = { x: e.clientX, y: e.clientY, target: e.target };
+        check(e.clientX, e.clientY, e.target);
+      }, { passive: true });
+      addEventListener('pointerup', (e) => { if (e.pointerType === 'touch') leave(); }, { passive: true });
+      addEventListener('pointercancel', leave, { passive: true });
+      // Leaving the window (the word sits on its bottom edge) lets go too.
+      d.addEventListener('pointerleave', leave);
+      addEventListener('blur', leave);
+      // The page scrolling under a still pointer moves the word under it.
+      addEventListener('scroll', () => { if (last && inView) check(last.x, last.y, document.elementFromPoint(last.x, last.y)); }, { passive: true });
+      // No hover on this screen: play it once when the word comes into view.
+      if (fx?.ready && !matchMedia('(hover: hover)').matches) {
+        const io = new IntersectionObserver(([e]) => {
+          if (!e.isIntersecting) return;
+          io.disconnect();
+          setTimeout(() => fx.demo(), 250);
+        }, { threshold: 0.5 });
+        io.observe(w);
+      }
+    })();
+
+    // The FAQ: answers ease open and closed instead of jumping. The
+    // details element still works on its own without this.
+    (() => {
+      const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+      // Open on the smooth spring, close on the snappy one (style.css :root).
+      const sp = (n) => getComputedStyle(document.documentElement).getPropertyValue(`--${n}`).trim();
+      for (const d of document.querySelectorAll('.faq details')) {
+        const summary = d.querySelector('summary');
+        const body = d.querySelector('summary ~ *');
+        let anim = null;
+        summary.addEventListener('click', (e) => {
+          if (reduced.matches || !body) return;
+          e.preventDefault();
+          const from = d.offsetHeight;
+          const closing = d.open;
+          if (!closing) d.open = true;
+          // The + turns with the click, not when the closing finishes.
+          d.toggleAttribute('data-closing', closing);
+          const to = closing ? summary.offsetHeight : d.scrollHeight;
+          anim?.cancel();
+          d.style.overflow = 'hidden';
+          anim = d.animate({ height: [`${from}px`, `${to}px`] }, { duration: parseFloat(sp(closing ? 'snappy-ms' : 'smooth-ms')), easing: sp(closing ? 'snappy' : 'smooth') });
+          body.animate({ opacity: closing ? [1, 0] : [0, 1], transform: closing ? ['none', 'translateY(-4px)'] : ['translateY(-4px)', 'none'] },
+            { duration: parseFloat(sp('snappy-ms')), easing: sp('snappy'), fill: 'both' });
+          anim.onfinish = () => {
+            if (closing) d.open = false;
+            d.removeAttribute('data-closing');
+            d.style.overflow = '';
+            anim = null;
+          };
+        });
+      }
+    })();
+
     // Shows the latest version next to the download button. Leaves the
     // plain "Latest release" link if GitHub can't be reached.
-    fetch('https://api.github.com/repos/zain-merchant/interlude/releases/latest')
-      .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
+    // The open source card's update list: how its light surface fades into
+    // the card (style.css, .oss).
+    // The looks (style.css, "Open source looks").
+    window.tune?.select({ label: 'Open source: look', value: 'poster-light', options: [['tight', 'Current, tightened'], ['doors', 'Two doors, in a light frame'], ['doors-apart', 'Two doors, a dark card and a light one'], ['doors-dark', 'Two doors, both dark like the note'], ['poster-card', 'Poster, in a dark card'], ['poster-light', 'Poster, in the light card'], ['poster-open', 'Poster, no card (the FAQ gets one)'], ['feed', 'The newest change, big'], ['cards', 'Centred, three change cards'], ['gitlog', 'The log as git shows it']],
+      onInput: (v) => { document.querySelector('.oss').dataset.look = v; window.tune?.refresh?.('Open source'); } });
+    // What else the light card has (style.css, "Light card extras").
+    window.tune?.select({ label: 'Open source: light card extra', value: 'none', options: [['none', 'Plain'], ['grooves', 'Grooves round the corner, kept off the words'], ['ghosts', 'Two paler cards behind it, like a deck'], ['glow', 'On a soft glow in the deck colours'], ['reveal', 'Heading rises in as it comes into view']],
+      onInput: (v) => (document.querySelector('.oss').dataset.extra = v) });
+    // (Reveal: marked once the card is mostly in view.)
+    (() => {
+      const card = document.querySelector('.oss');
+      if (!card || !('IntersectionObserver' in window)) { card?.toggleAttribute('data-in', true); return; }
+      new IntersectionObserver((es, io) => { if (es[0].isIntersecting) { card.toggleAttribute('data-in', true); io.disconnect(); } }, { threshold: 0.45 }).observe(card);
+    })();
+    // How much each feature's heading stands above its list.
+    document.documentElement.dataset.fhead = 'both';
+    window.tune?.select({ label: 'Features: heading', value: 'both', options: [['both', 'Bigger heading, quieter list'], ['big', 'Bigger heading'], ['quiet', 'Quieter list'], ['before', 'As before']],
+      onInput: (v) => (document.documentElement.dataset.fhead = v) });
+    // (Count: how many things each card lists.)
+    for (const g of document.querySelectorAll('.group')) { const h = g.querySelector('h3'); if (h) h.dataset.count = g.querySelectorAll('li').length; }
+    // The features set apart from the sections either side (style.css,
+    // "Features, set apart").
+    document.documentElement.dataset.fband = 'recess';
+    window.tune?.color({ label: 'Features: band colour', value: '#070709', onInput: (v) => document.documentElement.style.setProperty('--band-bg', v) });
+    window.tune?.color({ label: 'Features: band edge colour', value: '#ffffff12', onInput: (v) => document.documentElement.style.setProperty('--band-line', v) });
+    window.tune?.select({ label: 'Features: band', value: 'recess', options: [['lift', 'A lighter band, hairline edges'], ['recess', 'A darker band, pressed in'], ['panel', 'One big rounded panel'], ['tint', 'A band lit in the deck colours'], ['grooves', 'A band cut with grooves'], ['none', 'No band']],
+      onInput: (v) => (document.documentElement.dataset.fband = v) });
+    // The install steps' numbers: in a small badge, or plain.
+    document.documentElement.dataset.stepnum = 'badge';
+    window.tune?.select({ label: 'Install: step number', value: 'badge', options: [['badge', 'In a small badge'], ['plain', 'Plain, before the heading']],
+      onInput: (v) => (document.documentElement.dataset.stepnum = v) });
+    // A feature heading's distance to its first row (can tuck under the
+    // first row's own padding when negative).
+    window.tune?.slider({ label: 'Features: heading to rows', min: -9, max: 24, step: 1, value: 0, unit: 'px', css: '--fh-gap' });
+    // The Controllers picture: its size, how high it sits, and how long its
+    // fade at the card's foot runs.
+    window.tune?.slider({ label: 'Controllers picture: size', min: 0.8, max: 1.5, step: 0.01, value: 1.15, css: '--ctl-size' });
+    window.tune?.slider({ label: 'Controllers picture: up or down', min: -40, max: 40, step: 1, value: 0, unit: 'px', css: '--ctl-y' });
+    window.tune?.slider({ label: 'Controllers picture: fade length', min: 0, max: 120, step: 2, value: 46, unit: 'px', css: '--ctl-fl' });
+    // The feature cards apart, or one panel ruled into six.
+    document.documentElement.dataset.flayout = 'apart';
+    window.tune?.slider({ label: 'Features: gap between cards', min: 4, max: 48, step: 1, value: 24, unit: 'px', css: '--fgap' });
+    window.tune?.select({ label: 'Features: layout', value: 'apart', options: [['apart', 'Six cards'], ['one', 'One card, ruled into six']],
+      onInput: (v) => (document.documentElement.dataset.flayout = v) });
+    // Film grain over the record behind the hero: drawn by an SVG noise
+    // filter into a tile (its texture: how fine, how clumped, how hard),
+    // laid over the record at a size and an opacity, blended into it, and
+    // stepped a few times a second like film, or held still.
+    (() => {
+      // (Every grain layer on the page, the hero's and the footer's, set as one.)
+      const els = [...document.querySelectorAll('.grain')];
+      if (!els.length) return;
+      // A layer out of view stops stepping (its frames are swapped on the
+      // page's own thread, a restyle each step, seen or not).
+      if ('IntersectionObserver' in window) {
+        const io = new IntersectionObserver((es) => { for (const e of es) e.target.toggleAttribute('data-off', !e.isIntersecting); });
+        els.forEach((e) => io.observe(e));
+      }
+      const el = {
+        style: {
+          setProperty: (k, v) => els.forEach((e) => e.style.setProperty(k, v)),
+          set opacity(v) { els.forEach((e) => (e.style.opacity = v)); },
+          set mixBlendMode(v) { els.forEach((e) => (e.style.mixBlendMode = v)); },
+        },
+        dataset: { set move(v) { els.forEach((e) => (e.dataset.move = v)); } },
+      };
+      const d = document.documentElement;
+      const G = { texture: 'film', size: 1, amount: 0.12, contrast: 1.2, blend: 'normal', move: 'swap', fade: 1 };
+      const TEX = { fine: [0.95, 1], film: [0.75, 2], soft: [0.55, 3], coarse: [0.38, 3] };
+      const tile = () => {
+        const [f, oct] = TEX[G.texture] || TEX.film;
+        const k = G.contrast;
+        // The noise as specks, not a grey wash: where it's above its middle,
+        // white specks; below, black ones; each as clear as it's far from
+        // the middle (times the contrast), so the background between them
+        // stays as dark as it was.
+        const a = 2 * k;
+        // Eight different frames of grain (the same noise, eight seeds), for
+        // the film flicker to swap between; the first is the still one.
+        for (let i = 0; i < 8; i++) {
+          const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='g' x='0' y='0' width='100%' height='100%'><feTurbulence type='fractalNoise' baseFrequency='${f}' numOctaves='${oct}' stitchTiles='stitch' seed='${7 + i * 13}' result='n'/><feColorMatrix in='n' type='matrix' values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 ${a} 0 0 0 ${-k}' result='l'/><feColorMatrix in='n' type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ${-a} 0 0 0 ${k}' result='d'/><feMerge><feMergeNode in='d'/><feMergeNode in='l'/></feMerge></filter><rect width='200' height='200' filter='url(%23g)'/></svg>`;
+          const url = `url("data:image/svg+xml,${svg.replace(/</g, '%3C').replace(/>/g, '%3E').replace(/"/g, "'")}")`;
+          el.style.setProperty(`--grain-f${i}`, url);
+          if (!i) el.style.setProperty('--grain-img', url);
+        }
+      };
+      // The flicker (swap) is stepped from a timer at its own rate: as a CSS
+      // animation it restyled every layer on every frame of the screen (60
+      // or 120 a second) to change a few times a second. Only layers in
+      // view step; with reduced motion it holds still.
+      const still = matchMedia('(prefers-reduced-motion: reduce)');
+      let fps = 6;
+      let timer = 0;
+      let at = 0;
+      const step = () => {
+        at = (at + 1) % 8;
+        for (const e of els) if (!e.hasAttribute('data-off')) e.style.setProperty('--grain-img', `var(--grain-f${at})`);
+      };
+      const flicker = () => {
+        clearInterval(timer);
+        timer = 0;
+        if (G.move === 'swap' && !still.matches) timer = setInterval(step, 1000 / fps);
+      };
+      still.addEventListener?.('change', flicker);
+      const put = () => {
+        tile();
+        el.style.setProperty('--grain-size', `${200 * G.size}px`);
+        el.style.opacity = String(G.amount);
+        el.style.mixBlendMode = G.blend;
+        el.dataset.move = G.move;
+        el.style.setProperty('--grain-fade', String(G.fade));
+        flicker();
+      };
+      const t = window.tune;
+      const set = (k) => (v) => { G[k] = v; put(); };
+      t?.select({ label: 'Grain: texture', value: G.texture, options: [['fine', 'Fine, like sand'], ['film', 'Film'], ['soft', 'Soft and clumped'], ['coarse', 'Coarse']], onInput: set('texture') });
+      t?.slider({ label: 'Grain: size', min: 0.3, max: 4, step: 0.05, value: G.size, onInput: set('size') });
+      t?.slider({ label: 'Grain: amount', min: 0, max: 1, step: 0.01, value: G.amount, onInput: set('amount') });
+      t?.slider({ label: 'Grain: contrast', min: 0.5, max: 4, step: 0.05, value: G.contrast, onInput: set('contrast') });
+      t?.select({ label: 'Grain: blend', value: G.blend, options: [['normal', 'Normal'], ['overlay', 'Overlay'], ['soft-light', 'Soft light'], ['screen', 'Screen (light specks only)'], ['multiply', 'Multiply (dark specks only)']], onInput: set('blend') });
+      t?.select({ label: 'Grain: movement', value: G.move, options: [['swap', 'Flickers between frames of grain'], ['film', 'Jumps about'], ['slow', 'Shifts slowly'], ['still', 'Still']], onInput: set('move') });
+      // How often the film grain jumps: whole fractions of 60 a second (60
+      // over 2, 3, 4, 5, 6, 8, 10, 12, 15, 20), so every jump holds for the
+      // same number of the screen's frames. And how long the slow drift
+      // takes to come round.
+      const FPS = [30, 20, 15, 12, 10, 7.5, 6, 5, 4, 3];
+      t?.select({ label: 'Grain: flicker rate', value: '6', options: FPS.map((f) => [String(f), `${f} a second (every ${60 / f} frames)`]), onInput: (v) => { el.style.setProperty('--grain-fps', v); fps = +v || 6; flicker(); } });
+      t?.slider({ label: 'Grain: jump distance', min: 0.02, max: 1.5, step: 0.01, value: 0.3, onInput: (v) => el.style.setProperty('--grain-jump', String(v)) });
+      t?.slider({ label: 'Grain: drift time', min: 4, max: 60, step: 1, value: 20, unit: 's', onInput: (v) => el.style.setProperty('--grain-drift', `${v}s`) });
+      t?.slider({ label: 'Grain: fades out toward the features', min: 0, max: 1, step: 0.05, value: G.fade, onInput: set('fade') });
+      put();
+    })();
+    // Logos being tried (lab/logos.html): the mark everywhere the icon
+    // appears (nav, hero, footer, the tab), and the wordmark's lockup.
+    // From ?logo=<id>&lockup=<key>, or Tune (Logo); otherwise nothing loads.
+    (() => {
+      const q = new URLSearchParams(location.search);
+      const want = q.get('logo'), lk = q.get('lockup');
+      if (!want && !lk && !window.tune?.shown) return;
+      import('./logos.js').then(({ LOGOS, LOCKUPS, iconURL, byId }) => {
+        const d = document.documentElement;
+        const imgs = [...document.querySelectorAll('.brand img, .hero-icon, .dmg img')];
+        const fav = document.querySelector('link[rel="icon"]');
+        const orig = new Map(imgs.map((i) => [i, i.getAttribute('src')]));
+        const favOrig = fav?.getAttribute('href');
+        const mark = (id) => {
+          const logo = id !== 'current' && byId(id);
+          const url = logo ? iconURL(logo) : null;
+          imgs.forEach((i) => i.setAttribute('src', url ?? orig.get(i)));
+          if (fav) fav.setAttribute('href', url ?? favOrig);
+        };
+        const word = (k) => {
+          // (Today's wordmark: the stylesheet's own values, untouched.)
+          if (!LOCKUPS[k] || k === 'classic') {
+            for (const v of ['weight', 'track', 'track-s', 'case', 'font', 'size']) d.style.removeProperty(`--wm-${v}`);
+            requestAnimationFrame(() => dispatchEvent(new Event('resize')));
+            return;
+          }
+          const L = LOCKUPS[k];
+          d.style.setProperty('--wm-weight', String(L.weight));
+          d.style.setProperty('--wm-track', `${L.tracking}em`);
+          d.style.setProperty('--wm-track-s', `${L.tracking * 0.4}em`);
+          d.style.setProperty('--wm-case', L.case);
+          d.style.setProperty('--wm-font', L.font);
+          d.style.setProperty('--wm-size', String(L.size));
+          // (The nav measures its name to lay out the capsule.)
+          requestAnimationFrame(() => dispatchEvent(new Event('resize')));
+        };
+        const t = window.tune;
+        t?.select({ label: 'Logo: mark', value: 'current', options: LOGOS.map((l) => [l.id, `${l.family === 'light' ? 'Light: ' : ''}${l.name}`]), onInput: mark });
+        t?.select({ label: 'Logo: wordmark', value: 'classic', options: Object.entries(LOCKUPS).map(([k, v]) => [k, v.name]), onInput: word });
+        // (An address asking for one wins over whatever the panel last held.)
+        if (want) { mark(want); t?.set?.('Logo: mark', want); }
+        if (lk || want) { const k = lk || byId(want)?.lockup || 'classic'; word(k); t?.set?.('Logo: wordmark', k); }
+      });
+    })();
+    // Local only: what the page does when the site's files change.
+    if (window.__live) window.tune?.select({ label: 'Dev: live updates', value: (() => { try { return localStorage.getItem('interlude-live') || 'ask'; } catch { return 'ask'; } })(), options: [['ask', 'Styles live, ask before reloading'], ['reload', 'Styles live, reload for the rest'], ['off', 'Off']], onInput: (v) => window.__live.set(v) });
+    // When the light sweeps across Add music's row as its tracks are ready:
+    // after (positive) or ahead of (negative) the check and the green words.
+    window.tune?.slider({ label: 'Add music: sweep starts', min: -500, max: 500, step: 10, value: 0, unit: 'ms', css: '--add-sweep' });
+    // The note beside the FAQ (style.css, "The note beside the FAQ").
+    document.documentElement.dataset.note = 'sleeve';
+    window.tune?.select({ label: 'Note: style', value: 'sleeve', options: [['ruled', 'Ruled page, tilted right, signature right'], ['sleeve', 'A die-cut record sleeve, the record turning inside'], ['label', 'A white label record, the note written on it'], ['plain', 'Plain card'], ['tilt', 'Tilted a little'], ['overhang', 'Signature off the corner'], ['paper', 'On warm paper'], ['lined', 'Ruled like a notebook'], ['letter', 'Paper, tilted, signature off the corner']],
+      onInput: (v) => (document.documentElement.dataset.note = v) });
+    // What sits between sections (style.css, "Between sections").
+    document.documentElement.dataset.between = 'none';
+    window.tune?.select({ label: 'Sections: between', value: 'none', options: [['none', 'Nothing, space only'], ['rule', 'A hairline half way'], ['grooves', 'A strip of record grooves half way'], ['glow', 'A soft light behind each heading'], ['eyebrow', 'Each heading numbered']],
+      onInput: (v) => (document.documentElement.dataset.between = v) });
+    // The install and feature cards (style.css, "Cards"): as they were, or
+    // quieter and of a piece with the rest of the page, or no card at all.
+    document.documentElement.dataset.cards = 'hairlines';
+    window.tune?.select({ label: 'Cards: style', value: 'hairlines', options: [['hairlines', 'As before, lists on hairlines'], ['quiet', 'Quiet: hairlines, a soft top light'], ['open', 'Open: the picture in a panel, words on the page'], ['before', 'Before']],
+      onInput: (v) => (document.documentElement.dataset.cards = v) });
+    // What sits before each feature's heading.
+    document.documentElement.dataset.mark = 'underline';
+    window.tune?.select({ label: 'Features: heading mark', value: 'underline', options: [['underline', 'A short line under the heading'], ['count', 'How many it lists, beside it'], ['tick', 'A short bar before it'], ['edge', 'A lit edge along the card top'], ['glow', 'A soft glow in the corner'], ['none', 'Nothing'], ['dot', 'The dot (before)']],
+      onInput: (v) => (document.documentElement.dataset.mark = v) });
+    // The footer's name, exactly as wide as the column above it at any
+    // window size (measured, since a word's width isn't a CSS length).
+    (() => {
+      const w = document.querySelector('.foot-word');
+      const text = w && [...w.childNodes].find((n) => n.nodeType === 3 && n.textContent.trim());
+      if (!text) return;
+      // Fitted to the letters' ink, not their boxes: the I's left edge sits
+      // on the column's left edge, the e's right edge on its right edge.
+      const ctx = document.createElement('canvas').getContext('2d');
+      const fit = () => {
+        const target = w.clientWidth;
+        const cs = getComputedStyle(w);
+        const fs = parseFloat(cs.fontSize);
+        ctx.font = `${cs.fontWeight} ${fs}px ${cs.fontFamily}`;
+        if ('letterSpacing' in ctx) ctx.letterSpacing = cs.letterSpacing;
+        ctx.textAlign = 'left';
+        const m = ctx.measureText(text.textContent.trim());
+        const width = m.actualBoundingBoxLeft + m.actualBoundingBoxRight;
+        if (width > 0 && target > 0) {
+          const k = target / width;
+          w.style.setProperty('--foot-fs', `${fs * k}px`);
+          w.style.setProperty('--foot-indent', `${m.actualBoundingBoxLeft * k}px`);
+          // (The record drawing redraws its letters at the new size.)
+          dispatchEvent(new Event('foot-fit'));
+        }
+      };
+      fit();
+      document.fonts?.ready.then(fit);
+      new ResizeObserver(() => requestAnimationFrame(fit)).observe(w);
+    })();
+    const cream = () => document.querySelector('.oss')?.dataset.look === 'cream';
+    window.tune?.select({ show: cream, label: 'Open source: what fades', value: 'outer', options: [['outer', 'The outer card, to the right'], ['inner', 'The updates\' surface, to the right'], ['none', 'Nothing']],
+      onInput: (v) => { const o = document.querySelector('.oss'); if (v === 'none') o.removeAttribute('data-fade'); else o.dataset.fade = v; } });
+    window.tune?.slider({ show: cream, label: 'Open source: card brightness', min: 0, max: 1, step: 0.01, value: 0.9, css: '--oss-card' });
+    window.tune?.slider({ show: cream, label: 'Open source: card brightness at the right', min: 0, max: 1, step: 0.01, value: 0.12, css: '--oss-card-end' });
+    window.tune?.slider({ show: cream, label: 'Open source: card blur', min: 0, max: 60, step: 1, value: 30, unit: 'px', css: '--oss-blur' });
+    window.tune?.slider({ show: cream, label: 'Open source: fade starts at', min: 0, max: 100, step: 1, value: 35, unit: '%', css: '--oss-from' });
+    window.tune?.slider({ show: cream, label: 'Open source: fade ends at', min: 0, max: 100, step: 1, value: 100, unit: '%', css: '--oss-to' });
+    window.tune?.slider({ show: cream, label: 'Open source: updates surface white', min: 0, max: 1, step: 0.01, value: 0.62, css: '--oss-a' });
+    window.tune?.slider({ show: cream, label: 'Open source: lines', min: 0, max: 0.3, step: 0.01, value: 0.1, css: '--oss-line' });
+    // The open source card's log: the latest changes on main, merges left
+    // out (they only repeat the change they bring in), releases tagged.
+    // GitHub allows an address 60 of these an hour, so the list is kept in
+    // the browser for 15 minutes, and the last one kept is used if GitHub
+    // turns a request away.
+    const CACHED = 'interlude-commits';
+    const kept = (() => { try { return JSON.parse(localStorage.getItem(CACHED)); } catch { return null; } })();
+    // (Asked for only once the card is getting near: nothing before it needs
+    // it, and it's a good-sized answer.)
+    const nearOss = new Promise((go) => {
+      const el = document.querySelector('.oss');
+      if (!el || !('IntersectionObserver' in window)) return go();
+      const io = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) { io.disconnect(); go(); } }, { rootMargin: '1200px 0px' });
+      io.observe(el);
+    });
+    nearOss.then(() => kept && Date.now() - kept.at < 15 * 60000 ? kept.list
+      : fetch('https://api.github.com/repos/zain-merchant/interlude/commits?per_page=15')
+        .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
+        .then((list) => {
+          try { localStorage.setItem(CACHED, JSON.stringify({ at: Date.now(), list: list.map((c) => ({ sha: c.sha, html_url: c.html_url, commit: { message: c.commit.message, author: { date: c.commit.author.date } } })) })); } catch {}
+          return list;
+        })
+        .catch((e) => (kept ? kept.list : Promise.reject(e))))
+      .then((list) => {
+        const ago = (iso) => {
+          const m = Math.max(1, Math.round((Date.now() - new Date(iso)) / 60000));
+          return m < 60 ? `${m} min ago` : m < 1440 ? `${Math.round(m / 60)} hr ago` : `${Math.round(m / 1440)} d ago`;
+        };
+        const rows = list.filter((c) => !/^Merge /.test(c.commit.message)).slice(0, 6);
+        if (!rows.length) return;
+        const ol = document.querySelector('.oss-commits');
+        ol.replaceChildren(...rows.map((c, i) => {
+          const msg = c.commit.message.split('\n')[0];
+          const rel = /^Release \S+$/.test(msg);
+          const li = document.createElement('li');
+          if (i === 0) li.dataset.latest = '';
+          const a = document.createElement('a');
+          a.href = c.html_url; a.target = '_blank'; a.rel = 'noopener';
+          const t = document.createElement('span'); t.className = 'oss-msg';
+          if (rel) { const b = document.createElement('b'); b.textContent = msg.replace('Release ', 'Version '); t.append(b, ' released'); }
+          else {
+            // "Mappings: Mixxx 2.6…": the area it touches, quieter than the change.
+            const m = /^([^:]{2,24}): (.+)$/.exec(msg);
+            if (m) { const ar = document.createElement('span'); ar.className = 'oss-area'; ar.textContent = `${m[1]}: `; t.append(ar, m[2]); }
+            else t.textContent = msg;
+          }
+          const w = document.createElement('time'); w.dateTime = c.commit.author.date; w.textContent = ago(c.commit.author.date);
+          // (Its short hash, which some looks show.)
+          const h = document.createElement('code'); h.className = 'oss-sha'; h.textContent = c.sha.slice(0, 7);
+          a.append(h, t, w); li.append(a);
+          return li;
+        }));
+        // The same changes as one running line (the poster look), twice
+        // over so it loops without a seam.
+        const log = document.querySelector('.oss-log');
+        log.querySelector('.oss-ticker')?.remove();
+        const tk = document.createElement('div'); tk.className = 'oss-ticker'; tk.setAttribute('aria-hidden', 'true');
+        const track = document.createElement('div'); track.className = 'oss-track';
+        for (let k = 0; k < 2; k++) for (const li of ol.children) {
+          const a = li.querySelector('a').cloneNode(true); a.tabIndex = -1; track.append(a);
+        }
+        tk.append(track); log.append(tk);
+        // It runs at a steady 40px a second; with the pointer on it, it
+        // comes to a stop on a quick critically damped spring (about a
+        // quarter second) rather than at once, and picks up again the same
+        // way. (Not at all with reduced motion: it scrolls by hand.)
+        // The running is a Web Animation, which the compositor plays on its
+        // own: the page does nothing frame to frame. Only the spring to a
+        // stop and back is worked out here, as the animation's speed.
+        if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          const SPEED = 40, K = 180, C = 2 * Math.sqrt(K);
+          let anim = null, half = 0, rate = 1, acc = 0, want = 1, springing = false, seen = false, last = 0;
+          const make = () => {
+            const was = anim ? (anim.currentTime || 0) / (anim.effect.getTiming().duration || 1) : 0;
+            anim?.cancel();
+            half = track.scrollWidth / 2;
+            if (!half) { anim = null; return; }
+            const duration = (half / SPEED) * 1000;
+            anim = track.animate([{ transform: 'translate3d(0, 0, 0)' }, { transform: `translate3d(${-half}px, 0, 0)` }], { duration, iterations: Infinity, easing: 'linear' });
+            anim.currentTime = (was % 1) * duration;
+            anim.updatePlaybackRate(rate);
+            if (!seen || rate === 0) anim.pause();
+          };
+          const spring = (now) => {
+            const dt = Math.min(0.05, (now - last) / 1000 || 0.016); last = now;
+            acc += (-K * (rate - want) - C * acc) * dt;
+            rate += acc * dt;
+            const done = Math.abs(rate - want) < 0.005 && Math.abs(acc) < 0.01;
+            if (done) { rate = want; acc = 0; }
+            if (anim) {
+              if (rate <= 0) anim.pause();
+              else { anim.updatePlaybackRate(rate); if (seen && anim.playState !== 'running') anim.play(); }
+            }
+            if (!done) requestAnimationFrame(spring); else springing = false;
+          };
+          const to = (r) => { want = r; if (!springing) { springing = true; last = 0; requestAnimationFrame(spring); } };
+          const io = new IntersectionObserver(([e]) => {
+            seen = e.isIntersecting;
+            if (!anim) make();
+            if (anim) { if (seen && rate > 0) anim.play(); else anim.pause(); }
+          });
+          io.observe(tk);
+          tk.addEventListener('pointerenter', () => to(0));
+          tk.addEventListener('pointerleave', () => to(1));
+          addEventListener('resize', make);
+          document.fonts?.ready.then(make);
+        }
+      })
+      // (Nothing from GitHub and nothing kept: the card links to the changes
+      // on GitHub in the ticker's place, rather than a label over nothing.)
+      .catch(() => document.querySelector('.oss')?.toggleAttribute('data-nolog', true));
+    // The latest release, kept like the updates above (15 minutes, and the
+    // last one kept if GitHub turns the request away).
+    const RELEASE = 'interlude-release';
+    const rel = (() => { try { return JSON.parse(localStorage.getItem(RELEASE)); } catch { return null; } })();
+    (rel && Date.now() - rel.at < 15 * 60000 ? Promise.resolve(rel.r)
+      : fetch('https://api.github.com/repos/zain-merchant/interlude/releases/latest')
+        .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
+        .then((r) => {
+          try { localStorage.setItem(RELEASE, JSON.stringify({ at: Date.now(), r: { tag_name: r.tag_name, html_url: r.html_url } })); } catch {}
+          return r;
+        })
+        .catch((e) => (rel ? rel.r : Promise.reject(e))))
       .then((r) => {
         if (!r.tag_name) return;
         const v = document.getElementById('version');
         v.textContent = r.tag_name;
+        v.dataset.v = '';
         v.href = r.html_url;
+        // The card's head: "Interlude 0.1.3", and its What's new.
+        const dv = document.querySelector('.dl-ver');
+        if (dv) dv.textContent = ` ${r.tag_name.replace(/^v/, '')}`;
+        for (const nv of document.querySelectorAll('.dl-new-ver')) nv.textContent = ` in ${r.tag_name.replace(/^v/, '')}`;
+        for (const a of document.querySelectorAll('.dl-vlink, .dl-new2')) a.href = r.html_url;
+        const vl = document.querySelector('.dl-vlink');
+        if (vl) vl.textContent = r.tag_name;
+        for (const a of document.querySelectorAll('.dl-rel')) a.href = r.html_url;
+        for (const a of document.querySelectorAll('.dl-cv')) { a.textContent = `Version ${r.tag_name.replace(/^v/, '')}`; a.href = r.html_url; }
+        const vt = document.querySelector('.dl-vtext');
+        if (vt) { vt.textContent = r.tag_name.replace(/^v/, ''); vt.href = r.html_url; }
+        const pill = document.querySelector('.dl-pill');
+        if (pill) { pill.textContent = r.tag_name.replace(/^v/, ''); pill.href = r.html_url; }
+        const tl = document.querySelector('.dl-title');
+        if (tl) tl.href = r.html_url;
+        const dn = document.querySelector('.dl-new');
+        if (dn) dn.href = r.html_url;
       })
       .catch(() => {});
   </script>
