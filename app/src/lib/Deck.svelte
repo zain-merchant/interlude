@@ -242,7 +242,7 @@
     <!-- Prototype: the record sits on the outer side, title and times beside it. -->
     <div class="top">
       <Platter {deck} />
-      <div class="side">
+      <div class="side" class:stacked={!PLATTER_STYLES[platterProto.style]?.strip}>
     <!-- svelte-ignore a11y_no_static_element_interactions -->
       <header oncontextmenu={headerMenu}>
         <div class="title">
@@ -409,31 +409,33 @@
     display: flex;
     flex-direction: column;
     justify-content: center;
-    gap: 14px;
-  }
-  .mirror .side {
-    text-align: right;
+    gap: 10px;
   }
   /* BPM and key are in the record's centre in this prototype. */
   .side .bpm {
     display: none;
   }
-  .side .times {
+  .mirror .side header {
+    justify-content: flex-end;
+    text-align: right;
+  }
+  .side .overview {
+    height: 40px;
+    flex: none;
+  }
+  /* With the strip: the app's own time row. Without it: a bigger stacked readout. */
+  .side.stacked .times {
     flex-direction: column;
     align-items: flex-start;
     gap: 2px;
   }
-  .mirror .side .times {
+  .mirror .side.stacked .times {
     align-items: flex-end;
   }
-  .side .overview {
-    height: 44px;
-    flex: none;
-  }
-  .side .now {
+  .side.stacked .now {
     order: 3;
   }
-  .side .el {
+  .side.stacked .el {
     font-size: var(--t-xl);
     line-height: 34px;
   }
