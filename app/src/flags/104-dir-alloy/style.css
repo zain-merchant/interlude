@@ -1628,3 +1628,17 @@
   background: var(--rg-key-fill);
   box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.12), 0 0 0 1px #000;
 }
+/* The crossfader's ends: anodised tabs with a dark seam, so they hold on
+   the silver. */
+:root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] .mixer .xf i.end {
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.6);
+}
+/* The track list sits in a shallow milled pocket in the library plate. */
+:root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] section.library .main .scroll {
+  background: #babec3;
+  border-radius: 10px;
+  box-shadow: inset 0 1px 1px rgb(0 0 0 / 0.22), inset 0 0 0 1px rgb(0 0 0 / 0.08), 0 1px 0 rgb(255 255 255 / 0.55);
+}
+:root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] section.library .main .scroll {
+  margin-bottom: 12px;
+}

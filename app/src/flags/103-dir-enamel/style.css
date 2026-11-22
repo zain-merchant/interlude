@@ -1640,3 +1640,8 @@
   padding: 8px 8px 8px 18px;
   min-height: 52px;
 }
+/* Every key that latches in its deck's colour (Sync, Key lock, the FX
+   switch) uses the light twin on its black tile. */
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] :is(.fx .tog, .transport .btn.sync, .pitch .lock, .kl) {
+  --on: var(--on-ink);
+}
