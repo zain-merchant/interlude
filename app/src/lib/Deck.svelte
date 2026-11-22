@@ -175,10 +175,12 @@
     onclick: (e) => e.detail === 0 && fn(),
   });
   const play = () => t && control({ type: 'togglePlay', deck });
+  // SYNC turns sync on or off. On, the deck keeps deck {other}'s tempo
+  // as either pitch fader moves.
   const sync = () => {
-    if (!canSync) return;
+    if (!canSync && !d.synced) return;
     control({ type: 'sync', deck });
-    announce(`Deck ${name} synced to deck ${other}`);
+    announce(d.synced ? `Deck ${name} sync off` : `Deck ${name} synced to deck ${other}`);
   };
   const toggleKeylock = () => control({ type: 'setKeylock', deck, on: !d.keylock });
   const slipTip = () =>
@@ -297,8 +299,13 @@
           <svg viewBox="0 0 16 16"><path d="M4 2.2v11.6a.6.6 0 0 0 .9.5l9.2-5.8a.6.6 0 0 0 0-1L4.9 1.7a.6.6 0 0 0-.9.5z" /></svg>
         {/if}
       </button>
-      <button class="btn sync" aria-disabled={!canSync} {...press(sync)}
-        use:tip={() => (canSync ? tipText(`Match tempo and beats to deck ${other}`, keyLabel(`deck.${deck}.sync`)) : `Sync needs a beat on both decks`)}>Sync</button>
+      <button class="btn sync" class:on={d.synced} aria-disabled={!canSync && !d.synced} aria-pressed={!!d.synced} {...press(sync)}
+        use:tip={() =>
+          d.synced
+            ? tipText(`Sync on: keeps deck ${other}'s tempo when either pitch fader moves. Click to turn off`, keyLabel(`deck.${deck}.sync`))
+            : canSync
+              ? tipText(`Sync: match tempo and beats to deck ${other} and stay locked to it`, keyLabel(`deck.${deck}.sync`))
+              : `Sync needs a beat on both decks`}>Sync</button>
       <div class="btn jumps" role="group" aria-label="Beat jump">
         {#each [{ dir: -1, id: 'jumpBack', label: 'Jump back', glyph: '‹' }, { dir: 1, id: 'jumpForward', label: 'Jump forward', glyph: '›' }] as j, i}
           <button aria-label="{j.label} {jumpSize} {d.loopBeats === 1 ? 'beat' : 'beats'}" aria-disabled={!grid} style:order={i * 2}
@@ -582,6 +589,12 @@
   }
   .sync {
     color: var(--fg-2);
+  }
+  .sync.on,
+  .sync.on:hover {
+    color: var(--deck);
+    background: color-mix(in srgb, var(--deck) 12%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--deck) 55%, transparent);
   }
   .jumps {
     display: grid;

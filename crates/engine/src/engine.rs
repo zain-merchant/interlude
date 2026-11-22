@@ -40,6 +40,13 @@ pub struct Engine {
     sampler_buf: Vec<f32>,
     /// A deck started from pause while the other plays syncs to it.
     auto_sync: bool,
+    /// Sync on (SYNC pressed and not pressed again): the deck keeps the
+    /// other deck's tempo as it changes, until sync is turned off.
+    synced: [bool; NUM_DECKS],
+    /// For a synced deck, its tempo over the other deck's as heard: 1.0,
+    /// or 2.0 / 0.5 when it syncs at double or half time. Kept from when
+    /// sync went on, so the match doesn't flip as the tempo moves.
+    sync_ratio: [f64; NUM_DECKS],
 }
 
 /// The control half of the engine: send commands, read state.
@@ -84,6 +91,8 @@ pub fn new_engine(sample_rate: u32) -> (Engine, EngineHandle) {
         scratch: std::array::from_fn(|_| vec![0.0; MAX_BLOCK_FRAMES * 2]),
         sampler_buf: vec![0.0; MAX_BLOCK_FRAMES * 2],
         auto_sync: true,
+        synced: [false; NUM_DECKS],
+        sync_ratio: [1.0; NUM_DECKS],
     };
     let handle = EngineHandle {
         commands: cmd_tx,
@@ -158,18 +167,37 @@ impl Engine {
             (d.index(), deck.pos, deck.live() && !deliberate)
         });
         // Play, cue and hot cues can start a paused deck; with auto sync it
-        // comes in at the other deck's tempo and on its beat.
+        // comes in at the other deck's tempo and on its beat. So does a
+        // deck in a sync pair (either side has sync on): the deck already
+        // playing keeps its tempo and the one starting joins it.
         let start = match cmd {
             Play { deck } | TogglePlay { deck } | CuePress { deck } | HotCuePress { deck, .. } => {
                 Some(deck.index()).filter(|&i| !self.decks[i].playing)
             }
             _ => None,
         };
-        self.apply_inner(cmd);
+        // What moves the tempo of a deck in a sync pair moves the other too.
+        let tempo = match cmd {
+            SetRate { deck, .. } => Some((deck.index(), true)),
+            SetBeatgrid { deck, .. } => Some((deck.index(), false)),
+            _ => None,
+        };
+        match cmd {
+            Sync { deck } => self.toggle_sync(deck.index()),
+            Load { deck, .. } | Eject { deck } => {
+                self.synced[deck.index()] = false;
+                self.apply_inner(cmd);
+            }
+            _ => self.apply_inner(cmd),
+        }
         if let Some(i) = start {
-            if self.auto_sync && self.decks[i].playing && self.decks[1 - i].live() {
+            let paired = self.synced[i] || self.synced[1 - i];
+            if (self.auto_sync || paired) && self.decks[i].playing && self.decks[1 - i].live() {
                 self.sync(i);
             }
+        }
+        if let Some((i, moved)) = tempo {
+            self.follow(i, moved);
         }
         if let Some((i, pos, live)) = slip {
             self.decks[i].update_slip(pos, live);
@@ -272,7 +300,8 @@ impl Engine {
                 since_last,
             } => self.decks[deck.index()].scratch_to(seconds, since_last),
             Jog { deck, seconds } => self.decks[deck.index()].jog(seconds),
-            Sync { deck } => self.sync(deck.index()),
+            // Handled in `apply`: it turns sync on or off.
+            Sync { .. } => {}
             SetAutoGain { deck, db } => self.decks[deck.index()].set_auto_gain_db(db),
             SetGain { deck, db } => {
                 let db = db.clamp(GAIN_MIN_DB, GAIN_MAX_DB);
@@ -361,14 +390,66 @@ impl Engine {
         }
     }
 
-    /// Matches deck `i` to the other deck: tempo first, then beat phase.
-    /// Picks the half/double tempo match closest to the current speed, so a
-    /// 87 BPM grid syncs to 174 BPM drum & bass without racing.
-    fn sync(&mut self, i: usize) {
+    /// SYNC: turns sync on for deck `i` (matching it to the other deck
+    /// now, then keeping it there), or off if it's on. Stays off if the
+    /// decks can't be matched (a deck without a beatgrid).
+    fn toggle_sync(&mut self, i: usize) {
+        if self.synced[i] {
+            self.synced[i] = false;
+            return;
+        }
+        let Some(ratio) = self.sync(i) else { return };
+        self.synced[i] = true;
+        self.sync_ratio[i] = ratio;
+        // Both on: one ratio, seen from either side.
+        self.sync_ratio[1 - i] = 1.0 / ratio;
+    }
+
+    /// Keeps a sync pair together after deck `i`'s tempo changed: its rate
+    /// (`moved`) or its beatgrid. A synced other deck follows `i` while
+    /// `i` plays. A synced `i` whose fader moved takes the playing other
+    /// deck with it, the way synced decks share one tempo in other DJ
+    /// apps; a new beatgrid on a synced `i` puts it back on the other's
+    /// tempo instead. A paused deck never moves a playing one, so a deck
+    /// can be cued up at any tempo and joins the other when it starts.
+    fn follow(&mut self, i: usize, moved: bool) {
+        let other = 1 - i;
+        if self.synced[other] && self.decks[i].live() {
+            self.match_tempo(other);
+        } else if self.synced[i] && self.decks[other].live() {
+            if moved && self.decks[i].live() {
+                // The other deck matches `i`: `i` over it is the ratio.
+                self.sync_ratio[other] = 1.0 / self.sync_ratio[i];
+                self.match_tempo(other);
+            } else if !moved {
+                self.match_tempo(i);
+            }
+        }
+    }
+
+    /// Sets deck `i`'s rate to the other deck's tempo times its sync ratio.
+    /// Phase is left alone: both decks change speed in the same instant,
+    /// so beats that lined up stay lined up.
+    fn match_tempo(&mut self, i: usize) {
         let other = 1 - i;
         let (Some(me), Some(them)) = (self.decks[i].beat_info(), self.decks[other].beat_info())
         else {
             return;
+        };
+        let target = them.bpm * self.decks[other].rate * self.sync_ratio[i];
+        self.decks[i].rate = (target / me.bpm).clamp(0.0, 4.0);
+    }
+
+    /// Matches deck `i` to the other deck: tempo first, then beat phase.
+    /// Picks the half/double tempo match closest to the current speed, so a
+    /// 87 BPM grid syncs to 174 BPM drum & bass without racing. Returns
+    /// deck `i`'s tempo over the other's (1.0, 2.0 or 0.5), or `None` if
+    /// either deck has no beatgrid.
+    fn sync(&mut self, i: usize) -> Option<f64> {
+        let other = 1 - i;
+        let (Some(me), Some(them)) = (self.decks[i].beat_info(), self.decks[other].beat_info())
+        else {
+            return None;
         };
         let target_bpm = them.bpm * self.decks[other].rate;
         let candidates = [target_bpm, target_bpm * 2.0, target_bpm / 2.0];
@@ -383,16 +464,17 @@ impl Engine {
         let my_beat = me.beat;
         let their_beat = them.beat;
         let ratio = (me.bpm * rate) / target_bpm; // ~0.5, 1 or 2
-        let (mine, theirs, my_beats_per_unit) = if ratio > 1.5 {
-            (my_beat, their_beat * 2.0, 1.0)
+        let (mine, theirs, my_beats_per_unit, ratio) = if ratio > 1.5 {
+            (my_beat, their_beat * 2.0, 1.0, 2.0)
         } else if ratio < 0.75 {
-            (my_beat * 2.0, their_beat, 0.5)
+            (my_beat * 2.0, their_beat, 0.5, 0.5)
         } else {
-            (my_beat, their_beat, 1.0)
+            (my_beat, their_beat, 1.0, 1.0)
         };
         let mut delta = theirs.fract() - mine.fract();
         delta -= delta.round(); // shortest way: within half a beat
         self.decks[i].shift_beats(delta * my_beats_per_unit);
+        Some(ratio)
     }
 
     /// Shifts deck `i`'s key to play in the other deck's key, as heard:
@@ -426,8 +508,15 @@ impl Engine {
 
     fn publish(&self) {
         use std::sync::atomic::Ordering::Relaxed;
-        for ((deck, s), pad_fx) in self.decks.iter().zip(&self.shared.decks).zip(&self.pad_fx) {
+        for (i, ((deck, s), pad_fx)) in self
+            .decks
+            .iter()
+            .zip(&self.shared.decks)
+            .zip(&self.pad_fx)
+            .enumerate()
+        {
             let sr = deck.source_rate();
+            s.synced.store(self.synced[i], Relaxed);
             s.position.store(deck.pos / sr);
             s.cue.store(deck.cue / sr);
             s.rate.store(deck.rate);

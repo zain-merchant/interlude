@@ -267,8 +267,11 @@ pub enum Command {
         deck: DeckId,
         seconds: f64,
     },
-    /// Match this deck's tempo and beat phase to the other deck. Does
-    /// nothing unless both decks have a beatgrid.
+    /// SYNC: turns sync on (or off, if it's on). On matches this deck's
+    /// tempo and beat phase to the other deck, then keeps the two on one
+    /// tempo: moving either deck's pitch fader moves both while they play.
+    /// Loading or ejecting the deck turns it off. Does nothing unless both
+    /// decks have a beatgrid.
     Sync {
         deck: DeckId,
     },
