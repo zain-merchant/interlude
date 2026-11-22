@@ -1410,24 +1410,6 @@
   height: 22px;
   border-radius: 50%;
 }
-/* A channel's volume fills its capsule up to the thumb. */
-:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] .mixer .fwrap .fader.vertical {
-  overflow: clip;
-  overflow-clip-margin: 14px;
-}
-:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] .mixer .fwrap .fader.vertical .cap::before {
-  content: '';
-  position: absolute;
-  z-index: -1;
-  left: 50%;
-  top: 11px;
-  width: 8px;
-  height: 600px;
-  margin-left: -4px;
-  border-radius: 4px;
-  background: rgb(255 255 255 / 0.2);
-}
-
 /* ── Meters: capsules ────────────────────────────────────────────────── */
 :root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] .mixer .meter .bar,
 :root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] .mixer .meter .bar::after,
@@ -1531,5 +1513,18 @@
 @media (max-width: 1200px) {
   :root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] {
     --rg-num: 26px;
+  }
+  /* A small window keeps today's waves row, so the library keeps its rows. */
+  :root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] .app {
+    grid-template-rows: 136px var(--decks, 360px) var(--gap) minmax(160px, 1fr);
+  }
+  :root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] .app.sampling {
+    grid-template-rows: 136px var(--decks, 360px) var(--sampler) var(--gap) minmax(160px, 1fr);
+  }
+  /* Smaller cue discs, so a cue's time still fits beside its number. */
+  :root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] [data-region^='deck'] .perf .tc b {
+    width: 16px;
+    height: 16px;
+    font-size: 10px;
   }
 }

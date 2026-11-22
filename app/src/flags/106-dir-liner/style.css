@@ -1151,14 +1151,14 @@
 /* ── Reading: titles, artists, times, tempo, key ─────────────────────── */
 :root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] header .name {
   font-family: var(--ln-serif);
-  font-size: 21px;
+  font-size: 22px;
   font-weight: 500;
   letter-spacing: -0.01em;
 }
 :root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] header .artist {
   font-family: var(--ln-serif);
   font-style: italic;
-  font-size: 15px;
+  font-size: 17px;
   color: var(--fg-2);
 }
 :root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .bpm .big,
@@ -1371,19 +1371,24 @@
 /* ── Library: set like a track list ──────────────────────────────────── */
 :root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] section.library .scroll .row .t {
   font-family: var(--ln-serif);
-  font-size: 15px;
+  font-size: 17px;
   font-weight: 400;
 }
 :root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] section.library .scroll .row {
   font-family: var(--ln-serif);
-  font-size: 14px;
+  font-size: 15px;
+}
+/* Key names keep Geist: its sharps and flats are drawn for it. */
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] section.library .scroll .row .k {
+  font-family: var(--font);
+  font-size: var(--t-sm);
 }
 :root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] section.library .scroll .row > :nth-child(3) {
   font-style: italic;
 }
 :root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] section.library nav .item {
   font-family: var(--ln-serif);
-  font-size: 15px;
+  font-size: 16px;
 }
 :root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] section.library nav .item.on {
   font-weight: 500;
@@ -1439,4 +1444,21 @@
 :root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] .tip {
   font-family: var(--ln-serif);
   font-size: 14px;
+}
+
+/* Key lock's two words stay on one line in the italic. */
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .pitch .lock.on {
+  font-size: 14px;
+  white-space: nowrap;
+}
+@media (max-width: 1200px) {
+  :root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] {
+    --rg-num: 28px;
+  }
+  :root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] header .name {
+    font-size: 18px;
+  }
+  :root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] header .artist {
+    font-size: 15px;
+  }
 }
