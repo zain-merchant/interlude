@@ -127,10 +127,11 @@
   --sheet-ink: var(--f-b-ink);
   --play: var(--f-b-play);
 }
-/* On a sheet, secondary text is the sheet's own ink, so it holds its contrast on the colour. */
+/* On a sheet, secondary text is the sheet's own ink, so it holds its contrast on the colour:
+   --fg-2 about 6.5:1, --fg-3 about 4.6:1; the figures' decimals (large type) about 3.2:1. */
 :root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] :is([data-region^='deck'], .waves .lane) {
-  --fg-2: color-mix(in srgb, var(--sheet-ink) 88%, transparent);
-  --fg-3: color-mix(in srgb, var(--sheet-ink) 72%, transparent);
+  --fg-2: color-mix(in srgb, var(--sheet-ink) 94%, transparent);
+  --fg-3: color-mix(in srgb, var(--sheet-ink) 82%, transparent);
   --fg-4: color-mix(in srgb, var(--sheet-ink) 46%, transparent);
   --hover: rgb(255 255 255 / 0.3);
 }
@@ -373,7 +374,7 @@
 }
 :root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .bpm .big .frac,
 :root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .times .num:not(.ending) .t {
-  color: color-mix(in srgb, var(--sheet-ink) 46%, transparent) !important;
+  color: color-mix(in srgb, var(--sheet-ink) 62%, transparent) !important;
 }
 /* A track playing out: the time in red ink. */
 :root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .times .ending,
@@ -660,8 +661,8 @@
   --sheet: var(--f-a);
   --sheet-deep: var(--f-a-deep);
   --sheet-ink: var(--f-a-ink);
-  --fg-2: color-mix(in srgb, var(--f-a-ink) 88%, transparent);
-  --fg-3: color-mix(in srgb, var(--f-a-ink) 72%, transparent);
+  --fg-2: color-mix(in srgb, var(--f-a-ink) 94%, transparent);
+  --fg-3: color-mix(in srgb, var(--f-a-ink) 82%, transparent);
   --fg-4: color-mix(in srgb, var(--f-a-ink) 46%, transparent);
 }
 :root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .mixer .ch:not(:first-child),
@@ -669,8 +670,8 @@
   --sheet: var(--f-b);
   --sheet-deep: var(--f-b-deep);
   --sheet-ink: var(--f-b-ink);
-  --fg-2: color-mix(in srgb, var(--f-b-ink) 88%, transparent);
-  --fg-3: color-mix(in srgb, var(--f-b-ink) 72%, transparent);
+  --fg-2: color-mix(in srgb, var(--f-b-ink) 94%, transparent);
+  --fg-3: color-mix(in srgb, var(--f-b-ink) 82%, transparent);
   --fg-4: color-mix(in srgb, var(--f-b-ink) 46%, transparent);
 }
 :root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .app:has([data-region='deck0'] header .name.dim) .mixer :is(.ch:first-child, .fwrap:not(.mirror)),
@@ -1120,6 +1121,21 @@
 }
 :root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] #app [data-drop='blocked-over'] {
   outline-color: var(--f-red) !important;
+}
+
+/* A narrow deck (flag 8's container query): a set cue is a small ink square and its time, as today's dot and time. */
+@container (max-width: 319px) {
+  :root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .perf .tc.set b {
+    display: none !important;
+  }
+  :root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .perf .tc.set i {
+    display: block !important;
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    background: var(--f-ink) !important;
+    box-shadow: none !important;
+  }
 }
 
 /* ---------- Smaller windows ---------- */

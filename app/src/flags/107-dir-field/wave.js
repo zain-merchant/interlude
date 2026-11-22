@@ -77,8 +77,9 @@ function print(ctx, cols, shift, step, mid, amp, c, edgeW = 1) {
 function laneTile(wf, t, spp, h, c, dpr) {
   const F = wf.field;
   const el = F.spare.pop() ?? document.createElement('canvas');
-  el.width = Math.round(TILE * dpr);
-  el.height = wf.canvas.height;
+  const tw = Math.round(TILE * dpr);
+  if (el.width !== tw) el.width = tw;
+  if (el.height !== wf.canvas.height) el.height = wf.canvas.height;
   const x = el.getContext('2d');
   x.setTransform(1, 0, 0, 1, 0, 0);
   x.clearRect(0, 0, el.width, el.height);
@@ -96,10 +97,25 @@ function lane(wf, ctx, w, h, view, spp, c, dpr) {
     F.tiles = new Map();
     F.key = key;
     F.colors = c;
+    F.steady = 0;
   }
   const off = view.start / spp;
   const first = Math.floor(off / TILE);
   const last = Math.floor((off + w) / TILE);
+  // As the renderer does: while the zoom or size is changing, or for a couple of
+  // frames after a jump, print straight onto the lane, since tiles made then
+  // would be thrown away. Scrolling brings in one tile at a time; more is a jump.
+  let missing = 0;
+  for (let t = first; t <= last; t++) if (!F.tiles.has(t)) missing++;
+  if (missing > 1 && F.steady >= 3) F.steady = 0;
+  if (++F.steady < 3) {
+    const { cols, shift, step } = columns(wf, off, off + w, spp);
+    ctx.save();
+    ctx.translate(-off, 0);
+    print(ctx, cols, shift, step, h / 2, h / 2 - 1, c);
+    ctx.restore();
+    return;
+  }
   for (const [t, el] of F.tiles) {
     if (t >= first - 1 && t <= last + 1) continue;
     F.tiles.delete(t);
