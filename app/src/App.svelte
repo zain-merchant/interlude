@@ -246,7 +246,10 @@
         break;
       case 'deck.0.sync':
       case 'deck.1.sync':
-        if (down && loaded(deck) && engine.decks[deck].bpm && engine.decks[1 - deck].bpm) {
+        if (down && engine.decks[deck].synced) {
+          control({ type: 'sync', deck });
+          announce(`Deck ${'AB'[deck]} sync off`);
+        } else if (down && loaded(deck) && engine.decks[deck].bpm && engine.decks[1 - deck].bpm) {
           control({ type: 'sync', deck });
           announce(`Deck ${'AB'[deck]} synced`);
         }

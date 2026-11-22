@@ -791,6 +791,7 @@ fn all_leds(state: &State) -> Vec<Led> {
             deck.loaded && !deck.playing && (deck.position - deck.cue).abs() < 0.01,
         ));
         out.push((ch, HEADPHONE_CUE, deck.pfl));
+        out.push((ch, SYNC, deck.synced));
         // 4 BEAT/EXIT has no LED of its own.
         for note in [LOOP_IN, LOOP_OUT] {
             out.push((ch, note, deck.looping));
