@@ -70,6 +70,8 @@ async function createTauriBackend() {
     /** @returns {Promise<TrackInfo>} */
     /** With `autoGain`, the deck plays the track at the common loudness, under the trim. */
     loadTrack: (deck, path, autoGain = true) => invoke('load_track', { deck, path, autoGain }),
+    /** Decodes the track selected in the library ahead, so loading it is instant. */
+    preloadTrack: (path) => invoke('preload_track', { path }),
     /** Waveform bytes of what a deck plays with the stems in `mask` on. @returns {Promise<Uint8Array>} */
     stemsWaveform: async (deck, mask) => new Uint8Array(await invoke('stems_waveform', { deck, mask })),
     /** The Stems settings page. */

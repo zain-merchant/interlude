@@ -56,7 +56,7 @@ pub use shared::{
     DeckSnapshot, FxSnapshot, MixerSnapshot, SampleSnapshot, SamplerSnapshot, SharedState,
 };
 pub use stems::{Stem, Stems, ALL_STEMS, STEMS};
-pub use track::{LoadError, Track, TrackSummary};
+pub use track::{Known, LoadError, Track, TrackSummary};
 pub use waveform::Waveform;
 
 /// Number of decks. Phase 1 is a two-deck app; four decks come after the MVP.
