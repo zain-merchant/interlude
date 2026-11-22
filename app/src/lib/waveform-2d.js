@@ -31,7 +31,7 @@ const OFF = 20000;
 const rgba = (c, a) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
 
 /** Waveform looks under exploration; `?wave=<name>` picks one in the browser build. */
-export const STYLES = ['current', 'spectral', 'aurora', 'heat', 'contour', 'bars', 'horizon', 'ridgeline', 'matrix', 'spectrogram', 'lens', 'pulse', 'dusk', 'skywater', 'skyline', 'reflection', 'deckdusk', 'sunset', 'neon', 'tropical', 'deckpair', 'energy'];
+export const STYLES = ['current', 'spectral', 'aurora', 'heat', 'contour', 'bars', 'horizon', 'ridgeline', 'matrix', 'spectrogram', 'lens', 'pulse', 'dusk', 'skywater', 'skyline', 'reflection', 'deckdusk', 'sunset', 'neon', 'tropical', 'deckpair', 'energy', 'spectrum', 'sunset2', 'neon2', 'tropical2', 'deckpair2'];
 const STYLE_NOW = (() => {
   try {
     const s = new URLSearchParams(location.search).get('wave');
@@ -133,6 +133,28 @@ Object.assign(BLENDS, {
     energy: ['#2f4bff', '#8a3dff', '#ff3d9a', '#ff8a3d', '#ffd84a'].map(H),
   }),
 });
+
+/**
+ * Many colours, as other DJ apps do: each slice's colour comes from where
+ * its sound sits, bass-heavy at one end of the palette and bright at the
+ * other, and each band sits a step along from the one below it.
+ */
+const spectrumLook = (stops) => ({ ...mirrored('#000000', '#000000', '#000000'), spectrum: stops.map(H) });
+Object.assign(BLENDS, {
+  spectrum: () => spectrumLook(['#ff2d55', '#ff8a2d', '#ffd23d', '#3ddc84', '#2dc8ff', '#6a6bff']),
+  sunset2: () => spectrumLook(['#5b3cff', '#b03dff', '#ff3d8b', '#ff7a3d', '#ffc84a', '#fff1c4']),
+  neon2: () => spectrumLook(['#2f5bff', '#8a3dff', '#ff3dae', '#ff7ad6', '#3de6ff', '#a8ffe0']),
+  tropical2: () => spectrumLook(['#007f8a', '#00c8b0', '#9cf25c', '#ffe45c', '#ff7a5c', '#ff4f8b']),
+  deckpair2: (deck) => spectrumLook(deck === 0
+    ? ['#3b2fff', '#2f6bff', '#2fb4ff', '#2fe0d0', '#8affc4', '#e8fff6']
+    : ['#d0204a', '#ff4a3d', '#ff8a2d', '#ffb43d', '#ffe07a', '#fff6e0']),
+});
+/** Where a slice's sound sits, 0 (all bass) to 1 (all air), stretched to use the palette. */
+function centroid(v) {
+  const s = v[0] + v[1] + v[2] || 1;
+  const t = (v[1] * 0.5 + v[2]) / s;
+  return Math.max(0, Math.min(1, (t - 0.12) / 0.55));
+}
 
 /** Spectral: kick rose, body gold, air cyan; each column mixes by its band balance. */
 const SPEC = { low: hex('#ff3d71'), mid: hex('#ffb43d'), high: hex('#3dcbff') };
@@ -788,7 +810,8 @@ export class Waveform2D {
           ctx.save();
           ctx.translate(-OFF, 0);
           this.halfPath(cols, step, shift, base, amp, sign, level(half, k));
-          ctx.shadowColor = css(half.bands[k], a * 2.5 * dim * (look.glow ?? 1));
+          const gc = look.spectrum ? look.spectrum[k === 0 ? 1 : 3] : half.bands[k];
+          ctx.shadowColor = css(gc, a * 2.5 * dim * (look.glow ?? 1));
           ctx.shadowBlur = blur * dpr;
           ctx.shadowOffsetX = OFF * dpr;
           ctx.fillStyle = '#000';
@@ -808,6 +831,13 @@ export class Waveform2D {
         const far = base - sign * amp;
         const g = ctx.createLinearGradient(0, base, 0, far);
         const a = alphas[k] * dim * (overview ? 0.9 : 1);
+        if (look.spectrum) {
+          const off = [-0.18, 0.05, 0.3][k];
+          const lift = [0, 0.1, 0.45][k];
+          ctx.fillStyle = this.hgrad(cols, step, shift, (v) => lerp(ramp(look.spectrum, centroid(v) + off), [255, 255, 255], lift), () => a);
+          ctx.fill();
+          continue;
+        }
         if (look.energy) {
           // Each column's colour from its loudness, the higher bands a step hotter.
           ctx.fillStyle = this.hgrad(cols, step, shift, (v) => ramp(look.energy, Math.max(v[0], v[1], v[2]) ** 1.3 * 0.8 + k * 0.12), () => a);
