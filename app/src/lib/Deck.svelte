@@ -453,7 +453,7 @@
   .lay-across {
     --rec: calc(120px * var(--rs));
     grid-template-columns: var(--rec) minmax(0, 1fr) auto;
-    grid-template-rows: minmax(0, 1fr) var(--ov) 84px auto;
+    grid-template-rows: var(--rec) minmax(20px, 1fr) 84px auto;
     grid-template-areas: 'rec head times' 'ov ov ov' 'mp mp mp' 'tr tr tr';
     column-gap: 26px;
   }
@@ -462,6 +462,12 @@
     grid-template-areas: 'times head rec' 'ov ov ov' 'mp mp mp' 'tr tr tr';
   }
   .lay-across > header { align-self: center; }
+  /* The record's row is exactly the record, so the size slider always
+     moves it; the overview takes what's left, up to its own height. */
+  .lay-across > .overview {
+    align-self: center;
+    height: min(var(--ov), 100%);
+  }
   .lay-across > .times .el {
     font-size: var(--t-xl);
     line-height: 36px;
