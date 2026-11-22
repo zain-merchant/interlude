@@ -96,10 +96,6 @@ Everything Interlude does, in detail. For a short overview, see the
   rests just off the record while the deck is paused and swings onto it to
   play, following the track from the outer groove in. Tempo and key sit in
   the deck's inner corner.
-- **Phrases:** a thin strip under each overview marks the track's sections
-  (intro, build, drop, breakdown, verse, outro). They're found from the waveform's bass, mids and highs on
-  the beatgrid, in phrases of 4 to 32 bars, so fixing the grid moves them
-  too. A guide, not a rule: it reads the energy, not the arrangement.
 - **Library:** add music folders, instant search across artist, title and
   folder, load with double-click, Enter, or Shift+←/→. Columns for title,
   artist, BPM, key, length and folder (the columns button at the end of the headings, or a right-click on
