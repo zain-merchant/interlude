@@ -23,6 +23,13 @@
   const bpm = $derived(d.bpm > 0 ? d.bpm * d.rate : 0);
   const pk = $derived(t ? playingKey(d.key, d.rate, d.keylock, d.keyShift ?? 0) : null);
   const ratePct = $derived((d.rate - 1) * 100);
+  function fmt(s) {
+    if (!isFinite(s)) return '0:00.0';
+    const sign = s < 0 ? '−' : '';
+    s = Math.abs(s);
+    const m = Math.floor(s / 60);
+    return `${sign}${m}:${(s - m * 60).toFixed(1).padStart(4, '0')}`;
+  }
   const pct = (v) => `${v >= 0 ? '+' : '−'}${Math.abs(v).toFixed(2)}%`;
 
   let box = $state(0);
@@ -314,7 +321,10 @@
     <div class="sheen" style:width="{vr * 2}px" style:height="{vr * 2}px" style:left="{size / 2 - vr}px" style:top="{size / 2 - vr}px"></div>
     <canvas class="wave-ring" bind:this={ringCv}></canvas>
     <div class="hub" style:width="{hubD}px" style:height="{hubD}px" style:left="{size / 2 - hubD / 2}px" style:top="{size / 2 - hubD / 2}px" style:font-size="{hubD / 6.6}px">
-      {#if t}
+      {#if t && S.hub === 'time'}
+        <div class="b num">{fmt(d.position)}</div>
+        <div class="k num">{fmt(d.position - d.duration)}</div>
+      {:else if t}
         <div class="b num">{bpm > 0 ? bpm.toFixed(2) : '—'}</div>
         <div class="k">{pk ? `${keyName(pk)} · ${camelot(pk)}` : 'BPM'}</div>
         {#if S.extra === 'beats'}

@@ -25,6 +25,7 @@
   let { deck, onload, onreveal, onsettings } = $props();
 
   const name = $derived(deck === 0 ? 'A' : 'B');
+  const PS = $derived(PLATTER_STYLES[platterProto.style] ?? PLATTER_STYLES.bpmrec);
 
   // Fixing the beatgrid: right-click the BPM (or the waveform), or
   // double-click the BPM to type one.
@@ -238,7 +239,7 @@
 <section class="deck" class:mirror={deck === 1} style:--deck={deck === 0 ? 'var(--deck-a)' : 'var(--deck-b)'}
   style:--drop-color={deck === 0 ? 'var(--deck-a)' : 'var(--deck-b)'} aria-label={regionLabel} data-region="deck{deck}"
   use:dropTarget={{ ondrop: (track) => onload(deck, track), blocked: () => d.playing }}>
-  <div class="body lay-{PLATTER_STYLES[platterProto.style]?.layout ?? 'across'}" style:--rs={platterProto.rec / 100} style:--ov="{platterProto.ov}px">
+  <div class="body lay-across info-{PS.info}" style:--rs={platterProto.rec / 100} style:--ov="{platterProto.ov}px">
     <!-- Prototype: the record, title, overview and times are laid out by the
          chosen variant (grid areas on .body). -->
     <div class="rec-cell"><Platter {deck} /></div>
@@ -275,7 +276,8 @@
           </div>
         {/if}
       </div>
-    <div class="times" class:stack={PLATTER_STYLES[platterProto.style]?.times === 'stack'} class:line={PLATTER_STYLES[platterProto.style]?.times === 'line'}>
+    <div class="times" class:stack={PS.info === 'bpmrec'} class:phrase-only={PS.hub === 'time'}>
+      {#if PS.info === 'titlebpm'}<span class="bpmline num">{bpm > 0 ? bpm.toFixed(2) : '—'}<small>{#if pk}<b>{keyName(pk)} · {camelot(pk)}</b> · {/if}BPM</small></span>{/if}
         <span class="el num"><span class="sr">Elapsed </span>{fmt(d.position)}</span>
         {#if now}
           <span class="now {now.phrase.kind}" use:tip={() => `${PHRASE_NAMES[now.phrase.kind]}: ${now.phrase.bars} bars, energy ${now.phrase.energy} of 10. Found from the waveform on the beatgrid`}>
@@ -429,50 +431,56 @@
   }
   .times.stack .now { order: 3; line-height: 16px; }
   .times.stack .rm { line-height: 20px; }
-  /* Title over both: title and times across the deck, then the record and
-     a tall overview side by side at the same height. */
-  .lay-over {
-    --rec: min(calc(128px * var(--rs)), 132px);
-    grid-template-columns: var(--rec) minmax(0, 1fr) auto;
-    grid-template-rows: auto minmax(var(--rec), 1fr) 84px auto;
-    grid-template-areas: 'head head times' 'rec ov ov' 'mp mp mp' 'tr tr tr';
-    column-gap: 20px;
-  }
-  .mirror .lay-over {
-    grid-template-columns: auto minmax(0, 1fr) var(--rec);
-    grid-template-areas: 'times head head' 'ov ov rec' 'mp mp mp' 'tr tr tr';
-  }
-  .lay-over > .times.line {
-    flex-direction: row;
-    align-items: baseline;
-    gap: 14px;
-  }
-  .lay-over > header { align-self: center; }
-  /* Strip across, filled: record, title and a big elapsed time along the
-     top; the overview full width beneath. */
+  /* Strip across: the record and track info on top, the overview full
+     width beneath, then the deck's own tabs, cues and transport. The record
+     row is exactly the record (the size slider), the overview row exactly
+     its height, and whatever is left goes to the cues, so there are no gaps
+     between rows. The top row is split in two halves for layouts that put
+     the title above a second line. */
   .lay-across {
     --rec: calc(120px * var(--rs));
     grid-template-columns: var(--rec) minmax(0, 1fr) auto;
-    grid-template-rows: var(--rec) minmax(20px, 1fr) 84px auto;
-    grid-template-areas: 'rec head times' 'ov ov ov' 'mp mp mp' 'tr tr tr';
-    column-gap: 26px;
+    grid-template-rows: calc(var(--rec) / 2 - 3px) calc(var(--rec) / 2 - 3px) var(--ov) minmax(84px, 1fr) auto;
+    row-gap: 6px;
+    column-gap: 24px;
   }
-  .mirror .lay-across {
-    grid-template-columns: auto minmax(0, 1fr) var(--rec);
-    grid-template-areas: 'times head rec' 'ov ov ov' 'mp mp mp' 'tr tr tr';
-  }
-  .lay-across > header { align-self: center; }
-  /* The record's row is exactly the record, so the size slider always
-     moves it; the overview takes what's left, up to its own height. */
-  .lay-across > .overview {
-    align-self: center;
-    height: min(var(--ov), 100%);
-  }
-  .lay-across > .times .el {
-    font-size: var(--t-xl);
-    line-height: 36px;
-  }
-  /* BPM and key are in the record's centre in this prototype. */
+  .mirror .lay-across { grid-template-columns: auto minmax(0, 1fr) var(--rec); }
+  .lay-across > .mp, .lay-across > .transport { margin-top: 0; }
+  .lay-across > .overview { margin: 4px 0 2px; }
+  /* 1. BPM in the record; times stacked in the top inner corner. */
+  .info-bpmrec { grid-template-areas: 'rec head times' 'rec head times' 'ov ov ov' 'mp mp mp' 'tr tr tr'; }
+  .mirror .info-bpmrec { grid-template-areas: 'times head rec' 'times head rec' 'ov ov ov' 'mp mp mp' 'tr tr tr'; }
+  .info-bpmrec > header { align-self: center; }
+  .info-bpmrec > .times .el { font-size: var(--t-xl); line-height: 36px; }
+  /* 2. Time in the record; the app's own BPM and key in the corner. */
+  .info-bpmcorner { grid-template-areas: 'rec head head' 'rec times times' 'ov ov ov' 'mp mp mp' 'tr tr tr'; }
+  .mirror .info-bpmcorner { grid-template-areas: 'head head rec' 'times times rec' 'ov ov ov' 'mp mp mp' 'tr tr tr'; }
+  .info-bpmcorner > header { align-self: end; align-items: flex-end; }
+  .body.info-bpmcorner > header .bpm { display: grid; }
+  .mirror .body.info-bpmcorner > header { flex-direction: row-reverse; justify-content: space-between; }
+  .mirror .body.info-bpmcorner > header .bpm { justify-items: start; }
+  .info-bpmcorner > .times { align-self: start; justify-content: flex-end; }
+  .mirror .info-bpmcorner > .times { justify-content: flex-start; }
+  /* 3. BPM in the record; title, then one line of times beside it. */
+  .info-column { grid-template-areas: 'rec head head' 'rec times times' 'ov ov ov' 'mp mp mp' 'tr tr tr'; }
+  .mirror .info-column { grid-template-areas: 'head head rec' 'times times rec' 'ov ov ov' 'mp mp mp' 'tr tr tr'; }
+  .info-column > header { align-self: end; }
+  .info-column > .times { align-self: start; }
+  .info-column > .times .el { font-size: var(--t-xl); line-height: 36px; }
+  /* 4. Time in the record; title with BPM and key as a line under it. */
+  .info-titlebpm { grid-template-areas: 'rec head head' 'rec times times' 'ov ov ov' 'mp mp mp' 'tr tr tr'; }
+  .mirror .info-titlebpm { grid-template-areas: 'head head rec' 'times times rec' 'ov ov ov' 'mp mp mp' 'tr tr tr'; }
+  .info-titlebpm > header { align-self: end; }
+  .info-titlebpm > .times { align-self: start; justify-content: flex-start; gap: 14px; }
+  .mirror .info-titlebpm > .times { justify-content: flex-end; }
+  .info-titlebpm > .times .bpmline { display: inline; }
+  /* Only the phrase is left beside a record that shows the time. */
+  .times.phrase-only .el, .times.phrase-only .rm { display: none; }
+  .times .bpmline { display: none; }
+  .bpmline { font-size: var(--t-xl); font-weight: 300; letter-spacing: -0.03em; line-height: 36px; }
+  .bpmline small { font-size: var(--t-sm); font-weight: 400; letter-spacing: 0; color: var(--fg-2); margin-left: 8px; }
+  .bpmline small b { font-weight: 400; color: var(--deck); }
+  /* BPM and key are in the record's centre unless the layout says not. */
   .body > header .bpm {
     display: none;
   }
