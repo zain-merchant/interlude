@@ -34,7 +34,7 @@ test('tempo fits within 6%, at half and double time', () => {
   assert.ok(!tempoFits(undefined, 124));
 });
 
-const deck = (o) => ({ loaded: true, playing: false, bpm: 120, speed: 1, key: Am, keylock: false, fader: 1, ...o });
+const deck = (o) => ({ loaded: true, playing: false, bpm: 120, rate: 1, speed: 1, key: Am, keylock: false, fader: 1, ...o });
 
 test('the deck on air: playing first, then the louder one', () => {
   assert.equal(onAir([deck({ loaded: false }), deck({ loaded: false })], null), null);
@@ -44,11 +44,23 @@ test('the deck on air: playing first, then the louder one', () => {
 });
 
 test('the deck on air reports the tempo and key being heard', () => {
-  const a = onAir([deck({ playing: true, bpm: 120, speed: 1.06 }), deck({ loaded: false })], null);
+  const a = onAir([deck({ playing: true, bpm: 120, rate: 1.06, speed: 1.06 }), deck({ loaded: false })], null);
   assert.ok(Math.abs(a.bpm - 127.2) < 1e-9);
   assert.equal(a.key.tonic, 10); // a semitone up without keylock
-  const b = onAir([deck({ playing: true, speed: 1.06, keylock: true }), deck({ loaded: false })], null);
+  const b = onAir([deck({ playing: true, rate: 1.06, speed: 1.06, keylock: true }), deck({ loaded: false })], null);
   assert.equal(b.key.tonic, 9);
+  const c = onAir([deck({ playing: true, keylock: true, keyShift: 2 }), deck({ loaded: false })], null);
+  assert.equal(c.key.tonic, 11, 'key shift counts');
+});
+
+test('jog nudges and scratches do not move the deck on air', () => {
+  // Turning the jog wheel swings `speed` (even to zero or backwards while
+  // scratching); Fits follows the pitch fader's rate instead.
+  for (const speed of [1.4, 0.3, 0, -2]) {
+    const a = onAir([deck({ loaded: false }), deck({ playing: true, bpm: 124, rate: 1, speed })], null);
+    assert.equal(a.bpm, 124);
+    assert.equal(a.key.tonic, Am.tonic);
+  }
 });
 
 const track = (bpm, key) => ({ analysis: { bpm, key } });

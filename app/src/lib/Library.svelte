@@ -1,5 +1,5 @@
 <script>
-  import { onMount, tick } from 'svelte';
+  import { onMount, tick, untrack } from 'svelte';
   import { backend } from './backend.js';
   import { engine, tracks } from './engine.svelte.js';
   import { startDrag, endDrag, drag, dropTarget } from './dnd.svelte.js';
@@ -55,7 +55,20 @@
     const a = onAir(engine.decks, engine.mixer);
     return a ? JSON.stringify({ deck: a.deck, bpm: Math.round(a.bpm * 10) / 10, key: a.key && { tonic: a.key.tonic, minor: a.key.minor } }) : '';
   });
-  const air = $derived(airText ? JSON.parse(airText) : null);
+  // While the pitch fader moves, wait for it to settle before re-filtering, so
+  // the list doesn't churn. A new deck on air (or none) shows at once.
+  let airSettled = $state('');
+  $effect(() => {
+    const next = airText;
+    const deckOf = (t) => (t ? JSON.parse(t).deck : null);
+    if (deckOf(next) !== deckOf(untrack(() => airSettled))) {
+      airSettled = next;
+      return;
+    }
+    const id = setTimeout(() => (airSettled = next), 300);
+    return () => clearTimeout(id);
+  });
+  const air = $derived(airSettled ? JSON.parse(airSettled) : null);
   const airPath = $derived(air ? tracks[air.deck]?.path : null);
   const airLabel = $derived(air ? `${'AB'[air.deck]} · ${air.key ? `${camelot(air.key)} ` : ''}${Math.round(air.bpm)}` : '');
   const fitsTip = () =>
