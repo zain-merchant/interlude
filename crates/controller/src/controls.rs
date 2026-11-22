@@ -796,6 +796,7 @@ impl Controls {
                     ),
                     K::Pfl => flag(deck.pfl),
                     K::Keylock => flag(deck.keylock),
+                    K::Sync => flag(deck.synced),
                     K::Slip => flag(deck.slip),
                     K::Quantize => flag(state.mixer.quantize),
                     K::Volume => Taper::FADER.parameter_to_value(f64::from(deck.fader)),

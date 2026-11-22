@@ -8,7 +8,11 @@ Everything Interlude does, in detail. For a short overview, see the
 - **Tempo:** BPM and beatgrid detected on load (about 0.2 s for a 6-minute
   track), shown on each deck and as beat lines on the waveform (a stronger
   line every 4 beats). SYNC matches tempo and beat phase to the other deck,
-  picking half or double time when that's closer (e.g. 87 vs 174 BPM).
+  picking half or double time when that's closer (e.g. 87 vs 174 BPM),
+  and stays on (lit) until pressed again: while both decks play, moving
+  either deck's pitch fader moves both. A paused deck's fader moves only
+  that deck, and it joins the other's tempo when it starts. Loading a
+  track turns sync off on that deck.
   Detection range is 80-160 BPM; constant tempo only for now. After a
   track loads, the Beat This! beat tracker (Foscarin et al., ISMIR 2024,
   MIT licence, built in) listens to the whole track in the background:

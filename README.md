@@ -14,7 +14,7 @@ the report it saves.
 
 ## Features
 
-- **Decks:** BPM, beatgrid and key found on load; sync that matches tempo
+- **Decks:** BPM, beatgrid and key found on load; sync that locks tempo
   and beat phase; 8 hot cues, beat loops and beat jump; slip, quantize,
   key lock, key shift and key sync; scrolling three-band waveforms with a full-track overview.
 - **Mixer and effects:** trim, 3-band EQ with full kills, filter,
@@ -61,7 +61,7 @@ shape on AZERTY, QWERTZ and Dvorak.
 | --- | --- | --- |
 | Q | P | Cue (hold to preview) |
 | W | O | Play / pause |
-| E | I | Sync tempo and beats to the other deck |
+| E | I | Sync on/off: lock tempo and beats to the other deck |
 | Z / X | , / . | Nudge slower / faster (hold) |
 | G | H | Headphone cue |
 | 1 2 3 4 | 7 8 9 0 | Hot cues 1 to 4 (start a paused deck; Settings can make them hold to preview instead, Shift clears) |
