@@ -30,6 +30,7 @@ const STEP = 2;
 
 import { pebbleLane, pebbleOverview } from '../flags/105-dir-pebble/wave.js'; // #105 (UI audit flag)
 import { linerLane, linerOverview } from '../flags/106-dir-liner/wave.js'; // #106 (UI audit flag)
+import { fieldDraw } from '../flags/107-dir-field/wave.js'; // #107 (UI audit flag)
 
 const rgba = (c, a) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
 
@@ -133,6 +134,7 @@ export class Waveform2D {
   draw(view) {
     this.resize();
     if (this.unchanged(view)) return;
+    if (view.look === 'field') return fieldDraw(this, view); // #107 (UI audit flag): dir-field prints the sound dark on its deck's sheet
     const { ctx, canvas } = this;
     const dpr = window.devicePixelRatio || 1;
     const w = canvas.width / dpr;

@@ -1,0 +1,1092 @@
+/* #107 (UI audit flag; a visual direction): Field.
+
+   Each deck is a sheet of its own colour, cut from card and laid on a light
+   table. The sound is printed on the sheet in the deck's deep inks.
+
+   Material
+     page     a light warm grey table, --f-page
+     sheet    flat coloured card, no gradient; a crisp short shadow under it
+              (--f-cut). Deck A sky, deck B apricot. The mixer's channels
+              stand on their deck's sheet, the master on paper. The waves
+              panel is the two sheets side by side, the library is paper.
+     well     the sheet a step deeper, sunk (tabs track, overview, fader
+              slots, search). No black screens anywhere.
+     tile     a white card key, raised by a 1px hard shadow and a soft one.
+   State, one grammar
+     rest      white tile, label in the surface's ink
+     hover     the tile lifts a hair (stronger shadow)
+     pressed   the tile flush, at once
+     on        the tile goes black ink (--f-on), label white, flush
+     playing   Play alone: the tile in its deck's full colour, glyph white
+     kill/rec  the tile in red, the only red
+     selected  a white tile in a sunk track (tabs); a tone on paper (rows)
+     empty     a deck with no track is paper, not colour
+   Type: Geist, ink. Figures 600, decimals and tenths at the sheet's ink
+   46%. Every rule is under the tripled :root[data-flag-dir-field]. */
+
+/* ---------- Tokens ---------- */
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] {
+  --f-page: #e3e0d9;
+  --f-paper: #f8f6f1;
+  --f-lib: #fbfaf7;
+  --f-ink: #15171b;
+  --f-a: #a9c7ea;
+  --f-a-deep: #96b8e0;
+  --f-a-ink: #143459;
+  --f-a-play: #2a62b8;
+  --f-b: #f1c992;
+  --f-b-deep: #e7b776;
+  --f-b-ink: #57300a;
+  --f-b-play: #bd5d17;
+  --f-red: #cf3a26;
+  --f-cut: 0 1px 0 rgb(20 22 30 / 0.12), 0 2px 0 rgb(20 22 30 / 0.04), 0 8px 18px -12px rgb(20 22 30 / 0.3);
+  --f-tile: #fff;
+  --f-tile-edge: 0 1px 0 rgb(20 22 30 / 0.2), 0 2px 3px -1px rgb(20 22 30 / 0.16);
+  --f-tile-hover: 0 2px 0 rgb(20 22 30 / 0.2), 0 5px 8px -2px rgb(20 22 30 / 0.22);
+  --f-tile-down: inset 0 1px 1px rgb(20 22 30 / 0.16), 0 0 0 1px rgb(20 22 30 / 0.06);
+  --f-on-edge: inset 0 1px 1px rgb(0 0 0 / 0.4);
+  --f-well-edge: inset 0 1px 2px rgb(20 22 30 / 0.16);
+  --f-float-edge: 0 1px 0 rgb(20 22 30 / 0.12), 0 2px 6px rgb(20 22 30 / 0.1), 0 20px 44px -12px rgb(20 22 30 / 0.36);
+  --f-focus: #15171b;
+  --f-num: 36px;
+  --f-bpm: 28px;
+  /* The canvas reads these from body, as today: the deck inks it prints with. */
+  --a-low: #3b70b0;
+  --deck-a: #1c4a86;
+  --a-high: #0b1b33;
+  --b-low: #b0661f;
+  --deck-b: #6d3b0b;
+  --b-high: #2c1604;
+  --fg: #15171b;
+  --ink: #15171b;
+  --cue: #15171b;
+  --hc-1: #15171b;
+  --hc-2: #15171b;
+  --hc-3: #15171b;
+  --hc-4: #15171b;
+  --hc-5: #15171b;
+  --hc-6: #15171b;
+  --hc-7: #15171b;
+  --hc-8: #15171b;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field], :root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] #app {
+  color-scheme: light;
+  --bg: var(--f-page);
+  --fg: #15171b;
+  --fg-2: rgb(21 23 27 / 0.72);
+  --fg-3: rgb(21 23 27 / 0.55);
+  --fg-4: rgb(21 23 27 / 0.32);
+  --raise: rgb(20 22 30 / 0.05);
+  --hover: rgb(20 22 30 / 0.05);
+  --sel: rgb(20 22 30 / 0.08);
+  --line: rgb(20 22 30 / 0.1);
+  --line-2: rgb(20 22 30 / 0.16);
+  --glass-fill: var(--f-paper);
+  --glass-blur: none;
+  --glass-edge: var(--f-cut);
+  --well: rgb(20 22 30 / 0.07);
+  --well-shadow: var(--f-well-edge);
+  --go: #2e9a55;
+  --warn: #d49a0e;
+  --kill: var(--f-red);
+  --popover: #fff;
+  --popover-foreground: var(--fg);
+  --background: var(--bg);
+  --foreground: var(--fg);
+  --card: var(--bg);
+  --card-foreground: var(--fg);
+  --primary: var(--fg);
+  --primary-foreground: #fff;
+  --secondary: var(--raise);
+  --secondary-foreground: var(--fg);
+  --muted: var(--raise);
+  --muted-foreground: var(--fg-3);
+  --accent: var(--raise);
+  --accent-foreground: var(--fg);
+  --destructive: var(--kill);
+  --border: var(--line);
+  --input: var(--line-2);
+  --ring: var(--fg-2);
+  color: var(--fg);
+}
+/* The surfaces: each sets its sheet, the deeper well tone, and its ink. */
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] #app {
+  --sheet: var(--f-paper);
+  --sheet-deep: #e7e4dd;
+  --sheet-ink: var(--f-ink);
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region='deck0'], :root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .waves .lane:not(.b) {
+  --sheet: var(--f-a);
+  --sheet-deep: var(--f-a-deep);
+  --sheet-ink: var(--f-a-ink);
+  --play: var(--f-a-play);
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region='deck1'], :root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .waves .lane.b {
+  --sheet: var(--f-b);
+  --sheet-deep: var(--f-b-deep);
+  --sheet-ink: var(--f-b-ink);
+  --play: var(--f-b-play);
+}
+/* On a sheet, secondary text is the sheet's own ink, so it holds its contrast on the colour. */
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] :is([data-region^='deck'], .waves .lane) {
+  --fg-2: color-mix(in srgb, var(--sheet-ink) 88%, transparent);
+  --fg-3: color-mix(in srgb, var(--sheet-ink) 72%, transparent);
+  --fg-4: color-mix(in srgb, var(--sheet-ink) 46%, transparent);
+  --hover: rgb(255 255 255 / 0.3);
+}
+/* An empty deck is paper: the colour arrives with the track. */
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck']:has(header .name.dim),
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .waves .lane:has(.wave.empty) {
+  --sheet: var(--f-paper);
+  --sheet-deep: #e7e4dd;
+  --sheet-ink: var(--f-ink);
+}
+
+/* ---------- Page and panels ---------- */
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] body,
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .app,
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .bd {
+  background: var(--f-page) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .bd i {
+  display: none !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] :is(.glass, .decks > section, section.library, .settings, .sampler) {
+  background: var(--f-paper) !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  box-shadow: var(--f-cut) !important;
+  border-radius: 10px !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .decks > section[data-region^='deck'] {
+  background: var(--sheet) !important;
+  transition: background-color 240ms ease-out;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] section.library {
+  background: var(--f-lib) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .split i {
+  background: rgb(20 22 30 / 0.22) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] :focus-visible {
+  outline: 2px solid var(--f-focus);
+  outline-offset: 2px;
+}
+
+/* ---------- Keys: white card tiles ---------- */
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .btn:not(.ghost),
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .pitch .lock,
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .nudge,
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .mixer .hp,
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .mixer button.rec,
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .knob button.label,
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .fx .tog,
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .stems .need button,
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .backdrop .card .go:not(.primary),
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .backdrop .card .found {
+  background: var(--f-tile) !important;
+  box-shadow: var(--f-tile-edge) !important;
+  color: var(--fg) !important;
+  font-weight: 500 !important;
+  border: 0 !important;
+  outline-offset: 2px;
+  transition: box-shadow 120ms ease-out, background-color 120ms ease-out, color 120ms ease-out, transform 60ms ease-out !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .btn:not(.ghost):hover:not(:disabled, [aria-disabled='true']),
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .btn:not(.ghost)[data-show-hover],
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .pitch .lock:hover,
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .mixer .hp:hover,
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .mixer .hp[data-show-hover],
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .mixer button.rec:hover,
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .knob button.label:hover,
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .fx .tog:hover,
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .stems .need button:hover,
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .backdrop .card .go:not(.primary):hover,
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .backdrop .card .found:hover {
+  box-shadow: var(--f-tile-hover) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .btn:not(.ghost):is(:active, [data-show-active]):not(:disabled, [aria-disabled='true']),
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .pitch .lock:active,
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .mixer .hp:active,
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .mixer button.rec:active,
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .knob button.label:active,
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .fx .tog:active,
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .stems .need button:active,
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .backdrop .card .go:not(.primary):active,
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .backdrop .card .found:active {
+  box-shadow: var(--f-tile-down) !important;
+  transform: translateY(1px) !important;
+  transition-duration: 0ms !important;
+}
+/* On: the tile goes black ink, flush with its sheet. */
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .transport .btn.sync:is(.on, .pressed, [aria-pressed='true']),
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .pitch .lock.on,
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .mixer .hp.on,
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .fx .tog.live,
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .btn.sm.samp:is(.on, .pressed, [aria-pressed='true']),
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .transport .btn.cue.lit:is(:active, [data-show-active]) {
+  background: var(--f-ink) !important;
+  box-shadow: var(--f-on-edge) !important;
+  color: #fff !important;
+  transform: none !important;
+}
+/* Kill and Rec: the only red tiles. */
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .knob button.label.killed,
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .mixer button.rec.on {
+  background: var(--f-red) !important;
+  box-shadow: inset 0 1px 1px rgb(0 0 0 / 0.25) !important;
+  color: #fff !important;
+  transform: none !important;
+}
+/* Playing: Play alone, in its deck's full colour. */
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .transport .btn.play.on {
+  background: var(--play) !important;
+  box-shadow: inset 0 1px 1px rgb(0 0 0 / 0.25) !important;
+  color: #fff !important;
+  transform: none !important;
+}
+/* Held at the cue point (Play down while cueing): ink, as any key held on. */
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .transport .btn.play.on[data-cueing] {
+  background: var(--f-ink) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .btn:disabled,
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .btn[aria-disabled='true'] {
+  opacity: 1 !important;
+  background: rgb(255 255 255 / 0.28) !important;
+  box-shadow: none !important;
+  color: var(--fg-4) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .btn.ghost {
+  color: var(--fg-2) !important;
+  box-shadow: none !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .btn.ghost:hover:not(:disabled, [aria-disabled='true']) {
+  background: var(--hover) !important;
+  color: var(--fg) !important;
+}
+/* Primary: an ink tile. */
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] :is(.btn.primary, .go.primary),
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] :is(.btn.primary, .go.primary):hover:not(:disabled) {
+  background: var(--f-ink) !important;
+  color: #fff !important;
+  box-shadow: 0 1px 0 rgb(0 0 0 / 0.3) !important;
+  font-weight: 500 !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] :is(.btn.primary, .go.primary):hover:not(:disabled) {
+  background: #2b2e34 !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] :is(.btn.primary, .go.primary):active:not(:disabled) {
+  transform: translateY(1px) !important;
+}
+
+/* ---------- The waves: the two sheets, the sound printed on them ---------- */
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .waves.glass {
+  background: var(--f-paper) !important;
+  overflow: hidden;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .waves .lane {
+  background: var(--sheet) !important;
+  transition: background-color 240ms ease-out;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .waves .lane + .lane {
+  border-color: transparent !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .waves .who {
+  background: none !important;
+  box-shadow: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  color: var(--sheet-ink) !important;
+  font-weight: 600 !important;
+  text-shadow: none !important;
+}
+/* The lane's title sits on a scrap of its own sheet, so the print runs under it. */
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .waves .who {
+  background: var(--sheet) !important;
+  border-radius: 4px !important;
+  padding: 2px 8px 2px 6px !important;
+  margin: -2px 0 0 -6px !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .waves .who i {
+  background: var(--sheet-ink) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .waves .who .hint {
+  color: var(--fg-3) !important;
+  font-weight: 500 !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .waves .chip {
+  background: var(--f-ink) !important;
+  color: #fff !important;
+  box-shadow: none !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .waves .zoom {
+  background: none !important;
+  box-shadow: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  color: var(--fg-3) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .waves .zoom button {
+  background: var(--f-tile) !important;
+  box-shadow: var(--f-tile-edge) !important;
+  color: var(--fg) !important;
+  border-radius: 5px !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .waves .zoom button:hover {
+  box-shadow: var(--f-tile-hover) !important;
+}
+
+/* ---------- Deck header ---------- */
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] header .name {
+  font-size: 18px !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.015em !important;
+  color: var(--fg) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] header .name.dim {
+  color: var(--fg-3) !important;
+  font-weight: 500 !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] header .artist {
+  color: var(--fg-2) !important;
+  font-weight: 500 !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .bpm .big {
+  font-size: var(--f-bpm) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .times[data-big='remaining'] .rm,
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .times[data-big='elapsed'] .el,
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .times:not([data-big]) .el {
+  font-size: var(--f-num) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .bpm .big,
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .times[data-big='remaining'] .rm,
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .times[data-big='elapsed'] .el,
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .times:not([data-big]) .el {
+  font-weight: 600 !important;
+  letter-spacing: -0.04em !important;
+  line-height: 1 !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .bpm .big,
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .times .num:not(.ending) {
+  color: var(--fg) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .bpm .big .frac,
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .times .num:not(.ending) .t {
+  color: color-mix(in srgb, var(--sheet-ink) 46%, transparent) !important;
+}
+/* A track playing out: the time in red ink. */
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .times .ending,
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .times .ending .t {
+  color: #b42416 !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .times .ending .t {
+  opacity: 0.6;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck']:has(header .name.dim) :is(.bpm .big, .times .num, .times .t) {
+  color: var(--fg-4) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck']:has(header .name.dim) .bpm .big {
+  font-weight: 500 !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .times[data-big='remaining'] .el,
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .times[data-big='elapsed'] .rm,
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .times:not([data-big]) .rm {
+  font-size: var(--t-sm) !important;
+  font-weight: 500 !important;
+  letter-spacing: 0 !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .times[data-big='remaining'] .el,
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .times[data-big='elapsed'] .rm:not(.ending),
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .times:not([data-big]) .rm:not(.ending) {
+  color: var(--fg-2) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .times :is([data-big='remaining'] .el, [data-big='elapsed'] .rm) .t {
+  color: var(--fg-3) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .times {
+  align-items: baseline !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .bpm .unit,
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .bpm .key {
+  font-size: var(--t-sm) !important;
+  font-weight: 600 !important;
+  color: var(--fg) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .bpm .key .cam {
+  color: var(--fg-3) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .bpm .key.shifted {
+  color: var(--fg) !important;
+  text-decoration: underline 1.5px;
+  text-underline-offset: 3px;
+}
+/* The overview: a well, the sheet a step deeper. */
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .overview {
+  border-radius: 6px !important;
+  background: var(--sheet-deep) !important;
+  box-shadow: var(--f-well-edge) !important;
+  transition: background-color 240ms ease-out;
+}
+
+/* ---------- Deck tabs: a white tile in a sunk track ---------- */
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .modes {
+  gap: 0 !important;
+  padding: 3px !important;
+  border: 0 !important;
+  border-radius: 8px !important;
+  background: var(--sheet-deep) !important;
+  box-shadow: var(--f-well-edge) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .modes button {
+  height: 26px !important;
+  border-radius: 5px !important;
+  color: var(--fg-2) !important;
+  font-size: var(--t-sm) !important;
+  font-weight: 500 !important;
+  background: none !important;
+  box-shadow: none !important;
+  transition: color 120ms ease-out, background-color 120ms ease-out !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .modes button:hover {
+  color: var(--fg) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .modes button.on {
+  color: var(--fg) !important;
+  font-weight: 600 !important;
+  background: var(--f-tile) !important;
+  box-shadow: var(--f-tile-edge) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .modes button::after,
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .modes button.on::after,
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .modes button:focus-visible::before {
+  content: none !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field][data-input='keys'] [data-region^='deck'] .modes button:focus-visible,
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .modes button[data-show-focus] {
+  outline: 2px solid var(--f-focus) !important;
+  outline-offset: 1px !important;
+}
+/* A mode that's running keeps a small ink square by its name. */
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .modes button i {
+  width: 5px !important;
+  height: 5px !important;
+  border-radius: 1px !important;
+  background: var(--f-ink) !important;
+  box-shadow: none !important;
+}
+
+/* The row under the tabs. */
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .strip :is(.tc, .tb, .big, .kind, .stem) {
+  border-radius: 6px !important;
+  box-shadow: none !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .strip :is(.tc, .tb, .big, .kind, .stem):hover {
+  background: rgb(255 255 255 / 0.32) !important;
+}
+/* Hot cues: an ink square with the number knocked out when set, a pale square when free. */
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .perf .tc i {
+  display: none !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .perf .tc b {
+  display: inline-grid !important;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 !important;
+  border-radius: 3px;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  background: var(--f-ink);
+  color: #fff !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .perf .tc span {
+  color: var(--fg) !important;
+  font-weight: 500 !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .perf .tc:not(.set) b {
+  background: rgb(255 255 255 / 0.4);
+  color: var(--fg-3) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .perf .tc:not(.set) span {
+  color: var(--fg-3) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .perf .big b {
+  font-weight: 600 !important;
+  letter-spacing: -0.03em !important;
+  color: var(--fg) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .perf .big :is(span, small) {
+  color: var(--fg-2) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .perf .big b::before {
+  background: var(--f-ink) !important;
+  border-radius: 1px !important;
+  box-shadow: none !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .strip .tb {
+  color: var(--fg-2) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .fx .tog {
+  min-width: 48px !important;
+  height: var(--h-sm) !important;
+  padding: 0 10px !important;
+  border-radius: 5px !important;
+  justify-content: center;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .fx .tog i {
+  display: none !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .stems .need button {
+  height: var(--h-sm) !important;
+  padding: 0 10px !important;
+  border-radius: 5px !important;
+  text-decoration: none !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .stems .need {
+  color: var(--fg-2) !important;
+  align-items: center !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .stems .stem:not(.muted) i {
+  background: var(--f-ink) !important;
+  box-shadow: none !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .stems .stem.solo {
+  color: var(--fg) !important;
+  font-weight: 600 !important;
+}
+
+/* ---------- Transport ---------- */
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .transport > * {
+  border-radius: 6px !important;
+  font-size: var(--t-sm) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .pitch .lock {
+  border-radius: 6px !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .transport .btn.cue {
+  color: var(--fg) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .transport .btn.play svg {
+  width: 14px;
+  height: 14px;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .transport .btn.jumps span {
+  color: var(--fg) !important;
+  font-weight: 600 !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .transport .btn.jumps small {
+  color: var(--fg-3) !important;
+  font-weight: 500 !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .transport .btn.jumps button {
+  color: var(--fg-3) !important;
+  background: none !important;
+  box-shadow: none !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .transport .btn.jumps button:hover:not([aria-disabled='true']) {
+  color: var(--fg) !important;
+  background: rgb(20 22 30 / 0.05) !important;
+}
+
+/* ---------- Pitch column ---------- */
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .pitch .val {
+  font-weight: 600 !important;
+  color: var(--fg) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .nudge {
+  border-radius: 5px !important;
+  overflow: hidden;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .nudge button {
+  background: none !important;
+  box-shadow: none !important;
+  color: var(--fg) !important;
+  border-radius: 0 !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .nudge button + button {
+  box-shadow: inset 1px 0 0 rgb(20 22 30 / 0.1) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .nudge button:hover {
+  background: rgb(20 22 30 / 0.04) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .nudge button:active {
+  background: rgb(20 22 30 / 0.08) !important;
+}
+
+/* ---------- Faders: a slot cut in the sheet, a white tile with an ink line ---------- */
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .fader .line {
+  background: var(--sheet-deep) !important;
+  box-shadow: var(--f-well-edge) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .fader .mark,
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .fader .tick {
+  background: var(--fg-4) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .fader .cap,
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .fader:hover .cap,
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .fader.dragging .cap {
+  background: var(--f-tile) !important;
+  box-shadow: var(--f-tile-edge) !important;
+  border-radius: 3px !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .fader:hover .cap,
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .fader.dragging .cap {
+  box-shadow: var(--f-tile-hover) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .fader .cap::after {
+  background: var(--f-ink) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .fader .match {
+  background: var(--f-ink) !important;
+  opacity: 0.6;
+}
+
+/* ---------- Mixer: each channel on its deck's sheet, the master on paper ---------- */
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .decks > section.mixer {
+  background:
+    linear-gradient(90deg, var(--f-mix-a, var(--f-a)) 0 calc(50% - 57px), transparent 0 calc(50% + 57px), var(--f-mix-b, var(--f-b)) 0) top / 100% calc(100% - var(--f-xf, 60px)) no-repeat,
+    var(--f-paper) !important;
+}
+/* A channel whose deck is empty is paper too. */
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .app:has([data-region='deck0'] header .name.dim) .mixer {
+  --f-mix-a: var(--f-paper);
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .app:has([data-region='deck1'] header .name.dim) .mixer {
+  --f-mix-b: var(--f-paper);
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .mixer .ch:first-child,
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .mixer .fwrap:not(.mirror) {
+  --sheet: var(--f-a);
+  --sheet-deep: var(--f-a-deep);
+  --sheet-ink: var(--f-a-ink);
+  --fg-2: color-mix(in srgb, var(--f-a-ink) 88%, transparent);
+  --fg-3: color-mix(in srgb, var(--f-a-ink) 72%, transparent);
+  --fg-4: color-mix(in srgb, var(--f-a-ink) 46%, transparent);
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .mixer .ch:not(:first-child),
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .mixer .fwrap.mirror {
+  --sheet: var(--f-b);
+  --sheet-deep: var(--f-b-deep);
+  --sheet-ink: var(--f-b-ink);
+  --fg-2: color-mix(in srgb, var(--f-b-ink) 88%, transparent);
+  --fg-3: color-mix(in srgb, var(--f-b-ink) 72%, transparent);
+  --fg-4: color-mix(in srgb, var(--f-b-ink) 46%, transparent);
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .app:has([data-region='deck0'] header .name.dim) .mixer :is(.ch:first-child, .fwrap:not(.mirror)),
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .app:has([data-region='deck1'] header .name.dim) .mixer :is(.ch:not(:first-child), .fwrap.mirror) {
+  --sheet-deep: #e7e4dd;
+  --sheet-ink: var(--f-ink);
+  --fg-2: rgb(21 23 27 / 0.72);
+  --fg-3: rgb(21 23 27 / 0.55);
+  --fg-4: rgb(21 23 27 / 0.32);
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .mixer .cen {
+  --sheet-deep: #e7e4dd;
+}
+/* Dials: a white disc with one ink index. The disc turns, so its face is drawn on a layer that turns back. */
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .knob .dial,
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .knob .dial.dragging {
+  background: none !important;
+  box-shadow: none !important;
+  scale: 1.2;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .knob .dial::after {
+  content: none !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .knob .dial::before {
+  content: '' !important;
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: -1;
+  border-radius: 50% !important;
+  background: var(--f-tile) !important;
+  box-shadow: var(--f-tile-edge) !important;
+  transform: rotate(calc(var(--rot, 0deg) * -1)) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .knob .wrap:hover .dial::before {
+  box-shadow: var(--f-tile-hover) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .knob .dial i {
+  top: 2px !important;
+  width: 2px !important;
+  height: 36% !important;
+  margin-left: -1px !important;
+  border-radius: 1px !important;
+  background: var(--f-ink) !important;
+  box-shadow: none !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .knob .dial.killed::before {
+  background: var(--f-red) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .knob .dial.killed i {
+  background: #fff !important;
+}
+/* The ring: printed ticks, the value's ticks in ink. */
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .knob line {
+  stroke: color-mix(in srgb, var(--sheet-ink) 26%, transparent) !important;
+  stroke-width: 1 !important;
+  filter: none !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .knob line.on {
+  stroke: var(--sheet-ink) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .knob:has(.dial.killed) line.on {
+  stroke: var(--f-red) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .knob .label {
+  color: var(--fg-3) !important;
+  font-size: var(--t-xs) !important;
+  font-weight: 500 !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .knob button.label {
+  height: 18px !important;
+  min-width: 34px !important;
+  padding: 0 6px !important;
+  border-radius: 4px !important;
+  color: var(--fg) !important;
+}
+/* Meters: a slot in the sheet, the level printed as segments, green to red. */
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .meter.m60 .bar,
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .meter.m60 .clip {
+  background: var(--sheet-deep) !important;
+  box-shadow: inset 0 1px 1px rgb(20 22 30 / 0.14) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .meter.m60 .bar::after {
+  background: linear-gradient(to top, var(--go) 0 75%, var(--warn) 75% 97.9%, var(--f-red) 97.9%) !important;
+  -webkit-mask: repeating-linear-gradient(to top, #000 0 2px, transparent 2px 3px);
+  mask: repeating-linear-gradient(to top, #000 0 2px, transparent 2px 3px);
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .meter.m60.clipped .clip {
+  background: var(--f-red) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .meter.m60 .peak {
+  background: var(--f-ink) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .meter.m60 .db {
+  background: var(--fg-4) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .meter.m60 .db.zero {
+  background: var(--fg-2) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .mixer .hp {
+  border-radius: 5px !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .mixer button.rec {
+  border-radius: 5px !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .mixer button.rec .dot {
+  background: var(--f-red) !important;
+  box-shadow: none !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .mixer button.rec.on .dot {
+  background: #fff !important;
+}
+/* The crossfader sits on paper; its ends are the two sheets. */
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .mixer .xf .end {
+  opacity: 1 !important;
+  border-radius: 1px !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .mixer .xf .end:first-child {
+  background: var(--f-a-play) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .mixer .xf .end:last-child {
+  background: var(--f-b-play) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .mixer .xf .letter:first-child {
+  color: var(--f-a-play) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .mixer .xf .letter:last-child {
+  color: var(--f-b-play) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .mixer .xf .ruler line {
+  stroke: rgb(20 22 30 / 0.3) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .mixer .xf .ruler line.on {
+  stroke: var(--fg-2) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .mixer .lim {
+  color: var(--f-red) !important;
+}
+
+/* ---------- Library: paper ---------- */
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] section.library nav {
+  box-shadow: inset -1px 0 rgb(20 22 30 / 0.08) !important;
+  border-color: transparent !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] section.library nav .h {
+  color: var(--fg-3) !important;
+  font-weight: 600 !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] section.library nav .item {
+  color: var(--fg-2) !important;
+  border-radius: 6px !important;
+  box-shadow: none !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] section.library nav .item:hover,
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] section.library nav .item[data-show-hover] {
+  background: var(--hover) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] section.library nav .item.on,
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] section.library nav .item.on:hover {
+  background: var(--f-ink) !important;
+  color: #fff !important;
+  font-weight: 500 !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] section.library nav .item small {
+  color: var(--fg-3) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] section.library nav .item.on small {
+  color: rgb(255 255 255 / 0.62) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] section.library nav .add {
+  color: var(--fg-3) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] section.library nav .add:hover {
+  color: var(--fg) !important;
+  background: var(--hover) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] section.library .bar .search {
+  background: rgb(20 22 30 / 0.06) !important;
+  box-shadow: var(--f-well-edge) !important;
+  border-radius: 7px !important;
+  border: 0 !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] section.library .bar .search:focus-within {
+  box-shadow: var(--f-well-edge), 0 0 0 2px var(--f-focus) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] section.library .bar .search kbd {
+  color: var(--fg-3) !important;
+  background: none !important;
+  box-shadow: none !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] section.library .row.head {
+  border-color: var(--line) !important;
+  box-shadow: none !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] section.library .row.head .sort {
+  color: var(--fg-3) !important;
+  font-weight: 600 !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] section.library .row.head .sort:is(.on, :hover) {
+  color: var(--fg) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] section.library .scroll .row {
+  color: var(--fg-2) !important;
+  border-radius: 6px !important;
+  box-shadow: none !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] section.library .scroll .row .t,
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] section.library .scroll .row .n {
+  color: var(--fg) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] section.library .scroll .row .t {
+  font-weight: 500 !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] section.library .scroll .row:hover,
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] section.library .scroll .row[data-show-hover] {
+  background: var(--hover) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] section.library .scroll .row.sel,
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] section.library .scroll .row.sel:hover {
+  background: rgb(20 22 30 / 0.09) !important;
+  box-shadow: none !important;
+  color: var(--fg) !important;
+}
+/* A track on a deck: its row is a strip of that deck's sheet. */
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] section.library .scroll .row:has(.ld b) {
+  color: var(--fg) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] section.library .scroll .row:has(.ld b:not(.b)) {
+  background: var(--f-a) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] section.library .scroll .row:has(.ld b.b) {
+  background: var(--f-b) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] section.library .scroll .row:has(.ld b:not(.b)):has(.ld b.b) {
+  background: linear-gradient(90deg, var(--f-a) 50%, var(--f-b) 50%) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] section.library .scroll .row .ld b {
+  background: var(--f-a-ink) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] section.library .scroll .row .ld b.b {
+  background: var(--f-b-ink) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] section.library .scroll .row mark {
+  background: rgb(20 22 30 / 0.12) !important;
+  color: var(--fg) !important;
+  border-radius: 2px;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region='tracks'] .row .k.mix {
+  box-shadow: none !important;
+  padding-bottom: 0 !important;
+  color: var(--fg) !important;
+  font-weight: 600 !important;
+}
+
+/* ---------- The floating layer ---------- */
+/* Messages from the machine (toast, banner) are ink cards; things you work in (dialogs, menus, tips) are white card. */
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .toastbox .toast,
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .banner {
+  background: var(--f-ink) !important;
+  color: #fff !important;
+  box-shadow: 0 1px 0 rgb(0 0 0 / 0.2), 0 10px 24px -10px rgb(20 22 30 / 0.5) !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  --fg: #fff;
+  --fg-2: rgb(255 255 255 / 0.76);
+  --fg-3: rgb(255 255 255 / 0.56);
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .backdrop .card,
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] :is(.tip, .tooltip, .menu) {
+  background: #fff !important;
+  box-shadow: var(--f-float-edge) !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  color: var(--fg) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .toastbox .toast {
+  border-radius: 8px !important;
+  font-weight: 500 !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .toastbox .toast .undo {
+  background: rgb(255 255 255 / 0.14) !important;
+  box-shadow: none !important;
+  color: #fff !important;
+  border-radius: 5px !important;
+  font-weight: 500 !important;
+  border: 0 !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .toastbox .toast .undo:hover {
+  background: rgb(255 255 255 / 0.22) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .toastbox .toast .undo kbd {
+  color: rgb(255 255 255 / 0.56) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] section.library .bar {
+  anchor-name: --f-libbar;
+}
+@supports (anchor-name: --a) {
+  :root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .app > .banner.lost {
+    position: fixed !important;
+    position-anchor: --f-libbar;
+    top: calc(anchor(top) - 6px) !important;
+    left: calc(anchor(left) - 6px) !important;
+    bottom: auto !important;
+    translate: none !important;
+    width: calc(anchor-size(width) + 12px) !important;
+    max-width: none !important;
+    min-height: calc(anchor-size(height) + 12px) !important;
+  }
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .app > .banner.lost {
+  z-index: 60 !important;
+  border-radius: 10px !important;
+  padding: 6px 6px 6px 14px !important;
+  animation: none !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .banner.lost svg {
+  stroke: #ffb23e !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .banner.lost b {
+  font-weight: 600 !important;
+  color: #fff !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .banner.lost > span {
+  flex: 1;
+  color: rgb(255 255 255 / 0.76) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .banner .btn:not(.ghost) {
+  background: #fff !important;
+  color: var(--f-ink) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .tip kbd {
+  background: rgb(20 22 30 / 0.07) !important;
+  box-shadow: none !important;
+  color: var(--fg-2) !important;
+  border-radius: 4px !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .backdrop {
+  background: rgb(36 34 30 / 0.38) !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .backdrop::before {
+  content: none !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .backdrop .card {
+  border-radius: 12px !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .backdrop .card h2 {
+  font-size: var(--t-lg) !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.03em !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .backdrop .card .lead {
+  color: var(--fg-2) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .backdrop .card .link {
+  text-decoration: none !important;
+  color: var(--fg-2) !important;
+  font-weight: 500 !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .backdrop .card .link:hover {
+  color: var(--fg) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .backdrop .card textarea {
+  background: rgb(20 22 30 / 0.05) !important;
+  box-shadow: var(--f-well-edge) !important;
+  color: var(--fg) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .backdrop .card textarea:focus-visible {
+  box-shadow: var(--f-well-edge), 0 0 0 2px var(--f-focus) !important;
+  outline: none !important;
+}
+
+/* ---------- Settings ---------- */
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .settings nav .item {
+  color: var(--fg-2) !important;
+  border-radius: 6px !important;
+  box-shadow: none !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .settings nav .item:hover {
+  background: var(--hover) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .settings nav .item.on,
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .settings nav .item.on:hover {
+  background: var(--f-ink) !important;
+  color: #fff !important;
+  font-weight: 500 !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .settings .bar h2 {
+  font-weight: 600 !important;
+  letter-spacing: -0.015em !important;
+}
+
+/* Drop targets: ink outlines. */
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] #app [data-drop] {
+  outline-color: rgb(21 23 27 / 0.4) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] #app [data-drop='over'] {
+  outline-color: var(--f-ink) !important;
+  background-image: linear-gradient(rgb(255 255 255 / 0.2), transparent) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] #app [data-drop='blocked-over'] {
+  outline-color: var(--f-red) !important;
+}
+
+/* ---------- Smaller windows ---------- */
+@media (max-width: 1200px) {
+  :root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .perf .tc b {
+    min-width: 15px;
+    height: 15px;
+    font-size: 10px !important;
+  }
+  :root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] {
+    --f-num: 30px;
+    --f-bpm: 24px;
+  }
+  :root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] header .name {
+    font-size: 16px !important;
+  }
+}

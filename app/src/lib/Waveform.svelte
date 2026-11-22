@@ -38,6 +38,8 @@
     ...(mode === 'scroll' && flag('dir-centerline') ? { half: deck === 0 ? 'up' : 'down' } : {}),
     // #105, #106 (UI audit flags): dir-pebble draws beads on the beat grid, dir-liner flat ink.
     ...(flag('dir-pebble') ? { look: 'beads' } : flag('dir-liner') ? { look: 'ink' } : {}),
+    // #107 (UI audit flag): dir-field prints the sound in its deck's inks on a light sheet.
+    ...(flag('dir-field') ? { look: 'field' } : {}),
   });
 
   // #49 (UI audit flag): the play head's x in device px, at the waves
