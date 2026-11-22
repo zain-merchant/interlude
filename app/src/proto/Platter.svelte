@@ -17,7 +17,7 @@
   const HC = ['#e8b04a', '#7cb6ff', '#ef7a64', '#6fd08c', '#c99cff', '#5fd4d4', '#ff9fc8', '#d8d27a'];
   const rgba = (c, a) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
 
-  const S = $derived(STYLES[platter.style] ?? STYLES['smoked-arm']);
+  const S = $derived(STYLES[platter.style] ?? STYLES.beside);
   const d = $derived(engine.decks[deck]);
   const t = $derived(tracks[deck]);
   const bpm = $derived(d.bpm > 0 ? d.bpm * d.rate : 0);
@@ -38,7 +38,7 @@
   // Loaded, stopped and sitting on its cue point: the record that's up next.
   const pending = $derived(!!t && !d.playing && Math.abs(d.position - d.cue) < 0.05);
 
-  const size = $derived(Math.max(120, Math.floor(box)));
+  const size = $derived(Math.max(72, Math.floor(box)));
   // The record fills the box, less room for an outer waveform ring or the
   // strobe rim, so there's little dead space around it.
   const vr = $derived(Math.round(size / 2 - (S.ring === 'outer' ? platter.ringWidth + 14 : S.ring === 'cues' ? 9 : S.strobe ? 9 : 1)));
