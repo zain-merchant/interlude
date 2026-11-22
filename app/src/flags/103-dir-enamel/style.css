@@ -1,0 +1,1614 @@
+/* Built by the direction's work/build.py from #100's sources (forked) and the direction's own; edit those, not this. */
+/* #100 (UI audit flag; a visual direction): Room, graphic.
+
+   99's listening room (panels in layers, raised keys, the record grooves)
+   set in 97's graphic type and keys, and cleaned up: neutral greys instead
+   of warm ones, one clear value step between each layer, and hard 1px
+   edges. Nothing glows, nothing is blurred, nothing moves at rest.
+
+   Layers, back to front, each one clear step apart in value:
+     0 the room (the page)                 #09090b
+     1 the waveform window, cut in         #040405, record grooves
+     2 plates: decks, mixer, library       #161619, flat, lit top edge
+     3 wells cut into a plate              #060607 (overview, tabs, search)
+     4 keys standing on a plate            #2a2a2f, hard underside, soft lift
+
+   One state grammar:
+     rest     a key, standing up, label --fg-2;
+     hover    a step lighter, label --fg;
+     pressed  down 1px into the plate, while held;
+     on       latched down, flat and dark, its label in its role colour;
+     playing  Play alone: a flat face in its deck's colour, dark glyph, so
+              a deck that's playing reads from across the room;
+     selected a key standing up out of a well (the tabs) or a flat tone;
+     focus    a 2px ring, keyboard only;
+     disabled flat and faint.
+
+   Colour roles: ice and cream are the decks (waveforms, meters, Play,
+   the glyph of a deck key that's on). Amber is Cue and the headphone cue
+   only. Red is kill, Rec, clip, a track running out, device lost. Hot
+   cues 1 and 2 are a cool blue and a sage, never amber.
+
+   Type (97's): Geist. Time left and tempo 28/600 at -0.035em; titles
+   16/600; labels 13/500 and 11/500, sentence case. */
+
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] {
+  /* Surfaces. */
+  --bg: #09090b;
+  --rg-room: #09090b;
+  --rg-window: #040405;
+  --rg-plate: #161619;
+  --rg-well: #060607;
+  --rg-key: #2a2a2f;
+  --rg-key-2: #252529;
+  --rg-key-hi: #323238;
+  --rg-key-hi-2: #2c2c31;
+  --rg-down: #111113;
+  --rg-on: #0b0b0c;
+
+  --rg-slot: #030304;
+  --rg-cap: #38383e;
+  --rg-cap-2: #2e2e33;
+  --rg-cap-hi: #414147;
+  --rg-cap-hi-2: #36363b;
+  --rg-dial: #2e2e33;
+  --rg-dial-hi: #36363c;
+  --rg-ridge: #3a3a40;
+  --rg-ridge-hi: #444449;
+  --rg-ridge-2: #1c1c20;
+  --rg-dial-groove: #101012;
+  --rg-float: #1e1e22;
+  --rg-card: #1a1a1d;
+  --rg-row-sel: #232327;
+  --rg-tag: rgb(22 22 25 / 0.96);
+
+  /* Edges: crisp 1px lines first, then one soft lift under keys. */
+  --rg-lit: rgb(255 255 255 / 0.075);
+  --rg-hi: rgb(255 255 255 / 0.1);
+  --rg-hi-2: rgb(255 255 255 / 0.13);
+  --rg-lip: rgb(255 255 255 / 0.055);
+  --rg-rim: rgb(0 0 0 / 0.85);
+  --rg-groove-line: rgb(255 255 255 / 0.04);
+  --rg-window-line: rgb(255 255 255 / 0.045);
+  --rg-lift: 0 1px 2px rgb(0 0 0 / 0.3), 0 2px 6px -1px rgb(0 0 0 / 0.35);
+}
+
+/* The composite tokens are declared again on #app, so a token changed there
+   (the light appearance) carries into every recipe built from it. */
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel],
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] #app {
+  --rg-plate-edge: inset 0 1px 0 var(--rg-lit), 0 0 0 1px var(--rg-rim), 0 16px 32px -16px rgb(0 0 0 / 0.8);
+  --rg-well-edge: inset 0 1px 0 rgb(0 0 0 / 0.9), inset 0 0 0 1px rgb(0 0 0 / 0.55), 0 1px 0 var(--rg-lip);
+  --rg-cut: inset 0 1px 0 rgb(0 0 0 / 0.9), inset 0 0 0 1px rgb(0 0 0 / 0.5), inset 0 -1px 0 rgb(255 255 255 / 0.05);
+  --rg-key-fill: linear-gradient(180deg, var(--rg-key), var(--rg-key-2));
+  --rg-key-fill-hi: linear-gradient(180deg, var(--rg-key-hi), var(--rg-key-hi-2));
+  --rg-key-edge: inset 0 1px 0 var(--rg-hi), 0 1px 0 var(--rg-rim), var(--rg-lift);
+  --rg-key-edge-hi: inset 0 1px 0 var(--rg-hi-2), 0 1px 0 var(--rg-rim), var(--rg-lift);
+  --rg-down-edge: inset 0 1px 2px rgb(0 0 0 / 0.8), inset 0 0 0 1px rgb(0 0 0 / 0.45), 0 1px 0 var(--rg-lip);
+  --rg-on-edge: inset 0 1px 2px rgb(0 0 0 / 0.9), inset 0 0 0 1px rgb(0 0 0 / 0.55), 0 1px 0 rgb(255 255 255 / 0.07);
+  /* The record grooves: 1px rings 4px apart round a spindle far below. */
+  --rg-grooves: repeating-radial-gradient(circle at 50% 640px, var(--rg-groove-line) 0 1px, transparent 1.5px 4px);
+  --rg-cap-fill: linear-gradient(180deg, var(--rg-cap), var(--rg-cap-2));
+  --rg-cap-fill-hi: linear-gradient(180deg, var(--rg-cap-hi), var(--rg-cap-hi-2));
+  --rg-float-edge: inset 0 1px 0 rgb(255 255 255 / 0.09), 0 0 0 1px var(--rg-rim), 0 2px 6px rgb(0 0 0 / 0.35), 0 12px 32px -6px rgb(0 0 0 / 0.55);
+  --rg-tag-edge: inset 0 1px 0 var(--rg-lit), 0 0 0 1px var(--rg-rim), 0 2px 6px -1px rgb(0 0 0 / 0.5);
+  --glass-fill: var(--rg-plate);
+  --glass-edge: var(--rg-plate-edge);
+  --well: var(--rg-well);
+  --well-shadow: var(--rg-well-edge);
+  --flag-buttons-bg: var(--rg-key-fill);
+  --flag-buttons-ring: var(--rg-key-edge);
+  --flag-buttons-bg-hover: var(--rg-key-fill-hi);
+  --flag-buttons-ring-hover: var(--rg-key-edge-hi);
+  --flag-buttons-bg-on: var(--rg-down);
+  --flag-buttons-ring-on: var(--rg-down-edge);
+}
+
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] {
+  /* Text: a clean neutral white and three steps down. */
+  --fg: #eeeeec;
+  --fg-2: rgb(238 238 236 / 0.66);
+  --fg-3: rgb(238 238 236 / 0.5);
+  --fg-4: rgb(238 238 236 / 0.3);
+  --ink: #111113;
+  --rg-paper: #eeeeec;
+  --rg-paper-hi: #fff;
+  --rg-paper-fg: #111113;
+
+  --raise: rgb(255 255 255 / 0.06);
+  --hover: rgb(255 255 255 / 0.05);
+  --sel: rgb(255 255 255 / 0.09);
+  --line: rgb(255 255 255 / 0.07);
+  --line-2: rgb(255 255 255 / 0.11);
+  --popover: #1d1d21;
+
+  /* Roles. */
+  --cue: #eab34d;
+  --kill: #ff6359;
+  --warn: #ff6359;
+  --focus-ring: rgb(238 238 236 / 0.8);
+
+  /* Hot cues: one lightness, none of them amber (amber is Cue's alone). */
+  --hc-1: #8fb3dc;
+  --hc-2: #8fc7a0;
+  --hc-3: #d99a8a;
+  --hc-4: #b7a3dc;
+  --hc-5: #82c4c4;
+  --hc-6: #d9a3bd;
+  --hc-7: #c4c08a;
+  --hc-8: #a9b0bd;
+
+  --glass-blur: none;
+
+  --rg-num: 28px;
+  --rg-ease: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* ── The room ───────────────────────────────────────────────────────── */
+
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] body,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .app,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .bd {
+  background: var(--rg-room);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .bd i {
+  display: none;
+}
+
+/* Plates: solid and flat, a 1px lit top edge, a 1px dark rim, one shadow. */
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .decks > section,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] section.library,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .settings,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .sampler,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .glass:not(.waves) {
+  background: var(--rg-plate);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: var(--rg-plate-edge);
+}
+
+/* The waveform window: cut into the room, with the record's grooves. */
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .waves.glass {
+  padding-right: 0;
+  background: repeating-radial-gradient(ellipse 140% 100% at 50% 520%, var(--rg-window-line) 0 1px, transparent 1.5px 5px), var(--rg-window);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: 0 1px 0 var(--rg-lip);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .waves.glass::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow: inset 0 1px 0 rgb(0 0 0 / 0.9), inset 0 0 0 1px rgb(0 0 0 / 0.6), inset 0 -1px 0 rgb(255 255 255 / 0.05);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .waves .lane canvas {
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .waves .zoom,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .waves .lane .who {
+  z-index: 2;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .lane + .lane {
+  border-top-color: rgb(255 255 255 / 0.06);
+}
+/* The zoom control: a small plate on the window. */
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .zoom {
+  background: var(--rg-plate);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: var(--rg-tag-edge);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .waves .zoom button {
+  background: none;
+  box-shadow: none;
+}
+
+/* Lane titles, three ways (the "title" setting). */
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .waves .lane .who {
+  font-weight: 500;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .waves .lane:not(:has(.wave.empty)) .who {
+  background: var(--rg-tag);
+  box-shadow: var(--rg-tag-edge);
+  color: var(--fg-2);
+}
+
+/* ── Decks ─────────────────────────────────────────────────────────── */
+
+/* Title and artist over each other, tempo and key beside them; each row
+   on one baseline (deck-polish's grid), the figures no taller than the
+   title's line needs. */
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] header .name {
+  font-size: var(--t-md);
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: var(--fg);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] header .name.dim {
+  font-weight: 500;
+  color: var(--fg-3);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] header .artist {
+  font-weight: 400;
+  color: var(--fg-3);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .bpm .big,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .times[data-big='remaining'] .rm,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .times[data-big='elapsed'] .el,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .times:not([data-big]) .el {
+  font-size: var(--rg-num);
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  line-height: 28px;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .bpm .big,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .times .num:not(.ending) {
+  color: var(--fg);
+}
+/* The tempo's decimals and the time's tenths: the same size, a step down. */
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .bpm .big .frac,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .times .num:not(.ending) .t {
+  color: var(--fg-3);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .times .rm.ending .t {
+  color: color-mix(in srgb, var(--kill) 62%, transparent);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck']:has(header .name.dim) :is(.bpm .big, .times .num, .times .t) {
+  font-weight: 400;
+  color: var(--fg-4);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .times[data-big='remaining'] .el,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .times[data-big='elapsed'] .rm,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .times:not([data-big]) .rm {
+  font-size: var(--t-sm);
+  font-weight: 500;
+  letter-spacing: 0;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .times[data-big='remaining'] .el,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .times[data-big='elapsed'] .rm:not(.ending),
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .times:not([data-big]) .rm:not(.ending) {
+  color: var(--fg-3);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .times .t {
+  font-weight: 600;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .times :is([data-big='remaining'] .el, [data-big='elapsed'] .rm) .t {
+  font-weight: 500;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .times {
+  align-items: baseline;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .bpm .unit,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .bpm .key {
+  font-size: var(--t-sm);
+  font-weight: 500;
+  color: var(--fg-2);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .bpm .key.shifted {
+  color: var(--fg);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .bpm .key .cam {
+  color: var(--fg-3);
+}
+
+/* The overview: a well with the record's grooves in it; the cut drawn
+   over the waveform, kept to the top 1px so the cue flags stay clear. */
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .overview {
+  background: var(--rg-grooves), var(--rg-well);
+  box-shadow: 0 1px 0 var(--rg-lip);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .overview::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow: var(--rg-cut);
+}
+
+/* Tabs: a segmented switch. A grooved well, the current mode a key
+   standing up out of it. */
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .modes {
+  gap: 0;
+  padding: 3px;
+  border: 0;
+  border-radius: 11px;
+  background: var(--rg-grooves), var(--rg-well);
+  box-shadow: var(--rg-well-edge);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .modes button {
+  height: 26px;
+  border-radius: 8px;
+  color: var(--fg-3);
+  font-size: var(--t-sm);
+  font-weight: 500;
+  background: none;
+  box-shadow: none;
+  transition: color 120ms ease-out, background-color 120ms ease-out;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .modes button:hover {
+  color: var(--fg);
+  background: none;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .modes button.on {
+  color: var(--fg);
+  background: var(--rg-key-fill);
+  box-shadow: var(--rg-key-edge);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .modes button.on::after,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .modes button::after {
+  content: none;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .modes button:focus-visible::before {
+  content: none !important;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel][data-input='keys'] [data-region^='deck'] .modes button:focus-visible,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .modes button[data-show-focus] {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 0;
+}
+/* A mode that's running keeps a small dot by its name, in the deck's colour. */
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .modes button i,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .perf .big.live b::before {
+  width: 5px;
+  height: 5px;
+  background: var(--deck);
+  box-shadow: none;
+}
+
+/* The row under the tabs: text controls, a tone on hover. */
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .strip :is(.tc, .tb, .big, .kind, .stem) {
+  border-radius: var(--r);
+  box-shadow: none;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .strip :is(.tc, .tb, .big, .kind, .stem):hover {
+  background: var(--hover);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .perf .tc b {
+  color: var(--fg);
+  font-weight: 600;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .perf .tc span {
+  color: var(--fg-2);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .perf .tc:not(.set) :is(b, span) {
+  color: var(--fg-3);
+  font-weight: 500;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .perf .big b {
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  color: var(--fg);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .perf .big :is(span, small) {
+  color: var(--fg-2);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .strip .tb {
+  color: var(--fg-2);
+}
+/* The effect's switch and the stems download are keys. */
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .fx .tog {
+  --on: var(--deck);
+  min-width: 48px;
+  height: var(--h-sm);
+  padding: 0 10px;
+  border-radius: 6px;
+  justify-content: center;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .fx .tog i {
+  display: none;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .stems .need button {
+  height: var(--h-sm);
+  padding: 0 10px;
+  border-radius: 6px;
+  text-decoration: none;
+  color: var(--fg);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .stems .need {
+  color: var(--fg-2);
+  align-items: center;
+}
+
+/* ── Keys ──────────────────────────────────────────────────────────── */
+
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .btn:not(.ghost),
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .pitch .lock,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .mixer .hp,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .mixer button.rec,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .fx .tog,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .stems .need button,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .toastbox .toast .undo {
+  background: var(--rg-key-fill);
+  box-shadow: var(--rg-key-edge);
+  color: var(--fg-2);
+  font-weight: 500;
+  border: 0;
+  transition: background-color 120ms ease-out, color 120ms ease-out, box-shadow 120ms ease-out, translate 60ms ease-out;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .btn:not(.ghost):hover:not(:disabled, [aria-disabled='true']),
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .btn:not(.ghost)[data-show-hover],
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .pitch .lock:hover,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .mixer .hp:hover,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .mixer .hp[data-show-hover],
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .mixer button.rec:hover,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .fx .tog:hover,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .stems .need button:hover,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .toastbox .toast .undo:hover {
+  background: var(--rg-key-fill-hi);
+  box-shadow: var(--rg-key-edge-hi);
+  color: var(--fg);
+}
+/* Pressed: down 1px into the plate, at once. */
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .btn:active:not(:disabled, [aria-disabled='true']) {
+  transform: none;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] :is(.btn:not(.ghost), .mixer .hp, .mixer button.rec, .knob button.label, .toastbox .toast .undo, [data-region^='deck'] .pitch .lock, [data-region^='deck'] .fx .tog):is(:active, [data-show-active]):not(:disabled, [aria-disabled='true']) {
+  background: var(--rg-down);
+  box-shadow: var(--rg-down-edge);
+  translate: 0 1px;
+  transition-duration: 0ms;
+}
+/* On: latched down, flat and dark; the label in its role colour (--on).
+   It doesn't change on hover, so it never looks off. */
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .transport .btn.cue.lit,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .transport .btn.sync:is(.on, .pressed, [aria-pressed='true']),
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .pitch .lock.on,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .mixer .hp.on,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .knob button.label.killed,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .knob button.label.killed:hover,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .fx .tog.live,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .btn.sm.samp:is(.on, .pressed, [aria-pressed='true']) {
+  background: var(--rg-on);
+  box-shadow: var(--rg-on-edge);
+  color: var(--on, var(--fg));
+  translate: none;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .btn:disabled,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .btn[aria-disabled='true'] {
+  opacity: 1;
+  background: none;
+  box-shadow: inset 0 0 0 1px var(--line);
+  color: var(--fg-4);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .btn.ghost {
+  color: var(--fg-2);
+  box-shadow: none;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .btn.ghost:hover:not(:disabled, [aria-disabled='true']) {
+  background: var(--hover);
+  color: var(--fg);
+}
+
+/* Transport: four keys. */
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .transport > * {
+  border-radius: var(--r);
+  font-size: var(--t-sm);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .transport .btn.cue {
+  --on: var(--cue);
+  color: var(--fg-2);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .transport .btn.cue.lit {
+  color: var(--cue);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .transport .btn.sync {
+  --on: var(--deck);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .transport .btn.play {
+  color: var(--fg);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .transport .btn.play svg {
+  width: 14px;
+  height: 14px;
+}
+/* Playing: the one key that isn't a dark latch. A flat face in the
+   deck's own colour, pressed in 1px, the glyph in ink. No gradient. */
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .transport .btn.play.on,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .transport .btn.play.on:hover {
+  background: var(--deck);
+  box-shadow: 0 0 0 1px var(--rg-rim), 0 1px 0 1px var(--rg-lip);
+  color: var(--ink);
+  translate: 0 1px;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .transport .btn.play.on[data-cueing] {
+  background: var(--cue);
+}
+/* An empty deck's keys are flat and faint, every label at one level. */
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .transport .btn[aria-disabled='true'],
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .transport .btn[aria-disabled='true'] :is(span, small, button) {
+  color: var(--fg-4);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .transport .btn[aria-disabled='true'] {
+  background: none;
+  box-shadow: inset 0 0 0 1px var(--line);
+  translate: none;
+}
+
+/* Beat jump: one line, "4 beats", the number at the keys' label size. */
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .transport .jumps {
+  grid-template-columns: minmax(24px, 1fr) minmax(0, 48px) minmax(24px, 1fr);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .transport .jumps span {
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  gap: 4px;
+  white-space: nowrap;
+  font-size: var(--t-md);
+  font-weight: 600;
+  line-height: 20px;
+  color: var(--fg);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .transport .jumps small {
+  font-size: var(--t-xs);
+  font-weight: 500;
+  line-height: 20px;
+  color: var(--fg-3);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .transport .jumps button {
+  font-size: var(--t-md);
+  color: var(--fg-3);
+  background: none;
+  box-shadow: none;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .transport .jumps button:hover:not([aria-disabled='true']) {
+  color: var(--fg);
+  background: var(--hover);
+}
+@container (max-width: 95px) {
+  :root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .transport .jumps span {
+    font-size: var(--t-sm);
+  }
+}
+
+/* The pitch column. */
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .pitch .val {
+  font-weight: 500;
+  color: var(--fg-2);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .pitch .val.off {
+  color: var(--fg);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .pitch .lock {
+  --on: var(--deck);
+  border-radius: var(--r);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .pitch .nudge {
+  border-radius: 8px;
+  background: var(--rg-well);
+  box-shadow: var(--rg-well-edge);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .pitch .nudge button {
+  border-radius: 6px;
+  color: var(--fg-2);
+  background: none;
+  box-shadow: none;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .pitch .nudge button:hover:not([aria-disabled='true']) {
+  background: var(--hover);
+  color: var(--fg);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .pitch .nudge::before,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .pitch .nudge::after {
+  display: none;
+}
+
+/* Faders: a slot cut into the plate, a key for a cap. */
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .fader .line {
+  background: var(--rg-slot);
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.6), 0 1px 0 var(--rg-lip);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .fader .mark,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .fader .tick {
+  background: var(--fg-4);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .fader .cap {
+  border-radius: 4px;
+  background: var(--rg-cap-fill);
+  box-shadow: inset 0 1px 0 var(--rg-hi-2), 0 1px 0 var(--rg-rim), 0 3px 6px -2px rgb(0 0 0 / 0.5);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .fader .cap::after {
+  background: var(--rg-paper);
+  box-shadow: none;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .fader:hover .cap,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .fader.dragging .cap {
+  background: var(--rg-cap-fill-hi);
+}
+
+/* ── Mixer ─────────────────────────────────────────────────────────── */
+
+/* Dials: a flat cap in the keys' tone inside a knurled skirt; a fine dark
+   groove between them. The light and the lift sit on the wrap, which
+   doesn't turn, so the top edge stays lit wherever the dial points. */
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .knob .dial {
+  --rg-face: var(--rg-dial);
+  --rg-knurl: var(--rg-ridge);
+  background:
+    radial-gradient(circle closest-side, var(--rg-face) 0 70%, var(--rg-dial-groove) 72% 77%, transparent 79%),
+    repeating-conic-gradient(var(--rg-knurl) 0 5deg, var(--rg-ridge-2) 5deg 10deg);
+  box-shadow: 0 0 0 1px var(--rg-rim);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .knob .wrap::before,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .knob .wrap::after {
+  content: '';
+  position: absolute;
+  inset: 9px;
+  border-radius: 50%;
+  pointer-events: none;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .knob .wrap::before {
+  box-shadow: var(--rg-lift);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .knob .wrap::after {
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.06), rgb(255 255 255 / 0) 50%, rgb(0 0 0 / 0.1));
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.13);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .knob .dial::after {
+  content: none;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .knob .dial i {
+  background: var(--rg-paper);
+  box-shadow: none;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .knob .dial.killed i {
+  background: var(--kill);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .knob .wrap:has(.dial:hover) .dial,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .knob .dial.dragging {
+  --rg-face: var(--rg-dial-hi);
+  --rg-knurl: var(--rg-ridge-hi);
+}
+/* The scale: one dot per mark on one radius; the lit arc the same dots,
+   brighter. */
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .knob line {
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-dasharray: 0 100;
+  filter: none;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .knob line.major {
+  stroke-dashoffset: -1;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .knob line:not(.on) {
+  stroke: rgb(255 255 255 / 0.16);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .knob line.major:not(.on) {
+  stroke: rgb(255 255 255 / 0.36);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .knob line.on {
+  stroke-width: 2.1;
+  stroke: var(--fg);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .knob:has(.dial.killed) line.on {
+  stroke: var(--kill);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .knob .label {
+  color: var(--fg-3);
+  font-size: var(--t-xs);
+  font-weight: 500;
+}
+/* EQ kill: a caption like Trim's until you point at it, then a key; killed,
+   latched down with its label in red. */
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .knob button.label {
+  --on: var(--kill);
+  border-radius: 6px;
+  background: none;
+  box-shadow: none;
+  color: var(--fg-3);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .knob button.label:hover {
+  background: var(--rg-key-fill);
+  box-shadow: var(--rg-key-edge);
+  color: var(--fg);
+}
+
+/* Meters: a slot, filled in a clear tone of the deck's colour rising to
+   its white; the top 3 dB white, over 0 dB red. */
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .mixer .fwrap {
+  --mc: #b8d3f2;
+  --mc-lo: #5b8fcf;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .mixer .fwrap.mirror {
+  --mc: #f0d8b4;
+  --mc-lo: #b98e58;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .mixer .cen .mpair {
+  --mc: #f4f4f1;
+  --mc-lo: #a4a4a9;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .mixer .meter .bar,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .mixer .meter .clip {
+  background: var(--rg-slot);
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.6), 0 1px 0 var(--rg-lip);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .mixer .meter .bar::after {
+  background: linear-gradient(to top, var(--mc-lo) 0, var(--mc) 88%, #fff 88% 97.9%, var(--kill) 97.9%);
+  box-shadow: none;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .mixer .meter:not(.m60) {
+  background: var(--rg-slot);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .mixer .meter:not(.m60)::after {
+  background: linear-gradient(to top, var(--mc-lo) 0, var(--mc) 82%, #fff 82% 95%, var(--kill) 95%);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .mixer .meter.clipped .clip {
+  background: var(--kill);
+  box-shadow: none;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .mixer .meter .peak {
+  background: #fff;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .mixer .meter .db {
+  background: var(--fg-4);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .mixer .lim {
+  color: var(--kill);
+}
+
+/* Headphone cue and Rec: small keys at a 6px corner. */
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .mixer .hp {
+  --on: var(--cue);
+  border-radius: 6px;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .mixer .hp.on {
+  color: var(--cue);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .mixer button.rec {
+  border-radius: 6px;
+}
+/* Recording: set into the plate, its face a deep red, the dot red. */
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .mixer button.rec.on,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .mixer button.rec.on:hover {
+  background: color-mix(in srgb, var(--kill) 14%, var(--rg-on));
+  box-shadow: var(--rg-on-edge);
+  color: var(--fg);
+  translate: none;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .mixer button.rec .dot,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .mixer button.rec.on .dot {
+  background: var(--kill);
+  box-shadow: none;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] svg.ruler line.on {
+  filter: none;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .mixer .xf {
+  border-top-color: rgb(0 0 0 / 0.7);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.04);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .mixer .xf .end {
+  opacity: 1;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .mixer .xf .ruler line {
+  stroke: rgb(255 255 255 / 0.28);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .mixer .xf .ruler line.on {
+  stroke: var(--fg-2);
+}
+
+/* ── Library ───────────────────────────────────────────────────────── */
+
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] section.library nav .h,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .settings nav .h {
+  font-size: var(--t-xs);
+  font-weight: 500;
+  text-transform: none;
+  color: var(--fg-3);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] section.library nav {
+  border-right-color: rgb(0 0 0 / 0.7);
+  box-shadow: 1px 0 0 rgb(255 255 255 / 0.04);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] section.library nav .item {
+  color: var(--fg-2);
+  border-radius: var(--r);
+  box-shadow: none;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] section.library nav .item small {
+  color: var(--fg-3);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] section.library nav .item:hover,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] section.library nav .item[data-show-hover],
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] section.library nav .add:hover {
+  background: var(--hover);
+  color: var(--fg);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] section.library nav .add {
+  color: var(--fg-3);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] section.library nav .item.on,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] section.library nav .item.on:hover {
+  background: var(--rg-key-fill);
+  box-shadow: var(--rg-key-edge);
+  color: var(--fg);
+  font-weight: 500;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] section.library .bar .search {
+  border-radius: var(--r);
+  background: var(--rg-well);
+  box-shadow: var(--rg-well-edge);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] section.library .bar .search:focus-within {
+  box-shadow: var(--rg-well-edge), 0 0 0 2px var(--focus-ring);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] section.library .bar .search kbd {
+  color: var(--fg-3);
+  background: none;
+  box-shadow: none;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] section.library .bar :is(.samp, .gear) {
+  border-radius: var(--r);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] section.library .bar .samp.on {
+  --on: var(--fg);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] section.library .row.head {
+  border-bottom-color: rgb(0 0 0 / 0.7);
+  box-shadow: 0 1px 0 rgb(255 255 255 / 0.04);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] section.library .row.head .sort {
+  font-size: var(--t-xs);
+  font-weight: 500;
+  text-transform: none;
+  color: var(--fg-3);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] section.library .row.head .sort:is(.on, :hover) {
+  color: var(--fg);
+  background: none;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] section.library .scroll .row {
+  color: var(--fg-2);
+  border-radius: var(--r);
+  box-shadow: none;
+  transition: background 120ms ease-out;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] section.library .scroll .row .t {
+  color: var(--fg);
+  font-weight: 500;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] section.library .scroll .row .n {
+  color: var(--fg);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] section.library .scroll .row:hover,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] section.library .scroll .row[data-show-hover] {
+  background: var(--hover);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] section.library .scroll .row.sel,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] section.library .scroll .row.sel:hover {
+  background: var(--rg-row-sel);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06), 0 1px 0 rgb(0 0 0 / 0.6);
+  color: var(--fg);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] section.library .scroll .row mark {
+  background: rgb(255 255 255 / 0.16);
+  color: var(--fg);
+  border-radius: 2px;
+}
+/* Key match: a small dot after the key instead of an underline. */
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region='tracks'] .row .k.mix {
+  box-shadow: none;
+  padding-bottom: 0;
+  color: var(--fg);
+  position: relative;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region='tracks'] .row .k.mix::after {
+  content: '';
+  position: absolute;
+  left: calc(100% + 6px);
+  top: 50%;
+  width: 4px;
+  height: 4px;
+  margin-top: -2px;
+  border-radius: 50%;
+  background: var(--fg-2);
+}
+
+/* ── The floating layer: toast, banner, dialog, menu, tip ──────────── */
+
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .toastbox .toast,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .app > .banner:not(.lost),
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .backdrop > .card[role='dialog'],
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] :is(.tip, .menu) {
+  background: var(--rg-float);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: var(--rg-float-edge);
+  color: var(--fg);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .toastbox .toast {
+  border-radius: 12px;
+  font-weight: 500;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .toastbox .toast .undo {
+  border-radius: var(--r);
+  color: var(--fg);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .toastbox .toast .undo kbd {
+  color: var(--fg-3);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .tip {
+  border-radius: 8px;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .tip kbd {
+  background: var(--sel);
+  box-shadow: none;
+  color: var(--fg-2);
+  border-radius: 4px;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .menu {
+  border-radius: 12px;
+}
+
+/* Device lost: a plate of its own across the library's toolbar, a deep red
+   face lit along the top, the sign in red. */
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .app > .banner.lost {
+  top: auto;
+  bottom: calc(var(--gap) + var(--lib) - 58px);
+  left: calc(var(--gap) + var(--library-sidebar, 212px) + 8px);
+  right: calc(var(--gap) + 8px);
+  translate: none;
+  transform: none;
+  width: auto;
+  max-width: none;
+  min-height: 48px;
+  padding: 6px 6px 6px 16px;
+  border-radius: 14px;
+  background: #2e1513;
+  box-shadow: inset 0 1px 0 rgb(255 220 210 / 0.12), 0 0 0 1px rgb(0 0 0 / 0.8), 0 10px 24px -6px rgb(0 0 0 / 0.6);
+  color: rgb(255 236 230 / 0.72);
+  animation: rg-rise 220ms var(--rg-ease);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .app > .banner.lost b {
+  color: #fff3ef;
+  font-weight: 600;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .app > .banner.lost svg {
+  width: 20px;
+  height: 20px;
+  margin-right: 10px;
+  stroke: var(--kill);
+  filter: none;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .app > .banner.lost > span {
+  flex: 1;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .app > .banner.lost .btn,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .app > .banner.lost .btn.primary {
+  margin-left: 16px;
+  height: 36px;
+  border-radius: 9px;
+  background: linear-gradient(180deg, #4d2723, #42211e);
+  box-shadow: inset 0 1px 0 rgb(255 220 210 / 0.16), 0 1px 0 rgb(0 0 0 / 0.85), var(--rg-lift);
+  color: #fff3ef;
+  font-weight: 500;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .app > .banner.lost .btn:hover:not(:disabled) {
+  background: linear-gradient(180deg, #582d28, #4b2622);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .app:has(> .banner.lost) .toastbox .toast[data-docked] {
+  visibility: hidden;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .app:has(> .banner.lost) section.library :is(nav, .main) {
+  padding-bottom: 0;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .app:has(> .banner.lost) section.library .main .bar {
+  visibility: hidden;
+}
+/* The decks are held: Play lets go of its colour. */
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .app:has(> .banner.lost) [data-region^='deck'] .transport .btn.play.on {
+  color: var(--fg-3);
+  background: var(--rg-down);
+  box-shadow: var(--rg-down-edge);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .app > .banner:not(.lost) {
+  border-radius: 12px;
+}
+@keyframes rg-rise {
+  from {
+    opacity: 0;
+    translate: 0 4px;
+  }
+}
+
+/* ── Dialogs ───────────────────────────────────────────────────────── */
+
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .backdrop:has(> .card[role='dialog']) {
+  background: rgb(0 0 0 / 0.6);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .backdrop:has(> .card[role='dialog'])::before {
+  content: none;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .backdrop > .card[role='dialog'] {
+  border-radius: 20px;
+  background: var(--rg-card);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .backdrop > .card[role='dialog'] h2 {
+  font-size: var(--t-lg);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .backdrop > .card[role='dialog'] .lead {
+  color: var(--fg-2);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .backdrop > .card[role='dialog'] .found {
+  border-radius: 12px;
+  background: var(--rg-key-fill);
+  box-shadow: var(--rg-key-edge);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .backdrop > .card[role='dialog'] .found:hover:not(:disabled) {
+  background: var(--rg-key-fill-hi);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .backdrop > .card[role='dialog'] :is(.go, .btn.primary) {
+  display: inline-grid;
+  place-items: center;
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 8px;
+  background: var(--rg-paper);
+  color: var(--rg-paper-fg);
+  font-weight: 500;
+  box-shadow: inset 0 1px 0 #fff, 0 1px 0 var(--rg-rim), var(--rg-lift);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .backdrop > .card[role='dialog'] :is(.go, .btn.primary):hover:not(:disabled) {
+  background: var(--rg-paper-hi);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .backdrop > .card[role='dialog'] .found + .found :is(.go, .btn.primary),
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .backdrop > .card[role='dialog'] .source + .source :is(.go, .btn.primary) {
+  background: var(--rg-key-fill-hi);
+  box-shadow: var(--rg-key-edge);
+  color: var(--fg);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .backdrop > .card[role='dialog'] .link {
+  text-decoration: none;
+  color: var(--fg-2);
+  font-weight: 500;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .backdrop > .card[role='dialog'] .link:hover {
+  color: var(--fg);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .backdrop .card textarea {
+  background: var(--rg-well);
+  box-shadow: var(--rg-well-edge);
+  color: var(--fg);
+}
+
+/* ── Settings ──────────────────────────────────────────────────────── */
+
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .settings nav .item {
+  color: var(--fg-2);
+  border-radius: var(--r);
+  box-shadow: none;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .settings nav .item:hover {
+  background: var(--hover);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .settings nav .item.on,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .settings nav .item.on:hover {
+  background: var(--rg-key-fill);
+  box-shadow: var(--rg-key-edge);
+  color: var(--fg);
+  font-weight: 500;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .settings .bar h2 {
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .settings section h3 {
+  font-size: var(--t-sm);
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--fg-2);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .settings select {
+  border-radius: var(--r);
+  background-color: var(--rg-key);
+  box-shadow: var(--rg-key-edge);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .settings input[type='checkbox'] {
+  border-radius: 5px;
+  background: var(--rg-well);
+  box-shadow: var(--rg-well-edge);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .settings input[type='checkbox']:checked {
+  background: var(--rg-paper);
+  box-shadow: inset 0 1px 0 #fff, 0 1px 0 rgb(0 0 0 / 0.6);
+}
+
+/* ── Focus and the rest ────────────────────────────────────────────── */
+
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] :focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .split i,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .app > .grip:not(.side) i {
+  background: transparent;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .split:hover i,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .app > .grip:not(.side):hover i {
+  background: var(--fg-3);
+}
+
+@media (max-width: 1200px) {
+  :root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] {
+    --rg-num: 24px;
+  }
+}
+
+/* An empty deck's beat jump: flat like the keys beside it. */
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .transport .jumps:has(> button[aria-disabled='true']) {
+  background: none;
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .transport .jumps:has(> button[aria-disabled='true']) :is(span, small, button) {
+  color: var(--fg-4);
+}
+
+/* ── Light: the site's paper (98 Sleeve's approach) ────────────────────
+
+   The panels become paper, the keys raised paper with ink labels, and a key
+   that's on goes ink-black with its role colour in it. Everything that
+   shows sound (the waveform window, the overviews, the meters) stays a
+   black screen set into the paper, with today's waveforms. Deck A's sheet
+   is a touch cool and deck B's a touch warm: the two deck whites. Playing,
+   Play fills with a deep tone of its deck's colour.
+
+   The tokens are set on #app, not :root, so the waveform canvases (which
+   read their colours from the document) keep their dark-screen colours. */
+
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] body {
+  background: #d6d4ce;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] #app {
+  color-scheme: light;
+  --bg: #d6d4ce;
+  --rg-room: #d6d4ce;
+  --rg-plate: #f3f2ee;
+  --rg-well: #e5e3dd;
+  --rg-key: #ffffff;
+  --rg-key-2: #f6f5f1;
+  --rg-key-hi: #ffffff;
+  --rg-key-hi-2: #fcfbf9;
+  --rg-down: #e4e2dc;
+  --rg-on: #131316;
+  --rg-cap: #ffffff;
+  --rg-cap-2: #f1efe9;
+  --rg-cap-hi: #ffffff;
+  --rg-cap-hi-2: #fbfaf7;
+  --rg-dial: #f8f7f3;
+  --rg-dial-hi: #ffffff;
+  --rg-ridge: #e3e1db;
+  --rg-ridge-hi: #ebe9e4;
+  --rg-ridge-2: #c4c1b9;
+  --rg-dial-groove: #b8b5ad;
+  --rg-float: #fbfaf8;
+  --rg-card: #f6f5f1;
+  --rg-row-sel: #e6e4de;
+  --rg-lit: rgb(255 255 255 / 0.95);
+  --rg-hi: #fff;
+  --rg-hi-2: #fff;
+  --rg-lip: rgb(255 255 255 / 0.8);
+  --rg-rim: rgb(20 18 12 / 0.1);
+  --rg-groove-line: rgb(20 18 12 / 0.055);
+  --rg-lift: 0 1px 1px rgb(20 18 12 / 0.12), 0 2px 5px -1px rgb(20 18 12 / 0.16);
+  --rg-plate-edge: inset 0 1px 0 #fff, 0 0 0 1px rgb(20 18 12 / 0.07), 0 1px 2px rgb(20 18 12 / 0.08), 0 14px 28px -14px rgb(20 18 12 / 0.28);
+  --rg-well-edge: inset 0 1px 2px rgb(20 18 12 / 0.16), inset 0 0 0 1px rgb(20 18 12 / 0.05), 0 1px 0 rgb(255 255 255 / 0.85);
+  --rg-down-edge: inset 0 1px 2px rgb(20 18 12 / 0.22), inset 0 0 0 1px rgb(20 18 12 / 0.05), 0 1px 0 rgb(255 255 255 / 0.85);
+  --rg-on-edge: inset 0 1px 2px #000, 0 1px 0 rgb(255 255 255 / 0.85);
+  --rg-float-edge: inset 0 1px 0 #fff, 0 0 0 1px rgb(20 18 12 / 0.08), 0 2px 6px rgb(20 18 12 / 0.1), 0 18px 40px -10px rgb(20 18 12 / 0.32);
+  --rg-tag-edge: inset 0 1px 0 rgb(255 255 255 / 0.075), 0 0 0 1px rgb(0 0 0 / 0.85), 0 2px 6px -1px rgb(0 0 0 / 0.5);
+  --rg-paper: #131316;
+  --rg-paper-hi: #2a2a2f;
+  --rg-paper-fg: #f3f2ee;
+  --ink: #131316;
+
+  --fg: #131316;
+  --fg-2: rgb(19 19 22 / 0.72);
+  --fg-3: rgb(19 19 22 / 0.56);
+  --fg-4: rgb(19 19 22 / 0.34);
+  --raise: rgb(20 18 12 / 0.05);
+  --hover: rgb(20 18 12 / 0.05);
+  --sel: rgb(20 18 12 / 0.09);
+  --line: rgb(20 18 12 / 0.09);
+  --line-2: rgb(20 18 12 / 0.15);
+  --kill: #d23b2f;
+  --focus-ring: rgb(19 19 22 / 0.8);
+  --popover: #fbfaf8;
+  --popover-foreground: var(--fg);
+  --background: var(--bg);
+  --foreground: var(--fg);
+  --card: var(--bg);
+  --card-foreground: var(--fg);
+  --primary: var(--fg);
+  --primary-foreground: #f3f2ee;
+  --secondary: var(--raise);
+  --secondary-foreground: var(--fg);
+  --muted: var(--raise);
+  --muted-foreground: var(--fg-3);
+  --accent: var(--raise);
+  --accent-foreground: var(--fg);
+  --destructive: var(--kill);
+  --border: var(--line);
+  --input: var(--line-2);
+  --ring: var(--fg-2);
+  /* Hot cues on paper: the same hues, deep enough to read as dots. */
+  --hc-1: #4c78ad;
+  --hc-2: #3f8a5c;
+  --hc-3: #b65a47;
+  --hc-4: #7862b3;
+  --hc-5: #34858a;
+  --hc-6: #b15c88;
+  --hc-7: #8a8433;
+  --hc-8: #66707f;
+  color: var(--fg);
+}
+/* Inside a screen everything is as it is in the dark: light on black. */
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] :is(.waves, [data-region^='deck'] .overview) {
+  color-scheme: dark;
+  --fg: #eeeeec;
+  --fg-2: rgb(238 238 236 / 0.66);
+  --fg-3: rgb(238 238 236 / 0.5);
+  --fg-4: rgb(238 238 236 / 0.3);
+  --hover: rgb(255 255 255 / 0.05);
+  --line: rgb(255 255 255 / 0.07);
+  --line-2: rgb(255 255 255 / 0.11);
+  --kill: #ff6359;
+  --hc-1: #8fb3dc;
+  --hc-2: #8fc7a0;
+  --hc-3: #d99a8a;
+  --hc-4: #b7a3dc;
+  --hc-5: #82c4c4;
+  --hc-6: #d9a3bd;
+  --hc-7: #c4c08a;
+  --hc-8: #a9b0bd;
+  color: var(--fg);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .waves.glass {
+  background: repeating-radial-gradient(ellipse 140% 100% at 50% 520%, rgb(255 255 255 / 0.045) 0 1px, transparent 1.5px 5px), #0b0b0d;
+  box-shadow: 0 0 0 1px rgb(20 18 12 / 0.12), 0 1px 0 1px rgb(255 255 255 / 0.6);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .overview {
+  background: repeating-radial-gradient(circle at 50% 640px, rgb(255 255 255 / 0.04) 0 1px, transparent 1.5px 4px), #0b0b0d;
+  box-shadow: 0 1px 0 rgb(255 255 255 / 0.85);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .waves .zoom {
+  background: #1e1e22;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.1), 0 0 0 1px #000;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .waves .zoom :is(button, span) {
+  color: rgb(238 238 236 / 0.66);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .waves .lane:not(:has(.wave.empty)) .who {
+  background: rgb(30 30 34 / 0.96);
+}
+
+/* The deck sheets: the two deck whites, laid on the paper. */
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .decks > section[data-region='deck0'] {
+  background: #e7ecf2;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .decks > section[data-region='deck1'] {
+  background: #f3ece1;
+}
+/* A running mode's dot: ink, since the deck whites don't show on paper. */
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .modes button i,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .perf .big.live b::before {
+  background: var(--fg);
+}
+/* On a key that's on (ink), the red is the brighter one. */
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .knob button.label.killed,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .knob button.label.killed:hover {
+  color: #ff6359;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .mixer button.rec.on,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .mixer button.rec.on:hover {
+  background: #2a1210;
+  color: #f3f2ee;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .mixer button.rec.on .dot {
+  background: #ff6359;
+}
+/* Playing: a flat face in a deep tone of the deck's colour, a white glyph. */
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region='deck0'] .transport .btn.play.on,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region='deck0'] .transport .btn.play.on:hover {
+  background: #3f6ea9;
+  color: #fff;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region='deck1'] .transport .btn.play.on,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region='deck1'] .transport .btn.play.on:hover {
+  background: #a77431;
+  color: #fff;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .transport .btn.play.on[data-cueing] {
+  background: #b07c1c;
+}
+/* Fader slots are cut into the paper; only meters are screens. */
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .fader .line {
+  background: rgb(20 18 12 / 0.16);
+  box-shadow: inset 0 1px 1px rgb(20 18 12 / 0.25), 0 1px 0 rgb(255 255 255 / 0.8);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .fader .match {
+  background: rgb(19 19 22 / 0.55);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .mixer .meter .bar,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .mixer .meter .clip,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .mixer .meter:not(.m60) {
+  background: #0b0b0d;
+  box-shadow: 0 1px 0 rgb(255 255 255 / 0.8);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .knob line:not(.on) {
+  stroke: rgb(20 18 12 / 0.22);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .knob line.major:not(.on) {
+  stroke: rgb(20 18 12 / 0.45);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .knob .wrap::after {
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.5), rgb(255 255 255 / 0) 50%, rgb(20 18 12 / 0.04));
+  box-shadow: inset 0 1px 0 #fff;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .mixer .xf {
+  border-top-color: rgb(20 18 12 / 0.1);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.7);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .mixer .xf .ruler line {
+  stroke: rgb(20 18 12 / 0.32);
+}
+/* The crossfader's ends: deep tones of the deck colours (Mixer.svelte sets
+   the pale ones inline, so these need !important to show on paper). */
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .mixer .xf i.end:first-of-type {
+  background: #5d86bd !important;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .mixer .xf i.end:last-of-type {
+  background: #b98e58 !important;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] section.library nav {
+  border-right-color: rgb(20 18 12 / 0.1);
+  box-shadow: 1px 0 0 rgb(255 255 255 / 0.7);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] section.library .row.head {
+  border-bottom-color: rgb(20 18 12 / 0.1);
+  box-shadow: 0 1px 0 rgb(255 255 255 / 0.7);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] section.library .scroll .row.sel,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] section.library .scroll .row.sel:hover {
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.6), 0 1px 0 rgb(20 18 12 / 0.06);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] section.library .scroll .row mark {
+  background: rgb(20 18 12 / 0.13);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] section.library .scroll .row .ld b {
+  filter: saturate(1.5) brightness(0.82);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] #app [data-drop] {
+  outline-color: rgb(19 19 22 / 0.4);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] #app [data-drop='over'] {
+  outline-color: #131316;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .backdrop:has(> .card[role='dialog']) {
+  background: rgb(40 36 28 / 0.4);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .settings input[type='checkbox']:checked {
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.14), 0 1px 1px rgb(20 18 12 / 0.3);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .split:hover i,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .app > .grip:not(.side):hover i {
+  background: var(--fg-3);
+}
+/* A running loop and a loaded track's title: ink and a heavier weight,
+   since the deck whites don't show on paper (the bars beside the rows
+   still say which deck). */
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .perf .big.live :is(b, span) {
+  color: var(--fg);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] section.library .scroll .row:has(.ld b) .t {
+  color: var(--fg);
+  font-weight: 600;
+}
+
+
+/* ══ #103 Enamel ═══════════════════════════════════════════════════════
+
+   The app as enamelled equipment: every plate is white vitreous enamel,
+   set in a near-black cast-iron frame that shows as the seams between
+   plates. Nothing is a screen. Sound is printed on the enamel in ink:
+   Prussian blue for the left deck, umber for the right, black for what's
+   shared (the playheads, the loudest part of each ribbon, the legends).
+
+   Inks
+     prussian  #1d3d66   the left deck: its waveforms, meter, Play, mark
+     umber     #4a3322   the right deck
+     black     #141416   legends, latched keys, playheads
+     red       #c8372d   kill, Rec, clip, a track running out
+
+   The waveform renderer draws light on dark; here its canvases are shown
+   inverted (lightness flips, hue stays), so each colour the renderer reads
+   is the light twin of the ink it prints as. */
+
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] {
+  /* The renderer's colours (read from the document): light twins. */
+  --a-low: #2c4566;
+  --deck-a: #7f9ec8;
+  --a-high: #d3e1f4;
+  --b-low: #4d3b2d;
+  --deck-b: #a88b72;
+  --b-high: #e6d6c6;
+  --fg: #f2f2f0;
+  --cue: #e0b25a;
+  --hc-1: #9bbbe0;
+  --hc-2: #9ccdab;
+  --hc-3: #e2a596;
+  --hc-4: #c0aee0;
+  --hc-5: #8ecbcb;
+  --hc-6: #e0adc6;
+  --hc-7: #ccc893;
+  --hc-8: #b3b9c4;
+}
+
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] body,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] #app {
+  background: #1b1c1e;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] #app {
+  --bg: #1b1c1e;
+  --rg-room: #1b1c1e;
+  --en-iron: #1b1c1e;
+  --en-plate: #f6f5f1;
+  --en-well: #e9e7e1;
+  --en-a: #1d3d66;
+  --en-b: #4a3322;
+  --en-black: #141416;
+  --rg-plate: var(--en-plate);
+  --rg-well: var(--en-well);
+  --rg-row-sel: #e8e6e0;
+  /* The plate's edge: a fired lip (white above, a hair of shade below)
+     against the iron. No soft shadow: the iron is already dark. */
+  --rg-plate-edge: inset 0 1px 0 #fff, inset 0 -1px 0 rgb(20 18 12 / 0.07), 0 0 0 1px #000;
+  --deck-a: var(--en-a);
+  --deck-b: var(--en-b);
+  --kill: #c8372d;
+  --hc-1: #2f5d93;
+  --hc-2: #2f7a4c;
+  --hc-3: #a5473a;
+  --hc-4: #6550a3;
+  --hc-5: #22767a;
+  --hc-6: #a04976;
+  --hc-7: #77711f;
+  --hc-8: #535d6c;
+  --fg: #141416;
+  --fg-2: rgb(20 20 22 / 0.72);
+  --fg-3: rgb(20 20 22 / 0.56);
+  --fg-4: rgb(20 20 22 / 0.34);
+}
+
+/* The deck sheets are the same white: the inks say which deck is which. */
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .decks > section[data-region='deck0'],
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .decks > section[data-region='deck1'] {
+  background: var(--en-plate);
+}
+
+/* ── Printed sound ───────────────────────────────────────────────── */
+
+/* The waveform window is a plate like the others, not a screen. */
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .waves.glass {
+  background: var(--en-plate);
+  box-shadow: var(--rg-plate-edge);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .waves.glass::after {
+  box-shadow: none;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] :is(.waves .lane, [data-region^='deck'] .overview) canvas {
+  filter: invert(1) hue-rotate(180deg);
+}
+/* Inside the printed areas, text is ink again (the light sheet made them
+   dark screens). */
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] :is(.waves, [data-region^='deck'] .overview) {
+  color-scheme: light;
+  --fg: #141416;
+  --fg-2: rgb(20 20 22 / 0.72);
+  --fg-3: rgb(20 20 22 / 0.56);
+  --fg-4: rgb(20 20 22 / 0.34);
+  --line: rgb(20 18 12 / 0.09);
+  color: var(--fg);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .lane + .lane {
+  border-top-color: rgb(20 18 12 / 0.08);
+}
+/* The overview: printed into a shallow recess in the deck's plate. */
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .overview {
+  background: var(--en-plate);
+  box-shadow: inset 0 1px 2px rgb(20 18 12 / 0.14), inset 0 0 0 1px rgb(20 18 12 / 0.09), 0 1px 0 #fff;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] .overview::after {
+  box-shadow: none;
+}
+/* Zoom and lane titles: small white enamel tags on the print. */
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .waves .zoom,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .waves .lane:not(:has(.wave.empty)) .who {
+  background: #fff;
+  box-shadow: 0 0 0 1px rgb(20 18 12 / 0.12), 0 1px 2px rgb(20 18 12 / 0.12);
+  color: var(--fg-2);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .waves .zoom :is(button, span) {
+  color: var(--fg-2);
+}
+
+/* ── Meters, Play and the crossfader in ink ──────────────────────── */
+
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .mixer .meter .bar,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .mixer .meter .clip,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .mixer .meter:not(.m60) {
+  background: var(--en-well);
+  box-shadow: inset 0 1px 1px rgb(20 18 12 / 0.18), 0 1px 0 #fff;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region='deck0'] .transport .btn.play.on,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region='deck0'] .transport .btn.play.on:hover {
+  background: var(--en-a);
+  color: #fff;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region='deck1'] .transport .btn.play.on,
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region='deck1'] .transport .btn.play.on:hover {
+  background: var(--en-b);
+  color: #fff;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .mixer .xf i.end:first-of-type {
+  background: var(--en-a) !important;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .mixer .xf i.end:last-of-type {
+  background: var(--en-b) !important;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .mixer .fwrap {
+  --mc: var(--en-a);
+  --mc-lo: #8ea6c6;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .mixer .fwrap.mirror {
+  --mc: var(--en-b);
+  --mc-lo: #b39d8a;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .mixer .cen .mpair {
+  --mc: var(--en-black);
+  --mc-lo: #9a9a9c;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .mixer .meter .bar::after {
+  background: linear-gradient(to top, var(--mc-lo) 0, var(--mc) 88%, var(--en-black) 88% 97.9%, var(--kill) 97.9%);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .mixer .meter:not(.m60)::after {
+  background: linear-gradient(to top, var(--mc-lo) 0, var(--mc) 82%, var(--en-black) 82% 95%, var(--kill) 95%);
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .mixer .meter .peak {
+  background: var(--en-black);
+}
+
+/* ── Round 2 ─────────────────────────────────────────────────────── */
+
+/* The glaze: a plate is a hair brighter at the top than the bottom, with
+   a rolled rim: a white highlight on the edge and a darker line just
+   inside it where the enamel thins over the steel. */
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] #app {
+  --rg-plate: linear-gradient(180deg, #faf9f6, #f3f2ee 60%);
+  --rg-plate-edge: inset 0 1px 0 #fff, inset 0 0 0 1px rgb(20 18 12 / 0.1), inset 0 2px 0 rgb(255 255 255 / 0.9), 0 0 0 1px #000;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .decks > section[data-region='deck0'],
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] .decks > section[data-region='deck1'] {
+  background: var(--rg-plate);
+}
+/* A latched key is a black tile; its label is the light twin of its role,
+   since the inks don't show on black. */
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region='deck0'] {
+  --on-ink: #a9c3e6;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region='deck1'] {
+  --on-ink: #d9c3ad;
+}
+:root[data-flag-dir-enamel]:root[data-flag-dir-enamel]:root[data-flag-dir-enamel] [data-region^='deck'] :is(.transport .btn.sync:is(.on, .pressed, [aria-pressed='true']), .pitch .lock.on) {
+  color: var(--on-ink);
+}
