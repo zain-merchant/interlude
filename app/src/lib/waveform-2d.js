@@ -31,7 +31,7 @@ const OFF = 20000;
 const rgba = (c, a) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
 
 /** Waveform looks under exploration; `?wave=<name>` picks one in the browser build. */
-export const STYLES = ['current', 'spectral', 'aurora', 'heat', 'contour', 'bars', 'horizon', 'ridgeline', 'matrix', 'spectrogram', 'lens', 'pulse', 'dusk', 'skywater', 'skyline', 'reflection', 'deckdusk'];
+export const STYLES = ['current', 'spectral', 'aurora', 'heat', 'contour', 'bars', 'horizon', 'ridgeline', 'matrix', 'spectrogram', 'lens', 'pulse', 'dusk', 'skywater', 'skyline', 'reflection', 'deckdusk', 'sunset', 'neon', 'tropical', 'deckpair', 'energy'];
 const STYLE_NOW = (() => {
   try {
     const s = new URLSearchParams(location.search).get('wave');
@@ -115,6 +115,24 @@ const BLENDS = {
       down: { amp: 1, bands: [H('#d0367a'), H('#ff6f9a'), H('#ffe3ee')], edge: H('#ff9fc0'), stripes: 0.2 },
     },
 };
+
+/** Today's mirrored shape, no outline, in a fuller palette. */
+const mirrored = (low, mid, high, o = {}) => ({
+  base: 0.5, glow: 1.6, over: true, ...o,
+  up: { amp: 1, bands: [H(low), H(mid), H(high)], edge: null },
+  down: { amp: 1, bands: [H(low), H(mid), H(high)], edge: null },
+});
+Object.assign(BLENDS, {
+  sunset: () => mirrored('#6b4cff', '#ff7a3d', '#ffe27a'),
+  neon: () => mirrored('#2f6bff', '#ff3dae', '#c9f6ff'),
+  tropical: () => mirrored('#00b8b0', '#ff6a5c', '#fff2a8'),
+  deckpair: (deck) => deck === 0 ? mirrored('#2f6bff', '#2fd6e8', '#e8fff8') : mirrored('#ff4f6d', '#ffa23d', '#fff1c8'),
+  // Colour follows loudness: quiet passages cool, peaks and drops hot.
+  energy: () => ({
+    ...mirrored('#3b5bff', '#ff4fa0', '#fff0c0'),
+    energy: ['#2f4bff', '#8a3dff', '#ff3d9a', '#ff8a3d', '#ffd84a'].map(H),
+  }),
+});
 
 /** Spectral: kick rose, body gold, air cyan; each column mixes by its band balance. */
 const SPEC = { low: hex('#ff3d71'), mid: hex('#ffb43d'), high: hex('#3dcbff') };
@@ -770,7 +788,7 @@ export class Waveform2D {
           ctx.save();
           ctx.translate(-OFF, 0);
           this.halfPath(cols, step, shift, base, amp, sign, level(half, k));
-          ctx.shadowColor = css(half.bands[k], a * 2.5 * dim);
+          ctx.shadowColor = css(half.bands[k], a * 2.5 * dim * (look.glow ?? 1));
           ctx.shadowBlur = blur * dpr;
           ctx.shadowOffsetX = OFF * dpr;
           ctx.fillStyle = '#000';
@@ -778,7 +796,9 @@ export class Waveform2D {
           ctx.restore();
         }
       }
-      const alphas = [0.5, 0.4, 0.6];
+      // Layered over each other (not added) keeps each band's own hue.
+      if (look.over) ctx.globalCompositeOperation = 'source-over';
+      const alphas = look.over ? [0.85, 0.85, 0.9] : [0.5, 0.4, 0.6];
       for (let k = 0; k < 3; k++) {
         const col = half.bands[k];
         if (!col) continue;
@@ -788,8 +808,14 @@ export class Waveform2D {
         const far = base - sign * amp;
         const g = ctx.createLinearGradient(0, base, 0, far);
         const a = alphas[k] * dim * (overview ? 0.9 : 1);
+        if (look.energy) {
+          // Each column's colour from its loudness, the higher bands a step hotter.
+          ctx.fillStyle = this.hgrad(cols, step, shift, (v) => ramp(look.energy, Math.max(v[0], v[1], v[2]) ** 1.3 * 0.8 + k * 0.12), () => a);
+          ctx.fill();
+          continue;
+        }
         g.addColorStop(0, css(col, a));
-        g.addColorStop(1, css(k === 1 && half.top ? half.top : col, a * (half.fade ? 0.1 : 0.4)));
+        g.addColorStop(1, css(k === 1 && half.top ? half.top : col, a * (half.fade ? 0.1 : look.over ? 0.55 : 0.4)));
         ctx.fillStyle = g;
         ctx.fill();
       }
