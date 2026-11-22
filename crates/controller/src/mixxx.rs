@@ -540,11 +540,17 @@ impl MixxxMidi {
     pub fn new(preset: std::sync::Arc<Preset>) -> Self {
         let n = preset.outputs.len();
         let script = load_script(&preset);
+        let mut controls = Controls::new();
+        // MIDI learn binds a pitch fader as it comes, and most send 0 at
+        // the top, which should be the slower end.
+        if preset.exact {
+            controls.set_rate_dir(1.0);
+        }
         Self {
             script,
             last_state: State::default(),
             preset,
-            controls: Controls::new(),
+            controls,
             halves: vec![],
             knob: HashMap::new(),
             sent: vec![None; n],
@@ -1006,8 +1012,9 @@ mod tests {
     fn invert_and_select_knob() {
         let mut m = mapping();
         let s = st();
+        // Inverted, the top of the fader is -1: the bottom, the faster end.
         let out = cmds(m.handle(&[0xB0, 0x00, 0x7F], &s));
-        assert!(matches!(out[..], [Command::SetRate { rate, .. }] if (rate - 0.92).abs() < 1e-9));
+        assert!(matches!(out[..], [Command::SetRate { rate, .. }] if (rate - 1.08).abs() < 1e-9));
         assert!(matches!(
             m.handle(&[0xB6, 0x40, 0x7F], &s)[..],
             [Action::Browse(-1)]
@@ -1096,6 +1103,30 @@ mod tests {
             p.script_dirs = vec![dir.clone()];
             assert!(load_script(&p).is_some(), "{}: scripts didn't load", p.name);
         }
+    }
+
+    /// The Mixtrack (Pro) 3's pitch fader reads 0 at the top, marked minus,
+    /// and its script turns that into `rate` +1, as Mixxx expects: the top
+    /// must be the slower end, and the bottom the faster.
+    #[test]
+    fn mixtrack_3_pitch_fader_top_is_slower() {
+        let dir = crate::Catalog::source_mappings_dir().expect("bundled mappings");
+        let mut p = Preset::load(&dir.join("Numark-Mixtrack-3.midi.xml")).expect("mapping");
+        p.script_dirs = vec![dir];
+        let mut m = MixxxMidi::new(std::sync::Arc::new(p));
+        let s = st();
+        let rate = |m: &mut MixxxMidi, hi: u8, lo: u8| {
+            m.handle(&[0xB1, 0x18, hi], &s);
+            cmds(m.handle(&[0xB1, 0x38, lo], &s))
+                .into_iter()
+                .find_map(|c| match c {
+                    Command::SetRate { rate, .. } => Some(rate),
+                    _ => None,
+                })
+                .expect("a rate")
+        };
+        assert!(rate(&mut m, 0x00, 0x00) < 1.0);
+        assert!(rate(&mut m, 0x7F, 0x7F) > 1.0);
     }
 
     /// Bundled mappings whose scripts raise errors when every control is
