@@ -238,7 +238,7 @@
 <section class="deck" class:mirror={deck === 1} style:--deck={deck === 0 ? 'var(--deck-a)' : 'var(--deck-b)'}
   style:--drop-color={deck === 0 ? 'var(--deck-a)' : 'var(--deck-b)'} aria-label={regionLabel} data-region="deck{deck}"
   use:dropTarget={{ ondrop: (track) => onload(deck, track), blocked: () => d.playing }}>
-  <div class="body lay-{PLATTER_STYLES[platterProto.style]?.layout ?? 'wide'}" style:--rs={platterProto.rec / 100}>
+  <div class="body lay-{PLATTER_STYLES[platterProto.style]?.layout ?? 'across'}" style:--rs={platterProto.rec / 100}>
     <!-- Prototype: the record, title, overview and times are laid out by the
          chosen variant (grid areas on .body). -->
     <div class="rec-cell"><Platter {deck} /></div>
@@ -429,29 +429,17 @@
   }
   .times.stack .now { order: 3; line-height: 16px; }
   .times.stack .rm { line-height: 20px; }
-  /* Small record, big waveform: the record on the outer side, title and
-     times along the top, and a tall overview filling the rest. */
-  .lay-wide {
-    grid-template-columns: calc(160px * var(--rs)) minmax(0, 1fr) auto;
-    grid-template-rows: auto minmax(0, 1fr) 84px auto;
-    grid-template-areas: 'rec head times' 'rec ov ov' 'mp mp mp' 'tr tr tr';
-    column-gap: 26px;
-  }
-  .mirror .lay-wide {
-    grid-template-columns: auto minmax(0, 1fr) calc(160px * var(--rs));
-    grid-template-areas: 'times head rec' 'ov ov rec' 'mp mp mp' 'tr tr tr';
-  }
-  .lay-wide > header { align-self: center; }
   /* Title over both: title and times across the deck, then the record and
      a tall overview side by side at the same height. */
   .lay-over {
-    grid-template-columns: calc(128px * var(--rs)) minmax(0, 1fr) auto;
-    grid-template-rows: auto minmax(0, 1fr) 84px auto;
+    --rec: min(calc(128px * var(--rs)), 132px);
+    grid-template-columns: var(--rec) minmax(0, 1fr) auto;
+    grid-template-rows: auto minmax(var(--rec), 1fr) 84px auto;
     grid-template-areas: 'head head times' 'rec ov ov' 'mp mp mp' 'tr tr tr';
     column-gap: 20px;
   }
   .mirror .lay-over {
-    grid-template-columns: auto minmax(0, 1fr) calc(128px * var(--rs));
+    grid-template-columns: auto minmax(0, 1fr) var(--rec);
     grid-template-areas: 'times head head' 'ov ov rec' 'mp mp mp' 'tr tr tr';
   }
   .lay-over > .times.line {
@@ -463,13 +451,14 @@
   /* Strip across, filled: record, title and a big elapsed time along the
      top; the overview full width beneath. */
   .lay-across {
-    grid-template-columns: calc(124px * var(--rs)) minmax(0, 1fr) auto;
-    grid-template-rows: minmax(0, 1fr) 60px 84px auto;
+    --rec: min(calc(120px * var(--rs)), 138px);
+    grid-template-columns: var(--rec) minmax(0, 1fr) auto;
+    grid-template-rows: var(--rec) minmax(32px, 1fr) 84px auto;
     grid-template-areas: 'rec head times' 'ov ov ov' 'mp mp mp' 'tr tr tr';
     column-gap: 26px;
   }
   .mirror .lay-across {
-    grid-template-columns: auto minmax(0, 1fr) calc(124px * var(--rs));
+    grid-template-columns: auto minmax(0, 1fr) var(--rec);
     grid-template-areas: 'times head rec' 'ov ov ov' 'mp mp mp' 'tr tr tr';
   }
   .lay-across > header { align-self: center; }

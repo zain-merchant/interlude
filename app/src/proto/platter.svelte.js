@@ -6,12 +6,11 @@
  *  in Deck.svelte; `finish`, `ring` and `extra` are the record itself. */
 const REC = { finish: 'clear', ring: 'none', extra: 'pitch', arm: 'classic' };
 export const STYLES = {
-  wide: { label: 'Big Waveform', layout: 'wide', times: 'stack', ...REC },
-  over: { label: 'Title Over Both', layout: 'over', times: 'line', ...REC },
   across: { label: 'Strip Across', layout: 'across', times: 'stack', ...REC },
+  over: { label: 'Title Over Both', layout: 'over', times: 'line', ...REC },
 };
 
-const DEFAULTS = { style: 'wide', rec: 100, rpm: 33.333, grooves: 60, sheen: 55, hub: 68, ringWidth: 18, arm: true };
+const DEFAULTS = { style: 'across', rec: 100, rpm: 33.333, grooves: 60, sheen: 55, hub: 68, ringWidth: 18, arm: true };
 export const platter = $state({ ...DEFAULTS });
 try {
   const saved = JSON.parse(localStorage.getItem('oss-dj.proto.platter.v4') || 'null');
