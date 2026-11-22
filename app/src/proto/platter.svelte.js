@@ -6,11 +6,13 @@
  *  in Deck.svelte; `finish`, `ring` and `extra` are the record itself. */
 const REC = { finish: 'clear', ring: 'none', extra: 'pitch', arm: 'classic' };
 export const STYLES = {
-  across: { label: 'Strip Across', layout: 'across', times: 'stack', ...REC },
-  over: { label: 'Title Over Both', layout: 'over', times: 'line', ...REC },
+  bpmrec: { label: 'BPM in Record', info: 'bpmrec', hub: 'bpm', ...REC },
+  bpmcorner: { label: 'Time in Record', info: 'bpmcorner', hub: 'time', ...REC },
+  column: { label: 'Times Under Title', info: 'column', hub: 'bpm', ...REC },
+  titlebpm: { label: 'BPM Under Title', info: 'titlebpm', hub: 'time', ...REC },
 };
 
-const DEFAULTS = { style: 'across', rec: 100, ov: 40, rpm: 33.333, grooves: 60, sheen: 55, hub: 68, ringWidth: 18, arm: true };
+const DEFAULTS = { style: 'bpmrec', rec: 100, ov: 40, rpm: 33.333, grooves: 60, sheen: 55, hub: 68, ringWidth: 18, arm: true };
 export const platter = $state({ ...DEFAULTS });
 try {
   const saved = JSON.parse(localStorage.getItem('oss-dj.proto.platter.v4') || 'null');
