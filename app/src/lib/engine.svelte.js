@@ -5,7 +5,7 @@ import { backend } from './backend.js';
 import { autoGain } from './autogain.svelte.js';
 
 const emptyDeck = () => ({
-  loaded: false, playing: false, position: 0, duration: 0, cue: 0, rate: 1, speed: 1, bpm: 0, key: null, keylock: false, keyShift: 0, generation: 0, peak: 0,
+  loaded: false, playing: false, position: 0, duration: 0, cue: 0, rate: 1, speed: 1, bpm: 0, key: null, keylock: false, synced: false, keyShift: 0, generation: 0, peak: 0,
   hotCues: Array(8).fill(null), loopIn: null, loopOut: null, looping: false, loopBeats: 4, stems: 0b1111,
   slip: false, slipPosition: null,
 });
