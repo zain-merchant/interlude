@@ -255,6 +255,16 @@ const TICK: Duration = Duration::from_millis(250);
 /// A stream whose callback hasn't run for this long is treated as lost, for
 /// backends that go quiet instead of reporting an error.
 const STALL: Duration = Duration::from_secs(2);
+/// The longest wait before restarting a stream that keeps stalling. A Mac
+/// that is asleep runs this thread but no audio callbacks, so without a
+/// backoff the stream was torn down and rebuilt every few seconds all night.
+const MAX_STALL: Duration = Duration::from_secs(60);
+
+/// How long a stream may go quiet before it's restarted, after `stalls`
+/// restarts in a row that never got a callback: 2 s, then doubling to a minute.
+fn stall_limit(stalls: u32) -> Duration {
+    STALL.saturating_mul(1 << stalls.min(5)).min(MAX_STALL)
+}
 
 /// A running stream and what the watching thread needs to keep an eye on it.
 struct Live {
@@ -520,6 +530,7 @@ fn answer(reply: Option<Reply>, r: Result<String, String>) {
 /// Why the connected stream stopped being watched.
 enum Stop {
     Lost,
+    Stalled,
     Rebuild,
     Switch(cpal::Device, Option<Reply>),
 }
@@ -535,6 +546,8 @@ fn watch(ctx: &Ctx, mut live: Live, msgs: &mpsc::Receiver<Msg>, set: impl Fn(Out
             sample_rate: ctx.sample_rate,
         })
     };
+    // Restarts in a row after a stall, with no callback since.
+    let mut stalls: u32 = 0;
     loop {
         // Connected: watch for an error, a stall or a switch.
         let mut seen = live.callbacks.load(Ordering::Relaxed);
@@ -555,11 +568,15 @@ fn watch(ctx: &Ctx, mut live: Live, msgs: &mpsc::Receiver<Msg>, set: impl Fn(Out
             if n != seen {
                 seen = n;
                 last = Instant::now();
+                if stalls > 1 {
+                    eprintln!("audio: {} running again after {stalls} restarts", live.name);
+                }
+                stalls = 0;
             }
             match live.event.swap(OK, Ordering::Relaxed) {
                 GONE => break Stop::Lost,
                 REBUILD => break Stop::Rebuild,
-                _ if last.elapsed() > STALL => break Stop::Lost,
+                _ if last.elapsed() > stall_limit(stalls) => break Stop::Stalled,
                 _ => {}
             }
         };
@@ -587,6 +604,19 @@ fn watch(ctx: &Ctx, mut live: Live, msgs: &mpsc::Receiver<Msg>, set: impl Fn(Out
                     }
                 }
             },
+            Stop::Stalled => {
+                // The device is often still there and has just stopped
+                // calling back (the Mac slept, say). Restart it quietly, and
+                // only call it lost if it can't be reopened.
+                if stalls == 0 {
+                    eprintln!("audio: {name} stopped asking for audio; restarting it");
+                }
+                stalls = stalls.saturating_add(1);
+                if let Some(Ok(l)) = ctx.find(&id, &name).map(|d| ctx.open(&d)) {
+                    live = l;
+                    continue;
+                }
+            }
             Stop::Rebuild => {
                 // Same device, new settings (its sample rate changed, say).
                 let found = id.as_ref().and_then(|id| ctx.host.device_by_id(id));
@@ -597,6 +627,7 @@ fn watch(ctx: &Ctx, mut live: Live, msgs: &mpsc::Receiver<Msg>, set: impl Fn(Out
             }
             Stop::Lost => {}
         }
+        stalls = 0;
 
         // Lost: wait for the device to come back.
         eprintln!("audio device {name} went away; waiting for it to return");
@@ -657,6 +688,15 @@ mod tests {
 
     fn names(n: &[&str]) -> Vec<String> {
         n.iter().map(|s| s.to_string()).collect()
+    }
+
+    #[test]
+    fn stall_limit_backs_off_to_a_minute() {
+        assert_eq!(stall_limit(0), Duration::from_secs(2));
+        assert_eq!(stall_limit(1), Duration::from_secs(4));
+        assert_eq!(stall_limit(4), Duration::from_secs(32));
+        assert_eq!(stall_limit(5), MAX_STALL);
+        assert_eq!(stall_limit(u32::MAX), MAX_STALL);
     }
 
     #[test]
