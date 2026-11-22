@@ -12,6 +12,17 @@
 // moves a little every frame, peaks are caught or missed, and the shape
 // pulses.
 
+/**
+ * Where a bin lands on screen in CSS px, for overlays drawn outside the
+ * canvas (the hot cue chips). Matches the renderer, lens included.
+ */
+export function screenX(bin, start, perPx, playhead, widthPx, dpr) {
+  if (STYLE_NOW !== 'lens') return (bin - start) / perPx / dpr;
+  const p2 = perPx * 2;
+  const s2 = playhead - (widthPx / 2) * p2;
+  return lensWarp((bin - s2) / p2 / widthPx) * (widthPx / dpr);
+}
+
 /** Hot cue slots drawn, matching the engine's HOT_CUES. */
 export const HOT_CUES = 8;
 /** Offset used to draw a shape off canvas so only its blurred shadow shows. */
@@ -20,8 +31,8 @@ const OFF = 20000;
 const rgba = (c, a) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
 
 /** Waveform looks under exploration; `?wave=<name>` picks one in the browser build. */
-export const STYLES = ['current', 'spectral', 'aurora', 'heat', 'contour', 'bars'];
-const STYLE = (() => {
+export const STYLES = ['current', 'spectral', 'aurora', 'heat', 'contour', 'bars', 'horizon', 'ridgeline', 'matrix', 'spectrogram', 'lens', 'pulse'];
+const STYLE_NOW = (() => {
   try {
     const s = new URLSearchParams(location.search).get('wave');
     return STYLES.includes(s) ? s : 'current';
@@ -29,6 +40,24 @@ const STYLE = (() => {
     return 'current';
   }
 })();
+
+const STYLE = STYLE_NOW;
+
+/** The lens: screen position (0..1) for a linear position, magnified around the middle. */
+const LENS_K = 2.5;
+const LENS_N = 1 - Math.exp(-LENS_K);
+function lensWarp(p) {
+  const d = p - 0.5;
+  const t = Math.abs(d) * 2;
+  // Past the edges it carries on straight, so anything off screen stays off screen.
+  const f = t <= 1 ? (1 - Math.exp(-LENS_K * t)) / LENS_N : 1 + (t - 1) * (LENS_K * Math.exp(-LENS_K)) / LENS_N;
+  return 0.5 + Math.sign(d) * 0.5 * f;
+}
+function lensUnwarp(q) {
+  const d = q - 0.5;
+  const f = Math.min(1, Math.abs(d) * 2);
+  return 0.5 + Math.sign(d) * 0.5 * (-Math.log(1 - f * LENS_N) / LENS_K);
+}
 
 const hex = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
 const lerp = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
@@ -157,8 +186,13 @@ export class Waveform2D {
     const h = canvas.height / dpr;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, w, h);
+    if (STYLE === 'lens' && view.mode === 'scroll') {
+      // Twice the time on screen, bent so the play head is magnified and the edges compress.
+      view = { ...view, perPx: view.perPx * 2, start: view.playhead - (canvas.width / 2) * view.perPx * 2 };
+    }
     const spp = view.perPx * dpr; // bins per CSS pixel
-    const x = (bin) => (bin - view.start) / spp;
+    const lin = (bin) => (bin - view.start) / spp;
+    const x = STYLE === 'lens' && view.mode === 'scroll' ? (bin) => lensWarp(lin(bin) / w) * w : lin;
     const c = view.colors;
 
     if (view.loopIn >= 0 && view.loopOut > view.loopIn) {
@@ -170,11 +204,14 @@ export class Waveform2D {
       if (STYLE === 'current') {
         if (view.mode === 'scroll') this.ribbon(w, h, view, spp, c);
         else this.overview(w, h, c);
+      } else if (view.mode === 'scroll' && STYLE === 'lens') {
+        this.paint(this.lensColumns(w, view, spp), 2, 0, h, c, false, 'spectral');
       } else if (view.mode === 'scroll') {
         const { cols, step, shift } = this.columns(w, view, spp);
         this.paint(cols, step, shift, h, c, false);
       } else {
-        this.paint(this.overviewCols(Math.round(w)), 1, 0, h, c, true);
+        const o = STYLE === 'lens' || STYLE === 'pulse' ? 'spectral' : STYLE;
+        this.paint(this.overviewCols(Math.round(w)), 1, 0, h, c, true, o);
       }
     }
     // The grid sits over the waveform so it reads against loud parts too,
@@ -357,7 +394,7 @@ export class Waveform2D {
 
   /** The scrolling view's columns: track-fixed grid, lightly smoothed. */
   columns(w, view, spp) {
-    const step = STYLE === 'bars' ? 4 : 2;
+    const step = STYLE === 'bars' || STYLE === 'matrix' ? 4 : 2;
     const dt = spp * step;
     const k0 = Math.floor(view.start / dt);
     const shift = (k0 * dt - view.start) / spp;
@@ -411,8 +448,248 @@ export class Waveform2D {
     return g;
   }
 
+
+  /** Columns for the lens: equal on screen, so each spans more of the track toward the edges. */
+  lensColumns(w, view, spp) {
+    const cols = [];
+    const t = (q) => view.start + lensUnwarp(q / w) * w * spp;
+    for (let x = 0; x <= w + 2; x += 2) cols.push(this.sample(t(x - 1), t(x + 1)) ?? [0, 0, 0]);
+    const out = cols.map((v, i) => [0, 1, 2].map((k) => {
+      let s = 0, n = 0;
+      for (let j = -1; j <= 1; j++) if (cols[i + j]) { s += cols[i + j][k] * (2 - Math.abs(j)); n += 2 - Math.abs(j); }
+      return s / n;
+    }));
+    return out;
+  }
+
+  /** Local peaks of one band: column indexes louder than `min` and everything within `r`. */
+  peaks(cols, k, r, min) {
+    const out = [];
+    for (let i = 0; i < cols.length; i++) {
+      const v = cols[i][k];
+      if (v < min) continue;
+      let top = true;
+      for (let j = -r; j <= r && top; j++) if (j && cols[i + j] && cols[i + j][k] > v) top = false;
+      if (top) out.push(i);
+    }
+    return out;
+  }
+
+  /** The bolder forms: horizon, ridgeline, matrix, spectrogram, pulse. */
+  form(style, cols, step, shift, h, c, overview) {
+    const { ctx } = this;
+    const X = (i) => shift + i * step;
+    const n = cols.length;
+
+    if (style === 'horizon') {
+      // Mids and highs rise above a horizon line like a skyline; the bass hangs
+      // below it as a striped reflection.
+      const base = Math.round(h * 0.52) + 0.5;
+      const up = base - 3, down = h - base - 1;
+      ctx.beginPath();
+      ctx.moveTo(X(0), base);
+      for (let i = 0; i < n; i++) ctx.lineTo(X(i), base - Math.max(cols[i][1] * 0.85, cols[i][2] * 0.55) * up);
+      ctx.lineTo(X(n - 1), base);
+      ctx.closePath();
+      let g = ctx.createLinearGradient(0, base - up, 0, base);
+      g.addColorStop(0.3, css(hex('#ff5fa2'), 0.9));
+      g.addColorStop(0.7, css(hex('#ff9a3c'), 0.7));
+      g.addColorStop(1, css(hex('#ffd36b'), 0.3));
+      ctx.fillStyle = g;
+      ctx.fill();
+      // Highs: bright spires inside the skyline.
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.beginPath();
+      ctx.moveTo(X(0), base);
+      for (let i = 0; i < n; i++) ctx.lineTo(X(i), base - cols[i][2] * 0.95 * up);
+      ctx.lineTo(X(n - 1), base);
+      ctx.closePath();
+      g = ctx.createLinearGradient(0, base - up, 0, base);
+      g.addColorStop(0, 'rgba(255,255,255,0.9)');
+      g.addColorStop(1, css(hex('#7fe3ff'), 0.15));
+      ctx.fillStyle = g;
+      ctx.fill();
+      ctx.globalCompositeOperation = 'source-over';
+      // The bass reflection.
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(X(0), base);
+      for (let i = 0; i < n; i++) ctx.lineTo(X(i), base + cols[i][0] ** 1.5 * 0.95 * down);
+      ctx.lineTo(X(n - 1), base);
+      ctx.closePath();
+      g = ctx.createLinearGradient(0, base, 0, h);
+      g.addColorStop(0, css(hex('#8a7dff'), 1));
+      g.addColorStop(0.6, css(hex('#4a5cff'), 0.7));
+      g.addColorStop(1, css(hex('#2a7bff'), 0.2));
+      ctx.fillStyle = g;
+      ctx.fill();
+      ctx.clip();
+      ctx.fillStyle = 'rgba(8,8,12,0.55)';
+      for (let y = base + 2; y < h; y += overview ? 2 : 3) ctx.fillRect(0, y, X(n), 1);
+      ctx.restore();
+      ctx.fillStyle = 'rgba(255,255,255,0.6)';
+      ctx.fillRect(0, base - 0.5, X(n), 1);
+      return;
+    }
+
+    if (style === 'ridgeline') {
+      // Three ridges, highs at the back, bass at the front, each hiding what's behind it.
+      const ridges = [
+        [2, h * 0.4, h * 0.36, hex('#3dcbff')],
+        [1, h * 0.68, h * 0.5, hex('#ffb43d')],
+        [0, h * 0.97, h * 0.6, hex('#ff3d71')],
+      ];
+      for (const [k, base, tall, col] of ridges) {
+        const top = (i) => base - cols[i][k] * tall;
+        ctx.beginPath();
+        ctx.moveTo(X(0), base);
+        for (let i = 0; i < n; i++) ctx.lineTo(X(i), top(i));
+        ctx.lineTo(X(n - 1), base);
+        ctx.closePath();
+        ctx.fillStyle = '#16161a';
+        ctx.fill();
+        const g = ctx.createLinearGradient(0, base - tall, 0, base);
+        g.addColorStop(0, css(col, 0.55));
+        g.addColorStop(1, css(col, 0.02));
+        ctx.fillStyle = g;
+        ctx.fill();
+        ctx.beginPath();
+        for (let i = 0; i < n; i++) i ? ctx.lineTo(X(i), top(i)) : ctx.moveTo(X(i), top(i));
+        ctx.strokeStyle = css(lerp(col, [255, 255, 255], 0.2), 1);
+        ctx.lineWidth = overview ? 1 : 1.5;
+        ctx.stroke();
+      }
+      return;
+    }
+
+    if (style === 'matrix') {
+      // An LED wall: lit dots from the middle out, coloured by the band that reaches them.
+      const pitch = overview ? 3 : 4;
+      const dot = pitch - 1;
+      const stride = Math.max(1, Math.round(pitch / step));
+      const mid = h / 2;
+      const rows = Math.floor(mid / pitch);
+      const paths = { off: new Path2D(), low: new Path2D(), mid: new Path2D(), high: new Path2D() };
+      for (let i = 0; i < n; i += stride) {
+        const v = cols[i];
+        const x = Math.round(X(i));
+        for (let r = 0; r < rows; r++) {
+          const d = (r + 0.5) / rows;
+          const key = v[2] * 0.34 >= d ? 'high' : v[1] * 0.55 >= d ? 'mid' : v[0] * 1.0 >= d ? 'low' : 'off';
+          const y0 = Math.round(mid - (r + 1) * pitch) + 0.5;
+          const y1 = Math.round(mid + r * pitch) + 0.5;
+          paths[key].rect(x, y0, dot, dot);
+          paths[key].rect(x, y1, dot, dot);
+        }
+      }
+      ctx.fillStyle = 'rgba(255,255,255,0.035)';
+      ctx.fill(paths.off);
+      ctx.fillStyle = css(hex('#ff3d71'), 0.95);
+      ctx.fill(paths.low);
+      ctx.fillStyle = css(hex('#ffb43d'), 0.95);
+      ctx.fill(paths.mid);
+      ctx.fillStyle = css(hex('#c8f4ff'), 1);
+      ctx.fill(paths.high);
+      return;
+    }
+
+    if (style === 'spectrogram') {
+      // Frequency up the lane (bass at the bottom), energy as colour, drawn
+      // into a small image and scaled up smooth.
+      const R = 24;
+      const key = overview ? cols : null;
+      let img = key && this.specCache?.key === key ? this.specCache.img : null;
+      if (!img) {
+        const off = (this.specCanvas ??= document.createElement('canvas'));
+        off.width = n;
+        off.height = R;
+        const octx = off.getContext('2d');
+        const data = octx.createImageData(n, R);
+        const centers = [0.1, 0.45, 0.82];
+        for (let i = 0; i < n; i++) {
+          const v = cols[i];
+          for (let y = 0; y < R; y++) {
+            const fy = 1 - y / (R - 1);
+            let e = 0;
+            for (let k = 0; k < 3; k++) {
+              const sig = 0.08 + 0.16 * v[k];
+              const d = (fy - centers[k]) / sig;
+              e += v[k] * Math.exp(-d * d);
+            }
+            e = Math.min(1, e);
+            const col = ramp(HEAT, overview ? e ** 1.6 * 0.9 : e ** 0.85);
+            const o = (y * n + i) * 4;
+            data.data[o] = col[0];
+            data.data[o + 1] = col[1];
+            data.data[o + 2] = col[2];
+            data.data[o + 3] = Math.min(255, e * (overview ? 1.1 : 1.5) * 255);
+          }
+        }
+        octx.putImageData(data, 0, 0);
+        img = off;
+        if (key) {
+          const keep = document.createElement('canvas');
+          keep.width = n;
+          keep.height = R;
+          keep.getContext('2d').drawImage(off, 0, 0);
+          this.specCache = { key, img: keep };
+          img = keep;
+        }
+      }
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(img, X(0), 0, (n - 1) * step + step, h);
+      return;
+    }
+
+    if (style === 'pulse') {
+      // A graphic score: kicks as glowing discs, snares and pads as rings,
+      // hats as ticks, all strung on one line.
+      const mid = h / 2;
+      ctx.fillStyle = 'rgba(255,255,255,0.18)';
+      ctx.fillRect(0, mid - 0.5, X(n), 1);
+      // A thin body for the mids so quiet passages still have a shape.
+      ctx.beginPath();
+      ctx.moveTo(X(0), mid);
+      for (let i = 0; i < n; i++) ctx.lineTo(X(i), mid - cols[i][1] * h * 0.16);
+      for (let i = n - 1; i >= 0; i--) ctx.lineTo(X(i), mid + cols[i][1] * h * 0.16);
+      ctx.closePath();
+      ctx.fillStyle = css(hex('#ffb43d'), 0.22);
+      ctx.fill();
+      ctx.fillStyle = css(hex('#7fe3ff'), 0.85);
+      for (const i of this.peaks(cols, 2, 2, 0.22)) {
+        const t = cols[i][2] * h * 0.42;
+        ctx.fillRect(X(i) - 0.75, mid - t, 1.5, t * 2);
+      }
+      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = css(hex('#ffc65c'), 0.9);
+      for (const i of this.peaks(cols, 1, 12, 0.55)) {
+        ctx.beginPath();
+        ctx.arc(X(i), mid, 3 + cols[i][1] * h * 0.14, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      const rose = hex('#ff3d71');
+      for (const i of this.peaks(cols, 0, 8, 0.3)) {
+        const r = 4 + cols[i][0] * h * 0.25;
+        const g = ctx.createRadialGradient(X(i), mid, 0, X(i), mid, r);
+        g.addColorStop(0, 'rgba(255,240,245,0.95)');
+        g.addColorStop(0.35, css(rose, 0.85));
+        g.addColorStop(1, css(rose, 0.08));
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(X(i), mid, r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = css(rose, 0.9);
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+      return;
+    }
+  }
+
   /** The exploratory looks, shared by the scrolling view and the overview. */
-  paint(cols, step, shift, h, c, overview) {
+  paint(cols, step, shift, h, c, overview, STYLE = STYLE_NOW) {
+    if (['horizon', 'ridgeline', 'matrix', 'spectrogram', 'pulse'].includes(STYLE)) return this.form(STYLE, cols, step, shift, h, c, overview);
     const { ctx } = this;
     const mid = h / 2;
     const amp = (h / 2) * (overview ? 0.98 : 0.96);

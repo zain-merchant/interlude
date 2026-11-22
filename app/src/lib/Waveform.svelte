@@ -1,6 +1,6 @@
 <script>
   import { onMount } from 'svelte';
-  import { Waveform2D, themeColors, HOT_CUES } from './waveform-2d.js';
+  import { Waveform2D, themeColors, HOT_CUES, screenX } from './waveform-2d.js';
   import { tracks, engine, displayPos, displaySlip, onFrame, scrubStart, scrubTo, scrubEnd } from './engine.svelte.js';
   import { openMenu } from './menu.svelte.js';
   import { gridMenu, gridMode, startSlide, slide, endSlide } from './grid.svelte.js';
@@ -72,7 +72,7 @@
         marks.hotCues.forEach((c, i) => {
           const el = chips[i];
           if (!el) return;
-          const x = (c - start) / perPx / dpr;
+          const x = screenX(c, start, perPx, playhead, w, dpr);
           const show = c >= 0 && x > -20 && x < w / dpr + 20;
           el.style.display = show ? '' : 'none';
           if (show) el.style.transform = `translateX(${x.toFixed(1)}px)`;
