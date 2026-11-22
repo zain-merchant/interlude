@@ -36,6 +36,8 @@
     loopTint: flag('on-state'),
     // #101 (UI audit flag): dir-centerline draws each scrolling lane as half a ribbon on one shared axis: the left deck's rises from it, the right deck's hangs from it.
     ...(mode === 'scroll' && flag('dir-centerline') ? { half: deck === 0 ? 'up' : 'down' } : {}),
+    // #105, #106 (UI audit flags): dir-pebble draws beads on the beat grid, dir-liner flat ink.
+    ...(flag('dir-pebble') ? { look: 'beads' } : flag('dir-liner') ? { look: 'ink' } : {}),
   });
 
   // #49 (UI audit flag): the play head's x in device px, at the waves

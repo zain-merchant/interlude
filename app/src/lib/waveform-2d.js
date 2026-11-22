@@ -28,6 +28,9 @@ const MARGIN = 32;
 /** Columns of the scrolling ribbon, in CSS px. */
 const STEP = 2;
 
+import { pebbleLane, pebbleOverview } from '../flags/105-dir-pebble/wave.js'; // #105 (UI audit flag)
+import { linerLane, linerOverview } from '../flags/106-dir-liner/wave.js'; // #106 (UI audit flag)
+
 const rgba = (c, a) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
 
 export class Waveform2D {
@@ -124,7 +127,7 @@ export class Waveform2D {
    *           beatLen?: number, firstBeat?: number, hotCues?: number[],
    *           loopIn?: number, loopOut?: number, looping?: boolean, slip?: number,
    *           flags?: string, beatGrid?: boolean, edge?: string, clipStart?: boolean, cueChips?: boolean,
-   *           keyline?: boolean, loopTint?: boolean, half?: string }} view
+   *           keyline?: boolean, loopTint?: boolean, half?: string, look?: string }} view
    *   Positions are in bins, -1 for none; `perPx` is bins per device pixel.
    */
   draw(view) {
@@ -144,6 +147,7 @@ export class Waveform2D {
     this.strict = !!view.clipStart;
     // #101 (UI audit flag): dir-centerline's half ribbons ('up' sits on the lane's bottom edge, 'down' hangs from its top).
     this.half = view.half ?? '';
+    this.look = view.look ? [view.look, view.beatLen ?? 0, view.firstBeat ?? 0] : null; // #105, #106 (UI audit flags): dir-pebble's beads, dir-liner's ink
     // #41 (UI audit flag): beat-grid draws the grid over the ribbon instead (below).
     const grid = view.mode === 'scroll' && view.beatLen > 0;
     if (grid && !view.beatGrid) this.beats(w, h, view, spp, x);
@@ -330,7 +334,7 @@ export class Waveform2D {
   ribbon(w, h, view, spp, c) {
     const { ctx, canvas } = this;
     const dpr = window.devicePixelRatio || 1;
-    const key = `${this.version}|${spp}|${canvas.height}|${dpr}|${this.strict ? 1 : 0}|${view.edge ?? ''}${this.half ? `|${this.half}` : ''}`; // #101 (UI audit flag): half
+    const key = `${this.version}|${spp}|${canvas.height}|${dpr}|${this.strict ? 1 : 0}|${view.edge ?? ''}${this.half ? `|${this.half}` : ''}${this.look ? `|${this.look}` : ''}`; // #101 (UI audit flag): half; #105, #106: look
     if (!this.tiles || this.tilesKey !== key || this.tilesColors !== c) {
       this.tiles = new Map();
       this.spare = [];
@@ -406,6 +410,7 @@ export class Waveform2D {
    * the glow and the smoothing are whole up to them.
    */
   ribbonShape(ctx, ectx, x0, x1, spp, h, c, edge) {
+    if (this.look) return (this.look[0] === 'beads' ? pebbleLane : linerLane)(this, ectx, x0, x1, spp, h, c, this.look.slice(1)); // #105, #106 (UI audit flags)
     // #101 (UI audit flag): dir-centerline's half ribbon: the axis on the lane's edge, at the lane's full height.
     const mid = this.half === 'up' ? h : this.half === 'down' ? 0 : h / 2;
     const amp = this.half ? h : h / 2;
@@ -475,7 +480,7 @@ export class Waveform2D {
   overview(w, h, c) {
     const { ctx, canvas } = this;
     const dpr = window.devicePixelRatio || 1;
-    const key = `${this.version}|${canvas.width}|${canvas.height}|${dpr}`;
+    const key = `${this.version}|${canvas.width}|${canvas.height}|${dpr}${this.look ? `|${this.look[0]}` : ''}`; // #105, #106 (UI audit flags): look
     let img = this.overviewImage;
     if (!img || img.key !== key || img.colors !== c) {
       const el = document.createElement('canvas');
@@ -494,10 +499,11 @@ export class Waveform2D {
         x.fillStyle = rgba(color, a);
         x.fill();
       };
-      x.globalCompositeOperation = 'lighter';
-      fill(0, 0.95, c.low, 0.55);
-      fill(1, 0.6, c.mid, 0.4);
-      fill(2, 0.3, c.high, 0.45);
+      if (this.look) (this.look[0] === 'beads' ? pebbleOverview : linerOverview)(x, cols, mid, c); // #105, #106 (UI audit flags)
+      else x.globalCompositeOperation = 'lighter';
+      if (!this.look) fill(0, 0.95, c.low, 0.55);
+      if (!this.look) fill(1, 0.6, c.mid, 0.4);
+      if (!this.look) fill(2, 0.3, c.high, 0.45);
       this.overviewImage = img = { key, colors: c, el };
     }
     ctx.save();
