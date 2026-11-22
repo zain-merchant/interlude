@@ -434,6 +434,35 @@
   .mirror .bpm {
     justify-items: start;
   }
+  /* A narrow deck (a small window) has no room for the title between the
+     record and the tempo, so the tempo and key go under the title. */
+  @container (max-width: 500px) {
+    .body,
+    .mirror .body {
+      grid-template-rows: auto auto var(--ov) minmax(var(--h-lg), 1fr) auto;
+    }
+    .body {
+      grid-template-columns: var(--rec) minmax(0, 1fr);
+      grid-template-areas: 'rec head' 'rec bpm' 'ov ov' 'mp mp' 'tr tr';
+    }
+    .mirror .body {
+      grid-template-columns: minmax(0, 1fr) var(--rec);
+      grid-template-areas: 'head rec' 'bpm rec' 'ov ov' 'mp mp' 'tr tr';
+    }
+    .rec-cell {
+      height: var(--rec);
+    }
+    header {
+      align-self: end;
+    }
+    .bpm {
+      align-self: start;
+      justify-items: start;
+    }
+    .mirror .bpm {
+      justify-items: end;
+    }
+  }
   .bpm .big {
     font-size: var(--t-xl);
     font-weight: 300;
