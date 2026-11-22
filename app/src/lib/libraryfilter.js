@@ -34,7 +34,8 @@ export function tempoFits(bpm, target) {
 }
 
 /**
- * What the deck on air is playing: its tempo and the key it sounds in.
+ * What the deck on air is playing: its tempo and the key it sounds in, at
+ * its pitch fader setting (ignoring momentary nudges) and key shift.
  * Of the decks with a track, playing ones come first, then the one louder
  * through its fader and the crossfader. Null when no deck has a track.
  * @param {any[]} decks engine.decks
@@ -53,7 +54,10 @@ export function onAir(decks, mixer) {
   });
   if (!best) return null;
   const d = decks[best.deck];
-  return { deck: best.deck, bpm: d.bpm * d.speed, key: playingKey(d.key, d.speed, d.keylock) };
+  // The pitch fader's rate, not `speed`: speed swings with every jog nudge,
+  // scratch or pitch bend, and Fits should hold still through those.
+  const rate = d.rate > 0 ? d.rate : 1;
+  return { deck: best.deck, bpm: d.bpm * rate, key: playingKey(d.key, rate, d.keylock, d.keyShift ?? 0) };
 }
 
 /**
