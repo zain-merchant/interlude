@@ -11,6 +11,16 @@ fn main() {
     let t0 = Instant::now();
     let t = Track::load(&path).expect("could not load the file");
     let total = t0.elapsed();
+    // As the app loads a track the library has analyzed: only the waveform
+    // is worked out again.
+    let known = dj_engine::Known {
+        beatgrid: Some(t.beatgrid),
+        key: Some(t.key),
+        loudness: Some(t.loudness),
+    };
+    let t1 = Instant::now();
+    std::hint::black_box(Track::load_known(&path, known).expect("could not load the file"));
+    let analyzed = t1.elapsed();
     let (s, sr) = (&t.samples, t.sample_rate);
     let time = |f: &dyn Fn()| {
         let t = Instant::now();
@@ -26,10 +36,17 @@ fn main() {
     let key = time(&|| {
         std::hint::black_box(dj_engine::key::detect_key(s, sr));
     });
+    let lu = time(&|| {
+        std::hint::black_box(dj_engine::loudness::measure_loudness(s, sr));
+    });
     println!(
-        "loaded {:.0} s of audio in {} ms (analysis alone: waveform {wf} ms, beatgrid {grid} ms, key {key} ms)",
+        "loaded {:.0} s of audio in {} ms (analysis alone: waveform {wf} ms, beatgrid {grid} ms, key {key} ms, loudness {lu} ms)",
         t.duration_secs(),
         total.as_millis()
+    );
+    println!(
+        "loaded again with its analysis known in {} ms",
+        analyzed.as_millis()
     );
     println!(
         "samples: {} MB used, {} MB allocated",

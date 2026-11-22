@@ -13,6 +13,7 @@ mod controller;
 mod library;
 mod log;
 mod paths;
+mod preload;
 mod stems;
 
 use std::sync::{Arc, Mutex};
@@ -585,15 +586,31 @@ fn use_default_output(state: State<'_, AppState>) {
     }
 }
 
+/// Starts decoding the track selected in the library, so loading it is
+/// instant. See [`preload`].
+#[tauri::command]
+fn preload_track(
+    library: State<'_, library::Library>,
+    preload: State<'_, Arc<preload::Preload>>,
+    path: String,
+) {
+    let known = library.known(std::path::Path::new(&path));
+    preload.request(path, known);
+}
+
 /// Decodes a file on a worker thread (keeping the UI responsive), then loads
 /// it into the deck with its saved cue points. With `auto_gain` (the
 /// default), the deck plays it at the common loudness, under the trim.
+/// What the library has already analyzed isn't worked out again, and a
+/// track decoded ahead (see [`preload_track`]) is used as it is.
 #[tauri::command]
+#[allow(clippy::too_many_arguments)]
 async fn load_track(
     app: tauri::AppHandle,
     state: State<'_, AppState>,
     library: State<'_, library::Library>,
     stems: State<'_, stems::Stems>,
+    preload: State<'_, Arc<preload::Preload>>,
     deck: usize,
     path: String,
     auto_gain: Option<bool>,
@@ -605,19 +622,27 @@ async fn load_track(
     let deck_name = if deck == 0 { "A" } else { "B" };
     eprintln!("deck {deck_name}: loading {name}");
     let started = std::time::Instant::now();
-    let track = tauri::async_runtime::spawn_blocking(move || Track::load(&path))
+    let known = library.known(std::path::Path::new(&path));
+    let preload = preload.inner().clone();
+    let (track, ahead) =
+        tauri::async_runtime::spawn_blocking(move || match preload.take(&path, known) {
+            Some(decoded) => decoded.map(|t| (t, true)),
+            None => Track::load_known(&path, known)
+                .map(|t| (Arc::new(t), false))
+                .map_err(|e| e.to_string()),
+        })
         .await
         .map_err(|e| e.to_string())
-        .and_then(|r| r.map_err(|e| e.to_string()))
+        .and_then(|r| r)
         .inspect_err(|e| eprintln!("deck {deck_name}: couldn't load {name}: {e}"))?;
     eprintln!(
-        "deck {deck_name}: loaded {name} ({:.0} s of audio at {} Hz) in {:.1} s",
+        "deck {deck_name}: loaded {name} ({:.0} s of audio at {} Hz) in {:.2} s{}",
         track.duration_secs(),
         track.sample_rate,
-        started.elapsed().as_secs_f64()
+        started.elapsed().as_secs_f64(),
+        if ahead { ", decoded ahead" } else { "" }
     );
-    let track = Arc::new(track);
-    let (cues, locked, neural) = library.loaded(&app, deck, &track);
+    let (cues, locked, neural) = library.loaded(&app, deck, &track, known);
     let detected = neural.or(track.beatgrid);
     state.detected.lock().map_err(|_| "lock poisoned")?[deck] = detected;
     let info = TrackInfo {
@@ -930,6 +955,7 @@ pub fn run() {
             });
             app.manage(library::Library::load());
             app.manage(stems::Stems::new(shared.clone()));
+            app.manage(Arc::new(preload::Preload::default()));
 
             controller::start(app.handle(), engine, shared.clone());
             log_audio_stats(app.handle().clone());
@@ -955,6 +981,7 @@ pub fn run() {
             audio::audio_outputs,
             audio::set_audio_output,
             load_track,
+            preload_track,
             load_sample,
             default_samples,
             set_beatgrid,

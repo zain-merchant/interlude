@@ -426,6 +426,7 @@ export function createMockBackend() {
       samples[slot] = { duration, started: null };
       return duration;
     },
+    preloadTrack: async () => {},
     loadTrack: async (deck, path) => {
       const t = tracks.find((x) => x.path === path) ?? { title: path, path };
       if ('analysis' in t && !t.analysis) {
