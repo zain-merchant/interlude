@@ -1,0 +1,1101 @@
+/* #108 (UI audit flag; a visual direction): Ground.
+
+   Each deck stands on a ground of its own colour: night blue for the left,
+   tobacco for the right. Everything that belongs to a deck is a tone of its
+   ground: its lane in the waveform window, its plate, the wells cut into
+   it, the keys standing on it, and its text, which is the ground's pale
+   twin (ice on blue, cream on tobacco). What's shared is black: the room,
+   the mixer's master spine, the library. The two grounds meet in the
+   mixer, where each channel stands on its deck's colour and the
+   crossfader runs from one to the other.
+
+   One ladder of lightness, the same for both hues and for the neutral:
+     well 0.165   cut into a ground (overview, tab well, slots)
+     ground 0.24  a deck's plate, its lane
+     key 0.305    a key standing on the ground; hover 0.335
+     line 0.40    scales, idle dial dots
+     low 0.53     the waveform's outer band
+     tint 0.93    text, Play while playing, fader caps
+
+   One state grammar:
+     rest     a key standing up, label at 68%;
+     hover    a step lighter, label full;
+     pressed  down into the ground while held;
+     on       sunk into the well, flat, label full in its role colour;
+     playing  Play alone: a flat face in the deck's pale colour, the glyph
+              in the ground's colour;
+     focus    a 2px ring in the pale twin, keyboard only;
+     disabled flat on the ground, no edge, label at 30%. */
+
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] {
+  --gd-room: #050506;
+  --gd-seam: #09090a;
+  --gd-plate: #131315;
+  --gd-plate-well: #09090a;
+  --gd-plate-key: #232327;
+  --gd-plate-key2: #1f1f23;
+  --gd-plate-keyhi: #2b2b30;
+  --gd-plate-keyhi2: #27272b;
+  --gd-float: #1c1c1f;
+
+  /* Night blue (oklch hue 252) and tobacco (hue 66), one ladder. */
+  --gd-a-well: #010f20;
+  --gd-a-ground: #07203a;
+  --gd-a-key: #18304b;
+  --gd-a-key2: #142d47;
+  --gd-a-keyhi: #233d5b;
+  --gd-a-keyhi2: #1f3956;
+  --gd-a-line: #304a66;
+  --gd-a-lo: #4c6e95;
+  --gd-a-tint: 226 236 248;
+  --gd-a-face: #c9dcf2;
+
+  --gd-b-well: #180b01;
+  --gd-b-ground: #2d1b06;
+  --gd-b-key: #3e2a16;
+  --gd-b-key2: #3a2712;
+  --gd-b-keyhi: #4a3621;
+  --gd-b-keyhi2: #46321d;
+  --gd-b-line: #58432e;
+  --gd-b-lo: #826649;
+  --gd-b-tint: 247 234 216;
+  --gd-b-face: #f0dcc0;
+
+  --bg: var(--gd-room);
+  --fg: #ecebe7;
+  --fg-2: rgb(236 235 231 / 0.66);
+  --fg-3: rgb(236 235 231 / 0.5);
+  --fg-4: rgb(236 235 231 / 0.3);
+  --raise: rgb(255 255 255 / 0.06);
+  --hover: rgb(255 255 255 / 0.05);
+  --sel: rgb(255 255 255 / 0.08);
+  --line: rgb(255 255 255 / 0.07);
+  --line-2: rgb(255 255 255 / 0.11);
+  --popover: var(--gd-float);
+  --glass-blur: none;
+
+  /* Roles: Cue a clear lemon (reads on both grounds), red for kill, Rec,
+     clip, a track running out and a lost device. */
+  --cue: #f2c14e;
+  --kill: #ff7266;
+  --warn: #ff7266;
+  --ink: #0b0b0c;
+
+  /* The waveform bands, tones of each ground: the outer band its low step,
+     the middle its pale face, the core white. */
+  --a-low: #4c6e95;
+  --deck-a: #c9dcf2;
+  --a-high: #f6f9fd;
+  --b-low: #826649;
+  --deck-b: #f0dcc0;
+  --b-high: #fdf8f0;
+
+  /* Hot cues: one lightness, none amber, none red. */
+  --hc-1: #9cc0ea;
+  --hc-2: #9ed2ae;
+  --hc-3: #e0a898;
+  --hc-4: #c3b0e6;
+  --hc-5: #8ed0d0;
+  --hc-6: #e4b0c8;
+  --hc-7: #d0cb94;
+  --hc-8: #b4bbc7;
+
+  --gd-num: 28px;
+  --gd-ease: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* Each region gets its ground's tokens under one set of names. */
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region='deck0'],
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .waves .lane:not(.b),
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .mixer > .ch:first-child,
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .mixer > .fwrap:not(.mirror) {
+  --gd-well: var(--gd-a-well);
+  --gd-ground: var(--gd-a-ground);
+  --gd-key: var(--gd-a-key);
+  --gd-key2: var(--gd-a-key2);
+  --gd-keyhi: var(--gd-a-keyhi);
+  --gd-keyhi2: var(--gd-a-keyhi2);
+  --gd-line: var(--gd-a-line);
+  --gd-tint: var(--gd-a-tint);
+  --gd-face: var(--gd-a-face);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region='deck1'],
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .waves .lane.b,
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .mixer > .ch:nth-child(5),
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .mixer > .fwrap.mirror {
+  --gd-well: var(--gd-b-well);
+  --gd-ground: var(--gd-b-ground);
+  --gd-key: var(--gd-b-key);
+  --gd-key2: var(--gd-b-key2);
+  --gd-keyhi: var(--gd-b-keyhi);
+  --gd-keyhi2: var(--gd-b-keyhi2);
+  --gd-line: var(--gd-b-line);
+  --gd-tint: var(--gd-b-tint);
+  --gd-face: var(--gd-b-face);
+}
+/* Text inside a ground is the ground's pale twin, at the same three steps. */
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'],
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .waves .lane,
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .mixer > .ch,
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .mixer > .fwrap {
+  --fg: rgb(var(--gd-tint));
+  --fg-2: rgb(var(--gd-tint) / 0.68);
+  --fg-3: rgb(var(--gd-tint) / 0.52);
+  --fg-4: rgb(var(--gd-tint) / 0.3);
+  --hover: rgb(var(--gd-tint) / 0.06);
+  --line: rgb(var(--gd-tint) / 0.08);
+  --line-2: rgb(var(--gd-tint) / 0.13);
+  --focus-ring: rgb(var(--gd-tint) / 0.85);
+  color: var(--fg);
+}
+
+/* Recipes, built from whichever ground a control stands on. Outside a
+   ground (the library, dialogs) the neutral ladder fills in. */
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground],
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] #app {
+  --gd-well: var(--gd-plate-well);
+  --gd-ground: var(--gd-plate);
+  --gd-key: var(--gd-plate-key);
+  --gd-key2: var(--gd-plate-key2);
+  --gd-keyhi: var(--gd-plate-keyhi);
+  --gd-keyhi2: var(--gd-plate-keyhi2);
+  --gd-line: #3a3a3f;
+  --gd-tint: 236 235 231;
+  --gd-face: #ecebe7;
+  --focus-ring: rgb(236 235 231 / 0.85);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] #app,
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'],
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .waves .lane,
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .mixer > .ch,
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .mixer > .fwrap,
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .mixer > .cen,
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .mixer button.rec {
+  --gd-key-fill: linear-gradient(180deg, var(--gd-key), var(--gd-key2));
+  --gd-key-fill-hi: linear-gradient(180deg, var(--gd-keyhi), var(--gd-keyhi2));
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] {
+  --gd-key-edge: inset 0 1px 0 rgb(255 255 255 / 0.07), 0 1px 0 rgb(0 0 0 / 0.5), 0 2px 5px -1px rgb(0 0 0 / 0.4);
+  --gd-key-edge-hi: inset 0 1px 0 rgb(255 255 255 / 0.1), 0 1px 0 rgb(0 0 0 / 0.5), 0 2px 5px -1px rgb(0 0 0 / 0.4);
+  --gd-sunk-edge: inset 0 1px 2px rgb(0 0 0 / 0.55), 0 1px 0 rgb(255 255 255 / 0.05);
+  --gd-well-edge: inset 0 1px 2px rgb(0 0 0 / 0.5), 0 1px 0 rgb(255 255 255 / 0.05);
+}
+
+/* ── The room ───────────────────────────────────────────────────────── */
+
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] body,
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .app,
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .bd {
+  background: var(--gd-room);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .bd i {
+  display: none;
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .decks > section,
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] section.library,
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .settings,
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .sampler,
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .glass {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .decks > section[data-region^='deck'] {
+  background: var(--gd-ground);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06);
+}
+
+/* The waveform window: two lanes, each its deck's ground, with a black
+   seam between. No glass and no grooves; the colour is the frame. */
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .waves.glass {
+  gap: 4px;
+  padding: 0 52px 0 0;
+  background: var(--gd-room);
+  box-shadow: none;
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .waves .lane {
+  border-radius: var(--r-panel);
+  background: var(--gd-ground);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06);
+  overflow: hidden;
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .waves .lane + .lane {
+  border-top: 0;
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .waves .lane canvas {
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .waves .lane .who {
+  z-index: 2;
+  background: none;
+  box-shadow: none;
+  color: var(--fg-2);
+  font-weight: 600;
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .waves .lane .who i {
+  display: none;
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .waves .zoom {
+  z-index: 2;
+  background: var(--gd-plate);
+  border-radius: 12px;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06), 0 0 0 1px #000;
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .waves .zoom button {
+  background: none;
+  box-shadow: none;
+}
+
+/* ── Decks ─────────────────────────────────────────────────────────── */
+
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] header .name {
+  font-size: var(--t-md);
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: var(--fg);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] header .name.dim {
+  font-weight: 500;
+  color: var(--fg-3);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] header .artist {
+  font-weight: 500;
+  color: var(--fg-3);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .bpm .big,
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .times[data-big='remaining'] .rm,
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .times[data-big='elapsed'] .el,
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .times:not([data-big]) .el {
+  font-size: var(--gd-num);
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  line-height: 28px;
+  color: var(--fg);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .bpm .big .frac,
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .times .num:not(.ending) .t {
+  color: var(--fg-3);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .times .rm.ending,
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .times .rm.ending .t {
+  color: var(--kill);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .times[data-big='remaining'] .el,
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .times[data-big='elapsed'] .rm,
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .times:not([data-big]) .rm {
+  font-size: var(--t-sm);
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--fg-3);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .times {
+  align-items: baseline;
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .bpm .unit,
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .bpm .key {
+  font-size: var(--t-sm);
+  font-weight: 500;
+  color: var(--fg-2);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .bpm .key .cam {
+  color: var(--fg-3);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck']:has(header .name.dim) :is(.bpm .big, .times .num, .times .t) {
+  font-weight: 500;
+  color: var(--fg-4);
+}
+
+/* The overview: a well cut into the ground. */
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .overview {
+  background: var(--gd-well);
+  box-shadow: var(--gd-well-edge);
+}
+
+/* Tabs: a well, the current mode a key standing in it. */
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .modes {
+  gap: 0;
+  padding: 3px;
+  border: 0;
+  border-radius: 11px;
+  background: var(--gd-well);
+  box-shadow: var(--gd-well-edge);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .modes button {
+  height: 26px;
+  border-radius: 8px;
+  color: var(--fg-3);
+  font-size: var(--t-sm);
+  font-weight: 500;
+  background: none;
+  box-shadow: none;
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .modes button:hover {
+  color: var(--fg);
+  background: none;
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .modes button.on {
+  color: var(--fg);
+  background: var(--gd-key-fill);
+  box-shadow: var(--gd-key-edge);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .modes button::after,
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .modes button.on::after {
+  content: none;
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .modes button i,
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .perf .big.live b::before {
+  width: 5px;
+  height: 5px;
+  background: var(--fg);
+  box-shadow: none;
+}
+
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .strip :is(.tc, .tb, .big, .kind, .stem) {
+  border-radius: var(--r);
+  box-shadow: none;
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .strip :is(.tc, .tb, .big, .kind, .stem):hover {
+  background: var(--hover);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .perf .tc b {
+  color: var(--fg);
+  font-weight: 600;
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .perf .tc span {
+  color: var(--fg-2);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .perf .tc:not(.set) :is(b, span) {
+  color: var(--fg-3);
+  font-weight: 500;
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .perf .big b {
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  color: var(--fg);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .perf .big :is(span, small) {
+  color: var(--fg-2);
+}
+
+/* ── Keys ──────────────────────────────────────────────────────────── */
+
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .btn:not(.ghost),
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .pitch .lock,
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .mixer .hp,
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .mixer button.rec,
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .fx .tog,
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .stems .need button,
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .toastbox .toast .undo {
+  --flag-buttons-bg: var(--gd-key-fill);
+  background: var(--gd-key-fill);
+  box-shadow: var(--gd-key-edge);
+  color: var(--fg-2);
+  font-weight: 500;
+  border: 0;
+  transition: background-color 120ms ease-out, color 120ms ease-out, box-shadow 120ms ease-out, translate 60ms ease-out;
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .btn:not(.ghost):hover:not(:disabled, [aria-disabled='true']),
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .btn:not(.ghost)[data-show-hover],
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .pitch .lock:hover,
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .mixer .hp:hover,
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .mixer .hp[data-show-hover],
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .mixer button.rec:hover,
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .fx .tog:hover,
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .stems .need button:hover,
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .toastbox .toast .undo:hover {
+  background: var(--gd-key-fill-hi);
+  box-shadow: var(--gd-key-edge-hi);
+  color: var(--fg);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .btn:active:not(:disabled, [aria-disabled='true']) {
+  transform: none;
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] :is(.btn:not(.ghost), .mixer .hp, .mixer button.rec, .knob button.label, .toastbox .toast .undo, [data-region^='deck'] .pitch .lock, [data-region^='deck'] .fx .tog):is(:active, [data-show-active]):not(:disabled, [aria-disabled='true']) {
+  background: var(--gd-ground);
+  box-shadow: var(--gd-sunk-edge);
+  translate: 0 1px;
+  transition-duration: 0ms;
+}
+/* On: sunk into the well, flat, the label full in its role colour. */
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .transport .btn.cue.lit,
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .transport .btn.sync:is(.on, .pressed, [aria-pressed='true']),
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .pitch .lock.on,
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .mixer .hp.on,
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .knob button.label.killed,
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .knob button.label.killed:hover,
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .fx .tog.live,
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .btn.sm.samp:is(.on, .pressed, [aria-pressed='true']) {
+  background: var(--gd-well);
+  box-shadow: var(--gd-sunk-edge);
+  color: var(--on, var(--fg));
+  font-weight: 600;
+  translate: none;
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .btn:disabled,
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .btn[aria-disabled='true'] {
+  opacity: 1;
+  background: none;
+  box-shadow: inset 0 0 0 1px var(--line);
+  color: var(--fg-4);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .btn.ghost {
+  color: var(--fg-2);
+  box-shadow: none;
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .btn.ghost:hover:not(:disabled, [aria-disabled='true']) {
+  background: var(--hover);
+  color: var(--fg);
+}
+
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .transport > * {
+  border-radius: 10px;
+  font-size: var(--t-sm);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .transport .btn.cue {
+  --on: var(--cue);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .transport .btn.sync,
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .pitch .lock,
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .fx .tog {
+  --on: var(--fg);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .transport .btn.play {
+  color: var(--fg);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .transport .btn.play svg {
+  width: 14px;
+  height: 14px;
+}
+/* Playing: the deck's pale face, the glyph in its ground. */
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .transport .btn.play.on,
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .transport .btn.play.on:hover {
+  background: var(--gd-face);
+  box-shadow: 0 1px 0 rgb(0 0 0 / 0.5), 0 2px 5px -1px rgb(0 0 0 / 0.4);
+  color: var(--gd-ground);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .transport .btn.play.on[data-cueing] {
+  background: var(--cue);
+  color: var(--ink);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .transport .btn[aria-disabled='true'],
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .transport .btn[aria-disabled='true'] :is(span, small, button) {
+  color: var(--fg-4);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .transport .btn[aria-disabled='true'] {
+  background: none;
+  box-shadow: inset 0 0 0 1px var(--line);
+  translate: none;
+}
+
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .transport .jumps {
+  grid-template-columns: minmax(24px, 1fr) minmax(0, 48px) minmax(24px, 1fr);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .transport .jumps span {
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  gap: 4px;
+  white-space: nowrap;
+  font-size: var(--t-md);
+  font-weight: 600;
+  line-height: 20px;
+  color: var(--fg);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .transport .jumps small {
+  font-size: var(--t-xs);
+  font-weight: 500;
+  line-height: 20px;
+  color: var(--fg-3);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .transport .jumps button {
+  font-size: var(--t-md);
+  color: var(--fg-3);
+  background: none;
+  box-shadow: none;
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .transport .jumps button:hover:not([aria-disabled='true']) {
+  color: var(--fg);
+  background: var(--hover);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .transport .jumps:has(> button[aria-disabled='true']) {
+  background: none;
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+/* The pitch column. */
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .pitch .val {
+  font-weight: 500;
+  color: var(--fg-2);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .pitch .val.off {
+  color: var(--fg);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .pitch .lock {
+  border-radius: 10px;
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .pitch .nudge {
+  border-radius: 9px;
+  background: var(--gd-well);
+  box-shadow: var(--gd-well-edge);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .pitch .nudge button {
+  border-radius: 6px;
+  color: var(--fg-2);
+  background: none;
+  box-shadow: none;
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .pitch .nudge button:hover:not([aria-disabled='true']) {
+  background: var(--hover);
+  color: var(--fg);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .pitch .nudge::before,
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .pitch .nudge::after {
+  display: none;
+}
+
+/* Faders: a slot cut into the ground; the cap the ground's pale face with
+   a line of the ground across it. */
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .fader .line {
+  background: var(--gd-well);
+  box-shadow: inset 0 1px 1px rgb(0 0 0 / 0.5), 0 1px 0 rgb(255 255 255 / 0.05);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .fader .mark,
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .fader .tick {
+  background: var(--fg-4);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .fader .cap {
+  border-radius: 4px;
+  background: var(--gd-face);
+  box-shadow: 0 1px 0 rgb(0 0 0 / 0.55), 0 3px 6px -2px rgb(0 0 0 / 0.5);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .fader .cap::after {
+  background: var(--gd-ground);
+  box-shadow: none;
+}
+
+/* ── Mixer ─────────────────────────────────────────────────────────── */
+
+/* The plate is the two grounds meeting; the master is a black spine. */
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .decks > section.mixer {
+  background: linear-gradient(90deg, var(--gd-a-ground) 50%, var(--gd-b-ground) 50%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .mixer > .cen {
+  background: var(--gd-seam);
+  border-radius: 12px;
+  box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.5), 0 1px 0 rgb(255 255 255 / 0.05);
+}
+
+/* Dials: a turned cap in the ground's key tone, a pale pointer; the scale
+   one dot per mark, lit in the pale twin. */
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .knob .dial {
+  background: radial-gradient(circle closest-side, var(--gd-key) 0 74%, transparent 77%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.08), 0 1px 0 rgb(0 0 0 / 0.5), 0 2px 5px -1px rgb(0 0 0 / 0.45);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .knob .dial::after {
+  content: none;
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .knob .dial i {
+  background: rgb(var(--gd-tint));
+  box-shadow: none;
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .knob .dial.killed i {
+  background: var(--kill);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .knob .wrap:has(.dial:hover) .dial,
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .knob .dial.dragging {
+  background: radial-gradient(circle closest-side, var(--gd-keyhi) 0 74%, transparent 77%);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .knob line {
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-dasharray: 0 100;
+  filter: none;
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .knob line.major {
+  stroke-dashoffset: -1;
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .knob line:not(.on) {
+  stroke: rgb(var(--gd-tint) / 0.2);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .knob line.major:not(.on) {
+  stroke: rgb(var(--gd-tint) / 0.4);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .knob line.on {
+  stroke-width: 2.2;
+  stroke: rgb(var(--gd-tint));
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .knob:has(.dial.killed) line.on {
+  stroke: var(--kill);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .knob .label {
+  color: var(--fg-3);
+  font-size: var(--t-xs);
+  font-weight: 500;
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .knob button.label {
+  --on: var(--kill);
+  border-radius: 6px;
+  background: none;
+  box-shadow: none;
+  color: var(--fg-3);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .knob button.label:hover {
+  background: var(--gd-key-fill);
+  box-shadow: var(--gd-key-edge);
+  color: var(--fg);
+}
+
+/* Meters: a black slot, filled from the ground's low step up to its pale
+   face; the top 3 dB white, over 0 dB red. The master's in neutral. */
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .mixer .fwrap {
+  --mc: #c9dcf2;
+  --mc-lo: #4c6e95;
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .mixer .fwrap.mirror {
+  --mc: #f0dcc0;
+  --mc-lo: #8a6646;
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .mixer .cen .mpair {
+  --mc: #ecebe7;
+  --mc-lo: #77777c;
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .mixer .meter .bar,
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .mixer .meter .clip,
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .mixer .meter:not(.m60) {
+  background: #000;
+  box-shadow: 0 1px 0 rgb(255 255 255 / 0.05);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .mixer .meter .bar::after {
+  background: linear-gradient(to top, var(--mc-lo) 0, var(--mc) 88%, #fff 88% 97.9%, var(--kill) 97.9%);
+  box-shadow: none;
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .mixer .meter:not(.m60)::after {
+  background: linear-gradient(to top, var(--mc-lo) 0, var(--mc) 82%, #fff 82% 95%, var(--kill) 95%);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .mixer .meter.clipped .clip {
+  background: var(--kill);
+  box-shadow: none;
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .mixer .meter .peak {
+  background: #fff;
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .mixer .meter .db {
+  background: var(--fg-4);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .mixer .lim {
+  color: var(--kill);
+}
+
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .mixer .hp {
+  --on: var(--cue);
+  border-radius: 6px;
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .mixer button.rec {
+  border-radius: 6px;
+  --gd-key: var(--gd-plate-key);
+  --gd-key2: var(--gd-plate-key2);
+  --gd-keyhi: var(--gd-plate-keyhi);
+  --gd-keyhi2: var(--gd-plate-keyhi2);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .mixer button.rec.on,
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .mixer button.rec.on:hover {
+  background: #3b1512;
+  box-shadow: var(--gd-sunk-edge);
+  color: #ffe9e5;
+  translate: none;
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .mixer button.rec .dot,
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .mixer button.rec.on .dot {
+  background: var(--kill);
+  box-shadow: none;
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .mixer .cen .knob .dial {
+  --gd-key: var(--gd-plate-key);
+  --gd-keyhi: var(--gd-plate-keyhi);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] svg.ruler line.on {
+  filter: none;
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .mixer .xf {
+  border-top: 0;
+  box-shadow: none;
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .mixer .xf .end {
+  opacity: 1;
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .mixer .xf .ruler line {
+  stroke: rgb(255 255 255 / 0.3);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .mixer .xf .ruler line.on {
+  stroke: rgb(255 255 255 / 0.7);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .mixer .xf .fader .line {
+  background: #000;
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .mixer .xf .fader .cap {
+  background: #ecebe7;
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .mixer .xf .fader .cap::after {
+  background: #000;
+}
+
+/* ── Library: shared, so black; the decks' grounds come back as the rows
+   loaded on them. ─────────────────────────────────────────────────── */
+
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] section.library,
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .settings,
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .sampler {
+  background: var(--gd-plate);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] section.library nav .h,
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .settings nav .h {
+  font-size: var(--t-xs);
+  font-weight: 500;
+  text-transform: none;
+  color: var(--fg-3);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] section.library nav {
+  border-right-color: rgb(0 0 0 / 0.8);
+  box-shadow: 1px 0 0 rgb(255 255 255 / 0.04);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] section.library nav .item {
+  color: var(--fg-2);
+  border-radius: var(--r);
+  box-shadow: none;
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] section.library nav .item small {
+  color: var(--fg-3);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] section.library nav .item:hover,
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] section.library nav .item[data-show-hover],
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] section.library nav .add:hover {
+  background: var(--hover);
+  color: var(--fg);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] section.library nav .add {
+  color: var(--fg-3);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] section.library nav .item.on,
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] section.library nav .item.on:hover {
+  background: var(--gd-key-fill);
+  box-shadow: var(--gd-key-edge);
+  color: var(--fg);
+  font-weight: 500;
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] section.library .bar .search {
+  border-radius: var(--r);
+  background: var(--gd-well);
+  box-shadow: var(--gd-well-edge);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] section.library .bar .search:focus-within {
+  box-shadow: var(--gd-well-edge), 0 0 0 2px var(--focus-ring);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] section.library .bar .search kbd {
+  color: var(--fg-3);
+  background: none;
+  box-shadow: none;
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] section.library .row.head {
+  border-bottom-color: rgb(0 0 0 / 0.8);
+  box-shadow: 0 1px 0 rgb(255 255 255 / 0.04);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] section.library .row.head .sort {
+  font-size: var(--t-xs);
+  font-weight: 500;
+  text-transform: none;
+  color: var(--fg-3);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] section.library .row.head .sort:is(.on, :hover) {
+  color: var(--fg);
+  background: none;
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] section.library .scroll .row {
+  color: var(--fg-2);
+  border-radius: var(--r);
+  box-shadow: none;
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] section.library .scroll .row .t,
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] section.library .scroll .row .n {
+  color: var(--fg);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] section.library .scroll .row .t {
+  font-weight: 500;
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] section.library .scroll .row:hover,
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] section.library .scroll .row[data-show-hover] {
+  background: var(--hover);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] section.library .scroll .row.sel,
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] section.library .scroll .row.sel:hover {
+  background: var(--gd-plate-key);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06);
+  color: var(--fg);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] section.library .scroll .row mark {
+  background: rgb(255 255 255 / 0.16);
+  color: var(--fg);
+  border-radius: 2px;
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region='tracks'] .row .k.mix {
+  box-shadow: none;
+  padding-bottom: 0;
+  color: var(--fg);
+  position: relative;
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region='tracks'] .row .k.mix::after {
+  content: '';
+  position: absolute;
+  left: calc(100% + 6px);
+  top: 50%;
+  width: 4px;
+  height: 4px;
+  margin-top: -2px;
+  border-radius: 50%;
+  background: var(--fg-2);
+}
+
+/* ── The floating layer ────────────────────────────────────────────── */
+
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .toastbox .toast,
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .app > .banner:not(.lost),
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .backdrop > .card[role='dialog'],
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] :is(.tip, .menu) {
+  background: var(--gd-float);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.08), 0 0 0 1px #000, 0 12px 32px -6px rgb(0 0 0 / 0.6);
+  color: var(--fg);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .toastbox .toast {
+  border-radius: 12px;
+  font-weight: 500;
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .toastbox .toast .undo kbd {
+  color: var(--fg-3);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .backdrop:has(> .card[role='dialog']) {
+  background: rgb(0 0 0 / 0.6);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .backdrop:has(> .card[role='dialog'])::before {
+  content: none;
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .backdrop > .card[role='dialog'] {
+  border-radius: 20px;
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .backdrop > .card[role='dialog'] h2 {
+  font-size: var(--t-lg);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+}
+
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] :focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+@media (max-width: 1200px) {
+  :root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] {
+    --gd-num: 24px;
+  }
+}
+
+/* Loaded rows: the track on a deck sits on that deck's ground, its text in
+   the ground's pale twin, so the library says what's playing without a
+   legend. On both decks, the row is split between them. */
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] section.library .scroll .row:has(.ld b) {
+  --fg: rgb(var(--gd-tint));
+  --fg-2: rgb(var(--gd-tint) / 0.68);
+  --fg-3: rgb(var(--gd-tint) / 0.52);
+  color: var(--fg-2);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] section.library .scroll .row:has(.ld b:not(.b)) {
+  --gd-tint: var(--gd-a-tint);
+  background: var(--gd-a-ground);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] section.library .scroll .row:has(.ld b.b) {
+  --gd-tint: var(--gd-b-tint);
+  background: var(--gd-b-ground);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] section.library .scroll .row:has(.ld b:not(.b)):has(.ld b.b) {
+  --gd-tint: 236 235 231;
+  background: linear-gradient(90deg, var(--gd-a-ground) 50%, var(--gd-b-ground) 50%);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] section.library .scroll .row:has(.ld b):is(:hover, [data-show-hover], .sel) {
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.07);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] section.library .scroll .row:has(.ld b:not(.b)):is(:hover, [data-show-hover], .sel) {
+  background: var(--gd-a-key);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] section.library .scroll .row:has(.ld b.b):is(:hover, [data-show-hover], .sel) {
+  background: var(--gd-b-key);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] section.library .scroll .row .ld b {
+  background: rgb(var(--gd-a-tint));
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] section.library .scroll .row .ld b.b {
+  background: rgb(var(--gd-b-tint));
+}
+
+/* Device lost: an alarm stands on a ground of its own, red; the decks are
+   held, so Play lets go of its face. */
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .app > .banner.lost {
+  background: #4d1c1a;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.08), 0 0 0 1px #000, 0 12px 32px -6px rgb(0 0 0 / 0.6);
+  color: rgb(255 232 226 / 0.72);
+  --gd-key: #602a27;
+  --gd-key2: #5a2522;
+  --gd-keyhi: #6c312d;
+  --gd-keyhi2: #662c29;
+  --fg: #fff1ed;
+  --fg-2: rgb(255 241 237 / 0.8);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .app > .banner.lost b {
+  color: #fff1ed;
+  font-weight: 600;
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .app > .banner.lost svg {
+  stroke: #ff9a8f;
+  filter: none;
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .app > .banner.lost .btn {
+  color: #fff1ed;
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .app:has(> .banner.lost) [data-region^='deck'] .transport .btn.play.on {
+  background: var(--gd-well);
+  box-shadow: var(--gd-sunk-edge);
+  color: var(--fg-3);
+}
+
+/* Dialogs and settings: shared, so neutral; their one go-ahead is the pale
+   face that Play wears while playing. */
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .backdrop > .card[role='dialog'] .lead {
+  color: var(--fg-2);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .backdrop > .card[role='dialog'] .found {
+  border-radius: 12px;
+  background: var(--gd-plate);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.05), 0 0 0 1px #000;
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .backdrop > .card[role='dialog'] :is(.go, .btn.primary) {
+  display: inline-grid;
+  place-items: center;
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 8px;
+  background: #ecebe7;
+  color: #0b0b0c;
+  font-weight: 500;
+  box-shadow: 0 1px 0 rgb(0 0 0 / 0.5);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .backdrop > .card[role='dialog'] :is(.go, .btn.primary):hover:not(:disabled) {
+  background: #fff;
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .backdrop > .card[role='dialog'] .found + .found :is(.go, .btn.primary),
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .backdrop > .card[role='dialog'] .source + .source :is(.go, .btn.primary) {
+  background: var(--gd-key-fill);
+  box-shadow: var(--gd-key-edge);
+  color: var(--fg);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .backdrop > .card[role='dialog'] .link {
+  text-decoration: none;
+  color: var(--fg-2);
+  font-weight: 500;
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .backdrop > .card[role='dialog'] .link:hover {
+  color: var(--fg);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .backdrop .card textarea {
+  background: var(--gd-well);
+  box-shadow: var(--gd-well-edge);
+  color: var(--fg);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .settings nav .item {
+  color: var(--fg-2);
+  border-radius: var(--r);
+  box-shadow: none;
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .settings nav .item:hover {
+  background: var(--hover);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .settings nav .item.on,
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .settings nav .item.on:hover {
+  background: var(--gd-key-fill);
+  box-shadow: var(--gd-key-edge);
+  color: var(--fg);
+  font-weight: 500;
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .settings .bar {
+  border-bottom-color: rgb(0 0 0 / 0.8);
+  box-shadow: 0 1px 0 rgb(255 255 255 / 0.04);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .settings nav {
+  border-right-color: rgb(0 0 0 / 0.8);
+  box-shadow: 1px 0 0 rgb(255 255 255 / 0.04);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .settings .bar h2 {
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .settings section h3 {
+  font-size: var(--t-sm);
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--fg);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .settings select {
+  border-radius: var(--r);
+  background-color: var(--gd-key);
+  box-shadow: var(--gd-key-edge);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .settings input[type='checkbox'] {
+  border-radius: 5px;
+  background: var(--gd-well);
+  box-shadow: var(--gd-well-edge);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .settings input[type='checkbox']:checked {
+  background: #ecebe7;
+  box-shadow: 0 1px 0 rgb(0 0 0 / 0.6);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .tip {
+  border-radius: 8px;
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .tip kbd {
+  background: var(--sel);
+  box-shadow: none;
+  color: var(--fg-2);
+  border-radius: 4px;
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .menu {
+  border-radius: 12px;
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .split i,
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .app > .grip:not(.side) i {
+  background: transparent;
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .split:hover i,
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .app > .grip:not(.side):hover i {
+  background: var(--fg-3);
+}
+
+/* Tabs: the focus ring sits on the tab itself, inside the well. */
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground][data-input='keys'] [data-region^='deck'] .modes button:focus-visible,
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .modes button[data-show-focus] {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 0;
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .modes button:focus-visible::before {
+  content: none !important;
+}
+
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .transport .jumps:has(> button[aria-disabled='true']) :is(span, small, button) {
+  color: var(--fg-4);
+}
