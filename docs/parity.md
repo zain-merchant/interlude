@@ -14,7 +14,6 @@ against the code on 18 November 2026. Tick items off here as they land.
 - [x] 8 hot cues, beat loops, loop in/out, beat jump
 - [x] BPM and beatgrid analysis (with Beat This!), hand-fixed grids
 - [x] Key detection (KeyNet), shown in Camelot
-- [x] Phrase detection on the overview and the deck
 - [x] Mixer: trim, 3-band EQ with kills, filter, crossfader, headphone cue
       blend, auto gain, master limiter
 - [x] Beat FX unit per deck (echo, reverb, flanger, phaser) and 16 pad FX
