@@ -276,8 +276,8 @@
           </div>
         {/if}
       </div>
-    <div class="times" class:stack={PS.info === 'bpmrec'} class:phrase-only={PS.hub === 'time'}>
-      {#if PS.info === 'titlebpm'}<span class="bpmline num">{bpm > 0 ? bpm.toFixed(2) : '—'}<small>{#if pk}<b>{keyName(pk)} · {camelot(pk)}</b> · {/if}BPM</small></span>{/if}
+    <div class="times" class:stack={PS.info === 'bpmrec' || PS.info === 'bpmcorner'} class:phrase-only={PS.hub === 'time'}>
+      {#if PS.info === 'titlebpm' || PS.info === 'bpmcorner'}<span class="bpmline num">{bpm > 0 ? bpm.toFixed(2) : '—'}<small>{#if pk}<b>{keyName(pk)} · {camelot(pk)}</b>{' · '}{/if}BPM</small></span>{/if}
         <span class="el num"><span class="sr">Elapsed </span>{fmt(d.position)}</span>
         {#if now}
           <span class="now {now.phrase.kind}" use:tip={() => `${PHRASE_NAMES[now.phrase.kind]}: ${now.phrase.bars} bars, energy ${now.phrase.energy} of 10. Found from the waveform on the beatgrid`}>
@@ -452,15 +452,13 @@
   .mirror .info-bpmrec { grid-template-areas: 'times head rec' 'times head rec' 'ov ov ov' 'mp mp mp' 'tr tr tr'; }
   .info-bpmrec > header { align-self: center; }
   .info-bpmrec > .times .el { font-size: var(--t-xl); line-height: 36px; }
-  /* 2. Time in the record; the app's own BPM and key in the corner. */
-  .info-bpmcorner { grid-template-areas: 'rec head head' 'rec times times' 'ov ov ov' 'mp mp mp' 'tr tr tr'; }
-  .mirror .info-bpmcorner { grid-template-areas: 'head head rec' 'times times rec' 'ov ov ov' 'mp mp mp' 'tr tr tr'; }
-  .info-bpmcorner > header { align-self: end; align-items: flex-end; }
-  .body.info-bpmcorner > header .bpm { display: grid; }
-  .mirror .body.info-bpmcorner > header { flex-direction: row-reverse; justify-content: space-between; }
-  .mirror .body.info-bpmcorner > header .bpm { justify-items: start; }
-  .info-bpmcorner > .times { align-self: start; justify-content: flex-end; }
-  .mirror .info-bpmcorner > .times { justify-content: flex-start; }
+  /* 2. Time in the record; BPM, key and phrase stacked in the top corner,
+     laid out like 1 with the two swapped. */
+  .info-bpmcorner { grid-template-areas: 'rec head times' 'rec head times' 'ov ov ov' 'mp mp mp' 'tr tr tr'; }
+  .mirror .info-bpmcorner { grid-template-areas: 'times head rec' 'times head rec' 'ov ov ov' 'mp mp mp' 'tr tr tr'; }
+  .info-bpmcorner > header { align-self: center; }
+  .info-bpmcorner > .times .bpmline { display: block; line-height: 36px; }
+  .info-bpmcorner > .times .bpmline small { display: block; margin: 0; line-height: 20px; font-size: var(--t-md); font-weight: 300; }
   /* 3. BPM in the record; title, then one line of times beside it. */
   .info-column { grid-template-areas: 'rec head head' 'rec times times' 'ov ov ov' 'mp mp mp' 'tr tr tr'; }
   .mirror .info-column { grid-template-areas: 'head head rec' 'times times rec' 'ov ov ov' 'mp mp mp' 'tr tr tr'; }
