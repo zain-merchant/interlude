@@ -1154,6 +1154,8 @@
   /* "On": a pill filled with its role colour at low strength. */
   --pb-on-a: 22%;
   --rg-num: 30px;
+  /* How much taller the waves row is than the app's own (see Scale). */
+  --pb-grow: 40px;
 }
 :root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] body {
   font-family: var(--font);
@@ -1467,7 +1469,7 @@
   border-radius: 14px;
 }
 :root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] .settings input[type='checkbox'] {
-  border-radius: 50%;
+  border-radius: 6px;
 }
 :root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] .zoom {
   border-radius: var(--pb-pill);
@@ -1477,13 +1479,13 @@
 }
 
 /* ── Scale: the waveforms get the room the beads need ────────────────── */
-/* The waves row grows by 40px (from the library, which keeps its handle),
+/* The waves row grows by 40px over whatever the app sets (from the library),
    so a lane's beads are tall enough to read as a picture, not a texture. */
 :root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] .app {
-  grid-template-rows: 176px var(--decks, 360px) var(--gap) minmax(160px, 1fr);
+  grid-template-rows: calc(var(--waves, 136px) + var(--pb-grow)) var(--decks, 360px) var(--gap) minmax(160px, 1fr);
 }
 :root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] .app.sampling {
-  grid-template-rows: 176px var(--decks, 360px) var(--sampler) var(--gap) minmax(160px, 1fr);
+  grid-template-rows: calc(var(--waves, 136px) + var(--pb-grow)) var(--decks, 360px) var(--sampler) var(--gap) minmax(160px, 1fr);
 }
 /* Dials fill their ring's box: with no printed scale round them, the
    wedge can use the room the ticks had. */
@@ -1515,11 +1517,8 @@
     --rg-num: 26px;
   }
   /* A small window keeps today's waves row, so the library keeps its rows. */
-  :root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] .app {
-    grid-template-rows: 136px var(--decks, 360px) var(--gap) minmax(160px, 1fr);
-  }
-  :root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] .app.sampling {
-    grid-template-rows: 136px var(--decks, 360px) var(--sampler) var(--gap) minmax(160px, 1fr);
+  :root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] {
+    --pb-grow: 0px;
   }
   /* Smaller cue discs, so a cue's time still fits beside its number. */
   :root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] [data-region^='deck'] .perf .tc b {
@@ -1527,4 +1526,26 @@
     height: 16px;
     font-size: 10px;
   }
+  :root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] [data-region^='deck'] .perf .tc {
+    gap: 4px;
+    padding: 0 2px;
+  }
+}
+
+/* The lost-device banner sits over the library's toolbar, wherever the
+   taller waves row puts it (the base places it from the library's height). */
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] .app > .banner.lost {
+  top: calc(var(--top) + var(--waves, 136px) + var(--pb-grow) + var(--gap) + var(--decks, 360px) + var(--gap) + 6px);
+  bottom: auto;
+}
+/* Cue mix is a balance (cue to master): its wedge grows from the centre. */
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] .mixer .cen .knob:nth-child(2) .dial {
+  background:
+    conic-gradient(from calc(min(0deg, var(--rot)) - var(--rot)), var(--pb-fill) 0 max(var(--rot), -1 * var(--rot)), transparent 0),
+    conic-gradient(from calc(-135deg - var(--rot)), var(--pb-track) 0 270deg, transparent 0);
+}
+/* The row grips (panel sizes) sit on the rows' edges, which the taller
+   waves row moves down. */
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] .app > .grip:not(.side) {
+  translate: 0 var(--pb-grow);
 }

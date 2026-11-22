@@ -1198,9 +1198,8 @@
 :root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .bpm .key .cam {
   font-style: normal;
 }
-/* Words, not codes: the times say what they are. */
-:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .times[data-big='remaining'] .rm:not(:empty)::after,
-:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .times:not([data-big]) .rm:not(:empty)::after {
+/* Words, not codes: the times say what they are, whichever is the big one. */
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .times .rm:not(:empty)::after {
   content: ' left';
   font-style: italic;
   font-size: 15px;
@@ -1208,11 +1207,17 @@
   letter-spacing: 0;
   color: var(--fg-3);
 }
-:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .times[data-big='remaining'] .el:not(:empty)::after,
-:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .times:not([data-big]) .el:not(:empty)::after {
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .times .el:not(:empty)::after {
   content: ' played';
   font-style: italic;
+  font-size: 15px;
+  font-weight: 400;
+  letter-spacing: 0;
   color: var(--fg-3);
+}
+/* An empty deck has nothing played and nothing left. */
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck']:has(header .name.dim) .times :is(.el, .rm)::after {
+  content: none;
 }
 
 /* ── Waveform window and overview: plain dark, the ink carries it ───── */
