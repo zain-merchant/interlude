@@ -238,11 +238,10 @@
 <section class="deck" class:mirror={deck === 1} style:--deck={deck === 0 ? 'var(--deck-a)' : 'var(--deck-b)'}
   style:--drop-color={deck === 0 ? 'var(--deck-a)' : 'var(--deck-b)'} aria-label={regionLabel} data-region="deck{deck}"
   use:dropTarget={{ ondrop: (track) => onload(deck, track), blocked: () => d.playing }}>
-  <div class="body">
-    <!-- Prototype: the record sits on the outer side, title and times beside it. -->
-    <div class="top">
-      <Platter {deck} />
-      <div class="side" class:stacked={!PLATTER_STYLES[platterProto.style]?.strip}>
+  <div class="body lay-{PLATTER_STYLES[platterProto.style]?.layout ?? 'beside'}">
+    <!-- Prototype: the record, title, overview and times are laid out by the
+         chosen variant (grid areas on .body). -->
+    <div class="rec-cell"><Platter {deck} /></div>
     <!-- svelte-ignore a11y_no_static_element_interactions -->
       <header oncontextmenu={headerMenu}>
         <div class="title">
@@ -266,18 +265,16 @@
             aria-haspopup="menu" onclick={keyMenu} oncontextmenu={keyMenu} ondblclick={(e) => e.stopPropagation()} use:tip={keyTip}>{keyName(pk)} · {camelot(pk)}{#if pk.keyShift}<span class="ks num">{pk.keyShift > 0 ? '+' : '−'}{Math.abs(pk.keyShift)}</span>{/if}<svg viewBox="0 0 10 10" aria-hidden="true"><path d="M2.5 4l2.5 2.5L7.5 4" /></svg></button>{" · "}{/if}BPM</div>
         </div>
       </header>
-      {#if PLATTER_STYLES[platterProto.style]?.strip}
-        <div class="overview strip-ov">
-          <Waveform {deck} mode="overview" />
-          {#if phrases.length}
-            <div class="phrases" aria-hidden="true">
-              {#each phrases as p (p.start)}
-                <span class="phrase {p.kind}" style:left="{(p.start / t.duration) * 100}%" style:width="{((p.end - p.start) / t.duration) * 100}%"></span>
-              {/each}
-            </div>
-          {/if}
-        </div>
-      {/if}
+      <div class="overview">
+        <Waveform {deck} mode="overview" />
+        {#if phrases.length}
+          <div class="phrases" aria-hidden="true">
+            {#each phrases as p (p.start)}
+              <span class="phrase {p.kind}" style:left="{(p.start / t.duration) * 100}%" style:width="{((p.end - p.start) / t.duration) * 100}%"></span>
+            {/each}
+          </div>
+        {/if}
+      </div>
     <div class="times">
         <span class="el num"><span class="sr">Elapsed </span>{fmt(d.position)}</span>
         {#if now}
@@ -287,8 +284,6 @@
         {/if}
         <span class="rm num"><span class="sr">Remaining </span>{fmt(d.position - d.duration)}</span>
       </div>
-      </div>
-    </div>
 
     <div class="mp">
       <div class="modes" role="tablist" aria-label="Deck {name} controls" tabindex="-1" onkeydown={modeKey}>
@@ -388,54 +383,122 @@
   .deck.mirror .pitch {
     order: -1;
   }
+  /* Prototype layouts: the record and the track info are placed with grid
+     areas, so each variant is just a different map. The tabs and cues keep
+     one compact row (84px) and the transport keeps its own row. */
   .body {
     display: grid;
-    grid-template-rows: minmax(0, 1fr) 84px auto;
-    gap: 12px;
+    column-gap: 28px;
+    row-gap: 10px;
     min-width: 0;
     min-height: 0;
   }
-  .top {
-    display: flex;
-    gap: 30px;
-    min-height: 0;
-  }
-  .mirror .top {
-    flex-direction: row-reverse;
-  }
-  .side {
-    flex: 1;
+  .body > .mp { grid-area: mp; }
+  .body > .transport { grid-area: tr; }
+  .body > header { grid-area: head; }
+  .body > .overview { grid-area: ov; }
+  .body > .times { grid-area: times; }
+  .rec-cell {
+    grid-area: rec;
     min-width: 0;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 10px;
+    min-height: 0;
+    display: grid;
+    place-items: center;
   }
+  .mp, .transport {
+    margin-top: 2px;
+  }
+  /* Record beside: the record on the outer side, title, overview and
+     times stacked next to it. */
+  .lay-beside {
+    grid-template-columns: 186px minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr) auto 84px auto;
+    grid-template-areas: 'rec head' 'rec ov' 'rec times' 'mp mp' 'tr tr';
+  }
+  .mirror .lay-beside {
+    grid-template-columns: minmax(0, 1fr) 186px;
+    grid-template-areas: 'head rec' 'ov rec' 'times rec' 'mp mp' 'tr tr';
+  }
+  .lay-beside > .overview { margin: 4px 0; }
+  /* Beside the record the row is narrow, so the phrase gets its own line. */
+  .lay-beside > .times {
+    flex-wrap: wrap;
+    row-gap: 0;
+  }
+  .lay-beside > .times .now {
+    order: 3;
+    flex-basis: 100%;
+    line-height: 16px;
+  }
+  .mirror .lay-beside > .times .now {
+    text-align: right;
+  }
+  /* Strip across: record and info on top, the overview running the full
+     width of the deck under both. */
+  .lay-across {
+    grid-template-columns: 136px minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto 40px 84px auto;
+    grid-template-areas: 'rec head' 'rec times' 'ov ov' 'mp mp' 'tr tr';
+  }
+  .mirror .lay-across {
+    grid-template-columns: minmax(0, 1fr) 136px;
+    grid-template-areas: 'head rec' 'times rec' 'ov ov' 'mp mp' 'tr tr';
+  }
+  .lay-across > header { align-self: end; }
+  /* By the pads: the app's own top (title, overview, times) as before, and
+     the record down beside the cues and transport, like a turntable. */
+  .lay-pads {
+    grid-template-columns: 172px minmax(0, 1fr);
+    grid-template-rows: auto 44px auto minmax(0, 1fr) auto;
+    grid-template-areas: 'head head' 'ov ov' 'times times' 'rec mp' 'rec tr';
+    column-gap: 30px;
+  }
+  .mirror .lay-pads {
+    grid-template-columns: minmax(0, 1fr) 172px;
+    grid-template-areas: 'head head' 'ov ov' 'times times' 'mp rec' 'tr rec';
+  }
+  .lay-pads > .times { margin-top: -4px; }
+  .lay-pads > .mp { align-self: center; }
+  /* Waveform first: a small record beside the title, and a tall overview
+     across the deck. */
+  .lay-wave {
+    grid-template-columns: 88px minmax(0, 1fr);
+    grid-template-rows: 88px minmax(0, 1fr) auto 84px auto;
+    grid-template-areas: 'rec head' 'ov ov' 'times times' 'mp mp' 'tr tr';
+    column-gap: 26px;
+  }
+  .mirror .lay-wave {
+    grid-template-columns: minmax(0, 1fr) 88px;
+    grid-template-areas: 'head rec' 'ov ov' 'times times' 'mp mp' 'tr tr';
+  }
+  .lay-wave > header { align-self: center; }
+  .lay-wave > .times { margin-top: -4px; }
   /* BPM and key are in the record's centre in this prototype. */
-  .side .bpm {
+  .body > header .bpm {
     display: none;
   }
-  .mirror .side header {
+  .mirror .body > header {
     justify-content: flex-end;
     text-align: right;
   }
-  .side .overview {
-    height: 40px;
-    flex: none;
+  .mirror .lay-pads > header {
+    justify-content: space-between;
+    text-align: left;
   }
-  /* With the strip: the app's own time row. Without it: a bigger stacked readout. */
-  .side.stacked .times {
+  /* In the stacked layouts the elapsed time is the big number beside the record. */
+  .lay-across > .times {
     flex-direction: column;
     align-items: flex-start;
-    gap: 2px;
+    align-self: start;
+    gap: 0;
   }
-  .mirror .side.stacked .times {
+  .mirror .lay-across > .times {
     align-items: flex-end;
   }
-  .side.stacked .now {
+  .lay-across > .times .now {
     order: 3;
   }
-  .side.stacked .el {
+  .lay-across > .times .el {
     font-size: var(--t-xl);
     line-height: 34px;
   }
