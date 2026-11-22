@@ -31,7 +31,7 @@ const OFF = 20000;
 const rgba = (c, a) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
 
 /** Waveform looks under exploration; `?wave=<name>` picks one in the browser build. */
-export const STYLES = ['current', 'spectral', 'aurora', 'heat', 'contour', 'bars', 'horizon', 'ridgeline', 'matrix', 'spectrogram', 'lens', 'pulse', 'dusk', 'skywater', 'skyline', 'reflection', 'deckdusk', 'sunset', 'neon', 'tropical', 'deckpair', 'energy', 'spectrum', 'sunset2', 'neon2', 'tropical2', 'deckpair2'];
+export const STYLES = ['current', 'spectral', 'aurora', 'heat', 'contour', 'bars', 'horizon', 'ridgeline', 'matrix', 'spectrogram', 'lens', 'pulse', 'dusk', 'skywater', 'skyline', 'reflection', 'deckdusk', 'sunset', 'neon', 'tropical', 'deckpair', 'energy', 'spectrum', 'sunset2', 'neon2', 'tropical2', 'deckpair2', 'tinted', 'inkember', 'dusk2', 'glacier', 'mono'];
 const STYLE_NOW = (() => {
   try {
     const s = new URLSearchParams(location.search).get('wave');
@@ -155,6 +155,50 @@ function centroid(v) {
   const t = (v[1] * 0.5 + v[2]) / s;
   return Math.max(0, Math.min(1, (t - 0.12) / 0.55));
 }
+
+/** OKLCH (L 0..1, C, h degrees) to 0..255 sRGB, clipped. */
+function oklch(L, C, h) {
+  const a = C * Math.cos((h * Math.PI) / 180), b = C * Math.sin((h * Math.PI) / 180);
+  const l_ = L + 0.3963377774 * a + 0.2158037573 * b;
+  const m_ = L - 0.1055613458 * a - 0.0638541728 * b;
+  const s_ = L - 0.0894841775 * a - 1.291485548 * b;
+  const l = l_ ** 3, m = m_ ** 3, s = s_ ** 3;
+  const lin = [
+    4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
+    -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
+    -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s,
+  ];
+  return lin.map((x) => {
+    x = Math.max(0, Math.min(1, x));
+    return 255 * (x <= 0.0031308 ? 12.92 * x : 1.055 * x ** (1 / 2.4) - 0.055);
+  });
+}
+/**
+ * A palette in one hue family: each band has its own lightness and chroma
+ * (bass darkest and richest, highs lightest and palest), and the hue moves
+ * along a short arc with the sound, from h0 when bass-heavy to h1 when bright.
+ * Precomputed as a 33-step table per band.
+ */
+function family({ h0, h1, L = [0.56, 0.73, 0.9], C = [0.14, 0.11, 0.05], shift = [0, 0.15, 0.3] }) {
+  return [0, 1, 2].map((k) => Array.from({ length: 33 }, (_, i) => {
+    const t = Math.min(1, i / 32 + shift[k]);
+    return oklch(L[k], C[k], h0 + (h1 - h0) * t);
+  }));
+}
+const familyLook = (fam) => ({ ...mirrored('#000000', '#000000', '#000000'), family: fam, glow: 1 });
+const FAM = {
+  // Today's ice and cream, with a little hue movement and more depth.
+  tinted: [family({ h0: 262, h1: 225, C: [0.09, 0.06, 0.025] }), family({ h0: 45, h1: 80, C: [0.09, 0.06, 0.025] })],
+  // Ink blue to ice for A; ember to amber for B.
+  inkember: [family({ h0: 268, h1: 215 }), family({ h0: 30, h1: 75 })],
+  // Violet to blue for A; rose to peach for B.
+  dusk2: [family({ h0: 300, h1: 250, C: [0.15, 0.11, 0.05] }), family({ h0: 5, h1: 50, C: [0.15, 0.11, 0.05] })],
+  // Teal to sea green for A; copper to gold for B.
+  glacier: [family({ h0: 215, h1: 170, C: [0.11, 0.1, 0.05] }), family({ h0: 45, h1: 90, C: [0.12, 0.11, 0.05] })],
+  // One hue per deck, the colour only in the bass and mids: the calmest.
+  mono: [family({ h0: 250, h1: 250, C: [0.13, 0.08, 0.02], shift: [0, 0, 0] }), family({ h0: 55, h1: 55, C: [0.13, 0.08, 0.02], shift: [0, 0, 0] })],
+};
+for (const name of Object.keys(FAM)) BLENDS[name] = (deck) => familyLook(FAM[name][deck]);
 
 /** Spectral: kick rose, body gold, air cyan; each column mixes by its band balance. */
 const SPEC = { low: hex('#ff3d71'), mid: hex('#ffb43d'), high: hex('#3dcbff') };
@@ -810,7 +854,7 @@ export class Waveform2D {
           ctx.save();
           ctx.translate(-OFF, 0);
           this.halfPath(cols, step, shift, base, amp, sign, level(half, k));
-          const gc = look.spectrum ? look.spectrum[k === 0 ? 1 : 3] : half.bands[k];
+          const gc = look.family ? look.family[k][16] : look.spectrum ? look.spectrum[k === 0 ? 1 : 3] : half.bands[k];
           ctx.shadowColor = css(gc, a * 2.5 * dim * (look.glow ?? 1));
           ctx.shadowBlur = blur * dpr;
           ctx.shadowOffsetX = OFF * dpr;
@@ -831,6 +875,12 @@ export class Waveform2D {
         const far = base - sign * amp;
         const g = ctx.createLinearGradient(0, base, 0, far);
         const a = alphas[k] * dim * (overview ? 0.9 : 1);
+        if (look.family) {
+          const lut = look.family[k];
+          ctx.fillStyle = this.hgrad(cols, step, shift, (v) => lut[Math.round(centroid(v) * 32)], () => a);
+          ctx.fill();
+          continue;
+        }
         if (look.spectrum) {
           const off = [-0.18, 0.05, 0.3][k];
           const lift = [0, 0.1, 0.45][k];
@@ -872,6 +922,17 @@ export class Waveform2D {
         ctx.lineWidth = 1;
         ctx.stroke();
       }
+    }
+    if (look.family) {
+      // Soften toward the lane's edges, as today, so the middle carries the weight.
+      ctx.globalCompositeOperation = 'destination-out';
+      const g = ctx.createLinearGradient(0, 0, 0, h);
+      g.addColorStop(0, 'rgba(0,0,0,0.55)');
+      g.addColorStop(0.5, 'rgba(0,0,0,0)');
+      g.addColorStop(1, 'rgba(0,0,0,0.55)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, shift + cols.length * step, h);
+      ctx.globalCompositeOperation = 'source-over';
     }
     if (look.line) {
       ctx.fillStyle = `rgba(255,255,255,${look.line * (overview ? 0.6 : 1)})`;
