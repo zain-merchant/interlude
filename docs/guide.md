@@ -90,10 +90,14 @@ Everything Interlude does, in detail. For a short overview, see the
 - **Waveforms:** smooth low, mid and high bands in tones of each deck's
   colour, with beat lines, hot cues and loops: a scrolling view per deck
   plus a full-track overview you can click to jump.
+- **Record:** each deck has a clear record in its colour that turns with
+  the track, so scratching, braking and pitch show on it, with the elapsed
+  and remaining time in its still centre. Drag it to scratch. The tonearm
+  rests just off the record while the deck is paused and swings onto it to
+  play, following the track from the outer groove in. Tempo and key sit in
+  the deck's inner corner.
 - **Phrases:** a thin strip under each overview marks the track's sections
-  (intro, build, drop, breakdown, verse, outro), and the deck shows the one
-  playing and how many bars are left before the music changes ("Drop · 12
-  bars left"). They're found from the waveform's bass, mids and highs on
+  (intro, build, drop, breakdown, verse, outro). They're found from the waveform's bass, mids and highs on
   the beatgrid, in phrases of 4 to 32 bars, so fixing the grid moves them
   too. A guide, not a rule: it reads the energy, not the arrangement.
 - **Library:** add music folders, instant search across artist, title and
