@@ -31,7 +31,7 @@ const OFF = 20000;
 const rgba = (c, a) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
 
 /** Waveform looks under exploration; `?wave=<name>` picks one in the browser build. */
-export const STYLES = ['current', 'spectral', 'aurora', 'heat', 'contour', 'bars', 'horizon', 'ridgeline', 'matrix', 'spectrogram', 'lens', 'pulse'];
+export const STYLES = ['current', 'spectral', 'aurora', 'heat', 'contour', 'bars', 'horizon', 'ridgeline', 'matrix', 'spectrogram', 'lens', 'pulse', 'dusk', 'skywater', 'skyline', 'reflection', 'deckdusk'];
 const STYLE_NOW = (() => {
   try {
     const s = new URLSearchParams(location.search).get('wave');
@@ -68,6 +68,53 @@ function ramp(stops, t) {
   return lerp(stops[i], stops[i + 1], t - i);
 }
 const css = (c, a = 1) => `rgba(${c[0] | 0},${c[1] | 0},${c[2] | 0},${a})`;
+
+/**
+ * Blends of today's liquid ribbon with Horizon. Each half of the lane (above
+ * and below the centre line) gets its own height and its own three band
+ * colours, so a look can be mirrored like today or split like Horizon.
+ * `base` is where the centre line sits (0..1 down the lane).
+ */
+const H = (x) => hex(x);
+const BAND_SCALE = [0.95, 0.62, 0.34];
+const BLENDS = {
+  // Today's shape and layering in Horizon's dusk colours.
+  dusk: () => ({
+    base: 0.5,
+    up: { amp: 1, bands: [H('#7a5cff'), H('#ff7a5c'), H('#fff0dc')], edge: H('#ffb3c8') },
+    down: { amp: 1, bands: [H('#7a5cff'), H('#ff7a5c'), H('#fff0dc')], edge: H('#ffb3c8') },
+  }),
+  // Mirrored like today, but warm sky above the line and cool water below it.
+  skywater: () => ({
+    base: 0.5, line: 0.55,
+    up: { amp: 1, bands: [H('#ff5fa2'), H('#ff9a3c'), H('#fff0d6')], edge: H('#ffc2a8') },
+    down: { amp: 1, bands: [H('#5a5cff'), H('#3aa0ff'), H('#d6ecff')], edge: H('#9fb4ff'), stripes: 0.22 },
+  }),
+  // Horizon's split, drawn the liquid way: mids and highs above, bass below.
+  skyline: () => ({
+    base: 0.54, line: 0.6, only: true,
+    up: { amp: 1, bands: [null, H('#ff8a4c'), H('#fff0d6')], scale: [0, 0.92, 0.75], edge: H('#ffb38a'), top: H('#ff5fa2') },
+    down: { amp: 1, bands: [H('#7a6cff'), null, null], scale: [0.95, 0, 0], edge: H('#b0a6ff'), stripes: 0.18 },
+  }),
+  // The whole waveform stands on a horizon, with a dim reflection under it.
+  reflection: () => ({
+    base: 0.68, line: 0.5,
+    up: { amp: 1, bands: [H('#ff5f8f'), H('#ff9a3c'), H('#fff0d6')], edge: H('#ffc2a8') },
+    down: { amp: 1, bands: [H('#6a5cff'), H('#5a7cff'), H('#c8d4ff')], edge: null, dim: 0.7, stripes: 0.3, fade: true },
+  }),
+  // Sky and water in each deck's own colours, so A and B stay told apart.
+  deckdusk: (deck) => deck === 0
+    ? {
+      base: 0.5, line: 0.45,
+      up: { amp: 1, bands: [H('#3d8bff'), H('#7fd0ff'), H('#f4f8fc')], edge: H('#a8dcff') },
+      down: { amp: 1, bands: [H('#5a4cff'), H('#7a8cff'), H('#dfe6ff')], edge: H('#a99cff'), stripes: 0.2 },
+    }
+    : {
+      base: 0.5, line: 0.45,
+      up: { amp: 1, bands: [H('#ff7a2e'), H('#ffbd6b'), H('#fff6e8')], edge: H('#ffd0a0') },
+      down: { amp: 1, bands: [H('#d0367a'), H('#ff6f9a'), H('#ffe3ee')], edge: H('#ff9fc0'), stripes: 0.2 },
+    },
+};
 
 /** Spectral: kick rose, body gold, air cyan; each column mixes by its band balance. */
 const SPEC = { low: hex('#ff3d71'), mid: hex('#ffb43d'), high: hex('#3dcbff') };
@@ -687,9 +734,99 @@ export class Waveform2D {
     }
   }
 
+
+  /** One half of a band: from the centre line out to the band's level. */
+  halfPath(cols, step, shift, base, amp, sign, f) {
+    const { ctx } = this;
+    const n = cols.length;
+    ctx.beginPath();
+    ctx.moveTo(shift, base);
+    for (let i = 0; i < n; i++) ctx.lineTo(shift + i * step, base - sign * f(cols[i]) * amp);
+    ctx.lineTo(shift + (n - 1) * step, base);
+    ctx.closePath();
+  }
+
+  /** Today's liquid ribbon, with each half of the lane styled on its own. */
+  blend(look, cols, step, shift, h, overview) {
+    const { ctx } = this;
+    const base = Math.round(h * look.base) + 0.5;
+    const dpr = window.devicePixelRatio || 1;
+    const halves = [
+      [look.up, 1, base - 2],
+      [look.down, -1, h - base - 1],
+    ];
+    const level = (half, k) => {
+      const sc = (half.scale ?? BAND_SCALE)[k];
+      return (v) => v[k] * sc;
+    };
+    const outer = (half) => (v) => Math.max(...[0, 1, 2].map((k) => (half.bands[k] ? level(half, k)(v) : 0)));
+    for (const [half, sign, amp] of halves) {
+      const dim = half.dim ?? 1;
+      ctx.globalCompositeOperation = 'lighter';
+      if (!overview) {
+        // Glow under the lows and mids, as today: only the blurred shadow lands.
+        for (const [k, a, blur] of [[0, 0.07, 12], [1, 0.045, 10]]) {
+          if (!half.bands[k]) continue;
+          ctx.save();
+          ctx.translate(-OFF, 0);
+          this.halfPath(cols, step, shift, base, amp, sign, level(half, k));
+          ctx.shadowColor = css(half.bands[k], a * 2.5 * dim);
+          ctx.shadowBlur = blur * dpr;
+          ctx.shadowOffsetX = OFF * dpr;
+          ctx.fillStyle = '#000';
+          ctx.fill();
+          ctx.restore();
+        }
+      }
+      const alphas = [0.5, 0.4, 0.6];
+      for (let k = 0; k < 3; k++) {
+        const col = half.bands[k];
+        if (!col) continue;
+        this.halfPath(cols, step, shift, base, amp, sign, level(half, k));
+        // Strongest at the line, fading toward the lane's edge, as today;
+        // a `top` colour shifts the far end to another hue (Horizon's sunset).
+        const far = base - sign * amp;
+        const g = ctx.createLinearGradient(0, base, 0, far);
+        const a = alphas[k] * dim * (overview ? 0.9 : 1);
+        g.addColorStop(0, css(col, a));
+        g.addColorStop(1, css(k === 1 && half.top ? half.top : col, a * (half.fade ? 0.1 : 0.4)));
+        ctx.fillStyle = g;
+        ctx.fill();
+      }
+      ctx.globalCompositeOperation = 'source-over';
+      if (half.stripes) {
+        // Water: fine dark lines through this half, clipped to its shape.
+        ctx.save();
+        this.halfPath(cols, step, shift, base, amp, sign, outer(half));
+        ctx.clip();
+        ctx.fillStyle = `rgba(10,10,14,${half.stripes})`;
+        const gap = overview ? 2 : 3;
+        for (let y = base + 2; y < h; y += gap) ctx.fillRect(0, y, shift + cols.length * step, 1);
+        ctx.restore();
+      }
+      if (half.edge && !overview) {
+        // A crisp hairline along the outer edge, as today.
+        const f = outer(half);
+        ctx.beginPath();
+        cols.forEach((v, i) => {
+          const y = base - sign * f(v) * amp;
+          i ? ctx.lineTo(shift + i * step, y) : ctx.moveTo(shift, y);
+        });
+        ctx.strokeStyle = css(half.edge, 0.6 * dim);
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+    }
+    if (look.line) {
+      ctx.fillStyle = `rgba(255,255,255,${look.line * (overview ? 0.6 : 1)})`;
+      ctx.fillRect(0, base - 0.5, shift + cols.length * step, 1);
+    }
+  }
+
   /** The exploratory looks, shared by the scrolling view and the overview. */
   paint(cols, step, shift, h, c, overview, STYLE = STYLE_NOW) {
     if (['horizon', 'ridgeline', 'matrix', 'spectrogram', 'pulse'].includes(STYLE)) return this.form(STYLE, cols, step, shift, h, c, overview);
+    if (BLENDS[STYLE]) return this.blend(BLENDS[STYLE](c.deck ?? 0), cols, step, shift, h, overview);
     const { ctx } = this;
     const mid = h / 2;
     const amp = (h / 2) * (overview ? 0.98 : 0.96);
