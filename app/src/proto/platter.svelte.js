@@ -12,7 +12,7 @@ export const STYLES = {
   titlebpm: { label: 'BPM Under Title', info: 'titlebpm', hub: 'time', ...REC },
 };
 
-const DEFAULTS = { style: 'bpmrec', rec: 100, ov: 40, rpm: 33.333, grooves: 60, sheen: 55, hub: 68, ringWidth: 18, arm: true };
+const DEFAULTS = { style: 'bpmcorner', rec: 100, ov: 40, rpm: 33.333, grooves: 60, sheen: 55, hub: 68, ringWidth: 18, arm: true };
 export const platter = $state({ ...DEFAULTS });
 try {
   const saved = JSON.parse(localStorage.getItem('oss-dj.proto.platter.v4') || 'null');
