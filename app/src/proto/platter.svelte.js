@@ -10,7 +10,7 @@ export const STYLES = {
   over: { label: 'Title Over Both', layout: 'over', times: 'line', ...REC },
 };
 
-const DEFAULTS = { style: 'across', rec: 100, rpm: 33.333, grooves: 60, sheen: 55, hub: 68, ringWidth: 18, arm: true };
+const DEFAULTS = { style: 'across', rec: 100, ov: 40, rpm: 33.333, grooves: 60, sheen: 55, hub: 68, ringWidth: 18, arm: true };
 export const platter = $state({ ...DEFAULTS });
 try {
   const saved = JSON.parse(localStorage.getItem('oss-dj.proto.platter.v4') || 'null');

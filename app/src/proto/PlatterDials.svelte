@@ -3,7 +3,8 @@
   import { platter, savePlatter, resetPlatter } from './platter.svelte.js';
   let open = $state(false);
   const RANGES = [
-    { key: 'rec', label: 'Record size', min: 70, max: 115, unit: '%' },
+    { key: 'rec', label: 'Record size', min: 70, max: 130, unit: '%' },
+    { key: 'ov', label: 'Waveform height', min: 24, max: 80, unit: ' px' },
     { key: 'hub', label: 'Centre size', min: 50, max: 80, unit: '%' },
     { key: 'grooves', label: 'Grooves', min: 0, max: 100, unit: '%' },
     { key: 'sheen', label: 'Sheen', min: 0, max: 100, unit: '%' },

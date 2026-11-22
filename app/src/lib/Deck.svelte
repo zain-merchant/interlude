@@ -238,7 +238,7 @@
 <section class="deck" class:mirror={deck === 1} style:--deck={deck === 0 ? 'var(--deck-a)' : 'var(--deck-b)'}
   style:--drop-color={deck === 0 ? 'var(--deck-a)' : 'var(--deck-b)'} aria-label={regionLabel} data-region="deck{deck}"
   use:dropTarget={{ ondrop: (track) => onload(deck, track), blocked: () => d.playing }}>
-  <div class="body lay-{PLATTER_STYLES[platterProto.style]?.layout ?? 'across'}" style:--rs={platterProto.rec / 100}>
+  <div class="body lay-{PLATTER_STYLES[platterProto.style]?.layout ?? 'across'}" style:--rs={platterProto.rec / 100} style:--ov="{platterProto.ov}px">
     <!-- Prototype: the record, title, overview and times are laid out by the
          chosen variant (grid areas on .body). -->
     <div class="rec-cell"><Platter {deck} /></div>
@@ -451,9 +451,9 @@
   /* Strip across, filled: record, title and a big elapsed time along the
      top; the overview full width beneath. */
   .lay-across {
-    --rec: min(calc(120px * var(--rs)), 138px);
+    --rec: calc(120px * var(--rs));
     grid-template-columns: var(--rec) minmax(0, 1fr) auto;
-    grid-template-rows: var(--rec) minmax(32px, 1fr) 84px auto;
+    grid-template-rows: minmax(0, 1fr) var(--ov) 84px auto;
     grid-template-areas: 'rec head times' 'ov ov ov' 'mp mp mp' 'tr tr tr';
     column-gap: 26px;
   }
