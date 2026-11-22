@@ -108,7 +108,7 @@
   function armTarget(pos) {
     if (!t || !d.playing) return angleAt(vr + 9);
     const inner = hubD / 2 + 7, outer = vr - 6;
-    const f = Math.max(0, Math.min(1, pos / t.duration));
+    const f = t.duration > 0 ? Math.max(0, Math.min(1, pos / t.duration)) : 0;
     return angleAt(outer - (outer - inner) * f);
   }
 
