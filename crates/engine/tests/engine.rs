@@ -290,6 +290,34 @@ fn analysis_while_decoding_matches_analysis_after() {
     assert_eq!(streamed.waveform.bins, whole.waveform.bins);
     assert_eq!(streamed.beatgrid, whole.beatgrid);
     assert_eq!(streamed.key, whole.key);
+
+    // Loading with the analysis known takes it as it is and builds the same
+    // waveform, without looking for the tempo, key or loudness again.
+    let known = dj_engine::Known {
+        beatgrid: Some(Some(dj_engine::Beatgrid {
+            bpm: 100.0,
+            first_beat: 0.25,
+        })),
+        key: Some(None),
+        loudness: Some(dj_engine::Loudness {
+            lufs: Some(-9.0),
+            peak: 0.5,
+        }),
+    };
+    let quick = Track::load_known(&path, known).unwrap();
+    assert_eq!(quick.waveform.bins, streamed.waveform.bins);
+    assert_eq!(quick.samples, streamed.samples);
+    assert_eq!(Some(quick.beatgrid), known.beatgrid);
+    assert_eq!(quick.key, None);
+    assert_eq!(Some(quick.loudness), known.loudness);
+    // Only the key known: the rest is found as before.
+    let some = dj_engine::Known {
+        key: Some(streamed.key),
+        ..Default::default()
+    };
+    let partly = Track::load_known(&path, some).unwrap();
+    assert_eq!(partly.beatgrid, streamed.beatgrid);
+    assert_eq!(partly.loudness, streamed.loudness);
     std::fs::remove_dir_all(dir).ok();
 }
 

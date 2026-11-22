@@ -2088,6 +2088,7 @@ dependencies = [
  "dj-controller",
  "dj-engine",
  "dj-stems",
+ "hound",
  "libc",
  "lofty",
  "quick-xml 0.37.5",

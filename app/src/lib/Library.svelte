@@ -215,6 +215,21 @@
   });
   const selectIndex = (i) => (selPath = sorted[i]?.path ?? null);
 
+  // Decode the selected track ahead, so Load (on screen, the keyboard or a
+  // controller) finds it ready. Waits for the selection to settle, so
+  // browsing through the list doesn't decode every row on the way. Not
+  // the row selected by default when the library opens: only one picked.
+  const PRELOAD_MS = 150;
+  let picked = false;
+  $effect(() => {
+    const t = sorted[selected];
+    const path = t && !t.missing ? t.path : null;
+    picked ||= selPath !== null;
+    if (!picked || !path) return;
+    const timer = setTimeout(() => backend.preloadTrack(path).catch(() => {}), PRELOAD_MS);
+    return () => clearTimeout(timer);
+  });
+
   /** Tracks still waiting for their length, BPM and key, or showing ones an
    * older version of the analyzer found until it redoes them. */
   const pending = $derived(all.reduce((n, t) => n + (t.analysis && !t.analysis.outdated ? 0 : 1), 0));
