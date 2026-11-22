@@ -325,6 +325,72 @@ fn path_str(p: &Path) -> String {
     p.to_string_lossy().into_owned()
 }
 
+/// A GLOB matching paths with any character outside printable ASCII.
+const NON_ASCII: &str = "*[^ -~]*";
+
+/// One spelling for paths that differ only in how accents are written.
+fn spelling(path: &str) -> String {
+    use unicode_normalization::UnicodeNormalization;
+    path.nfc().collect()
+}
+
+/// Moves everything saved for track `other` onto track `keep`, then
+/// deletes `other`. Whatever `keep` already has wins.
+fn fold_track(tx: &rusqlite::Transaction<'_>, keep: i64, other: i64) -> rusqlite::Result<()> {
+    // Cues as a set: `keep` takes `other`'s only if it has none of its own.
+    let keep_has_cues: bool = tx.query_row(
+        "SELECT EXISTS (SELECT 1 FROM cues WHERE track_id = ?1)",
+        params![keep],
+        |r| r.get(0),
+    )?;
+    if !keep_has_cues {
+        tx.execute(
+            "UPDATE cues SET track_id = ?1 WHERE track_id = ?2",
+            params![keep, other],
+        )?;
+    }
+    tx.execute(
+        "UPDATE history SET track_id = ?1 WHERE track_id = ?2",
+        params![keep, other],
+    )?;
+    tx.execute(
+        "UPDATE OR IGNORE playlist_tracks SET track_id = ?1 WHERE track_id = ?2",
+        params![keep, other],
+    )?;
+    tx.execute(
+        "UPDATE tracks SET
+             title = CASE WHEN tracks.title = '' THEN o.title ELSE tracks.title END,
+             artist = CASE WHEN tracks.artist = '' THEN o.artist ELSE tracks.artist END,
+             album = CASE WHEN tracks.album = '' THEN o.album ELSE tracks.album END,
+             genre = CASE WHEN tracks.genre = '' THEN o.genre ELSE tracks.genre END,
+             added_at = min(tracks.added_at, o.added_at)
+         FROM (SELECT * FROM tracks WHERE id = ?2) AS o
+         WHERE tracks.id = ?1",
+        params![keep, other],
+    )?;
+    // Analysis as a whole, so a result is never half from one run.
+    tx.execute(
+        "UPDATE tracks SET analysis_version = o.analysis_version,
+             analysis_failed = o.analysis_failed, duration = o.duration, bpm = o.bpm,
+             first_beat = o.first_beat, key_tonic = o.key_tonic, key_minor = o.key_minor,
+             lufs = o.lufs, peak = o.peak, grid_neural = o.grid_neural
+         FROM (SELECT * FROM tracks WHERE id = ?2) AS o
+         WHERE tracks.id = ?1 AND tracks.analysis_version IS NULL
+             AND o.analysis_version IS NOT NULL AND NOT tracks.grid_locked",
+        params![keep, other],
+    )?;
+    // A grid fixed by hand beats one that wasn't.
+    tx.execute(
+        "UPDATE tracks SET bpm = o.bpm, first_beat = o.first_beat, grid_locked = 1,
+             grid_neural = o.grid_neural
+         FROM (SELECT * FROM tracks WHERE id = ?2) AS o
+         WHERE tracks.id = ?1 AND o.grid_locked AND NOT tracks.grid_locked",
+        params![keep, other],
+    )?;
+    tx.execute("DELETE FROM tracks WHERE id = ?1", params![other])?;
+    Ok(())
+}
+
 impl Db {
     /// Opens (or creates) the library at `file`, backing it up first when
     /// a backup is due. Fails with `DatabaseCorrupt` or `NotADatabase` if
@@ -342,6 +408,7 @@ impl Db {
         let db = Self::setup(conn)?;
         db.back_up(file);
         db.migrate()?;
+        db.merge_spellings()?;
         Ok(db)
     }
 
@@ -509,7 +576,9 @@ impl Db {
                 }
             }
         }
-        tx.commit()
+        tx.commit()?;
+        self.merge_spellings()?;
+        Ok(())
     }
 
     /// Every saved track under one of `roots`, missing ones included.
@@ -687,7 +756,7 @@ impl Db {
                 "SELECT analysis_version, analysis_failed, duration, bpm, key_tonic, key_minor,
                      lufs, peak
                  FROM tracks WHERE path = ?1",
-                params![path_str(path)],
+                params![self.stored(path)?],
                 |r| analysis_from(r, 0),
             )
             .optional()?
@@ -697,15 +766,82 @@ impl Db {
     /// The track's id, adding a bare row for a file loaded from outside
     /// the library folders. A later scan fills in its tags.
     fn track_id(&self, path: &Path) -> rusqlite::Result<i64> {
+        let path = self.stored(path)?;
         self.conn.execute(
             "INSERT OR IGNORE INTO tracks (path, added_at) VALUES (?1, ?2)",
-            params![path_str(path), now_ms()],
+            params![path, now_ms()],
         )?;
         self.conn.query_row(
             "SELECT id FROM tracks WHERE path = ?1",
-            params![path_str(path)],
+            params![path],
             |r| r.get(0),
         )
+    }
+
+    /// `path` as the library already spells it. macOS can write an accented
+    /// letter two ways (é as one character, or e plus a combining accent)
+    /// and treats both as the same file, but the folder scan and other apps'
+    /// exports don't always agree on which, so a saved track matches either.
+    fn stored(&self, path: &Path) -> rusqlite::Result<String> {
+        let s = path_str(path);
+        if s.is_ascii() {
+            return Ok(s);
+        }
+        let exact: bool = self.conn.query_row(
+            "SELECT EXISTS (SELECT 1 FROM tracks WHERE path = ?1)",
+            params![s],
+            |r| r.get(0),
+        )?;
+        if exact {
+            return Ok(s);
+        }
+        let want = spelling(&s);
+        let mut st = self.conn.prepare(&format!(
+            "SELECT path FROM tracks WHERE path GLOB '{NON_ASCII}'"
+        ))?;
+        let paths = st.query_map([], |r| r.get::<_, String>(0))?;
+        for p in paths {
+            let p = p?;
+            if spelling(&p) == want {
+                return Ok(p);
+            }
+        }
+        Ok(s)
+    }
+
+    /// Folds tracks saved twice under two spellings of the same path into
+    /// one: the one the folder scan sees (or else the oldest) keeps its
+    /// path, and takes the other's cue points, plays, playlist places and
+    /// any analysis or tags it lacks. Returns how many rows were folded in.
+    pub fn merge_spellings(&self) -> rusqlite::Result<usize> {
+        let rows: Vec<(i64, String, bool)> = {
+            let mut st = self.conn.prepare(&format!(
+                "SELECT id, path, size IS NOT NULL AND NOT missing FROM tracks
+                 WHERE path GLOB '{NON_ASCII}'"
+            ))?;
+            let rows = st.query_map([], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)))?;
+            rows.collect::<rusqlite::Result<_>>()?
+        };
+        let mut groups: HashMap<String, Vec<(i64, bool)>> = HashMap::new();
+        for (id, path, seen) in rows {
+            groups.entry(spelling(&path)).or_default().push((id, seen));
+        }
+        let mut merged = 0;
+        let tx = self.conn.unchecked_transaction()?;
+        for mut group in groups.into_values().filter(|g| g.len() > 1) {
+            // Seen by the scan first, then oldest.
+            group.sort_by_key(|&(id, seen)| (!seen, id));
+            let keep = group[0].0;
+            for &(other, _) in &group[1..] {
+                fold_track(&tx, keep, other)?;
+                merged += 1;
+            }
+        }
+        tx.commit()?;
+        if merged > 0 {
+            eprintln!("library: merged {merged} tracks saved twice under two spellings");
+        }
+        Ok(merged)
     }
 
     /// Saves a track's analysis. `first_beat` is known when the grid was
@@ -765,7 +901,7 @@ impl Db {
                 "SELECT bpm, first_beat FROM tracks
                  WHERE path = ?1 AND grid_neural AND NOT grid_locked
                      AND bpm IS NOT NULL AND first_beat IS NOT NULL",
-                params![path_str(path)],
+                params![self.stored(path)?],
                 |r| {
                     Ok(Beatgrid {
                         bpm: r.get(0)?,
@@ -782,7 +918,7 @@ impl Db {
             .query_row(
                 "SELECT bpm, first_beat FROM tracks
                  WHERE path = ?1 AND grid_locked AND bpm IS NOT NULL",
-                params![path_str(path)],
+                params![self.stored(path)?],
                 |r| {
                     Ok(Beatgrid {
                         bpm: r.get(0)?,
@@ -843,7 +979,7 @@ impl Db {
         self.conn.query_row(
             "SELECT EXISTS (SELECT 1 FROM cues JOIN tracks ON tracks.id = cues.track_id
                             WHERE tracks.path = ?1)",
-            params![path_str(path)],
+            params![self.stored(path)?],
             |r| r.get(0),
         )
     }
@@ -855,7 +991,7 @@ impl Db {
             "SELECT kind, slot, start, end FROM cues
              JOIN tracks ON tracks.id = cues.track_id WHERE tracks.path = ?1",
         )?;
-        let rows = st.query_map(params![path_str(path)], |r| {
+        let rows = st.query_map(params![self.stored(path)?], |r| {
             Ok((
                 r.get::<_, i64>(0)?,
                 r.get::<_, i64>(1)?,
@@ -1284,6 +1420,51 @@ mod tests {
             .collect();
         assert_eq!(titles, [a, b, a]);
         assert_eq!(db.session_tracks(44 * hour).unwrap().len(), 1);
+    }
+
+    #[test]
+    fn two_spellings_of_an_accented_path_are_one_track() {
+        let db = Db::open_in_memory().unwrap();
+        let roots = vec![PathBuf::from("/m")];
+        // An import names the file with a precomposed é...
+        let imported = PathBuf::from("/m/Beyonc\u{e9}.mp3");
+        let mut cues = SavedCues::default();
+        cues.hot_cues[0] = Some(3.0);
+        db.save_cues(&imported, &cues).unwrap();
+        let pl = db.create_playlist("Set").unwrap();
+        db.add_to_playlist(pl, std::slice::from_ref(&imported))
+            .unwrap();
+        db.save_grid(
+            &imported,
+            Some(Beatgrid {
+                bpm: 128.0,
+                first_beat: 0.1,
+            }),
+            None,
+        )
+        .unwrap();
+        // ...and the folder scan finds it as e plus a combining accent.
+        let on_disk = stat("/m/Beyonce\u{301}.mp3", 10, 1);
+        db.apply_scan(
+            &roots,
+            std::slice::from_ref(&on_disk),
+            &[(on_disk.clone(), tags("B"))],
+        )
+        .unwrap();
+
+        let rows = db.tracks(&roots).unwrap();
+        assert_eq!(rows.len(), 1);
+        assert_eq!(rows[0].path, on_disk.path);
+        assert!(!rows[0].missing);
+        assert_eq!(db.cues(&on_disk.path).unwrap().hot_cues[0], Some(3.0));
+        assert_eq!(db.locked_grid(&on_disk.path).unwrap().unwrap().bpm, 128.0);
+        let listed = db.playlist_tracks(pl).unwrap();
+        assert_eq!(listed.len(), 1);
+        assert_eq!(listed[0].path, on_disk.path);
+        // Either spelling finds it now, and adds no new row.
+        assert!(db.has_cues(&imported).unwrap());
+        db.record_play(&imported, 1).unwrap();
+        assert_eq!(db.tracks(&roots).unwrap().len(), 1);
     }
 
     #[test]
