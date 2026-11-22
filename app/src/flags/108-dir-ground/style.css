@@ -12,7 +12,9 @@
    One ladder of lightness, the same for both hues and for the neutral:
      well 0.165   cut into a ground (overview, tab well, slots)
      ground 0.24  a deck's plate, its lane
-     key 0.305    a key standing on the ground; hover 0.335
+     key 0.305    a key standing on the ground; hover 0.345
+     on 0.44      a key that's latched: a step up, flat
+     cap 0.68     what you turn: the dial caps (fader caps take the pale face)
      line 0.40    scales, idle dial dots
      low 0.53     the waveform's outer band
      tint 0.93    text, Play while playing, fader caps
@@ -21,9 +23,10 @@
      rest     a key standing up, label at 68%;
      hover    a step lighter, label full;
      pressed  down into the ground while held;
-     on       sunk into the well, flat, label full in its role colour;
-     playing  Play alone: a flat face in the deck's pale colour, the glyph
-              in the ground's colour;
+     on       a step up the ladder: flat, pressed 1px, label full in its
+              role colour (state is lightness: rest, on, playing);
+     playing  Play alone: the top of the ladder, a flat face in the deck's
+              pale colour, the glyph in the ground's colour;
      focus    a 2px ring in the pale twin, keyboard only;
      disabled flat on the ground, no edge, label at 30%. */
 
@@ -49,6 +52,9 @@
   --gd-a-lo: #4c6e95;
   --gd-a-tint: 226 236 248;
   --gd-a-face: #c9dcf2;
+  --gd-a-on: #3b5572;
+  --gd-a-cap: #899aae;
+  --gd-a-cap2: #697c92;
 
   --gd-b-well: #180b01;
   --gd-b-ground: #2d1b06;
@@ -60,6 +66,9 @@
   --gd-b-lo: #826649;
   --gd-b-tint: 247 234 216;
   --gd-b-face: #f0dcc0;
+  --gd-b-on: #634e38;
+  --gd-b-cap: #a49588;
+  --gd-b-cap2: #877767;
 
   --bg: var(--gd-room);
   --fg: #ecebe7;
@@ -118,6 +127,9 @@
   --gd-line: var(--gd-a-line);
   --gd-tint: var(--gd-a-tint);
   --gd-face: var(--gd-a-face);
+  --gd-on: var(--gd-a-on);
+  --gd-cap: var(--gd-a-cap);
+  --gd-cap2: var(--gd-a-cap2);
 }
 :root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region='deck1'],
 :root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .waves .lane.b,
@@ -132,6 +144,9 @@
   --gd-line: var(--gd-b-line);
   --gd-tint: var(--gd-b-tint);
   --gd-face: var(--gd-b-face);
+  --gd-on: var(--gd-b-on);
+  --gd-cap: var(--gd-b-cap);
+  --gd-cap2: var(--gd-b-cap2);
 }
 /* Text inside a ground is the ground's pale twin, at the same three steps. */
 :root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'],
@@ -162,6 +177,9 @@
   --gd-line: #3a3a3f;
   --gd-tint: 236 235 231;
   --gd-face: #ecebe7;
+  --gd-on: #525252;
+  --gd-cap: #989898;
+  --gd-cap2: #7a7a7a;
   --focus-ring: rgb(236 235 231 / 0.85);
 }
 :root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] #app,
@@ -427,11 +445,11 @@
 :root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .knob button.label.killed:hover,
 :root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .fx .tog.live,
 :root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .btn.sm.samp:is(.on, .pressed, [aria-pressed='true']) {
-  background: var(--gd-well);
-  box-shadow: var(--gd-sunk-edge);
+  background: var(--gd-on);
+  box-shadow: inset 0 1px 1px rgb(0 0 0 / 0.25), 0 1px 0 rgb(255 255 255 / 0.05);
   color: var(--on, var(--fg));
   font-weight: 600;
-  translate: none;
+  translate: 0 1px;
 }
 :root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .btn:disabled,
 :root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .btn[aria-disabled='true'] {
@@ -591,14 +609,15 @@
 /* Dials: a turned cap in the ground's key tone, a pale pointer; the scale
    one dot per mark, lit in the pale twin. */
 :root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .knob .dial {
-  background: radial-gradient(circle closest-side, var(--gd-key) 0 74%, transparent 77%);
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.08), 0 1px 0 rgb(0 0 0 / 0.5), 0 2px 5px -1px rgb(0 0 0 / 0.45);
+  background: radial-gradient(circle closest-side, var(--gd-cap) 0 52%, var(--gd-cap2) 60% 70%, transparent 73%);
+  box-shadow: none;
+  filter: drop-shadow(0 1px 0 rgb(0 0 0 / 0.55)) drop-shadow(0 2px 3px rgb(0 0 0 / 0.35));
 }
 :root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .knob .dial::after {
   content: none;
 }
 :root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .knob .dial i {
-  background: rgb(var(--gd-tint));
+  background: var(--gd-ground);
   box-shadow: none;
 }
 :root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .knob .dial.killed i {
@@ -606,25 +625,21 @@
 }
 :root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .knob .wrap:has(.dial:hover) .dial,
 :root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .knob .dial.dragging {
-  background: radial-gradient(circle closest-side, var(--gd-keyhi) 0 74%, transparent 77%);
+  background: radial-gradient(circle closest-side, color-mix(in oklab, var(--gd-cap), #fff 18%) 0 52%, var(--gd-cap) 60% 70%, transparent 73%);
 }
 :root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .knob line {
-  stroke-width: 1.8;
-  stroke-linecap: round;
-  stroke-dasharray: 0 100;
+  stroke-width: 1.5;
+  stroke-linecap: butt;
   filter: none;
 }
-:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .knob line.major {
-  stroke-dashoffset: -1;
-}
 :root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .knob line:not(.on) {
-  stroke: rgb(var(--gd-tint) / 0.2);
+  stroke: rgb(var(--gd-tint) / 0.14);
 }
 :root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .knob line.major:not(.on) {
-  stroke: rgb(var(--gd-tint) / 0.4);
+  stroke: rgb(var(--gd-tint) / 0.32);
 }
 :root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .knob line.on {
-  stroke-width: 2.2;
+  stroke-width: 1.5;
   stroke: rgb(var(--gd-tint));
 }
 :root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .knob:has(.dial.killed) line.on {
@@ -712,9 +727,10 @@
   background: var(--kill);
   box-shadow: none;
 }
-:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .mixer .cen .knob .dial {
-  --gd-key: var(--gd-plate-key);
-  --gd-keyhi: var(--gd-plate-keyhi);
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] .mixer > .cen .knob {
+  --gd-cap: #989898;
+  --gd-cap2: #7a7a7a;
+  --gd-ground: var(--gd-seam);
 }
 :root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] svg.ruler line.on {
   filter: none;
@@ -894,9 +910,13 @@
   letter-spacing: -0.03em;
 }
 
-:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] :focus-visible {
-  outline: 2px solid var(--focus-ring);
-  outline-offset: 2px;
+/* Focus keeps today's rules (where it shows and where it doesn't); only its
+   colour follows the ground. */
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] {
+  --ring: var(--focus-ring);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] :is(button, [role='slider'], [role='tab'], select, input):focus-visible {
+  outline-color: var(--focus-ring);
 }
 
 @media (max-width: 1200px) {
@@ -1098,4 +1118,17 @@
 
 :root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .transport .jumps:has(> button[aria-disabled='true']) :is(span, small, button) {
   color: var(--fg-4);
+}
+
+/* The stems download: a key, not a link. */
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .stems .need {
+  align-items: center;
+  color: var(--fg-2);
+}
+:root[data-flag-dir-ground][data-flag-dir-ground][data-flag-dir-ground] [data-region^='deck'] .stems .need button {
+  height: var(--h-sm);
+  padding: 0 10px;
+  border-radius: 6px;
+  text-decoration: none;
+  color: var(--fg);
 }

@@ -19,7 +19,7 @@ export default {
   against:
     'The design doc\'s "Liquid Glass on graphite" and its one neutral surface: each deck\'s plate, lane and keys are tones of a deep ground in its colour, with no glass and no blur.',
   notes:
-    'style.css is built from the direction folder\'s work/ground.src.css; every rule is under the tripled :root[data-flag-dir-ground] attribute. Each region sets one family of --gd-* tokens (its ground) and every recipe reads them, so a key, dial or slot takes the tone of whatever ground it stands on. Hooks: Deck.svelte (the tempo\'s decimals span), Waveform.svelte passes veil: \'ground\', and waveform-2d.js tints the played veil with the deck\'s ground instead of grey.',
+    'style.css is built from the direction folder\'s work/ground.src.css; every rule is under the tripled :root[data-flag-dir-ground] attribute. Each region sets one family of --gd-* tokens (its ground) and every recipe reads them, so a key, dial or slot takes the tone of whatever ground it stands on. State is a step up that ladder: a key at rest, a latched key a lighter flat tone, Play while playing the pale face. Hooks: Deck.svelte (the tempo\'s decimals span), Waveform.svelte passes veil: \'ground\', and waveform-2d.js tints the played veil with the deck\'s ground instead of grey.',
 };
 
 /** Show me: both decks playing, flipping between today and this direction. */
