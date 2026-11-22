@@ -238,7 +238,7 @@
 <section class="deck" class:mirror={deck === 1} style:--deck={deck === 0 ? 'var(--deck-a)' : 'var(--deck-b)'}
   style:--drop-color={deck === 0 ? 'var(--deck-a)' : 'var(--deck-b)'} aria-label={regionLabel} data-region="deck{deck}"
   use:dropTarget={{ ondrop: (track) => onload(deck, track), blocked: () => d.playing }}>
-  <div class="body lay-{PLATTER_STYLES[platterProto.style]?.layout ?? 'beside'}">
+  <div class="body lay-{PLATTER_STYLES[platterProto.style]?.layout ?? 'wide'}" style:--rs={platterProto.rec / 100}>
     <!-- Prototype: the record, title, overview and times are laid out by the
          chosen variant (grid areas on .body). -->
     <div class="rec-cell"><Platter {deck} /></div>
@@ -275,7 +275,7 @@
           </div>
         {/if}
       </div>
-    <div class="times">
+    <div class="times" class:stack={PLATTER_STYLES[platterProto.style]?.times === 'stack'} class:line={PLATTER_STYLES[platterProto.style]?.times === 'line'}>
         <span class="el num"><span class="sr">Elapsed </span>{fmt(d.position)}</span>
         {#if now}
           <span class="now {now.phrase.kind}" use:tip={() => `${PHRASE_NAMES[now.phrase.kind]}: ${now.phrase.bars} bars, energy ${now.phrase.energy} of 10. Found from the waveform on the beatgrid`}>
@@ -405,74 +405,78 @@
     display: grid;
     place-items: center;
   }
+  /* The record takes the column's width, so its size is set by the layout. */
+  .rec-cell :global(.wrap) {
+    width: 100%;
+    height: auto;
+    max-height: 100%;
+  }
   .mp, .transport {
     margin-top: 2px;
   }
-  /* Record beside: the record on the outer side, title, overview and
-     times stacked next to it. */
-  .lay-beside {
-    grid-template-columns: 186px minmax(0, 1fr);
-    grid-template-rows: auto minmax(0, 1fr) auto 84px auto;
-    grid-template-areas: 'rec head' 'rec ov' 'rec times' 'mp mp' 'tr tr';
-  }
-  .mirror .lay-beside {
-    grid-template-columns: minmax(0, 1fr) 186px;
-    grid-template-areas: 'head rec' 'ov rec' 'times rec' 'mp mp' 'tr tr';
-  }
-  .lay-beside > .overview { margin: 4px 0; }
-  /* Beside the record the row is narrow, so the phrase gets its own line. */
-  .lay-beside > .times {
-    flex-wrap: wrap;
-    row-gap: 0;
-  }
-  .lay-beside > .times .now {
-    order: 3;
-    flex-basis: 100%;
-    line-height: 16px;
-  }
-  .mirror .lay-beside > .times .now {
+  /* Times as a stack (elapsed, remaining, phrase) at the deck's inner
+     edge, so the top corner holds something useful instead of air. */
+  .body > .times.stack {
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 0;
     text-align: right;
   }
-  /* Strip across: record and info on top, the overview running the full
-     width of the deck under both. */
-  .lay-across {
-    grid-template-columns: 136px minmax(0, 1fr);
-    grid-template-rows: minmax(0, 1fr) auto 40px 84px auto;
-    grid-template-areas: 'rec head' 'rec times' 'ov ov' 'mp mp' 'tr tr';
+  .mirror .body > .times.stack {
+    align-items: flex-start;
+    text-align: left;
   }
-  .mirror .lay-across {
-    grid-template-columns: minmax(0, 1fr) 136px;
-    grid-template-areas: 'head rec' 'times rec' 'ov ov' 'mp mp' 'tr tr';
-  }
-  .lay-across > header { align-self: end; }
-  /* By the pads: the app's own top (title, overview, times) as before, and
-     the record down beside the cues and transport, like a turntable. */
-  .lay-pads {
-    grid-template-columns: 172px minmax(0, 1fr);
-    grid-template-rows: auto 44px auto minmax(0, 1fr) auto;
-    grid-template-areas: 'head head' 'ov ov' 'times times' 'rec mp' 'rec tr';
-    column-gap: 30px;
-  }
-  .mirror .lay-pads {
-    grid-template-columns: minmax(0, 1fr) 172px;
-    grid-template-areas: 'head head' 'ov ov' 'times times' 'mp rec' 'tr rec';
-  }
-  .lay-pads > .times { margin-top: -4px; }
-  .lay-pads > .mp { align-self: center; }
-  /* Waveform first: a small record beside the title, and a tall overview
-     across the deck. */
-  .lay-wave {
-    grid-template-columns: 88px minmax(0, 1fr);
-    grid-template-rows: 88px minmax(0, 1fr) auto 84px auto;
-    grid-template-areas: 'rec head' 'ov ov' 'times times' 'mp mp' 'tr tr';
+  .times.stack .now { order: 3; line-height: 16px; }
+  .times.stack .rm { line-height: 20px; }
+  /* Small record, big waveform: the record on the outer side, title and
+     times along the top, and a tall overview filling the rest. */
+  .lay-wide {
+    grid-template-columns: calc(160px * var(--rs)) minmax(0, 1fr) auto;
+    grid-template-rows: auto minmax(0, 1fr) 84px auto;
+    grid-template-areas: 'rec head times' 'rec ov ov' 'mp mp mp' 'tr tr tr';
     column-gap: 26px;
   }
-  .mirror .lay-wave {
-    grid-template-columns: minmax(0, 1fr) 88px;
-    grid-template-areas: 'head rec' 'ov ov' 'times times' 'mp mp' 'tr tr';
+  .mirror .lay-wide {
+    grid-template-columns: auto minmax(0, 1fr) calc(160px * var(--rs));
+    grid-template-areas: 'times head rec' 'ov ov rec' 'mp mp mp' 'tr tr tr';
   }
-  .lay-wave > header { align-self: center; }
-  .lay-wave > .times { margin-top: -4px; }
+  .lay-wide > header { align-self: center; }
+  /* Title over both: title and times across the deck, then the record and
+     a tall overview side by side at the same height. */
+  .lay-over {
+    grid-template-columns: calc(128px * var(--rs)) minmax(0, 1fr) auto;
+    grid-template-rows: auto minmax(0, 1fr) 84px auto;
+    grid-template-areas: 'head head times' 'rec ov ov' 'mp mp mp' 'tr tr tr';
+    column-gap: 20px;
+  }
+  .mirror .lay-over {
+    grid-template-columns: auto minmax(0, 1fr) calc(128px * var(--rs));
+    grid-template-areas: 'times head head' 'ov ov rec' 'mp mp mp' 'tr tr tr';
+  }
+  .lay-over > .times.line {
+    flex-direction: row;
+    align-items: baseline;
+    gap: 14px;
+  }
+  .lay-over > header { align-self: center; }
+  /* Strip across, filled: record, title and a big elapsed time along the
+     top; the overview full width beneath. */
+  .lay-across {
+    grid-template-columns: calc(124px * var(--rs)) minmax(0, 1fr) auto;
+    grid-template-rows: minmax(0, 1fr) 60px 84px auto;
+    grid-template-areas: 'rec head times' 'ov ov ov' 'mp mp mp' 'tr tr tr';
+    column-gap: 26px;
+  }
+  .mirror .lay-across {
+    grid-template-columns: auto minmax(0, 1fr) calc(124px * var(--rs));
+    grid-template-areas: 'times head rec' 'ov ov ov' 'mp mp mp' 'tr tr tr';
+  }
+  .lay-across > header { align-self: center; }
+  .lay-across > .times .el {
+    font-size: var(--t-xl);
+    line-height: 36px;
+  }
   /* BPM and key are in the record's centre in this prototype. */
   .body > header .bpm {
     display: none;
@@ -480,27 +484,6 @@
   .mirror .body > header {
     justify-content: flex-end;
     text-align: right;
-  }
-  .mirror .lay-pads > header {
-    justify-content: space-between;
-    text-align: left;
-  }
-  /* In the stacked layouts the elapsed time is the big number beside the record. */
-  .lay-across > .times {
-    flex-direction: column;
-    align-items: flex-start;
-    align-self: start;
-    gap: 0;
-  }
-  .mirror .lay-across > .times {
-    align-items: flex-end;
-  }
-  .lay-across > .times .now {
-    order: 3;
-  }
-  .lay-across > .times .el {
-    font-size: var(--t-xl);
-    line-height: 34px;
   }
   header {
     display: flex;
