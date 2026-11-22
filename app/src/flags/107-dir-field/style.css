@@ -565,7 +565,7 @@
 :root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .pitch .lock {
   border-radius: 6px !important;
 }
-:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .transport .btn.cue {
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .transport .btn.cue:not(:disabled, [aria-disabled='true']) {
   color: var(--fg) !important;
 }
 :root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .transport .btn.play svg {
