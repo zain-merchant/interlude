@@ -18,7 +18,6 @@
   import { announce } from './announce.svelte.js';
   import { keyName, keyLongName, camelot, playingKey } from './key.js';
   import { toggleSlip, beatJump, hasGrid, beatsLabel, setKeyShift, keyStep, keySync, canKeySync, KEY_SHIFT_MAX } from './performance.js';
-  import { findPhrases } from './phrases.js';
 
   /** @type {{ deck: number, onload: (deck: number, track: any) => void, onreveal: (path: string) => void, onsettings?: (page: string) => void }} */
   let { deck, onload, onreveal, onsettings } = $props();
@@ -120,9 +119,6 @@
   const atCue = $derived(!!t && !d.playing && Math.abs(d.position - d.cue) < 0.01);
   const pk = $derived(t ? playingKey(d.key, d.rate, d.keylock, d.keyShift ?? 0) : null);
   const canSync = $derived(!!t && d.bpm > 0 && engine.decks[1 - deck].bpm > 0);
-  // Phrases (intro, build, drop...) from the waveform on the grid, drawn
-  // along the overview; found again when the grid changes.
-  const phrases = $derived(t ? findPhrases(t.bins, t.binsPerSec, t.beatgrid, t.duration) : []);
 
   let lastTouch = 0;
 
@@ -258,13 +254,6 @@
     </div>
     <div class="overview">
       <Waveform {deck} mode="overview" />
-      {#if phrases.length}
-        <div class="phrases" aria-hidden="true">
-          {#each phrases as p (p.start)}
-            <span class="phrase {p.kind}" style:left="{(p.start / t.duration) * 100}%" style:width="{((p.end - p.start) / t.duration) * 100}%"></span>
-          {/each}
-        </div>
-      {/if}
     </div>
 
     <div class="mp">
@@ -497,25 +486,6 @@
   .overview :global(.wave) {
     height: 100%;
   }
-  /* Phrases: a thin strip along the bottom of the overview. */
-  .phrases {
-    position: absolute;
-    inset: auto 0 0 0;
-    height: 3px;
-    pointer-events: none;
-  }
-  .phrase {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    background: var(--phrase);
-    box-shadow: inset -1px 0 0 var(--well);
-  }
-  .intro, .outro { --phrase: var(--fg-4); }
-  .verse { --phrase: var(--fg-3); }
-  .breakdown { --phrase: var(--hc-2); }
-  .build { --phrase: var(--warn); }
-  .drop { --phrase: var(--hc-3); }
 
   /* Tabs, the mode row and the transport share the deck's four columns, so
      the tab bar spans the deck and every edge lines up. */
