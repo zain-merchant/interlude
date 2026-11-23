@@ -165,7 +165,7 @@ export function createMockBackend() {
     loaded: false, playing: false, position: 0, duration: 0, cue: 0, rate: 1, bend: 0, bpm: 0, key: null, keylock: false, synced: false, syncRatio: 1, keyShift: 0, firstBeat: 0,
     slip: false,
     generation: 0, previewing: false, scratching: false, waveform: null, fader: 1, peak: 0, path: null, ...freshLoops(),
-    filter: 0, fx: { kind: 'echo', on: false, level: 0.5, beats: 1 }, stems: 0b1111, splitFrom: 0, usedAt: null,
+    filter: 0, fx: { kind: 'echo', on: false, level: 0.5, beats: 1 }, stems: 0b1111, splitFrom: 0, usedAt: null, prepared: 0, preparing: null,
   }));
   // Stems: a pretend model download, and splitting that takes 20 s a track.
   /** @type {{ mode: import('./stemsmodel.js').StemsMode, cacheGb: number, cacheBytes: number }} */
@@ -222,6 +222,7 @@ export function createMockBackend() {
   function useStems(d) {
     if (d.usedAt != null || !d.loaded) return;
     d.usedAt = performance.now();
+    d.prepared = d.preparing == null ? 0 : d.usedAt - d.preparing;
   }
   const deckStems = (d) => {
     const is = (state, ready = 0, here = false) => ({ state, ready, here, error: null });
@@ -230,7 +231,8 @@ export function createMockBackend() {
     if (stemsCfg.mode === 'ask') return is('ask');
     const now = performance.now();
     if (stemsCfg.mode === 'efficient' && d.usedAt == null) return is('onUse');
-    const from = Math.max(stemsModel.at, d.usedAt ?? d.splitFrom);
+    // Preparing counts towards the wait for as long as it went on.
+    const from = Math.max(stemsModel.at, d.usedAt == null ? d.splitFrom : d.usedAt - d.prepared);
     if (now - from < LOAD_MS) return is('starting');
     const ready = Math.min(1, (now - from - LOAD_MS) / 20000);
     return is(ready >= 1 ? 'ready' : 'splitting', ready, now - from >= LOAD_MS + REGION_MS);
@@ -520,7 +522,7 @@ export function createMockBackend() {
       Object.assign(d, {
         loaded: true, playing: false, synced: false, position: saved?.cue ?? 0, cue: 0, duration, bpm, firstBeat: 0, key: st ? st.key : { tonic: seed % 12, minor: seed % 3 !== 0 },
         waveform: fakeWaveform(seed, duration, bpm || 120), generation: d.generation + 1, ...freshLoops(), path,
-        stems: 0b1111, splitFrom: performance.now(), usedAt: null, keyShift: 0,
+        stems: 0b1111, splitFrom: performance.now(), usedAt: null, prepared: 0, preparing: null, keyShift: 0,
       }, saved ? { ...saved, hotCues: [...saved.hotCues] } : {});
       return {
         title: t.title, path, duration, sampleRate: 44100,
@@ -563,6 +565,11 @@ export function createMockBackend() {
       for (const d of decks) d.splitFrom = performance.now();
       setModel({ error: stemsModel.error });
       return { ...stemsCfg, modelBytes: 510_700_000, model: stemsModel };
+    },
+    prepareStems: async (deck, on) => {
+      const d = decks[deck];
+      if (on) d.preparing ??= performance.now();
+      else d.preparing = null;
     },
     useStems: async (deck) => useStems(decks[deck]),
     clearStemsCache: async () => {

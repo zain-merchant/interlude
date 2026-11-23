@@ -46,7 +46,9 @@ fn output(path: &Path) -> Vec<u32> {
     let mut m = Model::load(path).expect("loads");
     let n = m.segment();
     let audio: Vec<f32> = (0..n).map(|i| (i as f32 * 0.05).sin() * 0.4).collect();
-    let out = m.run(&audio, &audio).expect("runs");
+    let out = m
+        .run(&audio, &audio, &dj_stems::Stop::new().unwrap())
+        .expect("runs");
     [out.vocals, out.bass, out.drums]
         .iter()
         .flatten()

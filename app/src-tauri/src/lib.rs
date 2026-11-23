@@ -1028,6 +1028,7 @@ pub fn run() {
             library::import_run,
             stems::stems_info,
             stems::set_stems,
+            stems::prepare_stems,
             stems::use_stems,
             stems::clear_stems_cache,
             stems::stems_model,

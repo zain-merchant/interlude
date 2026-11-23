@@ -10,7 +10,7 @@
   import { tracks } from './engine.svelte.js';
   import { tip, tipText } from './tooltip.svelte.js';
   import { keyLabel } from './commands.js';
-  import { STEMS, stemsOf, usable, waiting, soloed, toggleStem, soloStem, chooseStems } from './stems.svelte.js';
+  import { STEMS, stemsOf, usable, waiting, soloed, toggleStem, soloStem, chooseStems, prepares } from './stems.svelte.js';
   import { stemsModel, downloadStems, watchStemsModel } from './stemsmodel.svelte.js';
   import { percent, progressText, stemsStatus, STEMS_MODES, STEMS_WHAT } from './stemsmodel.js';
   import { flag } from '../flags/registry.svelte.js';
@@ -130,7 +130,7 @@
 
 <svelte:window onkeydowncapture={moreKey} onpointerdown={(e) => { if (more && !root?.contains(/** @type {Node} */ (e.target))) more = false; }} onresize={() => (more = false)} />
 
-<div class="stems" role="group" aria-label="{flag('deck-names') ? (deck === 0 ? 'Left deck' : 'Right deck') : `Deck ${'AB'[deck]}`} stems" style:--deck={deck === 0 ? 'var(--deck-a)' : 'var(--deck-b)'} bind:this={root}>
+<div class="stems" use:prepares={() => ({ deck })} role="group" aria-label="{flag('deck-names') ? (deck === 0 ? 'Left deck' : 'Right deck') : `Deck ${'AB'[deck]}`} stems" style:--deck={deck === 0 ? 'var(--deck-a)' : 'var(--deck-b)'} bind:this={root}>
   {#if asking}
     <div class="choice">
       <div class="options" role="group" aria-label="How should stems work?">

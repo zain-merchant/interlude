@@ -11,6 +11,12 @@
 //! the one whose ready audio runs out soonest goes first. Finished stems
 //! are saved to the cache.
 //!
+//! [`Splitter::prepare`] gets a deck's stems part of the way while it only
+//! looks as if they'll be used: it loads the model and splits the region at
+//! the play head. Once it no longer does, that's dropped at once, and a
+//! region being split is stopped. It isn't done until the model has its
+//! [`quick`] copy, since loading it without takes seconds and a lot of memory.
+//!
 //! The separation model is HTDemucs (Meta, MIT licence), run through ONNX
 //! Runtime on the CPU.
 
@@ -21,13 +27,15 @@ pub mod quick;
 pub mod split;
 
 use std::path::PathBuf;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Condvar, Mutex, MutexGuard};
+use std::time::{Duration, Instant};
 
 use dj_engine::{Stems, Track, NUM_DECKS};
 
 pub use cache::CacheKey;
-pub use model::Model;
-use split::{Plan, Progress};
+pub use model::{Model, Stop};
+use split::{Plan, Progress, Region};
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
@@ -79,6 +87,10 @@ pub enum When {
     /// As soon as a track loads.
     Always,
 }
+
+/// The longest a deck stays prepared: a pointer left lying on its stems
+/// doesn't keep the model in memory for good.
+const HOLD: Duration = Duration::from_secs(30);
 
 /// How the splitter should run. Changing it takes effect on the next region.
 #[derive(Debug, Clone, PartialEq)]
@@ -139,6 +151,11 @@ struct Job {
     /// Its stems have been used, so it's split whatever [`When`] says
     /// (other than never).
     used: bool,
+    /// Its stems look about to be used, until this time.
+    hint: Option<Instant>,
+    /// A region split on the strength of a hint. Kept out of the track's
+    /// stems, which take far more memory, until they're used.
+    ahead: Option<(usize, Region)>,
     failed: Option<String>,
 }
 
@@ -150,6 +167,11 @@ impl Job {
             When::OnUse => self.used,
             When::Always => true,
         }
+    }
+
+    /// It's only to be made ready to split.
+    fn hinted(&self, when: When, now: Instant) -> bool {
+        when == When::OnUse && !self.used && self.hint.is_some_and(|t| t > now)
     }
 
     fn done(&self) -> bool {
@@ -165,13 +187,34 @@ struct State {
     generation: u64,
     model_error: Option<String>,
     model_ready: bool,
+    /// The region being split: its deck, its job and how to stop it.
+    running: Option<(usize, u64, Arc<Stop>)>,
     next_id: u64,
     shutdown: bool,
+}
+
+impl State {
+    /// Stops the region being split if nothing has a use for it any more.
+    fn stop_unneeded(&self) {
+        let Some((deck, id, stop)) = &self.running else {
+            return;
+        };
+        let when = self.settings.when;
+        let now = Instant::now();
+        let needed = self.jobs[*deck]
+            .as_ref()
+            .is_some_and(|j| j.id == *id && (j.wanted(when) || j.hinted(when, now)));
+        if !needed {
+            stop.stop();
+        }
+    }
 }
 
 struct Shared {
     state: Mutex<State>,
     wake: Condvar,
+    /// Times the model has been loaded.
+    loads: AtomicUsize,
 }
 
 /// Splits tracks into stems on a background thread.
@@ -193,6 +236,7 @@ impl Splitter {
                 ..Default::default()
             }),
             wake: Condvar::new(),
+            loads: AtomicUsize::new(0),
         });
         let heads = Arc::new(heads);
         let worker = {
@@ -233,6 +277,7 @@ impl Splitter {
             if st.settings.when == When::Never {
                 st.jobs = Default::default();
             }
+            st.stop_unneeded();
         }
         self.shared.wake.notify_all();
     }
@@ -259,8 +304,11 @@ impl Splitter {
             looked: false,
             progress: None,
             used: false,
+            hint: None,
+            ahead: None,
             failed: None,
         });
+        st.stop_unneeded();
         drop(st);
         self.shared.wake.notify_all();
     }
@@ -270,11 +318,26 @@ impl Splitter {
         self.with_job(deck, |job| job.used = true);
     }
 
+    /// `deck`'s stems look about to be used (`on`), or no longer do. Does
+    /// nothing unless tracks are split on use.
+    pub fn prepare(&self, deck: usize, on: bool) {
+        self.with_job(deck, |job| job.hint = on.then(|| Instant::now() + HOLD));
+    }
+
     fn with_job(&self, deck: usize, f: impl FnOnce(&mut Job)) {
-        if let Some(job) = self.lock().jobs.get_mut(deck).and_then(|j| j.as_mut()) {
+        let mut st = self.lock();
+        if let Some(job) = st.jobs.get_mut(deck).and_then(|j| j.as_mut()) {
             f(job);
         }
+        st.stop_unneeded();
+        drop(st);
         self.shared.wake.notify_all();
+    }
+
+    /// Times the model has been loaded, for tests.
+    #[doc(hidden)]
+    pub fn model_loads(&self) -> usize {
+        self.shared.loads.load(Ordering::Relaxed)
     }
 
     /// Whether `deck` can play its stems where its play head is.
@@ -292,9 +355,11 @@ impl Splitter {
 
     /// Stops splitting for `deck` (its track was ejected).
     pub fn stop(&self, deck: usize) {
-        if let Some(j) = self.lock().jobs.get_mut(deck) {
+        let mut st = self.lock();
+        if let Some(j) = st.jobs.get_mut(deck) {
             *j = None;
         }
+        st.stop_unneeded();
     }
 
     pub fn status(&self, deck: usize) -> Status {
@@ -325,7 +390,13 @@ impl Splitter {
 
 impl Drop for Splitter {
     fn drop(&mut self) {
-        self.lock().shutdown = true;
+        {
+            let mut st = self.lock();
+            st.shutdown = true;
+            if let Some((_, _, stop)) = &st.running {
+                stop.stop();
+            }
+        }
         self.shared.wake.notify_all();
         if let Some(w) = self.worker.take() {
             let _ = w.join();
@@ -349,6 +420,12 @@ enum Task {
         id: u64,
         k: usize,
         plan: Plan,
+        track: Arc<Track>,
+    },
+    /// Put a region that was split ahead of use into the track's stems.
+    Commit {
+        deck: usize,
+        id: u64,
         track: Arc<Track>,
     },
     /// Load the model.
@@ -389,8 +466,21 @@ impl Worker {
                     if st.generation != self.model_generation {
                         self.model = None;
                     }
-                    if let Some(t) = self.pick(&mut st) {
+                    let now = Instant::now();
+                    Self::let_go(&mut st, now);
+                    if let Some(t) = self.pick(&mut st, now) {
                         break t;
+                    }
+                    let held = st.jobs.iter().flatten().filter_map(|j| j.hint).max();
+                    if let Some(until) = held {
+                        // Something may be about to be used: hold on.
+                        let wait = until.saturating_duration_since(now);
+                        st = shared
+                            .wake
+                            .wait_timeout(st, wait)
+                            .unwrap_or_else(|e| e.into_inner())
+                            .0;
+                        continue;
                     }
                     // Nothing to split: give back the memory the model holds.
                     // Loading it again doesn't take long.
@@ -411,7 +501,20 @@ impl Worker {
         }
     }
 
-    fn pick(&self, st: &mut State) -> Option<Task> {
+    /// Drops what was prepared for uses that never came.
+    fn let_go(st: &mut State, now: Instant) {
+        let on_use = st.settings.when == When::OnUse;
+        for job in st.jobs.iter_mut().flatten() {
+            if job.hint.is_some_and(|t| t <= now || job.used || !on_use) {
+                job.hint = None;
+            }
+            if job.hint.is_none() && !job.wanted(st.settings.when) {
+                job.ahead = None;
+            }
+        }
+    }
+
+    fn pick(&self, st: &mut State, now: Instant) -> Option<Task> {
         let when = st.settings.when;
         // Cache lookups first: they're quick and may save a whole split.
         for (deck, job) in st.jobs.iter().enumerate() {
@@ -425,11 +528,26 @@ impl Worker {
                 });
             }
         }
+        for (deck, job) in st.jobs.iter().enumerate() {
+            if let Some(job) = job.as_ref() {
+                if job.ahead.is_some() && job.wanted(when) {
+                    return Some(Task::Commit {
+                        deck,
+                        id: job.id,
+                        track: job.track.clone(),
+                    });
+                }
+            }
+        }
         let path = st.settings.model.clone()?;
         if st.model_error.is_some() {
             return None;
         }
-        let active = |j: &Job| j.failed.is_none() && j.wanted(when);
+        // Only a model that loads quickly is loaded on a hint.
+        let quick = self.model.is_some()
+            || st.jobs.iter().flatten().any(|j| j.hinted(when, now)) && quick::exists(&path);
+        let active =
+            |j: &Job| j.failed.is_none() && (j.wanted(when) || quick && j.hinted(when, now));
         for job in st.jobs.iter_mut().flatten().filter(|j| active(j)) {
             if job.progress.is_none() {
                 let segment = self.model.as_ref().map_or(DEFAULT_SEGMENT, |m| m.segment());
@@ -446,8 +564,9 @@ impl Worker {
         if self.model.is_none() || self.model_generation != st.generation {
             return Some(Task::LoadModel(path, st.generation));
         }
-        // The deck whose ready audio runs out soonest goes first.
-        let mut best: Option<(f64, Task)> = None;
+        // Tracks that are to be split go before ones that only may be, and
+        // among them the deck whose ready audio runs out soonest goes first.
+        let mut best: Option<((bool, f64), Task)> = None;
         for (deck, job) in st.jobs.iter().enumerate() {
             let Some(job) = job.as_ref().filter(|j| active(j)) else {
                 continue;
@@ -460,10 +579,18 @@ impl Worker {
             let Some(k) = p.next(head) else {
                 continue;
             };
-            let lead = p.lead(head);
-            if best.as_ref().is_none_or(|(l, _)| lead < *l) {
+            let wanted = job.wanted(when);
+            if !wanted {
+                // One region is enough to have ready: the one it'd play
+                // first. A moving deck gets the next one in time.
+                if job.ahead.as_ref().is_some_and(|(have, _)| *have == k) || p.lead(head) > 0.0 {
+                    continue;
+                }
+            }
+            let order = (!wanted, p.lead(head));
+            if best.as_ref().is_none_or(|(o, _)| order < *o) {
                 best = Some((
-                    lead,
+                    order,
                     Task::Region {
                         deck,
                         id: job.id,
@@ -517,6 +644,7 @@ impl Worker {
                 }
             }
             Task::LoadModel(path, generation) => {
+                shared.loads.fetch_add(1, Ordering::Relaxed);
                 let loaded = Model::load(&path);
                 let mut st = lock(&shared);
                 if st.generation != generation {
@@ -538,6 +666,7 @@ impl Worker {
                                         job.track.frames(),
                                         job.track.sample_rate,
                                     ));
+                                    job.ahead = None;
                                 }
                             }
                         }
@@ -560,38 +689,98 @@ impl Worker {
                 let Some(model) = self.model.as_mut() else {
                     return;
                 };
-                let input = plan.input(k, &track.samples);
-                let result = model.run(&input[0], &input[1]);
-                // Made out here, since it takes a moment.
-                let made = result.is_ok().then(|| attach(&track));
-                let mut st = lock(&shared);
-                let cache_limit = st.settings.cache_limit;
-                let cache_dir = st.settings.cache_dir.clone();
-                let Some(job) = st.jobs[deck].as_mut().filter(|j| j.id == id) else {
-                    return;
+                let stop = match Stop::new() {
+                    Ok(s) => Arc::new(s),
+                    Err(e) => return self.fail(deck, id, &e),
                 };
-                match result {
-                    Ok(sep) => {
-                        job.stems = job.stems.take().or(made);
-                        let (Some(p), Some(stems)) = (job.progress.as_mut(), job.stems.clone())
-                        else {
-                            return;
-                        };
-                        p.finish(k, &sep, &stems);
-                        if p.is_done() {
-                            let key = job.key.clone();
-                            drop(st);
-                            if let (Some(dir), Some(key)) = (cache_dir, key) {
-                                if let Err(e) = cache::save(&dir, &key, &stems, cache_limit) {
-                                    eprintln!("stems: couldn't save to the cache: {e}");
-                                }
-                            }
-                        }
+                {
+                    let mut st = lock(&shared);
+                    st.running = Some((deck, id, stop.clone()));
+                    // It may have been let go of since it was picked.
+                    st.stop_unneeded();
+                }
+                let input = plan.input(k, &track.samples);
+                let result = if stop.asked() {
+                    Err(Error::Model("stopped".into()))
+                } else {
+                    model
+                        .run(&input[0], &input[1], &stop)
+                        .map(|sep| plan.output(k, &sep))
+                };
+                lock(&shared).running = None;
+                if result.is_err() && stop.asked() {
+                    // Picked again if it's wanted after all.
+                    return;
+                }
+                let out = match result {
+                    Ok(out) => out,
+                    Err(e) => return self.fail(deck, id, &e),
+                };
+                // Its buffer is made out here, since it takes a moment, but
+                // only for a track that's to be split. It may have been used
+                // while this region ran.
+                let bare = {
+                    let mut st = lock(&shared);
+                    let when = st.settings.when;
+                    let Some(job) = st.jobs[deck].as_mut().filter(|j| j.id == id) else {
+                        return;
+                    };
+                    if !job.wanted(when) {
+                        job.ahead = Some((k, out));
+                        return;
                     }
-                    Err(e) => {
-                        eprintln!("stems: splitting failed: {e}");
-                        job.failed = Some(e.to_string());
-                    }
+                    job.stems.is_none()
+                };
+                let made = bare.then(|| attach(&track));
+                self.finish(deck, id, made, |_| Some((k, out)));
+            }
+            Task::Commit { deck, id, track } => {
+                let stems = attach(&track);
+                self.finish(deck, id, Some(stems), |job| job.ahead.take());
+            }
+        }
+    }
+
+    fn fail(&self, deck: usize, id: u64, e: &Error) {
+        eprintln!("stems: splitting failed: {e}");
+        let mut st = lock(&self.shared);
+        if let Some(job) = st.jobs[deck].as_mut().filter(|j| j.id == id) {
+            job.failed = Some(e.to_string());
+        }
+    }
+
+    /// Puts a region into a job's stems, and saves them to the cache if
+    /// that was the last. `made` is the stems, if the job has none yet.
+    fn finish(
+        &self,
+        deck: usize,
+        id: u64,
+        made: Option<Arc<Stems>>,
+        region: impl FnOnce(&mut Job) -> Option<(usize, Region)>,
+    ) {
+        let mut st = lock(&self.shared);
+        let cache_limit = st.settings.cache_limit;
+        let cache_dir = st.settings.cache_dir.clone();
+        let Some(job) = st.jobs[deck].as_mut().filter(|j| j.id == id) else {
+            return;
+        };
+        let Some((k, out)) = region(job) else {
+            return;
+        };
+        job.ahead = None;
+        if job.stems.is_none() {
+            job.stems = made;
+        }
+        let (Some(p), Some(stems)) = (job.progress.as_mut(), job.stems.clone()) else {
+            return;
+        };
+        p.finish(k, out, &stems);
+        if p.is_done() {
+            let key = job.key.clone();
+            drop(st);
+            if let (Some(dir), Some(key)) = (cache_dir, key) {
+                if let Err(e) = cache::save(&dir, &key, &stems, cache_limit) {
+                    eprintln!("stems: couldn't save to the cache: {e}");
                 }
             }
         }

@@ -397,6 +397,13 @@ pub fn set_stems(
     stems.info()
 }
 
+/// `deck`'s stems look about to be used (the pointer is on them), or no
+/// longer do.
+#[tauri::command]
+pub fn prepare_stems(stems: State<'_, Stems>, deck: usize, on: bool) {
+    stems.splitter.prepare(deck, on);
+}
+
 /// `deck`'s stems are being used: its Stems tab was opened.
 #[tauri::command]
 pub fn use_stems(stems: State<'_, Stems>, deck: usize) {

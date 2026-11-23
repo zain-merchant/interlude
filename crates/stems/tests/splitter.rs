@@ -162,6 +162,7 @@ fn nothing_splits_until_the_user_has_chosen() {
     let a = track(2.0);
     s.split(0, a.clone(), None);
     s.use_stems(0);
+    s.prepare(0, true);
     settle();
     assert_eq!(s.status(0), Status::Unchosen);
     assert!(a.stems.get().is_none(), "no memory taken");
@@ -219,6 +220,126 @@ fn on_use_splits_each_deck_when_its_stems_are_used() {
     settle();
     assert_eq!(s.status(0), Status::OnUse);
     assert!(c.stems.get().is_none());
+}
+
+#[test]
+fn preparing_takes_no_stems_memory_and_is_let_go_at_once() {
+    let s = splitter(When::OnUse, Some(model()));
+    let a = track(2.0);
+    s.split(0, a.clone(), None);
+    s.prepare(0, true);
+    settle();
+    // It's still only a maybe.
+    assert_eq!(s.status(0), Status::OnUse);
+    assert!(a.stems.get().is_none());
+    assert_eq!(s.model_loads(), 1);
+    s.prepare(0, false);
+    settle();
+    assert_eq!(s.status(0), Status::OnUse);
+    assert!(a.stems.get().is_none());
+    // The model was dropped, so using it now loads it again, and works.
+    s.use_stems(0);
+    wait_ready(&s, 0);
+    check(&a);
+    assert_eq!(s.model_loads(), 2);
+}
+
+/// Crossing the stems over and over: whatever is loading when the pointer
+/// comes back is used, and nothing is left running or queued afterwards.
+#[test]
+fn crossing_in_and_out_never_piles_up() {
+    let s = splitter(When::OnUse, Some(model()));
+    let a = track(2.0);
+    s.split(0, a.clone(), None);
+    settle();
+    let started = Instant::now();
+    for _ in 0..500 {
+        s.prepare(0, true);
+        s.prepare(0, false);
+    }
+    assert!(
+        started.elapsed() < Duration::from_secs(1),
+        "never waits for the worker"
+    );
+    settle();
+    let loads = s.model_loads();
+    assert!(loads < 100, "{loads} loads for 500 crossings");
+    settle();
+    assert_eq!(s.model_loads(), loads, "nothing queued");
+    assert!(a.stems.get().is_none());
+    assert_eq!(s.status(0), Status::OnUse);
+    // Ending on the stems, it's prepared, and a use still works.
+    s.prepare(0, true);
+    settle();
+    let ready = s.model_loads();
+    s.use_stems(0);
+    wait_ready(&s, 0);
+    check(&a);
+    assert_eq!(s.model_loads(), ready, "used what was prepared");
+}
+
+/// The region is stopped, not finished, and that isn't a failure.
+#[test]
+fn a_stopped_region_is_not_a_failure() {
+    let mut m = dj_stems::Model::load(&model()).unwrap();
+    let n = m.segment();
+    let quiet = vec![0.0; n];
+    let stop = dj_stems::Stop::new().unwrap();
+    stop.stop();
+    assert!(m.run(&quiet, &quiet, &stop).is_err());
+    assert!(stop.asked());
+    // The next run is its own.
+    assert!(m
+        .run(&quiet, &quiet, &dj_stems::Stop::new().unwrap())
+        .is_ok());
+}
+
+/// Tracks loaded one after another: only the last is split, and what was
+/// being split for the others is stopped.
+#[test]
+fn rapid_loads_split_only_the_last() {
+    let s = splitter(When::Always, Some(model()));
+    let tracks: Vec<_> = (0..20).map(|_| track(60.0)).collect();
+    for t in &tracks {
+        s.split(0, t.clone(), None);
+    }
+    wait_ready(&s, 0);
+    check(&tracks[19]);
+    for t in &tracks[..19] {
+        assert!(!t.stems.get().is_some_and(|s| s.is_complete()));
+    }
+}
+
+#[test]
+fn what_was_prepared_is_used() {
+    let s = splitter(When::OnUse, Some(model()));
+    let a = track(2.0);
+    s.split(0, a.clone(), None);
+    s.prepare(0, true);
+    settle();
+    s.use_stems(0);
+    wait_ready(&s, 0);
+    check(&a);
+}
+
+#[test]
+fn preparing_does_nothing_when_it_is_not_for_this_mode() {
+    let s = splitter(When::Unchosen, Some(model()));
+    let a = track(2.0);
+    s.split(0, a.clone(), None);
+    s.prepare(0, true);
+    s.prepare(5, true);
+    s.use_stems(5);
+    settle();
+    assert_eq!(s.status(0), Status::Unchosen);
+    // Letting go of a hover that never was isn't one.
+    s.configure(Settings {
+        when: When::OnUse,
+        ..s.settings()
+    });
+    s.prepare(0, false);
+    settle();
+    assert_eq!(s.status(0), Status::OnUse);
 }
 
 #[test]
@@ -363,6 +484,30 @@ fn makes_a_quick_copy_when_idle() {
     }
     let a = track(2.0);
     s.split(0, a.clone(), None);
+    wait_ready(&s, 0);
+    check(&a);
+    drop(s);
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+/// Until the model loads quickly, only a use loads it.
+#[test]
+fn nothing_is_prepared_without_a_quick_copy() {
+    let dir = std::env::temp_dir().join(format!("stems-slow-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).unwrap();
+    let path = dir.join("m.onnx");
+    std::fs::copy(model(), &path).unwrap();
+    let s = splitter(When::OnUse, Some(path.clone()));
+    until("a copy", || dj_stems::quick::exists(&path));
+    settle();
+    dj_stems::quick::remove(&path).unwrap();
+    let a = track(2.0);
+    s.split(0, a.clone(), None);
+    s.prepare(0, true);
+    settle();
+    assert_eq!(s.model_loads(), 0);
+    s.use_stems(0);
     wait_ready(&s, 0);
     check(&a);
     drop(s);

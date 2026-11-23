@@ -73,6 +73,54 @@ export function openedStems(deck) {
   if (tracks[deck] && stemsModel.mode !== 'ask') backend.useStems?.(deck);
 }
 
+/**
+ * Prepares a deck's stems while the pointer or the keyboard focus is on
+ * `node`, so a press is heard sooner when tracks are split on use. It starts
+ * at once and is let go of at once.
+ * @param {HTMLElement} node
+ * @param {() => { deck: number, on?: boolean }} get
+ */
+export function prepares(node, get) {
+  // The deck it was started for, so it's that one that's let go.
+  let sent = -1;
+  let over = false;
+  let focused = false;
+  const update = () => {
+    const { deck, on = true } = get();
+    const want = (over || focused) && on && !!tracks[deck] && stemsModel.mode === 'efficient' && stemsOf(deck).state === 'onUse';
+    if (want && sent < 0) {
+      sent = deck;
+      backend.prepareStems?.(deck, true);
+    } else if (!over && !focused && sent >= 0) {
+      backend.prepareStems?.(sent, false);
+      sent = -1;
+    }
+  };
+  /** @type {[string, (e: any) => void][]} */
+  const events = [
+    ['pointerenter', () => (over = true)],
+    ['pointerleave', () => (over = false)],
+    // A pointer that has pressed is on it, whatever it did to what's under it.
+    ['focusin', () => (focused = true)],
+    ['focusout', (e) => (focused = node.contains(e.relatedTarget))],
+  ];
+  const bound = events.map(([type, set]) => {
+    const fn = (e) => {
+      set(e);
+      update();
+    };
+    node.addEventListener(type, fn);
+    return () => node.removeEventListener(type, fn);
+  });
+  return {
+    destroy() {
+      bound.forEach((off) => off());
+      over = focused = false;
+      update();
+    },
+  };
+}
+
 /** Puts every stem back on where one was left muted with nothing to mute it: stems turned off, removed or failed. */
 export function dropWaiting(deck) {
   if (stemsOf(deck).mask !== ALL) control({ type: 'setStems', deck, mask: ALL });

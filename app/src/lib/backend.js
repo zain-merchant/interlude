@@ -79,6 +79,8 @@ async function createTauriBackend() {
     /** @param {{ mode?: import('./stemsmodel.js').StemsMode, cacheGb?: number }} change */
     setStems: (change) => invoke('set_stems', change),
     clearStemsCache: () => invoke('clear_stems_cache'),
+    /** A deck's stems look about to be used (the pointer is on them), or no longer do. */
+    prepareStems: (deck, on) => invoke('prepare_stems', { deck, on }),
     /** A deck's stems are being used: its Stems tab was opened. */
     useStems: (deck) => invoke('use_stems', { deck }),
     /** How the model download is doing. @returns {Promise<import('./stemsmodel.js').StemsModel>} */
