@@ -26,6 +26,8 @@
   import { installAppMenu } from './lib/appmenu.js';
   import { runPerformance } from './lib/performance.js';
   import { flag, setting } from './flags/registry.svelte.js';
+  import Status from './flags/112-shell-status/Status.svelte'; // #112 (UI audit flag)
+  import { open as shellOpen } from './flags/112-shell-status/connections.svelte.js'; // #112 (UI audit flag)
   import { start as startSquircles } from './flags/01-squircles/squircles.js';
   import { padMode, setPadMode } from './lib/padmode.svelte.js';
   import { tempoPickup } from './lib/pickup.svelte.js';
@@ -678,6 +680,7 @@
   $effect(() => (flag('squircles') ? startSquircles() : undefined));
 
   onMount(() => {
+    Object.assign(shellOpen, { settings: openSettings, setup: openControllerSetup }); // #112 (UI audit flag): shell-status
     captureUiErrors();
     libraryHealth().then((h) => (health = h)).catch(() => {});
     const updateTimer = setTimeout(() => checkForUpdate(), 8000);
@@ -731,6 +734,7 @@
          to zoom it. -->
     <div class="drag" data-tauri-drag-region aria-hidden="true"></div>
   {/if}
+  {#if flag('shell-status') && setting('shell-status', 'place') === 'titlebar'}<Status bar />{/if}<!-- #112 (UI audit flag): shell-status -->
   <div class="waves glass" data-region="waves" role="group" aria-label="Waveforms">
     {#each [0, 1] as deck}
       <div class="lane" style:--drop-color={deck === 0 ? 'var(--deck-a)' : 'var(--deck-b)'} class:b={deck === 1}

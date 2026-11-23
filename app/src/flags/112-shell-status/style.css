@@ -1,0 +1,271 @@
+/* #112 shell-status. The items are text controls, as the deck's key is: no
+   face, a tone on hover, a chevron. Red is only for no sound. */
+:root[data-flag-shell-status] .shell {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+:root[data-flag-shell-status] .shell .st {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: var(--h-md);
+  min-width: 32px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: var(--r);
+  background: none;
+  color: var(--fg-2);
+  font: 500 var(--t-sm) / 1 var(--font);
+  white-space: nowrap;
+  transition: background-color 120ms ease-out, color 120ms ease-out;
+}
+:root[data-flag-shell-status] .shell .st:is(:hover, .open) {
+  background: var(--hover);
+  color: var(--fg);
+}
+:root[data-flag-shell-status] .shell .st.bad {
+  color: var(--kill);
+}
+:root[data-flag-shell-status] .shell .st svg {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.35;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+:root[data-flag-shell-status] .shell .st .cv {
+  width: 10px;
+  height: 10px;
+  margin-left: -2px;
+  opacity: 0.7;
+}
+:root[data-flag-shell-status] .shell .nm {
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.4;
+}
+:root[data-flag-shell-status] .shell .bad .nm {
+  max-width: 220px;
+}
+
+/* ── In the library's toolbar ──────────────────────────────────────────
+   What gives way, in order (Status.svelte turns data-fit up until it
+   fits): the search field to 200px; "analyzing" and "Downloading stems,"
+   to their numbers; Sampler's label; the two names; the count. */
+:root[data-flag-shell-status] section.library .main > .bar > * {
+  flex: none;
+}
+:root[data-flag-shell-status] section.library .main > .bar > .search {
+  flex: 0 1 360px;
+  min-width: 200px;
+  max-width: none;
+}
+:root[data-flag-shell-status] section.library .main > .bar > .count {
+  white-space: nowrap;
+}
+:root[data-flag-shell-status] section.library .main > .bar:has(.shell-act) > .count .pending {
+  display: none;
+}
+:root[data-flag-shell-status] section.library .bar .shell-act {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--fg-3);
+  font-size: var(--t-xs);
+}
+:root[data-flag-shell-status] section.library .bar .shell-act i {
+  width: 48px;
+  height: 2px;
+  margin-left: 4px;
+  overflow: hidden;
+  border-radius: 1px;
+  background: var(--line-2);
+}
+:root[data-flag-shell-status] section.library .bar .shell-act u {
+  display: block;
+  height: 100%;
+  background: var(--fg-3);
+  transform-origin: left;
+  transition: transform 0.3s;
+}
+:root[data-flag-shell-status] section.library .bar:is([data-fit='1'], [data-fit='2'], [data-fit='3'], [data-fit='4']) :is(.shell-act .w, .shell-act i) {
+  display: none;
+}
+:root[data-flag-shell-status] section.library .bar:is([data-fit='1'], [data-fit='2'], [data-fit='3'], [data-fit='4']) .count .pending::after {
+  display: none;
+}
+:root[data-flag-shell-status] section.library .bar:is([data-fit='2'], [data-fit='3'], [data-fit='4']) .samp {
+  width: 32px;
+  padding: 0;
+  gap: 0;
+  font-size: 0;
+  justify-content: center;
+  place-items: center;
+}
+:root[data-flag-shell-status] section.library .bar:is([data-fit='3'], [data-fit='4']) .shell .nm {
+  display: none;
+}
+:root[data-flag-shell-status] section.library .bar[data-fit='4'] > .count:not(.shell-act) {
+  display: none;
+}
+
+/* ── In the title bar ────────────────────────────────────────────────── */
+:root[data-flag-shell-status][data-flag-shell-status-place='titlebar'] section.library .bar .gear {
+  display: none;
+}
+/* The strip is there on the Mac (32px, where the window's buttons are). In
+   a browser it's made: 20px over the app's own 12. */
+:root[data-flag-shell-status][data-flag-shell-status-place='titlebar'] .app:not(.mac-window) {
+  height: calc(100% - 20px);
+  top: 20px;
+}
+:root[data-flag-shell-status] .shell.bar {
+  position: fixed;
+  z-index: 6;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 32px;
+  box-sizing: border-box;
+  justify-content: flex-end;
+  padding: 0 8px 0 92px;
+}
+:root[data-flag-shell-status] .shell.bar .st {
+  height: 24px;
+  min-width: 24px;
+  border-radius: 6px;
+  font-size: 12px;
+}
+:root[data-flag-shell-status] .shell.bar .st.cog {
+  padding: 0 4px;
+}
+:root[data-flag-shell-status] .shell.bar .st.cog svg {
+  stroke-width: 2;
+}
+
+/* ── The menu ──────────────────────────────────────────────────────────
+   Corners nest: the menu is 12 with 4 of padding, so a row is 8; a key in
+   a 32px row sits 4 in, so it is 4. */
+:root[data-flag-shell-status] .shell-pop {
+  position: fixed;
+  z-index: 60;
+  box-sizing: border-box;
+  width: 320px;
+  padding: 4px;
+  border-radius: 12px;
+  background: var(--rg-float, var(--popover));
+  box-shadow: var(--rg-float-edge, inset 0 0 0 1px var(--line-2), 0 12px 32px rgb(0 0 0 / 0.45));
+  color: var(--fg);
+  font: 400 var(--t-sm) / 18px var(--font);
+}
+:root[data-flag-shell-status] .shell-pop:focus {
+  outline: none;
+}
+:root[data-flag-shell-status] .shell-pop h6 {
+  margin: 0;
+  padding: 8px 12px 4px;
+  color: var(--fg-3);
+  font: 500 var(--t-xs) / 16px var(--font);
+}
+:root[data-flag-shell-status] .shell-pop :is(.rw, .ln) {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-sizing: border-box;
+  width: 100%;
+  height: 32px;
+  padding: 0 4px 0 12px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--fg);
+  font: inherit;
+  text-align: left;
+}
+:root[data-flag-shell-status] .shell-pop .rw:is(:hover, :focus-visible):not(:disabled) {
+  background: var(--sel);
+}
+:root[data-flag-shell-status][data-input='keys'] .shell-pop .rw:focus-visible {
+  outline: 2px solid var(--focus-ring, var(--fg-2));
+  outline-offset: -2px;
+}
+:root[data-flag-shell-status] .shell-pop .rw:not([data-input]):focus-visible {
+  outline: none;
+}
+:root[data-flag-shell-status] .shell-pop .rw i {
+  flex: none;
+  display: grid;
+  width: 12px;
+}
+:root[data-flag-shell-status] .shell-pop .rw svg {
+  width: 12px;
+  height: 12px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+:root[data-flag-shell-status] .shell-pop :is(.rw, .ln) > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+:root[data-flag-shell-status] .shell-pop small {
+  margin-left: auto;
+  padding: 0 8px 0 12px;
+  flex: none;
+  max-width: 170px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--fg-3);
+  font-size: 12px;
+}
+:root[data-flag-shell-status] .shell-pop .k {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  margin-left: auto;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 4px;
+  background: var(--rg-key, var(--raise)) linear-gradient(rgb(255 255 255 / 0.035), transparent);
+  box-shadow: var(--rg-key-edge, inset 0 0 0 1px var(--line-2));
+  color: var(--fg);
+  font: 500 12px / 1 var(--font);
+}
+:root[data-flag-shell-status] .shell-pop button.k:hover {
+  background-color: var(--rg-key-hi, var(--hover));
+}
+:root[data-flag-shell-status] .shell-pop p {
+  margin: 0;
+  padding: 4px 12px 8px 32px;
+  color: var(--fg-3);
+  font-size: 12px;
+  line-height: 16px;
+}
+:root[data-flag-shell-status] .shell-pop p.none {
+  padding-left: 12px;
+}
+:root[data-flag-shell-status] .shell-pop p.err {
+  color: var(--kill);
+}
+:root[data-flag-shell-status] .shell-pop hr {
+  height: 1px;
+  margin: 4px 12px;
+  border: 0;
+  background: var(--line);
+}
+/* The right-click menu's rows nest the same way (the browser's stand-in; on the Mac that menu is the system's). */
+:root[data-flag-shell-status][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .menu button {
+  border-radius: 8px;
+}

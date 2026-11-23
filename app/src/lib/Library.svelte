@@ -1,4 +1,6 @@
 <script>
+  import Status from '../flags/112-shell-status/Status.svelte'; // #112 (UI audit flag)
+  import Activity from '../flags/112-shell-status/Activity.svelte'; // #112 (UI audit flag)
   import { flag, setting } from '../flags/registry.svelte.js';
   import { onMount, tick, untrack } from 'svelte';
   import { backend } from './backend.js';
@@ -860,6 +862,7 @@
       <span class="count num">{loading ? 'Scanning…' : countText}{#if !loading && pending}<span
           class="pending" style:--flag-visual-analysis-done={analysisDone} use:tip={() => 'Finding each track’s length, BPM and key in the background'}> · analyzing, {pending.toLocaleString()} to go</span>{/if}</span>
       {/if}
+      {#if flag('shell-status')}<Activity />{/if}<!-- #112 (UI audit flag): shell-status -->
       <button class="btn sm samp" class:on={sampler.open} aria-pressed={sampler.open}
         onclick={() => setSamplerOpen(!sampler.open)}
         use:tip={() => tipText(sampler.open ? 'Hide sampler' : 'Show sampler', keyLabel('view.sampler'),
@@ -867,6 +870,7 @@
           flag('tooltip-wrap') ? 'Eight one-shot sounds to fire over the mix.' : 'eight one-shot sounds to fire over the mix')}>
         <svg viewBox="0 0 12 12" aria-hidden="true"><rect x="1.5" y="1.5" width="3.5" height="3.5" rx="1" /><rect x="7" y="1.5" width="3.5" height="3.5" rx="1" /><rect x="1.5" y="7" width="3.5" height="3.5" rx="1" /><rect x="7" y="7" width="3.5" height="3.5" rx="1" /></svg>Sampler
       </button>
+      {#if flag('shell-status') && setting('shell-status', 'place') === 'library'}<Status />{/if}<!-- #112 (UI audit flag): shell-status -->
       {#if onsettings}
         <!-- Always here, however long the sidebar gets. -->
         <button class="btn sm gear" onclick={onsettings} aria-label="Settings"
