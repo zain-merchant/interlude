@@ -3,24 +3,25 @@
 // A DialKit panel (vendored in dialkit/) with the look and the sliders that
 // look has, shown while the flag is on. The registry holds the values; the
 // panel reads and writes them there. ⌥W goes to the next look and ⌥⇧W back,
-// ⌥1 to ⌥7 pick one (and turn the flag on). No app shortcut uses ⌥.
+// ⌥1 to ⌥6 pick one (and turn the flag on). No app shortcut uses ⌥.
 import { flags, flag, setting } from '../registry.svelte.js';
 import { showToast } from '../../lib/undo.svelte.js';
-import { LOOKS, PARAMS, lookOf } from './looks.js';
+import { LOOKS, LINES, PARAMS, lookOf } from './looks.js';
+import { lookNow } from './look.js';
 
 const ID = 'wave-looks';
 let kit = null;
 let busy = false;
 let shown = '';
 
-const look = () => lookOf(setting(ID, 'look'));
+const look = lookNow;
 const value = (l, k) => Number(setting(ID, `${l.id}-${k}`) ?? l.values[k]);
-const toggles = new Set(['lock', 'beats']);
+const toggles = new Set(['lock']);
 const name = (k) => PARAMS[k][0] + (PARAMS[k][4] ? ` (${PARAMS[k][4]})` : '');
 
 /** The panel's controls for a look; `at` gives each value's start (its default, for DialKit's reset). */
 function config(l) {
-  const c = { Look: { type: 'select', options: LOOKS.map((x, i) => ({ value: x.id, label: `${i + 1}  ${x.name}` })), default: 'today' }, 'Copy values': { type: 'action' } };
+  const c = { Look: { type: 'select', options: LOOKS.map((x, i) => ({ value: x.id, label: `${i + 1}  ${x.name}` })), default: 'exact' }, ...(l.draw ? { 'Beat lines': { type: 'select', options: LINES.map(([value, label]) => ({ value, label })), default: 'ticks' } } : {}), 'Copy values': { type: 'action' } };
   for (const [k, v] of Object.entries(l.values)) {
     const [, min, max, step, , folder] = PARAMS[k];
     // The folder that matters most for the look starts open.
@@ -30,7 +31,7 @@ function config(l) {
   return c;
 }
 const values = (l) => {
-  const v = { Look: l.id };
+  const v = { Look: l.id, ...(l.draw ? { 'Beat lines': setting(ID, 'lines') } : {}) };
   for (const k in l.values) (v[PARAMS[k][5]] ??= {})[name(k)] = toggles.has(k) ? !!value(l, k) : value(l, k);
   return v;
 };
@@ -39,6 +40,7 @@ const values = (l) => {
 function text() {
   const l = look();
   const lines = [`Waveform: ${l.name}`];
+  if (l.draw) lines.push(`Beat lines: ${LINES.find(([v]) => v === setting(ID, 'lines'))?.[1]}`);
   for (const k in l.values) {
     const v = value(l, k);
     lines.push(`${PARAMS[k][0]}: ${toggles.has(k) ? (v ? 'on' : 'off') : `${v}${PARAMS[k][4] && ` ${PARAMS[k][4]}`}`}${v === l.values[k] ? '' : ` (was ${l.values[k]})`}`);
@@ -81,6 +83,7 @@ function read(v) {
   if (busy) return;
   if (v.Look !== look().id) return pick(v.Look, false);
   const l = look();
+  if (v['Beat lines'] && v['Beat lines'] !== setting(ID, 'lines')) flags.settings[ID].lines = v['Beat lines'];
   for (const k in l.values) {
     const x = v[PARAMS[k][5]]?.[name(k)];
     if (x !== undefined && Number(x) !== value(l, k)) flags.settings[ID][`${l.id}-${k}`] = Number(x);
@@ -88,7 +91,7 @@ function read(v) {
 }
 function pick(id, say = true) {
   flags.on[ID] = true;
-  flags.settings[ID].look = id;
+  flags.settings[ID].pick = id;
   // After DialKit's own update has settled.
   queueMicrotask(fill);
   if (say) showToast(lookOf(id).name);
@@ -131,6 +134,6 @@ addEventListener('keydown', key, true);
 $effect.root(() => {
   $effect(() => {
     if (flag(ID)) open();
-    void setting(ID, 'look');
+    void setting(ID, 'pick');
   });
 });

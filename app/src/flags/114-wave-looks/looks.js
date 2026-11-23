@@ -3,6 +3,7 @@
 // Every look but Today is drawn by wave.js on one core: a level per band per
 // bin, smoothed only after a hit unless "before" says otherwise, drawn at one
 // device pixel a column. `today` has no values: it's the app's own drawing.
+// Today exact is what Direction 110 draws unless this flag picks another.
 
 const SMOOTH = (after, before = [0, 0, 0]) => ({
   a0: after[0], a1: after[1], a2: after[2],
@@ -20,6 +21,7 @@ export const PARAMS = {
   b2: ['Before the hit: highs', 0, 60, 1, 'ms', 'Smoothing'],
   soft: ['Softness between hits', 0, 8, 0.25, 'px', 'Smoothing'],
   hit: ['Smallest hit kept sharp', 2, 40, 1, '%', 'Smoothing'],
+  ease: ['Ease the spikes', 0, 100, 5, '%', 'Smoothing'],
   h0: ['Bass height', 10, 100, 1, '%', 'Heights'],
   h1: ['Mids height', 10, 100, 1, '%', 'Heights'],
   h2: ['Highs height', 10, 100, 1, '%', 'Heights'],
@@ -30,7 +32,6 @@ export const PARAMS = {
   w: ['Mark width', 0.5, 12, 0.25, 'px', 'Marks'],
   gap: ['Gap', 0.5, 8, 0.25, 'px', 'Marks'],
   lock: ['Pitch follows the beat', 0, 1, 1, '', 'Marks'],
-  beats: ['Beat lines to the pixel', 0, 1, 1, '', 'Drawing'],
 };
 
 const RIBBON = { out: 55, outw: 1, glow: 100, grad: 65 };
@@ -39,19 +40,29 @@ const ATTACK = SMOOTH([75, 55, 28]);
 /** The looks in the order the step key goes through them: id, name, how it's drawn, and its values. */
 export const LOOKS = [
   { id: 'today', name: 'Today', draw: null, values: {} },
-  { id: 'exact', name: 'Today exact', draw: 'ribbon', values: { ...SMOOTH([25, 22, 18]), soft: 4, hit: 15, ...HEIGHTS, ...RIBBON, beats: 1 } },
-  { id: 'attack', name: 'Attack', draw: 'ribbon', values: { ...ATTACK, ...HEIGHTS, ...RIBBON, beats: 1 } },
-  { id: 'nested', name: 'Nested', draw: 'nested', values: { ...ATTACK, ...HEIGHTS, out: 0, outw: 1, beats: 1 } },
-  { id: 'pills', name: 'Pills', draw: 'pills', values: { ...ATTACK, ...HEIGHTS, w: 4.75, gap: 2.5, lock: 1, beats: 1 } },
-  { id: 'narrow', name: 'Narrower pills', draw: 'pills', values: { ...ATTACK, ...HEIGHTS, w: 2.5, gap: 2, lock: 1, beats: 1 } },
-  { id: 'ticks', name: 'Tapered ticks', draw: 'ticks', values: { ...ATTACK, ...HEIGHTS, w: 3, gap: 0.75, lock: 1, beats: 1 } },
+  { id: 'exact', name: 'Today exact', draw: 'ribbon', values: { ...SMOOTH([25, 22, 18]), soft: 4, hit: 15, ease: 100, ...HEIGHTS, ...RIBBON } },
+  { id: 'attack', name: 'Attack', draw: 'ribbon', values: { ...ATTACK, ...HEIGHTS, ...RIBBON } },
+  { id: 'pills', name: 'Pills', draw: 'pills', values: { ...ATTACK, ...HEIGHTS, w: 4.75, gap: 2.5, lock: 1 } },
+  { id: 'narrow', name: 'Narrower pills', draw: 'pills', values: { ...ATTACK, ...HEIGHTS, w: 2.5, gap: 2, lock: 1 } },
+  { id: 'ticks', name: 'Tapered ticks', draw: 'ticks', values: { ...ATTACK, ...HEIGHTS, w: 3, gap: 0.75, lock: 1 } },
 ];
-export const lookOf = (id) => LOOKS.find((l) => l.id === id) ?? LOOKS[0];
+export const lookOf = (id) => LOOKS.find((l) => l.id === id) ?? LOOKS[1];
+/** What Direction 110 draws. */
+export const DEFAULT = 'exact';
+
+/** How the beats are marked over the sound, for every look but Today. */
+export const LINES = [
+  ['full', 'Full lines', "As strong as today's."],
+  ['faint', 'Fainter lines', 'A line on every beat, about a third as strong; the ticks at the edges keep the beat.'],
+  ['ticks', 'Edge ticks', 'Beats are short ticks at both edges; only bars are lines.'],
+  ['dots', 'Bars and dots', 'Bars are lines; beats are dots on the rims.'],
+];
 
 /** Registry settings: the look, and every look's values under `<look>-<value>`. */
 export function settings() {
   const out = {
-    look: { type: 'choice', label: 'Look', default: 'today', options: LOOKS.map((l) => [l.id, l.name]) },
+    pick: { type: 'choice', label: 'Look', default: DEFAULT, options: LOOKS.map((l) => [l.id, l.name]) },
+    lines: { type: 'choice', label: 'Beat lines', default: 'ticks', options: LINES },
   };
   for (const l of LOOKS) {
     for (const [k, v] of Object.entries(l.values)) {
