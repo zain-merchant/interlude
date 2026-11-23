@@ -4,6 +4,8 @@
   import { tracks, engine, displayPos, displaySlip, onFrame, scrubStart, scrubTo, scrubEnd, wake } from './engine.svelte.js';
   import { flag, flagsRev, watchFlags, DIRECTIONS } from '../flags/registry.svelte.js';
   import { waveOptions as roomTintWave } from '../flags/110-dir-room-tint/wave.js'; // #110 (UI audit flag)
+  import { lookString } from '../flags/114-wave-looks/look.js'; // #114 (UI audit flag)
+  import { trackpadZoom } from '../flags/115-trackpad-zoom/zoom.js'; // #115 (UI audit flag)
   import { openMenu } from './menu.svelte.js';
   import { gridMenu, gridMode, startSlide, slide, endSlide } from './grid.svelte.js';
 
@@ -33,6 +35,8 @@
   // change the theme's colours: the canvas reads them again whenever any
   // flag or setting changes (the registry bumps flagsRev), not only for a
   // list of flags that could fall behind.
+  // #114 (UI audit flag): wave-looks' look and its values as one string, '' for the app's own drawing.
+  const wl = $derived(lookString());
   // #43, #50, #52, #54 (UI audit flags): what the canvas draws differently with them on.
   const wf = () => ({
     clipStart: flag('lane-start'),
@@ -54,6 +58,8 @@
     ...(flag('font-special-gothic') ? { labelFont: '"Special Gothic"' } : {}),
     // The directions (#92 and up): the bar number's pill in the theme's ink, not fixed white.
     ...(DIRECTIONS.some((id) => flag(id)) ? { pill: 'theme' } : {}),
+    // #114 (UI audit flag): wave-looks.
+    ...(wl ? { wl, bps: tracks[deck]?.binsPerSec ?? 172 } : {}),
   });
 
   // #49 (UI audit flag): the play head's x in device px, at the waves
@@ -211,6 +217,12 @@
     const at = displayPos[deck] + ((e.clientX - r.left) / r.width - 0.5) * span();
     openMenu(e, gridMenu(deck, Math.max(0, Math.min(tracks[deck].duration, at))));
   }
+
+  // #115 (UI audit flag): trackpad-zoom takes pinches and ⌘/Ctrl/⌥ + scroll over the whole waveforms panel (the left deck's lane listens for both).
+  onMount(() => {
+    if (mode !== 'scroll' || deck !== 0) return;
+    return trackpadZoom(canvas.closest('.waves') ?? canvas, { on: () => flag('trackpad-zoom'), zoom: (f) => (wake(), onzoom?.(f)) }); // (a gesture isn't one of the events that wake the frame loop)
+  });
 
   // ⌘/Ctrl + scroll zooms; plain scroll scratches through a paused track.
   let wheelTimer;
