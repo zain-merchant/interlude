@@ -21,7 +21,7 @@
   <!-- Geist, served from here (no other site to reach before the page can
        draw its text); the Latin file is fetched straight away. -->
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="style.css?v=20261122d">
+  <link rel="stylesheet" href="style.css?v=20261122e">
   <script src="tune.js?v=20261122a"></script>
   <script>
     // Live updates while working on the site locally (the dev server
@@ -221,6 +221,14 @@
         const mw = narrow ? menuBtn.offsetWidth : 0;
         const ax = narrow ? left + capW - end - aw - (mw ? mw + 4 : 0) : lx + lw + gapA;
         geo = { W, H: nav.clientHeight, side: left, right: W - left - capW, b: bx - (x0 + brand.offsetLeft), l: lx - (x0 + links.offsetLeft), a: ax - (x0 + acts.offsetLeft) };
+        // At the top: the wide capsule, the bar's row inside it, 10px clear of
+        // the large icon all round (so as near the screen's edges as a phone's
+        // margin allows, 12px on a wide screen), its corners concentric with
+        // the icon's.
+        geo.side0 = narrow ? Math.max(4, x0 - 10) : 12;
+        geo.top0 = PAD;
+        geo.h0 = geo.H - PAD;
+        geo.r0 = (CAP_R - 6) * ICON + (geo.h0 - 36 * ICON) / 2;
         // The actions keep to what's beside them on the way, so the space
         // never closes up: just after the links (wide), or just inside the
         // capsule's closing right end (narrow).
@@ -248,22 +256,15 @@
         if (!geo) return;
         const p = shape.x;
         const q = act.x;
-        // One shape, outline and all: the bar lifts off first (its height
-        // and round ends come in ahead, v), then draws in from the sides (p),
-        // so it reads as the bar becoming a pill rather than a box shrinking.
-        // The glass is a lone absolutely placed box, so resizing it lays out
-        // nothing else.
-        const v = 1 - (1 - p) ** 2;
-        const left = geo.side * p, right = geo.right * p;
-        glass.style.left = `${r(left)}px`;
-        glass.style.width = `${r(geo.W - left - right)}px`;
-        glass.style.top = `${r(10 * v)}px`;
-        glass.style.height = `${r(geo.H + 1 - (geo.H - 47) * v)}px`;
-        glass.style.borderRadius = `${r(CAP_R * Math.min(1, v * 1.4))}px`;
-        glass.style.boxShadow = `inset 0 0 0 1px rgb(255 255 255 / ${r(0.09 * v)}), inset 0 1px 0 rgb(255 255 255 / ${r(0.05 * v)}), 0 12px 40px rgb(0 0 0 / ${r(0.42 * v)})`;
-        // Never a bar with a background: the glass comes in only as it
-        // closes on the capsule, and is gone again before it opens out.
-        glass.style.opacity = p > 0.001 ? String(r(clamp((p - 0.08) / 0.3))) : '';
+        // Always a capsule: the wide one at the top draws in to the compact
+        // one in one motion, on the same spring as the brand shrinks. The
+        // glass and its edge are lone absolutely placed boxes, so resizing
+        // them lays out nothing else.
+        const v = p;
+        const left = geo.side0 + (geo.side - geo.side0) * p, right = geo.side0 + (geo.right - geo.side0) * p;
+        const box = { left: `${r(left)}px`, width: `${r(geo.W - left - right)}px`, top: `${r(geo.top0 + (10 - geo.top0) * p)}px`, height: `${r(geo.h0 + (48 - geo.h0) * p)}px`, borderRadius: `${r(geo.r0 + (CAP_R - geo.r0) * p)}px` };
+        Object.assign(glass.style, box);
+        Object.assign(edge.style, box);
         // The bar's middle is 30px down, the capsule's 34px. The icon's box
         // is 36px, drawn larger in the bar; the name follows its right edge.
         const ic = ICON + (1 - ICON) * p;
@@ -332,7 +333,9 @@
         if (held) return;
         const h = headline().getBoundingClientRect();
         const NAV = geo?.H ?? 60;
-        const to = h.top < NAV + 8 ? 1 : h.top > NAV + 40 ? 0 : shape.to;
+        // (At the very top it's always the wide one, however close under
+        // the nav the headline sits; a little way down, always the compact.)
+        const to = scrollY < 12 ? 0 : h.top < NAV + 8 || scrollY > 64 ? 1 : h.top > NAV + 40 ? 0 : shape.to;
         if (to === shape.to) return;
         shape.to = to;
         d.toggleAttribute('data-capsule', to === 1);
@@ -382,13 +385,18 @@
         d.toggleAttribute('data-capsule', to === 1);
         if (reduced.matches) { shape.x = to; shape.v = 0; act.x = act.to = to; act.v = 0; }
       };
+      // Held while the menu is open: the capsule stays just as it is (the
+      // menu grows out of it, at whatever size; nothing in it moves or
+      // changes size), and goes on following the page once it's let go.
       window.navHold = (on) => {
         if (on === held) return;
         held = on;
-        if (on) { before = shape.to; toShape(1); }
-        else { toShape(before); read(); }
+        if (on) { before = shape.to; if (shape.x !== shape.to) toShape(shape.x > 0.5 ? 1 : 0); }
+        else read();
         wake();
       };
+      // The capsule as it is now, for the menu to open out of.
+      window.navCapsule = () => ({ rect: glass.getBoundingClientRect(), r: parseFloat(glass.style.borderRadius) || CAP_R });
       window.tune?.slider({ id: 'nav-word', label: 'Nav: name size before capsule', folder: 'Settled', min: 18, max: 96, step: 1, value: 32, unit: 'px', css: '--brand-word', onInput: () => requestAnimationFrame(measure) });
       // The capsule's corners: the icon's own (its squircle's corner, about
       // 8px at 36px, plus the 6px between), so everything inside is
@@ -478,7 +486,19 @@
         btn.setAttribute('aria-expanded', String(v));
         btn.setAttribute('aria-label', v ? 'Close menu' : 'Menu');
         for (const e of behind()) if (e) e.inert = v;
+        // (Its sheet over the capsule exactly, whatever size that is now.)
+        const c = v && window.navCapsule?.();
+        if (c && c.rect.width) {
+          menu.style.setProperty('--top', `${c.rect.top}px`);
+          menu.style.setProperty('--side', `${c.rect.left}px`);
+          menu.style.setProperty('--side-r', `${d.clientWidth - c.rect.right}px`);
+          menu.style.setProperty('--cap-h', `${c.rect.height}px`);
+          menu.style.setProperty('--r', `${c.r}px`);
+        }
         d.toggleAttribute('data-menu', v);
+        // (The hero holds still under it: nothing behind it is drawn while
+        // the menu moves.)
+        dispatchEvent(new CustomEvent('interlude:menu', { detail: v }));
         // (Picking a section: the capsule stays a capsule while the page
         // scrolls there, rather than opening to the bar and back.)
         clearTimeout(release);
@@ -1193,7 +1213,7 @@
     // under it follows; the switch picks mouse or controller.
     (async () => {
       const loaded = new Promise((ok) => (document.readyState === 'complete' ? ok() : addEventListener('load', ok, { once: true })));
-      const fx = await import('./hero-fx.js?v=20261121b').catch(() => null);
+      const fx = await import('./hero-fx.js?v=20261122a').catch(() => null);
       const frame = document.querySelector('.stage-frame');
       const screen = frame.querySelector('.screen');
       const live = frame.querySelector('.live');
@@ -1321,8 +1341,16 @@
       // the tab is hidden, so it's paused then: the clips stop, and the live
       // app (app/demo/pause.js) draws nothing until it's back.
       let onScreen = true;
+      // (And while the menu is open over it, from as it starts to open until
+      // a moment after it has shut, so its motion has the screen to itself.)
+      let menuOver = false, menuT = 0;
+      addEventListener('interlude:menu', (e) => {
+        clearTimeout(menuT);
+        const go = () => { menuOver = e.detail; fx?.hold?.(menuOver); pauseIfHidden(); };
+        if (e.detail) go(); else menuT = setTimeout(go, 400);
+      });
       const pauseIfHidden = () => {
-        const hidden = !onScreen || document.hidden;
+        const hidden = !onScreen || document.hidden || menuOver;
         live.contentWindow?.postMessage({ interlude: 'pause', paused: hidden || demo !== 'app' }, '*');
         clips?.setPaused(hidden || demo !== 'clips');
       };

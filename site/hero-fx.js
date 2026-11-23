@@ -230,6 +230,10 @@ const hover = { r: 0, a: 0, on: 0, x: -1e4, y: -1e4, sx: 0, sy: 0, vx: 0, vy: 0,
 const quiet = { x: 0, y: 0, on: false };
 let running = false;
 let visible = true;
+// Held still from the page (its menu open over the hero): drawn like when
+// it's out of view, not at all.
+let held = false;
+export function hold(v) { held = !!v; wake(); }
 
 export function setStyle(v) {
   style = STYLES[v] ? v : 'blend';
@@ -2613,7 +2617,7 @@ function wake() {
     frame(performance.now(), true);
     return;
   }
-  if (!visible) return;
+  if (!visible || held) return;
   running = true;
   last = performance.now();
   requestAnimationFrame(draw);
@@ -3623,7 +3627,7 @@ function draw(now) {
   nap = 0;
   resting = false;
   if (!running) return;
-  if (reduced.matches || !visible) {
+  if (reduced.matches || !visible || held) {
     running = false;
     // Stopping: the last frame left showing is a still one, with nothing
     // passing lit in it.
