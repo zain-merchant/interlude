@@ -25,12 +25,12 @@ export default {
     },
     sides: {
       type: 'choice',
-      label: 'Left and right edges',
-      default: 'same',
-      recommended: 'same',
+      label: 'Edges',
+      default: 'four',
+      recommended: 'four',
       options: [
-        ['same', 'The same', 'A key or value at the end stands as far in as the name does.'],
-        ['nest', 'Nested', 'A key or value at the end stands 4 in, as it does above and below.'],
+        ['four', '4 all round', 'Words and keys stand 4 in from every side.'],
+        ['nest', 'Words 9.5, keys 4', 'As it was.'],
       ],
     },
   },

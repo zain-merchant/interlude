@@ -37,11 +37,11 @@ export default {
     column: {
       type: 'choice',
       label: "The tempo's column: 0.00%, minus and plus, Key lock",
-      default: 'full',
+      default: 'ring',
       options: [
         ['full', 'A rule under the whole label', 'It fills with colour when Key lock is on.'],
         ['short', 'A short rule', 'The same, 22px.'],
-        ['ring', 'An etched outline', 'The same etched line all the way round Key lock and 0.00%; it takes the deck’s colour when Key lock is on.'],
+        ['ring', 'An etched outline', 'The same etched line all the way round Key lock and 0.00%; on, Key lock is pressed in and takes the deck’s colour.'],
         ['ledger', 'A ledger', 'Etched rules across the column, between the three.'],
         ['cut', 'One cut', 'All three in one cut under the fader, with rules between.'],
         ['plain', 'Plain', 'No mark; the labels are brighter than captions.'],

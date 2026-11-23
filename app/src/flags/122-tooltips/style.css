@@ -1,7 +1,7 @@
 /* #122 tooltips, on 110. One space, 10, between a name, its value, its key,
    the rule and what's after it, from ink or edge to ink or edge (words carry
-   about half a pixel of their own). Left and right are the same, 9.5, whatever is
-   at the end (or a box nests at 4, a setting). The first line is 28, rows 24 from middle to middle. */
+   about half a pixel of their own). 4 on every side (or words
+   9.5 and boxes 4, a setting). The first line is 28, rows 24 from middle to middle. */
 :root[data-flag-dir-room-tint][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips] .tip[role='tooltip']:has(> .tt) {
   --ti: 9px;
   box-sizing: border-box;
@@ -175,10 +175,8 @@
   font: inherit;
   text-box: trim-both cap alphabetic;
 }
-/* Both sides the same (a setting): a box at the end stands in as far as words. */
-:root[data-flag-dir-room-tint][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips-sides='same'] .tip[role='tooltip'] .tt:not(.one) .tl:has(> :is(.tv, .kcaps):last-child) {
-  padding-right: 9.5px;
-}
-:root[data-flag-dir-room-tint][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips-sides='same'] .tip[role='tooltip'] .th:has(> .kcaps:last-child) {
-  margin-right: calc(9.5px - var(--ti));
+/* 4 on all four sides (a setting), words and boxes alike; with rows, words keep
+   the boxes' column. */
+:root[data-flag-dir-room-tint][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips-sides='four'] .tip[role='tooltip']:has(> .tt) {
+  --ti: 4px;
 }
