@@ -35,6 +35,7 @@
   import { once, stemsReadyTip } from './lib/tips.svelte.js';
   import { libraryHealth, reveal, captureUiErrors, update, checkForUpdate, installUpdate } from './lib/support.svelte.js';
   import Status from './flags/112-shell-status/Status.svelte'; // #112 (UI audit flag)
+  import Keys from './flags/116-settings-finish/Keys.svelte'; // #118 (UI audit flag)
   import { open as shellOpen } from './flags/112-shell-status/connections.svelte.js'; // #112 (UI audit flag)
 
   let library;
@@ -847,7 +848,12 @@
         onpointerenter={() => flag('declutter-toast') && holdToast()} onpointerleave={() => flag('declutter-toast') && releaseToast()}>
         <span>{toast.text}</span>
         {#if toast.undo}
+          <!-- #118 (UI audit flag): toast-cut: a cut that holds its keys. -->
+          {#if flag('toast-cut') && flag('dir-room-tint')}
+          <button class="undo cut" onclick={() => { hideToast(); undo(); }}><span>Undo{#if keyLabel('edit.undo')}<span class="sr"> {keyLabel('edit.undo')}</span>{/if}</span>{#if keyLabel('edit.undo')}<Keys label={keyLabel('edit.undo')} />{/if}</button>
+          {:else}
           <button class="undo" onclick={() => { hideToast(); undo(); }}>Undo <kbd>{keyLabel('edit.undo')}</kbd></button>
+          {/if}
         {/if}
       </div>
     {/if}
