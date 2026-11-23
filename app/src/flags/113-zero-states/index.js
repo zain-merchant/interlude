@@ -17,8 +17,23 @@ export default {
   title: 'Zero states, drawn',
   group: 'Shell',
   byDefault: true, // approved, on for judging with 110; does nothing without it
+  settings: {
+    cable: {
+      type: 'choice',
+      label: 'The controller’s cable',
+      default: '1',
+      recommended: '1',
+      options: [
+        ['1', 'Low and round', 'A long sweep into a round loop, then up to the right.'],
+        ['2', 'Hanging beside the plug', 'The lowest: the loop hangs next to the plug.'],
+        ['3', 'Slack, leaning out', 'A looser loop that leans away.'],
+        ['4', 'Round to the left', 'The loop is on the left, and the cable comes back over the plug.'],
+        ['5', 'Small, then a long sweep', 'A small loop, then the cable dips and leaves far to the right.'],
+      ],
+    },
+  },
   notes:
-    'drawings.js is the SVG, tempos.js the filter’s picture (tested beside it), Zero.svelte the layout. Hooks: Library.svelte (the empty branches), Deck.svelte (the keys), Platter.svelte (the bare platter), Stems.svelte, ControllerSetup.svelte.',
+    'drawings.js is the SVG, wires.js the cable’s shapes, tempos.js the filter’s picture (tested beside it), Zero.svelte the layout. Hooks: Library.svelte (the empty branches), Deck.svelte (the keys), Platter.svelte (the bare platter), Stems.svelte, ControllerSetup.svelte.',
 };
 
 /** Show me: a search that finds nothing. */
