@@ -134,7 +134,7 @@ export class Waveform2D {
    */
   draw(view) {
     this.resize();
-    if (this.unchanged(view)) return;
+    if (this.unchanged(view) && !this.zooming) return; // #114 (UI audit flag): a coarse frame is drawn again once the zoom holds
     if (view.look === 'field') return fieldDraw(this, view); // #107 (UI audit flag): dir-field prints the sound dark on its deck's sheet
     const { ctx, canvas } = this;
     const dpr = window.devicePixelRatio || 1;

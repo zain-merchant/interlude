@@ -221,7 +221,7 @@
   // #115 (UI audit flag): trackpad-zoom takes pinches and ⌘/Ctrl/⌥ + scroll over the whole waveforms panel (the left deck's lane listens for both).
   onMount(() => {
     if (mode !== 'scroll' || deck !== 0) return;
-    return trackpadZoom(canvas.closest('.waves') ?? canvas, { on: () => flag('trackpad-zoom'), zoom: (f) => onzoom?.(f) });
+    return trackpadZoom(canvas.closest('.waves') ?? canvas, { on: () => flag('trackpad-zoom'), zoom: (f) => (wake(), onzoom?.(f)) }); // (a gesture isn't one of the events that wake the frame loop)
   });
 
   // ⌘/Ctrl + scroll zooms; plain scroll scratches through a paused track.
