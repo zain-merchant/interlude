@@ -558,10 +558,15 @@ pre {
 @media (hover: hover) and (pointer: fine) { .oss[data-look="white-dark"] .oss-commits a:hover .oss-msg { color: var(--fg); } }
 @media not all and (hover: hover) and (pointer: fine) { .oss[data-look="white-dark"] .oss-commits a:active .oss-msg { color: var(--fg); } }
 @media (max-width: 860px) {
-  .faq-row { grid-template-columns: 1fr; gap: 40px; }
-  .founder { position: static; max-width: 520px; }
   .oss { grid-template-columns: 1fr; gap: 28px; margin-top: 56px; padding: 24px; }
   .oss-text { padding: 4px 4px 0; }
+}
+/* (Under 961px there isn't room for the note beside the questions: stacked.
+   The record's way out goes with it: style.css, the sleeve, and index.html's
+   way().) */
+@media (max-width: 960px) {
+  .faq-row { grid-template-columns: 1fr; gap: 40px; }
+  .founder { position: static; max-width: 520px; }
 }
 details { border-top: 1px solid var(--line); }
 details:last-child { border-bottom: 1px solid var(--line); }
@@ -1978,7 +1983,7 @@ html[data-note="sleeve"] .rec {
    window's edge: the record, out at its furthest, reaches --rec-over past
    the sleeve (index.html sets it); when the page's margin can't hold that,
    the note's column widens and the FAQ narrows by just what's missing. */
-@media (min-width: 861px) {
+@media (min-width: 961px) {
   html[data-note="sleeve"] .faq-row {
     --shift: max(0px, var(--rec-over, 133px) + var(--note-nudge, 8px) + 28px - 14px - max(16px, (100vw - 1120px) / 2));
     grid-template-columns: minmax(0, 1fr) calc(320px + var(--shift));
@@ -1991,8 +1996,8 @@ html[data-note="sleeve"] .rec {
    margin. left (the one picked): the card first, the questions on its right, with
    room between for the record to slide into. mid: the card on the right,
    level with the middle of the questions. */
-@media (min-width: 861px) {
-  html[data-note="sleeve"][data-notelay="left"] .faq-row { --shift: 0px; grid-template-columns: 320px minmax(0, 1fr); gap: 188px; }
+@media (min-width: 961px) {
+  html[data-note="sleeve"][data-notelay="left"] .faq-row { --shift: 0px; grid-template-columns: 320px minmax(0, 1fr); gap: clamp(140px, 14vw, 188px); }
   html[data-note="sleeve"][data-notelay="left"] .faq-row > .founder { order: -1; margin: 0 auto 0 0; translate: 0 0; }
   html[data-note="sleeve"][data-notelay="mid"] .faq-row > .founder { align-self: center; }
 }
@@ -2009,12 +2014,10 @@ html[data-note="sleeve"] .rec {
   html[data-note="sleeve"] .rec { touch-action: none; }
   html[data-note="sleeve"] .rec-grab { display: block; position: absolute; left: var(--hx); top: var(--hy); width: calc(var(--hr) * 2); height: calc(var(--hr) * 2); translate: -50% -50%; border-radius: 50%; touch-action: none; }
 }
-@media (max-width: 620px) and (prefers-reduced-motion: no-preference) {
-  @media not all and (hover: hover) and (pointer: fine) { html[data-note="sleeve"] .founder { margin-bottom: var(--rec-peek, 28px); } }
-}
+@media (max-width: 960px) { html[data-note="sleeve"] .founder { margin-bottom: var(--rec-peek, 28px); } }
 /* Stacked under the questions: the record comes out of the open foot, and
    the window, its wear and the crease go with it. */
-@media (max-width: 860px) {
+@media (max-width: 960px) {
   html[data-note="sleeve"] .founder {
     --hx: 63%; --hy: calc(64% + var(--rec-peek, 28px));
     --rw: 72%; --rhalf: 36%; --crease: 180deg; --ask-w: 46%;
