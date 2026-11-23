@@ -39,8 +39,10 @@
 {#if keep}<span class="mid"><span class="a">{@render run(slice(0, at))}</span><span class="z">{@render run(slice(at, text.length))}</span></span>{:else}{@render run(slice(0, text?.length ?? 0))}{/if}
 
 <style>
+  /* Inline, so it stands where the line's own alignment puts it. */
   .mid {
-    display: flex;
+    display: inline-flex;
+    vertical-align: top;
     min-width: 0;
     max-width: 100%;
     padding: 0 !important;
