@@ -420,7 +420,13 @@
   const inFolder = (path, f) => path.startsWith(f.endsWith('/') || f.endsWith('\\') ? f : `${f}/`) || path.startsWith(`${f}\\`);
 
   export async function addFolder() {
-    const path = await backend.pickFolder();
+    let path = null;
+    try {
+      path = await backend.pickFolder();
+    } catch (e) {
+      // The list is fine; only the system's folder panel failed.
+      onmessage(`Couldn't open the folder picker: ${e?.message ?? e}`);
+    }
     if (!path) return;
     try {
       folders = await backend.addFolder(path);
