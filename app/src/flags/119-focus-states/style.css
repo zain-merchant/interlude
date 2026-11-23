@@ -4,8 +4,8 @@
    from the control and concentric with its corner. Inside, 1px in from the
    edge, where there's no room outside: rows, tabs, sidebar items, menu rows,
    headings. Round what moves: a dial, a fader's cap, the small key of a
-   stepper. A handle's own bar takes the colour. Nothing moves or fades, so
-   reduced motion has nothing to turn off.
+   stepper. A handle's own bar takes the colour. Nothing moves or
+   fades; the bars of the handles take their colour at once.
 
    Keys only: while #24's data-input says keys are moving focus, whatever has
    it, since WebKit doesn't call a focus moved by script (F6, a tab's arrows)
@@ -153,14 +153,17 @@
 /* ── Handles ───────────────────────────────────────────────────────── */
 :root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_)[data-input='keys'] .app > :is(.split, .grip:not(.side)):focus i,
 :root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):not([data-flag-focus-after-keys]) .app > :is(.split, .grip:not(.side)):focus-visible i {
+  transition: none;
   background: var(--fx);
 }
 :root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_)[data-input='keys'] .below > .grip.side:focus i,
 :root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):not([data-flag-focus-after-keys]) .below > .grip.side:focus-visible i {
+  transition: none;
   background: var(--fx);
 }
 :root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_)[data-input='keys'] section.library .row.head .colh:focus::after,
 :root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):not([data-flag-focus-after-keys]) section.library .row.head .colh:focus-visible::after {
+  transition: none;
   height: 18px;
   background: var(--fx);
   opacity: 1;

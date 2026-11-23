@@ -36,6 +36,7 @@ export const show = {
   after: 'A soft grey line just outside the control, bright enough to find and no more. A text field has only its caret and a little more light.',
   period: 1900,
   async setup(app, ctx) {
+    app.setFlag('dir-room-tint', true); // a fix's show pauses the direction, and this one is for #110
     if (!app.loaded(0)) await app.loadTrack(0);
     ctx.key = app.$("[data-region='deck0'] .transport .sync");
     await show.each(app, ctx);
@@ -45,6 +46,7 @@ export const show = {
     ctx.key?.focus({ preventScroll: true });
   },
   cleanup(app, ctx) {
+    app.setFlag('dir-room-tint', false);
     ctx.key?.blur();
     delete document.documentElement.dataset.input;
   },
