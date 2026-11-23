@@ -162,7 +162,7 @@
 
       // The hero's two buttons (and the same family in the menu, the
       // open-source card and the download sheet).
-      select('btn', { label: 'Buttons', value: 'today', options: [['today', 'Today'], ['ink', 'Ink'], ['label', 'Record label'], ['split', 'Split'], ['key', 'Key']], apply: (v) => { set('btn', v === 'today' ? '' : v); dispatchEvent(new Event('try-buttons')); } });
+      select('btn', { label: 'Buttons', value: 'today', options: [['today', 'Today'], ['ink', 'Ink'], ['label', 'Record label'], ['split', 'Split'], ['key', 'Key']], apply: (v) => { set('btn', v === 'today' ? '' : v); dispatchEvent(new Event('try-buttons')); dispatchEvent(new Event('try-squircles')); } });
 
       // The nav's surface, and what the capsule's Download control looks like.
       select('navglass', { label: 'Nav surface', value: 'solid', options: [['solid', 'Solid'], ['glass', 'Glass'], ['mixed', 'Solid top'], ['light', 'Light blur']], apply: (v) => set('navglass', v === 'solid' ? '' : v) });
