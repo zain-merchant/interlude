@@ -554,37 +554,43 @@ const fxEm = () => geo.em * (T.scale || 1);
 // and rings well up through it, more and faster the further it's pulled.
 // From the page (index.html), each time the pull changes; nothing runs
 // when it isn't pulled.
-const pull = { want: 0, k: 0, x: 0.5, time: 0, owns: false };
+const pull = { want: 0, k: 0, x: 0.5, time: 0, owns: false, rings: new Set() };
 export function surge(amount, x) {
   pull.want = Math.max(0, Math.min(1, amount || 0));
   if (x != null) pull.x = x;
   if (pull.want > 0 || pull.k > 0) wake();
 }
 function pullStep(dt) {
-  // (Quick to come, a little slower to go.)
-  pull.k += (pull.want - pull.k) * Math.min(1, dt * (pull.want > pull.k ? 14 : 5));
+  // (Comes in a little eased; goes at once, with the page.)
+  if (pull.want >= pull.k) pull.k += (pull.want - pull.k) * Math.min(1, dt * 14);
+  else pull.k = pull.want;
   if (Math.abs(pull.want - pull.k) < 0.002) pull.k = pull.want;
   // (From the foot of the letters, where the page ends.)
   const x = geo.width * pull.x, y = Math.min(geo.h / geo.dpr, geo.baseline + fxEm() * 0.05);
   if (pull.k > 0.01) {
-    // The light rises with the pull, from the foot of the word.
+    // The light rises with the pull, from the foot of the word, only as
+    // strong as the pull.
     if (!pull.owns && hover.want === 0 && hover.on < 0.02) Object.assign(hover, { x, y, vx: 0, vy: 0 });
     pull.owns = true;
     Object.assign(hover, { tx: x, ty: y - fxEm() * 0.45 * pull.k, want: 1 });
     // Rings well up along the foot, one after another across it, closer
     // together the harder it's pulled.
     pull.time += dt;
-    const every = 0.42 - 0.24 * pull.k;
+    const every = 0.6 - 0.35 * pull.k;
     if (pull.time >= every) {
       pull.time = 0;
       pull.n = ((pull.n || 0) + 1) % 5;
       const rx = geo.width * (0.5 + [0, -0.3, 0.3, -0.15, 0.15][pull.n] * (0.4 + 0.6 * pull.k));
-      if (!reduced.matches) ring(rx, y, -(0.8 + 1.2 * pull.k));
+      if (!reduced.matches) { const p = ring(rx, y, -(0.5 + 1.1 * pull.k)); if (p) pull.rings.add(p); }
     }
   } else if (pull.owns) {
+    // Let go: the light and its rings go with the page.
     pull.owns = false;
     pull.time = 0.4;
     hover.want = 0;
+    hover.on = 0;
+    for (const p of pull.rings) p[2] = -1;
+    pull.rings.clear();
   }
 }
 
@@ -593,6 +599,7 @@ function ring(x, y, share = 1) {
   // (A click's ring may take the oldest slot, so a click always shows.)
   const p = pts.find((q) => q[2] < 0) ?? (share < 0 ? pts.reduce((a, q) => (q[2] > a[2] ? q : a)) : null);
   if (p) { p[0] = x; p[1] = y; p[2] = 0; p[3] = share; }
+  return p;
 }
 
 // Sets rings off as the ripple style has it (see STYLES). Called each
@@ -669,6 +676,8 @@ function frame(now) {
   // Comes and goes evenly over the fade time (eased where it's drawn).
   const step = T.fade > 0 ? dt / T.fade : 1;
   hover.on = hover.want ? Math.min(1, hover.on + step) : Math.max(0, hover.on - step);
+  // (Pulled past the page's end: no stronger than the pull.)
+  if (pull.owns) hover.on = Math.min(hover.on, Math.min(1, pull.k * 1.8));
 
   // Follow the pointer on a critically damped spring (in small steps, so
   // it's steady at any frame rate).
