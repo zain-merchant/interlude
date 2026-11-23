@@ -8,7 +8,7 @@
 // shortcut uses ⌥.
 import { flags, flag, setting } from '../registry.svelte.js';
 import { showToast } from '../../lib/undo.svelte.js';
-import { LOOKS, LINES, CHIPS, PLAYED, PARAMS, lookOf } from './looks.js';
+import { LOOKS, LINES, CHIPS, PARAMS, lookOf } from './looks.js';
 import { lookNow } from './look.js';
 
 const ID = 'wave-looks';
@@ -26,7 +26,7 @@ const name = (k) => PARAMS[k][0] + (PARAMS[k][4] ? ` (${PARAMS[k][4]})` : '');
 
 /** The choices every look but Today shares: the control's name, its setting, its options. */
 /** @type {[string, string, any[]][]} */
-const SHARED = [['Beat marks', 'marks', LINES], ['Bar number', 'chip', CHIPS], ['Played half', 'played', PLAYED]];
+const SHARED = [['Beat marks', 'beats', LINES], ['Bar number', 'chip', CHIPS]];
 
 /** The panel's controls for a look; `at` gives each value's start (its default, for DialKit's reset). */
 function config(l) {
