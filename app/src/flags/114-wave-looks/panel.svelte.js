@@ -1,0 +1,136 @@
+// #114 (UI audit flag): wave-looks' switcher, dev builds only (main.js).
+//
+// A DialKit panel (vendored in dialkit/) with the look and the sliders that
+// look has, shown while the flag is on. The registry holds the values; the
+// panel reads and writes them there. ⌥W goes to the next look and ⌥⇧W back,
+// ⌥1 to ⌥7 pick one (and turn the flag on). No app shortcut uses ⌥.
+import { flags, flag, setting } from '../registry.svelte.js';
+import { showToast } from '../../lib/undo.svelte.js';
+import { LOOKS, PARAMS, lookOf } from './looks.js';
+
+const ID = 'wave-looks';
+let kit = null;
+let busy = false;
+let shown = '';
+
+const look = () => lookOf(setting(ID, 'look'));
+const value = (l, k) => Number(setting(ID, `${l.id}-${k}`) ?? l.values[k]);
+const toggles = new Set(['lock', 'beats']);
+const name = (k) => PARAMS[k][0] + (PARAMS[k][4] ? ` (${PARAMS[k][4]})` : '');
+
+/** The panel's controls for a look; `at` gives each value's start (its default, for DialKit's reset). */
+function config(l) {
+  const c = { Look: { type: 'select', options: LOOKS.map((x, i) => ({ value: x.id, label: `${i + 1}  ${x.name}` })), default: 'today' }, 'Copy values': { type: 'action' } };
+  for (const [k, v] of Object.entries(l.values)) {
+    const [, min, max, step, , folder] = PARAMS[k];
+    // The folder that matters most for the look starts open.
+    (c[folder] ??= folder === (l.values.w ? 'Marks' : 'Smoothing') ? {} : { _collapsed: true })[name(k)] = toggles.has(k) ? !!v : [v, min, max, step];
+  }
+  if (l.draw) c['Put this look back'] = { type: 'action' };
+  return c;
+}
+const values = (l) => {
+  const v = { Look: l.id };
+  for (const k in l.values) (v[PARAMS[k][5]] ??= {})[name(k)] = toggles.has(k) ? !!value(l, k) : value(l, k);
+  return v;
+};
+
+/** Every value of the look, as text: what's changed from its defaults is marked. */
+function text() {
+  const l = look();
+  const lines = [`Waveform: ${l.name}`];
+  for (const k in l.values) {
+    const v = value(l, k);
+    lines.push(`${PARAMS[k][0]}: ${toggles.has(k) ? (v ? 'on' : 'off') : `${v}${PARAMS[k][4] && ` ${PARAMS[k][4]}`}`}${v === l.values[k] ? '' : ` (was ${l.values[k]})`}`);
+  }
+  return lines.join('\n');
+}
+async function copy() {
+  const t = text();
+  try {
+    await navigator.clipboard.writeText(t);
+    showToast('Copied the waveform values');
+  } catch {
+    // The clipboard can be refused (no focus): the old way still works from a click.
+    const a = document.createElement('textarea');
+    a.value = t;
+    document.body.append(a);
+    a.select();
+    const ok = document.execCommand('copy');
+    a.remove();
+    showToast(ok ? 'Copied the waveform values' : "Couldn't copy the waveform values");
+  }
+}
+function reset() {
+  const l = look();
+  for (const k in l.values) flags.settings[ID][`${l.id}-${k}`] = l.values[k];
+  fill();
+}
+
+/** Puts the current look's controls and values in the panel. */
+function fill() {
+  if (!kit) return;
+  const l = look();
+  busy = true;
+  if (shown !== l.id) kit.updateConfig(config(l));
+  shown = l.id;
+  kit.setValues(values(l));
+  busy = false;
+}
+function read(v) {
+  if (busy) return;
+  if (v.Look !== look().id) return pick(v.Look, false);
+  const l = look();
+  for (const k in l.values) {
+    const x = v[PARAMS[k][5]]?.[name(k)];
+    if (x !== undefined && Number(x) !== value(l, k)) flags.settings[ID][`${l.id}-${k}`] = Number(x);
+  }
+}
+function pick(id, say = true) {
+  flags.on[ID] = true;
+  flags.settings[ID].look = id;
+  // After DialKit's own update has settled.
+  queueMicrotask(fill);
+  if (say) showToast(lookOf(id).name);
+}
+
+const typing = (t) => t instanceof HTMLInputElement || t instanceof HTMLTextAreaElement || t?.isContentEditable;
+function key(e) {
+  if (!e.altKey || e.metaKey || e.ctrlKey || typing(e.target)) return;
+  const at = LOOKS.findIndex((l) => l.id === look().id);
+  let to = -1;
+  if (e.code === 'KeyW') to = (at + (e.shiftKey ? LOOKS.length - 1 : 1)) % LOOKS.length;
+  else if (/^Digit\d$/.test(e.code) && !e.shiftKey) to = Number(e.code.slice(5)) - 1;
+  if (!LOOKS[to]) return;
+  e.preventDefault();
+  e.stopPropagation();
+  if (!e.repeat) pick(LOOKS[to].id);
+}
+
+async function open() {
+  if (kit) return fill();
+  const [{ default: DK }] = await Promise.all([import('./dialkit/dialkit.js'), import('./dialkit/styles.css')]);
+  if (kit) return;
+  DK.createDialRoot({ position: 'bottom-left', theme: 'dark', defaultOpen: true });
+  shown = look().id;
+  kit = DK.createDialKit('Waveform', config(look()), { id: 'interlude-wave', persist: false, onAction: (p) => (p === 'Copy values' ? copy() : reset()) });
+  fill();
+  kit.subscribe(read, false);
+  const css = document.createElement('style');
+  // Hidden while the flag is off; clear of the waveforms; and without
+  // DialKit's own copy and versions (they'd be lost on reload: the registry keeps the values).
+  css.textContent = `:root:not([data-flag-${ID}]) .dialkit-root, .dialkit-root .dialkit-panel-toolbar, .dialkit-root .dialkit-versions { display: none !important; }
+    .dialkit-panel[data-position='bottom-left'] .dialkit-panel-inner { max-height: calc(100vh - 190px) !important; }`;
+  document.head.append(css);
+  // Keys in the panel are the panel's: they don't reach the app's shortcuts
+  // (a slider's arrows would nudge a deck).
+  for (const type of ['keydown', 'keyup']) document.querySelector('.dialkit-root')?.addEventListener(type, (e) => e.stopPropagation());
+}
+
+addEventListener('keydown', key, true);
+$effect.root(() => {
+  $effect(() => {
+    if (flag(ID)) open();
+    void setting(ID, 'look');
+  });
+});

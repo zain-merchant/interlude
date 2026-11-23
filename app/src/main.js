@@ -9,4 +9,5 @@ mount(App, { target: document.getElementById('app') });
 import('./flags/registry.svelte.js');
 if (import.meta.env.DEV) {
   import('./flags/panel/FlagPanel.svelte').then(({ default: FlagPanel }) => mount(FlagPanel, { target: document.body }));
+  import('./flags/114-wave-looks/panel.svelte.js'); // #114 (UI audit flag): the waveform looks' switcher
 }
