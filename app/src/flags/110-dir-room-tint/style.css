@@ -2594,7 +2594,11 @@
 
 /* On is one thing: the key is in, and its glyph or label takes its colour.
    The fill stays the plate's own dark (a setting lets a breath of the colour
-   into it). Play is the exception: it fills with the deck's colour. */
+   into it). Two exceptions: Play fills with the deck's colour, and Rec has red
+   in its recess while it records. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer button.rec.on {
+  --kk-mix: 30%;
+}
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-on='breath'] {
   --kk-mix: 13%;
 }
@@ -2954,15 +2958,26 @@
   position: absolute;
   z-index: 3;
   top: 5px;
-  bottom: 7px;
+  height: calc(var(--col-h, 33px) - 5px);
   width: 2px;
   margin-left: -1px;
   border-radius: 1px;
-  background: var(--fg);
+  background: color-mix(in oklab, var(--fg) 70%, transparent);
   pointer-events: none;
 }
+/* The column being moved, all the way down, in the tint every place to drop
+   takes; while it would stay where it is, that's all there is. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .row.head .colins::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  bottom: 0;
+  left: var(--col-from, 0);
+  width: var(--col-w, 0);
+  background: color-mix(in oklab, var(--fg) 6%, transparent);
+}
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .row.head .colins.stays {
-  opacity: 0.3;
+  background: transparent;
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .row.head.lifting,
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .row.head.lifting * {
@@ -3127,14 +3142,21 @@
   background: color-mix(in oklab, var(--dt) 13%, transparent);
   box-shadow: inset 0 0 0 1.5px color-mix(in oklab, var(--dt) 80%, transparent);
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-drop='blocked']::after {
+/* A deck that's playing is a place like any other: the same tint. The first
+   drop only warns and the second replaces it, so under the pointer it says so
+   (a setting: say it, say nothing, or a red edge too). */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-playing='red'] [data-drop='blocked']::after {
   background: transparent;
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-drop='blocked-over']::after {
+  background: color-mix(in oklab, var(--dt) 13%, transparent);
+  box-shadow: inset 0 0 0 1.5px color-mix(in oklab, var(--dt) 80%, transparent);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-playing='red'] [data-drop='blocked-over']::after {
   background: color-mix(in oklab, var(--dt) 5%, transparent);
   box-shadow: inset 0 0 0 1.5px color-mix(in oklab, var(--kill) 70%, transparent);
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:is([data-flag-dir-room-tint-drop='pick'], [data-flag-dir-room-tint-drop='label']) [data-drop='ok']::after {
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:is([data-flag-dir-room-tint-drop='pick'], [data-flag-dir-room-tint-drop='label']) [data-drop]:is([data-drop='ok'], [data-drop='blocked'])::after {
   background: transparent;
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-drop='label'] :is(.lane, section.deck, [data-region^='deck'])[data-drop='over']::before,
@@ -3161,6 +3183,11 @@
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] :is(.lane, section.deck, [data-region^='deck'])[data-drop='blocked-over']::before {
   content: 'Playing. Drop twice to replace it' !important;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-playing='quiet']:not([data-flag-dir-room-tint-drop='label']) :is(.lane, section.deck, [data-region^='deck'])[data-drop='blocked-over']::before {
+  content: none !important;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-playing='red'] :is(.lane, section.deck, [data-region^='deck'])[data-drop='blocked-over']::before {
   color: color-mix(in oklab, var(--kill) 55%, var(--fg));
 }
 
