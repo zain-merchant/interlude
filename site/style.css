@@ -2021,6 +2021,25 @@ html[data-flayout="one"] .group:nth-child(-n + 2) { box-shadow: inset -1px 0 0 v
 .foot { position: relative; isolation: isolate; }
 .grain--foot { inset: 0; height: auto; z-index: 1; -webkit-mask-image: none; mask-image: none; }
 .foot-grid { position: relative; z-index: 2; }
+/* Past the foot of the page (pulled on past it, the rubber band): the
+   footer's colour and grain carry on, and a glow in the lamp's cool and warm
+   whites rises from below with the pull (--pull, index.html). Behind the
+   page: the root has a background of its own, so the body paints its own
+   and this shows only past its end. Not drawn at all until it's pulled. */
+html { background: var(--bg); }
+.foot-under {
+  display: none; position: fixed; left: 0; right: 0; bottom: 0; height: 70vh; z-index: -1; pointer-events: none;
+  background: rgb(12 12 14);
+}
+.foot-under[data-on] { display: block; }
+.grain--under { inset: 0; height: auto; z-index: 0; -webkit-mask-image: none; mask-image: none; }
+.foot-under::after {
+  content: ''; position: absolute; inset: 0;
+  background:
+    radial-gradient(60% 45% at 38% 100%, rgb(201 220 242 / 0.20), transparent 70%),
+    radial-gradient(60% 45% at 62% 100%, rgb(240 220 192 / 0.16), transparent 70%);
+  opacity: var(--pull, 0);
+}
 /* The features' grain: across the band, over its background and under
    the cards (the same grain as the hero's and the footer's). */
 .grain--band { top: 0; bottom: 0; left: 50%; width: 100vw; height: auto; translate: -50% 0; -webkit-mask-image: none; mask-image: none; }

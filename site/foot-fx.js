@@ -75,6 +75,7 @@ export const T = {
   songGap: 1.6,      // a song gap's width, in grooves
   trigger: 'follow', // follow: there while the pointer is; once: starts when it comes near, plays out, then fades on its own
   hold: 2.5,         // once: how long it plays before it fades, s
+  scale: 1,          // the effect's size (lamp, rings, lens) against the word's: 1 as tuned on a Mac
   letter: [1, 1, 1, 11 / 255],
   gap: [0, 0, 0, 0],
   line: [1, 1, 1, 19 / 255],
@@ -545,6 +546,48 @@ function reset() {
   Object.assign(emit, { dist: 0, time: 0, armed: false, rest: 0 });
 }
 
+// The size the effects are drawn at: the word's own size, times T.scale.
+const fxEm = () => geo.em * (T.scale || 1);
+
+// Pulled past the end of the page (the rubber band at the bottom, or a
+// trackpad pushing on past it): the light comes up from under the word
+// and rings well up through it, more and faster the further it's pulled.
+// From the page (index.html), each time the pull changes; nothing runs
+// when it isn't pulled.
+const pull = { want: 0, k: 0, x: 0.5, time: 0, owns: false };
+export function surge(amount, x) {
+  pull.want = Math.max(0, Math.min(1, amount || 0));
+  if (x != null) pull.x = x;
+  if (pull.want > 0 || pull.k > 0) wake();
+}
+function pullStep(dt) {
+  // (Quick to come, a little slower to go.)
+  pull.k += (pull.want - pull.k) * Math.min(1, dt * (pull.want > pull.k ? 14 : 5));
+  if (Math.abs(pull.want - pull.k) < 0.002) pull.k = pull.want;
+  // (From the foot of the letters, where the page ends.)
+  const x = geo.width * pull.x, y = Math.min(geo.h / geo.dpr, geo.baseline + fxEm() * 0.05);
+  if (pull.k > 0.01) {
+    // The light rises with the pull, from the foot of the word.
+    if (!pull.owns && hover.want === 0 && hover.on < 0.02) Object.assign(hover, { x, y, vx: 0, vy: 0 });
+    pull.owns = true;
+    Object.assign(hover, { tx: x, ty: y - fxEm() * 0.45 * pull.k, want: 1 });
+    // Rings well up along the foot, one after another across it, closer
+    // together the harder it's pulled.
+    pull.time += dt;
+    const every = 0.42 - 0.24 * pull.k;
+    if (pull.time >= every) {
+      pull.time = 0;
+      pull.n = ((pull.n || 0) + 1) % 5;
+      const rx = geo.width * (0.5 + [0, -0.3, 0.3, -0.15, 0.15][pull.n] * (0.4 + 0.6 * pull.k));
+      if (!reduced.matches) ring(rx, y, -(0.8 + 1.2 * pull.k));
+    }
+  } else if (pull.owns) {
+    pull.owns = false;
+    pull.time = 0.4;
+    hover.want = 0;
+  }
+}
+
 // A new ring at x, y (unless every slot is still running one).
 function ring(x, y, share = 1) {
   // (A click's ring may take the oldest slot, so a click always shows.)
@@ -556,7 +599,7 @@ function ring(x, y, share = 1) {
 // frame while the pointer is over the word; ox, oy is where the eased
 // pointer was a frame ago.
 function spawn(dt, ox, oy) {
-  const em = geo.em;
+  const em = fxEm();
   const style = STYLES.includes(T.rippleStyle) ? T.rippleStyle : 'breathe';
   const gap = Math.max(0.05, T.rippleSpacing) * em;
   if (style === 'wake') {
@@ -617,6 +660,7 @@ function frame(now) {
   if (!geo) layout();
   if (!geo) return false;
   if (demoAt) demoPoint(now);
+  if (pull.want || pull.k) pullStep(dt);
   clock += dt;
   // Once: it has played its time, so it fades, wherever the pointer is.
   if (T.trigger === 'once' && hover.want && now >= onceUntil) hover.want = 0;
@@ -648,10 +692,10 @@ function frame(now) {
 
   // Rings run out at the ripple speed and are done once past their reach.
   const rings = hasRipples(mode) && !still;
-  const reach = Math.max(0.1, T.rippleReach) * geo.em;
+  const reach = Math.max(0.1, T.rippleReach) * fxEm();
   for (const p of pts) {
     if (p[2] < 0) continue;
-    p[2] += T.rippleSpeed * geo.em * dt;
+    p[2] += T.rippleSpeed * fxEm() * dt;
     if (p[2] > reach * Math.abs(p[3])) p[2] = -1;
   }
   if (rings && hover.want) spawn(dt, ox, oy);
@@ -673,24 +717,24 @@ function frame(now) {
   gl.uniform1f(U.uWarp, mode === 'lamp-warp' ? T.warp : 0);
   // (Rings show in the ripple modes, and in any mode while a click's ring runs.)
   gl.uniform1f(U.uRipples, hasRipples(mode) || pts.some((q) => q[2] >= 0) ? 1 : 0);
-  gl.uniform4f(U.uRing, T.rippleBend, reach, Math.max(0.005, T.rippleWidth) * geo.em, 0.3 * geo.em);
-  gl.uniform1f(U.uEm, geo.em);
+  gl.uniform4f(U.uRing, T.rippleBend, reach, Math.max(0.005, T.rippleWidth) * fxEm(), 0.3 * fxEm());
+  gl.uniform1f(U.uEm, fxEm());
   const kz = knockNow(performance.now());
-  gl.uniform4f(U.uKnock, knock.x, knock.y, kz, Math.max(0.02, T.knockSize) * geo.em);
+  gl.uniform4f(U.uKnock, knock.x, knock.y, kz, Math.max(0.02, T.knockSize) * fxEm());
   {
     // Drawn out the way it's dragged, more the faster (a speed of 3em a
     // second gives the whole stretch), easing back as it slows.
     knock.vx *= Math.exp(-dt * 6); knock.vy *= Math.exp(-dt * 6);
     const sp = Math.hypot(knock.vx, knock.vy);
-    const st = 1 + T.dragStretch * Math.min(1, sp / (3 * geo.em));
+    const st = 1 + T.dragStretch * Math.min(1, sp / (3 * fxEm()));
     gl.uniform3f(U.uKnockDir, sp > 1 ? knock.vx / sp : 1, sp > 1 ? knock.vy / sp : 0, st);
     if (sp > 2) knock.moving = true; else knock.moving = false;
   }
   {
     // The wave: from the lens's edge outward, fading as it goes.
     const t = knock.at ? (performance.now() - knock.at) / 1000 : 0;
-    const start = Math.max(0.02, T.knockSize) * geo.em;
-    const R = start + T.knockSpeed * geo.em * t, reach = start + Math.max(0.05, T.knockReach) * geo.em;
+    const start = Math.max(0.02, T.knockSize) * fxEm();
+    const R = start + T.knockSpeed * fxEm() * t, reach = start + Math.max(0.05, T.knockReach) * fxEm();
     const f = knock.at ? Math.max(0, 1 - (R - start) / (reach - start)) : 0;
     const amp = T.knock * start * 0.5 * T.knockWave * f * f * Math.min(1, t / 0.05);
     gl.uniform4f(U.uKnock2, R, start * 0.6 * (1 + (R - start) / (2 * start)), amp, 0);
@@ -709,7 +753,7 @@ function frame(now) {
   // Keep going while anything is still moving: the fade, the spring, a
   // ring still running out, or (while over the word) rings to come: on a
   // timer for breathe and interference; for drop, the rest still to come.
-  if (demoAt) return true;
+  if (demoAt || pull.want || pull.k) return true;
   if (knock.at || knock.wave || knock.held || knock.moving) return true;
   if (T.trigger === 'once' && hover.want) return true;
   if (hover.on !== hover.want) return true;
@@ -780,6 +824,17 @@ export function click(p) {
   wake();
 }
 
+/** A finger that touched the word and then scrolled the page: a ring
+ *  from where it touched, and the light there for a moment (no lens: the
+ *  page is moving under it). */
+export function ping(p) {
+  if (!geo && !layout()) return;
+  ring(p.x, p.y, -1);
+  if (hover.want === 0 && hover.on < 0.02) Object.assign(hover, { x: p.x, y: p.y, vx: 0, vy: 0 });
+  Object.assign(hover, { tx: p.x, ty: p.y, want: 1 });
+  wake();
+}
+
 /** Dragging with the button down: the lens goes with the pointer. */
 export function drag(p) {
   if (!knock.held) return;
@@ -794,7 +849,7 @@ export function drag(p) {
   // The wake: a ripple left every so far along the way, each bending the
   // grooves as a click's does and running out on its own.
   knock.trail += Math.hypot(dx, dy);
-  const gap = Math.max(0.02, T.wakeSpacing) * (geo?.em || 200);
+  const gap = Math.max(0.02, T.wakeSpacing) * (geo ? fxEm() : 200);
   if (T.wakeReach > 0 && knock.trail >= gap) { knock.trail %= gap; ring(p.x, p.y, -T.wakeReach); }
   Object.assign(hover, { tx: p.x, ty: p.y });
   wake();

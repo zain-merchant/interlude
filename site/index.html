@@ -21,7 +21,7 @@
   <!-- Geist, served from here (no other site to reach before the page can
        draw its text); the Latin file is fetched straight away. -->
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="style.css?v=20261122b">
+  <link rel="stylesheet" href="style.css?v=20261122c">
   <script src="tune.js?v=20261122a"></script>
   <script>
     // Live updates while working on the site locally (.claude/serve.py
@@ -1104,6 +1104,11 @@
 
     <span class="foot-word" data-text="Interlude" aria-hidden="true">Interlude</span>
   </footer>
+  <!-- Under the page, past its end: what shows when the page is pulled on
+       past its foot (the rubber band in Safari): the footer's colour and its
+       grain, and a glow from below as it's pulled (index.html, the footer's
+       name). Behind the page itself, and only there while it's pulled. -->
+  <div class="foot-under" aria-hidden="true"><div class="grain grain--under"></div></div>
 
   <script>
     // Download on a phone or a tablet: the app is for a Mac, so a .dmg is no
@@ -1554,7 +1559,7 @@
           io.observe(w);
         });
       }
-      const fx = await import('./foot-fx.js?v=20261118d1').catch(() => null);
+      const fx = await import('./foot-fx.js?v=20261122a').catch(() => null);
       addEventListener('foot-fit', () => fx?.relayout());
       // Without tune.js (or an older one), each control still applies its default.
       const own = (o) => o.onInput?.(o.value);
@@ -1702,18 +1707,23 @@
         const r = w.getBoundingClientRect();
         if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom && !e.target.closest?.('a, button, .dialkit-root')) e.preventDefault();
       });
-      // (A finger's ring waits for a tap, or for the finger to move sideways:
-      // the footer keeps up and down for scrolling, style.css, so a scroll
-      // that starts on the word sets nothing off.)
+      // A finger: the light comes up under it as soon as it touches the
+      // word. A tap sends a ring (and the lens) out from there; dragged
+      // sideways the lens goes with it (the footer keeps up and down for
+      // scrolling, style.css). A touch that turns into a scroll (the page
+      // takes it: pointercancel) leaves a ring where it touched. Let go, the
+      // light stays a moment where the finger was, then fades.
       let fstart = null;
+      let linger = 0;
+      const touchAt = (e) => { const c = canvas?.getBoundingClientRect(); return c && { x: e.clientX - c.left, y: e.clientY - c.top }; };
       addEventListener('pointerdown', (e) => {
         if (e.button !== 0 || e.target.closest?.('a, button, .dialkit-root, .nav')) return;
         const r = w.getBoundingClientRect();
         if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) return;
-        const c = canvas?.getBoundingClientRect();
-        if (!c) return;
-        const p = { x: e.clientX - c.left, y: e.clientY - c.top };
+        const p = touchAt(e);
+        if (!p) return;
         if (e.pointerType !== 'touch') return fx?.click?.(p);
+        clearTimeout(linger);
         fstart = { id: e.pointerId, x: e.clientX, y: e.clientY, p, on: false };
       });
       addEventListener('pointermove', (e) => {
@@ -1722,7 +1732,10 @@
         if (Math.abs(dx) > 6 && Math.abs(dx) > Math.abs(dy)) { fstart.on = true; fx?.click?.(fstart.p); }
       }, { passive: true });
       addEventListener('pointerup', (e) => { if (fstart && !fstart.on && e.pointerId === fstart.id) fx?.click?.(fstart.p); fstart = null; });
-      addEventListener('pointercancel', () => (fstart = null));
+      addEventListener('pointercancel', (e) => {
+        if (fstart && !fstart.on && e.pointerId === fstart.id) fx?.ping?.(fstart.p);
+        fstart = null;
+      });
       // Held and dragged (a finger: dragged sideways), the lens goes with the
       // pointer; let go, it springs back.
       addEventListener('pointermove', (e) => {
@@ -1735,6 +1748,7 @@
         last = null;
         if (on) { on = false; w.style.setProperty('--on', '0'); fx?.point(null); }
       };
+      const leaveSoon = () => { clearTimeout(linger); linger = setTimeout(leave, 900); };
       addEventListener('pointermove', (e) => {
         // A finger counts only while it's down (and not scrolling the page).
         if (e.pointerType === 'touch' && !e.buttons) return;
@@ -1746,13 +1760,74 @@
         last = { x: e.clientX, y: e.clientY, target: e.target };
         check(e.clientX, e.clientY, e.target);
       }, { passive: true });
-      addEventListener('pointerup', (e) => { if (e.pointerType === 'touch') leave(); }, { passive: true });
-      addEventListener('pointercancel', leave, { passive: true });
-      // Leaving the window (the word sits on its bottom edge) lets go too.
-      d.addEventListener('pointerleave', leave);
+      addEventListener('pointerup', (e) => { if (e.pointerType === 'touch') leaveSoon(); }, { passive: true });
+      addEventListener('pointercancel', (e) => { if (e.pointerType === 'touch') { last = null; leaveSoon(); } else leave(); }, { passive: true });
+      // Leaving the window (the word sits on its bottom edge) lets go too
+      // (a finger, lifted, leaves too: that one lingers like the rest).
+      d.addEventListener('pointerleave', (e) => (e.pointerType === 'touch' ? leaveSoon() : leave()));
       addEventListener('blur', leave);
       // The page scrolling under a still pointer moves the word under it.
       addEventListener('scroll', () => { if (last && inView) check(last.x, last.y, document.elementFromPoint(last.x, last.y)); }, { passive: true });
+      // The effect's size on a touch screen, against the word (being tried,
+      // Footer: effect size on phones; or ?footfx=0.75 / 1 / 1.4 / 1.8).
+      // 1 is the Mac's: everything in it is in the word's em.
+      const coarse = matchMedia('(hover: none) and (pointer: coarse)');
+      const fxq = new URL(location.href).searchParams.get('footfx');
+      let fxScale = 1;
+      const applyScale = () => { if (fx) { fx.T.scale = coarse.matches ? fxScale : 1; fx.relayout(); } };
+      tune.select({ label: 'Footer: effect size on phones', folder: 'Motion', value: fxq || '1', options: [['0.75', 'Smaller (0.75)'], ['1', 'As on a Mac (today)'], ['1.4', 'Larger (1.4)'], ['1.8', 'Larger still (1.8)']],
+        onInput: (v) => { fxScale = +(fxq || v) || 1; applyScale(); } });
+      coarse.addEventListener?.('change', applyScale);
+
+      // Pulled on past the foot of the page: the effect wells up from under
+      // the word, the further the more (foot-fx.js surge). Safari reports
+      // the rubber band as a scroll past the end; a trackpad or wheel that
+      // keeps pushing down at the end (Chrome, Firefox) counts too, easing
+      // off once it stops. Under the page (.foot-under) the footer's colour
+      // and grain carry on, with a glow from below while it's pulled. Only
+      // arithmetic on scroll and wheel events until the end is reached;
+      // nothing runs once it's let go.
+      const under = document.querySelector('.foot-under');
+      const root = document.documentElement;
+      let maxY = 0;
+      const measureMax = () => { maxY = root.scrollHeight - innerHeight; };
+      measureMax();
+      addEventListener('resize', measureMax);
+      new ResizeObserver(measureMax).observe(document.body);
+      let over = 0, wheelPull = 0, wheelAt = 0, decayRaf = 0, shown = false;
+      const full = () => Math.max(70, innerHeight * 0.14);
+      const apply = () => {
+        const px = Math.max(over, wheelPull);
+        const k = Math.min(1, px / full());
+        fx?.surge?.(k, 0.5);
+        if ((k > 0) !== shown) { shown = k > 0; under?.toggleAttribute('data-on', shown); }
+        under?.style.setProperty('--pull', k.toFixed(3));
+      };
+      addEventListener('scroll', () => {
+        const o = Math.max(0, scrollY - maxY);
+        if (o === over) return;
+        over = o;
+        apply();
+      }, { passive: true });
+      const decay = (now) => {
+        decayRaf = 0;
+        if (now - wheelAt > 80) wheelPull *= 0.85;
+        if (wheelPull < 0.5) wheelPull = 0;
+        apply();
+        if (wheelPull) decayRaf = requestAnimationFrame(decay);
+      };
+      addEventListener('wheel', (e) => {
+        if (e.deltaY <= 0 || e.ctrlKey || scrollY < maxY - 1) return;
+        const F = full() * 1.25;
+        // (Harder and harder to pull further, like the rubber band.)
+        wheelPull = Math.min(F, wheelPull + e.deltaY * (e.deltaMode ? 16 : 1) * 0.35 * (1 - wheelPull / F));
+        wheelAt = performance.now();
+        apply();
+        if (!decayRaf) decayRaf = requestAnimationFrame(decay);
+      }, { passive: true });
+      // (For checking without a rubber band: window.footPull(px).)
+      window.footPull = (px) => { over = Math.max(0, px); apply(); };
+
       // No hover on this screen: play it once when the word comes into view.
       if (fx?.ready && !matchMedia('(hover: hover)').matches) {
         const io = new IntersectionObserver(([e]) => {
