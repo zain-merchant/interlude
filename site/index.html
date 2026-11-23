@@ -21,13 +21,13 @@
   <!-- Geist, served from here (no other site to reach before the page can
        draw its text); the Latin file is fetched straight away. -->
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="style.css?v=20261123m">
+  <link rel="stylesheet" href="style.css?v=20261123n">
   <script>
     // (The phone preview's frame, opened by this same site with the Tune
     // panel showing; nothing for anyone else.)
     if (self !== top && /[?&]frame=1/.test(location.search)) { try { if (parent.location.origin === location.origin && parent.tune?.shown) document.write('<script src="tune-frame.js?v=20261123a"><\/script>'); } catch {} }
   </script>
-  <script src="tune.js?v=20261123b"></script>
+  <script src="tune.js?v=20261123c"></script>
   <script>
     // Live updates while working on the site locally (.claude/serve.py
     // streams the files whose contents changed). Stylesheets swap in place,
@@ -456,12 +456,17 @@
         const left = geo.side0 + (geo.side - geo.side0) * p, right = geo.side0 + (geo.right - geo.side0) * p;
         // (Its corners smoothed like every other's where the browser draws
         // that itself, squircles.js: the radius scaled so the corner's
-        // middle stays put. Elsewhere round: a clip redrawn every frame
-        // would cost more than it shows.)
-        const sq = d.dataset.squircles && SQ_NATIVE ? sqScale(+d.dataset.squircles / 100) : 1;
-        const box = { left: `${r(left)}px`, width: `${r(geo.W - left - right)}px`, top: `${r(geo.top0 + (10 - geo.top0) * p)}px`, height: `${r(geo.h0 + (48 - geo.h0) * p)}px`, borderRadius: `${r((geo.r0 + (CAP_R - geo.r0) * p) * sq)}px` };
+        // middle stays put. Elsewhere cut to it, below.)
+        const sqK = d.dataset.squircles && SQ_NATIVE ? sqScale(+d.dataset.squircles / 100) : 1;
+        const box = { left: `${r(left)}px`, width: `${r(geo.W - left - right)}px`, top: `${r(geo.top0 + (10 - geo.top0) * p)}px`, height: `${r(geo.h0 + (48 - geo.h0) * p)}px`, borderRadius: `${r((geo.r0 + (CAP_R - geo.r0) * p) * sqK)}px` };
         Object.assign(glass.style, box);
         Object.assign(edge.style, box);
+        // (Cut to it, where the browser doesn't draw the shape: squircles.js.)
+        if (window.sq) {
+          const w = parseFloat(box.width), h = parseFloat(box.height), R = Array(4).fill(parseFloat(box.borderRadius)), I = R.map((v) => v - 1);
+          glass.style.setProperty('--sq-clip', `path(evenodd, '${window.sq.sliver(w, h, R, window.sq.s)}')`);
+          edge.style.setProperty('--sq-clip', `path(evenodd, '${window.sq.path(w, h, R, window.sq.s)}${window.sq.path(w - 2, h - 2, I, window.sq.s, 1, 1)}')`);
+        }
         // The bar's middle is 30px down, the capsule's 34px. The icon's box
         // is 36px, drawn larger in the bar; the name follows its right edge.
         const ic = ICON + (1 - ICON) * p;
@@ -2980,7 +2985,7 @@
       const st = window.tryState || {};
       // (?squircles=off turns it off; the Try group has both controls.)
       if (st.sqOn === false) { stop?.(); stop = null; return; }
-      sqMod ??= await import('./squircles.js?v=20261123c').catch(() => null);
+      sqMod ??= await import('./squircles.js?v=20261123e').catch(() => null);
       if (!sqMod) return;
       stop?.();
       document.documentElement.dataset.squircles = String(Math.max(0, Math.min(100, st.smooth ?? 60)));

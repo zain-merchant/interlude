@@ -496,8 +496,10 @@
     for (const [group, g] of groups) for (const [path, v] of Object.entries(g.last || {})) send(group, path, v);
   }
   function phone(size) {
-    if (!show) return;
+    if (!show || size === (preview?.size || 'off')) return;
     const [w, h] = (SIZES[size] ? size : '').split('x').map(Number);
+    // (The panel's own control says what's showing, however it was asked for.)
+    queueMicrotask(() => set('Try: Show as a phone', preview?.size || 'off'));
     if (!w) {
       if (!preview) return;
       preview.box.remove(); preview = null;

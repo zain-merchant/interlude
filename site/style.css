@@ -2272,9 +2272,24 @@ html[data-lablogo="plain"] .lg-rings circle:nth-child(-n + 2) { display: none; }
    them itself (index.html scales their radius to match; squircles.js does
    every other rounded rect). */
 @supports (corner-shape: superellipse(2)) {
-  html[data-squircles][data-nav="morph"] :is(.nav-glass, .nav-edge, .menu, .menu-sheet, .nav-rim i) { corner-shape: superellipse(1.6); }
+  html[data-squircles][data-nav="morph"] :is(.nav-glass, .nav-edge, .menu, .menu-sheet, .nav-rim i) { corner-shape: superellipse(var(--sq-k, 1.6)); }
+  html[data-squircles] .grain--btn { corner-shape: inherit; }
 }
-
+/* Where it doesn't (Safari), the glass and its edge are cut to the shape as
+   they morph (index.html): the edge is the hairline's colour in a ring. With
+   the menu open its lower half is masked away (it was clipped). */
+html[data-sqpath][data-nav="morph"] .nav-glass { clip-path: var(--sq-clip); }
+html[data-sqpath][data-nav="morph"] .nav-edge, html[data-sqpath][data-nav="morph"] .nav:is([data-menu], [data-menu-shutting]):not([data-norim]) .nav-edge {
+  box-shadow: none; background: linear-gradient(rgb(255 255 255 / 0.05), transparent 4px), var(--nav-line); clip-path: var(--sq-clip);
+}
+@media (max-width: 860px) {
+  html[data-sqpath][data-nav="morph"] .nav:is([data-menu], [data-menu-shutting]):not([data-norim]) .nav-edge { -webkit-mask: linear-gradient(#000 0 0) 0 0 / 100% var(--mid, 24px) no-repeat; mask: linear-gradient(#000 0 0) 0 0 / 100% var(--mid, 24px) no-repeat; }
+}
+/* The hero's frame: while the clips play, the app in it has the corners, so
+   the frame only crops; before that, its picture has them. */
+html[data-squircles] .stage-frame[data-live] .screen:has(> .clips:not([style*="hidden"])) { clip-path: inset(0 0 0 0); }
+html[data-squircles] .stage-frame[data-live][data-mode="controller"] .screen:has(> .clips:not([style*="hidden"])) { clip-path: inset(0 -40px calc(-1 * var(--ctl-out, 60px) * var(--s)) -40px); }
+html[data-sqpath] .stage-frame:not([data-live]) .screen { background: none; }
 /* Being tried (the Try group): the nav's Download control and the menu
    icon, as a pair. ghost: both outlined buttons; text: words alone; round:
    the light pill, fully round. */
