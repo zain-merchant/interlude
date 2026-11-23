@@ -154,10 +154,15 @@ export function createMockBackend() {
     loaded: false, playing: false, position: 0, duration: 0, cue: 0, rate: 1, bend: 0, bpm: 0, key: null, keylock: false, synced: false, syncRatio: 1, keyShift: 0, firstBeat: 0,
     slip: false,
     generation: 0, previewing: false, scratching: false, waveform: null, fader: 1, peak: 0, path: null, ...freshLoops(),
-    filter: 0, fx: { kind: 'echo', on: false, level: 0.5, beats: 1 }, stems: 0b1111, splitFrom: 0,
+    filter: 0, fx: { kind: 'echo', on: false, level: 0.5, beats: 1 }, stems: 0b1111, splitFrom: 0, usedAt: null,
   }));
   // Stems: a pretend model download, and splitting that takes 20 s a track.
-  const stemsCfg = { enabled: true, cacheGb: 5, cacheBytes: 1.2e9 };
+  /** @type {{ mode: import('./stemsmodel.js').StemsMode, cacheGb: number, cacheBytes: number }} */
+  const stemsCfg = { mode: 'ask', cacheGb: 5, cacheBytes: 1.2e9 };
+  // How long a press takes to be heard with nothing prepared: the model
+  // loads, then the region at the play head is split.
+  const LOAD_MS = 2000;
+  const REGION_MS = 2000;
   const MODEL_BYTES = 165_612_636;
   const MODEL_SECS = 15;
   // ?stems=ready starts with the model there; offline drops the connection
@@ -165,14 +170,16 @@ export function createMockBackend() {
   // if an earlier session had cancelled it there; slow takes ten minutes.
   const query = new URLSearchParams(globalThis.location?.search);
   let modelCase = query.get('stems') ?? '';
+  // ?mode=fast, efficient or off starts with that chosen; as a first use otherwise.
+  stemsCfg.mode = /** @type {any} */ (query.get('mode') ?? stemsCfg.mode);
   /** @type {import('./stemsmodel.js').StemsModel & { at?: number }} */
-  let stemsModel = { state: 'missing', done: 0, total: MODEL_BYTES, secondsLeft: null, error: null };
+  let stemsModel = { state: 'missing', done: 0, total: MODEL_BYTES, secondsLeft: null, error: null, mode: stemsCfg.mode };
   if (modelCase === 'ready') stemsModel = { ...stemsModel, state: 'ready', done: MODEL_BYTES, at: 0 };
   if (modelCase === 'cancelled') stemsModel.done = MODEL_BYTES * 0.4;
   let modelAsked = modelCase !== 'cancelled';
   const modelListeners = new Set();
   const setModel = (change) => {
-    stemsModel = { ...stemsModel, secondsLeft: null, error: null, ...change };
+    stemsModel = { ...stemsModel, secondsLeft: null, error: null, mode: stemsCfg.mode, ...change };
     for (const fn of modelListeners) fn(stemsModel);
     return stemsModel;
   };
@@ -200,11 +207,21 @@ export function createMockBackend() {
     modelAsked = false;
     return setModel({ state: 'missing', done });
   };
+  function useStems(d) {
+    if (d.usedAt != null || !d.loaded) return;
+    d.usedAt = performance.now();
+  }
   const deckStems = (d) => {
-    if (!d.loaded || !stemsCfg.enabled) return { state: 'off', ready: 0, error: null };
-    if (stemsModel.state !== 'ready') return { state: 'needsModel', ready: 0, error: null };
-    const ready = Math.min(1, (performance.now() - Math.max(d.splitFrom, stemsModel.at)) / 20000);
-    return { state: ready >= 1 ? 'ready' : 'splitting', ready, error: null };
+    const is = (state, ready = 0, here = false) => ({ state, ready, here, error: null });
+    if (!d.loaded || stemsCfg.mode === 'off') return is('off');
+    if (stemsModel.state !== 'ready') return is('needsModel');
+    if (stemsCfg.mode === 'ask') return is('ask');
+    const now = performance.now();
+    if (stemsCfg.mode === 'efficient' && d.usedAt == null) return is('onUse');
+    const from = Math.max(stemsModel.at, d.usedAt ?? d.splitFrom);
+    if (now - from < LOAD_MS) return is('starting');
+    const ready = Math.min(1, (now - from - LOAD_MS) / 20000);
+    return is(ready >= 1 ? 'ready' : 'splitting', ready, now - from >= LOAD_MS + REGION_MS);
   };
   /** @type {{ active: boolean, started: number, seconds: number, path: string | null }} */
   const rec = { active: false, started: 0, seconds: 0, path: null };
@@ -382,7 +399,10 @@ export function createMockBackend() {
         d.keyShift = shiftTo(mine, theirs);
         break;
       }
-      case 'setStems': d.stems = cmd.mask & 0b1111; break;
+      case 'setStems':
+        d.stems = cmd.mask & 0b1111;
+        if (d.stems !== 0b1111) useStems(d);
+        break;
       case 'setSlip': Object.assign(d, { slip: cmd.on }, cmd.on ? {} : { slipAt: null, slipHot: null }); break;
       case 'setFader': d.fader = cmd.value; break;
       case 'sync': {
@@ -484,7 +504,7 @@ export function createMockBackend() {
       Object.assign(d, {
         loaded: true, playing: false, synced: false, position: saved?.cue ?? 0, cue: 0, duration, bpm, firstBeat: 0, key: { tonic: seed % 12, minor: seed % 3 !== 0 },
         waveform: fakeWaveform(seed, duration, bpm), generation: d.generation + 1, ...freshLoops(), path,
-        stems: 0b1111, splitFrom: performance.now(), keyShift: 0,
+        stems: 0b1111, splitFrom: performance.now(), usedAt: null, keyShift: 0,
       }, saved ? { ...saved, hotCues: [...saved.hotCues] } : {});
       return {
         title: t.title, path, duration, sampleRate: 44100,
@@ -518,14 +538,17 @@ export function createMockBackend() {
     },
     stemsInfo: async () => ({ ...stemsCfg, modelBytes: 510_700_000, model: stemsModel }),
     setStems: async (change) => {
-      for (const k of ['enabled', 'cacheGb']) if (change[k] != null) stemsCfg[k] = change[k];
-      if (change.enabled === false && stemsModel.state !== 'ready') {
+      for (const k of ['mode', 'cacheGb']) if (change[k] != null) stemsCfg[k] = change[k];
+      if (change.mode === 'off' && stemsModel.state !== 'ready') {
         const asked = modelAsked;
         stopModel();
         modelAsked = asked;
-      } else if (change.enabled && modelAsked) startModel();
+      } else if (change.mode && modelAsked) startModel();
+      for (const d of decks) d.splitFrom = performance.now();
+      setModel({ error: stemsModel.error });
       return { ...stemsCfg, modelBytes: 510_700_000, model: stemsModel };
     },
+    useStems: async (deck) => useStems(decks[deck]),
     clearStemsCache: async () => {
       stemsCfg.cacheBytes = 0;
       return { ...stemsCfg, modelBytes: 510_700_000, model: stemsModel };
@@ -535,7 +558,7 @@ export function createMockBackend() {
       modelListeners.add(fn);
       return () => modelListeners.delete(fn);
     },
-    stemsSetupDone: async () => (stemsCfg.enabled && modelAsked && stemsModel.state === 'missing' ? startModel() : stemsModel),
+    stemsSetupDone: async () => (stemsCfg.mode !== 'off' && modelAsked && stemsModel.state === 'missing' ? startModel() : stemsModel),
     downloadStemsModel: async () => {
       modelAsked = true;
       return startModel();

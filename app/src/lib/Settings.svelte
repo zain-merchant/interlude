@@ -10,8 +10,8 @@
   import { setSlip } from './performance.js';
   import { keyLabel } from './commands.js';
   import { backend } from './backend.js';
-  import { stemsModel, downloadStems, cancelStems, removeStems, watchStemsModel } from './stemsmodel.svelte.js';
-  import { mb, percent, progressText, stemsStatus } from './stemsmodel.js';
+  import { stemsModel, downloadStems, cancelStems, removeStems, setStemsMode, watchStemsModel } from './stemsmodel.svelte.js';
+  import { mb, percent, progressText, stemsStatus, STEMS_MODES, STEMS_OFF, STEMS_WHAT } from './stemsmodel.js';
 
   /**
    * Settings open as a popup over the whole window. Performance keys keep
@@ -185,6 +185,15 @@
   async function setStems(change) {
     try {
       stems = await backend.setStems(change);
+    } catch (e) {
+      stemsError = String(e);
+    }
+  }
+  /** @param {import('./stemsmodel.js').StemsMode} mode */
+  async function pickMode(mode) {
+    stemsError = '';
+    try {
+      stems = await setStemsMode(mode);
     } catch (e) {
       stemsError = String(e);
     }
@@ -474,7 +483,7 @@
         <section class="display" aria-labelledby="stems-model" bind:this={modelSection}>
           <h3 id="stems-model">Separation model</h3>
           {#if stemsModel.state === 'ready'}
-            <p>Ready. Each track you load is split into vocals, melody, bass and drums on this computer, starting at the play head, so the part you're about to play is ready first. The model takes {mb(stems?.modelBytes || stemsModel.total)}.</p>
+            <p>Ready. It separates tracks into vocals, melody, bass and drums on this computer, starting at the play head, so the part you're about to play is ready first. The model takes {mb(stems?.modelBytes || stemsModel.total)}.</p>
             <div class="size model">
               {#if removing}
                 <p>New tracks won't have stems until it's downloaded again.</p>
@@ -511,9 +520,19 @@
         </section>
         {#if stems}
           <section class="display">
-            <h3>Splitting</h3>
-            <label class="check"><input type="checkbox" checked={stems.enabled} onchange={(e) => setStems({ enabled: e.currentTarget.checked })} />
-              Split tracks into stems when they load</label>
+            <h3 id="stems-mode">How stems work on {mac ? 'your Mac' : 'this computer'}</h3>
+            <p>{STEMS_WHAT}</p>
+            <div role="radiogroup" aria-labelledby="stems-mode">
+              {#each STEMS_MODES as m}
+                <label class="opt"><input type="radio" name="stems-mode" checked={stemsModel.mode === m.mode}
+                  aria-describedby="stems-{m.mode}" onchange={() => pickMode(m.mode)} /><span>{m.name}</span></label>
+                <p id="stems-{m.mode}" class="under">{m.line}</p>
+              {/each}
+              <label class="opt"><input type="radio" name="stems-mode" checked={stemsModel.mode === 'off'}
+                aria-describedby="stems-off" onchange={() => pickMode('off')} /><span>Off</span></label>
+              <p id="stems-off" class="under">{STEMS_OFF}</p>
+            </div>
+            {#if stemsModel.mode === 'ask'}<p>Nothing is separated until you choose, here or in a deck's Stems tab.</p>{/if}
           </section>
           <section class="display">
             <h3>Stems cache</h3>
@@ -892,6 +911,18 @@
     min-height: 30px;
     color: var(--fg);
   }
+  input[type='radio'] {
+    appearance: none;
+    flex: none;
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    border-radius: 50%;
+    box-shadow: inset 0 0 0 1px var(--fg-3);
+  }
+  input[type='radio']:checked {
+    box-shadow: inset 0 0 0 5px var(--fg);
+  }
   input[type='checkbox'] {
     appearance: none;
     flex: none;
@@ -916,6 +947,7 @@
     border-bottom: 1.6px solid var(--bg);
     transform: rotate(-45deg);
   }
+  input[type='radio']:focus-visible,
   input[type='checkbox']:focus-visible {
     outline: 2px solid var(--ring);
     outline-offset: 2px;
@@ -924,6 +956,9 @@
     display: flex;
     align-items: center;
     gap: 8px;
+  }
+  .display .under {
+    margin: 0 0 8px 26px;
   }
   .size.model {
     margin-bottom: 12px;
@@ -934,16 +969,6 @@
   .size span {
     width: 48px;
     text-align: center;
-  }
-  .check {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin: 0 0 8px;
-    color: var(--fg-2);
-  }
-  .check input {
-    accent-color: var(--fg);
   }
   .err {
     color: var(--kill);

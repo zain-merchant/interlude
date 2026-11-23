@@ -3,14 +3,16 @@
   // Shift-click plays it alone. A stem that plays has a filled dot; a muted
   // one a hollow dot and dim text; a soloed one takes the deck's colour. While the
   // track is still being split, a hairline under the buttons fills up. Until
-  // the model has downloaded, the buttons give way to how that's going.
+  // the model has downloaded, the buttons give way to how that's going. A
+  // press that isn't heard yet, because the track isn't split there, pulses.
   import { tick } from 'svelte';
+  import { announce } from './announce.svelte.js';
   import { tracks } from './engine.svelte.js';
   import { tip, tipText } from './tooltip.svelte.js';
   import { keyLabel } from './commands.js';
-  import { STEMS, stemsOf, usable, soloed, toggleStem, soloStem } from './stems.svelte.js';
+  import { STEMS, stemsOf, usable, waiting, soloed, toggleStem, soloStem, chooseStems } from './stems.svelte.js';
   import { stemsModel, downloadStems, watchStemsModel } from './stemsmodel.svelte.js';
-  import { percent, progressText, stemsStatus } from './stemsmodel.js';
+  import { percent, progressText, stemsStatus, STEMS_MODES, STEMS_WHAT } from './stemsmodel.js';
 
   /** @type {{ deck: number, onsettings?: () => void }} */
   let { deck, onsettings } = $props();
@@ -19,6 +21,7 @@
   const s = $derived(stemsOf(deck));
   const can = $derived(usable(deck));
   const solo = $derived(soloed(s.mask));
+  const later = $derived(waiting(deck));
 
   /** Why the buttons can't be used, or '' if they can. */
   const why = $derived.by(() => {
@@ -36,6 +39,42 @@
   // A track that's in the cache has its stems without the model, so the
   // deck decides. An empty deck shows a download that's on its way.
   const getting = $derived(t ? s.state === 'needsModel' : ['downloading', 'waiting', 'failed'].includes(stemsModel.state));
+  // Until it's chosen how stems work, the choice is here, ahead of a
+  // download: there's nothing to wait for. A cached track has its stems.
+  const asking = $derived(stemsModel.known && stemsModel.mode === 'ask' && !(t && s.state === 'ready'));
+  let more = $state(false);
+  let failed = $state('');
+  async function choose(mode) {
+    failed = '';
+    try {
+      await chooseStems(deck, mode);
+      more = false;
+    } catch (e) {
+      failed = String(e);
+    }
+  }
+  // On the window: in WebKit a click leaves a button without focus.
+  /** @param {KeyboardEvent} e */
+  function moreKey(e) {
+    if (e.key !== 'Escape' || !more) return;
+    e.preventDefault();
+    e.stopPropagation();
+    more = false;
+    /** @type {HTMLElement | null} */ (root?.querySelector('.info'))?.focus();
+  }
+  function showMore() {
+    more = !more;
+    // It's put at the end of the page, so it's read out rather than found.
+    if (more) announce([STEMS_WHAT, ...STEMS_MODES.map((m) => `${m.name}. ${m.line}`)].join(' '));
+  }
+  /** Puts the detail over everything: a panel would cover or cut it off. @param {HTMLElement} node */
+  function over(node) {
+    document.body.append(node);
+    const at = root.getBoundingClientRect();
+    node.style.left = `${Math.max(16, Math.min(at.left, innerWidth - node.offsetWidth - 16))}px`;
+    node.style.bottom = `${innerHeight - at.top + 8}px`;
+    return { destroy: () => node.remove() };
+  }
   const status = $derived(stemsStatus(stemsModel));
   const act = () => (status.action ? downloadStems().catch((e) => console.error('stems model', e)) : onsettings?.());
   $effect(() => (getting ? watchStemsModel() : undefined));
@@ -43,7 +82,7 @@
   // Focus on the status's button moves to the first stem when they're back.
   let root;
   $effect.pre(() => {
-    if (getting || !root?.contains(document.activeElement)) return;
+    if (getting || asking || !root?.contains(document.activeElement)) return;
     tick().then(() => document.activeElement === document.body && root?.querySelector('.stem')?.focus());
   });
 
@@ -63,20 +102,42 @@
   }
   const label = (i) => {
     const on = (s.mask >> i) & 1;
-    if (solo === i) return `${STEMS[i]} playing alone`;
-    return `${STEMS[i]} ${on ? 'on' : 'muted'}`;
+    const soon = later ? ', in a moment' : '';
+    if (solo === i) return `${STEMS[i]} playing alone${soon}`;
+    return `${STEMS[i]} ${on ? 'on' : `muted${soon}`}`;
   };
   const stemTip = (i) => {
     if (why) return why;
     const on = (s.mask >> i) & 1;
     const what = solo === i ? `${STEMS[i]} alone, ⇧-click for all` : on ? `Mute ${STEMS[i].toLowerCase()}` : `Unmute ${STEMS[i].toLowerCase()}`;
-    const note = s.state === 'splitting' || s.state === 'starting' ? `splitting, ${Math.round(s.ready * 100)}% ready` : '⇧-click to play it alone';
+    const note = later ? 'heard in a moment, once this part is ready' : s.state === 'onUse' ? 'ready a moment after you press it' : s.state === 'splitting' || s.state === 'starting' ? `${Math.round(s.ready * 100)}% of the track ready` : '⇧-click to play it alone';
     return tipText(what, keyLabel(`deck.${deck}.stem.${i}`), note);
   };
 </script>
 
+<svelte:window onkeydowncapture={moreKey} onpointerdown={(e) => { if (more && !root?.contains(/** @type {Node} */ (e.target))) more = false; }} onresize={() => (more = false)} />
+
 <div class="stems" role="group" aria-label="Deck {'AB'[deck]} stems" style:--deck={deck === 0 ? 'var(--deck-a)' : 'var(--deck-b)'} bind:this={root}>
-  {#if getting}
+  {#if asking}
+    <div class="choice">
+      <div class="options" role="group" aria-label="How should stems work?">
+        {#each STEMS_MODES as m}
+          <button class="option" onclick={() => choose(m.mode)} aria-describedby="stems-{deck}-{m.mode}" use:tip={() => m.line}>
+            <b>{m.name}</b><span id="stems-{deck}-{m.mode}">{m.short}</span></button>
+        {/each}
+      </div>
+      <button class="info" aria-expanded={more} aria-controls="stems-more-{deck}" aria-label="About this choice" onclick={showMore}
+        use:tip={() => 'About this choice'}><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.2" /><path d="M8 7.2v4M8 4.6v.6" /></svg></button>
+      {#if more}
+        <div class="more" use:over id="stems-more-{deck}">
+          <p>{STEMS_WHAT}</p>
+          {#each STEMS_MODES as m}<p><b>{m.name}.</b> {m.line}</p>{/each}
+          <p>Change it whenever you like in Settings › Stems.</p>
+        </div>
+      {/if}
+      {#if failed}<p class="failed" role="alert">{failed}</p>{/if}
+    </div>
+  {:else if getting}
     <div class="getting">
       <span class="what num" use:tip={() => [status.title, status.detail].filter(Boolean).join(': ')}>{status.title}
         {#if status.detail}<span class="detail">{status.detail}</span>{/if}</span>
@@ -90,7 +151,7 @@
     <div class="row">
       {#each STEMS as name, i}
         {@const on = !!((s.mask >> i) & 1)}
-        <button class="stem" class:muted={!on} class:solo={solo === i} aria-disabled={!can && !(t && why)}
+        <button class="stem" class:muted={!on} class:solo={solo === i} class:later={later && (solo === i || (solo < 0 && !on))} aria-disabled={!can && !(t && why)}
           aria-pressed={on} aria-label={label(i)}
           onpointerdown={(e) => down(e, i)} onclick={(e) => e.detail === 0 && down({ button: 0, shiftKey: e.shiftKey }, i)}
           onkeydown={(e) => key(e, i)} use:tip={() => stemTip(i)}><i></i>{name}</button>
@@ -98,7 +159,7 @@
     </div>
   {/if}
   {#if t && (s.state === 'splitting' || s.state === 'starting')}
-    <div class="progress" role="progressbar" aria-label="Splitting into stems" aria-valuemin="0" aria-valuemax="100"
+    <div class="progress" role="progressbar" aria-label="Getting stems ready" aria-valuemin="0" aria-valuemax="100"
       aria-valuenow={Math.round(s.ready * 100)}><i style:transform="scaleX({s.ready})"></i></div>
   {/if}
 </div>
@@ -114,6 +175,104 @@
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 8px;
     align-items: center;
+  }
+  .choice {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .options {
+    flex: 1;
+    min-width: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .option {
+    min-width: 0;
+    min-height: var(--h-lg);
+    padding: 4px 12px;
+    border: 0;
+    border-radius: var(--r);
+    background: none;
+    box-shadow: inset 0 0 0 1px var(--line-2);
+    color: var(--fg-2);
+    font: inherit;
+    text-align: left;
+    transition: background-color 140ms ease;
+  }
+  .option:hover {
+    background: var(--hover);
+  }
+  .option b,
+  .option span {
+    display: block;
+  }
+  .option span {
+    line-height: 13px;
+    text-wrap: balance;
+  }
+  .option b {
+    line-height: 16px;
+    font-weight: 400;
+    color: var(--fg);
+  }
+  .option span {
+    font-size: var(--t-xs);
+  }
+  .info {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: var(--h-md);
+    height: var(--h-md);
+    padding: 0;
+    border: 0;
+    border-radius: var(--r);
+    background: none;
+    color: var(--fg-2);
+  }
+  .info:hover,
+  .info[aria-expanded='true'] {
+    background: var(--hover);
+    color: var(--fg);
+  }
+  .info svg {
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.4;
+    stroke-linecap: round;
+  }
+  .more {
+    position: fixed;
+    z-index: 40;
+    width: min(360px, 100vw - 32px);
+    padding: 12px;
+    border-radius: 8px;
+    background: var(--popover);
+    box-shadow: inset 0 0 0 1px var(--line-2), 0 12px 32px rgb(0 0 0 / 0.45);
+    color: var(--fg-2);
+    pointer-events: none;
+  }
+  .more p {
+    margin: 0 0 8px;
+  }
+  .more p:last-child {
+    margin: 0;
+  }
+  .more b {
+    font-weight: 400;
+    color: var(--fg);
+  }
+  .failed {
+    position: absolute;
+    top: 100%;
+    margin: 0;
+    color: var(--kill);
+    font-size: var(--t-xs);
   }
   .getting {
     display: flex;
@@ -137,10 +296,24 @@
   .getting .btn {
     flex: none;
   }
+  /* Too narrow for the line: the name, and the rest in the detail. */
+  @container (max-width: 299px) {
+    .choice .option {
+      min-height: var(--h-md);
+      padding: 0 8px;
+      text-align: center;
+    }
+    .option span {
+      display: none;
+    }
+  }
   /* Narrow decks: two small lines, in the height of one. */
   @container (max-width: 320px) {
     .getting {
       padding-left: 0;
+    }
+    .option {
+      padding: 4px 8px;
     }
     .what {
       display: -webkit-box;
@@ -203,6 +376,21 @@
   }
   .stem.solo i {
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--deck) 25%, transparent);
+  }
+  /* Pressed, and not heard yet. */
+  .stem.later i {
+    animation: later 0.9s ease-in-out infinite alternate;
+  }
+  @keyframes later {
+    to {
+      opacity: 0.25;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .stem.later i {
+      animation: none;
+      opacity: 0.4;
+    }
   }
   .progress {
     position: absolute;

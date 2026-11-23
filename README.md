@@ -24,8 +24,9 @@ the report it saves.
   pads; auto gain so tracks start level; a master
   limiter so the output never clips.
 - **Stems:** mute or solo vocals, melody, bass and drums on each deck. The
-  model that splits them downloads by itself after setup (166 MB).
-  Tracks are split on your Mac, nothing is uploaded.
+  model that makes them downloads by itself after setup (166 MB), and you
+  choose whether every track is separated when you load it or only when you
+  use its stems. That happens on your Mac, nothing is uploaded.
 - **Library:** instant search, playlists, a history of every set, and
   import from Rekordbox and Serato with cues, loops and grids. Your music
   files are never changed.
@@ -100,7 +101,7 @@ crates/engine   Real-time audio engine (no UI). Decks, mixer, DSP, decoding,
                 waveform analysis, sound card output.
 crates/controller  MIDI and HID controllers: Mixxx mappings (and their
                 scripts), MIDI learn, the built-in DDJ-FLX4 mapping.
-crates/stems    Splits tracks into stems in the background (ONNX Runtime +
+crates/stems    Makes stems in the background (ONNX Runtime +
                 HTDemucs), and the stems cache.
 crates/cli      `dj` command-line tool for testing the engine headless.
 app/            Desktop app: Tauri 2 shell (app/src-tauri) + Svelte 5 UI (app/src).

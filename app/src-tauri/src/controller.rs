@@ -29,8 +29,9 @@ enum UiEvent {
     LoadSample { slot: usize },
     /// A pad mode button was pressed on `deck`.
     PadMode { deck: usize, mode: &'static str },
-    /// A stem pad was pressed on a deck whose stems can't be used yet.
-    StemsUnavailable { deck: usize },
+    /// A stem pad was pressed on a deck whose stems can't be used yet. The
+    /// press was for `mask`.
+    StemsUnavailable { deck: usize, mask: u8 },
     /// The deck's hardware tempo fader waits at `rate` to pick up the
     /// tempo, or (`null`) controls it again.
     TempoPickup { deck: usize, rate: Option<f64> },
@@ -48,17 +49,24 @@ impl Host for AppHost {
     fn act(&self, action: Action) {
         match action {
             // Without stems the deck plays the original whatever the mask
-            // says, so a stem pad would light up and change nothing.
-            Action::Engine(Command::SetStems { deck, .. })
-                if !self
-                    .app
-                    .try_state::<crate::stems::Stems>()
-                    .is_some_and(|s| s.usable(deck.index())) =>
-            {
-                let _ = self.app.emit(
-                    "controller",
-                    UiEvent::StemsUnavailable { deck: deck.index() },
-                );
+            // says, so a stem pad would light up and change nothing. Where
+            // they're only a moment away it lights at once, and is heard
+            // when they're there.
+            Action::Engine(Command::SetStems { deck, mask }) => {
+                let d = deck.index();
+                let stems = self.app.try_state::<crate::stems::Stems>();
+                let Some(stems) = stems.filter(|s| s.usable(d)) else {
+                    let _ = self
+                        .app
+                        .emit("controller", UiEvent::StemsUnavailable { deck: d, mask });
+                    return;
+                };
+                if mask != dj_engine::ALL_STEMS {
+                    stems.used(d);
+                }
+                if let Ok(mut e) = self.engine.lock() {
+                    let _ = e.send(Command::SetStems { deck, mask });
+                }
             }
             Action::Engine(cmd) => {
                 if let Ok(mut e) = self.engine.lock() {

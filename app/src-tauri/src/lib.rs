@@ -482,7 +482,17 @@ fn control(
         library.unwatch(deck);
         stems.ejected(deck);
     }
+    let used = match cmd {
+        // Muting one is using them; putting them all back isn't.
+        Control::SetStems { deck, mask } if mask & dj_engine::ALL_STEMS != dj_engine::ALL_STEMS => {
+            Some(deck)
+        }
+        _ => None,
+    };
     send(&state, cmd.into_command()?)?;
+    if let Some(deck) = used {
+        stems.used(deck);
+    }
     if let Some(deck) = eject {
         // The engine hands the track back to be freed; drop our copy too.
         if let Some(t) = state
@@ -1018,6 +1028,7 @@ pub fn run() {
             library::import_run,
             stems::stems_info,
             stems::set_stems,
+            stems::use_stems,
             stems::clear_stems_cache,
             stems::stems_model,
             stems::stems_setup_done,

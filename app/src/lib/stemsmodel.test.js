@@ -1,7 +1,7 @@
 // Run with `npm test` (node's built-in test runner).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { amount, mb, notYet, percent, progressText, spoken, stemsStatus, timeLeft } from './stemsmodel.js';
+import { amount, isWaiting, mb, notYet, onUse, percent, progressText, spoken, stemsStatus, STEMS_MODES, timeLeft } from './stemsmodel.js';
 
 const total = 165_612_636;
 /** @param {string} state */
@@ -74,4 +74,40 @@ test('quarters are spoken while the progress is on screen', () => {
   assert.equal(spoken(at(0.26), at(0.27), true), '');
   assert.equal(spoken(at(0.2), at(0.8), true), 'Stems, 75% downloaded');
   assert.equal(spoken(at(0.9), at(1), true), '');
+});
+
+const deck = (state, rest = {}) => ({ loaded: true, state, ...rest });
+
+test('the first use asks, whatever is going on with the model', () => {
+  for (const state of ['ask', 'needsModel', 'failed']) assert.equal(onUse('ask', deck(state)), 'ask', state);
+  // A track whose stems are in the cache plays them without being asked.
+  assert.equal(onUse('ask', deck('ready')), 'go');
+  assert.equal(onUse('ask', { loaded: false, state: 'off' }), 'cant');
+});
+
+test('once chosen, a press goes ahead or says why not', () => {
+  for (const mode of /** @type {const} */ (['fast', 'efficient'])) {
+    for (const state of ['onUse', 'starting', 'splitting', 'ready']) assert.equal(onUse(mode, deck(state)), 'go', state);
+    for (const state of ['needsModel', 'failed', 'off']) assert.equal(onUse(mode, deck(state)), 'cant', state);
+  }
+  assert.equal(onUse('off', deck('off')), 'cant');
+});
+
+test('a press is waiting until the track is split where it plays', () => {
+  const at = (state, here, mask = 0b1110) => isWaiting({ state, here, mask });
+  assert.ok(at('onUse', false));
+  assert.ok(at('starting', false));
+  assert.ok(at('splitting', false));
+  assert.ok(!at('splitting', true));
+  assert.ok(!at('ready', true));
+  assert.ok(!at('splitting', false, 0b1111), 'nothing is muted');
+  assert.ok(!at('failed', false), 'it isn’t coming');
+});
+
+test('the choices are two, in plain words', () => {
+  assert.deepEqual(STEMS_MODES.map((m) => m.name), ['Fast', 'Efficient']);
+  for (const m of STEMS_MODES) {
+    assert.ok(!/[·—]/.test(m.name + m.short + m.line));
+    assert.ok(!/[A-Z]{4,}/.test(m.name + m.short + m.line));
+  }
 });
