@@ -17,7 +17,7 @@
 //
 // Keys never leave focus on nothing: Esc goes to the track list, and when
 // what had focus has gone (Undo, a name being typed) focus goes back to where
-// it came from.
+// it came from. In a dialog over the window, Tab goes round inside it.
 
 const OURS = 'data-tabbed'; // the tabindex on this element is ours
 const NATIVE = "button, summary, a[href], input:is([type='checkbox'], [type='radio'], [type='range'], [type='button'])";
@@ -99,18 +99,29 @@ function beside(/** @type {NonNullable<ReturnType<typeof toast>>} */ t) {
   return after ? { before: all[all.indexOf(after) - 1], after } : null;
 }
 
+/** In a dialog over the window, Tab goes round inside it: where it wraps to, or nothing while it's inside. */
+function round(/** @type {boolean} */ back) {
+  const modal = q("[aria-modal='true']").filter(shown).at(-1);
+  if (!modal) return null;
+  const all = stops().filter((x) => modal.contains(x));
+  const here = /** @type {HTMLElement} */ (document.activeElement);
+  if (!all.length) return null;
+  if (here !== modal && !modal.contains(here)) return all[back ? all.length - 1 : 0];
+  if (back ? here === all[0] || here === modal : here === all.at(-1)) return all[back ? all.length - 1 : 0];
+  return null;
+}
+
 function tab(/** @type {KeyboardEvent} */ e) {
   moving = true;
   grant();
+  const here = document.activeElement;
   const t = toast();
   const b = t?.docked ? beside(t) : null;
-  if (!t || !b) return;
-  const here = document.activeElement;
   const to =
-    here === t.undo ? (e.shiftKey ? b.before : b.after)
-    : here === b.before && !e.shiftKey ? t.undo
-    : here === b.after && e.shiftKey ? t.undo
-    : null;
+    t && b && here === t.undo ? (e.shiftKey ? b.before : b.after)
+    : t && b && here === b.before && !e.shiftKey ? t.undo
+    : t && b && here === b.after && e.shiftKey ? t.undo
+    : round(e.shiftKey);
   if (!to) return;
   e.preventDefault();
   to.focus();
