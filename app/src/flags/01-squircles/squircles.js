@@ -1,9 +1,10 @@
 // #1: continuous-curvature (squircle) corners on every rounded rect.
 //
-// The shape is Figma's corner smoothing: at 0% it is the plain border-radius;
-// as smoothing rises the curve starts further along each edge and eases in,
-// but its middle (the 45° point) stays exactly where the plain radius puts
-// it, so a corner never looks bigger or smaller, only smoother.
+// The shape is a superellipse: at 0% smoothing it is the plain
+// border-radius; as smoothing rises the curve starts further along each edge
+// and eases in, but its middle (the 45° point) stays exactly where the plain
+// radius puts it, so a corner never looks bigger or smaller, only smoother.
+// Both engines draw the same curve, at every size.
 //
 // Two ways to draw it:
 //
@@ -23,7 +24,7 @@
 //   own backgrounds: the ring then follows the squircle all the way round,
 //   one ring wide, never cropped.
 //
-// Circles, capsules and radii under 4px are left alone. Elements are only
+// Circles, capsules and radii under 2px are left alone. Elements are only
 // re-measured when their size or class changes, or a flag or setting does.
 // Rules are shared between elements of the same size and look, in one
 // stylesheet, and elements point at them with data-sq (or data-sq-h for
@@ -33,10 +34,7 @@
 // start() is called by App.svelte while the flag is on and returns a stop
 // function that removes every attribute, observer and rule it added.
 
-const MIN_R = 4;
-// #110 (UI audit flag): dir-room-tint smooths only panels, plates and menus. Round a key or a field (8px), a drawn
-// superellipse is barely different from a circle, and Chrome leaves a notch in the line where it begins.
-const minR = () => (document.documentElement.hasAttribute('data-flag-dir-room-tint') ? 13 : MIN_R);
+const MIN_R = 2;
 const FAR = 160; // the outer rect's reach past the element: room for shadows and focus rings
 // Deck tabs draw their selected underline a pixel past their own box; a
 // clip would notch both its ends (b-K28), so they keep CSS's round corners.
@@ -56,52 +54,102 @@ export function nativeScale(s) {
   return (1 - Math.SQRT1_2) / (1 - 2 ** (-1 / n));
 }
 
-/** Figma's corner smoothing, for one corner (figma-squircle's maths). */
-function corner(r, s, budget) {
-  r = Math.min(r, budget);
-  let p = (1 + s) * r;
-  // Not enough room for the full smoothing: use what fits.
-  s = Math.max(0, Math.min(s, budget / r - 1));
-  p = Math.min(p, budget);
-  const arc = 90 * (1 - s);
-  const L = Math.sin(((arc / 2) * Math.PI) / 180) * r * Math.SQRT2;
-  const alpha = (90 - arc) / 2;
-  const p3p4 = r * Math.tan(((alpha / 2) * Math.PI) / 180);
-  const beta = 45 * s;
-  const c = p3p4 * Math.cos((beta * Math.PI) / 180);
-  const d = c * Math.tan((beta * Math.PI) / 180);
-  const b = (p - L - c - d) / 3;
-  const a = 2 * b;
-  return { r, p, a, b, c, d, L };
+/**
+ * The smoothing that fits: a smoothed corner starts further along its edges
+ * than its radius, so where there isn't room for that (a short key) it is
+ * smoothed less, and its 45° point stays put.
+ */
+export function fit(w, h, radii, s) {
+  const [tl, tr, br, bl] = radii;
+  const room = Math.min(w / (tl + tr || 1e-9), w / (bl + br || 1e-9), h / (tl + bl || 1e-9), h / (tr + br || 1e-9));
+  if (nativeScale(s) <= room) return s;
+  let lo = 0;
+  for (let i = 0, hi = s; i < 12; i++) {
+    const m = (lo + hi) / 2;
+    if (nativeScale(m) <= room) lo = m;
+    else hi = m;
+  }
+  return Math.floor(lo * 100) / 100;
 }
 
-const f = (n) => Math.round(n * 100) / 100;
+const f = (n) => Math.round(n * 1000) / 1000;
+
+/**
+ * One superellipse corner of the plain radius r as points on cubic curves,
+ * from the box's horizontal edge to its vertical one, in distances from the
+ * box's corner: the same curve corner-shape draws.
+ * @returns {{ R: number, c: number[][] }} c: [x1, y1, x, y] per piece
+ */
+function superCorner(r, s) {
+  const n = 2 ** (1 + s);
+  const R = r * nativeScale(s);
+  const at = (deg) => {
+    // The point whose edge runs at this angle: a, b are its distances from the curve's centre, over R.
+    const t = deg <= 0 ? 0 : deg >= 90 ? Infinity : Math.tan((deg * Math.PI) / 180) ** (1 / (n - 1));
+    if (t === Infinity) return [0, R];
+    const b = (1 + t ** n) ** (-1 / n);
+    return [R - t * b * R, R - b * R];
+  };
+  // Quadratic pieces: each end's tangents meet at its control point. Shorter where the curve leaves the edge.
+  const turns = [0, 6, 14, 28, 45, 62, 76, 84, 90];
+  const c = [];
+  for (let k = 0; k < turns.length - 1; k++) {
+    const [p, q] = [at(turns[k]), at(turns[k + 1])];
+    const [u, v] = [turns[k], turns[k + 1]].map((a) => [-Math.cos((a * Math.PI) / 180), Math.sin((a * Math.PI) / 180)]);
+    const z = ((q[0] - p[0]) * v[1] - (q[1] - p[1]) * v[0]) / (u[0] * v[1] - u[1] * v[0]);
+    c.push([p[0] + u[0] * z, p[1] + u[1] * z, ...q]);
+  }
+  return { R, c };
+}
+
+/** The corners' pieces in order round the box: [start, pieces] each, clockwise from the top right. */
+function corners(w, h, radii, s, x, y) {
+  const [tl, tr, br, bl] = radii;
+  const out = [];
+  // [radius, box corner, which way "in from the corner" points, whether the curve is walked backwards]
+  for (const [r, cx, cy, sx, sy, back] of [[tr, x + w, y, -1, 1, 0], [br, x + w, y + h, -1, -1, 1], [bl, x, y + h, 1, -1, 0], [tl, x, y, 1, 1, 1]]) {
+    if (!(r > 0)) {
+      out.push({ r: 0, cx, cy, sx, sy, back, d: `${f(cx)} ${f(cy)}`, start: [cx, cy] });
+      continue;
+    }
+    const { R, c } = superCorner(r, s);
+    const pt = (a, b) => `${f(cx + sx * a)} ${f(cy + sy * b)}`;
+    let pieces = c.map((k) => `Q${pt(k[0], k[1])} ${pt(k[2], k[3])}`);
+    let start = [cx + sx * R, cy];
+    if (back) {
+      const ends = [[R, 0], ...c.map((k) => [k[2], k[3]])];
+      pieces = c.map((k, i) => `Q${pt(k[0], k[1])} ${pt(ends[i][0], ends[i][1])}`).reverse();
+      start = [cx, cy + sy * R];
+    }
+    out.push({ r, cx, cy, sx, sy, back, d: pieces.join(''), start });
+  }
+  return out;
+}
 
 /** The smoothed rounded rect at (x, y), w × h, radii [tl, tr, br, bl]. */
 export function squirclePath(w, h, radii, s, x = 0, y = 0) {
-  const budget = Math.min(w, h) / 2;
-  const [tl, tr, br, bl] = radii.map((r) => (r > 0 ? corner(r, s, budget) : null));
-  let d = `M${f(x + (tr ? w - tr.p : w))} ${f(y)}`;
-  if (tr) {
-    const { a, b, c, d: dd, L, r } = tr;
-    d += `c${f(a)} 0 ${f(a + b)} 0 ${f(a + b + c)} ${f(dd)}a${f(r)} ${f(r)} 0 0 1 ${f(L)} ${f(L)}c${f(dd)} ${f(c)} ${f(dd)} ${f(b + c)} ${f(dd)} ${f(a + b + c)}`;
+  return (
+    corners(w, h, radii, s, x, y)
+      .map((k, i) => `${i ? 'L' : 'M'}${f(k.start[0])} ${f(k.start[1])}${k.r ? k.d : ''}`)
+      .join('') + 'Z'
+  );
+}
+
+/**
+ * What lies between a plain round corner and the smoothed one, for every
+ * corner, as a clip (even-odd, in a rect reaching far past the box). Only the
+ * slivers: an outline that ran along the box's own edges would be antialiased
+ * a second time there, which drew a notch where each curve begins.
+ */
+export function slivers(w, h, radii, s, far) {
+  let d = `M${-far} ${-far}H${f(w + far)}V${f(h + far)}H${-far}Z`;
+  for (const { r, cx, cy, sx, sy, back, d: curve, start } of corners(w, h, radii, s, 0, 0)) {
+    if (!r) continue;
+    const ends = [`${f(cx + sx * r)} ${f(cy)}`, `${f(cx)} ${f(cy + sy * r)}`];
+    if (back) ends.reverse();
+    d += `M${f(start[0])} ${f(start[1])}${curve}L${ends[1]}A${f(r)} ${f(r)} 0 0 0 ${ends[0]}Z`;
   }
-  d += `L${f(x + w)} ${f(y + (br ? h - br.p : h))}`;
-  if (br) {
-    const { a, b, c, d: dd, L, r } = br;
-    d += `c0 ${f(a)} 0 ${f(a + b)} ${f(-dd)} ${f(a + b + c)}a${f(r)} ${f(r)} 0 0 1 ${f(-L)} ${f(L)}c${f(-c)} ${f(dd)} ${f(-(b + c))} ${f(dd)} ${f(-(a + b + c))} ${f(dd)}`;
-  }
-  d += `L${f(x + (bl ? bl.p : 0))} ${f(y + h)}`;
-  if (bl) {
-    const { a, b, c, d: dd, L, r } = bl;
-    d += `c${f(-a)} 0 ${f(-(a + b))} 0 ${f(-(a + b + c))} ${f(-dd)}a${f(r)} ${f(r)} 0 0 1 ${f(-L)} ${f(-L)}c${f(-dd)} ${f(-c)} ${f(-dd)} ${f(-(b + c))} ${f(-dd)} ${f(-(a + b + c))}`;
-  }
-  d += `L${f(x)} ${f(y + (tl ? tl.p : 0))}`;
-  if (tl) {
-    const { a, b, c, d: dd, L, r } = tl;
-    d += `c0 ${f(-a)} 0 ${f(-(a + b))} ${f(dd)} ${f(-(a + b + c))}a${f(r)} ${f(r)} 0 0 1 ${f(L)} ${f(-L)}c${f(c)} ${f(-dd)} ${f(b + c)} ${f(-dd)} ${f(a + b + c)} ${f(-dd)}`;
-  }
-  return d + 'Z';
+  return d;
 }
 
 /** The plain circular rounded rect, as CSS draws it. */
@@ -203,12 +251,14 @@ export function start() {
     const r = radii.map((v) => f(v * scale));
     const half = Math.min(w, h) / 2;
     // Nothing to smooth: no radius worth it, or a circle or capsule.
-    if (!w || !h || Math.max(...r) < minR() || r.every((v) => v === 0 || v >= half - 0.5) || smoothing === 0) return;
+    if (!w || !h || Math.max(...r) < MIN_R || r.every((v) => v === 0 || v >= half - 0.5) || smoothing === 0) return;
+    const sm = fit(w, h, r, smoothing);
+    if (sm < 0.05) return;
 
     if (native) {
-      const k = nativeScale(smoothing);
-      const id = rule(`n:${r}:${smoothing}`, (id) => [
-        `:root[data-flag-squircles] [data-sq='${id}'] { corner-shape: superellipse(${f(1 + smoothing)}); border-radius: ${r.map((v) => `${f(v * k)}px`).join(' ')} !important; }`,
+      const k = nativeScale(sm);
+      const id = rule(`n:${r}:${sm}`, (id) => [
+        `:root[data-flag-squircles] [data-sq='${id}'] { corner-shape: superellipse(${f(1 + sm)}); border-radius: ${r.map((v) => `${f(v * k)}px`).join(' ')} !important; }`,
       ]);
       el.setAttribute('data-sq', id);
       return;
@@ -219,17 +269,17 @@ export function start() {
     const paints = cs.backgroundImage !== 'none' || cs.backgroundColor !== 'rgba(0, 0, 0, 0)' || cs.boxShadow !== 'none' || parseFloat(cs.borderTopWidth) > 0;
     const rg = ring(cs);
     const bg = cs.backgroundImage;
-    const key = `p:${f(w)}x${f(h)}:${r}:${smoothing}:${rg ? `${rg.w}/${rg.color}` : ''}:${rg ? bg + cs.backgroundSize + cs.backgroundPosition + cs.backgroundRepeat + cs.backgroundOrigin + cs.backgroundClip : ''}`;
+    const key = `p:${f(w)}x${f(h)}:${r}:${sm}:${rg ? `${rg.w}/${rg.color}` : ''}:${rg ? bg + cs.backgroundSize + cs.backgroundPosition + cs.backgroundRepeat + cs.backgroundOrigin + cs.backgroundClip : ''}`;
     const id = rule(key, (id) => {
       const sel = `:root[data-flag-squircles] :is([data-sq='${id}'], [data-sq-h='${id}']:is(${STATES}))`;
-      const clip = `M${-FAR} ${-FAR}H${f(w + FAR)}V${f(h + FAR)}H${-FAR}Z` + roundPath(w, h, r) + squirclePath(w, h, r, smoothing);
+      const clip = slivers(w, h, r, sm, FAR);
       const out = [`${sel} { clip-path: path(evenodd, '${clip}'); }`];
       if (rg) {
         // The ring along the smoothed edge, less the part of the element's
         // own (round) ring that the clip leaves: together, one even ring.
         const t = rg.w;
         const inner = r.map((v) => Math.max(0, v - t));
-        const sq = squirclePath(w, h, r, smoothing) + squirclePath(w - 2 * t, h - 2 * t, inner, smoothing, t, t);
+        const sq = squirclePath(w, h, r, sm) + squirclePath(w - 2 * t, h - 2 * t, inner, sm, t, t);
         const rd = roundPath(w, h, r) + roundPath(w - 2 * t, h - 2 * t, inner, t, t);
         const svg =
           `<svg xmlns='http://www.w3.org/2000/svg' width='${f(w)}' height='${f(h)}' viewBox='0 0 ${f(w)} ${f(h)}'>` +
