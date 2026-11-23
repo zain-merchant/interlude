@@ -22,7 +22,7 @@
       <label class="way" class:on={on === m.mode}>
         <input type="radio" name="stems-way" checked={on === m.mode} disabled={!ready} aria-describedby="stems-{m.mode}" onchange={() => pick(m.mode)} />
         <span class="wn">{m.name}</span>
-        <span class="wl" id="stems-{m.mode}">{m.line}</span>
+        <span class="wl" id="stems-{m.mode}">{#each m.line as s, i}{#if i}{' '}{/if}<span>{s}</span>{/each}</span>
         {#if takes(m.mode, stems.takes).length}
           <span class="wf">{#each takes(m.mode, stems.takes) as [a, b]}<span><b>{a}</b>{' '}<small>{b}</small></span>{/each}</span>
         {/if}

@@ -4,11 +4,11 @@
 
 export const INTRO = 'Stems let you mute the vocals, melody, bass or drums of a track, or play one of them alone.';
 
-/** @type {{ mode: StemsMode, name: string, line: string }[]} */
+/** @type {{ mode: StemsMode, name: string, line: string[] }[]} */
 export const MODES = [
-  { mode: 'fast', name: 'Fast', line: 'Ready instantly, but uses more memory. Interlude separates each track when you load it.' },
-  { mode: 'efficient', name: 'Efficient', line: 'Takes a few seconds, but uses less memory. Interlude separates a track only when you use its stems.' },
-  { mode: 'off', name: 'Off', line: 'Stems are turned off and use no memory.' },
+  { mode: 'fast', name: 'Fast', line: ['Ready instantly, but uses more memory.', 'Interlude separates each track when you load it.'] },
+  { mode: 'efficient', name: 'Efficient', line: ['Takes a few seconds, but uses less memory.', 'Interlude separates a track only when you use its stems.'] },
+  { mode: 'off', name: 'Off', line: ['Stems are turned off and use no memory.'] },
 ];
 
 /**
