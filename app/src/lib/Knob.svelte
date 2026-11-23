@@ -3,7 +3,7 @@
   import { openMenu } from './menu.svelte.js';
   import { detent, keyValue } from './control.js';
   import { flag, setting } from '../flags/registry.svelte.js';
-  import { axisOf, landed, scrolled } from '../flags/118-knob-feel/feel.js'; // #118 (UI audit flag): knob-feel
+  import { dragger, landed, scrolled } from '../flags/118-knob-feel/feel.js'; // #118 (UI audit flag): knob-feel
 
   /**
    * A rotary knob: a machined graphite cap with a white indicator inside an
@@ -60,26 +60,9 @@
   }
 
   let raw = 0;
-  // #118 (UI audit flag): knob-feel: the way this drag is going, once that's clear.
-  /** @type {'x' | 'y' | null} */
-  let axis = null;
-  let gone = [0, 0];
+  // #118 (UI audit flag): knob-feel: how this drag turns it (feel.js), and where the pointer was.
+  let turned = dragger('updown');
   let at = [0, 0];
-  /** How far the pointer moved, in px, the way this knob turns: up, or right. */
-  function turned(e) {
-    const how = setting('knob-feel', 'drag');
-    if (!flag('knob-feel')) return -e.movementY;
-    const [dx, dy] = [e.clientX - at[0], e.clientY - at[1]];
-    at = [e.clientX, e.clientY];
-    if (how === 'updown') return -dy;
-    if (how === 'across') return dx;
-    if (!axis) {
-      gone = [gone[0] + dx, gone[1] + dy];
-      axis = axisOf(gone[0], gone[1]);
-      return 0;
-    }
-    return axis === 'x' ? dx : -dy;
-  }
   let dragging = $state(false);
   const readout = () => tipText(name, format(value));
 
@@ -95,8 +78,7 @@
     }
 
     dragging = true;
-    axis = null;
-    gone = [0, 0];
+    turned = dragger(flag('knob-feel') ? setting('knob-feel', 'drag') : 'updown');
     at = [e.clientX, e.clientY];
     raw = pos;
     showTip(dial, readout());
@@ -104,7 +86,9 @@
   function move(e) {
     if (!dragging) return;
     const perPx = (1 / 180) * (e.shiftKey ? 0.1 : 1);
-    raw = clampPos(raw + turned(e) * perPx);
+    const by = flag('knob-feel') ? turned(e.clientX - at[0], e.clientY - at[1]) : -e.movementY;
+    at = [e.clientX, e.clientY];
+    raw = clampPos(raw + by * perPx);
     setPos(detent(raw, resetPos, perPx, e.shiftKey));
     showTip(dial, readout());
   }
