@@ -177,7 +177,10 @@ export function lookLane(wf, ctx, ectx, x0, x1, spp, h, c, half) {
   const amp = half ? h : h / 2;
   const E = envelopes(wf, o, spp);
   if (o.draw === 'pills' || o.draw === 'ticks') return marks(wf, ectx, E, x0, x1, spp, mid, amp, c);
-  const dpr = window.devicePixelRatio || 1;
+  // Columns to a CSS px: one per device pixel, or one per CSS px and no glow
+  // while the zoom is moving (every frame is drawn from scratch then).
+  const real = window.devicePixelRatio || 1;
+  const dpr = wf.zooming ? 1 : real;
   const k0 = Math.floor((x0 - PAD) * dpr);
   const k1 = Math.ceil((x1 + PAD) * dpr);
   const cols = columns(wf, E, k0, k1, spp / dpr);
@@ -216,12 +219,12 @@ export function lookLane(wf, ctx, ectx, x0, x1, spp, h, c, half) {
     }
   } else {
     ctx.globalCompositeOperation = 'lighter';
-    if (o.glow > 0) {
+    if (o.glow > 0 && !wf.zooming) {
       for (const [b, a, r] of [[0, 0.35, 12], [1, 0.22, 10]]) {
         path(ctx, heights[b], -OFF);
         ctx.shadowColor = rgba(c[COLOURS[b]], (a * 0.2 * o.glow) / 100);
-        ctx.shadowBlur = r * dpr;
-        ctx.shadowOffsetX = OFF * dpr;
+        ctx.shadowBlur = r * real;
+        ctx.shadowOffsetX = OFF * real;
         ctx.fillStyle = '#000';
         ctx.fill();
         ctx.shadowColor = 'transparent';

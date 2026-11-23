@@ -353,12 +353,14 @@ export class Waveform2D {
     const dpr = window.devicePixelRatio || 1;
     const key = `${this.version}|${spp}|${canvas.height}|${dpr}|${this.strict ? 1 : 0}|${view.edge ?? ''}${this.half ? `|${this.half}` : ''}${this.look ? `|${this.look}` : ''}${this.wl ? `|${this.wlKey}|${this.lookBps}|${this.lookBeat}` : ''}`; // #101 (UI audit flag): half; #105, #106: look; #114: wl
     if (!this.tiles || this.tilesKey !== key || this.tilesColors !== c) {
+      this.zooming = !!this.wl && !!this.tilesSpp && this.tilesSpp !== spp; // #114 (UI audit flag): the zoom is moving: drawn coarser until it holds
+      this.tilesSpp = spp;
       this.tiles = new Map();
       this.spare = [];
       this.tilesKey = key;
       this.tilesColors = c;
       this.steady = 0;
-    }
+    } else this.zooming = false;
     // The view's left edge on the track's grid, in CSS px from the track's start.
     const off = view.start / spp;
     const first = Math.floor(off / TILE);
