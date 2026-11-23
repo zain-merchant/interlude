@@ -18,7 +18,7 @@ export default {
   n: 44,
   title: 'Tempo % and key big enough to read',
   group: 'Type and colour',
-  notes: 'Tempo % at 13px (dim at zero); the key alone at 13px under the BPM on a loaded deck ("BPM" only under an empty deck\'s dash).',
+  notes: 'Tempo % at 13px (dim at zero). The key part is upstream\'s since the merge of main: the key is a --t-md button in the deck colour with no "BPM" after it, so this flag leaves it alone.',
 };
 
 /** Show me: deck A nudged off zero; flipping shows the 11px readouts (before) and the 13px ones (after), magnified. */

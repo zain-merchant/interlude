@@ -20,17 +20,10 @@
   color: var(--fg-2);
 }
 
-/* Click to swap: the centre is one button (it doesn't spin, so it isn't
-   part of the record you scratch). A hover lifts the small number, which
-   is the one a click brings forward. */
-:root[data-flag-time-remaining] [data-region^='deck'] .hub[data-big] {
-  pointer-events: auto;
-  cursor: pointer;
-}
-:root[data-flag-time-remaining] [data-region^='deck'] .hub[data-big='remaining']:hover .el,
-:root[data-flag-time-remaining] [data-region^='deck'] .hub[data-big='elapsed']:hover .rm:not(.ending) {
-  color: var(--fg);
-}
+/* Tap the centre to swap (Platter.svelte: the centre keeps upstream's
+   pointer-events: none, so a press there still reaches the record and a
+   drag from it scratches; only a release where it was pressed swaps).
+   Keyboard focus (Enter or Space) swaps too. */
 :root[data-flag-time-remaining] [data-region^='deck'] .hub[data-big]:focus-visible {
   outline: 2px solid var(--fg-2);
   outline-offset: 2px;

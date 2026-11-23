@@ -4,7 +4,7 @@
 /* Hover: a 5% fill and full-strength text everywhere. */
 :root[data-flag-states] .toast .undo:hover,
 :root[data-flag-states] .settings .key:hover,
-:root[data-flag-states] .sampler .close:hover {
+:root[data-flag-states] .library .filter .clear:hover {
   background: var(--hover);
   color: var(--fg);
 }
@@ -60,7 +60,9 @@
     .deck .jumps button,
     .zoom button,
     .search .clear,
-    .sampler .close,
+    .library .filter .clear,
+    .library .cols,
+    [data-region^='deck'] .grid button,
     .perf button,
     .fx button,
     .stems .stem
@@ -88,7 +90,9 @@
     .deck .jumps button,
     .zoom button,
     .search .clear,
-    .sampler .close,
+    .library .filter .clear,
+    .library .cols,
+    [data-region^='deck'] .grid button,
     .perf button,
     .fx button,
     .stems .stem

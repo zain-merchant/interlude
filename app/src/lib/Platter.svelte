@@ -53,7 +53,6 @@
           role: 'button',
           tabindex: 0,
           'aria-label': timeMode.big === 'remaining' ? 'Show time played big' : 'Show time left big',
-          onclick: () => swapTimes(),
           onkeydown: (e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), e.stopPropagation(), swapTimes()),
         }
       : {},
@@ -185,8 +184,18 @@
     const r = disc.getBoundingClientRect();
     return Math.atan2(e.clientY - (r.top + r.height / 2), e.clientX - (r.left + r.width / 2));
   };
+  // #40 (UI audit flag): time-remaining: a tap on the still centre swaps the times. The press
+  // still goes to the record (the centre lets pointers through), so a drag from it scratches as
+  // anywhere else; only a release within 3px of the press swaps.
+  let tap = null;
   function down(e) {
-    if (!t || e.button !== 0) return;
+    if (e.button !== 0) return;
+    if (flag('time-remaining')) {
+      const r = disc.getBoundingClientRect();
+      const inHub = Math.hypot(e.clientX - (r.left + r.width / 2), e.clientY - (r.top + r.height / 2)) <= hubD / 2;
+      tap = inHub ? { x: e.clientX, y: e.clientY } : null;
+    }
+    if (!t) return;
     disc.setPointerCapture(e.pointerId);
     last = pointerAngle(e);
     scrubStart(deck, { scratch: true });
@@ -200,7 +209,9 @@
     last = a;
     scrubTo(deck, displayPos[deck] + (da / (Math.PI * 2)) * (60 / RPM), e.timeStamp);
   }
-  function up() {
+  function up(e) {
+    if (tap && e && Math.hypot(e.clientX - tap.x, e.clientY - tap.y) <= 3) swapTimes();
+    tap = null;
     if (last == null) return;
     last = null;
     scrubEnd(deck);
@@ -212,7 +223,7 @@
     <div class="disc" bind:this={disc} style:width="{vr * 2}px" style:height="{vr * 2}px" style:left="{size / 2 - vr}px" style:top="{size / 2 - vr}px"
       role="slider" aria-label="Deck {name} record, drag to scratch" aria-valuenow={Math.round(d.position)} aria-valuemin="0"
       aria-valuemax={Math.round(d.duration)} aria-valuetext="{fmt(d.position)} of {fmt(d.duration)}" tabindex="-1"
-      onpointerdown={down} onpointermove={move} onpointerup={up} onpointercancel={up}>
+      onpointerdown={down} onpointermove={move} onpointerup={up} onpointercancel={() => ((tap = null), up())}>
       <canvas bind:this={vinylCv}></canvas>
     </div>
     <div class="sheen" style:width="{vr * 2}px" style:height="{vr * 2}px" style:left="{size / 2 - vr}px" style:top="{size / 2 - vr}px"></div>

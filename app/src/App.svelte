@@ -620,7 +620,8 @@
       toastDock = room >= 160 ? { left: done.left / k - 8, top: (done.top + done.height / 2) / k, max: room, at: 'settings' } : null;
       return;
     }
-    const from = document.querySelector('section.library .bar .search')?.getBoundingClientRect();
+    // Since upstream's Fits and Filter sit after the search field, the gap starts after them.
+    const from = (document.querySelector('section.library .bar .filter') ?? document.querySelector('section.library .bar .search'))?.getBoundingClientRect();
     const to = document.querySelector('section.library .bar .samp')?.getBoundingClientRect();
     if (!from || !to) return void (toastDock = null);
     const room = (to.left - from.right) / k - 24;

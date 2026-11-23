@@ -6,23 +6,6 @@
   font-size: var(--t-sm);
   font-variant-numeric: tabular-nums;
 }
-/* On a loaded deck the line under the BPM is the key alone, 13px --fg-2
-   (Camelot --fg-3), right-aligned to the numerals; "BPM" shows only under
-   an empty deck's dash (11px --fg-3), where it says what the dash is
-   (Deck.svelte renders the line this way with the flag on). */
-:root[data-flag-pitch-readout] [data-region^='deck'] .bpm .unit {
-  display: flex;
-  align-items: baseline;
-  justify-content: flex-end;
-  gap: 8px;
-}
-:root[data-flag-pitch-readout] [data-region^='deck'] .bpm .unit .key {
-  font-size: var(--t-sm);
-  color: var(--fg-2);
-}
-:root[data-flag-pitch-readout] [data-region^='deck'] .bpm .unit .key.shifted {
-  color: var(--fg);
-}
-:root[data-flag-pitch-readout] [data-region^='deck'] .bpm .unit .key .cam {
-  color: var(--fg-3);
-}
+/* The key under the BPM: since the merge of upstream main the deck draws
+   it at --t-md in the deck's colour as a button (the key shift menu), which
+   is what this flag was after, so it no longer restyles it. */

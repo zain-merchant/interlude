@@ -4,10 +4,9 @@
    strip). These rules bring the stragglers onto it and line up edges
    across panels. */
 
-/* Deck header: a 28px title over a 16px line (was 17), 44 in all, so
-   the overview, times, tabs and mode row below land on the grid. */
-:root[data-flag-grid] .deck .artist,
-:root[data-flag-grid] .deck .bpm .unit {
+/* Deck header: a 28px title over a 16px line (was 17). (The key line
+   under the BPM is upstream's 22px key button since the merge of main.) */
+:root[data-flag-grid] .deck .artist {
   line-height: 16px;
 }
 

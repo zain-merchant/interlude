@@ -22,26 +22,12 @@
   font: inherit;
 }
 
-/* The deck's line under the BPM: key, then its Camelot code a step
-   quieter, then the unit. */
+/* The deck's key: the key name, a space, then its Camelot code. */
 :root[data-flag-no-dots] [data-region^='deck'] .bpm .unit .cam {
   margin-left: 1px;
 }
-:root[data-flag-no-dots] [data-region^='deck'] .bpm .unit .key {
-  margin-right: calc(var(--flag-no-dots-gap, 8px) - 0.25em);
-}
-/* With #44 a loaded deck's line is the key alone: no unit after it, so no
-   gap either; the key ends on the BPM's right edge (it stopped 4.75px
-   short). */
-:root[data-flag-no-dots] [data-region^='deck'] .bpm .unit .key:last-child {
-  margin-right: 0;
-}
-:root[data-flag-no-dots][data-flag-no-dots-tone='step'] [data-region^='deck'] .bpm .unit .key:not(.shifted) {
-  color: var(--fg-2);
-}
-:root[data-flag-no-dots][data-flag-no-dots-tone='step'] [data-region^='deck'] .bpm .unit .key:not(.shifted) .cam {
-  color: var(--fg-3);
-}
+/* The key's colour is upstream's (the deck's colour, a button since the
+   merge of main); this flag only sets the space. */
 
 /* Library: "48 tracks   analyzing, 12 to go". */
 :root[data-flag-no-dots] section.library .bar .count .pending {

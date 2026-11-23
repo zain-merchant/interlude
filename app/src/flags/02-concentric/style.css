@@ -54,8 +54,8 @@
 :root[data-flag-concentric] .library .main .search .clear {
   border-radius: max(var(--concentric-min), calc(var(--r) - 6px));
 }
-:root[data-flag-concentric] .sampler .close {
-  border-radius: max(var(--concentric-min), calc(min(var(--r-panel), 20px) - 8px));
+:root[data-flag-concentric] .library .main .filter .clear {
+  border-radius: max(var(--concentric-min), calc(var(--r) - 6px));
 }
 :root[data-flag-concentric] .menu button {
   border-radius: max(var(--concentric-min), calc(var(--r) - 4px));
