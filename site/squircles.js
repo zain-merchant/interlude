@@ -22,14 +22,14 @@
 //   the element's own backgrounds.
 //
 // Also ::before and ::after. Circles and capsules keep their shape (they have
-// no straight edge to ease into: the maths gives the same curve back), and
-// radii under 4px change by less than a tenth of a pixel, so both are left
-// alone. Elements are only re-measured when their size or class changes:
+// no straight edge to ease into: the maths gives the same curve back), and in
+// the path way 1 and 2px corners are left alone (they'd change by 0.04px at
+// most, and there are hundreds, many moving). Elements are only re-measured when their size or class changes:
 // nothing runs at rest. In the path way a focused element's outline is cut to
 // the smoothed shape too (it would be a round one). (?squircles=off turns it off; ?squircles=NN sets
 // the smoothing, default 60.)
 
-const MIN_R = 4;
+const MIN_R = 1, MIN_PATH = 2.5;
 const FAR = 240; // the outer rect's reach past the element: room for shadows and focus rings
 // Not done here: what SVG draws; the nav's glass and edge, which the page
 // shapes itself as they morph (index.html); the grain over a button, which
@@ -38,7 +38,7 @@ const FAR = 240; // the outer rect's reach past the element: room for shadows an
 // style.css, and in the path way the hero's frame, which clips itself while
 // the app plays (its picture, its edge and the app in it are done).
 const SKIP = 'svg, svg *, .grain, .glow, .nav-glass, .nav-edge, .dialkit-root, .dialkit-root *, [class*="dialkit"], [class*="dialkit"] *';
-const SKIP_NATIVE = '.menu, .menu-sheet, .nav-rim, .nav-rim *';
+const SELF_NATIVE = '.menu, .menu-sheet, .nav-rim i';
 const SELF_PATH = '.screen';
 // When an element that draws nothing at rest may start to.
 const STATES = ":hover, :active, :focus-visible, [aria-pressed='true'], [aria-checked='true'], [aria-selected='true'], [aria-expanded='true'], [data-done]";
@@ -203,7 +203,7 @@ const svgUrl = (svg) => `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
 export function start() {
   const root = document.documentElement;
   const native = supported();
-  const skip = native ? `${SKIP}, ${SKIP_NATIVE}` : SKIP;
+  const self = native ? SELF_NATIVE : SELF_PATH;
   if (!root.dataset.squircles) root.dataset.squircles = '60';
   const style = document.createElement('style');
   style.dataset.squircles = '';
@@ -291,7 +291,7 @@ export function start() {
     const r = radii.map((v) => f(v * scale));
     const half = Math.min(w, h) / 2;
     // Nothing to smooth: no radius worth it, or a circle or capsule.
-    if (!w || !h || Math.max(...r) < MIN_R || r.every((v) => v === 0 || v >= half - 0.5) || smoothing === 0) return null;
+    if (!w || !h || Math.max(...r) < (native ? MIN_R : MIN_PATH) || r.every((v) => v === 0 || v >= half - 0.5) || smoothing === 0) return null;
     const attr = ATTRS[ps];
 
     if (native) {
@@ -306,7 +306,10 @@ export function start() {
     // An element that draws nothing at rest (a ghost button, an unselected
     // row) is only clipped while it might: hovered, pressed, on, selected.
     const paints = !!ps || cs.backgroundImage !== 'none' || cs.backgroundColor !== 'rgba(0, 0, 0, 0)' || cs.boxShadow !== 'none' || parseFloat(cs.borderTopWidth) > 0 || cs.overflow !== 'visible' || el.matches('img, video');
-    const rg = ring(cs);
+    // (Not inside the pictures at 12px and under, whose looks change on their
+    // own, some in their backgrounds: there the cut takes at most 0.15px of
+    // the ring, and a layer of ours would stop what moves in theirs.)
+    const rg = Math.max(...r) <= 12 && el.closest('[data-picture]') ? null : ring(cs);
     const bg = cs.backgroundImage;
     const key = `p${ps}:${f(w)}x${f(h)}:${r}:${smoothing}:${rg ? `${rg.w}/${rg.color}` : ''}:${rg ? bg + cs.backgroundSize + cs.backgroundPosition + cs.backgroundRepeat + cs.backgroundOrigin + cs.backgroundClip : ''}`;
     const id = rule(key, (id) => {
@@ -393,7 +396,7 @@ export function start() {
 
   /** Start watching an element if it has a radius. */
   function consider(el) {
-    if (tracked.has(el) || el.closest(skip) || (!native && el.matches(SELF_PATH))) return;
+    if (tracked.has(el) || el.closest(SKIP) || el.matches(self)) return;
     if (!['', '::before', '::after'].some((ps) => {
       const cs = getComputedStyle(el, ps || null);
       return [cs.borderTopLeftRadius, cs.borderTopRightRadius, cs.borderBottomRightRadius, cs.borderBottomLeftRadius].some((v) => parseFloat(v) > 0);

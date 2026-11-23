@@ -2985,7 +2985,7 @@
       const st = window.tryState || {};
       // (?squircles=off turns it off; the Try group has both controls.)
       if (st.sqOn === false) { stop?.(); stop = null; return; }
-      sqMod ??= await import('./squircles.js?v=20261123e').catch(() => null);
+      sqMod ??= await import('./squircles.js?v=20261123h').catch(() => null);
       if (!sqMod) return;
       stop?.();
       document.documentElement.dataset.squircles = String(Math.max(0, Math.min(100, st.smooth ?? 60)));
