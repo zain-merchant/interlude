@@ -21,7 +21,7 @@
   <!-- Geist, served from here (no other site to reach before the page can
        draw its text); the Latin file is fetched straight away. -->
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="style.css?v=20261122e">
+  <link rel="stylesheet" href="style.css?v=20261122j">
   <script src="tune.js?v=20261122a"></script>
   <script>
     // Live updates while working on the site locally (.claude/serve.py
@@ -114,7 +114,7 @@
           GitHub
         </a>
         <a class="btn small" href="https://github.com/zain-merchant/interlude/releases/latest/download/Interlude.dmg">
-          <svg class="nav-dl on-mac" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2.5v7.5m0 0L4.75 6.75M8 10l3.25-3.25M3.5 13h9"/></svg><svg class="nav-dl on-phone" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 9.5V2m0 0L5.25 4.75M8 2l2.75 2.75M5.5 7H5a1.5 1.5 0 0 0-1.5 1.5v4A1.5 1.5 0 0 0 5 14h6a1.5 1.5 0 0 0 1.5-1.5v-4A1.5 1.5 0 0 0 11 7h-.5"/></svg><span class="on-mac">Download</span><span class="on-phone">Send to Mac</span>
+          <svg class="nav-dl dlp-new" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2.5v7.5m0 0L4.75 6.75M8 10l3.25-3.25M3.5 13h9"/></svg><svg class="nav-dl on-phone dlp-old" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 9.5V2m0 0L5.25 4.75M8 2l2.75 2.75M5.5 7H5a1.5 1.5 0 0 0-1.5 1.5v4A1.5 1.5 0 0 0 5 14h6a1.5 1.5 0 0 0 1.5-1.5v-4A1.5 1.5 0 0 0 11 7h-.5"/></svg><span class="dlp-new">Download</span><span class="on-phone dlp-old">Send to Mac</span>
         </a>
       </div>
       <!-- Narrow screens: the sections are in a menu (below). -->
@@ -135,10 +135,11 @@
           </nav>
           <div class="menu-foot" style="--i: 5">
             <a class="btn big" href="https://github.com/zain-merchant/interlude/releases/latest/download/Interlude.dmg">
-              <svg class="on-mac" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v8m0 0L4.5 6.5M8 10l3.5-3.5M3 13h10"/></svg><svg class="on-phone" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 9.5V2m0 0L5.25 4.75M8 2l2.75 2.75M5.5 7H5a1.5 1.5 0 0 0-1.5 1.5v4A1.5 1.5 0 0 0 5 14h6a1.5 1.5 0 0 0 1.5-1.5v-4A1.5 1.5 0 0 0 11 7h-.5"/></svg>
-              <span class="on-mac">Download for Mac</span><span class="on-phone">Get it on your Mac</span>
+              <svg class="dlp-new" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v8m0 0L4.5 6.5M8 10l3.5-3.5M3 13h10"/></svg><svg class="on-phone dlp-old" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 9.5V2m0 0L5.25 4.75M8 2l2.75 2.75M5.5 7H5a1.5 1.5 0 0 0-1.5 1.5v4A1.5 1.5 0 0 0 5 14h6a1.5 1.5 0 0 0 1.5-1.5v-4A1.5 1.5 0 0 0 11 7h-.5"/></svg>
+              <span class="on-mac">Download for Mac</span><span class="on-phone dlp-new">Download</span><span class="on-phone dlp-old">Get it on your Mac</span>
             </a>
-            <p>Free and open source, for macOS 11+ on Apple silicon</p>
+            <p class="dl-cap menu-cap"><a class="dl-cv" href="https://github.com/zain-merchant/interlude/releases/latest" target="_blank" rel="noopener" title="What’s new">Latest version</a><span>macOS 11+ on Apple silicon</span><span title="GPL-3.0-or-later">GPLv3+</span></p>
+            <p class="menu-cap-old dlp-old">Free and open source, for macOS 11+ on Apple silicon</p>
           </div>
         </div>
       </div>
@@ -568,8 +569,8 @@
       </div>
       <div class="cta">
         <a class="btn big" href="https://github.com/zain-merchant/interlude/releases/latest/download/Interlude.dmg">
-          <svg class="on-mac" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v8m0 0L4.5 6.5M8 10l3.5-3.5M3 13h10"/></svg><svg class="on-phone" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 9.5V2m0 0L5.25 4.75M8 2l2.75 2.75M5.5 7H5a1.5 1.5 0 0 0-1.5 1.5v4A1.5 1.5 0 0 0 5 14h6a1.5 1.5 0 0 0 1.5-1.5v-4A1.5 1.5 0 0 0 11 7h-.5"/></svg>
-          <span class="on-mac">Download for Mac</span><span class="on-phone">Get it on your Mac</span>
+          <svg class="dlp-new" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v8m0 0L4.5 6.5M8 10l3.5-3.5M3 13h10"/></svg><svg class="on-phone dlp-old" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 9.5V2m0 0L5.25 4.75M8 2l2.75 2.75M5.5 7H5a1.5 1.5 0 0 0-1.5 1.5v4A1.5 1.5 0 0 0 5 14h6a1.5 1.5 0 0 0 1.5-1.5v-4A1.5 1.5 0 0 0 11 7h-.5"/></svg>
+          <span class="on-mac">Download for Mac</span><span class="on-phone dlp-new">Download</span><span class="on-phone dlp-old">Get it on your Mac</span>
         </a>
         <a class="btn ghost big" href="https://github.com/zain-merchant/interlude" target="_blank" rel="noopener">View on GitHub</a>
       </div>
@@ -1118,7 +1119,7 @@
       </div>
       <div>
         <h4>App</h4>
-        <a href="https://github.com/zain-merchant/interlude/releases/latest/download/Interlude.dmg"><span class="on-mac">Download</span><span class="on-phone">Get it on your Mac</span></a>
+        <a href="https://github.com/zain-merchant/interlude/releases/latest/download/Interlude.dmg"><span class="dlp-new">Download</span><span class="on-phone dlp-old">Get it on your Mac</span></a>
         <a href="https://github.com/zain-merchant/interlude/releases" target="_blank" rel="noopener">Changelog</a>
         <a href="#faq">FAQ</a>
       </div>
@@ -1138,15 +1139,43 @@
        name). Behind the page itself, and only there while it's pulled. -->
   <div class="foot-under" aria-hidden="true"><div class="grain grain--under"></div></div>
 
+  <!-- Download on a phone: what a tap on any download button opens (the
+       script below). A sheet of the menu's glass from the foot of the
+       screen. -->
+  <div class="dlsheet" id="dlsheet" hidden>
+    <div class="dlsheet-scrim"></div>
+    <div class="dlsheet-card" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="dlsheet-t" aria-describedby="dlsheet-b">
+      <i class="dlsheet-grab" aria-hidden="true"></i>
+      <img class="dlsheet-icon" src="img/icon.svg?v=2" alt="" width="44" height="44">
+      <h2 id="dlsheet-t">Interlude is a Mac app</h2>
+      <p id="dlsheet-b">Open this page on your Mac to download it, or send yourself the link.</p>
+      <div class="dlsheet-acts">
+        <button type="button" class="btn big" data-act="link"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6.5 9.5l3-3M7 4.5l1.3-1.3a2.6 2.6 0 0 1 3.7 3.7L10.7 8.2M9 11.5l-1.3 1.3a2.6 2.6 0 0 1-3.7-3.7L5.3 7.8"/></svg><span>Copy link</span></button>
+        <button type="button" class="btn ghost big" data-act="msg"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 3.5h10a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H7l-3 2.5v-2.5H3a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1z"/></svg><span>Copy a message</span></button>
+        <button type="button" class="btn ghost big" data-act="share" hidden><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 9.5V2m0 0L5.25 4.75M8 2l2.75 2.75M5.5 7H5a1.5 1.5 0 0 0-1.5 1.5v4A1.5 1.5 0 0 0 5 14h6a1.5 1.5 0 0 0 1.5-1.5v-4A1.5 1.5 0 0 0 11 7h-.5"/></svg><span>Share…</span></button>
+      </div>
+      <p class="dlsheet-msg"></p>
+    </div>
+  </div>
   <script>
     // Download on a phone or a tablet: the app is for a Mac, so a .dmg is no
-    // use here. Every download link instead hands the site's address on, to
-    // open on the Mac: the share sheet where there is one (AirDrop, Messages,
-    // a note to self), else it's copied, and says so. The links' words change
-    // with it (style.css, .on-phone). Nothing changes where there's a mouse.
+    // use here. A tap on any download link opens a small sheet that says so
+    // in a line, and hands the link on to open on the Mac: Copy link, Copy a
+    // message (a line ready to send yourself, with the link), and Share where
+    // the browser has a share sheet (only on https). Each says when it's
+    // copied. It shuts on a tap outside it, a swipe down, Escape or the
+    // button again; focus stays in it while it's open and goes back to the
+    // button after. Nothing changes where there's a mouse.
+    // (?dl=today: as it was, the share sheet straight away, else the link
+    // copied. ?dl=sheet2: the sheet with the other wording.)
     (() => {
       const phone = matchMedia('(hover: none) and (pointer: coarse)');
+      const d = document.documentElement;
       const url = document.querySelector('meta[property="og:url"]')?.content || location.href;
+      const pretty = url.replace(/^https?:\/\/|\/$/g, '');
+      const message = `Interlude, a free DJ app for Mac: ${url}`;
+      const mode = new URLSearchParams(location.search).get('dl') || 'sheet';
+      if (mode === 'today') d.dataset.dl = 'today';
       let toast = null, hide = 0;
       const say = (text) => {
         if (!toast) {
@@ -1162,30 +1191,139 @@
         requestAnimationFrame(() => toast.toggleAttribute('data-on', true));
         hide = setTimeout(() => toast.removeAttribute('data-on'), 2200);
       };
-      const copy = async () => {
-        try { await navigator.clipboard.writeText(url); return true; } catch {}
-        // (Older browsers, or no clipboard access: the old way.)
+      // Copied in the tap itself: the clipboard where the page may use it
+      // (https), else the old way, which works on http too.
+      const legacy = (text) => {
         const t = document.createElement('textarea');
-        t.value = url;
+        t.value = text;
         t.setAttribute('readonly', '');
         Object.assign(t.style, { position: 'fixed', top: '0', left: '0', opacity: '0', fontSize: '16px' });
         document.body.append(t);
         t.select();
-        t.setSelectionRange(0, url.length);
+        t.setSelectionRange(0, text.length);
         let ok = false;
         try { ok = document.execCommand('copy'); } catch {}
         t.remove();
         return ok;
       };
-      document.addEventListener('click', async (e) => {
-        const a = e.target.closest?.('a[href$="/Interlude.dmg"]');
-        if (!a || !phone.matches || e.defaultPrevented || e.button) return;
+      const copy = (text) => (window.isSecureContext && navigator.clipboard?.writeText
+        ? navigator.clipboard.writeText(text).then(() => true, () => legacy(text))
+        : Promise.resolve(legacy(text)));
+
+      // Today's: the share sheet at once, else copied.
+      const today = (e) => {
         e.preventDefault();
         if (navigator.share) {
-          try { await navigator.share({ title: 'Interlude', text: 'Interlude, a free DJ app for Mac. Open this on your Mac to download it.', url }); return; }
-          catch (err) { if (err?.name === 'AbortError') return; }
+          navigator.share({ title: 'Interlude', text: 'Interlude, a free DJ app for Mac. Open this on your Mac to download it.', url }).catch((err) => { if (err?.name !== 'AbortError') copy(url).then((ok) => say(ok ? 'Link copied. Open it on your Mac.' : pretty)); });
+          return;
         }
-        say(await copy() ? 'Link copied. Open it on your Mac.' : url.replace(/^https?:\/\/|\/$/g, ''));
+        copy(url).then((ok) => say(ok ? 'Link copied. Open it on your Mac.' : pretty));
+      };
+
+      // The sheet.
+      const sheet = document.getElementById('dlsheet');
+      const card = sheet.querySelector('.dlsheet-card');
+      const scrim = sheet.querySelector('.dlsheet-scrim');
+      const acts = [...sheet.querySelectorAll('[data-act]')];
+      const shareBtn = sheet.querySelector('[data-act="share"]');
+      if (mode === 'sheet2') {
+        sheet.querySelector('h2').textContent = 'Download on your Mac';
+        sheet.querySelector('#dlsheet-b').textContent = 'Interlude runs on macOS. Send yourself the link and it’ll be waiting when you’re back at your Mac.';
+      }
+      sheet.querySelector('.dlsheet-msg').textContent = `“${message.replace(url, pretty)}”`;
+      // (Share only where there's a share sheet: https, and a browser with one.)
+      shareBtn.hidden = !navigator.share;
+      let open = false, opener = null, shutT = 0;
+      const behind = () => [document.querySelector('main'), document.querySelector('footer'), document.querySelector('.nav')];
+      const label = (b, text) => { b.querySelector('span').textContent = text; };
+      const LABELS = { link: 'Copy link', msg: 'Copy a message', share: 'Share…' };
+      const done = (b, text) => {
+        label(b, text);
+        b.toggleAttribute('data-done', true);
+        clearTimeout(b._t);
+        b._t = setTimeout(() => { b.removeAttribute('data-done'); label(b, LABELS[b.dataset.act]); }, 1800);
+      };
+      function show(from) {
+        if (open) return;
+        open = true;
+        opener = from;
+        clearTimeout(shutT);
+        for (const b of acts) { b.removeAttribute('data-done'); label(b, LABELS[b.dataset.act]); }
+        sheet.hidden = false;
+        for (const e of behind()) if (e) e.inert = true;
+        // (Laid out shut first, then opened on the next frame, so it moves.)
+        card.style.translate = '';
+        requestAnimationFrame(() => requestAnimationFrame(() => d.toggleAttribute('data-dlsheet', true)));
+        // (Focus on the sheet itself, so a screen reader reads it and Tab
+        // goes to its buttons, with no ring drawn on one straight away.)
+        card.focus({ preventScroll: true });
+      }
+      function shut() {
+        if (!open) return;
+        open = false;
+        d.removeAttribute('data-dlsheet');
+        card.style.translate = '';
+        for (const e of behind()) if (e) e.inert = false;
+        opener?.focus?.({ preventScroll: true });
+        shutT = setTimeout(() => { if (!open) sheet.hidden = true; }, 400);
+      }
+      scrim.addEventListener('click', shut);
+      document.addEventListener('keydown', (e) => {
+        if (!open) return;
+        if (e.key === 'Escape') { e.preventDefault(); shut(); return; }
+        if (e.key !== 'Tab') return;
+        const list = acts.filter((b) => !b.hidden);
+        const i = list.indexOf(document.activeElement);
+        e.preventDefault();
+        list[(i + (e.shiftKey ? -1 : 1) + list.length) % list.length]?.focus();
+      });
+      sheet.addEventListener('click', (e) => {
+        const b = e.target.closest('[data-act]');
+        if (!b) return;
+        if (b.dataset.act === 'share') {
+          // (Straight from the tap, nothing awaited first: the share sheet
+          // needs the tap's own permission.)
+          try { navigator.share({ title: 'Interlude', text: 'Interlude, a free DJ app for Mac', url }).catch(() => {}); } catch {}
+          return;
+        }
+        const text = b.dataset.act === 'msg' ? message : url;
+        copy(text).then((ok) => {
+          if (ok) done(b, b.dataset.act === 'msg' ? 'Message copied' : 'Link copied');
+          else say(pretty);
+        });
+      });
+      // A swipe down on the card shuts it (it follows the finger; let go
+      // past a third of its height, or flicked, it goes).
+      let drag = null;
+      card.addEventListener('pointerdown', (e) => {
+        if (e.pointerType !== 'touch' || e.target.closest('button')) return;
+        drag = { id: e.pointerId, y: e.clientY, t: performance.now(), dy: 0 };
+      });
+      addEventListener('pointermove', (e) => {
+        if (!drag || e.pointerId !== drag.id) return;
+        drag.dy = Math.max(0, e.clientY - drag.y);
+        card.style.transition = 'none';
+        card.style.translate = `0 ${drag.dy}px`;
+      }, { passive: true });
+      const letGo = (e) => {
+        if (!drag || e.pointerId !== drag.id) return;
+        const v = drag.dy / Math.max(1, performance.now() - drag.t);
+        const far = drag.dy > card.offsetHeight / 3 || v > 0.6;
+        drag = null;
+        card.style.transition = '';
+        if (far) shut(); else card.style.translate = '';
+      };
+      addEventListener('pointerup', letGo);
+      addEventListener('pointercancel', letGo);
+
+      document.addEventListener('click', (e) => {
+        const a = e.target.closest?.('a[href$="/Interlude.dmg"]');
+        if (!a || !phone.matches || e.defaultPrevented || e.button) return;
+        if (mode === 'today') return today(e);
+        e.preventDefault();
+        // (From the menu: the menu shuts first.)
+        if (d.hasAttribute('data-menu')) document.querySelector('.menu-btn')?.click();
+        show(a.closest('.menu') ? document.querySelector('.menu-btn') : a);
       });
     })();
   </script>
