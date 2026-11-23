@@ -9,7 +9,7 @@
   let { t } = $props();
   const a = $derived(t.a ?? []);
   const main = $derived(!!(t.n || t.v || t.x));
-  // One thing more goes on the name's line, if that all fits in 320.
+  // One thing more goes on the name's line, if that all fits in 360: every dial at its longest value does, so a tooltip keeps its form as its value moves.
   const ask = $derived(setting('tooltips', 'lines') === 'one' && a.length === 1 && !t.x && !!(t.n || t.v));
   let el = $state();
   let wide = $state(false);
@@ -26,7 +26,7 @@
     said = s;
   });
   $effect(() => {
-    if (ask && !wide && el && JSON.stringify(t) && el.scrollWidth > 320) wide = true;
+    if (ask && !wide && el && JSON.stringify(t) && el.scrollWidth > 360) wide = true;
   });
   $effect(() => {
     if (!tx || fit || !t.x) return;

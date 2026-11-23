@@ -105,6 +105,9 @@
   padding-left: 16px;
 }
 /* On one line the rule stands. */
+:root[data-flag-dir-room-tint][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips] .tip[role='tooltip']:has(> .tt.one) {
+  max-width: 360px;
+}
 :root[data-flag-dir-room-tint][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips] .tip[role='tooltip'] .tt.one {
   display: flex;
   align-items: center;

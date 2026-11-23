@@ -16,7 +16,7 @@ export default {
       default: 'one',
       recommended: 'one',
       options: [
-        ['one', 'On the name’s line', 'After a standing rule, when the whole tooltip is 320 wide or less.'],
+        ['one', 'On the name’s line', 'After a standing rule, when the whole tooltip is 360 wide or less.'],
         ['rows', 'Always a row', 'Under a rule, as when there’s more than one.'],
       ],
     },
@@ -30,5 +30,15 @@ export const show = {
   about: 'A tooltip reads as a name with what you can do under it, as in a menu, in place of a sentence.',
   before: 'What it is, its value, its key and what else you can do run on in one sentence.',
   after: 'What is on the left, how is on the right, with a rule between the control and the rest.',
+  async setup(app) {
+    await app.loadTrack(0, 1);
+    const c = app.$("[data-region='deck0'] .tc[aria-label='Set hot cue 1']");
+    if (c) await app.click(c);
+    await app.wait(300);
+    const { showTip, tipText } = await import('../../lib/tooltip.svelte.js');
+    const { keyLabel } = await import('../../lib/commands.js');
+    const at = app.$("[data-region='deck0'] .tc");
+    if (at) showTip(at, tipText('Hot cue 1 at 1:14.0', keyLabel('deck.0.hotCue.0'), 'hold to preview, ⇧-click to clear'));
+  },
   target: '.tip',
 };

@@ -99,7 +99,8 @@ const keyLabels = () => new Set([...Object.keys(keys), ...Object.keys(keymap.ove
 export const tipText = (...parts) => {
   const list = parts.filter(Boolean);
   // #30 (UI audit flag): tooltip-wrap marks keys too, to put the keycap at the end of the title line.
-  if (!flag('no-dots') && !flag('tooltip-wrap')) return list.join(' · ');
+  // #122 (UI audit flag): tooltips reads the keys by their mark too.
+  if (!flag('no-dots') && !flag('tooltip-wrap') && !flag('tooltips')) return list.join(' · ');
   const k = keyLabels();
   return list.map((p) => (k.has(p) ? KEY_MARK + p : p)).join(' · ');
 };
