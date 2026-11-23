@@ -29,7 +29,7 @@ pub mod model;
 pub mod quick;
 pub mod split;
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
 use std::sync::{Arc, Condvar, Mutex, MutexGuard};
 use std::time::{Duration, Instant};
@@ -250,6 +250,9 @@ impl State {
     }
 }
 
+/// Whether any deck is playing.
+pub type Playing = Box<dyn Fn() -> bool + Send + Sync>;
+
 struct Shared {
     state: Mutex<State>,
     wake: Condvar,
@@ -257,6 +260,12 @@ struct Shared {
     loads: AtomicUsize,
     /// What it takes here. Locked after `state`, if both are.
     measured: Mutex<Measured>,
+    /// `None` counts as playing.
+    playing: Mutex<Option<Playing>>,
+    /// Whether there are cores to spare for a first region.
+    many_cores: AtomicBool,
+    /// Times the model was loaded to run on more threads.
+    wide_loads: AtomicUsize,
 }
 
 /// Splits tracks into stems on a background thread.
@@ -284,6 +293,9 @@ impl Splitter {
             wake: Condvar::new(),
             loads: AtomicUsize::new(0),
             measured: Mutex::new(Measured::new(&measure::machine())),
+            playing: Mutex::new(None),
+            many_cores: AtomicBool::new(model::many_cores()),
+            wide_loads: AtomicUsize::new(0),
         });
         let heads = Arc::new(heads);
         let worker = {
@@ -302,6 +314,28 @@ impl Splitter {
 
     fn lock(&self) -> MutexGuard<'_, State> {
         lock(&self.shared)
+    }
+
+    /// Tells the splitter how to find out whether a deck is playing. Until
+    /// it knows, it takes it that one is.
+    pub fn set_playing(&self, playing: Playing) {
+        *self
+            .shared
+            .playing
+            .lock()
+            .unwrap_or_else(|e| e.into_inner()) = Some(playing);
+    }
+
+    /// For tests: whether there are cores to spare.
+    #[doc(hidden)]
+    pub fn set_many_cores(&self, many: bool) {
+        self.shared.many_cores.store(many, Ordering::Relaxed);
+    }
+
+    /// For tests: how often the model was loaded to run on more threads.
+    #[doc(hidden)]
+    pub fn wide_loads(&self) -> usize {
+        self.shared.wide_loads.load(Ordering::Relaxed)
     }
 
     pub fn settings(&self) -> Settings {
@@ -541,6 +575,10 @@ struct Worker {
     since_load: u32,
     /// Watching how much memory that takes.
     peak: Option<Peak>,
+    /// The model runs on more threads than usual, for one region.
+    wide: bool,
+    /// That region has been split since there was last nothing to do.
+    begun: bool,
 }
 
 impl Worker {
@@ -553,6 +591,8 @@ impl Worker {
             quickened: None,
             since_load: 0,
             peak: None,
+            wide: false,
+            begun: false,
         }
     }
 
@@ -591,6 +631,7 @@ impl Worker {
                     // Nothing to split: give back the memory the model holds.
                     // Loading it again doesn't take long.
                     self.model = None;
+                    self.begun = false;
                     self.peak = None;
                     st.model_ready = false;
                     if let Some(path) = st.settings.measured.clone() {
@@ -785,6 +826,20 @@ impl Worker {
         best.map(|(_, t)| t)
     }
 
+    /// Whether to use more threads for the first region, so it's heard
+    /// sooner. Not while a deck plays, which keeps the audio its headroom,
+    /// and not when loading the model again after would take long.
+    fn can_go_wide(&self, path: &Path) -> bool {
+        let playing = self
+            .shared
+            .playing
+            .lock()
+            .unwrap_or_else(|e| e.into_inner());
+        self.shared.many_cores.load(Ordering::Relaxed)
+            && playing.as_ref().is_some_and(|p| !p())
+            && quick::exists(path)
+    }
+
     fn perform(&mut self, task: Task) {
         let shared = self.shared.clone();
         match task {
@@ -830,7 +885,13 @@ impl Worker {
                 let quick = quick::exists(&path);
                 self.since_load = 0;
                 self.peak = self.worth_watching(quick).then(Peak::start);
-                let loaded = Model::load(&path);
+                self.wide = !self.begun && self.can_go_wide(&path);
+                let loaded = if self.wide {
+                    shared.wide_loads.fetch_add(1, Ordering::Relaxed);
+                    Model::load_on(&path, model::FIRST_THREADS)
+                } else {
+                    Model::load(&path)
+                };
                 let mut st = lock(&shared);
                 if st.generation != generation {
                     return;
@@ -893,6 +954,12 @@ impl Worker {
                         .map(|sep| plan.output(k, &sep))
                 };
                 lock(&shared).running = None;
+                self.begun = result.is_ok();
+                if self.wide {
+                    // The rest can take its time: back to the usual threads.
+                    self.wide = false;
+                    self.model = None;
+                }
                 if result.is_err() && stop.asked() {
                     // Picked again if it's wanted after all.
                     return;

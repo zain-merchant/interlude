@@ -222,6 +222,7 @@ impl Stems {
             .as_ref()
             .is_some_and(|m: &Downloader| m.state() == download::State::Ready);
         let settled = saved.settle(has_model);
+        let decks = shared.clone();
         let heads: dj_stems::PlayHeads = Box::new(move |deck| shared.deck(deck).position);
         let stems = Self {
             splitter: Splitter::new(Settings::default(), heads),
@@ -232,6 +233,10 @@ impl Stems {
         if settled {
             stems.save();
         }
+        // More threads for a first region, but never while a deck plays.
+        stems.splitter.set_playing(Box::new(move || {
+            (0..NUM_DECKS).any(|d| decks.deck(d).playing)
+        }));
         stems.apply();
         stems
     }
