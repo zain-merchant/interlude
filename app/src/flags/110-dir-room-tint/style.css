@@ -1177,7 +1177,7 @@
    over the sound, the titles and the zoom, is inset 8px, with the corner
    every button has. */
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .waves.glass {
-  background: var(--rg-grooves), var(--rg-window);
+  background: repeating-radial-gradient(circle at 50% 2500px, var(--rg-groove-line) 0 1px, transparent 1.5px 4px), var(--rg-window);
   padding: 4px 0;
   box-shadow: 0 0 0 1px var(--rg-rim), 0 1px 0 1px var(--rg-lip);
 }
@@ -2602,8 +2602,15 @@
   margin-top: 0;
   border-radius: 1.5px;
 }
+/* On both decks: one bar in two halves, the left deck's over the right's. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .scroll .row .ld b:has(~ b) {
+  bottom: 13px;
+  border-radius: 1.5px 1.5px 0 0;
+}
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .scroll .row .ld b ~ b {
-  left: 11px;
+  left: 6px;
+  top: 13px;
+  border-radius: 0 0 1.5px 1.5px;
 }
 /* 2px between every two items, taken from their own height: the pitch and
    the number on show stay as they were, and no outline meets another. */
@@ -2919,59 +2926,119 @@
   outline-offset: -1.5px !important;
   border-radius: 5px;
 }
-/* ── Where a dragged track can land (drops.svelte.js) ──────────────────── */
-:root[data-room-drops] [data-drop] {
+/* ── Where a dragged track can land ────────────────────────────────────
+   Drawn on the target itself, so it follows its corners: a tint of the
+   deck's colour over it and, under the pointer, one solid thin edge. Three
+   ways (a setting): tint, every target takes a breath of colour and the one
+   under the pointer a little more with its edge; pick, only the one under
+   the pointer is marked; label, the same with what dropping will do. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-drop],
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-drop='blocked'] {
+  --dt: var(--drop-color, var(--fg));
   outline: none !important;
   background-image: none;
-}
-.room-drops {
-  position: fixed;
-  inset: 0;
-  z-index: 80;
-  width: 100%;
-  height: 100%;
-  overflow: visible;
-  pointer-events: none;
-  fill: none;
-}
-.room-drops path {
-  stroke: color-mix(in oklab, var(--drop-color) 62%, transparent);
-  stroke-width: 1.5;
-}
-.room-drops .fill {
-  stroke: var(--drop-color);
-  fill: color-mix(in oklab, var(--drop-color) 9%, transparent);
-}
-.room-drops .blocked path {
-  stroke: var(--fg-4);
-}
-.room-drops .blocked-over .fill {
-  stroke: var(--kill);
-  fill: color-mix(in oklab, var(--kill) 9%, transparent);
-}
-/* A ring on an end of a stepper lies over the rule beside it. */
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] :is(.transport .jumps, .pitch .nudge, .fx .beats, .perf .step, .strip .grid) > button:focus-visible {
-  z-index: 1;
-}
-/* Narrow: the parts are close enough that the rules crowd the words. */
-@media (max-width: 1200px) {
-  :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .transport .jumps > span::before,
-  :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .transport .jumps > span::after {
-    content: none !important;
-  }
-}
-/* The headings' room comes from above them, unless the sampler is there. */
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .bar + .row.head {
-  margin-top: -6px;
-}
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .scroll {
-  margin-top: -1px;
-}
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-input='keys'] section.library .row.head .colh:focus-visible::after {
-  height: 18px;
-  background: var(--fg-2);
   opacity: 1;
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer .fwrap .fader.vertical .mark.full {
-  background: var(--fg-2);
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'][data-drop] {
+  background-image: none;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-drop]:not(.lane) {
+  position: relative;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-drop]::after {
+  content: '' !important;
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  border-radius: inherit;
+  background: color-mix(in oklab, var(--dt) 5%, transparent);
+  box-shadow: inset 0 0 0 1.5px transparent;
+  opacity: 1;
+  scale: none;
+  transform: none;
+  pointer-events: none;
+  animation: none;
+  transition: background-color 120ms ease-out, box-shadow 120ms ease-out;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .waves .lane[data-drop]::after {
+  z-index: 1;
+  inset: -4px 0 0;
+  border-radius: calc(var(--r-panel) + 2px) calc(var(--r-panel) + 2px) 0 0;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .waves .lane.b[data-drop]::after {
+  inset: 0 0 -4px;
+  border-radius: 0 0 calc(var(--r-panel) + 2px) calc(var(--r-panel) + 2px);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-drop='over']::after {
+  background: color-mix(in oklab, var(--dt) 13%, transparent);
+  box-shadow: inset 0 0 0 1.5px color-mix(in oklab, var(--dt) 80%, transparent);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-drop='blocked']::after {
+  background: transparent;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-drop='blocked-over']::after {
+  background: color-mix(in oklab, var(--kill) 10%, transparent);
+  box-shadow: inset 0 0 0 1.5px color-mix(in oklab, var(--kill) 80%, transparent);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:is([data-flag-dir-room-tint-drop='pick'], [data-flag-dir-room-tint-drop='label']) [data-drop='ok']::after {
+  background: transparent;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-drop='label'] :is(.lane, section.deck, [data-region^='deck'])[data-drop$='over']::before {
+  content: 'Load here' !important;
+  position: absolute;
+  z-index: 7;
+  inset: auto;
+  top: 50%;
+  left: 50%;
+  width: auto;
+  height: 28px;
+  padding: 0 12px;
+  translate: -50% -50%;
+  border-radius: var(--r);
+  background: var(--rg-float);
+  box-shadow: var(--rg-float-edge);
+  color: var(--fg);
+  font: 500 var(--t-sm) / 28px var(--font);
+  white-space: nowrap;
+  opacity: 1;
+  transform: none;
+  pointer-events: none;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-drop='label'] :is(.lane, section.deck, [data-region^='deck'])[data-drop='blocked-over']::before {
+  content: 'Playing. Drop twice to replace it' !important;
+}
+
+/* ── Columns of figures ────────────────────────────────────────────────
+   A column's values are one group, as wide as its widest value can be (from
+   every track, not the rows on show), aligned among themselves and centred
+   in the column, so widening one adds room on both sides. Its heading sits
+   over the group, on the same edge; the sort arrow hangs outside. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .row > :is([data-col='bpm'], [data-col='time'], [data-col='key']) {
+  padding-left: max(6px, calc((100% - var(--gw, 40px)) / 2)) !important;
+  padding-right: max(6px, calc((100% - var(--gw, 40px)) / 2)) !important;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .row > [data-col='bpm'] {
+  --gw: var(--gw-bpm, 26px);
+  overflow: visible;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .row > [data-col='time'] {
+  --gw: var(--gw-time, 32px);
+  overflow: visible;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .row > [data-col='key'] {
+  --gw: 34px;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-key-notation-show='both'] section.library .row > [data-col='key'] {
+  --gw: 68px;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .row.head > .sort:is([data-col='bpm'], [data-col='time'], [data-col='key']) svg {
+  margin-right: -14px;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .row.head > .sort.num:is([data-col='bpm'], [data-col='time']) {
+  justify-content: flex-end !important;
+  text-align: right;
+  overflow: visible;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .row.head > .sort.num:is([data-col='bpm'], [data-col='time']) svg {
+  order: 1;
 }

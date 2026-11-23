@@ -20,6 +20,7 @@
   import { colResize, resetWidths } from '../flags/110-dir-room-tint/columns.js';
   import { arrange, setOrder } from '../flags/110-dir-room-tint/column-order.svelte.js';
   import ColumnsMenu from '../flags/110-dir-room-tint/ColumnsMenu.svelte';
+  import Mid from '../flags/110-dir-room-tint/Mid.svelte';
   import { onAir, passes, filtering, describe, FIT_TEMPO } from './libraryfilter.js';
 
   /** `onimport` opens the import window; `onempty` is called when the whole library loads with no tracks.
@@ -239,6 +240,22 @@
     openMenu(e, [
       ...COLUMNS.filter((c) => c.by !== 'title').map((c) => ({ label: c.label, checked: !hidden.includes(c.by), action: () => toggleColumn(c.by) })),
     ]);
+
+  // #110 (UI audit flag): dir-room-tint: the widest BPM and time in this list, whatever is scrolled into view (columns.js
+  // measures them, so each column's values keep one right edge, centred in the column).
+  const widest = $derived.by(() => {
+    const out = { bpm: '000', time: '0:00' };
+    if (!flag('dir-room-tint')) return out;
+    const long = (s) => [...s].reduce((n, c) => n + (/\d/.test(c) ? 1 : 0.45), 0);
+    for (const t of all) {
+      if (!t.analysis) continue;
+      const b = bpmText(t.analysis) || '';
+      const l = timeText(t.analysis) || '';
+      if (long(b) > long(out.bpm)) out.bpm = b;
+      if (long(l) > long(out.time)) out.time = l;
+    }
+    return out;
+  });
 
   const selected = $derived.by(() => {
     const i = sorted.findIndex((t) => t.path === selPath);
@@ -791,7 +808,7 @@
     {#each folders as f}
       <button class="item" class:on={folder === f} aria-current={folder === f} onclick={() => pick(f)}
         oncontextmenu={(e) => folderMenu(e, f)} use:tip={() => f}>
-        <span>{short(f)}</span>{#if folder === f && !loading}<small class="num">{all.length.toLocaleString()}</small>{:else if flag('folder-counts') && folderCounts[f] != null}<small class="num">{folderCounts[f].toLocaleString()}</small>{/if}
+        <span>{#if flag('dir-room-tint')}<Mid text={short(f)} />{:else}{short(f)}{/if}</span>{#if folder === f && !loading}<small class="num">{all.length.toLocaleString()}</small>{:else if flag('folder-counts') && folderCounts[f] != null}<small class="num">{folderCounts[f].toLocaleString()}</small>{/if}
       </button>
     {/each}
     <!-- #90 (UI audit flag): library-polish draws the plus as an icon. -->
@@ -807,7 +824,7 @@
         <button class="item" class:on aria-current={on} onclick={() => show({ kind: 'playlist', id: p.id })}
           ondblclick={() => (renaming = p.id)} oncontextmenu={(e) => playlistMenu(e, p)}
           use:dropTarget={{ ondrop: (t) => addTo(p.id, [t.path]) }}>
-          <span>{p.name}</span><small class="num">{p.count.toLocaleString()}</small>
+          <span>{#if flag('dir-room-tint')}<Mid text={p.name} />{:else}{p.name}{/if}</span><small class="num">{p.count.toLocaleString()}</small>
         </button>
       {/if}
     {/each}
@@ -896,7 +913,7 @@
     {#if sampler.open}<Sampler {onmessage} selected={() => selectedTrack()} />{/if}
 
     <!-- #110 (UI audit flag): dir-room-tint: the columns can be dragged to size. -->
-    <div class="row head" role="group" aria-label="Sort tracks" oncontextmenu={headMenu} use:colResize={{ on: flag('dir-room-tint') && sizedCols, columns, all: COLUMNS }}>
+    <div class="row head" role="group" aria-label="Sort tracks" oncontextmenu={headMenu} use:colResize={{ on: flag('dir-room-tint') && sizedCols, columns, all: COLUMNS, widest }}>
       <span></span>
       {#each columns as c}
         {@const on = sortOn.by === c.by}
@@ -964,7 +981,7 @@
             <span class="ld">{#each decks as d}<b class:b={d === 1} aria-hidden="true"></b>{#if flag('deck-letters')}<i class="dl" class:b={d === 1} aria-hidden="true">{'AB'[d]}</i>{/if}{/each}</span>
             {#each columns as c (c.by)}
               {#if c.by === 'title'}
-                <span class="t" data-col={colAttr(c)}>{#if t.missing}<span class="k" use:tip={() => `File not found: ${t.path}`}>{t.title}</span><span class="sr">, file not found</span>{:else if markOn}{#each marks(t.title) as m}{#if m.hit}<mark>{m.s}</mark>{:else}{m.s}{/if}{/each}{:else}{t.title}{/if}</span>
+                <span class="t" data-col={colAttr(c)}>{#if t.missing}<span class="k" use:tip={() => `File not found: ${t.path}`}>{t.title}</span><span class="sr">, file not found</span>{:else if flag('dir-room-tint')}<Mid text={t.title} parts={markOn ? marks(t.title) : null} />{:else if markOn}{#each marks(t.title) as m}{#if m.hit}<mark>{m.s}</mark>{:else}{m.s}{/if}{/each}{:else}{t.title}{/if}</span>
               {:else if c.by === 'bpm'}
                 <span class="n num" class:none={a && !a.bpm} data-col={colAttr(c)}>{a ? bpmText(a) || NONE : ''}</span>
               {:else if c.by === 'key'}
@@ -974,9 +991,9 @@
                 <span class="n num" class:none={a?.failed} data-col={colAttr(c)}>{a ? timeText(a) || NONE : ''}</span>
               {:else if markOn && (c.by === 'artist' || c.by === 'folder' || c.by === 'album' || c.by === 'genre')}
                 <!-- #84 (UI audit flag): search-scope marks the searched words. -->
-                <span data-col={colAttr(c)}>{#each marks(t[c.by]) as m}{#if m.hit}<mark>{m.s}</mark>{:else}{m.s}{/if}{/each}</span>
+                <span data-col={colAttr(c)}>{#if flag('dir-room-tint')}<Mid text={t[c.by] ?? ''} parts={marks(t[c.by])} />{:else}{#each marks(t[c.by]) as m}{#if m.hit}<mark>{m.s}</mark>{:else}{m.s}{/if}{/each}{/if}</span>
               {:else}
-                <span data-col={colAttr(c)}>{t[c.by] ?? ''}</span>
+                <span data-col={colAttr(c)}>{#if flag('dir-room-tint')}<Mid text={t[c.by] ?? ''} />{:else}{t[c.by] ?? ''}{/if}</span>
               {/if}
             {/each}
             {#if decks.length && flag('deck-names')}<span class="sr">, on the {decks.map((d) => ['left', 'right'][d]).join(' and ')} {decks.length > 1 ? 'decks' : 'deck'}</span>{:else if decks.length}<span class="sr">, on deck {decks.map((d) => 'AB'[d]).join(' and ')}</span>{/if}
