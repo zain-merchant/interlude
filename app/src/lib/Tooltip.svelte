@@ -18,7 +18,7 @@
   const twoLines = $derived(flag('tooltip-wrap') && rest.length > 24);
   // #122 (UI audit flag): tooltips: the tip's parts; null is no tip. It opens on whichever side of its control has room.
   const own = $derived(flag('tooltips') && flag('dir-room-tint'));
-  const tipParts = $derived(own && tooltip.text ? read(tooltip.text) : null);
+  const tipParts = $derived(own && tooltip.text ? read(tooltip.text, { live: tooltip.live, rested: tooltip.rested }) : null);
   let height = $state(0);
   // The browser preview scales the interface with CSS zoom, where rects are scaled and lengths aren't; the app's webview zooms by itself.
   const z = $derived((tooltip.visible && parseFloat(document.documentElement.style.zoom)) || 1);
