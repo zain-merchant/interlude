@@ -218,7 +218,7 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 4px;
+  gap: 4px 0.25em;
   overflow: visible;
   white-space: nowrap;
   color: var(--fg-2);
@@ -294,7 +294,17 @@
   height: 32px;
   padding: 0 12px;
 }
-/* Setup with nothing plugged in. */
+/* Setup with nothing plugged in: the lead runs up past the dialog's edge. */
+:root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] .card[role='dialog']:has(.zsetup) {
+  overflow: hidden;
+}
+:root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] .card[role='dialog'] .zsetup svg {
+  overflow: visible;
+}
+:root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] .card[role='dialog'] .top {
+  position: relative;
+  z-index: 1;
+}
 :root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] .card[role='dialog'] .zsetup {
   display: grid;
   justify-items: center;
