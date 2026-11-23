@@ -2088,7 +2088,6 @@
           if (demo === 'clips' && clips && left < 0.8) clips.prepare(true);
           if (left > 0.05 || (demo === 'clips' && clips && !clips.otherReady)) return;
           clearInterval(autoTimer);
-          window.__autoAt = { at: now, playedFor };
           setMode('controller', 'auto');
           clips?.prepare(false);
         }, STEP);
