@@ -26,18 +26,37 @@ export default {
     cues: {
       type: 'choice',
       label: 'Hot cues',
-      default: 'foot',
+      default: 'lamp',
       options: [
-        ['socket', 'Sockets', 'An empty place is its number in a small recess.'],
-        ['foot', 'Feet', 'A number over a short etched rule.'],
-        ['corner', 'Corner ticks', "A number, and a tick in its place's corner."],
-        ['next', 'Next only', 'Numbers alone; only the next free place is a key, and says Set.'],
+        ['dot', 'A small ring that fills', 'The lightest: a small ring beside the number.'],
+        ['lamp', 'A lamp that lights', 'A ring in a small cut; it lights when the cue is set.'],
+        ['ring', 'The number in a ring', 'The heaviest of the three: the ring is round the number.'],
+        ['foot', 'Pressed tiles', 'As it was: a number over a rule, and a pressed tile once set, in softer colours.'],
+      ],
+    },
+    weight: {
+      type: 'choice',
+      label: 'Small controls',
+      default: 'light',
+      options: [
+        ['light', 'Light', 'Key lock, minus and plus, the headphones, Rec and the tempo have no face until the pointer is over them.'],
+        ['full', 'Raised', 'As they were.'],
+      ],
+    },
+    room: {
+      type: 'choice',
+      label: "The mixer's room",
+      default: 'meters',
+      options: [
+        ['meters', 'Meters midway', 'At the same width, each meter stands midway between its fader and the middle.'],
+        ['wide', 'Wider', '24px wider, taken from the decks.'],
+        ['as', 'As it was', 'The meters close to their faders.'],
       ],
     },
     stepper: {
       type: 'choice',
       label: 'Steppers',
-      default: 'under',
+      default: 'one',
       options: [
         ['under', 'Two keys standing in one cut', 'The keys are raised; the amount is on the floor of the cut between them.'],
         ['one', 'One cut with rules', 'Nothing raised until the pointer is over an end.'],
@@ -85,13 +104,11 @@ export default {
     side: {
       type: 'choice',
       label: "The library's sidebar",
-      default: 'list',
+      default: 'dark',
       options: [
-        ['list', 'The list is a plate', 'The track list is a cut plate inside the panel; the sidebar stands on the panel.'],
-        ['line', 'A full rule', 'One panel, an etched rule from its top to its foot.'],
-        ['ground', 'Darker ground', "The sidebar on darker ground, to the panel's edges."],
-        ['dock', 'The sidebar is a plate', 'The sidebar is a cut plate inside the panel.'],
-        ['split', 'Two panels', 'The sidebar is a panel of its own, like the decks.'],
+        ['dock', 'A plate', 'The sidebar is a plate cut into the panel, 8px inside it.'],
+        ['ground', 'Darker ground', "The sidebar's end of the panel is darker, to the panel's edges."],
+        ['dark', 'A darker plate', 'The plate, with darker ground.'],
       ],
     },
     lanes: { type: 'range', label: 'Grooves behind the waveforms', min: 0, max: 100, step: 1, default: 8, unit: '' },
