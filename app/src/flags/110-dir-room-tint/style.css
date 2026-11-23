@@ -2144,7 +2144,7 @@
   margin-bottom: 12px;
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .pitch .val:hover {
-  background: linear-gradient(rgb(255 255 255 / 0.05), rgb(255 255 255 / 0.05)), var(--rg-grooves), var(--rg-well);
+  background: var(--rg-grooves), var(--rg-well);
   color: var(--fg);
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .pitch .val.off {
@@ -3162,4 +3162,7 @@
   height: 18px;
   background: var(--fg-2);
   opacity: 1;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .transport .jumps {
+  position: relative;
 }

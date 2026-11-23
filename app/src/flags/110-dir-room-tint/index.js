@@ -73,7 +73,7 @@ export default {
         ['off', 'Nothing', 'As they were.'],
       ],
     },
-    light: { type: 'range', label: 'How much light', min: 1, max: 16, step: 1, default: 5, unit: '%' },
+    light: { type: 'range', label: 'How much light', min: 1, max: 16, step: 1, default: 5, unit: '' },
     cue: {
       type: 'choice',
       label: "Cue's colour",
