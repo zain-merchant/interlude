@@ -187,6 +187,10 @@ Everything Interlude does, in detail. For a short overview, see the
   Mixxx install needed. Mapping files in the app's own `controllers`
   folder (in its data folder), folders listed in `INTERLUDE_MAPPINGS` and
   Mixxx's user folder come first, so a mapping you've changed wins.
+  On the DDJ-800 and DDJ-FLX6, SHIFT + HOT CUE then the pads mute stems:
+  vocals, melody, bass and vocals alone on top, drums and everything but
+  vocals on pads 5 and 8, and SHIFT + pad plays one alone (not yet tried on
+  either).
   Direct bindings and LEDs work for about 64% of the controls across the
   153 MIDI mappings (decks 3 and 4, and Mixxx-only features, are left
   out). The mappings' JavaScript runs too, in an embedded engine with

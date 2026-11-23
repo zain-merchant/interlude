@@ -150,7 +150,17 @@ pub enum DeckKey {
     FileBpm,
     VuMeter,
     PeakIndicator,
+    /// How many stems the track has: all of them, since any can be separated.
+    StemCount,
+    /// The page of pads each pad mode plays, by its place in [`PAD_PAGES`]
+    /// (openDJ's, where the pages can be moved about).
+    PadSlot(usize),
 }
+
+/// openDJ's numbers for the pages, mode by mode as its scripts count them:
+/// hot cues, pad FX 1, beat jump, sampler, KEYBOARD (which plays stems
+/// here, as on the FLX4), pad FX 2, beat loop and key shift.
+const PAD_PAGES: [u8; 8] = [0, 1, 2, 3, 4, 6, 5, 8];
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum SamplerKey {
@@ -496,7 +506,12 @@ fn deck_key(key: &str) -> Option<DeckKey> {
         "file_bpm" => FileBpm,
         "VuMeter" => VuMeter,
         "PeakIndicator" => PeakIndicator,
+        "stem_count" => StemCount,
         _ => {
+            if let Some(n) = key.strip_prefix("pad_slot_") {
+                let i: usize = n.parse().ok()?;
+                return (1..=PAD_PAGES.len()).contains(&i).then(|| PadSlot(i - 1));
+            }
             if let Some(rest) = key.strip_prefix("hotcue_") {
                 let (n, what) = rest.split_once('_')?;
                 let i: usize = n.parse().ok()?;
@@ -683,12 +698,16 @@ impl Control {
                 K::PlayPosition => Behavior::Pot { min: 0.0, max: 1.0 },
                 K::VuMeter => Behavior::Pot { min: 0.0, max: 1.0 },
                 K::Jog => Behavior::Encoder,
-                K::BeatLoopSize | K::BeatJumpSize | K::Duration | K::Bpm | K::FileBpm => {
-                    Behavior::Pot {
-                        min: 0.0,
-                        max: 512.0,
-                    }
-                }
+                K::BeatLoopSize
+                | K::BeatJumpSize
+                | K::Duration
+                | K::Bpm
+                | K::FileBpm
+                | K::StemCount
+                | K::PadSlot(_) => Behavior::Pot {
+                    min: 0.0,
+                    max: 512.0,
+                },
                 _ => Behavior::Push,
             },
             Control::Eq(..) => Behavior::Taper(Taper::EQ),
@@ -824,6 +843,8 @@ impl Controls {
                     K::FileBpm => deck.bpm,
                     K::VuMeter => f64::from(deck.peak).clamp(0.0, 1.0),
                     K::PeakIndicator => flag(deck.peak >= 1.0),
+                    K::StemCount if deck.loaded => STEMS as f64,
+                    K::PadSlot(i) => f64::from(PAD_PAGES[i]),
                     _ => 0.0,
                 }
             }
