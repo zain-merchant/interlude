@@ -137,6 +137,13 @@
   display: none;
 }
 
+/* A toast whose words need the items' room stands over them; they go whole
+   rather than show in half. */
+:root[data-flag-shell-status]:has(.toastbox .toast[data-docked='over']) section.library .bar > .shell:not(:focus-within, :has(.open)) {
+  opacity: 0;
+  pointer-events: none;
+}
+
 /* ── In the title bar ────────────────────────────────────────────────── */
 :root[data-flag-shell-status][data-flag-shell-status-place='titlebar'] section.library .bar :is(.gear, .pending) {
   display: none;

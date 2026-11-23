@@ -85,7 +85,8 @@
   });
   const air = $derived(airSettled ? JSON.parse(airSettled) : null);
   const airPath = $derived(air ? tracks[air.deck]?.path : null);
-  const airLabel = $derived(air ? `${'AB'[air.deck]} · ${air.key ? `${camelot(air.key)} ` : ''}${Math.round(air.bpm)}` : '');
+  // #10 / #88 (UI audit flags): no-dots, deck-names: the deck by its side, set apart by a space.
+  const airLabel = $derived(air ? `${flag('deck-names') ? ['left', 'right'][air.deck] : 'AB'[air.deck]}${flag('no-dots') ? ' ' : ' · '}${air.key ? `${camelot(air.key)} ` : ''}${Math.round(air.bpm)}` : '');
   const fitsTip = () =>
     !air
       ? 'Fits: load a track to see what mixes with it'

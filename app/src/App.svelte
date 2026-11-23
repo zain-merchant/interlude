@@ -638,11 +638,21 @@
     }
     // Since upstream's Fits and Filter sit after the search field, the gap starts after them.
     const from = (document.querySelector('section.library .bar .filter') ?? document.querySelector('section.library .bar .search'))?.getBoundingClientRect();
-    // #112 (UI audit flag): shell-status stands before Sampler.
-    const to = ((flag('shell-status') && document.querySelector('section.library .bar > .shell')) || document.querySelector('section.library .bar .samp'))?.getBoundingClientRect();
-    if (!from || !to) return void (toastDock = null);
-    const room = (to.left - from.right) / k - 24;
-    toastDock = room >= 160 ? { left: from.right / k + 12, top: (from.top + from.height / 2) / k, max: room, at: 'toolbar' } : null;
+    const samp = document.querySelector('section.library .bar .samp')?.getBoundingClientRect();
+    if (!from || !samp) return void (toastDock = null);
+    const gap = (/** @type {DOMRect} */ to) => (to.left - from.right) / k - 24;
+    let room = gap(samp);
+    let at = 'toolbar';
+    // #112 (UI audit flag): shell-status: its items stand before Sampler. The toast stops at them when all its words fit there, covers them for its few seconds when they fit up to Sampler, and goes to the corner (where it's never cut) when they don't.
+    const items = flag('shell-status') ? document.querySelector('section.library .bar > .shell')?.getBoundingClientRect() : null;
+    if (items) {
+      const words = el.querySelector(':scope > span');
+      const whole = el.offsetWidth + (words ? words.scrollWidth - words.clientWidth : 0);
+      if (whole <= gap(items)) room = gap(items);
+      else if (whole <= room) at = 'over';
+      else room = 0;
+    }
+    toastDock = room >= 160 ? { left: from.right / k + 12, top: (from.top + from.height / 2) / k, max: room, at } : null;
   });
 
   // #12 (UI audit flag): polish-dialog: where the library starts, so a dialog's
