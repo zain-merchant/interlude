@@ -1,4 +1,4 @@
-// #120 (UI audit flag): knob-feel: how a drag and a scroll turn a knob, and a scroll moves a fader.
+// #118 (UI audit flag): knob-feel: how a drag and a scroll turn a knob, and a scroll moves a fader.
 
 /** How far a drag goes, in px, before it's clear which way it's going. */
 const SLOP = 4;
