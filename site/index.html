@@ -173,8 +173,10 @@
       select('navset', { label: 'Nav colour', value: 'menu', options: [['menu', 'Menu (now)'], ['lifted', 'Lifted'], ['black', 'Black, firm edge']], apply: (v) => {
         navSet = v; fill(NAV[v][0]); d.style.setProperty('--nav-line', `rgb(255 255 255 / ${NAV[v][1]})`);
       } });
-      let navHand = 0;
-      color('navfill', { label: 'Nav colour by hand', value: '#141417', apply: (v) => { if (navHand++ === 0 && v === '#141417') return; fill(v); } });
+      // (Only a change counts: the panel hands every control its value back
+      // more than once as it loads, which would undo the set above.)
+      let navHand = '#141417';
+      color('navfill', { label: 'Nav colour by hand', value: '#141417', apply: (v) => { if (v === navHand) return; navHand = v; fill(v); } });
       // The nav's Download at the very top of the page too, where it fits.
       select('navtop', { label: 'Nav download at top', value: 'off', options: [['off', 'Hidden (now)'], ['on', 'Shown']], apply: (v) => { set('navtop', v === 'on' ? 'on' : ''); requestAnimationFrame(() => window.navMeasure?.()); } });
       select('navdl', { label: 'Nav download', value: 'pill', options: [['pill', 'Pill'], ['ghost', 'Outline'], ['text', 'Text'], ['pillround', 'Round pill']], apply: (v) => { set('navdl', v === 'pill' ? '' : v); requestAnimationFrame(() => window.navMeasure?.()); } });
@@ -185,11 +187,12 @@
       const PRESETS = { today: { op: 1, size: 1, fade: 0 }, darker: { op: 0.55, size: 1, fade: 0 }, smaller: { op: 1, size: 0.72, fade: 0 }, lower: { op: 1, size: 1, fade: 260 } };
       select('recbg', { label: 'Record preset', value: 'today', options: [['today', 'Today'], ['darker', 'Darker'], ['smaller', 'Smaller'], ['lower', 'Lower']], apply: (v) => { window.tryState.recPreset = v; Object.assign(rec, PRESETS[v]); recNow(); } });
       const recSlider = (key, label, prop, min, max, step, def) => {
-        let first = true;
+        let last = def;
         slider(key, { label, value: def, min, max, step, apply: (v) => {
-          // (The panel's own first call, at its default, leaves the preset.)
-          if (first && v === def) { first = false; return; }
-          first = false;
+          // (Only a change counts, so the panel handing its value back as it
+          // loads leaves the preset.)
+          if (v === last) return;
+          last = v;
           rec[prop] = v; recNow();
         } });
       };
