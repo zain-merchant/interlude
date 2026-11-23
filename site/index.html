@@ -2496,7 +2496,13 @@
       const G = { texture: 'film', size: 1, amount: 0.12, contrast: 1.2, blend: 'normal', move: 'swap', fade: 1 };
       const TEX = { fine: [0.95, 1], film: [0.75, 2], soft: [0.55, 3], coarse: [0.38, 3] };
       const tile = () => {
-        const [f, oct] = TEX[G.texture] || TEX.film;
+        let [f, oct] = TEX[G.texture] || TEX.film;
+        // (Safari draws the noise at the tile's drawn size, one sample a
+        // point: at a whole number of cells to the point every sample falls
+        // where noise is nothing, and there's no grain at all. A little
+        // coarser there.)
+        const cells = f / G.size;
+        if (CSS.supports('font', '-apple-system-body') && Math.abs(cells - Math.round(cells)) < 0.06) f *= 0.87;
         const k = G.contrast;
         // The noise as specks, not a grey wash: where it's above its middle,
         // white specks; below, black ones; each as clear as it's far from
