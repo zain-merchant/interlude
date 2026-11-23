@@ -2850,3 +2850,6 @@
     content: none !important;
   }
 }
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-input='keys'] [data-region^='deck'] .modes button:is(:focus-visible, :focus-visible + button)::after {
+  opacity: 0;
+}
