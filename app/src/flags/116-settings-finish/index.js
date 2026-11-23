@@ -15,6 +15,28 @@ export default {
   title: 'Settings: search, separate keys, corners that nest',
   group: 'Shell',
   byDefault: true, // while it's being judged; off again once it's decided
+  settings: {
+    title: {
+      type: 'choice',
+      label: 'The word Settings',
+      default: 'above',
+      recommended: 'above',
+      options: [
+        ['above', 'Above the search', 'Level with the page’s own title, so the two read as one line. The search is under it.'],
+        ['below', 'Below the search', 'A small heading over the pages, as Library is in the sidebar. The search stays level with Done.'],
+      ],
+    },
+    step: {
+      type: 'choice',
+      label: 'Display’s − and +',
+      default: 'split',
+      recommended: 'split',
+      options: [
+        ['split', 'Raised, sunken, raised', 'Two keys with the size sunk between them.'],
+        ['cut', 'One cut', 'The decks’ stepper: an end each side of the size, etched rules between.'],
+      ],
+    },
+  },
   notes:
     'style.css; Keys.svelte draws a shortcut as caps; find.js is the index and the matching; Search.svelte the field and Results.svelte its list. Hooks: Settings.svelte (the field, the results, the keys, the stems wording, Cmd+F and Esc). A controller’s own mapping file isn’t known to the screen, so only the actions MIDI learn offers and the ones you taught it can be found.',
 };
