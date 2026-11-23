@@ -2023,6 +2023,8 @@ html[data-note="sleeve"] .rec {
   html[data-note="sleeve"] .rec-grab { display: block; position: absolute; left: var(--hx); top: var(--hy); width: calc(var(--hr) * 2); height: calc(var(--hr) * 2); translate: -50% -50%; border-radius: 50%; touch-action: none; }
 }
 @media (max-width: 960px) { html[data-note="sleeve"] .founder { margin-bottom: var(--rec-peek, 28px); } }
+/* (Try, Note: on a phone, smaller and against the right edge.) */
+@media (max-width: 600px) { html[data-notephone="right"] .faq-row > .founder { zoom: 0.82; margin-left: auto; margin-right: 16px; } }
 /* Stacked under the questions: the record comes out of the open foot, and
    the window, its wear and the crease go with it. */
 @media (max-width: 960px) {
