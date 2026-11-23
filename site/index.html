@@ -21,7 +21,7 @@
   <!-- Geist, served from here (no other site to reach before the page can
        draw its text); the Latin file is fetched straight away. -->
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="style.css?v=20261123n">
+  <link rel="stylesheet" href="style.css?v=20261123o">
   <script>
     // (The phone preview's frame, opened by this same site with the Tune
     // panel showing; nothing for anyone else.)
@@ -205,7 +205,12 @@
       toggle('btngrainall', { label: 'Grain on Download too', folder: 'Buttons', value: false, apply: (v) => set('btngrainall', v) });
 
       // Controller mode.
-      select('switchat', { label: 'Switch sits', folder: 'Controller', value: 'left', options: [['left', 'Left'], ['center', 'Centred']], apply: (v) => set('switchat', v === 'left' ? 'left' : '') });
+      select('switchat', { label: 'Switch sits', folder: 'Controller', value: 'below', options: [['below', 'Below, left'], ['belowmid', 'Below, centred'], ['above', 'Above, left'], ['abovemid', 'Above, centred']], apply: (v) => { set('switchat', v === 'below' ? '' : v); fire('try-rec'); } });
+      slider('switchpad', { label: 'Switch, padding', folder: 'Controller', value: 6, min: 2, max: 10, step: 1, unit: 'px', apply: (v) => css('--switch-pad', `${v}px`) });
+      st.autoAfter = 3;
+      slider('autoafter', { label: 'Switches by itself after', folder: 'Controller', value: 3, min: 1, max: 12, step: 0.5, unit: 's', apply: (v) => (st.autoAfter = v) });
+      st.reveal = 'on';
+      select('reveal', { label: 'Pressing Controller scrolls', folder: 'Controller', value: 'on', options: [['on', 'To half of it, if it must'], ['off', 'Never']], apply: (v) => (st.reveal = v) });
       st.ctl = { scale: 1, down: 70 };
       slider('ctlscale', { label: 'Video size', folder: 'Controller', value: 100, min: 88, max: 100, step: 0.5, unit: '%', apply: (v) => { st.ctl.scale = v / 100; fire('try-controller'); } });
       slider('ctldown', { label: 'Controller down', folder: 'Controller', value: 70, min: 0, max: 130, step: 2, unit: 'px', apply: (v) => { st.ctl.down = v; fire('try-controller'); } });
@@ -879,19 +884,6 @@
     </section>
 
     <section class="shot wrap" aria-label="Interlude in action">
-      <!-- Above the screen: what plays it, the mouse or a controller. -->
-      <div class="shot-bar">
-        <div class="switch" role="radiogroup" aria-label="Play it with" data-mode="mouse">
-          <button type="button" role="radio" aria-checked="true" data-mode="mouse">
-            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5 12.5 7.4 8.6 8.6 7.4 12.5Z"/></svg>Mouse
-          </button>
-          <button type="button" role="radio" aria-checked="false" data-mode="controller">
-            <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="1.5" y="4" width="13" height="8" rx="2"/><circle cx="5" cy="8" r="1.8"/><circle cx="11" cy="8" r="1.8"/></svg>Controller
-          </button>
-          <i class="thumb" aria-hidden="true"></i><i class="grain grain--btn" aria-hidden="true"></i>
-        </div>
-        <span class="shot-tag">Works with 140+ MIDI controllers</span>
-      </div>
       <div class="stage-frame" data-mode="mouse">
         <div class="glow" aria-hidden="true"></div>
         <div class="screen">
@@ -906,6 +898,19 @@
           <!-- The real app on its simulated engine, played by a script (app/demo). Loaded after the page. -->
           <iframe class="live" title="Interlude mixing one track into the next" tabindex="-1" aria-hidden="true" data-src="demo/hero.html?v=20261120a"></iframe>
         </div>
+      </div>
+      <!-- Under the screen: what plays it, the mouse or a controller. -->
+      <div class="shot-bar">
+        <div class="switch" role="radiogroup" aria-label="Play it with" data-mode="mouse">
+          <button type="button" role="radio" aria-checked="true" data-mode="mouse">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5 12.5 7.4 8.6 8.6 7.4 12.5Z"/></svg>Mouse
+          </button>
+          <button type="button" role="radio" aria-checked="false" data-mode="controller">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="1.5" y="4" width="13" height="8" rx="2"/><circle cx="5" cy="8" r="1.8"/><circle cx="11" cy="8" r="1.8"/></svg>Controller
+          </button>
+          <i class="thumb" aria-hidden="true"></i><i class="grain grain--btn" aria-hidden="true"></i>
+        </div>
+        <span class="shot-tag">Works with 140+ MIDI controllers</span>
       </div>
     </section>
 
@@ -1822,7 +1827,7 @@
       const heroVars = { '--tilt': '0deg', '--anchor': '50% 0%' };
       // With the controller: the video's size (it isn't shrunk) and how much
       // lower the controller sits (the Try group, Controller).
-      const ctlNow = () => { const c = window.tryState?.ctl; if (c) { heroVars['--ctl-scale'] = String(c.scale); heroVars['--ctl-down'] = `${c.down}px`; frame.style.setProperty('--ctl-out', `${Math.max(20, c.down - 10)}px`); sendVars(); } };
+      const ctlNow = () => { const c = window.tryState?.ctl; if (c) { heroVars['--ctl-scale'] = String(c.scale); heroVars['--ctl-down'] = `${c.down}px`; frame.parentElement.style.setProperty('--ctl-down', `${c.down}px`); frame.style.setProperty('--ctl-out', `${Math.max(20, c.down - 10)}px`); sendVars(); } };
       addEventListener('try-controller', () => ctlNow());
       const sendVars = () => {
         live.contentWindow?.postMessage({ interlude: 'css', vars: heroVars }, '*');
@@ -1869,7 +1874,7 @@
           clipsHost.setAttribute('aria-hidden', 'true');
           live.after(clipsHost);
           try {
-            const { mountClips } = await import('./hero/clips.js?v=20261123a');
+            const { mountClips } = await import('./hero/clips.js?v=20261123b');
             clips = await mountClips(clipsHost, {
               base: 'hero/clips/', hand: mode, paused: true, log: q.has('log'),
               onReady: () => {
@@ -1958,22 +1963,75 @@
       const arrive = document.createElement('i');
       arrive.className = 'arrive'; arrive.setAttribute('aria-hidden', 'true');
       screen.append(arrive);
+      // Where the controller is once it has come in (its drawn outline, on
+      // screen, hero/clips.js), and how much of it the window shows: below
+      // the nav, above the window's foot (the visual viewport's, so a phone's
+      // toolbars, a pinch and the safe area count).
+      const safe = document.createElement('i');
+      Object.assign(safe.style, { position: 'fixed', bottom: 0, height: 'env(safe-area-inset-bottom, 0px)', width: 0, visibility: 'hidden', pointerEvents: 'none' });
+      document.body.append(safe);
+      const shows = () => {
+        const b = demo === 'clips' && clips?.controllerBox?.();
+        if (!b) return null;
+        const vv = window.visualViewport;
+        const top = Math.max(vv ? vv.offsetTop : 0, document.querySelector('.nav-glass').getBoundingClientRect().bottom);
+        const foot = (vv ? vv.offsetTop + vv.height : innerHeight) - safe.offsetHeight;
+        const seen = Math.min(b.bottom, foot) - Math.max(b.top, top);
+        // (How far to move for half of it: no further than that.)
+        const mid = (b.top + b.bottom) / 2;
+        return { share: seen / (b.bottom - b.top), by: seen * 2 >= b.bottom - b.top - 1 ? 0 : mid > foot ? mid - foot : mid < top ? mid - top : 0, out: b.top - foot };
+      };
       const land = () => {
         const how = window.tryState?.arrive ?? 'on';
-        if (how === 'off' || reduced.matches) return;
-        const r = screen.getBoundingClientRect(), s = r.width / 1440;
-        // (Out of view: under half of the controller's own height showing.)
-        const c = window.tryState?.ctl, top = r.top + (666 + (c?.down ?? 70)) * s, half = top + 98 * s;
-        if (how === 'always' || half > innerHeight) { arrive.classList.remove('go'); void arrive.offsetWidth; arrive.classList.add('go'); }
+        if (how === 'off' || reduced.matches || moving) return;
+        const v = shows();
+        if (how === 'always' || (v && v.share < 0.5)) { arrive.classList.remove('go'); void arrive.offsetWidth; arrive.classList.add('go'); }
       };
       document.addEventListener('interlude:hand', (e) => { if (e.detail.hand === 'controller') setTimeout(land, 260); });
-      for (const b of buttons) b.addEventListener('click', () => { touched = true; clips?.setHand(b.dataset.mode); setMode(b.dataset.mode); });
+      // Pressed (by a person), Controller brings half of itself into view, if
+      // it isn't: on the page's own smooth spring, measured again on each
+      // frame, dropped the moment the person scrolls.
+      let moving = 0;
+      const reveal = () => {
+        if ((window.tryState?.reveal ?? 'on') === 'off') return;
+        const v = shows();
+        if (!v || !v.by) return;
+        if (reduced.matches) { scrollBy({ top: v.by, behavior: 'instant' }); return; }
+        const css = getComputedStyle(document.documentElement);
+        const at = css.getPropertyValue('--smooth').match(/-?[\d.]+/g).map(Number), ms = parseFloat(css.getPropertyValue('--smooth-ms')) * 1.2;
+        const ease = (t) => { const x = t * (at.length - 1), i = Math.min(at.length - 2, Math.floor(x)); return at[i] + (at[i + 1] - at[i]) * (x - i); };
+        const from = scrollY, t0 = performance.now(), dir = Math.sign(v.by);
+        let put = from, far = from + v.by;
+        const stop = () => { cancelAnimationFrame(moving); moving = 0; for (const n of ENDS) removeEventListener(n, stop, true); };
+        const ENDS = ['wheel', 'touchstart', 'touchmove', 'pointerdown', 'keydown'];
+        stop();
+        const frameNow = (now) => {
+          // (Moved by anything else, the scrollbar say: theirs now.)
+          if (Math.abs(scrollY - put) > 2) return stop();
+          const t = Math.min(1, (now - t0) / ms), w = shows();
+          if (w) far = dir > 0 ? Math.max(put, scrollY + w.by) : Math.min(put, scrollY + w.by);
+          scrollTo({ top: from + (far - from) * (t < 1 ? ease(t) : 1), behavior: 'instant' });
+          put = scrollY;
+          if (t < 1) moving = requestAnimationFrame(frameNow); else stop();
+        };
+        moving = requestAnimationFrame(frameNow);
+        // (From the next event on: not the press's own.)
+        setTimeout(() => { if (moving) for (const n of ENDS) addEventListener(n, stop, { capture: true, passive: true }); }, 0);
+      };
+      let byKey = false;
+      for (const b of buttons) b.addEventListener('click', (e) => {
+        touched = true;
+        const person = e.isTrusted || byKey;
+        clips?.setHand(b.dataset.mode); setMode(b.dataset.mode);
+        if (person && b.dataset.mode === 'controller') reveal();
+      });
       sw.addEventListener('keydown', (e) => {
         if (!['ArrowLeft', 'ArrowRight'].includes(e.key)) return;
         const i = buttons.findIndex((b) => b.getAttribute('aria-checked') === 'true');
         const next = buttons[(i + (e.key === 'ArrowRight' ? 1 : buttons.length - 1)) % buttons.length];
-        next.click();
-        next.focus();
+        e.preventDefault();
+        byKey = true; next.click(); byKey = false;
+        next.focus({ preventScroll: true });
       });
       // The clips cross to the twin without the arrow as the hand switches;
       // with the pointer on the switch (or focus in it) the twin is started
@@ -2008,18 +2066,32 @@
         opening();
       } });
       opening();
-      let autoTimer = 0;
+      // Counted from when the hero is really showing and playing: its first
+      // frame is up (soon), it's not paused, and a fifth of it at least is in
+      // the window; held while it isn't. What the switch needs is asked for
+      // as the count starts, so it's made on time; not before it's in.
+      let autoTimer = 0, playedFor = 0;
+      const inView = () => { const r = screen.getBoundingClientRect(); return Math.min(r.bottom, innerHeight) - Math.max(r.top, 0) >= r.height * 0.2; };
       function soon() {
         if (!auto || autoTimer) return;
         auto = false;
-        autoTimer = setTimeout(function again() {
-          if (touched || mode !== 'mouse') return;
-          // (On screen, and with the controller's clips in, so it shows at once.)
-          if (!onScreen || document.hidden) { autoTimer = setTimeout(again, 700); return; }
-          // The clips switch as the step ends (no clip crossed mid-step); the live app at once.
-          if (demo === 'clips' && clips) clips.switchAtBoundary('controller');
-          else setMode('controller', 'auto');
-        }, 3500);
+        const STEP = 100;
+        let was = performance.now(), asked = false;
+        autoTimer = setInterval(() => {
+          const now = performance.now(), dt = Math.min(now - was, STEP * 3);
+          was = now;
+          if (touched || mode !== 'mouse') { clearInterval(autoTimer); clips?.prepare(false); return; }
+          if (!onScreen || document.hidden || menuOver || !inView()) return;
+          playedFor += dt / 1000;
+          if (!asked) { asked = true; clips?.want?.(); }
+          const left = (window.tryState?.autoAfter ?? 3) - playedFor;
+          if (demo === 'clips' && clips && left < 0.8) clips.prepare(true);
+          if (left > 0.05 || (demo === 'clips' && clips && !clips.otherReady)) return;
+          clearInterval(autoTimer);
+          window.__autoAt = { at: now, playedFor };
+          setMode('controller', 'auto');
+          clips?.prepare(false);
+        }, STEP);
       }
       addEventListener('pointerdown', (e) => { if (e.target.closest?.('.switch')) touched = true; }, { capture: true });
 

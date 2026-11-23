@@ -265,11 +265,21 @@ h1 { margin: 0; font-size: clamp(48px, 9vw, 88px); font-weight: 600; letter-spac
   opacity: 0.16;
   will-change: opacity, transform;
 }
-/* Above the frame, centred: the switch and, beside it, what it means, where
-   the eye lands before the app. Three layers only: a quiet track, a light
-   thumb, plain text. The controller version plays inside the same frame,
-   so this never moves. */
-.shot-bar { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 10px 14px; width: max-content; max-width: 100%; margin: 0 auto 22px; }
+/* Under the frame, on its left edge: the switch, and on its right edge what
+   it means; the controller, when it's showing, hangs below the frame between
+   them. Where there isn't the width for that the bar sits below the
+   controller. Neither ever moves as it comes and goes. Three layers only: a
+   quiet track, a light thumb, plain text. (Try, Controller: switch is.) */
+.shot { display: flex; flex-direction: column; }
+.shot-bar {
+  position: relative; z-index: 1; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 14px; width: 100%; margin: 18px 0 0;
+  /* How far below the frame the controller's box reaches. */
+  --hang: calc((var(--ctl-down, 70px) + 3px) * var(--s));
+}
+html[data-switchat="belowmid"] .shot-bar { justify-content: center; margin-top: calc(var(--hang) + 14px); }
+html[data-switchat^="above"] .shot-bar { order: -1; justify-content: flex-start; margin: 0 0 22px; }
+html[data-switchat="abovemid"] .shot-bar { justify-content: center; }
+@media (max-width: 1060px) { html:not([data-switchat^="above"]) .shot-bar { margin-top: calc(var(--hang) + 14px); } }
 /* Plain words, no badge: full-strength white, a weight up, with a soft
    dark halo behind the letters so they read over the record. */
 .shot-tag { display: inline-flex; align-items: center; height: 36px; color: #f4f3ef; font-size: 13.5px; font-weight: 500; text-shadow: 0 1px 2px rgb(9 9 11 / 0.9), 0 0 14px rgb(9 9 11 / 0.95), 0 0 28px rgb(9 9 11 / 0.8); }
@@ -298,8 +308,8 @@ main { position: relative; isolation: isolate; }
   position: relative;
   display: inline-grid;
   grid-template-columns: 1fr 1fr;
-  padding: 4px;
-  border-radius: 12px;
+  padding: var(--switch-pad, 6px);
+  border-radius: calc(8px + var(--switch-pad, 6px));
   /* Near solid, so it reads over the record's grooves (no blur: a blur
      inside the shot's layers is what went wrong before). */
   background: rgb(28 28 33 / 0.94);
@@ -330,10 +340,10 @@ main { position: relative; isolation: isolate; }
 .switch button[data-mode="mouse"] svg { fill: currentColor; stroke-width: 1; }
 .switch .thumb {
   position: absolute;
-  top: 4px;
-  bottom: 4px;
-  left: 4px;
-  width: calc(50% - 4px);
+  top: var(--switch-pad, 6px);
+  bottom: var(--switch-pad, 6px);
+  left: var(--switch-pad, 6px);
+  width: calc(50% - var(--switch-pad, 6px));
   border-radius: 8px;
   background: #f4f3ef;
   box-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
@@ -1301,9 +1311,10 @@ html[data-hero]:is([data-herotext="card"], [data-herotext="rail"], [data-herotex
 @media (max-width: 480px) {
   html[data-hero="split"] .hero { padding: 18px 8px 48px; }
   html[data-hero][data-herotext="card"] .dl-cap { justify-content: center; text-align: center; }
-  /* The switch just over the screen it switches; what it means above it. */
-  .shot-tag { order: -1; height: auto; }
-  .shot-bar { row-gap: 8px; margin-bottom: 14px; }
+  /* The switch, and what it means under it (over it, above the screen). */
+  .shot-tag { height: auto; }
+  html[data-switchat^="above"] .shot-tag { order: -1; }
+  html[data-switchat^="above"] .shot-bar { margin-bottom: 14px; }
 }
 /* Being tried (?surface=, Hero: GitHub and switch surface): what's behind
    the hero's GitHub button and the mouse/controller switch. Today's (the
@@ -2381,9 +2392,6 @@ html[data-btngrain] :is(.cta .btn.ghost, .switch) > .grain--btn, html[data-btngr
 }
 html[data-btngrain="under"] .cta .btn > :not(.grain--btn) { position: relative; z-index: 1; }
 html[data-btngrain="over"] :is(.cta .btn, .switch) > .grain--btn { z-index: 2; }
-
-/* The switch on the video's left edge (Try, Controller). */
-html[data-switchat="left"] .shot-bar { justify-content: flex-start; width: 100%; margin-inline: 0; }
 
 /* A light drawn once down the screen as the controller lands below the
    window (index.html, land). */

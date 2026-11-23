@@ -124,6 +124,22 @@ export async function mountClips(host, opts = {}) {
     root.style.setProperty('--away-s', String(away.scale));
   }
   root.style.setProperty('--ctl-mask', `url(${new URL(`${base}controller-mask.png${M.source ? `?v=${M.source}` : ''}`, location.href)})`);
+  // How much of its box the controller fills: its mask, read once.
+  let outline = null;
+  {
+    const im = new Image();
+    im.src = `${base}controller-mask.png${M.source ? `?v=${M.source}` : ''}`;
+    im.decode().then(() => {
+      const W = 180, H = Math.round((W * box.height) / box.width), c = document.createElement('canvas');
+      c.width = W; c.height = H;
+      const x = c.getContext('2d', { willReadFrequently: true });
+      x.drawImage(im, 0, 0, W, H);
+      const a = x.getImageData(0, 0, W, H).data;
+      let l = W, t = H, rr = 0, b = 0;
+      for (let y = 0; y < H; y++) for (let X = 0; X < W; X++) if (a[(y * W + X) * 4 + 3] > 100) { l = Math.min(l, X); rr = Math.max(rr, X + 1); t = Math.min(t, y); b = Math.max(b, y + 1); }
+      if (b > t) outline = [l / W, t / H, rr / W, b / H];
+    }).catch(() => {});
+  }
   for (const v of [...appEls, ...ctlEls]) Object.assign(v, { muted: true, playsInline: true, disablePictureInPicture: true, preload: 'auto' });
 
   const STEPS = M.steps.map((s, i) => ({ ...s, i }));
@@ -791,6 +807,14 @@ export async function mountClips(host, opts = {}) {
   }
   return {
     root, setHand, setPaused, setVars, prepare,
+    /** Where the controller's drawn outline is on screen once it has come in (its own entrance left out). */
+    controllerBox() {
+      const r = root.getBoundingClientRect();
+      if (!r.width) return null;
+      const k = r.width / root.offsetWidth, [x0, y0, x1, y1] = outline || [0, 0, 1, 1];
+      const left = r.left + desk.offsetLeft * k, top = r.top + desk.offsetTop * k, w = desk.offsetWidth * k, h = desk.offsetHeight * k;
+      return { left: left + w * x0, top: top + h * y0, right: left + w * x1, bottom: top + h * y1 };
+    },
     get codec() { return codec; }, get hand() { return hand; }, get step() { return pos; }, get slow() { return slow; },
     /** Switches to `h` as a step ends, once its clips for that step are in (onSwitch tells the page). */
     switchAtBoundary(h) { pending = h; const n = (pos + 1) % N; appClip(h, n, true); if (h === 'controller') ctlClip(h, n, true); },
