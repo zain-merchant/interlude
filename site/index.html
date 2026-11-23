@@ -210,7 +210,7 @@
       slider('ctlscale', { label: 'Video size', folder: 'Controller', value: 100, min: 88, max: 100, step: 0.5, unit: '%', apply: (v) => { st.ctl.scale = v / 100; fire('try-controller'); } });
       slider('ctldown', { label: 'Controller down', folder: 'Controller', value: 70, min: 0, max: 130, step: 2, unit: 'px', apply: (v) => { st.ctl.down = v; fire('try-controller'); } });
       select('arrive', { label: 'Glint', folder: 'Controller', value: 'on', options: [['on', 'When out of view'], ['always', 'Every time'], ['off', 'None']], apply: (v) => (st.arrive = v) });
-      slider('arriveamt', { label: 'Glint strength', folder: 'Controller', value: 0.16, min: 0.02, max: 0.3, step: 0.01, apply: (v) => css('--arrive', String(v)) });
+      slider('arriveamt', { label: 'Glint, strength', folder: 'Controller', value: 0.16, min: 0.02, max: 0.3, step: 0.01, apply: (v) => css('--arrive', String(v)) });
 
       // The record behind the hero: what a phone shows, and the desktop too
       // if it's ticked. A composition, or each part of it by hand.
@@ -227,8 +227,8 @@
       const rec = st.rec = { ...NONE, both: false };
       const recNow = () => { css('--rec-op', String(rec.op)); set('recboth', rec.both); fire('try-rec'); };
       const part = { recx: ['x', 'Across'], recy: ['y', 'Down'], reczoom: ['zoom', 'Size'], recrings: ['rings', 'Rings reach'], recfade: ['fade', 'Fades in by'], reclen: ['len', 'Fade length'], recop: ['op', 'Opacity'] };
-      const LBL = { recx: 'Across (px)', recy: 'Down (px)', reczoom: 'Size', recrings: 'Rings run out', recfade: 'Fades in by (px)', reclen: 'Fade length (px)', recop: 'Opacity' };
-      select('recbg', { label: 'Phone composition', folder: 'Record', value: 'today', options: [['today', 'Today'], ['lower', 'Lower, as was'], ['sunk', 'Sunk'], ['low', 'Low arc'], ['rim', 'Whole rim'], ['small', 'Small'], ['darker', 'Darker']], apply: (v, first) => { Object.assign(rec, NONE, COMP[v] || {}); recNow(); if (!first) for (const k in part) T.set(`Try: ${LBL[k]}`, rec[part[k][0]]); } });
+      const LBL = { recx: 'Phone, across (px)', recy: 'Phone, down (px)', reczoom: 'Phone, size', recrings: 'Phone, rings run out', recfade: 'Phone, fades in by (px)', reclen: 'Phone, fade length (px)', recop: 'Phone, opacity' };
+      select('recbg', { label: 'Phone, composition', folder: 'Record', value: 'today', options: [['today', 'Today'], ['lower', 'Lower, as was'], ['sunk', 'Sunk'], ['low', 'Low arc'], ['rim', 'Whole rim'], ['small', 'Small'], ['darker', 'Darker']], apply: (v, first) => { Object.assign(rec, NONE, COMP[v] || {}); recNow(); if (!first) for (const k in part) T.set(`Try: ${LBL[k]}`, rec[part[k][0]]); } });
       const R = [['recx', -300, 300, 2], ['recy', -120, 400, 2], ['reczoom', 0.35, 1.6, 0.01], ['recrings', 0.2, 1.2, 0.01], ['recfade', 0, 700, 5], ['reclen', 0, 700, 5], ['recop', 0.1, 1, 0.05]];
       for (const [k, min, max, step] of R) slider(k, { label: LBL[k], folder: 'Record', value: NONE[part[k][0]], min, max, step, apply: (v, first) => { if (first && !q.has(k)) return; rec[part[k][0]] = v; recNow(); } });
       toggle('recboth', { label: 'Apply to desktop too', folder: 'Record', value: false, apply: (v) => { rec.both = v; recNow(); } });
@@ -244,9 +244,9 @@
 
       // The footer's effect as the page is pulled past its end.
       st.pull = { max: 1, soon: 0.09, wide: 1.2 };
-      slider('pullmax', { label: 'Both sizes: pull, at most', folder: 'Footer', value: 1, min: 0.2, max: 1, step: 0.05, apply: (v) => (st.pull.max = v) });
-      slider('pullsoon', { label: 'Both sizes: pull needed (of screen)', folder: 'Footer', value: 0.09, min: 0.03, max: 0.6, step: 0.01, apply: (v) => (st.pull.soon = v) });
-      slider('pullwide', { label: 'Both sizes: spread', folder: 'Footer', value: 1.2, min: 0, max: 3, step: 0.1, apply: (v) => (st.pull.wide = v) });
+      slider('pullmax', { label: 'Pull, at most', folder: 'Footer', value: 1, min: 0.2, max: 1, step: 0.05, apply: (v) => (st.pull.max = v) });
+      slider('pullsoon', { label: 'Pull it takes (of screen)', folder: 'Footer', value: 0.09, min: 0.03, max: 0.6, step: 0.01, apply: (v) => (st.pull.soon = v) });
+      slider('pullwide', { label: 'Pull, spread', folder: 'Footer', value: 1.2, min: 0, max: 3, step: 0.1, apply: (v) => (st.pull.wide = v) });
 
       // Squircle corners.
       select('squircles', { label: 'Squircles', folder: 'Corners', value: 'on', options: [['on', 'On'], ['off', 'Off']], apply: (v) => { st.sqOn = v !== 'off'; fire('try-squircles'); } });
@@ -2442,7 +2442,13 @@
     // The features set apart from the sections either side (style.css,
     // "Features, set apart").
     document.documentElement.dataset.fband = 'recess';
-    window.tune?.color({ label: 'Features: band colour', value: '#070709', onInput: (v) => document.documentElement.style.setProperty('--band-bg', v) });
+    {
+      // (Matching the nav, its near-black; off, the colour picked below.)
+      let match = true, own = '#070709';
+      const paint = () => document.documentElement.style.setProperty('--band-bg', match ? 'var(--ink)' : own);
+      window.tune?.toggle?.({ label: 'Features: match the nav', value: true, onInput: (v) => { match = v; paint(); } });
+      window.tune?.color({ label: 'Features: band colour', value: '#070709', onInput: (v) => { own = v; paint(); } });
+    }
     window.tune?.color({ label: 'Features: band edge colour', value: '#ffffff12', onInput: (v) => document.documentElement.style.setProperty('--band-line', v) });
     window.tune?.select({ label: 'Features: band', value: 'recess', options: [['lift', 'A lighter band, hairline edges'], ['recess', 'A darker band, pressed in'], ['panel', 'One big rounded panel'], ['tint', 'A band lit in the deck colours'], ['grooves', 'A band cut with grooves'], ['none', 'No band']],
       onInput: (v) => (document.documentElement.dataset.fband = v) });
