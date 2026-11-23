@@ -3,7 +3,7 @@
   import { openMenu } from './menu.svelte.js';
   import { detent, keyValue } from './control.js';
   import { flag, setting } from '../flags/registry.svelte.js';
-  import { landed, scrolled } from '../flags/120-knob-feel/feel.js'; // #120 (UI audit flag): knob-feel
+  import { landed, scrolled } from '../flags/118-knob-feel/feel.js'; // #118 (UI audit flag): knob-feel
 
   /**
    * A fader drawn with plain elements, so it looks and behaves the same in
@@ -113,7 +113,7 @@
   }
   function wheel(e) {
     e.preventDefault();
-    // #120 (UI audit flag): knob-feel: as far as the scroll goes.
+    // #118 (UI audit flag): knob-feel: as far as the scroll goes.
     if (flag('knob-feel') && setting('knob-feel', 'scroll') === 'far') {
       const v = scrolled(e, { value, min, max, reset, sideways: !vertical, flip: invert, detent });
       if (v === null) return;

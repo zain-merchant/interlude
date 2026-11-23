@@ -1,4 +1,4 @@
-// #120 (UI audit flag): knob-feel.
+// #118 (UI audit flag): knob-feel.
 //
 // Drag. A knob turns with a drag left and right as well as up and down (right
 // and up raise it). The first few pixels say which, nearly diagonal counting
@@ -15,7 +15,7 @@
 // Hooks: Knob.svelte and Fader.svelte (feel.js).
 export default {
   id: 'knob-feel',
-  n: 120,
+  n: 118,
   title: 'Knobs turn sideways, and follow the scroll',
   group: 'Controls',
   settings: {

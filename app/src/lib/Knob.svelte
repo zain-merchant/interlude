@@ -3,12 +3,12 @@
   import { openMenu } from './menu.svelte.js';
   import { detent, keyValue } from './control.js';
   import { flag, setting } from '../flags/registry.svelte.js';
-  import { axisOf, landed, scrolled } from '../flags/120-knob-feel/feel.js'; // #120 (UI audit flag): knob-feel
+  import { axisOf, landed, scrolled } from '../flags/118-knob-feel/feel.js'; // #118 (UI audit flag): knob-feel
 
   /**
    * A rotary knob: a machined graphite cap with a white indicator inside an
    * engraved 270° tick scale. Drag it up or right to raise it, down or left
-   * to lower it (#120; up and down only without it; ⇧ for fine), scroll, or use the
+   * to lower it (#118; up and down only without it; ⇧ for fine), scroll, or use the
    * arrow keys; double-click or right-click resets. With `kill`, clicking
    * the label kills the band and clicking again brings it back. A `taper`
    * maps values to positions on the sweep (0..1) when they aren't linear,
@@ -60,7 +60,7 @@
   }
 
   let raw = 0;
-  // #120 (UI audit flag): knob-feel: the way this drag is going, once that's clear.
+  // #118 (UI audit flag): knob-feel: the way this drag is going, once that's clear.
   /** @type {'x' | 'y' | null} */
   let axis = null;
   let gone = [0, 0];
@@ -116,7 +116,7 @@
   }
   function wheel(e) {
     e.preventDefault();
-    // #120 (UI audit flag): knob-feel: as far as the scroll goes.
+    // #118 (UI audit flag): knob-feel: as far as the scroll goes.
     if (flag('knob-feel') && setting('knob-feel', 'scroll') === 'far') {
       const p = scrolled(e, { value: pos, min: 0, max: 1, reset: resetPos, sideways: true, detent });
       if (p === null) return;
