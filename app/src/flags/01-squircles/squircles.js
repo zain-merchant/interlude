@@ -34,6 +34,9 @@
 // function that removes every attribute, observer and rule it added.
 
 const MIN_R = 4;
+// #110 (UI audit flag): dir-room-tint smooths only panels, plates and menus. Round a key or a field (8px), a drawn
+// superellipse is barely different from a circle, and Chrome leaves a notch in the line where it begins.
+const minR = () => (document.documentElement.hasAttribute('data-flag-dir-room-tint') ? 13 : MIN_R);
 const FAR = 160; // the outer rect's reach past the element: room for shadows and focus rings
 // Deck tabs draw their selected underline a pixel past their own box; a
 // clip would notch both its ends (b-K28), so they keep CSS's round corners.
@@ -200,7 +203,7 @@ export function start() {
     const r = radii.map((v) => f(v * scale));
     const half = Math.min(w, h) / 2;
     // Nothing to smooth: no radius worth it, or a circle or capsule.
-    if (!w || !h || Math.max(...r) < MIN_R || r.every((v) => v === 0 || v >= half - 0.5) || smoothing === 0) return;
+    if (!w || !h || Math.max(...r) < minR() || r.every((v) => v === 0 || v >= half - 0.5) || smoothing === 0) return;
 
     if (native) {
       const k = nativeScale(smoothing);
