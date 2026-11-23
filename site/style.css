@@ -1401,7 +1401,11 @@ html[data-nav="morph"][data-navacts="island"] .nav[data-acts-in] .nav-actions .b
 @media not all and (hover: hover) and (pointer: fine) { .oss-track a:active .oss-msg { color: var(--oss-strong); text-decoration-color: currentColor; } }
 .oss-track a .oss-sha { display: none; }
 .oss-track time { font-size: 12.5px; color: var(--oss-dim); }
-@media (prefers-reduced-motion: reduce) { .oss-ticker { overflow-x: auto; } }
+.oss-ticker { cursor: grab; touch-action: pan-y; user-select: none; -webkit-user-select: none; }
+.oss-ticker[data-dragging] { cursor: grabbing; }
+.oss-ticker[data-dragging] a { pointer-events: none; }
+.oss-ticker a { -webkit-user-drag: none; }
+@media (prefers-reduced-motion: reduce) { .oss-ticker { overflow-x: auto; scrollbar-width: none; } .oss-ticker::-webkit-scrollbar { display: none; } }
 
 /* The newest change, big: the changes lead. The latest one is set as a
    headline with when above it; the rest follow small and fade with age.
@@ -2083,3 +2087,6 @@ html[data-lablogo="plain"] .lg-rings circle:nth-child(-n + 2) { display: none; }
    data-nolog): the link to them on GitHub where the ticker runs. */
 .oss[data-nolog] .oss-commits { display: block; margin: 0; padding: 0; list-style: none; }
 .oss[data-nolog] .oss-commits .oss-empty a { padding: 0; font-size: 14px; text-decoration: underline; text-decoration-color: rgb(11 11 13 / 0.2); text-underline-offset: 3px; }
+.oss[data-look^="poster"] .oss-log h4[data-front] { cursor: pointer; transition: color 150ms ease; }
+@media (hover: hover) and (pointer: fine) { .oss[data-look^="poster"] .oss-log h4[data-front]:hover { color: var(--oss-strong); } }
+.oss[data-look^="poster"] .oss-log h4[data-front]:focus-visible { outline: 2px solid currentColor; outline-offset: 4px; border-radius: 4px; }
