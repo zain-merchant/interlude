@@ -2390,11 +2390,10 @@
   font-weight: 500;
 }
 /* High, Mid and Low are captions, like Trim and Filter: no key behind them.
-   They still kill the band when clicked. What says so: they're a step
-   brighter than Trim and Filter and the pointer turns them towards red; a
-   killed one is red, with its dial's ticks red and its dial at the end. */
+   They still kill the band when clicked: the pointer turns them towards red;
+   a killed one is red, with its dial's ticks red and its dial at the end. */
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .knob button.label {
-  --kk-ink: var(--fg-2);
+  --kk-ink: var(--fg-3);
   --kk-ink-hi: color-mix(in oklab, var(--kill) 60%, var(--fg));
   cursor: pointer;
 }
@@ -3562,15 +3561,23 @@
   background: none;
   box-shadow: none;
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:not([data-flag-dir-room-tint-tempo='cut']) [data-region^='deck'] .pitch .val .lk {
-  justify-content: center;
+/* The figures and unit stand over the slot; a sign hangs before them, so it moves nothing. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .pitch .val {
+  text-align: center;
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:not([data-flag-dir-room-tint-tempo='cut']) [data-region^='deck'] .pitch .val .sg {
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .pitch .val .lk {
+  display: inline-flex;
+  position: relative;
+  width: auto;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .pitch .val .sg {
   position: absolute;
-  left: 4px;
+  right: calc(100% + 2px);
+  left: auto;
+  margin: 0;
 }
 /* 1: an etched rule under it */
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-tert='under'] :is([data-region^='deck'] .pitch .lock, [data-region^='deck'] .pitch .nudge > button, [data-region^='deck'] .pitch .val, .mixer .hp, .mixer button.rec)::after {
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-tert='under'] :is([data-region^='deck'] .pitch .lock, [data-region^='deck'] .pitch .nudge > button, :root:not([data-flag-dir-room-tint-tempo='cut']) [data-region^='deck'] .pitch .val, .mixer .hp, .mixer button.rec)::after {
   content: '' !important;
   position: absolute;
   inset: auto auto 2px 50%;
@@ -3593,6 +3600,10 @@
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-tert='under'] .mixer button.rec::after {
   width: 40px;
 }
+/* As wide as its glyph, so it stands clear of Filter. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-tert='under'] .mixer .hp::after {
+  width: 14px;
+}
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-tert='under'] :is([data-region^='deck'] .pitch .lock.on, .mixer .hp.on)::after {
   background: var(--on);
 }
@@ -3614,7 +3625,7 @@
   pointer-events: none;
 }
 /* 2: an etched rule beside it */
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-tert='beside'] :is([data-region^='deck'] .pitch .lock, [data-region^='deck'] .pitch .nudge > button, [data-region^='deck'] .pitch .val, .mixer .hp, .mixer button.rec)::after {
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-tert='beside'] :is([data-region^='deck'] .pitch .lock, [data-region^='deck'] .pitch .nudge > button, :root:not([data-flag-dir-room-tint-tempo='cut']) [data-region^='deck'] .pitch .val, .mixer .hp, .mixer button.rec)::after {
   content: '' !important;
   position: absolute;
   inset: 0 auto 0 2px;
@@ -3631,11 +3642,8 @@
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-tert='beside'] :is([data-region^='deck'] .pitch .lock.on, .mixer .hp.on)::after {
   background: var(--on);
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-tempo='cut'] [data-region^='deck'] .pitch .val::after {
-  content: none !important;
-}
 /* 3: a hairline cut round it */
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-tert='hair'] :is([data-region^='deck'] .pitch .lock, [data-region^='deck'] .pitch .nudge > button, [data-region^='deck'] .pitch .val, .mixer .hp, .mixer button.rec):not(:active, .rec.on) {
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-tert='hair'] :is([data-region^='deck'] .pitch .lock, [data-region^='deck'] .pitch .nudge > button, :root:not([data-flag-dir-room-tint-tempo='cut']) [data-region^='deck'] .pitch .val, .mixer .hp, .mixer button.rec):not(:active, .rec.on) {
   box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.55), 0 1px 0 0 rgb(255 255 255 / 0.06) !important;
   border-radius: 7px;
 }
@@ -3655,7 +3663,7 @@
   --kk-face: rgb(255 255 255 / 0.038);
   --kk-face-hi: rgb(255 255 255 / 0.075);
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-tert='flat'] [data-region^='deck'] .pitch .val:not(:hover) {
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-tert='flat']:not([data-flag-dir-room-tint-tempo='cut']) [data-region^='deck'] .pitch .val:not(:hover) {
   background: rgb(255 255 255 / 0.038);
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-tert='flat'] :is([data-region^='deck'] .pitch .lock.on, .mixer .hp.on) {
@@ -3663,7 +3671,7 @@
 }
 /* 6: a patch of grooves */
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-tert='groove'] :is([data-region^='deck'] .pitch .lock, [data-region^='deck'] .pitch .nudge > button, .mixer .hp, .mixer button.rec):not(.rec.on),
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-tert='groove'] [data-region^='deck'] .pitch .val {
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-tert='groove']:not([data-flag-dir-room-tint-tempo='cut']) [data-region^='deck'] .pitch .val {
   background-image: var(--rg-grooves);
   background-color: rgb(0 0 0 / 0.2);
 }
