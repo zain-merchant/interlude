@@ -81,6 +81,8 @@ async function createTauriBackend() {
     clearStemsCache: () => invoke('clear_stems_cache'),
     /** A deck's stems are being used: its Stems tab was opened. */
     useStems: (deck) => invoke('use_stems', { deck }),
+    /** A deck's Stems tab is showing, or no longer is: tracks that load while it is are being used. */
+    stemsOpen: (deck, open) => invoke('stems_open', { deck, open }),
     /** How the model download is doing. @returns {Promise<import('./stemsmodel.js').StemsModel>} */
     stemsModel: () => invoke('stems_model'),
     /**

@@ -403,6 +403,13 @@ pub fn use_stems(stems: State<'_, Stems>, deck: usize) {
     stems.used(deck);
 }
 
+/// `deck`'s Stems tab is showing, or no longer is. While it is, a track that
+/// loads there is being used.
+#[tauri::command]
+pub fn stems_open(stems: State<'_, Stems>, deck: usize, open: bool) {
+    stems.splitter.open(deck, open);
+}
+
 #[tauri::command]
 pub fn clear_stems_cache(stems: State<'_, Stems>) -> Result<StemsInfo, String> {
     if let Some(dir) = stems.cache_dir() {

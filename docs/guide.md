@@ -93,8 +93,8 @@ Everything Interlude does, in detail. For a short overview, see the
   each track when you load it, so its stems are ready instantly, but uses
   more memory. Efficient separates a track only when you use its stems, by
   opening its Stems tab or pressing one, which takes a few seconds, but uses
-  less. A tab left open doesn't separate the next track until you use it. A
-  press made before choosing brings the Stems tab forward and goes ahead
+  less. While the Stems tab stays open, each track that loads on that deck
+  counts as used. A press made before choosing brings the Stems tab forward and goes ahead
   once you choose. A stem pressed before its part of the track is ready
   pulses, and fades in or out once it is. If you already had the model when
   this choice arrived, you have Fast. On an M5 MacBook Air separating a
