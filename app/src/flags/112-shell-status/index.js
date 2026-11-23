@@ -34,7 +34,7 @@ export default {
     },
   },
   notes:
-    'Status.svelte is the two items (one when the controller is the output) and their popover; Activity.svelte is the stems download by the track count. connections.svelte.js holds what they show. Hooks: Library.svelte (Activity after the count, Status before Settings), App.svelte (Status in the title bar; which windows its links open). The toolbar gives way in this order: the search field to 200px, "analyzing", Sampler\'s label, the two names, the count.',
+    'Status.svelte is the two items (one when the controller is the output) and their popover; Activity.svelte is the stems download by the track count. connections.svelte.js holds what they show. Hooks: Library.svelte (Activity after the count, Status before Settings), App.svelte (Status in the title bar; which windows its links open). The toolbar gives way in this order: the search field to 200px, "analyzing", Sampler\'s label, the two names to 92px, the search field to 160px, the names to icons, the count.',
 };
 
 /** Show me: the popover open, and the items. */

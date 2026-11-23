@@ -56,8 +56,9 @@
 
 /* ── In the library's toolbar ──────────────────────────────────────────
    What gives way, in order (Status.svelte turns data-fit up until it
-   fits): the search field to 200px; "analyzing" and "Downloading stems,"
-   to their numbers; Sampler's label; the two names; the count. */
+   fits): the search field to 200px; 1 "analyzing" and "Downloading stems,"
+   to their numbers; 2 Sampler's label; 3 the two names to 92px; 4 the
+   search field to 160px; 5 the names to their icons; 6 the count. */
 :root[data-flag-shell-status] section.library .main > .bar > * {
   flex: none;
 }
@@ -94,13 +95,13 @@
   transform-origin: left;
   transition: transform 0.3s;
 }
-:root[data-flag-shell-status] section.library .bar:is([data-fit='1'], [data-fit='2'], [data-fit='3'], [data-fit='4']) :is(.shell-act .w, .shell-act i) {
+:root[data-flag-shell-status] section.library .bar:is([data-fit='1'], [data-fit='2'], [data-fit='3'], [data-fit='4'], [data-fit='5'], [data-fit='6']) :is(.shell-act .w, .shell-act i) {
   display: none;
 }
-:root[data-flag-shell-status] section.library .bar:is([data-fit='1'], [data-fit='2'], [data-fit='3'], [data-fit='4']) .count .pending::after {
+:root[data-flag-shell-status] section.library .bar:is([data-fit='1'], [data-fit='2'], [data-fit='3'], [data-fit='4'], [data-fit='5'], [data-fit='6']) .count .pending::after {
   display: none;
 }
-:root[data-flag-shell-status] section.library .bar:is([data-fit='2'], [data-fit='3'], [data-fit='4']) .samp {
+:root[data-flag-shell-status] section.library .bar:is([data-fit='2'], [data-fit='3'], [data-fit='4'], [data-fit='5'], [data-fit='6']) .samp {
   width: 32px;
   padding: 0;
   gap: 0;
@@ -109,14 +110,20 @@
   place-items: center;
 }
 :root[data-flag-shell-status] section.library .bar:is([data-fit='3'], [data-fit='4']) .shell .nm {
+  max-width: 92px;
+}
+:root[data-flag-shell-status] section.library .main > .bar:is([data-fit='4'], [data-fit='5'], [data-fit='6']) > .search {
+  min-width: 160px;
+}
+:root[data-flag-shell-status] section.library .bar:is([data-fit='5'], [data-fit='6']) .shell .nm {
   display: none;
 }
 /* No sound still says so. */
-:root[data-flag-shell-status] section.library .bar:is([data-fit='3'], [data-fit='4']) .shell .bad .nm {
+:root[data-flag-shell-status] section.library .bar:is([data-fit='5'], [data-fit='6']) .shell .bad .nm {
   display: inline;
   max-width: 96px;
 }
-:root[data-flag-shell-status] section.library .bar[data-fit='4'] > .count:not(.shell-act) {
+:root[data-flag-shell-status] section.library .bar[data-fit='6'] > .count:not(.shell-act) {
   display: none;
 }
 
@@ -125,10 +132,9 @@
   display: none;
 }
 /* The strip is there on the Mac (32px, where the window's buttons are). In
-   a browser it's made: 20px over the app's own 12. */
+   a browser it's made. */
 :root[data-flag-shell-status][data-flag-shell-status-place='titlebar'] .app:not(.mac-window) {
-  height: calc(100% - 20px);
-  top: 20px;
+  --top: 32px !important;
 }
 :root[data-flag-shell-status] .shell.bar {
   position: fixed;

@@ -30,7 +30,7 @@
 
   // The library toolbar gives way a step at a time until it fits (style.css
   // says what each step drops); the search field has already narrowed.
-  const STEPS = 4;
+  const STEPS = 6;
   $effect(() => {
     if (bar || !root) return;
     const toolbar = /** @type {HTMLElement} */ (root.parentElement);
@@ -159,6 +159,7 @@
 {/snippet}
 
 <div class="shell" class:bar data-tauri-drag-region={bar ? 'deep' : undefined} role="group" aria-label="Connections" bind:this={root}>
+  {#if bar}<span data-zoom-slot></span>{/if}
   {#each list as it (it.kind)}
     <button class="st" class:bad={it.state === 'bad'} class:open={!!shown && shown.dataset.kind === it.kind} data-kind={it.kind} aria-haspopup="dialog" aria-expanded={!!shown && shown.dataset.kind === it.kind}
       aria-label="{it.name}, {said[it.kind]}" onclick={toggle} use:tip={() => (shown ? '' : tipText(it.name, '', said[it.kind]))}>

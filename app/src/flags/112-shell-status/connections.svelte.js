@@ -18,6 +18,7 @@ export const conn = $state({
 });
 
 const EVERY = 2000; // as often as the engine looks for controllers
+const STEMS_EVERY = 10000; // stems_info adds up the cache folder, so only often while the model comes down
 const GONE_MS = 6000;
 const DROP_MS = 10000;
 let users = 0;
@@ -25,27 +26,41 @@ let timer = 0;
 let goneTimer = 0;
 let dropTimer = 0;
 let late = -1;
+let lateFrom = '';
+let last = 0;
+let stemsAt = 0;
 
 async function look() {
   if (document.hidden) return;
+  const now = Date.now();
+  // After a gap (hidden, or the Mac slept) the count starts again.
+  if (now - last > EVERY * 3) late = -1;
+  last = now;
   try {
-    const now = await backend.controllers?.();
-    const left = conn.controllers?.connected.find((c) => !now?.connected.some((n) => n.port === c.port));
+    const c = await backend.controllers?.();
+    const left = conn.controllers?.connected.find((o) => !c?.connected.some((n) => n.port === o.port));
     if (left) {
       conn.gone = left.port;
       clearTimeout(goneTimer);
       goneTimer = window.setTimeout(() => (conn.gone = ''), GONE_MS);
-    } else if (now?.connected.some((c) => c.port === conn.gone)) conn.gone = '';
-    conn.controllers = now ?? null;
+    } else if (c?.connected.some((n) => n.port === conn.gone)) conn.gone = '';
+    conn.controllers = c ?? null;
   } catch {}
-  try {
-    const m = (await backend.stemsInfo?.())?.model;
-    conn.stems = m?.state === 'downloading' ? { done: m.done, total: m.total } : null;
-  } catch {}
+  if (conn.stems || now - stemsAt >= STEMS_EVERY) {
+    stemsAt = now;
+    try {
+      const m = (await backend.stemsInfo?.())?.model;
+      conn.stems = m?.state === 'downloading' ? { done: m.done, total: m.total } : null;
+    } catch {}
+  }
   if (inTauri) {
     try {
       const { invoke } = await import('@tauri-apps/api/core');
       const s = /** @type {any} */ (await invoke('audio_stats'));
+      // Switching the output makes callbacks late; that isn't the sound dropping out.
+      const from = `${engine.audio?.state} ${engine.audio?.device ?? ''}`;
+      if (from !== lateFrom) late = -1;
+      lateFrom = from;
       if (late >= 0 && s && s.lateCallbacks > late) {
         conn.dropping = true;
         clearTimeout(dropTimer);
@@ -96,6 +111,8 @@ export function items() {
         ? { kind: 'out', name: `${a.device} disconnected`, icon: 'outx', state: 'bad' }
         : { kind: 'out', name: 'No output', icon: 'outx', state: 'bad' };
   if (c.length === 1 && a?.state === 'connected' && !conn.dropping && sameMachine(c[0].port, a.device)) return [{ kind: 'both', name: c[0].port, icon: 'both', state: '' }];
+  // One machine gone, sound and all: said once.
+  if (conn.gone && a?.state === 'lost' && sameMachine(conn.gone, a.device)) return [{ ...out, kind: 'both' }];
   const ctl = conn.gone
     ? { kind: 'ctl', name: `${conn.gone} disconnected`, icon: 'ctlx', state: '' }
     : c.length > 1

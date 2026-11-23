@@ -26,8 +26,6 @@
   import { installAppMenu } from './lib/appmenu.js';
   import { runPerformance } from './lib/performance.js';
   import { flag, setting } from './flags/registry.svelte.js';
-  import Status from './flags/112-shell-status/Status.svelte'; // #112 (UI audit flag)
-  import { open as shellOpen } from './flags/112-shell-status/connections.svelte.js'; // #112 (UI audit flag)
   import { start as startSquircles } from './flags/01-squircles/squircles.js';
   import { padMode, setPadMode } from './lib/padmode.svelte.js';
   import { tempoPickup } from './lib/pickup.svelte.js';
@@ -35,6 +33,8 @@
   import { toggleStem, soloStem, syncStemWaveforms, stemsUnavailable, stemsOf } from './lib/stems.svelte.js';
   import { once, stemsReadyTip } from './lib/tips.svelte.js';
   import { libraryHealth, reveal, captureUiErrors, update, checkForUpdate, installUpdate } from './lib/support.svelte.js';
+  import Status from './flags/112-shell-status/Status.svelte'; // #112 (UI audit flag)
+  import { open as shellOpen } from './flags/112-shell-status/connections.svelte.js'; // #112 (UI audit flag)
 
   let library;
   let mixer;

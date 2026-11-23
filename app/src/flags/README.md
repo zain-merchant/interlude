@@ -125,6 +125,8 @@ On by default (83):
 Off by default, and why:
 
 - #8 Worst-case test data (`stress-data`): test data for checking the fixes, not a fix; it swaps in a fake library and reloads the page. All on leaves it alone too (see "Disabled flags" for why it isn't disabled).
+- #112 Controller and output always on show (`shell-status`): a proposal; its setting puts it in the library's toolbar (the default) or the title bar.
+- #113 An empty BPM filter shows your tempos (`empty-filter`): a trial, drawn or draggable.
 - #92 and up, the directions: whole-app looks, opt-in and one at a time; not polish.
 
 Disabled (15): the "against the doc" alternatives. They argue against the
