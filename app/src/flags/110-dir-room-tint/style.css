@@ -2598,9 +2598,8 @@
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .row.head {
   position: relative;
   flex: none;
-  height: 36px;
-  margin-top: -6px;
-  padding-bottom: 2px;
+  height: 37px;
+  padding-bottom: 4px;
   box-sizing: border-box;
   border-bottom-color: transparent;
   box-shadow: none;
@@ -2819,4 +2818,11 @@
   :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .transport .jumps > span::after {
     content: none !important;
   }
+}
+/* The headings' room comes from above them, unless the sampler is there. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .bar + .row.head {
+  margin-top: -6px;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .scroll {
+  margin-top: -1px;
 }
