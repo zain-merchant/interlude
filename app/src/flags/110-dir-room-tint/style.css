@@ -1539,7 +1539,7 @@
    amount between them, the parts set off by short etched rules. */
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] :is(.transport .jumps, .pitch .nudge, .fx .beats, .perf .step) {
   display: grid;
-  grid-template-columns: 30px minmax(0, 1fr) 30px;
+  grid-template-columns: minmax(18px, 30px) minmax(max-content, 1fr) minmax(18px, 30px);
   justify-items: stretch;
   align-items: stretch;
   gap: 0;
