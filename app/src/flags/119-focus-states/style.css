@@ -53,8 +53,8 @@
 }
 
 /* ── The line ──────────────────────────────────────────────────────── */
-:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_)[data-input='keys'] :focus:not(.fp, .fp *, textarea, input:not([type='checkbox'], [type='radio'], [type='range'], [type='button'])),
-:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):not([data-flag-focus-after-keys]) :focus-visible:not(.fp, .fp *, textarea, input:not([type='checkbox'], [type='radio'], [type='range'], [type='button'])) {
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_)[data-input='keys'] :focus:not(:where(.fp, .fp *, textarea, input:not([type='checkbox'], [type='radio'], [type='range'], [type='button']))),
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):not([data-flag-focus-after-keys]) :focus-visible:not(:where(.fp, .fp *, textarea, input:not([type='checkbox'], [type='radio'], [type='range'], [type='button']))) {
   outline: var(--fx-w) solid var(--fx) !important;
   outline-offset: 2px !important;
 }
@@ -90,7 +90,7 @@
 :root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_)[data-input='keys'] .hub:focus,
 :root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):not([data-flag-focus-after-keys]) .hub:focus-visible {
   outline: var(--fx-w-round) solid var(--fx) !important;
-  outline-offset: -3px !important;
+  outline-offset: -5px !important;
 }
 /* The list with no selected row in view. */
 :root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_)[data-input='keys'] [data-region='tracks']:focus:not(:has(.row.sel)),

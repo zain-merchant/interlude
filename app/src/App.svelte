@@ -855,7 +855,7 @@
       <!-- #13 (UI audit flag): declutter-toast: hovering holds the toast; docked in the toolbar when chosen. -->
       <!-- svelte-ignore a11y_no_static_element_interactions (hover only pauses its timer; the toast is announced by its role="status" box) -->
       <div class="toast" bind:this={toastEl} data-docked={toastDock ? toastDock.at : undefined} style:left={toastDock ? `${toastDock.left}px` : undefined} style:top={toastDock ? `${toastDock.top}px` : undefined} style:max-width={toastDock ? `${toastDock.max}px` : undefined}
-        onfocusin={(e) => flag('focus-states') && e.target.matches(':focus-visible') && holdToast() /* #119 (UI audit flag): focus-states: it stays while its Undo has keyboard focus. */}
+        onfocusin={(e) => flag('focus-states') && /** @type {Element} */ (e.target).matches(':focus-visible') && holdToast() /* #119 (UI audit flag): focus-states: it stays while its Undo has keyboard focus. */}
         onfocusout={(e) => flag('focus-states') && !e.currentTarget.matches(':hover') && releaseToast()}
         onpointerenter={() => flag('declutter-toast') && holdToast()} onpointerleave={(e) => flag('declutter-toast') && !(flag('focus-states') && e.currentTarget.querySelector(':focus-visible')) && releaseToast()}>
         <span>{toast.text}</span>
