@@ -57,6 +57,8 @@
   }
   /* In a very narrow column the end gives way too, last. */
   .z {
+    display: flex;
+    justify-content: flex-end;
     flex: 0 0 auto;
     max-width: 60%;
     text-overflow: clip;

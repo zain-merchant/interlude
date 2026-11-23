@@ -93,6 +93,16 @@ export default {
         ['split', 'Two panels', 'The sidebar is a panel of its own, like the decks.'],
       ],
     },
+    lanes: { type: 'range', label: 'Grooves behind the waveforms', min: 0, max: 100, step: 1, default: 8, unit: '' },
+    overview: {
+      type: 'choice',
+      label: "Grooves behind each deck's overview",
+      default: 'quiet',
+      options: [
+        ['quiet', 'None', 'Like the lanes: only the waveform.'],
+        ['rings', 'As in the other cuts', 'The rings show where the track is quiet.'],
+      ],
+    },
     cut: {
       type: 'choice',
       label: "A cut's edge",
