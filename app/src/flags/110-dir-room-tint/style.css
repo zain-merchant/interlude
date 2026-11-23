@@ -3623,17 +3623,30 @@
   position: relative;
   border-radius: 7px;
 }
+/* As tall as Cue and the rest of its row, with their corner. */
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-column='ring'] [data-region^='deck'] .pitch .lock {
   width: 100%;
+  height: 100% !important; /* over this sheet's own 30px */
+  align-self: stretch;
   padding: 0;
-  border-radius: 7px;
+  border-radius: var(--key-r, 8px);
 }
-/* On: pressed into the panel, its words and line in the deck's colour. */
+/* On: pushed in. The face drops to black and lightens downward; the wall
+   above it throws a shadow; the light catches the far lip, so the line in the
+   deck's colour is dark along the top and brightest along the bottom. */
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-column='ring'] [data-region^='deck'] .pitch .lock.on {
-  --kk-face-in: rgb(0 0 0 / 0.42);
+  --kk-face-in: rgb(0 0 0 / 0.5);
+  --kk-c1: rgb(0 0 0 / 1);
+  --kk-c2: inset 0 5px 6px -2px rgb(0 0 0 / 0.85);
+  --tt-c3: rgb(255 255 255 / 0.16);
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-column='ring'] [data-region^='deck'] .pitch .lock.on::after {
-  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--deck) 58%, transparent), inset 0 2px 0 0 rgb(0 0 0 / 0.7), inset 0 4px 4px -1px rgb(0 0 0 / 0.5), 0 1px 0 0 rgb(255 255 255 / 0.15);
+  box-shadow: none;
+  padding: 1px;
+  background: linear-gradient(180deg, color-mix(in oklab, var(--deck) 14%, #000), color-mix(in oklab, var(--deck) 45%, #000) 45%, var(--deck));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
 }
 /* 3: a ledger: etched rules across the column, between the three */
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-column='ledger'] [data-region^='deck'] .pitch .val::after,
