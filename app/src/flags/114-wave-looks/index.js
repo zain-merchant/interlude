@@ -16,5 +16,5 @@ export default {
   byDefault: false,
   settings: settings(),
   notes:
-    'Opt-in. Opens its own panel (DialKit) with the look and its sliders; ⌥W steps to the next look, ⌥⇧W back, ⌥1 to ⌥6 pick one. Hooks, gated on this flag or Direction 110: Waveform.svelte (the look and its values as one string in the view), waveform-2d.js (ribbonShape, ribbon, overview and beats hand over to wave.js).',
+    'Opt-in. ⌥W (or turning this on) opens its own panel with the look and its sliders, and its × closes it and keeps the look; ⌥W again steps to the next look, ⌥⇧W back, ⌥1 to ⌥6 pick one. Hooks, gated on this flag or Direction 110: Waveform.svelte (the look and its values as one string in the view), waveform-2d.js (ribbonShape, ribbon, overview and beats hand over to wave.js).',
 };
