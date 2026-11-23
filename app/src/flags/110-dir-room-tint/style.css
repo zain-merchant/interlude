@@ -1574,7 +1574,7 @@
   justify-content: center;
   gap: 4px;
   min-width: 0;
-  padding: 0;
+  padding: 0 5px;
   place-self: stretch;
   font-size: var(--t-sm);
   font-weight: 500;
@@ -1626,11 +1626,7 @@
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .pitch .nudge {
   grid-template-columns: 1fr 1fr;
 }
-@container (max-width: 95px) {
-  :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .transport .jumps {
-    grid-template-columns: 20px minmax(0, 1fr) 20px;
-  }
-}
+
 
 /* ── The deck's grid ───────────────────────────────────────────────────
    The overview gets its height back (upstream's record header took it from
@@ -1890,7 +1886,8 @@
   border-radius: var(--r);
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .perf .step {
-  grid-template-columns: 52px minmax(0, 1fr) 52px;
+  grid-template-columns: minmax(26px, 52px) minmax(max-content, 1fr) minmax(26px, 52px);
+  container-type: inline-size;
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .perf .step .tb {
   font-size: var(--t-sm) !important;
@@ -1925,7 +1922,7 @@
     grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.4fr);
   }
   :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .perf .step {
-    grid-template-columns: 30px minmax(0, 1fr) 30px;
+    grid-template-columns: minmax(20px, 30px) minmax(max-content, 1fr) minmax(20px, 30px);
   }
 }
 
@@ -2369,7 +2366,7 @@
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer .meter .db.left {
   right: 100%;
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer .meter .db::after {
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-figures='on'] .mixer .meter .db::after {
   position: absolute;
   top: -5px;
   height: 11px;
@@ -2385,13 +2382,13 @@
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer .meter .db.left::after {
   right: 7px;
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer .meter .db::after {
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-figures='on'] .mixer .meter .db::after {
   content: '18';
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer .meter .db.zero::after {
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-figures='on'] .mixer .meter .db.zero::after {
   content: '0';
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer .meter .db.zero + .db::after {
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-figures='on'] .mixer .meter .db.zero + .db::after {
   content: '6';
 }
 /* The headphone cue is its fader's: on the fader's axis, as wide as its cap
@@ -2407,10 +2404,10 @@
 }
 @media (min-width: 1201px) {
   :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .app > .decks {
-    grid-template-columns: minmax(0, 1fr) 324px minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) 312px minmax(0, 1fr);
   }
   :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .decks > .mixer {
-    column-gap: 10px;
+    column-gap: 7px;
   }
 }
 
@@ -2583,15 +2580,17 @@
    The fill stays the plate's own dark (a setting lets a breath of the colour
    into it). Play is the exception: it fills with the deck's colour. */
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-on='breath'] {
-  --kk-mix: 9%;
+  --kk-mix: 13%;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-on='breath'] .mixer .hp {
+  --kk-mix: 7%;
+}
+/* A set cue's colour is how you find it: it keeps some in its fill. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:not([data-flag-dir-room-tint-setcue='ink']) [data-region^='deck'] .perf .tc.set {
+  --kk-mix: 24%;
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer .hp.on svg {
   color: var(--on);
-}
-@media (max-width: 1200px) {
-  :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .transport .jumps {
-    grid-template-columns: 22px minmax(0, 1fr) 22px;
-  }
 }
 
 /* One line height, even, so a label and an amount in the same row land on
@@ -2995,13 +2994,14 @@
   background: transparent;
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-drop='blocked-over']::after {
-  background: color-mix(in oklab, var(--kill) 10%, transparent);
-  box-shadow: inset 0 0 0 1.5px color-mix(in oklab, var(--kill) 80%, transparent);
+  background: color-mix(in oklab, var(--dt) 5%, transparent);
+  box-shadow: inset 0 0 0 1.5px color-mix(in oklab, var(--kill) 70%, transparent);
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:is([data-flag-dir-room-tint-drop='pick'], [data-flag-dir-room-tint-drop='label']) [data-drop='ok']::after {
   background: transparent;
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-drop='label'] :is(.lane, section.deck, [data-region^='deck'])[data-drop$='over']::before {
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-drop='label'] :is(.lane, section.deck, [data-region^='deck'])[data-drop='over']::before,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] :is(.lane, section.deck, [data-region^='deck'])[data-drop='blocked-over']::before {
   content: 'Load here' !important;
   position: absolute;
   z-index: 7;
@@ -3022,8 +3022,9 @@
   transform: none;
   pointer-events: none;
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-drop='label'] :is(.lane, section.deck, [data-region^='deck'])[data-drop='blocked-over']::before {
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] :is(.lane, section.deck, [data-region^='deck'])[data-drop='blocked-over']::before {
   content: 'Playing. Drop twice to replace it' !important;
+  color: color-mix(in oklab, var(--kill) 55%, var(--fg));
 }
 
 /* ── Columns of figures ────────────────────────────────────────────────
@@ -3156,13 +3157,6 @@
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] :is(.transport .jumps, .pitch .nudge, .fx .beats, .perf .step, .strip .grid) > button:focus-visible {
   z-index: 1;
 }
-/* Narrow: the parts are close enough that the rules crowd the words. */
-@media (max-width: 1200px) {
-  :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .transport .jumps > span::before,
-  :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .transport .jumps > span::after {
-    content: none !important;
-  }
-}
 /* The headings' room comes from above them, unless the sampler is there. */
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .bar + .row.head {
   margin-top: -6px;
@@ -3208,4 +3202,46 @@
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer .hp svg path {
   fill: currentColor;
   stroke: none;
+}
+/* The unit gives way before the figure or the ends do. */
+@container (max-width: 113px) {
+  :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .transport .jumps > span small {
+    display: none;
+  }
+}
+@container (max-width: 80px) {
+  :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .transport .jumps > span {
+    padding: 0 2px;
+    font-size: var(--t-xs);
+  }
+  :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .transport .jumps > span::before,
+  :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .transport .jumps > span::after {
+    content: none !important;
+  }
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .transport .jumps {
+  grid-template-columns: minmax(13px, 30px) minmax(max-content, 1fr) minmax(13px, 30px);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .perf .step > .val small {
+  font-size: inherit;
+  font-weight: inherit;
+  color: inherit;
+}
+@container (max-width: 134px) {
+  :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .perf .step > .val small {
+    display: none;
+  }
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .fx .beats {
+  grid-template-columns: minmax(18px, 30px) minmax(max-content, 1fr) minmax(18px, 30px);
+  container-type: inline-size;
+}
+@container (max-width: 116px) {
+  :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .fx .beats > .val {
+    padding: 0 3px;
+    font-size: 0;
+  }
+  :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .fx .beats > .val b {
+    font-size: var(--t-sm);
+  }
 }

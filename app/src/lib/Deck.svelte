@@ -1,6 +1,7 @@
 <script>
   import Waveform from './Waveform.svelte';
   import Fader from './Fader.svelte';
+  import Mid from '../flags/110-dir-room-tint/Mid.svelte'; // #110 (UI audit flag): dir-room-tint cuts a long title in the middle.
   import FxUnit from './FxUnit.svelte';
   import Performance from './Performance.svelte';
   import Stems from './Stems.svelte';
@@ -351,11 +352,11 @@
       {#if t}
         <!-- #54 (UI audit flag): deck-polish cuts a long title at a glyph, never leaving a space before the "…". -->
         {#if flag('deck-polish')}
-          <div class="name" use:tip={() => t.path} use:fitTitle={t.title}>{fittedTitle ?? t.title}</div>
+          <div class="name" use:tip={() => t.path} use:fitTitle={t.title}>{#if flag('dir-room-tint')}<Mid text={t.title} />{:else}{fittedTitle ?? t.title}{/if}</div>
         {:else}
-          <div class="name" use:tip={() => t.path}>{t.title}</div>
+          <div class="name" use:tip={() => t.path}>{#if flag('dir-room-tint')}<Mid text={t.title} />{:else}{t.title}{/if}</div>
         {/if}
-        <div class="artist">{t.artist || 'Unknown artist'}</div>
+        <div class="artist">{#if flag('dir-room-tint')}<Mid text={t.artist || 'Unknown artist'} />{:else}{t.artist || 'Unknown artist'}{/if}</div>
       {:else}
         <div class="name dim">Empty deck</div>
         <div class="artist">Drag a track here or press {keyLabel(`deck.${deck}.load`)}</div>

@@ -57,10 +57,28 @@ export default {
     on: {
       type: 'choice',
       label: "A key that's on",
-      default: 'ink',
+      default: 'breath',
       options: [
-        ['ink', 'Only its glyph or label', 'The key is in, and dark; its glyph or label takes the colour.'],
-        ['breath', 'A breath of colour', 'The same, with a trace of the colour in the fill.'],
+        ['breath', 'A breath of colour', 'The key is in, its glyph or label takes the colour, and a trace of it is in the fill.'],
+        ['ink', 'Only its glyph or label', 'The same, with no colour in the fill.'],
+      ],
+    },
+    setcue: {
+      type: 'choice',
+      label: 'A set hot cue',
+      default: 'tint',
+      options: [
+        ['tint', 'Its colour in the fill', 'Quick to tell one from another.'],
+        ['ink', 'Its colour in the number', 'The fill stays dark.'],
+      ],
+    },
+    figures: {
+      type: 'choice',
+      label: "The meters' figures",
+      default: 'off',
+      options: [
+        ['off', 'Ticks only', 'Marks at 0, 6 and 18 dB.'],
+        ['on', 'With figures', 'The same marks, numbered.'],
       ],
     },
     cut: {
