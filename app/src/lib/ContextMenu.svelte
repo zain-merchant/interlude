@@ -22,7 +22,7 @@
     // #14 (UI audit flag): states: opened by the pointer, the menu itself takes focus and no row is lit
     // until the pointer is on one; opened from the keyboard, the first item, as before.
     const roving = flag('states') && !htmlMenu.keyboard;
-    if (htmlMenu.open) tick().then(() => (roving ? el?.focus() : el?.querySelector('button:not(:disabled)')?.focus()));
+    if (htmlMenu.open) tick().then(() => (roving ? el?.focus() : ((flag('focus-states') && el?.querySelector('button[aria-checked="true"]:not(:disabled)')) || el?.querySelector('button:not(:disabled)'))?.focus()) /* #119 (UI audit flag): focus-states: the ticked one, or the first. */);
   });
   // #14 (UI audit flag): states: focus follows the pointer, so the lit row is always the one the
   // arrow keys and Return act on; leaving the menu puts focus back on the menu.

@@ -328,7 +328,15 @@ export function colResize(head, opts) {
   build(opts);
   return {
     // The headings are redrawn after this runs.
-    update: (/** @type {typeof opts} */ next) => requestAnimationFrame(() => build(next)),
+    // #119: the same columns, so the same handles: only their figures' width may differ, and one may have focus.
+    update: (/** @type {typeof opts} */ next) =>
+      requestAnimationFrame(() => {
+        const same = next.on === o.on && next.columns.map((c) => c.by).join() === o.columns.map((c) => c.by).join() && handles.every((h) => h.cell.isConnected);
+        if (!same) return build(next);
+        o = next;
+        measure();
+        lay();
+      }),
     destroy() {
       mains.delete(main);
       restyled.disconnect();

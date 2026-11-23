@@ -236,7 +236,8 @@
   /** The columns menu, from a right-click on the headings or the columns button (opened under it). */
   const columnsButton = (e) => {
     const r = e.currentTarget.getBoundingClientRect();
-    headMenu({ preventDefault() {}, stopPropagation() {}, clientX: r.right - 200, clientY: r.bottom + 4 });
+    // #119 (UI audit flag): focus-states: opened by Enter or Space, its first row has focus.
+    headMenu({ preventDefault() {}, stopPropagation() {}, clientX: r.right - 200, clientY: r.bottom + 4, isTrusted: flag('focus-states') && e.detail === 0 ? false : undefined });
   };
   let colMenu = $state(/** @type {{ x: number, y: number, keyboard: boolean } | null} */ (null)); // #110 (UI audit flag)
   const headMenu = (e) =>

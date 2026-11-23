@@ -126,7 +126,7 @@ On by default (84):
 
 #112 (`shell-status`), #113 (`zero-states`), #116 (`settings-finish`), #117
 (`key-marks`), #119 (`focus-states`), #121 (`toast-cut`) and #123 (`cue-apart`) are proposals, but on by default while the owner judges them; they go off again once that's decided.
-#112 is in both places at once; #113, #116, #119 and #121 only do
+#112 is in both places at once; #119 draws its line on direction #110 only (its keys work everywhere); #113, #116 and #121 only do
 anything on direction #110.
 
 Off by default, and why:

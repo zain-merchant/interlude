@@ -28,6 +28,7 @@
   import { flag, setting } from './flags/registry.svelte.js';
   import { side, sideShut, hideSidebar } from './flags/110-dir-room-tint/sidebar.svelte.js'; // #110 (UI audit flag)
   import { start as startSquircles } from './flags/01-squircles/squircles.js';
+  import { startKeys } from './flags/119-focus-states/keys.js';
   import { padMode, setPadMode } from './lib/padmode.svelte.js';
   import { tempoPickup } from './lib/pickup.svelte.js';
   import { gridEdit, NUDGE } from './lib/grid.svelte.js';
@@ -702,6 +703,9 @@
   /** True while the sampler is showing because of the controller's SAMPLER button. */
   let samplerFromPads = false;
 
+  // #119 (UI audit flag): focus-states: Tab reaches everything, sets are one stop, focus is never left on nothing.
+  $effect(() => (flag('focus-states') ? startKeys() : undefined));
+
   // #1 (UI audit flag): squircle corners: native corner-shape, or a clip with the ring redrawn in WebKit.
   $effect(() => (flag('squircles') ? startSquircles() : undefined));
 
@@ -778,6 +782,17 @@
     </div>
   </div>
 
+  {#snippet wavesGrip()}
+    <!-- #21 (UI audit flag): panel-sizes: the waveforms' bottom edge gets the library's handle. Placed absolutely, out of the grid. -->
+    <!-- svelte-ignore a11y_no_noninteractive_tabindex, a11y_no_noninteractive_element_interactions (a focusable separator is the ARIA window-splitter pattern) -->
+    <div class="grip" class:dragging={grab?.which === 'waves' || grab?.which === 'decks'} style:top="calc(var(--top) + {rows.waves - 12}px)" role="separator" aria-orientation="horizontal" aria-label="Resize waveforms"
+      aria-valuenow={rows.waves} aria-valuemin={PANEL.waves.min} aria-valuemax={wavesMax} tabindex="0"
+      onpointerdown={(e) => gripDown(e, 'waves')} onpointermove={gripMove} onpointerup={() => (grab = null)} onpointercancel={() => (grab = null)}
+      ondblclick={() => gripReset('waves')} onkeydown={(e) => gripKey(e, 'waves')}
+      use:tip={() => 'Drag to resize the waveforms, ⌥-drag for the decks, double-click to reset'}><i></i></div>
+  {/snippet}
+  {#if flag('panel-sizes') && flag('focus-states')}{@render wavesGrip()}{/if}<!-- #119 (UI audit flag): focus-states: after the waveforms, so Tab meets it there. -->
+
   <div class="decks">
     <Deck deck={0} onload={load} onreveal={(p) => library.reveal(p)} onsettings={openSettings} />
     <Mixer bind:this={mixer} onmessage={say} />
@@ -791,15 +806,7 @@
     ondblclick={splitReset} onkeydown={splitKey}
     use:tip={() => (flag('panel-sizes') ? 'Drag to resize the library, ⌥-drag for the decks, double-click to reset' : 'Drag to resize the library, double-click to reset')}><i></i></div>
 
-  {#if flag('panel-sizes')}
-    <!-- #21 (UI audit flag): panel-sizes: the waveforms' bottom edge gets the library's handle. Placed absolutely, out of the grid. -->
-    <!-- svelte-ignore a11y_no_noninteractive_tabindex, a11y_no_noninteractive_element_interactions (a focusable separator is the ARIA window-splitter pattern) -->
-    <div class="grip" class:dragging={grab?.which === 'waves' || grab?.which === 'decks'} style:top="calc(var(--top) + {rows.waves - 12}px)" role="separator" aria-orientation="horizontal" aria-label="Resize waveforms"
-      aria-valuenow={rows.waves} aria-valuemin={PANEL.waves.min} aria-valuemax={wavesMax} tabindex="0"
-      onpointerdown={(e) => gripDown(e, 'waves')} onpointermove={gripMove} onpointerup={() => (grab = null)} onpointercancel={() => (grab = null)}
-      ondblclick={() => gripReset('waves')} onkeydown={(e) => gripKey(e, 'waves')}
-      use:tip={() => 'Drag to resize the waveforms, ⌥-drag for the decks, double-click to reset'}><i></i></div>
-  {/if}
+  {#if flag('panel-sizes') && !flag('focus-states')}{@render wavesGrip()}{/if}
 
   <div class="below">
     {#if flag('panel-sizes')}
@@ -855,9 +862,9 @@
       <!-- #13 (UI audit flag): declutter-toast: hovering holds the toast; docked in the toolbar when chosen. -->
       <!-- svelte-ignore a11y_no_static_element_interactions (hover only pauses its timer; the toast is announced by its role="status" box) -->
       <div class="toast" bind:this={toastEl} data-docked={toastDock ? toastDock.at : undefined} style:left={toastDock ? `${toastDock.left}px` : undefined} style:top={toastDock ? `${toastDock.top}px` : undefined} style:max-width={toastDock ? `${toastDock.max}px` : undefined}
-        onfocusin={(e) => flag('focus-states') && flag('dir-room-tint') && /** @type {Element} */ (e.target).matches(':focus-visible') && holdToast() /* #119 (UI audit flag): focus-states: it stays while its Undo has keyboard focus. */}
-        onfocusout={(e) => flag('focus-states') && flag('dir-room-tint') && !e.currentTarget.matches(':hover') && releaseToast()}
-        onpointerenter={() => flag('declutter-toast') && holdToast()} onpointerleave={(e) => flag('declutter-toast') && !(flag('focus-states') && flag('dir-room-tint') && e.currentTarget.querySelector(':focus-visible')) && releaseToast()}>
+        onfocusin={(e) => flag('focus-states') && (document.documentElement.dataset.input === 'keys' || /** @type {Element} */ (e.target).matches(':focus-visible')) && holdToast() /* #119 (UI audit flag): focus-states: it stays while its Undo has keyboard focus. */}
+        onfocusout={(e) => flag('focus-states') && !e.currentTarget.matches(':hover') && releaseToast()}
+        onpointerenter={() => flag('declutter-toast') && holdToast()} onpointerleave={(e) => flag('declutter-toast') && !(flag('focus-states') && e.currentTarget.contains(document.activeElement)) && releaseToast()}>
         <span>{toast.text}</span>
         {#if toast.undo}
           <!-- #121 (UI audit flag): toast-cut: a cut that holds its keys. -->
