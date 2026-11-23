@@ -18,8 +18,8 @@ export const PARAMS = {
   b0: ['Before the hit: bass', 0, 60, 1, 'ms', 'Smoothing'],
   b1: ['Before the hit: mids', 0, 60, 1, 'ms', 'Smoothing'],
   b2: ['Before the hit: highs', 0, 60, 1, 'ms', 'Smoothing'],
-  soft: ['Smallest smoothing', 0, 6, 0.25, 'px', 'Smoothing'],
-  ripple: ['Ease small ripples', 0, 40, 1, '%', 'Smoothing'],
+  soft: ['Softness between hits', 0, 8, 0.25, 'px', 'Smoothing'],
+  hit: ['Smallest hit kept sharp', 2, 40, 1, '%', 'Smoothing'],
   h0: ['Bass height', 10, 100, 1, '%', 'Heights'],
   h1: ['Mids height', 10, 100, 1, '%', 'Heights'],
   h2: ['Highs height', 10, 100, 1, '%', 'Heights'],
@@ -39,9 +39,9 @@ const ATTACK = SMOOTH([75, 55, 28]);
 /** The looks in the order the step key goes through them: id, name, how it's drawn, and its values. */
 export const LOOKS = [
   { id: 'today', name: 'Today', draw: null, values: {} },
-  { id: 'exact', name: 'Today exact', draw: 'ribbon', values: { ...SMOOTH([20, 18, 14]), soft: 2, ripple: 10, ...HEIGHTS, ...RIBBON, beats: 1 } },
-  { id: 'attack', name: 'Attack', draw: 'ribbon', values: { ...ATTACK, soft: 0, ripple: 0, ...HEIGHTS, ...RIBBON, beats: 1 } },
-  { id: 'nested', name: 'Nested', draw: 'nested', values: { ...ATTACK, soft: 0, ripple: 0, ...HEIGHTS, out: 0, outw: 1, beats: 1 } },
+  { id: 'exact', name: 'Today exact', draw: 'ribbon', values: { ...SMOOTH([25, 22, 18]), soft: 4, hit: 15, ...HEIGHTS, ...RIBBON, beats: 1 } },
+  { id: 'attack', name: 'Attack', draw: 'ribbon', values: { ...ATTACK, ...HEIGHTS, ...RIBBON, beats: 1 } },
+  { id: 'nested', name: 'Nested', draw: 'nested', values: { ...ATTACK, ...HEIGHTS, out: 0, outw: 1, beats: 1 } },
   { id: 'pills', name: 'Pills', draw: 'pills', values: { ...ATTACK, ...HEIGHTS, w: 4.75, gap: 2.5, lock: 1, beats: 1 } },
   { id: 'narrow', name: 'Narrower pills', draw: 'pills', values: { ...ATTACK, ...HEIGHTS, w: 2.5, gap: 2, lock: 1, beats: 1 } },
   { id: 'ticks', name: 'Tapered ticks', draw: 'ticks', values: { ...ATTACK, ...HEIGHTS, w: 3, gap: 0.75, lock: 1, beats: 1 } },

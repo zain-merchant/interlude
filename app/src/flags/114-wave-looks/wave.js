@@ -4,8 +4,11 @@
 //   - Levels are read bin by bin, each bin once, in the column its time falls
 //     in. Nothing averages columns together, so a peak keeps its height.
 //   - Smoothing runs after a hit (it lets the level fall slowly), never
-//     before it, unless a look's "before" value asks for it. A rise is drawn
-//     where its bin starts.
+//     before it, unless a look's "before" value asks for it. Today exact also
+//     softens what's between hits, both ways, but never across one.
+//   - A rise is drawn where its bin says the hit was, to the nearest device
+//     pixel (LATE has the bands' own delays), and the outline is kept inside
+//     the shape.
 //   - The smoothed levels are worked out once for the whole track, not per
 //     tile, so every tile agrees with its neighbours.
 //   - Columns are one device pixel wide, and the beat lines are placed on
@@ -18,54 +21,115 @@ const OFF = 20000;
 const PAD = 32;
 
 /**
- * One band's level per bin, smoothed: rises are instant (or eased, if they're
- * ripples), falls have a time constant of `after` bins; `before` bins lets it
- * rise early. Pure forward and backward passes over the whole track.
+ * One band's level per bin, smoothed: a rise is instant, a fall has a time
+ * constant of `after` bins; `before` bins lets it rise early.
  */
-function envelope(v, after, before, ripple) {
+function envelope(v, after, before) {
   const n = v.length;
   const out = new Float32Array(n);
   const fall = after > 0.01 ? 1 - Math.exp(-1 / after) : 1;
   let y = 0;
   for (let i = 0; i < n; i++) {
     const x = v[i];
-    if (x > y) {
-      // A ripple: a rise that's small both against the lane and against the
-      // level it starts from. Easing one can't blunt a hit.
-      if (ripple && x - y < ripple && x < y * 1.35) y += (x - y) * 0.4;
-      else y = x;
-    } else y += (x - y) * fall;
+    y = x > y ? x : y + (x - y) * fall;
     out[i] = y;
   }
-  if (before > 0.01) {
-    const rise = 1 - Math.exp(-1 / before);
-    y = 0;
-    for (let i = n - 1; i >= 0; i--) {
-      const x = out[i];
-      y = x > y ? x : y + (x - y) * rise;
-      out[i] = y;
-    }
+  return early(out, before);
+}
+
+/** The "before" pass: a level that's about to rise starts rising `before` bins ahead. */
+function early(out, before) {
+  if (!(before > 0.01)) return out;
+  const rise = 1 - Math.exp(-1 / before);
+  let y = 0;
+  for (let i = out.length - 1; i >= 0; i--) {
+    const x = out[i];
+    y = x > y ? x : y + (x - y) * rise;
+    out[i] = y;
   }
   return out;
+}
+
+/**
+ * Today's softness, kept off the hits: finds them (a rise of more than `hit`
+ * of the band's height and by half as much again), smooths the level over
+ * `radius` bins to either side between one hit and the next but never across
+ * one, and keeps each hit's own peak and fall on top. So a hit starts and
+ * peaks where it does in the sound, and only what's between hits is softened.
+ */
+function between(v, after, before, radius, hit) {
+  const n = v.length;
+  const held = envelope(v, after, 0);
+  const R = Math.max(0, Math.round(radius / 2));
+  const ease = Math.exp(-1 / Math.max(after, radius, 1));
+  const starts = [0];
+  let last = -9;
+  for (let i = 1; i < n; i++) {
+    const was = held[i - 1];
+    if (v[i] > was + hit && v[i] > was * 1.5 && i - last > 3) starts.push((last = i));
+  }
+  // Two box passes (a triangle, as today's) inside each stretch, from running sums.
+  let src = held;
+  const sums = new Float64Array(n + 1);
+  for (let pass = 0; R && pass < 2; pass++) {
+    for (let i = 0; i < n; i++) sums[i + 1] = sums[i] + src[i];
+    const dst = new Float32Array(n);
+    for (let k = 0; k < starts.length; k++) {
+      const s0 = starts[k];
+      const s1 = starts[k + 1] ?? n;
+      for (let i = s0; i < s1; i++) {
+        const a = Math.max(s0, i - R);
+        const b = Math.min(s1, i + R + 1);
+        dst[i] = (sums[b] - sums[a]) / (b - a);
+      }
+    }
+    src = dst;
+  }
+  const out = src === held ? Float32Array.from(held) : src;
+  for (let k = 1; k < starts.length; k++) {
+    // The hit itself: up with the sound while it builds (a few bins), to its
+    // own peak. What the smoothing took off that peak is put back and let go
+    // slowly, so the top has no spike on it.
+    const s0 = starts[k];
+    const s1 = Math.min(n, starts[k + 1] ?? n);
+    let p = s0;
+    for (let i = s0; i < Math.min(s1, s0 + 4); i++) if (v[i] > v[p]) p = i;
+    for (let i = s0; i < p; i++) if (v[i] > out[i]) out[i] = v[i];
+    let d = v[p] - out[p];
+    for (let i = p; i < s1 && d > 0.002; i++, d *= ease) out[i] += d;
+  }
+  return early(out, before);
 }
 
 /** The three bands' envelopes for this look at this zoom, kept until either changes. */
 function envelopes(wf, o, spp) {
   const perMs = wf.lookBps / 1000; // bins in a millisecond
-  // The least smoothing is in px, so it grows with the zoom: in quarter
-  // steps, so a zoom gesture doesn't work it out afresh every frame.
-  const least = o.soft ? 2 ** (Math.round(Math.log2(o.soft * spp) * 4) / 4) : 0;
-  const after = [0, 1, 2].map((b) => Math.max(o[`a${b}`] * perMs, least));
+  // The softness between hits is in px, as today's is, so it grows with the
+  // zoom: in quarter steps of doubling, so a zoom gesture doesn't work it
+  // out afresh every frame.
+  const soft = o.soft ? 2 ** (Math.round(Math.log2(o.soft * spp) * 4) / 4) : 0;
+  const after = [0, 1, 2].map((b) => o[`a${b}`] * perMs);
   const before = [0, 1, 2].map((b) => (o[`b${b}`] ?? 0) * perMs);
-  const key = `${wf.version}|${after}|${before}|${o.ripple ?? 0}`;
-  if (wf.lookEnv?.key !== key) wf.lookEnv = { key, v: [0, 1, 2].map((b) => envelope(wf.bands[b], after[b], before[b], (o.ripple ?? 0) / 100)) };
+  const key = `${wf.version}|${after}|${before}|${soft}|${o.hit}`;
+  if (wf.lookEnv?.key !== key)
+    wf.lookEnv = { key, v: [0, 1, 2].map((b) => (o.hit != null ? between(wf.bands[b], after[b], before[b], soft, o.hit / 100) : envelope(wf.bands[b], after[b], before[b]))) };
   return wf.lookEnv.v;
 }
 
 /**
+ * How late in its bin each band is drawn, in bins. A hit can be anywhere in
+ * its bin, so on average it's half a bin after the bin's start; the analyser's
+ * filters delay the bass by about 2.3 ms and the mids by 0.7 (measured on
+ * synthesised kicks), which is that much already. Together every band's hits
+ * come out on time on average.
+ */
+const LATE = [0.09, 0.38, 0.47];
+
+/**
  * Column tops for device pixels k0 to k1: each band's level there. A bin
  * narrower than a column is its column's loudest; a wider one holds from its
- * start, easing into the next only if that's lower, so nothing rises early.
+ * start, easing into the next only if that's lower. A bin's start goes to
+ * the nearest column edge, so rounding is as often late as early.
  */
 function columns(wf, E, k0, k1, perCol) {
   const n = wf.count;
@@ -74,7 +138,7 @@ function columns(wf, E, k0, k1, perCol) {
     const v = E[b];
     const a = new Float32Array(k1 - k0);
     for (let k = k0; k < k1; k++) {
-      const t0 = k * perCol;
+      const t0 = (k - 0.5) * perCol - LATE[b];
       let i0 = Math.ceil(t0);
       const i1 = Math.ceil(t0 + perCol);
       let m = 0;
@@ -181,30 +245,53 @@ export function lookLane(wf, ctx, ectx, x0, x1, spp, h, c, half) {
     ctx.globalCompositeOperation = 'source-over';
   }
   if (o.out > 0) {
-    // The outline runs through the columns' own tops, so it touches each
-    // peak. A vertical edge keeps its 1px line inside the shape's side.
-    const top = heights[0].map((v, i) => Math.max(v, heights[1][i]));
-    ectx.strokeStyle = rgba(c.high, o.out / 100);
-    ectx.lineWidth = o.outw;
-    ectx.lineJoin = 'bevel';
-    for (const sign of [1, -1]) {
-      ectx.beginPath();
-      for (let i = 0; i < n; i++) {
-        const x = X(i) + 0.5 / dpr;
-        if (i) ectx.lineTo(x, mid - sign * top[i]);
-        else ectx.moveTo(x, mid - sign * top[i]);
-      }
-      ectx.stroke();
+    // A rim inside the shape: each column from its top down to where a line
+    // this wide, kept inside, ends (the lowest top within its width, less its
+    // width). Half of a stroked line would stand outside a hit's front edge
+    // and draw it early, and above its peak.
+    const r = Math.max(1, Math.round(o.outw * dpr));
+    const top = new Float32Array(n);
+    for (let i = 0; i < n; i++) top[i] = Math.max(heights[0][i], heights[1][i]);
+    const inner = new Float32Array(n);
+    for (let i = 0; i < n; i++) {
+      let m = top[i];
+      for (let j = Math.max(0, i - r); j <= Math.min(n - 1, i + r); j++) if (top[j] < m) m = top[j];
+      inner[i] = Math.max(0, m - o.outw);
     }
+    ectx.fillStyle = rgba(c.high, o.out / 100);
+    ectx.beginPath();
+    for (const sign of [1, -1]) {
+      ectx.moveTo(X(0), mid - sign * top[0]);
+      for (let i = 1; i < n; i++) {
+        if (top[i] === top[i - 1]) continue;
+        ectx.lineTo(X(i), mid - sign * top[i - 1]);
+        ectx.lineTo(X(i), mid - sign * top[i]);
+      }
+      ectx.lineTo(X(n), mid - sign * top[n - 1]);
+      ectx.lineTo(X(n), mid - sign * inner[n - 1]);
+      for (let i = n - 1; i > 0; i--) {
+        if (inner[i] === inner[i - 1]) continue;
+        ectx.lineTo(X(i), mid - sign * inner[i]);
+        ectx.lineTo(X(i), mid - sign * inner[i - 1]);
+      }
+      ectx.lineTo(X(0), mid - sign * inner[0]);
+      ectx.closePath();
+    }
+    ectx.fill();
   }
 }
 
-/** The marks' pitch in CSS px and their origin: the beat halved to the nearest of width + gap, or width + gap itself. */
+/** Parts of a beat the marks may stand on: every one of these keeps a mark on each quarter beat. */
+const PARTS = [1, 2, 4, 8, 12, 16, 24, 32, 48, 64, 96, 128];
+
+/** The marks' pitch in CSS px and their origin: the part of a beat nearest width + gap, or width + gap itself. */
 export function pitchOf(o, spp, beatLen, firstBeat) {
   const want = o.w + o.gap;
   if (!o.lock || !(beatLen > 0)) return { P: want, origin: 0 };
   const px = beatLen / spp;
-  return { P: px / 2 ** Math.max(0, Math.round(Math.log2(px / want))), origin: firstBeat / spp, per: 2 ** Math.max(0, Math.round(Math.log2(px / want))) };
+  const off = (d) => Math.abs(Math.log(px / d / want));
+  const part = PARTS.reduce((a, d) => (off(d) < off(a) ? d : a));
+  return { P: px / part, origin: firstBeat / spp };
 }
 
 /**
@@ -220,19 +307,19 @@ function marks(wf, ctx, E, x0, x1, spp, mid, amp, c) {
   const A = amp - 1;
   const H = [o.h0 / 100, o.h1 / 100, o.h2 / 100];
   const snap = (x) => Math.round(x * dpr) / dpr;
-  // The mark's share of the pitch holds whatever the pitch came out at, in whole device px.
-  const w = Math.max(1 / dpr, snap((P * o.w) / (o.w + o.gap)));
+  const w = Math.max(1 / dpr, Math.min(snap(o.w), Math.floor((P - 0.5) * dpr) / dpr));
   const lists = [[], [], []];
   const rest = [];
   const n = wf.count;
   for (let j = Math.floor((x0 - P * 2 - origin) / P); j <= Math.ceil((x1 + P - origin) / P); j++) {
     const xa = origin + j * P;
     const left = snap(xa);
-    const i0 = Math.max(0, Math.ceil((xa - P / 2) * spp - 0.5));
-    const i1 = Math.min(n, Math.max(i0 + 1, Math.ceil((xa + P / 2) * spp - 0.5)));
     const v = [0, 0, 0];
     for (let b = 0; b < 3; b++) {
       const e = E[b];
+      const late = LATE[b];
+      const i0 = Math.max(0, Math.ceil((xa - P / 2) * spp - late));
+      const i1 = Math.min(n, Math.max(i0 + 1, Math.ceil((xa + P / 2) * spp - late)));
       for (let i = i0; i < i1; i++) if (e[i] > v[b]) v[b] = e[i];
       v[b] *= H[b] * A;
     }
