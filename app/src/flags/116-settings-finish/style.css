@@ -299,7 +299,7 @@
    8 at its ends, 4 at the corners that face each other, 4 between. */
 :root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish-step='split'] .settings .sstep {
   grid-template-columns: 32px 64px 32px;
-  gap: 4px;
+  gap: var(--tt-split-gap, 4px);
   overflow: visible;
   background: none;
   box-shadow: none;
@@ -321,10 +321,10 @@
   box-shadow: none !important;
 }
 :root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish-step='split'] .settings .sstep > .btn:first-child {
-  border-radius: var(--r) 4px 4px var(--r);
+  border-radius: var(--r) var(--tt-split-in, 4px) var(--tt-split-in, 4px) var(--r);
 }
 :root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish-step='split'] .settings .sstep > .btn:last-child {
-  border-radius: 4px var(--r) var(--r) 4px;
+  border-radius: var(--tt-split-in, 4px) var(--r) var(--r) var(--tt-split-in, 4px);
 }
 :root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish-step='split'] .settings .sstep > .btn::after,
 :root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish-step='split'] .settings .sstep > .num::before,
@@ -332,7 +332,7 @@
   content: none;
 }
 :root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish-step='split'] .settings .sstep > .num {
-  border-radius: 4px;
+  border-radius: var(--tt-split-in, 4px);
   background: var(--rg-grooves), var(--rg-well);
   box-shadow: var(--tt-cut);
 }

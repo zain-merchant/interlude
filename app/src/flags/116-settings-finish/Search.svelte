@@ -1,4 +1,5 @@
 <script>
+  import Marks from '../117-key-marks/Marks.svelte';
   // The search field over Settings' pages. The list it finds is
   // Results.svelte's; the arrows and Return are handled here, where the
   // caret stays.
@@ -28,5 +29,5 @@
     aria-activedescendant={on && count ? `sr-${active}` : undefined} />
   {#if query}
     <button class="clear" aria-label="Clear search" onclick={() => { query = ''; input?.focus(); }}><svg viewBox="0 0 14 14" aria-hidden="true"><path d="M3.5 3.5 10.5 10.5M10.5 3.5 3.5 10.5" /></svg></button>
-  {:else}<kbd aria-hidden="true">{keyLabel('library.search')}</kbd>{/if}
+  {:else}<kbd aria-hidden="true"><Marks text={keyLabel('library.search')} /></kbd>{/if}
 </label>

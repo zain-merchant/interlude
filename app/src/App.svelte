@@ -36,6 +36,7 @@
   import { libraryHealth, reveal, captureUiErrors, update, checkForUpdate, installUpdate } from './lib/support.svelte.js';
   import Status from './flags/112-shell-status/Status.svelte'; // #112 (UI audit flag)
   import Keys from './flags/116-settings-finish/Keys.svelte'; // #120 (UI audit flag)
+  import Marks from './flags/117-key-marks/Marks.svelte'; // #117 (UI audit flag)
   import { open as shellOpen } from './flags/112-shell-status/connections.svelte.js'; // #112 (UI audit flag)
 
   let library;
@@ -758,7 +759,7 @@
       <div class="lane" style:--drop-color={deck === 0 ? 'var(--deck-a)' : 'var(--deck-b)'} class:b={deck === 1}
         use:dropTarget={{ ondrop: (t) => load(deck, t), blocked: () => engine.decks[deck].playing }}>
         <Waveform {deck} seconds={zoom} onzoom={(f) => setZoom(zoom * f)} />
-        <div class="who"><i></i>{#if tracks[deck]}{tracks[deck].title}{:else}<span class="hint">Drag a track here or press {keyLabel(`deck.${deck}.load`)}</span>{/if}</div>
+        <div class="who"><i></i>{#if tracks[deck]}{tracks[deck].title}{:else}<span class="hint">Drag a track here or press <Marks text={keyLabel(`deck.${deck}.load`)} /></span>{/if}</div>
       </div>
     {/each}
     <div class="zoom">

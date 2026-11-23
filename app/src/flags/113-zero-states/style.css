@@ -120,7 +120,20 @@
     height: 72px;
   }
 }
-@container (max-height: 119px) {
+/* Short: the drawing shrinks to what there is. */
+@container (min-width: 620px) {
+  :root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] .zs .gr svg {
+    width: auto;
+    max-height: calc(100cqh - 16px);
+  }
+}
+/* Narrow and short: the words, without the drawing. */
+@container (max-width: 619px) and (max-height: 219px) {
+  :root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] .zs .gr {
+    display: none;
+  }
+}
+@container (max-height: 79px) {
   :root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] .zs .gr,
   :root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] .zs .zp {
     display: none;

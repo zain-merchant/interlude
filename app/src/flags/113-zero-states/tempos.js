@@ -179,7 +179,7 @@ const many = (n) => n.toLocaleString();
 export function said(p, f) {
   const { count } = p;
   const keys = f.keys.length > 3 ? `those ${f.keys.length} keys` : f.keys.length > 1 ? `${f.keys.slice(0, -1).join(', ')} or ${f.keys.at(-1)}` : f.keys[0];
-  if (p.kind === 'slots') return count.both ? `${many(count.both)} ${p.ranged ? 'at both tempos' : 'at its tempo'}, none in ${p.keys.length > 1 ? 'a key that does' : 'that key'}.` : `${many(count.filter)} in the filter, none that mix.`;
+  if (p.kind === 'slots') return count.both ? `${many(count.both)} ${p.ranged ? 'at both tempos' : 'at its tempo'}, none in ${p.keys.length > 1 ? 'a key that mixes' : 'that key'}.` : `${many(count.filter)} in the filter, none that mix.`;
   if (p.kind === 'spans') return `${count.filter ? many(count.filter) : 'None'} in the filter, ${count.fit ? many(count.fit) : 'none'} that mix.`;
   if (p.ranged && !p.have) return p.n === 1 ? 'Its tempo isn’t known yet.' : 'No tempos are known yet.';
   if (p.ranged && p.keyed) return `${count.range ? `${many(count.range)} at that tempo` : 'None at that tempo'}, ${count.keys ? `${many(count.keys)} in ${keys}` : `none in ${keys}`}${count.range && count.keys ? ', none both' : ''}.`;

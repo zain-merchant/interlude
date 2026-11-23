@@ -1,4 +1,5 @@
 <script>
+  import Marks from '../flags/117-key-marks/Marks.svelte'; // #117 (UI audit flag)
   import { tick } from 'svelte';
   import { htmlMenu } from './menu.svelte.js';
   import { flag } from '../flags/registry.svelte.js';
@@ -53,7 +54,7 @@
         <button role={it.checked != null ? 'menuitemcheckbox' : 'menuitem'} aria-checked={it.checked ?? undefined}
           disabled={it.enabled === false} onclick={() => run(it)} onpointermove={follow}
           class:danger={flag('states') && /^(Delete|Remove)\b/.test(it.label)}>
-          <span>{#if it.checked != null}<i class="tick" aria-hidden="true">{it.checked ? '✓' : ''}</i>{/if}{it.label}</span>{#if it.key}<kbd>{it.key}</kbd>{/if}
+          <span>{#if it.checked != null}<i class="tick" aria-hidden="true">{it.checked ? '✓' : ''}</i>{/if}{it.label}</span>{#if it.key}<kbd><Marks text={it.key} /></kbd>{/if}
         </button>
       {/if}
     {/each}

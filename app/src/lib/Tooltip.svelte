@@ -1,4 +1,5 @@
 <script>
+  import Marks from '../flags/117-key-marks/Marks.svelte'; // #117 (UI audit flag)
   import { tooltip, tipWarm, KEY_MARK } from './tooltip.svelte.js';
   import { flag } from '../flags/registry.svelte.js';
   let el = $state();
@@ -19,7 +20,7 @@
   <!-- #12 (UI audit flag): data-warm marks a tip that follows straight on from another (no entrance). -->
   <div class="tip" class:below={tooltip.below} role="tooltip" bind:this={el} bind:clientWidth={width} data-warm={flag('polish-tooltip') && tipWarm.on ? '' : undefined}
     style:left="{left}px" style:top="{tooltip.y}px"><!-- #10 (UI audit flag): the tip's parts as spans spaced apart, not joined with middle dots.
-    -->{#if twoLines}<span class="l1"><span class="part">{words[0]}</span>{#each keycaps as k}{' '}<kbd class="key">{k}</kbd>{/each}</span>{' '}<span class="l2">{rest}</span>{:else if flag('no-dots')}{#each words as part, i}{i ? ' ' : ''}<span class="part">{part}</span>{/each}{#each keycaps as k}{' '}<kbd class="key">{k}</kbd>{/each}{:else}{tooltip.text.replaceAll(KEY_MARK, '')}{/if}</div>
+    -->{#if twoLines}<span class="l1"><span class="part"><Marks text={words[0]} /></span>{#each keycaps as k}{' '}<kbd class="key"><Marks text={k} /></kbd>{/each}</span>{' '}<span class="l2"><Marks text={rest} /></span>{:else if flag('no-dots')}{#each words as part, i}{i ? ' ' : ''}<span class="part"><Marks text={part} /></span>{/each}{#each keycaps as k}{' '}<kbd class="key"><Marks text={k} /></kbd>{/each}{:else}{tooltip.text.replaceAll(KEY_MARK, '')}{/if}</div>
 {/if}
 
 <style>

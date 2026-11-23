@@ -22,6 +22,10 @@
   position: relative;
   z-index: 1;
 }
+/* The message's own line, so the two stand on one baseline. */
+:root[data-flag-dir-room-tint][data-flag-toast-cut][data-flag-toast-cut][data-flag-toast-cut][data-flag-toast-cut][data-flag-toast-cut][data-flag-toast-cut][data-flag-toast-cut][data-flag-toast-cut] .toastbox .toast .undo.cut > span:first-child {
+  line-height: 1.3;
+}
 /* Pointed at: the grooves catch the light, as 110's other cuts do, and the
    keys brighten. */
 :root[data-flag-dir-room-tint][data-flag-toast-cut][data-flag-toast-cut][data-flag-toast-cut][data-flag-toast-cut][data-flag-toast-cut][data-flag-toast-cut][data-flag-toast-cut][data-flag-toast-cut] .toastbox .toast .undo.cut::before {
