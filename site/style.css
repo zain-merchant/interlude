@@ -2194,3 +2194,10 @@ html[data-lablogo="plain"] .lg-rings circle:nth-child(-n + 2) { display: none; }
 .oss[data-look^="poster"] .oss-log h4[data-front] { cursor: pointer; transition: color 150ms ease; }
 @media (hover: hover) and (pointer: fine) { .oss[data-look^="poster"] .oss-log h4[data-front]:hover { color: var(--oss-strong); } }
 .oss[data-look^="poster"] .oss-log h4[data-front]:focus-visible { outline: 2px solid currentColor; outline-offset: 4px; border-radius: 4px; }
+
+/* The nav's glass and edge with smoothed corners where the browser draws
+   them itself (index.html scales their radius to match; squircles.js does
+   every other rounded rect). */
+@supports (corner-shape: superellipse(2)) {
+  html[data-squircles][data-nav="morph"] :is(.nav-glass, .nav-edge) { corner-shape: superellipse(1.6); }
+}
