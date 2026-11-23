@@ -21,12 +21,25 @@
     const line = /** @type {HTMLElement} */ (probe.parentElement);
     /** @param {string} s */
     const width = (s) => {
-      probe.textContent = s;
-      return probe.getBoundingClientRect().width;
+      let w = widths.get(s);
+      if (w === undefined) {
+        probe.textContent = s;
+        w = probe.getBoundingClientRect().width;
+        widths.set(s, w);
+      }
+      return w;
     };
+    // Kept while the type is the same: writing to the page restyles a lot of it,
+    // and a deck being resized measures every frame.
+    /** @type {Map<string, number>} */
+    const widths = new Map();
+    let type = '';
     const measure = () => {
       const cs = getComputedStyle(line);
       const zoom = line.getBoundingClientRect().width / (line.offsetWidth || 1) || 1;
+      const now = `${cs.fontFamily} ${cs.fontSize} ${cs.fontWeight} ${cs.letterSpacing} ${zoom.toFixed(2)}`;
+      if (now !== type || widths.size > 200) widths.clear();
+      type = now;
       const room = (line.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight)) * zoom - 0.5;
       const all = Array.from(name);
       if (room <= 0 || width(name) <= room) cut = null;
@@ -51,11 +64,15 @@
         const end = (/** @type {number} */ k) => `${start(all.slice(0, k))}…`;
         cut = tail(n) >= LEAST && n - tail(n) >= LEAST ? mid(n) : end(most(end));
       }
-      probe.textContent = '';
+      if (probe.textContent) probe.textContent = '';
     };
     const ro = new ResizeObserver(measure);
     ro.observe(line);
-    document.fonts.addEventListener('loadingdone', measure);
+    const loaded = () => {
+      widths.clear();
+      measure();
+    };
+    document.fonts.addEventListener('loadingdone', loaded);
     const styled = new MutationObserver(() => requestAnimationFrame(measure));
     styled.observe(document.documentElement, { attributes: true, attributeFilter: ['data-flag-font-special-gothic', 'data-flag-dir-room-tint', 'style'] });
     measure();
@@ -67,7 +84,7 @@
       destroy() {
         ro.disconnect();
         styled.disconnect();
-        document.fonts.removeEventListener('loadingdone', measure);
+        document.fonts.removeEventListener('loadingdone', loaded);
       },
     };
   }

@@ -303,6 +303,7 @@
   let measureCtx = null;
   function fitTitle(node, title) {
     const fit = () => {
+      if (flag('dir-room-tint')) return; // #110 cuts it in the middle itself (Mid.svelte).
       const cs = getComputedStyle(node);
       measureCtx ??= document.createElement('canvas').getContext('2d');
       if (!measureCtx) return;

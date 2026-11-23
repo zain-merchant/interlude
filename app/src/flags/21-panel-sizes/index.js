@@ -22,6 +22,9 @@
 //               take it to 160), gentle snap where the waveforms
 //               are at 136
 //   sidebar     200px  flexible  160 to 320             gentle 6px snap
+//   mixer       (on #110) its designed width, 300, 312 or 336 by window and
+//               setting; 280 to 480, each deck keeping 330; both edges move,
+//               so a 6px snap each. Kept as null at the designed width.
 // Which neighbour gives way (owner's call 10, (a)): the decks move as one
 // block; the waveforms' handle sizes the waveforms and the library gives
 // way; the library's handle sizes the library and the waveforms give way;
@@ -32,7 +35,7 @@
 // A double-click settles back on the site's snappy spring (301ms; none
 // under reduced motion); a drag follows the pointer with no easing.
 //
-// Sizes are kept in one key, oss-dj.panelSizes = { waves, decks, sidebar }; the library is the remainder. The old oss-dj.libraryHeight is
+// Sizes are kept in one key, oss-dj.panelSizes = { waves, decks, sidebar, mixer }; the library is the remainder. The old oss-dj.libraryHeight is
 // read once to seed it. It's left in place while this is a flag so turning
 // the flag off loses nothing; drop it when shipping. The size model is
 // shared with #7 (App.svelte: rows, PANEL); this flag adds the grips, the

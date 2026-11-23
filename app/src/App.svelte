@@ -415,6 +415,7 @@
   const APP_MIN_H = 720; // matches .app's min-height
   let libHeight = $state(LIB_DEFAULT);
   let winHeight = $state(900);
+  let winWidth = $state(1440);
   try {
     libHeight = Number(localStorage.getItem(LIB_KEY)) || LIB_DEFAULT;
   } catch {}
@@ -431,6 +432,7 @@
     waves: { def: 136, min: 96 }, // the row, with the 12px gap under the panel
     decks: { def: 360, min: 340, max: 400 },
     sidebar: { def: 200, min: 160, max: 320 },
+    mixer: { min: 280, max: 480, deck: 330 }, // its designed width is the stylesheet's (--mixer-def)
   };
   const LIB_MIN = 160; // what a drag can take the library down to
   // What a short window keeps for the library before the waveforms and
@@ -440,13 +442,13 @@
   const PANEL_KEY = 'oss-dj.panelSizes';
   const sized = $derived(flag('edge-tall') || flag('panel-sizes'));
   /** The sizes asked for; what each row gets (`rows`) also depends on the window. */
-  const sizes = $state({ waves: PANEL.waves.def, decks: PANEL.decks.def, sidebar: PANEL.sidebar.def });
+  const sizes = $state({ waves: PANEL.waves.def, decks: PANEL.decks.def, sidebar: PANEL.sidebar.def, mixer: /** @type {number | null} null: its designed width */ (null) });
   // #21: the sizes are kept, in one key. The old library height is read once
   // to seed it (and left in place, so turning the flag off loses nothing).
   if (flag('panel-sizes')) {
     try {
       const kept = JSON.parse(localStorage.getItem(PANEL_KEY) ?? 'null');
-      if (kept) Object.assign(sizes, { waves: kept.waves ?? sizes.waves, decks: kept.decks ?? sizes.decks, sidebar: kept.sidebar ?? sizes.sidebar });
+      if (kept) Object.assign(sizes, { waves: kept.waves ?? sizes.waves, decks: kept.decks ?? sizes.decks, sidebar: kept.sidebar ?? sizes.sidebar, mixer: kept.mixer ?? null });
       else if (localStorage.getItem(LIB_KEY)) {
         const avail = Math.max(innerHeight, APP_MIN_H) - (macWindow ? TOP_STRIP : 12) - 24;
         sizes.waves = Math.max(PANEL.waves.min, avail - PANEL.decks.def - Number(localStorage.getItem(LIB_KEY)));
@@ -500,6 +502,29 @@
     }
     sizes.sidebar = Math.round(clamp(snapTo(w, PANEL.sidebar.def, 6), PANEL.sidebar.min, PANEL.sidebar.max));
   }
+  // #110 (UI audit flag): dir-room-tint: the mixer's edges drag, both at once, so
+  // it stays in the middle and the decks stay even. It sticks at its designed
+  // width, which depends on the window and a setting, so that's kept as null and
+  // follows them. A narrow window gives the decks their least first.
+  const mixerGrips = $derived(flag('panel-sizes') && flag('dir-room-tint'));
+  let decksEl = $state(/** @type {HTMLElement | null} */ (null));
+  let mixerDef = $state(300);
+  $effect(() => {
+    if (!decksEl || !mixerGrips) return;
+    void [winWidth, setting('dir-room-tint', 'room')];
+    // The flags' attributes are on the root by the next frame.
+    const el = decksEl;
+    const raf = requestAnimationFrame(() => (mixerDef = parseFloat(getComputedStyle(el).getPropertyValue('--mixer-def')) || 300));
+    return () => cancelAnimationFrame(raf);
+  });
+  const mixerMax = $derived(Math.max(mixerDef, Math.min(PANEL.mixer.max, winWidth - 48 - 2 * PANEL.mixer.deck)));
+  /** The mixer's width if it isn't its designed one. */
+  const mixerSet = $derived(!mixerGrips || sizes.mixer == null ? null : Math.min(sizes.mixer, mixerMax));
+  const mixerW = $derived(mixerSet ?? mixerDef);
+  function setMixer(w) {
+    const at = 2 * Math.round(clamp(snapTo(w, mixerDef, 12), PANEL.mixer.min, mixerMax) / 2);
+    sizes.mixer = at === mixerDef ? null : at;
+  }
   function setLib(h) {
     if (sized) {
       // The waveforms give way; the gentle snap is where they're at 136.
@@ -550,25 +575,27 @@
   // panel with the pointer (no easing), takes the same keys as the library's
   // (arrows ±24, ⇧ ±96, Home and End for min and max) and resets on a
   // double-click.
-  /** @type {{ which: string, at: number, from: number } | null} */
+  /** @type {{ which: string, at: number, from: number, dir: number } | null} */
   let grab = $state(null);
   const GRIPS = {
     waves: { get: () => rows.waves, set: setWaves, min: () => PANEL.waves.min, max: () => wavesMax, def: PANEL.waves.def, axis: 'y', dir: 1 },
     decks: { get: () => rows.decks, set: setDecks, min: () => PANEL.decks.min, max: () => PANEL.decks.max, def: PANEL.decks.def, axis: 'y', dir: -1 },
     sidebar: { get: () => (sideShut() ? 0 : sizes.sidebar), set: setSidebar, min: () => PANEL.sidebar.min, max: () => PANEL.sidebar.max, def: PANEL.sidebar.def, axis: 'x', dir: 1 },
+    mixer: { get: () => mixerW, set: setMixer, min: () => PANEL.mixer.min, max: () => mixerMax, get def() { return mixerDef; }, axis: 'x', dir: 1 },
   };
-  function gripDown(e, which) {
+  /** `dir`: how far the panel grows for each pixel of the drag, if not the grip's own. */
+  function gripDown(e, which, dir = undefined) {
     e.currentTarget.setPointerCapture(e.pointerId);
     // ⌥ on the waveforms' edge (the decks' top edge) sizes the decks.
     const w = which === 'waves' && e.altKey ? 'decks' : which;
-    grab = { which: w, at: GRIPS[w].axis === 'x' ? e.clientX : e.clientY, from: GRIPS[w].get() };
+    grab = { which: w, at: GRIPS[w].axis === 'x' ? e.clientX : e.clientY, from: GRIPS[w].get(), dir: dir ?? GRIPS[w].dir };
   }
   function gripMove(e) {
     if (!grab) return;
     const g = GRIPS[grab.which];
     const k = Number(document.documentElement.style.zoom) || 1;
     const d = ((g.axis === 'x' ? e.clientX : e.clientY) - grab.at) / k;
-    g.set(grab.from + g.dir * d);
+    g.set(grab.from + grab.dir * d);
   }
   function gripKey(e, which) {
     const g = GRIPS[which];
@@ -759,7 +786,7 @@
 <!-- #7 / #21 (UI audit flags): edge-tall, panel-sizes: the rows' sizes (--waves, --decks) and the sidebar's, while either is on. -->
 <div class="app" class:mac-window={macWindow} class:settling style:--top="{macWindow ? TOP_STRIP : 12}px" style:--lib="{lib}px"
   style:--waves={sized ? `${rows.waves}px` : undefined} style:--decks={sized ? `${rows.decks}px` : undefined}
-  style:--library-sidebar={flag('panel-sizes') ? `${sideShut() ? 0 : sizes.sidebar}px` : undefined} style:--side-w={flag('dir-room-tint') ? `${sizes.sidebar}px` : undefined} bind:clientHeight={winHeight}>
+  style:--library-sidebar={flag('panel-sizes') ? `${sideShut() ? 0 : sizes.sidebar}px` : undefined} style:--side-w={flag('dir-room-tint') ? `${sizes.sidebar}px` : undefined} bind:clientHeight={winHeight} bind:clientWidth={winWidth}>
   <Backdrop a="var(--deck-a)" b="var(--deck-b)" tint={0.25} />
   {#if macWindow}
     <!-- The window buttons' strip: drag it to move the window, double-click
@@ -793,7 +820,22 @@
   {/snippet}
   {#if flag('panel-sizes') && flag('focus-states')}{@render wavesGrip()}{/if}<!-- #119 (UI audit flag): focus-states: after the waveforms, so Tab meets it there. -->
 
-  <div class="decks">
+  {#if mixerGrips}
+    <!-- #110 (UI audit flag): dir-room-tint: the mixer's two edges, in the gaps beside it. A drag moves one by its length, so the mixer grows by twice that. Only the left is a tab stop: they're one control. -->
+    {#each [-1, 1] as edge (edge)}
+      <!-- svelte-ignore a11y_no_noninteractive_tabindex, a11y_no_noninteractive_element_interactions (a focusable separator is the ARIA window-splitter pattern) -->
+      <div class="grip mid" class:right={edge === 1} class:dragging={grab?.which === 'mixer'}
+        style:top="calc(var(--top) + {rows.waves}px)" style:height="{rows.decks}px" style:left="calc(50% {edge === 1 ? `+ ${mixerW / 2}px` : `- ${mixerW / 2}px - var(--gap)`})"
+        role="separator" aria-orientation="vertical" aria-label="Resize mixer" aria-hidden={edge === 1 ? 'true' : undefined}
+        aria-valuenow={mixerW} aria-valuemin={PANEL.mixer.min} aria-valuemax={mixerMax} tabindex={edge === 1 ? -1 : 0}
+        onmousedown={(e) => edge === 1 && e.preventDefault()}
+        onpointerdown={(e) => gripDown(e, 'mixer', 2 * edge)} onpointermove={gripMove} onpointerup={() => (grab = null)} onpointercancel={() => (grab = null)}
+        ondblclick={() => gripReset('mixer')} onkeydown={(e) => gripKey(e, 'mixer')}
+        use:tip={() => 'Drag to resize the mixer, double-click to reset'}><i></i></div>
+    {/each}
+  {/if}
+
+  <div class="decks" bind:this={decksEl} style:--mixer={mixerSet == null ? undefined : `${mixerSet}px`}>
     <Deck deck={0} onload={load} onreveal={(p) => library.reveal(p)} onsettings={openSettings} />
     <Mixer bind:this={mixer} onmessage={say} />
     <Deck deck={1} onload={load} onreveal={(p) => library.reveal(p)} onsettings={openSettings} />
@@ -1098,6 +1140,19 @@
   }
   .grip:focus-visible {
     outline: none;
+  }
+  /* #110: the mixer's edges: the same handle, upright; each lights with the other. */
+  .app > .grip.mid {
+    right: auto;
+    width: var(--gap);
+    cursor: col-resize;
+  }
+  .grip.mid i {
+    width: 3px;
+    height: 36px;
+  }
+  .app:has(> .grip.mid:is(:hover, :focus-visible)) > .grip.mid i {
+    background: var(--fg-3) !important;
   }
   /* The sidebar's edge: no pill (beside a scrolling list it read as a
      scrollbar), just an 8px strip centred on the 1px divider; on hover,

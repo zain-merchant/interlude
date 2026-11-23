@@ -12,6 +12,7 @@ const CASES = [
   ['Drag to resize the library, ⌥-drag for the decks, double-click to reset', 'none', '*Library height | Resize the decks: ⌥ + drag | Reset: double-click'],
   ['Drag to resize the waveforms, ⌥-drag for the decks, double-click to reset', 'none', '*Waveform height | Resize the decks: ⌥ + drag | Reset: double-click'],
   ['Drag to resize the sidebar, double-click to reset', 'none', '*Sidebar width | Reset: double-click'],
+  ['Drag to resize the mixer, double-click to reset', 'none', '*Mixer width | Reset: double-click'],
   ['Settings · ^⌘,', '*Settings | [⌘,]'],
   ['DDJ-FLX4 · controller', '*Controller'],
   ['MacBook Pro Speakers · output', '*Output'],

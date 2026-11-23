@@ -203,6 +203,9 @@ function ring(cs) {
   return null;
 }
 
+/** What `corners` goes by. */
+const LOOK = ['borderTopLeftRadius', 'borderTopRightRadius', 'borderBottomRightRadius', 'borderBottomLeftRadius', 'backgroundImage', 'backgroundColor', 'backgroundSize', 'backgroundPosition', 'backgroundRepeat', 'backgroundOrigin', 'backgroundClip', 'boxShadow', 'borderTopWidth', 'borderTopStyle', 'borderTopColor'];
+
 const svgUrl = (svg) => `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
 
 export function start() {
@@ -236,15 +239,26 @@ export function start() {
     return id;
   }
 
-  /** Give one element the right corners for its size, or none. */
-  function update(el) {
-    const size = sizes.get(el);
-    if (!size) return;
-    const { w, h } = size;
-    // Read the element's own look, without what this added.
-    el.removeAttribute('data-sq');
-    el.removeAttribute('data-sq-h');
-    const cs = getComputedStyle(el);
+  /** Give each element the right corners for its size, or none. All of them are
+   *  read before any is written: one by one, every read laid the page out again.
+   *  @param {Iterable<Element>} els */
+  function update(els) {
+    const list = [...els].filter((el) => sizes.has(el));
+    // Their own look, without what this added.
+    for (const el of list) {
+      el.removeAttribute('data-sq');
+      el.removeAttribute('data-sq-h');
+    }
+    const looks = list.map((el) => {
+      const cs = getComputedStyle(el);
+      return Object.fromEntries(LOOK.map((k) => [k, cs[k]]));
+    });
+    list.forEach((el, i) => corners(el, looks[i]));
+  }
+
+  /** One element's corners, from how it looks. */
+  function corners(el, cs) {
+    const { w, h } = /** @type {{ w: number, h: number }} */ (sizes.get(el));
     const radii = [cs.borderTopLeftRadius, cs.borderTopRightRadius, cs.borderBottomRightRadius, cs.borderBottomLeftRadius].map((v) => px(v, w));
     // CSS shrinks radii that don't fit; so does this.
     const scale = Math.min(1, w / (radii[0] + radii[1] || 1), w / (radii[2] + radii[3] || 1), h / (radii[0] + radii[3] || 1), h / (radii[1] + radii[2] || 1));
@@ -316,6 +330,8 @@ export function start() {
   const changed = new WeakMap();
   let settle = 0;
   const ro = new ResizeObserver((entries) => {
+    /** @type {Element[]} */
+    const now = [];
     for (const e of entries) {
       const box = e.borderBoxSize?.[0];
       const had = sizes.get(e.target);
@@ -327,16 +343,20 @@ export function start() {
       const again = at - (changed.get(el) ?? -1e9) < 200;
       changed.set(el, at);
       const small = (box ? box.inlineSize * box.blockSize : 1e9) < 20000;
-      if (had && !native && (again || !small)) {
-        el.removeAttribute('data-sq');
-        el.removeAttribute('data-sq-h');
+      if (had && (again || !small)) {
+        // The native corners are right at any size that isn't near the radius, so they stay.
+        if (!native) {
+          el.removeAttribute('data-sq');
+          el.removeAttribute('data-sq-h');
+        }
         settling.add(el);
-      } else update(el);
+      } else now.push(el);
     }
+    if (now.length) update(now);
     if (settling.size) {
       clearTimeout(settle);
       settle = setTimeout(() => {
-        for (const el of settling) if (el.isConnected) update(el);
+        update([...settling].filter((el) => el.isConnected));
         settling.clear();
       }, 150);
     }
@@ -405,7 +425,7 @@ export function start() {
         const nodes = pending;
         pending = [];
         nodes.forEach((n) => n.isConnected && scan(n));
-        for (const el of restyled) if (el.isConnected) update(el);
+        update([...restyled].filter((el) => el.isConnected));
         restyled.clear();
       });
   });

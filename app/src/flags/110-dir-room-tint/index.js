@@ -125,6 +125,16 @@ export default {
         ['on', 'With figures', 'The same marks, numbered.'],
       ],
     },
+    sides: { type: 'range', label: 'Grooves in the sidebars', min: 0, max: 100, step: 1, default: 60, unit: '' },
+    ground: {
+      type: 'choice',
+      label: "The sidebars' ground",
+      default: 'settings',
+      options: [
+        ['settings', 'As Settings had', 'The darker of the two, on both.'],
+        ['library', 'As the library had', 'The lighter of the two, on both.'],
+      ],
+    },
     lanes: { type: 'range', label: 'Grooves behind the waveforms', min: 0, max: 100, step: 1, default: 8, unit: '' },
     overview: {
       type: 'choice',

@@ -34,3 +34,14 @@
 :root[data-flag-panel-sizes] .app.settling .below > .grip.side {
   transition: left 301ms var(--flag-panel-sizes-spring);
 }
+/* #110: the mixer's two edges and what spreads out inside it. */
+:root[data-flag-panel-sizes] .app.settling > .decks {
+  transition: grid-template-columns 301ms var(--flag-panel-sizes-spring);
+}
+:root[data-flag-panel-sizes] .app.settling > .decks > .mixer,
+:root[data-flag-panel-sizes] .app.settling > .decks > .mixer .frow {
+  transition: gap 301ms var(--flag-panel-sizes-spring);
+}
+:root[data-flag-panel-sizes] .app.settling > .grip.mid {
+  transition: top 301ms var(--flag-panel-sizes-spring), left 301ms var(--flag-panel-sizes-spring);
+}

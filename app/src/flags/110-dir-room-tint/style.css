@@ -2449,9 +2449,6 @@
    quarters on its outer side, touching its slot; a meter's 0, 6 and 18 dB
    on its inner side, touching its bar, with their figures. Nothing stands
    between a fader and its meter. */
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer .fwrap .frow {
-  gap: 9px;
-}
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer .fwrap .fader.vertical .mark,
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer .fwrap.mirror .fader.vertical .mark {
   width: 4px;
@@ -2515,10 +2512,10 @@
 }
 @media (min-width: 1201px) {
   :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .app > .decks {
-    grid-template-columns: minmax(0, 1fr) 312px minmax(0, 1fr);
+    --mixer-def: 312px;
   }
   :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .decks > .mixer {
-    column-gap: 7px;
+    --mx-col: 7px;
   }
 }
 
@@ -2882,13 +2879,13 @@
   width: calc(var(--side-w, 200px) + 24px);
   /* Moved, not laid out again: WebKit left a transition of left at its old value when a setting changed. */
   translate: calc(var(--library-sidebar, 200px) - var(--side-w, 200px)) 0;
-  background: rgb(0 0 0 / 0.3);
+  background: var(--tt-side-veil), var(--tt-side-rings) 50% 0 / 720px 1400px no-repeat, var(--tt-side);
+  background-position: 0 0, calc(50% + 12px) 0, 0 0;
   box-shadow: inset -1px 0 0 rgb(0 0 0 / 0.6), 1px 0 0 var(--tt-rule-l);
   pointer-events: none;
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .below.sliding section.library::before {
   z-index: 1;
-  background: linear-gradient(rgb(0 0 0 / 0.3), rgb(0 0 0 / 0.3)) var(--panel, #161619);
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library nav {
   z-index: 1;
@@ -3810,21 +3807,34 @@
    Two ways (a setting): the meters midway between their fader and the middle
    column, at the width it has; or the mixer wider, and everything where it is. */
 @media (min-width: 1201px) {
-  :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-room='meters'] .mixer .fwrap .frow {
-    gap: 20px;
-  }
   :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-room='meters'] .decks > .mixer {
-    column-gap: 4px;
+    --mx-row: 20px;
+    --mx-col: 4px;
   }
   :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-room='wide'] .app > .decks {
-    grid-template-columns: minmax(0, 1fr) 336px minmax(0, 1fr);
+    --mixer-def: 336px;
   }
   :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-room='wide'] .decks > .mixer {
-    column-gap: 10px;
+    --mx-row: 13px;
+    --mx-col: 10px;
   }
-  :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-room='wide'] .mixer .fwrap .frow {
-    gap: 13px;
-  }
+}
+/* ── The mixer's width ─────────────────────────────────────────────────
+   Its edges drag (#21), both at once. --mixer is the width asked for, unset at
+   the designed one; --mx-e is how far each edge is from there. Wider, every
+   space grows in its own proportion, so the dials, faders and meters stay
+   spread out instead of leaving a hole in the middle. Narrower, the room
+   between a fader and its meter goes first. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .app > .decks {
+  --mixer-w: var(--mixer, var(--mixer-def, 300px));
+  --mx-e: calc((var(--mixer-w) - var(--mixer-def, 300px)) / 2);
+  grid-template-columns: minmax(0, 1fr) var(--mixer-w) minmax(0, 1fr);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .decks > .mixer {
+  column-gap: max(4px, calc(var(--mx-col, 4px) + max(0px, var(--mx-e)) * 0.3 + min(0px, var(--mx-e)) * 0.22));
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer .fwrap .frow {
+  gap: max(9px, calc(var(--mx-row, 9px) + max(0px, var(--mx-e)) * 0.26 + min(0px, var(--mx-e)) * 0.7));
 }
 
 /* ── Etched ticks ──────────────────────────────────────────────────────
@@ -3836,4 +3846,42 @@
   margin-top: -1px;
   margin-bottom: -1px;
   background: linear-gradient(180deg, #000 50%, rgb(255 255 255 / 0.15) 50%);
+}
+
+/* ── Both sidebars ─────────────────────────────────────────────────────
+   The library's and Settings' stand on one ground, with the record's grooves
+   in it, as every other cut has. The rings are one drawing at one size, so a
+   drag or a slide doesn't draw them again; the veil over them is the ground
+   itself, as strong as a slider says. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] {
+  --tt-side: var(--rg-room);
+  --tt-side-rings: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='720' height='1400' viewBox='0 0 720 1400'%3E%3Cg fill='none' stroke='%23fff' stroke-opacity='.045'%3E%3Ccircle cx='360' cy='1800' r='400'/%3E%3Ccircle cx='360' cy='1800' r='404'/%3E%3Ccircle cx='360' cy='1800' r='408'/%3E%3Ccircle cx='360' cy='1800' r='412'/%3E%3Ccircle cx='360' cy='1800' r='416'/%3E%3Ccircle cx='360' cy='1800' r='420'/%3E%3Ccircle cx='360' cy='1800' r='424'/%3E%3Ccircle cx='360' cy='1800' r='428'/%3E%3Ccircle cx='360' cy='1800' r='432'/%3E%3Ccircle cx='360' cy='1800' r='436'/%3E%3Ccircle cx='360' cy='1800' r='440'/%3E%3Ccircle cx='360' cy='1800' r='444'/%3E%3Ccircle cx='360' cy='1800' r='448'/%3E%3Ccircle cx='360' cy='1800' r='452'/%3E%3Ccircle cx='360' cy='1800' r='456'/%3E%3Ccircle cx='360' cy='1800' r='460'/%3E%3Ccircle cx='360' cy='1800' r='464'/%3E%3Ccircle cx='360' cy='1800' r='468'/%3E%3Ccircle cx='360' cy='1800' r='472'/%3E%3Ccircle cx='360' cy='1800' r='476'/%3E%3Ccircle cx='360' cy='1800' r='480'/%3E%3Ccircle cx='360' cy='1800' r='484'/%3E%3Ccircle cx='360' cy='1800' r='488'/%3E%3Ccircle cx='360' cy='1800' r='492'/%3E%3Ccircle cx='360' cy='1800' r='496'/%3E%3Ccircle cx='360' cy='1800' r='500'/%3E%3Ccircle cx='360' cy='1800' r='504'/%3E%3Ccircle cx='360' cy='1800' r='508'/%3E%3Ccircle cx='360' cy='1800' r='512'/%3E%3Ccircle cx='360' cy='1800' r='516'/%3E%3Ccircle cx='360' cy='1800' r='520'/%3E%3Ccircle cx='360' cy='1800' r='524'/%3E%3Ccircle cx='360' cy='1800' r='528'/%3E%3Ccircle cx='360' cy='1800' r='532'/%3E%3Ccircle cx='360' cy='1800' r='536'/%3E%3Ccircle cx='360' cy='1800' r='540'/%3E%3Ccircle cx='360' cy='1800' r='544'/%3E%3Ccircle cx='360' cy='1800' r='548'/%3E%3Ccircle cx='360' cy='1800' r='552'/%3E%3Ccircle cx='360' cy='1800' r='556'/%3E%3Ccircle cx='360' cy='1800' r='560'/%3E%3Ccircle cx='360' cy='1800' r='564'/%3E%3Ccircle cx='360' cy='1800' r='568'/%3E%3Ccircle cx='360' cy='1800' r='572'/%3E%3Ccircle cx='360' cy='1800' r='576'/%3E%3Ccircle cx='360' cy='1800' r='580'/%3E%3Ccircle cx='360' cy='1800' r='584'/%3E%3Ccircle cx='360' cy='1800' r='588'/%3E%3Ccircle cx='360' cy='1800' r='592'/%3E%3Ccircle cx='360' cy='1800' r='596'/%3E%3Ccircle cx='360' cy='1800' r='600'/%3E%3Ccircle cx='360' cy='1800' r='604'/%3E%3Ccircle cx='360' cy='1800' r='608'/%3E%3Ccircle cx='360' cy='1800' r='612'/%3E%3Ccircle cx='360' cy='1800' r='616'/%3E%3Ccircle cx='360' cy='1800' r='620'/%3E%3Ccircle cx='360' cy='1800' r='624'/%3E%3Ccircle cx='360' cy='1800' r='628'/%3E%3Ccircle cx='360' cy='1800' r='632'/%3E%3Ccircle cx='360' cy='1800' r='636'/%3E%3Ccircle cx='360' cy='1800' r='640'/%3E%3Ccircle cx='360' cy='1800' r='644'/%3E%3Ccircle cx='360' cy='1800' r='648'/%3E%3Ccircle cx='360' cy='1800' r='652'/%3E%3Ccircle cx='360' cy='1800' r='656'/%3E%3Ccircle cx='360' cy='1800' r='660'/%3E%3Ccircle cx='360' cy='1800' r='664'/%3E%3Ccircle cx='360' cy='1800' r='668'/%3E%3Ccircle cx='360' cy='1800' r='672'/%3E%3Ccircle cx='360' cy='1800' r='676'/%3E%3Ccircle cx='360' cy='1800' r='680'/%3E%3Ccircle cx='360' cy='1800' r='684'/%3E%3Ccircle cx='360' cy='1800' r='688'/%3E%3Ccircle cx='360' cy='1800' r='692'/%3E%3Ccircle cx='360' cy='1800' r='696'/%3E%3Ccircle cx='360' cy='1800' r='700'/%3E%3Ccircle cx='360' cy='1800' r='704'/%3E%3Ccircle cx='360' cy='1800' r='708'/%3E%3Ccircle cx='360' cy='1800' r='712'/%3E%3Ccircle cx='360' cy='1800' r='716'/%3E%3Ccircle cx='360' cy='1800' r='720'/%3E%3Ccircle cx='360' cy='1800' r='724'/%3E%3Ccircle cx='360' cy='1800' r='728'/%3E%3Ccircle cx='360' cy='1800' r='732'/%3E%3Ccircle cx='360' cy='1800' r='736'/%3E%3Ccircle cx='360' cy='1800' r='740'/%3E%3Ccircle cx='360' cy='1800' r='744'/%3E%3Ccircle cx='360' cy='1800' r='748'/%3E%3Ccircle cx='360' cy='1800' r='752'/%3E%3Ccircle cx='360' cy='1800' r='756'/%3E%3Ccircle cx='360' cy='1800' r='760'/%3E%3Ccircle cx='360' cy='1800' r='764'/%3E%3Ccircle cx='360' cy='1800' r='768'/%3E%3Ccircle cx='360' cy='1800' r='772'/%3E%3Ccircle cx='360' cy='1800' r='776'/%3E%3Ccircle cx='360' cy='1800' r='780'/%3E%3Ccircle cx='360' cy='1800' r='784'/%3E%3Ccircle cx='360' cy='1800' r='788'/%3E%3Ccircle cx='360' cy='1800' r='792'/%3E%3Ccircle cx='360' cy='1800' r='796'/%3E%3Ccircle cx='360' cy='1800' r='800'/%3E%3Ccircle cx='360' cy='1800' r='804'/%3E%3Ccircle cx='360' cy='1800' r='808'/%3E%3Ccircle cx='360' cy='1800' r='812'/%3E%3Ccircle cx='360' cy='1800' r='816'/%3E%3Ccircle cx='360' cy='1800' r='820'/%3E%3Ccircle cx='360' cy='1800' r='824'/%3E%3Ccircle cx='360' cy='1800' r='828'/%3E%3Ccircle cx='360' cy='1800' r='832'/%3E%3Ccircle cx='360' cy='1800' r='836'/%3E%3Ccircle cx='360' cy='1800' r='840'/%3E%3Ccircle cx='360' cy='1800' r='844'/%3E%3Ccircle cx='360' cy='1800' r='848'/%3E%3Ccircle cx='360' cy='1800' r='852'/%3E%3Ccircle cx='360' cy='1800' r='856'/%3E%3Ccircle cx='360' cy='1800' r='860'/%3E%3Ccircle cx='360' cy='1800' r='864'/%3E%3Ccircle cx='360' cy='1800' r='868'/%3E%3Ccircle cx='360' cy='1800' r='872'/%3E%3Ccircle cx='360' cy='1800' r='876'/%3E%3Ccircle cx='360' cy='1800' r='880'/%3E%3Ccircle cx='360' cy='1800' r='884'/%3E%3Ccircle cx='360' cy='1800' r='888'/%3E%3Ccircle cx='360' cy='1800' r='892'/%3E%3Ccircle cx='360' cy='1800' r='896'/%3E%3Ccircle cx='360' cy='1800' r='900'/%3E%3Ccircle cx='360' cy='1800' r='904'/%3E%3Ccircle cx='360' cy='1800' r='908'/%3E%3Ccircle cx='360' cy='1800' r='912'/%3E%3Ccircle cx='360' cy='1800' r='916'/%3E%3Ccircle cx='360' cy='1800' r='920'/%3E%3Ccircle cx='360' cy='1800' r='924'/%3E%3Ccircle cx='360' cy='1800' r='928'/%3E%3Ccircle cx='360' cy='1800' r='932'/%3E%3Ccircle cx='360' cy='1800' r='936'/%3E%3Ccircle cx='360' cy='1800' r='940'/%3E%3Ccircle cx='360' cy='1800' r='944'/%3E%3Ccircle cx='360' cy='1800' r='948'/%3E%3Ccircle cx='360' cy='1800' r='952'/%3E%3Ccircle cx='360' cy='1800' r='956'/%3E%3Ccircle cx='360' cy='1800' r='960'/%3E%3Ccircle cx='360' cy='1800' r='964'/%3E%3Ccircle cx='360' cy='1800' r='968'/%3E%3Ccircle cx='360' cy='1800' r='972'/%3E%3Ccircle cx='360' cy='1800' r='976'/%3E%3Ccircle cx='360' cy='1800' r='980'/%3E%3Ccircle cx='360' cy='1800' r='984'/%3E%3Ccircle cx='360' cy='1800' r='988'/%3E%3Ccircle cx='360' cy='1800' r='992'/%3E%3Ccircle cx='360' cy='1800' r='996'/%3E%3Ccircle cx='360' cy='1800' r='1000'/%3E%3Ccircle cx='360' cy='1800' r='1004'/%3E%3Ccircle cx='360' cy='1800' r='1008'/%3E%3Ccircle cx='360' cy='1800' r='1012'/%3E%3Ccircle cx='360' cy='1800' r='1016'/%3E%3Ccircle cx='360' cy='1800' r='1020'/%3E%3Ccircle cx='360' cy='1800' r='1024'/%3E%3Ccircle cx='360' cy='1800' r='1028'/%3E%3Ccircle cx='360' cy='1800' r='1032'/%3E%3Ccircle cx='360' cy='1800' r='1036'/%3E%3Ccircle cx='360' cy='1800' r='1040'/%3E%3Ccircle cx='360' cy='1800' r='1044'/%3E%3Ccircle cx='360' cy='1800' r='1048'/%3E%3Ccircle cx='360' cy='1800' r='1052'/%3E%3Ccircle cx='360' cy='1800' r='1056'/%3E%3Ccircle cx='360' cy='1800' r='1060'/%3E%3Ccircle cx='360' cy='1800' r='1064'/%3E%3Ccircle cx='360' cy='1800' r='1068'/%3E%3Ccircle cx='360' cy='1800' r='1072'/%3E%3Ccircle cx='360' cy='1800' r='1076'/%3E%3Ccircle cx='360' cy='1800' r='1080'/%3E%3Ccircle cx='360' cy='1800' r='1084'/%3E%3Ccircle cx='360' cy='1800' r='1088'/%3E%3Ccircle cx='360' cy='1800' r='1092'/%3E%3Ccircle cx='360' cy='1800' r='1096'/%3E%3Ccircle cx='360' cy='1800' r='1100'/%3E%3Ccircle cx='360' cy='1800' r='1104'/%3E%3Ccircle cx='360' cy='1800' r='1108'/%3E%3Ccircle cx='360' cy='1800' r='1112'/%3E%3Ccircle cx='360' cy='1800' r='1116'/%3E%3Ccircle cx='360' cy='1800' r='1120'/%3E%3Ccircle cx='360' cy='1800' r='1124'/%3E%3Ccircle cx='360' cy='1800' r='1128'/%3E%3Ccircle cx='360' cy='1800' r='1132'/%3E%3Ccircle cx='360' cy='1800' r='1136'/%3E%3Ccircle cx='360' cy='1800' r='1140'/%3E%3Ccircle cx='360' cy='1800' r='1144'/%3E%3Ccircle cx='360' cy='1800' r='1148'/%3E%3Ccircle cx='360' cy='1800' r='1152'/%3E%3Ccircle cx='360' cy='1800' r='1156'/%3E%3Ccircle cx='360' cy='1800' r='1160'/%3E%3Ccircle cx='360' cy='1800' r='1164'/%3E%3Ccircle cx='360' cy='1800' r='1168'/%3E%3Ccircle cx='360' cy='1800' r='1172'/%3E%3Ccircle cx='360' cy='1800' r='1176'/%3E%3Ccircle cx='360' cy='1800' r='1180'/%3E%3Ccircle cx='360' cy='1800' r='1184'/%3E%3Ccircle cx='360' cy='1800' r='1188'/%3E%3Ccircle cx='360' cy='1800' r='1192'/%3E%3Ccircle cx='360' cy='1800' r='1196'/%3E%3Ccircle cx='360' cy='1800' r='1200'/%3E%3Ccircle cx='360' cy='1800' r='1204'/%3E%3Ccircle cx='360' cy='1800' r='1208'/%3E%3Ccircle cx='360' cy='1800' r='1212'/%3E%3Ccircle cx='360' cy='1800' r='1216'/%3E%3Ccircle cx='360' cy='1800' r='1220'/%3E%3Ccircle cx='360' cy='1800' r='1224'/%3E%3Ccircle cx='360' cy='1800' r='1228'/%3E%3Ccircle cx='360' cy='1800' r='1232'/%3E%3Ccircle cx='360' cy='1800' r='1236'/%3E%3Ccircle cx='360' cy='1800' r='1240'/%3E%3Ccircle cx='360' cy='1800' r='1244'/%3E%3Ccircle cx='360' cy='1800' r='1248'/%3E%3Ccircle cx='360' cy='1800' r='1252'/%3E%3Ccircle cx='360' cy='1800' r='1256'/%3E%3Ccircle cx='360' cy='1800' r='1260'/%3E%3Ccircle cx='360' cy='1800' r='1264'/%3E%3Ccircle cx='360' cy='1800' r='1268'/%3E%3Ccircle cx='360' cy='1800' r='1272'/%3E%3Ccircle cx='360' cy='1800' r='1276'/%3E%3Ccircle cx='360' cy='1800' r='1280'/%3E%3Ccircle cx='360' cy='1800' r='1284'/%3E%3Ccircle cx='360' cy='1800' r='1288'/%3E%3Ccircle cx='360' cy='1800' r='1292'/%3E%3Ccircle cx='360' cy='1800' r='1296'/%3E%3Ccircle cx='360' cy='1800' r='1300'/%3E%3Ccircle cx='360' cy='1800' r='1304'/%3E%3Ccircle cx='360' cy='1800' r='1308'/%3E%3Ccircle cx='360' cy='1800' r='1312'/%3E%3Ccircle cx='360' cy='1800' r='1316'/%3E%3Ccircle cx='360' cy='1800' r='1320'/%3E%3Ccircle cx='360' cy='1800' r='1324'/%3E%3Ccircle cx='360' cy='1800' r='1328'/%3E%3Ccircle cx='360' cy='1800' r='1332'/%3E%3Ccircle cx='360' cy='1800' r='1336'/%3E%3Ccircle cx='360' cy='1800' r='1340'/%3E%3Ccircle cx='360' cy='1800' r='1344'/%3E%3Ccircle cx='360' cy='1800' r='1348'/%3E%3Ccircle cx='360' cy='1800' r='1352'/%3E%3Ccircle cx='360' cy='1800' r='1356'/%3E%3Ccircle cx='360' cy='1800' r='1360'/%3E%3Ccircle cx='360' cy='1800' r='1364'/%3E%3Ccircle cx='360' cy='1800' r='1368'/%3E%3Ccircle cx='360' cy='1800' r='1372'/%3E%3Ccircle cx='360' cy='1800' r='1376'/%3E%3Ccircle cx='360' cy='1800' r='1380'/%3E%3Ccircle cx='360' cy='1800' r='1384'/%3E%3Ccircle cx='360' cy='1800' r='1388'/%3E%3Ccircle cx='360' cy='1800' r='1392'/%3E%3Ccircle cx='360' cy='1800' r='1396'/%3E%3Ccircle cx='360' cy='1800' r='1400'/%3E%3Ccircle cx='360' cy='1800' r='1404'/%3E%3Ccircle cx='360' cy='1800' r='1408'/%3E%3Ccircle cx='360' cy='1800' r='1412'/%3E%3Ccircle cx='360' cy='1800' r='1416'/%3E%3Ccircle cx='360' cy='1800' r='1420'/%3E%3Ccircle cx='360' cy='1800' r='1424'/%3E%3Ccircle cx='360' cy='1800' r='1428'/%3E%3Ccircle cx='360' cy='1800' r='1432'/%3E%3Ccircle cx='360' cy='1800' r='1436'/%3E%3Ccircle cx='360' cy='1800' r='1440'/%3E%3Ccircle cx='360' cy='1800' r='1444'/%3E%3Ccircle cx='360' cy='1800' r='1448'/%3E%3Ccircle cx='360' cy='1800' r='1452'/%3E%3Ccircle cx='360' cy='1800' r='1456'/%3E%3Ccircle cx='360' cy='1800' r='1460'/%3E%3Ccircle cx='360' cy='1800' r='1464'/%3E%3Ccircle cx='360' cy='1800' r='1468'/%3E%3Ccircle cx='360' cy='1800' r='1472'/%3E%3Ccircle cx='360' cy='1800' r='1476'/%3E%3Ccircle cx='360' cy='1800' r='1480'/%3E%3Ccircle cx='360' cy='1800' r='1484'/%3E%3Ccircle cx='360' cy='1800' r='1488'/%3E%3Ccircle cx='360' cy='1800' r='1492'/%3E%3Ccircle cx='360' cy='1800' r='1496'/%3E%3Ccircle cx='360' cy='1800' r='1500'/%3E%3Ccircle cx='360' cy='1800' r='1504'/%3E%3Ccircle cx='360' cy='1800' r='1508'/%3E%3Ccircle cx='360' cy='1800' r='1512'/%3E%3Ccircle cx='360' cy='1800' r='1516'/%3E%3Ccircle cx='360' cy='1800' r='1520'/%3E%3Ccircle cx='360' cy='1800' r='1524'/%3E%3Ccircle cx='360' cy='1800' r='1528'/%3E%3Ccircle cx='360' cy='1800' r='1532'/%3E%3Ccircle cx='360' cy='1800' r='1536'/%3E%3Ccircle cx='360' cy='1800' r='1540'/%3E%3Ccircle cx='360' cy='1800' r='1544'/%3E%3Ccircle cx='360' cy='1800' r='1548'/%3E%3Ccircle cx='360' cy='1800' r='1552'/%3E%3Ccircle cx='360' cy='1800' r='1556'/%3E%3Ccircle cx='360' cy='1800' r='1560'/%3E%3Ccircle cx='360' cy='1800' r='1564'/%3E%3Ccircle cx='360' cy='1800' r='1568'/%3E%3Ccircle cx='360' cy='1800' r='1572'/%3E%3Ccircle cx='360' cy='1800' r='1576'/%3E%3Ccircle cx='360' cy='1800' r='1580'/%3E%3Ccircle cx='360' cy='1800' r='1584'/%3E%3Ccircle cx='360' cy='1800' r='1588'/%3E%3Ccircle cx='360' cy='1800' r='1592'/%3E%3Ccircle cx='360' cy='1800' r='1596'/%3E%3Ccircle cx='360' cy='1800' r='1600'/%3E%3Ccircle cx='360' cy='1800' r='1604'/%3E%3Ccircle cx='360' cy='1800' r='1608'/%3E%3Ccircle cx='360' cy='1800' r='1612'/%3E%3Ccircle cx='360' cy='1800' r='1616'/%3E%3Ccircle cx='360' cy='1800' r='1620'/%3E%3Ccircle cx='360' cy='1800' r='1624'/%3E%3Ccircle cx='360' cy='1800' r='1628'/%3E%3Ccircle cx='360' cy='1800' r='1632'/%3E%3Ccircle cx='360' cy='1800' r='1636'/%3E%3Ccircle cx='360' cy='1800' r='1640'/%3E%3Ccircle cx='360' cy='1800' r='1644'/%3E%3Ccircle cx='360' cy='1800' r='1648'/%3E%3Ccircle cx='360' cy='1800' r='1652'/%3E%3Ccircle cx='360' cy='1800' r='1656'/%3E%3Ccircle cx='360' cy='1800' r='1660'/%3E%3Ccircle cx='360' cy='1800' r='1664'/%3E%3Ccircle cx='360' cy='1800' r='1668'/%3E%3Ccircle cx='360' cy='1800' r='1672'/%3E%3Ccircle cx='360' cy='1800' r='1676'/%3E%3Ccircle cx='360' cy='1800' r='1680'/%3E%3Ccircle cx='360' cy='1800' r='1684'/%3E%3Ccircle cx='360' cy='1800' r='1688'/%3E%3Ccircle cx='360' cy='1800' r='1692'/%3E%3Ccircle cx='360' cy='1800' r='1696'/%3E%3Ccircle cx='360' cy='1800' r='1700'/%3E%3Ccircle cx='360' cy='1800' r='1704'/%3E%3Ccircle cx='360' cy='1800' r='1708'/%3E%3Ccircle cx='360' cy='1800' r='1712'/%3E%3Ccircle cx='360' cy='1800' r='1716'/%3E%3Ccircle cx='360' cy='1800' r='1720'/%3E%3Ccircle cx='360' cy='1800' r='1724'/%3E%3Ccircle cx='360' cy='1800' r='1728'/%3E%3Ccircle cx='360' cy='1800' r='1732'/%3E%3Ccircle cx='360' cy='1800' r='1736'/%3E%3Ccircle cx='360' cy='1800' r='1740'/%3E%3Ccircle cx='360' cy='1800' r='1744'/%3E%3Ccircle cx='360' cy='1800' r='1748'/%3E%3Ccircle cx='360' cy='1800' r='1752'/%3E%3Ccircle cx='360' cy='1800' r='1756'/%3E%3Ccircle cx='360' cy='1800' r='1760'/%3E%3Ccircle cx='360' cy='1800' r='1764'/%3E%3Ccircle cx='360' cy='1800' r='1768'/%3E%3Ccircle cx='360' cy='1800' r='1772'/%3E%3Ccircle cx='360' cy='1800' r='1776'/%3E%3Ccircle cx='360' cy='1800' r='1780'/%3E%3Ccircle cx='360' cy='1800' r='1784'/%3E%3Ccircle cx='360' cy='1800' r='1788'/%3E%3Ccircle cx='360' cy='1800' r='1792'/%3E%3Ccircle cx='360' cy='1800' r='1796'/%3E%3Ccircle cx='360' cy='1800' r='1800'/%3E%3Ccircle cx='360' cy='1800' r='1804'/%3E%3Ccircle cx='360' cy='1800' r='1808'/%3E%3Ccircle cx='360' cy='1800' r='1812'/%3E%3Ccircle cx='360' cy='1800' r='1816'/%3E%3Ccircle cx='360' cy='1800' r='1820'/%3E%3Ccircle cx='360' cy='1800' r='1824'/%3E%3Ccircle cx='360' cy='1800' r='1828'/%3E%3Ccircle cx='360' cy='1800' r='1832'/%3E%3Ccircle cx='360' cy='1800' r='1836'/%3E%3C/g%3E%3C/svg%3E");
+  --tt-side-fill: color-mix(in srgb, var(--tt-side) calc(100% - var(--flag-dir-room-tint-sides, 60) * 1%), transparent);
+  --tt-side-veil: linear-gradient(var(--tt-side-fill), var(--tt-side-fill));
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-ground='library'] {
+  --tt-side: #0f0f11;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .backdrop > .settings {
+  background: var(--tt-side);
+}
+/* To the window's own edges and the page's. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .backdrop > .settings > nav {
+  position: relative;
+  isolation: isolate;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .backdrop > .settings > nav::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: calc(1px - var(--gap)) calc(-1 * var(--gap)) calc(1px - var(--gap)) calc(1px - var(--gap));
+  border-radius: calc(var(--set-r, 20px) - 1px) 0 0 calc(var(--set-r, 20px) - 1px);
+  background: var(--tt-side-veil), var(--tt-side-rings) 50% 0 / 720px 1400px no-repeat;
+  /* They end softly at the page, whose round corners stand past their edge. */
+  -webkit-mask: linear-gradient(90deg, #000 calc(100% - 40px), transparent);
+  mask: linear-gradient(90deg, #000 calc(100% - 40px), transparent);
+  pointer-events: none;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .backdrop > .settings > .main {
+  position: relative;
 }

@@ -23,7 +23,7 @@ const RULES = [
   [/^[A-G][♭♯b#]? (major|minor) \(\d+[AB]\)$/, () => null],
 
   // Window
-  [/^Drag to resize the (library|waveforms|sidebar)(, (⌥|Alt\+)-?drag for the decks)?, double-click to reset$/, (m) => ({ late: { n: { library: 'Library height', waveforms: 'Waveform height', sidebar: 'Sidebar width' }[m[1]], a: [m[2] && ['Resize the decks', '⌥ + drag'], RESET].filter(Boolean) } })],
+  [/^Drag to resize the (library|waveforms|sidebar|mixer)(, (⌥|Alt\+)-?drag for the decks)?, double-click to reset$/, (m) => ({ late: { n: { library: 'Library height', waveforms: 'Waveform height', sidebar: 'Sidebar width', mixer: 'Mixer width' }[m[1]], a: [m[2] && ['Resize the decks', '⌥ + drag'], RESET].filter(Boolean) } })],
   [/^(.+) · (controller|output)$/, (m) => ({ n: up(m[2]) })],
   [/^The stems model, a one-time download$/, () => ({ late: { x: 'A one-time download.' } })],
 
