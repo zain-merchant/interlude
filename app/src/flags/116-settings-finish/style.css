@@ -507,6 +507,17 @@
   color: var(--fg-2);
   text-wrap: balance;
 }
+/* Wide enough for the longest of them on one line; with less room each breaks
+   after its first sentence, so they always match. */
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .stemsway {
+  max-width: 620px;
+  container-type: inline-size;
+}
+@container (max-width: 605px) {
+  :root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .stemsway .wl > span {
+    display: block;
+  }
+}
 :root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .stemsway .ways {
   display: grid;
   gap: 4px;
@@ -554,7 +565,6 @@
   margin-top: 2px;
   color: var(--fg-2);
   line-height: 18px;
-  text-wrap: balance;
 }
 :root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .stemsway .wf {
   display: grid;
@@ -573,4 +583,40 @@
   color: var(--fg-3);
   font-size: 12px;
   line-height: 16px;
+}
+
+/* A heading belongs to what's under it: about 12 from its letters to the next
+   letters or box, 16 under a dialog's larger title, and more than twice that
+   above a section's. */
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings section h3,
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .cols h3 {
+  margin-bottom: 2px;
+}
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings section h3:has(+ .size) {
+  margin-bottom: 6px;
+}
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings section h3:has(+ .row),
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .cols h3:has(+ .row) {
+  margin-bottom: -2px;
+}
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .backdrop > .card[role='dialog'] > .top:has(+ .lead) {
+  margin-bottom: 4px;
+}
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .backdrop > .card[role='dialog'] h2 + .lead {
+  margin-top: 4px;
+}
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .backdrop > .card[role='dialog'] h3 {
+  margin-bottom: 2px;
+}
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] section.library .filter .panel .ph {
+  margin-bottom: 4px;
+}
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] section.library .filter .panel .bpm {
+  margin-bottom: 16px;
+}
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .backdrop > .card[aria-labelledby='import-title'] > .top {
+  margin-bottom: 32px;
+}
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .backdrop > .card[aria-labelledby='import-title'] .src-head {
+  margin-bottom: 8px;
 }
