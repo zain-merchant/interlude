@@ -16,7 +16,7 @@
    * @type {{ value: number, min?: number, max?: number, reset?: number, label: string,
    *          vertical?: boolean, invert?: boolean, tick?: boolean, big?: boolean,
    *          format?: (v: number) => string, onchange?: (v: number) => void,
-   *          ghost?: number | null, note?: string, match?: number | null, shown?: boolean }}
+   *          ghost?: number | null, note?: string, match?: number | null, shown?: boolean, marks?: number[] }}
    */
   let {
     value = $bindable(),
@@ -33,6 +33,7 @@
     ghost = null,
     note = '',
     match = null, // #18 (UI audit flag): a value to mark beside the slot (the other deck's tempo); null draws nothing.
+    marks = [0, 0.25, 0.5, 0.75, 1], // #110 (UI audit flag): dir-room-tint: where the scale's marks stand, 0 to 1 along the travel.
     shown = false, // #109 (UI audit flag): quiet-readouts: the value is on screen beside the fader, so no live readout repeats it.
   } = $props();
 
@@ -142,7 +143,7 @@
   use:tip={() => note || tipText(label, shown ? '' : format(value), 'double-click to reset')}
 >
   <div class="line"></div>
-  {#each [0, 0.25, 0.5, 0.75, 1].filter((m) => !(tick && vertical && Math.abs(m - tickAt) < 1e-6)) as m}<i class="mark" style={vertical ? `bottom: ${m * 100}%` : `left: ${m * 100}%`}></i>{/each}
+  {#each marks.filter((m) => !(tick && vertical && Math.abs(m - tickAt) < 1e-6)) as m}<i class="mark" class:full={m === 1} style={vertical ? `bottom: ${m * 100}%` : `left: ${m * 100}%`}></i>{/each}
   {#if tick}<div class="tick" style={vertical ? `bottom: ${tickAt * 100}%` : `left: ${tickAt * 100}%`}></div>{/if}
   <!-- #18 (UI audit flag): the match mark; .out when the value is past the end of the travel. -->
   {#if match !== null}<div class="match" class:out={match < min || match > max} style={vertical ? `bottom: ${along(Math.max(min, Math.min(max, match))) * 100}%` : `left: ${along(Math.max(min, Math.min(max, match))) * 100}%`}></div>{/if}

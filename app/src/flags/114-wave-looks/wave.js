@@ -19,6 +19,8 @@ const rgba = (c, a = 1) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
 const OFF = 20000;
 /** CSS px drawn past the view or tile, for the glow and the outline. */
 const PAD = 32;
+/** As waveform-2d.js's TILE. */
+const TILE = 512;
 
 /**
  * One band's level per bin, smoothed: a rise is instant, a fall has a time
@@ -56,12 +58,14 @@ function early(out, before) {
  * `radius` bins to either side between one hit and the next but never across
  * one, and keeps each hit's own peak and fall on top. So a hit starts and
  * peaks where it does in the sound, and only what's between hits is softened.
+ * `ease` (0 to 1) rounds the peak over on its far side, across `round` bins.
  */
-function between(v, after, before, radius, hit) {
+function between(v, after, before, radius, hit, ease, round) {
   const n = v.length;
   const held = envelope(v, after, 0);
   const R = Math.max(0, Math.round(radius / 2));
-  const ease = Math.exp(-1 / Math.max(after, radius, 1));
+  const fall = Math.exp(-1 / Math.max(after, radius, 1));
+  const T = Math.max(2, round);
   const starts = [0];
   let last = -9;
   for (let i = 1; i < n; i++) {
@@ -95,8 +99,15 @@ function between(v, after, before, radius, hit) {
     let p = s0;
     for (let i = s0; i < Math.min(s1, s0 + 4); i++) if (v[i] > v[p]) p = i;
     for (let i = s0; i < p; i++) if (v[i] > out[i]) out[i] = v[i];
-    let d = v[p] - out[p];
-    for (let i = p; i < s1 && d > 0.002; i++, d *= ease) out[i] += d;
+    const d = v[p] - out[p];
+    let e = 1;
+    for (let i = p; i < s1 && d > 0.002; i++, e *= fall) {
+      const t = (i - p) / T;
+      const cos = t < 1 ? 0.5 + 0.5 * Math.cos(Math.PI * t) : 0;
+      const k = e + (cos - e) * Math.min(1, ease * 2);
+      if (k < 0.002) break;
+      out[i] += d * k;
+    }
   }
   return early(out, before);
 }
@@ -107,12 +118,14 @@ function envelopes(wf, o, spp) {
   // The softness between hits is in px, as today's is, so it grows with the
   // zoom: in quarter steps of doubling, so a zoom gesture doesn't work it
   // out afresh every frame.
-  const soft = o.soft ? 2 ** (Math.round(Math.log2(o.soft * spp) * 4) / 4) : 0;
+  const px = 2 ** (Math.round(Math.log2(spp) * 4) / 4);
+  const soft = (o.soft ?? 0) * px;
+  const ease = (o.ease ?? 0) / 100;
   const after = [0, 1, 2].map((b) => o[`a${b}`] * perMs);
   const before = [0, 1, 2].map((b) => (o[`b${b}`] ?? 0) * perMs);
-  const key = `${wf.version}|${after}|${before}|${soft}|${o.hit}`;
+  const key = `${wf.version}|${after}|${before}|${soft}|${o.hit}|${ease}`;
   if (wf.lookEnv?.key !== key)
-    wf.lookEnv = { key, v: [0, 1, 2].map((b) => (o.hit != null ? between(wf.bands[b], after[b], before[b], soft, o.hit / 100) : envelope(wf.bands[b], after[b], before[b]))) };
+    wf.lookEnv = { key, v: [0, 1, 2].map((b) => (o.hit != null ? between(wf.bands[b], after[b], before[b], soft, o.hit / 100, ease, (3 + 9 * ease) * px) : envelope(wf.bands[b], after[b], before[b]))) };
   return wf.lookEnv.v;
 }
 
@@ -187,6 +200,18 @@ export function lookLane(wf, ctx, ectx, x0, x1, spp, h, c, half) {
   const H = [o.h0 / 100, o.h1 / 100, o.h2 / 100];
   const heights = [0, 1, 2].map((b) => cols[b].map((v) => v * H[b] * amp));
   const n = k1 - k0;
+  // The front corner of a hit's top, cut back in its first column, with the
+  // peak in its second: still well past half its height where it did before,
+  // and nothing off the peak.
+  const ease = (o.ease ?? 0) / 100;
+  if (ease > 0 && !wf.zooming)
+    for (const a of heights)
+      for (let i = n - 2; i > 0; i--) {
+        const rise = a[i] - a[i - 1];
+        if (rise < 2) continue;
+        if (a[i] > a[i + 1]) a[i + 1] = a[i];
+        a[i] -= ease * Math.min(0.35 * rise, 3);
+      }
   const X = (i) => (k0 + i) / dpr; // the column's left edge
 
   // Each column is a step as wide as a device pixel: a rise is a straight
@@ -210,14 +235,7 @@ export function lookLane(wf, ctx, ectx, x0, x1, spp, h, c, half) {
     g.closePath();
   };
 
-  if (o.draw === 'nested') {
-    const T = tones(c);
-    for (let b = 0; b < 3; b++) {
-      path(ectx, heights[b]);
-      ectx.fillStyle = rgba(T[b]);
-      ectx.fill();
-    }
-  } else {
+  {
     ctx.globalCompositeOperation = 'lighter';
     if (o.glow > 0 && !wf.zooming) {
       for (const [b, a, r] of [[0, 0.35, 12], [1, 0.22, 10]]) {
@@ -252,7 +270,8 @@ export function lookLane(wf, ctx, ectx, x0, x1, spp, h, c, half) {
     // this wide, kept inside, ends (the lowest top within its width, less its
     // width). Half of a stroked line would stand outside a hit's front edge
     // and draw it early, and above its peak.
-    const r = Math.max(1, Math.round(o.outw * dpr));
+    // Eased spikes have a thinner edge at their sides.
+    const r = Math.max(1, Math.round(o.outw * dpr + (1 - o.outw * dpr) * ease));
     const top = new Float32Array(n);
     for (let i = 0; i < n; i++) top[i] = Math.max(heights[0][i], heights[1][i]);
     const inner = new Float32Array(n);
@@ -355,25 +374,13 @@ function marks(wf, ctx, E, x0, x1, spp, mid, amp, c) {
   ctx.fill();
 }
 
-/** The overview: solid bands, or marks, at the track's scale. True if it drew it (today's fills stay for the ribbons). */
+/** The overview as marks, at the track's scale. True if it drew it (today's fills stay for the ribbons). */
 export function lookOverview(wf, x, cols, w, mid, c) {
   const o = wf.wl;
   if (o.draw === 'ribbon') return false;
   const H = [o.h0 / 100, (o.h1 / 100) * (0.6 / 0.62), (o.h2 / 100) * (0.3 / 0.34)];
   const T = tones(c);
   x.globalCompositeOperation = 'source-over';
-  if (o.draw === 'nested') {
-    for (let b = 0; b < 3; b++) {
-      x.beginPath();
-      x.moveTo(0, mid);
-      cols.forEach((v, i) => x.lineTo(i, mid - v[b] * H[b] * mid));
-      for (let i = cols.length - 1; i >= 0; i--) x.lineTo(i, mid + cols[i][b] * H[b] * mid);
-      x.closePath();
-      x.fillStyle = rgba(T[b]);
-      x.fill();
-    }
-    return true;
-  }
   const P = Math.max(2, Math.min(6, Math.round((o.w + o.gap) * 0.6 * 2) / 2));
   const dpr = window.devicePixelRatio || 1;
   const mw = Math.max(1, Math.round(((P * o.w) / (o.w + o.gap)) * dpr) / dpr);
@@ -389,4 +396,124 @@ export function lookOverview(wf, x, cols, w, mid, c) {
     x.fill();
   }
   return true;
+}
+
+/**
+ * The scrolling lane, as Waveform2D.ribbon does it (tiles placed on whole
+ * device pixels, drawn straight onto the lane for a couple of frames after a
+ * jump), but for two things. A tempo change (a nudge, the pitch fader) keeps
+ * its tiles and places them stretched to fit; once the tempo holds, new ones
+ * are drawn a tile a frame and swapped in. And while the zoom moves, the lane
+ * is drawn coarser, as every frame is new.
+ */
+export function lookRibbon(wf, w, h, view, spp, c) {
+  const { ctx, canvas } = wf;
+  const dpr = window.devicePixelRatio || 1;
+  const base = `${wf.version}|${canvas.height}|${dpr}|${wf.strict ? 1 : 0}|${wf.half}|${wf.wlKey}|${wf.lookBps}|${wf.lookBeat}`;
+  wf.spare ??= [];
+  const straight = (s) => {
+    const off = view.start / s;
+    ctx.save();
+    ctx.translate(-Math.round(off * dpr) / dpr, 0);
+    wf.ribbonShape(ctx, ctx, off, off + w, s, h, c, view.edge);
+    ctx.restore();
+  };
+  wf.zooming = wf.lookSec !== undefined && view.sec !== wf.lookSec;
+  wf.lookSec = view.sec;
+  if (wf.zooming) {
+    wf.lookTiles = wf.lookNext = null;
+    wf.lookBusy = true; // drawn again, finer, once the zoom holds
+    straight(spp);
+    return;
+  }
+  let S = wf.lookTiles;
+  if (!S || S.base !== base || S.colors !== c || Math.abs(S.spp / spp - 1) > 0.12) {
+    if (S && S.base !== base) wf.spare = [];
+    S = wf.lookTiles = { base, colors: c, spp, tiles: new Map() };
+    wf.lookNext = null;
+    wf.lookSteady = 0;
+  }
+  const range = (s) => [Math.floor(view.start / s / TILE), Math.floor((view.start + w * spp) / s / TILE)];
+  const [first, last] = range(S.spp);
+  let missing = 0;
+  for (let t = first; t <= last; t++) if (!S.tiles.has(t)) missing++;
+  if (missing > 1 && wf.lookSteady >= 3) wf.lookSteady = 0;
+  wf.lookBusy = S.spp !== spp;
+  if (++wf.lookSteady < 3) {
+    straight(spp);
+    return;
+  }
+  for (const [t, tile] of S.tiles) {
+    if (t >= first - 1 && t <= last + 1) continue;
+    S.tiles.delete(t);
+    wf.spare.push(tile);
+  }
+  ctx.save();
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  const at = (t) => Math.round(((t * TILE * S.spp - view.start) / spp) * dpr);
+  for (let t = first; t <= last; t++) {
+    let tile = S.tiles.get(t);
+    if (!tile) S.tiles.set(t, (tile = wf.ribbonTile(t, S.spp, h, c, dpr, view.edge)));
+    const x = at(t);
+    const tw = S.spp === spp ? tile.bands.width : at(t + 1) - x;
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.drawImage(tile.bands, x, 0, tw, tile.bands.height);
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.drawImage(tile.edge, x, 0, tw, tile.edge.height);
+  }
+  ctx.restore();
+  // The tempo moved: once it's held for a few frames, tiles at its own scale.
+  if (S.spp === spp) return;
+  wf.lookHeld = wf.lookSpp === spp ? wf.lookHeld + 1 : 0;
+  wf.lookSpp = spp;
+  if (wf.lookHeld < 8) return;
+  let N = wf.lookNext;
+  if (!N || N.spp !== spp || N.base !== base || N.colors !== c) N = wf.lookNext = { base, colors: c, spp, tiles: new Map() };
+  const [a, b] = range(spp);
+  for (let t = a; t <= b; t++) {
+    if (N.tiles.has(t)) continue;
+    N.tiles.set(t, wf.ribbonTile(t, spp, h, c, dpr, view.edge));
+    return;
+  }
+  for (const tile of S.tiles.values()) wf.spare.push(tile);
+  wf.lookTiles = N;
+  wf.lookNext = null;
+}
+
+/** How strong each way of marking the beats is: a bar's line, a beat's line, a bar's ticks, a beat's ticks (CSS px long, then alpha). */
+const MARKS = {
+  full: { bar: 0.28, beat: 0.12, barTick: [5, 0.75], beatTick: [3, 0.4] },
+  faint: { bar: 0.14, beat: 0.05, barTick: [5, 0.6], beatTick: [3, 0.34] },
+  ticks: { bar: 0.14, beat: 0, barTick: [6, 0.7], beatTick: [4, 0.42] },
+  none: { bar: 0, beat: 0, barTick: [0, 0], beatTick: [0, 0] },
+  dots: { bar: 0.14, beat: 0, barTick: [5, 0.6], dot: 0.55 },
+};
+
+/**
+ * Beat lines, bars stronger, as Waveform2D.beats draws them but with each
+ * line's middle on its beat (they began there, and were rounded to whole CSS
+ * px while the sound is placed on device px, so they wobbled against it).
+ */
+export function lookBeats(wf, w, h, view, spp) {
+  const { ctx } = wf;
+  const dpr = window.devicePixelRatio || 1;
+  const len = view.beatLen;
+  const m = MARKS[wf.wl.lines] ?? MARKS.full;
+  const barsOnly = len / spp < 6;
+  const off = Math.round((view.start / spp) * dpr);
+  const mark = (x, y, ww, hh, a) => {
+    ctx.fillStyle = `rgba(255,255,255,${a})`;
+    ctx.fillRect(x, y, ww, hh);
+  };
+  for (let b = Math.ceil((view.start - view.firstBeat) / len) - 1; ; b++) {
+    const bx = (Math.round(((view.firstBeat + b * len) / spp - 0.5) * dpr) - off) / dpr;
+    if (bx > w) break;
+    const bar = ((b % 4) + 4) % 4 === 0;
+    if (barsOnly && !bar) continue;
+    const line = bar ? m.bar : m.beat;
+    if (line) mark(bx, 0, 1, h, line);
+    const tick = bar ? m.barTick : m.beatTick;
+    if (tick) for (const y of [0, h - tick[0]]) mark(bx, y, 1, tick[0], tick[1]);
+    else for (const y of [1, h - 3]) mark(bx - 0.5, y, 2, 2, m.dot);
+  }
 }

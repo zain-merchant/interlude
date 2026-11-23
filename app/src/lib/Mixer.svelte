@@ -165,7 +165,8 @@
     <div class="frow">
       <!-- #60 (UI audit flag): ticks and what only matter while meters is on. -->
       <Meter level={engine.deckLevels[deck]} ticks={deck === 0 ? 'right' : 'left'} what={D} />
-      <Fader vertical bind:value={ch.fader} reset={1} label="{D} volume"
+      <!-- #110 (UI audit flag): dir-room-tint marks 0, -6, -12, -18 and -24 dB and silence; the engine's gain is the fader squared. -->
+      <Fader vertical bind:value={ch.fader} reset={1} label="{D} volume" marks={flag('dir-room-tint') ? [0, 0.251, 0.355, 0.501, 0.708, 1] : undefined}
         onchange={(v) => control({ type: 'setFader', deck, value: v })} />
     </div>
     <button class="hp" class:on={ch.pfl} aria-pressed={ch.pfl} aria-label="{D} headphone cue"

@@ -58,8 +58,8 @@
     ...(flag('font-special-gothic') ? { labelFont: '"Special Gothic"' } : {}),
     // The directions (#92 and up): the bar number's pill in the theme's ink, not fixed white.
     ...(DIRECTIONS.some((id) => flag(id)) ? { pill: 'theme' } : {}),
-    // #114 (UI audit flag): wave-looks.
-    ...(wl ? { wl, bps: tracks[deck]?.binsPerSec ?? 172 } : {}),
+    // #114 (UI audit flag): wave-looks (`sec` tells a zoom from a tempo change).
+    ...(wl ? { wl, bps: tracks[deck]?.binsPerSec ?? 172, sec: seconds } : {}),
   });
 
   // #49 (UI audit flag): the play head's x in device px, at the waves
