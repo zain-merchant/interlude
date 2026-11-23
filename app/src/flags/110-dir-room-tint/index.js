@@ -34,9 +34,20 @@ export default {
         ['next', 'Next only', 'Numbers alone; only the next free place is a key, and says Set.'],
       ],
     },
+    stepper: {
+      type: 'choice',
+      label: 'Steppers',
+      default: 'split',
+      options: [
+        ['split', 'Two keys and a well', 'A raised key each side, the amount sunk between them.'],
+        ['under', 'Keys in a cut', 'One cut; the keys stand in it and the amount is its floor.'],
+        ['seam', 'Touching', 'The same as the first, with only a seam between.'],
+        ['one', 'One cut', 'As it was: no keys until the pointer is over an end.'],
+      ],
+    },
     step: {
       type: 'choice',
-      label: "A stepper's end under the pointer",
+      label: "A one-cut stepper's end (and the zoom's) under the pointer",
       default: 'rise',
       options: [
         ['rise', 'Rises', 'A small key comes up out of the cut, and goes in when held.'],
