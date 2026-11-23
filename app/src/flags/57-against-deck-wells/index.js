@@ -10,6 +10,7 @@
 export default {
   id: 'against-deck-wells',
   n: 57,
+  disabled: 'Against the doc\'s edge-free recessed wells.',
   title: 'An edge on the deck overview well',
   group: 'Shape',
   against: '"Depth, from back to front: ... 3. Recessed wells: darker, with an inner shadow."',

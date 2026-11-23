@@ -8,7 +8,9 @@ and tunes them. It has a row per flag, grouped by area: its number, its
 title, a line on what it fixes, a **Show me** and an on/off switch. A
 flag's settings open under its row while it's on (or with the sliders
 button beside Show me). There's a search field, All on / All off / Defaults
-(the recommended fixes on, the rest off) and a count of what's on.
+(the recommended fixes on, the rest off) and a count of what's on. Disabled
+flags (see "Disabled flags" below) sit folded away at the bottom, greyed,
+with no switch.
 
 <kbd>`</kbd> folds the panel down to a pill and opens it again. Drag it by
 its header (or drag the pill) and it docks to the nearest corner or edge
@@ -30,8 +32,8 @@ The owner: "the UI polish things you can leave on as default." The registry
 isn't a direction, doesn't set `against`, and doesn't set `byDefault: false`.
 Picks saved in localStorage win over the default from then on (picks saved
 before there were defaults keep what was on and take the defaults for the
-rest). The panel can still turn any of them off, and **Defaults** puts this
-list back. The registry ships in production builds, so these are on in the
+rest), except for a disabled flag, which stays off whatever was saved. The
+panel can still turn any of these off, and **Defaults** puts this list back. The registry ships in production builds, so these are on in the
 app too.
 
 On by default (83):
@@ -122,23 +124,56 @@ On by default (83):
 
 Off by default, and why:
 
-- #8 Worst-case test data (`stress-data`): test data for checking the fixes, not a fix; it swaps in a fake library and reloads the page.
+- #8 Worst-case test data (`stress-data`): test data for checking the fixes, not a fix; it swaps in a fake library and reloads the page. All on leaves it alone too (see "Disabled flags" for why it isn't disabled).
+- #92 and up, the directions: whole-app looks, opt-in and one at a time; not polish.
+
+Disabled (15): the "against the doc" alternatives. They argue against the
+design doc, and the owner wants them out of the way: "those ones can't even
+be turned on or off without talking with [me] first."
+
 - #38 Solid Done (`against-solid-primary`): against the doc's one solid primary; #27 is the adopted version.
 - #39 Brighter, larger quiet text (`against-text-levels`): against the doc's text levels; #25 is the adopted contrast fix.
-- #56 Hot cues as pads (`against-cue-pads`): against the doc's quiet text row of cues; kept for the owner to judge (upstream now shows all eight).
-- #56 Stronger deck colours (`against-deck-colours`): against the doc's pale deck whites; an alternative to judge.
+- #56 Hot cues as pads (`against-cue-pads`): against the doc's quiet text row of cues.
+- #56 Stronger deck colours (`against-deck-colours`): against the doc's pale deck whites.
 - #56 Brighter empty hot cues (`against-empty-rings`): against owner's call 9, which keeps them quiet.
-- #56 Heavier times and BPM (`against-heavy-numerals`): against the doc's light numerals; an alternative to judge.
+- #56 Heavier times and BPM (`against-heavy-numerals`): against the doc's light numerals.
 - #56 A and B letters on the decks (`deck-letters`): the doc rules deck letters out; #88's left/right words are the adopted fix.
-- #57 A stronger Cue at rest (`against-cue-outline`): against the doc's Cue outline; an alternative to judge.
-- #57 An edge on the overview well (`against-deck-wells`): against the doc's edge-free wells; an alternative to judge.
-- #57 Mirror the right deck more (`against-mirror`): against the doc's mirroring rule; an alternative to judge.
-- #57 A paused Play that steps back (`against-quiet-play`): competes with #6 play-states, which is on.
-- #57 Idle tabs show their state (`against-tab-status`): against the doc's quiet tabs; an alternative to judge.
-- #57 Calmer waveform cores (`against-wave-cores`): against the doc's waveform look; an alternative to judge.
-- #69 Mixer wells, slots and ticks the reviewers' way (`mixer-against-doc`): against the doc; the reviewers' alternative to judge.
+- #57 A stronger Cue at rest (`against-cue-outline`): against the doc's Cue outline.
+- #57 An edge on the overview well (`against-deck-wells`): against the doc's edge-free wells.
+- #57 Mirror the right deck more (`against-mirror`): against the doc's mirroring rule.
+- #57 A paused Play that steps back (`against-quiet-play`): against the doc's one solid Play; competes with #6 play-states.
+- #57 Idle tabs show their state (`against-tab-status`): against the doc's quiet tabs.
+- #57 Calmer waveform cores (`against-wave-cores`): against the doc's waveform look.
+- #69 Mixer wells, slots and ticks the reviewers' way (`mixer-against-doc`): against the doc; the reviewers' alternative.
 - #91 Roomier library rows (`library-roomy`): against the doc's 28px row pitch; fewer tracks fit.
-- #92 to #108, the directions: whole-app looks, opt-in and one at a time; not polish.
+
+## Disabled flags
+
+Besides on and off, a flag can be disabled: its `index.js` sets
+`disabled: '<why, in one line>'` beside `against`. Its folder, styles and
+hooks stay in the code, but:
+
+- The registry keeps it off whatever happens: a saved pick that turned it on
+  is ignored, `flag('<id>')` is false, its `data-flag-<id>` attribute is
+  never set (so its CSS never applies), and anything that sets
+  `flags.on[<id>]` (a show, a mask coming back) is put back to off.
+- All on, All off and Defaults leave it out, and the count ("N of M on")
+  doesn't include it.
+- The panel lists it in a folded **Disabled** section at the bottom,
+  greyed, with its reason and no switch, settings or Show me.
+
+Turning one back on is an edit, not a click: delete its `disabled` line
+(it's then an ordinary off-by-default flag), and only after talking it over
+with the owner. To disable another, add the line.
+
+`stress-data` is not disabled. It is a dev-only tool rather than a design
+choice: it only changes the simulated engine's library (`lib/mock.js`, the
+browser build), and three Show me's (#8 `stress-hours`, #13
+`declutter-lane-label`, #18 `visual-analysis`) turn it on to set their
+scene, which disabling would break. It stays off by default, All on skips
+it (it isn't a fix, and it reloads the page into a fake library), and it
+can be switched on by hand. The other `08-stress-*` flags are fixes found
+with it and are on by default.
 
 Retired at the merge of upstream main (folder and hooks removed), because
 upstream now does the same thing its own way: #17 headphone-align (the cue
@@ -205,7 +240,8 @@ on screen.
 A flag that goes against the design doc on purpose (the owner asked to
 judge some of the panel's rejected ideas) sets `against: '<the doc rule it
 breaks, quoted>'` in its default export, and its `about` says what the
-judges argued. The panel tags its row "Against the doc".
+judges argued. The panel tags its row "Against the doc". The non-direction
+ones are now disabled as well (see "Disabled flags").
 
 `16-library-end/` is a complete example: a style, a range setting and one
 gated hook.
@@ -274,7 +310,7 @@ its default export; the panel tags its row.
 **Directions are paused.** The directions (#92 and up, the "Direction"
 group) restyle the whole app on top of the fixes, so a fix's show pauses
 the one that's on and puts it back on Done; the card says so. All on turns
-on every fix but no direction, and while a direction is on the panel says
+on every fix but no direction (and not the test data or a disabled flag), and while a direction is on the panel says
 so at the top, with a button to turn it off.
 
 Canvases (the waveforms) read the theme's colours again whenever any flag

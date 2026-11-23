@@ -14,6 +14,7 @@
 export default {
   id: 'against-deck-colours',
   n: 56,
+  disabled: 'Against the doc\'s two pale deck whites.',
   title: 'Stronger deck colours',
   group: 'Type and colour',
   against: '"Deck colours: a cool and a warm white, so the decks differ by temperature, not by hue." Ruled out: "saturated deck colours" and "Blue and orange."',

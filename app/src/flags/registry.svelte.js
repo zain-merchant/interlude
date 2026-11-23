@@ -9,9 +9,11 @@
 //
 // The recommended fixes are on by default (the owner: "the UI polish things
 // you can leave on as default"); the rest stay off: the directions, the
-// "against the doc" alternatives and the worst-case test data. A flag that
-// is off is exactly the app as it was, so All off in the panel is upstream's
-// app. The audit's panel (panel/FlagPanel.svelte, dev builds only) turns
+// "against the doc" alternatives and the worst-case test data. The "against
+// the doc" fixes (not the directions) are disabled (`disabled: '<why>'`):
+// always off, with no switch in the panel, until the owner agrees to bring
+// one back. A flag that is off is exactly the app as it was, so All off in
+// the panel is upstream's app. The audit's panel (panel/FlagPanel.svelte, dev builds only) turns
 // them on and off and tunes their settings; this file stays the one place
 // the picks live. To ship one, keep its folder's changes and drop its gate.
 // The list of what's on by default, and why the rest isn't, is in README.md.
@@ -25,7 +27,7 @@
 const modules = import.meta.glob('./*/index.js', { eager: true, import: 'default' });
 import.meta.glob('./*/style.css', { eager: true });
 
-/** @typedef {{ id: string, n: number, title: string, group?: string, issue?: string, notes?: string, against?: string, superseded?: string, byDefault?: boolean, settings?: Record<string, any> }} Flag */
+/** @typedef {{ id: string, n: number, title: string, group?: string, issue?: string, notes?: string, against?: string, superseded?: string, disabled?: string, byDefault?: boolean, settings?: Record<string, any> }} Flag */
 /** @type {Flag[]} */
 export const FLAGS = Object.values(modules)
   .map((m) => /** @type {any} */ (m))
@@ -45,9 +47,10 @@ const saved = read();
 /**
  * Whether a flag is on when nothing's been picked for it: every fix is, but
  * not a direction (#92 and up), a flag that goes against the design doc
- * (`against`), or one that sets `byDefault: false` (the worst-case test data).
+ * (`against`), one that sets `byDefault: false` (the worst-case test data),
+ * or a disabled one.
  */
-export const onByDefault = (/** @type {Flag} */ f) => f.byDefault ?? (f.group !== 'Direction' && !f.against);
+export const onByDefault = (/** @type {Flag} */ f) => !f.disabled && (f.byDefault ?? (f.group !== 'Direction' && !f.against));
 /**
  * Picks saved before there were defaults (no `defaults` mark) stored every
  * flag, mostly false, so they can't tell "turned off" from "never touched":
@@ -55,7 +58,19 @@ export const onByDefault = (/** @type {Flag} */ f) => f.byDefault ?? (f.group !=
  * saved pick, on or off, wins over the default.
  */
 const pickedOn = (/** @type {Flag} */ f) =>
-  saved.defaults ? (saved.on?.[f.id] ?? onByDefault(f)) : !!saved.on?.[f.id] || onByDefault(f);
+  !isDisabled(f) && (saved.defaults ? (saved.on?.[f.id] ?? onByDefault(f)) : !!saved.on?.[f.id] || onByDefault(f));
+
+/**
+ * Disabled flags (`disabled: '<why>'` in their index.js) are a third state
+ * beside on and off: kept in the code but always off, whatever was saved or
+ * whatever turns them on (the panel has no switch for them, and the effect
+ * below puts them back off). Turning one back on means deleting its
+ * `disabled` line, after talking it over with the owner (README.md).
+ */
+export const isDisabled = (/** @type {Flag | undefined} */ f) => !!f?.disabled;
+const DISABLED = new Set(FLAGS.filter(isDisabled).map((f) => f.id));
+/** The flags the panel can turn on and off: every one but the disabled. */
+export const LIVE = FLAGS.filter((f) => !isDisabled(f));
 
 export const flags = $state({
   /** @type {Record<string, boolean>} */
@@ -81,7 +96,7 @@ export const isDirection = (/** @type {Flag | undefined} */ f) => f?.group === '
 export const DIRECTIONS = FLAGS.filter(isDirection).map((f) => f.id);
 
 /** Whether a flag is on. */
-export const flag = (/** @type {string} */ id) => flags.on[id] ?? false;
+export const flag = (/** @type {string} */ id) => !DISABLED.has(id) && (flags.on[id] ?? false);
 /** A flag's setting (its default while the flag is off is still returned). */
 export const setting = (/** @type {string} */ id, /** @type {string} */ key) => flags.settings[id]?.[key];
 
@@ -116,7 +131,7 @@ function apply() {
   rev++;
   const root = document.documentElement;
   for (const f of FLAGS) {
-    const on = flags.on[f.id];
+    const on = !DISABLED.has(f.id) && !!flags.on[f.id];
     root.toggleAttribute(`data-flag-${f.id}`, on);
     for (const [k, s] of Object.entries(f.settings ?? {})) {
       const v = flags.settings[f.id][k];
@@ -132,6 +147,8 @@ function apply() {
 
 $effect.root(() => {
   $effect(() => {
+    // A disabled flag that something turned on (a show, an old pick) goes back off.
+    for (const id of DISABLED) if (flags.on[id]) flags.on[id] = false;
     apply();
     try {
       localStorage.setItem(KEY, JSON.stringify({ defaults: 1, on: flags.on, settings: flags.settings, locked: flags.locked }));

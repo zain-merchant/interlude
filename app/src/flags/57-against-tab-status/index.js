@@ -11,6 +11,7 @@
 export default {
   id: 'against-tab-status',
   n: 57,
+  disabled: 'Against the doc\'s quiet underline tabs.',
   title: 'Idle tabs show their state',
   group: 'Controls',
   against: '"Mode panel: \'Text Row\' for Cues, Loop, FX and Stems. Underline tabs sit over one quiet row."',

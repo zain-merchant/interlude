@@ -12,6 +12,7 @@
 export default {
   id: 'against-quiet-play',
   n: 57,
+  disabled: 'Against the doc\'s one solid Play, and competes with #6 play-states.',
   title: 'A paused Play that steps back',
   group: 'Controls',
   against: '"Depth, from back to front: ... 5. One solid primary control, Play."',

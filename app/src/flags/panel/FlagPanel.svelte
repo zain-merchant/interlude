@@ -17,7 +17,7 @@
   // what's different now, Before / After (flipping on its own, or pinned),
   // and Guides, Replay, Again and Done. The card keeps off what's shown.
   import { tick, onMount } from 'svelte';
-  import { FLAGS, flags, picks, recommended, lockedAt, setLocked, isDirection, onByDefault } from '../registry.svelte.js';
+  import { FLAGS, LIVE, flags, picks, recommended, lockedAt, setLocked, isDirection, isDisabled, onByDefault } from '../registry.svelte.js';
   import { SHOWS, current, showMe, stopShow, replay, resumePending, setPhase, setFlipping, setSlow } from '../show/show.svelte.js';
   import { uiZoom } from '../../lib/uizoom.svelte.js';
   import Switch from './Switch.svelte';
@@ -54,21 +54,25 @@
   const unzoom = $derived((uiZoom.scale, 1 / (Number(document.documentElement.style.zoom) || 1)));
 
   // ── The flags ─────────────────────────────────────────────────────────
-  const groups = [...new Set(FLAGS.map((f) => f.group ?? 'Other'))];
+  const groups = [...new Set(LIVE.map((f) => f.group ?? 'Other'))];
   /** A flag's one line: its show's `about`, or its notes. */
   const about = (f) => SHOWS[f.id]?.about ?? f.notes ?? '';
   const isOn = (f) => (current.id === f.id ? true : !!flags.on[f.id]);
-  const count = $derived(FLAGS.filter(isOn).length);
+  const count = $derived(LIVE.filter(isOn).length);
   const words = (s) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
-  const shown = $derived.by(() => {
+  const found = $derived.by(() => {
     const q = words(query.trim());
     if (!q) return FLAGS;
     const parts = q.split(/\s+/);
     return FLAGS.filter((f) => {
-      const hay = words(`${f.n} ${f.title} ${about(f)} ${f.group ?? ''} ${f.id}`);
+      const hay = words(`${f.n} ${f.title} ${about(f)} ${f.group ?? ''} ${f.id} ${f.disabled ?? ''}`);
       return parts.every((p) => hay.includes(p));
     });
   });
+  const shown = $derived(found.filter((f) => !isDisabled(f)));
+  // Disabled flags (`disabled` in their index.js): kept in the code, always
+  // off, listed greyed at the bottom with their reason and no switch.
+  const shownDisabled = $derived(found.filter(isDisabled));
   const hasSettings = (f) => Object.keys(f.settings ?? {}).length > 0;
   const settingsOpen = (f) => hasSettings(f) && (disclosed[f.id] ?? isOn(f));
   function toggle(f, on) {
@@ -77,10 +81,12 @@
     if (on && disclosed[f.id] === false) delete disclosed[f.id];
   }
   // All on is every fix: the directions (#92 and up) are whole-app looks,
-  // opt-in and one at a time, so it leaves them as they are.
-  const all = (on) => FLAGS.forEach((f) => (on && isDirection(f) ? null : (flags.on[f.id] = on)));
+  // opt-in and one at a time, and the worst-case test data (`byDefault:
+  // false`) isn't a fix, so it leaves them as they are. Disabled flags are
+  // never touched (the registry keeps them off).
+  const all = (on) => LIVE.forEach((f) => (on && (isDirection(f) || f.byDefault === false) ? null : (flags.on[f.id] = on)));
   // Defaults: the recommended fixes on, everything else off (README.md lists them).
-  const defaults = () => FLAGS.forEach((f) => (flags.on[f.id] = onByDefault(f)));
+  const defaults = () => LIVE.forEach((f) => (flags.on[f.id] = onByDefault(f)));
   /** The direction that's on, if any: it changes how every fix looks, so the panel says so. */
   const direction = $derived(FLAGS.find((f) => isDirection(f) && flags.on[f.id]) ?? null);
   /** A flag by id, for the card's notes. */
@@ -398,7 +404,7 @@
       class:dragging
       data-dock={dock}
       bind:this={box}
-      aria-label="UI audit, {count} of {FLAGS.length} on{direction ? `, ${direction.title} on` : ''}. Open the panel (backquote key); arrow keys move it"
+      aria-label="UI audit, {count} of {LIVE.length} on{direction ? `, ${direction.title} on` : ''}. Open the panel (backquote key); arrow keys move it"
       onpointerdown={grab}
       onpointermove={drag}
       onpointerup={(e) => {
@@ -431,7 +437,7 @@
       >
         <div class="fp-heading">
           <b>UI audit</b>
-          <span class="fp-count">{count} of {FLAGS.length} on</span>
+          <span class="fp-count">{count} of {LIVE.length} on</span>
         </div>
         <div class="fp-head-acts">
           <button type="button" class="fp-text-btn" onclick={() => all(true)}>All on</button>
@@ -519,7 +525,24 @@
             </section>
           {/if}
         {/each}
-        {#if !shown.length}<p class="fp-empty">Nothing matches “{query}”.</p>{/if}
+        {#if shownDisabled.length}
+          <details class="fp-disabled" open={!!query.trim() || undefined}>
+            <summary><span>Disabled</span><small>{shownDisabled.length}</small></summary>
+            <p class="fp-disabled-note">Kept in the code but always off, and left out of All on, All off and Defaults. Bringing one back means editing its index.js, after talking it over with the owner.</p>
+            <ul>
+              {#each shownDisabled as f (f.id)}
+                <li class="fp-flag fp-off" data-flag={f.id}>
+                  <div class="fp-flag-main">
+                    <span class="fp-n">{f.n}</span>
+                    <span class="fp-title">{f.title}</span>
+                    <p class="fp-about">{#if f.against}<span class="fp-against" title={`The design doc: ${f.against}`}>Against the doc</span>{/if}{f.disabled}</p>
+                  </div>
+                </li>
+              {/each}
+            </ul>
+          </details>
+        {/if}
+        {#if !shown.length && !shownDisabled.length}<p class="fp-empty">Nothing matches “{query}”.</p>{/if}
       </div>
       <footer class="fp-foot"><kbd aria-label="backquote">&#96;</kbd> folds it · drag the top to move it, or use the arrow keys on it</footer>
     </section>
@@ -929,6 +952,60 @@
   .fp-empty {
     margin: 16px 8px;
     color: var(--fp-fg-3);
+  }
+  /* Disabled flags: folded away at the bottom, greyed, no switch. */
+  .fp-disabled {
+    margin-top: 8px;
+    border-top: 1px solid var(--fp-line);
+  }
+  .fp-disabled summary {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    padding: 12px 8px 6px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--fp-fg-3);
+    cursor: pointer;
+    list-style: none;
+  }
+  .fp-disabled summary::-webkit-details-marker {
+    display: none;
+  }
+  .fp-disabled summary::before {
+    content: '';
+    width: 5px;
+    height: 5px;
+    border-right: 1.5px solid currentColor;
+    border-bottom: 1.5px solid currentColor;
+    rotate: -45deg;
+    translate: 0 -1px;
+    transition: rotate 0.15s var(--fp-ease);
+  }
+  .fp-disabled[open] summary::before {
+    rotate: 45deg;
+  }
+  .fp-disabled summary:hover {
+    color: var(--fp-fg-2);
+  }
+  .fp-disabled summary small {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0;
+  }
+  .fp-disabled-note {
+    margin: 0 8px 6px;
+    font-size: 11px;
+    line-height: 16px;
+    color: var(--fp-fg-3);
+  }
+  .fp-flag.fp-off {
+    opacity: 0.5;
+  }
+  .fp-flag.fp-off:hover {
+    background: none;
   }
   .fp-foot {
     padding: 8px 16px 10px;

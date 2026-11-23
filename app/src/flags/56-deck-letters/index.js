@@ -14,6 +14,7 @@
 export default {
   id: 'deck-letters',
   n: 56,
+  disabled: 'The doc rules deck letters out; #88\'s left and right words are the adopted fix.',
   title: 'A and B letters on the decks',
   group: 'Type and colour',
   against: '"\'A\' and \'B\' deck labels. Colour and position already identify the decks."',

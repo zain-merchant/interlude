@@ -13,6 +13,7 @@
 export default {
   id: 'against-text-levels',
   n: 39,
+  disabled: 'Against the doc\'s text levels; #25 is the adopted contrast fix.',
   title: 'Brighter, larger quiet text and empty items',
   group: 'Type and colour',
   against: '"Type: five sizes, 11, 13, 16, 24 and 32px." "--fg-3 is 50%. This is the quietest level that still passes 4.5:1." "--fg-off is 30%, for empty or disabled items only."',

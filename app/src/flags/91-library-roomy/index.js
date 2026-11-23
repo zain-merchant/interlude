@@ -12,6 +12,7 @@
 export default {
   id: 'library-roomy',
   n: 91,
+  disabled: 'Against the doc\'s 13px rows on a 28px pitch; fewer tracks fit.',
   title: 'Roomier library rows and sidebar sections',
   group: 'Type and colour',
   against: 'Type: "five sizes, 11, 13, 16, 24 and 32px" (library rows are the 13px body on a 28px row), and #3\'s rule that sidebar labels sit on the track rows\' pitch.',

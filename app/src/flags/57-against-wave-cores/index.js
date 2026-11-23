@@ -11,6 +11,7 @@
 export default {
   id: 'against-wave-cores',
   n: 57,
+  disabled: 'Against the doc\'s waveform colours.',
   title: 'Calmer waveform cores',
   group: 'Type and colour',
   against: '"Deck 1 is ice white, #c9dcf2. Its waveform bands are #4d6580, #c9dcf2 and #f4f8fc." (and cream likewise)',

@@ -10,6 +10,7 @@
 export default {
   id: 'against-cue-outline',
   n: 57,
+  disabled: 'Against the doc\'s outlined Cue under one solid Play.',
   title: 'A stronger Cue at rest',
   group: 'Controls',
   against: '"Depth, from back to front: ... 4. Outlined controls (.ctl). 5. One solid primary control, Play."',

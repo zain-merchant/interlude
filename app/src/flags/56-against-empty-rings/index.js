@@ -12,6 +12,7 @@
 export default {
   id: 'against-empty-rings',
   n: 56,
+  disabled: 'Against the owner\'s call 9, which keeps empty hot cues quiet.',
   title: 'Brighter empty hot cues (and disabled deck controls)',
   group: 'Type and colour',
   against: '"Text: ... --fg-off is 30%, for empty or disabled items only."',

@@ -9,6 +9,7 @@
 export default {
   id: 'against-heavy-numerals',
   n: 56,
+  disabled: 'Against the doc\'s large, light numerals.',
   title: 'Heavier times and BPM',
   group: 'Type and colour',
   against: '"Typography: Geist Variable with tabular numbers. Times and BPM are large and light."',

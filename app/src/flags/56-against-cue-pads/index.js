@@ -17,6 +17,7 @@
 export default {
   id: 'against-cue-pads',
   n: 56,
+  disabled: 'Against the doc\'s quiet text row of cues.',
   title: 'Hot cues as pads',
   group: 'Controls',
   against: '"Mode panel: \'Text Row\' for Cues, Loop, FX and Stems. Underline tabs sit over one quiet row: Cues are a coloured dot, a number and a time."',

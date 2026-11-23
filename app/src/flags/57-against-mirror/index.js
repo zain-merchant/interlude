@@ -14,6 +14,7 @@
 export default {
   id: 'against-mirror',
   n: 57,
+  disabled: 'Against the doc\'s one shared order on both decks.',
   title: 'Mirror the right deck more',
   group: 'Layout',
   against: '"Alignment: the mode tabs, the mode row and the transport share the deck\'s four columns." (one shared order on both decks)',

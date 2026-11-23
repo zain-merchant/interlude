@@ -9,6 +9,7 @@
 export default {
   id: 'mixer-against-doc',
   n: 69,
+  disabled: 'Against the doc\'s wells, slots and dials; the reviewers\' alternative.',
   title: "Mixer wells, slots and dial ticks the reviewers' way",
   group: 'Type and colour',
   against: 'Recessed wells: darker, with an inner shadow. Used for waveforms and search.',

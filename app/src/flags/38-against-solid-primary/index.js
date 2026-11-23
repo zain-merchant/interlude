@@ -12,6 +12,7 @@
 export default {
   id: 'against-solid-primary',
   n: 38,
+  disabled: 'Against the doc\'s one solid primary (Play); #27 is the adopted version.',
   title: 'Solid Done in Settings and dialogs',
   group: 'Controls',
   against: '"Depth, from back to front: ... 5. One solid primary control, Play."',
