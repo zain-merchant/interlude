@@ -50,6 +50,8 @@
     ...(flag('dir-ground') ? { veil: 'ground' } : {}),
     // #110 (UI audit flag): dir-room-tint keeps today's waveform; its wave.js is where a new style drops in.
     ...(flag('dir-room-tint') ? roomTintWave({ deck, mode }) : {}),
+    // #111 (UI audit flag): font-special-gothic: the bar number on the play head in the same face.
+    ...(flag('font-special-gothic') ? { labelFont: '"Special Gothic"' } : {}),
     // The directions (#92 and up): the bar number's pill in the theme's ink, not fixed white.
     ...(DIRECTIONS.some((id) => flag(id)) ? { pill: 'theme' } : {}),
   });
@@ -99,6 +101,7 @@
       const ck = flagsRev();
       if (ck !== colorKey) {
         if (colorKey !== -1) colors = themeColors(deck);
+        if (flag('font-special-gothic') || colorKey !== -1) gl.font = getComputedStyle(canvas).fontFamily; // #111 (UI audit flag): the face can change while the app runs
         colorKey = ck;
       }
       const f = wf();

@@ -1,6 +1,6 @@
 // #110 (UI audit flag): dir-room-tint's waveform hook.
 //
-// Today's renderer is kept on purpose: the waveform style is being explored
+// Today's renderer is kept on purpose (only the overview's cue chips move): the waveform style is being explored
 // separately and will be picked later. Waveform.svelte spreads this object
 // into the options it hands the renderer while this flag is on, so a new
 // style drops in here and nowhere else in the component:
@@ -17,5 +17,6 @@
 // `mode` is 'scroll' for the lanes and 'overview' for the deck's overview.
 /** @param {{ deck: number, mode: string }} _ */
 export function waveOptions(_) {
-  return {};
+  // The overview's cue chips stand 3px clear of its top edge, all four corners round (they were cut off flat against it).
+  return { chipTop: 3 };
 }

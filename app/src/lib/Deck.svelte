@@ -454,7 +454,7 @@
   <div class="pitch">
     <button class="val num" class:off={Math.abs(ratePct) > 0.005} onclick={cycleRange}
       aria-label="{Dn} tempo {pct(ratePct)}, pitch range plus or minus {Math.round(range * 100)} percent. Click to change the range"
-      use:tip={rangeTip}>{pct(ratePct)}{#if range !== RANGES[0]}<span class="rng">±{Math.round(range * 100)}</span>{/if}</button>
+      use:tip={rangeTip}>{#if flag('dir-room-tint')}<!-- #110 (UI audit flag): dir-room-tint sets the tempo's sign, number and unit apart, so each keeps its place. --><span class="lk"><span class="sg">{Math.abs(ratePct) < 0.005 ? '' : ratePct > 0 ? '+' : '−'}</span><span class="dg">{Math.abs(ratePct).toFixed(2)}</span><span class="pc">%</span></span>{:else}{pct(ratePct)}{/if}{#if range !== RANGES[0]}<span class="rng">±{Math.round(range * 100)}</span>{/if}</button>
     <!-- #18 (UI audit flag): visual-tempo-match marks the tempos as matched (the handle's line takes the other deck's colour). -->
     <div class="pitch-fader" class:matched={tempoMatched}>
       <!-- #109 (UI audit flag): quiet-readouts: the tempo % above the fader already shows its value. -->

@@ -21,6 +21,24 @@ export default {
   against:
     '"One solid primary control, Play" (Play is a key like the rest until it plays; playing, it is a flat face in its deck\'s colour), "Times and BPM are large and light" (set at 600 weight, smaller, so they lead without shouting) and the Liquid Glass blur (panels are solid), as in #100.',
   settings: {
+    cues: {
+      type: 'choice',
+      label: 'Hot cues',
+      default: 'keys',
+      options: [
+        ['keys', 'Pads', 'Eight keys: up and plain until set, then down, tinted in the cue\'s colour.'],
+        ['discs', 'Numbered discs', 'v5\'s: a disc with the number, hollow until set, then filled.'],
+      ],
+    },
+    cue: {
+      type: 'choice',
+      label: "Cue's colour",
+      default: 'amber',
+      options: [
+        ['amber', 'Amber on both decks', 'The Cue key and the headphone cue are amber, as on DJ hardware; the side\'s tint says which deck.'],
+        ['deck', "Each deck's colour", 'Cue and its headphone cue are blue on the left and warm on the right.'],
+      ],
+    },
     meters: {
       type: 'choice',
       label: 'Meters',

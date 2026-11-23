@@ -127,7 +127,7 @@ export class Waveform2D {
    *           colors: ReturnType<typeof themeColors> & { low: number[], mid: number[], high: number[] },
    *           beatLen?: number, firstBeat?: number, hotCues?: number[],
    *           loopIn?: number, loopOut?: number, looping?: boolean, slip?: number,
-   *           flags?: string, edge?: string, clipStart?: boolean, cueChips?: boolean,
+   *           flags?: string, edge?: string, clipStart?: boolean, cueChips?: boolean, chipTop?: number, labelFont?: string,
    *           keyline?: boolean, loopTint?: boolean, half?: string, look?: string, veil?: string }} view
    *   Positions are in bins, -1 for none; `perPx` is bins per device pixel.
    */
@@ -202,7 +202,7 @@ export class Waveform2D {
       let row = 0;
       while ((rows[row] ?? -Infinity) > cx - 13) row++;
       rows[row] = cx;
-      this.chip(cx, w, i + 1, c.hot[i % c.hot.length], c.ink, row * 13);
+      this.chip(cx, w, i + 1, c.hot[i % c.hot.length], c.ink, (view.chipTop ?? 0) + row * 13); // #110 (UI audit flag): dir-room-tint's chips stand clear of the overview's top edge
     });
     if (view.cue >= 0) {
       const cx = x(view.cue);
@@ -268,7 +268,7 @@ export class Waveform2D {
     if (bar < 1) return;
     const { ctx } = this;
     const label = String(bar);
-    ctx.font = '600 10px "Geist Variable", system-ui, sans-serif';
+    ctx.font = `600 10px ${view.labelFont ? `${view.labelFont}, ` : ''}"Geist Variable", system-ui, sans-serif`; // #111 (UI audit flag): font-special-gothic's face
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     const pw = Math.max(18, ctx.measureText(label).width + 8);

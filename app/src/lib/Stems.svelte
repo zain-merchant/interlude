@@ -73,6 +73,10 @@
 
 <div class="stems" role="group" aria-label="{flag('deck-names') ? (deck === 0 ? 'Left deck' : 'Right deck') : `Deck ${'AB'[deck]}`} stems" style:--deck={deck === 0 ? 'var(--deck-a)' : 'var(--deck-b)'}>
   {#if needsModel}
+  <!-- #110 (UI audit flag): dir-room-tint keeps the four stems in view, off, over the line that says why. -->
+  {#if flag('dir-room-tint')}
+  <div class="row" aria-hidden="true">{#each STEMS as name}<button class="stem muted" aria-disabled="true" tabindex="-1">{name}</button>{/each}</div>
+  {/if}
   <p class="need">Stems need a one-time {modelSize}download <button onclick={() => onsettings?.()}>Get it</button></p>
   {:else}
   <div class="row">
