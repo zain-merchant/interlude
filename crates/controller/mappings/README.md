@@ -27,7 +27,9 @@ message lists; as far as we know none has been tried on the hardware yet.
 
 Their scripts call `midi.routeNote(channel, from, to)`, an openDJ addition
 that makes a note arrive as another one (pads following the page shown);
-`src/script.rs` supports it.
+`src/script.rs` supports it. They read the page of each pad mode from
+`[ChannelN] pad_slot_M`, which here is always openDJ's own order with stems on
+KEYBOARD (`src/controls.rs`).
 
 oss-dj ships them so that every controller Mixxx supports works without
 Mixxx installed. They're licensed under the GNU General Public License,
