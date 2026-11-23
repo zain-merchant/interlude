@@ -2,7 +2,7 @@
 //
 // Drag. A knob turns with a drag left and right as well as up and down (right
 // and up raise it), following the way the drag is going and changing axis when
-// it turns, or adding both (feel.js says how each behaves on a diagonal).
+// it turns (feel.js says what else was measured).
 // Nothing jumps. ⇧ for fine, the detent, double-click, the keys and focus are
 // as they were. Faders keep their own axis.
 //
@@ -25,7 +25,6 @@ export default {
       default: 'turn',
       options: [
         ['turn', 'Follows the way you drag', 'Left and right or up and down: the way the drag is going, changing when it turns.'],
-        ['sum', 'Both at once', 'Right and up add, left and down take away; up and left together cancel.'],
         ['across', 'Left and right', 'Only sideways.'],
         ['updown', 'Up and down', 'As it was.'],
       ],

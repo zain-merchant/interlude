@@ -12,18 +12,15 @@ const TURN = 1.8;
  * - turn: the axis the drag is going along, and only that one, so a hand that
  *   drifts changes nothing; when the drag turns, so does the axis, about 10px
  *   later. Nearly diagonal at the start counts as sideways.
- * - sum: both at once, dx less dy. Nothing to choose, and no 4px wait; up and
- *   right together is faster, and up and left together cancels.
  * - across, updown: one axis only.
- * Measured against each other, and against picking an axis once, the bigger
- * axis of each move and going round (directions5/work/drag20.mjs).
+ * Measured against adding both (up and left cancels), picking an axis once, the
+ * bigger axis of each move and going round (directions5/work/drag20.mjs).
  * @param {string} how
  * @returns {(dx: number, dy: number) => number}
  */
 export function dragger(how) {
   if (how === 'across') return (dx) => dx;
   if (how === 'updown') return (dx, dy) => -dy;
-  if (how === 'sum') return (dx, dy) => dx - dy;
   /** @type {'x' | 'y' | null} */
   let axis = null;
   let [gx, gy, rx, ry] = [0, 0, 0, 0];

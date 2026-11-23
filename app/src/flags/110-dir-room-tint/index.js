@@ -34,17 +34,26 @@ export default {
         ['foot', 'Pressed tiles', 'As it was: a number over a rule, and a pressed tile once set, in softer colours.'],
       ],
     },
-    tert: {
+    column: {
       type: 'choice',
-      label: 'Small switches and nudges',
-      default: 'under',
+      label: "The tempo's column: 0.00%, minus and plus, Key lock",
+      default: 'full',
       options: [
-        ['under', 'An etched rule under it', 'The rule fills with colour when it is on.'],
-        ['beside', 'An etched rule beside it', 'The rule fills with colour when it is on.'],
-        ['hair', 'A hairline cut round it', 'The line takes the colour when it is on.'],
-        ['bright', 'A brighter label', 'No mark: the label is brighter than a caption.'],
-        ['flat', 'A faint flat face', 'A face with no depth.'],
-        ['groove', 'A patch of grooves', 'The texture, with no edge.'],
+        ['full', 'A rule under the whole label', 'It fills with colour when Key lock is on.'],
+        ['short', 'A short rule', 'The same, 22px.'],
+        ['ledger', 'A ledger', 'Etched rules across the column, between the three.'],
+        ['cut', 'One cut', 'All three in one cut under the fader, with rules between.'],
+        ['plain', 'Plain', 'No mark; the labels are brighter than captions.'],
+      ],
+    },
+    head: {
+      type: 'choice',
+      label: "The sidebar's first row",
+      default: 'none',
+      options: [
+        ['none', 'All tracks', 'Level with the search; the button is at the toolbar’s start.'],
+        ['row', 'Library', 'A row with the button, level with the search.'],
+        ['search', 'The search', 'The search is at the sidebar’s top; the toolbar starts at Fits.'],
       ],
     },
     tempo: {
@@ -54,17 +63,6 @@ export default {
       options: [
         ['bare', 'Like the small switches', 'Its window shows under the pointer.'],
         ['cut', 'In its window', 'A small cut, as it was.'],
-      ],
-    },
-    ticks: {
-      type: 'choice',
-      label: 'Ticks',
-      default: 'etched',
-      options: [
-        ['etched', 'Etched', 'Each is a tiny cut, dark with a light edge.'],
-        ['strip', 'Etched, on a grooved strip', 'The same, standing on a shallow strip of grooves beside the slot.'],
-        ['rings', 'Etched, the dials too', "The same, and the dials' rings."],
-        ['lines', 'Lines', 'As they were.'],
       ],
     },
     room: {
@@ -114,17 +112,6 @@ export default {
       options: [
         ['off', 'Ticks only', 'Marks at 0, 6 and 18 dB.'],
         ['on', 'With figures', 'The same marks, numbered.'],
-      ],
-    },
-    head: {
-      type: 'choice',
-      label: "The sidebar's heading and its button",
-      default: 'bar',
-      options: [
-        ['bar', 'Button by the search', 'The button stays at the toolbar’s start; Library is a label at the sidebar’s padding.'],
-        ['title', 'A title on the toolbar’s line', 'Library at a title’s size, level with the search, its button in a box.'],
-        ['none', 'No heading', 'All tracks starts level with the search; the button is at the toolbar’s start.'],
-        ['top', "At the sidebar's top", 'Label and button at the sidebar’s own padding.'],
       ],
     },
     lanes: { type: 'range', label: 'Grooves behind the waveforms', min: 0, max: 100, step: 1, default: 8, unit: '' },
