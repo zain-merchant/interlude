@@ -2864,7 +2864,7 @@
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .sidetoggle {
   top: 18px;
-  transition: left 200ms cubic-bezier(0.2, 0.8, 0.2, 1), color 120ms ease-out, background-color 120ms ease-out;
+  transition: translate 200ms cubic-bezier(0.2, 0.8, 0.2, 1), color 120ms ease-out, background-color 120ms ease-out;
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .app:has(.grip.side.dragging) section.library .sidetoggle {
   transition: color 120ms ease-out;
@@ -2931,7 +2931,8 @@
    row at a title's size; or label and button keep to the sidebar's padding. */
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .sidetoggle {
   top: 18px;
-  left: calc(var(--library-sidebar, 200px) + 10px);
+  left: 0;
+  translate: calc(var(--library-sidebar, 200px) + 10px) 0;
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .main > .bar {
   padding-left: 32px;
@@ -2948,7 +2949,7 @@
   clip-path: inset(50%);
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:is([data-flag-dir-room-tint-head='title'], [data-flag-dir-room-tint-head='top']) section.library:not(.shut) .sidetoggle {
-  left: calc(var(--library-sidebar, 200px) - 36px);
+  translate: calc(var(--library-sidebar, 200px) - 36px) 0;
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:is([data-flag-dir-room-tint-head='title'], [data-flag-dir-room-tint-head='top']) section.library:not(.shut) .main > .bar {
   padding-left: 0;
@@ -2962,7 +2963,7 @@
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-head='title'] section.library:not(.shut) .sidetoggle {
   top: 19px;
-  left: calc(var(--library-sidebar, 200px) - 42px);
+  translate: calc(var(--library-sidebar, 200px) - 42px) 0;
   width: 26px;
   height: 26px;
   border-radius: 7px;
