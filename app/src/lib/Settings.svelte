@@ -522,7 +522,7 @@
   }
 
   // #116 (UI audit flag): settings-finish: search over every page.
-  const finish = $derived(flag('settings-finish'));
+  const finish = $derived(flag('settings-finish') && flag('dir-room-tint'));
   let query = $state('');
   let found = $state(0);
   let findInput = $state(/** @type {HTMLInputElement | null} */ (null));

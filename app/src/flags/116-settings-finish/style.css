@@ -5,7 +5,7 @@
    page is the app's panel, 24. It stands 12 in, so the window is 36. Done,
    the search field and the list stand 16 in from the panes' edges (28 from
    the window's), so they're 8: 24 - 16 and 36 - 28. */
-:root[data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .backdrop > .settings {
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .backdrop > .settings {
   --set-r: calc(var(--r-panel) + var(--gap));
   border-radius: var(--set-r);
   grid-template-columns: 208px minmax(0, 1fr);
@@ -13,34 +13,34 @@
 /* ── The list ──────────────────────────────────────────────────────────
    The field is level with Done; the first page with the page's first line.
    Rows 26 with 2 between, as in the library's. */
-:root[data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings nav {
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings nav {
   padding: 16px 4px 16px 16px;
   gap: 2px;
 }
-:root[data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings nav .h {
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings nav .h {
   display: none;
 }
-:root[data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings nav .sfind {
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings nav .sfind {
   flex: none;
   margin-bottom: 28px;
 }
-:root[data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings nav .item {
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings nav .item {
   flex: none;
   height: 26px;
   border-radius: var(--r);
 }
-:root[data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings nav .foot {
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings nav .foot {
   gap: 2px;
   padding-top: 12px;
   border-top: 0;
   box-shadow: inset 0 1px 0 rgb(0 0 0 / 0.7), inset 0 2px 0 rgb(255 255 255 / 0.04);
 }
-:root[data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings nav .foot .item {
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings nav .foot .item {
   height: 26px;
 }
 /* ── The search field ──────────────────────────────────────────────────
    The library's: a cut with the grooves in it, focus on its inside edge. */
-:root[data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .sfind {
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .sfind {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -49,16 +49,40 @@
   padding: 0 8px;
   border-radius: var(--r);
   background: var(--rg-grooves, none), var(--rg-well, var(--bg));
-  /* The list lies on the room, darker than a plate: the cut's lower lip catches more light here. */
-  box-shadow: inset 0 1px 1px rgb(0 0 0 / 0.9), inset 0 0 0 1px rgb(255 255 255 / 0.045), 0 1px 0 rgb(255 255 255 / 0.09);
+  box-shadow: inset 0 1px 0 rgb(0 0 0 / 0.9), inset 0 0 0 0 rgb(0 0 0 / 0), 0 1px 0 rgb(255 255 255 / 0.09);
+  position: relative;
   color: var(--fg-3);
   cursor: text;
 }
-:root[data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .sfind:has(input:focus-visible) {
-  outline: 1.5px solid var(--focus-field, var(--fg-3));
-  outline-offset: -1.5px;
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .sfind:has(input:focus-visible) {
+  box-shadow: inset 0 0 0 var(--focus-w, 1.5px) var(--focus-field, var(--fg-3)), 0 1px 0 0 var(--tt-c3, rgb(255 255 255 / 0.09));
 }
-:root[data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .sfind svg {
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .sfind > * {
+  position: relative;
+  z-index: 1;
+}
+/* 110's light on the grooves, under the pointer. */
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .sfind::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--tt-glint-rings);
+  -webkit-mask: linear-gradient(102deg, transparent 18%, #000 46%, #000 54%, transparent 82%);
+  mask: linear-gradient(102deg, transparent 18%, #000 46%, #000 54%, transparent 82%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease-out;
+}
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .sfind:hover::before {
+  opacity: calc(var(--tt-glint) * 0.012);
+}
+@media (prefers-reduced-motion: reduce) {
+  :root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .sfind::before {
+    content: none;
+  }
+}
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .sfind svg {
   flex: none;
   width: 14px;
   height: 14px;
@@ -67,8 +91,8 @@
   stroke-width: 1.4;
   stroke-linecap: round;
 }
-:root[data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .sfind input,
-:root[data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .sfind input:focus-visible {
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .sfind input,
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .sfind input:focus-visible {
   flex: 1;
   min-width: 0;
   padding: 0;
@@ -79,17 +103,17 @@
   outline: none !important;
   box-shadow: none;
 }
-:root[data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .sfind input::placeholder {
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .sfind input::placeholder {
   color: var(--fg-3);
 }
-:root[data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .sfind kbd {
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .sfind kbd {
   font: 400 11px/14px var(--font);
   color: var(--fg-3);
   background: none;
   box-shadow: none;
   padding: 0;
 }
-:root[data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .sfind .clear {
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .sfind .clear {
   flex: none;
   display: grid;
   place-items: center;
@@ -102,17 +126,17 @@
   background: none;
   color: var(--fg-3);
 }
-:root[data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .sfind .clear:hover {
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .sfind .clear:hover {
   color: var(--fg);
 }
 /* ── The page ──────────────────────────────────────────────────────────
    Its rule stops 16 short each side, where everything on it does. */
-:root[data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .backdrop > .settings .main .bar {
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .backdrop > .settings .main .bar {
   position: relative;
   border-bottom: 0;
   box-shadow: none;
 }
-:root[data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .main .bar::after {
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .main .bar::after {
   content: '';
   position: absolute;
   right: var(--pad);
@@ -123,73 +147,118 @@
   box-shadow: 0 1px 0 rgb(255 255 255 / 0.04);
 }
 /* Text, controls and lists share one column: 16 from the left, 560 wide. */
-:root[data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .display {
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .display {
   max-width: 560px;
 }
-:root[data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .display p {
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .display p {
   margin: 0 0 12px;
 }
-:root[data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .display .row + p {
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .display .row + p {
   margin-top: 12px;
 }
-:root[data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .display > :last-child,
-:root[data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .display > :last-child > :last-child {
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .display > :last-child,
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .display > :last-child > :last-child {
   margin-bottom: 0;
 }
 /* A setting's help goes under its words, not under its box. */
-:root[data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .display:has(> .opt) > p {
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .display:has(> .opt) > p {
   margin-left: 24px;
 }
-:root[data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .opt {
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .opt {
   gap: 8px;
   min-height: 24px;
 }
-:root[data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .opt + .opt {
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .opt + .opt {
   margin-top: 4px;
 }
-:root[data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .opt + p {
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .opt + p {
   margin-top: 4px;
 }
-:root[data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .display p + .size,
-:root[data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .display .size + p {
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .display p + .size,
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .display .size + p {
   margin-top: 12px;
 }
-:root[data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .size .cap {
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .size .cap {
   width: auto;
   min-width: 72px;
   text-align: left;
   font-size: 13px;
   color: var(--fg-2);
 }
-:root[data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .size {
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .size {
   gap: 12px;
 }
+/* The interface size is a stepper: a cut with a rule each side of its
+   figure, as minus and plus are everywhere in 110. */
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .size[role='group'] {
+  gap: 0;
+}
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .size[role='group'] > :is(.btn:nth-child(1), .num, .btn:nth-child(3)) {
+  box-sizing: border-box;
+  height: 32px;
+  border-radius: 0;
+  background: var(--rg-well) !important;
+  box-shadow: inset 0 1px 0 rgb(0 0 0 / 0.9), 0 1px 0 rgb(255 255 255 / 0.09) !important;
+  color: var(--fg-2);
+}
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .size[role='group'] > .btn:nth-child(1) {
+  border-radius: 8px 0 0 8px;
+}
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .size[role='group'] > .btn:nth-child(3) {
+  border-radius: 0 8px 8px 0;
+}
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .size[role='group'] > .btn:is(:nth-child(1), :nth-child(3)):hover:not(:disabled) {
+  color: var(--fg);
+}
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .size[role='group'] > .num {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 64px;
+}
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .size[role='group'] > .num::before,
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .size[role='group'] > .num::after {
+  content: '';
+  position: absolute;
+  top: 9px;
+  left: 0;
+  width: 1px;
+  height: 14px;
+  background: rgb(255 255 255 / 0.09);
+}
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .size[role='group'] > .num::after {
+  right: 0;
+  left: auto;
+}
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .size[role='group'] > .btn:last-child {
+  margin-left: 12px;
+}
 /* Rows sit on the same etched rules as the app's lists; the last has none. */
-:root[data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .row {
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .row {
   min-height: 32px;
   border-bottom-color: rgb(0 0 0 / 0.55);
   box-shadow: 0 1px 0 rgb(255 255 255 / 0.035);
 }
-:root[data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .row:last-child {
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .row:last-child {
   border-bottom-color: transparent;
   box-shadow: none;
 }
-:root[data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .row .reset {
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .row .reset {
   border-radius: 4px;
   font-size: 12px;
 }
-:root[data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .dim {
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .dim {
   font-size: 13px;
 }
-:root[data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .row:not(:has(button)) {
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .row:not(:has(button)) {
   align-items: center;
   padding-top: 0;
 }
 /* ── Keys ──────────────────────────────────────────────────────────────
    The caps are the key: each is raised on the plate, and the button they're
    in has no face of its own. */
-:root[data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .key:not(.none, .rec),
-:root[data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .key:not(.none, .rec):is(:hover, :active, [data-show-hover], [data-show-active]) {
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .key:not(.none, .rec),
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .key:not(.none, .rec):is(:hover, :active, [data-show-hover], [data-show-active]) {
   min-width: 24px;
   padding: 0;
   border: 0;
@@ -197,12 +266,12 @@
   background: none !important;
   box-shadow: none !important;
 }
-:root[data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .kcaps {
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .kcaps {
   display: inline-flex;
   gap: 4px;
   vertical-align: top;
 }
-:root[data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .kcap {
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .kcap {
   box-sizing: border-box;
   display: inline-flex;
   align-items: center;
@@ -217,12 +286,12 @@
   font: 500 12px/1 var(--font);
   transition: background-color 120ms ease-out, color 120ms ease-out;
 }
-:root[data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .kcap b {
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .kcap b {
   display: block;
   font: inherit;
   text-box: trim-both cap alphabetic;
 }
-:root[data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .kcap svg {
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .kcap svg {
   width: 12px;
   height: 12px;
   margin: 0 -1px;
@@ -232,23 +301,23 @@
   stroke-linecap: round;
   stroke-linejoin: round;
 }
-:root[data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .key:hover .kcap {
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .key:hover .kcap {
   background-color: var(--rg-key-hi, var(--hover));
   color: var(--fg);
 }
-:root[data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .key:active .kcap {
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .key:active .kcap {
   background: color-mix(in oklab, #000 24%, var(--rg-key, var(--raise)));
   box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.6), 0 1px 0 rgb(255 255 255 / 0.06);
 }
 /* Waiting for a key: a cut. None: words, no face. */
-:root[data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .key.rec {
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .key.rec {
   min-width: 96px;
   border-radius: 6px;
   background: var(--rg-well, var(--bg));
   box-shadow: var(--rg-well-edge, inset 0 0 0 1px var(--fg-3));
   color: var(--fg-2);
 }
-:root[data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .key.none:not(.rec) {
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .key.none:not(.rec) {
   min-width: 24px;
   margin-right: -6px;
   padding: 0 6px;
@@ -258,10 +327,10 @@
   color: var(--fg-3);
   font-size: 12px;
 }
-:root[data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .key.none:not(.rec):hover {
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .key.none:not(.rec):hover {
   color: var(--fg);
 }
-:root[data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .sr {
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .sr {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -270,10 +339,10 @@
   white-space: nowrap;
 }
 /* What a key press asks stands over the rows below, so none of them move. */
-:root[data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings section:has(> .inline) {
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings section:has(> .inline) {
   position: relative;
 }
-:root[data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .cols .inline {
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .cols .inline {
   position: absolute;
   z-index: 2;
   right: -8px;
@@ -293,13 +362,13 @@
 /* ── Results ───────────────────────────────────────────────────────────
    Rows as in the library: 2 apart, the chosen one a plate. Their words line
    up with the page's, so the rows reach 8 past it. */
-:root[data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .sresults {
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .sresults {
   display: flex;
   flex-direction: column;
   gap: 2px;
   margin: 0 -8px;
 }
-:root[data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .sresult {
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .sresult {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -308,49 +377,49 @@
   border-radius: var(--r);
   color: var(--fg);
 }
-:root[data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .sresult.on {
-  background: var(--tt-sheen, none), var(--rg-key, var(--sel));
-  box-shadow: inset 0 1px 0 0 rgb(255 255 255 / 0.085), var(--tt-lift, none);
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .sresult.on {
+  background: linear-gradient(180deg, #2b2b30, #232327);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.085), 0 1px 0 rgb(0 0 0 / 0.7), 0 2px 4px -1px rgb(0 0 0 / 0.3);
 }
-:root[data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .sresult.on .kcap {
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .sresult.on .kcap {
   background-color: #3d3d43;
 }
-:root[data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .sresult .n {
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .sresult .n {
   flex: 1;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-:root[data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .sresult small {
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .sresult small {
   margin-left: 8px;
   color: var(--fg-3);
   font-size: 12px;
 }
-:root[data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .sresult mark {
-  border-radius: 3px;
-  background: rgb(255 255 255 / 0.14);
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .sresult mark {
+  border-radius: 2px;
+  background: rgb(255 255 255 / 0.16);
   color: var(--fg);
 }
-:root[data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .sresult .p {
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .sresult .p {
   flex: none;
   width: 80px;
   color: var(--fg-3);
   font-size: 12px;
 }
-:root[data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .snone {
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .snone {
   display: grid;
   justify-items: center;
   align-content: center;
   gap: 12px;
   height: 100%;
 }
-:root[data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .snone p {
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .snone p {
   margin: 0;
   color: var(--fg-2);
 }
 /* The setting you came to: a plate that fades. */
-:root[data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .sfound {
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .sfound {
   border-radius: var(--r);
   animation: set-found 1.4s ease-out;
 }

@@ -130,6 +130,7 @@ Off by default, and why:
 
 - #8 Worst-case test data (`stress-data`): test data for checking the fixes, not a fix; it swaps in a fake library and reloads the page. All on leaves it alone too (see "Disabled flags" for why it isn't disabled).
 - #113 An empty BPM filter shows your tempos (`empty-filter`): a trial, drawn or draggable.
+- #116 Settings: search, separate keys, corners that nest (`settings-finish`): a proposal, only on direction #110.
 - #114 Waveform looks (`wave-looks`): opt-in, other looks to compare with today's, with a switcher of its own in dev builds.
 - #92 and up, the directions: whole-app looks, opt-in and one at a time; not polish.
 
