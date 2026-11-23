@@ -15,6 +15,7 @@
   import { bpmEdit, gridEdit, gridMenu, gridMode } from './grid.svelte.js';
   import { dropTarget } from './dnd.svelte.js';
   import { tip, tipText } from './tooltip.svelte.js';
+  import Keys from '../flags/116-settings-finish/Keys.svelte'; // #113 (UI audit flag)
   import { flag, setting } from '../flags/registry.svelte.js';
   import { openMenu } from './menu.svelte.js';
   import { keyLabel } from './commands.js';
@@ -359,7 +360,9 @@
         <div class="artist">{#if flag('dir-room-tint')}<Mid text={t.artist || 'Unknown artist'} />{:else}{t.artist || 'Unknown artist'}{/if}</div>
       {:else}
         <div class="name dim">Empty deck</div>
-        <div class="artist">Drag a track here or press {keyLabel(`deck.${deck}.load`)}</div>
+        <!-- #113 (UI audit flag): zero-states: the shortcut as keys. -->
+        {#if flag('zero-states') && flag('dir-room-tint')}<div class="artist load"><span>Drag a track here</span>{#if keyLabel(`deck.${deck}.load`)}<span>or press<span class="sr">{keyLabel(`deck.${deck}.load`)}</span><Keys label={keyLabel(`deck.${deck}.load`)} /></span>{/if}</div>{:else}
+        <div class="artist">Drag a track here or press {keyLabel(`deck.${deck}.load`)}</div>{/if}
       {/if}
     </header>
     <div class="bpm" oncontextmenu={openGridMenu} ondblclick={() => t && (bpmEdit.deck = deck)} role="group" aria-label="Tempo"

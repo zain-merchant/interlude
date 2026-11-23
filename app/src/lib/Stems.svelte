@@ -8,6 +8,8 @@
   import { keyLabel } from './commands.js';
   import { STEMS, stemsOf, usable, soloed, toggleStem, soloStem } from './stems.svelte.js';
   import { flag } from '../flags/registry.svelte.js';
+  import { draw } from '../flags/113-zero-states/drawings.js'; // #113 (UI audit flag)
+  import { conn, watchConnections } from '../flags/112-shell-status/connections.svelte.js'; // #113 (UI audit flag)
   import { backend } from './backend.js';
 
   /** @type {{ deck: number, onsettings?: () => void }} */
@@ -43,6 +45,18 @@
     }
   });
 
+  // #113 (UI audit flag): zero-states: what stands in for the stems when there are none to press.
+  const mb = (n) => Math.round(n / 1024 / 1024);
+  const zero = $derived.by(() => {
+    if (!flag('zero-states') || !flag('dir-room-tint') || !t) return null;
+    if (conn.stems && ['needsModel', 'off'].includes(s.state)) return { title: 'Downloading stems', line: `${mb(conn.stems.done)} of ${mb(conn.stems.total)} MB`, p: conn.stems.total ? conn.stems.done / conn.stems.total : 0 };
+    if (s.state === 'needsModel') return { title: 'Stems need a one-time download', line: modelSize.trim(), act: 'Get it' };
+    if (s.state === 'off') return { title: 'Stems are off', line: '', act: 'Turn on…' };
+    if (s.state === 'failed') return { title: 'Couldn’t make stems', line: s.error ?? '', act: 'Settings' };
+    return null;
+  });
+  $effect(() => (zero ? watchConnections() : undefined)); // the download, while it shows
+
   function down(e, i) {
     if (e.button !== 0) return;
     if (!can) {
@@ -72,7 +86,14 @@
 </script>
 
 <div class="stems" role="group" aria-label="{flag('deck-names') ? (deck === 0 ? 'Left deck' : 'Right deck') : `Deck ${'AB'[deck]}`} stems" style:--deck={deck === 0 ? 'var(--deck-a)' : 'var(--deck-b)'}>
-  {#if needsModel}
+  {#if zero}
+    <!-- #113 (UI audit flag): zero-states: a record in four rings, filling as the model comes down. -->
+    <div class="zstem">
+      {@html draw.stems(64, zero.p ?? 0)}
+      <div><p>{zero.title}</p>{#if zero.line}<p>{zero.line}</p>{/if}</div>
+      {#if zero.act}<button class="btn sm" onclick={() => onsettings?.()}>{zero.act}</button>{/if}
+    </div>
+  {:else if needsModel}
   <!-- #110 (UI audit flag): dir-room-tint keeps the four stems in view, off, over the line that says why. -->
   {#if flag('dir-room-tint')}
   <div class="row" aria-hidden="true">{#each STEMS as name}<button class="stem muted" aria-disabled="true" tabindex="-1">{name}</button>{/each}</div>
