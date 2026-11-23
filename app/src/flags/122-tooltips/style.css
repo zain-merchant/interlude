@@ -1,7 +1,7 @@
 /* #122 tooltips, on 110. One space, 10, between a name, its value, its key,
    the rule and what's after it, from ink or edge to ink or edge (words carry
-   about half a pixel of their own). 4 on every side (or words
-   9.5 and boxes 4, a setting). The first line is 28, rows 24 from middle to middle. */
+   about half a pixel of their own). At the edge a box
+   stands 4 in and words 8, the middle of a box's edge and its letter (a setting). The first line is 28, rows 24 from middle to middle. */
 :root[data-flag-dir-room-tint][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips] .tip[role='tooltip']:has(> .tt) {
   --ti: 9px;
   box-sizing: border-box;
@@ -175,8 +175,10 @@
   font: inherit;
   text-box: trim-both cap alphabetic;
 }
-/* 4 on all four sides (a setting), words and boxes alike; with rows, words keep
-   the boxes' column. */
+/* Where words start (a setting); a box stands 4 in. */
+:root[data-flag-dir-room-tint][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips-sides='eight'] .tip[role='tooltip']:has(> .tt) {
+  --ti: 7.5px;
+}
 :root[data-flag-dir-room-tint][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips-sides='four'] .tip[role='tooltip']:has(> .tt) {
-  --ti: 4px;
+  --ti: 3.5px;
 }
