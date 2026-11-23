@@ -256,7 +256,8 @@
       { label: 'Key down a semitone', action: () => keyStep(deck, -1), key: keyLabel(`deck.${deck}.keyDown`), enabled: ks > -KEY_SHIFT_MAX },
       { label: "Back to the track's key", action: () => setKeyShift(deck, 0), key: keyLabel(`deck.${deck}.keyReset`), enabled: ks !== 0 },
       '-',
-      { label: `Match deck ${other}'s key`, action: () => keySync(deck), key: keyLabel(`deck.${deck}.keySync`), enabled: canKeySync(deck) },
+      { label: `Match ${otherDn}'s key`, // #88 (UI audit flag): deck-names
+        action: () => keySync(deck), key: keyLabel(`deck.${deck}.keySync`), enabled: canKeySync(deck) },
     ]);
   }
   const bend = (v) => () => t && control({ type: 'setBend', deck, bend: v });
@@ -376,8 +377,7 @@
           aria-haspopup="menu" onclick={keyMenu} oncontextmenu={keyMenu} ondblclick={(e) => e.stopPropagation()} use:tip={keyTip}>{#if kn === 'camelot'}<span class="cam">{camelot(pk)}</span>{:else if kn === 'musical'}{keyName(pk)}{:else if flag('no-dots') || flag('pitch-readout')}{keyName(pk)} <span class="cam">{camelot(pk)}</span>{:else}{keyName(pk)} · {camelot(pk)}{/if}{#if pk.keyShift}<span class="ks num">{pk.keyShift > 0 ? '+' : '−'}{Math.abs(pk.keyShift)}</span>{/if}<svg viewBox="0 0 10 10" aria-hidden="true"><path d="M2.5 4l2.5 2.5L7.5 4" /></svg></button></div>
       {/if}
     </div>
-    <!-- #46 (UI audit flag): empty-deck (with deck-spare-height) shows the load hint inside the empty well. -->
-    <div class="overview" data-hint={flag('empty-deck') && !t ? `Drag a track here or press ${keyLabel(`deck.${deck}.load`)}` : undefined}>
+    <div class="overview">
       <Waveform {deck} mode="overview" />
     </div>
 

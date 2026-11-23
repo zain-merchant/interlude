@@ -40,16 +40,16 @@ export const show = {
   },
   // Keeps it in its last seconds (it would run out during a long look).
   async each(app) {
-    const rm = app.$("[data-region='deck0'] .times .rm")?.textContent ?? '';
+    const rm = app.$("[data-region='deck0'] .hub .rm")?.textContent ?? '';
     const m = rm.match(/(\d+):(\d\d)/);
     const left = m ? Number(m[1]) * 60 + Number(m[2]) : 0;
     if (left < 6 || left > 28) await app.seek(0, 0.95);
     await app.play(0);
   },
-  target: "[data-region='deck0'] .times .rm",
+  target: "[data-region='deck0'] .hub .rm",
   badge: (app, ctx) => ctx.at,
   aid(d, app, ctx) {
-    const rm = app.$("[data-region='deck0'] .times .rm");
+    const rm = app.$("[data-region='deck0'] .hub .rm");
     if (!rm) return;
     const r = app.textRect(rm) ?? rm.getBoundingClientRect();
     const z = 3;

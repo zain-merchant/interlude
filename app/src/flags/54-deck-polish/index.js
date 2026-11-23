@@ -33,7 +33,7 @@ export default {
   n: 54,
   title: 'Deck details: play head, cue numbers, tenths, menus',
   group: 'Polish',
-  notes: 'Keylined play head; hot cue numbers at weight 400 and 6px from their time; quieter tenths; the header a 2×2 baseline grid with 24px before the BPM; Eject (with Undo) in the deck header menu; BPM menu: Set BPM first, "10 ms" steps, "playhead"; arrow keys on the mode tabs keep focus on the selected tab.',
+  notes: 'Keylined play head; hot cue numbers at weight 400 and 6px from their time; quieter tenths; the title tracked a touch tighter (the 2×2 header grid went with upstream\'s new deck, where tempo and key have their own cell); Eject (with Undo) in the deck header menu; grid menu (grid.svelte.js, upstream\'s order kept): "10 ms" steps, "playhead"; arrow keys on the mode tabs keep focus on the selected tab.',
 };
 
 /** Show me: deck A playing with a hot cue set; flipping shows the time and cue row as they were (before) and polished (after), magnified. */
@@ -50,10 +50,10 @@ export const show = {
     await app.seek(0, 0.25);
     await app.play(0);
   },
-  target: (app) => [app.$("[data-region='deck0'] .times"), app.$("[data-region='deck0'] .perf .row")],
+  target: (app) => [app.$("[data-region='deck0'] .hub"), app.$("[data-region='deck0'] .perf .row")],
   badge: (app, ctx) => ctx.at,
   aid(d, app, ctx) {
-    const t = app.$("[data-region='deck0'] .times")?.getBoundingClientRect();
+    const t = app.$("[data-region='deck0'] .hub")?.getBoundingClientRect();
     const row = app.$("[data-region='deck0'] .perf .tc")?.getBoundingClientRect();
     if (!t || !row) return;
     // Both times in view: the time left on the right is the big one (with #40 the elapsed one is quiet throughout), so a loupe cut at 800px lost it.

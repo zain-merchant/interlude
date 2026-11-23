@@ -35,7 +35,7 @@ export const show = {
     if (!app.loaded(0)) await app.loadTrack(0);
     await app.play(0);
   },
-  target: (app) => [app.$("[data-region='deck0'] .bpm"), app.$("[data-region='deck0'] .times")],
+  target: (app) => [app.$("[data-region='deck0'] .bpm"), app.$("[data-region='deck0'] .hub")],
   badge: (app, ctx) => ctx.at,
   aid(d, app, ctx) {
     const b = app.$("[data-region='deck0'] .bpm")?.getBoundingClientRect();

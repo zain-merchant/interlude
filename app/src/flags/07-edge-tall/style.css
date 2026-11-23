@@ -6,6 +6,3 @@
 :root[data-flag-edge-tall] .app {
   grid-template-rows: var(--waves, 136px) var(--decks, 360px) var(--gap) minmax(160px, 1fr);
 }
-:root[data-flag-edge-tall] .app.sampling {
-  grid-template-rows: var(--waves, 136px) var(--decks, 360px) var(--sampler) var(--gap) minmax(160px, 1fr);
-}

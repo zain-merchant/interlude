@@ -3,10 +3,7 @@
 :root[data-flag-panel-sizes] .app {
   grid-template-rows: var(--waves, 136px) var(--decks, 360px) var(--gap) minmax(160px, 1fr);
 }
-:root[data-flag-panel-sizes] .app.sampling {
-  grid-template-rows: var(--waves, 136px) var(--decks, 360px) var(--sampler) var(--gap) minmax(160px, 1fr);
-}
-/* The sidebar's width, shared with Settings' page list (#36). */
+/* The sidebar's width. */
 :root[data-flag-panel-sizes] section.library {
   grid-template-columns: var(--library-sidebar, 200px) minmax(0, 1fr);
 }

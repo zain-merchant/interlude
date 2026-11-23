@@ -26,10 +26,10 @@ export const show = {
     // Past the first hour, so the time played reads in hours too.
     await app.seek(0, 0.8);
     await app.search('Printworks');
-    ctx.els = () => [app.$("[data-region='deck0'] .times .el"), app.$("[data-region='deck0'] .times .rm"), app.rows().find((x) => x.textContent.includes('Printworks'))?.querySelectorAll('.n.num')[1]];
+    ctx.els = () => [app.$("[data-region='deck0'] .hub .el"), app.$("[data-region='deck0'] .hub .rm"), app.rows().find((x) => x.textContent.includes('Printworks'))?.querySelectorAll('.n.num')[1]];
   },
-  target: (app) => [app.$("[data-region='deck0'] .times"), app.rows().find((r) => r.textContent.includes('Printworks'))?.querySelectorAll('.n.num')[1]],
-  badge: (app) => app.$("[data-region='deck0'] .times")?.getBoundingClientRect(),
+  target: (app) => [app.$("[data-region='deck0'] .hub"), app.rows().find((r) => r.textContent.includes('Printworks'))?.querySelectorAll('.n.num')[1]],
+  badge: (app) => app.$("[data-region='deck0'] .hub")?.getBoundingClientRect(),
   aid(d, app, ctx) {
     const before = ctx.phase === 'before';
     const say = (s) => {

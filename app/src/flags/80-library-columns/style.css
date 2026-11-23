@@ -5,39 +5,33 @@
    with the list (half and three tenths of the extra width), so a wide
    window's columns spread across it instead of leaving its right third
    empty. Folder takes what's left. (% of the row, since fr can't go in
-   min().) */
-:root[data-flag-library-columns] section.library {
+   min().) Since the merge of upstream's column picker, the widths are
+   --col-<column> variables Library.svelte reads, and the cells carry
+   data-col, so the rules hold whichever columns are shown. */
+:root[data-flag-library-columns] section.library .main {
   --lc-title: max(360px, calc(360px + (100% - 1200px) * 0.5));
   --lc-artist: max(240px, calc(240px + (100% - 1200px) * 0.3));
-}
-:root[data-flag-library-columns] section.library .row {
-  --lc-fixed: calc(26px + 64px + var(--lib-key, 68px) + 64px);
-  grid-template-columns:
-    26px
-    minmax(0, min(var(--lc-title), calc((100% - var(--lc-fixed)) * 2.4 / 5.2)))
-    minmax(0, min(var(--lc-artist), calc((100% - var(--lc-fixed)) * 1.6 / 5.2)))
-    64px var(--lib-key, 68px) 64px minmax(0, 1fr);
-}
-:root[data-flag-library-columns][data-flag-spacing] section.library .row {
-  --lc-fixed: calc(24px + 64px + var(--lib-key, 68px) + 64px);
-  grid-template-columns:
-    24px
-    minmax(0, min(var(--lc-title), calc((100% - var(--lc-fixed)) * 2.4 / 5.2)))
-    minmax(0, min(var(--lc-artist), calc((100% - var(--lc-fixed)) * 1.6 / 5.2)))
-    64px var(--lib-key, 68px) 64px minmax(0, 1fr);
+  /* The columns the user shows are read by Library.svelte (--col-<column>);
+     Album and Genre keep their shares, Folder takes what's left. */
+  --col-title: minmax(0, min(var(--lc-title), 32%));
+  --col-artist: minmax(0, min(var(--lc-artist), 21%));
+  --col-bpm: 64px;
+  --col-key: var(--lib-key, 68px);
+  --col-time: 64px;
+  --col-folder: minmax(0, 1fr);
 }
 /* 24px between the numbers: Key and Folder start 24px after the text
    before them (the cell before pads its right side by 6, or 8 under #15). */
-:root[data-flag-library-columns] section.library .row > :is(:nth-child(5), :nth-child(7)) {
+:root[data-flag-library-columns] section.library .row > :is([data-col='key'], [data-col='folder']) {
   padding-left: 18px;
 }
-:root[data-flag-library-columns][data-flag-spacing] section.library .row > :is(:nth-child(5), :nth-child(7)) {
+:root[data-flag-library-columns][data-flag-spacing] section.library .row > :is([data-col='key'], [data-col='folder']) {
   padding-left: 16px;
 }
 /* BPM at full strength (an empty one stays at the off level). */
-:root[data-flag-library-columns] section.library .scroll .row > .n:nth-child(4):not(.none) {
+:root[data-flag-library-columns] section.library .scroll .row > .n[data-col='bpm']:not(.none) {
   color: var(--fg);
 }
-:root[data-flag-library-columns] section.library .scroll .row.missing > .n:nth-child(4) {
+:root[data-flag-library-columns] section.library .scroll .row.missing > .n[data-col='bpm'] {
   color: inherit;
 }

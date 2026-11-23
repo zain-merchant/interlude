@@ -22,7 +22,7 @@
 // - A sidebar section heading keeps with its first item: while that item
 //   is still below the foot, the heading isn't drawn, so "History" is never
 //   stranded, or cut in half, at the panel's bottom edge.
-// - History lists ten days, then "Show all 14" opens the rest in place.
+// - (History's "Show all" went with upstream dropping History from the sidebar.)
 // - The list's focus ring followed its new uneven corners (square at the
 //   top, one rounded bottom corner); it now rings the selected row instead
 //   (1px, the list's own style; #14 draws it 2px when on).
@@ -31,7 +31,7 @@ export default {
   n: 20,
   title: 'Track list runs to the library\'s edge',
   group: 'Layout',
-  notes: 'Rows run to the library card\'s bottom edge and are cut there, by the card\'s own corner, instead of by a rounded box 8px inside it. The list and sidebar fade over 16px to 30% at an edge with more beyond it (top only once scrolled); History has "Show all" past ten days; the list\'s focus ring goes on the selected row.',
+  notes: 'Rows run to the library card\'s bottom edge and are cut there, by the card\'s own corner, instead of by a rounded box 8px inside it. The list and sidebar fade over 16px to 30% at an edge with more beyond it (top only once scrolled); the list\'s focus ring goes on the selected row.',
 };
 
 /** Show me: a selected row straddling the bottom of the track list, a loupe on the library's bottom-right corner, flipping. */

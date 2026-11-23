@@ -9,16 +9,15 @@
 // tab goes --fg-2 and its underline --fg-3 (a step above the other tabs), the beat-jump size dims with its
 // arrows, and the lanes drop their hint (the deck header keeps it, once
 // per deck). Pitch and Key lock stay live: they work without a track.
-// With deck-polish's quieter tenths on, an empty time stays one grey. With
-// deck-spare-height on, the hint moves from the subtitle into the empty
-// overview well, centred (Deck.svelte puts it on the well as data-hint),
-// and the subtitle keeps its room so loading a track moves nothing.
+// With deck-polish's quieter tenths on, an empty time stays one grey.
+// (The hint in the overview well went with #53 deck-spare-height, retired
+// at the merge of upstream's deck, which sizes its own rows.)
 export default {
   id: 'empty-deck',
   n: 46,
   title: 'An empty deck looks empty',
   group: 'Polish',
-  notes: 'With no track: BPM dash and times at --fg-4, the selected tab at --fg-2 with a --fg-3 underline (still above the other tabs), the jump size dims with its arrows, and the load hint shows once per deck (not on the lanes too).',
+  notes: 'With no track: BPM dash and times at --fg-4, the selected tab at --fg-2 with a --fg-3 underline (still above the other tabs), the jump size dims with its arrows, and the load hint shows once per deck, in the deck\'s header (not on the lanes too). The hint in the overview well went with #53.',
 };
 
 /** Show me: deck B ejected; flipping shows bright zeros and four hints (before) and a quiet empty deck (after). */
@@ -34,11 +33,11 @@ export const show = {
     await app.until(() => !app.loaded(1), 2000, 'deck B to empty');
   },
   target: (app) => [app.$("[data-region='deck1']"), app.$("[data-region='waves']")],
-  badge: (app) => app.$("[data-region='deck1'] .times")?.getBoundingClientRect(),
+  badge: (app) => app.$("[data-region='deck1'] .hub")?.getBoundingClientRect(),
   aid(d, app, ctx) {
     const n = 1;
     if (app.loaded(n)) return;
-    const t = app.$(`[data-region='deck${n}'] .times`)?.getBoundingClientRect();
+    const t = app.$(`[data-region='deck${n}'] .hub`)?.getBoundingClientRect();
     const w = app.$("[data-region='waves']")?.getBoundingClientRect();
     if (!t || !w) return;
     const before = ctx.phase === 'before';

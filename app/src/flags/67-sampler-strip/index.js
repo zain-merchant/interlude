@@ -1,28 +1,26 @@
-// #67 (mixer): the sampler strip says what to do and fits its dial (M8, C24).
+// #67 (mixer): the sampler strip's Level dial fits, and empty slots show
+// their edge (M8, C24).
 //
-// The Level dial's 40px box filled the 40px strip, touching both edges,
-// with the close × crowding it; the eight slots were dark numbered wells
-// that said nothing about dropping or clicking, and clicking an empty one
-// did nothing. With the flag on (hooks in Sampler.svelte):
-// - the Level dial is size 14, its tick ring 6px clear of the strip's
-//   edges, 8px from its label and 12px from the close ×;
-// - empty slots get a faint ring over the well, and the first empty one
-//   reads "Drag a track here" ("Drag here" when narrow) in --fg-3;
-// - clicking an empty slot puts the library's selected track in it, and
-//   its tooltip says so.
+// The Level dial's 40px box filled the strip, touching both edges. With the
+// flag on the dial is size 14 (Sampler.svelte), its tick ring clear of the
+// strip's edges and 8px from its label, and empty slots get a faint ring
+// over the well and a hand cursor. Since the merge of upstream main the
+// sampler is a row inside the library and upstream's empty slots say "Add
+// sound" and open a file picker on a click, which covers what this flag's
+// "Drag a track here" hint and click-to-load did, so those parts are gone.
 export default {
   id: 'sampler-strip',
   n: 67,
-  title: 'Sampler slots say what they take, and the Level dial fits',
+  title: 'The sampler\'s Level dial fits, and empty slots show their edge',
   group: 'Controls',
-  notes: 'Sampler.svelte: Knob size 14, "Drag a track here" in the first empty slot (it moves on as slots fill), click an empty slot = put(selected()), empty slots not aria-disabled. style.css: dial 1px down (ring 6px clear at the top, cap on the centre line of the label), gap 8, 9px left of the label to match the 9px of ring right of the cap, --line ring on empty wells, hint --fg-3, container query for the short hint.',
+  notes: 'Sampler.svelte: Knob size 14. style.css: dial 1px down, gap 8, 9px left of the label, --line ring on empty wells (brighter on hover) and a hand cursor. (The hint and click-to-load went with upstream\'s "Add sound" slots.)',
 };
 
 /** Show me: the sampler open with a track selected; loupes on the first slots and on the Level dial, flipping. */
 export const show = {
-  about: "The sampler's empty slots were dark boxes that gave no hint you could drop a track on them, clicking one did nothing, and the Level dial touched the strip's edges. Now an empty slot says \"Drag a track here\", a click loads the selected track, and the dial fits.",
-  before: 'Eight dark numbered boxes: nothing says to drag a track onto them, and clicking one does nothing. At the right end, the Level dial fills the strip from edge to edge and crowds the ×.',
-  after: 'Empty slots have a faint outline and the first one reads "Drag a track here"; clicking an empty slot loads the track selected in the library. The Level dial sits inside the strip with room around it.',
+  about: "The sampler's Level dial filled its strip from edge to edge, and empty slots were dark wells with no edge. Now the dial sits inside the strip, and an empty slot has a faint outline you can aim at.",
+  before: 'The Level dial touches the strip above and below; the empty slots are dark wells with no edge.',
+  after: 'The Level dial sits inside the strip with room around it, and each empty slot has a faint outline (brighter under the pointer).',
   async setup(app, ctx) {
     if (!app.$('.sampler')) {
       ctx.opened = true;
@@ -56,7 +54,7 @@ export const show = {
     const b = d.loupe('level', { x: k.left - 40, y: s.top - 4 }, { zoom, size: { w: wb * zoom, h: h * zoom }, at: { x: innerWidth - 16 - wb * zoom, y }, caption: '' });
     ctx.at = a.rect;
     const after = ctx.phase === 'after';
-    d.text(a.rect.x, a.rect.bottom + 16, after ? 'outlined, "Drag a track here", click loads the selected track' : 'blank wells: no hint, a click does nothing', { tone: after ? 'ok' : 'bad', fixed: true });
+    d.text(a.rect.x, a.rect.bottom + 16, after ? 'empty slots outlined' : 'empty slots: dark wells, no edge', { tone: after ? 'ok' : 'bad', fixed: true });
     d.text(b.rect.x, b.rect.bottom + 16, after ? 'the dial sits inside the strip' : 'the dial touches the strip edges', { tone: after ? 'ok' : 'bad', fixed: true });
   },
 };

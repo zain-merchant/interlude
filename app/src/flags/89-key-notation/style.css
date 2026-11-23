@@ -10,11 +10,11 @@
   /* Read by #80's column sizes. */
   --lib-key: 88px;
 }
-:root[data-flag-key-notation][data-flag-key-notation-show='both']:not([data-flag-library-columns]) section.library .row {
-  grid-template-columns: 26px minmax(0, 2.4fr) minmax(0, 1.6fr) 64px 72px 64px minmax(0, 1.2fr);
+:root[data-flag-key-notation][data-flag-key-notation-show='both']:not([data-flag-library-columns]) section.library .main {
+  --col-key: 72px;
 }
-:root[data-flag-key-notation][data-flag-key-notation-show='both'][data-flag-spacing]:not([data-flag-library-columns]) section.library .row {
-  grid-template-columns: 24px minmax(0, 2.4fr) minmax(0, 1.6fr) 64px 76px 64px minmax(0, 1.2fr);
+:root[data-flag-key-notation][data-flag-key-notation-show='both'][data-flag-spacing]:not([data-flag-library-columns]) section.library .main {
+  --col-key: 76px;
 }
 /* "Both": the key name sits in a slot a little wider than the widest name
    ("C♯m", 27px at 13px), so every row's Camelot code starts at one x (it

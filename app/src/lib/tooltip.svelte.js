@@ -22,8 +22,7 @@ function place(node, text) {
   // Above the control unless there's no room; never over its own value.
   // #61 (UI audit flag): eq-kill: a control may ask for its tip below (data-tip-below, set only while that flag is on).
   // #30 (UI audit flag): tooltip-wrap: the library toolbar's tips open below, clear of the decks above.
-  // #53 (UI audit flag): deck-spare-height closes the band above the transport, so a transport button's tip opens below it, off the hot cue row.
-  tooltip.below = node.dataset.tipBelow !== undefined || r.top < 40 || (flag('tooltip-wrap') && !!node.closest('section.library .bar')) || (flag('deck-spare-height') && !!node.closest("[data-region^='deck'] .transport"));
+  tooltip.below = node.dataset.tipBelow !== undefined || r.top < 40 || (flag('tooltip-wrap') && !!node.closest('section.library .bar'));
   tooltip.y = tooltip.below ? r.bottom + 8 : r.top - 8;
   tooltip.visible = true;
   owner = node;

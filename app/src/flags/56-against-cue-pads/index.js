@@ -11,6 +11,9 @@
 // slot's colour). Count setting: four, or all eight in two rows of four
 // (Performance.svelte renders eight under that option; the mode row grows
 // by a row, taken from the overview).
+// Since the merge of upstream main the deck shows all eight hot cues in two
+// rows itself, so this flag's "eight" count adds nothing over upstream; its
+// pads (a body to hit) are still the thing to judge.
 export default {
   id: 'against-cue-pads',
   n: 56,

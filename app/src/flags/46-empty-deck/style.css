@@ -3,15 +3,15 @@
    dims with its arrows, and the load hint shows once, in the deck's
    header (the lane keeps just its deck bar). Pitch and Key lock stay
    live: they work without a track. */
-:root[data-flag-empty-deck] [data-region^='deck']:has(.title .name.dim) :is(.bpm .big, .times .el, .times .rm) {
+:root[data-flag-empty-deck] [data-region^='deck']:has(header .name.dim) :is(.bpm .big, .hub .el, .hub .rm) {
   color: var(--fg-4);
 }
 /* The selected tab a step down (--fg-2, its underline --fg-3), still a
    step above the others (--fg-3); at --fg-3 it matched them, b-K30. */
-:root[data-flag-empty-deck] [data-region^='deck']:has(.title .name.dim) .modes button.on {
+:root[data-flag-empty-deck] [data-region^='deck']:has(header .name.dim) .modes button.on {
   color: var(--fg-2);
 }
-:root[data-flag-empty-deck] [data-region^='deck']:has(.title .name.dim) .modes button.on::after {
+:root[data-flag-empty-deck] [data-region^='deck']:has(header .name.dim) .modes button.on::after {
   background: var(--fg-3);
 }
 :root[data-flag-empty-deck] [data-region^='deck'] .transport .jumps:has(button[aria-disabled='true']) span {
@@ -23,27 +23,7 @@
 
 /* With deck-polish's quieter tenths, an empty time stays one grey: the
    tenths don't dim again on top of --fg-4. */
-:root[data-flag-empty-deck] [data-region^='deck']:has(.title .name.dim) .times .t {
+:root[data-flag-empty-deck] [data-region^='deck']:has(header .name.dim) .hub .t {
   opacity: 1;
   color: inherit;
-}
-
-/* With deck-spare-height's taller overview, the load hint moves into the
-   empty well, where the track will appear, centred at --t-sm --fg-3; the
-   subtitle line keeps its room (hidden), so loading a track moves nothing.
-   Still once per deck. */
-:root[data-flag-empty-deck][data-flag-deck-spare-height] [data-region^='deck'] .overview[data-hint]::after {
-  content: attr(data-hint);
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  padding: 0 var(--pad);
-  font-size: var(--t-sm);
-  color: var(--fg-3);
-  text-align: center;
-  pointer-events: none;
-}
-:root[data-flag-empty-deck][data-flag-deck-spare-height] [data-region^='deck']:has(.title .name.dim) .title .artist {
-  visibility: hidden;
 }

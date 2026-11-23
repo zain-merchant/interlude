@@ -29,6 +29,8 @@
 // - Every description follows its control, Slip's included (the review
 //   asked for one order on the page). Sync's note is one line.
 // Hooks in Settings.svelte.
+// Since the merge of upstream main: "Controller not working?" (Controllers)
+// says it in one sentence too.
 export default {
   id: 'settings-copy',
   n: 34,

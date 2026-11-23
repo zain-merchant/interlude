@@ -81,7 +81,7 @@ export function setKeyShift(deck, semitones) {
   control({ type: 'setKeyShift', deck, semitones: s });
   // Shown at once; the engine's next report agrees.
   engine.decks[deck].keyShift = s;
-  announce(s ? `Deck ${deckName(deck)} key ${semis(s)}` : `Deck ${deckName(deck)} back to the track's key`);
+  announce(s ? `${Deck(deck)} key ${semis(s)}` : `${Deck(deck)} back to the track's key`); // #88 (UI audit flag): deck-names
 }
 
 /** Moves a deck's key a semitone up (1) or down (-1). */
@@ -94,7 +94,7 @@ export const canKeySync = (deck) => !!tracks[deck] && !!engine.decks[deck].key &
 export function keySync(deck) {
   if (!canKeySync(deck)) return;
   control({ type: 'keySync', deck });
-  announce(`Deck ${deckName(deck)} key matched to deck ${deckName(1 - deck)}`);
+  announce(`${Deck(deck)} key matched to ${Deck(1 - deck).replace(/^D/, 'd').replace(/^Left|^Right/, (w) => w.toLowerCase())}`); // #88 (UI audit flag): deck-names
 }
 
 /** Quantize, for both decks, from Settings > Decks (B toggles it too). */

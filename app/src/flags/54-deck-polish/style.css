@@ -16,48 +16,18 @@
    the last digit recedes: under the big time --fg-2, under the small one
    --fg-3 (4.5:1 or better on the deck glass; an opacity step on --fg-2
    fell to 3.4:1). Flag 18's ending colour and an empty deck set their own. */
-:root[data-flag-deck-polish] [data-region^='deck'] .times .t {
+:root[data-flag-deck-polish] [data-region^='deck'] .hub .t {
   color: var(--fg-3);
 }
-:root[data-flag-deck-polish] [data-region^='deck'] .times:not([data-big='remaining']) .el .t,
-:root[data-flag-deck-polish] [data-region^='deck'] .times[data-big='remaining'] .rm .t {
+:root[data-flag-deck-polish] [data-region^='deck'] .hub:not([data-big='remaining']) .el .t,
+:root[data-flag-deck-polish] [data-region^='deck'] .hub[data-big='remaining'] .rm .t {
   color: var(--fg-2);
 }
 
-/* The header is a 2×2 grid: title | BPM over artist | key. Each row
-   puts its two on one baseline (the title with the BPM numerals, the artist
-   with the key: they were 3px apart, since lining up only the first row
-   pushed the BPM column up by the difference between a 24px and a 32px
-   figure in the same 28px line), and the BPM and key end on one right
-   edge. The title keeps 24px (2 × --gap) clear of the BPM and is cut
-   there, so a long one can't run on into the numerals (it sat 8px off and
-   read as one string). Where the deck is narrow (a header under 300px,
-   the smallest windows) the title drops to --t-md and the BPM numerals to
-   --t-lg on the same 28px line, so more of the title shows. Deck.svelte
-   cuts it at a glyph, with no space before the "…". */
-:root[data-flag-deck-polish] [data-region^='deck'] header {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  grid-template-rows: auto auto;
-  gap: 0 calc(2 * var(--gap));
-  align-items: baseline;
-  container-type: inline-size;
-}
-:root[data-flag-deck-polish] [data-region^='deck'] header > :is(.title, .bpm) {
-  grid-row: 1 / span 2;
-  display: grid;
-  grid-template-rows: subgrid;
-  align-items: baseline;
-}
+/* The title a touch tighter, as the big numerals are. (The 2×2 header
+   grid this flag had before the merge of upstream's deck is gone: the
+   tempo and key now sit in their own cell of the deck's grid, beside the
+   record, and upstream's narrow layout puts them under the title.) */
 :root[data-flag-deck-polish] [data-region^='deck'] .name {
   letter-spacing: -0.025em;
-}
-@container (max-width: 299px) {
-  :root[data-flag-deck-polish] [data-region^='deck'] .name {
-    font-size: var(--t-md);
-    letter-spacing: -0.01em;
-  }
-  :root[data-flag-deck-polish] [data-region^='deck'] .bpm .big {
-    font-size: var(--t-lg);
-  }
 }

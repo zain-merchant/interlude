@@ -12,14 +12,14 @@
 // other time big, for both decks; the choice is kept in localStorage as
 // oss-dj.timeMode. Its tooltip says so ("Click to show time played" / "time
 // left"), and a press that drags more than 3px doesn't swap.
-// Hooks: Deck.svelte (the .times attributes), mode.svelte.js (the shared
+// Hooks: Platter.svelte (the .hub attributes: the times live in the record's still centre since the merge of upstream's deck), mode.svelte.js (the shared
 // choice).
 export default {
   id: 'time-remaining',
   n: 40,
   title: 'Time left is the big number',
   group: 'Type and colour',
-  notes: 'Each deck shows the time left big and the time played small (sizes swap in place). Clicking the times swaps them back for both decks, remembered as oss-dj.timeMode.',
+  notes: 'Each deck shows the time left big and the time played small (sizes swap in place). Clicking the record\'s centre swaps them back for both decks, remembered as oss-dj.timeMode.',
 };
 
 /** Show me: deck A playing mid-track; flipping shows the time played big (before) and the time left big (after), magnified. */
@@ -32,10 +32,10 @@ export const show = {
     await app.seek(0, 0.4);
     await app.play(0);
   },
-  target: "[data-region='deck0'] .times",
+  target: "[data-region='deck0'] .hub",
   badge: (app, ctx) => ctx.at,
   aid(d, app, ctx) {
-    const t = app.$("[data-region='deck0'] .times");
+    const t = app.$("[data-region='deck0'] .hub");
     if (!t) return;
     const r = t.getBoundingClientRect();
     const z = 2;

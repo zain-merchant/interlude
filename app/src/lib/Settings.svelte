@@ -770,7 +770,12 @@
         </section>
         <section class="display">
           <h3>Controller not working?</h3>
+          <!-- #34 (UI audit flag): settings-copy says it in one sentence. -->
+          {#if flag('settings-copy')}
+            <p>If it does nothing or the wrong things, the app asks for each control in turn and you press or move it.</p>
+          {:else}
           <p>If it does nothing, or the wrong things, set it up step by step: the app asks for each control and you press or move it. It takes a couple of minutes, and you can share the result so it works for everyone.</p>
+          {/if}
           <div class="size">
             <button class="btn sm" onclick={onsetup}>Set up step by step…</button>
           </div>

@@ -53,6 +53,6 @@
 }
 
 /* Large numerals: tracking by size, so the two 24px numerals match. */
-:root[data-flag-type-scale] [data-region^='deck'] .times .el {
+:root[data-flag-type-scale] [data-region^='deck'] .hub .el {
   letter-spacing: -0.02em;
 }

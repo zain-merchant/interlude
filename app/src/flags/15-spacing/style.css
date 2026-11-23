@@ -15,8 +15,8 @@
 
 /* Library cells pad 8 (were 6). The marker column gives the 2px back
    (26 to 24), so titles still start where the search text does. */
-:root[data-flag-spacing] .library .row {
-  grid-template-columns: 24px minmax(0, 2.4fr) minmax(0, 1.6fr) 64px 56px 64px minmax(0, 1.2fr);
+:root[data-flag-spacing] .library .main {
+  --col-mark: 24px;
 }
 :root[data-flag-spacing] .library .row span,
 :root[data-flag-spacing] .library .sort {

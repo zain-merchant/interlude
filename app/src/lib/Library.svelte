@@ -202,7 +202,16 @@
   );
   const columns = $derived(COLUMNS.filter((c) => c.by === 'title' || !hidden.includes(c.by)));
   // The last 28px holds the columns button in the heading row.
-  const gridColumns = $derived(`26px ${columns.map((c) => c.width).join(' ')} 28px`);
+  // #15, #80, #89 (UI audit flags): spacing, library-columns and key-notation size the columns
+  // through --col-mark and --col-<column> on .main; each falls back to the width above.
+  const sizedCols = $derived(flag('spacing') || flag('library-columns') || flag('key-notation'));
+  const gridColumns = $derived(
+    sizedCols
+      ? `var(--col-mark, 26px) ${columns.map((c) => `var(--col-${c.by}, ${c.width})`).join(' ')} 28px`
+      : `26px ${columns.map((c) => c.width).join(' ')} 28px`,
+  );
+  // #80 (UI audit flag): library-columns names each cell's column (data-col), since the user picks which show.
+  const colAttr = (c) => (flag('library-columns') ? c.by : undefined);
   function toggleColumn(by) {
     hidden = hidden.includes(by) ? hidden.filter((h) => h !== by) : [...hidden, by];
     if (hidden.includes(by) && sort.by === by) sort = { by: null, dir: 1 };
@@ -876,7 +885,7 @@
       {#each columns as c}
         {@const on = sortOn.by === c.by}
         <!-- #81 (UI audit flag): library-sort gives every heading a slot for its arrow (hidden unless sorted), so nothing shifts. -->
-        <button class="sort" class:on class:num={c.num} aria-pressed={on}
+        <button class="sort" class:on class:num={c.num} aria-pressed={on} data-col={colAttr(c)}
           aria-label="Sort by {c.label.toLowerCase()}{on ? (sortOn.dir > 0 ? ', ascending' : ', descending') : ''}"
           use:flagTip={c.by === 'key' && flag('visual-key-match') ? () => 'A line under a key: it mixes with what’s loaded' : null}
           onclick={() => sortBy(c.by)}>{c.label}{#if on || flag('library-sort')}<svg viewBox="0 0 10 10" aria-hidden="true" class:down={on && sortOn.dir < 0} class:ghost={!on}><path d="M2.5 6.5 5 4l2.5 2.5" /></svg>{/if}</button>
@@ -936,19 +945,19 @@
             <span class="ld">{#each decks as d}<b class:b={d === 1} aria-hidden="true"></b>{#if flag('deck-letters')}<i class="dl" class:b={d === 1} aria-hidden="true">{'AB'[d]}</i>{/if}{/each}</span>
             {#each columns as c (c.by)}
               {#if c.by === 'title'}
-                <span class="t">{#if t.missing}<span class="k" use:tip={() => `File not found: ${t.path}`}>{t.title}</span><span class="sr">, file not found</span>{:else if markOn}{#each marks(t.title) as m}{#if m.hit}<mark>{m.s}</mark>{:else}{m.s}{/if}{/each}{:else}{t.title}{/if}</span>
+                <span class="t" data-col={colAttr(c)}>{#if t.missing}<span class="k" use:tip={() => `File not found: ${t.path}`}>{t.title}</span><span class="sr">, file not found</span>{:else if markOn}{#each marks(t.title) as m}{#if m.hit}<mark>{m.s}</mark>{:else}{m.s}{/if}{/each}{:else}{t.title}{/if}</span>
               {:else if c.by === 'bpm'}
-                <span class="n num" class:none={a && !a.bpm}>{a ? bpmText(a) || NONE : ''}</span>
+                <span class="n num" class:none={a && !a.bpm} data-col={colAttr(c)}>{a ? bpmText(a) || NONE : ''}</span>
               {:else if c.by === 'key'}
-                <span class:none={a && !a.key}>{#if a?.key}<span class="k" class:mix={!decks.length && mixKeys.some((k) => keysMix(k, a.key))} use:tip={() => keyTip(a.key, decks.length > 0)}><!-- #89 (UI audit flag): key-notation: Camelot, or both as the decks show it (the name in a slot, so the codes line up).
+                <span class:none={a && !a.key} data-col={colAttr(c)}>{#if a?.key}<span class="k" class:mix={!decks.length && mixKeys.some((k) => keysMix(k, a.key))} use:tip={() => keyTip(a.key, decks.length > 0)}><!-- #89 (UI audit flag): key-notation: Camelot, or both as the decks show it (the name in a slot, so the codes line up).
                   -->{#if notation === 'camelot'}{camelot(a.key)}{:else if notation === 'both'}<span class="kn">{keyName(a.key)}</span> <span class="cam">{camelot(a.key)}</span>{:else}{keyName(a.key)}{/if}</span>{:else if a}{NONE}{/if}</span>
               {:else if c.by === 'time'}
-                <span class="n num" class:none={a?.failed}>{a ? timeText(a) || NONE : ''}</span>
+                <span class="n num" class:none={a?.failed} data-col={colAttr(c)}>{a ? timeText(a) || NONE : ''}</span>
               {:else if markOn && (c.by === 'artist' || c.by === 'folder' || c.by === 'album' || c.by === 'genre')}
                 <!-- #84 (UI audit flag): search-scope marks the searched words. -->
-                <span>{#each marks(t[c.by]) as m}{#if m.hit}<mark>{m.s}</mark>{:else}{m.s}{/if}{/each}</span>
+                <span data-col={colAttr(c)}>{#each marks(t[c.by]) as m}{#if m.hit}<mark>{m.s}</mark>{:else}{m.s}{/if}{/each}</span>
               {:else}
-                <span>{t[c.by] ?? ''}</span>
+                <span data-col={colAttr(c)}>{t[c.by] ?? ''}</span>
               {/if}
             {/each}
             {#if decks.length && flag('deck-names')}<span class="sr">, on the {decks.map((d) => ['left', 'right'][d]).join(' and ')} {decks.length > 1 ? 'decks' : 'deck'}</span>{:else if decks.length}<span class="sr">, on deck {decks.map((d) => 'AB'[d]).join(' and ')}</span>{/if}
