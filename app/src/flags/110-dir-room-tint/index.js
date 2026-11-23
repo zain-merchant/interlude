@@ -54,13 +54,23 @@ export default {
         ['label', 'With a label', 'Only under the pointer, saying what dropping does.'],
       ],
     },
+    playing: {
+      type: 'choice',
+      label: "Dragging over a deck that's playing",
+      default: 'words',
+      options: [
+        ['words', 'It says so', "The deck's own tint, and a line: dropping once warns, twice replaces it."],
+        ['quiet', 'Like any deck', "The deck's own tint and nothing else; the first drop still warns."],
+        ['red', 'A red edge', 'As it was: a fainter tint, a red edge and the line in red.'],
+      ],
+    },
     on: {
       type: 'choice',
       label: "A key that's on",
-      default: 'breath',
+      default: 'ink',
       options: [
-        ['breath', 'A breath of colour', 'The key is in, its glyph or label takes the colour, and a trace of it is in the fill.'],
-        ['ink', 'Only its glyph or label', 'The same, with no colour in the fill.'],
+        ['ink', 'Only its glyph or label', 'The key is in, and its glyph or label takes the colour. Rec has red in it while it records.'],
+        ['breath', 'A breath of colour', 'The same, with a trace of the colour in the fill.'],
       ],
     },
     setcue: {

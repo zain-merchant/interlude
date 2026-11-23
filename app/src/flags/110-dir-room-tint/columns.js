@@ -7,8 +7,8 @@
 // one never sorts. Keys: ← → 8px (⇧ 32px), Home the least, Enter to fit, ⌫ to
 // put back. Double-click fits. Right-click fits or resets.
 //
-// Order. A heading dragged 6px or more moves: a bright rule shows where it
-// would land, Esc puts it back, and the click that ends the drag doesn't
+// Order. A heading dragged 6px or more moves: its column is tinted and a bright
+// rule down the list shows where it would land, Esc puts it back, and the click that ends the drag doesn't
 // sort. ⌥← and ⌥→ move the heading that's focused.
 //
 // Library.svelte reads each width from --col-<column> on .main; these are set
@@ -230,7 +230,13 @@ export function colResize(head, opts) {
     const r = cs[at].getBoundingClientRect();
     const me = cs.indexOf(lift.cell);
     const stays = (after && at === me) || (!after && (at === me || at === me + 1));
-    mark.style.left = `${((after ? r.right : r.left) - x0) / scale()}px`;
+    const left = ((after ? r.right : r.left) - x0) / scale();
+    const own = lift.cell.getBoundingClientRect();
+    const list = head.nextElementSibling?.getBoundingClientRect();
+    mark.style.left = `${left}px`;
+    mark.style.setProperty('--col-from', `${(own.left - x0) / scale() - left + 1}px`);
+    mark.style.setProperty('--col-w', `${own.width / scale()}px`);
+    if (list) mark.style.setProperty('--col-h', `${(list.bottom - head.getBoundingClientRect().top) / scale()}px`);
     mark.classList.toggle('stays', stays);
   };
   const drop = (/** @type {boolean} */ keep) => {
