@@ -127,7 +127,7 @@ export class Waveform2D {
    *           colors: ReturnType<typeof themeColors> & { low: number[], mid: number[], high: number[] },
    *           beatLen?: number, firstBeat?: number, hotCues?: number[],
    *           loopIn?: number, loopOut?: number, looping?: boolean, slip?: number,
-   *           flags?: string, beatGrid?: boolean, edge?: string, clipStart?: boolean, cueChips?: boolean,
+   *           flags?: string, edge?: string, clipStart?: boolean, cueChips?: boolean,
    *           keyline?: boolean, loopTint?: boolean, half?: string, look?: string, veil?: string }} view
    *   Positions are in bins, -1 for none; `perPx` is bins per device pixel.
    */
@@ -163,8 +163,7 @@ export class Waveform2D {
     }
     // The grid sits over the waveform so it reads against loud parts too,
     // and under the veil so the played part dims with it.
-    // #41 (UI audit flag): beat-grid draws its own grid (phrase lines, lighten-only) in the same place.
-    if (grid) view.beatGrid ? this.grid(w, h, view, spp, x) : this.beats(w, h, view, spp, x);
+    if (grid) this.beats(w, h, view, spp, x);
     if (this.count) {
       // The played part: a dark veil so what's ahead is what reads.
       const px = Math.max(0, Math.min(w, x(view.playhead)));
@@ -275,48 +274,15 @@ export class Waveform2D {
     const pw = Math.max(18, ctx.measureText(label).width + 8);
     const px = x(view.playhead) - pw / 2;
     const py = h / 2 - 7;
-    ctx.fillStyle = '#ffffff';
+    // UI audit flags (the directions, #92 and up): the pill in the theme's --fg with --ink on it.
+    const themed = view.pill === 'theme';
+    ctx.fillStyle = themed ? rgba(view.colors.fg, 1) : '#ffffff';
     ctx.beginPath();
     ctx.roundRect(px, py, pw, 14, 4);
     ctx.fill();
-    ctx.fillStyle = '#0c0c0e';
+    ctx.fillStyle = themed ? rgba(view.colors.ink, 1) : '#0c0c0e';
     ctx.fillText(label, px + pw / 2, h / 2 + 0.5);
     ctx.textAlign = 'start';
-  }
-
-  /**
-   * #41 (UI audit flag): the beat grid drawn over the ribbon. Bars are 1px
-   * lines (every 16th bar, a phrase, stronger); beats are short ticks at
-   * the lane's top and bottom edges, so the waveform between stays clear.
-   */
-  grid(w, h, view, spp, x) {
-    const { ctx } = this;
-    const dpr = window.devicePixelRatio || 1;
-    const len = view.beatLen;
-    const first = Math.ceil((view.start - view.firstBeat) / len);
-    const barsOnly = len / spp < 6;
-    const tick = 6;
-    // Lighten only, so a line crossing the ribbon's white core can't draw a
-    // darker seam through it.
-    ctx.globalCompositeOperation = 'screen';
-    for (let b = first; ; b++) {
-      const bx = Math.round(x(view.firstBeat + b * len));
-      if (bx > w + 2) break;
-      const n = ((b % 64) + 64) % 64;
-      if (n === 0) {
-        // A phrase (every 16th bar): 2 device px, twice the bar's strength.
-        ctx.fillStyle = 'rgba(255,255,255,0.45)';
-        ctx.fillRect(bx - 1 / dpr, 0, 2 / dpr, h);
-      } else if (n % 4 === 0) {
-        ctx.fillStyle = 'rgba(255,255,255,0.2)';
-        ctx.fillRect(bx, 0, 1, h);
-      } else if (!barsOnly) {
-        ctx.fillStyle = 'rgba(255,255,255,0.15)';
-        ctx.fillRect(bx, 0, 1, tick);
-        ctx.fillRect(bx, h - tick, 1, tick);
-      }
-    }
-    ctx.globalCompositeOperation = 'source-over';
   }
 
   /** #50 (UI audit flag): a hot cue's numbered chip, 12px tall, at the top of its overview line. */
@@ -486,8 +452,7 @@ export class Waveform2D {
     this.band(ctx, cols, step, shift, mid, amp, 2, 0.34, c.high, 0.55, h);
     ctx.globalCompositeOperation = 'source-over';
     // A crisp edge on the outer band so the shape reads sharp under the glow.
-    // #41 (UI audit flag): beat-grid's edge setting can soften it ('soft'), so it stops tracing every fin.
-    ectx.strokeStyle = rgba(c.high, edge === 'soft' ? 0.25 : 0.55);
+    ectx.strokeStyle = rgba(c.high, 0.55);
     ectx.lineWidth = 1;
     for (const sign of [1, -1]) {
       ectx.beginPath();

@@ -7,7 +7,7 @@
   import { onMount } from 'svelte';
   import { engine, tracks, displayPos, onFrame, scrubStart, scrubTo, scrubEnd } from './engine.svelte.js';
   import { tip } from './tooltip.svelte.js';
-  import { flag, setting } from '../flags/registry.svelte.js';
+  import { flag, setting, flagsRev } from '../flags/registry.svelte.js';
   import { hms } from '../flags/08-stress-hours/time.js';
   import { timeMode, swapTimes } from '../flags/40-time-remaining/mode.svelte.js';
 
@@ -75,9 +75,26 @@
   const dpr = Math.min(2, typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1);
 
   // The record, redrawn only when its size or deck changes.
+  // UI audit flags (the directions, #92 and up): a direction can tint the
+  // record through --record-tint, --record-high (r, g, b) and --record-mat
+  // (a colour) on the deck; unset (every flag off), the record is as before.
+  const triplet = (v) => {
+    const n = String(v).trim().split(/[\s,]+/).map(Number);
+    return n.length === 3 && n.every((x) => Number.isFinite(x)) ? n : null;
+  };
+  function themed() {
+    flagsRev();
+    if (!wrap) return { col: COLS[deck], mat: '#0c0c0f' };
+    const cs = getComputedStyle(wrap);
+    const c = triplet(cs.getPropertyValue('--record-tint'));
+    const high = triplet(cs.getPropertyValue('--record-high'));
+    const mat = cs.getPropertyValue('--record-mat').trim();
+    return { col: { c: c ?? COLS[deck].c, high: high ?? COLS[deck].high }, mat: mat || '#0c0c0f' };
+  }
   $effect(() => {
     if (!vinylCv) return;
-    const R = vr, col = COLS[deck], hr = hubD / 2;
+    const { col, mat } = themed();
+    const R = vr, hr = hubD / 2;
     vinylCv.width = vinylCv.height = Math.round(R * 2 * dpr);
     vinylCv.style.width = vinylCv.style.height = R * 2 + 'px';
     const g = vinylCv.getContext('2d');
@@ -88,7 +105,7 @@
     let x = deck * 13 + 7;
     const rnd = () => ((x = (x * 16807) % 2147483647) / 2147483647);
     // The platter mat, seen through the record.
-    fill(R, '#0c0c0f');
+    fill(R, mat);
     for (let r = R * 0.3; r < R; r += Math.max(3, R * 0.035)) ring(r, 'rgba(255,255,255,.028)', 1);
     // Tinted vinyl: denser at the rim, where light travels through more of it.
     const tint = g.createRadialGradient(0, 0, hr, 0, 0, R);

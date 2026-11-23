@@ -17,7 +17,7 @@
   // what's different now, Before / After (flipping on its own, or pinned),
   // and Guides, Replay, Again and Done. The card keeps off what's shown.
   import { tick, onMount } from 'svelte';
-  import { FLAGS, flags, picks, recommended, lockedAt, setLocked, isDirection } from '../registry.svelte.js';
+  import { FLAGS, flags, picks, recommended, lockedAt, setLocked, isDirection, onByDefault } from '../registry.svelte.js';
   import { SHOWS, current, showMe, stopShow, replay, resumePending, setPhase, setFlipping, setSlow } from '../show/show.svelte.js';
   import { uiZoom } from '../../lib/uizoom.svelte.js';
   import Switch from './Switch.svelte';
@@ -79,6 +79,8 @@
   // All on is every fix: the directions (#92 and up) are whole-app looks,
   // opt-in and one at a time, so it leaves them as they are.
   const all = (on) => FLAGS.forEach((f) => (on && isDirection(f) ? null : (flags.on[f.id] = on)));
+  // Defaults: the recommended fixes on, everything else off (README.md lists them).
+  const defaults = () => FLAGS.forEach((f) => (flags.on[f.id] = onByDefault(f)));
   /** The direction that's on, if any: it changes how every fix looks, so the panel says so. */
   const direction = $derived(FLAGS.find((f) => isDirection(f) && flags.on[f.id]) ?? null);
   /** A flag by id, for the card's notes. */
@@ -434,6 +436,7 @@
         <div class="fp-head-acts">
           <button type="button" class="fp-text-btn" onclick={() => all(true)}>All on</button>
           <button type="button" class="fp-text-btn" onclick={() => all(false)}>All off</button>
+          <button type="button" class="fp-text-btn" onclick={defaults} title="The recommended fixes on, the rest off">Defaults</button>
           <button type="button" class="fp-text-btn" onclick={exportPicks} title="Copy every pick, setting and lock as JSON">{copied ? 'Copied' : 'Export'}</button>
           <button type="button" class="fp-icon" aria-label="Fold the panel (backquote key)" title="Fold (backquote key)" onclick={() => fold(true)}>
             <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 6l3.5 3.5L11.5 6" /></svg>

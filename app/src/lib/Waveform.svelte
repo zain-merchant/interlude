@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { Waveform2D, themeColors, HOT_CUES } from './waveform-2d.js';
   import { tracks, engine, displayPos, displaySlip, onFrame, scrubStart, scrubTo, scrubEnd, wake } from './engine.svelte.js';
-  import { flag, flagsRev, watchFlags } from '../flags/registry.svelte.js';
+  import { flag, flagsRev, watchFlags, DIRECTIONS } from '../flags/registry.svelte.js';
   import { openMenu } from './menu.svelte.js';
   import { gridMenu, gridMode, startSlide, slide, endSlide } from './grid.svelte.js';
 
@@ -32,10 +32,8 @@
   // change the theme's colours: the canvas reads them again whenever any
   // flag or setting changes (the registry bumps flagsRev), not only for a
   // list of flags that could fall behind.
-  // #41, #43, #50, #52, #54 (UI audit flags): what the canvas draws differently with them on.
+  // #43, #50, #52, #54 (UI audit flags): what the canvas draws differently with them on.
   const wf = () => ({
-    beatGrid: flag('beat-grid'),
-    edge: flag('beat-grid') ? 'soft' : '',
     clipStart: flag('lane-start'),
     cueChips: flag('overview-cues'),
     keyline: flag('deck-polish'),
@@ -49,6 +47,8 @@
     ...(flag('dir-field') ? { look: 'field' } : {}),
     // #108 (UI audit flag): dir-ground veils the played part in the deck's ground, not grey.
     ...(flag('dir-ground') ? { veil: 'ground' } : {}),
+    // The directions (#92 and up): the bar number's pill in the theme's ink, not fixed white.
+    ...(DIRECTIONS.some((id) => flag(id)) ? { pill: 'theme' } : {}),
   });
 
   // #49 (UI audit flag): the play head's x in device px, at the waves

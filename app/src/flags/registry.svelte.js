@@ -7,10 +7,14 @@
 //   (and, when it can't be done in CSS, small hooks in components that
 //   read flag('<id>') or setting('<id>', '<key>') from this file)
 //
-// All flags are off by default, and off is exactly the app as it was. The
-// audit's panel (panel/FlagPanel.svelte, dev builds only) turns them on and
-// tunes their settings; this file stays the one place the picks live. To
-// ship one, keep its folder's changes and drop its gate.
+// The recommended fixes are on by default (the owner: "the UI polish things
+// you can leave on as default"); the rest stay off: the directions, the
+// "against the doc" alternatives and the worst-case test data. A flag that
+// is off is exactly the app as it was, so All off in the panel is upstream's
+// app. The audit's panel (panel/FlagPanel.svelte, dev builds only) turns
+// them on and off and tunes their settings; this file stays the one place
+// the picks live. To ship one, keep its folder's changes and drop its gate.
+// The list of what's on by default, and why the rest isn't, is in README.md.
 //
 // Settings: { key: { type: 'range', min, max, step, default, unit? } }
 // becomes the CSS variable --flag-<id>-<key>; { type: 'choice', options:
@@ -21,7 +25,7 @@
 const modules = import.meta.glob('./*/index.js', { eager: true, import: 'default' });
 import.meta.glob('./*/style.css', { eager: true });
 
-/** @typedef {{ id: string, n: number, title: string, group?: string, issue?: string, notes?: string, against?: string, superseded?: string, settings?: Record<string, any> }} Flag */
+/** @typedef {{ id: string, n: number, title: string, group?: string, issue?: string, notes?: string, against?: string, superseded?: string, byDefault?: boolean, settings?: Record<string, any> }} Flag */
 /** @type {Flag[]} */
 export const FLAGS = Object.values(modules)
   .map((m) => /** @type {any} */ (m))
@@ -38,9 +42,24 @@ function read() {
 }
 const saved = read();
 
+/**
+ * Whether a flag is on when nothing's been picked for it: every fix is, but
+ * not a direction (#92 and up), a flag that goes against the design doc
+ * (`against`), or one that sets `byDefault: false` (the worst-case test data).
+ */
+export const onByDefault = (/** @type {Flag} */ f) => f.byDefault ?? (f.group !== 'Direction' && !f.against);
+/**
+ * Picks saved before there were defaults (no `defaults` mark) stored every
+ * flag, mostly false, so they can't tell "turned off" from "never touched":
+ * they keep what was on and take the defaults for the rest. From then on a
+ * saved pick, on or off, wins over the default.
+ */
+const pickedOn = (/** @type {Flag} */ f) =>
+  saved.defaults ? (saved.on?.[f.id] ?? onByDefault(f)) : !!saved.on?.[f.id] || onByDefault(f);
+
 export const flags = $state({
   /** @type {Record<string, boolean>} */
-  on: Object.fromEntries(FLAGS.map((f) => [f.id, !!saved.on?.[f.id]])),
+  on: Object.fromEntries(FLAGS.map((f) => [f.id, pickedOn(f)])),
   /** @type {Record<string, Record<string, any>>} */
   settings: Object.fromEntries(
     FLAGS.map((f) => [
@@ -115,7 +134,7 @@ $effect.root(() => {
   $effect(() => {
     apply();
     try {
-      localStorage.setItem(KEY, JSON.stringify({ on: flags.on, settings: flags.settings, locked: flags.locked }));
+      localStorage.setItem(KEY, JSON.stringify({ defaults: 1, on: flags.on, settings: flags.settings, locked: flags.locked }));
     } catch {}
   });
 });

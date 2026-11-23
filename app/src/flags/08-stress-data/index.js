@@ -12,6 +12,7 @@ export default {
   id: 'stress-data',
   n: 8,
   title: 'Worst-case test data (reloads the page)',
+  byDefault: false, // test data, not a fix: off unless asked for
   group: 'Stability',
   notes:
     'Dev only: the simulated library and decks serve worst-case content. Worst case: long and unicode titles, RTL, emoji, missing artists, BPM 0 / 45 / 999, no key, failed analysis, a 2-hour mix, 1,284 tracks still analyzing, long playlist and folder names, a recording clock near an hour. Reload the page after switching.',

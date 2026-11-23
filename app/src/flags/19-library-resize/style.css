@@ -1,5 +1,0 @@
-/* #19: the handle's grip lights while it's dragged, as .split.drag did.
-   (The fix itself is the class name, in App.svelte.) */
-:root[data-flag-library-resize] .app > .split.dragging i {
-  background: var(--fg-3);
-}
