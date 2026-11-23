@@ -5,8 +5,62 @@
  * The model download as the engine reports it: missing, downloading, waiting
  * (for a connection), ready or failed, with `done` of `total` bytes in.
  * @typedef {{ state: 'missing' | 'downloading' | 'waiting' | 'ready' | 'failed', done: number, total: number,
- *             secondsLeft: number | null, error: string | null }} StemsModel
+ *             secondsLeft: number | null, error: string | null, mode: StemsMode }} StemsModel
  */
+
+/**
+ * When tracks are split: not until asked, every track as it loads, a track
+ * once its stems are used, or never.
+ * @typedef {'ask' | 'fast' | 'efficient' | 'off'} StemsMode
+ */
+
+/**
+ * The two ways stems can work, for the Stems tab and for Settings. Separating
+ * a track takes the same memory either way; the choice is how many are.
+ * `short` is for the tab, `line` for where there's room.
+ * @type {{ mode: 'fast' | 'efficient', name: string, short: string, line: string }[]}
+ */
+export const STEMS_MODES = [
+  {
+    mode: 'fast',
+    name: 'Fast',
+    // The last two words stay together, so neither ends up alone on a line.
+    short: 'Ready instantly, but uses more\u00a0memory',
+    line: 'Ready instantly, but uses more memory. Interlude separates each track when you load it.',
+  },
+  {
+    mode: 'efficient',
+    name: 'Efficient',
+    short: 'Takes a few seconds, but uses less\u00a0memory',
+    line: 'Takes a few seconds, but uses less memory. Interlude separates a track only when you use its stems.',
+  },
+];
+
+/** What turning them off means, in Settings. */
+export const STEMS_OFF = 'Stems are turned off and use no memory.';
+
+/** What stems are, before the choice. */
+export const STEMS_WHAT = 'Stems let you mute the vocals, melody, bass or drums of a track, or play one of them alone.';
+
+/**
+ * What using a deck's stems should do now: 'ask' the question first, 'go'
+ * ahead, or say why they 'can't' be used.
+ * @param {StemsMode} mode
+ * @param {{ loaded: boolean, state: string }} deck
+ */
+export function onUse(mode, deck) {
+  if (!deck.loaded) return 'cant';
+  // Stems that are in the cache need nothing decided.
+  if (mode === 'ask' && deck.state !== 'ready') return 'ask';
+  return ['onUse', 'starting', 'splitting', 'ready'].includes(deck.state) ? 'go' : 'cant';
+}
+
+/**
+ * A stem is muted that can still be heard, because the track isn't split
+ * there yet. `mask` has a bit set for each stem that's on.
+ * @param {{ mask: number, here?: boolean, state: string }} deck
+ */
+export const isWaiting = (deck) => deck.mask !== 0b1111 && !deck.here && ['onUse', 'starting', 'splitting'].includes(deck.state);
 
 /** Bytes in megabytes, as Finder counts them. */
 export const mb = (bytes) => `${Math.round(bytes / 1e6)} MB`;

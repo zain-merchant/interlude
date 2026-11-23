@@ -76,7 +76,7 @@ Everything Interlude does, in detail. For a short overview, see the
   on). Stems fade in and out over a few milliseconds, so there are no
   clicks, and the waveforms show only what you hear. With every stem on,
   you hear the original file exactly: melody is the original minus the
-  other three. Tracks are split on your computer by HTDemucs (Meta, MIT
+  other three. Tracks are separated on your computer by HTDemucs (Meta, MIT
   licence; Rouard et al., ICASSP 2023), run on the CPU through ONNX Runtime.
   The model is a one-time 166 MB download from Hugging Face that starts by
   itself in the background once Interlude is set up: after the first
@@ -88,13 +88,22 @@ Everything Interlude does, in detail. For a short overview, see the
   carries on where it stopped if the connection drops or you quit, and says
   why with a Retry if it can't finish. Settings › Stems can cancel it (it
   then stays off until you ask for it) and remove it again, and it doesn't
-  download while splitting is turned off. On an M5 MacBook Air a 4½-minute
-  track splits in about 50 seconds. Splitting starts at the
-  play head when a track loads and runs ahead of it, so the part you're
-  about to play is ready first; anything not split yet plays as normal.
-  Finished stems are kept in a cache (5 GB by default, oldest out first), so
-  a track you've played before has them at once. Settings › Stems turns
-  splitting off, sets the cache size and clears it. Stems have no keys
+  download while stems are turned off. Nothing is separated until you've
+  chosen how, in a deck's Stems tab or in Settings › Stems. Fast separates
+  each track when you load it, so its stems are ready instantly, but uses
+  more memory. Efficient separates a track only when you use its stems, by
+  opening its Stems tab or pressing one, which takes a few seconds, but uses
+  less. A tab left open doesn't separate the next track until you use it. A
+  press made before choosing brings the Stems tab forward and goes ahead
+  once you choose. A stem pressed before its part of the track is ready
+  pulses, and fades in or out once it is. If you already had the model when
+  this choice arrived, you have Fast. On an M5 MacBook Air separating a
+  4½-minute track takes about 50 seconds. It starts at the play head and
+  runs ahead of it, so the part you're about to play is ready first;
+  anything not ready yet plays as normal. Finished stems are kept in a
+  cache (5 GB by default, oldest out first), so a track whose stems you've
+  had before has them at once, whichever you chose. Settings › Stems also
+  turns stems off, sets the cache size and clears it. Stems have no keys
   until you give them some in Settings › Keyboard.
 - **Recording:** the Rec button in the mixer records the master output to a
   24-bit WAV in `Music/Interlude recordings`. The file is written off the
