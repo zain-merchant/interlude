@@ -1738,7 +1738,7 @@
     // under it follows; the switch picks mouse or controller.
     (async () => {
       const loaded = new Promise((ok) => (document.readyState === 'complete' ? ok() : addEventListener('load', ok, { once: true })));
-      const fx = await import('./hero-fx.js?v=20261123c').catch(() => null);
+      const fx = await import('./hero-fx.js?v=20261123s').catch(() => null);
       const frame = document.querySelector('.stage-frame');
       const screen = frame.querySelector('.screen');
       const live = frame.querySelector('.live');
