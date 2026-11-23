@@ -2884,23 +2884,20 @@
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-input='keys'] .below > .grip.side:focus-visible i {
   background: var(--fg-3);
 }
-/* The sidebar's ground is drawn behind it, on the panel, so the fade at the
-   end of a long list takes the words and not the ground. It slides with the
-   sidebar. Three ways, all on the same steps: every plate stands 8px in from
-   whatever is round it, every word and control 16. */
+/* The sidebar stands on darker ground, to the panel's edges, drawn behind it
+   so the fade at the end of a long list takes the words and not the ground.
+   It slides with the sidebar. Every plate stands 8px in from whatever is
+   round it, every word and control 16. */
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library::before {
   content: '';
   position: absolute;
   z-index: 0;
-  top: 8px;
-  bottom: 8px;
-  left: 8px;
-  /* Moved, not laid out again: WebKit left a transition of left at its old value when the setting changed. */
+  inset: 0 auto 0 0;
+  width: var(--side-w, 200px);
+  /* Moved, not laid out again: WebKit left a transition of left at its old value when a setting changed. */
   translate: calc(var(--library-sidebar, 200px) - var(--side-w, 200px)) 0;
-  width: calc(var(--side-w, 200px) - 8px);
-  border-radius: calc(var(--r-panel) - 8px);
-  background: rgb(0 0 0 / 0.28);
-  box-shadow: var(--tt-cut);
+  background: rgb(0 0 0 / 0.3);
+  box-shadow: inset -1px 0 0 rgb(0 0 0 / 0.6), 1px 0 0 var(--tt-rule-l);
   pointer-events: none;
   transition: translate 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
@@ -2911,32 +2908,68 @@
   z-index: 1;
   background: none;
   border-right: 0;
+  padding: 16px 8px;
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:not([data-flag-dir-room-tint-side='ground']) section.library nav {
-  width: calc(var(--side-w, 200px) - 8px);
-  margin: 8px 0 8px 8px;
-  padding: 8px;
-  border-radius: calc(var(--r-panel) - 8px);
+/* A section's label is its capitals: 10px over its first plate, 24 under the last. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library nav .h {
+  flex: none;
+  display: block;
+  height: 8px;
+  min-height: 0;
+  margin: 0 0 9px;
+  padding: 0 8px;
+  line-height: 14px;
+  text-box: trim-both cap alphabetic;
 }
-/* a darker plate */
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-side='dark'] section.library::before {
-  background: rgb(0 0 0 / 0.5);
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library nav .h.sec {
+  margin-top: 23px;
 }
-/* darker ground, to the panel's own edges */
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-side='ground'] section.library::before {
-  top: 0;
-  bottom: 0;
-  left: 0;
-  width: var(--side-w, 200px);
-  border-radius: 0;
-  background: rgb(0 0 0 / 0.3);
-  box-shadow: inset -1px 0 0 rgb(0 0 0 / 0.6), 1px 0 0 var(--tt-rule-l);
-}
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-side='ground'] section.library nav {
-  padding-inline: 8px;
-}
+/* Four ways to head it (a setting). With the button at the toolbar's start:
+   it stands beside the search, open or closed, and Library is a label at the
+   sidebar's own padding; or there's no label and All tracks is level with
+   the search. With the button in the sidebar: the heading holds the toolbar's
+   row at a title's size; or label and button keep to the sidebar's padding. */
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .sidetoggle {
-  left: max(10px, calc(var(--library-sidebar, 200px) - 36px));
+  top: 18px;
+  left: calc(var(--library-sidebar, 200px) + 10px);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .main > .bar {
+  padding-left: 32px;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-head='none'] section.library nav {
+  padding-top: 15px;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-head='none'] section.library nav .h:not(.sec) {
+  position: absolute;
+  margin: 0;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:is([data-flag-dir-room-tint-head='title'], [data-flag-dir-room-tint-head='top']) section.library:not(.shut) .sidetoggle {
+  left: calc(var(--library-sidebar, 200px) - 36px);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:is([data-flag-dir-room-tint-head='title'], [data-flag-dir-room-tint-head='top']) section.library:not(.shut) .main > .bar {
+  padding-left: 0;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-head='title'] section.library nav .h:not(.sec) {
+  height: 11px;
+  margin: 10.5px 0 13.5px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--fg);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-head='title'] section.library:not(.shut) .sidetoggle {
+  top: 19px;
+  left: calc(var(--library-sidebar, 200px) - 42px);
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  background: rgb(255 255 255 / 0.05);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-head='top'] section.library:not(.shut) .sidetoggle {
+  top: 6px;
 }
 @media (prefers-reduced-motion: reduce) {
   :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library,
@@ -2981,10 +3014,6 @@
   height: 2px;
   background: linear-gradient(180deg, var(--tt-rule-d) 50%, var(--tt-rule-l) 50%);
   pointer-events: none;
-}
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-side='ground'] section.library .row.head::after {
-  left: -8px;
-  right: -8px;
 }
 /* The column handles: out of sight until the pointer is over the headings. */
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .row.head .colh {

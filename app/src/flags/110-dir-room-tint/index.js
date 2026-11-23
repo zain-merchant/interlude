@@ -116,14 +116,15 @@ export default {
         ['on', 'With figures', 'The same marks, numbered.'],
       ],
     },
-    side: {
+    head: {
       type: 'choice',
-      label: "The library's sidebar",
-      default: 'dark',
+      label: "The sidebar's heading and its button",
+      default: 'bar',
       options: [
-        ['dock', 'A plate', 'The sidebar is a plate cut into the panel, 8px inside it.'],
-        ['ground', 'Darker ground', "The sidebar's end of the panel is darker, to the panel's edges."],
-        ['dark', 'A darker plate', 'The plate, with darker ground.'],
+        ['bar', 'Button by the search', 'The button stays at the toolbar’s start; Library is a label at the sidebar’s padding.'],
+        ['title', 'A title on the toolbar’s line', 'Library at a title’s size, level with the search, its button in a box.'],
+        ['none', 'No heading', 'All tracks starts level with the search; the button is at the toolbar’s start.'],
+        ['top', "At the sidebar's top", 'Label and button at the sidebar’s own padding.'],
       ],
     },
     lanes: { type: 'range', label: 'Grooves behind the waveforms', min: 0, max: 100, step: 1, default: 8, unit: '' },
