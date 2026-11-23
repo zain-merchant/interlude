@@ -9,7 +9,11 @@
 // Stems and Grid are laid out as keys, groups and readouts. Amber is Cue's.
 //
 // Only one direction is on at a time (only-one.svelte.js).
-if (typeof window !== 'undefined') setTimeout(() => import('./only-one.svelte.js'), 0);
+if (typeof window !== 'undefined')
+  setTimeout(() => {
+    import('./only-one.svelte.js');
+    import('./drops.svelte.js');
+  }, 0);
 
 export default {
   id: 'dir-room-tint',
@@ -22,10 +26,21 @@ export default {
     cues: {
       type: 'choice',
       label: 'Hot cues',
-      default: 'keys',
+      default: 'foot',
       options: [
-        ['keys', 'Pads', 'Eight keys: up and plain until set, then down, tinted in the cue\'s colour.'],
-        ['discs', 'Numbered discs', 'v5\'s: a disc with the number, hollow until set, then filled.'],
+        ['socket', 'Sockets', 'An empty place is its number in a small recess.'],
+        ['foot', 'Feet', 'A number over a short etched rule.'],
+        ['corner', 'Corner ticks', "A number, and a tick in its place's corner."],
+        ['next', 'Next only', 'Numbers alone; only the next free place is a key, and says Set.'],
+      ],
+    },
+    rules: {
+      type: 'choice',
+      label: "Library's rules",
+      default: 'inset',
+      options: [
+        ['inset', 'Inset', 'Neither the sidebar\'s rule nor the headings\' reaches an edge.'],
+        ['full', 'Edge to edge', 'Both run the whole way.'],
       ],
     },
     cue: {

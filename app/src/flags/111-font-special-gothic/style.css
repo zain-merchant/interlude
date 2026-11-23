@@ -22,9 +22,18 @@
   font-family: 'Interlude Accidentals', 'Special Gothic', 'Geist Variable', 'Helvetica Neue', Arial, sans-serif;
 }
 
-/* Song titles: bold, wherever a title is the subject. */
-:root[data-flag-font-special-gothic][data-flag-font-special-gothic][data-flag-font-special-gothic][data-flag-font-special-gothic][data-flag-font-special-gothic][data-flag-font-special-gothic] :is([data-region^='deck'] header .name:not(.dim), section.library .scroll .row .t, .waves .lane .who) {
+/* Song titles: bold where one title is the subject. In the library there
+   are dozens, so they lead their row by colour and half a step of weight. */
+:root[data-flag-font-special-gothic][data-flag-font-special-gothic][data-flag-font-special-gothic][data-flag-font-special-gothic][data-flag-font-special-gothic][data-flag-font-special-gothic] [data-region^='deck'] header .name {
   font-weight: 700;
+  letter-spacing: 0;
+}
+:root[data-flag-font-special-gothic][data-flag-font-special-gothic][data-flag-font-special-gothic][data-flag-font-special-gothic][data-flag-font-special-gothic][data-flag-font-special-gothic] .waves .lane .who {
+  font-weight: 600;
+  letter-spacing: 0;
+}
+:root[data-flag-font-special-gothic][data-flag-font-special-gothic][data-flag-font-special-gothic][data-flag-font-special-gothic][data-flag-font-special-gothic][data-flag-font-special-gothic] section.library .scroll .row .t {
+  font-weight: 450;
   letter-spacing: 0;
 }
 /* The tabular setting the app puts on everything spaces out the digits in
