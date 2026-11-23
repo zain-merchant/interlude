@@ -2849,8 +2849,8 @@
   border-right-color: transparent;
   box-shadow: none;
 }
-/* It moves on a spring (slide.js), which writes --library-sidebar and --side-p
-   (1 open, 0 shut) on .below; out of sight once it's still. */
+/* It moves on a spring (slide.js), over the list, which is laid out at its
+   widest until it's still: so the ground is opaque then, and over it. */
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .below:not(.sliding) section.library.shut nav {
   visibility: hidden;
 }
@@ -2885,6 +2885,10 @@
   background: rgb(0 0 0 / 0.3);
   box-shadow: inset -1px 0 0 rgb(0 0 0 / 0.6), 1px 0 0 var(--tt-rule-l);
   pointer-events: none;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .below.sliding section.library::before {
+  z-index: 1;
+  background: linear-gradient(rgb(0 0 0 / 0.3), rgb(0 0 0 / 0.3)) var(--panel, #161619);
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library nav {
   z-index: 1;

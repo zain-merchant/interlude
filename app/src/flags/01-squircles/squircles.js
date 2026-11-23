@@ -312,6 +312,8 @@ export function start() {
   // while the size changes and gets them back once it has held still.
   /** @type {Set<Element>} */
   const settling = new Set();
+  /** @type {WeakMap<Element, number>} */
+  const changed = new WeakMap();
   let settle = 0;
   const ro = new ResizeObserver((entries) => {
     for (const e of entries) {
@@ -319,7 +321,13 @@ export function start() {
       const had = sizes.get(e.target);
       const el = /** @type {HTMLElement} */ (e.target);
       sizes.set(el, box ? { w: box.inlineSize, h: box.blockSize } : { w: el.offsetWidth, h: el.offsetHeight });
-      if (had && !native) {
+      // A small one that has held still changes once (a key whose words grew):
+      // it's cut again at once. Changing again soon after, it's being resized.
+      const at = performance.now();
+      const again = at - (changed.get(el) ?? -1e9) < 200;
+      changed.set(el, at);
+      const small = (box ? box.inlineSize * box.blockSize : 1e9) < 20000;
+      if (had && !native && (again || !small)) {
         el.removeAttribute('data-sq');
         el.removeAttribute('data-sq-h');
         settling.add(el);
