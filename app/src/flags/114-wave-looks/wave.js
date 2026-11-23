@@ -533,7 +533,7 @@ export function lookBeats(wf, w, h, view, spp) {
   const close = Math.max(0, Math.min(1, (beatPx - 80) / 40));
   const off = Math.round((view.start / spp) * dpr);
   const head = (view.playhead - view.start) / spp;
-  const reach = Math.max(140, Math.min(w * 0.3, beatPx * 8));
+  const reach = Math.max(140, Math.min(w * 0.4, beatPx * 8));
   const bottom = view.deck === 0; // the left deck's lane is on top: the line between the lanes is its bottom edge
   const ends = m.edge === 'all' ? [true, false] : m.edge === 'seam' ? [bottom] : m.edge === 'outer' ? [!bottom] : [];
   const px = 1 / dpr;
@@ -582,7 +582,7 @@ export function lookBeats(wf, w, h, view, spp) {
   ctx.restore();
 }
 
-/** The bar the play head is in, quieter than a white pill on it: small figures just ahead of it at the line between the lanes. */
+/** The bar the play head is in, quieter than a white pill on it: small figures at its top, on the played side. */
 export function lookBar(wf, h, view, x) {
   if (wf.wl.chip === 'none') return;
   const bar = Math.floor((view.playhead - view.firstBeat) / view.beatLen / 4) + 1;
@@ -592,10 +592,10 @@ export function lookBar(wf, h, view, x) {
   ctx.font = `600 10px ${view.labelFont ? `${view.labelFont}, ` : ''}"Geist Variable", system-ui, sans-serif`;
   const tw = Math.ceil(ctx.measureText(label).width) + 8;
   const left = x(view.playhead) - tw - 0.75;
-  const top = view.deck === 0 ? h - 14 : 0;
+  const top = 0; // clear of the hot cues' chips, at each lane's foot
   ctx.fillStyle = 'rgba(6,6,7,0.78)';
   ctx.beginPath();
-  ctx.roundRect(left, top, tw, 14, view.deck === 0 ? [3, 0, 0, 0] : [0, 0, 0, 3]);
+  ctx.roundRect(left, top, tw, 14, [0, 0, 0, 3]);
   ctx.fill();
   ctx.fillStyle = `rgba(${view.colors.fg},0.86)`;
   ctx.textAlign = 'center';

@@ -71,7 +71,7 @@ export const LINES = [
 ];
 /** The bar number at the play head. */
 export const CHIPS = [
-  ['quiet', 'Quiet', 'Small figures beside the play head, at the line between the lanes.'],
+  ['quiet', 'Quiet', 'Small figures at the top of the play head, on the played side.'],
   ['pill', 'Pill', 'White, on the play head.'],
   ['none', 'Off', ''],
 ];
