@@ -12,6 +12,10 @@
   import { pushEdit, showToast } from './undo.svelte.js';
   import { keyName, keyLongName, camelot, keysMix, playingKey } from './key.js';
   import { hms } from '../flags/08-stress-hours/time.js';
+  // #110 (UI audit flag): dir-room-tint: columns dragged to size and to order.
+  import { colResize, resetWidths } from '../flags/110-dir-room-tint/columns.js';
+  import { arrange, setOrder } from '../flags/110-dir-room-tint/column-order.svelte.js';
+  import ColumnsMenu from '../flags/110-dir-room-tint/ColumnsMenu.svelte';
   import { onAir, passes, filtering, describe, FIT_TEMPO } from './libraryfilter.js';
 
   /** `onimport` opens the import window; `onempty` is called when the whole library loads with no tracks.
@@ -200,7 +204,7 @@
       }
     })(),
   );
-  const columns = $derived(COLUMNS.filter((c) => c.by === 'title' || !hidden.includes(c.by)));
+  const columns = $derived((flag('dir-room-tint') ? arrange(COLUMNS) : COLUMNS).filter((c) => c.by === 'title' || !hidden.includes(c.by))); // #110 (UI audit flag)
   // The last 28px holds the columns button in the heading row.
   // #15, #80, #89 (UI audit flags): spacing, library-columns and key-notation size the columns
   // through --col-mark and --col-<column> on .main; each falls back to the width above.
@@ -224,7 +228,9 @@
     const r = e.currentTarget.getBoundingClientRect();
     headMenu({ preventDefault() {}, stopPropagation() {}, clientX: r.right - 200, clientY: r.bottom + 4 });
   };
+  let colMenu = $state(/** @type {{ x: number, y: number, keyboard: boolean } | null} */ (null)); // #110 (UI audit flag)
   const headMenu = (e) =>
+    flag('dir-room-tint') ? (e.preventDefault(), e.stopPropagation(), (colMenu = { x: e.clientX, y: e.clientY, keyboard: e.isTrusted === false })) :
     openMenu(e, [
       ...COLUMNS.filter((c) => c.by !== 'title').map((c) => ({ label: c.label, checked: !hidden.includes(c.by), action: () => toggleColumn(c.by) })),
     ]);
@@ -767,6 +773,8 @@
   onMount(refresh);
 </script>
 
+{#if colMenu && flag('dir-room-tint')}<ColumnsMenu {...colMenu} columns={COLUMNS} {hidden} ontoggle={toggleColumn} onreset={() => { setOrder([]); resetWidths(); }} onclose={() => (colMenu = null)} />{/if}
+
 <section class="library" aria-label="Library">
   <nav data-region="sidebar" aria-label="Library and playlists" bind:this={nav} onscroll={edges}
     data-more={flag('library-clip') && navMore ? '' : undefined} data-scrolled={flag('library-clip') && navUp ? '' : undefined}>
@@ -880,7 +888,8 @@
 
     {#if sampler.open}<Sampler {onmessage} selected={() => selectedTrack()} />{/if}
 
-    <div class="row head" role="group" aria-label="Sort tracks" oncontextmenu={headMenu}>
+    <!-- #110 (UI audit flag): dir-room-tint: the columns can be dragged to size. -->
+    <div class="row head" role="group" aria-label="Sort tracks" oncontextmenu={headMenu} use:colResize={{ on: flag('dir-room-tint') && sizedCols, columns, all: COLUMNS }}>
       <span></span>
       {#each columns as c}
         {@const on = sortOn.by === c.by}
