@@ -7,10 +7,11 @@
    - Each deck's side carries a barely-there tint of its colour: every
      step of 100's ladder (plate, wells, keys, caps, slots) keeps its exact
      lightness and gains a little chroma in the deck's hue (blue left,
-     warm right). In greyscale it is 100. The mixer splits gently at its
+     warm right). The mixer splits gently at its
      edges, the library stays neutral.
-   - The grooves line every cavity that holds the music or a mode: the
-     waveform window, the overview, the tab switch and the record's bed.
+   - The grooves line every cavity cut into a surface: the waveform window,
+     the overview, the tab switch, the record's bed, the search and number
+     fields, the pitch nudge and an empty sampler pad.
    - Pebble's language where it reads better, in 100's shapes: dials show
      their amount as a filled ring, on is a key tinted with its role
      colour (not a dark latch), fader thumbs are raised discs, hot cues
@@ -1413,9 +1414,9 @@
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] {
   /* The mixer's edges and the lanes take the decks' hues at the plate's
      and the window's lightness (see the deck blocks below). */
-  --tt-plate-a: oklch(0.2015 0.0095 250);
-  --tt-plate-b: oklch(0.2015 0.0055 72);
-  --tt-lane-a: oklch(0.6 0.09 250 / 0.035);
+  --tt-plate-a: oklch(0.2015 0.0111 258);
+  --tt-plate-b: oklch(0.2015 0.0040 72);
+  --tt-lane-a: oklch(0.6 0.09 258 / 0.035);
   --tt-lane-b: oklch(0.6 0.08 72 / 0.03);
   /* On: a key tinted with its role colour, its label in that colour. */
   --tt-on-a: 17%;
@@ -1429,29 +1430,29 @@
 
 /* ── The tint ────────────────────────────────────────────────────────── */
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region='deck0'] {
-  /* A: 100's ladder at its own lightness, chroma 0.045 per unit of lightness, hue 250. */
-  --rg-window: oklch(0.1075 0.0048 250);
-  --rg-plate: oklch(0.2015 0.0091 250);
-  --rg-well: oklch(0.1228 0.0055 250);
-  --rg-key: oklch(0.2870 0.0129 250);
-  --rg-key-2: oklch(0.2661 0.0120 250);
-  --rg-key-hi: oklch(0.3195 0.0144 250);
-  --rg-key-hi-2: oklch(0.2951 0.0133 250);
-  --rg-down: oklch(0.1785 0.0080 250);
-  --rg-on: oklch(0.1500 0.0068 250);
-  --rg-slot: oklch(0.0979 0.0044 250);
-  --rg-cap: oklch(0.3430 0.0154 250);
-  --rg-cap-2: oklch(0.3032 0.0136 250);
-  --rg-cap-hi: oklch(0.3775 0.0170 250);
-  --rg-cap-hi-2: oklch(0.3348 0.0151 250);
-  --rg-dial: oklch(0.3032 0.0136 250);
-  --rg-dial-hi: oklch(0.3352 0.0151 250);
-  --rg-ridge: oklch(0.3507 0.0158 250);
-  --rg-ridge-hi: oklch(0.3885 0.0175 250);
-  --rg-ridge-2: oklch(0.2282 0.0103 250);
-  --rg-dial-groove: oklch(0.1739 0.0078 250);
-  --tt-h: 250;
-  --tt-k: 0.045;
+  /* A: 100's ladder at its own lightness, chroma 0.055 per unit of lightness, hue 258.0. */
+  --rg-window: oklch(0.1075 0.0059 258.0);
+  --rg-plate: oklch(0.2015 0.0111 258.0);
+  --rg-well: oklch(0.1228 0.0068 258.0);
+  --rg-key: oklch(0.2870 0.0158 258.0);
+  --rg-key-2: oklch(0.2661 0.0146 258.0);
+  --rg-key-hi: oklch(0.3195 0.0176 258.0);
+  --rg-key-hi-2: oklch(0.2951 0.0162 258.0);
+  --rg-down: oklch(0.1785 0.0098 258.0);
+  --rg-on: oklch(0.1500 0.0083 258.0);
+  --rg-slot: oklch(0.0979 0.0054 258.0);
+  --rg-cap: oklch(0.3430 0.0189 258.0);
+  --rg-cap-2: oklch(0.3032 0.0167 258.0);
+  --rg-cap-hi: oklch(0.3775 0.0208 258.0);
+  --rg-cap-hi-2: oklch(0.3348 0.0184 258.0);
+  --rg-dial: oklch(0.3032 0.0167 258.0);
+  --rg-dial-hi: oklch(0.3352 0.0184 258.0);
+  --rg-ridge: oklch(0.3507 0.0193 258.0);
+  --rg-ridge-hi: oklch(0.3885 0.0214 258.0);
+  --rg-ridge-2: oklch(0.2282 0.0125 258.0);
+  --rg-dial-groove: oklch(0.1739 0.0096 258.0);
+  --tt-h: 258.0;
+  --tt-k: 0.055;
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region='deck0'] {
   /* The recipes, declared again here so they pick up the tinted steps. */
@@ -1482,29 +1483,29 @@
   --flag-buttons-ring-on: var(--rg-down-edge);
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region='deck1'] {
-  /* B: 100's ladder at its own lightness, chroma 0.025 per unit of lightness, hue 72. */
-  --rg-window: oklch(0.1075 0.0027 72);
-  --rg-plate: oklch(0.2015 0.0050 72);
-  --rg-well: oklch(0.1228 0.0031 72);
-  --rg-key: oklch(0.2870 0.0072 72);
-  --rg-key-2: oklch(0.2661 0.0067 72);
-  --rg-key-hi: oklch(0.3195 0.0080 72);
-  --rg-key-hi-2: oklch(0.2951 0.0074 72);
-  --rg-down: oklch(0.1785 0.0045 72);
-  --rg-on: oklch(0.1500 0.0038 72);
-  --rg-slot: oklch(0.0979 0.0024 72);
-  --rg-cap: oklch(0.3430 0.0086 72);
-  --rg-cap-2: oklch(0.3032 0.0076 72);
-  --rg-cap-hi: oklch(0.3775 0.0094 72);
-  --rg-cap-hi-2: oklch(0.3348 0.0084 72);
-  --rg-dial: oklch(0.3032 0.0076 72);
-  --rg-dial-hi: oklch(0.3352 0.0084 72);
-  --rg-ridge: oklch(0.3507 0.0088 72);
-  --rg-ridge-hi: oklch(0.3885 0.0097 72);
-  --rg-ridge-2: oklch(0.2282 0.0057 72);
-  --rg-dial-groove: oklch(0.1739 0.0043 72);
-  --tt-h: 72;
-  --tt-k: 0.025;
+  /* B: 100's ladder at its own lightness, chroma 0.02 per unit of lightness, hue 72.0. */
+  --rg-window: oklch(0.1075 0.0022 72.0);
+  --rg-plate: oklch(0.2015 0.0040 72.0);
+  --rg-well: oklch(0.1228 0.0025 72.0);
+  --rg-key: oklch(0.2870 0.0057 72.0);
+  --rg-key-2: oklch(0.2661 0.0053 72.0);
+  --rg-key-hi: oklch(0.3195 0.0064 72.0);
+  --rg-key-hi-2: oklch(0.2951 0.0059 72.0);
+  --rg-down: oklch(0.1785 0.0036 72.0);
+  --rg-on: oklch(0.1500 0.0030 72.0);
+  --rg-slot: oklch(0.0979 0.0020 72.0);
+  --rg-cap: oklch(0.3430 0.0069 72.0);
+  --rg-cap-2: oklch(0.3032 0.0061 72.0);
+  --rg-cap-hi: oklch(0.3775 0.0076 72.0);
+  --rg-cap-hi-2: oklch(0.3348 0.0067 72.0);
+  --rg-dial: oklch(0.3032 0.0061 72.0);
+  --rg-dial-hi: oklch(0.3352 0.0067 72.0);
+  --rg-ridge: oklch(0.3507 0.0070 72.0);
+  --rg-ridge-hi: oklch(0.3885 0.0078 72.0);
+  --rg-ridge-2: oklch(0.2282 0.0046 72.0);
+  --rg-dial-groove: oklch(0.1739 0.0035 72.0);
+  --tt-h: 72.0;
+  --tt-k: 0.02;
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region='deck1'] {
   /* The recipes, declared again here so they pick up the tinted steps. */
@@ -1535,6 +1536,16 @@
   --flag-buttons-ring-on: var(--rg-down-edge);
 }
 
+/* Any other latched key (a .pressed or aria-pressed .btn, through the
+   buttons flag's tokens) takes the same "on": tinted, standing. Declared
+   wherever the key recipes are, so each side tints its own. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint],
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] #app,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] {
+  --flag-buttons-bg-on: linear-gradient(180deg, color-mix(in oklab, var(--fg) var(--tt-on-a), var(--rg-key)), color-mix(in oklab, var(--fg) var(--tt-on-a), var(--rg-key-2)));
+  --flag-buttons-ring-on: inset 0 0 0 1px color-mix(in oklab, var(--fg) 34%, transparent), inset 0 1px 0 var(--rg-hi), 0 1px 0 var(--rg-rim), var(--rg-lift);
+}
+
 /* The waveform window: each lane breathes its deck's hue over the
    grooves, so the colour runs from lane to deck without a panel edge. */
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .waves > .lane:nth-child(1 of .lane) {
@@ -1546,25 +1557,34 @@
 
 /* The mixer: neutral in the middle, the two hues only at its edges, under
    their channels. */
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .decks > .mixer,
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer.glass {
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .decks > .mixer {
   background: linear-gradient(90deg, var(--tt-plate-a), var(--rg-plate) 30% 70%, var(--tt-plate-b));
 }
 
-/* ── Grooves: every cavity that holds the music or a mode ──────────────
+/* ── Grooves: every cavity cut into a surface ──────────────────────────
    The waveform window, the overview and the tab switch have them from
-   100. The record now sits in a round bed cut into the plate (too narrow
-   for grooves of its own; the record carries its own). Wells smaller than
-   three grooves (fader slots, fields, sampler pads) stay plain: grooves
-   there read as noise. */
+   100. Now every other cut does too: the record's round bed, the search
+   field, the filter's BPM fields, the pitch nudge, an empty sampler pad
+   and the setup card's fields. Slots (faders, meters) are lines, not
+   cavities, and stay plain. */
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .rec-cell .platter::before {
   content: '';
   position: absolute;
-  inset: -5px;
+  inset: -7px;
   border-radius: 50%;
-  background: var(--rg-well);
+  background: repeating-radial-gradient(circle at 50% 50%, var(--rg-groove-line) 0 1px, transparent 1.5px 4px), var(--rg-well);
   box-shadow: var(--rg-well-edge);
   pointer-events: none;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .rec-cell .disc {
+  box-shadow: 0 0 0 1px var(--rg-rim), 0 4px 10px -2px rgb(0 0 0 / 0.6);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .bar .search,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .filter .panel .bpm input,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .pitch .nudge,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .sampler .slot:not(.set),
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .backdrop > .card[role='dialog'] .field input {
+  background: var(--rg-grooves), var(--rg-well);
 }
 /* The vinyl takes its deck's hue a little deeper than the pale deck
    colour, so it reads as tinted vinyl, not grey (Platter's canvas). */
@@ -1770,22 +1790,22 @@
 }
 
 /* ── The record's centre: whichever time is big leads in white ───────── */
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .rec-cell .hub .num,
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .rec-cell .hub .rm:not(.ending) {
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .rec-cell .hub .num {
   color: var(--fg-2);
   font-weight: 500;
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .rec-cell .hub:not([data-big='remaining']) .el,
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .rec-cell .hub[data-big='remaining'] .rm:not(.ending) {
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .rec-cell .hub[data-big='remaining'] .rm {
   color: var(--fg);
   font-weight: 600;
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .rec-cell .hub .rm.ending {
+/* Ending: the time left turns red at its own weight. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .rec-cell .hub:is([data-big], :not([data-big])) .rm.ending {
   color: var(--kill);
 }
-
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .rec-cell .hub.empty .num,
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .rec-cell .hub.empty .num .t {
+/* Empty: both times faint and light, whichever is big. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .rec-cell .hub.empty:is([data-big], :not([data-big])) .num,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .rec-cell .hub.empty:is([data-big], :not([data-big])) .num .t {
   font-weight: 400;
   color: var(--fg-4);
 }

@@ -5,8 +5,7 @@
 // carries a barely-there tint of its colour: 100's ladder of greys at the
 // same lightness, with a little chroma in the deck's hue, so it reads as
 // "this side is the blue deck" without a coloured panel. The record
-// grooves line every cavity that holds the music or a mode, the record's
-// bed included. From Pebble, in 100's softer shapes: dials fill a ring
+// grooves line every cavity cut into a surface, the record's bed included. From Pebble, in 100's softer shapes: dials fill a ring
 // with their amount, on is a key tinted with its role colour, fader thumbs
 // are raised discs, hot cues numbered discs, meters capsules with colour.
 // Amber is Cue's again.
@@ -33,7 +32,7 @@ export default {
     },
   },
   notes:
-    "style.css is built from flag 100's current sheet (dark, lane titles on a small plate) and this direction's layer, in the scratchpad's directions5/work (build.py, tint.src.css); every rule is under the tripled :root[data-flag-dir-room-tint] attribute. The deck tints are generated: each of 100's steps at its own OKLCH lightness with a little chroma in the deck's hue, declared on the deck, with 100's composite recipes declared again there. Hooks, all gated on this flag: Deck.svelte (the tempo decimals span), Waveform.svelte (spreads waveOptions() from wave.js, empty today: the place a new waveform style drops in) and Platter.svelte (the record's grooves at the cavities' 4px pitch).",
+    "style.css is built from flag 100's current sheet (dark, lane titles on a small plate) and this direction's layer, in the scratchpad's directions5/work (build.py, tint.src.css); every rule is under the tripled :root[data-flag-dir-room-tint] attribute. The deck tints are generated: each of 100's steps at its own OKLCH lightness with a little chroma in the deck's hue, declared on the deck, with 100's composite recipes declared again there. Hooks, all gated on this flag: Deck.svelte (the tempo decimals span), Waveform.svelte (spreads waveOptions() from wave.js, empty today: the place a new waveform style drops in) and Platter.svelte (class long on the record's centre for an hour-long track, so its times fit).",
 };
 
 /** Show me: both decks playing, flipping between today and this direction. */
