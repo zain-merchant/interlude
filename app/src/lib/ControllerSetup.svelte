@@ -322,7 +322,7 @@
     {#if stage === 'pick'}
       {#if flag('zero-states') && flag('dir-room-tint') && ctl && !ctl.ports.length}
         <!-- #113 (UI audit flag): zero-states. -->
-        <div class="zsetup"><div>{@html draw.controller(0, Number(setting('zero-states', 'cable')))}</div><div><p>No controller found</p><p>Plug yours in with its USB cable and switch it on. It shows up here by itself.</p></div></div>
+        <div class="zsetup"><div>{@html draw.controller(0, setting('zero-states', 'cable'))}</div><div><p>No controller found</p><p>Plug yours in with its USB cable and switch it on. It shows up here by itself.</p></div></div>
       {:else}
       <p class="lead">If your controller does nothing, or the wrong things, teach it here. The app asks for each control in turn, and you press or move it.</p>
       {#if !ctl}
