@@ -520,10 +520,9 @@ export class Waveform2D {
       };
       const own = this.wl && lookOverview(this, x, cols, w, mid, c); // #114 (UI audit flag)
       const look = !this.wl && this.look;
-      if (own);
-      else if (look) (look[0] === 'beads' ? pebbleOverview : linerOverview)(x, cols, mid, c); // #105, #106 (UI audit flags)
-      else x.globalCompositeOperation = 'lighter';
-      if (!own && !look) {
+      if (look && !own) (look[0] === 'beads' ? pebbleOverview : linerOverview)(x, cols, mid, c); // #105, #106 (UI audit flags)
+      else if (!own) {
+        x.globalCompositeOperation = 'lighter';
         fill(0, 0.95, c.low, 0.55);
         fill(1, 0.6, c.mid, 0.4);
         fill(2, 0.3, c.high, 0.45);

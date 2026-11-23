@@ -1,3 +1,4 @@
+// @ts-nocheck (vendored)
 "use strict";
 var DialKit = (() => {
   var __defProp = Object.defineProperty;
