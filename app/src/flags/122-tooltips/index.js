@@ -25,12 +25,13 @@ export default {
     },
     sides: {
       type: 'choice',
-      label: 'Left and right edges',
-      default: 'same',
-      recommended: 'same',
+      label: 'Where words start, beside a key 4 from its edge',
+      default: 'eight',
+      recommended: 'eight',
       options: [
-        ['same', 'The same', 'A key or value at the end stands as far in as the name does.'],
-        ['nest', 'Nested', 'A key or value at the end stands 4 in, as it does above and below.'],
+        ['eight', '8', 'Halfway between the key’s box (4) and its letter (about 12), which is where the eye puts that side.'],
+        ['nest', '9.5', 'As far as the words are from the top and bottom.'],
+        ['four', '4', 'As far as the key’s box.'],
       ],
     },
   },

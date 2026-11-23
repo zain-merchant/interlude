@@ -1,7 +1,7 @@
 /* #122 tooltips, on 110. One space, 10, between a name, its value, its key,
    the rule and what's after it, from ink or edge to ink or edge (words carry
-   about half a pixel of their own). Left and right are the same, 9.5, whatever is
-   at the end (or a box nests at 4, a setting). The first line is 28, rows 24 from middle to middle. */
+   about half a pixel of their own). At the edge a box
+   stands 4 in and words 8, the middle of a box's edge and its letter (a setting). The first line is 28, rows 24 from middle to middle. */
 :root[data-flag-dir-room-tint][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips] .tip[role='tooltip']:has(> .tt) {
   --ti: 9px;
   box-sizing: border-box;
@@ -175,10 +175,10 @@
   font: inherit;
   text-box: trim-both cap alphabetic;
 }
-/* Both sides the same (a setting): a box at the end stands in as far as words. */
-:root[data-flag-dir-room-tint][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips-sides='same'] .tip[role='tooltip'] .tt:not(.one) .tl:has(> :is(.tv, .kcaps):last-child) {
-  padding-right: 9.5px;
+/* Where words start (a setting); a box stands 4 in. */
+:root[data-flag-dir-room-tint][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips-sides='eight'] .tip[role='tooltip']:has(> .tt) {
+  --ti: 7.5px;
 }
-:root[data-flag-dir-room-tint][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips-sides='same'] .tip[role='tooltip'] .th:has(> .kcaps:last-child) {
-  margin-right: calc(9.5px - var(--ti));
+:root[data-flag-dir-room-tint][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips-sides='four'] .tip[role='tooltip']:has(> .tt) {
+  --ti: 3.5px;
 }

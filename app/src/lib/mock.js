@@ -164,7 +164,7 @@ export function createMockBackend() {
     filter: 0, fx: { kind: 'echo', on: false, level: 0.5, beats: 1 }, stems: 0b1111, splitFrom: 0,
   }));
   // Stems: a pretend model download, and splitting that takes 20 s a track.
-  const stemsCfg = { enabled: true, cacheGb: 5, cacheBytes: 1.2e9 };
+  const stemsCfg = { enabled: true, mode: 'fast', takes: { perTrackMb: 160, makingGb: 2.5, waitSeconds: 6 }, cacheGb: 5, cacheBytes: 1.2e9 };
   /** @type {any} */
   let stemsModel = { state: 'missing' };
   const deckStems = (d) => {
@@ -488,7 +488,9 @@ export function createMockBackend() {
     },
     stemsInfo: async () => ({ ...stemsCfg, model: stemsModel, modelBytes: 84 * 1024 * 1024 }),
     setStems: async (change) => {
-      for (const k of ['enabled', 'cacheGb']) if (change[k] != null) stemsCfg[k] = change[k];
+      for (const k of ['enabled', 'mode', 'cacheGb']) if (change[k] != null) stemsCfg[k] = change[k];
+      if (change.mode) stemsCfg.enabled = change.mode !== 'off';
+      else if (change.enabled != null) stemsCfg.mode = change.enabled ? 'fast' : 'off';
       return { ...stemsCfg, model: stemsModel, modelBytes: 84 * 1024 * 1024 };
     },
     clearStemsCache: async () => {
