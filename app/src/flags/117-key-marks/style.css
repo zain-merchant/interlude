@@ -18,7 +18,7 @@
   font-family: system-ui, -apple-system, sans-serif !important;
 }
 /* Ours (marks.js): the height of the capitals, standing on the baseline. */
-:root[data-flag-key-marks] .km.own svg {
+:root[data-flag-key-marks][data-flag-key-marks][data-flag-key-marks][data-flag-key-marks][data-flag-key-marks][data-flag-key-marks][data-flag-key-marks][data-flag-key-marks][data-flag-key-marks] .km.own svg {
   display: inline-block;
   width: auto;
   height: 0.705em;
@@ -34,7 +34,7 @@
 :root[data-flag-key-marks] .kcap .km.own {
   display: grid;
 }
-:root[data-flag-key-marks] .kcap .km.own svg {
+:root[data-flag-key-marks][data-flag-key-marks][data-flag-key-marks][data-flag-key-marks][data-flag-key-marks][data-flag-key-marks][data-flag-key-marks][data-flag-key-marks][data-flag-key-marks] .kcap .km.own svg {
   stroke-width: 108;
 }
 :root[data-flag-key-marks] .km-say {
