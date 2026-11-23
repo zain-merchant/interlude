@@ -63,6 +63,17 @@ export default {
         ['breath', 'A breath of colour', 'The same, with a trace of the colour in the fill.'],
       ],
     },
+    cut: {
+      type: 'choice',
+      label: "A cut's edge",
+      default: 'crisp',
+      options: [
+        ['crisp', 'Two lines', 'A dark line inside the top, a light one on the lower lip, no blur.'],
+        ['rim', 'Two lines and a rim', 'The same, with a thin dark line all round inside.'],
+        ['step', 'A hard shadow', 'The same, with a 2px shadow under the top edge, no blur.'],
+        ['soft', 'Blurred', 'As it was: a blurred shadow inside.'],
+      ],
+    },
     glint: {
       type: 'choice',
       label: 'Grooves under the pointer',

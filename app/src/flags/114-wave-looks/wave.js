@@ -63,7 +63,7 @@ function early(out, before) {
 function between(v, after, before, radius, hit, ease, round) {
   const n = v.length;
   const held = envelope(v, after, 0);
-  const R = Math.max(0, Math.round(radius / 2));
+  const R = Math.max(0, Math.round((radius * (1 + 0.75 * ease)) / 2));
   const fall = Math.exp(-1 / Math.max(after, radius, 1));
   const T = Math.max(2, round);
   const starts = [0];
@@ -73,7 +73,9 @@ function between(v, after, before, radius, hit, ease, round) {
     if (v[i] > was + hit && v[i] > was * 1.5 && i - last > 3) starts.push((last = i));
   }
   // Two box passes (a triangle, as today's) inside each stretch, from running sums.
-  let src = held;
+  // Eased, the level smoothed is one that falls slower, so the valleys between hits fill.
+  let src = ease > 0 ? envelope(v, after * (1 + 2 * ease), 0) : held;
+  const top = src;
   const sums = new Float64Array(n + 1);
   for (let pass = 0; R && pass < 2; pass++) {
     for (let i = 0; i < n; i++) sums[i + 1] = sums[i] + src[i];
@@ -89,7 +91,7 @@ function between(v, after, before, radius, hit, ease, round) {
     }
     src = dst;
   }
-  const out = src === held ? Float32Array.from(held) : src;
+  const out = src === top ? Float32Array.from(top) : src;
   for (let k = 1; k < starts.length; k++) {
     // The hit itself: up with the sound while it builds (a few bins), to its
     // own peak. What the smoothing took off that peak is put back and let go
@@ -125,7 +127,7 @@ function envelopes(wf, o, spp) {
   const before = [0, 1, 2].map((b) => (o[`b${b}`] ?? 0) * perMs);
   const key = `${wf.version}|${after}|${before}|${soft}|${o.hit}|${ease}`;
   if (wf.lookEnv?.key !== key)
-    wf.lookEnv = { key, v: [0, 1, 2].map((b) => (o.hit != null ? between(wf.bands[b], after[b], before[b], soft, o.hit / 100, ease, (3 + 9 * ease) * px) : envelope(wf.bands[b], after[b], before[b]))) };
+    wf.lookEnv = { key, v: [0, 1, 2].map((b) => (o.hit != null ? between(wf.bands[b], after[b], before[b], soft, o.hit / 100, ease, (3 + 17 * ease) * px) : envelope(wf.bands[b], after[b], before[b]))) };
   return wf.lookEnv.v;
 }
 
@@ -137,11 +139,14 @@ function envelopes(wf, o, spp) {
  * come out on time on average.
  */
 const LATE = [0.09, 0.38, 0.47];
+/** A rise between two bins that's drawn as a slope, not an edge: well under the smallest hit. */
+const SLOPE = 0.08;
 
 /**
  * Column tops for device pixels k0 to k1: each band's level there. A bin
  * narrower than a column is its column's loudest; a wider one holds from its
- * start, easing into the next only if that's lower. A bin's start goes to
+ * start, easing into the next only if that's lower or barely higher (a swell,
+ * not a hit). A bin's start goes to
  * the nearest column edge, so rounding is as often late as early.
  */
 function columns(wf, E, k0, k1, perCol) {
@@ -162,7 +167,7 @@ function columns(wf, E, k0, k1, perCol) {
       const i = Math.floor(t0);
       if (i >= 0 && i < n) {
         const next = i + 1 < n ? v[i + 1] : 0;
-        const hold = next < v[i] ? v[i] + (next - v[i]) * (t0 - i) : v[i];
+        const hold = next < v[i] + SLOPE ? v[i] + (next - v[i]) * (t0 - i) : v[i];
         if (hold > m) m = hold;
       }
       a[k - k0] = m;
@@ -210,7 +215,7 @@ export function lookLane(wf, ctx, ectx, x0, x1, spp, h, c, half) {
         const rise = a[i] - a[i - 1];
         if (rise < 2) continue;
         if (a[i] > a[i + 1]) a[i + 1] = a[i];
-        a[i] -= ease * Math.min(0.35 * rise, 3);
+        a[i] -= ease * Math.min(0.2 * rise, 3);
       }
   const X = (i) => (k0 + i) / dpr; // the column's left edge
 
@@ -427,7 +432,7 @@ export function lookRibbon(wf, w, h, view, spp, c) {
     return;
   }
   let S = wf.lookTiles;
-  if (!S || S.base !== base || S.colors !== c || Math.abs(S.spp / spp - 1) > 0.12) {
+  if (!S || S.base !== base || S.colors !== c || Math.abs(S.spp / spp - 1) > 0.35) {
     if (S && S.base !== base) wf.spare = [];
     S = wf.lookTiles = { base, colors: c, spp, tiles: new Map() };
     wf.lookNext = null;
@@ -455,7 +460,7 @@ export function lookRibbon(wf, w, h, view, spp, c) {
     let tile = S.tiles.get(t);
     if (!tile) S.tiles.set(t, (tile = wf.ribbonTile(t, S.spp, h, c, dpr, view.edge)));
     const x = at(t);
-    const tw = S.spp === spp ? tile.bands.width : at(t + 1) - x;
+    const tw = at(t + 1) - x; // up to the next tile, so no gap shows where the pixel ratio isn't whole
     ctx.globalCompositeOperation = 'lighter';
     ctx.drawImage(tile.bands, x, 0, tw, tile.bands.height);
     ctx.globalCompositeOperation = 'source-over';
