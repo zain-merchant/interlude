@@ -81,6 +81,18 @@ export default {
         ['on', 'With figures', 'The same marks, numbered.'],
       ],
     },
+    side: {
+      type: 'choice',
+      label: "The library's sidebar",
+      default: 'list',
+      options: [
+        ['list', 'The list is a plate', 'The track list is a cut plate inside the panel; the sidebar stands on the panel.'],
+        ['line', 'A full rule', 'One panel, an etched rule from its top to its foot.'],
+        ['ground', 'Darker ground', "The sidebar on darker ground, to the panel's edges."],
+        ['dock', 'The sidebar is a plate', 'The sidebar is a cut plate inside the panel.'],
+        ['split', 'Two panels', 'The sidebar is a panel of its own, like the decks.'],
+      ],
+    },
     cut: {
       type: 'choice',
       label: "A cut's edge",

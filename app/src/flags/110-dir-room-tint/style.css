@@ -2721,43 +2721,150 @@
   box-shadow: none !important;
 }
 
-/* ── The library's rules ───────────────────────────────────────────────
-   One etched line: up the sidebar's edge, round a corner, and along under
-   the headings. It ends 16px short of the panel's foot and of its right
-   edge, the panel's own inset. (columns.js keeps --rule-y on the headings.)
-   Dragging the sidebar changes the pointer and, faintly, the line's light. */
+/* ── The library and its sidebar ───────────────────────────────────────
+   Five ways to set the sidebar in the library's panel (a setting), from a
+   line between them to two panels. In all of them it slides under the
+   panel's left edge to close, the list keeps its place, and the list's
+   content stands 8px in from whatever is round it on the left, the top and
+   the right (its row plates; the text is 24 and 12 from the same edges). */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library {
+  position: relative;
+  overflow: hidden;
+  --side-gap: 0px;
+  transition: grid-template-columns 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .app:has(.grip.side.dragging) section.library,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .app.settling section.library {
+  transition: none;
+}
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library nav {
+  box-sizing: border-box;
+  width: var(--side-w, 200px);
+  justify-self: end;
   border-right-color: transparent;
   box-shadow: none;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library.shut nav {
+  visibility: hidden;
+  transition: visibility 0s 200ms;
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .main {
   position: relative;
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .main::before {
-  content: '';
-  position: absolute;
-  z-index: 1;
-  left: -1px;
-  right: 16px;
-  top: var(--rule-y, 92px);
-  bottom: 16px;
-  border: 1px solid var(--tt-rule-d);
-  border-right-color: transparent;
-  border-bottom-color: transparent;
-  border-radius: 14px 0 0 0;
-  box-shadow: inset 1px 1px 0 var(--tt-rule-l);
-  -webkit-mask: linear-gradient(90deg, #000 30px, transparent 30px), linear-gradient(#000 30px, transparent 30px);
-  mask: linear-gradient(90deg, #000 30px, transparent 30px), linear-gradient(#000 30px, transparent 30px);
-  pointer-events: none;
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .sidetoggle {
+  top: 18px;
+  left: max(10px, calc(var(--library-sidebar, 200px) - 44px));
+  transition: left 200ms cubic-bezier(0.2, 0.8, 0.2, 1), color 120ms ease-out, background-color 120ms ease-out;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .app:has(.grip.side.dragging) section.library .sidetoggle {
+  transition: color 120ms ease-out;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library.shut .main > .bar {
+  padding-left: 32px;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .main > .bar {
+  transition: padding-left 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .below > .grip.side:is(:hover, .dragging) i {
   background: transparent;
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .below:has(> .grip.side:is(:hover, .dragging)) section.library .main {
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .below:has(> .grip.side:is(:hover, .dragging)) section.library {
   --tt-rule-l: rgb(255 255 255 / 0.12);
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-input='keys'] .below > .grip.side:focus-visible i {
   background: var(--fg-3);
+}
+/* line: a full etched rule between them, meeting the headings' rule square. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-side='line'] section.library .main::before {
+  content: '';
+  position: absolute;
+  z-index: 1;
+  left: -1px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--tt-rule-v);
+  pointer-events: none;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-side='line'] section.library.shut .main::before {
+  opacity: 0;
+}
+/* ground: the sidebar on darker ground, to the panel's own edges. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-side='ground'] section.library nav {
+  background: rgb(0 0 0 / 0.3);
+  box-shadow: inset -1px 0 0 rgb(0 0 0 / 0.6), 1px 0 0 var(--tt-rule-l);
+}
+/* dock: the sidebar a cut of its own, 8px inside the panel, concentric. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-side='dock'] section.library {
+  --side-gap: 8px;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-side='dock'] section.library nav {
+  width: calc(var(--side-w, 200px) - 8px);
+  margin: 8px 0 8px 8px;
+  padding: 8px;
+  border-radius: calc(var(--r-panel) - 8px);
+  background: rgb(0 0 0 / 0.28);
+  box-shadow: var(--tt-cut);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-side='dock'] section.library nav {
+  padding-top: calc(16px - 8px);
+}
+/* list: the list a cut plate, 8px inside the panel; the sidebar on the panel. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:not([data-flag-dir-room-tint-side='line'], [data-flag-dir-room-tint-side='ground'], [data-flag-dir-room-tint-side='dock'], [data-flag-dir-room-tint-side='split']) section.library .main {
+  margin: 8px 8px 8px 0;
+  padding: 8px 8px 0;
+  border-radius: calc(var(--r-panel) - 8px);
+  background: rgb(0 0 0 / 0.26);
+  box-shadow: var(--tt-cut);
+  overflow: hidden;
+  transition: margin 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:not([data-flag-dir-room-tint-side='line'], [data-flag-dir-room-tint-side='ground'], [data-flag-dir-room-tint-side='dock'], [data-flag-dir-room-tint-side='split']) section.library.shut .main {
+  margin-left: 8px;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:not([data-flag-dir-room-tint-side='line'], [data-flag-dir-room-tint-side='ground'], [data-flag-dir-room-tint-side='dock'], [data-flag-dir-room-tint-side='split']) section.library :is(.row.head, .scroll) {
+  margin-inline: 0;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:not([data-flag-dir-room-tint-side='line'], [data-flag-dir-room-tint-side='ground'], [data-flag-dir-room-tint-side='dock'], [data-flag-dir-room-tint-side='split']) section.library .main > .bar {
+  padding-inline: 8px;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:not([data-flag-dir-room-tint-side='line'], [data-flag-dir-room-tint-side='ground'], [data-flag-dir-room-tint-side='dock'], [data-flag-dir-room-tint-side='split']) section.library.shut .main > .bar {
+  padding-left: 32px;
+}
+/* split: two panels, the app's gap between them, like the decks above. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-side='split'] section.library {
+  background: none;
+  box-shadow: none;
+  overflow: visible;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-side='split'] section.library nav {
+  width: calc(var(--side-w, 200px) - 12px);
+  justify-self: start;
+  border-radius: var(--r-panel);
+  background: var(--rg-plate);
+  box-shadow: var(--rg-plate-edge);
+  transition: translate 200ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity 140ms ease-out;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-side='split'] section.library.shut nav {
+  translate: calc(-100% - 16px) 0;
+  opacity: 0;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-side='split'] section.library .main {
+  border-radius: var(--r-panel);
+  background: var(--rg-plate);
+  box-shadow: var(--rg-plate-edge);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-side='split'] section.library .sidetoggle {
+  left: max(10px, calc(var(--library-sidebar, 200px) - 12px - 44px));
+}
+@media (prefers-reduced-motion: reduce) {
+  :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library,
+  :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .sidetoggle,
+  :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .main,
+  :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library nav,
+  :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .main > .bar {
+    transition: none !important;
+  }
 }
 
 /* The list's edges. A title's ink stands 24px from the sidebar's rule, the
@@ -2782,6 +2889,20 @@
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .row.head .cols {
   margin-right: 8px;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .row.head::after {
+  content: '';
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 0;
+  height: 2px;
+  background: linear-gradient(180deg, var(--tt-rule-d) 50%, var(--tt-rule-l) 50%);
+  pointer-events: none;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:is([data-flag-dir-room-tint-side='line'], [data-flag-dir-room-tint-side='ground']) section.library .row.head::after {
+  left: -8px;
+  right: -8px;
 }
 /* The column handles: out of sight until the pointer is over the headings. */
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .row.head .colh {
@@ -3161,8 +3282,9 @@
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .bar + .row.head {
   margin-top: -6px;
 }
+/* The first row's plate stands 8px under the rule, as it does from the sides. */
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .scroll {
-  margin-top: -1px;
+  margin-top: 3px;
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer .fwrap .fader.vertical .mark.full {
   background: var(--fg-2);
