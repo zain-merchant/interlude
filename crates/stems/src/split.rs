@@ -20,6 +20,8 @@ use crate::model::{Separated, MODEL_RATE};
 
 /// One stored stem frame: vocals, bass, drums, each (left, right).
 type Frame = [(f32, f32); STORED];
+/// A split region, ready to go into a track's stems.
+pub type Region = Vec<Frame>;
 
 /// How a track is cut into regions.
 #[derive(Debug, Clone, Copy)]
@@ -145,7 +147,7 @@ impl Plan {
     }
 
     /// Region `k`'s output, resampled to the track's frames over its extent.
-    fn output(&self, k: usize, sep: &Separated) -> Vec<Frame> {
+    pub fn output(&self, k: usize, sep: &Separated) -> Region {
         let (start, end) = self.extent(k);
         let in_start = self.input_start(k) as f64;
         let n = self.segment as i64;
@@ -240,11 +242,10 @@ impl Progress {
         }
     }
 
-    /// Writes region `k`'s result into `stems` and marks every block that is
+    /// Writes region `k`'s result ([`Plan::output`]) into `stems` and marks every block that is
     /// now complete as ready.
-    pub fn finish(&mut self, k: usize, sep: &Separated, stems: &Stems) {
+    pub fn finish(&mut self, k: usize, out: Region, stems: &Stems) {
         let plan = self.plan;
-        let out = plan.output(k, sep);
         let (start, end) = plan.extent(k);
         let h = plan.half_fringe();
         let write = |f: usize, fr: &Frame| {
@@ -368,7 +369,7 @@ mod tests {
         let mut steps = 0;
         while let Some(k) = order(&p) {
             let sep = fake(&plan, &plan.input(k, &samples));
-            p.finish(k, &sep, &stems);
+            p.finish(k, plan.output(k, &sep), &stems);
             steps += 1;
             assert!(steps <= plan.regions(), "a region was split twice");
         }
@@ -419,12 +420,12 @@ mod tests {
             bass: [vec![0.0; 4096], vec![0.0; 4096]],
             drums: [vec![0.0; 4096], vec![0.0; 4096]],
         };
-        p.finish(start, &silent, &stems);
+        p.finish(start, plan.output(start, &silent), &stems);
         assert_eq!(p.next(60_000.0), Some(start + 1));
         assert!(p.lead(60_000.0) > 0.0);
         // Past the end: wraps back to the nearest region before.
         for k in start + 1..plan.regions() {
-            p.finish(k, &silent, &stems);
+            p.finish(k, plan.output(k, &silent), &stems);
         }
         assert_eq!(p.next(60_000.0), Some(start - 1));
         assert_eq!(p.lead(60_000.0), f64::INFINITY);

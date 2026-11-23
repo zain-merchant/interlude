@@ -16,7 +16,7 @@
   import { openMenu } from './menu.svelte.js';
   import { keyLabel } from './commands.js';
   import { announce } from './announce.svelte.js';
-  import { leftStems, openedStems, showStems } from './stems.svelte.js';
+  import { leftStems, openedStems, prepares, showStems } from './stems.svelte.js';
   import { keyName, keyLongName, camelot, playingKey } from './key.js';
   import { toggleSlip, beatJump, hasGrid, beatsLabel, setKeyShift, keyStep, keySync, canKeySync, KEY_SHIFT_MAX } from './performance.js';
 
@@ -276,7 +276,7 @@
         {#each MODES as m}
           {@const busy = (m.id === 'loop' && d.looping) || (m.id === 'fx' && d.fx?.on) || (m.id === 'stems' && (d.stems ?? 15) !== 15)}
           <button role="tab" class:on={mode === m.id} aria-selected={mode === m.id} tabindex={mode === m.id ? 0 : -1}
-            onclick={() => setMode(m.id)} use:tip={() => (busy ? `${m.label} (active)` : m.id === 'grid' ? 'Grid: fix the beatgrid. While open, drag the waveform to slide it' : m.label)}>
+            onclick={() => setMode(m.id)} use:prepares={() => ({ deck, on: m.id === 'stems' && mode !== 'stems' })} use:tip={() => (busy ? `${m.label} (active)` : m.id === 'grid' ? 'Grid: fix the beatgrid. While open, drag the waveform to slide it' : m.label)}>
             {m.label}{#if busy}<i aria-label="active"></i>{/if}
           </button>
         {/each}

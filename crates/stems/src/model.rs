@@ -9,12 +9,13 @@
 //! either broken or about 100x slower for this model, so it isn't used.
 
 use std::path::Path;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Mutex;
 use std::time::Instant;
 
 use ort::environment::Environment;
 use ort::session::builder::{AutoDevicePolicy, GraphOptimizationLevel, SessionBuilder};
-use ort::session::Session;
+use ort::session::{NoSelectedOutputs, RunOptions, Session};
 use ort::value::Tensor;
 
 use crate::{quick, Error};
@@ -64,6 +65,32 @@ pub(crate) fn builder(level: GraphOptimizationLevel) -> Result<SessionBuilder, E
         .with_intra_threads(THREADS)?
         .with_memory_pattern(false)?
         .with_execution_providers([ort::ep::CPU::default().with_arena_allocator(false).build()])?)
+}
+
+/// Stops one run of the model from another thread. Made fresh for each run.
+pub struct Stop {
+    options: RunOptions<NoSelectedOutputs>,
+    asked: AtomicBool,
+}
+
+impl Stop {
+    pub fn new() -> Result<Self, Error> {
+        Ok(Self {
+            options: RunOptions::new()?,
+            asked: AtomicBool::new(false),
+        })
+    }
+
+    /// Ends the run soon, at the next of the model's steps. The run fails,
+    /// and [`Stop::asked`] tells that from failing by itself.
+    pub fn stop(&self) {
+        self.asked.store(true, Ordering::Release);
+        let _ = self.options.terminate();
+    }
+
+    pub fn asked(&self) -> bool {
+        self.asked.load(Ordering::Acquire)
+    }
 }
 
 /// A loaded separation model.
@@ -134,14 +161,16 @@ impl Model {
 
     /// Separates one segment. `left` and `right` are exactly
     /// [`Model::segment`] samples at [`MODEL_RATE`].
-    pub fn run(&mut self, left: &[f32], right: &[f32]) -> Result<Separated, Error> {
+    pub fn run(&mut self, left: &[f32], right: &[f32], stop: &Stop) -> Result<Separated, Error> {
         let n = self.segment;
         assert!(left.len() == n && right.len() == n, "segment length");
         let mut mix = Vec::with_capacity(2 * n);
         mix.extend_from_slice(left);
         mix.extend_from_slice(right);
         let input = Tensor::<f32>::from_array(([1usize, 2, n], mix))?;
-        let outputs = self.session.run(ort::inputs![input])?;
+        let outputs = self
+            .session
+            .run_with_options(ort::inputs![input], &stop.options)?;
         let (_, data) = outputs[0].try_extract_tensor::<f32>()?;
         if data.len() != OUT_STEMS * 2 * n {
             return Err(Error::Model(format!(

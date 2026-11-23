@@ -94,6 +94,14 @@ impl Host for AppHost {
                 );
             }
             Action::PadMode { deck, mode } => {
+                // Choosing the stems pads is the earliest a controller says
+                // they're wanted. The screen hears of it next and opens the
+                // Stems tab, but there's no need to wait for that.
+                if mode == PadMode::Keyboard {
+                    if let Some(stems) = self.app.try_state::<crate::stems::Stems>() {
+                        stems.used(deck.index());
+                    }
+                }
                 let mode = match mode {
                     PadMode::HotCue => "hotCue",
                     PadMode::BeatLoop => "beatLoop",
