@@ -41,6 +41,7 @@ export default {
       options: [
         ['full', 'A rule under the whole label', 'It fills with colour when Key lock is on.'],
         ['short', 'A short rule', 'The same, 22px.'],
+        ['ring', 'An etched outline', 'The same etched line all the way round Key lock and 0.00%; it takes the deck’s colour when Key lock is on.'],
         ['ledger', 'A ledger', 'Etched rules across the column, between the three.'],
         ['cut', 'One cut', 'All three in one cut under the fader, with rules between.'],
         ['plain', 'Plain', 'No mark; the labels are brighter than captions.'],
@@ -54,6 +55,16 @@ export default {
         ['none', 'All tracks', 'Level with the search; the button is at the toolbar’s start.'],
         ['row', 'Library', 'A row with the button, level with the search.'],
         ['search', 'The search', 'The search is at the sidebar’s top; the toolbar starts at Fits.'],
+      ],
+    },
+    slide: {
+      type: 'choice',
+      label: 'The sidebar’s spring',
+      default: 'spring',
+      options: [
+        ['spring', 'Spring', 'Barely goes over.'],
+        ['lively', 'Livelier', 'Goes about 13px over as it opens, then back.'],
+        ['none', 'None', 'At once.'],
       ],
     },
     tempo: {

@@ -6,6 +6,7 @@
   import { tip, tipText } from '../../lib/tooltip.svelte.js';
   import { drag } from '../../lib/dnd.svelte.js';
   import { side, sideShut, hideSidebar, SIDE_KEY } from './sidebar.svelte.js';
+  import { slide } from './slide.js';
 
   let el = $state(/** @type {HTMLButtonElement | null} */ (null));
   // Focus in the sidebar comes out of it as it goes.
@@ -16,6 +17,14 @@
   });
   $effect(() => {
     if (!drag.track && side.peek) side.peek = false;
+  });
+  // The spring starts before the new place is drawn.
+  let first = true;
+  $effect.pre(() => {
+    const shut = sideShut();
+    const below = /** @type {HTMLElement | null} */ (el?.closest('.below') ?? null);
+    slide(below, shut, first || !!below?.querySelector('.grip.side.dragging'));
+    first = false;
   });
   let over = 0;
   const enter = () => {

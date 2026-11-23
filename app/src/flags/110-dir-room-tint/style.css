@@ -2841,11 +2841,6 @@
   position: relative;
   overflow: hidden;
   --side-gap: 0px;
-  transition: grid-template-columns 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .app:has(.grip.side.dragging) section.library,
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .app.settling section.library {
-  transition: none;
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library nav {
   box-sizing: border-box;
@@ -2854,25 +2849,17 @@
   border-right-color: transparent;
   box-shadow: none;
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library.shut nav {
+/* It moves on a spring (slide.js), which writes --library-sidebar and --side-p
+   (1 open, 0 shut) on .below; out of sight once it's still. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .below:not(.sliding) section.library.shut nav {
   visibility: hidden;
-  transition: visibility 0s 200ms;
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .main {
   position: relative;
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .sidetoggle {
   top: 18px;
-  transition: translate 200ms cubic-bezier(0.2, 0.8, 0.2, 1), color 120ms ease-out, background-color 120ms ease-out;
-}
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .app:has(.grip.side.dragging) section.library .sidetoggle {
-  transition: color 120ms ease-out;
-}
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library.shut .main > .bar {
-  padding-left: 32px;
-}
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .main > .bar {
-  transition: padding-left 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition: color 120ms ease-out, background-color 120ms ease-out;
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .below > .grip.side:is(:hover, .dragging) i {
   background: transparent;
@@ -2891,17 +2878,13 @@
   content: '';
   position: absolute;
   z-index: 0;
-  inset: 0 auto 0 0;
-  width: var(--side-w, 200px);
+  inset: 0 auto 0 -24px;
+  width: calc(var(--side-w, 200px) + 24px);
   /* Moved, not laid out again: WebKit left a transition of left at its old value when a setting changed. */
   translate: calc(var(--library-sidebar, 200px) - var(--side-w, 200px)) 0;
   background: rgb(0 0 0 / 0.3);
   box-shadow: inset -1px 0 0 rgb(0 0 0 / 0.6), 1px 0 0 var(--tt-rule-l);
   pointer-events: none;
-  transition: translate 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .app:has(.grip.side.dragging) section.library::before {
-  transition: none;
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library nav {
   z-index: 1;
@@ -2969,11 +2952,11 @@
   overflow: hidden;
   clip-path: inset(50%);
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-head='row'] section.library:not(.shut) .sidetoggle {
-  translate: calc(var(--library-sidebar, 200px) - 36px) 0;
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-head='row'] section.library .sidetoggle {
+  translate: calc(var(--library-sidebar, 200px) + 10px - 46px * var(--side-p, 1)) 0;
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-head='row'] section.library:not(.shut) .main > .bar {
-  padding-left: 0;
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-head='row'] section.library .main > .bar {
+  padding-left: calc(32px - 32px * var(--side-p, 1));
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-head='search'] section.library:not(.shut) nav {
   padding-top: 74px;
@@ -2991,17 +2974,6 @@
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-head='search'] section.library:not(.shut) .main > .bar > .search input {
   min-width: 0;
 }
-@media (prefers-reduced-motion: reduce) {
-  :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library,
-  :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library::before,
-  :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .sidetoggle,
-  :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .main,
-  :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library nav,
-  :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .main > .bar {
-    transition: none !important;
-  }
-}
-
 /* The list's edges. A title's ink stands 24px from the sidebar's rule, the
    distance from a BPM to its key; its row's plate reaches 8px past the
    toolbar on both sides, so text lines up with the toolbar and the plate
@@ -3634,6 +3606,30 @@
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:is([data-flag-dir-room-tint-column='full'], [data-flag-dir-room-tint-column='short']) [data-region^='deck'] .pitch .lock.on::after {
   background: var(--deck);
+}
+/* The rule carried all the way round: a dark line with its light below it, lit
+   from above, so the top edge's light falls inside and the bottom's outside. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-column='ring'] [data-region^='deck'] .pitch .lock::after,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-column='ring']:not([data-flag-dir-room-tint-tempo='cut']) [data-region^='deck'] .pitch .val:not(:hover, :focus-visible, :focus-within)::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: none;
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.85), inset 0 2px 0 0 rgb(255 255 255 / 0.12), 0 1px 0 0 rgb(255 255 255 / 0.15);
+  pointer-events: none;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-column='ring'] [data-region^='deck'] .pitch .val {
+  position: relative;
+  border-radius: 7px;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-column='ring'] [data-region^='deck'] .pitch .lock {
+  width: 100%;
+  padding: 0;
+  border-radius: 7px;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-column='ring'] [data-region^='deck'] .pitch .lock.on::after {
+  box-shadow: inset 0 0 0 1px var(--deck), 0 0 0 1px rgb(0 0 0 / 0.6), 0 2px 0 0 rgb(255 255 255 / 0.12);
 }
 /* 3: a ledger: etched rules across the column, between the three */
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-column='ledger'] [data-region^='deck'] .pitch .val::after,

@@ -23,6 +23,16 @@ export default {
         ['rows', 'Always a row', 'Under a rule, as when there’s more than one.'],
       ],
     },
+    sides: {
+      type: 'choice',
+      label: 'Left and right edges',
+      default: 'same',
+      recommended: 'same',
+      options: [
+        ['same', 'The same', 'A key or value at the end stands as far in as the name does.'],
+        ['nest', 'Nested', 'A key or value at the end stands 4 in, as it does above and below.'],
+      ],
+    },
   },
   notes:
     'read.js turns a tooltip’s sentence into its parts (read.test.js has every sentence in the app); Tip.svelte draws them; style.css. Hooks: Tooltip.svelte, and lib/tooltip.svelte.js (where the control ends, so a tall tip can open below). When this lands, each control should give its parts itself.',
