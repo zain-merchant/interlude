@@ -1,0 +1,301 @@
+/* #113 zero-states, on 110. 12 within, 24 between, measured cap to
+   baseline from the drawings' own ink. */
+:root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] section.library .scroll:has(> .zs) {
+  overflow: hidden;
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+:root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] .zs {
+  position: absolute;
+  inset: 0;
+  container-type: size;
+  font: 400 13px/20px var(--font);
+  --near: 12px;
+  --far: 24px;
+}
+:root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] .zs .in {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: var(--far);
+  padding: 0 var(--far);
+  text-align: center;
+}
+:root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] .zs .gr,
+:root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] .zs .tx {
+  display: grid;
+}
+:root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] .zs .tx {
+  gap: var(--near);
+  justify-items: center;
+}
+:root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] .zs .zh,
+:root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] .zs .zp {
+  margin: 0;
+  text-wrap: balance;
+  text-box: trim-both cap alphabetic;
+}
+:root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] .zs .zh {
+  color: var(--fg);
+  font: 600 16px/20px var(--font);
+}
+:root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] .zs .zp {
+  max-width: 336px;
+  color: var(--fg-2);
+}
+:root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] .zs .acts {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--near);
+}
+:root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] .zs .btn.btn.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  padding: 0 12px;
+  font: 500 13px/1 var(--font);
+}
+:root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] .zs .btn kbd {
+  padding: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--fg-3);
+  font: 400 12px/1 var(--font);
+}
+:root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] .zs .btn.btn.btn.zpri {
+  background: var(--rg-paper, #eeeeec) !important;
+  box-shadow: inset 0 1px 0 #fff, var(--tt-lift) !important;
+  color: #111113 !important;
+}
+:root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] .zs .btn.btn.btn.zpri:hover {
+  background: #fff !important;
+}
+:root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] .zs .btn.btn.btn.zpri:active {
+  background: #d3d3d0 !important;
+}
+/* Short: a smaller drawing, then the drawing beside the words, then words. */
+@container (max-height: 291px) {
+  :root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] .zs .gr .zg {
+    width: auto;
+    height: 88px;
+  }
+}
+@container (max-height: 245px) {
+  :root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] .zs .in {
+    grid-template-columns: auto auto;
+    justify-items: start;
+    text-align: left;
+  }
+  :root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] .zs .in:has(.gr) .gr {
+    grid-row: 1 / 3;
+    align-self: center;
+  }
+  :root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] .zs .tx {
+    justify-items: start;
+    align-self: end;
+  }
+  :root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] .zs .acts {
+    align-self: start;
+    justify-content: start;
+  }
+  :root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] .zs .in:not(:has(.acts)) .tx {
+    grid-row: 1 / 3;
+    align-self: center;
+  }
+}
+@container (max-height: 135px) {
+  :root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] .zs .gr {
+    display: none;
+  }
+  :root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] .zs .in {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  :root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] .zs .zp {
+    display: none;
+  }
+}
+/* Nothing at all: no headings over no rows, no count of none; the room
+   they took is the drawing's. */
+:root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] section.library .scroll[data-zero='all'] {
+  overflow: visible;
+}
+:root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] section.library .scroll[data-zero='all'] > .zs {
+  top: -37px;
+}
+:root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] section.library .main:has(> .scroll[data-zero='all']) :is(.row.head, .bar > .count) {
+  visibility: hidden;
+}
+:root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] section.library .main:has(> .scroll[data-zero='all'])::before {
+  border-top-color: transparent;
+  border-radius: 0;
+  box-shadow: inset 1px 0 0 var(--tt-rule-l);
+}
+/* The filter's picture: a cut with your tempos in it, ink only. */
+:root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] .zs .zfp {
+  display: block;
+  overflow: visible;
+}
+:root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] .zs .zwell {
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  background: var(--rg-grooves), var(--rg-well);
+  box-shadow: var(--tt-cut);
+}
+:root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] .zs .zfp .rng {
+  fill: rgb(238 238 236 / 0.07);
+}
+:root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] .zs .zfp .edge {
+  fill: none;
+  stroke: rgb(238 238 236 / 0.5);
+  stroke-linecap: round;
+}
+:root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] .zs .zfp .all {
+  fill: rgb(238 238 236 / 0.2);
+}
+:root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] .zs .zfp .all.only {
+  fill: rgb(238 238 236 / 0.42);
+}
+:root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] .zs .zfp .a {
+  fill: rgb(238 238 236 / 0.85);
+}
+:root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] .zs .zfp .cell {
+  fill: rgb(238 238 236 / 0.09);
+}
+:root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] .zs .zfp text {
+  fill: var(--fg-3);
+  font: 400 11px/1 var(--font);
+  font-variant-numeric: tabular-nums;
+}
+:root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] .zs .zfp text.on {
+  fill: var(--fg);
+}
+:root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] .zs .sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+/* Decks: the bare platter, and its keys. */
+:root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] [data-region^='deck'] .platter.bare :is(.disc, .sheen, .hub) {
+  visibility: hidden;
+}
+:root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] [data-region^='deck'] .platter .bareart {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+:root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] [data-region^='deck'] header .artist.load {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  overflow: visible;
+  white-space: nowrap;
+  color: var(--fg-2);
+}
+:root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] [data-region='deck1'] header .artist.load {
+  justify-content: flex-end;
+}
+:root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] [data-region^='deck'] header .artist.load > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+:root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] [data-region^='deck']:has(header .artist.load) .bpm .big {
+  visibility: hidden;
+}
+:root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] :is([data-region^='deck'], .toastbox) .kcaps {
+  display: inline-flex;
+  gap: 2px;
+}
+:root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] :is([data-region^='deck'], .toastbox) .kcap {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 4px;
+  border-radius: 4px;
+  background: var(--tt-sheen), var(--rg-key);
+  box-shadow: inset 0 1px 0 0 rgb(255 255 255 / 0.095), var(--tt-lift);
+  color: var(--fg-2);
+  font: 500 11.5px/1 var(--font);
+}
+:root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] :is([data-region^='deck'], .toastbox) .kcap b {
+  display: block;
+  font: inherit;
+  text-box: trim-both cap alphabetic;
+}
+:root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] :is([data-region^='deck'], .toastbox) .kcap svg {
+  width: 12px;
+  height: 12px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+/* Stems: a record in four rings, two lines, and the way on. */
+:root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] [data-region^='deck'] .stems .zstem {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 24px;
+  height: 72px;
+  padding: 0 8px;
+  font: 400 13px/20px var(--font);
+}
+:root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] [data-region^='deck'] .stems .zstem > div {
+  display: grid;
+  gap: 12px;
+}
+:root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] [data-region^='deck'] .stems .zstem p {
+  margin: 0;
+  color: var(--fg-2);
+  text-box: trim-both cap alphabetic;
+  font-variant-numeric: tabular-nums;
+}
+:root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] [data-region^='deck'] .stems .zstem p:first-child {
+  color: var(--fg);
+  font-weight: 600;
+}
+:root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] [data-region^='deck'] .stems .zstem .btn {
+  height: 32px;
+  padding: 0 12px;
+}
+/* Setup with nothing plugged in. */
+:root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] .card[role='dialog'] .zsetup {
+  display: grid;
+  justify-items: center;
+  gap: 24px;
+  padding: 24px 0;
+  text-align: center;
+}
+:root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] .card[role='dialog'] .zsetup > div:last-child {
+  display: grid;
+  gap: 12px;
+}
+:root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] .card[role='dialog'] .zsetup p {
+  margin: 0;
+  max-width: 336px;
+  color: var(--fg-2);
+  font: 400 13px/20px var(--font);
+  text-wrap: balance;
+  text-box: trim-both cap alphabetic;
+}
+:root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] .card[role='dialog'] .zsetup p:first-child {
+  color: var(--fg);
+  font: 600 16px/20px var(--font);
+}
