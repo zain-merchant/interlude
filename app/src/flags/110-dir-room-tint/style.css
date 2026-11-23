@@ -2369,6 +2369,12 @@
   }
 }
 
+/* One line height, even, so a label and an amount in the same row land on
+   the same pixel (17px in a 40px row left half a pixel each to round). */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] :is(.strip button, .transport .btn, .transport .jumps > span, .fx .beats > .val, .perf .step > .val, .perf .step > .val b) {
+  line-height: 16px;
+}
+
 /* ── The library's loaded mark ─────────────────────────────────────────
    The lane titles' and the crossfader's bar, 3 by 14, in the middle of the
    gutter before the title, so a selected or hovered row's shape holds it. */
@@ -2450,4 +2456,19 @@
 /* The filter panel: 10px round its fields' 8. */
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .filter .panel {
   border-radius: 18px;
+}
+/* A search match: its tone only. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .scroll .row mark {
+  font-weight: inherit;
+}
+/* The beat jump is a cut: it doesn't shrink when an end is held. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .transport .jumps:is(*, :active) {
+  transform: none;
+  scale: none;
+  translate: none;
+}
+/* A caption has no face to press in. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .knob button.label:is(*, :active, [data-show-active], .pressed):is(*, :active):not(:disabled, [aria-disabled='true']) {
+  background-color: transparent;
+  box-shadow: none;
 }
