@@ -2559,7 +2559,7 @@ for (const ev of ['pointerup', 'pointercancel', 'blur']) addEventListener(ev, ()
 // a tap (down and up again close by, quickly, the page not scrolled), so a
 // swipe that scrolls the page drops nothing. (Not on the nav, its glass
 // included: a click there is meant for the nav.)
-const NEEDLE_SKIP = 'a, button, input, select, summary, iframe, .shot, .dialkit-root, .nav';
+const NEEDLE_SKIP = 'a, button, input, select, summary, iframe, .shot, .dialkit-root, .nav, .dlsheet';
 function dropNeedle(p) {
   const { r } = toRecord(p.x, p.y, geo);
   if (r < geo.r0 || r > geo.Rmax) return;
