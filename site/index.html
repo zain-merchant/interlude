@@ -166,7 +166,17 @@
 
       // The nav's surface, and what the capsule's Download control looks like.
       select('navglass', { label: 'Nav surface', value: 'solid', options: [['solid', 'Solid'], ['glass', 'Glass'], ['mixed', 'Solid top'], ['light', 'Light blur']], apply: (v) => set('navglass', v === 'solid' ? '' : v) });
-      color('navfill', { label: 'Nav colour', value: '#141417', apply: (v) => { d.style.setProperty('--nav-fill', v.startsWith('#') ? v : `#${v}`); } });
+      // (Three sets, fill and edge together; the colour alone by hand after.)
+      const NAV = { menu: ['#141417', 0.09], lifted: ['#1d1d21', 0.14], black: ['#0b0b0d', 0.2] };
+      const fill = (v) => d.style.setProperty('--nav-fill', v.startsWith('#') ? v : `#${v}`);
+      let navSet = 'menu';
+      select('navset', { label: 'Nav colour', value: 'menu', options: [['menu', 'Menu (now)'], ['lifted', 'Lifted'], ['black', 'Black, firm edge']], apply: (v) => {
+        navSet = v; fill(NAV[v][0]); d.style.setProperty('--nav-line', `rgb(255 255 255 / ${NAV[v][1]})`);
+      } });
+      let navHand = 0;
+      color('navfill', { label: 'Nav colour by hand', value: '#141417', apply: (v) => { if (navHand++ === 0 && v === '#141417') return; fill(v); } });
+      // The nav's Download at the very top of the page too, where it fits.
+      select('navtop', { label: 'Nav download at top', value: 'off', options: [['off', 'Hidden (now)'], ['on', 'Shown']], apply: (v) => { set('navtop', v === 'on' ? 'on' : ''); requestAnimationFrame(() => window.navMeasure?.()); } });
       select('navdl', { label: 'Nav download', value: 'pill', options: [['pill', 'Pill'], ['ghost', 'Outline'], ['text', 'Text'], ['pillround', 'Round pill']], apply: (v) => { set('navdl', v === 'pill' ? '' : v); requestAnimationFrame(() => window.navMeasure?.()); } });
 
       // The record behind a phone's hero: a preset, or each part by hand.
@@ -356,6 +366,17 @@
         // be held to the capsule's right end at every width (draw).
         geo.narrow = narrow; geo.mw = mw; geo.aw = aw;
         geo.mx0 = x0 + menuBtn.offsetLeft; geo.ax0 = x0 + acts.offsetLeft;
+        // Shown at the top too (Try, "Nav download at top"), if it fits:
+        // on a phone, clear of the large name; on a wide screen, with the
+        // sections moved left to make room.
+        geo.top = false; geo.linksTop = 0;
+        if (d.dataset.navtop === 'on') {
+          const g0 = narrow ? Math.max(4, x0 - 10) : 12;
+          const aTop = W - g0 - 10 - (mw ? mw + 4 : 0) - aw;
+          const nameEnd = x0 + brand.offsetLeft + 36 * ICON + GAP + ww;
+          if (narrow) geo.top = aTop - nameEnd >= 8;
+          else { geo.linksTop = Math.min(0, aTop - 26 - (x0 + links.offsetLeft + lw)); geo.top = x0 + links.offsetLeft + geo.linksTop - nameEnd >= 24; }
+        }
         draw();
         requestAnimationFrame(() => window.menuPlace?.());
       }
@@ -407,7 +428,7 @@
         // In island the links travel on an eased share of the shape, home
         // well before it settles, so they're clear of the buttons early.
         const pl = (d.dataset.navacts || 'island') === 'island' ? 1 - (1 - p) ** 2 : p;
-        links.style.transform = `translate(${r(geo.l * pl)}px, ${r(dy * v)}px)`;
+        links.style.transform = `translate(${r(geo.l * pl + geo.linksTop * (1 - pl))}px, ${r(dy * v)}px)`;
         // Both ride the capsule's right end as it contracts: the menu button
         // its own width in from the edge (10px at the wide top, 6 in the
         // compact capsule, as the icon is at the other end), the actions
@@ -450,10 +471,10 @@
           acts.style.opacity = mode === 'with' ? String(r(clamp((p - 0.2) / 0.4) ** 1.5)) : '1';
           // (island: the links come home ahead of the shape, below, so the
           // buttons can surface as soon as the capsule has its glass.)
-          const on = (mode === 'after' && shape.to === 1 && p > 0.55) || (island && shape.to === 1 && p > actsAt);
+          const on = (mode === 'after' && shape.to === 1 && p > 0.55) || (island && shape.to === 1 && p > actsAt) || geo.top;
           if (nav.hasAttribute('data-acts-in') !== on) nav.toggleAttribute('data-acts-in', on);
         }
-        const shown = (mode === 'old' ? q > 0.02 || act.to === 1 : p > 0.05) ? 'visible' : '';
+        const shown = (mode === 'old' ? q > 0.02 || act.to === 1 : p > 0.05 || geo.top) ? 'visible' : '';
         if (acts.style.visibility !== shown) acts.style.visibility = shown;
       }
       // In as soon as the headline reaches the bar, so the bar's large name
