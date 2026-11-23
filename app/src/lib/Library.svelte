@@ -12,9 +12,9 @@
   import { keyName, keyLongName, camelot } from './key.js';
   import { onAir, passes, filtering, describe, FIT_TEMPO } from './libraryfilter.js';
 
-  /** `onimport` opens the import window; `onempty` is called when the whole library loads with no tracks.
-   * @type {{ onload: (deck: number, track: import('./backend.js').LibraryTrack, opts?: { force?: boolean }) => void, onsettings?: () => void, onmessage?: (text: string) => void, onimport?: () => void, onempty?: () => void }} */
-  let { onload, onsettings, onmessage = showToast, onimport, onempty } = $props();
+  /** `onimport` opens the import window; `onloaded` is called with the number of tracks each time the whole library loads.
+   * @type {{ onload: (deck: number, track: import('./backend.js').LibraryTrack, opts?: { force?: boolean }) => void, onsettings?: () => void, onmessage?: (text: string) => void, onimport?: () => void, onloaded?: (tracks: number) => void }} */
+  let { onload, onsettings, onmessage = showToast, onimport, onloaded } = $props();
 
   const ROW = 28;
 
@@ -286,7 +286,7 @@
       byPath = new Map();
       for (const t of all) byPath.set(t.path, [...(byPath.get(t.path) ?? []), t]);
       if (view.kind === 'all') total = all.length;
-      if (view.kind === 'all' && total === 0) onempty?.();
+      if (view.kind === 'all') onloaded?.(total);
       if (!keep) selectIndex(0);
     } catch (e) {
       error = String(e);

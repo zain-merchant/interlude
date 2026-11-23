@@ -23,7 +23,8 @@ the report it saves.
   trans, brake, spin back, sweeps and more) on the controller's PAD FX
   pads; auto gain so tracks start level; a master
   limiter so the output never clips.
-- **Stems:** mute or solo vocals, melody, bass and drums on each deck.
+- **Stems:** mute or solo vocals, melody, bass and drums on each deck. The
+  model that splits them downloads by itself after setup (166 MB).
   Tracks are split on your Mac, nothing is uploaded.
 - **Library:** instant search, playlists, a history of every set, and
   import from Rekordbox and Serato with cues, loops and grids. Your music

@@ -2,11 +2,15 @@
   // A deck's stems: vocals, melody, bass and drums. Click mutes a stem,
   // Shift-click plays it alone. A stem that plays has a filled dot; a muted
   // one a hollow dot and dim text; a soloed one takes the deck's colour. While the
-  // track is still being split, a hairline under the buttons fills up.
+  // track is still being split, a hairline under the buttons fills up. Until
+  // the model has downloaded, the buttons give way to how that's going.
+  import { tick } from 'svelte';
   import { tracks } from './engine.svelte.js';
   import { tip, tipText } from './tooltip.svelte.js';
   import { keyLabel } from './commands.js';
   import { STEMS, stemsOf, usable, soloed, toggleStem, soloStem } from './stems.svelte.js';
+  import { stemsModel, downloadStems, watchStemsModel } from './stemsmodel.svelte.js';
+  import { percent, progressText, stemsStatus } from './stemsmodel.js';
 
   /** @type {{ deck: number, onsettings?: () => void }} */
   let { deck, onsettings } = $props();
@@ -20,8 +24,6 @@
   const why = $derived.by(() => {
     if (!t) return 'Load a track first';
     switch (s.state) {
-      case 'needsModel':
-        return 'Stems need a one-time download of the separation model. Click to get it in Settings';
       case 'failed':
         return `Stems couldn't be made: ${s.error ?? 'unknown error'}. Click for Settings`;
       case 'off':
@@ -29,6 +31,20 @@
       default:
         return '';
     }
+  });
+
+  // A track that's in the cache has its stems without the model, so the
+  // deck decides. An empty deck shows a download that's on its way.
+  const getting = $derived(t ? s.state === 'needsModel' : ['downloading', 'waiting', 'failed'].includes(stemsModel.state));
+  const status = $derived(stemsStatus(stemsModel));
+  const act = () => (status.action ? downloadStems().catch((e) => console.error('stems model', e)) : onsettings?.());
+  $effect(() => (getting ? watchStemsModel() : undefined));
+
+  // Focus on the status's button moves to the first stem when they're back.
+  let root;
+  $effect.pre(() => {
+    if (getting || !root?.contains(document.activeElement)) return;
+    tick().then(() => document.activeElement === document.body && root?.querySelector('.stem')?.focus());
   });
 
   function down(e, i) {
@@ -59,25 +75,38 @@
   };
 </script>
 
-<div class="stems" role="group" aria-label="Deck {'AB'[deck]} stems" style:--deck={deck === 0 ? 'var(--deck-a)' : 'var(--deck-b)'}>
-  <div class="row">
-    {#each STEMS as name, i}
-      {@const on = !!((s.mask >> i) & 1)}
-      <button class="stem" class:muted={!on} class:solo={solo === i} aria-disabled={!can && !(t && why)}
-        aria-pressed={on} aria-label={label(i)}
-        onpointerdown={(e) => down(e, i)} onclick={(e) => e.detail === 0 && down({ button: 0, shiftKey: e.shiftKey }, i)}
-        onkeydown={(e) => key(e, i)} use:tip={() => stemTip(i)}><i></i>{name}</button>
-    {/each}
-  </div>
+<div class="stems" role="group" aria-label="Deck {'AB'[deck]} stems" style:--deck={deck === 0 ? 'var(--deck-a)' : 'var(--deck-b)'} bind:this={root}>
+  {#if getting}
+    <div class="getting">
+      <span class="what num" use:tip={() => [status.title, status.detail].filter(Boolean).join(': ')}>{status.title}
+        {#if status.detail}<span class="detail">{status.detail}</span>{/if}</span>
+      <button class="btn sm" onclick={act}>{status.action || 'Settings'}</button>
+    </div>
+    {#if stemsModel.done && stemsModel.state !== 'ready'}
+      <div class="progress" role="progressbar" aria-label="Stems download" aria-valuemin="0" aria-valuemax="100"
+        aria-valuenow={percent(stemsModel)} aria-valuetext={progressText(stemsModel)}><i style:transform="scaleX({stemsModel.done / stemsModel.total})"></i></div>
+    {/if}
+  {:else}
+    <div class="row">
+      {#each STEMS as name, i}
+        {@const on = !!((s.mask >> i) & 1)}
+        <button class="stem" class:muted={!on} class:solo={solo === i} aria-disabled={!can && !(t && why)}
+          aria-pressed={on} aria-label={label(i)}
+          onpointerdown={(e) => down(e, i)} onclick={(e) => e.detail === 0 && down({ button: 0, shiftKey: e.shiftKey }, i)}
+          onkeydown={(e) => key(e, i)} use:tip={() => stemTip(i)}><i></i>{name}</button>
+      {/each}
+    </div>
+  {/if}
   {#if t && (s.state === 'splitting' || s.state === 'starting')}
     <div class="progress" role="progressbar" aria-label="Splitting into stems" aria-valuemin="0" aria-valuemax="100"
-      aria-valuenow={Math.round(s.ready * 100)}><i style:width="{s.ready * 100}%"></i></div>
+      aria-valuenow={Math.round(s.ready * 100)}><i style:transform="scaleX({s.ready})"></i></div>
   {/if}
 </div>
 
 <style>
   .stems {
     position: relative;
+    container-type: inline-size;
     min-width: 0;
   }
   .row {
@@ -85,6 +114,48 @@
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 8px;
     align-items: center;
+  }
+  .getting {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: var(--h-md);
+    padding-left: 8px;
+  }
+  .what {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--fg);
+  }
+  .detail {
+    margin-left: 8px;
+    color: var(--fg-2);
+  }
+  .getting .btn {
+    flex: none;
+  }
+  /* Narrow decks: two small lines, in the height of one. */
+  @container (max-width: 320px) {
+    .getting {
+      padding-left: 0;
+    }
+    .what {
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
+      white-space: normal;
+      font-size: var(--t-xs);
+      line-height: 14px;
+    }
+    .detail {
+      display: block;
+      margin-left: 0;
+      white-space: nowrap;
+    }
   }
   .stem {
     justify-self: center;
@@ -145,6 +216,7 @@
     display: block;
     height: 100%;
     background: var(--fg-3);
-    transition: width 0.3s;
+    transform-origin: left;
+    transition: transform 0.3s linear;
   }
 </style>

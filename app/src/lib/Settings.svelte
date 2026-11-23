@@ -10,6 +10,8 @@
   import { setSlip } from './performance.js';
   import { keyLabel } from './commands.js';
   import { backend } from './backend.js';
+  import { stemsModel, downloadStems, cancelStems, removeStems, watchStemsModel } from './stemsmodel.svelte.js';
+  import { mb, percent, progressText, stemsStatus } from './stemsmodel.js';
 
   /**
    * Settings open as a popup over the whole window. Performance keys keep
@@ -141,7 +143,7 @@
 
   const pct = (s) => `${Math.round(s * 100)}%`;
 
-  // Stems: the model download, and how splitting and the cache behave.
+  // Stems: the model, and how splitting and the cache behave.
   const CACHE_SIZES = [0, 1, 2, 5, 10, 20, 50];
   /** @type {any} */
   let stems = $state(null);
@@ -157,9 +159,28 @@
   $effect(() => {
     if (page !== 'stems') return;
     refreshStems();
-    // Follow a download while the page is open.
-    const timer = setInterval(() => stems?.model?.state === 'downloading' && refreshStems(), 250);
-    return () => clearInterval(timer);
+    return watchStemsModel();
+  });
+  /** Runs one of the model's buttons: download, cancel or remove. @param {() => Promise<void>} what */
+  async function model(what) {
+    stemsError = '';
+    try {
+      await what();
+    } catch (e) {
+      stemsError = String(e);
+    }
+  }
+  /** Remove was pressed, and asks first. */
+  let removing = $state(false);
+  /** @type {HTMLElement | undefined} */
+  let modelSection = $state();
+  // The button that had focus may be gone with the state it was for: focus
+  // moves to the first one now there.
+  $effect.pre(() => {
+    void removing;
+    if (stemsModel.state !== 'ready') removing = false;
+    if (!modelSection?.contains(document.activeElement)) return;
+    tick().then(() => document.activeElement === document.body && modelSection?.querySelector('button')?.focus());
   });
   async function setStems(change) {
     try {
@@ -167,15 +188,6 @@
     } catch (e) {
       stemsError = String(e);
     }
-  }
-  async function download() {
-    stemsError = '';
-    try {
-      await backend.downloadStemsModel();
-    } catch (e) {
-      stemsError = String(e);
-    }
-    refreshStems();
   }
   async function clearCache() {
     try {
@@ -386,8 +398,7 @@
     refreshControllers();
   }
 
-  const mb = (b) => `${Math.round(b / (1024 * 1024))} MB`;
-  const gb = (b) => (b >= 1024 ** 3 ? `${(b / 1024 ** 3).toFixed(1)} GB` : mb(b));
+  const gb = (b) => (b >= 1024 ** 3 ? `${(b / 1024 ** 3).toFixed(1)} GB` : `${Math.round(b / 1024 ** 2)} MB`);
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
@@ -460,20 +471,42 @@
           {/each}
         </div>
       {:else if page === 'stems'}
-        <section class="display">
-          <h3>Separation model</h3>
-          {#if !stems}
-            <p>{stemsError || 'Loading…'}</p>
-          {:else if stems.model.state === 'ready'}
-            <p>Ready. Each track you load is split into vocals, melody, bass and drums on this computer, starting at the play head, so the part you're about to play is ready first.</p>
-          {:else if stems.model.state === 'downloading'}
-            <p>Downloading, {mb(stems.model.done)} of {mb(stems.model.total)}…</p>
-            <div class="bar-track" role="progressbar" aria-label="Model download" aria-valuemin="0" aria-valuemax="100"
-              aria-valuenow={Math.round((stems.model.done / stems.model.total) * 100)}><i style:width="{(stems.model.done / stems.model.total) * 100}%"></i></div>
+        <section class="display" aria-labelledby="stems-model" bind:this={modelSection}>
+          <h3 id="stems-model">Separation model</h3>
+          {#if stemsModel.state === 'ready'}
+            <p>Ready. Each track you load is split into vocals, melody, bass and drums on this computer, starting at the play head, so the part you're about to play is ready first. The model takes {mb(stemsModel.total)}.</p>
+            <div class="size model">
+              {#if removing}
+                <p>New tracks won't have stems until it's downloaded again.</p>
+                <button class="btn sm" onclick={() => (removing = false)}>Keep</button>
+                <button class="btn sm" onclick={() => model(removeStems)}>Remove</button>
+              {:else}
+                <button class="btn sm" onclick={() => (removing = true)}>Remove the model…</button>
+              {/if}
+            </div>
+          {:else if stemsModel.known}
+            <p>Stems need a one-time {mb(stemsModel.total)} download: HTDemucs, an open model (MIT licence) that runs on this computer. It comes from Hugging Face, and nothing is uploaded.</p>
+            {#if stemsModel.state === 'failed'}
+              <p class="err">{stemsModel.error}</p>
+            {:else if stemsModel.state !== 'missing' || stemsModel.done}
+              <p class="num">{{ downloading: 'Downloading in the background', waiting: 'Waiting for a connection. It carries on by itself', missing: 'Stopped' }[stemsModel.state]}: {progressText(stemsModel)}</p>
+            {/if}
+            {#if stemsModel.done}
+              <div class="bar-track" role="progressbar" aria-label="Model download" aria-valuemin="0" aria-valuemax="100"
+                aria-valuenow={percent(stemsModel)} aria-valuetext={progressText(stemsModel)}><i style:width="{(stemsModel.done / stemsModel.total) * 100}%"></i></div>
+            {/if}
+            <div class="size model">
+              {#if stemsModel.state !== 'downloading'}
+                <button class="btn sm" onclick={() => model(downloadStems)}>{stemsStatus(stemsModel).action}</button>
+              {/if}
+              {#if stemsModel.state !== 'missing'}
+                <button class="btn sm" onclick={() => model(cancelStems)}>Cancel</button>
+              {:else if stemsModel.done}
+                <button class="btn sm" onclick={() => model(removeStems)}>Delete the download</button>
+              {/if}
+            </div>
           {:else}
-            <p>Stems need a one-time {mb(stems.modelBytes)} download: HTDemucs, an open model (MIT licence) that runs on this computer. Nothing is uploaded.</p>
-            {#if stems.model.state === 'failed'}<p class="err" role="alert">{stems.model.error}</p>{/if}
-            <div class="size"><button class="btn sm" onclick={download}>{stems.model.state === 'failed' ? 'Try again' : `Download (${mb(stems.modelBytes)})`}</button></div>
+            <p>{stemsError || 'Loading…'}</p>
           {/if}
         </section>
         {#if stems}
@@ -891,6 +924,12 @@
     display: flex;
     align-items: center;
     gap: 8px;
+  }
+  .size.model {
+    margin-bottom: 12px;
+  }
+  .size.model p {
+    margin: 0;
   }
   .size span {
     width: 48px;
