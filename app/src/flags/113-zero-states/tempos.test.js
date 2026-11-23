@@ -40,14 +40,31 @@ test('keys alone are the wheel', () => {
   assert.equal(p.keys[7], 1); // 8A
   assert.ok(p.chosen[6]);
 });
-test('Fits: the deck’s three windows, and the track on air left out', () => {
+test('the wheel and the keys agree', async () => {
+  const { WHEEL, keyAt } = await import('./tempos.js');
+  const { camelot } = await import('../../lib/key.js');
+  WHEEL.forEach((c, i) => assert.equal(camelot(keyAt(i)), c));
+});
+test('Fits with tempos apart: two spans that share nothing', () => {
   const air = { bpm: 120, key: { tonic: 2, minor: true } };
-  const ts = [{ ...T(120, 2), path: 'air' }, T(119, 2), T(60, 2), T(200, 9)];
-  const p = picture(ts, F(190, 210), air, 'air');
-  assert.equal(p.count.fit, 2);
-  assert.equal(p.count.filter, 1);
-  assert.ok(p.windows.some(([a, b]) => a < 119 && b > 119));
-  assert.equal(said(p, F(190, 210)), '1 in the filter, 2 that mix, none both.');
+  const p = picture([T(119, 2), T(200, 9)], F(190, 210), air, null);
+  assert.equal(p.kind, 'spans');
+  const [[a, b]] = p.windows;
+  assert.ok(b < p.range[0] || a > p.range[1]);
+});
+test('Fits with tempos that meet: the keys that would do, empty', () => {
+  const air = { bpm: 120, key: { tonic: 2, minor: true } }; // 7A
+  const ts = [T(119, 9), T(122, 4)];
+  const p = picture(ts, F(115, 125), air, null);
+  assert.equal(p.kind, 'slots');
+  assert.deepEqual([...p.keys].sort(), ['6A', '7A', '7B', '8A'].sort());
+  assert.equal(ts.filter((t) => p.keys.includes('x')).length, 0);
+  assert.equal(p.count.both, 2);
+});
+test('Fits leaves out the track on air', () => {
+  const air = { bpm: 120, key: { tonic: 2, minor: true } };
+  const p = picture([{ ...T(120, 2), path: 'air' }, T(60, 2)], F(190, 210), air, 'air');
+  assert.equal(p.count.fit, 1);
 });
 test('one track, none known, and nothing at all', () => {
   assert.equal(picture([T(128)], F(90, 100)).bars.reduce((n, b) => n + b.all, 0), 1);

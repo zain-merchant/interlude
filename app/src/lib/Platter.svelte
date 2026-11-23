@@ -25,6 +25,7 @@
 
   const d = $derived(engine.decks[deck]);
   const t = $derived(tracks[deck]);
+  const armNew = $derived(flag('zero-states') && flag('dir-room-tint')); // #113 (UI audit flag): zero-states
   const zero = $derived(flag('zero-states') && flag('dir-room-tint') && !t); // #113 (UI audit flag): zero-states
   const name = $derived(deck === 0 ? 'A' : 'B');
 
@@ -260,6 +261,8 @@
           <!-- counterweight -->
           <rect x={-26 * k} y={-6.5 * k} width={18 * k} height={13 * k} rx={2.5 * k} fill="url(#weight{deck})" stroke="rgba(255,255,255,.12)" stroke-width="0.75" />
           <rect x={-24 * k} y={-6.5 * k} width={1.2 * k} height={13 * k} fill="rgba(255,255,255,.18)" />
+          <!-- #113 (UI audit flag): zero-states: one arm for both decks, its head turned in over the record. -->
+          {#if armNew}<g class="arm2">{@html draw.tonearm(armG.L, k, deck === 0 ? 1 : -1, 'var(--deckc)')}</g>{:else}
           <rect x={-8 * k} y={-1.8 * k} width={armG.L - 8 * k} height={3.6 * k} rx={1.8 * k} fill="url(#tube{deck})" />
           <!-- headshell, cartridge in the deck's colour, and finger lift -->
           <g transform="translate({armG.L} 0) rotate(-16)">
@@ -268,6 +271,7 @@
             <rect x={-16 * k} y={-9 * k} width={2 * k} height={5 * k} rx={1 * k} fill="#c9c7c0" />
           </g>
           <circle cx={armG.L} cy="0" r={1.6 * k} fill="#f4f2ec" />
+          {/if}
         </svg>
       </div>
       <div class="cap"></div>

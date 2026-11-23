@@ -1,7 +1,7 @@
 <script>
   // Where this list's tracks are, and where the filter is. Drawn, not to drag.
-  /** @type {{ p: any, tint: string }} */
-  let { p, tint } = $props();
+  /** @type {{ p: any }} */
+  let { p } = $props();
   const W = 264;
   const H = 72;
   const PAD = 12;
@@ -19,22 +19,19 @@
     for (const [b, a] of [[p.lo, PAD], [p.hi, W - PAD]]) if (!near(a) && !out.some((o) => Math.abs(o.x - a) < 34)) out.push({ x: a, s: n1(b), on: false });
     return out;
   });
-  const topKey = $derived(p.kind === 'keys' ? Math.max(1, ...p.keys) : 1);
-  const label = $derived(p.kind === 'keys' ? 'Your tracks by key, and the keys chosen' : `Your tracks' tempos, from ${p.lo} to ${p.hi} BPM, and the range chosen`);
+  const label = $derived(`Your tracks' tempos, from ${p.lo} to ${p.hi} BPM, and the range chosen`);
 </script>
 
 {#if p.kind === 'tempo'}
   <svg class="zfp" viewBox="0 0 {W} {H + 18}" width={W} height={H + 18} role="img" aria-label={label}>
     <foreignObject x="0" y="0" width={W} height={H}><div class="zwell"></div></foreignObject>
-    {#each p.windows as w}<rect x={x(w[0])} y="1" width={x(w[1]) - x(w[0])} height={H - 2} style:fill={tint} opacity=".13" />{/each}
     {#if p.range}<rect class="rng" x={x(p.range[0])} y="1" width={Math.max(0, x(p.range[1]) - x(p.range[0]))} height={H - 2} />{/if}
     {#each p.bars as b}
       {#if b.all}
         {@const x0 = x(b.x0)}
         {@const w = Math.max(0.8, x(b.x1) - x0 - Math.min(1.5, (x(b.x1) - x0) * 0.3))}
-        <rect class="all" class:only={!p.keyed && !p.fit} x={x0 + 0.4} y={base - tall(b.all)} width={w} height={tall(b.all)} rx={Math.min(1.5, w / 2)} />
+        <rect class="all" class:only={!p.keyed} x={x0 + 0.4} y={base - tall(b.all)} width={w} height={tall(b.all)} rx={Math.min(1.5, w / 2)} />
         {#if b.a}<rect class="a" x={x0 + 0.4} y={base - tall(b.a)} width={w} height={tall(b.a)} rx={Math.min(1.5, w / 2)} />{/if}
-        {#if b.b}<rect style:fill={tint} x={x0 + 0.4} y={base - tall(b.a) - tall(b.b) + (b.a ? 0 : 0)} width={w} height={tall(b.b)} rx={Math.min(1.5, w / 2)} />{/if}
       {/if}
     {/each}
     {#if p.ends.low != null}<path class="edge" d="M{x(p.ends.low)} 1v{H - 2}" />{/if}
@@ -43,16 +40,4 @@
     {#each labels as l}<text class:on={l.on} x={Math.max(8, Math.min(W - 8, l.x))} y={H + 14} text-anchor={l.x < 20 ? 'start' : l.x > W - 20 ? 'end' : 'middle'}>{l.s}</text>{/each}
   </svg>
   {#if p.off.low || p.off.high}<span class="sr-only">{p.off.low + p.off.high} outside this scale</span>{/if}
-{:else}
-  <svg class="zfp" viewBox="0 0 {W} {H + 18}" width={W} height={H + 18} role="img" aria-label={label}>
-    <foreignObject x="0" y="0" width={W} height={H}><div class="zwell"></div></foreignObject>
-    {#each p.keys as k, i}
-      {@const cx = 24 + (i % 12) * 19}
-      {@const cy = i < 12 ? 5 : 37}
-      {#if p.chosen[i]}<rect class="cell" x={cx} y={cy} width="19" height="30" rx="4" />{/if}
-      {#if k}<rect class="all only" x={cx + 6} y={cy + 27 - Math.max(2, (k / topKey) * 24)} width="7" height={Math.max(2, (k / topKey) * 24)} rx="1.5" />{/if}
-    {/each}
-    {#each ['A', 'B'] as l, i}<text class:on={p.chosen.slice(i * 12, i * 12 + 12).some(Boolean)} x="13" y={i ? 56 : 24} text-anchor="middle">{l}</text>{/each}
-    {#each Array(12) as _, i}<text class:on={p.chosen[i] || p.chosen[i + 12]} x={24 + i * 19 + 9.5} y={H + 14} text-anchor="middle">{i + 1}</text>{/each}
-  </svg>
 {/if}

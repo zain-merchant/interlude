@@ -1,4 +1,5 @@
 <script>
+  import Marks from '../flags/117-key-marks/Marks.svelte'; // #117 (UI audit flag)
   import Status from '../flags/112-shell-status/Status.svelte'; // #112 (UI audit flag)
   import LibraryZero from '../flags/113-zero-states/LibraryZero.svelte'; // #113 (UI audit flag)
   import { conn } from '../flags/112-shell-status/connections.svelte.js'; // #112 (UI audit flag)
@@ -848,7 +849,7 @@
           <button class="clear" aria-label="Clear search" onclick={clearSearch} use:tip={() => tipText('Clear search', 'Esc')}>
             <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 5l6 6M11 5l-6 6" /></svg>
           </button>
-        {:else}<kbd>{MOD}F</kbd>{/if}
+        {:else}<kbd><Marks text="{MOD}F" /></kbd>{/if}
       </label>
       <button class="btn sm chip" class:on={fits} aria-pressed={fits} disabled={!air && !fits} onclick={toggleFits} use:tip={fitsTip}>
         Fits{#if fits && air}<span class="chip-val num">{airLabel}</span>{/if}

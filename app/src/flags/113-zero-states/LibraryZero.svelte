@@ -3,7 +3,7 @@
   import Zero from './Zero.svelte';
   import FilterPicture from './FilterPicture.svelte';
   import { draw } from './drawings.js';
-  import { picture, said, head } from './tempos.js';
+  import { picture, said, head, WHEEL } from './tempos.js';
   import { FIT_TEMPO } from '../../lib/libraryfilter.js';
   import { camelot } from '../../lib/key.js';
   import { describe } from '../../lib/libraryfilter.js';
@@ -16,8 +16,10 @@
   const also = $derived([fits && 'Fits on', filtered && describe(filter).replaceAll(' · ', ', ')].filter(Boolean).join(', '));
 </script>
 
+{#snippet pic()}<FilterPicture {p} />{/snippet}
+
 {#if error}
-  <Zero title="Couldn’t open your library" help={error}><button class="btn sm" onclick={retry}>Try again</button></Zero>
+  <Zero art={draw.error()} title="Couldn’t open your library" help={error}><button class="btn sm" onclick={retry}>Try again</button></Zero>
 {:else if !all.length && view.kind === 'playlist'}
   <Zero art={draw.playlist()} title="No tracks in this playlist" help="Drag tracks onto its name in the sidebar." />
 {:else if !all.length && view.kind === 'folder'}
@@ -34,8 +36,7 @@
     {#if filtered}<button class="btn sm" onclick={clearFilter}>Clear filter</button>{/if}
   </Zero>
 {:else if p}
-  <Zero title={head(filter)} help={said(p, filter)}>
-    {#snippet picture()}<FilterPicture {p} tint={air?.deck === 1 ? 'var(--deck-b)' : 'var(--deck-a)'} />{/snippet}
+  <Zero title={head(filter)} help={said(p, filter)} art={p.kind === 'keys' ? draw.keySlots(WHEEL.filter((c) => filter.keys.includes(c))) : p.kind === 'slots' ? draw.keySlots(p.keys) : p.kind === 'spans' ? draw.spans({ ...p, tint: air?.deck === 1 ? '#f0dcc0' : '#c9dcf2' }) : ''} picture={p.kind === 'tempo' ? pic : undefined}>
     <button class="btn sm" onclick={clearFilter}>Clear filter</button>
     {#if fits}<button class="btn sm" onclick={toggleFits}>Turn off Fits</button>{/if}
   </Zero>

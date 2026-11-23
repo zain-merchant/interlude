@@ -1,4 +1,5 @@
 <script>
+  import Marks from '../flags/117-key-marks/Marks.svelte'; // #117 (UI audit flag)
   import { onMount, tick } from 'svelte';
   import { keys, binding, commandName, sameKey, mac } from './commands.js';
   import { keymap, saveKeymap, bindingFrom, reserved } from './keymap.svelte.js';
@@ -14,6 +15,7 @@
   import { pushEdit } from './undo.svelte.js';
   import Keys from '../flags/116-settings-finish/Keys.svelte'; // #116 (UI audit flag)
   import Search from '../flags/116-settings-finish/Search.svelte'; // #116 (UI audit flag)
+  import Stepper from '../flags/116-settings-finish/Stepper.svelte'; // #116 (UI audit flag)
   import Results from '../flags/116-settings-finish/Results.svelte'; // #116 (UI audit flag)
   import { search } from '../flags/116-settings-finish/find.js'; // #116 (UI audit flag)
 
@@ -714,9 +716,15 @@
             <div class="size">
               <!-- #31 (UI audit flag): select-chevron: a caption names the menu. -->
               {#if flag('select-chevron')}<span class="cap">Keep up to</span>{/if}
+              <!-- #116 (UI audit flag): settings-finish: seven sizes in order are steps, not a menu. -->
+              {#if finish}
+              {@const at = Math.max(0, CACHE_SIZES.findIndex((n) => n >= stems.cacheGb))}
+              <div role="group" aria-label="Stems cache size"><Stepper value={stems.cacheGb ? `${stems.cacheGb} GB` : 'Off'} less={() => setStems({ cacheGb: CACHE_SIZES[at - 1] })} more={() => setStems({ cacheGb: CACHE_SIZES[CACHE_SIZES[at] > stems.cacheGb ? at : at + 1] })} atLeast={at === 0} atMost={stems.cacheGb >= CACHE_SIZES.at(-1)} lessLabel="Keep less" moreLabel="Keep more" /></div>
+              {:else}
               <select class="btn sm" aria-label="Stems cache size" value={stems.cacheGb} onchange={(e) => setStems({ cacheGb: Number(e.currentTarget.value) })}>
                 {#each CACHE_SIZES as n}<option value={n}>{n ? `${n} GB` : 'Off'}</option>{/each}
               </select>
+              {/if}
               <button class="btn sm" onclick={clearCache} disabled={!stems.cacheBytes}>Clear cache</button>
             </div>
           </section>
@@ -750,7 +758,7 @@
               <input type="checkbox" checked={deckSettings.quantize} onchange={(e) => setDeckSetting('quantize', e.currentTarget.checked)} />
               <span>{flag('settings-type') ? 'Quantize: snap to the beat' : 'Snap to the beat'}</span>
             </label>
-            <p>Hot cues, loops and jumps land on the nearest beat{#if keyLabel('mixer.quantize')}; {keyLabel('mixer.quantize')} turns it on and off{/if}.</p>
+            <p>Hot cues, loops and jumps land on the nearest beat{#if keyLabel('mixer.quantize')}; <Marks text={keyLabel('mixer.quantize')} /> turns it on and off{/if}.</p>
           </section>
           <section class="display">
             <h3>Slip</h3>
@@ -940,15 +948,16 @@
       {:else}
         <section class="display">
           <h3>Interface size</h3>
-          <p>{#if flag('settings-copy')}Scales text and controls alike; {keyLabel('view.uiZoomIn')} and {keyLabel('view.uiZoomOut')} work from anywhere.{:else}Scales everything, text and controls alike. {keyLabel('view.uiZoomIn')} and {keyLabel('view.uiZoomOut')} do the same from anywhere.{/if}</p>
+          <p>{#if flag('settings-copy')}Scales text and controls alike; <Marks text={keyLabel('view.uiZoomIn')} /> and <Marks text={keyLabel('view.uiZoomOut')} /> work from anywhere.{:else}Scales everything, text and controls alike. <Marks text={keyLabel('view.uiZoomIn')} /> and <Marks text={keyLabel('view.uiZoomOut')} /> do the same from anywhere.{/if}</p>
           <div class="size" role="group" aria-label="Interface size">
-            {#snippet stepper()}
+            <!-- #116 (UI audit flag): settings-finish: raised, sunken, raised. -->
+            {#if finish}
+            <Stepper value={pct(uiZoom.scale)} less={() => stepUiZoom(-1)} more={() => stepUiZoom(1)} atLeast={uiZoom.scale <= uiZoomSteps[0]} atMost={uiZoom.scale >= uiZoomSteps.at(-1)} lessLabel="Smaller" moreLabel="Bigger" />
+            {:else}
             <button class="btn sm" onclick={() => stepUiZoom(-1)} disabled={uiZoom.scale <= uiZoomSteps[0]} aria-label="Smaller">−</button>
             <span class="num" aria-live="polite">{pct(uiZoom.scale)}</span>
             <button class="btn sm" onclick={() => stepUiZoom(1)} disabled={uiZoom.scale >= uiZoomSteps.at(-1)} aria-label="Bigger">+</button>
-            {/snippet}
-            <!-- #116 (UI audit flag): settings-finish: one cut holds the three. -->
-            {#if finish}<div class="sstep">{@render stepper()}</div>{:else}{@render stepper()}{/if}
+            {/if}
             <button class="btn sm" onclick={() => setUiZoom(1)} disabled={uiZoom.scale === 1}>{flag('settings-copy') ? 'Reset to 100%' : 'Actual size'}</button>
           </div>
         </section>
