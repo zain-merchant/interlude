@@ -3035,6 +3035,7 @@
   margin-right: -14px;
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .row.head > .sort.num:is([data-col='bpm'], [data-col='time']) {
+  flex-direction: row !important;
   justify-content: flex-end !important;
   text-align: right;
   overflow: visible;
