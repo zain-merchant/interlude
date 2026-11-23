@@ -267,14 +267,38 @@
   stroke-linejoin: round;
 }
 /* Stems: a record in four rings, two lines, and the way on. */
+:root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] [data-region^='deck'] .stems:has(> .zstem) {
+  container-type: inline-size;
+  margin-top: -6px; /* midway between the tabs and the keys */
+}
 :root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] [data-region^='deck'] .stems .zstem {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  gap: 24px;
-  height: 72px;
+  gap: 20px;
+  height: 56px;
   padding: 0 8px;
   font: 400 13px/20px var(--font);
+}
+:root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] [data-region^='deck'] .stems .zstem > svg {
+  width: 44px;
+  height: 44px;
+}
+/* Room for the words first: the record smaller, the size left out. */
+@container (max-width: 340px) {
+  :root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] [data-region^='deck'] .stems .zstem {
+    gap: 10px;
+    padding: 0;
+    line-height: 17px;
+    text-wrap: balance;
+  }
+  :root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] [data-region^='deck'] .stems .zstem > svg {
+    width: 28px;
+    height: 28px;
+  }
+  :root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] [data-region^='deck'] .stems .zstem:has(> .btn) p:not(:first-child) {
+    display: none;
+  }
 }
 :root[data-flag-dir-room-tint][data-flag-zero-states][data-flag-zero-states][data-flag-zero-states] [data-region^='deck'] .stems .zstem > div {
   display: grid;
