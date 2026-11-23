@@ -17,7 +17,44 @@
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:image" content="https://interludedj.com/img/og.png">
   <meta name="theme-color" content="#09090b">
+  <link rel="canonical" href="https://interludedj.com/">
   <link rel="icon" href="img/icon.svg?v=2" type="image/svg+xml">
+  <!-- For search engines: the site's name, and what the app is. Keep it to
+       what the page itself says. -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": "https://interludedj.com/#website",
+        "name": "Interlude",
+        "alternateName": "interludedj.com",
+        "url": "https://interludedj.com/"
+      },
+      {
+        "@type": "SoftwareApplication",
+        "@id": "https://interludedj.com/#app",
+        "name": "Interlude",
+        "description": "Interlude is a free, open-source DJ app for Mac. Two decks, sync, stems, effects, a fast library, and support for 140+ controllers.",
+        "url": "https://interludedj.com/",
+        "applicationCategory": "MultimediaApplication",
+        "applicationSubCategory": "DJ software",
+        "operatingSystem": "macOS 11 or later",
+        "processorRequirements": "Apple silicon",
+        "downloadUrl": "https://github.com/zain-merchant/interlude/releases/latest/download/Interlude.dmg",
+        "releaseNotes": "https://github.com/zain-merchant/interlude/releases",
+        "screenshot": "https://interludedj.com/img/screenshot-1x.jpg",
+        "image": "https://interludedj.com/img/og.png",
+        "isAccessibleForFree": true,
+        "license": "https://www.gnu.org/licenses/gpl-3.0.html",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+        "author": { "@type": "Person", "name": "Zain Merchant", "url": "https://github.com/zain-merchant" },
+        "sameAs": ["https://github.com/zain-merchant/interlude"]
+      }
+    ]
+  }
+  </script>
   <!-- Geist, served from here (no other site to reach before the page can
        draw its text); the Latin file is fetched straight away. -->
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
