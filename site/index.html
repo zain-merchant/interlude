@@ -2004,7 +2004,9 @@
         under?.style.setProperty('--pull', k.toFixed(3));
       };
       addEventListener('scroll', () => {
-        const o = Math.max(0, scrollY - maxY);
+        // (Past the end by more than a pixel: at a zoom or an odd window
+        // size the page can come to rest a fraction past its measured end.)
+        const o = Math.max(0, scrollY - maxY - 1);
         if (o === over) return;
         over = o;
         apply();
@@ -2620,7 +2622,7 @@
     // ?squircles=NN: that much smoothing (60 by default).
     const sq = new URLSearchParams(location.search).get('squircles');
     if (sq !== 'off') {
-      const go = () => import('./squircles.js?v=20261122a').then((m) => {
+      const go = () => import('./squircles.js?v=20261122b').then((m) => {
         if (sq && Number.isFinite(+sq)) document.documentElement.dataset.squircles = String(Math.max(0, Math.min(100, +sq)));
         m.start();
         window.navMeasure?.();

@@ -29,12 +29,13 @@
 
 const MIN_R = 4;
 const FAR = 160; // the outer rect's reach past the element: room for shadows and focus rings
-// Left round: SVG; the nav's glass and edge, resized every frame as they
+// Left round: SVG; the hero's screen (it clips itself once the app plays);
+// the nav's glass and edge, resized every frame as they
 // morph (the page's own script gives them the native shape where there is
 // one); the note's sleeve, whose record runs out past it; the inside of
 // the feature cards' pictures, the app's own look, often moving; the Tune
 // panel.
-const SKIP = 'svg, svg *, .nav-glass, .nav-edge, .founder, .founder *, [data-picture] *, .dialkit-root, .dialkit-root *, [class*="dialkit"], [class*="dialkit"] *';
+const SKIP = 'svg, svg *, .nav-glass, .nav-edge, .founder, .founder *, [data-picture] *, .stage-frame, .stage-frame *, .dialkit-root, .dialkit-root *, [class*="dialkit"], [class*="dialkit"] *';
 // When an element that draws nothing at rest may start to.
 const STATES = ":hover, :active, :focus-visible, [aria-pressed='true'], [aria-checked='true'], [aria-selected='true'], [aria-expanded='true'], [data-done]";
 
@@ -192,6 +193,8 @@ export function start() {
     el.removeAttribute('data-sq');
     el.removeAttribute('data-sq-h');
     const cs = getComputedStyle(el);
+    // (Clipped or masked by the page itself since it was first seen.)
+    if (cs.clipPath !== 'none' || (cs.maskImage && cs.maskImage !== 'none') || (cs.webkitMaskImage && cs.webkitMaskImage !== 'none')) return;
     const radii = [cs.borderTopLeftRadius, cs.borderTopRightRadius, cs.borderBottomRightRadius, cs.borderBottomLeftRadius].map((v) => px(v, w));
     // CSS shrinks radii that don't fit; so does this.
     const scale = Math.min(1, w / (radii[0] + radii[1] || 1), w / (radii[2] + radii[3] || 1), h / (radii[0] + radii[3] || 1), h / (radii[1] + radii[2] || 1));
