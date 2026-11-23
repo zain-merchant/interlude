@@ -489,6 +489,14 @@ function finish(p) {
   return true;
 }
 
+// Where each letter of the word starts, from the first: by the font's own
+// advances (measured with no spacing set, kerning and all), then the letter
+// spacing and the adjustment after the first letter, both in em. (The fit,
+// index.html, works them out the same way.)
+export function wordAt(x, name, size, track, first) {
+  return [...name].map((_, i) => x.measureText(name.slice(0, i + 1)).width - x.measureText(name[i]).width + i * track * size + (i ? first * size : 0));
+}
+
 // The letters, drawn into a texture the size of the canvas, on the same
 // baseline and in the same type as the page's word.
 function layout() {
@@ -511,19 +519,17 @@ function layout() {
   x.fillRect(0, 0, w, h);
   x.scale(dpr, dpr);
   x.font = `${cs.fontWeight} ${size}px ${cs.fontFamily}`;
-  if ('letterSpacing' in x) x.letterSpacing = cs.letterSpacing;
   x.textAlign = 'left';
   x.textBaseline = 'alphabetic';
-  // Exactly where the page sets its own letters: from the start of the
-  // word's text box (canvas centring with letter-spacing lands elsewhere).
-  const tn = [...word.childNodes].find((n) => n.nodeType === 3 && n.textContent.trim());
-  let tx = 0;
-  if (tn) { const rg = document.createRange(); rg.selectNodeContents(tn); tx = rg.getBoundingClientRect().left - c.left; }
+  // From the start of the word's box (its indent is the fit's, index.html),
+  // each letter set by itself, so every browser spaces them alike: Safari
+  // drew the spacing looser, and starts a range over the word at its second
+  // letter once the first has a style of its own (::first-letter).
   x.fillStyle = '#fff';
-  // (The I to n gap has an adjustment of its own, --wm-in, as the page's letters.)
-  const name = word.dataset.text, kern = (parseFloat(cs.getPropertyValue('--wm-in')) || 0) * size;
-  x.fillText(name[0], tx, baseline);
-  x.fillText(name.slice(1), tx + x.measureText(name[0]).width + kern, baseline);
+  const name = word.dataset.text, em = (v) => (parseFloat(v) || 0) / size;
+  const at = wordAt(x, name, size, em(cs.letterSpacing), parseFloat(cs.getPropertyValue('--wm-in')) || 0);
+  const tx = word.getBoundingClientRect().left + (parseFloat(cs.textIndent) || 0) - c.left;
+  [...name].forEach((ch, i) => x.fillText(ch, tx + at[i], baseline));
   gl.bindTexture(gl.TEXTURE_2D, tex);
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, t);
   // The grooves: arcs of the CSS ellipse "100% 50% at 50% 135%" of the
@@ -558,11 +564,12 @@ const fxEm = () => geo.em * (pull.owns ? Math.max(1.8, T.scale || 1) * (1 + pull
 // and rings well up through it, more and faster the further it's pulled.
 // From the page (index.html), each time the pull changes; nothing runs
 // when it isn't pulled.
-const pull = { want: 0, k: 0, x: 0.5, wide: 1, time: 9, owns: false, rings: new Set() };
-export function surge(amount, x, wide) {
+const pull = { want: 0, k: 0, x: 0.5, wide: 1, time: 9, owns: false, rings: new Set(), lit: 2.6 };
+export function surge(amount, x, wide, lit) {
   pull.want = Math.max(0, Math.min(1, amount || 0));
   if (x != null) pull.x = x;
   if (wide != null) pull.wide = wide;
+  if (lit != null) pull.lit = lit;
   if (pull.want > 0 || pull.k > 0) wake();
 }
 function pullStep(dt) {
@@ -683,7 +690,7 @@ function frame(now) {
   const step = T.fade > 0 ? dt / (pull.owns ? Math.min(0.15, T.fade) : T.fade) : 1;
   hover.on = hover.want ? Math.min(1, hover.on + step) : Math.max(0, hover.on - step);
   // (Pulled past the page's end: no stronger than the pull.)
-  if (pull.owns) hover.on = Math.min(hover.on, Math.min(1, pull.k * 2.6));
+  if (pull.owns) hover.on = Math.min(hover.on, Math.min(1, pull.k * pull.lit));
 
   // Follow the pointer on a critically damped spring (in small steps, so
   // it's steady at any frame rate).

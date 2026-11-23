@@ -73,7 +73,10 @@ a, button, summary, [role="radio"], .btn { touch-action: manipulation; }
 }
 :focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; border-radius: 6px; }
 
-.wrap { width: min(1120px, 100% - 32px); margin-inline: auto; }
+/* (The page reaches the screen's edges, viewport-fit=cover; a phone on its
+   side keeps its words clear of the camera and the corners.) */
+:root { --safe-x: max(env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px)); }
+.wrap { width: min(1120px, 100% - 32px - 2 * var(--safe-x)); margin-inline: auto; }
 
 /* Nav */
 .nav {
@@ -667,7 +670,7 @@ details p { margin: 0; padding-bottom: 20px; color: var(--fg-2); max-width: 62ch
    up and down still scrolls the page, and a pinch still zooms. */
 .foot { touch-action: pan-y pinch-zoom; }
 .foot-word {
-  position: relative; display: block; width: min(1120px, 100% - 32px); margin: 28px auto calc(var(--foot-cut, 0.33) * -1em); text-align: left; text-indent: var(--foot-indent, 0px); white-space: nowrap; user-select: none; pointer-events: none;
+  position: relative; display: block; width: min(1120px, 100% - 32px - 2 * var(--safe-x)); margin: 28px auto calc((0.128 - var(--foot-cut, 0.33)) * 1em - 40px); text-align: left; text-indent: var(--foot-indent, 0px); white-space: nowrap; user-select: none; pointer-events: none;
   /* As wide as the column above (index.html measures it into --foot-fs). */
   font-size: var(--foot-fs, clamp(96px, 21vw, 340px)); font-weight: 600; letter-spacing: -0.07em; line-height: 0.9;
   color: var(--foot-letter, rgb(255 255 255 / 0.045));
@@ -843,6 +846,16 @@ html[data-nav="morph"] { --nav-h: max(60px, calc(var(--brand-word) * 1.35), calc
 html[data-nav="morph"] { --nav-pad: 10px; }
 html[data-nav="morph"] .nav {
   height: calc(var(--nav-h) + var(--nav-pad)); padding-top: var(--nav-pad); box-sizing: border-box; background: none; border-bottom: 0; -webkit-backdrop-filter: none; backdrop-filter: none;
+}
+/* On a phone the bar's own box starts where its capsule does, not at the top
+   of the screen. Safari paints a solid strip over the status bar wherever
+   something sticky and as wide as the window touches the top edge; without
+   one, the page scrolls on up behind the Dynamic Island. Nothing moves: what
+   was the bar's padding is the body's. */
+@media (max-width: 860px) {
+  html[data-nav="morph"] body { padding-top: var(--nav-pad); }
+  html[data-nav="morph"] .nav { top: var(--nav-pad); height: var(--nav-h); padding-top: 0; }
+  html[data-nav="morph"] :is(.nav-glass, .nav-edge) { margin-top: calc(var(--nav-pad) * -1); }
 }
 /* The glass: one box, always blurred (the blur never changes), always a
    capsule: at the top of the page a wide one round the large brand, drawn
@@ -2037,6 +2050,9 @@ html[data-note="sleeve"] .rec {
   html[data-note="sleeve"] .rec-grab { display: block; position: absolute; left: var(--hx); top: var(--hy); width: calc(var(--hr) * 2); height: calc(var(--hr) * 2); translate: -50% -50%; border-radius: 50%; touch-action: none; }
 }
 @media (max-width: 960px) { html[data-note="sleeve"] .founder { margin-bottom: var(--rec-peek, 28px); } }
+/* And, where it comes out (never with less motion), the room it comes out
+   into: clear of the card under it, with 40px to spare. */
+@media (max-width: 960px) and (prefers-reduced-motion: no-preference) { html[data-note="sleeve"] .founder { margin-bottom: calc(var(--rec-peek, 28px) + var(--rec-room, 65px)); } }
 /* (Try, Note: on a phone, smaller and against the right edge.) */
 @media (max-width: 600px) { html[data-notephone="right"] .faq-row > .founder { zoom: 0.82; margin-left: auto; margin-right: 16px; } }
 /* Stacked under the questions: the record comes out of the open foot, and
@@ -2048,8 +2064,10 @@ html[data-note="sleeve"] .rec {
     --wr0: 100px; --wr1: 103.5px; --wr2: 105px; --wr3: 108px;
   }
 }
-/* On a phone it leans the other way, by as much. */
-@media (max-width: 620px) { html[data-note="sleeve"] .founder { rotate: calc(var(--sleeve-tilt, -1.5deg) * -1); } }
+/* Stacked, it turns about its own middle, so that stays in the middle of the
+   page. On a phone it leans the other way, by two thirds as much. */
+@media (max-width: 960px) { html[data-note="sleeve"] .founder { transform-origin: 50% 50%; } }
+@media (max-width: 620px) { html[data-note="sleeve"] .founder { rotate: calc(var(--sleeve-tilt, -1.5deg) * -2 / 3); } }
 /* (The page cuts it at the window's edge, never a section's.) */
 body { overflow-x: clip; }
 html[data-note="sleeve"] .founder h3 { color: #17140e; margin: 0 0 12px; }
