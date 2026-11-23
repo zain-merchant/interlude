@@ -353,11 +353,11 @@
       {#if t}
         <!-- #54 (UI audit flag): deck-polish cuts a long title at a glyph, never leaving a space before the "…". -->
         {#if flag('deck-polish')}
-          <div class="name" use:tip={() => t.path} use:fitTitle={t.title}>{#if flag('dir-room-tint')}<Mid text={t.title} />{:else}{fittedTitle ?? t.title}{/if}</div>
+          <div class="name" use:tip={() => t.path} use:fitTitle={t.title}>{#if flag('dir-room-tint')}<Mid text={t.title} fit />{:else}{fittedTitle ?? t.title}{/if}</div>
         {:else}
-          <div class="name" use:tip={() => t.path}>{#if flag('dir-room-tint')}<Mid text={t.title} />{:else}{t.title}{/if}</div>
+          <div class="name" use:tip={() => t.path}>{#if flag('dir-room-tint')}<Mid text={t.title} fit />{:else}{t.title}{/if}</div>
         {/if}
-        <div class="artist">{#if flag('dir-room-tint')}<Mid text={t.artist || 'Unknown artist'} />{:else}{t.artist || 'Unknown artist'}{/if}</div>
+        <div class="artist">{#if flag('dir-room-tint')}<Mid text={t.artist || 'Unknown artist'} fit />{:else}{t.artist || 'Unknown artist'}{/if}</div>
       {:else}
         <div class="name dim">Empty deck</div>
         <!-- #113 (UI audit flag): zero-states: the shortcut as keys. -->

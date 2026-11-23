@@ -6,8 +6,71 @@
   // there is nothing to measure, resize or redraw, and the whole name is in
   // the page in order: it copies, reads aloud and is found as one string.
   // `parts` are a search's matches, kept on both sides of the cut.
-  /** @type {{ text: string, parts?: { s: string, hit: boolean }[] | null }} */
-  let { text, parts = null } = $props();
+  //
+  // With `fit` (a deck's title and artist) the cut is measured instead, to the
+  // letter, so no gap is left beside the ellipsis; and where it would leave
+  // fewer than six letters on either side it cuts the end, as names usually do.
+  /** @type {{ text: string, parts?: { s: string, hit: boolean }[] | null, fit?: boolean }} */
+  let { text, parts = null, fit = false } = $props();
+
+  const LEAST = 6;
+  /** What's shown: the name, or its start and end. @type {string | null} */
+  let cut = $state(null);
+  /** @param {HTMLElement} probe @param {string} name */
+  function fitted(probe, name) {
+    const line = /** @type {HTMLElement} */ (probe.parentElement);
+    /** @param {string} s */
+    const width = (s) => {
+      probe.textContent = s;
+      return probe.getBoundingClientRect().width;
+    };
+    const measure = () => {
+      const cs = getComputedStyle(line);
+      const zoom = line.getBoundingClientRect().width / (line.offsetWidth || 1) || 1;
+      const room = (line.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight)) * zoom - 0.5;
+      const all = Array.from(name);
+      if (room <= 0 || width(name) <= room) cut = null;
+      else {
+        // Nothing left hanging at the cut: no space, bracket or dash.
+        const trim = (/** @type {string[]} */ a) => a.join('').trim();
+        const start = (/** @type {string[]} */ a) => trim(a).replace(/[\s([{&,–—-]+$/, '');
+        /** The most letters that fit, by `make`. @param {(n: number) => string} make */
+        const most = (make) => {
+          let lo = 0;
+          let hi = all.length - 1;
+          while (lo < hi) {
+            const m = (lo + hi + 1) >> 1;
+            if (width(make(m)) <= room) lo = m;
+            else hi = m - 1;
+          }
+          return lo;
+        };
+        const tail = (/** @type {number} */ n) => Math.min(12, Math.floor(n * 0.4));
+        const mid = (/** @type {number} */ n) => `${start(all.slice(0, n - tail(n)))}…${trim(all.slice(all.length - tail(n)))}`;
+        const n = most(mid);
+        const end = (/** @type {number} */ k) => `${start(all.slice(0, k))}…`;
+        cut = tail(n) >= LEAST && n - tail(n) >= LEAST ? mid(n) : end(most(end));
+      }
+      probe.textContent = '';
+    };
+    const ro = new ResizeObserver(measure);
+    ro.observe(line);
+    document.fonts.addEventListener('loadingdone', measure);
+    const styled = new MutationObserver(() => requestAnimationFrame(measure));
+    styled.observe(document.documentElement, { attributes: true, attributeFilter: ['data-flag-font-special-gothic', 'data-flag-dir-room-tint', 'style'] });
+    measure();
+    return {
+      update(/** @type {string} */ next) {
+        name = next;
+        measure();
+      },
+      destroy() {
+        ro.disconnect();
+        styled.disconnect();
+        document.fonts.removeEventListener('loadingdone', measure);
+      },
+    };
+  }
 
   // The end: up to 12 characters, never more than the last two fifths, so the
   // start is always the longer part; a short name isn't cut at all.
@@ -36,9 +99,23 @@
 
 {#snippet run(/** @type {{ s: string, hit: boolean }[]} */ list)}{#each list as m}{#if m.hit}<mark>{m.s}</mark>{:else}{m.s}{/if}{/each}{/snippet}
 
-{#if keep}<span class="mid"><span class="a">{@render run(slice(0, at))}</span><span class="z">{@render run(slice(at, text.length))}</span></span>{:else}{@render run(slice(0, text?.length ?? 0))}{/if}
+{#if fit}{#if cut}<span class="sr">{text}</span><span aria-hidden="true">{cut}</span>{:else}{text}{/if}<span class="probe" aria-hidden="true" use:fitted={text ?? ''}></span>{:else if keep}<span class="mid"><span class="a">{@render run(slice(0, at))}</span><span class="z">{@render run(slice(at, text.length))}</span></span>{:else}{@render run(slice(0, text?.length ?? 0))}{/if}
 
 <style>
+  .probe,
+  .sr {
+    position: absolute;
+    visibility: hidden;
+    white-space: pre;
+    pointer-events: none;
+  }
+  .sr {
+    visibility: visible;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
   /* Inline, so it stands where the line's own alignment puts it. */
   .mid {
     display: inline-flex;
