@@ -265,21 +265,23 @@ h1 { margin: 0; font-size: clamp(48px, 9vw, 88px); font-weight: 600; letter-spac
   opacity: 0.16;
   will-change: opacity, transform;
 }
-/* Under the frame, on its left edge: the switch, and on its right edge what
-   it means; the controller, when it's showing, hangs below the frame between
-   them. Where there isn't the width for that the bar sits below the
-   controller. Neither ever moves as it comes and goes. Three layers only: a
-   quiet track, a light thumb, plain text. (Try, Controller: switch is.) */
+/* Under the frame, centred: the switch and, beside it, what it means. The
+   controller, when it's showing, hangs below the frame, so the bar sits
+   below that, always: neither ever moves as it comes and goes. Three layers
+   only: a quiet track, a light thumb, plain text. (Try, Controller: switch
+   sits. below: on the frame's left edge, close under it, its words on the
+   right edge, the controller hanging between, where there's the width.) */
 .shot { display: flex; flex-direction: column; }
 .shot-bar {
-  position: relative; z-index: 1; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 14px; width: 100%; margin: 18px 0 0;
-  /* How far below the frame the controller's box reaches. */
+  position: relative; z-index: 1; display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 10px 16px; width: 100%;
+  /* How far below the frame the controller reaches, and clear of it. */
   --hang: calc((var(--ctl-down, 70px) + 3px) * var(--s));
+  margin: calc(var(--hang) + var(--switch-gap, 14px)) 0 0;
 }
-html[data-switchat="belowmid"] .shot-bar { justify-content: center; margin-top: calc(var(--hang) + 14px); }
+html[data-switchat="belowleft"] .shot-bar { justify-content: space-between; }
+@media (min-width: 1061px) { html[data-switchat="belowleft"] .shot-bar { margin-top: 18px; } }
 html[data-switchat^="above"] .shot-bar { order: -1; justify-content: flex-start; margin: 0 0 22px; }
 html[data-switchat="abovemid"] .shot-bar { justify-content: center; }
-@media (max-width: 1060px) { html:not([data-switchat^="above"]) .shot-bar { margin-top: calc(var(--hang) + 14px); } }
 /* Plain words, no badge: full-strength white, a weight up, with a soft
    dark halo behind the letters so they read over the record. */
 .shot-tag { display: inline-flex; align-items: center; height: 36px; color: #f4f3ef; font-size: 13.5px; font-weight: 500; text-shadow: 0 1px 2px rgb(9 9 11 / 0.9), 0 0 14px rgb(9 9 11 / 0.95), 0 0 28px rgb(9 9 11 / 0.8); }

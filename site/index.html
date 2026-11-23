@@ -21,7 +21,7 @@
   <!-- Geist, served from here (no other site to reach before the page can
        draw its text); the Latin file is fetched straight away. -->
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="style.css?v=20261123o">
+  <link rel="stylesheet" href="style.css?v=20261123p">
   <script>
     // (The phone preview's frame, opened by this same site with the Tune
     // panel showing; nothing for anyone else.)
@@ -205,7 +205,8 @@
       toggle('btngrainall', { label: 'Grain on Download too', folder: 'Buttons', value: false, apply: (v) => set('btngrainall', v) });
 
       // Controller mode.
-      select('switchat', { label: 'Switch sits', folder: 'Controller', value: 'below', options: [['below', 'Below, left'], ['belowmid', 'Below, centred'], ['above', 'Above, left'], ['abovemid', 'Above, centred']], apply: (v) => { set('switchat', v === 'below' ? '' : v); fire('try-rec'); } });
+      select('switchat', { label: 'Switch sits', folder: 'Controller', value: 'mid', options: [['mid', 'Below, centred'], ['belowleft', 'Below, left'], ['above', 'Above, left'], ['abovemid', 'Above, centred']], apply: (v) => { set('switchat', v === 'mid' ? '' : v); fire('try-rec'); } });
+      slider('switchgap', { label: 'Switch, clear of controller', folder: 'Controller', value: 14, min: -40, max: 40, step: 1, unit: 'px', apply: (v) => { css('--switch-gap', `${v}px`); fire('try-rec'); } });
       slider('switchpad', { label: 'Switch, padding', folder: 'Controller', value: 6, min: 2, max: 10, step: 1, unit: 'px', apply: (v) => css('--switch-pad', `${v}px`) });
       st.autoAfter = 3;
       slider('autoafter', { label: 'Switches by itself after', folder: 'Controller', value: 3, min: 1, max: 12, step: 0.5, unit: 's', apply: (v) => (st.autoAfter = v) });
