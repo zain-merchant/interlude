@@ -52,7 +52,9 @@ export default {
       label: 'Key lock when it’s on (with the etched outline)',
       default: 'dot',
       options: [
-        ['dot', 'Pressed, with a dot', 'A ring over the words, as the hot cues have, filled with the deck’s colour when on.'],
+        ['dot', 'Pressed, a dot above', 'A ring over the words, as the hot cues have, filled with the deck’s colour when on. The words stay on the row’s line.'],
+        ['corner', 'Pressed, a dot in the corner', 'The same, top right.'],
+        ['foot', 'Pressed, a dot below', 'The same, under the words.'],
         ['under', 'Pressed, underlined', 'A line under the words in the deck’s colour.'],
         ['outline', 'Pressed, outlined', 'An outline in the deck’s colour.'],
         ['sync', 'Pressed, like Sync', 'Nothing more than its words in the deck’s colour.'],

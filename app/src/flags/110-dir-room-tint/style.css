@@ -3627,6 +3627,7 @@
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-column='ring'] [data-region^='deck'] .pitch .lock {
   width: 100%;
   height: 100% !important; /* over this sheet's own 30px */
+  font-size: 13px; /* as Cue and Sync, so their words share a line */
   align-self: stretch;
   padding: 0;
   border-radius: var(--key-r, 8px);
@@ -3659,24 +3660,31 @@
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-column='ring'][data-flag-dir-room-tint-keyon='raise'] [data-region^='deck'] .pitch .lock.on::after {
   content: none;
 }
-/* A dot over the words, as the hot cues have: a ring in a small cut, filled when on. */
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-column='ring'][data-flag-dir-room-tint-keyon='dot'] [data-region^='deck'] .pitch .lock {
-  padding-top: 13px;
-}
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-column='ring'][data-flag-dir-room-tint-keyon='dot'] [data-region^='deck'] .pitch .lock::before {
+/* A dot, as the hot cues have: a ring in a small cut, filled when on. The words
+   stay on the row's line; the dot takes the space they leave. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-column='ring']:is([data-flag-dir-room-tint-keyon='dot'], [data-flag-dir-room-tint-keyon='corner'], [data-flag-dir-room-tint-keyon='foot']) [data-region^='deck'] .pitch .lock::before {
   content: '';
   position: absolute;
-  left: calc(50% - 3.5px);
-  top: 9px;
-  width: 7px;
-  height: 7px;
+  left: calc(50% - 3px);
+  top: 6px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   box-shadow: inset 0 0 0 1.5px rgb(238 238 236 / 0.38), 0 1px 0 rgb(255 255 255 / 0.09);
   pointer-events: none;
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-column='ring'][data-flag-dir-room-tint-keyon='dot'] [data-region^='deck'] .pitch .lock.on::before {
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-column='ring']:is([data-flag-dir-room-tint-keyon='dot'], [data-flag-dir-room-tint-keyon='corner'], [data-flag-dir-room-tint-keyon='foot']) [data-region^='deck'] .pitch .lock.on::before {
   background: var(--deck);
   box-shadow: 0 1px 0 rgb(255 255 255 / 0.09);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-column='ring'][data-flag-dir-room-tint-keyon='corner'] [data-region^='deck'] .pitch .lock::before {
+  left: auto;
+  right: 7px;
+  top: 7px;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-column='ring'][data-flag-dir-room-tint-keyon='foot'] [data-region^='deck'] .pitch .lock::before {
+  top: auto;
+  bottom: 6px;
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-column='ring'][data-flag-dir-room-tint-keyon='under'] [data-region^='deck'] .pitch .lock.on::after {
   inset: auto 14px 8px;
