@@ -41,24 +41,10 @@ export default {
       options: [
         ['full', 'A rule under the whole label', 'It fills with colour when Key lock is on.'],
         ['short', 'A short rule', 'The same, 22px.'],
-        ['ring', 'An etched outline', 'The same etched line all the way round Key lock and 0.00%; on, Key lock is pressed in, its words in the deck’s colour.'],
+        ['ring', 'An etched outline', 'The same etched line all the way round Key lock and 0.00%; on, Key lock is pressed in, its words and dot in the deck’s colour.'],
         ['ledger', 'A ledger', 'Etched rules across the column, between the three.'],
         ['cut', 'One cut', 'All three in one cut under the fader, with rules between.'],
         ['plain', 'Plain', 'No mark; the labels are brighter than captions.'],
-      ],
-    },
-    keyon: {
-      type: 'choice',
-      label: 'Key lock when it’s on (with the etched outline)',
-      default: 'dot',
-      options: [
-        ['dot', 'Pressed, a dot above', 'A ring over the words, as the hot cues have, filled with the deck’s colour when on. The words stay on the row’s line.'],
-        ['corner', 'Pressed, a dot in the corner', 'The same, top right.'],
-        ['foot', 'Pressed, a dot below', 'The same, under the words.'],
-        ['under', 'Pressed, underlined', 'A line under the words in the deck’s colour.'],
-        ['outline', 'Pressed, outlined', 'An outline in the deck’s colour.'],
-        ['sync', 'Pressed, like Sync', 'Nothing more than its words in the deck’s colour.'],
-        ['raise', 'Comes up', 'A raised key, as a selected tab is.'],
       ],
     },
     head: {

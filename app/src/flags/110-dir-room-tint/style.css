@@ -3632,7 +3632,7 @@
   padding: 0;
   border-radius: var(--key-r, 8px);
 }
-/* On (a setting): the app's own pressed key, as Sync is. */
+/* On: the app's own pressed key, as Sync is. */
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-column='ring'] [data-region^='deck'] .pitch .lock.on {
   --kk-face-in: var(--rg-down);
   --kk-c1: rgb(0 0 0 / 0.9);
@@ -3641,28 +3641,9 @@
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-column='ring'] [data-region^='deck'] .pitch .lock.on::after {
   box-shadow: none;
 }
-/* Off etched and flat; on comes up as a raised key, as a selected tab does,
-   its words in the deck's colour. Pressing it goes in, as every key's press does. */
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-column='ring'][data-flag-dir-room-tint-keyon='raise'] [data-region^='deck'] .pitch .lock.on:not(:active, .pressed, [data-show-active]) {
-  --kk-c1: rgb(0 0 0 / 0);
-  --tt-c3: rgb(0 0 0 / 0);
-  background-color: var(--rg-key);
-  background-image: var(--tt-sheen);
-  box-shadow:
-    inset 0 1px 0 0 rgb(255 255 255 / 0.095),
-    inset 0 12px 12px -10px rgb(255 255 255 / 0.045),
-    0 1px 0 0 var(--tt-rim),
-    0 2px 5px -1px var(--tt-lift-c);
-}
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-column='ring'][data-flag-dir-room-tint-keyon='raise'] [data-region^='deck'] .pitch .lock.on:not(:active, .pressed, [data-show-active]):hover {
-  background-color: color-mix(in oklab, #fff 6%, var(--rg-key));
-}
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-column='ring'][data-flag-dir-room-tint-keyon='raise'] [data-region^='deck'] .pitch .lock.on::after {
-  content: none;
-}
 /* A dot, as the hot cues have: a ring in a small cut, filled when on. The words
-   stay on the row's line; the dot takes the space they leave. */
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-column='ring']:is([data-flag-dir-room-tint-keyon='dot'], [data-flag-dir-room-tint-keyon='corner'], [data-flag-dir-room-tint-keyon='foot']) [data-region^='deck'] .pitch .lock::before {
+   stay on the row's line; the dot takes the space over them. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-column='ring'] [data-region^='deck'] .pitch .lock::before {
   content: '';
   position: absolute;
   left: calc(50% - 3px);
@@ -3673,27 +3654,9 @@
   box-shadow: inset 0 0 0 1.5px rgb(238 238 236 / 0.38), 0 1px 0 rgb(255 255 255 / 0.09);
   pointer-events: none;
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-column='ring']:is([data-flag-dir-room-tint-keyon='dot'], [data-flag-dir-room-tint-keyon='corner'], [data-flag-dir-room-tint-keyon='foot']) [data-region^='deck'] .pitch .lock.on::before {
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-column='ring'] [data-region^='deck'] .pitch .lock.on::before {
   background: var(--deck);
   box-shadow: 0 1px 0 rgb(255 255 255 / 0.09);
-}
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-column='ring'][data-flag-dir-room-tint-keyon='corner'] [data-region^='deck'] .pitch .lock::before {
-  left: auto;
-  right: 7px;
-  top: 7px;
-}
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-column='ring'][data-flag-dir-room-tint-keyon='foot'] [data-region^='deck'] .pitch .lock::before {
-  top: auto;
-  bottom: 6px;
-}
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-column='ring'][data-flag-dir-room-tint-keyon='under'] [data-region^='deck'] .pitch .lock.on::after {
-  inset: auto 14px 8px;
-  height: 2px;
-  border-radius: 1px;
-  background: var(--deck);
-}
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-column='ring'][data-flag-dir-room-tint-keyon='outline'] [data-region^='deck'] .pitch .lock.on::after {
-  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--deck) 80%, transparent);
 }
 /* 3: a ledger: etched rules across the column, between the three */
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-column='ledger'] [data-region^='deck'] .pitch .val::after,
