@@ -8,7 +8,7 @@ use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 
 use dj_engine::{SharedState, NUM_DECKS};
-use dj_stems::{download, CacheKey, Settings, Splitter, Status};
+use dj_stems::{download, CacheKey, Head, Settings, Splitter, Status};
 use serde::{Deserialize, Serialize};
 use tauri::State;
 
@@ -98,7 +98,13 @@ impl Stems {
         } else {
             ModelState::Missing
         };
-        let heads: dj_stems::PlayHeads = Box::new(move |deck| shared.deck(deck).position);
+        let heads: dj_stems::PlayHeads = Box::new(move |deck| {
+            let d = shared.deck(deck);
+            Head {
+                at: d.position,
+                speed: if d.playing { d.speed } else { 0.0 },
+            }
+        });
         let stems = Self {
             splitter: Splitter::new(Settings::default(), heads),
             dir,

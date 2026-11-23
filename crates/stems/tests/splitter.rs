@@ -8,7 +8,7 @@ use std::time::{Duration, Instant};
 
 use dj_engine::stems::{STORED_BASS, STORED_DRUMS, STORED_VOCALS};
 use dj_engine::Track;
-use dj_stems::{CacheKey, Settings, Splitter, Status};
+use dj_stems::{CacheKey, Head, Settings, Splitter, Status};
 
 fn model() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/data/fake-stems.onnx")
@@ -61,7 +61,7 @@ fn splits_two_decks_and_caches() {
     };
     let s = Splitter::new(
         settings.clone(),
-        Box::new(|deck| if deck == 0 { 0.0 } else { 0.5 }),
+        Box::new(|deck| Head::still(if deck == 0 { 0.0 } else { 0.5 })),
     );
 
     let file = dir.join("song.wav");

@@ -222,13 +222,26 @@ impl Progress {
     }
 
     /// The next region to split for a play head at track frame `head`: the
-    /// first one not done from the play head on, or else the nearest one
-    /// before it.
-    pub fn next(&self, head: f64) -> Option<usize> {
+    /// ones a deck standing there plays from, then the first one not done
+    /// from the play head on, or else the nearest one before it.
+    ///
+    /// `still` is whether the deck stays at `head`, so it's worth finishing
+    /// what is just behind it.
+    pub fn next(&self, head: f64, still: bool) -> Option<usize> {
         let p = self.plan.region_at(head);
-        (p..self.plan.regions)
+        // Right after a region's start a deck also needs the one before it:
+        // a block of stems can straddle the two.
+        let (from, to) = dj_engine::stems::around(head as i64, self.plan.rate);
+        let block = |f: i64| f as usize / BLOCK_FRAMES;
+        let first = self.plan.region_at((block(from) * BLOCK_FRAMES) as f64);
+        let last = self
+            .plan
+            .region_at(((block(to) + 1) * BLOCK_FRAMES - 1) as f64);
+        (p..=last)
+            .chain((first..p).rev().filter(|_| still))
+            .chain(p..self.plan.regions)
+            .chain((0..p).rev())
             .find(|&k| !self.done[k])
-            .or_else(|| (0..p).rev().find(|&k| !self.done[k]))
     }
 
     /// How far ahead of `head` the stems are ready, in track frames.
@@ -389,22 +402,22 @@ mod tests {
 
     #[test]
     fn forward_from_the_start() {
-        run(50_000, 44_100, 4096, |p| p.next(0.0));
+        run(50_000, 44_100, 4096, |p| p.next(0.0, true));
     }
 
     #[test]
     fn from_the_middle_then_back() {
-        run(50_000, 44_100, 4096, |p| p.next(31_000.0));
+        run(50_000, 44_100, 4096, |p| p.next(31_000.0, true));
     }
 
     #[test]
     fn other_sample_rates() {
-        run(40_000, 48_000, 4096, |p| p.next(12_345.0));
+        run(40_000, 48_000, 4096, |p| p.next(12_345.0, false));
     }
 
     #[test]
     fn shorter_than_one_segment() {
-        run(1000, 44_100, 4096, |p| p.next(0.0));
+        run(1000, 44_100, 4096, |p| p.next(0.0, true));
     }
 
     #[test]
@@ -413,20 +426,47 @@ mod tests {
         let mut p = Progress::new(plan);
         let stems = Stems::new(100_000);
         let start = plan.region_at(60_000.0);
-        assert_eq!(p.next(60_000.0), Some(start));
+        assert_eq!(p.next(60_000.0, false), Some(start));
         let silent = Separated {
             vocals: [vec![0.0; 4096], vec![0.0; 4096]],
             bass: [vec![0.0; 4096], vec![0.0; 4096]],
             drums: [vec![0.0; 4096], vec![0.0; 4096]],
         };
         p.finish(start, &silent, &stems);
-        assert_eq!(p.next(60_000.0), Some(start + 1));
+        assert_eq!(p.next(60_000.0, false), Some(start + 1));
         assert!(p.lead(60_000.0) > 0.0);
         // Past the end: wraps back to the nearest region before.
         for k in start + 1..plan.regions() {
             p.finish(k, &silent, &stems);
         }
-        assert_eq!(p.next(60_000.0), Some(start - 1));
+        assert_eq!(p.next(60_000.0, false), Some(start - 1));
         assert_eq!(p.lead(60_000.0), f64::INFINITY);
+    }
+
+    /// A deck standing just after a region's start can't play until the one
+    /// before it is in too, so that one doesn't wait until last.
+    #[test]
+    fn a_still_deck_gets_both_sides_of_a_boundary() {
+        let frames = 44_100 * 60;
+        let plan = Plan::new(343_980, frames, 44_100);
+        let mut p = Progress::new(plan);
+        let stems = Stems::new(frames);
+        let silent = Separated {
+            vocals: [vec![0.0; 343_980], vec![0.0; 343_980]],
+            bass: [vec![0.0; 343_980], vec![0.0; 343_980]],
+            drums: [vec![0.0; 343_980], vec![0.0; 343_980]],
+        };
+        let head = plan.boundary(3) as f64 + 100.0;
+        for want in [3, 2] {
+            assert!(!stems.is_ready_at(head as i64, 44_100));
+            assert_eq!(p.next(head, true), Some(want));
+            p.finish(want, &silent, &stems);
+        }
+        assert!(stems.is_ready_at(head as i64, 44_100));
+        assert_eq!(p.next(head, true), Some(4));
+        // Mid-region, the one under the head is enough.
+        let head = (plan.boundary(5) + plan.boundary(6)) as f64 / 2.0;
+        p.finish(5, &silent, &stems);
+        assert!(stems.is_ready_at(head as i64, 44_100));
     }
 }
