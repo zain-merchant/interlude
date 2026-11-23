@@ -139,6 +139,46 @@ a, button, summary, [role="radio"], .btn { touch-action: manipulation; }
 .toast svg { width: 16px; height: 16px; flex: none; fill: none; stroke: var(--ring); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 @media (prefers-reduced-motion: reduce) { .toast, .toast[data-on] { translate: -50% 0; scale: 1; transition: opacity 0.2s; } }
 
+/* Download on a phone (index.html): the buttons say Download, as on a
+   Mac; a tap opens the sheet below. (?dl=today: the words before.) */
+html:not([data-dl="today"]) .dlp-old { display: none !important; }
+@media (hover: none) and (pointer: coarse) { html[data-dl="today"] .dlp-new { display: none !important; } }
+html[data-dl="today"] .menu-cap { display: none !important; }
+/* The sheet: the menu's glass, from the foot of the screen, its corners
+   concentric with the screen's own on a phone; the page dims behind it.
+   It moves on transforms and opacity alone. */
+.dlsheet { position: fixed; inset: 0; z-index: 70; }
+.dlsheet[hidden] { display: none; }
+.dlsheet-scrim { position: absolute; inset: 0; background: rgb(5 5 7 / 0.55); opacity: 0; transition: opacity var(--snappy-ms) var(--snappy); touch-action: none; }
+html[data-dlsheet] .dlsheet-scrim { opacity: 1; transition: opacity var(--smooth-ms) var(--smooth); }
+.dlsheet-card {
+  position: absolute; left: 10px; right: 10px; bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  display: grid; justify-items: center; padding: 10px 18px 18px; border-radius: 30px; text-align: center;
+  background: rgb(16 16 19 / 0.92); -webkit-backdrop-filter: blur(24px) saturate(1.4); backdrop-filter: blur(24px) saturate(1.4);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.09), inset 0 1px 0 rgb(255 255 255 / 0.06), 0 24px 60px rgb(0 0 0 / 0.55);
+  translate: 0 calc(100% + 24px); will-change: translate;
+  transition: translate var(--snappy-ms) var(--snappy);
+  touch-action: none;
+}
+html[data-dlsheet] .dlsheet-card { translate: 0 0; transition: translate var(--smooth-ms) var(--smooth); }
+.dlsheet-grab { width: 36px; height: 5px; border-radius: 3px; background: rgb(255 255 255 / 0.16); margin-bottom: 16px; }
+.dlsheet-icon { width: 44px; height: 44px; margin-bottom: 12px; }
+.dlsheet h2 { margin: 0; font-size: 20px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.25; }
+.dlsheet-card > p { margin: 6px 0 0; max-width: 30ch; color: var(--fg-2); font-size: 15px; line-height: 1.45; text-wrap: balance; }
+.dlsheet-acts { display: grid; gap: 8px; width: 100%; margin-top: 20px; }
+.dlsheet-acts .btn { width: 100%; height: 50px; justify-content: center; gap: 8px; border-radius: 16px; font-size: 16px; }
+.dlsheet-acts .btn svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.dlsheet-acts .btn.ghost { background: rgb(255 255 255 / 0.07); }
+.dlsheet-acts .btn[hidden] { display: none; }
+.dlsheet-card:focus { outline: none; }
+/* Copied: the button says so, with a tick in place of its icon. */
+.dlsheet-acts .btn[data-done] svg { display: none; }
+.dlsheet-acts .btn[data-done]::before { content: ''; width: 17px; height: 17px; background: currentColor; -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.5l3 3 6-7' fill='none' stroke='%23000' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.5l3 3 6-7' fill='none' stroke='%23000' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat; }
+.dlsheet-msg { margin: 12px 0 0 !important; color: var(--fg-3) !important; font-size: 13px !important; }
+@media (prefers-reduced-motion: reduce) { .dlsheet-card, html[data-dlsheet] .dlsheet-card { translate: none; transition: none; } }
+/* The menu's small print, as under the hero's buttons. */
+.menu-foot .menu-cap { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; row-gap: 4px; margin: 12px 0 2px; color: var(--fg-3); font-size: 13px; line-height: 18px; }
+
 /* Hero */
 .hero { position: relative; text-align: center; padding: 96px 0 56px; }
 .hero-icon { margin: 0 auto 28px; filter: drop-shadow(0 18px 40px rgb(62 198 255 / 0.18)); }
@@ -1207,6 +1247,18 @@ html[data-hero]:is([data-herotext="card"], [data-herotext="rail"], [data-herotex
   html[data-hero]:is([data-herotext="card"], [data-herotext="dmg"]) .hero-side { padding: 18px; }
   html[data-hero][data-herotext="dmg"] .meta { margin: 18px -18px -18px; padding: 12px 18px; }
 }
+/* Phones: the headline close under the nav; the words, the buttons and
+   the small print kept in a little from the screen's edges (24px, where
+   the page's own margin is 16), all on the one left edge. The two
+   buttons: GitHub only as wide as its words, Download taking the rest; the
+   small print centred under them. */
+@media (max-width: 480px) {
+  html[data-hero="split"] .hero { padding: 18px 8px 48px; }
+  html[data-hero][data-herotext="card"] .dl-cap { justify-content: center; text-align: center; }
+  /* The switch just over the screen it switches; what it means above it. */
+  .shot-tag { order: -1; height: auto; }
+  .shot-bar { row-gap: 8px; margin-bottom: 14px; }
+}
 /* ── Hero and nav layouts (end) ── */
 
 /* Install steps: the number sits just above its heading, close to it, on
@@ -2093,9 +2145,10 @@ html[data-lablogo="plain"] .lg-rings circle:nth-child(-n + 2) { display: none; }
   html[data-hero][data-herotext="card"][data-cardsurface="rule"] .hero-side::before { content: none; }
 }
 @media (max-width: 480px) {
-  /* The two buttons share the width, the same size; the caption a size
-     smaller so its three facts fit on a line. */
-  html[data-hero][data-herotext="card"] .cta .btn.big { flex: 1 1 0; justify-content: center; padding: 0 10px; }
+  /* GitHub only as wide as its words; Download takes the rest. The
+     caption a size smaller so its three facts fit on a line. */
+  html[data-hero][data-herotext="card"] .cta .btn.big { flex: 1 1 auto; justify-content: center; padding: 0 10px; }
+  html[data-hero][data-herotext="card"] .cta .btn.ghost { flex: 0 0 auto; padding: 0 18px; }
   html[data-hero][data-herotext="card"] .dl-cap { font-size: 12px; }
   .dl-cap > * + *::before { margin: 0 7px; }
   /* The open source heading's halves each on one line. */
