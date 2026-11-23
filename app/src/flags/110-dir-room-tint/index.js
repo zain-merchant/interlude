@@ -50,16 +50,13 @@ export default {
     keyon: {
       type: 'choice',
       label: 'Key lock when it’s on (with the etched outline)',
-      default: 'raise',
+      default: 'dot',
       options: [
-        ['raise', 'Comes up', 'Off is the etched outline; on is a raised key, as a selected tab is, its words in the deck’s colour.'],
-        ['drop', 'Raised off, dropped on', 'Off stands up a little; on drops in, the etched outline in the deck’s colour.'],
-        ['deep', 'Deep', 'Off flat; on has a long shadow from its top edge.'],
-        ['cutgrooves', 'Etched, with grooves', 'Pressed, with the record’s grooves and the outline.'],
-        ['sync', 'Like Sync', 'Off is the etched outline; on is the app’s pressed key, its words in the deck’s colour.'],
-        ['grooves', 'Grooves', 'Pressed, with the record’s grooves.'],
-        ['etched', 'Etched, tinted', 'Pressed, the etched outline in the deck’s colour.'],
-        ['line', 'A thin line', 'Pressed, an even line in the deck’s colour.'],
+        ['dot', 'Pressed, with a dot', 'A ring over the words, as the hot cues have, filled with the deck’s colour when on.'],
+        ['under', 'Pressed, underlined', 'A line under the words in the deck’s colour.'],
+        ['outline', 'Pressed, outlined', 'An outline in the deck’s colour.'],
+        ['sync', 'Pressed, like Sync', 'Nothing more than its words in the deck’s colour.'],
+        ['raise', 'Comes up', 'A raised key, as a selected tab is.'],
       ],
     },
     head: {
