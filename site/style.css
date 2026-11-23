@@ -177,7 +177,10 @@ html[data-dlsheet] .dlsheet-card { translate: 0 0; transition: translate var(--s
 .dlsheet-msg { margin: 12px 0 0 !important; color: var(--fg-3) !important; font-size: 13px !important; }
 @media (prefers-reduced-motion: reduce) { .dlsheet-card, html[data-dlsheet] .dlsheet-card { translate: none; transition: none; } }
 /* The menu's small print, as under the hero's buttons. */
-.menu-foot .menu-cap { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; row-gap: 4px; margin: 12px 0 2px; color: rgb(236 234 228 / 0.42); font-size: 12px; line-height: 18px; }
+/* Quieter than the hero's (which sits over the record): the page's third
+   tone, still 4.5:1 on the menu. (As specific as the hero's caption rule,
+   which any .dl-cap would otherwise take.) */
+html[data-hero][data-herotext="card"][data-cardblock] .menu-foot .dl-cap.menu-cap { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; row-gap: 4px; margin: 12px 0 2px; color: var(--fg-3); font-size: 12px; line-height: 18px; text-shadow: none; }
 .menu-foot .menu-cap .dl-cv { text-decoration-color: rgb(236 234 228 / 0.22); }
 .menu-foot .menu-cap > * + *::before { background: rgb(255 255 255 / 0.16); }
 
@@ -810,7 +813,7 @@ html[data-nav="centred"] .nav-actions .btn:not(.ghost) { padding: 0 14px; border
    Download come in at the end.
    index.html moves it all with a spring, writing only clip-path (the
    glass), opacity and transform; nothing here changes size or place. */
-.nav-dl, .nav-glass, .nav-edge { display: none; }
+.nav-dl, .nav-glass, .nav-edge, .nav-rim { display: none; }
 html[data-nav="morph"] { scroll-padding-top: 80px; }
 /* The bar grows to fit a large name or icon (they're tuned in the Tune
    panel); the capsule is always 48px, 10px down. */
@@ -829,7 +832,7 @@ html[data-nav="morph"] .nav {
    same as the open menu's, so opening it restyles nothing. --nav-fill is
    picked in the Tune panel. Glass: the blur as before; mixed: solid at the
    top, glass once it's the compact capsule; light: a lighter blur. */
-html { --nav-fill: #141417; }
+html { --nav-fill: #141417; --nav-line: rgb(255 255 255 / 0.09); }
 html[data-nav="morph"] .nav-glass {
   display: block; position: absolute; z-index: -1; left: 0; top: 0; width: 100%; height: calc(var(--nav-h) + var(--nav-pad) + 1px); pointer-events: none;
   background: var(--nav-fill);
@@ -844,16 +847,30 @@ html[data-navglass="light"][data-nav="morph"] .nav-glass {
 }
 html[data-nav="morph"] .nav-edge {
   display: block; position: absolute; z-index: 0; top: 0; left: 0; width: 100%; height: 48px; pointer-events: none;
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.09), inset 0 1px 0 rgb(255 255 255 / 0.05);
+  box-shadow: inset 0 0 0 1px var(--nav-line), inset 0 1px 0 rgb(255 255 255 / 0.05);
 }
-/* The capsule's edge is the menu's edge too: with the menu open it runs on
-   down round the sheet (as tall as the sheet, index.html's --menu-h), on
-   the sheet's own timing, so one line is drawn all the way round and
-   nothing about it changes as the menu opens. */
+/* With the menu open the edge is drawn in two, each a fixed size, so
+   nothing is laid out as it moves: the capsule's own down to the middle of
+   its straight sides (--mid), and below that the rim, the same line down
+   the sheet's sides and round its foot, which slides down with the sheet,
+   on its timing, inside a box that clips what's above. Shut, the rim's foot
+   lies exactly on the capsule's, so it takes over and hands back unseen.
+   (--menu-h, --mid, --er: index.html, the menu.) */
 @media (max-width: 860px) {
-  html[data-nav="morph"] .nav[data-menu-shutting] .nav-edge { transition: height var(--snappy-ms) var(--snappy); }
-  html[data-nav="morph"] .nav[data-menu] .nav-edge { height: var(--menu-h, 48px) !important; transition: height var(--smooth-ms) var(--smooth); }
+  html[data-nav="morph"] .nav-rim {
+    display: block; position: fixed; z-index: 0; top: calc(var(--top, 10px) + var(--mid, 24px)); left: var(--side, 12px); right: var(--side-r, 12px); height: calc(var(--menu-h, 48px) - var(--mid, 24px));
+    overflow: hidden; visibility: hidden; pointer-events: none;
+  }
+  .nav-rim i {
+    position: absolute; left: 0; right: 0; bottom: 0; top: -60px; border-radius: var(--er, 14px); will-change: translate;
+    box-shadow: inset 0 0 0 1px var(--nav-line);
+    translate: 0 calc(var(--cap-h, 48px) - var(--menu-h, 48px)); transition: translate var(--snappy-ms) var(--snappy);
+  }
+  .nav[data-menu] .nav-rim i { translate: 0 0; transition: translate var(--smooth-ms) var(--smooth); }
+  html[data-nav="morph"] .nav:is([data-menu], [data-menu-shutting]):not([data-norim]) .nav-rim { visibility: visible; }
+  html[data-nav="morph"] .nav:is([data-menu], [data-menu-shutting]):not([data-norim]) .nav-edge { clip-path: inset(0 0 calc(100% - var(--mid, 24px)) 0); }
 }
+@media (max-width: 860px) and (prefers-reduced-motion: reduce) { .nav-rim i { translate: 0 0; transition: none; } }
 html[data-nav="morph"] .nav-row { position: relative; height: var(--nav-h); gap: 22px; }
 html[data-nav="morph"] .links { margin: 0 0 0 auto; gap: 26px; }
 /* The icon is laid out at its capsule size (36px) and drawn at 32px in the
@@ -912,9 +929,8 @@ html[data-nav="morph"] .nav-dl path { fill: none; stroke: currentColor; stroke-w
 
   /* The page behind: dimmed and blurred, and out of reach; it doesn't
      scroll (no layout change: the scrollbar's room is kept). */
-  /* (The page isn't locked from scrolling: the scrim takes no pan and the
-     menu keeps its own scroll, and locking the root lays the page out
-     again just as the menu starts to move.) */
+  /* (The page behind is kept from scrolling by index.html, on the touches
+     themselves, not by locking the root.) */
   .menu-scrim {
     display: block; position: fixed; inset: 0; z-index: -1; touch-action: none;
     background: rgb(5 5 7 / 0.62);
@@ -927,9 +943,9 @@ html[data-nav="morph"] .nav-dl path { fill: none; stroke: currentColor; stroke-w
      what's in it. Shut, all that shows of it is a capsule-high strip at
      the top (the box round it, .menu, clips the rest away); it opens by
      sliding down out of that, its words held still in place (moved back
-     up by just as much) so it's the glass that reveals them, like a blind.
-     Only transforms and opacity move, on the compositor; nothing is laid
-     out as it opens or shuts. Over the capsule exactly, so it reads as the
+     up by just as much) so it's the sheet that reveals them, like a blind.
+     Only transforms move (and the words' opacity); nothing is laid out as
+     it opens or shuts. Over the capsule exactly, so it reads as the
      capsule growing. */
   .menu {
     /* Over the capsule exactly as it is when the menu opens (index.html
@@ -940,20 +956,21 @@ html[data-nav="morph"] .nav-dl path { fill: none; stroke: currentColor; stroke-w
     --cap-h: 48px;
     --r: var(--cap-r, 14px);
     display: block; position: fixed; z-index: -1; top: var(--top); left: var(--side); right: var(--side-r);
-    border-radius: var(--r); overflow: hidden;
+    border-radius: var(--er, var(--r)); overflow: hidden;
     visibility: hidden; pointer-events: none;
     transition: visibility 0s linear var(--snappy-ms);
   }
   .nav[data-menu] .menu { visibility: visible; pointer-events: auto; transition: visibility 0s; }
   .menu-sheet {
-    position: relative; overflow: hidden; border-radius: var(--r);
+    position: relative; overflow: hidden; border-radius: var(--er, var(--r));
     /* The capsule's own colour, solid (no blur moving with it); its edge
        is the capsule's (.nav-edge). */
     background: var(--nav-fill);
-    translate: 0 calc(var(--cap-h) - 100%); opacity: 0; will-change: translate, opacity;
-    transition: translate var(--snappy-ms) var(--snappy), opacity 140ms ease-out 120ms;
+    /* (Never faded: shut, it lies on the capsule in the capsule's colour.) */
+    translate: 0 calc(var(--cap-h) - 100%); will-change: translate;
+    transition: translate var(--snappy-ms) var(--snappy);
   }
-  .nav[data-menu] .menu-sheet { translate: 0 0; opacity: 1; transition: translate var(--smooth-ms) var(--smooth), opacity 90ms ease-out; }
+  .nav[data-menu] .menu-sheet { translate: 0 0; transition: translate var(--smooth-ms) var(--smooth); }
   .menu-in {
     max-height: calc(100vh - var(--top) - 12px - env(safe-area-inset-bottom, 0px));
     max-height: calc(100dvh - var(--top) - 12px - env(safe-area-inset-bottom, 0px));
@@ -2238,7 +2255,7 @@ html[data-lablogo="plain"] .lg-rings circle:nth-child(-n + 2) { display: none; }
    them itself (index.html scales their radius to match; squircles.js does
    every other rounded rect). */
 @supports (corner-shape: superellipse(2)) {
-  html[data-squircles][data-nav="morph"] :is(.nav-glass, .nav-edge) { corner-shape: superellipse(1.6); }
+  html[data-squircles][data-nav="morph"] :is(.nav-glass, .nav-edge, .menu, .menu-sheet, .nav-rim i) { corner-shape: superellipse(1.6); }
 }
 
 /* Being tried (the Try group): the nav's Download control and the menu
