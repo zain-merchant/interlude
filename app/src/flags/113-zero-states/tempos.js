@@ -10,6 +10,9 @@ const CAP = 1000; // tempos over this are counted as off the scale
 /** The n-th key of the Filter's wheel: 1A to 12A, then 1B to 12B. */
 export const WHEEL = [...'AB'].flatMap((l) => Array.from({ length: 12 }, (_, i) => `${i + 1}${l}`));
 
+/** The key at a place on it. @param {number} i */
+export const keyAt = (i) => ({ tonic: ((i % 12) * 7 + (i < 12 ? 8 : 11)) % 12, minor: i < 12 });
+
 /** Where a Fits match can be: at half, normal and double time. @param {number} bpm */
 export const fitWindows = (bpm) => [1, 0.5, 2].map((m) => [(bpm * (1 - FIT_TEMPO)) / m, (bpm * (1 + FIT_TEMPO)) / m]);
 
@@ -21,6 +24,7 @@ const inRange = (bpm, f) => (f.bpmMin == null || bpm >= f.bpmMin) && (f.bpmMax =
  * @param {{ bpmMin: number | null, bpmMax: number | null, keys: string[] }} f
  * @param {{ bpm: number, key: any } | null} fit the deck on air, with Fits on
  * @param {string | null} skip the track on air, which Fits leaves out
+ * @returns {any}
  */
 export function picture(tracks, f, fit = null, skip = null) {
   const ranged = f.bpmMin != null || f.bpmMax != null;
@@ -35,7 +39,7 @@ export function picture(tracks, f, fit = null, skip = null) {
   let have = 0;
   let noTempo = 0;
   let noKey = 0;
-  const count = { range: 0, keys: 0, filter: 0, fit: 0, above: Infinity, below: -Infinity };
+  const count = { both: 0, range: 0, keys: 0, filter: 0, fit: 0, above: Infinity, below: -Infinity };
   for (let i = 0; i < n; i++) {
     const t = tracks[i];
     if (skip && t.path === skip) continue;
@@ -51,7 +55,9 @@ export function picture(tracks, f, fit = null, skip = null) {
     if (kOk && keyed) count.keys++;
     const fOk = rOk && kOk;
     if (fOk) count.filter++;
-    const airOk = !!fit && has && tempoFits(bpm, fit.bpm) && (!fit.key || (!!k && keysFit(k, fit.key)));
+    const near = !!fit && has && tempoFits(bpm, fit.bpm);
+    if (near && rOk) count.both++;
+    const airOk = near && (!fit.key || (!!k && keysFit(k, fit.key)));
     if (airOk) count.fit++;
     if (!has) {
       noTempo++;
@@ -86,6 +92,12 @@ export function picture(tracks, f, fit = null, skip = null) {
       if (b < first) first = b;
       if (b > final) final = b;
     }
+  }
+  // With Fits: no tempo does for both, or the tempos do and the keys don't.
+  if (fit && !(ranged && !count.both)) {
+    const mix = WHEEL.filter((_, i) => !fit.key || keysFit(keyAt(i), fit.key));
+    const both = keyed ? mix.filter((c) => f.keys.includes(c)) : mix;
+    return { ...base, kind: 'slots', keys: both.length ? both : WHEEL.filter((c) => f.keys.includes(c)) };
   }
   const windows = fit ? fitWindows(fit.bpm) : [];
   const want = [];
@@ -135,6 +147,16 @@ export function picture(tracks, f, fit = null, skip = null) {
     }
   }
   const clip = ([a, b]) => [Math.max(lo, Math.min(hi, a)), Math.max(lo, Math.min(hi, b))];
+  if (fit) {
+    // The deck's nearest range to the filter's, and the filter's.
+    const r = [f.bpmMin ?? 0, f.bpmMax ?? CAP];
+    const near = windows.map((w) => ({ w, d: Math.max(0, r[0] - w[1], w[0] - r[1]) })).sort((x, y) => x.d - y.d)[0].w;
+    const ends = [near[0], near[1], f.bpmMin ?? Math.min(near[0], f.bpmMax) - 20, Math.min(CAP, f.bpmMax ?? Math.max(near[1], f.bpmMin) + 20)];
+    const a = Math.min(...ends);
+    const z = Math.max(...ends);
+    const m = Math.max(4, (z - a) * 0.08);
+    return { ...base, kind: 'spans', lo: a - m, hi: z + m, windows: [near], range: [f.bpmMin ?? a - m, Math.min(CAP, f.bpmMax ?? z + m)] };
+  }
   return {
     ...base,
     kind: 'tempo',
@@ -157,7 +179,8 @@ const many = (n) => n.toLocaleString();
 export function said(p, f) {
   const { count } = p;
   const keys = f.keys.length > 3 ? `those ${f.keys.length} keys` : f.keys.length > 1 ? `${f.keys.slice(0, -1).join(', ')} or ${f.keys.at(-1)}` : f.keys[0];
-  if (p.fit) return `${count.filter ? `${many(count.filter)} in the filter` : 'None in the filter'}, ${count.fit ? `${many(count.fit)} that ${count.fit === 1 ? 'mixes' : 'mix'}` : 'none that mix'}${count.filter && count.fit ? ', none both' : ''}.`;
+  if (p.kind === 'slots') return count.both ? `${many(count.both)} ${p.ranged ? 'at both tempos' : 'at its tempo'}, none in ${p.keys.length > 1 ? 'a key that mixes' : 'that key'}.` : `${many(count.filter)} in the filter, none that mix.`;
+  if (p.kind === 'spans') return `${count.filter ? many(count.filter) : 'None'} in the filter, ${count.fit ? many(count.fit) : 'none'} that mix.`;
   if (p.ranged && !p.have) return p.n === 1 ? 'Its tempo isn’t known yet.' : 'No tempos are known yet.';
   if (p.ranged && p.keyed) return `${count.range ? `${many(count.range)} at that tempo` : 'None at that tempo'}, ${count.keys ? `${many(count.keys)} in ${keys}` : `none in ${keys}`}${count.range && count.keys ? ', none both' : ''}.`;
   if (p.keyed) return p.noKey === p.n ? 'No keys are known yet.' : '';

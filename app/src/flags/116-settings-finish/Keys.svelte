@@ -1,5 +1,7 @@
 <script>
   import { flag } from '../registry.svelte.js';
+  import Marks from '../117-key-marks/Marks.svelte';
+  import { isMark, local } from '../117-key-marks/marks.js';
   // A shortcut as separate caps ("⇧⌘Z" is three), its marks drawn to sit
   // level with the letters.
   /** @type {{ label: string }} */
@@ -20,7 +22,7 @@
   const ORDER = '⌃⌥⇧⌘';
   const caps = $derived.by(() => {
     const mods = [];
-    let rest = label;
+    let rest = flag('key-marks') ? local(label) : label;
     for (;;) {
       if (rest.length > 1 && ORDER.includes(rest[0])) {
         mods.push(rest[0]);
@@ -36,4 +38,4 @@
   });
 </script>
 
-<span class="kcaps" aria-hidden="true">{#each caps as c}<span class="kcap" class:word={!MARK[c] && c.length > 1}>{#if MARK[c] && !flag('key-marks')}<svg viewBox="0 0 16 16"><path d={MARK[c]} /></svg>{:else}<b>{c}</b>{/if}</span>{/each}</span>
+<span class="kcaps" aria-hidden="true">{#each caps as c}<span class="kcap" class:word={!MARK[c] && c.length > 1}>{#if MARK[c] && !flag('key-marks')}<svg viewBox="0 0 16 16"><path d={MARK[c]} /></svg>{:else if flag('key-marks') && isMark(c)}<Marks text={c} />{:else}<b>{c}</b>{/if}</span>{/each}</span>

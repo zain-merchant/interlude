@@ -124,9 +124,9 @@ On by default (84):
 - #115 Pinch to zoom the waveforms (`trackpad-zoom`)
 - #118 Knobs turn sideways, and follow the scroll (`knob-feel`)
 
-#112 (`shell-status`), #113 (`zero-states`), #116 (`settings-finish`) and #117
-(`key-marks`) are proposals, but on by default while the owner judges them; they go off again once that's decided.
-#112 is in both places at once; #113 and #116 only do
+#112 (`shell-status`), #113 (`zero-states`), #116 (`settings-finish`), #117
+(`key-marks`) and #121 (`toast-cut`) are proposals, but on by default while the owner judges them; they go off again once that's decided.
+#112 is in both places at once; #113, #116 and #121 only do
 anything on direction #110.
 
 Off by default, and why:
