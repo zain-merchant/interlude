@@ -25,7 +25,7 @@ export const PARAMS = {
   h0: ['Bass height', 10, 100, 1, '%', 'Heights'],
   h1: ['Mids height', 10, 100, 1, '%', 'Heights'],
   h2: ['Highs height', 10, 100, 1, '%', 'Heights'],
-  out: ['Outline', 0, 100, 1, '%', 'Drawing'],
+  rim: ['Outline', 0, 100, 1, '%', 'Drawing'],
   outw: ['Outline width', 0.5, 2, 0.25, 'px', 'Drawing'],
   glow: ['Glow', 0, 300, 5, '%', 'Drawing'],
   grad: ['Fade to the edges', 0, 100, 1, '%', 'Drawing'],
@@ -34,13 +34,13 @@ export const PARAMS = {
   lock: ['Pitch follows the beat', 0, 1, 1, '', 'Marks'],
 };
 
-const RIBBON = { out: 55, outw: 1, glow: 100, grad: 65 };
+const RIBBON = { rim: 55, outw: 1, glow: 100, grad: 65 };
 const ATTACK = SMOOTH([75, 55, 28]);
 
 /** The looks in the order the step key goes through them: id, name, how it's drawn, and its values. */
 export const LOOKS = [
   { id: 'today', name: 'Today', draw: null, values: {} },
-  { id: 'exact', name: 'Today exact', draw: 'ribbon', values: { ...SMOOTH([25, 22, 18]), soft: 4, hit: 15, ease: 50, ...HEIGHTS, ...RIBBON } },
+  { id: 'exact', name: 'Today exact', draw: 'ribbon', values: { ...SMOOTH([25, 22, 18]), soft: 4, hit: 15, ease: 50, ...HEIGHTS, ...RIBBON, rim: 35 } },
   { id: 'attack', name: 'Attack', draw: 'ribbon', values: { ...ATTACK, ...HEIGHTS, ...RIBBON } },
   { id: 'pills', name: 'Pills', draw: 'pills', values: { ...ATTACK, ...HEIGHTS, w: 4.75, gap: 2.5, lock: 1 } },
   { id: 'narrow', name: 'Narrower pills', draw: 'pills', values: { ...ATTACK, ...HEIGHTS, w: 2.5, gap: 2, lock: 1 } },
@@ -51,23 +51,16 @@ export const lookOf = (id) => LOOKS.find((l) => l.id === id) ?? LOOKS[1];
 export const DEFAULT = 'exact';
 
 /**
- * How the beats are marked, for every look but Today. Whatever's picked, Grid
- * mode shows them at full strength (`full`), as they're being fixed there.
+ * How the beats are drawn, for every look but Today. Which beats are marked is
+ * the app's own rule (Waveform2D.beats): every beat, a bar every four from the
+ * first downbeat, bars only where a beat is under 6 px, on both halves. Grid
+ * mode draws them in full, as they're being fixed there.
  */
 export const LINES = [
-  ['near', 'Between the lanes, by the play head', 'Ticks on the line between the lanes, strongest at the play head and fading away from it; bars are longer, every fourth bar longest.'],
-  ['seam', 'Between the lanes', "Ticks on the line between the lanes only, so the two decks' beats stand back to back."],
-  ['match', 'Between the lanes, beats while matching', 'Bars only; beats while both decks play unsynced, during a nudge or a drag, or with the pointer over the waveforms.'],
-  ['bars', 'Bars, beats when close', 'Faint bar lines; beats as ticks once zoomed in, or while matching.'],
-  ['outer', 'Outer edges', 'Ticks on the top and bottom edges of the panel only.'],
-  ['ruler', 'Ruler between the lanes', 'The same ticks on a dark strip, so loud sound never covers them.'],
-  ['notch', 'Notches', 'A gap in the sound at each beat instead of a mark; wider at a bar.'],
-  ['behind', 'Behind the sound', 'Lines that pass under the waveform.'],
-  ['zoom', 'Every fourth bar, the rest by zoom', 'Lines: every fourth bar strongest, bars and beats fading as you zoom out.'],
-  ['ticks', 'Edge ticks', 'Ticks at all four edges; bars are lines.'],
-  ['faint', 'Fainter lines', 'A line on every beat, about a third as strong.'],
-  ['dots', 'Bars and dots', 'Bars are lines; beats are dots on the rims.'],
-  ['full', 'Full lines', "As strong as today's."],
+  ['seam', 'Between the lanes', "One short tick for each, on the line between the lanes, so the two decks' beats stand back to back; a bar's is longer."],
+  ['edges', 'Both edges', "A short tick for each at both edges of its lane, where they've always been; a bar's is longer."],
+  ['ticks', 'Both edges, bars as lines', 'Longer ticks at both edges, and a faint line at each bar.'],
+  ['full', 'Lines', 'A line on every beat, with its ticks.'],
 ];
 /** The bar number at the play head. */
 export const CHIPS = [
@@ -75,20 +68,12 @@ export const CHIPS = [
   ['pill', 'Pill', 'White, on the play head.'],
   ['none', 'Off', ''],
 ];
-/** What the part behind the play head shows. */
-export const PLAYED = [
-  ['bare', 'Dimmed, no marks', 'No beat marks past the last beat.'],
-  ['deep', 'Dimmed further, no marks', ''],
-  ['veil', 'Dimmed', "As today's."],
-];
-
 /** Registry settings: the look, and every look's values under `<look>-<value>`. */
 export function settings() {
   const out = {
     pick: { type: 'choice', label: 'Look', default: DEFAULT, options: LOOKS.map((l) => [l.id, l.name]) },
-    marks: { type: 'choice', label: 'Beat marks', default: 'near', options: LINES },
+    beats: { type: 'choice', label: 'Beat marks', default: 'seam', options: LINES },
     chip: { type: 'choice', label: 'Bar number', default: 'quiet', options: CHIPS },
-    played: { type: 'choice', label: 'Played half', default: 'bare', options: PLAYED },
   };
   for (const l of LOOKS) {
     for (const [k, v] of Object.entries(l.values)) {
