@@ -3,6 +3,7 @@
   import { Waveform2D, themeColors, HOT_CUES } from './waveform-2d.js';
   import { tracks, engine, displayPos, displaySlip, onFrame, scrubStart, scrubTo, scrubEnd, wake } from './engine.svelte.js';
   import { flag, flagsRev, watchFlags, DIRECTIONS } from '../flags/registry.svelte.js';
+  import { waveOptions as roomTintWave } from '../flags/110-dir-room-tint/wave.js'; // #110 (UI audit flag)
   import { openMenu } from './menu.svelte.js';
   import { gridMenu, gridMode, startSlide, slide, endSlide } from './grid.svelte.js';
 
@@ -47,6 +48,8 @@
     ...(flag('dir-field') ? { look: 'field' } : {}),
     // #108 (UI audit flag): dir-ground veils the played part in the deck's ground, not grey.
     ...(flag('dir-ground') ? { veil: 'ground' } : {}),
+    // #110 (UI audit flag): dir-room-tint keeps today's waveform; its wave.js is where a new style drops in.
+    ...(flag('dir-room-tint') ? roomTintWave({ deck, mode }) : {}),
     // The directions (#92 and up): the bar number's pill in the theme's ink, not fixed white.
     ...(DIRECTIONS.some((id) => flag(id)) ? { pill: 'theme' } : {}),
   });

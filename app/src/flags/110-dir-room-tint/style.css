@@ -1,0 +1,1834 @@
+/* #110 (UI audit flag; a visual direction): Room, tinted.
+
+   Flag 100 (Room, graphic) refined with the owner's other favourite in
+   mind. The base is 100's: panels in clear layers, raised keys with soft
+   rounded corners, record grooves in the cavities, graphic type. On top:
+
+   - Each deck's side carries a barely-there tint of its colour: every
+     step of 100's ladder (plate, wells, keys, caps, slots) keeps its exact
+     lightness and gains a little chroma in the deck's hue (blue left,
+     warm right). In greyscale it is 100. The mixer splits gently at its
+     edges, the library stays neutral.
+   - The grooves line every cavity that holds the music or a mode: the
+     waveform window, the overview, the tab switch and the record's bed.
+   - Pebble's language where it reads better, in 100's shapes: dials show
+     their amount as a filled ring, on is a key tinted with its role
+     colour (not a dark latch), fader thumbs are raised discs, hot cues
+     are numbered discs, meters are capsules with colour.
+   - Amber is Cue's again: the Cue key and the headphone cue, nothing else.
+
+   Every rule is under the tripled :root[data-flag-dir-room-tint]
+   attribute (the sheet loads before flags 11 to 99 in path order). */
+
+/* ══ Base: flag 100 (Room, graphic), dark ══ */
+
+
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] {
+  /* Surfaces. */
+  --bg: #09090b;
+  --rg-room: #09090b;
+  --rg-window: #040405;
+  --rg-plate: #161619;
+  --rg-well: #060607;
+  --rg-key: #2a2a2f;
+  --rg-key-2: #252529;
+  --rg-key-hi: #323238;
+  --rg-key-hi-2: #2c2c31;
+  --rg-down: #111113;
+  --rg-on: #0b0b0c;
+
+  --rg-slot: #030304;
+  --rg-cap: #38383e;
+  --rg-cap-2: #2e2e33;
+  --rg-cap-hi: #414147;
+  --rg-cap-hi-2: #36363b;
+  --rg-dial: #2e2e33;
+  --rg-dial-hi: #36363c;
+  --rg-ridge: #3a3a40;
+  --rg-ridge-hi: #444449;
+  --rg-ridge-2: #1c1c20;
+  --rg-dial-groove: #101012;
+  --rg-float: #1e1e22;
+  --rg-card: #1a1a1d;
+  --rg-row-sel: #232327;
+  --rg-tag: rgb(22 22 25 / 0.96);
+
+  /* Edges: crisp 1px lines first, then one soft lift under keys. */
+  --rg-lit: rgb(255 255 255 / 0.075);
+  --rg-hi: rgb(255 255 255 / 0.1);
+  --rg-hi-2: rgb(255 255 255 / 0.13);
+  --rg-lip: rgb(255 255 255 / 0.055);
+  --rg-rim: rgb(0 0 0 / 0.85);
+  --rg-groove-line: rgb(255 255 255 / 0.04);
+  --rg-window-line: rgb(255 255 255 / 0.045);
+  --rg-lift: 0 1px 2px rgb(0 0 0 / 0.3), 0 2px 6px -1px rgb(0 0 0 / 0.35);
+}
+
+/* The composite tokens are declared again on #app, so a token changed there
+   (the light appearance) carries into every recipe built from it. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint],
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] #app {
+  --rg-plate-edge: inset 0 1px 0 var(--rg-lit), 0 0 0 1px var(--rg-rim), 0 16px 32px -16px rgb(0 0 0 / 0.8);
+  --rg-well-edge: inset 0 1px 0 rgb(0 0 0 / 0.9), inset 0 0 0 1px rgb(0 0 0 / 0.55), 0 1px 0 var(--rg-lip);
+  --rg-cut: inset 0 1px 0 rgb(0 0 0 / 0.9), inset 0 0 0 1px rgb(0 0 0 / 0.5), inset 0 -1px 0 rgb(255 255 255 / 0.05);
+  --rg-key-fill: linear-gradient(180deg, var(--rg-key), var(--rg-key-2));
+  --rg-key-fill-hi: linear-gradient(180deg, var(--rg-key-hi), var(--rg-key-hi-2));
+  --rg-key-edge: inset 0 1px 0 var(--rg-hi), 0 1px 0 var(--rg-rim), var(--rg-lift);
+  --rg-key-edge-hi: inset 0 1px 0 var(--rg-hi-2), 0 1px 0 var(--rg-rim), var(--rg-lift);
+  --rg-down-edge: inset 0 1px 2px rgb(0 0 0 / 0.8), inset 0 0 0 1px rgb(0 0 0 / 0.45), 0 1px 0 var(--rg-lip);
+  --rg-on-edge: inset 0 1px 2px rgb(0 0 0 / 0.9), inset 0 0 0 1px rgb(0 0 0 / 0.55), 0 1px 0 rgb(255 255 255 / 0.07);
+  /* The record grooves: 1px rings 4px apart round a spindle far below. */
+  --rg-grooves: repeating-radial-gradient(circle at 50% 640px, var(--rg-groove-line) 0 1px, transparent 1.5px 4px);
+  --rg-cap-fill: linear-gradient(180deg, var(--rg-cap), var(--rg-cap-2));
+  --rg-cap-fill-hi: linear-gradient(180deg, var(--rg-cap-hi), var(--rg-cap-hi-2));
+  --rg-float-edge: inset 0 1px 0 rgb(255 255 255 / 0.09), 0 0 0 1px var(--rg-rim), 0 2px 6px rgb(0 0 0 / 0.35), 0 12px 32px -6px rgb(0 0 0 / 0.55);
+  --rg-tag-edge: inset 0 1px 0 var(--rg-lit), 0 0 0 1px var(--rg-rim), 0 2px 6px -1px rgb(0 0 0 / 0.5);
+  --glass-fill: var(--rg-plate);
+  --glass-edge: var(--rg-plate-edge);
+  --well: var(--rg-well);
+  --well-shadow: var(--rg-well-edge);
+  --flag-buttons-bg: var(--rg-key-fill);
+  --flag-buttons-ring: var(--rg-key-edge);
+  --flag-buttons-bg-hover: var(--rg-key-fill-hi);
+  --flag-buttons-ring-hover: var(--rg-key-edge-hi);
+  --flag-buttons-bg-on: var(--rg-down);
+  --flag-buttons-ring-on: var(--rg-down-edge);
+}
+
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] {
+  /* Text: a clean neutral white and three steps down. */
+  --fg: #eeeeec;
+  --fg-2: rgb(238 238 236 / 0.66);
+  --fg-3: rgb(238 238 236 / 0.5);
+  --fg-4: rgb(238 238 236 / 0.3);
+  --ink: #111113;
+  --rg-paper: #eeeeec;
+  --rg-paper-hi: #fff;
+  --rg-paper-fg: #111113;
+
+  --raise: rgb(255 255 255 / 0.06);
+  --hover: rgb(255 255 255 / 0.05);
+  --sel: rgb(255 255 255 / 0.09);
+  --line: rgb(255 255 255 / 0.07);
+  --line-2: rgb(255 255 255 / 0.11);
+  --popover: #1d1d21;
+
+  /* Roles. */
+  --cue: #eab34d;
+  --kill: #ff6359;
+  --warn: #ff6359;
+  --focus-ring: rgb(238 238 236 / 0.8);
+
+  /* Hot cues: one lightness, none of them amber (amber is Cue's alone). */
+  --hc-1: #8fb3dc;
+  --hc-2: #8fc7a0;
+  --hc-3: #d99a8a;
+  --hc-4: #b7a3dc;
+  --hc-5: #82c4c4;
+  --hc-6: #d9a3bd;
+  --hc-7: #c4c08a;
+  --hc-8: #a9b0bd;
+
+  --glass-blur: none;
+
+  --rg-num: 28px;
+  --rg-ease: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* ── The room ───────────────────────────────────────────────────────── */
+
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] body,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .app,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .bd {
+  background: var(--rg-room);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .bd i {
+  display: none;
+}
+
+/* Plates: solid and flat, a 1px lit top edge, a 1px dark rim, one shadow. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .decks > section,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .glass:not(.waves) {
+  background: var(--rg-plate);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: var(--rg-plate-edge);
+}
+
+/* The waveform window: cut into the room, with the record's grooves. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .waves.glass {
+  padding-right: 0;
+  background: repeating-radial-gradient(ellipse 140% 100% at 50% 520%, var(--rg-window-line) 0 1px, transparent 1.5px 5px), var(--rg-window);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: 0 1px 0 var(--rg-lip);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .waves.glass::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow: inset 0 1px 0 rgb(0 0 0 / 0.9), inset 0 0 0 1px rgb(0 0 0 / 0.6), inset 0 -1px 0 rgb(255 255 255 / 0.05);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .waves .lane canvas {
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .waves .zoom,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .waves .lane .who {
+  z-index: 2;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .lane + .lane {
+  border-top-color: rgb(255 255 255 / 0.06);
+}
+/* The zoom control: a small plate on the window. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .zoom {
+  background: var(--rg-plate);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: var(--rg-tag-edge);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .waves .zoom button {
+  background: none;
+  box-shadow: none;
+}
+
+/* Lane titles, three ways (the "title" setting). */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .waves .lane .who {
+  font-weight: 500;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .waves .lane:not(:has(.wave.empty)) .who {
+  background: var(--rg-tag);
+  box-shadow: var(--rg-tag-edge);
+  color: var(--fg-2);
+}
+
+/* ── Decks ─────────────────────────────────────────────────────────── */
+
+/* Title and artist over each other, tempo and key beside them; each row
+   on one baseline (deck-polish's grid), the figures no taller than the
+   title's line needs. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] header .name {
+  font-size: var(--t-md);
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: var(--fg);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] header .name.dim {
+  font-weight: 500;
+  color: var(--fg-3);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] header .artist {
+  font-weight: 400;
+  color: var(--fg-3);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .bpm .big {
+  font-size: var(--rg-num);
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  line-height: 28px;
+  color: var(--fg);
+}
+/* The tempo's decimals: the same size, a step down. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .bpm .big .frac {
+  color: var(--fg-3);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck']:has(header .name.dim) .bpm .big {
+  font-weight: 400;
+  color: var(--fg-4);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .bpm .unit,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .bpm .key {
+  font-size: var(--t-sm);
+  font-weight: 500;
+  color: var(--fg-2);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .bpm .key.shifted {
+  color: var(--fg);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .bpm .key .cam {
+  color: var(--fg-3);
+}
+
+/* The overview: a well with the record's grooves in it; the cut drawn
+   over the waveform, kept to the top 1px so the cue flags stay clear. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .overview {
+  background: var(--rg-grooves), var(--rg-well);
+  box-shadow: 0 1px 0 var(--rg-lip);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .overview::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow: var(--rg-cut);
+}
+
+/* Tabs: a segmented switch. A grooved well, the current mode a key
+   standing up out of it. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .modes {
+  gap: 0;
+  padding: 3px;
+  border: 0;
+  border-radius: 11px;
+  background: var(--rg-grooves), var(--rg-well);
+  box-shadow: var(--rg-well-edge);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .modes button {
+  height: 26px;
+  border-radius: 8px;
+  color: var(--fg-3);
+  font-size: var(--t-sm);
+  font-weight: 500;
+  background: none;
+  box-shadow: none;
+  transition: color 120ms ease-out, background-color 120ms ease-out;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .modes button:hover {
+  color: var(--fg);
+  background: none;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .modes button.on {
+  color: var(--fg);
+  background: var(--rg-key-fill);
+  box-shadow: var(--rg-key-edge);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .modes button.on::after,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .modes button::after {
+  content: none;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .modes button:focus-visible::before {
+  content: none !important;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-input='keys'] [data-region^='deck'] .modes button:focus-visible,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .modes button[data-show-focus] {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 0;
+}
+/* A mode that's running keeps a small dot by its name, in the deck's colour. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .modes button i,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .perf .big.live b::before {
+  width: 5px;
+  height: 5px;
+  background: var(--deck);
+  box-shadow: none;
+}
+
+/* The row under the tabs: text controls, a tone on hover. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .strip :is(.tc, .tb, .big, .kind, .stem) {
+  border-radius: var(--r);
+  box-shadow: none;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .strip :is(.tc, .tb, .big, .kind, .stem):hover {
+  background: var(--hover);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .perf .tc b {
+  color: var(--fg);
+  font-weight: 600;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .perf .tc span {
+  color: var(--fg-2);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .perf .tc:not(.set) :is(b, span) {
+  color: var(--fg-3);
+  font-weight: 500;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .perf .big b {
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  color: var(--fg);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .perf .big :is(span, small) {
+  color: var(--fg-2);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .strip .tb {
+  color: var(--fg-2);
+}
+/* The effect's switch and the stems download are keys. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .fx .tog {
+  --on: var(--deck);
+  min-width: 48px;
+  height: var(--h-sm);
+  padding: 0 10px;
+  border-radius: 6px;
+  justify-content: center;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .fx .tog i {
+  display: none;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .stems .need button {
+  height: var(--h-sm);
+  padding: 0 10px;
+  border-radius: 6px;
+  text-decoration: none;
+  color: var(--fg);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .stems .need {
+  color: var(--fg-2);
+  align-items: center;
+}
+
+/* ── Keys ──────────────────────────────────────────────────────────── */
+
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .btn:not(.ghost),
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .pitch .lock,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer .hp,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer button.rec,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .fx .tog,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .stems .need button,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .toastbox .toast .undo {
+  background: var(--rg-key-fill);
+  box-shadow: var(--rg-key-edge);
+  color: var(--fg-2);
+  font-weight: 500;
+  border: 0;
+  transition: background-color 120ms ease-out, color 120ms ease-out, box-shadow 120ms ease-out, translate 60ms ease-out;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .btn:not(.ghost):hover:not(:disabled, [aria-disabled='true']),
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .btn:not(.ghost)[data-show-hover],
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .pitch .lock:hover,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer .hp:hover,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer .hp[data-show-hover],
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer button.rec:hover,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .fx .tog:hover,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .stems .need button:hover,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .toastbox .toast .undo:hover {
+  background: var(--rg-key-fill-hi);
+  box-shadow: var(--rg-key-edge-hi);
+  color: var(--fg);
+}
+/* Pressed: down 1px into the plate, at once. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .btn:active:not(:disabled, [aria-disabled='true']) {
+  transform: none;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] :is(.btn:not(.ghost), .mixer .hp, .mixer button.rec, .knob button.label, .toastbox .toast .undo, [data-region^='deck'] .pitch .lock, [data-region^='deck'] .fx .tog):is(:active, [data-show-active]):not(:disabled, [aria-disabled='true']) {
+  background: var(--rg-down);
+  box-shadow: var(--rg-down-edge);
+  translate: 0 1px;
+  transition-duration: 0ms;
+}
+/* On: latched down, flat and dark; the label in its role colour (--on).
+   It doesn't change on hover, so it never looks off. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .transport .btn.cue.lit,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .transport .btn.sync:is(.on, .pressed, [aria-pressed='true']),
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .pitch .lock.on,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer .hp.on,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .knob button.label.killed,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .knob button.label.killed:hover,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .fx .tog.live,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .btn.sm.samp:is(.on, .pressed, [aria-pressed='true']) {
+  background: var(--rg-on);
+  box-shadow: var(--rg-on-edge);
+  color: var(--on, var(--fg));
+  translate: none;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .btn:disabled,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .btn[aria-disabled='true'] {
+  opacity: 1;
+  background: none;
+  box-shadow: inset 0 0 0 1px var(--line);
+  color: var(--fg-4);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .btn.ghost {
+  color: var(--fg-2);
+  box-shadow: none;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .btn.ghost:hover:not(:disabled, [aria-disabled='true']) {
+  background: var(--hover);
+  color: var(--fg);
+}
+
+/* Transport: four keys. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .transport > * {
+  border-radius: var(--r);
+  font-size: var(--t-sm);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .transport .btn.cue {
+  --on: var(--cue);
+  color: var(--fg-2);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .transport .btn.cue.lit {
+  color: var(--cue);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .transport .btn.sync {
+  --on: var(--deck);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .transport .btn.play {
+  color: var(--fg);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .transport .btn.play svg {
+  width: 14px;
+  height: 14px;
+}
+/* Playing: the one key that isn't a dark latch. A flat face in the
+   deck's own colour, pressed in 1px, the glyph in ink. No gradient. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .transport .btn.play.on,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .transport .btn.play.on:hover {
+  background: var(--deck);
+  box-shadow: 0 0 0 1px var(--rg-rim), 0 1px 0 1px var(--rg-lip);
+  color: var(--ink);
+  translate: 0 1px;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .transport .btn.play.on[data-cueing] {
+  background: var(--cue);
+}
+/* An empty deck's keys are flat and faint, every label at one level. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .transport .btn[aria-disabled='true'],
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .transport .btn[aria-disabled='true'] :is(span, small, button) {
+  color: var(--fg-4);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .transport .btn[aria-disabled='true'] {
+  background: none;
+  box-shadow: inset 0 0 0 1px var(--line);
+  translate: none;
+}
+
+/* Beat jump: one line, "4 beats", the number at the keys' label size. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .transport .jumps {
+  grid-template-columns: minmax(24px, 1fr) minmax(0, 48px) minmax(24px, 1fr);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .transport .jumps span {
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  gap: 4px;
+  white-space: nowrap;
+  font-size: var(--t-md);
+  font-weight: 600;
+  line-height: 20px;
+  color: var(--fg);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .transport .jumps small {
+  font-size: var(--t-xs);
+  font-weight: 500;
+  line-height: 20px;
+  color: var(--fg-3);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .transport .jumps button {
+  font-size: var(--t-md);
+  color: var(--fg-3);
+  background: none;
+  box-shadow: none;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .transport .jumps button:hover:not([aria-disabled='true']) {
+  color: var(--fg);
+  background: var(--hover);
+}
+@container (max-width: 95px) {
+  :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .transport .jumps span {
+    font-size: var(--t-sm);
+  }
+}
+
+/* The pitch column. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .pitch .val {
+  font-weight: 500;
+  color: var(--fg-2);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .pitch .val.off {
+  color: var(--fg);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .pitch .lock {
+  --on: var(--deck);
+  border-radius: var(--r);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .pitch .nudge {
+  border-radius: 8px;
+  background: var(--rg-well);
+  box-shadow: var(--rg-well-edge);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .pitch .nudge button {
+  border-radius: 6px;
+  color: var(--fg-2);
+  background: none;
+  box-shadow: none;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .pitch .nudge button:hover:not([aria-disabled='true']) {
+  background: var(--hover);
+  color: var(--fg);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .pitch .nudge::before,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .pitch .nudge::after {
+  display: none;
+}
+
+/* Faders: a slot cut into the plate, a key for a cap. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .fader .line {
+  background: var(--rg-slot);
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.6), 0 1px 0 var(--rg-lip);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .fader .mark,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .fader .tick {
+  background: var(--fg-4);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .fader .cap {
+  border-radius: 4px;
+  background: var(--rg-cap-fill);
+  box-shadow: inset 0 1px 0 var(--rg-hi-2), 0 1px 0 var(--rg-rim), 0 3px 6px -2px rgb(0 0 0 / 0.5);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .fader .cap::after {
+  background: var(--rg-paper);
+  box-shadow: none;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .fader:hover .cap,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .fader.dragging .cap {
+  background: var(--rg-cap-fill-hi);
+}
+
+/* ── Mixer ─────────────────────────────────────────────────────────── */
+
+/* Dials: a flat cap in the keys' tone inside a knurled skirt; a fine dark
+   groove between them. The light and the lift sit on the wrap, which
+   doesn't turn, so the top edge stays lit wherever the dial points. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .knob .dial {
+  --rg-face: var(--rg-dial);
+  --rg-knurl: var(--rg-ridge);
+  background:
+    radial-gradient(circle closest-side, var(--rg-face) 0 70%, var(--rg-dial-groove) 72% 77%, transparent 79%),
+    repeating-conic-gradient(var(--rg-knurl) 0 5deg, var(--rg-ridge-2) 5deg 10deg);
+  box-shadow: 0 0 0 1px var(--rg-rim);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .knob .wrap::before,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .knob .wrap::after {
+  content: '';
+  position: absolute;
+  inset: 9px;
+  border-radius: 50%;
+  pointer-events: none;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .knob .wrap::before {
+  box-shadow: var(--rg-lift);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .knob .wrap::after {
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.06), rgb(255 255 255 / 0) 50%, rgb(0 0 0 / 0.1));
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.13);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .knob .dial::after {
+  content: none;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .knob .dial i {
+  background: var(--rg-paper);
+  box-shadow: none;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .knob .dial.killed i {
+  background: var(--kill);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .knob .wrap:has(.dial:hover) .dial,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .knob .dial.dragging {
+  --rg-face: var(--rg-dial-hi);
+  --rg-knurl: var(--rg-ridge-hi);
+}
+/* The scale: one dot per mark on one radius; the lit arc the same dots,
+   brighter. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .knob line {
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-dasharray: 0 100;
+  filter: none;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .knob line.major {
+  stroke-dashoffset: -1;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .knob line:not(.on) {
+  stroke: rgb(255 255 255 / 0.16);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .knob line.major:not(.on) {
+  stroke: rgb(255 255 255 / 0.36);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .knob line.on {
+  stroke-width: 2.1;
+  stroke: var(--fg);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .knob:has(.dial.killed) line.on {
+  stroke: var(--kill);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .knob .label {
+  color: var(--fg-3);
+  font-size: var(--t-xs);
+  font-weight: 500;
+}
+/* EQ kill: a caption like Trim's until you point at it, then a key; killed,
+   latched down with its label in red. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .knob button.label {
+  --on: var(--kill);
+  border-radius: 6px;
+  background: none;
+  box-shadow: none;
+  color: var(--fg-3);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .knob button.label:hover {
+  background: var(--rg-key-fill);
+  box-shadow: var(--rg-key-edge);
+  color: var(--fg);
+}
+
+/* Meters: a slot, filled in a clear tone of the deck's colour rising to
+   its white; the top 3 dB white, over 0 dB red. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer .fwrap {
+  --mc: #b8d3f2;
+  --mc-lo: #5b8fcf;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer .fwrap.mirror {
+  --mc: #f0d8b4;
+  --mc-lo: #b98e58;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer .cen .mpair {
+  --mc: #f4f4f1;
+  --mc-lo: #a4a4a9;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer .meter .bar,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer .meter .clip {
+  background: var(--rg-slot);
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.6), 0 1px 0 var(--rg-lip);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer .meter .bar::after {
+  background: linear-gradient(to top, var(--mc-lo) 0, var(--mc) 88%, #fff 88% 97.9%, var(--kill) 97.9%);
+  box-shadow: none;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer .meter:not(.m60) {
+  background: var(--rg-slot);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer .meter:not(.m60)::after {
+  background: linear-gradient(to top, var(--mc-lo) 0, var(--mc) 82%, #fff 82% 95%, var(--kill) 95%);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer .meter.clipped .clip {
+  background: var(--kill);
+  box-shadow: none;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer .meter .peak {
+  background: #fff;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer .meter .db {
+  background: var(--fg-4);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer .lim {
+  color: var(--kill);
+}
+
+/* Headphone cue and Rec: small keys at a 6px corner. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer .hp {
+  --on: var(--cue);
+  border-radius: 6px;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer .hp.on {
+  color: var(--cue);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer button.rec {
+  border-radius: 6px;
+}
+/* Recording: set into the plate, its face a deep red, the dot red. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer button.rec.on,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer button.rec.on:hover {
+  background: color-mix(in srgb, var(--kill) 14%, var(--rg-on));
+  box-shadow: var(--rg-on-edge);
+  color: var(--fg);
+  translate: none;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer button.rec .dot,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer button.rec.on .dot {
+  background: var(--kill);
+  box-shadow: none;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] svg.ruler line.on {
+  filter: none;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer .xf {
+  border-top-color: rgb(0 0 0 / 0.7);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.04);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer .xf .end {
+  opacity: 1;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer .xf .ruler line {
+  stroke: rgb(255 255 255 / 0.28);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer .xf .ruler line.on {
+  stroke: var(--fg-2);
+}
+
+/* ── Library ───────────────────────────────────────────────────────── */
+
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library nav .h,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .settings nav .h {
+  font-size: var(--t-xs);
+  font-weight: 500;
+  text-transform: none;
+  color: var(--fg-3);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library nav {
+  border-right-color: rgb(0 0 0 / 0.7);
+  box-shadow: 1px 0 0 rgb(255 255 255 / 0.04);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library nav .item {
+  color: var(--fg-2);
+  border-radius: var(--r);
+  box-shadow: none;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library nav .item small {
+  color: var(--fg-3);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library nav .item:hover,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library nav .item[data-show-hover],
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library nav .add:hover {
+  background: var(--hover);
+  color: var(--fg);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library nav .add {
+  color: var(--fg-3);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library nav .item.on,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library nav .item.on:hover {
+  background: var(--rg-key-fill);
+  box-shadow: var(--rg-key-edge);
+  color: var(--fg);
+  font-weight: 500;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .bar .search {
+  border-radius: var(--r);
+  background: var(--rg-well);
+  box-shadow: var(--rg-well-edge);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .bar .search:focus-within {
+  box-shadow: var(--rg-well-edge), 0 0 0 2px var(--focus-ring);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .bar .search kbd {
+  color: var(--fg-3);
+  background: none;
+  box-shadow: none;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .bar :is(.samp, .gear) {
+  border-radius: var(--r);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .bar .samp.on {
+  --on: var(--fg);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .row.head {
+  border-bottom-color: rgb(0 0 0 / 0.7);
+  box-shadow: 0 1px 0 rgb(255 255 255 / 0.04);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .row.head .sort {
+  font-size: var(--t-xs);
+  font-weight: 500;
+  text-transform: none;
+  color: var(--fg-3);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .row.head .sort:is(.on, :hover) {
+  color: var(--fg);
+  background: none;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .scroll .row {
+  color: var(--fg-2);
+  border-radius: var(--r);
+  box-shadow: none;
+  transition: background 120ms ease-out;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .scroll .row .t {
+  color: var(--fg);
+  font-weight: 500;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .scroll .row .n {
+  color: var(--fg);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .scroll .row:hover,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .scroll .row[data-show-hover] {
+  background: var(--hover);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .scroll .row.sel,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .scroll .row.sel:hover {
+  background: var(--rg-row-sel);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06), 0 1px 0 rgb(0 0 0 / 0.6);
+  color: var(--fg);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .scroll .row mark {
+  background: rgb(255 255 255 / 0.16);
+  color: var(--fg);
+  border-radius: 2px;
+}
+/* Key match: a small dot after the key instead of an underline. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region='tracks'] .row .k.mix {
+  box-shadow: none;
+  padding-bottom: 0;
+  color: var(--fg);
+  position: relative;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region='tracks'] .row .k.mix::after {
+  content: '';
+  position: absolute;
+  left: calc(100% + 6px);
+  top: 50%;
+  width: 4px;
+  height: 4px;
+  margin-top: -2px;
+  border-radius: 50%;
+  background: var(--fg-2);
+}
+
+/* ── The floating layer: toast, banner, dialog, menu, tip ──────────── */
+
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .toastbox .toast,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .app > .banner:not(.lost),
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .backdrop > .card[role='dialog'],
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] :is(.tip, .menu) {
+  background: var(--rg-float);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: var(--rg-float-edge);
+  color: var(--fg);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .toastbox .toast {
+  border-radius: 12px;
+  font-weight: 500;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .toastbox .toast .undo {
+  border-radius: var(--r);
+  color: var(--fg);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .toastbox .toast .undo kbd {
+  color: var(--fg-3);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .tip {
+  border-radius: 8px;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .tip kbd {
+  background: var(--sel);
+  box-shadow: none;
+  color: var(--fg-2);
+  border-radius: 4px;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .menu {
+  border-radius: 12px;
+}
+
+/* Device lost: a plate of its own across the library's toolbar, a deep red
+   face lit along the top, the sign in red. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .app > .banner.lost {
+  top: auto;
+  bottom: calc(var(--gap) + var(--lib) - 58px);
+  left: calc(var(--gap) + var(--library-sidebar, 212px) + 8px);
+  right: calc(var(--gap) + 8px);
+  translate: none;
+  transform: none;
+  width: auto;
+  max-width: none;
+  min-height: 48px;
+  padding: 6px 6px 6px 16px;
+  border-radius: 14px;
+  background: #2e1513;
+  box-shadow: inset 0 1px 0 rgb(255 220 210 / 0.12), 0 0 0 1px rgb(0 0 0 / 0.8), 0 10px 24px -6px rgb(0 0 0 / 0.6);
+  color: rgb(255 236 230 / 0.72);
+  animation: rg-rise 220ms var(--rg-ease);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .app > .banner.lost b {
+  color: #fff3ef;
+  font-weight: 600;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .app > .banner.lost svg {
+  width: 20px;
+  height: 20px;
+  margin-right: 10px;
+  stroke: var(--kill);
+  filter: none;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .app > .banner.lost > span {
+  flex: 1;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .app > .banner.lost .btn,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .app > .banner.lost .btn.primary {
+  margin-left: 16px;
+  height: 36px;
+  border-radius: 9px;
+  background: linear-gradient(180deg, #4d2723, #42211e);
+  box-shadow: inset 0 1px 0 rgb(255 220 210 / 0.16), 0 1px 0 rgb(0 0 0 / 0.85), var(--rg-lift);
+  color: #fff3ef;
+  font-weight: 500;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .app > .banner.lost .btn:hover:not(:disabled) {
+  background: linear-gradient(180deg, #582d28, #4b2622);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .app:has(> .banner.lost) .toastbox .toast[data-docked] {
+  visibility: hidden;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .app:has(> .banner.lost) section.library :is(nav, .main) {
+  padding-bottom: 0;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .app:has(> .banner.lost) section.library .main .bar {
+  visibility: hidden;
+}
+/* The decks are held: Play lets go of its colour. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .app:has(> .banner.lost) [data-region^='deck'] .transport .btn.play.on {
+  color: var(--fg-3);
+  background: var(--rg-down);
+  box-shadow: var(--rg-down-edge);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .app > .banner:not(.lost) {
+  border-radius: 12px;
+}
+@keyframes rg-rise {
+  from {
+    opacity: 0;
+    translate: 0 4px;
+  }
+}
+
+/* ── Dialogs ───────────────────────────────────────────────────────── */
+
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .backdrop:has(> .card[role='dialog']) {
+  background: rgb(0 0 0 / 0.6);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .backdrop:has(> .card[role='dialog'])::before {
+  content: none;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .backdrop > .card[role='dialog'] {
+  border-radius: 20px;
+  background: var(--rg-card);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .backdrop > .card[role='dialog'] h2 {
+  font-size: var(--t-lg);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .backdrop > .card[role='dialog'] .lead {
+  color: var(--fg-2);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .backdrop > .card[role='dialog'] .found {
+  border-radius: 12px;
+  background: var(--rg-key-fill);
+  box-shadow: var(--rg-key-edge);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .backdrop > .card[role='dialog'] .found:hover:not(:disabled) {
+  background: var(--rg-key-fill-hi);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .backdrop > .card[role='dialog'] :is(.go, .btn.primary) {
+  display: inline-grid;
+  place-items: center;
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 8px;
+  background: var(--rg-paper);
+  color: var(--rg-paper-fg);
+  font-weight: 500;
+  box-shadow: inset 0 1px 0 #fff, 0 1px 0 var(--rg-rim), var(--rg-lift);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .backdrop > .card[role='dialog'] :is(.go, .btn.primary):hover:not(:disabled) {
+  background: var(--rg-paper-hi);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .backdrop > .card[role='dialog'] .found + .found :is(.go, .btn.primary),
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .backdrop > .card[role='dialog'] .source + .source :is(.go, .btn.primary) {
+  background: var(--rg-key-fill-hi);
+  box-shadow: var(--rg-key-edge);
+  color: var(--fg);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .backdrop > .card[role='dialog'] .link {
+  text-decoration: none;
+  color: var(--fg-2);
+  font-weight: 500;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .backdrop > .card[role='dialog'] .link:hover {
+  color: var(--fg);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .backdrop .card textarea {
+  background: var(--rg-well);
+  box-shadow: var(--rg-well-edge);
+  color: var(--fg);
+}
+
+/* ── Settings ──────────────────────────────────────────────────────── */
+
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .settings nav .item {
+  color: var(--fg-2);
+  border-radius: var(--r);
+  box-shadow: none;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .settings nav .item:hover {
+  background: var(--hover);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .settings nav .item.on,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .settings nav .item.on:hover {
+  background: var(--rg-key-fill);
+  box-shadow: var(--rg-key-edge);
+  color: var(--fg);
+  font-weight: 500;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .settings .bar h2 {
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .settings section h3 {
+  font-size: var(--t-sm);
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--fg-2);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .settings select {
+  border-radius: var(--r);
+  background-color: var(--rg-key);
+  box-shadow: var(--rg-key-edge);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .settings input[type='checkbox'] {
+  border-radius: 5px;
+  background: var(--rg-well);
+  box-shadow: var(--rg-well-edge);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .settings input[type='checkbox']:checked {
+  background: var(--rg-paper);
+  box-shadow: inset 0 1px 0 #fff, 0 1px 0 rgb(0 0 0 / 0.6);
+}
+
+/* ── Focus and the rest ────────────────────────────────────────────── */
+
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] :focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .split i,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .app > .grip:not(.side) i {
+  background: transparent;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .split:hover i,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .app > .grip:not(.side):hover i {
+  background: var(--fg-3);
+}
+
+@media (max-width: 1200px) {
+  :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] {
+    --rg-num: 24px;
+  }
+}
+
+/* An empty deck's beat jump: flat like the keys beside it. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .transport .jumps:has(> button[aria-disabled='true']) {
+  background: none;
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .transport .jumps:has(> button[aria-disabled='true']) :is(span, small, button) {
+  color: var(--fg-4);
+}
+
+/* ── Upstream's new UI (merge of main) ─────────────────────────────── */
+
+/* The record. The disc is the screen's black with the deck's tint in it
+   (the canvas reads --record-mat), edged with the plates' hard rim and
+   their one shadow. The still centre is a small plate: flat, its top edge
+   lit, no blur and no glow, the times on it in the deck's figures. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] {
+  --record-mat: var(--rg-window);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .rec-cell .disc {
+  box-shadow: 0 0 0 1px var(--rg-rim), 0 16px 32px -16px rgb(0 0 0 / 0.8);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .rec-cell .hub {
+  background: var(--rg-plate);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: inset 0 1px 0 var(--rg-lit), 0 0 0 1px var(--rg-rim), var(--rg-lift);
+}
+/* Both lines in one weight and tracking, so whichever is the big one reads
+   as the deck's figure; the other is a step down in tone. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .rec-cell .hub .num {
+  font-weight: 600;
+  letter-spacing: -0.035em;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .rec-cell .hub .el {
+  color: var(--fg);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .rec-cell .hub .rm:not(.ending) {
+  color: var(--fg-3);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .rec-cell .hub .num:not(.ending) .t {
+  color: var(--fg-3);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .rec-cell .hub .rm.ending .t {
+  color: color-mix(in srgb, var(--kill) 62%, transparent);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .rec-cell .hub.empty .num {
+  font-weight: 400;
+  color: var(--fg-4);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .rec-cell .hub:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+/* The tonearm in the mixer's materials: its pivot a knurled dial with a
+   paper dot, the tube and counterweight flat, no chrome. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .tonearm .pivot {
+  background:
+    radial-gradient(circle closest-side, var(--rg-dial) 0 52%, var(--rg-dial-groove) 55% 62%, transparent 65%),
+    repeating-conic-gradient(var(--rg-ridge) 0 10deg, var(--rg-ridge-2) 10deg 20deg);
+  box-shadow: 0 0 0 1px var(--rg-rim), var(--rg-lift);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .tonearm .cap {
+  background: #eeeeec;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .tonearm svg > rect:nth-of-type(1) {
+  fill: #2a2a2f;
+  stroke: rgb(0 0 0 / 0.85);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .tonearm svg > rect:nth-of-type(2) {
+  fill: rgb(255 255 255 / 0.1);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .tonearm svg > rect:nth-of-type(3) {
+  fill: #c4c4c1;
+}
+
+/* The key under the tempo opens the key shift menu: a text control, a tone
+   on hover like the strip's, the shift in the deck's colour. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .bpm .key {
+  border-radius: 6px;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .bpm .key:hover,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .bpm .key[aria-expanded='true'] {
+  color: var(--fg);
+  background: var(--hover);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .bpm .key:hover .cam {
+  color: var(--fg-2);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .bpm .key .ks {
+  color: var(--deck);
+}
+
+/* The Grid tab's row: text controls like the rest of the strip. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .strip .grid button {
+  border-radius: var(--r);
+  color: var(--fg-2);
+  font-weight: 500;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .strip .grid button:hover:not([aria-disabled='true']) {
+  background: var(--hover);
+  color: var(--fg);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .strip .grid button:active:not([aria-disabled='true']) {
+  transform: none;
+  translate: 0 1px;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .strip .grid button[aria-disabled='true'] {
+  opacity: 1;
+  color: var(--fg-4);
+}
+
+/* Library toolbar: Fits and Filter are keys; on, latched down. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .bar .chip {
+  border-radius: var(--r);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .bar .chip.on,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .bar .chip.on:hover {
+  background: var(--rg-on);
+  box-shadow: var(--rg-on-edge);
+  color: var(--fg);
+  translate: none;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .bar .chip .chip-val {
+  color: var(--fg-2);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .bar .filter .clear,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .bar .cols {
+  border-radius: 6px;
+}
+/* The filter: a floating plate like a menu; BPM in wells, the Camelot keys
+   small keys, a picked one latched down. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .filter .panel {
+  border-radius: 12px;
+  background: var(--rg-float);
+  box-shadow: var(--rg-float-edge);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .filter .panel .ph {
+  font-weight: 500;
+  color: var(--fg-3);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .filter .panel .bpm input {
+  background: var(--rg-well);
+  box-shadow: var(--rg-well-edge);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .filter .panel .bpm input:focus-visible {
+  box-shadow: var(--rg-well-edge), 0 0 0 2px var(--focus-ring);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .filter .panel .kc {
+  border-radius: 6px;
+  background: var(--rg-key-fill);
+  box-shadow: var(--rg-key-edge);
+  color: var(--fg-2);
+  font-weight: 500;
+  transition: background-color 120ms ease-out, color 120ms ease-out, box-shadow 120ms ease-out, translate 60ms ease-out;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .filter .panel .kc:hover {
+  background: var(--rg-key-fill-hi);
+  box-shadow: var(--rg-key-edge-hi);
+  color: var(--fg);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .filter .panel .kc:active {
+  background: var(--rg-down);
+  box-shadow: var(--rg-down-edge);
+  translate: 0 1px;
+  transition-duration: 0ms;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .filter .panel .kc.on,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .filter .panel .kc.on:hover {
+  background: var(--rg-on);
+  box-shadow: var(--rg-on-edge);
+  color: var(--fg);
+  translate: none;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .row.head .cols {
+  color: var(--fg-3);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .row.head .cols:hover {
+  color: var(--fg);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .menu .tick {
+  color: var(--fg);
+}
+
+/* The sampler: a row in the library plate, not a plate of its own. A
+   loaded pad is a key, an empty one a well; playing, it's latched down. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .sampler {
+  background: none;
+  box-shadow: none;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .sampler .title {
+  font-weight: 500;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .sampler .slot {
+  background: var(--rg-well);
+  box-shadow: var(--rg-well-edge);
+  color: var(--fg-4);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .sampler .slot.set {
+  background: var(--rg-key-fill);
+  box-shadow: var(--rg-key-edge);
+  color: var(--fg-2);
+  font-weight: 500;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .sampler .slot.set:hover {
+  background: var(--rg-key-fill-hi);
+  box-shadow: var(--rg-key-edge-hi);
+  color: var(--fg);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .sampler .slot.set:active {
+  background: var(--rg-down);
+  box-shadow: var(--rg-down-edge);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .sampler .slot.playing,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .sampler .slot.playing:hover {
+  background: var(--rg-on);
+  box-shadow: var(--rg-on-edge);
+  color: var(--fg);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .sampler .slot .bar {
+  background: var(--rg-paper);
+}
+
+/* Settings: a popup like the dialogs. The popup is the room's tone, so the
+   page inside it stands up as a plate, the nav beside it on the room. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .backdrop:has(> .settings) {
+  background: rgb(0 0 0 / 0.6);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .backdrop > .settings {
+  border-radius: 20px;
+  background: var(--rg-room);
+  box-shadow: var(--rg-float-edge);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .backdrop > .settings .main {
+  background: var(--rg-plate);
+  box-shadow: var(--rg-plate-edge);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .backdrop > .settings .main .bar {
+  border-bottom-color: rgb(0 0 0 / 0.7);
+  box-shadow: 0 1px 0 rgb(255 255 255 / 0.04);
+}
+
+/* Controller setup: the dialog card; the drawing of the controller in the
+   room's layers, the control to use now in paper (amber is Cue's alone). */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .backdrop > .card[role='dialog'] .close {
+  border-radius: 6px;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .backdrop > .card[role='dialog'] .close:hover {
+  background: var(--hover);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .backdrop > .card[role='dialog'] .field input {
+  background: var(--rg-well);
+  box-shadow: var(--rg-well-edge);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .backdrop > .card[role='dialog'] .board .body {
+  fill: var(--rg-plate);
+  stroke: rgb(0 0 0 / 0.85);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .backdrop > .card[role='dialog'] .board .mixer {
+  fill: var(--rg-well);
+  stroke: rgb(255 255 255 / 0.055);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .backdrop > .card[role='dialog'] .board .ctl {
+  fill: var(--rg-key);
+  stroke: rgb(255 255 255 / 0.12);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .backdrop > .card[role='dialog'] .board .ctl .ghost {
+  fill: none;
+  stroke: rgb(255 255 255 / 0.06);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .backdrop > .card[role='dialog'] .board .ctl .cap {
+  fill: var(--rg-cap);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .backdrop > .card[role='dialog'] .board .ctl.done {
+  stroke: var(--fg-3);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .backdrop > .card[role='dialog'] .board .ctl.on {
+  fill: rgb(238 238 236 / 0.16);
+  stroke: var(--rg-paper);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .backdrop > .card[role='dialog'] .board .ctl.on .cap {
+  fill: var(--rg-paper);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .backdrop > .card[role='dialog'] .count {
+  font-weight: 500;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .backdrop > .card[role='dialog'] .ask {
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .backdrop > .card[role='dialog'] .note.got {
+  color: var(--fg);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .backdrop > .card[role='dialog'] .progress {
+  background: var(--rg-slot);
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.6), 0 1px 0 var(--rg-lip);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .backdrop > .card[role='dialog'] .progress div {
+  background: var(--rg-paper);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .backdrop > .card[role='dialog'] .share {
+  background: var(--rg-well);
+  box-shadow: var(--rg-well-edge);
+}
+
+
+/* ══ 110: the tint, the grooves, and what Pebble taught ══ */
+/* ── Tokens ──────────────────────────────────────────────────────────── */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] {
+  /* The mixer's edges and the lanes take the decks' hues at the plate's
+     and the window's lightness (see the deck blocks below). */
+  --tt-plate-a: oklch(0.2015 0.0095 250);
+  --tt-plate-b: oklch(0.2015 0.0055 72);
+  --tt-lane-a: oklch(0.6 0.09 250 / 0.035);
+  --tt-lane-b: oklch(0.6 0.08 72 / 0.03);
+  /* On: a key tinted with its role colour, its label in that colour. */
+  --tt-on-a: 17%;
+  /* Meters (Level colours): a clear green, a yellow-green for the top
+     6 dB (not Cue's amber), red over 0 dB. */
+  --tt-m-lo: #2c9a5f;
+  --tt-m: #5fd38e;
+  --tt-m-hot: #d6e36b;
+  --rg-num: 24px;
+}
+
+/* ── The tint ────────────────────────────────────────────────────────── */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region='deck0'] {
+  /* A: 100's ladder at its own lightness, chroma 0.045 per unit of lightness, hue 250. */
+  --rg-window: oklch(0.1075 0.0048 250);
+  --rg-plate: oklch(0.2015 0.0091 250);
+  --rg-well: oklch(0.1228 0.0055 250);
+  --rg-key: oklch(0.2870 0.0129 250);
+  --rg-key-2: oklch(0.2661 0.0120 250);
+  --rg-key-hi: oklch(0.3195 0.0144 250);
+  --rg-key-hi-2: oklch(0.2951 0.0133 250);
+  --rg-down: oklch(0.1785 0.0080 250);
+  --rg-on: oklch(0.1500 0.0068 250);
+  --rg-slot: oklch(0.0979 0.0044 250);
+  --rg-cap: oklch(0.3430 0.0154 250);
+  --rg-cap-2: oklch(0.3032 0.0136 250);
+  --rg-cap-hi: oklch(0.3775 0.0170 250);
+  --rg-cap-hi-2: oklch(0.3348 0.0151 250);
+  --rg-dial: oklch(0.3032 0.0136 250);
+  --rg-dial-hi: oklch(0.3352 0.0151 250);
+  --rg-ridge: oklch(0.3507 0.0158 250);
+  --rg-ridge-hi: oklch(0.3885 0.0175 250);
+  --rg-ridge-2: oklch(0.2282 0.0103 250);
+  --rg-dial-groove: oklch(0.1739 0.0078 250);
+  --tt-h: 250;
+  --tt-k: 0.045;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region='deck0'] {
+  /* The recipes, declared again here so they pick up the tinted steps. */
+  --rg-plate-edge: inset 0 1px 0 var(--rg-lit), 0 0 0 1px var(--rg-rim), 0 16px 32px -16px rgb(0 0 0 / 0.8);
+  --rg-well-edge: inset 0 1px 0 rgb(0 0 0 / 0.9), inset 0 0 0 1px rgb(0 0 0 / 0.55), 0 1px 0 var(--rg-lip);
+  --rg-cut: inset 0 1px 0 rgb(0 0 0 / 0.9), inset 0 0 0 1px rgb(0 0 0 / 0.5), inset 0 -1px 0 rgb(255 255 255 / 0.05);
+  --rg-key-fill: linear-gradient(180deg, var(--rg-key), var(--rg-key-2));
+  --rg-key-fill-hi: linear-gradient(180deg, var(--rg-key-hi), var(--rg-key-hi-2));
+  --rg-key-edge: inset 0 1px 0 var(--rg-hi), 0 1px 0 var(--rg-rim), var(--rg-lift);
+  --rg-key-edge-hi: inset 0 1px 0 var(--rg-hi-2), 0 1px 0 var(--rg-rim), var(--rg-lift);
+  --rg-down-edge: inset 0 1px 2px rgb(0 0 0 / 0.8), inset 0 0 0 1px rgb(0 0 0 / 0.45), 0 1px 0 var(--rg-lip);
+  --rg-on-edge: inset 0 1px 2px rgb(0 0 0 / 0.9), inset 0 0 0 1px rgb(0 0 0 / 0.55), 0 1px 0 rgb(255 255 255 / 0.07);
+  /* The record grooves: 1px rings 4px apart round a spindle far below. */
+  --rg-grooves: repeating-radial-gradient(circle at 50% 640px, var(--rg-groove-line) 0 1px, transparent 1.5px 4px);
+  --rg-cap-fill: linear-gradient(180deg, var(--rg-cap), var(--rg-cap-2));
+  --rg-cap-fill-hi: linear-gradient(180deg, var(--rg-cap-hi), var(--rg-cap-hi-2));
+  --rg-float-edge: inset 0 1px 0 rgb(255 255 255 / 0.09), 0 0 0 1px var(--rg-rim), 0 2px 6px rgb(0 0 0 / 0.35), 0 12px 32px -6px rgb(0 0 0 / 0.55);
+  --rg-tag-edge: inset 0 1px 0 var(--rg-lit), 0 0 0 1px var(--rg-rim), 0 2px 6px -1px rgb(0 0 0 / 0.5);
+  --glass-fill: var(--rg-plate);
+  --glass-edge: var(--rg-plate-edge);
+  --well: var(--rg-well);
+  --well-shadow: var(--rg-well-edge);
+  --flag-buttons-bg: var(--rg-key-fill);
+  --flag-buttons-ring: var(--rg-key-edge);
+  --flag-buttons-bg-hover: var(--rg-key-fill-hi);
+  --flag-buttons-ring-hover: var(--rg-key-edge-hi);
+  --flag-buttons-bg-on: var(--rg-down);
+  --flag-buttons-ring-on: var(--rg-down-edge);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region='deck1'] {
+  /* B: 100's ladder at its own lightness, chroma 0.025 per unit of lightness, hue 72. */
+  --rg-window: oklch(0.1075 0.0027 72);
+  --rg-plate: oklch(0.2015 0.0050 72);
+  --rg-well: oklch(0.1228 0.0031 72);
+  --rg-key: oklch(0.2870 0.0072 72);
+  --rg-key-2: oklch(0.2661 0.0067 72);
+  --rg-key-hi: oklch(0.3195 0.0080 72);
+  --rg-key-hi-2: oklch(0.2951 0.0074 72);
+  --rg-down: oklch(0.1785 0.0045 72);
+  --rg-on: oklch(0.1500 0.0038 72);
+  --rg-slot: oklch(0.0979 0.0024 72);
+  --rg-cap: oklch(0.3430 0.0086 72);
+  --rg-cap-2: oklch(0.3032 0.0076 72);
+  --rg-cap-hi: oklch(0.3775 0.0094 72);
+  --rg-cap-hi-2: oklch(0.3348 0.0084 72);
+  --rg-dial: oklch(0.3032 0.0076 72);
+  --rg-dial-hi: oklch(0.3352 0.0084 72);
+  --rg-ridge: oklch(0.3507 0.0088 72);
+  --rg-ridge-hi: oklch(0.3885 0.0097 72);
+  --rg-ridge-2: oklch(0.2282 0.0057 72);
+  --rg-dial-groove: oklch(0.1739 0.0043 72);
+  --tt-h: 72;
+  --tt-k: 0.025;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region='deck1'] {
+  /* The recipes, declared again here so they pick up the tinted steps. */
+  --rg-plate-edge: inset 0 1px 0 var(--rg-lit), 0 0 0 1px var(--rg-rim), 0 16px 32px -16px rgb(0 0 0 / 0.8);
+  --rg-well-edge: inset 0 1px 0 rgb(0 0 0 / 0.9), inset 0 0 0 1px rgb(0 0 0 / 0.55), 0 1px 0 var(--rg-lip);
+  --rg-cut: inset 0 1px 0 rgb(0 0 0 / 0.9), inset 0 0 0 1px rgb(0 0 0 / 0.5), inset 0 -1px 0 rgb(255 255 255 / 0.05);
+  --rg-key-fill: linear-gradient(180deg, var(--rg-key), var(--rg-key-2));
+  --rg-key-fill-hi: linear-gradient(180deg, var(--rg-key-hi), var(--rg-key-hi-2));
+  --rg-key-edge: inset 0 1px 0 var(--rg-hi), 0 1px 0 var(--rg-rim), var(--rg-lift);
+  --rg-key-edge-hi: inset 0 1px 0 var(--rg-hi-2), 0 1px 0 var(--rg-rim), var(--rg-lift);
+  --rg-down-edge: inset 0 1px 2px rgb(0 0 0 / 0.8), inset 0 0 0 1px rgb(0 0 0 / 0.45), 0 1px 0 var(--rg-lip);
+  --rg-on-edge: inset 0 1px 2px rgb(0 0 0 / 0.9), inset 0 0 0 1px rgb(0 0 0 / 0.55), 0 1px 0 rgb(255 255 255 / 0.07);
+  /* The record grooves: 1px rings 4px apart round a spindle far below. */
+  --rg-grooves: repeating-radial-gradient(circle at 50% 640px, var(--rg-groove-line) 0 1px, transparent 1.5px 4px);
+  --rg-cap-fill: linear-gradient(180deg, var(--rg-cap), var(--rg-cap-2));
+  --rg-cap-fill-hi: linear-gradient(180deg, var(--rg-cap-hi), var(--rg-cap-hi-2));
+  --rg-float-edge: inset 0 1px 0 rgb(255 255 255 / 0.09), 0 0 0 1px var(--rg-rim), 0 2px 6px rgb(0 0 0 / 0.35), 0 12px 32px -6px rgb(0 0 0 / 0.55);
+  --rg-tag-edge: inset 0 1px 0 var(--rg-lit), 0 0 0 1px var(--rg-rim), 0 2px 6px -1px rgb(0 0 0 / 0.5);
+  --glass-fill: var(--rg-plate);
+  --glass-edge: var(--rg-plate-edge);
+  --well: var(--rg-well);
+  --well-shadow: var(--rg-well-edge);
+  --flag-buttons-bg: var(--rg-key-fill);
+  --flag-buttons-ring: var(--rg-key-edge);
+  --flag-buttons-bg-hover: var(--rg-key-fill-hi);
+  --flag-buttons-ring-hover: var(--rg-key-edge-hi);
+  --flag-buttons-bg-on: var(--rg-down);
+  --flag-buttons-ring-on: var(--rg-down-edge);
+}
+
+/* The waveform window: each lane breathes its deck's hue over the
+   grooves, so the colour runs from lane to deck without a panel edge. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .waves > .lane:nth-child(1 of .lane) {
+  background: var(--tt-lane-a);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .waves > .lane:nth-child(2 of .lane) {
+  background: var(--tt-lane-b);
+}
+
+/* The mixer: neutral in the middle, the two hues only at its edges, under
+   their channels. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .decks > .mixer,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer.glass {
+  background: linear-gradient(90deg, var(--tt-plate-a), var(--rg-plate) 30% 70%, var(--tt-plate-b));
+}
+
+/* ── Grooves: every cavity that holds the music or a mode ──────────────
+   The waveform window, the overview and the tab switch have them from
+   100. The record now sits in a round bed cut into the plate (too narrow
+   for grooves of its own; the record carries its own). Wells smaller than
+   three grooves (fader slots, fields, sampler pads) stay plain: grooves
+   there read as noise. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .rec-cell .platter::before {
+  content: '';
+  position: absolute;
+  inset: -5px;
+  border-radius: 50%;
+  background: var(--rg-well);
+  box-shadow: var(--rg-well-edge);
+  pointer-events: none;
+}
+/* The vinyl takes its deck's hue a little deeper than the pale deck
+   colour, so it reads as tinted vinyl, not grey (Platter's canvas). */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region='deck0'] {
+  --record-tint: 91, 143, 207;
+  --record-high: 184, 211, 242;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region='deck1'] {
+  --record-tint: 185, 142, 88;
+  --record-high: 240, 216, 180;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .rec-cell .disc {
+  box-shadow: 0 0 0 1px var(--rg-rim), 0 4px 10px -2px rgb(0 0 0 / 0.6);
+}
+
+/* ── Numbers (Pebble's hierarchy) ────────────────────────────────────── */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .bpm .big {
+  line-height: 24px;
+  letter-spacing: -0.03em;
+}
+
+/* ── Keys: on is a colour, not a latch ─────────────────────────────────
+   A key that's on stays standing, its face tinted with its role colour
+   and a fine ring of it, its label in it. Held is still the 1px press. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .transport .btn.cue.lit,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .transport .btn.sync:is(.on, .pressed, [aria-pressed='true']),
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .pitch .lock.on,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer .hp.on,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .knob button.label.killed,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .knob button.label.killed:hover,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .fx .tog.live,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .btn.sm.samp:is(.on, .pressed, [aria-pressed='true']),
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .bar .chip.on,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .bar .chip.on:hover,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .filter .panel .kc.on,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .filter .panel .kc.on:hover,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .sampler .slot.playing,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .sampler .slot.playing:hover,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .settings .key.rec,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .settings .btn.rec {
+  background: linear-gradient(180deg, color-mix(in oklab, var(--on, var(--fg)) var(--tt-on-a), var(--rg-key)), color-mix(in oklab, var(--on, var(--fg)) var(--tt-on-a), var(--rg-key-2)));
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--on, var(--fg)) 34%, transparent), inset 0 1px 0 var(--rg-hi), 0 1px 0 var(--rg-rim), var(--rg-lift);
+  color: var(--on, var(--fg));
+  translate: none;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer button.rec.on,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer button.rec.on:hover {
+  --on: var(--kill);
+  background: linear-gradient(180deg, color-mix(in oklab, var(--kill) var(--tt-on-a), var(--rg-key)), color-mix(in oklab, var(--kill) var(--tt-on-a), var(--rg-key-2)));
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--kill) 34%, transparent), inset 0 1px 0 var(--rg-hi), 0 1px 0 var(--rg-rim), var(--rg-lift);
+  color: var(--fg);
+}
+
+/* Cue is amber again: its label at rest, its face when lit. Amber means
+   cue and nothing else (the Cue key, the headphone cue). */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .transport .btn.cue:not([aria-disabled='true']) {
+  color: var(--cue);
+}
+
+/* ── Hot cues: numbered discs, hollow until set, then filled ─────────── */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .perf .tc b {
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--ink);
+  background: var(--hc, var(--fg-2));
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.25), 0 1px 0 var(--rg-rim);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .perf .tc:not(.set) b {
+  background: none;
+  box-shadow: inset 0 0 0 1.25px var(--line-2);
+  color: var(--fg-3);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .perf .tc i {
+  display: none;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .perf .tc {
+  gap: 7px;
+}
+
+/* ── Dials: the amount is a filled ring round 100's knurled cap ────────
+   The printed dots go; a 4px ring outside the cap fills with the amount.
+   Channel dials fill from the centre (their default) in their deck's
+   colour; master, cue mix and the effect level from the start in white.
+   The ring is drawn on the dial's own ::before, in its turning frame, so
+   each layer starts at its screen angle minus --rot. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .knob svg {
+  display: none;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .knob .dial {
+  overflow: visible;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .knob .dial::before {
+  --tt-fill: var(--c, var(--fg));
+  --tt-track: rgb(255 255 255 / 0.16);
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  pointer-events: none;
+  background:
+    conic-gradient(from calc(-135deg - var(--rot)), var(--tt-fill) 0 calc(var(--rot) + 135deg), transparent 0),
+    conic-gradient(from calc(-135deg - var(--rot)), var(--tt-track) 0 270deg, transparent 0);
+  -webkit-mask: radial-gradient(closest-side, transparent calc(100% - 4.5px), #000 calc(100% - 4px));
+  mask: radial-gradient(closest-side, transparent calc(100% - 4.5px), #000 calc(100% - 4px));
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer .ch .knob .dial::before,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer .cen .knob:nth-child(2) .dial::before {
+  background:
+    conic-gradient(from calc(min(0deg, var(--rot)) - var(--rot)), var(--tt-fill) 0 max(var(--rot), -1 * var(--rot)), transparent 0),
+    conic-gradient(from calc(-2.5deg - var(--rot)), var(--fg-2) 0 5deg, transparent 0),
+    conic-gradient(from calc(-135deg - var(--rot)), var(--tt-track) 0 270deg, transparent 0);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer .ch:nth-child(1 of .ch) .knob .dial::before {
+  --tt-fill: var(--deck-a);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer .ch:nth-last-child(1 of .ch) .knob .dial::before {
+  --tt-fill: var(--deck-b);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .knob .dial.killed::before {
+  --tt-fill: var(--kill);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .knob .wrap:has(.dial:hover) .dial::before,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .knob .dial.dragging::before {
+  --tt-track: rgb(255 255 255 / 0.22);
+}
+
+/* ── Faders: a slot, a raised disc for a thumb ───────────────────────── */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .fader .cap,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .fader.vertical .cap {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--rg-cap-fill);
+  box-shadow: inset 0 1px 0 var(--rg-hi-2), 0 0 0 1px var(--rg-rim), 0 2px 5px rgb(0 0 0 / 0.55);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .fader .cap::after,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .fader.vertical .cap::after {
+  top: 50%;
+  left: 50%;
+  right: auto;
+  bottom: auto;
+  width: 6px;
+  height: 6px;
+  margin: -3px 0 0 -3px;
+  border-radius: 50%;
+  background: var(--rg-paper);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .fader .ghost {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .fader .line {
+  border-radius: 3px;
+}
+
+/* ── Meters: capsules with colour ────────────────────────────────────── */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer .fwrap,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer .fwrap.mirror,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer .cen .mpair {
+  --mc-lo: var(--tt-m-lo);
+  --mc: var(--tt-m);
+  --mc-hot: var(--tt-m-hot);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-meters='deck'] .mixer .fwrap {
+  --mc: #a9cbf2;
+  --mc-lo: #4f86c9;
+  --mc-hot: #eef5fd;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-meters='deck'] .mixer .fwrap.mirror {
+  --mc: #efd2a8;
+  --mc-lo: #b47f3e;
+  --mc-hot: #fdf6ec;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-meters='deck'] .mixer .cen .mpair {
+  --mc: #f4f4f1;
+  --mc-lo: #9a9aa0;
+  --mc-hot: #fff;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer .meter .bar,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer .meter .bar::after,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer .meter:not(.m60),
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer .meter:not(.m60)::after {
+  border-radius: 3px;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer .meter .bar::after {
+  background: linear-gradient(to top, var(--mc-lo) 0, var(--mc) 88%, var(--mc-hot) 88% 97.9%, var(--kill) 97.9%);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer .meter:not(.m60)::after {
+  background: linear-gradient(to top, var(--mc-lo) 0, var(--mc) 82%, var(--mc-hot) 82% 95%, var(--kill) 95%);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer .meter .clip {
+  border-radius: 2px;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer .ch:nth-child(n of .ch) .knob .dial.killed::before {
+  --tt-fill: var(--kill);
+}
+
+/* ── The record's centre: whichever time is big leads in white ───────── */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .rec-cell .hub .num,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .rec-cell .hub .rm:not(.ending) {
+  color: var(--fg-2);
+  font-weight: 500;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .rec-cell .hub:not([data-big='remaining']) .el,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .rec-cell .hub[data-big='remaining'] .rm:not(.ending) {
+  color: var(--fg);
+  font-weight: 600;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .rec-cell .hub .rm.ending {
+  color: var(--kill);
+}
+
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .rec-cell .hub.empty .num,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .rec-cell .hub.empty .num .t {
+  font-weight: 400;
+  color: var(--fg-4);
+}
+/* An hour-long track: both times a step down, so h:mm:ss fits the centre. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .rec-cell .hub.long .num {
+  font-size: 0.82em;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .rec-cell .hub.long:not([data-big='remaining']) .el,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .rec-cell .hub.long[data-big='remaining'] .rm {
+  font-size: 1.22em;
+  letter-spacing: -0.04em;
+}
+
+/* ── Controller setup: the drawn controller carries the same tints ───── */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .backdrop > .card[role='dialog'] .board {
+  border-radius: 17px;
+  background: linear-gradient(90deg, var(--tt-plate-a), var(--rg-plate) 38% 62%, var(--tt-plate-b));
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .backdrop > .card[role='dialog'] .board .body {
+  fill: transparent;
+}
+
+/* Meters: 6px capsules, wide enough for the colour to read. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer .meter {
+  width: 6px;
+}
+
+/* A small window: smaller discs, so a set cue's time still fits. */
+@media (max-width: 1200px) {
+  :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .perf .tc b {
+    width: 15px;
+    height: 15px;
+    font-size: 9.5px;
+  }
+  :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .perf .tc {
+    gap: 4px;
+    padding: 0 2px;
+  }
+}
+
+/* The hot cue chips over the scrolling lanes: the same numbered discs. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .waves .wave .chip {
+  border-radius: 50%;
+  font-weight: 700;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.25), 0 0 0 1px var(--rg-rim);
+}

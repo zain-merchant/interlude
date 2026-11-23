@@ -366,8 +366,8 @@
       {#if editingBpm}
         <input class="big num edit" value={d.bpm > 0 ? +d.bpm.toFixed(2) : ''} inputmode="decimal" aria-label="Track BPM" spellcheck="false"
           use:focusBpm onkeydown={bpmKey} onblur={(e) => finishBpm(e.currentTarget.value)} />
-      {:else if bpm > 0 && (flag('dir-graphic2') || flag('dir-sleeve') || flag('dir-room-graphic') || flag('dir-enamel') || flag('dir-alloy') || flag('dir-pebble') || flag('dir-liner') || flag('dir-field') || flag('dir-ground'))}
-        <!-- #97, #98, #100, #103, #104, #105, #106, #107, #108 (UI audit flags): the tempo's decimals in their own span, so they can step down like the time's tenths. -->
+      {:else if bpm > 0 && (flag('dir-graphic2') || flag('dir-sleeve') || flag('dir-room-graphic') || flag('dir-enamel') || flag('dir-alloy') || flag('dir-pebble') || flag('dir-liner') || flag('dir-field') || flag('dir-ground') || flag('dir-room-tint'))}
+        <!-- #97, #98, #100, #103, #104, #105, #106, #107, #108, #110 (UI audit flags): the tempo's decimals in their own span, so they can step down like the time's tenths. -->
         <div class="big num"><span class="sr">Tempo </span>{bpm.toFixed(2).slice(0, -3)}<span class="frac">{bpm.toFixed(2).slice(-3)}</span><span class="sr"> BPM</span></div>
       {:else}
         <div class="big num"><span class="sr">Tempo </span>{bpm > 0 ? bpm.toFixed(2) : '—'}<span class="sr"> BPM</span></div>

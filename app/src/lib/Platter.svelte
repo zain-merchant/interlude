@@ -229,10 +229,10 @@
     <div class="sheen" style:width="{vr * 2}px" style:height="{vr * 2}px" style:left="{size / 2 - vr}px" style:top="{size / 2 - vr}px"></div>
     <!-- The centre doesn't spin, so the times stay readable. -->
     {#if flag('time-remaining') || flag('deck-polish') || flag('visual-ending')}
-      <!-- #40, #54, #18 (UI audit flags): time-remaining's swap, deck-polish's tenths, visual-ending's last seconds; with all off, the centre is as before. -->
+      <!-- #40, #54, #18 (UI audit flags): time-remaining's swap, deck-polish's tenths, visual-ending's last seconds; with all off, the centre is as before. #110 (dir-room-tint) marks an hour-long track (class long) so its times can step down to fit. -->
       {@const el = clock(fmt(d.position))}
       {@const rm = clock(fmt(d.position - d.duration))}
-      <div class="hub" class:empty={!t} {...timesProps} use:tip={timesTip} style:width="{hubD}px" style:height="{hubD}px" style:left="{size / 2 - hubD / 2}px" style:top="{size / 2 - hubD / 2}px" style:font-size="{hubD / 6.6}px">
+      <div class="hub" class:empty={!t} class:long={flag('dir-room-tint') && d.duration >= 3600} {...timesProps} use:tip={timesTip} style:width="{hubD}px" style:height="{hubD}px" style:left="{size / 2 - hubD / 2}px" style:top="{size / 2 - hubD / 2}px" style:font-size="{hubD / 6.6}px">
         <div class="el num"><span class="sr">Elapsed </span>{el.whole}{#if el.tenth}<span class="t">{el.tenth}</span>{/if}</div>
         <div class="rm num" class:ending class:last={ending && d.duration - d.position < 10}><span class="sr">Remaining </span>{rm.whole}{#if rm.tenth}<span class="t">{rm.tenth}</span>{/if}</div>
       </div>
