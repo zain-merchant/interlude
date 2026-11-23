@@ -3658,6 +3658,19 @@
   background: var(--deck);
   box-shadow: 0 1px 0 rgb(255 255 255 / 0.09);
 }
+/* Nothing loaded: it still works, and stands back with the rest of its row. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-column='ring'] [data-region^='deck']:has(.transport .play[aria-disabled='true']) .pitch .lock:not(.on, :hover, :focus-visible) {
+  --kk-ink: var(--fg-4);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-column='ring'] [data-region^='deck']:has(.transport .play[aria-disabled='true']) .pitch .lock:not(:hover, :focus-visible)::before {
+  opacity: 0.5;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-column='ring'] [data-region^='deck']:has(.transport .play[aria-disabled='true']) .pitch .lock:not(.on, :hover, :focus-visible)::after {
+  opacity: 0.55;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-column='ring'] [data-region^='deck']:has(.transport .play[aria-disabled='true']) .pitch .lock.on:not(:hover, :focus-visible) {
+  --kk-ink-in: color-mix(in oklab, var(--deck) 45%, transparent);
+}
 /* 3: a ledger: etched rules across the column, between the three */
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-column='ledger'] [data-region^='deck'] .pitch .val::after,
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-column='ledger'] [data-region^='deck'] .pitch .nudge::before,
