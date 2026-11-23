@@ -21,7 +21,7 @@
   <!-- Geist, served from here (no other site to reach before the page can
        draw its text); the Latin file is fetched straight away. -->
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="style.css?v=20261120n">
+  <link rel="stylesheet" href="style.css?v=20261122a">
   <script src="tune.js?v=20261120m"></script>
   <script>
     // Live updates while working on the site locally (.claude/serve.py
@@ -2128,6 +2128,15 @@
         // The running is a Web Animation, which the compositor plays on its
         // own: the page does nothing frame to frame. Only the spring to a
         // stop and back is worked out here, as the animation's speed.
+        // Moving it by hand (a drag, a fling, or a sideways scroll on a
+        // trackpad or wheel): with reduced motion it's a plain scroller with
+        // its bar hidden; otherwise the running animation is moved along.
+        let shiftBy = (px) => { tk.scrollLeft += px; };
+        // (While a hand is on it, the running is held entirely, so it
+        // never drifts under the pointer or catches up after.)
+        let held = false, setHeld = (on) => { held = on; };
+        // (Where it is along one loop, and the loop's length, in px.)
+        let where = () => [tk.scrollLeft, Infinity];
         if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
           const SPEED = 40, K = 180, C = 2 * Math.sqrt(K);
           let anim = null, half = 0, rate = 1, acc = 0, want = 1, springing = false, seen = false, last = 0;
@@ -2150,7 +2159,7 @@
             if (done) { rate = want; acc = 0; }
             if (anim) {
               if (rate <= 0) anim.pause();
-              else { anim.updatePlaybackRate(rate); if (seen && anim.playState !== 'running') anim.play(); }
+              else { anim.updatePlaybackRate(rate); if (seen && !held && anim.playState !== 'running') anim.play(); }
             }
             if (!done) requestAnimationFrame(spring); else springing = false;
           };
@@ -2158,7 +2167,7 @@
           const io = new IntersectionObserver(([e]) => {
             seen = e.isIntersecting;
             if (!anim) make();
-            if (anim) { if (seen && rate > 0) anim.play(); else anim.pause(); }
+            if (anim) { if (seen && !held && rate > 0) anim.play(); else anim.pause(); }
           });
           io.observe(tk);
           tk.addEventListener('pointerenter', () => to(0));
@@ -2167,12 +2176,98 @@
           let resume = 0;
           tk.addEventListener('pointerleave', (e) => { clearTimeout(resume); if (e.pointerType === 'touch') resume = setTimeout(() => to(1), 1500); else to(1); });
           tk.addEventListener('pointerenter', () => clearTimeout(resume));
+          // (Its time is its place: SPEED px a second, wrapped to one loop.)
+          setHeld = (on) => {
+            held = on;
+            if (!anim) return;
+            if (on) anim.pause(); else if (seen && rate > 0) anim.play();
+          };
+          where = () => (anim ? [(((anim.currentTime || 0) / 1000) * SPEED) % half, half] : [0, Infinity]);
+          shiftBy = (px) => {
+            if (!anim) make();
+            if (!anim) return;
+            const d = anim.effect.getTiming().duration;
+            anim.currentTime = ((((anim.currentTime || 0) + (px / SPEED) * 1000) % d) + d) % d;
+          };
           // (Only a change of width moves it: a phone's toolbar coming and
           // going as the page scrolls changes only the height.)
           let lastW = innerWidth;
           addEventListener('resize', () => { if (innerWidth !== lastW) { lastW = innerWidth; make(); } });
           document.fonts?.ready.then(make);
         }
+        // A drag moves it with the pointer; a finger's flick carries on a
+        // little and slows (a mouse stops where it's let go). A finger's
+        // up-and-down still scrolls the page (touch-action: pan-y), and a
+        // drag doesn't also open the change it started on.
+        let down = null, dragged = false, v = 0, glide = 0, wheelHold = 0;
+        const coast = () => {
+          v *= 0.92;
+          if (Math.abs(v) < 0.02) { setHeld(false); return; }
+          shiftBy(v * 16); glide = requestAnimationFrame(coast);
+        };
+        tk.addEventListener('pointerdown', (e) => {
+          if (e.button !== 0) return;
+          cancelAnimationFrame(glide); clearTimeout(wheelHold);
+          down = { x: e.clientX, last: e.clientX, t: e.timeStamp, id: e.pointerId, touch: e.pointerType === 'touch' };
+          dragged = false; v = 0;
+          setHeld(true);
+        });
+        tk.addEventListener('pointermove', (e) => {
+          if (!down || e.pointerId !== down.id) return;
+          if (!dragged) {
+            if (Math.abs(e.clientX - down.x) < 5) return;
+            dragged = true; tk.dataset.dragging = ''; try { tk.setPointerCapture(e.pointerId); } catch {}
+            down.last = e.clientX;
+          }
+          const dx = e.clientX - down.last, dt = Math.max(1, e.timeStamp - down.t);
+          shiftBy(-dx);
+          v = Math.max(-1.5, Math.min(1.5, 0.7 * (-dx / dt) + 0.3 * v));
+          down.last = e.clientX; down.t = e.timeStamp;
+        });
+        const up = (e) => {
+          if (!down || e.pointerId !== down.id) return;
+          const fling = dragged && down.touch && e.type === 'pointerup' && e.timeStamp - down.t < 60;
+          down = null; delete tk.dataset.dragging;
+          if (fling) glide = requestAnimationFrame(coast); else setHeld(false);
+        };
+        tk.addEventListener('pointerup', up);
+        tk.addEventListener('pointercancel', up);
+        tk.addEventListener('click', (e) => { if (dragged) { e.preventDefault(); e.stopPropagation(); dragged = false; } }, true);
+        tk.addEventListener('dragstart', (e) => e.preventDefault());
+        // The heading takes it back to the newest change: a short glide the
+        // nearer way round the loop (at once with reduced motion).
+        const h4 = log.querySelector('h4');
+        const toFront = () => {
+          cancelAnimationFrame(glide);
+          const [c, h] = where();
+          const dist = c > h / 2 ? h - c : -c;
+          if (!dist) return;
+          if (matchMedia('(prefers-reduced-motion: reduce)').matches) { shiftBy(dist); return; }
+          setHeld(true);
+          const t0 = performance.now(), T = Math.min(700, 250 + Math.abs(dist) * 0.4);
+          let done = 0;
+          const step = (now) => {
+            const k = Math.min(1, (now - t0) / T), e = 1 - Math.pow(1 - k, 3);
+            shiftBy(dist * e - done); done = dist * e;
+            if (k < 1) glide = requestAnimationFrame(step);
+            else setHeld(false);
+          };
+          glide = requestAnimationFrame(step);
+        };
+        if (h4) {
+          h4.setAttribute('role', 'button'); h4.tabIndex = 0; h4.dataset.front = '';
+          h4.onclick = toFront;
+          h4.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toFront(); } };
+        }
+        // Sideways scrolling only (or Shift with a wheel): up and down is the
+        // page's. Held while it's being scrolled, let go a moment after.
+        tk.addEventListener('wheel', (e) => {
+          const dx = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.shiftKey ? e.deltaY : 0;
+          if (!dx) return;
+          e.preventDefault(); cancelAnimationFrame(glide);
+          setHeld(true); clearTimeout(wheelHold); wheelHold = setTimeout(() => setHeld(false), 200);
+          shiftBy(e.deltaMode === 1 ? dx * 16 : dx);
+        }, { passive: false });
       })
       // (Nothing from GitHub and nothing kept: the card links to the changes
       // on GitHub in the ticker's place, rather than a label over nothing.)
