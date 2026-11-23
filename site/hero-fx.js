@@ -432,8 +432,17 @@ void glintColour(float arc, float du, float a, float r, float inSong, inout vec3
   gv = mix(gv, glintProf3(x * x + du * du) * inSong, uChroma.y);
 #elif PAL == 3
   // The footer's lamp: a white core with a cool and a warm side.
-  float side = clamp(arc * 1.2 * sp, -1.0, 1.0);
-  tv = mix(mix(BLUE, ORANGE, 0.5 + 0.5 * side), vec3(1.0), exp(-arc * arc * 2.5 * sp * sp) * 0.45);
+  // (Eased from one side to the other with no corner at either end: a
+  // clamped straight ramp put a crease in the soft light where it met
+  // each side, which showed as a hard seam between the blue and the
+  // orange.)
+  float side = smoothstep(-1.25, 1.25, arc * 1.2 * sp);
+  // Where one glint's run ends and the next one's begins (half a glint's
+  // turn either way), one's orange tail meets the other's blue head: both
+  // ease to the colour between, so the light carries on with no seam.
+  float halfTurn = PI / uGlintShape.z * r / (220.0 * uGlintShape.x);
+  side = mix(side, 0.5, smoothstep(0.55 * halfTurn, halfTurn, abs(arc)));
+  tv = mix(mix(BLUE, ORANGE, side), vec3(1.0), exp(-arc * arc * 2.5 * sp * sp) * 0.45);
 #elif PAL == 4
   // A diffraction grating's rainbow, as on a CD: it runs along the
   // glint and shifts as the glint turns through the light.
@@ -450,7 +459,12 @@ void glintColour(float arc, float du, float a, float r, float inSong, inout vec3
   vec3 xu = du * sc;
   gv = mix(gv, glintProf3(xa * xa + xu * xu) * inSong * vec3(0.95, 1.0, 1.15), uChroma.y);
 #endif
-  tv /= max(maxc(tv), 1e-3);
+  // (To full brightness by a smooth maximum of the three: the plain max
+  // turns a corner wherever a different channel becomes the largest, and
+  // that corner showed as a seam in the soft light.)
+  float tm = maxc(tv);
+  float sm = tm + 0.04 * log(dot(exp((tv - tm) / 0.04), vec3(1.0)));
+  tv /= max(sm, 1e-3);
 }
 // The glints' light at a place in one (along it, across it), in their
 // colour: what the pointer's lights are painted with too, so they always
@@ -2548,20 +2562,31 @@ function dropNeedle(p) {
   Object.assign(quiet, { x: p.x, y: p.y, on: true });
   wake();
 }
+// (A finger's tap, and only a tap: not one that moved on the way, not one
+// while the page scrolled under it, and not the touch that stops a page
+// still gliding from a flick, which comes down and up again in place.)
 let tap = null;
+let scrolledAt = -1e9;
+addEventListener('scroll', () => { scrolledAt = performance.now(); if (tap) tap.scrolled = true; }, { passive: true });
 addEventListener('pointerdown', (e) => {
   if (touch !== 'needle' || !geo || e.target.closest(NEEDLE_SKIP)) return;
   if (e.pointerType !== 'touch') return dropNeedle(local(e));
-  tap = { id: e.pointerId, x: e.clientX, y: e.clientY, t: performance.now(), p: local(e) };
+  tap = { id: e.pointerId, x: e.clientX, y: e.clientY, t: performance.now(), p: local(e), scrolled: performance.now() - scrolledAt < 250 };
+}, { passive: true });
+addEventListener('touchmove', (e) => {
+  const t = tap && e.touches[0];
+  if (t && Math.hypot(t.clientX - tap.x, t.clientY - tap.y) >= 10) tap.scrolled = true;
 }, { passive: true });
 addEventListener('pointerup', (e) => {
   if (!tap || e.pointerId !== tap.id) return;
-  const ok = performance.now() - tap.t < 500 && Math.hypot(e.clientX - tap.x, e.clientY - tap.y) < 10;
+  const ok = !tap.scrolled && performance.now() - tap.t < 500 && Math.hypot(e.clientX - tap.x, e.clientY - tap.y) < 10;
   const p = tap.p;
   tap = null;
   if (ok && geo) dropNeedle(p);
 }, { passive: true });
 addEventListener('pointercancel', () => (tap = null), { passive: true });
+// (For checking: whether the needle is down.)
+export const needleDown = () => needle.on;
 
 // A finger: the light goes where it is, also while it scrolls the page
 // (touchmove keeps coming during a scroll, pointermove doesn't; passive, so
