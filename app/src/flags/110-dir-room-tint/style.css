@@ -1237,28 +1237,28 @@
   height: 22px;
   border-radius: calc(var(--r) - 2px);
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:not([data-flag-dir-room-tint-stepper='one']) .waves .zoom {
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:not([data-flag-dir-room-tint-stepper='one']) .waves .zoom {
   padding: 3px;
   gap: 1px;
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:not([data-flag-dir-room-tint-stepper='one']) .waves .zoom button {
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:not([data-flag-dir-room-tint-stepper='one']) .waves .zoom button {
   background: var(--tt-sheen), var(--rg-key);
   box-shadow: inset 0 1px 0 0 rgb(255 255 255 / 0.095), 0 1px 0 0 var(--tt-rim), 0 2px 5px -1px var(--tt-lift-c) !important;
   width: 26px;
   border-radius: calc(var(--r) - 3px);
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:not([data-flag-dir-room-tint-stepper='one']) .waves .zoom button:is(:hover, [data-show-hover]):not(:disabled) {
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:not([data-flag-dir-room-tint-stepper='one']) .waves .zoom button:is(:hover, [data-show-hover]):not(:disabled) {
   background: var(--tt-sheen), var(--rg-key-hi);
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:not([data-flag-dir-room-tint-stepper='one']) .waves .zoom button:is(:active, [data-show-active]):not(:disabled) {
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:not([data-flag-dir-room-tint-stepper='one']) .waves .zoom button:is(:active, [data-show-active]):not(:disabled) {
   background: var(--rg-down);
   box-shadow: inset 0 1px 0 0 var(--tt-c1), 0 1px 0 0 var(--tt-c3) !important;
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:not([data-flag-dir-room-tint-stepper='one']) .waves .zoom button:disabled {
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:not([data-flag-dir-room-tint-stepper='one']) .waves .zoom button:disabled {
   background: rgb(255 255 255 / 0.022);
   box-shadow: none !important;
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:not([data-flag-dir-room-tint-stepper='one']) .waves .zoom button::after {
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:not([data-flag-dir-room-tint-stepper='one']) .waves .zoom button::after {
   content: none;
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .waves .zoom button::after {
@@ -2798,11 +2798,9 @@
 }
 
 /* ── The library and its sidebar ───────────────────────────────────────
-   Five ways to set the sidebar in the library's panel (a setting), from a
-   line between them to two panels. In all of them it slides under the
-   panel's left edge to close, the list keeps its place, and the list's
-   content stands 8px in from whatever is round it on the left, the top and
-   the right (its row plates; the text is 24 and 12 from the same edges). */
+   The sidebar on a ground of its own in the library's panel, three ways (a
+   setting). In all of them it slides under the panel's left edge to close and
+   the list keeps its place. */
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library {
   position: relative;
   overflow: hidden;
@@ -2829,7 +2827,6 @@
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .sidetoggle {
   top: 18px;
-  left: max(10px, calc(var(--library-sidebar, 200px) - 44px));
   transition: left 200ms cubic-bezier(0.2, 0.8, 0.2, 1), color 120ms ease-out, background-color 120ms ease-out;
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .app:has(.grip.side.dragging) section.library .sidetoggle {
@@ -2850,91 +2847,61 @@
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-input='keys'] .below > .grip.side:focus-visible i {
   background: var(--fg-3);
 }
-/* line: a full etched rule between them, meeting the headings' rule square. */
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-side='line'] section.library .main::before {
+/* The sidebar's ground is drawn behind it, on the panel, so the fade at the
+   end of a long list takes the words and not the ground. It slides with the
+   sidebar. Three ways, all on the same steps: every plate stands 8px in from
+   whatever is round it, every word and control 16. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library::before {
   content: '';
   position: absolute;
-  z-index: 1;
-  left: -1px;
-  top: 0;
-  bottom: 0;
-  width: 2px;
-  background: var(--tt-rule-v);
+  z-index: 0;
+  top: 8px;
+  bottom: 8px;
+  left: calc(var(--library-sidebar, 200px) - var(--side-w, 200px) + 8px);
+  width: calc(var(--side-w, 200px) - 8px);
+  border-radius: calc(var(--r-panel) - 8px);
+  background: rgb(0 0 0 / 0.28);
+  box-shadow: var(--tt-cut);
   pointer-events: none;
+  transition: left 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-side='line'] section.library.shut .main::before {
-  opacity: 0;
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .app:has(.grip.side.dragging) section.library::before {
+  transition: none;
 }
-/* ground: the sidebar on darker ground, to the panel's own edges. */
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-side='ground'] section.library nav {
-  background: rgb(0 0 0 / 0.3);
-  box-shadow: inset -1px 0 0 rgb(0 0 0 / 0.6), 1px 0 0 var(--tt-rule-l);
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library nav {
+  z-index: 1;
+  background: none;
+  border-right: 0;
 }
-/* dock: the sidebar a cut of its own, 8px inside the panel, concentric. */
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-side='dock'] section.library {
-  --side-gap: 8px;
-}
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-side='dock'] section.library nav {
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:not([data-flag-dir-room-tint-side='ground']) section.library nav {
   width: calc(var(--side-w, 200px) - 8px);
   margin: 8px 0 8px 8px;
   padding: 8px;
   border-radius: calc(var(--r-panel) - 8px);
-  background: rgb(0 0 0 / 0.28);
-  box-shadow: var(--tt-cut);
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-side='dock'] section.library nav {
-  padding-top: calc(16px - 8px);
+/* a darker plate */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-side='dark'] section.library::before {
+  background: rgb(0 0 0 / 0.5);
 }
-/* list: the list a cut plate, 8px inside the panel; the sidebar on the panel. */
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:not([data-flag-dir-room-tint-side='line'], [data-flag-dir-room-tint-side='ground'], [data-flag-dir-room-tint-side='dock'], [data-flag-dir-room-tint-side='split']) section.library .main {
-  margin: 8px 8px 8px 0;
-  padding: 8px 8px 0;
-  border-radius: calc(var(--r-panel) - 8px);
-  background: rgb(0 0 0 / 0.26);
-  box-shadow: var(--tt-cut);
-  overflow: hidden;
-  transition: margin 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
+/* darker ground, to the panel's own edges */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-side='ground'] section.library::before {
+  top: 0;
+  bottom: 0;
+  left: calc(var(--library-sidebar, 200px) - var(--side-w, 200px));
+  width: var(--side-w, 200px);
+  border-radius: 0;
+  background: rgb(0 0 0 / 0.3);
+  box-shadow: inset -1px 0 0 rgb(0 0 0 / 0.6), 1px 0 0 var(--tt-rule-l);
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:not([data-flag-dir-room-tint-side='line'], [data-flag-dir-room-tint-side='ground'], [data-flag-dir-room-tint-side='dock'], [data-flag-dir-room-tint-side='split']) section.library.shut .main {
-  margin-left: 8px;
-}
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:not([data-flag-dir-room-tint-side='line'], [data-flag-dir-room-tint-side='ground'], [data-flag-dir-room-tint-side='dock'], [data-flag-dir-room-tint-side='split']) section.library :is(.row.head, .scroll) {
-  margin-inline: 0;
-}
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:not([data-flag-dir-room-tint-side='line'], [data-flag-dir-room-tint-side='ground'], [data-flag-dir-room-tint-side='dock'], [data-flag-dir-room-tint-side='split']) section.library .main > .bar {
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-side='ground'] section.library nav {
   padding-inline: 8px;
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:not([data-flag-dir-room-tint-side='line'], [data-flag-dir-room-tint-side='ground'], [data-flag-dir-room-tint-side='dock'], [data-flag-dir-room-tint-side='split']) section.library.shut .main > .bar {
-  padding-left: 32px;
-}
-/* split: two panels, the app's gap between them, like the decks above. */
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-side='split'] section.library {
-  background: none;
-  box-shadow: none;
-  overflow: visible;
-}
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-side='split'] section.library nav {
-  width: calc(var(--side-w, 200px) - 12px);
-  justify-self: start;
-  border-radius: var(--r-panel);
-  background: var(--rg-plate);
-  box-shadow: var(--rg-plate-edge);
-  transition: translate 200ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity 140ms ease-out;
-}
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-side='split'] section.library.shut nav {
-  translate: calc(-100% - 16px) 0;
-  opacity: 0;
-}
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-side='split'] section.library .main {
-  border-radius: var(--r-panel);
-  background: var(--rg-plate);
-  box-shadow: var(--rg-plate-edge);
-}
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-side='split'] section.library .sidetoggle {
-  left: max(10px, calc(var(--library-sidebar, 200px) - 12px - 44px));
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .sidetoggle {
+  left: max(10px, calc(var(--library-sidebar, 200px) - 36px));
 }
 @media (prefers-reduced-motion: reduce) {
   :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library,
+  :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library::before,
   :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .sidetoggle,
   :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .main,
   :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library nav,
@@ -2976,7 +2943,7 @@
   background: linear-gradient(180deg, var(--tt-rule-d) 50%, var(--tt-rule-l) 50%);
   pointer-events: none;
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:is([data-flag-dir-room-tint-side='line'], [data-flag-dir-room-tint-side='ground']) section.library .row.head::after {
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-side='ground'] section.library .row.head::after {
   left: -8px;
   right: -8px;
 }

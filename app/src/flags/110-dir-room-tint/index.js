@@ -85,13 +85,11 @@ export default {
     side: {
       type: 'choice',
       label: "The library's sidebar",
-      default: 'list',
+      default: 'dark',
       options: [
-        ['list', 'The list is a plate', 'The track list is a cut plate inside the panel; the sidebar stands on the panel.'],
-        ['line', 'A full rule', 'One panel, an etched rule from its top to its foot.'],
-        ['ground', 'Darker ground', "The sidebar on darker ground, to the panel's edges."],
-        ['dock', 'The sidebar is a plate', 'The sidebar is a cut plate inside the panel.'],
-        ['split', 'Two panels', 'The sidebar is a panel of its own, like the decks.'],
+        ['dock', 'A plate', 'The sidebar is a plate cut into the panel, 8px inside it.'],
+        ['ground', 'Darker ground', "The sidebar's end of the panel is darker, to the panel's edges."],
+        ['dark', 'A darker plate', 'The plate, with darker ground.'],
       ],
     },
     lanes: { type: 'range', label: 'Grooves behind the waveforms', min: 0, max: 100, step: 1, default: 8, unit: '' },
