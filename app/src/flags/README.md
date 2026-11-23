@@ -123,8 +123,9 @@ On by default (84):
 - #109 Popovers stop repeating values already on screen (`quiet-readouts`)
 - #115 Pinch to zoom the waveforms (`trackpad-zoom`)
 
-#112 (`shell-status`) is a proposal, but on by default while the owner
-judges it, in both places at once; it goes off again once that's decided.
+#112 (`shell-status`) and #116 (`settings-finish`) are proposals, but on by
+default while the owner judges them; they go off again once that's decided.
+#112 is in both places at once; #116 only does anything on direction #110.
 
 Off by default, and why:
 

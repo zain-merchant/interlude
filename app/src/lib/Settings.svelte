@@ -12,6 +12,10 @@
   import { backend } from './backend.js';
   import { flag } from '../flags/registry.svelte.js';
   import { pushEdit } from './undo.svelte.js';
+  import Keys from '../flags/116-settings-finish/Keys.svelte'; // #116 (UI audit flag)
+  import Search from '../flags/116-settings-finish/Search.svelte'; // #116 (UI audit flag)
+  import Results from '../flags/116-settings-finish/Results.svelte'; // #116 (UI audit flag)
+  import { search } from '../flags/116-settings-finish/find.js'; // #116 (UI audit flag)
 
   /**
    * Settings open as a popup over the whole window. Performance keys keep
@@ -120,6 +124,14 @@
   // While recording, every key press is captured here first, so it can't
   // also play a deck.
   function capture(e) {
+    // #116 (UI audit flag): settings-finish: the library's search shortcut finds settings while they're open.
+    if (!recording && finish && sameKey(binding('library.search'), bindingFrom(e, mac))) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      findInput?.focus();
+      findInput?.select();
+      return;
+    }
     if (!recording) return;
     const id = recording;
     e.preventDefault();
@@ -192,6 +204,14 @@
 
   function panelKey(e) {
     if (e.key === 'Escape' && !recording) {
+      // #116 (UI audit flag): settings-finish: Esc leaves a search first.
+      if (query) {
+        query = '';
+        e.preventDefault();
+        e.stopPropagation();
+        findInput?.focus();
+        return;
+      }
       e.preventDefault();
       e.stopPropagation();
       if (pending) pending = null;
@@ -501,6 +521,67 @@
     refreshControllers();
   }
 
+  // #116 (UI audit flag): settings-finish: search over every page.
+  const finish = $derived(flag('settings-finish') && flag('dir-room-tint'));
+  let query = $state('');
+  let found = $state(0);
+  let findInput = $state(/** @type {HTMLInputElement | null} */ (null));
+  const finding = $derived(finish && !!query.trim());
+  const entries = $derived.by(() => {
+    if (!finding) return [];
+    /** @type {import('../flags/116-settings-finish/find.js').Entry[]} */
+    const out = [];
+    const add = (page, label, words = '', find = label) => out.push({ id: `${page}/${label}`, page, label, words, find });
+    add('Decks', 'Hot cues start a paused deck', 'pad play');
+    add('Decks', 'Sync when a deck starts', 'auto tempo beat match');
+    add('Decks', 'Quantize: snap to the beat', 'grid');
+    for (const i of [0, 1]) add('Decks', `Slip on the ${deckName(i).toLowerCase()}`, 'scratch loop');
+    add('Audio', 'Output', 'sound card speakers headphones device automatic');
+    add('Display', 'Interface size', 'zoom scale text bigger smaller');
+    add('Library', 'Auto gain', 'loudness volume trim');
+    add('Library', 'Import from another app', 'rekordbox serato cue points playlists beatgrids');
+    add('Stems', 'Separation model', 'download htdemucs vocals drums bass melody');
+    add('Stems', 'Make stems when a track loads', 'automatic vocals');
+    add('Stems', 'Stems cache', 'disk size clear keep');
+    add('Controllers', 'Connected', 'midi hid mapping plugged');
+    add('Controllers', 'Controller not working?', 'set up step by step wizard');
+    add('Controllers', 'MIDI learn', 'teach map control');
+    for (const c of ctl?.connected ?? []) out.push({ id: `c/${c.port}`, page: 'Controllers', label: c.port, words: c.mapping, find: 'Connected' });
+    for (const g of groups) for (const id of g.ids) out.push({ id, page: 'Keyboard', label: nameOf(id), group: /^deck\.\d\./.test(id) ? g.name : '', key: binding(id)?.label ?? '', words: 'shortcut key', at: id });
+    for (const g of ACTIONS) for (const a of g.list) {
+      const b = bindings.find((x) => x.group === a.group && x.key === a.key);
+      out.push({ id: `m/${a.id}`, page: 'Controllers', label: a.label.slice(g.name.length + 2), group: `${g.name}, ${b ? b.description : 'mapping'}`, words: 'midi learn controller', at: a.id, find: 'MIDI learn' });
+    }
+    return out;
+  });
+  const results = $derived(finding ? search(entries, query) : []);
+  $effect(() => {
+    if (finding && !ctl) refreshControllers();
+  });
+  async function goTo(i = found) {
+    const r = results[i];
+    if (!r) return;
+    query = '';
+    page = /** @type {any} */ (PAGES.find(([, label]) => label === r.page)?.[0] ?? page);
+    if (r.page === 'Controllers' && r.at) action = r.at;
+    await tick();
+    // The stems and controllers pages fill in when their answer comes.
+    for (let n = 0; n < 20; n++) {
+      const key = r.page === 'Keyboard' ? root?.querySelector(`[data-key="${r.at}"]`) : null;
+      const at = key ?? [...(root?.querySelectorAll('.scroll :is(label, h3)') ?? [])].find((e) => e.textContent.trim().startsWith(r.find ?? '~'));
+      if (at) {
+        const row = at.closest('.row') ?? at.closest('label') ?? at;
+        row.scrollIntoView({ block: 'center' });
+        row.classList.add('sfound');
+        setTimeout(() => row.classList.remove('sfound'), 1400);
+        const to = key ?? (r.page === 'Controllers' && r.at ? at.closest('section')?.querySelector('select[aria-label="Action"]') : (at.matches('label') ? at : at.closest('section'))?.querySelector('input, select, button:not(:disabled)'));
+        /** @type {HTMLElement | null | undefined} */ (to)?.focus({ preventScroll: true });
+        return;
+      }
+      await new Promise((done) => setTimeout(done, 50));
+    }
+  }
+
   const mb = (b) => `${Math.round(b / (1024 * 1024))} MB`;
   const gb = (b) => (b >= 1024 ** 3 ? `${(b / 1024 ** 3).toFixed(1)} GB` : mb(b));
 </script>
@@ -510,11 +591,12 @@
 <div class="settings" role="dialog" aria-modal="true" aria-label="Settings" bind:this={root} onkeydown={panelKey} tabindex="-1">
   <!-- svelte-ignore a11y_no_noninteractive_element_interactions (the arrow keys move between pages: #24 focus-after-keys) -->
   <nav aria-label="Settings pages" onkeydown={navKey}>
+    {#if finish}<Search bind:query bind:active={found} bind:input={findInput} count={results.length} onpick={() => goTo()} />{/if}<!-- #116 (UI audit flag): settings-finish -->
     <div class="h">Settings</div>
     {#each PAGES as [id, label] (id)}
-      <button class="item" class:on={page === id} aria-current={page === id ? 'page' : undefined}
+      <button class="item" class:on={page === id && !finding} aria-current={page === id ? 'page' : undefined}
         data-page={roving ? id : undefined} tabindex={roving ? (page === id ? 0 : -1) : undefined}
-        onclick={(e) => goPage(id, e)}>{label}</button>
+        onclick={(e) => { query = ''; goPage(id, e); }}>{label}</button>
     {/each}
     <div class="foot">
       {#if onupdates}<button class="item" onclick={onupdates}>Check for updates</button>{/if}
@@ -524,8 +606,10 @@
 
   <div class="main">
     <div class="bar">
-      <h2>{{ keyboard: 'Keyboard', decks: 'Decks', audio: 'Audio', library: 'Library', stems: 'Stems', controllers: 'Controllers' }[page] ?? 'Display'}</h2>
-      {#if page === 'keyboard'}
+      <h2>{finding ? 'Search' : { keyboard: 'Keyboard', decks: 'Decks', audio: 'Audio', library: 'Library', stems: 'Stems', controllers: 'Controllers' }[page] ?? 'Display'}</h2>
+      {#if finding}
+        <p>{results.length ? `${results.length} found` : ''}</p>
+      {:else if page === 'keyboard'}
         <p>Click a shortcut, then press the new key. Backspace removes it, Esc cancels.</p>
         {#if !flag('settings-undo')}
           <button class="btn sm" onclick={resetAll} disabled={!Object.keys(keymap.overrides).length}>Reset all</button>
@@ -538,7 +622,9 @@
 
     <div class="scroll" bind:this={scrollEl} onscroll={() => flag('settings-type') && scrollEdges()}
       data-scrolled={flag('settings-type') && scrollUp ? '' : undefined} data-more={flag('settings-type') && scrollMore ? '' : undefined}>
-      {#if page === 'keyboard'}
+      {#if finding}
+        <Results {results} {query} bind:active={found} onpick={goTo} onclear={() => { query = ''; findInput?.focus(); }} /><!-- #116 (UI audit flag): settings-finish -->
+      {:else if page === 'keyboard'}
         <div class="cols">
           {#each groups as g}
             <section aria-labelledby="kg-{g.name}">
@@ -554,7 +640,7 @@
                   <!-- #32 (UI audit flag): settings-type: an unassigned key says "Set" rather than a dash that looks like the minus key. -->
                   <button class="key num" class:rec={recording === id} class:none={!b} data-key={id}
                     aria-label={recording === id ? `Press a key for ${fullName(id)}` : `${fullName(id)}, ${b ? b.label : 'no shortcut'}. Change`}
-                    onclick={() => record(id)}>{recording === id ? 'Press a key…' : (b?.label ?? (flag('settings-type') ? 'Set' : '—'))}</button>
+                    onclick={() => record(id)}>{#if finish && b && recording !== id}<Keys label={b.label} />{:else}{recording === id ? 'Press a key…' : (b?.label ?? (flag('settings-type') ? 'Set' : '—'))}{/if}</button>
                 </div>
                 {#if note?.id === id}
                   <div class="inline" role="status">{note.text}</div>
@@ -584,7 +670,7 @@
           {:else if stems.model.state === 'ready'}
             <!-- #33 (UI audit flag): stems-model: says it's installed, and its size. #34 (UI audit flag): settings-copy: one sentence. -->
             {#if flag('stems-model')}<p class="installed">Installed, {mb(stems.modelBytes)}</p>{/if}
-            <p>{flag('settings-copy') ? 'Each track you load is split into vocals, melody, bass and drums on this computer, starting at the play head.' : "Ready. Each track you load is split into vocals, melody, bass and drums on this computer, starting at the play head, so the part you're about to play is ready first."}</p>
+            <p>{flag('settings-copy') ? (finish ? 'Makes vocals, melody, bass and drums from each track on this computer.' : 'Each track you load is split into vocals, melody, bass and drums on this computer, starting at the play head.') : "Ready. Each track you load is split into vocals, melody, bass and drums on this computer, starting at the play head, so the part you're about to play is ready first."}</p>
           {:else if stems.model.state === 'downloading'}
             <p>Downloading, {mb(stems.model.done)} of {mb(stems.model.total)}…</p>
             <div class="bar-track" role="progressbar" aria-label="Model download" aria-valuemin="0" aria-valuemax="100"
@@ -602,14 +688,14 @@
         </section>
         {#if stems}
           <section class="display">
-            <h3>Splitting</h3>
+            {#if !finish}<h3>Splitting</h3>{/if}
             {#if flag('settings-checks') || flag('stems-model')}
               <!-- #35 (UI audit flag): settings-checks: the same checkbox row as every other page.
                    #33 (UI audit flag): stems-model: off and unavailable until the model is installed. -->
               {@const ready = !flag('stems-model') || stems.model.state === 'ready'}
               <label class={flag('settings-checks') ? 'opt' : 'check'} class:off={!ready}>
                 <input type="checkbox" checked={stems.enabled && ready} disabled={!ready} onchange={(e) => setStems({ enabled: e.currentTarget.checked })} />
-                <span>Split tracks into stems when they load</span>
+                <span>{finish ? 'Make stems when a track loads' : 'Split tracks into stems when they load'}</span>
               </label>
               {#if !ready}<p class="needs">Download the separation model above to turn this on.</p>{/if}
             {:else}
@@ -855,9 +941,13 @@
           <h3>Interface size</h3>
           <p>{#if flag('settings-copy')}Scales text and controls alike; {keyLabel('view.uiZoomIn')} and {keyLabel('view.uiZoomOut')} work from anywhere.{:else}Scales everything, text and controls alike. {keyLabel('view.uiZoomIn')} and {keyLabel('view.uiZoomOut')} do the same from anywhere.{/if}</p>
           <div class="size" role="group" aria-label="Interface size">
+            {#snippet stepper()}
             <button class="btn sm" onclick={() => stepUiZoom(-1)} disabled={uiZoom.scale <= uiZoomSteps[0]} aria-label="Smaller">−</button>
             <span class="num" aria-live="polite">{pct(uiZoom.scale)}</span>
             <button class="btn sm" onclick={() => stepUiZoom(1)} disabled={uiZoom.scale >= uiZoomSteps.at(-1)} aria-label="Bigger">+</button>
+            {/snippet}
+            <!-- #116 (UI audit flag): settings-finish: one cut holds the three. -->
+            {#if finish}<div class="sstep">{@render stepper()}</div>{:else}{@render stepper()}{/if}
             <button class="btn sm" onclick={() => setUiZoom(1)} disabled={uiZoom.scale === 1}>{flag('settings-copy') ? 'Reset to 100%' : 'Actual size'}</button>
           </div>
         </section>
