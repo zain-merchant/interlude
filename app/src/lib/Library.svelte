@@ -1,6 +1,6 @@
 <script>
   import Status from '../flags/112-shell-status/Status.svelte'; // #112 (UI audit flag)
-  import EmptyFilter from '../flags/113-empty-filter/EmptyFilter.svelte'; // #113 (UI audit flag)
+  import LibraryZero from '../flags/113-zero-states/LibraryZero.svelte'; // #113 (UI audit flag)
   import { conn } from '../flags/112-shell-status/connections.svelte.js'; // #112 (UI audit flag)
   import Activity from '../flags/112-shell-status/Activity.svelte'; // #112 (UI audit flag)
   import { flag, setting } from '../flags/registry.svelte.js';
@@ -107,7 +107,7 @@
       return words.every((w) => hay.includes(w));
     });
   });
-  let emptyHeld = $state(false); // #113 (UI audit flag): its handles are being dragged
+  const zero = $derived(flag('zero-states') && flag('dir-room-tint') && !loading && (!!error || !results.length)); // #113 (UI audit flag): zero-states
   function setFilter(f) {
     filter = f;
     selectIndex(0);
@@ -856,7 +856,7 @@
       <div class="filter" bind:this={filterBox}>
         <button class="btn sm chip" class:on={filtered} aria-expanded={filterOpen} aria-haspopup="dialog"
           onclick={() => (filterOpen = !filterOpen)} use:tip={() => (filterOpen ? '' : 'Filter by BPM and key')}>
-          <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M1.5 3h9M3 6h6M4.75 9h2.5" /></svg>{filtered ? describe(filter) : 'Filter'}
+          <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M1.5 3h9M3 6h6M4.75 9h2.5" /></svg>{filtered ? (flag('no-dots') ? describe(filter).replaceAll(' · ', ', ') : describe(filter)) : 'Filter'}
         </button>
         {#if filtered}
           <button class="clear" aria-label="Clear the filter" onclick={clearFilter} use:tip={() => 'Clear the filter'}>
@@ -935,11 +935,11 @@
     </div>
 
     <div class="scroll" bind:this={scroller} bind:clientHeight={viewHeight} onscroll={() => ((scrollTop = scroller.scrollTop), edges())}
-      tabindex="0" onkeydown={listKey} role="listbox" aria-label="Tracks" data-region="tracks" data-more={flag('library-clip') && listMore ? '' : undefined} data-scrolled={flag('library-clip') && listUp ? '' : undefined}
+      tabindex="0" onkeydown={listKey} role="listbox" aria-label="Tracks" data-region="tracks" data-zero={zero ? (all.length ? 'some' : 'all') : undefined} data-more={flag('library-clip') && listMore ? '' : undefined} data-scrolled={flag('library-clip') && listUp ? '' : undefined}
       aria-activedescendant={sorted[selected] ? `track-${selected}` : undefined}>
-      {#if flag('empty-filter') && !error && !loading && all.length && (filter.bpmMin || filter.bpmMax) && !filter.keys.length && !query.trim() && !fits && (!results.length || emptyHeld)}
-        <!-- #113 (UI audit flag): empty-filter: your tempos, and the range asked for. -->
-        <EmptyFilter tracks={all} {filter} count={results.length} {setFilter} clear={clearFilter} bind:held={emptyHeld} />
+      {#if zero}
+        <!-- #113 (UI audit flag): zero-states. -->
+        <LibraryZero {all} {error} {query} {fits} {filtered} {filter} {air} {airPath} {view} retry={() => refresh()} {addFolder} onimport={view.kind === 'all' ? onimport : undefined} {clearSearch} {toggleFits} {clearFilter} />
       {:else if error}
         <div class="empty">{error}</div>
       {:else if !loading && !all.length && emptyView}
@@ -958,7 +958,7 @@
         <div class="empty"><p>Nothing in {viewName} matches “{query.trim()}”.</p><button class="btn sm" onclick={clearSearch}>Clear search<kbd class="keyhint">esc</kbd></button></div>
       {:else if !loading && !results.length}
         <div class="empty">
-          <p>{query ? `Nothing matches “${query}”` : 'No tracks'}{fits ? ` that mix with deck ${air ? 'AB'[air.deck] : ''}` : ''}{filtered ? ` in ${describe(filter)}` : ''}.</p>
+          <p>{query ? `Nothing matches “${query}”` : 'No tracks'}{fits ? ` that mix with deck ${air ? 'AB'[air.deck] : ''}` : ''}{filtered ? ` in ${flag('no-dots') ? describe(filter).replaceAll(' · ', ', ') : describe(filter)}` : ''}.</p>
           {#if fits || filtered}
             <div class="empty-actions">
               {#if fits}<button class="btn sm" onclick={toggleFits}>Show everything</button>{/if}

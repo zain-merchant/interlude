@@ -8,6 +8,7 @@
   import { engine, tracks, displayPos, onFrame, scrubStart, scrubTo, scrubEnd } from './engine.svelte.js';
   import { tip } from './tooltip.svelte.js';
   import { flag, setting, flagsRev } from '../flags/registry.svelte.js';
+  import { draw } from '../flags/113-zero-states/drawings.js'; // #113 (UI audit flag)
   import { hms } from '../flags/08-stress-hours/time.js';
   import { timeMode, swapTimes } from '../flags/40-time-remaining/mode.svelte.js';
 
@@ -24,6 +25,7 @@
 
   const d = $derived(engine.decks[deck]);
   const t = $derived(tracks[deck]);
+  const zero = $derived(flag('zero-states') && flag('dir-room-tint') && !t); // #113 (UI audit flag): zero-states
   const name = $derived(deck === 0 ? 'A' : 'B');
 
   function fmt(s) {
@@ -219,7 +221,7 @@
 </script>
 
 <div class="wrap" bind:this={wrap}>
-  <div class="platter" style:width="{size}px" style:height="{size}px" style:--deckc={deck === 0 ? 'var(--deck-a)' : 'var(--deck-b)'}>
+  <div class="platter" class:bare={zero} style:width="{size}px" style:height="{size}px" style:--deckc={deck === 0 ? 'var(--deck-a)' : 'var(--deck-b)'}>
     <div class="disc" bind:this={disc} style:width="{vr * 2}px" style:height="{vr * 2}px" style:left="{size / 2 - vr}px" style:top="{size / 2 - vr}px"
       role="slider" aria-label="Deck {name} record, drag to scratch" aria-valuenow={Math.round(d.position)} aria-valuemin="0"
       aria-valuemax={Math.round(d.duration)} aria-valuetext="{fmt(d.position)} of {fmt(d.duration)}" tabindex="-1"
@@ -242,6 +244,7 @@
       <div class="rm num"><span class="sr">Remaining </span>{fmt(d.position - d.duration)}</div>
     </div>
     {/if}
+    {#if zero}<!-- #113 (UI audit flag): zero-states: the bare platter. --><div class="bareart" aria-hidden="true">{@html draw.platter(Math.round(size), deck)}</div>{/if}
     <div class="tonearm" class:down={!!t && d.playing} style:left="{armG.px}px" style:top="{armG.py}px" style:--s={k} aria-hidden="true">
       <div class="pivot"></div>
       <div class="swing" bind:this={arm}>
