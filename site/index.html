@@ -21,8 +21,8 @@
   <!-- Geist, served from here (no other site to reach before the page can
        draw its text); the Latin file is fetched straight away. -->
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="style.css?v=20261123a">
-  <script src="tune.js?v=20261122a"></script>
+  <link rel="stylesheet" href="style.css?v=20261123d">
+  <script src="tune.js?v=20261123a"></script>
   <script>
     // Live updates while working on the site locally (.claude/serve.py
     // streams the files whose contents changed). Stylesheets swap in place,
@@ -83,9 +83,6 @@
       d.dataset.hero = 'split';
       d.dataset.herotext = 'card';
       d.dataset.nav = 'morph';
-      // Being tried (style.css): what's behind the hero's GitHub button and
-      // the switch (?surface=glass, crisp or raised), and the record behind
-      // a phone's hero (?recbg=darker, smaller or lower).
       const tq = new URLSearchParams(location.search);
       // ?menulog=1: a few numbers on screen, for reading off a phone: the
       // frames as the menu opens and shuts (how many, how many late, the
@@ -114,14 +111,91 @@
         addEventListener('interlude:menu', (e) => frames(e.detail ? 'menu open' : 'menu shut'));
         window.__menulog = { line, frames };
       }
-      if (/^(glass|crisp|raised)$/.test(tq.get('surface'))) d.dataset.surface = tq.get('surface');
-      if (/^(darker|smaller|lower)$/.test(tq.get('recbg'))) d.dataset.recbg = tq.get('recbg');
       // iOS Safari shows :active on a touch only when the page listens for
       // touches; this one does nothing else.
       document.addEventListener('touchstart', () => {}, { passive: true });
       const scrolled =() => d.toggleAttribute('data-scrolled', scrollY > 8);
       addEventListener('scroll', scrolled, { passive: true });
       scrolled();
+    })();
+  </script>
+  <script>
+    // Being tried this round, all in one place: each a control in the Tune
+    // panel (the Try group, at its top) and an address param. A param sets
+    // the value for the visit, whatever the panel has saved (the panel's
+    // own restores in the first few seconds are ignored then); moving the
+    // control by hand after that takes over. Every switch is an attribute
+    // on <html>, a custom property or an event, so nothing here does
+    // anything until it's read.
+    (() => {
+      const d = document.documentElement;
+      const q = new URLSearchParams(location.search);
+      const T = window.tune;
+      const own = (key, value, valid) => {
+        const raw = q.get(key);
+        const from = raw != null && valid(raw) ? raw : null;
+        return { start: from ?? value, locked: from != null };
+      };
+      const control = (make, key, opts) => {
+        const { start, locked } = own(key, opts.value, opts.valid);
+        let lock = locked, n = 0;
+        if (locked) setTimeout(() => (lock = false), 3000);
+        const onInput = (v) => {
+          // (A param's value stands until the panel is moved by hand.)
+          if (lock && n++ > 0 && String(v) !== String(start)) return;
+          opts.apply(v);
+        };
+        make({ label: `Try: ${opts.label}`, value: start, ...opts.rest, onInput });
+      };
+      const select = (key, opts) => control((o) => T.select(o), key, { ...opts, valid: (v) => opts.options.some(([x]) => x === v), rest: { options: opts.options } });
+      const slider = (key, opts) => control((o) => T.slider(o), key, { ...opts, valid: (v) => Number.isFinite(+v), rest: { min: opts.min, max: opts.max, step: opts.step, unit: opts.unit || '' } });
+      const color = (key, opts) => control((o) => T.color(o), key, { ...opts, valid: (v) => /^#?[0-9a-f]{6}$/i.test(v), rest: {} });
+      const set = (name, v) => { if (v === '' || v == null) delete d.dataset[name]; else d.dataset[name] = v; };
+      window.tryState = { recPreset: 'today' };
+      if (!T) return;
+
+      // What's behind the hero's GitHub button and the mouse/controller switch.
+      select('surface', { label: 'GitHub and switch', value: 'today', options: [['today', 'Today'], ['glass', 'Glass'], ['crisp', 'Crisp'], ['raised', 'Raised']], apply: (v) => set('surface', v === 'today' ? '' : v) });
+
+      // The hero's two buttons (and the same family in the menu, the
+      // open-source card and the download sheet).
+      select('btn', { label: 'Buttons', value: 'today', options: [['today', 'Today'], ['ink', 'Ink'], ['label', 'Record label'], ['split', 'Split'], ['key', 'Key']], apply: (v) => { set('btn', v === 'today' ? '' : v); dispatchEvent(new Event('try-buttons')); } });
+
+      // The nav's surface, and what the capsule's Download control looks like.
+      select('navglass', { label: 'Nav surface', value: 'solid', options: [['solid', 'Solid'], ['glass', 'Glass'], ['mixed', 'Solid top'], ['light', 'Light blur']], apply: (v) => set('navglass', v === 'solid' ? '' : v) });
+      color('navfill', { label: 'Nav colour', value: '#141417', apply: (v) => { d.style.setProperty('--nav-fill', v.startsWith('#') ? v : `#${v}`); } });
+      select('navdl', { label: 'Nav download', value: 'pill', options: [['pill', 'Pill'], ['ghost', 'Outline'], ['text', 'Text'], ['pillround', 'Round pill']], apply: (v) => { set('navdl', v === 'pill' ? '' : v); requestAnimationFrame(() => window.navMeasure?.()); } });
+
+      // The record behind a phone's hero: a preset, or each part by hand.
+      const rec = window.tryState.rec = { op: 1, size: 1, fade: 0 };
+      const recNow = () => { d.style.setProperty('--rec-op', String(rec.op)); dispatchEvent(new CustomEvent('try-rec', { detail: rec })); };
+      const PRESETS = { today: { op: 1, size: 1, fade: 0 }, darker: { op: 0.55, size: 1, fade: 0 }, smaller: { op: 1, size: 0.72, fade: 0 }, lower: { op: 1, size: 1, fade: 260 } };
+      select('recbg', { label: 'Record preset', value: 'today', options: [['today', 'Today'], ['darker', 'Darker'], ['smaller', 'Smaller'], ['lower', 'Lower']], apply: (v) => { window.tryState.recPreset = v; Object.assign(rec, PRESETS[v]); recNow(); } });
+      const recSlider = (key, label, prop, min, max, step, def) => {
+        let first = true;
+        slider(key, { label, value: def, min, max, step, apply: (v) => {
+          // (The panel's own first call, at its default, leaves the preset.)
+          if (first && v === def) { first = false; return; }
+          first = false;
+          rec[prop] = v; recNow();
+        } });
+      };
+      recSlider('recop', 'Record opacity', 'op', 0.2, 1, 0.05, 1);
+      recSlider('recsize', 'Record size', 'size', 0.5, 1.2, 0.02, 1);
+      recSlider('recfade', 'Record fade from (px)', 'fade', 0, 500, 10, 0);
+
+      // The phone's download: what a tap does, and the button's words.
+      select('dl', { label: 'Phone tap', value: 'sheet', options: [['sheet', 'Sheet'], ['sheet2', 'Sheet, other words'], ['today', 'Today']], apply: (v) => { window.tryState.dl = v; set('dl', v === 'today' ? 'today' : ''); dispatchEvent(new Event('try-dl')); } });
+      const LABELS = { get: 'Get on Mac', send: 'Send to Mac', download: 'Download' };
+      const putLabel = (v) => { window.tryState.label = v; const go = () => { for (const e of document.querySelectorAll('.dlp-label')) e.textContent = LABELS[v] || LABELS.get; window.navMeasure?.(); }; if (document.readyState === 'loading') addEventListener('DOMContentLoaded', go, { once: true }); else go(); };
+      select('label', { label: 'Phone button', value: 'get', options: [['get', 'Get on Mac'], ['send', 'Send to Mac'], ['download', 'Download']], apply: putLabel });
+
+      // The footer name's effect on phones, against the word (1: as on a Mac).
+      slider('footfx', { label: 'Footer effect', value: 1, min: 0.75, max: 1.8, step: 0.05, apply: (v) => { window.tryState.footfx = +v; dispatchEvent(new Event('try-footfx')); } });
+
+      // Squircle corners: on or off, and how smooth.
+      select('squircles', { label: 'Squircles', value: 'on', options: [['on', 'On'], ['off', 'Off']], apply: (v) => { window.tryState.sqOn = v !== 'off'; dispatchEvent(new Event('try-squircles')); } });
+      slider('smooth', { label: 'Squircle smooth', value: /^\d+$/.test(q.get('squircles') || '') ? +q.get('squircles') : 60, min: 0, max: 100, step: 5, unit: '%', apply: (v) => { window.tryState.smooth = +v; dispatchEvent(new Event('try-squircles')); } });
     })();
   </script>
 </head>
@@ -1259,8 +1333,8 @@
       const url = document.querySelector('meta[property="og:url"]')?.content || location.href;
       const pretty = url.replace(/^https?:\/\/|\/$/g, '');
       const message = `Interlude, a free DJ app for Mac: ${url}`;
-      const mode = new URLSearchParams(location.search).get('dl') || 'sheet';
-      if (mode === 'today') d.dataset.dl = 'today';
+      // (Being tried, the Try group: what a tap does.)
+      const mode = () => window.tryState?.dl || new URLSearchParams(location.search).get('dl') || 'sheet';
       let toast = null, hide = 0;
       const say = (text) => {
         if (!toast) {
@@ -1311,10 +1385,13 @@
       const scrim = sheet.querySelector('.dlsheet-scrim');
       const acts = [...sheet.querySelectorAll('[data-act]')];
       const shareBtn = sheet.querySelector('[data-act="share"]');
-      if (mode === 'sheet2') {
-        sheet.querySelector('h2').textContent = 'Download on your Mac';
-        sheet.querySelector('#dlsheet-b').textContent = 'Interlude runs on macOS. Send yourself the link and it’ll be waiting when you’re back at your Mac.';
-      }
+      const words = () => {
+        const two = mode() === 'sheet2';
+        sheet.querySelector('h2').textContent = two ? 'Download on your Mac' : 'Interlude is a Mac app';
+        sheet.querySelector('#dlsheet-b').textContent = two ? 'Interlude runs on macOS. Send yourself the link and it’ll be waiting when you’re back at your Mac.' : 'Open this page on your Mac to download it, or send yourself the link.';
+      };
+      words();
+      addEventListener('try-dl', words);
       sheet.querySelector('.dlsheet-msg').textContent = `“${message.replace(url, pretty)}”`;
       // (Share only where there's a share sheet: https, and a browser with one.)
       shareBtn.hidden = !navigator.share;
@@ -1404,7 +1481,7 @@
       document.addEventListener('click', (e) => {
         const a = e.target.closest?.('a[href$="/Interlude.dmg"]');
         if (!a || !phone.matches || e.defaultPrevented || e.button) return;
-        if (mode === 'today') return today(e);
+        if (mode() === 'today') return today(e);
         e.preventDefault();
         // (From the menu: the menu shuts first.)
         if (document.querySelector('.nav')?.hasAttribute('data-menu')) document.querySelector('.menu-btn')?.click();
@@ -1473,18 +1550,26 @@
       }
 
       const q = new URLSearchParams(location.search);
-      // Being tried on phones (?recbg=, style.css): the record drawn smaller
-      // round the same middle, or fading in further down.
-      // (Set once the panels have put their values in, a moment after load.)
-      const recbg = document.documentElement.dataset.recbg;
-      if (fx && (recbg === 'smaller' || recbg === 'lower') && matchMedia('(max-width: 480px)').matches) {
-        const size = fx.T.size, fadeAt = fx.T.fadeAt, fadeLen = fx.T.fadeLen;
-        const apply = () => {
-          if (recbg === 'smaller') fx.T.size = Math.max(0.7, (fx.T.size === size ? size : fx.T.size) * 0.72);
-          else { fx.T.fadeAt = Math.max(fadeAt, 260); fx.T.fadeLen = Math.min(Math.max(fadeLen, 300), 420); }
+      // Being tried on phones (the Try group): the record drawn smaller
+      // round the same middle, or fading in further down (its opacity is
+      // style.css's). The base values are whatever the panels settled on.
+      // (A button treatment changes a button's width: the record's holes
+      // under them are measured again.)
+      addEventListener('try-buttons', () => requestAnimationFrame(() => fx?.relayout?.()));
+      if (fx) {
+        const phone = matchMedia('(max-width: 480px)');
+        let base = null;
+        const applyRec = () => {
+          const r = window.tryState?.rec;
+          if (!r || !phone.matches) return;
+          base ??= { size: fx.T.size, fadeAt: fx.T.fadeAt, fadeLen: fx.T.fadeLen };
+          fx.T.size = base.size * r.size;
+          fx.T.fadeAt = r.fade ? Math.max(base.fadeAt, r.fade) : base.fadeAt;
+          fx.T.fadeLen = r.fade ? Math.min(Math.max(base.fadeLen, 300), 420) : base.fadeLen;
           fx.relayout?.();
         };
-        loaded.then(() => setTimeout(apply, 1200));
+        // (Once the panels have put their own values in.)
+        loaded.then(() => setTimeout(() => { if (window.tryState?.rec && (window.tryState.rec.size !== 1 || window.tryState.rec.fade)) applyRec(); addEventListener('try-rec', applyRec); }, 1200));
       }
       // The hand it plays with: the controller (owner's pick), or the mouse
       // (?hand=mouse). Tune > Hero > Layout > starts with.
@@ -2048,11 +2133,9 @@
       // Footer: effect size on phones; or ?footfx=0.75 / 1 / 1.4 / 1.8).
       // 1 is the Mac's: everything in it is in the word's em.
       const coarse = matchMedia('(hover: none) and (pointer: coarse)');
-      const fxq = new URL(location.href).searchParams.get('footfx');
-      let fxScale = 1;
-      const applyScale = () => { if (fx) { fx.T.scale = coarse.matches ? fxScale : 1; fx.relayout(); } };
-      tune.select({ label: 'Footer: effect size on phones', folder: 'Motion', value: fxq || '1', options: [['0.75', 'Smaller (0.75)'], ['1', 'As on a Mac (today)'], ['1.4', 'Larger (1.4)'], ['1.8', 'Larger still (1.8)']],
-        onInput: (v) => { fxScale = +(fxq || v) || 1; applyScale(); } });
+      const applyScale = () => { if (fx) { fx.T.scale = coarse.matches ? (window.tryState?.footfx ?? 1) : 1; fx.relayout(); } };
+      addEventListener('try-footfx', applyScale);
+      applyScale();
       coarse.addEventListener?.('change', applyScale);
 
       // Pulled on past the foot of the page: the effect wells up from under
@@ -2709,16 +2792,21 @@
     // Smoothed (squircle) corners on every rounded rect (squircles.js), once
     // the page has loaded and is idle. ?squircles=off: plain round corners;
     // ?squircles=NN: that much smoothing (60 by default).
-    const sq = new URLSearchParams(location.search).get('squircles');
-    if (sq !== 'off') {
-      const go = () => import('./squircles.js?v=20261123a').then((m) => {
-        if (sq && Number.isFinite(+sq)) document.documentElement.dataset.squircles = String(Math.max(0, Math.min(100, +sq)));
-        m.start();
-        window.navMeasure?.();
-      }).catch(() => {});
-      const idle = () => ('requestIdleCallback' in window ? requestIdleCallback(go, { timeout: 800 }) : setTimeout(go, 200));
-      if (document.readyState === 'complete') idle(); else addEventListener('load', idle, { once: true });
-    }
+    let sqMod = null, stop = null, ready = false;
+    const go = async () => {
+      const st = window.tryState || {};
+      // (?squircles=off turns it off; the Try group has both controls.)
+      if (st.sqOn === false) { stop?.(); stop = null; return; }
+      sqMod ??= await import('./squircles.js?v=20261123a').catch(() => null);
+      if (!sqMod) return;
+      stop?.();
+      document.documentElement.dataset.squircles = String(Math.max(0, Math.min(100, st.smooth ?? 60)));
+      stop = sqMod.start();
+      window.navMeasure?.();
+    };
+    addEventListener('try-squircles', () => { if (ready) go(); });
+    const idle = () => ('requestIdleCallback' in window ? requestIdleCallback(() => { ready = true; go(); }, { timeout: 800 }) : setTimeout(() => { ready = true; go(); }, 200));
+    if (document.readyState === 'complete') idle(); else addEventListener('load', idle, { once: true });
   </script>
 </body>
 </html>

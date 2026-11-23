@@ -278,11 +278,19 @@
     const v = g && (g[folder ? `${folder}.${name}` : name] ?? g[name]);
     return v === undefined ? value : v;
   };
-  const show = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname) || new URLSearchParams(location.search).has('tune');
+  // On localhost, on a machine's own name on the tailnet (a name with no
+  // dot, as http://lunar-mbp:8765 on a phone), or anywhere with ?tune (kept
+  // from then on; ?tune=off forgets). Nothing is loaded otherwise.
+  const on = new URLSearchParams(location.search).get('tune');
+  try { if (on === 'off') localStorage.removeItem('tune-on'); else if (on !== null) localStorage.setItem('tune-on', '1'); } catch {}
+  const kept = (() => { try { return localStorage.getItem('tune-on') === '1'; } catch { return false; } })();
+  const show = on !== 'off' && (/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname) || (!location.hostname.includes('.') && location.hostname !== '') || on !== null || kept);
   const base = document.currentScript?.src ? new URL('.', document.currentScript.src).href : './';
   const groups = new Map();
   // The groups' order in the panel: the page's, top to bottom.
-  const ORDER = ['Nav', 'Hero', 'Hero record', 'Features', 'Open source', 'Footer'];
+  // (This round's switches first; then the Archive, everything tuned before,
+  // folded away under its own heading.)
+  const ORDER = ['Try', 'Archive', 'Nav', 'Hero', 'Hero record', 'Features', 'Open source', 'Footer'];
   // And within a group, its folders' order where it matters.
   const FOLDERS = { Hero: ['Layout', 'Controller', 'Performance'] };
   let queued = false;
@@ -318,6 +326,9 @@
     location.reload();
   }
 
+  // The Archive has a panel of its own to open; what it holds is whatever's
+  // below it.
+  if (show) queueMicrotask(() => add('Archive: everything from before this round, below', { key: 'archive', apply: () => {}, config: { type: 'select', options: [{ value: 'below', label: 'Open the folders below' }], default: 'below' } }));
   if (show) {
     snapshot();
     const css = document.createElement('link');
@@ -327,7 +338,9 @@
     // On a touch screen, up and down on a slider scrolls the panel (a
     // sideways drag still moves it).
     const touch = document.createElement('style');
-    touch.textContent = '@media (pointer: coarse) { .dialkit-root .dialkit-slider { touch-action: pan-y; } }';
+    touch.textContent = '@media (pointer: coarse) { .dialkit-root .dialkit-slider { touch-action: pan-y; } }'
+      // The Archive: everything below its heading is hidden until it's opened.
+      + 'html:not([data-tune-archive]) .dialkit-folder-root > .dialkit-folder-content > .dialkit-folder-inner > .dialkit-folder-section:nth-child(n+3) { display: none; }';
     document.head.append(touch);
     lib = new Promise((done, fail) => {
       const s = document.createElement('script');
@@ -439,7 +452,7 @@
     g.stash = stash;
     const first = configOf(g);
     g.sig = JSON.stringify(first);
-    const kit = DK.createDialKit(group, first, { id, persist: true });
+    const kit = DK.createDialKit(group, first, { id, persist: true, defaultCollapsed: group !== 'Try' });
     g.kit = kit;
     g.DK = DK;
     putBack(DK, id, stash, [...shownNow].map((c) => c.path));
@@ -554,6 +567,20 @@
     }, 0);
   }
 
+  // The Archive's heading opens and shuts what's below it: its own panel's
+  // open state is watched (a few attribute changes a day), and the page gets
+  // an attribute for the rule above.
+  function archive() {
+    const inner = document.querySelector('.dialkit-folder-root > .dialkit-folder-content > .dialkit-folder-inner');
+    if (!inner) return;
+    const read = () => {
+      const a = [...inner.children].find((c) => c.querySelector('.dialkit-folder-title')?.textContent?.trim() === 'Archive');
+      document.documentElement.toggleAttribute('data-tune-archive', a?.dataset.open === 'true');
+    };
+    new MutationObserver(read).observe(inner, { attributes: true, attributeFilter: ['data-open'], subtree: true, childList: true });
+    read();
+  }
+
   async function flush() {
     queued = false;
     const DK = await lib.catch(() => null);
@@ -573,7 +600,7 @@
         g.made = true;
         make(DK, group, g);
       }
-      if (!ui.started) { ui.started = true; ui.start(); }
+      if (!ui.started) { ui.started = true; ui.start(); archive(); }
     };
     if (document.body) start();
     else addEventListener('DOMContentLoaded', start, { once: true });

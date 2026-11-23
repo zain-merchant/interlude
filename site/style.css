@@ -1294,13 +1294,9 @@ html[data-surface="crisp"] .hero .hero-side .cta .btn.ghost, html[data-surface="
 html[data-surface="raised"] .hero .hero-side .cta .btn.ghost, html[data-surface="raised"] .switch {
   background: rgb(38 38 42); box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.1), inset 0 0 0 1px rgb(255 255 255 / 0.07), 0 1px 2px rgb(0 0 0 / 0.5);
 }
-/* Being tried (?recbg=, Hero: record on a phone): the record behind the
-   phone's hero. Today's (the default); darker; smaller (the whole record
-   drawn smaller round the same middle, index.html); lower (it fades in
-   further down, under the headline, index.html). */
-@media (max-width: 480px) {
-  html[data-recbg="darker"] .ripples { opacity: 0.55; }
-}
+/* Being tried on a phone (the Try group in Tune): the record's opacity; its
+   size and where it fades in are hero-fx.js's (index.html). */
+@media (max-width: 480px) { .ripples { opacity: var(--rec-op, 1); } }
 
 /* ── Hero and nav layouts (end) ── */
 
@@ -2220,3 +2216,85 @@ html[data-lablogo="plain"] .lg-rings circle:nth-child(-n + 2) { display: none; }
 @supports (corner-shape: superellipse(2)) {
   html[data-squircles][data-nav="morph"] :is(.nav-glass, .nav-edge) { corner-shape: superellipse(1.6); }
 }
+
+/* Being tried (the Try group): the nav's Download control and the menu
+   icon, as a pair. ghost: both outlined buttons; text: words alone; round:
+   the light pill, fully round. */
+html[data-navdl="ghost"][data-nav="morph"] .nav-actions .btn:not(.ghost),
+html[data-navdl="ghost"][data-nav="morph"] .menu-btn {
+  background: transparent; color: var(--fg); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.2);
+}
+html[data-navdl="ghost"][data-nav="morph"] .nav-actions .btn:not(.ghost):active, html[data-navdl="ghost"] .menu-btn:active { background: rgb(255 255 255 / 0.08); }
+html[data-navdl="text"][data-nav="morph"] .nav-actions .btn:not(.ghost) { background: transparent; color: var(--fg); padding: 0 8px; box-shadow: none; }
+html[data-navdl="text"][data-nav="morph"] .nav-actions .btn:not(.ghost) .nav-dl { display: none; }
+html[data-navdl="pillround"][data-nav="morph"] .nav-actions .btn:not(.ghost) { border-radius: 999px; }
+html[data-navdl="pillround"][data-nav="morph"] .menu-btn { border-radius: 999px; background: rgb(255 255 255 / 0.09); }
+
+/* Being tried (the Try group in Tune, "Buttons"): the two-button family in
+   the hero, the menu, the open-source card and the download sheet. Today's
+   is the default. Each is flat or hard-edged, no soft shadow or blur, so
+   nothing of what's behind shows through or spreads. */
+/* Ink: pure white on pure black, with a hard hairline; no grey at all. */
+html[data-btn="ink"] :is(main, .dlsheet, .menu, footer) .btn.btn.btn.btn.btn {
+  background: #fff; color: #050506; box-shadow: none;
+}
+html[data-btn="ink"] :is(main, .dlsheet, .menu, footer) .btn.btn.btn.btn.btn.ghost {
+  background: #000; color: #fff; box-shadow: inset 0 0 0 1.5px rgb(255 255 255 / 0.42);
+}
+html[data-btn="ink"] .oss .btn.btn.btn.btn.btn.btn { background: #050506; color: #fff; }
+html[data-btn="ink"] .oss .btn.btn.btn.btn.btn.btn.ghost { background: transparent; color: #050506; box-shadow: inset 0 0 0 1.5px rgb(5 5 6 / 0.5); }
+@media (hover: hover) and (pointer: fine) {
+  html[data-btn="ink"] :is(main, .dlsheet, .menu, footer) .btn.btn.btn.btn.btn:hover { background: #d9d9d9; }
+  html[data-btn="ink"] :is(main, .dlsheet, .menu, footer) .btn.btn.btn.btn.btn.ghost:hover { background: #fff; color: #050506; }
+}
+/* Record label: the colours of the label pressings on the note's record:
+   side A's orange as the primary, side B's blue as the second. */
+html[data-btn="label"] :is(main, .dlsheet, .menu, footer) .btn.btn.btn.btn.btn {
+  background: #fb8b38; color: #1c0f04; box-shadow: none;
+}
+html[data-btn="label"] :is(main, .dlsheet, .menu, footer) .btn.btn.btn.btn.btn.ghost {
+  background: #0c1519; color: #9fe2f5; box-shadow: inset 0 0 0 1.5px rgb(63 201 234 / 0.75);
+}
+html[data-btn="label"] .oss .btn.btn.btn.btn.btn.btn.ghost { background: transparent; color: #0a4a5e; box-shadow: inset 0 0 0 1.5px rgb(10 74 94 / 0.6); }
+@media (hover: hover) and (pointer: fine) {
+  html[data-btn="label"] :is(main, .dlsheet, .menu, footer) .btn.btn.btn.btn.btn:hover { background: #ff9f55; }
+  html[data-btn="label"] :is(main, .dlsheet, .menu, footer) .btn.btn.btn.btn.btn.ghost:hover { background: #12262d; color: #c6f1fc; }
+}
+/* Split: an icon in its own dark cell, a hard line between it and the
+   words; the second is its outlined twin. */
+html[data-btn="split"] :is(main, .dlsheet, .menu, footer) .btn.btn.btn.btn.btn {
+  background: #f3f2ee; color: #0b0b0d; box-shadow: none;
+}
+html[data-btn="split"] :is(main, .dlsheet, .menu, footer) .btn.btn.btn.btn.btn:not(.ghost):has(> svg) { position: relative; padding-left: 60px; padding-right: 18px; overflow: hidden; }
+html[data-btn="split"] :is(main, .dlsheet, .menu, footer) .btn.btn.btn.btn.btn:not(.ghost) > svg { position: absolute; left: 0; top: 0; bottom: 0; box-sizing: border-box; height: 100%; width: 46px; margin: 0; padding: 0 15px; background: #0b0b0d; color: #f3f2ee; }
+html[data-btn="split"] :is(main, .dlsheet, .menu, footer) .btn.btn.btn.btn.btn.ghost {
+  background: transparent; color: #f3f2ee; box-shadow: inset 0 0 0 1.5px rgb(243 242 238 / 0.55);
+}
+html[data-btn="split"] .oss .btn.btn.btn.btn.btn.btn.ghost { color: #0b0b0d; box-shadow: inset 0 0 0 1.5px rgb(11 11 13 / 0.6); }
+html[data-btn="split"] .oss .btn.btn.btn.btn.btn.btn:not(.ghost) { background: #0b0b0d; color: #f3f2ee; }
+html[data-btn="split"] .oss .btn.btn.btn.btn.btn.btn:not(.ghost) > svg { background: #f3f2ee; color: #0b0b0d; }
+/* Keys: a lit top, a hard edge under, pressed in when pressed. */
+html[data-btn="key"] :is(main, .dlsheet, .menu, footer) .btn.btn.btn.btn.btn {
+  background: linear-gradient(#ffffff, #e6e2d8); color: #0b0b0d;
+  box-shadow: inset 0 1px 0 #fff, 0 2px 0 #8b877b, 0 3px 0 rgb(0 0 0 / 0.55);
+  transition: transform 60ms ease-out, box-shadow 60ms ease-out;
+}
+html[data-btn="key"] :is(main, .dlsheet, .menu, footer) .btn.btn.btn.btn.btn.ghost {
+  background: linear-gradient(#2a2a2e, #1d1d20); color: #f3f2ee;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.22), inset 0 0 0 1px rgb(255 255 255 / 0.08), 0 2px 0 #000, 0 3px 0 rgb(255 255 255 / 0.06);
+}
+html[data-btn="key"] .oss .btn.btn.btn.btn.btn.btn { background: linear-gradient(#26262a, #0f0f11); color: #fff; box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.25), 0 2px 0 #000; }
+html[data-btn="key"] .oss .btn.btn.btn.btn.btn.btn.ghost { background: linear-gradient(#fff, #ece9df); color: #0b0b0d; box-shadow: inset 0 1px 0 #fff, 0 2px 0 #a8a497; }
+html[data-btn="key"] :is(main, .dlsheet, .menu, footer) .btn.btn.btn.btn.btn:active { transform: translateY(2px); box-shadow: inset 0 1px 0 #fff, 0 0 0 #8b877b; }
+
+/* The same four, on the mouse/controller switch. */
+html[data-btn="ink"] .switch { background: #000; box-shadow: inset 0 0 0 1.5px rgb(255 255 255 / 0.42); }
+html[data-btn="ink"] .switch .thumb { background: #fff; box-shadow: none; }
+html[data-btn="label"] .switch { background: #0c1519; box-shadow: inset 0 0 0 1.5px rgb(63 201 234 / 0.6); }
+html[data-btn="label"] .switch button { color: rgb(159 226 245 / 0.75); }
+html[data-btn="label"] .switch .thumb { background: #fb8b38; box-shadow: none; }
+html[data-btn="label"] .switch button[aria-checked="true"] { color: #1c0f04; }
+html[data-btn="split"] .switch { background: #0b0b0d; box-shadow: inset 0 0 0 1.5px rgb(243 242 238 / 0.55); }
+html[data-btn="split"] .switch .thumb { background: #f3f2ee; box-shadow: none; }
+html[data-btn="key"] .switch { background: linear-gradient(#26262a, #1b1b1e); box-shadow: inset 0 1px 0 rgb(0 0 0 / 0.5), inset 0 0 0 1px rgb(255 255 255 / 0.09); }
+html[data-btn="key"] .switch .thumb { background: linear-gradient(#fff, #e6e2d8); box-shadow: inset 0 1px 0 #fff, 0 2px 0 #8b877b; }
