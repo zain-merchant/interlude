@@ -35,7 +35,7 @@ const SETS = { A: { R: false, own: ['shift', 'cmd', 'opt', 'ctrl', 'ret', 'del',
 const svg = {};
 for (const [name, set] of Object.entries(SETS)) for (const [w, s] of Object.entries(set.w)) {
   const glyphs = [new opentype.Glyph({ name: '.notdef', unicode: 0, advanceWidth: 500, path: new opentype.Path() })];
-  for (const g of set.own) { const k = g === 'cmd' || g === 'del' || g === 'shift' ? 0.92 : 1; const [cs, width] = G[g](s * k, set.R); const p = new opentype.Path(); for (const c of cs) { c.forEach(([x, y], i) => (i ? p.lineTo(x + 50, y) : p.moveTo(x + 50, y))); p.close(); } glyphs.push(new opentype.Glyph({ name: g, unicode: CODE[g], advanceWidth: Math.round(width + 100), path: p })); svg[`${name}${w}${g}`] = [p.toPathData(1), width + 100]; }
+  for (const g of set.own) { const k = g === 'cmd' || g === 'del' || g === 'shift' ? 0.92 : 1; const [cs, width] = G[g](s * k, set.R); const p = new opentype.Path(); for (const c of cs) { c.forEach(([x, y], i) => (i ? p.lineTo(x + 70, y) : p.moveTo(x + 70, y))); p.close(); } glyphs.push(new opentype.Glyph({ name: g, unicode: CODE[g], advanceWidth: Math.round(width + 140), path: p })); svg[`${name}${w}${g}`] = [p.toPathData(1), width + 140]; }
   const f = new opentype.Font({ familyName: `Interlude Keys ${name}`, styleName: 'Regular', unitsPerEm: 1000, ascender: 1000, descender: -250, glyphs }); const buf = Buffer.from(f.toArrayBuffer()); writeFileSync(`keys-${name}-${w}.otf`, buf); console.log(name, w, buf.length, 'bytes');
 }
 writeFileSync('svg.json', JSON.stringify(svg));
