@@ -26,12 +26,31 @@ export default {
     cues: {
       type: 'choice',
       label: 'Hot cues',
-      default: 'foot',
+      default: 'lamp',
       options: [
-        ['socket', 'Sockets', 'An empty place is its number in a small recess.'],
-        ['foot', 'Feet', 'A number over a short etched rule.'],
-        ['corner', 'Corner ticks', "A number, and a tick in its place's corner."],
-        ['next', 'Next only', 'Numbers alone; only the next free place is a key, and says Set.'],
+        ['dot', 'A small ring that fills', 'The lightest: a small ring beside the number.'],
+        ['lamp', 'A lamp that lights', 'A ring in a small cut; it lights when the cue is set.'],
+        ['ring', 'The number in a ring', 'The heaviest of the three: the ring is round the number.'],
+        ['foot', 'Pressed tiles', 'As it was: a number over a rule, and a pressed tile once set, in softer colours.'],
+      ],
+    },
+    weight: {
+      type: 'choice',
+      label: 'Small controls',
+      default: 'light',
+      options: [
+        ['light', 'Light', 'Key lock, minus and plus, the headphones, Rec and the tempo have no face until the pointer is over them.'],
+        ['full', 'Raised', 'As they were.'],
+      ],
+    },
+    room: {
+      type: 'choice',
+      label: "The mixer's room",
+      default: 'meters',
+      options: [
+        ['meters', 'Meters midway', 'At the same width, each meter stands midway between its fader and the middle.'],
+        ['wide', 'Wider', '24px wider, taken from the decks.'],
+        ['as', 'As it was', 'The meters close to their faders.'],
       ],
     },
     stepper: {
