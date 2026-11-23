@@ -75,7 +75,7 @@ const BASE_CSS = `
 .hero-clips .desk .glint.go::before {
   /* (The cards' band leans a twentieth of its way across; so does this.) */
   content: ''; position: absolute; left: -2%; right: -2%; top: 0; height: 60%;
-  background: linear-gradient(183deg, transparent 20%, rgb(255 255 255 / var(--arrive-ctl, 0.5)) 50%, transparent 80%);
+  background: linear-gradient(183deg, transparent 20%, rgb(255 255 255 / var(--arrive-ctl, 0.4)) 50%, transparent 80%);
   /* (The cards' curve, longer: it has several times as far to go.) */
   animation: hero-clips-glint calc(1.5 * var(--glide-ms, 977ms)) var(--glide, ease-out) 80ms both;
 }

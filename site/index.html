@@ -201,7 +201,7 @@
       // mouse/controller switch, or all of the hero's).
       select('surface', { label: 'GitHub and switch, fill', folder: 'Buttons', value: 'ink', options: [['ink', 'Near-black'], ['today', 'Grey (before)'], ['glass', 'Glass'], ['crisp', 'Firm edge'], ['raised', 'Raised grey']], apply: (v) => set('surface', v === 'today' ? '' : v) });
       select('btn', { label: 'Both hero buttons', folder: 'Buttons', value: 'today', options: [['today', 'Today'], ['ink', 'Ink'], ['label', 'Record label'], ['split', 'Split'], ['key', 'Key']], apply: (v) => { set('btn', v === 'today' ? '' : v); fire('try-buttons'); fire('try-squircles'); } });
-      select('btngrain', { label: 'Film grain, buttons', folder: 'Buttons', value: 'off', options: [['off', 'None (before)'], ['github', 'GitHub only'], ['under', 'Both, under words'], ['over', 'Both, over words']], apply: (v) => set('btngrain', v === 'off' ? '' : v) });
+      select('btngrain', { label: 'Film grain, buttons', folder: 'Buttons', value: 'github', options: [['github', 'GitHub only'], ['off', 'None (before)'], ['under', 'Both, under words'], ['over', 'Both, over words']], apply: (v) => set('btngrain', v === 'off' ? '' : v) });
       slider('btngrainamt', { label: 'Grain strength', folder: 'Buttons', value: 1, min: 0.2, max: 3, step: 0.1, unit: 'x', apply: (v) => css('--btn-grain', String(v)) });
       toggle('btngrainall', { label: 'Grain on Download too', folder: 'Buttons', value: false, apply: (v) => set('btngrainall', v) });
 
@@ -222,7 +222,7 @@
       slider('ctlscale', { label: 'Video size', folder: 'Controller', value: 100, min: 88, max: 100, step: 0.5, unit: '%', apply: (v) => { st.ctl.scale = v / 100; fire('try-controller'); } });
       select('arrive', { label: 'Glint, where', folder: 'Controller', value: 'card', options: [['card', 'As the feature cards’'], ['on', 'Down the screen (before)'], ['off', 'None']], apply: (v) => { st.arrive = v; set('arrive', v === 'on' ? 'screen' : ''); } });
       slider('arriveamt', { label: 'Glint, light on the screen', folder: 'Controller', value: 0.12, min: 0.02, max: 0.4, step: 0.01, apply: (v) => css('--arrive', String(v)) });
-      slider('arrivectl', { label: 'Glint, light on the controller', folder: 'Controller', value: 0.5, min: 0.05, max: 0.9, step: 0.05, apply: (v) => css('--arrive-ctl', String(v)) });
+      slider('arrivectl', { label: 'Glint, light on the controller', folder: 'Controller', value: 0.4, min: 0.05, max: 0.9, step: 0.05, apply: (v) => css('--arrive-ctl', String(v)) });
 
       // The record behind the hero: what a phone shows, and the desktop too
       // if it's ticked. A composition, or each part of it by hand.
@@ -1881,7 +1881,7 @@
           clipsHost.setAttribute('aria-hidden', 'true');
           live.after(clipsHost);
           try {
-            const { mountClips } = await import('./hero/clips.js?v=20261123e');
+            const { mountClips } = await import('./hero/clips.js?v=20261123f');
             clips = await mountClips(clipsHost, {
               base: 'hero/clips/', hand: mode, paused: true, log: q.has('log'),
               onReady: () => {
