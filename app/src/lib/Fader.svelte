@@ -2,7 +2,8 @@
   import { showTip, hideTip, tip, tipText } from './tooltip.svelte.js';
   import { openMenu } from './menu.svelte.js';
   import { detent, keyValue } from './control.js';
-  import { flag } from '../flags/registry.svelte.js';
+  import { flag, setting } from '../flags/registry.svelte.js';
+  import { landed, scrolled } from '../flags/120-knob-feel/feel.js'; // #120 (UI audit flag): knob-feel
 
   /**
    * A fader drawn with plain elements, so it looks and behaves the same in
@@ -112,6 +113,15 @@
   }
   function wheel(e) {
     e.preventDefault();
+    // #120 (UI audit flag): knob-feel: as far as the scroll goes.
+    if (flag('knob-feel') && setting('knob-feel', 'scroll') === 'far') {
+      const v = scrolled(e, { value, min, max, reset, sideways: !vertical, flip: invert, detent });
+      if (v === null) return;
+      set(v);
+      landed(value);
+      live();
+      return;
+    }
     const d = (vertical ? -e.deltaY : e.deltaX || -e.deltaY) > 0 ? 1 : -1;
     set(value + d * (invert ? -1 : 1) * (max - min) * (e.shiftKey ? 0.005 : 0.02));
     live();

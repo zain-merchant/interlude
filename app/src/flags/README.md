@@ -122,6 +122,7 @@ On by default (84):
 - #90 Library details (`library-polish`)
 - #109 Popovers stop repeating values already on screen (`quiet-readouts`)
 - #115 Pinch to zoom the waveforms (`trackpad-zoom`)
+- #120 Knobs turn sideways, and follow the scroll (`knob-feel`)
 
 #112 (`shell-status`), #113 (`zero-states`), #116 (`settings-finish`) and #117
 (`key-marks`) are proposals, but on by default while the owner judges them; they go off again once that's decided.
