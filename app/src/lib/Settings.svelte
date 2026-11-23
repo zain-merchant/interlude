@@ -16,6 +16,7 @@
   import Keys from '../flags/116-settings-finish/Keys.svelte'; // #116 (UI audit flag)
   import Search from '../flags/116-settings-finish/Search.svelte'; // #116 (UI audit flag)
   import Stepper from '../flags/116-settings-finish/Stepper.svelte'; // #116 (UI audit flag)
+  import StemsWay from '../flags/116-settings-finish/Stems.svelte'; // #116 (UI audit flag)
   import Results from '../flags/116-settings-finish/Results.svelte'; // #116 (UI audit flag)
   import { search } from '../flags/116-settings-finish/find.js'; // #116 (UI audit flag)
 
@@ -543,7 +544,7 @@
     add('Library', 'Auto gain', 'loudness volume trim');
     add('Library', 'Import from another app', 'rekordbox serato cue points playlists beatgrids');
     add('Stems', 'Separation model', 'download htdemucs vocals drums bass melody');
-    add('Stems', 'Make stems when a track loads', 'automatic vocals');
+    add('Stems', 'How stems work', 'fast efficient off memory automatic vocals mute solo alone split separate');
     add('Stems', 'Stems cache', 'disk size clear keep');
     add('Controllers', 'Connected', 'midi hid mapping plugged');
     add('Controllers', 'Controller not working?', 'set up step by step wizard');
@@ -673,7 +674,7 @@
           {:else if stems.model.state === 'ready'}
             <!-- #33 (UI audit flag): stems-model: says it's installed, and its size. #34 (UI audit flag): settings-copy: one sentence. -->
             {#if flag('stems-model')}<p class="installed">Installed, {mb(stems.modelBytes)}</p>{/if}
-            <p>{flag('settings-copy') ? (finish ? 'Makes vocals, melody, bass and drums from each track on this computer.' : 'Each track you load is split into vocals, melody, bass and drums on this computer, starting at the play head.') : "Ready. Each track you load is split into vocals, melody, bass and drums on this computer, starting at the play head, so the part you're about to play is ready first."}</p>
+            {#if !finish}<p>{flag('settings-copy') ? 'Each track you load is split into vocals, melody, bass and drums on this computer, starting at the play head.' : "Ready. Each track you load is split into vocals, melody, bass and drums on this computer, starting at the play head, so the part you're about to play is ready first."}</p>{:else if !flag('stems-model')}<p>Installed.</p>{/if}
           {:else if stems.model.state === 'downloading'}
             <p>Downloading, {mb(stems.model.done)} of {mb(stems.model.total)}…</p>
             <div class="bar-track" role="progressbar" aria-label="Model download" aria-valuemin="0" aria-valuemax="100"
@@ -690,15 +691,19 @@
           {/if}
         </section>
         {#if stems}
+          <!-- #116 (UI audit flag): settings-finish: what stems are, then how they work. -->
+          {#if finish}
+          <StemsWay {stems} ready={!flag('stems-model') || stems.model.state === 'ready'} set={setStems} />
+          {:else}
           <section class="display">
-            {#if !finish}<h3>Splitting</h3>{/if}
+            <h3>Splitting</h3>
             {#if flag('settings-checks') || flag('stems-model')}
               <!-- #35 (UI audit flag): settings-checks: the same checkbox row as every other page.
                    #33 (UI audit flag): stems-model: off and unavailable until the model is installed. -->
               {@const ready = !flag('stems-model') || stems.model.state === 'ready'}
               <label class={flag('settings-checks') ? 'opt' : 'check'} class:off={!ready}>
                 <input type="checkbox" checked={stems.enabled && ready} disabled={!ready} onchange={(e) => setStems({ enabled: e.currentTarget.checked })} />
-                <span>{finish ? 'Make stems when a track loads' : 'Split tracks into stems when they load'}</span>
+                <span>Split tracks into stems when they load</span>
               </label>
               {#if !ready}<p class="needs">Download the separation model above to turn this on.</p>{/if}
             {:else}
@@ -706,6 +711,7 @@
                 Split tracks into stems when they load</label>
             {/if}
           </section>
+          {/if}
           <section class="display">
             <h3>Stems cache</h3>
             {#if flag('settings-copy')}
