@@ -278,8 +278,8 @@
     const v = g && (g[folder ? `${folder}.${name}` : name] ?? g[name]);
     return v === undefined ? value : v;
   };
-  // On localhost, on a machine's own name on the tailnet (a name with no
-  // dot, as http://lunar-mbp:8765 on a phone), or anywhere with ?tune (kept
+  // On localhost, on a machine's own name on a private network (a name with
+  // no dot, for a phone on the same one), or anywhere with ?tune (kept
   // from then on; ?tune=off forgets). Nothing is loaded otherwise.
   // (In the phone preview's frame, tune-frame.js, the panel is the page's
   // outside: the controls here only take the values it hands in.)

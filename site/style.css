@@ -2409,3 +2409,6 @@ html[data-btngrain="over"] :is(.cta .btn, .switch) > .grain--btn { z-index: 2; }
 @keyframes arrive { from { transform: translateY(-105%); } to { transform: translateY(255%); } }
 @keyframes arrive-end { to { visibility: hidden; } }
 @media (prefers-reduced-motion: reduce) { .arrive { display: none !important; } }
+
+/* (The pictures' text caret blinks; not with less motion.) */
+@media (prefers-reduced-motion: reduce) { .p-caret.p-caret { animation: none; } }
