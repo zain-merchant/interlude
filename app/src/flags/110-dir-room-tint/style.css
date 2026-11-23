@@ -2945,13 +2945,15 @@
   z-index: 0;
   top: 8px;
   bottom: 8px;
-  left: calc(var(--library-sidebar, 200px) - var(--side-w, 200px) + 8px);
+  left: 8px;
+  /* Moved, not laid out again: WebKit left a transition of left at its old value when the setting changed. */
+  translate: calc(var(--library-sidebar, 200px) - var(--side-w, 200px)) 0;
   width: calc(var(--side-w, 200px) - 8px);
   border-radius: calc(var(--r-panel) - 8px);
   background: rgb(0 0 0 / 0.28);
   box-shadow: var(--tt-cut);
   pointer-events: none;
-  transition: left 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition: translate 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .app:has(.grip.side.dragging) section.library::before {
   transition: none;
@@ -2975,7 +2977,7 @@
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-side='ground'] section.library::before {
   top: 0;
   bottom: 0;
-  left: calc(var(--library-sidebar, 200px) - var(--side-w, 200px));
+  left: 0;
   width: var(--side-w, 200px);
   border-radius: 0;
   background: rgb(0 0 0 / 0.3);
