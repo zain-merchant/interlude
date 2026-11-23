@@ -245,6 +245,8 @@
       [ch, 'loop_double', 'Double loop'],
       [ch, 'beatjump_backward', 'Beat jump back'],
       [ch, 'beatjump_forward', 'Beat jump forward'],
+      // Mixxx's numbers for the stems.
+      ...[['Vocals', 4], ['Melody', 3], ['Bass', 2], ['Drums', 1]].map(([stem, i]) => [`[Channel${n}_Stem${i}]`, 'mute', `${stem} stem on/off`]),
       [ch, 'LoadSelectedTrack', 'Load selected track'],
       [`[EffectRack1_EffectUnit${n}]`, 'enabled', 'Effect on/off'],
       [`[EffectRack1_EffectUnit${n}]`, 'mix', 'Effect amount'],

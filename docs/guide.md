@@ -216,7 +216,7 @@ Everything Interlude does, in detail. For a short overview, see the
   the mapping can ship with the app.
 - **Any other MIDI controller: MIDI learn.** In Settings → Controllers,
   pick the controller, pick an action (play, cue, faders, EQ, hot cues,
-  loops, effects, browsing, samples) and press Learn, then move the
+  loops, stems, effects, browsing, samples) and press Learn, then move the
   control. It tells buttons, knobs, 14-bit faders, jog encoders and pitch
   bend apart on its own and moves straight on to the next action. The
   result is saved as a Mixxx mapping in the app's `controllers` folder and
