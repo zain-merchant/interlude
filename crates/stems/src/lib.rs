@@ -18,6 +18,7 @@ pub mod split;
 
 use std::path::PathBuf;
 use std::sync::{Arc, Condvar, Mutex, MutexGuard};
+use std::time::Instant;
 
 use dj_engine::{Stems, Track, NUM_DECKS};
 
@@ -294,6 +295,8 @@ struct Worker {
     heads: PlayHeads,
     model: Option<Model>,
     model_generation: u64,
+    /// How long the last region took.
+    region_secs: f64,
 }
 
 impl Worker {
@@ -303,6 +306,7 @@ impl Worker {
             heads,
             model: None,
             model_generation: u64::MAX,
+            region_secs: 1.5,
         }
     }
 
@@ -367,8 +371,10 @@ impl Worker {
                 continue;
             };
             let head = (self.heads)(deck);
-            let at = head.at.max(0.0) * job.track.sample_rate as f64;
-            let Some(k) = p.next(at, head.speed == 0.0) else {
+            let rate = job.track.sample_rate as f64;
+            let at = head.at.max(0.0) * rate;
+            let reach = p.reach(at, at + head.speed * self.region_secs * rate);
+            let Some(k) = p.next(reach, head.speed == 0.0) else {
                 continue;
             };
             let lead = p.lead(at);
@@ -472,8 +478,10 @@ impl Worker {
                 let Some(model) = self.model.as_mut() else {
                     return;
                 };
+                let started = Instant::now();
                 let input = plan.input(k, &track.samples);
                 let result = model.run(&input[0], &input[1]);
+                self.region_secs = started.elapsed().as_secs_f64();
                 let mut st = lock(&shared);
                 let cache_limit = st.settings.cache_limit;
                 let cache_dir = st.settings.cache_dir.clone();

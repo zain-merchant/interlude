@@ -244,6 +244,17 @@ impl Progress {
             .find(|&k| !self.done[k])
     }
 
+    /// The region that can still be reached in time by a deck at `head`
+    /// that will be at `later` when it's done.
+    pub fn reach(&self, head: f64, later: f64) -> f64 {
+        let k = self.plan.region_at(head);
+        if !self.done[k] && k + 1 < self.plan.regions && later >= self.plan.extent(k).1 as f64 {
+            later
+        } else {
+            head
+        }
+    }
+
     /// How far ahead of `head` the stems are ready, in track frames.
     pub fn lead(&self, head: f64) -> f64 {
         let p = self.plan.region_at(head);
@@ -468,5 +479,19 @@ mod tests {
         let head = (plan.boundary(5) + plan.boundary(6)) as f64 / 2.0;
         p.finish(5, &silent, &stems);
         assert!(stems.is_ready_at(head as i64, 44_100));
+    }
+
+    /// A deck that will have left a region before it's split gets the next.
+    #[test]
+    fn a_moving_deck_skips_what_it_would_miss() {
+        let plan = Plan::new(343_980, 44_100 * 60, 44_100);
+        let p = Progress::new(plan);
+        let end = plan.boundary(2) as f64;
+        assert_eq!(p.reach(end - 20_000.0, end + 40_000.0), end + 40_000.0);
+        assert_eq!(p.reach(end - 200_000.0, end - 100_000.0), end - 200_000.0);
+        assert_eq!(
+            p.next(p.reach(end - 20_000.0, end + 40_000.0), false),
+            Some(2)
+        );
     }
 }
