@@ -37,12 +37,10 @@ export default {
     stepper: {
       type: 'choice',
       label: 'Steppers',
-      default: 'split',
+      default: 'under',
       options: [
-        ['split', 'Two keys and a well', 'A raised key each side, the amount sunk between them.'],
-        ['under', 'Keys in a cut', 'One cut; the keys stand in it and the amount is its floor.'],
-        ['seam', 'Touching', 'The same as the first, with only a seam between.'],
-        ['one', 'One cut', 'As it was: no keys until the pointer is over an end.'],
+        ['under', 'Two keys standing in one cut', 'The keys are raised; the amount is on the floor of the cut between them.'],
+        ['one', 'One cut with rules', 'Nothing raised until the pointer is over an end.'],
       ],
     },
     step: {
@@ -73,24 +71,6 @@ export default {
         ['words', 'It says so', "The deck's own tint, and a line: dropping once warns, twice replaces it."],
         ['quiet', 'Like any deck', "The deck's own tint and nothing else; the first drop still warns."],
         ['red', 'A red edge', 'As it was: a fainter tint, a red edge and the line in red.'],
-      ],
-    },
-    on: {
-      type: 'choice',
-      label: "A key that's on",
-      default: 'ink',
-      options: [
-        ['ink', 'Only its glyph or label', 'The key is in, and its glyph or label takes the colour. Rec has red in it while it records.'],
-        ['breath', 'A breath of colour', 'The same, with a trace of the colour in the fill.'],
-      ],
-    },
-    setcue: {
-      type: 'choice',
-      label: 'A set hot cue',
-      default: 'tint',
-      options: [
-        ['tint', 'Its colour in the fill', 'Quick to tell one from another.'],
-        ['ink', 'Its colour in the number', 'The fill stays dark.'],
       ],
     },
     figures: {

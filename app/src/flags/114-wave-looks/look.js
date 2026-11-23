@@ -15,7 +15,7 @@ export function lookString() {
   const on = flag(ID);
   const set = FLAGS.find((f) => f.id === ID)?.settings;
   const at = (k) => (on ? setting(ID, k) : set?.[k].default);
-  const o = { id: l.id, draw: l.draw, lines: at('marks'), chip: at('chip'), played: at('played') };
+  const o = { id: l.id, draw: l.draw, lines: at('beats'), chip: at('chip') };
   for (const k in l.values) o[k] = Number((on ? setting(ID, `${l.id}-${k}`) : null) ?? l.values[k]);
   return JSON.stringify(o);
 }

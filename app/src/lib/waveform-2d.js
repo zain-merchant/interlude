@@ -180,7 +180,6 @@ export class Waveform2D {
       const px = Math.max(0, Math.min(w, x(view.playhead)));
       ctx.fillStyle = view.mode === 'scroll' ? 'rgba(12,12,14,0.5)' : 'rgba(12,12,14,0.55)';
       if (view.veil === 'ground') ctx.fillStyle = rgba(c.low.map((v) => Math.round(v * 0.2)), view.mode === 'scroll' ? 0.58 : 0.62); // #108 (UI audit flag): dir-ground's veil is a deep tone of the deck's ground
-      if (this.wl?.played === 'deep') ctx.fillStyle = 'rgba(10,10,12,0.7)'; // #114 (UI audit flag)
       ctx.fillRect(0, 0, px, h);
     }
     if (view.loopIn >= 0 && view.loopOut > view.loopIn) {

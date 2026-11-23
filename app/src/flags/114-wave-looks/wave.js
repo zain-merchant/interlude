@@ -270,7 +270,7 @@ export function lookLane(wf, ctx, ectx, x0, x1, spp, h, c, half) {
     }
     ctx.globalCompositeOperation = 'source-over';
   }
-  if (o.out > 0) {
+  if (o.rim > 0) {
     // A rim inside the shape: each column from its top down to where a line
     // this wide, kept inside, ends (the lowest top within its width, less its
     // width). Half of a stroked line would stand outside a hit's front edge
@@ -285,7 +285,7 @@ export function lookLane(wf, ctx, ectx, x0, x1, spp, h, c, half) {
       for (let j = Math.max(0, i - r); j <= Math.min(n - 1, i + r); j++) if (top[j] < m) m = top[j];
       inner[i] = Math.max(0, m - o.outw);
     }
-    ectx.fillStyle = rgba(c.high, o.out / 100);
+    ectx.fillStyle = rgba(c.high, o.rim / 100);
     ectx.beginPath();
     for (const sign of [1, -1]) {
       ectx.moveTo(X(0), mid - sign * top[0]);
@@ -486,100 +486,60 @@ export function lookRibbon(wf, w, h, view, spp, c) {
 }
 
 /**
- * Each way of marking the beats. `edge`: where its ticks stand ('seam' is the
- * line between the lanes, 'outer' the panel's own edges, 'all' both). `tick`:
- * lengths (CSS px) and alphas of a beat's, a bar's and a fourth bar's tick;
- * `line`: alphas of their full-height lines.
+ * Each way of drawing the beats. `edge`: where the ticks stand ('seam' is the
+ * line between the lanes, 'all' both edges of each lane). `tick`: lengths (CSS
+ * px) and alphas of a beat's and a bar's; `live`: the same while they're being
+ * used; `line`: alphas of their full-height lines.
  */
-const TICK = { tick: [[3, 0.5], [6, 0.8], [10, 0.95]] };
 const MARKS = {
-  full: { edge: 'all', tick: [[3, 0.4], [5, 0.75], [5, 0.75]], line: [0.12, 0.28, 0.28] },
-  faint: { edge: 'all', tick: [[3, 0.34], [5, 0.6], [5, 0.6]], line: [0.05, 0.14, 0.14] },
-  ticks: { edge: 'all', tick: [[4, 0.42], [6, 0.7], [6, 0.7]], line: [0, 0.14, 0.14] },
-  dots: { edge: 'all', tick: [[0, 0], [5, 0.6], [5, 0.6]], line: [0, 0.14, 0.14], dot: 0.55 },
-  seam: { edge: 'seam', ...TICK },
-  outer: { edge: 'outer', ...TICK },
-  near: { edge: 'seam', ...TICK, near: true },
-  match: { edge: 'seam', ...TICK, beats: 'live' },
-  bars: { edge: 'seam', tick: TICK.tick, line: [0, 0.1, 0.18], beats: 'close' },
-  ruler: { edge: 'seam', ...TICK, strip: 11 },
-  zoom: { line: [0.16, 0.24, 0.4], fade: true },
-  behind: { line: [0.2, 0.4, 0.55], under: true },
-  notch: { line: [0.6, 1, 1], cut: true },
+  seam: { edge: 'seam', tick: [[3, 0.36], [6, 0.7]], live: [[4, 0.65], [8, 0.95]] },
+  edges: { edge: 'all', tick: [[2, 0.36], [5, 0.65]], live: [[3, 0.65], [6, 0.95]] },
+  ticks: { edge: 'all', tick: [[4, 0.42], [6, 0.7]], line: [0, 0.14] },
+  full: { edge: 'all', tick: [[3, 0.4], [5, 0.75]], line: [0.12, 0.28] },
   none: {},
 };
 
 /**
- * The beats, bars and every fourth bar. Each mark's middle is on its beat and
- * on the pixel grid the sound is placed on (as Waveform2D.beats has them, a
- * mark begins on its beat and is rounded to whole CSS px, so it wobbles
- * against the sound). In Grid mode they're at full strength.
+ * The beats and bars, the same ones Waveform2D.beats marks: every beat, a bar
+ * every four from the first downbeat, and bars only where a beat is under 6
+ * px. Each mark's middle is on its beat and on the pixel grid the sound is
+ * placed on (there, a mark begins on its beat and is rounded to whole CSS px,
+ * so it wobbles against the sound). In Grid mode they're drawn in full.
  */
 export function lookBeats(wf, w, h, view, spp) {
   const { ctx, wl } = wf;
   const dpr = window.devicePixelRatio || 1;
   const len = view.beatLen;
-  const fix = view.live === 2;
-  const m = fix ? MARKS.full : MARKS[wl.lines] ?? MARKS.full;
-  // What's being worked with comes in over a few frames, not at a stroke.
+  const m = view.live === 2 ? MARKS.full : MARKS[wl.lines] ?? MARKS.seam;
+  // Stronger while they're used, over a few frames, not at a stroke.
   const want = view.live ? 1 : 0;
   wf.lookLive = wf.lookLive === undefined ? want : wf.lookLive + (want - wf.lookLive) * 0.25;
   if (Math.abs(want - wf.lookLive) < 0.02) wf.lookLive = want;
   else wf.lookBusy = true;
-  const beatPx = len / spp;
-  const barsOnly = beatPx < 6;
-  // Where beats crowd, they give way to bars.
-  const roomy = Math.max(0, Math.min(1, (beatPx - 8) / 24));
-  const close = Math.max(0, Math.min(1, (beatPx - 80) / 40));
+  const tick = [0, 1].map((k) => {
+    const [a, b] = [m.tick?.[k] ?? [0, 0], (m.live ?? m.tick)?.[k] ?? [0, 0]];
+    return [Math.round((a[0] + (b[0] - a[0]) * wf.lookLive) * dpr) / dpr, a[1] + (b[1] - a[1]) * wf.lookLive];
+  });
+  const barsOnly = len / spp < 6;
   const off = Math.round((view.start / spp) * dpr);
-  const head = (view.playhead - view.start) / spp;
-  const reach = Math.max(140, Math.min(w * 0.4, beatPx * 8));
   const bottom = view.deck === 0; // the left deck's lane is on top: the line between the lanes is its bottom edge
-  const ends = m.edge === 'all' ? [true, false] : m.edge === 'seam' ? [bottom] : m.edge === 'outer' ? [!bottom] : [];
-  const px = 1 / dpr;
-  if (m.strip) {
-    ctx.fillStyle = 'rgba(6,6,7,0.86)';
-    ctx.fillRect(0, bottom ? h - m.strip : 0, w, m.strip);
-  }
-  ctx.save();
-  if (m.under) ctx.globalCompositeOperation = 'destination-over';
-  if (m.cut) ctx.globalCompositeOperation = 'destination-out';
+  const ends = m.edge === 'all' ? [true, false] : m.edge === 'seam' ? [bottom] : [];
   for (let b = Math.ceil((view.start - view.firstBeat) / len) - 1; ; b++) {
     const bx = (Math.round(((view.firstBeat + b * len) / spp - 0.5) * dpr) - off) / dpr;
     if (bx > w) break;
     const bar = ((b % 4) + 4) % 4 === 0;
-    const k = !bar ? 0 : ((b % 16) + 16) % 16 === 0 ? 2 : 1;
     if (barsOnly && !bar) continue;
-    const from = bx + 0.5 - head;
-    if (!fix && wl.played !== 'veil' && from < -Math.max(beatPx, 4)) continue;
-    let a = 1;
-    if (!fix) {
-      if (k === 0 && m.edge !== 'all') a *= m.fade ? roomy * 0.7 : roomy;
-      if (m.fade && k === 1) a *= Math.max(0.25, Math.min(1, beatPx / 40));
-      if (k === 0 && m.beats === 'live') a *= wf.lookLive;
-      if (k === 0 && m.beats === 'close') a *= Math.max(close, wf.lookLive);
-      if (m.near) {
-        const g = Math.exp(-((from / reach) ** 2));
-        // Away from the play head the bars stay, faint; beats go.
-        a *= k ? 0.3 + 0.7 * g : g;
-        if (k === 0) a = Math.max(a, roomy * wf.lookLive * 0.7 * Math.exp(-((from / (reach * 2)) ** 2)));
-      }
-    }
-    if (a < 0.03) continue;
-    const paint = (y, hh, alpha, x = bx, ww = 1) => {
-      ctx.fillStyle = m.cut ? `rgba(0,0,0,${alpha})` : `rgba(255,255,255,${alpha})`;
-      ctx.fillRect(x, y, ww, hh);
-    };
+    const k = bar ? 1 : 0;
     const line = m.line?.[k];
     if (line) {
-      if (m.cut) paint(0, h, line * a, k ? bx - px : bx, k ? 1 + 2 * px : 1);
-      else paint(0, h, line * a);
+      ctx.fillStyle = `rgba(255,255,255,${line})`;
+      ctx.fillRect(bx, 0, 1, h);
     }
-    const [tl, ta] = m.tick?.[k] ?? [0, 0];
-    if (tl) for (const e of ends) paint(e ? h - tl : 0, tl, ta * a);
-    else if (m.dot && !k) for (const e of ends) paint(e ? h - 3 : 1, 2, m.dot * a, bx - 0.5, 2);
+    const [tl, ta] = tick[k];
+    if (!tl) continue;
+    ctx.fillStyle = `rgba(255,255,255,${ta})`;
+    for (const e of ends) ctx.fillRect(bx, e ? h - tl : 0, 1, tl);
   }
-  ctx.restore();
 }
 
 /** The bar the play head is in, quieter than a white pill on it: small figures at its top, on the played side. */
