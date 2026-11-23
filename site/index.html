@@ -21,7 +21,7 @@
   <!-- Geist, served from here (no other site to reach before the page can
        draw its text); the Latin file is fetched straight away. -->
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="style.css?v=20261123k">
+  <link rel="stylesheet" href="style.css?v=20261123l">
   <script>
     // (The phone preview's frame, opened by this same site with the Tune
     // panel showing; nothing for anyone else.)
@@ -171,7 +171,7 @@
         T.select({ label: 'Try: Show as a phone', folder: 'Preview', value: 'off', options: [['off', 'Off'], ['390x844', 'iPhone 15'], ['375x667', 'iPhone SE'], ['430x932', 'iPhone Pro Max'], ['820x1180', 'iPad']], onInput: (v) => { if (document.body) T.phone(v); else addEventListener('DOMContentLoaded', () => T.phone(v), { once: true }); } });
         const where = () => T.framePage() || window;
         T.button({ label: 'Try: Open the phone sheet', folder: 'Preview', onPress: () => where().openPhoneSheet?.() });
-        T.button({ label: 'Try: Play rubber band (simulated)', folder: 'Preview', onPress: () => where().footPlay?.() });
+        T.button({ label: 'Try: Play rubber band (simulated)', folder: 'Preview', onPress: async () => { const w = where(); w.scrollTo({ top: 1e6, behavior: 'instant' }); for (let i = 0; i < 40 && !w.footPlay; i++) await new Promise((r) => setTimeout(r, 100)); w.footPlay?.(); } });
       }
 
       // Nav. The capsule at the top of the page, against the site's text
@@ -241,6 +241,7 @@
 
       // Where the note's card sits beside the questions (a wide screen).
       select('notelay', { label: 'Desktop card', folder: 'Note', value: 'right', options: [['right', 'Right, follows'], ['mid', 'Right, centred'], ['left', 'Left']], apply: (v) => set('notelay', v === 'right' ? '' : v) });
+      select('notephone', { label: 'Phone card', folder: 'Note', value: 'center', options: [['center', 'Centred'], ['right', 'Smaller, at the right']], apply: (v) => set('notephone', v === 'center' ? '' : v) });
 
       // The footer's effect as the page is pulled past its end.
       st.pull = { max: 1, soon: 0.09, wide: 1.2 };
