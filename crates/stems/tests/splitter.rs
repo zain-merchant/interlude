@@ -719,3 +719,102 @@ fn only_efficient_prepares_a_cue() {
     assert_eq!(s.model_loads(), 0);
     assert_eq!(s.status(0), Status::Unchosen);
 }
+
+#[test]
+fn a_track_loaded_with_the_stems_open_splits_as_it_loads() {
+    let s = splitter(When::OnUse, Some(model()));
+    // Left open at launch, before there's any track.
+    s.open(0, true);
+    let a = track(2.0);
+    s.split(0, a.clone(), None);
+    wait_ready(&s, 0);
+    check(&a);
+    // And so does the next one.
+    let b = track(2.0);
+    s.split(0, b.clone(), None);
+    wait_ready(&s, 0);
+    check(&b);
+}
+
+#[test]
+fn stems_open_on_the_other_deck_only_split_that_deck() {
+    let s = splitter(When::OnUse, Some(model()));
+    s.open(1, true);
+    let (a, b) = (track(2.0), track(2.0));
+    s.split(0, a.clone(), None);
+    s.split(1, b.clone(), None);
+    wait_ready(&s, 1);
+    settle();
+    assert_eq!(s.status(0), Status::OnUse);
+    assert!(a.stems.get().is_none());
+}
+
+#[test]
+fn closing_the_stems_finishes_the_track_and_leaves_the_next() {
+    let s = splitter(When::OnUse, Some(model()));
+    s.open(0, true);
+    let a = track(400.0);
+    s.split(0, a.clone(), None);
+    until("under way", || {
+        a.stems.get().is_some_and(|s| s.ready_fraction() > 0.0)
+    });
+    s.open(0, false);
+    wait_ready(&s, 0);
+    let b = track(2.0);
+    s.split(0, b.clone(), None);
+    settle();
+    assert_eq!(s.status(0), Status::OnUse);
+    assert!(b.stems.get().is_none());
+}
+
+#[test]
+fn rapid_loads_with_the_stems_open_split_only_the_last() {
+    let s = splitter(When::OnUse, Some(model()));
+    s.open(0, true);
+    let tracks: Vec<_> = (0..20).map(|_| track(60.0)).collect();
+    for t in &tracks {
+        s.split(0, t.clone(), None);
+    }
+    wait_ready(&s, 0);
+    check(&tracks[19]);
+    for t in &tracks[..19] {
+        assert!(!t.stems.get().is_some_and(|s| s.is_complete()));
+    }
+}
+
+#[test]
+fn stems_left_open_split_nothing_before_the_choice_or_when_off() {
+    let s = splitter(When::Unchosen, Some(model()));
+    s.open(0, true);
+    let a = track(2.0);
+    s.split(0, a.clone(), None);
+    settle();
+    assert_eq!(s.status(0), Status::Unchosen);
+    assert!(a.stems.get().is_none());
+    s.configure(Settings {
+        when: When::Never,
+        ..s.settings()
+    });
+    s.split(0, a.clone(), None);
+    settle();
+    assert_eq!(s.status(0), Status::Off);
+    assert!(a.stems.get().is_none());
+}
+
+/// Opening them again for the same track, over and over, splits it once.
+#[test]
+fn opening_and_closing_changes_nothing_once_it_is_split() {
+    let s = splitter(When::OnUse, Some(model()));
+    let a = track(2.0);
+    s.split(0, a.clone(), None);
+    for _ in 0..50 {
+        s.open(0, true);
+        s.open(0, false);
+    }
+    s.open(9, true);
+    wait_ready(&s, 0);
+    check(&a);
+    s.open(0, true);
+    settle();
+    assert_eq!(s.status(0), Status::Ready);
+}

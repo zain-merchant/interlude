@@ -6,8 +6,8 @@
   // the model has downloaded, the buttons give way to how that's going. A
   // press that isn't heard yet, because the track isn't split there, pulses.
   import { onMount, tick } from 'svelte';
-  import { backend } from './backend.js';
   import { announce } from './announce.svelte.js';
+  import { backend } from './backend.js';
   import { tracks } from './engine.svelte.js';
   import { tip, tipText } from './tooltip.svelte.js';
   import { keyLabel } from './commands.js';
@@ -97,6 +97,12 @@
   onMount(() => {
     backend.stemsShown?.(deck, true);
     return () => void backend.stemsShown?.(deck, false);
+  });
+
+  // This is only here while the tab is open, from launch if it was left so.
+  onMount(() => {
+    backend.stemsOpen?.(deck, true);
+    return () => void backend.stemsOpen?.(deck, false);
   });
 
   // Focus on the status's button moves to the first stem when they're back.

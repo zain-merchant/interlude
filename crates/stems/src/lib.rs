@@ -221,6 +221,8 @@ struct State {
     generation: u64,
     model_error: Option<String>,
     model_ready: bool,
+    /// Decks whose stems are in front of the user.
+    open: [bool; NUM_DECKS],
     /// Stems have been used since the app started.
     used: bool,
     /// Decks whose Stems tab is showing.
@@ -353,7 +355,7 @@ impl Splitter {
             key,
             looked: false,
             progress: None,
-            used: false,
+            used: st.open[deck],
             hint: None,
             ahead: None,
             asked: None,
@@ -402,6 +404,18 @@ impl Splitter {
     /// nothing unless tracks are split on use.
     pub fn prepare(&self, deck: usize, on: bool) {
         self.with_job(deck, |job| job.hint = on.then(|| Instant::now() + HOLD));
+    }
+
+    /// `deck`'s stems are in front of the user (`open`), or no longer are.
+    /// That's using them, for the track that's there and for any that loads
+    /// while they stay there. Closing them doesn't stop a split that has started.
+    pub fn open(&self, deck: usize, open: bool) {
+        if let Some(o) = self.lock().open.get_mut(deck) {
+            *o = open;
+        }
+        if open {
+            self.use_stems(deck);
+        }
     }
 
     fn with_job(&self, deck: usize, f: impl FnOnce(&mut Job)) {
