@@ -782,15 +782,16 @@
     </div>
   </div>
 
-  {#if flag('panel-sizes')}
-    <!-- #21 (UI audit flag): panel-sizes: the waveforms' bottom edge gets the library's handle. Placed absolutely, out of the grid, and after them, so Tab meets it there (#119). -->
+  {#snippet wavesGrip()}
+    <!-- #21 (UI audit flag): panel-sizes: the waveforms' bottom edge gets the library's handle. Placed absolutely, out of the grid. -->
     <!-- svelte-ignore a11y_no_noninteractive_tabindex, a11y_no_noninteractive_element_interactions (a focusable separator is the ARIA window-splitter pattern) -->
     <div class="grip" class:dragging={grab?.which === 'waves' || grab?.which === 'decks'} style:top="calc(var(--top) + {rows.waves - 12}px)" role="separator" aria-orientation="horizontal" aria-label="Resize waveforms"
       aria-valuenow={rows.waves} aria-valuemin={PANEL.waves.min} aria-valuemax={wavesMax} tabindex="0"
       onpointerdown={(e) => gripDown(e, 'waves')} onpointermove={gripMove} onpointerup={() => (grab = null)} onpointercancel={() => (grab = null)}
       ondblclick={() => gripReset('waves')} onkeydown={(e) => gripKey(e, 'waves')}
       use:tip={() => 'Drag to resize the waveforms, ⌥-drag for the decks, double-click to reset'}><i></i></div>
-  {/if}
+  {/snippet}
+  {#if flag('panel-sizes') && flag('focus-states')}{@render wavesGrip()}{/if}<!-- #119 (UI audit flag): focus-states: after the waveforms, so Tab meets it there. -->
 
   <div class="decks">
     <Deck deck={0} onload={load} onreveal={(p) => library.reveal(p)} onsettings={openSettings} />
@@ -804,6 +805,8 @@
     onpointerdown={splitDown} onpointermove={splitMove} onpointerup={() => (split = null)} onpointercancel={() => (split = null)}
     ondblclick={splitReset} onkeydown={splitKey}
     use:tip={() => (flag('panel-sizes') ? 'Drag to resize the library, ⌥-drag for the decks, double-click to reset' : 'Drag to resize the library, double-click to reset')}><i></i></div>
+
+  {#if flag('panel-sizes') && !flag('focus-states')}{@render wavesGrip()}{/if}
 
   <div class="below">
     {#if flag('panel-sizes')}

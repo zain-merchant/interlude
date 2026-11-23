@@ -368,9 +368,9 @@
     <div class="bpm" oncontextmenu={openGridMenu} ondblclick={() => t && (bpmEdit.deck = deck)} role="group" aria-label="Tempo"
       use:tip={() => (editingBpm ? '' : d.bpm > 0 ? `Track tempo ${d.bpm.toFixed(2)} BPM${t?.gridLocked ? ', beatgrid fixed by hand' : ''}. Right-click here or on the waveform to fix the beatgrid` : t ? 'No clear beat found. Double-click to set the BPM' : '')}>
       {#if editingBpm}
-        {#if flag('focus-states')}
+        {#if flag('focus-states') && flag('dir-room-tint')}
           <!-- #119 (UI audit flag): focus-states: the figures keep their place (they're still there, unseen, under the field), and the field has room round them. -->
-          <div class="typed"><div class="big num" aria-hidden="true">{#if bpm > 0 && flag('dir-room-tint')}{bpm.toFixed(2).slice(0, -3)}<span class="frac">{bpm.toFixed(2).slice(-3)}</span>{:else}{bpm > 0 ? bpm.toFixed(2) : '—'}{/if}</div><input class="big num edit" value={d.bpm > 0 ? d.bpm.toFixed(2) : ''} inputmode="decimal" aria-label="Track BPM" spellcheck="false"
+          <div class="typed"><div class="big num" aria-hidden="true">{#if bpm > 0}{bpm.toFixed(2).slice(0, -3)}<span class="frac">{bpm.toFixed(2).slice(-3)}</span>{:else}—{/if}</div><input class="big num edit" value={d.bpm > 0 ? d.bpm.toFixed(2) : ''} inputmode="decimal" aria-label="Track BPM" spellcheck="false"
             use:focusBpm onkeydown={bpmKey} onblur={(e) => finishBpm(e.currentTarget.value)} /></div>
         {:else}
         <input class="big num edit" value={d.bpm > 0 ? +d.bpm.toFixed(2) : ''} inputmode="decimal" aria-label="Track BPM" spellcheck="false"

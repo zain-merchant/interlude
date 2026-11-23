@@ -101,7 +101,7 @@ function beside(/** @type {NonNullable<ReturnType<typeof toast>>} */ t) {
 
 /** In a dialog over the window, Tab goes round inside it: where it wraps to, or nothing while it's inside. */
 function round(/** @type {boolean} */ back) {
-  const modal = q("[aria-modal='true']").filter(shown).at(-1);
+  const modal = dialog();
   if (!modal) return null;
   const all = stops().filter((x) => modal.contains(x));
   const here = /** @type {HTMLElement} */ (document.activeElement);
@@ -156,19 +156,24 @@ function arrow(/** @type {KeyboardEvent} */ e) {
 }
 
 // ── Never on nothing ──
-const home = () => /** @type {HTMLElement | null} */ (document.querySelector(LIST))?.focus({ preventScroll: true });
+/** The dialog over the window, if there is one. */
+const dialog = () => q("[aria-modal='true']").filter(shown).at(-1);
+/** The track list, or the dialog over it. */
+function home() {
+  (dialog() ?? /** @type {HTMLElement | null} */ (document.querySelector(LIST)))?.focus({ preventScroll: true });
+}
 function after(/** @type {KeyboardEvent} */ e) {
   const was = /** @type {HTMLElement | null} */ (document.activeElement);
   if (!was || was === document.body) return;
   const typed = was.matches('input:not([type="checkbox"], [type="radio"], [type="range"]), textarea');
   const back = from.get(was);
-  const keys = moving || typed;
+  const keys = moving || typed || document.documentElement.dataset.input === 'keys';
   setTimeout(() => {
     if (document.activeElement && document.activeElement !== document.body) return;
     if (!was.isConnected) {
       // A pointer's own press on Undo, say, leaves focus where pointers leave it.
       if (!keys) return;
-      if (back && usable(back)) back.focus({ preventScroll: true });
+      if (back && usable(back) && (dialog()?.contains(back) ?? true)) back.focus({ preventScroll: true });
       else home();
     } else if (keys && e.key === 'Escape') home();
     else if (keys && typed) home();
