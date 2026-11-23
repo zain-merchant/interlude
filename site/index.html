@@ -21,7 +21,7 @@
   <!-- Geist, served from here (no other site to reach before the page can
        draw its text); the Latin file is fetched straight away. -->
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="style.css?v=20261122l">
+  <link rel="stylesheet" href="style.css?v=20261122m">
   <script src="tune.js?v=20261122a"></script>
   <script>
     // Live updates while working on the site locally (.claude/serve.py
@@ -185,6 +185,8 @@
       // The name is --brand-word (30px) in the bar and 15px in the capsule;
       // the icon is --brand-icon (40px) in the bar and 36px in the capsule.
       let WORD = 15 / 30, ICON = 40 / 36, CAP_R = 14, GAP = 10, PAD = 0;
+      const SQ_NATIVE = typeof CSS !== 'undefined' && CSS.supports('corner-shape', 'superellipse(2)');
+      const sqScale = (s) => (1 - Math.SQRT1_2) / (1 - 2 ** (-1 / 2 ** (1 + s)));
       const sizes = () => {
         const cs = getComputedStyle(d);
         CAP_R = parseFloat(cs.getPropertyValue('--cap-r')) || 14;
@@ -269,7 +271,12 @@
         // them lays out nothing else.
         const v = p;
         const left = geo.side0 + (geo.side - geo.side0) * p, right = geo.side0 + (geo.right - geo.side0) * p;
-        const box = { left: `${r(left)}px`, width: `${r(geo.W - left - right)}px`, top: `${r(geo.top0 + (10 - geo.top0) * p)}px`, height: `${r(geo.h0 + (48 - geo.h0) * p)}px`, borderRadius: `${r(geo.r0 + (CAP_R - geo.r0) * p)}px` };
+        // (Its corners smoothed like every other's where the browser draws
+        // that itself, squircles.js: the radius scaled so the corner's
+        // middle stays put. Elsewhere round: a clip redrawn every frame
+        // would cost more than it shows.)
+        const sq = d.dataset.squircles && SQ_NATIVE ? sqScale(+d.dataset.squircles / 100) : 1;
+        const box = { left: `${r(left)}px`, width: `${r(geo.W - left - right)}px`, top: `${r(geo.top0 + (10 - geo.top0) * p)}px`, height: `${r(geo.h0 + (48 - geo.h0) * p)}px`, borderRadius: `${r((geo.r0 + (CAP_R - geo.r0) * p) * sq)}px` };
         Object.assign(glass.style, box);
         Object.assign(edge.style, box);
         // The bar's middle is 30px down, the capsule's 34px. The icon's box
@@ -403,7 +410,7 @@
         wake();
       };
       // The capsule as it is now, for the menu to open out of.
-      window.navCapsule = () => ({ rect: glass.getBoundingClientRect(), r: parseFloat(glass.style.borderRadius) || CAP_R });
+      window.navCapsule = () => ({ rect: glass.getBoundingClientRect(), r: geo ? geo.r0 + (CAP_R - geo.r0) * shape.x : CAP_R });
       window.tune?.slider({ id: 'nav-word', label: 'Nav: name size before capsule', folder: 'Settled', min: 18, max: 96, step: 1, value: 32, unit: 'px', css: '--brand-word', onInput: () => requestAnimationFrame(measure) });
       // The capsule's corners: the icon's own (its squircle's corner, about
       // 8px at 36px, plus the 6px between), so everything inside is
@@ -2606,6 +2613,21 @@
         if (dn) dn.href = r.html_url;
       })
       .catch(() => {});
+  </script>
+  <script type="module">
+    // Smoothed (squircle) corners on every rounded rect (squircles.js), once
+    // the page has loaded and is idle. ?squircles=off: plain round corners;
+    // ?squircles=NN: that much smoothing (60 by default).
+    const sq = new URLSearchParams(location.search).get('squircles');
+    if (sq !== 'off') {
+      const go = () => import('./squircles.js?v=20261122a').then((m) => {
+        if (sq && Number.isFinite(+sq)) document.documentElement.dataset.squircles = String(Math.max(0, Math.min(100, +sq)));
+        m.start();
+        window.navMeasure?.();
+      }).catch(() => {});
+      const idle = () => ('requestIdleCallback' in window ? requestIdleCallback(go, { timeout: 800 }) : setTimeout(go, 200));
+      if (document.readyState === 'complete') idle(); else addEventListener('load', idle, { once: true });
+    }
   </script>
 </body>
 </html>
