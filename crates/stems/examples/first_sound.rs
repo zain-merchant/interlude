@@ -15,7 +15,7 @@ use std::time::{Duration, Instant};
 
 use dj_engine::{Stems, Track};
 use dj_stems::download::{Downloader, State};
-use dj_stems::{Model, Settings, Splitter, Stop, When};
+use dj_stems::{Head, Model, Settings, Splitter, Stop, When};
 
 const TRIALS: usize = 3;
 
@@ -99,7 +99,7 @@ fn on_use(path: &Path, samples: &[f32]) -> Splitter {
             model: Some(path.into()),
             ..Default::default()
         },
-        Box::new(|_| 93.0),
+        Box::new(|_| Head::still(93.0)),
     );
     let track = Track::from_stereo(samples.to_vec(), 44_100);
     s.split(0, Arc::new(track), None);

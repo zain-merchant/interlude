@@ -8,7 +8,7 @@ use std::time::{Duration, Instant};
 
 use dj_engine::stems::{STORED_BASS, STORED_DRUMS, STORED_VOCALS};
 use dj_engine::Track;
-use dj_stems::{CacheKey, Settings, Splitter, Status, When};
+use dj_stems::{CacheKey, Head, Settings, Splitter, Status, When};
 
 /// The stand-in model, in a folder of its own: the splitter puts a copy that
 /// loads quickly beside it.
@@ -73,7 +73,7 @@ fn splits_two_decks_and_caches() {
     };
     let s = Splitter::new(
         settings.clone(),
-        Box::new(|deck| if deck == 0 { 0.0 } else { 0.5 }),
+        Box::new(|deck| Head::still(if deck == 0 { 0.0 } else { 0.5 })),
     );
 
     let file = dir.join("song.wav");
@@ -139,7 +139,7 @@ fn splitter(when: When, model: Option<PathBuf>) -> Splitter {
         model,
         ..Default::default()
     };
-    Splitter::new(settings, Box::new(|_| 0.0))
+    Splitter::new(settings, Box::new(|_| Head::still(0.0)))
 }
 
 /// Waits until `f`, or panics.
@@ -470,7 +470,7 @@ fn makes_a_quick_copy_when_idle() {
         model: Some(path.clone()),
         ..Default::default()
     };
-    let s = Splitter::new(off.clone(), Box::new(|_| 0.0));
+    let s = Splitter::new(off.clone(), Box::new(|_| Head::still(0.0)));
     std::thread::sleep(Duration::from_millis(200));
     assert!(!dj_stems::quick::exists(&path), "not while stems are off");
     s.configure(Settings {
@@ -588,7 +588,7 @@ fn movable(when: When) -> (Splitter, Arc<std::sync::Mutex<[f64; 2]>>) {
             model: Some(model()),
             ..Default::default()
         },
-        Box::new(move |deck| h.lock().unwrap()[deck]),
+        Box::new(move |deck| Head::still(h.lock().unwrap()[deck])),
     );
     until("a copy", || dj_stems::quick::exists(&model()));
     (s, heads)
@@ -833,7 +833,7 @@ fn only_the_first_region_goes_wide() {
             model: Some(path.clone()),
             ..Default::default()
         },
-        Box::new(|_| 0.0),
+        Box::new(|_| Head::still(0.0)),
     );
     let playing = Arc::new(std::sync::atomic::AtomicBool::new(false));
     let start = Instant::now();
@@ -879,7 +879,7 @@ fn going_wide_is_for_a_beginning() {
             model: Some(model()),
             ..Default::default()
         },
-        Box::new(|_| 0.0),
+        Box::new(|_| Head::still(0.0)),
     );
     let start = Instant::now();
     while !dj_stems::quick::exists(&model()) {

@@ -19,7 +19,7 @@ use std::sync::{Arc, Mutex};
 
 use dj_engine::{SharedState, NUM_DECKS};
 use dj_stems::download::{self, Downloader};
-use dj_stems::{CacheKey, Settings, Splitter, Status, When, MODEL_BYTES};
+use dj_stems::{CacheKey, Head, Settings, Splitter, Status, When, MODEL_BYTES};
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter, Manager, State};
 
@@ -223,7 +223,13 @@ impl Stems {
             .is_some_and(|m: &Downloader| m.state() == download::State::Ready);
         let settled = saved.settle(has_model);
         let decks = shared.clone();
-        let heads: dj_stems::PlayHeads = Box::new(move |deck| shared.deck(deck).position);
+        let heads: dj_stems::PlayHeads = Box::new(move |deck| {
+            let d = shared.deck(deck);
+            Head {
+                at: d.position,
+                speed: if d.playing { d.speed } else { 0.0 },
+            }
+        });
         let stems = Self {
             splitter: Splitter::new(Settings::default(), heads),
             dir,
