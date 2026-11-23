@@ -3652,7 +3652,10 @@ function draw(now) {
   nap = 0;
   resting = false;
   if (!running) return;
-  if (reduced.matches || !visible || held) {
+  // (Held by the page: just stop, leaving the frame that's there; drawing
+  // a still one would cost a whole frame just as the menu starts to move.)
+  if (held) { running = false; return; }
+  if (reduced.matches || !visible) {
     running = false;
     // Stopping: the last frame left showing is a still one, with nothing
     // passing lit in it.
