@@ -7,7 +7,9 @@
    stepper. A handle's own bar takes the colour. Nothing moves or fades, so
    reduced motion has nothing to turn off.
 
-   Keys only (#24's data-input). A text field has no line: its caret, its
+   Keys only: while #24's data-input says keys are moving focus, whatever has
+   it, since WebKit doesn't call a focus moved by script (F6, a tab's arrows)
+   :focus-visible; :focus-visible where #24 is off. A text field has no line: its caret, its
    words and icon a step brighter, and a little more light on its lower lip,
    however you got there.
 
@@ -51,38 +53,48 @@
 }
 
 /* ── The line ──────────────────────────────────────────────────────── */
-:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):where([data-input='keys'], :not([data-flag-focus-after-keys])) :focus-visible:not(.fp, .fp *) {
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_)[data-input='keys'] :focus:not(.fp, .fp *, textarea, input:not([type='checkbox'], [type='radio'], [type='range'], [type='button'])),
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):not([data-flag-focus-after-keys]) :focus-visible:not(.fp, .fp *, textarea, input:not([type='checkbox'], [type='radio'], [type='range'], [type='button'])) {
   outline: var(--fx-w) solid var(--fx) !important;
   outline-offset: 2px !important;
 }
 /* What shows it somewhere else: containers, and what has a part that moves. */
-:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_) :is([data-region='tracks'], .menu, .panel, .card, .settings, [role='dialog'], .shell-pop, .scroll, .colh, .split, .grip, .fader, .knob .dial, .search > input, .sfind > input):focus-visible {
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_) :is([data-region='tracks'], .menu, .panel, .card, .settings, [role='dialog'], .shell-pop, .scroll, .modes, .colh, .split, .grip, .fader, .knob .dial, .search > input, .sfind > input):focus {
   outline: none !important;
 }
 /* No room outside. */
-:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):where([data-input='keys'], :not([data-flag-focus-after-keys])) :is(section.library nav :is(.item, .add), .settings nav .item, .row.head .sort, .row.head .cols, .modes button, .knob button.label, .search .clear, .rw):focus-visible,
-:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):where([data-input='keys'], :not([data-flag-focus-after-keys])) .menu button:focus-visible,
-:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):where([data-input='keys'], :not([data-flag-focus-after-keys])) [data-region='tracks']:focus-visible .row.sel {
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_)[data-input='keys'] :is(section.library nav :is(.item, .add), .settings nav .item, .row.head .sort, .row.head .cols, .modes button, .knob button.label, .search .clear, .rw):focus,
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):not([data-flag-focus-after-keys]) :is(section.library nav :is(.item, .add), .settings nav .item, .row.head .sort, .row.head .cols, .modes button, .knob button.label, .search .clear, .rw):focus-visible,
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_)[data-input='keys'] .menu button:focus,
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):not([data-flag-focus-after-keys]) .menu button:focus-visible,
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_)[data-input='keys'] [data-region='tracks']:focus .row.sel,
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):not([data-flag-focus-after-keys]) [data-region='tracks']:focus-visible .row.sel {
   outline: var(--fx-w) solid var(--fx) !important;
   outline-offset: calc(-1px - var(--fx-w)) !important;
 }
-:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):where([data-input='keys'], :not([data-flag-focus-after-keys])) :is(.modes button.on, nav .item.on):focus-visible,
-:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):where([data-input='keys'], :not([data-flag-focus-after-keys])) [data-region='tracks']:focus-visible .row.sel {
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_)[data-input='keys'] :is(.modes button.on, nav .item.on):focus,
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):not([data-flag-focus-after-keys]) :is(.modes button.on, nav .item.on):focus-visible,
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_)[data-input='keys'] [data-region='tracks']:focus .row.sel,
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):not([data-flag-focus-after-keys]) [data-region='tracks']:focus-visible .row.sel {
   --fx: var(--fx-face);
 }
-:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):where([data-input='keys'], :not([data-flag-focus-after-keys])) :is(.menu button, .rw):focus-visible {
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_)[data-input='keys'] :is(.menu button, .rw):focus,
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):not([data-flag-focus-after-keys]) :is(.menu button, .rw):focus-visible {
   --fx: var(--fx-menu);
 }
-:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):where([data-input='keys'], :not([data-flag-focus-after-keys])) :is(.st, .undo, .hp):focus-visible {
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_)[data-input='keys'] :is(.st, .undo, .hp):focus,
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):not([data-flag-focus-after-keys]) :is(.st, .undo, .hp):focus-visible {
   outline-offset: 1px !important;
 }
 /* The record's centre: on its own dark, not on the vinyl. */
-:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):where([data-input='keys'], :not([data-flag-focus-after-keys])) .hub:focus-visible {
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_)[data-input='keys'] .hub:focus,
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):not([data-flag-focus-after-keys]) .hub:focus-visible {
   outline: var(--fx-w-round) solid var(--fx) !important;
   outline-offset: -3px !important;
 }
 /* The list with no selected row in view. */
-:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):where([data-input='keys'], :not([data-flag-focus-after-keys])) [data-region='tracks']:focus-visible:not(:has(.row.sel)) {
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_)[data-input='keys'] [data-region='tracks']:focus:not(:has(.row.sel)),
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):not([data-flag-focus-after-keys]) [data-region='tracks']:focus-visible:not(:has(.row.sel)) {
   outline: var(--fx-w) solid var(--fx) !important;
   outline-offset: -2px !important;
 }
@@ -91,40 +103,48 @@
 :root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_) .knob .wrap:has(> .dial:focus-visible) {
   outline: none !important;
 }
-:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):where([data-input='keys'], :not([data-flag-focus-after-keys])):not(#_) .knob .dial:focus-visible {
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_)[data-input='keys']:not(#_) .knob .dial:focus,
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):not([data-flag-focus-after-keys]):not(#_) .knob .dial:focus-visible {
   outline: var(--fx-w-round) solid var(--fx) !important;
   outline-offset: 2px !important;
 }
-:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):where([data-input='keys'], :not([data-flag-focus-after-keys])):not(#_) .cen .dial:focus-visible {
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_)[data-input='keys']:not(#_) .cen .dial:focus,
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):not([data-flag-focus-after-keys]):not(#_) .cen .dial:focus-visible {
   outline-color: var(--fx-face) !important;
 }
 /* #1 clips a focused fader's own (unseen) corners, which cut its cap at the
    end of its travel whenever a key was pressed after a click. */
-:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_) .fader:focus-visible {
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_) .fader:focus {
   clip-path: none !important;
 }
-:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):where([data-input='keys'], :not([data-flag-focus-after-keys])) .fader:focus-visible .cap {
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_)[data-input='keys'] .fader:focus .cap,
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):not([data-flag-focus-after-keys]) .fader:focus-visible .cap {
   outline: var(--fx-w) solid var(--fx) !important;
   outline-offset: 2px !important;
 }
 /* An end of a one-cut stepper, the zoom's, Grid's and Settings': where the
    small key rises under the pointer, 3px in from the cut. */
-:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):where([data-input='keys'], :not([data-flag-focus-after-keys])) :is([data-region^='deck'] :is(.jumps, .nudge, .beats, .step) > button, .strip .grid .sym, .sstep > .btn):focus-visible {
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_)[data-input='keys'] :is([data-region^='deck'] :is(.jumps, .nudge, .beats, .step) > button, .strip .grid .sym, .sstep > .btn):focus,
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):not([data-flag-focus-after-keys]) :is([data-region^='deck'] :is(.jumps, .nudge, .beats, .step) > button, .strip .grid .sym, .sstep > .btn):focus-visible {
   border-radius: var(--r);
   outline-offset: calc(-3px - var(--fx-w)) !important;
 }
-:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):where([data-input='keys'], :not([data-flag-focus-after-keys])) .zoom button:focus-visible {
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_)[data-input='keys'] .zoom button:focus,
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):not([data-flag-focus-after-keys]) .zoom button:focus-visible {
   outline-offset: calc(-1px - var(--fx-w)) !important;
 }
 
 /* ── Handles ───────────────────────────────────────────────────────── */
-:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):where([data-input='keys'], :not([data-flag-focus-after-keys])) .app > :is(.split, .grip:not(.side)):focus-visible i {
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_)[data-input='keys'] .app > :is(.split, .grip:not(.side)):focus i,
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):not([data-flag-focus-after-keys]) .app > :is(.split, .grip:not(.side)):focus-visible i {
   background: var(--fx);
 }
-:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):where([data-input='keys'], :not([data-flag-focus-after-keys])) .below > .grip.side:focus-visible i {
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_)[data-input='keys'] .below > .grip.side:focus i,
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):not([data-flag-focus-after-keys]) .below > .grip.side:focus-visible i {
   background: var(--fx);
 }
-:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):where([data-input='keys'], :not([data-flag-focus-after-keys])) section.library .row.head .colh:focus-visible::after {
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_)[data-input='keys'] section.library .row.head .colh:focus::after,
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):not([data-flag-focus-after-keys]) section.library .row.head .colh:focus-visible::after {
   height: 18px;
   background: var(--fx);
   opacity: 1;
