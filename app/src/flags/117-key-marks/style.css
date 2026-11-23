@@ -1,0 +1,62 @@
+/* #117 key-marks: the marks on keys, as two small fonts. */
+@font-face {
+  font-family: 'Interlude Keys';
+  src: url('./matched-400.otf') format('opentype');
+  font-weight: 100 449;
+  font-display: block;
+  unicode-range: U+21A9, U+21E5, U+21E7, U+2303, U+2318, U+2325, U+232B;
+}
+@font-face {
+  font-family: 'Interlude Keys';
+  src: url('./matched-500.otf') format('opentype');
+  font-weight: 450 549;
+  font-display: block;
+  unicode-range: U+21A9, U+21E5, U+21E7, U+2303, U+2318, U+2325, U+232B;
+}
+@font-face {
+  font-family: 'Interlude Keys';
+  src: url('./matched-600.otf') format('opentype');
+  font-weight: 550 900;
+  font-display: block;
+  unicode-range: U+21A9, U+21E5, U+21E7, U+2303, U+2318, U+2325, U+232B;
+}
+@font-face {
+  font-family: 'Interlude Keys Round';
+  src: url('./round-400.otf') format('opentype');
+  font-weight: 100 449;
+  font-display: block;
+  unicode-range: U+2190-2193, U+21A9, U+21E5, U+21E7, U+2303, U+2318, U+2325, U+232B;
+}
+@font-face {
+  font-family: 'Interlude Keys Round';
+  src: url('./round-500.otf') format('opentype');
+  font-weight: 450 549;
+  font-display: block;
+  unicode-range: U+2190-2193, U+21A9, U+21E5, U+21E7, U+2303, U+2318, U+2325, U+232B;
+}
+@font-face {
+  font-family: 'Interlude Keys Round';
+  src: url('./round-600.otf') format('opentype');
+  font-weight: 550 900;
+  font-display: block;
+  unicode-range: U+2190-2193, U+21A9, U+21E5, U+21E7, U+2303, U+2318, U+2325, U+232B;
+}
+:root[data-flag-key-marks][data-flag-key-marks][data-flag-key-marks][data-flag-key-marks][data-flag-key-marks-set='matched'] {
+  --key-marks: 'Interlude Keys';
+}
+:root[data-flag-key-marks][data-flag-key-marks][data-flag-key-marks][data-flag-key-marks][data-flag-key-marks-set='round'] {
+  --key-marks: 'Interlude Keys Round';
+}
+/* In front of whichever face the app is set in. */
+:root[data-flag-key-marks][data-flag-key-marks][data-flag-key-marks][data-flag-key-marks] {
+  --font: 'Interlude Accidentals', var(--key-marks), 'Geist Variable', 'Helvetica Neue', Arial, sans-serif;
+  --font-sans: var(--font);
+}
+:root[data-flag-key-marks][data-flag-key-marks][data-flag-key-marks][data-flag-key-marks][data-flag-font-special-gothic] {
+  --font: 'Interlude Accidentals', var(--key-marks), 'Special Gothic', 'Geist Variable', 'Helvetica Neue', Arial, sans-serif;
+}
+:root[data-flag-key-marks][data-flag-key-marks][data-flag-key-marks][data-flag-key-marks],
+:root[data-flag-key-marks][data-flag-key-marks][data-flag-key-marks][data-flag-key-marks] body,
+:root[data-flag-key-marks][data-flag-key-marks][data-flag-key-marks][data-flag-key-marks] .font-sans {
+  font-family: var(--font);
+}
