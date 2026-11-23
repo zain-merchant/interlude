@@ -5,8 +5,7 @@
 // iOS and macOS, instead of a circular arc that starts abruptly. Circles and
 // capsules stay as they are.
 //
-// The shape is Figma's corner smoothing: 0% is the plain border-radius, and
-// more smoothing starts the curve further along each edge while its middle
+// The shape is a superellipse: 0% is the plain border-radius, and more smoothing starts the curve further along each edge while its middle
 // (the 45° point) stays where the plain radius puts it, so a corner never
 // looks bigger or smaller, only smoother. squircles.js (started from
 // App.svelte) draws it one of two ways:
@@ -25,7 +24,7 @@ export default {
   title: 'Smoother rounded corners',
   group: 'Shape',
   notes:
-    'Figma-style smoothed corners on every rounded rect; circles and capsules unchanged. Smoothing changes the curve, not the corner\'s size (0% is the plain radius). Native corner-shape in Chrome 139+; in WebKit (Safari, the app) a clip with the ring redrawn along the curve, so borders are never cropped. Deck tabs are left round: a clip notched their selected underline.',
+    'Smoothed corners on every rounded rect, from 2px up and the same curve in both engines; circles and capsules unchanged. Smoothing changes the curve, not the corner\'s size (0% is the plain radius). Native corner-shape in Chrome 139+; in WebKit (Safari, the app) a clip with the ring redrawn along the curve, so borders are never cropped. Deck tabs are left round: a clip notched their selected underline.',
   settings: {
     // A plain number (0 to 100) rather than a %.
     smoothing: { type: 'range', min: 0, max: 100, step: 5, default: 60, unit: '', label: 'Smoothing %' },
