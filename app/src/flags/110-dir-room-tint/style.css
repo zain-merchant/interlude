@@ -1237,33 +1237,6 @@
   height: 22px;
   border-radius: calc(var(--r) - 2px);
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:not([data-flag-dir-room-tint-stepper='one']) .waves .zoom {
-  padding: 3px;
-  gap: 1px;
-}
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:not([data-flag-dir-room-tint-stepper='one']) .waves .zoom button {
-  --kk-face: var(--rg-key);
-  --kk-face-hi: var(--rg-key-hi);
-  --kk-face-dn: var(--rg-down);
-  background: var(--tt-sheen), var(--rg-key);
-  box-shadow: inset 0 1px 0 0 rgb(255 255 255 / 0.095), 0 1px 0 0 var(--tt-rim), 0 2px 5px -1px var(--tt-lift-c) !important;
-  width: 26px;
-  border-radius: calc(var(--r) - 3px);
-}
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:not([data-flag-dir-room-tint-stepper='one']) .waves .zoom button:is(:hover, [data-show-hover]):not(:disabled) {
-  background: var(--tt-sheen), var(--rg-key-hi);
-}
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:not([data-flag-dir-room-tint-stepper='one']) .waves .zoom button:is(:active, [data-show-active]):not(:disabled) {
-  background: var(--rg-down);
-  box-shadow: inset 0 1px 0 0 var(--tt-c1), 0 1px 0 0 var(--tt-c3), 0 0 0 0 rgb(0 0 0 / 0) !important;
-}
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:not([data-flag-dir-room-tint-stepper='one']) .waves .zoom button:disabled {
-  background: rgb(255 255 255 / 0.022);
-  box-shadow: none !important;
-}
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:not([data-flag-dir-room-tint-stepper='one']) .waves .zoom button::after {
-  content: none;
-}
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .waves .zoom button::after {
   inset: 1px;
 }
@@ -1456,7 +1429,7 @@
 /* Tier: recessed. An end of a stepper has no face of its own; under the
    pointer a shape shows in it, 3px in from the cut's edges and from the
    rule beside it, its corners the cut's less 3. Three ways (a setting). */
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] :is(:root[data-flag-dir-room-tint-stepper='one'] [data-region^='deck'] :is(.transport .jumps, .pitch .nudge, .fx .beats, .perf .step) > button, .zoom button, [data-region^='deck'] .strip .grid button:is(:nth-child(1), :nth-child(2), :nth-child(4), :nth-child(5))) {
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] :is([data-region^='deck'] :is(.transport .jumps, .pitch .nudge, .fx .beats, .perf .step) > button, .zoom button, [data-region^='deck'] .strip .grid button:is(:nth-child(1), :nth-child(2), :nth-child(4), :nth-child(5))) {
   --kk-face: transparent;
   --kk-face-hi: transparent;
   --kk-face-dn: transparent;
@@ -1468,7 +1441,7 @@
   --kk-sheen: rgb(255 255 255 / 0);
   box-shadow: none !important;
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] :is(:root[data-flag-dir-room-tint-stepper='one'] [data-region^='deck'] :is(.transport .jumps, .pitch .nudge, .fx .beats, .perf .step) > button, .zoom button, [data-region^='deck'] .strip .grid button:is(:nth-child(1), :nth-child(2), :nth-child(4), :nth-child(5)))::after {
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] :is([data-region^='deck'] :is(.transport .jumps, .pitch .nudge, .fx .beats, .perf .step) > button, .zoom button, [data-region^='deck'] .strip .grid button:is(:nth-child(1), :nth-child(2), :nth-child(4), :nth-child(5)))::after {
   content: '';
   position: absolute;
   z-index: -1;
@@ -1481,37 +1454,37 @@
   pointer-events: none;
   transition: opacity 140ms ease-out, scale 140ms ease-out, box-shadow 90ms ease-out, background-color 90ms ease-out;
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] :is(:root[data-flag-dir-room-tint-stepper='one'] [data-region^='deck'] :is(.transport .jumps, .pitch .nudge, .fx .beats, .perf .step) > button, .zoom button, [data-region^='deck'] .strip .grid button:is(:nth-child(1), :nth-child(2), :nth-child(4), :nth-child(5))) {
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] :is([data-region^='deck'] :is(.transport .jumps, .pitch .nudge, .fx .beats, .perf .step) > button, .zoom button, [data-region^='deck'] .strip .grid button:is(:nth-child(1), :nth-child(2), :nth-child(4), :nth-child(5))) {
   position: relative;
   isolation: isolate;
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] :is(:root[data-flag-dir-room-tint-stepper='one'] [data-region^='deck'] :is(.transport .jumps, .pitch .nudge, .fx .beats, .perf .step) > button, .zoom button, [data-region^='deck'] .strip .grid button:is(:nth-child(1), :nth-child(2), :nth-child(4), :nth-child(5))):is(:hover, [data-show-hover]):not([aria-disabled='true'], :disabled)::after {
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] :is([data-region^='deck'] :is(.transport .jumps, .pitch .nudge, .fx .beats, .perf .step) > button, .zoom button, [data-region^='deck'] .strip .grid button:is(:nth-child(1), :nth-child(2), :nth-child(4), :nth-child(5))):is(:hover, [data-show-hover]):not([aria-disabled='true'], :disabled)::after {
   opacity: 1;
   scale: 1;
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] :is(:root[data-flag-dir-room-tint-stepper='one'] [data-region^='deck'] :is(.transport .jumps, .pitch .nudge, .fx .beats, .perf .step) > button, .zoom button, [data-region^='deck'] .strip .grid button:is(:nth-child(1), :nth-child(2), :nth-child(4), :nth-child(5))):is(:active, [data-show-active]):not([aria-disabled='true'], :disabled)::after {
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] :is([data-region^='deck'] :is(.transport .jumps, .pitch .nudge, .fx .beats, .perf .step) > button, .zoom button, [data-region^='deck'] .strip .grid button:is(:nth-child(1), :nth-child(2), :nth-child(4), :nth-child(5))):is(:active, [data-show-active]):not([aria-disabled='true'], :disabled)::after {
   background: var(--rg-down);
   box-shadow: inset 0 1px 0 0 var(--tt-c1), 0 1px 0 0 var(--tt-c3);
   transition-duration: 50ms;
 }
-:root[data-flag-dir-room-tint-step='sink'][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] :is(:root[data-flag-dir-room-tint-stepper='one'] [data-region^='deck'] :is(.transport .jumps, .pitch .nudge, .fx .beats, .perf .step) > button, .zoom button, [data-region^='deck'] .strip .grid button:is(:nth-child(1), :nth-child(2), :nth-child(4), :nth-child(5)))::after {
+:root[data-flag-dir-room-tint-step='sink'][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] :is([data-region^='deck'] :is(.transport .jumps, .pitch .nudge, .fx .beats, .perf .step) > button, .zoom button, [data-region^='deck'] .strip .grid button:is(:nth-child(1), :nth-child(2), :nth-child(4), :nth-child(5)))::after {
   background: rgb(0 0 0 / 0.75);
   box-shadow: inset 0 1px 3px 0 #000, 0 1px 0 0 rgb(255 255 255 / 0.13);
 }
-:root[data-flag-dir-room-tint-step='sink'][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] :is(:root[data-flag-dir-room-tint-stepper='one'] [data-region^='deck'] :is(.transport .jumps, .pitch .nudge, .fx .beats, .perf .step) > button, .zoom button, [data-region^='deck'] .strip .grid button:is(:nth-child(1), :nth-child(2), :nth-child(4), :nth-child(5))):is(:active, [data-show-active]):not([aria-disabled='true'], :disabled)::after {
+:root[data-flag-dir-room-tint-step='sink'][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] :is([data-region^='deck'] :is(.transport .jumps, .pitch .nudge, .fx .beats, .perf .step) > button, .zoom button, [data-region^='deck'] .strip .grid button:is(:nth-child(1), :nth-child(2), :nth-child(4), :nth-child(5))):is(:active, [data-show-active]):not([aria-disabled='true'], :disabled)::after {
   background: #000;
   box-shadow: inset 0 2px 4px 0 #000, 0 1px 0 0 rgb(255 255 255 / 0.2);
 }
-:root[data-flag-dir-room-tint-step='tint'][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] :is(:root[data-flag-dir-room-tint-stepper='one'] [data-region^='deck'] :is(.transport .jumps, .pitch .nudge, .fx .beats, .perf .step) > button, .zoom button, [data-region^='deck'] .strip .grid button:is(:nth-child(1), :nth-child(2), :nth-child(4), :nth-child(5)))::after {
+:root[data-flag-dir-room-tint-step='tint'][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] :is([data-region^='deck'] :is(.transport .jumps, .pitch .nudge, .fx .beats, .perf .step) > button, .zoom button, [data-region^='deck'] .strip .grid button:is(:nth-child(1), :nth-child(2), :nth-child(4), :nth-child(5)))::after {
   background: rgb(255 255 255 / 0.075);
   box-shadow: none;
 }
-:root[data-flag-dir-room-tint-step='tint'][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] :is(:root[data-flag-dir-room-tint-stepper='one'] [data-region^='deck'] :is(.transport .jumps, .pitch .nudge, .fx .beats, .perf .step) > button, .zoom button, [data-region^='deck'] .strip .grid button:is(:nth-child(1), :nth-child(2), :nth-child(4), :nth-child(5))):is(:active, [data-show-active]):not([aria-disabled='true'], :disabled)::after {
+:root[data-flag-dir-room-tint-step='tint'][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] :is([data-region^='deck'] :is(.transport .jumps, .pitch .nudge, .fx .beats, .perf .step) > button, .zoom button, [data-region^='deck'] .strip .grid button:is(:nth-child(1), :nth-child(2), :nth-child(4), :nth-child(5))):is(:active, [data-show-active]):not([aria-disabled='true'], :disabled)::after {
   background: rgb(255 255 255 / 0.035);
   box-shadow: none;
 }
 @media (prefers-reduced-motion: reduce) {
-  :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] :is(:root[data-flag-dir-room-tint-stepper='one'] [data-region^='deck'] :is(.transport .jumps, .pitch .nudge, .fx .beats, .perf .step) > button, .zoom button, [data-region^='deck'] .strip .grid button:is(:nth-child(1), :nth-child(2), :nth-child(4), :nth-child(5)))::after {
+  :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] :is([data-region^='deck'] :is(.transport .jumps, .pitch .nudge, .fx .beats, .perf .step) > button, .zoom button, [data-region^='deck'] .strip .grid button:is(:nth-child(1), :nth-child(2), :nth-child(4), :nth-child(5)))::after {
     scale: 1;
     transition: none;
   }
@@ -1576,18 +1549,15 @@
   font-size: var(--t-sm) !important;
 }
 
-/* ── Steppers: two keys standing in one cut ────────────────────────────
-   Everything that nudges, steps, halves or doubles: one cut, 3px of it round
-   two raised keys, the amount on its floor between them. The keys' corners
-   are the cut's less 3. Or (a setting) one cut with short etched rules, whose
-   ends rise under the pointer. Settings' steppers take the same numbers. */
+/* ── Steppers: one cut, an end each side ───────────────────────────────
+   Everything that nudges, steps, halves or doubles: a cut with a glyph at
+   each end and the amount between them, set off by short etched rules. An
+   end rises under the pointer. Settings' steppers take the same numbers. */
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] :is(.transport .jumps, .pitch .nudge, .fx .beats, .perf .step) {
   display: grid;
-  grid-template-columns: minmax(21px, 28px) minmax(max-content, 1fr) minmax(21px, 28px);
   justify-items: stretch;
   align-items: stretch;
   gap: 0;
-  padding: 3px;
   overflow: hidden;
   border-radius: var(--r);
   background: var(--rg-grooves), var(--rg-well);
@@ -1599,20 +1569,19 @@
   min-width: 0;
   height: 100%;
   padding: 0;
-  border-radius: calc(var(--r) - 3px);
   box-sizing: border-box;
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-stepper='one'] [data-region^='deck'] :is(.transport .jumps, .pitch .nudge, .fx .beats, .perf .step) {
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] :is(.transport .jumps, .pitch .nudge, .fx .beats, .perf .step) {
   grid-template-columns: minmax(18px, 30px) minmax(max-content, 1fr) minmax(18px, 30px);
   padding: 0;
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-stepper='one'] [data-region^='deck'] :is(.transport .jumps, .pitch .nudge, .fx .beats, .perf .step) > button {
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] :is(.transport .jumps, .pitch .nudge, .fx .beats, .perf .step) > button {
   border-radius: 0;
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-stepper='one'] [data-region^='deck'] :is(.transport .jumps, .pitch .nudge, .fx .beats, .perf .step) > button:first-of-type {
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] :is(.transport .jumps, .pitch .nudge, .fx .beats, .perf .step) > button:first-of-type {
   border-radius: var(--r) 0 0 var(--r);
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-stepper='one'] [data-region^='deck'] :is(.transport .jumps, .pitch .nudge, .fx .beats, .perf .step) > button:last-of-type {
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] :is(.transport .jumps, .pitch .nudge, .fx .beats, .perf .step) > button:last-of-type {
   border-radius: 0 var(--r) var(--r) 0;
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] :is(.transport .jumps, .pitch .nudge, .fx .beats, .perf .step):has(> button[aria-disabled='true']):not(:has(> button:not([aria-disabled='true']))) {
@@ -1653,9 +1622,9 @@
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] :is(.transport .jumps > span, .fx .beats > .val, .perf .step > .val) {
   position: relative;
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-stepper='one'] [data-region^='deck'] :is(.transport .jumps > span, .fx .beats > .val, .perf .step > .val)::before,
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-stepper='one'] [data-region^='deck'] :is(.transport .jumps > span, .fx .beats > .val, .perf .step > .val)::after,
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-stepper='one'] [data-region^='deck'] .pitch .nudge::after {
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] :is(.transport .jumps > span, .fx .beats > .val, .perf .step > .val)::before,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] :is(.transport .jumps > span, .fx .beats > .val, .perf .step > .val)::after,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .pitch .nudge::after {
   content: '';
   position: absolute;
   inset: 0 auto 0 -1px;
@@ -1665,21 +1634,19 @@
   background: linear-gradient(90deg, #000 50%, rgb(255 255 255 / 0.13) 50%);
   pointer-events: none;
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-stepper='one'] [data-region^='deck'] :is(.transport .jumps > span, .fx .beats > .val, .perf .step > .val)::after {
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] :is(.transport .jumps > span, .fx .beats > .val, .perf .step > .val)::after {
   inset: 0 -1px 0 auto;
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .pitch .nudge {
   position: relative;
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-stepper='one'] [data-region^='deck'] .pitch .nudge::after {
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .pitch .nudge::after {
   inset: 0 auto 0 calc(50% - 1px);
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .pitch .nudge {
-  gap: 2px;
-  padding: 3px;
   grid-template-columns: 1fr 1fr;
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-stepper='one'] [data-region^='deck'] .pitch .nudge {
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .pitch .nudge {
   gap: 0;
   padding: 0;
 }
@@ -1708,7 +1675,7 @@
   margin: 0;
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .transport {
-  grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(min(106px, 30%), 1.22fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(min(132px, 36%), 1.5fr);
 }
 
 /* ── Numbers ───────────────────────────────────────────────────────────
@@ -1954,45 +1921,29 @@
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:not([data-flag-dir-room-tint-cues='foot']) [data-region^='deck'] .perf .tc.set span {
   color: var(--fg-2);
 }
-/* a lamp: the ring stands in a small cut, and lights */
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-cues='lamp'] [data-region^='deck'] .perf .tc {
-  --ci: 13px;
-  padding-left: max(4px, calc(50% - 35px));
-}
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-cues='lamp'] [data-region^='deck'] .perf .tc i {
+/* the ring stands in a small cut, and lights */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:not([data-flag-dir-room-tint-cues='foot']) [data-region^='deck'] .perf .tc i {
   background: rgb(0 0 0 / 0.6);
   box-shadow: inset 0 0 0 var(--cl) color-mix(in oklab, var(--hc) 85%, transparent), 0 1px 0 rgb(255 255 255 / 0.09);
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-cues='lamp'] [data-region^='deck'] .perf .tc.set i {
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:not([data-flag-dir-room-tint-cues='foot']) [data-region^='deck'] .perf .tc.set i {
   background: var(--hc);
   box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.3), 0 1px 0 rgb(0 0 0 / 0.78);
 }
-/* the number in the ring */
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-cues='ring'] [data-region^='deck'] .perf .tc {
-  padding-left: max(4px, calc(50% - 32px));
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:not([data-flag-dir-room-tint-cues='foot']) [data-region^='deck'] .perf .tc[aria-disabled='true'] i {
+  box-shadow: inset 0 0 0 var(--cl) var(--fg-4);
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-cues='ring'] [data-region^='deck'] .perf .tc i {
-  display: none;
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-cues='nine'] [data-region^='deck'] .perf .tc {
+  --ci: 9px;
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-cues='ring'] [data-region^='deck'] .perf .tc:is(.set, :not(.set)) b {
-  flex: none;
-  box-sizing: border-box;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  line-height: 23px;
-  text-align: center;
-  text-box: normal;
-  box-shadow: inset 0 0 0 1.5px color-mix(in oklab, var(--hc) 80%, transparent);
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-cues='eleven'] [data-region^='deck'] .perf .tc {
+  --ci: 11px;
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-cues='ring'] [data-region^='deck'] .perf .tc.set b {
-  background: var(--hc);
-  box-shadow: none;
-  color: #0d0d10;
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:not([data-flag-dir-room-tint-cues='foot'], [data-flag-dir-room-tint-cues='nine'], [data-flag-dir-room-tint-cues='eleven']) [data-region^='deck'] .perf .tc {
+  --ci: 7px;
 }
 @container (max-height: 63.9px) {
   :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:not([data-flag-dir-room-tint-cues='foot']) [data-region^='deck'] .perf .tc {
-    --ci: 10px;
     gap: 4px;
     justify-content: center;
     padding: 0;
@@ -2003,7 +1954,6 @@
 }
 @container (max-width: 319px) {
   :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:not([data-flag-dir-room-tint-cues='foot']) [data-region^='deck'] .perf .tc {
-    --ci: 10px;
     gap: 5px;
     padding: 0 0 0 4px;
   }
@@ -2045,11 +1995,10 @@
   border-radius: var(--r);
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .perf .step {
-  padding: 3px;
   grid-template-columns: minmax(26px, 52px) minmax(max-content, 1fr) minmax(26px, 52px);
   container-type: inline-size;
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-stepper='one'] [data-region^='deck'] .perf .step {
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .perf .step {
   padding: 0;
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .perf .step .tb {
@@ -3498,10 +3447,7 @@
   }
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .transport .jumps {
-  grid-template-columns: minmax(13px, 26px) minmax(max-content, 1fr) minmax(13px, 26px);
-}
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-stepper='one'] [data-region^='deck'] .transport .jumps {
-  grid-template-columns: minmax(13px, 30px) minmax(max-content, 1fr) minmax(13px, 30px);
+  grid-template-columns: minmax(13px, 27px) minmax(max-content, 1fr) minmax(13px, 27px);
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .transport .jumps > span {
   padding-inline: 3px;
@@ -3530,13 +3476,15 @@
   }
 }
 
-/* ── Weight ────────────────────────────────────────────────────────────
+/* ── Tertiary ──────────────────────────────────────────────────────────
    One rule. Raised: what you play with, and what opens something (Cue, Play,
-   Sync, Loop, the effect and its switch, the library's keys). Ghost: switches
-   and small nudges (Key lock, minus and plus, the headphones, Rec, the hot
-   cues): no face at rest, a faint one under the pointer; on, a recess or a
-   ring that fills. Text: what's read (the tempo's range). */
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:not([data-flag-dir-room-tint-weight='full']) :is([data-region^='deck'] .pitch .lock, [data-region^='deck'] .pitch .nudge > button, .mixer .hp, .mixer button.rec) {
+   Sync, Loop, the effect and its switch, the library's keys). A cut: an
+   amount, with what changes it at its ends. Tertiary: switches and small
+   nudges (Key lock, minus and plus, the headphones, Rec, and the tempo's
+   range). Those are bare, with one sign that they press (six of them, a
+   setting), a faint face under the pointer, and on in the sign and the label.
+   Rec alone has red in a recess while it records. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] :is([data-region^='deck'] .pitch .lock, [data-region^='deck'] .pitch .nudge > button, .mixer .hp, .mixer button.rec) {
   --kk-face: transparent;
   --kk-face-hi: rgb(255 255 255 / 0.055);
   --kk-face-dn: rgb(0 0 0 / 0.35);
@@ -3546,56 +3494,128 @@
   --kk-rim: rgb(0 0 0 / 0);
   --kk-lift: rgb(0 0 0 / 0);
   --kk-sheen: rgb(255 255 255 / 0);
+  --kk-ink: var(--fg-2);
+  position: relative;
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:not([data-flag-dir-room-tint-weight='full']) [data-region^='deck'] .pitch .nudge {
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .pitch .nudge {
   gap: 4px;
-  padding: 0;
   background: none;
   box-shadow: none;
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:not([data-flag-dir-room-tint-weight='full']) [data-region^='deck'] .pitch .nudge::before,
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:not([data-flag-dir-room-tint-weight='full']) [data-region^='deck'] .pitch .nudge::after {
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .pitch .nudge::before,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .pitch .nudge::after,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .pitch .nudge > button::after {
   content: none;
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:not([data-flag-dir-room-tint-weight='full']) [data-region^='deck'] .pitch .nudge > button:is(:first-of-type, :last-of-type) {
-  --kk-ink: var(--fg-3);
-  height: 24px;
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .pitch .nudge > button:is(:first-of-type, :last-of-type) {
+  height: 26px;
   align-self: center;
   border-radius: 6px;
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:not([data-flag-dir-room-tint-weight='full']) [data-region^='deck'] .pitch .nudge > button::after {
-  content: none;
-}
-/* Key lock's one sign: the ring a hot cue has, filled while it's on. */
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:not([data-flag-dir-room-tint-weight='full']) [data-region^='deck'] .pitch .lock {
-  --kk-face-in: transparent;
-  --kk-c1: rgb(0 0 0 / 0);
-  --tt-c3: rgb(0 0 0 / 0);
-  --kk-ink: var(--fg-2);
-  --kk-ink-in: var(--fg);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .pitch .lock {
   width: calc(100% + 8px);
   margin-inline: -4px;
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:not([data-flag-dir-room-tint-weight='full']) [data-region^='deck'] .pitch .lock::before {
-  content: '';
-  flex: none;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  box-shadow: inset 0 0 0 1.5px var(--fg-4);
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] :is([data-region^='deck'] .pitch .lock.on, .mixer .hp.on) {
+  --kk-face-in: transparent;
+  --kk-c1: rgb(0 0 0 / 0);
+  --tt-c3: rgb(0 0 0 / 0);
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:not([data-flag-dir-room-tint-weight='full']) [data-region^='deck'] .pitch .lock.on::before {
-  background: var(--deck);
-  box-shadow: none;
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .pitch .lock.on {
+  --kk-ink-in: var(--deck);
 }
-/* The tempo is read more than pressed: its window shows under the pointer. */
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:not([data-flag-dir-room-tint-weight='full']) [data-region^='deck'] .pitch .val:not(:hover, :focus-visible, :focus-within) {
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer button.rec:not(.on) .dot {
+  background: color-mix(in oklab, var(--kill) 72%, #17171a);
+}
+/* 0.00%: in its window, or bare like the rest (a setting). */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:not([data-flag-dir-room-tint-tempo='cut']) [data-region^='deck'] .pitch .val:not(:hover, :focus-visible, :focus-within) {
   background: none;
   box-shadow: none;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:not([data-flag-dir-room-tint-tempo='cut']) [data-region^='deck'] .pitch .val .lk {
+  justify-content: center;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:not([data-flag-dir-room-tint-tempo='cut']) [data-region^='deck'] .pitch .val .sg {
+  position: absolute;
+  left: 4px;
+}
+/* 1: an etched rule under it */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-tert='under'] :is([data-region^='deck'] .pitch .lock, [data-region^='deck'] .pitch .nudge > button, [data-region^='deck'] .pitch .val, .mixer .hp, .mixer button.rec)::after {
+  content: '' !important;
+  position: absolute;
+  inset: auto auto 2px 50%;
+  width: min(22px, 60%);
+  height: 2px;
+  translate: -50% 0;
+  background: linear-gradient(180deg, rgb(0 0 0 / 0.85) 50%, rgb(255 255 255 / 0.15) 50%);
+  box-shadow: none;
+  opacity: 1;
+  scale: none;
+  border-radius: 0;
+  pointer-events: none;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-tert='under'] [data-region^='deck'] .pitch .lock::after {
+  width: 48px;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-tert='under'] [data-region^='deck'] .pitch .val::after {
+  width: 34px;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-tert='under'] .mixer button.rec::after {
+  width: 40px;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-tert='under'] :is([data-region^='deck'] .pitch .lock.on, .mixer .hp.on)::after {
+  background: var(--on);
+}
+/* 2: an etched rule beside it */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-tert='beside'] :is([data-region^='deck'] .pitch .lock, [data-region^='deck'] .pitch .nudge > button, [data-region^='deck'] .pitch .val, .mixer .hp, .mixer button.rec)::after {
+  content: '' !important;
+  position: absolute;
+  inset: 0 auto 0 2px;
+  width: 2px;
+  height: 12px;
+  margin: auto 0;
+  background: linear-gradient(90deg, rgb(0 0 0 / 0.85) 50%, rgb(255 255 255 / 0.16) 50%);
+  box-shadow: none;
+  opacity: 1;
+  scale: none;
+  border-radius: 0;
+  pointer-events: none;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-tert='beside'] :is([data-region^='deck'] .pitch .lock.on, .mixer .hp.on)::after {
+  background: var(--on);
+}
+/* 3: a hairline cut round it */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-tert='hair'] :is([data-region^='deck'] .pitch .lock, [data-region^='deck'] .pitch .nudge > button, [data-region^='deck'] .pitch .val, .mixer .hp, .mixer button.rec):not(:active, .rec.on) {
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.55), 0 1px 0 0 rgb(255 255 255 / 0.06) !important;
+  border-radius: 7px;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-tert='hair'] :is([data-region^='deck'] .pitch .lock.on, .mixer .hp.on):not(:active) {
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--on) 45%, transparent), 0 1px 0 0 rgb(255 255 255 / 0.06) !important;
+}
+/* 4: a brighter label */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-tert='bright'] :is([data-region^='deck'] .pitch .lock, [data-region^='deck'] .pitch .nudge > button, .mixer .hp, .mixer button.rec) {
+  --kk-ink: var(--fg);
+  font-weight: 600;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-tert='bright'] .mixer .hp:not(.on) svg {
+  color: var(--fg) !important;
+}
+/* 5: a faint flat face */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-tert='flat'] :is([data-region^='deck'] .pitch .lock, [data-region^='deck'] .pitch .nudge > button, .mixer .hp, .mixer button.rec) {
+  --kk-face: rgb(255 255 255 / 0.038);
+  --kk-face-hi: rgb(255 255 255 / 0.075);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-tert='flat'] [data-region^='deck'] .pitch .val:not(:hover) {
+  background: rgb(255 255 255 / 0.038);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-tert='flat'] :is([data-region^='deck'] .pitch .lock.on, .mixer .hp.on) {
+  --kk-face-in: color-mix(in oklab, var(--on) 13%, transparent);
+}
+/* 6: a patch of grooves */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-tert='groove'] :is([data-region^='deck'] .pitch .lock, [data-region^='deck'] .pitch .nudge > button, .mixer .hp, .mixer button.rec):not(.rec.on),
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-tert='groove'] [data-region^='deck'] .pitch .val {
+  background-image: var(--rg-grooves);
+  background-color: rgb(0 0 0 / 0.2);
 }
 
 /* ── The mixer's scales ────────────────────────────────────────────────
@@ -3654,14 +3674,52 @@
     gap: 13px;
   }
 }
-/* Without its window the tempo stands over its fader's slot. */
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:not([data-flag-dir-room-tint-weight='full']) [data-region^='deck'] .pitch .val .lk {
-  justify-content: center;
+
+/* ── Etched ticks ──────────────────────────────────────────────────────
+   Every mark is a tiny cut, dark with a light lower edge, like the rules
+   (two ways and the plain lines, a setting): on the plate, or on a shallow
+   grooved strip beside the slot. No brighter than the lines were. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:not([data-flag-dir-room-tint-ticks='lines']) :is(.mixer .fwrap .fader.vertical .mark, [data-region^='deck'] .pitch .fader.vertical .mark) {
+  height: 2px;
+  margin-top: -1px;
+  margin-bottom: -1px;
+  background: linear-gradient(180deg, #000 50%, rgb(255 255 255 / 0.15) 50%);
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:not([data-flag-dir-room-tint-weight='full']) [data-region^='deck'] .pitch .val .sg {
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:not([data-flag-dir-room-tint-ticks='lines']) .mixer svg.ruler line:not(.on, :first-child, :last-child) {
+  stroke: #000;
+  stroke-width: 1;
+  filter: drop-shadow(1px 0 0 rgb(255 255 255 / 0.15));
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-ticks='strip'] :is(.mixer .fwrap .fader.vertical, [data-region^='deck'] .pitch .fader.vertical)::before {
+  content: '';
   position: absolute;
-  left: 4px;
+  top: 0;
+  bottom: 0;
+  left: calc(50% + 4px);
+  width: 9px;
+  border-radius: 2px;
+  background: var(--rg-grooves), rgb(0 0 0 / 0.28);
+  box-shadow: inset 0 1px 0 rgb(0 0 0 / 0.7), 0 1px 0 rgb(255 255 255 / 0.05);
+  pointer-events: none;
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:not([data-flag-dir-room-tint-weight='full']) .mixer button.rec:not(.on) .dot {
-  background: color-mix(in oklab, var(--kill) 72%, #17171a);
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-ticks='strip'] :is(.mixer .fwrap.mirror .fader.vertical, [data-region='deck1'] .pitch .fader.vertical)::before {
+  left: auto;
+  right: calc(50% + 4px);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-ticks='strip'] .mixer .xf .xr::before {
+  content: '';
+  position: absolute;
+  inset: 0 -4px auto;
+  height: 12px;
+  border-radius: 2px;
+  background: var(--rg-grooves), rgb(0 0 0 / 0.28);
+  box-shadow: inset 0 1px 0 rgb(0 0 0 / 0.7), 0 1px 0 rgb(255 255 255 / 0.05);
+  pointer-events: none;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-ticks='strip'] .mixer .xf .xr {
+  position: relative;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-ticks='rings'] .knob line:not(.on) {
+  stroke: rgb(0 0 0 / 0.85);
+  filter: drop-shadow(0 1px 0 rgb(255 255 255 / 0.16));
 }

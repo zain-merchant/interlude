@@ -26,21 +26,45 @@ export default {
     cues: {
       type: 'choice',
       label: 'Hot cues',
-      default: 'lamp',
+      default: 'seven',
       options: [
-        ['dot', 'A small ring that fills', 'The lightest: a small ring beside the number.'],
-        ['lamp', 'A lamp that lights', 'A ring in a small cut; it lights when the cue is set.'],
-        ['ring', 'The number in a ring', 'The heaviest of the three: the ring is round the number.'],
+        ['seven', 'Small circles', 'A ring 7px across in a small cut; it lights when the cue is set.'],
+        ['nine', 'Middle circles', '9px across.'],
+        ['eleven', 'Large circles', '11px across.'],
         ['foot', 'Pressed tiles', 'As it was: a number over a rule, and a pressed tile once set, in softer colours.'],
       ],
     },
-    weight: {
+    tert: {
       type: 'choice',
-      label: 'Small controls',
-      default: 'light',
+      label: 'Small switches and nudges',
+      default: 'under',
       options: [
-        ['light', 'Light', 'Key lock, minus and plus, the headphones, Rec and the tempo have no face until the pointer is over them.'],
-        ['full', 'Raised', 'As they were.'],
+        ['under', 'An etched rule under it', 'The rule fills with colour when it is on.'],
+        ['beside', 'An etched rule beside it', 'The rule fills with colour when it is on.'],
+        ['hair', 'A hairline cut round it', 'The line takes the colour when it is on.'],
+        ['bright', 'A brighter label', 'No mark: the label is brighter than a caption.'],
+        ['flat', 'A faint flat face', 'A face with no depth.'],
+        ['groove', 'A patch of grooves', 'The texture, with no edge.'],
+      ],
+    },
+    tempo: {
+      type: 'choice',
+      label: "The tempo's range, 0.00%",
+      default: 'bare',
+      options: [
+        ['bare', 'Like the small switches', 'Its window shows under the pointer.'],
+        ['cut', 'In its window', 'A small cut, as it was.'],
+      ],
+    },
+    ticks: {
+      type: 'choice',
+      label: 'Ticks',
+      default: 'etched',
+      options: [
+        ['etched', 'Etched', 'Each is a tiny cut, dark with a light edge.'],
+        ['strip', 'Etched, on a grooved strip', 'The same, standing on a shallow strip of grooves beside the slot.'],
+        ['rings', 'Etched, the dials too', "The same, and the dials' rings."],
+        ['lines', 'Lines', 'As they were.'],
       ],
     },
     room: {
@@ -51,15 +75,6 @@ export default {
         ['meters', 'Meters midway', 'At the same width, each meter stands midway between its fader and the middle.'],
         ['wide', 'Wider', '24px wider, taken from the decks.'],
         ['as', 'As it was', 'The meters close to their faders.'],
-      ],
-    },
-    stepper: {
-      type: 'choice',
-      label: 'Steppers',
-      default: 'one',
-      options: [
-        ['under', 'Two keys standing in one cut', 'The keys are raised; the amount is on the floor of the cut between them.'],
-        ['one', 'One cut with rules', 'Nothing raised until the pointer is over an end.'],
       ],
     },
     step: {
