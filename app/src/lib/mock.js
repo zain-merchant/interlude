@@ -137,19 +137,6 @@ export function createMockBackend() {
   };
   // Background analysis: one track every 60 ms, reported to listeners.
   const analysisListeners = new Set();
-  // Music folders the preview's picker can add, with what's in them.
-  const NEW_FOLDERS = {
-    '/Users/you/Music/Bandcamp Friday': ['Pale Harbour', 'Second Skin', 'Glass Delta', 'Morning Tax', 'Soft Machinery', 'Lantern Year', 'Kerosene', 'Under the Viaduct', 'Salt Routine', 'Tall Weeds', 'Ferry Song', 'Nightjar', 'Copper Sleep', 'Two Rivers'],
-    '/Users/you/Music/Promos': ['Untitled Roller', 'Breakwater', 'Signal Loss', 'Hold Music', 'Marble Run', 'Last Orders', 'Static Garden', 'Blue Hour (Dub)', 'Ladder'],
-  };
-  const fillFolder = (folder) => {
-    for (const [i, title] of (NEW_FOLDERS[folder] ?? []).entries()) {
-      const artist = ARTISTS[(hash(folder) + i * 5) % ARTISTS.length];
-      const path = `${folder}/${artist} - ${title}.mp3`;
-      if (tracks.some((t) => t.path === path)) continue;
-      tracks.push({ path, title, artist, album: '', genre: 'Electronic', folder: folder.split('/').pop(), format: i % 3 ? 'MP3' : 'AIFF', missing: false, analysis: null });
-    }
-  };
   let analysisQueue = [];
   setInterval(() => {
     const t = analysisQueue.shift();
@@ -522,7 +509,6 @@ export function createMockBackend() {
     libraryFolders: async () => [...folders],
     addFolder: async (path) => {
       if (path && !folders.includes(path)) folders.push(path);
-      fillFolder(path);
       return [...folders];
     },
     useDefaultOutput: async () => {
@@ -641,7 +627,6 @@ export function createMockBackend() {
     pickRekordboxXml: async () => '~/Desktop/rekordbox.xml',
     pickSeratoFolder: async () => '/Volumes/USB/_Serato_',
     // #7 (UI audit flag): a show (or a check) can hand the picker a folder, e.g. an empty one.
-    // Otherwise the picker "picks" the next of NEW_FOLDERS, then is cancelled.
-    pickFolder: async () => globalThis.__mockPickFolder ?? Object.keys(NEW_FOLDERS).find((f) => !folders.includes(f)) ?? null,
+    pickFolder: async () => globalThis.__mockPickFolder ?? null,
   };
 }
