@@ -5,7 +5,8 @@
   // track is still being split, a hairline under the buttons fills up. Until
   // the model has downloaded, the buttons give way to how that's going. A
   // press that isn't heard yet, because the track isn't split there, pulses.
-  import { tick } from 'svelte';
+  import { onMount, tick } from 'svelte';
+  import { backend } from './backend.js';
   import { announce } from './announce.svelte.js';
   import { tracks } from './engine.svelte.js';
   import { tip, tipText } from './tooltip.svelte.js';
@@ -78,6 +79,12 @@
   const status = $derived(stemsStatus(stemsModel));
   const act = () => (status.action ? downloadStems().catch((e) => console.error('stems model', e)) : onsettings?.());
   $effect(() => (getting ? watchStemsModel() : undefined));
+
+  // This is only here while the tab is open. Cues on the deck are prepared for then.
+  onMount(() => {
+    backend.stemsShown?.(deck, true);
+    return () => void backend.stemsShown?.(deck, false);
+  });
 
   // Focus on the status's button moves to the first stem when they're back.
   let root;

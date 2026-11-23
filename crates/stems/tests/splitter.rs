@@ -513,3 +513,145 @@ fn nothing_is_prepared_without_a_quick_copy() {
     drop(s);
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+/// A splitter whose play heads the test moves, in seconds.
+fn movable(when: When) -> (Splitter, Arc<std::sync::Mutex<[f64; 2]>>) {
+    let heads = Arc::new(std::sync::Mutex::new([0.0; 2]));
+    let h = heads.clone();
+    let s = Splitter::new(
+        Settings {
+            when,
+            model: Some(model()),
+            ..Default::default()
+        },
+        Box::new(move |deck| h.lock().unwrap()[deck]),
+    );
+    until("a copy", || dj_stems::quick::exists(&model()));
+    (s, heads)
+}
+
+/// Longer than a deck has to stand for, with time to split a region.
+fn rest() {
+    std::thread::sleep(Duration::from_millis(1100));
+}
+
+/// Loads a track as someone who uses stems, and lets it settle.
+fn load_as_a_user(s: &Splitter) -> Arc<Track> {
+    s.use_stems(1);
+    let t = track(60.0);
+    s.split(0, t.clone(), None);
+    std::thread::sleep(Duration::from_millis(900));
+    t
+}
+
+#[test]
+fn a_cued_deck_is_prepared_where_it_stands() {
+    let (s, heads) = movable(When::OnUse);
+    let t = load_as_a_user(&s);
+    rest();
+    assert_eq!(s.model_loads(), 0, "loading it isn't cueing it");
+    heads.lock().unwrap()[0] = 20.0;
+    rest();
+    assert_eq!(s.model_loads(), 1);
+    assert_eq!(s.status(0), Status::OnUse, "still only a maybe");
+    assert!(t.stems.get().is_none());
+    // Nothing more to do, so the model isn't held, and standing on does nothing.
+    rest();
+    assert_eq!(s.model_loads(), 1);
+    // Back where it was loaded counts too, once it has been somewhere else.
+    heads.lock().unwrap()[0] = 0.0;
+    rest();
+    assert_eq!(s.model_loads(), 2);
+    s.use_stems(0);
+    wait_ready(&s, 0);
+    check(&t);
+}
+
+#[test]
+fn cueing_prepares_nothing_for_someone_who_does_not_use_stems() {
+    let (s, heads) = movable(When::OnUse);
+    let t = track(60.0);
+    s.split(0, t.clone(), None);
+    std::thread::sleep(Duration::from_millis(900));
+    heads.lock().unwrap()[0] = 20.0;
+    rest();
+    assert_eq!(s.model_loads(), 0);
+    // With its Stems tab showing it does, and not for the other deck's.
+    s.shown(1, true);
+    heads.lock().unwrap()[0] = 30.0;
+    rest();
+    assert_eq!(s.model_loads(), 0);
+    s.shown(0, true);
+    std::thread::sleep(Duration::from_millis(300));
+    heads.lock().unwrap()[0] = 40.0;
+    rest();
+    assert_eq!(s.model_loads(), 1);
+    assert_eq!(s.status(0), Status::OnUse);
+    // Put away again, the next cue is nobody's.
+    s.shown(0, false);
+    heads.lock().unwrap()[0] = 10.0;
+    rest();
+    assert_eq!(s.model_loads(), 1);
+    s.shown(9, true);
+}
+
+/// Cue after cue, with no rest between: nothing is made until it stops, and
+/// then once.
+#[test]
+fn rapid_cueing_waits_for_the_last() {
+    let (s, heads) = movable(When::OnUse);
+    load_as_a_user(&s);
+    for i in 0..20 {
+        heads.lock().unwrap()[0] = 5.0 + 2.0 * i as f64;
+        std::thread::sleep(Duration::from_millis(60));
+    }
+    assert_eq!(s.model_loads(), 0, "not while it's moving");
+    rest();
+    assert_eq!(s.model_loads(), 1);
+    rest();
+    assert_eq!(s.model_loads(), 1, "nothing queued");
+}
+
+#[test]
+fn a_playing_deck_is_not_being_cued() {
+    let (s, heads) = movable(When::OnUse);
+    load_as_a_user(&s);
+    for i in 0..60 {
+        heads.lock().unwrap()[0] = i as f64 * 0.02;
+        std::thread::sleep(Duration::from_millis(20));
+    }
+    assert_eq!(s.model_loads(), 0);
+}
+
+#[test]
+fn another_track_drops_what_a_cue_prepared() {
+    let (s, heads) = movable(When::OnUse);
+    let t = load_as_a_user(&s);
+    heads.lock().unwrap()[0] = 20.0;
+    rest();
+    assert_eq!(s.model_loads(), 1);
+    let next = track(60.0);
+    heads.lock().unwrap()[0] = 0.0;
+    s.split(0, next.clone(), None);
+    rest();
+    rest();
+    assert_eq!(s.model_loads(), 1, "the new one hasn't been cued");
+    assert!(t.stems.get().is_none() && next.stems.get().is_none());
+    s.stop(0);
+    heads.lock().unwrap()[0] = 33.0;
+    rest();
+    assert_eq!(s.model_loads(), 1, "and an empty deck can't be");
+}
+
+#[test]
+fn only_efficient_prepares_a_cue() {
+    let (s, heads) = movable(When::Unchosen);
+    s.shown(0, true);
+    let t = track(60.0);
+    s.split(0, t.clone(), None);
+    std::thread::sleep(Duration::from_millis(900));
+    heads.lock().unwrap()[0] = 20.0;
+    rest();
+    assert_eq!(s.model_loads(), 0);
+    assert_eq!(s.status(0), Status::Unchosen);
+}

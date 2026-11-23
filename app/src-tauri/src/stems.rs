@@ -404,6 +404,12 @@ pub fn prepare_stems(stems: State<'_, Stems>, deck: usize, on: bool) {
     stems.splitter.prepare(deck, on);
 }
 
+/// Whether `deck`'s Stems tab is showing.
+#[tauri::command]
+pub fn stems_shown(stems: State<'_, Stems>, deck: usize, shown: bool) {
+    stems.splitter.shown(deck, shown);
+}
+
 /// `deck`'s stems are being used: its Stems tab was opened.
 #[tauri::command]
 pub fn use_stems(stems: State<'_, Stems>, deck: usize) {

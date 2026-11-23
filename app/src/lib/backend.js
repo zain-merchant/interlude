@@ -81,6 +81,8 @@ async function createTauriBackend() {
     clearStemsCache: () => invoke('clear_stems_cache'),
     /** A deck's stems look about to be used (the pointer is on them), or no longer do. */
     prepareStems: (deck, on) => invoke('prepare_stems', { deck, on }),
+    /** Whether a deck's Stems tab is showing. */
+    stemsShown: (deck, shown) => invoke('stems_shown', { deck, shown }),
     /** A deck's stems are being used: its Stems tab was opened. */
     useStems: (deck) => invoke('use_stems', { deck }),
     /** How the model download is doing. @returns {Promise<import('./stemsmodel.js').StemsModel>} */

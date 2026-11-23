@@ -98,7 +98,9 @@ Everything Interlude does, in detail. For a short overview, see the
   once you choose. A stem pressed before its part of the track is ready
   pulses, and fades in or out once it is. With Efficient, resting the
   pointer on the Stems tab or the stems gets the track started, and moving
-  off lets it go. If you already had the model when
+  off lets it go. So does cueing a stopped deck, once you've used stems since
+  Interlude started or that deck's Stems tab is showing: it's kept ready
+  while the deck is there. If you already had the model when
   this choice arrived, you have Fast. On an M5 MacBook Air separating a
   4½-minute track takes about 50 seconds. It starts at the play head and
   runs ahead of it, so the part you're about to play is ready first;
