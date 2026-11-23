@@ -21,7 +21,7 @@
   <!-- Geist, served from here (no other site to reach before the page can
        draw its text); the Latin file is fetched straight away. -->
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="style.css?v=20261123i">
+  <link rel="stylesheet" href="style.css?v=20261123k">
   <script>
     // (The phone preview's frame, opened by this same site with the Tune
     // panel showing; nothing for anyone else.)
@@ -210,7 +210,7 @@
       slider('ctlscale', { label: 'Video size', folder: 'Controller', value: 100, min: 88, max: 100, step: 0.5, unit: '%', apply: (v) => { st.ctl.scale = v / 100; fire('try-controller'); } });
       slider('ctldown', { label: 'Controller down', folder: 'Controller', value: 70, min: 0, max: 130, step: 2, unit: 'px', apply: (v) => { st.ctl.down = v; fire('try-controller'); } });
       select('arrive', { label: 'Glint', folder: 'Controller', value: 'on', options: [['on', 'When out of view'], ['always', 'Every time'], ['off', 'None']], apply: (v) => (st.arrive = v) });
-      slider('arriveamt', { label: 'Glint strength', folder: 'Controller', value: 0.1, min: 0.02, max: 0.3, step: 0.01, apply: (v) => css('--arrive', String(v)) });
+      slider('arriveamt', { label: 'Glint strength', folder: 'Controller', value: 0.16, min: 0.02, max: 0.3, step: 0.01, apply: (v) => css('--arrive', String(v)) });
 
       // The record behind the hero: what a phone shows, and the desktop too
       // if it's ticked. A composition, or each part of it by hand.
@@ -243,9 +243,10 @@
       select('notelay', { label: 'Desktop card', folder: 'Note', value: 'right', options: [['right', 'Right, follows'], ['mid', 'Right, centred'], ['left', 'Left']], apply: (v) => set('notelay', v === 'right' ? '' : v) });
 
       // The footer's effect as the page is pulled past its end.
-      st.pull = { max: 0.8, soon: 0.2 };
-      slider('pullmax', { label: 'Pull strength', folder: 'Footer', value: 0.8, min: 0.2, max: 1, step: 0.05, apply: (v) => (st.pull.max = v) });
-      slider('pullsoon', { label: 'Pull needed (of screen)', folder: 'Footer', value: 0.2, min: 0.05, max: 0.6, step: 0.01, apply: (v) => (st.pull.soon = v) });
+      st.pull = { max: 1, soon: 0.09, wide: 1.2 };
+      slider('pullmax', { label: 'Both sizes: pull, at most', folder: 'Footer', value: 1, min: 0.2, max: 1, step: 0.05, apply: (v) => (st.pull.max = v) });
+      slider('pullsoon', { label: 'Both sizes: pull needed (of screen)', folder: 'Footer', value: 0.09, min: 0.03, max: 0.6, step: 0.01, apply: (v) => (st.pull.soon = v) });
+      slider('pullwide', { label: 'Both sizes: spread', folder: 'Footer', value: 1.2, min: 0, max: 3, step: 0.1, apply: (v) => (st.pull.wide = v) });
 
       // Squircle corners.
       select('squircles', { label: 'Squircles', folder: 'Corners', value: 'on', options: [['on', 'On'], ['off', 'Off']], apply: (v) => { st.sqOn = v !== 'off'; fire('try-squircles'); } });
@@ -2061,7 +2062,7 @@
           io.observe(w);
         });
       }
-      const fx = await import('./foot-fx.js?v=20261123a').catch(() => null);
+      const fx = await import('./foot-fx.js?v=20261123c').catch(() => null);
       addEventListener('foot-fit', () => fx?.relayout());
       // Without tune.js (or an older one), each control still applies its default.
       const own = (o) => o.onInput?.(o.value);
@@ -2301,12 +2302,12 @@
       // band gives little), then less and less; let go, it goes with the
       // page.
       // (Both set in the Try group, Footer.)
-      const pullOf = () => window.tryState?.pull || { max: 0.8, soon: 0.2 };
+      const pullOf = () => window.tryState?.pull || { max: 1, soon: 0.09, wide: 1.2 };
       const strength = (px) => { const p = pullOf(); return p.max * (1 - Math.exp(-px / (innerHeight * p.soon))); };
       const apply = () => {
         const px = Math.max(over, wheelPull);
         const k = px > 0 ? strength(px) : 0;
-        fx?.surge?.(k, 0.5);
+        fx?.surge?.(k, 0.5, pullOf().wide);
         if ((k > 0) !== shown) { shown = k > 0; under?.toggleAttribute('data-on', shown); }
         under?.style.setProperty('--pull', k.toFixed(3));
         log?.(px, k);
