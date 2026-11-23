@@ -9,7 +9,11 @@
 // Stems and Grid are laid out as keys, groups and readouts. Amber is Cue's.
 //
 // Only one direction is on at a time (only-one.svelte.js).
-if (typeof window !== 'undefined') setTimeout(() => import('./only-one.svelte.js'), 0);
+if (typeof window !== 'undefined')
+  setTimeout(() => {
+    import('./only-one.svelte.js');
+    import('./drops.svelte.js');
+  }, 0);
 
 export default {
   id: 'dir-room-tint',
@@ -22,21 +26,21 @@ export default {
     cues: {
       type: 'choice',
       label: 'Hot cues',
-      default: 'tile',
+      default: 'foot',
       options: [
-        ['tile', 'Flat tiles', 'An empty place is a flat tone with its number.'],
-        ['tray', 'One tray', 'All eight on one flat tone, parted by thin gaps.'],
-        ['ledge', 'Ledges', 'A number over a short bar, no tile.'],
-        ['bare', 'Bare', 'The number alone.'],
+        ['socket', 'Sockets', 'An empty place is its number in a small recess.'],
+        ['foot', 'Feet', 'A number over a short etched rule.'],
+        ['corner', 'Corner ticks', "A number, and a tick in its place's corner."],
+        ['next', 'Next only', 'Numbers alone; only the next free place is a key, and says Set.'],
       ],
     },
-    zoom: {
+    rules: {
       type: 'choice',
-      label: 'Waveform zoom',
-      default: 'float',
+      label: "Library's rules",
+      default: 'inset',
       options: [
-        ['float', 'Over the waveform', 'Upright at the right, the sound passing under it.'],
-        ['bar', 'Top right of the window', 'On one line, out of the waveform.'],
+        ['inset', 'Inset', 'Neither the sidebar\'s rule nor the headings\' reaches an edge.'],
+        ['full', 'Edge to edge', 'Both run the whole way.'],
       ],
     },
     cue: {
