@@ -1,15 +1,20 @@
-// #114 (UI audit flag): wave-looks' current look as one string for the
-// renderer's view ('' while it's off or set to Today). One string, so the
-// renderer can compare it frame to frame and the frame loop redraws when a
-// slider moves.
-import { flag, setting } from '../registry.svelte.js';
-import { lookOf } from './looks.js';
+// #114 (UI audit flag): wave-looks' look as one string for the renderer's
+// view, '' for the app's own drawing. One string, so the renderer can compare
+// it frame to frame and the frame loop redraws when a slider moves.
+import { flag, setting, FLAGS } from '../registry.svelte.js';
+import { lookOf, DEFAULT } from './looks.js';
+
+const ID = 'wave-looks';
+/** The look that shows: the flag's pick while it's on, else Direction 110's, else the app's own. */
+export const lookNow = () => lookOf(flag(ID) ? setting(ID, 'pick') : flag('dir-room-tint') ? DEFAULT : 'today');
 
 export function lookString() {
-  if (!flag('wave-looks')) return '';
-  const l = lookOf(setting('wave-looks', 'look'));
+  const l = lookNow();
   if (!l.draw) return '';
-  const o = { id: l.id, draw: l.draw };
-  for (const k in l.values) o[k] = Number(setting('wave-looks', `${l.id}-${k}`) ?? l.values[k]);
+  // With the flag off, 110's look has its defaults, whatever was tuned.
+  const on = flag(ID);
+  const lines = on ? setting(ID, 'lines') : FLAGS.find((f) => f.id === ID)?.settings?.lines.default;
+  const o = { id: l.id, draw: l.draw, lines };
+  for (const k in l.values) o[k] = Number((on ? setting(ID, `${l.id}-${k}`) : null) ?? l.values[k]);
   return JSON.stringify(o);
 }

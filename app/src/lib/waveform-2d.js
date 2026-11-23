@@ -31,7 +31,7 @@ const STEP = 2;
 import { pebbleLane, pebbleOverview } from '../flags/105-dir-pebble/wave.js'; // #105 (UI audit flag)
 import { linerLane, linerOverview } from '../flags/106-dir-liner/wave.js'; // #106 (UI audit flag)
 import { fieldDraw } from '../flags/107-dir-field/wave.js'; // #107 (UI audit flag)
-import { lookLane, lookOverview } from '../flags/114-wave-looks/wave.js'; // #114 (UI audit flag)
+import { lookLane, lookRibbon, lookBeats, lookOverview } from '../flags/114-wave-looks/wave.js'; // #114 (UI audit flag)
 
 const rgba = (c, a) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
 
@@ -129,12 +129,12 @@ export class Waveform2D {
    *           beatLen?: number, firstBeat?: number, hotCues?: number[],
    *           loopIn?: number, loopOut?: number, looping?: boolean, slip?: number,
    *           flags?: string, edge?: string, clipStart?: boolean, cueChips?: boolean, chipTop?: number, labelFont?: string,
-   *           keyline?: boolean, loopTint?: boolean, half?: string, look?: string, veil?: string, wl?: string, bps?: number }} view
+   *           keyline?: boolean, loopTint?: boolean, half?: string, look?: string, veil?: string, wl?: string, bps?: number, sec?: number }} view
    *   Positions are in bins, -1 for none; `perPx` is bins per device pixel.
    */
   draw(view) {
     this.resize();
-    if (this.unchanged(view) && !this.zooming) return; // #114 (UI audit flag): a coarse frame is drawn again once the zoom holds
+    if (this.unchanged(view) && !this.lookBusy) return; // #114 (UI audit flag): wave-looks has a frame to draw finer still
     if (view.look === 'field') return fieldDraw(this, view); // #107 (UI audit flag): dir-field prints the sound dark on its deck's sheet
     const { ctx, canvas } = this;
     const dpr = window.devicePixelRatio || 1;
@@ -155,6 +155,8 @@ export class Waveform2D {
     if ((view.wl ?? '') !== (this.wlKey ?? '')) {
       this.wlKey = view.wl ?? '';
       this.wl = view.wl ? JSON.parse(view.wl) : null;
+      this.lookTiles = this.tiles = null;
+      this.lookBusy = false;
     }
     if (this.wl) (this.lookBps = view.bps ?? 172.27), (this.lookBeat = [view.beatLen ?? 0, view.firstBeat ?? 0]);
     const grid = view.mode === 'scroll' && view.beatLen > 0;
@@ -165,12 +167,14 @@ export class Waveform2D {
       ctx.fillRect(a, 0, b - a, h);
     }
     if (this.count) {
-      if (view.mode === 'scroll') this.ribbon(w, h, view, spp, c);
+      if (view.mode === 'scroll' && this.wl) lookRibbon(this, w, h, view, spp, c); // #114 (UI audit flag)
+      else if (view.mode === 'scroll') this.ribbon(w, h, view, spp, c);
       else this.overview(w, h, c);
     }
     // The grid sits over the waveform so it reads against loud parts too,
     // and under the veil so the played part dims with it.
-    if (grid) this.beats(w, h, view, spp, x);
+    if (grid && this.wl) lookBeats(this, w, h, view, spp); // #114 (UI audit flag)
+    else if (grid) this.beats(w, h, view, spp, x);
     if (this.count) {
       // The played part: a dark veil so what's ahead is what reads.
       const px = Math.max(0, Math.min(w, x(view.playhead)));
@@ -244,13 +248,11 @@ export class Waveform2D {
    */
   beats(w, h, view, spp, x) {
     const { ctx } = this;
-    const dpr = window.devicePixelRatio || 1;
     const len = view.beatLen;
     const barsOnly = len / spp < 6;
     const TICK = 5;
     for (let b = Math.ceil((view.start - view.firstBeat) / len); ; b++) {
-      // #114 (UI audit flag): wave-looks puts the line's middle on the beat, on the pixel grid the sound is placed on.
-      const bx = this.wl?.beats ? (Math.round(((view.firstBeat + b * len) / spp - 0.5) * dpr) - Math.round((view.start / spp) * dpr)) / dpr : Math.round(x(view.firstBeat + b * len));
+      const bx = Math.round(x(view.firstBeat + b * len));
       if (bx > w) break;
       const bar = ((b % 4) + 4) % 4 === 0;
       if (barsOnly && !bar) continue;
@@ -351,16 +353,14 @@ export class Waveform2D {
   ribbon(w, h, view, spp, c) {
     const { ctx, canvas } = this;
     const dpr = window.devicePixelRatio || 1;
-    const key = `${this.version}|${spp}|${canvas.height}|${dpr}|${this.strict ? 1 : 0}|${view.edge ?? ''}${this.half ? `|${this.half}` : ''}${this.look ? `|${this.look}` : ''}${this.wl ? `|${this.wlKey}|${this.lookBps}|${this.lookBeat}` : ''}`; // #101 (UI audit flag): half; #105, #106: look; #114: wl
+    const key = `${this.version}|${spp}|${canvas.height}|${dpr}|${this.strict ? 1 : 0}|${view.edge ?? ''}${this.half ? `|${this.half}` : ''}${this.look ? `|${this.look}` : ''}`; // #101 (UI audit flag): half; #105, #106: look
     if (!this.tiles || this.tilesKey !== key || this.tilesColors !== c) {
-      this.zooming = !!this.wl && !!this.tilesSpp && this.tilesSpp !== spp; // #114 (UI audit flag): the zoom is moving: drawn coarser until it holds
-      this.tilesSpp = spp;
       this.tiles = new Map();
       this.spare = [];
       this.tilesKey = key;
       this.tilesColors = c;
       this.steady = 0;
-    } else this.zooming = false;
+    }
     // The view's left edge on the track's grid, in CSS px from the track's start.
     const off = view.start / spp;
     const first = Math.floor(off / TILE);
@@ -371,7 +371,7 @@ export class Waveform2D {
     if (missing > 1 && this.steady >= 3) this.steady = 0;
     if (++this.steady < 3) {
       ctx.save();
-      ctx.translate(this.wl ? -Math.round(off * dpr) / dpr : -off, 0); // #114 (UI audit flag): on whole device px, as the tiles are
+      ctx.translate(-off, 0);
       this.ribbonShape(ctx, ctx, off, off + w, spp, h, c, view.edge);
       ctx.restore();
       return;
