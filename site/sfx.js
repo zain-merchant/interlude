@@ -10,7 +10,7 @@
 // that edits it.
 //
 // Loaded by the boot script in index.html on the first tap or key, never
-// before, and never while sound is off. The rules:
+// before, and never while sound is off (it's off until it's asked for). The rules:
 // - Nothing plays before a gesture, while the tab is hidden, on hover or on
 //   scroll. Only the visitor's own hand makes a sound: a script switching
 //   something by itself stays silent.
@@ -51,6 +51,7 @@ export const SOUNDS = {
     nav: { cue: 'shaker' },
     hand: { cue: 'pluckPair' },
     faq: { cue: 'pluck' },
+    panel: { cue: 'pluck' },
     needle: { cue: 'hat909' },
     knock: { cue: 'tom' },
     copy: { cue: 'pluckPair' },
@@ -172,6 +173,12 @@ export const SLOTS = {
     hats: { name: '909 hats', what: 'Open hat opening, closed closing', def: (o) => S(hat909(up(o), 0, up(o) ? 1 : 0.8)) },
     tom: { name: 'Tom, high', what: 'On the fifth opening, the third closing', tuned: 1, from: 2, def: (o) => S(tom(up(o) ? 2 : 1, 0, up(o) ? 1 : 0.7)) },
   } },
+  panel: { name: 'Menu and sheet', where: 'The phone’s menu and the Send to Mac sheet opening (rises) or closing (the first note alone, softer)', db: -3, dir: ['Open', 'Close'], v: {
+    pluck: { name: 'Pluck, third to fifth', what: 'Two quick plucks upward; closing, the first alone', tuned: 1, from: 1, def: (o) => (up(o) ? S(pluck(1, 0, 0.8, 0.05), pluck(2, 0.035, 1, 0.06)) : S(pluck(1, 0, 0.6, 0.05))) },
+    rim: { name: 'Rim', what: 'High on the fifth opening, the root closing', tuned: 1, from: 6, def: (o) => S(rim(up(o) ? 6 : 4, 0, up(o) ? 1 : 0.7)) },
+    hats: { name: '909 hats', what: 'Open hat opening, closed closing', def: (o) => S(hat909(up(o), 0, up(o) ? 1 : 0.8)) },
+    tom: { name: 'Tom, high', what: 'On the fifth opening, the third closing', tuned: 1, from: 2, def: (o) => S(tom(up(o) ? 2 : 1, 0, up(o) ? 1 : 0.7)) },
+  } },
   needle: { name: 'Record', where: 'A click or tap on the hero record’s grooves, where the needle drops', db: -2, v: {
     hat909: { name: '909 closed hat', what: 'Short bright noise, unpitched', def: () => S(hat909()) },
     hat808: { name: '808 closed hat', what: 'Metallic, from six square waves, unpitched', def: () => S(hat808()) },
@@ -184,7 +191,7 @@ export const SLOTS = {
     clap: { name: 'Clap, tight', what: 'Three quick bursts and a short tail, unpitched', def: () => S(clap()) },
     stab: { name: 'House stab', what: 'The minor 7th chord, once', tuned: 1, from: 0, def: () => S(stab(0)) },
   } },
-  copy: { name: 'Copy', where: 'Anything that copies (data-sfx="copy"); the site has none yet', db: -2, v: {
+  copy: { name: 'Copy', where: 'Copy link and Copy a message in the phone’s sheet, once copied (and anything with data-sfx="copy")', db: -2, v: {
     pluckPair: { name: 'Pluck pair', what: 'The octave, then the fifth above it', tuned: 1, from: 4, def: () => S(pluck(4, 0, 0.8, 0.05), pluck(6, 0.04, 1, 0.06)) },
     rimPair: { name: 'Rim pair', what: 'Rims on the octave, then the fifth above', tuned: 1, from: 4, def: () => S(rim(4), rim(6, 0.04)) },
     stabHat: { name: 'Stab and hat', what: 'The minor 7th chord, then a soft closed hat', tuned: 1, from: 0, def: () => S(stab(0), hat909(false, 0.05, 0.6)) },
@@ -203,6 +210,7 @@ export const TRIMS = {
   'nav.shaker': -23.5, 'nav.hat808': -13.6, 'nav.pluck': -19.9,
   'hand.pluckPair': -20.3, 'hand.stab': -16.6, 'hand.rimPair': -13.4, 'hand.hats': -22,
   'faq.pluck': -20.5, 'faq.rim': -13.2, 'faq.hats': -24, 'faq.tom': -22,
+  'panel.pluck': -20.5, 'panel.rim': -13.2, 'panel.hats': -24, 'panel.tom': -22,
   'needle.hat909': -17.6, 'needle.hat808': -9.6, 'needle.rim': -11.2, 'needle.clap': -10.8,
   'knock.tom': -21.2, 'knock.snare': -17.3, 'knock.clap': -10.8, 'knock.stab': -15.5,
   'copy.pluckPair': -20.3, 'copy.rimPair': -14.8, 'copy.stabHat': -17.5,
@@ -263,13 +271,14 @@ export function play(slot, o = {}, cue, force, edit) {
 
 // ---- on the page ------------------------------------------------------
 let lastInput = 0, press = null, started = false;
+let last = { slot: '', at: -1e9 };   // the last control that sounded
 const now = () => performance.now();
 const fresh = () => now() - lastInput < 1000;   // a real input just now
 
 // The control under a press or click, and its cue (null: silent).
 function cueFor(t) {
   const el = t?.closest?.('[data-sfx], a[href], button, summary');
-  if (!el || el.closest('.dialkit-root, .switch, .sfx-btn') || el.disabled || el.getAttribute('aria-disabled') === 'true') return null;
+  if (!el || el.closest('.dialkit-root, .switch, .sfx-btn, .menu-btn') || el.disabled || el.getAttribute('aria-disabled') === 'true') return null;
   const named = el.dataset.sfx;
   if (named) return named === 'none' ? null : { el, slot: named };
   if (el.localName === 'summary') return { el, slot: 'faq', o: { d: el.parentElement?.open ? -1 : 1 } };
@@ -311,7 +320,7 @@ export function start(opts = {}) {
     if (e.button) { press = null; return; }
     const c = cueFor(e.target), mouse = e.pointerType === 'mouse';
     press = { c, mouse, x: e.clientX, y: e.clientY, at: now(), word: onWord(e), played: false };
-    if (mouse && c) press.played = play(c.slot, c.o) || true;
+    if (mouse && c) { press.played = play(c.slot, c.o) || true; last = { slot: c.slot, at: now() }; }
     if (mouse && press.word) play('knock', { pan: panAt(e.clientX) });
   }, cap);
   // Touch: a tap is a lift close to where it went down (a scroll cancels).
@@ -320,7 +329,6 @@ export function start(opts = {}) {
     const p = press;
     if (!p || p.mouse || !e.isTrusted) return;
     if (Math.hypot(e.clientX - p.x, e.clientY - p.y) > 10 || now() - p.at > 600) return;
-    if (p.needle) play('needle');
     if (p.word) play('knock', { pan: panAt(e.clientX) });
   }, cap);
   // Clicks: keyboard (Enter, Space) and touch taps; a mouse already
@@ -329,19 +337,31 @@ export function start(opts = {}) {
     if (!e.isTrusted) return;
     const c = cueFor(e.target);
     if (!c) return;
+    last = { slot: c.slot, at: now() };
     if (press?.mouse && press.played && press.c?.el === c.el && now() - press.at < 1500) return;
-    play(c.slot, c.o);
+    // (A Download tapped on a phone opens the sheet instead, which has a
+    // sound of its own.)
+    if (c.slot === 'download') setTimeout(() => e.defaultPrevented || play(c.slot, c.o));
+    else play(c.slot, c.o);
   }, cap);
   // From the page's scripts, answering the visitor's own hand only.
-  // hero-fx.js: a needle dropped on the record (on pointerdown).
+  // hero-fx.js: a needle dropped on the record (a mouse on press, a finger
+  // as it lifts from a tap).
   addEventListener('record:needle', () => {
-    const p = press;
-    if (!p || now() - p.at > 300) return;
-    p.needle = true;
-    if (p.mouse) play('needle');
+    if (press && now() - press.at < 700) play('needle');
   });
-  // The Mouse / Controller switch (index.html).
-  document.addEventListener('hero:hand', (e) => { if (fresh()) play('hand', { d: e.detail?.hand === 'controller' ? 1 : -1 }); });
+  // The Mouse / Controller switch (index.html); not when it switches by itself.
+  document.addEventListener('interlude:hand', (e) => { if (!e.detail?.auto && fresh()) play('hand', { d: e.detail?.hand === 'controller' ? 1 : -1 }); });
+  // The phone's menu and its sheet. A menu shut by picking something in it
+  // has sounded as that; one shut for the sheet leaves the sound to the sheet.
+  let sheet = -1e9;
+  const panel = (open) => play('panel', { d: open ? 1 : -1 });
+  addEventListener('interlude:menu', (e) => {
+    if (!fresh()) return;
+    if (e.detail) return panel(true);
+    setTimeout(() => { if (now() - sheet > 200 && !(last.slot === 'nav' && now() - last.at < 300)) panel(false); });
+  });
+  document.addEventListener('interlude:sheet', (e) => { if (!fresh()) return; if (e.detail?.open) sheet = now(); panel(!!e.detail?.open); });
   // Anything else: document.dispatchEvent(new CustomEvent('sfx:play', { detail: { cue: 'copy' } }))
   document.addEventListener('sfx:play', (e) => { if (fresh() && e.detail?.cue) play(e.detail.cue, e.detail); });
   // Hidden: sleep once the last cue's tail is out (a suspended context keeps

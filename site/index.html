@@ -375,7 +375,7 @@
         let v = null, m = null;
         try { v = localStorage.getItem(K); } catch {}
         let on = v ? v === 'on' : !(matchMedia('(prefers-reduced-motion: reduce)').matches || navigator.connection?.saveData);
-        const load = () => (m ||= import('./sfx.js?v=1').then((x) => (x.start({ on }), x), () => (m = null)));
+        const load = () => (m ||= import('./sfx.js?v=2').then((x) => (x.start({ on }), x), () => (m = null)));
         // Both speakers (the nav's, here; the footer's, once it's parsed).
         const show = () => { for (const b of document.querySelectorAll('.sfx-btn')) { b.setAttribute('aria-pressed', on); b.title = on ? 'Sound on' : 'Sound off'; } };
         show();
@@ -1532,8 +1532,8 @@
       <h2 id="dlsheet-t">Interlude is a Mac app</h2>
       <p id="dlsheet-b">Open this page on your Mac to download it, or send yourself the link.</p>
       <div class="dlsheet-acts">
-        <button type="button" class="btn big" data-act="link"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6.5 9.5l3-3M7 4.5l1.3-1.3a2.6 2.6 0 0 1 3.7 3.7L10.7 8.2M9 11.5l-1.3 1.3a2.6 2.6 0 0 1-3.7-3.7L5.3 7.8"/></svg><span>Copy link</span></button>
-        <button type="button" class="btn ghost big" data-act="msg"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 3.5h10a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H7l-3 2.5v-2.5H3a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1z"/></svg><span>Copy a message</span></button>
+        <button type="button" class="btn big" data-sfx="none" data-act="link"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6.5 9.5l3-3M7 4.5l1.3-1.3a2.6 2.6 0 0 1 3.7 3.7L10.7 8.2M9 11.5l-1.3 1.3a2.6 2.6 0 0 1-3.7-3.7L5.3 7.8"/></svg><span>Copy link</span></button>
+        <button type="button" class="btn ghost big" data-sfx="none" data-act="msg"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 3.5h10a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H7l-3 2.5v-2.5H3a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1z"/></svg><span>Copy a message</span></button>
         <button type="button" class="btn ghost big" data-act="share" hidden><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 9.5V2m0 0L5.25 4.75M8 2l2.75 2.75M5.5 7H5a1.5 1.5 0 0 0-1.5 1.5v4A1.5 1.5 0 0 0 5 14h6a1.5 1.5 0 0 0 1.5-1.5v-4A1.5 1.5 0 0 0 11 7h-.5"/></svg><span>Share…</span></button>
       </div>
       <p class="dlsheet-msg"></p>
@@ -1639,6 +1639,7 @@
         // (Laid out shut first, then opened on the next frame, so it moves.)
         card.style.translate = '';
         requestAnimationFrame(() => requestAnimationFrame(() => d.toggleAttribute('data-dlsheet', true)));
+        document.dispatchEvent(new CustomEvent('interlude:sheet', { detail: { open: true } }));   // sfx.js
         // (Focus on the sheet itself, so a screen reader reads it and Tab
         // goes to its buttons, with no ring drawn on one straight away.)
         card.focus({ preventScroll: true });
@@ -1647,6 +1648,7 @@
         if (!open) return;
         open = false;
         d.removeAttribute('data-dlsheet');
+        document.dispatchEvent(new CustomEvent('interlude:sheet', { detail: { open: false } }));
         card.style.translate = '';
         for (const e of behind()) if (e) e.inert = false;
         opener?.focus?.({ preventScroll: true });
@@ -1673,8 +1675,10 @@
         }
         const text = b.dataset.act === 'msg' ? message : url;
         copy(text).then((ok) => {
-          if (ok) done(b, b.dataset.act === 'msg' ? 'Message copied' : 'Link copied');
-          else say(pretty);
+          if (ok) {
+            done(b, b.dataset.act === 'msg' ? 'Message copied' : 'Link copied');
+            document.dispatchEvent(new CustomEvent('sfx:play', { detail: { cue: 'copy' } }));
+          } else say(pretty);
         });
       });
       // A swipe down on the card shuts it (it follows the finger; let go
