@@ -1,4 +1,5 @@
-// #112 (UI audit flag; an opt-in proposal): connection status.
+// #112 (UI audit flag; a proposal, on by default for now so it can be judged):
+// connection status.
 //
 // What's connected, where the sound goes, and what's being worked on, kept
 // in one place that never moves. Today the output only shows in a banner
@@ -22,7 +23,7 @@ export default {
   n: 112,
   title: 'Controller and output always on show',
   group: 'Shell',
-  byDefault: false,
+  byDefault: true, // while it's being judged; a proposal, so off again once it's decided
   settings: {
     place: {
       type: 'choice',
@@ -42,7 +43,7 @@ export default {
 
 /** Show me: the popover open, and the items. */
 export const show = {
-  about: 'The controller and the output are always on show beside Settings, with the output picker one click away.',
+  about: 'On by default for now, in both places, so you can compare them. The controller and the output are always on show beside Settings, with the output picker one click away.',
   before: 'Nothing on the main screen says which controller is connected or where the sound goes.',
   after: 'Both are named in the toolbar. Their menu picks the output and lists the controllers.',
   target: 'section.library .bar .shell',

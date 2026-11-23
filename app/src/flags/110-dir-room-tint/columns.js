@@ -20,6 +20,9 @@ import { moveColumn } from './column-order.svelte.js';
 const KEY = 'interlude.columnWidths';
 const MIN = /** @type {Record<string, number>} */ ({ title: 120, artist: 88, album: 72, genre: 64, bpm: 52, key: 72, time: 52, folder: 72 });
 
+// Columns whose values are a group centred in them: their own padding is whatever is left.
+const FIGURES = ['bpm', 'key', 'time'];
+
 /** @type {Record<string, number>} */
 let widths = (() => {
   try {
@@ -52,7 +55,7 @@ export function resetWidths() {
 
 /**
  * @param {HTMLElement} head the heading row
- * @param {{ on: boolean, columns: { by: any, label: string }[], all: { by: any, label: string }[] }} opts
+ * @param {{ on: boolean, columns: { by: any, label: string }[], all: { by: any, label: string }[], widest: { bpm: string, time: string } }} opts
  */
 export function colResize(head, opts) {
   const main = /** @type {HTMLElement} */ (head.parentElement);
@@ -80,9 +83,15 @@ export function colResize(head, opts) {
     let w = 0;
     const range = document.createRange();
     for (const cell of [h.cell, ...main.querySelectorAll(`.scroll .row > [data-col='${h.by}']`)]) {
-      range.selectNodeContents(cell);
+      // A name cut in the middle (Mid.svelte) is as wide as its two parts uncut.
+      const parts = cell.querySelectorAll('.mid > span');
+      let text = 0;
+      for (const p of parts.length ? parts : [cell]) {
+        range.selectNodeContents(p);
+        text += range.getBoundingClientRect().width / scale();
+      }
       const c = getComputedStyle(cell);
-      w = Math.max(w, range.getBoundingClientRect().width / scale() + parseFloat(c.paddingLeft) + parseFloat(c.paddingRight));
+      w = Math.max(w, text + (FIGURES.includes(h.by) ? 24 : parseFloat(c.paddingLeft) + parseFloat(c.paddingRight)));
     }
     resize(h, Math.ceil(w) + 2, most(h.cell));
     save();
@@ -96,6 +105,28 @@ export function colResize(head, opts) {
     }
   };
   const seen = new ResizeObserver(lay);
+  // How wide the widest BPM and time are, in the rows' own type.
+  const measure = () => {
+    const list = main.querySelector('.scroll');
+    if (!o.on || !list) return;
+    const row = document.createElement('div');
+    row.className = 'row';
+    row.style.cssText = 'position:absolute;visibility:hidden;display:block;width:auto;pointer-events:none';
+    row.setAttribute('aria-hidden', 'true');
+    list.append(row);
+    for (const by of /** @type {const} */ (['bpm', 'time'])) {
+      const cell = document.createElement('span');
+      cell.className = 'n num';
+      cell.style.cssText = 'position:absolute;padding:0;width:max-content;overflow:visible';
+      cell.textContent = o.widest[by];
+      row.append(cell);
+      main.style.setProperty(`--gw-${by}`, `${Math.ceil(cell.getBoundingClientRect().width / scale())}px`);
+    }
+    row.remove();
+  };
+  const restyled = new MutationObserver(() => requestAnimationFrame(measure));
+  restyled.observe(document.documentElement, { attributes: true, attributeFilter: ['data-flag-font-special-gothic', 'data-flag-dir-room-tint'] });
+  document.fonts.addEventListener('loadingdone', measure);
 
   function wire(/** @type {H} */ h) {
     let from = 0;
@@ -286,6 +317,7 @@ export function colResize(head, opts) {
     // The list gives way when the sampler opens above the headings.
     const list = head.nextElementSibling;
     if (list) seen.observe(list);
+    measure();
     lay();
   }
   build(opts);
@@ -294,6 +326,8 @@ export function colResize(head, opts) {
     update: (/** @type {typeof opts} */ next) => requestAnimationFrame(() => build(next)),
     destroy() {
       mains.delete(main);
+      restyled.disconnect();
+      document.fonts.removeEventListener('loadingdone', measure);
       seen.disconnect();
       window.removeEventListener('keydown', esc, true);
       for (const h of handles) h.el.remove();

@@ -12,7 +12,7 @@
 if (typeof window !== 'undefined')
   setTimeout(() => {
     import('./only-one.svelte.js');
-    import('./drops.svelte.js');
+    import('./glint.svelte.js');
   }, 0);
 
 export default {
@@ -44,6 +44,36 @@ export default {
         ['tint', 'Tints', 'A lighter tone, no depth.'],
       ],
     },
+    drop: {
+      type: 'choice',
+      label: 'Where a dragged track can land',
+      default: 'tint',
+      options: [
+        ['tint', 'A tint', 'Every place takes a breath of its colour; the one under the pointer more, with one thin edge.'],
+        ['pick', 'Only under the pointer', 'Nothing until you reach a place.'],
+        ['label', 'With a label', 'Only under the pointer, saying what dropping does.'],
+      ],
+    },
+    on: {
+      type: 'choice',
+      label: "A key that's on",
+      default: 'ink',
+      options: [
+        ['ink', 'Only its glyph or label', 'The key is in, and dark; its glyph or label takes the colour.'],
+        ['breath', 'A breath of colour', 'The same, with a trace of the colour in the fill.'],
+      ],
+    },
+    glint: {
+      type: 'choice',
+      label: 'Grooves under the pointer',
+      default: 'fixed',
+      options: [
+        ['fixed', 'Catch the light', 'A soft band, always in the same place.'],
+        ['follow', 'Follow the pointer', 'The band leans a little towards the pointer.'],
+        ['off', 'Nothing', 'As they were.'],
+      ],
+    },
+    light: { type: 'range', label: 'How much light', min: 1, max: 16, step: 1, default: 5, unit: '%' },
     cue: {
       type: 'choice',
       label: "Cue's colour",
@@ -64,7 +94,7 @@ export default {
     },
   },
   notes:
-    "style.css is built from flag 100's current sheet (dark, without its keys and mixer sections) and this direction's layer, in the scratchpad's directions5/work (build.py, tint.src.css); every rule is under the tripled :root[data-flag-dir-room-tint] attribute, the key states under eight of it so they outrank #9's and #14's. The deck tints are generated: each of 100's steps at its own OKLCH lightness with a little chroma in the deck's hue. Hooks, gated on this flag: Deck.svelte (the tempo's decimals and the pitch readout's parts in spans), Performance.svelte (the Loop row: one key, then the length), Stems.svelte (the four stems stay in view, off, while the model is missing), Platter.svelte (class long for an hour-long track), Waveform.svelte (waveOptions() from wave.js), waveform-2d.js (chipTop), Library.svelte (column order, columns.js on the headings, ColumnsMenu.svelte). drops.svelte.js draws the drop targets.",
+    "style.css is built from flag 100's current sheet (dark, without its keys and mixer sections) and this direction's layer, in the scratchpad's directions5/work (build.py, tint.src.css); every rule is under the tripled :root[data-flag-dir-room-tint] attribute, the key states under eight of it so they outrank #9's and #14's. The deck tints are generated: each of 100's steps at its own OKLCH lightness with a little chroma in the deck's hue. Hooks, gated on this flag: Deck.svelte (the tempo's decimals and the pitch readout's parts in spans), Performance.svelte (the Loop row: one key, then the length), Stems.svelte (the four stems stay in view, off, while the model is missing), Platter.svelte (class long for an hour-long track), Waveform.svelte (waveOptions() from wave.js), waveform-2d.js (chipTop), Library.svelte (column order, columns.js on the headings, ColumnsMenu.svelte). Mid.svelte cuts long names in the middle. Fader.svelte takes the volume faders' marks from Mixer.svelte.",
 };
 
 /** Show me: both decks playing, flipping between today and this direction. */
