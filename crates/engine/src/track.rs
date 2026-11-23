@@ -58,56 +58,90 @@ const FEED_SAMPLES: usize = 1 << 16;
 
 type Analysis = (Waveform, Option<Beatgrid>, Option<Key>, Loudness);
 
+/// What's already known about a file from an earlier analysis (the
+/// library's), so loading it needn't work it out again. Each `Some` skips
+/// that analysis; `Some(None)` means it was looked for and not found.
+/// The waveform is always built: it isn't saved anywhere.
+#[derive(Debug, Clone, Copy, Default, PartialEq)]
+pub struct Known {
+    pub beatgrid: Option<Option<Beatgrid>>,
+    pub key: Option<Option<Key>>,
+    pub loudness: Option<Loudness>,
+}
+
 /// Runs `produce`, which calls `feed` with consecutive stretches of
-/// interleaved stereo audio, while four threads analyze that audio for the
-/// waveform, beatgrid, key and loudness.
+/// interleaved stereo audio, while up to four threads analyze that audio
+/// for the waveform, beatgrid, key and loudness. What `known` already has
+/// isn't analyzed.
 fn analyze_while<R>(
     sample_rate: u32,
+    known: Known,
     produce: impl FnOnce(&mut dyn FnMut(&[f32])) -> R,
 ) -> (R, Analysis) {
     // A few stretches in flight at most: if analysis falls behind, decoding
     // waits rather than queueing up a second copy of the track.
     const IN_FLIGHT: usize = 8;
     std::thread::scope(|s| {
-        let (wf_tx, wf_rx) = mpsc::sync_channel::<Arc<[f32]>>(IN_FLIGHT);
-        let (bg_tx, bg_rx) = mpsc::sync_channel::<Arc<[f32]>>(IN_FLIGHT);
-        let (key_tx, key_rx) = mpsc::sync_channel::<Arc<[f32]>>(IN_FLIGHT);
-        let (lu_tx, lu_rx) = mpsc::sync_channel::<Arc<[f32]>>(IN_FLIGHT);
-        let waveform = s.spawn(move || {
-            let mut b = WaveformBuilder::new(sample_rate);
-            wf_rx.iter().for_each(|c| b.push(&c));
-            b.finish()
+        let mut senders = Vec::with_capacity(4);
+        let mut channel = || {
+            let (tx, rx) = mpsc::sync_channel::<Arc<[f32]>>(IN_FLIGHT);
+            senders.push(tx);
+            rx
+        };
+        let waveform = {
+            let rx = channel();
+            s.spawn(move || {
+                let mut b = WaveformBuilder::new(sample_rate);
+                rx.iter().for_each(|c| b.push(&c));
+                b.finish()
+            })
+        };
+        let grid = known.beatgrid.is_none().then(|| {
+            let rx = channel();
+            s.spawn(move || {
+                let mut b = BeatgridBuilder::new(sample_rate);
+                rx.iter().for_each(|c| b.push(&c));
+                b.finish()
+            })
         });
-        let grid = s.spawn(move || {
-            let mut b = BeatgridBuilder::new(sample_rate);
-            bg_rx.iter().for_each(|c| b.push(&c));
-            b.finish()
+        let key = known.key.is_none().then(|| {
+            let rx = channel();
+            s.spawn(move || {
+                let mut b = KeyBuilder::new(sample_rate);
+                rx.iter().for_each(|c| b.push(&c));
+                b.finish()
+            })
         });
-        let key = s.spawn(move || {
-            let mut b = KeyBuilder::new(sample_rate);
-            key_rx.iter().for_each(|c| b.push(&c));
-            b.finish()
-        });
-        let loudness = s.spawn(move || {
-            let mut b = LoudnessBuilder::new(sample_rate);
-            lu_rx.iter().for_each(|c| b.push(&c));
-            b.finish()
+        let loudness = known.loudness.is_none().then(|| {
+            let rx = channel();
+            s.spawn(move || {
+                let mut b = LoudnessBuilder::new(sample_rate);
+                rx.iter().for_each(|c| b.push(&c));
+                b.finish()
+            })
         });
         let result = produce(&mut |chunk: &[f32]| {
             if chunk.is_empty() {
                 return;
             }
             let chunk: Arc<[f32]> = chunk.into();
-            for tx in [&wf_tx, &bg_tx, &key_tx, &lu_tx] {
+            for tx in &senders {
                 let _ = tx.send(chunk.clone());
             }
         });
-        drop((wf_tx, bg_tx, key_tx, lu_tx));
+        drop(senders);
         let analysis = (
             waveform.join().unwrap_or_default(),
-            grid.join().ok().flatten(),
-            key.join().ok().flatten(),
-            loudness.join().unwrap_or_default(),
+            known
+                .beatgrid
+                .unwrap_or_else(|| grid.and_then(|h| h.join().ok().flatten())),
+            known
+                .key
+                .unwrap_or_else(|| key.and_then(|h| h.join().ok().flatten())),
+            known
+                .loudness
+                .or_else(|| loudness.and_then(|h| h.join().ok()))
+                .unwrap_or_default(),
         );
         (result, analysis)
     })
@@ -146,6 +180,13 @@ impl Track {
 
     /// Decodes an audio file (MP3, AAC/M4A, FLAC, WAV, AIFF, OGG, ALAC).
     pub fn load(path: impl AsRef<Path>) -> Result<Self, LoadError> {
+        Self::load_known(path, Known::default())
+    }
+
+    /// Like [`Track::load`], taking what `known` already has instead of
+    /// analyzing it again. Key detection is most of a load's time, so
+    /// skipping it makes a load several times faster.
+    pub fn load_known(path: impl AsRef<Path>, known: Known) -> Result<Self, LoadError> {
         let path = path.as_ref();
         let mut opened = Decoding::open(path)?;
         let stream_rate = opened.stream_rate;
@@ -153,7 +194,7 @@ impl Track {
         // analysis threads as soon as it's decoded, so they finish soon
         // after the last packet instead of starting then.
         let (stereo, sample_rate, analysis) = if stream_rate > 0 {
-            let (result, analysis) = analyze_while(stream_rate, |feed| opened.run(feed));
+            let (result, analysis) = analyze_while(stream_rate, known, |feed| opened.run(feed));
             let (stereo, sample_rate) = result?;
             (stereo, sample_rate, Some(analysis))
         } else {
@@ -190,6 +231,11 @@ pub struct TrackSummary {
     pub duration: f64,
     /// Detected tempo, if the track has a clear pulse.
     pub bpm: Option<f64>,
+    /// The detected beatgrid, whose tempo is `bpm`.
+    pub grid: Option<Beatgrid>,
+    /// `grid` came from Beat This! ([`crate::beatthis`]), not only the DSP
+    /// analysis.
+    pub neural_grid: bool,
     pub key: Option<Key>,
     pub loudness: Loudness,
 }
@@ -199,6 +245,8 @@ impl TrackSummary {
         Self {
             duration: track.duration_secs(),
             bpm: track.beatgrid.map(|g| g.bpm),
+            grid: track.beatgrid,
+            neural_grid: false,
             key: track.key,
             loudness: track.loudness,
         }
@@ -207,15 +255,24 @@ impl TrackSummary {
     /// Decodes and analyzes a file for the library, without keeping the
     /// audio or building a waveform. Runs tempo, key and loudness one after
     /// the other on the calling thread, so background analysis stays on one
-    /// core.
+    /// core, then refines the grid with Beat This! (on the runtime's own
+    /// threads; the app keeps those to two).
     pub fn analyze(path: impl AsRef<Path>) -> Result<Self, LoadError> {
         let (stereo, sample_rate) = decode(path.as_ref())?;
-        Ok(Self {
+        crate::keynet::set_single_threaded(true);
+        let dsp = detect_beatgrid(&stereo, sample_rate);
+        let refined = dsp.and_then(|g| crate::beatthis::refine(&stereo, sample_rate, Some(g)));
+        let grid = refined.map(|r| r.grid).or(dsp);
+        let analysis = Self {
             duration: stereo.len() as f64 / 2.0 / sample_rate as f64,
-            bpm: detect_beatgrid(&stereo, sample_rate).map(|g| g.bpm),
+            bpm: grid.map(|g| g.bpm),
+            grid,
+            neural_grid: refined.is_some(),
             key: detect_key(&stereo, sample_rate),
             loudness: measure_loudness(&stereo, sample_rate),
-        })
+        };
+        crate::keynet::set_single_threaded(false);
+        Ok(analysis)
     }
 }
 

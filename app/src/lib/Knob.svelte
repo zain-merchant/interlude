@@ -44,8 +44,6 @@
   // The default comes back exact, not as a round trip through the taper.
   const setPos = (p) => set(p === resetPos ? reset : taper.fromPos(clampPos(p)));
   const killed = $derived(kill !== undefined && value <= kill);
-  // #5 (UI audit flag): no-shift drops the " · kill" suffix, which widened the mixer; the label's colour and mark show the kill instead.
-  const killText = $derived(killed && !flag('no-shift') ? ' · kill' : '');
   // Angles from 12 o'clock, clockwise.
   const angle = (p) => -135 + p * 270;
   let beforeKill = 0;
@@ -188,7 +186,7 @@
   {#if kill !== undefined}
     <!-- #61 (UI audit flag): eq-kill opens the kill's tooltip under the label, off the knob. -->
     <button class="label" class:killed onclick={toggleKill} aria-pressed={killed} data-tip-below={flag('eq-kill') ? '' : undefined}
-      use:tip={() => (killed ? `Bring back ${tipName()}` : `Kill ${tipName()}`)}>{label}{killText}</button>
+      use:tip={() => (killed ? `Bring back ${tipName()}` : `Kill ${tipName()}`)}>{label}</button>
   {:else if label}
     <span class="label">{label}</span>
   {/if}

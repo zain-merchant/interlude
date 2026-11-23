@@ -22,6 +22,11 @@ use crate::{Action, State};
 
 /// Mixxx's default pitch fader range: ±8%.
 const DEFAULT_RATE_RANGE: f64 = 0.08;
+/// Mixxx's default `rate_dir`: down speeds up, as on a turntable. `rate`
+/// follows the fader's position (+1 at the top), and `rate_dir` decides
+/// which end is faster, so a mapping written for Mixxx's default makes the
+/// top slower.
+const DEFAULT_RATE_DIR: f64 = -1.0;
 /// Mixxx's default beat jump size, in beats.
 const DEFAULT_BEATJUMP: f64 = 4.0;
 /// Seconds one unit of `jog` moves the track. Mixxx treats `jog` as a
@@ -99,15 +104,23 @@ pub enum DeckKey {
     Sync,
     Pfl,
     Keylock,
+    /// Key shift: a semitone up or down, back to the track's key, or the
+    /// other deck's key.
+    KeyUp,
+    KeyDown,
+    KeyReset,
+    KeySync,
     Slip,
     Quantize,
     /// Channel fader.
     Volume,
     /// Trim, as a gain ratio.
     Pregain,
-    /// Pitch fader, -1..1 across the range.
+    /// Pitch fader, -1 (bottom) ..= 1 (top) across the range.
     Rate,
     RateRange,
+    /// Which end of the pitch fader is faster: -1 for the bottom.
+    RateDir,
     /// Relative: nudges the track.
     Jog,
     /// Bends the tempo while held: up if true, small if the second is.
@@ -446,12 +459,17 @@ fn deck_key(key: &str) -> Option<DeckKey> {
         "beatsync" | "beatsync_tempo" | "sync_enabled" | "beatsync_phase" => Sync,
         "pfl" => Pfl,
         "keylock" => Keylock,
+        "pitch_up" | "pitch_up_small" => KeyUp,
+        "pitch_down" | "pitch_down_small" => KeyDown,
+        "reset_key" => KeyReset,
+        "sync_key" => KeySync,
         "slip_enabled" => Slip,
         "quantize" => Quantize,
         "volume" => Volume,
         "pregain" => Pregain,
         "rate" => Rate,
         "rateRange" => RateRange,
+        "rate_dir" => RateDir,
         "jog" => Jog,
         "rate_temp_up" => TempBend(true, false),
         "rate_temp_down" => TempBend(false, false),
@@ -632,6 +650,7 @@ impl Control {
         match *self {
             Control::Deck(_, K::Volume | K::Pregain) => 1.0,
             Control::Deck(_, K::RateRange) => DEFAULT_RATE_RANGE,
+            Control::Deck(_, K::RateDir) => DEFAULT_RATE_DIR,
             Control::Deck(_, K::BeatJumpSize) => DEFAULT_BEATJUMP,
             Control::Deck(_, K::BeatLoopSize) => dj_engine::DEFAULT_LOOP_BEATS,
             Control::Eq(..) | Control::MasterGain => 1.0,
@@ -653,7 +672,7 @@ impl Control {
                 }
                 K::Volume => Behavior::Taper(Taper::FADER),
                 K::Pregain => Behavior::Taper(Taper::PREGAIN),
-                K::Rate => Behavior::Pot {
+                K::Rate | K::RateDir => Behavior::Pot {
                     min: -1.0,
                     max: 1.0,
                 },
@@ -706,6 +725,7 @@ impl Control {
 #[derive(Debug, Clone, Copy)]
 struct DeckExtra {
     rate_range: f64,
+    rate_dir: f64,
     beatjump: f64,
     /// EQ gains before each band was killed, to bring back on unkill.
     before_kill: [Option<f32>; 3],
@@ -715,6 +735,7 @@ impl Default for DeckExtra {
     fn default() -> Self {
         Self {
             rate_range: DEFAULT_RATE_RANGE,
+            rate_dir: DEFAULT_RATE_DIR,
             beatjump: DEFAULT_BEATJUMP,
             before_kill: [None; 3],
         }
@@ -754,6 +775,13 @@ impl Controls {
         Self::default()
     }
 
+    /// Sets every deck's `rate_dir`: 1 makes the top of the fader faster.
+    pub fn set_rate_dir(&mut self, dir: f64) {
+        for x in &mut self.decks {
+            x.rate_dir = if dir < 0.0 { -1.0 } else { 1.0 };
+        }
+    }
+
     /// The control's current value, in Mixxx's units.
     pub fn get(&self, c: Control, state: &State) -> f64 {
         use DeckKey as K;
@@ -768,12 +796,14 @@ impl Controls {
                     ),
                     K::Pfl => flag(deck.pfl),
                     K::Keylock => flag(deck.keylock),
+                    K::Sync => flag(deck.synced),
                     K::Slip => flag(deck.slip),
                     K::Quantize => flag(state.mixer.quantize),
                     K::Volume => Taper::FADER.parameter_to_value(f64::from(deck.fader)),
                     K::Pregain => db_to_ratio(f64::from(deck.gain_db)),
-                    K::Rate => (deck.rate - 1.0) / x.rate_range,
+                    K::Rate => (deck.rate - 1.0) / (x.rate_range * x.rate_dir),
                     K::RateRange => x.rate_range,
+                    K::RateDir => x.rate_dir,
                     K::LoopEnabled => flag(deck.looping),
                     K::BeatLoopSize => deck.loop_beats,
                     K::BeatLoop(b, BeatLoopKey::Enabled) => {
@@ -880,6 +910,12 @@ impl Controls {
                         seconds: deck_state.position,
                     }),
                     K::Sync if on => engine(Command::Sync { deck }),
+                    K::KeyUp | K::KeyDown if on => engine(Command::SetKeyShift {
+                        deck,
+                        semitones: deck_state.key_shift + if k == K::KeyUp { 1 } else { -1 },
+                    }),
+                    K::KeyReset if on => engine(Command::SetKeyShift { deck, semitones: 0 }),
+                    K::KeySync if on => engine(Command::KeySync { deck }),
                     K::Pfl if on != deck_state.pfl => engine(Command::SetPfl { deck, on }),
                     K::Keylock if on != deck_state.keylock => {
                         engine(Command::SetKeylock { deck, on })
@@ -898,8 +934,12 @@ impl Controls {
                     }),
                     K::Rate => engine(Command::SetRate {
                         deck,
-                        rate: 1.0 + v.clamp(-1.0, 1.0) * x.rate_range,
+                        rate: 1.0 + v.clamp(-1.0, 1.0) * x.rate_range * x.rate_dir,
                     }),
+                    K::RateDir => {
+                        x.rate_dir = if v < 0.0 { -1.0 } else { 1.0 };
+                        vec![]
+                    }
                     K::RateRange => {
                         x.rate_range = v.clamp(0.01, 4.0);
                         vec![]
@@ -1348,11 +1388,28 @@ mod tests {
         let mut ctl = Controls::new();
         let s = st();
         let rate = c("[Channel1]", "rate");
-        let top = cmds(ctl.set_from_midi(rate, 0.0, false, &s));
-        assert!(matches!(top[..], [Command::SetRate { rate, .. }] if (rate - 0.92).abs() < 1e-9));
+        // As in Mixxx, `rate` is the fader's position, +1 at the top, and
+        // by default the bottom is faster.
+        let bottom = cmds(ctl.set_from_midi(rate, 0.0, false, &s));
+        assert!(
+            matches!(bottom[..], [Command::SetRate { rate, .. }] if (rate - 1.08).abs() < 1e-9)
+        );
         ctl.set(c("[Channel1]", "rateRange"), 0.5, &s);
-        let bottom = cmds(ctl.set_from_midi(rate, 127.0, false, &s));
-        assert!(matches!(bottom[..], [Command::SetRate { rate, .. }] if (rate - 1.5).abs() < 1e-9));
+        let top = cmds(ctl.set_from_midi(rate, 127.0, false, &s));
+        assert!(matches!(top[..], [Command::SetRate { rate, .. }] if (rate - 0.5).abs() < 1e-9));
+    }
+
+    #[test]
+    fn rate_dir_flips_the_fader() {
+        let mut ctl = Controls::new();
+        let mut s = st();
+        assert_eq!(ctl.get(c("[Channel1]", "rate_dir"), &s), -1.0);
+        let rate = c("[Channel1]", "rate");
+        ctl.set(c("[Channel1]", "rate_dir"), 1.0, &s);
+        let top = cmds(ctl.set(rate, 1.0, &s));
+        assert!(matches!(top[..], [Command::SetRate { rate, .. }] if (rate - 1.08).abs() < 1e-9));
+        s.decks[0].rate = 0.96;
+        assert!((ctl.get(rate, &s) + 0.5).abs() < 1e-9);
     }
 
     #[test]
@@ -1378,7 +1435,7 @@ mod tests {
         assert_eq!(ctl.get(c("[Channel1]", "play_indicator"), &s), 1.0);
         assert_eq!(ctl.get(c("[Channel1]", "hotcue_2_enabled"), &s), 1.0);
         assert_eq!(ctl.get(c("[Channel1]", "hotcue_1_enabled"), &s), 0.0);
-        assert!((ctl.get(c("[Channel2]", "rate"), &s) - 0.5).abs() < 1e-9);
+        assert!((ctl.get(c("[Channel2]", "rate"), &s) + 0.5).abs() < 1e-9);
         assert_eq!(ctl.get(c("[Channel2]", "beatloop_8_enabled"), &s), 1.0);
         assert_eq!(ctl.get(c("[Channel2]", "beatloop_4_enabled"), &s), 0.0);
         assert_eq!(ctl.get(c("[Channel1]", "volume"), &s), 1.0);

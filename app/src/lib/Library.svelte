@@ -1,6 +1,6 @@
 <script>
   import { flag, setting } from '../flags/registry.svelte.js';
-  import { onMount, tick } from 'svelte';
+  import { onMount, tick, untrack } from 'svelte';
   import { backend } from './backend.js';
   import { engine, tracks } from './engine.svelte.js';
   import { startDrag, endDrag, drag, dropTarget } from './dnd.svelte.js';
@@ -8,12 +8,15 @@
   import { openMenu } from './menu.svelte.js';
   import { keyLabel, MOD } from './commands.js';
   import { sampler, setSamplerOpen } from './sampler.svelte.js';
+  import Sampler from './Sampler.svelte';
   import { pushEdit, showToast } from './undo.svelte.js';
   import { keyName, keyLongName, camelot, keysMix, playingKey } from './key.js';
   import { hms } from '../flags/08-stress-hours/time.js';
+  import { onAir, passes, filtering, describe, FIT_TEMPO } from './libraryfilter.js';
 
-  /** @type {{ onload: (deck: number, track: import('./backend.js').LibraryTrack, opts?: { force?: boolean }) => void, onsettings?: () => void }} */
-  let { onload, onsettings } = $props();
+  /** `onimport` opens the import window; `onempty` is called when the whole library loads with no tracks.
+   * @type {{ onload: (deck: number, track: import('./backend.js').LibraryTrack, opts?: { force?: boolean }) => void, onsettings?: () => void, onmessage?: (text: string) => void, onimport?: () => void, onempty?: () => void }} */
+  let { onload, onsettings, onmessage = showToast, onimport, onempty } = $props();
 
   // #91 (UI audit flag): library-roomy (against the doc) sets a taller row pitch.
   // #102 (UI audit flag): dir-crate makes the library the main place, with taller rows.
@@ -21,17 +24,15 @@
 
   let folders = $state([]);
   /**
-   * What the track list shows: every track, a folder, a playlist or a History session.
-   * @typedef {{ kind: 'all' | 'folder' | 'playlist' | 'session', path?: string, id?: number, start?: number }} View
+   * What the track list shows: every track, a folder or a playlist.
+   * @typedef {{ kind: 'all' | 'folder' | 'playlist', path?: string, id?: number }} View
    */
   let view = $state(/** @type {View} */ ({ kind: 'all' }));
   const folder = $derived(view.kind === 'folder' ? view.path : null);
-  /** Playlists and History keep their own order; the scan is sorted by artist. */
-  const ordered = $derived(view.kind === 'playlist' || view.kind === 'session');
+  /** Playlists keep their own order; the scan is sorted by artist. */
+  const ordered = $derived(view.kind === 'playlist');
   /** @type {import('./backend.js').Playlist[]} */
   let playlists = $state([]);
-  /** @type {import('./backend.js').HistorySession[]} */
-  let sessions = $state([]);
   /** The playlist whose name is being typed. */
   let renaming = $state(null);
   let all = $state([]);
@@ -48,19 +49,94 @@
   let scrollTop = $state(0);
   let viewHeight = $state(400);
 
-  /** Every word must appear in the artist, title, album, genre or folder. */
+  // Filters: a BPM range and keys (from the Filter button), and Fits, which
+  // keeps the tracks that mix with the deck on air.
+  /** @type {import('./libraryfilter.js').Filter} */
+  let filter = $state({ bpmMin: null, bpmMax: null, keys: [] });
+  let fits = $state(false);
+  let filterOpen = $state(false);
+  const filtered = $derived(filtering(filter));
+  /** The deck on air, as a string so the list only re-filters when its tempo or key really changes. */
+  const airText = $derived.by(() => {
+    const a = onAir(engine.decks, engine.mixer);
+    return a ? JSON.stringify({ deck: a.deck, bpm: Math.round(a.bpm * 10) / 10, key: a.key && { tonic: a.key.tonic, minor: a.key.minor } }) : '';
+  });
+  // While the pitch fader moves, wait for it to settle before re-filtering, so
+  // the list doesn't churn. A new deck on air (or none) shows at once.
+  let airSettled = $state('');
+  $effect(() => {
+    const next = airText;
+    const deckOf = (t) => (t ? JSON.parse(t).deck : null);
+    if (deckOf(next) !== deckOf(untrack(() => airSettled))) {
+      airSettled = next;
+      return;
+    }
+    const id = setTimeout(() => (airSettled = next), 300);
+    return () => clearTimeout(id);
+  });
+  const air = $derived(airSettled ? JSON.parse(airSettled) : null);
+  const airPath = $derived(air ? tracks[air.deck]?.path : null);
+  const airLabel = $derived(air ? `${'AB'[air.deck]} · ${air.key ? `${camelot(air.key)} ` : ''}${Math.round(air.bpm)}` : '');
+  const fitsTip = () =>
+    !air
+      ? 'Fits: load a track to see what mixes with it'
+      : `${fits ? 'Showing' : 'Show'} tracks that mix with deck ${'AB'[air.deck]}: within ${Math.round(FIT_TEMPO * 100)}% of ${air.bpm.toFixed(1)} BPM${air.key ? `, in ${camelot(air.key)} or a key next to it on the Camelot wheel` : ''}${fits ? '. Click to show everything' : ''}`;
+
+  /** Every word must appear in the artist, title, album, genre or folder, and the track must pass the filters. */
   const results = $derived.by(() => {
     const words = query.toLowerCase().split(/\s+/).filter(Boolean);
-    if (!words.length) return all;
+    const fit = fits ? air : null;
+    if (!words.length && !filtered && !fit) return all;
     return all.filter((t) => {
+      if ((filtered || fit) && !passes(t, filter, fit)) return false;
+      if (fit && t.path === airPath) return false;
+      if (!words.length) return true;
       const hay = `${t.artist} ${t.title} ${t.album ?? ''} ${t.genre ?? ''} ${t.folder}`.toLowerCase();
       return words.every((w) => hay.includes(w));
     });
   });
+  function setFilter(f) {
+    filter = f;
+    selectIndex(0);
+    if (scroller) scroller.scrollTop = 0;
+  }
+  const clearFilter = () => setFilter({ bpmMin: null, bpmMax: null, keys: [] });
+  /** A typed BPM, or null when the box is empty or not a number. */
+  const bpmInput = (v) => {
+    const n = parseFloat(v);
+    return Number.isFinite(n) && n > 0 ? n : null;
+  };
+  const toggleKey = (c) =>
+    setFilter({ ...filter, keys: filter.keys.includes(c) ? filter.keys.filter((k) => k !== c) : [...filter.keys, c] });
+  /** The Camelot wheel as two rows: minor keys (A) over major (B). */
+  const WHEEL = ['A', 'B'].map((l) => Array.from({ length: 12 }, (_, i) => `${i + 1}${l}`));
+  function toggleFits() {
+    fits = !fits;
+    selectIndex(0);
+    if (scroller) scroller.scrollTop = 0;
+  }
+  let filterBox = $state();
+  /** Closes the filter panel on a click outside it or Escape. */
+  $effect(() => {
+    if (!filterOpen) return;
+    const down = (e) => !filterBox?.contains(e.target) && (filterOpen = false);
+    const key = (e) => {
+      if (e.key !== 'Escape') return;
+      e.stopPropagation();
+      filterOpen = false;
+      filterBox?.querySelector('button')?.focus();
+    };
+    window.addEventListener('pointerdown', down, true);
+    window.addEventListener('keydown', key, true);
+    return () => {
+      window.removeEventListener('pointerdown', down, true);
+      window.removeEventListener('keydown', key, true);
+    };
+  });
 
   // Sorting: by a column, either way. Null keeps the scan's artist, title
   // order. Tracks still being analyzed sort after the rest, whichever way.
-  /** @type {{ by: 'title' | 'artist' | 'bpm' | 'key' | 'time' | 'folder' | null, dir: 1 | -1 }} */
+  /** @type {{ by: 'title' | 'artist' | 'album' | 'genre' | 'bpm' | 'key' | 'time' | 'folder' | null, dir: 1 | -1 }} */
   let sort = $state({ by: null, dir: 1 });
   const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
   // Camelot order puts harmonically close keys next to each other.
@@ -72,6 +148,8 @@
   const SORT_VALUE = {
     title: (t) => t.title,
     artist: (t) => t.artist || null,
+    album: (t) => t.album || null,
+    genre: (t) => t.genre || null,
     folder: (t) => t.folder,
     bpm: (t) => t.analysis?.bpm ?? null,
     key: (t) => keyRank(t.analysis?.key),
@@ -98,15 +176,49 @@
   function sortBy(by) {
     sort = { by, dir: sortOn.by === by && sortOn.dir > 0 ? -1 : 1 };
   }
-  /** @type {{ by: typeof sort.by, label: string, num?: boolean }[]} */
+  /** Every column, in order. Title always shows; right-click the headings to pick the rest.
+   * @type {{ by: typeof sort.by, label: string, num?: boolean, width: string }[]} */
   const COLUMNS = [
-    { by: 'title', label: 'Title' },
-    { by: 'artist', label: 'Artist' },
-    { by: 'bpm', label: 'BPM', num: true },
-    { by: 'key', label: 'Key' },
-    { by: 'time', label: 'Time', num: true },
-    { by: 'folder', label: 'Folder' },
+    { by: 'title', label: 'Title', width: 'minmax(0, 2.4fr)' },
+    { by: 'artist', label: 'Artist', width: 'minmax(0, 1.6fr)' },
+    { by: 'album', label: 'Album', width: 'minmax(0, 1.4fr)' },
+    { by: 'genre', label: 'Genre', width: 'minmax(0, 1fr)' },
+    { by: 'bpm', label: 'BPM', num: true, width: '64px' },
+    { by: 'key', label: 'Key', width: '56px' },
+    { by: 'time', label: 'Time', num: true, width: '64px' },
+    { by: 'folder', label: 'Folder', width: 'minmax(0, 1.2fr)' },
   ];
+  const HIDDEN_KEY = 'oss-dj.libraryHiddenColumns';
+  const DEFAULT_HIDDEN = ['album', 'genre'];
+  let hidden = $state(
+    (() => {
+      try {
+        const v = JSON.parse(localStorage.getItem(HIDDEN_KEY) ?? 'null');
+        return Array.isArray(v) ? v : DEFAULT_HIDDEN;
+      } catch {
+        return DEFAULT_HIDDEN;
+      }
+    })(),
+  );
+  const columns = $derived(COLUMNS.filter((c) => c.by === 'title' || !hidden.includes(c.by)));
+  // The last 28px holds the columns button in the heading row.
+  const gridColumns = $derived(`26px ${columns.map((c) => c.width).join(' ')} 28px`);
+  function toggleColumn(by) {
+    hidden = hidden.includes(by) ? hidden.filter((h) => h !== by) : [...hidden, by];
+    if (hidden.includes(by) && sort.by === by) sort = { by: null, dir: 1 };
+    try {
+      localStorage.setItem(HIDDEN_KEY, JSON.stringify(hidden));
+    } catch {}
+  }
+  /** The columns menu, from a right-click on the headings or the columns button (opened under it). */
+  const columnsButton = (e) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    headMenu({ preventDefault() {}, stopPropagation() {}, clientX: r.right - 200, clientY: r.bottom + 4 });
+  };
+  const headMenu = (e) =>
+    openMenu(e, [
+      ...COLUMNS.filter((c) => c.by !== 'title').map((c) => ({ label: c.label, checked: !hidden.includes(c.by), action: () => toggleColumn(c.by) })),
+    ]);
 
   const selected = $derived.by(() => {
     const i = sorted.findIndex((t) => t.path === selPath);
@@ -127,7 +239,7 @@
   const tracksWord = $derived(flag('stress-plural') && results.length === 1 ? 'track' : 'tracks');
   // #84 (UI audit flag): search-scope: a search's count keeps the total ("4 of 48 tracks").
   const countText = $derived(
-    flag('search-scope') && query.trim()
+    flag('search-scope') && (query.trim() || filtered || fits)
       ? `${results.length.toLocaleString()} of ${all.length.toLocaleString()} ${all.length === 1 ? 'track' : 'tracks'}`
       : `${results.length.toLocaleString()} ${tracksWord}`,
   );
@@ -135,7 +247,6 @@
   const viewName = $derived(
     view.kind === 'folder' ? `“${short(view.path ?? '')}”`
     : view.kind === 'playlist' ? `“${playlistName(view.id)}”`
-    : view.kind === 'session' ? (sessions.find((x) => x.start === view.start) ? sessionLabel(sessions.find((x) => x.start === view.start)) : 'History')
     : 'All tracks',
   );
   // #84 (UI audit flag): search-scope marks the searched words in titles and artists.
@@ -155,8 +266,24 @@
     return out;
   }
 
-  /** Tracks still waiting for their length, BPM and key. */
-  const pending = $derived(all.reduce((n, t) => n + (t.analysis ? 0 : 1), 0));
+  // Decode the selected track ahead, so Load (on screen, the keyboard or a
+  // controller) finds it ready. Waits for the selection to settle, so
+  // browsing through the list doesn't decode every row on the way. Not
+  // the row selected by default when the library opens: only one picked.
+  const PRELOAD_MS = 150;
+  let picked = false;
+  $effect(() => {
+    const t = sorted[selected];
+    const path = t && !t.missing ? t.path : null;
+    picked ||= selPath !== null;
+    if (!picked || !path) return;
+    const timer = setTimeout(() => backend.preloadTrack(path).catch(() => {}), PRELOAD_MS);
+    return () => clearTimeout(timer);
+  });
+
+  /** Tracks still waiting for their length, BPM and key, or showing ones an
+   * older version of the analyzer found until it redoes them. */
+  const pending = $derived(all.reduce((n, t) => n + (t.analysis && !t.analysis.outdated ? 0 : 1), 0));
   // #18 (UI audit flag): how much of the library is analysed, for the bar under the analysis note.
   const analysisDone = $derived(flag('visual-analysis') && all.length ? `${((1 - pending / all.length) * 100).toFixed(1)}%` : undefined);
   const bpmText = (a) => {
@@ -174,28 +301,14 @@
   /** Shown when analysis found nothing (or the file wouldn't decode). */
   const NONE = '–';
 
-  // Analysis results stream in from the background analyzer. A History
-  // session can list a track twice, so each path maps to every row of it.
+  // Analysis results stream in from the background analyzer. A playlist
+  // can list a track twice, so each path maps to every row of it.
   let byPath = new Map();
   $effect(() => {
     let off = null;
     let gone = false;
     backend.onLibraryAnalysis?.((e) => {
-      for (const t of byPath.get(e.path) ?? []) t.analysis = { duration: e.duration, bpm: e.bpm, key: e.key, failed: e.failed };
-    }).then((fn) => (gone ? fn() : (off = fn)));
-    return () => {
-      gone = true;
-      off?.();
-    };
-  });
-  // A track just went into History.
-  $effect(() => {
-    let off = null;
-    let gone = false;
-    backend.onLibraryPlayed?.(async () => {
-      sessions = await backend.historySessions();
-      if (view.kind === 'session' && view.start === sessions[0]?.start) refresh({ keep: true });
-      else if (view.kind === 'session' && sessions.length && !sessions.some((x) => x.start === view.start)) refresh({ keep: true });
+      for (const t of byPath.get(e.path) ?? []) t.analysis = { duration: e.duration, bpm: e.bpm, key: e.key, failed: e.failed, outdated: e.outdated };
     }).then((fn) => (gone ? fn() : (off = fn)));
     return () => {
       gone = true;
@@ -233,14 +346,12 @@
     loading = !keep;
     error = '';
     try {
-      [folders, playlists, sessions] = await Promise.all([backend.libraryFolders(), backend.playlists(), backend.historySessions()]);
+      [folders, playlists] = await Promise.all([backend.libraryFolders(), backend.playlists()]);
       if (view.kind === 'playlist' && !playlists.some((p) => p.id === view.id)) view = { kind: 'all' };
-      if (view.kind === 'session' && !sessions.some((x) => x.start === view.start)) view = { kind: 'all' };
       const list =
         view.kind === 'playlist' ? await backend.playlistTracks(view.id)
-        : view.kind === 'session' ? await backend.sessionTracks(view.start)
         : await backend.libraryTracks(folder);
-      // Rows need a unique key: History can list a track twice.
+      // Rows need a unique key: a playlist can list a track twice.
       const seen = new Map();
       for (const t of list) {
         const n = seen.get(t.path) ?? 0;
@@ -254,6 +365,7 @@
       // #85 (UI audit flag): folder-counts (counted always; only shown with the flag on).
       if (view.kind === 'all') folderCounts = Object.fromEntries(folders.map((f) => [f, all.filter((t) => inFolder(t.path, f)).length]));
       else if (view.kind === 'folder' && view.path) folderCounts = { ...folderCounts, [view.path]: all.length };
+      if (view.kind === 'all' && total === 0) onempty?.();
       if (!keep) selectIndex(0);
     } catch (e) {
       error = String(e);
@@ -425,18 +537,6 @@
     reorder(paths, `Moved ${q(drag.track.title)}`);
   }
 
-  /** History session label: "Fri 31 Oct", with the time if a day has two. */
-  function sessionLabel(x) {
-    const d = new Date(x.start);
-    const day = d.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' });
-    const twice = sessions.some((o) => o !== x && new Date(o.start).toDateString() === d.toDateString());
-    return twice ? `${day}, ${d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}` : day;
-  }
-  const HISTORY_SHOWN = 10;
-  // #20 (UI audit flag): library-clip: "Show all" under History once there are more than HISTORY_SHOWN days.
-  let allHistory = $state(false);
-  const historyShown = $derived(flag('library-clip') && allHistory ? sessions.length : HISTORY_SHOWN);
-
   // #20 (UI audit flag): library-clip fades the list's and the sidebar's foot while more is below (data-more).
   let nav = $state(/** @type {HTMLElement | null} */ (null));
   let listMore = $state(false);
@@ -460,7 +560,7 @@
     }
   }
   $effect(() => {
-    void [flag('library-clip'), viewHeight, sorted.length, sessions.length, playlists.length, folders.length, historyShown, ROW];
+    void [flag('library-clip'), viewHeight, sorted.length, playlists.length, folders.length, ROW];
     edges();
   });
   // Other flags change row and heading sizes: measure again when any flag or setting changes.
@@ -659,7 +759,7 @@
 </script>
 
 <section class="library" aria-label="Library">
-  <nav data-region="sidebar" aria-label="Library, playlists and history" bind:this={nav} onscroll={edges}
+  <nav data-region="sidebar" aria-label="Library and playlists" bind:this={nav} onscroll={edges}
     data-more={flag('library-clip') && navMore ? '' : undefined} data-scrolled={flag('library-clip') && navUp ? '' : undefined}>
     <div class="h">Library</div>
     <button class="item" class:on={view.kind === 'all'} aria-current={view.kind === 'all'} onclick={() => pick(null)}>
@@ -690,22 +790,10 @@
     {/each}
     <button class="add" onclick={() => newPlaylist()}>{#if flag('library-polish')}<svg class="plus" viewBox="0 0 12 12" aria-hidden="true"><path d="M6 1.5v9M1.5 6h9" /></svg><span>New playlist</span>{:else}+ New playlist{/if}</button>
 
-    {#if sessions.length}
-      <div class="h sec">History</div>
-      {#each sessions.slice(0, historyShown) as x (x.start)}
-        {@const on = view.kind === 'session' && view.start === x.start}
-        <button class="item" class:on aria-current={on} onclick={() => show({ kind: 'session', start: x.start })}
-          use:tip={() => `Played ${new Date(x.start).toLocaleString()}`}>
-          <span>{sessionLabel(x)}</span><small class="num">{x.count.toLocaleString()}</small>
-        </button>
-      {/each}
-      {#if flag('library-clip') && !allHistory && sessions.length > HISTORY_SHOWN}
-        <button class="add" onclick={() => (allHistory = true)}>Show all {sessions.length.toLocaleString()}</button>
-      {/if}
-    {/if}
+
   </nav>
 
-  <div class="main">
+  <div class="main" style:--cols={gridColumns}>
     <div class="bar">
       <label class="search">
         <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="4.5" /><path d="M10.5 10.5 14 14" /></svg>
@@ -717,6 +805,44 @@
           </button>
         {:else}<kbd>{MOD}F</kbd>{/if}
       </label>
+      <button class="btn sm chip" class:on={fits} aria-pressed={fits} disabled={!air && !fits} onclick={toggleFits} use:tip={fitsTip}>
+        Fits{#if fits && air}<span class="chip-val num">{airLabel}</span>{/if}
+      </button>
+      <div class="filter" bind:this={filterBox}>
+        <button class="btn sm chip" class:on={filtered} aria-expanded={filterOpen} aria-haspopup="dialog"
+          onclick={() => (filterOpen = !filterOpen)} use:tip={() => (filterOpen ? '' : 'Filter by BPM and key')}>
+          <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M1.5 3h9M3 6h6M4.75 9h2.5" /></svg>{filtered ? describe(filter) : 'Filter'}
+        </button>
+        {#if filtered}
+          <button class="clear" aria-label="Clear the filter" onclick={clearFilter} use:tip={() => 'Clear the filter'}>
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 5l6 6M11 5l-6 6" /></svg>
+          </button>
+        {/if}
+        {#if filterOpen}
+          <div class="panel" role="dialog" aria-label="Filter by BPM and key">
+            <div class="ph">BPM</div>
+            <div class="bpm">
+              <input class="num" type="number" min="1" step="1" placeholder="From" aria-label="Lowest BPM" value={filter.bpmMin ?? ''}
+                oninput={(e) => setFilter({ ...filter, bpmMin: bpmInput(e.currentTarget.value) })} />
+              <span>to</span>
+              <input class="num" type="number" min="1" step="1" placeholder="To" aria-label="Highest BPM" value={filter.bpmMax ?? ''}
+                oninput={(e) => setFilter({ ...filter, bpmMax: bpmInput(e.currentTarget.value) })} />
+            </div>
+            <div class="ph">Key</div>
+            <div class="wheel" role="group" aria-label="Keys, on the Camelot wheel">
+              {#each WHEEL as row}
+                {#each row as c}
+                  <button class="kc num" class:on={filter.keys.includes(c)} aria-pressed={filter.keys.includes(c)} onclick={() => toggleKey(c)}>{c}</button>
+                {/each}
+              {/each}
+            </div>
+            <div class="pf">
+              <span>A minor keys, B major</span>
+              <button class="btn sm ghost" disabled={!filtered} onclick={clearFilter}>Clear</button>
+            </div>
+          </div>
+        {/if}
+      </div>
       <!-- #10 (UI audit flag): the analysis note set apart by space, not a middle dot. -->
       {#if flag('no-dots')}
         <span class="count num">{loading ? 'Scanning…' : countText}{#if !loading && pending}{' '}<span
@@ -729,7 +855,7 @@
         onclick={() => setSamplerOpen(!sampler.open)}
         use:tip={() => tipText(sampler.open ? 'Hide sampler' : 'Show sampler', keyLabel('view.sampler'),
           // #30 (UI audit flag): tooltip-wrap (E9): the description as its own sentence, since the tip now wraps.
-          flag('tooltip-wrap') ? 'Eight one-shot slots; drag tracks onto them.' : 'eight one-shot slots; drag tracks onto them')}>
+          flag('tooltip-wrap') ? 'Eight one-shot sounds to fire over the mix.' : 'eight one-shot sounds to fire over the mix')}>
         <svg viewBox="0 0 12 12" aria-hidden="true"><rect x="1.5" y="1.5" width="3.5" height="3.5" rx="1" /><rect x="7" y="1.5" width="3.5" height="3.5" rx="1" /><rect x="1.5" y="7" width="3.5" height="3.5" rx="1" /><rect x="7" y="7" width="3.5" height="3.5" rx="1" /></svg>Sampler
       </button>
       {#if onsettings}
@@ -743,9 +869,11 @@
       {/if}
     </div>
 
-    <div class="row head" role="group" aria-label="Sort tracks">
+    {#if sampler.open}<Sampler {onmessage} selected={() => selectedTrack()} />{/if}
+
+    <div class="row head" role="group" aria-label="Sort tracks" oncontextmenu={headMenu}>
       <span></span>
-      {#each COLUMNS as c}
+      {#each columns as c}
         {@const on = sortOn.by === c.by}
         <!-- #81 (UI audit flag): library-sort gives every heading a slot for its arrow (hidden unless sorted), so nothing shifts. -->
         <button class="sort" class:on class:num={c.num} aria-pressed={on}
@@ -753,6 +881,10 @@
           use:flagTip={c.by === 'key' && flag('visual-key-match') ? () => 'A line under a key: it mixes with what’s loaded' : null}
           onclick={() => sortBy(c.by)}>{c.label}{#if on || flag('library-sort')}<svg viewBox="0 0 10 10" aria-hidden="true" class:down={on && sortOn.dir < 0} class:ghost={!on}><path d="M2.5 6.5 5 4l2.5 2.5" /></svg>{/if}</button>
       {/each}
+      <button class="cols" aria-label="Choose columns" aria-haspopup="menu" onclick={columnsButton}
+        use:tip={() => 'Choose columns'}>
+        <svg viewBox="0 0 14 14" aria-hidden="true"><rect x="1.5" y="2.5" width="11" height="9" rx="1.5" /><path d="M5.25 2.5v9M8.75 2.5v9" /></svg>
+      </button>
     </div>
 
     <div class="scroll" bind:this={scroller} bind:clientHeight={viewHeight} onscroll={() => ((scrollTop = scroller.scrollTop), edges())}
@@ -765,13 +897,25 @@
       {:else if !loading && !all.length}
         <div class="empty">
           <p>No tracks yet.</p>
-          <button class="btn sm" onclick={addFolder}>Add a music folder</button>
+          <div class="empty-actions">
+            <button class="btn sm" onclick={addFolder}>Add a music folder</button>
+            {#if onimport && view.kind === 'all'}<button class="btn sm" onclick={onimport}>Import from Rekordbox or Serato</button>{/if}
+          </div>
+          {#if onimport && view.kind === 'all'}<p class="hint">Importing brings your cue points, loops, beatgrids and playlists too.</p>{/if}
         </div>
-      {:else if !loading && !results.length && flag('search-scope')}
+      {:else if !loading && !results.length && flag('search-scope') && query.trim() && !fits && !filtered}
         <!-- #84 (UI audit flag): search-scope: name the view, and offer the way out. -->
-        <div class="empty"><p>Nothing in {viewName} matches “{query.trim()}”.</p><button class="btn sm" onclick={clearSearch}>Clear search<kbd class="hint">esc</kbd></button></div>
+        <div class="empty"><p>Nothing in {viewName} matches “{query.trim()}”.</p><button class="btn sm" onclick={clearSearch}>Clear search<kbd class="keyhint">esc</kbd></button></div>
       {:else if !loading && !results.length}
-        <div class="empty">Nothing matches “{query}”.</div>
+        <div class="empty">
+          <p>{query ? `Nothing matches “${query}”` : 'No tracks'}{fits ? ` that mix with deck ${air ? 'AB'[air.deck] : ''}` : ''}{filtered ? ` in ${describe(filter)}` : ''}.</p>
+          {#if fits || filtered}
+            <div class="empty-actions">
+              {#if fits}<button class="btn sm" onclick={toggleFits}>Show everything</button>{/if}
+              {#if filtered}<button class="btn sm" onclick={clearFilter}>Clear the filter</button>{/if}
+            </div>
+          {/if}
+        </div>
       {/if}
       <div style:height="{sorted.length * ROW}px" style:position="relative">
         {#each visible as t, i (t.key ?? t.path)}
@@ -790,13 +934,23 @@
             use:flagTip={flag('library-polish') && index === selected && !t.missing ? () => `Double-click to load, or ${keyLabel('deck.0.load')} / ${keyLabel('deck.1.load')}` : null}>
             <!-- #90 (UI audit flag): library-polish: the selected row's tip says how to load it (c-K83). -->
             <span class="ld">{#each decks as d}<b class:b={d === 1} aria-hidden="true"></b>{#if flag('deck-letters')}<i class="dl" class:b={d === 1} aria-hidden="true">{'AB'[d]}</i>{/if}{/each}</span>
-            <span class="t">{#if t.missing}<span class="k" use:tip={() => `File not found: ${t.path}`}>{t.title}</span><span class="sr">, file not found</span>{:else if markOn}{#each marks(t.title) as m}{#if m.hit}<mark>{m.s}</mark>{:else}{m.s}{/if}{/each}{:else}{t.title}{/if}</span>
-            <span>{#if markOn}{#each marks(t.artist) as m}{#if m.hit}<mark>{m.s}</mark>{:else}{m.s}{/if}{/each}{:else}{t.artist}{/if}</span>
-            <span class="n num" class:none={a && !a.bpm}>{a ? bpmText(a) || NONE : ''}</span>
-            <span class:none={a && !a.key}>{#if a?.key}<span class="k" class:mix={!decks.length && mixKeys.some((k) => keysMix(k, a.key))} use:tip={() => keyTip(a.key, decks.length > 0)}><!-- #89 (UI audit flag): key-notation: Camelot, or both as the decks show it (the name in a slot, so the codes line up).
-                -->{#if notation === 'camelot'}{camelot(a.key)}{:else if notation === 'both'}<span class="kn">{keyName(a.key)}</span> <span class="cam">{camelot(a.key)}</span>{:else}{keyName(a.key)}{/if}</span>{:else if a}{NONE}{/if}</span>
-            <span class="n num" class:none={a?.failed}>{a ? timeText(a) || NONE : ''}</span>
-            <span>{#if markOn}{#each marks(t.folder) as m}{#if m.hit}<mark>{m.s}</mark>{:else}{m.s}{/if}{/each}{:else}{t.folder}{/if}</span>
+            {#each columns as c (c.by)}
+              {#if c.by === 'title'}
+                <span class="t">{#if t.missing}<span class="k" use:tip={() => `File not found: ${t.path}`}>{t.title}</span><span class="sr">, file not found</span>{:else if markOn}{#each marks(t.title) as m}{#if m.hit}<mark>{m.s}</mark>{:else}{m.s}{/if}{/each}{:else}{t.title}{/if}</span>
+              {:else if c.by === 'bpm'}
+                <span class="n num" class:none={a && !a.bpm}>{a ? bpmText(a) || NONE : ''}</span>
+              {:else if c.by === 'key'}
+                <span class:none={a && !a.key}>{#if a?.key}<span class="k" class:mix={!decks.length && mixKeys.some((k) => keysMix(k, a.key))} use:tip={() => keyTip(a.key, decks.length > 0)}><!-- #89 (UI audit flag): key-notation: Camelot, or both as the decks show it (the name in a slot, so the codes line up).
+                  -->{#if notation === 'camelot'}{camelot(a.key)}{:else if notation === 'both'}<span class="kn">{keyName(a.key)}</span> <span class="cam">{camelot(a.key)}</span>{:else}{keyName(a.key)}{/if}</span>{:else if a}{NONE}{/if}</span>
+              {:else if c.by === 'time'}
+                <span class="n num" class:none={a?.failed}>{a ? timeText(a) || NONE : ''}</span>
+              {:else if markOn && (c.by === 'artist' || c.by === 'folder' || c.by === 'album' || c.by === 'genre')}
+                <!-- #84 (UI audit flag): search-scope marks the searched words. -->
+                <span>{#each marks(t[c.by]) as m}{#if m.hit}<mark>{m.s}</mark>{:else}{m.s}{/if}{/each}</span>
+              {:else}
+                <span>{t[c.by] ?? ''}</span>
+              {/if}
+            {/each}
             {#if decks.length && flag('deck-names')}<span class="sr">, on the {decks.map((d) => ['left', 'right'][d]).join(' and ')} {decks.length > 1 ? 'decks' : 'deck'}</span>{:else if decks.length}<span class="sr">, on deck {decks.map((d) => 'AB'[d]).join(' and ')}</span>{/if}
           </div>
         {/each}
@@ -983,6 +1137,116 @@
     clip-path: inset(50%);
     white-space: nowrap;
   }
+  .chip {
+    min-width: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 10px;
+    white-space: nowrap;
+  }
+  .chip.on {
+    color: var(--fg);
+    background: var(--sel);
+  }
+  .chip svg {
+    width: 11px;
+    height: 11px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.3;
+    stroke-linecap: round;
+  }
+  .chip-val {
+    color: var(--fg-2);
+  }
+  .filter {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
+  .filter > .clear {
+    margin: 0;
+  }
+  /* The filter panel: under its button, above the track list. */
+  .panel {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    z-index: 20;
+    width: 300px;
+    padding: 10px;
+    border-radius: 8px;
+    background: var(--popover);
+    box-shadow: inset 0 0 0 1px var(--line-2), 0 12px 32px rgb(0 0 0 / 0.45);
+  }
+  .ph {
+    margin: 0 0 6px;
+    font-size: var(--t-xs);
+    color: var(--fg-3);
+  }
+  .bpm {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    color: var(--fg-3);
+    font-size: var(--t-xs);
+  }
+  .bpm input {
+    flex: 1;
+    min-width: 0;
+    height: var(--h-md);
+    box-sizing: border-box;
+    padding: 0 8px;
+    border: 0;
+    border-radius: var(--r);
+    background: var(--well);
+    box-shadow: var(--well-shadow);
+    color: var(--fg);
+    font: inherit;
+    font-size: var(--t-sm);
+  }
+  .bpm input:focus-visible {
+    outline: none;
+    box-shadow: var(--well-shadow), inset 0 0 0 1px var(--fg-3);
+  }
+  .wheel {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 4px;
+  }
+  .kc {
+    height: 24px;
+    padding: 0;
+    border: 0;
+    border-radius: 5px;
+    background: var(--raise);
+    color: var(--fg-2);
+    font: inherit;
+    font-size: var(--t-xs);
+    transition: background-color 140ms ease, color 140ms ease;
+  }
+  .kc:hover {
+    color: var(--fg);
+  }
+  .kc.on {
+    background: var(--sel);
+    color: var(--fg);
+    box-shadow: inset 0 0 0 1px var(--line-2);
+  }
+  .kc:focus-visible {
+    outline: 1px solid var(--fg-3);
+  }
+  .pf {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 10px;
+    font-size: var(--t-xs);
+    color: var(--fg-3);
+  }
   .count {
     font-size: var(--t-xs);
     color: var(--fg-3);
@@ -1020,7 +1284,7 @@
   }
   .row {
     display: grid;
-    grid-template-columns: 26px minmax(0, 2.4fr) minmax(0, 1.6fr) 64px 56px 64px minmax(0, 1.2fr);
+    grid-template-columns: var(--cols);
     align-items: center;
     height: 28px;
     color: var(--fg-2);
@@ -1080,6 +1344,35 @@
     fill: none;
     stroke: currentColor;
     stroke-width: 1.4;
+  }
+  /* Opens the columns menu; quiet until hovered, like the headings. */
+  .cols {
+    justify-self: end;
+    width: 24px;
+    height: 22px;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 0;
+    border-radius: 5px;
+    background: none;
+    color: inherit;
+    transition: background-color 140ms ease, color 140ms ease;
+  }
+  .cols:hover,
+  .cols:focus-visible {
+    background: var(--hover);
+    color: var(--fg);
+  }
+  .cols:focus-visible {
+    outline: 1px solid var(--fg-3);
+  }
+  .cols svg {
+    width: 13px;
+    height: 13px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.2;
   }
   .sort svg.down {
     transform: rotate(180deg);
@@ -1169,9 +1462,18 @@
     color: var(--fg-3);
   }
   /* search-scope (#84): the key hint 8px after "Clear search", as Undo's ⌘Z. */
-  .empty .btn:has(.hint) {
+  .empty .btn:has(.keyhint) {
     display: inline-flex;
     align-items: center;
     gap: 8px;
+  }
+  .empty-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+  }
+  .empty .hint {
+    font-size: 12px;
   }
 </style>

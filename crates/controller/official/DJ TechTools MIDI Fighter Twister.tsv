@@ -1,0 +1,220 @@
+# MIDI Fighter Twister — DJ TechTools "Midi Fighter Twister User Guide", Appendix 1 (default MIDI messages)
+# source: https://s3.amazonaws.com/MF_Support_Docs/Midi+Fighter+Twister+User+Guide.pdf
+# Channels are 0-based in the guide (status B0 = channel 0). Encoder switches send CC by default (a note is
+# optional). LEDs: display value on channel 0, switch colour on channel 1, animation on channel 2 (same number).
+in	B3	08	Bank 1 LH side switch 1	
+in	B3	09	Bank 1 LH side switch 2	
+in	B3	0A	Bank 1 LH side switch 3	
+in	B3	0B	Bank 1 RH side switch 1	
+in	B3	0C	Bank 1 RH side switch 2	
+in	B3	0D	Bank 1 RH side switch 3	
+both	B0	00	Bank 1 Encoder 1 (turn; display value)	
+both	B1	00	Bank 1 Encoder 1 switch (CC, default; RGB colour)	
+out	B2	00	Bank 1 Encoder 1 animation	
+both	B0	01	Bank 1 Encoder 2 (turn; display value)	
+both	B1	01	Bank 1 Encoder 2 switch (CC, default; RGB colour)	
+out	B2	01	Bank 1 Encoder 2 animation	
+both	B0	02	Bank 1 Encoder 3 (turn; display value)	
+both	B1	02	Bank 1 Encoder 3 switch (CC, default; RGB colour)	
+out	B2	02	Bank 1 Encoder 3 animation	
+both	B0	03	Bank 1 Encoder 4 (turn; display value)	
+both	B1	03	Bank 1 Encoder 4 switch (CC, default; RGB colour)	
+out	B2	03	Bank 1 Encoder 4 animation	
+both	B0	04	Bank 1 Encoder 5 (turn; display value)	
+both	B1	04	Bank 1 Encoder 5 switch (CC, default; RGB colour)	
+out	B2	04	Bank 1 Encoder 5 animation	
+both	B0	05	Bank 1 Encoder 6 (turn; display value)	
+both	B1	05	Bank 1 Encoder 6 switch (CC, default; RGB colour)	
+out	B2	05	Bank 1 Encoder 6 animation	
+both	B0	06	Bank 1 Encoder 7 (turn; display value)	
+both	B1	06	Bank 1 Encoder 7 switch (CC, default; RGB colour)	
+out	B2	06	Bank 1 Encoder 7 animation	
+both	B0	07	Bank 1 Encoder 8 (turn; display value)	
+both	B1	07	Bank 1 Encoder 8 switch (CC, default; RGB colour)	
+out	B2	07	Bank 1 Encoder 8 animation	
+both	B0	08	Bank 1 Encoder 9 (turn; display value)	
+both	B1	08	Bank 1 Encoder 9 switch (CC, default; RGB colour)	
+out	B2	08	Bank 1 Encoder 9 animation	
+both	B0	09	Bank 1 Encoder 10 (turn; display value)	
+both	B1	09	Bank 1 Encoder 10 switch (CC, default; RGB colour)	
+out	B2	09	Bank 1 Encoder 10 animation	
+both	B0	0A	Bank 1 Encoder 11 (turn; display value)	
+both	B1	0A	Bank 1 Encoder 11 switch (CC, default; RGB colour)	
+out	B2	0A	Bank 1 Encoder 11 animation	
+both	B0	0B	Bank 1 Encoder 12 (turn; display value)	
+both	B1	0B	Bank 1 Encoder 12 switch (CC, default; RGB colour)	
+out	B2	0B	Bank 1 Encoder 12 animation	
+both	B0	0C	Bank 1 Encoder 13 (turn; display value)	
+both	B1	0C	Bank 1 Encoder 13 switch (CC, default; RGB colour)	
+out	B2	0C	Bank 1 Encoder 13 animation	
+both	B0	0D	Bank 1 Encoder 14 (turn; display value)	
+both	B1	0D	Bank 1 Encoder 14 switch (CC, default; RGB colour)	
+out	B2	0D	Bank 1 Encoder 14 animation	
+both	B0	0E	Bank 1 Encoder 15 (turn; display value)	
+both	B1	0E	Bank 1 Encoder 15 switch (CC, default; RGB colour)	
+out	B2	0E	Bank 1 Encoder 15 animation	
+both	B0	0F	Bank 1 Encoder 16 (turn; display value)	
+both	B1	0F	Bank 1 Encoder 16 switch (CC, default; RGB colour)	
+out	B2	0F	Bank 1 Encoder 16 animation	
+in	B3	0E	Bank 2 LH side switch 1	
+in	B3	0F	Bank 2 LH side switch 2	
+in	B3	10	Bank 2 LH side switch 3	
+in	B3	11	Bank 2 RH side switch 1	
+in	B3	12	Bank 2 RH side switch 2	
+in	B3	13	Bank 2 RH side switch 3	
+both	B0	10	Bank 2 Encoder 1 (turn; display value)	
+both	B1	10	Bank 2 Encoder 1 switch (CC, default; RGB colour)	
+out	B2	10	Bank 2 Encoder 1 animation	
+both	B0	11	Bank 2 Encoder 2 (turn; display value)	
+both	B1	11	Bank 2 Encoder 2 switch (CC, default; RGB colour)	
+out	B2	11	Bank 2 Encoder 2 animation	
+both	B0	12	Bank 2 Encoder 3 (turn; display value)	
+both	B1	12	Bank 2 Encoder 3 switch (CC, default; RGB colour)	
+out	B2	12	Bank 2 Encoder 3 animation	
+both	B0	13	Bank 2 Encoder 4 (turn; display value)	
+both	B1	13	Bank 2 Encoder 4 switch (CC, default; RGB colour)	
+out	B2	13	Bank 2 Encoder 4 animation	
+both	B0	14	Bank 2 Encoder 5 (turn; display value)	
+both	B1	14	Bank 2 Encoder 5 switch (CC, default; RGB colour)	
+out	B2	14	Bank 2 Encoder 5 animation	
+both	B0	15	Bank 2 Encoder 6 (turn; display value)	
+both	B1	15	Bank 2 Encoder 6 switch (CC, default; RGB colour)	
+out	B2	15	Bank 2 Encoder 6 animation	
+both	B0	16	Bank 2 Encoder 7 (turn; display value)	
+both	B1	16	Bank 2 Encoder 7 switch (CC, default; RGB colour)	
+out	B2	16	Bank 2 Encoder 7 animation	
+both	B0	17	Bank 2 Encoder 8 (turn; display value)	
+both	B1	17	Bank 2 Encoder 8 switch (CC, default; RGB colour)	
+out	B2	17	Bank 2 Encoder 8 animation	
+both	B0	18	Bank 2 Encoder 9 (turn; display value)	
+both	B1	18	Bank 2 Encoder 9 switch (CC, default; RGB colour)	
+out	B2	18	Bank 2 Encoder 9 animation	
+both	B0	19	Bank 2 Encoder 10 (turn; display value)	
+both	B1	19	Bank 2 Encoder 10 switch (CC, default; RGB colour)	
+out	B2	19	Bank 2 Encoder 10 animation	
+both	B0	1A	Bank 2 Encoder 11 (turn; display value)	
+both	B1	1A	Bank 2 Encoder 11 switch (CC, default; RGB colour)	
+out	B2	1A	Bank 2 Encoder 11 animation	
+both	B0	1B	Bank 2 Encoder 12 (turn; display value)	
+both	B1	1B	Bank 2 Encoder 12 switch (CC, default; RGB colour)	
+out	B2	1B	Bank 2 Encoder 12 animation	
+both	B0	1C	Bank 2 Encoder 13 (turn; display value)	
+both	B1	1C	Bank 2 Encoder 13 switch (CC, default; RGB colour)	
+out	B2	1C	Bank 2 Encoder 13 animation	
+both	B0	1D	Bank 2 Encoder 14 (turn; display value)	
+both	B1	1D	Bank 2 Encoder 14 switch (CC, default; RGB colour)	
+out	B2	1D	Bank 2 Encoder 14 animation	
+both	B0	1E	Bank 2 Encoder 15 (turn; display value)	
+both	B1	1E	Bank 2 Encoder 15 switch (CC, default; RGB colour)	
+out	B2	1E	Bank 2 Encoder 15 animation	
+both	B0	1F	Bank 2 Encoder 16 (turn; display value)	
+both	B1	1F	Bank 2 Encoder 16 switch (CC, default; RGB colour)	
+out	B2	1F	Bank 2 Encoder 16 animation	
+in	B3	14	Bank 3 LH side switch 1	
+in	B3	15	Bank 3 LH side switch 2	
+in	B3	16	Bank 3 LH side switch 3	
+in	B3	17	Bank 3 RH side switch 1	
+in	B3	18	Bank 3 RH side switch 2	
+in	B3	19	Bank 3 RH side switch 3	
+both	B0	20	Bank 3 Encoder 1 (turn; display value)	
+both	B1	20	Bank 3 Encoder 1 switch (CC, default; RGB colour)	
+out	B2	20	Bank 3 Encoder 1 animation	
+both	B0	21	Bank 3 Encoder 2 (turn; display value)	
+both	B1	21	Bank 3 Encoder 2 switch (CC, default; RGB colour)	
+out	B2	21	Bank 3 Encoder 2 animation	
+both	B0	22	Bank 3 Encoder 3 (turn; display value)	
+both	B1	22	Bank 3 Encoder 3 switch (CC, default; RGB colour)	
+out	B2	22	Bank 3 Encoder 3 animation	
+both	B0	23	Bank 3 Encoder 4 (turn; display value)	
+both	B1	23	Bank 3 Encoder 4 switch (CC, default; RGB colour)	
+out	B2	23	Bank 3 Encoder 4 animation	
+both	B0	24	Bank 3 Encoder 5 (turn; display value)	
+both	B1	24	Bank 3 Encoder 5 switch (CC, default; RGB colour)	
+out	B2	24	Bank 3 Encoder 5 animation	
+both	B0	25	Bank 3 Encoder 6 (turn; display value)	
+both	B1	26	Bank 3 Encoder 6 switch (CC, default; RGB colour)	
+out	B2	25	Bank 3 Encoder 6 animation	
+both	B0	26	Bank 3 Encoder 7 (turn; display value)	
+both	B1	27	Bank 3 Encoder 7 switch (CC, default; RGB colour)	
+out	B2	26	Bank 3 Encoder 7 animation	
+both	B0	27	Bank 3 Encoder 8 (turn; display value)	
+both	B1	28	Bank 3 Encoder 8 switch (CC, default; RGB colour)	
+out	B2	27	Bank 3 Encoder 8 animation	
+both	B0	28	Bank 3 Encoder 9 (turn; display value)	
+both	B1	29	Bank 3 Encoder 9 switch (CC, default; RGB colour)	
+out	B2	28	Bank 3 Encoder 9 animation	
+both	B0	29	Bank 3 Encoder 10 (turn; display value)	
+both	B1	2A	Bank 3 Encoder 10 switch (CC, default; RGB colour)	
+out	B2	29	Bank 3 Encoder 10 animation	
+both	B0	2A	Bank 3 Encoder 11 (turn; display value)	
+both	B1	2B	Bank 3 Encoder 11 switch (CC, default; RGB colour)	
+out	B2	2A	Bank 3 Encoder 11 animation	
+both	B0	2B	Bank 3 Encoder 12 (turn; display value)	
+both	B1	2C	Bank 3 Encoder 12 switch (CC, default; RGB colour)	
+out	B2	2B	Bank 3 Encoder 12 animation	
+both	B0	2C	Bank 3 Encoder 13 (turn; display value)	
+both	B1	2D	Bank 3 Encoder 13 switch (CC, default; RGB colour)	
+out	B2	2C	Bank 3 Encoder 13 animation	
+both	B0	2D	Bank 3 Encoder 14 (turn; display value)	
+both	B1	2E	Bank 3 Encoder 14 switch (CC, default; RGB colour)	
+out	B2	2D	Bank 3 Encoder 14 animation	
+both	B0	2E	Bank 3 Encoder 15 (turn; display value)	
+both	B1	2F	Bank 3 Encoder 15 switch (CC, default; RGB colour)	
+out	B2	2E	Bank 3 Encoder 15 animation	
+both	B0	2F	Bank 3 Encoder 16 (turn; display value)	
+both	B1	30	Bank 3 Encoder 16 switch (CC, default; RGB colour)	
+out	B2	2F	Bank 3 Encoder 16 animation	
+in	B3	1A	Bank 4 LH side switch 1	
+in	B3	1B	Bank 4 LH side switch 2	
+in	B3	1C	Bank 4 LH side switch 3	
+in	B3	1D	Bank 4 RH side switch 1	
+in	B3	1E	Bank 4 RH side switch 2	
+in	B3	1F	Bank 4 RH side switch 3	
+both	B0	30	Bank 4 Encoder 1 (turn; display value)	
+out	B2	30	Bank 4 Encoder 1 animation	
+both	B0	31	Bank 4 Encoder 2 (turn; display value)	
+both	B1	31	Bank 4 Encoder 2 switch (CC, default; RGB colour)	
+out	B2	31	Bank 4 Encoder 2 animation	
+both	B0	32	Bank 4 Encoder 3 (turn; display value)	
+both	B1	32	Bank 4 Encoder 3 switch (CC, default; RGB colour)	
+out	B2	32	Bank 4 Encoder 3 animation	
+both	B0	33	Bank 4 Encoder 4 (turn; display value)	
+both	B1	33	Bank 4 Encoder 4 switch (CC, default; RGB colour)	
+out	B2	33	Bank 4 Encoder 4 animation	
+both	B0	34	Bank 4 Encoder 5 (turn; display value)	
+both	B1	34	Bank 4 Encoder 5 switch (CC, default; RGB colour)	
+out	B2	34	Bank 4 Encoder 5 animation	
+both	B0	35	Bank 4 Encoder 6 (turn; display value)	
+both	B1	35	Bank 4 Encoder 6 switch (CC, default; RGB colour)	
+out	B2	35	Bank 4 Encoder 6 animation	
+both	B0	36	Bank 4 Encoder 7 (turn; display value)	
+both	B1	36	Bank 4 Encoder 7 switch (CC, default; RGB colour)	
+out	B2	36	Bank 4 Encoder 7 animation	
+both	B0	37	Bank 4 Encoder 8 (turn; display value)	
+both	B1	37	Bank 4 Encoder 8 switch (CC, default; RGB colour)	
+out	B2	37	Bank 4 Encoder 8 animation	
+both	B0	38	Bank 4 Encoder 9 (turn; display value)	
+both	B1	38	Bank 4 Encoder 9 switch (CC, default; RGB colour)	
+out	B2	38	Bank 4 Encoder 9 animation	
+both	B0	39	Bank 4 Encoder 10 (turn; display value)	
+both	B1	39	Bank 4 Encoder 10 switch (CC, default; RGB colour)	
+out	B2	39	Bank 4 Encoder 10 animation	
+both	B0	3A	Bank 4 Encoder 11 (turn; display value)	
+both	B1	3A	Bank 4 Encoder 11 switch (CC, default; RGB colour)	
+out	B2	3A	Bank 4 Encoder 11 animation	
+both	B0	3B	Bank 4 Encoder 12 (turn; display value)	
+both	B1	3B	Bank 4 Encoder 12 switch (CC, default; RGB colour)	
+out	B2	3B	Bank 4 Encoder 12 animation	
+both	B0	3C	Bank 4 Encoder 13 (turn; display value)	
+both	B1	3C	Bank 4 Encoder 13 switch (CC, default; RGB colour)	
+out	B2	3C	Bank 4 Encoder 13 animation	
+both	B0	3D	Bank 4 Encoder 14 (turn; display value)	
+both	B1	3D	Bank 4 Encoder 14 switch (CC, default; RGB colour)	
+out	B2	3D	Bank 4 Encoder 14 animation	
+both	B0	3E	Bank 4 Encoder 15 (turn; display value)	
+both	B1	3E	Bank 4 Encoder 15 switch (CC, default; RGB colour)	
+out	B2	3E	Bank 4 Encoder 15 animation	
+both	B0	3F	Bank 4 Encoder 16 (turn; display value)	
+both	B1	3F	Bank 4 Encoder 16 switch (CC, default; RGB colour)	
+out	B2	3F	Bank 4 Encoder 16 animation	
+extra-in	B1	25	push switch of encoder 38 (bank 3), on channel 2 like the other switches

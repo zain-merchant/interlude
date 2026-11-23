@@ -117,12 +117,18 @@
   onMount(() => {
     const back = document.activeElement;
     root.focus();
-    backend.importSources().then((f) => {
-      found = f;
-      searching = false;
-    });
+    const look = () =>
+      backend.importSources().then((f) => {
+        found = f;
+        searching = false;
+      });
+    look();
+    // Coming back from Rekordbox after exporting: the new file shows up.
+    const again = () => step === 'find' && look();
+    window.addEventListener('focus', again);
     const off = backend.onImportProgress((p) => (progress = p));
     return () => {
+      window.removeEventListener('focus', again);
       off.then((f) => f());
       /** @type {HTMLElement} */ (back)?.focus?.();
     };
@@ -183,16 +189,19 @@
             {/each}
             <button class="link" onclick={() => choose(app.kind)} disabled={step === 'reading'}>{app.other}</button>
           {:else}
+            {#if app.kind === 'rekordbox'}
+              <p class="why">Rekordbox keeps cue points in its own library, not in your music files, so it needs one export first.</p>
+            {/if}
             <ol class="how">
               {#if app.kind === 'rekordbox'}
-                <li>In {flag('import-links') ? 'rekordbox' : 'Rekordbox'}, choose <b>File › Export Collection in xml format</b>.</li>
-                <li>Save it anywhere, then choose it here.</li>
+                <li>Open {flag('import-links') ? 'rekordbox' : 'Rekordbox'} and choose <b>File › Export Collection in xml format</b>.</li>
+                <li>Save it to your Desktop or Documents. It shows up here.</li>
               {:else}
                 <li>Open Serato DJ on this computer once, so it saves your library.</li>
                 <li>For a library on a drive, choose the drive's <b>_Serato_</b> folder.</li>
               {/if}
             </ol>
-            <button class="btn sm" onclick={() => choose(app.kind)} disabled={step === 'reading'}>{app.kind === 'serato' ? 'Choose folder…' : 'Choose file…'}</button>
+            <button class="btn sm" onclick={() => choose(app.kind)} disabled={step === 'reading'}>{app.kind === 'serato' ? 'Choose folder…' : 'Choose the file…'}</button>
           {/if}
         </div>
       {/each}
@@ -230,6 +239,9 @@
             </label>
           {/each}
         </div>
+      {/if}
+      {#if source?.kind === 'rekordbox' && !preview.withCues}
+        <p class="note">This export has no cue points. If your tracks have cues in Rekordbox, export the collection again and choose the new file.</p>
       {/if}
       {#if preview.missing}
         <p class="note">{plural(preview.missing, 'track')} {preview.missing === 1 ? "isn't" : "aren't"} on this computer right now. {source?.kind === 'serato'
@@ -447,6 +459,11 @@
   }
   .link:hover {
     color: var(--fg-2);
+  }
+  .why {
+    margin: 0 0 10px;
+    color: var(--fg-2);
+    line-height: 1.5;
   }
   .how {
     margin: 0 0 16px;

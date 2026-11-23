@@ -1,0 +1,92 @@
+# TWEAKER — Electrix "TWEAKER User Manual", 4 Default MIDI Settings and Default MIDI Map
+# source: https://electrixpro.com/wp-content/uploads/2014/10/Tweaker_User_Manual.pdf
+# Factory defaults, all on MIDI channel 1. Button/pad LEDs take the same note; encoder rings use CC 79-84.
+# The settings channel (16) is not listed. The crossfader is the only pot with no centre note.
+both	90	01	grid soft-touch button 1 (row 1, column 1; RGB LED)	
+both	90	02	grid soft-touch button 2 (row 1, column 2; RGB LED)	
+both	90	03	grid soft-touch button 3 (row 1, column 3; RGB LED)	
+both	90	04	grid soft-touch button 4 (row 1, column 4; RGB LED)	
+both	90	05	grid soft-touch button 5 (row 1, column 5; RGB LED)	
+both	90	06	grid soft-touch button 6 (row 1, column 6; RGB LED)	
+both	90	07	grid soft-touch button 7 (row 1, column 7; RGB LED)	
+both	90	08	grid soft-touch button 8 (row 1, column 8; RGB LED)	
+both	90	09	grid soft-touch button 9 (row 2, column 1; RGB LED)	
+both	90	0A	grid soft-touch button 10 (row 2, column 2; RGB LED)	
+both	90	0B	grid soft-touch button 11 (row 2, column 3; RGB LED)	
+both	90	0C	grid soft-touch button 12 (row 2, column 4; RGB LED)	
+both	90	0D	grid soft-touch button 13 (row 2, column 5; RGB LED)	
+both	90	0E	grid soft-touch button 14 (row 2, column 6; RGB LED)	
+both	90	0F	grid soft-touch button 15 (row 2, column 7; RGB LED)	
+both	90	10	grid soft-touch button 16 (row 2, column 8; RGB LED)	
+both	90	11	grid soft-touch button 17 (row 3, column 1; RGB LED)	
+both	90	12	grid soft-touch button 18 (row 3, column 2; RGB LED)	
+both	90	13	grid soft-touch button 19 (row 3, column 3; RGB LED)	
+both	90	14	grid soft-touch button 20 (row 3, column 4; RGB LED)	
+both	90	15	grid soft-touch button 21 (row 3, column 5; RGB LED)	
+both	90	16	grid soft-touch button 22 (row 3, column 6; RGB LED)	
+both	90	17	grid soft-touch button 23 (row 3, column 7; RGB LED)	
+both	90	18	grid soft-touch button 24 (row 3, column 8; RGB LED)	
+both	90	19	grid soft-touch button 25 (row 4, column 1; RGB LED)	
+both	90	1A	grid soft-touch button 26 (row 4, column 2; RGB LED)	
+both	90	1B	grid soft-touch button 27 (row 4, column 3; RGB LED)	
+both	90	1C	grid soft-touch button 28 (row 4, column 4; RGB LED)	
+both	90	1D	grid soft-touch button 29 (row 4, column 5; RGB LED)	
+both	90	1E	grid soft-touch button 30 (row 4, column 6; RGB LED)	
+both	90	1F	grid soft-touch button 31 (row 4, column 7; RGB LED)	
+both	90	20	grid soft-touch button 32 (row 4, column 8; RGB LED)	
+both	90	21	left side button 1 (A0) (RGB LED)	
+both	90	22	left side button 2 (A#0) (RGB LED)	
+both	90	23	left bottom button (B0) (RGB LED)	
+both	90	24	right side button 1 (C1) (RGB LED)	
+both	90	25	right side button 2 (C#1) (RGB LED)	
+both	90	26	right bottom button (D1) (RGB LED)	
+both	90	27	navigation up (red LED)	
+both	90	28	navigation centre (red LED)	
+both	90	29	navigation down (red LED)	
+both	90	2A	navigation left (red LED)	
+both	90	2B	navigation right (red LED)	
+both	90	2C	navigation encoder push (blue LED)	
+both	90	2D	left encoder 1 push (blue LED)	
+both	90	2E	left encoder 2 push (blue LED)	
+both	90	2F	left encoder 3 push (blue LED)	
+both	90	30	right encoder 1 push (blue LED)	
+both	90	31	right encoder 2 push (blue LED)	
+both	90	32	right encoder 3 push (blue LED)	
+in	B0	33	left pot	
+in	90	33	left pot centre note	
+in	B0	34	right pot	
+in	90	34	right pot centre note	
+in	B0	35	left fader	
+in	90	35	left fader centre note	
+in	B0	36	right fader	
+in	90	36	right fader centre note	
+in	B0	37	crossfader	
+in	B0	38	navigation encoder	
+in	B0	39	left encoder 1	
+in	B0	3A	left encoder 2	
+in	B0	3B	left encoder 3	
+in	B0	3C	right encoder 1	
+in	B0	3D	right encoder 2	
+in	B0	3E	right encoder 3	
+both	90	3F	force-sensitive pad 1 (red LED)	
+in	B0	47	force-sensitive pad 1 pressure	
+both	90	40	force-sensitive pad 2 (red LED)	
+in	B0	48	force-sensitive pad 2 pressure	
+both	90	41	force-sensitive pad 3 (red LED)	
+in	B0	49	force-sensitive pad 3 pressure	
+both	90	42	force-sensitive pad 4 (red LED)	
+in	B0	4A	force-sensitive pad 4 pressure	
+both	90	43	force-sensitive pad 5 (red LED)	
+in	B0	4B	force-sensitive pad 5 pressure	
+both	90	44	force-sensitive pad 6 (red LED)	
+in	B0	4C	force-sensitive pad 6 pressure	
+both	90	45	force-sensitive pad 7 (red LED)	
+in	B0	4D	force-sensitive pad 7 pressure	
+both	90	46	force-sensitive pad 8 (red LED)	
+in	B0	4E	force-sensitive pad 8 pressure	
+out	B0	4F	left encoder 1 LED ring	
+out	B0	50	left encoder 2 LED ring	
+out	B0	51	left encoder 3 LED ring	
+out	B0	52	right encoder 1 LED ring	
+out	B0	53	right encoder 2 LED ring	
+out	B0	54	right encoder 3 LED ring	

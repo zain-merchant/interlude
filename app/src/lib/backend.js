@@ -10,7 +10,7 @@ export const inTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in
 /**
  * @typedef {{ loaded: boolean, playing: boolean, position: number, duration: number,
  *             cue: number, rate: number, speed: number, bpm: number,
- *             key: { tonic: number, minor: boolean } | null, keylock: boolean,
+ *             key: { tonic: number, minor: boolean } | null, keylock: boolean, synced?: boolean,
  *             generation: number, peak: number, hotCues: (number | null)[],
  *             loopIn: number | null, loopOut: number | null, looping: boolean,
  *             loopBeats: number, slip?: boolean, slipPosition?: number | null, filter?: number,
@@ -27,7 +27,7 @@ export const inTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in
  *             beatgrid: Beatgrid | null, gridLocked?: boolean }} TrackInfo
  * @typedef {{ bpm: number, firstBeat: number }} Beatgrid
  * @typedef {{ duration: number | null, bpm: number | null,
- *             key: { tonic: number, minor: boolean } | null, failed: boolean }} TrackAnalysis
+ *             key: { tonic: number, minor: boolean } | null, failed: boolean, outdated?: boolean }} TrackAnalysis
  * @typedef {{ path: string, title: string, artist: string, album: string, genre: string,
  *             folder: string, format: string, missing: boolean,
  *             analysis: TrackAnalysis | null }} LibraryTrack
@@ -65,9 +65,13 @@ async function createTauriBackend() {
     setAudioOutput: (device) => invoke('set_audio_output', { device }),
     /** Puts a file in a sampler slot. @returns {Promise<number>} its length in seconds */
     loadSample: (slot, path) => invoke('load_sample', { slot, path }),
+    /** The sounds that ship with the app, in slot order. @returns {Promise<{ path: string, title: string }[]>} */
+    defaultSamples: () => invoke('default_samples'),
     /** @returns {Promise<TrackInfo>} */
     /** With `autoGain`, the deck plays the track at the common loudness, under the trim. */
     loadTrack: (deck, path, autoGain = true) => invoke('load_track', { deck, path, autoGain }),
+    /** Decodes the track selected in the library ahead, so loading it is instant. */
+    preloadTrack: (path) => invoke('preload_track', { path }),
     /** Waveform bytes of what a deck plays with the stems in `mask` on. @returns {Promise<Uint8Array>} */
     stemsWaveform: async (deck, mask) => new Uint8Array(await invoke('stems_waveform', { deck, mask })),
     /** The Stems settings page. */
@@ -137,6 +141,13 @@ async function createTauriBackend() {
      */
     onLibraryAnalysis: (fn) => listen('library-analysis', (e) => fn(e.payload)),
     /**
+     * Beat This! found the grid of a track on a deck, a few seconds after
+     * it loaded. The deck already uses it.
+     * @param {(e: { deck: number, path: string, beatgrid: Beatgrid }) => void} fn
+     * @returns {Promise<() => void>} unlisten
+     */
+    onDeckBeatgrid: (fn) => listen('deck-beatgrid', (e) => fn(e.payload)),
+    /**
      * Library actions from a hardware controller (browse knob, load buttons).
      * @param {(e: { type: 'browse', delta: number } | { type: 'load', deck: number } | { type: 'loadSample', slot: number }) => void} fn
      * @returns {Promise<() => void>} unlisten
@@ -155,11 +166,28 @@ async function createTauriBackend() {
     midiLearnStop: () => invoke('midi_learn_stop'),
     /** @returns {Promise<Binding[]>} */
     learnedMapping: (port) => invoke('learned_mapping', { port }),
-    /** Saves (or with no bindings, deletes) the learned mapping for a port, and reconnects. */
+    /** Saves (or with no bindings, deletes) the learned mapping for a port, and reconnects. @returns {Promise<string>} the file */
     saveLearnedMapping: (port, bindings) => invoke('save_learned_mapping', { port, bindings }),
+    /** @returns {Promise<string[]>} the MIDI controllers there's a mapping for */
+    controllerModels: () => invoke('controller_models'),
+    /** While paused, connected controllers drive nothing (MIDI learn still hears them). */
+    controllersPause: (paused) => invoke('controllers_pause', { paused }),
+    /** @returns {Promise<string>} */
+    appVersion: async () => (await import('@tauri-apps/api/app')).getVersion(),
+    /** Opens a web page in the default browser. */
+    openUrl: async (url) => (await import('@tauri-apps/plugin-opener')).openUrl(url),
     /** @returns {Promise<string | null>} */
     pickFolder: async () => {
       const picked = await open({ directory: true, multiple: false, title: 'Add a music folder' });
+      return typeof picked === 'string' ? picked : null;
+    },
+    /** @returns {Promise<string | null>} an audio file for a sampler slot */
+    pickSample: async () => {
+      const picked = await open({
+        multiple: false,
+        title: 'Choose a sound for the sampler',
+        filters: [{ name: 'Audio', extensions: ['wav', 'aiff', 'aif', 'mp3', 'flac', 'ogg', 'm4a', 'aac'] }],
+      });
       return typeof picked === 'string' ? picked : null;
     },
   };

@@ -5,7 +5,8 @@
 import { inTauri } from './backend.js';
 
 /**
- * @typedef {{ label: string, action: () => void, key?: string, enabled?: boolean } | '-'} MenuEntry
+ * @typedef {{ label: string, action: () => void, key?: string, enabled?: boolean, checked?: boolean } | '-'} MenuEntry
+ * `checked` makes the item a checkbox, ticked or not.
  */
 
 /** The HTML fallback's state, drawn by ContextMenu.svelte. */
@@ -28,11 +29,13 @@ export async function openMenu(e, items) {
   e.preventDefault();
   e.stopPropagation();
   if (inTauri) {
-    const { Menu, MenuItem, PredefinedMenuItem } = await import('@tauri-apps/api/menu');
+    const { Menu, MenuItem, CheckMenuItem, PredefinedMenuItem } = await import('@tauri-apps/api/menu');
     const built = await Promise.all(
       items.map((it) =>
         it === '-'
           ? PredefinedMenuItem.new({ item: 'Separator' })
+          : it.checked != null
+          ? CheckMenuItem.new({ text: it.label, enabled: it.enabled ?? true, checked: it.checked, action: it.action })
           : MenuItem.new({ text: it.label, enabled: it.enabled ?? true, accelerator: accel(it.key), action: it.action }),
       ),
     );

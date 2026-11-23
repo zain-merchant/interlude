@@ -50,9 +50,10 @@
         <div class="sep" role="separator"></div>
       {:else}
         <!-- #14 (UI audit flag): states: destructive items are marked, to draw them in --kill. -->
-        <button role="menuitem" disabled={it.enabled === false} onclick={() => run(it)} onpointermove={follow}
+        <button role={it.checked != null ? 'menuitemcheckbox' : 'menuitem'} aria-checked={it.checked ?? undefined}
+          disabled={it.enabled === false} onclick={() => run(it)} onpointermove={follow}
           class:danger={flag('states') && /^(Delete|Remove)\b/.test(it.label)}>
-          <span>{it.label}</span>{#if it.key}<kbd>{it.key}</kbd>{/if}
+          <span>{#if it.checked != null}<i class="tick" aria-hidden="true">{it.checked ? '✓' : ''}</i>{/if}{it.label}</span>{#if it.key}<kbd>{it.key}</kbd>{/if}
         </button>
       {/if}
     {/each}
@@ -94,6 +95,13 @@
   }
   button:disabled {
     color: var(--fg-4);
+  }
+  .tick {
+    display: inline-block;
+    width: 16px;
+    margin-left: -2px;
+    font-style: normal;
+    color: var(--fg-2);
   }
   kbd {
     font: inherit;

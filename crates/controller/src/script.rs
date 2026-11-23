@@ -104,6 +104,9 @@ struct Shared {
     takeover: HashMap<Control, Option<f64>>,
     errors: HashSet<String>,
     name: String,
+    /// Notes the script sends elsewhere (`midi.routeNote`): (channel, note)
+    /// in, note out.
+    routes: HashMap<(u8, u8), u8>,
 }
 
 impl Shared {
@@ -202,6 +205,7 @@ impl Script {
             scratch: [None; dj_engine::NUM_DECKS],
             takeover: HashMap::new(),
             errors: HashSet::new(),
+            routes: HashMap::new(),
             name: name.to_owned(),
         }));
         let script = Script {
@@ -369,6 +373,17 @@ impl Script {
         self.take()
     }
 
+    /// The note a note message on `channel` stands for, after the
+    /// script's `midi.routeNote` calls (an openDJ addition its mappings use
+    /// to make pads follow the page shown).
+    pub fn route(&self, channel: u8, note: u8) -> u8 {
+        lock(&self.shared)
+            .routes
+            .get(&(channel, note))
+            .copied()
+            .unwrap_or(note)
+    }
+
     /// The distinct errors the scripts have raised so far.
     pub fn errors(&self) -> Vec<String> {
         let mut e: Vec<String> = lock(&self.shared).errors.iter().cloned().collect();
@@ -526,6 +541,17 @@ fn native<'js>(
         let msg: Vec<u8> = bytes.iter().map(|&b| (b as i64 & 0xFF) as u8).collect();
         if !msg.is_empty() {
             lock(&s).midi_out.push(msg);
+        }
+    });
+    let s = shared.clone();
+    func!("routeNote", move |channel: f64, from: f64, to: f64| {
+        let byte = |v: f64| (v as i64 & 0x7F) as u8;
+        let (channel, from, to) = ((channel as i64 & 0x0F) as u8, byte(from), byte(to));
+        let mut s = lock(&s);
+        if from == to {
+            s.routes.remove(&(channel, from));
+        } else {
+            s.routes.insert((channel, from), to);
         }
     });
     let s = shared.clone();
@@ -761,6 +787,8 @@ const PRELUDE: &str = r#"
   g.midi = g.controller = {
     sendShortMsg(s, d1, d2) { native.send([Number(s) & 0xff, Number(d1) & 0xff, Number(d2) & 0xff]); },
     sendSysexMsg(data, length) { native.send(bytes(data, length)); },
+    // openDJ's: notes `from` on `channel` arrive as `to` from now on.
+    routeNote(channel, from, to) { native.routeNote(Number(channel), Number(from), Number(to)); },
     // On a HID controller: send(data, length, reportId).
     send(data, length, reportId) {
       if (native.isHid()) native.hidOutput(Number(reportId) || 0, bytes(data, length), true);
@@ -1082,6 +1110,20 @@ mod tests {
         let out = cmds(s.binding("T.go", "[Master]", 0x90, 0, 1, &st()));
         assert_eq!(s.take_midi(), vec![vec![0xB0, 0, 1]]);
         assert!(matches!(out[..], [Command::SetCrossfader { value }] if value == 1.0));
+    }
+
+    #[test]
+    fn notes_can_be_routed() {
+        let mut s = load(
+            r#"var T = { go: function () {
+                 midi.routeNote(7, 0x00, 0x20);
+                 midi.routeNote(7, 0x01, 0x01);
+               } };"#,
+        );
+        s.binding("T.go", "", 0x90, 0, 1, &st());
+        assert_eq!(s.route(7, 0x00), 0x20);
+        assert_eq!(s.route(7, 0x01), 0x01);
+        assert_eq!(s.route(6, 0x00), 0x00);
     }
 
     #[test]

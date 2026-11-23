@@ -9,8 +9,8 @@
   import ContextMenu from './lib/ContextMenu.svelte';
   import Settings from './lib/Settings.svelte';
   import Import from './lib/Import.svelte';
-  import Sampler from './lib/Sampler.svelte';
   import Report from './lib/Report.svelte';
+  import ControllerSetup from './lib/ControllerSetup.svelte';
   import { sampler, setSamplerOpen, restoreSampler, loadSample } from './lib/sampler.svelte.js';
   import { engine, tracks, startEngineLoop, loadTrack, control, deckSnapshot, restoreDeck } from './lib/engine.svelte.js';
   import { backend, inTauri } from './lib/backend.js';
@@ -29,7 +29,9 @@
   import { start as startSquircles } from './flags/01-squircles/squircles.js';
   import { padMode, setPadMode } from './lib/padmode.svelte.js';
   import { tempoPickup } from './lib/pickup.svelte.js';
-  import { toggleStem, soloStem, syncStemWaveforms, stemsUnavailable } from './lib/stems.svelte.js';
+  import { gridEdit, NUDGE } from './lib/grid.svelte.js';
+  import { toggleStem, soloStem, syncStemWaveforms, stemsUnavailable, stemsOf } from './lib/stems.svelte.js';
+  import { once, stemsReadyTip } from './lib/tips.svelte.js';
   import { libraryHealth, reveal, captureUiErrors, update, checkForUpdate, installUpdate } from './lib/support.svelte.js';
 
   let library;
@@ -107,11 +109,15 @@
     });
   }
 
-  // Settings open over the library, leaving the decks in reach.
+  // Settings open as a popup over the whole window.
   let settings = $state(null); // null, 'keyboard', 'decks', 'audio', 'display', 'library', 'stems' or 'controllers'
 
   // Muted stems drop out of the waveforms.
   $effect(() => syncStemWaveforms());
+  // The first time a track's stems are ready, a one-time tip says where they are.
+  $effect(() => {
+    if ([0, 1].some((d) => stemsOf(d).state === 'ready')) stemsReadyTip();
+  });
   // Importing another app's library opens in its own window over the app.
   let importing = $state(false);
   const openImport = () => {
@@ -123,6 +129,12 @@
   const openReport = () => {
     hideToast();
     reporting = true;
+  };
+  // Controller not working: set it up step by step, over the app.
+  let settingUp = $state(false);
+  const openControllerSetup = () => {
+    hideToast();
+    settingUp = true;
   };
   /** What the report says about the setup, beyond the version and system. */
   async function reportContext() {
@@ -242,7 +254,10 @@
         break;
       case 'deck.0.sync':
       case 'deck.1.sync':
-        if (down && loaded(deck) && engine.decks[deck].bpm && engine.decks[1 - deck].bpm) {
+        if (down && engine.decks[deck].synced) {
+          control({ type: 'sync', deck });
+          announce(`Deck ${'AB'[deck]} sync off`);
+        } else if (down && loaded(deck) && engine.decks[deck].bpm && engine.decks[1 - deck].bpm) {
           control({ type: 'sync', deck });
           announce(`${deckName(deck, true)} synced`);
         }
@@ -307,6 +322,18 @@
         break;
       case 'view.uiZoomReset':
         if (down) setUiZoom(1);
+        break;
+      case 'deck.0.gridEarlier':
+      case 'deck.1.gridEarlier':
+        if (down) gridEdit(deck, 'nudge', 'Moved the grid earlier', -NUDGE);
+        break;
+      case 'deck.0.gridLater':
+      case 'deck.1.gridLater':
+        if (down) gridEdit(deck, 'nudge', 'Moved the grid later', NUDGE);
+        break;
+      case 'deck.0.gridDownbeat':
+      case 'deck.1.gridDownbeat':
+        if (down) gridEdit(deck, 'downbeat', 'Moved the downbeat');
         break;
       default: {
         const stem = /^deck\.(\d)\.stem(Solo)?\.(\d)$/.exec(id);
@@ -378,8 +405,6 @@
   try {
     libHeight = Number(localStorage.getItem(LIB_KEY)) || LIB_DEFAULT;
   } catch {}
-  const SAMPLER_H = 52; // a 40px strip and the 12px gap above it
-
   // #7 (UI audit flag): edge-tall, and #21 panel-sizes: every row has one
   // designed size (taken from the 1440×900 layout); the library takes what's
   // left, so a tall window gives its extra height to the track list. A short
@@ -387,12 +412,11 @@
   // waveforms down to 96px, then the decks down to 340px. The decks move as
   // one block: the library's handle sizes the library (the waveforms give
   // way), the waveforms' handle sizes the waveforms (the library gives way),
-  // and only ⌥-dragging either deck edge changes the decks. The sampler
-  // takes its strip from the library, never from the decks.
+  // and only ⌥-dragging either deck edge changes the decks. (The sampler is
+  // a row inside the library now, so it takes nothing from these.)
   const PANEL = {
     waves: { def: 136, min: 96 }, // the row, with the 12px gap under the panel
     decks: { def: 360, min: 340, max: 400 },
-    sampler: { def: 40, min: 40, max: 56 }, // the strip, plus a 12px gap above
     sidebar: { def: 200, min: 160, max: 320 },
   };
   const LIB_MIN = 160; // what a drag can take the library down to
@@ -403,13 +427,13 @@
   const PANEL_KEY = 'oss-dj.panelSizes';
   const sized = $derived(flag('edge-tall') || flag('panel-sizes'));
   /** The sizes asked for; what each row gets (`rows`) also depends on the window. */
-  const sizes = $state({ waves: PANEL.waves.def, decks: PANEL.decks.def, sampler: PANEL.sampler.def, sidebar: PANEL.sidebar.def });
+  const sizes = $state({ waves: PANEL.waves.def, decks: PANEL.decks.def, sidebar: PANEL.sidebar.def });
   // #21: the sizes are kept, in one key. The old library height is read once
   // to seed it (and left in place, so turning the flag off loses nothing).
   if (flag('panel-sizes')) {
     try {
       const kept = JSON.parse(localStorage.getItem(PANEL_KEY) ?? 'null');
-      if (kept) Object.assign(sizes, kept);
+      if (kept) Object.assign(sizes, { waves: kept.waves ?? sizes.waves, decks: kept.decks ?? sizes.decks, sidebar: kept.sidebar ?? sizes.sidebar });
       else if (localStorage.getItem(LIB_KEY)) {
         const avail = Math.max(innerHeight, APP_MIN_H) - (macWindow ? TOP_STRIP : 12) - 24;
         sizes.waves = Math.max(PANEL.waves.min, avail - PANEL.decks.def - Number(localStorage.getItem(LIB_KEY)));
@@ -423,9 +447,8 @@
       localStorage.setItem(PANEL_KEY, s);
     } catch {}
   });
-  const samplerRow = $derived(sized ? sizes.sampler + 12 : SAMPLER_H);
   /** Height for the waveforms, decks and library rows together. */
-  const avail = $derived(Math.max(winHeight, APP_MIN_H) - (macWindow ? TOP_STRIP : 12) - 12 - 12 - (sampler.open ? samplerRow : 0));
+  const avail = $derived(Math.max(winHeight, APP_MIN_H) - (macWindow ? TOP_STRIP : 12) - 12 - 12);
   /** What each row gets: the library first gives way to 240, then the waveforms to 96, then the decks to 340.
    *  (Waveforms dragged past their designed size are kept until the library is at 160.) */
   const rows = $derived.by(() => {
@@ -443,7 +466,7 @@
   /** The waveforms' largest size with the decks as they are: half the window, and the library keeps 160. */
   const wavesMax = $derived(Math.max(PANEL.waves.min, Math.min(Math.round(winHeight / 2), avail - rows.decks - LIB_MIN)));
 
-  const libMax = $derived(sized ? Math.max(LIB_MIN, avail - rows.decks - PANEL.waves.min) : Math.max(160, Math.min(560, Math.max(winHeight, APP_MIN_H) - (macWindow ? TOP_STRIP : 12) - 12 - 136 - 12 - 12 - 300 - (sampler.open ? SAMPLER_H : 0))));
+  const libMax = $derived(sized ? Math.max(LIB_MIN, avail - rows.decks - PANEL.waves.min) : Math.max(160, Math.min(560, Math.max(winHeight, APP_MIN_H) - (macWindow ? TOP_STRIP : 12) - 12 - 136 - 12 - 12 - 300)));
   const lib = $derived(sized ? rows.lib : Math.max(160, Math.min(libMax, libHeight)));
   /** A snap: within `band` of `at`, it's `at`. */
   const snapTo = (v, at, band) => (Math.abs(v - at) <= band ? at : v);
@@ -455,9 +478,6 @@
   }
   function setDecks(h) {
     sizes.decks = Math.round(clamp(snapTo(h, PANEL.decks.def, 16), PANEL.decks.min, PANEL.decks.max));
-  }
-  function setSampler(h) {
-    sizes.sampler = Math.round(clamp(snapTo(h, PANEL.sampler.def, 8), PANEL.sampler.min, PANEL.sampler.max));
   }
   function setSidebar(w) {
     sizes.sidebar = Math.round(clamp(snapTo(w, PANEL.sidebar.def, 6), PANEL.sidebar.min, PANEL.sidebar.max));
@@ -517,7 +537,6 @@
   const GRIPS = {
     waves: { get: () => rows.waves, set: setWaves, min: () => PANEL.waves.min, max: () => wavesMax, def: PANEL.waves.def, axis: 'y', dir: 1 },
     decks: { get: () => rows.decks, set: setDecks, min: () => PANEL.decks.min, max: () => PANEL.decks.max, def: PANEL.decks.def, axis: 'y', dir: -1 },
-    sampler: { get: () => sizes.sampler, set: setSampler, min: () => PANEL.sampler.min, max: () => PANEL.sampler.max, def: PANEL.sampler.def, axis: 'y', dir: -1 },
     sidebar: { get: () => sizes.sidebar, set: setSidebar, min: () => PANEL.sidebar.min, max: () => PANEL.sidebar.max, def: PANEL.sidebar.def, axis: 'x', dir: 1 },
   };
   function gripDown(e, which) {
@@ -565,6 +584,7 @@
       importLibrary: openImport,
       keyboard: () => openSettings('keyboard'),
       report: openReport,
+      controllerSetup: openControllerSetup,
       checkUpdates: checkUpdatesNow,
       undoInField,
     }).catch((e) => console.error('menu', e));
@@ -687,7 +707,7 @@
 <svelte:window onkeydown={keydown} onkeyup={keyup} onblur={blur} oncontextmenu={contextmenu} />
 
 <!-- #7 / #21 (UI audit flags): edge-tall, panel-sizes: the rows' sizes (--waves, --decks) and the sidebar's, while either is on. -->
-<div class="app" class:sampling={sampler.open} class:mac-window={macWindow} class:settling style:--top="{macWindow ? TOP_STRIP : 12}px" style:--lib="{lib}px" style:--sampler="{samplerRow}px"
+<div class="app" class:mac-window={macWindow} class:settling style:--top="{macWindow ? TOP_STRIP : 12}px" style:--lib="{lib}px"
   style:--waves={sized ? `${rows.waves}px` : undefined} style:--decks={sized ? `${rows.decks}px` : undefined}
   style:--library-sidebar={flag('panel-sizes') ? `${sizes.sidebar}px` : undefined} bind:clientHeight={winHeight}>
   <Backdrop a="var(--deck-a)" b="var(--deck-b)" tint={0.25} />
@@ -717,38 +737,26 @@
     <Deck deck={1} onload={load} onreveal={(p) => library.reveal(p)} onsettings={openSettings} />
   </div>
 
-  {#if sampler.open}<Sampler onmessage={say} selected={() => library.selectedTrack()} />{/if}
-
   <!-- svelte-ignore a11y_no_noninteractive_tabindex, a11y_no_noninteractive_element_interactions (a focusable separator is the ARIA window-splitter pattern) -->
-  <!-- #19 (UI audit flag): library-resize: while dragging, the handle is marked "dragging", not "drag", which is also the title strip's class (.app > .drag is absolutely placed, so the handle left the grid and the library fell into its 12px row until the drag ended). -->
-  <!-- #21 (UI audit flag): panel-sizes marks the handle "dragging" too, so it works without #19. -->
-  <div class="split" class:drag={split && !flag('library-resize') && !flag('panel-sizes')} class:dragging={split && (flag('library-resize') || flag('panel-sizes'))} role="separator" aria-orientation="horizontal" aria-label="Resize library"
+  <div class="split" class:dragging={split} role="separator" aria-orientation="horizontal" aria-label="Resize library"
     aria-valuenow={Math.round(lib)} aria-valuemin={160} aria-valuemax={Math.round(libMax)} tabindex="0"
     onpointerdown={splitDown} onpointermove={splitMove} onpointerup={() => (split = null)} onpointercancel={() => (split = null)}
     ondblclick={splitReset} onkeydown={splitKey}
     use:tip={() => (flag('panel-sizes') ? 'Drag to resize the library, ⌥-drag for the decks, double-click to reset' : 'Drag to resize the library, double-click to reset')}><i></i></div>
 
   {#if flag('panel-sizes')}
-    <!-- #21 (UI audit flag): panel-sizes: the waveforms' bottom edge and the sampler's top edge get the library's handle. Placed absolutely, out of the grid. -->
+    <!-- #21 (UI audit flag): panel-sizes: the waveforms' bottom edge gets the library's handle. Placed absolutely, out of the grid. -->
     <!-- svelte-ignore a11y_no_noninteractive_tabindex, a11y_no_noninteractive_element_interactions (a focusable separator is the ARIA window-splitter pattern) -->
     <div class="grip" class:dragging={grab?.which === 'waves' || grab?.which === 'decks'} style:top="calc(var(--top) + {rows.waves - 12}px)" role="separator" aria-orientation="horizontal" aria-label="Resize waveforms"
       aria-valuenow={rows.waves} aria-valuemin={PANEL.waves.min} aria-valuemax={wavesMax} tabindex="0"
       onpointerdown={(e) => gripDown(e, 'waves')} onpointermove={gripMove} onpointerup={() => (grab = null)} onpointercancel={() => (grab = null)}
       ondblclick={() => gripReset('waves')} onkeydown={(e) => gripKey(e, 'waves')}
       use:tip={() => 'Drag to resize the waveforms, ⌥-drag for the decks, double-click to reset'}><i></i></div>
-    {#if sampler.open}
-      <!-- svelte-ignore a11y_no_noninteractive_tabindex, a11y_no_noninteractive_element_interactions -->
-      <div class="grip" class:dragging={grab?.which === 'sampler'} style:top="calc(var(--top) + {rows.waves + rows.decks}px)" role="separator" aria-orientation="horizontal" aria-label="Resize sampler"
-        aria-valuenow={sizes.sampler} aria-valuemin={PANEL.sampler.min} aria-valuemax={PANEL.sampler.max} tabindex="0"
-        onpointerdown={(e) => gripDown(e, 'sampler')} onpointermove={gripMove} onpointerup={() => (grab = null)} onpointercancel={() => (grab = null)}
-        ondblclick={() => gripReset('sampler')} onkeydown={(e) => gripKey(e, 'sampler')}
-        use:tip={() => 'Drag to resize the sampler, double-click to reset'}><i></i></div>
-    {/if}
   {/if}
 
   <div class="below">
-    {#if flag('panel-sizes') && (settings === null || flag('settings-panel'))}
-      <!-- #21 (UI audit flag): panel-sizes: the sidebar's edge, over the library's divider (and Settings' page list, with #36). -->
+    {#if flag('panel-sizes')}
+      <!-- #21 (UI audit flag): panel-sizes: the sidebar's edge, over the library's divider. -->
       <!-- svelte-ignore a11y_no_noninteractive_tabindex, a11y_no_noninteractive_element_interactions -->
       <div class="grip side" class:dragging={grab?.which === 'sidebar'} role="separator" aria-orientation="vertical" aria-label="Resize sidebar"
         aria-valuenow={sizes.sidebar} aria-valuemin={PANEL.sidebar.min} aria-valuemax={PANEL.sidebar.max} tabindex="0"
@@ -756,11 +764,10 @@
         ondblclick={() => gripReset('sidebar')} onkeydown={(e) => gripKey(e, 'sidebar')}
         use:tip={() => 'Drag to resize the sidebar, double-click to reset'}><i></i></div>
     {/if}
-    <div class="libwrap" inert={settings !== null}>
-      <Library bind:this={library} onload={load} onsettings={() => openSettings()} />
+    <div class="libwrap">
+      <Library bind:this={library} onload={load} onsettings={() => openSettings()} onmessage={say}
+        onimport={openImport} onempty={() => { if (once('importOffer')) openImport(); }} />
     </div>
-    {#if settings}<Settings bind:page={settings} onclose={() => (settings = null)} onimport={() => { settings = null; openImport(); }}
-      onreport={openReport} onupdates={checkUpdatesNow} />{/if}
   </div>
 
   {#if engine.audio?.state === 'lost'}
@@ -814,8 +821,11 @@
 <Tooltip />
 <ContextMenu />
 
+{#if settings}<Settings bind:page={settings} onclose={() => (settings = null)} onimport={() => { settings = null; openImport(); }}
+  onreport={openReport} onupdates={checkUpdatesNow} onsetup={openControllerSetup} />{/if}
 {#if importing}<Import onclose={() => (importing = false)} ondone={() => library.reload()} />{/if}
 {#if reporting}<Report onclose={() => (reporting = false)} context={reportContext} />{/if}
+{#if settingUp}<ControllerSetup onclose={() => (settingUp = false)} />{/if}
 
 <style>
   .app {
@@ -830,9 +840,6 @@
     grid-template-rows: 136px minmax(300px, 1fr) var(--gap) var(--lib);
     padding: var(--top) var(--gap) var(--gap);
     background: var(--bg);
-  }
-  .app.sampling {
-    grid-template-rows: 136px minmax(300px, 1fr) var(--sampler) var(--gap) var(--lib);
   }
   .app > :global(:not(.bd)) {
     position: relative;
@@ -855,10 +862,6 @@
   .libwrap {
     display: grid;
     min-height: 0;
-  }
-  /* Settings open over the library; its glass would show the list through. */
-  .libwrap[inert] {
-    visibility: hidden;
   }
   .banner {
     position: absolute;
@@ -999,7 +1002,7 @@
     transition: background-color 140ms ease;
   }
   .split:hover i,
-  .split.drag i,
+  .split.dragging i,
   .split:focus-visible i {
     background: var(--fg-3);
   }

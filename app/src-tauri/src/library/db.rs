@@ -16,9 +16,9 @@ use super::tags::Tags;
 use super::Analysis;
 
 /// Bumped when BPM or key detection changes enough that saved results
-/// should be redone. Tracks analyzed by an older version are analyzed
-/// again in the background.
-pub const ANALYSIS_VERSION: i64 = 1;
+/// should be redone. Tracks analyzed by an older version keep showing their
+/// old results while they're analyzed again in the background.
+pub const ANALYSIS_VERSION: i64 = 4;
 
 const BACKUPS_KEPT: usize = 7;
 
@@ -81,6 +81,9 @@ const MIGRATIONS: &[&str] = &[
     // NULL until measured.
     "ALTER TABLE tracks ADD COLUMN lufs REAL;
      ALTER TABLE tracks ADD COLUMN peak REAL;",
+    // 5: the grid (bpm, first_beat) came from Beat This!, so a quicker DSP
+    // result doesn't replace it.
+    "ALTER TABLE tracks ADD COLUMN grid_neural INTEGER NOT NULL DEFAULT 0;",
 ];
 
 /// Plays further apart than this start a new history session, so a night
@@ -322,6 +325,72 @@ fn path_str(p: &Path) -> String {
     p.to_string_lossy().into_owned()
 }
 
+/// A GLOB matching paths with any character outside printable ASCII.
+const NON_ASCII: &str = "*[^ -~]*";
+
+/// One spelling for paths that differ only in how accents are written.
+fn spelling(path: &str) -> String {
+    use unicode_normalization::UnicodeNormalization;
+    path.nfc().collect()
+}
+
+/// Moves everything saved for track `other` onto track `keep`, then
+/// deletes `other`. Whatever `keep` already has wins.
+fn fold_track(tx: &rusqlite::Transaction<'_>, keep: i64, other: i64) -> rusqlite::Result<()> {
+    // Cues as a set: `keep` takes `other`'s only if it has none of its own.
+    let keep_has_cues: bool = tx.query_row(
+        "SELECT EXISTS (SELECT 1 FROM cues WHERE track_id = ?1)",
+        params![keep],
+        |r| r.get(0),
+    )?;
+    if !keep_has_cues {
+        tx.execute(
+            "UPDATE cues SET track_id = ?1 WHERE track_id = ?2",
+            params![keep, other],
+        )?;
+    }
+    tx.execute(
+        "UPDATE history SET track_id = ?1 WHERE track_id = ?2",
+        params![keep, other],
+    )?;
+    tx.execute(
+        "UPDATE OR IGNORE playlist_tracks SET track_id = ?1 WHERE track_id = ?2",
+        params![keep, other],
+    )?;
+    tx.execute(
+        "UPDATE tracks SET
+             title = CASE WHEN tracks.title = '' THEN o.title ELSE tracks.title END,
+             artist = CASE WHEN tracks.artist = '' THEN o.artist ELSE tracks.artist END,
+             album = CASE WHEN tracks.album = '' THEN o.album ELSE tracks.album END,
+             genre = CASE WHEN tracks.genre = '' THEN o.genre ELSE tracks.genre END,
+             added_at = min(tracks.added_at, o.added_at)
+         FROM (SELECT * FROM tracks WHERE id = ?2) AS o
+         WHERE tracks.id = ?1",
+        params![keep, other],
+    )?;
+    // Analysis as a whole, so a result is never half from one run.
+    tx.execute(
+        "UPDATE tracks SET analysis_version = o.analysis_version,
+             analysis_failed = o.analysis_failed, duration = o.duration, bpm = o.bpm,
+             first_beat = o.first_beat, key_tonic = o.key_tonic, key_minor = o.key_minor,
+             lufs = o.lufs, peak = o.peak, grid_neural = o.grid_neural
+         FROM (SELECT * FROM tracks WHERE id = ?2) AS o
+         WHERE tracks.id = ?1 AND tracks.analysis_version IS NULL
+             AND o.analysis_version IS NOT NULL AND NOT tracks.grid_locked",
+        params![keep, other],
+    )?;
+    // A grid fixed by hand beats one that wasn't.
+    tx.execute(
+        "UPDATE tracks SET bpm = o.bpm, first_beat = o.first_beat, grid_locked = 1,
+             grid_neural = o.grid_neural
+         FROM (SELECT * FROM tracks WHERE id = ?2) AS o
+         WHERE tracks.id = ?1 AND o.grid_locked AND NOT tracks.grid_locked",
+        params![keep, other],
+    )?;
+    tx.execute("DELETE FROM tracks WHERE id = ?1", params![other])?;
+    Ok(())
+}
+
 impl Db {
     /// Opens (or creates) the library at `file`, backing it up first when
     /// a backup is due. Fails with `DatabaseCorrupt` or `NotADatabase` if
@@ -339,6 +408,7 @@ impl Db {
         let db = Self::setup(conn)?;
         db.back_up(file);
         db.migrate()?;
+        db.merge_spellings()?;
         Ok(db)
     }
 
@@ -506,7 +576,9 @@ impl Db {
                 }
             }
         }
-        tx.commit()
+        tx.commit()?;
+        self.merge_spellings()?;
+        Ok(())
     }
 
     /// Every saved track under one of `roots`, missing ones included.
@@ -684,7 +756,7 @@ impl Db {
                 "SELECT analysis_version, analysis_failed, duration, bpm, key_tonic, key_minor,
                      lufs, peak
                  FROM tracks WHERE path = ?1",
-                params![path_str(path)],
+                params![self.stored(path)?],
                 |r| analysis_from(r, 0),
             )
             .optional()?
@@ -694,32 +766,104 @@ impl Db {
     /// The track's id, adding a bare row for a file loaded from outside
     /// the library folders. A later scan fills in its tags.
     fn track_id(&self, path: &Path) -> rusqlite::Result<i64> {
+        let path = self.stored(path)?;
         self.conn.execute(
             "INSERT OR IGNORE INTO tracks (path, added_at) VALUES (?1, ?2)",
-            params![path_str(path), now_ms()],
+            params![path, now_ms()],
         )?;
         self.conn.query_row(
             "SELECT id FROM tracks WHERE path = ?1",
-            params![path_str(path)],
+            params![path],
             |r| r.get(0),
         )
     }
 
-    /// Saves a track's analysis. `first_beat` is known when the track was
-    /// loaded onto a deck; background analysis leaves the saved one alone.
+    /// `path` as the library already spells it. macOS can write an accented
+    /// letter two ways (é as one character, or e plus a combining accent)
+    /// and treats both as the same file, but the folder scan and other apps'
+    /// exports don't always agree on which, so a saved track matches either.
+    fn stored(&self, path: &Path) -> rusqlite::Result<String> {
+        let s = path_str(path);
+        if s.is_ascii() {
+            return Ok(s);
+        }
+        let exact: bool = self.conn.query_row(
+            "SELECT EXISTS (SELECT 1 FROM tracks WHERE path = ?1)",
+            params![s],
+            |r| r.get(0),
+        )?;
+        if exact {
+            return Ok(s);
+        }
+        let want = spelling(&s);
+        let mut st = self.conn.prepare(&format!(
+            "SELECT path FROM tracks WHERE path GLOB '{NON_ASCII}'"
+        ))?;
+        let paths = st.query_map([], |r| r.get::<_, String>(0))?;
+        for p in paths {
+            let p = p?;
+            if spelling(&p) == want {
+                return Ok(p);
+            }
+        }
+        Ok(s)
+    }
+
+    /// Folds tracks saved twice under two spellings of the same path into
+    /// one: the one the folder scan sees (or else the oldest) keeps its
+    /// path, and takes the other's cue points, plays, playlist places and
+    /// any analysis or tags it lacks. Returns how many rows were folded in.
+    pub fn merge_spellings(&self) -> rusqlite::Result<usize> {
+        let rows: Vec<(i64, String, bool)> = {
+            let mut st = self.conn.prepare(&format!(
+                "SELECT id, path, size IS NOT NULL AND NOT missing FROM tracks
+                 WHERE path GLOB '{NON_ASCII}'"
+            ))?;
+            let rows = st.query_map([], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)))?;
+            rows.collect::<rusqlite::Result<_>>()?
+        };
+        let mut groups: HashMap<String, Vec<(i64, bool)>> = HashMap::new();
+        for (id, path, seen) in rows {
+            groups.entry(spelling(&path)).or_default().push((id, seen));
+        }
+        let mut merged = 0;
+        let tx = self.conn.unchecked_transaction()?;
+        for mut group in groups.into_values().filter(|g| g.len() > 1) {
+            // Seen by the scan first, then oldest.
+            group.sort_by_key(|&(id, seen)| (!seen, id));
+            let keep = group[0].0;
+            for &(other, _) in &group[1..] {
+                fold_track(&tx, keep, other)?;
+                merged += 1;
+            }
+        }
+        tx.commit()?;
+        if merged > 0 {
+            eprintln!("library: merged {merged} tracks saved twice under two spellings");
+        }
+        Ok(merged)
+    }
+
+    /// Saves a track's analysis. `first_beat` is known when the grid was
+    /// found (`None` leaves the saved one alone). `neural` marks a grid
+    /// from Beat This!; a DSP grid never replaces one, and neither replaces
+    /// a grid fixed by hand.
     pub fn save_analysis(
         &self,
         path: &Path,
         a: &Analysis,
         first_beat: Option<f64>,
+        neural: bool,
     ) -> rusqlite::Result<()> {
         let id = self.track_id(path)?;
         self.conn.execute(
             "UPDATE tracks SET analysis_version = ?2, analysis_failed = ?3, duration = ?4,
                  key_tonic = ?6, key_minor = ?7, lufs = ?9, peak = ?10,
-                 bpm = CASE WHEN grid_locked THEN bpm ELSE ?5 END,
-                 first_beat = CASE WHEN grid_locked THEN first_beat
-                     WHEN ?5 IS NULL THEN NULL ELSE coalesce(?8, first_beat) END
+                 bpm = CASE WHEN grid_locked OR (grid_neural AND NOT ?11) THEN bpm ELSE ?5 END,
+                 first_beat = CASE WHEN grid_locked OR (grid_neural AND NOT ?11) THEN first_beat
+                     WHEN ?5 IS NULL THEN NULL ELSE coalesce(?8, first_beat) END,
+                 grid_neural = CASE WHEN grid_locked THEN grid_neural
+                     ELSE grid_neural OR ?11 END
              WHERE id = ?1",
             params![
                 id,
@@ -732,9 +876,40 @@ impl Db {
                 first_beat,
                 a.loudness.and_then(|l| l.lufs),
                 a.loudness.map(|l| l.peak),
+                neural,
             ],
         )?;
         Ok(())
+    }
+
+    /// Saves the grid Beat This! found for a track loaded onto a deck,
+    /// unless its grid was fixed by hand.
+    pub fn save_neural_grid(&self, path: &Path, grid: Beatgrid) -> rusqlite::Result<()> {
+        let id = self.track_id(path)?;
+        self.conn.execute(
+            "UPDATE tracks SET bpm = ?2, first_beat = ?3, grid_neural = 1
+             WHERE id = ?1 AND NOT grid_locked",
+            params![id, grid.bpm, grid.first_beat],
+        )?;
+        Ok(())
+    }
+
+    /// The grid Beat This! found for a track, unless one was fixed by hand.
+    pub fn neural_grid(&self, path: &Path) -> rusqlite::Result<Option<Beatgrid>> {
+        self.conn
+            .query_row(
+                "SELECT bpm, first_beat FROM tracks
+                 WHERE path = ?1 AND grid_neural AND NOT grid_locked
+                     AND bpm IS NOT NULL AND first_beat IS NOT NULL",
+                params![self.stored(path)?],
+                |r| {
+                    Ok(Beatgrid {
+                        bpm: r.get(0)?,
+                        first_beat: r.get(1)?,
+                    })
+                },
+            )
+            .optional()
     }
 
     /// The beatgrid fixed by hand for a track, if there is one.
@@ -743,7 +918,7 @@ impl Db {
             .query_row(
                 "SELECT bpm, first_beat FROM tracks
                  WHERE path = ?1 AND grid_locked AND bpm IS NOT NULL",
-                params![path_str(path)],
+                params![self.stored(path)?],
                 |r| {
                     Ok(Beatgrid {
                         bpm: r.get(0)?,
@@ -804,7 +979,7 @@ impl Db {
         self.conn.query_row(
             "SELECT EXISTS (SELECT 1 FROM cues JOIN tracks ON tracks.id = cues.track_id
                             WHERE tracks.path = ?1)",
-            params![path_str(path)],
+            params![self.stored(path)?],
             |r| r.get(0),
         )
     }
@@ -816,7 +991,7 @@ impl Db {
             "SELECT kind, slot, start, end FROM cues
              JOIN tracks ON tracks.id = cues.track_id WHERE tracks.path = ?1",
         )?;
-        let rows = st.query_map(params![path_str(path)], |r| {
+        let rows = st.query_map(params![self.stored(path)?], |r| {
             Ok((
                 r.get::<_, i64>(0)?,
                 r.get::<_, i64>(1)?,
@@ -863,12 +1038,12 @@ impl Db {
 }
 
 /// Reads the eight analysis columns starting at `at`. `None` when the track
-/// hasn't been analyzed by the current analyzer.
+/// hasn't been analyzed yet. A result from an older analyzer is kept, marked
+/// outdated, so its BPM and key stay on screen until it's redone.
 fn analysis_from(r: &rusqlite::Row<'_>, at: usize) -> rusqlite::Result<Option<Analysis>> {
-    let version: Option<i64> = r.get(at)?;
-    if version != Some(ANALYSIS_VERSION) {
+    let Some(version): Option<i64> = r.get(at)? else {
         return Ok(None);
-    }
+    };
     let failed: bool = r.get(at + 1)?;
     let tonic: Option<u8> = r.get(at + 4)?;
     let minor: Option<bool> = r.get(at + 5)?;
@@ -880,6 +1055,7 @@ fn analysis_from(r: &rusqlite::Row<'_>, at: usize) -> rusqlite::Result<Option<An
         key: tonic.zip(minor).map(|(t, m)| Key::new(t, m)),
         loudness: peak.map(|peak| Loudness { lufs, peak }),
         failed,
+        outdated: version != ANALYSIS_VERSION,
     }))
 }
 
@@ -1007,9 +1183,10 @@ mod tests {
                 peak: 0.98,
             }),
             failed: false,
+            outdated: false,
         };
-        db.save_analysis(p, &a, Some(0.12)).unwrap();
-        db.save_analysis(p, &a, None).unwrap();
+        db.save_analysis(p, &a, Some(0.12), false).unwrap();
+        db.save_analysis(p, &a, None, false).unwrap();
         assert_eq!(db.analysis(p).unwrap(), Some(a));
         let first: Option<f64> = db
             .conn
@@ -1032,8 +1209,9 @@ mod tests {
             key: None,
             loudness: None,
             failed: false,
+            outdated: false,
         };
-        db.save_analysis(p, &a, Some(0.1)).unwrap();
+        db.save_analysis(p, &a, Some(0.1), false).unwrap();
         assert_eq!(db.locked_grid(p).unwrap(), None);
         let fixed = Beatgrid {
             bpm: 174.0,
@@ -1041,13 +1219,56 @@ mod tests {
         };
         db.save_grid(p, Some(fixed), Some(detected)).unwrap();
         // Analysis runs again (a reload, or a new analyzer version).
-        db.save_analysis(p, &a, Some(0.1)).unwrap();
+        db.save_analysis(p, &a, Some(0.1), false).unwrap();
         assert_eq!(db.locked_grid(p).unwrap(), Some(fixed));
         assert_eq!(db.analysis(p).unwrap().unwrap().bpm, Some(174.0));
         // Reset: back to the detected grid, unlocked.
         db.save_grid(p, None, Some(detected)).unwrap();
         assert_eq!(db.locked_grid(p).unwrap(), None);
         assert_eq!(db.analysis(p).unwrap().unwrap().bpm, Some(87.0));
+    }
+
+    #[test]
+    fn a_neural_grid_outlasts_dsp_results_but_not_a_fixed_one() {
+        let db = Db::open_in_memory().unwrap();
+        let p = Path::new("/m/a.mp3");
+        let a = |bpm| Analysis {
+            duration: Some(300.0),
+            bpm: Some(bpm),
+            key: None,
+            loudness: None,
+            failed: false,
+            outdated: false,
+        };
+        // Loaded onto a deck: the DSP grid, then Beat This!'s.
+        db.save_analysis(p, &a(123.9), Some(0.4), false).unwrap();
+        assert_eq!(db.neural_grid(p).unwrap(), None);
+        let neural = Beatgrid {
+            bpm: 124.0,
+            first_beat: 1.3,
+        };
+        db.save_neural_grid(p, neural).unwrap();
+        assert_eq!(db.neural_grid(p).unwrap(), Some(neural));
+        // Loaded again: the quicker DSP result doesn't replace it.
+        db.save_analysis(p, &a(123.9), Some(0.4), false).unwrap();
+        assert_eq!(db.neural_grid(p).unwrap(), Some(neural));
+        assert_eq!(db.analysis(p).unwrap().unwrap().bpm, Some(124.0));
+        // Background analysis with Beat This! does.
+        db.save_analysis(p, &a(124.5), Some(0.2), true).unwrap();
+        assert_eq!(db.neural_grid(p).unwrap().unwrap().bpm, 124.5);
+        // A grid fixed by hand wins over both, and Beat This! leaves it be.
+        let fixed = Beatgrid {
+            bpm: 62.0,
+            first_beat: 0.0,
+        };
+        db.save_grid(p, Some(fixed), Some(neural)).unwrap();
+        db.save_neural_grid(p, neural).unwrap();
+        db.save_analysis(p, &a(124.5), Some(0.2), true).unwrap();
+        assert_eq!(db.neural_grid(p).unwrap(), None);
+        assert_eq!(db.locked_grid(p).unwrap(), Some(fixed));
+        // Reset puts the detected grid back.
+        db.save_grid(p, None, Some(neural)).unwrap();
+        assert_eq!(db.neural_grid(p).unwrap(), Some(neural));
     }
 
     #[test]
@@ -1063,8 +1284,9 @@ mod tests {
                 peak: 0.0,
             }),
             failed: false,
+            outdated: false,
         };
-        db.save_analysis(p, &silent, None).unwrap();
+        db.save_analysis(p, &silent, None, false).unwrap();
         let back = db.analysis(p).unwrap().unwrap();
         assert_eq!(back, silent);
         assert!(back.complete());
@@ -1079,14 +1301,40 @@ mod tests {
     }
 
     #[test]
-    fn old_analysis_versions_count_as_not_analyzed() {
+    fn old_analysis_versions_are_kept_but_marked_outdated() {
         let db = Db::open_in_memory().unwrap();
         let p = Path::new("/m/a.mp3");
-        db.save_analysis(p, &Analysis::FAILED, None).unwrap();
+        let a = Analysis {
+            duration: Some(300.0),
+            bpm: Some(124.0),
+            key: Some(Key::new(9, true)),
+            loudness: Some(Loudness {
+                lufs: Some(-9.0),
+                peak: 0.9,
+            }),
+            failed: false,
+            outdated: false,
+        };
+        db.save_analysis(p, &a, Some(0.1), false).unwrap();
+        assert!(db.analysis(p).unwrap().unwrap().complete());
         db.conn
-            .execute("UPDATE tracks SET analysis_version = 0", [])
+            .execute("UPDATE tracks SET analysis_version = 2", [])
             .unwrap();
-        assert_eq!(db.analysis(p).unwrap(), None);
+        // Still shown, but queued to be redone.
+        let old = db.analysis(p).unwrap().unwrap();
+        assert_eq!(
+            old,
+            Analysis {
+                outdated: true,
+                ..a
+            }
+        );
+        assert!(!old.complete());
+        // Redoing it brings it up to date.
+        db.save_analysis(p, &a, Some(0.1), false).unwrap();
+        assert!(db.analysis(p).unwrap().unwrap().complete());
+        // A track never analyzed still has nothing to show.
+        assert_eq!(db.analysis(Path::new("/m/new.mp3")).unwrap(), None);
     }
 
     #[test]
@@ -1172,6 +1420,51 @@ mod tests {
             .collect();
         assert_eq!(titles, [a, b, a]);
         assert_eq!(db.session_tracks(44 * hour).unwrap().len(), 1);
+    }
+
+    #[test]
+    fn two_spellings_of_an_accented_path_are_one_track() {
+        let db = Db::open_in_memory().unwrap();
+        let roots = vec![PathBuf::from("/m")];
+        // An import names the file with a precomposed é...
+        let imported = PathBuf::from("/m/Beyonc\u{e9}.mp3");
+        let mut cues = SavedCues::default();
+        cues.hot_cues[0] = Some(3.0);
+        db.save_cues(&imported, &cues).unwrap();
+        let pl = db.create_playlist("Set").unwrap();
+        db.add_to_playlist(pl, std::slice::from_ref(&imported))
+            .unwrap();
+        db.save_grid(
+            &imported,
+            Some(Beatgrid {
+                bpm: 128.0,
+                first_beat: 0.1,
+            }),
+            None,
+        )
+        .unwrap();
+        // ...and the folder scan finds it as e plus a combining accent.
+        let on_disk = stat("/m/Beyonce\u{301}.mp3", 10, 1);
+        db.apply_scan(
+            &roots,
+            std::slice::from_ref(&on_disk),
+            &[(on_disk.clone(), tags("B"))],
+        )
+        .unwrap();
+
+        let rows = db.tracks(&roots).unwrap();
+        assert_eq!(rows.len(), 1);
+        assert_eq!(rows[0].path, on_disk.path);
+        assert!(!rows[0].missing);
+        assert_eq!(db.cues(&on_disk.path).unwrap().hot_cues[0], Some(3.0));
+        assert_eq!(db.locked_grid(&on_disk.path).unwrap().unwrap().bpm, 128.0);
+        let listed = db.playlist_tracks(pl).unwrap();
+        assert_eq!(listed.len(), 1);
+        assert_eq!(listed[0].path, on_disk.path);
+        // Either spelling finds it now, and adds no new row.
+        assert!(db.has_cues(&imported).unwrap());
+        db.record_play(&imported, 1).unwrap();
+        assert_eq!(db.tracks(&roots).unwrap().len(), 1);
     }
 
     #[test]

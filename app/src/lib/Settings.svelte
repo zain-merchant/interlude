@@ -14,12 +14,12 @@
   import { pushEdit } from './undo.svelte.js';
 
   /**
-   * Settings sit over the library, never over the decks, and don't block
-   * them: performance keys keep working while this is open, except while a
-   * shortcut is being recorded.
-   * @type {{ page?: 'keyboard' | 'decks' | 'audio' | 'display' | 'library' | 'stems' | 'controllers', onclose: () => void, onimport?: () => void, onreport?: () => void, onupdates?: () => void }}
+   * Settings open as a popup over the whole window. Performance keys keep
+   * working while it's open, except while a shortcut is being recorded.
+   * Clicking outside it or pressing Escape closes it.
+   * @type {{ page?: 'keyboard' | 'decks' | 'audio' | 'display' | 'library' | 'stems' | 'controllers', onclose: () => void, onimport?: () => void, onreport?: () => void, onupdates?: () => void, onsetup?: () => void }}
    */
-  let { page = $bindable('keyboard'), onclose, onimport, onreport, onupdates } = $props();
+  let { page = $bindable('keyboard'), onclose, onimport, onreport, onupdates, onsetup } = $props();
 
   // #32 (UI audit flag): settings-type: the page fades at its edges like the track list (#20): the top
   // only once scrolled (data-scrolled), the foot only while more is below (data-more).
@@ -506,7 +506,8 @@
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-<div class="settings" role="dialog" aria-modal="false" aria-label="Settings" bind:this={root} onkeydown={panelKey} tabindex="-1">
+<div class="backdrop" role="presentation" onpointerdown={(e) => { if (e.target === e.currentTarget) onclose(); }}>
+<div class="settings" role="dialog" aria-modal="true" aria-label="Settings" bind:this={root} onkeydown={panelKey} tabindex="-1">
   <!-- svelte-ignore a11y_no_noninteractive_element_interactions (the arrow keys move between pages: #24 focus-after-keys) -->
   <nav aria-label="Settings pages" onkeydown={navKey}>
     <div class="h">Settings</div>
@@ -768,6 +769,13 @@
           {/if}
         </section>
         <section class="display">
+          <h3>Controller not working?</h3>
+          <p>If it does nothing, or the wrong things, set it up step by step: the app asks for each control and you press or move it. It takes a couple of minutes, and you can share the result so it works for everyone.</p>
+          <div class="size">
+            <button class="btn sm" onclick={onsetup}>Set up step by step…</button>
+          </div>
+        </section>
+        <section class="display">
           <h3>MIDI learn</h3>
           {#if flag('settings-copy')}
             <p>Pick an action, press Learn, then move the control for it; each one moves on to the next action.</p>
@@ -852,15 +860,43 @@
     </div>
   </div>
 </div>
+</div>
 
 <style>
-  .settings {
-    position: absolute;
+  .backdrop {
+    position: fixed;
     inset: 0;
-    z-index: 20;
+    z-index: 45;
+    display: grid;
+    /* One full-height row, so the popup's height (and centring) can't be pushed by a tall page. */
+    grid-template-rows: minmax(0, 1fr);
+    place-items: center;
+    padding: 24px;
+    background: rgb(5 5 6 / 0.6);
+    animation: fade 0.16s ease-out;
+  }
+  .settings {
+    width: min(960px, 100%);
+    height: min(640px, 100%);
     display: grid;
     grid-template-columns: 200px minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
     gap: var(--gap);
+    padding: var(--gap);
+    border-radius: 14px;
+    background: #121214;
+    box-shadow: inset 0 0 0 1px var(--line-2), 0 24px 80px rgb(0 0 0 / 0.5);
+    outline: none;
+    animation: rise 0.2s ease-out;
+  }
+  @keyframes fade {
+    from { opacity: 0; }
+  }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(8px) scale(0.99); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .backdrop, .settings { animation: none; }
   }
   nav {
     display: flex;
@@ -897,7 +933,7 @@
     background: var(--sel);
     color: var(--fg);
   }
-  /* The page is a glass panel, like the track list it covers. */
+  /* The page is a glass panel inside the popup. */
   .main {
     display: flex;
     flex-direction: column;

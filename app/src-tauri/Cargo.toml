@@ -30,6 +30,10 @@ lofty = "0.25.5"
 quick-xml = "0.37"
 base64 = "0.23"
 tauri-plugin-single-instance = "2"
+unicode-normalization = "0.1"
+
+[dev-dependencies]
+hound = "3.5"
 
 [target.'cfg(unix)'.dependencies]
 libc = "0.2"

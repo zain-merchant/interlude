@@ -1,0 +1,329 @@
+# OPUS-QUAD — AlphaTheta "MIDI Message List" E1
+# source: https://downloads.support.alphatheta.com/software_info/all-in-one-dj-systems/OPUS-QUAD/OPUS-QUAD_MIDI_Message_List_E1.pdf
+in	B0	22	DECK1 Jog whee (top) el	
+in	B1	22	DECK2 Jog whee (top) el	
+in	B2	22	DECK3 Jog whee (top) el	
+in	B3	22	DECK4 Jog whee (top) el	
+in	B0	29	DECK1 Jog wheel (top) (1[L,R]) +SHIFT	
+in	B1	29	DECK2 Jog wheel (top) (1[L,R]) +SHIFT	
+in	B2	29	DECK3 Jog wheel (top) (1[L,R]) +SHIFT	
+in	B3	29	DECK4 Jog wheel (top) (1[L,R]) +SHIFT	
+in	90	20	DECK1 Jog wheel (top) (1[L,R], touch)	
+in	91	20	DECK2 Jog wheel (top) (1[L,R], touch)	
+in	92	20	DECK3 Jog wheel (top) (1[L,R], touch)	
+in	93	20	DECK4 Jog wheel (top) (1[L,R], touch)	
+in	90	48	DECK1 Jog wheel (top) (1[L,R]) +SHIFT	
+in	91	48	DECK2 Jog wheel (top) (1[L,R]) +SHIFT	
+in	92	48	DECK3 Jog wheel (top) (1[L,R]) +SHIFT	
+in	93	48	DECK4 Jog wheel (top) (1[L,R]) +SHIFT	
+in	B0	21	DECK1 Jog wheel (Side) (1[L,R])	
+in	B1	21	DECK2 Jog wheel (Side) (1[L,R])	
+in	B2	21	DECK3 Jog wheel (Side) (1[L,R])	
+in	B3	21	DECK4 Jog wheel (Side) (1[L,R])	
+in	B0	26	DECK1 Jog wheel (Side) (1[L,R]) +SHIFT	
+in	B1	26	DECK2 Jog wheel (Side) (1[L,R]) +SHIFT	
+in	B2	26	DECK3 Jog wheel (Side) (1[L,R]) +SHIFT	
+in	B3	26	DECK4 Jog wheel (Side) (1[L,R]) +SHIFT	
+in	B0	00	DECK1 TEMPO (2[L,R])	
+in	B1	00	DECK2 TEMPO (2[L,R])	
+in	B2	00	DECK3 TEMPO (2[L,R])	
+in	B3	00	DECK4 TEMPO (2[L,R])	
+in	B0	20	DECK1 TEMPO	[Channel1] rate
+in	B1	20	DECK2 TEMPO	[Channel2] rate
+in	B2	20	DECK3 TEMPO	[Channel3] rate
+in	B3	20	DECK4 TEMPO	[Channel4] rate
+both	90	13	DECK1 TEMPO RES SET	
+both	91	13	DECK2 TEMPO RES SET	
+both	92	13	DECK3 TEMPO RES SET	
+both	93	13	DECK4 TEMPO RES SET	
+in	90	10	DECK1 TEMPO RANGE (4[L,R])	
+in	91	10	DECK2 TEMPO RANGE (4[L,R])	
+in	92	10	DECK3 TEMPO RANGE (4[L,R])	
+in	93	10	DECK4 TEMPO RANGE (4[L,R])	
+both	90	11	DECK1 MASTER TEM MPO	
+both	91	11	DECK2 MASTER TEM MPO	
+both	92	11	DECK3 MASTER TEM MPO	
+both	93	11	DECK4 MASTER TEM MPO	
+both	90	02	DECK1 KEY SYNC C	
+both	91	02	DECK2 KEY SYNC C	
+both	92	02	DECK3 KEY SYNC C	
+both	93	02	DECK4 KEY SYNC C	
+both	90	1F	DECK1 SYNC (7[L,R], Long)	
+both	91	1F	DECK2 SYNC (7[L,R], Long)	
+both	92	1F	DECK3 SYNC (7[L,R], Long)	
+both	93	1F	DECK4 SYNC (7[L,R], Long)	
+in	90	47	DECK1 SYNC (Long)	
+in	91	47	DECK2 SYNC (Long)	
+in	92	47	DECK3 SYNC (Long)	
+in	93	47	DECK4 SYNC (Long)	
+both	90	1E	DECK1 MASTER R	
+both	91	1E	DECK2 MASTER R	
+both	92	1E	DECK3 MASTER R	
+both	93	1E	DECK4 MASTER R	
+both	90	12	DECK1 JOG MOD DE	
+both	91	12	DECK2 JOG MOD DE	
+both	92	12	DECK3 JOG MOD DE	
+both	93	12	DECK4 JOG MOD DE	
+in	B0	1E	DECK1 VINYL SPEED A ADJUST	
+in	B1	1E	DECK2 VINYL SPEED A ADJUST	
+in	B2	1E	DECK3 VINYL SPEED A ADJUST	
+in	B3	1E	DECK4 VINYL SPEED A ADJUST	
+in	90	03	DECK1 DECK SELE ECT	
+in	91	03	DECK2 DECK SELE ECT	
+in	92	03	DECK3 DECK SELE ECT	
+in	93	03	DECK4 DECK SELE ECT	
+in	90	04	DECK1 TRACK SEARCH FWD (12[L,R])	
+in	91	04	DECK2 TRACK SEARCH FWD (12[L,R])	
+in	92	04	DECK3 TRACK SEARCH FWD (12[L,R])	
+in	93	04	DECK4 TRACK SEARCH FWD (12[L,R])	
+in	90	05	DECK1 TRACK SEARC CH REV	
+in	91	05	DECK2 TRACK SEARC CH REV	
+in	92	05	DECK3 TRACK SEARC CH REV	
+in	93	05	DECK4 TRACK SEARC CH REV	
+both	90	09	DECK1 DECK QUAN NTIZE	
+both	91	09	DECK2 DECK QUAN NTIZE	
+both	92	09	DECK3 DECK QUAN NTIZE	
+both	93	09	DECK4 DECK QUAN NTIZE	
+in	B0	2E	DECK1 BEAT LOO OP	
+in	B1	2E	DECK2 BEAT LOO OP	
+in	B2	2E	DECK3 BEAT LOO OP	
+in	B3	2E	DECK4 BEAT LOO OP	
+in	90	43	DECK1 BEAT LOOP (14[L,R])	
+in	91	43	DECK2 BEAT LOOP (14[L,R])	
+in	92	43	DECK3 BEAT LOOP (14[L,R])	
+in	93	43	DECK4 BEAT LOOP (14[L,R])	
+in	90	44	DECK1 BEAT LOOP (14[L,R]) +SHIFT	
+in	91	44	DECK2 BEAT LOOP (14[L,R]) +SHIFT	
+in	92	44	DECK3 BEAT LOOP (14[L,R]) +SHIFT	
+in	93	44	DECK4 BEAT LOOP (14[L,R]) +SHIFT	
+both	90	06	DECK1 LOOP IN (14[L,R], Long)	
+both	91	06	DECK2 LOOP IN (14[L,R], Long)	
+both	92	06	DECK3 LOOP IN (14[L,R], Long)	
+both	93	06	DECK4 LOOP IN (14[L,R], Long)	
+both	90	45	DECK1 LOOP IN N (Long)	
+both	91	45	DECK2 LOOP IN N (Long)	
+both	92	45	DECK3 LOOP IN N (Long)	
+both	93	45	DECK4 LOOP IN N (Long)	
+both	90	07	DECK1 LOOP OUT (16[L,R])	
+both	91	07	DECK2 LOOP OUT (16[L,R])	
+both	92	07	DECK3 LOOP OUT (16[L,R])	
+both	93	07	DECK4 LOOP OUT (16[L,R])	
+in	90	2C	DECK1 BEAT JUMP F FWD	
+in	91	2C	DECK2 BEAT JUMP F FWD	
+in	92	2C	DECK3 BEAT JUMP F FWD	
+in	93	2C	DECK4 BEAT JUMP F FWD	
+in	90	49	DECK1 BEAT JUMP FWD (16[L,R]) +SHIFT	
+in	91	49	DECK2 BEAT JUMP FWD (16[L,R]) +SHIFT	
+in	92	49	DECK3 BEAT JUMP FWD (16[L,R]) +SHIFT	
+in	93	49	DECK4 BEAT JUMP FWD (16[L,R]) +SHIFT	
+in	90	2D	DECK1 BEAT JUMP REV (17[L,R])	
+in	91	2D	DECK2 BEAT JUMP REV (17[L,R])	
+in	92	2D	DECK3 BEAT JUMP REV (17[L,R])	
+in	93	2D	DECK4 BEAT JUMP REV (17[L,R])	
+in	90	4A	DECK1 BEAT JUMP REV (17[L,R]) +SHIFT	
+in	91	4A	DECK2 BEAT JUMP REV (17[L,R]) +SHIFT	
+in	92	4A	DECK3 BEAT JUMP REV (17[L,R]) +SHIFT	
+in	93	4A	DECK4 BEAT JUMP REV (17[L,R]) +SHIFT	
+both	90	21	DECK1 SLIP REVERSE (18[L,R])	
+both	91	21	DECK2 SLIP REVERSE (18[L,R])	
+both	92	21	DECK3 SLIP REVERSE (18[L,R])	
+both	93	21	DECK4 SLIP REVERSE (18[L,R])	
+both	90	01	DECK1 CUE	[Channel1] cue_default
+both	91	01	DECK2 CUE	[Channel2] cue_default
+both	92	01	DECK3 CUE	[Channel3] cue_default
+both	93	01	DECK4 CUE	[Channel4] cue_default
+both	90	00	DECK1 PLAY/PAUSE (20[L,R])	[Channel1] play
+both	91	00	DECK2 PLAY/PAUSE (20[L,R])	[Channel2] play
+both	92	00	DECK3 PLAY/PAUSE (20[L,R])	[Channel3] play
+both	93	00	DECK4 PLAY/PAUSE (20[L,R])	[Channel4] play
+both	90	08	DECK1 HOT CUE A (21[L,R])	[Channel1] hotcue_1_activate
+both	91	08	DECK2 HOT CUE A (21[L,R])	[Channel2] hotcue_1_activate
+both	92	08	DECK3 HOT CUE A (21[L,R])	[Channel3] hotcue_1_activate
+both	93	08	DECK4 HOT CUE A (21[L,R])	[Channel4] hotcue_1_activate
+both	90	0A	DECK1 HOT CUE A (21[L,R]) +SHIFT	
+both	91	0A	DECK2 HOT CUE A (21[L,R]) +SHIFT	
+both	92	0A	DECK3 HOT CUE A (21[L,R]) +SHIFT	
+both	93	0A	DECK4 HOT CUE A (21[L,R]) +SHIFT	
+both	90	0B	DECK1 HOT CUE B (22[L,R])	[Channel1] hotcue_2_activate
+both	91	0B	DECK2 HOT CUE B (22[L,R])	[Channel2] hotcue_2_activate
+both	92	0B	DECK3 HOT CUE B (22[L,R])	[Channel3] hotcue_2_activate
+both	93	0B	DECK4 HOT CUE B (22[L,R])	[Channel4] hotcue_2_activate
+both	90	0C	DECK1 HOT CUE B (22[L,R]) +SHIFT	
+both	91	0C	DECK2 HOT CUE B (22[L,R]) +SHIFT	
+both	92	0C	DECK3 HOT CUE B (22[L,R]) +SHIFT	
+both	93	0C	DECK4 HOT CUE B (22[L,R]) +SHIFT	
+both	90	0D	DECK1 HOT CUE C (23[L,R])	[Channel1] hotcue_3_activate
+both	91	0D	DECK2 HOT CUE C (23[L,R])	[Channel2] hotcue_3_activate
+both	92	0D	DECK3 HOT CUE C (23[L,R])	[Channel3] hotcue_3_activate
+both	93	0D	DECK4 HOT CUE C (23[L,R])	[Channel4] hotcue_3_activate
+both	90	0E	DECK1 HOT CUE C (23[L,R]) +SHIFT	
+both	91	0E	DECK2 HOT CUE C (23[L,R]) +SHIFT	
+both	92	0E	DECK3 HOT CUE C (23[L,R]) +SHIFT	
+both	93	0E	DECK4 HOT CUE C (23[L,R]) +SHIFT	
+both	90	0F	DECK1 HOT CUE D (24[L,R])	[Channel1] hotcue_4_activate
+both	91	0F	DECK2 HOT CUE D (24[L,R])	[Channel2] hotcue_4_activate
+both	92	0F	DECK3 HOT CUE D (24[L,R])	[Channel3] hotcue_4_activate
+both	93	0F	DECK4 HOT CUE D (24[L,R])	[Channel4] hotcue_4_activate
+both	90	14	DECK1 HOT CUE D (24[L,R]) +SHIFT	
+both	91	14	DECK2 HOT CUE D (24[L,R]) +SHIFT	
+both	92	14	DECK3 HOT CUE D (24[L,R]) +SHIFT	
+both	93	14	DECK4 HOT CUE D (24[L,R]) +SHIFT	
+both	90	15	DECK1 HOT CUE E (25[L,R])	[Channel1] hotcue_5_activate
+both	91	15	DECK2 HOT CUE E (25[L,R])	[Channel2] hotcue_5_activate
+both	92	15	DECK3 HOT CUE E (25[L,R])	[Channel3] hotcue_5_activate
+both	93	15	DECK4 HOT CUE E (25[L,R])	[Channel4] hotcue_5_activate
+both	90	16	DECK1 HOT CUE E (25[L,R]) +SHIFT	
+both	91	16	DECK2 HOT CUE E (25[L,R]) +SHIFT	
+both	92	16	DECK3 HOT CUE E (25[L,R]) +SHIFT	
+both	93	16	DECK4 HOT CUE E (25[L,R]) +SHIFT	
+both	90	17	DECK1 HOT CUE F (26[L,R])	[Channel1] hotcue_6_activate
+both	91	17	DECK2 HOT CUE F (26[L,R])	[Channel2] hotcue_6_activate
+both	92	17	DECK3 HOT CUE F (26[L,R])	[Channel3] hotcue_6_activate
+both	93	17	DECK4 HOT CUE F (26[L,R])	[Channel4] hotcue_6_activate
+both	90	18	DECK1 HOT CUE F (26[L,R]) +SHIFT	
+both	91	18	DECK2 HOT CUE F (26[L,R]) +SHIFT	
+both	92	18	DECK3 HOT CUE F (26[L,R]) +SHIFT	
+both	93	18	DECK4 HOT CUE F (26[L,R]) +SHIFT	
+both	90	19	DECK1 HOT CUE G (27[L,R])	[Channel1] hotcue_7_activate
+both	91	19	DECK2 HOT CUE G (27[L,R])	[Channel2] hotcue_7_activate
+both	92	19	DECK3 HOT CUE G (27[L,R])	[Channel3] hotcue_7_activate
+both	93	19	DECK4 HOT CUE G (27[L,R])	[Channel4] hotcue_7_activate
+both	90	1A	DECK1 HOT CUE G (27[L,R]) +SHIFT	
+both	91	1A	DECK2 HOT CUE G (27[L,R]) +SHIFT	
+both	92	1A	DECK3 HOT CUE G (27[L,R]) +SHIFT	
+both	93	1A	DECK4 HOT CUE G (27[L,R]) +SHIFT	
+both	90	1B	DECK1 HOT CUE H (28[L,R])	[Channel1] hotcue_8_activate
+both	91	1B	DECK2 HOT CUE H (28[L,R])	[Channel2] hotcue_8_activate
+both	92	1B	DECK3 HOT CUE H (28[L,R])	[Channel3] hotcue_8_activate
+both	93	1B	DECK4 HOT CUE H (28[L,R])	[Channel4] hotcue_8_activate
+both	90	1C	DECK1 HOT CUE H (28[L,R]) +SHIFT	
+both	91	1C	DECK2 HOT CUE H (28[L,R]) +SHIFT	
+both	92	1C	DECK3 HOT CUE H (28[L,R]) +SHIFT	
+both	93	1C	DECK4 HOT CUE H (28[L,R]) +SHIFT	
+in	90	3F	DECK1 SHIFT (29[L,R])	
+in	91	3F	DECK2 SHIFT (29[L,R])	
+in	92	3F	DECK3 SHIFT (29[L,R])	
+in	93	3F	DECK4 SHIFT (29[L,R])	
+both	90	51	DECK1 LOAD	[Channel1] LoadSelectedTrack
+both	91	51	DECK2 LOAD	[Channel2] LoadSelectedTrack
+both	92	51	DECK3 LOAD	[Channel3] LoadSelectedTrack
+both	93	51	DECK4 LOAD	[Channel4] LoadSelectedTrack
+in	B0	1C	DECK1 NEEDLE POSITION (GUI / Full Waveform: 2 deck / 4 deck) (31[L,R])	
+in	B1	1C	DECK2 NEEDLE POSITION (GUI / Full Waveform: 2 deck / 4 deck) (31[L,R])	
+in	B2	1C	DECK3 NEEDLE POSITION (GUI / Full Waveform: 2 deck / 4 deck) (31[L,R])	
+in	B3	1C	DECK4 NEEDLE POSITION (GUI / Full Waveform: 2 deck / 4 deck) (31[L,R])	
+in	90	36	DECK1 NEEDLE POSIT (GUI / Full Waveform: 2 d TION deck / 4 deck)	
+in	91	36	DECK2 NEEDLE POSIT (GUI / Full Waveform: 2 d TION deck / 4 deck)	
+in	92	36	DECK3 NEEDLE POSIT (GUI / Full Waveform: 2 d TION deck / 4 deck)	
+in	93	36	DECK4 NEEDLE POSIT (GUI / Full Waveform: 2 d TION deck / 4 deck)	
+in	B4	2A	EFFECT SELECT DELAY (2, EFFECT, 1)	
+in	B4	37	EFFECT SELECT T ECHO	
+in	B4	33	EFFECT SELECT P PING PONG	
+in	B4	2B	EFFECT SELECT T SPIRAL	
+in	B4	36	EFFECT SELECT REVERB	
+in	B4	35	EFFECT SELECT T TRANS	
+in	B4	3B	EFFECT SELECT T FILTER	
+in	B4	32	EFFECT SELECT F FLANGER	
+in	B4	39	EFFECT SELECT PHASER	
+in	B4	3F	EFFECT SELECT T PITCH	
+in	B4	3A	EFFECT SELECT SP PIRAL ROLL	
+in	B4	2E	EFFECT SELEC CT ROLL	
+in	B4	3D	EFFECT SELECT VIN NYL BRAKE	
+in	B4	3E	EFFECT SELECT T HELIX	
+in	B4	4E	TAP	
+in	B4	4C	BEAT LEFT (2, EFFECT, 3)	
+in	B4	4D	BEAT RIGH HT	
+in	B4	2D	TIME	
+in	B4	5B	LEVEL DEP PTH	
+in	B4	72	BEAT EFFECT O ON/OFF	
+in	B4	05	COLOR (2, EFFECT, 7)	
+in	B4	0A	COLOR CH 2	[QuickEffectRack1_[Channel2]] super1
+in	B4	16	COLOR CH 3	[QuickEffectRack1_[Channel3]] super1
+in	B4	53	COLOR CH 4	[QuickEffectRack1_[Channel4]] super1
+in	B4	6C	PARAMETE TER	
+in	B4	69	SPACE	
+in	B4	6B	DUB ECHO O	
+in	B4	56	CRUSH	
+in	B4	6A	SWEEP	
+in	B4	55	NOISE	
+in	B4	57	FILTER	
+in	B4	5D	SMOOTHT ECO O LEVEL	
+in	B4	5E	SMOOTHT ECO ON/OFF	
+in	B4	0B	CROSSFADER	[Master] crossfader
+in	B4	11	CH FADER CH 1	
+in	B4	12	CH FADER CH 2	[Channel2] volume
+in	B4	13	CH FADER CH 3	[Channel3] volume
+in	B4	14	CH FADER CH 4	[Channel4] volume
+in	B4	41	CROSSFADER ASSIGN CH 1 (MIXER info. display) THRU (slide touch)	
+in	B4	42	CROSSFADER ASSIGN CH 2 (MIXER info. display) B (touch)	
+in	B4	43	CROSSFADER ASSIGN CH 3 (MIXER info. display) THRU (touch)	
+in	B4	44	CROSSFADER ASSIGN CH 4 (MIXER info. display) THRU (touch)	
+in	94	3D	INPUT SELECT SWITCH (CH3) (MIXER info. display) DECK (touch)	
+in	94	41	INPUT SELECT SWITCH (CH4) (MIXER info. display) DECK (touch)	
+in	B4	01	TRIM CH 1	
+in	B4	06	TRIM CH 2	[Channel2] pregain
+in	B4	0C	TRIM CH 3	[Channel3] pregain
+in	B4	50	TRIM CH 4	[Channel4] pregain
+in	B4	02	EQ HIGH CH 1	
+in	B4	07	EQ HIGH CH 2	[EqualizerRack1_[Channel2]_Effect1] parameter3
+in	B4	0E	EQ HIGH CH 3	[EqualizerRack1_[Channel3]_Effect1] parameter3
+in	B4	51	EQ HIGH CH 4	[EqualizerRack1_[Channel4]_Effect1] parameter3
+in	B4	03	EQ MID CH 1	[EqualizerRack1_[Channel1]_Effect1] parameter2
+in	B4	08	EQ MID CH 2	[EqualizerRack1_[Channel2]_Effect1] parameter2
+in	B4	0F	EQ MID CH 3	[EqualizerRack1_[Channel3]_Effect1] parameter2
+in	B4	5C	EQ MID CH 4	[EqualizerRack1_[Channel4]_Effect1] parameter2
+in	B4	04	EQ LOW CH 1	
+in	B4	09	EQ LOW CH 2	[EqualizerRack1_[Channel2]_Effect1] parameter1
+in	B4	15	EQ LOW CH 3	[EqualizerRack1_[Channel3]_Effect1] parameter1
+in	B4	52	EQ LOW CH 4	[EqualizerRack1_[Channel4]_Effect1] parameter1
+in	B4	1B	HEADPHONES MIXING	
+in	B4	1A	HEADPHONES LEVEL	
+in	B4	46	CH CUE (Headphone) CH 1	
+in	B4	47	CH CUE (Headphone) CH 2	
+in	B4	48	CH CUE (Headphone) CH 3	
+in	B4	49	CH CUE (Headphone) CH 4	
+in	B4	18	MASTER LEVEL	
+in	B4	19	BOOTH MONITOR R LEVEL	
+in	B4	27	ZONE LEVE EL	
+in	B0	4F	DECK1 Smart Rotary Selector	
+in	B0	60	DECK1 Smart Rotary Selector +SHIFT	
+in	90	33	DECK1 Smart Rotary Selector	
+in	90	61	DECK1 Smart Rotary Selector +SHIFT	
+in	90	31	DECK1 Smart Rotary Selector	
+in	90	5D	DECK1 Smart Rotary Selector (tilt up) +SHIFT	
+in	90	34	DECK1 Smart Rotary Selector	
+in	90	35	DECK1 Smart Rotary Selector (tilt down) +SHIFT	
+in	90	37	DECK1 Smart Rotary Selector	
+in	90	38	DECK1 Smart Rotary Selector (tilt left) +SHIFT	
+in	90	39	DECK1 Smart Rotary Selector	
+in	90	3A	DECK1 Smart Rotary Selector (tilt right) +SHIFT	
+in	90	32	DECK1 BACK	
+in	90	5F	DECK1 BACK +SHIFT	
+in	90	30	DECK1 TAG TRACK/REMOVE	
+in	90	62	DECK1 TAG TRACK/REMOVE +SHIFT	
+in	B0	64	DECK1 PC CONTROL M MODE	
+in	B1	64	DECK2 PC CONTROL M MODE	
+in	B2	64	DECK3 PC CONTROL M MODE	
+in	B3	64	DECK4 PC CONTROL M MODE	
+out	B0	65	DECK1 SMOOTH ECHO TIMING Notification	
+out	B1	65	DECK2 SMOOTH ECHO TIMING Notification	
+out	B2	65	DECK3 SMOOTH ECHO TIMING Notification	
+out	B3	65	DECK4 SMOOTH ECHO TIMING Notification	
+out	9B	04	Load Deck 1	
+out	9B	05	Load Deck 2 (For flashing LOAD button illumination)	
+out	9B	06	Load Deck 3	
+out	9B	07	Load Deck 4	
+out	BB	00	Current Position Bar Deck 1 (Rotation indication)	
+out	BB	01	Current Position Bar Deck 2	
+out	BB	02	Current Position Bar Deck 3	
+out	BB	03	Current Position Bar Deck 4	
+out	BB	04	Cue Marker Deck 1 (CURRENT CUE Position)	
+out	BB	05	Cue Marker Deck 2	
+out	BB	06	Cue Marker Deck 3	
+out	BB	07	Cue Marker Deck 4	
+in	94	3B	INPUT SELECT SWITCH (CH3) (MIXER info. display) LINE (touch)	
+in	94	3C	INPUT SELECT SWITCH (CH3) (MIXER info. display) PHONO (touch)	
+in	94	3E	INPUT SELECT SWITCH (CH3) (MIXER info. display) Bluetooth (touch)	
+in	94	40	INPUT SELECT SWITCH (CH4) (MIXER info. display) PHONO (touch)	
+in	94	3F	INPUT SELECT SWITCH (CH4) (MIXER info. display) LINE (touch)	
+in	94	42	INPUT SELECT SWITCH (CH4) (MIXER info. display) Bluetooth (touch)	

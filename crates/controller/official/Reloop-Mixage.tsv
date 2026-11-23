@@ -1,0 +1,128 @@
+# Mixage — Reloop "Mixage Interface Edition MK2 Instruction Manual" 7.2 MIDI Assignment Chart
+# source: https://www.reloop.com/media/catalog/product/pdf/2/2/4/224964_Reloop_IM.pdf
+# The original Mixage manual was not found on reloop.com; this is the Interface Edition MK2 chart.
+# MIDI channel 1 (the default). SW/CENTER/LED/LEVEL = 0x9n, VR/ENC = 0xBn (as the chart notes say).
+# CUE1-4 are the Sync/CUP/Cue/Play buttons (manual T16-T19), so they carry no expect.
+in	90	1F	TRAX (push)	
+in	B0	1F	TRAX (turn)	[Library] MoveVertical
+in	90	5E	TRAX +SHIFT (push)	
+in	B0	5E	TRAX +SHIFT (turn)	
+in	90	20	CD1 LENGTH (push)	
+in	B0	20	CD1 LENGTH (turn)	
+in	90	5F	CD1 LENGTH +SHIFT (push)	
+in	B0	5F	CD1 LENGTH +SHIFT (turn)	
+in	90	21	CD1 DRY/WET (push)	
+in	B0	21	CD1 DRY/WET (turn)	
+in	90	60	CD1 DRY/WET +SHIFT (push)	
+in	B0	60	CD1 DRY/WET +SHIFT (turn)	
+in	90	24	CD1 JOG (push)	
+in	B0	24	CD1 JOG (turn)	
+in	90	63	CD1 JOG +SHIFT (push)	
+in	B0	63	CD1 JOG +SHIFT (turn)	
+in	90	22	CD2 LENGTH (push)	
+in	B0	22	CD2 LENGTH (turn)	
+in	90	61	CD2 LENGTH +SHIFT (push)	
+in	B0	61	CD2 LENGTH +SHIFT (turn)	
+in	90	23	CD2 DRY/WET (push)	
+in	B0	23	CD2 DRY/WET (turn)	
+in	90	62	CD2 DRY/WET +SHIFT (push)	
+in	B0	62	CD2 DRY/WET +SHIFT (turn)	
+in	90	25	CD2 JOG (push)	
+in	B0	25	CD2 JOG (turn)	
+in	90	64	CD2 JOG +SHIFT (push)	
+in	B0	64	CD2 JOG +SHIFT (turn)	
+in	90	2A	CD1 SHIFT	
+in	90	2B	CD2 SHIFT	
+in	B0	33	CD1 GAIN	[Channel1] pregain
+in	B0	72	CD1 GAIN +SHIFT	
+in	B0	34	CD1 FILTER	[QuickEffectRack1_[Channel1]] super1
+in	90	34	CD1 FILTER (center)	
+in	B0	73	CD1 FILTER +SHIFT	
+in	90	73	CD1 FILTER +SHIFT (center)	
+in	B0	35	CD1 HIGH	[EqualizerRack1_[Channel1]_Effect1] parameter3
+in	B0	74	CD1 HIGH +SHIFT	
+in	B0	36	CD1 MID	[EqualizerRack1_[Channel1]_Effect1] parameter2
+in	B0	75	CD1 MID +SHIFT	
+in	B0	37	CD1 LOW	[EqualizerRack1_[Channel1]_Effect1] parameter1
+in	B0	76	CD1 LOW +SHIFT	
+in	B0	38	CD1 CH FADER	[Channel1] volume
+in	B0	77	CD1 CH FADER +SHIFT	
+in	B0	39	CD2 GAIN	[Channel2] pregain
+in	B0	78	CD2 GAIN +SHIFT	
+in	B0	3A	CD2 FILTER	[QuickEffectRack1_[Channel2]] super1
+in	90	3A	CD2 FILTER (center)	
+in	B0	79	CD2 FILTER +SHIFT	
+in	90	79	CD2 FILTER +SHIFT (center)	
+in	B0	3B	CD2 HIGH	[EqualizerRack1_[Channel2]_Effect1] parameter3
+in	B0	7A	CD2 HIGH +SHIFT	
+in	B0	3C	CD2 MID	[EqualizerRack1_[Channel2]_Effect1] parameter2
+in	B0	7B	CD2 MID +SHIFT	
+in	B0	3D	CD2 LOW	[EqualizerRack1_[Channel2]_Effect1] parameter1
+in	B0	7C	CD2 LOW +SHIFT	
+in	B0	3E	CD2 CH FADER	[Channel2] volume
+in	B0	7D	CD2 CH FADER +SHIFT	
+in	B0	32	CUEMIX	
+in	B0	31	CROSSFADER	[Master] crossfader
+both	90	01	CD1 -	
+in	90	40	CD1 - +SHIFT	
+both	90	02	CD1 +	
+in	90	41	CD1 + +SHIFT	
+both	90	03	CD1 Search	
+in	90	42	CD1 Search +SHIFT	
+both	90	04	CD1 Scratch	
+in	90	43	CD1 Scratch +SHIFT	
+both	90	05	CD1 LOOP	
+in	90	44	CD1 LOOP +SHIFT	
+both	90	06	CD1 RELOOP	
+in	90	45	CD1 RELOOP +SHIFT	
+both	90	07	CD1 FX SEL	
+in	90	46	CD1 FX SEL +SHIFT	
+both	90	08	CD1 FX ON	
+in	90	47	CD1 FX ON +SHIFT	
+both	90	09	CD1 CUE1	
+in	90	48	CD1 CUE1 +SHIFT	
+both	90	0A	CD1 CUE2	
+in	90	49	CD1 CUE2 +SHIFT	
+both	90	0B	CD1 CUE3	
+in	90	4A	CD1 CUE3 +SHIFT	
+both	90	0C	CD1 CUE4	
+in	90	4B	CD1 CUE4 +SHIFT	
+both	90	0D	CD1 LOAD	[Channel1] LoadSelectedTrack
+in	90	4C	CD1 LOAD +SHIFT	
+both	90	0E	CD1 HP	[Channel1] pfl
+in	90	4D	CD1 HP +SHIFT	
+both	90	0F	CD2 -	
+in	90	4E	CD2 - +SHIFT	
+both	90	10	CD2 +	
+in	90	4F	CD2 + +SHIFT	
+both	90	11	CD2 Search	
+in	90	50	CD2 Search +SHIFT	
+both	90	12	CD2 Scratch	
+in	90	51	CD2 Scratch +SHIFT	
+both	90	13	CD2 LOOP	
+in	90	52	CD2 LOOP +SHIFT	
+both	90	14	CD2 RELOOP	
+in	90	53	CD2 RELOOP +SHIFT	
+both	90	15	CD2 FX SEL	
+in	90	54	CD2 FX SEL +SHIFT	
+both	90	16	CD2 FX ON	
+in	90	55	CD2 FX ON +SHIFT	
+both	90	17	CD2 CUE1	
+in	90	56	CD2 CUE1 +SHIFT	
+both	90	18	CD2 CUE2	
+in	90	57	CD2 CUE2 +SHIFT	
+both	90	19	CD2 CUE3	
+in	90	58	CD2 CUE3 +SHIFT	
+both	90	1A	CD2 CUE4	
+in	90	59	CD2 CUE4 +SHIFT	
+both	90	1B	CD2 LOAD	[Channel2] LoadSelectedTrack
+in	90	5A	CD2 LOAD +SHIFT	
+both	90	1C	CD2 HP	[Channel2] pfl
+in	90	5B	CD2 HP +SHIFT	
+out	90	1D	CH1 Level Meter	
+out	90	1E	CH2 Level Meter	
+in	E0	00	CD1 PITCH (pitch bend, MIDI CH = 1)	[Channel1] rate
+in	E1	00	CD2 PITCH (pitch bend, MIDI CH = 1)	[Channel2] rate
+in	E2	00	CD1 PITCH +SHIFT (pitch bend)	
+in	E3	00	CD2 PITCH +SHIFT (pitch bend)	
+extra-in	90	31	the only list on reloop.com is for the Mixage Interface Edition MK2

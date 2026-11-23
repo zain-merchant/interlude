@@ -13,6 +13,7 @@ mod controller;
 mod library;
 mod log;
 mod paths;
+mod preload;
 mod stems;
 
 use std::sync::{Arc, Mutex};
@@ -23,7 +24,7 @@ use dj_engine::{
 };
 use serde::{Deserialize, Serialize};
 use tauri::ipc::Response;
-use tauri::{Manager, State};
+use tauri::{Emitter, Manager, State};
 
 /// Keeps whichever output is running alive for the app's lifetime.
 pub(crate) enum Output {
@@ -74,6 +75,9 @@ pub(crate) struct AppState {
     output: Output,
     /// The output device picked in Settings > Audio.
     audio: Mutex<audio::Saved>,
+    /// Each deck's detected grid: Beat This!'s once it has run, otherwise
+    /// the DSP one the track loaded with. Reset Grid goes back to it.
+    detected: Mutex<[Option<Beatgrid>; dj_engine::NUM_DECKS]>,
 }
 
 #[derive(Serialize)]
@@ -184,6 +188,13 @@ enum Control {
     SetKeylock {
         deck: usize,
         on: bool,
+    },
+    SetKeyShift {
+        deck: usize,
+        semitones: i32,
+    },
+    KeySync {
+        deck: usize,
     },
     SetSlip {
         deck: usize,
@@ -354,6 +365,13 @@ impl Control {
             C::SetKeylock { deck, on } => Command::SetKeylock {
                 deck: deck_id(deck)?,
                 on,
+            },
+            C::SetKeyShift { deck, semitones } => Command::SetKeyShift {
+                deck: deck_id(deck)?,
+                semitones,
+            },
+            C::KeySync { deck } => Command::KeySync {
+                deck: deck_id(deck)?,
             },
             C::SetSlip { deck, on } => Command::SetSlip {
                 deck: deck_id(deck)?,
@@ -568,15 +586,31 @@ fn use_default_output(state: State<'_, AppState>) {
     }
 }
 
+/// Starts decoding the track selected in the library, so loading it is
+/// instant. See [`preload`].
+#[tauri::command]
+fn preload_track(
+    library: State<'_, library::Library>,
+    preload: State<'_, Arc<preload::Preload>>,
+    path: String,
+) {
+    let known = library.known(std::path::Path::new(&path));
+    preload.request(path, known);
+}
+
 /// Decodes a file on a worker thread (keeping the UI responsive), then loads
 /// it into the deck with its saved cue points. With `auto_gain` (the
 /// default), the deck plays it at the common loudness, under the trim.
+/// What the library has already analyzed isn't worked out again, and a
+/// track decoded ahead (see [`preload_track`]) is used as it is.
 #[tauri::command]
+#[allow(clippy::too_many_arguments)]
 async fn load_track(
     app: tauri::AppHandle,
     state: State<'_, AppState>,
     library: State<'_, library::Library>,
     stems: State<'_, stems::Stems>,
+    preload: State<'_, Arc<preload::Preload>>,
     deck: usize,
     path: String,
     auto_gain: Option<bool>,
@@ -588,19 +622,29 @@ async fn load_track(
     let deck_name = if deck == 0 { "A" } else { "B" };
     eprintln!("deck {deck_name}: loading {name}");
     let started = std::time::Instant::now();
-    let track = tauri::async_runtime::spawn_blocking(move || Track::load(&path))
+    let known = library.known(std::path::Path::new(&path));
+    let preload = preload.inner().clone();
+    let (track, ahead) =
+        tauri::async_runtime::spawn_blocking(move || match preload.take(&path, known) {
+            Some(decoded) => decoded.map(|t| (t, true)),
+            None => Track::load_known(&path, known)
+                .map(|t| (Arc::new(t), false))
+                .map_err(|e| e.to_string()),
+        })
         .await
         .map_err(|e| e.to_string())
-        .and_then(|r| r.map_err(|e| e.to_string()))
+        .and_then(|r| r)
         .inspect_err(|e| eprintln!("deck {deck_name}: couldn't load {name}: {e}"))?;
     eprintln!(
-        "deck {deck_name}: loaded {name} ({:.0} s of audio at {} Hz) in {:.1} s",
+        "deck {deck_name}: loaded {name} ({:.0} s of audio at {} Hz) in {:.2} s{}",
         track.duration_secs(),
         track.sample_rate,
-        started.elapsed().as_secs_f64()
+        started.elapsed().as_secs_f64(),
+        if ahead { ", decoded ahead" } else { "" }
     );
-    let track = Arc::new(track);
-    let (cues, locked) = library.loaded(&app, deck, &track);
+    let (cues, locked, neural) = library.loaded(&app, deck, &track, known);
+    let detected = neural.or(track.beatgrid);
+    state.detected.lock().map_err(|_| "lock poisoned")?[deck] = detected;
     let info = TrackInfo {
         title: track.title(),
         path: track
@@ -612,7 +656,7 @@ async fn load_track(
         sample_rate: track.sample_rate,
         bins_per_sec: track.waveform.bins_per_sec,
         bin_count: track.waveform.bins.len(),
-        beatgrid: locked.or(track.beatgrid),
+        beatgrid: locked.or(detected),
         grid_locked: locked.is_some(),
     };
     send(
@@ -634,18 +678,129 @@ async fn load_track(
     for cmd in cues.commands(id) {
         send(&state, cmd)?;
     }
-    if locked.is_some() {
+    if locked.is_some() || neural.is_some() {
         send(
             &state,
             Command::SetBeatgrid {
                 deck: id,
-                grid: locked,
+                grid: locked.or(neural),
             },
         )?;
     }
     stems.loaded(deck, &track);
-    state.tracks.lock().map_err(|_| "lock poisoned")?[deck] = Some(track);
+    state.tracks.lock().map_err(|_| "lock poisoned")?[deck] = Some(track.clone());
+    if neural.is_none() && track.beatgrid.is_some() {
+        refine_grid(app, deck, track);
+    }
     Ok(info)
+}
+
+/// What the UI hears when Beat This! has found a deck's grid.
+#[derive(Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+struct DeckGrid {
+    deck: usize,
+    path: String,
+    beatgrid: Beatgrid,
+}
+
+/// Finds the grid of a track just loaded onto a deck with Beat This!, in
+/// the background (it takes some seconds), saves it, and puts it on the
+/// deck if the track is still there and its grid wasn't fixed by hand.
+fn refine_grid(app: tauri::AppHandle, deck: usize, track: Arc<Track>) {
+    let Some(path) = track.path.clone() else {
+        return;
+    };
+    std::thread::spawn(move || {
+        let started = std::time::Instant::now();
+        let Some(refined) =
+            dj_engine::beatthis::refine(&track.samples, track.sample_rate, track.beatgrid)
+        else {
+            return;
+        };
+        let grid = refined.grid;
+        eprintln!(
+            "beat this: {} at {:.2} BPM, bar 1 at {:.3} s{} ({:.1} s)",
+            path.display(),
+            grid.bpm,
+            grid.first_beat,
+            if refined.unsure { ", unsure" } else { "" },
+            started.elapsed().as_secs_f64()
+        );
+        let library = app.state::<library::Library>();
+        if library.save_neural_grid(&app, &path, grid) {
+            return;
+        }
+        let state = app.state::<AppState>();
+        let still_loaded = state.tracks.lock().is_ok_and(|tracks| {
+            tracks[deck]
+                .as_ref()
+                .is_some_and(|t| Arc::ptr_eq(t, &track))
+        });
+        if !still_loaded {
+            return;
+        }
+        if let Ok(mut detected) = state.detected.lock() {
+            detected[deck] = Some(grid);
+        }
+        let Ok(id) = deck_id(deck) else { return };
+        if send(
+            &state,
+            Command::SetBeatgrid {
+                deck: id,
+                grid: Some(grid),
+            },
+        )
+        .is_ok()
+        {
+            let _ = app.emit(
+                "deck-beatgrid",
+                DeckGrid {
+                    deck,
+                    path: path.display().to_string(),
+                    beatgrid: grid,
+                },
+            );
+        }
+    });
+}
+
+/// A built-in sampler sound: where its file is and what to call it.
+#[derive(Serialize)]
+struct DefaultSample {
+    path: String,
+    title: String,
+}
+
+/// The one-shots that ship with the app (air horn, kick, ...), in slot
+/// order. They fill the sampler the first time it's used. The files are
+/// named "N Title.wav"; the number orders them and is dropped from the title.
+#[tauri::command]
+fn default_samples(app: tauri::AppHandle) -> Vec<DefaultSample> {
+    let dir = app
+        .path()
+        .resource_dir()
+        .ok()
+        .map(|d| d.join("samples"))
+        .filter(|d| d.is_dir())
+        .unwrap_or_else(|| std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("samples"));
+    let mut files: Vec<_> = std::fs::read_dir(&dir)
+        .map(|r| r.flatten().map(|e| e.path()).collect())
+        .unwrap_or_default();
+    files.retain(|p| p.extension().is_some_and(|e| e == "wav"));
+    files.sort();
+    files
+        .into_iter()
+        .take(SAMPLER_SLOTS)
+        .filter_map(|p| {
+            let stem = p.file_stem()?.to_str()?;
+            let title = stem.split_once(' ').map_or(stem, |(_, t)| t).to_string();
+            Some(DefaultSample {
+                path: p.to_str()?.to_string(),
+                title,
+            })
+        })
+        .collect()
 }
 
 /// Decodes a file on a worker thread and puts it in a sampler slot.
@@ -697,12 +852,19 @@ fn set_beatgrid(
             return Err(format!("{} BPM is out of range", g.bpm));
         }
     }
-    send(&state, Command::SetBeatgrid { deck: id, grid })?;
+    let detected = state.detected.lock().map_err(|_| "lock poisoned")?[deck].or(track.beatgrid);
+    send(
+        &state,
+        Command::SetBeatgrid {
+            deck: id,
+            grid: grid.or(detected),
+        },
+    )?;
     if let Some(path) = &track.path {
-        library.save_grid(&app, path, grid, track.beatgrid)?;
+        library.save_grid(&app, path, grid, detected)?;
     }
     Ok(GridInfo {
-        beatgrid: grid.or(track.beatgrid),
+        beatgrid: grid.or(detected),
         grid_locked: grid.is_some(),
     })
 }
@@ -787,11 +949,13 @@ pub fn run() {
             app.manage(AppState {
                 engine: engine.clone(),
                 tracks: Mutex::new(Default::default()),
+                detected: Mutex::new(Default::default()),
                 output,
                 audio: Mutex::new(saved_audio),
             });
             app.manage(library::Library::load());
             app.manage(stems::Stems::new(shared.clone()));
+            app.manage(Arc::new(preload::Preload::default()));
 
             controller::start(app.handle(), engine, shared.clone());
             log_audio_stats(app.handle().clone());
@@ -817,7 +981,9 @@ pub fn run() {
             audio::audio_outputs,
             audio::set_audio_output,
             load_track,
+            preload_track,
             load_sample,
+            default_samples,
             set_beatgrid,
             waveform,
             start_recording,
@@ -825,6 +991,8 @@ pub fn run() {
             controller::controller_name,
             controller::controllers,
             controller::midi_learn_start,
+            controller::controller_models,
+            controller::controllers_pause,
             controller::midi_learn_poll,
             controller::midi_learn_stop,
             controller::learned_mapping,

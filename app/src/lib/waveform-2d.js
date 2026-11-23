@@ -150,9 +150,7 @@ export class Waveform2D {
     // #101 (UI audit flag): dir-centerline's half ribbons ('up' sits on the lane's bottom edge, 'down' hangs from its top).
     this.half = view.half ?? '';
     this.look = view.look ? [view.look, view.beatLen ?? 0, view.firstBeat ?? 0] : null; // #105, #106 (UI audit flags): dir-pebble's beads, dir-liner's ink
-    // #41 (UI audit flag): beat-grid draws the grid over the ribbon instead (below).
     const grid = view.mode === 'scroll' && view.beatLen > 0;
-    if (grid && !view.beatGrid) this.beats(w, h, view, spp, x);
     if (view.loopIn >= 0 && view.loopOut > view.loopIn) {
       const a = x(view.loopIn), b = x(view.loopOut);
       // #43 (UI audit flag): on-state tints a running loop's stretch in the deck's colour.
@@ -162,8 +160,12 @@ export class Waveform2D {
     if (this.count) {
       if (view.mode === 'scroll') this.ribbon(w, h, view, spp, c);
       else this.overview(w, h, c);
-      if (grid && view.beatGrid) this.grid(w, h, view, spp, x); // #41 (UI audit flag)
-
+    }
+    // The grid sits over the waveform so it reads against loud parts too,
+    // and under the veil so the played part dims with it.
+    // #41 (UI audit flag): beat-grid draws its own grid (phrase lines, lighten-only) in the same place.
+    if (grid) view.beatGrid ? this.grid(w, h, view, spp, x) : this.beats(w, h, view, spp, x);
+    if (this.count) {
       // The played part: a dark veil so what's ahead is what reads.
       const px = Math.max(0, Math.min(w, x(view.playhead)));
       ctx.fillStyle = view.mode === 'scroll' ? 'rgba(12,12,14,0.5)' : 'rgba(12,12,14,0.55)';
@@ -226,23 +228,60 @@ export class Waveform2D {
       }
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(x(view.playhead) - 0.75, 0, 1.5, h);
+      if (view.mode === 'scroll' && view.beatLen > 0) this.barNumber(h, view, x);
     }
   }
 
+  /**
+   * Beat lines, with brighter bar lines. Beat 0 is the first downbeat.
+   * When beats get too close to tell apart only bars are drawn.
+   */
   beats(w, h, view, spp, x) {
     const { ctx } = this;
     const len = view.beatLen;
-    const first = Math.ceil((view.start - view.firstBeat) / len);
-    // Too dense to read: drop to bars only.
     const barsOnly = len / spp < 6;
-    for (let b = first; ; b++) {
-      const bx = x(view.firstBeat + b * len);
+    const TICK = 5;
+    for (let b = Math.ceil((view.start - view.firstBeat) / len); ; b++) {
+      const bx = Math.round(x(view.firstBeat + b * len));
       if (bx > w) break;
       const bar = ((b % 4) + 4) % 4 === 0;
       if (barsOnly && !bar) continue;
-      ctx.fillStyle = bar ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.03)';
-      ctx.fillRect(Math.round(bx), 0, 1, h);
+      if (bar) {
+        ctx.fillStyle = 'rgba(255,255,255,0.28)';
+        ctx.fillRect(bx, 0, 1, h);
+        // Ticks at the edges mark the bar even where the waveform is loud.
+        ctx.fillStyle = 'rgba(255,255,255,0.75)';
+        ctx.fillRect(bx, 0, 1, TICK);
+        ctx.fillRect(bx, h - TICK, 1, TICK);
+      } else {
+        ctx.fillStyle = 'rgba(255,255,255,0.12)';
+        ctx.fillRect(bx, 0, 1, h);
+        ctx.fillStyle = 'rgba(255,255,255,0.4)';
+        ctx.fillRect(bx, 0, 1, 3);
+        ctx.fillRect(bx, h - 3, 1, 3);
+      }
     }
+  }
+
+  /** The bar the play head is in, on the play head line, from the first downbeat on. */
+  barNumber(h, view, x) {
+    const bar = Math.floor((view.playhead - view.firstBeat) / view.beatLen / 4) + 1;
+    if (bar < 1) return;
+    const { ctx } = this;
+    const label = String(bar);
+    ctx.font = '600 10px "Geist Variable", system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const pw = Math.max(18, ctx.measureText(label).width + 8);
+    const px = x(view.playhead) - pw / 2;
+    const py = h / 2 - 7;
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.roundRect(px, py, pw, 14, 4);
+    ctx.fill();
+    ctx.fillStyle = '#0c0c0e';
+    ctx.fillText(label, px + pw / 2, h / 2 + 0.5);
+    ctx.textAlign = 'start';
   }
 
   /**

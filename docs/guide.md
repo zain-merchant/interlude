@@ -8,8 +8,17 @@ Everything Interlude does, in detail. For a short overview, see the
 - **Tempo:** BPM and beatgrid detected on load (about 0.2 s for a 6-minute
   track), shown on each deck and as beat lines on the waveform (a stronger
   line every 4 beats). SYNC matches tempo and beat phase to the other deck,
-  picking half or double time when that's closer (e.g. 87 vs 174 BPM).
-  Detection range is 80-160 BPM; constant tempo only for now.
+  picking half or double time when that's closer (e.g. 87 vs 174 BPM),
+  and stays on (lit) until pressed again: while both decks play, moving
+  either deck's pitch fader moves both. A paused deck's fader moves only
+  that deck, and it joins the other's tempo when it starts. Loading a
+  track turns sync off on that deck.
+  Detection range is 80-160 BPM; constant tempo only for now. After a
+  track loads, the Beat This! beat tracker (Foscarin et al., ISMIR 2024,
+  MIT licence, built in) listens to the whole track in the background:
+  where it agrees with the grid on the beats, its downbeats set bar 1, and
+  where it's sure of a steady tempo the grid missed (live drums, mostly),
+  its grid is used. A grid you've fixed by hand is never changed.
 - **Hot cues, loops, beat jump:** 8 hot cues per deck (4 on screen, all 8
   on the FLX4 pads): set, jump, hold on a paused deck to preview. Beat loops
   snap to the beatgrid, halve and double, and wrap without clicks. Beat jump
@@ -24,6 +33,17 @@ Everything Interlude does, in detail. For a short overview, see the
   would have been, so a loop or scratch never knocks the mix out of time.
   With slip on, a hot cue pressed mid-play rolls while held. Cue, a seek
   or turning slip off ends a slip where it is.
+- **Key shift and key sync:** each deck shows the key it's playing in, in
+  Camelot, next to the BPM. Click it to move the key a semitone up or down
+  (up to an octave either way), go back to the track's key, or match the
+  other deck's key. Key sync picks the smallest shift that puts the deck on
+  the other deck's Camelot code (its key, or the relative major or minor),
+  so the two mix in key; it allows for the tempo, so it works with key lock
+  on or off. The tempo doesn't change. While a key is shifted, the deck
+  shows how far after the Camelot code ("12A +2"); loading a track puts it
+  back. On the FLX4, KEY SHIFT pad mode (SHIFT + SAMPLER) does the same;
+  the commands have no keys until you give them some in Settings ›
+  Keyboard.
 - **Quantize** (on by default; the Quantize button in the mixer, or B):
   hot cues, the cue point, loop in and out snap to the nearest beat, and a
   hot cue or reloop pressed mid-play lands at the same point in the beat, so
@@ -39,15 +59,18 @@ Everything Interlude does, in detail. For a short overview, see the
   Loud masters are turned down in full; quiet tracks are turned up only as
   far as their peaks allow, so auto gain never makes a track clip.
 - **Effects:** a filter knob per channel (left low-pass, right high-pass,
-  centre off) and a beat FX unit per deck: echo, reverb, flanger and phaser,
+  centre off), sixteen pad FX on the controller's PAD FX pads (see the
+  DDJ-FLX4 below), and a beat FX unit per deck: echo, reverb, flanger and phaser,
   timed in beats (1/8 to 8) from the deck's tempo, with level and on. Echo
   and reverb tails ring out after you switch them off.
 - **Sampler:** eight one-shot slots that play straight to the master
-  (past the crossfader), with one level knob. It stays out of the way: the
-  Sampler button above the library (or S) opens a slim strip under the
-  decks. Drag a track onto a slot to load it (up to 60 seconds), click to
-  play from the top, ⇧-click to stop, right-click to clear. Slots are kept
-  between sessions.
+  (past the crossfader), with one level knob. The Sampler button above the
+  library (or S) opens a row of slots at the top of the library. It starts
+  with eight built-in sounds (air horn, siren, kick, clap, snare, rewind,
+  riser, laser). Click a slot to play it from the top, ⇧-click to stop.
+  Click an empty slot to choose a sound file, or drag a short track onto
+  any slot (up to 60 seconds). Right-click a slot to swap, clear or put
+  its built-in sound back. Slots are kept between sessions.
 - **Stems:** each deck's Stems tab has four buttons, Vocals, Melody, Bass
   and Drums. Click mutes a stem, ⇧-click plays it alone (again: all back
   on). Stems fade in and out over a few milliseconds, so there are no
@@ -71,10 +94,23 @@ Everything Interlude does, in detail. For a short overview, see the
 - **Waveforms:** smooth low, mid and high bands in tones of each deck's
   colour, with beat lines, hot cues and loops: a scrolling view per deck
   plus a full-track overview you can click to jump.
+- **Record:** each deck has a clear record in its colour that turns with
+  the track, so scratching, braking and pitch show on it, with the elapsed
+  and remaining time in its still centre. Drag it to scratch. The tonearm
+  rests just off the record while the deck is paused and swings onto it to
+  play, following the track from the outer groove in. Tempo and key sit in
+  the deck's inner corner.
 - **Library:** add music folders, instant search across artist, title and
   folder, load with double-click, Enter, or Shift+←/→. Columns for title,
-  artist, BPM, key, length and folder; click a heading to sort (again to
-  reverse). Title, artist, album and genre come from the file's tags (or
+  artist, BPM, key, length and folder (the columns button at the end of the headings, or a right-click on
+  them, shows album and genre or hides any column but title); click a heading to sort (again to
+  reverse). **Filter** narrows the list to a BPM range and any keys on the
+  Camelot wheel. **Fits** shows only the tracks that mix with the deck on
+  air (the playing deck, or the louder one through its fader and the
+  crossfader): within 6% of its tempo, at half or double time too, and in
+  its key, a key next to it on the wheel, or its relative major or minor.
+  It follows the key the deck is sounding in, so a pitched-up track without
+  key lock is matched as heard. Title, artist, album and genre come from the file's tags (or
   an "Artist - Title" file name). BPM, key and length are found in the
   background, one track at a time, and saved. The library lives in one
   SQLite file (`library.db` in the app's data folder, backed up daily to
@@ -121,9 +157,21 @@ Everything Interlude does, in detail. For a short overview, see the
   CUE/LOOP CALL halves and doubles the loop (with SHIFT: beat jump), all
   with LEDs. Sampler pad mode plays sampler slots 1 to 8 from either deck's
   pads (lit when loaded); SHIFT + pad stops a slot, or loads the selected
-  library track into an empty one. PAD FX1 mode is stems: pads 1 to 4
+  library track into an empty one. PAD FX1 and PAD FX2 are pad FX: hold
+  a pad and its effect plays, let go and it stops (lit while held). PAD
+  FX1: echo, reverb, trans, roll 1/4, high-pass sweep, bit crush, brake,
+  spin back. PAD FX2: roll 1, roll 1/2, roll 1/8, roll 1/16, dub echo,
+  trans 1/8, low-pass sweep, flanger. Rolls and trans land on the
+  beatgrid; the track keeps playing underneath, so letting go comes back
+  in where it would have been; echo and reverb tails ring out. KEYBOARD
+  (SHIFT + HOT CUE) is stems, as in Mixxx's FLX4 mapping: pads 1 to 4
   mute and unmute vocals, melody, bass and drums (lit while playing), pads
-  5 to 8 play one alone (lit while soloed). CFX knobs drive the channel
+  5 to 8 play one alone (lit while soloed). KEY SHIFT (SHIFT + SAMPLER)
+  sets the key: top pads to the track's key, +1, +2 and +3 semitones,
+  bottom pads to key sync, -1, -2 and -3, so each column is a distance from
+  the original; with SHIFT, pads 7 and 8 step down and up a semitone at a
+  time, as far as an octave. The pad for the current shift lights. The first time a track's stems
+  are ready, a one-time tip says where they are. CFX knobs drive the channel
   filters. The beat FX section works as in rekordbox: the channel select
   lever picks the deck (MASTER runs the effect on both), BEAT FX SELECT
   changes the effect (SHIFT goes back), BEAT ◀ ▶ the beat length,
@@ -131,14 +179,16 @@ Everything Interlude does, in detail. For a short overview, see the
   ON/OFF turns every effect off). Moving the lever takes the effect with it
   to the new deck.
 - **Other controllers (early): Mixxx mappings, built in.** Interlude ships
-  every controller mapping from Mixxx 2.5.6 (in
+  every controller mapping from Mixxx's 2.6 branch, plus openDJ's
+  untested Mixxx-format mappings for the Pioneer DDJ-FLX6, DDJ-FLX10,
+  DDJ-800, DDJ-SX2, DDJ-RX, XDJ-RX3, XDJ-AZ and OPUS-QUAD (in
   `crates/controller/mappings`, GPL-2.0-or-later), so a controller Mixxx
   supports connects when it's plugged in, alongside any others, with no
   Mixxx install needed. Mapping files in the app's own `controllers`
   folder (in its data folder), folders listed in `INTERLUDE_MAPPINGS` and
   Mixxx's user folder come first, so a mapping you've changed wins.
-  Direct bindings and LEDs work for about 68% of the controls across the
-  142 MIDI mappings (decks 3 and 4, and Mixxx-only features, are left
+  Direct bindings and LEDs work for about 64% of the controls across the
+  153 MIDI mappings (decks 3 and 4, and Mixxx-only features, are left
   out). The mappings' JavaScript runs too, in an embedded engine with
   Mixxx's script API (controls, connections, timers, jog scratching, MIDI
   out); all 130 scripted mappings load, and each script call has a time
@@ -156,6 +206,14 @@ Everything Interlude does, in detail. For a short overview, see the
   Hercules consoles) aren't connected automatically, and game controllers
   are left alone. On Linux, opening a HID device needs a udev rule giving
   you access to it; Mixxx's packages install one.
+- **Controller not working? Set it up step by step.** Help › Controller
+  Not Working… (or Settings › Controllers) asks which controller and model
+  it is, then walks through about 37 controls on a picture of a two-deck
+  controller: press or move each one as it lights up, or skip it. The
+  controller is paused meanwhile so pressing PLAY doesn't start a deck. The
+  result is saved like a MIDI learn mapping, and Share on GitHub opens a
+  prefilled issue in the browser (nothing is sent until it's submitted) so
+  the mapping can ship with the app.
 - **Any other MIDI controller: MIDI learn.** In Settings → Controllers,
   pick the controller, pick an action (play, cue, faders, EQ, hot cues,
   loops, effects, browsing, samples) and press Learn, then move the

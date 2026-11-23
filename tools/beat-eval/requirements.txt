@@ -1,0 +1,9 @@
+numpy
+scipy
+soundfile
+mir_eval
+mido
+remotezip
+# Only for comparing with other analyzers (--algo essentia / librosa):
+# essentia
+# librosa

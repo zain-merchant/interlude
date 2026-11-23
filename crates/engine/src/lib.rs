@@ -15,18 +15,21 @@
 //! audio thread.
 
 pub mod analysis;
+pub mod beatthis;
 mod command;
 mod deck;
 pub mod dsp;
 mod engine;
 pub mod fx;
 pub mod key;
+pub mod keynet;
 mod limiter;
 pub mod loudness;
 mod mixer;
 mod null_output;
 #[cfg(feature = "output")]
 pub mod output;
+mod padfx;
 mod record;
 mod sampler;
 mod shared;
@@ -37,7 +40,7 @@ pub mod waveform;
 
 pub use analysis::Beatgrid;
 pub use command::{Command, DeckId, EqBand, SavedCues};
-pub use deck::{DEFAULT_LOOP_BEATS, HOT_CUES, MAX_LOOP_BEATS, MIN_LOOP_BEATS};
+pub use deck::{DEFAULT_LOOP_BEATS, HOT_CUES, KEY_SHIFT_MAX, MAX_LOOP_BEATS, MIN_LOOP_BEATS};
 pub use engine::{
     new_engine, Engine, EngineHandle, GAIN_MAX_DB, GAIN_MIN_DB, MASTER_MAX_DB, MASTER_MIN_DB,
     MAX_BLOCK_FRAMES,
@@ -46,13 +49,14 @@ pub use fx::FxKind;
 pub use key::Key;
 pub use loudness::Loudness;
 pub use null_output::{start_null, NullOutput};
+pub use padfx::PadFx;
 pub use record::{RecordError, RecordingStatus};
 pub use sampler::{MAX_SAMPLE_SECS, SAMPLER_SLOTS};
 pub use shared::{
     DeckSnapshot, FxSnapshot, MixerSnapshot, SampleSnapshot, SamplerSnapshot, SharedState,
 };
 pub use stems::{Stem, Stems, ALL_STEMS, STEMS};
-pub use track::{LoadError, Track, TrackSummary};
+pub use track::{Known, LoadError, Track, TrackSummary};
 pub use waveform::Waveform;
 
 /// Number of decks. Phase 1 is a two-deck app; four decks come after the MVP.

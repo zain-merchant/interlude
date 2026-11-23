@@ -1,6 +1,6 @@
 <script>
-  // A deck's hot cues, or its loop and beat jump, as one quiet row above the
-  // transport. A hot cue is its slot's colour and a time, like its line on
+  // A deck's eight hot cues, or its loop and beat jump, as a quiet strip
+  // above the transport. A hot cue is its slot's colour and a time, like its line on
   // the waveform; an active loop takes the deck's colour.
   import { engine, tracks } from './engine.svelte.js';
   import { tip, tipText } from './tooltip.svelte.js';
@@ -120,12 +120,13 @@
 </div>
 
 <style>
-  /* One quiet row on the deck's four columns: words, numbers and small
-     marks, no boxes. A hot cue is a colour and a time. */
+  /* Two quiet rows on the deck's four columns, 1-4 over 5-8 like the
+     controller's pads: words, numbers and small marks, no boxes. A hot cue
+     is a colour and a time. */
   .row {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 8px;
+    gap: 0 8px;
     align-items: center;
   }
   button {
@@ -178,6 +179,21 @@
   }
   .tc.set span {
     color: var(--fg-2);
+  }
+  /* A short window has no room for two rows: all eight go on one, as a
+     colour and a number. The time is in the tooltip. */
+  @container (max-height: 63.9px) {
+    .row {
+      grid-template-columns: repeat(8, minmax(0, 1fr));
+      gap: 4px;
+    }
+    .tc {
+      gap: 5px;
+      padding: 0 4px;
+    }
+    .tc span {
+      display: none;
+    }
   }
   .grp {
     display: flex;
