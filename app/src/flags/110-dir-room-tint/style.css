@@ -3649,6 +3649,33 @@
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-column='ring'][data-flag-dir-room-tint-keyon='line'] [data-region^='deck'] .pitch .lock.on::after {
   box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--deck) 38%, transparent);
 }
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-column='ring'][data-flag-dir-room-tint-keyon='deep'] [data-region^='deck'] .pitch .lock.on {
+  --kk-face-in: #0b0c0e;
+  background-image: linear-gradient(180deg, #050608, color-mix(in oklab, var(--deck) 7%, #0e1013));
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-column='ring'][data-flag-dir-room-tint-keyon='deep'] [data-region^='deck'] .pitch .lock.on::after {
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.9), inset 0 6px 8px -2px rgb(0 0 0 / 0.9), 0 1px 0 0 color-mix(in oklab, var(--deck) 40%, transparent);
+}
+/* Off stands up a little, so on has somewhere to drop from. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-column='ring'][data-flag-dir-room-tint-keyon='drop'] [data-region^='deck'] .pitch .lock:not(.on) {
+  --kk-face: color-mix(in oklab, #fff 5%, transparent);
+  --kk-face-hi: color-mix(in oklab, #fff 8%, transparent);
+  --kk-top: rgb(255 255 255 / 0.06);
+  --kk-lift: rgb(0 0 0 / 0.35);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-column='ring'][data-flag-dir-room-tint-keyon='drop'] [data-region^='deck'] .pitch .lock.on {
+  --kk-face-in: #0b0c0e;
+  background-image: linear-gradient(180deg, #07080a, color-mix(in oklab, var(--deck) 5%, #0d0f12));
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-column='ring'][data-flag-dir-room-tint-keyon='drop'] [data-region^='deck'] .pitch .lock.on::after {
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.9), inset 0 4px 5px -1px rgb(0 0 0 / 0.8), 0 1px 0 0 color-mix(in oklab, var(--deck) 40%, transparent);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-column='ring'][data-flag-dir-room-tint-keyon='cutgrooves'] [data-region^='deck'] .pitch .lock.on {
+  background-image: var(--rg-grooves), var(--rg-well);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-column='ring'][data-flag-dir-room-tint-keyon='cutgrooves'] [data-region^='deck'] .pitch .lock.on::after {
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.85), inset 0 2px 0 0 color-mix(in oklab, var(--deck) 22%, transparent), 0 1px 0 0 color-mix(in oklab, var(--deck) 40%, transparent);
+}
 /* 3: a ledger: etched rules across the column, between the three */
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-column='ledger'] [data-region^='deck'] .pitch .val::after,
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-column='ledger'] [data-region^='deck'] .pitch .nudge::before,
