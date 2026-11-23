@@ -56,7 +56,7 @@ export default {
     stepper: {
       type: 'choice',
       label: 'Steppers',
-      default: 'under',
+      default: 'one',
       options: [
         ['under', 'Two keys standing in one cut', 'The keys are raised; the amount is on the floor of the cut between them.'],
         ['one', 'One cut with rules', 'Nothing raised until the pointer is over an end.'],
