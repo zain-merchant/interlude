@@ -777,23 +777,25 @@ html[data-nav="morph"] { --nav-pad: 10px; }
 html[data-nav="morph"] .nav {
   height: calc(var(--nav-h) + var(--nav-pad)); padding-top: var(--nav-pad); box-sizing: border-box; background: none; border-bottom: 0; -webkit-backdrop-filter: none; backdrop-filter: none;
 }
-/* The glass: one box, always blurred (the blur never changes). There are
-   only two states, the clear bar and the capsule: the glass is unseen in
-   the bar however far the page has scrolled, and the script fades it in
-   as it cuts it down to the capsule. */
+/* The glass: one box, always blurred (the blur never changes), always a
+   capsule: at the top of the page a wide one round the large brand, drawn
+   in to the compact one as the page scrolls (index.html sets its box and
+   corners). Its soft shadow is its own; its hairline edge is .nav-edge,
+   the same box over it, so the menu's sheet (which grows out of the glass)
+   slides in under the edge and the edge never goes. */
 html[data-nav="morph"] .nav-glass {
   display: block; position: absolute; z-index: -1; left: 0; top: 0; width: 100%; height: calc(var(--nav-h) + var(--nav-pad) + 1px); pointer-events: none;
   background: rgb(16 16 19 / 0.74);
   -webkit-backdrop-filter: blur(20px) saturate(1.4); backdrop-filter: blur(20px) saturate(1.4);
-  opacity: 0; will-change: opacity;
+  box-shadow: 0 12px 40px rgb(0 0 0 / 0.42);
 }
-/* The capsule's hairline edge and soft shadow; the script fades it in as
-   the glass closes on it, and sets its left and width. */
 html[data-nav="morph"] .nav-edge {
-  display: none; position: absolute; z-index: -1; top: 10px; left: 0; width: 0; height: 48px; border-radius: 24px;
-  pointer-events: none; opacity: 0; will-change: opacity;
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.09), inset 0 1px 0 rgb(255 255 255 / 0.05), 0 12px 40px rgb(0 0 0 / 0.42);
+  display: block; position: absolute; z-index: 0; top: 0; left: 0; width: 100%; height: 48px; pointer-events: none;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.09), inset 0 1px 0 rgb(255 255 255 / 0.05);
 }
+/* With the menu open its sheet carries the edge on down: the capsule's
+   own fades out toward its foot. */
+@media (max-width: 860px) { html[data-menu][data-nav="morph"] .nav-edge { -webkit-mask-image: linear-gradient(#000 40%, transparent); mask-image: linear-gradient(#000 40%, transparent); } }
 html[data-nav="morph"] .nav-row { position: relative; height: var(--nav-h); gap: 22px; }
 html[data-nav="morph"] .links { margin: 0 0 0 auto; gap: 26px; }
 /* The icon is laid out at its capsule size (36px) and drawn at 32px in the
@@ -870,10 +872,14 @@ html[data-nav="morph"] .nav-dl path { fill: none; stroke: currentColor; stroke-w
      out as it opens or shuts. Over the capsule exactly, so it reads as the
      capsule growing. */
   .menu {
+    /* Over the capsule exactly as it is when the menu opens (index.html
+       sets these from it): its top, its sides, its height and corners. */
     --top: calc(var(--nav-pad, 10px) + env(safe-area-inset-top, 0px));
     --side: calc(12px + max(env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px)));
+    --side-r: var(--side);
+    --cap-h: 48px;
     --r: var(--cap-r, 14px);
-    display: block; position: fixed; z-index: -1; top: var(--top); left: var(--side); right: var(--side);
+    display: block; position: fixed; z-index: -1; top: var(--top); left: var(--side); right: var(--side-r);
     border-radius: var(--r); overflow: hidden;
     visibility: hidden; pointer-events: none;
     transition: visibility 0s linear var(--snappy-ms);
@@ -883,20 +889,20 @@ html[data-nav="morph"] .nav-dl path { fill: none; stroke: currentColor; stroke-w
     position: relative; overflow: hidden; border-radius: var(--r);
     background: rgb(16 16 19 / 0.9); -webkit-backdrop-filter: blur(24px) saturate(1.4); backdrop-filter: blur(24px) saturate(1.4);
     box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.09), inset 0 1px 0 rgb(255 255 255 / 0.05);
-    translate: 0 calc(48px - 100%); opacity: 0; will-change: translate, opacity;
+    translate: 0 calc(var(--cap-h) - 100%); opacity: 0; will-change: translate, opacity;
     transition: translate var(--snappy-ms) var(--snappy), opacity 140ms ease-out 120ms;
   }
   html[data-menu] .menu-sheet { translate: 0 0; opacity: 1; transition: translate var(--smooth-ms) var(--smooth), opacity 90ms ease-out; }
   .menu-in {
     max-height: calc(100vh - var(--top) - 12px - env(safe-area-inset-bottom, 0px));
     max-height: calc(100dvh - var(--top) - 12px - env(safe-area-inset-bottom, 0px));
-    overflow-y: auto; overscroll-behavior: contain; padding: 60px 8px 8px;
-    translate: 0 calc(100% - 48px); will-change: translate;
+    overflow-y: auto; overscroll-behavior: contain; padding: calc(var(--cap-h) + 12px) 8px 8px;
+    translate: 0 calc(100% - var(--cap-h)); will-change: translate;
     transition: translate var(--snappy-ms) var(--snappy);
   }
   html[data-menu] .menu-in { translate: 0 0; transition: translate var(--smooth-ms) var(--smooth); }
   /* A hairline under the capsule's row, the brand and the cross above it. */
-  .menu-in::before { content: ''; position: absolute; top: 48px; left: 14px; right: 14px; height: 1px; background: rgb(255 255 255 / 0.07); }
+  .menu-in::before { content: ''; position: absolute; top: var(--cap-h); left: 14px; right: 14px; height: 1px; background: rgb(255 255 255 / 0.07); }
 
   /* The sections, large, in the headline's own type; the two that leave
      the site carry a small arrow. Each comes in a beat after the one
