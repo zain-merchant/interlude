@@ -10,7 +10,7 @@
   const a = $derived(t.a ?? []);
   const main = $derived(!!(t.n || t.v || t.x));
   // One thing more goes on the name's line, if that all fits in 360: every dial at its longest value does, so a tooltip keeps its form as its value moves.
-  const ask = $derived(setting('tooltips', 'lines') === 'one' && a.length === 1 && !t.x && !!(t.n || t.v));
+  const ask = $derived(setting('tooltips', 'lines') === 'one' && a.length === 1 && !t.x);
   let el = $state();
   let wide = $state(false);
   let said = '';
@@ -49,6 +49,9 @@
 
 {#snippet how(h)}<span class="th">{#each h.split(' + ') as p, i}{#if i}<span class="tw pl">+</span>{/if}{#if word(p)}<span class="tw tg">{p}</span>{:else}<Keys label={key(p)} />{/if}{/each}</span>{/snippet}
 
+{#if t.live}
+<div class="tt live"><span class="tw">{t.v}</span></div>
+{:else}
 <div class="tt" class:one class:alone={!a.length} bind:this={el}>
   {#if main}
     <div class="tm">
@@ -62,3 +65,4 @@
     <div class="ta">{#each a as [w, h]}<span class="tw what">{w}</span>{@render how(h)}{/each}</div>
   {/if}
 </div>
+{/if}

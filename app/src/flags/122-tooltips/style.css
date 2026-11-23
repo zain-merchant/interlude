@@ -1,9 +1,10 @@
-/* #122 tooltips, on 110. One grid: 10 in from both sides for words and boxes
-   alike; the first line is 28; rows are 24 from middle to middle; 8 between a
-   name, its value and its key; 14 from any line's middle to the rule or edge
-   beside it. Only a value is cut in and only keys are raised. */
+/* #122 tooltips, on 110. One space, 10, between a name, its value, its key,
+   the rule and what's after it, from ink or edge to ink or edge (words carry
+   about half a pixel of their own). Whatever is at the edge stands the same
+   in on every side of it: a box 4, its corner 4 in the tip's 8; words 9.5,
+   bare or in a box. The first line is 28, rows 24 from middle to middle. */
 :root[data-flag-dir-room-tint][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips] .tip[role='tooltip']:has(> .tt) {
-  --ti: 10px;
+  --ti: 9px;
   box-sizing: border-box;
   width: max-content;
   max-width: 320px;
@@ -20,9 +21,12 @@
 :root[data-flag-dir-room-tint][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips] .tip[role='tooltip'] .tl {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 9.5px;
   height: 28px;
   padding: 0 var(--ti);
+}
+:root[data-flag-dir-room-tint][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips] .tip[role='tooltip'] .tt:not(.one) .tl:has(> :is(.tv, .kcaps):last-child) {
+  padding-right: 4px;
 }
 :root[data-flag-dir-room-tint][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips] .tip[role='tooltip'] .tl > * {
   flex: none;
@@ -43,7 +47,7 @@
   display: flex;
   align-items: center;
   height: 20px;
-  padding: 0 6px;
+  padding: 0 5px;
   border-radius: 4px;
   background: var(--rg-grooves), var(--rg-well);
   box-shadow: var(--tt-cut);
@@ -52,7 +56,7 @@
 :root[data-flag-dir-room-tint][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips] .tip[role='tooltip'] .tx {
   box-sizing: border-box;
   max-width: 280px;
-  margin: 2px 0 10px;
+  margin: 1.5px 0 9.5px;
   padding: 0 var(--ti);
   color: var(--fg-2);
   white-space: normal;
@@ -61,7 +65,7 @@
   text-box: trim-both cap alphabetic;
 }
 :root[data-flag-dir-room-tint][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips] .tip[role='tooltip'] .tx.lead {
-  margin-top: 10px;
+  margin-top: 9.5px;
   color: var(--fg);
 }
 /* A sentence of its own has the whole width. */
@@ -93,6 +97,9 @@
   gap: 6px;
   height: 20px;
 }
+:root[data-flag-dir-room-tint][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips] .tip[role='tooltip'] .th:has(> .kcaps:last-child) {
+  margin-right: calc(4px - var(--ti));
+}
 :root[data-flag-dir-room-tint][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips] .tip[role='tooltip'] .tg {
   color: var(--fg-2);
 }
@@ -112,6 +119,18 @@
   display: flex;
   align-items: center;
 }
+:root[data-flag-dir-room-tint][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips] .tip[role='tooltip'] .tt.one .tl {
+  padding-right: 9.5px;
+}
+:root[data-flag-dir-room-tint][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips] .tip[role='tooltip'] .tt.one .tl:has(> :is(.tv, .kcaps):last-child) {
+  padding-right: 10px;
+}
+:root[data-flag-dir-room-tint][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips] .tip[role='tooltip'] .tt.one .ta {
+  padding-left: 9.5px;
+}
+:root[data-flag-dir-room-tint][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips] .tip[role='tooltip'] .tt.one .ta:first-child {
+  padding-left: var(--ti);
+}
 :root[data-flag-dir-room-tint][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips] .tip[role='tooltip'] .tt.one .tl > .tw {
   flex: none;
 }
@@ -125,6 +144,13 @@
 :root[data-flag-dir-room-tint][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips] .tip[role='tooltip'] .tt.one .ta {
   grid-template-columns: max-content max-content;
   column-gap: 8px;
+}
+:root[data-flag-dir-room-tint][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips] .tip[role='tooltip'] .tt.live {
+  display: flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 8px;
+  font-size: 12px;
 }
 :root[data-flag-dir-room-tint][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips] .tip[role='tooltip'] .kcaps {
   display: inline-flex;

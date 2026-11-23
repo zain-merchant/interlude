@@ -2,7 +2,10 @@
 //
 // The name, its value cut in, its key raised; then, after an etched rule, what
 // else you can do, what it does on the left and how on the right. One thing
-// more goes on the name's line when that fits; more are rows.
+// more goes on the name's line when that fits; more are rows. It says at once
+// only what the control doesn't (read.js has the rule); resting 1.5 s says the
+// rest. A dial or fader being moved shows its value and nothing else, which
+// agrees with #109: where the value is already on screen it shows nothing.
 export default {
   id: 'tooltips',
   n: 122,
