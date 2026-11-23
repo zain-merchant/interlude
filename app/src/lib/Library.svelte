@@ -1,8 +1,4 @@
 <script>
-  // #110 (UI audit flag): dir-room-tint: columns dragged to size and to order.
-  import { colResize, resetWidths } from '../flags/110-dir-room-tint/columns.js';
-  import { arrange, setOrder } from '../flags/110-dir-room-tint/column-order.svelte.js';
-  import ColumnsMenu from '../flags/110-dir-room-tint/ColumnsMenu.svelte';
   import { flag, setting } from '../flags/registry.svelte.js';
   import { onMount, tick, untrack } from 'svelte';
   import { backend } from './backend.js';
@@ -16,6 +12,10 @@
   import { pushEdit, showToast } from './undo.svelte.js';
   import { keyName, keyLongName, camelot, keysMix, playingKey } from './key.js';
   import { hms } from '../flags/08-stress-hours/time.js';
+  // #110 (UI audit flag): dir-room-tint: columns dragged to size and to order.
+  import { colResize, resetWidths } from '../flags/110-dir-room-tint/columns.js';
+  import { arrange, setOrder } from '../flags/110-dir-room-tint/column-order.svelte.js';
+  import ColumnsMenu from '../flags/110-dir-room-tint/ColumnsMenu.svelte';
   import { onAir, passes, filtering, describe, FIT_TEMPO } from './libraryfilter.js';
 
   /** `onimport` opens the import window; `onempty` is called when the whole library loads with no tracks.
