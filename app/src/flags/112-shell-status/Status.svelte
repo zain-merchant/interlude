@@ -83,7 +83,7 @@
     const h = pop.offsetHeight;
     const below = r.bottom / k + 4;
     const end = innerHeight / k - 12;
-    if (opening) over = below + h + 40 > end && r.top / k > end - below; // 40: the line a playing deck adds
+    if (opening) over = below + h > end && r.top / k > end - below;
     at = {
       left: Math.max(12, Math.min(innerWidth / k - w - 12, r.right / k - w)),
       top: Math.max(12, over ? r.top / k - 4 - h : Math.min(below, end - h)),
@@ -94,7 +94,7 @@
     void asked;
     void error;
     void conn.controllers;
-    if (shown) tick().then(place);
+    if (shown) tick().then(() => place());
   });
 
   /** @param {string | null} device */
@@ -187,7 +187,7 @@
       {/each}
     </div>
     {#if error}<p class="err" role="alert">{error}</p>
-    {:else if asked !== undefined}<p role="status">A deck is playing. Switching stops the sound for a moment.</p>{/if}
+    {:else}<p role="status">{asked !== undefined ? 'A deck is playing. This stops it for a moment.' : 'Switching stops the sound for a moment.'}</p>{/if}
     <hr />
     <h6>Controllers</h6>
     {#each conn.controllers?.connected ?? [] as c}

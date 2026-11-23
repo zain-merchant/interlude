@@ -103,7 +103,7 @@ export function items() {
       : c.length
         ? { kind: 'ctl', name: c[0].port, icon: 'ctl', state: '' }
         : unmapped().length
-          ? { kind: 'ctl', name: `${unmapped()[0]}, no mapping`, icon: 'ctlx', state: '' }
+          ? { kind: 'ctl', name: `No mapping, ${unmapped()[0]}`, icon: 'ctlx', state: '' }
           : null;
   return ctl ? [ctl, out] : [out];
 }

@@ -1,5 +1,6 @@
 <script>
   import Status from '../flags/112-shell-status/Status.svelte'; // #112 (UI audit flag)
+  import EmptyFilter from '../flags/113-empty-filter/EmptyFilter.svelte'; // #113 (UI audit flag)
   import Activity from '../flags/112-shell-status/Activity.svelte'; // #112 (UI audit flag)
   import { flag, setting } from '../flags/registry.svelte.js';
   import { onMount, tick, untrack } from 'svelte';
@@ -97,6 +98,7 @@
       return words.every((w) => hay.includes(w));
     });
   });
+  let emptyHeld = $state(false); // #113 (UI audit flag): its handles are being dragged
   function setFilter(f) {
     filter = f;
     selectIndex(0);
@@ -903,7 +905,10 @@
     <div class="scroll" bind:this={scroller} bind:clientHeight={viewHeight} onscroll={() => ((scrollTop = scroller.scrollTop), edges())}
       tabindex="0" onkeydown={listKey} role="listbox" aria-label="Tracks" data-region="tracks" data-more={flag('library-clip') && listMore ? '' : undefined} data-scrolled={flag('library-clip') && listUp ? '' : undefined}
       aria-activedescendant={sorted[selected] ? `track-${selected}` : undefined}>
-      {#if error}
+      {#if flag('empty-filter') && !error && !loading && all.length && (filter.bpmMin || filter.bpmMax) && !filter.keys.length && !query.trim() && !fits && (!results.length || emptyHeld)}
+        <!-- #113 (UI audit flag): empty-filter: your tempos, and the range asked for. -->
+        <EmptyFilter tracks={all} {filter} count={results.length} {setFilter} clear={clearFilter} bind:held={emptyHeld} />
+      {:else if error}
         <div class="empty">{error}</div>
       {:else if !loading && !all.length && emptyView}
         <div class="empty"><p class="what">{emptyView[0]}</p><p class="how">{emptyView[1]}</p></div>

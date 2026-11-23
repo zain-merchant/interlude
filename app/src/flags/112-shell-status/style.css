@@ -111,6 +111,11 @@
 :root[data-flag-shell-status] section.library .bar:is([data-fit='3'], [data-fit='4']) .shell .nm {
   display: none;
 }
+/* No sound still says so. */
+:root[data-flag-shell-status] section.library .bar:is([data-fit='3'], [data-fit='4']) .shell .bad .nm {
+  display: inline;
+  max-width: 96px;
+}
 :root[data-flag-shell-status] section.library .bar[data-fit='4'] > .count:not(.shell-act) {
   display: none;
 }
