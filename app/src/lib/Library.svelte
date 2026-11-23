@@ -21,6 +21,8 @@
   import { arrange, setOrder } from '../flags/110-dir-room-tint/column-order.svelte.js';
   import ColumnsMenu from '../flags/110-dir-room-tint/ColumnsMenu.svelte';
   import Mid from '../flags/110-dir-room-tint/Mid.svelte';
+  import SideToggle from '../flags/110-dir-room-tint/SideToggle.svelte';
+  import { sideShut } from '../flags/110-dir-room-tint/sidebar.svelte.js';
   import { onAir, passes, filtering, describe, FIT_TEMPO } from './libraryfilter.js';
 
   /** `onimport` opens the import window; `onempty` is called when the whole library loads with no tracks.
@@ -799,8 +801,10 @@
 
 {#if colMenu && flag('dir-room-tint')}<ColumnsMenu {...colMenu} columns={COLUMNS} {hidden} ontoggle={toggleColumn} onreset={() => { setOrder([]); resetWidths(); }} onclose={() => (colMenu = null)} />{/if}
 
-<section class="library" aria-label="Library">
-  <nav data-region="sidebar" aria-label="Library and playlists" bind:this={nav} onscroll={edges}
+<section class="library" class:shut={sideShut()} aria-label="Library">
+  <!-- #110 (UI audit flag): dir-room-tint: the sidebar closes. -->
+  {#if flag('dir-room-tint')}<SideToggle />{/if}
+  <nav inert={sideShut()} data-region="sidebar" aria-label="Library and playlists" bind:this={nav} onscroll={edges}
     data-more={flag('library-clip') && navMore ? '' : undefined} data-scrolled={flag('library-clip') && navUp ? '' : undefined}>
     <div class="h">Library</div>
     <button class="item" class:on={view.kind === 'all'} aria-current={view.kind === 'all'} onclick={() => pick(null)}>

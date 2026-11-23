@@ -26,6 +26,7 @@
   import { installAppMenu } from './lib/appmenu.js';
   import { runPerformance } from './lib/performance.js';
   import { flag, setting } from './flags/registry.svelte.js';
+  import { side, sideShut, hideSidebar } from './flags/110-dir-room-tint/sidebar.svelte.js'; // #110 (UI audit flag)
   import { start as startSquircles } from './flags/01-squircles/squircles.js';
   import { padMode, setPadMode } from './lib/padmode.svelte.js';
   import { tempoPickup } from './lib/pickup.svelte.js';
@@ -482,6 +483,11 @@
     sizes.decks = Math.round(clamp(snapTo(h, PANEL.decks.def, 16), PANEL.decks.min, PANEL.decks.max));
   }
   function setSidebar(w) {
+    // #110 (UI audit flag): dir-room-tint: dragged well past its least, the sidebar closes; dragged back out, it opens.
+    if (flag('dir-room-tint')) {
+      hideSidebar(w < PANEL.sidebar.min - 48);
+      if (side.hidden) return;
+    }
     sizes.sidebar = Math.round(clamp(snapTo(w, PANEL.sidebar.def, 6), PANEL.sidebar.min, PANEL.sidebar.max));
   }
   function setLib(h) {
@@ -539,7 +545,7 @@
   const GRIPS = {
     waves: { get: () => rows.waves, set: setWaves, min: () => PANEL.waves.min, max: () => wavesMax, def: PANEL.waves.def, axis: 'y', dir: 1 },
     decks: { get: () => rows.decks, set: setDecks, min: () => PANEL.decks.min, max: () => PANEL.decks.max, def: PANEL.decks.def, axis: 'y', dir: -1 },
-    sidebar: { get: () => sizes.sidebar, set: setSidebar, min: () => PANEL.sidebar.min, max: () => PANEL.sidebar.max, def: PANEL.sidebar.def, axis: 'x', dir: 1 },
+    sidebar: { get: () => (sideShut() ? 0 : sizes.sidebar), set: setSidebar, min: () => PANEL.sidebar.min, max: () => PANEL.sidebar.max, def: PANEL.sidebar.def, axis: 'x', dir: 1 },
   };
   function gripDown(e, which) {
     e.currentTarget.setPointerCapture(e.pointerId);
@@ -738,7 +744,7 @@
 <!-- #7 / #21 (UI audit flags): edge-tall, panel-sizes: the rows' sizes (--waves, --decks) and the sidebar's, while either is on. -->
 <div class="app" class:mac-window={macWindow} class:settling style:--top="{macWindow ? TOP_STRIP : 12}px" style:--lib="{lib}px"
   style:--waves={sized ? `${rows.waves}px` : undefined} style:--decks={sized ? `${rows.decks}px` : undefined}
-  style:--library-sidebar={flag('panel-sizes') ? `${sizes.sidebar}px` : undefined} bind:clientHeight={winHeight}>
+  style:--library-sidebar={flag('panel-sizes') ? `${sideShut() ? 0 : sizes.sidebar}px` : undefined} style:--side-w={flag('dir-room-tint') ? `${sizes.sidebar}px` : undefined} bind:clientHeight={winHeight}>
   <Backdrop a="var(--deck-a)" b="var(--deck-b)" tint={0.25} />
   {#if macWindow}
     <!-- The window buttons' strip: drag it to move the window, double-click
@@ -790,6 +796,7 @@
       <!-- svelte-ignore a11y_no_noninteractive_tabindex, a11y_no_noninteractive_element_interactions -->
       <div class="grip side" class:dragging={grab?.which === 'sidebar'} role="separator" aria-orientation="vertical" aria-label="Resize sidebar"
         aria-valuenow={sizes.sidebar} aria-valuemin={PANEL.sidebar.min} aria-valuemax={PANEL.sidebar.max} tabindex="0"
+        onmousedown={(e) => e.preventDefault() /* #110: a row that comes under the pointer mid-drag mustn't start a drag of its own */}
         onpointerdown={(e) => gripDown(e, 'sidebar')} onpointermove={gripMove} onpointerup={() => (grab = null)} onpointercancel={() => (grab = null)}
         ondblclick={() => gripReset('sidebar')} onkeydown={(e) => gripKey(e, 'sidebar')}
         use:tip={() => 'Drag to resize the sidebar, double-click to reset'}><i></i></div>

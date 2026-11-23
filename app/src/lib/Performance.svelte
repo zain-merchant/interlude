@@ -113,7 +113,7 @@
       <!-- #110 (UI audit flag): dir-room-tint: one key that loops, then how long the loop is, stepped in a cut like every other amount. Its jump arrows are the transport's own (same action, one row down), so they aren't drawn twice. -->
       <button class="big" class:live={d.looping} aria-pressed={d.looping} aria-disabled={!grid} {...press(() => loopToggle(deck))}
         use:tip={() => (grid ? tipText(d.looping ? 'Exit loop' : `Loop ${size} ${beatsWord}`, keyLabel(`deck.${deck}.loop`)) : noGrid)}><span>Loop</span></button>
-      <div class="step">{@render halve('÷2')}<span class="val"><b class="num">{size}</b>{beatsWord}</span>{@render double('×2')}</div>
+      <div class="step">{@render halve('÷2')}<span class="val"><b class="num">{size}</b><small>{beatsWord}</small></span>{@render double('×2')}</div>
     {:else if flag('no-shift-strip')}
       <!-- #5 (UI audit flag): no-shift-strip puts ÷2 and ×2 beside the value they change, the jump arrows outside them. -->
       {@render back()}{@render halve('÷2')}{@render value()}{@render double('×2')}{@render forward()}

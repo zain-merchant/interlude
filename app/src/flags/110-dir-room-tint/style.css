@@ -1177,9 +1177,25 @@
    over the sound, the titles and the zoom, is inset 8px, with the corner
    every button has. */
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .waves.glass {
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23fff' stroke-opacity='.045'%3E%3Ccircle cx='50%25' cy='2500' r='2372'/%3E%3Ccircle cx='50%25' cy='2500' r='2376'/%3E%3Ccircle cx='50%25' cy='2500' r='2380'/%3E%3Ccircle cx='50%25' cy='2500' r='2384'/%3E%3Ccircle cx='50%25' cy='2500' r='2388'/%3E%3Ccircle cx='50%25' cy='2500' r='2392'/%3E%3Ccircle cx='50%25' cy='2500' r='2396'/%3E%3Ccircle cx='50%25' cy='2500' r='2400'/%3E%3Ccircle cx='50%25' cy='2500' r='2404'/%3E%3Ccircle cx='50%25' cy='2500' r='2408'/%3E%3Ccircle cx='50%25' cy='2500' r='2412'/%3E%3Ccircle cx='50%25' cy='2500' r='2416'/%3E%3Ccircle cx='50%25' cy='2500' r='2420'/%3E%3Ccircle cx='50%25' cy='2500' r='2424'/%3E%3Ccircle cx='50%25' cy='2500' r='2428'/%3E%3Ccircle cx='50%25' cy='2500' r='2432'/%3E%3Ccircle cx='50%25' cy='2500' r='2436'/%3E%3Ccircle cx='50%25' cy='2500' r='2440'/%3E%3Ccircle cx='50%25' cy='2500' r='2444'/%3E%3Ccircle cx='50%25' cy='2500' r='2448'/%3E%3Ccircle cx='50%25' cy='2500' r='2452'/%3E%3Ccircle cx='50%25' cy='2500' r='2456'/%3E%3Ccircle cx='50%25' cy='2500' r='2460'/%3E%3Ccircle cx='50%25' cy='2500' r='2464'/%3E%3Ccircle cx='50%25' cy='2500' r='2468'/%3E%3Ccircle cx='50%25' cy='2500' r='2472'/%3E%3Ccircle cx='50%25' cy='2500' r='2476'/%3E%3Ccircle cx='50%25' cy='2500' r='2480'/%3E%3Ccircle cx='50%25' cy='2500' r='2484'/%3E%3Ccircle cx='50%25' cy='2500' r='2488'/%3E%3Ccircle cx='50%25' cy='2500' r='2492'/%3E%3Ccircle cx='50%25' cy='2500' r='2496'/%3E%3Ccircle cx='50%25' cy='2500' r='2500'/%3E%3Ccircle cx='50%25' cy='2500' r='2504'/%3E%3Ccircle cx='50%25' cy='2500' r='2508'/%3E%3Ccircle cx='50%25' cy='2500' r='2512'/%3E%3Ccircle cx='50%25' cy='2500' r='2516'/%3E%3Ccircle cx='50%25' cy='2500' r='2520'/%3E%3Ccircle cx='50%25' cy='2500' r='2524'/%3E%3Ccircle cx='50%25' cy='2500' r='2528'/%3E%3Ccircle cx='50%25' cy='2500' r='2532'/%3E%3Ccircle cx='50%25' cy='2500' r='2536'/%3E%3Ccircle cx='50%25' cy='2500' r='2540'/%3E%3Ccircle cx='50%25' cy='2500' r='2544'/%3E%3Ccircle cx='50%25' cy='2500' r='2548'/%3E%3Ccircle cx='50%25' cy='2500' r='2552'/%3E%3Ccircle cx='50%25' cy='2500' r='2556'/%3E%3Ccircle cx='50%25' cy='2500' r='2560'/%3E%3Ccircle cx='50%25' cy='2500' r='2564'/%3E%3Ccircle cx='50%25' cy='2500' r='2568'/%3E%3Ccircle cx='50%25' cy='2500' r='2572'/%3E%3Ccircle cx='50%25' cy='2500' r='2576'/%3E%3Ccircle cx='50%25' cy='2500' r='2580'/%3E%3Ccircle cx='50%25' cy='2500' r='2584'/%3E%3Ccircle cx='50%25' cy='2500' r='2588'/%3E%3Ccircle cx='50%25' cy='2500' r='2592'/%3E%3Ccircle cx='50%25' cy='2500' r='2596'/%3E%3Ccircle cx='50%25' cy='2500' r='2600'/%3E%3Ccircle cx='50%25' cy='2500' r='2604'/%3E%3Ccircle cx='50%25' cy='2500' r='2608'/%3E%3Ccircle cx='50%25' cy='2500' r='2612'/%3E%3Ccircle cx='50%25' cy='2500' r='2616'/%3E%3Ccircle cx='50%25' cy='2500' r='2620'/%3E%3Ccircle cx='50%25' cy='2500' r='2624'/%3E%3Ccircle cx='50%25' cy='2500' r='2628'/%3E%3Ccircle cx='50%25' cy='2500' r='2632'/%3E%3Ccircle cx='50%25' cy='2500' r='2636'/%3E%3Ccircle cx='50%25' cy='2500' r='2640'/%3E%3Ccircle cx='50%25' cy='2500' r='2644'/%3E%3Ccircle cx='50%25' cy='2500' r='2648'/%3E%3Ccircle cx='50%25' cy='2500' r='2652'/%3E%3Ccircle cx='50%25' cy='2500' r='2656'/%3E%3Ccircle cx='50%25' cy='2500' r='2660'/%3E%3Ccircle cx='50%25' cy='2500' r='2664'/%3E%3Ccircle cx='50%25' cy='2500' r='2668'/%3E%3Ccircle cx='50%25' cy='2500' r='2672'/%3E%3Ccircle cx='50%25' cy='2500' r='2676'/%3E%3Ccircle cx='50%25' cy='2500' r='2680'/%3E%3Ccircle cx='50%25' cy='2500' r='2684'/%3E%3Ccircle cx='50%25' cy='2500' r='2688'/%3E%3Ccircle cx='50%25' cy='2500' r='2692'/%3E%3Ccircle cx='50%25' cy='2500' r='2696'/%3E%3Ccircle cx='50%25' cy='2500' r='2700'/%3E%3Ccircle cx='50%25' cy='2500' r='2704'/%3E%3Ccircle cx='50%25' cy='2500' r='2708'/%3E%3Ccircle cx='50%25' cy='2500' r='2712'/%3E%3Ccircle cx='50%25' cy='2500' r='2716'/%3E%3Ccircle cx='50%25' cy='2500' r='2720'/%3E%3Ccircle cx='50%25' cy='2500' r='2724'/%3E%3Ccircle cx='50%25' cy='2500' r='2728'/%3E%3Ccircle cx='50%25' cy='2500' r='2732'/%3E%3Ccircle cx='50%25' cy='2500' r='2736'/%3E%3Ccircle cx='50%25' cy='2500' r='2740'/%3E%3Ccircle cx='50%25' cy='2500' r='2744'/%3E%3Ccircle cx='50%25' cy='2500' r='2748'/%3E%3Ccircle cx='50%25' cy='2500' r='2752'/%3E%3Ccircle cx='50%25' cy='2500' r='2756'/%3E%3Ccircle cx='50%25' cy='2500' r='2760'/%3E%3Ccircle cx='50%25' cy='2500' r='2764'/%3E%3Ccircle cx='50%25' cy='2500' r='2768'/%3E%3Ccircle cx='50%25' cy='2500' r='2772'/%3E%3Ccircle cx='50%25' cy='2500' r='2776'/%3E%3Ccircle cx='50%25' cy='2500' r='2780'/%3E%3Ccircle cx='50%25' cy='2500' r='2784'/%3E%3Ccircle cx='50%25' cy='2500' r='2788'/%3E%3Ccircle cx='50%25' cy='2500' r='2792'/%3E%3Ccircle cx='50%25' cy='2500' r='2796'/%3E%3Ccircle cx='50%25' cy='2500' r='2800'/%3E%3Ccircle cx='50%25' cy='2500' r='2804'/%3E%3Ccircle cx='50%25' cy='2500' r='2808'/%3E%3Ccircle cx='50%25' cy='2500' r='2812'/%3E%3Ccircle cx='50%25' cy='2500' r='2816'/%3E%3Ccircle cx='50%25' cy='2500' r='2820'/%3E%3Ccircle cx='50%25' cy='2500' r='2824'/%3E%3Ccircle cx='50%25' cy='2500' r='2828'/%3E%3Ccircle cx='50%25' cy='2500' r='2832'/%3E%3C/g%3E%3C/svg%3E") 0 0 / 100% 100% no-repeat, var(--rg-window);
+  isolation: isolate;
+  background: var(--rg-window);
   padding: 4px 0;
   box-shadow: 0 0 0 1px var(--rg-rim), 0 1px 0 1px var(--rg-lip);
+}
+/* The lanes' rings, on a layer of their own so they can be faded (a slider:
+   the waveform is what's to read here). */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .waves.glass::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23fff' stroke-opacity='.045'%3E%3Ccircle cx='50%25' cy='2500' r='2372'/%3E%3Ccircle cx='50%25' cy='2500' r='2376'/%3E%3Ccircle cx='50%25' cy='2500' r='2380'/%3E%3Ccircle cx='50%25' cy='2500' r='2384'/%3E%3Ccircle cx='50%25' cy='2500' r='2388'/%3E%3Ccircle cx='50%25' cy='2500' r='2392'/%3E%3Ccircle cx='50%25' cy='2500' r='2396'/%3E%3Ccircle cx='50%25' cy='2500' r='2400'/%3E%3Ccircle cx='50%25' cy='2500' r='2404'/%3E%3Ccircle cx='50%25' cy='2500' r='2408'/%3E%3Ccircle cx='50%25' cy='2500' r='2412'/%3E%3Ccircle cx='50%25' cy='2500' r='2416'/%3E%3Ccircle cx='50%25' cy='2500' r='2420'/%3E%3Ccircle cx='50%25' cy='2500' r='2424'/%3E%3Ccircle cx='50%25' cy='2500' r='2428'/%3E%3Ccircle cx='50%25' cy='2500' r='2432'/%3E%3Ccircle cx='50%25' cy='2500' r='2436'/%3E%3Ccircle cx='50%25' cy='2500' r='2440'/%3E%3Ccircle cx='50%25' cy='2500' r='2444'/%3E%3Ccircle cx='50%25' cy='2500' r='2448'/%3E%3Ccircle cx='50%25' cy='2500' r='2452'/%3E%3Ccircle cx='50%25' cy='2500' r='2456'/%3E%3Ccircle cx='50%25' cy='2500' r='2460'/%3E%3Ccircle cx='50%25' cy='2500' r='2464'/%3E%3Ccircle cx='50%25' cy='2500' r='2468'/%3E%3Ccircle cx='50%25' cy='2500' r='2472'/%3E%3Ccircle cx='50%25' cy='2500' r='2476'/%3E%3Ccircle cx='50%25' cy='2500' r='2480'/%3E%3Ccircle cx='50%25' cy='2500' r='2484'/%3E%3Ccircle cx='50%25' cy='2500' r='2488'/%3E%3Ccircle cx='50%25' cy='2500' r='2492'/%3E%3Ccircle cx='50%25' cy='2500' r='2496'/%3E%3Ccircle cx='50%25' cy='2500' r='2500'/%3E%3Ccircle cx='50%25' cy='2500' r='2504'/%3E%3Ccircle cx='50%25' cy='2500' r='2508'/%3E%3Ccircle cx='50%25' cy='2500' r='2512'/%3E%3Ccircle cx='50%25' cy='2500' r='2516'/%3E%3Ccircle cx='50%25' cy='2500' r='2520'/%3E%3Ccircle cx='50%25' cy='2500' r='2524'/%3E%3Ccircle cx='50%25' cy='2500' r='2528'/%3E%3Ccircle cx='50%25' cy='2500' r='2532'/%3E%3Ccircle cx='50%25' cy='2500' r='2536'/%3E%3Ccircle cx='50%25' cy='2500' r='2540'/%3E%3Ccircle cx='50%25' cy='2500' r='2544'/%3E%3Ccircle cx='50%25' cy='2500' r='2548'/%3E%3Ccircle cx='50%25' cy='2500' r='2552'/%3E%3Ccircle cx='50%25' cy='2500' r='2556'/%3E%3Ccircle cx='50%25' cy='2500' r='2560'/%3E%3Ccircle cx='50%25' cy='2500' r='2564'/%3E%3Ccircle cx='50%25' cy='2500' r='2568'/%3E%3Ccircle cx='50%25' cy='2500' r='2572'/%3E%3Ccircle cx='50%25' cy='2500' r='2576'/%3E%3Ccircle cx='50%25' cy='2500' r='2580'/%3E%3Ccircle cx='50%25' cy='2500' r='2584'/%3E%3Ccircle cx='50%25' cy='2500' r='2588'/%3E%3Ccircle cx='50%25' cy='2500' r='2592'/%3E%3Ccircle cx='50%25' cy='2500' r='2596'/%3E%3Ccircle cx='50%25' cy='2500' r='2600'/%3E%3Ccircle cx='50%25' cy='2500' r='2604'/%3E%3Ccircle cx='50%25' cy='2500' r='2608'/%3E%3Ccircle cx='50%25' cy='2500' r='2612'/%3E%3Ccircle cx='50%25' cy='2500' r='2616'/%3E%3Ccircle cx='50%25' cy='2500' r='2620'/%3E%3Ccircle cx='50%25' cy='2500' r='2624'/%3E%3Ccircle cx='50%25' cy='2500' r='2628'/%3E%3Ccircle cx='50%25' cy='2500' r='2632'/%3E%3Ccircle cx='50%25' cy='2500' r='2636'/%3E%3Ccircle cx='50%25' cy='2500' r='2640'/%3E%3Ccircle cx='50%25' cy='2500' r='2644'/%3E%3Ccircle cx='50%25' cy='2500' r='2648'/%3E%3Ccircle cx='50%25' cy='2500' r='2652'/%3E%3Ccircle cx='50%25' cy='2500' r='2656'/%3E%3Ccircle cx='50%25' cy='2500' r='2660'/%3E%3Ccircle cx='50%25' cy='2500' r='2664'/%3E%3Ccircle cx='50%25' cy='2500' r='2668'/%3E%3Ccircle cx='50%25' cy='2500' r='2672'/%3E%3Ccircle cx='50%25' cy='2500' r='2676'/%3E%3Ccircle cx='50%25' cy='2500' r='2680'/%3E%3Ccircle cx='50%25' cy='2500' r='2684'/%3E%3Ccircle cx='50%25' cy='2500' r='2688'/%3E%3Ccircle cx='50%25' cy='2500' r='2692'/%3E%3Ccircle cx='50%25' cy='2500' r='2696'/%3E%3Ccircle cx='50%25' cy='2500' r='2700'/%3E%3Ccircle cx='50%25' cy='2500' r='2704'/%3E%3Ccircle cx='50%25' cy='2500' r='2708'/%3E%3Ccircle cx='50%25' cy='2500' r='2712'/%3E%3Ccircle cx='50%25' cy='2500' r='2716'/%3E%3Ccircle cx='50%25' cy='2500' r='2720'/%3E%3Ccircle cx='50%25' cy='2500' r='2724'/%3E%3Ccircle cx='50%25' cy='2500' r='2728'/%3E%3Ccircle cx='50%25' cy='2500' r='2732'/%3E%3Ccircle cx='50%25' cy='2500' r='2736'/%3E%3Ccircle cx='50%25' cy='2500' r='2740'/%3E%3Ccircle cx='50%25' cy='2500' r='2744'/%3E%3Ccircle cx='50%25' cy='2500' r='2748'/%3E%3Ccircle cx='50%25' cy='2500' r='2752'/%3E%3Ccircle cx='50%25' cy='2500' r='2756'/%3E%3Ccircle cx='50%25' cy='2500' r='2760'/%3E%3Ccircle cx='50%25' cy='2500' r='2764'/%3E%3Ccircle cx='50%25' cy='2500' r='2768'/%3E%3Ccircle cx='50%25' cy='2500' r='2772'/%3E%3Ccircle cx='50%25' cy='2500' r='2776'/%3E%3Ccircle cx='50%25' cy='2500' r='2780'/%3E%3Ccircle cx='50%25' cy='2500' r='2784'/%3E%3Ccircle cx='50%25' cy='2500' r='2788'/%3E%3Ccircle cx='50%25' cy='2500' r='2792'/%3E%3Ccircle cx='50%25' cy='2500' r='2796'/%3E%3Ccircle cx='50%25' cy='2500' r='2800'/%3E%3Ccircle cx='50%25' cy='2500' r='2804'/%3E%3Ccircle cx='50%25' cy='2500' r='2808'/%3E%3Ccircle cx='50%25' cy='2500' r='2812'/%3E%3Ccircle cx='50%25' cy='2500' r='2816'/%3E%3Ccircle cx='50%25' cy='2500' r='2820'/%3E%3Ccircle cx='50%25' cy='2500' r='2824'/%3E%3Ccircle cx='50%25' cy='2500' r='2828'/%3E%3Ccircle cx='50%25' cy='2500' r='2832'/%3E%3C/g%3E%3C/svg%3E") 0 0 / 100% 100% no-repeat;
+  opacity: calc(var(--flag-dir-room-tint-lanes, 8) / 100);
+  pointer-events: none;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-overview='quiet'] [data-region^='deck'] .overview {
+  background: var(--rg-well);
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .waves.glass::after {
   box-shadow: none;
@@ -1574,7 +1590,7 @@
   justify-content: center;
   gap: 4px;
   min-width: 0;
-  padding: 0;
+  padding: 0 5px;
   place-self: stretch;
   font-size: var(--t-sm);
   font-weight: 500;
@@ -1626,11 +1642,7 @@
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .pitch .nudge {
   grid-template-columns: 1fr 1fr;
 }
-@container (max-width: 95px) {
-  :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .transport .jumps {
-    grid-template-columns: 20px minmax(0, 1fr) 20px;
-  }
-}
+
 
 /* ── The deck's grid ───────────────────────────────────────────────────
    The overview gets its height back (upstream's record header took it from
@@ -1890,7 +1902,8 @@
   border-radius: var(--r);
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .perf .step {
-  grid-template-columns: 52px minmax(0, 1fr) 52px;
+  grid-template-columns: minmax(26px, 52px) minmax(max-content, 1fr) minmax(26px, 52px);
+  container-type: inline-size;
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .perf .step .tb {
   font-size: var(--t-sm) !important;
@@ -1925,7 +1938,7 @@
     grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.4fr);
   }
   :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .perf .step {
-    grid-template-columns: 30px minmax(0, 1fr) 30px;
+    grid-template-columns: minmax(20px, 30px) minmax(max-content, 1fr) minmax(20px, 30px);
   }
 }
 
@@ -2369,7 +2382,7 @@
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer .meter .db.left {
   right: 100%;
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer .meter .db::after {
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-figures='on'] .mixer .meter .db::after {
   position: absolute;
   top: -5px;
   height: 11px;
@@ -2385,13 +2398,13 @@
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer .meter .db.left::after {
   right: 7px;
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer .meter .db::after {
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-figures='on'] .mixer .meter .db::after {
   content: '18';
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer .meter .db.zero::after {
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-figures='on'] .mixer .meter .db.zero::after {
   content: '0';
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer .meter .db.zero + .db::after {
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-figures='on'] .mixer .meter .db.zero + .db::after {
   content: '6';
 }
 /* The headphone cue is its fader's: on the fader's axis, as wide as its cap
@@ -2407,10 +2420,10 @@
 }
 @media (min-width: 1201px) {
   :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .app > .decks {
-    grid-template-columns: minmax(0, 1fr) 324px minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) 312px minmax(0, 1fr);
   }
   :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .decks > .mixer {
-    column-gap: 10px;
+    column-gap: 7px;
   }
 }
 
@@ -2583,15 +2596,17 @@
    The fill stays the plate's own dark (a setting lets a breath of the colour
    into it). Play is the exception: it fills with the deck's colour. */
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-on='breath'] {
-  --kk-mix: 9%;
+  --kk-mix: 13%;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-on='breath'] .mixer .hp {
+  --kk-mix: 7%;
+}
+/* A set cue's colour is how you find it: it keeps some in its fill. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:not([data-flag-dir-room-tint-setcue='ink']) [data-region^='deck'] .perf .tc.set {
+  --kk-mix: 24%;
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer .hp.on svg {
   color: var(--on);
-}
-@media (max-width: 1200px) {
-  :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .transport .jumps {
-    grid-template-columns: 22px minmax(0, 1fr) 22px;
-  }
 }
 
 /* One line height, even, so a label and an amount in the same row land on
@@ -2722,43 +2737,150 @@
   box-shadow: none !important;
 }
 
-/* ── The library's rules ───────────────────────────────────────────────
-   One etched line: up the sidebar's edge, round a corner, and along under
-   the headings. It ends 16px short of the panel's foot and of its right
-   edge, the panel's own inset. (columns.js keeps --rule-y on the headings.)
-   Dragging the sidebar changes the pointer and, faintly, the line's light. */
+/* ── The library and its sidebar ───────────────────────────────────────
+   Five ways to set the sidebar in the library's panel (a setting), from a
+   line between them to two panels. In all of them it slides under the
+   panel's left edge to close, the list keeps its place, and the list's
+   content stands 8px in from whatever is round it on the left, the top and
+   the right (its row plates; the text is 24 and 12 from the same edges). */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library {
+  position: relative;
+  overflow: hidden;
+  --side-gap: 0px;
+  transition: grid-template-columns 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .app:has(.grip.side.dragging) section.library,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .app.settling section.library {
+  transition: none;
+}
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library nav {
+  box-sizing: border-box;
+  width: var(--side-w, 200px);
+  justify-self: end;
   border-right-color: transparent;
   box-shadow: none;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library.shut nav {
+  visibility: hidden;
+  transition: visibility 0s 200ms;
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .main {
   position: relative;
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .main::before {
-  content: '';
-  position: absolute;
-  z-index: 1;
-  left: -1px;
-  right: 16px;
-  top: var(--rule-y, 92px);
-  bottom: 16px;
-  border: 1px solid var(--tt-rule-d);
-  border-right-color: transparent;
-  border-bottom-color: transparent;
-  border-radius: 14px 0 0 0;
-  box-shadow: inset 1px 1px 0 var(--tt-rule-l);
-  -webkit-mask: linear-gradient(90deg, #000 30px, transparent 30px), linear-gradient(#000 30px, transparent 30px);
-  mask: linear-gradient(90deg, #000 30px, transparent 30px), linear-gradient(#000 30px, transparent 30px);
-  pointer-events: none;
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .sidetoggle {
+  top: 18px;
+  left: max(10px, calc(var(--library-sidebar, 200px) - 44px));
+  transition: left 200ms cubic-bezier(0.2, 0.8, 0.2, 1), color 120ms ease-out, background-color 120ms ease-out;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .app:has(.grip.side.dragging) section.library .sidetoggle {
+  transition: color 120ms ease-out;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library.shut .main > .bar {
+  padding-left: 32px;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .main > .bar {
+  transition: padding-left 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .below > .grip.side:is(:hover, .dragging) i {
   background: transparent;
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .below:has(> .grip.side:is(:hover, .dragging)) section.library .main {
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .below:has(> .grip.side:is(:hover, .dragging)) section.library {
   --tt-rule-l: rgb(255 255 255 / 0.12);
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-input='keys'] .below > .grip.side:focus-visible i {
   background: var(--fg-3);
+}
+/* line: a full etched rule between them, meeting the headings' rule square. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-side='line'] section.library .main::before {
+  content: '';
+  position: absolute;
+  z-index: 1;
+  left: -1px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--tt-rule-v);
+  pointer-events: none;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-side='line'] section.library.shut .main::before {
+  opacity: 0;
+}
+/* ground: the sidebar on darker ground, to the panel's own edges. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-side='ground'] section.library nav {
+  background: rgb(0 0 0 / 0.3);
+  box-shadow: inset -1px 0 0 rgb(0 0 0 / 0.6), 1px 0 0 var(--tt-rule-l);
+}
+/* dock: the sidebar a cut of its own, 8px inside the panel, concentric. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-side='dock'] section.library {
+  --side-gap: 8px;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-side='dock'] section.library nav {
+  width: calc(var(--side-w, 200px) - 8px);
+  margin: 8px 0 8px 8px;
+  padding: 8px;
+  border-radius: calc(var(--r-panel) - 8px);
+  background: rgb(0 0 0 / 0.28);
+  box-shadow: var(--tt-cut);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-side='dock'] section.library nav {
+  padding-top: calc(16px - 8px);
+}
+/* list: the list a cut plate, 8px inside the panel; the sidebar on the panel. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:not([data-flag-dir-room-tint-side='line'], [data-flag-dir-room-tint-side='ground'], [data-flag-dir-room-tint-side='dock'], [data-flag-dir-room-tint-side='split']) section.library .main {
+  margin: 8px 8px 8px 0;
+  padding: 8px 8px 0;
+  border-radius: calc(var(--r-panel) - 8px);
+  background: rgb(0 0 0 / 0.26);
+  box-shadow: var(--tt-cut);
+  overflow: hidden;
+  transition: margin 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:not([data-flag-dir-room-tint-side='line'], [data-flag-dir-room-tint-side='ground'], [data-flag-dir-room-tint-side='dock'], [data-flag-dir-room-tint-side='split']) section.library.shut .main {
+  margin-left: 8px;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:not([data-flag-dir-room-tint-side='line'], [data-flag-dir-room-tint-side='ground'], [data-flag-dir-room-tint-side='dock'], [data-flag-dir-room-tint-side='split']) section.library :is(.row.head, .scroll) {
+  margin-inline: 0;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:not([data-flag-dir-room-tint-side='line'], [data-flag-dir-room-tint-side='ground'], [data-flag-dir-room-tint-side='dock'], [data-flag-dir-room-tint-side='split']) section.library .main > .bar {
+  padding-inline: 8px;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:not([data-flag-dir-room-tint-side='line'], [data-flag-dir-room-tint-side='ground'], [data-flag-dir-room-tint-side='dock'], [data-flag-dir-room-tint-side='split']) section.library.shut .main > .bar {
+  padding-left: 32px;
+}
+/* split: two panels, the app's gap between them, like the decks above. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-side='split'] section.library {
+  background: none;
+  box-shadow: none;
+  overflow: visible;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-side='split'] section.library nav {
+  width: calc(var(--side-w, 200px) - 12px);
+  justify-self: start;
+  border-radius: var(--r-panel);
+  background: var(--rg-plate);
+  box-shadow: var(--rg-plate-edge);
+  transition: translate 200ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity 140ms ease-out;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-side='split'] section.library.shut nav {
+  translate: calc(-100% - 16px) 0;
+  opacity: 0;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-side='split'] section.library .main {
+  border-radius: var(--r-panel);
+  background: var(--rg-plate);
+  box-shadow: var(--rg-plate-edge);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-side='split'] section.library .sidetoggle {
+  left: max(10px, calc(var(--library-sidebar, 200px) - 12px - 44px));
+}
+@media (prefers-reduced-motion: reduce) {
+  :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library,
+  :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .sidetoggle,
+  :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .main,
+  :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library nav,
+  :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .main > .bar {
+    transition: none !important;
+  }
 }
 
 /* The list's edges. A title's ink stands 24px from the sidebar's rule, the
@@ -2783,6 +2905,20 @@
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .row.head .cols {
   margin-right: 8px;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .row.head::after {
+  content: '';
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 0;
+  height: 2px;
+  background: linear-gradient(180deg, var(--tt-rule-d) 50%, var(--tt-rule-l) 50%);
+  pointer-events: none;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:is([data-flag-dir-room-tint-side='line'], [data-flag-dir-room-tint-side='ground']) section.library .row.head::after {
+  left: -8px;
+  right: -8px;
 }
 /* The column handles: out of sight until the pointer is over the headings. */
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .row.head .colh {
@@ -2995,13 +3131,14 @@
   background: transparent;
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-drop='blocked-over']::after {
-  background: color-mix(in oklab, var(--kill) 10%, transparent);
-  box-shadow: inset 0 0 0 1.5px color-mix(in oklab, var(--kill) 80%, transparent);
+  background: color-mix(in oklab, var(--dt) 5%, transparent);
+  box-shadow: inset 0 0 0 1.5px color-mix(in oklab, var(--kill) 70%, transparent);
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:is([data-flag-dir-room-tint-drop='pick'], [data-flag-dir-room-tint-drop='label']) [data-drop='ok']::after {
   background: transparent;
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-drop='label'] :is(.lane, section.deck, [data-region^='deck'])[data-drop$='over']::before {
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-drop='label'] :is(.lane, section.deck, [data-region^='deck'])[data-drop='over']::before,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] :is(.lane, section.deck, [data-region^='deck'])[data-drop='blocked-over']::before {
   content: 'Load here' !important;
   position: absolute;
   z-index: 7;
@@ -3022,8 +3159,9 @@
   transform: none;
   pointer-events: none;
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-drop='label'] :is(.lane, section.deck, [data-region^='deck'])[data-drop='blocked-over']::before {
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] :is(.lane, section.deck, [data-region^='deck'])[data-drop='blocked-over']::before {
   content: 'Playing. Drop twice to replace it' !important;
+  color: color-mix(in oklab, var(--kill) 55%, var(--fg));
 }
 
 /* ── Columns of figures ────────────────────────────────────────────────
@@ -3156,19 +3294,13 @@
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] :is(.transport .jumps, .pitch .nudge, .fx .beats, .perf .step, .strip .grid) > button:focus-visible {
   z-index: 1;
 }
-/* Narrow: the parts are close enough that the rules crowd the words. */
-@media (max-width: 1200px) {
-  :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .transport .jumps > span::before,
-  :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .transport .jumps > span::after {
-    content: none !important;
-  }
-}
 /* The headings' room comes from above them, unless the sampler is there. */
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .bar + .row.head {
   margin-top: -6px;
 }
+/* The first row's plate stands 8px under the rule, as it does from the sides. */
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .scroll {
-  margin-top: -1px;
+  margin-top: 3px;
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer .fwrap .fader.vertical .mark.full {
   background: var(--fg-2);
@@ -3208,4 +3340,46 @@
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer .hp svg path {
   fill: currentColor;
   stroke: none;
+}
+/* The unit gives way before the figure or the ends do. */
+@container (max-width: 113px) {
+  :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .transport .jumps > span small {
+    display: none;
+  }
+}
+@container (max-width: 80px) {
+  :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .transport .jumps > span {
+    padding: 0 2px;
+    font-size: var(--t-xs);
+  }
+  :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .transport .jumps > span::before,
+  :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .transport .jumps > span::after {
+    content: none !important;
+  }
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .transport .jumps {
+  grid-template-columns: minmax(13px, 30px) minmax(max-content, 1fr) minmax(13px, 30px);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .perf .step > .val small {
+  font-size: inherit;
+  font-weight: inherit;
+  color: inherit;
+}
+@container (max-width: 134px) {
+  :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .perf .step > .val small {
+    display: none;
+  }
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .fx .beats {
+  grid-template-columns: minmax(18px, 30px) minmax(max-content, 1fr) minmax(18px, 30px);
+  container-type: inline-size;
+}
+@container (max-width: 116px) {
+  :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .fx .beats > .val {
+    padding: 0 3px;
+    font-size: 0;
+  }
+  :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .fx .beats > .val b {
+    font-size: var(--t-sm);
+  }
 }
