@@ -14,6 +14,7 @@
 pub mod cache;
 pub mod download;
 pub mod model;
+pub mod quick;
 pub mod split;
 
 use std::path::PathBuf;
@@ -280,6 +281,8 @@ enum Task {
     },
     /// Load the model.
     LoadModel(PathBuf, u64),
+    /// Make the copy of the model that loads quickly.
+    MakeQuick(PathBuf),
 }
 
 struct Worker {
@@ -287,6 +290,8 @@ struct Worker {
     heads: PlayHeads,
     model: Option<Model>,
     model_generation: u64,
+    /// The model a quick copy was last made of, or tried to be: once each.
+    quickened: Option<PathBuf>,
 }
 
 impl Worker {
@@ -296,6 +301,7 @@ impl Worker {
             heads,
             model: None,
             model_generation: u64::MAX,
+            quickened: None,
         }
     }
 
@@ -314,9 +320,17 @@ impl Worker {
                     if let Some(t) = self.pick(&st) {
                         break t;
                     }
-                    // Nothing to split: give back the 4 to 5 GB the model
-                    // holds while it runs. Loading it again takes a second.
+                    // Nothing to split: give back the memory the model holds.
+                    // Loading it again doesn't take long.
                     self.model = None;
+                    // And make the next time quick, while there's nothing
+                    // else to do.
+                    if st.settings.enabled && self.quickened != st.settings.model {
+                        self.quickened = st.settings.model.clone();
+                        if let Some(path) = st.settings.model.clone() {
+                            break Task::MakeQuick(path);
+                        }
+                    }
                     st = shared.wake.wait(st).unwrap_or_else(|e| e.into_inner());
                 }
             };
@@ -418,6 +432,13 @@ impl Worker {
                         p.mark_all_done();
                     }
                     job.progress = Some(p);
+                }
+            }
+            Task::MakeQuick(path) => {
+                // Checking one that's there now saves the next load doing it.
+                let _ = quick::find(&path);
+                if let Err(e) = quick::make(&path) {
+                    eprintln!("stems: couldn't make a quick copy of the model: {e}");
                 }
             }
             Task::LoadModel(path, generation) => {

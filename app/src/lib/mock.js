@@ -531,7 +531,7 @@ export function createMockBackend() {
       }
       return out;
     },
-    stemsInfo: async () => ({ ...stemsCfg, model: stemsModel }),
+    stemsInfo: async () => ({ ...stemsCfg, modelBytes: 510_700_000, model: stemsModel }),
     setStems: async (change) => {
       for (const k of ['enabled', 'cacheGb']) if (change[k] != null) stemsCfg[k] = change[k];
       if (change.enabled === false && stemsModel.state !== 'ready') {
@@ -539,11 +539,11 @@ export function createMockBackend() {
         stopModel();
         modelAsked = asked;
       } else if (change.enabled && modelAsked) startModel();
-      return { ...stemsCfg, model: stemsModel };
+      return { ...stemsCfg, modelBytes: 510_700_000, model: stemsModel };
     },
     clearStemsCache: async () => {
       stemsCfg.cacheBytes = 0;
-      return { ...stemsCfg, model: stemsModel };
+      return { ...stemsCfg, modelBytes: 510_700_000, model: stemsModel };
     },
     stemsModel: async () => stemsModel,
     onStemsModel: async (fn) => {
