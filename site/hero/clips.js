@@ -39,7 +39,7 @@ const TICK = 1000 / 12;
 
 /** The base styles, scoped to the player's root. */
 const BASE_CSS = `
-.hero-clips { position: relative; width: 1440px; height: 920px; overflow: hidden; --tilt: 0deg; --anchor: 50% 0%; }
+.hero-clips { position: relative; width: 1440px; height: 1020px; overflow: hidden; --tilt: 0deg; --anchor: 50% 0%; }
 .hero-clips .app-host { height: 900px; }
 .hero-clips video { position: absolute; inset: 0; width: 100%; height: 100%; display: block; z-index: 0; }
 .hero-clips video.front { z-index: 1; }
@@ -56,6 +56,8 @@ const BASE_CSS = `
   position: absolute; pointer-events: none; z-index: 2;
   -webkit-mask: var(--ctl-mask) 0 0 / 100% 100% no-repeat;
   mask: var(--ctl-mask) 0 0 / 100% 100% no-repeat alpha;
+  /* (Lower than it was recorded, by --ctl-down: the video isn't shrunk.) */
+  margin-top: var(--ctl-down, 70px);
   opacity: 0;
   transform: translate(calc(var(--hw-from, -40px) * var(--away-x, 0)), calc(var(--hw-from, -40px) * var(--away-y, 0.5))) scale(var(--away-s, 0.985));
   filter: blur(calc(var(--hw-blur, 10px) * 0.52));
@@ -65,6 +67,8 @@ const BASE_CSS = `
   opacity: 1; transform: none; filter: none;
   transition: transform var(--smooth-ms) var(--smooth) var(--hw-delay, 110ms), opacity var(--smooth-ms) var(--smooth) var(--hw-delay, 110ms), filter 340ms cubic-bezier(0.2, 0, 0, 1) var(--hw-delay, 110ms);
 }
+/* The video keeps its size with the controller (recorded at 0.91). */
+.hero-clips[data-hand="controller"] .app-host.app-host { transform: scale(var(--ctl-scale, 1)); }
 .hero-clips svg.links path { transition: none !important; }
 `;
 
@@ -584,13 +588,39 @@ export async function mountClips(host, opts = {}) {
         svg.append(p);
       }
       if (p.getAttribute('class') !== cls) p.setAttribute('class', cls);
-      if (p.getAttribute('d') !== d) p.setAttribute('d', d);
-      const s = p.style;
+      const [path, k2] = where(d);
+      if (p.getAttribute('d') !== path) p.setAttribute('d', path);
+      // (Dashes as long against the line as they were.)
+      const dash = (v) => (k2 === 1 || !v ? v : String(v).replace(/-?[\d.]+/g, (x) => String(Math.round(x * k2 * 100) / 100)));
+      const s = p.style, A = dash(da), O = dash(dof);
       if (s.opacity !== String(op)) s.opacity = op;
-      if (s.strokeDasharray !== da) s.strokeDasharray = da;
-      if (s.strokeDashoffset !== dof) s.strokeDashoffset = dof;
+      if (s.strokeDasharray !== A) s.strokeDasharray = A;
+      if (s.strokeDashoffset !== O) s.strokeDashoffset = O;
     });
   }
+  // The lines were recorded with the video shrunk (0.91, tipped 3 degrees
+  // about its top) and the controller higher: each end is put where its own
+  // now is, the app's and the controller's, and the curve between them with
+  // them. (M xc yc C xc ym, xa ym, xa ya: the controller's end, then the
+  // app's, the bends half way.)
+  const REC = { s: 0.91, cos: Math.cos(Math.PI / 60), sin: Math.sin(Math.PI / 60), d: 2400 };
+  const moved = new Map();
+  function where(d) {
+    const key = `${d}|${ctl.scale}|${ctl.down}`;
+    let m = moved.get(key);
+    if (m) return m;
+    const n = d.match(/-?[\d.]+/g)?.map(Number);
+    if (n?.length !== 8) return [d, 1];
+    const [xc, yc, , , , , xa, ya] = n;
+    const ys = (ya * REC.d) / (REC.d * REC.cos - ya * REC.sin), p = REC.d / (REC.d + ys * REC.sin);
+    const X = 720 + ((xa - 720) / p / REC.s) * ctl.scale, Y = (ys / REC.s) * ctl.scale, C = yc + ctl.down, M = (C + Y) / 2;
+    const f = (v) => Math.round(v * 10) / 10;
+    m = [`M${xc} ${f(C)} C ${xc} ${f(M)}, ${f(X)} ${f(M)}, ${f(X)} ${f(Y)}`, Math.abs(C - Y) / Math.max(1, Math.abs(yc - ya))];
+    if (moved.size > 4000) moved.clear();
+    moved.set(key, m);
+    return m;
+  }
+  const ctl = { scale: 1, down: 70 };
   const linksAt = (t, f) => t.links[f] || [];
   const anyLinks = (t, f, n) => { for (let k = f; k < f + n; k++) if (t.links[k]) return true; return false; };
   function linkFrames() {
@@ -733,6 +763,8 @@ export async function mountClips(host, opts = {}) {
   }
   function setVars(vars) {
     for (const [k, v] of Object.entries(vars || {})) root.style.setProperty(k, v);
+    if (vars?.['--ctl-scale'] !== undefined) ctl.scale = parseFloat(vars['--ctl-scale']) || 1;
+    if (vars?.['--ctl-down'] !== undefined) ctl.down = parseFloat(vars['--ctl-down']) || 0;
   }
 
   if (opts.paused) paused = true;

@@ -21,8 +21,13 @@
   <!-- Geist, served from here (no other site to reach before the page can
        draw its text); the Latin file is fetched straight away. -->
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="style.css?v=20261123h">
-  <script src="tune.js?v=20261123a"></script>
+  <link rel="stylesheet" href="style.css?v=20261123i">
+  <script>
+    // (The phone preview's frame, opened by this same site with the Tune
+    // panel showing; nothing for anyone else.)
+    if (self !== top && /[?&]frame=1/.test(location.search)) { try { if (parent.location.origin === location.origin && parent.tune?.shown) document.write('<script src="tune-frame.js?v=20261123a"><\/script>'); } catch {} }
+  </script>
+  <script src="tune.js?v=20261123b"></script>
   <script>
     // Live updates while working on the site locally (.claude/serve.py
     // streams the files whose contents changed). Stylesheets swap in place,
@@ -123,98 +128,128 @@
     })();
   </script>
   <script>
-    // Being tried this round, all in one place: each a control in the Tune
-    // panel (the Try group, at its top) and an address param. A param sets
-    // the value for the visit, whatever the panel has saved (the panel's
-    // own restores in the first few seconds are ignored then); moving the
-    // control by hand after that takes over. Every switch is an attribute
-    // on <html>, a custom property or an event, so nothing here does
-    // anything until it's read.
+    // Being tried, all in one place: each a control in the Tune panel (the
+    // Try group, at its top, in folders; Phone holds what only a phone
+    // shows) and an address param. A param sets the value for the visit,
+    // whatever the panel has saved (the panel's own restores in the first
+    // few seconds are ignored then); moving the control by hand after that
+    // takes over. Every switch is an attribute on <html>, a custom property
+    // or an event, so nothing here does anything until it's read.
     (() => {
       const d = document.documentElement;
       const q = new URLSearchParams(location.search);
       const T = window.tune;
-      const own = (key, value, valid) => {
-        const raw = q.get(key);
-        const from = raw != null && valid(raw) ? raw : null;
-        return { start: from ?? value, locked: from != null };
-      };
-      const control = (make, key, opts) => {
-        const { start, locked } = own(key, opts.value, opts.valid);
-        let lock = locked, n = 0;
-        if (locked) setTimeout(() => (lock = false), 3000);
-        const onInput = (v) => {
-          // (A param's value stands until the panel is moved by hand.)
-          if (lock && n++ > 0 && String(v) !== String(start)) return;
-          opts.apply(v);
-        };
-        make({ label: `Try: ${opts.label}`, value: start, ...opts.rest, onInput });
-      };
-      const select = (key, opts) => control((o) => T.select(o), key, { ...opts, valid: (v) => opts.options.some(([x]) => x === v), rest: { options: opts.options } });
-      const slider = (key, opts) => control((o) => T.slider(o), key, { ...opts, valid: (v) => Number.isFinite(+v), rest: { min: opts.min, max: opts.max, step: opts.step, unit: opts.unit || '' } });
-      const color = (key, opts) => control((o) => T.color(o), key, { ...opts, valid: (v) => /^#?[0-9a-f]{6}$/i.test(v), rest: {} });
-      const set = (name, v) => { if (v === '' || v == null) delete d.dataset[name]; else d.dataset[name] = v; };
-      window.tryState = { recPreset: 'today' };
+      const st = window.tryState = {};
       if (!T) return;
-
-      // What's behind the hero's GitHub button and the mouse/controller switch.
-      select('surface', { label: 'GitHub and switch', value: 'today', options: [['today', 'Today'], ['glass', 'Glass'], ['crisp', 'Crisp'], ['raised', 'Raised']], apply: (v) => set('surface', v === 'today' ? '' : v) });
-
-      // The hero's two buttons (and the same family in the menu, the
-      // open-source card and the download sheet).
-      select('btn', { label: 'Buttons', value: 'today', options: [['today', 'Today'], ['ink', 'Ink'], ['label', 'Record label'], ['split', 'Split'], ['key', 'Key']], apply: (v) => { set('btn', v === 'today' ? '' : v); dispatchEvent(new Event('try-buttons')); dispatchEvent(new Event('try-squircles')); } });
-
-      // The nav's surface, and what the capsule's Download control looks like.
-      select('navglass', { label: 'Nav surface', value: 'solid', options: [['solid', 'Solid'], ['glass', 'Glass'], ['mixed', 'Solid top'], ['light', 'Light blur']], apply: (v) => set('navglass', v === 'solid' ? '' : v) });
-      // (Three sets, fill and edge together; the colour alone by hand after.)
-      const NAV = { menu: ['#141417', 0.09], lifted: ['#1d1d21', 0.14], black: ['#0b0b0d', 0.2] };
-      const fill = (v) => d.style.setProperty('--nav-fill', v.startsWith('#') ? v : `#${v}`);
-      let navSet = 'menu';
-      select('navset', { label: 'Nav colour', value: 'menu', options: [['menu', 'Menu (now)'], ['lifted', 'Lifted'], ['black', 'Black, firm edge']], apply: (v) => {
-        navSet = v; fill(NAV[v][0]); d.style.setProperty('--nav-line', `rgb(255 255 255 / ${NAV[v][1]})`);
-      } });
-      // (Only a change counts: the panel hands every control its value back
-      // more than once as it loads, which would undo the set above.)
-      let navHand = '#141417';
-      color('navfill', { label: 'Nav colour by hand', value: '#141417', apply: (v) => { if (v === navHand) return; navHand = v; fill(v); } });
-      // The nav's Download at the very top of the page too, where it fits.
-      select('navtop', { label: 'Nav download at top', value: 'off', options: [['off', 'Hidden (now)'], ['on', 'Shown']], apply: (v) => { set('navtop', v === 'on' ? 'on' : ''); requestAnimationFrame(() => window.navMeasure?.()); } });
-      select('navdl', { label: 'Nav download', value: 'pill', options: [['pill', 'Pill'], ['ghost', 'Outline'], ['text', 'Text'], ['pillround', 'Round pill']], apply: (v) => { set('navdl', v === 'pill' ? '' : v); requestAnimationFrame(() => window.navMeasure?.()); } });
-
-      // The record behind a phone's hero: a preset, or each part by hand.
-      const rec = window.tryState.rec = { op: 1, size: 1, fade: 0 };
-      const recNow = () => { d.style.setProperty('--rec-op', String(rec.op)); dispatchEvent(new CustomEvent('try-rec', { detail: rec })); };
-      const PRESETS = { today: { op: 1, size: 1, fade: 0 }, darker: { op: 0.55, size: 1, fade: 0 }, smaller: { op: 1, size: 0.72, fade: 0 }, lower: { op: 1, size: 1, fade: 260 } };
-      select('recbg', { label: 'Record preset', value: 'today', options: [['today', 'Today'], ['darker', 'Darker'], ['smaller', 'Smaller'], ['lower', 'Lower']], apply: (v) => { window.tryState.recPreset = v; Object.assign(rec, PRESETS[v]); recNow(); } });
-      const recSlider = (key, label, prop, min, max, step, def) => {
-        let last = def;
-        slider(key, { label, value: def, min, max, step, apply: (v) => {
-          // (Only a change counts, so the panel handing its value back as it
-          // loads leaves the preset.)
-          if (v === last) return;
+      const num = (v) => Number.isFinite(+v);
+      const control = (make, key, o, valid, rest) => {
+        const raw = q.get(key), from = raw != null && valid(raw) ? (typeof o.value === 'number' ? +raw : typeof o.value === 'boolean' ? raw === 'on' || raw === 'true' : raw) : null;
+        const start = from ?? o.value;
+        let lock = from != null, first = true, last;
+        if (lock) setTimeout(() => (lock = false), 3000);
+        // (Only a change counts: the panel hands every control its value
+        // back more than once as it loads, which would undo a preset. And a
+        // param's value stands until the panel is moved by hand.)
+        make({ label: `Try: ${o.label}`, folder: o.folder, value: start, ...rest, onInput: (v) => {
+          if (!first && (v === last || (lock && String(v) !== String(start)))) return;
           last = v;
-          rec[prop] = v; recNow();
+          o.apply(v, first);
+          first = false;
         } });
       };
-      recSlider('recop', 'Record opacity', 'op', 0.2, 1, 0.05, 1);
-      recSlider('recsize', 'Record size', 'size', 0.5, 1.2, 0.02, 1);
-      recSlider('recfade', 'Record fade from (px)', 'fade', 0, 500, 10, 0);
+      const select = (key, o) => control((x) => T.select(x), key, o, (v) => o.options.some(([k]) => k === v), { options: o.options });
+      const slider = (key, o) => control((x) => T.slider(x), key, o, num, { min: o.min, max: o.max, step: o.step, unit: o.unit || '' });
+      const color = (key, o) => control((x) => T.color(x), key, o, (v) => /^#?[0-9a-f]{6}$/i.test(v), {});
+      const toggle = (key, o) => control((x) => (T.toggle || T.select)(x), key, o, (v) => /^(on|off|true|false)$/.test(v), {});
+      const set = (name, v) => { if (v === '' || v == null || v === false) delete d.dataset[name]; else d.dataset[name] = v === true ? '' : v; };
+      const css = (name, v) => d.style.setProperty(name, v);
+      const fire = (name) => dispatchEvent(new Event(name));
+      const remeasure = () => requestAnimationFrame(() => window.navMeasure?.());
 
-      // The phone's download: what a tap does, and the button's words.
-      select('dl', { label: 'Phone tap', value: 'sheet', options: [['sheet', 'Sheet'], ['sheet2', 'Sheet, other words'], ['today', 'Today']], apply: (v) => { window.tryState.dl = v; set('dl', v === 'today' ? 'today' : ''); dispatchEvent(new Event('try-dl')); } });
-      const LABELS = { get: 'Get on Mac', send: 'Send to Mac', download: 'Download' };
-      const putLabel = (v) => { window.tryState.label = v; const go = () => { for (const e of document.querySelectorAll('.dlp-label')) e.textContent = LABELS[v] || LABELS.get; window.navMeasure?.(); }; if (document.readyState === 'loading') addEventListener('DOMContentLoaded', go, { once: true }); else go(); };
-      select('label', { label: 'Phone button', value: 'get', options: [['get', 'Get on Mac'], ['send', 'Send to Mac'], ['download', 'Download']], apply: putLabel });
+      // Preview: a phone, beside the panel, on the Mac.
+      if (T.shown) {
+        T.select({ label: 'Try: Show as a phone', folder: 'Preview', value: 'off', options: [['off', 'Off'], ['390x844', 'iPhone 15'], ['375x667', 'iPhone SE'], ['430x932', 'iPhone Pro Max'], ['820x1180', 'iPad']], onInput: (v) => { if (document.body) T.phone(v); else addEventListener('DOMContentLoaded', () => T.phone(v), { once: true }); } });
+        const where = () => T.framePage() || window;
+        T.button({ label: 'Try: Open the phone sheet', folder: 'Preview', onPress: () => where().openPhoneSheet?.() });
+        T.button({ label: 'Try: Play rubber band (simulated)', folder: 'Preview', onPress: () => where().footPlay?.() });
+      }
+
+      // Nav. The capsule at the top of the page, against the site's text
+      // (over: past it by this much each side), and once it's scrolled.
+      const NAVW = { over: 20, under: -18, compact: 'compact', full: 'full' };
+      st.nav = { w: 'over', by: 20, more: 0 };
+      select('navw', { label: 'Desktop width', folder: 'Nav', value: 'over', options: [['over', 'Past the text'], ['under', 'Inside the text'], ['compact', 'Near scrolled'], ['full', 'Full (before)']], apply: (v, first) => { st.nav.w = v; if (typeof NAVW[v] === 'number') { st.nav.by = NAVW[v]; if (!first) T.set('Try: Desktop, past the text (px)', NAVW[v]); } remeasure(); } });
+      slider('navby', { label: 'Desktop, past the text (px)', folder: 'Nav', value: 20, min: -260, max: 80, step: 1, apply: (v, first) => { if (first && !q.has('navby')) return; st.nav.by = v; if (typeof NAVW[st.nav.w] !== 'number') st.nav.w = 'over'; remeasure(); } });
+      slider('navmore', { label: 'Desktop, scrolled, wider (px)', folder: 'Nav', value: 0, min: 0, max: 160, step: 2, apply: (v) => { st.nav.more = v; remeasure(); } });
+      color('navink', { label: 'Colour', folder: 'Nav', value: '#070709', apply: (v) => css('--nav-fill', v.startsWith('#') ? v : `#${v}`) });
+      slider('navedge', { label: 'Edge strength', folder: 'Nav', value: 0.09, min: 0, max: 0.2, step: 0.01, apply: (v) => css('--nav-line', `rgb(255 255 255 / ${v})`) });
+      select('navglass', { label: 'Surface', folder: 'Nav', value: 'solid', options: [['solid', 'Solid'], ['glass', 'Glass'], ['mixed', 'Solid at the top'], ['light', 'Light blur']], apply: (v) => set('navglass', v === 'solid' ? '' : v) });
+      select('navtop', { label: 'Download at the top', folder: 'Nav', value: 'off', options: [['off', 'Hidden'], ['on', 'Shown where it fits']], apply: (v) => { set('navtop', v === 'on' ? 'on' : ''); remeasure(); } });
+      select('navdl', { label: 'Download looks like', folder: 'Nav', value: 'pill', options: [['pill', 'Pill'], ['ghost', 'Outline'], ['text', 'Text'], ['pillround', 'Round pill']], apply: (v) => { set('navdl', v === 'pill' ? '' : v); remeasure(); } });
+
+      // Wordmark: the letter spacing of "Interlude", everywhere it's written
+      // (the nav's is one size drawn smaller once scrolled).
+      st.wm = {};
+      const track = (key, label, name, value, after) => slider(key, { label, folder: 'Wordmark', value, min: -0.12, max: 0.02, step: 0.005, unit: 'em', apply: (v) => { css(name, `${v}em`); after?.(); } });
+      track('wmnav', 'Nav', '--wmk-nav', -0.045, remeasure);
+      track('wmfoot', 'Footer, small', '--wm-foot', -0.04);
+      track('wmbig', 'Footer, large', '--wm-big', -0.075, () => fire('try-wordmark'));
+      track('wmrec', 'Note record', '--wm-rec', -0.03);
+
+      // Buttons, and the film grain over them (View on GitHub and the
+      // mouse/controller switch, or all of the hero's).
+      select('surface', { label: 'GitHub and switch', folder: 'Buttons', value: 'today', options: [['today', 'Today'], ['ink', 'Near-black'], ['glass', 'Glass'], ['crisp', 'Firm edge'], ['raised', 'Raised grey']], apply: (v) => set('surface', v === 'today' ? '' : v) });
+      select('btn', { label: 'Both hero buttons', folder: 'Buttons', value: 'today', options: [['today', 'Today'], ['ink', 'Ink'], ['label', 'Record label'], ['split', 'Split'], ['key', 'Key']], apply: (v) => { set('btn', v === 'today' ? '' : v); fire('try-buttons'); fire('try-squircles'); } });
+      select('btngrain', { label: 'Film grain on them', folder: 'Buttons', value: 'off', options: [['off', 'None'], ['under', 'Under words'], ['over', 'Over words']], apply: (v) => set('btngrain', v === 'off' ? '' : v) });
+      slider('btngrainamt', { label: 'Grain strength', folder: 'Buttons', value: 1, min: 0.2, max: 3, step: 0.1, unit: 'x', apply: (v) => css('--btn-grain', String(v)) });
+      toggle('btngrainall', { label: 'Grain on Download too', folder: 'Buttons', value: false, apply: (v) => set('btngrainall', v) });
+
+      // Controller mode.
+      select('switchat', { label: 'Switch sits', folder: 'Controller', value: 'left', options: [['left', 'Left'], ['center', 'Centred']], apply: (v) => set('switchat', v === 'left' ? 'left' : '') });
+      st.ctl = { scale: 1, down: 70 };
+      slider('ctlscale', { label: 'Video size', folder: 'Controller', value: 100, min: 88, max: 100, step: 0.5, unit: '%', apply: (v) => { st.ctl.scale = v / 100; fire('try-controller'); } });
+      slider('ctldown', { label: 'Controller down', folder: 'Controller', value: 70, min: 0, max: 130, step: 2, unit: 'px', apply: (v) => { st.ctl.down = v; fire('try-controller'); } });
+      select('arrive', { label: 'Glint', folder: 'Controller', value: 'on', options: [['on', 'When out of view'], ['always', 'Every time'], ['off', 'None']], apply: (v) => (st.arrive = v) });
+      slider('arriveamt', { label: 'Glint strength', folder: 'Controller', value: 0.1, min: 0.02, max: 0.3, step: 0.01, apply: (v) => css('--arrive', String(v)) });
+
+      // The record behind the hero: what a phone shows, and the desktop too
+      // if it's ticked. A composition, or each part of it by hand.
+      const NONE = { x: 0, y: 0, zoom: 1, rings: 1, fade: 0, len: 0, op: 1 };
+      const COMP = {
+        today: {},
+        lower: { fade: 260, len: 420 },
+        sunk: { y: 70, fade: 300, len: 300 },
+        low: { y: 150, zoom: 0.9, fade: 330, len: 200 },
+        rim: { y: 120, zoom: 0.72, rings: 0.5, fade: 60, len: 40 },
+        small: { y: 60, zoom: 0.62, rings: 0.62, fade: 120, len: 110, op: 0.9 },
+        darker: { op: 0.55 },
+      };
+      const rec = st.rec = { ...NONE, both: false };
+      const recNow = () => { css('--rec-op', String(rec.op)); set('recboth', rec.both); fire('try-rec'); };
+      const part = { recx: ['x', 'Across'], recy: ['y', 'Down'], reczoom: ['zoom', 'Size'], recrings: ['rings', 'Rings reach'], recfade: ['fade', 'Fades in by'], reclen: ['len', 'Fade length'], recop: ['op', 'Opacity'] };
+      const LBL = { recx: 'Across (px)', recy: 'Down (px)', reczoom: 'Size', recrings: 'Rings run out', recfade: 'Fades in by (px)', reclen: 'Fade length (px)', recop: 'Opacity' };
+      select('recbg', { label: 'Phone composition', folder: 'Record', value: 'today', options: [['today', 'Today'], ['lower', 'Lower, as was'], ['sunk', 'Sunk'], ['low', 'Low arc'], ['rim', 'Whole rim'], ['small', 'Small'], ['darker', 'Darker']], apply: (v, first) => { Object.assign(rec, NONE, COMP[v] || {}); recNow(); if (!first) for (const k in part) T.set(`Try: ${LBL[k]}`, rec[part[k][0]]); } });
+      const R = [['recx', -300, 300, 2], ['recy', -120, 400, 2], ['reczoom', 0.35, 1.6, 0.01], ['recrings', 0.2, 1.2, 0.01], ['recfade', 0, 700, 5], ['reclen', 0, 700, 5], ['recop', 0.1, 1, 0.05]];
+      for (const [k, min, max, step] of R) slider(k, { label: LBL[k], folder: 'Record', value: NONE[part[k][0]], min, max, step, apply: (v, first) => { if (first && !q.has(k)) return; rec[part[k][0]] = v; recNow(); } });
+      toggle('recboth', { label: 'Apply to desktop too', folder: 'Record', value: false, apply: (v) => { rec.both = v; recNow(); } });
+
+      // Phone.
+      select('dl', { label: 'Download tap', folder: 'Phone', value: 'sheet', options: [['sheet', 'Sheet'], ['sheet2', 'Sheet, other words'], ['today', 'Share at once']], apply: (v) => { st.dl = v; set('dl', v === 'today' ? 'today' : ''); fire('try-dl'); } });
+      const LABELS = { send: 'Send to Mac', get: 'Get on Mac', download: 'Download' };
+      select('label', { label: 'Button says', folder: 'Phone', value: 'send', options: [['send', 'Send to Mac'], ['get', 'Get on Mac'], ['download', 'Download']], apply: (v) => { st.label = v; const go = () => { for (const e of document.querySelectorAll('.dlp-label')) e.textContent = LABELS[v] || LABELS.send; window.navMeasure?.(); }; if (document.readyState === 'loading') addEventListener('DOMContentLoaded', go, { once: true }); else go(); } });
+      slider('footfx', { label: 'Footer effect size', folder: 'Phone', value: 1, min: 0.75, max: 1.8, step: 0.05, apply: (v) => { st.footfx = +v; fire('try-footfx'); } });
 
       // Where the note's card sits beside the questions (a wide screen).
-      select('notelay', { label: 'Note layout', value: 'left', options: [['left', 'Card left'], ['right', 'Card right'], ['mid', 'Card right, mid']], apply: (v) => set('notelay', v) });
+      select('notelay', { label: 'Desktop card', folder: 'Note', value: 'right', options: [['right', 'Right, follows'], ['mid', 'Right, centred'], ['left', 'Left']], apply: (v) => set('notelay', v === 'right' ? '' : v) });
 
-      // The footer name's effect on phones, against the word (1: as on a Mac).
-      slider('footfx', { label: 'Footer effect', value: 1, min: 0.75, max: 1.8, step: 0.05, apply: (v) => { window.tryState.footfx = +v; dispatchEvent(new Event('try-footfx')); } });
+      // The footer's effect as the page is pulled past its end.
+      st.pull = { max: 0.8, soon: 0.2 };
+      slider('pullmax', { label: 'Pull strength', folder: 'Footer', value: 0.8, min: 0.2, max: 1, step: 0.05, apply: (v) => (st.pull.max = v) });
+      slider('pullsoon', { label: 'Pull needed (of screen)', folder: 'Footer', value: 0.2, min: 0.05, max: 0.6, step: 0.01, apply: (v) => (st.pull.soon = v) });
 
-      // Squircle corners: on or off, and how smooth.
-      select('squircles', { label: 'Squircles', value: 'on', options: [['on', 'On'], ['off', 'Off']], apply: (v) => { window.tryState.sqOn = v !== 'off'; dispatchEvent(new Event('try-squircles')); } });
-      slider('smooth', { label: 'Squircle smooth', value: /^\d+$/.test(q.get('squircles') || '') ? +q.get('squircles') : 60, min: 0, max: 100, step: 5, unit: '%', apply: (v) => { window.tryState.smooth = +v; dispatchEvent(new Event('try-squircles')); } });
+      // Squircle corners.
+      select('squircles', { label: 'Squircles', folder: 'Corners', value: 'on', options: [['on', 'On'], ['off', 'Off']], apply: (v) => { st.sqOn = v !== 'off'; fire('try-squircles'); } });
+      slider('smooth', { label: 'Smoothing', folder: 'Corners', value: /^\d+$/.test(q.get('squircles') || '') ? +q.get('squircles') : 60, min: 0, max: 100, step: 5, unit: '%', apply: (v) => { st.smooth = +v; fire('try-squircles'); } });
     })();
   </script>
 </head>
@@ -334,7 +369,9 @@
         // Download pill, the same as above and below them (48 = 6 + 36 + 6).
         // (The same space between the brand and the sections as between the
         // sections and the actions.)
-        const end = 6, gap = 26, gapA = 26, inset = 12;
+        // (Once scrolled, wider by this much if it's asked for: the Try group.)
+        const nw = window.tryState?.nav || { w: 'full', by: 0, more: 0 };
+        const end = 6, gap = 26 + nw.more / 2, gapA = 26 + nw.more / 2, inset = 12;
         // The brand in the capsule: the 36px icon, then the name drawn at
         // WORD of its laid-out (bar) size.
         // (Its exact width, undoing whatever scale it's drawn at now.)
@@ -356,7 +393,14 @@
         // the large icon all round (so as near the screen's edges as a phone's
         // margin allows, 12px on a wide screen), its corners concentric with
         // the icon's.
-        geo.side0 = narrow ? Math.max(4, x0 - 10) : 12;
+        // On a wide screen its width is against the site's text (a little past
+        // it, a little inside it) or a little over its own once scrolled,
+        // never less than the brand and the sections need; inside the text,
+        // both move in with it.
+        const need = 12 + 36 * ICON + GAP + ww + 24 + lw + 22;
+        const asked = nw.w === 'full' ? 12 : nw.w === 'compact' ? (W - capW - 80) / 2 : x0 - nw.by;
+        geo.side0 = narrow ? Math.max(4, x0 - 10) : Math.max(12, Math.min(asked, (W - need) / 2));
+        geo.brandTop = narrow ? 0 : Math.max(0, geo.side0 + 12 - (x0 + brand.offsetLeft));
         geo.top0 = PAD;
         geo.h0 = geo.H - PAD;
         geo.r0 = (CAP_R - 6) * ICON + (geo.h0 - 36 * ICON) / 2;
@@ -372,13 +416,12 @@
         // Shown at the top too (Try, "Nav download at top"), if it fits:
         // on a phone, clear of the large name; on a wide screen, with the
         // sections moved left to make room.
-        geo.top = false; geo.linksTop = 0;
+        geo.top = false; geo.linksTop = narrow ? 0 : Math.min(0, W - geo.side0 - 22 - (x0 + links.offsetLeft + lw));
         if (d.dataset.navtop === 'on') {
-          const g0 = narrow ? Math.max(4, x0 - 10) : 12;
-          const aTop = W - g0 - 10 - (mw ? mw + 4 : 0) - aw;
-          const nameEnd = x0 + brand.offsetLeft + 36 * ICON + GAP + ww;
+          const aTop = W - geo.side0 - 10 - (mw ? mw + 4 : 0) - aw;
+          const nameEnd = x0 + brand.offsetLeft + geo.brandTop + 36 * ICON + GAP + ww;
           if (narrow) geo.top = aTop - nameEnd >= 8;
-          else { geo.linksTop = Math.min(0, aTop - 26 - (x0 + links.offsetLeft + lw)); geo.top = x0 + links.offsetLeft + geo.linksTop - nameEnd >= 24; }
+          else { geo.linksTop = Math.min(geo.linksTop, aTop - 26 - (x0 + links.offsetLeft + lw)); geo.top = x0 + links.offsetLeft + geo.linksTop - nameEnd >= 24; }
         }
         draw();
         requestAnimationFrame(() => window.menuPlace?.());
@@ -423,7 +466,7 @@
         // The capsule's middle is 34px down; the bar's is halfway down the
         // row, below the top padding (--nav-pad).
         const dy = 34 - (PAD + (geo.H - PAD) / 2);
-        brand.style.transform = `translate(${r(geo.b * p)}px, ${r(dy * v)}px)`;
+        brand.style.transform = `translate(${r(geo.b * p + geo.brandTop * (1 - p))}px, ${r(dy * v)}px)`;
         icon.style.transform = `scale(${r(ic)})`;
         // The bar's gap between icon and name (--brand-gap) closes to the
         // capsule's 10px as it forms.
@@ -806,11 +849,11 @@
         <span><b>Interlude.dmg</b><small>For macOS 11+ on Apple silicon</small></span>
       </div>
       <div class="cta">
-        <a class="btn big" href="https://github.com/zain-merchant/interlude/releases/latest/download/Interlude.dmg">
+        <a class="btn big" href="https://github.com/zain-merchant/interlude/releases/latest/download/Interlude.dmg"><i class="grain grain--btn" aria-hidden="true"></i>
           <svg class="dlp-new" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v8m0 0L4.5 6.5M8 10l3.5-3.5M3 13h10"/></svg><svg class="on-phone dlp-old" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 9.5V2m0 0L5.25 4.75M8 2l2.75 2.75M5.5 7H5a1.5 1.5 0 0 0-1.5 1.5v4A1.5 1.5 0 0 0 5 14h6a1.5 1.5 0 0 0 1.5-1.5v-4A1.5 1.5 0 0 0 11 7h-.5"/></svg>
           <span class="on-mac">Download for Mac</span><span class="on-phone dlp-new dlp-label">Get on Mac</span><span class="on-phone dlp-old">Get it on your Mac</span>
         </a>
-        <a class="btn ghost big" href="https://github.com/zain-merchant/interlude" target="_blank" rel="noopener">View on GitHub</a>
+        <a class="btn ghost big" href="https://github.com/zain-merchant/interlude" target="_blank" rel="noopener"><i class="grain grain--btn" aria-hidden="true"></i><span>View on GitHub</span></a>
       </div>
       <!-- Under the buttons, where Mac download pages put it: the version,
            what it runs on, the licence (Hero: download block). -->
@@ -838,7 +881,7 @@
           <button type="button" role="radio" aria-checked="false" data-mode="controller">
             <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="1.5" y="4" width="13" height="8" rx="2"/><circle cx="5" cy="8" r="1.8"/><circle cx="11" cy="8" r="1.8"/></svg>Controller
           </button>
-          <i class="thumb" aria-hidden="true"></i>
+          <i class="thumb" aria-hidden="true"></i><i class="grain grain--btn" aria-hidden="true"></i>
         </div>
         <span class="shot-tag">Works with 140+ MIDI controllers</span>
       </div>
@@ -1122,7 +1165,7 @@
             el('circle', { cx: 2.3, cy: -12, r: 3.6, fill: 'none', stroke: '#ff9b45', 'stroke-width': 1.2 }, tileG);
             // Its name under it, larger; under that, which side.
             const n = el('text', { y: 11, 'text-anchor': 'middle', 'font-size': 7.4, 'font-weight': 650, 'letter-spacing': -0.25, style: ink(92), 'font-family': 'Geist, sans-serif' }, lab);
-            n.textContent = 'Interlude';
+            n.textContent = 'Interlude'; n.setAttribute('class', 'rec-name'); n.removeAttribute('letter-spacing');
             const sb = el('text', { y: 18, 'text-anchor': 'middle', 'font-size': 3.3, 'font-weight': 600, 'letter-spacing': 0.9, style: ink(70), 'font-family': 'Geist, sans-serif' }, lab);
             sb.textContent = `SIDE ${side}`;
             el('circle', { r: 1.3, fill: '#0b0b0d' }, lab);
@@ -1559,6 +1602,8 @@
       addEventListener('pointerup', letGo);
       addEventListener('pointercancel', letGo);
 
+      // (For the Try group, Preview: the sheet on a Mac.)
+      window.openPhoneSheet = () => show(document.activeElement);
       document.addEventListener('click', (e) => {
         const a = e.target.closest?.('a[href$="/Interlude.dmg"]');
         if (!a || !phone.matches || e.defaultPrevented || e.button) return;
@@ -1594,7 +1639,7 @@
     // under it follows; the switch picks mouse or controller.
     (async () => {
       const loaded = new Promise((ok) => (document.readyState === 'complete' ? ok() : addEventListener('load', ok, { once: true })));
-      const fx = await import('./hero-fx.js?v=20261123a').catch(() => null);
+      const fx = await import('./hero-fx.js?v=20261123b').catch(() => null);
       const frame = document.querySelector('.stage-frame');
       const screen = frame.querySelector('.screen');
       const live = frame.querySelector('.live');
@@ -1631,26 +1676,21 @@
       }
 
       const q = new URLSearchParams(location.search);
-      // Being tried on phones (the Try group): the record drawn smaller
-      // round the same middle, or fading in further down (its opacity is
-      // style.css's). The base values are whatever the panels settled on.
-      // (A button treatment changes a button's width: the record's holes
-      // under them are measured again.)
-      addEventListener('try-buttons', () => requestAnimationFrame(() => fx?.relayout?.()));
-      if (fx) {
-        const phone = matchMedia('(max-width: 480px)');
-        let base = null;
+      // The record's composition on a phone, and on the desktop if it's
+      // asked for (the Try group, Record): laid over whatever the Hero
+      // record panel holds, never written to it.
+      if (fx?.adj) {
+        const small = matchMedia('(max-width: 480px)');
         const applyRec = () => {
           const r = window.tryState?.rec;
-          if (!r || !phone.matches) return;
-          base ??= { size: fx.T.size, fadeAt: fx.T.fadeAt, fadeLen: fx.T.fadeLen };
-          fx.T.size = base.size * r.size;
-          fx.T.fadeAt = r.fade ? Math.max(base.fadeAt, r.fade) : base.fadeAt;
-          fx.T.fadeLen = r.fade ? Math.min(Math.max(base.fadeLen, 300), 420) : base.fadeLen;
+          if (!r) return;
+          const on = small.matches || r.both;
+          Object.assign(fx.adj, on ? { x: r.x, y: r.y, zoom: r.zoom, rings: r.rings, fadeAt: r.fade || null, fadeLen: r.len || null } : { x: 0, y: 0, zoom: 1, rings: 1, fadeAt: null, fadeLen: null });
           fx.relayout?.();
         };
-        // (Once the panels have put their own values in.)
-        loaded.then(() => setTimeout(() => { if (window.tryState?.rec && (window.tryState.rec.size !== 1 || window.tryState.rec.fade)) applyRec(); addEventListener('try-rec', applyRec); }, 1200));
+        applyRec();
+        addEventListener('try-rec', applyRec);
+        small.addEventListener?.('change', applyRec);
       }
       // The hand it plays with: the controller (owner's pick), or the mouse
       // (?hand=mouse). Tune > Hero > Layout > starts with.
@@ -1773,6 +1813,10 @@
       // tips its top toward you; none, it stays flat, the owner's pick) and
       // where it scales from.
       const heroVars = { '--tilt': '0deg', '--anchor': '50% 0%' };
+      // With the controller: the video's size (it isn't shrunk) and how much
+      // lower the controller sits (the Try group, Controller).
+      const ctlNow = () => { const c = window.tryState?.ctl; if (c) { heroVars['--ctl-scale'] = String(c.scale); heroVars['--ctl-down'] = `${c.down}px`; frame.style.setProperty('--ctl-out', `${Math.max(20, c.down - 10)}px`); sendVars(); } };
+      addEventListener('try-controller', () => ctlNow());
       const sendVars = () => {
         live.contentWindow?.postMessage({ interlude: 'css', vars: heroVars }, '*');
         clips?.setVars(heroVars);
@@ -1818,7 +1862,7 @@
           clipsHost.setAttribute('aria-hidden', 'true');
           live.after(clipsHost);
           try {
-            const { mountClips } = await import('./hero/clips.js?v=20261122a');
+            const { mountClips } = await import('./hero/clips.js?v=20261123a');
             clips = await mountClips(clipsHost, {
               base: 'hero/clips/', hand: mode, paused: true, log: q.has('log'),
               onReady: () => {
@@ -1851,6 +1895,7 @@
             clipsFailed = true;
             return;
           }
+          ctlNow();
           clips.setVars(heroVars);
           if (clips.hand !== mode) clips.setHand(mode);
         }
@@ -1900,6 +1945,21 @@
         sw.dataset.mode = mode;
         if (how !== 'init') document.dispatchEvent(new CustomEvent('interlude:hand', { detail: { hand: mode, auto: how === 'auto' } }));
       }
+      // With the controller out of view below, something has to show that it
+      // has landed: a light drawn once down the screen, so the eye goes with
+      // it (on a transform; not with less motion).
+      const arrive = document.createElement('i');
+      arrive.className = 'arrive'; arrive.setAttribute('aria-hidden', 'true');
+      screen.append(arrive);
+      const land = () => {
+        const how = window.tryState?.arrive ?? 'on';
+        if (how === 'off' || reduced.matches) return;
+        const r = screen.getBoundingClientRect(), s = r.width / 1440;
+        // (Out of view: under half of the controller's own height showing.)
+        const c = window.tryState?.ctl, top = r.top + (666 + (c?.down ?? 70)) * s, half = top + 98 * s;
+        if (how === 'always' || half > innerHeight) { arrive.classList.remove('go'); void arrive.offsetWidth; arrive.classList.add('go'); }
+      };
+      document.addEventListener('interlude:hand', (e) => { if (e.detail.hand === 'controller') setTimeout(land, 260); });
       for (const b of buttons) b.addEventListener('click', () => { touched = true; clips?.setHand(b.dataset.mode); setMode(b.dataset.mode); });
       sw.addEventListener('keydown', (e) => {
         if (!['ArrowLeft', 'ArrowRight'].includes(e.key)) return;
@@ -2234,13 +2294,15 @@
       // footer's bottom edge and the window's, and only while the footer is
       // in view (so nothing is ever drawn at the top of the page, whatever
       // the browser reports there).
+      const theme = document.querySelector('meta[name="theme-color"]');
       let near = false;
       let over = 0, wheelPull = 0, wheelAt = 0, decayRaf = 0, shown = false;
-      // Strength from the pull: it builds slowly over a long pull (the most
-      // a rubber band gives is about a third of the screen) and never comes
-      // all the way in; let go, it goes with the page.
-      const KMAX = 0.55;
-      const strength = (px) => KMAX * (1 - Math.exp(-px / (innerHeight * 0.45)));
+      // Strength from the pull: most of it within a short pull (a rubber
+      // band gives little), then less and less; let go, it goes with the
+      // page.
+      // (Both set in the Try group, Footer.)
+      const pullOf = () => window.tryState?.pull || { max: 0.8, soon: 0.2 };
+      const strength = (px) => { const p = pullOf(); return p.max * (1 - Math.exp(-px / (innerHeight * p.soon))); };
       const apply = () => {
         const px = Math.max(over, wheelPull);
         const k = px > 0 ? strength(px) : 0;
@@ -2254,11 +2316,13 @@
         near = e.isIntersecting;
         // (The page's own colour past its foot too, the footer's, while the
         // footer is in view; the page's everywhere else.)
-        root.style.backgroundColor = near ? 'rgb(12 12 14)' : '';
+        root.toggleAttribute('data-foot-near', near);
+        theme?.setAttribute('content', near ? '#0c0c0e' : '#09090b');
         if (!near && (over || wheelPull)) reset();
       }).observe(foot);
       addEventListener('scroll', () => {
-        if (!near) return;
+        // (Never at the top: the page must be scrolled down to its end.)
+        if (!near || scrollY < 2) return;
         const o = Math.max(0, innerHeight - foot.getBoundingClientRect().bottom - 1);
         if (o === over) return;
         over = o;
@@ -2285,6 +2349,27 @@
       const log = window.__menulog?.line && ((px, k) => window.__menulog.line('pull', `scrollY ${Math.round(scrollY)} innerH ${innerHeight} footBottom ${Math.round(foot.getBoundingClientRect().bottom)} gap ${Math.round(px)} k ${k.toFixed(2)}`));
       // (For checking without a rubber band: window.footPull(px).)
       window.footPull = (px) => { over = Math.max(0, px); apply(); };
+      // A pull played without a hand (Try, Preview: it says it's simulated):
+      // the page and its footer lifted off the window's foot and let go, as
+      // a rubber band would, with what lies under showing in the gap.
+      window.footPlay = async () => {
+        scrollTo({ top: 1e6, behavior: 'instant' });
+        await new Promise((r) => setTimeout(r, 900));
+        const most = Math.min(140, innerHeight * 0.16), t0 = performance.now();
+        const note = document.createElement('div');
+        note.className = 'toast'; note.textContent = 'Simulated pull'; document.body.append(note); note.toggleAttribute('data-on', true);
+        under.style.zIndex = 5;
+        await new Promise((done) => requestAnimationFrame(function f(now) {
+          const t = (now - t0) / 1000, up = t < 0.45 ? 1 - (1 - t / 0.45) ** 3 : t < 1.9 ? 1 : Math.max(0, 1 - (t - 1.9) / 0.45) ** 2;
+          const px = most * up;
+          for (const e of document.querySelectorAll('main, .foot')) e.style.translate = `0 ${-px}px`;
+          under.style.clipPath = `inset(calc(100% - ${px}px) 0 0 0)`;
+          over = px; apply();
+          if (t < 2.4) requestAnimationFrame(f); else done();
+        }));
+        for (const e of document.querySelectorAll('main, .foot')) e.style.translate = '';
+        under.style.zIndex = under.style.clipPath = ''; over = 0; apply(); note.remove();
+      };
 
       // No hover on this screen: play it once when the word comes into view.
       if (fx?.ready && !matchMedia('(hover: hover)').matches) {
@@ -2508,6 +2593,8 @@
         };
         const word = (k) => {
           // (Today's wordmark: the stylesheet's own values, untouched.)
+          // (Another lockup keeps its own spacing: the Try group's is for today's.)
+          d.toggleAttribute('data-wm-lock', !!LOCKUPS[k] && k !== 'classic');
           if (!LOCKUPS[k] || k === 'classic') {
             for (const v of ['weight', 'track', 'track-s', 'case', 'font', 'size']) d.style.removeProperty(`--wm-${v}`);
             requestAnimationFrame(() => dispatchEvent(new Event('resize')));
@@ -2606,6 +2693,7 @@
       };
       fit();
       document.fonts?.ready.then(() => { ink.key = ''; fit(); });
+      addEventListener('try-wordmark', () => requestAnimationFrame(fit));
       new ResizeObserver(() => requestAnimationFrame(fit)).observe(w);
     })();
     const cream = () => document.querySelector('.oss')?.dataset.look === 'cream';
@@ -2878,7 +2966,7 @@
       const st = window.tryState || {};
       // (?squircles=off turns it off; the Try group has both controls.)
       if (st.sqOn === false) { stop?.(); stop = null; return; }
-      sqMod ??= await import('./squircles.js?v=20261123b').catch(() => null);
+      sqMod ??= await import('./squircles.js?v=20261123c').catch(() => null);
       if (!sqMod) return;
       stop?.();
       document.documentElement.dataset.squircles = String(Math.max(0, Math.min(100, st.smooth ?? 60)));
