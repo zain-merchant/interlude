@@ -41,10 +41,21 @@ export default {
       options: [
         ['full', 'A rule under the whole label', 'It fills with colour when Key lock is on.'],
         ['short', 'A short rule', 'The same, 22px.'],
-        ['ring', 'An etched outline', 'The same etched line all the way round Key lock and 0.00%; on, Key lock is pressed in and takes the deck’s colour.'],
+        ['ring', 'An etched outline', 'The same etched line all the way round Key lock and 0.00%; on, Key lock is pressed in, its words in the deck’s colour.'],
         ['ledger', 'A ledger', 'Etched rules across the column, between the three.'],
         ['cut', 'One cut', 'All three in one cut under the fader, with rules between.'],
         ['plain', 'Plain', 'No mark; the labels are brighter than captions.'],
+      ],
+    },
+    keyon: {
+      type: 'choice',
+      label: 'Key lock when it’s on (with the etched outline)',
+      default: 'sync',
+      options: [
+        ['sync', 'Like Sync', 'The app’s pressed key, its words in the deck’s colour.'],
+        ['grooves', 'Grooves', 'Pressed, with the record’s grooves.'],
+        ['etched', 'Etched, tinted', 'Pressed, the etched outline in the deck’s colour.'],
+        ['line', 'A thin line', 'Pressed, an even line in the deck’s colour.'],
       ],
     },
     head: {
