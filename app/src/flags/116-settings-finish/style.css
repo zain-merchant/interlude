@@ -275,66 +275,28 @@
 }
 :root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .sstep > .num {
   position: relative;
-  display: grid;
-  place-items: center;
+  display: block;
+  align-self: center;
   width: auto;
   height: auto;
+  margin-top: 1px;
   color: var(--fg-2);
   font-weight: 500;
+  text-align: center;
+  text-box: trim-both cap alphabetic;
 }
 :root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .sstep > .num::before,
 :root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .sstep > .num::after {
   content: '';
   position: absolute;
-  inset: 0 auto 0 -1px;
+  inset: 50% auto auto -1px;
   width: 2px;
   height: 14px;
-  margin: auto 0;
+  translate: 0 -50%;
   background: linear-gradient(90deg, #000 50%, rgb(255 255 255 / 0.13) 50%);
 }
 :root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .sstep > .num::after {
-  inset: 0 -1px 0 auto;
-}
-/* Split: two keys with the size sunk between them. The three make one shape:
-   8 at its ends, 4 at the corners that face each other, 4 between. */
-:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish]:not([data-flag-dir-room-tint-stepper='one'], [data-flag-dir-room-tint-stepper='under']) .settings .sstep {
-  grid-template-columns: 32px 64px 32px;
-  gap: var(--tt-split-gap, 4px);
-  overflow: visible;
-  background: none;
-  box-shadow: none;
-}
-:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish]:not([data-flag-dir-room-tint-stepper='one'], [data-flag-dir-room-tint-stepper='under']) .settings .sstep > .btn,
-:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish]:not([data-flag-dir-room-tint-stepper='one'], [data-flag-dir-room-tint-stepper='under']) .settings .sstep > .btn:hover {
-  background: var(--tt-sheen), var(--rg-key) !important;
-  box-shadow: inset 0 1px 0 0 rgb(255 255 255 / 0.095), var(--tt-lift) !important;
-}
-:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish]:not([data-flag-dir-room-tint-stepper='one'], [data-flag-dir-room-tint-stepper='under']) .settings .sstep > .btn:hover:not(:disabled) {
-  background: var(--tt-sheen), var(--rg-key-hi) !important;
-}
-:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish]:not([data-flag-dir-room-tint-stepper='one'], [data-flag-dir-room-tint-stepper='under']) .settings .sstep > .btn:active:not(:disabled) {
-  background: var(--rg-down) !important;
-  box-shadow: var(--rg-down-edge) !important;
-}
-:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish]:not([data-flag-dir-room-tint-stepper='one'], [data-flag-dir-room-tint-stepper='under']) .settings .sstep > .btn:disabled {
-  background: rgb(255 255 255 / 0.022) !important;
-  box-shadow: none !important;
-}
-:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish]:not([data-flag-dir-room-tint-stepper='one'], [data-flag-dir-room-tint-stepper='under']) .settings .sstep > .btn:first-child {
-  border-radius: var(--r) var(--tt-split-in, 4px) var(--tt-split-in, 4px) var(--r);
-}
-:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish]:not([data-flag-dir-room-tint-stepper='one'], [data-flag-dir-room-tint-stepper='under']) .settings .sstep > .btn:last-child {
-  border-radius: var(--tt-split-in, 4px) var(--r) var(--r) var(--tt-split-in, 4px);
-}
-:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish]:not([data-flag-dir-room-tint-stepper='one'], [data-flag-dir-room-tint-stepper='under']) .settings .sstep > .btn::after,
-:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish]:not([data-flag-dir-room-tint-stepper='one'], [data-flag-dir-room-tint-stepper='under']) .settings .sstep > .num::before,
-:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish]:not([data-flag-dir-room-tint-stepper='one'], [data-flag-dir-room-tint-stepper='under']) .settings .sstep > .num::after {
-  content: none;
-}
-:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish]:not([data-flag-dir-room-tint-stepper='one'], [data-flag-dir-room-tint-stepper='under']) .settings .sstep > .num {
-  border-radius: var(--tt-split-in, 4px);
-  background: var(--rg-grooves), var(--rg-well);
-  box-shadow: var(--tt-cut);
+  inset: 50% -1px auto auto;
 }
 /* Under (110's setting): the recess runs under the keys. */
 :root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-dir-room-tint-stepper='under'] .settings .sstep {
