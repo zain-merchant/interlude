@@ -82,8 +82,8 @@
 :root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):not([data-flag-focus-after-keys]) :is(.menu button, .rw):focus-visible {
   --fx: var(--fx-menu);
 }
-:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_)[data-input='keys'] :is(.st, .undo, .hp):focus,
-:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):not([data-flag-focus-after-keys]) :is(.st, .undo, .hp):focus-visible {
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_)[data-input='keys'] :is(.st, .undo, .hp, .bpm .key):focus,
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):not([data-flag-focus-after-keys]) :is(.st, .undo, .hp, .bpm .key):focus-visible {
   outline-offset: 1px !important;
 }
 /* The record's centre: on its own dark, not on the vinyl. */
@@ -124,10 +124,26 @@
 }
 /* An end of a one-cut stepper, the zoom's, Grid's and Settings': where the
    small key rises under the pointer, 3px in from the cut. */
-:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_)[data-input='keys'] :is([data-region^='deck'] :is(.jumps, .nudge, .beats, .step) > button, .strip .grid .sym, .sstep > .btn):focus,
-:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):not([data-flag-focus-after-keys]) :is([data-region^='deck'] :is(.jumps, .nudge, .beats, .step) > button, .strip .grid .sym, .sstep > .btn):focus-visible {
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_)[data-input='keys'] :is([data-region^='deck'] :is(.jumps, .nudge, .beats, .step) > button, .sstep > .btn):focus,
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):not([data-flag-focus-after-keys]) :is([data-region^='deck'] :is(.jumps, .nudge, .beats, .step) > button, .sstep > .btn):focus-visible {
   border-radius: var(--r);
   outline-offset: calc(-3px - var(--fx-w)) !important;
+}
+/* Grid's paint half a cut each, so the line is on their small key itself. */
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_)[data-input='keys'] .strip .grid .sym:focus,
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):not([data-flag-focus-after-keys]) .strip .grid .sym:focus-visible {
+  outline: none !important;
+}
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_)[data-input='keys'] .strip .grid .sym:focus::after,
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):not([data-flag-focus-after-keys]) .strip .grid .sym:focus-visible::after {
+  opacity: 1;
+  scale: 1;
+  outline: var(--fx-w) solid var(--fx);
+}
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_)[data-input='keys'] .strip .grid .sym:focus:not(:hover, :active, [data-show-hover], [data-show-active])::after,
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):not([data-flag-focus-after-keys]) .strip .grid .sym:focus-visible:not(:hover, :active, [data-show-hover], [data-show-active])::after {
+  background: none;
+  box-shadow: none;
 }
 :root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_)[data-input='keys'] .zoom button:focus,
 :root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):not([data-flag-focus-after-keys]) .zoom button:focus-visible {
