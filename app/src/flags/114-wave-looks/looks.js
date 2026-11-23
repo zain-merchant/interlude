@@ -40,7 +40,7 @@ const ATTACK = SMOOTH([75, 55, 28]);
 /** The looks in the order the step key goes through them: id, name, how it's drawn, and its values. */
 export const LOOKS = [
   { id: 'today', name: 'Today', draw: null, values: {} },
-  { id: 'exact', name: 'Today exact', draw: 'ribbon', values: { ...SMOOTH([25, 22, 18]), soft: 4, hit: 15, ease: 100, ...HEIGHTS, ...RIBBON } },
+  { id: 'exact', name: 'Today exact', draw: 'ribbon', values: { ...SMOOTH([25, 22, 18]), soft: 4, hit: 15, ease: 50, ...HEIGHTS, ...RIBBON } },
   { id: 'attack', name: 'Attack', draw: 'ribbon', values: { ...ATTACK, ...HEIGHTS, ...RIBBON } },
   { id: 'pills', name: 'Pills', draw: 'pills', values: { ...ATTACK, ...HEIGHTS, w: 4.75, gap: 2.5, lock: 1 } },
   { id: 'narrow', name: 'Narrower pills', draw: 'pills', values: { ...ATTACK, ...HEIGHTS, w: 2.5, gap: 2, lock: 1 } },
