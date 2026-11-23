@@ -35,7 +35,7 @@ const FAR = 160; // the outer rect's reach past the element: room for shadows an
 // one); the note's sleeve, whose record runs out past it; the inside of
 // the feature cards' pictures, the app's own look, often moving; the Tune
 // panel.
-const SKIP = 'svg, svg *, .nav-glass, .nav-edge, .founder, .founder *, [data-picture] *, .stage-frame, .stage-frame *, .menu, .menu *, .menu-scrim, .dialkit-root, .dialkit-root *, [class*="dialkit"], [class*="dialkit"] *';
+const SKIP = 'svg, svg *, .nav-glass, .nav-edge, .nav-rim, .nav-rim *, .founder, .founder *, [data-picture] *, .stage-frame, .stage-frame *, .menu, .menu *, .menu-scrim, .dialkit-root, .dialkit-root *, [class*="dialkit"], [class*="dialkit"] *';
 // When an element that draws nothing at rest may start to.
 const STATES = ":hover, :active, :focus-visible, [aria-pressed='true'], [aria-checked='true'], [aria-selected='true'], [aria-expanded='true'], [data-done]";
 

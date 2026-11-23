@@ -21,7 +21,7 @@
   <!-- Geist, served from here (no other site to reach before the page can
        draw its text); the Latin file is fetched straight away. -->
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="style.css?v=20261123f">
+  <link rel="stylesheet" href="style.css?v=20261123h">
   <script src="tune.js?v=20261123a"></script>
   <script>
     // Live updates while working on the site locally (the dev server
@@ -100,14 +100,17 @@
         };
         const line = (k, v) => { lines.set(k, v); if (document.body) show(); };
         const frames = (label) => {
-          const t0 = performance.now(), ts = [t0];
+          const t0 = performance.now(), ts = [];
           const f = (t) => { ts.push(t); if (t - t0 < 900) requestAnimationFrame(f); else {
-            const g = ts.slice(1).map((t, i) => t - ts[i]);
-            const late = g.filter((x) => x > 20);
-            line(label, `${g.length} frames in 900ms, ${late.length} late, worst ${Math.round(Math.max(...g))}ms; first ${g.slice(0, 8).map(Math.round).join(' ')}`);
+            const late = ts.slice(1).map((t, i) => [Math.round(ts[i] - t0), Math.round(t - ts[i])]).filter(([, g]) => g > 25);
+            line(label, `first frame +${Math.round(ts[0] - t0)}ms, ${ts.length} frames in 900ms, late ${late.length}${late.length ? ` (at+gap ms: ${late.slice(0, 6).map((x) => x.join('+')).join(', ')})` : ''}`);
           } };
           requestAnimationFrame(f);
         };
+        // (Wherever the page is, so the top's rubber band shows too.)
+        const where = () => { const f = document.querySelector('.foot'), u = document.querySelector('.foot-under'); if (f) line('scroll', `y ${Math.round(scrollY)} of ${document.documentElement.scrollHeight - innerHeight}, innerH ${innerHeight}, foot ${Math.round(f.getBoundingClientRect().bottom)}, under ${u?.hasAttribute('data-on') ? 'ON' : 'off'}, root ${document.documentElement.style.backgroundColor || 'page'}`); };
+        addEventListener('scroll', where, { passive: true });
+        addEventListener('load', where);
         addEventListener('interlude:menu', (e) => frames(e.detail ? 'menu open' : 'menu shut'));
         window.__menulog = { line, frames };
       }
@@ -207,6 +210,8 @@
     <!-- The bar to capsule nav's glass and its edge (style.css). -->
     <span class="nav-glass" aria-hidden="true"></span>
     <span class="nav-edge" aria-hidden="true"></span>
+    <!-- The open menu's share of that edge: its sides and foot. -->
+    <span class="nav-rim" aria-hidden="true"><i></i></span>
     <div class="wrap nav-row">
       <a class="brand" href="#top" aria-label="Interlude home">
         <img src="img/icon.svg?v=2" alt="" width="24" height="24">
@@ -527,7 +532,7 @@
         wake();
       };
       // The capsule as it is now, for the menu to open out of.
-      window.navCapsule = () => ({ rect: glass.getBoundingClientRect(), r: geo ? geo.r0 + (CAP_R - geo.r0) * shape.x : CAP_R });
+      window.navCapsule = () => ({ rect: glass.getBoundingClientRect(), r: geo ? geo.r0 + (CAP_R - geo.r0) * shape.x : CAP_R, er: parseFloat(edge.style.borderRadius) || CAP_R });
       window.tune?.slider({ id: 'nav-word', label: 'Nav: name size before capsule', folder: 'Settled', min: 18, max: 96, step: 1, value: 32, unit: 'px', css: '--brand-word', onInput: () => requestAnimationFrame(measure) });
       // The capsule's corners: the icon's own (its squircle's corner, about
       // 8px at 36px, plus the 6px between), so everything inside is
@@ -613,8 +618,11 @@
       let release = 0, done = null, later = 0, shutT = 0;
       const ms = (n, or) => parseFloat(getComputedStyle(d).getPropertyValue(n)) || or;
       const SMOOTH = ms('--smooth-ms', 450), SNAPPY = ms('--snappy-ms', 300);
-      // (?menuoff=inert,hold,focus: leave one of those out, to find what
-      // costs on a phone; with ?menulog=1 the frames show on screen.)
+      // (?menuoff=inert,focus,hold,pause,edge,lock: leave any of those out,
+      // to find what costs on a phone; with ?menulog=1 the frames show on
+      // screen. ?menulock=root: the page's root locked while it's open, as
+      // it used to be.)
+      const rim = nav.querySelector('.nav-rim');
       const off = new Set((new URLSearchParams(location.search).get('menuoff') || '').split(','));
       // Laid out ahead, not on the tap: the sheet sits over the capsule
       // exactly (its top, sides, height and corners), and the capsule's
@@ -626,18 +634,61 @@
         if (open) return;
         const c = window.navCapsule?.();
         if (!c || !c.rect.width) return;
-        const key = [c.rect.top, c.rect.left, c.rect.right, c.rect.height, c.r, d.clientWidth].map((v) => Math.round(v * 10)).join();
+        const sheet = menu.querySelector('.menu-sheet');
+        const key = [c.rect.top, c.rect.left, c.rect.right, c.rect.height, c.r, c.er, d.clientWidth, sheet.offsetHeight].map((v) => Math.round(v * 10)).join();
         if (key === placed) return;
         placed = key;
-        menu.style.setProperty('--top', `${c.rect.top}px`);
-        menu.style.setProperty('--side', `${c.rect.left}px`);
-        menu.style.setProperty('--side-r', `${d.clientWidth - c.rect.right}px`);
-        menu.style.setProperty('--cap-h', `${c.rect.height}px`);
-        menu.style.setProperty('--r', `${c.r}px`);
-        nav.style.setProperty('--menu-h', `${menu.querySelector('.menu-sheet').offsetHeight}px`);
+        for (const e of [menu, rim]) {
+          e.style.setProperty('--top', `${c.rect.top}px`);
+          e.style.setProperty('--side', `${c.rect.left}px`);
+          e.style.setProperty('--side-r', `${d.clientWidth - c.rect.right}px`);
+          e.style.setProperty('--cap-h', `${c.rect.height}px`);
+          e.style.setProperty('--r', `${c.r}px`);
+          // (The capsule's corners as drawn: scaled where they're squircles.)
+          e.style.setProperty('--er', `${c.er}px`);
+        }
+        // Where the capsule's own edge stops and the rim takes over, half way
+        // down its straight sides.
+        nav.style.setProperty('--mid', `${Math.round(c.rect.height / 2)}px`);
+        nav.style.setProperty('--menu-h', `${sheet.offsetHeight}px`);
       }
       window.menuPlace = place;
+      // (The sheet's height changes with the version's words and the fonts.)
+      new ResizeObserver(() => place()).observe(menu.querySelector('.menu-sheet'));
+      nav.toggleAttribute('data-norim', off.has('edge'));
       addEventListener('resize', () => { placed = ''; requestAnimationFrame(place); });
+      // The page behind can't be scrolled while it's open: a finger anywhere
+      // (the sheet, the capsule, the page) scrolls nothing, unless the menu
+      // itself is taller than the screen, which then scrolls to its ends and
+      // no further. Decided on a touch's first move (Safari takes no answer
+      // after it); a pinch still zooms. The same for a wheel and the keys
+      // that page. No lock on the root: that lays the page out again just
+      // as the menu starts to move.
+      const inner = menu.querySelector('.menu-in');
+      let from = null;
+      const canGo = (dy) => inner.scrollHeight > inner.clientHeight + 1 && (dy > 0 ? inner.scrollTop > 0 : inner.scrollTop < inner.scrollHeight - inner.clientHeight - 1);
+      const onStart = (e) => { from = e.touches.length === 1 ? { y: e.touches[0].clientY, ok: null } : null; };
+      const onMove = (e) => {
+        if (!from || e.touches.length !== 1) return;
+        if (from.ok === null) from.ok = !!e.target.closest?.('.menu-in') && canGo(e.touches[0].clientY - from.y);
+        if (!from.ok && e.cancelable) e.preventDefault();
+      };
+      const onWheel = (e) => { if (!e.ctrlKey && !(e.target.closest?.('.menu-in') && canGo(-e.deltaY)) && e.cancelable) e.preventDefault(); };
+      const onKeys = (e) => {
+        const dir = { ArrowUp: 1, PageUp: 1, Home: 1, ArrowDown: -1, PageDown: -1, End: -1 }[e.key] ?? (e.key === ' ' && document.activeElement !== btn ? -1 : 0);
+        if (dir && !(inner.contains(document.activeElement) && canGo(dir))) e.preventDefault();
+      };
+      const rootLock = new URLSearchParams(location.search).get('menulock') === 'root';
+      function hold(v) {
+        if (off.has('lock')) return;
+        if (rootLock) { d.style.overflow = v ? 'hidden' : ''; return; }
+        const f = v ? 'addEventListener' : 'removeEventListener';
+        document[f]('touchstart', onStart, { passive: true });
+        document[f]('touchmove', onMove, { passive: false });
+        document[f]('wheel', onWheel, { passive: false });
+        document[f]('keydown', onKeys);
+        from = null;
+      }
       function set(v, { refocus = false, follow = false } = {}) {
         if (v === open) return;
         if (v) place();
@@ -649,6 +700,7 @@
         nav.toggleAttribute('data-menu-shutting', !v);
         if (!v) shutT = setTimeout(() => nav.removeAttribute('data-menu-shutting'), SNAPPY);
         nav.toggleAttribute('data-menu', v);
+        hold(v);
         // (The hero holds still under it.)
         dispatchEvent(new CustomEvent('interlude:menu', { detail: v }));
         // (Picking a section: the capsule stays as it is while the page
@@ -1672,11 +1724,11 @@
       let menuOver = false, menuT = 0;
       addEventListener('interlude:menu', (e) => {
         clearTimeout(menuT);
-        if (/(^|,)hold(,|$)/.test(new URLSearchParams(location.search).get('menuoff') || '')) return;
+        const off = (new URLSearchParams(location.search).get('menuoff') || '').split(',');
         // (The record stops at once, which costs nothing; the clips pause
         // straight away too: while they play, their frames keep the page
         // busy through the sheet's motion (measured).)
-        if (e.detail) { menuOver = true; fx?.hold?.(true); pauseIfHidden(); }
+        if (e.detail) { if (!off.includes('pause')) menuOver = true; if (!off.includes('hold')) fx?.hold?.(true); pauseIfHidden(); }
         else menuT = setTimeout(() => { menuOver = false; fx?.hold?.(false); pauseIfHidden(); }, 400);
       });
       const pauseIfHidden = () => {
@@ -2802,7 +2854,7 @@
       const st = window.tryState || {};
       // (?squircles=off turns it off; the Try group has both controls.)
       if (st.sqOn === false) { stop?.(); stop = null; return; }
-      sqMod ??= await import('./squircles.js?v=20261123a').catch(() => null);
+      sqMod ??= await import('./squircles.js?v=20261123b').catch(() => null);
       if (!sqMod) return;
       stop?.();
       document.documentElement.dataset.squircles = String(Math.max(0, Math.min(100, st.smooth ?? 60)));
