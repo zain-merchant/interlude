@@ -394,6 +394,13 @@
 
   // The webview's own right-click menu (Reload, Inspect) never shows; text
   // fields keep theirs for copy and paste.
+  const elementOf = (n) => (n instanceof Element ? n : n?.parentElement);
+  const keepText = (e) => {
+    if (!elementOf(e.target)?.closest("input, textarea, [contenteditable='true']")) e.preventDefault();
+  };
+  const keepPictures = (e) => {
+    if (elementOf(e.target)?.matches('img, a, a *, svg, svg *') && !elementOf(e.target).closest('[draggable=true]')) e.preventDefault();
+  };
   function contextmenu(e) {
     if (!(e.target instanceof HTMLInputElement)) e.preventDefault();
   }
@@ -740,6 +747,8 @@
 </script>
 
 <svelte:window onkeydown={keydown} onkeyup={keyup} onblur={blur} oncontextmenu={contextmenu} />
+<!-- A selection can only start in a text field, whatever draws the text, and a picture or link can't be dragged out of the window. -->
+<svelte:document onselectstart={keepText} ondragstart={keepPictures} />
 
 <!-- #7 / #21 (UI audit flags): edge-tall, panel-sizes: the rows' sizes (--waves, --decks) and the sidebar's, while either is on. -->
 <div class="app" class:mac-window={macWindow} class:settling style:--top="{macWindow ? TOP_STRIP : 12}px" style:--lib="{lib}px"
