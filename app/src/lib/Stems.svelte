@@ -50,7 +50,7 @@
   const zero = $derived.by(() => {
     if (!flag('zero-states') || !flag('dir-room-tint') || !t) return null;
     if (conn.stems && ['needsModel', 'off'].includes(s.state)) return { title: 'Downloading stems', line: `${mb(conn.stems.done)} of ${mb(conn.stems.total)} MB`, p: conn.stems.total ? conn.stems.done / conn.stems.total : 0 };
-    if (s.state === 'needsModel') return { title: 'Stems need a one-time download', line: modelSize.trim(), act: 'Get it' };
+    if (s.state === 'needsModel') return { title: 'Stems need a one-\u2060time download', line: modelSize.trim(), act: 'Get it' };
     if (s.state === 'off') return { title: 'Stems are off', line: '', act: 'Turn on…' };
     if (s.state === 'failed') return { title: 'Couldn’t make stems', line: s.error ?? '', act: 'Settings' };
     return null;
