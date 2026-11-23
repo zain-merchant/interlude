@@ -14,6 +14,10 @@
 :root {
   color-scheme: dark;
   --bg: #09090b;
+  /* The one near-black for a surface over the page: the nav, the menu, the
+     sheet, the toast, the features' band. (The page itself is --bg: the
+     hero's clips are recorded on that colour.) */
+  --ink: #070709;
   --panel: #111114;
   --fg: #eceae4;
   --fg-2: rgb(236 234 228 / 0.68);
@@ -84,7 +88,7 @@ a, button, summary, [role="radio"], .btn { touch-action: manipulation; }
 .nav-row { display: flex; align-items: center; gap: 24px; height: 60px; }
 /* (The wordmark's style can be swapped while logos are tried: --wm-*, set
    from lab/logos.html's lockups by index.html.) */
-.brand { display: inline-flex; align-items: center; gap: 10px; font-weight: var(--wm-weight, 600); text-decoration: none; letter-spacing: var(--wm-track-s, -0.01em); }
+.brand { display: inline-flex; align-items: center; gap: 10px; font-weight: var(--wm-weight, 600); text-decoration: none; letter-spacing: var(--wm-track-s, var(--wm-foot, -0.01em)); }
 .brand span { font-family: var(--wm-font, inherit); text-transform: var(--wm-case, none); }
 .links { display: flex; gap: 22px; margin-right: auto; font-size: 14px; }
 .links a { color: var(--fg-2); text-decoration: none; }
@@ -129,7 +133,7 @@ a, button, summary, [role="radio"], .btn { touch-action: manipulation; }
 .toast {
   position: fixed; z-index: 60; left: 50%; bottom: max(20px, calc(env(safe-area-inset-bottom, 0px) + 12px));
   display: flex; align-items: center; gap: 8px; max-width: calc(100% - 32px); padding: 11px 16px 11px 13px; border-radius: 14px;
-  background: rgb(16 16 19 / 0.82); -webkit-backdrop-filter: blur(20px) saturate(1.4); backdrop-filter: blur(20px) saturate(1.4);
+  background: var(--ink);
   box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1), inset 0 1px 0 rgb(255 255 255 / 0.06), 0 12px 40px rgb(0 0 0 / 0.5);
   color: var(--fg); font-size: 14px; font-weight: 500; line-height: 1.3; white-space: nowrap;
   translate: -50% 12px; scale: 0.96; opacity: 0; pointer-events: none;
@@ -149,12 +153,12 @@ html[data-dl="today"] .menu-cap { display: none !important; }
    It moves on transforms and opacity alone. */
 .dlsheet { position: fixed; inset: 0; z-index: 70; }
 .dlsheet[hidden] { display: none; }
-.dlsheet-scrim { position: absolute; inset: 0; background: rgb(5 5 7 / 0.55); opacity: 0; transition: opacity var(--snappy-ms) var(--snappy); touch-action: none; }
+.dlsheet-scrim { position: absolute; inset: 0; background: rgb(7 7 9 / 0.6); opacity: 0; transition: opacity var(--snappy-ms) var(--snappy); touch-action: none; }
 html[data-dlsheet] .dlsheet-scrim { opacity: 1; transition: opacity var(--smooth-ms) var(--smooth); }
 .dlsheet-card {
   position: absolute; left: 10px; right: 10px; bottom: calc(10px + env(safe-area-inset-bottom, 0px));
   display: grid; justify-items: center; padding: 10px 18px 18px; border-radius: 30px; text-align: center;
-  background: rgb(16 16 19 / 0.92); -webkit-backdrop-filter: blur(24px) saturate(1.4); backdrop-filter: blur(24px) saturate(1.4);
+  background: var(--ink);
   box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.09), inset 0 1px 0 rgb(255 255 255 / 0.06), 0 24px 60px rgb(0 0 0 / 0.55);
   translate: 0 calc(100% + 24px); will-change: translate;
   transition: translate var(--snappy-ms) var(--snappy);
@@ -166,7 +170,7 @@ html[data-dlsheet] .dlsheet-card { translate: 0 0; transition: translate var(--s
 .dlsheet h2 { margin: 0; font-size: 20px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.25; }
 .dlsheet-card > p { margin: 6px 0 0; max-width: 30ch; color: var(--fg-2); font-size: 15px; line-height: 1.45; text-wrap: balance; }
 .dlsheet-acts { display: grid; gap: 8px; width: 100%; margin-top: 20px; }
-.dlsheet-acts .btn { width: 100%; height: 50px; justify-content: center; gap: 8px; border-radius: 16px; font-size: 16px; }
+.dlsheet-acts .btn { width: 100%; height: 50px; border: 0; font-family: inherit; cursor: pointer; justify-content: center; gap: 8px; border-radius: 16px; font-size: 16px; }
 .dlsheet-acts .btn svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 .dlsheet-acts .btn.ghost { background: rgb(255 255 255 / 0.07); }
 .dlsheet-acts .btn[hidden] { display: none; }
@@ -215,7 +219,7 @@ h1 { margin: 0; font-size: clamp(48px, 9vw, 88px); font-weight: 600; letter-spac
   top: 0;
   left: 0;
   width: 1440px;
-  height: 920px;
+  height: 1020px;
   border: 0;
   background: transparent;
   transform: scale(var(--s));
@@ -232,7 +236,7 @@ h1 { margin: 0; font-size: clamp(48px, 9vw, 88px); font-weight: 600; letter-spac
    just above the toggle. The strip opens at once; it closes only after
    the controller has gone back down, so it never cuts it off. */
 .stage-frame[data-live] .screen { overflow: visible; clip-path: inset(0 0 0 0 round calc(28px * var(--s))); transition: clip-path 0s linear var(--glide-ms); }
-.stage-frame[data-live][data-mode="controller"] .screen { clip-path: inset(0 0 calc(-20px * var(--s)) 0 round calc(28px * var(--s)) calc(28px * var(--s)) 0 0); transition-delay: 0s; }
+.stage-frame[data-live][data-mode="controller"] .screen { clip-path: inset(0 -40px calc(-1 * var(--ctl-out, 60px) * var(--s)) -40px round calc(28px * var(--s)) calc(28px * var(--s)) 0 0); transition-delay: 0s; }
 /* Live, the app draws its own edge and shadow (it moves within the frame). */
 .stage-frame[data-live] .screen { background: none; box-shadow: none; }
 /* The screenshot's edge, until the live app (which draws its own) takes over:
@@ -837,7 +841,7 @@ html[data-nav="morph"] .nav {
    same as the open menu's, so opening it restyles nothing. --nav-fill is
    picked in the Tune panel. Glass: the blur as before; mixed: solid at the
    top, glass once it's the compact capsule; light: a lighter blur. */
-html { --nav-fill: #141417; --nav-line: rgb(255 255 255 / 0.09); }
+html { --nav-fill: var(--ink); --nav-line: rgb(255 255 255 / 0.09); }
 html[data-nav="morph"] .nav-glass {
   display: block; position: absolute; z-index: -1; left: 0; top: 0; width: 100%; height: calc(var(--nav-h) + var(--nav-pad) + 1px); pointer-events: none;
   background: var(--nav-fill);
@@ -938,7 +942,7 @@ html[data-nav="morph"] .nav-dl path { fill: none; stroke: currentColor; stroke-w
      themselves, not by locking the root.) */
   .menu-scrim {
     display: block; position: fixed; inset: 0; z-index: -1; touch-action: none;
-    background: rgb(5 5 7 / 0.62);
+    background: rgb(7 7 9 / 0.62);
     opacity: 0; visibility: hidden; pointer-events: none;
     transition: opacity var(--snappy-ms) var(--snappy), visibility 0s linear var(--snappy-ms);
   }
@@ -1311,7 +1315,10 @@ html[data-surface="glass"] .hero .hero-side .cta .btn.ghost, html[data-surface="
   box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.09), inset 0 1px 0 rgb(255 255 255 / 0.05), 0 12px 40px rgb(0 0 0 / 0.42);
 }
 html[data-surface="crisp"] .hero .hero-side .cta .btn.ghost, html[data-surface="crisp"] .switch {
-  background: rgb(11 11 13); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.16);
+  background: var(--ink); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.16);
+}
+html[data-surface="ink"] .hero .hero-side .cta .btn.ghost, html[data-surface="ink"] .switch {
+  background: var(--ink); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.09);
 }
 html[data-surface="raised"] .hero .hero-side .cta .btn.ghost, html[data-surface="raised"] .switch {
   background: rgb(38 38 42); box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.1), inset 0 0 0 1px rgb(255 255 255 / 0.07), 0 1px 2px rgb(0 0 0 / 0.5);
@@ -1871,7 +1878,7 @@ html[data-fband="lift"] #features::before { background: rgb(255 255 255 / 0.022)
    along each edge. Its colour and the hairlines' are on Tune (Features:
    band colour, band edge colour). */
 html[data-fband="recess"] #features::before {
-  background: var(--band-bg, #070709);
+  background: var(--band-bg, var(--ink));
   border-block: 1px solid var(--band-line, rgb(255 255 255 / 0.07));
   box-shadow: inset 0 14px 24px -14px rgb(0 0 0 / 0.7);
 }
@@ -2169,10 +2176,13 @@ html[data-flayout="one"] .group:nth-child(-n + 2) { box-shadow: inset -1px 0 0 v
    whites rises from below with the pull (--pull, index.html). Behind the
    page: the root has a background of its own, so the body paints its own
    and this shows only past its end. Not drawn at all until it's pulled. */
+/* (The footer's own colour as it's seen, its grain in it, for wherever the
+   layer below doesn't reach; only while the footer is in view.) */
 html { background: var(--bg); }
+html[data-foot-near] { background: #0c0c0e; }
 .foot-under {
   display: none; position: fixed; left: 0; right: 0; bottom: 0; height: 70vh; z-index: -1; pointer-events: none;
-  background: rgb(12 12 14);
+  background: var(--bg);
 }
 .foot-under[data-on] { display: block; }
 .grain--under { inset: 0; height: auto; z-index: 0; -webkit-mask-image: none; mask-image: none; }
@@ -2333,3 +2343,38 @@ html[data-btn="split"] .switch { background: #0b0b0d; box-shadow: inset 0 0 0 1.
 html[data-btn="split"] .switch .thumb { background: #f3f2ee; box-shadow: none; }
 html[data-btn="key"] .switch { background: #1f1f23; box-shadow: inset 0 1px 0 rgb(0 0 0 / 0.5), inset 0 0 0 1px rgb(255 255 255 / 0.09); }
 html[data-btn="key"] .switch .thumb { background: #f1eee6; box-shadow: inset 0 1px 0 #fff, 0 2px 0 #8b877b; }
+
+/* The letter spacing of "Interlude" (Try, Wordmark), where the Logo panel
+   hasn't picked another lockup. */
+html:not([data-wm-lock])[data-nav="morph"] .nav .brand span { letter-spacing: var(--wmk-nav, -0.03em); }
+html:not([data-wm-lock]) .foot-word { letter-spacing: var(--wm-big, -0.07em); }
+.rec-name { letter-spacing: var(--wm-rec, -0.03em); }
+
+/* The film grain on the hero's buttons and the switch (Try, Buttons): the
+   same frames as over the record, stepped with it. Under the words it's the
+   surface's; over them it's the whole button's. It takes no pointer. */
+.grain--btn { display: none; }
+html[data-btngrain] .cta .btn.ghost, html[data-btngrain][data-btngrainall] .cta .btn, html[data-btngrain] .switch { position: relative; }
+html[data-btngrain] :is(.cta .btn.ghost, .switch) > .grain--btn, html[data-btngrain][data-btngrainall] .cta .btn > .grain--btn {
+  display: block; position: absolute; inset: 0; z-index: 0; width: auto; height: auto; border-radius: inherit; pointer-events: none;
+  opacity: calc(0.12 * var(--btn-grain, 1)) !important;
+  -webkit-mask-image: none; mask-image: none;
+}
+html[data-btngrain="under"] .cta .btn > :not(.grain--btn) { position: relative; z-index: 1; }
+html[data-btngrain="over"] :is(.cta .btn, .switch) > .grain--btn { z-index: 2; }
+
+/* The switch on the video's left edge (Try, Controller). */
+html[data-switchat="left"] .shot-bar { justify-content: flex-start; width: 100%; margin-inline: 0; }
+
+/* A light drawn once down the screen as the controller lands below the
+   window (index.html, land). */
+.arrive { position: absolute; inset: 0; z-index: 3; overflow: hidden; border-radius: calc(28px * var(--s)); pointer-events: none; display: none; }
+.arrive.go { display: block; animation: arrive-end 1.5s linear both; }
+.arrive.go::before {
+  content: ''; position: absolute; left: 0; right: 0; top: 0; height: 46%;
+  background: linear-gradient(to bottom, transparent, rgb(255 255 255 / var(--arrive, 0.1)) 62%, transparent);
+  animation: arrive 1.25s 0.05s cubic-bezier(0.45, 0, 0.3, 1) both; will-change: transform;
+}
+@keyframes arrive { from { transform: translateY(-105%); } to { transform: translateY(225%); } }
+@keyframes arrive-end { to { visibility: hidden; } }
+@media (prefers-reduced-motion: reduce) { .arrive { display: none !important; } }

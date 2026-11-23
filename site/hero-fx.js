@@ -229,6 +229,12 @@ const hover = { r: 0, a: 0, on: 0, x: -1e4, y: -1e4, sx: 0, sy: 0, vx: 0, vy: 0,
 // there (so nothing stays lit under a still pointer) until it moves away.
 const quiet = { x: 0, y: 0, on: false };
 let running = false;
+// Where the page moves the whole composition from where the Layout controls
+// put it (the phone's, and the desktop's if it's asked for): across and down
+// (CSS px), its size about its own middle, how far its rings run out (a
+// share of T.size), and its top fade (null: T's own). Kept apart from T,
+// which the Hero record panel owns and saves.
+export const adj = { x: 0, y: 0, zoom: 1, rings: 1, fadeAt: null, fadeLen: null };
 let visible = true;
 // Held still from the page (its menu open over the hero): drawn like when
 // it's out of view, not at all.
@@ -2407,7 +2413,7 @@ function layout(now) {
   const c = canvas.getBoundingClientRect();
   canvasTop = c.top + scrollPos;
   const s = screen.getBoundingClientRect();
-  const cx = s.left - c.left + s.width / 2;
+  const cx = s.left - c.left + s.width / 2 + adj.x;
   // The composition was set on a wide window, where the app's screen is
   // REF_W across with its top REF_TOP below the canvas's; on a narrower one
   // all of it (the drop, the disc, the horizon, where the far rim lands)
@@ -2417,14 +2423,15 @@ function layout(now) {
   const sTop = s.top - c.top;
   // The centre sits just behind the top of the screen; the disc is about
   // 1.8 times the content's width across.
-  const cy = sTop + s.height * 0.14 + T.drop * k;
-  const R = s.width * 0.9;
+  const cy = sTop + s.height * 0.14 + T.drop * k + adj.y;
+  const R = s.width * 0.9 * adj.zoom;
   const r0 = R * 0.12;
   // Tilt it back just enough that its far rim lands where it does on the
   // wide window: near the top of the canvas there, behind the headline.
   const hz = horizon() * k;
   const d0 = cy + hz;
-  const rimY = sTop - (REF_TOP - RIM_TOP - T.drop) * k;
+  // (Moved, or drawn larger or smaller, the rim keeps its place on the disc.)
+  const rimY = cy - (s.height * 0.14 + (REF_TOP - RIM_TOP) * k) * adj.zoom;
   const tilt = Math.max(0.2, ((d0 / (rimY + hz) - 1) * d0) / R);
   // The hero's buttons, so nothing shows through them.
   const holes = [...document.querySelectorAll('.hero .btn')].slice(0, 4).map((b) => {
@@ -2441,7 +2448,7 @@ function layout(now) {
   const end = bar && next && next.top > bar.bottom ? next.top - c.top : s.bottom - c.top + 180;
   // The app's screen, where the pointer isn't on the record.
   const box = { l: s.left - c.left, r: s.right - c.left, t: s.top - c.top, b: s.bottom - c.top };
-  const key = [c.width, c.height, Math.round(cx), Math.round(cy), Math.round(end), T.drop, T.persp, T.size, T.up, T.reach, T.warp, T.warpAmt, T.fadeAt, T.fadeLen, T.songLen, T.bfStart, T.bfEnd, T.bfCurve, T.bfShape, T.bfWidth, T.bfCentre, T.bfMid].join();
+  const key = [c.width, c.height, Math.round(cx), Math.round(cy), Math.round(end), adj.zoom, adj.rings, adj.fadeAt, adj.fadeLen, T.drop, T.persp, T.size, T.up, T.reach, T.warp, T.warpAmt, T.fadeAt, T.fadeLen, T.songLen, T.bfStart, T.bfEnd, T.bfCurve, T.bfShape, T.bfWidth, T.bfCentre, T.bfMid].join();
   gl.uniform4fv(U.uHoles, new Float32Array([...holes.flat(), ...new Array(16 - holes.length * 4).fill(0)]));
   gl.uniform1f(U.uHoleCount, holes.length);
   holesNow.list = new Float32Array([...holes.flat(), ...new Array(16 - holes.length * 4).fill(0)]);
@@ -2454,7 +2461,7 @@ function layout(now) {
   const g = { cx, cy, hz, d0, tilt, rimY, up: T.up, half: c.width / 2, lens: [cx, rimY + (cy - rimY) * 0.45, Math.max(200, c.width * 0.3)] };
   // How far out it runs: all round, and (with more rings above) up top as
   // far as the rings now reach at the top of the canvas.
-  const out = R * T.size;
+  const out = R * T.size * adj.rings;
   let top = T.up > 0 ? Math.max(out, toRecord(cx, rimY, g).r) : out;
   // Rings past the rim, up top only (reach): the disc's far edge carried
   // further out toward the top of the canvas, share `reach` of the way.
@@ -3724,8 +3731,8 @@ const CURVES = {
   long: (t) => 1 - (1 - t) ** 3,
 };
 function topFade(fxTop, fxMid, fxEnd, w) {
-  const y1 = Math.max(8, Math.min(T.fadeAt, fxTop));
-  const len = Math.max(8, Math.min(T.fadeLen, y1));
+  const y1 = Math.max(8, Math.min(adj.fadeAt ?? T.fadeAt, fxTop));
+  const len = Math.max(8, Math.min(adj.fadeLen ?? T.fadeLen, y1));
   const at = (f) => `${(y1 - len + len * f).toFixed(1)}px`;
   const mid = T.bfMid;
   const topPart = `linear-gradient(to bottom, transparent 0, transparent ${at(0)}, rgb(0 0 0 / 0.06) ${at(60 / 230)}, rgb(0 0 0 / 0.5) ${at(140 / 230)}, #000 ${at(1)}, #000 ${fxTop}px, rgb(0 0 0 / ${mid}) ${fxMid}px, rgb(0 0 0 / ${mid}) 100%)`;

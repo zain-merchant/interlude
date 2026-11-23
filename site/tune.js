@@ -281,9 +281,12 @@
   // On localhost, on a machine's own name on the tailnet (a name with no
   // dot, as http://lunar-mbp:8765 on a phone), or anywhere with ?tune (kept
   // from then on; ?tune=off forgets). Nothing is loaded otherwise.
-  const on = new URLSearchParams(location.search).get('tune');
-  try { if (on === 'off') localStorage.removeItem('tune-on'); else if (on !== null) localStorage.setItem('tune-on', '1'); } catch {}
-  const kept = (() => { try { return localStorage.getItem('tune-on') === '1'; } catch { return false; } })();
+  // (In the phone preview's frame, tune-frame.js, the panel is the page's
+  // outside: the controls here only take the values it hands in.)
+  const framed = !!window.__framed;
+  const on = framed ? 'off' : new URLSearchParams(location.search).get('tune');
+  if (!framed) try { if (on === 'off') localStorage.removeItem('tune-on'); else if (on !== null) localStorage.setItem('tune-on', '1'); } catch {}
+  const kept = !framed && (() => { try { return localStorage.getItem('tune-on') === '1'; } catch { return false; } })();
   const show = on !== 'off' && (/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname) || (!location.hostname.includes('.') && location.hostname !== '') || on !== null || kept);
   const base = document.currentScript?.src ? new URL('.', document.currentScript.src).href : './';
   const groups = new Map();
@@ -292,7 +295,7 @@
   // folded away under its own heading.)
   const ORDER = ['Try', 'Archive', 'Nav', 'Hero', 'Hero record', 'Features', 'Open source', 'Footer'];
   // And within a group, its folders' order where it matters.
-  const FOLDERS = { Hero: ['Layout', 'Controller', 'Performance'] };
+  const FOLDERS = { Hero: ['Layout', 'Controller', 'Performance'], Try: ['Preview', 'Nav', 'Wordmark', 'Buttons', 'Controller', 'Record', 'Phone', 'Note', 'Footer', 'Corners'] };
   let queued = false;
   let lib = null;
   let root = null;
@@ -358,6 +361,7 @@
     if (!groups.has(group)) groups.set(group, { name: group, list: [], made: false });
     const path = def.folder ? `${def.folder}.${name}` : name;
     groups.get(group).list.push({ name, path, ...def });
+    if (framed) return;
     if (!queued) {
       queued = true;
       // Controls registered in one go of a script share a panel.
@@ -452,7 +456,8 @@
     g.stash = stash;
     const first = configOf(g);
     g.sig = JSON.stringify(first);
-    const kit = DK.createDialKit(group, first, { id, persist: true, defaultCollapsed: group !== 'Try' });
+    const kit = DK.createDialKit(group, first, { id, persist: true, defaultCollapsed: group !== 'Try',
+      onAction: (path) => g.list.find((c) => c.path === path && c.press)?.press() });
     g.kit = kit;
     g.DK = DK;
     putBack(DK, id, stash, [...shownNow].map((c) => c.path));
@@ -473,8 +478,61 @@
         if (g.hold?.has(c.path) && g.hold.get(c.path) !== x) continue;
         last[c.path] = x;
         c.apply(x);
+        send(group, c.path, x);
       }
     });
+  }
+
+  // The phone preview: the same page in a frame the size of a phone, over
+  // the page and beside the panel, which goes on working and sets the
+  // frame's values too (tune-frame.js makes it a phone inside). Only where
+  // the panel shows.
+  const SIZES = { '390x844': 'iPhone 15', '375x667': 'iPhone SE', '430x932': 'iPhone Pro Max', '820x1180': 'iPad' };
+  let preview = null;
+  function send(group, path, value) {
+    try { preview?.frame.contentWindow?.tune?.receive?.(group, path, value); } catch {}
+  }
+  function sendAll() {
+    for (const [group, g] of groups) for (const [path, v] of Object.entries(g.last || {})) send(group, path, v);
+  }
+  function phone(size) {
+    if (!show) return;
+    const [w, h] = (SIZES[size] ? size : '').split('x').map(Number);
+    if (!w) {
+      if (!preview) return;
+      preview.box.remove(); preview = null;
+      removeEventListener('resize', fitPhone); dispatchEvent(new CustomEvent('interlude:menu', { detail: false }));
+      return;
+    }
+    if (!preview) {
+      const box = document.createElement('div');
+      Object.assign(box.style, { position: 'fixed', inset: 0, zIndex: 9000, background: 'rgb(40 40 44 / 0.96)' });
+      const frame = document.createElement('iframe');
+      Object.assign(frame.style, { position: 'absolute', border: 0, borderRadius: '28px', background: '#000', boxShadow: '0 0 0 1px rgb(255 255 255 / 0.2), 0 30px 80px rgb(0 0 0 / 0.5)', transformOrigin: '0 0' });
+      frame.title = 'Phone preview';
+      const q = new URLSearchParams(location.search); q.delete('tune'); q.set('frame', '1');
+      frame.src = `${location.pathname}?${q}`;
+      frame.addEventListener('load', () => { sendAll(); setTimeout(sendAll, 1500); });
+      const cap = document.createElement('p');
+      Object.assign(cap.style, { position: 'absolute', margin: 0, color: '#ccc', font: '13px/1.4 system-ui, sans-serif', whiteSpace: 'nowrap' });
+      box.append(frame, cap);
+      document.body.append(box);
+      preview = { box, frame, cap };
+      addEventListener('resize', fitPhone);
+      // (The page behind holds still.)
+      dispatchEvent(new CustomEvent('interlude:menu', { detail: true }));
+    }
+    Object.assign(preview, { w, h, size });
+    fitPhone();
+  }
+  function fitPhone() {
+    if (!preview) return;
+    const { frame, cap, w, h, size } = preview;
+    const k = Math.min(1, (innerHeight - 64) / h);
+    const left = Math.max(16, (innerWidth - 340 - w * k) / 2);
+    Object.assign(frame.style, { width: `${w}px`, height: `${h}px`, left: `${left}px`, top: '40px', transform: k < 1 ? `scale(${k})` : '' });
+    Object.assign(cap.style, { left: `${left}px`, top: '12px' });
+    cap.textContent = `${SIZES[size]}, ${w} by ${h}${k < 1 ? `, shown at ${Math.round(k * 100)}%` : ''}`;
   }
 
   function rebuild(group) {
@@ -613,20 +671,36 @@
       onInput?.(v);
     };
     apply(value);
-    if (show) add(unit ? `${label} (${unit})` : label, { key: label, apply, config: [value, min, max, step], folder, show: when });
+    if (show || framed) add(unit ? `${label} (${unit})` : label, { key: label, apply, config: [value, min, max, step], folder, show: when });
   }
 
   function select({ label, options, value, onInput, folder, show: when }) {
     value = v1(label, '', folder, value);
     onInput?.(value);
     const list = () => (typeof options === 'function' ? options() : options).map(([v, t]) => ({ value: v, label: t }));
-    if (show) add(label, { key: label, apply: (v) => onInput?.(v), config: typeof options === 'function' ? () => ({ type: 'select', options: list(), default: value }) : { type: 'select', options: list(), default: value }, folder, show: when });
+    if (show || framed) add(label, { key: label, apply: (v) => onInput?.(v), config: typeof options === 'function' ? () => ({ type: 'select', options: list(), default: value }) : { type: 'select', options: list(), default: value }, folder, show: when });
   }
 
   function color({ label, value, onInput, folder, show: when }) {
     value = v1(label, '', folder, value);
     onInput?.(value);
-    if (show) add(label, { key: label, apply: (v) => onInput?.(v), config: { type: 'color', default: value }, folder, show: when });
+    if (show || framed) add(label, { key: label, apply: (v) => onInput?.(v), config: { type: 'color', default: value }, folder, show: when });
+  }
+
+  // A button: press() when it's pressed.
+  function button({ label, onPress, folder, show: when }) {
+    if (show) add(label, { key: label, apply: () => {}, press: onPress, config: { type: 'action', label: label.slice(label.indexOf(':') + 1).trim() }, folder, show: when });
+  }
+  // A checkbox.
+  function toggle({ label, value, onInput, folder, show: when }) {
+    value = v1(label, '', folder, value);
+    onInput?.(value);
+    if (show || framed) add(label, { key: label, apply: (v) => onInput?.(v), config: value, folder, show: when });
+  }
+  // (In the preview's frame: a value from the panel outside.)
+  function receive(group, path, value) {
+    const c = groups.get(group)?.list.find((c) => c.path === path);
+    if (c && !c.press) c.apply(value);
   }
 
   function set(label, value) {
@@ -653,14 +727,14 @@
     value = v1(label, '', folder, value);
     if (value && value.type) { const { type, ...rest } = value; value = rest; }
     onInput?.(value);
-    if (show) add(label, { key: label, apply: (v) => onInput?.(v), config: { type: 'spring', ...value }, folder, show: when });
+    if (show || framed) add(label, { key: label, apply: (v) => onInput?.(v), config: { type: 'spring', ...value }, folder, show: when });
   }
   function easing({ label, value, onInput, folder, show: when }) {
     value = v1(label, '', folder, value);
     if (value && value.type) { const { type, ...rest } = value; value = rest; }
     onInput?.(value);
-    if (show) add(label, { key: label, apply: (v) => onInput?.(v), config: { type: 'easing', ...value }, folder, show: when });
+    if (show || framed) add(label, { key: label, apply: (v) => onInput?.(v), config: { type: 'easing', ...value }, folder, show: when });
   }
 
-  window.tune = { slider, select, color, spring, easing, refresh, set, backups, restore, shown: show };
+  window.tune = { slider, select, color, spring, easing, button, toggle, refresh, set, backups, restore, shown: show, phone, framePage: () => preview?.frame.contentWindow, receive: framed ? receive : undefined };
 })();
