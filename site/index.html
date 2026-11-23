@@ -22,7 +22,7 @@
        draw its text); the Latin file is fetched straight away. -->
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="style.css?v=20261122a">
-  <script src="tune.js?v=20261120m"></script>
+  <script src="tune.js?v=20261122a"></script>
   <script>
     // Live updates while working on the site locally (the dev server
     // streams the files whose contents changed). Stylesheets swap in place,
@@ -1323,8 +1323,9 @@
       // costs to run; the cursor and waveforms move a little less smoothly.
       let appFps = 30;
       // The pushed-back screen in controller mode: how far it tips (negative
-      // tips its top toward you) and where it scales from.
-      const heroVars = { '--tilt': '-3deg', '--anchor': '50% 0%' };
+      // tips its top toward you; none, it stays flat, the owner's pick) and
+      // where it scales from.
+      const heroVars = { '--tilt': '0deg', '--anchor': '50% 0%' };
       const sendVars = () => {
         live.contentWindow?.postMessage({ interlude: 'css', vars: heroVars }, '*');
         clips?.setVars(heroVars);
@@ -1332,7 +1333,7 @@
       window.tune?.slider({ label: 'Hero: controller comes in from (px, minus is above)', min: -160, max: 160, step: 2, value: -40, unit: 'px', onInput: (v) => { heroVars['--hw-from'] = `${v}px`; sendVars(); } });
       window.tune?.slider({ label: 'Hero: controller follows the screen by (ms)', min: 0, max: 500, step: 5, value: 110, unit: 'ms', onInput: (v) => { heroVars['--hw-delay'] = `${v}ms`; sendVars(); } });
       window.tune?.slider({ label: 'Hero: controller blur as it comes in', min: 0, max: 30, step: 0.5, value: 10, unit: 'px', onInput: (v) => { heroVars['--hw-blur'] = `${v}px`; sendVars(); } });
-      window.tune?.slider({ label: 'Hero: screen tilt in controller mode', min: -10, max: 10, step: 0.5, value: -3, unit: '°', onInput: (v) => { heroVars['--tilt'] = `${v}deg`; sendVars(); } });
+      window.tune?.slider({ label: 'Hero: screen tilt in controller mode', min: -10, max: 10, step: 0.5, value: 0, unit: '°', onInput: (v) => { heroVars['--tilt'] = `${v}deg`; sendVars(); } });
       window.tune?.select({ label: 'Hero: screen scales from', value: 'top', options: [['top', 'Its top'], ['center', 'Its middle'], ['bottom', 'Its bottom']], onInput: (v) => { heroVars['--anchor'] = { top: '50% 0%', center: '50% 50%', bottom: '50% 100%' }[v]; sendVars(); } });
       const sendFps = () => live.contentWindow?.postMessage({ interlude: 'fps', fps: appFps }, '*');
       live.addEventListener('load', sendFps);
@@ -1370,7 +1371,7 @@
           clipsHost.setAttribute('aria-hidden', 'true');
           live.after(clipsHost);
           try {
-            const { mountClips } = await import('./hero/clips.js?v=20261121c');
+            const { mountClips } = await import('./hero/clips.js?v=20261122a');
             clips = await mountClips(clipsHost, {
               base: 'hero/clips/', hand: mode, paused: true, log: q.has('log'),
               onReady: () => {

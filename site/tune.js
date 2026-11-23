@@ -123,7 +123,7 @@
       "controller comes in from (px, minus is above) (px)": -40,
       "controller follows the screen by (ms) (ms)": 135,
       "controller blur as it comes in (px)": 10,
-      "screen tilt in controller mode (°)": -3,
+      "screen tilt in controller mode (°)": 0,
       "screen scales from": "top"
     },
     "Hero record": {

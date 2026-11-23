@@ -39,7 +39,7 @@ const TICK = 1000 / 12;
 
 /** The base styles, scoped to the player's root. */
 const BASE_CSS = `
-.hero-clips { position: relative; width: 1440px; height: 920px; overflow: hidden; --tilt: -3deg; --anchor: 50% 0%; }
+.hero-clips { position: relative; width: 1440px; height: 920px; overflow: hidden; --tilt: 0deg; --anchor: 50% 0%; }
 .hero-clips .app-host { height: 900px; }
 .hero-clips video { position: absolute; inset: 0; width: 100%; height: 100%; display: block; z-index: 0; }
 .hero-clips video.front { z-index: 1; }
