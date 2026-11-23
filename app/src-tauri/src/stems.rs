@@ -103,6 +103,8 @@ pub struct StemsInfo {
     cache_gb: u32,
     /// Bytes the cache takes now.
     cache_bytes: u64,
+    /// Bytes the model takes, with the copy that loads quickly.
+    model_bytes: u64,
     model: ModelInfo,
 }
 
@@ -220,6 +222,9 @@ impl Stems {
             enabled: saved.enabled,
             cache_gb: saved.cache_gb,
             cache_bytes: self.cache_dir().map_or(0, |d| dj_stems::cache::size(&d)),
+            model_bytes: self.model_path().map_or(0, |p| {
+                std::fs::metadata(&p).map_or(0, |m| m.len()) + dj_stems::quick::size(&p)
+            }),
             model: self.model_info(),
         }
     }
@@ -339,6 +344,9 @@ pub fn remove_stems_model(stems: State<'_, Stems>) -> Result<ModelInfo, String> 
     stems.allow_download(false);
     if let Some(m) = &stems.model {
         m.remove().map_err(|e| e.to_string())?;
+    }
+    if let Some(p) = stems.model_path() {
+        dj_stems::quick::remove(&p).map_err(|e| e.to_string())?;
     }
     Ok(stems.model_info())
 }

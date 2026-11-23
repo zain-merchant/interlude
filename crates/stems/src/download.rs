@@ -194,7 +194,7 @@ fn content_range(v: &str) -> Option<(u64, Option<u64>)> {
 
 /// Bytes free on the disk `dir` is on, where the system can say.
 #[cfg(unix)]
-fn free_space(dir: &Path) -> Option<u64> {
+pub(crate) fn free_space(dir: &Path) -> Option<u64> {
     use std::os::unix::ffi::OsStrExt;
     let path = std::ffi::CString::new(dir.as_os_str().as_bytes()).ok()?;
     let mut s: libc::statvfs = unsafe { std::mem::zeroed() };
@@ -206,7 +206,7 @@ fn free_space(dir: &Path) -> Option<u64> {
 }
 
 #[cfg(not(unix))]
-fn free_space(_dir: &Path) -> Option<u64> {
+pub(crate) fn free_space(_dir: &Path) -> Option<u64> {
     None
 }
 
@@ -225,7 +225,7 @@ pub fn file_sha256(path: &Path) -> std::io::Result<String> {
     Ok(hex(&hash.finalize()))
 }
 
-fn hex(bytes: &[u8]) -> String {
+pub(crate) fn hex(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
 
