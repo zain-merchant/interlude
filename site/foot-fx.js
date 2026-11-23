@@ -520,7 +520,10 @@ function layout() {
   let tx = 0;
   if (tn) { const rg = document.createRange(); rg.selectNodeContents(tn); tx = rg.getBoundingClientRect().left - c.left; }
   x.fillStyle = '#fff';
-  x.fillText(word.dataset.text, tx, baseline);
+  // (The I to n gap has an adjustment of its own, --wm-in, as the page's letters.)
+  const name = word.dataset.text, kern = (parseFloat(cs.getPropertyValue('--wm-in')) || 0) * size;
+  x.fillText(name[0], tx, baseline);
+  x.fillText(name.slice(1), tx + x.measureText(name[0]).width + kern, baseline);
   gl.bindTexture(gl.TEXTURE_2D, tex);
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, t);
   // The grooves: arcs of the CSS ellipse "100% 50% at 50% 135%" of the

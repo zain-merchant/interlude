@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Interlude: a free DJ app for Mac</title>
-  <meta name="description" content="Interlude is a free, open-source DJ app for Mac. Two decks, sync, stems, effects, a fast library, and support for 140+ controllers.">
+  <meta name="description" content="Interlude is a free, open-source DJ app for Mac. Two decks, sync, stems, effects, a fast library, and support for 150+ controllers.">
   <meta property="og:title" content="Interlude">
   <meta property="og:description" content="A free, open-source DJ app for Mac.">
   <meta property="og:type" content="website">
@@ -13,7 +13,7 @@
   <meta property="og:image" content="https://interludedj.com/img/og.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="Interlude, a free, open-source DJ app for the Mac">
+  <meta property="og:image:alt" content="Interlude, a free, open-source DJ app for Mac">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:image" content="https://interludedj.com/img/og.png">
   <meta name="theme-color" content="#09090b">
@@ -21,7 +21,7 @@
   <!-- Geist, served from here (no other site to reach before the page can
        draw its text); the Latin file is fetched straight away. -->
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="style.css?v=20261123q">
+  <link rel="stylesheet" href="style.css?v=20261123v">
   <script>
     // (The phone preview's frame, opened by this same site with the Tune
     // panel showing; nothing for anyone else.)
@@ -185,7 +185,7 @@
       slider('navedge', { label: 'Edge strength', folder: 'Nav', value: 0.09, min: 0, max: 0.2, step: 0.01, apply: (v) => css('--nav-line', `rgb(255 255 255 / ${v})`) });
       select('navglass', { label: 'Surface', folder: 'Nav', value: 'solid', options: [['solid', 'Solid'], ['glass', 'Glass'], ['mixed', 'Solid at the top'], ['light', 'Light blur']], apply: (v) => set('navglass', v === 'solid' ? '' : v) });
       select('navtop', { label: 'Download at the top', folder: 'Nav', value: 'off', options: [['off', 'Hidden'], ['on', 'Shown where it fits']], apply: (v) => { set('navtop', v === 'on' ? 'on' : ''); remeasure(); } });
-      select('navdl', { label: 'Download looks like', folder: 'Nav', value: 'pill', options: [['pill', 'Pill'], ['ghost', 'Outline'], ['text', 'Text'], ['pillround', 'Round pill']], apply: (v) => { set('navdl', v === 'pill' ? '' : v); remeasure(); } });
+      select('navdl', { label: 'Download, look', folder: 'Nav', value: 'ghost', options: [['ghost', 'Outline'], ['pill', 'Pill (before)'], ['text', 'Text'], ['pillround', 'Round pill']], apply: (v) => { set('navdl', v === 'pill' ? '' : v); remeasure(); } });
 
       // Wordmark: the letter spacing of "Interlude", everywhere it's written
       // (the nav's is one size drawn smaller once scrolled).
@@ -195,28 +195,34 @@
       track('wmfoot', 'Footer, small', '--wm-foot', -0.04);
       track('wmbig', 'Footer, large', '--wm-big', -0.075, () => fire('try-wordmark'));
       track('wmrec', 'Note record', '--wm-rec', -0.03);
+      slider('wmin', { label: 'I to n, more or less', folder: 'Wordmark', value: -0.02, min: -0.08, max: 0.04, step: 0.005, unit: 'em', apply: (v) => { css('--wm-in', `${v}em`); remeasure(); fire('try-wordmark'); } });
 
       // Buttons, and the film grain over them (View on GitHub and the
       // mouse/controller switch, or all of the hero's).
-      select('surface', { label: 'GitHub and switch', folder: 'Buttons', value: 'today', options: [['today', 'Today'], ['ink', 'Near-black'], ['glass', 'Glass'], ['crisp', 'Firm edge'], ['raised', 'Raised grey']], apply: (v) => set('surface', v === 'today' ? '' : v) });
+      select('surface', { label: 'GitHub and switch, fill', folder: 'Buttons', value: 'ink', options: [['ink', 'Near-black'], ['today', 'Grey (before)'], ['glass', 'Glass'], ['crisp', 'Firm edge'], ['raised', 'Raised grey']], apply: (v) => set('surface', v === 'today' ? '' : v) });
       select('btn', { label: 'Both hero buttons', folder: 'Buttons', value: 'today', options: [['today', 'Today'], ['ink', 'Ink'], ['label', 'Record label'], ['split', 'Split'], ['key', 'Key']], apply: (v) => { set('btn', v === 'today' ? '' : v); fire('try-buttons'); fire('try-squircles'); } });
-      select('btngrain', { label: 'Film grain on them', folder: 'Buttons', value: 'off', options: [['off', 'None'], ['under', 'Under words'], ['over', 'Over words']], apply: (v) => set('btngrain', v === 'off' ? '' : v) });
+      select('btngrain', { label: 'Film grain, buttons', folder: 'Buttons', value: 'off', options: [['off', 'None (before)'], ['github', 'GitHub only'], ['under', 'Both, under words'], ['over', 'Both, over words']], apply: (v) => set('btngrain', v === 'off' ? '' : v) });
       slider('btngrainamt', { label: 'Grain strength', folder: 'Buttons', value: 1, min: 0.2, max: 3, step: 0.1, unit: 'x', apply: (v) => css('--btn-grain', String(v)) });
       toggle('btngrainall', { label: 'Grain on Download too', folder: 'Buttons', value: false, apply: (v) => set('btngrainall', v) });
 
       // Controller mode.
       select('switchat', { label: 'Switch sits', folder: 'Controller', value: 'mid', options: [['mid', 'Below, centred'], ['belowleft', 'Below, left'], ['above', 'Above, left'], ['abovemid', 'Above, centred']], apply: (v) => { set('switchat', v === 'mid' ? '' : v); fire('try-rec'); } });
-      slider('switchgap', { label: 'Switch, clear of controller', folder: 'Controller', value: 14, min: -40, max: 40, step: 1, unit: 'px', apply: (v) => { css('--switch-gap', `${v}px`); fire('try-rec'); } });
       slider('switchpad', { label: 'Switch, padding', folder: 'Controller', value: 6, min: 2, max: 10, step: 1, unit: 'px', apply: (v) => css('--switch-pad', `${v}px`) });
       st.autoAfter = 3;
       slider('autoafter', { label: 'Switches by itself after', folder: 'Controller', value: 3, min: 1, max: 12, step: 0.5, unit: 's', apply: (v) => (st.autoAfter = v) });
       st.reveal = 'on';
       select('reveal', { label: 'Pressing Controller scrolls', folder: 'Controller', value: 'on', options: [['on', 'To half of it, if it must'], ['off', 'Never']], apply: (v) => (st.reveal = v) });
-      st.ctl = { scale: 1, down: 70 };
+      // (Up: the controller's foot just past the video's, and the switch 28px
+      // under it, as it used to be. Low: as before, further below both.)
+      const SITS = { up: [24, 7], low: [70, 14] };
+      st.ctl = { scale: 1, down: SITS.up[0] };
+      select('ctlsits', { label: 'Controller sits', folder: 'Controller', value: 'up', options: [['up', 'Up, switch close'], ['low', 'Low (before)']], apply: (v, first) => { const [down, gap] = SITS[v]; st.ctl.down = down; css('--switch-gap', `${gap}px`); fire('try-controller'); fire('try-rec'); if (!first) { T.set('Try: Controller, down (px)', down); T.set('Try: Switch, clear of it (px)', gap); } } });
+      slider('ctldown', { label: 'Controller, down (px)', folder: 'Controller', value: SITS.up[0], min: 0, max: 130, step: 2, apply: (v, first) => { if (first && !q.has('ctldown')) return; st.ctl.down = v; fire('try-controller'); } });
+      slider('switchgap', { label: 'Switch, clear of it (px)', folder: 'Controller', value: SITS.up[1], min: -40, max: 40, step: 1, apply: (v, first) => { if (first && !q.has('switchgap')) return; css('--switch-gap', `${v}px`); fire('try-rec'); } });
       slider('ctlscale', { label: 'Video size', folder: 'Controller', value: 100, min: 88, max: 100, step: 0.5, unit: '%', apply: (v) => { st.ctl.scale = v / 100; fire('try-controller'); } });
-      slider('ctldown', { label: 'Controller down', folder: 'Controller', value: 70, min: 0, max: 130, step: 2, unit: 'px', apply: (v) => { st.ctl.down = v; fire('try-controller'); } });
-      select('arrive', { label: 'Glint', folder: 'Controller', value: 'on', options: [['on', 'When out of view'], ['always', 'Every time'], ['off', 'None']], apply: (v) => (st.arrive = v) });
-      slider('arriveamt', { label: 'Glint, strength', folder: 'Controller', value: 0.16, min: 0.02, max: 0.3, step: 0.01, apply: (v) => css('--arrive', String(v)) });
+      select('arrive', { label: 'Glint, where', folder: 'Controller', value: 'card', options: [['card', 'As the feature cards’'], ['on', 'Down the screen (before)'], ['off', 'None']], apply: (v) => { st.arrive = v; set('arrive', v === 'on' ? 'screen' : ''); } });
+      slider('arriveamt', { label: 'Glint, light on the screen', folder: 'Controller', value: 0.12, min: 0.02, max: 0.4, step: 0.01, apply: (v) => css('--arrive', String(v)) });
+      slider('arrivectl', { label: 'Glint, light on the controller', folder: 'Controller', value: 0.5, min: 0.05, max: 0.9, step: 0.05, apply: (v) => css('--arrive-ctl', String(v)) });
 
       // The record behind the hero: what a phone shows, and the desktop too
       // if it's ticked. A composition, or each part of it by hand.
@@ -230,13 +236,13 @@
         small: { y: 60, zoom: 0.62, rings: 0.62, fade: 120, len: 110, op: 0.9 },
         darker: { op: 0.55 },
       };
-      const rec = st.rec = { ...NONE, both: false };
+      const rec = st.rec = { ...NONE, ...COMP.sunk, both: false };
       const recNow = () => { css('--rec-op', String(rec.op)); set('recboth', rec.both); fire('try-rec'); };
       const part = { recx: ['x', 'Across'], recy: ['y', 'Down'], reczoom: ['zoom', 'Size'], recrings: ['rings', 'Rings reach'], recfade: ['fade', 'Fades in by'], reclen: ['len', 'Fade length'], recop: ['op', 'Opacity'] };
-      const LBL = { recx: 'Phone, across (px)', recy: 'Phone, down (px)', reczoom: 'Phone, size', recrings: 'Phone, rings run out', recfade: 'Phone, fades in by (px)', reclen: 'Phone, fade length (px)', recop: 'Phone, opacity' };
-      select('recbg', { label: 'Phone, composition', folder: 'Record', value: 'today', options: [['today', 'Today'], ['lower', 'Lower, as was'], ['sunk', 'Sunk'], ['low', 'Low arc'], ['rim', 'Whole rim'], ['small', 'Small'], ['darker', 'Darker']], apply: (v, first) => { Object.assign(rec, NONE, COMP[v] || {}); recNow(); if (!first) for (const k in part) T.set(`Try: ${LBL[k]}`, rec[part[k][0]]); } });
+      const LBL = { recx: 'Phone record, across (px)', recy: 'Phone record, down (px)', reczoom: 'Phone record, size', recrings: 'Phone record, rings', recfade: 'Phone record, fades in by', reclen: 'Phone record, fade length', recop: 'Phone record, opacity' };
+      select('recbg', { label: 'Phone record', folder: 'Record', value: 'sunk', options: [['sunk', 'Sunk'], ['today', 'Full (before)'], ['lower', 'Lower, as was'], ['low', 'Low arc'], ['rim', 'Whole rim'], ['small', 'Small'], ['darker', 'Darker']], apply: (v, first) => { Object.assign(rec, NONE, COMP[v] || {}); recNow(); if (!first) for (const k in part) T.set(`Try: ${LBL[k]}`, rec[part[k][0]]); } });
       const R = [['recx', -300, 300, 2], ['recy', -120, 400, 2], ['reczoom', 0.35, 1.6, 0.01], ['recrings', 0.2, 1.2, 0.01], ['recfade', 0, 700, 5], ['reclen', 0, 700, 5], ['recop', 0.1, 1, 0.05]];
-      for (const [k, min, max, step] of R) slider(k, { label: LBL[k], folder: 'Record', value: NONE[part[k][0]], min, max, step, apply: (v, first) => { if (first && !q.has(k)) return; rec[part[k][0]] = v; recNow(); } });
+      for (const [k, min, max, step] of R) slider(k, { label: LBL[k], folder: 'Record', value: { ...NONE, ...COMP.sunk }[part[k][0]], min, max, step, apply: (v, first) => { if (first && !q.has(k)) return; rec[part[k][0]] = v; recNow(); } });
       toggle('recboth', { label: 'Apply to desktop too', folder: 'Record', value: false, apply: (v) => { rec.both = v; recNow(); } });
 
       // Phone.
@@ -911,7 +917,7 @@
           </button>
           <i class="thumb" aria-hidden="true"></i><i class="grain grain--btn" aria-hidden="true"></i>
         </div>
-        <span class="shot-tag">Works with 140+ MIDI controllers</span>
+        <span class="shot-tag">Works with 150+ MIDI controllers</span>
       </div>
     </section>
 
@@ -978,7 +984,7 @@
           <h3><span class="dot a"></span>Controllers</h3>
           <ul>
             <li><b>DDJ-FLX4</b><span>Mapped in full</span></li>
-            <li><b>140+ more</b><span>Via Mixxx mappings</span></li>
+            <li><b>150+ more</b><span>Via Mixxx mappings</span></li>
             <li><b>The rest</b><span>MIDI learn</span></li>
           </ul>
         </div>
@@ -1008,7 +1014,7 @@
         </details>
         <details>
           <summary>Will my controller work?</summary>
-          <p>The Pioneer DDJ-FLX4 is fully mapped. Interlude also reads Mixxx mapping files and ships with more than 140 of them, so most popular controllers connect on their own. If yours doesn't, Settings › Controllers lets you map it with MIDI learn.</p>
+          <p>The Pioneer DDJ-FLX4 is fully mapped. Interlude also reads Mixxx mapping files and ships with more than 150 of them, so most popular controllers connect on their own. If yours doesn't, Settings › Controllers lets you map it with MIDI learn.</p>
         </details>
         <details>
           <summary>Does it change my music files?</summary>
@@ -1178,7 +1184,7 @@
             el('circle', { cx: 2.3, cy: -12, r: 3.6, fill: 'none', stroke: '#ff9b45', 'stroke-width': 1.2 }, tileG);
             // Its name under it, larger; under that, which side.
             const n = el('text', { y: 11, 'text-anchor': 'middle', 'font-size': 7.4, 'font-weight': 650, 'letter-spacing': -0.25, style: ink(92), 'font-family': 'Geist, sans-serif' }, lab);
-            n.textContent = 'Interlude'; n.setAttribute('class', 'rec-name'); n.removeAttribute('letter-spacing');
+            el('tspan', {}, n).textContent = 'I'; n.append('nterlude'); n.setAttribute('class', 'rec-name'); n.removeAttribute('letter-spacing');
             const sb = el('text', { y: 18, 'text-anchor': 'middle', 'font-size': 3.3, 'font-weight': 600, 'letter-spacing': 0.9, style: ink(70), 'font-family': 'Geist, sans-serif' }, lab);
             sb.textContent = `SIDE ${side}`;
             el('circle', { r: 1.3, fill: '#0b0b0d' }, lab);
@@ -1875,7 +1881,7 @@
           clipsHost.setAttribute('aria-hidden', 'true');
           live.after(clipsHost);
           try {
-            const { mountClips } = await import('./hero/clips.js?v=20261123b');
+            const { mountClips } = await import('./hero/clips.js?v=20261123e');
             clips = await mountClips(clipsHost, {
               base: 'hero/clips/', hand: mode, paused: true, log: q.has('log'),
               onReady: () => {
@@ -1983,10 +1989,15 @@
         return { share: seen / (b.bottom - b.top), by: seen * 2 >= b.bottom - b.top - 1 ? 0 : mid > foot ? mid - foot : mid < top ? mid - top : 0, out: b.top - foot };
       };
       const land = () => {
-        const how = window.tryState?.arrive ?? 'on';
-        if (how === 'off' || reduced.matches || moving) return;
+        const how = window.tryState?.arrive ?? 'card';
+        if (how === 'off' || reduced.matches) return;
         const v = shows();
-        if (how === 'always' || (v && v.share < 0.5)) { arrive.classList.remove('go'); void arrive.offsetWidth; arrive.classList.add('go'); }
+        // (The feature cards' glint, turned to run from top to bottom: across
+        // the controller as it comes in, where it's in view or being brought
+        // into it; else down the screen, so the eye goes down to it.)
+        if (how === 'card' && v && (moving || v.share >= 0.5)) { clips?.glint?.(); return; }
+        if (moving || !v || v.share >= 0.5) return;
+        arrive.classList.remove('go'); void arrive.offsetWidth; arrive.classList.add('go');
       };
       document.addEventListener('interlude:hand', (e) => { if (e.detail.hand === 'controller') setTimeout(land, 260); });
       // Pressed (by a person), Controller brings half of itself into view, if
@@ -2140,7 +2151,7 @@
           io.observe(w);
         });
       }
-      const fx = await import('./foot-fx.js?v=20261123c').catch(() => null);
+      const fx = await import('./foot-fx.js?v=20261123d').catch(() => null);
       addEventListener('foot-fit', () => fx?.relayout());
       // Without tune.js (or an older one), each control still applies its default.
       const own = (o) => o.onInput?.(o.value);
@@ -2154,7 +2165,7 @@
         const gl = !!fx?.ready;
         // Without WebGL the word falls back to the first version, in CSS.
         d.dataset.foot = gl ? m : 'css';
-        d.toggleAttribute('data-foot-gl', gl);
+        d.toggleAttribute('data-foot-gl', gl); dispatchEvent(new Event('try-wordmark'));
         if (fx) { fx.T.mode = m; fx.relayout(); }
         if (m !== mode) { mode = m; tune.refresh('Footer'); }
       };
@@ -2745,7 +2756,8 @@
       // pixels right and ran off the right edge there.)
       const ink = { key: '', left: 0, width: 0 };
       const measureInk = (cs, fs) => {
-        const key = `${cs.fontWeight}|${cs.fontFamily}|${parseFloat(cs.letterSpacing) / fs}|${text.textContent.trim()}`;
+        const kern = document.documentElement.hasAttribute('data-foot-gl') ? parseFloat(getComputedStyle(w).getPropertyValue('--wm-in')) || 0 : 0;
+        const key = `${cs.fontWeight}|${cs.fontFamily}|${parseFloat(cs.letterSpacing) / fs}|${kern}|${text.textContent.trim()}`;
         if (ink.key === key) return ink;
         const S = 200, word = text.textContent.trim();
         const c = document.createElement('canvas');
@@ -2758,8 +2770,8 @@
         x.font = `${cs.fontWeight} ${S}px ${cs.fontFamily}`;
         x.textBaseline = 'alphabetic';
         x.fillStyle = '#fff';
-        if ('letterSpacing' in x) { x.letterSpacing = `${ls}px`; x.fillText(word, pad, S * 1.2); }
-        else { let at = pad; for (const ch of word) { x.fillText(ch, at, S * 1.2); at += x.measureText(ch).width + ls; } }
+        if ('letterSpacing' in x) { x.letterSpacing = `${ls}px`; x.fillText(word[0], pad, S * 1.2); x.fillText(word.slice(1), pad + x.measureText(word[0]).width + kern * S, S * 1.2); }
+        else { let at = pad; for (const ch of word) { x.fillText(ch, at, S * 1.2); at += x.measureText(ch).width + ls + (at === pad ? kern * S : 0); } }
         const d = x.getImageData(0, 0, c.width, c.height).data;
         let l = -1, r = -1;
         for (let col = 0; col < c.width && l < 0; col++) for (let row = 0; row < c.height; row++) if (d[(row * c.width + col) * 4 + 3] > 8) { l = col; break; }

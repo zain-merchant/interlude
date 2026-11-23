@@ -275,8 +275,8 @@ h1 { margin: 0; font-size: clamp(48px, 9vw, 88px); font-weight: 600; letter-spac
 .shot-bar {
   position: relative; z-index: 1; display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 10px 16px; width: 100%;
   /* How far below the frame the controller reaches, and clear of it. */
-  --hang: calc((var(--ctl-down, 70px) + 3px) * var(--s));
-  margin: calc(var(--hang) + var(--switch-gap, 14px)) 0 0;
+  --hang: calc((var(--ctl-down, 24px) + 3px) * var(--s));
+  margin: max(28px, calc(var(--hang) + var(--switch-gap, 7px))) 0 0;
 }
 html[data-switchat="belowleft"] .shot-bar { justify-content: space-between; }
 @media (min-width: 1061px) { html[data-switchat="belowleft"] .shot-bar { margin-top: 18px; } }
@@ -2381,32 +2381,48 @@ html[data-btn="key"] .switch .thumb { background: #f1eee6; box-shadow: inset 0 1
 html:not([data-wm-lock])[data-nav="morph"] .nav .brand span { letter-spacing: var(--wmk-nav, -0.03em); }
 html:not([data-wm-lock]) .foot-word { letter-spacing: var(--wm-big, -0.07em); }
 .rec-name { letter-spacing: var(--wm-rec, -0.03em); }
+/* The gap after the I, between two upright stems, which no even spacing
+   brings level with the rest: an adjustment of its own. (The footer's large
+   one only where its canvas draws it, foot-fx.js: the other way repeats the
+   whole word in one piece.) */
+html:not([data-wm-lock])[data-nav="morph"] .nav .brand span::first-letter { letter-spacing: calc(var(--wmk-nav, -0.03em) + var(--wm-in, 0em)); }
+.foot .brand span::first-letter { letter-spacing: calc(var(--wm-foot, -0.03em) + var(--wm-in, 0em)); }
+html[data-foot-gl]:not([data-wm-lock]) .foot-word::first-letter { letter-spacing: calc(var(--wm-big, -0.07em) + var(--wm-in, 0em)); }
+.rec-name tspan { letter-spacing: calc(var(--wm-rec, -0.03em) + var(--wm-in, 0em)); }
 
 /* The film grain on the hero's buttons and the switch (Try, Buttons): the
    same frames as over the record, stepped with it. Under the words it's the
    surface's; over them it's the whole button's. It takes no pointer. */
 .grain--btn { display: none; }
 html[data-btngrain] .cta .btn.ghost, html[data-btngrain][data-btngrainall] .cta .btn, html[data-btngrain] .switch { position: relative; }
-html[data-btngrain] :is(.cta .btn.ghost, .switch) > .grain--btn, html[data-btngrain][data-btngrainall] .cta .btn > .grain--btn {
+html[data-btngrain] .cta .btn.ghost > .grain--btn, html[data-btngrain]:not([data-btngrain="github"]) .switch > .grain--btn, html[data-btngrain][data-btngrainall] .cta .btn > .grain--btn {
   display: block; position: absolute; inset: 0; z-index: 0; width: auto; height: auto; border-radius: inherit; pointer-events: none;
   opacity: calc(0.12 * var(--btn-grain, 1)) !important;
   -webkit-mask-image: none; mask-image: none;
 }
 html[data-btngrain="under"] .cta .btn > :not(.grain--btn) { position: relative; z-index: 1; }
-html[data-btngrain="over"] :is(.cta .btn, .switch) > .grain--btn { z-index: 2; }
+html:is([data-btngrain="over"], [data-btngrain="github"]) :is(.cta .btn, .switch) > .grain--btn { z-index: 2; }
 
-/* A light drawn once down the screen as the controller lands below the
-   window (index.html, land). */
+/* With the controller below the window, a light drawn once down the screen as
+   it lands (index.html, land): the feature cards' glint (the "connected" tag,
+   the folder's row), its slant and its pace, turned to run from top to
+   bottom. (data-arrive="screen": the one before it.) */
 .arrive { position: absolute; inset: 0; z-index: 3; overflow: hidden; border-radius: calc(28px * var(--s)); pointer-events: none; display: none; }
-.arrive.go { display: block; animation: arrive-end 1.9s linear both; }
+.arrive.go { display: block; animation: arrive-end 2.1s step-end both; }
 .arrive.go::before {
-  content: ''; position: absolute; left: 0; right: 0; top: 0; height: 40%;
-  /* (A soft tail and a firm front edge, so it reads as going down.) */
+  content: ''; position: absolute; left: -2%; right: -2%; top: 0; height: 60%;
+  background: linear-gradient(183deg, transparent 20%, rgb(255 255 255 / var(--arrive, 0.12)) 50%, transparent 80%);
+  animation: arrive calc(1.9 * var(--glide-ms)) var(--glide) 0.08s both; will-change: transform;
+}
+@keyframes arrive { from { transform: translateY(-70%); } to { transform: translateY(150%); } }
+html[data-arrive="screen"] .arrive.go { animation-duration: 1.9s; }
+html[data-arrive="screen"] .arrive.go::before {
+  left: 0; right: 0; height: 40%;
   background: linear-gradient(to bottom, transparent, rgb(255 255 255 / calc(0.35 * var(--arrive, 0.16))) 55%, rgb(255 255 255 / var(--arrive, 0.16)) 94%, transparent);
   -webkit-mask-image: linear-gradient(to right, transparent, #000 22% 78%, transparent); mask-image: linear-gradient(to right, transparent, #000 22% 78%, transparent);
-  animation: arrive 1.7s 0.05s cubic-bezier(0.45, 0, 0.3, 1) both; will-change: transform;
+  animation: arrive-before 1.7s 0.05s cubic-bezier(0.45, 0, 0.3, 1) both;
 }
-@keyframes arrive { from { transform: translateY(-105%); } to { transform: translateY(255%); } }
+@keyframes arrive-before { from { transform: translateY(-105%); } to { transform: translateY(255%); } }
 @keyframes arrive-end { to { visibility: hidden; } }
 @media (prefers-reduced-motion: reduce) { .arrive { display: none !important; } }
 

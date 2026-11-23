@@ -67,6 +67,21 @@ const BASE_CSS = `
   opacity: 1; transform: none; filter: none;
   transition: transform var(--smooth-ms) var(--smooth) var(--hw-delay, 110ms), opacity var(--smooth-ms) var(--smooth) var(--hw-delay, 110ms), filter 340ms cubic-bezier(0.2, 0, 0, 1) var(--hw-delay, 110ms);
 }
+/* A light across it as it comes in (glint(), below): the feature cards' own
+   ("connected", and the folder's row), turned to run from top to bottom,
+   inside the controller's outline as everything in here is. */
+.hero-clips .desk .glint { position: absolute; inset: 0; z-index: 4; overflow: hidden; display: none; }
+.hero-clips .desk .glint.go { display: block; animation: hero-clips-glint-end 1.7s step-end both; }
+.hero-clips .desk .glint.go::before {
+  /* (The cards' band leans a twentieth of its way across; so does this.) */
+  content: ''; position: absolute; left: -2%; right: -2%; top: 0; height: 60%;
+  background: linear-gradient(183deg, transparent 20%, rgb(255 255 255 / var(--arrive-ctl, 0.5)) 50%, transparent 80%);
+  /* (The cards' curve, longer: it has several times as far to go.) */
+  animation: hero-clips-glint calc(1.5 * var(--glide-ms, 977ms)) var(--glide, ease-out) 80ms both;
+}
+@keyframes hero-clips-glint { from { transform: translateY(-70%); } to { transform: translateY(150%); } }
+@keyframes hero-clips-glint-end { to { visibility: hidden; } }
+@media (prefers-reduced-motion: reduce) { .hero-clips .desk .glint { display: none !important; } }
 /* The video keeps its size with the controller (recorded at 0.91). */
 .hero-clips[data-hand="controller"] .app-host.app-host { transform: scale(var(--ctl-scale, 1)); }
 .hero-clips svg.links path { transition: none !important; }
@@ -100,7 +115,7 @@ export async function mountClips(host, opts = {}) {
   const root = document.createElement('div');
   root.className = 'hero-clips';
   root.innerHTML = `<div class="app-host"><video muted playsinline></video><video muted playsinline></video><video muted playsinline></video></div>
-    <div class="desk"><video muted playsinline></video><video muted playsinline></video></div>
+    <div class="desk"><video muted playsinline></video><video muted playsinline></video><i class="glint" aria-hidden="true"></i></div>
     <svg class="links" width="1440" height="920"></svg>`;
   host.append(root);
   if (!document.getElementById('hero-clips-css')) {
@@ -807,6 +822,8 @@ export async function mountClips(host, opts = {}) {
   }
   return {
     root, setHand, setPaused, setVars, prepare,
+    /** A light across the controller, once. */
+    glint() { const g = desk.querySelector('.glint'); g.classList.remove('go'); void g.offsetWidth; g.classList.add('go'); },
     /** Where the controller's drawn outline is on screen once it has come in (its own entrance left out). */
     controllerBox() {
       const r = root.getBoundingClientRect();
