@@ -1992,8 +1992,25 @@
 }
 @container (max-height: 63.9px) {
   :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:not([data-flag-dir-room-tint-cues='foot']) [data-region^='deck'] .perf .tc {
-    gap: 5px;
+    --ci: 10px;
+    gap: 4px;
     justify-content: center;
+    padding: 0;
+  }
+  :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:not([data-flag-dir-room-tint-cues='foot']) [data-region^='deck'] .perf .tc.set b {
+    display: block;
+  }
+}
+@container (max-width: 319px) {
+  :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:not([data-flag-dir-room-tint-cues='foot']) [data-region^='deck'] .perf .tc {
+    --ci: 10px;
+    gap: 5px;
+    padding: 0 0 0 4px;
+  }
+}
+@container (max-height: 63.9px) {
+  :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:not([data-flag-dir-room-tint-cues='foot']) [data-region^='deck'] .perf .tc {
+    gap: 4px;
     padding: 0;
   }
 }
