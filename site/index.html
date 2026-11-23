@@ -2028,26 +2028,51 @@
       if (!text) return;
       // Fitted to the letters' ink, not their boxes: the I's left edge sits
       // on the column's left edge, the e's right edge on its right edge.
-      const ctx = document.createElement('canvas').getContext('2d');
+      // (The ink is found by drawing the word once and looking for its
+      // first and last lit columns: Safari's measureText gives the advance
+      // box for actualBoundingBox, not the ink, so the word sat a few
+      // pixels right and ran off the right edge there.)
+      const ink = { key: '', left: 0, width: 0 };
+      const measureInk = (cs, fs) => {
+        const key = `${cs.fontWeight}|${cs.fontFamily}|${parseFloat(cs.letterSpacing) / fs}|${text.textContent.trim()}`;
+        if (ink.key === key) return ink;
+        const S = 200, word = text.textContent.trim();
+        const c = document.createElement('canvas');
+        const x = c.getContext('2d', { willReadFrequently: true });
+        x.font = `${cs.fontWeight} ${S}px ${cs.fontFamily}`;
+        const ls = (parseFloat(cs.letterSpacing) || 0) * (S / fs);
+        const pad = S;
+        c.width = Math.ceil(x.measureText(word).width + pad * 2);
+        c.height = Math.ceil(S * 1.6);
+        x.font = `${cs.fontWeight} ${S}px ${cs.fontFamily}`;
+        x.textBaseline = 'alphabetic';
+        x.fillStyle = '#fff';
+        if ('letterSpacing' in x) { x.letterSpacing = `${ls}px`; x.fillText(word, pad, S * 1.2); }
+        else { let at = pad; for (const ch of word) { x.fillText(ch, at, S * 1.2); at += x.measureText(ch).width + ls; } }
+        const d = x.getImageData(0, 0, c.width, c.height).data;
+        let l = -1, r = -1;
+        for (let col = 0; col < c.width && l < 0; col++) for (let row = 0; row < c.height; row++) if (d[(row * c.width + col) * 4 + 3] > 8) { l = col; break; }
+        for (let col = c.width - 1; col >= 0 && r < 0; col--) for (let row = 0; row < c.height; row++) if (d[(row * c.width + col) * 4 + 3] > 8) { r = col + 1; break; }
+        if (l < 0) return null;
+        Object.assign(ink, { key, left: (l - pad) / S, width: (r - l) / S });
+        return ink;
+      };
       const fit = () => {
         const target = w.clientWidth;
         const cs = getComputedStyle(w);
         const fs = parseFloat(cs.fontSize);
-        ctx.font = `${cs.fontWeight} ${fs}px ${cs.fontFamily}`;
-        if ('letterSpacing' in ctx) ctx.letterSpacing = cs.letterSpacing;
-        ctx.textAlign = 'left';
-        const m = ctx.measureText(text.textContent.trim());
-        const width = m.actualBoundingBoxLeft + m.actualBoundingBoxRight;
-        if (width > 0 && target > 0) {
-          const k = target / width;
-          w.style.setProperty('--foot-fs', `${fs * k}px`);
-          w.style.setProperty('--foot-indent', `${m.actualBoundingBoxLeft * k}px`);
+        const m = measureInk(cs, fs);
+        if (m && m.width > 0 && target > 0) {
+          // (Ink scales with the size, letter-spacing being in em.)
+          const size = target / m.width;
+          w.style.setProperty('--foot-fs', `${size}px`);
+          w.style.setProperty('--foot-indent', `${-m.left * size}px`);
           // (The record drawing redraws its letters at the new size.)
           dispatchEvent(new Event('foot-fit'));
         }
       };
       fit();
-      document.fonts?.ready.then(fit);
+      document.fonts?.ready.then(() => { ink.key = ''; fit(); });
       new ResizeObserver(() => requestAnimationFrame(fit)).observe(w);
     })();
     const cream = () => document.querySelector('.oss')?.dataset.look === 'cream';
