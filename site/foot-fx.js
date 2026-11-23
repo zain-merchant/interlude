@@ -547,22 +547,24 @@ function reset() {
 }
 
 // The size the effects are drawn at: the word's own size, times T.scale.
-const fxEm = () => geo.em * (T.scale || 1);
+// (Pulled past the page's end it's drawn larger, so it takes in the word.)
+const fxEm = () => geo.em * (pull.owns ? Math.max(1.8, T.scale || 1) * (1 + pull.wide * pull.k) : T.scale || 1);
 
 // Pulled past the end of the page (the rubber band at the bottom, or a
 // trackpad pushing on past it): the light comes up from under the word
 // and rings well up through it, more and faster the further it's pulled.
 // From the page (index.html), each time the pull changes; nothing runs
 // when it isn't pulled.
-const pull = { want: 0, k: 0, x: 0.5, time: 0, owns: false, rings: new Set() };
-export function surge(amount, x) {
+const pull = { want: 0, k: 0, x: 0.5, wide: 1, time: 9, owns: false, rings: new Set() };
+export function surge(amount, x, wide) {
   pull.want = Math.max(0, Math.min(1, amount || 0));
   if (x != null) pull.x = x;
+  if (wide != null) pull.wide = wide;
   if (pull.want > 0 || pull.k > 0) wake();
 }
 function pullStep(dt) {
   // (Comes in a little eased; goes at once, with the page.)
-  if (pull.want >= pull.k) pull.k += (pull.want - pull.k) * Math.min(1, dt * 14);
+  if (pull.want >= pull.k) pull.k += (pull.want - pull.k) * Math.min(1, dt * 24);
   else pull.k = pull.want;
   if (Math.abs(pull.want - pull.k) < 0.002) pull.k = pull.want;
   // (From the foot of the letters, where the page ends.)
@@ -572,7 +574,7 @@ function pullStep(dt) {
     // strong as the pull.
     if (!pull.owns && hover.want === 0 && hover.on < 0.02) Object.assign(hover, { x, y, vx: 0, vy: 0 });
     pull.owns = true;
-    Object.assign(hover, { tx: x, ty: y - fxEm() * 0.45 * pull.k, want: 1 });
+    Object.assign(hover, { tx: x, ty: y - geo.em * (T.scale || 1) * 0.45 * pull.k, want: 1 });
     // Rings well up along the foot, one after another across it, closer
     // together the harder it's pulled.
     pull.time += dt;
@@ -581,12 +583,12 @@ function pullStep(dt) {
       pull.time = 0;
       pull.n = ((pull.n || 0) + 1) % 5;
       const rx = geo.width * (0.5 + [0, -0.3, 0.3, -0.15, 0.15][pull.n] * (0.4 + 0.6 * pull.k));
-      if (!reduced.matches) { const p = ring(rx, y, -(0.5 + 1.1 * pull.k)); if (p) pull.rings.add(p); }
+      if (!reduced.matches) { const p = ring(rx, y, -(0.7 + 0.9 * pull.k)); if (p) pull.rings.add(p); }
     }
   } else if (pull.owns) {
     // Let go: the light and its rings go with the page.
     pull.owns = false;
-    pull.time = 0.4;
+    pull.time = 9;
     hover.want = 0;
     hover.on = 0;
     for (const p of pull.rings) p[2] = -1;
@@ -674,10 +676,11 @@ function frame(now) {
   const still = reduced.matches;
 
   // Comes and goes evenly over the fade time (eased where it's drawn).
-  const step = T.fade > 0 ? dt / T.fade : 1;
+  // (A pull comes and goes in well under a second, so it comes in quicker.)
+  const step = T.fade > 0 ? dt / (pull.owns ? Math.min(0.15, T.fade) : T.fade) : 1;
   hover.on = hover.want ? Math.min(1, hover.on + step) : Math.max(0, hover.on - step);
   // (Pulled past the page's end: no stronger than the pull.)
-  if (pull.owns) hover.on = Math.min(hover.on, Math.min(1, pull.k * 1.8));
+  if (pull.owns) hover.on = Math.min(hover.on, Math.min(1, pull.k * 2.6));
 
   // Follow the pointer on a critically damped spring (in small steps, so
   // it's steady at any frame rate).
@@ -704,7 +707,8 @@ function frame(now) {
   const reach = Math.max(0.1, T.rippleReach) * fxEm();
   for (const p of pts) {
     if (p[2] < 0) continue;
-    p[2] += T.rippleSpeed * fxEm() * dt;
+    // (A pull's rings run out faster than a hover's.)
+    p[2] += T.rippleSpeed * fxEm() * dt * (pull.owns ? 1.5 : 1);
     if (p[2] > reach * Math.abs(p[3])) p[2] = -1;
   }
   if (rings && hover.want) spawn(dt, ox, oy);
