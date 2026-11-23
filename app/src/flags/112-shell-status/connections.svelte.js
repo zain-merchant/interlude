@@ -6,6 +6,10 @@ import { engine } from '../../lib/engine.svelte.js';
 /** @type {{ settings: (page: string) => void, setup: () => void }} */
 export const open = { settings: () => {}, setup: () => {} };
 
+/** The menu that's open, from either place: one at a time. */
+/** @type {{ close: ((back?: boolean) => void) | null }} */
+export const menu = { close: null };
+
 export const conn = $state({
   /** @type {null | { connected: { port: string, mapping: string, learned: boolean }[], ports: string[], learned: string[] }} */
   controllers: null,
