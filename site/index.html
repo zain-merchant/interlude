@@ -1825,6 +1825,9 @@
         apply();
         if (!decayRaf) decayRaf = requestAnimationFrame(decay);
       }, { passive: true });
+      // (The page's own colour past its foot, too, while the footer is in
+      // view: the footer's, with its grain. At the top it stays the page's.)
+      new IntersectionObserver(([e]) => { root.style.backgroundColor = e.isIntersecting ? 'rgb(12 12 14)' : ''; }).observe(document.querySelector('.foot'));
       // (For checking without a rubber band: window.footPull(px).)
       window.footPull = (px) => { over = Math.max(0, px); apply(); };
 
