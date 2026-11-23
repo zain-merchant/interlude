@@ -89,6 +89,7 @@ export function colResize(head, opts) {
   };
   const lay = () => {
     const x0 = head.getBoundingClientRect().left;
+    main.style.setProperty('--rule-y', `${head.offsetTop + head.offsetHeight - 2}px`);
     for (const h of handles) {
       h.el.style.left = `${(h.left.getBoundingClientRect().right - x0) / scale()}px`;
       h.el.setAttribute('aria-valuenow', String(Math.round(widthOf(h.cell))));
@@ -282,6 +283,9 @@ export function colResize(head, opts) {
     });
     for (const c of cs) seen.observe(c);
     seen.observe(head);
+    // The list gives way when the sampler opens above the headings.
+    const list = head.nextElementSibling;
+    if (list) seen.observe(list);
     lay();
   }
   build(opts);

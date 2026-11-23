@@ -34,13 +34,14 @@ export default {
         ['next', 'Next only', 'Numbers alone; only the next free place is a key, and says Set.'],
       ],
     },
-    rules: {
+    step: {
       type: 'choice',
-      label: "Library's rules",
-      default: 'inset',
+      label: "A stepper's end under the pointer",
+      default: 'rise',
       options: [
-        ['inset', 'Inset', 'Neither the sidebar\'s rule nor the headings\' reaches an edge.'],
-        ['full', 'Edge to edge', 'Both run the whole way.'],
+        ['rise', 'Rises', 'A small key comes up out of the cut, and goes in when held.'],
+        ['sink', 'Sinks', 'The end goes deeper into the cut.'],
+        ['tint', 'Tints', 'A lighter tone, no depth.'],
       ],
     },
     cue: {
