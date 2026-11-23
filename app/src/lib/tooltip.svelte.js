@@ -7,7 +7,7 @@ import { flag } from '../flags/registry.svelte.js';
 import { keys, keyLabel } from './commands.js';
 import { keymap } from './keymap.svelte.js';
 
-export const tooltip = $state({ text: '', x: 0, y: 0, below: false, visible: false });
+export const tooltip = $state({ text: '', x: 0, y: 0, top: 0, bottom: 0, below: false, visible: false });
 // #12 (UI audit flag): whether the tip showing came straight from another, so it skips its entrance.
 export const tipWarm = $state({ on: false });
 
@@ -24,6 +24,9 @@ function place(node, text) {
   // #30 (UI audit flag): tooltip-wrap: the library toolbar's tips open below, clear of the decks above.
   tooltip.below = node.dataset.tipBelow !== undefined || r.top < 40 || (flag('tooltip-wrap') && !!node.closest('section.library .bar'));
   tooltip.y = tooltip.below ? r.bottom + 8 : r.top - 8;
+  // #122 (UI audit flag): tooltips: where the control starts and ends, so a tall tip can take the other side.
+  tooltip.top = r.top;
+  tooltip.bottom = r.bottom;
   tooltip.visible = true;
   owner = node;
 }

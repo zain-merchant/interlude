@@ -298,35 +298,6 @@
 :root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .sstep > .num::after {
   inset: 50% -1px auto auto;
 }
-/* Under (110's setting): the recess runs under the keys. */
-:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-dir-room-tint-stepper='under'] .settings .sstep {
-  grid-template-columns: 28px 64px 28px;
-  gap: 2px;
-  padding: 3px;
-  box-sizing: border-box;
-}
-:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-dir-room-tint-stepper='under'] .settings .sstep > .btn,
-:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-dir-room-tint-stepper='under'] .settings .sstep > .btn:is(:hover, :active, :disabled) {
-  border-radius: calc(var(--r) - 3px);
-  background: var(--tt-sheen), var(--rg-key) !important;
-  box-shadow: inset 0 1px 0 0 rgb(255 255 255 / 0.095), var(--tt-lift) !important;
-}
-:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-dir-room-tint-stepper='under'] .settings .sstep > .btn:hover:not(:disabled) {
-  background: var(--tt-sheen), var(--rg-key-hi) !important;
-}
-:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-dir-room-tint-stepper='under'] .settings .sstep > .btn:active:not(:disabled) {
-  background: var(--rg-down) !important;
-  box-shadow: var(--rg-down-edge) !important;
-}
-:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-dir-room-tint-stepper='under'] .settings .sstep > .btn:disabled {
-  background: rgb(255 255 255 / 0.022) !important;
-  box-shadow: none !important;
-}
-:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-dir-room-tint-stepper='under'] .settings .sstep > .btn::after,
-:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-dir-room-tint-stepper='under'] .settings .sstep > .num::before,
-:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-dir-room-tint-stepper='under'] .settings .sstep > .num::after {
-  content: none;
-}
 /* Rows sit on the same etched rules as the app's lists; the last has none. */
 :root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .row {
   min-height: 32px;
