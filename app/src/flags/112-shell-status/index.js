@@ -8,8 +8,8 @@
 // `place` picks where the controller, the output and Settings sit:
 //   library   in the library's toolbar, windowed and full screen alike
 //   titlebar  in the strip above the waveforms, so the two can be compared
-// Never both. Analyzing and the stems download stay by the track count
-// either way: they're about the library.
+// Never both. Analyzing and the stems download go with them: by the track
+// count in the library, at the strip's other end in the title bar.
 //
 // Nothing here needs Rust. controllers() is asked every two seconds while
 // the window is showing (the engine itself rescans every two seconds), as
@@ -29,7 +29,7 @@ export default {
       recommended: 'library',
       options: [
         ['library', "Library's toolbar", 'The same place windowed and full screen. Nothing in the title bar.'],
-        ['titlebar', 'Title bar', 'In the strip beside the window buttons. The Mac can cover it in full screen.'],
+        ['titlebar', 'Title bar', 'In the strip, beside the window buttons. Full screen hides those buttons, so the strip then starts with a gap.'],
       ],
     },
   },

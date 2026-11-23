@@ -73,14 +73,14 @@
 :root[data-flag-shell-status] section.library .main > .bar:has(.shell-act) > .count .pending {
   display: none;
 }
-:root[data-flag-shell-status] section.library .bar .shell-act {
+:root[data-flag-shell-status] .shell-act {
   display: inline-flex;
   align-items: center;
   gap: 4px;
   color: var(--fg-3);
   font-size: var(--t-xs);
 }
-:root[data-flag-shell-status] section.library .bar .shell-act i {
+:root[data-flag-shell-status] .shell-act i {
   width: 48px;
   height: 2px;
   margin-left: 4px;
@@ -88,7 +88,7 @@
   border-radius: 1px;
   background: var(--line-2);
 }
-:root[data-flag-shell-status] section.library .bar .shell-act u {
+:root[data-flag-shell-status] .shell-act u {
   display: block;
   height: 100%;
   background: var(--fg-3);
@@ -128,7 +128,7 @@
 }
 
 /* ── In the title bar ────────────────────────────────────────────────── */
-:root[data-flag-shell-status][data-flag-shell-status-place='titlebar'] section.library .bar .gear {
+:root[data-flag-shell-status][data-flag-shell-status-place='titlebar'] section.library .bar :is(.gear, .pending) {
   display: none;
 }
 /* The strip is there on the Mac (32px, where the window's buttons are). In
@@ -144,8 +144,7 @@
   left: 0;
   height: 32px;
   box-sizing: border-box;
-  justify-content: flex-end;
-  padding: 0 8px 0 92px;
+  padding: 0 12px 0 88px;
 }
 :root[data-flag-shell-status] .shell.bar .st {
   height: 24px;
@@ -155,6 +154,11 @@
 }
 :root[data-flag-shell-status] .shell.bar .st.cog {
   padding: 0 4px;
+}
+:root[data-flag-shell-status] .shell.bar .shell-act {
+  flex: none;
+  margin-left: auto;
+  white-space: nowrap;
 }
 :root[data-flag-shell-status] .shell.bar .st.cog svg {
   stroke-width: 2;

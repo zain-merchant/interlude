@@ -1,6 +1,7 @@
 <script>
   import Status from '../flags/112-shell-status/Status.svelte'; // #112 (UI audit flag)
   import EmptyFilter from '../flags/113-empty-filter/EmptyFilter.svelte'; // #113 (UI audit flag)
+  import { conn } from '../flags/112-shell-status/connections.svelte.js'; // #112 (UI audit flag)
   import Activity from '../flags/112-shell-status/Activity.svelte'; // #112 (UI audit flag)
   import { flag, setting } from '../flags/registry.svelte.js';
   import { onMount, tick, untrack } from 'svelte';
@@ -304,6 +305,7 @@
    * older version of the analyzer found until it redoes them. */
   const pending = $derived(all.reduce((n, t) => n + (t.analysis && !t.analysis.outdated ? 0 : 1), 0));
   // #18 (UI audit flag): how much of the library is analysed, for the bar under the analysis note.
+  $effect(() => void (conn.pending = loading ? 0 : pending)); // #112 (UI audit flag): shell-status, the title bar says it
   const analysisDone = $derived(flag('visual-analysis') && all.length ? `${((1 - pending / all.length) * 100).toFixed(1)}%` : undefined);
   const bpmText = (a) => {
     if (!a?.bpm) return '';
@@ -872,7 +874,7 @@
       <span class="count num">{loading ? 'Scanning…' : countText}{#if !loading && pending}<span
           class="pending" style:--flag-visual-analysis-done={analysisDone} use:tip={() => 'Finding each track’s length, BPM and key in the background'}> · analyzing, {pending.toLocaleString()} to go</span>{/if}</span>
       {/if}
-      {#if flag('shell-status')}<Activity />{/if}<!-- #112 (UI audit flag): shell-status -->
+      {#if flag('shell-status') && setting('shell-status', 'place') === 'library'}<Activity />{/if}<!-- #112 (UI audit flag): shell-status -->
       <button class="btn sm samp" class:on={sampler.open} aria-pressed={sampler.open}
         onclick={() => setSamplerOpen(!sampler.open)}
         use:tip={() => tipText(sampler.open ? 'Hide sampler' : 'Show sampler', keyLabel('view.sampler'),

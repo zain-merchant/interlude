@@ -13,6 +13,8 @@ export const conn = $state({
   gone: '',
   /** @type {null | { done: number, total: number }} the stems model coming down */
   stems: null,
+  /** Tracks still to be analyzed: Library.svelte sets it. */
+  pending: 0,
   /** The sound has just dropped out. */
   dropping: false,
 });
