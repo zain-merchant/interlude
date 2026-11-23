@@ -99,7 +99,9 @@ Everything Interlude does, in detail. For a short overview, see the
   pulses, and fades in or out once it is. With Efficient, resting the
   pointer on the Stems tab or the stems gets the track started, and moving
   off lets it go. If you already had the model when
-  this choice arrived, you have Fast. On an M5 MacBook Air separating a
+  this choice arrived, you have Fast. Settings › Stems says what each takes
+  on your computer: memory, and how long until they're heard. Interlude notes
+  that as it separates tracks, and never runs anything just to find out. On an M5 MacBook Air separating a
   4½-minute track takes about 50 seconds. It starts at the play head and
   runs ahead of it, so the part you're about to play is ready first;
   anything not ready yet plays as normal. Finished stems are kept in a

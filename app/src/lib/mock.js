@@ -189,6 +189,10 @@ export function createMockBackend() {
   if (modelCase === 'ready') stemsModel = { ...stemsModel, state: 'ready', done: MODEL_BYTES, at: 0 };
   if (modelCase === 'cancelled') stemsModel.done = MODEL_BYTES * 0.4;
   let modelAsked = modelCase !== 'cancelled';
+  // ?measured=1 has figures from this computer.
+  const measured = query.get('measured')
+    ? { heard: 4.1, memory: 2.4 }
+    : { heard: null, memory: null };
   const modelListeners = new Set();
   const setModel = (change) => {
     stemsModel = { ...stemsModel, secondsLeft: null, error: null, mode: stemsCfg.mode, ...change };
@@ -554,7 +558,7 @@ export function createMockBackend() {
       }
       return out;
     },
-    stemsInfo: async () => ({ ...stemsCfg, modelBytes: 510_700_000, model: stemsModel }),
+    stemsInfo: async () => ({ ...stemsCfg, modelBytes: 510_700_000, measured, model: stemsModel }),
     setStems: async (change) => {
       for (const k of ['mode', 'cacheGb']) if (change[k] != null) stemsCfg[k] = change[k];
       if (change.mode === 'off' && stemsModel.state !== 'ready') {
@@ -564,7 +568,7 @@ export function createMockBackend() {
       } else if (change.mode && modelAsked) startModel();
       for (const d of decks) d.splitFrom = performance.now();
       setModel({ error: stemsModel.error });
-      return { ...stemsCfg, modelBytes: 510_700_000, model: stemsModel };
+      return { ...stemsCfg, modelBytes: 510_700_000, measured, model: stemsModel };
     },
     prepareStems: async (deck, on) => {
       const d = decks[deck];
@@ -574,7 +578,7 @@ export function createMockBackend() {
     useStems: async (deck) => useStems(decks[deck]),
     clearStemsCache: async () => {
       stemsCfg.cacheBytes = 0;
-      return { ...stemsCfg, modelBytes: 510_700_000, model: stemsModel };
+      return { ...stemsCfg, modelBytes: 510_700_000, measured, model: stemsModel };
     },
     stemsModel: async () => stemsModel,
     onStemsModel: async (fn) => {

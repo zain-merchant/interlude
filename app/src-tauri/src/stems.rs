@@ -174,6 +174,26 @@ pub struct StemsInfo {
     /// Bytes the model takes, with the copy that loads quickly.
     model_bytes: u64,
     model: ModelInfo,
+    measured: MeasuredInfo,
+}
+
+/// What making stems has taken on this computer, where that's known.
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MeasuredInfo {
+    /// Seconds from a press to the sound.
+    heard: Option<f32>,
+    /// GB, at the most.
+    memory: Option<f32>,
+}
+
+impl From<dj_stems::measure::Summary> for MeasuredInfo {
+    fn from(s: dj_stems::measure::Summary) -> Self {
+        Self {
+            heard: s.heard,
+            memory: s.memory,
+        }
+    }
 }
 
 impl Stems {
@@ -239,6 +259,7 @@ impl Stems {
             model: self.model_path().filter(|_| ready),
             cache_dir: self.cache_dir(),
             cache_limit: saved.cache_gb as u64 * GB,
+            measured: self.dir.as_ref().map(|d| d.join("stems-measured.txt")),
         });
     }
 
@@ -311,6 +332,7 @@ impl Stems {
                 std::fs::metadata(&p).map_or(0, |m| m.len()) + dj_stems::quick::size(&p)
             }),
             model: self.model_info(),
+            measured: self.splitter.measured().into(),
         }
     }
 

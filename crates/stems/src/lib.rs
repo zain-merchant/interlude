@@ -22,18 +22,20 @@
 
 pub mod cache;
 pub mod download;
+pub mod measure;
 pub mod model;
 pub mod quick;
 pub mod split;
 
 use std::path::PathBuf;
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
 use std::sync::{Arc, Condvar, Mutex, MutexGuard};
 use std::time::{Duration, Instant};
 
 use dj_engine::{Stems, Track, NUM_DECKS};
 
 pub use cache::CacheKey;
+use measure::{Figure, Measured};
 pub use model::{Model, Stop};
 use split::{Plan, Progress, Region};
 
@@ -102,6 +104,8 @@ pub struct Settings {
     /// (0 turns the cache off).
     pub cache_dir: Option<PathBuf>,
     pub cache_limit: u64,
+    /// Where what it takes on this computer is kept.
+    pub measured: Option<PathBuf>,
 }
 
 impl Default for Settings {
@@ -111,6 +115,7 @@ impl Default for Settings {
             model: None,
             cache_dir: None,
             cache_limit: 5 * 1024 * 1024 * 1024,
+            measured: None,
         }
     }
 }
@@ -156,6 +161,9 @@ struct Job {
     /// A region split on the strength of a hint. Kept out of the track's
     /// stems, which take far more memory, until they're used.
     ahead: Option<(usize, Region)>,
+    /// When its stems were first used, with nothing prepared, until they're
+    /// heard.
+    asked: Option<Instant>,
     failed: Option<String>,
 }
 
@@ -215,6 +223,8 @@ struct Shared {
     wake: Condvar,
     /// Times the model has been loaded.
     loads: AtomicUsize,
+    /// What it takes here. Locked after `state`, if both are.
+    measured: Mutex<Measured>,
 }
 
 /// Splits tracks into stems on a background thread.
@@ -222,6 +232,10 @@ pub struct Splitter {
     shared: Arc<Shared>,
     heads: Arc<PlayHeads>,
     worker: Option<std::thread::JoinHandle<()>>,
+}
+
+fn measured(shared: &Shared) -> MutexGuard<'_, Measured> {
+    shared.measured.lock().unwrap_or_else(|e| e.into_inner())
 }
 
 fn lock(shared: &Shared) -> MutexGuard<'_, State> {
@@ -237,6 +251,7 @@ impl Splitter {
             }),
             wake: Condvar::new(),
             loads: AtomicUsize::new(0),
+            measured: Mutex::new(Measured::new(&measure::machine())),
         });
         let heads = Arc::new(heads);
         let worker = {
@@ -263,6 +278,11 @@ impl Splitter {
 
     pub fn configure(&self, settings: Settings) {
         let mut st = self.lock();
+        if let Some(path) = &settings.measured {
+            if st.settings.measured.as_ref() != Some(path) {
+                *measured(&self.shared) = Measured::read(path, &measure::machine());
+            }
+        }
         if st.settings != settings {
             let model_changed = st.settings.model != settings.model;
             st.settings = settings;
@@ -306,6 +326,7 @@ impl Splitter {
             used: false,
             hint: None,
             ahead: None,
+            asked: None,
             failed: None,
         });
         st.stop_unneeded();
@@ -315,7 +336,22 @@ impl Splitter {
 
     /// `deck`'s stems are being used: split its track, if it isn't being.
     pub fn use_stems(&self, deck: usize) {
-        self.with_job(deck, |job| job.used = true);
+        // Only a press that starts the work says how long that takes.
+        let starts = !self.is_here(deck) && {
+            let s = self.settings();
+            s.when == When::OnUse && s.model.is_some()
+        };
+        self.with_job(deck, |job| {
+            if !job.used && starts && job.hint.is_none() && job.ahead.is_none() {
+                job.asked = Some(Instant::now());
+            }
+            job.used = true;
+        });
+    }
+
+    /// What making stems has taken on this computer.
+    pub fn measured(&self) -> measure::Summary {
+        measured(&self.shared).summary()
     }
 
     /// `deck`'s stems look about to be used (`on`), or no longer do. Does
@@ -432,6 +468,8 @@ enum Task {
     LoadModel(PathBuf, u64),
     /// Make the copy of the model that loads quickly.
     MakeQuick(PathBuf),
+    /// Keep what's been measured.
+    Save(PathBuf),
 }
 
 struct Worker {
@@ -441,6 +479,10 @@ struct Worker {
     model_generation: u64,
     /// The model a quick copy was last made of, or tried to be: once each.
     quickened: Option<PathBuf>,
+    /// Regions split since the model was loaded.
+    since_load: u32,
+    /// Watching how much memory that takes.
+    peak: Option<Peak>,
 }
 
 impl Worker {
@@ -451,6 +493,8 @@ impl Worker {
             model: None,
             model_generation: u64::MAX,
             quickened: None,
+            since_load: 0,
+            peak: None,
         }
     }
 
@@ -485,7 +529,13 @@ impl Worker {
                     // Nothing to split: give back the memory the model holds.
                     // Loading it again doesn't take long.
                     self.model = None;
+                    self.peak = None;
                     st.model_ready = false;
+                    if let Some(path) = st.settings.measured.clone() {
+                        if measured(&shared).is_new() {
+                            break Task::Save(path);
+                        }
+                    }
                     // And make the next time quick, while there's nothing
                     // else to do.
                     if st.settings.when != When::Never && self.quickened != st.settings.model {
@@ -636,6 +686,7 @@ impl Worker {
                     }
                 }
             }
+            Task::Save(path) => measured(&shared).write(&path),
             Task::MakeQuick(path) => {
                 // Checking one that's there now saves the next load doing it.
                 let _ = quick::find(&path);
@@ -645,6 +696,9 @@ impl Worker {
             }
             Task::LoadModel(path, generation) => {
                 shared.loads.fetch_add(1, Ordering::Relaxed);
+                let quick = quick::exists(&path);
+                self.since_load = 0;
+                self.peak = self.worth_watching(quick).then(Peak::start);
                 let loaded = Model::load(&path);
                 let mut st = lock(&shared);
                 if st.generation != generation {
@@ -716,6 +770,7 @@ impl Worker {
                     Ok(out) => out,
                     Err(e) => return self.fail(deck, id, &e),
                 };
+                self.region_done();
                 // Its buffer is made out here, since it takes a moment, but
                 // only for a track that's to be split. It may have been used
                 // while this region ran.
@@ -737,6 +792,23 @@ impl Worker {
             Task::Commit { deck, id, track } => {
                 let stems = attach(&track);
                 self.finish(deck, id, Some(stems), |job| job.ahead.take());
+            }
+        }
+    }
+
+    /// Whether to watch memory this time: until there are enough figures,
+    /// and now and then after that.
+    fn worth_watching(&self, quick: bool) -> bool {
+        let enough = measured(&self.shared).count(Figure::Memory) >= 5;
+        quick && (!enough || self.shared.loads.load(Ordering::Relaxed).is_multiple_of(10))
+    }
+
+    /// A region was split. The second is as high as memory goes.
+    fn region_done(&mut self) {
+        self.since_load += 1;
+        if self.since_load == 2 {
+            if let Some(gb) = self.peak.take().and_then(|p| p.stop()) {
+                measured(&self.shared).note(Figure::Memory, gb);
             }
         }
     }
@@ -775,6 +847,14 @@ impl Worker {
             return;
         };
         p.finish(k, out, &stems);
+        let rate = job.track.sample_rate;
+        let at = ((self.heads)(deck).max(0.0) * rate as f64) as i64;
+        if job.asked.is_some() && stems.is_ready_at(at, rate) {
+            if let Some(when) = job.asked.take() {
+                let secs = when.elapsed().as_secs_f32();
+                measured(&self.shared).note(Figure::Heard, secs);
+            }
+        }
         if p.is_done() {
             let key = job.key.clone();
             drop(st);
@@ -784,6 +864,49 @@ impl Worker {
                 }
             }
         }
+    }
+}
+
+/// Watches how much memory is taken, from before the model is loaded.
+struct Peak {
+    before: Option<u64>,
+    most: Arc<AtomicU64>,
+    going: Arc<AtomicBool>,
+}
+
+impl Peak {
+    fn start() -> Self {
+        let before = measure::memory();
+        let most = Arc::new(AtomicU64::new(0));
+        let going = Arc::new(AtomicBool::new(before.is_some()));
+        if before.is_some() {
+            let (m, g) = (most.clone(), going.clone());
+            let _ = std::thread::Builder::new()
+                .name("stems-memory".into())
+                .spawn(move || {
+                    while g.load(Ordering::Relaxed) {
+                        m.fetch_max(measure::memory().unwrap_or(0), Ordering::Relaxed);
+                        std::thread::sleep(Duration::from_millis(20));
+                    }
+                });
+        }
+        Self {
+            before,
+            most,
+            going,
+        }
+    }
+
+    /// GB more than at the start, at the most.
+    fn stop(self) -> Option<f32> {
+        let most = self.most.load(Ordering::Relaxed);
+        Some(most.checked_sub(self.before?)? as f32 / 1e9)
+    }
+}
+
+impl Drop for Peak {
+    fn drop(&mut self) {
+        self.going.store(false, Ordering::Relaxed);
     }
 }
 
