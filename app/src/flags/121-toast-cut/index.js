@@ -1,4 +1,4 @@
-// #120 (UI audit flag; on 110): the toast's Undo is a cut that holds its keys.
+// #121 (UI audit flag; on 110): the toast's Undo is a cut that holds its keys.
 //
 // 110's recess (its grooves and edge), 4px in from the toast on three sides,
 // with Command and Z raised in it. A cut alone reads as a readout, so it says
@@ -7,7 +7,7 @@
 // keys go down into it and the whole cut darkens.
 export default {
   id: 'toast-cut',
-  n: 120,
+  n: 121,
   title: 'Undo is a cut that holds its keys',
   group: 'Shell',
   byDefault: true, // approved, on for judging with 110; does nothing without it
