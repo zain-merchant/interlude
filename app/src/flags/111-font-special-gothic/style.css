@@ -1,13 +1,13 @@
 /* #111 (UI audit flag; a typeface): Special Gothic, with Geist behind it.
-   The range leaves out + (2B), plus-minus (B1) and minus (2212), whose
-   strokes are too short in this face, so the next family, Geist, draws them. */
+   The range leaves out + (2B), plus-minus (B1), times (D7), divide (F7) and minus (2212), whose
+   marks are too small in this face, so the next family, Geist, draws them. */
 @font-face {
   font-family: 'Special Gothic';
   src: url('./SpecialGothic.woff2') format('woff2-variations');
   font-weight: 400 700;
   font-stretch: 75% 125%;
   font-display: swap;
-  unicode-range: U+0-2A, U+2C-B0, U+B2-2211, U+2213-FFFF;
+  unicode-range: U+0-2A, U+2C-B0, U+B2-D6, U+D8-F6, U+F8-2211, U+2213-FFFF;
 }
 /* Tripled, to outrank the accidentals flag's own --font (its sharps and flats
    stay first; its face covers only those). */

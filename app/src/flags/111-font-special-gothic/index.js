@@ -6,7 +6,7 @@
 // any direction, or none.
 //
 // Its weaknesses, and what's done about each:
-//   - its minus and plus are short (a minus reads as a hyphen): those signs
+//   - its minus, plus, times and divide are small (a minus reads as a hyphen): those signs
 //     and the plus-minus are left out of its range, so they come from Geist;
 //   - its tabular figures sit very tight at 500 and up (0.014 to 0.036em of
 //     ink between two digits, against Geist's 0.052 to 0.065): figures get a
