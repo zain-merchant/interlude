@@ -597,9 +597,23 @@
   // (under 160px) does it fall back to the corner.
   let toastEl = $state(/** @type {HTMLElement | null} */ (null));
   let toastDock = $state(/** @type {{ left: number, top: number, max: number, at?: string } | null} */ (null));
+  // Panels can be resized while a toast shows, and the rows ease to a new
+  // size (340ms), so the dock is measured again whenever the toolbar or a
+  // panel round it changes size, not only when a toast arrives.
+  let dockTurn = $state(0);
+  $effect(() => {
+    if (!toastEl || !flag('declutter-toast')) return;
+    const ro = new ResizeObserver(() => dockTurn++);
+    for (const sel of ['.app > .waves', '.app > .decks', 'section.library', 'section.library .bar', 'section.library .bar .filter', '.settings .main .bar']) {
+      const n = document.querySelector(sel);
+      if (n) ro.observe(n);
+    }
+    return () => ro.disconnect();
+  });
   $effect(() => {
     void toast.id;
     void winHeight;
+    void dockTurn;
     const el = toastEl;
     if (!el || !flag('declutter-toast') || setting('declutter-toast', 'place') !== 'toolbar') {
       toastDock = null;
