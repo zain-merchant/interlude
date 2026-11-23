@@ -171,7 +171,7 @@
     </div>
     <button class="hp" class:on={ch.pfl} aria-pressed={ch.pfl} aria-label="{D} headphone cue"
       onclick={() => togglePfl(deck)} use:tip={() => tipText(`Headphone cue ${ch.pfl ? 'on' : 'off'}`, keyLabel(`deck.${deck}.pfl`))}>
-      {#if flag('dir-room-tint')}<svg viewBox="0 0 16 16"><path d="M2.75 9V8.25a5.25 5.25 0 0 1 10.5 0V9" /><rect x="2" y="9" width="3.5" height="5" rx="1.5" /><rect x="10.5" y="9" width="3.5" height="5" rx="1.5" /></svg>{:else}<svg viewBox="0 0 16 16"><path d="M2.5 10V8a5.5 5.5 0 0 1 11 0v2" /><rect x="2" y="9.5" width="3" height="4.5" rx="1" /><rect x="11" y="9.5" width="3" height="4.5" rx="1" /></svg>{/if}
+      {#if flag('dir-room-tint')}<svg viewBox="0 0 16 16"><path d="M2 8a6 6 0 0 1 12 0v4.5a1.5 1.5 0 0 1-1.5 1.5H12a1.5 1.5 0 0 1-1.5-1.5v-2A1.5 1.5 0 0 1 12 9h.5V8a4.5 4.5 0 0 0-9 0v1H4a1.5 1.5 0 0 1 1.5 1.5v2A1.5 1.5 0 0 1 4 14h-.5A1.5 1.5 0 0 1 2 12.5z" /></svg>{:else}<svg viewBox="0 0 16 16"><path d="M2.5 10V8a5.5 5.5 0 0 1 11 0v2" /><rect x="2" y="9.5" width="3" height="4.5" rx="1" /><rect x="11" y="9.5" width="3" height="4.5" rx="1" /></svg>{/if}
     </button>
   </div>
 {/snippet}
