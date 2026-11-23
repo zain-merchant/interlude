@@ -602,7 +602,7 @@ details p { margin: 0; padding-bottom: 20px; color: var(--fg-2); max-width: 62ch
 .foot-word {
   position: relative; display: block; width: min(1120px, 100% - 32px); margin: 28px auto calc(var(--foot-cut, 0.33) * -1em); text-align: left; text-indent: var(--foot-indent, 0px); white-space: nowrap; user-select: none; pointer-events: none;
   /* As wide as the column above (index.html measures it into --foot-fs). */
-  font-size: var(--foot-fs, clamp(96px, 21vw, 340px)); font-weight: 600; letter-spacing: -0.055em; line-height: 0.9;
+  font-size: var(--foot-fs, clamp(96px, 21vw, 340px)); font-weight: 600; letter-spacing: -0.07em; line-height: 0.9;
   color: var(--foot-letter, rgb(255 255 255 / 0.045));
   --x: 50%; --y: 50%; --on: 0;
 }
