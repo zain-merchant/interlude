@@ -1023,6 +1023,7 @@ name = "dj-stems"
 version = "0.1.5"
 dependencies = [
  "dj-engine",
+ "libc",
  "ort",
  "sha2",
  "thiserror 2.0.21",

@@ -5,6 +5,8 @@
 import { engine, tracks, control } from './engine.svelte.js';
 import { backend } from './backend.js';
 import { announce } from './announce.svelte.js';
+import { stemsModel } from './stemsmodel.svelte.js';
+import { notYet } from './stemsmodel.js';
 import { flag } from '../flags/registry.svelte.js';
 
 export const STEMS = ['Vocals', 'Melody', 'Bass', 'Drums'];
@@ -24,12 +26,12 @@ export function stemsOf(deck) {
 /** True when the deck's stems can be used (or are on their way). */
 export const usable = (deck) => !!tracks[deck] && ['starting', 'splitting', 'ready'].includes(stemsOf(deck).state);
 
-/** Why a stem pad on the controller did nothing, for a toast. */
+/** Why a stem key, or a stem pad on the controller, did nothing, for a toast. */
 export function stemsUnavailable(deck) {
   if (!tracks[deck]) return `${Deck(deck)}: load a track first`;
   switch (stemsOf(deck).state) {
     case 'needsModel':
-      return 'Stems need a one-time model download. Get it in Settings › Stems';
+      return notYet(stemsModel);
     case 'failed':
       return `${Deck(deck)}: stems couldn't be made`;
     default:

@@ -1,5 +1,10 @@
 //! Stems in the app: splits each loaded track in the background, fetches
-//! the model on request, and keeps the stems settings.
+//! the model, and keeps the stems settings.
+//!
+//! The model isn't part of the app, to keep it small. It downloads by itself
+//! once the app is set up ([`stems_setup_done`]), unless stems are turned off
+//! or the user cancelled or removed it, which is remembered until they ask
+//! for it again.
 //!
 //! Settings live in `stems.json` in the app's data folder, the model in
 //! `models/`, and finished stems in `stems/`.
@@ -8,9 +13,10 @@ use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 
 use dj_engine::{SharedState, NUM_DECKS};
-use dj_stems::{download, CacheKey, Settings, Splitter, Status};
+use dj_stems::download::{self, Downloader};
+use dj_stems::{CacheKey, Settings, Splitter, Status, MODEL_BYTES};
 use serde::{Deserialize, Serialize};
-use tauri::State;
+use tauri::{AppHandle, Emitter, Manager, State};
 
 const GB: u64 = 1024 * 1024 * 1024;
 
@@ -22,6 +28,9 @@ struct Saved {
     enabled: bool,
     /// Stems cache size in GB. 0 turns the cache off.
     cache_gb: u32,
+    /// Download the model without being asked. Off once the user has
+    /// cancelled or removed it, until they download it themselves.
+    auto_download: bool,
 }
 
 impl Default for Saved {
@@ -29,30 +38,50 @@ impl Default for Saved {
         Self {
             enabled: true,
             cache_gb: 5,
+            auto_download: true,
         }
     }
 }
 
-#[derive(Debug, Clone, Default, Serialize)]
-#[serde(tag = "state", rename_all = "camelCase")]
-enum ModelState {
-    #[default]
-    Missing,
-    Downloading {
-        done: u64,
-        total: u64,
-    },
-    Ready,
-    Failed {
-        error: String,
-    },
+/// The model download as the UI shows it, and the `stems-model` event.
+#[derive(Debug, Clone, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ModelInfo {
+    /// missing, downloading, waiting (for a connection), ready or failed.
+    state: &'static str,
+    /// Bytes that are in, of `total`.
+    done: u64,
+    total: u64,
+    seconds_left: Option<u64>,
+    error: Option<String>,
+}
+
+impl From<download::State> for ModelInfo {
+    fn from(s: download::State) -> Self {
+        use download::State as S;
+        let (state, done, seconds_left, error) = match s {
+            S::Missing { done } => ("missing", done, None, None),
+            S::Downloading { done, left } => ("downloading", done, left, None),
+            S::Waiting { done } => ("waiting", done, None, None),
+            S::Ready => ("ready", MODEL_BYTES, None, None),
+            S::Failed { done, error } => ("failed", done, None, Some(error)),
+        };
+        Self {
+            state,
+            done,
+            total: MODEL_BYTES,
+            seconds_left,
+            error,
+        }
+    }
 }
 
 pub struct Stems {
     splitter: Splitter,
     dir: Option<PathBuf>,
     saved: Mutex<Saved>,
-    model: Arc<Mutex<ModelState>>,
+    /// `None` without a data folder to keep the model in.
+    model: Option<Downloader>,
 }
 
 /// One deck's stems as the UI shows them.
@@ -74,36 +103,36 @@ pub struct StemsInfo {
     cache_gb: u32,
     /// Bytes the cache takes now.
     cache_bytes: u64,
-    model: ModelState,
-    /// Size of the model download, in bytes.
-    model_bytes: u64,
+    model: ModelInfo,
 }
 
-/// Size of the model download, shown before it starts.
-const MODEL_BYTES: u64 = 165_612_636;
-
 impl Stems {
-    pub fn new(shared: Arc<SharedState>) -> Self {
+    pub fn new(shared: Arc<SharedState>, app: AppHandle) -> Self {
         let dir = crate::paths::data_dir();
         let saved: Saved = dir
             .as_ref()
             .and_then(|d| std::fs::read(d.join("stems.json")).ok())
             .and_then(|b| serde_json::from_slice(&b).ok())
             .unwrap_or_default();
-        let model_path = dir
-            .as_ref()
-            .map(|d| d.join("models").join(dj_stems::MODEL_FILE));
-        let model = if model_path.as_ref().is_some_and(|p| p.exists()) {
-            ModelState::Ready
-        } else {
-            ModelState::Missing
-        };
+        let model = dir.as_ref().map(|d| {
+            let dest = d.join("models").join(dj_stems::MODEL_FILE);
+            Downloader::new(dj_stems::model_source(), dest, move |s| {
+                // Splitting starts on the loaded decks once it's in, and
+                // stops using it once it's removed.
+                if matches!(s, download::State::Ready | download::State::Missing { .. }) {
+                    if let Some(stems) = app.try_state::<Stems>() {
+                        stems.apply();
+                    }
+                }
+                let _ = app.emit("stems-model", ModelInfo::from(s.clone()));
+            })
+        });
         let heads: dj_stems::PlayHeads = Box::new(move |deck| shared.deck(deck).position);
         let stems = Self {
             splitter: Splitter::new(Settings::default(), heads),
             dir,
             saved: Mutex::new(saved),
-            model: Arc::new(Mutex::new(model)),
+            model,
         };
         stems.apply();
         stems
@@ -121,8 +150,12 @@ impl Stems {
 
     /// Hands the current settings to the splitter.
     fn apply(&self) {
-        let saved = self.saved.lock().expect("stems settings").clone();
-        let ready = matches!(*self.model.lock().expect("model state"), ModelState::Ready);
+        // Held to the end, so two of these can't hand over old news.
+        let saved = self.saved.lock().expect("stems settings");
+        let ready = self
+            .model
+            .as_ref()
+            .is_some_and(|m| m.state() == download::State::Ready);
         self.splitter.configure(Settings {
             enabled: saved.enabled,
             model: self.model_path().filter(|_| ready),
@@ -187,9 +220,38 @@ impl Stems {
             enabled: saved.enabled,
             cache_gb: saved.cache_gb,
             cache_bytes: self.cache_dir().map_or(0, |d| dj_stems::cache::size(&d)),
-            model: self.model.lock().expect("model state").clone(),
-            model_bytes: MODEL_BYTES,
+            model: self.model_info(),
         }
+    }
+
+    fn model_info(&self) -> ModelInfo {
+        match &self.model {
+            Some(m) => m.state().into(),
+            None => download::State::Failed {
+                done: 0,
+                error: "There's no folder to keep it in.".into(),
+            }
+            .into(),
+        }
+    }
+
+    /// Starts the download if it's missing and nobody has said no to it.
+    fn auto_download(&self) {
+        let saved = self.saved.lock().expect("stems settings").clone();
+        if let Some(m) = &self.model {
+            if saved.enabled
+                && saved.auto_download
+                && matches!(m.state(), download::State::Missing { .. })
+            {
+                m.start();
+            }
+        }
+    }
+
+    /// Remembers whether the model may download by itself.
+    fn allow_download(&self, yes: bool) {
+        self.saved.lock().expect("stems settings").auto_download = yes;
+        self.save();
     }
 }
 
@@ -216,6 +278,12 @@ pub fn set_stems(
     }
     stems.save();
     stems.apply();
+    // With splitting off there's nothing to download the model for.
+    match (enabled, &stems.model) {
+        (Some(true), _) => stems.auto_download(),
+        (Some(false), Some(m)) => m.cancel(),
+        _ => {}
+    }
     if let (Some(dir), Some(gb)) = (stems.cache_dir(), cache_gb) {
         let _ = dj_stems::cache::trim(&dir, gb as u64 * GB, None);
     }
@@ -230,47 +298,49 @@ pub fn clear_stems_cache(stems: State<'_, Stems>) -> Result<StemsInfo, String> {
     Ok(stems.info())
 }
 
-/// Starts downloading the model in the background; `stems_info` shows how
-/// far it has got. Stems start on the loaded decks once it's in.
 #[tauri::command]
-pub fn download_stems_model(app: tauri::AppHandle, stems: State<'_, Stems>) -> Result<(), String> {
-    let path = stems.model_path().ok_or("no data folder")?;
-    {
-        let mut m = stems.model.lock().expect("model state");
-        if matches!(*m, ModelState::Downloading { .. } | ModelState::Ready) {
-            return Ok(());
-        }
-        *m = ModelState::Downloading {
-            done: 0,
-            total: MODEL_BYTES,
-        };
+pub fn stems_model(stems: State<'_, Stems>) -> ModelInfo {
+    stems.model_info()
+}
+
+/// The app is set up: whatever the first launch asks has been answered. The
+/// model starts downloading, if it isn't here and nobody has said no to it.
+#[tauri::command]
+pub fn stems_setup_done(stems: State<'_, Stems>) -> ModelInfo {
+    stems.auto_download();
+    stems.model_info()
+}
+
+/// Downloads the model because the user asked, or tries again now. The
+/// `stems-model` event says how it's going.
+#[tauri::command]
+pub fn download_stems_model(stems: State<'_, Stems>) -> ModelInfo {
+    stems.allow_download(true);
+    if let Some(m) = &stems.model {
+        m.start();
     }
-    let model = stems.model.clone();
-    std::thread::Builder::new()
-        .name("stems-download".into())
-        .spawn(move || {
-            let result = download::fetch(
-                dj_stems::MODEL_URL,
-                dj_stems::MODEL_SHA256,
-                &path,
-                |done, total| {
-                    *model.lock().expect("model state") = ModelState::Downloading {
-                        done,
-                        total: if total > 0 { total } else { MODEL_BYTES },
-                    };
-                },
-            );
-            *model.lock().expect("model state") = match result {
-                Ok(()) => ModelState::Ready,
-                Err(e) => ModelState::Failed {
-                    error: e.to_string(),
-                },
-            };
-            use tauri::Manager;
-            app.state::<Stems>().apply();
-        })
-        .map_err(|e| e.to_string())?;
-    Ok(())
+    stems.model_info()
+}
+
+/// Stops the download, and doesn't start it again until the user asks.
+#[tauri::command]
+pub fn cancel_stems_model(stems: State<'_, Stems>) -> ModelInfo {
+    stems.allow_download(false);
+    if let Some(m) = &stems.model {
+        m.cancel();
+    }
+    stems.model_info()
+}
+
+/// Deletes the model, or what's in of it, and doesn't download it again
+/// until the user asks.
+#[tauri::command]
+pub fn remove_stems_model(stems: State<'_, Stems>) -> Result<ModelInfo, String> {
+    stems.allow_download(false);
+    if let Some(m) = &stems.model {
+        m.remove().map_err(|e| e.to_string())?;
+    }
+    Ok(stems.model_info())
 }
 
 /// Raw waveform bytes for what a deck plays with the stems in `mask` on.
@@ -295,4 +365,33 @@ pub async fn stems_waveform(
     .await
     .map_err(|e| e.to_string())?;
     Ok(tauri::ipc::Response::new(bytes))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Settings saved before the model downloaded by itself.
+    #[test]
+    fn older_settings_download_the_model() {
+        let s: Saved = serde_json::from_str(r#"{"enabled": false, "cacheGb": 20}"#).unwrap();
+        assert!(!s.enabled);
+        assert_eq!(s.cache_gb, 20);
+        assert!(s.auto_download);
+    }
+
+    #[test]
+    fn the_ui_gets_the_download_as_it_is() {
+        let info = ModelInfo::from(download::State::Downloading {
+            done: 5,
+            left: Some(9),
+        });
+        assert_eq!(
+            serde_json::to_value(info).unwrap(),
+            serde_json::json!({
+                "state": "downloading", "done": 5, "total": MODEL_BYTES,
+                "secondsLeft": 9, "error": null,
+            })
+        );
+    }
 }

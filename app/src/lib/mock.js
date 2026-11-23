@@ -167,11 +167,50 @@ export function createMockBackend() {
     generation: 0, previewing: false, scratching: false, waveform: null, fader: 1, peak: 0, path: null, ...freshLoops(),
     filter: 0, fx: { kind: 'echo', on: false, level: 0.5, beats: 1 }, stems: 0b1111, splitFrom: 0,
   }));
-  // Stems: a pretend model download (?stems=ready starts with it done), and
-  // splitting that takes 20 s a track.
+  // Stems: a pretend model download, and splitting that takes 20 s a track.
   const stemsCfg = { enabled: true, cacheGb: 5, cacheBytes: 1.2e9 };
-  /** @type {any} */
-  let stemsModel = new URLSearchParams(globalThis.location?.search).get('stems') === 'ready' ? { state: 'ready', at: 0 } : { state: 'missing' };
+  const MODEL_BYTES = 165_612_636;
+  const MODEL_SECS = 15;
+  // ?stems=ready starts with the model there; offline drops the connection
+  // at 40% until it's tried again; failed fails there; cancelled starts as
+  // if an earlier session had cancelled it there; slow takes ten minutes.
+  const query = new URLSearchParams(globalThis.location?.search);
+  let modelCase = query.get('stems') ?? '';
+  /** @type {import('./stemsmodel.js').StemsModel & { at?: number }} */
+  let stemsModel = { state: 'missing', done: 0, total: MODEL_BYTES, secondsLeft: null, error: null };
+  if (modelCase === 'ready') stemsModel = { ...stemsModel, state: 'ready', done: MODEL_BYTES, at: 0 };
+  if (modelCase === 'cancelled') stemsModel.done = MODEL_BYTES * 0.4;
+  let modelAsked = modelCase !== 'cancelled';
+  const modelListeners = new Set();
+  const setModel = (change) => {
+    stemsModel = { ...stemsModel, secondsLeft: null, error: null, ...change };
+    for (const fn of modelListeners) fn(stemsModel);
+    return stemsModel;
+  };
+  let modelTimer;
+  const startModel = () => {
+    if (stemsModel.state === 'downloading' || stemsModel.state === 'ready') return stemsModel;
+    if (stemsModel.state !== 'missing') modelCase = ''; // trying again works
+    clearInterval(modelTimer);
+    const rate = MODEL_BYTES / (modelCase === 'slow' ? 600 : MODEL_SECS);
+    modelTimer = setInterval(() => {
+      const done = Math.min(MODEL_BYTES, stemsModel.done + rate / 4);
+      if (modelCase === 'offline' && done > MODEL_BYTES * 0.4) return void (clearInterval(modelTimer), setModel({ state: 'waiting' }));
+      if (modelCase === 'failed' && done > MODEL_BYTES * 0.4) {
+        clearInterval(modelTimer);
+        return void setModel({ state: 'failed', error: "There isn't enough space on the disk. Free up 300 MB." });
+      }
+      if (done < MODEL_BYTES) return void setModel({ done, secondsLeft: Math.ceil((MODEL_BYTES - done) / rate) });
+      clearInterval(modelTimer);
+      setModel({ state: 'ready', done, at: performance.now() });
+    }, 250);
+    return setModel({ state: 'downloading' });
+  };
+  const stopModel = (done = stemsModel.done) => {
+    clearInterval(modelTimer);
+    modelAsked = false;
+    return setModel({ state: 'missing', done });
+  };
   const deckStems = (d) => {
     if (!d.loaded || !stemsCfg.enabled) return { state: 'off', ready: 0, error: null };
     if (stemsModel.state !== 'ready') return { state: 'needsModel', ready: 0, error: null };
@@ -188,7 +227,8 @@ export function createMockBackend() {
     const playing = s.started != null && t < s.duration;
     return { loaded: s.duration > 0, playing, progress: playing ? t / s.duration : 0, duration: s.duration };
   };
-  let folders = stress?.folders ?? FOLDERS.map((f) => `/Music/${f}`);
+  // ?library=empty starts with no music, as on a first launch.
+  let folders = query.get('library') === 'empty' ? [] : stress?.folders ?? FOLDERS.map((f) => `/Music/${f}`);
   let xf = 0;
   let last = performance.now();
   // Simulated audio device, so the disconnect banner can be tried in a
@@ -491,28 +531,32 @@ export function createMockBackend() {
       }
       return out;
     },
-    stemsInfo: async () => ({ ...stemsCfg, model: stemsModel, modelBytes: 84 * 1024 * 1024 }),
+    stemsInfo: async () => ({ ...stemsCfg, model: stemsModel }),
     setStems: async (change) => {
       for (const k of ['enabled', 'cacheGb']) if (change[k] != null) stemsCfg[k] = change[k];
-      if (change.mode) stemsCfg.enabled = change.mode !== 'off';
-      else if (change.enabled != null) stemsCfg.mode = change.enabled ? 'fast' : 'off';
-      return { ...stemsCfg, model: stemsModel, modelBytes: 84 * 1024 * 1024 };
+      if (change.enabled === false && stemsModel.state !== 'ready') {
+        const asked = modelAsked;
+        stopModel();
+        modelAsked = asked;
+      } else if (change.enabled && modelAsked) startModel();
+      return { ...stemsCfg, model: stemsModel };
     },
     clearStemsCache: async () => {
       stemsCfg.cacheBytes = 0;
-      return { ...stemsCfg, model: stemsModel, modelBytes: 84 * 1024 * 1024 };
+      return { ...stemsCfg, model: stemsModel };
     },
+    stemsModel: async () => stemsModel,
+    onStemsModel: async (fn) => {
+      modelListeners.add(fn);
+      return () => modelListeners.delete(fn);
+    },
+    stemsSetupDone: async () => (stemsCfg.enabled && modelAsked && stemsModel.state === 'missing' ? startModel() : stemsModel),
     downloadStemsModel: async () => {
-      if (stemsModel.state === 'downloading' || stemsModel.state === 'ready') return;
-      const total = 84 * 1024 * 1024;
-      const started = performance.now();
-      stemsModel = { state: 'downloading', done: 0, total };
-      const timer = setInterval(() => {
-        const done = Math.min(total, ((performance.now() - started) / 4000) * total);
-        stemsModel = done >= total ? { state: 'ready', at: performance.now() } : { state: 'downloading', done, total };
-        if (done >= total) clearInterval(timer);
-      }, 100);
+      modelAsked = true;
+      return startModel();
     },
+    cancelStemsModel: async () => (stemsModel.state === 'ready' ? stemsModel : stopModel()),
+    removeStemsModel: async () => stopModel(0),
     libraryFolders: async () => [...folders],
     addFolder: async (path) => {
       if (path && !folders.includes(path)) folders.push(path);

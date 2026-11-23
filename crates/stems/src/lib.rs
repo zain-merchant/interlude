@@ -31,8 +31,6 @@ pub enum Error {
     Model(String),
     #[error("ONNX Runtime: {0}")]
     Ort(#[from] ort::Error),
-    #[error("download failed: {0}")]
-    Download(String),
     #[error(transparent)]
     Io(#[from] std::io::Error),
 }
@@ -43,7 +41,7 @@ impl From<ort::Error<ort::session::builder::SessionBuilder>> for Error {
     }
 }
 
-/// The model file Interlude downloads on first use: HTDemucs v4, exported to
+/// The model file Interlude downloads once it's set up: HTDemucs v4, exported to
 /// ONNX with its weights stored as 16-bit floats (it still computes in
 /// 32-bit). Parity-checked against Meta's PyTorch model by its exporter.
 pub const MODEL_ID: &str = "htdemucs-v4";
@@ -52,6 +50,17 @@ pub const MODEL_FILE: &str = "htdemucs_fp16weights.onnx";
 pub const MODEL_URL: &str = "https://huggingface.co/StemSplitio/htdemucs-onnx/resolve/d54ed9eb60e258ea82131c6ee14578628816456a/htdemucs_fp16weights.onnx";
 /// SHA-256 of the file at [`MODEL_URL`]; a mismatch refuses the download.
 pub const MODEL_SHA256: &str = "d05c269d0178d2a72ad484b10b11dd370193fc923201c3b27a99f848745db70a";
+/// Its size.
+pub const MODEL_BYTES: u64 = 165_612_636;
+
+/// The model, as something to [`download`].
+pub fn model_source() -> download::Source {
+    download::Source {
+        url: MODEL_URL.into(),
+        sha256: MODEL_SHA256.into(),
+        bytes: MODEL_BYTES,
+    }
+}
 
 /// How the splitter should run. Changing it takes effect on the next region.
 #[derive(Debug, Clone, PartialEq)]

@@ -28,7 +28,8 @@ ruled out along the way.
   - Cues are a coloured dot, a number and a time. Empty slots read "Set".
   - Loop shows ½, ‹ 4 beats ›, 2×.
   - FX shows the effect, its beat length, a level and an on/off control.
-  - Stems are dots: filled when on, hollow and dimmed when muted.
+  - Stems are dots: filled when on, hollow and dimmed when muted. Until the
+    model has downloaded, the row says how that's going in words.
 - **Typography:** Geist Variable with tabular numbers. Times and BPM are
   large and light.
 - **Waveforms:** calm ribbons sampled on a grid anchored to the track, so
