@@ -21,14 +21,12 @@ export default {
     cable: {
       type: 'choice',
       label: 'The controller’s cable',
-      default: '2i',
-      recommended: '2i',
+      default: '2j',
+      recommended: '2j',
       options: [
         ['2f', 'Leaning out', 'A loop beside the plug that crosses behind itself, then out at a slant.'],
-        ['2g', 'Wider', 'The same, leaning further.'],
-        ['2h', 'Wider still', 'Further again.'],
         ['2i', 'Flaring', 'It leaves the loop steeply and curves away to the right.'],
-        ['2j', 'Out wide, then up', 'It swings out to the right and turns straight up.'],
+        ['2j', 'Out wide, then up', 'It swings out to the right and turns straight up, a tenth of the way in from the controller’s end.'],
       ],
     },
   },
