@@ -128,6 +128,9 @@
 :root[data-flag-dir-room-tint][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips] .tip[role='tooltip'] .tt.one .ta {
   padding-left: 9.5px;
 }
+:root[data-flag-dir-room-tint][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips] .tip[role='tooltip'] .tt.one .ta:first-child {
+  padding-left: var(--ti);
+}
 :root[data-flag-dir-room-tint][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips][data-flag-tooltips] .tip[role='tooltip'] .tt.one .tl > .tw {
   flex: none;
 }

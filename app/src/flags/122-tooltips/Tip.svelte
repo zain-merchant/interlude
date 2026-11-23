@@ -10,7 +10,7 @@
   const a = $derived(t.a ?? []);
   const main = $derived(!!(t.n || t.v || t.x));
   // One thing more goes on the name's line, if that all fits in 360: every dial at its longest value does, so a tooltip keeps its form as its value moves.
-  const ask = $derived(setting('tooltips', 'lines') === 'one' && a.length === 1 && !t.x && !!(t.n || t.v));
+  const ask = $derived(setting('tooltips', 'lines') === 'one' && a.length === 1 && !t.x);
   let el = $state();
   let wide = $state(false);
   let said = '';
