@@ -21,7 +21,7 @@
   <!-- Geist, served from here (no other site to reach before the page can
        draw its text); the Latin file is fetched straight away. -->
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="style.css?v=20261122j">
+  <link rel="stylesheet" href="style.css?v=20261122l">
   <script src="tune.js?v=20261122a"></script>
   <script>
     // Live updates while working on the site locally (.claude/serve.py
@@ -83,6 +83,12 @@
       d.dataset.hero = 'split';
       d.dataset.herotext = 'card';
       d.dataset.nav = 'morph';
+      // Being tried (style.css): what's behind the hero's GitHub button and
+      // the switch (?surface=glass, crisp or raised), and the record behind
+      // a phone's hero (?recbg=darker, smaller or lower).
+      const tq = new URLSearchParams(location.search);
+      if (/^(glass|crisp|raised)$/.test(tq.get('surface'))) d.dataset.surface = tq.get('surface');
+      if (/^(darker|smaller|lower)$/.test(tq.get('recbg'))) d.dataset.recbg = tq.get('recbg');
       // iOS Safari shows :active on a touch only when the page listens for
       // touches; this one does nothing else.
       document.addEventListener('touchstart', () => {}, { passive: true });
@@ -1388,6 +1394,19 @@
       }
 
       const q = new URLSearchParams(location.search);
+      // Being tried on phones (?recbg=, style.css): the record drawn smaller
+      // round the same middle, or fading in further down.
+      // (Set once the panels have put their values in, a moment after load.)
+      const recbg = document.documentElement.dataset.recbg;
+      if (fx && (recbg === 'smaller' || recbg === 'lower') && matchMedia('(max-width: 480px)').matches) {
+        const size = fx.T.size, fadeAt = fx.T.fadeAt, fadeLen = fx.T.fadeLen;
+        const apply = () => {
+          if (recbg === 'smaller') fx.T.size = Math.max(0.7, (fx.T.size === size ? size : fx.T.size) * 0.72);
+          else { fx.T.fadeAt = Math.max(fadeAt, 260); fx.T.fadeLen = Math.min(Math.max(fadeLen, 300), 420); }
+          fx.relayout?.();
+        };
+        loaded.then(() => setTimeout(apply, 1200));
+      }
       // The hand it plays with: the controller (owner's pick), or the mouse
       // (?hand=mouse). Tune > Hero > Layout > starts with.
       let mode = q.get('hand') === 'mouse' ? 'mouse' : 'controller';

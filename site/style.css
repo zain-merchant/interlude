@@ -1259,6 +1259,30 @@ html[data-hero]:is([data-herotext="card"], [data-herotext="rail"], [data-herotex
   .shot-tag { order: -1; height: auto; }
   .shot-bar { row-gap: 8px; margin-bottom: 14px; }
 }
+/* Being tried (?surface=, Hero: GitHub and switch surface): what's behind
+   the hero's GitHub button and the mouse/controller switch. Today's (the
+   default): a lit grey and a near-solid dark with a soft wide shadow.
+   glass: the nav capsule's own glass and edge. crisp: the page's black, a
+   clean hairline, no soft shadow. raised: the app's panel grey, a lit top
+   edge, a short tight shadow. */
+html[data-surface="glass"] .hero .hero-side .cta .btn.ghost, html[data-surface="glass"] .switch {
+  background: rgb(16 16 19 / 0.74); -webkit-backdrop-filter: blur(20px) saturate(1.4); backdrop-filter: blur(20px) saturate(1.4);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.09), inset 0 1px 0 rgb(255 255 255 / 0.05), 0 12px 40px rgb(0 0 0 / 0.42);
+}
+html[data-surface="crisp"] .hero .hero-side .cta .btn.ghost, html[data-surface="crisp"] .switch {
+  background: rgb(11 11 13); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.16);
+}
+html[data-surface="raised"] .hero .hero-side .cta .btn.ghost, html[data-surface="raised"] .switch {
+  background: rgb(38 38 42); box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.1), inset 0 0 0 1px rgb(255 255 255 / 0.07), 0 1px 2px rgb(0 0 0 / 0.5);
+}
+/* Being tried (?recbg=, Hero: record on a phone): the record behind the
+   phone's hero. Today's (the default); darker; smaller (the whole record
+   drawn smaller round the same middle, index.html); lower (it fades in
+   further down, under the headline, index.html). */
+@media (max-width: 480px) {
+  html[data-recbg="darker"] .ripples { opacity: 0.55; }
+}
+
 /* ── Hero and nav layouts (end) ── */
 
 /* Install steps: the number sits just above its heading, close to it, on
