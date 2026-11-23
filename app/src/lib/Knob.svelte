@@ -2,11 +2,13 @@
   import { showTip, hideTip, tip, tipText } from './tooltip.svelte.js';
   import { openMenu } from './menu.svelte.js';
   import { detent, keyValue } from './control.js';
-  import { flag } from '../flags/registry.svelte.js';
+  import { flag, setting } from '../flags/registry.svelte.js';
+  import { axisOf, landed, scrolled } from '../flags/120-knob-feel/feel.js'; // #120 (UI audit flag): knob-feel
 
   /**
    * A rotary knob: a machined graphite cap with a white indicator inside an
-   * engraved 270° tick scale. Drag up/down (⇧ for fine), scroll, or use the
+   * engraved 270° tick scale. Drag it up or right to raise it, down or left
+   * to lower it (#120; up and down only without it; ⇧ for fine), scroll, or use the
    * arrow keys; double-click or right-click resets. With `kill`, clicking
    * the label kills the band and clicking again brings it back. A `taper`
    * maps values to positions on the sweep (0..1) when they aren't linear,
@@ -58,6 +60,26 @@
   }
 
   let raw = 0;
+  // #120 (UI audit flag): knob-feel: the way this drag is going, once that's clear.
+  /** @type {'x' | 'y' | null} */
+  let axis = null;
+  let gone = [0, 0];
+  let at = [0, 0];
+  /** How far the pointer moved, in px, the way this knob turns: up, or right. */
+  function turned(e) {
+    const how = setting('knob-feel', 'drag');
+    if (!flag('knob-feel')) return -e.movementY;
+    const [dx, dy] = [e.clientX - at[0], e.clientY - at[1]];
+    at = [e.clientX, e.clientY];
+    if (how === 'updown') return -dy;
+    if (how === 'across') return dx;
+    if (!axis) {
+      gone = [gone[0] + dx, gone[1] + dy];
+      axis = axisOf(gone[0], gone[1]);
+      return 0;
+    }
+    return axis === 'x' ? dx : -dy;
+  }
   let dragging = $state(false);
   const readout = () => tipText(name, format(value));
 
@@ -73,13 +95,16 @@
     }
 
     dragging = true;
+    axis = null;
+    gone = [0, 0];
+    at = [e.clientX, e.clientY];
     raw = pos;
     showTip(dial, readout());
   }
   function move(e) {
     if (!dragging) return;
     const perPx = (1 / 180) * (e.shiftKey ? 0.1 : 1);
-    raw = clampPos(raw - e.movementY * perPx);
+    raw = clampPos(raw + turned(e) * perPx);
     setPos(detent(raw, resetPos, perPx, e.shiftKey));
     showTip(dial, readout());
   }
@@ -91,6 +116,15 @@
   }
   function wheel(e) {
     e.preventDefault();
+    // #120 (UI audit flag): knob-feel: as far as the scroll goes.
+    if (flag('knob-feel') && setting('knob-feel', 'scroll') === 'far') {
+      const p = scrolled(e, { value: pos, min: 0, max: 1, reset: resetPos, sideways: true, detent });
+      if (p === null) return;
+      setPos(p);
+      landed(pos);
+      showTip(dial, readout());
+      return;
+    }
     setPos(pos - Math.sign(e.deltaY) * (e.shiftKey ? 0.005 : 0.02));
     showTip(dial, readout());
   }

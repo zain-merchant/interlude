@@ -485,40 +485,121 @@ export function lookRibbon(wf, w, h, view, spp, c) {
   wf.lookNext = null;
 }
 
-/** How strong each way of marking the beats is: a bar's line, a beat's line, a bar's ticks, a beat's ticks (CSS px long, then alpha). */
+/**
+ * Each way of marking the beats. `edge`: where its ticks stand ('seam' is the
+ * line between the lanes, 'outer' the panel's own edges, 'all' both). `tick`:
+ * lengths (CSS px) and alphas of a beat's, a bar's and a fourth bar's tick;
+ * `line`: alphas of their full-height lines.
+ */
+const TICK = { tick: [[3, 0.5], [6, 0.8], [10, 0.95]] };
 const MARKS = {
-  full: { bar: 0.28, beat: 0.12, barTick: [5, 0.75], beatTick: [3, 0.4] },
-  faint: { bar: 0.14, beat: 0.05, barTick: [5, 0.6], beatTick: [3, 0.34] },
-  ticks: { bar: 0.14, beat: 0, barTick: [6, 0.7], beatTick: [4, 0.42] },
-  none: { bar: 0, beat: 0, barTick: [0, 0], beatTick: [0, 0] },
-  dots: { bar: 0.14, beat: 0, barTick: [5, 0.6], dot: 0.55 },
+  full: { edge: 'all', tick: [[3, 0.4], [5, 0.75], [5, 0.75]], line: [0.12, 0.28, 0.28] },
+  faint: { edge: 'all', tick: [[3, 0.34], [5, 0.6], [5, 0.6]], line: [0.05, 0.14, 0.14] },
+  ticks: { edge: 'all', tick: [[4, 0.42], [6, 0.7], [6, 0.7]], line: [0, 0.14, 0.14] },
+  dots: { edge: 'all', tick: [[0, 0], [5, 0.6], [5, 0.6]], line: [0, 0.14, 0.14], dot: 0.55 },
+  seam: { edge: 'seam', ...TICK },
+  outer: { edge: 'outer', ...TICK },
+  near: { edge: 'seam', ...TICK, near: true },
+  match: { edge: 'seam', ...TICK, beats: 'live' },
+  bars: { edge: 'seam', tick: TICK.tick, line: [0, 0.1, 0.18], beats: 'close' },
+  ruler: { edge: 'seam', ...TICK, strip: 11 },
+  zoom: { line: [0.16, 0.24, 0.4], fade: true },
+  behind: { line: [0.2, 0.4, 0.55], under: true },
+  notch: { line: [0.6, 1, 1], cut: true },
+  none: {},
 };
 
 /**
- * Beat lines, bars stronger, as Waveform2D.beats draws them but with each
- * line's middle on its beat (they began there, and were rounded to whole CSS
- * px while the sound is placed on device px, so they wobbled against it).
+ * The beats, bars and every fourth bar. Each mark's middle is on its beat and
+ * on the pixel grid the sound is placed on (as Waveform2D.beats has them, a
+ * mark begins on its beat and is rounded to whole CSS px, so it wobbles
+ * against the sound). In Grid mode they're at full strength.
  */
 export function lookBeats(wf, w, h, view, spp) {
-  const { ctx } = wf;
+  const { ctx, wl } = wf;
   const dpr = window.devicePixelRatio || 1;
   const len = view.beatLen;
-  const m = MARKS[wf.wl.lines] ?? MARKS.full;
-  const barsOnly = len / spp < 6;
+  const fix = view.live === 2;
+  const m = fix ? MARKS.full : MARKS[wl.lines] ?? MARKS.full;
+  // What's being worked with comes in over a few frames, not at a stroke.
+  const want = view.live ? 1 : 0;
+  wf.lookLive = wf.lookLive === undefined ? want : wf.lookLive + (want - wf.lookLive) * 0.25;
+  if (Math.abs(want - wf.lookLive) < 0.02) wf.lookLive = want;
+  else wf.lookBusy = true;
+  const beatPx = len / spp;
+  const barsOnly = beatPx < 6;
+  // Where beats crowd, they give way to bars.
+  const roomy = Math.max(0, Math.min(1, (beatPx - 8) / 24));
+  const close = Math.max(0, Math.min(1, (beatPx - 80) / 40));
   const off = Math.round((view.start / spp) * dpr);
-  const mark = (x, y, ww, hh, a) => {
-    ctx.fillStyle = `rgba(255,255,255,${a})`;
-    ctx.fillRect(x, y, ww, hh);
-  };
+  const head = (view.playhead - view.start) / spp;
+  const reach = Math.max(140, Math.min(w * 0.4, beatPx * 8));
+  const bottom = view.deck === 0; // the left deck's lane is on top: the line between the lanes is its bottom edge
+  const ends = m.edge === 'all' ? [true, false] : m.edge === 'seam' ? [bottom] : m.edge === 'outer' ? [!bottom] : [];
+  const px = 1 / dpr;
+  if (m.strip) {
+    ctx.fillStyle = 'rgba(6,6,7,0.86)';
+    ctx.fillRect(0, bottom ? h - m.strip : 0, w, m.strip);
+  }
+  ctx.save();
+  if (m.under) ctx.globalCompositeOperation = 'destination-over';
+  if (m.cut) ctx.globalCompositeOperation = 'destination-out';
   for (let b = Math.ceil((view.start - view.firstBeat) / len) - 1; ; b++) {
     const bx = (Math.round(((view.firstBeat + b * len) / spp - 0.5) * dpr) - off) / dpr;
     if (bx > w) break;
     const bar = ((b % 4) + 4) % 4 === 0;
+    const k = !bar ? 0 : ((b % 16) + 16) % 16 === 0 ? 2 : 1;
     if (barsOnly && !bar) continue;
-    const line = bar ? m.bar : m.beat;
-    if (line) mark(bx, 0, 1, h, line);
-    const tick = bar ? m.barTick : m.beatTick;
-    if (tick) for (const y of [0, h - tick[0]]) mark(bx, y, 1, tick[0], tick[1]);
-    else for (const y of [1, h - 3]) mark(bx - 0.5, y, 2, 2, m.dot);
+    const from = bx + 0.5 - head;
+    if (!fix && wl.played !== 'veil' && from < -Math.max(beatPx, 4)) continue;
+    let a = 1;
+    if (!fix) {
+      if (k === 0 && m.edge !== 'all') a *= m.fade ? roomy * 0.7 : roomy;
+      if (m.fade && k === 1) a *= Math.max(0.25, Math.min(1, beatPx / 40));
+      if (k === 0 && m.beats === 'live') a *= wf.lookLive;
+      if (k === 0 && m.beats === 'close') a *= Math.max(close, wf.lookLive);
+      if (m.near) {
+        const g = Math.exp(-((from / reach) ** 2));
+        // Away from the play head the bars stay, faint; beats go.
+        a *= k ? 0.3 + 0.7 * g : g;
+        if (k === 0) a = Math.max(a, roomy * wf.lookLive * 0.7 * Math.exp(-((from / (reach * 2)) ** 2)));
+      }
+    }
+    if (a < 0.03) continue;
+    const paint = (y, hh, alpha, x = bx, ww = 1) => {
+      ctx.fillStyle = m.cut ? `rgba(0,0,0,${alpha})` : `rgba(255,255,255,${alpha})`;
+      ctx.fillRect(x, y, ww, hh);
+    };
+    const line = m.line?.[k];
+    if (line) {
+      if (m.cut) paint(0, h, line * a, k ? bx - px : bx, k ? 1 + 2 * px : 1);
+      else paint(0, h, line * a);
+    }
+    const [tl, ta] = m.tick?.[k] ?? [0, 0];
+    if (tl) for (const e of ends) paint(e ? h - tl : 0, tl, ta * a);
+    else if (m.dot && !k) for (const e of ends) paint(e ? h - 3 : 1, 2, m.dot * a, bx - 0.5, 2);
   }
+  ctx.restore();
+}
+
+/** The bar the play head is in, quieter than a white pill on it: small figures at its top, on the played side. */
+export function lookBar(wf, h, view, x) {
+  if (wf.wl.chip === 'none') return;
+  const bar = Math.floor((view.playhead - view.firstBeat) / view.beatLen / 4) + 1;
+  if (bar < 1) return;
+  const { ctx } = wf;
+  const label = String(bar);
+  ctx.font = `600 10px ${view.labelFont ? `${view.labelFont}, ` : ''}"Geist Variable", system-ui, sans-serif`;
+  const tw = Math.ceil(ctx.measureText(label).width) + 8;
+  const left = x(view.playhead) - tw - 0.75;
+  const top = 0; // clear of the hot cues' chips, at each lane's foot
+  ctx.fillStyle = 'rgba(6,6,7,0.78)';
+  ctx.beginPath();
+  ctx.roundRect(left, top, tw, 14, [0, 0, 0, 3]);
+  ctx.fill();
+  ctx.fillStyle = `rgba(${view.colors.fg},0.86)`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(label, left + tw / 2, top + 7.5);
+  ctx.textAlign = 'start';
 }

@@ -13,8 +13,9 @@ export function lookString() {
   if (!l.draw) return '';
   // With the flag off, 110's look has its defaults, whatever was tuned.
   const on = flag(ID);
-  const lines = on ? setting(ID, 'lines') : FLAGS.find((f) => f.id === ID)?.settings?.lines.default;
-  const o = { id: l.id, draw: l.draw, lines };
+  const set = FLAGS.find((f) => f.id === ID)?.settings;
+  const at = (k) => (on ? setting(ID, k) : set?.[k].default);
+  const o = { id: l.id, draw: l.draw, lines: at('marks'), chip: at('chip'), played: at('played') };
   for (const k in l.values) o[k] = Number((on ? setting(ID, `${l.id}-${k}`) : null) ?? l.values[k]);
   return JSON.stringify(o);
 }
