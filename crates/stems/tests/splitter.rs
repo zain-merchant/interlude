@@ -10,8 +10,20 @@ use dj_engine::stems::{STORED_BASS, STORED_DRUMS, STORED_VOCALS};
 use dj_engine::Track;
 use dj_stems::{CacheKey, Settings, Splitter, Status};
 
+/// The stand-in model, in a folder of its own: the splitter puts a copy that
+/// loads quickly beside it.
 fn model() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/data/fake-stems.onnx")
+    static MODEL: std::sync::OnceLock<PathBuf> = std::sync::OnceLock::new();
+    MODEL
+        .get_or_init(|| {
+            let dir = std::env::temp_dir().join(format!("stems-model-{}", std::process::id()));
+            std::fs::create_dir_all(&dir).unwrap();
+            let from = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/data/fake-stems.onnx");
+            let to = dir.join("fake-stems.onnx");
+            std::fs::copy(from, &to).unwrap();
+            to
+        })
+        .clone()
 }
 
 fn track(seconds: f32) -> Arc<Track> {
@@ -118,4 +130,37 @@ fn model_loads_again_after_being_dropped() {
         assert!(m.segment() > 0);
         drop(m);
     }
+}
+
+/// Once there's nothing to split, the model gets a copy that loads quickly.
+#[test]
+fn makes_a_quick_copy_when_idle() {
+    let dir = std::env::temp_dir().join(format!("stems-idle-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).unwrap();
+    let path = dir.join("m.onnx");
+    std::fs::copy(model(), &path).unwrap();
+    let off = Settings {
+        enabled: false,
+        model: Some(path.clone()),
+        ..Default::default()
+    };
+    let s = Splitter::new(off.clone(), Box::new(|_| 0.0));
+    std::thread::sleep(Duration::from_millis(200));
+    assert!(!dj_stems::quick::exists(&path), "not while stems are off");
+    s.configure(Settings {
+        enabled: true,
+        ..off
+    });
+    let start = Instant::now();
+    while !dj_stems::quick::exists(&path) {
+        assert!(start.elapsed() < Duration::from_secs(10));
+        std::thread::sleep(Duration::from_millis(5));
+    }
+    let a = track(2.0);
+    s.split(0, a.clone(), None);
+    wait_ready(&s, 0);
+    check(&a);
+    drop(s);
+    let _ = std::fs::remove_dir_all(&dir);
 }

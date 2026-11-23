@@ -13,11 +13,11 @@ use std::sync::Mutex;
 use std::time::Instant;
 
 use ort::environment::Environment;
-use ort::session::builder::AutoDevicePolicy;
+use ort::session::builder::{AutoDevicePolicy, GraphOptimizationLevel, SessionBuilder};
 use ort::session::Session;
 use ort::value::Tensor;
 
-use crate::Error;
+use crate::{quick, Error};
 
 /// The sample rate the model was trained at.
 pub const MODEL_RATE: u32 = 44_100;
@@ -47,6 +47,25 @@ fn environment() -> Result<Environment, Error> {
     Ok(e)
 }
 
+/// A session as every load of the model wants it, optimised to `level`.
+pub(crate) fn builder(level: GraphOptimizationLevel) -> Result<SessionBuilder, Error> {
+    let env = environment()?;
+    // The model barely gains past two threads (on an M5: 1.46 s per
+    // segment on one, 1.21 s on two, 1.07 s on four), so two keeps it
+    // fast while leaving the rest for the audio thread and the UI.
+    // Without the arena and memory pattern, memory stays flat from one
+    // segment to the next (about 0.5 GB less at peak) for under 3% speed.
+    // ort turns on automatic device selection by default, which on macOS
+    // adds Core ML even with only the CPU provider listed, and Core ML
+    // can't compile this model. PreferCPU keeps it off.
+    Ok(Session::builder(&env)?
+        .with_auto_device(AutoDevicePolicy::PreferCPU)?
+        .with_optimization_level(level)?
+        .with_intra_threads(THREADS)?
+        .with_memory_pattern(false)?
+        .with_execution_providers([ort::ep::CPU::default().with_arena_allocator(false).build()])?)
+}
+
 /// A loaded separation model.
 pub struct Model {
     session: Session,
@@ -62,26 +81,23 @@ pub struct Separated {
 }
 
 impl Model {
-    /// Loads a model file.
+    /// Loads a model file, or its [`quick`] copy if it has one.
     pub fn load(path: &Path) -> Result<Self, Error> {
+        if let Some(copy) = quick::find(path) {
+            match Self::open(&copy) {
+                Ok(m) => return Ok(m),
+                Err(e) => {
+                    eprintln!("stems: the quick copy of the model won't load ({e})");
+                    let _ = std::fs::remove_file(copy);
+                }
+            }
+        }
+        Self::open(path)
+    }
+
+    fn open(path: &Path) -> Result<Self, Error> {
         let started = Instant::now();
-        let env = environment()?;
-        // The model barely gains past two threads (on an M5: 1.46 s per
-        // segment on one, 1.21 s on two, 1.07 s on four), so two keeps it
-        // fast while leaving the rest for the audio thread and the UI.
-        // Without the arena and memory pattern, memory stays flat from one
-        // segment to the next (about 0.5 GB less at peak) for under 3% speed.
-        // ort turns on automatic device selection by default, which on macOS
-        // adds Core ML even with only the CPU provider listed, and Core ML
-        // can't compile this model. PreferCPU keeps it off.
-        let session = Session::builder(&env)?
-            .with_auto_device(AutoDevicePolicy::PreferCPU)?
-            .with_intra_threads(THREADS)?
-            .with_memory_pattern(false)?
-            .with_execution_providers([ort::ep::CPU::default()
-                .with_arena_allocator(false)
-                .build()])?
-            .commit_from_file(path)?;
+        let session = builder(GraphOptimizationLevel::All)?.commit_from_file(path)?;
         let segment = Self::check_shapes(&session)?;
         eprintln!(
             "stems: model loaded in {:.1} s",

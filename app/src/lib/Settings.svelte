@@ -474,7 +474,7 @@
         <section class="display" aria-labelledby="stems-model" bind:this={modelSection}>
           <h3 id="stems-model">Separation model</h3>
           {#if stemsModel.state === 'ready'}
-            <p>Ready. Each track you load is split into vocals, melody, bass and drums on this computer, starting at the play head, so the part you're about to play is ready first. The model takes {mb(stemsModel.total)}.</p>
+            <p>Ready. Each track you load is split into vocals, melody, bass and drums on this computer, starting at the play head, so the part you're about to play is ready first. The model takes {mb(stems?.modelBytes || stemsModel.total)}.</p>
             <div class="size model">
               {#if removing}
                 <p>New tracks won't have stems until it's downloaded again.</p>
