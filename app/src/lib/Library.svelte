@@ -1,4 +1,8 @@
 <script>
+  import Status from '../flags/112-shell-status/Status.svelte'; // #112 (UI audit flag)
+  import EmptyFilter from '../flags/113-empty-filter/EmptyFilter.svelte'; // #113 (UI audit flag)
+  import { conn } from '../flags/112-shell-status/connections.svelte.js'; // #112 (UI audit flag)
+  import Activity from '../flags/112-shell-status/Activity.svelte'; // #112 (UI audit flag)
   import { flag, setting } from '../flags/registry.svelte.js';
   import { onMount, tick, untrack } from 'svelte';
   import { backend } from './backend.js';
@@ -99,6 +103,7 @@
       return words.every((w) => hay.includes(w));
     });
   });
+  let emptyHeld = $state(false); // #113 (UI audit flag): its handles are being dragged
   function setFilter(f) {
     filter = f;
     selectIndex(0);
@@ -300,6 +305,7 @@
    * older version of the analyzer found until it redoes them. */
   const pending = $derived(all.reduce((n, t) => n + (t.analysis && !t.analysis.outdated ? 0 : 1), 0));
   // #18 (UI audit flag): how much of the library is analysed, for the bar under the analysis note.
+  $effect(() => void (conn.pending = loading ? 0 : pending)); // #112 (UI audit flag): shell-status, the title bar says it
   const analysisDone = $derived(flag('visual-analysis') && all.length ? `${((1 - pending / all.length) * 100).toFixed(1)}%` : undefined);
   const bpmText = (a) => {
     if (!a?.bpm) return '';
@@ -868,6 +874,7 @@
       <span class="count num">{loading ? 'Scanning…' : countText}{#if !loading && pending}<span
           class="pending" style:--flag-visual-analysis-done={analysisDone} use:tip={() => 'Finding each track’s length, BPM and key in the background'}> · analyzing, {pending.toLocaleString()} to go</span>{/if}</span>
       {/if}
+      {#if flag('shell-status') && setting('shell-status', 'place') === 'library'}<Activity />{/if}<!-- #112 (UI audit flag): shell-status -->
       <button class="btn sm samp" class:on={sampler.open} aria-pressed={sampler.open}
         onclick={() => setSamplerOpen(!sampler.open)}
         use:tip={() => tipText(sampler.open ? 'Hide sampler' : 'Show sampler', keyLabel('view.sampler'),
@@ -875,6 +882,7 @@
           flag('tooltip-wrap') ? 'Eight one-shot sounds to fire over the mix.' : 'eight one-shot sounds to fire over the mix')}>
         <svg viewBox="0 0 12 12" aria-hidden="true"><rect x="1.5" y="1.5" width="3.5" height="3.5" rx="1" /><rect x="7" y="1.5" width="3.5" height="3.5" rx="1" /><rect x="1.5" y="7" width="3.5" height="3.5" rx="1" /><rect x="7" y="7" width="3.5" height="3.5" rx="1" /></svg>Sampler
       </button>
+      {#if flag('shell-status') && setting('shell-status', 'place') === 'library'}<Status />{/if}<!-- #112 (UI audit flag): shell-status -->
       {#if onsettings}
         <!-- Always here, however long the sidebar gets. -->
         <button class="btn sm gear" onclick={onsettings} aria-label="Settings"
@@ -908,7 +916,10 @@
     <div class="scroll" bind:this={scroller} bind:clientHeight={viewHeight} onscroll={() => ((scrollTop = scroller.scrollTop), edges())}
       tabindex="0" onkeydown={listKey} role="listbox" aria-label="Tracks" data-region="tracks" data-more={flag('library-clip') && listMore ? '' : undefined} data-scrolled={flag('library-clip') && listUp ? '' : undefined}
       aria-activedescendant={sorted[selected] ? `track-${selected}` : undefined}>
-      {#if error}
+      {#if flag('empty-filter') && !error && !loading && all.length && (filter.bpmMin || filter.bpmMax) && !filter.keys.length && !query.trim() && !fits && (!results.length || emptyHeld)}
+        <!-- #113 (UI audit flag): empty-filter: your tempos, and the range asked for. -->
+        <EmptyFilter tracks={all} {filter} count={results.length} {setFilter} clear={clearFilter} bind:held={emptyHeld} />
+      {:else if error}
         <div class="empty">{error}</div>
       {:else if !loading && !all.length && emptyView}
         <div class="empty"><p class="what">{emptyView[0]}</p><p class="how">{emptyView[1]}</p></div>
