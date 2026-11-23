@@ -26,7 +26,7 @@ export default {
       options: [
         ['2f', 'Leaning out', 'A loop beside the plug that crosses behind itself, then out at a slant.'],
         ['2i', 'Flaring', 'It leaves the loop steeply and curves away to the right.'],
-        ['2j', 'Out wide, then up', 'It swings out to the right and turns straight up, a tenth of the way in from the controller’s end.'],
+        ['2j', 'Out wide, then up', 'It swings out to the right and turns up and away, a tenth of the way in from the controller’s end.'],
       ],
     },
   },
