@@ -1150,7 +1150,7 @@
           // Which way it comes out: to the side beside the questions, where
           // there's room; down, out of the open foot, where they're stacked.
           // held: a finger pulling it by hand.
-          let dir = matchMedia('(min-width: 861px)').matches ? 'side' : 'down', held = null;
+          let dir = matchMedia('(min-width: 961px)').matches ? 'side' : 'down', held = null;
           const place = () => { rec.style.translate = dir === 'down' ? `0 ${x * S.down}%` : `${x * S.out}% 0`; };
           const step = (now) => {
             const dt = Math.min(0.05, (now - last) / 1000 || 0.016); last = now;
@@ -1174,7 +1174,7 @@
           note.addEventListener('pointerenter', (e) => { if (e.pointerType === 'touch') return; if (x < 0.01) dir = way(); go(true); });
           note.addEventListener('pointerleave', (e) => { if (e.pointerType !== 'touch') go(false); });
           // (Out of the open foot, always.)
-          const way = () => (matchMedia('(min-width: 861px)').matches ? 'side' : 'down');
+          const way = () => (matchMedia('(min-width: 961px)').matches ? 'side' : 'down');
           // Pulled by hand: a finger on the record (through the sleeve's
           // window, or on the part that's out) drags it along the way it
           // comes out; let go, it carries on out or goes home with the speed
