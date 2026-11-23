@@ -20,7 +20,7 @@ export default {
   against:
     'The design doc\'s type ("Geist Variable … times and BPM are large and light"): SF Pro Rounded (ui-rounded in WebKit), a macOS system face, at 600. Its liquid ribbon waveform: beads on the beat grid. Its outlined controls and "one solid primary control, Play", as in #100.',
   notes:
-    "style.css is built from two parts: flag 100's plates and keys (neutral, so the swing is the language, not the material) and Pebble's language layer; every rule is under the tripled :root[data-flag-dir-pebble] attribute. Hooks: Waveform.svelte passes look: 'beads'; waveform-2d.js hands the lane and the overview to wave.js here (and keys its tiles and overview cache on the look). Dials are pure CSS: a conic wedge drawn in the dial's turning frame from --rot. The rounded face is a macOS system font; another platform falls back to Geist.",
+    "style.css is built from two parts: flag 100's plates and keys (neutral, so the swing is the language, not the material) and Pebble's language layer; every rule is under the tripled :root[data-flag-dir-pebble] attribute. Hooks: Waveform.svelte passes look: 'beads'; waveform-2d.js hands the lane and the overview to wave.js here (and keys its tiles and overview cache on the look). Dials are pure CSS: a conic wedge drawn in the dial's turning frame from --rot. The rounded face is a macOS system font; another platform falls back to Geist. The record is a dial too: the vinyl a ring tinted through Platter's --record-tint/--record-high/--record-mat (the meters' deck tones), the still centre a raised cap with the times on it.",
 };
 
 /** Show me: both decks playing, flipping between today and this direction. */

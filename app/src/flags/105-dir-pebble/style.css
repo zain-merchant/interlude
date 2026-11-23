@@ -1184,10 +1184,7 @@
   font-weight: 600;
   letter-spacing: -0.005em;
 }
-:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] [data-region^='deck'] .bpm .big,
-:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] [data-region^='deck'] .times[data-big='remaining'] .rm,
-:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] [data-region^='deck'] .times[data-big='elapsed'] .el,
-:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] [data-region^='deck'] .times:not([data-big]) .el {
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] [data-region^='deck'] .bpm .big {
   font-weight: 600;
   letter-spacing: -0.02em;
   line-height: 30px;
@@ -1484,9 +1481,6 @@
 :root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] .app {
   grid-template-rows: calc(var(--waves, 136px) + var(--pb-grow)) var(--decks, 360px) var(--gap) minmax(160px, 1fr);
 }
-:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] .app.sampling {
-  grid-template-rows: calc(var(--waves, 136px) + var(--pb-grow)) var(--decks, 360px) var(--sampler) var(--gap) minmax(160px, 1fr);
-}
 /* Dials fill their ring's box: with no printed scale round them, the
    wedge can use the room the ticks had. */
 :root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] .knob .dial {
@@ -1548,4 +1542,447 @@
    waves row moves down. */
 :root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] .app > .grip:not(.side) {
   translate: 0 var(--pb-grow);
+}
+
+/* ══ Upstream's new UI (merge of main) ═══════════════════════════════════ */
+
+/* ── The record: a filled ring of vinyl round a raised cap ───────────────
+   The same shape as a dial: the vinyl is the ring (tinted with the deck's
+   meter colours, on the plate's well), the still centre is the raised cap,
+   the times printed on it. Flat: no sheen. */
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] [data-region='deck0'] {
+  --record-tint: 91, 143, 207;
+  --record-high: 184, 211, 242;
+  --record-mat: #060607;
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] [data-region='deck1'] {
+  --record-tint: 185, 142, 88;
+  --record-high: 240, 216, 180;
+  --record-mat: #060607;
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] [data-region^='deck'] .platter .disc {
+  box-shadow: 0 0 0 1px var(--rg-rim), 0 4px 12px -2px rgb(0 0 0 / 0.55);
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] [data-region^='deck'] .platter .sheen {
+  display: none;
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] [data-region^='deck'] .platter .hub {
+  background: var(--rg-cap-fill);
+  box-shadow: inset 0 1px 0 var(--rg-hi-2), 0 0 0 1px var(--rg-rim), 0 3px 8px rgb(0 0 0 / 0.55);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+/* The times on the cap: the big one rounded at 600, the other a step down
+   (sizes stay in em, off the hub's own size). */
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] [data-region^='deck'] .hub .el,
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] [data-region^='deck'] .hub .rm {
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--fg-2);
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] [data-region^='deck'] .hub:not([data-big='remaining']) .el,
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] [data-region^='deck'] .hub[data-big='remaining'] .rm {
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--fg);
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] [data-region^='deck'] .hub[data-big='remaining'] .rm {
+  font-size: 1.75em;
+  line-height: 1.05;
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] [data-region^='deck'] .hub[data-big='remaining'] .el {
+  font-size: 0.95em;
+  line-height: 1.15;
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] [data-region^='deck'] .hub .t {
+  color: var(--fg-3);
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] [data-region^='deck'] .hub .rm.ending,
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] [data-region^='deck'] .hub .rm.ending .t {
+  color: var(--kill);
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] [data-region^='deck'] .hub.empty :is(.el, .rm, .t),
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] [data-region^='deck']:has(header .name.dim) .hub :is(.el, .rm, .t) {
+  font-weight: 400;
+  color: var(--fg-4);
+}
+/* Clickable (time-remaining): the cap lightens like a key under the pointer. */
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] [data-region^='deck'] .hub[role='button']:hover,
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] [data-region^='deck'] .hub[data-big]:hover {
+  background: var(--rg-cap-fill-hi);
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] [data-region^='deck'] .hub:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+/* The tonearm: flat, round-ended parts in the caps' tones; the pivot is a
+   cap, its spindle the light dot every Pebble grip has. */
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] [data-region^='deck'] .tonearm .pivot {
+  background: var(--rg-cap-fill);
+  box-shadow: inset 0 1px 0 var(--rg-hi-2), 0 0 0 1px var(--rg-rim), 0 3px 8px rgb(0 0 0 / 0.55);
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] [data-region^='deck'] .tonearm .cap {
+  background: var(--fg);
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] [data-region^='deck'] .tonearm svg > rect:nth-of-type(1) {
+  fill: var(--rg-cap);
+  stroke: var(--rg-rim);
+  rx: calc(6.5px * var(--s));
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] [data-region^='deck'] .tonearm svg > rect:nth-of-type(2) {
+  fill: transparent;
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] [data-region^='deck'] .tonearm svg > rect:nth-of-type(3),
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] [data-region^='deck'] .tonearm svg g rect:nth-of-type(3) {
+  fill: #b4b4b8;
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] [data-region^='deck'] .tonearm svg g rect:nth-of-type(1) {
+  fill: var(--rg-cap);
+  stroke: var(--rg-rim);
+  rx: calc(5px * var(--s));
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] [data-region^='deck'] .tonearm svg g rect:nth-of-type(2) {
+  rx: calc(3.2px * var(--s));
+}
+
+/* ── Tempo and key ───────────────────────────────────────────────────────
+   The key opens the key shift menu: a quiet label that becomes a pill under
+   the pointer, like the row's text controls. */
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] [data-region^='deck'] .bpm .key {
+  margin: 0 -7px 0 -8px;
+  padding: 1px 7px 1px 8px;
+  border-radius: var(--pb-pill);
+  color: var(--fg-2);
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] [data-region^='deck'] .bpm .key:hover,
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] [data-region^='deck'] .bpm .key[aria-expanded='true'] {
+  background: var(--hover);
+  color: var(--fg);
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] [data-region^='deck'] .bpm .key.shifted {
+  color: var(--fg);
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] [data-region^='deck'] .bpm .key:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 0;
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] [data-region^='deck'] .bpm .key .ks {
+  font-weight: 600;
+}
+
+/* ── Grid tab: text controls, a pill on hover, as the other tabs' rows ── */
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] [data-region^='deck'] .grid button {
+  border-radius: var(--pb-pill);
+  color: var(--fg-2);
+  font-weight: 500;
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] [data-region^='deck'] .grid button:hover:not([aria-disabled='true']) {
+  color: var(--fg);
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] [data-region^='deck'] .grid button[aria-disabled='true'] {
+  opacity: 1;
+  color: var(--fg-4);
+}
+
+/* ── Hot cues: two rows of discs; the time beside a set one ───────────── */
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] [data-region^='deck'] .perf .tc {
+  gap: 6px;
+}
+
+/* ── Library toolbar: chips are pills; on is the fg-filled pill ───────── */
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] section.library .chip,
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] section.library .filter > .clear,
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] section.library .clear {
+  border-radius: var(--pb-pill);
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] section.library .chip.on,
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] section.library .chip.on:hover {
+  background: color-mix(in srgb, var(--fg) var(--pb-on-a), var(--rg-plate));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--fg) 30%, transparent), 0 1px 0 var(--rg-rim);
+  color: var(--fg);
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] section.library .chip .chip-val {
+  color: var(--fg);
+  font-weight: 600;
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] section.library .filter > .clear {
+  width: 24px;
+  height: 24px;
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] section.library .count {
+  font-weight: 500;
+}
+/* The filter popover: the floating layer's rounded plate; the BPM fields
+   capsule wells; the key wheel hollow pills that fill when chosen, as a
+   hot cue's disc does. */
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] section.library .panel {
+  padding: 12px;
+  border-radius: 20px;
+  background: var(--rg-float);
+  box-shadow: var(--rg-float-edge);
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] section.library .panel .ph {
+  font-weight: 500;
+  margin-left: 4px;
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] section.library .panel .bpm input {
+  padding: 0 12px;
+  border-radius: var(--pb-pill);
+  background: var(--rg-well);
+  box-shadow: var(--rg-well-edge);
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] section.library .panel .bpm input:focus-visible {
+  box-shadow: var(--rg-well-edge), 0 0 0 2px var(--focus-ring);
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] section.library .panel .kc {
+  height: 26px;
+  border-radius: var(--pb-pill);
+  background: none;
+  box-shadow: inset 0 0 0 1.5px var(--line-2);
+  color: var(--fg-2);
+  font-weight: 500;
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] section.library .panel .kc:hover {
+  background: var(--hover);
+  color: var(--fg);
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] section.library .panel .kc.on,
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] section.library .panel .kc.on:hover {
+  background: color-mix(in srgb, var(--fg) var(--pb-on-a), var(--rg-float));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--fg) 30%, transparent);
+  color: var(--fg);
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] section.library .panel .kc:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 1px;
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] section.library .panel .pf {
+  margin-left: 4px;
+}
+/* The columns button: a round grip at the headings' end. */
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] section.library .row.head .cols {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  color: var(--fg-3);
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] section.library .row.head .cols:hover,
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] section.library .row.head .cols:focus-visible {
+  background: var(--hover);
+  color: var(--fg);
+}
+/* The columns menu's tick, in the menu's text colour. */
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] .menu [role='menuitemcheckbox'] i.tick {
+  color: var(--fg);
+}
+
+/* ── The sampler: a row inside the library plate, eight pills ─────────── */
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] section.library .sampler {
+  background: none;
+  box-shadow: none;
+  border-radius: 0;
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] section.library .sampler .title {
+  font-weight: 500;
+}
+/* Empty: a capsule well, "Add sound" faint in it. Loaded: a raised pill.
+   Playing: filled with the fg at low strength, and the fill grows across
+   it as the sample plays (an amount is how much is filled). */
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] section.library .sampler .slot {
+  padding: 0 12px;
+  border-radius: var(--pb-pill);
+  background: var(--rg-well);
+  box-shadow: var(--rg-well-edge);
+  color: var(--fg-4);
+  font-weight: 500;
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] section.library .sampler .slot:not(.set):hover {
+  color: var(--fg-2);
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] section.library .sampler .slot.set {
+  background: var(--rg-key-fill);
+  box-shadow: var(--rg-key-edge);
+  color: var(--fg-2);
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] section.library .sampler .slot.set:hover {
+  background: var(--rg-key-fill-hi);
+  box-shadow: var(--rg-key-edge-hi);
+  color: var(--fg);
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] section.library .sampler .slot.set:active {
+  background: var(--rg-down);
+  box-shadow: var(--rg-down-edge);
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] section.library .sampler .slot.playing,
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] section.library .sampler .slot.playing:hover {
+  background: color-mix(in srgb, var(--fg) 10%, var(--rg-plate));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--fg) 30%, transparent), 0 1px 0 var(--rg-rim);
+  color: var(--fg);
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] section.library .sampler .slot .n {
+  font-weight: 600;
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] section.library .sampler .slot .bar {
+  top: 0;
+  height: auto;
+  border-radius: var(--pb-pill);
+  background: color-mix(in srgb, var(--fg) 16%, transparent);
+  pointer-events: none;
+}
+
+/* ── Empty library: its offers are keys ───────────────────────────────── */
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] section.library .empty .what {
+  font-weight: 600;
+  color: var(--fg);
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] section.library .empty .hint {
+  color: var(--fg-3);
+}
+
+/* ── Settings: a popup, the dialogs' rounded card; the page a plate in it ─ */
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] .backdrop:has(> .settings[role='dialog']) {
+  background: rgb(0 0 0 / 0.6);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] .backdrop > .settings[role='dialog'] {
+  border-radius: 26px;
+  background: var(--rg-card);
+  box-shadow: var(--rg-float-edge);
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] .settings .main {
+  border-radius: calc(26px - var(--gap));
+  background: var(--rg-plate);
+  box-shadow: var(--rg-plate-edge);
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] .settings nav .h {
+  margin-left: 4px;
+}
+/* Shortcuts are pills: a raised key when set, hollow when not, the fg
+   filled pill while it listens for a key. */
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] .settings .key {
+  border-radius: var(--pb-pill);
+  background: var(--rg-key-fill);
+  box-shadow: var(--rg-key-edge);
+  color: var(--fg);
+  font-weight: 500;
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] .settings .key:hover {
+  background: var(--rg-key-fill-hi);
+  box-shadow: var(--rg-key-edge-hi);
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] .settings .key.none {
+  background: none;
+  box-shadow: inset 0 0 0 1.5px var(--line-2);
+  color: var(--fg-3);
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] .settings .key.rec,
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] .settings .btn.rec {
+  background: color-mix(in srgb, var(--fg) var(--pb-on-a), var(--rg-plate));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--fg) 30%, transparent), 0 1px 0 var(--rg-rim);
+  color: var(--fg);
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] .settings .reset {
+  border-radius: var(--pb-pill);
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] .settings select.btn,
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] .settings input:not([type='checkbox']):not([type='range']) {
+  border-radius: var(--pb-pill);
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] .settings .bar-track,
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] .settings .bar-track i {
+  height: 6px;
+  border-radius: var(--pb-pill);
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] .settings .bar-track {
+  background: var(--rg-slot);
+}
+
+/* ── Controller setup: the dialogs' card; fields are capsule wells ────── */
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] .backdrop > .card[role='dialog'] .close {
+  border-radius: 50%;
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] .backdrop > .card[role='dialog'] .close:hover {
+  background: var(--hover);
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] .backdrop > .card[role='dialog'] h2 {
+  font-size: var(--t-lg);
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] .backdrop > .card[role='dialog'] .field input,
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] .backdrop > .card[role='dialog'] .field select {
+  border-radius: var(--pb-pill);
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] .backdrop > .card[role='dialog'] .field input {
+  padding: 0 14px;
+  background: var(--rg-well);
+  box-shadow: var(--rg-well-edge);
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] .backdrop > .card[role='dialog'] .field input:focus-visible {
+  outline: none;
+  box-shadow: var(--rg-well-edge), 0 0 0 2px var(--focus-ring);
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] .backdrop > .card[role='dialog'] .field select {
+  padding: 0 14px;
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] .backdrop > .card[role='dialog'] .ask {
+  font-weight: 600;
+}
+/* Progress: a capsule meter. */
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] .backdrop > .card[role='dialog'] .progress {
+  height: 8px;
+  border-radius: var(--pb-pill);
+  background: var(--rg-slot);
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.6), 0 1px 0 var(--rg-lip);
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] .backdrop > .card[role='dialog'] .progress div {
+  border-radius: var(--pb-pill);
+  background: var(--fg);
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] .backdrop > .card[role='dialog'] .share {
+  border-radius: 18px;
+  background: var(--rg-key-fill);
+  box-shadow: var(--rg-key-edge);
+}
+/* The drawn controller: round-cornered body; the control to use now is
+   filled in Cue's amber, the ones done a filled fg. */
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] .backdrop > .card[role='dialog'] .board .body {
+  rx: 18px;
+  fill: var(--rg-plate);
+  stroke: var(--rg-rim);
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] .backdrop > .card[role='dialog'] .board .mixer {
+  rx: 12px;
+  fill: var(--rg-well);
+  stroke: none;
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] .backdrop > .card[role='dialog'] .ctl {
+  fill: rgb(255 255 255 / 0.06);
+  stroke: var(--line-2);
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] .backdrop > .card[role='dialog'] .ctl.done {
+  fill: color-mix(in srgb, var(--fg) 18%, transparent);
+  stroke: transparent;
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] .backdrop > .card[role='dialog'] .ctl.on {
+  fill: color-mix(in srgb, var(--cue) 30%, transparent);
+  stroke: var(--cue);
+}
+/* Native selects in the setup card: drawn as a pill key with its own
+   chevron (a native menulist won't take a full round corner). */
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] .backdrop > .card[role='dialog'] .field select {
+  -webkit-appearance: none;
+  appearance: none;
+  padding-right: 32px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpath d='M2.5 4 5 6.5 7.5 4' fill='none' stroke='%23eeeeec' stroke-opacity='.66' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 12px center / 12px 12px, var(--rg-key-fill);
+}
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] section.library .panel .bpm input:focus-visible {
+  outline: none;
+}
+/* The drawn keys and pads are pills too. */
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] .backdrop > .card[role='dialog'] .board .ctl rect {
+  rx: 8px;
+}
+/* The search field rings itself on focus; the input inside it doesn't. */
+:root[data-flag-dir-pebble][data-flag-dir-pebble][data-flag-dir-pebble] section.library .bar .search input:focus-visible {
+  outline: none;
 }

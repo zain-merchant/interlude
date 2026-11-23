@@ -143,8 +143,6 @@
 /* Plates: solid and flat, a 1px lit top edge, a 1px dark rim, one shadow. */
 :root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] .decks > section,
 :root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] section.library,
-:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] .settings,
-:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] .sampler,
 :root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] .glass:not(.waves) {
   background: var(--rg-plate);
   -webkit-backdrop-filter: none;
@@ -221,51 +219,20 @@
   font-weight: 400;
   color: var(--fg-3);
 }
-:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .bpm .big,
-:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .times[data-big='remaining'] .rm,
-:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .times[data-big='elapsed'] .el,
-:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .times:not([data-big]) .el {
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .bpm .big {
   font-size: var(--rg-num);
   font-weight: 600;
   letter-spacing: -0.035em;
   line-height: 28px;
-}
-:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .bpm .big,
-:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .times .num:not(.ending) {
   color: var(--fg);
 }
-/* The tempo's decimals and the time's tenths: the same size, a step down. */
-:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .bpm .big .frac,
-:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .times .num:not(.ending) .t {
+/* The tempo's decimals: the same size, a step down. */
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .bpm .big .frac {
   color: var(--fg-3);
 }
-:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .times .rm.ending .t {
-  color: color-mix(in srgb, var(--kill) 62%, transparent);
-}
-:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck']:has(header .name.dim) :is(.bpm .big, .times .num, .times .t) {
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck']:has(header .name.dim) .bpm .big {
   font-weight: 400;
   color: var(--fg-4);
-}
-:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .times[data-big='remaining'] .el,
-:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .times[data-big='elapsed'] .rm,
-:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .times:not([data-big]) .rm {
-  font-size: var(--t-sm);
-  font-weight: 500;
-  letter-spacing: 0;
-}
-:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .times[data-big='remaining'] .el,
-:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .times[data-big='elapsed'] .rm:not(.ending),
-:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .times:not([data-big]) .rm:not(.ending) {
-  color: var(--fg-3);
-}
-:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .times .t {
-  font-weight: 600;
-}
-:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .times :is([data-big='remaining'] .el, [data-big='elapsed'] .rm) .t {
-  font-weight: 500;
-}
-:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .times {
-  align-items: baseline;
 }
 :root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .bpm .unit,
 :root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .bpm .key {
@@ -1139,6 +1106,301 @@
   color: var(--fg-4);
 }
 
+/* ── Upstream's new UI (merge of main) ─────────────────────────────── */
+
+/* The record. The disc is the screen's black with the deck's tint in it
+   (the canvas reads --record-mat), edged with the plates' hard rim and
+   their one shadow. The still centre is a small plate: flat, its top edge
+   lit, no blur and no glow, the times on it in the deck's figures. */
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] {
+  --record-mat: var(--rg-window);
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .rec-cell .disc {
+  box-shadow: 0 0 0 1px var(--rg-rim), 0 16px 32px -16px rgb(0 0 0 / 0.8);
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .rec-cell .hub {
+  background: var(--rg-plate);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: inset 0 1px 0 var(--rg-lit), 0 0 0 1px var(--rg-rim), var(--rg-lift);
+}
+/* Both lines in one weight and tracking, so whichever is the big one reads
+   as the deck's figure; the other is a step down in tone. */
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .rec-cell .hub .num {
+  font-weight: 600;
+  letter-spacing: -0.035em;
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .rec-cell .hub .el {
+  color: var(--fg);
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .rec-cell .hub .rm:not(.ending) {
+  color: var(--fg-3);
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .rec-cell .hub .num:not(.ending) .t {
+  color: var(--fg-3);
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .rec-cell .hub .rm.ending .t {
+  color: color-mix(in srgb, var(--kill) 62%, transparent);
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .rec-cell .hub.empty .num {
+  font-weight: 400;
+  color: var(--fg-4);
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .rec-cell .hub:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+/* The tonearm in the mixer's materials: its pivot a knurled dial with a
+   paper dot, the tube and counterweight flat, no chrome. */
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .tonearm .pivot {
+  background:
+    radial-gradient(circle closest-side, var(--rg-dial) 0 52%, var(--rg-dial-groove) 55% 62%, transparent 65%),
+    repeating-conic-gradient(var(--rg-ridge) 0 10deg, var(--rg-ridge-2) 10deg 20deg);
+  box-shadow: 0 0 0 1px var(--rg-rim), var(--rg-lift);
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .tonearm .cap {
+  background: #eeeeec;
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .tonearm svg > rect:nth-of-type(1) {
+  fill: #2a2a2f;
+  stroke: rgb(0 0 0 / 0.85);
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .tonearm svg > rect:nth-of-type(2) {
+  fill: rgb(255 255 255 / 0.1);
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .tonearm svg > rect:nth-of-type(3) {
+  fill: #c4c4c1;
+}
+
+/* The key under the tempo opens the key shift menu: a text control, a tone
+   on hover like the strip's, the shift in the deck's colour. */
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .bpm .key {
+  border-radius: 6px;
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .bpm .key:hover,
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .bpm .key[aria-expanded='true'] {
+  color: var(--fg);
+  background: var(--hover);
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .bpm .key:hover .cam {
+  color: var(--fg-2);
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .bpm .key .ks {
+  color: var(--deck);
+}
+
+/* The Grid tab's row: text controls like the rest of the strip. */
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .strip .grid button {
+  border-radius: var(--r);
+  color: var(--fg-2);
+  font-weight: 500;
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .strip .grid button:hover:not([aria-disabled='true']) {
+  background: var(--hover);
+  color: var(--fg);
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .strip .grid button:active:not([aria-disabled='true']) {
+  transform: none;
+  translate: 0 1px;
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .strip .grid button[aria-disabled='true'] {
+  opacity: 1;
+  color: var(--fg-4);
+}
+
+/* Library toolbar: Fits and Filter are keys; on, latched down. */
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] section.library .bar .chip {
+  border-radius: var(--r);
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] section.library .bar .chip.on,
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] section.library .bar .chip.on:hover {
+  background: var(--rg-on);
+  box-shadow: var(--rg-on-edge);
+  color: var(--fg);
+  translate: none;
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] section.library .bar .chip .chip-val {
+  color: var(--fg-2);
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] section.library .bar .filter .clear,
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] section.library .bar .cols {
+  border-radius: 6px;
+}
+/* The filter: a floating plate like a menu; BPM in wells, the Camelot keys
+   small keys, a picked one latched down. */
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] section.library .filter .panel {
+  border-radius: 12px;
+  background: var(--rg-float);
+  box-shadow: var(--rg-float-edge);
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] section.library .filter .panel .ph {
+  font-weight: 500;
+  color: var(--fg-3);
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] section.library .filter .panel .bpm input {
+  background: var(--rg-well);
+  box-shadow: var(--rg-well-edge);
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] section.library .filter .panel .bpm input:focus-visible {
+  box-shadow: var(--rg-well-edge), 0 0 0 2px var(--focus-ring);
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] section.library .filter .panel .kc {
+  border-radius: 6px;
+  background: var(--rg-key-fill);
+  box-shadow: var(--rg-key-edge);
+  color: var(--fg-2);
+  font-weight: 500;
+  transition: background-color 120ms ease-out, color 120ms ease-out, box-shadow 120ms ease-out, translate 60ms ease-out;
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] section.library .filter .panel .kc:hover {
+  background: var(--rg-key-fill-hi);
+  box-shadow: var(--rg-key-edge-hi);
+  color: var(--fg);
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] section.library .filter .panel .kc:active {
+  background: var(--rg-down);
+  box-shadow: var(--rg-down-edge);
+  translate: 0 1px;
+  transition-duration: 0ms;
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] section.library .filter .panel .kc.on,
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] section.library .filter .panel .kc.on:hover {
+  background: var(--rg-on);
+  box-shadow: var(--rg-on-edge);
+  color: var(--fg);
+  translate: none;
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] section.library .row.head .cols {
+  color: var(--fg-3);
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] section.library .row.head .cols:hover {
+  color: var(--fg);
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] .menu .tick {
+  color: var(--fg);
+}
+
+/* The sampler: a row in the library plate, not a plate of its own. A
+   loaded pad is a key, an empty one a well; playing, it's latched down. */
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] section.library .sampler {
+  background: none;
+  box-shadow: none;
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] section.library .sampler .title {
+  font-weight: 500;
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] section.library .sampler .slot {
+  background: var(--rg-well);
+  box-shadow: var(--rg-well-edge);
+  color: var(--fg-4);
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] section.library .sampler .slot.set {
+  background: var(--rg-key-fill);
+  box-shadow: var(--rg-key-edge);
+  color: var(--fg-2);
+  font-weight: 500;
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] section.library .sampler .slot.set:hover {
+  background: var(--rg-key-fill-hi);
+  box-shadow: var(--rg-key-edge-hi);
+  color: var(--fg);
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] section.library .sampler .slot.set:active {
+  background: var(--rg-down);
+  box-shadow: var(--rg-down-edge);
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] section.library .sampler .slot.playing,
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] section.library .sampler .slot.playing:hover {
+  background: var(--rg-on);
+  box-shadow: var(--rg-on-edge);
+  color: var(--fg);
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] section.library .sampler .slot .bar {
+  background: var(--rg-paper);
+}
+
+/* Settings: a popup like the dialogs. The popup is the room's tone, so the
+   page inside it stands up as a plate, the nav beside it on the room. */
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] .backdrop:has(> .settings) {
+  background: rgb(0 0 0 / 0.6);
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] .backdrop > .settings {
+  border-radius: 20px;
+  background: var(--rg-room);
+  box-shadow: var(--rg-float-edge);
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] .backdrop > .settings .main {
+  background: var(--rg-plate);
+  box-shadow: var(--rg-plate-edge);
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] .backdrop > .settings .main .bar {
+  border-bottom-color: rgb(0 0 0 / 0.7);
+  box-shadow: 0 1px 0 rgb(255 255 255 / 0.04);
+}
+
+/* Controller setup: the dialog card; the drawing of the controller in the
+   room's layers, the control to use now in paper (amber is Cue's alone). */
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] .backdrop > .card[role='dialog'] .close {
+  border-radius: 6px;
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] .backdrop > .card[role='dialog'] .close:hover {
+  background: var(--hover);
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] .backdrop > .card[role='dialog'] .field input {
+  background: var(--rg-well);
+  box-shadow: var(--rg-well-edge);
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] .backdrop > .card[role='dialog'] .board .body {
+  fill: var(--rg-plate);
+  stroke: rgb(0 0 0 / 0.85);
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] .backdrop > .card[role='dialog'] .board .mixer {
+  fill: var(--rg-well);
+  stroke: rgb(255 255 255 / 0.055);
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] .backdrop > .card[role='dialog'] .board .ctl {
+  fill: var(--rg-key);
+  stroke: rgb(255 255 255 / 0.12);
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] .backdrop > .card[role='dialog'] .board .ctl .ghost {
+  fill: none;
+  stroke: rgb(255 255 255 / 0.06);
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] .backdrop > .card[role='dialog'] .board .ctl .cap {
+  fill: var(--rg-cap);
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] .backdrop > .card[role='dialog'] .board .ctl.done {
+  stroke: var(--fg-3);
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] .backdrop > .card[role='dialog'] .board .ctl.on {
+  fill: rgb(238 238 236 / 0.16);
+  stroke: var(--rg-paper);
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] .backdrop > .card[role='dialog'] .board .ctl.on .cap {
+  fill: var(--rg-paper);
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] .backdrop > .card[role='dialog'] .count {
+  font-weight: 500;
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] .backdrop > .card[role='dialog'] .ask {
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] .backdrop > .card[role='dialog'] .note.got {
+  color: var(--fg);
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] .backdrop > .card[role='dialog'] .progress {
+  background: var(--rg-slot);
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.6), 0 1px 0 var(--rg-lip);
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] .backdrop > .card[role='dialog'] .progress div {
+  background: var(--rg-paper);
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] .backdrop > .card[role='dialog'] .share {
+  background: var(--rg-well);
+  box-shadow: var(--rg-well-edge);
+}
+
 
 /* ── The language ── */
 /* Type: a serif for everything you read, Geist for what you press. The
@@ -1162,31 +1424,41 @@
   color: var(--fg-2);
 }
 :root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .bpm .big,
-:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .times .num {
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .rec-cell .hub .num {
   font-family: var(--ln-serif);
   font-variant-numeric: tabular-nums lining-nums;
 }
 :root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .bpm .big,
-:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .times[data-big='remaining'] .rm,
-:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .times[data-big='elapsed'] .el,
-:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .times:not([data-big]) .el {
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .rec-cell .hub[data-big='remaining'] .rm,
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .rec-cell .hub[data-big='elapsed'] .el,
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .rec-cell .hub:not([data-big]) .el {
   font-weight: 500;
   letter-spacing: -0.01em;
-  line-height: 32px;
 }
 :root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .bpm .big {
   font-size: 26px;
   line-height: 26px;
 }
-:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .times .t {
+/* The times, in the record's still centre: sizes in em off the centre's
+   own size, so they keep inside the circle. */
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .rec-cell .hub[data-big='remaining'] .rm,
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .rec-cell .hub[data-big='elapsed'] .el,
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .rec-cell .hub:not([data-big]) .el {
+  font-size: 1.6em;
+  line-height: 1;
+  color: var(--fg);
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .rec-cell .hub .t {
   font-weight: 500;
 }
-/* The small time and the key, in the serif at reading size. */
-:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .times[data-big='remaining'] .el,
-:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .times[data-big='elapsed'] .rm,
-:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .times:not([data-big]) .rm {
-  font-size: 15px;
+/* The small time, in the serif at reading size. */
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .rec-cell .hub[data-big='remaining'] .el,
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .rec-cell .hub[data-big='elapsed'] .rm,
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .rec-cell .hub:not([data-big]) .rm {
+  font-size: 0.95em;
   font-weight: 400;
+  line-height: 1.15;
+  color: var(--fg-2);
 }
 :root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .bpm .key,
 :root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .bpm .unit {
@@ -1198,26 +1470,42 @@
 :root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .bpm .key .cam {
   font-style: normal;
 }
-/* Words, not codes: the times say what they are, whichever is the big one. */
-:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .times .rm:not(:empty)::after {
-  content: ' left';
+/* Words, not codes: the times say what they are, whichever is the big one.
+   The big time's word sets under it; the small one's runs after it. */
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .rec-cell .hub :is(.el, .rm):not(:empty)::after {
+  font-family: var(--ln-serif);
   font-style: italic;
-  font-size: 15px;
   font-weight: 400;
   letter-spacing: 0;
   color: var(--fg-3);
+  font-size: 0.85em;
 }
-:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .times .el:not(:empty)::after {
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .rec-cell .hub .rm:not(:empty)::after {
+  content: ' left';
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .rec-cell .hub .el:not(:empty)::after {
   content: ' played';
-  font-style: italic;
-  font-size: 15px;
-  font-weight: 400;
-  letter-spacing: 0;
-  color: var(--fg-3);
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .rec-cell .hub[data-big='remaining'] .rm::after,
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .rec-cell .hub[data-big='elapsed'] .el::after,
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .rec-cell .hub:not([data-big]) .el::after {
+  display: block;
+  font-size: 0.5em;
+  line-height: 1.3;
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .rec-cell .hub[data-big='remaining'] .el::after,
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .rec-cell .hub[data-big='elapsed'] .rm::after,
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .rec-cell .hub:not([data-big]) .rm::after {
+  font-size: 0.9em;
 }
 /* An empty deck has nothing played and nothing left. */
-:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck']:has(header .name.dim) .times :is(.el, .rm)::after {
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .rec-cell .hub.empty :is(.el, .rm)::after,
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck']:has(header .name.dim) .rec-cell .hub :is(.el, .rm)::after {
   content: none;
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .rec-cell .hub .ending,
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .rec-cell .hub .ending::after {
+  color: var(--kill);
 }
 
 /* ── Waveform window and overview: plain dark, the ink carries it ───── */
@@ -1466,4 +1754,147 @@
   :root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] header .artist {
     font-size: 15px;
   }
+}
+
+/* ── Upstream's new UI (merge of main) ───────────────────────────────── */
+/* The record: printed, not lit. The vinyl keeps the deck's ink on a plain
+   dark mat; the disc stands on the plate with a fine dark rule and a short
+   shadow, no glow; the sheen is held down. */
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] {
+  --record-mat: #0b0b0d;
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region='deck0'] {
+  --record-tint: 201, 220, 242;
+  --record-high: 244, 248, 252;
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region='deck1'] {
+  --record-tint: 240, 220, 192;
+  --record-high: 252, 247, 239;
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .rec-cell .disc {
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.7), 0 2px 4px rgb(0 0 0 / 0.45);
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .rec-cell .sheen {
+  opacity: 0.45;
+}
+/* The centre: a printed label, flat on the plate's tone, ringed with a
+   fine rule. */
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .rec-cell .hub {
+  background: var(--rg-plate);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.16), 0 0 0 1px rgb(0 0 0 / 0.6);
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .rec-cell .hub[role='button']:hover {
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.32), 0 0 0 1px rgb(0 0 0 / 0.6);
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner][data-input='keys'] [data-region^='deck'] .rec-cell .hub:focus-visible {
+  outline: 2px solid var(--fg-2);
+  outline-offset: 2px;
+}
+/* The tonearm: a plain turned cap for the pivot, as the dials. */
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .rec-cell .pivot {
+  background: radial-gradient(circle, #1a1a1d 34%, transparent 37%), radial-gradient(circle at 50% 30%, #38383e, #26262a 75%);
+  box-shadow: 0 0 0 1px var(--rg-rim), 0 2px 4px rgb(0 0 0 / 0.5);
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .rec-cell .cap {
+  background: #ecebe6;
+}
+
+/* The key: a word in italic that opens a menu. Hovered, a fine rule under
+   it, as a link in the notes; the chevron a fine stroke. */
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .bpm .key {
+  color: var(--deck);
+  background: none;
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .bpm .key:hover,
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .bpm .key[aria-expanded='true'] {
+  background: none;
+  color: var(--fg);
+  text-decoration: underline 1px;
+  text-underline-offset: 4px;
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .bpm .key svg {
+  stroke-width: 1.1;
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .bpm .key .ks {
+  font-style: italic;
+}
+
+/* Hot cues: a free pad's "Set" in the italic, a set pad's time upright. */
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .perf .tc:not(.set) span {
+  font-family: var(--ln-serif);
+  font-style: italic;
+}
+/* The Grid tab: its words in the serif (they're read), its marks in Geist. */
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] [data-region^='deck'] .strip .grid button:not(.sym) {
+  font-family: var(--ln-serif);
+  font-size: 15px;
+}
+
+/* Library toolbar: Fits and Filter are keys; on, the label goes to the
+   serif's italic (the filter's value follows it). */
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] section.library .chip.on,
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] section.library .chip.on:hover {
+  font-family: var(--ln-serif);
+  font-style: italic;
+  font-size: 15px;
+  color: var(--fg);
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] section.library .chip .chip-val {
+  font-family: var(--ln-serif);
+  font-style: italic;
+  color: var(--fg-2);
+}
+/* The filter popover: headings in the italic, as the column heads; a
+   chosen key in the italic too. */
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] section.library .panel .ph {
+  font-family: var(--ln-serif);
+  font-style: italic;
+  font-size: 13px;
+  font-weight: 400;
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] section.library .panel .kc.on {
+  font-family: var(--ln-serif);
+  font-style: italic;
+  font-size: 14px;
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] section.library .panel .pf {
+  font-family: var(--ln-serif);
+  font-style: italic;
+}
+/* The sampler row: sound names in the serif, an empty slot's offer in the
+   italic. */
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] section.library .sampler .title {
+  font-family: var(--ln-serif);
+  font-style: italic;
+  font-size: 13px;
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] section.library .sampler .slot .name {
+  font-family: var(--ln-serif);
+  font-size: 14px;
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] section.library .sampler .slot:not(.set) .name {
+  font-style: italic;
+}
+/* An empty library and no results: the offer is read, so it's set. */
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] section.library .empty,
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] section.library .empty .hint {
+  font-family: var(--ln-serif);
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] section.library .empty .hint {
+  font-style: italic;
+}
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] section.library .empty .empty-actions .btn {
+  font-family: var(--font);
+}
+/* Menus (the key shift, the columns): their items are read. */
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] .menu [role^='menuitem'] {
+  font-family: var(--ln-serif);
+  font-size: 15px;
+}
+/* Settings, now a popup: the plates' float, its own rule and shadow. */
+:root[data-flag-dir-liner][data-flag-dir-liner][data-flag-dir-liner] .backdrop > .settings {
+  background: var(--rg-float);
+  box-shadow: var(--rg-float-edge);
 }

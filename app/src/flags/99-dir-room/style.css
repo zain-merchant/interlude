@@ -249,13 +249,6 @@
 :root[data-flag-dir-room][data-flag-dir-room] [data-region^='deck'] .bpm .key {
   color: var(--fg-3);
 }
-:root[data-flag-dir-room][data-flag-dir-room] [data-region^='deck'] .times .rm {
-  color: var(--fg);
-  letter-spacing: -0.02em;
-}
-:root[data-flag-dir-room][data-flag-dir-room] [data-region^='deck'] .times .el {
-  color: var(--fg-3);
-}
 
 /* The overview: a well cut into the plate, with a record's grooves in
    it: 1px rings 4px apart round a spindle far below, showing where the
@@ -996,4 +989,261 @@
 :root[data-flag-dir-room][data-flag-dir-room] .split:hover i,
 :root[data-flag-dir-room][data-flag-dir-room] .app > .grip:not(.side):hover i {
   background: var(--fg-3);
+}
+
+/* ── Upstream's new UI (merge of main) ─────────────────────────────── */
+
+/* The record. The vinyl takes the deck's white on a warm mat; the disc
+   stands on the plate with the plate's own short hard shadow, no white
+   ring. The sheen stays (it's the record's surface, not a light wash),
+   held down. */
+:root[data-flag-dir-room][data-flag-dir-room] [data-region^='deck'] {
+  --record-mat: #0b0a09;
+}
+:root[data-flag-dir-room][data-flag-dir-room] [data-region='deck0'] {
+  --record-tint: 196, 214, 236;
+  --record-high: 238, 242, 246;
+}
+:root[data-flag-dir-room][data-flag-dir-room] [data-region='deck1'] {
+  --record-tint: 232, 214, 188;
+  --record-high: 246, 240, 230;
+}
+:root[data-flag-dir-room][data-flag-dir-room] [data-region^='deck'] .rec-cell .disc {
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.6), 0 1px 0 1px rgb(0 0 0 / 0.35), 0 12px 24px -8px rgb(0 0 0 / 0.85);
+}
+:root[data-flag-dir-room][data-flag-dir-room] [data-region^='deck'] .rec-cell .sheen {
+  opacity: 0.6;
+}
+/* The centre: a key-coloured label set on the record, lit along its top
+   edge, solid (no blur). Time remaining leads in paper white; elapsed
+   steps down. Sizes stay the hub's own (em off its inline size). */
+:root[data-flag-dir-room][data-flag-dir-room] [data-region^='deck'] .rec-cell .hub {
+  background: linear-gradient(180deg, #2a2724, #1e1c19);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: inset 0 1px 0 var(--rm-lit-key), inset 0 -1px 0 rgb(0 0 0 / 0.3), 0 0 0 1px rgb(0 0 0 / 0.55), 0 3px 8px -2px rgb(0 0 0 / 0.6);
+}
+:root[data-flag-dir-room][data-flag-dir-room] [data-region^='deck'] .rec-cell .hub .el {
+  color: var(--fg-2);
+}
+:root[data-flag-dir-room][data-flag-dir-room] [data-region^='deck'] .rec-cell .hub .rm:not(.ending) {
+  color: var(--fg);
+  letter-spacing: -0.02em;
+}
+:root[data-flag-dir-room][data-flag-dir-room] [data-region^='deck'] .rec-cell .hub[data-big='remaining'] .el,
+:root[data-flag-dir-room][data-flag-dir-room] [data-region^='deck'] .rec-cell .hub[data-big='elapsed'] .rm:not(.ending) {
+  color: var(--fg-3);
+}
+:root[data-flag-dir-room][data-flag-dir-room] [data-region^='deck'] .rec-cell .hub[data-big='remaining'] .rm:not(.ending),
+:root[data-flag-dir-room][data-flag-dir-room] [data-region^='deck'] .rec-cell .hub[data-big='elapsed'] .el {
+  color: var(--fg);
+}
+:root[data-flag-dir-room][data-flag-dir-room] [data-region^='deck'] .rec-cell .hub .t {
+  color: var(--fg-3);
+}
+:root[data-flag-dir-room][data-flag-dir-room] [data-region^='deck'] .rec-cell .hub.empty :is(.el, .rm) {
+  color: var(--fg-4);
+}
+:root[data-flag-dir-room][data-flag-dir-room] [data-region^='deck'] .rec-cell .hub[role='button']:hover {
+  background: linear-gradient(180deg, #312e2a, #23211e);
+}
+:root[data-flag-dir-room][data-flag-dir-room][data-input='keys'] [data-region^='deck'] .rec-cell .hub:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+/* The tonearm: its pivot a dial cap in the keys' tone, a paper cap. */
+:root[data-flag-dir-room][data-flag-dir-room] [data-region^='deck'] .rec-cell .pivot {
+  background:
+    radial-gradient(circle, #1a1816 36%, transparent 39%),
+    radial-gradient(circle closest-side, #3a3733 0 80%, #24221f 84%);
+  box-shadow: inset 0 1px 0 rgb(255 246 232 / 0.16), 0 0 0 1px rgb(0 0 0 / 0.55), 0 3px 8px -2px rgb(0 0 0 / 0.6);
+}
+:root[data-flag-dir-room][data-flag-dir-room] [data-region^='deck'] .rec-cell .cap {
+  background: var(--rm-paper);
+}
+
+/* The key: quiet text that opens a menu; hover a faint tile, the label
+   comes up to paper. */
+:root[data-flag-dir-room][data-flag-dir-room] [data-region^='deck'] .bpm .key {
+  border-radius: 6px;
+}
+:root[data-flag-dir-room][data-flag-dir-room] [data-region^='deck'] .bpm .key:hover,
+:root[data-flag-dir-room][data-flag-dir-room] [data-region^='deck'] .bpm .key.shifted {
+  color: var(--fg);
+}
+:root[data-flag-dir-room][data-flag-dir-room] [data-region^='deck'] .bpm .key:hover {
+  background: var(--hover);
+}
+:root[data-flag-dir-room][data-flag-dir-room] [data-region^='deck'] .bpm .key .ks {
+  color: var(--deck);
+}
+:root[data-flag-dir-room][data-flag-dir-room] [data-region^='deck'] .bpm .key:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 1px;
+}
+
+/* The Grid tab: plain text over the plate like the pads; hover a faint
+   tile, pressed into the plate. */
+:root[data-flag-dir-room][data-flag-dir-room] [data-region^='deck'] .strip .grid button {
+  border-radius: 8px;
+  color: var(--fg-2);
+}
+:root[data-flag-dir-room][data-flag-dir-room] [data-region^='deck'] .strip .grid button:hover:not([aria-disabled='true']) {
+  color: var(--fg);
+  background: var(--hover);
+}
+:root[data-flag-dir-room][data-flag-dir-room] [data-region^='deck'] .strip .grid button:active:not([aria-disabled='true']) {
+  transform: none;
+  background: var(--rm-down-fill);
+  box-shadow: var(--rm-down-edge);
+}
+:root[data-flag-dir-room][data-flag-dir-room] [data-region^='deck'] .strip .grid button[aria-disabled='true'] {
+  opacity: 1;
+  color: var(--fg-4);
+}
+
+/* Library toolbar: Fits and Filter are keys; on, latched down. */
+:root[data-flag-dir-room][data-flag-dir-room] section.library .bar .chip {
+  border-radius: 10px;
+}
+:root[data-flag-dir-room][data-flag-dir-room] section.library .bar .chip.on,
+:root[data-flag-dir-room][data-flag-dir-room] section.library .bar .chip.on:hover {
+  --on: var(--fg);
+  color: var(--fg);
+  background: var(--rm-on-fill);
+  box-shadow: var(--rm-on-edge);
+}
+:root[data-flag-dir-room][data-flag-dir-room] section.library .bar .chip-val {
+  color: var(--fg-2);
+}
+:root[data-flag-dir-room][data-flag-dir-room] section.library .bar .filter > .clear {
+  border-radius: 8px;
+}
+/* The filter popover: the nearest plate, lit along the top; the BPM
+   fields wells; the key chips small keys, picked ones latched down. */
+:root[data-flag-dir-room][data-flag-dir-room] section.library .filter .panel {
+  border-radius: 14px;
+  background: linear-gradient(180deg, #1f1d1a, #1a1816);
+  box-shadow: inset 0 1px 0 rgb(255 246 232 / 0.09), 0 0 0 1px rgb(0 0 0 / 0.6), 0 16px 40px -10px rgb(0 0 0 / 0.8);
+}
+:root[data-flag-dir-room][data-flag-dir-room] section.library .filter .panel .ph {
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+:root[data-flag-dir-room][data-flag-dir-room] section.library .filter .panel .bpm input {
+  border-radius: 9px;
+  background: var(--rm-well);
+  box-shadow: var(--rm-well-edge);
+}
+:root[data-flag-dir-room][data-flag-dir-room] section.library .filter .panel .bpm input:focus-visible {
+  box-shadow: var(--rm-well-edge), 0 0 0 2px var(--focus-ring);
+}
+:root[data-flag-dir-room][data-flag-dir-room] section.library .filter .panel .kc {
+  border-radius: 7px;
+  color: var(--fg-2);
+  background: var(--rm-key-fill);
+  box-shadow: var(--rm-key-edge);
+  transition: background var(--rm-press-ms) var(--rm-ease), box-shadow var(--rm-press-ms) var(--rm-ease), color var(--rm-press-ms) var(--rm-ease);
+}
+:root[data-flag-dir-room][data-flag-dir-room] section.library .filter .panel .kc:hover {
+  color: var(--fg);
+  background: var(--rm-key-fill-hi);
+  box-shadow: var(--rm-key-edge-hi);
+}
+:root[data-flag-dir-room][data-flag-dir-room] section.library .filter .panel .kc.on,
+:root[data-flag-dir-room][data-flag-dir-room] section.library .filter .panel .kc.on:hover {
+  --on: var(--fg);
+  color: var(--fg);
+  background: var(--rm-on-fill);
+  box-shadow: var(--rm-on-edge);
+}
+:root[data-flag-dir-room][data-flag-dir-room] section.library .filter .panel .kc:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 1px;
+}
+/* The columns button, at the end of the heads: quiet; hover a tile. */
+:root[data-flag-dir-room][data-flag-dir-room] section.library .row.head .cols {
+  border-radius: 7px;
+  color: var(--fg-3);
+}
+:root[data-flag-dir-room][data-flag-dir-room] section.library .row.head .cols:hover {
+  color: var(--fg);
+  background: var(--hover);
+}
+
+/* The sampler row, inside the library plate: empty slots are wells cut
+   into it ("Add sound"); a loaded sound is a key; playing, latched down
+   with a paper label and the paper progress line. */
+:root[data-flag-dir-room][data-flag-dir-room] section.library .sampler .slot {
+  border-radius: 8px;
+  background: var(--rm-well);
+  box-shadow: var(--rm-well-edge);
+  color: var(--fg-4);
+}
+:root[data-flag-dir-room][data-flag-dir-room] section.library .sampler .slot:not(.set):hover {
+  color: var(--fg-2);
+}
+:root[data-flag-dir-room][data-flag-dir-room] section.library .sampler .slot.set {
+  color: var(--fg-2);
+  background: var(--rm-key-fill);
+  box-shadow: var(--rm-key-edge);
+  transition: background var(--rm-press-ms) var(--rm-ease), box-shadow var(--rm-press-ms) var(--rm-ease), color var(--rm-press-ms) var(--rm-ease);
+}
+:root[data-flag-dir-room][data-flag-dir-room] section.library .sampler .slot.set:hover {
+  color: var(--fg);
+  background: var(--rm-key-fill-hi);
+  box-shadow: var(--rm-key-edge-hi);
+}
+:root[data-flag-dir-room][data-flag-dir-room] section.library .sampler .slot.set:active,
+:root[data-flag-dir-room][data-flag-dir-room] section.library .sampler .slot.playing,
+:root[data-flag-dir-room][data-flag-dir-room] section.library .sampler .slot.playing:hover {
+  --on: var(--fg);
+  color: var(--fg);
+  background: var(--rm-on-fill);
+  box-shadow: var(--rm-on-edge);
+}
+:root[data-flag-dir-room][data-flag-dir-room] section.library .sampler .bar {
+  background: var(--rm-paper);
+}
+
+/* Empty library: the offer under its keys reads as a quiet note. */
+:root[data-flag-dir-room][data-flag-dir-room] section.library .empty .hint {
+  color: var(--fg-3);
+}
+
+/* Settings, now a popup: the same even dim as the dialogs, no blur; the
+   popup the nearest plate, its page a well cut into it. */
+:root[data-flag-dir-room][data-flag-dir-room] .backdrop:has(> .settings) {
+  background: rgb(6 5 4 / 0.62);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+:root[data-flag-dir-room][data-flag-dir-room] .backdrop > .settings[role='dialog'] {
+  border-radius: 20px;
+  background: linear-gradient(180deg, #1d1b19, #191715);
+  box-shadow: inset 0 1px 0 rgb(255 246 232 / 0.09), 0 0 0 1px rgb(0 0 0 / 0.6), 0 24px 60px -12px rgb(0 0 0 / 0.75);
+}
+:root[data-flag-dir-room][data-flag-dir-room] .backdrop > .settings[role='dialog'] > .main {
+  border-radius: 14px;
+  background: #141311;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: inset 0 1px 0 rgb(0 0 0 / 0.5), inset 0 2px 5px -1px rgb(0 0 0 / 0.45), 0 1px 0 var(--rm-lip);
+}
+
+/* Controller setup: the dialog card above; its fields wells, the close a
+   quiet key, the rest the keys already set for dialogs. */
+:root[data-flag-dir-room][data-flag-dir-room] .backdrop > .card[role='dialog'] .field input,
+:root[data-flag-dir-room][data-flag-dir-room] .backdrop > .card[role='dialog'] .field select {
+  border-radius: 9px;
+}
+:root[data-flag-dir-room][data-flag-dir-room] .backdrop > .card[role='dialog'] .field input {
+  background: var(--rm-well);
+  box-shadow: var(--rm-well-edge);
+}
+:root[data-flag-dir-room][data-flag-dir-room] .backdrop > .card[role='dialog'] .close {
+  border-radius: 8px;
+}
+:root[data-flag-dir-room][data-flag-dir-room] .backdrop > .card[role='dialog'] .close:hover {
+  background: var(--hover);
 }

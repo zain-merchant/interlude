@@ -200,17 +200,22 @@
 :root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .bpm .key.shifted {
   color: var(--fg-2);
 }
-:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .times .rm,
-:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .times[data-big='elapsed'] .el {
+/* The times, in the record's still centre: time left at full white
+   (or elapsed, when it's the one swapped big). */
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .rec-cell .hub .rm:not(.ending),
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .rec-cell .hub[data-big='elapsed'] .el {
   letter-spacing: -0.02em;
   color: var(--fg);
 }
-:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .times[data-big='elapsed'] .rm,
-:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .times:not([data-big='elapsed']) .el {
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .rec-cell .hub[data-big='elapsed'] .rm:not(.ending),
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .rec-cell .hub:not([data-big='elapsed']) .el {
   color: var(--fg-3);
 }
-:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .times .t {
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .rec-cell .hub .t {
   color: var(--fg-3);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .rec-cell .hub.empty :is(.el, .rm) {
+  color: var(--fg-4);
 }
 :root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .pitch .val {
   color: var(--fg-2);
@@ -919,4 +924,186 @@
 }
 :root[data-flag-dir-quiet][data-flag-dir-quiet] .btn.ghost:hover:not(:disabled, [aria-disabled='true']) {
   background: rgb(255 255 255 / 0.05);
+}
+
+/* ── Upstream's new UI (merge of main) ─────────────────────────────── */
+
+/* The record: quieter. The vinyl in the deck's colour on a graphite mat,
+   one soft shadow, no light ring, the sheen held down. Its centre is the
+   quieter glass, a 1px top light; the pivot a tonal key. */
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] {
+  --record-mat: #0d0d10;
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .rec-cell .disc {
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.03), 0 14px 30px -10px rgb(0 0 0 / 0.55);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .rec-cell .sheen {
+  opacity: 0.55;
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .rec-cell .hub {
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.07), rgb(255 255 255 / 0.03)), rgb(16 16 19 / 0.86);
+  -webkit-backdrop-filter: blur(6px) saturate(1.1);
+  backdrop-filter: blur(6px) saturate(1.1);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.08), inset 0 0 0 1px rgb(255 255 255 / 0.045), 0 6px 16px -6px rgb(0 0 0 / 0.5);
+  transition: background var(--dq-t) var(--dq-ease);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .rec-cell .hub[role='button']:hover {
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.1), rgb(255 255 255 / 0.05)), rgb(16 16 19 / 0.86);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet][data-input='keys'] [data-region^='deck'] .rec-cell .hub:focus-visible {
+  outline: 2px solid var(--dq-focus);
+  outline-offset: 2px;
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .rec-cell .pivot {
+  background: radial-gradient(circle, #16161a 36%, transparent 39%), linear-gradient(180deg, #3a3b40, #2a2b2f);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.08), 0 4px 10px -2px rgb(0 0 0 / 0.5);
+}
+
+/* The key: a caption that opens a menu; hover the tonal fill and --fg. */
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .bpm .key {
+  border-radius: 6px;
+  transition: background var(--dq-t) var(--dq-ease), color var(--dq-t) var(--dq-ease);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .bpm .key:hover {
+  background: var(--hover);
+  color: var(--fg);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .bpm .key .ks {
+  color: var(--deck);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .bpm .key:focus-visible {
+  outline: 2px solid var(--dq-focus);
+  outline-offset: 2px;
+}
+
+/* Sync is a latch: on, the deck's tint with the label in it. */
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .transport .btn.sync.on,
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .transport .btn.sync.on:hover {
+  --role: var(--deck);
+  background: var(--dq-on-bg);
+  box-shadow: none;
+  color: var(--deck);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .transport .btn.sync.on:hover {
+  background: var(--dq-on-bg-hover);
+}
+
+/* The Grid tab: captions like the pads; hover the tonal fill. */
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .strip .grid button {
+  border-radius: 8px;
+  color: var(--fg-2);
+  transition: background var(--dq-t) var(--dq-ease), color var(--dq-t) var(--dq-ease);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .strip .grid button:hover:not([aria-disabled='true']) {
+  color: var(--fg);
+  background: var(--hover);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .strip .grid button:active:not([aria-disabled='true']) {
+  transform: none;
+  background: var(--dq-press);
+  box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.4);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] [data-region^='deck'] .strip .grid button[aria-disabled='true'] {
+  opacity: 1;
+  color: var(--fg-4);
+}
+
+/* Library toolbar: Fits and Filter are tonal keys; on, the tint. */
+:root[data-flag-dir-quiet][data-flag-dir-quiet] section.library .bar .chip {
+  border-radius: 10px;
+  color: var(--fg-2);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] section.library .bar .chip.on,
+:root[data-flag-dir-quiet][data-flag-dir-quiet] section.library .bar .chip.on:hover {
+  --role: var(--fg);
+  background: var(--dq-on-bg);
+  box-shadow: none;
+  color: var(--fg);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] section.library .bar .chip-val {
+  color: var(--fg-3);
+}
+/* The filter popover: the popover surface, one light edge, one soft
+   shadow; key chips tonal, picked ones --sel. */
+:root[data-flag-dir-quiet][data-flag-dir-quiet] section.library .filter .panel {
+  border-radius: 12px;
+  background: #1c1d21;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.08), inset 0 0 0 1px rgb(255 255 255 / 0.05), 0 16px 40px rgb(0 0 0 / 0.5);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] section.library .filter .panel .bpm input {
+  border-radius: 8px;
+  background: var(--well);
+  box-shadow: var(--well-shadow);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] section.library .filter .panel .kc {
+  border-radius: 6px;
+  background: var(--raise);
+  box-shadow: none;
+  color: var(--fg-2);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] section.library .filter .panel .kc:hover {
+  background: var(--hover);
+  color: var(--fg);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] section.library .filter .panel .kc.on,
+:root[data-flag-dir-quiet][data-flag-dir-quiet] section.library .filter .panel .kc.on:hover {
+  background: var(--sel);
+  box-shadow: none;
+  color: var(--fg);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] section.library .row.head .cols:hover {
+  background: var(--hover);
+}
+
+/* The sampler row: empty slots a step darker (wells), a sound a tonal key,
+   playing selected; no hairlines. */
+:root[data-flag-dir-quiet][data-flag-dir-quiet] section.library .sampler .slot {
+  border-radius: 8px;
+  background: var(--well);
+  box-shadow: var(--well-shadow);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] section.library .sampler .slot.set {
+  background: var(--raise);
+  box-shadow: none;
+  color: var(--fg-2);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] section.library .sampler .slot.set:hover {
+  background: var(--hover);
+  color: var(--fg);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] section.library .sampler .slot.set:active {
+  background: var(--dq-press);
+  box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.4);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] section.library .sampler .slot.playing,
+:root[data-flag-dir-quiet][data-flag-dir-quiet] section.library .sampler .slot.playing:hover {
+  background: var(--sel);
+  box-shadow: none;
+  color: var(--fg);
+}
+
+/* Settings, now a popup: one even dim, no blur, and the dialog card's
+   popover surface. */
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .backdrop:has(> .settings) {
+  background: rgb(9 9 11 / 0.55);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .backdrop > .settings[role='dialog'] {
+  border-radius: 18px;
+  background: #1c1d21;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.08), inset 0 0 0 1px rgb(255 255 255 / 0.05), 0 32px 80px rgb(0 0 0 / 0.55);
+}
+
+/* Controller setup: the dialog card above; its fields wells. */
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .backdrop > .card[role='dialog'] .field input {
+  border-radius: 8px;
+  background: var(--well);
+  box-shadow: var(--well-shadow);
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .backdrop > .card[role='dialog'] .close {
+  border-radius: 8px;
+}
+:root[data-flag-dir-quiet][data-flag-dir-quiet] .backdrop > .card[role='dialog'] .close:hover {
+  background: var(--hover);
 }

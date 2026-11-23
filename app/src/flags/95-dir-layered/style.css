@@ -139,11 +139,26 @@
 :root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] .bpm .key {
   color: var(--fg-3);
 }
-:root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] .times .rm {
+/* The times, in the record's still centre: time left leads. */
+:root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] .rec-cell .hub .rm:not(.ending) {
   color: var(--fg);
 }
-:root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] .times .el {
+:root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] .rec-cell .hub .el {
   color: var(--fg-3);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] .rec-cell .hub[data-big='remaining'] .el,
+:root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] .rec-cell .hub[data-big='elapsed'] .rm:not(.ending) {
+  color: var(--fg-3);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] .rec-cell .hub[data-big='remaining'] .rm:not(.ending),
+:root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] .rec-cell .hub[data-big='elapsed'] .el {
+  color: var(--fg);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] .rec-cell .hub .t {
+  color: var(--fg-3);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] .rec-cell .hub.empty :is(.el, .rm) {
+  color: var(--fg-4);
 }
 
 /* The overview: a well cut into the deck. */
@@ -716,4 +731,150 @@
 :root[data-flag-dir-layered][data-flag-dir-layered] .card[role='dialog'] textarea {
   background: var(--well);
   box-shadow: var(--well-shadow);
+}
+
+/* ── Upstream's new UI (merge of main) ─────────────────────────────── */
+
+/* The record sits at layer 1 with the deck: its own soft shadow under it,
+   no lit ring. Its centre is a key (layer 2) standing on it: a raised
+   face, lit along the top, opaque so the turning grooves don't show
+   through. The tonearm's pivot is a raised key too. */
+:root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] .rec-cell .disc {
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.4), 0 2px 3px rgb(0 0 0 / 0.22), 0 14px 28px -10px rgb(0 0 0 / 0.6);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] .rec-cell .hub {
+  background: var(--ly-face), #1f2024;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: var(--ly-raised);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] .rec-cell .hub[role='button']:hover {
+  background: var(--ly-face-hover), #1f2024;
+  box-shadow: var(--ly-raised-hover);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] .rec-cell .pivot {
+  background: radial-gradient(circle, #19191c 36%, transparent 39%), var(--ly-face), #2a2b30;
+  box-shadow: var(--ly-raised);
+}
+
+/* The key: quiet text that opens a menu; hover a faint tile. */
+:root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] .bpm .key {
+  border-radius: 6px;
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] .bpm .key:hover,
+:root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] .bpm .key.shifted {
+  color: var(--fg);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] .bpm .key:hover {
+  background: rgb(255 255 255 / 0.05);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] .bpm .key .ks {
+  color: var(--deck);
+}
+
+/* Sync is a latch: on, latched down and tinted in the deck's colour. */
+:root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] .transport .sync.on,
+:root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] .transport .sync.on:hover {
+  --lit: var(--deck);
+  color: var(--deck);
+  background: var(--ly-on-bg);
+  box-shadow: var(--ly-on);
+}
+
+/* The Grid tab: text on the panel like the pads; a faint tile on hover,
+   sinks while held. */
+:root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] .strip .grid button {
+  border-radius: 8px;
+  color: var(--fg-2);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] .strip .grid button:hover:not([aria-disabled='true']) {
+  color: var(--fg);
+  background: rgb(255 255 255 / 0.05);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] .strip .grid button:active:not([aria-disabled='true']) {
+  transform: none;
+  translate: 0 1px;
+  background: var(--ly-sunk-bg);
+  box-shadow: var(--ly-sunk);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] [data-region^='deck'] .strip .grid button[aria-disabled='true'] {
+  opacity: 1;
+  color: var(--fg-4);
+}
+
+/* Library toolbar: Fits and Filter are keys; on, latched down. */
+:root[data-flag-dir-layered][data-flag-dir-layered] section.library .bar .chip {
+  border-radius: 10px;
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] section.library .bar .chip.on,
+:root[data-flag-dir-layered][data-flag-dir-layered] section.library .bar .chip.on:hover {
+  --lit: var(--fg);
+  color: var(--fg);
+  background: var(--ly-on-bg);
+  box-shadow: var(--ly-on);
+}
+/* The filter popover floats (layer 3): opaque, its fields wells, its key
+   chips small keys. */
+:root[data-flag-dir-layered][data-flag-dir-layered] section.library .filter .panel {
+  border-radius: 14px;
+  background: var(--ly-float);
+  box-shadow: var(--ly-float-edge);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] section.library .filter .panel .bpm input {
+  border-radius: 8px;
+  background: var(--well);
+  box-shadow: var(--well-shadow);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] section.library .filter .panel .kc {
+  border-radius: 6px;
+  color: var(--fg-2);
+  background: var(--ly-face);
+  box-shadow: var(--ly-raised);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] section.library .filter .panel .kc:hover {
+  color: var(--fg);
+  background: var(--ly-face-hover);
+  box-shadow: var(--ly-raised-hover);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] section.library .filter .panel .kc.on,
+:root[data-flag-dir-layered][data-flag-dir-layered] section.library .filter .panel .kc.on:hover {
+  --lit: var(--fg);
+  color: var(--fg);
+  background: var(--ly-on-bg);
+  box-shadow: var(--ly-on);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] section.library .row.head .cols {
+  border-radius: 6px;
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] section.library .row.head .cols:hover {
+  background: rgb(255 255 255 / 0.05);
+}
+
+/* The sampler row, inside the library panel: empty slots stay wells. */
+:root[data-flag-dir-layered][data-flag-dir-layered] section.library .sampler .slot:not(.set) {
+  background: var(--well);
+  box-shadow: var(--well-shadow);
+}
+
+/* Settings, now a popup: the top sheet (layer 4), like the dialogs;
+   its page a panel on it. */
+:root[data-flag-dir-layered][data-flag-dir-layered] .backdrop > .settings[role='dialog'] {
+  border-radius: 20px;
+  background: var(--ly-sheet);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: var(--ly-sheet-edge);
+}
+
+/* Controller setup: the dialog sheet above; its fields wells. */
+:root[data-flag-dir-layered][data-flag-dir-layered] .backdrop > .card[role='dialog'] .field input {
+  border-radius: 8px;
+  background: var(--well);
+  box-shadow: var(--well-shadow);
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] .backdrop > .card[role='dialog'] .close {
+  border-radius: 8px;
+}
+:root[data-flag-dir-layered][data-flag-dir-layered] .backdrop > .card[role='dialog'] .close:hover {
+  background: rgb(255 255 255 / 0.05);
 }

@@ -159,7 +159,6 @@
 :root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] .decks > section,
 :root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] section.library,
 :root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] .settings,
-:root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] .sampler,
 :root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] .glass:not(.waves) {
   background: var(--rg-plate);
   -webkit-backdrop-filter: none;
@@ -237,50 +236,48 @@
   color: var(--fg-3);
 }
 :root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] [data-region^='deck'] .bpm .big,
-:root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] [data-region^='deck'] .times[data-big='remaining'] .rm,
-:root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] [data-region^='deck'] .times[data-big='elapsed'] .el,
-:root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] [data-region^='deck'] .times:not([data-big]) .el {
-  font-size: var(--rg-num);
+/* The times, in the record's still centre (sizes in em off its own). */
+:root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] [data-region^='deck'] .rec-cell .hub[data-big='remaining'] .rm,
+:root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] [data-region^='deck'] .rec-cell .hub[data-big='elapsed'] .el,
+:root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] [data-region^='deck'] .rec-cell .hub:not([data-big]) .el {
+  font-size: 1.6em;
   font-weight: 600;
   letter-spacing: -0.035em;
-  line-height: 28px;
+  line-height: 1.05;
 }
 :root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] [data-region^='deck'] .bpm .big,
-:root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] [data-region^='deck'] .times .num:not(.ending) {
+:root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] [data-region^='deck'] .rec-cell .hub .num:not(.ending) {
   color: var(--fg);
 }
 /* The tempo's decimals and the time's tenths: the same size, a step down. */
 :root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] [data-region^='deck'] .bpm .big .frac,
-:root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] [data-region^='deck'] .times .num:not(.ending) .t {
+:root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] [data-region^='deck'] .rec-cell .hub .num:not(.ending) .t {
   color: var(--fg-3);
 }
-:root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] [data-region^='deck'] .times .rm.ending .t {
+:root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] [data-region^='deck'] .rec-cell .hub .rm.ending .t {
   color: color-mix(in srgb, var(--kill) 62%, transparent);
 }
-:root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] [data-region^='deck']:has(header .name.dim) :is(.bpm .big, .times .num, .times .t) {
+:root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] [data-region^='deck']:has(header .name.dim) :is(.bpm .big, .rec-cell .hub .num, .rec-cell .hub .t) {
   font-weight: 400;
   color: var(--fg-4);
 }
-:root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] [data-region^='deck'] .times[data-big='remaining'] .el,
-:root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] [data-region^='deck'] .times[data-big='elapsed'] .rm,
-:root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] [data-region^='deck'] .times:not([data-big]) .rm {
-  font-size: var(--t-sm);
+:root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] [data-region^='deck'] .rec-cell .hub[data-big='remaining'] .el,
+:root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] [data-region^='deck'] .rec-cell .hub[data-big='elapsed'] .rm,
+:root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] [data-region^='deck'] .rec-cell .hub:not([data-big]) .rm {
+  font-size: 0.95em;
   font-weight: 500;
   letter-spacing: 0;
 }
-:root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] [data-region^='deck'] .times[data-big='remaining'] .el,
-:root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] [data-region^='deck'] .times[data-big='elapsed'] .rm:not(.ending),
-:root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] [data-region^='deck'] .times:not([data-big]) .rm:not(.ending) {
+:root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] [data-region^='deck'] .rec-cell .hub[data-big='remaining'] .el,
+:root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] [data-region^='deck'] .rec-cell .hub[data-big='elapsed'] .rm:not(.ending),
+:root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] [data-region^='deck'] .rec-cell .hub:not([data-big]) .rm:not(.ending) {
   color: var(--fg-3);
 }
-:root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] [data-region^='deck'] .times .t {
+:root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] [data-region^='deck'] .rec-cell .hub .t {
   font-weight: 600;
 }
-:root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] [data-region^='deck'] .times :is([data-big='remaining'] .el, [data-big='elapsed'] .rm) .t {
+:root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] [data-region^='deck'] .rec-cell .hub :is([data-big='remaining'] .el, [data-big='elapsed'] .rm) .t {
   font-weight: 500;
-}
-:root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] [data-region^='deck'] .times {
-  align-items: baseline;
 }
 :root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] [data-region^='deck'] .bpm .unit,
 :root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] [data-region^='deck'] .bpm .key {
@@ -1641,4 +1638,159 @@
 }
 :root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] section.library .main .scroll {
   margin-bottom: 12px;
+}
+
+/* ── Upstream's new UI (merge of main) ───────────────────────────── */
+
+/* The record is sound, so it's black glass: the vinyl keeps the deck's
+   colour on a black mat, set into the silver with a dark seam and a bright
+   chamfer below (light from above), no soft glow. */
+:root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] [data-region^='deck'] {
+  --record-mat: var(--al-glass);
+}
+:root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] [data-region='deck0'] {
+  --record-tint: 185, 205, 228;
+  --record-high: 236, 242, 248;
+}
+:root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] [data-region='deck1'] {
+  --record-tint: 227, 205, 172;
+  --record-high: 250, 244, 234;
+}
+:root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] [data-region^='deck'] .rec-cell .disc {
+  box-shadow: 0 0 0 1px #000, 0 1px 0 1px rgb(255 255 255 / 0.5), 0 6px 14px -6px rgb(0 0 0 / 0.55);
+}
+/* The centre: a round pane of black glass with the times lit on it. */
+:root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] [data-region^='deck'] .rec-cell .hub {
+  --fg: #eff1f3;
+  --fg-2: rgb(239 241 243 / 0.8);
+  --fg-3: rgb(239 241 243 / 0.58);
+  --fg-4: rgb(239 241 243 / 0.34);
+  --kill: #ff6359;
+  background: var(--al-glass);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.08), 0 0 0 1px #000, 0 1px 0 1px rgb(255 255 255 / 0.18);
+}
+:root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] [data-region^='deck'] .rec-cell .hub .rm.ending {
+  color: var(--kill);
+}
+:root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] [data-region^='deck'] .rec-cell .hub[role='button']:hover {
+  background: #141518;
+}
+:root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy][data-input='keys'] [data-region^='deck'] .rec-cell .hub:focus-visible {
+  outline: 2px solid var(--al-ink);
+  outline-offset: 2px;
+}
+/* The tonearm's pivot: a turned rubber cap in a milled collar. */
+:root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] [data-region^='deck'] .rec-cell .pivot {
+  background: radial-gradient(circle, #2a2c30 30%, transparent 33%), radial-gradient(circle at 50% 30%, var(--rg-key-hi), var(--rg-key-2) 70%);
+  box-shadow: 0 0 0 1px #0c0d0f, 0 1px 0 1px rgb(255 255 255 / 0.5), 0 3px 6px -2px rgb(0 0 0 / 0.5);
+}
+:root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] [data-region^='deck'] .rec-cell .swing {
+  filter: drop-shadow(0 calc(5px * var(--s)) calc(3px * var(--s)) rgb(0 0 0 / 0.4));
+}
+:root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] [data-region^='deck'] .rec-cell .tonearm.down .swing {
+  filter: drop-shadow(0 calc(2px * var(--s)) calc(1.5px * var(--s)) rgb(0 0 0 / 0.45));
+}
+
+/* The key: an ink legend engraved in the metal; hovered, a milled pocket. */
+:root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] [data-region^='deck'] .bpm .key {
+  color: var(--fg);
+}
+:root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] [data-region^='deck'] .bpm .key:hover,
+:root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] [data-region^='deck'] .bpm .key[aria-expanded='true'] {
+  background: var(--al-pocket);
+  box-shadow: var(--rg-well-edge);
+}
+:root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy][data-input='keys'] [data-region^='deck'] .bpm .key:focus-visible {
+  outline: 2px solid var(--al-ink);
+}
+
+/* The Grid tab: engraved legends on the plate, a milled pocket on hover. */
+:root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] [data-region^='deck'] .strip .grid button {
+  color: var(--fg);
+  font-weight: 500;
+}
+:root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] [data-region^='deck'] .strip .grid button:hover:not([aria-disabled='true']) {
+  background: var(--al-pocket);
+  box-shadow: var(--rg-well-edge);
+}
+
+/* Library toolbar: Fits and Filter are rubber keys; latched, near-black
+   rubber with the legend lit. */
+:root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] section.library .chip:is(.on, [aria-pressed='true']),
+:root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] section.library .chip.on:hover {
+  background: var(--rg-on);
+  box-shadow: var(--rg-on-edge);
+  color: #eff1f3;
+}
+:root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] section.library .chip .chip-val {
+  color: rgb(239 241 243 / 0.66);
+}
+:root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] section.library .filter .clear {
+  color: var(--fg-3);
+}
+:root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] section.library .filter .clear:hover {
+  color: var(--fg);
+  background: var(--hover);
+}
+/* The filter popover: a milled silver plate floated over the library;
+   its fields pockets, its key chips flat legends that latch into rubber. */
+:root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] section.library .panel {
+  background: var(--rg-float);
+  box-shadow: var(--rg-float-edge);
+  border: 0;
+}
+:root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] section.library .panel input {
+  background: var(--al-pocket);
+  box-shadow: var(--rg-well-edge);
+  border: 0;
+  color: var(--fg);
+}
+:root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] section.library .panel .kc {
+  background: var(--al-pocket);
+  box-shadow: var(--rg-well-edge);
+  color: var(--fg-2);
+}
+:root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] section.library .panel .kc:hover {
+  background: #b8bcc1;
+  color: var(--fg);
+}
+:root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] section.library .panel .kc.on {
+  background: var(--rg-key-fill);
+  box-shadow: var(--rg-key-edge);
+  color: #eff1f3;
+}
+:root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] section.library .head .cols:hover {
+  background: var(--al-pocket);
+  box-shadow: var(--rg-well-edge);
+}
+/* The sampler row: empty slots milled pockets, a loaded one a rubber key,
+   a playing one latched with its legend lit. */
+:root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] section.library .sampler .slot {
+  background: var(--al-pocket);
+  box-shadow: var(--rg-well-edge);
+  color: var(--fg-3);
+}
+:root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] section.library .sampler .slot.set {
+  --fg: #eff1f3;
+  --fg-2: rgb(239 241 243 / 0.8);
+  --fg-3: rgb(239 241 243 / 0.58);
+  background: var(--rg-key-fill);
+  box-shadow: var(--rg-key-edge);
+  color: var(--fg-2);
+}
+:root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] section.library .sampler .slot.set:hover {
+  background: var(--rg-key-fill-hi);
+  color: var(--fg);
+}
+:root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] section.library .sampler .slot.playing {
+  background: var(--rg-on);
+  box-shadow: var(--rg-on-edge);
+  color: #eff1f3;
+}
+/* Settings, now a popup: a silver plate floated over the dimmed chassis. */
+:root[data-flag-dir-alloy]:root[data-flag-dir-alloy]:root[data-flag-dir-alloy] .backdrop > .settings {
+  background: var(--rg-plate);
+  box-shadow: var(--rg-float-edge);
 }

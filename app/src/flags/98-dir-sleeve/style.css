@@ -331,17 +331,13 @@
   color: var(--fg-3) !important;
   font-weight: 400 !important;
 }
-:root[data-flag-dir-sleeve][data-flag-dir-sleeve] [data-region^='deck'] .bpm .big,
-:root[data-flag-dir-sleeve][data-flag-dir-sleeve] [data-region^='deck'] .times[data-big='remaining'] .rm,
-:root[data-flag-dir-sleeve][data-flag-dir-sleeve] [data-region^='deck'] .times[data-big='elapsed'] .el,
-:root[data-flag-dir-sleeve][data-flag-dir-sleeve] [data-region^='deck'] .times:not([data-big]) .el {
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] [data-region^='deck'] .bpm .big {
   font-size: var(--d-num) !important;
   font-weight: 600 !important;
   letter-spacing: -0.04em !important;
   line-height: 1 !important;
 }
-:root[data-flag-dir-sleeve][data-flag-dir-sleeve] [data-region^='deck'] .bpm .big,
-:root[data-flag-dir-sleeve][data-flag-dir-sleeve] [data-region^='deck'] .times .num:not(.ending) {
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] [data-region^='deck'] .bpm .big {
   color: var(--fg) !important;
 }
 /* The tempo's decimals and the time's tenths step down: same size, quieter. */
@@ -349,38 +345,17 @@
   color: var(--fg-3) !important;
 }
 /* A track playing out: the time goes red (flag 18), tenths a step quieter. */
-:root[data-flag-dir-sleeve][data-flag-dir-sleeve] [data-region^='deck'] .times .rm.ending .t {
-  color: color-mix(in srgb, var(--kill) 62%, transparent) !important;
-}
+
 :root[data-flag-dir-sleeve][data-flag-dir-sleeve] [data-region^='deck']:has(header .name.dim) .bpm .big {
   font-weight: 400 !important;
 }
 /* An empty deck's figures wait at the off level. */
-:root[data-flag-dir-sleeve][data-flag-dir-sleeve] [data-region^='deck']:has(header .name.dim) :is(.bpm .big, .times .num, .times .t) {
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] [data-region^='deck']:has(header .name.dim) .bpm .big {
   color: var(--fg-4) !important;
 }
-:root[data-flag-dir-sleeve][data-flag-dir-sleeve] [data-region^='deck'] .times[data-big='remaining'] .el,
-:root[data-flag-dir-sleeve][data-flag-dir-sleeve] [data-region^='deck'] .times[data-big='elapsed'] .rm,
-:root[data-flag-dir-sleeve][data-flag-dir-sleeve] [data-region^='deck'] .times:not([data-big]) .rm {
-  font-size: var(--t-sm) !important;
-  font-weight: 500 !important;
-  letter-spacing: 0 !important;
-}
-:root[data-flag-dir-sleeve][data-flag-dir-sleeve] [data-region^='deck'] .times[data-big='remaining'] .el,
-:root[data-flag-dir-sleeve][data-flag-dir-sleeve] [data-region^='deck'] .times[data-big='elapsed'] .rm:not(.ending),
-:root[data-flag-dir-sleeve][data-flag-dir-sleeve] [data-region^='deck'] .times:not([data-big]) .rm:not(.ending) {
-  color: var(--fg-3) !important;
-}
+
 /* The tenths step down: same size, a quieter tone. */
-:root[data-flag-dir-sleeve][data-flag-dir-sleeve] [data-region^='deck'] .times .num:not(.ending) .t {
-  color: var(--fg-3) !important;
-}
-:root[data-flag-dir-sleeve][data-flag-dir-sleeve] [data-region^='deck'] .times .t {
-  font-weight: 600 !important;
-}
-:root[data-flag-dir-sleeve][data-flag-dir-sleeve] [data-region^='deck'] .times :is([data-big='remaining'] .el, [data-big='elapsed'] .rm) .t {
-  font-weight: 500 !important;
-}
+
 :root[data-flag-dir-sleeve][data-flag-dir-sleeve] [data-region^='deck'] .bpm .unit,
 :root[data-flag-dir-sleeve][data-flag-dir-sleeve] [data-region^='deck'] .bpm .key {
   font-size: var(--t-sm) !important;
@@ -398,10 +373,6 @@
   border-radius: var(--r) !important;
   background: var(--d-screen) !important;
   box-shadow: var(--d-screen-edge) !important;
-}
-
-:root[data-flag-dir-sleeve][data-flag-dir-sleeve] [data-region^='deck'] .times {
-  align-items: baseline !important;
 }
 
 /* ---------- Deck tabs: a segmented switch ---------- */
@@ -962,7 +933,6 @@
   }
 }
 
-
 /* ---------- Sleeve: the deck sheets ---------- */
 :root[data-flag-dir-sleeve][data-flag-dir-sleeve] .decks > section[data-region='deck0'] {
   background: #e3eaf3 !important;
@@ -1032,4 +1002,262 @@
    white doesn't show on paper. */
 :root[data-flag-dir-sleeve][data-flag-dir-sleeve] .fader .match {
   background: rgb(19 19 22 / 0.55) !important;
+}
+
+/* ---------- Upstream's new UI (merge of main) ---------- */
+
+/* The record: black vinyl, a screen like the waveforms, standing on the
+   sheet with the paper's own soft shadow (no light ring). */
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] [data-region^='deck'] {
+  --record-mat: #0c0c0e;
+}
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] [data-region^='deck'] .rec-cell .disc {
+  box-shadow: 0 0 0 1px rgb(20 18 12 / 0.12), 0 1px 2px rgb(20 18 12 / 0.22), 0 12px 24px -10px rgb(20 18 12 / 0.45) !important;
+}
+/* Its centre is the record's label: paper in the deck's sheet colour,
+   ink type, the big time heavy and tight like the tempo. Sizes stay the
+   hub's own (em off its inline size). */
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] [data-region^='deck'] .rec-cell .hub {
+  background: radial-gradient(circle at 50% 50%, transparent 0 3px, rgb(20 18 12 / 0.08) 3.5px 4px, transparent 4.5px), var(--d-label, #f1efe9) !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  box-shadow: inset 0 1px 0 #fff, inset 0 0 0 1px rgb(20 18 12 / 0.06), 0 1px 2px rgb(0 0 0 / 0.5) !important;
+}
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] [data-region='deck0'] {
+  --d-label: #e3eaf3;
+}
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] [data-region='deck1'] {
+  --d-label: #f4eada;
+}
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] [data-region^='deck'] .rec-cell .hub :is(.el, .rm) {
+  font-weight: 500 !important;
+  letter-spacing: -0.01em !important;
+}
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] [data-region^='deck'] .rec-cell .hub:not([data-big]) .el,
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] [data-region^='deck'] .rec-cell .hub[data-big='elapsed'] .el,
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] [data-region^='deck'] .rec-cell .hub[data-big='remaining'] .rm {
+  font-weight: 600 !important;
+  letter-spacing: -0.04em !important;
+}
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] [data-region^='deck'] .rec-cell .hub .num:not(.ending) {
+  color: var(--fg) !important;
+}
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] [data-region^='deck'] .rec-cell .hub:not([data-big]) .rm:not(.ending),
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] [data-region^='deck'] .rec-cell .hub[data-big='elapsed'] .rm:not(.ending),
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] [data-region^='deck'] .rec-cell .hub[data-big='remaining'] .el {
+  color: var(--fg-2) !important;
+}
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] [data-region^='deck'] .rec-cell .hub .num:not(.ending) .t {
+  color: var(--fg-3) !important;
+}
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] [data-region^='deck'] .rec-cell .hub .rm.ending .t {
+  color: color-mix(in srgb, var(--kill) 62%, transparent) !important;
+}
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] [data-region^='deck'] .rec-cell .hub.empty :is(.num, .t),
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] [data-region^='deck']:has(header .name.dim) .rec-cell .hub :is(.num, .t) {
+  color: var(--fg-4) !important;
+}
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] [data-region^='deck'] .rec-cell .hub[role='button']:focus-visible {
+  outline: 2px solid var(--d-focus) !important;
+  outline-offset: 2px;
+}
+/* The tonearm's pivot: a paper dial with an ink centre. */
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] [data-region^='deck'] .rec-cell .pivot {
+  background: radial-gradient(circle, #131316 34%, transparent 37%), var(--d-dial) !important;
+  box-shadow: var(--d-dial-edge) !important;
+}
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] [data-region^='deck'] .rec-cell .cap {
+  background: #131316 !important;
+}
+
+/* The key: ink text that opens a menu; a faint tone on hover. */
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] [data-region^='deck'] .bpm .key {
+  border-radius: 5px !important;
+}
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] [data-region^='deck'] .bpm .key:hover {
+  background: var(--d-hover) !important;
+  color: var(--fg) !important;
+}
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] [data-region^='deck'] .bpm .key .ks {
+  color: var(--fg) !important;
+}
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] [data-region^='deck'] .bpm .key:focus-visible {
+  outline: 2px solid var(--d-focus) !important;
+  outline-offset: 1px !important;
+}
+
+/* The Grid tab: plain ink text on the sheet; a faint tone on hover,
+   pressed into the paper while held. */
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] [data-region^='deck'] .strip .grid button {
+  color: var(--fg-2) !important;
+  font-weight: 500 !important;
+  border-radius: var(--r) !important;
+}
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] [data-region^='deck'] .strip .grid button:hover:not([aria-disabled='true']) {
+  background: var(--d-hover) !important;
+  color: var(--fg) !important;
+}
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] [data-region^='deck'] .strip .grid button:active:not([aria-disabled='true']) {
+  background: var(--d-key-down) !important;
+  box-shadow: var(--d-key-down-edge) !important;
+  transform: translateY(1px) !important;
+}
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] [data-region^='deck'] .strip .grid button[aria-disabled='true'] {
+  opacity: 1 !important;
+  color: var(--fg-4) !important;
+}
+
+/* Library toolbar: Fits and Filter are keys; on, down and dark. */
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] section.library .bar .btn.chip.on,
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] section.library .bar .btn.chip.on:hover {
+  background: var(--d-on) !important;
+  box-shadow: var(--d-on-edge) !important;
+  color: var(--d-on-fg) !important;
+  transform: none !important;
+}
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] section.library .bar .btn.chip.on .chip-val {
+  color: rgb(236 234 228 / 0.66) !important;
+}
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] section.library .bar .chip-val {
+  color: var(--fg-3) !important;
+}
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] section.library .bar .filter > .clear:hover {
+  background: var(--d-hover) !important;
+}
+/* The filter popover: the floating layer; BPM fields; key chips as keys. */
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] section.library .filter .panel {
+  background: var(--d-float) !important;
+  box-shadow: var(--d-float-edge) !important;
+  border-radius: calc(var(--r) + 4px) !important;
+  color: var(--fg) !important;
+}
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] section.library .filter .panel :is(.ph, .pf) {
+  color: var(--fg-3) !important;
+  font-weight: 500 !important;
+}
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] section.library .filter .panel .bpm input {
+  background: var(--d-field) !important;
+  box-shadow: var(--d-field-edge) !important;
+  color: var(--fg) !important;
+}
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] section.library .filter .panel .bpm input:focus-visible {
+  box-shadow: var(--d-field-edge), 0 0 0 2px var(--d-focus) !important;
+}
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] section.library .filter .panel .kc {
+  background: var(--d-key) !important;
+  box-shadow: var(--d-key-edge) !important;
+  color: var(--fg-2) !important;
+  font-weight: 500 !important;
+}
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] section.library .filter .panel .kc:hover {
+  background: var(--d-key-hover) !important;
+  color: var(--fg) !important;
+}
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] section.library .filter .panel .kc:active {
+  background: var(--d-key-down) !important;
+  box-shadow: var(--d-key-down-edge) !important;
+}
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] section.library .filter .panel .kc.on,
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] section.library .filter .panel .kc.on:hover {
+  background: var(--d-on) !important;
+  box-shadow: var(--d-on-edge) !important;
+  color: var(--d-on-fg) !important;
+}
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] section.library .filter .panel .kc:focus-visible {
+  outline: 2px solid var(--d-focus) !important;
+  outline-offset: 2px !important;
+}
+/* The columns button: quiet until hovered. */
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] section.library .row.head .cols {
+  color: var(--fg-3) !important;
+  border-radius: var(--r) !important;
+}
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] section.library .row.head .cols:hover {
+  background: var(--d-hover) !important;
+  color: var(--fg) !important;
+}
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] .menu [role='menuitemcheckbox'] .tick {
+  color: var(--fg) !important;
+}
+
+/* The sampler: a row of the library sheet, no sheet of its own. Empty
+   slots are fields pressed into the paper ("Add sound"); a sound is a key;
+   playing, it stays down and dark with a light progress line. */
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] section.library .sampler {
+  background: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] section.library .sampler .title {
+  color: var(--fg-3) !important;
+  font-weight: 500 !important;
+}
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] section.library .sampler .slot {
+  background: var(--d-field) !important;
+  box-shadow: var(--d-field-edge) !important;
+  color: var(--fg-3) !important;
+  border-radius: var(--r) !important;
+}
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] section.library .sampler .slot:not(.set):hover {
+  color: var(--fg) !important;
+}
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] section.library .sampler .slot.set {
+  background: var(--d-key) !important;
+  box-shadow: var(--d-key-edge) !important;
+  color: var(--fg-2) !important;
+  font-weight: 500 !important;
+}
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] section.library .sampler .slot.set:hover {
+  background: var(--d-key-hover) !important;
+  color: var(--fg) !important;
+}
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] section.library .sampler .slot.set:active {
+  background: var(--d-key-down) !important;
+  box-shadow: var(--d-key-down-edge) !important;
+}
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] section.library .sampler .slot.playing,
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] section.library .sampler .slot.playing:hover {
+  background: var(--d-on) !important;
+  box-shadow: var(--d-on-edge) !important;
+  color: var(--d-on-fg) !important;
+}
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] section.library .sampler .slot .n {
+  color: var(--fg-3) !important;
+}
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] section.library .sampler .slot.playing .n {
+  color: var(--d-on-fg) !important;
+}
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] section.library .sampler .slot .bar {
+  background: var(--d-on-fg) !important;
+}
+
+/* Settings, now a popup: a sheet on the floating layer over the scrim. */
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] .backdrop > .settings[role='dialog'] {
+  background: var(--d-float) !important;
+  box-shadow: var(--d-float-edge) !important;
+  border-radius: var(--r-panel) !important;
+}
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] .backdrop > .settings[role='dialog'] > .main {
+  background: var(--d-panel) !important;
+  box-shadow: inset 0 0 0 1px rgb(20 18 12 / 0.06), 0 1px 0 #fff !important;
+}
+
+/* Controller setup: its card is the dialog above; its fields are fields,
+   the close a quiet key. */
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] .backdrop .card .field input {
+  background: var(--d-field) !important;
+  box-shadow: var(--d-field-edge) !important;
+  color: var(--fg) !important;
+}
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] .backdrop .card .close {
+  color: var(--fg-3) !important;
+}
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] .backdrop .card .close:hover {
+  background: var(--d-hover) !important;
+  color: var(--fg) !important;
+}
+/* Play, on and hovered: stays in its role colour (the Play hover rule
+   above out-ranked the on rule, so its glyph went ink on ink). */
+:root[data-flag-dir-sleeve][data-flag-dir-sleeve] [data-region^='deck'] .transport .btn.play.on:hover {
+  color: var(--d-role, var(--d-on-fg)) !important;
 }

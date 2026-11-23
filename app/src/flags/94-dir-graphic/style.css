@@ -188,6 +188,7 @@
 :root[data-flag-dir-graphic][data-flag-dir-graphic] :is(
     [data-region^='deck'] .transport .btn.cue,
     [data-region^='deck'] .transport .btn.play,
+    [data-region^='deck'] .transport .btn.sync,
     [data-region^='deck'] .pitch .lock
   ) {
   position: relative;
@@ -195,6 +196,7 @@
 :root[data-flag-dir-graphic][data-flag-dir-graphic] :is(
     [data-region^='deck'] .transport .btn.cue,
     [data-region^='deck'] .transport .btn.play,
+    [data-region^='deck'] .transport .btn.sync,
     [data-region^='deck'] .pitch .lock
   )::before {
   content: '' !important;
@@ -213,6 +215,7 @@
 :root[data-flag-dir-graphic][data-flag-dir-graphic] :is(
     [data-region^='deck'] .transport .btn.cue.lit,
     [data-region^='deck'] .transport .btn.play.on,
+    [data-region^='deck'] .transport .btn.sync.on,
     [data-region^='deck'] .pitch .lock.on
   )::before {
   background: var(--g-dot-c, var(--fg)) !important;
@@ -280,26 +283,32 @@
   color: var(--fg-3) !important;
   font-weight: 500;
 }
-:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .bpm .big,
-:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .times[data-big='remaining'] .rm,
-:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .times[data-big='elapsed'] .el,
-:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .times:not([data-big]) .el {
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .bpm .big {
   font-size: 34px !important;
   font-weight: 600 !important;
   letter-spacing: -0.035em !important;
   line-height: 34px !important;
   color: var(--fg) !important;
 }
-:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .times[data-big='remaining'] .el,
-:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .times[data-big='elapsed'] .rm,
-:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .times:not([data-big]) .rm {
-  font-size: var(--t-md) !important;
+/* The times, in the record's centre: the big one in the numerals' voice
+   (600, tight, white), the other a grey caption. Sizes stay the hub's own
+   (em off its inline size), so the circle holds. */
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .rec-cell .hub[data-big='remaining'] .rm,
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .rec-cell .hub[data-big='elapsed'] .el,
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .rec-cell .hub:not([data-big]) .el {
+  font-weight: 600 !important;
+  letter-spacing: -0.035em !important;
+  color: var(--fg) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .rec-cell .hub[data-big='remaining'] .el,
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .rec-cell .hub[data-big='elapsed'] .rm,
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .rec-cell .hub:not([data-big]) .rm {
   font-weight: 500 !important;
   letter-spacing: -0.01em !important;
   color: var(--fg-3) !important;
 }
 /* The tenths step down to grey, a weight lighter. */
-:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .times .t {
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .rec-cell .hub .t {
   color: var(--fg-3) !important;
   font-weight: 500;
 }
@@ -1010,10 +1019,7 @@
 
 /* ---------- Smaller windows: the figures step down, so titles keep room ---------- */
 @media (max-width: 1200px) {
-  :root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .bpm .big,
-  :root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .times[data-big='remaining'] .rm,
-  :root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .times[data-big='elapsed'] .el,
-  :root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .times:not([data-big]) .el {
+  :root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .bpm .big {
     font-size: 28px !important;
     line-height: 30px !important;
   }
@@ -1038,4 +1044,229 @@
    device-lost band's alone). */
 :root[data-flag-dir-graphic][data-flag-dir-graphic] .mixer .lim {
   color: var(--kill) !important;
+}
+
+/* ---------- Upstream's new UI (merge of main) ---------- */
+
+/* Sync is a latch now: a switch like Play, a hollow dot at rest; on, the
+   dot fills in the deck's colour and the label goes white. Never a fill. */
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .transport .btn.sync,
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .transport .btn.sync:hover,
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .transport .btn.sync.on,
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .transport .btn.sync.on:hover {
+  --g-dot-c: var(--deck);
+  background: var(--g-ctl) !important;
+  box-shadow: none !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .transport .btn.sync:hover:not([aria-disabled='true']) {
+  background: var(--g-ctl-hover) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .transport .btn.sync.on {
+  color: var(--fg) !important;
+}
+
+/* The record, printed flat: black vinyl in the deck's colour, no ring of
+   light, no shadow, no sheen; a hairline inside its edge like the cards.
+   The centre is a flat panel disc with a hairline; the tonearm casts no
+   shadow, its pivot a flat control disc. */
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] {
+  --record-mat: #000;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .rec-cell .disc {
+  box-shadow: inset 0 0 0 1px var(--line) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .rec-cell .sheen {
+  display: none;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .rec-cell .hub {
+  background: #0e0e10 !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  box-shadow: inset 0 0 0 1px var(--line-2) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .rec-cell .hub[role='button']:hover {
+  background: var(--g-ctl) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .rec-cell .hub.empty :is(.el, .rm, .t) {
+  color: var(--fg-4) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .rec-cell .swing,
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .rec-cell .tonearm.down .swing {
+  filter: none !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .rec-cell .pivot {
+  background: radial-gradient(circle, #000 36%, var(--g-ctl) 38%) !important;
+  box-shadow: inset 0 0 0 1px var(--line-2) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .rec-cell .cap {
+  background: var(--fg) !important;
+}
+
+/* The key: a grey caption that opens a menu; hover one step lighter. */
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .bpm .key:hover {
+  background: var(--g-ctl-hover) !important;
+  color: var(--fg) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .bpm .key .ks {
+  color: var(--fg) !important;
+}
+
+/* The Grid tab: flat controls on the panel; hover one step lighter,
+   pressed black at once; the words as micro-labels. */
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .strip .grid button {
+  border-radius: var(--r) !important;
+  color: var(--fg-2) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .strip .grid button:not(.sym) {
+  font-size: var(--g-cap) !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .strip .grid button:hover:not([aria-disabled='true']) {
+  background: var(--g-ctl-hover) !important;
+  color: var(--fg) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .strip .grid button:active:not([aria-disabled='true']) {
+  background: #000 !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] [data-region^='deck'] .strip .grid button[aria-disabled='true'] {
+  opacity: 0.35;
+}
+
+/* Library toolbar: Fits and Filter are switches: a hollow dot at rest,
+   filled white when on; the control stays dark. */
+:root[data-flag-dir-graphic][data-flag-dir-graphic] section.library .bar .chip {
+  position: relative;
+  padding-left: 22px !important;
+  font-size: var(--g-cap) !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] section.library .bar .chip svg {
+  display: none;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] section.library .bar .chip::before {
+  content: '';
+  position: absolute;
+  left: 9px;
+  top: calc(50% - var(--g-dot) / 2);
+  width: var(--g-dot);
+  height: var(--g-dot);
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px var(--fg-3);
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] section.library .bar .chip.on,
+:root[data-flag-dir-graphic][data-flag-dir-graphic] section.library .bar .chip.on:hover {
+  background: var(--g-ctl) !important;
+  color: var(--fg) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] section.library .bar .chip.on::before {
+  background: var(--fg);
+  box-shadow: none;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] section.library .bar .chip-val {
+  color: var(--fg-3) !important;
+  letter-spacing: 0;
+  text-transform: none;
+}
+/* The filter popover: a solid card with a hairline, like the dialogs;
+   wells for the BPM; key chips flat controls, picked ones inverted. */
+:root[data-flag-dir-graphic][data-flag-dir-graphic] section.library .filter .panel {
+  background: var(--popover) !important;
+  box-shadow: inset 0 0 0 1px var(--line-2) !important;
+  border-radius: 10px !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] section.library .filter .panel .ph {
+  font-size: var(--g-cap) !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fg-3) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] section.library .filter .panel .bpm input {
+  background: var(--well) !important;
+  box-shadow: var(--well-shadow) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] section.library .filter .panel .kc {
+  background: var(--g-ctl) !important;
+  box-shadow: none !important;
+  color: var(--fg-2) !important;
+  font-weight: 600;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] section.library .filter .panel .kc:hover {
+  background: var(--g-ctl-hover) !important;
+  color: var(--fg) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] section.library .filter .panel .kc.on,
+:root[data-flag-dir-graphic][data-flag-dir-graphic] section.library .filter .panel .kc.on:hover {
+  background: var(--g-paper) !important;
+  color: var(--ink) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] section.library .row.head .cols:hover {
+  background: var(--g-ctl-hover) !important;
+}
+
+/* The sampler: a row of the library panel, no panel of its own. Empty
+   slots are black wells; a sound a flat control; playing, inverted. */
+:root[data-flag-dir-graphic][data-flag-dir-graphic] section.library .sampler {
+  background: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] section.library .sampler .title {
+  font-size: var(--g-cap) !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] section.library .sampler .slot {
+  background: var(--well) !important;
+  box-shadow: var(--well-shadow) !important;
+  border-radius: var(--r) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] section.library .sampler .slot.set {
+  background: var(--g-ctl) !important;
+  box-shadow: none !important;
+  color: var(--fg-2) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] section.library .sampler .slot.set:hover {
+  background: var(--g-ctl-hover) !important;
+  color: var(--fg) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] section.library .sampler .slot.set:active {
+  background: #000 !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] section.library .sampler .slot.playing,
+:root[data-flag-dir-graphic][data-flag-dir-graphic] section.library .sampler .slot.playing:hover {
+  background: var(--g-paper) !important;
+  color: var(--ink) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] section.library .sampler .slot.playing .n {
+  color: var(--ink) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] section.library .sampler .slot .bar {
+  background: var(--ink) !important;
+}
+
+/* Settings, now a popup: the solid card on the even scrim. */
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .backdrop > .settings[role='dialog'] {
+  background: #0e0e10 !important;
+  box-shadow: inset 0 0 0 1px var(--line-2) !important;
+  border-radius: var(--r-panel) !important;
+  animation-duration: 80ms !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .backdrop > .settings[role='dialog'] > .main {
+  background: #0a0a0b !important;
+  box-shadow: inset 0 0 0 1px var(--line) !important;
+}
+
+/* Controller setup: the card above; fields are wells. */
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .backdrop .card .field input {
+  background: var(--well) !important;
+  box-shadow: var(--well-shadow) !important;
+}
+:root[data-flag-dir-graphic][data-flag-dir-graphic] .backdrop .card .close:hover {
+  background: var(--g-ctl-hover) !important;
 }

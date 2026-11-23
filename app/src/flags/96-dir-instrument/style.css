@@ -145,34 +145,28 @@
   box-shadow: none;
 }
 
-/* Each deck's readout: title and tempo, overview, times, on one screen
-   that bleeds 12px past the deck's columns, so the text inside still
-   lines up with the keys below. Drawn in three parts that meet flush. */
+/* Each deck's readout: the record (its centre carries the times), title,
+   tempo and key, and the overview, on one screen that bleeds 12px past the
+   deck's columns, so the text inside still lines up with the keys below.
+   The screen is the body grid's own ::before, laid over the record's row
+   and the overview's (and the extra title row in a narrow deck). */
 :root[data-flag-dir-instrument][data-flag-dir-instrument] .decks > section[data-region^='deck'] {
   column-gap: 28px;
 }
-:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .body {
-  row-gap: 0;
-}
-:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .body > header,
-:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .body > .overview,
-:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .body > .times {
-  margin-left: -16px;
-  margin-right: -16px;
-  padding-left: 16px;
-  padding-right: 16px;
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .body::before {
+  content: '';
+  grid-row: 1 / span 2;
+  grid-column: 1 / -1;
+  margin: -16px -16px -10px;
+  border-radius: 12px;
   background: var(--in-scr);
+  box-shadow: inset 0 0 0 1px var(--in-scr-rim), inset 0 3px 3px -1px rgb(0 0 0 / 0.55), 0 1px 0 var(--in-scr-lip), 0 -1px 0 rgb(0 0 0 / 0.25);
+  pointer-events: none;
 }
-:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .body > header {
-  margin-top: -16px;
-  padding-top: 16px;
-  padding-bottom: 12px;
-  border-radius: 12px 12px 0 0;
-  box-shadow: inset 0 1px 0 var(--in-scr-rim), inset 1px 0 0 var(--in-scr-rim), inset -1px 0 0 var(--in-scr-rim), inset 0 3px 3px -1px rgb(0 0 0 / 0.55), 0 -1px 0 rgb(0 0 0 / 0.25);
-}
-:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .body > .overview {
-  border-radius: 0;
-  box-shadow: inset 1px 0 0 var(--in-scr-rim), inset -1px 0 0 var(--in-scr-rim);
+@container (max-width: 500px) {
+  :root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .body::before {
+    grid-row: 1 / span 3;
+  }
 }
 :root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .body > .overview > .wave {
   border-radius: 8px;
@@ -181,16 +175,11 @@
   outline: 1px solid var(--in-scr-line);
   outline-offset: -1px;
 }
-:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .body > .times {
-  padding-top: 12px;
-  padding-bottom: 14px;
-  border-radius: 0 0 12px 12px;
-  box-shadow: inset 0 -1px 0 var(--in-scr-rim), inset 1px 0 0 var(--in-scr-rim), inset -1px 0 0 var(--in-scr-rim), 0 1px 0 var(--in-scr-lip);
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .body > .overview {
+  background: none;
+  box-shadow: none;
 }
 :root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .body > .mp {
-  margin-top: 12px;
-}
-:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .body > .transport {
   margin-top: 12px;
 }
 
@@ -209,12 +198,71 @@
 :root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] header .artist,
 :root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .bpm .unit,
 :root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .bpm .key,
-:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .times .el {
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .rec-cell .hub .el {
   color: var(--fg-3);
 }
 :root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .bpm .big,
-:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .times .rm {
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .rec-cell .hub .rm:not(.ending) {
   color: var(--fg);
+}
+
+/* The record, on the screen: its vinyl in the deck's white on a black mat,
+   no lit ring (a screen's light is its content). Its centre a small
+   screen of its own in a cut bezel, solid, no blur. The tonearm's pivot a
+   key of the chassis. */
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] {
+  --record-mat: #09090b;
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .rec-cell .disc {
+  box-shadow: 0 0 0 1px var(--in-scr-rim);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .rec-cell .hub {
+  background: var(--in-scr);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: inset 0 0 0 1px var(--in-scr-rim), inset 0 2px 3px rgb(0 0 0 / 0.6), 0 0 0 1px var(--in-scr-line);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .rec-cell .hub[data-big='remaining'] .el,
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .rec-cell .hub[data-big='elapsed'] .rm:not(.ending) {
+  color: var(--fg-3);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .rec-cell .hub[data-big='remaining'] .rm:not(.ending),
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .rec-cell .hub[data-big='elapsed'] .el {
+  color: var(--fg);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .rec-cell .hub .t {
+  color: var(--fg-3);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .rec-cell .hub.empty :is(.el, .rm) {
+  color: var(--fg-4);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument][data-input='keys'] [data-region^='deck'] .rec-cell .hub:focus-visible {
+  outline: 2px solid var(--fg-2);
+  outline-offset: 2px;
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .rec-cell .pivot {
+  background: radial-gradient(circle, #1c1d20 36%, transparent 39%), var(--in-face);
+  box-shadow: var(--in-raised);
+}
+
+/* The key on the screen: quiet text that opens a menu; a faint tile on
+   hover. */
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .bpm .key {
+  border-radius: 6px;
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .bpm .key:hover,
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .bpm .key.shifted {
+  color: var(--fg);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .bpm .key:hover {
+  background: rgb(255 255 255 / 0.06);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .bpm .key .ks {
+  color: var(--deck);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .bpm .key:focus-visible {
+  outline: 2px solid var(--fg-2);
+  outline-offset: 1px;
 }
 
 /* Tabs: a segmented control cut into the face (32 + 1px, as today). */
@@ -781,4 +829,131 @@
 :root[data-flag-dir-instrument][data-flag-dir-instrument] .card[role='dialog'] textarea {
   background: var(--in-scr);
   box-shadow: inset 0 0 0 1px var(--in-scr-rim), inset 0 2px 3px rgb(0 0 0 / 0.6), 0 1px 0 var(--in-scr-lip);
+}
+
+/* ── Upstream's new UI (merge of main) ─────────────────────────────── */
+
+/* Sync is a latch now: on, it stays down, lit from inside in the deck's
+   colour, like Play. */
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .transport .sync.on,
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .transport .sync.on:hover {
+  --lit: var(--deck);
+  color: var(--deck);
+  background: var(--in-on-bg);
+  box-shadow: var(--in-sunk);
+}
+
+/* The Grid tab: text on the face like the pads; a faint tile on hover,
+   pushed in while held. */
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .strip .grid button {
+  border-radius: 8px;
+  color: var(--fg-2);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .strip .grid button:hover:not([aria-disabled='true']) {
+  color: var(--fg);
+  background: rgb(255 255 255 / 0.05);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .strip .grid button:active:not([aria-disabled='true']) {
+  transform: none;
+  translate: 0 1px;
+  background: var(--in-sunk-bg);
+  box-shadow: var(--in-sunk);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] [data-region^='deck'] .strip .grid button[aria-disabled='true'] {
+  opacity: 1;
+  color: var(--fg-4);
+}
+
+/* Library toolbar: Fits and Filter are keys; on, latched down. */
+:root[data-flag-dir-instrument][data-flag-dir-instrument] section.library .bar .chip {
+  border-radius: 10px;
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] section.library .bar .chip.on,
+:root[data-flag-dir-instrument][data-flag-dir-instrument] section.library .bar .chip.on:hover,
+:root[data-flag-dir-instrument][data-flag-dir-instrument] section.library .bar .samp.on,
+:root[data-flag-dir-instrument][data-flag-dir-instrument] section.library .bar .samp.on:hover {
+  --lit: var(--fg);
+  color: var(--fg);
+  background: var(--in-on-bg);
+  box-shadow: var(--in-sunk);
+}
+/* The filter popover: a plate of the chassis lifted off the face, its
+   fields cut in, its key chips small keys. */
+:root[data-flag-dir-instrument][data-flag-dir-instrument] section.library .filter .panel {
+  border-radius: 14px;
+  background: linear-gradient(180deg, #34353a, #2d2e32);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.09), 0 0 0 1px rgb(0 0 0 / 0.55), 0 16px 40px -10px rgb(0 0 0 / 0.7);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] section.library .filter .panel .bpm input {
+  border-radius: 8px;
+  background: var(--in-scr);
+  box-shadow: var(--well-shadow);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] section.library .filter .panel .bpm input:focus-visible {
+  box-shadow: var(--well-shadow), 0 0 0 2px var(--fg-2);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] section.library .filter .panel .kc {
+  border-radius: 6px;
+  color: var(--fg-2);
+  background: var(--in-face);
+  box-shadow: var(--in-raised);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] section.library .filter .panel .kc:hover {
+  color: var(--fg);
+  background: var(--in-face-hover);
+  box-shadow: var(--in-raised-hover);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] section.library .filter .panel .kc.on,
+:root[data-flag-dir-instrument][data-flag-dir-instrument] section.library .filter .panel .kc.on:hover {
+  --lit: var(--fg);
+  color: var(--fg);
+  background: var(--in-on-bg);
+  box-shadow: var(--in-sunk);
+}
+/* The columns button sits on the list's screen: quiet, a tile on hover. */
+:root[data-flag-dir-instrument][data-flag-dir-instrument] section.library .row.head .cols {
+  border-radius: 6px;
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] section.library .row.head .cols:hover {
+  background: rgb(255 255 255 / 0.06);
+}
+
+/* The sampler row is on the face, between the toolbar and the list's
+   screen: empty slots cut in ("Add sound"), a sound a raised pad. */
+:root[data-flag-dir-instrument][data-flag-dir-instrument] section.library .sampler .slot:not(.set) {
+  background: var(--in-sunk-bg);
+  box-shadow: var(--in-sunk);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] section.library .sampler .bar {
+  background: var(--fg);
+}
+
+/* Settings, now a popup: a plate of the chassis lifted off the face, like
+   the dialogs; its page cut in. */
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .backdrop:has(> .settings) {
+  background: rgb(0 0 0 / 0.5);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .backdrop > .settings[role='dialog'] {
+  border-radius: 18px;
+  background: linear-gradient(180deg, #333438, #2d2e32);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.09), 0 0 0 1px rgb(0 0 0 / 0.55), 0 40px 80px -16px rgb(0 0 0 / 0.7);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .backdrop > .settings[role='dialog'] > .main {
+  background: var(--in-ch);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.45), inset 0 0 0 1px rgb(0 0 0 / 0.35), 0 1px 0 var(--in-seam-light);
+}
+
+/* Controller setup: the dialog plate above; its fields cut in. */
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .backdrop > .card[role='dialog'] .field input {
+  border-radius: 8px;
+  background: var(--in-scr);
+  box-shadow: var(--well-shadow);
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .backdrop > .card[role='dialog'] .close {
+  border-radius: 8px;
+}
+:root[data-flag-dir-instrument][data-flag-dir-instrument] .backdrop > .card[role='dialog'] .close:hover {
+  background: rgb(255 255 255 / 0.06);
 }

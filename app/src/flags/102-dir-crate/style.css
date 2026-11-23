@@ -201,12 +201,13 @@
 :root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .bpm .key {
   color: var(--fg-3);
 }
-/* (#18's ending colour on the remaining time stays.) */
-:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .times .rm:not(.ending) {
+/* The times, in the record's still centre. (#18's ending colour on the
+   remaining time stays.) */
+:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .rec-cell .hub .rm:not(.ending) {
   color: var(--fg);
   letter-spacing: -0.02em;
 }
-:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .times .el {
+:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .rec-cell .hub .el {
   color: var(--fg-3);
 }
 
@@ -951,6 +952,177 @@
   background: var(--fg-3);
 }
 
+/* ── Upstream's new UI (merge of main) ─────────────────────────────── */
+
+/* The record. The vinyl takes the deck's white on a near-black mat; the
+   disc stands on the plate with the plate's own short hard shadow, no
+   soft glow. */
+:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] {
+  --record-mat: #0a0a0b;
+}
+:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region='deck0'] {
+  --record-tint: 196, 214, 236;
+  --record-high: 238, 242, 246;
+}
+:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region='deck1'] {
+  --record-tint: 232, 214, 188;
+  --record-high: 246, 240, 230;
+}
+:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .rec-cell .disc {
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.6), 0 1px 0 1px rgb(0 0 0 / 0.35), 0 12px 24px -8px rgb(0 0 0 / 0.85);
+}
+:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .rec-cell .sheen {
+  opacity: 0.6;
+}
+/* The centre: a key set on the record, lit along its top edge, solid (no
+   blur). Whichever time is big (remaining unless #40's click swapped it)
+   leads in paper white; the other steps down. Sizes in em off the
+   centre's own size. */
+:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .rec-cell .hub {
+  background: var(--rm-key-fill);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: inset 0 1px 0 var(--rm-lit-key), inset 0 -1px 0 rgb(0 0 0 / 0.3), 0 0 0 1px rgb(0 0 0 / 0.55), 0 3px 8px -2px rgb(0 0 0 / 0.6);
+}
+:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .rec-cell .hub:not([data-big='elapsed']) .rm,
+:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .rec-cell .hub[data-big='elapsed'] .el {
+  font-size: 1.6em;
+  font-weight: 300;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+}
+:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .rec-cell .hub:not([data-big='elapsed']) .el,
+:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .rec-cell .hub[data-big='elapsed'] .rm {
+  font-size: 0.95em;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .rec-cell .hub:not([data-big='elapsed']) .rm:not(.ending),
+:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .rec-cell .hub[data-big='elapsed'] .el {
+  color: var(--fg);
+}
+:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .rec-cell .hub:not([data-big='elapsed']) .el,
+:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .rec-cell .hub[data-big='elapsed'] .rm:not(.ending) {
+  color: var(--fg-3);
+}
+:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .rec-cell .hub:not([data-big='elapsed']) .rm {
+  order: -1;
+}
+:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .rec-cell .hub .t {
+  color: var(--fg-3);
+}
+:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .rec-cell .hub.empty :is(.el, .rm) {
+  color: var(--fg-4);
+}
+:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .rec-cell .hub[role='button']:hover {
+  background: var(--rm-key-fill-hi);
+}
+:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate][data-input='keys'] [data-region^='deck'] .rec-cell .hub:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+/* The tonearm: its pivot a dial cap in the keys' tone, a paper cap. */
+:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .rec-cell .pivot {
+  background:
+    radial-gradient(circle, #19191b 36%, transparent 39%),
+    radial-gradient(circle closest-side, var(--rm-key-hi) 0 80%, var(--rm-key-2) 84%);
+  box-shadow: inset 0 1px 0 var(--rm-lit-key), 0 0 0 1px rgb(0 0 0 / 0.55), 0 3px 8px -2px rgb(0 0 0 / 0.6);
+}
+:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .rec-cell .cap {
+  background: var(--rm-paper);
+}
+
+/* The key: quiet text that opens a menu; hovered, a key stands up under
+   it and the label comes up to paper. */
+:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .bpm .key {
+  border-radius: 6px;
+}
+:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .bpm .key:hover,
+:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .bpm .key[aria-expanded='true'] {
+  background: var(--rm-key-fill);
+  box-shadow: var(--rm-key-edge);
+  color: var(--fg);
+}
+:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate][data-input='keys'] [data-region^='deck'] .bpm .key:focus-visible {
+  outline: 2px solid var(--focus-ring);
+}
+
+/* The Grid tab: labels on the plate; hovered, a key stands up. */
+:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .strip .grid button {
+  color: var(--fg-2);
+}
+:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .strip .grid button:hover:not([aria-disabled='true']) {
+  background: var(--rm-key-fill);
+  box-shadow: var(--rm-key-edge);
+  color: var(--fg);
+}
+
+/* Library toolbar: Fits and Filter latch down, their label in paper. */
+:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] section.library .chip.on,
+:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] section.library .chip.on:hover {
+  background: var(--rm-on-fill);
+  box-shadow: var(--rm-on-edge);
+  color: var(--fg);
+}
+:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] section.library .chip .chip-val {
+  color: var(--fg-2);
+}
+/* The filter popover: the menus' plate; its fields wells, a chosen key
+   latched down. */
+:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] section.library .panel {
+  border-radius: 12px;
+  background: #202022;
+  border: 0;
+  box-shadow: inset 0 1px 0 rgb(255 252 246 / 0.08), 0 0 0 1px rgb(0 0 0 / 0.5), 0 14px 32px -8px rgb(0 0 0 / 0.65);
+}
+:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] section.library .panel input {
+  background: var(--rm-well);
+  box-shadow: var(--rm-cut);
+  border: 0;
+}
+:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] section.library .panel .kc {
+  background: var(--rm-key-fill);
+  box-shadow: var(--rm-key-edge);
+  color: var(--fg-2);
+}
+:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] section.library .panel .kc:hover {
+  background: var(--rm-key-fill-hi);
+  color: var(--fg);
+}
+:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] section.library .panel .kc.on {
+  background: var(--rm-on-fill);
+  box-shadow: var(--rm-on-edge);
+  color: var(--fg);
+}
+/* The sampler row: an empty slot a well, a loaded one a key, a playing
+   one latched down. */
+:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] section.library .sampler .slot {
+  background: var(--rm-well);
+  box-shadow: var(--rm-cut);
+}
+:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] section.library .sampler .slot.set {
+  background: var(--rm-key-fill);
+  box-shadow: var(--rm-key-edge);
+  color: var(--fg-2);
+}
+:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] section.library .sampler .slot.set:hover {
+  background: var(--rm-key-fill-hi);
+  color: var(--fg);
+}
+:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] section.library .sampler .slot.playing {
+  background: var(--rm-on-fill);
+  box-shadow: var(--rm-on-edge);
+  color: var(--fg);
+}
+/* Settings, now a popup: the nearest plate over one even dim, no blur. */
+:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] .backdrop:has(> .settings) {
+  background: rgb(6 5 4 / 0.62);
+}
+:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] .backdrop > .settings {
+  background: linear-gradient(180deg, #1b1b1d, #171719);
+  box-shadow: inset 0 1px 0 rgb(255 252 246 / 0.09), 0 0 0 1px rgb(0 0 0 / 0.6), 0 24px 60px -12px rgb(0 0 0 / 0.75);
+}
+
 
 /* ══ The console mixer (both directions) ════════════════════════════════
 
@@ -1019,8 +1191,8 @@
 
 /* ══ Layout: Crate ══════════════════════════════════════════════════════
 
-   The window, top to bottom: the library (the main place, roomy), its
-   handle, the sampler when it's open, then the strip under your hands:
+   The window, top to bottom: the library (the main place, roomy, with
+   the sampler as a row in it), its handle, then the strip under your hands:
    both scrolling lanes, and deck, mixer, deck. The handle still trades
    room between the library and the strip (dragging it up grows the
    lanes). */
@@ -1035,10 +1207,6 @@
   grid-template-rows: minmax(200px, 1fr) var(--gap) var(--cr-lanes) var(--cr-strip);
   grid-template-areas: 'lib' 'split' 'waves' 'decks';
 }
-:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] .app.sampling {
-  grid-template-rows: minmax(180px, 1fr) var(--gap) var(--sampler) var(--cr-lanes) var(--cr-strip);
-  grid-template-areas: 'lib' 'split' 'samp' 'waves' 'decks';
-}
 :root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] .app > .below {
   grid-area: lib;
 }
@@ -1050,10 +1218,6 @@
 }
 :root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] .app > .decks {
   grid-area: decks;
-}
-:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] .app > .sampler {
-  grid-area: samp;
-  margin-bottom: var(--gap);
 }
 :root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] .app > .grip:not(.side) {
   display: none;
@@ -1076,24 +1240,48 @@
   padding: 14px 16px;
   gap: 16px;
 }
-/* The deck: title over artist and tempo over key on the top line; the
-   overview with the time remaining beside it (the time it shows); then
-   the tabs, the mode row and the transport. */
-:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .body {
-  grid-template-columns: minmax(0, 1fr) auto;
-  grid-template-rows: auto 40px minmax(0, 1fr) auto;
-  grid-template-areas: 'head head' 'ov times' 'mp mp' 'tr tr';
+/* The deck: the record at its outer edge, with the time in its centre;
+   beside it the title over the artist and the tempo over the key, and
+   under them the overview; then the tabs, the mode row and the transport
+   across the deck. The record spans the title and overview rows. (These
+   hold at any deck width, so the deck's own narrow layout doesn't apply.) */
+:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .body,
+:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'].mirror .body {
+  --rec: 90px;
+  grid-template-rows: minmax(40px, auto) 40px minmax(0, 1fr) auto;
   gap: 10px 14px;
+}
+:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .body {
+  grid-template-columns: var(--rec) minmax(0, 1fr) auto;
+  grid-template-areas: 'rec head bpm' 'rec ov ov' 'mp mp mp' 'tr tr tr';
+}
+:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'].mirror .body {
+  grid-template-columns: auto minmax(0, 1fr) var(--rec);
+  grid-template-areas: 'bpm head rec' 'ov ov rec' 'mp mp mp' 'tr tr tr';
+}
+:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .body > .rec-cell {
+  grid-area: rec;
+  height: auto;
+  align-self: center;
 }
 :root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .body > header {
   grid-area: head;
+  align-self: center;
+}
+:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .body > .bpm {
+  grid-area: bpm;
+  align-self: center;
+  justify-items: end;
+}
+:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'].mirror .body > .bpm {
+  justify-items: start;
+}
+:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'].mirror .body > header {
+  text-align: right;
 }
 :root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .body > .overview {
   grid-area: ov;
-}
-:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .body > .times {
-  grid-area: times;
-  align-self: center;
+  margin: 0;
 }
 :root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .body > .mp {
   grid-area: mp;
@@ -1104,55 +1292,30 @@
 :root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] header .name {
   line-height: 20px;
 }
-:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] header .bpm .big {
+:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .bpm .big {
   font-size: var(--t-lg);
   line-height: 20px;
 }
-:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] header .bpm .unit {
+:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .bpm .unit {
   line-height: 16px;
-}
-:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .times {
-  display: flex;
-  flex-direction: column-reverse;
-  align-items: flex-end;
-  justify-content: flex-end;
-}
-:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .times > span {
-  text-align: right;
-}
-/* Whichever time is big (remaining unless #40's click swapped it) leads
-   in full white; the other steps down. #18's ending colour on the
-   remaining time is left alone. */
-:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .times:not([data-big='elapsed']) .rm,
-:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .times[data-big='elapsed'] .el {
-  font-size: var(--t-lg);
-  font-weight: 300;
-  line-height: 20px;
-  letter-spacing: -0.03em;
-}
-:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .times:not([data-big='elapsed']) .rm:not(.ending),
-:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .times[data-big='elapsed'] .el {
-  color: var(--fg);
-}
-:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .times:not([data-big='elapsed']) .el,
-:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .times[data-big='elapsed'] .rm {
-  font-size: var(--t-xs);
-  font-weight: 400;
-  line-height: 16px;
-  letter-spacing: 0;
-}
-:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .times:not([data-big='elapsed']) .el,
-:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .times[data-big='elapsed'] .rm:not(.ending) {
-  color: var(--fg-3);
-}
-:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .times[data-big='elapsed'] {
-  flex-direction: column;
-}
-:root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .times[data-big]:hover :is(.el, .rm:not(.ending)) {
-  color: var(--fg);
 }
 :root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .mp {
   gap: 6px;
+}
+/* A narrow deck (a small window): a smaller record and tempo, and the
+   title without the artist, so the title keeps some room. */
+@container (max-width: 420px) {
+  :root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .body,
+  :root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'].mirror .body {
+    --rec: 76px;
+    column-gap: 10px;
+  }
+  :root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] .bpm .big {
+    font-size: var(--t-md);
+  }
+  :root[data-flag-dir-crate][data-flag-dir-crate][data-flag-dir-crate] [data-region^='deck'] header .artist {
+    display: none;
+  }
 }
 
 

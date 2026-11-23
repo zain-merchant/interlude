@@ -152,7 +152,7 @@
 :root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .bd i {
   display: none !important;
 }
-:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] :is(.glass, .decks > section, section.library, .settings, .sampler) {
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] :is(.glass, .decks > section, section.library, .settings) {
   background: var(--f-paper) !important;
   -webkit-backdrop-filter: none !important;
   backdrop-filter: none !important;
@@ -355,58 +355,55 @@
 :root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .bpm .big {
   font-size: var(--f-bpm) !important;
 }
-:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .times[data-big='remaining'] .rm,
-:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .times[data-big='elapsed'] .el,
-:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .times:not([data-big]) .el {
-  font-size: var(--f-num) !important;
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .rec-cell .hub[data-big='remaining'] .rm,
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .rec-cell .hub[data-big='elapsed'] .el,
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .rec-cell .hub:not([data-big]) .el {
+  font-size: 1.55em !important;
 }
 :root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .bpm .big,
-:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .times[data-big='remaining'] .rm,
-:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .times[data-big='elapsed'] .el,
-:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .times:not([data-big]) .el {
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .rec-cell .hub[data-big='remaining'] .rm,
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .rec-cell .hub[data-big='elapsed'] .el,
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .rec-cell .hub:not([data-big]) .el {
   font-weight: 600 !important;
   letter-spacing: -0.04em !important;
   line-height: 1 !important;
 }
 :root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .bpm .big,
-:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .times .num:not(.ending) {
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .rec-cell .hub .num:not(.ending) {
   color: var(--fg) !important;
 }
 :root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .bpm .big .frac,
-:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .times .num:not(.ending) .t {
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .rec-cell .hub .num:not(.ending) .t {
   color: color-mix(in srgb, var(--sheet-ink) 62%, transparent) !important;
 }
 /* A track playing out: the time in red ink. */
-:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .times .ending,
-:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .times .ending .t {
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .rec-cell .hub .ending,
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .rec-cell .hub .ending .t {
   color: #b42416 !important;
 }
-:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .times .ending .t {
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .rec-cell .hub .ending .t {
   opacity: 0.6;
 }
-:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck']:has(header .name.dim) :is(.bpm .big, .times .num, .times .t) {
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck']:has(header .name.dim) :is(.bpm .big, .rec-cell .hub .num, .rec-cell .hub .t) {
   color: var(--fg-4) !important;
 }
 :root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck']:has(header .name.dim) .bpm .big {
   font-weight: 500 !important;
 }
-:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .times[data-big='remaining'] .el,
-:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .times[data-big='elapsed'] .rm,
-:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .times:not([data-big]) .rm {
-  font-size: var(--t-sm) !important;
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .rec-cell .hub[data-big='remaining'] .el,
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .rec-cell .hub[data-big='elapsed'] .rm,
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .rec-cell .hub:not([data-big]) .rm {
+  font-size: 0.95em !important;
   font-weight: 500 !important;
   letter-spacing: 0 !important;
 }
-:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .times[data-big='remaining'] .el,
-:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .times[data-big='elapsed'] .rm:not(.ending),
-:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .times:not([data-big]) .rm:not(.ending) {
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .rec-cell .hub[data-big='remaining'] .el,
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .rec-cell .hub[data-big='elapsed'] .rm:not(.ending),
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .rec-cell .hub:not([data-big]) .rm:not(.ending) {
   color: var(--fg-2) !important;
 }
-:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .times :is([data-big='remaining'] .el, [data-big='elapsed'] .rm) .t {
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .rec-cell .hub :is([data-big='remaining'] .el, [data-big='elapsed'] .rm) .t {
   color: var(--fg-3) !important;
-}
-:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .times {
-  align-items: baseline !important;
 }
 :root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .bpm .unit,
 :root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .bpm .key {
@@ -1103,13 +1100,6 @@
 :root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .sampler .slot .bar {
   background: #fff !important;
 }
-:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .sampler .close {
-  color: var(--fg-2) !important;
-}
-:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .sampler .close:hover {
-  background: var(--hover) !important;
-  color: var(--fg) !important;
-}
 
 /* Drop targets: ink outlines. */
 :root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] #app [data-drop] {
@@ -1152,4 +1142,191 @@
   :root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] header .name {
     font-size: 16px !important;
   }
+}
+
+/* ---------- Upstream's new UI (merge of main) ---------- */
+/* The play head's bar number: the canvas draws its pill in --fg with
+   --ink on it, both read from body. Ink pill, white figure: --ink is white
+   at body for the canvas only; the app keeps its ink. */
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] body {
+  --ink: #fff;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] #app {
+  --ink: #15171b;
+}
+/* The record: printed in the sheet's deep ink on the sheet's deeper tone,
+   so it's a coloured disc on a coloured card, never a black one. It sits on
+   the sheet with the card's crisp short shadow. (The canvas reads these
+   only when flags change, so they don't follow the empty-deck paper.) */
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region='deck0'] {
+  --record-mat: var(--f-a-deep);
+  --record-tint: 20, 52, 89;
+  --record-high: 255, 255, 255;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region='deck1'] {
+  --record-mat: var(--f-b-deep);
+  --record-tint: 87, 48, 10;
+  --record-high: 255, 255, 255;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .rec-cell .disc {
+  box-shadow: 0 1px 0 rgb(20 22 30 / 0.16), 0 2px 0 rgb(20 22 30 / 0.05), 0 10px 18px -10px rgb(20 22 30 / 0.4) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .rec-cell .sheen {
+  opacity: 0.8;
+}
+/* The centre: a white card label, the times in ink as on the sheet. */
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .rec-cell .hub {
+  background: var(--f-tile) !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  box-shadow: var(--f-tile-edge) !important;
+  --sheet-ink: var(--f-ink);
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .rec-cell .hub[role='button']:hover {
+  box-shadow: var(--f-tile-hover) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field][data-input='keys'] [data-region^='deck'] .rec-cell .hub:focus-visible {
+  outline: 2px solid var(--f-focus);
+  outline-offset: 2px;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .rec-cell .hub .rm:not(.ending),
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .rec-cell .hub .el:not(.ending) {
+  font-variant-numeric: tabular-nums;
+}
+/* The tonearm: a white tile for the pivot, an ink cap, a soft paper shadow. */
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .rec-cell .pivot {
+  background: radial-gradient(circle, var(--f-ink) 0 26%, transparent 29%), var(--f-tile) !important;
+  box-shadow: var(--f-tile-edge) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .rec-cell .cap {
+  background: var(--f-ink) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .rec-cell .swing {
+  filter: drop-shadow(0 calc(5px * var(--s)) calc(4px * var(--s)) rgb(20 22 30 / 0.28)) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .rec-cell .tonearm.down .swing {
+  filter: drop-shadow(0 calc(2px * var(--s)) calc(1.5px * var(--s)) rgb(20 22 30 / 0.32)) !important;
+}
+
+/* The key: ink text that opens a menu; hovered, it stands up as a tile. */
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .bpm .key {
+  border-radius: 5px !important;
+  padding: 1px 4px 1px 6px !important;
+  margin: 0 -4px 0 -6px !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .bpm .key:hover,
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .bpm .key[aria-expanded='true'] {
+  background: var(--f-tile) !important;
+  box-shadow: var(--f-tile-edge) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .bpm .key svg {
+  opacity: 1 !important;
+  stroke-width: 1.8 !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .bpm .key .ks {
+  color: var(--fg) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field][data-input='keys'] [data-region^='deck'] .bpm .key:focus-visible {
+  outline: 2px solid var(--f-focus) !important;
+}
+
+/* The Grid tab: keys on the sheet, as the loop row's. */
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .strip .grid button {
+  border-radius: 6px !important;
+  color: var(--fg) !important;
+  font-weight: 500 !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .strip .grid button:hover:not([aria-disabled='true']) {
+  background: rgb(255 255 255 / 0.32) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] [data-region^='deck'] .strip .grid button[aria-disabled='true'] {
+  opacity: 1 !important;
+  color: var(--fg-4) !important;
+}
+
+/* Library toolbar: Fits and Filter are tiles; on, ink. The filter's
+   value reads in the tile's own light ink. */
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] section.library .chip.on,
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] section.library .chip.on:hover {
+  background: var(--f-ink) !important;
+  box-shadow: var(--f-on-edge) !important;
+  color: #fff !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] section.library .chip.on .chip-val {
+  color: rgb(255 255 255 / 0.66) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] section.library .filter .clear {
+  color: var(--fg-3) !important;
+  border-radius: 4px !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] section.library .filter .clear:hover {
+  color: var(--fg) !important;
+  background: var(--hover) !important;
+}
+/* The filter popover: a white float; key chips are tiles in a well, on is ink. */
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] section.library .panel {
+  background: #fff !important;
+  box-shadow: var(--f-float-edge) !important;
+  border: 0 !important;
+  border-radius: 10px !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] section.library .panel .ph {
+  color: var(--fg-3) !important;
+  font-weight: 600 !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] section.library .panel input {
+  background: rgb(20 22 30 / 0.05) !important;
+  box-shadow: var(--f-well-edge) !important;
+  border: 0 !important;
+  color: var(--fg) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] section.library .panel .kc {
+  background: var(--f-tile) !important;
+  box-shadow: var(--f-tile-edge) !important;
+  border: 0 !important;
+  color: var(--fg-2) !important;
+  font-weight: 500 !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] section.library .panel .kc:hover {
+  box-shadow: var(--f-tile-hover) !important;
+  color: var(--fg) !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] section.library .panel .kc.on {
+  background: var(--f-ink) !important;
+  box-shadow: var(--f-on-edge) !important;
+  color: #fff !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] section.library .panel .pf {
+  border-color: var(--line) !important;
+  color: var(--fg-3) !important;
+}
+/* The columns button: quiet ink, a tile when hovered. */
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] section.library .head .cols {
+  color: var(--fg-3) !important;
+  border-radius: 5px !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] section.library .head .cols:hover {
+  background: var(--f-tile) !important;
+  box-shadow: var(--f-tile-edge) !important;
+  color: var(--fg) !important;
+}
+/* The sampler is a row in the library, on its paper: no card of its own. */
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] section.library .sampler {
+  background: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] section.library .sampler .slot:not(.set) {
+  font-style: normal;
+}
+/* An empty library and no results: the offer on paper, the actions tiles. */
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] section.library .empty .hint {
+  color: var(--fg-3) !important;
+}
+
+/* Settings is a popup now: paper, floated over the dimmed table. */
+:root[data-flag-dir-field][data-flag-dir-field][data-flag-dir-field] .backdrop > .settings {
+  background: var(--f-paper) !important;
+  box-shadow: var(--f-float-edge) !important;
+  border-radius: 12px !important;
 }
