@@ -513,3 +513,67 @@ fn nothing_is_prepared_without_a_quick_copy() {
     drop(s);
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+/// What it takes is noted as it happens, and kept.
+#[test]
+fn notes_what_it_takes() {
+    let dir = std::env::temp_dir().join(format!("stems-notes-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).unwrap();
+    let file = dir.join("measured.txt");
+    let s = splitter(When::OnUse, Some(model()));
+    until("a copy", || dj_stems::quick::exists(&model()));
+    s.configure(Settings {
+        measured: Some(file.clone()),
+        ..s.settings()
+    });
+    assert_eq!(s.measured(), Default::default(), "nothing yet");
+    s.split(0, track(20.0), None);
+    settle();
+    assert_eq!(s.measured(), Default::default(), "loading one isn't work");
+    s.use_stems(0);
+    wait_ready(&s, 0);
+    let heard = s.measured().heard;
+    assert!(heard.is_some_and(|h| h > 0.0 && h < 20.0), "{heard:?}");
+    until("kept", || file.exists());
+
+    // Used again there's nothing to note, and neither is there when it was
+    // prepared first: that says how long the pointer rested.
+    let kept = std::fs::read_to_string(&file).unwrap();
+    s.use_stems(0);
+    s.split(1, track(20.0), None);
+    settle();
+    s.prepare(1, true);
+    settle();
+    s.use_stems(1);
+    wait_ready(&s, 1);
+    settle();
+    let line = |t: &str| t.lines().find(|l| l.starts_with("heard")).map(String::from);
+    assert_eq!(line(&std::fs::read_to_string(&file).unwrap()), line(&kept));
+
+    // Another launch has it at once.
+    let again = splitter(When::OnUse, None);
+    again.configure(Settings {
+        measured: Some(file),
+        ..again.settings()
+    });
+    // Kept to thousandths.
+    assert!(again
+        .measured()
+        .heard
+        .is_some_and(|h| (h - heard.unwrap()).abs() < 1e-3));
+    drop((s, again));
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+/// Stems that were made as the track loaded weren't waited for from a press.
+#[test]
+fn notes_only_a_press_that_starts_the_work() {
+    let s = splitter(When::Always, Some(model()));
+    until("a copy", || dj_stems::quick::exists(&model()));
+    s.split(0, track(20.0), None);
+    s.use_stems(0);
+    wait_ready(&s, 0);
+    settle();
+    assert_eq!(s.measured().heard, None);
+}

@@ -12,6 +12,7 @@
   import { backend } from './backend.js';
   import { stemsModel, downloadStems, cancelStems, removeStems, setStemsMode, watchStemsModel } from './stemsmodel.svelte.js';
   import { mb, percent, progressText, stemsStatus, STEMS_MODES, STEMS_OFF, STEMS_WHAT } from './stemsmodel.js';
+  import { figures, takes } from './stemsmeasured.js';
 
   /**
    * Settings open as a popup over the whole window. Performance keys keep
@@ -189,6 +190,7 @@
       stemsError = String(e);
     }
   }
+  const took = $derived(figures(stems?.measured));
   /** @param {import('./stemsmodel.js').StemsMode} mode */
   async function pickMode(mode) {
     stemsError = '';
@@ -522,11 +524,17 @@
           <section class="display">
             <h3 id="stems-mode">How stems work on {mac ? 'your Mac' : 'this computer'}</h3>
             <p>{STEMS_WHAT}</p>
+            {#if took.note}<p>{took.note}</p>{/if}
             <div role="radiogroup" aria-labelledby="stems-mode">
               {#each STEMS_MODES as m}
                 <label class="opt"><input type="radio" name="stems-mode" checked={stemsModel.mode === m.mode}
                   aria-describedby="stems-{m.mode}" onchange={() => pickMode(m.mode)} /><span>{m.name}</span></label>
-                <p id="stems-{m.mode}" class="under">{m.line}</p>
+                <div id="stems-{m.mode}" class="under">
+                  <p>{m.line}</p>
+                  <dl>
+                    {#each takes(m.mode, took.takes) as [value, label]}<div><dt>{label}</dt><dd class="num">{value}</dd></div>{/each}
+                  </dl>
+                </div>
               {/each}
               <label class="opt"><input type="radio" name="stems-mode" checked={stemsModel.mode === 'off'}
                 aria-describedby="stems-off" onchange={() => pickMode('off')} /><span>Off</span></label>
@@ -956,6 +964,25 @@
     display: flex;
     align-items: center;
     gap: 8px;
+  }
+  .under p {
+    margin: 0 0 8px;
+  }
+  .under dl {
+    margin: 0;
+  }
+  .under dl div {
+    display: grid;
+    grid-template-columns: 144px 1fr;
+    gap: 8px;
+  }
+  .under dt {
+    order: 1;
+    color: var(--fg-3);
+  }
+  .under dd {
+    margin: 0;
+    color: var(--fg-2);
   }
   .display .under {
     margin: 0 0 8px 26px;
