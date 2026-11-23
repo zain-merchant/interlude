@@ -20,5 +20,5 @@ test('special characters are plain text', () => assert.equal(ids('(.*'), ''));
 test('marks keep the text whole', () => {
   const m = marks('Clear hot cue 1', 'CUE hot');
   assert.equal(m.map((x) => x.s).join(''), 'Clear hot cue 1');
-  assert.deepEqual(m.filter((x) => x.hit).map((x) => x.s), ['hot', 'cue']);
+  assert.deepEqual(m.filter((x) => x.hit).map((x) => x.s), ['hot cue']);
 });

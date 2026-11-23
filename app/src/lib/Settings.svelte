@@ -941,9 +941,13 @@
           <h3>Interface size</h3>
           <p>{#if flag('settings-copy')}Scales text and controls alike; {keyLabel('view.uiZoomIn')} and {keyLabel('view.uiZoomOut')} work from anywhere.{:else}Scales everything, text and controls alike. {keyLabel('view.uiZoomIn')} and {keyLabel('view.uiZoomOut')} do the same from anywhere.{/if}</p>
           <div class="size" role="group" aria-label="Interface size">
+            {#snippet stepper()}
             <button class="btn sm" onclick={() => stepUiZoom(-1)} disabled={uiZoom.scale <= uiZoomSteps[0]} aria-label="Smaller">−</button>
             <span class="num" aria-live="polite">{pct(uiZoom.scale)}</span>
             <button class="btn sm" onclick={() => stepUiZoom(1)} disabled={uiZoom.scale >= uiZoomSteps.at(-1)} aria-label="Bigger">+</button>
+            {/snippet}
+            <!-- #116 (UI audit flag): settings-finish: one cut holds the three. -->
+            {#if finish}<div class="sstep">{@render stepper()}</div>{:else}{@render stepper()}{/if}
             <button class="btn sm" onclick={() => setUiZoom(1)} disabled={uiZoom.scale === 1}>{flag('settings-copy') ? 'Reset to 100%' : 'Actual size'}</button>
           </div>
         </section>

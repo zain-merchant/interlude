@@ -49,7 +49,7 @@
   padding: 0 8px;
   border-radius: var(--r);
   background: var(--rg-grooves, none), var(--rg-well, var(--bg));
-  box-shadow: inset 0 1px 0 rgb(0 0 0 / 0.9), inset 0 0 0 0 rgb(0 0 0 / 0), 0 1px 0 rgb(255 255 255 / 0.09);
+  box-shadow: var(--rg-well-edge, inset 0 0 0 1px var(--line-2));
   position: relative;
   color: var(--fg-3);
   cursor: text;
@@ -188,50 +188,76 @@
 :root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .size {
   gap: 12px;
 }
-/* The interface size is a stepper: a cut with a rule each side of its
-   figure, as minus and plus are everywhere in 110. */
-:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .size[role='group'] {
-  gap: 0;
-}
-:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .size[role='group'] > :is(.btn:nth-child(1), .num, .btn:nth-child(3)) {
-  box-sizing: border-box;
+/* The interface size is 110's stepper: one cut, an end each side of the
+   amount, short etched rules between, a shape under the pointer. */
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .sstep {
+  display: grid;
+  grid-template-columns: 32px 64px 32px;
+  overflow: hidden;
   height: 32px;
+  border-radius: var(--r);
+  background: var(--rg-grooves), var(--rg-well);
+  box-shadow: var(--tt-cut);
+}
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .sstep > .btn,
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .sstep > .btn:is(:hover, :active, :disabled) {
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  height: 100%;
+  padding: 0;
   border-radius: 0;
-  background: var(--rg-well) !important;
-  box-shadow: inset 0 1px 0 rgb(0 0 0 / 0.9), 0 1px 0 rgb(255 255 255 / 0.09) !important;
-  color: var(--fg-2);
+  background: none !important;
+  box-shadow: none !important;
 }
-:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .size[role='group'] > .btn:nth-child(1) {
-  border-radius: 8px 0 0 8px;
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .sstep > .btn:first-child {
+  border-radius: var(--r) 0 0 var(--r);
 }
-:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .size[role='group'] > .btn:nth-child(3) {
-  border-radius: 0 8px 8px 0;
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .sstep > .btn:last-child {
+  border-radius: 0 var(--r) var(--r) 0;
 }
-:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .size[role='group'] > .btn:is(:nth-child(1), :nth-child(3)):hover:not(:disabled) {
-  color: var(--fg);
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .sstep > .btn::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 3px;
+  border-radius: calc(var(--r) - 3px);
+  background: var(--tt-sheen), var(--rg-key);
+  box-shadow: inset 0 1px 0 0 rgb(255 255 255 / 0.095), 0 1px 0 0 var(--tt-rim), 0 2px 5px -1px var(--tt-lift-c);
+  opacity: 0;
+  scale: 0.92;
+  pointer-events: none;
+  transition: opacity 140ms ease-out, scale 140ms ease-out;
 }
-:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .size[role='group'] > .num {
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .sstep > .btn:hover:not(:disabled)::after {
+  opacity: 1;
+  scale: 1;
+}
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .sstep > .btn:active:not(:disabled)::after {
+  background: var(--rg-down);
+  box-shadow: inset 0 1px 0 0 var(--tt-c1), 0 1px 0 0 var(--tt-c3);
+}
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .sstep > .num {
   position: relative;
   display: grid;
   place-items: center;
-  width: 64px;
+  width: auto;
+  height: auto;
+  color: var(--fg-2);
+  font-weight: 500;
 }
-:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .size[role='group'] > .num::before,
-:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .size[role='group'] > .num::after {
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .sstep > .num::before,
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .sstep > .num::after {
   content: '';
   position: absolute;
-  top: 9px;
-  left: 0;
-  width: 1px;
+  inset: 0 auto 0 -1px;
+  width: 2px;
   height: 14px;
-  background: rgb(255 255 255 / 0.09);
+  margin: auto 0;
+  background: linear-gradient(90deg, #000 50%, rgb(255 255 255 / 0.13) 50%);
 }
-:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .size[role='group'] > .num::after {
-  right: 0;
-  left: auto;
-}
-:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .size[role='group'] > .btn:last-child {
-  margin-left: 12px;
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .sstep > .num::after {
+  inset: 0 -1px 0 auto;
 }
 /* Rows sit on the same etched rules as the app's lists; the last has none. */
 :root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .row {
@@ -404,6 +430,7 @@
 :root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .sresult .p {
   flex: none;
   width: 80px;
+  text-align: right;
   color: var(--fg-3);
   font-size: 12px;
 }

@@ -1,4 +1,5 @@
-// #116 (UI audit flag; an opt-in proposal on 110): Settings, finished.
+// #116 (UI audit flag; a proposal on 110, on by default for now so it can be
+// judged): Settings, finished.
 //
 // Most of the polish already reached Settings (#02, #15, #31 to #37 and
 // 110's keys, menus, checkboxes, selection and focus). This is the rest:
@@ -13,14 +14,14 @@ export default {
   n: 116,
   title: 'Settings: search, separate keys, corners that nest',
   group: 'Shell',
-  byDefault: false,
+  byDefault: true, // while it's being judged; off again once it's decided
   notes:
     'style.css; Keys.svelte draws a shortcut as caps; find.js is the index and the matching; Search.svelte the field and Results.svelte its list. Hooks: Settings.svelte (the field, the results, the keys, the stems wording, Cmd+F and Esc). A controller’s own mapping file isn’t known to the screen, so only the actions MIDI learn offers and the ones you taught it can be found.',
 };
 
 /** Show me: Settings, Keyboard. */
 export const show = {
-  about: 'Settings gets a search for any setting, shortcut or mapping, shortcuts drawn as separate keys, and corners that nest.',
+  about: 'On by default for now. Settings gets a search for any setting, shortcut or mapping, shortcuts drawn as separate keys, and corners that nest.',
   before: 'No way to search. Each shortcut is one wide key, and the page’s corner is rounder than the window’s round it.',
   after: 'Search is at the top of the list (Cmd+F). Each key is its own, and every corner follows the one outside it.',
   async setup(app) {

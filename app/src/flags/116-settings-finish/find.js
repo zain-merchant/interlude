@@ -38,5 +38,16 @@ export function marks(text, query) {
   const ws = wordsOf(query).sort((a, b) => b.length - a.length);
   if (!ws.length) return [{ s: text, hit: false }];
   const re = new RegExp(`(${ws.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`, 'ig');
-  return text.split(re).filter(Boolean).map((s) => ({ s, hit: ws.includes(s.toLowerCase()) }));
+  const out = [];
+  for (const s of text.split(re).filter(Boolean)) {
+    const hit = ws.includes(s.toLowerCase());
+    const last = out.at(-1);
+    // Words that follow on are one mark, the space between them too.
+    if (hit && last?.hit) last.s += s;
+    else if (hit && out.length > 1 && !last.s.trim() && out.at(-2).hit) {
+      out.pop();
+      out.at(-1).s += last.s + s;
+    } else out.push({ s, hit });
+  }
+  return out;
 }
