@@ -5,11 +5,13 @@
 // when it's lost, controllers only show in Settings, and a stems download
 // only shows on its Settings page.
 //
-// `place` picks where the controller, the output and Settings sit:
-//   library   in the library's toolbar, windowed and full screen alike
-//   titlebar  in the strip above the waveforms, so the two can be compared
-// Never both. Analyzing and the stems download go with them: by the track
-// count in the library, at the strip's other end in the title bar.
+// `place` picks where the controller, the output, Settings and what's being
+// worked on sit:
+//   both      in both, to compare (the owner asked for this for now)
+//   library   in the library's toolbar: the items right before Sampler
+//   titlebar  at the right of the strip above the waveforms
+// Sampler and Settings keep their places in the toolbar, at its right end;
+// only the title bar alone takes Settings out of it.
 //
 // Nothing here needs Rust. controllers() is asked every two seconds while
 // the window is showing (the engine itself rescans every two seconds), as
@@ -25,16 +27,17 @@ export default {
     place: {
       type: 'choice',
       label: 'Where',
-      default: 'library',
+      default: 'both',
       recommended: 'library',
       options: [
-        ['library', "Library's toolbar", 'The same place windowed and full screen. Nothing in the title bar.'],
-        ['titlebar', 'Title bar', 'In the strip, beside the window buttons. Full screen hides those buttons, so the strip then starts with a gap.'],
+        ['both', 'Both', 'In both places at once, to compare them.'],
+        ['library', "Library's toolbar", 'Before Sampler, the same place windowed and full screen.'],
+        ['titlebar', 'Title bar', 'At the right of the strip above the waveforms. The Mac can cover it in full screen.'],
       ],
     },
   },
   notes:
-    'Status.svelte is the two items (one when the controller is the output) and their popover; Activity.svelte is the stems download by the track count. connections.svelte.js holds what they show. Hooks: Library.svelte (Activity after the count, Status before Settings), App.svelte (Status in the title bar; which windows its links open). The toolbar gives way in this order: the search field to 200px, "analyzing", Sampler\'s label, the two names to 92px, the search field to 160px, the names to icons, the count.',
+    'Status.svelte is the two items (one when the controller is the output) and their popover; Activity.svelte is the stems download by the track count. connections.svelte.js holds what they show. Hooks: Library.svelte (Activity after the count, Status before Settings), App.svelte (Status in the title bar; which windows its links open). The toolbar gives way in this order: the search field to 200px, "analyzing", Sampler\'s label, the two names to 92px, the search field to 160px, analyzing, the names to icons, the count.',
 };
 
 /** Show me: the popover open, and the items. */

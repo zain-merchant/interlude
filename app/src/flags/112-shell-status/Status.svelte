@@ -1,15 +1,16 @@
 <script>
   // The controller and the output, beside Settings; a click opens one menu
-  // for both. In the title bar, beside the window's buttons, it brings
-  // Settings and what's being worked on with it.
+  // for both. In the title bar it brings Settings and what's being
+  // worked on with it.
   import { onMount, tick } from 'svelte';
   import { backend } from '../../lib/backend.js';
   import { engine } from '../../lib/engine.svelte.js';
   import { tip, tipText } from '../../lib/tooltip.svelte.js';
   import { keyLabel } from '../../lib/commands.js';
   import Activity from './Activity.svelte';
-  import { conn, items, open as go, unmapped, watchConnections, refresh } from './connections.svelte.js';
+  import { conn, items, menu, open as go, unmapped, watchConnections, refresh } from './connections.svelte.js';
 
+  const uid = $props.id();
   /** @type {{ bar?: boolean }} `bar`: in the title bar, rather than the library's toolbar */
   let { bar = false } = $props();
 
@@ -32,7 +33,7 @@
 
   // The library toolbar gives way a step at a time until it fits (style.css
   // says what each step drops); the search field has already narrowed.
-  const STEPS = 6;
+  const STEPS = 7;
   $effect(() => {
     if (bar || !root) return;
     const toolbar = /** @type {HTMLElement} */ (root.parentElement);
@@ -62,6 +63,8 @@
 
   async function toggle(e) {
     if (shown) return close();
+    menu.close?.(false);
+    menu.close = close;
     shown = e.currentTarget;
     error = '';
     asked = undefined;
@@ -74,9 +77,10 @@
   function close(back = true) {
     const b = shown;
     shown = null;
+    if (menu.close === close) menu.close = null;
     if (back) b?.focus();
   }
-  // Under the item, its right edge on the item's (in the title bar, its left), or over it with no room
+  // Under the item, its right edge on the item's, or over it with no room
   // below. It stays on the side it opened on, whatever its rows then do.
   let over = false;
   function place(opening = false) {
@@ -89,7 +93,7 @@
     const end = innerHeight / k - 12;
     if (opening) over = below + h > end && r.top / k > end - below;
     at = {
-      left: Math.max(12, Math.min(innerWidth / k - w - 12, bar ? r.left / k : r.right / k - w)),
+      left: Math.max(12, Math.min(innerWidth / k - w - 12, r.right / k - w)),
       top: Math.max(12, over ? r.top / k - 4 - h : Math.min(below, end - h)),
     };
   }
@@ -162,29 +166,29 @@
   {:else if n === 'outx'}<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 6.2h2.2L7.4 3.4v9.2L4.2 9.8H2zM10.2 6.2l3.6 3.6M13.8 6.2l-3.6 3.6" /></svg>{/if}
 {/snippet}
 
-<div class="shell" class:bar data-tauri-drag-region={bar ? 'deep' : undefined} role="group" aria-label="Connections" bind:this={root}>
-  {#if bar}
-    <button class="st cog" aria-label="Settings" onclick={() => go.settings('keyboard')} use:tip={() => tipText('Settings', keyLabel('app.settings'))}>
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915" /><circle cx="12" cy="12" r="3" /></svg>
-    </button>
-  {/if}
+<div class="shell" class:bar data-tauri-drag-region={bar ? 'deep' : undefined} role="group" aria-label={bar ? 'Connections, title bar' : 'Connections'} bind:this={root}>
+  {#if bar}<Activity bar />{/if}
   {#each list as it (it.kind)}
     <button class="st" class:bad={it.state === 'bad'} class:open={!!shown && shown.dataset.kind === it.kind} data-kind={it.kind} aria-haspopup="dialog" aria-expanded={!!shown && shown.dataset.kind === it.kind}
       aria-label="{it.name}, {said[it.kind]}" onclick={toggle} use:tip={() => (shown ? '' : tipText(it.name, '', said[it.kind]))}>
       {@render icon(it.icon)}<span class="nm">{it.name}</span><svg class="cv" viewBox="0 0 10 10" aria-hidden="true"><path d="M2.5 4 5 6.5 7.5 4" /></svg>
     </button>
   {/each}
-  {#if bar}<Activity bar />{/if}
+  {#if bar}
+    <button class="st cog" aria-label="Settings" onclick={() => go.settings('keyboard')} use:tip={() => tipText('Settings', keyLabel('app.settings'))}>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915" /><circle cx="12" cy="12" r="3" /></svg>
+    </button>
+  {/if}
 </div>
 
 {#if shown}
   <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
   <div class="shell-pop" role="dialog" aria-label="Connections" tabindex="-1" bind:this={pop} use:portal onkeydown={key} style:left="{at.left}px" style:top="{at.top}px">
-    <h6 id="sp-out">Output</h6>
-    <div role="group" aria-labelledby="sp-out">
+    <h6 id="{uid}-out">Output</h6>
+    <div role="group" aria-labelledby="{uid}-out">
       {#each [null, ...(outputs?.devices ?? [])] as d}
         {@const on = !!outputs && outputs.choice === d}
-        <button class="rw" aria-pressed={on} disabled={busy} onclick={() => pick(d)}>
+        <button class="rw" aria-pressed={on} aria-disabled={busy || undefined} onclick={() => pick(d)}>
           <i>{#if on}<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 6.4 4.8 9 10 3.4" /></svg>{/if}</i>
           <span>{d ?? 'Automatic'}</span>
           {#if asked !== undefined && asked === d}<b class="k">Switch now</b>{:else if d === null && on && dev}<small>{dev} now</small>{/if}

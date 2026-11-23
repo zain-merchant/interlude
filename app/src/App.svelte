@@ -606,7 +606,7 @@
   $effect(() => {
     if (!toastEl || !flag('declutter-toast')) return;
     const ro = new ResizeObserver(() => dockTurn++);
-    for (const sel of ['.app > .waves', '.app > .decks', 'section.library', 'section.library .bar', 'section.library .bar .filter', '.settings .main .bar']) {
+    for (const sel of ['.app > .waves', '.app > .decks', 'section.library', 'section.library .bar', 'section.library .bar .filter', 'section.library .bar .chip', 'section.library .bar .shell', '.settings .main .bar']) {
       const n = document.querySelector(sel);
       if (n) ro.observe(n);
     }
@@ -638,7 +638,8 @@
     }
     // Since upstream's Fits and Filter sit after the search field, the gap starts after them.
     const from = (document.querySelector('section.library .bar .filter') ?? document.querySelector('section.library .bar .search'))?.getBoundingClientRect();
-    const to = document.querySelector('section.library .bar .samp')?.getBoundingClientRect();
+    // #112 (UI audit flag): shell-status stands before Sampler.
+    const to = ((flag('shell-status') && document.querySelector('section.library .bar > .shell')) || document.querySelector('section.library .bar .samp'))?.getBoundingClientRect();
     if (!from || !to) return void (toastDock = null);
     const room = (to.left - from.right) / k - 24;
     toastDock = room >= 160 ? { left: from.right / k + 12, top: (from.top + from.height / 2) / k, max: room, at: 'toolbar' } : null;
@@ -734,7 +735,7 @@
          to zoom it. -->
     <div class="drag" data-tauri-drag-region aria-hidden="true"></div>
   {/if}
-  {#if flag('shell-status') && setting('shell-status', 'place') === 'titlebar'}<Status bar />{/if}<!-- #112 (UI audit flag): shell-status -->
+  {#if flag('shell-status') && setting('shell-status', 'place') !== 'library'}<Status bar />{/if}<!-- #112 (UI audit flag): shell-status -->
   <div class="waves glass" data-region="waves" role="group" aria-label="Waveforms">
     {#each [0, 1] as deck}
       <div class="lane" style:--drop-color={deck === 0 ? 'var(--deck-a)' : 'var(--deck-b)'} class:b={deck === 1}
