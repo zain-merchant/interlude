@@ -1969,6 +1969,11 @@
   color: var(--fg-2);
   transition: background-color 140ms ease-out, color 140ms ease-out;
 }
+/* Room for the range line (shown when the range isn't the usual one), kept
+   whether or not it shows, so the fader's top never meets it. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .pitch .val {
+  margin-bottom: 12px;
+}
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .pitch .val:hover {
   background: color-mix(in oklab, #fff 4%, var(--rg-well));
   color: var(--fg);
