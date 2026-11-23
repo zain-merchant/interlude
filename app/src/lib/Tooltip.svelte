@@ -20,14 +20,19 @@
   const own = $derived(flag('tooltips') && flag('dir-room-tint'));
   const tipParts = $derived(own && tooltip.text ? read(tooltip.text) : null);
   let height = $state(0);
-  const under = $derived(!own ? tooltip.below : tooltip.below ? tooltip.bottom + 8 + height <= window.innerHeight - edge || tooltip.top - 8 - height < edge : tooltip.top - 8 - height < edge && tooltip.bottom + 8 + height <= window.innerHeight - edge);
-  const y = $derived(!own ? tooltip.y : under ? tooltip.bottom + 8 : tooltip.top - 8);
+  // The browser preview scales the interface with CSS zoom, where rects are scaled and lengths aren't; the app's webview zooms by itself.
+  const z = $derived((tooltip.visible && parseFloat(document.documentElement.style.zoom)) || 1);
+  const above = $derived(tooltip.top / z - 8 - height >= edge);
+  const fitsUnder = $derived(tooltip.bottom / z + 8 + height <= window.innerHeight / z - edge);
+  const under = $derived(!own ? tooltip.below : tooltip.below ? fitsUnder || !above : !above && fitsUnder);
+  const y = $derived(!own ? tooltip.y : under ? tooltip.bottom / z + 8 : tooltip.top / z - 8);
+  const x = $derived(!own ? left : Math.max(edge, Math.min(window.innerWidth / z - width - edge, tooltip.x / z - width / 2)));
 </script>
 
 {#if tooltip.visible && tooltip.text && (!own || tipParts)}
   <!-- #12 (UI audit flag): data-warm marks a tip that follows straight on from another (no entrance). -->
   <div class="tip" class:below={under} role="tooltip" bind:this={el} bind:clientWidth={width} bind:clientHeight={height} data-warm={flag('polish-tooltip') && tipWarm.on ? '' : undefined}
-    style:left="{left}px" style:top="{y}px">{#if tipParts}<Tip t={tipParts} />{:else}<!-- #10 (UI audit flag): the tip's parts as spans spaced apart, not joined with middle dots.
+    style:left="{x}px" style:top="{y}px">{#if tipParts}<Tip t={tipParts} />{:else}<!-- #10 (UI audit flag): the tip's parts as spans spaced apart, not joined with middle dots.
     -->{#if twoLines}<span class="l1"><span class="part"><Marks text={words[0]} /></span>{#each keycaps as k}{' '}<kbd class="key"><Marks text={k} /></kbd>{/each}</span>{' '}<span class="l2"><Marks text={rest} /></span>{:else if flag('no-dots')}{#each words as part, i}{i ? ' ' : ''}<span class="part"><Marks text={part} /></span>{/each}{#each keycaps as k}{' '}<kbd class="key"><Marks text={k} /></kbd>{/each}{:else}{tooltip.text.replaceAll(KEY_MARK, '')}{/if}{/if}</div>
 {/if}
 
