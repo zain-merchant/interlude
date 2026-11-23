@@ -1,4 +1,5 @@
 <script>
+  import { flag } from '../registry.svelte.js';
   // A shortcut as separate caps ("⇧⌘Z" is three), its marks drawn to sit
   // level with the letters.
   /** @type {{ label: string }} */
@@ -35,4 +36,4 @@
   });
 </script>
 
-<span class="kcaps" aria-hidden="true">{#each caps as c}<span class="kcap" class:word={!MARK[c] && c.length > 1}>{#if MARK[c]}<svg viewBox="0 0 16 16"><path d={MARK[c]} /></svg>{:else}<b>{c}</b>{/if}</span>{/each}</span>
+<span class="kcaps" aria-hidden="true">{#each caps as c}<span class="kcap" class:word={!MARK[c] && c.length > 1}>{#if MARK[c] && !flag('key-marks')}<svg viewBox="0 0 16 16"><path d={MARK[c]} /></svg>{:else}<b>{c}</b>{/if}</span>{/each}</span>

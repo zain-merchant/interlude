@@ -123,8 +123,8 @@ On by default (84):
 - #109 Popovers stop repeating values already on screen (`quiet-readouts`)
 - #115 Pinch to zoom the waveforms (`trackpad-zoom`)
 
-#112 (`shell-status`), #113 (`zero-states`) and #116 (`settings-finish`) are
-proposals, but on by default while the owner judges them; they go off again once that's decided.
+#112 (`shell-status`), #113 (`zero-states`), #116 (`settings-finish`) and #117
+(`key-marks`) are proposals, but on by default while the owner judges them; they go off again once that's decided.
 #112 is in both places at once; #113 and #116 only do
 anything on direction #110.
 

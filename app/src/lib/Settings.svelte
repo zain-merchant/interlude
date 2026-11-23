@@ -591,6 +591,7 @@
 <div class="settings" role="dialog" aria-modal="true" aria-label="Settings" bind:this={root} onkeydown={panelKey} tabindex="-1">
   <!-- svelte-ignore a11y_no_noninteractive_element_interactions (the arrow keys move between pages: #24 focus-after-keys) -->
   <nav aria-label="Settings pages" onkeydown={navKey}>
+    {#if finish}<div class="stitle">Settings</div>{/if}<!-- #116 (UI audit flag): settings-finish -->
     {#if finish}<Search bind:query bind:active={found} bind:input={findInput} count={results.length} onpick={() => goTo()} />{/if}<!-- #116 (UI audit flag): settings-finish -->
     <div class="h">Settings</div>
     {#each PAGES as [id, label] (id)}

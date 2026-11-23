@@ -20,9 +20,34 @@
 :root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings nav .h {
   display: none;
 }
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings nav .stitle {
+  flex: none;
+  padding: 0 8px;
+  color: var(--fg);
+}
 :root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings nav .sfind {
   flex: none;
-  margin-bottom: 28px;
+}
+/* Above: on the line of the page's own title; the list then starts a row
+   lower than the page's first line. */
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish-title='above'] .settings nav .stitle {
+  height: 32px;
+  font: 600 16px/32px var(--font);
+  letter-spacing: -0.015em;
+}
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish-title='above'] .settings nav .sfind {
+  margin: 12px 0 16px;
+}
+/* Below: a heading over the pages, as the library's sidebar has. */
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish-title='below'] .settings nav .stitle {
+  order: 1;
+  height: 26px;
+  margin: 12px 0 2px;
+  color: var(--fg-3);
+  font: 500 var(--t-xs)/26px var(--font);
+}
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish-title='below'] .settings nav :is(.item, .foot) {
+  order: 2;
 }
 :root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings nav .item {
   flex: none;
@@ -269,6 +294,47 @@
 }
 :root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .sstep > .num::after {
   inset: 0 -1px 0 auto;
+}
+/* Split: two keys with the size sunk between them. The three make one shape:
+   8 at its ends, 4 at the corners that face each other, 4 between. */
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish-step='split'] .settings .sstep {
+  grid-template-columns: 32px 64px 32px;
+  gap: 4px;
+  overflow: visible;
+  background: none;
+  box-shadow: none;
+}
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish-step='split'] .settings .sstep > .btn,
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish-step='split'] .settings .sstep > .btn:hover {
+  background: var(--tt-sheen), var(--rg-key) !important;
+  box-shadow: inset 0 1px 0 0 rgb(255 255 255 / 0.095), var(--tt-lift) !important;
+}
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish-step='split'] .settings .sstep > .btn:hover:not(:disabled) {
+  background: var(--tt-sheen), var(--rg-key-hi) !important;
+}
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish-step='split'] .settings .sstep > .btn:active:not(:disabled) {
+  background: var(--rg-down) !important;
+  box-shadow: var(--rg-down-edge) !important;
+}
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish-step='split'] .settings .sstep > .btn:disabled {
+  background: rgb(255 255 255 / 0.022) !important;
+  box-shadow: none !important;
+}
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish-step='split'] .settings .sstep > .btn:first-child {
+  border-radius: var(--r) 4px 4px var(--r);
+}
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish-step='split'] .settings .sstep > .btn:last-child {
+  border-radius: 4px var(--r) var(--r) 4px;
+}
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish-step='split'] .settings .sstep > .btn::after,
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish-step='split'] .settings .sstep > .num::before,
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish-step='split'] .settings .sstep > .num::after {
+  content: none;
+}
+:root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish-step='split'] .settings .sstep > .num {
+  border-radius: 4px;
+  background: var(--rg-grooves), var(--rg-well);
+  box-shadow: var(--tt-cut);
 }
 /* Rows sit on the same etched rules as the app's lists; the last has none. */
 :root[data-flag-dir-room-tint][data-flag-settings-finish][data-flag-settings-finish][data-flag-settings-finish] .settings .row {
