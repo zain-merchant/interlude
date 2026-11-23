@@ -9,7 +9,11 @@
 // One focus line, and one drawing for every place a track can be dropped.
 //
 // Only one direction is on at a time (only-one.svelte.js).
-if (typeof window !== 'undefined') setTimeout(() => import('./only-one.svelte.js'), 0);
+if (typeof window !== 'undefined')
+  setTimeout(() => {
+    import('./only-one.svelte.js');
+    import('./glint.svelte.js');
+  }, 0);
 
 export default {
   id: 'dir-room-tint',
@@ -50,6 +54,26 @@ export default {
         ['label', 'With a label', 'Only under the pointer, saying what dropping does.'],
       ],
     },
+    on: {
+      type: 'choice',
+      label: "A key that's on",
+      default: 'ink',
+      options: [
+        ['ink', 'Only its glyph or label', 'The key is in, and dark; its glyph or label takes the colour.'],
+        ['breath', 'A breath of colour', 'The same, with a trace of the colour in the fill.'],
+      ],
+    },
+    glint: {
+      type: 'choice',
+      label: 'Grooves under the pointer',
+      default: 'fixed',
+      options: [
+        ['fixed', 'Catch the light', 'A soft band, always in the same place.'],
+        ['follow', 'Follow the pointer', 'The band leans a little towards the pointer.'],
+        ['off', 'Nothing', 'As they were.'],
+      ],
+    },
+    light: { type: 'range', label: 'How much light', min: 1, max: 16, step: 1, default: 5, unit: '%' },
     cue: {
       type: 'choice',
       label: "Cue's colour",
