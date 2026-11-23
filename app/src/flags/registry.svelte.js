@@ -25,7 +25,17 @@
 // the panel's words for it) is for the dev-only panel, which reads it itself
 // (show/show.svelte.js), so it stays out of production builds.
 const modules = import.meta.glob('./*/index.js', { eager: true, import: 'default' });
-import.meta.glob('./*/style.css', { eager: true });
+import.meta.glob(['./*/style.css', '!./9[2-9]-dir-*/style.css', '!./10[0-8]-dir-*/style.css'], { eager: true });
+// The earlier directions' sheets are large and only one is ever on, and every
+// rule in the page costs each style change: they load when theirs is turned on.
+const lazy = import.meta.glob(['./9[2-9]-dir-*/style.css', './10[0-8]-dir-*/style.css']);
+/** @type {Record<string, () => Promise<any>>} */
+const sheetOf = {};
+for (const [path, load] of Object.entries(lazy)) {
+  const m = /^\.\/(\d+)-(.+)\/style\.css$/.exec(path);
+  if (m) sheetOf[m[2]] = load;
+}
+const loadedSheets = new Set();
 
 /** @typedef {{ id: string, n: number, title: string, group?: string, issue?: string, notes?: string, against?: string, superseded?: string, disabled?: string, byDefault?: boolean, settings?: Record<string, any> }} Flag */
 /** @type {Flag[]} */
@@ -132,6 +142,10 @@ function apply() {
   const root = document.documentElement;
   for (const f of FLAGS) {
     const on = !DISABLED.has(f.id) && !!flags.on[f.id];
+    if (on && sheetOf[f.id] && !loadedSheets.has(f.id)) {
+      loadedSheets.add(f.id);
+      sheetOf[f.id]();
+    }
     root.toggleAttribute(`data-flag-${f.id}`, on);
     for (const [k, s] of Object.entries(f.settings ?? {})) {
       const v = flags.settings[f.id][k];
