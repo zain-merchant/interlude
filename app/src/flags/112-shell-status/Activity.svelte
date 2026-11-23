@@ -11,7 +11,7 @@
 </script>
 
 {#if conn.stems}
-  <span class="count num shell-act" use:tip={() => 'The stems model, once. Tracks split when it’s in'}>
+  <span class="count num shell-act" use:tip={() => 'The stems model, a one-time download'}>
     <span class="w">Downloading stems,</span> {mb(conn.stems.done)} of {mb(conn.stems.total)} MB
     <i aria-hidden="true"><u style:transform="scaleX({conn.stems.total ? conn.stems.done / conn.stems.total : 0})"></u></i>
   </span>
