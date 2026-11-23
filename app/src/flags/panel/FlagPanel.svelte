@@ -478,7 +478,7 @@
               <h3><span>{g}</span>{#if on}<small>{on} on</small>{/if}</h3>
               <ul>
                 {#each list as f (f.id)}
-                  {@const sets = Object.entries(f.settings ?? {})}
+                  {@const sets = Object.entries(f.settings ?? {}).filter(([, s]) => !s.tuner)}
                   <li class="fp-flag" class:on={isOn(f)} data-flag={f.id}>
                     <div class="fp-flag-main">
                       <span class="fp-n">{f.n}</span>
