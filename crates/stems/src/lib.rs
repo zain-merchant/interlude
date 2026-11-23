@@ -587,6 +587,8 @@ struct Worker {
     model_generation: u64,
     /// The model a quick copy was last made of, or tried to be: once each.
     quickened: Option<PathBuf>,
+    /// How long the last region took.
+    region_secs: f64,
     /// Regions split since the model was loaded.
     since_load: u32,
     /// Watching how much memory that takes.
@@ -605,6 +607,7 @@ impl Worker {
             model: None,
             model_generation: u64::MAX,
             quickened: None,
+            region_secs: 1.5,
             since_load: 0,
             peak: None,
             wide: false,
@@ -815,7 +818,8 @@ impl Worker {
             let rate = job.track.sample_rate as f64;
             let head = (self.heads)(deck);
             let at = head.at.max(0.0) * rate;
-            let Some(k) = p.next(at, head.speed == 0.0) else {
+            let reach = p.reach(at, at + head.speed * self.region_secs * rate);
+            let Some(k) = p.next(reach, head.speed == 0.0) else {
                 continue;
             };
             let wanted = job.wanted(when);
@@ -952,6 +956,7 @@ impl Worker {
                 let Some(model) = self.model.as_mut() else {
                     return;
                 };
+                let started = Instant::now();
                 let stop = match Stop::new() {
                     Ok(s) => Arc::new(s),
                     Err(e) => return self.fail(deck, id, &e),
@@ -981,6 +986,7 @@ impl Worker {
                     // Picked again if it's wanted after all.
                     return;
                 }
+                self.region_secs = started.elapsed().as_secs_f64();
                 let out = match result {
                     Ok(out) => out,
                     Err(e) => return self.fail(deck, id, &e),
