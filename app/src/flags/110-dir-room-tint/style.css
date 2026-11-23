@@ -1161,62 +1161,121 @@
 }
 
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .waves > .lane:nth-child(1 of .lane) {
-  background: linear-gradient(90deg, var(--tt-lane-a) calc(100% - 48px), transparent);
+  background: var(--tt-lane-a);
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .waves > .lane:nth-child(2 of .lane) {
-  background: linear-gradient(90deg, var(--tt-lane-b) calc(100% - 48px), transparent);
+  background: var(--tt-lane-b);
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .decks > .mixer {
   background: linear-gradient(90deg, var(--tt-plate-a), var(--rg-plate) 30% 70%, var(--tt-plate-b));
 }
 
 /* ── The waveform window ───────────────────────────────────────────────
-   The lanes stop at the zoom control's gutter and fade at both ends, as in
-   the app itself, and nothing in the window touches its rim: 100 ran the
-   waveform under the rim and the zoom plate. */
+   The sound runs the whole width, edge to edge, with no fade at either end.
+   The window's rim is drawn outside it, so nothing is painted over the
+   waveform (100 drew it inside, and it greyed the last pixels). What stands
+   over the sound, the titles and the zoom, is inset 8px on every side, its
+   corners concentric with the window's. */
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .waves.glass {
-  padding: 4px 48px 4px 0;
+  padding: 4px 0;
+  box-shadow: 0 0 0 1px var(--rg-rim), 0 1px 0 1px var(--rg-lip);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .waves.glass::after {
+  box-shadow: none;
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .waves .lane canvas {
-  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 20px calc(100% - 20px), transparent);
-  mask-image: linear-gradient(90deg, transparent 0, #000 20px calc(100% - 20px), transparent);
+  -webkit-mask-image: none;
+  mask-image: none;
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .waves .lane:not(:has(.wave.empty)) .who {
   left: 8px;
   top: 5px;
+  border-radius: calc(var(--r-panel) - 8px);
+  background: rgb(21 21 24 / 0.97);
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.8), inset 0 1px 0 rgb(255 255 255 / 0.07), var(--tt-lift);
 }
+/* The zoom floats over the sound. It can't be a recess (there's nothing to
+   cut into), so it's a dark slab: the one pair that isn't cut in. */
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .waves .zoom {
+  top: 50%;
   right: 8px;
+  bottom: auto;
   width: 32px;
-  padding: 0;
+  height: auto;
+  padding: 2px;
   gap: 0;
-  border-radius: 8px;
-  background: rgb(0 0 0 / 0.55);
-  box-shadow: 0 1px 0 0 var(--rg-rim), 0 2px 5px -1px rgb(0 0 0 / 0.4);
+  transform: translateY(-50%);
+  flex-direction: column;
+  box-sizing: border-box;
+  border-radius: calc(var(--r-panel) - 8px);
+  background: rgb(18 18 21 / 0.97);
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.8), inset 0 1px 0 rgb(255 255 255 / 0.07);
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .waves .zoom button {
-  width: 32px;
-  height: 28px;
-  border-radius: 0;
-  --kk-rim: transparent;
-  --kk-lift: transparent;
-}
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .waves .zoom button:first-child {
-  border-radius: 8px 8px 3px 3px;
-}
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .waves .zoom button:last-child {
-  border-radius: 3px 3px 8px 8px;
+  --kk-face: transparent;
+  --kk-face-hi: rgb(255 255 255 / 0.07);
+  --kk-face-dn: rgb(255 255 255 / 0.03);
+  --kk-off: transparent;
+  width: 28px;
+  height: 22px;
+  border-radius: calc(var(--r-panel) - 10px);
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .waves .zoom span.num {
-  width: 32px;
+  width: 28px;
   min-width: 0;
-  height: 24px;
+  height: 14px;
   display: grid;
   place-items: center;
-  font-size: var(--t-xs);
+  font-size: 10px;
+  line-height: 1;
   color: var(--fg-2);
+}
+/* The other place (a setting, for a talk): the zoom on one line at the top
+   right of the window, out of the waveform. zoom.js moves it into
+   [data-zoom-slot] if a title bar offers one; until then it stands in a
+   strip of its own. Never in both: it's one element. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-zoom='bar'] .app:not(.mac-window, :has([data-zoom-slot])) {
+  --top: 32px !important;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-zoom='bar'] :is(.app > .zoom, [data-zoom-slot] .zoom) {
+  position: static;
+  display: grid;
+  grid-template-columns: 26px 34px 26px;
+  align-items: stretch;
+  gap: 0;
+  width: auto;
+  height: 22px;
+  padding: 0;
+  transform: none;
+  overflow: hidden;
+  border-radius: 7px;
   background: var(--rg-well);
-  box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.8);
+  box-shadow: var(--tt-cut);
+  color: var(--fg-2);
+  -webkit-app-region: no-drag;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-zoom='bar'] .app > .zoom {
+  position: fixed;
+  z-index: 60;
+  top: 5px;
+  right: 12px;
+  bottom: auto;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-zoom='bar'] :is(.app > .zoom, [data-zoom-slot] .zoom) button {
+  --kk-face: transparent;
+  --kk-face-hi: rgb(255 255 255 / 0.06);
+  --kk-face-dn: rgb(255 255 255 / 0.025);
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border-radius: 0;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-zoom='bar'] :is(.app > .zoom, [data-zoom-slot] .zoom) span.num {
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  font-size: 11px;
+  line-height: 1;
 }
 
 /* ── Grooves: every cavity cut into a surface ──────────────────────────
@@ -1258,107 +1317,152 @@
 }
 
 
-/* ── The keys: one state system ────────────────────────────────────────
-   A control you press is a key, and a key is in one of two places: up, or
-   down 1px into the plate. Hover only lightens its face. Held is down.
-   Latched (Sync, Key lock, the headphone cue, Rec, a killed band, FX on, a
-   playing stem, a set hot cue, a running loop, a filter that's on) stays
-   down, its face tinted and its label in its role colour. Playing is Play
-   latched with its face in the deck's colour. Disabled is flat: no relief.
+/* ── Hierarchy: raised, flat, recessed ─────────────────────────────────
+   Raised is for what you perform with and nothing else: Play, Cue and Sync,
+   the fader caps, the dials, the tab's thumb. Play leads: it's the brightest
+   face on the deck, and the only one that fills with the deck's colour.
+   Flat is everything else you press: a tone on the plate, no light on its
+   top edge, no shadow under it. Recessed is what holds something or steps
+   something: tracks, slots, fields, readouts, and every minus and plus.
+   Text is a label that happens to be clickable.
 
-   Every state has the same five shadows in the same order (inset light,
-   inset shade, inset ring, rim, lift) and a flat face colour, so each can
-   ease into the next. Per key: --on (role), --kk-face, --kk-face-in,
-   --kk-ink, --kk-ink-in, and --kk-rim and --kk-lift (transparent in a
-   group, whose outside edge the group draws). */
+   One press for all of them. Hover lightens the face. Held goes in: a dark
+   face, shaded from the top. On stays in, tinted, its label in its role
+   colour. Nothing moves: depth is drawn by shading, so a label sits on the
+   same line whatever its key is doing (v8 dropped keys by 1px, which put a
+   pressed key's label under its neighbours').
+
+   Every state has the same five shadows in the same order, so each eases
+   into the next. A tier sets --kk-face(-hi, -dn), --kk-top, --kk-rim,
+   --kk-lift and --kk-cut; a control sets --on and --kk-ink. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint],
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] #app,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'],
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer > :is(.ch, .fwrap) {
+  --tt-flat: rgb(255 255 255 / 0.05);
+  --tt-flat-hi: rgb(255 255 255 / 0.09);
+  --tt-flat-dn: rgb(0 0 0 / 0.3);
+  /* The one shadow under anything raised, and the one cut. */
+  --tt-rim: rgb(0 0 0 / 0.6);
+  --tt-lift-c: rgb(0 0 0 / 0.3);
+  --tt-lift: 0 1px 0 0 var(--tt-rim), 0 1px 3px 0 var(--tt-lift-c);
+  --tt-cut: inset 0 1px 2px 0 rgb(0 0 0 / 0.7), 0 1px 0 0 rgb(255 255 255 / 0.045);
+  --rg-lift: 0 1px 3px 0 var(--tt-lift-c);
+  --rg-key-fill: var(--tt-flat);
+  --rg-key-fill-hi: var(--tt-flat-hi);
+  --rg-key-edge: 0 0 0 0 transparent;
+  --rg-key-edge-hi: 0 0 0 0 transparent;
+  --flag-buttons-bg: var(--tt-flat);
+  --flag-buttons-ring: 0 0 0 0 transparent;
+  --flag-buttons-bg-hover: var(--tt-flat-hi);
+  --flag-buttons-ring-hover: 0 0 0 0 transparent;
+}
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] :is(.btn:not(.ghost, .primary, .jumps, select, .banner *), [data-region^='deck'] .pitch .lock, .mixer .hp, .mixer button.rec, .knob button.label, [data-region^='deck'] .fx .kind, [data-region^='deck'] .fx .ar, [data-region^='deck'] .fx .tog, [data-region^='deck'] .stems .need button, [data-region^='deck'] .stems .stem, [data-region^='deck'] .perf .tc, [data-region^='deck'] .perf .tb, [data-region^='deck'] .perf .big, [data-region^='deck'] .grid button, [data-region^='deck'] .transport .jumps button, [data-region^='deck'] .pitch .nudge button, .zoom button, .toastbox .toast .undo, section.library .bar .chip, section.library .filter .panel .kc, section.library .sampler .slot.set, .settings .key, .settings .btn:not(.primary, .ghost, select)) {
-  background-color: var(--kk-face, var(--rg-key));
-  background-image: linear-gradient(180deg, rgb(255 255 255 / 0.035), rgb(255 255 255 / 0));
+  background-color: var(--kk-face, var(--tt-flat));
+  background-image: none;
   box-shadow:
-    inset 0 1px 0 0 rgb(255 255 255 / 0.1),
-    inset 0 0 0 0 rgb(0 0 0 / 0),
+    inset 0 1px 0 0 var(--kk-top, rgb(255 255 255 / 0)),
+    inset 0 1px 2px 0 var(--kk-cut, rgb(0 0 0 / 0)),
     inset 0 0 0 1px rgb(0 0 0 / 0),
-    0 1px 0 0 var(--kk-rim, rgb(0 0 0 / 0.85)),
-    0 2px 5px -1px var(--kk-lift, rgb(0 0 0 / 0.45));
+    0 1px 0 0 var(--kk-rim, rgb(0 0 0 / 0)),
+    0 1px 3px 0 var(--kk-lift, rgb(0 0 0 / 0));
   color: var(--kk-ink, var(--fg-2));
   font-weight: 500;
   border: 0;
   opacity: 1;
   filter: none;
   transform: none;
-  translate: 0 0;
-  /* Coming up waits 24ms: a press on a latched key turns it off a frame
-     before the engine reports it held (WebKit), and it mustn't start to rise. */
+  translate: none;
+  /* Letting go waits 24ms: a press on a key that's on turns it off a frame
+     before the engine reports it held (WebKit), and it mustn't flash. */
   transition:
     background-color 140ms ease-out 24ms,
     box-shadow 140ms ease-out 24ms,
-    color 140ms ease-out,
-    translate 140ms var(--tt-ease) 24ms;
+    color 140ms ease-out;
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] :is(.btn:not(.ghost, .primary, .jumps, select, .banner *), [data-region^='deck'] .pitch .lock, .mixer .hp, .mixer button.rec, .knob button.label, [data-region^='deck'] .fx .kind, [data-region^='deck'] .fx .ar, [data-region^='deck'] .fx .tog, [data-region^='deck'] .stems .need button, [data-region^='deck'] .stems .stem, [data-region^='deck'] .perf .tc, [data-region^='deck'] .perf .tb, [data-region^='deck'] .perf .big, [data-region^='deck'] .grid button, [data-region^='deck'] .transport .jumps button, [data-region^='deck'] .pitch .nudge button, .zoom button, .toastbox .toast .undo, section.library .bar .chip, section.library .filter .panel .kc, section.library .sampler .slot.set, .settings .key, .settings .btn:not(.primary, .ghost, select)):is(:hover, [data-show-hover]):not(:disabled, [aria-disabled='true']) {
-  background-color: color-mix(in oklab, #fff 6%, var(--kk-face, var(--rg-key)));
+  background-color: var(--kk-face-hi, var(--tt-flat-hi));
   box-shadow:
-    inset 0 1px 0 0 rgb(255 255 255 / 0.13),
-    inset 0 0 0 0 rgb(0 0 0 / 0),
+    inset 0 1px 0 0 var(--kk-top, rgb(255 255 255 / 0)),
+    inset 0 1px 2px 0 var(--kk-cut, rgb(0 0 0 / 0)),
     inset 0 0 0 1px rgb(0 0 0 / 0),
-    0 1px 0 0 var(--kk-rim, rgb(0 0 0 / 0.85)),
-    0 2px 5px -1px var(--kk-lift, rgb(0 0 0 / 0.45));
+    0 1px 0 0 var(--kk-rim, rgb(0 0 0 / 0)),
+    0 1px 3px 0 var(--kk-lift, rgb(0 0 0 / 0));
   color: var(--kk-ink-hi, var(--fg));
   transform: none;
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] :is([data-region^='deck'] .transport .btn.sync.on, [data-region^='deck'] .pitch .lock.on, .mixer .hp.on, .mixer button.rec.on, .knob button.label.killed, [data-region^='deck'] .fx .tog.live, [data-region^='deck'] .stems .stem:not(.muted, [aria-disabled='true']), [data-region^='deck'] .perf .tc.set, [data-region^='deck'] .perf .big.live, [data-region^='deck'] .transport .btn.play.on, .btn.sm.samp:is(.on, .pressed, [aria-pressed='true']), .btn:is(.pressed, [aria-pressed='true']):not(.ghost, .primary, .jumps, .play, .sync, .samp), section.library .bar .chip.on, section.library .filter .panel .kc.on, section.library .sampler .slot.playing, .settings .key.rec, .settings .btn.rec) {
-  background-color: var(--kk-face-in, color-mix(in oklab, var(--on, var(--fg)) var(--kk-mix, 20%), var(--rg-down)));
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] :is([data-region^='deck'] .transport .btn.sync.on, [data-region^='deck'] .pitch .lock.on, .mixer .hp.on, .mixer button.rec.on, [data-region^='deck'] .fx .tog.live, [data-region^='deck'] .stems .stem:not(.muted, [aria-disabled='true']), [data-region^='deck'] .perf .tc.set, [data-region^='deck'] .perf .big.live, [data-region^='deck'] .transport .btn.play.on, .btn.sm.samp:is(.on, .pressed, [aria-pressed='true']), .btn:is(.pressed, [aria-pressed='true']):not(.ghost, .primary, .jumps, .play, .sync, .samp), section.library .bar .chip.on, section.library .filter .panel .kc.on, section.library .sampler .slot.playing, .settings .key.rec, .settings .btn.rec) {
+  background-color: var(--kk-face-in, color-mix(in oklab, var(--on, var(--fg)) var(--kk-mix, 30%), var(--rg-down)));
   box-shadow:
-    inset 0 1px 0 0 rgb(0 0 0 / 0.45),
-    inset 0 2px 5px 0 rgb(0 0 0 / var(--kk-shade, 0.6)),
-    inset 0 0 0 1px color-mix(in oklab, var(--kk-ring, var(--on, var(--fg))) 14%, transparent),
-    0 1px 0 0 rgb(255 255 255 / 0.06),
-    0 0 0 0 rgb(0 0 0 / 0);
-  color: var(--kk-ink-in, var(--on, var(--fg)));
-  translate: 0 1px;
-}
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] :is([data-region^='deck'] .transport .btn.sync.on, [data-region^='deck'] .pitch .lock.on, .mixer .hp.on, .mixer button.rec.on, .knob button.label.killed, [data-region^='deck'] .fx .tog.live, [data-region^='deck'] .stems .stem:not(.muted, [aria-disabled='true']), [data-region^='deck'] .perf .tc.set, [data-region^='deck'] .perf .big.live, [data-region^='deck'] .transport .btn.play.on, .btn.sm.samp:is(.on, .pressed, [aria-pressed='true']), .btn:is(.pressed, [aria-pressed='true']):not(.ghost, .primary, .jumps, .play, .sync, .samp), section.library .bar .chip.on, section.library .filter .panel .kc.on, section.library .sampler .slot.playing, .settings .key.rec, .settings .btn.rec):is(:hover, [data-show-hover]):not(:disabled, [aria-disabled='true']) {
-  background-color: color-mix(in oklab, #fff 5%, var(--kk-face-in, color-mix(in oklab, var(--on, var(--fg)) var(--kk-mix, 20%), var(--rg-down))));
-  box-shadow:
-    inset 0 1px 0 0 rgb(0 0 0 / 0.45),
-    inset 0 2px 5px 0 rgb(0 0 0 / var(--kk-shade, 0.6)),
-    inset 0 0 0 1px color-mix(in oklab, var(--kk-ring, var(--on, var(--fg))) 22%, transparent),
-    0 1px 0 0 rgb(255 255 255 / 0.06),
+    inset 0 1px 0 0 rgb(0 0 0 / 0.4),
+    inset 0 2px 4px 0 rgb(0 0 0 / var(--kk-shade, 0.45)),
+    inset 0 0 0 1px rgb(0 0 0 / 0.12),
+    0 1px 0 0 rgb(255 255 255 / 0.05),
     0 0 0 0 rgb(0 0 0 / 0);
   color: var(--kk-ink-in, var(--on, var(--fg)));
 }
-/* Held: down at once (a press has to be felt), whatever the key was. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] :is([data-region^='deck'] .transport .btn.sync.on, [data-region^='deck'] .pitch .lock.on, .mixer .hp.on, .mixer button.rec.on, [data-region^='deck'] .fx .tog.live, [data-region^='deck'] .stems .stem:not(.muted, [aria-disabled='true']), [data-region^='deck'] .perf .tc.set, [data-region^='deck'] .perf .big.live, [data-region^='deck'] .transport .btn.play.on, .btn.sm.samp:is(.on, .pressed, [aria-pressed='true']), .btn:is(.pressed, [aria-pressed='true']):not(.ghost, .primary, .jumps, .play, .sync, .samp), section.library .bar .chip.on, section.library .filter .panel .kc.on, section.library .sampler .slot.playing, .settings .key.rec, .settings .btn.rec):is(:hover, [data-show-hover]):not(:disabled, [aria-disabled='true']) {
+  background-color: color-mix(in oklab, #fff 6%, var(--kk-face-in, color-mix(in oklab, var(--on, var(--fg)) var(--kk-mix, 30%), var(--rg-down))));
+  box-shadow:
+    inset 0 1px 0 0 rgb(0 0 0 / 0.4),
+    inset 0 2px 4px 0 rgb(0 0 0 / var(--kk-shade, 0.45)),
+    inset 0 0 0 1px rgb(0 0 0 / 0.12),
+    0 1px 0 0 rgb(255 255 255 / 0.05),
+    0 0 0 0 rgb(0 0 0 / 0);
+  color: var(--kk-ink-in, var(--on, var(--fg)));
+}
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] :is(.btn:not(.ghost, .primary, .jumps, select, .banner *), [data-region^='deck'] .pitch .lock, .mixer .hp, .mixer button.rec, .knob button.label, [data-region^='deck'] .fx .kind, [data-region^='deck'] .fx .ar, [data-region^='deck'] .fx .tog, [data-region^='deck'] .stems .need button, [data-region^='deck'] .stems .stem, [data-region^='deck'] .perf .tc, [data-region^='deck'] .perf .tb, [data-region^='deck'] .perf .big, [data-region^='deck'] .grid button, [data-region^='deck'] .transport .jumps button, [data-region^='deck'] .pitch .nudge button, .zoom button, .toastbox .toast .undo, section.library .bar .chip, section.library .filter .panel .kc, section.library .sampler .slot.set, .settings .key, .settings .btn:not(.primary, .ghost, select)):is(:active, [data-show-active], .pressed):is(:active, [data-show-active], .pressed):not(:disabled, [aria-disabled='true']) {
-  background-color: color-mix(in oklab, #000 22%, var(--kk-face, var(--rg-key)));
+  background-color: var(--kk-face-dn, var(--tt-flat-dn));
   box-shadow:
-    inset 0 1px 0 0 rgb(0 0 0 / 0.45),
-    inset 0 2px 4px 0 rgb(0 0 0 / 0.55),
-    inset 0 0 0 1px rgb(0 0 0 / 0.25),
-    0 1px 0 0 rgb(255 255 255 / 0.06),
+    inset 0 1px 0 0 rgb(0 0 0 / 0.4),
+    inset 0 2px 4px 0 rgb(0 0 0 / 0.5),
+    inset 0 0 0 1px rgb(0 0 0 / 0.12),
+    0 1px 0 0 rgb(255 255 255 / 0.05),
     0 0 0 0 rgb(0 0 0 / 0);
   color: var(--kk-ink-hi, var(--fg));
   transform: none;
   filter: none;
-  translate: 0 1px;
   transition-duration: 50ms;
   transition-delay: 0ms;
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] :is([data-region^='deck'] .transport .btn.sync.on, [data-region^='deck'] .pitch .lock.on, .mixer .hp.on, .mixer button.rec.on, .knob button.label.killed, [data-region^='deck'] .fx .tog.live, [data-region^='deck'] .stems .stem:not(.muted, [aria-disabled='true']), [data-region^='deck'] .perf .tc.set, [data-region^='deck'] .perf .big.live, [data-region^='deck'] .transport .btn.play.on, .btn.sm.samp:is(.on, .pressed, [aria-pressed='true']), .btn:is(.pressed, [aria-pressed='true']):not(.ghost, .primary, .jumps, .play, .sync, .samp), section.library .bar .chip.on, section.library .filter .panel .kc.on, section.library .sampler .slot.playing, .settings .key.rec, .settings .btn.rec):is(:active, [data-show-active], .pressed):is(:active, [data-show-active], .pressed):not(:disabled, [aria-disabled='true']) {
-  background-color: color-mix(in oklab, #000 16%, var(--kk-face-in, color-mix(in oklab, var(--on, var(--fg)) var(--kk-mix, 20%), var(--rg-down))));
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] :is([data-region^='deck'] .transport .btn.sync.on, [data-region^='deck'] .pitch .lock.on, .mixer .hp.on, .mixer button.rec.on, [data-region^='deck'] .fx .tog.live, [data-region^='deck'] .stems .stem:not(.muted, [aria-disabled='true']), [data-region^='deck'] .perf .tc.set, [data-region^='deck'] .perf .big.live, [data-region^='deck'] .transport .btn.play.on, .btn.sm.samp:is(.on, .pressed, [aria-pressed='true']), .btn:is(.pressed, [aria-pressed='true']):not(.ghost, .primary, .jumps, .play, .sync, .samp), section.library .bar .chip.on, section.library .filter .panel .kc.on, section.library .sampler .slot.playing, .settings .key.rec, .settings .btn.rec):is(:active, [data-show-active], .pressed):is(:active, [data-show-active], .pressed):not(:disabled, [aria-disabled='true']) {
+  background-color: color-mix(in oklab, #000 18%, var(--kk-face-in, color-mix(in oklab, var(--on, var(--fg)) var(--kk-mix, 30%), var(--rg-down))));
   color: var(--kk-ink-in, var(--on, var(--fg)));
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] :is(.btn:not(.ghost, .primary, .jumps, select, .banner *), [data-region^='deck'] .pitch .lock, .mixer .hp, .mixer button.rec, .knob button.label, [data-region^='deck'] .fx .kind, [data-region^='deck'] .fx .ar, [data-region^='deck'] .fx .tog, [data-region^='deck'] .stems .need button, [data-region^='deck'] .stems .stem, [data-region^='deck'] .perf .tc, [data-region^='deck'] .perf .tb, [data-region^='deck'] .perf .big, [data-region^='deck'] .grid button, [data-region^='deck'] .transport .jumps button, [data-region^='deck'] .pitch .nudge button, .zoom button, .toastbox .toast .undo, section.library .bar .chip, section.library .filter .panel .kc, section.library .sampler .slot.set, .settings .key, .settings .btn:not(.primary, .ghost, select)):is(:disabled, [aria-disabled='true']) {
-  background-color: transparent;
+  background-color: var(--kk-off, rgb(255 255 255 / 0.022));
   background-image: none;
   box-shadow:
     inset 0 1px 0 0 rgb(255 255 255 / 0),
-    inset 0 0 0 0 rgb(0 0 0 / 0),
-    inset 0 0 0 1px var(--kk-off, var(--line)),
+    inset 0 1px 2px 0 rgb(0 0 0 / 0),
+    inset 0 0 0 1px rgb(0 0 0 / 0),
     0 1px 0 0 rgb(0 0 0 / 0),
-    0 0 0 0 rgb(0 0 0 / 0);
+    0 1px 3px 0 rgb(0 0 0 / 0);
   color: var(--fg-4);
   opacity: 1;
-  translate: 0 0;
+}
+/* Tier: raised. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] :is([data-region^='deck'] .transport :is(.cue, .play, .sync)) {
+  --kk-face: var(--rg-key);
+  --kk-face-hi: color-mix(in oklab, #fff 6%, var(--rg-key));
+  --kk-face-dn: color-mix(in oklab, #000 24%, var(--rg-key));
+  --kk-top: rgb(255 255 255 / 0.09);
+  --kk-rim: var(--tt-rim);
+  --kk-lift: var(--tt-lift-c);
+}
+/* Tier: recessed. Each end of a stepper is a tone in the cut. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] :is([data-region^='deck'] :is(.transport .jumps, .pitch .nudge, .fx .beats, .perf .step) > button) {
+  --kk-face: transparent;
+  --kk-face-hi: rgb(255 255 255 / 0.06);
+  --kk-face-dn: rgb(255 255 255 / 0.025);
+  --kk-off: transparent;
+}
+/* Tier: text. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] :is(.knob button.label) {
+  --kk-face: transparent;
+  --kk-face-hi: transparent;
+  --kk-face-dn: transparent;
+  --kk-off: transparent;
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .btn.ghost {
   color: var(--fg-2);
@@ -1368,8 +1472,6 @@
   background: var(--hover);
   color: var(--fg);
 }
-/* Text that opens something (the key, the effect's menu in a toolbar) is
-   not a key: text, a chevron, a tone on hover. Text controls don't move. */
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] :is(.pitch .val, .bpm .key):active {
   transform: none;
   translate: none;
@@ -1410,87 +1512,74 @@
   font-size: var(--t-sm) !important;
 }
 
-/* ── Groups: keys that share one body ──────────────────────────────────
-   The group draws the outside edge once; its keys meet at a 1px seam and
-   each sinks on its own. A value between two keys is a small window cut
-   into the same body. */
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] :is(.transport .jumps, .pitch .nudge, .fx .beats) {
+/* ── Steppers: one cut, an end each side ───────────────────────────────
+   Everything that nudges, steps, halves or doubles is the same thing: a cut
+   in the plate with a glyph at each end and, where there's an amount, the
+   amount between them. No seams, no second window. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] :is(.transport .jumps, .pitch .nudge, .fx .beats, .perf .step) {
   display: grid;
-  gap: 1px;
-  padding: 0;
-  border-radius: var(--r);
-  background: rgb(0 0 0 / 0.6);
-  box-shadow: 0 1px 0 0 rgb(0 0 0 / 0.85), 0 2px 5px -1px rgb(0 0 0 / 0.45);
-  opacity: 1;
-}
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] :is(.transport .jumps, .pitch .nudge, .fx .beats) > button {
-  --kk-rim: transparent;
-  --kk-lift: transparent;
-  --kk-off: transparent;
-  min-width: 0;
-  height: 100%;
-  padding: 0;
-  border-radius: 3px;
-  box-sizing: border-box;
-}
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] :is(.transport .jumps, .pitch .nudge, .fx .beats) > button:first-of-type {
-  width: 100%;
-  border-radius: var(--r) 3px 3px var(--r);
-}
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] :is(.transport .jumps, .pitch .nudge, .fx .beats) > button:last-of-type {
-  border-radius: 3px var(--r) var(--r) 3px;
-}
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] :is(.transport .jumps, .pitch .nudge, .fx .beats):has(> button[aria-disabled='true']):not(:has(> button:not([aria-disabled='true']))) {
-  background: none;
-  box-shadow: inset 0 0 0 1px var(--line);
-}
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] :is(.transport .jumps > span, .fx .beats > .val) {
-  display: flex;
-  align-items: baseline;
-  justify-content: center;
-  align-content: center;
-  gap: 4px;
-  min-width: 0;
-  padding: 0;
-  font-size: 12px;
-  font-weight: 500;
-  line-height: 1;
-  letter-spacing: 0;
-  white-space: nowrap;
-  color: var(--fg);
-  background: var(--rg-well);
-  box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.8);
-  place-self: stretch;
-  align-items: center;
-}
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .transport .jumps > span small,
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .fx .beats > .val {
-  font-size: 12px;
-  font-weight: 500;
-  line-height: 1;
-}
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .transport .jumps > span small {
-  color: var(--fg-2);
-}
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .fx .beats > .val {
-  color: var(--fg-2);
-}
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .fx .beats > .val b {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--fg);
-}
-
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .transport .jumps {
   grid-template-columns: 30px minmax(0, 1fr) 30px;
   justify-items: stretch;
   align-items: stretch;
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+  border-radius: var(--r);
+  background: var(--rg-well);
+  box-shadow: var(--tt-cut);
+  opacity: 1;
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .transport .jumps > button {
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] :is(.transport .jumps, .pitch .nudge, .fx .beats, .perf .step) > button {
   width: 100%;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border-radius: 0;
+  box-sizing: border-box;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] :is(.transport .jumps, .pitch .nudge, .fx .beats, .perf .step) > button:first-of-type {
+  border-radius: var(--r) 0 0 var(--r);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] :is(.transport .jumps, .pitch .nudge, .fx .beats, .perf .step) > button:last-of-type {
+  border-radius: 0 var(--r) var(--r) 0;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] :is(.transport .jumps, .pitch .nudge, .fx .beats, .perf .step):has(> button[aria-disabled='true']):not(:has(> button:not([aria-disabled='true']))) {
+  background: rgb(0 0 0 / 0.18);
+  box-shadow: none;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] :is(.transport .jumps > span, .fx .beats > .val, .perf .step > .val) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 0;
+  padding: 0;
+  place-self: stretch;
+  font-size: var(--t-sm);
+  font-weight: 500;
+  line-height: normal;
+  letter-spacing: 0;
+  white-space: nowrap;
+  color: var(--fg-2);
+  opacity: 1;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] :is(.transport .jumps, .fx .beats, .perf .step):not(:has(> button:not([aria-disabled='true']))) > :is(span, .val) {
+  color: var(--fg-4);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .transport .jumps > button[aria-disabled='true'] {
+  opacity: 1;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] :is(.transport .jumps > span small, .fx .beats > .val b, .perf .step > .val b) {
+  font-size: inherit;
+  font-weight: 500;
+  line-height: inherit;
+  color: inherit;
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .transport .jumps > span {
   order: 1;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .pitch .nudge {
+  grid-template-columns: 1fr 1fr;
 }
 @container (max-width: 95px) {
   :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .transport .jumps {
@@ -1546,8 +1635,7 @@
   width: calc((100% - 6px) / 5);
   border-radius: 8px;
   background-color: var(--rg-key);
-  background-image: linear-gradient(180deg, rgb(255 255 255 / 0.035), rgb(255 255 255 / 0));
-  box-shadow: inset 0 1px 0 0 rgb(255 255 255 / 0.1), 0 1px 0 0 rgb(0 0 0 / 0.85), 0 2px 5px -1px rgb(0 0 0 / 0.45);
+  box-shadow: inset 0 1px 0 0 rgb(255 255 255 / 0.09), var(--tt-lift);
   transition: translate 190ms cubic-bezier(0.22, 0.9, 0.24, 1);
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .modes:has(button:nth-of-type(2).on)::before { translate: 100% 0; }
@@ -1606,7 +1694,11 @@
   height: 100%;
 }
 
-/* Hot cues: eight pads. */
+/* Hot cues: eight places. At rest a place is drawn four ways (a setting):
+   tile, a flat tone; tray, one tone for all eight, parted by hairlines of
+   the plate; ledge, a short bar under the number; bare, the number alone.
+   Set is the same in all four: pressed in, in the cue's colour, with its
+   time. An empty place shows its number; under the pointer it says Set. */
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .perf .row {
   grid-auto-rows: minmax(0, 1fr);
   gap: 6px 8px;
@@ -1615,8 +1707,10 @@
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .perf .tc {
   --on: var(--hc);
-  --kk-face-in: color-mix(in oklab, var(--hc) 27%, var(--rg-down));
+  --kk-face-in: color-mix(in oklab, var(--hc) 30%, var(--rg-down));
   --kk-ink: var(--fg-3);
+  --kk-ink-in: var(--fg);
+  position: relative;
   justify-self: stretch;
   width: 100%;
   height: 100%;
@@ -1631,58 +1725,66 @@
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .perf .tc i {
   display: none;
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .perf .tc b {
-  font-weight: 600;
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .perf .tc :is(b, span) {
+  font-weight: 500;
+  letter-spacing: 0;
   color: inherit;
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .perf .tc span {
-  color: inherit;
-  letter-spacing: 0;
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .perf .tc.set b {
+  color: var(--hc);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .perf .tc:not(.set) b {
+  width: auto;
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .perf .tc:not(.set) span {
-  color: rgb(238 238 236 / 0.56);
-  font-weight: 400;
+  position: absolute;
+  left: calc(50% + 10px);
+  min-width: 0;
+  opacity: 0;
+  transition: opacity 140ms ease-out;
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .perf .tc.set span {
-  color: var(--fg);
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .perf .tc:not(.set):is(:hover, :focus-visible, [data-show-hover]):not([aria-disabled='true']) span {
+  opacity: 1;
 }
-/* (The other option is v5's: not keys at all, so it takes the key off.) */
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-cues='discs'] [data-region^='deck'] .perf .tc {
-  background: none !important;
-  box-shadow: none !important;
-  translate: none !important;
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .perf .tc[aria-disabled='true'] :is(b, span) {
+  color: var(--fg-4);
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-cues='discs'] [data-region^='deck'] .perf .tc:hover:not([aria-disabled='true']) {
-  background: var(--hover) !important;
+/* tray */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-cues='tray'] [data-region^='deck'] .perf .row {
+  gap: 1px;
+  overflow: hidden;
+  border-radius: var(--r);
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-cues='discs'] [data-region^='deck'] .perf .tc b {
-  display: inline-grid;
-  place-items: center;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--fg-3);
-  box-shadow: inset 0 0 0 1.25px var(--line-2);
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-cues='tray'] [data-region^='deck'] .perf .tc {
+  max-height: none;
+  border-radius: 0;
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-cues='discs'] [data-region^='deck'] .perf .tc.set b {
-  color: var(--ink);
-  background: var(--hc);
-  box-shadow: none;
+/* ledge, bare */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint]:is([data-flag-dir-room-tint-cues='ledge'], [data-flag-dir-room-tint-cues='bare']) [data-region^='deck'] .perf .tc:not(.set) {
+  --kk-face: transparent;
+  --kk-off: transparent;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-cues='ledge'] [data-region^='deck'] .perf .tc:not(.set)::after {
+  content: '';
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 3px;
+  height: 2px;
+  border-radius: 1px;
+  background: rgb(255 255 255 / 0.1);
 }
 
-/* Loop: the jumps at the ends, the loop's length as one body: halve, the
-   loop itself, double. The loop is the latch. */
+/* Loop: one key that loops, and how long the loop is. (The jump arrows this
+   row used to hold are the transport's own, one row down.) */
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .perf .grp {
   display: grid;
-  grid-template-columns: 52px 48px minmax(0, 1fr) 48px 52px;
-  column-gap: 0;
-  gap: 0;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+  gap: 8px;
   height: 100%;
   align-items: stretch;
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .perf .grp > button {
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .perf .grp > * {
   justify-self: stretch;
   width: auto;
   height: 100%;
@@ -1690,69 +1792,44 @@
   padding: 0;
   border-radius: var(--r);
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .perf .grp > :first-child {
-  margin-right: 8px;
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .perf .step {
+  grid-template-columns: 52px minmax(0, 1fr) 52px;
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .perf .grp > :last-child {
-  margin-left: 8px;
-}
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .perf .grp > :nth-child(2) {
-  border-radius: var(--r) 3px 3px var(--r);
-  margin-right: 1px;
-}
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .perf .grp > :nth-child(3) {
-  border-radius: 3px;
-}
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .perf .grp > :nth-child(4) {
-  border-radius: 3px var(--r) var(--r) 3px;
-  margin-left: 1px;
-}
-@container (max-width: 319px) {
-  :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .perf .grp {
-    grid-template-columns: 40px 34px minmax(0, 1fr) 34px 40px;
-  }
-  :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .perf .big::before {
-    content: none;
-  }
-  :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .perf .big {
-    gap: 3px;
-    font-size: 12px;
-  }
-  :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .perf .big :is(b, span) {
-    font-size: 12px;
-  }
-}
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .perf .grp > .tb:not(.ar) {
-  font-size: var(--t-sm);
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .perf .step .tb {
+  font-size: var(--t-sm) !important;
   font-weight: 500;
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .perf .big {
   --on: var(--deck);
-  --kk-ink: var(--fg);
   justify-content: center;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   font-size: var(--t-sm);
   font-weight: 500;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .perf .big :is(b, span) {
+  margin: 0;
+  font-size: inherit;
+  font-weight: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+  opacity: 1;
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .perf .big::before {
   content: '';
   width: 15px;
   height: 15px;
-  margin-right: 2px;
   background: currentColor;
   -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M10.5 2.2 13 4.6 10.5 7M13 4.6H5.4A3.1 3.1 0 0 0 2.3 7.7v.5M5.5 13.8 3 11.4 5.5 9M3 11.4h7.6a3.1 3.1 0 0 0 3.1-3.1v-.5' fill='none' stroke='%23000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
   mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M10.5 2.2 13 4.6 10.5 7M13 4.6H5.4A3.1 3.1 0 0 0 2.3 7.7v.5M5.5 13.8 3 11.4 5.5 9M3 11.4h7.6a3.1 3.1 0 0 0 3.1-3.1v-.5' fill='none' stroke='%23000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .perf .big :is(b, span) {
-  font-size: var(--t-sm);
-  font-weight: 500;
-  letter-spacing: 0;
-  color: inherit;
-  opacity: 1;
-}
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .perf .big b::before {
-  content: none !important;
+@container (max-width: 319px) {
+  :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .perf .grp {
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.4fr);
+  }
+  :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .perf .step {
+    grid-template-columns: 30px minmax(0, 1fr) 30px;
+  }
 }
 
 /* FX: which effect, how long, how much, on. */
@@ -1788,9 +1865,6 @@
   justify-content: space-between;
   padding: 0 12px;
   border-radius: var(--r);
-}
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .fx .beats {
-  grid-template-columns: 34px minmax(0, 1fr) 34px;
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .fx .knob {
   align-self: center;
@@ -1882,14 +1956,20 @@
   padding: 0;
   border-radius: var(--r);
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .strip .grid button:nth-child(1),
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .strip .grid button:nth-child(4) {
-  border-radius: var(--r) 3px 3px var(--r);
+/* The two pairs are steppers; the markup has no wrapper, so each half draws
+   its half of the cut. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .strip .grid button:is(:nth-child(1), :nth-child(2), :nth-child(4), :nth-child(5)) {
+  --kk-face: var(--rg-well);
+  --kk-face-hi: color-mix(in oklab, #fff 6%, var(--rg-well));
+  --kk-face-dn: color-mix(in oklab, #fff 2%, var(--rg-well));
+  --kk-rim: rgb(255 255 255 / 0.045);
+  --kk-off: rgb(0 0 0 / 0.18);
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .strip .grid button:nth-child(2),
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .strip .grid button:nth-child(5) {
-  border-radius: 3px var(--r) var(--r) 3px;
-  margin-left: 1px;
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .strip .grid button:is(:nth-child(1), :nth-child(4)) {
+  border-radius: var(--r) 0 0 var(--r);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .strip .grid button:is(:nth-child(2), :nth-child(5)) {
+  border-radius: 0 var(--r) var(--r) 0;
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .strip .grid button:is(:nth-child(3), :nth-child(4), :nth-child(6), :nth-child(7)) {
   margin-left: 8px;
@@ -1921,6 +2001,7 @@
    warmed. */
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .transport .cue.lit:not([aria-disabled='true']) {
   --kk-face: color-mix(in oklab, var(--on) 22%, var(--rg-key));
+  --kk-face-hi: color-mix(in oklab, var(--on) 26%, var(--rg-key));
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .transport .sync {
   --on: var(--deck);
@@ -1928,17 +2009,19 @@
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .transport .play {
   --on: var(--deck);
   --kk-ink: var(--fg);
+  --kk-face: color-mix(in oklab, #fff 11%, var(--rg-key));
+  --kk-face-hi: color-mix(in oklab, #fff 17%, var(--rg-key));
+  --kk-top: rgb(255 255 255 / 0.14);
   --kk-face-in: var(--deck);
   --kk-ink-in: var(--ink);
-  --kk-shade: 0.22;
-  --kk-ring: #000;
+  --kk-shade: 0.16;
 }
 /* Play swaps its glyph as it's pressed. The pointer must land on the key,
    not the glyph: WebKit lets go of a held key when the node that was
    pressed is removed, and Play rose under the finger. */
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .transport .play svg {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   pointer-events: none;
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .transport .play[data-cueing] {
@@ -1961,7 +2044,7 @@
   position: relative;
   border-radius: 6px;
   background: var(--rg-well);
-  box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.8), 0 1px 0 var(--rg-lip);
+  box-shadow: var(--tt-cut);
   font-size: 12px;
   font-weight: 500;
   line-height: 24px;
@@ -2005,7 +2088,6 @@
   line-height: 14px;
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .pitch .nudge {
-  grid-template-columns: 1fr 1fr;
   height: 30px;
   width: 100%;
 }
@@ -2041,7 +2123,7 @@
   border-radius: 4px;
   background-color: var(--rg-cap);
   background-image: linear-gradient(180deg, rgb(255 255 255 / 0.07), rgb(0 0 0 / 0.14));
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.16), 0 0 0 1px var(--rg-rim), 0 3px 6px -1px rgb(0 0 0 / 0.65);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.16), 0 0 0 1px var(--tt-rim), var(--tt-lift);
   transition: background-color 140ms ease-out;
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .fader:hover .cap,
@@ -2061,7 +2143,7 @@
   background:
     radial-gradient(circle at 50% 50%, var(--rg-dial) 0 60%, transparent 61%),
     repeating-conic-gradient(var(--rg-ridge) 0 5deg, var(--rg-ridge-2) 5deg 10deg);
-  box-shadow: 0 0 0 1px var(--rg-rim), 0 3px 6px rgb(0 0 0 / 0.6), inset 0 1px 0 rgb(255 255 255 / 0.1);
+  box-shadow: 0 0 0 1px var(--tt-rim), var(--tt-lift), inset 0 1px 0 rgb(255 255 255 / 0.1);
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .knob .dial::after {
   background: radial-gradient(circle at 40% 30%, var(--rg-cap), var(--rg-ridge-2) 92%);
@@ -2087,10 +2169,18 @@
   font-size: var(--t-xs);
   font-weight: 500;
 }
-/* EQ kills are keys, always: a label you can press looks like one. */
+/* High, Mid and Low are captions, like Trim and Filter: no key behind them.
+   They still kill the band when clicked. What says so: they're a step
+   brighter than Trim and Filter and the pointer turns them towards red; a
+   killed one is red, with its dial's ticks red and its dial at the end. */
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .knob button.label {
-  --on: var(--kill);
-  border-radius: 6px;
+  --kk-ink: var(--fg-2);
+  --kk-ink-hi: color-mix(in oklab, var(--kill) 60%, var(--fg));
+  cursor: pointer;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .knob button.label.killed {
+  --kk-ink: var(--kill);
+  --kk-ink-hi: color-mix(in oklab, var(--kill) 80%, var(--fg));
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .mixer .hp {
   --on: var(--cue);
@@ -2267,24 +2357,16 @@
   letter-spacing: -0.01em;
 }
 
-/* The deck colours and white are pale: at the role colours' strength a key
-   that's down would be lighter than one that's up. */
+/* On has to read at a glance now its neighbours are flat: the deck colours
+   and white at a strength that lights the face, still shaded as a thing
+   that's in. */
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] :is([data-region^='deck'] :is(.transport .sync, .pitch .lock, .fx .tog, .stems .stem, .perf .big), section.library :is(.chip, .kc, .slot, .samp), .settings :is(.key, .btn)) {
-  --kk-mix: 13%;
-}
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .perf .tc[aria-disabled='true'] :is(b, span) {
-  color: var(--fg-4);
+  --kk-mix: 26%;
 }
 @media (max-width: 1200px) {
   :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .transport .jumps {
     grid-template-columns: 22px minmax(0, 1fr) 22px;
   }
-}
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .perf .big :is(b, span) {
-  flex: none;
-  width: auto;
-  min-width: 0;
-  margin: 0;
 }
 
 /* ── The library's loaded mark ─────────────────────────────────────────
@@ -2314,21 +2396,58 @@
   border-radius: var(--r);
   color: var(--fg-2);
   font-weight: 500;
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Cpath d='M3.6 5.4 7 8.8l3.4-3.4' fill='none' stroke='%23eeeeec' stroke-opacity='.6' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 10px center / 14px 14px, var(--rg-key);
-  box-shadow: inset 0 1px 0 0 rgb(255 255 255 / 0.1), 0 1px 0 0 rgb(0 0 0 / 0.85), 0 2px 5px -1px rgb(0 0 0 / 0.45);
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Cpath d='M3.6 5.4 7 8.8l3.4-3.4' fill='none' stroke='%23eeeeec' stroke-opacity='.6' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 10px center / 14px 14px, var(--tt-flat);
+  box-shadow: none;
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] :is(.settings select, .backdrop > .card[role='dialog'] .field select):hover {
-  background-color: var(--rg-key-hi);
+  background-color: var(--tt-flat-hi);
   color: var(--fg);
 }
 /* The one go-ahead in a dialog presses like the rest. */
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .backdrop > .card[role='dialog'] :is(.go, .btn.primary) {
   transform: none;
-  transition: background-color 140ms ease-out, translate 140ms var(--tt-ease) 24ms;
+  box-shadow: inset 0 1px 0 #fff, var(--tt-lift);
+  transition: background-color 140ms ease-out;
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .backdrop > .card[role='dialog'] :is(.go, .btn.primary):active:active:not(:disabled, [aria-disabled='true']) {
   background: #d3d3d0;
-  translate: 0 1px;
   transition-duration: 50ms;
   transition-delay: 0ms;
+}
+
+/* ── Weight never changes with state ───────────────────────────────────
+   Selected, on, set, empty and swapped change colour only. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] header .name.dim {
+  font-weight: 600;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck']:has(header .name.dim) .bpm .big {
+  font-weight: 600;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] :is(section.library, .settings) nav :is(.item, .item.on, .item.on:hover) {
+  font-weight: 400;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .sampler :is(.slot, .slot.set, .slot:not(.set)) {
+  font-weight: 500;
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .rec-cell .hub :is(.num, .el, .rm),
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .rec-cell .hub.empty:is([data-big], :not([data-big])) :is(.num, .num .t),
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .rec-cell .hub:not([data-big='remaining']) .el,
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .rec-cell .hub[data-big='remaining'] .rm {
+  font-weight: 600;
+}
+
+/* ── Menus: the row's corner is the menu's, less the gap between them ──── */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .menu {
+  --mr: 14px;
+  --mp: 5px;
+  padding: var(--mp);
+  border-radius: var(--mr);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] .menu button {
+  border-radius: calc(var(--mr) - var(--mp));
+  padding-inline: 11px;
+}
+/* The filter panel: 10px round its fields' 8. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] section.library .filter .panel {
+  border-radius: 18px;
 }

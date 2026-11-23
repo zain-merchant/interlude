@@ -22,10 +22,21 @@ export default {
     cues: {
       type: 'choice',
       label: 'Hot cues',
-      default: 'keys',
+      default: 'tile',
       options: [
-        ['keys', 'Pads', 'Eight keys: up and plain until set, then down, tinted in the cue\'s colour.'],
-        ['discs', 'Numbered discs', 'v5\'s: a disc with the number, hollow until set, then filled.'],
+        ['tile', 'Flat tiles', 'An empty place is a flat tone with its number.'],
+        ['tray', 'One tray', 'All eight on one flat tone, parted by thin gaps.'],
+        ['ledge', 'Ledges', 'A number over a short bar, no tile.'],
+        ['bare', 'Bare', 'The number alone.'],
+      ],
+    },
+    zoom: {
+      type: 'choice',
+      label: 'Waveform zoom',
+      default: 'float',
+      options: [
+        ['float', 'Over the waveform', 'Upright at the right, the sound passing under it.'],
+        ['bar', 'Top right of the window', 'On one line, out of the waveform.'],
       ],
     },
     cue: {

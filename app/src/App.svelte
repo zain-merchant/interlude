@@ -26,6 +26,7 @@
   import { installAppMenu } from './lib/appmenu.js';
   import { runPerformance } from './lib/performance.js';
   import { flag, setting } from './flags/registry.svelte.js';
+  import { placeZoom } from './flags/110-dir-room-tint/zoom.js'; // #110 (UI audit flag)
   import { start as startSquircles } from './flags/01-squircles/squircles.js';
   import { padMode, setPadMode } from './lib/padmode.svelte.js';
   import { tempoPickup } from './lib/pickup.svelte.js';
@@ -739,7 +740,8 @@
         <div class="who"><i></i>{#if tracks[deck]}{tracks[deck].title}{:else}<span class="hint">Drag a track here or press {keyLabel(`deck.${deck}.load`)}</span>{/if}</div>
       </div>
     {/each}
-    <div class="zoom">
+    <!-- #110 (UI audit flag): dir-room-tint: the zoom can stand at the window's top right instead (one or the other, for a talk). -->
+    <div class="zoom" use:placeZoom={flag('dir-room-tint') && setting('dir-room-tint', 'zoom') === 'bar'}>
       <button onclick={() => setZoom(zoom * 1.4)} aria-label="Zoom out" use:tip={() => tipText('Zoom out', keyLabel('view.zoomOut'))}>−</button>
       <span class="num"><span class="sr">Waveforms show </span>{zoom.toFixed(0)} s</span>
       <button onclick={() => setZoom(zoom / 1.4)} aria-label="Zoom in" use:tip={() => tipText('Zoom in', keyLabel('view.zoomIn'))}>+</button>
