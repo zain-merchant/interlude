@@ -576,6 +576,7 @@ export function createMockBackend() {
       else d.preparing = null;
     },
     useStems: async (deck) => useStems(decks[deck]),
+    stemsShown: async () => {},
     clearStemsCache: async () => {
       stemsCfg.cacheBytes = 0;
       return { ...stemsCfg, modelBytes: 510_700_000, measured, model: stemsModel };

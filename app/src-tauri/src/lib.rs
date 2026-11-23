@@ -1030,6 +1030,7 @@ pub fn run() {
             stems::set_stems,
             stems::prepare_stems,
             stems::use_stems,
+            stems::stems_shown,
             stems::clear_stems_cache,
             stems::stems_model,
             stems::stems_setup_done,

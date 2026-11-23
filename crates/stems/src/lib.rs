@@ -14,7 +14,9 @@
 //! [`Splitter::prepare`] gets a deck's stems part of the way while it only
 //! looks as if they'll be used: it loads the model and splits the region at
 //! the play head. Once it no longer does, that's dropped at once, and a
-//! region being split is stopped. It isn't done until the model has its
+//! region being split is stopped. A deck that's cued is prepared too: once it has
+//! stood still at a new place for a moment, the region there is split and
+//! kept aside for as long as the deck is in it. It isn't done until the model has its
 //! [`quick`] copy, since loading it without takes seconds and a lot of memory.
 //!
 //! The separation model is HTDemucs (Meta, MIT licence), run through ONNX
@@ -90,6 +92,14 @@ pub enum When {
     Always,
 }
 
+/// How often decks are looked at, to see whether one has been cued, and how
+/// long one has to have stood still for that.
+const LOOK: Duration = Duration::from_millis(150);
+const REST: Duration = Duration::from_millis(400);
+/// How long a track takes to settle after it's loaded: where it stands then
+/// is where it was loaded to, not somewhere it was cued.
+const SETTLE: Duration = Duration::from_millis(500);
+
 /// The longest a deck stays prepared: a pointer left lying on its stems
 /// doesn't keep the model in memory for good.
 const HOLD: Duration = Duration::from_secs(30);
@@ -164,6 +174,13 @@ struct Job {
     /// When its stems were first used, with nothing prepared, until they're
     /// heard.
     asked: Option<Instant>,
+    /// When it was loaded, and where it stood once that had settled.
+    loaded: Instant,
+    settled: Option<f64>,
+    /// The deck was cued in this region, and is still in it.
+    cued: Option<usize>,
+    /// Where it last stood, and since when.
+    stood: Option<(f64, Instant)>,
     failed: Option<String>,
 }
 
@@ -182,6 +199,15 @@ impl Job {
         when == When::OnUse && !self.used && self.hint.is_some_and(|t| t > now)
     }
 
+    /// It was cued, and the region there isn't split yet.
+    fn cue_wanted(&self, when: When) -> bool {
+        when == When::OnUse
+            && !self.used
+            && self
+                .cued
+                .is_some_and(|k| self.ahead.as_ref().is_none_or(|(have, _)| *have != k))
+    }
+
     fn done(&self) -> bool {
         self.progress.as_ref().is_some_and(|p| p.is_done())
     }
@@ -195,6 +221,10 @@ struct State {
     generation: u64,
     model_error: Option<String>,
     model_ready: bool,
+    /// Stems have been used since the app started.
+    used: bool,
+    /// Decks whose Stems tab is showing.
+    shown: [bool; NUM_DECKS],
     /// The region being split: its deck, its job and how to stop it.
     running: Option<(usize, u64, Arc<Stop>)>,
     next_id: u64,
@@ -209,9 +239,9 @@ impl State {
         };
         let when = self.settings.when;
         let now = Instant::now();
-        let needed = self.jobs[*deck]
-            .as_ref()
-            .is_some_and(|j| j.id == *id && (j.wanted(when) || j.hinted(when, now)));
+        let needed = self.jobs[*deck].as_ref().is_some_and(|j| {
+            j.id == *id && (j.wanted(when) || j.hinted(when, now) || j.cue_wanted(when))
+        });
         if !needed {
             stop.stop();
         }
@@ -327,6 +357,10 @@ impl Splitter {
             hint: None,
             ahead: None,
             asked: None,
+            loaded: Instant::now(),
+            settled: None,
+            cued: None,
+            stood: None,
             failed: None,
         });
         st.stop_unneeded();
@@ -341,6 +375,7 @@ impl Splitter {
             let s = self.settings();
             s.when == When::OnUse && s.model.is_some()
         };
+        self.lock().used = true;
         self.with_job(deck, |job| {
             if !job.used && starts && job.hint.is_none() && job.ahead.is_none() {
                 job.asked = Some(Instant::now());
@@ -352,6 +387,15 @@ impl Splitter {
     /// What making stems has taken on this computer.
     pub fn measured(&self) -> measure::Summary {
         measured(&self.shared).summary()
+    }
+
+    /// Whether `deck`'s Stems tab is showing. Only says whether its cues are
+    /// prepared for; it isn't using them.
+    pub fn shown(&self, deck: usize, shown: bool) {
+        if let Some(s) = self.lock().shown.get_mut(deck) {
+            *s = shown;
+        }
+        self.shared.wake.notify_all();
     }
 
     /// `deck`'s stems look about to be used (`on`), or no longer do. Does
@@ -511,14 +555,18 @@ impl Worker {
                         self.model = None;
                     }
                     let now = Instant::now();
-                    Self::let_go(&mut st, now);
+                    let looking = self.look(&mut st, now);
+                    self.let_go(&mut st, now);
                     if let Some(t) = self.pick(&mut st, now) {
                         break t;
                     }
                     let held = st.jobs.iter().flatten().filter_map(|j| j.hint).max();
                     if let Some(until) = held {
                         // Something may be about to be used: hold on.
-                        let wait = until.saturating_duration_since(now);
+                        let mut wait = until.saturating_duration_since(now);
+                        if looking {
+                            wait = wait.min(LOOK);
+                        }
                         st = shared
                             .wake
                             .wait_timeout(st, wait)
@@ -544,6 +592,14 @@ impl Worker {
                             break Task::MakeQuick(path);
                         }
                     }
+                    if looking {
+                        st = shared
+                            .wake
+                            .wait_timeout(st, LOOK)
+                            .unwrap_or_else(|e| e.into_inner())
+                            .0;
+                        continue;
+                    }
                     st = shared.wake.wait(st).unwrap_or_else(|e| e.into_inner());
                 }
             };
@@ -551,14 +607,68 @@ impl Worker {
         }
     }
 
+    /// Looks for decks that have been cued. Only for people who use stems:
+    /// any have been used since the app started, or the deck's Stems tab is
+    /// showing. Returns whether to go on looking.
+    fn look(&self, st: &mut State, now: Instant) -> bool {
+        if st.settings.when != When::OnUse || st.settings.model.is_none() {
+            return false;
+        }
+        let segment = self.model.as_ref().map_or(DEFAULT_SEGMENT, |m| m.segment());
+        let (used, shown) = (st.used, st.shown);
+        let mut looking = false;
+        for (deck, job) in st.jobs.iter_mut().enumerate() {
+            let Some(job) = job.as_mut().filter(|j| !j.used && j.looked && !j.done()) else {
+                continue;
+            };
+            if !(used || shown[deck]) {
+                job.cued = None;
+                job.stood = None;
+                continue;
+            }
+            looking = true;
+            let at = (self.heads)(deck).max(0.0);
+            if now.duration_since(job.loaded) < SETTLE {
+                continue;
+            }
+            let rate = job.track.sample_rate;
+            let frames = job.track.frames();
+            let p = job
+                .progress
+                .get_or_insert_with(|| Progress::new(Plan::new(segment, frames, rate)));
+            let region = p.plan().region_at(at * rate as f64);
+            // Out of the region it was cued in: played away, or cued elsewhere.
+            if job.cued.is_some_and(|k| k != region) {
+                job.cued = None;
+            }
+            let settled = *job.settled.get_or_insert(at);
+            let moved = (at - settled).abs() > 1e-6;
+            if moved {
+                // It has been somewhere else, so anywhere counts from now on.
+                job.settled = Some(f64::NAN);
+            }
+            let cueable = job.settled.is_some_and(f64::is_nan);
+            match job.stood {
+                Some((was, since)) if (was - at).abs() < 1e-6 => {
+                    if cueable && now.duration_since(since) >= REST {
+                        job.cued = Some(region);
+                    }
+                }
+                _ => job.stood = Some((at, now)),
+            }
+        }
+        st.stop_unneeded();
+        looking
+    }
+
     /// Drops what was prepared for uses that never came.
-    fn let_go(st: &mut State, now: Instant) {
+    fn let_go(&self, st: &mut State, now: Instant) {
         let on_use = st.settings.when == When::OnUse;
         for job in st.jobs.iter_mut().flatten() {
             if job.hint.is_some_and(|t| t <= now || job.used || !on_use) {
                 job.hint = None;
             }
-            if job.hint.is_none() && !job.wanted(st.settings.when) {
+            if job.hint.is_none() && job.cued.is_none() && !job.wanted(st.settings.when) {
                 job.ahead = None;
             }
         }
@@ -595,9 +705,16 @@ impl Worker {
         }
         // Only a model that loads quickly is loaded on a hint.
         let quick = self.model.is_some()
-            || st.jobs.iter().flatten().any(|j| j.hinted(when, now)) && quick::exists(&path);
-        let active =
-            |j: &Job| j.failed.is_none() && (j.wanted(when) || quick && j.hinted(when, now));
+            || st
+                .jobs
+                .iter()
+                .flatten()
+                .any(|j| j.hinted(when, now) || j.cue_wanted(when))
+                && quick::exists(&path);
+        let active = |j: &Job| {
+            let maybe = quick && (j.hinted(when, now) || j.cue_wanted(when));
+            j.failed.is_none() && (j.wanted(when) || maybe)
+        };
         for job in st.jobs.iter_mut().flatten().filter(|j| active(j)) {
             if job.progress.is_none() {
                 let segment = self.model.as_ref().map_or(DEFAULT_SEGMENT, |m| m.segment());
