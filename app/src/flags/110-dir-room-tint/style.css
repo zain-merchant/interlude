@@ -1705,7 +1705,7 @@
   margin: 0;
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .transport {
-  grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(0, 1.22fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(min(106px, 30%), 1.22fr);
 }
 
 /* ── Numbers ───────────────────────────────────────────────────────────
@@ -3425,7 +3425,7 @@
   stroke: none;
 }
 /* The unit gives way before the figure or the ends do. */
-@container (max-width: 92px) {
+@container (max-width: 96px) {
   :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .transport .jumps > span small {
     display: none;
   }
