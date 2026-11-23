@@ -2,14 +2,46 @@
 
 /** How far a drag goes, in px, before it's clear which way it's going. */
 const SLOP = 4;
+/** How much of the last movement says which way it's going now, in px. */
+const MEMORY = 12;
+/** How much more of that the other axis needs before the drag changes to it. */
+const TURN = 1.8;
 
 /**
- * Which way a drag is going, or null while it's too short to tell. Nearly
- * diagonal counts as sideways.
+ * Turns one drag's movement into travel, up and right raising. Ways:
+ * - turn: the axis the drag is going along, and only that one, so a hand that
+ *   drifts changes nothing; when the drag turns, so does the axis, about 10px
+ *   later. Nearly diagonal at the start counts as sideways.
+ * - sum: both at once, dx less dy. Nothing to choose, and no 4px wait; up and
+ *   right together is faster, and up and left together cancels.
+ * - across, updown: one axis only.
+ * Measured against each other, and against picking an axis once, the bigger
+ * axis of each move and going round (directions5/work/drag20.mjs).
+ * @param {string} how
+ * @returns {(dx: number, dy: number) => number}
  */
-export function axisOf(/** @type {number} */ dx, /** @type {number} */ dy) {
-  if (Math.hypot(dx, dy) < SLOP) return null;
-  return Math.abs(dx) >= Math.abs(dy) * 0.75 ? 'x' : 'y';
+export function dragger(how) {
+  if (how === 'across') return (dx) => dx;
+  if (how === 'updown') return (dx, dy) => -dy;
+  if (how === 'sum') return (dx, dy) => dx - dy;
+  /** @type {'x' | 'y' | null} */
+  let axis = null;
+  let [gx, gy, rx, ry] = [0, 0, 0, 0];
+  return (dx, dy) => {
+    const d = Math.hypot(dx, dy);
+    if (!d) return 0;
+    const k = Math.exp(-d / MEMORY);
+    rx = rx * k + (dx / d) * (1 - k);
+    ry = ry * k + (dy / d) * (1 - k);
+    if (!axis) {
+      gx += dx;
+      gy += dy;
+      if (Math.hypot(gx, gy) >= SLOP) axis = Math.abs(gx) >= Math.abs(gy) * 0.75 ? 'x' : 'y';
+      return 0;
+    }
+    if (axis === 'x' ? Math.abs(ry) > TURN * Math.abs(rx) : Math.abs(rx) > TURN * Math.abs(ry)) axis = axis === 'x' ? 'y' : 'x';
+    return axis === 'x' ? dx : -dy;
+  };
 }
 
 /** The whole travel, in px of scroll. */

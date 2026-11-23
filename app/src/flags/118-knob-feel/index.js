@@ -1,9 +1,9 @@
 // #118 (UI audit flag): knob-feel.
 //
 // Drag. A knob turns with a drag left and right as well as up and down (right
-// and up raise it). The first few pixels say which, nearly diagonal counting
-// as sideways, and the drag stays on that axis; nothing moves until then, so
-// nothing jumps. ⇧ for fine, the detent, double-click, the keys and focus are
+// and up raise it), following the way the drag is going and changing axis when
+// it turns, or adding both (feel.js says how each behaves on a diagonal).
+// Nothing jumps. ⇧ for fine, the detent, double-click, the keys and focus are
 // as they were. Faders keep their own axis.
 //
 // Scroll. A knob or a fader moves as far as the scroll does (400px for the
@@ -22,9 +22,10 @@ export default {
     drag: {
       type: 'choice',
       label: 'Dragging a knob',
-      default: 'both',
+      default: 'turn',
       options: [
-        ['both', 'Either way', 'Left and right, or up and down: whichever way the drag starts.'],
+        ['turn', 'Follows the way you drag', 'Left and right or up and down: the way the drag is going, changing when it turns.'],
+        ['sum', 'Both at once', 'Right and up add, left and down take away; up and left together cancel.'],
         ['across', 'Left and right', 'Only sideways.'],
         ['updown', 'Up and down', 'As it was.'],
       ],
