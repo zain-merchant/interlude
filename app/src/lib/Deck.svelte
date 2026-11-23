@@ -230,7 +230,8 @@
   const toggleKeylock = () => control({ type: 'setKeylock', deck, on: !d.keylock });
   const slipTip = () =>
     tipText('Slip on: after a scratch, loop, held hot cue or pause, the track picks up where it would have been. Click to turn off', keyLabel(`deck.${deck}.slip`));
-  const rangeTip = () => `Tempo ${pct(ratePct)}, fader range ±${Math.round(range * 100)}%. Click to change the range`;
+  // #109 (UI audit flag): quiet-readouts: the button itself is the tempo, so its tip only adds the range.
+  const rangeTip = () => (flag('quiet-readouts') ? `Fader range ±${Math.round(range * 100)}%. Click to change the range` : `Tempo ${pct(ratePct)}, fader range ±${Math.round(range * 100)}%. Click to change the range`);
   const st = (n) => `${Math.abs(n)} ${Math.abs(n) === 1 ? 'semitone' : 'semitones'}`;
   const keyTip = () => {
     if (!pk) return '';
@@ -269,7 +270,7 @@
     if (pickupRate !== null) return `The controller's tempo fader is at ${pct((pickupRate - 1) * 100)}. Move it to the marker and it takes over`;
     if (tempoMatch === null) return '';
     const o = engine.decks[1 - deck];
-    return tipText(`${Dn} pitch`, pct(ratePct), 'double-click to reset', `the mark is where it matches the other deck (${(o.bpm * o.rate).toFixed(2)})`);
+    return tipText(`${Dn} pitch`, flag('quiet-readouts') ? '' : pct(ratePct), 'double-click to reset', `the mark is where it matches the other deck (${(o.bpm * o.rate).toFixed(2)})`); // #109 (UI audit flag)
   });
 
   const regionLabel = $derived(
@@ -456,7 +457,8 @@
       use:tip={rangeTip}>{pct(ratePct)}{#if range !== RANGES[0]}<span class="rng">±{Math.round(range * 100)}</span>{/if}</button>
     <!-- #18 (UI audit flag): visual-tempo-match marks the tempos as matched (the handle's line takes the other deck's colour). -->
     <div class="pitch-fader" class:matched={tempoMatched}>
-      <Fader vertical big tick value={pitch} min={-1} max={1} reset={0} label="{Dn} pitch" onchange={setPitch}
+      <!-- #109 (UI audit flag): quiet-readouts: the tempo % above the fader already shows its value. -->
+      <Fader vertical big tick value={pitch} min={-1} max={1} reset={0} label="{Dn} pitch" onchange={setPitch} shown={flag('quiet-readouts')}
         format={(v) => pct(-v * range * 100)} {ghost} match={tempoMatch}
         note={pitchNote} />
     </div>

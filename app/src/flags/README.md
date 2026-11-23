@@ -1,13 +1,14 @@
 # UI audit flags
 
-Each change being tried in the UI audit is a flag: off by default, and off
-is exactly the app as it was. In a dev build (`npm run dev`) the audit's
+Each change being tried in the UI audit is a flag. The recommended fixes
+are on by default (see "On by default" below); a flag that's off is
+exactly the app as it was, so All off is upstream's app. In a dev build (`npm run dev`) the audit's
 panel (`panel/FlagPanel.svelte`, loaded only by dev builds) turns flags on
 and tunes them. It has a row per flag, grouped by area: its number, its
 title, a line on what it fixes, a **Show me** and an on/off switch. A
 flag's settings open under its row while it's on (or with the sliders
-button beside Show me). There's a search field, All on / All off and a
-count of what's on.
+button beside Show me). There's a search field, All on / All off / Defaults
+(the recommended fixes on, the rest off) and a count of what's on.
 
 <kbd>`</kbd> folds the panel down to a pill and opens it again. Drag it by
 its header (or drag the pill) and it docks to the nearest corner or edge
@@ -21,6 +22,130 @@ folder just appears in it.
 Each flag becomes its own issue and pull request. To ship one: keep its
 folder's styles and its hooks, then remove its gate (the
 `:root[data-flag-<id>]` prefix and the `flag('<id>')` checks).
+
+## On by default
+
+The owner: "the UI polish things you can leave on as default." The registry
+(`onByDefault` in `registry.svelte.js`) turns on every fix: every flag that
+isn't a direction, doesn't set `against`, and doesn't set `byDefault: false`.
+Picks saved in localStorage win over the default from then on (picks saved
+before there were defaults keep what was on and take the defaults for the
+rest). The panel can still turn any of them off, and **Defaults** puts this
+list back. The registry ships in production builds, so these are on in the
+app too.
+
+On by default (83):
+
+- #1 Smoother rounded corners (`squircles`)
+- #2 Rounded corners that nest evenly (`concentric`)
+- #3 Things side by side line up (`grid`)
+- #4 Clearer edges and selection (`borders`)
+- #5 Recording no longer nudges the mixer (`no-shift`)
+- #5 Typing a BPM keeps the deck still (`no-shift-bpm`)
+- #5 Tempo readout and pitch fader keep still (`no-shift-pitch`)
+- #5 Sorting keeps the BPM and Time headings in place (`no-shift-sort`)
+- #5 Cues, loop, FX and beat jump hold their places (`no-shift-strip`)
+- #5 Deck tabs keep still when their dot lights (`no-shift-tabs`)
+- #6 The play button shows which deck is playing (`play-states`)
+- #7 Banners float instead of squeezing the decks (`edge-banner`)
+- #7 Empty playlists and folders say so (`edge-empty-views`)
+- #7 Tall windows give the extra room to the library (`edge-tall`)
+- #8 Times past an hour show hours (`stress-hours`)
+- #8 Deck buttons fit the smallest window (`stress-narrow-strip`)
+- #8 "1 track", not "1 tracks" (`stress-plural`)
+- #9 Buttons that look pressable (`buttons`)
+- #10 Space instead of middle dots (`no-dots`)
+- #11 Arrows and notes at the right brightness (`colour-scale`)
+- #11 Text in five clear sizes (`type-scale`)
+- #12 Dialogs arrive quickly (`polish-dialog`)
+- #12 The "Loaded" message slides in (`polish-toast`)
+- #12 Tooltips: no wait when moving between them (`polish-tooltip`)
+- #13 Waveform titles stop before the play head (`declutter-lane-label`)
+- #13 Load messages stay on one line and off the titles (`declutter-toast`)
+- #14 Every control answers pointing, pressing and focus alike (`states`)
+- #15 Even margins everywhere (`spacing`)
+- #16 Room under the last library row (`library-end`)
+- #18 A progress meter while the library is analysed (`visual-analysis`)
+- #18 Warn when a track is about to end (`visual-ending`)
+- #18 Mark library keys that mix with what's loaded (`visual-key-match`)
+- #18 A mark on the pitch slider shows where tempos match (`visual-tempo-match`)
+- #20 Track list runs to the library's edge (`library-clip`)
+- #21 A grip on every panel edge, and designed sizes (`panel-sizes`)
+- #23 A lost audio device looks like a warning (`banner-warning`)
+- #24 Focus rings only after you use the keys (`focus-after-keys`)
+- #25 The quietest grey clears contrast everywhere (`quiet-text`)
+- #26 Toast, banner and dialog details (`overlay-polish`)
+- #27 Each dialog's main button looks like one (`primary-button`)
+- #28 Report says what it saves and where (`report-copy`)
+- #29 Import's links look like links (`import-links`)
+- #30 Long tooltips wrap (`tooltip-wrap`)
+- #31 Menus in Settings look like menus (`select-chevron`)
+- #32 Settings headings lead the page (`settings-type`)
+- #33 Stems don't claim to be on before they can be (`stems-model`)
+- #34 Settings say it in one line (`settings-copy`)
+- #35 Checkboxes that look ready to tick (`settings-checks`)
+- #37 Resetting shortcuts can be undone (`settings-undo`)
+- #40 Time left is the big number (`time-remaining`)
+- #42 Beat-jump arrows work across their whole half (`beat-jump-hit`)
+- #43 A running loop or effect looks on (`on-state`)
+- #44 Tempo % and key big enough to read (`pitch-readout`)
+- #45 Hot cue 1 is no longer the Cue colour (`cue-colour`)
+- #46 An empty deck looks empty (`empty-deck`)
+- #47 The FX level dial says "Level" (`fx-label`)
+- #48 The nudge buttons look like buttons (`nudge-pill`)
+- #49 Waveform zoom moves off the waveform (`zoom-pill`)
+- #50 Hot cue numbers on the overview (`overview-cues`)
+- #51 Flat and sharp signs that match the type (`key-glyphs`)
+- #52 Nothing drawn before the track starts (`lane-start`)
+- #54 Deck details: play head, cue numbers, tenths, menus (`deck-polish`)
+- #60 Meters with a scale, peak hold and a clip light (`meters`)
+- #61 EQ kills look like buttons (`eq-kill`)
+- #62 Dials grab on their whole ring (`hit-areas`)
+- #63 Dials and faders light up under the pointer (`control-feedback`)
+- #64 One scale on the crossfader (`crossfader-scale`)
+- #65 Right-hand fader scales mirror the left (`mirror-scales`)
+- #66 Quieter rings on Master, Cue mix and sampler Level (`knob-rings`)
+- #67 The sampler's Level dial fits, and empty slots show their edge (`sampler-strip`)
+- #68 Mixer details: dial pointers, sampler menu (`mixer-polish`)
+- #80 Track list columns sized to what they hold (`library-columns`)
+- #81 Column headings show the sort (`library-sort`)
+- #82 Loaded tracks stand out in the list (`loaded-rows`)
+- #83 Settings button shows a gear (`settings-icon`)
+- #84 Searches say where they looked, and how to get back (`search-scope`)
+- #85 Every music folder shows its count (`folder-counts`)
+- #86 Library messages say what happened, in plain words (`copy-toasts`)
+- #87 Only the list the keys move looks selected (`library-focus`)
+- #88 Say "left deck" and "right deck", not A and B (`deck-names`)
+- #89 The library writes keys the way the decks do (`key-notation`)
+- #90 Library details (`library-polish`)
+- #109 Popovers stop repeating values already on screen (`quiet-readouts`)
+
+Off by default, and why:
+
+- #8 Worst-case test data (`stress-data`): test data for checking the fixes, not a fix; it swaps in a fake library and reloads the page.
+- #38 Solid Done (`against-solid-primary`): against the doc's one solid primary; #27 is the adopted version.
+- #39 Brighter, larger quiet text (`against-text-levels`): against the doc's text levels; #25 is the adopted contrast fix.
+- #56 Hot cues as pads (`against-cue-pads`): against the doc's quiet text row of cues; kept for the owner to judge (upstream now shows all eight).
+- #56 Stronger deck colours (`against-deck-colours`): against the doc's pale deck whites; an alternative to judge.
+- #56 Brighter empty hot cues (`against-empty-rings`): against owner's call 9, which keeps them quiet.
+- #56 Heavier times and BPM (`against-heavy-numerals`): against the doc's light numerals; an alternative to judge.
+- #56 A and B letters on the decks (`deck-letters`): the doc rules deck letters out; #88's left/right words are the adopted fix.
+- #57 A stronger Cue at rest (`against-cue-outline`): against the doc's Cue outline; an alternative to judge.
+- #57 An edge on the overview well (`against-deck-wells`): against the doc's edge-free wells; an alternative to judge.
+- #57 Mirror the right deck more (`against-mirror`): against the doc's mirroring rule; an alternative to judge.
+- #57 A paused Play that steps back (`against-quiet-play`): competes with #6 play-states, which is on.
+- #57 Idle tabs show their state (`against-tab-status`): against the doc's quiet tabs; an alternative to judge.
+- #57 Calmer waveform cores (`against-wave-cores`): against the doc's waveform look; an alternative to judge.
+- #69 Mixer wells, slots and ticks the reviewers' way (`mixer-against-doc`): against the doc; the reviewers' alternative to judge.
+- #91 Roomier library rows (`library-roomy`): against the doc's 28px row pitch; fewer tracks fit.
+- #92 to #108, the directions: whole-app looks, opt-in and one at a time; not polish.
+
+Retired at the merge of upstream main (folder and hooks removed), because
+upstream now does the same thing its own way: #17 headphone-align (the cue
+button spans fader and meter), #19 library-resize (the handle is
+`.dragging`), #36 settings-panel (Settings is a popup), #41 beat-grid (the
+grid draws over the waveform with edge ticks) and #53 deck-spare-height (the
+deck sizes its own rows; its old rows squeezed the hot cues to one line).
 
 ## A flag
 
@@ -187,7 +312,7 @@ don't contain them and every flag off is still the app as it was.
 
 ## Rules
 
-- Off means unchanged. Check the app with every flag off against `main`.
+- Off means unchanged. Check the app with every flag off (All off) against `main`.
 - Keep class names, `aria-label`s and `data-region`s as they are: other code
   (the website's hero) finds controls by them.
 - One flag per audit item, or one per sub-fix for the open-ended items.

@@ -16,7 +16,7 @@
    * @type {{ value: number, min?: number, max?: number, reset?: number, label: string,
    *          vertical?: boolean, invert?: boolean, tick?: boolean, big?: boolean,
    *          format?: (v: number) => string, onchange?: (v: number) => void,
-   *          ghost?: number | null, note?: string, match?: number | null }}
+   *          ghost?: number | null, note?: string, match?: number | null, shown?: boolean }}
    */
   let {
     value = $bindable(),
@@ -33,6 +33,7 @@
     ghost = null,
     note = '',
     match = null, // #18 (UI audit flag): a value to mark beside the slot (the other deck's tempo); null draws nothing.
+    shown = false, // #109 (UI audit flag): quiet-readouts: the value is on screen beside the fader, so no live readout repeats it.
   } = $props();
 
   let track;
@@ -57,6 +58,8 @@
     }
   }
   const readout = () => tipText(label, format(value));
+  // #109 (UI audit flag): with the value shown beside it, a drag or key shows no popover (the readout there moves instead).
+  const live = () => (shown ? hideTip(track) : showTip(track, readout()));
   // #86 (UI audit flag): copy-toasts says what the reset goes back to.
   const resetLabel = () => (flag('copy-toasts') ? `Reset to ${format(reset)}` : 'Reset to default');
 
@@ -81,7 +84,7 @@
       raw = min + (invert ? 1 - g : g) * (max - min);
       set(raw);
     }
-    showTip(track, readout());
+    live();
   }
   function move(e) {
     if (!dragging) return;
@@ -91,7 +94,7 @@
     last = f;
     const perPx = (max - min) / length();
     set(detent(raw, reset, perPx, e.shiftKey));
-    showTip(track, readout());
+    live();
   }
   function up() {
     if (!dragging) return;
@@ -104,13 +107,13 @@
     if (invert && e.key.startsWith('Arrow')) v = value - (v - value);
     e.preventDefault();
     set(v);
-    showTip(track, readout());
+    live();
   }
   function wheel(e) {
     e.preventDefault();
     const d = (vertical ? -e.deltaY : e.deltaX || -e.deltaY) > 0 ? 1 : -1;
     set(value + d * (invert ? -1 : 1) * (max - min) * (e.shiftKey ? 0.005 : 0.02));
-    showTip(track, readout());
+    live();
   }
 </script>
 
@@ -136,7 +139,7 @@
   onkeydown={key}
   onwheel={wheel}
   oncontextmenu={(e) => openMenu(e, [{ label: resetLabel(), action: () => set(reset) }])}
-  use:tip={() => note || tipText(label, format(value), 'double-click to reset')}
+  use:tip={() => note || tipText(label, shown ? '' : format(value), 'double-click to reset')}
 >
   <div class="line"></div>
   {#each [0, 0.25, 0.5, 0.75, 1].filter((m) => !(tick && vertical && Math.abs(m - tickAt) < 1e-6)) as m}<i class="mark" style={vertical ? `bottom: ${m * 100}%` : `left: ${m * 100}%`}></i>{/each}

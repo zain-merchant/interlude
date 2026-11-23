@@ -81,7 +81,8 @@
   <button class="tb kind" aria-haspopup="menu" aria-label="{Dn} effect, {k.label}" {...press(pick)}
     use:tip={() => 'Choose effect'}>{k.label}<svg viewBox="0 0 10 10" aria-hidden="true"><path d="M2.5 4l2.5 2.5L7.5 4" /></svg></button>
   <span class="sep"></span>
-  <div class="beats" use:tip={() => `${k.beats}: ${beatText(beats)} ${beats > 1 ? 'beats' : 'beat'}`}>
+  <!-- #109 (UI audit flag): quiet-readouts: the length is written between the arrows, so the tip only names it. -->
+  <div class="beats" use:tip={() => (flag('quiet-readouts') ? k.beats : `${k.beats}: ${beatText(beats)} ${beats > 1 ? 'beats' : 'beat'}`)}>
     <button class="tb ar" aria-label="Shorter" aria-disabled={beats <= BEATS[0]} {...press(() => step(-1))}>‹</button>
     <span class="val" aria-live="polite" aria-label="{beatText(beats)} {beats > 1 ? 'beats' : 'beat'}"><b class="num">{beatText(beats)}</b> {beats > 1 ? 'beats' : 'beat'}</span>
     <button class="tb ar" aria-label="Longer" aria-disabled={beats >= BEATS[BEATS.length - 1]} {...press(() => step(1))}>›</button>

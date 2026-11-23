@@ -84,6 +84,7 @@
   };
   function themed() {
     flagsRev();
+    void t; // a direction may tint an empty deck's record differently: read again on load and eject
     if (!wrap) return { col: COLS[deck], mat: '#0c0c0f' };
     const cs = getComputedStyle(wrap);
     const c = triplet(cs.getPropertyValue('--record-tint'));
