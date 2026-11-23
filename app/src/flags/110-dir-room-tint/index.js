@@ -50,12 +50,13 @@ export default {
     keyon: {
       type: 'choice',
       label: 'Key lock when it’s on (with the etched outline)',
-      default: 'drop',
+      default: 'raise',
       options: [
+        ['raise', 'Comes up', 'Off is the etched outline; on is a raised key, as a selected tab is, its words in the deck’s colour.'],
         ['drop', 'Raised off, dropped on', 'Off stands up a little; on drops in, the etched outline in the deck’s colour.'],
         ['deep', 'Deep', 'Off flat; on has a long shadow from its top edge.'],
         ['cutgrooves', 'Etched, with grooves', 'Pressed, with the record’s grooves and the outline.'],
-        ['sync', 'Like Sync', 'The app’s pressed key, its words in the deck’s colour.'],
+        ['sync', 'Like Sync', 'Off is the etched outline; on is the app’s pressed key, its words in the deck’s colour.'],
         ['grooves', 'Grooves', 'Pressed, with the record’s grooves.'],
         ['etched', 'Etched, tinted', 'Pressed, the etched outline in the deck’s colour.'],
         ['line', 'A thin line', 'Pressed, an even line in the deck’s colour.'],

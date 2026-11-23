@@ -3676,6 +3676,25 @@
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-column='ring'][data-flag-dir-room-tint-keyon='cutgrooves'] [data-region^='deck'] .pitch .lock.on::after {
   box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.85), inset 0 2px 0 0 color-mix(in oklab, var(--deck) 22%, transparent), 0 1px 0 0 color-mix(in oklab, var(--deck) 40%, transparent);
 }
+/* Off etched and flat; on comes up as a raised key, as a selected tab does,
+   its words in the deck's colour. Pressing it goes in, as every key's press does. */
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-column='ring'][data-flag-dir-room-tint-keyon='raise'] [data-region^='deck'] .pitch .lock.on:not(:active, .pressed, [data-show-active]) {
+  --kk-c1: rgb(0 0 0 / 0);
+  --tt-c3: rgb(0 0 0 / 0);
+  background-color: var(--rg-key);
+  background-image: var(--tt-sheen);
+  box-shadow:
+    inset 0 1px 0 0 rgb(255 255 255 / 0.095),
+    inset 0 12px 12px -10px rgb(255 255 255 / 0.045),
+    0 1px 0 0 var(--tt-rim),
+    0 2px 5px -1px var(--tt-lift-c);
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-column='ring'][data-flag-dir-room-tint-keyon='raise'] [data-region^='deck'] .pitch .lock.on:not(:active, .pressed, [data-show-active]):hover {
+  background-color: color-mix(in oklab, #fff 6%, var(--rg-key));
+}
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-column='ring'][data-flag-dir-room-tint-keyon='raise'] [data-region^='deck'] .pitch .lock.on::after {
+  content: none;
+}
 /* 3: a ledger: etched rules across the column, between the three */
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-column='ledger'] [data-region^='deck'] .pitch .val::after,
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint-column='ledger'] [data-region^='deck'] .pitch .nudge::before,
