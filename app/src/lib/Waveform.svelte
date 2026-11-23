@@ -5,6 +5,7 @@
   import { flag, flagsRev, watchFlags, DIRECTIONS } from '../flags/registry.svelte.js';
   import { waveOptions as roomTintWave } from '../flags/110-dir-room-tint/wave.js'; // #110 (UI audit flag)
   import { lookString } from '../flags/114-wave-looks/look.js'; // #114 (UI audit flag)
+  import { trackpadZoom } from '../flags/115-trackpad-zoom/zoom.js'; // #115 (UI audit flag)
   import { openMenu } from './menu.svelte.js';
   import { gridMenu, gridMode, startSlide, slide, endSlide } from './grid.svelte.js';
 
@@ -216,6 +217,12 @@
     const at = displayPos[deck] + ((e.clientX - r.left) / r.width - 0.5) * span();
     openMenu(e, gridMenu(deck, Math.max(0, Math.min(tracks[deck].duration, at))));
   }
+
+  // #115 (UI audit flag): trackpad-zoom takes pinches and ⌘/Ctrl/⌥ + scroll over the whole waveforms panel (the left deck's lane listens for both).
+  onMount(() => {
+    if (mode !== 'scroll' || deck !== 0) return;
+    return trackpadZoom(canvas.closest('.waves') ?? canvas, { on: () => flag('trackpad-zoom'), zoom: (f) => onzoom?.(f) });
+  });
 
   // ⌘/Ctrl + scroll zooms; plain scroll scratches through a paused track.
   let wheelTimer;

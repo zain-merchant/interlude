@@ -36,7 +36,7 @@ rest), except for a disabled flag, which stays off whatever was saved. The
 panel can still turn any of these off, and **Defaults** puts this list back. The registry ships in production builds, so these are on in the
 app too.
 
-On by default (83):
+On by default (84):
 
 - #1 Smoother rounded corners (`squircles`)
 - #2 Rounded corners that nest evenly (`concentric`)
@@ -121,10 +121,12 @@ On by default (83):
 - #89 The library writes keys the way the decks do (`key-notation`)
 - #90 Library details (`library-polish`)
 - #109 Popovers stop repeating values already on screen (`quiet-readouts`)
+- #115 Pinch to zoom the waveforms (`trackpad-zoom`)
 
 Off by default, and why:
 
 - #8 Worst-case test data (`stress-data`): test data for checking the fixes, not a fix; it swaps in a fake library and reloads the page. All on leaves it alone too (see "Disabled flags" for why it isn't disabled).
+- #114 Waveform looks (`wave-looks`): opt-in, other looks to compare with today's, with a switcher of its own in dev builds.
 - #92 and up, the directions: whole-app looks, opt-in and one at a time; not polish.
 
 Disabled (15): the "against the doc" alternatives. They argue against the
