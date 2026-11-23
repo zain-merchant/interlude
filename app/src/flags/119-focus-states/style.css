@@ -9,9 +9,8 @@
 
    Keys only: while #24's data-input says keys are moving focus, whatever has
    it, since WebKit doesn't call a focus moved by script (F6, a tab's arrows)
-   :focus-visible; :focus-visible where #24 is off. A text field has no line: its caret, its
-   words and icon a step brighter, and a little more light on its lower lip,
-   however you got there.
+   :focus-visible; :focus-visible where #24 is off. A text field has no line: its caret, and
+   its words and icon a step brighter, however you got there.
 
    It is a real outline, so forced colours keep it, and nothing here depends
    on a rule under a label. :not(#_) outranks 110's repeated attribute. */
@@ -63,8 +62,8 @@
   outline: none !important;
 }
 /* No room outside. */
-:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_)[data-input='keys'] :is(section.library nav :is(.item, .add), .settings nav .item, .row.head .sort, .row.head .cols, .modes button, .knob button.label, .search .clear, .rw):focus,
-:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):not([data-flag-focus-after-keys]) :is(section.library nav :is(.item, .add), .settings nav .item, .row.head .sort, .row.head .cols, .modes button, .knob button.label, .search .clear, .rw):focus-visible,
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_)[data-input='keys'] :is(section.library nav button:is(.item, .add), .settings nav .item, .row.head .sort, .row.head .cols, .modes button, .knob button.label, .search .clear, .rw):focus,
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):not([data-flag-focus-after-keys]) :is(section.library nav button:is(.item, .add), .settings nav .item, .row.head .sort, .row.head .cols, .modes button, .knob button.label, .search .clear, .rw):focus-visible,
 :root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_)[data-input='keys'] .menu button:focus,
 :root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):not([data-flag-focus-after-keys]) .menu button:focus-visible,
 :root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_)[data-input='keys'] [data-region='tracks']:focus .row.sel,
@@ -169,12 +168,14 @@
   opacity: 1;
 }
 
-/* ── Text fields ───────────────────────────────────────────────────── */
+/* ── Text fields ───────────────────────────────────────────────────────
+   No line and no lit edge: the caret, and the words and icon a step
+   brighter. The cut stays as it was. */
 :root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_) :is(section.library .bar .search, .settings .sfind):has(> input:focus-visible),
 :root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_) :is(input:not([type='range'], [type='checkbox'], [type='radio'], [type='button'], .search > *, .sfind > *, .fp *), textarea:not(.fp *)):focus-visible {
   outline: none !important;
   caret-color: var(--fg);
-  box-shadow: inset 0 1px 0 0 var(--tt-c1), var(--tt-c2), 0 1px 0 0 rgb(255 255 255 / 0.38);
+  box-shadow: var(--tt-cut);
 }
 :root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_) :is(.search, .sfind) > input:focus-visible {
   outline: none !important;
@@ -191,6 +192,60 @@
     outline: 2px solid #fff !important;
     outline-offset: -2px !important;
   }
+}
+/* The tempo being typed: the field lies over the figures it replaces, which
+   stay where they were, with 8px beside them and 3 above and below. */
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_) [data-region^='deck'] .bpm .typed {
+  position: relative;
+}
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_) [data-region^='deck'] .bpm .typed > div {
+  visibility: hidden;
+}
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_) [data-region^='deck'] .bpm .typed > .edit,
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_) [data-region^='deck'] .bpm .typed > .edit:focus-visible {
+  position: absolute;
+  z-index: 2;
+  inset: -3px -8px;
+  box-sizing: border-box;
+  width: auto;
+  height: auto;
+  margin: 0;
+  padding: 2px 8px 4px;
+  border-radius: var(--r);
+  letter-spacing: 0.001em;
+  background: var(--rg-grooves), var(--rg-well);
+  box-shadow: var(--tt-cut);
+  text-align: right;
+  line-height: 24px;
+}
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_) [data-region^='deck'] .mirror .bpm .typed > .edit,
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_) [data-region^='deck'].mirror .bpm .typed > .edit {
+  text-align: left;
+}
+/* WebKit sets a field's figures a pixel and a half higher in their line than
+   Chromium does. */
+@supports (font: -apple-system-body) {
+  :root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_) [data-region^='deck'] .bpm .typed > .edit:focus-visible {
+    padding: 3.5px 8px 2.5px;
+  }
+}
+/* The setup card's name: the browser's mark for its suggestions, as quiet as
+   the app's own chevrons. */
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_) input[list]::-webkit-calendar-picker-indicator {
+  opacity: 0.4;
+}
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_) input[list]::-webkit-list-button {
+  color: var(--fg-3);
+}
+/* The filter's BPM fields: the figures alone. Up and down still step them. */
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_) input[type='number'] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_) input[type='number']::-webkit-inner-spin-button,
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_) input[type='number']::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 /* ── The sidebar's list: what you reach stops clear of its fades ────── */
