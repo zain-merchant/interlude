@@ -31,7 +31,7 @@ const STEP = 2;
 import { pebbleLane, pebbleOverview } from '../flags/105-dir-pebble/wave.js'; // #105 (UI audit flag)
 import { linerLane, linerOverview } from '../flags/106-dir-liner/wave.js'; // #106 (UI audit flag)
 import { fieldDraw } from '../flags/107-dir-field/wave.js'; // #107 (UI audit flag)
-import { lookLane, lookRibbon, lookBeats, lookOverview } from '../flags/114-wave-looks/wave.js'; // #114 (UI audit flag)
+import { lookLane, lookRibbon, lookBeats, lookBar, lookOverview } from '../flags/114-wave-looks/wave.js'; // #114 (UI audit flag)
 
 const rgba = (c, a) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
 
@@ -129,7 +129,7 @@ export class Waveform2D {
    *           beatLen?: number, firstBeat?: number, hotCues?: number[],
    *           loopIn?: number, loopOut?: number, looping?: boolean, slip?: number,
    *           flags?: string, edge?: string, clipStart?: boolean, cueChips?: boolean, chipTop?: number, labelFont?: string,
-   *           keyline?: boolean, loopTint?: boolean, half?: string, look?: string, veil?: string, wl?: string, bps?: number, sec?: number }} view
+   *           keyline?: boolean, loopTint?: boolean, half?: string, look?: string, veil?: string, wl?: string, bps?: number, sec?: number, deck?: number, live?: number }} view
    *   Positions are in bins, -1 for none; `perPx` is bins per device pixel.
    */
   draw(view) {
@@ -180,6 +180,7 @@ export class Waveform2D {
       const px = Math.max(0, Math.min(w, x(view.playhead)));
       ctx.fillStyle = view.mode === 'scroll' ? 'rgba(12,12,14,0.5)' : 'rgba(12,12,14,0.55)';
       if (view.veil === 'ground') ctx.fillStyle = rgba(c.low.map((v) => Math.round(v * 0.2)), view.mode === 'scroll' ? 0.58 : 0.62); // #108 (UI audit flag): dir-ground's veil is a deep tone of the deck's ground
+      if (this.wl?.played === 'deep') ctx.fillStyle = 'rgba(10,10,12,0.7)'; // #114 (UI audit flag)
       ctx.fillRect(0, 0, px, h);
     }
     if (view.loopIn >= 0 && view.loopOut > view.loopIn) {
@@ -238,7 +239,8 @@ export class Waveform2D {
       }
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(x(view.playhead) - 0.75, 0, 1.5, h);
-      if (view.mode === 'scroll' && view.beatLen > 0) this.barNumber(h, view, x);
+      if (view.mode === 'scroll' && view.beatLen > 0 && this.wl && this.wl.chip !== 'pill') lookBar(this, h, view, x); // #114 (UI audit flag)
+      else if (view.mode === 'scroll' && view.beatLen > 0) this.barNumber(h, view, x);
     }
   }
 

@@ -58,8 +58,8 @@
     ...(flag('font-special-gothic') ? { labelFont: '"Special Gothic"' } : {}),
     // The directions (#92 and up): the bar number's pill in the theme's ink, not fixed white.
     ...(DIRECTIONS.some((id) => flag(id)) ? { pill: 'theme' } : {}),
-    // #114 (UI audit flag): wave-looks (`sec` tells a zoom from a tempo change).
-    ...(wl ? { wl, bps: tracks[deck]?.binsPerSec ?? 172, sec: seconds } : {}),
+    // #114 (UI audit flag): wave-looks (`sec` tells a zoom from a tempo change, `live` whether the beats are being worked with).
+    ...(wl ? { wl, bps: tracks[deck]?.binsPerSec ?? 172, sec: seconds, deck, live: live() } : {}),
   });
 
   // #49 (UI audit flag): the play head's x in device px, at the waves
@@ -217,6 +217,26 @@
     const at = displayPos[deck] + ((e.clientX - r.left) / r.width - 0.5) * span();
     openMenu(e, gridMenu(deck, Math.max(0, Math.min(tracks[deck].duration, at))));
   }
+
+  // #114 (UI audit flag): wave-looks' beat marks: 2 in Grid mode, where they're being fixed; 1 while they're used (both
+  // decks playing unsynced, a nudge, a drag, or the pointer over the waveforms); else 0.
+  let over = $state(false);
+  const live = () => {
+    if (editing) return 2;
+    const [a, b] = engine.decks;
+    const d = engine.decks[deck];
+    const matching = a.playing && b.playing && !a.synced && !b.synced;
+    return over || drag || matching || (d.playing && Math.abs(d.speed - d.rate) > 1e-4) ? 1 : 0;
+  };
+  onMount(() => {
+    if (mode !== 'scroll') return;
+    const panel = canvas.closest('.waves');
+    const set = (e) => ((over = e.type === 'pointerenter'), wl && wake());
+    for (const t of ['pointerenter', 'pointerleave']) panel?.addEventListener(t, set);
+    return () => {
+      for (const t of ['pointerenter', 'pointerleave']) panel?.removeEventListener(t, set);
+    };
+  });
 
   // #115 (UI audit flag): trackpad-zoom takes pinches and ⌘/Ctrl/⌥ + scroll over the whole waveforms panel (the left deck's lane listens for both).
   onMount(() => {

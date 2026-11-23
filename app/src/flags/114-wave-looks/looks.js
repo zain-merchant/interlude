@@ -50,19 +50,45 @@ export const lookOf = (id) => LOOKS.find((l) => l.id === id) ?? LOOKS[1];
 /** What Direction 110 draws. */
 export const DEFAULT = 'exact';
 
-/** How the beats are marked over the sound, for every look but Today. */
+/**
+ * How the beats are marked, for every look but Today. Whatever's picked, Grid
+ * mode shows them at full strength (`full`), as they're being fixed there.
+ */
 export const LINES = [
-  ['full', 'Full lines', "As strong as today's."],
-  ['faint', 'Fainter lines', 'A line on every beat, about a third as strong; the ticks at the edges keep the beat.'],
-  ['ticks', 'Edge ticks', 'Beats are short ticks at both edges; only bars are lines.'],
+  ['near', 'Between the lanes, by the play head', 'Ticks on the line between the lanes, strongest at the play head and fading away from it; bars are longer, every fourth bar longest.'],
+  ['seam', 'Between the lanes', "Ticks on the line between the lanes only, so the two decks' beats stand back to back."],
+  ['match', 'Between the lanes, beats while matching', 'Bars only; beats while both decks play unsynced, during a nudge or a drag, or with the pointer over the waveforms.'],
+  ['bars', 'Bars, beats when close', 'Faint bar lines; beats as ticks once zoomed in, or while matching.'],
+  ['outer', 'Outer edges', 'Ticks on the top and bottom edges of the panel only.'],
+  ['ruler', 'Ruler between the lanes', 'The same ticks on a dark strip, so loud sound never covers them.'],
+  ['notch', 'Notches', 'A gap in the sound at each beat instead of a mark; wider at a bar.'],
+  ['behind', 'Behind the sound', 'Lines that pass under the waveform.'],
+  ['zoom', 'Every fourth bar, the rest by zoom', 'Lines: every fourth bar strongest, bars and beats fading as you zoom out.'],
+  ['ticks', 'Edge ticks', 'Ticks at all four edges; bars are lines.'],
+  ['faint', 'Fainter lines', 'A line on every beat, about a third as strong.'],
   ['dots', 'Bars and dots', 'Bars are lines; beats are dots on the rims.'],
+  ['full', 'Full lines', "As strong as today's."],
+];
+/** The bar number at the play head. */
+export const CHIPS = [
+  ['quiet', 'Quiet', 'Small figures beside the play head, at the line between the lanes.'],
+  ['pill', 'Pill', 'White, on the play head.'],
+  ['none', 'Off', ''],
+];
+/** What the part behind the play head shows. */
+export const PLAYED = [
+  ['bare', 'Dimmed, no marks', 'No beat marks past the last beat.'],
+  ['deep', 'Dimmed further, no marks', ''],
+  ['veil', 'Dimmed', "As today's."],
 ];
 
 /** Registry settings: the look, and every look's values under `<look>-<value>`. */
 export function settings() {
   const out = {
     pick: { type: 'choice', label: 'Look', default: DEFAULT, options: LOOKS.map((l) => [l.id, l.name]) },
-    lines: { type: 'choice', label: 'Beat lines', default: 'ticks', options: LINES },
+    marks: { type: 'choice', label: 'Beat marks', default: 'near', options: LINES },
+    chip: { type: 'choice', label: 'Bar number', default: 'quiet', options: CHIPS },
+    played: { type: 'choice', label: 'Played half', default: 'bare', options: PLAYED },
   };
   for (const l of LOOKS) {
     for (const [k, v] of Object.entries(l.values)) {

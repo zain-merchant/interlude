@@ -8,7 +8,7 @@
 // shortcut uses ⌥.
 import { flags, flag, setting } from '../registry.svelte.js';
 import { showToast } from '../../lib/undo.svelte.js';
-import { LOOKS, LINES, PARAMS, lookOf } from './looks.js';
+import { LOOKS, LINES, CHIPS, PLAYED, PARAMS, lookOf } from './looks.js';
 import { lookNow } from './look.js';
 
 const ID = 'wave-looks';
@@ -24,9 +24,13 @@ const value = (l, k) => Number(setting(ID, `${l.id}-${k}`) ?? l.values[k]);
 const toggles = new Set(['lock']);
 const name = (k) => PARAMS[k][0] + (PARAMS[k][4] ? ` (${PARAMS[k][4]})` : '');
 
+/** The choices every look but Today shares: the control's name, its setting, its options. */
+/** @type {[string, string, any[]][]} */
+const SHARED = [['Beat marks', 'marks', LINES], ['Bar number', 'chip', CHIPS], ['Played half', 'played', PLAYED]];
+
 /** The panel's controls for a look; `at` gives each value's start (its default, for DialKit's reset). */
 function config(l) {
-  const c = { Look: { type: 'select', options: LOOKS.map((x, i) => ({ value: x.id, label: `${i + 1}  ${x.name}` })), default: 'exact' }, ...(l.draw ? { 'Beat lines': { type: 'select', options: LINES.map(([value, label]) => ({ value, label })), default: 'ticks' } } : {}), 'Copy values': { type: 'action' } };
+  const c = { Look: { type: 'select', options: LOOKS.map((x, i) => ({ value: x.id, label: `${i + 1}  ${x.name}` })), default: 'exact' }, ...(l.draw ? Object.fromEntries(SHARED.map(([n, , o]) => [n, { type: 'select', options: o.map(([value, label]) => ({ value, label })), default: o[0][0] }])) : {}), 'Copy values': { type: 'action' } };
   for (const [k, v] of Object.entries(l.values)) {
     const [, min, max, step, , folder] = PARAMS[k];
     // The folder that matters most for the look starts open.
@@ -36,7 +40,7 @@ function config(l) {
   return c;
 }
 const values = (l) => {
-  const v = { Look: l.id, ...(l.draw ? { 'Beat lines': setting(ID, 'lines') } : {}) };
+  const v = { Look: l.id, ...(l.draw ? Object.fromEntries(SHARED.map(([n, k]) => [n, setting(ID, k)])) : {}) };
   for (const k in l.values) (v[PARAMS[k][5]] ??= {})[name(k)] = toggles.has(k) ? !!value(l, k) : value(l, k);
   return v;
 };
@@ -45,7 +49,7 @@ const values = (l) => {
 function text() {
   const l = look();
   const lines = [`Waveform: ${l.name}`];
-  if (l.draw) lines.push(`Beat lines: ${LINES.find(([v]) => v === setting(ID, 'lines'))?.[1]}`);
+  if (l.draw) for (const [n, k, o] of SHARED) lines.push(`${n}: ${o.find(([v]) => v === setting(ID, k))?.[1]}`);
   for (const k in l.values) {
     const v = value(l, k);
     lines.push(`${PARAMS[k][0]}: ${toggles.has(k) ? (v ? 'on' : 'off') : `${v}${PARAMS[k][4] && ` ${PARAMS[k][4]}`}`}${v === l.values[k] ? '' : ` (was ${l.values[k]})`}`);
@@ -88,7 +92,7 @@ function read(v) {
   if (busy) return;
   if (v.Look !== look().id) return pick(v.Look, false);
   const l = look();
-  if (v['Beat lines'] && v['Beat lines'] !== setting(ID, 'lines')) flags.settings[ID].lines = v['Beat lines'];
+  for (const [n, k] of SHARED) if (v[n] && v[n] !== setting(ID, k)) flags.settings[ID][k] = v[n];
   for (const k in l.values) {
     const x = v[PARAMS[k][5]]?.[name(k)];
     if (x !== undefined && Number(x) !== value(l, k)) flags.settings[ID][`${l.id}-${k}`] = Number(x);
