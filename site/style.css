@@ -1327,6 +1327,7 @@ html[data-surface="raised"] .hero .hero-side .cta .btn.ghost, html[data-surface=
 /* Being tried on a phone (the Try group in Tune): the record's opacity; its
    size and where it fades in are hero-fx.js's (index.html). */
 @media (max-width: 480px) { .ripples { opacity: var(--rec-op, 1); } }
+html[data-recboth] .ripples { opacity: var(--rec-op, 1); }
 
 /* ── Hero and nav layouts (end) ── */
 
