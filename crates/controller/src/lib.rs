@@ -18,6 +18,7 @@ pub mod learn;
 #[cfg(feature = "midi")]
 pub mod midi;
 pub mod mixxx;
+pub mod official;
 pub mod script;
 
 use std::path::{Path, PathBuf};

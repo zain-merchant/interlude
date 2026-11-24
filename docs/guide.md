@@ -8,7 +8,11 @@ Everything Interlude does, in detail. For a short overview, see the
 - **Tempo:** BPM and beatgrid detected on load (about 0.2 s for a 6-minute
   track), shown on each deck and as beat lines on the waveform (a stronger
   line every 4 beats). SYNC matches tempo and beat phase to the other deck,
-  picking half or double time when that's closer (e.g. 87 vs 174 BPM).
+  picking half or double time when that's closer (e.g. 87 vs 174 BPM),
+  and stays on (lit) until pressed again: while both decks play, moving
+  either deck's pitch fader moves both. A paused deck's fader moves only
+  that deck, and it joins the other's tempo when it starts. Loading a
+  track turns sync off on that deck.
   Detection range is 80-160 BPM; constant tempo only for now. After a
   track loads, the Beat This! beat tracker (Foscarin et al., ISMIR 2024,
   MIT licence, built in) listens to the whole track in the background:
@@ -90,12 +94,12 @@ Everything Interlude does, in detail. For a short overview, see the
 - **Waveforms:** smooth low, mid and high bands in tones of each deck's
   colour, with beat lines, hot cues and loops: a scrolling view per deck
   plus a full-track overview you can click to jump.
-- **Phrases:** a thin strip under each overview marks the track's sections
-  (intro, build, drop, breakdown, verse, outro), and the deck shows the one
-  playing and how many bars are left before the music changes ("Drop · 12
-  bars left"). They're found from the waveform's bass, mids and highs on
-  the beatgrid, in phrases of 4 to 32 bars, so fixing the grid moves them
-  too. A guide, not a rule: it reads the energy, not the arrangement.
+- **Record:** each deck has a clear record in its colour that turns with
+  the track, so scratching, braking and pitch show on it, with the elapsed
+  and remaining time in its still centre. Drag it to scratch. The tonearm
+  rests just off the record while the deck is paused and swings onto it to
+  play, following the track from the outer groove in. Tempo and key sit in
+  the deck's inner corner.
 - **Library:** add music folders, instant search across artist, title and
   folder, load with double-click, Enter, or Shift+←/→. Columns for title,
   artist, BPM, key, length and folder (the columns button at the end of the headings, or a right-click on

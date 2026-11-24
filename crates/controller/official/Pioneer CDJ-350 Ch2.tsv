@@ -1,0 +1,29 @@
+# CDJ-350 — Pioneer "Operating Instructions" DRB1507F, List of MIDI Messages
+# source: https://downloads.support.alphatheta.com/manuals/CDJ_350_DRB1507F_manual.pdf
+# n (MIDI channel) is set on the unit; this mapping drives a second unit left on MIDI channel 1, so rows use channel 1 (status 90/B0) and expect [Channel2].
+in	B0	10	CH2 Jog dial (scratch)	
+in	B0	1D	CH2 TEMPO	[Channel2] rate
+in	B0	30	CH2 Jog dial (spin outer section)	
+in	B0	4F	CH2 SELECT PUSH (turn)	
+in	90	00	CH2 PLAY/PAUSE	[Channel2] play
+in	90	01	CH2 CUE	[Channel2] cue_default
+in	90	02	CH2 SEARCH FWD	
+in	90	03	CH2 SEARCH REV	
+in	90	04	CH2 TRACK SEARCH NEXT	
+in	90	05	CH2 TRACK SEARCH PREV	
+in	90	06	CH2 LOOP IN/CUE (HOT LOOP)	
+in	90	07	CH2 LOOP OUT (OUT ADJUST)	[Channel2] loop_out
+in	90	08	CH2 RELOOP/EXIT	[Channel2] reloop_toggle
+in	90	0E	CH2 TIME MODE (AUTO CUE)	
+in	90	0F	CH2 DISPLAY (UTILITY)	
+in	90	10	CH2 TEMPO RANGE	
+in	90	11	CH2 MASTER TEMPO	
+in	90	12	CH2 VINYL MODE	
+in	90	16	CH2 BEAT LOOP (LOOP DIVIDE) +	
+in	90	17	CH2 BEAT LOOP (LOOP DIVIDE) -	
+in	90	20	CH2 Jog dial (press top)	
+in	90	26	CH2 BPM LOCK	
+in	90	2E	CH2 PLAYLIST	
+in	90	2F	CH2 DISC EJECT	
+in	90	32	CH2 BACK	
+in	90	33	CH2 SELECT PUSH (press)	

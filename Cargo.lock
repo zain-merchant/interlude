@@ -985,7 +985,7 @@ dependencies = [
 
 [[package]]
 name = "dj-cli"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "dj-controller",
  "dj-engine",
@@ -994,7 +994,7 @@ dependencies = [
 
 [[package]]
 name = "dj-controller"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "dj-engine",
  "hidapi",
@@ -1005,7 +1005,7 @@ dependencies = [
 
 [[package]]
 name = "dj-engine"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "beat-this",
  "cpal",
@@ -1020,7 +1020,7 @@ dependencies = [
 
 [[package]]
 name = "dj-stems"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "dj-engine",
  "ort",
@@ -2080,7 +2080,7 @@ dependencies = [
 
 [[package]]
 name = "interlude"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "base64 0.23.1",
  "chrono",
@@ -2088,6 +2088,7 @@ dependencies = [
  "dj-controller",
  "dj-engine",
  "dj-stems",
+ "hound",
  "libc",
  "lofty",
  "quick-xml 0.37.5",
@@ -2101,6 +2102,7 @@ dependencies = [
  "tauri-plugin-process",
  "tauri-plugin-single-instance",
  "tauri-plugin-updater",
+ "unicode-normalization",
 ]
 
 [[package]]
@@ -5524,6 +5526,15 @@ name = "unicode-ident"
 version = "1.0.27"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a2c754d6c33795a1c324727428e5a7dedb5b06195f9890bdbcba760d3e246563"
+
+[[package]]
+name = "unicode-normalization"
+version = "0.1.26"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "75cd3fb03d5288b3ba9a1ee103ac7e9cbb59f0b03d64f8ddfcc04dd42758a85d"
+dependencies = [
+ "tinyvec",
+]
 
 [[package]]
 name = "unicode-segmentation"

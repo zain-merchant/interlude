@@ -10,7 +10,7 @@ export const inTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in
 /**
  * @typedef {{ loaded: boolean, playing: boolean, position: number, duration: number,
  *             cue: number, rate: number, speed: number, bpm: number,
- *             key: { tonic: number, minor: boolean } | null, keylock: boolean,
+ *             key: { tonic: number, minor: boolean } | null, keylock: boolean, synced?: boolean,
  *             generation: number, peak: number, hotCues: (number | null)[],
  *             loopIn: number | null, loopOut: number | null, looping: boolean,
  *             loopBeats: number, slip?: boolean, slipPosition?: number | null, filter?: number,
@@ -27,7 +27,7 @@ export const inTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in
  *             beatgrid: Beatgrid | null, gridLocked?: boolean }} TrackInfo
  * @typedef {{ bpm: number, firstBeat: number }} Beatgrid
  * @typedef {{ duration: number | null, bpm: number | null,
- *             key: { tonic: number, minor: boolean } | null, failed: boolean }} TrackAnalysis
+ *             key: { tonic: number, minor: boolean } | null, failed: boolean, outdated?: boolean }} TrackAnalysis
  * @typedef {{ path: string, title: string, artist: string, album: string, genre: string,
  *             folder: string, format: string, missing: boolean,
  *             analysis: TrackAnalysis | null }} LibraryTrack
@@ -70,6 +70,8 @@ async function createTauriBackend() {
     /** @returns {Promise<TrackInfo>} */
     /** With `autoGain`, the deck plays the track at the common loudness, under the trim. */
     loadTrack: (deck, path, autoGain = true) => invoke('load_track', { deck, path, autoGain }),
+    /** Decodes the track selected in the library ahead, so loading it is instant. */
+    preloadTrack: (path) => invoke('preload_track', { path }),
     /** Waveform bytes of what a deck plays with the stems in `mask` on. @returns {Promise<Uint8Array>} */
     stemsWaveform: async (deck, mask) => new Uint8Array(await invoke('stems_waveform', { deck, mask })),
     /** The Stems settings page. */

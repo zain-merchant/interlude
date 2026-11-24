@@ -290,6 +290,34 @@ fn analysis_while_decoding_matches_analysis_after() {
     assert_eq!(streamed.waveform.bins, whole.waveform.bins);
     assert_eq!(streamed.beatgrid, whole.beatgrid);
     assert_eq!(streamed.key, whole.key);
+
+    // Loading with the analysis known takes it as it is and builds the same
+    // waveform, without looking for the tempo, key or loudness again.
+    let known = dj_engine::Known {
+        beatgrid: Some(Some(dj_engine::Beatgrid {
+            bpm: 100.0,
+            first_beat: 0.25,
+        })),
+        key: Some(None),
+        loudness: Some(dj_engine::Loudness {
+            lufs: Some(-9.0),
+            peak: 0.5,
+        }),
+    };
+    let quick = Track::load_known(&path, known).unwrap();
+    assert_eq!(quick.waveform.bins, streamed.waveform.bins);
+    assert_eq!(quick.samples, streamed.samples);
+    assert_eq!(Some(quick.beatgrid), known.beatgrid);
+    assert_eq!(quick.key, None);
+    assert_eq!(Some(quick.loudness), known.loudness);
+    // Only the key known: the rest is found as before.
+    let some = dj_engine::Known {
+        key: Some(streamed.key),
+        ..Default::default()
+    };
+    let partly = Track::load_known(&path, some).unwrap();
+    assert_eq!(partly.beatgrid, streamed.beatgrid);
+    assert_eq!(partly.loudness, streamed.loudness);
     std::fs::remove_dir_all(dir).ok();
 }
 
@@ -408,6 +436,124 @@ fn a_deck_started_while_the_other_plays_syncs_to_it() {
     h.send(Command::Play { deck: DeckId::B }).unwrap();
     render(&mut e, 0.1);
     assert_eq!(h.shared().deck(1).rate, 1.0);
+}
+
+/// Both decks playing, B synced to A.
+fn synced_pair() -> (Engine, EngineHandle) {
+    let (mut e, mut h) = setup();
+    load(&mut h, DeckId::A, drums(128.0, 40.0, 0.10));
+    load(&mut h, DeckId::B, drums(122.0, 40.0, 0.31));
+    h.send(Command::Play { deck: DeckId::A }).unwrap();
+    h.send(Command::Play { deck: DeckId::B }).unwrap();
+    h.send(Command::Sync { deck: DeckId::B }).unwrap();
+    render(&mut e, 0.5);
+    assert!(h.shared().deck(1).synced);
+    (e, h)
+}
+
+fn tempo(h: &EngineHandle, deck: DeckId) -> f64 {
+    let d = h.shared().deck(deck.index());
+    d.bpm * d.rate
+}
+
+#[test]
+fn a_synced_deck_follows_the_other_decks_tempo() {
+    let (mut e, mut h) = synced_pair();
+    for rate in [1.04, 0.97, 1.0] {
+        h.send(Command::SetRate {
+            deck: DeckId::A,
+            rate,
+        })
+        .unwrap();
+        render(&mut e, 2.0);
+        assert!((tempo(&h, DeckId::B) - tempo(&h, DeckId::A)).abs() < 0.01);
+    }
+    // Still on the beat after all that.
+    let (a, b) = (h.shared().deck(0), h.shared().deck(1));
+    let phase = |pos: f64, bpm: f64, off: f64| ((pos - off) * bpm / 60.0).rem_euclid(1.0);
+    let mut d = (phase(a.position, 128.0, 0.10) - phase(b.position, 122.0, 0.31)).abs();
+    d = d.min(1.0 - d);
+    assert!(d < 0.02, "phase off by {d:.3} of a beat");
+
+    // SYNC again turns it off: B keeps its tempo and stops following.
+    h.send(Command::Sync { deck: DeckId::B }).unwrap();
+    h.send(Command::SetRate {
+        deck: DeckId::A,
+        rate: 1.05,
+    })
+    .unwrap();
+    render(&mut e, 0.1);
+    assert!(!h.shared().deck(1).synced);
+    assert!((tempo(&h, DeckId::B) - 128.0).abs() < 0.01);
+}
+
+#[test]
+fn moving_a_synced_decks_fader_moves_both() {
+    let (mut e, mut h) = synced_pair();
+    h.send(Command::SetRate {
+        deck: DeckId::B,
+        rate: 1.1,
+    })
+    .unwrap();
+    render(&mut e, 0.1);
+    assert!((tempo(&h, DeckId::B) - 122.0 * 1.1).abs() < 0.01);
+    assert!((tempo(&h, DeckId::A) - 122.0 * 1.1).abs() < 0.01);
+}
+
+#[test]
+fn a_paused_deck_never_moves_a_playing_one() {
+    let (mut e, mut h) = synced_pair();
+    // The leader paused: its fader moves alone, and B carries on.
+    h.send(Command::Pause { deck: DeckId::A }).unwrap();
+    h.send(Command::SetRate {
+        deck: DeckId::A,
+        rate: 0.9,
+    })
+    .unwrap();
+    render(&mut e, 0.1);
+    assert!((tempo(&h, DeckId::B) - 128.0).abs() < 0.01);
+    // Started again, A joins B's tempo rather than B jumping to A's.
+    h.send(Command::Play { deck: DeckId::A }).unwrap();
+    render(&mut e, 0.1);
+    assert!((tempo(&h, DeckId::A) - 128.0).abs() < 0.01);
+    assert!(h.shared().deck(1).synced);
+}
+
+#[test]
+fn a_synced_deck_at_double_time_stays_there() {
+    let (mut e, mut h) = setup();
+    load(&mut h, DeckId::A, drums(87.0, 30.0, 0.0));
+    load(&mut h, DeckId::B, drums(150.0, 30.0, 0.0));
+    h.send(Command::Play { deck: DeckId::A }).unwrap();
+    h.send(Command::Play { deck: DeckId::B }).unwrap();
+    h.send(Command::Sync { deck: DeckId::B }).unwrap();
+    // A slows down a lot: B stays at twice A's tempo, not A's tempo.
+    h.send(Command::SetRate {
+        deck: DeckId::A,
+        rate: 0.8,
+    })
+    .unwrap();
+    render(&mut e, 0.1);
+    let (a, b) = (tempo(&h, DeckId::A), tempo(&h, DeckId::B));
+    assert!((b - 2.0 * a).abs() < 0.05, "A {a} B {b}");
+}
+
+#[test]
+fn loading_a_track_turns_sync_off() {
+    let (mut e, mut h) = synced_pair();
+    load(&mut h, DeckId::B, drums(122.0, 10.0, 0.0));
+    render(&mut e, 0.1);
+    assert!(!h.shared().deck(1).synced);
+}
+
+#[test]
+fn sync_needs_a_beatgrid_on_both_decks() {
+    let (mut e, mut h) = setup();
+    load(&mut h, DeckId::A, sine(440.0, 10.0, 0.5));
+    load(&mut h, DeckId::B, drums(122.0, 10.0, 0.0));
+    h.send(Command::Sync { deck: DeckId::B }).unwrap();
+    render(&mut e, 0.1);
+    assert!(!h.shared().deck(1).synced);
 }
 
 #[test]

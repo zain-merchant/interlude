@@ -52,7 +52,7 @@ const GLOBAL_CH: u8 = 6;
 // Deck notes (channel = deck).
 const PLAY: u8 = 0x0B;
 /// SHIFT + PLAY/PAUSE: slip mode on / off.
-const PLAY_SHIFT: u8 = 0x47;
+const PLAY_SHIFT: u8 = 0x0E;
 const CUE: u8 = 0x0C;
 const SHIFT: u8 = 0x3F;
 const JOG_TOUCH: u8 = 0x36;
@@ -125,8 +125,8 @@ const FADER: u8 = 0x13;
 const JOG_SIDE: u8 = 0x21;
 const JOG_TOP: u8 = 0x22;
 const JOG_TOP_VINYL_OFF: u8 = 0x23;
-const JOG_SHIFT: u8 = 0x26;
-const JOG_SHIFT_TOP: u8 = 0x29;
+/// SHIFT + turning the jog wheel (top or side).
+const JOG_SHIFT: u8 = 0x29;
 
 // Global channel.
 const CROSSFADER: u8 = 0x1F;
@@ -136,8 +136,9 @@ const BROWSE: u8 = 0x40;
 const LOAD_A: u8 = 0x46;
 const LOAD_B: u8 = 0x47;
 
-/// MIDI channel (0-based) of the beat FX section. Some messages arrive on
-/// the next channel while the lever is at CH2; both are accepted.
+/// MIDI channel (0-based) of the beat FX section. While the lever is at CH2,
+/// FX ON/OFF arrives on the next channel, and so does the lever's CH2
+/// position; nothing else does.
 const FX_CH: u8 = 4;
 const FX_SELECT: u8 = 0x63;
 const FX_SELECT_SHIFT: u8 = 0x64;
@@ -486,7 +487,7 @@ impl Flx4 {
                     seconds: ticks * SECS_PER_TICK,
                 })]
             }
-            JOG_SHIFT | JOG_SHIFT_TOP => {
+            JOG_SHIFT => {
                 let deck_state = &state.decks[d];
                 let seconds = (deck_state.position + ticks * SECS_PER_TICK * SEARCH_SPEED)
                     .clamp(0.0, deck_state.duration);
@@ -713,7 +714,13 @@ impl Mapping for Flx4 {
                 Self::pad(d, p % 2 == 1, num, value > 0, state)
             }
             _ if ch == GLOBAL_CH => self.global(kind, num, value),
-            _ if ch == FX_CH || ch == FX_CH + 1 => self.fx(kind, num, value, state),
+            _ if ch == FX_CH => self.fx(kind, num, value, state),
+            _ if ch == FX_CH + 1
+                && kind == NOTE_ON
+                && matches!(num, FX_ON | FX_ON_SHIFT | FX_LEVER_CH1 | FX_LEVER_CH2) =>
+            {
+                self.fx(kind, num, value, state)
+            }
             _ => vec![],
         }
     }
@@ -784,7 +791,9 @@ fn all_leds(state: &State) -> Vec<Led> {
             deck.loaded && !deck.playing && (deck.position - deck.cue).abs() < 0.01,
         ));
         out.push((ch, HEADPHONE_CUE, deck.pfl));
-        for note in [LOOP_IN, LOOP_OUT, RELOOP_EXIT] {
+        out.push((ch, SYNC, deck.synced));
+        // 4 BEAT/EXIT has no LED of its own.
+        for note in [LOOP_IN, LOOP_OUT] {
             out.push((ch, note, deck.looping));
         }
         let loop_beats = match (deck.looping, deck.loop_in, deck.loop_out) {
@@ -1542,13 +1551,17 @@ mod tests {
         let on: Vec<_> = m.leds(&s).into_iter().filter(|l| l[2] == 0x7F).collect();
         for led in [
             vec![0x91, LOOP_IN, 0x7F],
-            vec![0x91, RELOOP_EXIT, 0x7F],
+            vec![0x91, LOOP_OUT, 0x7F],
             vec![0x99, 0x64, 0x7F], // the 4-beat loop pad
             vec![0x9A, 0x64, 0x7F],
             vec![0x99, 0x20, 0x7F], // beat jump works now there's a grid
         ] {
             assert!(on.contains(&led), "{led:02X?} not in {on:02X?}");
         }
+        assert!(
+            !on.iter().any(|l| l[1] == RELOOP_EXIT),
+            "4 BEAT/EXIT has no LED"
+        );
     }
 
     #[test]

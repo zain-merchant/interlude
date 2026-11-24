@@ -62,7 +62,8 @@ pub struct LibraryTrack {
     format: String,
     /// The file wasn't found in the last scan. Its cues are kept.
     missing: bool,
-    /// Length, BPM and key once analyzed; `None` until then.
+    /// Length, BPM and key once analyzed; `None` until then. Kept, marked
+    /// outdated, while a newer analyzer redoes it.
     analysis: Option<Analysis>,
 }
 
@@ -78,6 +79,9 @@ pub struct Analysis {
     /// analyzer gets back to them.
     loudness: Option<Loudness>,
     failed: bool,
+    /// Found by an older analyzer. Shown until the analyzer redoes it, so
+    /// an update that improves detection doesn't blank the library.
+    outdated: bool,
 }
 
 impl From<TrackSummary> for Analysis {
@@ -88,6 +92,7 @@ impl From<TrackSummary> for Analysis {
             key: s.key,
             loudness: Some(s.loudness),
             failed: false,
+            outdated: false,
         }
     }
 }
@@ -99,12 +104,13 @@ impl Analysis {
         key: None,
         loudness: None,
         failed: true,
+        outdated: false,
     };
 
-    /// Nothing left to analyze: everything is measured, or the file
-    /// couldn't be decoded.
+    /// Nothing left to analyze: everything is measured by the current
+    /// analyzer, or the file couldn't be decoded.
     fn complete(&self) -> bool {
-        self.failed || self.loudness.is_some()
+        !self.outdated && (self.failed || self.loudness.is_some())
     }
 }
 
@@ -408,15 +414,40 @@ impl Library {
         Ok(())
     }
 
+    /// What the library's analysis already knows about a file, so loading
+    /// it onto a deck skips working that out again (key detection alone is
+    /// most of a load). Only a complete, current analysis counts; the grid
+    /// only once Beat This! has found it, since the DSP grid it refines
+    /// isn't saved.
+    pub fn known(&self, path: &Path) -> dj_engine::Known {
+        let db = self.db.lock().unwrap();
+        let mut known = dj_engine::Known::default();
+        if let Ok(Some(a)) = db.analysis(path) {
+            if !a.outdated && !a.failed {
+                if let Some(loudness) = a.loudness {
+                    known.key = Some(a.key);
+                    known.loudness = Some(loudness);
+                }
+            }
+        }
+        if let Ok(Some(grid)) = db.neural_grid(path) {
+            known.beatgrid = Some(Some(grid));
+        }
+        known
+    }
+
     /// Saves the analysis of a track that was just loaded onto a deck, so
     /// the library shows it without decoding the file again, and returns
     /// what to put back on the deck: its saved cue points, its beatgrid if
     /// one was fixed by hand, and the grid Beat This! found if it has run.
+    /// `known` is what the load took from the library instead of analyzing
+    /// ([`Library::known`]); with all of it, there's nothing new to save.
     pub fn loaded(
         &self,
         app: &AppHandle,
         deck: usize,
         track: &dj_engine::Track,
+        known: dj_engine::Known,
     ) -> (SavedCues, Option<Beatgrid>, Option<Beatgrid>) {
         // The deck still holds the track being replaced: keep its last change.
         self.watch_deck(deck, 0.0);
@@ -424,13 +455,15 @@ impl Library {
             self.unwatch(deck);
             return (SavedCues::default(), None, None);
         };
-        self.analyzer.record(
-            app,
-            path,
-            TrackSummary::of(track).into(),
-            track.beatgrid.map(|g| g.first_beat),
-            false,
-        );
+        if known.key.is_none() || known.loudness.is_none() {
+            self.analyzer.record(
+                app,
+                path,
+                TrackSummary::of(track).into(),
+                track.beatgrid.map(|g| g.first_beat),
+                false,
+            );
+        }
         let cues = self.db.lock().unwrap().cues(path).unwrap_or_else(|e| {
             eprintln!("could not read cues for {}: {e}", path.display());
             SavedCues::default()

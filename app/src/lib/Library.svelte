@@ -1,5 +1,5 @@
 <script>
-  import { onMount, tick } from 'svelte';
+  import { onMount, tick, untrack } from 'svelte';
   import { backend } from './backend.js';
   import { engine, tracks } from './engine.svelte.js';
   import { startDrag, endDrag, drag, dropTarget } from './dnd.svelte.js';
@@ -20,17 +20,15 @@
 
   let folders = $state([]);
   /**
-   * What the track list shows: every track, a folder, a playlist or a History session.
-   * @typedef {{ kind: 'all' | 'folder' | 'playlist' | 'session', path?: string, id?: number, start?: number }} View
+   * What the track list shows: every track, a folder or a playlist.
+   * @typedef {{ kind: 'all' | 'folder' | 'playlist', path?: string, id?: number }} View
    */
   let view = $state(/** @type {View} */ ({ kind: 'all' }));
   const folder = $derived(view.kind === 'folder' ? view.path : null);
-  /** Playlists and History keep their own order; the scan is sorted by artist. */
-  const ordered = $derived(view.kind === 'playlist' || view.kind === 'session');
+  /** Playlists keep their own order; the scan is sorted by artist. */
+  const ordered = $derived(view.kind === 'playlist');
   /** @type {import('./backend.js').Playlist[]} */
   let playlists = $state([]);
-  /** @type {import('./backend.js').HistorySession[]} */
-  let sessions = $state([]);
   /** The playlist whose name is being typed. */
   let renaming = $state(null);
   let all = $state([]);
@@ -57,7 +55,20 @@
     const a = onAir(engine.decks, engine.mixer);
     return a ? JSON.stringify({ deck: a.deck, bpm: Math.round(a.bpm * 10) / 10, key: a.key && { tonic: a.key.tonic, minor: a.key.minor } }) : '';
   });
-  const air = $derived(airText ? JSON.parse(airText) : null);
+  // While the pitch fader moves, wait for it to settle before re-filtering, so
+  // the list doesn't churn. A new deck on air (or none) shows at once.
+  let airSettled = $state('');
+  $effect(() => {
+    const next = airText;
+    const deckOf = (t) => (t ? JSON.parse(t).deck : null);
+    if (deckOf(next) !== deckOf(untrack(() => airSettled))) {
+      airSettled = next;
+      return;
+    }
+    const id = setTimeout(() => (airSettled = next), 300);
+    return () => clearTimeout(id);
+  });
+  const air = $derived(airSettled ? JSON.parse(airSettled) : null);
   const airPath = $derived(air ? tracks[air.deck]?.path : null);
   const airLabel = $derived(air ? `${'AB'[air.deck]} · ${air.key ? `${camelot(air.key)} ` : ''}${Math.round(air.bpm)}` : '');
   const fitsTip = () =>
@@ -204,8 +215,24 @@
   });
   const selectIndex = (i) => (selPath = sorted[i]?.path ?? null);
 
-  /** Tracks still waiting for their length, BPM and key. */
-  const pending = $derived(all.reduce((n, t) => n + (t.analysis ? 0 : 1), 0));
+  // Decode the selected track ahead, so Load (on screen, the keyboard or a
+  // controller) finds it ready. Waits for the selection to settle, so
+  // browsing through the list doesn't decode every row on the way. Not
+  // the row selected by default when the library opens: only one picked.
+  const PRELOAD_MS = 150;
+  let picked = false;
+  $effect(() => {
+    const t = sorted[selected];
+    const path = t && !t.missing ? t.path : null;
+    picked ||= selPath !== null;
+    if (!picked || !path) return;
+    const timer = setTimeout(() => backend.preloadTrack(path).catch(() => {}), PRELOAD_MS);
+    return () => clearTimeout(timer);
+  });
+
+  /** Tracks still waiting for their length, BPM and key, or showing ones an
+   * older version of the analyzer found until it redoes them. */
+  const pending = $derived(all.reduce((n, t) => n + (t.analysis && !t.analysis.outdated ? 0 : 1), 0));
   const bpmText = (a) => {
     if (!a?.bpm) return '';
     const r = Math.round(a.bpm);
@@ -219,28 +246,14 @@
   /** Shown when analysis found nothing (or the file wouldn't decode). */
   const NONE = '–';
 
-  // Analysis results stream in from the background analyzer. A History
-  // session can list a track twice, so each path maps to every row of it.
+  // Analysis results stream in from the background analyzer. A playlist
+  // can list a track twice, so each path maps to every row of it.
   let byPath = new Map();
   $effect(() => {
     let off = null;
     let gone = false;
     backend.onLibraryAnalysis?.((e) => {
-      for (const t of byPath.get(e.path) ?? []) t.analysis = { duration: e.duration, bpm: e.bpm, key: e.key, failed: e.failed };
-    }).then((fn) => (gone ? fn() : (off = fn)));
-    return () => {
-      gone = true;
-      off?.();
-    };
-  });
-  // A track just went into History.
-  $effect(() => {
-    let off = null;
-    let gone = false;
-    backend.onLibraryPlayed?.(async () => {
-      sessions = await backend.historySessions();
-      if (view.kind === 'session' && view.start === sessions[0]?.start) refresh({ keep: true });
-      else if (view.kind === 'session' && sessions.length && !sessions.some((x) => x.start === view.start)) refresh({ keep: true });
+      for (const t of byPath.get(e.path) ?? []) t.analysis = { duration: e.duration, bpm: e.bpm, key: e.key, failed: e.failed, outdated: e.outdated };
     }).then((fn) => (gone ? fn() : (off = fn)));
     return () => {
       gone = true;
@@ -257,14 +270,12 @@
     loading = !keep;
     error = '';
     try {
-      [folders, playlists, sessions] = await Promise.all([backend.libraryFolders(), backend.playlists(), backend.historySessions()]);
+      [folders, playlists] = await Promise.all([backend.libraryFolders(), backend.playlists()]);
       if (view.kind === 'playlist' && !playlists.some((p) => p.id === view.id)) view = { kind: 'all' };
-      if (view.kind === 'session' && !sessions.some((x) => x.start === view.start)) view = { kind: 'all' };
       const list =
         view.kind === 'playlist' ? await backend.playlistTracks(view.id)
-        : view.kind === 'session' ? await backend.sessionTracks(view.start)
         : await backend.libraryTracks(folder);
-      // Rows need a unique key: History can list a track twice.
+      // Rows need a unique key: a playlist can list a track twice.
       const seen = new Map();
       for (const t of list) {
         const n = seen.get(t.path) ?? 0;
@@ -436,14 +447,6 @@
     reorder(paths, `Moved ${drag.track.title}`);
   }
 
-  /** History session label: "Fri 31 Oct", with the time if a day has two. */
-  function sessionLabel(x) {
-    const d = new Date(x.start);
-    const day = d.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' });
-    const twice = sessions.some((o) => o !== x && new Date(o.start).toDateString() === d.toDateString());
-    return twice ? `${day}, ${d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}` : day;
-  }
-  const HISTORY_SHOWN = 10;
 
   function select(i) {
     if (!sorted.length) return;
@@ -595,7 +598,7 @@
 </script>
 
 <section class="library" aria-label="Library">
-  <nav data-region="sidebar" aria-label="Library, playlists and history">
+  <nav data-region="sidebar" aria-label="Library and playlists">
     <div class="h">Library</div>
     <button class="item" class:on={view.kind === 'all'} aria-current={view.kind === 'all'} onclick={() => pick(null)}>
       <span>All tracks</span>{#if total !== null}<small class="num">{total.toLocaleString()}</small>{/if}
@@ -624,16 +627,6 @@
     {/each}
     <button class="add" onclick={() => newPlaylist()}>+ New playlist</button>
 
-    {#if sessions.length}
-      <div class="h sec">History</div>
-      {#each sessions.slice(0, HISTORY_SHOWN) as x (x.start)}
-        {@const on = view.kind === 'session' && view.start === x.start}
-        <button class="item" class:on aria-current={on} onclick={() => show({ kind: 'session', start: x.start })}
-          use:tip={() => `Played ${new Date(x.start).toLocaleString()}`}>
-          <span>{sessionLabel(x)}</span><small class="num">{x.count.toLocaleString()}</small>
-        </button>
-      {/each}
-    {/if}
   </nav>
 
   <div class="main" style:--cols={gridColumns}>

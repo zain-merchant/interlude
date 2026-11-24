@@ -37,6 +37,7 @@ pub(crate) struct DeckShared {
     pub bpm: AtomicF64,
     pub playing: AtomicBool,
     pub keylock: AtomicBool,
+    pub synced: AtomicBool,
     pub key_shift: AtomicI8,
     /// [`Key::code`] of the loaded track's key.
     pub key: AtomicU32,
@@ -171,6 +172,8 @@ pub struct DeckSnapshot {
     pub key: Option<Key>,
     /// Keylock on: tempo changes keep the pitch.
     pub keylock: bool,
+    /// Sync on: the deck keeps the other deck's tempo as it changes.
+    pub synced: bool,
     /// Key shift in semitones, on top of any change the tempo makes.
     pub key_shift: i32,
     pub generation: u64,
@@ -221,6 +224,7 @@ impl SharedState {
             bpm: d.bpm.load(),
             key: Key::from_code(d.key.load(Relaxed)),
             keylock: d.keylock.load(Relaxed),
+            synced: d.synced.load(Relaxed),
             key_shift: d.key_shift.load(Relaxed).into(),
             generation: d.generation.load(Relaxed),
             peak: d.peak.load(),

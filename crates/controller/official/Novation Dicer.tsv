@@ -1,0 +1,81 @@
+# Dicer — Novation "Dicer Programmer's Reference"
+# source: https://fael-downloads-prod.focusrite.com/customer/prod/s3fs-public/novation/downloads/25391/dicer-programmers-reference2.pdf
+# Master Dicer: channels 11-13 (Hot Cue / Loop Roll / Auto Loop); slave Dicer: channels 14-16. Conventional modes
+# (Figure 3); one-page mode is not listed. The reference does not say which deck a Dicer controls, so no expect.
+in	9A	00	master Hot Cue mode button (when mode button events are enabled)	
+both	9A	3C	master dice button 1 (Hot Cue)	
+both	9A	41	master dice button 1 (Hot Cue) +SHIFT	
+both	9A	3D	master dice button 2 (Hot Cue)	
+both	9A	42	master dice button 2 (Hot Cue) +SHIFT	
+both	9A	3E	master dice button 3 (Hot Cue)	
+both	9A	43	master dice button 3 (Hot Cue) +SHIFT	
+both	9A	3F	master dice button 4 (Hot Cue)	
+both	9A	44	master dice button 4 (Hot Cue) +SHIFT	
+both	9A	40	master dice button 5 (Hot Cue)	
+both	9A	45	master dice button 5 (Hot Cue) +SHIFT	
+in	9B	00	master Loop Roll mode button (when mode button events are enabled)	
+both	9B	3C	master dice button 1 (Loop Roll)	
+both	9B	41	master dice button 1 (Loop Roll) +SHIFT	
+both	9B	3D	master dice button 2 (Loop Roll)	
+both	9B	42	master dice button 2 (Loop Roll) +SHIFT	
+both	9B	3E	master dice button 3 (Loop Roll)	
+both	9B	43	master dice button 3 (Loop Roll) +SHIFT	
+both	9B	3F	master dice button 4 (Loop Roll)	
+both	9B	44	master dice button 4 (Loop Roll) +SHIFT	
+both	9B	40	master dice button 5 (Loop Roll)	
+both	9B	45	master dice button 5 (Loop Roll) +SHIFT	
+in	9C	00	master Auto Loop mode button (when mode button events are enabled)	
+both	9C	3C	master dice button 1 (Auto Loop)	
+both	9C	41	master dice button 1 (Auto Loop) +SHIFT	
+both	9C	3D	master dice button 2 (Auto Loop)	
+both	9C	42	master dice button 2 (Auto Loop) +SHIFT	
+both	9C	3E	master dice button 3 (Auto Loop)	
+both	9C	43	master dice button 3 (Auto Loop) +SHIFT	
+both	9C	3F	master dice button 4 (Auto Loop)	
+both	9C	44	master dice button 4 (Auto Loop) +SHIFT	
+both	9C	40	master dice button 5 (Auto Loop)	
+both	9C	45	master dice button 5 (Auto Loop) +SHIFT	
+in	9D	00	slave Hot Cue mode button (when mode button events are enabled)	
+both	9D	3C	slave dice button 1 (Hot Cue)	
+both	9D	41	slave dice button 1 (Hot Cue) +SHIFT	
+both	9D	3D	slave dice button 2 (Hot Cue)	
+both	9D	42	slave dice button 2 (Hot Cue) +SHIFT	
+both	9D	3E	slave dice button 3 (Hot Cue)	
+both	9D	43	slave dice button 3 (Hot Cue) +SHIFT	
+both	9D	3F	slave dice button 4 (Hot Cue)	
+both	9D	44	slave dice button 4 (Hot Cue) +SHIFT	
+both	9D	40	slave dice button 5 (Hot Cue)	
+both	9D	45	slave dice button 5 (Hot Cue) +SHIFT	
+in	9E	00	slave Loop Roll mode button (when mode button events are enabled)	
+both	9E	3C	slave dice button 1 (Loop Roll)	
+both	9E	41	slave dice button 1 (Loop Roll) +SHIFT	
+both	9E	3D	slave dice button 2 (Loop Roll)	
+both	9E	42	slave dice button 2 (Loop Roll) +SHIFT	
+both	9E	3E	slave dice button 3 (Loop Roll)	
+both	9E	43	slave dice button 3 (Loop Roll) +SHIFT	
+both	9E	3F	slave dice button 4 (Loop Roll)	
+both	9E	44	slave dice button 4 (Loop Roll) +SHIFT	
+both	9E	40	slave dice button 5 (Loop Roll)	
+both	9E	45	slave dice button 5 (Loop Roll) +SHIFT	
+in	9F	00	slave Auto Loop mode button (when mode button events are enabled)	
+both	9F	3C	slave dice button 1 (Auto Loop)	
+both	9F	41	slave dice button 1 (Auto Loop) +SHIFT	
+both	9F	3D	slave dice button 2 (Auto Loop)	
+both	9F	42	slave dice button 2 (Auto Loop) +SHIFT	
+both	9F	3E	slave dice button 3 (Auto Loop)	
+both	9F	43	slave dice button 3 (Auto Loop) +SHIFT	
+both	9F	3F	slave dice button 4 (Auto Loop)	
+both	9F	44	slave dice button 4 (Auto Loop) +SHIFT	
+both	9F	40	slave dice button 5 (Auto Loop)	
+both	9F	45	slave dice button 5 (Auto Loop) +SHIFT	
+out	BA	00	master reset / light show / LEDs off (data byte selects)	
+out	BA	11	master change mode / unlock advanced features	
+out	BA	12	master shift lock timeout (Hot Cues)	
+out	BA	13	master shift lock timeout (Loop Roll)	
+out	BA	14	master shift lock timeout (Auto Loop)	
+out	BD	00	slave reset / light show / LEDs off (data byte selects)	
+out	BD	11	slave change mode / unlock advanced features	
+out	BD	12	slave shift lock timeout (Hot Cues)	
+out	BD	13	slave shift lock timeout (Loop Roll)	
+out	BD	14	slave shift lock timeout (Auto Loop)	
+out	BA	15	master transmit mode button events on/off	

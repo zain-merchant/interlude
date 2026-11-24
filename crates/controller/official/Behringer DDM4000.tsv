@@ -1,0 +1,173 @@
+# DDM4000 — Behringer "DIGITAL PRO MIXER DDM4000 MIDI Send / Receive Overview" (Tab. A.1, A.2)
+# source: https://cdn-media.empowertribe.com/55e3201e6a90496cb35ec542b6915360/8850002247710.pdf
+# The overview gives CC and note numbers without a channel; MIDI channel 1 is assumed. LEDs are set by CC.
+in	B0	04	HIGH 1	[EqualizerRack1_[Channel1]_Effect1] parameter3
+in	B0	00	HIGH	
+in	B0	05	MID 1	[EqualizerRack1_[Channel1]_Effect1] parameter2
+in	B0	01	MID	
+in	B0	06	LOW 1	[EqualizerRack1_[Channel1]_Effect1] parameter1
+in	B0	02	LOW	
+in	B0	07	FADER 1	[Channel1] volume
+in	90	31	MIC SET UP	
+in	90	20	Channel 1 CF ASSIGN	
+in	90	32	UMIC ON	
+in	90	38	Channel 1 EQ MODE	
+in	90	33	MIC FX ON	
+in	90	3A	Channel 1 KILL HIGH	
+in	90	34	TALK ON	
+in	90	3C	Channel 1 KILL MID	
+in	90	35	MIC ON	
+in	90	3E	Channel 1 KILL LOW	
+in	B0	14	CF CURVE	
+in	90	3F	Channel 1 PFL	[Channel1] pfl
+in	B0	15	CROSS FADER	[Master] crossfader
+in	B0	08	HIGH 2	[EqualizerRack1_[Channel2]_Effect1] parameter3
+in	90	17	CF A FULL FREQ	
+in	B0	09	MID 2	[EqualizerRack1_[Channel2]_Effect1] parameter2
+in	90	18	CF A HIGH	
+in	B0	0A	LOW 2	[EqualizerRack1_[Channel2]_Effect1] parameter1
+in	90	19	CF A MID	
+in	B0	0B	FADER 2	[Channel2] volume
+in	90	1A	CF A LOW	
+in	90	22	Channel 2 CF ASSIGN	
+in	90	1B	CF B FULL FREQ	
+in	90	42	Channel 2 EQ MODE	
+in	90	1C	CF B HIGH	
+in	90	44	Channel 2 KILL HIGH	
+in	90	1D	CF B MID	
+in	90	46	Channel 2 KILL MID	
+in	90	1E	CF B LOW	
+in	90	48	Channel 2 KILL LOW	
+in	90	1F	CF ON	
+in	90	49	Channel 2 PFL	[Channel2] pfl
+in	90	28	REVERSE TAP	
+in	B0	0C	HIGH 3	[EqualizerRack1_[Channel3]_Effect1] parameter3
+in	90	29	REVERSE HOLD	
+in	B0	0D	MID 3	[EqualizerRack1_[Channel3]_Effect1] parameter2
+in	90	2A	MIDIBOUNCE	
+in	B0	0E	LOW 3	[EqualizerRack1_[Channel3]_Effect1] parameter1
+in	90	2B	BEAT <	
+in	B0	0F	FADER 3	[Channel3] volume
+in	90	2C	BEAT >	
+in	90	24	Channel 3 CF ASSIGN	
+in	90	5F	INSERT	
+in	90	4C	Channel 3 EQ MODE	
+in	B0	03	VOLUME/MIX	
+in	90	4E	Channel 3 KILL HIGH	
+in	90	60	REC SOURCE <	
+in	90	50	Channel 3 KILL MID	
+in	90	61	REC SOURCE >	
+in	90	52	Channel 3 KILL LOW	
+in	90	66	PFL	
+in	90	53	Channel 3 PFL	[Channel3] pfl
+in	90	67	SAMPLE LENGTH <	
+in	B0	10	HIGH 4	[EqualizerRack1_[Channel4]_Effect1] parameter3
+in	90	68	SAMPLE LENGTH >	
+in	B0	11	MID 4	[EqualizerRack1_[Channel4]_Effect1] parameter2
+in	90	6C	BANK ASSIGN	
+in	B0	12	LOW 4	[EqualizerRack1_[Channel4]_Effect1] parameter1
+in	90	6D	RECORD IN	
+in	B0	13	FADER 4	[Channel4] volume
+in	90	6E	PLAY (Bank 1)	
+in	90	26	Channel 4 CF ASSIGN	
+in	90	71	Mode (Bank 1)	
+in	90	56	Channel 4 EQ MODE	
+in	90	73	PLAY (Bank 2)	
+in	90	58	Channel 4 KILL HIGH	
+in	90	76	MODE (Bank 2)	
+in	90	5A	Channel 4 KILL MID	
+in	90	78	SMP FX ON	
+in	90	5C	Channel 4 KILL LOW	
+in	90	79	FX SELECT	
+in	90	5D	Channel 4 PFL	[Channel4] pfl
+in	90	7A	CF ASSIGN	
+in	90	7C	CF START	
+out	B0	31	MIC SETUP LED	
+out	B0	17	CF A FULL FREQ LED	
+out	B0	32	MIC UMIC ON LED	
+out	B0	18	CF A HIGH LED	
+out	B0	33	MIC FX ON LED	
+out	B0	19	CF A MID LED	
+out	B0	34	MIC TALK ON LED	
+out	B0	1A	CF A LOW LED	
+out	B0	35	MIC ON LED	
+out	B0	1B	CF B FULL FREQ LED	
+out	B0	20	CF ASSIGN A LED	
+out	B0	1C	CF B HIGH LED	
+out	B0	21	CF ASSIGN B LED	
+out	B0	1D	CF B MID LED	
+out	B0	37	SINGLE MODE LED	
+out	B0	1E	CF B LOW LED	
+out	B0	38	MULTI MODE LED	
+out	B0	1F	CF ON LED	
+out	B0	39	HIGH MULTI amber LED	
+out	B0	28	CF REVERSE TAP LED	
+out	B0	3A	HIGH SINGLE blue LED	
+out	B0	29	CF REVERSE HOLD LED	
+out	B0	3B	MID MULTI amber LED	
+out	B0	2A	CF MIDIBOUNCE LED	
+out	B0	3C	MID SINGLE blue LED	
+out	B0	2B	CF BEAT 1 LED	
+out	B0	3D	LOW MULTI amber LED	
+out	B0	2C	CF BEAT 2 LED	
+out	B0	3E	LOW SINGLE blue LED	
+out	B0	2D	CF BEAT 4 LED	
+out	B0	3F	PFL LED	
+out	B0	2E	CF BEAT 8 LED	
+out	B0	22	CF ASSIGN A LED	
+out	B0	2F	CF BEAT 16 LED	
+out	B0	23	CF ASSIGN B LED	
+out	B0	5F	INSERT LED	
+out	B0	41	SINGLE MODE LED	
+out	B0	60	REC CH 1 LED	
+out	B0	42	MULTI MODE LED	
+out	B0	61	REC CH 2 LED	
+out	B0	43	HIGH MULTI amber LED	
+out	B0	44	HIGH SINGLE blue LED	
+out	B0	45	MID MULTI amber LED	
+out	B0	46	MID SINGLE blue LED	
+out	B0	47	LOW MULTI amber LED	
+out	B0	48	LOW SINGLE blue LED	
+out	B0	67	BEAT 1 LED	
+out	B0	49	PFL LED	
+out	B0	68	BEAT 2 LED	
+out	B0	24	CF ASSIGN A LED	
+out	B0	69	BEAT 4 LED	
+out	B0	25	CF ASSIGN B LED	
+out	B0	6A	BEAT 8 LED	
+out	B0	4B	SINGLE MODE LED	
+out	B0	6B	BEAT 16 LED	
+out	B0	4C	MULTI MODE LED	
+out	B0	6C	BEAT INFINITY LED	
+out	B0	4D	HIGH MULTI amber LED	
+out	B0	6D	RECORD IN LED	
+out	B0	4E	HIGH SINGLE blue LED	
+out	B0	4F	MID MULTI amber LED	
+out	B0	6F	REVERSE Bank 1 LED	
+out	B0	50	MID SINGLE blue LED	
+out	B0	70	LOOP Bank 1 LED	
+out	B0	51	LOW MULTI amber LED	
+out	B0	71	MODE Bank 1 amber LED	
+out	B0	52	LOW SINGLE blue LED	
+out	B0	72	MODE Bank 1 blue LED	
+out	B0	53	PFL LED	
+out	B0	26	CF ASSIGN A LED	
+out	B0	74	REVERSE Bank 2 LED	
+out	B0	27	CF ASSIGN B LED	
+out	B0	75	LOOP Bank 2 LED	
+out	B0	55	SINGLE MODE LED	
+out	B0	76	MODE Bank 2 amber LED	
+out	B0	56	MULTI MODE LED	
+out	B0	77	MODE Bank 2 blue LED	
+out	B0	57	HIGH MULTI amber LED	
+out	B0	78	SMP FX ON LED	
+out	B0	58	HIGH SINGLE blue LED	
+out	B0	79	FX SELECT LED	
+out	B0	7A	cc LED	
+out	B0	59	MID MULTI amber LED	
+out	B0	5A	MID SINGLE blue LED	
+out	B0	7B	CF ASSIGN B LED	
+out	B0	5B	LOW MULTI amber LED	
+out	B0	7C	CF START LED	
+out	B0	5C	LOW SINGLE blue LED	
+out	B0	5D	PFL LED	

@@ -1,0 +1,116 @@
+# VCI-100 — Vestax "VCI-100 Owner's Manual" (VOM-VCI-100), 5. MIDI Map (scanned page, transcribed by eye)
+# source: https://web.archive.org/web/2015id_/http://help.vestax.co.jp:80/en/usr_data/file/manual/pdf_computerinterface_manuals/VOM-VCI-100.pdf
+# MIDI channel 1. Controls are named SWn/VRn/ENCn as on the map (panel numbering), so no expect is given.
+# The map lists no LED messages. Note 5B is printed as "SW35 (Effect Param = A)" a second time.
+in	90	30	TOUCH1 (Jog Mode)	
+in	90	31	TOUCH2 (Jog Mode)	
+in	B0	10	ENC1 (Jog Mode, TOUCH1=On)	
+in	B0	11	ENC2 (Jog Mode, TOUCH2=On)	
+in	90	32	SW1	
+in	90	36	SW5	
+in	B0	08	VR1	
+in	90	34	SW3	
+in	90	38	SW7	
+in	90	33	SW2	
+in	90	37	SW6	
+in	90	35	SW4	
+in	90	39	SW8	
+in	B0	15	VR6	
+in	90	0F	VR6 (CENTER)	
+in	B0	16	VR7	
+in	90	10	VR7 (CENTER)	
+in	B0	17	VR8	
+in	90	11	VR8 (CENTER)	
+in	B0	14	VR5	
+in	90	0E	VR5 (CENTER)	
+in	B0	0E	VR4	
+in	90	0C	VR4 (CENTER)	
+in	B0	1C	VR9	
+in	90	18	VR9 (CENTER)	
+in	B0	54	VR17 (Effect Param = Master)	
+in	B0	55	VR18 (Effect Param = Master)	
+in	B0	56	VR19 (Effect Param = Master)	
+in	B0	57	VR20 (Effect Param = Master)	
+in	B0	1E	VR10	
+in	90	16	VR10 (CENTER)	
+in	B0	0C	VR2	
+in	B0	1F	VR12	
+in	90	17	VR12 (CENTER)	
+in	B0	1D	VR11	
+in	90	19	VR11 (CENTER)	
+in	B0	0D	VR3	
+in	B0	18	VR13	
+in	90	12	VR13 (CENTER)	
+in	B0	19	VR14	
+in	90	13	VR14 (CENTER)	
+in	B0	1A	VR15	
+in	90	14	VR15 (CENTER)	
+in	B0	1B	VR16	
+in	90	15	VR16 (CENTER)	
+in	B0	07	VR22	
+in	B0	58	VR23	
+in	B0	59	VR24	
+in	90	1A	VR24 (CENTER)	
+in	B0	0F	VR21	
+in	90	0D	VR21 (CENTER)	
+in	B0	46	VR17 (Effect Param = A)	
+in	B0	47	VR18 (Effect Param = A)	
+in	B0	48	VR19 (Effect Param = A)	
+in	B0	49	VR20 (Effect Param = A)	
+in	B0	4A	VR17 (Effect Param = B)	
+in	B0	4B	VR18 (Effect Param = B)	
+in	B0	4C	VR19 (Effect Param = B)	
+in	B0	4D	VR20 (Effect Param = B)	
+in	90	3A	ENC1 (TOUCH1=Off, Time Stretch=Off) (note)	
+in	90	3B	ENC1 (TOUCH1=Off, Time Stretch=Off) (note)	
+in	90	3C	ENC2 (TOUCH2=Off, Time Stretch=Off) (note)	
+in	90	3D	ENC2 (TOUCH2=Off, Time Stretch=Off) (note)	
+in	B0	12	ENC1 (Seek Mode, TOUCH1=On)	
+in	B0	13	ENC2 (Seek Mode, TOUCH2=On)	
+in	90	42	SW21	
+in	90	43	SW40	
+in	90	44	SW22	
+in	90	45	SW39	
+in	90	48	SW26	
+in	90	49	SW28	
+in	90	4A	SW25, SW36 (Effect Param = A)	
+in	90	4B	SW27, SW36 (Effect Param = B)	
+in	90	4C	SW32, SW36 (Effect Param = Mas.)	
+in	90	4D	SW30 (Effect Param = A)	
+in	90	4E	SW30 (Effect Param = B)	
+in	90	4F	SW30 (Effect Param = Mas.)	
+in	90	50	SW31 (Effect Param = A)	
+in	90	51	SW31 (Effect Param = B)	
+in	90	52	SW31 (Effect Param = Mas.)	
+in	90	53	SW33 (Effect Param = A)	
+in	90	54	SW33 (Effect Param = B)	
+in	90	55	SW33 (Effect Param = Mas.)	
+in	90	56	SW34 (Effect Param = A)	
+in	90	57	SW34 (Effect Param = B)	
+in	90	58	SW34 (Effect Param = Mas.)	
+in	90	59	SW35 (Effect Param = A)	
+in	90	5A	SW35 (Effect Param = B)	
+in	90	5B	SW35 (Effect Param = A, as printed)	
+in	90	5C	SW16	
+in	90	5D	SW18	
+in	90	5E	SW17 (Preview Stop -> Play)	
+in	90	5F	SW17 (Preview Play -> Stop)	
+in	90	60	SW19	
+in	90	61	SW20	
+in	90	62	SW9	
+in	90	63	SW10	
+in	90	64	SW11	
+in	90	65	SW12	
+in	90	66	SW13	
+in	90	67	SW14	
+in	90	68	SW15	
+in	90	69	VR7 (MIN)	
+in	90	6A	VR15 (MIN)	
+in	90	6B	SWs relate to Deck A	
+in	90	6C	SWs relate to Deck B	
+in	90	46	SW24	
+in	90	47	SW37	
+in	90	6D	ENC1 (TOUCH1=Off, Time Stretch=On) (note)	
+in	90	6E	ENC1 (TOUCH1=Off, Time Stretch=On) (note)	
+in	90	6F	ENC2 (TOUCH2=Off, Time Stretch=On) (note)	
+in	90	70	ENC2 (TOUCH2=Off, Time Stretch=On) (note)	

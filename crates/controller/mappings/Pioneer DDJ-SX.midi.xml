@@ -547,16 +547,6 @@
             <control>
                 <group>[Channel1]</group>
                 <key>PioneerDDJSX.jogTouch</key>
-                <description>Jog touch (No Vinyl Mode) Deck 1, left JOGDIAL (Deck 1 active)</description>
-                <status>0x90</status>
-                <midino>0x35</midino>
-                <options>
-                    <script-binding/>
-                </options>
-            </control>
-            <control>
-                <group>[Channel1]</group>
-                <key>PioneerDDJSX.jogTouch</key>
                 <description>Jog touch (Vinyl Mode) Deck 1, left JOGDIAL (Deck 1 active)</description>
                 <status>0x90</status>
                 <midino>0x36</midino>
@@ -2010,16 +2000,6 @@
                 <description>Shift Deck 2, Button: right SHIFT (Deck 2 active)</description>
                 <status>0x91</status>
                 <midino>0x3F</midino>
-                <options>
-                    <script-binding/>
-                </options>
-            </control>
-            <control>
-                <group>[Channel2]</group>
-                <key>PioneerDDJSX.jogTouch</key>
-                <description>Jog touch (No Vinyl Mode) Deck 2, right JOGDIAL (Deck 2 active)</description>
-                <status>0x91</status>
-                <midino>0x35</midino>
                 <options>
                     <script-binding/>
                 </options>
@@ -3484,16 +3464,6 @@
                     <script-binding/>
                 </options>
             </control>
-             <control>
-                <group>[Channel3]</group>
-                <key>PioneerDDJSX.jogTouch</key>
-                <description>Jog touch (No Vinyl Mode) Deck 3, left JOGDIAL (Deck 3 active)</description>
-                <status>0x92</status>
-                <midino>0x35</midino>
-                <options>
-                    <script-binding/>
-                </options>
-            </control>
             <control>
                 <group>[Channel3]</group>
                 <key>PioneerDDJSX.jogTouch</key>
@@ -4636,26 +4606,6 @@
             </control>
             <control>
                 <group>[Channel4]</group>
-                <key>PioneerDDJSX.filterKnobMSB</key>
-                <description>Filter Deck 4 (MSB), Knob: FILTER Deck 4</description>
-                <status>0xB6</status>
-                <midino>0x1A</midino>
-                <options>
-                    <script-binding/>
-                </options>
-            </control>
-            <control>
-                <group>[Channel4]</group>
-                <key>PioneerDDJSX.filterKnobLSB</key>
-                <description>Filter Deck 4 (LSB), Knob: FILTER Deck 4</description>
-                <status>0xB6</status>
-                <midino>0x3A</midino>
-                <options>
-                    <script-binding/>
-                </options>
-            </control>
-            <control>
-                <group>[Channel4]</group>
                 <key>PioneerDDJSX.filterLowKnobMSB</key>
                 <description>Low level Deck 4 (MSB), Knob: LOW Deck 4</description>
                 <status>0xB3</status>
@@ -4950,16 +4900,6 @@
                 <description>Shift Deck 4, Button: right SHIFT (Deck 4 active)</description>
                 <status>0x93</status>
                 <midino>0x3F</midino>
-                <options>
-                    <script-binding/>
-                </options>
-            </control>
-            <control>
-                <group>[Channel4]</group>
-                <key>PioneerDDJSX.jogTouch</key>
-                <description>Jog touch (No Vinyl Mode) Deck 4, right JOGDIAL (Deck 4 active)</description>
-                <status>0x93</status>
-                <midino>0x35</midino>
                 <options>
                     <script-binding/>
                 </options>

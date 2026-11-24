@@ -562,36 +562,6 @@
                 </options>
             </control>
             <control>
-                <description>PAD 1 (DECK1) PAD FX 1 - hold - the pad's effect (openDJ)</description>
-                <group>[Channel1]</group>
-                <key>PioneerXDJAZ.padFxPressed</key>
-                <status>0x95</status>
-                <midino>0x50</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 1 (DECK1) KEY SHIFT - press - shift the key</description>
-                <group>[Channel1]</group>
-                <key>PioneerXDJAZ.pitchPadPressed</key>
-                <status>0x95</status>
-                <midino>0x60</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 1 (DECK1) KEY SHIFT +SHIFT - press - shift the key further</description>
-                <group>[Channel1]</group>
-                <key>PioneerXDJAZ.pitchPadShiftPressed</key>
-                <status>0x95</status>
-                <midino>0x68</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
                 <description>PAD 2 (DECK1) HOT CUE - press - set or play hot cue 2</description>
                 <group>[Channel1]</group>
                 <key>hotcue_2_activate</key>
@@ -687,36 +657,6 @@
                 <key>PioneerXDJAZ.keyboardPadShiftPressed</key>
                 <status>0x95</status>
                 <midino>0x49</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 2 (DECK1) PAD FX 1 - hold - the pad's effect (openDJ)</description>
-                <group>[Channel1]</group>
-                <key>PioneerXDJAZ.padFxPressed</key>
-                <status>0x95</status>
-                <midino>0x51</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 2 (DECK1) KEY SHIFT - press - shift the key</description>
-                <group>[Channel1]</group>
-                <key>PioneerXDJAZ.pitchPadPressed</key>
-                <status>0x95</status>
-                <midino>0x61</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 2 (DECK1) KEY SHIFT +SHIFT - press - shift the key further</description>
-                <group>[Channel1]</group>
-                <key>PioneerXDJAZ.pitchPadShiftPressed</key>
-                <status>0x95</status>
-                <midino>0x69</midino>
                 <options>
                     <Script-Binding />
                 </options>
@@ -822,36 +762,6 @@
                 </options>
             </control>
             <control>
-                <description>PAD 3 (DECK1) PAD FX 1 - hold - the pad's effect (openDJ)</description>
-                <group>[Channel1]</group>
-                <key>PioneerXDJAZ.padFxPressed</key>
-                <status>0x95</status>
-                <midino>0x52</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 3 (DECK1) KEY SHIFT - press - shift the key</description>
-                <group>[Channel1]</group>
-                <key>PioneerXDJAZ.pitchPadPressed</key>
-                <status>0x95</status>
-                <midino>0x62</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 3 (DECK1) KEY SHIFT +SHIFT - press - shift the key further</description>
-                <group>[Channel1]</group>
-                <key>PioneerXDJAZ.pitchPadShiftPressed</key>
-                <status>0x95</status>
-                <midino>0x6A</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
                 <description>PAD 4 (DECK1) HOT CUE - press - set or play hot cue 4</description>
                 <group>[Channel1]</group>
                 <key>hotcue_4_activate</key>
@@ -952,36 +862,6 @@
                 </options>
             </control>
             <control>
-                <description>PAD 4 (DECK1) PAD FX 1 - hold - the pad's effect (openDJ)</description>
-                <group>[Channel1]</group>
-                <key>PioneerXDJAZ.padFxPressed</key>
-                <status>0x95</status>
-                <midino>0x53</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 4 (DECK1) KEY SHIFT - press - shift the key</description>
-                <group>[Channel1]</group>
-                <key>PioneerXDJAZ.pitchPadPressed</key>
-                <status>0x95</status>
-                <midino>0x63</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 4 (DECK1) KEY SHIFT +SHIFT - press - shift the key further</description>
-                <group>[Channel1]</group>
-                <key>PioneerXDJAZ.pitchPadShiftPressed</key>
-                <status>0x95</status>
-                <midino>0x6B</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
                 <description>PAD 5 (DECK1) HOT CUE - press - set or play hot cue 5</description>
                 <group>[Channel1]</group>
                 <key>hotcue_5_activate</key>
@@ -1067,46 +947,6 @@
                 <key>PioneerXDJAZ.keyboardPadPressed</key>
                 <status>0x99</status>
                 <midino>0x44</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 5 (DECK1) KEYBOARD +SHIFT - press</description>
-                <group>[Channel1]</group>
-                <key>PioneerXDJAZ.keyboardPadShiftPressed</key>
-                <status>0x99</status>
-                <midino>0x4C</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 5 (DECK1) PAD FX 1 - hold - the pad's effect (openDJ)</description>
-                <group>[Channel1]</group>
-                <key>PioneerXDJAZ.padFxPressed</key>
-                <status>0x99</status>
-                <midino>0x54</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 5 (DECK1) KEY SHIFT - press - shift the key</description>
-                <group>[Channel1]</group>
-                <key>PioneerXDJAZ.pitchPadPressed</key>
-                <status>0x99</status>
-                <midino>0x64</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 5 (DECK1) KEY SHIFT +SHIFT - press - shift the key further</description>
-                <group>[Channel1]</group>
-                <key>PioneerXDJAZ.pitchPadShiftPressed</key>
-                <status>0x99</status>
-                <midino>0x6C</midino>
                 <options>
                     <Script-Binding />
                 </options>
@@ -1202,46 +1042,6 @@
                 </options>
             </control>
             <control>
-                <description>PAD 6 (DECK1) KEYBOARD +SHIFT - press</description>
-                <group>[Channel1]</group>
-                <key>PioneerXDJAZ.keyboardPadShiftPressed</key>
-                <status>0x99</status>
-                <midino>0x4D</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 6 (DECK1) PAD FX 1 - hold - the pad's effect (openDJ)</description>
-                <group>[Channel1]</group>
-                <key>PioneerXDJAZ.padFxPressed</key>
-                <status>0x99</status>
-                <midino>0x55</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 6 (DECK1) KEY SHIFT - press - shift the key</description>
-                <group>[Channel1]</group>
-                <key>PioneerXDJAZ.pitchPadPressed</key>
-                <status>0x99</status>
-                <midino>0x65</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 6 (DECK1) KEY SHIFT +SHIFT - press - shift the key further</description>
-                <group>[Channel1]</group>
-                <key>PioneerXDJAZ.pitchPadShiftPressed</key>
-                <status>0x99</status>
-                <midino>0x6D</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
                 <description>PAD 7 (DECK1) HOT CUE - press - set or play hot cue 7</description>
                 <group>[Channel1]</group>
                 <key>hotcue_7_activate</key>
@@ -1332,46 +1132,6 @@
                 </options>
             </control>
             <control>
-                <description>PAD 7 (DECK1) KEYBOARD +SHIFT - press</description>
-                <group>[Channel1]</group>
-                <key>PioneerXDJAZ.keyboardPadShiftPressed</key>
-                <status>0x99</status>
-                <midino>0x4E</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 7 (DECK1) PAD FX 1 - hold - the pad's effect (openDJ)</description>
-                <group>[Channel1]</group>
-                <key>PioneerXDJAZ.padFxPressed</key>
-                <status>0x99</status>
-                <midino>0x56</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 7 (DECK1) KEY SHIFT - press - shift the key</description>
-                <group>[Channel1]</group>
-                <key>PioneerXDJAZ.pitchPadPressed</key>
-                <status>0x99</status>
-                <midino>0x66</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 7 (DECK1) KEY SHIFT +SHIFT - press - shift the key further</description>
-                <group>[Channel1]</group>
-                <key>PioneerXDJAZ.pitchPadShiftPressed</key>
-                <status>0x99</status>
-                <midino>0x6E</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
                 <description>PAD 8 (DECK1) HOT CUE - press - set or play hot cue 8</description>
                 <group>[Channel1]</group>
                 <key>hotcue_8_activate</key>
@@ -1457,46 +1217,6 @@
                 <key>PioneerXDJAZ.keyboardPadPressed</key>
                 <status>0x99</status>
                 <midino>0x47</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 8 (DECK1) KEYBOARD +SHIFT - press</description>
-                <group>[Channel1]</group>
-                <key>PioneerXDJAZ.keyboardPadShiftPressed</key>
-                <status>0x99</status>
-                <midino>0x4F</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 8 (DECK1) PAD FX 1 - hold - the pad's effect (openDJ)</description>
-                <group>[Channel1]</group>
-                <key>PioneerXDJAZ.padFxPressed</key>
-                <status>0x99</status>
-                <midino>0x57</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 8 (DECK1) KEY SHIFT - press - shift the key</description>
-                <group>[Channel1]</group>
-                <key>PioneerXDJAZ.pitchPadPressed</key>
-                <status>0x99</status>
-                <midino>0x67</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 8 (DECK1) KEY SHIFT +SHIFT - press - shift the key further</description>
-                <group>[Channel1]</group>
-                <key>PioneerXDJAZ.pitchPadShiftPressed</key>
-                <status>0x99</status>
-                <midino>0x6F</midino>
                 <options>
                     <Script-Binding />
                 </options>
@@ -1982,36 +1702,6 @@
                 </options>
             </control>
             <control>
-                <description>PAD 1 (DECK2) PAD FX 1 - hold - the pad's effect (openDJ)</description>
-                <group>[Channel2]</group>
-                <key>PioneerXDJAZ.padFxPressed</key>
-                <status>0x96</status>
-                <midino>0x50</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 1 (DECK2) KEY SHIFT - press - shift the key</description>
-                <group>[Channel2]</group>
-                <key>PioneerXDJAZ.pitchPadPressed</key>
-                <status>0x96</status>
-                <midino>0x60</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 1 (DECK2) KEY SHIFT +SHIFT - press - shift the key further</description>
-                <group>[Channel2]</group>
-                <key>PioneerXDJAZ.pitchPadShiftPressed</key>
-                <status>0x96</status>
-                <midino>0x68</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
                 <description>PAD 2 (DECK2) HOT CUE - press - set or play hot cue 2</description>
                 <group>[Channel2]</group>
                 <key>hotcue_2_activate</key>
@@ -2107,36 +1797,6 @@
                 <key>PioneerXDJAZ.keyboardPadShiftPressed</key>
                 <status>0x96</status>
                 <midino>0x49</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 2 (DECK2) PAD FX 1 - hold - the pad's effect (openDJ)</description>
-                <group>[Channel2]</group>
-                <key>PioneerXDJAZ.padFxPressed</key>
-                <status>0x96</status>
-                <midino>0x51</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 2 (DECK2) KEY SHIFT - press - shift the key</description>
-                <group>[Channel2]</group>
-                <key>PioneerXDJAZ.pitchPadPressed</key>
-                <status>0x96</status>
-                <midino>0x61</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 2 (DECK2) KEY SHIFT +SHIFT - press - shift the key further</description>
-                <group>[Channel2]</group>
-                <key>PioneerXDJAZ.pitchPadShiftPressed</key>
-                <status>0x96</status>
-                <midino>0x69</midino>
                 <options>
                     <Script-Binding />
                 </options>
@@ -2242,36 +1902,6 @@
                 </options>
             </control>
             <control>
-                <description>PAD 3 (DECK2) PAD FX 1 - hold - the pad's effect (openDJ)</description>
-                <group>[Channel2]</group>
-                <key>PioneerXDJAZ.padFxPressed</key>
-                <status>0x96</status>
-                <midino>0x52</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 3 (DECK2) KEY SHIFT - press - shift the key</description>
-                <group>[Channel2]</group>
-                <key>PioneerXDJAZ.pitchPadPressed</key>
-                <status>0x96</status>
-                <midino>0x62</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 3 (DECK2) KEY SHIFT +SHIFT - press - shift the key further</description>
-                <group>[Channel2]</group>
-                <key>PioneerXDJAZ.pitchPadShiftPressed</key>
-                <status>0x96</status>
-                <midino>0x6A</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
                 <description>PAD 4 (DECK2) HOT CUE - press - set or play hot cue 4</description>
                 <group>[Channel2]</group>
                 <key>hotcue_4_activate</key>
@@ -2372,36 +2002,6 @@
                 </options>
             </control>
             <control>
-                <description>PAD 4 (DECK2) PAD FX 1 - hold - the pad's effect (openDJ)</description>
-                <group>[Channel2]</group>
-                <key>PioneerXDJAZ.padFxPressed</key>
-                <status>0x96</status>
-                <midino>0x53</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 4 (DECK2) KEY SHIFT - press - shift the key</description>
-                <group>[Channel2]</group>
-                <key>PioneerXDJAZ.pitchPadPressed</key>
-                <status>0x96</status>
-                <midino>0x63</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 4 (DECK2) KEY SHIFT +SHIFT - press - shift the key further</description>
-                <group>[Channel2]</group>
-                <key>PioneerXDJAZ.pitchPadShiftPressed</key>
-                <status>0x96</status>
-                <midino>0x6B</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
                 <description>PAD 5 (DECK2) HOT CUE - press - set or play hot cue 5</description>
                 <group>[Channel2]</group>
                 <key>hotcue_5_activate</key>
@@ -2487,46 +2087,6 @@
                 <key>PioneerXDJAZ.keyboardPadPressed</key>
                 <status>0x9A</status>
                 <midino>0x44</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 5 (DECK2) KEYBOARD +SHIFT - press</description>
-                <group>[Channel2]</group>
-                <key>PioneerXDJAZ.keyboardPadShiftPressed</key>
-                <status>0x9A</status>
-                <midino>0x4C</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 5 (DECK2) PAD FX 1 - hold - the pad's effect (openDJ)</description>
-                <group>[Channel2]</group>
-                <key>PioneerXDJAZ.padFxPressed</key>
-                <status>0x9A</status>
-                <midino>0x54</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 5 (DECK2) KEY SHIFT - press - shift the key</description>
-                <group>[Channel2]</group>
-                <key>PioneerXDJAZ.pitchPadPressed</key>
-                <status>0x9A</status>
-                <midino>0x64</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 5 (DECK2) KEY SHIFT +SHIFT - press - shift the key further</description>
-                <group>[Channel2]</group>
-                <key>PioneerXDJAZ.pitchPadShiftPressed</key>
-                <status>0x9A</status>
-                <midino>0x6C</midino>
                 <options>
                     <Script-Binding />
                 </options>
@@ -2622,46 +2182,6 @@
                 </options>
             </control>
             <control>
-                <description>PAD 6 (DECK2) KEYBOARD +SHIFT - press</description>
-                <group>[Channel2]</group>
-                <key>PioneerXDJAZ.keyboardPadShiftPressed</key>
-                <status>0x9A</status>
-                <midino>0x4D</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 6 (DECK2) PAD FX 1 - hold - the pad's effect (openDJ)</description>
-                <group>[Channel2]</group>
-                <key>PioneerXDJAZ.padFxPressed</key>
-                <status>0x9A</status>
-                <midino>0x55</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 6 (DECK2) KEY SHIFT - press - shift the key</description>
-                <group>[Channel2]</group>
-                <key>PioneerXDJAZ.pitchPadPressed</key>
-                <status>0x9A</status>
-                <midino>0x65</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 6 (DECK2) KEY SHIFT +SHIFT - press - shift the key further</description>
-                <group>[Channel2]</group>
-                <key>PioneerXDJAZ.pitchPadShiftPressed</key>
-                <status>0x9A</status>
-                <midino>0x6D</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
                 <description>PAD 7 (DECK2) HOT CUE - press - set or play hot cue 7</description>
                 <group>[Channel2]</group>
                 <key>hotcue_7_activate</key>
@@ -2752,46 +2272,6 @@
                 </options>
             </control>
             <control>
-                <description>PAD 7 (DECK2) KEYBOARD +SHIFT - press</description>
-                <group>[Channel2]</group>
-                <key>PioneerXDJAZ.keyboardPadShiftPressed</key>
-                <status>0x9A</status>
-                <midino>0x4E</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 7 (DECK2) PAD FX 1 - hold - the pad's effect (openDJ)</description>
-                <group>[Channel2]</group>
-                <key>PioneerXDJAZ.padFxPressed</key>
-                <status>0x9A</status>
-                <midino>0x56</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 7 (DECK2) KEY SHIFT - press - shift the key</description>
-                <group>[Channel2]</group>
-                <key>PioneerXDJAZ.pitchPadPressed</key>
-                <status>0x9A</status>
-                <midino>0x66</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 7 (DECK2) KEY SHIFT +SHIFT - press - shift the key further</description>
-                <group>[Channel2]</group>
-                <key>PioneerXDJAZ.pitchPadShiftPressed</key>
-                <status>0x9A</status>
-                <midino>0x6E</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
                 <description>PAD 8 (DECK2) HOT CUE - press - set or play hot cue 8</description>
                 <group>[Channel2]</group>
                 <key>hotcue_8_activate</key>
@@ -2877,46 +2357,6 @@
                 <key>PioneerXDJAZ.keyboardPadPressed</key>
                 <status>0x9A</status>
                 <midino>0x47</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 8 (DECK2) KEYBOARD +SHIFT - press</description>
-                <group>[Channel2]</group>
-                <key>PioneerXDJAZ.keyboardPadShiftPressed</key>
-                <status>0x9A</status>
-                <midino>0x4F</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 8 (DECK2) PAD FX 1 - hold - the pad's effect (openDJ)</description>
-                <group>[Channel2]</group>
-                <key>PioneerXDJAZ.padFxPressed</key>
-                <status>0x9A</status>
-                <midino>0x57</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 8 (DECK2) KEY SHIFT - press - shift the key</description>
-                <group>[Channel2]</group>
-                <key>PioneerXDJAZ.pitchPadPressed</key>
-                <status>0x9A</status>
-                <midino>0x67</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 8 (DECK2) KEY SHIFT +SHIFT - press - shift the key further</description>
-                <group>[Channel2]</group>
-                <key>PioneerXDJAZ.pitchPadShiftPressed</key>
-                <status>0x9A</status>
-                <midino>0x6F</midino>
                 <options>
                     <Script-Binding />
                 </options>
@@ -3402,36 +2842,6 @@
                 </options>
             </control>
             <control>
-                <description>PAD 1 (DECK3) PAD FX 1 - hold - the pad's effect (openDJ)</description>
-                <group>[Channel3]</group>
-                <key>PioneerXDJAZ.padFxPressed</key>
-                <status>0x97</status>
-                <midino>0x50</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 1 (DECK3) KEY SHIFT - press - shift the key</description>
-                <group>[Channel3]</group>
-                <key>PioneerXDJAZ.pitchPadPressed</key>
-                <status>0x97</status>
-                <midino>0x60</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 1 (DECK3) KEY SHIFT +SHIFT - press - shift the key further</description>
-                <group>[Channel3]</group>
-                <key>PioneerXDJAZ.pitchPadShiftPressed</key>
-                <status>0x97</status>
-                <midino>0x68</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
                 <description>PAD 2 (DECK3) HOT CUE - press - set or play hot cue 2</description>
                 <group>[Channel3]</group>
                 <key>hotcue_2_activate</key>
@@ -3527,36 +2937,6 @@
                 <key>PioneerXDJAZ.keyboardPadShiftPressed</key>
                 <status>0x97</status>
                 <midino>0x49</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 2 (DECK3) PAD FX 1 - hold - the pad's effect (openDJ)</description>
-                <group>[Channel3]</group>
-                <key>PioneerXDJAZ.padFxPressed</key>
-                <status>0x97</status>
-                <midino>0x51</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 2 (DECK3) KEY SHIFT - press - shift the key</description>
-                <group>[Channel3]</group>
-                <key>PioneerXDJAZ.pitchPadPressed</key>
-                <status>0x97</status>
-                <midino>0x61</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 2 (DECK3) KEY SHIFT +SHIFT - press - shift the key further</description>
-                <group>[Channel3]</group>
-                <key>PioneerXDJAZ.pitchPadShiftPressed</key>
-                <status>0x97</status>
-                <midino>0x69</midino>
                 <options>
                     <Script-Binding />
                 </options>
@@ -3662,36 +3042,6 @@
                 </options>
             </control>
             <control>
-                <description>PAD 3 (DECK3) PAD FX 1 - hold - the pad's effect (openDJ)</description>
-                <group>[Channel3]</group>
-                <key>PioneerXDJAZ.padFxPressed</key>
-                <status>0x97</status>
-                <midino>0x52</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 3 (DECK3) KEY SHIFT - press - shift the key</description>
-                <group>[Channel3]</group>
-                <key>PioneerXDJAZ.pitchPadPressed</key>
-                <status>0x97</status>
-                <midino>0x62</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 3 (DECK3) KEY SHIFT +SHIFT - press - shift the key further</description>
-                <group>[Channel3]</group>
-                <key>PioneerXDJAZ.pitchPadShiftPressed</key>
-                <status>0x97</status>
-                <midino>0x6A</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
                 <description>PAD 4 (DECK3) HOT CUE - press - set or play hot cue 4</description>
                 <group>[Channel3]</group>
                 <key>hotcue_4_activate</key>
@@ -3792,36 +3142,6 @@
                 </options>
             </control>
             <control>
-                <description>PAD 4 (DECK3) PAD FX 1 - hold - the pad's effect (openDJ)</description>
-                <group>[Channel3]</group>
-                <key>PioneerXDJAZ.padFxPressed</key>
-                <status>0x97</status>
-                <midino>0x53</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 4 (DECK3) KEY SHIFT - press - shift the key</description>
-                <group>[Channel3]</group>
-                <key>PioneerXDJAZ.pitchPadPressed</key>
-                <status>0x97</status>
-                <midino>0x63</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 4 (DECK3) KEY SHIFT +SHIFT - press - shift the key further</description>
-                <group>[Channel3]</group>
-                <key>PioneerXDJAZ.pitchPadShiftPressed</key>
-                <status>0x97</status>
-                <midino>0x6B</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
                 <description>PAD 5 (DECK3) HOT CUE - press - set or play hot cue 5</description>
                 <group>[Channel3]</group>
                 <key>hotcue_5_activate</key>
@@ -3907,46 +3227,6 @@
                 <key>PioneerXDJAZ.keyboardPadPressed</key>
                 <status>0x9B</status>
                 <midino>0x44</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 5 (DECK3) KEYBOARD +SHIFT - press</description>
-                <group>[Channel3]</group>
-                <key>PioneerXDJAZ.keyboardPadShiftPressed</key>
-                <status>0x9B</status>
-                <midino>0x4C</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 5 (DECK3) PAD FX 1 - hold - the pad's effect (openDJ)</description>
-                <group>[Channel3]</group>
-                <key>PioneerXDJAZ.padFxPressed</key>
-                <status>0x9B</status>
-                <midino>0x54</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 5 (DECK3) KEY SHIFT - press - shift the key</description>
-                <group>[Channel3]</group>
-                <key>PioneerXDJAZ.pitchPadPressed</key>
-                <status>0x9B</status>
-                <midino>0x64</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 5 (DECK3) KEY SHIFT +SHIFT - press - shift the key further</description>
-                <group>[Channel3]</group>
-                <key>PioneerXDJAZ.pitchPadShiftPressed</key>
-                <status>0x9B</status>
-                <midino>0x6C</midino>
                 <options>
                     <Script-Binding />
                 </options>
@@ -4042,46 +3322,6 @@
                 </options>
             </control>
             <control>
-                <description>PAD 6 (DECK3) KEYBOARD +SHIFT - press</description>
-                <group>[Channel3]</group>
-                <key>PioneerXDJAZ.keyboardPadShiftPressed</key>
-                <status>0x9B</status>
-                <midino>0x4D</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 6 (DECK3) PAD FX 1 - hold - the pad's effect (openDJ)</description>
-                <group>[Channel3]</group>
-                <key>PioneerXDJAZ.padFxPressed</key>
-                <status>0x9B</status>
-                <midino>0x55</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 6 (DECK3) KEY SHIFT - press - shift the key</description>
-                <group>[Channel3]</group>
-                <key>PioneerXDJAZ.pitchPadPressed</key>
-                <status>0x9B</status>
-                <midino>0x65</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 6 (DECK3) KEY SHIFT +SHIFT - press - shift the key further</description>
-                <group>[Channel3]</group>
-                <key>PioneerXDJAZ.pitchPadShiftPressed</key>
-                <status>0x9B</status>
-                <midino>0x6D</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
                 <description>PAD 7 (DECK3) HOT CUE - press - set or play hot cue 7</description>
                 <group>[Channel3]</group>
                 <key>hotcue_7_activate</key>
@@ -4172,46 +3412,6 @@
                 </options>
             </control>
             <control>
-                <description>PAD 7 (DECK3) KEYBOARD +SHIFT - press</description>
-                <group>[Channel3]</group>
-                <key>PioneerXDJAZ.keyboardPadShiftPressed</key>
-                <status>0x9B</status>
-                <midino>0x4E</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 7 (DECK3) PAD FX 1 - hold - the pad's effect (openDJ)</description>
-                <group>[Channel3]</group>
-                <key>PioneerXDJAZ.padFxPressed</key>
-                <status>0x9B</status>
-                <midino>0x56</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 7 (DECK3) KEY SHIFT - press - shift the key</description>
-                <group>[Channel3]</group>
-                <key>PioneerXDJAZ.pitchPadPressed</key>
-                <status>0x9B</status>
-                <midino>0x66</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 7 (DECK3) KEY SHIFT +SHIFT - press - shift the key further</description>
-                <group>[Channel3]</group>
-                <key>PioneerXDJAZ.pitchPadShiftPressed</key>
-                <status>0x9B</status>
-                <midino>0x6E</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
                 <description>PAD 8 (DECK3) HOT CUE - press - set or play hot cue 8</description>
                 <group>[Channel3]</group>
                 <key>hotcue_8_activate</key>
@@ -4297,46 +3497,6 @@
                 <key>PioneerXDJAZ.keyboardPadPressed</key>
                 <status>0x9B</status>
                 <midino>0x47</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 8 (DECK3) KEYBOARD +SHIFT - press</description>
-                <group>[Channel3]</group>
-                <key>PioneerXDJAZ.keyboardPadShiftPressed</key>
-                <status>0x9B</status>
-                <midino>0x4F</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 8 (DECK3) PAD FX 1 - hold - the pad's effect (openDJ)</description>
-                <group>[Channel3]</group>
-                <key>PioneerXDJAZ.padFxPressed</key>
-                <status>0x9B</status>
-                <midino>0x57</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 8 (DECK3) KEY SHIFT - press - shift the key</description>
-                <group>[Channel3]</group>
-                <key>PioneerXDJAZ.pitchPadPressed</key>
-                <status>0x9B</status>
-                <midino>0x67</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 8 (DECK3) KEY SHIFT +SHIFT - press - shift the key further</description>
-                <group>[Channel3]</group>
-                <key>PioneerXDJAZ.pitchPadShiftPressed</key>
-                <status>0x9B</status>
-                <midino>0x6F</midino>
                 <options>
                     <Script-Binding />
                 </options>
@@ -4822,36 +3982,6 @@
                 </options>
             </control>
             <control>
-                <description>PAD 1 (DECK4) PAD FX 1 - hold - the pad's effect (openDJ)</description>
-                <group>[Channel4]</group>
-                <key>PioneerXDJAZ.padFxPressed</key>
-                <status>0x98</status>
-                <midino>0x50</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 1 (DECK4) KEY SHIFT - press - shift the key</description>
-                <group>[Channel4]</group>
-                <key>PioneerXDJAZ.pitchPadPressed</key>
-                <status>0x98</status>
-                <midino>0x60</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 1 (DECK4) KEY SHIFT +SHIFT - press - shift the key further</description>
-                <group>[Channel4]</group>
-                <key>PioneerXDJAZ.pitchPadShiftPressed</key>
-                <status>0x98</status>
-                <midino>0x68</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
                 <description>PAD 2 (DECK4) HOT CUE - press - set or play hot cue 2</description>
                 <group>[Channel4]</group>
                 <key>hotcue_2_activate</key>
@@ -4947,36 +4077,6 @@
                 <key>PioneerXDJAZ.keyboardPadShiftPressed</key>
                 <status>0x98</status>
                 <midino>0x49</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 2 (DECK4) PAD FX 1 - hold - the pad's effect (openDJ)</description>
-                <group>[Channel4]</group>
-                <key>PioneerXDJAZ.padFxPressed</key>
-                <status>0x98</status>
-                <midino>0x51</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 2 (DECK4) KEY SHIFT - press - shift the key</description>
-                <group>[Channel4]</group>
-                <key>PioneerXDJAZ.pitchPadPressed</key>
-                <status>0x98</status>
-                <midino>0x61</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 2 (DECK4) KEY SHIFT +SHIFT - press - shift the key further</description>
-                <group>[Channel4]</group>
-                <key>PioneerXDJAZ.pitchPadShiftPressed</key>
-                <status>0x98</status>
-                <midino>0x69</midino>
                 <options>
                     <Script-Binding />
                 </options>
@@ -5082,36 +4182,6 @@
                 </options>
             </control>
             <control>
-                <description>PAD 3 (DECK4) PAD FX 1 - hold - the pad's effect (openDJ)</description>
-                <group>[Channel4]</group>
-                <key>PioneerXDJAZ.padFxPressed</key>
-                <status>0x98</status>
-                <midino>0x52</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 3 (DECK4) KEY SHIFT - press - shift the key</description>
-                <group>[Channel4]</group>
-                <key>PioneerXDJAZ.pitchPadPressed</key>
-                <status>0x98</status>
-                <midino>0x62</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 3 (DECK4) KEY SHIFT +SHIFT - press - shift the key further</description>
-                <group>[Channel4]</group>
-                <key>PioneerXDJAZ.pitchPadShiftPressed</key>
-                <status>0x98</status>
-                <midino>0x6A</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
                 <description>PAD 4 (DECK4) HOT CUE - press - set or play hot cue 4</description>
                 <group>[Channel4]</group>
                 <key>hotcue_4_activate</key>
@@ -5212,36 +4282,6 @@
                 </options>
             </control>
             <control>
-                <description>PAD 4 (DECK4) PAD FX 1 - hold - the pad's effect (openDJ)</description>
-                <group>[Channel4]</group>
-                <key>PioneerXDJAZ.padFxPressed</key>
-                <status>0x98</status>
-                <midino>0x53</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 4 (DECK4) KEY SHIFT - press - shift the key</description>
-                <group>[Channel4]</group>
-                <key>PioneerXDJAZ.pitchPadPressed</key>
-                <status>0x98</status>
-                <midino>0x63</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 4 (DECK4) KEY SHIFT +SHIFT - press - shift the key further</description>
-                <group>[Channel4]</group>
-                <key>PioneerXDJAZ.pitchPadShiftPressed</key>
-                <status>0x98</status>
-                <midino>0x6B</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
                 <description>PAD 5 (DECK4) HOT CUE - press - set or play hot cue 5</description>
                 <group>[Channel4]</group>
                 <key>hotcue_5_activate</key>
@@ -5327,46 +4367,6 @@
                 <key>PioneerXDJAZ.keyboardPadPressed</key>
                 <status>0x9C</status>
                 <midino>0x44</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 5 (DECK4) KEYBOARD +SHIFT - press</description>
-                <group>[Channel4]</group>
-                <key>PioneerXDJAZ.keyboardPadShiftPressed</key>
-                <status>0x9C</status>
-                <midino>0x4C</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 5 (DECK4) PAD FX 1 - hold - the pad's effect (openDJ)</description>
-                <group>[Channel4]</group>
-                <key>PioneerXDJAZ.padFxPressed</key>
-                <status>0x9C</status>
-                <midino>0x54</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 5 (DECK4) KEY SHIFT - press - shift the key</description>
-                <group>[Channel4]</group>
-                <key>PioneerXDJAZ.pitchPadPressed</key>
-                <status>0x9C</status>
-                <midino>0x64</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 5 (DECK4) KEY SHIFT +SHIFT - press - shift the key further</description>
-                <group>[Channel4]</group>
-                <key>PioneerXDJAZ.pitchPadShiftPressed</key>
-                <status>0x9C</status>
-                <midino>0x6C</midino>
                 <options>
                     <Script-Binding />
                 </options>
@@ -5462,46 +4462,6 @@
                 </options>
             </control>
             <control>
-                <description>PAD 6 (DECK4) KEYBOARD +SHIFT - press</description>
-                <group>[Channel4]</group>
-                <key>PioneerXDJAZ.keyboardPadShiftPressed</key>
-                <status>0x9C</status>
-                <midino>0x4D</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 6 (DECK4) PAD FX 1 - hold - the pad's effect (openDJ)</description>
-                <group>[Channel4]</group>
-                <key>PioneerXDJAZ.padFxPressed</key>
-                <status>0x9C</status>
-                <midino>0x55</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 6 (DECK4) KEY SHIFT - press - shift the key</description>
-                <group>[Channel4]</group>
-                <key>PioneerXDJAZ.pitchPadPressed</key>
-                <status>0x9C</status>
-                <midino>0x65</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 6 (DECK4) KEY SHIFT +SHIFT - press - shift the key further</description>
-                <group>[Channel4]</group>
-                <key>PioneerXDJAZ.pitchPadShiftPressed</key>
-                <status>0x9C</status>
-                <midino>0x6D</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
                 <description>PAD 7 (DECK4) HOT CUE - press - set or play hot cue 7</description>
                 <group>[Channel4]</group>
                 <key>hotcue_7_activate</key>
@@ -5592,46 +4552,6 @@
                 </options>
             </control>
             <control>
-                <description>PAD 7 (DECK4) KEYBOARD +SHIFT - press</description>
-                <group>[Channel4]</group>
-                <key>PioneerXDJAZ.keyboardPadShiftPressed</key>
-                <status>0x9C</status>
-                <midino>0x4E</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 7 (DECK4) PAD FX 1 - hold - the pad's effect (openDJ)</description>
-                <group>[Channel4]</group>
-                <key>PioneerXDJAZ.padFxPressed</key>
-                <status>0x9C</status>
-                <midino>0x56</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 7 (DECK4) KEY SHIFT - press - shift the key</description>
-                <group>[Channel4]</group>
-                <key>PioneerXDJAZ.pitchPadPressed</key>
-                <status>0x9C</status>
-                <midino>0x66</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 7 (DECK4) KEY SHIFT +SHIFT - press - shift the key further</description>
-                <group>[Channel4]</group>
-                <key>PioneerXDJAZ.pitchPadShiftPressed</key>
-                <status>0x9C</status>
-                <midino>0x6E</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
                 <description>PAD 8 (DECK4) HOT CUE - press - set or play hot cue 8</description>
                 <group>[Channel4]</group>
                 <key>hotcue_8_activate</key>
@@ -5717,46 +4637,6 @@
                 <key>PioneerXDJAZ.keyboardPadPressed</key>
                 <status>0x9C</status>
                 <midino>0x47</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 8 (DECK4) KEYBOARD +SHIFT - press</description>
-                <group>[Channel4]</group>
-                <key>PioneerXDJAZ.keyboardPadShiftPressed</key>
-                <status>0x9C</status>
-                <midino>0x4F</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 8 (DECK4) PAD FX 1 - hold - the pad's effect (openDJ)</description>
-                <group>[Channel4]</group>
-                <key>PioneerXDJAZ.padFxPressed</key>
-                <status>0x9C</status>
-                <midino>0x57</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 8 (DECK4) KEY SHIFT - press - shift the key</description>
-                <group>[Channel4]</group>
-                <key>PioneerXDJAZ.pitchPadPressed</key>
-                <status>0x9C</status>
-                <midino>0x67</midino>
-                <options>
-                    <Script-Binding />
-                </options>
-            </control>
-            <control>
-                <description>PAD 8 (DECK4) KEY SHIFT +SHIFT - press - shift the key further</description>
-                <group>[Channel4]</group>
-                <key>PioneerXDJAZ.pitchPadShiftPressed</key>
-                <status>0x9C</status>
-                <midino>0x6F</midino>
                 <options>
                     <Script-Binding />
                 </options>
@@ -8038,102 +6918,6 @@
                 <key>beatlooproll_8_activate</key>
                 <status>0x9C</status>
                 <midino>0x27</midino>
-                <on>0x7F</on>
-                <minimum>0.5</minimum>
-            </output>
-            <output>
-                <group>[Channel1]</group>
-                <key>pfl</key>
-                <status>0xB4</status>
-                <midino>0x46</midino>
-                <on>0x7F</on>
-                <minimum>0.5</minimum>
-            </output>
-            <output>
-                <group>[Channel2]</group>
-                <key>pfl</key>
-                <status>0xB4</status>
-                <midino>0x47</midino>
-                <on>0x7F</on>
-                <minimum>0.5</minimum>
-            </output>
-            <output>
-                <group>[Channel3]</group>
-                <key>pfl</key>
-                <status>0xB4</status>
-                <midino>0x48</midino>
-                <on>0x7F</on>
-                <minimum>0.5</minimum>
-            </output>
-            <output>
-                <group>[Channel4]</group>
-                <key>pfl</key>
-                <status>0xB4</status>
-                <midino>0x49</midino>
-                <on>0x7F</on>
-                <minimum>0.5</minimum>
-            </output>
-            <output>
-                <group>[Channel1]</group>
-                <key>beatloop_4_enabled</key>
-                <status>0x90</status>
-                <midino>0x43</midino>
-                <on>0x7F</on>
-                <minimum>0.5</minimum>
-            </output>
-            <output>
-                <group>[Channel1]</group>
-                <key>beatloop_8_enabled</key>
-                <status>0x90</status>
-                <midino>0x44</midino>
-                <on>0x7F</on>
-                <minimum>0.5</minimum>
-            </output>
-            <output>
-                <group>[Channel2]</group>
-                <key>beatloop_4_enabled</key>
-                <status>0x91</status>
-                <midino>0x43</midino>
-                <on>0x7F</on>
-                <minimum>0.5</minimum>
-            </output>
-            <output>
-                <group>[Channel2]</group>
-                <key>beatloop_8_enabled</key>
-                <status>0x91</status>
-                <midino>0x44</midino>
-                <on>0x7F</on>
-                <minimum>0.5</minimum>
-            </output>
-            <output>
-                <group>[Channel3]</group>
-                <key>beatloop_4_enabled</key>
-                <status>0x92</status>
-                <midino>0x43</midino>
-                <on>0x7F</on>
-                <minimum>0.5</minimum>
-            </output>
-            <output>
-                <group>[Channel3]</group>
-                <key>beatloop_8_enabled</key>
-                <status>0x92</status>
-                <midino>0x44</midino>
-                <on>0x7F</on>
-                <minimum>0.5</minimum>
-            </output>
-            <output>
-                <group>[Channel4]</group>
-                <key>beatloop_4_enabled</key>
-                <status>0x93</status>
-                <midino>0x43</midino>
-                <on>0x7F</on>
-                <minimum>0.5</minimum>
-            </output>
-            <output>
-                <group>[Channel4]</group>
-                <key>beatloop_8_enabled</key>
-                <status>0x93</status>
-                <midino>0x44</midino>
                 <on>0x7F</on>
                 <minimum>0.5</minimum>
             </output>

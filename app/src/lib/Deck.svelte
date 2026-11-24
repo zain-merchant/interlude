@@ -5,6 +5,7 @@
   import Performance from './Performance.svelte';
   import Stems from './Stems.svelte';
   import Grid from './Grid.svelte';
+  import Platter from './Platter.svelte';
   import { untrack } from 'svelte';
   import { padMode, padModeTab } from './padmode.svelte.js';
   import { tempoPickup } from './pickup.svelte.js';
@@ -18,7 +19,6 @@
   import { announce } from './announce.svelte.js';
   import { keyName, keyLongName, camelot, playingKey } from './key.js';
   import { toggleSlip, beatJump, hasGrid, beatsLabel, setKeyShift, keyStep, keySync, canKeySync, KEY_SHIFT_MAX } from './performance.js';
-  import { findPhrases, phraseAt, PHRASE_NAMES } from './phrases.js';
 
   /** @type {{ deck: number, onload: (deck: number, track: any) => void, onreveal: (path: string) => void, onsettings?: (page: string) => void }} */
   let { deck, onload, onreveal, onsettings } = $props();
@@ -120,10 +120,6 @@
   const atCue = $derived(!!t && !d.playing && Math.abs(d.position - d.cue) < 0.01);
   const pk = $derived(t ? playingKey(d.key, d.rate, d.keylock, d.keyShift ?? 0) : null);
   const canSync = $derived(!!t && d.bpm > 0 && engine.decks[1 - deck].bpm > 0);
-  // Phrases (intro, build, drop...) from the waveform on the grid; found
-  // again when the grid changes.
-  const phrases = $derived(t ? findPhrases(t.bins, t.binsPerSec, t.beatgrid, t.duration) : []);
-  const now = $derived(t?.beatgrid ? phraseAt(phrases, d.position, t.beatgrid) : null);
 
   let lastTouch = 0;
 
@@ -171,14 +167,6 @@
     announce(`Deck ${name} pitch range plus or minus ${Math.round(range * 100)} percent`);
   }
 
-  function fmt(s) {
-    if (!isFinite(s)) return '0:00.0';
-    const sign = s < 0 ? '−' : '';
-    s = Math.abs(s);
-    const m = Math.floor(s / 60);
-    const sec = (s - m * 60).toFixed(1).padStart(4, '0');
-    return `${sign}${m}:${sec}`;
-  }
   const pct = (v) => `${v >= 0 ? '+' : '−'}${Math.abs(v).toFixed(2)}%`;
 
   // Buttons act on pointer-down so a press is felt at once; keyboard
@@ -188,10 +176,12 @@
     onclick: (e) => e.detail === 0 && fn(),
   });
   const play = () => t && control({ type: 'togglePlay', deck });
+  // SYNC turns sync on or off. On, the deck keeps deck {other}'s tempo
+  // as either pitch fader moves.
   const sync = () => {
-    if (!canSync) return;
+    if (!canSync && !d.synced) return;
     control({ type: 'sync', deck });
-    announce(`Deck ${name} synced to deck ${other}`);
+    announce(d.synced ? `Deck ${name} sync off` : `Deck ${name} synced to deck ${other}`);
   };
   const toggleKeylock = () => control({ type: 'setKeylock', deck, on: !d.keylock });
   const slipTip = () =>
@@ -238,50 +228,36 @@
   style:--drop-color={deck === 0 ? 'var(--deck-a)' : 'var(--deck-b)'} aria-label={regionLabel} data-region="deck{deck}"
   use:dropTarget={{ ondrop: (track) => onload(deck, track), blocked: () => d.playing }}>
   <div class="body">
+    <!-- The record on the outer side with the times in its centre, the title
+         beside it, tempo and key in the inner corner, and the overview of
+         the whole track across the deck under them. -->
+    <div class="rec-cell"><Platter {deck} /></div>
     <!-- svelte-ignore a11y_no_static_element_interactions -->
     <header oncontextmenu={headerMenu}>
-      <div class="title">
-        {#if t}
-          <div class="name" use:tip={() => t.path} use:arrive={{ key: t.path }}>{t.title}</div>
-          <div class="artist" use:arrive={{ key: t.path, delay: 20 }}>{t.artist || 'Unknown artist'}</div>
-        {:else}
-          <div class="name dim">Empty deck</div>
-          <div class="artist">Drag a track here or press {keyLabel(`deck.${deck}.load`)}</div>
-        {/if}
-      </div>
-      <div class="bpm" oncontextmenu={openGridMenu} ondblclick={() => t && (bpmEdit.deck = deck)} role="group" aria-label="Tempo"
-        use:tip={() => (editingBpm ? '' : d.bpm > 0 ? `Track tempo ${d.bpm.toFixed(2)} BPM${t?.gridLocked ? ', beatgrid fixed by hand' : ''}. Right-click here or on the waveform to fix the beatgrid` : t ? 'No clear beat found. Double-click to set the BPM' : '')}>
-        {#if editingBpm}
-          <input class="big num edit" value={d.bpm > 0 ? +d.bpm.toFixed(2) : ''} inputmode="decimal" aria-label="Track BPM" spellcheck="false"
-            use:focusBpm onkeydown={bpmKey} onblur={(e) => finishBpm(e.currentTarget.value)} />
-        {:else}
-          <!-- The tempo arrives with the track, and again when analysis finds it. -->
-          <div class="big num" use:arrive={{ key: `${t?.path}:${d.bpm > 0}`, delay: 40 }}>{bpm > 0 ? bpm.toFixed(2) : '—'}</div>
-        {/if}
-        <div class="unit" use:arrive={{ key: `${t?.path}:${!!pk}`, delay: 60 }}>{#if pk}<button class="key" class:shifted={pk.shift} aria-label="Key {keyName(pk)}, {camelot(pk)}{pk.keyShift ? `, shifted ${pk.keyShift > 0 ? 'up' : 'down'} ${st(pk.keyShift)}` : ''}. Shift the key"
-          aria-haspopup="menu" onclick={keyMenu} oncontextmenu={keyMenu} ondblclick={(e) => e.stopPropagation()} use:tip={keyTip}>{keyName(pk)} · {camelot(pk)}{#if pk.keyShift}<span class="ks num">{pk.keyShift > 0 ? '+' : '−'}{Math.abs(pk.keyShift)}</span>{/if}<svg viewBox="0 0 10 10" aria-hidden="true"><path d="M2.5 4l2.5 2.5L7.5 4" /></svg></button>{" · "}{/if}BPM</div>
-      </div>
+      {#if t}
+        <div class="name" use:tip={() => t.path} use:arrive={{ key: t.path }}>{t.title}</div>
+        <div class="artist" use:arrive={{ key: t.path, delay: 20 }}>{t.artist || 'Unknown artist'}</div>
+      {:else}
+        <div class="name dim">Empty deck</div>
+        <div class="artist">Drag a track here or press {keyLabel(`deck.${deck}.load`)}</div>
+      {/if}
     </header>
-
-    <div class="overview" use:arrive={{ key: t?.path, delay: 0, y: 0, blur: 0, duration: 280 }}>
-      <Waveform {deck} mode="overview" />
-      {#if phrases.length}
-        <div class="phrases" aria-hidden="true">
-          {#each phrases as p (p.start)}
-            <span class="phrase {p.kind}" style:left="{(p.start / t.duration) * 100}%" style:width="{((p.end - p.start) / t.duration) * 100}%"></span>
-          {/each}
-        </div>
+    <div class="bpm" oncontextmenu={openGridMenu} ondblclick={() => t && (bpmEdit.deck = deck)} role="group" aria-label="Tempo"
+      use:tip={() => (editingBpm ? '' : d.bpm > 0 ? `Track tempo ${d.bpm.toFixed(2)} BPM${t?.gridLocked ? ', beatgrid fixed by hand' : ''}. Right-click here or on the waveform to fix the beatgrid` : t ? 'No clear beat found. Double-click to set the BPM' : '')}>
+      {#if editingBpm}
+        <input class="big num edit" value={d.bpm > 0 ? +d.bpm.toFixed(2) : ''} inputmode="decimal" aria-label="Track BPM" spellcheck="false"
+          use:focusBpm onkeydown={bpmKey} onblur={(e) => finishBpm(e.currentTarget.value)} />
+      {:else}
+        <!-- The tempo arrives with the track, and again when analysis finds it. -->
+        <div class="big num" use:arrive={{ key: `${t?.path}:${d.bpm > 0}`, delay: 40 }}><span class="sr">Tempo </span>{bpm > 0 ? bpm.toFixed(2) : '—'}<span class="sr"> BPM</span></div>
+      {/if}
+      {#if pk}
+        <div class="unit" use:arrive={{ key: t?.path, delay: 60 }}><button class="key" class:shifted={pk.shift} aria-label="Key {keyName(pk)}, {camelot(pk)}{pk.keyShift ? `, shifted ${pk.keyShift > 0 ? 'up' : 'down'} ${st(pk.keyShift)}` : ''}. Shift the key"
+          aria-haspopup="menu" onclick={keyMenu} oncontextmenu={keyMenu} ondblclick={(e) => e.stopPropagation()} use:tip={keyTip}>{keyName(pk)} · {camelot(pk)}{#if pk.keyShift}<span class="ks num">{pk.keyShift > 0 ? '+' : '−'}{Math.abs(pk.keyShift)}</span>{/if}<svg viewBox="0 0 10 10" aria-hidden="true"><path d="M2.5 4l2.5 2.5L7.5 4" /></svg></button></div>
       {/if}
     </div>
-
-    <div class="times" use:arrive={{ key: t?.path, delay: 40, y: 3, blur: 0 }}>
-      <span class="el num"><span class="sr">Elapsed </span>{fmt(d.position)}</span>
-      {#if now}
-        <span class="now {now.phrase.kind}" use:tip={() => `${PHRASE_NAMES[now.phrase.kind]}: ${now.phrase.bars} bars, energy ${now.phrase.energy} of 10. Found from the waveform on the beatgrid`}>
-          {PHRASE_NAMES[now.phrase.kind]} · <span class="num">{now.barsLeft}</span> {now.barsLeft === 1 ? 'bar' : 'bars'} left
-        </span>
-      {/if}
-      <span class="rm num"><span class="sr">Remaining </span>{fmt(d.position - d.duration)}</span>
+    <div class="overview" use:arrive={{ key: t?.path, delay: 0, y: 0, blur: 0, duration: 280 }}>
+      <Waveform {deck} mode="overview" />
     </div>
 
     <div class="mp">
@@ -325,8 +301,13 @@
           <svg viewBox="0 0 16 16"><path d="M4 2.2v11.6a.6.6 0 0 0 .9.5l9.2-5.8a.6.6 0 0 0 0-1L4.9 1.7a.6.6 0 0 0-.9.5z" /></svg>
         {/if}
       </button>
-      <button class="btn sync" aria-disabled={!canSync} {...press(sync)}
-        use:tip={() => (canSync ? tipText(`Match tempo and beats to deck ${other}`, keyLabel(`deck.${deck}.sync`)) : `Sync needs a beat on both decks`)}>Sync</button>
+      <button class="btn sync" class:on={d.synced} aria-disabled={!canSync && !d.synced} aria-pressed={!!d.synced} {...press(sync)}
+        use:tip={() =>
+          d.synced
+            ? tipText(`Sync on: keeps deck ${other}'s tempo when either pitch fader moves. Click to turn off`, keyLabel(`deck.${deck}.sync`))
+            : canSync
+              ? tipText(`Sync: match tempo and beats to deck ${other} and stay locked to it`, keyLabel(`deck.${deck}.sync`))
+              : `Sync needs a beat on both decks`}>Sync</button>
       <div class="btn jumps" role="group" aria-label="Beat jump">
         {#each [{ dir: -1, id: 'jumpBack', label: 'Jump back', glyph: '‹' }, { dir: 1, id: 'jumpForward', label: 'Jump forward', glyph: '›' }] as j, i}
           <button aria-label="{j.label} {jumpSize} {d.loopBeats === 1 ? 'beat' : 'beats'}" aria-disabled={!grid} style:order={i * 2}
@@ -369,6 +350,7 @@
 
 <style>
   .deck {
+    container-type: size;
     display: grid;
     grid-template-columns: minmax(0, 1fr) 56px;
     gap: var(--pad);
@@ -382,23 +364,45 @@
   .deck.mirror .pitch {
     order: -1;
   }
+  /* The record and track info on top, the overview across the deck under
+     them, then the tabs, cues and transport. The record's row is exactly the
+     record and the overview's row exactly the overview, both set by the
+     deck's height; the rest goes to the cues, so they get two rows when
+     there's room and a compact one when there isn't. */
   .body {
+    --rec: clamp(84px, 34cqh, 200px);
+    --ov: clamp(32px, 11cqh, 60px);
     display: grid;
-    grid-template-rows: auto minmax(32px, 48px) auto 1fr auto;
-    gap: 12px;
+    grid-template-columns: var(--rec) minmax(0, 1fr) auto;
+    grid-template-rows: var(--rec) var(--ov) minmax(var(--h-lg), 1fr) auto;
+    grid-template-areas: 'rec head bpm' 'ov ov ov' 'mp mp mp' 'tr tr tr';
+    column-gap: 24px;
+    row-gap: 6px;
     min-width: 0;
     min-height: 0;
   }
+  .mirror .body {
+    grid-template-columns: auto minmax(0, 1fr) var(--rec);
+    grid-template-areas: 'bpm head rec' 'ov ov ov' 'mp mp mp' 'tr tr tr';
+  }
+  .rec-cell {
+    grid-area: rec;
+    min-width: 0;
+    min-height: 0;
+    display: grid;
+    place-items: center;
+  }
+  .body > .mp { grid-area: mp; }
+  .body > .transport { grid-area: tr; }
+  .body > .overview { grid-area: ov; margin: 4px 0 2px; }
+  /* The title, beside the record. */
   header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 12px;
+    grid-area: head;
+    align-self: center;
     min-width: 0;
   }
-  .title {
-    flex: 1;
-    min-width: 0;
+  .mirror header {
+    text-align: right;
   }
   .name {
     font-size: var(--t-lg);
@@ -418,15 +422,49 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
+  /* Tempo and key in the deck's inner top corner. */
   .bpm {
-    flex: none;
+    grid-area: bpm;
+    align-self: center;
     display: grid;
     justify-items: end;
+  }
+  .mirror .bpm {
+    justify-items: start;
+  }
+  /* A narrow deck (a small window) has no room for the title between the
+     record and the tempo, so the tempo and key go under the title. */
+  @container (max-width: 500px) {
+    .body,
+    .mirror .body {
+      grid-template-rows: auto auto var(--ov) minmax(var(--h-lg), 1fr) auto;
+    }
+    .body {
+      grid-template-columns: var(--rec) minmax(0, 1fr);
+      grid-template-areas: 'rec head' 'rec bpm' 'ov ov' 'mp mp' 'tr tr';
+    }
+    .mirror .body {
+      grid-template-columns: minmax(0, 1fr) var(--rec);
+      grid-template-areas: 'head rec' 'bpm rec' 'ov ov' 'mp mp' 'tr tr';
+    }
+    .rec-cell {
+      height: var(--rec);
+    }
+    header {
+      align-self: end;
+    }
+    .bpm {
+      align-self: start;
+      justify-items: start;
+    }
+    .mirror .bpm {
+      justify-items: end;
+    }
   }
   .bpm .big {
     font-size: var(--t-xl);
     font-weight: 300;
-    line-height: 28px;
+    line-height: 36px;
     letter-spacing: -0.03em;
   }
   .bpm .edit {
@@ -441,9 +479,9 @@
     box-shadow: 0 0 0 1px var(--fg-3);
   }
   .bpm .unit {
-    font-size: var(--t-xs);
-    line-height: 17px;
-    color: var(--fg-3);
+    font-size: var(--t-md);
+    font-weight: 300;
+    line-height: 22px;
   }
   /* A recessed well: darker than the glass, with an inner shadow. */
   .overview {
@@ -457,50 +495,6 @@
   .overview :global(.wave) {
     height: 100%;
   }
-  .times {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-  }
-  .el {
-    font-size: var(--t-lg);
-    font-weight: 300;
-    line-height: 28px;
-    letter-spacing: -0.03em;
-  }
-  .rm {
-    font-size: var(--t-md);
-    font-weight: 300;
-    color: var(--fg-2);
-  }
-  /* Phrases: a thin strip along the bottom of the overview, and the one
-     playing between the times. */
-  .phrases {
-    position: absolute;
-    inset: auto 0 0 0;
-    height: 3px;
-    pointer-events: none;
-  }
-  .phrase {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    background: var(--phrase);
-    box-shadow: inset -1px 0 0 var(--well);
-  }
-  .now {
-    font-size: var(--t-xs);
-    color: var(--phrase);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .intro, .outro { --phrase: var(--fg-4); }
-  .verse { --phrase: var(--fg-3); }
-  .breakdown { --phrase: var(--hc-2); }
-  .build { --phrase: var(--warn); }
-  .drop { --phrase: var(--hc-3); }
-  .now.intro, .now.outro, .now.verse { color: var(--fg-2); }
 
   /* Tabs, the mode row and the transport share the deck's four columns, so
      the tab bar spans the deck and every edge lines up. */
@@ -597,6 +591,12 @@
   }
   .sync {
     color: var(--fg-2);
+  }
+  .sync.on,
+  .sync.on:hover {
+    color: var(--deck);
+    background: color-mix(in srgb, var(--deck) 12%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--deck) 55%, transparent);
   }
   .jumps {
     display: grid;
@@ -727,7 +727,7 @@
     gap: 3px;
     margin: 0 -2px 0 -5px;
     padding: 0 2px 0 5px;
-    color: var(--fg-3);
+    color: var(--deck);
     font: inherit;
     border: 0;
     background: none;

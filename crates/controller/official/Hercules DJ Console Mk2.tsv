@@ -1,0 +1,52 @@
+# DJ Console Mk2 — Hercules "User Manual" (VirtualDJ), MIDI input/output commands
+# source: https://ts.hercules.com/download/sound/manuals/Mk2/01_DJConsoleMk2_PC_MAC%20VirtualDJ_eng.pdf
+both	B0	08	Left Play/Pause	[Channel1] play
+both	B0	09	Left Cue	[Channel1] cue_default
+in	B0	0B	Left Prev. Track	
+in	B0	0C	Left Next Track	
+in	B0	14	Left Pitch Bend “-”	
+in	B0	13	Left Pitch Bend “+”	
+both	B0	0A	Left AutoBeat Select	
+in	B0	1B	Left Mouse Button	
+both	B0	16	Left Master Tempo	
+in	B0	07	Left FX Select	
+both	B0	0F	Left FX “1”	
+both	B0	0E	Left FX “2”	
+both	B0	0D	Left FX “3”	
+both	B0	02	Right Play/Pause	[Channel2] play
+both	B0	03	Right Cue	[Channel2] cue_default
+both	B0	05	Right Prev. Track	
+in	B0	06	Right Next Track	
+in	B0	18	Right Pitch Bend “-“	
+in	B0	17	Right Pitch Bend “+”	
+both	B0	04	Right AutoBeat Select	
+in	B0	1C	Right Mouse Button	
+both	B0	1A	Right Master Tempo	
+in	B0	01	Right FX Select	
+both	B0	10	Right FX “1”	
+both	B0	11	Right FX “2”	
+both	B0	12	Right FX “3”	
+in	B0	1D	Left Deck Audio Source Select	
+in	B0	1E	Right Deck Audio Source Select	
+in	B0	21	Headphone Deck A	
+in	B0	22	Headphone Deck B	
+in	B0	23	Headphone Split	
+in	B0	24	Headphone Mix	
+in	B0	31	Cross Fader	[Master] crossfader
+in	B0	36	Left Jog Wheel	
+in	B0	37	Right Jog Wheel	
+in	B0	34	Left Pitch Knob	
+in	B0	35	Right Pitch Knob	
+in	B0	2E	Left Bass Knob	
+in	B0	2F	Left Medium Knob	
+in	B0	30	Left Treble Knob	
+in	B0	2B	Right Bass Knob	
+in	B0	2C	Right Medium Knob	
+in	B0	2D	Right Treble Knob	
+in	B0	32	Left Volume Slider	[Channel1] volume
+in	B0	33	Right Volume Slider	[Channel2] volume
+in	B0	39	Ministick Y-Axis	
+in	B0	28	Ministick X-Axis	
+out	B0	00	Left Play/Pause Blinking	
+out	B0	7E	Deck Selection	
+out	B0	7F	Update Analog Controls	
