@@ -165,8 +165,9 @@ function publish() {
     const file = path.join(tmp, archive);
     const list = path.join(tmp, 'files.txt');
     fs.writeFileSync(list, [...files.map((f) => `hero/clips/${f}`), ...POSTER.map((p) => `img/${p}`)].join('\n') + '\n');
-    // (No macOS metadata: no ._ files, no extended attributes.)
-    execFileSync('tar', ['-czf', file, ...(process.platform === 'darwin' ? ['--no-mac-metadata'] : []), '-C', SITE, '-T', list], { env: { ...process.env, COPYFILE_DISABLE: '1' } });
+    // (No macOS metadata: no ._ files, no extended attributes. And no names
+    // of the account that packed it.)
+    execFileSync('tar', ['--numeric-owner', '-czf', file, ...(process.platform === 'darwin' ? ['--no-mac-metadata'] : []), '-C', SITE, '-T', list], { env: { ...process.env, COPYFILE_DISABLE: '1' } });
     const index = { schema: m.schema ?? SCHEMA, source: m.source, archive, sha256: sha256(file), bytes: fs.statSync(file).size, files: files.length + POSTER.length, published: new Date().toISOString() };
     const indexFile = path.join(tmp, INDEX);
     fs.writeFileSync(indexFile, JSON.stringify(index, null, 1));
