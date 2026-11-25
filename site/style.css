@@ -434,8 +434,8 @@ pre {
   color: var(--fg-2); font-size: 14.5px; line-height: 1.6;
 }
 .founder h3 { margin: 0 0 14px; color: var(--fg); font-size: 17px; font-weight: 500; }
-/* Skeleton lines where the note's text will go. */
-.founder-body { display: grid; gap: 9px; margin-bottom: 18px; }
+/* The note's text (other note styles still draw skeleton lines). */
+.founder-body { margin: 0 0 18px; }
 .founder-body i { display: block; width: var(--w); height: 9px; border-radius: 5px; background: rgb(255 255 255 / 0.07); }
 .founder-body i.gap { margin-top: 8px; }
 .founder-ask { margin: 0 0 6px; }
@@ -2072,7 +2072,7 @@ html[data-note="sleeve"] .rec {
 /* (The page cuts it at the window's edge, never a section's.) */
 body { overflow-x: clip; }
 html[data-note="sleeve"] .founder h3 { color: #17140e; margin: 0 0 12px; }
-html[data-note="sleeve"] .founder-body { margin-bottom: 14px; gap: 7px; }
+html[data-note="sleeve"] .founder-body { margin-bottom: 14px; color: #3a352b; font-size: 13.5px; line-height: 1.5; }
 html[data-note="sleeve"] .founder-body i.gap { margin-top: 6px; }
 html[data-note="sleeve"] .founder-body i { background: rgb(28 24 18 / 0.11); }
 html[data-note="sleeve"] .founder-body i:nth-child(n + 5) { width: min(var(--w), 48%); }
