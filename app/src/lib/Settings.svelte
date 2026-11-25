@@ -11,6 +11,8 @@
   import { setSlip } from './performance.js';
   import { keyLabel } from './commands.js';
   import { backend } from './backend.js';
+  import { stemsModel, downloadStems, cancelStems, removeStems, watchStemsModel } from './stemsmodel.svelte.js';
+  import { mb, percent, progressText, stemsStatus } from './stemsmodel.js';
   import { flag } from '../flags/registry.svelte.js';
   import { pushEdit } from './undo.svelte.js';
   import Keys from '../flags/116-settings-finish/Keys.svelte'; // #116 (UI audit flag)
@@ -264,7 +266,7 @@
 
   const pct = (s) => `${Math.round(s * 100)}%`;
 
-  // Stems: the model download, and how splitting and the cache behave.
+  // Stems: the model, and how splitting and the cache behave.
   const CACHE_SIZES = [0, 1, 2, 5, 10, 20, 50];
   /** @type {any} */
   let stems = $state(null);
@@ -280,9 +282,28 @@
   $effect(() => {
     if (page !== 'stems') return;
     refreshStems();
-    // Follow a download while the page is open.
-    const timer = setInterval(() => stems?.model?.state === 'downloading' && refreshStems(), 250);
-    return () => clearInterval(timer);
+    return watchStemsModel();
+  });
+  /** Runs one of the model's buttons: download, cancel or remove. @param {() => Promise<void>} what */
+  async function model(what) {
+    stemsError = '';
+    try {
+      await what();
+    } catch (e) {
+      stemsError = String(e);
+    }
+  }
+  /** Remove was pressed, and asks first. */
+  let removing = $state(false);
+  /** @type {HTMLElement | undefined} */
+  let modelSection = $state();
+  // The button that had focus may be gone with the state it was for: focus
+  // moves to the first one now there.
+  $effect.pre(() => {
+    void removing;
+    if (stemsModel.state !== 'ready') removing = false;
+    if (!modelSection?.contains(document.activeElement)) return;
+    tick().then(() => document.activeElement === document.body && modelSection?.querySelector('button')?.focus());
   });
   async function setStems(change) {
     try {
@@ -290,15 +311,6 @@
     } catch (e) {
       stemsError = String(e);
     }
-  }
-  async function download() {
-    stemsError = '';
-    try {
-      await backend.downloadStemsModel();
-    } catch (e) {
-      stemsError = String(e);
-    }
-    refreshStems();
   }
   async function clearCache() {
     try {
@@ -544,7 +556,7 @@
     add('Library', 'Auto gain', 'loudness volume trim');
     add('Library', 'Import from another app', 'rekordbox serato cue points playlists beatgrids');
     add('Stems', 'Separation model', 'download htdemucs vocals drums bass melody');
-    add('Stems', 'How stems work', 'on off memory automatic vocals mute solo alone split separate');
+    add('Stems', 'How stems work', 'fast efficient off memory automatic vocals mute solo alone split separate');
     add('Stems', 'Stems cache', 'disk size clear keep');
     add('Controllers', 'Connected', 'midi hid mapping plugged');
     add('Controllers', 'Controller not working?', 'set up step by step wizard');
@@ -585,8 +597,7 @@
     }
   }
 
-  const mb = (b) => `${Math.round(b / (1024 * 1024))} MB`;
-  const gb = (b) => (b >= 1024 ** 3 ? `${(b / 1024 ** 3).toFixed(1)} GB` : mb(b));
+  const gb = (b) => (b >= 1024 ** 3 ? `${(b / 1024 ** 3).toFixed(1)} GB` : `${Math.round(b / 1024 ** 2)} MB`);
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
@@ -667,45 +678,66 @@
           </div>
         {/if}
       {:else if page === 'stems'}
-        <section class="display">
-          <h3>Separation model</h3>
-          {#if !stems}
-            <p>{stemsError || 'Loading…'}</p>
-          {:else if stems.model.state === 'ready'}
+        <section class="display" aria-labelledby="stems-model" bind:this={modelSection}>
+          <h3 id="stems-model">Separation model</h3>
+          {#if stemsModel.state === 'ready'}
             <!-- #33 (UI audit flag): stems-model: says it's installed, and its size. #34 (UI audit flag): settings-copy: one sentence. -->
-            {#if flag('stems-model')}<p class="installed">Installed, {mb(stems.modelBytes)}</p>{/if}
-            {#if !finish}<p>{flag('settings-copy') ? 'Each track you load is split into vocals, melody, bass and drums on this computer, starting at the play head.' : "Ready. Each track you load is split into vocals, melody, bass and drums on this computer, starting at the play head, so the part you're about to play is ready first."}</p>{:else if !flag('stems-model')}<p>Installed.</p>{/if}
-          {:else if stems.model.state === 'downloading'}
-            <p>Downloading, {mb(stems.model.done)} of {mb(stems.model.total)}…</p>
-            <div class="bar-track" role="progressbar" aria-label="Model download" aria-valuemin="0" aria-valuemax="100"
-              aria-valuenow={Math.round((stems.model.done / stems.model.total) * 100)}><i style:width="{(stems.model.done / stems.model.total) * 100}%"></i></div>
-          {:else}
+            {#if flag('stems-model')}<p class="installed">Installed, {mb(stemsModel.total)}</p>{/if}
+            {#if finish}{#if !flag('stems-model')}<p>Installed.</p>{/if}
+            {:else if flag('settings-copy')}<p>Each track you load is split into vocals, melody, bass and drums on this computer, starting at the play head.</p>
+            {:else}<p>Ready. Each track you load is split into vocals, melody, bass and drums on this computer, starting at the play head, so the part you're about to play is ready first. The model takes {mb(stemsModel.total)}.</p>{/if}
+            <div class="size model">
+              {#if removing}
+                <p>New tracks won't have stems until it's downloaded again.</p>
+                <button class="btn sm" onclick={() => (removing = false)}>Keep</button>
+                <button class="btn sm" onclick={() => model(removeStems)}>Remove</button>
+              {:else}
+                <button class="btn sm" onclick={() => (removing = true)}>Remove the model…</button>
+              {/if}
+            </div>
+          {:else if stemsModel.known}
             {#if flag('settings-copy')}
-              <!-- #34 (UI audit flag): settings-copy: one sentence; the size is on the button; American spelling, like the rest of the app. -->
-              <p>Stems need a one-time download of HTDemucs, an open model (MIT license) that runs on this computer, so nothing is uploaded.</p>
+              <!-- #34 (UI audit flag): settings-copy: one sentence; American spelling, like the rest of the app. -->
+              <p>Stems need a one-time {mb(stemsModel.total)} download of HTDemucs, an open model (MIT license) that comes from Hugging Face and runs on this computer, so nothing is uploaded.</p>
             {:else}
-              <p>Stems need a one-time {mb(stems.modelBytes)} download: HTDemucs, an open model (MIT licence) that runs on this computer. Nothing is uploaded.</p>
+              <p>Stems need a one-time {mb(stemsModel.total)} download: HTDemucs, an open model (MIT licence) that runs on this computer. It comes from Hugging Face, and nothing is uploaded.</p>
             {/if}
-            {#if stems.model.state === 'failed'}<p class="err" role="alert">{stems.model.error}</p>{/if}
-            <div class="size"><button class="btn sm" onclick={download}>{stems.model.state === 'failed' ? 'Try again' : `Download (${mb(stems.modelBytes)})`}</button></div>
+            {#if stemsModel.state === 'failed'}
+              <p class="err" role="alert">{stemsModel.error}</p>
+            {:else if stemsModel.state !== 'missing' || stemsModel.done}
+              <p class="num">{{ downloading: 'Downloading in the background', waiting: 'Waiting for a connection. It carries on by itself', missing: 'Stopped' }[stemsModel.state]}: {progressText(stemsModel)}</p>
+            {/if}
+            {#if stemsModel.done}
+              <div class="bar-track" role="progressbar" aria-label="Model download" aria-valuemin="0" aria-valuemax="100"
+                aria-valuenow={percent(stemsModel)} aria-valuetext={progressText(stemsModel)}><i style:width="{(stemsModel.done / stemsModel.total) * 100}%"></i></div>
+            {/if}
+            <div class="size model">
+              {#if stemsModel.state !== 'downloading'}
+                <button class="btn sm" onclick={() => model(downloadStems)}>{stemsStatus(stemsModel).action}</button>
+              {/if}
+              {#if stemsModel.state !== 'missing'}
+                <button class="btn sm" onclick={() => model(cancelStems)}>Cancel</button>
+              {:else if stemsModel.done}
+                <button class="btn sm" onclick={() => model(removeStems)}>Delete the download</button>
+              {/if}
+            </div>
+          {:else}
+            <p>{stemsError || 'Loading…'}</p>
           {/if}
         </section>
         {#if stems}
           <!-- #116 (UI audit flag): settings-finish: what stems are, then how they work. -->
           {#if finish}
-          <StemsWay {stems} ready={!flag('stems-model') || stems.model.state === 'ready'} set={setStems} />
+          <StemsWay {stems} set={setStems} />
           {:else}
           <section class="display">
             <h3>Splitting</h3>
-            {#if flag('settings-checks') || flag('stems-model')}
-              <!-- #35 (UI audit flag): settings-checks: the same checkbox row as every other page.
-                   #33 (UI audit flag): stems-model: off and unavailable until the model is installed. -->
-              {@const ready = !flag('stems-model') || stems.model.state === 'ready'}
-              <label class={flag('settings-checks') ? 'opt' : 'check'} class:off={!ready}>
-                <input type="checkbox" checked={stems.enabled && ready} disabled={!ready} onchange={(e) => setStems({ enabled: e.currentTarget.checked })} />
+            {#if flag('settings-checks')}
+              <!-- #35 (UI audit flag): settings-checks: the same checkbox row as every other page. -->
+              <label class="opt">
+                <input type="checkbox" checked={stems.enabled} onchange={(e) => setStems({ enabled: e.currentTarget.checked })} />
                 <span>Split tracks into stems when they load</span>
               </label>
-              {#if !ready}<p class="needs">Download the separation model above to turn this on.</p>{/if}
             {:else}
               <label class="check"><input type="checkbox" checked={stems.enabled} onchange={(e) => setStems({ enabled: e.currentTarget.checked })} />
                 Split tracks into stems when they load</label>
@@ -1207,6 +1239,12 @@
     display: flex;
     align-items: center;
     gap: 8px;
+  }
+  .size.model {
+    margin-bottom: 12px;
+  }
+  .size.model p {
+    margin: 0;
   }
   .size span {
     width: 48px;

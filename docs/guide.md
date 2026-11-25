@@ -77,9 +77,17 @@ Everything Interlude does, in detail. For a short overview, see the
   clicks, and the waveforms show only what you hear. With every stem on,
   you hear the original file exactly: melody is the original minus the
   other three. Tracks are split on your computer by HTDemucs (Meta, MIT
-  licence; Rouard et al., ICASSP 2023), a one-time 166 MB download from
-  Settings › Stems, run on the CPU through ONNX Runtime. On an M5 MacBook
-  Air a 4½-minute track splits in about 50 seconds. Splitting starts at the
+  licence; Rouard et al., ICASSP 2023), run on the CPU through ONNX Runtime.
+  The model is a one-time 166 MB download from Hugging Face that starts by
+  itself in the background once Interlude is set up: after the first
+  launch's import offer is closed, or on the next launch if you already
+  have a library. Until it's in, the Stems tab shows how far it has got,
+  and the buttons appear when it's done. It's checked when it arrives,
+  carries on where it stopped if the connection drops or you quit, and says
+  why with a Retry if it can't finish. Settings › Stems can cancel it (it
+  then stays off until you ask for it) and remove it again, and it doesn't
+  download while splitting is turned off. On an M5 MacBook Air a 4½-minute
+  track splits in about 50 seconds. Splitting starts at the
   play head when a track loads and runs ahead of it, so the part you're
   about to play is ready first; anything not split yet plays as normal.
   Finished stems are kept in a cache (5 GB by default, oldest out first), so

@@ -954,7 +954,7 @@ pub fn run() {
                 audio: Mutex::new(saved_audio),
             });
             app.manage(library::Library::load());
-            app.manage(stems::Stems::new(shared.clone()));
+            app.manage(stems::Stems::new(shared.clone(), app.handle().clone()));
             app.manage(Arc::new(preload::Preload::default()));
 
             controller::start(app.handle(), engine, shared.clone());
@@ -1019,7 +1019,11 @@ pub fn run() {
             stems::stems_info,
             stems::set_stems,
             stems::clear_stems_cache,
+            stems::stems_model,
+            stems::stems_setup_done,
             stems::download_stems_model,
+            stems::cancel_stems_model,
+            stems::remove_stems_model,
             stems::stems_waveform,
         ])
         .build(tauri::generate_context!())

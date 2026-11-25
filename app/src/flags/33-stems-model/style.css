@@ -1,16 +1,5 @@
-/* #33: the model's state, and the Split tracks box while it can't work. */
+/* #33: the model's state. */
 :root[data-flag-stems-model] .settings .display .installed {
   margin-bottom: 4px;
   color: var(--fg-2);
-}
-/* Unavailable: the app's one disabled look (40%), box and label together,
-   so disabled, enabled-empty and ticked are three distinct levels. */
-:root[data-flag-stems-model] .settings .display :is(.opt, .check).off {
-  opacity: 0.4;
-}
-/* The note under it points at the fix, on the label's left edge. */
-:root[data-flag-stems-model] .settings .display p.needs {
-  margin: 0 0 0 24px;
-  font-size: var(--t-sm);
-  color: var(--fg-3);
 }

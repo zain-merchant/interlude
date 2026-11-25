@@ -32,8 +32,9 @@
   import { padMode, setPadMode } from './lib/padmode.svelte.js';
   import { tempoPickup } from './lib/pickup.svelte.js';
   import { gridEdit, NUDGE } from './lib/grid.svelte.js';
-  import { toggleStem, soloStem, syncStemWaveforms, stemsUnavailable, stemsOf } from './lib/stems.svelte.js';
+  import { toggleStem, soloStem, syncStemWaveforms, stemsUnavailable, stemsOf, usable } from './lib/stems.svelte.js';
   import { once, stemsReadyTip } from './lib/tips.svelte.js';
+  import { startStemsModel, stemsSetupDone } from './lib/stemsmodel.svelte.js';
   import { libraryHealth, reveal, captureUiErrors, update, checkForUpdate, installUpdate } from './lib/support.svelte.js';
   import Status from './flags/112-shell-status/Status.svelte'; // #112 (UI audit flag)
   import Keys from './flags/116-settings-finish/Keys.svelte'; // #121 (UI audit flag)
@@ -130,6 +131,24 @@
     hideToast();
     importing = true;
   };
+  function closeImport() {
+    importing = false;
+    setupDone();
+  }
+  // Setting up is over once the library is on screen and the first launch's
+  // import offer, if there is one, has been taken or turned down. Until then
+  // nothing big downloads; after it, the stems model does (see stems.rs).
+  let setUp = false;
+  function setupDone() {
+    if (setUp) return;
+    setUp = true;
+    stemsSetupDone().catch((e) => console.error('stems model', e));
+  }
+  /** The whole library loaded, with this many tracks. */
+  function libraryLoaded(tracks) {
+    if (tracks === 0 && once('importOffer')) openImport();
+    else if (!importing) setupDone();
+  }
   // Report a problem: a small window over the app.
   let reporting = $state(false);
   const openReport = () => {
@@ -344,7 +363,9 @@
       default: {
         const stem = /^deck\.(\d)\.stem(Solo)?\.(\d)$/.exec(id);
         if (stem) {
-          if (down) (stem[2] ? soloStem : toggleStem)(Number(stem[1]), Number(stem[3]));
+          if (!down) break;
+          if (usable(Number(stem[1]))) (stem[2] ? soloStem : toggleStem)(Number(stem[1]), Number(stem[3]));
+          else say(stemsUnavailable(Number(stem[1])));
           break;
         }
         runPerformance(id, down);
@@ -743,6 +764,7 @@
     const updateTimer = setTimeout(() => checkForUpdate(), 8000);
     startEngineLoop();
     syncDeckSettings();
+    const offModel = startStemsModel().catch((e) => void console.error('stems model', e));
     // The controller's browse knob and load buttons drive the library.
     const off = backend.onController?.((e) => {
       if (e.type === 'browse') library.browse(e.delta);
@@ -775,6 +797,7 @@
     return () => {
       clearTimeout(updateTimer);
       off?.then((f) => f());
+      offModel.then((f) => f && f());
     };
   });
 </script>
@@ -863,7 +886,7 @@
     {/if}
     <div class="libwrap">
       <Library bind:this={library} onload={load} onsettings={() => openSettings()} onmessage={say}
-        onimport={openImport} onempty={() => { if (once('importOffer')) openImport(); }} />
+        onimport={openImport} onloaded={libraryLoaded} />
     </div>
   </div>
 
@@ -927,7 +950,7 @@
 
 {#if settings}<Settings bind:page={settings} onclose={() => (settings = null)} onimport={() => { settings = null; openImport(); }}
   onreport={openReport} onupdates={checkUpdatesNow} onsetup={openControllerSetup} />{/if}
-{#if importing}<Import onclose={() => (importing = false)} ondone={() => library.reload()} />{/if}
+{#if importing}<Import onclose={closeImport} ondone={() => library.reload()} />{/if}
 {#if reporting}<Report onclose={() => (reporting = false)} context={reportContext} />{/if}
 {#if settingUp}<ControllerSetup onclose={() => (settingUp = false)} />{/if}
 
