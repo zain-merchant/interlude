@@ -62,6 +62,11 @@ naming the newest. `app/scripts/hero-clips.mjs` does both ends:
 - **Bump the schema** (`CLIPS_SCHEMA` in `clips.js`, and the manifest the
   recorder writes) only when the player can't play older sets any more.
 
+On GitHub: Actions, Hero clips, Run workflow (`.github/workflows/hero-clips.yml`)
+does the same on GitHub's Macs, each hand in parts so no job runs out of
+time. It leaves the set as a download on the run, or publishes it if
+"Publish the set" is ticked.
+
 Options (`node demo/segments/record.mjs ...`):
 
 - `--if-changed`: nothing to do if the clips are up to date.

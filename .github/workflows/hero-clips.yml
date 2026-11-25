@@ -1,0 +1,122 @@
+# Records the website hero's clips and publishes them to the hero-clips
+# pre-release (app/demo/segments/README.md). Started by hand: Actions, Hero
+# clips, Run workflow.
+#
+# A job may take 6 hours at most and a hand takes longer than that on one
+# runner, so each hand is recorded in parts, a runner each: plan the loop,
+# record the parts, encode them all and publish.
+name: Hero clips
+
+on:
+  workflow_dispatch:
+    inputs:
+      parts:
+        description: Runners to record each hand on
+        default: '6'
+      publish:
+        description: Publish the set (off keeps it as a download on this run)
+        type: boolean
+        default: false
+
+concurrency: hero-clips
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: app
+
+jobs:
+  plan:
+    runs-on: macos-15
+    timeout-minutes: 90
+    outputs:
+      parts: ${{ steps.parts.outputs.parts }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: app/package-lock.json }
+      - run: npm ci
+      - run: node demo/segments/record.mjs --phase plan --work "$RUNNER_TEMP/clips"
+      - id: parts
+        env:
+          PARTS: ${{ inputs.parts }}
+        # The steps of each hand, in parts of about the same number of frames.
+        run: |
+          node --input-type=module -e '
+            import fs from "node:fs";
+            const plan = JSON.parse(fs.readFileSync(process.env.RUNNER_TEMP + "/clips/plan.json", "utf8"));
+            const want = Math.max(1, Math.min(10, parseInt(process.env.PARTS, 10) || 6));
+            const total = plan.len.slice(plan.from, plan.until).reduce((s, n) => s + n, 0);
+            const parts = [];
+            let a = plan.from, at = 0;
+            for (let k = plan.from; k < plan.until; k++) {
+              at += plan.len[k];
+              if (at >= (total / want) * (parts.length + 1) - 1 || k === plan.until - 1) { parts.push([a, k + 1]); a = k + 1; }
+            }
+            const all = ["mouse", "controller"].flatMap((m) => parts.map(([x, y]) => ({ mode: m, from: x, to: y })));
+            fs.appendFileSync(process.env.GITHUB_OUTPUT, "parts=" + JSON.stringify(all) + "\n");
+          '
+      - uses: actions/upload-artifact@v4
+        with: { name: plan, path: '${{ runner.temp }}/clips', retention-days: 1 }
+
+  record:
+    needs: plan
+    runs-on: macos-15
+    timeout-minutes: 350
+    strategy:
+      fail-fast: true
+      max-parallel: 5
+      matrix:
+        part: ${{ fromJSON(needs.plan.outputs.parts) }}
+    name: record ${{ matrix.part.mode }} ${{ matrix.part.from }} to ${{ matrix.part.to }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: app/package-lock.json }
+      - run: npm ci
+      - run: brew install ffmpeg
+      - uses: actions/download-artifact@v4
+        with: { name: plan, path: '${{ runner.temp }}/clips' }
+      - env:
+          PART: ${{ matrix.part.mode }}:${{ matrix.part.from }}:${{ matrix.part.to }}
+        run: node demo/segments/record.mjs --phase part --part "$PART" --work "$RUNNER_TEMP/clips"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: part-${{ matrix.part.mode }}-${{ matrix.part.from }}
+          path: |
+            ${{ runner.temp }}/clips
+            !${{ runner.temp }}/clips/site
+            !${{ runner.temp }}/clips/plan.json
+          retention-days: 1
+          compression-level: 0
+
+  encode:
+    needs: record
+    runs-on: macos-15
+    timeout-minutes: 350
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: app/package-lock.json }
+      - run: npm ci
+      - run: brew install ffmpeg imagemagick
+      - uses: actions/download-artifact@v4
+        with: { path: '${{ runner.temp }}/clips', merge-multiple: true }
+      # (--software: a runner has no media engine to count on.)
+      - run: node demo/segments/record.mjs --phase encode --software --work "$RUNNER_TEMP/clips"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hero-clips
+          path: |
+            site/hero/clips
+            site/img/screenshot*
+          retention-days: 7
+          compression-level: 0
+      - if: inputs.publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: npm run clips:publish -- --repo "$GITHUB_REPOSITORY"
