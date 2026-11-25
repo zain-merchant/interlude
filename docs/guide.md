@@ -82,7 +82,9 @@ Everything Interlude does, in detail. For a short overview, see the
   downloads until you ask: press Download on a deck's Stems tab or in
   Settings › Stems. If you quit before it's in, it carries on where it
   stopped the next time you open Interlude. Until it's in, the Stems tab shows how far it has got,
-  and the buttons appear when it's done. It's checked when it arrives,
+  and the buttons appear when it's done. Once it's in, Interlude makes a
+  second copy that loads in well under a second; the two take about 510 MB.
+  The download is checked when it arrives,
   carries on where it stopped if the connection drops or you quit, and says
   why with a Retry if it can't finish. Settings › Stems can cancel it (it
   then stays off until you ask for it) and remove it again, and it doesn't

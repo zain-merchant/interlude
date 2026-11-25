@@ -556,7 +556,7 @@
     add('Library', 'Auto gain', 'loudness volume trim');
     add('Library', 'Import from another app', 'rekordbox serato cue points playlists beatgrids');
     add('Stems', 'Separation model', 'download htdemucs vocals drums bass melody');
-    add('Stems', 'How stems work', 'fast efficient off memory automatic vocals mute solo alone split separate');
+    add('Stems', 'How stems work', 'on off memory automatic vocals mute solo alone split separate');
     add('Stems', 'Stems cache', 'disk size clear keep');
     add('Controllers', 'Connected', 'midi hid mapping plugged');
     add('Controllers', 'Controller not working?', 'set up step by step wizard');
@@ -682,10 +682,10 @@
           <h3 id="stems-model">Separation model</h3>
           {#if stemsModel.state === 'ready'}
             <!-- #33 (UI audit flag): stems-model: says it's installed, and its size. #34 (UI audit flag): settings-copy: one sentence. -->
-            {#if flag('stems-model')}<p class="installed">Installed, {mb(stemsModel.total)}</p>{/if}
+            {#if flag('stems-model')}<p class="installed">Installed, {mb(stems?.modelBytes || stemsModel.total)}</p>{/if}
             {#if finish}{#if !flag('stems-model')}<p>Installed.</p>{/if}
             {:else if flag('settings-copy')}<p>Each track you load is split into vocals, melody, bass and drums on this computer, starting at the play head.</p>
-            {:else}<p>Ready. Each track you load is split into vocals, melody, bass and drums on this computer, starting at the play head, so the part you're about to play is ready first. The model takes {mb(stemsModel.total)}.</p>{/if}
+            {:else}<p>Ready. Each track you load is split into vocals, melody, bass and drums on this computer, starting at the play head, so the part you're about to play is ready first. The model takes {mb(stems?.modelBytes || stemsModel.total)}.</p>{/if}
             <div class="size model">
               {#if removing}
                 <p>New tracks won't have stems until it's downloaded again.</p>
