@@ -1,16 +1,13 @@
 # Interlude
 
-A free, open-source DJ app for the Mac. Two decks with sync, stems,
-effects, a fast library with Rekordbox and Serato import, and the Pioneer
-DDJ-FLX4 mapped in full, with no account and no subscription. It covers the
-core of a two-deck set in rekordbox, Serato DJ or djay; what's still missing
-is listed in [docs/parity.md](docs/parity.md).
+A free, open-source DJ app for the Mac. No account, no subscription.
+What's not there yet is listed in [docs/parity.md](docs/parity.md).
 
 **[Download Interlude](https://github.com/zain-merchant/interlude/releases/latest/download/Interlude.dmg)**
 for Macs with Apple silicon (macOS 11 or later), or visit
 [interludedj.com](https://interludedj.com).
 
-![Interlude with two tracks loaded: waveforms on top, two decks around the mixer, the library below](docs/screenshot.jpg)
+![Interlude with two tracks playing in sync: waveforms on top, two decks around the mixer, the library below](docs/screenshot.jpg)
 
 Interlude is in beta. If something goes wrong, use Help › Report a Problem
 and [open an issue](https://github.com/zain-merchant/interlude/issues) with

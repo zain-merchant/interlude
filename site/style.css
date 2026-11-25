@@ -2447,23 +2447,3 @@ html[data-arrive="screen"] .arrive.go::before {
 
 /* (The pictures' text caret blinks; not with less motion.) */
 @media (prefers-reduced-motion: reduce) { .p-caret.p-caret { animation: none; } }
-
-/* The sound switch (sfx.js): a speaker at the start of the nav's actions,
-   quiet until hovered; waves when on, a cross when off. 40px on narrow
-   screens, for a thumb. */
-.sfx-btn { display: inline-grid; place-items: center; flex: none; width: 34px; height: 34px; align-self: center; padding: 0; border: 0; border-radius: 9px;
-  background: none; color: var(--fg-3); cursor: pointer; transition: color 150ms, background-color 150ms; -webkit-tap-highlight-color: transparent; }
-@media (hover: hover) and (pointer: fine) { .sfx-btn:hover { color: var(--fg); background: rgb(255 255 255 / 0.06); } }
-.sfx-btn:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
-.sfx-btn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
-.sfx-btn[aria-pressed="true"] .sfx-off, .sfx-btn[aria-pressed="false"] .sfx-on { display: none; }
-@media (max-width: 860px) { .sfx-btn { width: 40px; height: 40px; } }
-/* (On a phone the capsule has no room left beside Send to Mac: the footer's
-   line is the one there.) */
-@media (max-width: 480px) { html[data-nav="morph"] .nav-actions .sfx-btn { display: none; } }
-/* In the footer's App column, a line like the links above it: the
-   nav's speaker is hidden at the top of the page in some nav styles
-   (morph), and this one is always where people look for settings. */
-.foot .sfx-foot { display: flex; gap: 7px; width: auto; height: auto; padding: 3px 0; border-radius: 4px; background: none; color: var(--fg-2); font: inherit; font-size: 14px; }
-@media (hover: hover) and (pointer: fine) { .foot .sfx-foot:hover { color: var(--fg); background: none; } }
-.foot .sfx-foot svg { width: 15px; height: 15px; }
