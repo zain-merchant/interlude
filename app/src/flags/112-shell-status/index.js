@@ -23,6 +23,10 @@ export default {
   n: 112,
   title: 'Controller and output always on show',
   group: 'Shell',
+  // Off by default: the controller and output are in Settings (Audio,
+  // Controllers), and the banner still says when the output is lost. The
+  // library toolbar keeps Sampler and Settings.
+  byDefault: false,
   settings: {
     place: {
       type: 'choice',

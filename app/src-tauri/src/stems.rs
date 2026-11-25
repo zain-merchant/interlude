@@ -1,10 +1,10 @@
 //! Stems in the app: splits each loaded track in the background, fetches
 //! the model, and keeps the stems settings.
 //!
-//! The model isn't part of the app, to keep it small. It downloads by itself
-//! once the app is set up ([`stems_setup_done`]), unless stems are turned off
-//! or the user cancelled or removed it, which is remembered until they ask
-//! for it again.
+//! The model isn't part of the app, to keep it small. It downloads only once
+//! the user asks for it. If the app quits before it's in, it carries on where
+//! it stopped on the next launch ([`stems_setup_done`]), unless stems are
+//! turned off or the user cancelled or removed it since.
 //!
 //! Settings live in `stems.json` in the app's data folder, the model in
 //! `models/`, and finished stems in `stems/`.
@@ -28,8 +28,9 @@ struct Saved {
     enabled: bool,
     /// Stems cache size in GB. 0 turns the cache off.
     cache_gb: u32,
-    /// Download the model without being asked. Off once the user has
-    /// cancelled or removed it, until they download it themselves.
+    /// The user asked for the model, so an unfinished download carries on
+    /// at launch. Off until they press Download, and again once they cancel
+    /// or remove it.
     auto_download: bool,
 }
 
@@ -38,7 +39,7 @@ impl Default for Saved {
         Self {
             enabled: true,
             cache_gb: 5,
-            auto_download: true,
+            auto_download: false,
         }
     }
 }
@@ -240,7 +241,7 @@ impl Stems {
         }
     }
 
-    /// Starts the download if it's missing and nobody has said no to it.
+    /// Carries on with the download if the user asked for it and it isn't in.
     fn auto_download(&self) {
         let saved = self.saved.lock().expect("stems settings").clone();
         if let Some(m) = &self.model {
@@ -308,8 +309,8 @@ pub fn stems_model(stems: State<'_, Stems>) -> ModelInfo {
     stems.model_info()
 }
 
-/// The app is set up: whatever the first launch asks has been answered. The
-/// model starts downloading, if it isn't here and nobody has said no to it.
+/// The app is set up: whatever the first launch asks has been answered. A
+/// download the user started, and the app quit before it finished, carries on.
 #[tauri::command]
 pub fn stems_setup_done(stems: State<'_, Stems>) -> ModelInfo {
     stems.auto_download();
@@ -379,13 +380,14 @@ pub async fn stems_waveform(
 mod tests {
     use super::*;
 
-    /// Settings saved before the model downloaded by itself.
+    /// Settings saved before the download was remembered: nobody has asked.
     #[test]
-    fn older_settings_download_the_model() {
+    fn older_settings_dont_download_the_model() {
         let s: Saved = serde_json::from_str(r#"{"enabled": false, "cacheGb": 20}"#).unwrap();
         assert!(!s.enabled);
         assert_eq!(s.cache_gb, 20);
-        assert!(s.auto_download);
+        assert!(!s.auto_download);
+        assert!(!Saved::default().auto_download);
     }
 
     #[test]
