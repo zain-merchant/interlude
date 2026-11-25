@@ -1,5 +1,5 @@
 // Tune: DialKit panels (vendor/dialkit, MIT) for settling a few values by
-// eye. Shown on localhost or with ?tune in the address; elsewhere every
+// eye. Shown only on localhost (or a local machine name); elsewhere every
 // value keeps its default and DialKit isn't loaded at all.
 //
 //   tune.slider({ label, min, max, step, value, unit, css, onInput })
@@ -278,16 +278,16 @@
     const v = g && (g[folder ? `${folder}.${name}` : name] ?? g[name]);
     return v === undefined ? value : v;
   };
-  // On localhost, on a machine's own name on a private network (a name with
-  // no dot, for a phone on the same one), or anywhere with ?tune (kept
-  // from then on; ?tune=off forgets). Nothing is loaded otherwise.
+  // Only on localhost or a machine's own name on a private network (a name
+  // with no dot, for a phone on the same one); ?tune=off hides it there.
+  // Never on the published site, whatever the address says: nothing is
+  // loaded there.
   // (In the phone preview's frame, tune-frame.js, the panel is the page's
   // outside: the controls here only take the values it hands in.)
   const framed = !!window.__framed;
   const on = framed ? 'off' : new URLSearchParams(location.search).get('tune');
-  if (!framed) try { if (on === 'off') localStorage.removeItem('tune-on'); else if (on !== null) localStorage.setItem('tune-on', '1'); } catch {}
-  const kept = !framed && (() => { try { return localStorage.getItem('tune-on') === '1'; } catch { return false; } })();
-  const show = on !== 'off' && (/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname) || (!location.hostname.includes('.') && location.hostname !== '') || on !== null || kept);
+  const local = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname) || (!location.hostname.includes('.') && location.hostname !== '');
+  const show = on !== 'off' && local;
   const base = document.currentScript?.src ? new URL('.', document.currentScript.src).href : './';
   const groups = new Map();
   // The groups' order in the panel: the page's, top to bottom.
