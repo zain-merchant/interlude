@@ -40,6 +40,14 @@ pub const STORED_DRUMS: usize = 2;
 /// Frames per ready flag: about 0.37 s at 44.1 kHz.
 pub const BLOCK_FRAMES: usize = 1 << 14;
 
+/// The frames a deck at `frame` reads, in time to fade: enough behind for
+/// keylock's grains, and enough ahead for muted stems to have faded back in
+/// before the deck runs into a part that isn't split.
+pub fn around(frame: i64, sample_rate: u32) -> (i64, i64) {
+    let rate = sample_rate as i64;
+    ((frame - rate / 10).max(0), (frame + rate / 5).max(0))
+}
+
 /// Samples are stored as 16-bit with 6 dB of headroom: a stem can peak a
 /// little above the mix it came from.
 const SCALE: f32 = 16384.0;
@@ -129,6 +137,15 @@ impl Stems {
             .is_some_and(|r| r.load(Ordering::Acquire))
     }
 
+    /// Whether the stems are ready at `frame` and close around it (see
+    /// [`around`]), so a deck there can play them. Real-time safe.
+    pub fn is_ready_at(&self, frame: i64, sample_rate: u32) -> bool {
+        let (from, to) = around(frame, sample_rate);
+        let last = self.ready.len() as i64 - 1;
+        let block = |f: i64| (f / BLOCK_FRAMES as i64).clamp(0, last.max(0));
+        (block(from)..=block(to)).all(|b| self.is_block_ready(b as usize))
+    }
+
     /// Share of the track that's ready, 0.0 to 1.0.
     pub fn ready_fraction(&self) -> f32 {
         if self.ready.is_empty() {
@@ -185,6 +202,11 @@ impl StemMix {
             bass: g[Stem::Bass as usize] - melody,
             drums: g[Stem::Drums as usize] - melody,
         }
+    }
+
+    /// Between the full mix (0.0) and this one (1.0).
+    pub fn faded(gains: [f32; STEMS], in_use: f32) -> Self {
+        Self::from_gains(gains.map(|g| 1.0 + (g - 1.0) * in_use))
     }
 
     pub fn is_full(&self) -> bool {

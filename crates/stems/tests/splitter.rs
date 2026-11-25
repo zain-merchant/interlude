@@ -8,10 +8,22 @@ use std::time::{Duration, Instant};
 
 use dj_engine::stems::{STORED_BASS, STORED_DRUMS, STORED_VOCALS};
 use dj_engine::Track;
-use dj_stems::{CacheKey, Settings, Splitter, Status};
+use dj_stems::{CacheKey, Head, Settings, Splitter, Status, When};
 
+/// The stand-in model, in a folder of its own: the splitter puts a copy that
+/// loads quickly beside it.
 fn model() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/data/fake-stems.onnx")
+    static MODEL: std::sync::OnceLock<PathBuf> = std::sync::OnceLock::new();
+    MODEL
+        .get_or_init(|| {
+            let dir = std::env::temp_dir().join(format!("stems-model-{}", std::process::id()));
+            std::fs::create_dir_all(&dir).unwrap();
+            let from = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/data/fake-stems.onnx");
+            let to = dir.join("fake-stems.onnx");
+            std::fs::copy(from, &to).unwrap();
+            to
+        })
+        .clone()
 }
 
 fn track(seconds: f32) -> Arc<Track> {
@@ -61,7 +73,7 @@ fn splits_two_decks_and_caches() {
     };
     let s = Splitter::new(
         settings.clone(),
-        Box::new(|deck| if deck == 0 { 0.0 } else { 0.5 }),
+        Box::new(|deck| Head::still(if deck == 0 { 0.0 } else { 0.5 })),
     );
 
     let file = dir.join("song.wav");
@@ -118,4 +130,321 @@ fn model_loads_again_after_being_dropped() {
         assert!(m.segment() > 0);
         drop(m);
     }
+}
+
+/// A splitter for `when`, with every play head at the start.
+fn splitter(when: When, model: Option<PathBuf>) -> Splitter {
+    let settings = Settings {
+        when,
+        model,
+        ..Default::default()
+    };
+    Splitter::new(settings, Box::new(|_| Head::still(0.0)))
+}
+
+/// Waits until `f`, or panics.
+fn until(what: &str, f: impl Fn() -> bool) {
+    let start = Instant::now();
+    while !f() {
+        assert!(start.elapsed() < Duration::from_secs(20), "{what}");
+        std::thread::sleep(Duration::from_millis(5));
+    }
+}
+
+/// Long enough for anything that was going to happen to have happened.
+fn settle() {
+    std::thread::sleep(Duration::from_millis(300));
+}
+
+#[test]
+fn nothing_splits_until_the_user_has_chosen() {
+    let s = splitter(When::Unchosen, Some(model()));
+    let a = track(2.0);
+    s.split(0, a.clone(), None);
+    s.use_stems(0);
+    settle();
+    assert_eq!(s.status(0), Status::Unchosen);
+    assert!(a.stems.get().is_none(), "no memory taken");
+
+    // Chosen while the track is loaded: it splits at once.
+    s.configure(Settings {
+        when: When::Always,
+        ..s.settings()
+    });
+    wait_ready(&s, 0);
+    check(&a);
+}
+
+#[test]
+fn choosing_on_use_after_a_press_splits_that_track_only() {
+    let s = splitter(When::Unchosen, Some(model()));
+    let (a, b) = (track(2.0), track(2.0));
+    s.split(0, a.clone(), None);
+    s.split(1, b.clone(), None);
+    s.use_stems(0);
+    s.configure(Settings {
+        when: When::OnUse,
+        ..s.settings()
+    });
+    wait_ready(&s, 0);
+    check(&a);
+    settle();
+    assert_eq!(s.status(1), Status::OnUse);
+    assert!(b.stems.get().is_none());
+}
+
+#[test]
+fn on_use_splits_each_deck_when_its_stems_are_used() {
+    let s = splitter(When::OnUse, Some(model()));
+    let (a, b) = (track(2.0), track(2.0));
+    s.split(0, a.clone(), None);
+    s.split(1, b.clone(), None);
+    settle();
+    for (deck, t) in [(0, &a), (1, &b)] {
+        assert_eq!(s.status(deck), Status::OnUse);
+        assert!(!s.is_here(deck));
+        assert!(t.stems.get().is_none());
+    }
+    s.use_stems(1);
+    wait_ready(&s, 1);
+    assert!(s.is_here(1));
+    check(&b);
+    assert_eq!(s.status(0), Status::OnUse);
+    s.use_stems(0);
+    wait_ready(&s, 0);
+    check(&a);
+    // The next track on the deck waits to be used again.
+    let c = track(2.0);
+    s.split(0, c.clone(), None);
+    settle();
+    assert_eq!(s.status(0), Status::OnUse);
+    assert!(c.stems.get().is_none());
+}
+
+#[test]
+fn cached_stems_play_at_once_in_every_mode() {
+    let dir = std::env::temp_dir().join(format!("interlude-modes-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).unwrap();
+    let file = dir.join("song.wav");
+    std::fs::write(&file, b"stand-in for a music file").unwrap();
+    let key = CacheKey::for_file(&file, "fake");
+    let s = splitter(When::Always, Some(model()));
+    s.configure(Settings {
+        cache_dir: Some(dir.join("cache")),
+        ..s.settings()
+    });
+    s.split(0, track(2.0), key.clone());
+    wait_ready(&s, 0);
+    // Ready comes before the save: give it time.
+    until("cached", || {
+        std::fs::read_dir(dir.join("cache")).is_ok_and(|d| {
+            d.flatten()
+                .any(|e| e.path().extension().is_some_and(|x| x == "stems"))
+        })
+    });
+    for when in [When::OnUse, When::Unchosen, When::Always] {
+        for model in [None, Some(model())] {
+            s.configure(Settings {
+                when,
+                model,
+                ..s.settings()
+            });
+            let t = track(2.0);
+            s.split(0, t.clone(), key.clone());
+            wait_ready(&s, 0);
+            assert!(s.is_here(0));
+            check(&t);
+        }
+    }
+    drop(s);
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn a_press_before_the_model_is_in_counts_once_it_is() {
+    let s = splitter(When::OnUse, None);
+    let a = track(2.0);
+    s.split(0, a.clone(), None);
+    until("needs the model", || s.status(0) == Status::NeedsModel);
+    s.use_stems(0);
+    settle();
+    assert_eq!(s.status(0), Status::NeedsModel);
+    s.configure(Settings {
+        model: Some(model()),
+        ..s.settings()
+    });
+    wait_ready(&s, 0);
+    check(&a);
+}
+
+#[test]
+fn changing_mode_mid_split_keeps_what_is_used_and_stops_the_rest() {
+    let s = splitter(When::Always, Some(model()));
+    // Long enough to be caught part way.
+    let (a, b) = (track(400.0), track(400.0));
+    s.split(0, a.clone(), None);
+    s.split(1, b.clone(), None);
+    until("both under way", || {
+        [&a, &b]
+            .iter()
+            .all(|t| t.stems.get().is_some_and(|s| s.ready_fraction() > 0.0))
+    });
+    s.use_stems(0);
+    s.configure(Settings {
+        when: When::OnUse,
+        ..s.settings()
+    });
+    assert_eq!(s.status(1), Status::OnUse, "partly split, and left there");
+    settle();
+    let left = b.stems.get().unwrap().ready_fraction();
+    assert!(left < 1.0, "the test track is too short to catch");
+    settle();
+    assert_eq!(b.stems.get().unwrap().ready_fraction(), left);
+    // Off: nothing more happens, and what's split stays usable.
+    s.configure(Settings {
+        when: When::Never,
+        ..s.settings()
+    });
+    assert_eq!(s.status(0), Status::Off);
+    assert_eq!(s.status(1), Status::Off);
+    // On again, with the tracks handed over again: it finishes them.
+    s.configure(Settings {
+        when: When::Always,
+        ..s.settings()
+    });
+    s.split(1, b.clone(), None);
+    wait_ready(&s, 1);
+}
+
+#[test]
+fn removing_the_model_mid_split_waits_for_it() {
+    let s = splitter(When::Always, Some(model()));
+    let a = track(400.0);
+    s.split(0, a.clone(), None);
+    until("under way", || {
+        a.stems.get().is_some_and(|s| s.ready_fraction() > 0.0)
+    });
+    s.configure(Settings {
+        model: None,
+        ..s.settings()
+    });
+    assert_eq!(s.status(0), Status::NeedsModel);
+    s.configure(Settings {
+        model: Some(model()),
+        ..s.settings()
+    });
+    wait_ready(&s, 0);
+}
+/// Once there's nothing to split, the model gets a copy that loads quickly.
+#[test]
+fn makes_a_quick_copy_when_idle() {
+    let dir = std::env::temp_dir().join(format!("stems-idle-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).unwrap();
+    let path = dir.join("m.onnx");
+    std::fs::copy(model(), &path).unwrap();
+    let off = Settings {
+        when: When::Never,
+        model: Some(path.clone()),
+        ..Default::default()
+    };
+    let s = Splitter::new(off.clone(), Box::new(|_| Head::still(0.0)));
+    std::thread::sleep(Duration::from_millis(200));
+    assert!(!dj_stems::quick::exists(&path), "not while stems are off");
+    s.configure(Settings {
+        when: When::Always,
+        ..off
+    });
+    let start = Instant::now();
+    while !dj_stems::quick::exists(&path) {
+        assert!(start.elapsed() < Duration::from_secs(10));
+        std::thread::sleep(Duration::from_millis(5));
+    }
+    let a = track(2.0);
+    s.split(0, a.clone(), None);
+    wait_ready(&s, 0);
+    check(&a);
+    drop(s);
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+/// The first region runs on more threads, and the rest on the usual ones:
+/// with cores to spare, nothing playing, and a model that loads quickly.
+#[test]
+fn only_the_first_region_goes_wide() {
+    let dir = std::env::temp_dir().join(format!("stems-wide-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).unwrap();
+    let path = dir.join("m.onnx");
+    std::fs::copy(model(), &path).unwrap();
+    let s = Splitter::new(
+        Settings {
+            model: Some(path.clone()),
+            ..Default::default()
+        },
+        Box::new(|_| Head::still(0.0)),
+    );
+    let playing = Arc::new(std::sync::atomic::AtomicBool::new(false));
+    let start = Instant::now();
+    while !dj_stems::quick::exists(&path) {
+        assert!(start.elapsed() < Duration::from_secs(10));
+        std::thread::sleep(Duration::from_millis(5));
+    }
+    let split = |want: usize, why: &str| {
+        // Idle first, so it's a beginning.
+        std::thread::sleep(Duration::from_millis(200));
+        let before = s.wide_loads();
+        let t = track(3.0);
+        s.split(0, t.clone(), None);
+        wait_ready(&s, 0);
+        check(&t);
+        assert_eq!(s.wide_loads() - before, want, "{why}");
+    };
+    s.set_many_cores(true);
+    split(0, "it doesn't know whether a deck plays");
+    let p = playing.clone();
+    s.set_playing(Box::new(move || {
+        p.load(std::sync::atomic::Ordering::Relaxed)
+    }));
+    split(1, "once, however many regions");
+    split(1, "and again for the next track");
+    playing.store(true, std::sync::atomic::Ordering::Relaxed);
+    split(0, "a deck is playing");
+    playing.store(false, std::sync::atomic::Ordering::Relaxed);
+    s.set_many_cores(false);
+    split(0, "no cores to spare");
+    s.set_many_cores(true);
+    dj_stems::quick::remove(&path).unwrap();
+    split(0, "the model is slow to load");
+    drop(s);
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+/// The other deck's first region, while the model is in use, changes nothing.
+#[test]
+fn going_wide_is_for_a_beginning() {
+    let s = Splitter::new(
+        Settings {
+            model: Some(model()),
+            ..Default::default()
+        },
+        Box::new(|_| Head::still(0.0)),
+    );
+    let start = Instant::now();
+    while !dj_stems::quick::exists(&model()) {
+        assert!(start.elapsed() < Duration::from_secs(10));
+        std::thread::sleep(Duration::from_millis(5));
+    }
+    std::thread::sleep(Duration::from_millis(200));
+    s.set_many_cores(true);
+    s.set_playing(Box::new(|| false));
+    let (a, b) = (track(60.0), track(60.0));
+    s.split(0, a.clone(), None);
+    s.split(1, b.clone(), None);
+    wait_ready(&s, 0);
+    wait_ready(&s, 1);
+    check(&a);
+    check(&b);
+    assert_eq!(s.wide_loads(), 1);
 }

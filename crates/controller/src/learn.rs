@@ -191,8 +191,13 @@ pub struct Binding {
     pub number: u8,
 }
 
-/// The LED control that shows a learned button's state, if it has one.
-fn led_for(group: &str, key: &str) -> Option<String> {
+/// The LED control that shows a learned button's state, if it has one, and
+/// the values it's lit between.
+fn led_for(group: &str, key: &str) -> Option<(String, &'static str)> {
+    // Lit while the stem plays, as the stem pads are.
+    if key == "mute" && group.contains("_Stem") {
+        return Control::parse(group, key).map(|_| (key.to_owned(), "<maximum>0.5</maximum>"));
+    }
     let led = match key {
         "play" => "play_indicator".to_owned(),
         "cue_default" => "cue_indicator".to_owned(),
@@ -216,7 +221,7 @@ fn led_for(group: &str, key: &str) -> Option<String> {
             }
         }
     };
-    Control::parse(group, &led).map(|_| led)
+    Control::parse(group, &led).map(|_| (led, "<minimum>0.5</minimum>"))
 }
 
 fn esc(s: &str) -> String {
@@ -245,9 +250,9 @@ pub fn write_mapping(port: &str, bindings: &[Binding]) -> String {
             Kind::Button => {
                 control(&b.group, &b.key, 0x90 | ch, b.number, "normal");
                 control(&b.group, &b.key, 0x80 | ch, b.number, "normal");
-                if let Some(led) = led_for(&b.group, &b.key) {
+                if let Some((led, lit)) = led_for(&b.group, &b.key) {
                     outputs += &format!(
-                        "      <output>\n        <group>{}</group>\n        <key>{}</key>\n        <status>0x{:02X}</status>\n        <midino>0x{:02X}</midino>\n        <minimum>0.5</minimum>\n      </output>\n",
+                        "      <output>\n        <group>{}</group>\n        <key>{}</key>\n        <status>0x{:02X}</status>\n        <midino>0x{:02X}</midino>\n        {lit}\n      </output>\n",
                         esc(&b.group),
                         esc(&led),
                         0x90 | ch,
@@ -388,6 +393,52 @@ mod tests {
     #[test]
     fn ignores_releases_and_clock() {
         assert!(detect(&[[0x80, 0x0B, 0x00], [0x90, 0x0B, 0x00], [0xF8, 0, 0]]).is_none());
+    }
+
+    #[test]
+    fn a_learned_stem_button_mutes_and_lights_its_stem() {
+        use dj_engine::{Command, Stem, ALL_STEMS};
+        let drums = 1 << Stem::Drums as u8;
+        let b = Binding {
+            group: "[Channel2_Stem1]".into(),
+            key: "mute".into(),
+            kind: Kind::Button,
+            status: 0x99,
+            number: 0x24,
+        };
+        let p = Preset::parse(&write_mapping("Pads", std::slice::from_ref(&b))).unwrap();
+        assert_eq!(read_bindings(&p), vec![b]);
+        let mut m = MixxxMidi::new(Arc::new(p));
+        let mut s = State::default();
+        for d in &mut s.decks {
+            d.loaded = true;
+            d.stems = ALL_STEMS;
+        }
+        let mut press = |s: &State| {
+            let mut out = m.handle(&[0x99, 0x24, 0x7F], s);
+            out.extend(m.handle(&[0x89, 0x24, 0x00], s));
+            (out, m.leds(s))
+        };
+        let (out, lit) = press(&s);
+        assert!(
+            matches!(out[..], [Action::Engine(Command::SetStems { deck, mask })]
+                if deck.index() == 1 && mask == ALL_STEMS & !drums),
+            "{out:?}"
+        );
+        assert_eq!(lit, vec![vec![0x99, 0x24, 0x7F]], "playing: lit");
+        s.decks[1].stems = ALL_STEMS & !drums;
+        let (out, lit) = press(&s);
+        assert!(
+            matches!(
+                out[..],
+                [Action::Engine(Command::SetStems {
+                    mask: ALL_STEMS,
+                    ..
+                })]
+            ),
+            "{out:?}"
+        );
+        assert_eq!(lit, vec![vec![0x99, 0x24, 0x00]], "muted: dark");
     }
 
     #[test]

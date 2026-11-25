@@ -77,7 +77,7 @@ To drop a gate: keep the folder's styles and its hooks, then remove the
 - #30 Long tooltips wrap (`tooltip-wrap`)
 - #31 Menus in Settings look like menus (`select-chevron`)
 - #32 Settings headings lead the page (`settings-type`)
-- #33 Stems don't claim to be on before they can be (`stems-model`)
+- #33 Settings says when the stems model is installed (`stems-model`)
 - #34 Settings say it in one line (`settings-copy`)
 - #35 Checkboxes that look ready to tick (`settings-checks`)
 - #37 Resetting shortcuts can be undone (`settings-undo`)

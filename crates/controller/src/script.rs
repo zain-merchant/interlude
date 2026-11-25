@@ -25,7 +25,9 @@ use std::time::{Duration, Instant};
 
 use rquickjs::{Context, Function, Object, Runtime};
 
-use crate::controls::{Control, Controls};
+use dj_engine::Command;
+
+use crate::controls::{Control, Controls, DeckKey};
 use crate::{Action, State};
 
 /// The script every Mixxx mapping gets, loaded before its own files.
@@ -119,8 +121,19 @@ impl Shared {
 
     fn set(&mut self, c: Control, v: f64) {
         let actions = self.controls.set(c, v, &self.state);
+        // Stems go to the engine all four at once, so the next one a script
+        // sets has to start from this one.
+        for a in &actions {
+            if let Action::Engine(Command::SetStems { deck, mask }) = a {
+                self.state.decks[deck.index()].stems = *mask;
+            }
+        }
         self.actions.extend(actions);
-        if !c.behavior().is_encoder() {
+        let fixed = matches!(
+            c,
+            Control::Deck(_, DeckKey::StemCount | DeckKey::PadSlot(_))
+        );
+        if !c.behavior().is_encoder() && !fixed {
             self.overlay.insert(c, (v, Instant::now()));
         }
     }

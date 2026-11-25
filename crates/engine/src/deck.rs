@@ -126,6 +126,10 @@ pub(crate) struct Deck {
     /// Which stems are audible, one bit per [`crate::Stem`].
     pub stems: u8,
     stem_gain: [Smoothed; STEMS],
+    /// 1.0 while the stems around the play head are split, 0.0 while they
+    /// aren't. Muting fades in and out with it, so it starts (and, past the
+    /// part that's split, stops) without a click.
+    stems_here: Smoothed,
     /// Trim, as the knob has it, and auto gain under it, in dB. The deck
     /// plays at their sum.
     trim_db: f32,
@@ -171,6 +175,7 @@ impl Deck {
             gain: Smoothed::new(1.0, 10.0, out_rate),
             stems: ALL_STEMS,
             stem_gain: std::array::from_fn(|_| Smoothed::new(1.0, STEM_FADE_MS, out_rate)),
+            stems_here: Smoothed::new(0.0, STEM_FADE_MS, out_rate),
             trim_db: 0.0,
             auto_gain_db: 0.0,
             eq: Eq3::new(out_rate),
@@ -203,6 +208,8 @@ impl Deck {
         for g in &mut self.stem_gain {
             g.snap();
         }
+        self.stems_here.set(0.0);
+        self.stems_here.snap();
         self.slip_pos = None;
         self.slip_hot = None;
         self.eq.reset();
@@ -841,6 +848,10 @@ impl Deck {
             stems: track.stems.get().map(|s| &**s),
             mix: StemMix::FULL,
         };
+        let here = base
+            .stems
+            .is_some_and(|s| s.is_ready_at(self.pos as i64, track.sample_rate));
+        self.stems_here.set(if here { 1.0 } else { 0.0 });
         let frames = track.frames() as i64;
         let ratio = track.sample_rate as f64 / self.out_rate;
         let tempo = (self.rate + self.bend + self.jog_bend).max(0.0);
@@ -883,7 +894,10 @@ impl Deck {
         for (n, frame) in out.as_chunks_mut::<2>().0.iter_mut().enumerate() {
             let (mut l, mut r) = (0.0, 0.0);
             let src = Source {
-                mix: StemMix::from_gains(std::array::from_fn(|i| self.stem_gain[i].tick())),
+                mix: StemMix::faded(
+                    std::array::from_fn(|i| self.stem_gain[i].tick()),
+                    self.stems_here.tick(),
+                ),
                 ..base
             };
             let read = |pos: f64| stretch::read(&src, pos);

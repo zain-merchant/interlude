@@ -76,10 +76,27 @@ async function createTauriBackend() {
     stemsWaveform: async (deck, mask) => new Uint8Array(await invoke('stems_waveform', { deck, mask })),
     /** The Stems settings page. */
     stemsInfo: () => invoke('stems_info'),
-    /** @param {{ enabled?: boolean, cacheGb?: number }} change */
+    /** @param {{ mode?: import('./stemsmodel.js').StemsMode, cacheGb?: number }} change */
     setStems: (change) => invoke('set_stems', change),
     clearStemsCache: () => invoke('clear_stems_cache'),
+    /** A deck's stems are being used: its Stems tab was opened. */
+    useStems: (deck) => invoke('use_stems', { deck }),
+    /** How the model download is doing. @returns {Promise<import('./stemsmodel.js').StemsModel>} */
+    stemsModel: () => invoke('stems_model'),
+    /**
+     * Every change to it, and its progress a few times a second.
+     * @param {(m: import('./stemsmodel.js').StemsModel) => void} fn
+     * @returns {Promise<() => void>} unlisten
+     */
+    onStemsModel: (fn) => listen('stems-model', (e) => fn(e.payload)),
+    /** The first launch is over with: the model may download by itself. @returns {Promise<import('./stemsmodel.js').StemsModel>} */
+    stemsSetupDone: () => invoke('stems_setup_done'),
+    /** Downloads it because the user asked, or tries again now. @returns {Promise<import('./stemsmodel.js').StemsModel>} */
     downloadStemsModel: () => invoke('download_stems_model'),
+    /** Stops, until the user asks again. @returns {Promise<import('./stemsmodel.js').StemsModel>} */
+    cancelStemsModel: () => invoke('cancel_stems_model'),
+    /** Deletes it, or what's in of it. @returns {Promise<import('./stemsmodel.js').StemsModel>} */
+    removeStemsModel: () => invoke('remove_stems_model'),
     /**
      * Fixes the beatgrid of a deck's track by hand (saved, and kept from
      * analysis), or with null goes back to the detected one.

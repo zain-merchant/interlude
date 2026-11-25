@@ -365,17 +365,6 @@
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .fx .tog i {
   display: none;
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .stems .need button {
-  height: var(--h-sm);
-  padding: 0 10px;
-  border-radius: 6px;
-  text-decoration: none;
-  color: var(--fg);
-}
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .stems .need {
-  color: var(--fg-2);
-  align-items: center;
-}
 
 /* ── Library ───────────────────────────────────────────────────────── */
 
@@ -1344,7 +1333,7 @@
   --tt-rule-l: rgb(255 255 255 / 0.055);
   --tt-rule-v: linear-gradient(90deg, var(--tt-rule-d) 50%, var(--tt-rule-l) 50%);
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] :is(.btn:not(.ghost, .primary, .jumps, select, .banner *), [data-region^='deck'] .pitch .lock, .mixer .hp, .mixer button.rec, .knob button.label, [data-region^='deck'] .fx .kind, [data-region^='deck'] .fx .ar, [data-region^='deck'] .fx .tog, [data-region^='deck'] .stems .need button, [data-region^='deck'] .stems .stem, [data-region^='deck'] .perf .tc, [data-region^='deck'] .perf .tb, [data-region^='deck'] .perf .big, [data-region^='deck'] .grid button, [data-region^='deck'] .transport .jumps button, [data-region^='deck'] .pitch .nudge button, .zoom button, .toastbox .toast .undo, section.library .bar .chip, section.library .filter .panel .kc, section.library .sampler .slot.set, .settings .key, .settings .btn:not(.primary, .ghost, select)) {
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] :is(.btn:not(.ghost, .primary, .jumps, select, .banner *), [data-region^='deck'] .pitch .lock, .mixer .hp, .mixer button.rec, .knob button.label, [data-region^='deck'] .fx .kind, [data-region^='deck'] .fx .ar, [data-region^='deck'] .fx .tog, [data-region^='deck'] .stems .option, [data-region^='deck'] .stems .stem, [data-region^='deck'] .perf .tc, [data-region^='deck'] .perf .tb, [data-region^='deck'] .perf .big, [data-region^='deck'] .grid button, [data-region^='deck'] .transport .jumps button, [data-region^='deck'] .pitch .nudge button, .zoom button, .toastbox .toast .undo, section.library .bar .chip, section.library .filter .panel .kc, section.library .sampler .slot.set, .settings .key, .settings .btn:not(.primary, .ghost, select)) {
   background-color: var(--kk-face, var(--rg-key));
   background-image: none;
   box-shadow:
@@ -1366,7 +1355,7 @@
     box-shadow 140ms ease-out 24ms,
     color 140ms ease-out;
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] :is(.btn:not(.ghost, .primary, .jumps, select, .banner *), [data-region^='deck'] .pitch .lock, .mixer .hp, .mixer button.rec, .knob button.label, [data-region^='deck'] .fx .kind, [data-region^='deck'] .fx .ar, [data-region^='deck'] .fx .tog, [data-region^='deck'] .stems .need button, [data-region^='deck'] .stems .stem, [data-region^='deck'] .perf .tc, [data-region^='deck'] .perf .tb, [data-region^='deck'] .perf .big, [data-region^='deck'] .grid button, [data-region^='deck'] .transport .jumps button, [data-region^='deck'] .pitch .nudge button, .zoom button, .toastbox .toast .undo, section.library .bar .chip, section.library .filter .panel .kc, section.library .sampler .slot.set, .settings .key, .settings .btn:not(.primary, .ghost, select)):is(:hover, [data-show-hover]):not(:disabled, [aria-disabled='true']) {
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] :is(.btn:not(.ghost, .primary, .jumps, select, .banner *), [data-region^='deck'] .pitch .lock, .mixer .hp, .mixer button.rec, .knob button.label, [data-region^='deck'] .fx .kind, [data-region^='deck'] .fx .ar, [data-region^='deck'] .fx .tog, [data-region^='deck'] .stems .option, [data-region^='deck'] .stems .stem, [data-region^='deck'] .perf .tc, [data-region^='deck'] .perf .tb, [data-region^='deck'] .perf .big, [data-region^='deck'] .grid button, [data-region^='deck'] .transport .jumps button, [data-region^='deck'] .pitch .nudge button, .zoom button, .toastbox .toast .undo, section.library .bar .chip, section.library .filter .panel .kc, section.library .sampler .slot.set, .settings .key, .settings .btn:not(.primary, .ghost, select)):is(:hover, [data-show-hover]):not(:disabled, [aria-disabled='true']) {
   background-color: var(--kk-face-hi, color-mix(in oklab, #fff 6%, var(--kk-face, var(--rg-key))));
   box-shadow:
     inset 0 1px 0 0 var(--kk-top-hi, rgb(255 255 255 / 0.125)),
@@ -1394,7 +1383,7 @@
     0 0 0 0 rgb(0 0 0 / 0);
   color: var(--kk-ink-in, var(--on, var(--fg)));
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] :is(.btn:not(.ghost, .primary, .jumps, select, .banner *), [data-region^='deck'] .pitch .lock, .mixer .hp, .mixer button.rec, .knob button.label, [data-region^='deck'] .fx .kind, [data-region^='deck'] .fx .ar, [data-region^='deck'] .fx .tog, [data-region^='deck'] .stems .need button, [data-region^='deck'] .stems .stem, [data-region^='deck'] .perf .tc, [data-region^='deck'] .perf .tb, [data-region^='deck'] .perf .big, [data-region^='deck'] .grid button, [data-region^='deck'] .transport .jumps button, [data-region^='deck'] .pitch .nudge button, .zoom button, .toastbox .toast .undo, section.library .bar .chip, section.library .filter .panel .kc, section.library .sampler .slot.set, .settings .key, .settings .btn:not(.primary, .ghost, select)):is(:active, [data-show-active], .pressed):is(:active, [data-show-active], .pressed):not(:disabled, [aria-disabled='true']) {
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] :is(.btn:not(.ghost, .primary, .jumps, select, .banner *), [data-region^='deck'] .pitch .lock, .mixer .hp, .mixer button.rec, .knob button.label, [data-region^='deck'] .fx .kind, [data-region^='deck'] .fx .ar, [data-region^='deck'] .fx .tog, [data-region^='deck'] .stems .option, [data-region^='deck'] .stems .stem, [data-region^='deck'] .perf .tc, [data-region^='deck'] .perf .tb, [data-region^='deck'] .perf .big, [data-region^='deck'] .grid button, [data-region^='deck'] .transport .jumps button, [data-region^='deck'] .pitch .nudge button, .zoom button, .toastbox .toast .undo, section.library .bar .chip, section.library .filter .panel .kc, section.library .sampler .slot.set, .settings .key, .settings .btn:not(.primary, .ghost, select)):is(:active, [data-show-active], .pressed):is(:active, [data-show-active], .pressed):not(:disabled, [aria-disabled='true']) {
   background-color: var(--kk-face-dn, color-mix(in oklab, #000 14%, var(--kk-face, var(--rg-key))));
   box-shadow:
     inset 0 1px 0 0 var(--kk-c1, var(--tt-c1)),
@@ -1411,7 +1400,7 @@
   background-color: var(--kk-face-in, color-mix(in oklab, var(--on, var(--fg)) var(--kk-mix, 0%), var(--rg-down)));
   color: var(--kk-ink-in, var(--on, var(--fg)));
 }
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] :is(.btn:not(.ghost, .primary, .jumps, select, .banner *), [data-region^='deck'] .pitch .lock, .mixer .hp, .mixer button.rec, .knob button.label, [data-region^='deck'] .fx .kind, [data-region^='deck'] .fx .ar, [data-region^='deck'] .fx .tog, [data-region^='deck'] .stems .need button, [data-region^='deck'] .stems .stem, [data-region^='deck'] .perf .tc, [data-region^='deck'] .perf .tb, [data-region^='deck'] .perf .big, [data-region^='deck'] .grid button, [data-region^='deck'] .transport .jumps button, [data-region^='deck'] .pitch .nudge button, .zoom button, .toastbox .toast .undo, section.library .bar .chip, section.library .filter .panel .kc, section.library .sampler .slot.set, .settings .key, .settings .btn:not(.primary, .ghost, select)):is(:disabled, [aria-disabled='true']) {
+:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] :is(.btn:not(.ghost, .primary, .jumps, select, .banner *), [data-region^='deck'] .pitch .lock, .mixer .hp, .mixer button.rec, .knob button.label, [data-region^='deck'] .fx .kind, [data-region^='deck'] .fx .ar, [data-region^='deck'] .fx .tog, [data-region^='deck'] .stems .option, [data-region^='deck'] .stems .stem, [data-region^='deck'] .perf .tc, [data-region^='deck'] .perf .tb, [data-region^='deck'] .perf .big, [data-region^='deck'] .grid button, [data-region^='deck'] .transport .jumps button, [data-region^='deck'] .pitch .nudge button, .zoom button, .toastbox .toast .undo, section.library .bar .chip, section.library .filter .panel .kc, section.library .sampler .slot.set, .settings .key, .settings .btn:not(.primary, .ghost, select)):is(:disabled, [aria-disabled='true']) {
   background-color: var(--kk-off, rgb(255 255 255 / 0.022));
   background-image: none;
   box-shadow:
@@ -2111,29 +2100,6 @@
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .stems .stem.solo {
   --kk-ink-in: #fff;
-}
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .stems .row + .need,
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .stems .need {
-  align-items: center;
-  color: var(--fg-2);
-  margin: 0;
-}
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .stems .need button {
-  height: 24px;
-  padding: 0 10px;
-  font-size: 12px;
-  border-radius: 7px;
-  text-decoration: none;
-}
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .stems:has(> .row + .need) {
-  align-self: center;
-}
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .stems:has(> .row + .need) .row {
-  height: 30px;
-}
-:root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .stems .row + .need {
-  margin-top: 6px;
-  line-height: 24px;
 }
 :root[data-flag-dir-room-tint][data-flag-dir-room-tint][data-flag-dir-room-tint] [data-region^='deck'] .stems .progress {
   bottom: -9px;

@@ -1822,6 +1822,69 @@ fn stems_mute_and_solo() {
     assert_eq!(h.shared().deck(0).stems, 0b1111);
 }
 
+/// A stem muted before the track is split drops out as the split arrives,
+/// and comes back where the split ends, both without a click.
+#[test]
+fn stems_muted_early_fade_in_and_out_with_the_split() {
+    use dj_engine::stems::{BLOCK_FRAMES, STORED_BASS, STORED_DRUMS, STORED_VOCALS};
+    use dj_engine::Stems;
+
+    for keylock in [false, true] {
+        let (mut e, mut h) = setup();
+        // A loud low tone, so a hard cut anywhere would stand out: the whole
+        // mix is vocals.
+        let vocals = sine(60.0, 6.0, 0.6);
+        let track = Track::from_stereo(vocals.clone(), SR);
+        let stems = Arc::new(Stems::new(track.frames()));
+        for f in 0..track.frames() {
+            stems.write(f, STORED_VOCALS, vocals[f * 2], vocals[f * 2 + 1]);
+            stems.write(f, STORED_BASS, 0.0, 0.0);
+            stems.write(f, STORED_DRUMS, 0.0, 0.0);
+        }
+        let track = Arc::new(track);
+        let deck = DeckId::A;
+        h.send(Command::Load {
+            deck,
+            track: track.clone(),
+        })
+        .unwrap();
+        h.send(Command::SetCrossfader { value: -1.0 }).unwrap();
+        h.send(Command::SetKeylock { deck, on: keylock }).unwrap();
+        h.send(Command::SetRate { deck, rate: 1.05 }).unwrap();
+        h.send(Command::Play { deck }).unwrap();
+        // Muted with nothing to mute it with, then with nothing split yet.
+        h.send(Command::SetStems { deck, mask: 0b1110 }).unwrap();
+        let full = rms(&render(&mut e, 0.5)[4800..]);
+        assert!(full > 0.1, "plays on");
+        track.stems.set(stems.clone()).unwrap();
+        let still = rms(&render(&mut e, 0.3));
+        assert!((still / full - 1.0).abs() < 0.1, "{still} vs {full}");
+
+        // Blocks 1 to 6 arrive under the play head.
+        for b in 1..7 {
+            stems.mark_ready(b);
+        }
+        // (Render in odd pieces, so it isn't tied to one buffer size.)
+        let mut out = vec![];
+        while h.shared().deck(0).position < 7.6 * BLOCK_FRAMES as f64 / SR as f64 {
+            out.extend(render(&mut e, 0.013));
+        }
+        let biggest = out
+            .chunks(2)
+            .zip(out.chunks(2).skip(1))
+            .map(|(a, b)| (b[0] - a[0]).abs())
+            .fold(0.0, f32::max);
+        // A 60 Hz tone at this level moves under 0.006 a sample; a cut from
+        // its peak to nothing would move it by 0.6.
+        assert!(biggest < 0.02, "keylock {keylock}: jump {biggest}");
+        let at = |secs: f64| (secs * SR as f64) as usize * 2;
+        let mid = rms(&out[at(0.5)..at(1.0)]);
+        assert!(mid < 1e-3, "muted where it's split: {mid}");
+        let tail = rms(&out[out.len() - at(0.1)..]);
+        assert!(tail > 0.1, "back where it isn't: {tail}");
+    }
+}
+
 #[test]
 fn auto_gain_matches_loudness_and_trim_works_on_top() {
     use dj_engine::loudness::TARGET_LUFS;

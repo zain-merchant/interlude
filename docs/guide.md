@@ -76,15 +76,32 @@ Everything Interlude does, in detail. For a short overview, see the
   on). Stems fade in and out over a few milliseconds, so there are no
   clicks, and the waveforms show only what you hear. With every stem on,
   you hear the original file exactly: melody is the original minus the
-  other three. Tracks are split on your computer by HTDemucs (Meta, MIT
-  licence; Rouard et al., ICASSP 2023), a one-time 166 MB download from
-  Settings › Stems, run on the CPU through ONNX Runtime. On an M5 MacBook
-  Air a 4½-minute track splits in about 50 seconds. Splitting starts at the
-  play head when a track loads and runs ahead of it, so the part you're
-  about to play is ready first; anything not split yet plays as normal.
-  Finished stems are kept in a cache (5 GB by default, oldest out first), so
-  a track you've played before has them at once. Settings › Stems turns
-  splitting off, sets the cache size and clears it. Stems have no keys
+  other three. Tracks are separated on your computer by HTDemucs (Meta, MIT
+  licence; Rouard et al., ICASSP 2023), run on the CPU through ONNX Runtime.
+  The model is a one-time 166 MB download from Hugging Face. Nothing
+  downloads until you ask: press Download on a deck's Stems tab or in
+  Settings › Stems. If you quit before it's in, it carries on where it
+  stopped the next time you open Interlude. Until it's in, the Stems tab shows how far it has got,
+  and the buttons appear when it's done. Once it's in, Interlude makes a
+  second copy that loads in well under a second; the two take about 510 MB.
+  The download is checked when it arrives,
+  carries on where it stopped if the connection drops or you quit, and says
+  why with a Retry if it can't finish. Settings › Stems can cancel it (it
+  then stays off until you ask for it) and remove it again, and it doesn't
+  download while stems are turned off. Settings › Stems sets when stems are
+  made. For every track, the default, makes them as each track loads, so
+  they're ready at once, but each loaded track keeps about 150 MB of them.
+  Only when I use them makes a track's stems the first time you open its
+  Stems tab or press a stem: that first press takes a few seconds, and
+  tracks you never use stems on take no memory for them. Off makes none. A tab left open doesn't separate the next track until you
+  use it. A stem pressed before its part of the track is ready pulses, and
+  fades in or out once it is. On an M5 MacBook Air separating a
+  4½-minute track takes about 50 seconds. It starts at the play head and
+  runs ahead of it, so the part you're about to play is ready first;
+  anything not ready yet plays as normal. Finished stems are kept in a
+  cache (5 GB by default, oldest out first), so a track whose stems you've
+  had before has them at once, whichever you chose. Settings › Stems also
+  turns stems off, sets the cache size and clears it. Stems have no keys
   until you give them some in Settings › Keyboard.
 - **Recording:** the Rec button in the mixer records the master output to a
   24-bit WAV in `Music/Interlude recordings`. The file is written off the
@@ -187,6 +204,10 @@ Everything Interlude does, in detail. For a short overview, see the
   Mixxx install needed. Mapping files in the app's own `controllers`
   folder (in its data folder), folders listed in `INTERLUDE_MAPPINGS` and
   Mixxx's user folder come first, so a mapping you've changed wins.
+  On the DDJ-800 and DDJ-FLX6, SHIFT + HOT CUE then the pads mute stems:
+  vocals, melody, bass and vocals alone on top, drums and everything but
+  vocals on pads 5 and 8, and SHIFT + pad plays one alone (not yet tried on
+  either).
   Direct bindings and LEDs work for about 64% of the controls across the
   153 MIDI mappings (decks 3 and 4, and Mixxx-only features, are left
   out). The mappings' JavaScript runs too, in an embedded engine with
@@ -216,7 +237,7 @@ Everything Interlude does, in detail. For a short overview, see the
   the mapping can ship with the app.
 - **Any other MIDI controller: MIDI learn.** In Settings → Controllers,
   pick the controller, pick an action (play, cue, faders, EQ, hot cues,
-  loops, effects, browsing, samples) and press Learn, then move the
+  loops, stems, effects, browsing, samples) and press Learn, then move the
   control. It tells buttons, knobs, 14-bit faders, jog encoders and pitch
   bend apart on its own and moves straight on to the next action. The
   result is saved as a Mixxx mapping in the app's `controllers` folder and

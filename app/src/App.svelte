@@ -1,5 +1,5 @@
 <script>
-  import { onMount } from 'svelte';
+  import { onMount, untrack } from 'svelte';
   import Deck from './lib/Deck.svelte';
   import Mixer from './lib/Mixer.svelte';
   import Library from './lib/Library.svelte';
@@ -32,8 +32,9 @@
   import { padMode, setPadMode } from './lib/padmode.svelte.js';
   import { tempoPickup } from './lib/pickup.svelte.js';
   import { gridEdit, NUDGE } from './lib/grid.svelte.js';
-  import { toggleStem, soloStem, syncStemWaveforms, stemsUnavailable, stemsOf } from './lib/stems.svelte.js';
+  import { toggleStem, soloStem, setStemMask, syncStemWaveforms, stemsOf, dropWaiting } from './lib/stems.svelte.js';
   import { once, stemsReadyTip } from './lib/tips.svelte.js';
+  import { startStemsModel, stemsSetupDone } from './lib/stemsmodel.svelte.js';
   import { libraryHealth, reveal, captureUiErrors, update, checkForUpdate, installUpdate } from './lib/support.svelte.js';
   import Status from './flags/112-shell-status/Status.svelte'; // #112 (UI audit flag)
   import Keys from './flags/116-settings-finish/Keys.svelte'; // #121 (UI audit flag)
@@ -124,12 +125,41 @@
   $effect(() => {
     if ([0, 1].some((d) => stemsOf(d).state === 'ready')) stemsReadyTip();
   });
+  // A press that can't be kept after all is undone, so a stem doesn't stay
+  // muted with no way to bring it back.
+  $effect(() => {
+    for (const d of [0, 1]) {
+      const { state, mask } = stemsOf(d);
+      if (mask !== 0b1111 && ['failed', 'off', 'needsModel'].includes(state) && tracks[d]) {
+        untrack(() => dropWaiting(d));
+        if (state === 'failed') say(`Deck ${'AB'[d]}: stems couldn't be made`);
+      }
+    }
+  });
   // Importing another app's library opens in its own window over the app.
   let importing = $state(false);
   const openImport = () => {
     hideToast();
     importing = true;
   };
+  function closeImport() {
+    importing = false;
+    setupDone();
+  }
+  // Setting up is over once the library is on screen and the first launch's
+  // import offer, if there is one, has been taken or turned down. Until then
+  // nothing big downloads; after it, the stems model does (see stems.rs).
+  let setUp = false;
+  function setupDone() {
+    if (setUp) return;
+    setUp = true;
+    stemsSetupDone().catch((e) => console.error('stems model', e));
+  }
+  /** The whole library loaded, with this many tracks. */
+  function libraryLoaded(tracks) {
+    if (tracks === 0 && once('importOffer')) openImport();
+    else if (!importing) setupDone();
+  }
   // Report a problem: a small window over the app.
   let reporting = $state(false);
   const openReport = () => {
@@ -743,11 +773,12 @@
     const updateTimer = setTimeout(() => checkForUpdate(), 8000);
     startEngineLoop();
     syncDeckSettings();
+    const offModel = startStemsModel().catch((e) => void console.error('stems model', e));
     // The controller's browse knob and load buttons drive the library.
     const off = backend.onController?.((e) => {
       if (e.type === 'browse') library.browse(e.delta);
       else if (e.type === 'load') library.loadSelected(e.deck);
-      else if (e.type === 'stemsUnavailable') say(stemsUnavailable(e.deck));
+      else if (e.type === 'stemsUnavailable') setStemMask(e.deck, e.mask);
       else if (e.type === 'tempoPickup') tempoPickup[e.deck] = e.rate ?? null;
       else if (e.type === 'padMode') {
         const was = padMode[e.deck].mode;
@@ -775,6 +806,7 @@
     return () => {
       clearTimeout(updateTimer);
       off?.then((f) => f());
+      offModel.then((f) => f && f());
     };
   });
 </script>
@@ -863,7 +895,7 @@
     {/if}
     <div class="libwrap">
       <Library bind:this={library} onload={load} onsettings={() => openSettings()} onmessage={say}
-        onimport={openImport} onempty={() => { if (once('importOffer')) openImport(); }} />
+        onimport={openImport} onloaded={libraryLoaded} />
     </div>
   </div>
 
@@ -927,7 +959,7 @@
 
 {#if settings}<Settings bind:page={settings} onclose={() => (settings = null)} onimport={() => { settings = null; openImport(); }}
   onreport={openReport} onupdates={checkUpdatesNow} onsetup={openControllerSetup} />{/if}
-{#if importing}<Import onclose={() => (importing = false)} ondone={() => library.reload()} />{/if}
+{#if importing}<Import onclose={closeImport} ondone={() => library.reload()} />{/if}
 {#if reporting}<Report onclose={() => (reporting = false)} context={reportContext} />{/if}
 {#if settingUp}<ControllerSetup onclose={() => (settingUp = false)} />{/if}
 
