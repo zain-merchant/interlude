@@ -178,7 +178,9 @@ export function createMockBackend() {
   const MODEL_SECS = 15;
   // ?stems=ready starts with the model there; offline drops the connection
   // at 40% until it's tried again; failed fails there; cancelled starts as
-  // if an earlier session had cancelled it there; slow takes ten minutes.
+  // if an earlier session had cancelled it there; interrupted as if the app
+  // quit there mid-download, so it carries on; slow takes ten minutes. The
+  // download waits for the user, except in the cases that show it going.
   const query = new URLSearchParams(globalThis.location?.search);
   let modelCase = query.get('stems') ?? '';
   // ?mode=fast, efficient or off starts with that chosen; as a first use otherwise.
@@ -187,8 +189,8 @@ export function createMockBackend() {
   /** @type {import('./stemsmodel.js').StemsModel & { at?: number }} */
   let stemsModel = { state: 'missing', done: 0, total: MODEL_BYTES, secondsLeft: null, error: null, mode: stemsCfg.mode };
   if (modelCase === 'ready') stemsModel = { ...stemsModel, state: 'ready', done: MODEL_BYTES, at: 0 };
-  if (modelCase === 'cancelled') stemsModel.done = MODEL_BYTES * 0.4;
-  let modelAsked = modelCase !== 'cancelled';
+  if (modelCase === 'cancelled' || modelCase === 'interrupted') stemsModel.done = MODEL_BYTES * 0.4;
+  let modelAsked = ['interrupted', 'offline', 'failed', 'slow'].includes(modelCase);
   const modelListeners = new Set();
   const setModel = (change) => {
     stemsModel = { ...stemsModel, secondsLeft: null, error: null, mode: stemsCfg.mode, ...change };

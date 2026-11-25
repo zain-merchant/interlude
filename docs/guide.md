@@ -78,10 +78,10 @@ Everything Interlude does, in detail. For a short overview, see the
   you hear the original file exactly: melody is the original minus the
   other three. Tracks are separated on your computer by HTDemucs (Meta, MIT
   licence; Rouard et al., ICASSP 2023), run on the CPU through ONNX Runtime.
-  The model is a one-time 166 MB download from Hugging Face that starts by
-  itself in the background once Interlude is set up: after the first
-  launch's import offer is closed, or on the next launch if you already
-  have a library. Until it's in, the Stems tab shows how far it has got,
+  The model is a one-time 166 MB download from Hugging Face. Nothing
+  downloads until you ask: press Download on a deck's Stems tab or in
+  Settings › Stems. If you quit before it's in, it carries on where it
+  stopped the next time you open Interlude. Until it's in, the Stems tab shows how far it has got,
   and the buttons appear when it's done. Once it's in, Interlude makes a
   second copy that loads in well under a second; the two take about 510 MB.
   The download is checked when it arrives,

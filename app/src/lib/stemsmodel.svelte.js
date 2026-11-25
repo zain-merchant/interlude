@@ -4,7 +4,7 @@
 
 import { backend } from './backend.js';
 import { announce } from './announce.svelte.js';
-import { tipOnce } from './tips.svelte.js';
+import { showToast } from './undo.svelte.js';
 import { mb, progressText, spoken } from './stemsmodel.js';
 
 /** @type {import('./stemsmodel.js').StemsModel & { known: boolean }} */
@@ -34,11 +34,13 @@ export async function startStemsModel() {
   return off ?? (() => {});
 }
 
-/** The app is set up, so the model may download. The first time it does, a tip says so. */
+/** The app is set up, so a download the app quit in the middle of carries on, and a toast says so. */
 export async function stemsSetupDone() {
-  take(await backend.stemsSetupDone?.());
-  if (stemsModel.state === 'downloading') {
-    tipOnce('stemsDownload', `Stems are downloading in the background (${mb(stemsModel.total)}). Settings › Stems shows how far it's got, and can cancel it.`);
+  const m = await backend.stemsSetupDone?.();
+  take(m);
+  // It only carries on by itself when some of it is already in.
+  if (m?.state === 'downloading' && m.done > 0) {
+    showToast(`Carrying on with the stems download, ${Math.round(m.done / 1e6)} of ${mb(m.total)} in. Settings › Stems can cancel it.`, { ms: 6000 });
   }
 }
 
