@@ -24,7 +24,7 @@ the report it saves.
   pads; auto gain so tracks start level; a master
   limiter so the output never clips.
 - **Stems:** mute or solo vocals, melody, bass and drums on each deck. The
-  model that splits them downloads by itself after setup (166 MB).
+  model that splits them is a one-time download (166 MB) you start from the Stems tab or Settings.
   Tracks are split on your Mac, nothing is uploaded.
 - **Library:** instant search, playlists, a history of every set, and
   import from Rekordbox and Serato with cues, loops and grids. Your music
