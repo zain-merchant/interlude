@@ -12,3 +12,11 @@ tools/beat-eval/data/
 tools/beat-eval/.cache/
 tools/beat-eval/.venv/
 __pycache__/
+
+# The hero's clips and poster: kept in the hero-clips pre-release, not in git
+# (npm --prefix app run clips:fetch; see app/demo/segments/README.md)
+site/hero/clips/
+site/img/screenshot.jpg
+site/img/screenshot-1x.jpg
+site/img/screenshot.avif
+site/img/screenshot-1x.avif

@@ -1,0 +1,177 @@
+/* The named springs, as CSS linear() curves (springs.css). Imported here,
+   not from JS, so each page's own stylesheet carries them: the site links
+   demo/cards.css alone. */
+@import './springs.css';
+
+/* The hero page: the app at 1440 × 900. In the controller version the app
+   eases back and the controller comes up over its foot, inside the same
+   900, so the page around it never moves. Clear around the app, so the
+   website's page shows through. */
+:root { color-scheme: dark; }
+/* 920 tall: the app's 900, and 20px of clear space under it, so the
+   controller rises from just above the toggle on the page, not from the
+   app's own foot. (The website shows that strip only in controller mode.) */
+html, body { margin: 0; width: 1440px; height: 920px; overflow: hidden; background: transparent !important; }
+#hero { position: relative; width: 1440px; height: 920px; overflow: hidden; }
+
+/* The real app, as `npm run dev` mounts it. No one can reach in: the
+   visitor watches. */
+.app-host {
+  position: absolute; top: 0; left: 0; width: 1440px;
+  overflow: hidden; border-radius: 28px; background: #09090b;
+  pointer-events: none; user-select: none;
+}
+
+/* Stageshow's stage, over the app, drawing only the cursor. */
+.cursor-layer { position: absolute; inset: 0; z-index: 200; pointer-events: none; }
+.hero-stage .ss-stage { background: transparent; }
+
+/* The cursor: Stageshow's solid arrow, oversized the way modern product
+   demos draw it. A thick white stroke with round joins rounds every
+   corner; two tight shadows draw a thin dark outline around that rounded
+   shape, so it reads on black and on white; a soft shadow lifts it. */
+.hero-stage .ss-stage .ss-cursor { --ss-cursor-size: 1.4; }
+.hero-stage .ss-stage .ss-cursor .ss-cursor__arrow {
+  overflow: visible;
+  filter:
+    drop-shadow(0 0 0.5px #0b0b0d)
+    drop-shadow(0 0 0.5px #0b0b0d)
+    drop-shadow(0 2px 4px rgb(0 0 0 / 0.4));
+  /* Rests turned 11° clockwise of the kit's arrow, and steers from there,
+     pivoting on its tip (the hotspot, 4 × 3 in its 22px box). */
+  transform-origin: 4px 3px;
+  rotate: calc(11deg + var(--lean, 0deg));
+  /* Its own layer, so steering it only turns what's already drawn: the
+     arrow and its three shadows aren't drawn again every frame. */
+  will-change: rotate;
+}
+.hero-stage .ss-stage .ss-cursor .ss-cursor__arrow path {
+  fill: #fff;
+  stroke: #fff;
+  stroke-width: 3;
+  stroke-linejoin: round;
+}
+
+/* Stageshow presses its cursor; the app's own :hover and :active styles
+   answer real pointers only, so the script marks what it touches. */
+.app-host [data-demo-hover].btn { background-color: rgb(255 255 255 / 0.08); }
+.app-host [data-demo-pressed].btn { transform: scale(0.97); }
+/* A press goes down on the `press` spring and lands; the release comes
+   back on `snappy` (springs.css). */
+.app-host .btn { transition: transform var(--snappy-ms) var(--snappy), background-color var(--snappy-ms) var(--snappy); }
+.app-host [data-demo-pressed].btn { transition-duration: var(--press-ms), var(--snappy-ms); transition-timing-function: var(--press), var(--snappy); }
+
+/* A fingertip on the hardware, without drawing a hand: the soft shadow a
+   finger casts on the surface it presses, darkest where it touches. The
+   key's own travel and light do the rest. */
+.hero-stage .ss-stage .ss-cursor[data-style="touch"] .ss-cursor__dot {
+  width: 40px;
+  height: 46px;
+  margin: -22px 0 0 -18px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgb(0 0 0 / 0.55), rgb(0 0 0 / 0.28) 55%, transparent);
+  box-shadow: none;
+  filter: blur(2px);
+}
+.hero-stage .ss-stage .ss-cursor[data-style="touch"][data-pressed="true"] .ss-cursor__dot {
+  background: radial-gradient(closest-side, rgb(0 0 0 / 0.7), rgb(0 0 0 / 0.35) 50%, transparent);
+  transform: scale(0.85);
+}
+
+/* Demo only: no toasts. The app's "Loaded … / Undo" bar is for someone at
+   the keyboard; in a picture of the app it's noise. */
+.app-host .toastbox { display: none; }
+
+/* The controller version: the screen eases back and shrinks a little, as a
+   laptop does behind the controller in front of it; the desk comes up over
+   its foot. */
+/* Both on `glide` (big travel: leaves at once, 98% there by 592ms, no
+   overshoot), together. The desk moves by `top`, a layout property; only
+   its curve is the spring's. */
+/* The screen eases back (scale) and tips (tilt, --tilt: negative tips its
+   top toward you, as a laptop lid tilted back reads from in front of it),
+   both on the website's sliders (Hero: screen tilt, anchor), sent in. */
+:root { --tilt: -3deg; --anchor: 50% 0%; }
+/* (On the glide spring made 20% quicker: the same curve over 80% of the
+   time, a stiffer spring with the same damping. Coming in, the screen moves
+   first and the controller follows a beat behind (--hw-delay,
+   controller.css); going, they leave together.) */
+.app-host { transform-origin: var(--anchor); transition: transform calc(var(--glide-ms) * 0.8) var(--glide); }
+#hero[data-hand="controller"] .app-host { transform: perspective(2400px) rotateX(var(--tilt)) scale(0.91); }
+/* The desk never travels: it waits where it shows (so the controller
+   never crosses the frame's edge on the way, and needs no mask to hide
+   that), and the controller rises a short way into place there. */
+.desk { top: 624px; }
+
+/* The link between a control on the controller and the one it drives in
+   the app (#hero[data-input]): soft rings round both, a fine line between,
+   a dot of light travelling it; or a small label gliding across. Quiet
+   white, the app's own hairline weight; everything eases in and out. */
+svg.links { position: absolute; inset: 0; z-index: 255; pointer-events: none; overflow: visible; }
+/* Interlude's orange: warm enough to read over the app's blues and the
+   metal alike, with a dark keyline for the brightest parts. */
+.link-mark {
+  position: absolute; z-index: 5; pointer-events: none; box-sizing: border-box;
+  border: 1.75px solid #ff9b45; box-shadow: 0 0 0 1px rgb(0 0 0 / 0.35), inset 0 0 0 1px rgb(0 0 0 / 0.35);
+  opacity: 0; transition: opacity var(--smooth-ms) var(--smooth);
+}
+.link-mark.on { opacity: 1; }
+.link-line {
+  fill: none; stroke: #ff9b45; stroke-width: 1.75; stroke-linecap: round;
+  filter: drop-shadow(0 0 1px rgb(0 0 0 / 0.9));
+  opacity: 0; transition: opacity var(--smooth-ms) var(--smooth);
+}
+.link-line.on { opacity: 1; }
+/* The pulse: a bright stretch of the line, glowing. */
+.link-spark { fill: none; stroke: #ffe2c2; stroke-width: 3; stroke-linecap: round; filter: drop-shadow(0 0 3px #ff9b45) drop-shadow(0 0 8px rgb(255 155 69 / 0.8)); }
+/* The demo moves focus about; no focus rings in it. */
+#hero :focus, #hero :focus-visible { outline: none !important; }
+.link-label {
+  position: absolute; left: 0; top: 0; z-index: 260; pointer-events: none; white-space: nowrap;
+  padding: 7px 12px; border-radius: 999px;
+  font: 500 17px/1 'Geist Variable', system-ui, sans-serif; color: #eceae4;
+  background: rgb(24 24 28 / 0.92); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.14), 0 8px 24px rgb(0 0 0 / 0.5);
+}
+
+/* The screen's edge, drawn the way the app draws its own panels (its
+   --glass-edge: a 1px hairline at 8% white, a 14% light along the top) and
+   inside the app's own box, so nothing can clip it. The corner is 28px:
+   the panels' 16px plus the app's 12px margin, so the edge runs concentric
+   with the panels inside it. */
+.app-host::after {
+  content: ''; position: absolute; inset: 0; z-index: 150; border-radius: inherit; pointer-events: none;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08), inset 0 1px 0 rgb(255 255 255 / 0.14);
+}
+
+/* (A running loop shows as the app shows it: its number in the deck's
+   colour, nothing more.) */
+
+/* The library's background-analysis note ("analyzing, 12 to go") would
+   otherwise flicker in the demo's first seconds. */
+.app-host :is(.pending, .shell-act) { display: none !important; }
+/* The deeper Club board sits a little higher, so it still ends above the toggle. */
+/* Club: its front edge down at the frame's foot. */
+.desk:has(.hw[data-v="club"]) { top: 650px; }
+
+/* Paused while off screen (pause.js): CSS animations stand still too. */
+html[data-paused] *, html[data-paused] *::before, html[data-paused] *::after { animation-play-state: paused !important; }
+
+/* Cheaper to draw, for the website only (the app itself is unchanged).
+   The app's glass panels blur what's behind them on every frame; behind
+   them here is only the backdrop's soft light, already blurred, so the
+   panels keep their tint and drop the blur. And the backdrop's three
+   drifting lights hold still: they drift over minutes, too slowly to see
+   in a demo, but they kept the whole picture repainting. */
+:root { --glass-blur: none; }
+.bd i { animation: none !important; will-change: auto !important; }
+/* And the backdrop on a layer of its own, drawn once: otherwise its 90px
+   blurs share a layer with the decks, and every meter or readout that
+   changes over them has the blur worked out again around it. */
+.bd { will-change: transform; }
+
+/* The app casts no shadow and never fades, in either mode. */
+
+/* (No fade at the frame's foot: the controller rises inside the frame
+   and never crosses its edge.) */
+.desk-clip { position: absolute; inset: 0; pointer-events: none; }
+#hero ~ .edge-blur { display: none; }

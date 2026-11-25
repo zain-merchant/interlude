@@ -1,0 +1,446 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Motion lab: Low kill and stems</title>
+<meta name="robots" content="noindex">
+<script src="../tune.js?v=lab3"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* A page for comparing feels side by side: hover a knob (or a stem
+     lane) to play it. Not linked from the site. */
+  :root { --bg: #09090b; --panel: #111114; --fg: #eceae4; --fg-2: rgb(236 234 228 / 0.68); --fg-3: rgb(236 234 228 / 0.5); --fg-4: rgb(236 234 228 / 0.3);
+    --line: rgb(255 255 255 / 0.08); --deck-a: #c9dcf2; --deck-b: #f0dcc0; --kill: #ff6b5f; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 48px 16px 80px; background: var(--bg); color: var(--fg); font: 15px/1.5 Geist, system-ui, sans-serif; }
+  main { max-width: 1120px; margin: 0 auto; }
+  h1 { margin: 0 0 6px; font-size: 28px; font-weight: 600; letter-spacing: -0.02em; }
+  h2 { margin: 56px 0 6px; font-size: 20px; font-weight: 600; }
+  p.lede { margin: 0 0 28px; color: var(--fg-2); max-width: 60ch; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+  .cell { padding: 18px 14px 16px; border-radius: 14px; background: var(--panel); box-shadow: inset 0 0 0 1px var(--line); cursor: default; }
+  .cell:hover { box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.16); }
+  .tag { display: flex; align-items: baseline; gap: 8px; margin-bottom: 12px; }
+  .tag b { font-size: 18px; font-weight: 600; }
+  .tag span { color: var(--fg-3); font-size: 12.5px; line-height: 1.35; }
+
+  /* The app's knob (as in the Features picture). */
+  .knob { display: grid; justify-items: center; }
+  .knob .wrap { position: relative; display: grid; place-items: center; width: 84px; height: 84px; }
+  .knob svg { position: absolute; inset: 0; overflow: visible; }
+  .knob line { stroke: rgb(255 255 255 / 0.16); stroke-width: 1.4; stroke-linecap: round; }
+  .knob line.major { stroke: rgb(255 255 255 / 0.28); }
+  .knob line.on { stroke: var(--deck-a); stroke-width: 1.8; filter: drop-shadow(0 0 0.75px var(--deck-a)); }
+  .knob[data-killed] line.on { stroke: var(--kill); filter: drop-shadow(0 0 0.75px var(--kill)); }
+  /* The dial: the knurled edge and the pointer turn; the cap in the middle,
+     with its light, stays still, as a real knob's lighting does. */
+  .dial { position: relative; width: 66px; height: 66px; border-radius: 50%;
+    box-shadow: 0 0 0 1px #08080a, 0 3px 6px rgb(0 0 0 / 0.6), inset 0 1px 0 rgb(255 255 255 / 0.1); }
+  .dial .knurl, .dial .ptr { position: absolute; inset: 0; border-radius: 50%; will-change: transform; }
+  .dial .knurl { background: radial-gradient(circle at 50% 50%, #2e2f34 0 60%, transparent 61%), repeating-conic-gradient(#3c3d43 0 5deg, #1c1d20 5deg 10deg); }
+  .dial .cap { position: absolute; inset: 20%; border-radius: 50%; background: radial-gradient(circle at 40% 30%, #3a3b41, #26272b 70%); box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.08), 0 0 0 1px rgb(0 0 0 / 0.4); }
+  .dial .ptr i { position: absolute; left: 50%; top: 9%; width: 2px; height: 30%; margin-left: -1px; border-radius: 1px; background: #f4f3ee; }
+  .label { position: relative; margin-top: 4px; font-size: 12px; color: var(--fg-3); transition: color 140ms; }
+  .knob[data-killed] .label { color: var(--kill); }
+  .kill { position: absolute; left: 50%; top: calc(100% + 3px); padding: 1px 5px; border-radius: 4px; font-size: 9px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;
+    color: #0b0b0d; background: var(--kill); opacity: 0; transform: translate(-50%, -3px); transition: opacity 0.2s, transform 0.3s cubic-bezier(0.23, 1, 0.32, 1); }
+  .knob[data-killed] .kill { opacity: 1; transform: translate(-50%, 0); transition-duration: 0.06s, 0.16s; }
+
+  /* The tune-it-yourself landings: thud (pressed in and back, smooth),
+     click (dropped a hair and back in two hard steps, like a detent),
+     flash (the ring lit for an instant). Depth and time from the panel. */
+  .knob.land-thud .dial { animation: thud var(--land, 120ms) cubic-bezier(0.23, 1, 0.32, 1); }
+  .knob.land-click .dial { animation: click var(--land, 60ms) steps(2, jump-none); }
+  @keyframes click { 0% { translate: 0 var(--depth, 1.5px); scale: calc(1 - var(--dz, 0.02)); } 100% { translate: 0 0; scale: 1; } }
+  .knob.land-flash line.on, .knob.land-both line.on { animation: flash 260ms ease-out; }
+  .knob.land-both .dial { animation: click var(--land, 60ms) steps(2, jump-none); }
+  #sync-cmp { display: grid; gap: 14px; padding: 20px 22px; }
+  .srow { display: grid; grid-template-columns: 210px 1fr; align-items: center; gap: 16px; }
+  .srow span { color: var(--fg-3); font-size: 12.5px; }
+  .ticks { position: relative; height: 34px; overflow: hidden; }
+  .ticks .run { position: absolute; inset: 0; transform-origin: 0 50%; }
+  .ticks i { position: absolute; top: 50%; width: 2px; height: 12px; margin-top: -6px; border-radius: 1px; background: rgb(255 255 255 / 0.35); }
+  .ticks i.bar { height: 26px; margin-top: -13px; width: 3px; }
+  .ticks.a i.bar { background: var(--deck-a); }
+  .ticks.b i.bar { background: var(--deck-b); }
+  .live { display: grid; grid-template-columns: 220px 1fr; gap: 12px; margin-bottom: 8px; }
+  .live .cell { display: grid; align-content: center; }
+  .knob.thud .dial { animation: thud 160ms cubic-bezier(0.23, 1, 0.32, 1); }
+  @keyframes thud { 0% { scale: 1; } 30% { scale: 0.955; } 100% { scale: 1; } }
+  .knob.flash line.on { animation: flash 260ms ease-out; }
+  @keyframes flash { 0% { stroke: #fff; filter: drop-shadow(0 0 3px var(--kill)); } 100% {} }
+  /* A stem lane: its bars flatten on mute, grow back on unmute. */
+  .lane { display: flex; align-items: center; gap: 2px; height: 26px; margin: 4px 0 18px; overflow: hidden; }
+  .lane b { flex: none; width: 4px; height: calc(var(--h) * 100%); border-radius: 1px; background: var(--deck-b); opacity: 0.75;
+    transition-property: transform, opacity; transition-duration: var(--d), 0.4s; transition-timing-function: var(--e), ease; }
+  .lane[data-muted] b { transform: scaleY(0.1); opacity: 0.25; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Sync slide</h1>
+  <p class="lede">Hover to play all four at once: deck B's beats sliding onto A's, the way the Decks picture does it. The top row is the old curve.</p>
+  <div class="cell" id="sync-cmp"></div>
+
+  <h1 style="margin-top:56px">Tune it yourself</h1>
+  <p class="lede">Apple's spring: duration and bounce (SwiftUI's <code>.spring(duration:bounce:)</code>), plus mass and initial velocity (as on <code>CASpringAnimation</code>), in the DialKit panel (bottom right). Hover each to play it. "Copy parameters" in the panel gives me the exact values.</p>
+  <div class="live">
+    <div class="cell" id="live-knob"><div class="tag"><b>Knob</b><span>Low, down to its kill</span></div><div class="knob"></div></div>
+    <div class="cell" id="live-stem"><div class="tag"><b>Stems</b><span>mute, then unmute</span></div><div class="lane"></div></div>
+  </div>
+
+  <h1 style="margin-top:56px">Low kill</h1>
+  <p class="lede">Round 3. Hover a knob to turn it from the middle down to its kill. The new ones leave fast and are still moving when they hit the stop, so they land rather than settle; most add a small thud on impact (no bounce). K and Q are round 2, for reference.</p>
+  <div class="grid" id="knobs"></div>
+
+  <h2>Stems</h2>
+  <p class="lede">Hover a lane: its bars flatten (mute), then grow back (unmute). Every new one leaves fast (no lag) and keeps left to right, with different staggers. S7 is round 2's favourite, for reference.</p>
+  <div class="grid" id="stems"></div>
+</main>
+<script>
+  // Springs, Apple-style: a duration (how long it feels) and a bounce
+  // (0 = no overshoot). "Into a stop" means a lively spring that's caught
+  // by the end of its travel: it arrives still moving and stops dead there,
+  // never past it, so the landing reads as a click.
+  function spring({ duration, bounce = 0, stop = false }) {
+    const w0 = (2 * Math.PI) / duration;
+    const z = 1 - bounce;
+    const x = (t) => {
+      if (z >= 1) return 1 - Math.exp(-w0 * t) * (1 + w0 * t);
+      const wd = w0 * Math.sqrt(1 - z * z);
+      return 1 - Math.exp(-z * w0 * t) * (Math.cos(wd * t) + ((z * w0) / wd) * Math.sin(wd * t));
+    };
+    let T = 0;
+    const dt = 1 / 1000;
+    if (stop && z < 1) { while (x(T) < 1 && T < 5) T += dt; }
+    else { while (T < 5 && !(1 - x(T) < 0.001 && T > 0.05)) T += dt; }
+    return { ms: T * 1000, ease: (u) => Math.min(1, x(u * T) / Math.min(1, x(T)) ) };
+  }
+  const bez = (x1, y1, x2, y2) => {
+    const at = (a, b, t) => 3 * a * t * (1 - t) ** 2 + 3 * b * t * t * (1 - t) + t ** 3;
+    return (x) => { let lo = 0, hi = 1, t = x; for (let i = 0; i < 30; i++) { if (at(x1, x2, t) < x) lo = t; else hi = t; t = (lo + hi) / 2; } return at(y1, y2, t); };
+  };
+  const sinkE = bez(0.77, 0, 0.175, 1);
+  const inOut = (t) => -(Math.cos(Math.PI * t) - 1) / 2;
+  // Two stages: glide most of the way, then the last stretch on a spring into the stop.
+  const twoStage = (() => {
+    const s = spring({ duration: 0.32, bounce: 0.35, stop: true });
+    const a = 0.62, at = 0.86; // the glide takes 62% of the time to cover 86% of the way
+    return { ms: 520 + s.ms, ease: (u) => {
+      const k = 520 / (520 + s.ms);
+      if (u < k) return at * (1 - (1 - u / k) ** 2) * 1; // eases out into the hand-off
+      return at + (1 - at) * s.ease((u - k) / (1 - k));
+    } };
+  })();
+
+  // Apple's springs: a response (how quickly it gets there, in seconds) and
+  // a damping ratio (1 = no overshoot). Same thing as spring() above with
+  // duration = response and bounce = 1 − damping. Every one of these
+  // starts moving at full speed straight away (no slow start), unlike the
+  // first round.
+  const apple = (response, damping, stop) => spring({ duration: response, bounce: 1 - damping, stop });
+  // Round 3. A curve made from its two speeds: how fast it leaves (out)
+  // and how fast it's still going when it hits the stop (hit), as
+  // multiples of its average speed. Leaving fast kills the lag; still
+  // moving at the end makes it land instead of settle. Between, the speed
+  // eases down smoothly; where `hit` is high (U, V) it picks up a little
+  // again just before the stop, a gentle pull into place.
+  const twoSpeed = (out, hit) => (t) => (t ** 3 - 2 * t ** 2 + t) * out + (-2 * t ** 3 + 3 * t ** 2) + (t ** 3 - t ** 2) * hit;
+  const KNOBS = [
+    ['K', 'Round 2: Apple spring (for reference)', apple(0.35, 1)],
+    ['Q', 'Round 2: iOS sheet curve (for reference)', { ms: 450, ease: bez(0.32, 0.72, 0, 1) }],
+    ['S', 'Leaves fast, lands at speed', { ms: 330, ease: twoSpeed(2.2, 0.9) }],
+    ['T', 'Same, with a thud as it lands', { ms: 330, ease: twoSpeed(2.2, 0.9), thud: true }],
+    ['U', 'Harder landing, with a thud', { ms: 300, ease: twoSpeed(2.0, 1.4), thud: true }],
+    ['V', 'Heavier: slower, lands hard, thud', { ms: 400, ease: twoSpeed(1.7, 1.3), thud: true }],
+    ['W', 'Quick and light: snaps, thud', { ms: 250, ease: twoSpeed(2.4, 1.1), thud: true }],
+    ['X', 'Thud plus the ring flashing on impact', { ms: 330, ease: twoSpeed(2.2, 1.1), thud: true, flash: true }],
+  ];
+
+  const TICKS = 27;
+  const angle = (p) => -135 + 270 * p;
+  function knob(el) {
+    const R = 66 / 2 + 7, box = 84;
+    el.innerHTML = `<div class="wrap"><svg width="${box}" height="${box}" viewBox="${-box / 2} ${-box / 2} ${box} ${box}"></svg><div class="dial"><b class="knurl"></b><span class="cap"></span><b class="ptr"><i></i></b></div></div><span class="label">Low<b class="kill">Kill</b></span>`;
+    const svg = el.querySelector('svg'), turn = el.querySelectorAll('.knurl, .ptr');
+    const lines = Array.from({ length: TICKS }, (_, i) => {
+      const p = i / (TICKS - 1), a = ((angle(p) - 90) * Math.PI) / 180;
+      const major = i % ((TICKS - 1) / 2) === 0 || i % ((TICKS - 1) / 6) === 0;
+      const r0 = R - (major ? 3.5 : 2.5);
+      const l = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      l.setAttribute('x1', Math.cos(a) * r0); l.setAttribute('y1', Math.sin(a) * r0);
+      l.setAttribute('x2', Math.cos(a) * (R + 1)); l.setAttribute('y2', Math.sin(a) * (R + 1));
+      if (major) l.classList.add('major');
+      svg.append(l);
+      return { l, p };
+    });
+    const half = 0.5 / (TICKS - 1);
+    return (pos) => {
+      for (const t of turn) t.style.transform = `rotate(${angle(pos)}deg)`;
+      const lo = Math.min(pos, 0.5), hi = Math.max(pos, 0.5);
+      for (const { l, p } of lines) l.classList.toggle('on', hi - lo > 0.02 && p >= lo - half && p <= hi + half);
+      el.toggleAttribute('data-killed', pos <= half);
+    };
+  }
+
+  const host = document.getElementById('knobs');
+  for (const [letter, note, curve] of KNOBS) {
+    const cell = document.createElement('div');
+    cell.className = 'cell';
+    cell.innerHTML = `<div class="tag"><b>${letter}</b><span>${note} · ${Math.round(curve.ms)}ms</span></div><div class="knob"></div>`;
+    host.append(cell);
+    const set = knob(cell.querySelector('.knob'));
+    set(0.5);
+    let raf = 0, timer = 0;
+    const play = () => {
+      cancelAnimationFrame(raf); clearTimeout(timer);
+      set(0.5);
+      timer = setTimeout(() => {
+        const t0 = performance.now();
+        const tick = (now) => {
+          const u = Math.min(1, (now - t0) / curve.ms);
+          set(0.5 * (1 - curve.ease(u)));
+          if (u < 1) raf = requestAnimationFrame(tick);
+          else {
+            set(0);
+            const k = cell.querySelector('.knob');
+            // The landing: the dial pressed in a hair and straight back (no
+            // bounce past the stop), and the ring lit brighter for an instant.
+            if (curve.thud) { k.classList.remove('thud'); void k.offsetWidth; k.classList.add('thud'); }
+            if (curve.flash) { k.classList.remove('flash'); void k.offsetWidth; k.classList.add('flash'); }
+          }
+        };
+        raf = requestAnimationFrame(tick);
+      }, 250);
+    };
+    cell.addEventListener('pointerenter', play);
+    cell.addEventListener('click', play);
+  }
+
+  // Stems: the same short Apple spring for every lane (in CSS as linear(),
+  // so it's a real spring), muting a touch quicker than it unmutes, as
+  // things leave faster than they arrive. What changes is the order the
+  // bars move in.
+  const toLinear = (ease, n = 48) => `linear(${Array.from({ length: n + 1 }, (_, i) => +ease(i / n).toFixed(4)).join(', ')})`;
+  // Round 3: no spring from rest (it starts slow, the lag in S7); a curve
+  // that leaves at speed and lands, in for unmute and a touch quicker out.
+  const IN = { ms: 300, ease: twoSpeed(2.2, 0.6) }, OUT = { ms: 240, ease: twoSpeed(2.4, 0.6) };
+  const N = 34;
+  const STEMS = [
+    ['S7', 'Round 2: left to right (for reference)', (i) => i * 7, apple(0.36, 1), apple(0.26, 1)],
+    ['S14', 'Left to right, leaves fast (S7 without the lag)', (i) => i * 7],
+    ['S15', 'Left to right on twos: each pair moves together', (i) => Math.floor(i / 2) * 14],
+    ['S16', 'Left to right, every second bar a beat behind', (i) => i * 6 + (i % 2) * 45],
+    ['S17', 'Left to right on threes', (i) => Math.floor(i / 3) * 21],
+    ['S18', 'Left to right, pairs, a quicker sweep', (i) => Math.floor(i / 2) * 9],
+  ];
+  const heights = Array.from({ length: N }, (_, i) => 0.35 + 0.6 * Math.abs(Math.sin(i * 1.7) * Math.cos(i * 0.6)));
+  const sh = document.getElementById('stems');
+  for (const [tag, note, delay, inC = IN, outC = OUT] of STEMS) {
+    const cell = document.createElement('div');
+    cell.className = 'cell';
+    cell.innerHTML = `<div class="tag"><b>${tag}</b><span>${note}</span></div><div class="lane">${heights.map((h, i) => `<b style="--h:${h.toFixed(2)};transition-delay:${Math.round(delay(i))}ms"></b>`).join('')}</div>`;
+    const lane = cell.querySelector('.lane');
+    const use = (c) => { lane.style.setProperty('--d', `${Math.round(c.ms)}ms`); lane.style.setProperty('--e', toLinear(c.ease)); };
+    sh.append(cell);
+    let t = 0;
+    const span = Math.max(...heights.map((_, i) => delay(i)));
+    const play = () => {
+      clearTimeout(t);
+      use(inC);
+      lane.removeAttribute('data-muted');
+      t = setTimeout(() => {
+        use(outC);
+        lane.setAttribute('data-muted', '');
+        t = setTimeout(() => { use(inC); lane.removeAttribute('data-muted'); }, outC.ms + span + 500);
+      }, 150);
+    };
+    cell.addEventListener('pointerenter', play);
+    cell.addEventListener('click', play);
+  }
+
+  // Apple's spring, as SwiftUI's .spring(duration:bounce:): duration is
+  // how long it takes (perceptually), bounce 0 for none, up to 1 for a lot
+  // (it goes past and comes back), below 0 for extra-damped (slower to
+  // arrive, no overshoot). Turned into physics the way SwiftUI does
+  // (stiffness (2π / duration)², damping from the bounce, both for a mass
+  // of 1). Then, as on CASpringAnimation: mass, the weight on that same
+  // spring (over 1 slower and bouncier than duration and bounce say,
+  // under 1 quicker and calmer), and initial velocity, how fast it's
+  // already moving as it starts, in whole travels per second (1 = going
+  // fast enough to cover the whole turn in a second).
+  // lock: the end stops it the instant it gets there (still moving, so it
+  // snaps into place), never letting it settle or pass.
+  // magnet: a pull toward the end that only starts within `range` of it
+  // (a fraction of the whole travel) and grows sharply the closer it gets,
+  // up to `strength` (in multiples of the spring's own pull at full
+  // stretch). A spring pulls hardest when it's far away and weakest at the
+  // end; the magnet is the other way round, so it grabs it at the end.
+  function appleSpring(duration, bounce, mass = 1, v0 = 0, lock = false, magnet = 0, range = 0.15) {
+    const k = ((2 * Math.PI) / duration) ** 2;
+    const c = bounce >= 0 ? ((1 - bounce) * 4 * Math.PI) / duration : (4 * Math.PI) / (duration * (1 + bounce));
+    let x = 0, v = v0, t = 0;
+    const dt = 1 / 1000, pts = [0];
+    while (t < 4) {
+      const d = 1 - x;
+      const pull = magnet > 0 && d > 0 && d < range ? magnet * k * (1 - d / range) ** 2 : 0;
+      v += ((-k * (x - 1) - c * v + pull) / mass) * dt; x += v * dt; t += dt;
+      if ((lock || magnet > 0) && x >= 0.998) break;
+      pts.push(x);
+      if (Math.abs(1 - x) < 0.001 && Math.abs(v) < 0.02 && t > 0.02) break;
+    }
+    pts.push(1);
+    const T = pts.length - 1;
+    return { ms: T, ease: (u) => { const f = u * T, i = Math.floor(f); return i >= T ? 1 : pts[i] + (pts[i + 1] - pts[i]) * (f - i); } };
+  }
+  const L = { dur: 0.3, bounce: 0, mass: 1, v0: 0, lock: true, magnet: 0, range: 0.15, sDur: 0.25, sBounce: 0, sMass: 1, sV0: 0, stagger: 'pairs', step: 14, lag: 3 };
+  window.__L = L;
+  const knobCurve = () => appleSpring(L.dur, L.bounce, L.mass, L.v0, L.lock, L.magnet, L.range);
+  const stemCurve = () => appleSpring(L.sDur, L.sBounce, L.sMass, L.sV0);
+  const T = window.tune;
+  if (T) {
+    T.slider({ label: 'Knob (Apple spring): duration', min: 0.1, max: 2, step: 0.01, value: L.dur, unit: 's', onInput: (v) => (L.dur = v) });
+    T.slider({ label: 'Knob (Apple spring): bounce', min: -0.5, max: 0.5, step: 0.01, value: L.bounce, onInput: (v) => (L.bounce = v) });
+    T.slider({ label: 'Knob (Apple spring): mass', min: 0.2, max: 3, step: 0.05, value: L.mass, onInput: (v) => (L.mass = v) });
+    T.select({ label: 'Knob (Apple spring): lock at kill', value: 'on', options: [['on', 'On: stops dead at the end (snaps)'], ['off', 'Off: settles onto it']], onInput: (v) => (L.lock = v === 'on') });
+    T.slider({ label: 'Knob (Apple spring): magnet strength', min: 0, max: 20, step: 0.1, value: L.magnet, onInput: (v) => (L.magnet = v) });
+    T.slider({ label: 'Knob (Apple spring): magnet range', min: 0.02, max: 0.5, step: 0.01, value: L.range, onInput: (v) => (L.range = v) });
+    T.slider({ label: 'Knob (Apple spring): initial velocity', min: 0, max: 10, step: 0.1, value: L.v0, onInput: (v) => (L.v0 = v) });
+    T.slider({ label: 'Stems (Apple spring): duration', min: 0.1, max: 2, step: 0.01, value: L.sDur, unit: 's', onInput: (v) => (L.sDur = v) });
+    T.slider({ label: 'Stems (Apple spring): bounce', min: -0.5, max: 0.5, step: 0.01, value: L.sBounce, onInput: (v) => (L.sBounce = v) });
+    T.slider({ label: 'Stems (Apple spring): mass', min: 0.2, max: 3, step: 0.05, value: L.sMass, onInput: (v) => (L.sMass = v) });
+    T.slider({ label: 'Stems (Apple spring): initial velocity', min: 0, max: 10, step: 0.1, value: L.sV0, onInput: (v) => (L.sV0 = v) });
+    T.select({ label: 'Stems (Apple spring): stagger', value: L.stagger, options: [['ltr', 'Left to right'], ['pairs', 'On twos (pairs)'], ['threes', 'On threes'], ['offset', 'Every second bar behind (even)'],
+      ['alternate', 'Every second bar behind, each by its own amount'], ['some', 'Some bars behind (about one in three)'], ['clumps', 'Uneven little groups'], ['wave', 'A wave: drifting behind and catching up'], ['beat', 'Downbeats first, the rest trailing'], ['none', 'All at once']], onInput: (v) => (L.stagger = v) });
+    T.slider({ label: 'Stems (Apple spring): lag', min: 0, max: 8, step: 0.1, value: L.lag, onInput: (v) => (L.lag = v) });
+    T.slider({ label: 'Stems (Apple spring): stagger step', min: 0, max: 30, step: 0.5, value: L.step, unit: 'ms', onInput: (v) => (L.step = v) });
+  }
+  // The live knob.
+  {
+    const cell = document.getElementById('live-knob');
+    const el = cell.querySelector('.knob');
+    const set = knob(el);
+    set(0.5);
+    let raf = 0, timer = 0;
+    const play = () => {
+      cancelAnimationFrame(raf); clearTimeout(timer); set(0.5);
+      const c = knobCurve();
+      timer = setTimeout(() => {
+        // Timed from the first frame it draws, on the frames' own clock
+        // (a timer's clock runs ahead of it, so the first steps jumped).
+        let t0 = null;
+        const tick = (now) => {
+          t0 ??= now;
+          const u = Math.min(1, (now - t0) / c.ms);
+          set(0.5 * (1 - c.ease(u)));
+          if (u < 1) { raf = requestAnimationFrame(tick); return; }
+          set(0);
+        };
+        raf = requestAnimationFrame(tick);
+      }, 250);
+    };
+    cell.addEventListener('pointerenter', play); cell.addEventListener('click', play);
+  }
+  // The live stem lane.
+  {
+    const cell = document.getElementById('live-stem');
+    const lane = cell.querySelector('.lane');
+    const hs = Array.from({ length: 34 }, (_, i) => 0.35 + 0.6 * Math.abs(Math.sin(i * 1.7) * Math.cos(i * 0.6)));
+    lane.innerHTML = hs.map((h) => `<b style="--h:${h.toFixed(2)}"></b>`).join('');
+    const bars = [...lane.children];
+    // Every pattern still sweeps left to right (i steps); the irregular
+    // ones push some bars a little behind, by amounts that vary bar to bar,
+    // scaled by "lag". rnd is a fixed scatter, the same every play.
+    const rnd = (i, k = 1) => { const v = Math.sin(i * 12.9898 * k + 78.233) * 43758.5453; return v - Math.floor(v); };
+    const behind = {
+      // The old one: every second bar the same amount behind.
+      offset: (i) => (i % 2) * 1,
+      // Every second bar behind, but each by its own amount.
+      alternate: (i) => (i % 2) * (0.4 + 1.2 * rnd(i)),
+      // Most bars on time; about one in three behind, by varying amounts.
+      some: (i) => (rnd(i, 2) < 0.35 ? 0.6 + 1.4 * rnd(i, 3) : 0),
+      // Little uneven groups (two to four bars) that move together.
+      clumps: (i) => { let g = 0, at = 0; while (at <= i) { at += 2 + Math.floor(rnd(g, 5) * 3); g++; } return (rnd(g, 7) * 2) - (i - (at - 1)) * 0.0; },
+      // A gentle wave through the line: bars drift behind and catch up.
+      wave: (i) => 0.9 + 0.9 * Math.sin(i * 0.9 + 1.3),
+      // Downbeats first: every fourth bar leads, the ones between trail by varying amounts.
+      beat: (i) => (i % 4 === 0 ? 0 : 0.5 + 1.3 * rnd(i, 4)),
+    };
+    const delay = (i) => {
+      if (L.stagger === 'none') return 0;
+      if (L.stagger === 'pairs') return Math.floor(i / 2) * L.step;
+      if (L.stagger === 'threes') return Math.floor(i / 3) * L.step;
+      const lag = behind[L.stagger] ? behind[L.stagger](i) * L.lag : 0;
+      return Math.max(0, (i + lag) * L.step);
+    };
+    let t = 0;
+    const play = () => {
+      clearTimeout(t);
+      const c = stemCurve();
+      const toLin = (e, n = 60) => `linear(${Array.from({ length: n + 1 }, (_, i) => +e(i / n).toFixed(4)).join(', ')})`;
+      lane.style.setProperty('--d', `${Math.round(c.ms)}ms`);
+      lane.style.setProperty('--e', toLin(c.ease));
+      bars.forEach((b, i) => (b.style.transitionDelay = `${Math.round(delay(i))}ms`));
+      lane.removeAttribute('data-muted');
+      const span = delay(bars.length - 1);
+      t = setTimeout(() => { lane.setAttribute('data-muted', ''); t = setTimeout(() => lane.removeAttribute('data-muted'), c.ms + span + 500); }, 150);
+    };
+    cell.addEventListener('pointerenter', play); cell.addEventListener('click', play);
+  }
+
+  // The sync slide, old against new: four pairs of decks, B sliding onto A.
+  {
+    const host = document.getElementById('sync-cmp');
+    const T = 14, N = 40, LATE = 2.4, FROM = 118;
+    const ticks = (cls) => `<div class="ticks ${cls}"><div class="run">${Array.from({ length: N }, (_, i) => `<i class="${i % 4 === 0 ? 'bar' : ''}" style="left:${i * T}px"></i>`).join('')}</div></div>`;
+    const sp = (d) => spring({ duration: d });
+    const rows = [
+      ['Old: cubic-bezier(0.77, 0, 0.175, 1), 0.75s', { ms: 750, ease: bez(0.77, 0, 0.175, 1) }, 0],
+      ['Now: spring from rest, 0.75', sp(0.75), 0],
+      ['Spring from rest, 0.45', sp(0.45), 0],
+      ['Pause 180ms, then spring 0.4', sp(0.4), 180],
+    ];
+    for (const [label, curve, pause] of rows) {
+      const row = document.createElement('div');
+      row.className = 'srow';
+      row.innerHTML = `<span>${label} · ${Math.round(pause + curve.ms)}ms</span><div>${ticks('a')}${ticks('b')}</div>`;
+      host.append(row);
+      row.run = row.querySelector('.ticks.b .run');
+      row.curve = curve; row.pause = pause;
+    }
+    const set = (row, u) => {
+      const k = row.curve.ease(u);
+      const off = T * LATE * (1 - k), sc = 129 / FROM + (1 - 129 / FROM) * k;
+      row.run.style.transform = `translateX(${off}px) scaleX(${sc})`;
+    };
+    const all = [...host.querySelectorAll('.srow')];
+    all.forEach((r) => set(r, 0));
+    let raf = 0, timer = 0;
+    const play = () => {
+      cancelAnimationFrame(raf); clearTimeout(timer);
+      all.forEach((r) => set(r, 0));
+      timer = setTimeout(() => {
+        let t0 = null;
+        const tick = (now) => {
+          t0 ??= now;
+          let busy = false;
+          for (const r of all) {
+            const t = now - t0 - r.pause;
+            const u = Math.max(0, Math.min(1, t / r.curve.ms));
+            set(r, u);
+            if (u < 1) busy = true;
+          }
+          if (busy) raf = requestAnimationFrame(tick);
+        };
+        raf = requestAnimationFrame(tick);
+      }, 300);
+    };
+    host.addEventListener('pointerenter', play);
+    host.addEventListener('click', play);
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,435 @@
+/* How the controller is drawn (.hw[data-skin], see Controller.jsx), apart
+   from how it's laid out (.hw[data-v], controller.css). Each skin repaints
+   the same parts in the same places, so the script, the mirror and the
+   links to the app find them all as before. They're drawn for the club
+   layout. `current` is controller.css as it stands; every other skin is
+   flat paint: solid fills, hard edges, hard offset shadows rather than
+   soft ones, no blur and no glow, so a key lighting or a meter moving
+   repaints only itself, cheaply. Where one uses a gradient it's a hard-
+   stopped pattern (a grid, a grain, halftone dots, strobe marks), never a
+   soft blend. Loaded after controller.css, so a rule here as specific as
+   the club rule it replaces wins. */
+
+/* ======================================================================
+   flat: a flat vector drawing. A sunflower-yellow body, ink-navy parts,
+   white platters, sky and pink for the decks; shading is a single hard
+   step, never a blend.
+   ====================================================================== */
+.hw[data-skin="flat"] {
+  --ink: #1f2940;
+  --paper: #fffaf0;
+  --deck-a: #62c8ff;
+  --deck-b: #ff7b98;
+  --cue: #ff8a3d;
+  --play: #3fd68a;
+  background: #ffc94a;
+  box-shadow: inset 0 0 0 3px var(--ink), inset 0 -10px 0 #f2b232;
+  color: var(--ink);
+  font-weight: 700;
+}
+.hw[data-skin="flat"]::after {
+  background: linear-gradient(0deg, var(--ink) 0 5px, #e09d22 5px);
+  box-shadow: 0 0 0 3px var(--ink);
+}
+.hw[data-skin="flat"] .hw-key {
+  color: var(--paper); background: var(--ink); border-radius: 7px;
+  box-shadow: 0 3px 0 #0f1526;
+}
+.hw[data-skin="flat"] .hw-key[data-lit] { color: var(--ink); background: var(--deck); box-shadow: 0 0 0 2px var(--ink), 0 3px 0 2px var(--ink); }
+.hw[data-skin="flat"] .hw-fx[data-lit] { background: var(--cue); }
+.hw[data-skin="flat"] .hw-round { color: var(--paper); background: var(--ink); box-shadow: 0 4px 0 #0f1526; }
+.hw[data-skin="flat"] .hw-cue[data-lit] { color: var(--ink); background: var(--cue); box-shadow: 0 0 0 3px var(--ink), 0 4px 0 3px var(--ink); }
+.hw[data-skin="flat"] .hw-play[data-lit] { color: var(--ink); background: var(--play); box-shadow: 0 0 0 3px var(--ink), 0 4px 0 3px var(--ink); }
+.hw[data-skin="flat"] [data-hw-pressed] { transform: translateY(3px); box-shadow: 0 0 0 2px var(--ink) !important; }
+/* The tempo faders: a navy slot on a printed scale, a white cap. */
+.hw[data-skin="flat"] .hw-pitch__slot, .hw[data-skin="flat"] .hw-chfader__slot, .hw[data-skin="flat"] .hw-xf__slot { background: var(--ink); box-shadow: none; }
+.hw[data-skin="flat"] .hw-pitch__slot::before {
+  background: repeating-linear-gradient(180deg, var(--ink) 0 2px, transparent 2px 10%) left / 6px 100% no-repeat, repeating-linear-gradient(180deg, var(--ink) 0 2px, transparent 2px 10%) right / 6px 100% no-repeat;
+}
+.hw[data-skin="flat"] .hw-pitch__mid { height: 2px; background: var(--ink); }
+.hw[data-skin="flat"] .hw-pitch__cap, .hw[data-skin="flat"] .hw-chfader__cap, .hw[data-skin="flat"] .hw-xf__cap {
+  background: var(--paper); box-shadow: 0 0 0 2.5px var(--ink), 0 4px 0 2.5px var(--ink);
+}
+.hw[data-skin="flat"] .hw-pitch__cap::after, .hw[data-skin="flat"] .hw-chfader__cap::after, .hw[data-skin="flat"] .hw-xf__cap::after { background: var(--ink); }
+/* The jog: a white ring round a navy platter, a white hub; a ring in the
+   deck's colour while it plays. */
+.hw[data-skin="flat"] .hw-jog { box-shadow: 0 0 0 3px var(--ink), 0 0 0 8px var(--glowring, #ffc94a), 0 0 0 11px var(--ink); transition: none; }
+.hw[data-skin="flat"] .hw-jog[data-playing] { --glowring: var(--deck); }
+.hw[data-skin="flat"] .hw-jog__ring { background: var(--paper); box-shadow: inset 0 -8px 0 #ece3cf; }
+.hw[data-skin="flat"] .hw-jog__platter { inset: 9%; background: var(--ink); box-shadow: inset 0 0 0 10px #2b3756; }
+.hw[data-skin="flat"] .hw-jog__mark { top: 3%; width: 8px; height: 13%; margin-left: -4px; border-radius: 4px; box-shadow: none; }
+.hw[data-skin="flat"] .hw-jog__hub { inset: 36%; background: var(--paper); box-shadow: 0 0 0 3px var(--ink), inset 0 -5px 0 #ece3cf; }
+/* Pads on a navy strip. */
+.hw[data-skin="flat"] .hw-perf { background: var(--ink); box-shadow: none; }
+.hw[data-skin="flat"] .hw-pad { color: rgb(255 250 240 / 0.6); background: #34405e; box-shadow: inset 0 -3px 0 #28324c; }
+.hw[data-skin="flat"] .hw-pad[data-lit] { color: var(--ink); background: var(--deck); box-shadow: inset 0 -3px 0 rgb(0 0 0 / 0.16); }
+/* The mixer: a navy panel; white knobs with a navy pointer. */
+.hw[data-skin="flat"] .hw-mixer { background: var(--ink); box-shadow: 0 0 0 3px var(--ink); color: var(--paper); }
+/* Knobs turn, so their edges are rings, not one-sided steps that would turn with them. */
+.hw[data-skin="flat"] .hw-mixer .hw-knob i, .hw[data-skin="flat"] .hw-browse { background: var(--paper); box-shadow: inset 0 0 0 3px #d9d0bb; }
+.hw[data-skin="flat"] .hw-mixer .hw-eq--low i { background: #ffc94a; box-shadow: inset 0 0 0 3px #e5a92c; }
+.hw[data-skin="flat"] .hw-mixer .hw-knob i::after, .hw[data-skin="flat"] .hw-browse i { width: 3px; margin-left: -1.5px; background: var(--ink); box-shadow: none; }
+.hw[data-skin="flat"] .hw-mixer .hw-chfader__slot, .hw[data-skin="flat"] .hw-mixer .hw-xf__slot { background: #0f1526; }
+.hw[data-skin="flat"] .hw-meter i { background: #34405e; }
+.hw[data-skin="flat"] .hw-meter i[data-level="hot"], .hw[data-skin="flat"] .hw-meter i[data-level="peak"] { background: #3f3f55; }
+.hw[data-skin="flat"] .hw-meter i[data-lit] { background: var(--play); box-shadow: none; }
+.hw[data-skin="flat"] .hw-meter i[data-lit][data-level="hot"] { background: #ffc94a; box-shadow: none; }
+.hw[data-skin="flat"] .hw-meter i[data-lit][data-level="peak"] { background: #ff5d5d; box-shadow: none; }
+
+/* ======================================================================
+   bauhaus: modernist geometry. An off-white board, black panels and
+   rules, the three primaries; a blue disc and a red disc for the jogs,
+   square pads in red, yellow, blue and black. Bold geometric caps.
+   ====================================================================== */
+.hw[data-skin="bauhaus"] {
+  --ink: #141414;
+  --paper: #eee8da;
+  --red: #d8301f;
+  --yellow: #f3c11a;
+  --blue: #1f4ec2;
+  --deck-a: var(--blue);
+  --deck-b: var(--red);
+  background:
+    /* a black rule along the back, and a yellow square on it */
+    linear-gradient(var(--yellow), var(--yellow)) calc(50% + 150px) 14px / 22px 14px no-repeat,
+    linear-gradient(var(--ink), var(--ink)) 22px 18px / calc(100% - 44px) 6px no-repeat,
+    var(--paper);
+  box-shadow: inset 0 0 0 3px var(--ink);
+  color: var(--ink);
+  font-family: 'Futura', 'Avenir Next', 'Century Gothic', 'Helvetica Neue', sans-serif;
+  font-weight: 700;
+}
+.hw[data-skin="bauhaus"]::after { background: linear-gradient(0deg, var(--ink) 0 4px, transparent 4px), var(--red); box-shadow: inset 0 0 0 3px var(--ink); }
+.hw[data-skin="bauhaus"] .hw-key { border-radius: 0; color: var(--paper); background: var(--ink); box-shadow: none; }
+.hw[data-skin="bauhaus"] .hw-key[data-lit] { color: #fff; background: var(--deck); box-shadow: 0 0 0 2px var(--ink); }
+.hw[data-skin="bauhaus"] .hw-fx[data-lit] { color: var(--ink); background: var(--yellow); }
+.hw[data-skin="bauhaus"] .hw-round { color: var(--ink); background: var(--paper); box-shadow: inset 0 0 0 3px var(--ink); }
+.hw[data-skin="bauhaus"] .hw-cue[data-lit] { color: var(--ink); background: var(--yellow); box-shadow: inset 0 0 0 3px var(--ink); }
+.hw[data-skin="bauhaus"] .hw-play[data-lit] { color: var(--paper); background: var(--ink); box-shadow: inset 0 0 0 3px var(--ink), 0 0 0 4px var(--yellow); }
+.hw[data-skin="bauhaus"] [data-hw-pressed] { transform: translateY(2px) scale(0.96); box-shadow: inset 0 0 0 3px var(--ink) !important; }
+.hw[data-skin="bauhaus"] .hw-pitch__slot, .hw[data-skin="bauhaus"] .hw-chfader__slot, .hw[data-skin="bauhaus"] .hw-xf__slot { border-radius: 0; background: var(--ink); box-shadow: none; }
+.hw[data-skin="bauhaus"] .hw-pitch__slot { width: 4px; }
+.hw[data-skin="bauhaus"] .hw-pitch__slot::before {
+  background: repeating-linear-gradient(180deg, var(--ink) 0 2px, transparent 2px 10%) left / 8px 100% no-repeat, repeating-linear-gradient(180deg, var(--ink) 0 2px, transparent 2px 10%) right / 4px 100% no-repeat;
+}
+.hw[data-skin="bauhaus"] .hw-pitch__mid { left: -14px; right: -14px; height: 3px; background: var(--red); }
+.hw[data-skin="bauhaus"] .hw-pitch__cap, .hw[data-skin="bauhaus"] .hw-chfader__cap, .hw[data-skin="bauhaus"] .hw-xf__cap { border-radius: 0; background: var(--ink); box-shadow: none; }
+.hw[data-skin="bauhaus"] .hw-pitch__cap::after, .hw[data-skin="bauhaus"] .hw-chfader__cap::after, .hw[data-skin="bauhaus"] .hw-xf__cap::after { border-radius: 0; background: var(--yellow); }
+/* The jogs: a primary disc in a black ring, an off-white quarter turning
+   with it, an off-white hub; a yellow ring round it while it plays. */
+.hw[data-skin="bauhaus"] .hw-jog { box-shadow: 0 0 0 6px var(--glowring, transparent); transition: none; }
+.hw[data-skin="bauhaus"] .hw-jog[data-playing] { --glowring: var(--yellow); }
+.hw[data-skin="bauhaus"] .hw-jog__ring { background: var(--ink); box-shadow: none; }
+.hw[data-skin="bauhaus"] .hw-jog__platter {
+  inset: 6%;
+  background: conic-gradient(var(--paper) 0 89.7deg, var(--deck) 90.3deg 359.7deg, var(--paper));
+  box-shadow: none;
+}
+.hw[data-skin="bauhaus"] .hw-jog__mark { top: 0; width: 6px; height: 50%; margin-left: -3px; border-radius: 0; background: var(--ink); box-shadow: none; }
+.hw[data-skin="bauhaus"] .hw-jog__hub { inset: 38%; background: var(--paper); box-shadow: 0 0 0 4px var(--ink); }
+/* Square pads: outlined, filled with a primary when lit. */
+.hw[data-skin="bauhaus"] .hw-perf { padding: 0; background: none; box-shadow: none; }
+.hw[data-skin="bauhaus"] .hw-pad { border-radius: 0; color: var(--ink); background: var(--paper); box-shadow: inset 0 0 0 2.5px var(--ink); }
+.hw[data-skin="bauhaus"] .hw-pad[data-lit] { color: var(--paper); box-shadow: inset 0 0 0 2.5px var(--ink); }
+.hw[data-skin="bauhaus"] .hw-pad[data-lit]:nth-child(1) { background: var(--red); }
+.hw[data-skin="bauhaus"] .hw-pad[data-lit]:nth-child(2) { background: var(--yellow); color: var(--ink); }
+.hw[data-skin="bauhaus"] .hw-pad[data-lit]:nth-child(3) { background: var(--blue); }
+.hw[data-skin="bauhaus"] .hw-pad[data-lit]:nth-child(4) { background: var(--ink); }
+/* The mixer: a black rectangle; off-white, yellow and red knobs. */
+.hw[data-skin="bauhaus"] .hw-mixer { border-radius: 0; background: var(--ink); box-shadow: none; color: var(--paper); }
+.hw[data-skin="bauhaus"] .hw-mixer .hw-knob i, .hw[data-skin="bauhaus"] .hw-browse { background: var(--paper); box-shadow: none; }
+.hw[data-skin="bauhaus"] .hw-mixer .hw-eq--mid i { background: var(--yellow); }
+.hw[data-skin="bauhaus"] .hw-mixer .hw-eq--low i, .hw[data-skin="bauhaus"] .hw-browse { background: var(--red); }
+.hw[data-skin="bauhaus"] .hw-mixer .hw-knob i::after, .hw[data-skin="bauhaus"] .hw-browse i { top: 0; width: 3px; height: 50%; margin-left: -1.5px; border-radius: 0; background: var(--ink); box-shadow: none; }
+.hw[data-skin="bauhaus"] .hw-mixer .hw-chfader__slot, .hw[data-skin="bauhaus"] .hw-mixer .hw-xf__slot { background: #444; }
+.hw[data-skin="bauhaus"] .hw-mixer .hw-chfader__cap, .hw[data-skin="bauhaus"] .hw-mixer .hw-xf__cap { background: var(--paper); }
+.hw[data-skin="bauhaus"] .hw-mixer .hw-chfader__cap::after, .hw[data-skin="bauhaus"] .hw-mixer .hw-xf__cap::after { background: var(--red); }
+.hw[data-skin="bauhaus"] .hw-meter i { border-radius: 0; background: #2c2c2c; }
+.hw[data-skin="bauhaus"] .hw-meter i[data-lit] { background: var(--paper); box-shadow: none; }
+.hw[data-skin="bauhaus"] .hw-meter i[data-lit][data-level="hot"] { background: var(--yellow); box-shadow: none; }
+.hw[data-skin="bauhaus"] .hw-meter i[data-lit][data-level="peak"] { background: var(--red); box-shadow: none; }
+
+/* ======================================================================
+   te: small-studio industrial design. A flat aluminium-grey slab, every
+   part a precise flat shape: chunky round knobs in blue, white and
+   orange, square grey keys, a black readout for the meters, and tiny
+   lowercase monospaced print.
+   ====================================================================== */
+.hw[data-skin="te"] {
+  --ink: #161616;
+  --slab: #d6d6d2;
+  --key: #ececea;
+  --orange: #ff5a1e;
+  --blue: #2a64d8;
+  --deck-a: var(--blue);
+  --deck-b: var(--orange);
+  --play: #2fbf63;
+  background: var(--slab);
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.28), inset 0 2px 0 rgb(255 255 255 / 0.6);
+  color: var(--ink);
+  font: 500 7.5px/1 'SF Mono', ui-monospace, 'Menlo', monospace;
+  letter-spacing: 0.02em;
+  text-transform: lowercase;
+}
+.hw[data-skin="te"]::after { background: linear-gradient(0deg, #2a2a2a 0 3px, #a9aaa6 3px); box-shadow: none; }
+.hw[data-skin="te"] .hw-key { height: 26px; border-radius: 3px; color: var(--ink); background: var(--key); box-shadow: 0 0 0 1px rgb(0 0 0 / 0.35), 0 2px 0 1px #9d9e9a; font-weight: 500; font-size: 8px; }
+.hw[data-skin="te"] .hw-key[data-lit] { color: #fff; background: var(--deck); box-shadow: 0 0 0 1px rgb(0 0 0 / 0.35), 0 2px 0 1px #9d9e9a; }
+.hw[data-skin="te"] .hw-fx[data-lit] { background: var(--orange); }
+.hw[data-skin="te"] .hw-round { color: var(--ink); background: var(--key); box-shadow: 0 0 0 1px rgb(0 0 0 / 0.35), 0 3px 0 1px #9d9e9a; }
+.hw[data-skin="te"] .hw-cue span { font-size: 8.5px; font-weight: 500; }
+.hw[data-skin="te"] .hw-cue[data-lit] { color: #fff; background: var(--orange); box-shadow: 0 0 0 1px rgb(0 0 0 / 0.35), 0 3px 0 1px #9d9e9a; }
+.hw[data-skin="te"] .hw-play[data-lit] { color: #fff; background: var(--ink); box-shadow: 0 0 0 1px rgb(0 0 0 / 0.35), 0 3px 0 1px #9d9e9a; }
+.hw[data-skin="te"] .hw-play[data-lit] svg { fill: var(--play); }
+.hw[data-skin="te"] [data-hw-pressed] { transform: translateY(2px); box-shadow: 0 0 0 1px rgb(0 0 0 / 0.35) !important; }
+/* Faders: hairline slots and fine ticks, black caps with an orange line. */
+.hw[data-skin="te"] .hw-pitch__slot, .hw[data-skin="te"] .hw-chfader__slot, .hw[data-skin="te"] .hw-xf__slot { border-radius: 2px; background: var(--ink); box-shadow: none; }
+.hw[data-skin="te"] .hw-pitch__slot { width: 4px; }
+.hw[data-skin="te"] .hw-pitch__slot::before {
+  background: repeating-linear-gradient(180deg, var(--ink) 0 1px, transparent 1px 5%) left / 5px 100% no-repeat, repeating-linear-gradient(180deg, var(--ink) 0 1px, transparent 1px 10%) right / 8px 100% no-repeat;
+}
+.hw[data-skin="te"] .hw-pitch__mid { background: var(--orange); height: 2px; }
+.hw[data-skin="te"] .hw-pitch__cap, .hw[data-skin="te"] .hw-chfader__cap, .hw[data-skin="te"] .hw-xf__cap { border-radius: 3px; background: var(--ink); box-shadow: 0 2px 0 #8c8d89; }
+.hw[data-skin="te"] .hw-pitch__cap::after, .hw[data-skin="te"] .hw-chfader__cap::after, .hw[data-skin="te"] .hw-xf__cap::after { background: var(--orange); }
+/* The jog: a black rubber ring, a flat grey platter with an orange dot,
+   a black spindle; the deck's colour round it while it plays. */
+.hw[data-skin="te"] .hw-jog { box-shadow: 0 0 0 4px var(--glowring, rgb(0 0 0 / 0.12)); transition: none; }
+.hw[data-skin="te"] .hw-jog[data-playing] { --glowring: var(--deck); }
+.hw[data-skin="te"] .hw-jog__ring { background: var(--ink); box-shadow: none; }
+.hw[data-skin="te"] .hw-jog__platter {
+  inset: 8%; box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.3);
+  /* twelve index marks round the edge, turning with it */
+  background: radial-gradient(circle closest-side, var(--key) 0 84%, transparent 84.5%), repeating-conic-gradient(#8e8f8b 0 1.4deg, var(--key) 1.4deg 30deg); }
+.hw[data-skin="te"] .hw-jog__mark { top: 6%; width: 10px; height: 10px; margin-left: -5px; border-radius: 50%; background: var(--orange); box-shadow: none; }
+.hw[data-skin="te"] .hw-jog__hub { inset: 44%; background: var(--ink); box-shadow: 0 0 0 5px var(--slab), 0 0 0 6px rgb(0 0 0 / 0.3); }
+.hw[data-skin="te"] .hw-perf { padding: 0; background: none; box-shadow: none; }
+.hw[data-skin="te"] .hw-pad { border-radius: 3px; color: var(--ink); background: #c4c4c0; box-shadow: 0 0 0 1px rgb(0 0 0 / 0.3); font-weight: 500; }
+/* Lit, a pad turns key-white and its little lamp shows the deck's colour. */
+.hw[data-skin="te"] .hw-pad[data-lit] { color: var(--ink); background: var(--key); box-shadow: 0 0 0 1px rgb(0 0 0 / 0.3); }
+.hw[data-skin="te"] .hw-pad::after { content: ''; position: absolute; right: 5px; top: 5px; width: 6px; height: 6px; border-radius: 50%; background: #9d9e9a; }
+.hw[data-skin="te"] .hw-pad[data-lit]::after { background: var(--deck); }
+/* The mixer: the same slab, ruled off by hairlines; chunky knobs. */
+.hw[data-skin="te"] .hw-mixer { border-radius: 4px; background: #cfcfcb; box-shadow: 0 0 0 1px rgb(0 0 0 / 0.3); color: var(--ink); }
+.hw[data-skin="te"] .hw-mixer .hw-knob { font-weight: 500; }
+.hw[data-skin="te"] .hw-mixer .hw-knob i, .hw[data-skin="te"] .hw-browse { background: var(--key); box-shadow: 0 0 0 1px rgb(0 0 0 / 0.35), 0 0 0 3px rgb(0 0 0 / 0.1); }
+.hw[data-skin="te"] .hw-mixer .hw-eq--high i { background: var(--blue); }
+.hw[data-skin="te"] .hw-mixer .hw-eq--low i { background: var(--orange); }
+.hw[data-skin="te"] .hw-browse { background: var(--ink); }
+.hw[data-skin="te"] .hw-mixer .hw-knob i::after, .hw[data-skin="te"] .hw-browse i { top: 3px; width: 3px; height: 26%; margin-left: -1.5px; border-radius: 2px; background: #fff; box-shadow: none; }
+.hw[data-skin="te"] .hw-mixer .hw-eq--mid i::after { background: var(--ink); }
+.hw[data-skin="te"] .hw-meters { padding: 4px; border-radius: 2px; background: #0d0d0d; }
+.hw[data-skin="te"] .hw-meter i { border-radius: 0; background: #262626; }
+.hw[data-skin="te"] .hw-meter i[data-lit] { background: #f2f2ee; box-shadow: none; }
+.hw[data-skin="te"] .hw-meter i[data-lit][data-level="hot"] { background: var(--orange); box-shadow: none; }
+.hw[data-skin="te"] .hw-meter i[data-lit][data-level="peak"] { background: #ff2a1a; box-shadow: none; }
+
+/* ======================================================================
+   blueprint: a technical drawing. Drafting blue with a faint grid, every
+   part drawn in white line, nothing filled until it's lit; the platters
+   carry crosshairs (so their turning shows) and the front face is
+   section-hatched.
+   ====================================================================== */
+.hw[data-skin="blueprint"] {
+  --line: #eaf2ff;
+  --faint: rgb(234 242 255 / 0.45);
+  --bp: #1d55c4;
+  --deck-a: var(--line);
+  --deck-b: var(--line);
+  --amber: #ffd04d;
+  background:
+    repeating-linear-gradient(0deg, rgb(234 242 255 / 0.09) 0 1px, transparent 1px 16px),
+    repeating-linear-gradient(90deg, rgb(234 242 255 / 0.09) 0 1px, transparent 1px 16px),
+    var(--bp);
+  box-shadow: inset 0 0 0 2px var(--line);
+  outline: 1px dashed var(--faint);
+  outline-offset: -9px;
+  color: var(--line);
+  font-family: 'DIN Condensed', 'Avenir Next Condensed', 'Arial Narrow', sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+}
+.hw[data-skin="blueprint"]::after {
+  background: repeating-linear-gradient(45deg, var(--faint) 0 1px, transparent 1px 7px), #184aac;
+  box-shadow: inset 0 0 0 2px var(--line);
+}
+.hw[data-skin="blueprint"] .hw-key { color: var(--line); background: transparent; box-shadow: inset 0 0 0 1.5px var(--line); }
+.hw[data-skin="blueprint"] .hw-key[data-lit] { color: var(--bp); background: var(--line); box-shadow: inset 0 0 0 1.5px var(--line); }
+.hw[data-skin="blueprint"] .hw-fx[data-lit] { background: var(--amber); }
+.hw[data-skin="blueprint"] .hw-round { color: var(--line); background: transparent; box-shadow: inset 0 0 0 1.5px var(--line), 0 0 0 4px var(--bp), 0 0 0 5px var(--faint); }
+.hw[data-skin="blueprint"] .hw-cue[data-lit] { color: var(--bp); background: var(--amber); box-shadow: inset 0 0 0 1.5px var(--line), 0 0 0 4px var(--bp), 0 0 0 5px var(--line); }
+.hw[data-skin="blueprint"] .hw-play[data-lit] { color: var(--bp); background: var(--line); box-shadow: inset 0 0 0 1.5px var(--line), 0 0 0 4px var(--bp), 0 0 0 5px var(--line); }
+.hw[data-skin="blueprint"] [data-hw-pressed] { transform: translateY(2px); box-shadow: inset 0 0 0 3px var(--line) !important; }
+/* Faders: a slot drawn as its two edges, a dimensioned scale, an
+   outlined cap with a centre line. */
+.hw[data-skin="blueprint"] .hw-pitch__slot, .hw[data-skin="blueprint"] .hw-chfader__slot, .hw[data-skin="blueprint"] .hw-xf__slot { border-radius: 0; background: transparent; box-shadow: inset 0 0 0 1px var(--line); }
+.hw[data-skin="blueprint"] .hw-pitch__slot::before {
+  background: repeating-linear-gradient(180deg, var(--line) 0 1px, transparent 1px 10%) left / 6px 100% no-repeat, repeating-linear-gradient(180deg, var(--faint) 0 1px, transparent 1px 5%) right / 5px 100% no-repeat;
+}
+.hw[data-skin="blueprint"] .hw-pitch__mid { left: -16px; right: -16px; background: repeating-linear-gradient(90deg, var(--line) 0 3px, transparent 3px 5px); }
+.hw[data-skin="blueprint"] .hw-pitch__cap, .hw[data-skin="blueprint"] .hw-chfader__cap, .hw[data-skin="blueprint"] .hw-xf__cap { border-radius: 2px; background: var(--bp); box-shadow: inset 0 0 0 1.5px var(--line); }
+.hw[data-skin="blueprint"] .hw-pitch__cap::after, .hw[data-skin="blueprint"] .hw-chfader__cap::after, .hw[data-skin="blueprint"] .hw-xf__cap::after { height: 1px; background: var(--line); }
+/* The jog: concentric circles, a dashed one for the platter's edge,
+   crosshairs that turn with it; while it plays its outer circle doubles. */
+.hw[data-skin="blueprint"] .hw-jog { box-shadow: 0 0 0 6px var(--bp), 0 0 0 7px var(--glowring, var(--faint)); transition: none; }
+.hw[data-skin="blueprint"] .hw-jog[data-playing] { --glowring: var(--line); box-shadow: 0 0 0 6px var(--bp), 0 0 0 7.5px var(--line), 0 0 0 10px var(--bp), 0 0 0 11px var(--line); }
+.hw[data-skin="blueprint"] .hw-jog__ring { background: var(--bp); box-shadow: inset 0 0 0 1.5px var(--line); }
+.hw[data-skin="blueprint"] .hw-jog__platter {
+  inset: 8%;
+  background:
+    linear-gradient(90deg, transparent calc(50% - 0.5px), var(--faint) calc(50% - 0.5px) calc(50% + 0.5px), transparent calc(50% + 0.5px)),
+    linear-gradient(0deg, transparent calc(50% - 0.5px), var(--faint) calc(50% - 0.5px) calc(50% + 0.5px), transparent calc(50% + 0.5px));
+  border: 1px dashed var(--line);
+  box-sizing: border-box;
+  box-shadow: none;
+}
+.hw[data-skin="blueprint"] .hw-jog__mark { top: 3%; width: 6px; height: 11%; margin-left: -3px; border-radius: 0; background: var(--line); box-shadow: none; }
+.hw[data-skin="blueprint"] .hw-jog__hub { inset: 40%; background: var(--bp); box-shadow: inset 0 0 0 1.5px var(--line), inset 0 0 0 6px var(--bp), inset 0 0 0 7px var(--faint); }
+.hw[data-skin="blueprint"] .hw-perf { background: transparent; box-shadow: inset 0 0 0 1px var(--faint); border-radius: 4px; }
+.hw[data-skin="blueprint"] .hw-pad { border-radius: 2px; color: var(--line); background: transparent; box-shadow: inset 0 0 0 1.5px var(--line); }
+.hw[data-skin="blueprint"] .hw-pad[data-lit] { color: var(--bp); background: var(--line); box-shadow: inset 0 0 0 1.5px var(--line); }
+/* The mixer: an outlined panel; knobs as circles with a centre mark. */
+.hw[data-skin="blueprint"] .hw-mixer { border-radius: 4px; background: transparent; box-shadow: inset 0 0 0 1.5px var(--line); color: var(--line); }
+.hw[data-skin="blueprint"] .hw-mixer .hw-knob i, .hw[data-skin="blueprint"] .hw-browse {
+  background: radial-gradient(circle, var(--line) 0 1.5px, transparent 2px), var(--bp);
+  box-shadow: inset 0 0 0 1.5px var(--line), 0 0 0 3px var(--bp), 0 0 0 4px var(--faint);
+}
+.hw[data-skin="blueprint"] .hw-mixer .hw-knob i::after, .hw[data-skin="blueprint"] .hw-browse i { top: 0; width: 2px; height: 40%; margin-left: -1px; border-radius: 0; background: var(--line); box-shadow: none; }
+.hw[data-skin="blueprint"] .hw-meter { gap: 2px; }
+.hw[data-skin="blueprint"] .hw-meter i { border-radius: 0; background: transparent; box-shadow: inset 0 0 0 1px var(--faint); }
+.hw[data-skin="blueprint"] .hw-meter i[data-lit] { background: var(--line); box-shadow: none; }
+.hw[data-skin="blueprint"] .hw-meter i[data-lit][data-level="hot"] { background: var(--amber); box-shadow: none; }
+.hw[data-skin="blueprint"] .hw-meter i[data-lit][data-level="peak"] { background: #ff8a7a; box-shadow: none; }
+
+/* ======================================================================
+   riso: a two-ink risograph print. Cream paper; everything printed in
+   blue or fluoro pink, the pink plate a touch off register (a hard offset
+   copy behind each blue shape); halftone dots for the tints.
+   ====================================================================== */
+.hw[data-skin="riso"] {
+  --paper: #f4eee2;
+  --blue: #2a5bd7;
+  --pink: #ff4fa8;
+  --deck-a: var(--pink);
+  --deck-b: var(--pink);
+  --dots-pink: radial-gradient(circle, var(--pink) 0 1.1px, transparent 1.5px) 0 0 / 5px 5px;
+  --dots-blue: radial-gradient(circle, var(--blue) 0 1px, transparent 1.4px) 0 0 / 4px 4px;
+  background: var(--paper);
+  box-shadow: inset 0 0 0 2.5px var(--blue);
+  color: var(--blue);
+  font-family: 'Arial Rounded MT Bold', 'Avenir Next', 'Helvetica Neue', sans-serif;
+  font-weight: 700;
+}
+.hw[data-skin="riso"]::after { background: var(--dots-blue), var(--pink); background-size: 4px 4px, auto; box-shadow: inset 0 0 0 2.5px var(--blue); }
+.hw[data-skin="riso"] .hw-key { color: var(--paper); background: var(--blue); box-shadow: 2px 2px 0 var(--pink); border-radius: 8px; }
+.hw[data-skin="riso"] .hw-key[data-lit] { color: var(--paper); background: var(--pink); box-shadow: 2px 2px 0 var(--blue); }
+.hw[data-skin="riso"] .hw-round { color: var(--paper); background: var(--blue); box-shadow: 3px 2px 0 var(--pink); }
+.hw[data-skin="riso"] .hw-cue[data-lit], .hw[data-skin="riso"] .hw-play[data-lit] { color: var(--blue); background: var(--pink); box-shadow: 3px 2px 0 var(--blue); }
+.hw[data-skin="riso"] [data-hw-pressed] { transform: translate(2px, 2px); box-shadow: 0 0 0 transparent !important; }
+.hw[data-skin="riso"] .hw-pitch__slot, .hw[data-skin="riso"] .hw-chfader__slot, .hw[data-skin="riso"] .hw-xf__slot { background: var(--blue); box-shadow: 2px 1px 0 var(--pink); }
+.hw[data-skin="riso"] .hw-pitch__slot::before {
+  background: repeating-linear-gradient(180deg, var(--pink) 0 2px, transparent 2px 10%) left / 6px 100% no-repeat, repeating-linear-gradient(180deg, var(--pink) 0 2px, transparent 2px 10%) right / 6px 100% no-repeat;
+}
+.hw[data-skin="riso"] .hw-pitch__mid { height: 2px; background: var(--blue); }
+.hw[data-skin="riso"] .hw-pitch__cap, .hw[data-skin="riso"] .hw-chfader__cap, .hw[data-skin="riso"] .hw-xf__cap { background: var(--pink); box-shadow: inset 0 0 0 2px var(--blue), 2px 2px 0 var(--blue); }
+.hw[data-skin="riso"] .hw-pitch__cap::after, .hw[data-skin="riso"] .hw-chfader__cap::after, .hw[data-skin="riso"] .hw-xf__cap::after { background: var(--blue); }
+/* The jog: a pink halftone ring, a blue platter, a paper mark; while it
+   plays a solid pink ring prints round it. */
+.hw[data-skin="riso"] .hw-jog { box-shadow: 0 0 0 5px var(--paper), 0 0 0 8px var(--glowring, transparent); transition: none; }
+.hw[data-skin="riso"] .hw-jog[data-playing] { --glowring: var(--pink); }
+/* The pink plate's copy of the platter is printed on the ring, which
+   stays still, so it doesn't turn with the platter. */
+.hw[data-skin="riso"] .hw-jog__ring {
+  background: radial-gradient(38% 38% at calc(50% + 4px) calc(50% + 3px), var(--pink) 0 99%, transparent 100%), var(--dots-pink), var(--paper);
+  box-shadow: inset 0 0 0 2.5px var(--blue);
+}
+.hw[data-skin="riso"] .hw-jog__platter { inset: 12%; background: var(--blue); box-shadow: none; }
+.hw[data-skin="riso"] .hw-jog__mark { top: 6%; width: 7px; height: 14%; margin-left: -3.5px; border-radius: 4px; background: var(--paper); box-shadow: none; }
+.hw[data-skin="riso"] .hw-jog__hub { inset: 40%; background: var(--pink); box-shadow: inset 0 0 0 2.5px var(--paper); }
+.hw[data-skin="riso"] .hw-perf { background: var(--dots-blue); background-color: transparent; box-shadow: none; }
+.hw[data-skin="riso"] .hw-pad { color: var(--blue); background: var(--paper); box-shadow: inset 0 0 0 2px var(--blue); }
+.hw[data-skin="riso"] .hw-pad[data-lit] { color: var(--paper); background: var(--pink); box-shadow: inset 0 0 0 2px var(--blue), 2px 2px 0 var(--blue); }
+/* The mixer: a solid blue block, paper knobs, pink pointers. */
+.hw[data-skin="riso"] .hw-mixer { background: var(--blue); box-shadow: 4px 3px 0 var(--pink); color: var(--paper); }
+.hw[data-skin="riso"] .hw-mixer .hw-knob i, .hw[data-skin="riso"] .hw-browse { background: var(--paper); box-shadow: 0 0 0 2px var(--pink); }
+.hw[data-skin="riso"] .hw-mixer .hw-eq--low i, .hw[data-skin="riso"] .hw-browse { background: var(--dots-blue), var(--paper); background-size: 4px 4px, auto; }
+.hw[data-skin="riso"] .hw-mixer .hw-knob i::after, .hw[data-skin="riso"] .hw-browse i { top: 2px; width: 3px; height: 40%; margin-left: -1.5px; background: var(--pink); box-shadow: none; }
+.hw[data-skin="riso"] .hw-mixer .hw-chfader__slot, .hw[data-skin="riso"] .hw-mixer .hw-xf__slot { background: var(--paper); box-shadow: none; }
+.hw[data-skin="riso"] .hw-mixer .hw-chfader__cap, .hw[data-skin="riso"] .hw-mixer .hw-xf__cap { box-shadow: inset 0 0 0 2px var(--paper); }
+.hw[data-skin="riso"] .hw-mixer .hw-chfader__cap::after, .hw[data-skin="riso"] .hw-mixer .hw-xf__cap::after { background: var(--paper); }
+.hw[data-skin="riso"] .hw-meter i { background: rgb(244 238 226 / 0.22); }
+.hw[data-skin="riso"] .hw-meter i[data-lit], .hw[data-skin="riso"] .hw-meter i[data-lit][data-level="hot"] { background: var(--paper); box-shadow: none; }
+.hw[data-skin="riso"] .hw-meter i[data-lit][data-level="peak"] { background: var(--pink); box-shadow: none; }
+
+/* ======================================================================
+   hifi: a 70s hi-fi. A walnut case; the decks are satin silver plates
+   set into it, the mixer a black fascia with amber-lit meters; knobs
+   with silver tops and black skirts, cream keys, amber lamps.
+   ====================================================================== */
+.hw[data-skin="hifi"] {
+  --walnut: #6a3b20;
+  --grain:
+    repeating-linear-gradient(1deg, rgb(40 18 6 / 0.32) 0 1px, transparent 1px 7px),
+    repeating-linear-gradient(-0.6deg, rgb(40 18 6 / 0.26) 0 2px, transparent 2px 19px),
+    repeating-linear-gradient(0.4deg, rgb(255 210 160 / 0.09) 0 3px, transparent 3px 31px);
+  --silver: #d7d4cc;
+  --edge: #8f8b82;
+  --black: #1b1815;
+  --cream: #efe8d6;
+  --amber: #ffad1f;
+  --deck-a: var(--amber);
+  --deck-b: var(--amber);
+  --play: #7fe08a;
+  background: var(--grain), var(--walnut);
+  box-shadow: inset 0 0 0 2px #3c1f0e, inset 0 2px 0 3px rgb(255 214 170 / 0.18);
+  color: #2a2620;
+  font-family: 'Avenir Next', 'Futura', 'Helvetica Neue', sans-serif;
+  font-weight: 600;
+}
+.hw[data-skin="hifi"]::after { background: linear-gradient(0deg, #1f0f06 0 4px, transparent 4px), var(--grain), #522c16; box-shadow: none; }
+/* The silver plates the decks sit on: the plate is the deck's own box,
+   carried out past its edges by a solid spread, with a dark seam. */
+.hw[data-skin="hifi"] .hw-deck { border-radius: 4px; background: var(--silver); box-shadow: 0 0 0 10px var(--silver), 0 0 0 11px var(--edge), 0 0 0 12.5px #2c1709; }
+.hw[data-skin="hifi"] .hw-key { border-radius: 2px; color: #2a2620; background: var(--cream); box-shadow: 0 0 0 1px #6f6a60, 0 3px 0 1px #6f6a60; }
+.hw[data-skin="hifi"] .hw-key[data-lit] { color: #2a1a00; background: var(--amber); box-shadow: 0 0 0 1px #7a5208, 0 3px 0 1px #7a5208; }
+.hw[data-skin="hifi"] .hw-round { color: var(--cream); background: var(--black); box-shadow: 0 0 0 3px var(--silver), 0 0 0 4px var(--edge); }
+.hw[data-skin="hifi"] .hw-cue[data-lit] { color: #2a1a00; background: var(--amber); box-shadow: 0 0 0 3px var(--silver), 0 0 0 4px var(--edge); }
+.hw[data-skin="hifi"] .hw-play[data-lit] { color: #0e2a12; background: var(--play); box-shadow: 0 0 0 3px var(--silver), 0 0 0 4px var(--edge); }
+.hw[data-skin="hifi"] [data-hw-pressed] { transform: translateY(2px); box-shadow: 0 0 0 1px #6f6a60 !important; }
+.hw[data-skin="hifi"] .hw-round[data-hw-pressed] { box-shadow: 0 0 0 3px var(--silver), 0 0 0 4px var(--edge) !important; }
+/* Faders: black slots, a printed scale, black caps with a cream line. */
+.hw[data-skin="hifi"] .hw-pitch__slot, .hw[data-skin="hifi"] .hw-chfader__slot, .hw[data-skin="hifi"] .hw-xf__slot { border-radius: 1px; background: var(--black); box-shadow: 0 0 0 1px #fff7 ; }
+.hw[data-skin="hifi"] .hw-pitch__slot::before {
+  background: repeating-linear-gradient(180deg, #2a2620 0 1px, transparent 1px 10%) left / 6px 100% no-repeat, repeating-linear-gradient(180deg, #2a2620 0 1px, transparent 1px 10%) right / 6px 100% no-repeat;
+}
+.hw[data-skin="hifi"] .hw-pitch__mid { background: #2a2620; }
+.hw[data-skin="hifi"] .hw-pitch__cap, .hw[data-skin="hifi"] .hw-chfader__cap, .hw[data-skin="hifi"] .hw-xf__cap { border-radius: 2px; background: var(--black); box-shadow: 0 3px 0 #000a; }
+.hw[data-skin="hifi"] .hw-pitch__cap::after, .hw[data-skin="hifi"] .hw-chfader__cap::after, .hw[data-skin="hifi"] .hw-xf__cap::after { background: var(--cream); }
+/* The jog: a turntable. A silver rim printed with strobe marks, a black
+   rubber mat, an amber mark, a silver spindle; while it plays the strobe
+   rim is lit amber. */
+.hw[data-skin="hifi"] .hw-jog { box-shadow: 0 0 0 2px var(--edge); transition: none; }
+.hw[data-skin="hifi"] .hw-jog__ring { background: repeating-conic-gradient(#3a352e 0 2deg, var(--silver) 2deg 6deg); box-shadow: inset 0 0 0 1px var(--edge); }
+.hw[data-skin="hifi"] .hw-jog[data-playing] .hw-jog__ring { background: repeating-conic-gradient(#3a352e 0 2deg, #f6c66a 2deg 6deg); }
+.hw[data-skin="hifi"] .hw-jog__platter {
+  inset: 7%;
+  background: repeating-radial-gradient(circle, #26221e 0 2px, var(--black) 2px 5px);
+  box-shadow: 0 0 0 1.5px #000;
+}
+.hw[data-skin="hifi"] .hw-jog__mark { top: 4%; width: 5px; height: 12%; margin-left: -2.5px; border-radius: 1px; background: var(--amber); box-shadow: none; }
+.hw[data-skin="hifi"] .hw-jog__hub { inset: 43%; background: var(--silver); box-shadow: 0 0 0 1px #000, 0 0 0 7px var(--black), 0 0 0 8px #3a352e; }
+.hw[data-skin="hifi"] .hw-perf { border-radius: 3px; background: var(--black); box-shadow: 0 0 0 1px var(--edge); }
+.hw[data-skin="hifi"] .hw-pad { border-radius: 2px; color: rgb(239 232 214 / 0.55); background: #2e2924; box-shadow: none; }
+.hw[data-skin="hifi"] .hw-pad[data-lit] { color: #2a1a00; background: var(--amber); box-shadow: none; }
+/* The mixer: a black fascia, silver-topped knobs with black skirts. */
+.hw[data-skin="hifi"] .hw-mixer { border-radius: 4px; background: var(--black); box-shadow: 0 0 0 1px #000, 0 0 0 4px var(--silver), 0 0 0 5px var(--edge), 0 0 0 6.5px #2c1709; color: var(--cream); }
+.hw[data-skin="hifi"] .hw-mixer .hw-knob i, .hw[data-skin="hifi"] .hw-browse {
+  background: radial-gradient(circle closest-side, var(--silver) 0 66%, #000 68% 72%, transparent 74%), repeating-conic-gradient(#3b3631 0 8deg, #26221e 8deg 16deg);
+  box-shadow: 0 0 0 1px #000;
+}
+.hw[data-skin="hifi"] .hw-mixer .hw-knob i::after, .hw[data-skin="hifi"] .hw-browse i { top: 26%; width: 2px; height: 22%; margin-left: -1px; border-radius: 0; background: var(--black); box-shadow: none; }
+.hw[data-skin="hifi"] .hw-mixer .hw-chfader__slot, .hw[data-skin="hifi"] .hw-mixer .hw-xf__slot { background: #000; box-shadow: 0 0 0 1px #4a443c; }
+.hw[data-skin="hifi"] .hw-mixer .hw-chfader__cap, .hw[data-skin="hifi"] .hw-mixer .hw-xf__cap { background: var(--silver); box-shadow: 0 2px 0 #000; }
+.hw[data-skin="hifi"] .hw-mixer .hw-chfader__cap::after, .hw[data-skin="hifi"] .hw-mixer .hw-xf__cap::after { background: var(--black); }
+.hw[data-skin="hifi"] .hw-meter i { border-radius: 0; background: #3a2a12; }
+.hw[data-skin="hifi"] .hw-meter i[data-lit] { background: var(--amber); box-shadow: none; }
+.hw[data-skin="hifi"] .hw-meter i[data-lit][data-level="hot"] { background: #ff7a1a; box-shadow: none; }
+.hw[data-skin="hifi"] .hw-meter i[data-lit][data-level="peak"] { background: #ff3d2e; box-shadow: none; }
