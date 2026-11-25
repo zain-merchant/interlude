@@ -20,7 +20,8 @@ pub mod model;
 pub mod quick;
 pub mod split;
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Condvar, Mutex, MutexGuard};
 
 use dj_engine::{Stems, Track, NUM_DECKS};
@@ -185,9 +186,18 @@ struct State {
     shutdown: bool,
 }
 
+/// Whether any deck is playing.
+pub type Playing = Box<dyn Fn() -> bool + Send + Sync>;
+
 struct Shared {
     state: Mutex<State>,
     wake: Condvar,
+    /// `None` counts as playing.
+    playing: Mutex<Option<Playing>>,
+    /// Whether there are cores to spare for a first region.
+    many_cores: AtomicBool,
+    /// Times the model was loaded to run on more threads.
+    wide_loads: AtomicUsize,
 }
 
 /// Splits tracks into stems on a background thread.
@@ -209,6 +219,9 @@ impl Splitter {
                 ..Default::default()
             }),
             wake: Condvar::new(),
+            playing: Mutex::new(None),
+            many_cores: AtomicBool::new(model::many_cores()),
+            wide_loads: AtomicUsize::new(0),
         });
         let heads = Arc::new(heads);
         let worker = {
@@ -227,6 +240,28 @@ impl Splitter {
 
     fn lock(&self) -> MutexGuard<'_, State> {
         lock(&self.shared)
+    }
+
+    /// Tells the splitter how to find out whether a deck is playing. Until
+    /// it knows, it takes it that one is.
+    pub fn set_playing(&self, playing: Playing) {
+        *self
+            .shared
+            .playing
+            .lock()
+            .unwrap_or_else(|e| e.into_inner()) = Some(playing);
+    }
+
+    /// For tests: whether there are cores to spare.
+    #[doc(hidden)]
+    pub fn set_many_cores(&self, many: bool) {
+        self.shared.many_cores.store(many, Ordering::Relaxed);
+    }
+
+    /// For tests: how often the model was loaded to run on more threads.
+    #[doc(hidden)]
+    pub fn wide_loads(&self) -> usize {
+        self.shared.wide_loads.load(Ordering::Relaxed)
     }
 
     pub fn settings(&self) -> Settings {
@@ -380,6 +415,10 @@ struct Worker {
     model_generation: u64,
     /// The model a quick copy was last made of, or tried to be: once each.
     quickened: Option<PathBuf>,
+    /// The model runs on more threads than usual, for one region.
+    wide: bool,
+    /// That region has been split since there was last nothing to do.
+    begun: bool,
 }
 
 impl Worker {
@@ -390,6 +429,8 @@ impl Worker {
             model: None,
             model_generation: u64::MAX,
             quickened: None,
+            wide: false,
+            begun: false,
         }
     }
 
@@ -411,6 +452,7 @@ impl Worker {
                     // Nothing to split: give back the memory the model holds.
                     // Loading it again doesn't take long.
                     self.model = None;
+                    self.begun = false;
                     st.model_ready = false;
                     // And make the next time quick, while there's nothing
                     // else to do.
@@ -494,6 +536,20 @@ impl Worker {
         best.map(|(_, t)| t)
     }
 
+    /// Whether to use more threads for the first region, so it's heard
+    /// sooner. Not while a deck plays, which keeps the audio its headroom,
+    /// and not when loading the model again after would take long.
+    fn can_go_wide(&self, path: &Path) -> bool {
+        let playing = self
+            .shared
+            .playing
+            .lock()
+            .unwrap_or_else(|e| e.into_inner());
+        self.shared.many_cores.load(Ordering::Relaxed)
+            && playing.as_ref().is_some_and(|p| !p())
+            && quick::exists(path)
+    }
+
     fn perform(&mut self, task: Task) {
         let shared = self.shared.clone();
         match task {
@@ -534,7 +590,13 @@ impl Worker {
                 }
             }
             Task::LoadModel(path, generation) => {
-                let loaded = Model::load(&path);
+                self.wide = !self.begun && self.can_go_wide(&path);
+                let loaded = if self.wide {
+                    shared.wide_loads.fetch_add(1, Ordering::Relaxed);
+                    Model::load_on(&path, model::FIRST_THREADS)
+                } else {
+                    Model::load(&path)
+                };
                 let mut st = lock(&shared);
                 if st.generation != generation {
                     return;
@@ -579,6 +641,12 @@ impl Worker {
                 };
                 let input = plan.input(k, &track.samples);
                 let result = model.run(&input[0], &input[1]);
+                self.begun = result.is_ok();
+                if self.wide {
+                    // The rest can take its time: back to the usual threads.
+                    self.wide = false;
+                    self.model = None;
+                }
                 // Made out here, since it takes a moment.
                 let made = result.is_ok().then(|| attach(&track));
                 let mut st = lock(&shared);
