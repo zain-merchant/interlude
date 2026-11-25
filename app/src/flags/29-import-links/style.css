@@ -1,0 +1,83 @@
+/* #29 (E6, E7 and Import's backlog nits). */
+/* The links: a quiet underline that says "you can click this", one step
+   brighter than the notes around them, full strength on hover. Lined up
+   with the file name above, not the card's edge. */
+:root[data-flag-import-links] .card[aria-labelledby='import-title'] .link {
+  /* = the found row's left padding, so its first glyph sits on the file
+     name's (14px; 16 with #15). */
+  margin-left: 14px;
+  color: var(--fg-2);
+  /* Longhands: WebKit ignores a colour or thickness in the shorthand. */
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-decoration-color: var(--fg-3);
+  text-underline-offset: 3px;
+  transition: color 140ms ease, text-decoration-color 140ms ease;
+}
+:root[data-flag-import-links] .card[aria-labelledby='import-title'] .link:hover:not(:disabled) {
+  color: var(--fg);
+  text-decoration-color: var(--fg-2);
+}
+:root[data-flag-import-links][data-flag-spacing] .card[aria-labelledby='import-title'] .link {
+  margin-left: var(--space-4, 16px);
+}
+/* The step in words ("1 of 4"), without the dashes beside it: the two
+   said the same thing twice (e-K22). The row is 16px tall, level with the
+   card's side padding (e-K54). */
+:root[data-flag-import-links] .card[aria-labelledby='import-title'] .top {
+  height: 16px;
+}
+:root[data-flag-import-links] .card[aria-labelledby='import-title'] .steps {
+  align-items: center;
+}
+:root[data-flag-import-links] .card[aria-labelledby='import-title'] .steps li:not(.of) {
+  display: none;
+}
+:root[data-flag-import-links] .card[aria-labelledby='import-title'] .steps li.of {
+  width: auto;
+  height: auto;
+  margin-left: 0;
+  background: none;
+  font-size: var(--t-xs);
+  color: var(--fg-3);
+}
+/* The close × meets the content's right edge (e-K32). */
+:root[data-flag-import-links] .card[aria-labelledby='import-title'] .close {
+  margin-right: -7px;
+}
+/* The lead keeps to about 60 characters a line (e-K58). */
+:root[data-flag-import-links] .card[aria-labelledby='import-title'] .lead {
+  max-width: 420px;
+}
+/* Sources: no outlined card round each (four boxes deep: dialog, card,
+   row, chip); a heading and space set them apart (e-K55). */
+:root[data-flag-import-links] .card[aria-labelledby='import-title'] .source {
+  padding: 0;
+  box-shadow: none;
+}
+:root[data-flag-import-links] .card[aria-labelledby='import-title'] .source + .source {
+  margin-top: 24px;
+}
+/* The source heading leads; the found file below it is regular weight
+   (e-K56). */
+:root[data-flag-import-links] .card[aria-labelledby='import-title'] .file b {
+  font-weight: 400;
+}
+/* Where and when on one 11px line (the review: two identical lines read
+   as a list): the path at --fg-2 (on the raised row --fg-3 was 4.41:1,
+   E11), then the age a step quieter, set apart by 8px, not a dot. */
+:root[data-flag-import-links] .card[aria-labelledby='import-title'] .file small {
+  font-size: var(--t-xs);
+  color: var(--fg-2);
+}
+:root[data-flag-import-links] .card[aria-labelledby='import-title'] .file small .when {
+  margin-left: calc(8px - 0.25em);
+  /* --fg-3 at 11px on the raised row was 4.4:1; the gap sets it apart. */
+  color: var(--fg-2);
+}
+/* A section's rhythm is one step: 16px from its heading to the row, and
+   16px from the row to its "Choose a different …" link (it was 8). */
+:root[data-flag-import-links] .card[aria-labelledby='import-title'] .found + .link,
+:root[data-flag-import-links] .card[aria-labelledby='import-title'] .link {
+  margin-top: 16px;
+}

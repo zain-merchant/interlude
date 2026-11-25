@@ -1,0 +1,31 @@
+/* #81: the headings say how the list is sorted. Three steps: at rest
+   --fg-3, hovered --fg-2, sorted --fg with its arrow. Only the sorted
+   heading ever shows an arrow (a hovered one beside it read as a second
+   sort key). Every heading keeps an invisible slot for its arrow
+   (Library.svelte renders one on every heading under this flag), so
+   sorting never moves a word. In the number columns the arrow sits on the
+   left, so the word stays over its right-aligned digits (as #5 does). */
+:root[data-flag-library-sort] section.library .head .sort {
+  border-radius: 6px;
+  transition: color 140ms ease, background-color 140ms ease;
+}
+:root[data-flag-library-sort] section.library .head .sort.num {
+  flex-direction: row-reverse;
+  justify-content: flex-start;
+}
+:root[data-flag-library-sort] section.library .head .sort svg.ghost {
+  visibility: hidden;
+}
+/* Hover: one step up, never to the sorted heading's full strength. */
+:root[data-flag-library-sort] section.library .head .sort:not(.on):hover {
+  color: var(--fg-2);
+}
+/* Pressed: a fill, so a click visibly lands. */
+:root[data-flag-library-sort] section.library .head .sort:active {
+  background: var(--hover);
+}
+@media (prefers-reduced-motion: reduce) {
+  :root[data-flag-library-sort] section.library .head .sort {
+    transition-duration: 0s;
+  }
+}

@@ -21,16 +21,24 @@
   import { keyboardMenu, htmlMenu } from './lib/menu.svelte.js';
   import { tip, tipText } from './lib/tooltip.svelte.js';
   import { live, announce } from './lib/announce.svelte.js';
-  import { toast, showToast, hideToast, pushEdit, undo, redo } from './lib/undo.svelte.js';
+  import { toast, showToast, hideToast, holdToast, releaseToast, pushEdit, undo, redo } from './lib/undo.svelte.js';
   import { stepUiZoom, setUiZoom } from './lib/uizoom.svelte.js';
   import { installAppMenu } from './lib/appmenu.js';
   import { runPerformance } from './lib/performance.js';
+  import { flag, setting } from './flags/registry.svelte.js';
+  import { side, sideShut, hideSidebar } from './flags/110-dir-room-tint/sidebar.svelte.js'; // #110 (UI audit flag)
+  import { start as startSquircles } from './flags/01-squircles/squircles.js';
+  import { startKeys } from './flags/119-focus-states/keys.js';
   import { padMode, setPadMode } from './lib/padmode.svelte.js';
   import { tempoPickup } from './lib/pickup.svelte.js';
   import { gridEdit, NUDGE } from './lib/grid.svelte.js';
   import { toggleStem, soloStem, syncStemWaveforms, stemsUnavailable, stemsOf } from './lib/stems.svelte.js';
   import { once, stemsReadyTip } from './lib/tips.svelte.js';
   import { libraryHealth, reveal, captureUiErrors, update, checkForUpdate, installUpdate } from './lib/support.svelte.js';
+  import Status from './flags/112-shell-status/Status.svelte'; // #112 (UI audit flag)
+  import Keys from './flags/116-settings-finish/Keys.svelte'; // #121 (UI audit flag)
+  import Marks from './flags/117-key-marks/Marks.svelte'; // #117 (UI audit flag)
+  import { open as shellOpen } from './flags/112-shell-status/connections.svelte.js'; // #112 (UI audit flag)
 
   let library;
   let mixer;
@@ -42,7 +50,13 @@
   let zoom = $state(12);
   const say = (msg) => showToast(msg);
 
-  const playingMsg = (deck) => `Deck ${'AB'[deck]} is playing. Pause it first.`;
+  // #88 (UI audit flag): deck-names: decks are named by side ("left deck"), as
+  // the screen never shows a letter; off, "deck A" / "Deck A" as before.
+  const deckName = (deck, start = false) =>
+    flag('deck-names') ? `${start ? (deck ? 'Right' : 'Left') : deck ? 'right' : 'left'} deck` : `${start ? 'Deck' : 'deck'} ${'AB'[deck]}`;
+  // #86 (UI audit flag): copy-toasts: the track title set off in quotes.
+  const titled = (t) => (flag('copy-toasts') ? `“${t}”` : t);
+  const playingMsg = (deck) => `${deckName(deck, true)} is playing. Pause it first.`;
 
   // Loading onto a playing deck stops what the room hears, so it takes a
   // second press: the first only warns. Any load onto the same deck within
@@ -60,8 +74,8 @@
       return true;
     }
     replacing = { deck, until: now + REPLACE_MS };
-    showToast(`Deck ${'AB'[deck]} is playing. Load again within 3 seconds to replace it.`, { ms: REPLACE_MS });
-    announce(`Deck ${'AB'[deck]} is playing. Load again within 3 seconds to replace it.`);
+    showToast(`${deckName(deck, true)} is playing. Load again within 3 seconds to replace it.`, { ms: REPLACE_MS });
+    announce(`${deckName(deck, true)} is playing. Load again within 3 seconds to replace it.`);
     return false;
   }
 
@@ -73,9 +87,9 @@
     const before = deckSnapshot(deck);
     try {
       await loadTrack(deck, track);
-      announce(`Loaded ${track.title} on deck ${'AB'[deck]}`);
+      announce(`Loaded ${titled(track.title)} on ${deckName(deck)}`);
     } catch (e) {
-      say(`Couldn't load ${track.title}: ${e}`);
+      say(`Couldn't load ${titled(track.title)}: ${e}`);
       return;
     }
     let after = null;
@@ -91,7 +105,7 @@
       return now;
     };
     pushEdit({
-      label: `Loaded ${track.title} on deck ${'AB'[deck]}`,
+      label: `Loaded ${titled(track.title)} on ${deckName(deck)}`,
       undo: async () => {
         const now = await swap(before)();
         if (now === false) return false;
@@ -177,16 +191,15 @@
 
   /** Speaks where a deck is: time, bar and whether it's playing. */
   function readPosition(deck) {
-    const n = 'AB'[deck];
     const t = tracks[deck];
-    if (!t) return announce(`Deck ${n} is empty`);
+    if (!t) return announce(`${deckName(deck, true)} is empty`);
     const d = engine.decks[deck];
     const spoken = (s) => {
       const m = Math.floor(s / 60);
       const sec = Math.floor(s - m * 60);
       return `${m} minute${m === 1 ? '' : 's'} ${sec} second${sec === 1 ? '' : 's'}`;
     };
-    const parts = [`Deck ${n}`, `${spoken(d.position)} of ${spoken(d.duration)}`];
+    const parts = [deckName(deck, true), `${spoken(d.position)} of ${spoken(d.duration)}`];
     const g = t.beatgrid;
     if (g?.bpm) {
       const bar = (s) => Math.floor(Math.max(0, ((s - g.firstBeat) * g.bpm) / 60) / 4) + 1;
@@ -202,7 +215,8 @@
     const a = engine.audio;
     if (a?.state === 'lost' && lostDevice === null) {
       lostDevice = a.device;
-      announce(`${a.device} disconnected. Decks are held where they stopped.`);
+      // #23 (UI audit flag): banner-warning: the announcement says what the banner says.
+      announce(flag('banner-warning') ? `${a.device} disconnected. Decks paused. They carry on when it's back.` : `${a.device} disconnected. Decks are held where they stopped.`);
     } else if (a?.state === 'connected' && lostDevice !== null) {
       say(a.device === lostDevice ? `${a.device} is back` : `Playing through ${a.device}`);
       announce(`Audio is back on ${a.device}`);
@@ -251,7 +265,7 @@
           announce(`Deck ${'AB'[deck]} sync off`);
         } else if (down && loaded(deck) && engine.decks[deck].bpm && engine.decks[1 - deck].bpm) {
           control({ type: 'sync', deck });
-          announce(`Deck ${'AB'[deck]} synced`);
+          announce(`${deckName(deck, true)} synced`);
         }
         break;
       case 'deck.0.slower':
@@ -383,6 +397,13 @@
 
   // The webview's own right-click menu (Reload, Inspect) never shows; text
   // fields keep theirs for copy and paste.
+  const elementOf = (n) => (n instanceof Element ? n : n?.parentElement);
+  const keepText = (e) => {
+    if (!elementOf(e.target)?.closest("input, textarea, [contenteditable='true']")) e.preventDefault();
+  };
+  const keepPictures = (e) => {
+    if (elementOf(e.target)?.matches('img, a, a *, svg, svg *') && !elementOf(e.target).closest('[draggable=true]')) e.preventDefault();
+  };
   function contextmenu(e) {
     if (!(e.target instanceof HTMLInputElement)) e.preventDefault();
   }
@@ -394,23 +415,150 @@
   const APP_MIN_H = 720; // matches .app's min-height
   let libHeight = $state(LIB_DEFAULT);
   let winHeight = $state(900);
+  let winWidth = $state(1440);
   try {
     libHeight = Number(localStorage.getItem(LIB_KEY)) || LIB_DEFAULT;
   } catch {}
-  const libMax = $derived(Math.max(160, Math.min(560, Math.max(winHeight, APP_MIN_H) - (macWindow ? TOP_STRIP : 12) - 12 - 136 - 12 - 12 - 300)));
-  const lib = $derived(Math.max(160, Math.min(libMax, libHeight)));
+  // #7 (UI audit flag): edge-tall, and #21 panel-sizes: every row has one
+  // designed size (taken from the 1440×900 layout); the library takes what's
+  // left, so a tall window gives its extra height to the track list. A short
+  // window gives way in order: the library down to 160px, then the
+  // waveforms down to 96px, then the decks down to 340px. The decks move as
+  // one block: the library's handle sizes the library (the waveforms give
+  // way), the waveforms' handle sizes the waveforms (the library gives way),
+  // and only ⌥-dragging either deck edge changes the decks. (The sampler is
+  // a row inside the library now, so it takes nothing from these.)
+  const PANEL = {
+    waves: { def: 136, min: 96 }, // the row, with the 12px gap under the panel
+    decks: { def: 360, min: 340, max: 400 },
+    sidebar: { def: 200, min: 160, max: 320 },
+    mixer: { min: 280, max: 480, deck: 330 }, // its designed width is the stylesheet's (--mixer-def)
+  };
+  const LIB_MIN = 160; // what a drag can take the library down to
+  // What a short window keeps for the library before the waveforms and
+  // decks give way (176px at 1024×760 with the sampler open was a strip of
+  // four rows).
+  const LIB_FIT = 240;
+  const PANEL_KEY = 'oss-dj.panelSizes';
+  const sized = $derived(flag('edge-tall') || flag('panel-sizes'));
+  /** The sizes asked for; what each row gets (`rows`) also depends on the window. */
+  const sizes = $state({ waves: PANEL.waves.def, decks: PANEL.decks.def, sidebar: PANEL.sidebar.def, mixer: /** @type {number | null} null: its designed width */ (null) });
+  // #21: the sizes are kept, in one key. The old library height is read once
+  // to seed it (and left in place, so turning the flag off loses nothing).
+  if (flag('panel-sizes')) {
+    try {
+      const kept = JSON.parse(localStorage.getItem(PANEL_KEY) ?? 'null');
+      if (kept) Object.assign(sizes, { waves: kept.waves ?? sizes.waves, decks: kept.decks ?? sizes.decks, sidebar: kept.sidebar ?? sizes.sidebar, mixer: kept.mixer ?? null });
+      else if (localStorage.getItem(LIB_KEY)) {
+        const avail = Math.max(innerHeight, APP_MIN_H) - (macWindow ? TOP_STRIP : 12) - 24;
+        sizes.waves = Math.max(PANEL.waves.min, avail - PANEL.decks.def - Number(localStorage.getItem(LIB_KEY)));
+      }
+    } catch {}
+  }
+  $effect(() => {
+    const s = JSON.stringify(sizes);
+    if (!flag('panel-sizes')) return;
+    try {
+      localStorage.setItem(PANEL_KEY, s);
+    } catch {}
+  });
+  /** Height for the waveforms, decks and library rows together. */
+  const avail = $derived(Math.max(winHeight, APP_MIN_H) - (macWindow ? TOP_STRIP : 12) - 12 - 12);
+  /** What each row gets: the library first gives way to 240, then the waveforms to 96, then the decks to 340.
+   *  (Waveforms dragged past their designed size are kept until the library is at 160.) */
+  const rows = $derived.by(() => {
+    let waves = Math.min(sizes.waves, Math.max(PANEL.waves.min, Math.round(winHeight / 2)));
+    let decks = Math.max(PANEL.decks.min, Math.min(PANEL.decks.max, sizes.decks));
+    let short = (sizes.waves > PANEL.waves.def ? LIB_MIN : LIB_FIT) - (avail - waves - decks);
+    if (short > 0) {
+      const w = Math.max(PANEL.waves.min, waves - short);
+      short -= waves - w;
+      waves = w;
+      decks = Math.max(PANEL.decks.min, decks - short);
+    }
+    return { waves, decks, lib: Math.max(LIB_MIN, avail - waves - decks) };
+  });
+  /** The waveforms' largest size with the decks as they are: half the window, and the library keeps 160. */
+  const wavesMax = $derived(Math.max(PANEL.waves.min, Math.min(Math.round(winHeight / 2), avail - rows.decks - LIB_MIN)));
+
+  const libMax = $derived(sized ? Math.max(LIB_MIN, avail - rows.decks - PANEL.waves.min) : Math.max(160, Math.min(560, Math.max(winHeight, APP_MIN_H) - (macWindow ? TOP_STRIP : 12) - 12 - 136 - 12 - 12 - 300)));
+  const lib = $derived(sized ? rows.lib : Math.max(160, Math.min(libMax, libHeight)));
+  /** A snap: within `band` of `at`, it's `at`. */
+  const snapTo = (v, at, band) => (Math.abs(v - at) <= band ? at : v);
+  const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+  // The library's height as the waveforms' size, which gives way for it.
+  const libSnap = $derived(avail - PANEL.waves.def - rows.decks);
+  function setWaves(h) {
+    sizes.waves = Math.round(clamp(snapTo(h, PANEL.waves.def, 6), PANEL.waves.min, wavesMax));
+  }
+  function setDecks(h) {
+    sizes.decks = Math.round(clamp(snapTo(h, PANEL.decks.def, 16), PANEL.decks.min, PANEL.decks.max));
+  }
+  function setSidebar(w) {
+    // #110 (UI audit flag): dir-room-tint: dragged well past its least, the sidebar closes; dragged back out, it opens.
+    if (flag('dir-room-tint')) {
+      hideSidebar(w < PANEL.sidebar.min - 48);
+      if (side.hidden) return;
+    }
+    sizes.sidebar = Math.round(clamp(snapTo(w, PANEL.sidebar.def, 6), PANEL.sidebar.min, PANEL.sidebar.max));
+  }
+  // #110 (UI audit flag): dir-room-tint: the mixer's edges drag, both at once, so
+  // it stays in the middle and the decks stay even. It sticks at its designed
+  // width, which depends on the window and a setting, so that's kept as null and
+  // follows them. A narrow window gives the decks their least first.
+  const mixerGrips = $derived(flag('panel-sizes') && flag('dir-room-tint'));
+  let decksEl = $state(/** @type {HTMLElement | null} */ (null));
+  let mixerDef = $state(300);
+  $effect(() => {
+    if (!decksEl || !mixerGrips) return;
+    void [winWidth, setting('dir-room-tint', 'room')];
+    // The flags' attributes are on the root by the next frame.
+    const el = decksEl;
+    const raf = requestAnimationFrame(() => (mixerDef = parseFloat(getComputedStyle(el).getPropertyValue('--mixer-def')) || 300));
+    return () => cancelAnimationFrame(raf);
+  });
+  const mixerMax = $derived(Math.max(mixerDef, Math.min(PANEL.mixer.max, winWidth - 48 - 2 * PANEL.mixer.deck)));
+  /** The mixer's width if it isn't its designed one. */
+  const mixerSet = $derived(!mixerGrips || sizes.mixer == null ? null : Math.min(sizes.mixer, mixerMax));
+  const mixerW = $derived(mixerSet ?? mixerDef);
+  function setMixer(w) {
+    const at = 2 * Math.round(clamp(snapTo(w, mixerDef, 12), PANEL.mixer.min, mixerMax) / 2);
+    sizes.mixer = at === mixerDef ? null : at;
+  }
   function setLib(h) {
+    if (sized) {
+      // The waveforms give way; the gentle snap is where they're at 136.
+      setWaves(avail - rows.decks - snapTo(h, libSnap, 6));
+      return;
+    }
     libHeight = Math.max(160, Math.min(libMax, h));
     try {
       localStorage.setItem(LIB_KEY, String(libHeight));
     } catch {}
   }
+  // #21: a double-click resets a panel to its designed size, settling on
+  // the site's snappy spring (none under reduced motion).
+  let settling = $state(false);
+  let settleTimer;
+  function settle(fn) {
+    settling = true;
+    clearTimeout(settleTimer);
+    requestAnimationFrame(() => {
+      fn();
+      settleTimer = setTimeout(() => (settling = false), 340);
+    });
+  }
   let split = $state(null);
   const splitDown = (e) => {
     e.currentTarget.setPointerCapture(e.pointerId);
-    split = { y: e.clientY, h: lib };
+    // #21: ⌥-drag on a deck edge sizes the decks instead.
+    split = { y: e.clientY, h: lib, decks: flag('panel-sizes') && e.altKey ? rows.decks : null };
   };
-  const splitMove = (e) => split && setLib(split.h - (e.clientY - split.y));
+  const splitMove = (e) => {
+    if (!split) return;
+    if (split.decks != null) setDecks(split.decks + (e.clientY - split.y));
+    else setLib(split.h - (e.clientY - split.y));
+  };
   const splitKey = (e) => {
     const step = e.shiftKey ? 96 : 24;
     if (e.key === 'ArrowUp') setLib(lib + step);
@@ -421,6 +569,48 @@
     e.preventDefault();
     e.stopPropagation();
   };
+  const splitReset = () => (sized ? settle(() => (flag('panel-sizes') ? setWaves(PANEL.waves.def) : (sizes.waves = PANEL.waves.def))) : setLib(LIB_DEFAULT));
+
+  // #21 (UI audit flag): panel-sizes: the other handles. Each drags its
+  // panel with the pointer (no easing), takes the same keys as the library's
+  // (arrows ±24, ⇧ ±96, Home and End for min and max) and resets on a
+  // double-click.
+  /** @type {{ which: string, at: number, from: number, dir: number } | null} */
+  let grab = $state(null);
+  const GRIPS = {
+    waves: { get: () => rows.waves, set: setWaves, min: () => PANEL.waves.min, max: () => wavesMax, def: PANEL.waves.def, axis: 'y', dir: 1 },
+    decks: { get: () => rows.decks, set: setDecks, min: () => PANEL.decks.min, max: () => PANEL.decks.max, def: PANEL.decks.def, axis: 'y', dir: -1 },
+    sidebar: { get: () => (sideShut() ? 0 : sizes.sidebar), set: setSidebar, min: () => PANEL.sidebar.min, max: () => PANEL.sidebar.max, def: PANEL.sidebar.def, axis: 'x', dir: 1 },
+    mixer: { get: () => mixerW, set: setMixer, min: () => PANEL.mixer.min, max: () => mixerMax, get def() { return mixerDef; }, axis: 'x', dir: 1 },
+  };
+  /** `dir`: how far the panel grows for each pixel of the drag, if not the grip's own. */
+  function gripDown(e, which, dir = undefined) {
+    e.currentTarget.setPointerCapture(e.pointerId);
+    // ⌥ on the waveforms' edge (the decks' top edge) sizes the decks.
+    const w = which === 'waves' && e.altKey ? 'decks' : which;
+    grab = { which: w, at: GRIPS[w].axis === 'x' ? e.clientX : e.clientY, from: GRIPS[w].get(), dir: dir ?? GRIPS[w].dir };
+  }
+  function gripMove(e) {
+    if (!grab) return;
+    const g = GRIPS[grab.which];
+    const k = Number(document.documentElement.style.zoom) || 1;
+    const d = ((g.axis === 'x' ? e.clientX : e.clientY) - grab.at) / k;
+    g.set(grab.from + grab.dir * d);
+  }
+  function gripKey(e, which) {
+    const g = GRIPS[which];
+    const step = (e.shiftKey ? 96 : 24) * g.dir;
+    const more = g.axis === 'x' ? 'ArrowRight' : 'ArrowDown';
+    const less = g.axis === 'x' ? 'ArrowLeft' : 'ArrowUp';
+    if (e.key === more) g.set(g.get() + step);
+    else if (e.key === less) g.set(g.get() - step);
+    else if (e.key === 'Home') g.set(g.min());
+    else if (e.key === 'End') g.set(g.max());
+    else return;
+    e.preventDefault();
+    e.stopPropagation();
+  }
+  const gripReset = (which) => settle(() => GRIPS[which].set(GRIPS[which].def));
 
   /** Undo / redo in a focused text field, for the menu's ⌘Z. True if it was one. */
   function undoInField(again) {
@@ -445,10 +635,109 @@
     }).catch((e) => console.error('menu', e));
   });
 
+  // #13 (UI audit flag): declutter-toast: "In the toolbar" docks the toast in
+  // the library's toolbar, between the search field and Sampler (over the
+  // track count), never over the rows; a message longer than the gap is cut
+  // short with an ellipsis (Undo stays whole). Only with no room at all
+  // (under 160px) does it fall back to the corner.
+  let toastEl = $state(/** @type {HTMLElement | null} */ (null));
+  let toastDock = $state(/** @type {{ left: number, top: number, max: number, at?: string } | null} */ (null));
+  // Panels can be resized while a toast shows, and the rows ease to a new
+  // size (340ms), so the dock is measured again whenever the toolbar or a
+  // panel round it changes size, not only when a toast arrives.
+  let dockTurn = $state(0);
+  $effect(() => {
+    if (!toastEl || !flag('declutter-toast')) return;
+    const ro = new ResizeObserver(() => dockTurn++);
+    for (const sel of ['.app > .waves', '.app > .decks', 'section.library', 'section.library .bar', 'section.library .bar .filter', 'section.library .bar .chip', 'section.library .bar .shell', '.settings .main .bar']) {
+      const n = document.querySelector(sel);
+      if (n) ro.observe(n);
+    }
+    return () => ro.disconnect();
+  });
+  $effect(() => {
+    void toast.id;
+    void winHeight;
+    void dockTurn;
+    const el = toastEl;
+    if (!el || !flag('declutter-toast') || setting('declutter-toast', 'place') !== 'toolbar') {
+      toastDock = null;
+      return;
+    }
+    const k = Number(document.documentElement.style.zoom) || 1;
+    // #37 (UI audit flag): settings-undo: with Settings over the library, the toast sits in its header, left of Done.
+    if (settings !== null) {
+      const done = document.querySelector('.settings .main .bar > .btn:last-child')?.getBoundingClientRect();
+      // The end of the words before Done (the page's instruction line stretches to Done; its text doesn't).
+      const before = document.querySelector('.settings .main .bar > .btn:last-child')?.previousElementSibling;
+      const text = before && document.createRange();
+      text?.selectNodeContents(before);
+      const prev = text?.getBoundingClientRect();
+      if (!flag('settings-undo') || !done || !prev) return void (toastDock = null);
+      const room = (done.left - prev.right) / k - 24;
+      // Its right edge 8px before Done, on Done's centre line (placed from its right: data-docked="settings").
+      toastDock = room >= 160 ? { left: done.left / k - 8, top: (done.top + done.height / 2) / k, max: room, at: 'settings' } : null;
+      return;
+    }
+    // Since upstream's Fits and Filter sit after the search field, the gap starts after them.
+    const from = (document.querySelector('section.library .bar .filter') ?? document.querySelector('section.library .bar .search'))?.getBoundingClientRect();
+    const samp = document.querySelector('section.library .bar .samp')?.getBoundingClientRect();
+    if (!from || !samp) return void (toastDock = null);
+    const gap = (/** @type {DOMRect} */ to) => (to.left - from.right) / k - 24;
+    let room = gap(samp);
+    let at = 'toolbar';
+    // #112 (UI audit flag): shell-status: its items stand before Sampler. The toast stops at them when all its words fit there, covers them for its few seconds when they fit up to Sampler, and goes to the corner (where it's never cut) when they don't.
+    const items = flag('shell-status') ? document.querySelector('section.library .bar > .shell')?.getBoundingClientRect() : null;
+    if (items) {
+      const words = el.querySelector(':scope > span');
+      const whole = el.offsetWidth + (words ? words.scrollWidth - words.clientWidth : 0);
+      if (whole <= gap(items)) room = gap(items);
+      else if (whole <= room) at = 'over';
+      else room = 0;
+    }
+    toastDock = room >= 160 ? { left: from.right / k + 12, top: (from.top + from.height / 2) / k, max: room, at } : null;
+  });
+
+  // #12 (UI audit flag): polish-dialog: where the library starts, so a dialog's
+  // scrim blurs the library but leaves the decks clear.
+  $effect(() => {
+    const root = document.documentElement;
+    if (!flag('polish-dialog') || !(importing || reporting)) return void root.style.removeProperty('--flag-polish-dialog-lib');
+    void winHeight;
+    const top = document.querySelector('.app > .below')?.getBoundingClientRect().top;
+    if (top != null) root.style.setProperty('--flag-polish-dialog-lib', `${top / (Number(root.style.zoom) || 1)}px`);
+  });
+
+  // #24 (UI audit flag): focus-after-keys: html[data-input='keys'] while the
+  // keyboard is moving focus (Tab, arrows, Home/End, Page keys, F6), cleared
+  // by any pointer press, so focus rings show only after navigating by key.
+  // A shortcut like W (play) doesn't count: it acts, it doesn't move focus.
+  $effect(() => {
+    if (!flag('focus-after-keys')) return;
+    const root = document.documentElement;
+    const NAV = new Set(['Tab', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Home', 'End', 'PageUp', 'PageDown', 'F6']);
+    const keys = (e) => NAV.has(e.key) && (root.dataset.input = 'keys');
+    const pointer = () => delete root.dataset.input;
+    addEventListener('keydown', keys, true);
+    addEventListener('pointerdown', pointer, true);
+    return () => {
+      removeEventListener('keydown', keys, true);
+      removeEventListener('pointerdown', pointer, true);
+      delete root.dataset.input;
+    };
+  });
+
   /** True while the sampler is showing because of the controller's SAMPLER button. */
   let samplerFromPads = false;
 
+  // #119 (UI audit flag): focus-states: Tab reaches everything, sets are one stop, focus is never left on nothing.
+  $effect(() => (flag('focus-states') ? startKeys() : undefined));
+
+  // #1 (UI audit flag): squircle corners: native corner-shape, or a clip with the ring redrawn in WebKit.
+  $effect(() => (flag('squircles') ? startSquircles() : undefined));
+
   onMount(() => {
+    Object.assign(shellOpen, { settings: openSettings, setup: openControllerSetup }); // #112 (UI audit flag): shell-status
     captureUiErrors();
     libraryHealth().then((h) => (health = h)).catch(() => {});
     const updateTimer = setTimeout(() => checkForUpdate(), 8000);
@@ -491,20 +780,26 @@
 </script>
 
 <svelte:window onkeydown={keydown} onkeyup={keyup} onblur={blur} oncontextmenu={contextmenu} />
+<!-- A selection can only start in a text field, whatever draws the text, and a picture or link can't be dragged out of the window. -->
+<svelte:document onselectstart={keepText} ondragstart={keepPictures} />
 
-<div class="app" class:mac-window={macWindow} style:--top="{macWindow ? TOP_STRIP : 12}px" style:--lib="{lib}px"  bind:clientHeight={winHeight}>
+<!-- #7 / #21 (UI audit flags): edge-tall, panel-sizes: the rows' sizes (--waves, --decks) and the sidebar's, while either is on. -->
+<div class="app" class:mac-window={macWindow} class:settling style:--top="{macWindow ? TOP_STRIP : 12}px" style:--lib="{lib}px"
+  style:--waves={sized ? `${rows.waves}px` : undefined} style:--decks={sized ? `${rows.decks}px` : undefined}
+  style:--library-sidebar={flag('panel-sizes') ? `${sideShut() ? 0 : sizes.sidebar}px` : undefined} style:--side-w={flag('dir-room-tint') ? `${sizes.sidebar}px` : undefined} bind:clientHeight={winHeight} bind:clientWidth={winWidth}>
   <Backdrop a="var(--deck-a)" b="var(--deck-b)" tint={0.25} />
   {#if macWindow}
     <!-- The window buttons' strip: drag it to move the window, double-click
          to zoom it. -->
     <div class="drag" data-tauri-drag-region aria-hidden="true"></div>
   {/if}
+  {#if flag('shell-status') && setting('shell-status', 'place') !== 'library'}<Status bar />{/if}<!-- #112 (UI audit flag): shell-status -->
   <div class="waves glass" data-region="waves" role="group" aria-label="Waveforms">
     {#each [0, 1] as deck}
       <div class="lane" style:--drop-color={deck === 0 ? 'var(--deck-a)' : 'var(--deck-b)'} class:b={deck === 1}
         use:dropTarget={{ ondrop: (t) => load(deck, t), blocked: () => engine.decks[deck].playing }}>
         <Waveform {deck} seconds={zoom} onzoom={(f) => setZoom(zoom * f)} />
-        <div class="who"><i></i>{#if tracks[deck]}{tracks[deck].title}{:else}<span class="hint">Drag a track here or press {keyLabel(`deck.${deck}.load`)}</span>{/if}</div>
+        <div class="who"><i></i>{#if tracks[deck]}{tracks[deck].title}{:else}<span class="hint">Drag a track here or press <Marks text={keyLabel(`deck.${deck}.load`)} /></span>{/if}</div>
       </div>
     {/each}
     <div class="zoom">
@@ -514,7 +809,33 @@
     </div>
   </div>
 
-  <div class="decks">
+  {#snippet wavesGrip()}
+    <!-- #21 (UI audit flag): panel-sizes: the waveforms' bottom edge gets the library's handle. Placed absolutely, out of the grid. -->
+    <!-- svelte-ignore a11y_no_noninteractive_tabindex, a11y_no_noninteractive_element_interactions (a focusable separator is the ARIA window-splitter pattern) -->
+    <div class="grip" class:dragging={grab?.which === 'waves' || grab?.which === 'decks'} style:top="calc(var(--top) + {rows.waves - 12}px)" role="separator" aria-orientation="horizontal" aria-label="Resize waveforms"
+      aria-valuenow={rows.waves} aria-valuemin={PANEL.waves.min} aria-valuemax={wavesMax} tabindex="0"
+      onpointerdown={(e) => gripDown(e, 'waves')} onpointermove={gripMove} onpointerup={() => (grab = null)} onpointercancel={() => (grab = null)}
+      ondblclick={() => gripReset('waves')} onkeydown={(e) => gripKey(e, 'waves')}
+      use:tip={() => 'Drag to resize the waveforms, ⌥-drag for the decks, double-click to reset'}><i></i></div>
+  {/snippet}
+  {#if flag('panel-sizes') && flag('focus-states')}{@render wavesGrip()}{/if}<!-- #119 (UI audit flag): focus-states: after the waveforms, so Tab meets it there. -->
+
+  {#if mixerGrips}
+    <!-- #110 (UI audit flag): dir-room-tint: the mixer's two edges, in the gaps beside it. A drag moves one by its length, so the mixer grows by twice that. Only the left is a tab stop: they're one control. -->
+    {#each [-1, 1] as edge (edge)}
+      <!-- svelte-ignore a11y_no_noninteractive_tabindex, a11y_no_noninteractive_element_interactions (a focusable separator is the ARIA window-splitter pattern) -->
+      <div class="grip mid" class:right={edge === 1} class:dragging={grab?.which === 'mixer'}
+        style:top="calc(var(--top) + {rows.waves}px)" style:height="{rows.decks}px" style:left="calc(50% {edge === 1 ? `+ ${mixerW / 2}px` : `- ${mixerW / 2}px - var(--gap)`})"
+        role="separator" aria-orientation="vertical" aria-label="Resize mixer" aria-hidden={edge === 1 ? 'true' : undefined}
+        aria-valuenow={mixerW} aria-valuemin={PANEL.mixer.min} aria-valuemax={mixerMax} tabindex={edge === 1 ? -1 : 0}
+        onmousedown={(e) => edge === 1 && e.preventDefault()}
+        onpointerdown={(e) => gripDown(e, 'mixer', 2 * edge)} onpointermove={gripMove} onpointerup={() => (grab = null)} onpointercancel={() => (grab = null)}
+        ondblclick={() => gripReset('mixer')} onkeydown={(e) => gripKey(e, 'mixer')}
+        use:tip={() => 'Drag to resize the mixer, double-click to reset'}><i></i></div>
+    {/each}
+  {/if}
+
+  <div class="decks" bind:this={decksEl} style:--mixer={mixerSet == null ? undefined : `${mixerSet}px`}>
     <Deck deck={0} onload={load} onreveal={(p) => library.reveal(p)} onsettings={openSettings} />
     <Mixer bind:this={mixer} onmessage={say} />
     <Deck deck={1} onload={load} onreveal={(p) => library.reveal(p)} onsettings={openSettings} />
@@ -524,10 +845,22 @@
   <div class="split" class:dragging={split} role="separator" aria-orientation="horizontal" aria-label="Resize library"
     aria-valuenow={Math.round(lib)} aria-valuemin={160} aria-valuemax={Math.round(libMax)} tabindex="0"
     onpointerdown={splitDown} onpointermove={splitMove} onpointerup={() => (split = null)} onpointercancel={() => (split = null)}
-    ondblclick={() => setLib(LIB_DEFAULT)} onkeydown={splitKey}
-    use:tip={() => 'Drag to resize the library, double-click to reset'}><i></i></div>
+    ondblclick={splitReset} onkeydown={splitKey}
+    use:tip={() => (flag('panel-sizes') ? 'Drag to resize the library, ⌥-drag for the decks, double-click to reset' : 'Drag to resize the library, double-click to reset')}><i></i></div>
+
+  {#if flag('panel-sizes') && !flag('focus-states')}{@render wavesGrip()}{/if}
 
   <div class="below">
+    {#if flag('panel-sizes')}
+      <!-- #21 (UI audit flag): panel-sizes: the sidebar's edge, over the library's divider. -->
+      <!-- svelte-ignore a11y_no_noninteractive_tabindex, a11y_no_noninteractive_element_interactions -->
+      <div class="grip side" class:dragging={grab?.which === 'sidebar'} role="separator" aria-orientation="vertical" aria-label="Resize sidebar"
+        aria-valuenow={sizes.sidebar} aria-valuemin={PANEL.sidebar.min} aria-valuemax={PANEL.sidebar.max} tabindex="0"
+        onmousedown={(e) => e.preventDefault() /* #110: a row that comes under the pointer mid-drag mustn't start a drag of its own */}
+        onpointerdown={(e) => gripDown(e, 'sidebar')} onpointermove={gripMove} onpointerup={() => (grab = null)} onpointercancel={() => (grab = null)}
+        ondblclick={() => gripReset('sidebar')} onkeydown={(e) => gripKey(e, 'sidebar')}
+        use:tip={() => 'Drag to resize the sidebar, double-click to reset'}><i></i></div>
+    {/if}
     <div class="libwrap">
       <Library bind:this={library} onload={load} onsettings={() => openSettings()} onmessage={say}
         onimport={openImport} onempty={() => { if (once('importOffer')) openImport(); }} />
@@ -535,11 +868,16 @@
   </div>
 
   {#if engine.audio?.state === 'lost'}
-    <div class="banner" role="alert">
+    <!-- #23 (UI audit flag): banner-warning: the lost device is a warning (amber), with one clear way out (tonal, so it doesn't outshout the warning). -->
+    <div class="banner" class:lost={flag('banner-warning')} role="alert">
       <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.8 15 14H1z" /><path d="M8 6.2v3.6M8 11.6v.4" /></svg>
-      <span><b>{engine.audio.device} disconnected.</b> Decks are held where they stopped and carry on when it's back.</span>
+      {#if flag('banner-warning')}
+        <span><b>{engine.audio.device} disconnected.</b> Decks paused. They carry on when it's back.</span>
+      {:else}
+        <span><b>{engine.audio.device} disconnected.</b> Decks are held where they stopped and carry on when it's back.</span>
+      {/if}
       {#if engine.audio.fallback && engine.audio.fallback !== engine.audio.device}
-        <button class="btn sm" onclick={() => backend.useDefaultOutput?.()}>Play through {engine.audio.fallback}</button>
+        <button class="btn sm" class:primary={flag('banner-warning')} onclick={() => backend.useDefaultOutput?.()}>{flag('banner-warning') ? 'Use' : 'Play through'} {engine.audio.fallback}</button>
       {/if}
     </div>
   {:else if healthText}
@@ -563,10 +901,20 @@
 
   <div class="toastbox" role="status">
     {#if toast.text}
-      <div class="toast">
+      <!-- #13 (UI audit flag): declutter-toast: hovering holds the toast; docked in the toolbar when chosen. -->
+      <!-- svelte-ignore a11y_no_static_element_interactions (hover only pauses its timer; the toast is announced by its role="status" box) -->
+      <div class="toast" bind:this={toastEl} data-docked={toastDock ? toastDock.at : undefined} style:left={toastDock ? `${toastDock.left}px` : undefined} style:top={toastDock ? `${toastDock.top}px` : undefined} style:max-width={toastDock ? `${toastDock.max}px` : undefined}
+        onfocusin={(e) => flag('focus-states') && (document.documentElement.dataset.input === 'keys' || /** @type {Element} */ (e.target).matches(':focus-visible')) && holdToast() /* #119 (UI audit flag): focus-states: it stays while its Undo has keyboard focus. */}
+        onfocusout={(e) => flag('focus-states') && !e.currentTarget.matches(':hover') && releaseToast()}
+        onpointerenter={() => flag('declutter-toast') && holdToast()} onpointerleave={(e) => flag('declutter-toast') && !(flag('focus-states') && e.currentTarget.contains(document.activeElement)) && releaseToast()}>
         <span>{toast.text}</span>
         {#if toast.undo}
+          <!-- #121 (UI audit flag): toast-cut: a cut that holds its keys. -->
+          {#if flag('toast-cut') && flag('dir-room-tint')}
+          <button class="undo cut" onclick={() => { hideToast(); undo(); }}><span>Undo{#if keyLabel('edit.undo')}<span class="sr"> {keyLabel('edit.undo')}</span>{/if}</span>{#if keyLabel('edit.undo')}<Keys label={keyLabel('edit.undo')} />{/if}</button>
+          {:else}
           <button class="undo" onclick={() => { hideToast(); undo(); }}>Undo <kbd>{keyLabel('edit.undo')}</kbd></button>
+          {/if}
         {/if}
       </div>
     {/if}
@@ -764,6 +1112,75 @@
   }
   .split:focus-visible {
     outline: none;
+  }
+  /* #21 (UI audit flag): panel-sizes: the other handles, drawn like the
+     library's; out of the grid, over the gaps they resize. */
+  .app > .grip {
+    position: absolute;
+    left: var(--gap);
+    right: var(--gap);
+    z-index: 6;
+    height: var(--gap);
+    display: grid;
+    place-items: center;
+    cursor: row-resize;
+    touch-action: none;
+  }
+  .grip i {
+    width: 36px;
+    height: 3px;
+    border-radius: 2px;
+    background: var(--fg-4);
+    transition: background-color 140ms ease;
+  }
+  .grip:hover i,
+  .grip.dragging i,
+  .grip:focus-visible i {
+    background: var(--fg-3);
+  }
+  .grip:focus-visible {
+    outline: none;
+  }
+  /* #110: the mixer's edges: the same handle, upright; each lights with the other. */
+  .app > .grip.mid {
+    right: auto;
+    width: var(--gap);
+    cursor: col-resize;
+  }
+  .grip.mid i {
+    width: 3px;
+    height: 36px;
+  }
+  .app:has(> .grip.mid:is(:hover, :focus-visible)) > .grip.mid i {
+    background: var(--fg-3) !important;
+  }
+  /* The sidebar's edge: no pill (beside a scrolling list it read as a
+     scrollbar), just an 8px strip centred on the 1px divider; on hover,
+     drag or focus the divider itself lights from top to bottom. */
+  .below > .grip.side {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: calc(var(--library-sidebar) - 4px);
+    z-index: 6;
+    width: 8px;
+    cursor: col-resize;
+    touch-action: none;
+  }
+  .grip.side i {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 3px;
+    width: 1px;
+    height: auto;
+    border-radius: 0;
+    background: transparent;
+  }
+  .grip.side:hover i,
+  .grip.side.dragging i,
+  .grip.side:focus-visible i {
+    background: var(--fg-3);
   }
   .toast {
     position: fixed;

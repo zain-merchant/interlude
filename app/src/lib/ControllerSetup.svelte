@@ -1,4 +1,6 @@
 <script>
+  import { flag, setting } from '../flags/registry.svelte.js'; // #113 (UI audit flag)
+  import { draw } from '../flags/113-zero-states/drawings.js'; // #113 (UI audit flag)
   import { onMount } from 'svelte';
   import { backend } from './backend.js';
   import { announce } from './announce.svelte.js';
@@ -318,6 +320,10 @@
     </div>
 
     {#if stage === 'pick'}
+      {#if flag('zero-states') && flag('dir-room-tint') && ctl && !ctl.ports.length}
+        <!-- #113 (UI audit flag): zero-states. -->
+        <div class="zsetup"><div>{@html draw.controller(0, setting('zero-states', 'cable'))}</div><div><p>No controller found</p><p>Plug yours in with its USB cable and switch it on. It shows up here by itself.</p></div></div>
+      {:else}
       <p class="lead">If your controller does nothing, or the wrong things, teach it here. The app asks for each control in turn, and you press or move it.</p>
       {#if !ctl}
         <p class="lead">{error || 'Looking for controllers…'}</p>
@@ -341,6 +347,7 @@
           <datalist id="setup-models">{#each models as m}<option value={m}></option>{/each}</datalist>
         </label>
         <p class="hint">About {STEPS.length} steps, a couple of minutes. Skip anything your controller doesn't have. While you do this the controller won't play or change anything.</p>
+      {/if}
       {/if}
       {#if error && ctl}<p class="error" role="alert">{error}</p>{/if}
       <div class="actions">

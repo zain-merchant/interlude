@@ -8,6 +8,8 @@
   import { keyLabel } from './commands.js';
   import { PADS, hasGrid, beatsLabel, hotCue, clearHotCue, loopToggle, loopScale, beatJump } from './performance.js';
   import { deckSettings } from './decksettings.svelte.js';
+  import { flag } from '../flags/registry.svelte.js';
+  import { hms } from '../flags/08-stress-hours/time.js';
 
   /** @type {{ deck: number, show?: 'all' | 'cues' | 'loop' }} */
   let { deck, show = 'all' } = $props();
@@ -21,8 +23,11 @@
 
   let held = $state(-1);
 
-  const mmss = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+  // #8 (UI audit flag): stress-hours shows hot cues past an hour as h:mm:ss.
+  const mmss = (s) => (flag('stress-hours') && s >= 3600 ? hms(s) : `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`);
   function fmt(s) {
+    if (flag('deck-polish')) s = Math.round(s * 10) / 10; // #54 (UI audit flag): round before splitting (no "0:60.0")
+    if (flag('stress-hours') && s >= 3600) return hms(s, 1); // #8 (UI audit flag)
     const m = Math.floor(s / 60);
     return `${m}:${(s - m * 60).toFixed(1).padStart(4, '0')}`;
   }
@@ -65,7 +70,7 @@
 
 <div class="perf">
   {#if show !== 'loop'}
-  <div class="row" role="group" aria-label="Deck {'AB'[deck]} hot cues">
+  <div class="row" role="group" aria-label="{flag('deck-names') ? (deck === 0 ? 'Left deck' : 'Right deck') : `Deck ${'AB'[deck]}`} hot cues">
     {#each Array.from({ length: PADS }, (_, i) => i) as i}
       {@const set = d.hotCues?.[i] != null}
       <button class="tc" class:set class:pressed={held === i} aria-disabled={!t} style:--hc="var(--hc-{i + 1})"
@@ -77,21 +82,42 @@
   </div>
   {/if}
   {#if show !== 'cues'}
-  <div class="grp" role="group" aria-label="Deck {'AB'[deck]} loop">
+  {#snippet halve(glyph)}
     <button class="tb" aria-label="Halve loop" aria-disabled={!t} {...press(() => loopScale(deck, 0.5))}
-      use:tip={() => tipText('Halve loop', keyLabel(`deck.${deck}.loopHalve`))}>½</button>
+      use:tip={() => tipText('Halve loop', keyLabel(`deck.${deck}.loopHalve`))}>{glyph}</button>
+  {/snippet}
+  {#snippet double(glyph)}
+    <button class="tb" aria-label="Double loop" aria-disabled={!t} {...press(() => loopScale(deck, 2))}
+      use:tip={() => tipText('Double loop', keyLabel(`deck.${deck}.loopDouble`))}>{glyph}</button>
+  {/snippet}
+  {#snippet back()}
     <button class="tb ar" aria-label="Jump back {size} {beatsWord}" aria-disabled={!grid}
       onpointerdown={(e) => e.button === 0 && beatJump(deck, -1, e.shiftKey)} onclick={(e) => e.detail === 0 && beatJump(deck, -1, e.shiftKey)}
       use:tip={() => (grid ? tipText(`Jump back ${size} ${beatsWord}`, keyLabel(`deck.${deck}.jumpBack`)) : noGrid)}>‹</button>
+  {/snippet}
+  {#snippet forward()}
+    <button class="tb ar" aria-label="Jump forward {size} {beatsWord}" aria-disabled={!grid}
+      onpointerdown={(e) => e.button === 0 && beatJump(deck, 1, e.shiftKey)} onclick={(e) => e.detail === 0 && beatJump(deck, 1, e.shiftKey)}
+      use:tip={() => (grid ? tipText(`Jump forward ${size} ${beatsWord}`, keyLabel(`deck.${deck}.jumpForward`)) : noGrid)}>›</button>
+  {/snippet}
+  {#snippet value()}
     <button class="big" class:live={d.looping} aria-pressed={d.looping} aria-disabled={!grid}
       {...press(() => loopToggle(deck))}
       use:tip={() => (grid ? tipText(d.looping ? 'Exit loop' : `Loop ${size} ${beatsWord}`, keyLabel(`deck.${deck}.loop`)) : noGrid)}
     ><b class="num">{size}</b><span>{beatsWord}</span></button>
-    <button class="tb ar" aria-label="Jump forward {size} {beatsWord}" aria-disabled={!grid}
-      onpointerdown={(e) => e.button === 0 && beatJump(deck, 1, e.shiftKey)} onclick={(e) => e.detail === 0 && beatJump(deck, 1, e.shiftKey)}
-      use:tip={() => (grid ? tipText(`Jump forward ${size} ${beatsWord}`, keyLabel(`deck.${deck}.jumpForward`)) : noGrid)}>›</button>
-    <button class="tb" aria-label="Double loop" aria-disabled={!t} {...press(() => loopScale(deck, 2))}
-      use:tip={() => tipText('Double loop', keyLabel(`deck.${deck}.loopDouble`))}>2×</button>
+  {/snippet}
+  <div class="grp" role="group" aria-label="{flag('deck-names') ? (deck === 0 ? 'Left deck' : 'Right deck') : `Deck ${'AB'[deck]}`} loop">
+    {#if flag('dir-room-tint')}
+      <!-- #110 (UI audit flag): dir-room-tint: one key that loops, then how long the loop is, stepped in a cut like every other amount. Its jump arrows are the transport's own (same action, one row down), so they aren't drawn twice. -->
+      <button class="big" class:live={d.looping} aria-pressed={d.looping} aria-disabled={!grid} {...press(() => loopToggle(deck))}
+        use:tip={() => (grid ? tipText(d.looping ? 'Exit loop' : `Loop ${size} ${beatsWord}`, keyLabel(`deck.${deck}.loop`)) : noGrid)}><span>Loop</span></button>
+      <div class="step">{@render halve('÷2')}<span class="val"><b class="num">{size}</b><small>{beatsWord}</small></span>{@render double('×2')}</div>
+    {:else if flag('no-shift-strip')}
+      <!-- #5 (UI audit flag): no-shift-strip puts ÷2 and ×2 beside the value they change, the jump arrows outside them. -->
+      {@render back()}{@render halve('÷2')}{@render value()}{@render double('×2')}{@render forward()}
+    {:else}
+      {@render halve('½')}{@render back()}{@render value()}{@render forward()}{@render double('2×')}
+    {/if}
   </div>
   {/if}
 </div>

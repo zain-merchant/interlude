@@ -3,6 +3,7 @@
 // engine) a matching HTML menu stands in.
 
 import { inTauri } from './backend.js';
+import { flag } from '../flags/registry.svelte.js';
 
 /**
  * @typedef {{ label: string, action: () => void, key?: string, enabled?: boolean, checked?: boolean } | '-'} MenuEntry
@@ -10,7 +11,7 @@ import { inTauri } from './backend.js';
  */
 
 /** The HTML fallback's state, drawn by ContextMenu.svelte. */
-export const htmlMenu = $state({ items: /** @type {MenuEntry[]} */ ([]), x: 0, y: 0, open: false, returnFocus: null });
+export const htmlMenu = $state({ items: /** @type {MenuEntry[]} */ ([]), x: 0, y: 0, open: false, returnFocus: null, keyboard: false });
 
 // macOS shows accelerators in its own glyphs; translate ours.
 const accel = (k) =>
@@ -47,6 +48,9 @@ export async function openMenu(e, items) {
   htmlMenu.x = e.clientX;
   htmlMenu.y = e.clientY;
   htmlMenu.returnFocus = document.activeElement;
+  // #14 (UI audit flag): states: whether the keyboard opened it (keyboardMenu sends an untrusted event).
+  // #119 (UI audit flag): focus-states: Enter or Space on a key counts too (a click with no detail).
+  htmlMenu.keyboard = !e.isTrusted || (flag('focus-states') && e.type === 'click' && e.detail === 0);
   htmlMenu.open = true;
 }
 
@@ -56,8 +60,10 @@ export async function openMenu(e, items) {
  */
 export function keyboardMenu(e) {
   if (!(e.key === 'ContextMenu' || (e.shiftKey && e.key === 'F10'))) return false;
-  const el = document.activeElement;
+  let el = document.activeElement;
   if (!(el instanceof HTMLElement) || el === document.body) return false;
+  // #119 (UI audit flag): focus-states: the track list has focus, but the menu is its selected row's.
+  if (flag('focus-states')) el = el.matches("[data-region='tracks']") ? (el.querySelector('.row.sel') ?? el) : el;
   e.preventDefault();
   const r = el.getBoundingClientRect();
   el.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true, clientX: r.left + r.width / 2, clientY: r.top + r.height / 2 }));

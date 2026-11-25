@@ -1,0 +1,8 @@
+/* #35: an enabled, unticked box at --fg-3 (about 4.6:1); disabled keeps the
+   off level. */
+:root[data-flag-settings-checks] .settings input[type='checkbox']:not(:checked, :disabled) {
+  box-shadow: inset 0 0 0 1px var(--fg-3);
+}
+:root[data-flag-settings-checks] .settings input[type='checkbox']:not(:checked, :disabled):hover {
+  box-shadow: inset 0 0 0 1px var(--fg-2);
+}

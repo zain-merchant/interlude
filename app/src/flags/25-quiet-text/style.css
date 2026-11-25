@@ -1,0 +1,8 @@
+/* #25: the quietest text level from 50% to 52%. Not under Increase
+   Contrast, which already lifts it to 68% (app.css): a :root rule with the
+   flag's attribute would outrank that one and pull it back down. */
+@media not (prefers-contrast: more) {
+  :root[data-flag-quiet-text] {
+    --fg-3: rgb(236 234 228 / 0.52);
+  }
+}

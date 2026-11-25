@@ -1,0 +1,33 @@
+/* #54: small deck fixes from the panel's backlog. */
+
+/* Hot cue numbers at the same weight as the deck's other numerals
+   (b-K62), and the number a little closer to its time (d-K64: the
+   tabular "1" has wide side bearings, so 8px looked wider than the dot's
+   gap). */
+:root[data-flag-deck-polish] [data-region^='deck'] .perf .tc {
+  gap: 6px;
+}
+:root[data-flag-deck-polish] [data-region^='deck'] .perf .tc b {
+  font-weight: 400;
+}
+
+/* Tenths of a second one step quieter than the minutes and seconds
+   beside them (b-K67), so the time reads at a glance and the flicker of
+   the last digit recedes: under the big time --fg-2, under the small one
+   --fg-3 (4.5:1 or better on the deck glass; an opacity step on --fg-2
+   fell to 3.4:1). Flag 18's ending colour and an empty deck set their own. */
+:root[data-flag-deck-polish] [data-region^='deck'] .hub .t {
+  color: var(--fg-3);
+}
+:root[data-flag-deck-polish] [data-region^='deck'] .hub:not([data-big='remaining']) .el .t,
+:root[data-flag-deck-polish] [data-region^='deck'] .hub[data-big='remaining'] .rm .t {
+  color: var(--fg-2);
+}
+
+/* The title a touch tighter, as the big numerals are. (The 2×2 header
+   grid this flag had before the merge of upstream's deck is gone: the
+   tempo and key now sit in their own cell of the deck's grid, beside the
+   record, and upstream's narrow layout puts them under the title.) */
+:root[data-flag-deck-polish] [data-region^='deck'] .name {
+  letter-spacing: -0.025em;
+}

@@ -1,0 +1,10 @@
+/* #5: the kill shows on the label without changing its length: the label
+   is already red while killed (Knob.svelte), and with the suffix gone that
+   colour (with the dial's red ring, and #61's tinted button) is the mark. */
+
+/* The record button holds the width of the longest clock it shows in a
+   set ("0:00:00", tabular figures) from the start, so "Rec" turning into
+   a running clock doesn't resize it. */
+:root[data-flag-no-shift] .mixer button.rec {
+  min-width: calc(5ch + 0.6em + 30px);
+}

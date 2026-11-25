@@ -1,0 +1,123 @@
+/* #32: Settings type and rhythm. */
+
+/* Page title one step up (16/500); section headings at body size, medium
+   weight and full white, so they lead the 13px grey text under them. */
+:root[data-flag-settings-type] .settings .bar h2 {
+  font-size: var(--t-md);
+  font-weight: 500;
+}
+:root[data-flag-settings-type] .settings h3 {
+  margin: 0 0 8px;
+  font-size: var(--t-sm);
+  font-weight: 500;
+  color: var(--fg);
+}
+/* Help text on a whole-pixel line (no 16/17px alternation). */
+:root[data-flag-settings-type] .settings .display p {
+  line-height: 20px;
+}
+
+/* One gap between sections, whatever ended the last one: 24px. The first
+   starts 16px under the header, as before. */
+:root[data-flag-settings-type] .settings .scroll {
+  padding-top: var(--pad);
+}
+:root[data-flag-settings-type] .settings section {
+  padding-top: 0;
+}
+:root[data-flag-settings-type] .settings section > :last-child {
+  margin-bottom: 0;
+}
+:root[data-flag-settings-type] .settings .scroll > section + :is(section, p) {
+  margin-top: 24px;
+}
+/* In the Keyboard page's columns a top margin would push down whichever
+   group starts a column; the gap goes under each group instead. */
+:root[data-flag-settings-type] .settings .cols > section:not(:last-child) {
+  padding-bottom: 24px;
+}
+
+/* S6: content fades at its edges instead of being sliced, with the track
+   list's edge (#20, the per-fix review's one soft-edge spec): 16px to a 30%
+   floor, the top only once scrolled, the foot only while more is below
+   (Settings.svelte sets data-scrolled and data-more). */
+:root[data-flag-settings-type] .settings .scroll {
+  --clip-top: #000;
+  --clip-foot: #000;
+  -webkit-mask-image: linear-gradient(to bottom, var(--clip-top) 0, #000 16px, #000 calc(100% - 16px), var(--clip-foot) 100%);
+  mask-image: linear-gradient(to bottom, var(--clip-top) 0, #000 16px, #000 calc(100% - 16px), var(--clip-foot) 100%);
+}
+:root[data-flag-settings-type] .settings .scroll[data-scrolled] {
+  --clip-top: rgb(0 0 0 / 0.3);
+}
+:root[data-flag-settings-type] .settings .scroll[data-more] {
+  --clip-foot: rgb(0 0 0 / 0.3);
+}
+
+/* S8: Check for updates and Report a problem are actions, not pages: small,
+   quiet, under a rule. */
+:root[data-flag-settings-type] .settings nav .foot {
+  margin-top: auto;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+:root[data-flag-settings-type] .settings nav .foot .item {
+  height: 24px;
+  font-size: var(--t-xs);
+  color: var(--fg-3);
+}
+:root[data-flag-settings-type] .settings nav .foot .item:hover {
+  color: var(--fg);
+}
+
+/* S13: keyboard page. Caps wide enough for ⇧⌘Z; an unassigned key is an
+   empty dashed slot that says "Set" (it was a dash, like the minus key);
+   0 and O told apart by a slashed zero. */
+:root[data-flag-settings-type] .settings .key {
+  min-width: 52px;
+  font-feature-settings: 'tnum' 1, 'zero' 1;
+}
+:root[data-flag-settings-type] .settings .key.none:not(.rec) {
+  border: 1px dashed var(--line-2);
+  box-shadow: none;
+  font-size: var(--t-xs);
+  color: var(--fg-3);
+}
+:root[data-flag-settings-type] .settings .key.none:not(.rec):hover {
+  border-color: var(--fg-4);
+  color: var(--fg-2);
+}
+/* The Keyboard page's group headings scroll with their lists (a sticky
+   heading in a multi-column flow can't stay level across columns: only
+   the first was pulled up, and its band didn't match the panel). */
+:root[data-flag-settings-type] .settings .cols h3 {
+  margin: 0 0 8px;
+}
+/* The columns run the page's full width, so the last one ends under Done
+   (a 1080px cap stopped them about 104px short). Each row stops at 360px
+   instead, so a name and its key still sit close together on a wide
+   window. */
+:root[data-flag-settings-type] .settings .cols .row {
+  max-width: 360px;
+}
+/* A little air before each run of related shortcuts (hot cues, stems,
+   loops, beat jumps). */
+:root[data-flag-settings-type] .settings .row:has(> [data-key$='.hotCue.0'], > [data-key$='.stem.0'], > [data-key$='.loop'], > [data-key$='.jumpBack']) {
+  margin-top: 8px;
+}
+
+/* Inline code follows the sentence's size. Text-only rows line up on the
+   text baseline. */
+:root[data-flag-settings-type] .settings code {
+  font-size: 0.92em;
+}
+:root[data-flag-settings-type] .settings .row:not(:has(button)) {
+  align-items: baseline;
+  padding-top: 7px;
+}
+
+/* S2 (#24 focus-after-keys): the page list's ring sits inside its pill, so
+   it never crosses the next one. */
+:root[data-flag-focus-after-keys] .settings nav .item:focus-visible {
+  outline-offset: -2px;
+}

@@ -9,6 +9,7 @@
   import { openMenu } from './menu.svelte.js';
   import { dropTarget } from './dnd.svelte.js';
   import { engine } from './engine.svelte.js';
+  import { flag } from '../flags/registry.svelte.js';
   import { sampler, SLOTS, loadSample, clearSample, playSample, stopSample, setSamplerLevel, pickSample, loadDefaultSample, defaultSamples } from './sampler.svelte.js';
 
   /** @type {{ onmessage?: (text: string) => void, selected?: () => any }} */
@@ -75,7 +76,10 @@
       { label: 'Stop', action: () => stopSample(i), enabled: !!live(i)?.playing },
       '-',
       { label: 'Choose a sound…', action: () => choose(i) },
-      { label: pick ? `Put ${pick.title} here` : 'Put the selected track here', action: () => put(i, pick), enabled: !!pick },
+      // #68 (UI audit flag): mixer-polish names the slot the menu acts on (it can be half under the menu).
+      flag('mixer-polish')
+        ? { label: pick ? `Load ${pick.title} into slot ${i + 1}` : `Load the selected track into slot ${i + 1}`, action: () => put(i, pick), enabled: !!pick }
+        : { label: pick ? `Put ${pick.title} here` : 'Put the selected track here', action: () => put(i, pick), enabled: !!pick },
       ...(d ? [{ label: `Use the built-in ${d.title.toLowerCase()}`, action: () => builtIn(i), enabled: s?.path !== d.path }] : []),
       { label: 'Clear slot', action: () => clearSample(i), enabled: !!s },
     ]);
@@ -99,7 +103,8 @@
       </button>
     {/each}
   </div>
-  <Knob label="Level" name="Sampler level" size={22} fromMin value={sampler.level} min={0} max={1} reset={0.8}
+  <!-- #67 / #66 (UI audit flags): sampler-strip's smaller dial fits the strip; knob-rings' quieter ring. -->
+  <Knob label="Level" name="Sampler level" size={flag('sampler-strip') ? 14 : 22} fromMin arc={flag('knob-rings') ? 'var(--fg-2)' : undefined} value={sampler.level} min={0} max={1} reset={0.8}
     format={(v) => `${Math.round(v * 100)}%`} onchange={setSamplerLevel} />
 </section>
 

@@ -1,0 +1,14 @@
+/* #18: a library key that mixes with what's loaded is drawn at full
+   strength over one quiet grey line, under the key and its code together
+   (a box shadow on the key, not text-decoration per span, so the line has
+   no seam). A row that is itself on a deck isn't marked (Library.svelte).
+   The decks carry no mark. */
+:root[data-flag-visual-key-match] [data-region='tracks'] .row .k.mix {
+  display: inline-block;
+  /* Visible, or the cell's overflow: hidden would put an inline-block's
+     baseline at its bottom edge and lift the key off the row's baseline. */
+  overflow: visible;
+  padding-bottom: 2px;
+  box-shadow: inset 0 -1px 0 var(--fg-3);
+  color: var(--fg);
+}

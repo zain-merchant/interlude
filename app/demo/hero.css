@@ -61,18 +61,6 @@ html, body { margin: 0; width: 1440px; height: 920px; overflow: hidden; backgrou
 .app-host .btn { transition: transform var(--snappy-ms) var(--snappy), background-color var(--snappy-ms) var(--snappy); }
 .app-host [data-demo-pressed].btn { transition-duration: var(--press-ms), var(--snappy-ms); transition-timing-function: var(--press), var(--snappy); }
 
-
-/* Demo only: when an EQ is killed the app adds " · kill" to its label, so
-   the label widens and its words jump. Here the label keeps its own word
-   and the kill shows by colour alone (the knob's ring and label turn red),
-   so nothing moves at all. The UI audit's no-shift item does this in the
-   app itself. */
-.app-host [data-region="mixer"] .knob button.label.killed { font-size: 0; line-height: 0; }
-.app-host [data-region="mixer"] .knob button.label.killed::before { display: block; font-size: var(--t-xs); line-height: var(--label-lh, 12px); }
-.app-host [data-region="mixer"] .knob:has([aria-label$="low EQ"]) button.label.killed::before { content: 'Low'; }
-.app-host [data-region="mixer"] .knob:has([aria-label$="mid EQ"]) button.label.killed::before { content: 'Mid'; }
-.app-host [data-region="mixer"] .knob:has([aria-label$="high EQ"]) button.label.killed::before { content: 'High'; }
-
 /* A fingertip on the hardware, without drawing a hand: the soft shadow a
    finger casts on the surface it presses, darkest where it touches. The
    key's own travel and light do the rest. */
@@ -160,7 +148,7 @@ svg.links { position: absolute; inset: 0; z-index: 255; pointer-events: none; ov
 
 /* The library's background-analysis note ("analyzing, 12 to go") would
    otherwise flicker in the demo's first seconds. */
-.app-host .pending { display: none !important; }
+.app-host :is(.pending, .shell-act) { display: none !important; }
 /* The deeper Club board sits a little higher, so it still ends above the toggle. */
 /* Club: its front edge down at the frame's foot. */
 .desk:has(.hw[data-v="club"]) { top: 650px; }

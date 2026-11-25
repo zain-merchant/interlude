@@ -6,6 +6,11 @@
   // the record scratches, as dragging the waveform does.
   import { onMount } from 'svelte';
   import { engine, tracks, displayPos, onFrame, scrubStart, scrubTo, scrubEnd } from './engine.svelte.js';
+  import { tip } from './tooltip.svelte.js';
+  import { flag, setting, flagsRev } from '../flags/registry.svelte.js';
+  import { draw } from '../flags/113-zero-states/drawings.js'; // #113 (UI audit flag)
+  import { hms } from '../flags/08-stress-hours/time.js';
+  import { timeMode, swapTimes } from '../flags/40-time-remaining/mode.svelte.js';
 
   /** @type {{ deck: number }} */
   let { deck } = $props();
@@ -20,15 +25,42 @@
 
   const d = $derived(engine.decks[deck]);
   const t = $derived(tracks[deck]);
+  const armNew = $derived(flag('zero-states') && flag('dir-room-tint')); // #113 (UI audit flag): zero-states
+  const zero = $derived(flag('zero-states') && flag('dir-room-tint') && !t); // #113 (UI audit flag): zero-states
   const name = $derived(deck === 0 ? 'A' : 'B');
 
   function fmt(s) {
     if (!isFinite(s)) return '0:00.0';
+    // #8 (UI audit flag): stress-hours shows h:mm:ss.s past an hour.
+    if (flag('stress-hours') && Math.abs(s) >= 3600) return hms(flag('deck-polish') ? Math.round(s * 10) / 10 : s, 1);
     const sign = s < 0 ? '−' : '';
     s = Math.abs(s);
+    // #54 (UI audit flag): deck-polish rounds to tenths before splitting, so 59.96 s reads 1:00.0, not 0:60.0.
+    if (flag('deck-polish')) s = Math.round(s * 10) / 10;
     const m = Math.floor(s / 60);
     return `${sign}${m}:${(s - m * 60).toFixed(1).padStart(4, '0')}`;
   }
+
+  // #54 (UI audit flag): deck-polish sets the tenths of a second apart (class "t"), to step them down.
+  const clock = (s) => {
+    const m = flag('deck-polish') ? /^(.*)(\.\d)$/.exec(s) : null;
+    return m ? { whole: m[1], tenth: m[2] } : { whole: s, tenth: '' };
+  };
+  // #18 (UI audit flag): the track is playing out its last seconds (class:ending, and class:last for the final ten, on the remaining time).
+  const ending = $derived(flag('visual-ending') && !!t && d.playing && d.duration > 0 && d.duration - d.position < (Number(setting('visual-ending', 'secs')) || 30));
+  // #40 (UI audit flag): time-remaining makes the time left the big number; clicking the centre swaps them (both decks, remembered).
+  const timesProps = $derived(
+    flag('time-remaining')
+      ? {
+          'data-big': timeMode.big,
+          role: 'button',
+          tabindex: 0,
+          'aria-label': timeMode.big === 'remaining' ? 'Show time played big' : 'Show time left big',
+          onkeydown: (e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), e.stopPropagation(), swapTimes()),
+        }
+      : {},
+  );
+  const timesTip = () => (flag('time-remaining') ? (timeMode.big === 'remaining' ? 'Click to show time played' : 'Click to show time left') : '');
 
   let box = $state(0);
   /** @type {HTMLDivElement} */ let wrap;
@@ -45,9 +77,27 @@
   const dpr = Math.min(2, typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1);
 
   // The record, redrawn only when its size or deck changes.
+  // UI audit flags (the directions, #92 and up): a direction can tint the
+  // record through --record-tint, --record-high (r, g, b) and --record-mat
+  // (a colour) on the deck; unset (every flag off), the record is as before.
+  const triplet = (v) => {
+    const n = String(v).trim().split(/[\s,]+/).map(Number);
+    return n.length === 3 && n.every((x) => Number.isFinite(x)) ? n : null;
+  };
+  function themed() {
+    flagsRev();
+    void t; // a direction may tint an empty deck's record differently: read again on load and eject
+    if (!wrap) return { col: COLS[deck], mat: '#0c0c0f' };
+    const cs = getComputedStyle(wrap);
+    const c = triplet(cs.getPropertyValue('--record-tint'));
+    const high = triplet(cs.getPropertyValue('--record-high'));
+    const mat = cs.getPropertyValue('--record-mat').trim();
+    return { col: { c: c ?? COLS[deck].c, high: high ?? COLS[deck].high }, mat: mat || '#0c0c0f' };
+  }
   $effect(() => {
     if (!vinylCv) return;
-    const R = vr, col = COLS[deck], hr = hubD / 2;
+    const { col, mat } = themed();
+    const R = vr, hr = hubD / 2;
     vinylCv.width = vinylCv.height = Math.round(R * 2 * dpr);
     vinylCv.style.width = vinylCv.style.height = R * 2 + 'px';
     const g = vinylCv.getContext('2d');
@@ -58,7 +108,7 @@
     let x = deck * 13 + 7;
     const rnd = () => ((x = (x * 16807) % 2147483647) / 2147483647);
     // The platter mat, seen through the record.
-    fill(R, '#0c0c0f');
+    fill(R, mat);
     for (let r = R * 0.3; r < R; r += Math.max(3, R * 0.035)) ring(r, 'rgba(255,255,255,.028)', 1);
     // Tinted vinyl: denser at the rim, where light travels through more of it.
     const tint = g.createRadialGradient(0, 0, hr, 0, 0, R);
@@ -137,8 +187,18 @@
     const r = disc.getBoundingClientRect();
     return Math.atan2(e.clientY - (r.top + r.height / 2), e.clientX - (r.left + r.width / 2));
   };
+  // #40 (UI audit flag): time-remaining: a tap on the still centre swaps the times. The press
+  // still goes to the record (the centre lets pointers through), so a drag from it scratches as
+  // anywhere else; only a release within 3px of the press swaps.
+  let tap = null;
   function down(e) {
-    if (!t || e.button !== 0) return;
+    if (e.button !== 0) return;
+    if (flag('time-remaining')) {
+      const r = disc.getBoundingClientRect();
+      const inHub = Math.hypot(e.clientX - (r.left + r.width / 2), e.clientY - (r.top + r.height / 2)) <= hubD / 2;
+      tap = inHub ? { x: e.clientX, y: e.clientY } : null;
+    }
+    if (!t) return;
     disc.setPointerCapture(e.pointerId);
     last = pointerAngle(e);
     scrubStart(deck, { scratch: true });
@@ -152,7 +212,9 @@
     last = a;
     scrubTo(deck, displayPos[deck] + (da / (Math.PI * 2)) * (60 / RPM), e.timeStamp);
   }
-  function up() {
+  function up(e) {
+    if (tap && e && Math.hypot(e.clientX - tap.x, e.clientY - tap.y) <= 3) swapTimes();
+    tap = null;
     if (last == null) return;
     last = null;
     scrubEnd(deck);
@@ -160,19 +222,30 @@
 </script>
 
 <div class="wrap" bind:this={wrap}>
-  <div class="platter" style:width="{size}px" style:height="{size}px" style:--deckc={deck === 0 ? 'var(--deck-a)' : 'var(--deck-b)'}>
+  <div class="platter" class:bare={zero} style:width="{size}px" style:height="{size}px" style:--deckc={deck === 0 ? 'var(--deck-a)' : 'var(--deck-b)'}>
     <div class="disc" bind:this={disc} style:width="{vr * 2}px" style:height="{vr * 2}px" style:left="{size / 2 - vr}px" style:top="{size / 2 - vr}px"
       role="slider" aria-label="Deck {name} record, drag to scratch" aria-valuenow={Math.round(d.position)} aria-valuemin="0"
       aria-valuemax={Math.round(d.duration)} aria-valuetext="{fmt(d.position)} of {fmt(d.duration)}" tabindex="-1"
-      onpointerdown={down} onpointermove={move} onpointerup={up} onpointercancel={up}>
+      onpointerdown={down} onpointermove={move} onpointerup={up} onpointercancel={() => ((tap = null), up())}>
       <canvas bind:this={vinylCv}></canvas>
     </div>
     <div class="sheen" style:width="{vr * 2}px" style:height="{vr * 2}px" style:left="{size / 2 - vr}px" style:top="{size / 2 - vr}px"></div>
     <!-- The centre doesn't spin, so the times stay readable. -->
+    {#if flag('time-remaining') || flag('deck-polish') || flag('visual-ending')}
+      <!-- #40, #54, #18 (UI audit flags): time-remaining's swap, deck-polish's tenths, visual-ending's last seconds; with all off, the centre is as before. #110 (dir-room-tint) marks an hour-long track (class long) so its times can step down to fit. -->
+      {@const el = clock(fmt(d.position))}
+      {@const rm = clock(fmt(d.position - d.duration))}
+      <div class="hub" class:empty={!t} class:long={flag('dir-room-tint') && d.duration >= 3600} {...timesProps} use:tip={timesTip} style:width="{hubD}px" style:height="{hubD}px" style:left="{size / 2 - hubD / 2}px" style:top="{size / 2 - hubD / 2}px" style:font-size="{hubD / 6.6}px">
+        <div class="el num"><span class="sr">Elapsed </span>{el.whole}{#if el.tenth}<span class="t">{el.tenth}</span>{/if}</div>
+        <div class="rm num" class:ending class:last={ending && d.duration - d.position < 10}><span class="sr">Remaining </span>{rm.whole}{#if rm.tenth}<span class="t">{rm.tenth}</span>{/if}</div>
+      </div>
+    {:else}
     <div class="hub" style:width="{hubD}px" style:height="{hubD}px" style:left="{size / 2 - hubD / 2}px" style:top="{size / 2 - hubD / 2}px" style:font-size="{hubD / 6.6}px">
       <div class="el num"><span class="sr">Elapsed </span>{fmt(d.position)}</div>
       <div class="rm num"><span class="sr">Remaining </span>{fmt(d.position - d.duration)}</div>
     </div>
+    {/if}
+    {#if zero}<!-- #113 (UI audit flag): zero-states: the bare platter. --><div class="bareart" aria-hidden="true">{@html draw.platter(Math.round(size), deck)}</div>{/if}
     <div class="tonearm" class:down={!!t && d.playing} style:left="{armG.px}px" style:top="{armG.py}px" style:--s={k} aria-hidden="true">
       <div class="pivot"></div>
       <div class="swing" bind:this={arm}>
@@ -188,6 +261,8 @@
           <!-- counterweight -->
           <rect x={-26 * k} y={-6.5 * k} width={18 * k} height={13 * k} rx={2.5 * k} fill="url(#weight{deck})" stroke="rgba(255,255,255,.12)" stroke-width="0.75" />
           <rect x={-24 * k} y={-6.5 * k} width={1.2 * k} height={13 * k} fill="rgba(255,255,255,.18)" />
+          <!-- #113 (UI audit flag): zero-states: one arm for both decks, its head turned in over the record. -->
+          {#if armNew}<g class="arm2">{@html draw.tonearm(armG.L, k, deck === 0 ? 1 : -1, 'var(--deckc)')}</g>{:else}
           <rect x={-8 * k} y={-1.8 * k} width={armG.L - 8 * k} height={3.6 * k} rx={1.8 * k} fill="url(#tube{deck})" />
           <!-- headshell, cartridge in the deck's colour, and finger lift -->
           <g transform="translate({armG.L} 0) rotate(-16)">
@@ -196,6 +271,7 @@
             <rect x={-16 * k} y={-9 * k} width={2 * k} height={5 * k} rx={1 * k} fill="#c9c7c0" />
           </g>
           <circle cx={armG.L} cy="0" r={1.6 * k} fill="#f4f2ec" />
+          {/if}
         </svg>
       </div>
       <div class="cap"></div>

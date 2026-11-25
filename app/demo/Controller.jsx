@@ -13,15 +13,14 @@
 // its keys and turns its knobs; the app does the rest.
 import { useEffect, useRef, useState } from 'react';
 import { engine } from '$lib/engine.svelte.js';
+import { deckSlider } from './app.js';
 
 // 33⅓ rpm: how far a platter turns in a second, in degrees.
 const DEG_PER_SEC = (100 / 3 / 60) * 360;
 
 /** One of the app's sliders, for the controller to mirror. */
 function appSlider(d, which) {
-  if (which === 'pitch') return document.querySelector(`[role="slider"][aria-label="Deck ${'AB'[d]} pitch"]`);
-  if (which === 'volume') return document.querySelector(`[role="slider"][aria-label="Deck ${'AB'[d]} volume"]`);
-  return document.querySelector(`[role="slider"][aria-label="Deck ${'AB'[d]} ${which} EQ"]`);
+  return deckSlider(d, which === 'pitch' || which === 'volume' ? which : `${which} EQ`);
 }
 /** How far along its travel a slider is, 0 to 1, from its own ARIA values. */
 function along(el) {
