@@ -8,7 +8,7 @@ import { showToast } from './undo.svelte.js';
 import { mb, progressText, spoken } from './stemsmodel.js';
 
 /** @type {import('./stemsmodel.js').StemsModel & { known: boolean }} */
-export const stemsModel = $state({ known: false, state: 'missing', done: 0, total: 0, secondsLeft: null, error: null });
+export const stemsModel = $state({ known: false, state: 'missing', done: 0, total: 0, secondsLeft: null, error: null, mode: 'ask' });
 
 /** How many places on screen show the progress. */
 let watchers = 0;
@@ -53,3 +53,10 @@ export async function downloadStems() {
 export const cancelStems = async () => take(await backend.cancelStemsModel());
 /** Deletes the model, or what's in of it. */
 export const removeStems = async () => take(await backend.removeStemsModel());
+
+/** Changes when tracks are split. @param {import('./stemsmodel.js').StemsMode} mode */
+export async function setStemsMode(mode) {
+  const info = await backend.setStems({ mode });
+  take(info.model);
+  return info;
+}

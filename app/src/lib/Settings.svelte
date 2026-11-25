@@ -11,8 +11,8 @@
   import { setSlip } from './performance.js';
   import { keyLabel } from './commands.js';
   import { backend } from './backend.js';
-  import { stemsModel, downloadStems, cancelStems, removeStems, watchStemsModel } from './stemsmodel.svelte.js';
-  import { mb, percent, progressText, stemsStatus } from './stemsmodel.js';
+  import { stemsModel, downloadStems, cancelStems, removeStems, setStemsMode, watchStemsModel } from './stemsmodel.svelte.js';
+  import { mb, percent, progressText, stemsStatus, STEMS_MODES, STEMS_OFF, STEMS_WHAT } from './stemsmodel.js';
   import { flag } from '../flags/registry.svelte.js';
   import { pushEdit } from './undo.svelte.js';
   import Keys from '../flags/116-settings-finish/Keys.svelte'; // #116 (UI audit flag)
@@ -312,6 +312,15 @@
       stemsError = String(e);
     }
   }
+  /** @param {import('./stemsmodel.js').StemsMode} mode */
+  async function pickMode(mode) {
+    stemsError = '';
+    try {
+      stems = await setStemsMode(mode);
+    } catch (e) {
+      stemsError = String(e);
+    }
+  }
   async function clearCache() {
     try {
       stems = await backend.clearStemsCache();
@@ -556,7 +565,7 @@
     add('Library', 'Auto gain', 'loudness volume trim');
     add('Library', 'Import from another app', 'rekordbox serato cue points playlists beatgrids');
     add('Stems', 'Separation model', 'download htdemucs vocals drums bass melody');
-    add('Stems', 'How stems work', 'on off memory automatic vocals mute solo alone split separate');
+    add('Stems', 'How stems work', 'fast efficient off memory automatic vocals mute solo alone split separate');
     add('Stems', 'Stems cache', 'disk size clear keep');
     add('Controllers', 'Connected', 'midi hid mapping plugged');
     add('Controllers', 'Controller not working?', 'set up step by step wizard');
@@ -684,8 +693,8 @@
             <!-- #33 (UI audit flag): stems-model: says it's installed, and its size. #34 (UI audit flag): settings-copy: one sentence. -->
             {#if flag('stems-model')}<p class="installed">Installed, {mb(stems?.modelBytes || stemsModel.total)}</p>{/if}
             {#if finish}{#if !flag('stems-model')}<p>Installed.</p>{/if}
-            {:else if flag('settings-copy')}<p>Each track you load is split into vocals, melody, bass and drums on this computer, starting at the play head.</p>
-            {:else}<p>Ready. Each track you load is split into vocals, melody, bass and drums on this computer, starting at the play head, so the part you're about to play is ready first. The model takes {mb(stems?.modelBytes || stemsModel.total)}.</p>{/if}
+            {:else if flag('settings-copy')}<p>It separates tracks into vocals, melody, bass and drums on this computer, starting at the play head.</p>
+            {:else}<p>Ready. It separates tracks into vocals, melody, bass and drums on this computer, starting at the play head, so the part you're about to play is ready first. The model takes {mb(stems?.modelBytes || stemsModel.total)}.</p>{/if}
             <div class="size model">
               {#if removing}
                 <p>New tracks won't have stems until it's downloaded again.</p>
@@ -728,20 +737,22 @@
         {#if stems}
           <!-- #116 (UI audit flag): settings-finish: what stems are, then how they work. -->
           {#if finish}
-          <StemsWay {stems} set={setStems} />
+          <StemsWay mode={stemsModel.mode} set={pickMode} />
           {:else}
           <section class="display">
-            <h3>Splitting</h3>
-            {#if flag('settings-checks')}
-              <!-- #35 (UI audit flag): settings-checks: the same checkbox row as every other page. -->
-              <label class="opt">
-                <input type="checkbox" checked={stems.enabled} onchange={(e) => setStems({ enabled: e.currentTarget.checked })} />
-                <span>Split tracks into stems when they load</span>
-              </label>
-            {:else}
-              <label class="check"><input type="checkbox" checked={stems.enabled} onchange={(e) => setStems({ enabled: e.currentTarget.checked })} />
-                Split tracks into stems when they load</label>
-            {/if}
+            <h3 id="stems-mode">How stems work on {mac ? 'your Mac' : 'this computer'}</h3>
+            <p>{STEMS_WHAT}</p>
+            <div role="radiogroup" aria-labelledby="stems-mode">
+              {#each STEMS_MODES as m}
+                <label class="opt"><input type="radio" name="stems-mode" checked={stemsModel.mode === m.mode}
+                  aria-describedby="stems-{m.mode}" onchange={() => pickMode(m.mode)} /><span>{m.name}</span></label>
+                <p id="stems-{m.mode}" class="under">{m.line}</p>
+              {/each}
+              <label class="opt"><input type="radio" name="stems-mode" checked={stemsModel.mode === 'off'}
+                aria-describedby="stems-off" onchange={() => pickMode('off')} /><span>Off</span></label>
+              <p id="stems-off" class="under">{STEMS_OFF}</p>
+            </div>
+            {#if stemsModel.mode === 'ask'}<p>Nothing is separated until you choose, here or in a deck's Stems tab.</p>{/if}
           </section>
           {/if}
           <section class="display">
@@ -1207,6 +1218,18 @@
     min-height: 30px;
     color: var(--fg);
   }
+  input[type='radio'] {
+    appearance: none;
+    flex: none;
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    border-radius: 50%;
+    box-shadow: inset 0 0 0 1px var(--fg-3);
+  }
+  input[type='radio']:checked {
+    box-shadow: inset 0 0 0 5px var(--fg);
+  }
   input[type='checkbox'] {
     appearance: none;
     flex: none;
@@ -1231,6 +1254,7 @@
     border-bottom: 1.6px solid var(--bg);
     transform: rotate(-45deg);
   }
+  input[type='radio']:focus-visible,
   input[type='checkbox']:focus-visible {
     outline: 2px solid var(--ring);
     outline-offset: 2px;
@@ -1239,6 +1263,9 @@
     display: flex;
     align-items: center;
     gap: 8px;
+  }
+  .display .under {
+    margin: 0 0 8px 26px;
   }
   .size.model {
     margin-bottom: 12px;
@@ -1249,16 +1276,6 @@
   .size span {
     width: 48px;
     text-align: center;
-  }
-  .check {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin: 0 0 8px;
-    color: var(--fg-2);
-  }
-  .check input {
-    accent-color: var(--fg);
   }
   .err {
     color: var(--kill);

@@ -21,6 +21,7 @@
   import { openMenu } from './menu.svelte.js';
   import { keyLabel } from './commands.js';
   import { announce } from './announce.svelte.js';
+  import { leftStems, openedStems, showStems } from './stems.svelte.js';
   import { keyName, keyLongName, camelot, playingKey, keysMix } from './key.js';
   import { toggleSlip, beatJump, hasGrid, beatsLabel, setKeyShift, keyStep, keySync, canKeySync, KEY_SHIFT_MAX } from './performance.js';
 
@@ -104,7 +105,10 @@
     if (MODES.some((m) => m.id === saved)) mode = /** @type {any} */ (saved);
   } catch {}
   function setMode(m) {
+    const opened = m === 'stems' && mode !== 'stems';
     mode = m;
+    if (opened) openedStems(deck);
+    else if (m !== 'stems') leftStems(deck);
     // Grid isn't remembered: while it's open, dragging the waveform slides
     // the grid instead of scratching, which shouldn't greet a new session.
     if (m === 'grid') return;
@@ -120,7 +124,16 @@
   $effect(() => {
     const tab = padModeTab(padMode[deck].mode);
     padMode[deck].presses;
-    if (tab) untrack(() => setMode(tab));
+    if (!tab) return;
+    untrack(() => {
+      // Choosing the stems pads again is using them, with the tab open or not.
+      if (tab === 'stems' && mode === 'stems') openedStems(deck);
+      setMode(tab);
+    });
+  });
+  // A stem pressed before choosing how stems work brings the choice forward.
+  $effect(() => {
+    if (showStems[deck].n) untrack(() => setMode('stems'));
   });
   function modeKey(e) {
     const i = MODES.findIndex((m) => m.id === mode);

@@ -1,5 +1,5 @@
 <script>
-  import { onMount } from 'svelte';
+  import { onMount, untrack } from 'svelte';
   import Deck from './lib/Deck.svelte';
   import Mixer from './lib/Mixer.svelte';
   import Library from './lib/Library.svelte';
@@ -32,7 +32,7 @@
   import { padMode, setPadMode } from './lib/padmode.svelte.js';
   import { tempoPickup } from './lib/pickup.svelte.js';
   import { gridEdit, NUDGE } from './lib/grid.svelte.js';
-  import { toggleStem, soloStem, syncStemWaveforms, stemsUnavailable, stemsOf, usable } from './lib/stems.svelte.js';
+  import { toggleStem, soloStem, setStemMask, syncStemWaveforms, stemsOf, dropWaiting } from './lib/stems.svelte.js';
   import { once, stemsReadyTip } from './lib/tips.svelte.js';
   import { startStemsModel, stemsSetupDone } from './lib/stemsmodel.svelte.js';
   import { libraryHealth, reveal, captureUiErrors, update, checkForUpdate, installUpdate } from './lib/support.svelte.js';
@@ -124,6 +124,17 @@
   // The first time a track's stems are ready, a one-time tip says where they are.
   $effect(() => {
     if ([0, 1].some((d) => stemsOf(d).state === 'ready')) stemsReadyTip();
+  });
+  // A press that can't be kept after all is undone, so a stem doesn't stay
+  // muted with no way to bring it back.
+  $effect(() => {
+    for (const d of [0, 1]) {
+      const { state, mask } = stemsOf(d);
+      if (mask !== 0b1111 && ['failed', 'off', 'needsModel'].includes(state) && tracks[d]) {
+        untrack(() => dropWaiting(d));
+        if (state === 'failed') say(`Deck ${'AB'[d]}: stems couldn't be made`);
+      }
+    }
   });
   // Importing another app's library opens in its own window over the app.
   let importing = $state(false);
@@ -363,9 +374,7 @@
       default: {
         const stem = /^deck\.(\d)\.stem(Solo)?\.(\d)$/.exec(id);
         if (stem) {
-          if (!down) break;
-          if (usable(Number(stem[1]))) (stem[2] ? soloStem : toggleStem)(Number(stem[1]), Number(stem[3]));
-          else say(stemsUnavailable(Number(stem[1])));
+          if (down) (stem[2] ? soloStem : toggleStem)(Number(stem[1]), Number(stem[3]));
           break;
         }
         runPerformance(id, down);
@@ -769,7 +778,7 @@
     const off = backend.onController?.((e) => {
       if (e.type === 'browse') library.browse(e.delta);
       else if (e.type === 'load') library.loadSelected(e.deck);
-      else if (e.type === 'stemsUnavailable') say(stemsUnavailable(e.deck));
+      else if (e.type === 'stemsUnavailable') setStemMask(e.deck, e.mask);
       else if (e.type === 'tempoPickup') tempoPickup[e.deck] = e.rate ?? null;
       else if (e.type === 'padMode') {
         const was = padMode[e.deck].mode;

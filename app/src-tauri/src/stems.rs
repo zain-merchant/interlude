@@ -1,5 +1,10 @@
-//! Stems in the app: splits each loaded track in the background, fetches
-//! the model, and keeps the stems settings.
+//! Stems in the app: splits loaded tracks in the background when the user's
+//! choice says to, fetches the model, and keeps the stems settings.
+//!
+//! Nothing is split until the user has chosen between having stems ready on
+//! every track and splitting a track once its stems are used. They're asked
+//! the first time they use stems. People who had the model before there was
+//! a choice keep what they had, stems on every track.
 //!
 //! The model isn't part of the app, to keep it small. It downloads only once
 //! the user asks for it. If the app quits before it's in, it carries on where
@@ -14,18 +19,35 @@ use std::sync::{Arc, Mutex};
 
 use dj_engine::{SharedState, NUM_DECKS};
 use dj_stems::download::{self, Downloader};
-use dj_stems::{CacheKey, Settings, Splitter, Status, MODEL_BYTES};
+use dj_stems::{CacheKey, Settings, Splitter, Status, When, MODEL_BYTES};
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter, Manager, State};
 
 const GB: u64 = 1024 * 1024 * 1024;
 
+/// When tracks are split, as the user chose.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum Mode {
+    /// Not chosen yet: asked the first time stems are used.
+    Ask,
+    /// Every track, as it loads.
+    Fast,
+    /// A track once its stems are used.
+    Efficient,
+    /// Never. (Saved as `enabled`, which keeps the choice for later.)
+    Off,
+}
+
 /// What the user can change, as saved.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
 struct Saved {
-    /// Split tracks when they load.
+    /// Stems are on.
     enabled: bool,
+    /// When tracks are split, if on. Missing in settings from before there
+    /// was a choice; [`Saved::settle`] fills it in.
+    mode: Option<Mode>,
     /// Stems cache size in GB. 0 turns the cache off.
     cache_gb: u32,
     /// The user asked for the model, so an unfinished download carries on
@@ -38,8 +60,48 @@ impl Default for Saved {
     fn default() -> Self {
         Self {
             enabled: true,
+            mode: None,
             cache_gb: 5,
             auto_download: false,
+        }
+    }
+}
+
+impl Saved {
+    /// Decides the mode the first time this version runs: whoever already
+    /// has the model was splitting every track, and goes on doing so;
+    /// anyone else is asked. Returns whether that changed anything, to be
+    /// saved at once: later, a model that downloaded by itself would look
+    /// the same.
+    fn settle(&mut self, has_model: bool) -> bool {
+        if self.mode.is_some() {
+            return false;
+        }
+        self.mode = Some(if has_model { Mode::Fast } else { Mode::Ask });
+        true
+    }
+
+    fn mode(&self) -> Mode {
+        if self.enabled {
+            self.mode.unwrap_or(Mode::Ask)
+        } else {
+            Mode::Off
+        }
+    }
+
+    fn set_mode(&mut self, mode: Mode) {
+        self.enabled = mode != Mode::Off;
+        if self.enabled {
+            self.mode = Some(mode);
+        }
+    }
+
+    fn when(&self) -> When {
+        match self.mode() {
+            Mode::Ask => When::Unchosen,
+            Mode::Fast => When::Always,
+            Mode::Efficient => When::OnUse,
+            Mode::Off => When::Never,
         }
     }
 }
@@ -55,10 +117,13 @@ pub struct ModelInfo {
     total: u64,
     seconds_left: Option<u64>,
     error: Option<String>,
+    /// When tracks are split. Not about the model, but what the UI shows of
+    /// stems depends on both.
+    mode: Mode,
 }
 
-impl From<download::State> for ModelInfo {
-    fn from(s: download::State) -> Self {
+impl ModelInfo {
+    fn new(s: download::State, mode: Mode) -> Self {
         use download::State as S;
         let (state, done, seconds_left, error) = match s {
             S::Missing { done } => ("missing", done, None, None),
@@ -73,6 +138,7 @@ impl From<download::State> for ModelInfo {
             total: MODEL_BYTES,
             seconds_left,
             error,
+            mode,
         }
     }
 }
@@ -89,8 +155,10 @@ pub struct Stems {
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DeckStems {
-    /// off, needsModel, starting, splitting, ready or failed.
+    /// off, needsModel, ask, onUse, starting, splitting, ready or failed.
     state: &'static str,
+    /// The stems are ready where the play head is, so muting one is heard.
+    here: bool,
     /// Share of the track that's split, 0 to 1.
     ready: f32,
     error: Option<String>,
@@ -100,7 +168,7 @@ pub struct DeckStems {
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct StemsInfo {
-    enabled: bool,
+    mode: Mode,
     cache_gb: u32,
     /// Bytes the cache takes now.
     cache_bytes: u64,
@@ -112,7 +180,7 @@ pub struct StemsInfo {
 impl Stems {
     pub fn new(shared: Arc<SharedState>, app: AppHandle) -> Self {
         let dir = crate::paths::data_dir();
-        let saved: Saved = dir
+        let mut saved: Saved = dir
             .as_ref()
             .and_then(|d| std::fs::read(d.join("stems.json")).ok())
             .and_then(|b| serde_json::from_slice(&b).ok())
@@ -120,16 +188,21 @@ impl Stems {
         let model = dir.as_ref().map(|d| {
             let dest = d.join("models").join(dj_stems::MODEL_FILE);
             Downloader::new(dj_stems::model_source(), dest, move |s| {
+                let Some(stems) = app.try_state::<Stems>() else {
+                    return;
+                };
                 // Splitting starts on the loaded decks once it's in, and
                 // stops using it once it's removed.
                 if matches!(s, download::State::Ready | download::State::Missing { .. }) {
-                    if let Some(stems) = app.try_state::<Stems>() {
-                        stems.apply();
-                    }
+                    stems.apply();
                 }
-                let _ = app.emit("stems-model", ModelInfo::from(s.clone()));
+                let _ = app.emit("stems-model", ModelInfo::new(s.clone(), stems.mode()));
             })
         });
+        let has_model = model
+            .as_ref()
+            .is_some_and(|m: &Downloader| m.state() == download::State::Ready);
+        let settled = saved.settle(has_model);
         let heads: dj_stems::PlayHeads = Box::new(move |deck| shared.deck(deck).position);
         let stems = Self {
             splitter: Splitter::new(Settings::default(), heads),
@@ -137,6 +210,9 @@ impl Stems {
             saved: Mutex::new(saved),
             model,
         };
+        if settled {
+            stems.save();
+        }
         stems.apply();
         stems
     }
@@ -160,7 +236,7 @@ impl Stems {
             .as_ref()
             .is_some_and(|m| m.state() == download::State::Ready);
         self.splitter.configure(Settings {
-            enabled: saved.enabled,
+            when: saved.when(),
             model: self.model_path().filter(|_| ready),
             cache_dir: self.cache_dir(),
             cache_limit: saved.cache_gb as u64 * GB,
@@ -177,7 +253,7 @@ impl Stems {
         }
     }
 
-    /// A track was loaded on `deck`: start splitting it.
+    /// A track was loaded on `deck`: split it, now or when it's used.
     pub fn loaded(&self, deck: usize, track: &Arc<dj_engine::Track>) {
         let key = track
             .path
@@ -190,13 +266,19 @@ impl Stems {
         self.splitter.stop(deck);
     }
 
-    /// True when `deck`'s stems can be muted: split, or being split. Until
-    /// then the deck plays the original whatever the stem mask says.
+    /// True when `deck`'s stems can be muted: split, being split, or split
+    /// as soon as one is. Until it's split where it plays, the deck plays
+    /// the original, and muting is heard once it is.
     pub fn usable(&self, deck: usize) -> bool {
         matches!(
             self.splitter.status(deck),
-            Status::Starting | Status::Splitting(_) | Status::Ready
+            Status::OnUse | Status::Starting | Status::Splitting(_) | Status::Ready
         )
+    }
+
+    /// `deck`'s stems are being used.
+    pub fn used(&self, deck: usize) {
+        self.splitter.use_stems(deck);
     }
 
     pub fn decks(&self) -> [DeckStems; NUM_DECKS] {
@@ -204,6 +286,8 @@ impl Stems {
             let (state, ready, error) = match self.splitter.status(deck) {
                 Status::Off => ("off", 0.0, None),
                 Status::NeedsModel => ("needsModel", 0.0, None),
+                Status::Unchosen => ("ask", 0.0, None),
+                Status::OnUse => ("onUse", 0.0, None),
                 Status::Starting => ("starting", 0.0, None),
                 Status::Splitting(r) => ("splitting", r, None),
                 Status::Ready => ("ready", 1.0, None),
@@ -211,6 +295,7 @@ impl Stems {
             };
             DeckStems {
                 state,
+                here: self.splitter.is_here(deck),
                 ready,
                 error,
             }
@@ -220,7 +305,7 @@ impl Stems {
     fn info(&self) -> StemsInfo {
         let saved = self.saved.lock().expect("stems settings").clone();
         StemsInfo {
-            enabled: saved.enabled,
+            mode: saved.mode(),
             cache_gb: saved.cache_gb,
             cache_bytes: self.cache_dir().map_or(0, |d| dj_stems::cache::size(&d)),
             model_bytes: self.model_path().map_or(0, |p| {
@@ -230,15 +315,19 @@ impl Stems {
         }
     }
 
+    fn mode(&self) -> Mode {
+        self.saved.lock().expect("stems settings").mode()
+    }
+
     fn model_info(&self) -> ModelInfo {
-        match &self.model {
-            Some(m) => m.state().into(),
+        let state = match &self.model {
+            Some(m) => m.state(),
             None => download::State::Failed {
                 done: 0,
                 error: "There's no folder to keep it in.".into(),
-            }
-            .into(),
-        }
+            },
+        };
+        ModelInfo::new(state, self.mode())
     }
 
     /// Carries on with the download if the user asked for it and it isn't in.
@@ -270,13 +359,15 @@ pub fn stems_info(stems: State<'_, Stems>) -> StemsInfo {
 #[tauri::command]
 pub fn set_stems(
     stems: State<'_, Stems>,
-    enabled: Option<bool>,
+    app: State<'_, crate::AppState>,
+    mode: Option<Mode>,
     cache_gb: Option<u32>,
 ) -> StemsInfo {
+    let was = stems.mode();
     {
         let mut s = stems.saved.lock().expect("stems settings");
-        if let Some(v) = enabled {
-            s.enabled = v;
+        if let Some(v) = mode {
+            s.set_mode(v);
         }
         if let Some(v) = cache_gb {
             s.cache_gb = v.min(100);
@@ -284,16 +375,33 @@ pub fn set_stems(
     }
     stems.save();
     stems.apply();
-    // With splitting off there's nothing to download the model for.
-    match (enabled, &stems.model) {
-        (Some(true), _) => stems.auto_download(),
-        (Some(false), Some(m)) => m.cancel(),
+    match (mode, &stems.model) {
+        // With stems off there's nothing to download the model for.
+        (Some(Mode::Off), Some(m)) => m.cancel(),
+        (Some(_), _) => {
+            stems.auto_download();
+            if was == Mode::Off {
+                // It let go of the loaded tracks when it was turned off.
+                let tracks = app.tracks.lock().unwrap_or_else(|e| e.into_inner()).clone();
+                for (deck, track) in tracks.iter().enumerate() {
+                    if let Some(t) = track {
+                        stems.loaded(deck, t);
+                    }
+                }
+            }
+        }
         _ => {}
     }
     if let (Some(dir), Some(gb)) = (stems.cache_dir(), cache_gb) {
         let _ = dj_stems::cache::trim(&dir, gb as u64 * GB, None);
     }
     stems.info()
+}
+
+/// `deck`'s stems are being used: its Stems tab was opened.
+#[tauri::command]
+pub fn use_stems(stems: State<'_, Stems>, deck: usize) {
+    stems.used(deck);
 }
 
 #[tauri::command]
@@ -380,10 +488,14 @@ pub async fn stems_waveform(
 mod tests {
     use super::*;
 
+    fn saved(json: &str) -> Saved {
+        serde_json::from_str(json).unwrap()
+    }
+
     /// Settings saved before the download was remembered: nobody has asked.
     #[test]
     fn older_settings_dont_download_the_model() {
-        let s: Saved = serde_json::from_str(r#"{"enabled": false, "cacheGb": 20}"#).unwrap();
+        let s = saved(r#"{"enabled": false, "cacheGb": 20}"#);
         assert!(!s.enabled);
         assert_eq!(s.cache_gb, 20);
         assert!(!s.auto_download);
@@ -391,16 +503,58 @@ mod tests {
     }
 
     #[test]
+    fn whoever_has_the_model_keeps_splitting_every_track_unasked() {
+        let mut s = saved(r#"{"enabled": true, "cacheGb": 5}"#);
+        assert!(s.settle(true), "saved");
+        assert_eq!(s.mode(), Mode::Fast);
+        // With stems off they stay off, and Fast is there to go back to.
+        let mut s = saved(r#"{"enabled": false}"#);
+        s.settle(true);
+        assert_eq!(s.mode(), Mode::Off);
+        assert_eq!(s.mode, Some(Mode::Fast));
+    }
+
+    #[test]
+    fn anyone_else_is_asked_even_once_the_model_is_in() {
+        let mut s = Saved::default();
+        assert!(s.settle(false), "saved");
+        assert_eq!(s.when(), When::Unchosen);
+        // Next launch, with the model downloaded meanwhile.
+        let mut s = saved(&serde_json::to_string(&s).unwrap());
+        assert!(!s.settle(true));
+        assert_eq!(s.mode(), Mode::Ask);
+    }
+
+    #[test]
+    fn a_choice_survives_turning_stems_off_and_restarting() {
+        let mut s = Saved::default();
+        s.settle(false);
+        s.set_mode(Mode::Efficient);
+        assert_eq!(s.when(), When::OnUse);
+        s.set_mode(Mode::Off);
+        assert_eq!(s.when(), When::Never);
+        let s = saved(&serde_json::to_string(&s).unwrap());
+        assert_eq!(s.mode(), Mode::Off);
+        assert_eq!(s.mode, Some(Mode::Efficient));
+        for (mode, name) in [(Mode::Efficient, "\"efficient\""), (Mode::Fast, "\"fast\"")] {
+            assert_eq!(serde_json::to_string(&mode).unwrap(), name);
+        }
+    }
+
+    #[test]
     fn the_ui_gets_the_download_as_it_is() {
-        let info = ModelInfo::from(download::State::Downloading {
-            done: 5,
-            left: Some(9),
-        });
+        let info = ModelInfo::new(
+            download::State::Downloading {
+                done: 5,
+                left: Some(9),
+            },
+            Mode::Ask,
+        );
         assert_eq!(
             serde_json::to_value(info).unwrap(),
             serde_json::json!({
                 "state": "downloading", "done": 5, "total": MODEL_BYTES,
-                "secondsLeft": 9, "error": null,
+                "secondsLeft": 9, "error": null, "mode": "ask",
             })
         );
     }
