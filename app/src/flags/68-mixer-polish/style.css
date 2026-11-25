@@ -1,0 +1,9 @@
+/* #68: small mixer fixes from the panel's backlog. */
+
+/* a-K45: the dial pointer, a 2px hairline, goes to 3px with rounded ends,
+   so where a dial points reads from arm's length. */
+:root[data-flag-mixer-polish] .knob .dial i {
+  width: 3px;
+  margin-left: -1.5px;
+  border-radius: 1.5px;
+}

@@ -9,6 +9,7 @@
   import { engine, control as send } from './engine.svelte.js';
   import { backend } from './backend.js';
   import { announce } from './announce.svelte.js';
+  import { flag } from '../flags/registry.svelte.js';
 
   /** @type {{ onmessage?: (text: string) => void }} */
   let { onmessage = () => {} } = $props();
@@ -27,7 +28,9 @@
   /** Height of the channel dial columns; on a short mixer the dials shrink so their labels never overlap. */
   let chHeight = $state(0);
   // Each dial takes its size plus 24px (tick ring and label), with 4px between dials.
-  const knob = $derived(chHeight ? Math.max(14, Math.min(KNOB, Math.floor((chHeight - 16) / 5 - 24))) : KNOB);
+  // #61 (UI audit flag): eq-kill's kill buttons add 9px under three of the five dials and the captions 5px under two.
+  const dialRows = 5;
+  const knob = $derived(chHeight ? Math.max(14, Math.min(KNOB, Math.floor((chHeight - 16) / dialRows - 24 - (flag('eq-kill') ? 7.4 : 0)))) : KNOB);
   const color = (deck) => (deck === 0 ? 'var(--deck-a)' : 'var(--deck-b)');
   const channels = $state([0, 1].map(() => ({ gain: 0, eq: [0, 0, 0], filter: 0, fader: 1, pfl: false })));
   let master = $state(0);
@@ -137,15 +140,17 @@
 {#snippet knobs(deck)}
   {@const ch = channels[deck]}
   {@const n = deck === 0 ? 'A' : 'B'}
+  <!-- #88 (UI audit flag): deck-names calls the decks left and right. -->
+  {@const D = flag('deck-names') ? (deck === 0 ? 'Left deck' : 'Right deck') : `Deck ${n}`}
   <div class="ch" bind:clientHeight={chHeight}>
-    <Knob label="Trim" name="Deck {n} trim" size={knob} bind:value={ch.gain} min={-12} max={12} reset={0} format={db} arc={color(deck)}
+    <Knob label="Trim" name="{D} trim" size={knob} bind:value={ch.gain} min={-12} max={12} reset={0} format={db} arc={color(deck)}
       onchange={(v) => control({ type: 'setGain', deck, db: v })} />
     {#each BANDS as { label, band }}
-      <Knob {label} name="Deck {n} {label.toLowerCase()} EQ" size={knob} bind:value={ch.eq[band]} min={KILL} max={EQ_MAX} reset={0} kill={KILL} taper={eqTaper} format={db}
+      <Knob {label} name="{D} {label.toLowerCase()} EQ" size={knob} bind:value={ch.eq[band]} min={KILL} max={EQ_MAX} reset={0} kill={KILL} taper={eqTaper} format={db}
         arc={color(deck)}
         onchange={(v) => control({ type: 'setEq', deck, band, db: v })} />
     {/each}
-    <Knob label="Filter" name="Deck {n} filter" size={knob} bind:value={ch.filter} min={-1} max={1} reset={0} format={filterText} arc={color(deck)}
+    <Knob label="Filter" name="{D} filter" size={knob} bind:value={ch.filter} min={-1} max={1} reset={0} format={filterText} arc={color(deck)}
       onchange={(v) => control({ type: 'setFilter', deck, value: v })} />
   </div>
 {/snippet}
@@ -153,15 +158,19 @@
 {#snippet strip(deck)}
   {@const ch = channels[deck]}
   {@const n = deck === 0 ? 'A' : 'B'}
+  <!-- #88 (UI audit flag): deck-names calls the decks left and right. -->
+  {@const D = flag('deck-names') ? (deck === 0 ? 'Left deck' : 'Right deck') : `Deck ${n}`}
   <div class="fwrap" class:mirror={deck === 1}>
     <div class="frow">
-      <Meter level={engine.deckLevels[deck]} />
-      <Fader vertical bind:value={ch.fader} reset={1} label="Deck {n} volume"
+      <!-- #60 (UI audit flag): ticks and what only matter while meters is on. -->
+      <Meter level={engine.deckLevels[deck]} ticks={deck === 0 ? 'right' : 'left'} what={D} />
+      <!-- #110 (UI audit flag): dir-room-tint marks 0, -6, -12 and -24 dB and silence; the engine's gain is the fader squared. -->
+      <Fader vertical bind:value={ch.fader} reset={1} label="{D} volume" marks={flag('dir-room-tint') ? [0, 0.251, 0.501, 0.708, 1] : undefined}
         onchange={(v) => control({ type: 'setFader', deck, value: v })} />
     </div>
-    <button class="hp" class:on={ch.pfl} aria-pressed={ch.pfl} aria-label="Deck {n} headphone cue"
+    <button class="hp" class:on={ch.pfl} aria-pressed={ch.pfl} aria-label="{D} headphone cue"
       onclick={() => togglePfl(deck)} use:tip={() => tipText(`Headphone cue ${ch.pfl ? 'on' : 'off'}`, keyLabel(`deck.${deck}.pfl`))}>
-      <svg viewBox="0 0 16 16"><path d="M2.5 10V8a5.5 5.5 0 0 1 11 0v2" /><rect x="2" y="9.5" width="3" height="4.5" rx="1" /><rect x="11" y="9.5" width="3" height="4.5" rx="1" /></svg>
+      {#if flag('dir-room-tint')}<svg viewBox="0 0 16 16"><path d="M2 8a6 6 0 0 1 12 0v4.5a1.5 1.5 0 0 1-1.5 1.5H12a1.5 1.5 0 0 1-1.5-1.5v-2A1.5 1.5 0 0 1 12 9h.5V8a4.5 4.5 0 0 0-9 0v1H4a1.5 1.5 0 0 1 1.5 1.5v2A1.5 1.5 0 0 1 4 14h-.5A1.5 1.5 0 0 1 2 12.5z" /></svg>{:else}<svg viewBox="0 0 16 16"><path d="M2.5 10V8a5.5 5.5 0 0 1 11 0v2" /><rect x="2" y="9.5" width="3" height="4.5" rx="1" /><rect x="11" y="9.5" width="3" height="4.5" rx="1" /></svg>{/if}
     </button>
   </div>
 {/snippet}
@@ -170,16 +179,18 @@
   {@render knobs(0)}
   {@render strip(0)}
   <div class="cen">
-    <Knob label="Master" name="Master volume" size={26} fromMin bind:value={master} min={-24} max={6} reset={0} format={db}
+    <!-- #66 (UI audit flag): knob-rings draws the global rings a step quieter, and Cue mix from 12 o'clock. -->
+    <Knob label="Master" name="Master volume" size={26} fromMin arc={flag('knob-rings') ? 'var(--fg-2)' : undefined} bind:value={master} min={-24} max={6} reset={0} format={db}
       onchange={(v) => control({ type: 'setMasterGain', db: v })} />
-    <Knob label="Cue mix" name="Headphone cue mix" size={22} fromMin bind:value={cueMix} min={0} max={1} reset={0.5}
+    <Knob label="Cue mix" name="Headphone cue mix" size={22} fromMin={!flag('knob-rings')} arc={flag('knob-rings') ? 'var(--fg-2)' : undefined} bind:value={cueMix} min={0} max={1} reset={0.5}
       format={(v) => `${Math.round((1 - v) * 100)}% cue, ${Math.round(v * 100)}% master`}
       onchange={(v) => control({ type: 'setCueMix', value: v })} />
     <div class="mpair" use:tip={() => engine.limiting >= 0.5
       ? `Master level. The limiter is turning the mix down ${engine.limiting.toFixed(1)} dB to stop it distorting; lower the master or channel levels.`
       : 'Master level'}>
-      <Meter level={engine.masterLevels[0]} />
-      <Meter level={engine.masterLevels[1]} />
+      <!-- #60 (UI audit flag): the limiter keeps the master under full scale, so its meters have no clip light. -->
+      <Meter level={engine.masterLevels[0]} ticks="left" light={false} />
+      <Meter level={engine.masterLevels[1]} light={false} />
       {#if engine.limiting >= 0.5}<span class="lim" aria-hidden="true">LIM</span>{/if}
     </div>
     {#if rec}
@@ -198,7 +209,7 @@
     <div class="xr">
     <Ruler value={(crossfader + 1) / 2} from={0.5} n={41} major={10} color="var(--fg)" height={8} />
     <Fader tick value={crossfader} min={-1} max={1} reset={0} label="Crossfader" onchange={setCrossfader}
-      format={(v) => (Math.abs(v) < 0.005 ? 'centre' : `${Math.round(Math.abs(v) * 100)}% to ${v < 0 ? 'A' : 'B'}`)} />
+      format={(v) => (Math.abs(v) < 0.005 ? 'centre' : `${Math.round(Math.abs(v) * 100)}% to ${flag('deck-names') ? (v < 0 ? 'the left deck' : 'the right deck') : v < 0 ? 'A' : 'B'}`)} />
     </div>
     <i class="end" style:background="var(--deck-b)"></i>
   </div>

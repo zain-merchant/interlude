@@ -1,0 +1,25 @@
+/* #37: Reset all below all three columns of the Keyboard page, the full
+   width of the page under a rule, in the per-row Reset's quiet text style
+   (not red, not filled). */
+:root[data-flag-settings-undo] .settings .reset-all {
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 24px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+:root[data-flag-settings-undo] .settings .reset-all .btn {
+  /* The label starts on the page's content edge, like the rows above. */
+  margin-left: -8px;
+  color: var(--fg-3);
+}
+:root[data-flag-settings-undo] .settings .reset-all .btn:hover:not(:disabled) {
+  color: var(--fg);
+}
+/* With nothing to reset it sits at the doc's off level (--fg-4), not at
+   Settings' 35% opacity on top of --fg-3, which left a ghost at about 18%
+   white (1.7:1, c-K01). */
+:root[data-flag-settings-undo] .settings .reset-all .btn:disabled {
+  opacity: 1;
+  color: var(--fg-4);
+}

@@ -1,7 +1,11 @@
 <script>
   import { onMount } from 'svelte';
   import { Waveform2D, themeColors, HOT_CUES } from './waveform-2d.js';
-  import { tracks, engine, displayPos, displaySlip, onFrame, scrubStart, scrubTo, scrubEnd } from './engine.svelte.js';
+  import { tracks, engine, displayPos, displaySlip, onFrame, scrubStart, scrubTo, scrubEnd, wake } from './engine.svelte.js';
+  import { flag, flagsRev, watchFlags } from '../flags/registry.svelte.js';
+  import { waveOptions as roomTintWave } from '../flags/110-dir-room-tint/wave.js'; // #110 (UI audit flag)
+  import { lookString } from '../flags/114-wave-looks/look.js'; // #110 (UI audit flag)
+  import { trackpadZoom } from '../flags/115-trackpad-zoom/zoom.js'; // #115 (UI audit flag)
   import { openMenu } from './menu.svelte.js';
   import { gridMenu, gridMode, startSlide, slide, endSlide } from './grid.svelte.js';
 
@@ -27,6 +31,57 @@
     };
   }
 
+  // UI audit flags (#11, #45, #110, …) can
+  // change the theme's colours: the canvas reads them again whenever any
+  // flag or setting changes (the registry bumps flagsRev), not only for a
+  // list of flags that could fall behind.
+  // #110 (UI audit flag): its waveform's values as one string, '' for the app's own drawing.
+  const wl = $derived(lookString());
+  // #43, #50, #52, #54 (UI audit flags): what the canvas draws differently with them on.
+  const wf = () => ({
+    clipStart: flag('lane-start'),
+    cueChips: flag('overview-cues'),
+    keyline: flag('deck-polish'),
+    axis: flag('zoom-pill'),
+    loopTint: flag('on-state'),
+    // #110 (UI audit flag): dir-room-tint keeps today's waveform; its wave.js is where a new style drops in.
+    ...(flag('dir-room-tint') ? roomTintWave({ deck, mode }) : {}),
+    // #111 (UI audit flag): font-special-gothic: the bar number on the play head in the same face.
+    ...(flag('font-special-gothic') ? { labelFont: '"Special Gothic"' } : {}),
+    // #110 (UI audit flag): the bar number's pill in the theme's ink, not fixed white.
+    ...(flag('dir-room-tint') ? { pill: 'theme' } : {}),
+    // #110 (UI audit flag): its waveform (`sec` tells a zoom from a tempo change, `live` whether the beats are being worked with).
+    ...(wl ? { wl, bps: tracks[deck]?.binsPerSec ?? 172, sec: seconds, deck, live: live() } : {}),
+  });
+
+  // #49 (UI audit flag): the play head's x in device px, at the waves
+  // panel's horizontal centre; measured when the lane's size changes.
+  const zoomAxis = $derived(mode === 'scroll' && flag('zoom-pill'));
+  let axis = { w: -1, x: 0 };
+  function axisX(w) {
+    if (axis.w !== w) {
+      const panel = canvas.closest('.waves')?.getBoundingClientRect();
+      const lane = canvas.getBoundingClientRect();
+      axis = { w, x: panel && lane.width ? (panel.left + panel.width / 2 - lane.left) * (w / lane.width) : w / 2 };
+    }
+    return axis.x;
+  }
+  $effect(() => {
+    zoomAxis;
+    axis = { w: -1, x: 0 };
+  });
+
+  // The frame loop sleeps while nothing moves; a flag flipping wakes it
+  // to redraw (not on the first run, so with every flag off nothing new
+  // happens).
+  let watched = false;
+  $effect(() => {
+    watchFlags();
+    wf();
+    if (watched) wake();
+    watched = true;
+  });
+
   onMount(() => {
     let gl;
     try {
@@ -36,10 +91,19 @@
       failed = true;
       return;
     }
-    const colors = themeColors(deck);
+    let colors = themeColors(deck);
+    let colorKey = -1;
+    gl.font = getComputedStyle(canvas).fontFamily; // #50 (UI audit flag): the overview chips' numbers
     let uploaded = null;
-
     const off = onFrame(() => {
+      const ck = flagsRev();
+      if (ck !== colorKey) {
+        if (colorKey !== -1) colors = themeColors(deck);
+        if (flag('font-special-gothic') || colorKey !== -1) gl.font = getComputedStyle(canvas).fontFamily; // #111 (UI audit flag): the face can change while the app runs
+        colorKey = ck;
+      }
+      const f = wf();
+      const flagView = { ...f, flags: Object.values(f).join('|') };
       const t = tracks[deck];
       const bins = t?.bins ?? null;
       if (bins !== uploaded) {
@@ -62,9 +126,10 @@
       };
       if (mode === 'scroll') {
         const perPx = (span() * bps) / w;
-        const start = playhead - (w / 2) * perPx;
+        // #49 (UI audit flag): zoom-pill puts the play head on the waveforms panel's centre (the window's axis), not the shortened lane's.
+        const start = playhead - (zoomAxis ? axisX(w) : w / 2) * perPx;
         gl.draw({
-          mode, start, perPx, playhead, cue, colors, ...marks,
+          mode, start, perPx, playhead, cue, colors, ...marks, ...flagView,
           beatLen: grid ? (60 / grid.bpm) * bps : 0,
           firstBeat: grid ? grid.firstBeat * bps : 0,
         });
@@ -83,7 +148,7 @@
         // lane is drawn again only when it moves that far, not every frame.
         const perPx = Math.max(count, 1) / w;
         const q = (b) => (b < 0 ? b : Math.round(b / (perPx / 4)) * (perPx / 4));
-        gl.draw({ mode, start: 0, perPx, playhead: q(playhead), cue, colors, ...marks, slip: q(marks.slip) });
+        gl.draw({ mode, start: 0, perPx, playhead: q(playhead), cue, colors, ...marks, slip: q(marks.slip), ...flagView });
       }
     });
     return off;
@@ -144,6 +209,32 @@
     const at = displayPos[deck] + ((e.clientX - r.left) / r.width - 0.5) * span();
     openMenu(e, gridMenu(deck, Math.max(0, Math.min(tracks[deck].duration, at))));
   }
+
+  // #110 (UI audit flag): its beat marks: 2 in Grid mode, where they're being fixed; 1 while they're used (both
+  // decks playing unsynced, a nudge, a drag, or the pointer over the waveforms); else 0.
+  let over = $state(false);
+  const live = () => {
+    if (editing) return 2;
+    const [a, b] = engine.decks;
+    const d = engine.decks[deck];
+    const matching = a.playing && b.playing && !a.synced && !b.synced;
+    return over || drag || matching || (d.playing && Math.abs(d.speed - d.rate) > 1e-4) ? 1 : 0;
+  };
+  onMount(() => {
+    if (mode !== 'scroll') return;
+    const panel = canvas.closest('.waves');
+    const set = (e) => ((over = e.type === 'pointerenter'), wl && wake());
+    for (const t of ['pointerenter', 'pointerleave']) panel?.addEventListener(t, set);
+    return () => {
+      for (const t of ['pointerenter', 'pointerleave']) panel?.removeEventListener(t, set);
+    };
+  });
+
+  // #115 (UI audit flag): trackpad-zoom takes pinches and ⌘/Ctrl/⌥ + scroll over the whole waveforms panel (the left deck's lane listens for both).
+  onMount(() => {
+    if (mode !== 'scroll' || deck !== 0) return;
+    return trackpadZoom(canvas.closest('.waves') ?? canvas, { on: () => flag('trackpad-zoom'), zoom: (f) => (wake(), onzoom?.(f)) }); // (a gesture isn't one of the events that wake the frame loop)
+  });
 
   // ⌘/Ctrl + scroll zooms; plain scroll scratches through a paused track.
   let wheelTimer;

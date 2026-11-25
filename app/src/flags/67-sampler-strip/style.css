@@ -1,0 +1,27 @@
+/* #67: the sampler strip. The Level dial (14px cap) sits with its tick
+   ring at least 6px clear of the strip's top and bottom. The ring reaches
+   further up than down (its gap is at the bottom) while the cap is round,
+   so the dial drops 1px: the ring keeps its 6px at the top and the cap
+   sits on the label's centre line (2px put it a pixel under). The cap has
+   9px of ring on its right, so the label gets the same 9px on its left:
+   label and cap sit centred in their group, and what you see (the label
+   and the ring) is midway between the last slot and the ×'s glyph, 21px
+   each side. 8px from the label to the dial's box, 12px (the strip's gap)
+   after it. Empty slots get a faint ring over the well
+   and a hand cursor. */
+:root[data-flag-sampler-strip] .sampler .knob {
+  gap: 8px;
+}
+:root[data-flag-sampler-strip] .sampler .knob .label {
+  margin-left: 9px;
+}
+:root[data-flag-sampler-strip] .sampler .knob .wrap {
+  transform: translateY(1px);
+}
+:root[data-flag-sampler-strip] .sampler .slot:not(.set) {
+  box-shadow: var(--well-shadow), inset 0 0 0 1px var(--line);
+  cursor: pointer;
+}
+:root[data-flag-sampler-strip] .sampler .slot:not(.set):hover {
+  box-shadow: var(--well-shadow), inset 0 0 0 1px var(--line-2);
+}

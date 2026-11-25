@@ -10,6 +10,15 @@
     <div id="hero"></div>
     <!-- The heaviest step of the controller's edge blur (hero.css). -->
     <div class="edge-blur" aria-hidden="true"></div>
+    <!-- Before the app's modules: the simulated engine reads the address as it
+         starts. The stems are downloaded already, and the library has each
+         title once. -->
+    <script>
+      const url = new URL(location.href);
+      url.searchParams.set('stems', 'ready');
+      url.searchParams.set('library', 'short');
+      history.replaceState(history.state, '', url);
+    </script>
     <script type="module" src="./hero.jsx"></script>
   </body>
 </html>

@@ -1,0 +1,30 @@
+/* #11 (colours): one text level per role. */
+
+/* Live information, not a disabled item: --fg-4 -> --fg-3. */
+:root[data-flag-colour-scale] section.library .bar .count .pending {
+  color: var(--fg-3);
+}
+
+/* Glyph buttons (‹ ›) are --fg-2 everywhere; the nudge pair was --fg-3. */
+:root[data-flag-colour-scale] [data-region^='deck'] .pitch .nudge button {
+  color: var(--fg-2);
+}
+:root[data-flag-colour-scale] [data-region^='deck'] .pitch .nudge button:hover:not([aria-disabled='true']) {
+  color: var(--fg);
+}
+
+/* M7 (mixer builder's request): fader scale marks readable (were 14%
+   white, about 1.6:1); the default tick to 0.5. */
+:root[data-flag-colour-scale] .fader .mark {
+  background: rgb(255 255 255 / 0.3);
+}
+:root[data-flag-colour-scale] .fader .tick {
+  background: rgb(255 255 255 / 0.5);
+}
+
+/* E11 (critique panel): small grey text on a raised or tonal fill uses
+   --fg-2: the toast's ⌘Z was --fg-3 at 4.15:1. (Import's path line is
+   #29's, the sidebar's selected count #87's.) */
+:root[data-flag-colour-scale] .toast .undo kbd {
+  color: var(--fg-2);
+}

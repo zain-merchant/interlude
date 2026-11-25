@@ -1,0 +1,6 @@
+/* #83: the gear keeps the button's 14px icon and its 1.3px line: Lucide's
+   path is drawn on a 24-unit grid, so its stroke is 1.3 × 24 / 14 units. */
+:root[data-flag-settings-icon] section.library .gear svg.cog {
+  stroke-width: 2.23;
+  stroke-linejoin: round;
+}

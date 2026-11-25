@@ -1,0 +1,13 @@
+/* #65: right-hand faders mirror their scale marks. Upright marks sit 8px
+   right of the slot's centre line; deck B's pitch fader and channel B put
+   them 8px left instead (5px marks, 9px default tick). */
+:root[data-flag-mirror-scales] :is([data-region='deck1'] .pitch-fader, .mixer .fwrap.mirror) .fader.vertical .mark {
+  margin-left: -13px;
+}
+:root[data-flag-mirror-scales] :is([data-region='deck1'] .pitch-fader, .mixer .fwrap.mirror) .fader.vertical .tick {
+  margin-left: -17px;
+}
+/* #18's tempo-match mark (10px, 2px clear of the slot since D15) sits on the side away from the ticks, so on deck B it moves to the right. */
+:root[data-flag-mirror-scales][data-flag-visual-tempo-match] [data-region='deck1'] .pitch-fader .fader.vertical .match {
+  margin-left: 4px;
+}

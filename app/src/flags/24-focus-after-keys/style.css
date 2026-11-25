@@ -1,0 +1,48 @@
+/* #24 (C15): focus rings only after keyboard navigation. App.svelte sets
+   html[data-input='keys'] when Tab, an arrow, Home/End, a Page key or F6
+   moves focus, and clears it on any pointer press. Until then a focused
+   control draws no ring, however the browser judges :focus-visible (it
+   counts any key, so W to play lit the tab you'd just clicked). Text
+   fields keep theirs: you click them to type into them, and the ring says
+   where the typing goes. The ring is hidden by colour, not removed, so
+   nothing moves when it comes back. */
+:root[data-flag-focus-after-keys]:not([data-input='keys'])
+  :focus-visible:not(input:not([type='checkbox'], [type='radio'], [type='range'], [type='button']), textarea, [contenteditable='true']) {
+  outline-color: transparent !important;
+}
+/* Components that draw focus as a fill or a lit grip rather than an
+   outline: the same rule. */
+:root[data-flag-focus-after-keys]:not([data-input='keys']) .app > .split:focus-visible i {
+  background: transparent;
+}
+
+/* The selected track row: #14 rings the row inside the focused list, so
+   the rule above (on the focused element) never reached it. */
+:root[data-flag-focus-after-keys]:not([data-input='keys']) [data-region='tracks']:focus-visible .row.sel {
+  outline-color: transparent !important;
+}
+/* Deck tabs: the ring inside the tab, ending 4px above the selected
+   underline so the two never touch (d-K19; an inset outline sat right on
+   it). An outline can't stop short at one side, so the ring is drawn as
+   the tab's ::before, only once keys are in use. */
+:root[data-flag-focus-after-keys] .modes button:focus-visible {
+  outline: none;
+}
+:root[data-flag-focus-after-keys][data-input='keys'] .modes button:focus-visible::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 5px;
+  border-radius: var(--r);
+  box-shadow: inset 0 0 0 2px var(--focus-ring, var(--fg-2));
+  pointer-events: none;
+}
+
+/* The rings #14 draws on a wrapper rather than the focused element (the
+   crossfader with its ruler, a knob round its ticks, an upright fader
+   round its cap): hidden the same way. */
+:root[data-flag-focus-after-keys]:not([data-input='keys']) :is(.xr:has(.fader:focus-visible), .knob .wrap:has(> .dial:focus-visible)) {
+  outline-color: transparent !important;
+}
+:root[data-flag-focus-after-keys]:not([data-input='keys']) .fader.vertical:focus-visible::before {
+  box-shadow: none !important;
+}

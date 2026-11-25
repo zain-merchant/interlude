@@ -3,18 +3,36 @@
 // ("Low EQ · −6.0 dB · double-click to reset"). Knobs and faders also use
 // it as a live readout while they're dragged.
 
-export const tooltip = $state({ text: '', x: 0, y: 0, below: false, visible: false });
+import { flag } from '../flags/registry.svelte.js';
+import { keys, keyLabel } from './commands.js';
+import { keymap } from './keymap.svelte.js';
+
+export const tooltip = $state({ text: '', x: 0, y: 0, top: 0, bottom: 0, below: false, visible: false, live: false, rested: false });
+// #12 (UI audit flag): whether the tip showing came straight from another, so it skips its entrance.
+export const tipWarm = $state({ on: false });
 
 let timer;
 let owner = null;
+let restTimer; // #122 (UI audit flag): tooltips says more once the pointer has rested 1.5 s.
+let leftAt = -Infinity; // #12 (UI audit flag): when the pointer last left a showing tip's control.
 
-function place(node, text) {
+function place(node, text, live = false) {
   const r = node.getBoundingClientRect();
   tooltip.text = text;
   tooltip.x = r.left + r.width / 2;
   // Above the control unless there's no room; never over its own value.
-  tooltip.below = r.top < 40;
+  // #61 (UI audit flag): eq-kill: a control may ask for its tip below (data-tip-below, set only while that flag is on).
+  // #30 (UI audit flag): tooltip-wrap: the library toolbar's tips open below, clear of the decks above.
+  tooltip.below = node.dataset.tipBelow !== undefined || r.top < 40 || (flag('tooltip-wrap') && !!node.closest('section.library .bar'));
   tooltip.y = tooltip.below ? r.bottom + 8 : r.top - 8;
+  // #122 (UI audit flag): tooltips: where the control starts and ends, so a tall tip can take the other side.
+  tooltip.top = r.top;
+  tooltip.bottom = r.bottom;
+  // #122 (UI audit flag): tooltips: a value while it's changed is that alone; a longer rest says more.
+  clearTimeout(restTimer);
+  tooltip.live = live;
+  if (live || owner !== node) tooltip.rested = false;
+  if (!live && !tooltip.rested) restTimer = setTimeout(() => (tooltip.rested = owner === node && tooltip.visible), tipWarm.on ? 1500 : 900);
   tooltip.visible = true;
   owner = node;
 }
@@ -22,13 +40,16 @@ function place(node, text) {
 /** Shows `text` for `node` now (live readouts). */
 export function showTip(node, text) {
   clearTimeout(timer);
-  place(node, text);
+  tipWarm.on = true; // #12 (UI audit flag): live readouts (drags, keys) appear without an entrance.
+  place(node, text, true);
 }
 
 export function hideTip(node) {
   clearTimeout(timer);
   if (!node || owner === node) {
     tooltip.visible = false;
+    tooltip.rested = false;
+    clearTimeout(restTimer);
     owner = null;
   }
 }
@@ -43,12 +64,21 @@ export function tip(node, text) {
   let get = text;
   const enter = () => {
     clearTimeout(timer);
+    // #12 (UI audit flag): moving straight from one tip to the next skips the delay and the entrance.
+    if (flag('polish-tooltip') && performance.now() - leftAt < 300) {
+      tipWarm.on = true;
+      return place(node, get());
+    }
+    tipWarm.on = false;
     timer = setTimeout(() => place(node, get()), 600);
   };
-  const focus = () => node.matches(':focus-visible') && place(node, get());
+  // #12 (UI audit flag): keyboard focus shows its tip without an entrance.
+  const focus = () => node.matches(':focus-visible') && ((tipWarm.on = true), place(node, get()));
   const leave = () => hideTip(node);
+  // #12 (UI audit flag): note when a showing tip is left, for the next control's tip.
+  const out = () => (owner === node && tooltip.visible && (!flag('tooltips') || document.querySelector(".tip[role='tooltip']")) && (leftAt = performance.now()), hideTip(node));
   node.addEventListener('pointerenter', enter);
-  node.addEventListener('pointerleave', leave);
+  node.addEventListener('pointerleave', out);
   node.addEventListener('pointerdown', leave);
   node.addEventListener('focus', focus);
   node.addEventListener('blur', leave);
@@ -60,7 +90,7 @@ export function tip(node, text) {
     destroy() {
       hideTip(node);
       node.removeEventListener('pointerenter', enter);
-      node.removeEventListener('pointerleave', leave);
+      node.removeEventListener('pointerleave', out);
       node.removeEventListener('pointerdown', leave);
       node.removeEventListener('focus', focus);
       node.removeEventListener('blur', leave);
@@ -68,5 +98,17 @@ export function tip(node, text) {
   };
 }
 
+// #10 (UI audit flag): no-dots: a part that is a key (a command's current key, or Esc) is marked
+// with an invisible separator, so the tip can draw it as a keycap at its end.
+export const KEY_MARK = '\u2063';
+const keyLabels = () => new Set([...Object.keys(keys), ...Object.keys(keymap.overrides)].map(keyLabel).filter(Boolean).concat('Esc'));
+
 /** Joins tooltip parts, skipping empty ones. */
-export const tipText = (...parts) => parts.filter(Boolean).join(' · ');
+export const tipText = (...parts) => {
+  const list = parts.filter(Boolean);
+  // #30 (UI audit flag): tooltip-wrap marks keys too, to put the keycap at the end of the title line.
+  // #122 (UI audit flag): tooltips reads the keys by their mark too.
+  if (!flag('no-dots') && !flag('tooltip-wrap') && !flag('tooltips')) return list.join(' · ');
+  const k = keyLabels();
+  return list.map((p) => (k.has(p) ? KEY_MARK + p : p)).join(' · ');
+};

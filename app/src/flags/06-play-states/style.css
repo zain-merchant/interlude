@@ -1,0 +1,84 @@
+/* #6: play button states. Paused keeps the app's solid white; the other
+   states are told apart by fill, edge and glyph, not hue alone. */
+
+/* Paused, hovered: a touch brighter, so it answers the pointer (not
+   pure white, which jumped out of the deck's own white). */
+:root[data-flag-play-states] .transport .btn.play:not(.on, [aria-disabled='true']):hover {
+  background: color-mix(in srgb, var(--fg) 70%, #fff);
+}
+
+/* Playing: lit (batch D2). The button is solid in the deck's own white
+   while the deck runs, like a CDJ's play lamp, and an outline while it's
+   paused and ready. Play stays the one solid control: solid while it's
+   doing its job. */
+:root[data-flag-play-states][data-flag-play-states-playing='lit'] .transport .btn.play.on {
+  background: var(--deck);
+  color: var(--ink);
+  box-shadow: none;
+}
+:root[data-flag-play-states][data-flag-play-states-playing='lit'] .transport .btn.play.on:hover {
+  background: color-mix(in srgb, var(--deck) 94%, #fff);
+}
+/* Paused (and empty): the tonal tile every resting button has (flag 09's
+   surface when it's on), no outline: an outline belongs to Cue armed at
+   its cue point. An empty deck's tile dims with the 40% disabled rule, to
+   Cue's disabled grey (disabled Sync drops its tile, #14). */
+:root[data-flag-play-states][data-flag-play-states-playing='lit'] .transport .btn.play:not(.on) {
+  background: var(--flag-buttons-bg, var(--raise));
+  color: var(--fg);
+  box-shadow: none;
+}
+:root[data-flag-play-states][data-flag-play-states-playing='lit'] .transport .btn.play:not(.on, [aria-disabled='true']):hover {
+  background: var(--flag-buttons-bg-hover, var(--hover));
+  box-shadow: none;
+}
+:root[data-flag-play-states][data-flag-play-states-playing='lit'] .transport .btn.play[aria-disabled='true'] {
+  opacity: 0.4;
+}
+
+/* Playing: outline. Solid when it's waiting, a bright outline while it
+   runs. */
+:root[data-flag-play-states][data-flag-play-states-playing='outline'] .transport .btn.play.on {
+  background: transparent;
+  color: var(--fg);
+  box-shadow: inset 0 0 0 1.5px var(--fg);
+}
+:root[data-flag-play-states][data-flag-play-states-playing='outline'] .transport .btn.play.on:hover {
+  background: var(--hover);
+}
+
+/* Cueing: Cue held, the track previewing from the cue point. Play looks
+   just as it does paused, with the play glyph (pressing Play now keeps it
+   playing): the held Cue is the one amber thing on screen. An amber ring
+   and fill here put the press's feedback on the wrong button (d-K02), and
+   an outline means Cue armed, on Cue only. Play is .on while cueing, so
+   without this it would flash its lit fill. */
+:root[data-flag-play-states][data-flag-play-states-playing='lit'] .transport .btn.play.on[data-cueing] {
+  background: var(--flag-buttons-bg, var(--raise));
+  color: var(--fg);
+  box-shadow: none;
+}
+:root[data-flag-play-states][data-flag-play-states-playing]:not([data-flag-play-states-playing='lit']) .transport .btn.play.on[data-cueing] {
+  background: var(--fg);
+  color: var(--ink);
+  box-shadow: none;
+}
+:root[data-flag-play-states][data-flag-play-states-playing] .transport .btn.play.on[data-cueing] svg {
+  display: none;
+}
+:root[data-flag-play-states][data-flag-play-states-playing] .transport .btn.play.on[data-cueing]::after {
+  content: '';
+  width: 14px;
+  height: 14px;
+  background: currentColor;
+  clip-path: polygon(26% 12%, 88% 50%, 26% 88%);
+}
+
+/* Disabled: no track. An empty outline and a faint glyph, not a grey
+   block that still looks pressable. */
+:root[data-flag-play-states] .transport .btn.play[aria-disabled='true'] {
+  opacity: 1;
+  background: transparent;
+  color: var(--fg-4);
+  box-shadow: inset 0 0 0 1px var(--line-2);
+}

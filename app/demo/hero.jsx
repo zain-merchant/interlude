@@ -19,6 +19,7 @@ import { createRoot } from 'react-dom/client';
 import { mount } from 'svelte';
 import { Stage } from './stageshow/stage';
 import { Controller } from './Controller.jsx';
+import { deckSlider } from './app.js';
 import { toLinear, SMOOTH, GLIDE, LOCK, PULSE } from './springs.js';
 import App from '../src/App.svelte';
 import { engine, control } from '$lib/engine.svelte.js';
@@ -83,12 +84,10 @@ function spot(el, fx = 0.78, fy = 0.66) {
 const deckEl = (d) => $(`[data-region="deck${d}"]`);
 const crossfader = () => $('[role="slider"][aria-label="Crossfader"]');
 
-/** A library row by its title. */
+/** A library row by its title (which may be drawn in parts). */
 function rowByTitle(title) {
-  for (const n of document.querySelectorAll('[data-region="tracks"] *')) {
-    if (n.childElementCount === 0 && n.textContent.trim() === title) {
-      return n.closest('[role="row"], [role="option"], li, tr, .row') ?? n.parentElement;
-    }
+  for (const row of document.querySelectorAll('[data-region="tracks"] [role="option"]')) {
+    if (row.querySelector('.t')?.textContent.trim() === title) return row;
   }
   return null;
 }
@@ -122,8 +121,8 @@ const ready = new Promise((r) => (markReady = r));
 
 /** Gets the app to the opening picture: A playing a few bars in, B cued. */
 async function setUp() {
-  // Stems need their separation model; the simulated engine 'downloads' it in a few seconds.
-  backend.downloadStemsModel?.();
+  // Stems ready before they're pressed: chosen as someone who uses them would.
+  await backend.setStems?.({ mode: 'fast' });
   await until(() => rowByTitle(OPENER) && rowByTitle(SET[0]));
   doubleClick(rowByTitle(OPENER));
   await until(() => engine.decks[0].loaded);
@@ -685,7 +684,7 @@ const tabOf = (d, label) => [...deckEl(d).querySelectorAll('[role="tab"]')].find
 const stemOf = (d, i) => deckEl(d).querySelectorAll('.stems .stem')[i];
 const loopOf = (d) => deckEl(d).querySelector('.perf button.big');
 const fxOf = (d) => deckEl(d).querySelector('.fx .tog');
-const lowEq = (d) => $(`[role="slider"][aria-label="Deck ${'AB'[d]} low EQ"]`);
+const lowEq = (d) => deckSlider(d, 'low EQ');
 const key = (el, k) => el.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true }));
 
 /** Switches the app's tab without the hand, as the controller's mapping does. */

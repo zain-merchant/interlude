@@ -1,0 +1,11 @@
+/* #44: the tempo % and the key read at body size. */
+
+/* The tempo % over the pitch fader: 13px tabular; at zero --fg-2, off zero
+   --fg (Deck.svelte's .off). */
+:root[data-flag-pitch-readout] [data-region^='deck'] .pitch .val {
+  font-size: var(--t-sm);
+  font-variant-numeric: tabular-nums;
+}
+/* The key under the BPM: since the merge of upstream main the deck draws
+   it at --t-md in the deck's colour as a button (the key shift menu), which
+   is what this flag was after, so it no longer restyles it. */

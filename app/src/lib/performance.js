@@ -4,6 +4,7 @@
 
 import { engine, tracks, control } from './engine.svelte.js';
 import { announce } from './announce.svelte.js';
+import { flag } from '../flags/registry.svelte.js';
 import { deckSettings, setDeckSetting, saveSlip } from './decksettings.svelte.js';
 
 /** Hot cues the deck shows as pads: all eight, like the engine and the
@@ -11,6 +12,8 @@ import { deckSettings, setDeckSetting, saveSlip } from './decksettings.svelte.js
 export const PADS = 8;
 
 const deckName = (deck) => 'AB'[deck];
+// #88 (UI audit flag): deck-names says "Left deck" / "Right deck" ("Deck A" otherwise).
+const Deck = (deck) => (flag('deck-names') ? (deck === 0 ? 'Left deck' : 'Right deck') : `Deck ${deckName(deck)}`);
 /** True when the deck's track has a beatgrid, which loops and jumps need. */
 export const hasGrid = (deck) => !!tracks[deck] && engine.decks[deck].bpm > 0;
 
@@ -29,14 +32,14 @@ export function hotCue(deck, index, down) {
 export function clearHotCue(deck, index) {
   if (!tracks[deck] || engine.decks[deck].hotCues?.[index] == null) return;
   control({ type: 'hotCueClear', deck, index });
-  announce(`Deck ${deckName(deck)} hot cue ${index + 1} cleared`);
+  announce(`${Deck(deck)} hot cue ${index + 1} cleared`);
 }
 
 export function loopToggle(deck) {
   if (!hasGrid(deck)) return;
   const d = engine.decks[deck];
   control({ type: 'loopToggle', deck });
-  announce(d.looping ? `Deck ${deckName(deck)} loop off` : `Deck ${deckName(deck)} looping ${beatsLabel(d.loopBeats)} beats`);
+  announce(d.looping ? `${Deck(deck)} loop off` : `${Deck(deck)} looping ${beatsLabel(d.loopBeats)} beats`);
 }
 
 /** Halves (0.5) or doubles (2) the loop size and the loop playing. */
@@ -60,7 +63,7 @@ export function setSlip(deck, on) {
   // Shown at once; the engine's next report agrees.
   engine.decks[deck].slip = on;
   saveSlip(deck, on);
-  announce(`Deck ${deckName(deck)} slip ${on ? 'on' : 'off'}`);
+  announce(`${Deck(deck)} slip ${on ? 'on' : 'off'}`);
 }
 
 /** Slip mode on or off. */
@@ -78,7 +81,7 @@ export function setKeyShift(deck, semitones) {
   control({ type: 'setKeyShift', deck, semitones: s });
   // Shown at once; the engine's next report agrees.
   engine.decks[deck].keyShift = s;
-  announce(s ? `Deck ${deckName(deck)} key ${semis(s)}` : `Deck ${deckName(deck)} back to the track's key`);
+  announce(s ? `${Deck(deck)} key ${semis(s)}` : `${Deck(deck)} back to the track's key`); // #88 (UI audit flag): deck-names
 }
 
 /** Moves a deck's key a semitone up (1) or down (-1). */
@@ -91,7 +94,7 @@ export const canKeySync = (deck) => !!tracks[deck] && !!engine.decks[deck].key &
 export function keySync(deck) {
   if (!canKeySync(deck)) return;
   control({ type: 'keySync', deck });
-  announce(`Deck ${deckName(deck)} key matched to deck ${deckName(1 - deck)}`);
+  announce(`${Deck(deck)} key matched to ${Deck(1 - deck).replace(/^D/, 'd').replace(/^Left|^Right/, (w) => w.toLowerCase())}`); // #88 (UI audit flag): deck-names
 }
 
 /** Quantize, for both decks, from Settings > Decks (B toggles it too). */

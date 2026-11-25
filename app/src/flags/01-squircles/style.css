@@ -1,0 +1,5 @@
+/* #1: squircle corners. squircles.js generates the rules, each scoped under
+   :root[data-flag-squircles], into its own stylesheet: corner-shape with a
+   radius matched to the plain corner's apex where the engine has it
+   (Chrome 139+), and a clip-path plus a redrawn ring everywhere else
+   (WebKit: Safari and the app's WKWebView). Nothing else is needed here. */
