@@ -1,0 +1,39 @@
+/* #12: the toast rises and fades in. A transition from @starting-style
+   rather than keyframes, so it can be retargeted; `translate` stacks with
+   the toast's own centring transform. Webviews without @starting-style
+   show it at once, as before. The card turns opaque in the first 80ms
+   while the rise runs its full time, so the list's text never shows
+   through its words (Mo1). */
+:root[data-flag-polish-toast] {
+  --flag-polish-toast-curve: cubic-bezier(0.23, 1, 0.32, 1);
+}
+:root[data-flag-polish-toast] .toastbox .toast {
+  transition:
+    opacity 80ms ease-out,
+    translate var(--flag-polish-toast-rise, 160ms) var(--flag-polish-toast-curve);
+  @starting-style {
+    opacity: 0;
+    translate: 0 8px;
+  }
+}
+
+/* In the library toolbar (#13's default place) a long rise would come up
+   out of the column headings: there it rises 4px and fades in together
+   over 180ms, and the track count it covers fades out over the same time
+   (back in over 140ms when the message goes), so the two are never both
+   fully there. */
+:root[data-flag-polish-toast][data-flag-declutter-toast][data-flag-declutter-toast-place='toolbar'] .toastbox .toast {
+  transition:
+    opacity 180ms var(--flag-polish-toast-curve),
+    translate 180ms var(--flag-polish-toast-curve);
+  @starting-style {
+    opacity: 0;
+    translate: 0 4px;
+  }
+}
+:root[data-flag-polish-toast][data-flag-declutter-toast] section.library .bar .count {
+  transition: opacity 140ms ease-out;
+}
+:root[data-flag-polish-toast][data-flag-declutter-toast]:has(.toastbox .toast[data-docked]) section.library .bar .count {
+  transition: opacity 180ms var(--flag-polish-toast-curve);
+}

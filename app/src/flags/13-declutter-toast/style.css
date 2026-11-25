@@ -1,0 +1,56 @@
+/* #13: one line where it fits; the window's width less a margin at most. */
+:root[data-flag-declutter-toast] .toastbox .toast {
+  width: max-content;
+  max-width: calc(100vw - 48px);
+}
+/* Where the track list's edges are: the app's 12px gap plus the library's
+   inset (8px, or the panel padding with #2 concentric on). */
+:root[data-flag-declutter-toast] {
+  --toast-inset: calc(var(--gap) + 8px);
+}
+:root[data-flag-declutter-toast][data-flag-concentric] {
+  --toast-inset: calc(var(--gap) + var(--pad));
+}
+/* Bottom right, flush with the track list's corner (it ran 4px past the
+   list's right edge at right: 24px). */
+:root[data-flag-declutter-toast]:is([data-flag-declutter-toast-place='corner'], [data-flag-declutter-toast-place='toolbar']) .toastbox .toast {
+  left: auto;
+  right: var(--toast-inset);
+  bottom: var(--toast-inset);
+  transform: none;
+  max-width: min(640px, calc(100vw - 48px));
+}
+/* In the toolbar (App.svelte places it when it fits): in the gap between
+   the search field and Sampler, over the track count, as tall as the
+   toolbar's buttons. */
+:root[data-flag-declutter-toast] .toastbox .toast[data-docked] {
+  right: auto;
+  bottom: auto;
+  /* App.svelte gives the centre line as its top. */
+  transform: translateY(-50%);
+  min-height: var(--h-md);
+  padding-top: 0;
+  padding-bottom: 0;
+}
+:root[data-flag-declutter-toast] .toastbox .toast[data-docked] .undo {
+  flex: none;
+  height: var(--h-sm);
+}
+/* A message longer than the gap ends in an ellipsis; Undo stays whole. */
+:root[data-flag-declutter-toast] .toastbox .toast[data-docked] > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+:root[data-flag-declutter-toast]:has(.toastbox .toast[data-docked]) section.library .bar .count {
+  opacity: 0;
+}
+/* Dev builds only: when the audit's own panel is docked in that corner, clear it. */
+:root[data-flag-declutter-toast]:is([data-flag-declutter-toast-place='corner'], [data-flag-declutter-toast-place='toolbar']):has(body > .fp [data-dock='br']) .toastbox .toast:not([data-docked]) {
+  bottom: 64px;
+}
+/* In the Settings header (#37), its right edge 8px before Done. */
+:root[data-flag-declutter-toast] .toastbox .toast[data-docked='settings'] {
+  transform: translate(-100%, -50%);
+}

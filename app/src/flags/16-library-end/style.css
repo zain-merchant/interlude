@@ -1,0 +1,7 @@
+/* #16: room under the last library row. The rows' spacer is the list's
+   last child, sized inline to exactly its rows; padding under it (outside
+   that height, hence content-box) extends the scroll by the gap. */
+:root[data-flag-library-end] [data-region='tracks'] > div:last-child {
+  box-sizing: content-box;
+  padding-bottom: var(--flag-library-end-gap, 6px);
+}

@@ -1,0 +1,23 @@
+/* #18: the remaining time turns red (--kill: "critical", as kill, clip and
+   destructive actions) while the track plays out, well apart from Cue's
+   amber right below it. In the last ten seconds it pulses by brightening
+   towards white and back, never by fading, so it stays readable at every
+   frame (and doesn't pulse under reduced motion). */
+:root[data-flag-visual-ending] [data-region^='deck'] .hub .rm.ending {
+  color: var(--kill);
+  transition: color 200ms ease;
+}
+:root[data-flag-visual-ending] [data-region^='deck'] .hub .rm.ending .t {
+  opacity: 1;
+  color: color-mix(in srgb, var(--kill) 60%, transparent);
+}
+@media (prefers-reduced-motion: no-preference) {
+  :root[data-flag-visual-ending][data-flag-visual-ending-pulse='on'] [data-region^='deck'] .hub .rm.ending.last {
+    animation: flag-visual-ending-pulse 1s ease-in-out infinite alternate;
+  }
+}
+@keyframes flag-visual-ending-pulse {
+  to {
+    color: color-mix(in srgb, var(--kill) 55%, var(--fg));
+  }
+}

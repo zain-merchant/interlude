@@ -1,0 +1,262 @@
+/* #119 focus-states, on #110. A quiet line round what the keys are on.
+
+   One thin grey line, 3:1 against what it lies on and little more, 2px out
+   from the control and concentric with its corner. Inside, 1px in from the
+   edge, where there's no room outside: rows, tabs, sidebar items, menu rows,
+   headings. Round what moves: a dial, a fader's cap, the small key of a
+   stepper. A handle's own bar takes the colour. Nothing moves or
+   fades; the bars of the handles take their colour at once.
+
+   Keys only: while #24's data-input says keys are moving focus, whatever has
+   it, since WebKit doesn't call a focus moved by script (F6, a tab's arrows)
+   :focus-visible; :focus-visible where #24 is off. A text field has no line: its caret, and
+   its words and icon a step brighter, however you got there.
+
+   It is a real outline, so forced colours keep it, and nothing here depends
+   on a rule under a label. :not(#_) outranks 110's repeated attribute. */
+
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_) body {
+  /* 110's own line, unpainted. */
+  --focus-ring: transparent;
+  --focus-field: transparent;
+  --focus-w: 0px;
+  /* The line on a panel or in a cut; on a raised face; on a menu's. */
+  --fx: #6d6d70;
+  --fx-face: #838386;
+  --fx-menu: #8f8f92;
+  --fx-w: 1px;
+  --fx-w-round: 1.5px;
+}
+/* The audit's panel keeps its own. */
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_) .fp {
+  --focus-ring: rgb(238 238 236 / 0.82);
+}
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_)[data-flag-focus-states-tint='deck'] :is([data-region='deck0'], .mixer > .ch:nth-child(1 of .ch), .mixer > .fwrap:not(.mirror)) {
+  --fx: oklch(0.54 0.028 258);
+  --fx-face: oklch(0.625 0.03 258);
+}
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_)[data-flag-focus-states-tint='deck'] :is([data-region='deck1'], .mixer > .ch:nth-last-child(1 of .ch), .mixer > .fwrap.mirror) {
+  --fx: oklch(0.54 0.022 76);
+  --fx-face: oklch(0.625 0.024 76);
+}
+/* Increase Contrast: white, and 2px. */
+@media (prefers-contrast: more) {
+  :root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):not(#_) body,
+  :root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):not(#_) :is([data-region^='deck'], .mixer > :is(.ch, .fwrap)) {
+    --fx: #fff;
+    --fx-face: #fff;
+    --fx-menu: #fff;
+    --fx-w: 2px;
+    --fx-w-round: 2px;
+  }
+}
+
+/* ── The line ──────────────────────────────────────────────────────── */
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_)[data-input='keys'] :focus:not(:where(.fp, .fp *, textarea, input:not([type='checkbox'], [type='radio'], [type='range'], [type='button']))),
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):not([data-flag-focus-after-keys]) :focus-visible:not(:where(.fp, .fp *, textarea, input:not([type='checkbox'], [type='radio'], [type='range'], [type='button']))) {
+  outline: var(--fx-w) solid var(--fx) !important;
+  outline-offset: 2px !important;
+}
+/* What shows it somewhere else: containers, and what has a part that moves. */
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_) :is([data-region='tracks'], .menu, .panel, .card, .settings, [role='dialog'], .shell-pop, .scroll, .modes, .colh, .split, .grip, .fader, .knob .dial, .search > input, .sfind > input):focus {
+  outline: none !important;
+}
+/* No room outside. */
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_)[data-input='keys'] :is(section.library nav button:is(.item, .add), .settings nav .item, .row.head .sort, .row.head .cols, .modes button, .knob button.label, .search .clear, .rw):focus,
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):not([data-flag-focus-after-keys]) :is(section.library nav button:is(.item, .add), .settings nav .item, .row.head .sort, .row.head .cols, .modes button, .knob button.label, .search .clear, .rw):focus-visible,
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_)[data-input='keys'] .menu button:focus,
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):not([data-flag-focus-after-keys]) .menu button:focus-visible,
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_)[data-input='keys'] [data-region='tracks']:focus .row.sel,
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):not([data-flag-focus-after-keys]) [data-region='tracks']:focus-visible .row.sel {
+  outline: var(--fx-w) solid var(--fx) !important;
+  outline-offset: calc(-1px - var(--fx-w)) !important;
+}
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_)[data-input='keys'] :is(.modes button.on, nav .item.on):focus,
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):not([data-flag-focus-after-keys]) :is(.modes button.on, nav .item.on):focus-visible,
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_)[data-input='keys'] [data-region='tracks']:focus .row.sel,
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):not([data-flag-focus-after-keys]) [data-region='tracks']:focus-visible .row.sel {
+  --fx: var(--fx-face);
+}
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_)[data-input='keys'] :is(.menu button, .rw):focus,
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):not([data-flag-focus-after-keys]) :is(.menu button, .rw):focus-visible {
+  --fx: var(--fx-menu);
+}
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_)[data-input='keys'] :is(.st, .undo, .hp, .bpm .key):focus,
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):not([data-flag-focus-after-keys]) :is(.st, .undo, .hp, .bpm .key):focus-visible {
+  outline-offset: 1px !important;
+}
+/* The record's centre: on its own dark, not on the vinyl. */
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_)[data-input='keys'] .hub:focus,
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):not([data-flag-focus-after-keys]) .hub:focus-visible {
+  outline: var(--fx-w-round) solid var(--fx) !important;
+  outline-offset: -5px !important;
+}
+/* The list with no selected row in view. */
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_)[data-input='keys'] [data-region='tracks']:focus:not(:has(.row.sel)),
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):not([data-flag-focus-after-keys]) [data-region='tracks']:focus-visible:not(:has(.row.sel)) {
+  outline: var(--fx-w) solid var(--fx) !important;
+  outline-offset: -2px !important;
+}
+
+/* ── Round the part that moves ─────────────────────────────────────── */
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_) .knob .wrap:has(> .dial:focus-visible) {
+  outline: none !important;
+}
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_)[data-input='keys']:not(#_) .knob .dial:focus,
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):not([data-flag-focus-after-keys]):not(#_) .knob .dial:focus-visible {
+  outline: var(--fx-w-round) solid var(--fx) !important;
+  outline-offset: 2px !important;
+}
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_)[data-input='keys']:not(#_) .cen .dial:focus,
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):not([data-flag-focus-after-keys]):not(#_) .cen .dial:focus-visible {
+  outline-color: var(--fx-face) !important;
+}
+/* #1 clips a focused fader's own (unseen) corners, which cut its cap at the
+   end of its travel whenever a key was pressed after a click. */
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_) .fader:focus {
+  clip-path: none !important;
+}
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_)[data-input='keys'] .fader:focus .cap,
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):not([data-flag-focus-after-keys]) .fader:focus-visible .cap {
+  outline: var(--fx-w) solid var(--fx) !important;
+  outline-offset: 2px !important;
+}
+/* An end of a one-cut stepper, the zoom's, Grid's and Settings': where the
+   small key rises under the pointer, 3px in from the cut. */
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_)[data-input='keys'] :is([data-region^='deck'] :is(.jumps, .nudge, .beats, .step) > button, .sstep > .btn):focus,
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):not([data-flag-focus-after-keys]) :is([data-region^='deck'] :is(.jumps, .nudge, .beats, .step) > button, .sstep > .btn):focus-visible {
+  border-radius: var(--r);
+  outline-offset: calc(-3px - var(--fx-w)) !important;
+}
+/* Grid's paint half a cut each, so the line is on their small key itself. */
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_)[data-input='keys'] .strip .grid .sym:focus,
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):not([data-flag-focus-after-keys]) .strip .grid .sym:focus-visible {
+  outline: none !important;
+}
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_)[data-input='keys'] .strip .grid .sym:focus::after,
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):not([data-flag-focus-after-keys]) .strip .grid .sym:focus-visible::after {
+  opacity: 1;
+  scale: 1;
+  outline: var(--fx-w) solid var(--fx);
+}
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_)[data-input='keys'] .strip .grid .sym:focus:not(:hover, :active, [data-show-hover], [data-show-active])::after,
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):not([data-flag-focus-after-keys]) .strip .grid .sym:focus-visible:not(:hover, :active, [data-show-hover], [data-show-active])::after {
+  background: none;
+  box-shadow: none;
+}
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_)[data-input='keys'] .zoom button:focus,
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):not([data-flag-focus-after-keys]) .zoom button:focus-visible {
+  outline-offset: calc(-1px - var(--fx-w)) !important;
+}
+
+/* ── Handles ───────────────────────────────────────────────────────── */
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_)[data-input='keys'] .app > :is(.split, .grip:not(.side)):focus i,
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):not([data-flag-focus-after-keys]) .app > :is(.split, .grip:not(.side)):focus-visible i {
+  transition: none;
+  background: var(--fx);
+}
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_)[data-input='keys'] .below > .grip.side:focus i,
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):not([data-flag-focus-after-keys]) .below > .grip.side:focus-visible i {
+  transition: none;
+  background: var(--fx);
+}
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_)[data-input='keys'] section.library .row.head .colh:focus::after,
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_):not([data-flag-focus-after-keys]) section.library .row.head .colh:focus-visible::after {
+  transition: none;
+  height: 18px;
+  background: var(--fx);
+  opacity: 1;
+}
+
+/* ── Text fields ───────────────────────────────────────────────────────
+   No line and no lit edge: the caret, and the words and icon a step
+   brighter. The cut stays as it was. */
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_) :is(section.library .bar .search, .settings .sfind):has(> input:focus-visible),
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_) :is(input:not([type='range'], [type='checkbox'], [type='radio'], [type='button'], .search > *, .sfind > *, .fp *), textarea:not(.fp *)):focus-visible {
+  outline: none !important;
+  caret-color: var(--fg);
+  box-shadow: var(--tt-cut);
+}
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_) :is(.search, .sfind) > input:focus-visible {
+  outline: none !important;
+  box-shadow: none;
+  caret-color: var(--fg);
+}
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_) :is(.search, .sfind):has(> input:focus-visible) > svg,
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_) :is(input, textarea):focus-visible::placeholder {
+  color: var(--fg-2);
+}
+@media (prefers-contrast: more) {
+  :root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_) :is(section.library .bar .search, .settings .sfind):has(> input:focus-visible),
+  :root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_) :is(input:not([type='range'], [type='checkbox'], [type='radio'], [type='button'], .search > *, .sfind > *, .fp *), textarea:not(.fp *)):focus-visible {
+    outline: 2px solid #fff !important;
+    outline-offset: -2px !important;
+  }
+}
+/* The tempo being typed: the field lies over the figures it replaces, which
+   stay where they were, with 8px beside them and 3 above and below. */
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_) [data-region^='deck'] .bpm .typed {
+  position: relative;
+}
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_) [data-region^='deck'] .bpm .typed > div {
+  visibility: hidden;
+}
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_) [data-region^='deck'] .bpm .typed > .edit,
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_) [data-region^='deck'] .bpm .typed > .edit:focus-visible {
+  position: absolute;
+  z-index: 2;
+  inset: -3px -8px;
+  box-sizing: border-box;
+  width: auto;
+  height: auto;
+  margin: 0;
+  padding: 2px 8px 4px;
+  border-radius: var(--r);
+  letter-spacing: 0.001em;
+  background: var(--rg-grooves), var(--rg-well);
+  box-shadow: var(--tt-cut);
+  text-align: right;
+  line-height: 24px;
+}
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_) [data-region^='deck'] .mirror .bpm .typed > .edit,
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_) [data-region^='deck'].mirror .bpm .typed > .edit {
+  text-align: left;
+}
+/* WebKit sets a field's figures a pixel and a half higher in their line than
+   Chromium does. */
+@supports (font: -apple-system-body) {
+  :root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_) [data-region^='deck'] .bpm .typed > .edit:focus-visible {
+    padding: 3.5px 8px 2.5px;
+  }
+}
+/* The setup card's name: the browser's mark for its suggestions, as quiet as
+   the app's own chevrons. */
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_) input[list]::-webkit-calendar-picker-indicator {
+  opacity: 0.4;
+}
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_) input[list]::-webkit-list-button {
+  color: var(--fg-3);
+}
+/* The filter's BPM fields: the figures alone. Up and down still step them. */
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_) input[type='number'] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_) input[type='number']::-webkit-inner-spin-button,
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_) input[type='number']::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* ── The sidebar's list: what you reach stops clear of its fades ────── */
+:root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_) section.library nav {
+  scroll-padding-block: 24px;
+}
+
+/* Forced colours: the system's own colour, and fields have the line too. */
+@media (forced-colors: active) {
+  :root[data-flag-focus-states][data-flag-dir-room-tint]:not(#_) :is(.search:has(> input:focus-visible), .sfind:has(> input:focus-visible), input:not(.search > *, .sfind > *):focus-visible, textarea:focus-visible) {
+    outline: 2px solid Highlight !important;
+    outline-offset: -2px !important;
+  }
+}

@@ -1,0 +1,114 @@
+/* #9: button styles. Each style sets the same few variables; one set of
+   rules below applies them to every normal button. Outlines are drawn from
+   --line-2, so they follow the border treatment (#4). */
+
+/* Outline: today's look, with its weight and strength tunable. */
+:root[data-flag-buttons][data-flag-buttons-style='outline'] {
+  --flag-buttons-bg: transparent;
+  --flag-buttons-ring: inset 0 0 0 var(--flag-buttons-weight, 1px) rgb(from var(--line-2) r g b / calc(alpha * var(--flag-buttons-edge, 1)));
+  --flag-buttons-bg-hover: var(--hover);
+  --flag-buttons-ring-hover: inset 0 0 0 var(--flag-buttons-weight, 1px) rgb(from var(--line-2) r g b / calc(alpha * var(--flag-buttons-edge, 1) * 1.7));
+  --flag-buttons-bg-on: var(--sel);
+  --flag-buttons-ring-on: var(--flag-buttons-ring-hover);
+}
+
+/* Tonal fill: no outline, a soft grey fill that lifts on hover. */
+:root[data-flag-buttons][data-flag-buttons-style='tonal'] {
+  --flag-buttons-bg: rgb(255 255 255 / 0.06);
+  --flag-buttons-ring: none;
+  --flag-buttons-bg-hover: rgb(255 255 255 / 0.095);
+  --flag-buttons-ring-hover: none;
+  --flag-buttons-bg-on: rgb(255 255 255 / 0.15);
+  --flag-buttons-ring-on: none;
+}
+
+/* Glass: a small pane of the panels' own glass, top edge lit. */
+:root[data-flag-buttons][data-flag-buttons-style='glass'] {
+  --flag-buttons-bg: linear-gradient(180deg, rgb(255 255 255 / 0.075), rgb(255 255 255 / 0.03));
+  --flag-buttons-ring: inset 0 0 0 1px rgb(255 255 255 / 0.06), inset 0 1px 0 rgb(255 255 255 / 0.12);
+  --flag-buttons-bg-hover: linear-gradient(180deg, rgb(255 255 255 / 0.11), rgb(255 255 255 / 0.05));
+  --flag-buttons-ring-hover: inset 0 0 0 1px rgb(255 255 255 / 0.09), inset 0 1px 0 rgb(255 255 255 / 0.16);
+  --flag-buttons-bg-on: linear-gradient(180deg, rgb(255 255 255 / 0.15), rgb(255 255 255 / 0.08));
+  --flag-buttons-ring-on: inset 0 0 0 1px rgb(255 255 255 / 0.12), inset 0 1px 0 rgb(255 255 255 / 0.2);
+}
+
+/* Raised: a key that stands off the panel; selected ones latch down into
+   it. */
+:root[data-flag-buttons][data-flag-buttons-style='raised'] {
+  --flag-buttons-bg: linear-gradient(180deg, rgb(255 255 255 / 0.085), rgb(255 255 255 / 0.045));
+  --flag-buttons-ring: inset 0 1px 0 rgb(255 255 255 / 0.1), inset 0 0 0 1px rgb(255 255 255 / 0.04), 0 1px 2px rgb(0 0 0 / 0.45);
+  --flag-buttons-bg-hover: linear-gradient(180deg, rgb(255 255 255 / 0.11), rgb(255 255 255 / 0.065));
+  --flag-buttons-ring-hover: inset 0 1px 0 rgb(255 255 255 / 0.14), inset 0 0 0 1px rgb(255 255 255 / 0.05), 0 1px 3px rgb(0 0 0 / 0.5);
+  --flag-buttons-bg-on: var(--well);
+  --flag-buttons-ring-on: inset 0 1px 3px rgb(0 0 0 / 0.5), inset 0 0 0 1px rgb(255 255 255 / 0.05);
+}
+
+/* Which buttons: every .btn but the ones with a look of their own, plus
+   the outlined buttons drawn outside .btn (mixer headphone cue and Rec,
+   the toast's Undo). A headphone cue that's on keeps its amber ring. */
+:root[data-flag-buttons] :is(.btn:not(.play, .cue, .ghost, .primary, .rec), .mixer .hp:not(.on), .mixer button.rec, .toast .undo) {
+  background: var(--flag-buttons-bg);
+  box-shadow: var(--flag-buttons-ring);
+}
+:root[data-flag-buttons] .mixer .hp.on {
+  background: var(--flag-buttons-bg);
+}
+:root[data-flag-buttons]
+  :is(.btn:not(.play, .cue, .ghost, .primary, .rec, .jumps), .mixer .hp:not(.on), .mixer button.rec, .toast .undo):hover:not(:disabled, [aria-disabled='true']) {
+  color: var(--fg);
+  background: var(--flag-buttons-bg-hover);
+  box-shadow: var(--flag-buttons-ring-hover);
+}
+/* Selected (Sampler open, a latched .pressed button, Rec on). */
+:root[data-flag-buttons] :is(.btn:not(.play, .cue, .ghost, .primary, .rec):is(.pressed, [aria-pressed='true']), .mixer button.rec.on),
+:root[data-flag-buttons] :is(.btn:not(.play, .cue, .ghost, .primary, .rec):is(.pressed, [aria-pressed='true']), .mixer button.rec.on):hover {
+  color: var(--fg);
+  background: var(--flag-buttons-bg-on);
+  box-shadow: var(--flag-buttons-ring-on);
+}
+
+/* Settings > Display (critique panel S7): the Interface size − and + were
+   23×32px slivers with a 6px glyph (.btn.sm has min-width: 0). Square
+   32×32 buttons with a 16px glyph, and the 100% readout on the buttons'
+   text baseline. */
+:root[data-flag-buttons] .settings .size[role='group'] .btn.sm:is([aria-label='Smaller'], [aria-label='Bigger']) {
+  width: var(--h-md);
+  padding: 0;
+  font-size: var(--t-md);
+}
+:root[data-flag-buttons] .settings .size[role='group'] {
+  align-items: baseline;
+}
+
+/* D5 (decks builder's request): Key lock (and Slip) rest like Sync, so
+   they read as buttons; on keeps the selected look. */
+:root[data-flag-buttons] [data-region^='deck'] .pitch .lock {
+  background: var(--flag-buttons-bg);
+  box-shadow: var(--flag-buttons-ring);
+  color: var(--fg-2);
+}
+:root[data-flag-buttons] [data-region^='deck'] .pitch .lock:hover {
+  background: var(--flag-buttons-bg-hover);
+  box-shadow: var(--flag-buttons-ring-hover);
+  color: var(--fg);
+}
+:root[data-flag-buttons] [data-region^='deck'] .pitch .lock.on,
+:root[data-flag-buttons] [data-region^='deck'] .pitch .lock.on:hover {
+  background: var(--flag-buttons-bg-on);
+  box-shadow: var(--flag-buttons-ring-on), inset 0 0 0 1px var(--line-2);
+  color: var(--fg);
+}
+/* D18: Cue rests like Sync (the style's fill, amber label); the amber ring
+   shows only at the cue point (.lit). */
+:root[data-flag-buttons] [data-region^='deck'] .transport .cue {
+  background: var(--flag-buttons-bg);
+  box-shadow: var(--flag-buttons-ring);
+}
+:root[data-flag-buttons] [data-region^='deck'] .transport .cue:hover:not([aria-disabled='true']) {
+  background: var(--flag-buttons-bg-hover);
+  box-shadow: var(--flag-buttons-ring-hover);
+}
+:root[data-flag-buttons] [data-region^='deck'] .transport .cue.lit,
+:root[data-flag-buttons] [data-region^='deck'] .transport .cue.lit:hover {
+  box-shadow: inset 0 0 0 1.5px var(--cue);
+}

@@ -21,6 +21,9 @@ const future = [];
 /** The toast at the bottom of the window. `undo` shows an Undo button. */
 export const toast = $state({ text: '', undo: false, id: 0 });
 let timer;
+// #13 (UI audit flag): declutter-toast: when the toast goes, and how long it had, so hovering can hold it.
+let due = 0;
+let left = 0;
 
 /** Shows a short message. With `undo`, it offers Undo for 6 seconds. `ms` sets how long it stays. */
 export function showToast(text, { undo = false, ms = undefined } = {}) {
@@ -28,21 +31,39 @@ export function showToast(text, { undo = false, ms = undefined } = {}) {
   toast.undo = undo;
   toast.id++;
   clearTimeout(timer);
-  timer = setTimeout(hideToast, ms ?? (undo ? 6000 : 2600));
+  const wait = ms ?? (undo ? 6000 : 2600);
+  due = performance.now() + wait;
+  timer = setTimeout(hideToast, wait);
 }
 
 export function hideToast() {
   clearTimeout(timer);
+  due = 0;
   toast.text = '';
   toast.undo = false;
 }
 
-/** Records an edit that has just happened, and offers to undo it. */
-export function pushEdit(edit) {
+/** #13 (UI audit flag): declutter-toast: the pointer is on the toast; it stays until the pointer leaves. */
+export function holdToast() {
+  if (!toast.text || !due) return;
+  clearTimeout(timer);
+  left = Math.max(0, due - performance.now());
+  due = 0;
+}
+/** #13 (UI audit flag): declutter-toast: the pointer left; the toast gets what it had left, and at least a second and a half. */
+export function releaseToast() {
+  if (!toast.text || due) return;
+  const wait = Math.max(1500, left);
+  due = performance.now() + wait;
+  timer = setTimeout(hideToast, wait);
+}
+
+/** Records an edit that has just happened, and offers to undo it. `ms`: how long the toast stays. */
+export function pushEdit(edit, { ms = undefined } = {}) {
   past.push(edit);
   if (past.length > LIMIT) past.shift();
   future.length = 0;
-  showToast(edit.label, { undo: true });
+  showToast(edit.label, { undo: true, ms });
 }
 
 let busy = false;

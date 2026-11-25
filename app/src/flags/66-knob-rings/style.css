@@ -1,0 +1,6 @@
+/* #66: lit ticks without the glow (the doc rules glows out), so lit
+   neighbours stay separate marks. The quieter colour for Master, Cue mix
+   and the sampler Level comes from Mixer.svelte / Sampler.svelte (arc). */
+:root[data-flag-knob-rings] .knob line.on {
+  filter: none;
+}

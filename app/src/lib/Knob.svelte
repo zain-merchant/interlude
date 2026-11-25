@@ -2,10 +2,13 @@
   import { showTip, hideTip, tip, tipText } from './tooltip.svelte.js';
   import { openMenu } from './menu.svelte.js';
   import { detent, keyValue } from './control.js';
+  import { flag, setting } from '../flags/registry.svelte.js';
+  import { dragger, landed, scrolled } from '../flags/118-knob-feel/feel.js'; // #118 (UI audit flag): knob-feel
 
   /**
    * A rotary knob: a machined graphite cap with a white indicator inside an
-   * engraved 270° tick scale. Drag up/down (⇧ for fine), scroll, or use the
+   * engraved 270° tick scale. Drag it up or right to raise it, down or left
+   * to lower it (#118; up and down only without it; ⇧ for fine), scroll, or use the
    * arrow keys; double-click or right-click resets. With `kill`, clicking
    * the label kills the band and clicking again brings it back. A `taper`
    * maps values to positions on the sweep (0..1) when they aren't linear,
@@ -57,30 +60,55 @@
   }
 
   let raw = 0;
+  // #118 (UI audit flag): knob-feel: how this drag turns it (feel.js), and where the pointer was.
+  let turned = dragger('updown');
+  let at = [0, 0];
   let dragging = $state(false);
   const readout = () => tipText(name, format(value));
 
   function down(e) {
     if (e.button !== 0) return;
     e.currentTarget.setPointerCapture(e.pointerId);
+    // #62 (UI audit flag): a press on the ring focuses the dial as a press on the cap does. The
+    // press's own focus change is cancelled, and focusing here, inside the pointer event, keeps
+    // the focus ring off (it's a pointer focus, not a keyboard one).
+    if (grabRing && e.target !== dial && !dial.contains(e.target)) {
+      e.preventDefault();
+      dial.focus({ preventScroll: true });
+    }
+
     dragging = true;
+    turned = dragger(flag('knob-feel') ? setting('knob-feel', 'drag') : 'updown');
+    at = [e.clientX, e.clientY];
     raw = pos;
     showTip(dial, readout());
   }
   function move(e) {
     if (!dragging) return;
     const perPx = (1 / 180) * (e.shiftKey ? 0.1 : 1);
-    raw = clampPos(raw - e.movementY * perPx);
+    const by = flag('knob-feel') ? turned(e.clientX - at[0], e.clientY - at[1]) : -e.movementY;
+    at = [e.clientX, e.clientY];
+    raw = clampPos(raw + by * perPx);
     setPos(detent(raw, resetPos, perPx, e.shiftKey));
     showTip(dial, readout());
   }
   function up() {
     if (!dragging) return;
     dragging = false;
+
     hideTip(dial);
   }
   function wheel(e) {
     e.preventDefault();
+    // #118 (UI audit flag): knob-feel: as far as the scroll goes.
+    if (flag('knob-feel') && setting('knob-feel', 'scroll') === 'far') {
+      const p = scrolled(e, { value: pos, min: 0, max: 1, reset: resetPos, sideways: true, detent });
+      if (p === null) return;
+      setPos(p);
+      landed(pos);
+      showTip(dial, readout());
+      return;
+    }
     setPos(pos - Math.sign(e.deltaY) * (e.shiftKey ? 0.005 : 0.02));
     showTip(dial, readout());
   }
@@ -99,11 +127,19 @@
       set(kill);
     }
   }
+  // #62 (UI audit flag): hit-areas moves the gestures from the cap to the
+  // whole tick ring (.wrap); with it off they stay on the cap (.dial).
+  const grabRing = $derived(flag('hit-areas'));
+  const onRing = (fn) => (e) => grabRing && fn(e);
+  const onCap = (fn) => (e) => !grabRing && fn(e);
   const menu = (e) =>
     openMenu(e, [
-      { label: 'Reset to default', action: () => set(reset), key: '' },
+      // #86 (UI audit flag): copy-toasts says what the reset goes back to.
+      { label: flag('copy-toasts') ? `Reset to ${format(reset)}` : 'Reset to default', action: () => set(reset), key: '' },
       ...(kill !== undefined ? [{ label: killed ? 'Bring back' : 'Kill', action: toggleKill }] : []),
     ]);
+  // #88 (UI audit flag): with deck-names the name starts "Left deck …", which reads "Kill left deck high EQ" mid-sentence.
+  const tipName = () => (flag('deck-names') ? name.charAt(0).toLowerCase() + name.slice(1) : name);
   const TICKS = 27;
   const R = $derived(size / 2 + 7);
   const box = $derived(size + 18);
@@ -121,23 +157,23 @@
     }),
   );
   const half = 0.5 / (TICKS - 1);
-  const lit = (tk) => hi - lo > 0.02 && tk.p >= lo - half && tk.p <= hi + half;
 </script>
 
 <div class="knob" style:--c={arc ?? 'var(--fg)'}>
-  <div class="wrap" style:width="{box}px" style:height="{box}px">
+  <!-- svelte-ignore a11y_no_static_element_interactions (the dial inside is the slider; the ring only widens where it grabs) -->
+  <div class="wrap" style:width="{box}px" style:height="{box}px"
+    onpointerdown={onRing(down)}
+    onpointermove={onRing(move)}
+    onpointerup={onRing(up)}
+    onpointercancel={onRing(up)}
+    ondblclick={onRing(() => set(reset))}
+    onwheel={onRing(wheel)}
+    oncontextmenu={onRing(menu)}>
     <svg width={box} height={box} viewBox="{-box / 2} {-box / 2} {box} {box}" aria-hidden="true">
-      <!-- The lit ticks in a group of their own, glowing as one: one filter
-           for the ring rather than one per tick, which costs a lot to
-           repaint as the knob turns. -->
       {#each ticks as tk}
-        {#if !lit(tk)}<line x1={tk.x1} y1={tk.y1} x2={tk.x2} y2={tk.y2} class:major={tk.major} />{/if}
+        <line x1={tk.x1} y1={tk.y1} x2={tk.x2} y2={tk.y2} class:major={tk.major}
+          class:on={hi - lo > 0.02 && tk.p >= lo - half && tk.p <= hi + half} />
       {/each}
-      <g class="lit">
-        {#each ticks as tk}
-          {#if lit(tk)}<line x1={tk.x1} y1={tk.y1} x2={tk.x2} y2={tk.y2} class="on" class:major={tk.major} />{/if}
-        {/each}
-      </g>
     </svg>
     <div
       bind:this={dial}
@@ -154,20 +190,21 @@
       style:width="{size}px"
       style:height="{size}px"
       style:--rot="{angle(pos)}deg"
-      onpointerdown={down}
-      onpointermove={move}
-      onpointerup={up}
-      onpointercancel={up}
-      ondblclick={() => set(reset)}
-      onwheel={wheel}
+      onpointerdown={onCap(down)}
+      onpointermove={onCap(move)}
+      onpointerup={onCap(up)}
+      onpointercancel={onCap(up)}
+      ondblclick={onCap(() => set(reset))}
+      onwheel={onCap(wheel)}
       onkeydown={key}
-      oncontextmenu={menu}
+      oncontextmenu={onCap(menu)}
       use:tip={() => tipText(name, format(value), 'double-click to reset')}
     ><i></i></div>
   </div>
   {#if kill !== undefined}
-    <button class="label" class:killed onclick={toggleKill} aria-pressed={killed}
-      use:tip={() => (killed ? `Bring back ${name}` : `Kill ${name}`)}>{label}</button>
+    <!-- #61 (UI audit flag): eq-kill opens the kill's tooltip under the label, off the knob. -->
+    <button class="label" class:killed onclick={toggleKill} aria-pressed={killed} data-tip-below={flag('eq-kill') ? '' : undefined}
+      use:tip={() => (killed ? `Bring back ${tipName()}` : `Kill ${tipName()}`)}>{label}</button>
   {:else if label}
     <span class="label">{label}</span>
   {/if}
@@ -200,8 +237,6 @@
   line.on {
     stroke: var(--c);
     stroke-width: 1.8;
-  }
-  .lit {
     filter: drop-shadow(0 0 0.75px var(--c));
   }
   .knob:has(.dial.killed) line.on {

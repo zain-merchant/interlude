@@ -1,0 +1,56 @@
+/* #20: the track list runs to the library card's bottom edge and clips
+   there, with the card's corner, not at an inner rounded box 8px above it.
+   The column's bottom padding goes; the list's own corners go square
+   except the one that meets the card's corner (bottom right), which takes
+   the card's radius less the list's inset on each side (8px across, 0px
+   down): an elliptical corner concentric with the card's. Written after
+   #2's radius on the list, so it wins where both are on. */
+:root[data-flag-library-clip] section.library .main {
+  padding-bottom: 0;
+}
+:root[data-flag-library-clip] section.library .main .scroll {
+  border-radius: 0;
+  /* The column's inset is 8px, or the panel padding under #2. */
+  border-bottom-right-radius: max(4px, calc(var(--r-panel) - var(--library-inset, 8px))) var(--r-panel);
+}
+
+/* Li9 (C38): one soft edge, top and bottom. While there's more to scroll
+   past an edge, the list and the sidebar fade over 16px there, down to 30%
+   (not to nothing, so a row cut at the edge stays legible). Library.svelte
+   sets data-more while either can scroll further down and data-scrolled
+   once it has scrolled from the top, so at rest the first row is crisp and
+   at the end nothing fades (#16's room under the last row stays clear).
+   The same edge spec is meant for Settings' scroll (layout's #32). */
+:root[data-flag-library-clip] section.library :is([data-region='tracks'], [data-region='sidebar']) {
+  --clip-top: #000;
+  --clip-foot: #000;
+}
+:root[data-flag-library-clip] section.library :is([data-region='tracks'], [data-region='sidebar'])[data-scrolled] {
+  --clip-top: rgb(0 0 0 / 0.3);
+}
+:root[data-flag-library-clip] section.library :is([data-region='tracks'], [data-region='sidebar'])[data-more] {
+  --clip-foot: rgb(0 0 0 / 0.3);
+}
+:root[data-flag-library-clip] section.library :is([data-region='tracks'], [data-region='sidebar']):is([data-more], [data-scrolled]) {
+  -webkit-mask-image: linear-gradient(to bottom, var(--clip-top) 0, #000 16px, #000 calc(100% - 16px), var(--clip-foot) 100%);
+  mask-image: linear-gradient(to bottom, var(--clip-top) 0, #000 16px, #000 calc(100% - 16px), var(--clip-foot) 100%);
+}
+
+/* A section heading whose first item is still below the sidebar's foot
+   isn't drawn (Library.svelte marks it data-cut): no heading stranded,
+   or cut in half, at the edge. It comes back as its first item scrolls in. */
+:root[data-flag-library-clip] section.library [data-region='sidebar'] > .h[data-cut] {
+  visibility: hidden;
+}
+
+/* Li6: the list's own focus ring followed its new, uneven corners (square
+   at the top, rounded at one bottom corner). The ring goes round the row
+   the arrow keys move instead, in the list's own 1px style. With #14 on,
+   #14 draws this ring in its 2px style. */
+:root[data-flag-library-clip]:not([data-flag-states]) section.library [data-region='tracks']:focus-visible {
+  outline: none;
+}
+:root[data-flag-library-clip]:not([data-flag-states]) section.library [data-region='tracks']:focus-visible .row.sel {
+  outline: 1px solid var(--fg-3);
+  outline-offset: -1px;
+}

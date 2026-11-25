@@ -1,0 +1,37 @@
+/* #90: library polish from the critique's backlog. */
+
+/* a-K51 / c-K50: "+ Add music folder" and "+ New playlist" had a typed
+   plus. A drawn 12px plus at --fg-3 sits where the typed one did, its
+   stroke starting with the items' text above it. */
+:root[data-flag-library-polish] section.library [data-region='sidebar'] .add:has(> svg.plus) {
+  justify-content: flex-start;
+  gap: 6px;
+}
+:root[data-flag-library-polish] section.library [data-region='sidebar'] .add > svg.plus {
+  flex: none;
+  width: 12px;
+  height: 12px;
+  margin-left: -1px;
+  fill: none;
+  stroke: var(--fg-3);
+  stroke-width: 1.3;
+  stroke-linecap: round;
+}
+/* The label stays a step below the items (--fg-3, as before), so a new
+   playlist and "+ New playlist" read clearly apart. */
+:root[data-flag-library-polish] section.library [data-region='sidebar'] .add:has(> svg.plus):hover {
+  color: var(--fg);
+}
+:root[data-flag-library-polish] section.library [data-region='sidebar'] .add:has(> svg.plus):hover > svg.plus {
+  stroke: var(--fg-2);
+}
+
+/* Sidebar sections, on #3's row grid: the Library heading sits 17px above
+   its first item (its band shares the search bar's row), while Playlists
+   and History took one row with 5px under them. Each later heading now
+   takes two rows (still on the 28px pitch): a 24px break above, the label,
+   and the same 17px down to its first item as Library has. */
+:root[data-flag-library-polish][data-flag-grid] section.library nav > .h.sec {
+  margin-top: 24px;
+  padding-bottom: 16px;
+}

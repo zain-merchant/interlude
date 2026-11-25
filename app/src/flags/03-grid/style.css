@@ -1,0 +1,97 @@
+/* #3: the 4px grid. The base unit is 4px: --pad 16, --gap 12, control
+   heights 44/32/24 and the 28px row are all multiples of it, and the
+   panels start on it (the window pads 12, or 32 under the macOS title
+   strip). These rules bring the stragglers onto it and line up edges
+   across panels. */
+
+/* Deck header: a 28px title over a 16px line (was 17). (The key line
+   under the BPM is upstream's 22px key button since the merge of main.) */
+:root[data-flag-grid] .deck .artist {
+  line-height: 16px;
+}
+
+/* One bottom line, 12px above the transport (the deck body's gap): the
+   mode row's box ends there, and so do the mixer's headphone buttons. The pitch
+   column's gap is 8, so its nudge pair ended 4px lower; this adds the 4. */
+:root[data-flag-grid] .deck .pitch .nudge {
+  margin-bottom: calc(var(--gap) - 8px);
+}
+
+/* Mixer centre: dial labels on a 12px line like the channel dials', so
+   Master, Cue mix and the meters sit on whole pixels; Rec drops to the
+   headphone buttons' line instead of floating mid-column. (The last row
+   never shrinks below Rec, so on the shortest mixer Rec overflows down,
+   as it does today, rather than up over the meters.) */
+:root[data-flag-grid] .mixer .cen .label {
+  line-height: 12px;
+}
+:root[data-flag-grid] .mixer .cen {
+  grid-template-rows: auto auto auto 1fr;
+}
+:root[data-flag-grid] .mixer .cen > .rec {
+  align-self: end;
+}
+
+/* Waveform lanes: the track name is centred on the same line as the zoom
+   control (8px from the top, 24 tall). */
+:root[data-flag-grid] .waves .who {
+  height: var(--h-sm);
+}
+
+/* Library: the sidebar and the track list share one 28px row pitch from
+   the search bar down. The sidebar's heading takes the search bar's row
+   (32 + 8, its label centred on the search text), and the column header
+   takes one row (24 + its 4px rule gap, was 28 + 4). (The nav is a
+   scrolling flex column, so the headings mustn't shrink.), so the first sidebar
+   item meets the column header and every item after meets a track row. */
+:root[data-flag-grid] .library nav > .h:first-child,
+:root[data-flag-grid] .settings nav > .h:first-child {
+  flex: none;
+  height: var(--h-md);
+  margin-bottom: 8px;
+  padding-bottom: 0;
+  display: flex;
+  align-items: center;
+}
+:root[data-flag-grid] .library .head {
+  height: 24px;
+}
+/* The column headings 2px lower, inside their 24px row, so "Title" and
+   the sidebar's "All tracks" share a centre line (they were 1.7px apart);
+   the row and the list below keep their places. */
+:root[data-flag-grid] .library .head > * {
+  translate: 0 2px;
+}
+/* Later section headings are one row too (an 8px space, a 16px line and
+   4 under it), so the playlists below stay on the pitch. */
+:root[data-flag-grid] .library nav > .h.sec {
+  flex: none;
+  height: 16px;
+  margin-top: 8px;
+  padding-bottom: 4px;
+  line-height: 16px;
+  box-sizing: content-box;
+  display: flex;
+  align-items: flex-end;
+}
+
+/* Overlay: the grid drawn over the app, to check by eye. */
+:root[data-flag-grid]:not([data-flag-grid-overlay='off']) body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  pointer-events: none;
+  --u: 4px;
+  background-image:
+    repeating-linear-gradient(to right, rgb(255 64 160 / 0.12) 0 1px, transparent 1px var(--u)),
+    repeating-linear-gradient(to bottom, rgb(255 64 160 / 0.12) 0 1px, transparent 1px var(--u));
+}
+:root[data-flag-grid][data-flag-grid-overlay='16'] body::after {
+  --u: 16px;
+}
+
+/* D21 (decks builder's request): the deck title and BPM share a baseline. */
+:root[data-flag-grid] [data-region^='deck'] header {
+  align-items: last baseline;
+}

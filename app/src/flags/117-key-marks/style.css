@@ -1,0 +1,46 @@
+/* #117 key-marks: the system font's own marks. system-ui is San Francisco on
+   a Mac; -apple-system is for WebKit. */
+:root[data-flag-key-marks] .km {
+  font-family: system-ui, -apple-system, sans-serif;
+  letter-spacing: 0;
+}
+/* In a key: the weight whose stems come nearest the letter's. */
+:root[data-flag-key-marks] .kcap .km {
+  display: block;
+  font-weight: 600;
+  text-box: trim-both cap alphabetic;
+}
+:root[data-flag-key-marks][data-flag-key-marks-letters='sf'] .kcap b {
+  font-family: system-ui, -apple-system, sans-serif;
+  font-weight: 600;
+}
+:root[data-flag-key-marks][data-flag-key-marks-letters='sf'] kbd {
+  font-family: system-ui, -apple-system, sans-serif !important;
+}
+/* Ours (marks.js): the height of the capitals, standing on the baseline. */
+:root[data-flag-key-marks][data-flag-key-marks][data-flag-key-marks][data-flag-key-marks][data-flag-key-marks][data-flag-key-marks][data-flag-key-marks][data-flag-key-marks][data-flag-key-marks] .km.own svg {
+  display: inline-block;
+  width: auto;
+  height: 0.705em;
+  margin: 0;
+  overflow: visible;
+  vertical-align: baseline;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 80;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+:root[data-flag-key-marks] .kcap .km.own {
+  display: grid;
+}
+:root[data-flag-key-marks][data-flag-key-marks][data-flag-key-marks][data-flag-key-marks][data-flag-key-marks][data-flag-key-marks][data-flag-key-marks][data-flag-key-marks][data-flag-key-marks] .kcap .km.own svg {
+  stroke-width: 108;
+}
+:root[data-flag-key-marks] .km-say {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}

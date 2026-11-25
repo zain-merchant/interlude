@@ -1,0 +1,29 @@
+/* #46: an empty deck looks empty. Its numbers sit at the doc's "empty"
+   level (--fg-4), the selected tab drops to --fg-2, the beat-jump size
+   dims with its arrows, and the load hint shows once, in the deck's
+   header (the lane keeps just its deck bar). Pitch and Key lock stay
+   live: they work without a track. */
+:root[data-flag-empty-deck] [data-region^='deck']:has(header .name.dim) :is(.bpm .big, .hub .el, .hub .rm) {
+  color: var(--fg-4);
+}
+/* The selected tab a step down (--fg-2, its underline --fg-3), still a
+   step above the others (--fg-3); at --fg-3 it matched them, b-K30. */
+:root[data-flag-empty-deck] [data-region^='deck']:has(header .name.dim) .modes button.on {
+  color: var(--fg-2);
+}
+:root[data-flag-empty-deck] [data-region^='deck']:has(header .name.dim) .modes button.on::after {
+  background: var(--fg-3);
+}
+:root[data-flag-empty-deck] [data-region^='deck'] .transport .jumps:has(button[aria-disabled='true']) span {
+  opacity: 0.4;
+}
+:root[data-flag-empty-deck] .waves .lane .who .hint {
+  display: none;
+}
+
+/* With deck-polish's quieter tenths, an empty time stays one grey: the
+   tenths don't dim again on top of --fg-4. */
+:root[data-flag-empty-deck] [data-region^='deck']:has(header .name.dim) .hub .t {
+  opacity: 1;
+  color: inherit;
+}

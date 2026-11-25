@@ -1,0 +1,8 @@
+/* #7: every row at its designed size (App.svelte works them out: --waves
+   136, --decks 360, the sampler's strip), and the library takes the rest,
+   so a tall window gives its extra height to the track list. A short
+   window gives way in order: library to 160, waveforms to 96, decks to
+   340 (App.svelte). */
+:root[data-flag-edge-tall] .app {
+  grid-template-rows: var(--waves, 136px) var(--decks, 360px) var(--gap) minmax(160px, 1fr);
+}

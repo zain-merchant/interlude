@@ -1,0 +1,40 @@
+/* #10: parts set apart by space (and a step in tone), not middle dots.
+   The hooks keep one real space between parts for screen readers and
+   copy; the margin makes up the rest of the gap. */
+
+/* Tooltips: "Low EQ  −6.0 dB  double-click to reset". */
+:root[data-flag-no-dots] [role='tooltip'] .part + .part {
+  margin-left: calc(var(--flag-no-dots-gap, 8px) - 0.25em);
+}
+:root[data-flag-no-dots][data-flag-no-dots-tone='step'] [role='tooltip'] .part + .part {
+  color: var(--fg-2);
+}
+
+/* A tip's key (E9): without the dot, "deck B E" and "S eight one-shot
+   slots" ran the key into the words. The key now comes last, 8px after the
+   words, as a bare dim glyph in --fg-3 (tooltip.svelte.js marks it,
+   Tooltip.svelte sets it apart): the way the search field, the toast and
+   the menus show a key (the doc's rule 6). An outlined keycap here was the
+   one boxed key in the app (d-K22, e-K06). */
+:root[data-flag-no-dots] [role='tooltip'] .key {
+  margin-left: calc(8px - 0.25em);
+  color: var(--fg-3);
+  font: inherit;
+}
+
+/* The deck's key: the key name, a space, then its Camelot code. */
+:root[data-flag-no-dots] [data-region^='deck'] .bpm .unit .cam {
+  margin-left: 1px;
+}
+/* The key's colour is upstream's (the deck's colour, a button since the
+   merge of main); this flag only sets the space. */
+
+/* Library: "48 tracks   analyzing, 12 to go". */
+:root[data-flag-no-dots] section.library .bar .count .pending {
+  margin-left: calc(var(--flag-no-dots-gap, 8px) - 0.25em);
+}
+
+/* Import: "Music/rekordbox   updated 2 days ago". */
+:root[data-flag-no-dots] .found .file small .when {
+  margin-left: calc(var(--flag-no-dots-gap, 8px) - 0.25em);
+}

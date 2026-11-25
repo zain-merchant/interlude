@@ -1,0 +1,130 @@
+/* #5: fixed slots for changing values in the deck's mode row. Sizes are in
+   em/ch of the text they hold, so they follow the type scale. */
+
+/* The mode row measures its own width, so slots are only reserved where
+   they fit (decks narrower than 320px, at the smallest windows, keep the
+   old sizing rather than overflow). Safari 16+ / WebKit has these. */
+:root[data-flag-no-shift-strip] [data-region^='deck'] .mp {
+  container-type: inline-size;
+}
+
+@container (min-width: 320px) {
+  /* Hot cues: the time slot fits "0:00" whether it reads Set or a time. */
+  :root[data-flag-no-shift-strip] [data-region^='deck'] .perf .tc span {
+    min-width: calc(3ch + 0.3em);
+    text-align: left;
+  }
+
+  /* Hot cues: dot, a one-figure slot for the number, then the value,
+     6px apart and left-aligned, so "1 Set" and "2 1:07" put their value at
+     the same distance from the dot. */
+  :root[data-flag-no-shift-strip] [data-region^='deck'] .perf .tc {
+    gap: 6px;
+  }
+  :root[data-flag-no-shift-strip] [data-region^='deck'] .perf .tc b {
+    width: 1ch;
+    text-align: center;
+  }
+
+  /* FX: on the deck's four columns like the cues, the tabs and the
+     transport (batch D11): effect, length, level, on. Each sits centred in
+     its own column, so a longer effect name can't push the others, and the
+     separators go (the columns do their job). */
+  :root[data-flag-no-shift-strip] [data-region^='deck'] .fx {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(min-content, 1fr));
+    align-items: center;
+    justify-items: center;
+    gap: 8px;
+  }
+  :root[data-flag-no-shift-strip] [data-region^='deck'] .fx .sep {
+    display: none;
+  }
+  :root[data-flag-no-shift-strip] [data-region^='deck'] .fx .tog {
+    min-width: 3.8em;
+  }
+
+  /* Loop: ÷2 and ×2 hug the value they change, and the jump arrows sit in
+     the outer columns, centred over Cue and the beat jump below (batch
+     D20; Performance.svelte puts them in this order). */
+  :root[data-flag-no-shift-strip] [data-region^='deck'] .perf .grp {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto minmax(0, 1fr) auto;
+    align-items: baseline;
+    column-gap: 8px;
+  }
+  :root[data-flag-no-shift-strip] [data-region^='deck'] .perf .grp > .ar {
+    justify-self: center;
+  }
+  :root[data-flag-no-shift-strip] [data-region^='deck'] .perf .grp > .ar + .tb {
+    justify-self: end;
+  }
+  :root[data-flag-no-shift-strip] [data-region^='deck'] .perf .grp > .big + .tb {
+    justify-self: start;
+  }
+  :root[data-flag-no-shift-strip] [data-region^='deck'] .perf .grp > .tb:not(.ar) {
+    font-size: var(--t-sm);
+  }
+}
+
+/* Where the row is wide enough (a quarter column each for the arrows and
+   room for ÷2, the size and ×2 between them) the arrows sit in the outer
+   quarter columns, over Cue and the beat jump below. */
+@container (min-width: 420px) {
+  :root[data-flag-no-shift-strip] [data-region^='deck'] .perf .grp {
+    grid-template-columns: calc((100% - 24px) / 4) minmax(0, 1fr) auto minmax(0, 1fr) calc((100% - 24px) / 4);
+  }
+}
+
+/* The size button holds one width (it fits "1/16 beats") and centres its
+   contents, so "4 beats" sits on the button's centre line rather than
+   being pushed right by an empty slot, and ÷2 / ×2 never move. The row
+   then needs about 240px with a 1/16 loop; the window's minimum gives it
+   234 (at 1024×760 stress-narrow-strip tightens its side buttons to fit),
+   and below that a 1/16 loop overflowed before this flag too. */
+:root[data-flag-no-shift-strip] [data-region^='deck'] .perf .grp > .big {
+  min-width: 114px;
+  justify-content: center;
+}
+:root[data-flag-no-shift-strip] [data-region^='deck'] .perf .grp > .big b,
+:root[data-flag-no-shift-strip] [data-region^='deck'] .perf .grp > .big span {
+  min-width: 0;
+}
+
+/* Beat jump in the transport: three equal parts, so the size in the middle
+   can change without moving the arrows' hit areas. */
+:root[data-flag-no-shift-strip] [data-region^='deck'] .transport .jumps {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+:root[data-flag-no-shift-strip] [data-region^='deck'] .transport .jumps span {
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* The size reads as a length: the number at --t-sm --fg-2 with its unit
+   under it ("beats", --t-xs --fg-3), stacked so both fit the middle
+   third (batch D4). The control measures itself and drops the unit where
+   it's too narrow for it (the smallest windows). */
+:root[data-flag-no-shift-strip] [data-region^='deck'] .transport .jumps {
+  container-type: inline-size;
+}
+:root[data-flag-no-shift-strip] [data-region^='deck'] .transport .jumps span {
+  display: grid;
+  justify-items: center;
+  font-size: var(--t-sm);
+  line-height: 15px;
+  color: var(--fg-2);
+}
+:root[data-flag-no-shift-strip] [data-region^='deck'] .transport .jumps small {
+  font-size: var(--t-xs);
+  line-height: 13px;
+  color: var(--fg-3);
+}
+@container (max-width: 95px) {
+  :root[data-flag-no-shift-strip] [data-region^='deck'] .transport .jumps small {
+    display: none;
+  }
+  :root[data-flag-no-shift-strip] [data-region^='deck'] .transport .jumps span {
+    font-size: var(--t-xs);
+  }
+}

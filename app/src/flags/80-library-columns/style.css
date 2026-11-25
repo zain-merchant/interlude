@@ -1,0 +1,37 @@
+/* #80: columns sized to what they hold. Fixed tracks: the marker (26, or
+   24 under #15), BPM 64, Key 56 + 12 and Time 64. Title and Artist share
+   the rest 2.4 : 1.6 of 5.2 (Folder's 1.2), as before, but stop at 360 and
+   240 on a list up to 1200px wide (1440 windows); past that the caps grow
+   with the list (half and three tenths of the extra width), so a wide
+   window's columns spread across it instead of leaving its right third
+   empty. Folder takes what's left. (% of the row, since fr can't go in
+   min().) Since the merge of upstream's column picker, the widths are
+   --col-<column> variables Library.svelte reads, and the cells carry
+   data-col, so the rules hold whichever columns are shown. */
+:root[data-flag-library-columns] section.library .main {
+  --lc-title: max(360px, calc(360px + (100% - 1200px) * 0.5));
+  --lc-artist: max(240px, calc(240px + (100% - 1200px) * 0.3));
+  /* The columns the user shows are read by Library.svelte (--col-<column>);
+     Album and Genre keep their shares, Folder takes what's left. */
+  --col-title: minmax(0, min(var(--lc-title), 32%));
+  --col-artist: minmax(0, min(var(--lc-artist), 21%));
+  --col-bpm: 64px;
+  --col-key: var(--lib-key, 68px);
+  --col-time: 64px;
+  --col-folder: minmax(0, 1fr);
+}
+/* 24px between the numbers: Key and Folder start 24px after the text
+   before them (the cell before pads its right side by 6, or 8 under #15). */
+:root[data-flag-library-columns] section.library .row > :is([data-col='key'], [data-col='folder']) {
+  padding-left: 18px;
+}
+:root[data-flag-library-columns][data-flag-spacing] section.library .row > :is([data-col='key'], [data-col='folder']) {
+  padding-left: 16px;
+}
+/* BPM at full strength (an empty one stays at the off level). */
+:root[data-flag-library-columns] section.library .scroll .row > .n[data-col='bpm']:not(.none) {
+  color: var(--fg);
+}
+:root[data-flag-library-columns] section.library .scroll .row.missing > .n[data-col='bpm'] {
+  color: inherit;
+}

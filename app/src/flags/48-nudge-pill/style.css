@@ -1,0 +1,45 @@
+/* #48: the nudge pair is one 24px pill split in two, on the tonal surface
+   every resting button has (flag 09's when it's on): no outline, since an
+   outline means Cue armed. A 1px --line-2 divider between the halves;
+   each half lifts on hover and takes --sel while held. Glyphs − and + in
+   --fg-2. Hit areas stay 28×24. */
+:root[data-flag-nudge-pill] [data-region^='deck'] .pitch .nudge {
+  width: 56px;
+  height: var(--h-sm);
+  border-radius: var(--r);
+  background: var(--flag-buttons-bg, var(--raise));
+  box-shadow: none;
+}
+:root[data-flag-nudge-pill] [data-region^='deck'] .pitch .nudge button {
+  height: var(--h-sm);
+  border-radius: var(--r) 0 0 var(--r);
+  color: var(--fg-2);
+  font-size: var(--t-sm);
+  line-height: 1;
+}
+:root[data-flag-nudge-pill] [data-region^='deck'] .pitch .nudge button + button {
+  border-radius: 0 var(--r) var(--r) 0;
+  box-shadow: inset 1px 0 0 var(--line-2);
+}
+/* Each half carries the pill's outer corners itself (the pill no longer
+   clips them), so a keyboard ring goes round the whole half, inside it.
+   Clipping the pill cut the ring down to a 2px bar (d-K01). */
+:root[data-flag-nudge-pill] [data-region^='deck'] .pitch .nudge button:focus-visible {
+  outline-offset: -2px;
+}
+:root[data-flag-nudge-pill] [data-region^='deck'] .pitch .nudge button:hover:not([aria-disabled='true']) {
+  background: var(--flag-buttons-bg-hover, var(--hover));
+  color: var(--fg);
+}
+:root[data-flag-nudge-pill] [data-region^='deck'] .pitch .nudge button:active:not([aria-disabled='true']) {
+  /* Pressed sinks, like every button under #14 (a step darker than rest;
+     --sel read as hover). */
+  background: var(--well);
+  transition: background-color 60ms ease-out;
+}
+:root[data-flag-nudge-pill] [data-region^='deck'] .pitch .nudge:has(button[aria-disabled='true']) {
+  opacity: 0.4;
+}
+:root[data-flag-nudge-pill] [data-region^='deck'] .pitch .nudge button[aria-disabled='true'] {
+  opacity: 1;
+}

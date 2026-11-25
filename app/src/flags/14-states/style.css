@@ -1,0 +1,229 @@
+/* #14: one state system. Resting looks belong to #9; these rules only add
+   or align states. */
+
+/* Hover: a 5% fill and full-strength text everywhere. */
+:root[data-flag-states] .toast .undo:hover,
+:root[data-flag-states] .settings .key:hover,
+:root[data-flag-states] .library .filter .clear:hover {
+  background: var(--hover);
+  color: var(--fg);
+}
+/* Context menu: hover and arrow-key focus are the current item, so they
+   get the selected fill. */
+:root[data-flag-states] .menu button:is(:hover, :focus-visible):not(:disabled) {
+  background: var(--sel);
+}
+/* E10: focus follows the pointer (ContextMenu.svelte), so the one lit row
+   is the focused one; hover alone lights nothing, or a menu opened under
+   the pointer lit two rows at once. A clear 12% highlight, label at full
+   strength; destructive items in --kill. */
+:root[data-flag-states] .menu button:hover:not(:focus):not(:disabled) {
+  background: none;
+}
+:root[data-flag-states] .menu button:focus:not(:disabled) {
+  background: rgb(255 255 255 / 0.12);
+  color: var(--fg);
+  outline: none;
+}
+:root[data-flag-states] .menu button.danger:not(:disabled) span {
+  color: var(--kill);
+}
+/* Deck tabs and sort headers: hover is a step towards selected, never
+   the same thing. A hovered tab brightens its label only (the underline is
+   the selected tab's alone); a hovered heading goes to --fg-2, under the
+   sorted heading's --fg. */
+:root[data-flag-states] .modes button:not(.on):hover {
+  color: var(--fg);
+}
+:root[data-flag-states] .head .sort:not(.on):hover {
+  color: var(--fg-2);
+}
+/* A pressed sidebar item: its count at --fg-2 on the --sel fill (--fg-3
+   there was 4.3:1). */
+:root[data-flag-states] [data-region='sidebar'] .item:active small {
+  color: var(--fg-2);
+}
+
+/* Pressed, buttons: shrink to 97% (as .btn already does) and darken the
+   face a little, so it reads even where the button has no fill. */
+:root[data-flag-states]
+  :is(
+    .btn,
+    .mixer .hp,
+    .mixer button.rec,
+    .toast .undo,
+    .settings .key,
+    .deck .val,
+    .deck .range,
+    .deck .lock,
+    .deck .nudge button,
+    .deck .jumps button,
+    .zoom button,
+    .search .clear,
+    .library .filter .clear,
+    .library .cols,
+    [data-region^='deck'] .grid button,
+    .perf button,
+    .fx button,
+    .stems .stem
+  ):active:not(:disabled, [aria-disabled='true'], .jumps) {
+  transform: scale(0.97);
+}
+/* ...and sinks into the panel, never dimming the label (F2, then the
+   round-2 capture pass: a held button looked like a hovered one, since
+   hover lightens and the old pressed fill was barely different). Pressed
+   is a step darker than rest: the recessed well (--well) with its inner
+   shadow and a 1px inset edge, reached in 60ms so a tap shows. Play is
+   solid, so it darkens as a whole; Cue is engaged while held, so it takes
+   its amber at 12%, like a cueing Play (#6). */
+:root[data-flag-states]
+  :is(
+    .btn:not(.play, .cue, .primary),
+    .mixer .hp,
+    .mixer button.rec,
+    .toast .undo,
+    .settings .key,
+    .deck .val,
+    .deck .range,
+    .deck .lock,
+    .deck .nudge button,
+    .deck .jumps button,
+    .zoom button,
+    .search .clear,
+    .library .filter .clear,
+    .library .cols,
+    [data-region^='deck'] .grid button,
+    .perf button,
+    .fx button,
+    .stems .stem
+  ):active:active:not(:disabled, [aria-disabled='true'], .jumps) {
+  /* :active twice: one step above #9's hover rules, which would otherwise
+     win while the pointer is still over the button. */
+  background: var(--well);
+  box-shadow: var(--well-shadow), inset 0 0 0 1px var(--line-2);
+  transition:
+    background-color 60ms ease-out,
+    box-shadow 60ms ease-out,
+    transform 60ms ease-out;
+}
+:root[data-flag-states] .btn.play:active:not(:disabled, [aria-disabled='true']) {
+  filter: brightness(0.9);
+}
+:root[data-flag-states] .btn.cue:active:not(:disabled, [aria-disabled='true']) {
+  background: color-mix(in srgb, var(--cue) 12%, transparent);
+  transition: background-color 60ms ease-out, transform 60ms ease-out;
+}
+/* The deck's Cue, held: the same amber tint, scoped to the transport so it
+   outranks #9's hover fill there (the hover fill won, so a held Cue showed
+   only hover, d-K02). */
+:root[data-flag-states] [data-region^='deck'] .transport .btn.cue:active:not(:disabled, [aria-disabled='true']) {
+  background: color-mix(in srgb, var(--cue) 12%, transparent);
+}
+/* Pressed, list items, track rows and tabs: the selected fill, no shrink. */
+:root[data-flag-states] :is([data-region='sidebar'] :is(.item, .add), nav[aria-label='Settings pages'] .item, .modes button, [data-region='tracks'] .row):active {
+  background: var(--sel);
+}
+/* Column headings (Li4): pressed is a fill, so a click visibly lands. */
+:root[data-flag-states] .head .sort:active {
+  border-radius: 6px;
+  background: var(--hover);
+}
+/* A held hot cue (.pressed) is pressed, not hovered. */
+:root[data-flag-states] .perf .tc.pressed {
+  background: var(--sel);
+}
+
+/* Selected: a latched toggle gets the selected fill, like Sampler. */
+:root[data-flag-states] .deck .lock.on {
+  background: var(--sel);
+}
+
+/* Focus: the one 2px ring, 2px out; inset where the edge would clip it.
+   The track list (Li6): the ring goes round the selected row, the thing
+   the arrow keys move, not round the whole list (whose corners #20 makes
+   uneven). */
+:root[data-flag-states] [data-region='tracks']:focus-visible {
+  outline: none;
+}
+:root[data-flag-states] [data-region='tracks']:focus-visible .row.sel {
+  outline: 2px solid var(--focus-ring, var(--fg-2));
+  outline-offset: -2px;
+  border-radius: var(--r);
+}
+/* The search field: the same ring in place of its own 1px focus ring. */
+:root[data-flag-states] .search:focus-within {
+  box-shadow: var(--well-shadow);
+  outline: 2px solid var(--fg-2);
+  outline-offset: 2px;
+}
+:root[data-flag-states] .search .clear:focus-visible {
+  outline: 2px solid var(--fg-2);
+  outline-offset: 1px;
+}
+
+/* Disabled: 40% everywhere (hover is already off for disabled controls). */
+:root[data-flag-states] :is(.btn:disabled, .btn[aria-disabled='true']),
+:root[data-flag-states] .deck .nudge button[aria-disabled='true'] {
+  opacity: 0.4;
+}
+
+/* Round rings everywhere (F1): the tabs, sort headings and faders had
+   square ones (radius 0). */
+:root[data-flag-states] :is(.modes button, .head .sort, .fader) {
+  border-radius: var(--r);
+}
+/* The crossfader: the ring goes round the fader and its scale together,
+   4px out, instead of cutting through the ruler's ticks. */
+:root[data-flag-states] .xr .fader:focus-visible {
+  outline: none;
+}
+:root[data-flag-states] .xr:has(.fader:focus-visible) {
+  border-radius: var(--r);
+  outline: 2px solid var(--focus-ring, var(--fg-2));
+  outline-offset: 4px;
+}
+/* Upright faders: the cap overhangs the track's ends by half its height,
+   so the ring is drawn round the cap's whole travel, 2px clear of it. */
+:root[data-flag-states] .fader.vertical:focus-visible {
+  outline: none;
+}
+:root[data-flag-states] .fader.vertical:focus-visible::before {
+  content: '';
+  position: absolute;
+  inset: -8px -2px;
+  border-radius: var(--r);
+  box-shadow: 0 0 0 2px var(--focus-ring, var(--fg-2));
+  pointer-events: none;
+}
+/* Knobs: a round ring outside the tick ring, not a square one through it. */
+:root[data-flag-states] .knob .dial:focus-visible {
+  outline: none;
+}
+:root[data-flag-states] .knob .wrap:has(> .dial:focus-visible) {
+  border-radius: 50%;
+  outline: 2px solid var(--focus-ring, var(--fg-2));
+  outline-offset: 1px;
+}
+
+/* A hot cue (F3): hovering an empty slot lifts its label to --fg-2, so
+   the hover fill doesn't drop it under 4.5:1. */
+:root[data-flag-states] .perf .tc:not(.set):hover:not([aria-disabled='true']) :is(b, span) {
+  color: var(--fg-2);
+}
+
+/* The Report box (E5): one ring, the app's, inside the field, so it
+   doesn't run past the text column; no extra border or second ring. */
+:root[data-flag-states] .card[aria-labelledby='report-title'] textarea:focus-visible {
+  outline: 2px solid var(--focus-ring, var(--fg-2));
+  outline-offset: -2px;
+}
+
+/* Sync is an action, not a switch: enabled, it rests at --fg-2 like every
+   tonal button (--fg on hover). Lifting enabled Sync's label to --fg
+   (b-K35) made it the one bright word in the transport, so it looked
+   engaged (b-K10, d-K05). Enabled and disabled now differ by the fill:
+   disabled Sync drops its tonal tile and sits at 40%, about --fg-4. */
+:root[data-flag-states] [data-region^='deck'] .transport .btn.sync[aria-disabled='true'] {
+  background: none;
+  box-shadow: none;
+}
