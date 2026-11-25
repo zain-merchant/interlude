@@ -1,0 +1,42 @@
+import opentype from 'opentype.js';
+import { writeFileSync } from 'node:fs';
+const P = () => new opentype.Path();
+// y-up font units, 1000/em. Geist 400: stem 84, cap 710, x-height 530.
+const S = Number(process.env.STEM || 80);
+function flat() {
+  const p = P();
+  const x0 = 60, x1 = x0 + S, top = 760;
+  // stem (clockwise)
+  p.moveTo(x0, -10); p.lineTo(x0, top); p.lineTo(x1, top); p.lineTo(x1, -10); p.close();
+  // bowl outer (clockwise): up the stem side, round over the top right, down to the foot
+  p.moveTo(x0 + 10, -10);
+  p.lineTo(x0 + 10, 380);
+  p.curveTo(150, 440, 280, 455, 345, 400);
+  p.curveTo(410, 345, 395, 245, 320, 165);
+  p.curveTo(250, 90, 160, 30, x0 + 10, -10);
+  p.close();
+  // bowl hole (counter-clockwise)
+  p.moveTo(x1, 100);
+  p.curveTo(190, 140, 245, 190, 270, 240);
+  p.curveTo(300, 295, 290, 345, 250, 358);
+  p.curveTo(210, 370, 170, 355, x1, 320);
+  p.close();
+  return new opentype.Glyph({ name: 'flat', unicode: 0x266d, advanceWidth: 460, path: p });
+}
+function sharp() {
+  const p = P();
+  const v = S - 14; // verticals a touch lighter, as in a #
+  const bar = S + 4; // slanted bars heavier, as engraved
+  const rect = (xa, ya, xb, yb) => { p.moveTo(xa, ya); p.lineTo(xa, yb); p.lineTo(xb, yb); p.lineTo(xb, ya); p.close(); };
+  rect(150, -60, 150 + v, 700);
+  rect(320, -20, 320 + v, 740);
+  const slant = (y) => { const dy = 70; p.moveTo(50, y); p.lineTo(50, y + bar); p.lineTo(480, y + bar + dy); p.lineTo(480, y + dy); p.close(); };
+  slant(150);
+  slant(400);
+  return new opentype.Glyph({ name: 'sharp', unicode: 0x266f, advanceWidth: 530, path: p });
+}
+const notdef = new opentype.Glyph({ name: '.notdef', unicode: 0, advanceWidth: 500, path: P() });
+const font = new opentype.Font({ familyName: 'Interlude Accidentals', styleName: 'Regular', unitsPerEm: 1000, ascender: 1000, descender: -250, glyphs: [notdef, flat(), sharp()] });
+const buf = Buffer.from(font.toArrayBuffer());
+writeFileSync('acc.otf', buf);
+console.log(buf.length, buf.toString('base64').length);

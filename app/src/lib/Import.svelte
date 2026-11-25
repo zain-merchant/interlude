@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { backend } from './backend.js';
   import { announce } from './announce.svelte.js';
+  import { flag } from '../flags/registry.svelte.js';
 
   /**
    * Bringing another app's library over, one calm step at a time: find it,
@@ -38,6 +39,8 @@
   const ago = (ms, verb) => {
     const h = (Date.now() - ms) / 3600e3;
     if (h < 1) return `${verb} just now`;
+    // #29 (UI audit flag): import-links: hours in words.
+    if (h < 24 && flag('import-links')) return `${verb} ${Math.round(h)} ${Math.round(h) === 1 ? 'hour' : 'hours'} ago`;
     if (h < 24) return `${verb} ${Math.round(h)} h ago`;
     if (h < 48) return `${verb} yesterday`;
     return `${verb} ${new Date(ms).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}`;
@@ -47,11 +50,22 @@
     { kind: 'rekordbox', name: 'Rekordbox', note: '5, 6 and 7', verb: 'exported', other: 'Use a different file…' },
     { kind: 'serato', name: 'Serato DJ', note: 'Pro and Lite', verb: 'updated', other: 'Choose a different _Serato_ folder…' },
   ]);
-  const appName = $derived(source?.kind === 'serato' ? 'Serato' : 'Rekordbox');
+  // #29 (UI audit flag): import-links: the brand's own spelling (rekordbox), one verb on the
+  // "different" links, and the versions in words.
+  const APPS_29 = /** @type {const} */ ([
+    { kind: 'rekordbox', name: 'rekordbox', note: 'versions 5, 6 and 7', verb: 'exported', other: 'Choose a different file…' },
+    { kind: 'serato', name: 'Serato DJ', note: 'Pro and Lite', verb: 'updated', other: 'Choose a different folder…' },
+  ]);
+  const apps = $derived(flag('import-links') ? APPS_29 : APPS);
+  const appName = $derived(source?.kind === 'serato' ? 'Serato' : flag('import-links') ? 'rekordbox' : 'Rekordbox');
+  // #27 (UI audit flag): primary-button: the most recently exported library found is named as the newest.
+  const newest = $derived(found.reduce((a, f) => (!a || f.modified > a.modified ? f : a), null));
   const foundFor = (kind) => found.filter((f) => f.source.kind === kind).slice(0, kind === 'rekordbox' ? 1 : 3);
   /** What a found library is called: the file, or for Serato where it lives. */
   const title = (src) => {
     if (src.kind === 'rekordbox') return fileName(src.path);
+    // #29 (UI audit flag): import-links: named as the thing found, like rekordbox.xml; where it is goes on the line below.
+    if (flag('import-links')) return 'Serato folder';
     const drive = src.path.match(/^\/Volumes\/([^/]+)\//);
     return drive ? `On ${drive[1]}` : 'In your Music folder';
   };
@@ -129,6 +143,8 @@
     <div class="top">
       <ol class="steps" aria-label="Step {stepIndex + 1} of {STEPS.length}">
         {#each STEPS as s, i}<li class:on={i <= stepIndex}></li>{/each}
+        <!-- #29 (UI audit flag): import-links: the step in words (its style.css hides the dashes). -->
+        {#if flag('import-links')}<li class="of num" aria-hidden="true">{stepIndex + 1} of {STEPS.length}</li>{/if}
       </ol>
       {#if step !== 'running'}
         <button class="close" onclick={onclose} aria-label="Close">
@@ -141,7 +157,7 @@
       <h2 id="import-title">Bring your library over</h2>
       <p class="lead">Your cue points, loops, beatgrids and playlists come with your tracks. Your music files aren't changed.</p>
 
-      {#each APPS as app}
+      {#each apps as app}
         {@const mine = foundFor(app.kind)}
         <div class="source" aria-busy={(step === 'reading' && source?.kind === app.kind) || searching}>
           <div class="src-head">
@@ -157,9 +173,18 @@
               <button class="found" onclick={() => read(f.source)} disabled={step === 'reading'}>
                 <span class="file">
                   <b>{title(f.source)}</b>
+                  <!-- #29 (UI audit flag): import-links: where, then when a step quieter, on one line. -->
+                  {#if flag('import-links')}
+                    <small>{where(f.source.path)}{f.source.kind === 'serato' ? `/${fileName(f.source.path)}` : ''} <span class="when">{ago(f.modified, app.verb)}{#if flag('primary-button') && f === newest && found.length > 1}, newest{/if}</span></small>
+                  <!-- #10 (UI audit flag): where and when set apart by space, not a middle dot. -->
+                  {:else if flag('no-dots')}
+                    <small>{where(f.source.path)}{f.source.kind === 'serato' ? `/${fileName(f.source.path)}` : ''} <span class="when">{ago(f.modified, app.verb)}{#if flag('primary-button') && f === newest && found.length > 1}, newest{/if}</span></small>
+                  {:else}
                   <small>{where(f.source.path)}{f.source.kind === 'serato' ? `/${fileName(f.source.path)}` : ''} · {ago(f.modified, app.verb)}</small>
+                  {/if}
                 </span>
-                <span class="go">Continue</span>
+                <!-- #27 (UI audit flag): primary-button: "Import" on each, the same tonal chip; the newest says so in its age line. -->
+                {#if flag('primary-button')}<span class="go" class:primary={f === newest}>Import</span>{:else}<span class="go">Continue</span>{/if}
               </button>
             {/each}
             <button class="link" onclick={() => choose(app.kind)} disabled={step === 'reading'}>{app.other}</button>
@@ -169,7 +194,7 @@
             {/if}
             <ol class="how">
               {#if app.kind === 'rekordbox'}
-                <li>Open Rekordbox and choose <b>File › Export Collection in xml format</b>.</li>
+                <li>Open {flag('import-links') ? 'rekordbox' : 'Rekordbox'} and choose <b>File › Export Collection in xml format</b>.</li>
                 <li>Save it to your Desktop or Documents. It shows up here.</li>
               {:else}
                 <li>Open Serato DJ on this computer once, so it saves your library.</li>

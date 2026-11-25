@@ -1,0 +1,17 @@
+/* #18: a small meter after the analysis note: a fixed 64×2px track
+   (--line-2) 8px after the text, centred on its x-height, filled with
+   --fg-2 to the part done (--flag-visual-analysis-done, set by
+   Library.svelte). Fixed width, so it doesn't shrink as the count drops,
+   and nothing under the text (a line under it read as an underline). */
+:root[data-flag-visual-analysis] section.library .bar .count .pending::after {
+  content: '';
+  display: inline-block;
+  width: 64px;
+  height: 2px;
+  margin-left: 8px;
+  vertical-align: middle;
+  border-radius: 1px;
+  background:
+    linear-gradient(var(--fg-2), var(--fg-2)) left center / var(--flag-visual-analysis-done, 0%) 100% no-repeat,
+    var(--line-2);
+}

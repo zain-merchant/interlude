@@ -1,0 +1,95 @@
+/* #43: a running loop (and an engaged effect, a stem playing alone) reads
+   as on where you already look: the value itself lights up in the deck's
+   own white with a filled dot (hollow at rest), and on the waveforms the
+   loop's stretch is tinted in the deck's colour between its in and out
+   lines (waveform-2d.js). No box, no fill, and nothing changes size
+   between off and on. */
+:root[data-flag-on-state] [data-region^='deck'] .mp {
+  container-type: inline-size;
+}
+
+/* Loop: at rest the size is a step quieter (--fg-2, "beats" --fg-3);
+   running, both go to the deck's white. */
+:root[data-flag-on-state] [data-region^='deck'] .perf .big b {
+  white-space: nowrap;
+  color: var(--fg-2);
+  transition: color 140ms ease;
+}
+:root[data-flag-on-state] [data-region^='deck'] .perf .big.live b,
+:root[data-flag-on-state] [data-region^='deck'] .perf .big.live span {
+  color: var(--deck);
+  opacity: 1;
+}
+:root[data-flag-on-state] [data-region^='deck'] .perf .big:hover:not([aria-disabled='true']) b {
+  color: var(--fg);
+}
+:root[data-flag-on-state] [data-region^='deck'] .perf .big.live:hover:not([aria-disabled='true']) b {
+  color: var(--deck);
+}
+
+/* The dot: 8px before the number's ink, inside a slot as wide as "1/16"
+   plus the dot, so the number keeps its right edge and "beats" holds its
+   place when 4 becomes 1/4. It sits on the row's centre line, level with
+   ÷2 and ×2. (Pinned to the slot's left edge and lifted to the figures'
+   middle, it floated about 45px from a 4 and high, reading as a degree
+   sign, b-K04.) Hollow --fg-3 at rest, filled in the deck colour while the
+   loop runs (the doc's stem idiom). */
+:root[data-flag-on-state] [data-region^='deck'] .perf .grp > .big b {
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  min-width: calc(2.2em + 14px);
+}
+:root[data-flag-on-state] [data-region^='deck'] .perf .grp > .big span {
+  min-width: 2.6em;
+  text-align: left;
+}
+:root[data-flag-on-state] [data-region^='deck'] .perf .big b::before {
+  content: '';
+  flex: none;
+  align-self: center;
+  width: 6px;
+  height: 6px;
+  margin-right: 8px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px var(--fg-3);
+  transition: background-color 140ms ease, box-shadow 140ms ease;
+}
+:root[data-flag-on-state] [data-region^='deck'] .perf .big.live b::before {
+  background: var(--deck);
+  box-shadow: none;
+}
+/* In the narrowest decks (a mode row under 320px) there is no room for
+   the dot and its slot; the brighter deck-coloured size says it alone. */
+@container (max-width: 319px) {
+  :root[data-flag-on-state] [data-region^='deck'] .perf .grp > .big b {
+    display: inline;
+    min-width: 0;
+  }
+  :root[data-flag-on-state] [data-region^='deck'] .perf .big b::before {
+    content: none;
+  }
+}
+
+/* FX on: the same dot, and its word in the deck colour when on (as today). */
+:root[data-flag-on-state] [data-region^='deck'] .fx .tog {
+  transition: color 140ms ease;
+}
+:root[data-flag-on-state] [data-region^='deck'] .fx .tog i {
+  width: 6px;
+  height: 6px;
+  box-shadow: inset 0 0 0 1px var(--fg-3);
+}
+:root[data-flag-on-state] [data-region^='deck'] .fx .tog.live i {
+  background: var(--deck);
+  box-shadow: none;
+}
+
+/* Stems: a muted stem's hollow dot is readable (--fg-3); one playing alone
+   keeps the deck colour (as today) without its halo. */
+:root[data-flag-on-state] [data-region^='deck'] .stems .stem.muted i {
+  box-shadow: inset 0 0 0 1px var(--fg-3);
+}
+:root[data-flag-on-state] [data-region^='deck'] .stems .stem.solo i {
+  box-shadow: none;
+}

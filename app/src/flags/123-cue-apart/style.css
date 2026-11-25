@@ -1,0 +1,12 @@
+/* #123: index.js has how these were found. */
+:root[data-flag-cue-apart][data-flag-cue-apart][data-flag-cue-apart][data-flag-cue-apart][data-flag-cue-apart][data-flag-cue-apart][data-flag-cue-apart][data-flag-cue-apart],
+:root[data-flag-cue-apart][data-flag-cue-apart][data-flag-cue-apart][data-flag-cue-apart][data-flag-cue-apart][data-flag-cue-apart][data-flag-cue-apart][data-flag-cue-apart] [data-region^='deck'] {
+  --hc-1: #da6038;
+  --hc-2: #52b17a;
+  --hc-3: #aa82e0;
+  --hc-4: #51e0d8;
+  --hc-5: #d998ae;
+  --hc-6: #d3ce88;
+  --hc-7: #7bbbf1;
+  --hc-8: #b6f5dc;
+}

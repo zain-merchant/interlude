@@ -1,0 +1,37 @@
+/* #30 (C6, E9): a tooltip with a description wraps at 280px into a short,
+   balanced block instead of one 381px line that ran off-centre; short
+   name, value and key tips are narrower than that and stay on one line.
+   From the backlog: the tip takes the controls' radius (it was 6px, off
+   the scale; e-K50) and the menus' shadow, so it separates from what's
+   beneath it (e-K49). Its width is its own (max-content, capped), never
+   the room left of where it was placed, so measuring it to centre it
+   can't change it again. */
+:root[data-flag-tooltip-wrap] .tip[role='tooltip'] {
+  width: max-content;
+  max-width: 280px;
+  white-space: normal;
+  text-wrap: pretty;
+  border-radius: var(--r);
+  box-shadow: inset 0 0 0 1px var(--line-2), 0 12px 32px rgb(0 0 0 / 0.45);
+}
+
+/* A tip with a description: the title on line one with its key at the
+   right end (a bare --fg-3 glyph, as #10 sets keys), the description under it in --fg-2, both 13px. */
+:root[data-flag-tooltip-wrap] .tip[role='tooltip'] .l1 {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: var(--t-sm);
+  color: var(--fg);
+}
+:root[data-flag-tooltip-wrap] .tip[role='tooltip'] .l1 .key {
+  margin: 0 0 0 auto;
+  color: var(--fg-3);
+  font: inherit;
+}
+:root[data-flag-tooltip-wrap] .tip[role='tooltip'] .l2 {
+  display: block;
+  margin-top: 2px;
+  font-size: var(--t-sm);
+  color: var(--fg-2);
+}

@@ -1,0 +1,35 @@
+/* #63: dials and faders answer the pointer. Hover lays 5% white over a
+   dial's cap and lifts its idle ticks to --fg-3; while it's turned, a thin
+   ring sits on the cap. Faders: hover lays the same 5% over the cap, and a
+   drag adds the ring, so pressed no longer looks like hover. 140ms ease. */
+
+:root[data-flag-control-feedback] .knob line {
+  transition: stroke 140ms ease;
+}
+:root[data-flag-control-feedback] .knob .dial::after,
+:root[data-flag-control-feedback] .fader .cap {
+  transition: box-shadow 140ms ease;
+}
+
+/* Hover: on the cap, or on the whole ring when hit-areas (#62) makes the ring the handle. */
+:root[data-flag-control-feedback]:not([data-flag-hit-areas]) .knob .wrap:has(.dial:hover) line:not(.on),
+:root[data-flag-control-feedback][data-flag-hit-areas] .knob .wrap:hover line:not(.on),
+:root[data-flag-control-feedback] .knob .wrap:has(.dial.dragging) line:not(.on) {
+  stroke: var(--fg-3);
+}
+:root[data-flag-control-feedback]:not([data-flag-hit-areas]) .knob .wrap:has(.dial:hover) .dial::after,
+:root[data-flag-control-feedback][data-flag-hit-areas] .knob .wrap:hover .dial::after,
+:root[data-flag-control-feedback] .knob .dial.dragging::after {
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.08), 0 0 0 1px rgb(0 0 0 / 0.4), inset 0 0 0 99px var(--hover);
+}
+:root[data-flag-control-feedback] .knob .dial.dragging {
+  box-shadow: 0 0 0 1px #08080a, 0 3px 6px rgb(0 0 0 / 0.6), inset 0 1px 0 rgb(255 255 255 / 0.1), inset 0 0 0 1px var(--fg-3);
+}
+
+:root[data-flag-control-feedback] .fader:hover .cap,
+:root[data-flag-control-feedback] .fader.dragging .cap {
+  box-shadow: 0 0 0 1px #08080a, 0 3px 5px rgb(0 0 0 / 0.6), inset 0 1px 0 rgb(255 255 255 / 0.1), inset 0 0 0 99px var(--hover);
+}
+:root[data-flag-control-feedback] .fader.dragging .cap {
+  box-shadow: 0 0 0 1px #08080a, 0 3px 5px rgb(0 0 0 / 0.6), inset 0 1px 0 rgb(255 255 255 / 0.1), inset 0 0 0 99px var(--hover), inset 0 0 0 1px var(--fg-3);
+}

@@ -1,0 +1,58 @@
+/* #11: five sizes (--t-xs 11, --t-sm 13, --t-md 16, --t-lg 24, --t-xl 32)
+   and three weights (300 large numerals, 400 text, 500 small headings).
+   Each rule mirrors the component's own selector so it wins outright. */
+
+/* Tooltips: 12 -> 13. */
+:root[data-flag-type-scale] .tip[role='tooltip'] {
+  font-size: var(--t-sm);
+}
+
+/* Settings: shortcut keys and status notes are values and sentences (13);
+   mapping names and descriptions are metadata (11). */
+:root[data-flag-type-scale] .settings[role='dialog'] .row .key {
+  font-size: var(--t-sm);
+}
+:root[data-flag-type-scale] .settings[role='dialog'] .inline {
+  font-size: var(--t-sm);
+}
+:root[data-flag-type-scale] .settings[role='dialog'] .row .dim,
+:root[data-flag-type-scale] .settings[role='dialog'] .dim {
+  font-size: var(--t-xs);
+}
+
+/* Dialog titles: 22/500 and 24/500 -> 24 at the deck title's weight. */
+:root[data-flag-type-scale] .card[role='dialog'] h2 {
+  font-size: var(--t-lg);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+}
+
+/* Import dialog: 12 -> 13 for sentences and controls, 11 for metadata;
+   22 -> 24 for the totals. */
+:root[data-flag-type-scale] .card[aria-labelledby='import-title'] h3,
+:root[data-flag-type-scale] .card[aria-labelledby='import-title'] .go,
+:root[data-flag-type-scale] .card[aria-labelledby='import-title'] .link,
+:root[data-flag-type-scale] .card[aria-labelledby='import-title'] .note,
+:root[data-flag-type-scale] .card[aria-labelledby='import-title'] .error,
+:root[data-flag-type-scale] .card[aria-labelledby='import-title'] .sub {
+  font-size: var(--t-sm);
+}
+:root[data-flag-type-scale] .card[aria-labelledby='import-title'] .file small,
+:root[data-flag-type-scale] .card[aria-labelledby='import-title'] .summary dd {
+  font-size: var(--t-xs);
+}
+:root[data-flag-type-scale] .card[aria-labelledby='import-title'] .summary dt {
+  font-size: var(--t-lg);
+  font-weight: 300;
+  letter-spacing: -0.02em;
+}
+
+/* Waveform hot cue chips: 600 -> 500, the heaviest weight in the app. */
+:root[data-flag-type-scale] .chip.num {
+  font-weight: 500;
+}
+
+/* Large numerals: tracking by size, so the two 24px numerals match. */
+:root[data-flag-type-scale] [data-region^='deck'] .hub .el {
+  letter-spacing: -0.02em;
+}

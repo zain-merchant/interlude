@@ -1,0 +1,98 @@
+/* #2: concentric by construction. Two numbers set everything: the panel
+   radius R (--flag-concentric-radius) and the panel padding P
+   (--flag-concentric-padding). Every panel takes R and insets its content by
+   P, and anything inset in a rounded thing gets that thing's radius less
+   its inset, never below 4px:
+     panels (decks, mixer, waveforms, library, Settings, sampler, dialogs)  R
+     controls in a panel, P in (--r: every .btn, field, row, tab)         R − P
+     the zoom pill, P in from the waveforms' corner                       R − P
+     its − + buttons, 2px in                                              R − P − 2
+     the search field's clear button, 6px in                              R − P − 6
+     context menu items, 4px in                                           --r − 4
+   and, the other way, overlays sized from what's inside them: the toast is
+   its Undo's radius + 6, the banner its buttons' + 8. Defaults R 24, P 16
+   keep today's 16px padding and 8px controls; only the panels round more. */
+:root[data-flag-concentric] {
+  --concentric-min: 4px;
+  --r-panel: var(--flag-concentric-radius, 24px);
+  --pad: var(--flag-concentric-padding, 16px);
+  --r: max(var(--concentric-min), calc(var(--r-panel) - var(--pad)));
+  --radius: var(--r);
+}
+
+/* Every panel insets by P. (Decks already pad by --pad; Settings pads its
+   sides by --pad already.) */
+:root[data-flag-concentric] .mixer {
+  padding: var(--pad);
+}
+:root[data-flag-concentric] section.library nav,
+:root[data-flag-concentric] section.library .main {
+  padding: var(--pad);
+}
+:root[data-flag-concentric] section.library {
+  /* #20 (library-clip) reads this for the list's corner. */
+  --library-inset: var(--pad);
+}
+:root[data-flag-concentric] .settings .main .bar {
+  padding: var(--pad);
+}
+/* The waveforms panel: the zoom pill sits P in from its corner. */
+:root[data-flag-concentric] .waves .zoom {
+  top: var(--pad);
+  right: var(--pad);
+  border-radius: var(--r);
+}
+:root[data-flag-concentric] .waves .zoom button {
+  border-radius: max(var(--concentric-min), calc(var(--r) - 2px));
+}
+
+/* Things flush with a rounded parent take its radius. */
+:root[data-flag-concentric] .library .main .scroll .row,
+:root[data-flag-concentric] .transport .jumps button {
+  border-radius: var(--r);
+}
+:root[data-flag-concentric] .library .main .search .clear {
+  border-radius: max(var(--concentric-min), calc(var(--r) - 6px));
+}
+:root[data-flag-concentric] .library .main .filter .clear {
+  border-radius: max(var(--concentric-min), calc(var(--r) - 6px));
+}
+:root[data-flag-concentric] .menu button {
+  border-radius: max(var(--concentric-min), calc(var(--r) - 4px));
+}
+
+/* Dialogs are panels too; their padding (24 to 32) is already past R. */
+:root[data-flag-concentric] .card[role='dialog'] {
+  border-radius: var(--r-panel);
+}
+
+/* Overlays sized from their contents: the toast around its Undo (6px in),
+   the banner around its buttons (8px in). */
+:root[data-flag-concentric] .toastbox .toast {
+  border-radius: calc(var(--r) + 6px);
+}
+:root[data-flag-concentric] .toastbox .toast .undo {
+  border-radius: var(--r);
+}
+:root[data-flag-concentric] .banner {
+  border-radius: calc(var(--r) + 8px);
+}
+:root[data-flag-concentric] .banner .btn {
+  border-radius: var(--r);
+}
+/* With #15 spacing the toast pads 4px round Undo, not 6 (and docked in the
+   toolbar by #13 it's 4px too), so its radius follows the real inset. */
+:root[data-flag-concentric][data-flag-spacing] .toastbox .toast,
+:root[data-flag-concentric] .toastbox .toast[data-docked] {
+  border-radius: calc(var(--r) + 4px);
+}
+/* Docked in the toolbar (#13) the toast stays a pill, the shape that tells
+   it from a control: 16px on its 32px height. Its Undo, 4px in, is a
+   capsule to match (16 - 4 = 12 on its 24px), so the two curves run
+   side by side instead of the pill pinching a square-cornered chip. */
+:root[data-flag-concentric] .toastbox .toast[data-docked] {
+  border-radius: calc(var(--r) + 8px);
+}
+:root[data-flag-concentric] .toastbox .toast[data-docked] .undo {
+  border-radius: calc(var(--r) + 4px);
+}
