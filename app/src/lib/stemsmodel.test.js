@@ -105,7 +105,7 @@ test('a press is waiting until the track is split where it plays', () => {
 });
 
 test('the choices are two, in plain words', () => {
-  assert.deepEqual(STEMS_MODES.map((m) => m.name), ['Fast', 'Efficient']);
+  assert.deepEqual(STEMS_MODES.map((m) => m.name), ['For every track', 'Only when I use them']);
   for (const m of STEMS_MODES) {
     assert.ok(!/[·—]/.test(m.name + m.short + m.line));
     assert.ok(!/[A-Z]{4,}/.test(m.name + m.short + m.line));

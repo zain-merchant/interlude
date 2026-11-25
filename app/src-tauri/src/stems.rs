@@ -1,10 +1,9 @@
-//! Stems in the app: splits loaded tracks in the background when the user's
-//! choice says to, fetches the model, and keeps the stems settings.
+//! Stems in the app: splits loaded tracks in the background as the mode
+//! says, fetches the model, and keeps the stems settings.
 //!
-//! Nothing is split until the user has chosen between having stems ready on
-//! every track and splitting a track once its stems are used. They're asked
-//! the first time they use stems. People who had the model before there was
-//! a choice keep what they had, stems on every track.
+//! Every track is split as it loads (Fast) unless the user picks Efficient,
+//! splitting a track once its stems are used, or Off, in Settings › Stems.
+//! Nobody is asked.
 //!
 //! The model isn't part of the app, to keep it small. It downloads only once
 //! the user asks for it. If the app quits before it's in, it carries on where
@@ -29,7 +28,9 @@ const GB: u64 = 1024 * 1024 * 1024;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum Mode {
-    /// Not chosen yet: asked the first time stems are used.
+    /// Not chosen yet. Settings from before Fast was the default can't
+    /// say it any more ([`Saved::settle`] makes it Fast), but the UI still
+    /// knows it.
     Ask,
     /// Every track, as it loads.
     Fast,
@@ -68,22 +69,21 @@ impl Default for Saved {
 }
 
 impl Saved {
-    /// Decides the mode the first time this version runs: whoever already
-    /// has the model was splitting every track, and goes on doing so;
-    /// anyone else is asked. Returns whether that changed anything, to be
-    /// saved at once: later, a model that downloaded by itself would look
-    /// the same.
-    fn settle(&mut self, has_model: bool) -> bool {
+    /// Decides the mode the first time this version runs: Fast, splitting
+    /// every track as it loads, for everyone. Efficient and Off are in
+    /// Settings › Stems. Returns whether that changed anything, to be
+    /// saved at once.
+    fn settle(&mut self) -> bool {
         if self.mode.is_some() {
             return false;
         }
-        self.mode = Some(if has_model { Mode::Fast } else { Mode::Ask });
+        self.mode = Some(Mode::Fast);
         true
     }
 
     fn mode(&self) -> Mode {
         if self.enabled {
-            self.mode.unwrap_or(Mode::Ask)
+            self.mode.unwrap_or(Mode::Fast)
         } else {
             Mode::Off
         }
@@ -199,10 +199,7 @@ impl Stems {
                 let _ = app.emit("stems-model", ModelInfo::new(s.clone(), stems.mode()));
             })
         });
-        let has_model = model
-            .as_ref()
-            .is_some_and(|m: &Downloader| m.state() == download::State::Ready);
-        let settled = saved.settle(has_model);
+        let settled = saved.settle();
         let heads: dj_stems::PlayHeads = Box::new(move |deck| shared.deck(deck).position);
         let stems = Self {
             splitter: Splitter::new(Settings::default(), heads),
@@ -503,32 +500,32 @@ mod tests {
     }
 
     #[test]
-    fn whoever_has_the_model_keeps_splitting_every_track_unasked() {
+    fn older_settings_split_every_track_unasked() {
         let mut s = saved(r#"{"enabled": true, "cacheGb": 5}"#);
-        assert!(s.settle(true), "saved");
+        assert!(s.settle(), "saved");
         assert_eq!(s.mode(), Mode::Fast);
         // With stems off they stay off, and Fast is there to go back to.
         let mut s = saved(r#"{"enabled": false}"#);
-        s.settle(true);
+        s.settle();
         assert_eq!(s.mode(), Mode::Off);
         assert_eq!(s.mode, Some(Mode::Fast));
     }
 
     #[test]
-    fn anyone_else_is_asked_even_once_the_model_is_in() {
+    fn anyone_else_gets_fast_too_and_isnt_asked() {
         let mut s = Saved::default();
-        assert!(s.settle(false), "saved");
-        assert_eq!(s.when(), When::Unchosen);
+        assert!(s.settle(), "saved");
+        assert_eq!(s.mode(), Mode::Fast);
         // Next launch, with the model downloaded meanwhile.
         let mut s = saved(&serde_json::to_string(&s).unwrap());
-        assert!(!s.settle(true));
-        assert_eq!(s.mode(), Mode::Ask);
+        assert!(!s.settle());
+        assert_eq!(s.mode(), Mode::Fast);
     }
 
     #[test]
     fn a_choice_survives_turning_stems_off_and_restarting() {
         let mut s = Saved::default();
-        s.settle(false);
+        s.settle();
         s.set_mode(Mode::Efficient);
         assert_eq!(s.when(), When::OnUse);
         s.set_mode(Mode::Off);

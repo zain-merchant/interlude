@@ -88,16 +88,14 @@ Everything Interlude does, in detail. For a short overview, see the
   carries on where it stopped if the connection drops or you quit, and says
   why with a Retry if it can't finish. Settings › Stems can cancel it (it
   then stays off until you ask for it) and remove it again, and it doesn't
-  download while stems are turned off. Nothing is separated until you've
-  chosen how, in a deck's Stems tab or in Settings › Stems. Fast separates
-  each track when you load it, so its stems are ready instantly, but uses
-  more memory. Efficient separates a track only when you use its stems, by
-  opening its Stems tab or pressing one, which takes a few seconds, but uses
-  less. A tab left open doesn't separate the next track until you use it. A
-  press made before choosing brings the Stems tab forward and goes ahead
-  once you choose. A stem pressed before its part of the track is ready
-  pulses, and fades in or out once it is. If you already had the model when
-  this choice arrived, you have Fast. On an M5 MacBook Air separating a
+  download while stems are turned off. Settings › Stems sets when stems are
+  made. For every track, the default, makes them as each track loads, so
+  they're ready at once, but each loaded track keeps about 150 MB of them.
+  Only when I use them makes a track's stems the first time you open its
+  Stems tab or press a stem: that first press takes a few seconds, and
+  tracks you never use stems on take no memory for them. Off makes none. A tab left open doesn't separate the next track until you
+  use it. A stem pressed before its part of the track is ready pulses, and
+  fades in or out once it is. On an M5 MacBook Air separating a
   4½-minute track takes about 50 seconds. It starts at the play head and
   runs ahead of it, so the part you're about to play is ready first;
   anything not ready yet plays as normal. Finished stems are kept in a

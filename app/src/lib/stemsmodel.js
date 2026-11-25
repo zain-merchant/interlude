@@ -23,21 +23,21 @@
 export const STEMS_MODES = [
   {
     mode: 'fast',
-    name: 'Fast',
+    name: 'For every track',
     // The last two words stay together, so neither ends up alone on a line.
-    short: 'Ready instantly, but uses more\u00a0memory',
-    line: 'Ready instantly, but uses more memory. Interlude separates each track when you load it.',
+    short: 'Ready as soon as a track loads, but uses more\u00a0memory',
+    line: 'Stems are ready as soon as you load a track. Uses more memory: each loaded track keeps about 150\u00a0MB of stems.',
   },
   {
     mode: 'efficient',
-    name: 'Efficient',
-    short: 'Takes a few seconds, but uses less\u00a0memory',
-    line: 'Takes a few seconds, but uses less memory. Interlude separates a track only when you use its stems.',
+    name: 'Only when I use them',
+    short: 'Saves memory, but the first press takes a few\u00a0seconds',
+    line: "A track's stems are made the first time you open its Stems tab or press a stem. Saves memory, but that first press takes a few seconds.",
   },
 ];
 
 /** What turning them off means, in Settings. */
-export const STEMS_OFF = 'Stems are turned off and use no memory.';
+export const STEMS_OFF = 'No stems, and no memory used for them.';
 
 /** What stems are, before the choice. */
 export const STEMS_WHAT = 'Stems let you mute the vocals, melody, bass or drums of a track, or play one of them alone.';
