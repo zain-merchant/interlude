@@ -5,6 +5,7 @@
 import { engine, tracks, nextGrid, setGrid, wake } from './engine.svelte.js';
 import { pushEdit } from './undo.svelte.js';
 import { announce } from './announce.svelte.js';
+import { flag } from '../flags/registry.svelte.js';
 
 /** Which deck's BPM readout is being typed into, if any. */
 export const bpmEdit = $state({ deck: -1 });
@@ -46,10 +47,13 @@ export function gridMenu(deck, at) {
   const t = tracks[deck];
   const has = !!t?.beatgrid;
   const here = at != null;
+  // #54 (UI audit flag): deck-polish says the grid step ("10 ms") and spells "playhead".
+  const p = flag('deck-polish');
+  const ms = p ? ` ${Math.round(NUDGE * 1000)} ms` : '';
   return [
-    { label: here ? 'Set downbeat here' : 'Set downbeat at play head', enabled: has, action: () => gridEdit(deck, 'downbeat', 'Moved the downbeat', 0, at) },
-    { label: 'Move grid earlier', enabled: has, action: () => gridEdit(deck, 'nudge', 'Moved the grid earlier', -NUDGE) },
-    { label: 'Move grid later', enabled: has, action: () => gridEdit(deck, 'nudge', 'Moved the grid later', NUDGE) },
+    { label: here ? 'Set downbeat here' : p ? 'Set downbeat at playhead' : 'Set downbeat at play head', enabled: has, action: () => gridEdit(deck, 'downbeat', 'Moved the downbeat', 0, at) },
+    { label: `Move grid${ms} earlier`, enabled: has, action: () => gridEdit(deck, 'nudge', `Moved the grid${ms} earlier`, -NUDGE) },
+    { label: `Move grid${ms} later`, enabled: has, action: () => gridEdit(deck, 'nudge', `Moved the grid${ms} later`, NUDGE) },
     '-',
     { label: 'Halve BPM', enabled: has, action: () => gridEdit(deck, 'halve', 'Halved the BPM') },
     { label: 'Double BPM', enabled: has, action: () => gridEdit(deck, 'double', 'Doubled the BPM') },

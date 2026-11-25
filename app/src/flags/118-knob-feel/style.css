@@ -1,0 +1,5 @@
+/* #118: the cursor says which way a knob is dragged. */
+:root[data-flag-knob-feel]:not([data-flag-knob-feel-drag='updown']) .knob .dial,
+:root[data-flag-knob-feel][data-flag-hit-areas]:not([data-flag-knob-feel-drag='updown']) .knob .wrap {
+  cursor: ew-resize;
+}

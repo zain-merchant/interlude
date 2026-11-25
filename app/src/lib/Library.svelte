@@ -1,4 +1,10 @@
 <script>
+  import Marks from '../flags/117-key-marks/Marks.svelte'; // #117 (UI audit flag)
+  import Status from '../flags/112-shell-status/Status.svelte'; // #112 (UI audit flag)
+  import LibraryZero from '../flags/113-zero-states/LibraryZero.svelte'; // #113 (UI audit flag)
+  import { conn } from '../flags/112-shell-status/connections.svelte.js'; // #112 (UI audit flag)
+  import Activity from '../flags/112-shell-status/Activity.svelte'; // #112 (UI audit flag)
+  import { flag, setting } from '../flags/registry.svelte.js';
   import { onMount, tick, untrack } from 'svelte';
   import { backend } from './backend.js';
   import { engine, tracks } from './engine.svelte.js';
@@ -9,7 +15,15 @@
   import { sampler, setSamplerOpen } from './sampler.svelte.js';
   import Sampler from './Sampler.svelte';
   import { pushEdit, showToast } from './undo.svelte.js';
-  import { keyName, keyLongName, camelot } from './key.js';
+  import { keyName, keyLongName, camelot, keysMix, playingKey } from './key.js';
+  import { hms } from '../flags/08-stress-hours/time.js';
+  // #110 (UI audit flag): dir-room-tint: columns dragged to size and to order.
+  import { colResize, resetWidths } from '../flags/110-dir-room-tint/columns.js';
+  import { arrange, setOrder } from '../flags/110-dir-room-tint/column-order.svelte.js';
+  import ColumnsMenu from '../flags/110-dir-room-tint/ColumnsMenu.svelte';
+  import Mid from '../flags/110-dir-room-tint/Mid.svelte';
+  import SideToggle from '../flags/110-dir-room-tint/SideToggle.svelte';
+  import { sideShut } from '../flags/110-dir-room-tint/sidebar.svelte.js';
   import { onAir, passes, filtering, describe, FIT_TEMPO } from './libraryfilter.js';
 
   /** `onimport` opens the import window; `onempty` is called when the whole library loads with no tracks.
@@ -33,6 +47,8 @@
   let renaming = $state(null);
   let all = $state([]);
   let total = $state(null); // track count across every folder
+  // #85 (UI audit flag): folder-counts: each music folder's track count, kept from the last All tracks (or that folder's) load.
+  let folderCounts = $state(/** @type {Record<string, number>} */ ({}));
   let query = $state('');
   /** The selected track, by path, so it stays selected when rows reorder. */
   let selPath = $state(null);
@@ -70,7 +86,8 @@
   });
   const air = $derived(airSettled ? JSON.parse(airSettled) : null);
   const airPath = $derived(air ? tracks[air.deck]?.path : null);
-  const airLabel = $derived(air ? `${'AB'[air.deck]} · ${air.key ? `${camelot(air.key)} ` : ''}${Math.round(air.bpm)}` : '');
+  // #10 / #88 (UI audit flags): no-dots, deck-names: the deck by its side, set apart by a space.
+  const airLabel = $derived(air ? `${flag('deck-names') ? ['left', 'right'][air.deck] : 'AB'[air.deck]}${flag('no-dots') ? ' ' : ' · '}${air.key ? `${camelot(air.key)} ` : ''}${Math.round(air.bpm)}` : '');
   const fitsTip = () =>
     !air
       ? 'Fits: load a track to see what mixes with it'
@@ -89,6 +106,7 @@
       return words.every((w) => hay.includes(w));
     });
   });
+  const zero = $derived(flag('zero-states') && flag('dir-room-tint') && !loading && (!!error || !results.length)); // #113 (UI audit flag): zero-states
   function setFilter(f) {
     filter = f;
     selectIndex(0);
@@ -149,21 +167,26 @@
     key: (t) => keyRank(t.analysis?.key),
     time: (t) => t.analysis?.duration ?? null,
   };
+  // #81 (UI audit flag): library-sort: with no column picked, the scan's lists sort by Artist (then Title), and say so.
+  const sortOn = $derived(!sort.by && flag('library-sort') && !ordered ? { by: /** @type {typeof sort.by} */ ('artist'), dir: sort.dir } : sort);
   const sorted = $derived.by(() => {
-    if (!sort.by) return results;
-    const value = SORT_VALUE[sort.by];
-    const dir = sort.dir;
+    if (!sortOn.by) return results;
+    const value = SORT_VALUE[sortOn.by];
+    const dir = sortOn.dir;
+    // #81 (UI audit flag): library-sort breaks ties on Artist by Title.
+    const then = flag('library-sort') && sortOn.by === 'artist';
     return results
       .map((t) => ({ t, v: value(t) }))
       .sort((a, b) => {
         if (a.v == null || b.v == null) return a.v == null ? (b.v == null ? 0 : 1) : -1;
-        return (typeof a.v === 'string' ? collator.compare(a.v, b.v) : a.v - b.v) * dir;
+        const c = (typeof a.v === 'string' ? collator.compare(a.v, b.v) : a.v - b.v) * dir;
+        return c || !then ? c : collator.compare(a.t.title, b.t.title);
       })
       .map((x) => x.t);
   });
   /** @param {typeof sort.by} by */
   function sortBy(by) {
-    sort = { by, dir: sort.by === by && sort.dir > 0 ? -1 : 1 };
+    sort = { by, dir: sortOn.by === by && sortOn.dir > 0 ? -1 : 1 };
   }
   /** Every column, in order. Title always shows; right-click the headings to pick the rest.
    * @type {{ by: typeof sort.by, label: string, num?: boolean, width: string }[]} */
@@ -189,9 +212,18 @@
       }
     })(),
   );
-  const columns = $derived(COLUMNS.filter((c) => c.by === 'title' || !hidden.includes(c.by)));
+  const columns = $derived((flag('dir-room-tint') ? arrange(COLUMNS) : COLUMNS).filter((c) => c.by === 'title' || !hidden.includes(c.by))); // #110 (UI audit flag)
   // The last 28px holds the columns button in the heading row.
-  const gridColumns = $derived(`26px ${columns.map((c) => c.width).join(' ')} 28px`);
+  // #15, #80, #89 (UI audit flags): spacing, library-columns and key-notation size the columns
+  // through --col-mark and --col-<column> on .main; each falls back to the width above.
+  const sizedCols = $derived(flag('spacing') || flag('library-columns') || flag('key-notation'));
+  const gridColumns = $derived(
+    sizedCols
+      ? `var(--col-mark, 26px) ${columns.map((c) => `var(--col-${c.by}, ${c.width})`).join(' ')} 28px`
+      : `26px ${columns.map((c) => c.width).join(' ')} 28px`,
+  );
+  // #80 (UI audit flag): library-columns names each cell's column (data-col), since the user picks which show.
+  const colAttr = (c) => (flag('library-columns') ? c.by : undefined);
   function toggleColumn(by) {
     hidden = hidden.includes(by) ? hidden.filter((h) => h !== by) : [...hidden, by];
     if (hidden.includes(by) && sort.by === by) sort = { by: null, dir: 1 };
@@ -202,18 +234,77 @@
   /** The columns menu, from a right-click on the headings or the columns button (opened under it). */
   const columnsButton = (e) => {
     const r = e.currentTarget.getBoundingClientRect();
-    headMenu({ preventDefault() {}, stopPropagation() {}, clientX: r.right - 200, clientY: r.bottom + 4 });
+    // #119 (UI audit flag): focus-states: opened by Enter or Space, its first row has focus.
+    headMenu({ preventDefault() {}, stopPropagation() {}, clientX: r.right - 200, clientY: r.bottom + 4, isTrusted: flag('focus-states') && e.detail === 0 ? false : undefined });
   };
+  let colMenu = $state(/** @type {{ x: number, y: number, keyboard: boolean } | null} */ (null)); // #110 (UI audit flag)
   const headMenu = (e) =>
+    flag('dir-room-tint') ? (e.preventDefault(), e.stopPropagation(), (colMenu = { x: e.clientX, y: e.clientY, keyboard: e.isTrusted === false })) :
     openMenu(e, [
       ...COLUMNS.filter((c) => c.by !== 'title').map((c) => ({ label: c.label, checked: !hidden.includes(c.by), action: () => toggleColumn(c.by) })),
     ]);
+
+  // #110 (UI audit flag): dir-room-tint: the widest BPM and time in this list, whatever is scrolled into view (columns.js
+  // measures them, so each column's values keep one right edge, centred in the column).
+  const widest = $derived.by(() => {
+    const out = { bpm: '000', time: '0:00' };
+    if (!flag('dir-room-tint')) return out;
+    const long = (s) => [...s].reduce((n, c) => n + (/\d/.test(c) ? 1 : 0.45), 0);
+    for (const t of all) {
+      if (!t.analysis) continue;
+      const b = bpmText(t.analysis) || '';
+      const l = timeText(t.analysis) || '';
+      if (long(b) > long(out.bpm)) out.bpm = b;
+      if (long(l) > long(out.time)) out.time = l;
+    }
+    return out;
+  });
 
   const selected = $derived.by(() => {
     const i = sorted.findIndex((t) => t.path === selPath);
     return i < 0 ? 0 : i;
   });
   const selectIndex = (i) => (selPath = sorted[i]?.path ?? null);
+
+  // #7 (UI audit flag): edge-empty-views: an empty playlist or folder says so, not "No tracks yet. Add a music folder".
+  // Two short lines: what's empty, then how to fill it.
+  const emptyView = $derived(
+    !flag('edge-empty-views') ? null
+    : view.kind === 'playlist' ? ['This playlist is empty.', 'Drag tracks onto its name in the sidebar.']
+    : view.kind === 'folder' ? ['No music in this folder.', 'Add music files to it in Finder.']
+    : null,
+  );
+
+  // #8 (UI audit flag): stress-plural says "1 track", not "1 tracks".
+  const tracksWord = $derived(flag('stress-plural') && results.length === 1 ? 'track' : 'tracks');
+  // #84 (UI audit flag): search-scope: a search's count keeps the total ("4 of 48 tracks").
+  const countText = $derived(
+    flag('search-scope') && (query.trim() || filtered || fits)
+      ? `${results.length.toLocaleString()} of ${all.length.toLocaleString()} ${all.length === 1 ? 'track' : 'tracks'}`
+      : `${results.length.toLocaleString()} ${tracksWord}`,
+  );
+  // #84 (UI audit flag): search-scope: the view a search runs in, for "Nothing in All tracks matches …".
+  const viewName = $derived(
+    view.kind === 'folder' ? `“${short(view.path ?? '')}”`
+    : view.kind === 'playlist' ? `“${playlistName(view.id)}”`
+    : 'All tracks',
+  );
+  // #84 (UI audit flag): search-scope marks the searched words in titles and artists.
+  const markOn = $derived(flag('search-scope') && !!query.trim());
+  /** Splits `text` into runs that match a searched word and runs that don't. */
+  function marks(text) {
+    const words = query.toLowerCase().split(/\s+/).filter(Boolean);
+    const lower = (text ?? '').toLowerCase();
+    if (!text || lower.length !== text.length) return [{ s: text ?? '', hit: false }];
+    const hit = new Array(text.length).fill(false);
+    for (const w of words) for (let i = lower.indexOf(w); i >= 0; i = lower.indexOf(w, i + w.length)) hit.fill(true, i, i + w.length);
+    const out = [];
+    for (let i = 0; i < text.length; i++) {
+      if (out.length && out[out.length - 1].hit === hit[i]) out[out.length - 1].s += text[i];
+      else out.push({ s: text[i], hit: hit[i] });
+    }
+    return out;
+  }
 
   // Decode the selected track ahead, so Load (on screen, the keyboard or a
   // controller) finds it ready. Waits for the selection to settle, so
@@ -233,6 +324,9 @@
   /** Tracks still waiting for their length, BPM and key, or showing ones an
    * older version of the analyzer found until it redoes them. */
   const pending = $derived(all.reduce((n, t) => n + (t.analysis && !t.analysis.outdated ? 0 : 1), 0));
+  // #18 (UI audit flag): how much of the library is analysed, for the bar under the analysis note.
+  $effect(() => void (conn.pending = loading ? 0 : pending)); // #112 (UI audit flag): shell-status, the title bar says it
+  const analysisDone = $derived(flag('visual-analysis') && all.length ? `${((1 - pending / all.length) * 100).toFixed(1)}%` : undefined);
   const bpmText = (a) => {
     if (!a?.bpm) return '';
     const r = Math.round(a.bpm);
@@ -241,6 +335,8 @@
   const timeText = (a) => {
     if (a?.duration == null) return '';
     const s = Math.round(a.duration);
+    // #8 (UI audit flag): stress-hours shows h:mm:ss past an hour.
+    if (flag('stress-hours') && s >= 3600) return hms(s);
     return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
   };
   /** Shown when analysis found nothing (or the file wouldn't decode). */
@@ -264,6 +360,27 @@
   const first = $derived(Math.max(0, Math.floor(scrollTop / ROW) - 5));
   const visible = $derived(sorted.slice(first, first + Math.ceil(viewHeight / ROW) + 10));
   const onDeck = (t) => [0, 1].filter((d) => tracks[d]?.path === t.path);
+  // #18 (UI audit flag): the keys to mix into: the playing decks', or the loaded ones' if none plays (class:mix on .k).
+  const mixFrom = $derived.by(() => {
+    if (!flag('visual-key-match')) return [];
+    const loaded = [0, 1].filter((d) => tracks[d] && engine.decks[d].key);
+    const from = loaded.some((d) => engine.decks[d].playing) ? loaded.filter((d) => engine.decks[d].playing) : loaded;
+    return from.map((d) => ({ d, key: playingKey(engine.decks[d].key, engine.decks[d].rate, engine.decks[d].keylock) }));
+  });
+  const mixKeys = $derived(mixFrom.map((m) => m.key));
+  // #89 (UI audit flag): key-notation: how the Key column writes a key (null: as today, musical).
+  const notation = $derived(flag('key-notation') ? setting('key-notation', 'show') : null);
+  /** #18 (UI audit flag): the decks a key mixes with, for its tooltip. */
+  const mixWith = (key) => mixFrom.filter((m) => keysMix(m.key, key));
+  const side = (d) => ['left', 'right'][d];
+  /** #18 (UI audit flag): a mixing key's tooltip says which deck it goes with, by position ("Mixes with the left deck (C, 8B)"). */
+  function keyTip(key, loaded = false) {
+    const own = `${keyLongName(key)} (${camelot(key)})`;
+    const w = loaded ? [] : mixWith(key);
+    if (!w.length) return own;
+    if (w.length > 1) return tipText(own, 'Mixes with both decks');
+    return tipText(own, `Mixes with the ${side(w[0].d)} deck (${keyName(w[0].key)}, ${camelot(w[0].key)})`);
+  }
 
   /** Loads the current view. `keep` holds on to the selection (after an edit). */
   async function refresh({ keep = false } = {}) {
@@ -286,6 +403,9 @@
       byPath = new Map();
       for (const t of all) byPath.set(t.path, [...(byPath.get(t.path) ?? []), t]);
       if (view.kind === 'all') total = all.length;
+      // #85 (UI audit flag): folder-counts (counted always; only shown with the flag on).
+      if (view.kind === 'all') folderCounts = Object.fromEntries(folders.map((f) => [f, all.filter((t) => inFolder(t.path, f)).length]));
+      else if (view.kind === 'folder' && view.path) folderCounts = { ...folderCounts, [view.path]: all.length };
       if (view.kind === 'all' && total === 0) onempty?.();
       if (!keep) selectIndex(0);
     } catch (e) {
@@ -295,8 +415,17 @@
     }
   }
 
+  /** Whether `path` is inside music folder `f`. */
+  const inFolder = (path, f) => path.startsWith(f.endsWith('/') || f.endsWith('\\') ? f : `${f}/`) || path.startsWith(`${f}\\`);
+
   export async function addFolder() {
-    const path = await backend.pickFolder();
+    let path = null;
+    try {
+      path = await backend.pickFolder();
+    } catch (e) {
+      // The list is fine; only the system's folder panel failed.
+      onmessage(`Couldn't open the folder picker: ${e?.message ?? e}`);
+    }
     if (!path) return;
     try {
       folders = await backend.addFolder(path);
@@ -315,7 +444,7 @@
     await refresh();
     if (undoable)
       pushEdit({
-        label: `Removed ${short(f)} from the library`,
+        label: `Removed ${q(short(f))} from the library`,
         undo: () => restoreFolder(f),
         redo: () => removeFolder(f, { undoable: false }),
       });
@@ -345,7 +474,13 @@
   }
 
   // Playlists. Every change can be undone, and none touches the files.
-  const playlistName = (id) => playlists.find((p) => p.id === id)?.name ?? 'playlist';
+  // (Declared as functions so the empty view and #84's view name above can use them.)
+  function playlistName(id) {
+    return playlists.find((p) => p.id === id)?.name ?? 'playlist';
+  }
+  // #86 (UI audit flag): copy-toasts sets names off in quotes and says what was made ("Created playlist “New playlist”").
+  const copy = () => flag('copy-toasts');
+  const q = (s) => (copy() ? `“${s}”` : s);
 
   /** Makes a playlist (holding `paths`) and starts naming it. */
   async function newPlaylist(paths = []) {
@@ -355,7 +490,7 @@
     playlists = await backend.playlists();
     renaming = id;
     pushEdit({
-      label: `Made ${name}`,
+      label: copy() ? `Created playlist ${q(name)}` : `Made ${name}`,
       undo: async () => { await backend.deletePlaylist(id); await refresh({ keep: true }); },
       redo: async () => { await backend.createPlaylist(name, paths); await refresh({ keep: true }); },
     });
@@ -369,7 +504,7 @@
     await backend.renamePlaylist(id, name);
     playlists = await backend.playlists();
     pushEdit({
-      label: `Renamed ${old} to ${name}`,
+      label: `Renamed ${q(old)} to ${q(name)}`,
       undo: async () => { await backend.renamePlaylist(id, old); playlists = await backend.playlists(); },
       redo: async () => { await backend.renamePlaylist(id, name); playlists = await backend.playlists(); },
     });
@@ -383,7 +518,7 @@
     await refresh({ keep: view.kind !== 'all' });
     let current = id;
     pushEdit({
-      label: `Deleted ${name}`,
+      label: copy() ? `Deleted playlist ${q(name)}` : `Deleted ${name}`,
       undo: async () => { current = await backend.createPlaylist(name, paths); await refresh({ keep: true }); },
       redo: async () => { await backend.deletePlaylist(current); await refresh({ keep: true }); },
     });
@@ -396,8 +531,10 @@
     const added = paths.filter((p) => !before.includes(p)).length;
     await refresh({ keep: true });
     const name = playlistName(id);
+    // #86 (UI audit flag): copy-toasts: nothing changed, so nothing to undo.
+    if (!added && copy()) return showToast(paths.length === 1 ? `Already in ${q(name)}` : `All already in ${q(name)}`);
     pushEdit({
-      label: added ? `Added ${added === 1 ? 'a track' : `${added} tracks`} to ${name}` : `Already in ${name}`,
+      label: added ? `Added ${added === 1 ? 'a track' : `${added} tracks`} to ${q(name)}` : `Already in ${name}`,
       undo: async () => { await backend.setPlaylistTracks(id, before); await refresh({ keep: true }); },
       redo: async () => { await backend.addToPlaylist(id, paths); await refresh({ keep: true }); },
     });
@@ -418,7 +555,7 @@
   }
 
   function removeFromPlaylist(t) {
-    reorder(all.filter((x) => x.path !== t.path).map((x) => x.path), `Removed ${t.title} from ${playlistName(view.id)}`);
+    reorder(all.filter((x) => x.path !== t.path).map((x) => x.path), `Removed ${q(t.title)} from ${q(playlistName(view.id))}`);
   }
 
   // Drag to reorder: only in a playlist shown in its own order, unfiltered.
@@ -444,17 +581,83 @@
     paths.splice(from, 1);
     if (to > from) to--;
     paths.splice(to, 0, moving);
-    reorder(paths, `Moved ${drag.track.title}`);
+    reorder(paths, `Moved ${q(drag.track.title)}`);
   }
 
+  // #20 (UI audit flag): library-clip fades the list's and the sidebar's foot while more is below (data-more).
+  let nav = $state(/** @type {HTMLElement | null} */ (null));
+  let listMore = $state(false);
+  let navMore = $state(false);
+  let listUp = $state(false);
+  let navUp = $state(false);
+  const below = (el) => !!el && el.scrollTop + el.clientHeight < el.scrollHeight - 1;
+  function edges() {
+    listMore = below(scroller);
+    navMore = below(nav);
+    listUp = !!scroller && scroller.scrollTop > 0;
+    navUp = !!nav && nav.scrollTop > 0;
+    // A section heading keeps with its first item: while that item is out of
+    // view below, the heading is hidden (data-cut) rather than left alone
+    // at, or half under, the sidebar's foot.
+    if (!nav) return;
+    const foot = nav.getBoundingClientRect().bottom - 8;
+    for (const h of nav.querySelectorAll(':scope > .h')) {
+      const next = h.nextElementSibling;
+      h.toggleAttribute('data-cut', flag('library-clip') && !!next && next.getBoundingClientRect().top > foot);
+    }
+  }
+  $effect(() => {
+    void [flag('library-clip'), viewHeight, sorted.length, playlists.length, folders.length, ROW];
+    edges();
+  });
+  // Other flags change row and heading sizes: measure again when any flag or setting changes.
+  $effect(() => {
+    if (!flag('library-clip')) return;
+    let raf = 0;
+    const watch = new MutationObserver(() => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(edges);
+    });
+    watch.observe(document.documentElement, { attributes: true });
+    return () => {
+      watch.disconnect();
+      cancelAnimationFrame(raf);
+    };
+  });
+
+  /**
+   * A tooltip that only exists while a flag asks for one: pass null and the
+   * node has no tip at all (an empty tip would still hide the one showing).
+   * @param {HTMLElement} node
+   * @param {(() => string) | null} get
+   */
+  function flagTip(node, get) {
+    let t = get ? tip(node, get) : null;
+    return {
+      /** @param {(() => string) | null} next */
+      update(next) {
+        if (next && t) t.update(next);
+        else if (next) t = tip(node, next);
+        else if (t) {
+          t.destroy();
+          t = null;
+        }
+      },
+      destroy() {
+        t?.destroy();
+      },
+    };
+  }
 
   function select(i) {
     if (!sorted.length) return;
     const index = Math.max(0, Math.min(sorted.length - 1, i));
     selectIndex(index);
     const y = index * ROW;
+    // #16 (UI audit flag): scroll the row clear of the list's foot by the gap under the last row.
+    const pad = flag('library-end') ? parseFloat(setting('library-end', 'gap')) || 0 : 0;
     if (y < scroller.scrollTop) scroller.scrollTop = y;
-    else if (y + ROW > scroller.scrollTop + scroller.clientHeight) scroller.scrollTop = y + ROW - scroller.clientHeight;
+    else if (y + ROW + pad > scroller.scrollTop + scroller.clientHeight) scroller.scrollTop = y + ROW + pad - scroller.clientHeight;
   }
 
   /** Moves the selection by `delta` rows, scrolling it into view. */
@@ -550,14 +753,19 @@
     search?.select();
   }
 
-  const short = (p) => p.split(/[\\/]/).filter(Boolean).pop() ?? p;
+  function short(p) {
+    return p.split(/[\\/]/).filter(Boolean).pop() ?? p;
+  }
 
   const rowMenu = (e, t, index) => {
     selectIndex(index);
     // Choosing "Replace" in the menu is the confirmation, so it loads at once.
     const playing = (d) => engine.decks[d].playing;
+    // #88 (UI audit flag): deck-names says "the left deck", as the screen shows it, not a letter it never shows.
+    const named = flag('deck-names');
+    const on = (d) => (named ? `${['left', 'right'][d]} deck` : `deck ${'AB'[d]}`);
     const load = [0, 1].map((d) => ({
-      label: t.missing ? 'File not found' : playing(d) ? `Replace the playing track on deck ${'AB'[d]}` : `Load to deck ${'AB'[d]}`,
+      label: t.missing ? 'File not found' : playing(d) ? (named ? `Replace track on ${on(d)}` : `Replace the playing track on ${on(d)}`) : `Load to ${on(d)}`,
       key: playing(d) ? undefined : keyLabel(`deck.${d}.load`),
       enabled: !t.missing,
       action: () => onload(d, t, { force: true }),
@@ -573,7 +781,7 @@
   };
   const playlistMenu = (e, p) =>
     openMenu(e, [
-      { label: 'Rename', action: () => (renaming = p.id) },
+      { label: copy() ? 'Rename playlist' : 'Rename', action: () => (renaming = p.id) },
       '-',
       { label: 'Delete playlist', action: () => deletePlaylist(p.id) },
     ]);
@@ -597,8 +805,13 @@
   onMount(refresh);
 </script>
 
-<section class="library" aria-label="Library">
-  <nav data-region="sidebar" aria-label="Library and playlists">
+{#if colMenu && flag('dir-room-tint')}<ColumnsMenu {...colMenu} columns={COLUMNS} {hidden} ontoggle={toggleColumn} onreset={() => { setOrder([]); resetWidths(); }} onclose={() => (colMenu = null)} />{/if}
+
+<section class="library" class:shut={sideShut()} aria-label="Library">
+  <!-- #110 (UI audit flag): dir-room-tint: the sidebar closes. -->
+  {#if flag('dir-room-tint')}<SideToggle />{/if}
+  <nav inert={sideShut()} data-region="sidebar" aria-label="Library and playlists" bind:this={nav} onscroll={edges}
+    data-more={flag('library-clip') && navMore ? '' : undefined} data-scrolled={flag('library-clip') && navUp ? '' : undefined}>
     <div class="h">Library</div>
     <button class="item" class:on={view.kind === 'all'} aria-current={view.kind === 'all'} onclick={() => pick(null)}>
       <span>All tracks</span>{#if total !== null}<small class="num">{total.toLocaleString()}</small>{/if}
@@ -606,10 +819,11 @@
     {#each folders as f}
       <button class="item" class:on={folder === f} aria-current={folder === f} onclick={() => pick(f)}
         oncontextmenu={(e) => folderMenu(e, f)} use:tip={() => f}>
-        <span>{short(f)}</span>{#if folder === f && !loading}<small class="num">{all.length.toLocaleString()}</small>{/if}
+        <span>{#if flag('dir-room-tint')}<Mid text={short(f)} />{:else}{short(f)}{/if}</span>{#if folder === f && !loading}<small class="num">{all.length.toLocaleString()}</small>{:else if flag('folder-counts') && folderCounts[f] != null}<small class="num">{folderCounts[f].toLocaleString()}</small>{/if}
       </button>
     {/each}
-    <button class="add" onclick={addFolder}>+ Add music folder</button>
+    <!-- #90 (UI audit flag): library-polish draws the plus as an icon. -->
+    <button class="add" onclick={addFolder}>{#if flag('library-polish')}<svg class="plus" viewBox="0 0 12 12" aria-hidden="true"><path d="M6 1.5v9M1.5 6h9" /></svg><span>Add music folder</span>{:else}+ Add music folder{/if}</button>
 
     <div class="h sec">Playlists</div>
     {#each playlists as p (p.id)}
@@ -621,11 +835,12 @@
         <button class="item" class:on aria-current={on} onclick={() => show({ kind: 'playlist', id: p.id })}
           ondblclick={() => (renaming = p.id)} oncontextmenu={(e) => playlistMenu(e, p)}
           use:dropTarget={{ ondrop: (t) => addTo(p.id, [t.path]) }}>
-          <span>{p.name}</span><small class="num">{p.count.toLocaleString()}</small>
+          <span>{#if flag('dir-room-tint')}<Mid text={p.name} />{:else}{p.name}{/if}</span><small class="num">{p.count.toLocaleString()}</small>
         </button>
       {/if}
     {/each}
-    <button class="add" onclick={() => newPlaylist()}>+ New playlist</button>
+    <button class="add" onclick={() => newPlaylist()}>{#if flag('library-polish')}<svg class="plus" viewBox="0 0 12 12" aria-hidden="true"><path d="M6 1.5v9M1.5 6h9" /></svg><span>New playlist</span>{:else}+ New playlist{/if}</button>
+
 
   </nav>
 
@@ -639,7 +854,7 @@
           <button class="clear" aria-label="Clear search" onclick={clearSearch} use:tip={() => tipText('Clear search', 'Esc')}>
             <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 5l6 6M11 5l-6 6" /></svg>
           </button>
-        {:else}<kbd>{MOD}F</kbd>{/if}
+        {:else}<kbd><Marks text="{MOD}F" /></kbd>{/if}
       </label>
       <button class="btn sm chip" class:on={fits} aria-pressed={fits} disabled={!air && !fits} onclick={toggleFits} use:tip={fitsTip}>
         Fits{#if fits && air}<span class="chip-val num">{airLabel}</span>{/if}
@@ -647,7 +862,7 @@
       <div class="filter" bind:this={filterBox}>
         <button class="btn sm chip" class:on={filtered} aria-expanded={filterOpen} aria-haspopup="dialog"
           onclick={() => (filterOpen = !filterOpen)} use:tip={() => (filterOpen ? '' : 'Filter by BPM and key')}>
-          <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M1.5 3h9M3 6h6M4.75 9h2.5" /></svg>{filtered ? describe(filter) : 'Filter'}
+          <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M1.5 3h9M3 6h6M4.75 9h2.5" /></svg>{filtered ? (flag('no-dots') ? describe(filter).replaceAll(' · ', ', ') : describe(filter)) : 'Filter'}
         </button>
         {#if filtered}
           <button class="clear" aria-label="Clear the filter" onclick={clearFilter} use:tip={() => 'Clear the filter'}>
@@ -679,31 +894,45 @@
           </div>
         {/if}
       </div>
-      <span class="count num">{loading ? 'Scanning…' : `${results.length.toLocaleString()} tracks`}{#if !loading && pending}<span
-          class="pending" use:tip={() => 'Finding each track’s length, BPM and key in the background'}> · analyzing, {pending.toLocaleString()} to go</span>{/if}</span>
+      <!-- #10 (UI audit flag): the analysis note set apart by space, not a middle dot. -->
+      {#if flag('no-dots')}
+        <span class="count num">{loading ? 'Scanning…' : countText}{#if !loading && pending}{' '}<span
+            class="pending" style:--flag-visual-analysis-done={analysisDone} use:tip={() => 'Finding each track’s length, BPM and key in the background'}>analyzing, {pending.toLocaleString()} to go</span>{/if}</span>
+      {:else}
+      <span class="count num">{loading ? 'Scanning…' : countText}{#if !loading && pending}<span
+          class="pending" style:--flag-visual-analysis-done={analysisDone} use:tip={() => 'Finding each track’s length, BPM and key in the background'}> · analyzing, {pending.toLocaleString()} to go</span>{/if}</span>
+      {/if}
+      {#if flag('shell-status') && setting('shell-status', 'place') !== 'titlebar'}<Activity /><Status />{/if}<!-- #112 (UI audit flag): shell-status -->
       <button class="btn sm samp" class:on={sampler.open} aria-pressed={sampler.open}
         onclick={() => setSamplerOpen(!sampler.open)}
-        use:tip={() => tipText(sampler.open ? 'Hide sampler' : 'Show sampler', keyLabel('view.sampler'), 'eight one-shot sounds to fire over the mix')}>
+        use:tip={() => tipText(sampler.open ? 'Hide sampler' : 'Show sampler', keyLabel('view.sampler'),
+          // #30 (UI audit flag): tooltip-wrap (E9): the description as its own sentence, since the tip now wraps.
+          flag('tooltip-wrap') ? 'Eight one-shot sounds to fire over the mix.' : 'eight one-shot sounds to fire over the mix')}>
         <svg viewBox="0 0 12 12" aria-hidden="true"><rect x="1.5" y="1.5" width="3.5" height="3.5" rx="1" /><rect x="7" y="1.5" width="3.5" height="3.5" rx="1" /><rect x="1.5" y="7" width="3.5" height="3.5" rx="1" /><rect x="7" y="7" width="3.5" height="3.5" rx="1" /></svg>Sampler
       </button>
       {#if onsettings}
         <!-- Always here, however long the sidebar gets. -->
         <button class="btn sm gear" onclick={onsettings} aria-label="Settings"
           use:tip={() => tipText('Settings', keyLabel('app.settings'))}>
-          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 4.5h6M11.5 4.5h2M2.5 11.5h2M7.5 11.5h6" /><circle cx="10" cy="4.5" r="1.5" /><circle cx="6" cy="11.5" r="1.5" /></svg>
+          <!-- #83 (UI audit flag): settings-icon draws a gear (Lucide's "settings"), not two sliders that read as a filter. -->
+          {#if flag('settings-icon')}<svg class="cog" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915" /><circle cx="12" cy="12" r="3" /></svg>{:else}
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 4.5h6M11.5 4.5h2M2.5 11.5h2M7.5 11.5h6" /><circle cx="10" cy="4.5" r="1.5" /><circle cx="6" cy="11.5" r="1.5" /></svg>{/if}
         </button>
       {/if}
     </div>
 
     {#if sampler.open}<Sampler {onmessage} selected={() => selectedTrack()} />{/if}
 
-    <div class="row head" role="group" aria-label="Sort tracks" oncontextmenu={headMenu}>
+    <!-- #110 (UI audit flag): dir-room-tint: the columns can be dragged to size. -->
+    <div class="row head" role="group" aria-label="Sort tracks" oncontextmenu={headMenu} use:colResize={{ on: flag('dir-room-tint') && sizedCols, columns, all: COLUMNS, widest }}>
       <span></span>
       {#each columns as c}
-        {@const on = sort.by === c.by}
-        <button class="sort" class:on class:num={c.num} aria-pressed={on}
-          aria-label="Sort by {c.label.toLowerCase()}{on ? (sort.dir > 0 ? ', ascending' : ', descending') : ''}"
-          onclick={() => sortBy(c.by)}>{c.label}{#if on}<svg viewBox="0 0 10 10" aria-hidden="true" class:down={sort.dir < 0}><path d="M2.5 6.5 5 4l2.5 2.5" /></svg>{/if}</button>
+        {@const on = sortOn.by === c.by}
+        <!-- #81 (UI audit flag): library-sort gives every heading a slot for its arrow (hidden unless sorted), so nothing shifts. -->
+        <button class="sort" class:on class:num={c.num} aria-pressed={on} data-col={colAttr(c)}
+          aria-label="Sort by {c.label.toLowerCase()}{on ? (sortOn.dir > 0 ? ', ascending' : ', descending') : ''}"
+          use:flagTip={c.by === 'key' && flag('visual-key-match') ? () => 'A line under a key: it mixes with what’s loaded' : null}
+          onclick={() => sortBy(c.by)}>{c.label}{#if on || flag('library-sort')}<svg viewBox="0 0 10 10" aria-hidden="true" class:down={on && sortOn.dir < 0} class:ghost={!on}><path d="M2.5 6.5 5 4l2.5 2.5" /></svg>{/if}</button>
       {/each}
       <button class="cols" aria-label="Choose columns" aria-haspopup="menu" onclick={columnsButton}
         use:tip={() => 'Choose columns'}>
@@ -711,11 +940,16 @@
       </button>
     </div>
 
-    <div class="scroll" bind:this={scroller} bind:clientHeight={viewHeight} onscroll={() => (scrollTop = scroller.scrollTop)}
-      tabindex="0" onkeydown={listKey} role="listbox" aria-label="Tracks" data-region="tracks"
+    <div class="scroll" bind:this={scroller} bind:clientHeight={viewHeight} onscroll={() => ((scrollTop = scroller.scrollTop), edges())}
+      tabindex="0" onkeydown={listKey} role="listbox" aria-label="Tracks" data-region="tracks" data-zero={zero ? (all.length ? 'some' : 'all') : undefined} data-more={flag('library-clip') && listMore ? '' : undefined} data-scrolled={flag('library-clip') && listUp ? '' : undefined}
       aria-activedescendant={sorted[selected] ? `track-${selected}` : undefined}>
-      {#if error}
+      {#if zero}
+        <!-- #113 (UI audit flag): zero-states. -->
+        <LibraryZero {all} {error} {query} {fits} {filtered} {filter} {air} {airPath} {view} retry={() => refresh()} {addFolder} onimport={view.kind === 'all' ? onimport : undefined} {clearSearch} {toggleFits} {clearFilter} />
+      {:else if error}
         <div class="empty">{error}</div>
+      {:else if !loading && !all.length && emptyView}
+        <div class="empty"><p class="what">{emptyView[0]}</p><p class="how">{emptyView[1]}</p></div>
       {:else if !loading && !all.length}
         <div class="empty">
           <p>No tracks yet.</p>
@@ -725,9 +959,12 @@
           </div>
           {#if onimport && view.kind === 'all'}<p class="hint">Importing brings your cue points, loops, beatgrids and playlists too.</p>{/if}
         </div>
+      {:else if !loading && !results.length && flag('search-scope') && query.trim() && !fits && !filtered}
+        <!-- #84 (UI audit flag): search-scope: name the view, and offer the way out. -->
+        <div class="empty"><p>Nothing in {viewName} matches “{query.trim()}”.</p><button class="btn sm" onclick={clearSearch}>Clear search<kbd class="keyhint">esc</kbd></button></div>
       {:else if !loading && !results.length}
         <div class="empty">
-          <p>{query ? `Nothing matches “${query}”` : 'No tracks'}{fits ? ` that mix with deck ${air ? 'AB'[air.deck] : ''}` : ''}{filtered ? ` in ${describe(filter)}` : ''}.</p>
+          <p>{query ? `Nothing matches “${query}”` : 'No tracks'}{fits ? ` that mix with deck ${air ? 'AB'[air.deck] : ''}` : ''}{filtered ? ` in ${flag('no-dots') ? describe(filter).replaceAll(' · ', ', ') : describe(filter)}` : ''}.</p>
           {#if fits || filtered}
             <div class="empty-actions">
               {#if fits}<button class="btn sm" onclick={toggleFits}>Show everything</button>{/if}
@@ -749,22 +986,28 @@
             ondragend={() => { dropAt = null; endDrag(); }} ondragover={(e) => rowDragOver(e, index)} ondrop={rowDrop}
             ondragleave={(e) => { if (!e.currentTarget.contains(/** @type {Node} */ (e.relatedTarget))) dropAt = null; }}
             onclick={() => { selectIndex(index); scroller.focus({ preventScroll: true }); }} ondblclick={() => autoLoad(t)} onkeydown={() => {}}
-            oncontextmenu={(e) => rowMenu(e, t, index)}>
+            oncontextmenu={(e) => rowMenu(e, t, index)}
+            use:flagTip={flag('library-polish') && index === selected && !t.missing ? () => `Double-click to load, or ${keyLabel('deck.0.load')} / ${keyLabel('deck.1.load')}` : null}>
+            <!-- #90 (UI audit flag): library-polish: the selected row's tip says how to load it (c-K83). -->
             <span class="ld">{#each decks as d}<b class:b={d === 1} aria-hidden="true"></b>{/each}</span>
             {#each columns as c (c.by)}
               {#if c.by === 'title'}
-                <span class="t">{#if t.missing}<span class="k" use:tip={() => `File not found: ${t.path}`}>{t.title}</span><span class="sr">, file not found</span>{:else}{t.title}{/if}</span>
+                <span class="t" data-col={colAttr(c)}>{#if t.missing}<span class="k" use:tip={() => `File not found: ${t.path}`}>{t.title}</span><span class="sr">, file not found</span>{:else if flag('dir-room-tint')}<Mid text={t.title} parts={markOn ? marks(t.title) : null} />{:else if markOn}{#each marks(t.title) as m}{#if m.hit}<mark>{m.s}</mark>{:else}{m.s}{/if}{/each}{:else}{t.title}{/if}</span>
               {:else if c.by === 'bpm'}
-                <span class="n num" class:none={a && !a.bpm}>{a ? bpmText(a) || NONE : ''}</span>
+                <span class="n num" class:none={a && !a.bpm} data-col={colAttr(c)}>{a ? bpmText(a) || NONE : ''}</span>
               {:else if c.by === 'key'}
-                <span class:none={a && !a.key}>{#if a?.key}<span class="k" use:tip={() => `${keyLongName(a.key)} (${camelot(a.key)})`}>{keyName(a.key)}</span>{:else if a}{NONE}{/if}</span>
+                <span class:none={a && !a.key} data-col={colAttr(c)}>{#if a?.key}<span class="k" class:mix={!decks.length && mixKeys.some((k) => keysMix(k, a.key))} use:tip={() => keyTip(a.key, decks.length > 0)}><!-- #89 (UI audit flag): key-notation: Camelot, or both as the decks show it (the name in a slot, so the codes line up).
+                  -->{#if notation === 'camelot'}{camelot(a.key)}{:else if notation === 'both'}<span class="kn">{keyName(a.key)}</span> <span class="cam">{camelot(a.key)}</span>{:else}{keyName(a.key)}{/if}</span>{:else if a}{NONE}{/if}</span>
               {:else if c.by === 'time'}
-                <span class="n num" class:none={a?.failed}>{a ? timeText(a) || NONE : ''}</span>
+                <span class="n num" class:none={a?.failed} data-col={colAttr(c)}>{a ? timeText(a) || NONE : ''}</span>
+              {:else if markOn && (c.by === 'artist' || c.by === 'folder' || c.by === 'album' || c.by === 'genre')}
+                <!-- #84 (UI audit flag): search-scope marks the searched words. -->
+                <span data-col={colAttr(c)}>{#if flag('dir-room-tint')}<Mid text={t[c.by] ?? ''} parts={marks(t[c.by])} />{:else}{#each marks(t[c.by]) as m}{#if m.hit}<mark>{m.s}</mark>{:else}{m.s}{/if}{/each}{/if}</span>
               {:else}
-                <span>{t[c.by] ?? ''}</span>
+                <span data-col={colAttr(c)}>{#if flag('dir-room-tint')}<Mid text={t[c.by] ?? ''} />{:else}{t[c.by] ?? ''}{/if}</span>
               {/if}
             {/each}
-            {#if decks.length}<span class="sr">, on deck {decks.map((d) => 'AB'[d]).join(' and ')}</span>{/if}
+            {#if decks.length && flag('deck-names')}<span class="sr">, on the {decks.map((d) => ['left', 'right'][d]).join(' and ')} {decks.length > 1 ? 'decks' : 'deck'}</span>{:else if decks.length}<span class="sr">, on deck {decks.map((d) => 'AB'[d]).join(' and ')}</span>{/if}
           </div>
         {/each}
       </div>
@@ -1255,6 +1498,20 @@
   }
   .empty p {
     margin: 0;
+  }
+  /* edge-empty-views (#7): what's empty, then 4px under it, how to fill it. */
+  .empty .what {
+    color: var(--fg-2);
+  }
+  .empty .how {
+    margin-top: -4px;
+    color: var(--fg-3);
+  }
+  /* search-scope (#84): the key hint 8px after "Clear search", as Undo's ⌘Z. */
+  .empty .btn:has(.keyhint) {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
   }
   .empty-actions {
     display: flex;

@@ -1,0 +1,21 @@
+/* #28 (E4, E5): the Report text box drops the browser's resize grip, which
+   sat in its rounded corner (the box is tall enough for a few lines and
+   scrolls past that). */
+:root[data-flag-report-copy] .card[aria-labelledby='report-title'] textarea {
+  display: block; /* no inline descender gap above the small print */
+  resize: none;
+}
+/* The close × (e-K32): its glyph sat 7px inside the content's right edge;
+   it now meets the edge, keeping its 28px target. */
+:root[data-flag-report-copy] .card[aria-labelledby='report-title'] .close {
+  margin-right: -7px;
+}
+/* The line under the box: what the file holds and where it goes. It's
+   what you're agreeing to send, so it reads at body size in --fg-2 (as
+   11px --fg-3 fine print it looked like a footnote, e-K09). */
+:root[data-flag-report-copy] .card[aria-labelledby='report-title'] .fine {
+  margin: 8px 0 0;
+  font-size: var(--t-sm);
+  line-height: 20px;
+  color: var(--fg-2);
+}

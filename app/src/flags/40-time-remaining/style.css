@@ -1,0 +1,30 @@
+/* #40: the big number is the time left. Since the merge of upstream's
+   deck the two times sit in the record's still centre (.hub, Platter.svelte):
+   elapsed on top, remaining under it, sized in em off the centre's own
+   font size. They keep their places; only which one is big changes, so
+   flag 18's ending colour stays on the remaining time. */
+:root[data-flag-time-remaining] [data-region^='deck'] .hub[data-big='remaining'] .rm {
+  font-size: 1.55em;
+  font-weight: 300;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+}
+:root[data-flag-time-remaining] [data-region^='deck'] .hub[data-big='remaining'] .rm:not(.ending) {
+  color: var(--fg);
+}
+:root[data-flag-time-remaining] [data-region^='deck'] .hub[data-big='remaining'] .el {
+  font-size: 0.95em;
+  font-weight: 400;
+  line-height: 1.15;
+  letter-spacing: normal;
+  color: var(--fg-2);
+}
+
+/* Tap the centre to swap (Platter.svelte: the centre keeps upstream's
+   pointer-events: none, so a press there still reaches the record and a
+   drag from it scratches; only a release where it was pressed swaps).
+   Keyboard focus (Enter or Space) swaps too. */
+:root[data-flag-time-remaining] [data-region^='deck'] .hub[data-big]:focus-visible {
+  outline: 2px solid var(--fg-2);
+  outline-offset: 2px;
+}

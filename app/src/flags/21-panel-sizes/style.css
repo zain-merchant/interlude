@@ -1,0 +1,47 @@
+/* #21: the same rows as #7 (App.svelte sets --waves and --decks from the
+   sizes you drag), so this works with #7 off too. */
+:root[data-flag-panel-sizes] .app {
+  grid-template-rows: var(--waves, 136px) var(--decks, 360px) var(--gap) minmax(160px, 1fr);
+}
+/* The sidebar's width. */
+:root[data-flag-panel-sizes] section.library {
+  grid-template-columns: var(--library-sidebar, 200px) minmax(0, 1fr);
+}
+
+/* Grips show only when you reach for them: transparent at rest, --fg-3
+   while the pointer is over the 12px gutter (which shows the resize
+   cursor), during a drag, or with keyboard focus, as the sidebar's divider
+   already does. Drawn at rest, the three grey pills (two of them 44px
+   apart round the sampler) read as scrollbar thumbs (b-K39, f-K22). */
+:root[data-flag-panel-sizes] .app > .grip:not(:hover, .dragging, :focus-visible) > i {
+  background: transparent;
+}
+
+/* A double-click reset settles on the site's snappy spring (301ms); a drag
+   follows the pointer with no easing. Off under reduced motion (app.css). */
+:root[data-flag-panel-sizes] {
+  --flag-panel-sizes-spring: linear(0, 0.101, 0.207, 0.309, 0.405, 0.491, 0.569, 0.636, 0.695, 0.745, 0.788, 0.824, 0.854, 0.88, 0.901, 0.918, 0.933, 0.945, 0.955, 0.963, 0.97, 0.975, 0.98, 0.984, 0.987, 0.989, 0.991, 0.993, 0.994, 0.995, 0.996, 0.997, 0.997, 0.998, 0.998, 0.999, 0.999, 0.999, 1);
+}
+:root[data-flag-panel-sizes] .app.settling {
+  transition: grid-template-rows 301ms var(--flag-panel-sizes-spring);
+}
+:root[data-flag-panel-sizes] .app.settling > .grip {
+  transition: top 301ms var(--flag-panel-sizes-spring);
+}
+:root[data-flag-panel-sizes] .app.settling section.library {
+  transition: grid-template-columns 301ms var(--flag-panel-sizes-spring);
+}
+:root[data-flag-panel-sizes] .app.settling .below > .grip.side {
+  transition: left 301ms var(--flag-panel-sizes-spring);
+}
+/* #110: the mixer's two edges and what spreads out inside it. */
+:root[data-flag-panel-sizes] .app.settling > .decks {
+  transition: grid-template-columns 301ms var(--flag-panel-sizes-spring);
+}
+:root[data-flag-panel-sizes] .app.settling > .decks > .mixer,
+:root[data-flag-panel-sizes] .app.settling > .decks > .mixer .frow {
+  transition: gap 301ms var(--flag-panel-sizes-spring);
+}
+:root[data-flag-panel-sizes] .app.settling > .grip.mid {
+  transition: top 301ms var(--flag-panel-sizes-spring), left 301ms var(--flag-panel-sizes-spring);
+}

@@ -1,0 +1,57 @@
+/* #111 (UI audit flag; a typeface): Special Gothic, with Geist behind it.
+   The range leaves out + (2B), plus-minus (B1), times (D7), divide (F7) and minus (2212), whose
+   marks are too small in this face, so the next family, Geist, draws them. */
+@font-face {
+  font-family: 'Special Gothic';
+  src: url('./SpecialGothic.woff2') format('woff2-variations');
+  font-weight: 400 700;
+  font-stretch: 75% 125%;
+  font-display: swap;
+  unicode-range: U+0-2A, U+2C-B0, U+B2-D6, U+D8-F6, U+F8-2211, U+2213-FFFF;
+}
+/* Tripled, to outrank the accidentals flag's own --font (its sharps and flats
+   stay first; its face covers only those). */
+:root[data-flag-font-special-gothic][data-flag-font-special-gothic][data-flag-font-special-gothic] {
+  --font: 'Interlude Accidentals', 'Special Gothic', 'Geist Variable', 'Helvetica Neue', Arial, sans-serif;
+  --font-sans: var(--font);
+}
+/* Tailwind's @theme inline writes Geist into these by name. */
+:root[data-flag-font-special-gothic],
+:root[data-flag-font-special-gothic] body,
+:root[data-flag-font-special-gothic] .font-sans {
+  font-family: 'Interlude Accidentals', 'Special Gothic', 'Geist Variable', 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* Song titles: bold where one title is the subject. In the library there
+   are dozens, so they lead their row by colour and half a step of weight. */
+:root[data-flag-font-special-gothic][data-flag-font-special-gothic][data-flag-font-special-gothic][data-flag-font-special-gothic][data-flag-font-special-gothic][data-flag-font-special-gothic] [data-region^='deck'] header .name {
+  font-weight: 700;
+  letter-spacing: 0;
+}
+:root[data-flag-font-special-gothic][data-flag-font-special-gothic][data-flag-font-special-gothic][data-flag-font-special-gothic][data-flag-font-special-gothic][data-flag-font-special-gothic] .waves .lane .who {
+  font-weight: 600;
+  letter-spacing: 0;
+}
+:root[data-flag-font-special-gothic][data-flag-font-special-gothic][data-flag-font-special-gothic][data-flag-font-special-gothic][data-flag-font-special-gothic][data-flag-font-special-gothic] section.library .scroll .row .t {
+  font-weight: 450;
+  letter-spacing: 0;
+}
+/* The tabular setting the app puts on everything spaces out the digits in
+   a title ("Track 01"): titles take proportional figures. */
+:root[data-flag-font-special-gothic][data-flag-font-special-gothic][data-flag-font-special-gothic][data-flag-font-special-gothic][data-flag-font-special-gothic][data-flag-font-special-gothic] :is([data-region^='deck'] header .name, section.library .scroll .row .t, .waves .lane .who) {
+  font-variant-numeric: proportional-nums;
+  font-feature-settings: 'tnum' 0;
+}
+
+/* Figures: room between them, by weight. */
+:root[data-flag-font-special-gothic][data-flag-font-special-gothic][data-flag-font-special-gothic][data-flag-font-special-gothic][data-flag-font-special-gothic][data-flag-font-special-gothic] .num:not(.name) {
+  letter-spacing: 0.02em;
+}
+:root[data-flag-font-special-gothic][data-flag-font-special-gothic][data-flag-font-special-gothic][data-flag-font-special-gothic][data-flag-font-special-gothic][data-flag-font-special-gothic] :is([data-region^='deck'] .bpm .big, [data-region^='deck'] .hub .num, [data-region^='deck'] .perf .tc, [data-region^='deck'] .pitch .val) {
+  letter-spacing: 0.012em;
+}
+/* 600 is this face's bold, not its regular: the tempo and the big time read
+   as firmly at 500 without closing up. */
+:root[data-flag-font-special-gothic][data-flag-font-special-gothic][data-flag-font-special-gothic][data-flag-font-special-gothic][data-flag-font-special-gothic][data-flag-font-special-gothic] [data-region^='deck'] .bpm .big {
+  font-weight: 500;
+}

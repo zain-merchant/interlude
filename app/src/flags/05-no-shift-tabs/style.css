@@ -1,0 +1,6 @@
+/* #5: the "active" dot (6px gap + 4px dot) hangs off the end of the label:
+   a negative margin of the same size keeps it out of the line's width, so
+   the centred word doesn't move. */
+:root[data-flag-no-shift-tabs] [data-region^='deck'] .modes button i {
+  margin-right: -10px;
+}

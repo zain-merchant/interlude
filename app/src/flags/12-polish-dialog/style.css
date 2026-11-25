@@ -1,0 +1,52 @@
+/* #12: the dialog's existing entrance, on a strong ease-out. The card is
+   opaque within 80ms while it rises for the full time, so the app's text
+   doesn't show through its words as it arrives (Mo1). */
+:root[data-flag-polish-dialog] .backdrop:has(> .card[role='dialog']) {
+  animation: flag-polish-dialog-fade 160ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+:root[data-flag-polish-dialog] .backdrop > .card[role='dialog'] {
+  animation:
+    flag-polish-dialog-opaque 80ms ease-out,
+    flag-polish-dialog-rise var(--flag-polish-dialog-ms, 220ms) cubic-bezier(0.23, 1, 0.32, 1);
+}
+@keyframes flag-polish-dialog-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes flag-polish-dialog-opaque {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes flag-polish-dialog-rise {
+  from {
+    transform: translateY(8px) scale(0.97);
+  }
+}
+
+/* The scrim (E8): half as dark and no blur over the decks, so the times
+   and waveforms stay readable while a dialog is open mid-set. The blur
+   stays over the library (App.svelte gives its top as
+   --flag-polish-dialog-lib); it starts at the decks' bottom edge, in the
+   12px gutter, and fades in across it, so there's no seam. */
+:root[data-flag-polish-dialog] .backdrop:has(> .card[role='dialog']) {
+  background: rgb(5 5 6 / 0.5);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+:root[data-flag-polish-dialog][data-flag-polish-dialog-scrim='library'] .backdrop:has(> .card[role='dialog'])::before {
+  content: '';
+  position: fixed;
+  inset: calc(var(--flag-polish-dialog-lib, 100%) - var(--gap)) 0 0;
+  z-index: 0;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 var(--gap));
+  mask-image: linear-gradient(to bottom, transparent 0, #000 var(--gap));
+}
+/* Above the blur layer. */
+:root[data-flag-polish-dialog][data-flag-polish-dialog-scrim='library'] .backdrop > .card[role='dialog'] {
+  position: relative;
+  z-index: 1;
+}

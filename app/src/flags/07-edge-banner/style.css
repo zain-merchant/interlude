@@ -1,0 +1,35 @@
+/* #7: out of the app's grid, as each of these was written to be. Beats
+   App.svelte's `.app > :not(.bd) { position: relative }` on specificity. */
+:root[data-flag-edge-banner] .app > .banner,
+:root[data-flag-edge-banner] .app > .toastbox,
+:root[data-flag-edge-banner] .app > .sr {
+  position: absolute;
+}
+/* Placed at left: 50%, an absolute box only gets half the window before it
+   wraps; size it to its text, up to the max-width it already has. */
+:root[data-flag-edge-banner] .app > .banner {
+  width: max-content;
+}
+
+/* Later (critique panel E12, then the per-fix review): centred at the
+   foot of the window, floating over the library panel's bottom edge
+   (12 + 16px up), never over the waveforms or the decks. Inside a deck's
+   lane it read as "this deck is broken" and covered the lane. One line,
+   as wide as its content. */
+:root[data-flag-edge-banner] .app > .banner {
+  top: auto;
+  bottom: calc(var(--gap) + var(--pad));
+  left: 50%;
+  transform: none;
+  translate: -50% 0;
+  max-width: calc(100% - 2 * var(--pad));
+  white-space: nowrap;
+}
+/* The round-2 capture pass: floating over the library's foot it covered
+   the last track rows. While a banner shows, the library keeps that strip
+   clear (the banner's 48px, its 28px from the window's bottom, 8px of air):
+   the list and the sidebar end above it, and the banner sits on empty
+   glass. */
+:root[data-flag-edge-banner] .app:has(> .banner) section.library :is(nav, .main) {
+  padding-bottom: calc(48px + var(--pad) + 8px);
+}

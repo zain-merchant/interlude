@@ -1,0 +1,51 @@
+/* #23: the lost-device banner is a warning by its icon, not its edge (an
+   amber ring echoed Cue's). One line: 16px to the icon, 8px to the
+   message, 16px to the button, 8px round the button; the radius is the
+   button's plus that inset (8 + 8 = 16), so the corners nest (the panel
+   radius, 24px under #2, didn't). The update and library banners stay as
+   they are. */
+:root[data-flag-banner-warning] .banner.lost {
+  align-items: center;
+  gap: 0;
+  min-height: 48px;
+  box-sizing: border-box;
+  padding: 8px 8px 8px 16px;
+  border-radius: calc(var(--r) + 8px);
+  background: var(--popover);
+  box-shadow: inset 0 0 0 1px var(--line-2), 0 20px 50px rgb(0 0 0 / 0.3);
+  white-space: nowrap;
+}
+:root[data-flag-banner-warning] .banner.lost svg {
+  align-self: center;
+  margin-right: 8px;
+  stroke: var(--warn);
+}
+:root[data-flag-banner-warning] .banner.lost b {
+  font-weight: 500;
+}
+/* Too long for the window: the message gives way, the button stays whole. */
+:root[data-flag-banner-warning] .banner.lost > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* Its one way out: a tonal button (--sel fill, the label at full
+   strength, weight 500), 32px like Report's Save. Round 1's tonal button
+   read as disabled because its label was grey, not because it was tonal;
+   the solid cream slab that replaced it outshouted the warning itself
+   (d-K08, e-K26), so the icon and the device name lead again. */
+:root[data-flag-banner-warning] .banner.lost .btn {
+  flex: none;
+  height: var(--h-md);
+  margin-left: 16px;
+  padding: 0 12px;
+  border-radius: var(--r);
+  background: var(--sel);
+  box-shadow: none;
+  color: var(--fg);
+  font-weight: 500;
+}
+:root[data-flag-banner-warning] .banner.lost .btn:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--fg) 12%, transparent);
+  color: var(--fg);
+}

@@ -5,11 +5,14 @@
 import { engine, tracks, control } from './engine.svelte.js';
 import { backend } from './backend.js';
 import { announce } from './announce.svelte.js';
+import { flag } from '../flags/registry.svelte.js';
 
 export const STEMS = ['Vocals', 'Melody', 'Bass', 'Drums'];
 export const ALL = 0b1111;
 
 const deckName = (deck) => 'AB'[deck];
+// #88 (UI audit flag): deck-names says "Left deck" / "Right deck" ("Deck A" otherwise).
+const Deck = (deck) => (flag('deck-names') ? (deck === 0 ? 'Left deck' : 'Right deck') : `Deck ${deckName(deck)}`);
 
 /** The deck's stems as the engine reports them: which are on, and how far splitting has got. */
 export function stemsOf(deck) {
@@ -23,12 +26,12 @@ export const usable = (deck) => !!tracks[deck] && ['starting', 'splitting', 'rea
 
 /** Why a stem pad on the controller did nothing, for a toast. */
 export function stemsUnavailable(deck) {
-  if (!tracks[deck]) return `Deck ${deckName(deck)}: load a track first`;
+  if (!tracks[deck]) return `${Deck(deck)}: load a track first`;
   switch (stemsOf(deck).state) {
     case 'needsModel':
       return 'Stems need a one-time model download. Get it in Settings › Stems';
     case 'failed':
-      return `Deck ${deckName(deck)}: stems couldn't be made`;
+      return `${Deck(deck)}: stems couldn't be made`;
     default:
       return 'Stems are off. Turn them on in Settings › Stems';
   }
@@ -41,7 +44,7 @@ export function soloed(mask) {
 
 function send(deck, mask, said) {
   control({ type: 'setStems', deck, mask });
-  announce(`Deck ${deckName(deck)}: ${said}`);
+  announce(`${Deck(deck)}: ${said}`);
 }
 
 /** Mutes or unmutes one stem. */

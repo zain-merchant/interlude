@@ -1,0 +1,31 @@
+/* #27 (C50, E3): one main-action button. The look Import's own .btn.primary
+   had, as a shared class: a solid light fill with dark text, the control
+   height and radius. Dialogs and alert banners mark their one main action
+   with it (Report, Import; the device-lost banner's button is #23's).
+   Allowed there only, never on the performance surface (owner's call 3). */
+:root[data-flag-primary-button] .btn.primary {
+  height: var(--h-md);
+  border-radius: var(--r);
+  background: var(--fg);
+  box-shadow: none;
+  color: var(--ink);
+  font-weight: 500;
+}
+:root[data-flag-primary-button] .btn.primary:hover:not(:disabled, [aria-disabled='true']) {
+  background: #fff;
+  box-shadow: none;
+  color: var(--ink);
+}
+:root[data-flag-primary-button] .btn.primary:disabled {
+  opacity: 0.4;
+}
+/* Import's rows: every source found gets the same tonal chip, all saying
+   Import; the newest says so in its age line ("exported 3 hours ago,
+   newest"). A solid chip on one row, beside a barely-there grey one on
+   the next, made the choice look made for you, at a step where the row
+   itself is the action (e-K12, e-K30). */
+:root[data-flag-primary-button] .card[aria-labelledby='import-title'] .found .go {
+  border-radius: var(--r);
+  background: rgb(255 255 255 / 0.08);
+  color: var(--fg);
+}

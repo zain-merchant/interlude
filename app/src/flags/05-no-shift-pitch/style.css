@@ -1,0 +1,54 @@
+/* #5: the tempo readout. A box exactly as wide as "−00.00%" (3.9em,
+   tabular) centred on the fader's column, the number right-aligned in it
+   so the % stays put, and the range line's room kept below it whether or
+   not it shows. (A wider, right-aligned box sat the % 7-8px off its
+   fader: batch D8.) */
+:root[data-flag-no-shift-pitch] [data-region^='deck'] .pitch .val {
+  box-sizing: content-box;
+  width: 3.9em;
+  padding-inline: 2px;
+  justify-self: center;
+  justify-items: end;
+  text-align: right;
+  align-self: start;
+  grid-template-rows: auto calc(var(--t-xs) * 1.3);
+}
+
+/* The pitch column's rows: readout (as tall as it is, with its range
+   line's room, so the fader starts 8px under it), fader, nudge, Key lock (44px, level
+   with Cue and Play). While Slip is on for either deck, both decks' columns
+   gain a 24px row for it between the nudge and Key lock (the deck without
+   Slip keeps the row empty), so the two decks mirror and Key lock never
+   changes size. 8px between every row. */
+:root[data-flag-no-shift-pitch] [data-region^='deck'] .pitch {
+  grid-template-rows: auto minmax(0, 1fr) auto var(--h-lg);
+  gap: 8px;
+}
+:root[data-flag-no-shift-pitch] [data-region^='deck'] .pitch > * {
+  grid-column: 1;
+}
+:root[data-flag-no-shift-pitch] [data-region^='deck'] .pitch > .pitch-fader {
+  grid-row: 2;
+}
+:root[data-flag-no-shift-pitch] [data-region^='deck'] .pitch > .nudge {
+  grid-row: 3;
+}
+:root[data-flag-no-shift-pitch] [data-region^='deck'] .pitch > .kl {
+  grid-row: -2;
+  height: var(--h-lg);
+  white-space: normal;
+}
+@supports selector(:has(*)) {
+  :root[data-flag-no-shift-pitch] [data-region^='deck'] .pitch:has(> .lock:not(.kl), > .slip-room) {
+    grid-template-rows: auto minmax(0, 1fr) auto var(--h-sm) var(--h-lg);
+  }
+  :root[data-flag-no-shift-pitch] [data-region^='deck'] .pitch > .lock:not(.kl),
+  :root[data-flag-no-shift-pitch] [data-region^='deck'] .pitch > .slip-room {
+    grid-row: 4;
+    width: 100%;
+    height: var(--h-sm);
+  }
+  :root[data-flag-no-shift-pitch] [data-region^='deck'] .pitch:has(> .lock:not(.kl), > .slip-room) > .kl {
+    grid-row: 5;
+  }
+}
