@@ -200,7 +200,13 @@ impl Stems {
             })
         });
         let settled = saved.settle();
-        let heads: dj_stems::PlayHeads = Box::new(move |deck| shared.deck(deck).position);
+        let heads: dj_stems::PlayHeads = Box::new(move |deck| {
+            let d = shared.deck(deck);
+            dj_stems::Head {
+                at: d.position,
+                speed: if d.playing { d.speed } else { 0.0 },
+            }
+        });
         let stems = Self {
             splitter: Splitter::new(Settings::default(), heads),
             dir,

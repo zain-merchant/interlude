@@ -122,8 +122,24 @@ pub enum Status {
     Failed(String),
 }
 
-/// Play head of each deck, in seconds, as the engine reports it.
-pub type PlayHeads = Box<dyn Fn(usize) -> f64 + Send + Sync>;
+/// Where a deck's play head is.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Head {
+    /// Seconds into the track.
+    pub at: f64,
+    /// Seconds it moves a second: 0.0 for a stopped deck.
+    pub speed: f64,
+}
+
+impl Head {
+    /// A deck stopped at `at`.
+    pub fn still(at: f64) -> Self {
+        Self { at, speed: 0.0 }
+    }
+}
+
+/// Play head of each deck, as the engine reports it.
+pub type PlayHeads = Box<dyn Fn(usize) -> Head + Send + Sync>;
 
 struct Job {
     id: u64,
@@ -279,7 +295,7 @@ impl Splitter {
 
     /// Whether `deck` can play its stems where its play head is.
     pub fn is_here(&self, deck: usize) -> bool {
-        let head = (self.heads)(deck).max(0.0);
+        let head = (self.heads)(deck).at.max(0.0);
         let st = self.lock();
         let Some(job) = st.jobs.get(deck).and_then(|j| j.as_ref()) else {
             return false;
@@ -456,8 +472,9 @@ impl Worker {
                 continue;
             };
             let rate = job.track.sample_rate as f64;
-            let head = (self.heads)(deck).max(0.0) * rate;
-            let Some(k) = p.next(head) else {
+            let now = (self.heads)(deck);
+            let head = now.at.max(0.0) * rate;
+            let Some(k) = p.next(head, now.speed == 0.0) else {
                 continue;
             };
             let lead = p.lead(head);
