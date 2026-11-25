@@ -11,7 +11,7 @@
 </script>
 
 <section class="display stemsway">
-  <h3 id="stems-way">How stems work on {mac ? 'your Mac' : 'this computer'}</h3>
+  <h3 id="stems-way">When to make stems</h3>
   <p>{STEMS_WHAT}</p>
   <div class="ways" role="radiogroup" aria-labelledby="stems-way">
     {#each ways as m (m.mode)}

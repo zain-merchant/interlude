@@ -169,7 +169,7 @@ export function createMockBackend() {
   }));
   // Stems: a pretend model download, and splitting that takes 20 s a track.
   /** @type {{ mode: import('./stemsmodel.js').StemsMode, cacheGb: number, cacheBytes: number }} */
-  const stemsCfg = { mode: 'ask', cacheGb: 5, cacheBytes: 1.2e9 };
+  const stemsCfg = { mode: 'fast', cacheGb: 5, cacheBytes: 1.2e9 };
   // How long a press takes to be heard with nothing prepared: the model
   // loads, then the region at the play head is split.
   const LOAD_MS = 2000;

@@ -45,7 +45,7 @@ export async function chooseStems(deck, mode) {
   const press = held;
   held = null;
   await setStemsMode(mode);
-  announce(mode === 'fast' ? 'Fast stems' : 'Efficient stems');
+  announce(mode === 'fast' ? 'Stems for every track' : 'Stems only when you use them');
   if (press && tracks[press.deck]?.path === press.path) {
     if (stemsModel.state === 'ready') press.act();
     else showToast(notYet(stemsModel));
