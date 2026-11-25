@@ -150,7 +150,7 @@ pub fn make(model: &Path) -> Result<(), Error> {
     }
     let building = dir.join(format!("{stem}{UNFINISHED}"));
     let made = (|| {
-        let session = model::builder(GraphOptimizationLevel::Level2)?
+        let session = model::builder(GraphOptimizationLevel::Level2, model::THREADS)?
             .with_optimized_model_path(&building)?
             .commit_from_file(model)?;
         drop(session);

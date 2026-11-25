@@ -29,7 +29,42 @@ const OUT_VOCALS: usize = 3;
 const OUT_STEMS: usize = 4;
 
 /// Threads the model runs on.
-const THREADS: usize = 2;
+pub const THREADS: usize = 2;
+/// Threads it runs on for the first region, where that's worth it and safe.
+pub const FIRST_THREADS: usize = 4;
+
+/// Whether this computer has the cores for [`FIRST_THREADS`] beside
+/// everything else the app does.
+pub fn many_cores() -> bool {
+    let logical = std::thread::available_parallelism().map_or(1, |n| n.get());
+    enough(performance_cores(), logical)
+}
+
+/// With `fast` performance cores, where they're told apart, of `logical`.
+fn enough(fast: Option<usize>, logical: usize) -> bool {
+    fast.map_or(logical >= 8, |n| n >= 6)
+}
+
+#[cfg(target_os = "macos")]
+fn performance_cores() -> Option<usize> {
+    let mut n: i32 = 0;
+    let mut len = std::mem::size_of::<i32>();
+    let ok = unsafe {
+        libc::sysctlbyname(
+            c"hw.perflevel0.physicalcpu".as_ptr(),
+            (&mut n as *mut i32).cast(),
+            &mut len,
+            std::ptr::null_mut(),
+            0,
+        )
+    };
+    (ok == 0).then(|| usize::try_from(n).ok()).flatten()
+}
+
+#[cfg(not(target_os = "macos"))]
+fn performance_cores() -> Option<usize> {
+    None
+}
 
 /// ONNX Runtime allows one environment per process, ever: once the first
 /// is made, building another fails even after it's dropped. The model is
@@ -48,7 +83,10 @@ fn environment() -> Result<Environment, Error> {
 }
 
 /// A session as every load of the model wants it, optimised to `level`.
-pub(crate) fn builder(level: GraphOptimizationLevel) -> Result<SessionBuilder, Error> {
+pub(crate) fn builder(
+    level: GraphOptimizationLevel,
+    threads: usize,
+) -> Result<SessionBuilder, Error> {
     let env = environment()?;
     // The model barely gains past two threads (on an M5: 1.46 s per
     // segment on one, 1.21 s on two, 1.07 s on four), so two keeps it
@@ -61,7 +99,7 @@ pub(crate) fn builder(level: GraphOptimizationLevel) -> Result<SessionBuilder, E
     Ok(Session::builder(&env)?
         .with_auto_device(AutoDevicePolicy::PreferCPU)?
         .with_optimization_level(level)?
-        .with_intra_threads(THREADS)?
+        .with_intra_threads(threads)?
         .with_memory_pattern(false)?
         .with_execution_providers([ort::ep::CPU::default().with_arena_allocator(false).build()])?)
 }
@@ -83,8 +121,13 @@ pub struct Separated {
 impl Model {
     /// Loads a model file, or its [`quick`] copy if it has one.
     pub fn load(path: &Path) -> Result<Self, Error> {
+        Self::load_on(path, THREADS)
+    }
+
+    /// [`Model::load`], to run on this many threads.
+    pub fn load_on(path: &Path, threads: usize) -> Result<Self, Error> {
         if let Some(copy) = quick::find(path) {
-            match Self::open(&copy) {
+            match Self::open(&copy, threads) {
                 Ok(m) => return Ok(m),
                 Err(e) => {
                     eprintln!("stems: the quick copy of the model won't load ({e})");
@@ -92,12 +135,12 @@ impl Model {
                 }
             }
         }
-        Self::open(path)
+        Self::open(path, threads)
     }
 
-    fn open(path: &Path) -> Result<Self, Error> {
+    fn open(path: &Path, threads: usize) -> Result<Self, Error> {
         let started = Instant::now();
-        let session = builder(GraphOptimizationLevel::All)?.commit_from_file(path)?;
+        let session = builder(GraphOptimizationLevel::All, threads)?.commit_from_file(path)?;
         let segment = Self::check_shapes(&session)?;
         eprintln!(
             "stems: model loaded in {:.1} s",
@@ -160,5 +203,23 @@ impl Model {
             bass: take(OUT_BASS),
             drums: take(OUT_DRUMS),
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn only_many_cores_are_enough() {
+        // M1, M2 and so on; M1 Pro; an unknown computer.
+        assert!(!enough(Some(4), 8));
+        assert!(enough(Some(6), 8));
+        assert!(enough(Some(8), 10));
+        assert!(!enough(None, 4));
+        assert!(enough(None, 8));
+        #[cfg(target_arch = "aarch64")]
+        #[cfg(target_os = "macos")]
+        assert!(performance_cores().is_some_and(|n| n > 0));
     }
 }

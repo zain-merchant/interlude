@@ -200,7 +200,14 @@ impl Stems {
             })
         });
         let settled = saved.settle();
-        let heads: dj_stems::PlayHeads = Box::new(move |deck| shared.deck(deck).position);
+        let playing_shared = shared.clone();
+        let heads: dj_stems::PlayHeads = Box::new(move |deck| {
+            let d = shared.deck(deck);
+            dj_stems::Head {
+                at: d.position,
+                speed: if d.playing { d.speed } else { 0.0 },
+            }
+        });
         let stems = Self {
             splitter: Splitter::new(Settings::default(), heads),
             dir,
@@ -210,6 +217,11 @@ impl Stems {
         if settled {
             stems.save();
         }
+        // More threads for a first region, but never while a deck plays.
+        let decks = playing_shared;
+        stems.splitter.set_playing(Box::new(move || {
+            (0..NUM_DECKS).any(|d| decks.deck(d).playing)
+        }));
         stems.apply();
         stems
     }

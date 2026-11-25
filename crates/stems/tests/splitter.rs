@@ -8,7 +8,7 @@ use std::time::{Duration, Instant};
 
 use dj_engine::stems::{STORED_BASS, STORED_DRUMS, STORED_VOCALS};
 use dj_engine::Track;
-use dj_stems::{CacheKey, Settings, Splitter, Status, When};
+use dj_stems::{CacheKey, Head, Settings, Splitter, Status, When};
 
 /// The stand-in model, in a folder of its own: the splitter puts a copy that
 /// loads quickly beside it.
@@ -73,7 +73,7 @@ fn splits_two_decks_and_caches() {
     };
     let s = Splitter::new(
         settings.clone(),
-        Box::new(|deck| if deck == 0 { 0.0 } else { 0.5 }),
+        Box::new(|deck| Head::still(if deck == 0 { 0.0 } else { 0.5 })),
     );
 
     let file = dir.join("song.wav");
@@ -139,7 +139,7 @@ fn splitter(when: When, model: Option<PathBuf>) -> Splitter {
         model,
         ..Default::default()
     };
-    Splitter::new(settings, Box::new(|_| 0.0))
+    Splitter::new(settings, Box::new(|_| Head::still(0.0)))
 }
 
 /// Waits until `f`, or panics.
@@ -349,7 +349,7 @@ fn makes_a_quick_copy_when_idle() {
         model: Some(path.clone()),
         ..Default::default()
     };
-    let s = Splitter::new(off.clone(), Box::new(|_| 0.0));
+    let s = Splitter::new(off.clone(), Box::new(|_| Head::still(0.0)));
     std::thread::sleep(Duration::from_millis(200));
     assert!(!dj_stems::quick::exists(&path), "not while stems are off");
     s.configure(Settings {
@@ -367,4 +367,84 @@ fn makes_a_quick_copy_when_idle() {
     check(&a);
     drop(s);
     let _ = std::fs::remove_dir_all(&dir);
+}
+
+/// The first region runs on more threads, and the rest on the usual ones:
+/// with cores to spare, nothing playing, and a model that loads quickly.
+#[test]
+fn only_the_first_region_goes_wide() {
+    let dir = std::env::temp_dir().join(format!("stems-wide-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).unwrap();
+    let path = dir.join("m.onnx");
+    std::fs::copy(model(), &path).unwrap();
+    let s = Splitter::new(
+        Settings {
+            model: Some(path.clone()),
+            ..Default::default()
+        },
+        Box::new(|_| Head::still(0.0)),
+    );
+    let playing = Arc::new(std::sync::atomic::AtomicBool::new(false));
+    let start = Instant::now();
+    while !dj_stems::quick::exists(&path) {
+        assert!(start.elapsed() < Duration::from_secs(10));
+        std::thread::sleep(Duration::from_millis(5));
+    }
+    let split = |want: usize, why: &str| {
+        // Idle first, so it's a beginning.
+        std::thread::sleep(Duration::from_millis(200));
+        let before = s.wide_loads();
+        let t = track(3.0);
+        s.split(0, t.clone(), None);
+        wait_ready(&s, 0);
+        check(&t);
+        assert_eq!(s.wide_loads() - before, want, "{why}");
+    };
+    s.set_many_cores(true);
+    split(0, "it doesn't know whether a deck plays");
+    let p = playing.clone();
+    s.set_playing(Box::new(move || {
+        p.load(std::sync::atomic::Ordering::Relaxed)
+    }));
+    split(1, "once, however many regions");
+    split(1, "and again for the next track");
+    playing.store(true, std::sync::atomic::Ordering::Relaxed);
+    split(0, "a deck is playing");
+    playing.store(false, std::sync::atomic::Ordering::Relaxed);
+    s.set_many_cores(false);
+    split(0, "no cores to spare");
+    s.set_many_cores(true);
+    dj_stems::quick::remove(&path).unwrap();
+    split(0, "the model is slow to load");
+    drop(s);
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+/// The other deck's first region, while the model is in use, changes nothing.
+#[test]
+fn going_wide_is_for_a_beginning() {
+    let s = Splitter::new(
+        Settings {
+            model: Some(model()),
+            ..Default::default()
+        },
+        Box::new(|_| Head::still(0.0)),
+    );
+    let start = Instant::now();
+    while !dj_stems::quick::exists(&model()) {
+        assert!(start.elapsed() < Duration::from_secs(10));
+        std::thread::sleep(Duration::from_millis(5));
+    }
+    std::thread::sleep(Duration::from_millis(200));
+    s.set_many_cores(true);
+    s.set_playing(Box::new(|| false));
+    let (a, b) = (track(60.0), track(60.0));
+    s.split(0, a.clone(), None);
+    s.split(1, b.clone(), None);
+    wait_ready(&s, 0);
+    wait_ready(&s, 1);
+    check(&a);
+    check(&b);
+    assert_eq!(s.wide_loads(), 1);
 }
