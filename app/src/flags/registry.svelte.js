@@ -7,7 +7,8 @@
 //   (and, when it can't be done in CSS, small hooks in components that
 //   read flag('<id>') or setting('<id>', '<key>') from this file)
 //
-// Every flag is on by default but the worst-case test data. A flag that is
+// Every flag is on by default but the worst-case test data and #112 (the
+// controller and output buttons, which live in Settings). A flag that is
 // off is exactly the app as it was, so All off in the panel is the app
 // before the audit. The audit's panel (panel/FlagPanel.svelte, dev builds
 // only) turns them on and off and tunes their settings; this file is the one
@@ -47,7 +48,7 @@ const saved = read();
 
 /**
  * Whether a flag is on when nothing's been picked for it: everything is,
- * but one that sets `byDefault: false` (the worst-case test data).
+ * but one that sets `byDefault: false` (the worst-case test data, #112).
  */
 export const onByDefault = (/** @type {Flag} */ f) => f.byDefault ?? true;
 const pickedOn = (/** @type {Flag} */ f) => saved.on?.[f.id] ?? onByDefault(f);
