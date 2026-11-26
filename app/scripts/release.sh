@@ -17,7 +17,7 @@
 # ~/.tauri/oss-dj-updater.key (or set INTERLUDE_UPDATER_KEY to its path).
 #
 # Apple signing and notarization happen by themselves once this Mac has
-# (see "Apple signing" in the README):
+# (see "Apple signing" in docs/releasing.md):
 #   - a "Developer ID Application" certificate in the login keychain, and
 #   - the notarization login saved in the keychain, once:
 #       security add-generic-password -s interlude-notarize -a <Apple ID email> -w
@@ -77,7 +77,7 @@ if [[ -n $APPLE_SIGNING_IDENTITY ]]; then
     APPLE_PASSWORD=$(security find-generic-password -s interlude-notarize -w)
   fi
   [[ -n ${APPLE_ID:-} && -n ${APPLE_PASSWORD:-} ]] ||
-    fail "found $APPLE_SIGNING_IDENTITY but no notarization login; see \"Apple signing\" in the README"
+    fail "found $APPLE_SIGNING_IDENTITY but no notarization login; see \"Apple signing\" in docs/releasing.md"
   echo "    signing as $APPLE_SIGNING_IDENTITY and notarizing as $APPLE_ID"
 else
   echo "    no Developer ID certificate: testers will need the Open Anyway step"
