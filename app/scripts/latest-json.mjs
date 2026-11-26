@@ -6,7 +6,7 @@
 // It finds the signed update bundle (`*.app.tar.gz` and its `.sig`) for
 // this Mac's architecture, and writes `latest.json` next to it. Upload
 // both files and latest.json to the GitHub release tagged v<version> in
-// zain-merchant/interlude (see "Releasing" in the README).
+// zain-merchant/interlude (see docs/releasing.md).
 
 import { readFileSync, readdirSync, writeFileSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
@@ -27,7 +27,7 @@ if (!existsSync(dir)) {
 }
 const bundle = readdirSync(dir).find((f) => f.endsWith('.app.tar.gz'));
 if (!bundle || !existsSync(join(dir, `${bundle}.sig`))) {
-  console.error('No signed .app.tar.gz found. Set TAURI_SIGNING_PRIVATE_KEY (see the README) and build again.');
+  console.error('No signed .app.tar.gz found. Set TAURI_SIGNING_PRIVATE_KEY (see docs/releasing.md) and build again.');
   process.exit(1);
 }
 
