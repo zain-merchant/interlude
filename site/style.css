@@ -1973,7 +1973,7 @@ html[data-note="sleeve"] .founder {
   /* The window over the record's middle. Beside the questions (a wide
      screen): the record stands out of the open side, as the first sleeve
      did; stacked under them (a phone), out of the open foot. */
-  --hx: 72%; --hy: calc(60% - var(--rec-lift, 12px)); --hr: 50px;
+  --hx: 72%; --hy: calc(60% - var(--rec-lift, 7px)); --hr: 50px;
   --rw: 80%; --rhalf: 40%; --crease: 90deg; --ask-w: 56%;
   --wr0: 112px; --wr1: 115.5px; --wr2: 117px; --wr3: 120px;
   /* A record sleeve's corners are all but square: card cut to size. */
@@ -2061,7 +2061,7 @@ html[data-note="sleeve"] .rec {
    the window, its wear and the crease go with it. */
 @media (max-width: 960px) {
   html[data-note="sleeve"] .founder {
-    --hx: 63%; --hy: calc(64% + var(--rec-peek, 28px));
+    --hx: 71%; --hy: calc(64% + var(--rec-peek, 28px));
     --rw: 72%; --rhalf: 36%; --crease: 180deg; --ask-w: 46%;
     --wr0: 100px; --wr1: 103.5px; --wr2: 105px; --wr3: 108px;
   }
@@ -2072,8 +2072,19 @@ html[data-note="sleeve"] .rec {
 @media (max-width: 620px) { html[data-note="sleeve"] .founder { rotate: calc(var(--sleeve-tilt, -1.5deg) * -2 / 3); } }
 /* (The page cuts it at the window's edge, never a section's.) */
 body { overflow-x: clip; }
-html[data-note="sleeve"] .founder h3 { color: #17140e; margin: 0 0 12px; }
+html[data-note="sleeve"] .founder h3 { color: #17140e; margin: 0 0 12px; line-height: 27px; }
 html[data-note="sleeve"] .founder-body { margin-bottom: 14px; color: #3a352b; font-size: 13.5px; line-height: 1.5; text-wrap: pretty; }
+/* Every line keeps --hole-pad clear of the window. In each paragraph, a
+   float put over the whole sleeve from its top-left corner down to the
+   foot of its words (index.html measures where that is), whose shape is
+   the window and that much round it: a line that would pass closer ends
+   short, or goes under. */
+html[data-note="sleeve"] .founder .line-end { display: inline-block; width: 0; height: 1lh; vertical-align: top; }
+.founder .line-end { display: none; }
+html[data-note="sleeve"] :is(.founder-body, .founder-close, .founder-ask)::before {
+  content: ''; float: right; width: var(--fw, 0px); height: var(--fh, 0px); margin: calc(-1 * var(--fy, 0px)) calc(-1 * var(--fr, 0px)) 0 0;
+  shape-outside: circle(calc(var(--hr) + var(--hole-pad, 22px)) at var(--fcx, -999px) var(--fcy, -999px)) border-box;
+}
 /* The sign-off sits with the ask at the foot, clear of the window: the
    body's three lines above, its own line below, left of the record. */
 html[data-note="sleeve"] .founder-close { margin: auto 0 12px; color: #3a352b; font-size: 13.5px; line-height: 1.4; white-space: nowrap; }

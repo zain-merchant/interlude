@@ -58,7 +58,7 @@
   <!-- Geist, served from here (no other site to reach before the page can
        draw its text); the Latin file is fetched straight away. -->
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="style.css?v=20261126a">
+  <link rel="stylesheet" href="style.css?v=20261126b">
   <script>
     // (The phone preview's frame, opened by this same site with the Tune
     // panel showing; nothing for anyone else.)
@@ -1445,6 +1445,40 @@
           io.disconnect();
         }, { threshold: 0.6 });
         io.observe(note);
+      })();
+      // The sleeve's words keep clear of its window (style.css, --hole-pad):
+      // each paragraph is told where it sits in the sleeve, where its last
+      // line ends, and where the window is, for the float that keeps its
+      // lines off it. Again when anything in it changes size, as a line
+      // going under does.
+      (() => {
+        const note = document.querySelector('.founder');
+        if (!note || !('ResizeObserver' in window)) return;
+        const ps = [...note.querySelectorAll('.founder-body, .founder-close, .founder-ask')];
+        // (Where the words end, not the paragraph: it's as tall as its float.)
+        const ends = ps.map((p) => p.appendChild(Object.assign(document.createElement('i'), { className: 'line-end', ariaHidden: 'true' })));
+        const px = (v) => `${Math.round(v * 10) / 10}px`;
+        let queued = false;
+        const fit = () => {
+          queued = false;
+          if (document.documentElement.dataset.note !== 'sleeve') return;
+          const W = note.offsetWidth, hole = getComputedStyle(note, '::before');
+          note.style.setProperty('--fcx', hole.left);
+          note.style.setProperty('--fcy', hole.top);
+          ps.forEach((p, k) => {
+            const s = p.style;
+            s.setProperty('--fw', px(W));
+            s.setProperty('--fy', px(p.offsetTop));
+            s.setProperty('--fr', px(W - p.offsetLeft - p.offsetWidth));
+            s.setProperty('--fh', px(ends[k].offsetTop + ends[k].offsetHeight));
+          });
+        };
+        const soon = () => { if (!queued) { queued = true; requestAnimationFrame(fit); } };
+        const ro = new ResizeObserver(soon);
+        for (const e of [note, ...ps]) ro.observe(e);
+        addEventListener('resize', soon);
+        document.fonts?.ready.then(soon);
+        new MutationObserver(soon).observe(document.documentElement, { attributes: true, attributeFilter: ['data-note'] });
       })();
     </script>
   </main>
