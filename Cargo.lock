@@ -1007,10 +1007,15 @@ dependencies = [
 name = "dj-engine"
 version = "0.1.6"
 dependencies = [
+ "anyhow",
  "beat-this",
  "cpal",
  "hound",
+ "libc",
  "matrixmultiply",
+ "rayon",
+ "rten",
+ "rten-tensor",
  "rtrb",
  "rustfft",
  "serde",

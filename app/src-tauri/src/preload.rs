@@ -70,6 +70,10 @@ impl Preload {
         let spawned = std::thread::Builder::new()
             .name("preload".into())
             .spawn(move || {
+                // Ahead of a load nobody has asked for yet, so below the
+                // audio and the UI. Loading a track that isn't decoded yet
+                // happens on the thread that asks, at its priority.
+                dj_engine::background::lower();
                 let (mut path, mut known) = (path, known);
                 loop {
                     let started = std::time::Instant::now();

@@ -81,6 +81,9 @@ fn analyze_while<R>(
     // A few stretches in flight at most: if analysis falls behind, decoding
     // waits rather than queueing up a second copy of the track.
     const IN_FLIGHT: usize = 8;
+    // The threads work at the caller's priority: below the audio and the
+    // UI when a background thread loads.
+    let priority = crate::background::Priority::current();
     std::thread::scope(|s| {
         let mut senders = Vec::with_capacity(4);
         let mut channel = || {
@@ -91,6 +94,7 @@ fn analyze_while<R>(
         let waveform = {
             let rx = channel();
             s.spawn(move || {
+                priority.apply();
                 let mut b = WaveformBuilder::new(sample_rate);
                 rx.iter().for_each(|c| b.push(&c));
                 b.finish()
@@ -99,6 +103,7 @@ fn analyze_while<R>(
         let grid = known.beatgrid.is_none().then(|| {
             let rx = channel();
             s.spawn(move || {
+                priority.apply();
                 let mut b = BeatgridBuilder::new(sample_rate);
                 rx.iter().for_each(|c| b.push(&c));
                 b.finish()
@@ -107,6 +112,7 @@ fn analyze_while<R>(
         let key = known.key.is_none().then(|| {
             let rx = channel();
             s.spawn(move || {
+                priority.apply();
                 let mut b = KeyBuilder::new(sample_rate);
                 rx.iter().for_each(|c| b.push(&c));
                 b.finish()
@@ -115,6 +121,7 @@ fn analyze_while<R>(
         let loudness = known.loudness.is_none().then(|| {
             let rx = channel();
             s.spawn(move || {
+                priority.apply();
                 let mut b = LoudnessBuilder::new(sample_rate);
                 rx.iter().for_each(|c| b.push(&c));
                 b.finish()
@@ -153,10 +160,20 @@ impl Track {
     pub fn from_stereo(samples: Vec<f32>, sample_rate: u32) -> Self {
         // The analyses only read the samples, so run them side by side:
         // loading takes as long as the slowest, not all of them.
+        let priority = crate::background::Priority::current();
         let (waveform, beatgrid, key, loudness) = std::thread::scope(|s| {
-            let key = s.spawn(|| detect_key(&samples, sample_rate));
-            let waveform = s.spawn(|| Waveform::analyze(&samples, sample_rate));
-            let loudness = s.spawn(|| measure_loudness(&samples, sample_rate));
+            let key = s.spawn(|| {
+                priority.apply();
+                detect_key(&samples, sample_rate)
+            });
+            let waveform = s.spawn(|| {
+                priority.apply();
+                Waveform::analyze(&samples, sample_rate)
+            });
+            let loudness = s.spawn(|| {
+                priority.apply();
+                measure_loudness(&samples, sample_rate)
+            });
             let grid = detect_beatgrid(&samples, sample_rate);
             let waveform = waveform.join().unwrap_or_default();
             (

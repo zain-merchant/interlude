@@ -29,8 +29,8 @@ against the code on 18 November 2026. Tick items off here as they land.
 
 ### 1. You'll feel it in a set
 
-- [ ] **Faster stems.** Splitting runs on the CPU only (about 50 s for a
-      4½-minute track). rekordbox, Serato and djay use the GPU / Neural
+- [ ] **Faster stems.** Splitting runs on the CPU only (about 80 s for a
+      4½-minute track, on one core). rekordbox, Serato and djay use the GPU / Neural
       Engine and feel near-instant. On a Mac that means ONNX Runtime's CoreML
       path (or a Core ML model).
 - [ ] **More beat FX and Smart CFX.** Only 4 beat FX, where rekordbox gives

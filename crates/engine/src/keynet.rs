@@ -335,10 +335,12 @@ impl Conv {
         let mut out = vec![0.0f32; self.out * h * w];
         let threads = threads().min(h);
         let target = SendPtr(out.as_mut_ptr());
+        let priority = crate::background::Priority::current();
         std::thread::scope(|scope| {
             for part in 0..threads {
                 let target = &target;
                 scope.spawn(move || {
+                    priority.apply();
                     let mut patches = vec![0.0f32; depth * w];
                     for row in (part..h).step_by(threads) {
                         for ci in 0..self.inp {

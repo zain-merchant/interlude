@@ -205,6 +205,9 @@ pub struct OutputStats {
     /// before: a sign the system starved the audio thread and it may have
     /// dropped out.
     pub late_callbacks: u64,
+    /// Times the system said the audio missed its deadline (an underrun:
+    /// a click or a short dropout).
+    pub overloads: u64,
 }
 
 #[derive(Debug, Default)]
@@ -213,6 +216,7 @@ struct Stats {
     latency_us: AtomicU32,
     max_render_us: AtomicU32,
     late: AtomicU64,
+    overloads: AtomicU64,
 }
 
 impl Stats {
@@ -222,6 +226,7 @@ impl Stats {
             output_latency_ms: self.latency_us.load(Ordering::Relaxed) as f32 / 1000.0,
             max_render_us: self.max_render_us.load(Ordering::Relaxed),
             late_callbacks: self.late.load(Ordering::Relaxed),
+            overloads: self.overloads.load(Ordering::Relaxed),
         }
     }
 }
@@ -346,6 +351,7 @@ fn open_with(
     let ch = channels as usize;
     let engine = engine.clone();
     let (count, ev) = (callbacks.clone(), event.clone());
+    let overloads = stats.clone();
     let stats = stats.clone();
     let mut last_callback: Option<cpal::StreamInstant> = None;
 
@@ -399,6 +405,10 @@ fn open_with(
             move |err| match err.kind() {
                 cpal::ErrorKind::DeviceNotAvailable => ev.store(GONE, Ordering::Relaxed),
                 cpal::ErrorKind::StreamInvalidated => ev.store(REBUILD, Ordering::Relaxed),
+                cpal::ErrorKind::Xrun => {
+                    overloads.overloads.fetch_add(1, Ordering::Relaxed);
+                    eprintln!("audio stream error: {err}");
+                }
                 _ => eprintln!("audio stream error: {err}"),
             },
             None,

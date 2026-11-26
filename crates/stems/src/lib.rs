@@ -435,6 +435,9 @@ impl Worker {
     }
 
     fn run(mut self) {
+        // Splitting is the heaviest thing the app does, and runs whenever a
+        // track loads: it gives way to the audio, the UI and other apps.
+        dj_engine::background::lower();
         let shared = self.shared.clone();
         loop {
             let task = {

@@ -21,6 +21,16 @@ lock-free queue and reads state back from atomics, so a slow UI frame can't
 cause a dropout. The audio thread never locks, allocates or touches the disk;
 tracks are decoded up front on a worker thread and freed off the audio thread.
 
+Heavy background work (preloading and analysis, Beat This!, stem splitting)
+runs below the audio and the UI: its threads call
+`dj_engine::background::lower()`, and threads they start take their
+priority. The two neural networks, Beat This! and the stem splitter, never
+run at the same time: each run takes a `background::turn()`. Both at once
+held up the audio thread long enough for dropouts on an M5 MacBook Air.
+`dj latency [secs] [file]` plays two decks and reports the audio's timing,
+including the overloads (underruns) Core Audio reports, while it analyzes
+`file` over and over.
+
 ## Building
 
 You need Rust (stable) and Node 20+.

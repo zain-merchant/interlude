@@ -18,10 +18,13 @@
 //! beat model, from beat-this-rs) are built into the app, so this works
 //! offline. See `models/README.md`.
 
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex, OnceLock};
 
-use beat_this::{BeatThis, RtenRuntime, Runtime};
+use beat_this::{BeatThis, Model, Runtime, Tensor};
+use rten::{NodeId, RunOptions, ThreadPool, ValueView};
+use rten_tensor::Layout;
 
 use crate::analysis::{Beatgrid, MAX_BPM, MIN_BPM};
 
@@ -69,14 +72,13 @@ pub fn refine(stereo: &[f32], sample_rate: u32, hint: Option<Beatgrid>) -> Optio
 
 /// Beat and downbeat times (seconds), from the network.
 fn detect(stereo: &[f32], sample_rate: u32) -> Result<(Vec<f64>, Vec<f64>), String> {
-    type Model = <RtenRuntime as Runtime>::Model;
     // Loaded once, and run for one track at a time.
-    static TRACKER: Mutex<Option<BeatThis<Model>>> = Mutex::new(None);
+    static TRACKER: Mutex<Option<BeatThis<PooledModel>>> = Mutex::new(None);
     let mut tracker = TRACKER.lock().unwrap_or_else(|e| e.into_inner());
     if tracker.is_none() {
         let mel = model_file("beat-this-mel.onnx", MEL)?;
         let small = model_file("beat-this-small.onnx", SMALL)?;
-        *tracker = Some(BeatThis::new(&RtenRuntime, &mel, &small).map_err(|e| e.to_string())?);
+        *tracker = Some(BeatThis::new(&Pooled, &mel, &small).map_err(|e| e.to_string())?);
     }
     let bt = tracker.as_mut().expect("loaded above");
     let mut stream = bt.stream(sample_rate).map_err(|e| e.to_string())?;
@@ -90,6 +92,92 @@ fn detect(stereo: &[f32], sample_rate: u32) -> Result<(Vec<f64>, Vec<f64>), Stri
     let found = stream.finish().map_err(|e| e.to_string())?;
     let secs = |v: Vec<f32>| v.into_iter().map(f64::from).collect();
     Ok((secs(found.beats), secs(found.downbeats)))
+}
+
+/// Threads Beat This! runs on. It finds a grid in a few seconds on two,
+/// in the background, often while a set plays.
+const THREADS: usize = 2;
+
+/// The pool Beat This! runs on: [`THREADS`] threads at background priority,
+/// so finding a grid gives way to the audio and the UI. (rten's own pool
+/// takes every performance core at the default priority.)
+fn pool() -> Arc<ThreadPool> {
+    static POOL: OnceLock<Arc<ThreadPool>> = OnceLock::new();
+    POOL.get_or_init(|| {
+        let pool = ThreadPool::with_num_threads(THREADS);
+        pool.run(|| rayon::broadcast(|_| crate::background::lower()));
+        Arc::new(pool)
+    })
+    .clone()
+}
+
+/// rten, run on [`pool`], one turn on the networks at a time. Otherwise as
+/// `beat_this::RtenRuntime`.
+struct Pooled;
+
+struct PooledModel {
+    model: rten::Model,
+    inputs: HashMap<String, NodeId>,
+    outputs: Vec<(NodeId, String)>,
+}
+
+impl Runtime for Pooled {
+    type Model = PooledModel;
+
+    fn load_model(&self, path: &Path) -> anyhow::Result<PooledModel> {
+        let model = rten::Model::load_file(path)?;
+        let name = |id: NodeId| model.node_info(id)?.name().map(str::to_owned);
+        let inputs = model
+            .input_ids()
+            .iter()
+            .filter_map(|&id| Some((name(id)?, id)))
+            .collect();
+        let outputs = model
+            .output_ids()
+            .iter()
+            .map(|&id| (id, name(id).unwrap_or_else(|| format!("output_{id:?}"))))
+            .collect();
+        Ok(PooledModel {
+            model,
+            inputs,
+            outputs,
+        })
+    }
+}
+
+impl Model for PooledModel {
+    fn run(&mut self, inputs: &[(&str, &Tensor)]) -> anyhow::Result<HashMap<String, Tensor>> {
+        let inputs = inputs
+            .iter()
+            .map(|(name, t)| {
+                let id = *self
+                    .inputs
+                    .get(*name)
+                    .ok_or_else(|| anyhow::anyhow!("rten: no input named {name}"))?;
+                let view = ValueView::from_shape(t.shape.as_slice(), t.data.as_slice())
+                    .map_err(|e| anyhow::anyhow!("rten: input {name}: {e}"))?;
+                Ok((id, view.into()))
+            })
+            .collect::<anyhow::Result<Vec<_>>>()?;
+        let ids: Vec<NodeId> = self.outputs.iter().map(|(id, _)| *id).collect();
+        let opts = RunOptions::default().with_thread_pool(Some(pool()));
+        // Never beside the stem splitter (see `crate::background`).
+        let turn = crate::background::turn();
+        let values = self.model.run(inputs, &ids, Some(opts))?;
+        drop(turn);
+        self.outputs
+            .iter()
+            .zip(values)
+            .map(|((_, name), value)| {
+                let t = value
+                    .into_tensor::<f32>()
+                    .ok_or_else(|| anyhow::anyhow!("rten: output {name} isn't f32"))?;
+                let shape = t.shape().to_vec();
+                let data = t.into_data();
+                Ok((name.clone(), Tensor { shape, data }))
+            })
+            .collect()
+    }
 }
 
 /// The runtime loads models from files, so the built-in ones are written

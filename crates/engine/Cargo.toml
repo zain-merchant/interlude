@@ -19,7 +19,15 @@ thiserror = "2"
 hound = "3.5"
 # Beat and downbeat tracking (Beat This!, MIT) on the pure-Rust rten runtime.
 beat-this = { version = "1.1", default-features = false }
+# Beat This! runs on a pool of its own at background priority (see
+# `beatthis::Pooled`), so these come in directly.
+rten = { version = "0.24", default-features = false }
+rten-tensor = "0.24"
+rayon = "1"
+anyhow = "1"
 matrixmultiply = { version = "0.3", features = ["std"] }
 rustfft = "6"
 serde = { version = "1", features = ["derive"], optional = true }
 
+[target.'cfg(target_os = "macos")'.dependencies]
+libc = "0.2"

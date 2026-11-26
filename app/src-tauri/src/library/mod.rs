@@ -343,7 +343,11 @@ impl Library {
         let _ = self.app.set(app.clone());
         let _ = std::thread::Builder::new()
             .name("library-analysis".into())
-            .spawn(move || analyzer.run(app));
+            .spawn(move || {
+                // Below the audio, the UI and other apps.
+                dj_engine::background::lower();
+                analyzer.run(app)
+            });
         let _ = self.shared.set(shared);
     }
 

@@ -96,7 +96,8 @@ Everything Interlude does, in detail. For a short overview, see the
   tracks you never use stems on take no memory for them. Off makes none. A tab left open doesn't separate the next track until you
   use it. A stem pressed before its part of the track is ready pulses, and
   fades in or out once it is. On an M5 MacBook Air separating a
-  4½-minute track takes about 50 seconds. It starts at the play head and
+  4½-minute track takes about 80 seconds, on one core and at low
+  priority, so the audio and the rest of your Mac come first. It starts at the play head and
   runs ahead of it, so the part you're about to play is ready first;
   anything not ready yet plays as normal. Finished stems are kept in a
   cache (5 GB by default, oldest out first), so a track whose stems you've
