@@ -1,0 +1,6 @@
+# GitHub's language bar. Without these, the Mixxx controller scripts and the
+# website make the repo show as JavaScript instead of Rust and Svelte.
+crates/controller/mappings/** linguist-vendored
+site/demo/** linguist-generated
+site/vendor/** linguist-vendored
+site/** linguist-documentation
