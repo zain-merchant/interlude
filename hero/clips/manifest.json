@@ -1,0 +1,311 @@
+{
+ "schema": 1,
+ "source": "a22eeb1fc054be0d",
+ "fps": 30,
+ "scale": 2,
+ "codecs": [
+  "hevc",
+  "h264"
+ ],
+ "small": "@1x",
+ "steps": [
+  {
+   "name": "sync",
+   "frames": 224,
+   "blend": false
+  },
+  {
+   "name": "stems",
+   "frames": 115,
+   "blend": false
+  },
+  {
+   "name": "play",
+   "frames": 113,
+   "blend": false
+  },
+  {
+   "name": "eq",
+   "frames": 144,
+   "blend": false
+  },
+  {
+   "name": "crossfade",
+   "frames": 140,
+   "blend": false
+  },
+  {
+   "name": "stems",
+   "frames": 101,
+   "blend": false
+  },
+  {
+   "name": "stop",
+   "frames": 107,
+   "blend": false
+  },
+  {
+   "name": "reset",
+   "frames": 142,
+   "blend": false
+  },
+  {
+   "name": "load",
+   "frames": 248,
+   "blend": false
+  },
+  {
+   "name": "sync",
+   "frames": 223,
+   "blend": true
+  },
+  {
+   "name": "play",
+   "frames": 112,
+   "blend": false
+  },
+  {
+   "name": "loop",
+   "frames": 109,
+   "blend": false
+  },
+  {
+   "name": "crossfade",
+   "frames": 148,
+   "blend": false
+  },
+  {
+   "name": "unloop",
+   "frames": 97,
+   "blend": false
+  },
+  {
+   "name": "fx",
+   "frames": 127,
+   "blend": false
+  },
+  {
+   "name": "stop",
+   "frames": 100,
+   "blend": false
+  },
+  {
+   "name": "reset",
+   "frames": 94,
+   "blend": false
+  },
+  {
+   "name": "load",
+   "frames": 245,
+   "blend": false
+  },
+  {
+   "name": "sync",
+   "frames": 124,
+   "blend": true
+  },
+  {
+   "name": "stems",
+   "frames": 115,
+   "blend": false
+  },
+  {
+   "name": "play",
+   "frames": 113,
+   "blend": false
+  },
+  {
+   "name": "eq",
+   "frames": 144,
+   "blend": false
+  },
+  {
+   "name": "crossfade",
+   "frames": 140,
+   "blend": true
+  },
+  {
+   "name": "stems",
+   "frames": 101,
+   "blend": false
+  },
+  {
+   "name": "stop",
+   "frames": 107,
+   "blend": false
+  },
+  {
+   "name": "reset",
+   "frames": 142,
+   "blend": false
+  },
+  {
+   "name": "load",
+   "frames": 241,
+   "blend": false
+  },
+  {
+   "name": "sync",
+   "frames": 224,
+   "blend": false
+  },
+  {
+   "name": "play",
+   "frames": 112,
+   "blend": false
+  },
+  {
+   "name": "loop",
+   "frames": 109,
+   "blend": false
+  },
+  {
+   "name": "crossfade",
+   "frames": 148,
+   "blend": false
+  },
+  {
+   "name": "unloop",
+   "frames": 97,
+   "blend": true
+  },
+  {
+   "name": "fx",
+   "frames": 127,
+   "blend": false
+  },
+  {
+   "name": "stop",
+   "frames": 100,
+   "blend": false
+  },
+  {
+   "name": "reset",
+   "frames": 94,
+   "blend": false
+  },
+  {
+   "name": "load",
+   "frames": 253,
+   "blend": false
+  },
+  {
+   "name": "sync",
+   "frames": 224,
+   "blend": false
+  },
+  {
+   "name": "stems",
+   "frames": 114,
+   "blend": false
+  },
+  {
+   "name": "play",
+   "frames": 113,
+   "blend": false
+  },
+  {
+   "name": "eq",
+   "frames": 144,
+   "blend": false
+  },
+  {
+   "name": "crossfade",
+   "frames": 140,
+   "blend": false
+  },
+  {
+   "name": "stems",
+   "frames": 101,
+   "blend": false
+  },
+  {
+   "name": "stop",
+   "frames": 107,
+   "blend": false
+  },
+  {
+   "name": "reset",
+   "frames": 142,
+   "blend": false
+  },
+  {
+   "name": "load",
+   "frames": 296,
+   "blend": false
+  },
+  {
+   "name": "sync",
+   "frames": 124,
+   "blend": true
+  },
+  {
+   "name": "play",
+   "frames": 112,
+   "blend": false
+  },
+  {
+   "name": "loop",
+   "frames": 109,
+   "blend": false
+  },
+  {
+   "name": "crossfade",
+   "frames": 148,
+   "blend": false
+  },
+  {
+   "name": "unloop",
+   "frames": 97,
+   "blend": false
+  },
+  {
+   "name": "fx",
+   "frames": 127,
+   "blend": false
+  },
+  {
+   "name": "stop",
+   "frames": 100,
+   "blend": true
+  },
+  {
+   "name": "reset",
+   "frames": 94,
+   "blend": false
+  },
+  {
+   "name": "load",
+   "frames": 245,
+   "blend": false
+  }
+ ],
+ "modes": {
+  "mouse": {
+   "play": "app",
+   "twin": "twin"
+  },
+  "controller": {
+   "play": "app",
+   "twin": null
+  }
+ },
+ "controllerBox": {
+  "x": 360,
+  "y": 638,
+  "width": 720,
+  "height": 265
+ },
+ "controllerAway": {
+  "rest": [
+   387.79278564453125,
+   665.5999755859375,
+   664.4143676757812,
+   197.21923828125
+  ],
+  "perPx": 0.5622186279296875,
+  "dx": 0,
+  "scale": 0.9835029508720793
+ },
+ "css": "#hero { --snappy-ms: .301s; --snappy: linear(0, .101, .207, .309, .405, .491, .569, .636, .695, .745, .788, .824, .854, .88, .901, .918, .933, .945, .955, .963, .97, .975, .98, .984, .987, .989, .991, .993, .994, .995, .996, .997, .997, .998, .998, .999, .999, .999, 1); --smooth-ms: .495s; --smooth: linear(0, .065, .13, .195, .258, .318, .375, .429, .48, .528, .572, .612, .649, .684, .715, .744, .769, .793, .814, .834, .851, .867, .881, .894, .905, .915, .925, .933, .94, .947, .953, .958, .963, .967, .97, .974, .977, .979, .982, .984, .986, .987, .989, .99, .991, .992, .993, .994, .995, .995, .996, .996, .997, .997, .997, .998, .998, .998, .998, .999, .999, .999, 1); --settle-ms: .5s; --settle: linear(0, .034, .071, .111, .152, .194, .237, .279, .321, .362, .403, .442, .48, .516, .551, .584, .615, .645, .673, .699, .724, .747, .769, .789, .808, .825, .841, .856, .87, .883, .894, .905, .915, .924, .932, .939, .946, .952, .958, .963, .967, .971, .975, .978, .981, .984, .986, .988, .99, .992, .993, .994, .996, .997, .997, .998, .999, .999, 1, 1, 1, 1.001, 1.001, 1); --glide-ms: .977s; --glide: linear(0, .033, .066, .099, .133, .166, .198, .231, .262, .293, .324, .353, .382, .41, .437, .463, .488, .512, .536, .558, .58, .601, .621, .64, .658, .676, .692, .708, .724, .738, .752, .765, .778, .79, .801, .812, .822, .832, .841, .85, .858, .866, .874, .881, .887, .894, .9, .906, .911, .916, .921, .925, .93, .934, .938, .941, .945, .948, .951, .954, .957, .959, .961, .964, .966, .968, .97, .972, .973, .975, .976, .978, .979, .98, .982, .983, .984, .985, .986, .987, .987, .988, .989, .989, .99, .991, .991, .992, .992, .993, .993, .994, .994, .994, .995, .995, .995, .996, .996, .996, .996, .997, .997, .997, .997, .997, .998, .998, .998, .998, .998, .998, .998, .998, .999, .999, .999, .999, .999, .999, 1); --lock-ms: .352s; --lock: linear(0, .033, .067, .102, .137, .172, .208, .243, .277, .311, .344, .376, .407, .437, .467, .495, .522, .548, .573, .596, .619, .641, .661, .681, .7, .717, .734, .75, .765, .779, .793, .805, .817, .829, .84, .851, .862, .873, .885, .898, .912, .928, .948, .971, 1); --press-ms: .24s; --press: linear(0, .117, .248, .376, .492, .592, .676, .744, .8, .844, .879, .907, .928, .945, .958, .968, .975, .981, .986, .989, .992, .994, .995, .996, .997, .998, .998, .999, .999, .999, 1); --pulse-ms: .58s; --pulse: linear(0, .036, .077, .122, .169, .217, .265, .313, .359, .405, .448, .489, .528, .565, .6, .633, .663, .691, .718, .742, .765, .785, .804, .822, .838, .853, .866, .879, .89, .9, .91, .918, .926, .933, .939, .945, .95, .955, .96, .964, .967, .97, .973, .976, .978, .98, .982, .984, .986, .987, .988, .99, .991, .992, .992, .993, .994, .994, .995, .996, .996, .996, .997, .997, .997, .998, .998, .998, .998, .998, .999, .999, .999, 1); }\n.app-host { pointer-events: none; user-select: none; background: rgb(9, 9, 11); border-radius: 28px; width: 1440px; position: absolute; top: 0px; left: 0px; overflow: hidden; }\n.app-host { transform-origin: var(--anchor); transition: transform calc(var(--glide-ms) * .8) var(--glide); }\n#hero[data-hand=\"controller\"] .app-host { transform: perspective(2400px) rotateX(var(--tilt)) scale(.91); }\nsvg.links { z-index: 255; pointer-events: none; position: absolute; inset: 0px; overflow: visible; }\n.link-line { fill: none; stroke: rgb(255, 155, 69); stroke-width: 1.75px; stroke-linecap: round; filter: drop-shadow(rgba(0, 0, 0, 0.9) 0px 0px 1px); opacity: 0; transition: opacity var(--smooth-ms) var(--smooth); }\n.link-line.on { opacity: 1; }\n.link-spark { fill: none; stroke: rgb(255, 226, 194); stroke-width: 3px; stroke-linecap: round; filter: drop-shadow(rgb(255, 155, 69) 0px 0px 3px) drop-shadow(rgba(255, 155, 69, 0.8) 0px 0px 8px); }"
+}
