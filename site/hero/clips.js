@@ -263,7 +263,7 @@ export async function mountClips(host, opts = {}) {
   // classes and paths given once, in tables.)
   const timeline = (mode) => (tl[mode] ??= fetch(`${base}${mode}.json${v}`).then((r) => r.json()).then(({ classes, paths, steps }) => steps.map((s) => ({
     level: s.level.map((x) => x / 1000),
-    links: Object.fromEntries(Object.entries(s.links).map(([f, ls]) => [f, ls.map(([c, p, op, da, dof]) => [classes[c], paths[p], op, da, dof])])),
+    links: Object.fromEntries(Object.entries(s.links).map(([f, ls]) => [f, ls.map(([c, p, op, da, dof, ends]) => [classes[c], paths[p], op, da, dof, ends])])),
   }))));
   // (Each recording's files asked for with its own mark, so one recorded
   // again under the same names is never mixed with a cached older one.)
@@ -610,16 +610,19 @@ export async function mountClips(host, opts = {}) {
   function clearLinks() {
     while (paths.length) paths.pop().remove();
   }
-  function drawLinks(links) {
+  // hw: the frame's links as the controller's clip is showing them (its
+  // ring's end), where that clip isn't quite in step with the app's.
+  function drawLinks(links, hw = links) {
     while (paths.length > links.length) paths.pop().remove();
-    links.forEach(([cls, d, op, da, dof], k) => {
+    const places = links.some((l) => l[5]) ? boxes() : null;
+    links.forEach(([cls, d, op, da, dof, ends], k) => {
       let p = paths[k];
       if (!p) {
         p = paths[k] = document.createElementNS(NS, 'path');
         svg.append(p);
       }
       if (p.getAttribute('class') !== cls) p.setAttribute('class', cls);
-      const [path, k2] = where(d);
+      const [path, k2] = (ends && places && fromRings(d, hw[k]?.[5] ?? ends, ends, places)) || where(d);
       if (p.getAttribute('d') !== path) p.setAttribute('d', path);
       // (Dashes as long against the line as they were.)
       const dash = (v) => (k2 === 1 || !v ? v : String(v).replace(/-?[\d.]+/g, (x) => String(Math.round(x * k2 * 100) / 100)));
@@ -652,25 +655,86 @@ export async function mountClips(host, opts = {}) {
     return m;
   }
   const ctl = { scale: 1, down: 70 };
+  // Where the clips are now, in the player's own pixels: the controller's
+  // box and the app's (its clip is the flat app, 1440 wide).
+  function boxes() {
+    const r = root.getBoundingClientRect();
+    if (!r.width) return null;
+    const k = r.width / root.offsetWidth;
+    const of = (el) => { const b = el.getBoundingClientRect(); return { x: (b.left - r.left) / k, y: (b.top - r.top) / k, w: b.width / k, h: b.height / k }; };
+    const host = of(appEls[0].parentElement);
+    return { desk: of(desk), app: host, appK: host.w / 1440 };
+  }
+  // The line from the controller's ring to the app's, as the clips show the
+  // rings now: each end where the recorded line met its ring, and the bends
+  // kept as they were against the ends (out of a ring sideways stays
+  // sideways), their reach scaled with the run.
+  function fromRings(d, hwEnds, appEnds, at) {
+    const n = d.match(/-?[\d.]+/g)?.map(Number);
+    if (n?.length !== 8) return null;
+    // (A line leaves a ring from the middle of a side. The page that was
+    // recorded draws it a frame behind a ring that moves, so its end comes
+    // out a little inside: it's put back on the side.)
+    const side = (x) => (Math.abs(x - 0.5) < 0.25 ? 0.5 : x < 0.5 ? 0 : 1);
+    const [u0, v0, dx, dy, dw, dh] = hwEnds.map((x, i) => (i < 2 ? side(x) : x));
+    const [u1, v1, ax, ay, aw, ah] = appEnds.slice(6).map((x, i) => (i < 2 ? side(x) : x));
+    const sx = at.desk.w / box.width, sy = at.desk.h / box.height;
+    const P0 = { x: at.desk.x + (dx + u0 * dw) * sx, y: at.desk.y + (dy + v0 * dh) * sy };
+    const P1 = { x: at.app.x + (ax + u1 * aw) * at.appK, y: at.app.y + (ay + v1 * ah) * at.appK };
+    const [x0, y0, c0x, c0y, c1x, c1y, x1, y1] = n;
+    const k = Math.abs(y1 - y0) > 1 ? Math.max(0.3, Math.min(3, Math.abs(P1.y - P0.y) / Math.abs(y1 - y0))) : 1;
+    const f = (v) => Math.round(v * 10) / 10;
+    const C0 = { x: P0.x + (c0x - x0) * k, y: P0.y + (c0y - y0) * k }, C1 = { x: P1.x + (c1x - x1) * k, y: P1.y + (c1y - y1) * k };
+    return [`M${f(P0.x)} ${f(P0.y)} C ${f(C0.x)} ${f(C0.y)}, ${f(C1.x)} ${f(C1.y)}, ${f(P1.x)} ${f(P1.y)}`, k];
+  }
   const linksAt = (t, f) => t.links[f] || [];
   const anyLinks = (t, f, n) => { for (let k = f; k < f + n; k++) if (t.links[k]) return true; return false; };
+  // Each clip's frame as it will be on screen at the next paint: from the
+  // last frame it presented and when (frame callbacks), run on from there,
+  // so a line is drawn on the same paint as the frame it belongs to, not a
+  // frame after it. (Without frame callbacks: its time.)
+  const shown = new WeakMap();
+  function watchFrames(el, at) {
+    if (!el?.requestVideoFrameCallback || shown.has(el)) return;
+    const cb = (now, meta) => {
+      shown.set(el, { media: meta.mediaTime, at: meta.expectedDisplayTime ?? now });
+      if (linking && cur === at) el.requestVideoFrameCallback(cb);
+      else shown.delete(el);
+    };
+    shown.set(el, null);
+    el.requestVideoFrameCallback(cb);
+  }
+  let vsync = 1000 / 60;
+  function frameAt(el, now) {
+    const s = shown.get(el);
+    if (!s) return Math.round(el.currentTime * M.fps);
+    const ahead = Math.max(0, now + vsync - s.at) / 1000;
+    return Math.round(s.media * M.fps) + (el.paused ? 0 : Math.floor(ahead * M.fps * el.playbackRate + 0.02));
+  }
   function linkFrames() {
     if (linking) return;
     linking = true;
     const at = cur;
-    const frame = (now, time) => {
+    watchFrames(at.app, at);
+    if (at.ctl) watchFrames(at.ctl, at);
+    let last = 0;
+    const frame = (now) => {
       if (cur !== at || paused || at.mode !== hand) {
         linking = false;
         if (at.mode !== hand) clearLinks();
         return;
       }
-      const f = Math.round(time * M.fps);
-      drawLinks(linksAt(at.tl, f));
+      if (last) vsync = vsync * 0.9 + Math.min(50, now - last) * 0.1;
+      last = now;
+      const f = frameAt(at.app, now);
+      const fc = at.ctl ? frameAt(at.ctl, now) : f;
+      const ls = linksAt(at.tl, f);
+      drawLinks(ls, fc === f ? ls : linksAt(at.tl, fc));
       // Carry on while there are lines, or some soon.
-      if (anyLinks(at.tl, f, 4)) onFrame(at.app, frame);
+      if (anyLinks(at.tl, f, 4)) requestAnimationFrame(frame);
       else linking = false;
     };
-    onFrame(at.app, frame);
+    requestAnimationFrame(frame);
   }
 
   // A dozen times a second: the levels since the last time, the links

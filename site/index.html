@@ -58,7 +58,7 @@
   <!-- Geist, served from here (no other site to reach before the page can
        draw its text); the Latin file is fetched straight away. -->
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="style.css?v=20261125b">
+  <link rel="stylesheet" href="style.css?v=20261126a">
   <script>
     // (The phone preview's frame, opened by this same site with the Tune
     // panel showing; nothing for anyone else.)
@@ -249,9 +249,10 @@
       slider('autoafter', { label: 'Switches by itself after', folder: 'Controller', value: 3, min: 1, max: 12, step: 0.5, unit: 's', apply: (v) => (st.autoAfter = v) });
       st.reveal = 'on';
       select('reveal', { label: 'Pressing Controller scrolls', folder: 'Controller', value: 'on', options: [['on', 'To half of it, if it must'], ['off', 'Never']], apply: (v) => (st.reveal = v) });
-      // (Up: the controller's foot just past the video's, and the switch 28px
-      // under it, as it used to be. Low: as before, further below both.)
-      const SITS = { up: [24, 7], low: [70, 14] };
+      // (Up: the controller two of the library's rows lower than it was, so
+      // it covers less of the app, and the switch close under it. Low: as
+      // before, further below both.)
+      const SITS = { up: [94, 7], low: [70, 14] };
       st.ctl = { scale: 1, down: SITS.up[0] };
       select('ctlsits', { label: 'Controller sits', folder: 'Controller', value: 'up', options: [['up', 'Up, switch close'], ['low', 'Low (before)']], apply: (v, first) => { const [down, gap] = SITS[v]; st.ctl.down = down; css('--switch-gap', `${gap}px`); fire('try-controller'); fire('try-rec'); if (!first) { T.set('Try: Controller, down (px)', down); T.set('Try: Switch, clear of it (px)', gap); } } });
       slider('ctldown', { label: 'Controller, down (px)', folder: 'Controller', value: SITS.up[0], min: 0, max: 130, step: 2, apply: (v, first) => { if (first && !q.has('ctldown')) return; st.ctl.down = v; fire('try-controller'); } });
@@ -1071,7 +1072,9 @@
            the maker. -->
       <aside class="founder" aria-label="A note from the maker">
         <h3>Hi, I'm Zain.</h3>
-        <p class="founder-body">I've been DJing for eight years and coding for longer. Interlude is the DJ app I always wanted. I hope you enjoy it.</p>
+        <p class="founder-body">I've been DJing for eight years and coding for longer. Interlude is the DJ app I always wanted.</p>
+        <!-- (The sign-off with the ask, at the foot, as a letter closes.) -->
+        <p class="founder-close">I hope you enjoy it.</p>
         <p class="founder-ask">Have a question? <a href="https://github.com/zain-merchant/interlude/issues/new" target="_blank" rel="noopener">Ask me on GitHub</a></p>
         <!-- Signed by hand: one line, written in as the note comes into view. -->
         <svg class="founder-sig" viewBox="0 0 176 70" role="img" aria-label="Zain">
@@ -1919,7 +1922,7 @@
           clipsHost.setAttribute('aria-hidden', 'true');
           live.after(clipsHost);
           try {
-            const { mountClips } = await import('./hero/clips.js?v=20261123f');
+            const { mountClips } = await import('./hero/clips.js?v=20261126a');
             clips = await mountClips(clipsHost, {
               base: 'hero/clips/', hand: mode, paused: true, log: q.has('log'),
               onReady: () => {

@@ -116,6 +116,11 @@ svg.links { position: absolute; inset: 0; z-index: 255; pointer-events: none; ov
   opacity: 0; transition: opacity var(--smooth-ms) var(--smooth);
 }
 .link-mark.on { opacity: 1; }
+/* A mark is put in its control's own layout box, and some boxes style every
+   child they have (the decks' panels: a glass fill, a blur, a shadow). A
+   mark is only ever its outline: nothing of theirs, or it would cover the
+   control it's round. */
+#hero .link-mark { background-color: transparent !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; box-shadow: 0 0 0 1px rgb(0 0 0 / 0.35), inset 0 0 0 1px rgb(0 0 0 / 0.35) !important; }
 .link-line {
   fill: none; stroke: #ff9b45; stroke-width: 1.75; stroke-linecap: round;
   filter: drop-shadow(0 0 1px rgb(0 0 0 / 0.9));

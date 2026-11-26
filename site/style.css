@@ -438,6 +438,7 @@ pre {
 .founder-body { margin: 0 0 18px; }
 .founder-body i { display: block; width: var(--w); height: 9px; border-radius: 5px; background: rgb(255 255 255 / 0.07); }
 .founder-body i.gap { margin-top: 8px; }
+.founder-close { margin: 0 0 14px; color: var(--fg); }
 .founder-ask { margin: 0 0 6px; }
 .founder-ask a { color: var(--fg); text-decoration: underline; text-decoration-color: rgb(236 234 228 / 0.35); text-underline-offset: 3px; }
 @media (hover: hover) and (pointer: fine) { .founder-ask a:hover { text-decoration-color: var(--fg); } }
@@ -2072,7 +2073,11 @@ html[data-note="sleeve"] .rec {
 /* (The page cuts it at the window's edge, never a section's.) */
 body { overflow-x: clip; }
 html[data-note="sleeve"] .founder h3 { color: #17140e; margin: 0 0 12px; }
-html[data-note="sleeve"] .founder-body { margin-bottom: 14px; color: #3a352b; font-size: 13.5px; line-height: 1.5; }
+html[data-note="sleeve"] .founder-body { margin-bottom: 14px; color: #3a352b; font-size: 13.5px; line-height: 1.5; text-wrap: pretty; }
+/* The sign-off sits with the ask at the foot, clear of the window: the
+   body's three lines above, its own line below, left of the record. */
+html[data-note="sleeve"] .founder-close { margin: auto 0 12px; color: #3a352b; font-size: 13.5px; line-height: 1.4; white-space: nowrap; }
+html[data-note="sleeve"] .founder-close + .founder-ask { margin-top: 0; }
 html[data-note="sleeve"] .founder-body i.gap { margin-top: 6px; }
 html[data-note="sleeve"] .founder-body i { background: rgb(28 24 18 / 0.11); }
 html[data-note="sleeve"] .founder-body i:nth-child(n + 5) { width: min(var(--w), 48%); }
