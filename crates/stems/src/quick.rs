@@ -150,10 +150,13 @@ pub fn make(model: &Path) -> Result<(), Error> {
     }
     let building = dir.join(format!("{stem}{UNFINISHED}"));
     let made = (|| {
+        // Optimising takes seconds of heavy work: not beside Beat This!.
+        let turn = dj_engine::background::turn();
         let session = model::builder(GraphOptimizationLevel::Level2, model::THREADS)?
             .with_optimized_model_path(&building)?
             .commit_from_file(model)?;
         drop(session);
+        drop(turn);
         fs::File::open(&building)?.sync_all()?;
         let hash = file_sha256(&building)?;
         let path = dir.join(format!("{stem}.{key}.{}{SUFFIX}", &hash[..16]));

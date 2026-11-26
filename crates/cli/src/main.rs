@@ -6,7 +6,8 @@
 //!   dj play <a> [b]                        play A, then crossfade into B
 //!   dj midi [secs]                         print what MIDI controllers send
 //!   dj mappings [dir...]                   list controller mappings and how much of each works
-//!   dj latency [secs]                      play two decks hard and report audio timing
+//!   dj latency [secs] [file]               play two decks hard and report audio timing,
+//!                                          loading and analyzing `file` over and over meanwhile
 
 use std::sync::Arc;
 use std::time::{Duration, Instant};
@@ -25,10 +26,13 @@ fn main() {
         Some("midi") => midi(args.get(1).and_then(|s| s.parse().ok())),
         Some("mappings") => mappings(&args[1..]),
         Some("accuracy") => accuracy(args.get(1).map(String::as_str)),
-        Some("latency") => latency(args.get(1).and_then(|s| s.parse().ok()).unwrap_or(10)),
+        Some("latency") => latency(
+            args.get(1).and_then(|s| s.parse().ok()).unwrap_or(10),
+            args.get(2).map(String::as_str),
+        ),
         _ => {
             eprintln!(
-                "usage:\n  dj info <file>\n  dj render <a> <b> <out.wav> [secs]\n  dj play <a> [b]\n  dj midi [secs]\n  dj mappings [dir...]\n  dj accuracy [controller dir]\n  dj latency [secs]"
+                "usage:\n  dj info <file>\n  dj render <a> <b> <out.wav> [secs]\n  dj play <a> [b]\n  dj midi [secs]\n  dj mappings [dir...]\n  dj accuracy [controller dir]\n  dj latency [secs] [file]"
             );
             std::process::exit(2);
         }
@@ -243,7 +247,11 @@ fn play(a: &str, b: Option<&str>) -> Result<()> {
 /// the real output, quietly, and prints the stream's timing every second:
 /// buffer size, the driver's output latency, the slowest render and any
 /// late callbacks. Set `INTERLUDE_BUFFER_FRAMES` to try other buffer sizes.
-fn latency(secs: u64) -> Result<()> {
+///
+/// With `busy`, a file keeps being loaded and its grid found with Beat
+/// This! in the background, the work the app does after every track load,
+/// to show whether that starves the audio.
+fn latency(secs: u64, busy: Option<&str>) -> Result<()> {
     let (output, mut h) = dj_engine::output::start_preferring(&["DDJ-FLX4"])?;
     let sr = output.sample_rate;
     eprintln!("output: {} at {sr} Hz", output.device_name);
@@ -254,7 +262,30 @@ fn latency(secs: u64) -> Result<()> {
         })
         .collect();
     let track = Arc::new(Track::from_stereo(tone, sr));
-    send(&mut h, Command::SetMasterGain { db: -40.0 });
+    send(
+        &mut h,
+        Command::SetMasterGain {
+            db: if busy.is_some() { -60.0 } else { -40.0 },
+        },
+    );
+    let stop = Arc::new(std::sync::atomic::AtomicBool::new(false));
+    let worker = busy.map(|path| {
+        let (path, stop) = (path.to_owned(), stop.clone());
+        std::thread::spawn(move || {
+            use std::sync::atomic::Ordering::Relaxed;
+            while !stop.load(Relaxed) {
+                let Ok(t) = Track::load(&path) else { return };
+                let t0 = Instant::now();
+                let found =
+                    dj_engine::beatthis::refine(&t.samples, t.sample_rate, t.beatgrid).is_some();
+                eprintln!(
+                    "beat this: {} in {:.1} s",
+                    if found { "found a grid" } else { "no grid" },
+                    t0.elapsed().as_secs_f64()
+                );
+            }
+        })
+    });
     for deck in DeckId::ALL {
         send(
             &mut h,
@@ -273,14 +304,19 @@ fn latency(secs: u64) -> Result<()> {
         let s = output.stats();
         let budget = s.buffer_frames as f64 / sr as f64 * 1e6;
         println!(
-            "buffer {} frames ({:.1} ms), output latency {:.1} ms, slowest render {} µs ({:.0}% of budget), late callbacks {}",
+            "buffer {} frames ({:.1} ms), output latency {:.1} ms, slowest render {} µs ({:.0}% of budget), late callbacks {}, overloads {}",
             s.buffer_frames,
             budget / 1000.0,
             s.output_latency_ms,
             s.max_render_us,
             s.max_render_us as f64 / budget * 100.0,
-            s.late_callbacks
+            s.late_callbacks,
+            s.overloads
         );
+    }
+    stop.store(true, std::sync::atomic::Ordering::Relaxed);
+    if let Some(w) = worker {
+        let _ = w.join();
     }
     Ok(())
 }

@@ -307,10 +307,12 @@
   }
 
   // Decode the selected track ahead, so Load (on screen, the keyboard or a
-  // controller) finds it ready. Waits for the selection to settle, so
-  // browsing through the list doesn't decode every row on the way. Not
-  // the row selected by default when the library opens: only one picked.
-  const PRELOAD_MS = 150;
+  // controller) finds it ready. Waits for the selection to settle for a
+  // second, so scrolling through the list doesn't decode and analyze every
+  // row on the way (about a second of CPU each). Loading sooner decodes it
+  // then, which takes well under a second. Not the row selected by default
+  // when the library opens: only one picked.
+  const PRELOAD_MS = 1000;
   let picked = false;
   $effect(() => {
     const t = sorted[selected];

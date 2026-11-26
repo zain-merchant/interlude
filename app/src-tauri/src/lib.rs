@@ -722,6 +722,7 @@ fn refine_grid(app: tauri::AppHandle, deck: usize, track: Arc<Track>) {
         return;
     };
     std::thread::spawn(move || {
+        dj_engine::background::lower();
         let started = std::time::Instant::now();
         let Some(refined) =
             dj_engine::beatthis::refine(&track.samples, track.sample_rate, track.beatgrid)

@@ -12,7 +12,7 @@ use std::path::Path;
 use std::sync::Mutex;
 use std::time::Instant;
 
-use ort::environment::Environment;
+use ort::environment::{Environment, ThreadManager};
 use ort::session::builder::{AutoDevicePolicy, GraphOptimizationLevel, SessionBuilder};
 use ort::session::Session;
 use ort::value::Tensor;
@@ -28,8 +28,12 @@ const OUT_BASS: usize = 1;
 const OUT_VOCALS: usize = 3;
 const OUT_STEMS: usize = 4;
 
-/// Threads the model runs on.
-pub const THREADS: usize = 2;
+/// Threads the model runs on. One: it splits a track about four times
+/// faster than it plays on an M5 that way (2.0 s a segment), and a second
+/// thread buys only 40% more speed for 35% more CPU time (1.2 s a segment,
+/// 2.4 s of CPU against 1.7). Splitting runs whenever a track loads, so the
+/// CPU time is what the rest of the Mac feels.
+pub const THREADS: usize = 1;
 /// Threads it runs on for the first region, where that's worth it and safe.
 pub const FIRST_THREADS: usize = 4;
 
@@ -88,9 +92,8 @@ pub(crate) fn builder(
     threads: usize,
 ) -> Result<SessionBuilder, Error> {
     let env = environment()?;
-    // The model barely gains past two threads (on an M5: 1.46 s per
-    // segment on one, 1.21 s on two, 1.07 s on four), so two keeps it
-    // fast while leaving the rest for the audio thread and the UI.
+    // Any threads ONNX Runtime starts for it work at background priority,
+    // like the splitter's own (see `dj_engine::background`).
     // Without the arena and memory pattern, memory stays flat from one
     // segment to the next (about 0.5 GB less at peak) for under 3% speed.
     // ort turns on automatic device selection by default, which on macOS
@@ -100,8 +103,32 @@ pub(crate) fn builder(
         .with_auto_device(AutoDevicePolicy::PreferCPU)?
         .with_optimization_level(level)?
         .with_intra_threads(threads)?
+        .with_thread_manager(Background)?
         .with_memory_pattern(false)?
         .with_execution_providers([ort::ep::CPU::default().with_arena_allocator(false).build()])?)
+}
+
+/// Starts ONNX Runtime's threads at background priority, so splitting
+/// gives way to the audio, the UI and other apps.
+struct Background;
+
+impl ThreadManager for Background {
+    type Thread = std::thread::JoinHandle<()>;
+
+    fn create(&self, work: impl FnOnce() + Send + 'static) -> ort::Result<Self::Thread> {
+        std::thread::Builder::new()
+            .name("stems-model".into())
+            .spawn(move || {
+                dj_engine::background::lower();
+                work();
+            })
+            .map_err(|e| ort::Error::new(e.to_string()))
+    }
+
+    fn join(thread: Self::Thread) -> ort::Result<()> {
+        let _ = thread.join();
+        Ok(())
+    }
 }
 
 /// A loaded separation model.
@@ -140,7 +167,9 @@ impl Model {
 
     fn open(path: &Path, threads: usize) -> Result<Self, Error> {
         let started = Instant::now();
+        let turn = dj_engine::background::turn();
         let session = builder(GraphOptimizationLevel::All, threads)?.commit_from_file(path)?;
+        drop(turn);
         let segment = Self::check_shapes(&session)?;
         eprintln!(
             "stems: model loaded in {:.1} s",
@@ -184,7 +213,10 @@ impl Model {
         mix.extend_from_slice(left);
         mix.extend_from_slice(right);
         let input = Tensor::<f32>::from_array(([1usize, 2, n], mix))?;
+        // Never beside Beat This! (see `dj_engine::background`).
+        let turn = dj_engine::background::turn();
         let outputs = self.session.run(ort::inputs![input])?;
+        drop(turn);
         let (_, data) = outputs[0].try_extract_tensor::<f32>()?;
         if data.len() != OUT_STEMS * 2 * n {
             return Err(Error::Model(format!(
