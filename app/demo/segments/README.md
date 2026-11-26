@@ -17,7 +17,8 @@ It builds the demo into a work folder (the system's temp folder, or
 `--work DIR`), records, encodes into `site/hero/clips/`, and writes the
 poster (`site/img/screenshot*.jpg` and `.avif`, the loop's first frame).
 It takes a while (on an M1 Pro: about 2 hours to record both hands, then
-the encoding), and needs ffmpeg with libx264, libx265 (and libsvtav1 for
+the encoding; with `--gpu`, below, each frame takes about half as long),
+and needs ffmpeg with libx264, libx265 (and libsvtav1 for
 `--codecs av1`), and ImageMagick (`magick`) for comparing the hands'
 pictures. Then publish the set (below); nothing to commit.
 
@@ -62,16 +63,32 @@ naming the newest. `app/scripts/hero-clips.mjs` does both ends:
 - **Bump the schema** (`CLIPS_SCHEMA` in `clips.js`, and the manifest the
   recorder writes) only when the player can't play older sets any more.
 
-On GitHub: Actions, Hero clips, Run workflow (`.github/workflows/hero-clips.yml`)
-does the same on GitHub's Macs, each hand in parts so no job runs out of
-time. It leaves the set as a download on the run, or publishes it if
-"Publish the set" is ticked.
+On GitHub (`.github/workflows/hero-clips.yml`) it runs by itself after a
+push to main that touches `app/src`, `app/demo` or the lockfile (tests
+aside: they're not in the hash either), publishes the set, and then the site
+with it (`.github/workflows/site.yml`). It stops after a minute if the hash
+is the published set's. It spreads the work out: the plan, then the
+recording split between 5 Macs at once (GitHub's limit), in one go, no Mac
+waiting for another to finish; then each Mac's masters encoded in up to
+four slices, a Linux runner each (`--only`); and a last Mac puts the set
+together and publishes it. `--phase parts --jobs 5` does the split: steps
+of about the same cost a Mac, by each hand's cost a frame and the time it
+takes a Mac to get to its first step (it replays the script there), so a
+Mac may record the end of one hand and then the start of the other. By
+hand: Actions, Hero clips, Run workflow records whatever the hash unless
+"Only if ... changed" is ticked, and publishes only if "Publish" is ticked;
+"Macs" and "GPU" are there to try other splits, or the GPU.
 
 Options (`node demo/segments/record.mjs ...`):
 
 - `--if-changed`: nothing to do if the clips are up to date.
 - `--jobs 3`: recording processes per hand. More is not faster on a laptop
   (the GPU and memory are the limit, not the cores).
+- `--profile`: with `--part`, where each frame's time goes (captures, the
+  lines, the clock), every 60 frames and at the end, with the frames so far
+  and their time in all.
+- `--gpu`: with the plan, record with Chrome drawing on the Mac's GPU where
+  it can: about twice as fast, not quite the same pixels (below).
 - `--codecs hevc,h264`: add `av1` for AV1 too (it only plays where the
   browser decodes it in hardware, and was barely smaller than HEVC here).
 - `--phase plan|record|encode`: one stage at a time; `--keep` keeps the
@@ -100,7 +117,14 @@ levels from run to run).
    (the engine at every boundary must match between the hands, play heads
    within 12 ms). A step is one move: putting an EQ or the echo back after a
    stop, or letting a loop go after a crossfade, are steps of their own.
-3. **Recording**, each hand in parts at once, each part in a real 2x window.
+3. **Recording**, each hand in parts at once, each part in a real 2x window,
+   in Chrome's software renderer (its default without a screen); or with
+   `--gpu`, drawn by the Mac's GPU (Metal) where Chrome has one, each
+   capture in about half the time. The two don't draw quite the same pixels
+   (the app within a few levels, at edges; the controller, tipped back in
+   3D, with the edge of its top a few pixels lower), so the plan finds out
+   which one its Mac draws with and every part must draw with the same, or
+   it stops: parts that don't match wouldn't join up.
    Each frame, in layers:
    - the app alone, flat (the page tips it back itself in the controller
      hand), without the controller or the link lines; in the mouse hand
