@@ -43,6 +43,11 @@ const BASE_CSS = `
 .hero-clips .app-host { height: 900px; }
 .hero-clips video { position: absolute; inset: 0; width: 100%; height: 100%; display: block; z-index: 0; }
 .hero-clips video.front { z-index: 1; }
+/* The controller's picture, where it's painted from its clip (deskPic,
+   below): the clips themselves stay in place, playing, unseen. */
+.hero-clips .desk canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: none; z-index: 1; }
+.hero-clips[data-deskpic] .desk canvas { display: block; }
+.hero-clips[data-deskpic] .desk video { visibility: hidden; }
 .hero-clips video.going { z-index: 2; opacity: 0; transition: opacity 180ms cubic-bezier(0.4, 0, 1, 1); }
 .hero-clips video.coming { z-index: 3; animation: hero-clips-in var(--in, 180ms) cubic-bezier(0.2, 0, 0, 1) both; }
 @keyframes hero-clips-in { from { opacity: 0; } to { opacity: 1; } }
@@ -115,7 +120,7 @@ export async function mountClips(host, opts = {}) {
   const root = document.createElement('div');
   root.className = 'hero-clips';
   root.innerHTML = `<div class="app-host"><video muted playsinline></video><video muted playsinline></video><video muted playsinline></video></div>
-    <div class="desk"><video muted playsinline></video><video muted playsinline></video><i class="glint" aria-hidden="true"></i></div>
+    <div class="desk"><video muted playsinline></video><video muted playsinline></video><canvas></canvas><i class="glint" aria-hidden="true"></i></div>
     <svg class="links" width="1440" height="920"></svg>`;
   host.append(root);
   if (!document.getElementById('hero-clips-css')) {
@@ -156,6 +161,33 @@ export async function mountClips(host, opts = {}) {
     }).catch(() => {});
   }
   for (const v of [...appEls, ...ctlEls]) Object.assign(v, { muted: true, playsInline: true, disablePictureInPicture: true, preload: 'auto' });
+
+  // The controller painted into a canvas, frame by frame, in Chromium: with
+  // two videos playing in view (the app's and the controller's), it slows
+  // the whole page to the videos' 30 frames a second (to save power, it
+  // seems: measured on an M5, scrolling the hero ran at 30 while both were
+  // on screen, 60 with either alone, at any size or codec). A canvas is just
+  // the page, so only the app's clip counts as a video. Elsewhere, and where
+  // there are no frame callbacks, the clips show as they are.
+  const deskCanvas = desk.querySelector('canvas');
+  const deskCtx = /Chrome\//.test(navigator.userAgent) && 'requestVideoFrameCallback' in HTMLVideoElement.prototype ? deskCanvas.getContext('2d') : null;
+  const deskPaint = (el) => {
+    if (!deskCtx || !el.classList.contains('front') || !el.videoWidth) return;
+    if (deskCanvas.width !== el.videoWidth || deskCanvas.height !== el.videoHeight) {
+      deskCanvas.width = el.videoWidth;
+      deskCanvas.height = el.videoHeight;
+    }
+    try {
+      deskCtx.drawImage(el, 0, 0);
+      root.dataset.deskpic = '';
+    } catch {
+      delete root.dataset.deskpic;
+    }
+  };
+  if (deskCtx) for (const el of ctlEls) {
+    const each = () => { deskPaint(el); el.requestVideoFrameCallback(each); };
+    el.requestVideoFrameCallback(each);
+  }
 
   const STEPS = M.steps.map((s, i) => ({ ...s, i }));
   const N = STEPS.length;
@@ -384,6 +416,7 @@ export async function mountClips(host, opts = {}) {
   function front(el, els, how = 'cut') {
     onFrame(el, () => {
       el.classList.add('front');
+      if (els === ctlEls) deskPaint(el);
       if (how === 'in') {
         // Fades in over the rest, which stays as it is until then.
         el.classList.add('coming');

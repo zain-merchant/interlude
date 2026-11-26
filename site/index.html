@@ -1956,7 +1956,7 @@
           clipsHost.setAttribute('aria-hidden', 'true');
           live.after(clipsHost);
           try {
-            const { mountClips } = await import('./hero/clips.js?v=20261126a');
+            const { mountClips } = await import('./hero/clips.js?v=20261126b');
             clips = await mountClips(clipsHost, {
               base: 'hero/clips/', hand: mode, paused: true, log: q.has('log'),
               onReady: () => {
