@@ -48,7 +48,7 @@ Tauri signs the app and sends it to Apple to notarize (a few minutes).
 
 ## The website
 
-The website is `site/`, plain HTML and CSS, with no CI. Its animated
+The website is `site/`, plain HTML and CSS. Its animated
 parts are built from the app: the hero's demo and the feature cards'
 pictures (`site/demo`, committed) and the hero's recorded clips and poster
 (`site/hero/clips` and `site/img/screenshot*`, not in git: they're kept in
@@ -67,6 +67,11 @@ replaces the branch's history, so agree the switch with the repo owner):
 npm --prefix app run site:pages     # prints the push, e.g.:
 git push --force origin <commit>:refs/heads/gh-pages
 ```
+The Site workflow (`.github/workflows/site.yml`) does all of this by
+itself after a push to main that touches `site/`, and after Hero clips
+publishes a new set (it builds the hero's demo fresh rather than taking the
+committed one); or Actions, Site, Run workflow.
+
 It's served at [interludedj.com](https://interludedj.com) (`site/CNAME`;
 DNS at Namecheap points the domain at GitHub Pages).
 

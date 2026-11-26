@@ -20,7 +20,9 @@
 // pages    makes the commit to publish the site from: what is committed in
 //          site/, plus the clips and poster, which git doesn't keep, and
 //          without site/lab/ (pages for working on the site, never
-//          published). Prints the push; pushes nothing.
+//          published). Prints the push; pushes nothing, unless --push
+//          (the Site workflow). --built-demo takes site/demo as built
+//          (npm run build:site), not as committed.
 //
 // The repo: --repo, else $HERO_CLIPS_REPO, else "config.heroClipsRepo" in
 // app/package.json.
@@ -218,10 +220,21 @@ function pages() {
     // site/lab/ is for working on the site (galleries, auditions, trials):
     // it's served locally but never published.
     git(['rm', '-r', '--cached', '--quiet', '--ignore-unmatch', '--', 'lab'], env);
+    // (--built-demo: site/demo as just built, not as committed.)
+    if (args['built-demo']) {
+      git(['rm', '-r', '--cached', '--quiet', '--ignore-unmatch', '--', 'demo'], env);
+      execFileSync('git', ['--work-tree', '.', 'add', '-f', '--', 'demo'], { cwd: SITE, env: { ...process.env, ...env } });
+    }
     execFileSync('git', ['--work-tree', '.', 'add', '-f', '--', ...setFiles(m).map((f) => `hero/clips/${f}`), ...POSTER.map((p) => `img/${p}`)], { cwd: SITE, env: { ...process.env, ...env } });
     const tree = git(['write-tree'], env);
     const head = git(['rev-parse', '--short', 'HEAD']);
     const commit = git(['-c', 'commit.gpgsign=false', 'commit-tree', tree, '-m', `Site at ${head}, hero clips ${m.source}`]);
+    if (args.push) {
+      // (Replaces the branch: one commit, so old sets don't pile up in it.)
+      execFileSync('git', ['push', '--force', 'origin', `${commit}:refs/heads/gh-pages`], { cwd: ROOT, stdio: 'inherit' });
+      say(`published the site: ${commit} (site/ at ${head}, clips ${m.source}) is gh-pages`);
+      return;
+    }
     say(`site commit ${commit} (site/ at ${head}, clips ${m.source}). One commit with no history, so old sets don't pile up in gh-pages. To publish:`);
     console.log(`  git push --force origin ${commit}:refs/heads/gh-pages`);
   } finally {

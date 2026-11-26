@@ -461,13 +461,29 @@ async function recordPart(mode, a, b) {
       enc = open1(k);
       tl = timelines[k] = { level: [], links: [] };
     }
-    const t = await page.evaluate(() => {
+    // The lines, and where their two rings are: the controller's in its
+    // box, as the controller's clip has it; the app's flat, as the app's clip
+    // has it (measured below); and where on each ring the line meets it.
+    // The page draws each line from its rings, wherever it puts the clips.
+    const t = await page.evaluate((box) => {
+      const h = document.getElementById('hero').getBoundingClientRect();
+      const rect = (m) => { const r = m.getBoundingClientRect(); return [r.left - h.left, r.top - h.top, r.width, r.height]; };
+      const marks = [...document.querySelectorAll('.link-mark')];
+      const hw = marks.find((m) => m.closest('.desk')), app = marks.find((m) => m.closest('.app-host'));
+      const r = (v) => Math.round(v * 10) / 10;
       const links = [...document.querySelectorAll('svg.links > path')].map((p) => {
         const cs = getComputedStyle(p);
-        return [p.getAttribute('class'), p.getAttribute('d'), +(+cs.opacity).toFixed(3), cs.strokeDasharray, cs.strokeDashoffset];
+        const l = [p.getAttribute('class'), p.getAttribute('d'), +(+cs.opacity).toFixed(3), cs.strokeDasharray, cs.strokeDashoffset];
+        const n = p.getAttribute('d')?.match(/-?[\d.]+/g)?.map(Number);
+        if (hw && app && n?.length === 8) {
+          const a = rect(hw), b = rect(app);
+          const uv = (x, y, q) => [r((x - q[0]) / Math.max(1, q[2]) * 1000) / 1000, r((y - q[1]) / Math.max(1, q[3]) * 1000) / 1000];
+          l.push([...uv(n[0], n[1], a), r(a[0] - box.x), r(a[1] - box.y), r(a[2]), r(a[3]), ...uv(n[6], n[7], b)]);
+        }
+        return l;
       });
       return { level: Math.round(window.__level * 1000) / 1000, links };
-    });
+    }, box);
     tl.level[f] = t.level;
     tl.links[f] = t.links.length ? t.links : 0;
     // The controller alone: with the controller hand's fingertip on it,
@@ -477,6 +493,16 @@ async function recordPart(mode, a, b) {
     // The app alone, flat; and in the mouse hand with the arrow too. (The
     // mouse hand's flat one is its twin, only ever played at 1x: taken at 1x.)
     await hide('.desk, .ss-cursor, svg.links { visibility: hidden !important; } .app-host { transform: none !important; }');
+    // (The app's ring, flat.)
+    if (t.links.some((l) => l[5])) {
+      const at = await page.evaluate(() => {
+        const h = document.getElementById('hero').getBoundingClientRect();
+        const m = [...document.querySelectorAll('.link-mark')].find((e) => e.closest('.app-host'));
+        const r = m?.getBoundingClientRect();
+        return r && [r.left - h.left, r.top - h.top, r.width, r.height].map((v) => Math.round(v * 10) / 10);
+      });
+      for (const l of t.links) if (l[5]) { if (at) l[5].push(...at); else l.length = 5; }
+    }
     const flat = Buffer.from(await shot({ x: 0, y: 0, width: W, height: H }, mode === 'mouse' ? 1 / SCALE : 1), 'base64');
     await enc.app.write(flat);
     if (f === 0) fs.writeFileSync(path.join(boundsDir, `${mode}-${k}.png`), flat);
@@ -627,7 +653,10 @@ if (PHASE === 'all' || PHASE === 'encode') {
   }
 
   // Timelines: per hand, one file: levels as thousandths; link lines only on
-  // the frames that have them, each [class, path, opacity, dash, offset] with
+  // the frames that have them, each [class, path, opacity, dash, offset,
+  // ends] (ends: where the line meets the controller's ring [u, v] and that
+  // ring in the controller's box [x, y, w, h], then the app's ring the same
+  // way, flat), with
   // the classes and paths in tables (a few hundred paths, used again and
   // again) and numbers to a tenth of a pixel.
   for (const mode of MODES) {
@@ -638,7 +667,7 @@ if (PHASE === 'all' || PHASE === 'encode') {
     const steps = STEPS.map((k) => {
       const t = JSON.parse(fs.readFileSync(path.join(WORK, `timeline-${mode}-${k}.json`), 'utf8'));
       const links = {};
-      t.links.forEach((l, f) => { if (l) links[f] = l.map(([c, d, op, da, dof]) => [idx(classes, c), idx(paths, tenth(d)), op, tenth(da), tenth(dof)]); });
+      t.links.forEach((l, f) => { if (l) links[f] = l.map(([c, d, op, da, dof, ends]) => [idx(classes, c), idx(paths, tenth(d)), op, tenth(da), tenth(dof), ...(ends?.length === 12 ? [ends] : [])]); });
       return { level: t.level.map((x) => Math.round((x ?? 0) * 1000)), links };
     });
     fs.writeFileSync(path.join(OUT, `${mode}.json`), JSON.stringify({ classes, paths, steps }));
