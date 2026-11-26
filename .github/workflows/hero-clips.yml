@@ -1,6 +1,6 @@
 # Records the website hero's clips and publishes them to the hero-clips
-# pre-release (app/demo/segments/README.md). Started by hand: Actions, Hero
-# clips, Run workflow.
+# pre-release (app/demo/segments/README.md), and with Publish, the site with
+# them (Site). Started by hand: Actions, Hero clips, Run workflow.
 #
 # A job may take 6 hours at most and a hand takes longer than that on one
 # runner, so each hand is recorded in parts, a runner each: plan the loop,
@@ -120,3 +120,12 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: npm run clips:publish -- --repo "$GITHUB_REPOSITORY"
+
+  # The site with the new set. (A push made with this run's token doesn't
+  # start other workflows, so Site is called from here.)
+  site:
+    needs: encode
+    if: inputs.publish && github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
+    uses: ./.github/workflows/site.yml

@@ -1,0 +1,50 @@
+# Publishes the website (site/) to gh-pages, served at interludedj.com: what
+# `npm run site:pages` and its push do by hand (docs/releasing.md), with the
+# hero's demo built fresh and the newest published clips.
+#
+# Runs after a push to main that touches site/, after Hero clips publishes a
+# new set (it calls this), or by hand. Always from main as it is now, so a
+# run that started earlier never puts back an older site.
+name: Site
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - site/**
+      - '!site/lab/**'
+  workflow_dispatch:
+  workflow_call:
+
+# The newest run wins: it publishes everything the older one would have.
+concurrency:
+  group: site
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+defaults:
+  run:
+    working-directory: app
+
+jobs:
+  publish:
+    # (Hero clips calls this from a test run on a branch too: only main publishes.)
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with: { ref: main }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: app/package-lock.json }
+      - run: npm ci
+      - run: npm run build:site
+      - run: npm run clips:fetch -- --repo "$GITHUB_REPOSITORY"
+      - env:
+          GIT_AUTHOR_NAME: github-actions[bot]
+          GIT_AUTHOR_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+          GIT_COMMITTER_NAME: github-actions[bot]
+          GIT_COMMITTER_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+        run: node scripts/hero-clips.mjs pages --built-demo --push
