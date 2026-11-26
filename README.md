@@ -16,11 +16,16 @@
 
 ![Interlude with two tracks playing in sync: waveforms on top, two decks around the mixer, the library below](docs/screenshot.jpg)
 
-Interlude is a two-deck DJ app with no account and no subscription. What's
-not there yet is listed in [docs/parity.md](docs/parity.md).
+Interlude is a two-deck DJ app with no account and no subscription.
 
 ## What you get
 
+- **Beautiful to use.** A calm, clear interface that keeps your set in
+  front of you, with every control where your hands expect it.
+- **Fast.** Instant library search, and an audio engine written in Rust
+  that stays light on your Mac.
+- **Everything you'd expect from pro DJ software.** Sync, stems, effects,
+  Rekordbox and Serato import, and full controller support, for free.
 - **Decks.** BPM, key and beatgrid found on load, sync, hot cues, loops,
   slip and key lock.
 - **Mixer and effects.** 3-band EQ with kills, filter, beat-timed effects,
