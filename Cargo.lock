@@ -985,7 +985,7 @@ dependencies = [
 
 [[package]]
 name = "dj-cli"
-version = "0.1.6"
+version = "0.1.7"
 dependencies = [
  "dj-controller",
  "dj-engine",
@@ -994,7 +994,7 @@ dependencies = [
 
 [[package]]
 name = "dj-controller"
-version = "0.1.6"
+version = "0.1.7"
 dependencies = [
  "dj-engine",
  "hidapi",
@@ -1005,7 +1005,7 @@ dependencies = [
 
 [[package]]
 name = "dj-engine"
-version = "0.1.6"
+version = "0.1.7"
 dependencies = [
  "anyhow",
  "beat-this",
@@ -1025,7 +1025,7 @@ dependencies = [
 
 [[package]]
 name = "dj-stems"
-version = "0.1.6"
+version = "0.1.7"
 dependencies = [
  "dj-engine",
  "libc",
@@ -2086,7 +2086,7 @@ dependencies = [
 
 [[package]]
 name = "interlude"
-version = "0.1.6"
+version = "0.1.7"
 dependencies = [
  "base64 0.23.1",
  "chrono",
