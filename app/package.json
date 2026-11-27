@@ -23,6 +23,7 @@
     "build:site:all": "npm run build:site && node scripts/hero-clips.mjs fetch && node demo/segments/record.mjs --if-changed"
   },
   "dependencies": {
+    "@fontsource-variable/geist-mono": "^5.3.0",
     "@tauri-apps/api": "^2.9.0",
     "@tauri-apps/plugin-dialog": "^2.4.0",
     "@tauri-apps/plugin-opener": "^2.7.3",

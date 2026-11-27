@@ -513,7 +513,35 @@
 }
 .desk:has(.hw[data-v="club"]) { opacity: 0; transition: opacity var(--smooth-ms) var(--smooth), filter 240ms cubic-bezier(0.4, 0, 1, 1); }
 .desk[data-shown]:has(.hw[data-v="club"]) { opacity: 1; transition: opacity var(--smooth-ms) var(--smooth) var(--hw-delay, 110ms), filter 340ms cubic-bezier(0.2, 0, 0, 1) var(--hw-delay, 110ms); }
-.hw[data-v="club"]::after {
+/* The face hangs from the plate but is drawn on a layer of its own under
+   it (.hw-body, the plate's twin in size and movement, drawing nothing
+   else): where the plate is in front of the face, it covers it whatever
+   the renderer, rather than by sorting the two in 3D. (Chrome's software
+   renderer, which records the hero's clips, doesn't sort them: it drew the
+   face over the plate's last 26px. On the GPU the plate covered it, as
+   meant.) Above the face's top the face is in front of the plate, and its
+   shadow falls on it there: .hw-shade, a twin drawn after the plate, draws
+   just that part of the shadow. */
+.hw-body, .hw-shade { display: none; }
+.hw-body[data-v="club"], .hw-shade[data-v="club"] {
+  --body: 76px;
+  display: block; position: absolute; left: 140px; top: 30px; width: 1160px; height: 430px;
+  pointer-events: none;
+  transform-style: preserve-3d;
+  transform-origin: 50% 0;
+  transform: translateY(var(--hw-from, -40px)) rotateX(40deg) scale(0.985);
+  transition: transform var(--smooth-ms) var(--smooth);
+}
+.desk[data-shown] :is(.hw-body, .hw-shade)[data-v="club"] { transform: rotateX(40deg); transition: transform var(--smooth-ms) var(--smooth) var(--hw-delay, 110ms); }
+.hw-shade[data-v="club"]::after {
+  content: ''; position: absolute; left: 0; right: 0; top: calc(100% - 26px); height: var(--body);
+  border-radius: 26px 26px 26px 26px / 20px 20px 20px 20px;
+  transform-origin: 50% 0; transform: rotateX(-40deg);
+  /* (Only the shadow, only above the face's top.) */
+  box-shadow: 0 5px 8px -2px rgb(0 0 0 / 0.75), 0 12px 22px rgb(0 0 0 / 0.5);
+  clip-path: inset(-60px -60px 100% -60px);
+}
+.hw-body[data-v="club"]::after {
   content: ''; position: absolute; left: 0; right: 0; top: calc(100% - 26px); height: var(--body);
   /* Top corners: the plate's own 26px corners as they're seen from here
      (26px across, 26 × cos 40° ≈ 20px down), so the face never shows past
@@ -560,12 +588,12 @@
     inset 0 -2px 1px -1px rgb(255 255 255 / 0.95),
     inset 0 -7px 6px -5px rgb(0 0 0 / 0.14);
   color: rgb(22 23 26 / 0.7);
-  font-family: 'SF Mono', ui-monospace, Menlo, monospace;
+  font-family: 'Geist Mono Variable', 'Geist Mono', Menlo, monospace;
   text-transform: lowercase;
   letter-spacing: 0.03em;
 }
 /* The front face: the same metal turned away from the light. */
-.hw[data-v="club"][data-skin="current"]::after {
+.hw-body[data-v="club"][data-skin="current"]::after {
   background:
     linear-gradient(90deg, rgb(0 0 0 / 0.45), rgb(0 0 0 / 0.12) 18px, transparent 44px, transparent calc(100% - 44px), rgb(0 0 0 / 0.12) calc(100% - 18px), rgb(0 0 0 / 0.45)),
     linear-gradient(0deg, #0b0b0d 0 3px, rgb(0 0 0 / 0.3) 3px, transparent 10px),

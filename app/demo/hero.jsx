@@ -28,6 +28,9 @@ import { showTip, hideTip, tipText } from '$lib/tooltip.svelte.js';
 import { hideToast } from '$lib/undo.svelte.js';
 import { backend } from '$lib/backend.js';
 import '../src/app.css';
+// (The controller's print and the stage's code in Geist Mono, served with
+// the page: the same on every machine, the recorder's included.)
+import '@fontsource-variable/geist-mono';
 import './hero.css';
 import './controller.css';
 import './controller-skins.css';

@@ -221,7 +221,7 @@
 .hw[data-v="club"][data-skin="most"] {
   --deck-a: #5b9cff;
   --deck-b: #ff8a3d;
-  font-family: 'SF Mono', ui-monospace, Menlo, monospace;
+  font-family: 'Geist Mono Variable', 'Geist Mono', Menlo, monospace;
   text-transform: lowercase;
   letter-spacing: 0.03em;
 }

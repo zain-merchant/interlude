@@ -87,7 +87,7 @@
     --ss-shadow-ground: 0 0 0 1px rgba(50, 50, 93, 0.06), 0 24px 48px -24px rgba(50, 50, 93, 0.18);
 
     --ss-font: system-ui, -apple-system, sans-serif;
-    --ss-mono: "SF Mono", "SFMono-Regular", ui-monospace, Consolas, monospace;
+    --ss-mono: "Geist Mono Variable", "Geist Mono", Menlo, Consolas, monospace;
 
     /* Shape: the radius scale the product's own parts use. A look sets these
        to its design system's values; each rounded part reads one */

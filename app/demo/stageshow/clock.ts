@@ -6,9 +6,9 @@
 //
 // A recorder or the playground runs installVirtualClock() in the page
 // before any of its code loads. From then on time only moves when the
-// recorder steps it, by exactly 1/fps: timers fire in time order, one
-// animation frame runs, and every CSS transition and animation is set to the
-// new time. Live playback instead calls advance() with the native RAF's
+// recorder steps it, by exactly 1/fps: timers fire in time order, every CSS
+// transition and animation is set to the new time, and one animation frame
+// runs. Live playback instead calls advance() with the native RAF's
 // elapsed time, so its motion follows the display refresh rate. Each fixed
 // frame of a video is then the same on every render, a
 // timed beat lands on a known frame, and nothing drops or doubles.
@@ -27,8 +27,8 @@ export interface ClockControl {
   /**
    * Advance `frames` frames (1 by default). Per frame: timers due by the new
    * time fire in order, each followed by the work it queued (React commits,
-   * promise chains); then one round of animation frames; then every CSS
-   * transition and animation is moved to the new time.
+   * promise chains); then every CSS transition and animation is moved to
+   * the new time; then one round of animation frames.
    */
   step(frames?: number): Promise<void>
   /** Advance live playback by elapsed milliseconds, rendering one update. */
@@ -210,6 +210,12 @@ export function installVirtualClock(opts: { fps?: number; epoch?: number; onLayo
     }
     vt = to
     frame++
+    // CSS first, then the frame's callbacks, as a browser's rendering step
+    // does: a callback that changes a value mid-transition (a fader's cap
+    // ridden a little further each frame) retargets it from where it has got
+    // to by now, not from where it was a frame ago. (The other way round, a
+    // transition retargeted every frame never left its start.)
+    moveAnimations(from)
     const cbs = frameCbs
     const layout = layoutCbs
     frameCbs = new Map()
@@ -217,7 +223,6 @@ export function installVirtualClock(opts: { fps?: number; epoch?: number; onLayo
     for (const fn of Array.from(layout.values())) run(fn, [vt])
     for (const fn of Array.from(cbs.values())) run(fn, [vt])
     await settle()
-    moveAnimations(from)
   }
 
   const control: ClockControl = {

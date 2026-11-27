@@ -1,24 +1,49 @@
 # Records the website hero's clips and publishes them to the hero-clips
-# pre-release (app/demo/segments/README.md), and with Publish, the site with
-# them (Site). Started by hand: Actions, Hero clips, Run workflow.
+# pre-release (app/demo/segments/README.md), then the site with them (Site).
 #
-# A job may take 6 hours at most and a hand takes longer than that on one
-# runner, so each hand is recorded in parts, a runner each: plan the loop,
-# record the parts, encode them all and publish.
+# Runs by itself after a push to main that touches what the clips are made
+# from (the app's UI, the demo, the recorder; not tests), and publishes; if
+# the hash of those is the published set's, it stops after a minute. Or by
+# hand: Actions, Hero clips, Run workflow.
+#
+# Spread over as many runners as GitHub gives at once: plan the loop; record
+# each hand in parts on Macs, a runner each (GitHub gives 5 Macs at once);
+# encode each part's masters, a codec at a time, on Linux runners at once;
+# then one Mac puts the set together and publishes it.
 name: Hero clips
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - app/src/**
+      - app/demo/**
+      - app/package-lock.json
+      - app/svelte.config.js
+      - '!app/**/*.test.*'
+      - '!app/**/*.spec.*'
   workflow_dispatch:
     inputs:
-      parts:
-        description: Runners to record each hand on
-        default: '6'
       publish:
-        description: Publish the set (off keeps it as a download on this run)
+        description: Publish the set, and the site with it (off keeps the set as a download on this run)
         type: boolean
         default: false
+      only_if_changed:
+        description: Only if the app, the demo or the recorder changed since the published set
+        type: boolean
+        default: false
+      macs:
+        description: Macs to record on at once (empty for 5, GitHub's limit)
+        default: ''
+      gpu:
+        description: Draw with the Macs' GPU, as people's browsers do (off, Chrome's software drawing, a near match)
+        type: boolean
+        default: true
 
-concurrency: hero-clips
+# One at a time. A run under way finishes and publishes; a newer push waits for it.
+concurrency:
+  group: hero-clips
+  cancel-in-progress: false
 
 permissions:
   contents: read
@@ -28,36 +53,61 @@ defaults:
     working-directory: app
 
 jobs:
+  check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    outputs:
+      record: ${{ steps.check.outputs.record }}
+      source: ${{ steps.check.outputs.source }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: app/package-lock.json }
+      - run: npm ci --ignore-scripts
+      - id: check
+        env:
+          ALWAYS: ${{ github.event_name == 'workflow_dispatch' && !inputs.only_if_changed }}
+        run: |
+          have=$(node demo/segments/record.mjs --print-source)
+          published=$(curl -fsSL "https://github.com/$GITHUB_REPOSITORY/releases/download/hero-clips/hero-clips.json" | jq -r .source || true)
+          echo "source=$have" >> "$GITHUB_OUTPUT"
+          echo "These sources: $have. Published: ${published:-none}."
+          if [ "$ALWAYS" = true ] || [ "$have" != "$published" ]; then
+            echo record=true >> "$GITHUB_OUTPUT"
+          else
+            echo "The published set is up to date: nothing to record."
+            echo record=false >> "$GITHUB_OUTPUT"
+          fi
+
   plan:
+    needs: check
+    if: needs.check.outputs.record == 'true'
     runs-on: macos-15
     timeout-minutes: 90
     outputs:
-      parts: ${{ steps.parts.outputs.parts }}
+      jobs: ${{ steps.parts.outputs.jobs }}
+      encodes: ${{ steps.parts.outputs.encodes }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: 22, cache: npm, cache-dependency-path: app/package-lock.json }
       - run: npm ci
-      - run: node demo/segments/record.mjs --phase plan --work "$RUNNER_TEMP/clips"
+      - env:
+          GPU: ${{ github.event_name == 'push' || inputs.gpu }}
+        run: |
+          flags=()
+          if [ "$GPU" = true ]; then flags+=(--gpu); fi
+          node demo/segments/record.mjs --phase plan "${flags[@]}" --work "$RUNNER_TEMP/clips"
+      # What each Mac records (steps of about the same cost, in one wave of
+      # 5, GitHub's limit), and the slices of it each Linux runner encodes.
       - id: parts
         env:
-          PARTS: ${{ inputs.parts }}
-        # The steps of each hand, in parts of about the same number of frames.
+          MACS: ${{ inputs.macs || '5' }}
         run: |
-          node --input-type=module -e '
-            import fs from "node:fs";
-            const plan = JSON.parse(fs.readFileSync(process.env.RUNNER_TEMP + "/clips/plan.json", "utf8"));
-            const want = Math.max(1, Math.min(10, parseInt(process.env.PARTS, 10) || 6));
-            const total = plan.len.slice(plan.from, plan.until).reduce((s, n) => s + n, 0);
-            const parts = [];
-            let a = plan.from, at = 0;
-            for (let k = plan.from; k < plan.until; k++) {
-              at += plan.len[k];
-              if (at >= (total / want) * (parts.length + 1) - 1 || k === plan.until - 1) { parts.push([a, k + 1]); a = k + 1; }
-            }
-            const all = ["mouse", "controller"].flatMap((m) => parts.map(([x, y]) => ({ mode: m, from: x, to: y })));
-            fs.appendFileSync(process.env.GITHUB_OUTPUT, "parts=" + JSON.stringify(all) + "\n");
-          '
+          node demo/segments/record.mjs --phase parts --jobs "$MACS" --work "$RUNNER_TEMP/clips" > "$RUNNER_TEMP/parts.json"
+          jq . "$RUNNER_TEMP/parts.json"
+          echo "jobs=$(jq -c .jobs "$RUNNER_TEMP/parts.json")" >> "$GITHUB_OUTPUT"
+          echo "encodes=$(jq -c .encodes "$RUNNER_TEMP/parts.json")" >> "$GITHUB_OUTPUT"
       - uses: actions/upload-artifact@v4
         with: { name: plan, path: '${{ runner.temp }}/clips', retention-days: 1 }
 
@@ -69,8 +119,8 @@ jobs:
       fail-fast: true
       max-parallel: 5
       matrix:
-        part: ${{ fromJSON(needs.plan.outputs.parts) }}
-    name: record ${{ matrix.part.mode }} ${{ matrix.part.from }} to ${{ matrix.part.to }}
+        job: ${{ fromJSON(needs.plan.outputs.jobs) }}
+    name: record ${{ matrix.job.ranges }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -79,23 +129,86 @@ jobs:
       - run: brew install ffmpeg
       - uses: actions/download-artifact@v4
         with: { name: plan, path: '${{ runner.temp }}/clips' }
+      # Its ranges one after the other (the end of one hand and the start of
+      # the other, say); then the masters sorted into the encoders' slices.
       - env:
-          PART: ${{ matrix.part.mode }}:${{ matrix.part.from }}:${{ matrix.part.to }}
-        run: node demo/segments/record.mjs --phase part --part "$PART" --work "$RUNNER_TEMP/clips"
+          RANGES: ${{ matrix.job.ranges }}
+          SLICES: ${{ join(matrix.job.enc, ' ') }}
+        run: |
+          for r in $RANGES; do
+            node demo/segments/record.mjs --phase part --part "$r" --profile --work "$RUNNER_TEMP/clips"
+          done
+          i=0
+          for s in $SLICES; do
+            IFS=: read -r mode a b <<< "$s"
+            mkdir -p "$RUNNER_TEMP/slices/$i"
+            for ((k = a; k < b; k++)); do mv "$RUNNER_TEMP/clips/masters/$mode-$k".*.mkv "$RUNNER_TEMP/slices/$i/"; done
+            i=$((i + 1))
+          done
+      # The lossless masters, a slice for each encoder (at most 4 a Mac:
+      # record.mjs --phase parts, ENC); and the rest (timelines, boundary
+      # pictures, the controller's box and mask), small, for every encoder
+      # and the last job.
+      - if: matrix.job.enc[0]
+        uses: actions/upload-artifact@v4
+        with: { name: 'masters-${{ matrix.job.id }}-0', path: '${{ runner.temp }}/slices/0', retention-days: 1, compression-level: 0 }
+      - if: matrix.job.enc[1]
+        uses: actions/upload-artifact@v4
+        with: { name: 'masters-${{ matrix.job.id }}-1', path: '${{ runner.temp }}/slices/1', retention-days: 1, compression-level: 0 }
+      - if: matrix.job.enc[2]
+        uses: actions/upload-artifact@v4
+        with: { name: 'masters-${{ matrix.job.id }}-2', path: '${{ runner.temp }}/slices/2', retention-days: 1, compression-level: 0 }
+      - if: matrix.job.enc[3]
+        uses: actions/upload-artifact@v4
+        with: { name: 'masters-${{ matrix.job.id }}-3', path: '${{ runner.temp }}/slices/3', retention-days: 1, compression-level: 0 }
       - uses: actions/upload-artifact@v4
         with:
-          name: part-${{ matrix.part.mode }}-${{ matrix.part.from }}
+          name: meta-${{ matrix.job.id }}
           path: |
             ${{ runner.temp }}/clips
+            !${{ runner.temp }}/clips/masters
             !${{ runner.temp }}/clips/site
             !${{ runner.temp }}/clips/plan.json
           retention-days: 1
-          compression-level: 0
 
   encode:
-    needs: record
+    needs: [plan, record]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: true
+      matrix:
+        slice: ${{ fromJSON(needs.plan.outputs.encodes) }}
+    name: encode ${{ matrix.slice.only }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: app/package-lock.json }
+      - run: npm ci --ignore-scripts
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+      - uses: actions/download-artifact@v4
+        with: { name: plan, path: '${{ runner.temp }}/clips' }
+      - uses: actions/download-artifact@v4
+        with: { pattern: meta-*, path: '${{ runner.temp }}/clips', merge-multiple: true }
+      - uses: actions/download-artifact@v4
+        with: { name: 'masters-${{ matrix.slice.job }}-${{ matrix.slice.i }}', path: '${{ runner.temp }}/clips/masters' }
+      - env:
+          ONLY: ${{ matrix.slice.only }}
+        run: node demo/segments/record.mjs --phase encode --software --only "$ONLY" --codecs hevc,h264 --encoders 2 --work "$RUNNER_TEMP/clips" --out "$RUNNER_TEMP/out"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: enc-${{ matrix.slice.job }}-${{ matrix.slice.i }}
+          path: ${{ runner.temp }}/out
+          retention-days: 1
+          compression-level: 0
+
+  # Every clip is encoded by now, so this encodes nothing: it writes the
+  # controller's mask, compares the hands' boundaries, makes the poster, the
+  # timelines and the manifest, and publishes.
+  finish:
+    needs: [check, encode]
     runs-on: macos-15
-    timeout-minutes: 350
+    timeout-minutes: 60
     permissions:
       contents: write
     steps:
@@ -105,8 +218,11 @@ jobs:
       - run: npm ci
       - run: brew install ffmpeg imagemagick
       - uses: actions/download-artifact@v4
-        with: { path: '${{ runner.temp }}/clips', merge-multiple: true }
-      # (--software: a runner has no media engine to count on.)
+        with: { name: plan, path: '${{ runner.temp }}/clips' }
+      - uses: actions/download-artifact@v4
+        with: { pattern: meta-*, path: '${{ runner.temp }}/clips', merge-multiple: true }
+      - uses: actions/download-artifact@v4
+        with: { pattern: enc-*, path: '${{ github.workspace }}/site/hero/clips', merge-multiple: true }
       - run: node demo/segments/record.mjs --phase encode --software --work "$RUNNER_TEMP/clips"
       - uses: actions/upload-artifact@v4
         with:
@@ -116,7 +232,14 @@ jobs:
             site/img/screenshot*
           retention-days: 7
           compression-level: 0
-      - if: inputs.publish
+      # (The check's hash, from Linux, must be the one a Mac writes, or no run would ever
+      # skip. After the upload: the set is still there to look at.)
+      - env:
+          CHECKED: ${{ needs.check.outputs.source }}
+        run: |
+          made=$(jq -r .source ../site/hero/clips/manifest.json)
+          if [ "$made" != "$CHECKED" ]; then echo "::error::the set is $made but the check worked out $CHECKED"; exit 1; fi
+      - if: github.event_name == 'push' || inputs.publish
         env:
           GH_TOKEN: ${{ github.token }}
         run: npm run clips:publish -- --repo "$GITHUB_REPOSITORY"
@@ -124,8 +247,9 @@ jobs:
   # The site with the new set. (A push made with this run's token doesn't
   # start other workflows, so Site is called from here.)
   site:
-    needs: encode
-    if: inputs.publish && github.ref == 'refs/heads/main'
+    needs: finish
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || inputs.publish)
     permissions:
       contents: write
     uses: ./.github/workflows/site.yml
+

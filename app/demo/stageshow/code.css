@@ -6,7 +6,7 @@
     --ss-code-str: #15803d;
     --ss-code-num: #b45309;
     --ss-code-fn: #2563eb;
-    font: 11.5px/19px ui-monospace, 'SF Mono', Menlo, monospace;
+    font: 11.5px/19px 'Geist Mono Variable', 'Geist Mono', Menlo, monospace;
     color: var(--ss-text-strong);
   }
 
