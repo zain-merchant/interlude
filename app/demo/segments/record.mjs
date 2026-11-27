@@ -731,11 +731,30 @@ if (PHASE === 'all' || PHASE === 'record') {
 }
 
 // 5. Encode, and the manifest.
-function ffmpeg(a) {
+// (Each file takes seconds to a minute. On GitHub's Linux runners one ffmpeg
+// in a few hundred has hung for good, all its work done but never exiting:
+// one that runs past FF_LIMIT is stopped and run again, twice at most.)
+const FF_LIMIT = 6 * 60e3;
+function ffmpegOnce(a) {
   return new Promise((ok, fail) => {
     const p = spawn('ffmpeg', ['-y', '-hide_banner', '-loglevel', 'error', ...a], { stdio: ['ignore', 'inherit', 'inherit'] });
-    p.on('close', (c) => (c ? fail(new Error(`ffmpeg exited ${c}: ${a.join(' ')}`)) : ok()));
+    let stuck = false;
+    const t = setTimeout(() => { stuck = true; p.kill('SIGKILL'); }, FF_LIMIT);
+    p.on('close', (c) => {
+      clearTimeout(t);
+      if (stuck) fail(Object.assign(new Error(`ffmpeg ran past ${FF_LIMIT / 60e3} minutes: ${a.join(' ')}`), { stuck }));
+      else if (c) fail(new Error(`ffmpeg exited ${c}: ${a.join(' ')}`));
+      else ok();
+    });
   });
+}
+async function ffmpeg(a) {
+  for (let k = 0; ; k++) {
+    try { return await ffmpegOnce(a); } catch (e) {
+      if (!e.stuck || k === 2) throw e;
+      log(`${e.message.split(':')[0]}, again`);
+    }
+  }
 }
 // HEVC on a Mac by the media engine (VideoToolbox): measured on a 2x app
 // clip, quality 66 gives the size and SSIM of x265 fast at crf 26 (about
