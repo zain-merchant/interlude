@@ -500,6 +500,15 @@ async function recordPart(mode, a, b) {
       hw.style.transition = 'none';
       hw.style.transform = getComputedStyle(hw).transform === 'none' ? '' : `translateY(${from}px) ${getComputedStyle(hw).transform} scale(0.985)`;
       const r1 = hw.getBoundingClientRect();
+      // (Back where it was with its transition still off, and its style
+      // worked out, before its own style comes back. Else the plate glides
+      // home from up there, on the real clock until the virtual one finds
+      // the transition and starts it over: on a fast Mac the plate sat away
+      // for the cycle's first 4 frames and came down over 15 more, on
+      // GitHub's only frame 0 was away; and its twin .hw-body, never moved,
+      // stayed at rest under it.)
+      hw.style.transform = '';
+      hw.getBoundingClientRect();
       hw.setAttribute('style', was);
       // Per px of --hw-from: how far its middle moves; and how much smaller it is.
       return { rest: [r0.left, r0.top, r0.width, r0.height], perPx: ((r1.top + r1.height / 2) - (r0.top + r0.height / 2)) / from, dx: ((r1.left + r1.width / 2) - (r0.left + r0.width / 2)) / from, scale: r1.width / r0.width };
