@@ -36,9 +36,9 @@ on:
         description: Macs to record on at once (empty for 5, GitHub's limit)
         default: ''
       gpu:
-        description: Draw with the Macs' GPU where Chrome can (about twice as fast; the controller's 3D edge draws a few pixels lower)
+        description: Draw with the Macs' GPU, as people's browsers do (off, Chrome's software drawing, a near match)
         type: boolean
-        default: false
+        default: true
 
 # One at a time. A run under way finishes and publishes; a newer push waits for it.
 concurrency:
@@ -93,7 +93,7 @@ jobs:
         with: { node-version: 22, cache: npm, cache-dependency-path: app/package-lock.json }
       - run: npm ci
       - env:
-          GPU: ${{ inputs.gpu || false }}
+          GPU: ${{ github.event_name == 'push' || inputs.gpu }}
         run: |
           flags=()
           if [ "$GPU" = true ]; then flags+=(--gpu); fi

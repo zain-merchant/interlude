@@ -77,7 +77,7 @@ takes a Mac to get to its first step (it replays the script there), so a
 Mac may record the end of one hand and then the start of the other. By
 hand: Actions, Hero clips, Run workflow records whatever the hash unless
 "Only if ... changed" is ticked, and publishes only if "Publish" is ticked;
-"Macs" and "GPU" are there to try other splits, or the GPU.
+"Macs" is there to try other splits, and "GPU" (on) to record in software.
 
 Options (`node demo/segments/record.mjs ...`):
 
@@ -90,10 +90,10 @@ Options (`node demo/segments/record.mjs ...`):
 - `--gpu`: with the plan, record with Chrome drawing on the Mac's GPU where
   it can: about twice as fast on an M1 Pro, but no faster on GitHub's Macs
   (measured there, a mouse frame 850 to 1030 ms with the GPU against 900 to
-  1000 without, a controller one 720 to 770 against 620 to 760), so the
-  workflow records in software unless "GPU" is ticked. It's kept for
-  recording on a Mac of your own, and to compare with how browsers, which
-  draw on the GPU, show the hero (below).
+  1000 without, a controller one 720 to 770 against 620 to 760). The
+  workflow uses it all the same: browsers draw on the GPU, so it records the
+  hero as people see it. If a Mac has no GPU the plan records in software,
+  a near match (below), and every part must draw the way the plan did.
 - `--codecs hevc,h264`: add `av1` for AV1 too (it only plays where the
   browser decodes it in hardware, and was barely smaller than HEVC here).
 - `--phase plan|record|encode`: one stage at a time; `--keep` keeps the
