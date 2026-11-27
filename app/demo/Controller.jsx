@@ -311,6 +311,8 @@ export function Controller({ shown }) {
     // rises through is the controller's alone: hero.css .desk-clip.)
     <div className="desk-clip">
     <div className="desk" data-shown={up || undefined}>
+      {/* (The body under the plate, drawn before it: controller.css .hw-body.) */}
+      <div className="hw-body" data-v={version} data-skin={skin} aria-hidden="true" />
       <div ref={root} className="hw" data-target="controller" data-v={version} data-skin={skin}>
         <Deck side="left" />
         <div className="hw-mixer">
@@ -331,6 +333,8 @@ export function Controller({ shown }) {
         <Deck side="right" />
         <i className="hw-badge" aria-hidden />
       </div>
+      {/* (The body's shadow where it falls on the plate, drawn after it.) */}
+      <div className="hw-shade" data-v={version} data-skin={skin} aria-hidden="true" />
     </div>
     </div>
   );

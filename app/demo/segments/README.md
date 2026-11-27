@@ -88,7 +88,12 @@ Options (`node demo/segments/record.mjs ...`):
   lines, the clock), every 60 frames and at the end, with the frames so far
   and their time in all.
 - `--gpu`: with the plan, record with Chrome drawing on the Mac's GPU where
-  it can: about twice as fast, not quite the same pixels (below).
+  it can: about twice as fast on an M1 Pro, but no faster on GitHub's Macs
+  (measured there, a mouse frame 850 to 1030 ms with the GPU against 900 to
+  1000 without, a controller one 720 to 770 against 620 to 760), so the
+  workflow records in software unless "GPU" is ticked. It's kept for
+  recording on a Mac of your own, and to compare with how browsers, which
+  draw on the GPU, show the hero (below).
 - `--codecs hevc,h264`: add `av1` for AV1 too (it only plays where the
   browser decodes it in hardware, and was barely smaller than HEVC here).
 - `--phase plan|record|encode`: one stage at a time; `--keep` keeps the
@@ -121,10 +126,14 @@ levels from run to run).
    in Chrome's software renderer (its default without a screen); or with
    `--gpu`, drawn by the Mac's GPU (Metal) where Chrome has one, each
    capture in about half the time. The two don't draw quite the same pixels
-   (the app within a few levels, at edges; the controller, tipped back in
-   3D, with the edge of its top a few pixels lower), so the plan finds out
-   which one its Mac draws with and every part must draw with the same, or
-   it stops: parts that don't match wouldn't join up.
+   (within a few levels, at edges), so the plan finds out which one its Mac
+   draws with and every part must draw with the same, or it stops: parts
+   that don't match wouldn't join up. (They once drew the controller's body
+   differently: the software renderer doesn't sort 3D layers by depth, and
+   drew its front face over the plate's last 26px. The face is now a layer
+   of its own under the plate, and its shadow on the plate one over it,
+   controller.css `.hw-body` and `.hw-shade`, so both draw what the GPU
+   did.)
    Each frame, in layers:
    - the app alone, flat (the page tips it back itself in the controller
      hand), without the controller or the link lines; in the mouse hand
