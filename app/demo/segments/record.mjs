@@ -224,7 +224,11 @@ const NATIVE = !!args.part;
 // lower), so the plan says which one every part uses: the plan's Mac finds
 // out (gpuOf), and a part on a Mac that draws otherwise stops rather than
 // record a set that doesn't join up.
-const GPU_ARGS = ['--enable-gpu', '--use-angle=metal', '--ignore-gpu-blocklist'];
+// (Composited on the GPU, but each layer's pixels drawn by Chrome's own
+// rasterizer, not the GPU's: rastered on the GPU, the same unchanged layer
+// came out a level apart, all over, on a capture in ten or so, a different
+// one every take, and on no two machines alike.)
+const GPU_ARGS = ['--enable-gpu', '--use-angle=metal', '--ignore-gpu-blocklist', '--disable-gpu-rasterization'];
 /** What draws WebGL in a page: the GPU's name, or null for software or none. */
 const rendererOf = (page) => page.evaluate(() => {
   const gl = document.createElement('canvas').getContext('webgl');
@@ -248,6 +252,13 @@ async function open(mode, plan, scale = SCALE) {
   const page = await ctx.newPage();
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
+  // CSS transitions and animations stand still on the browser's own clock:
+  // the virtual one moves each by hand once it has seen it, but one that
+  // starts between two of its looks (a style worked out as the browser
+  // draws) would otherwise run on real time until then, as far as the
+  // machine's speed lets it, or even to its end (a fader cap's 120 ms, on
+  // GitHub's Macs, jumped where it should glide).
+  await (await ctx.newCDPSession(page)).send('Animation.setPlaybackRate', { playbackRate: 0 });
   await page.goto(`${base}?mode=${mode}`);
   // No transitions on the app's own box: the recorder lays it flat and back
   // between captures, and the screen's easing is the page's job.

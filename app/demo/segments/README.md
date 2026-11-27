@@ -133,7 +133,18 @@ levels from run to run).
    drew its front face over the plate's last 26px. The face is now a layer
    of its own under the plate, and its shadow on the plate one over it,
    controller.css `.hw-body` and `.hw-shade`, so both draw what the GPU
-   did.)
+   did.) With `--gpu` the GPU puts the layers together, but Chrome's own
+   rasterizer draws each one: the GPU's drew the same unchanged layer a
+   level apart all over on a capture in ten or so, different every take.
+   The same frames on any Mac, fast or slow, also need the page's CSS
+   transitions to stand still on the browser's clock (the recorder sets
+   its animations' rate to 0), so only the virtual clock moves them: one
+   that started as the browser drew ran on real time until the clock saw
+   it, and on GitHub's slower Macs a fader cap's 120 ms ran out before it
+   did, so the cap jumped. (On a laptop the same cap stood still under the
+   moving finger: the clock moved CSS after each frame's callbacks, so a
+   transition retargeted every frame never left its start. It moves CSS
+   first now, as a browser does, and the cap glides.)
    Each frame, in layers:
    - the app alone, flat (the page tips it back itself in the controller
      hand), without the controller or the link lines; in the mouse hand
